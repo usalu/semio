@@ -5,15 +5,16 @@
   "type": "object",
   "additionalProperties": false,
   "required": [
+    "mutation",
     "snapshot"
   ],
   "properties": {
-    "snapshot": {
-      "$ref": "#/$defs/PlySnapshot"
-    },
     "mutation": {
       "const": "setSnapshot",
       "description": "Aggregate discriminator spliced in by PlyMutation; absent when the payload stands alone."
+    },
+    "snapshot": {
+      "$ref": "#/$defs/PlySnapshot"
     }
   },
   "$defs": {
@@ -25,21 +26,73 @@
       ],
       "properties": {
         "schema": {
-          "type": "string"
+          "type": "string",
+          "x-semio-ui": {
+            "widget": "text",
+            "label": {
+              "en": "Snapshot schema",
+              "de": "Snapshot-Schema"
+            },
+            "description": {
+              "en": "Identifier of the snapshot schema version.",
+              "de": "Kennung der Version des Snapshot-Schemas."
+            }
+          }
         },
         "format": {
-          "$ref": "#/$defs/PlyFormat"
+          "$ref": "#/$defs/PlyFormat",
+          "x-semio-ui": {
+            "widget": "segmented",
+            "label": {
+              "en": "File format",
+              "de": "Dateiformat"
+            },
+            "options": {
+              "ascii": {
+                "en": "ASCII",
+                "de": "ASCII"
+              },
+              "binaryLittleEndian": {
+                "en": "Binary, little-endian",
+                "de": "Binär, Little-Endian"
+              },
+              "binaryBigEndian": {
+                "en": "Binary, big-endian",
+                "de": "Binär, Big-Endian"
+              }
+            }
+          }
         },
         "comments": {
           "type": "array",
           "items": {
             "type": "string"
+          },
+          "x-semio-ui": {
+            "label": {
+              "en": "Comments",
+              "de": "Kommentare"
+            },
+            "description": {
+              "en": "Header `comment` lines in order.",
+              "de": "Header-Zeilen `comment` in Reihenfolge."
+            }
           }
         },
         "elements": {
           "type": "array",
           "items": {
             "$ref": "#/$defs/PlyElement"
+          },
+          "x-semio-ui": {
+            "label": {
+              "en": "Elements",
+              "de": "Elemente"
+            },
+            "description": {
+              "en": "Declared elements (vertex, face, …) with their rows.",
+              "de": "Deklarierte Elemente (vertex, face, …) mit ihren Zeilen."
+            }
           }
         }
       }
@@ -79,6 +132,16 @@
           "type": "array",
           "items": {
             "$ref": "#/$defs/PlyRow"
+          },
+          "x-semio-ui": {
+            "label": {
+              "en": "Rows",
+              "de": "Zeilen"
+            },
+            "description": {
+              "en": "One value set per element instance.",
+              "de": "Ein Wertesatz je Elementinstanz."
+            }
           }
         }
       }

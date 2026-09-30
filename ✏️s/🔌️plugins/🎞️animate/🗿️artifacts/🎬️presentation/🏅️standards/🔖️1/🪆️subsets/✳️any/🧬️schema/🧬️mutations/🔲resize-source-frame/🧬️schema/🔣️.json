@@ -31,6 +31,17 @@
         "height": {
           "type": "number"
         }
+      },
+      "x-semio-ui": {
+        "role": "value",
+        "label": {
+          "en": "New Source Frame",
+          "de": "Neuer Quellrahmen"
+        },
+        "description": {
+          "en": "Visible region of the source, as fractions of its size.",
+          "de": "Sichtbarer Bereich der Quelle als Anteile ihrer Größe."
+        }
       }
     }
   }

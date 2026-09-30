@@ -1,0 +1,37 @@
+[package]
+name = "semio-s-flow-composition"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+description = "First-party Flow extension catalogue and native example composition laws"
+
+[package.metadata.semio]
+role = "test"
+
+[lints]
+workspace = true
+
+[dev-dependencies]
+semio-s-spatial-kernel-semio-session.workspace = true
+semio-framework-os-flow.workspace = true
+semio-framework-artifact-flow-flow.workspace = true
+semio-framework.workspace = true
+serde_json.workspace = true
+neural_engine = { path = "../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🧠️neural/⚙️engine/📦️packages/🦀️rust", package = "semio-framework-os-kernel-neural-engine" }
+semio-s-plugin-flow-extension-brep = { path = "../../../../🔌️plugins/🌊️flow/🧩️extensions/📐️brep/📦️packages/🦀️rust", default-features = false }
+semio-s-plugin-flow-extension-primitive = { path = "../../../../🔌️plugins/🌊️flow/🧩️extensions/🔤️primitive/📦️packages/🦀️rust", default-features = false }
+semio-s-plugin-flow-extension-math = { path = "../../../../🔌️plugins/🌊️flow/🧩️extensions/🧮️math/📦️packages/🦀️rust", default-features = false }
+semio-s-plugin-flow-extension-text = { path = "../../../../🔌️plugins/🌊️flow/🧩️extensions/📝️text/📦️packages/🦀️rust", default-features = false }
+semio-s-plugin-flow-extension-logic = { path = "../../../../🔌️plugins/🌊️flow/🧩️extensions/🧠️logic/📦️packages/🦀️rust", default-features = false }
+semio-s-plugin-flow-extension-dictionary = { path = "../../../../🔌️plugins/🌊️flow/🧩️extensions/📖️dictionary/📦️packages/🦀️rust", default-features = false }
+semio-s-plugin-flow-extension-list = { path = "../../../../🔌️plugins/🌊️flow/🧩️extensions/📃️list/📦️packages/🦀️rust", default-features = false }
+semio-s-plugin-flow-extension-draw = { path = "../../../../🔌️plugins/🌊️flow/🧩️extensions/🖍️draw/📦️packages/🦀️rust", default-features = false }
+semio-s-plugin-flow-extension-bim = { path = "../../../../🔌️plugins/🌊️flow/🧩️extensions/🏗️bim/📦️packages/🦀️rust", default-features = false }
+
+[[test]]
+name = "flow_catalogue"
+path = "../../🧪️tests/🌿️catalogue/🦀️.rs"
+
+[[test]]
+name = "flow_port_types"
+path = "../../🧪️tests/🔌️port-types/🦀️.rs"

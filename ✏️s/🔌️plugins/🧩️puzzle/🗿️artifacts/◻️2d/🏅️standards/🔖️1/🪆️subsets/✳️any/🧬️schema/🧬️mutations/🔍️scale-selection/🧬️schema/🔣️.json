@@ -1,0 +1,124 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/puzzle/puzzle2d/mutation/scale-selection/schema.json",
+  "title": "ScaleSelection",
+  "description": "The `scale-selection` mutation record — internally tagged `\"mutation\": \"scaleSelection\"`, the one branch the aggregate `../🔣️.json` union carries for this kind.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "mutation",
+    "targets",
+    "pivotX",
+    "pivotY",
+    "factor"
+  ],
+  "properties": {
+    "mutation": {
+      "const": "scaleSelection",
+      "x-semio-ui": {
+        "widget": "hidden",
+        "role": "discriminator",
+        "label": {
+          "en": "Mutation",
+          "de": "Mutation"
+        }
+      }
+    },
+    "targets": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "minItems": 1,
+      "uniqueItems": true,
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Targets",
+          "de": "Ziele"
+        },
+        "description": {
+          "en": "Nodes and target regions to scale; locked or missing ones are skipped.",
+          "de": "Zu skalierende Knoten und Zielregionen; gesperrte oder fehlende werden übersprungen."
+        },
+        "ref": {
+          "kind": [
+            "node",
+            "targetRegion"
+          ],
+          "domain": "vortex",
+          "granularity": "node"
+        },
+        "group": "target",
+        "order": 10
+      }
+    },
+    "pivotX": {
+      "type": "number",
+      "x-semio-ui": {
+        "widget": "stepper",
+        "role": "value",
+        "label": {
+          "en": "Pivot X",
+          "de": "Bezugspunkt X"
+        },
+        "step": 1,
+        "precision": 2,
+        "snapSource": {
+          "config": "gridFactor"
+        },
+        "group": "pivot",
+        "order": 20
+      }
+    },
+    "pivotY": {
+      "type": "number",
+      "x-semio-ui": {
+        "widget": "stepper",
+        "role": "value",
+        "label": {
+          "en": "Pivot Y",
+          "de": "Bezugspunkt Y"
+        },
+        "step": 1,
+        "precision": 2,
+        "snapSource": {
+          "config": "gridFactor"
+        },
+        "group": "pivot",
+        "order": 30
+      }
+    },
+    "factor": {
+      "type": "number",
+      "exclusiveMinimum": 0,
+      "x-semio-ui": {
+        "widget": "slider",
+        "role": "value",
+        "label": {
+          "en": "Factor",
+          "de": "Faktor"
+        },
+        "description": {
+          "en": "Spreads positions from the pivot; node sizes stay.",
+          "de": "Spreizt Positionen vom Drehpunkt aus; Knotengrößen bleiben."
+        },
+        "step": 0.01,
+        "precision": 2,
+        "softMin": 0.1,
+        "softMax": 10,
+        "scale": "log",
+        "snaps": [
+          0.25,
+          0.5,
+          1,
+          2,
+          4
+        ],
+        "group": "scale",
+        "order": 40
+      }
+    }
+  }
+}

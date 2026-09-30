@@ -118,6 +118,59 @@
         "command": "bun ./📜️script.ts test schema",
         "forwardAllArgs": true
       },
+      "inputs": [
+        "default",
+        "schemaSources",
+        "{workspaceRoot}/**/*fixtures/**/🦠️mutation/🔣️.json",
+        "{workspaceRoot}/🧰️framework/🔨️modules/🛂️manifest/🟦️.ts",
+        "{workspaceRoot}/🧰️framework/🔨️modules/🛂️manifest/🔣️input-labels.json",
+        "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔣️schema-catalog.json"
+      ],
+      "outputs": []
+    },
+    "test-schema-mutation-inputs": {
+      "executor": "nx:run-commands",
+      "options": {
+        "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test",
+        "command": "bun ./📜️script.ts schema mutation-inputs",
+        "forwardAllArgs": true
+      },
+      "outputs": []
+    },
+    "test-schema-mutation-inputs-census": {
+      "executor": "nx:run-commands",
+      "options": {
+        "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test",
+        "command": "bun ./📜️script.ts schema mutation-inputs --census",
+        "forwardAllArgs": true
+      },
+      "outputs": []
+    },
+    "test-schema-mutation-payloads": {
+      "executor": "nx:run-commands",
+      "options": {
+        "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test",
+        "command": "bun ./📜️script.ts schema mutation-payloads",
+        "forwardAllArgs": true
+      },
+      "outputs": []
+    },
+    "test-schema-mutation-payloads-census": {
+      "executor": "nx:run-commands",
+      "options": {
+        "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test",
+        "command": "bun ./📜️script.ts schema mutation-payloads --census",
+        "forwardAllArgs": true
+      },
+      "outputs": []
+    },
+    "test-mutation-payload-parity": {
+      "executor": "nx:run-commands",
+      "options": {
+        "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test",
+        "command": "bun ./📜️script.ts test mutation-payload-parity",
+        "forwardAllArgs": true
+      },
       "outputs": []
     },
     "test-fixture-verify": {

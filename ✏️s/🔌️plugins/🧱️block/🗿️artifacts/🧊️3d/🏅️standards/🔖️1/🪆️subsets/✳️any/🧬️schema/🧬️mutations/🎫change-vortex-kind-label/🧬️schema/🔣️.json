@@ -5,15 +5,42 @@
   "type": "object",
   "additionalProperties": false,
   "required": [
+    "mutation",
     "id",
     "newLabel"
   ],
   "properties": {
+    "mutation": {
+      "const": "changeVortexKindLabel"
+    },
     "id": {
-      "type": "string"
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Vortex kind",
+          "de": "Wirbelart"
+        },
+        "ref": {
+          "kind": "vortexKind"
+        },
+        "group": "target",
+        "order": 10
+      }
     },
     "newLabel": {
-      "type": "string"
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "text",
+        "role": "value",
+        "label": {
+          "en": "Label",
+          "de": "Bezeichnung"
+        },
+        "group": "value",
+        "order": 20
+      }
     }
   }
 }

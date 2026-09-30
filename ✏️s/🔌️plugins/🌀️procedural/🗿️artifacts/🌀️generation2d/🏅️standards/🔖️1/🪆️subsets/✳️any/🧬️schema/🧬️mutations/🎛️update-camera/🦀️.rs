@@ -12,6 +12,7 @@ use semio_framework_value_derive::{FromValue, ToValue};
 /// 📷 `update-camera` payload — the fixture's new camera position/zoom.
 #[derive(Clone, Debug, PartialEq, ToValue, FromValue, dsl::MutationLeaf)]
 #[mutation_leaf(contract = ::protocol)]
+#[value(rename_all = "camelCase")]
 pub struct UpdateCamera {
     pub camera: CameraJson,
 }

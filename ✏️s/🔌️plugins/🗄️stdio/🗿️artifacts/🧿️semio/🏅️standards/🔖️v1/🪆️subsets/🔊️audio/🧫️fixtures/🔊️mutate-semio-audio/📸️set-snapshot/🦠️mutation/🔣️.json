@@ -1,6 +1,7 @@
 {
   "kind": "set-snapshot",
-  "params": {
+  "mutation": {
+    "mutation": "setSnapshot",
     "snapshot": {
       "schema": "stdio.semio.audio",
       "sampleRate": 8000,

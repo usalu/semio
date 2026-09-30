@@ -1,20 +1,23 @@
 //! 📏️ `scale-selection` command.
 
-use crate::editor::puzzle2d::{puzzle2d_selected_target_region_ids, puzzle2d_transform_selection, puzzle2d_transform_target_regions, Puzzle2dActionCtx, Puzzle2dTransform};
+use crate::editor::puzzle2d::{puzzle2d_selection_pivot, Puzzle2dActionCtx, Puzzle2dSelectPhase, Puzzle2dSelectionMotion, Puzzle2dSelectionRecord};
 use serde_json::Value;
 
-/// 📏️ Scales the selected nodes' positions about the selection's centroid by `factor` (sizes stay —
-/// a node kind's footprint is the kind's, not the layout's). Selected target regions scale with the
-/// gesture too, and unlike a node they scale their EXTENT as well as their corner — a region has no
-/// kind catalogue to take a footprint from, exactly as puzzle3d scales a selected target volume.
+/// 📏️ Scales the selected nodes' positions and target regions about their joint centroid by `factor` through the
+/// select tool (node sizes stay — a node kind's footprint is the kind's, not the layout's; a region scales its
+/// corner AND its extent, having no kind catalogue to take a footprint from). The `scale-selection` leaf records the
+/// ids, the one pivot and the factor; `phase` streams, commits or aborts a multi-dispatch scaling whose ticks
+/// multiply about one pivot.
 pub fn scale_selection(ctx: &mut Puzzle2dActionCtx<'_>, args: Option<&Value>) {
+    let Some(phase) = Puzzle2dSelectPhase::from_args(args) else { return };
     let factor = args.and_then(|value| value.get("factor").or_else(|| value.get("value"))).and_then(Value::as_f64).filter(|factor| factor.is_finite() && *factor > 0.0 && *factor != 1.0);
-    let Some(factor) = factor else { return };
-    let selected_ids = ctx.selected_ids();
-    if ctx.refuse_when_locked(&selected_ids) {
+    let targets = ctx.selected_transform_targets();
+    let records = match (factor, puzzle2d_selection_pivot(ctx.base.typed(), &targets, true)) {
+        (Some(factor), Some((pivot_x, pivot_y))) => vec![Puzzle2dSelectionRecord { targets, motion: Puzzle2dSelectionMotion::Scale { pivot_x, pivot_y, factor }, proximity: Vec::new(), connect: false }],
+        _ => Vec::new(),
+    };
+    if records.is_empty() && matches!(phase, Puzzle2dSelectPhase::Once | Puzzle2dSelectPhase::Stream) {
         return;
     }
-    puzzle2d_transform_selection(&mut ctx.scene.fixture, &selected_ids, Puzzle2dTransform::Scale { factor });
-    let region_ids = puzzle2d_selected_target_region_ids(&ctx.scene.fixture, &selected_ids);
-    puzzle2d_transform_target_regions(&mut ctx.scene.fixture, &region_ids, Puzzle2dTransform::Scale { factor });
+    ctx.transform_selection("scaleSelection", phase, records);
 }

@@ -68,8 +68,8 @@
     },
     "routes": {
       "type": "array",
-      "minItems": 18,
-      "maxItems": 18,
+      "minItems": 36,
+      "maxItems": 36,
       "items": [
         {
           "type": "object",
@@ -532,6 +532,476 @@
             "lanes": {
               "const": [
                 "WindowConfig"
+              ]
+            },
+            "blocker": {
+              "const": ""
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "id",
+            "disposition",
+            "lanes",
+            "blocker"
+          ],
+          "properties": {
+            "id": {
+              "const": "patchNode"
+            },
+            "disposition": {
+              "const": "Migrated"
+            },
+            "lanes": {
+              "const": [
+                "Artifact"
+              ]
+            },
+            "blocker": {
+              "const": ""
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "id",
+            "disposition",
+            "lanes",
+            "blocker"
+          ],
+          "properties": {
+            "id": {
+              "const": "patchElement"
+            },
+            "disposition": {
+              "const": "Migrated"
+            },
+            "lanes": {
+              "const": [
+                "Artifact"
+              ]
+            },
+            "blocker": {
+              "const": ""
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "id",
+            "disposition",
+            "lanes",
+            "blocker"
+          ],
+          "properties": {
+            "id": {
+              "const": "patchMaterial"
+            },
+            "disposition": {
+              "const": "Migrated"
+            },
+            "lanes": {
+              "const": [
+                "Artifact"
+              ]
+            },
+            "blocker": {
+              "const": ""
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "id",
+            "disposition",
+            "lanes",
+            "blocker"
+          ],
+          "properties": {
+            "id": {
+              "const": "patchSection"
+            },
+            "disposition": {
+              "const": "Migrated"
+            },
+            "lanes": {
+              "const": [
+                "Artifact"
+              ]
+            },
+            "blocker": {
+              "const": ""
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "id",
+            "disposition",
+            "lanes",
+            "blocker"
+          ],
+          "properties": {
+            "id": {
+              "const": "patchSupport"
+            },
+            "disposition": {
+              "const": "Migrated"
+            },
+            "lanes": {
+              "const": [
+                "Artifact"
+              ]
+            },
+            "blocker": {
+              "const": ""
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "id",
+            "disposition",
+            "lanes",
+            "blocker"
+          ],
+          "properties": {
+            "id": {
+              "const": "patchSolid"
+            },
+            "disposition": {
+              "const": "Migrated"
+            },
+            "lanes": {
+              "const": [
+                "Artifact"
+              ]
+            },
+            "blocker": {
+              "const": ""
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "id",
+            "disposition",
+            "lanes",
+            "blocker"
+          ],
+          "properties": {
+            "id": {
+              "const": "patchLoad"
+            },
+            "disposition": {
+              "const": "Migrated"
+            },
+            "lanes": {
+              "const": [
+                "Artifact"
+              ]
+            },
+            "blocker": {
+              "const": ""
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "id",
+            "disposition",
+            "lanes",
+            "blocker"
+          ],
+          "properties": {
+            "id": {
+              "const": "patchLoadCase"
+            },
+            "disposition": {
+              "const": "Migrated"
+            },
+            "lanes": {
+              "const": [
+                "Artifact"
+              ]
+            },
+            "blocker": {
+              "const": ""
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "id",
+            "disposition",
+            "lanes",
+            "blocker"
+          ],
+          "properties": {
+            "id": {
+              "const": "patchCombination"
+            },
+            "disposition": {
+              "const": "Migrated"
+            },
+            "lanes": {
+              "const": [
+                "Artifact"
+              ]
+            },
+            "blocker": {
+              "const": ""
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "id",
+            "disposition",
+            "lanes",
+            "blocker"
+          ],
+          "properties": {
+            "id": {
+              "const": "setResultAnimation"
+            },
+            "disposition": {
+              "const": "Migrated"
+            },
+            "lanes": {
+              "const": [
+                "WindowConfig",
+                "WindowTransient"
+              ]
+            },
+            "blocker": {
+              "const": ""
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "id",
+            "disposition",
+            "lanes",
+            "blocker"
+          ],
+          "properties": {
+            "id": {
+              "const": "resultAnimationTick"
+            },
+            "disposition": {
+              "const": "Migrated"
+            },
+            "lanes": {
+              "const": [
+                "WindowConfig",
+                "WindowTransient"
+              ]
+            },
+            "blocker": {
+              "const": ""
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "id",
+            "disposition",
+            "lanes",
+            "blocker"
+          ],
+          "properties": {
+            "id": {
+              "const": "focusEntity"
+            },
+            "disposition": {
+              "const": "Migrated"
+            },
+            "lanes": {
+              "const": [
+                "WindowConfig"
+              ]
+            },
+            "blocker": {
+              "const": ""
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "id",
+            "disposition",
+            "lanes",
+            "blocker"
+          ],
+          "properties": {
+            "id": {
+              "const": "translateSelection"
+            },
+            "disposition": {
+              "const": "Migrated"
+            },
+            "lanes": {
+              "const": [
+                "Artifact"
+              ]
+            },
+            "blocker": {
+              "const": ""
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "id",
+            "disposition",
+            "lanes",
+            "blocker"
+          ],
+          "properties": {
+            "id": {
+              "const": "rotateSelection"
+            },
+            "disposition": {
+              "const": "Migrated"
+            },
+            "lanes": {
+              "const": [
+                "Artifact"
+              ]
+            },
+            "blocker": {
+              "const": ""
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "id",
+            "disposition",
+            "lanes",
+            "blocker"
+          ],
+          "properties": {
+            "id": {
+              "const": "scaleSelection"
+            },
+            "disposition": {
+              "const": "Migrated"
+            },
+            "lanes": {
+              "const": [
+                "Artifact"
+              ]
+            },
+            "blocker": {
+              "const": ""
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "id",
+            "disposition",
+            "lanes",
+            "blocker"
+          ],
+          "properties": {
+            "id": {
+              "const": "setTransformGumballFlag"
+            },
+            "disposition": {
+              "const": "Migrated"
+            },
+            "lanes": {
+              "const": [
+                "WindowConfig"
+              ]
+            },
+            "blocker": {
+              "const": ""
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "id",
+            "disposition",
+            "lanes",
+            "blocker"
+          ],
+          "properties": {
+            "id": {
+              "const": "transformBegin"
+            },
+            "disposition": {
+              "const": "Migrated"
+            },
+            "lanes": {
+              "const": [
+                "HostOnly"
+              ]
+            },
+            "blocker": {
+              "const": ""
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "id",
+            "disposition",
+            "lanes",
+            "blocker"
+          ],
+          "properties": {
+            "id": {
+              "const": "transformEnd"
+            },
+            "disposition": {
+              "const": "Migrated"
+            },
+            "lanes": {
+              "const": [
+                "HostOnly"
               ]
             },
             "blocker": {

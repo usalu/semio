@@ -157,8 +157,7 @@ mod oracles {
     /// error, never a silent no-op.
     fn apply(exchange: &mut Exchange, kind: &str, params: &Json) -> Result<(), String> {
         match kind {
-            "no-mutation" => Ok(()),
-            "set-snapshot" => part21::set_file_schema(exchange, &part21::str_array(params, "fileSchema")),
+            "set-snapshot" => part21::replace_with_snapshot(exchange, params.get("snapshot").ok_or("set-snapshot carries `snapshot`")?),
             "set-view-definition" => part21::set_view_definition(exchange, &part21::str_field(params, "view")?),
             "set-analysis-model" => set_analysis_model(exchange, params),
             "set-load-group" => set_load_group(exchange, params),
@@ -171,6 +170,16 @@ mod oracles {
         let mut exchange = part21::read(input)?;
         apply(&mut exchange, kind, params)?;
         Ok(part21::write(&exchange))
+    }
+
+    /// 🔁️ Decode and re-encode with no mutation: `ruststep`'s parse, the standard's own writer.
+    pub fn round_trip(input: &[u8]) -> Result<Vec<u8>, String> {
+        Ok(part21::write(&part21::read(input)?))
+    }
+
+    /// 📸️ The untouched document as the `set-snapshot` payload that restores it.
+    pub fn snapshot_payload(input: &[u8]) -> Result<Json, String> {
+        Ok(part21::snapshot_payload(&part21::read(input)?))
     }
     //#endregion 🔖️Apply
 
@@ -224,6 +233,18 @@ pub fn oracle_apply_mutation(input: &[u8], spec: &Json) -> Result<Vec<u8>, Strin
     oracles::apply_mutation(input, &kind, spec.get("params").unwrap_or(&empty))
 }
 
+/// 🔁️ Decodes and re-encodes the artifact with no mutation — the identity cycle every law's baseline runs.
+#[cfg(feature = "oracles")]
+pub fn oracle_round_trip(input: &[u8]) -> Result<Vec<u8>, String> {
+    oracles::round_trip(input)
+}
+
+/// 📸️ The untouched artifact as the `set-snapshot` wire payload that restores it — the inverse of `set-snapshot`.
+#[cfg(feature = "oracles")]
+pub fn oracle_snapshot_payload(input: &[u8]) -> Result<Json, String> {
+    oracles::snapshot_payload(input)
+}
+
 /// 👁️ This subset's own semantic projection, read back through the independent `ruststep` parser.
 #[cfg(feature = "oracles")]
 pub fn project_ifc_2x3_sav(bytes: &[u8]) -> Result<Json, String> {
@@ -233,6 +254,16 @@ pub fn project_ifc_2x3_sav(bytes: &[u8]) -> Result<Json, String> {
 /// 🚫️ Without the `oracles` feature the reference implementation is not linked at all.
 #[cfg(not(feature = "oracles"))]
 pub fn oracle_apply_mutation(_input: &[u8], _spec: &Json) -> Result<Vec<u8>, String> {
+    Err("the `oracles` feature is disabled — this host was not built with the registered reference implementations".to_string())
+}
+
+#[cfg(not(feature = "oracles"))]
+pub fn oracle_round_trip(_input: &[u8]) -> Result<Vec<u8>, String> {
+    Err("the `oracles` feature is disabled — this host was not built with the registered reference implementations".to_string())
+}
+
+#[cfg(not(feature = "oracles"))]
+pub fn oracle_snapshot_payload(_input: &[u8]) -> Result<Json, String> {
     Err("the `oracles` feature is disabled — this host was not built with the registered reference implementations".to_string())
 }
 

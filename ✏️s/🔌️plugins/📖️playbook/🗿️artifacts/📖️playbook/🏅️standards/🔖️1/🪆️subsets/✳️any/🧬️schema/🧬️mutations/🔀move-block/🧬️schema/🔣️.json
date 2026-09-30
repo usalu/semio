@@ -5,20 +5,75 @@
   "type": "object",
   "additionalProperties": false,
   "required": [
+    "mutation",
     "blockId",
     "fromStepId",
     "index",
     "toStepId"
   ],
   "properties": {
+    "mutation": {
+      "const": "moveBlock"
+    },
     "blockId": {
-      "type": "string"
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Block",
+          "de": "Block"
+        },
+        "description": {
+          "en": "The block to move.",
+          "de": "Der zu verschiebende Block."
+        },
+        "ref": {
+          "kind": "block",
+          "domain": "blocks",
+          "granularity": "block"
+        }
+      }
     },
     "fromStepId": {
-      "type": "string"
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "From Step",
+          "de": "Von Schritt"
+        },
+        "description": {
+          "en": "The step that holds the block now.",
+          "de": "Der Schritt, der den Block jetzt enthält."
+        },
+        "ref": {
+          "kind": "step",
+          "domain": "blocks",
+          "granularity": "step"
+        }
+      }
     },
     "toStepId": {
-      "type": "string"
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "value",
+        "label": {
+          "en": "To Step",
+          "de": "Nach Schritt"
+        },
+        "description": {
+          "en": "The step that receives the block.",
+          "de": "Der Schritt, der den Block aufnimmt."
+        },
+        "ref": {
+          "kind": "step",
+          "domain": "blocks",
+          "granularity": "step"
+        }
+      }
     },
     "index": {
       "type": "integer",

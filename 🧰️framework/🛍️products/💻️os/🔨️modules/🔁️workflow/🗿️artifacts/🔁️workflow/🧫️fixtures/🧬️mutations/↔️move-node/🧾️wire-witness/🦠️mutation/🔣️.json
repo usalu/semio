@@ -1,0 +1,6 @@
+{
+  "operation": "moveNode",
+  "nodeId": "n1",
+  "x": 5.5,
+  "y": -6.25
+}

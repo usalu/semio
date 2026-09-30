@@ -18,7 +18,7 @@ Feature: Apply every typed STL ascii mutation to a real-world mesh
   each facet's normal rather than deriving it from winding, and it names the solid in its header;
   `set-triangle-normal` and `set-solid-name` change exactly those two fields and nothing else, so
   under the shared `semantic-mesh-v1` profile — which lists `solidName` as writer freedom and
-  reports no normals at all — 2 of the 7 declared kinds moved nothing and their rows measured
+  reports no normals at all — 2 of the 6 declared kinds moved nothing and their rows measured
   nothing. `semantic-stl-ascii-v1` makes both normative, the projection carries them, and every
   `mutate-<kind>` scenario asserts in role that the kind really did move it.
 
@@ -30,10 +30,12 @@ Feature: Apply every typed STL ascii mutation to a real-world mesh
   the grammar it is filed under. The oracle therefore writes the ASCII document itself, from the
   triangle soup `stl_io` parsed, the same precedent the OBJ case follows for a format whose Rust
   reference is a reader; nothing in it touches this repository's `decode_stl_ascii`/
-  `encode_stl_ascii`. `no-mutation` is a real parse and re-emission for the same reason — it used to
-  hand the input bytes straight back. Byte-identical output stays impossible either way: `stl_io`
-  resolves every coordinate through `f32` while the committed fixture carries the `f64` decimals its
-  GLB derivation produced.
+  `encode_stl_ascii`. Byte-identical output stays impossible: `stl_io` resolves every coordinate
+  through `f32` while the committed fixture carries the `f64` decimals its GLB derivation produced.
+
+  Every row's `params` is the leaf wire payload — `set-snapshot` carries the whole `StlSnapshot`
+  (`schema`, `solidName`, `triangles`) — decoded by the subject through `StlMutation`'s own payload
+  constructor and read by the oracle from the same keys.
 
   @id-mutate
   @level-exhaustive
@@ -47,23 +49,12 @@ Feature: Apply every typed STL ascii mutation to a real-world mesh
     Then the oracle and the subject agree on the semantic projection
     Examples:
       | id                    | params |
-      | set-snapshot           | {"triangles": [{"normal": [0.0, 0.0, 1.0], "vertices": [[0.0, 0.0, 0.0], [1.0, 0.0, 0.0], [0.0, 1.0, 0.0]]}]} |
+      | set-snapshot           | {"snapshot": {"schema": "stdio.stl", "solidName": "replacement-triangle", "triangles": [{"normal": [0.0, 0.0, 1.0], "vertices": [[0.0, 0.0, 0.0], [1.0, 0.0, 0.0], [0.0, 1.0, 0.0]]}]}} |
       | set-solid-name         | {"name": "renamed-hexagonal-forest"} |
       | insert-triangle        | {"index": 500, "triangle": {"normal": [0.0, 0.0, 1.0], "vertices": [[100.0, 100.0, 50.0], [101.0, 100.0, 50.0], [100.0, 101.0, 50.0]]}} |
       | remove-triangle        | {"index": 500} |
       | set-triangle-normal    | {"index": 500, "normal": [0.0, 1.0, 0.0]} |
       | set-triangle-vertices  | {"index": 500, "vertices": [[1.0, 1.0, 1.0], [2.0, 1.0, 1.0], [1.0, 2.0, 1.0]]} |
-
-  @id-no-mutation-baseline-mutate
-  @level-exhaustive
-  @mode-differential
-  Scenario: Apply no-mutation to the real mesh
-    Given the real input mesh shared://🏛️hexagonal-cut-concrete-forest-left/🧊️.stl
-    When the no-mutation mutation is applied with its parameters
-      """
-      {"kind": "no-mutation", "params": {}}
-      """
-    Then the oracle and the subject agree on the semantic projection
 
   @id-inverse
   @level-exhaustive
@@ -78,24 +69,12 @@ Feature: Apply every typed STL ascii mutation to a real-world mesh
     Then the oracle and the subject agree on the semantic projection of the original mesh
     Examples:
       | id                    | params |
-      | set-snapshot           | {"triangles": [{"normal": [0.0, 0.0, 1.0], "vertices": [[0.0, 0.0, 0.0], [1.0, 0.0, 0.0], [0.0, 1.0, 0.0]]}]} |
+      | set-snapshot           | {"snapshot": {"schema": "stdio.stl", "solidName": "replacement-triangle", "triangles": [{"normal": [0.0, 0.0, 1.0], "vertices": [[0.0, 0.0, 0.0], [1.0, 0.0, 0.0], [0.0, 1.0, 0.0]]}]}} |
       | set-solid-name         | {"name": "renamed-hexagonal-forest"} |
       | insert-triangle        | {"index": 500, "triangle": {"normal": [0.0, 0.0, 1.0], "vertices": [[100.0, 100.0, 50.0], [101.0, 100.0, 50.0], [100.0, 101.0, 50.0]]}} |
       | remove-triangle        | {"index": 500} |
       | set-triangle-normal    | {"index": 500, "normal": [0.0, 1.0, 0.0]} |
       | set-triangle-vertices  | {"index": 500, "vertices": [[1.0, 1.0, 1.0], [2.0, 1.0, 1.0], [1.0, 2.0, 1.0]]} |
-
-  @id-no-mutation-baseline-inverse
-  @level-exhaustive
-  @mode-differential
-  Scenario: Undoing no-mutation restores the real mesh
-    Given the real input mesh shared://🏛️hexagonal-cut-concrete-forest-left/🧊️.stl
-    When the no-mutation mutation is applied with its parameters
-      """
-      {"kind": "no-mutation", "params": {}}
-      """
-    And the inverse mutation is applied to that result
-    Then the oracle and the subject agree on the semantic projection of the original mesh
 
   @id-identity-round-trip
   @level-long

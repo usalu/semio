@@ -5,15 +5,50 @@
   "type": "object",
   "additionalProperties": false,
   "required": [
+    "mutation",
     "id",
     "newShape"
   ],
   "properties": {
+    "mutation": {
+      "const": "changeShotShape"
+    },
     "id": {
-      "type": "string"
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Shot",
+          "de": "Aufnahme"
+        },
+        "description": {
+          "en": "The shot this mutation addresses.",
+          "de": "Die Aufnahme, die diese Mutation adressiert."
+        },
+        "ref": {
+          "kind": "shot"
+        },
+        "group": "target",
+        "order": 10
+      }
     },
     "newShape": {
-      "type": "string"
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "text",
+        "role": "value",
+        "label": {
+          "en": "Shape",
+          "de": "Form"
+        },
+        "description": {
+          "en": "Frame shape, e.g. rectangle or ellipse.",
+          "de": "Bildform, z. B. rectangle (Rechteck) oder ellipse (Ellipse)."
+        },
+        "group": "output",
+        "order": 20
+      }
     }
   }
 }

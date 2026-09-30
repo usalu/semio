@@ -5,10 +5,14 @@
   "type": "object",
   "additionalProperties": false,
   "required": [
+    "mutation",
     "entity",
     "key"
   ],
   "properties": {
+    "mutation": {
+      "const": "removeDataProperty"
+    },
     "entity": {
       "oneOf": [
         {

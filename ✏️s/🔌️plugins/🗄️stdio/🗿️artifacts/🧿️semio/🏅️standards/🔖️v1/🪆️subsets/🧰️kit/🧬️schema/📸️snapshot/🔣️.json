@@ -9,24 +9,48 @@
     "types": {
       "type": "array",
       "items": { "$ref": "#/$defs/SemioKitType" },
-      "x-semio-state": "artifact"
+      "x-semio-state": "artifact",
+      "x-semio-ui": {
+        "label": {
+          "en": "Types",
+          "de": "Typen"
+        }
+      }
     },
     "designs": {
       "type": "array",
       "items": { "$ref": "#/$defs/SemioKitDesign" },
-      "x-semio-state": "artifact"
+      "x-semio-state": "artifact",
+      "x-semio-ui": {
+        "label": {
+          "en": "Designs",
+          "de": "Entwürfe"
+        }
+      }
     },
     "objects": {
       "type": "array",
       "items": { "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/semio/v1/base/child.json#/$defs/object" },
       "x-semio-state": "artifact",
-      "x-semio-child": "s.stdio.semio"
+      "x-semio-child": "s.stdio.semio",
+      "x-semio-ui": {
+        "label": {
+          "en": "Objects",
+          "de": "Objekte"
+        }
+      }
     },
     "models": {
       "type": "array",
       "items": { "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/semio/v1/base/child.json#/$defs/model" },
       "x-semio-state": "artifact",
-      "x-semio-child": "s.stdio.semio"
+      "x-semio-child": "s.stdio.semio",
+      "x-semio-ui": {
+        "label": {
+          "en": "Models",
+          "de": "Modelle"
+        }
+      }
     },
     "properties": {
       "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/semio/v1/base/child.json#/$defs/value",
@@ -35,9 +59,15 @@
     },
     "representations": {
       "type": "array",
-      "items": { "$ref": "https://json.schemas.assets.semio-tech.com/os/store/link.json" },
+      "items": { "$ref": "https://json.schemas.assets.semio-tech.com/os/store/link/schema.json" },
       "x-semio-state": "artifact",
-      "x-semio-link": "representation"
+      "x-semio-link": "representation",
+      "x-semio-ui": {
+        "label": {
+          "en": "Representations",
+          "de": "Darstellungen"
+        }
+      }
     }
   },
   "$defs": {
@@ -48,7 +78,16 @@
       "properties": {
         "id": { "type": "string" },
         "name": { "type": "string" },
-        "category": { "type": "string" }
+        "category": {
+          "type": "string",
+          "x-semio-ui": {
+            "widget": "text",
+            "label": {
+              "en": "Category",
+              "de": "Kategorie"
+            }
+          }
+        }
       }
     },
     "SemioKitPiece": {
@@ -57,7 +96,20 @@
       "required": ["id", "typeId", "transform"],
       "properties": {
         "id": { "type": "string" },
-        "typeId": { "type": "string" },
+        "typeId": {
+          "type": "string",
+          "x-semio-ui": {
+            "widget": "reference",
+            "role": "target",
+            "label": {
+              "en": "Type",
+              "de": "Typ"
+            },
+            "ref": {
+              "kind": "type"
+            }
+          }
+        },
         "transform": { "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/semio/v1/base/geometry.json" }
       }
     },
@@ -67,10 +119,54 @@
       "required": ["id", "connectingPieceId", "connectingPort", "connectedPieceId", "connectedPort"],
       "properties": {
         "id": { "type": "string" },
-        "connectingPieceId": { "type": "string" },
-        "connectingPort": { "type": "string" },
-        "connectedPieceId": { "type": "string" },
-        "connectedPort": { "type": "string" }
+        "connectingPieceId": {
+          "type": "string",
+          "x-semio-ui": {
+            "widget": "reference",
+            "role": "target",
+            "label": {
+              "en": "Connecting piece",
+              "de": "Verbindendes Teil"
+            },
+            "ref": {
+              "kind": "piece"
+            }
+          }
+        },
+        "connectingPort": {
+          "type": "string",
+          "x-semio-ui": {
+            "widget": "text",
+            "label": {
+              "en": "Connecting port",
+              "de": "Verbindender Port"
+            }
+          }
+        },
+        "connectedPieceId": {
+          "type": "string",
+          "x-semio-ui": {
+            "widget": "reference",
+            "role": "target",
+            "label": {
+              "en": "Connected piece",
+              "de": "Verbundenes Teil"
+            },
+            "ref": {
+              "kind": "piece"
+            }
+          }
+        },
+        "connectedPort": {
+          "type": "string",
+          "x-semio-ui": {
+            "widget": "text",
+            "label": {
+              "en": "Connected port",
+              "de": "Verbundener Port"
+            }
+          }
+        }
       }
     },
     "SemioKitDesign": {
@@ -80,8 +176,26 @@
       "properties": {
         "id": { "type": "string" },
         "name": { "type": "string" },
-        "pieces": { "type": "array", "items": { "$ref": "#/$defs/SemioKitPiece" } },
-        "connections": { "type": "array", "items": { "$ref": "#/$defs/SemioKitConnection" } }
+        "pieces": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/SemioKitPiece" },
+          "x-semio-ui": {
+            "label": {
+              "en": "Pieces",
+              "de": "Teile"
+            }
+          }
+        },
+        "connections": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/SemioKitConnection" },
+          "x-semio-ui": {
+            "label": {
+              "en": "Connections",
+              "de": "Verbindungen"
+            }
+          }
+        }
       }
     }
   }

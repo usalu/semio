@@ -5,7 +5,7 @@
   "exchangeProcess": null,
   "geometry": {
     "objects": {},
-    "primitive_registry": [
+    "primitiveRegistry": [
       {
         "id": "box",
         "parameters": [

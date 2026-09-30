@@ -1,0 +1,7 @@
+{
+  "ChangeScriptLimits": {
+    "newMaxSteps": 20000,
+    "newMaxRecursion": 128,
+    "newTimeoutMs": 250
+  }
+}

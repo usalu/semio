@@ -11,6 +11,23 @@
           "type": "array",
           "items": {
             "type": "string"
+          },
+          "x-semio-ui": {
+            "widget": "reference",
+            "role": "target",
+            "label": {
+              "en": "Selected shots",
+              "de": "Ausgewählte Aufnahmen"
+            },
+            "description": {
+              "en": "Shots selected in the gallery.",
+              "de": "In der Galerie ausgewählte Aufnahmen."
+            },
+            "ref": {
+              "kind": "shot"
+            },
+            "group": "selection",
+            "order": 10
           }
         },
         "camera": {
@@ -22,7 +39,22 @@
                 "type": "number"
               },
               "minItems": 3,
-              "maxItems": 3
+              "maxItems": 3,
+              "x-semio-ui": {
+                "widget": "vector",
+                "role": "value",
+                "label": {
+                  "en": "Position",
+                  "de": "Position"
+                },
+                "description": {
+                  "en": "Where the camera stands.",
+                  "de": "Standpunkt der Kamera."
+                },
+                "step": 0.1,
+                "group": "camera",
+                "order": 10
+              }
             },
             "target": {
               "type": "array",
@@ -30,13 +62,73 @@
                 "type": "number"
               },
               "minItems": 3,
-              "maxItems": 3
+              "maxItems": 3,
+              "x-semio-ui": {
+                "widget": "vector",
+                "role": "value",
+                "label": {
+                  "en": "Look at",
+                  "de": "Blickziel"
+                },
+                "description": {
+                  "en": "The point the camera looks at.",
+                  "de": "Der Punkt, auf den die Kamera blickt."
+                },
+                "step": 0.1,
+                "group": "camera",
+                "order": 20
+              }
             },
             "zoom": {
-              "type": "number"
+              "type": "number",
+              "x-semio-ui": {
+                "widget": "slider",
+                "role": "value",
+                "label": {
+                  "en": "Zoom",
+                  "de": "Zoom"
+                },
+                "step": 0.01,
+                "precision": 2,
+                "softMin": 0.1,
+                "softMax": 10,
+                "scale": "log",
+                "snaps": [
+                  0.5,
+                  1,
+                  2
+                ],
+                "group": "camera",
+                "order": 30
+              }
             },
             "fov": {
-              "type": "number"
+              "type": "number",
+              "x-semio-ui": {
+                "widget": "slider",
+                "role": "value",
+                "label": {
+                  "en": "Field of view",
+                  "de": "Sichtfeld"
+                },
+                "description": {
+                  "en": "Vertical opening angle of a perspective camera.",
+                  "de": "Vertikaler Öffnungswinkel einer perspektivischen Kamera."
+                },
+                "unit": "deg",
+                "step": 1,
+                "precision": 1,
+                "softMin": 10,
+                "softMax": 120,
+                "snaps": [
+                  30,
+                  45,
+                  60,
+                  90
+                ],
+                "group": "camera",
+                "order": 40
+              }
             },
             "up": {
               "anyOf": [
@@ -51,13 +143,42 @@
                 {
                   "type": "null"
                 }
-              ]
+              ],
+              "x-semio-ui": {
+                "widget": "vector",
+                "role": "value",
+                "label": {
+                  "en": "Up",
+                  "de": "Oben"
+                },
+                "description": {
+                  "en": "Up direction of the camera image.",
+                  "de": "Aufwärtsrichtung des Kamerabilds."
+                },
+                "step": 0.1,
+                "group": "camera",
+                "order": 50
+              }
             },
             "projection": {
               "type": [
                 "string",
                 "null"
-              ]
+              ],
+              "x-semio-ui": {
+                "widget": "text",
+                "role": "value",
+                "label": {
+                  "en": "Projection",
+                  "de": "Projektion"
+                },
+                "description": {
+                  "en": "perspective or orthographic.",
+                  "de": "perspective (perspektivisch) oder orthographic (orthografisch)."
+                },
+                "group": "camera",
+                "order": 60
+              }
             }
           },
           "required": [
@@ -66,14 +187,36 @@
             "zoom",
             "fov"
           ],
-          "additionalProperties": false
+          "additionalProperties": false,
+          "x-semio-ui": {
+            "role": "value",
+            "label": {
+              "en": "Viewport camera",
+              "de": "Ansichtskamera"
+            },
+            "group": "camera",
+            "order": 20
+          }
         }
       },
       "required": [
         "selectedShotIds",
         "camera"
       ],
-      "additionalProperties": false
+      "additionalProperties": false,
+      "x-semio-ui": {
+        "role": "value",
+        "label": {
+          "en": "Presence",
+          "de": "Präsenz"
+        },
+        "description": {
+          "en": "What this participant selects and sees.",
+          "de": "Was diese Person auswählt und sieht."
+        },
+        "group": "record",
+        "order": 10
+      }
     }
   },
   "required": [

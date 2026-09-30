@@ -400,7 +400,7 @@ async fn bundle_contributes_draw_for_flow_and_procedural3d_play() {
         .contributes_topic(flow_topic.topic, flow_topic.payload)
         .contributes_topic(procedural3d_topic.topic, procedural3d_topic.payload)
         .handler("evaluate", |req| Ok(flow_extension_sdk::evaluate_invoke_json(&neural_engine::ColdOwner::new(module_registry()), req).unwrap()));
-    install_extension_bundle(bundle).await;
+    assert!(install_extension_bundle(&mut Some(bundle)).await.unwrap());
     let installed = extension_manifest().await;
     assert_eq!(installed.topic_contributions.len(), 2);
     assert_eq!(installed.topic_contributions[0].topic, "flow.extension");
@@ -408,4 +408,5 @@ async fn bundle_contributes_draw_for_flow_and_procedural3d_play() {
     let _ = extension_manifest().await;
     extension_activate().await.expect("activate");
     let _ = extension_invoke;
+    semio_framework_plugin::plugin_runtime::extension_dispose_cold().unwrap();
 }

@@ -5,6 +5,11 @@
   },
   "useDaemonProcess": true,
   "defaultBase": "⛳wip",
+  "targetDefaults": {
+    "canonical-architecture": {
+      "cache": false
+    }
+  },
   "namedInputs": {
     "default": ["{projectRoot}/**/*", "sharedGlobals"],
     "sharedGlobals": [

@@ -5,15 +5,16 @@
   "type": "object",
   "additionalProperties": false,
   "required": [
+    "mutation",
     "block"
   ],
   "properties": {
-    "block": {
-      "$ref": "#/$defs/CadBlock"
-    },
     "mutation": {
       "const": "addBlock",
       "description": "Aggregate discriminator spliced in by SemioCadMutation; absent when the payload stands alone."
+    },
+    "block": {
+      "$ref": "#/$defs/CadBlock"
     }
   },
   "$defs": {

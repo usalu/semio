@@ -13,378 +13,10 @@
       ],
       "properties": {
         "mutation": {
-          "const": "createAccessor"
+          "const": "setSnapshot"
         },
         "payload": {
-          "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/gltf/2.0/any/mutation/create-accessor/schema.json"
-        }
-      }
-    },
-    {
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "mutation",
-        "payload"
-      ],
-      "properties": {
-        "mutation": {
-          "const": "deleteAccessor"
-        },
-        "payload": {
-          "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/gltf/2.0/any/mutation/delete-accessor/schema.json"
-        }
-      }
-    },
-    {
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "mutation",
-        "payload"
-      ],
-      "properties": {
-        "mutation": {
-          "const": "moveAccessor"
-        },
-        "payload": {
-          "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/gltf/2.0/any/mutation/move-accessor/schema.json"
-        }
-      }
-    },
-    {
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "mutation",
-        "payload"
-      ],
-      "properties": {
-        "mutation": {
-          "const": "reorderAccessors"
-        },
-        "payload": {
-          "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/gltf/2.0/any/mutation/reorder-accessors/schema.json"
-        }
-      }
-    },
-    {
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "mutation",
-        "payload"
-      ],
-      "properties": {
-        "mutation": {
-          "const": "createAnimation"
-        },
-        "payload": {
-          "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/gltf/2.0/any/mutation/create-animation/schema.json"
-        }
-      }
-    },
-    {
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "mutation",
-        "payload"
-      ],
-      "properties": {
-        "mutation": {
-          "const": "deleteAnimation"
-        },
-        "payload": {
-          "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/gltf/2.0/any/mutation/delete-animation/schema.json"
-        }
-      }
-    },
-    {
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "mutation",
-        "payload"
-      ],
-      "properties": {
-        "mutation": {
-          "const": "moveAnimation"
-        },
-        "payload": {
-          "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/gltf/2.0/any/mutation/move-animation/schema.json"
-        }
-      }
-    },
-    {
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "mutation",
-        "payload"
-      ],
-      "properties": {
-        "mutation": {
-          "const": "reorderAnimations"
-        },
-        "payload": {
-          "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/gltf/2.0/any/mutation/reorder-animations/schema.json"
-        }
-      }
-    },
-    {
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "mutation",
-        "payload"
-      ],
-      "properties": {
-        "mutation": {
-          "const": "changeAssetDescriptiveMetadata"
-        },
-        "payload": {
-          "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/gltf/2.0/any/mutation/change-asset-descriptive-metadata/schema.json"
-        }
-      }
-    },
-    {
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "mutation",
-        "payload"
-      ],
-      "properties": {
-        "mutation": {
-          "const": "changeAssetExtensionData"
-        },
-        "payload": {
-          "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/gltf/2.0/any/mutation/change-asset-extension-data/schema.json"
-        }
-      }
-    },
-    {
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "mutation",
-        "payload"
-      ],
-      "properties": {
-        "mutation": {
-          "const": "changeAssetExtraData"
-        },
-        "payload": {
-          "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/gltf/2.0/any/mutation/change-asset-extra-data/schema.json"
-        }
-      }
-    },
-    {
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "mutation",
-        "payload"
-      ],
-      "properties": {
-        "mutation": {
-          "const": "changeAssetVersion"
-        },
-        "payload": {
-          "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/gltf/2.0/any/mutation/change-asset-version/schema.json"
-        }
-      }
-    },
-    {
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "mutation",
-        "payload"
-      ],
-      "properties": {
-        "mutation": {
-          "const": "createBufferView"
-        },
-        "payload": {
-          "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/gltf/2.0/any/mutation/create-buffer-view/schema.json"
-        }
-      }
-    },
-    {
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "mutation",
-        "payload"
-      ],
-      "properties": {
-        "mutation": {
-          "const": "deleteBufferView"
-        },
-        "payload": {
-          "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/gltf/2.0/any/mutation/delete-buffer-view/schema.json"
-        }
-      }
-    },
-    {
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "mutation",
-        "payload"
-      ],
-      "properties": {
-        "mutation": {
-          "const": "moveBufferView"
-        },
-        "payload": {
-          "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/gltf/2.0/any/mutation/move-buffer-view/schema.json"
-        }
-      }
-    },
-    {
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "mutation",
-        "payload"
-      ],
-      "properties": {
-        "mutation": {
-          "const": "reorderBufferViews"
-        },
-        "payload": {
-          "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/gltf/2.0/any/mutation/reorder-buffer-views/schema.json"
-        }
-      }
-    },
-    {
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "mutation",
-        "payload"
-      ],
-      "properties": {
-        "mutation": {
-          "const": "createBuffer"
-        },
-        "payload": {
-          "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/gltf/2.0/any/mutation/create-buffer/schema.json"
-        }
-      }
-    },
-    {
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "mutation",
-        "payload"
-      ],
-      "properties": {
-        "mutation": {
-          "const": "deleteBuffer"
-        },
-        "payload": {
-          "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/gltf/2.0/any/mutation/delete-buffer/schema.json"
-        }
-      }
-    },
-    {
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "mutation",
-        "payload"
-      ],
-      "properties": {
-        "mutation": {
-          "const": "moveBuffer"
-        },
-        "payload": {
-          "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/gltf/2.0/any/mutation/move-buffer/schema.json"
-        }
-      }
-    },
-    {
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "mutation",
-        "payload"
-      ],
-      "properties": {
-        "mutation": {
-          "const": "reorderBuffers"
-        },
-        "payload": {
-          "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/gltf/2.0/any/mutation/reorder-buffers/schema.json"
-        }
-      }
-    },
-    {
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "mutation",
-        "payload"
-      ],
-      "properties": {
-        "mutation": {
-          "const": "createCamera"
-        },
-        "payload": {
-          "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/gltf/2.0/any/mutation/create-camera/schema.json"
-        }
-      }
-    },
-    {
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "mutation",
-        "payload"
-      ],
-      "properties": {
-        "mutation": {
-          "const": "deleteCamera"
-        },
-        "payload": {
-          "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/gltf/2.0/any/mutation/delete-camera/schema.json"
-        }
-      }
-    },
-    {
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "mutation",
-        "payload"
-      ],
-      "properties": {
-        "mutation": {
-          "const": "moveCamera"
-        },
-        "payload": {
-          "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/gltf/2.0/any/mutation/move-camera/schema.json"
-        }
-      }
-    },
-    {
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "mutation",
-        "payload"
-      ],
-      "properties": {
-        "mutation": {
-          "const": "reorderCameras"
-        },
-        "payload": {
-          "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/gltf/2.0/any/mutation/reorder-cameras/schema.json"
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/gltf/2.0/any/mutation/set-snapshot/schema.json"
         }
       }
     },
@@ -400,343 +32,7 @@
           "const": "bindDefaultScene"
         },
         "payload": {
-          "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/gltf/2.0/any/mutation/bind-default-scene/schema.json"
-        }
-      }
-    },
-    {
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "mutation",
-        "payload"
-      ],
-      "properties": {
-        "mutation": {
-          "const": "unbindDefaultScene"
-        },
-        "payload": {
-          "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/gltf/2.0/any/mutation/unbind-default-scene/schema.json"
-        }
-      }
-    },
-    {
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "mutation",
-        "payload"
-      ],
-      "properties": {
-        "mutation": {
-          "const": "changeDocumentExtensionData"
-        },
-        "payload": {
-          "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/gltf/2.0/any/mutation/change-document-extension-data/schema.json"
-        }
-      }
-    },
-    {
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "mutation",
-        "payload"
-      ],
-      "properties": {
-        "mutation": {
-          "const": "changeDocumentExtraData"
-        },
-        "payload": {
-          "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/gltf/2.0/any/mutation/change-document-extra-data/schema.json"
-        }
-      }
-    },
-    {
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "mutation",
-        "payload"
-      ],
-      "properties": {
-        "mutation": {
-          "const": "createImage"
-        },
-        "payload": {
-          "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/gltf/2.0/any/mutation/create-image/schema.json"
-        }
-      }
-    },
-    {
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "mutation",
-        "payload"
-      ],
-      "properties": {
-        "mutation": {
-          "const": "deleteImage"
-        },
-        "payload": {
-          "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/gltf/2.0/any/mutation/delete-image/schema.json"
-        }
-      }
-    },
-    {
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "mutation",
-        "payload"
-      ],
-      "properties": {
-        "mutation": {
-          "const": "moveImage"
-        },
-        "payload": {
-          "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/gltf/2.0/any/mutation/move-image/schema.json"
-        }
-      }
-    },
-    {
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "mutation",
-        "payload"
-      ],
-      "properties": {
-        "mutation": {
-          "const": "reorderImages"
-        },
-        "payload": {
-          "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/gltf/2.0/any/mutation/reorder-images/schema.json"
-        }
-      }
-    },
-    {
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "mutation",
-        "payload"
-      ],
-      "properties": {
-        "mutation": {
-          "const": "changeMaterialAlphaMode"
-        },
-        "payload": {
-          "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/gltf/2.0/any/mutation/change-material-alpha-mode/schema.json"
-        }
-      }
-    },
-    {
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "mutation",
-        "payload"
-      ],
-      "properties": {
-        "mutation": {
-          "const": "changeMaterialDoubleSided"
-        },
-        "payload": {
-          "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/gltf/2.0/any/mutation/change-material-double-sided/schema.json"
-        }
-      }
-    },
-    {
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "mutation",
-        "payload"
-      ],
-      "properties": {
-        "mutation": {
-          "const": "createMaterial"
-        },
-        "payload": {
-          "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/gltf/2.0/any/mutation/create-material/schema.json"
-        }
-      }
-    },
-    {
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "mutation",
-        "payload"
-      ],
-      "properties": {
-        "mutation": {
-          "const": "deleteMaterial"
-        },
-        "payload": {
-          "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/gltf/2.0/any/mutation/delete-material/schema.json"
-        }
-      }
-    },
-    {
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "mutation",
-        "payload"
-      ],
-      "properties": {
-        "mutation": {
-          "const": "moveMaterial"
-        },
-        "payload": {
-          "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/gltf/2.0/any/mutation/move-material/schema.json"
-        }
-      }
-    },
-    {
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "mutation",
-        "payload"
-      ],
-      "properties": {
-        "mutation": {
-          "const": "reorderMaterials"
-        },
-        "payload": {
-          "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/gltf/2.0/any/mutation/reorder-materials/schema.json"
-        }
-      }
-    },
-    {
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "mutation",
-        "payload"
-      ],
-      "properties": {
-        "mutation": {
-          "const": "changeMeshExtensionData"
-        },
-        "payload": {
-          "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/gltf/2.0/any/mutation/change-mesh-extension-data/schema.json"
-        }
-      }
-    },
-    {
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "mutation",
-        "payload"
-      ],
-      "properties": {
-        "mutation": {
-          "const": "changeMeshExtraData"
-        },
-        "payload": {
-          "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/gltf/2.0/any/mutation/change-mesh-extra-data/schema.json"
-        }
-      }
-    },
-    {
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "mutation",
-        "payload"
-      ],
-      "properties": {
-        "mutation": {
-          "const": "changeMeshMorphWeights"
-        },
-        "payload": {
-          "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/gltf/2.0/any/mutation/change-mesh-morph-weights/schema.json"
-        }
-      }
-    },
-    {
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "mutation",
-        "payload"
-      ],
-      "properties": {
-        "mutation": {
-          "const": "createMesh"
-        },
-        "payload": {
-          "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/gltf/2.0/any/mutation/create-mesh/schema.json"
-        }
-      }
-    },
-    {
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "mutation",
-        "payload"
-      ],
-      "properties": {
-        "mutation": {
-          "const": "deleteMesh"
-        },
-        "payload": {
-          "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/gltf/2.0/any/mutation/delete-mesh/schema.json"
-        }
-      }
-    },
-    {
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "mutation",
-        "payload"
-      ],
-      "properties": {
-        "mutation": {
-          "const": "moveMesh"
-        },
-        "payload": {
-          "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/gltf/2.0/any/mutation/move-mesh/schema.json"
-        }
-      }
-    },
-    {
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "mutation",
-        "payload"
-      ],
-      "properties": {
-        "mutation": {
-          "const": "changeMeshName"
-        },
-        "payload": {
-          "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/gltf/2.0/any/mutation/change-mesh-name/schema.json"
-        }
-      }
-    },
-    {
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "mutation",
-        "payload"
-      ],
-      "properties": {
-        "mutation": {
-          "const": "reorderMeshs"
-        },
-        "payload": {
-          "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/gltf/2.0/any/mutation/reorder-meshs/schema.json"
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/gltf/2.0/any/mutation/bind-default-scene/schema.json#/$defs/BindDefaultSceneMutation"
         }
       }
     },
@@ -752,119 +48,7 @@
           "const": "bindMorphTargetAttribute"
         },
         "payload": {
-          "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/gltf/2.0/any/mutation/bind-morph-target-attribute/schema.json"
-        }
-      }
-    },
-    {
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "mutation",
-        "payload"
-      ],
-      "properties": {
-        "mutation": {
-          "const": "moveMorphTargetAttribute"
-        },
-        "payload": {
-          "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/gltf/2.0/any/mutation/move-morph-target-attribute/schema.json"
-        }
-      }
-    },
-    {
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "mutation",
-        "payload"
-      ],
-      "properties": {
-        "mutation": {
-          "const": "reorderMorphTargetAttributes"
-        },
-        "payload": {
-          "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/gltf/2.0/any/mutation/reorder-morph-target-attributes/schema.json"
-        }
-      }
-    },
-    {
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "mutation",
-        "payload"
-      ],
-      "properties": {
-        "mutation": {
-          "const": "unbindMorphTargetAttribute"
-        },
-        "payload": {
-          "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/gltf/2.0/any/mutation/unbind-morph-target-attribute/schema.json"
-        }
-      }
-    },
-    {
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "mutation",
-        "payload"
-      ],
-      "properties": {
-        "mutation": {
-          "const": "createMorphTarget"
-        },
-        "payload": {
-          "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/gltf/2.0/any/mutation/create-morph-target/schema.json"
-        }
-      }
-    },
-    {
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "mutation",
-        "payload"
-      ],
-      "properties": {
-        "mutation": {
-          "const": "deleteMorphTarget"
-        },
-        "payload": {
-          "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/gltf/2.0/any/mutation/delete-morph-target/schema.json"
-        }
-      }
-    },
-    {
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "mutation",
-        "payload"
-      ],
-      "properties": {
-        "mutation": {
-          "const": "moveMorphTarget"
-        },
-        "payload": {
-          "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/gltf/2.0/any/mutation/move-morph-target/schema.json"
-        }
-      }
-    },
-    {
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "mutation",
-        "payload"
-      ],
-      "properties": {
-        "mutation": {
-          "const": "reorderMorphTargets"
-        },
-        "payload": {
-          "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/gltf/2.0/any/mutation/reorder-morph-targets/schema.json"
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/gltf/2.0/any/mutation/bind-morph-target-attribute/schema.json#/$defs/BindMorphTargetAttributeMutation"
         }
       }
     },
@@ -880,23 +64,7 @@
           "const": "bindNodeCamera"
         },
         "payload": {
-          "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/gltf/2.0/any/mutation/bind-node-camera/schema.json"
-        }
-      }
-    },
-    {
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "mutation",
-        "payload"
-      ],
-      "properties": {
-        "mutation": {
-          "const": "unbindNodeCamera"
-        },
-        "payload": {
-          "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/gltf/2.0/any/mutation/unbind-node-camera/schema.json"
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/gltf/2.0/any/mutation/bind-node-camera/schema.json#/$defs/BindNodeCameraMutation"
         }
       }
     },
@@ -912,55 +80,7 @@
           "const": "bindNodeChild"
         },
         "payload": {
-          "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/gltf/2.0/any/mutation/bind-node-child/schema.json"
-        }
-      }
-    },
-    {
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "mutation",
-        "payload"
-      ],
-      "properties": {
-        "mutation": {
-          "const": "moveNodeChild"
-        },
-        "payload": {
-          "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/gltf/2.0/any/mutation/move-node-child/schema.json"
-        }
-      }
-    },
-    {
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "mutation",
-        "payload"
-      ],
-      "properties": {
-        "mutation": {
-          "const": "reorderNodeChildren"
-        },
-        "payload": {
-          "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/gltf/2.0/any/mutation/reorder-node-children/schema.json"
-        }
-      }
-    },
-    {
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "mutation",
-        "payload"
-      ],
-      "properties": {
-        "mutation": {
-          "const": "unbindNodeChild"
-        },
-        "payload": {
-          "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/gltf/2.0/any/mutation/unbind-node-child/schema.json"
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/gltf/2.0/any/mutation/bind-node-child/schema.json#/$defs/BindNodeChildMutation"
         }
       }
     },
@@ -976,23 +96,7 @@
           "const": "bindNodeMesh"
         },
         "payload": {
-          "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/gltf/2.0/any/mutation/bind-node-mesh/schema.json"
-        }
-      }
-    },
-    {
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "mutation",
-        "payload"
-      ],
-      "properties": {
-        "mutation": {
-          "const": "unbindNodeMesh"
-        },
-        "payload": {
-          "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/gltf/2.0/any/mutation/unbind-node-mesh/schema.json"
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/gltf/2.0/any/mutation/bind-node-mesh/schema.json#/$defs/BindNodeMeshMutation"
         }
       }
     },
@@ -1008,183 +112,7 @@
           "const": "bindNodeSkin"
         },
         "payload": {
-          "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/gltf/2.0/any/mutation/bind-node-skin/schema.json"
-        }
-      }
-    },
-    {
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "mutation",
-        "payload"
-      ],
-      "properties": {
-        "mutation": {
-          "const": "unbindNodeSkin"
-        },
-        "payload": {
-          "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/gltf/2.0/any/mutation/unbind-node-skin/schema.json"
-        }
-      }
-    },
-    {
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "mutation",
-        "payload"
-      ],
-      "properties": {
-        "mutation": {
-          "const": "changeNodeExtensionData"
-        },
-        "payload": {
-          "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/gltf/2.0/any/mutation/change-node-extension-data/schema.json"
-        }
-      }
-    },
-    {
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "mutation",
-        "payload"
-      ],
-      "properties": {
-        "mutation": {
-          "const": "changeNodeExtraData"
-        },
-        "payload": {
-          "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/gltf/2.0/any/mutation/change-node-extra-data/schema.json"
-        }
-      }
-    },
-    {
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "mutation",
-        "payload"
-      ],
-      "properties": {
-        "mutation": {
-          "const": "changeNodeMorphWeights"
-        },
-        "payload": {
-          "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/gltf/2.0/any/mutation/change-node-morph-weights/schema.json"
-        }
-      }
-    },
-    {
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "mutation",
-        "payload"
-      ],
-      "properties": {
-        "mutation": {
-          "const": "createNode"
-        },
-        "payload": {
-          "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/gltf/2.0/any/mutation/create-node/schema.json"
-        }
-      }
-    },
-    {
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "mutation",
-        "payload"
-      ],
-      "properties": {
-        "mutation": {
-          "const": "deleteNode"
-        },
-        "payload": {
-          "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/gltf/2.0/any/mutation/delete-node/schema.json"
-        }
-      }
-    },
-    {
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "mutation",
-        "payload"
-      ],
-      "properties": {
-        "mutation": {
-          "const": "moveNode"
-        },
-        "payload": {
-          "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/gltf/2.0/any/mutation/move-node/schema.json"
-        }
-      }
-    },
-    {
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "mutation",
-        "payload"
-      ],
-      "properties": {
-        "mutation": {
-          "const": "changeNodeName"
-        },
-        "payload": {
-          "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/gltf/2.0/any/mutation/change-node-name/schema.json"
-        }
-      }
-    },
-    {
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "mutation",
-        "payload"
-      ],
-      "properties": {
-        "mutation": {
-          "const": "reorderNodes"
-        },
-        "payload": {
-          "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/gltf/2.0/any/mutation/reorder-nodes/schema.json"
-        }
-      }
-    },
-    {
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "mutation",
-        "payload"
-      ],
-      "properties": {
-        "mutation": {
-          "const": "moveNodeParent"
-        },
-        "payload": {
-          "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/gltf/2.0/any/mutation/move-node-parent/schema.json"
-        }
-      }
-    },
-    {
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "mutation",
-        "payload"
-      ],
-      "properties": {
-        "mutation": {
-          "const": "changeNodeTransform"
-        },
-        "payload": {
-          "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/gltf/2.0/any/mutation/change-node-transform/schema.json"
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/gltf/2.0/any/mutation/bind-node-skin/schema.json#/$defs/BindNodeSkinMutation"
         }
       }
     },
@@ -1200,55 +128,7 @@
           "const": "bindPrimitiveAttribute"
         },
         "payload": {
-          "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/gltf/2.0/any/mutation/bind-primitive-attribute/schema.json"
-        }
-      }
-    },
-    {
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "mutation",
-        "payload"
-      ],
-      "properties": {
-        "mutation": {
-          "const": "movePrimitiveAttribute"
-        },
-        "payload": {
-          "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/gltf/2.0/any/mutation/move-primitive-attribute/schema.json"
-        }
-      }
-    },
-    {
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "mutation",
-        "payload"
-      ],
-      "properties": {
-        "mutation": {
-          "const": "reorderPrimitiveAttributes"
-        },
-        "payload": {
-          "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/gltf/2.0/any/mutation/reorder-primitive-attributes/schema.json"
-        }
-      }
-    },
-    {
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "mutation",
-        "payload"
-      ],
-      "properties": {
-        "mutation": {
-          "const": "unbindPrimitiveAttribute"
-        },
-        "payload": {
-          "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/gltf/2.0/any/mutation/unbind-primitive-attribute/schema.json"
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/gltf/2.0/any/mutation/bind-primitive-attribute/schema.json#/$defs/BindPrimitiveAttributeMutation"
         }
       }
     },
@@ -1264,23 +144,7 @@
           "const": "bindPrimitiveIndices"
         },
         "payload": {
-          "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/gltf/2.0/any/mutation/bind-primitive-indices/schema.json"
-        }
-      }
-    },
-    {
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "mutation",
-        "payload"
-      ],
-      "properties": {
-        "mutation": {
-          "const": "unbindPrimitiveIndices"
-        },
-        "payload": {
-          "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/gltf/2.0/any/mutation/unbind-primitive-indices/schema.json"
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/gltf/2.0/any/mutation/bind-primitive-indices/schema.json#/$defs/BindPrimitiveIndicesMutation"
         }
       }
     },
@@ -1296,263 +160,7 @@
           "const": "bindPrimitiveMaterial"
         },
         "payload": {
-          "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/gltf/2.0/any/mutation/bind-primitive-material/schema.json"
-        }
-      }
-    },
-    {
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "mutation",
-        "payload"
-      ],
-      "properties": {
-        "mutation": {
-          "const": "unbindPrimitiveMaterial"
-        },
-        "payload": {
-          "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/gltf/2.0/any/mutation/unbind-primitive-material/schema.json"
-        }
-      }
-    },
-    {
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "mutation",
-        "payload"
-      ],
-      "properties": {
-        "mutation": {
-          "const": "changePrimitiveExtensionData"
-        },
-        "payload": {
-          "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/gltf/2.0/any/mutation/change-primitive-extension-data/schema.json"
-        }
-      }
-    },
-    {
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "mutation",
-        "payload"
-      ],
-      "properties": {
-        "mutation": {
-          "const": "changePrimitiveExtraData"
-        },
-        "payload": {
-          "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/gltf/2.0/any/mutation/change-primitive-extra-data/schema.json"
-        }
-      }
-    },
-    {
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "mutation",
-        "payload"
-      ],
-      "properties": {
-        "mutation": {
-          "const": "changePrimitiveTopologyMode"
-        },
-        "payload": {
-          "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/gltf/2.0/any/mutation/change-primitive-topology-mode/schema.json"
-        }
-      }
-    },
-    {
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "mutation",
-        "payload"
-      ],
-      "properties": {
-        "mutation": {
-          "const": "createPrimitive"
-        },
-        "payload": {
-          "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/gltf/2.0/any/mutation/create-primitive/schema.json"
-        }
-      }
-    },
-    {
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "mutation",
-        "payload"
-      ],
-      "properties": {
-        "mutation": {
-          "const": "deletePrimitive"
-        },
-        "payload": {
-          "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/gltf/2.0/any/mutation/delete-primitive/schema.json"
-        }
-      }
-    },
-    {
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "mutation",
-        "payload"
-      ],
-      "properties": {
-        "mutation": {
-          "const": "movePrimitive"
-        },
-        "payload": {
-          "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/gltf/2.0/any/mutation/move-primitive/schema.json"
-        }
-      }
-    },
-    {
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "mutation",
-        "payload"
-      ],
-      "properties": {
-        "mutation": {
-          "const": "reorderPrimitives"
-        },
-        "payload": {
-          "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/gltf/2.0/any/mutation/reorder-primitives/schema.json"
-        }
-      }
-    },
-    {
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "mutation",
-        "payload"
-      ],
-      "properties": {
-        "mutation": {
-          "const": "addRequiredExtension"
-        },
-        "payload": {
-          "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/gltf/2.0/any/mutation/add-required-extension/schema.json"
-        }
-      }
-    },
-    {
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "mutation",
-        "payload"
-      ],
-      "properties": {
-        "mutation": {
-          "const": "moveRequiredExtension"
-        },
-        "payload": {
-          "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/gltf/2.0/any/mutation/move-required-extension/schema.json"
-        }
-      }
-    },
-    {
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "mutation",
-        "payload"
-      ],
-      "properties": {
-        "mutation": {
-          "const": "removeRequiredExtension"
-        },
-        "payload": {
-          "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/gltf/2.0/any/mutation/remove-required-extension/schema.json"
-        }
-      }
-    },
-    {
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "mutation",
-        "payload"
-      ],
-      "properties": {
-        "mutation": {
-          "const": "reorderRequiredExtensions"
-        },
-        "payload": {
-          "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/gltf/2.0/any/mutation/reorder-required-extensions/schema.json"
-        }
-      }
-    },
-    {
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "mutation",
-        "payload"
-      ],
-      "properties": {
-        "mutation": {
-          "const": "createSampler"
-        },
-        "payload": {
-          "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/gltf/2.0/any/mutation/create-sampler/schema.json"
-        }
-      }
-    },
-    {
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "mutation",
-        "payload"
-      ],
-      "properties": {
-        "mutation": {
-          "const": "deleteSampler"
-        },
-        "payload": {
-          "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/gltf/2.0/any/mutation/delete-sampler/schema.json"
-        }
-      }
-    },
-    {
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "mutation",
-        "payload"
-      ],
-      "properties": {
-        "mutation": {
-          "const": "moveSampler"
-        },
-        "payload": {
-          "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/gltf/2.0/any/mutation/move-sampler/schema.json"
-        }
-      }
-    },
-    {
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "mutation",
-        "payload"
-      ],
-      "properties": {
-        "mutation": {
-          "const": "reorderSamplers"
-        },
-        "payload": {
-          "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/gltf/2.0/any/mutation/reorder-samplers/schema.json"
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/gltf/2.0/any/mutation/bind-primitive-material/schema.json#/$defs/BindPrimitiveMaterialMutation"
         }
       }
     },
@@ -1568,7 +176,7 @@
           "const": "bindSceneRootNode"
         },
         "payload": {
-          "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/gltf/2.0/any/mutation/bind-scene-root-node/schema.json"
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/gltf/2.0/any/mutation/bind-scene-root-node/schema.json#/$defs/BindSceneRootNodeMutation"
         }
       }
     },
@@ -1581,10 +189,10 @@
       ],
       "properties": {
         "mutation": {
-          "const": "moveSceneRootNode"
+          "const": "changeAssetDescriptiveMetadata"
         },
         "payload": {
-          "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/gltf/2.0/any/mutation/move-scene-root-node/schema.json"
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/gltf/2.0/any/mutation/change-asset-descriptive-metadata/schema.json#/$defs/ChangeAssetDescriptiveMetadataMutation"
         }
       }
     },
@@ -1597,10 +205,10 @@
       ],
       "properties": {
         "mutation": {
-          "const": "reorderSceneRootNodes"
+          "const": "changeAssetExtensionData"
         },
         "payload": {
-          "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/gltf/2.0/any/mutation/reorder-scene-root-nodes/schema.json"
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/gltf/2.0/any/mutation/change-asset-extension-data/schema.json#/$defs/ChangeAssetExtensionDataMutation"
         }
       }
     },
@@ -1613,10 +221,266 @@
       ],
       "properties": {
         "mutation": {
-          "const": "unbindSceneRootNode"
+          "const": "changeAssetExtraData"
         },
         "payload": {
-          "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/gltf/2.0/any/mutation/unbind-scene-root-node/schema.json"
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/gltf/2.0/any/mutation/change-asset-extra-data/schema.json#/$defs/ChangeAssetExtraDataMutation"
+        }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "mutation",
+        "payload"
+      ],
+      "properties": {
+        "mutation": {
+          "const": "changeAssetVersion"
+        },
+        "payload": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/gltf/2.0/any/mutation/change-asset-version/schema.json#/$defs/ChangeAssetVersionMutation"
+        }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "mutation",
+        "payload"
+      ],
+      "properties": {
+        "mutation": {
+          "const": "changeDocumentExtensionData"
+        },
+        "payload": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/gltf/2.0/any/mutation/change-document-extension-data/schema.json#/$defs/ChangeDocumentExtensionDataMutation"
+        }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "mutation",
+        "payload"
+      ],
+      "properties": {
+        "mutation": {
+          "const": "changeDocumentExtraData"
+        },
+        "payload": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/gltf/2.0/any/mutation/change-document-extra-data/schema.json#/$defs/ChangeDocumentExtraDataMutation"
+        }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "mutation",
+        "payload"
+      ],
+      "properties": {
+        "mutation": {
+          "const": "changeMaterialAlphaMode"
+        },
+        "payload": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/gltf/2.0/any/mutation/change-material-alpha-mode/schema.json#/$defs/ChangeMaterialAlphaModeMutation"
+        }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "mutation",
+        "payload"
+      ],
+      "properties": {
+        "mutation": {
+          "const": "changeMaterialDoubleSided"
+        },
+        "payload": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/gltf/2.0/any/mutation/change-material-double-sided/schema.json#/$defs/ChangeMaterialDoubleSidedMutation"
+        }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "mutation",
+        "payload"
+      ],
+      "properties": {
+        "mutation": {
+          "const": "changeMeshExtensionData"
+        },
+        "payload": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/gltf/2.0/any/mutation/change-mesh-extension-data/schema.json#/$defs/ChangeMeshExtensionDataMutation"
+        }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "mutation",
+        "payload"
+      ],
+      "properties": {
+        "mutation": {
+          "const": "changeMeshExtraData"
+        },
+        "payload": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/gltf/2.0/any/mutation/change-mesh-extra-data/schema.json#/$defs/ChangeMeshExtraDataMutation"
+        }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "mutation",
+        "payload"
+      ],
+      "properties": {
+        "mutation": {
+          "const": "changeMeshMorphWeights"
+        },
+        "payload": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/gltf/2.0/any/mutation/change-mesh-morph-weights/schema.json#/$defs/ChangeMeshMorphWeightsMutation"
+        }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "mutation",
+        "payload"
+      ],
+      "properties": {
+        "mutation": {
+          "const": "changeMeshName"
+        },
+        "payload": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/gltf/2.0/any/mutation/change-mesh-name/schema.json#/$defs/ChangeMeshNameMutation"
+        }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "mutation",
+        "payload"
+      ],
+      "properties": {
+        "mutation": {
+          "const": "changeNodeExtensionData"
+        },
+        "payload": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/gltf/2.0/any/mutation/change-node-extension-data/schema.json#/$defs/ChangeNodeExtensionDataMutation"
+        }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "mutation",
+        "payload"
+      ],
+      "properties": {
+        "mutation": {
+          "const": "changeNodeExtraData"
+        },
+        "payload": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/gltf/2.0/any/mutation/change-node-extra-data/schema.json#/$defs/ChangeNodeExtraDataMutation"
+        }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "mutation",
+        "payload"
+      ],
+      "properties": {
+        "mutation": {
+          "const": "changeNodeMorphWeights"
+        },
+        "payload": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/gltf/2.0/any/mutation/change-node-morph-weights/schema.json#/$defs/ChangeNodeMorphWeightsMutation"
+        }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "mutation",
+        "payload"
+      ],
+      "properties": {
+        "mutation": {
+          "const": "changeNodeName"
+        },
+        "payload": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/gltf/2.0/any/mutation/change-node-name/schema.json#/$defs/ChangeNodeNameMutation"
+        }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "mutation",
+        "payload"
+      ],
+      "properties": {
+        "mutation": {
+          "const": "changePrimitiveExtensionData"
+        },
+        "payload": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/gltf/2.0/any/mutation/change-primitive-extension-data/schema.json#/$defs/ChangePrimitiveExtensionDataMutation"
+        }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "mutation",
+        "payload"
+      ],
+      "properties": {
+        "mutation": {
+          "const": "changePrimitiveExtraData"
+        },
+        "payload": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/gltf/2.0/any/mutation/change-primitive-extra-data/schema.json#/$defs/ChangePrimitiveExtraDataMutation"
+        }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "mutation",
+        "payload"
+      ],
+      "properties": {
+        "mutation": {
+          "const": "changePrimitiveTopologyMode"
+        },
+        "payload": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/gltf/2.0/any/mutation/change-primitive-topology-mode/schema.json#/$defs/ChangePrimitiveTopologyModeMutation"
         }
       }
     },
@@ -1632,7 +496,7 @@
           "const": "changeSceneExtensionData"
         },
         "payload": {
-          "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/gltf/2.0/any/mutation/change-scene-extension-data/schema.json"
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/gltf/2.0/any/mutation/change-scene-extension-data/schema.json#/$defs/ChangeSceneExtensionDataMutation"
         }
       }
     },
@@ -1648,55 +512,7 @@
           "const": "changeSceneExtraData"
         },
         "payload": {
-          "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/gltf/2.0/any/mutation/change-scene-extra-data/schema.json"
-        }
-      }
-    },
-    {
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "mutation",
-        "payload"
-      ],
-      "properties": {
-        "mutation": {
-          "const": "createScene"
-        },
-        "payload": {
-          "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/gltf/2.0/any/mutation/create-scene/schema.json"
-        }
-      }
-    },
-    {
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "mutation",
-        "payload"
-      ],
-      "properties": {
-        "mutation": {
-          "const": "deleteScene"
-        },
-        "payload": {
-          "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/gltf/2.0/any/mutation/delete-scene/schema.json"
-        }
-      }
-    },
-    {
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "mutation",
-        "payload"
-      ],
-      "properties": {
-        "mutation": {
-          "const": "moveScene"
-        },
-        "payload": {
-          "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/gltf/2.0/any/mutation/move-scene/schema.json"
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/gltf/2.0/any/mutation/change-scene-extra-data/schema.json#/$defs/ChangeSceneExtraDataMutation"
         }
       }
     },
@@ -1712,7 +528,7 @@
           "const": "changeSceneName"
         },
         "payload": {
-          "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/gltf/2.0/any/mutation/change-scene-name/schema.json"
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/gltf/2.0/any/mutation/change-scene-name/schema.json#/$defs/ChangeSceneNameMutation"
         }
       }
     },
@@ -1725,10 +541,202 @@
       ],
       "properties": {
         "mutation": {
-          "const": "reorderScenes"
+          "const": "createAccessor"
         },
         "payload": {
-          "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/gltf/2.0/any/mutation/reorder-scenes/schema.json"
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/gltf/2.0/any/mutation/create-accessor/schema.json#/$defs/CreateAccessorMutation"
+        }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "mutation",
+        "payload"
+      ],
+      "properties": {
+        "mutation": {
+          "const": "createAnimation"
+        },
+        "payload": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/gltf/2.0/any/mutation/create-animation/schema.json#/$defs/CreateAnimationMutation"
+        }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "mutation",
+        "payload"
+      ],
+      "properties": {
+        "mutation": {
+          "const": "createBuffer"
+        },
+        "payload": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/gltf/2.0/any/mutation/create-buffer/schema.json#/$defs/CreateBufferMutation"
+        }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "mutation",
+        "payload"
+      ],
+      "properties": {
+        "mutation": {
+          "const": "createBufferView"
+        },
+        "payload": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/gltf/2.0/any/mutation/create-buffer-view/schema.json#/$defs/CreateBufferViewMutation"
+        }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "mutation",
+        "payload"
+      ],
+      "properties": {
+        "mutation": {
+          "const": "createCamera"
+        },
+        "payload": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/gltf/2.0/any/mutation/create-camera/schema.json#/$defs/CreateCameraMutation"
+        }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "mutation",
+        "payload"
+      ],
+      "properties": {
+        "mutation": {
+          "const": "createImage"
+        },
+        "payload": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/gltf/2.0/any/mutation/create-image/schema.json#/$defs/CreateImageMutation"
+        }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "mutation",
+        "payload"
+      ],
+      "properties": {
+        "mutation": {
+          "const": "createMaterial"
+        },
+        "payload": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/gltf/2.0/any/mutation/create-material/schema.json#/$defs/CreateMaterialMutation"
+        }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "mutation",
+        "payload"
+      ],
+      "properties": {
+        "mutation": {
+          "const": "createMesh"
+        },
+        "payload": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/gltf/2.0/any/mutation/create-mesh/schema.json#/$defs/CreateMeshMutation"
+        }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "mutation",
+        "payload"
+      ],
+      "properties": {
+        "mutation": {
+          "const": "createMorphTarget"
+        },
+        "payload": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/gltf/2.0/any/mutation/create-morph-target/schema.json#/$defs/CreateMorphTargetMutation"
+        }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "mutation",
+        "payload"
+      ],
+      "properties": {
+        "mutation": {
+          "const": "createNode"
+        },
+        "payload": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/gltf/2.0/any/mutation/create-node/schema.json#/$defs/CreateNodeMutation"
+        }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "mutation",
+        "payload"
+      ],
+      "properties": {
+        "mutation": {
+          "const": "createPrimitive"
+        },
+        "payload": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/gltf/2.0/any/mutation/create-primitive/schema.json#/$defs/CreatePrimitiveMutation"
+        }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "mutation",
+        "payload"
+      ],
+      "properties": {
+        "mutation": {
+          "const": "createSampler"
+        },
+        "payload": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/gltf/2.0/any/mutation/create-sampler/schema.json#/$defs/CreateSamplerMutation"
+        }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "mutation",
+        "payload"
+      ],
+      "properties": {
+        "mutation": {
+          "const": "createScene"
+        },
+        "payload": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/gltf/2.0/any/mutation/create-scene/schema.json#/$defs/CreateSceneMutation"
         }
       }
     },
@@ -1744,55 +752,7 @@
           "const": "createSkin"
         },
         "payload": {
-          "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/gltf/2.0/any/mutation/create-skin/schema.json"
-        }
-      }
-    },
-    {
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "mutation",
-        "payload"
-      ],
-      "properties": {
-        "mutation": {
-          "const": "deleteSkin"
-        },
-        "payload": {
-          "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/gltf/2.0/any/mutation/delete-skin/schema.json"
-        }
-      }
-    },
-    {
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "mutation",
-        "payload"
-      ],
-      "properties": {
-        "mutation": {
-          "const": "moveSkin"
-        },
-        "payload": {
-          "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/gltf/2.0/any/mutation/move-skin/schema.json"
-        }
-      }
-    },
-    {
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "mutation",
-        "payload"
-      ],
-      "properties": {
-        "mutation": {
-          "const": "reorderSkins"
-        },
-        "payload": {
-          "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/gltf/2.0/any/mutation/reorder-skins/schema.json"
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/gltf/2.0/any/mutation/create-skin/schema.json#/$defs/CreateSkinMutation"
         }
       }
     },
@@ -1808,55 +768,7 @@
           "const": "createTexture"
         },
         "payload": {
-          "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/gltf/2.0/any/mutation/create-texture/schema.json"
-        }
-      }
-    },
-    {
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "mutation",
-        "payload"
-      ],
-      "properties": {
-        "mutation": {
-          "const": "deleteTexture"
-        },
-        "payload": {
-          "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/gltf/2.0/any/mutation/delete-texture/schema.json"
-        }
-      }
-    },
-    {
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "mutation",
-        "payload"
-      ],
-      "properties": {
-        "mutation": {
-          "const": "moveTexture"
-        },
-        "payload": {
-          "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/gltf/2.0/any/mutation/move-texture/schema.json"
-        }
-      }
-    },
-    {
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "mutation",
-        "payload"
-      ],
-      "properties": {
-        "mutation": {
-          "const": "reorderTextures"
-        },
-        "payload": {
-          "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/gltf/2.0/any/mutation/reorder-textures/schema.json"
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/gltf/2.0/any/mutation/create-texture/schema.json#/$defs/CreateTextureMutation"
         }
       }
     },
@@ -1872,7 +784,567 @@
           "const": "addUsedExtension"
         },
         "payload": {
-          "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/gltf/2.0/any/mutation/add-used-extension/schema.json"
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/gltf/2.0/any/mutation/add-used-extension/schema.json#/$defs/AddUsedExtensionMutation"
+        }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "mutation",
+        "payload"
+      ],
+      "properties": {
+        "mutation": {
+          "const": "deleteAccessor"
+        },
+        "payload": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/gltf/2.0/any/mutation/delete-accessor/schema.json#/$defs/DeleteAccessorMutation"
+        }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "mutation",
+        "payload"
+      ],
+      "properties": {
+        "mutation": {
+          "const": "deleteAnimation"
+        },
+        "payload": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/gltf/2.0/any/mutation/delete-animation/schema.json#/$defs/DeleteAnimationMutation"
+        }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "mutation",
+        "payload"
+      ],
+      "properties": {
+        "mutation": {
+          "const": "deleteBuffer"
+        },
+        "payload": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/gltf/2.0/any/mutation/delete-buffer/schema.json#/$defs/DeleteBufferMutation"
+        }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "mutation",
+        "payload"
+      ],
+      "properties": {
+        "mutation": {
+          "const": "deleteBufferView"
+        },
+        "payload": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/gltf/2.0/any/mutation/delete-buffer-view/schema.json#/$defs/DeleteBufferViewMutation"
+        }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "mutation",
+        "payload"
+      ],
+      "properties": {
+        "mutation": {
+          "const": "deleteCamera"
+        },
+        "payload": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/gltf/2.0/any/mutation/delete-camera/schema.json#/$defs/DeleteCameraMutation"
+        }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "mutation",
+        "payload"
+      ],
+      "properties": {
+        "mutation": {
+          "const": "deleteImage"
+        },
+        "payload": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/gltf/2.0/any/mutation/delete-image/schema.json#/$defs/DeleteImageMutation"
+        }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "mutation",
+        "payload"
+      ],
+      "properties": {
+        "mutation": {
+          "const": "deleteMaterial"
+        },
+        "payload": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/gltf/2.0/any/mutation/delete-material/schema.json#/$defs/DeleteMaterialMutation"
+        }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "mutation",
+        "payload"
+      ],
+      "properties": {
+        "mutation": {
+          "const": "deleteMesh"
+        },
+        "payload": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/gltf/2.0/any/mutation/delete-mesh/schema.json#/$defs/DeleteMeshMutation"
+        }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "mutation",
+        "payload"
+      ],
+      "properties": {
+        "mutation": {
+          "const": "deleteMorphTarget"
+        },
+        "payload": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/gltf/2.0/any/mutation/delete-morph-target/schema.json#/$defs/DeleteMorphTargetMutation"
+        }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "mutation",
+        "payload"
+      ],
+      "properties": {
+        "mutation": {
+          "const": "deleteNode"
+        },
+        "payload": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/gltf/2.0/any/mutation/delete-node/schema.json#/$defs/DeleteNodeMutation"
+        }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "mutation",
+        "payload"
+      ],
+      "properties": {
+        "mutation": {
+          "const": "deletePrimitive"
+        },
+        "payload": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/gltf/2.0/any/mutation/delete-primitive/schema.json#/$defs/DeletePrimitiveMutation"
+        }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "mutation",
+        "payload"
+      ],
+      "properties": {
+        "mutation": {
+          "const": "deleteSampler"
+        },
+        "payload": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/gltf/2.0/any/mutation/delete-sampler/schema.json#/$defs/DeleteSamplerMutation"
+        }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "mutation",
+        "payload"
+      ],
+      "properties": {
+        "mutation": {
+          "const": "deleteScene"
+        },
+        "payload": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/gltf/2.0/any/mutation/delete-scene/schema.json#/$defs/DeleteSceneMutation"
+        }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "mutation",
+        "payload"
+      ],
+      "properties": {
+        "mutation": {
+          "const": "deleteSkin"
+        },
+        "payload": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/gltf/2.0/any/mutation/delete-skin/schema.json#/$defs/DeleteSkinMutation"
+        }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "mutation",
+        "payload"
+      ],
+      "properties": {
+        "mutation": {
+          "const": "deleteTexture"
+        },
+        "payload": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/gltf/2.0/any/mutation/delete-texture/schema.json#/$defs/DeleteTextureMutation"
+        }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "mutation",
+        "payload"
+      ],
+      "properties": {
+        "mutation": {
+          "const": "moveAccessor"
+        },
+        "payload": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/gltf/2.0/any/mutation/move-accessor/schema.json#/$defs/MoveAccessorMutation"
+        }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "mutation",
+        "payload"
+      ],
+      "properties": {
+        "mutation": {
+          "const": "moveAnimation"
+        },
+        "payload": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/gltf/2.0/any/mutation/move-animation/schema.json#/$defs/MoveAnimationMutation"
+        }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "mutation",
+        "payload"
+      ],
+      "properties": {
+        "mutation": {
+          "const": "moveBuffer"
+        },
+        "payload": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/gltf/2.0/any/mutation/move-buffer/schema.json#/$defs/MoveBufferMutation"
+        }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "mutation",
+        "payload"
+      ],
+      "properties": {
+        "mutation": {
+          "const": "moveBufferView"
+        },
+        "payload": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/gltf/2.0/any/mutation/move-buffer-view/schema.json#/$defs/MoveBufferViewMutation"
+        }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "mutation",
+        "payload"
+      ],
+      "properties": {
+        "mutation": {
+          "const": "moveCamera"
+        },
+        "payload": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/gltf/2.0/any/mutation/move-camera/schema.json#/$defs/MoveCameraMutation"
+        }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "mutation",
+        "payload"
+      ],
+      "properties": {
+        "mutation": {
+          "const": "moveImage"
+        },
+        "payload": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/gltf/2.0/any/mutation/move-image/schema.json#/$defs/MoveImageMutation"
+        }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "mutation",
+        "payload"
+      ],
+      "properties": {
+        "mutation": {
+          "const": "moveMaterial"
+        },
+        "payload": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/gltf/2.0/any/mutation/move-material/schema.json#/$defs/MoveMaterialMutation"
+        }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "mutation",
+        "payload"
+      ],
+      "properties": {
+        "mutation": {
+          "const": "moveMesh"
+        },
+        "payload": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/gltf/2.0/any/mutation/move-mesh/schema.json#/$defs/MoveMeshMutation"
+        }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "mutation",
+        "payload"
+      ],
+      "properties": {
+        "mutation": {
+          "const": "moveMorphTarget"
+        },
+        "payload": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/gltf/2.0/any/mutation/move-morph-target/schema.json#/$defs/MoveMorphTargetMutation"
+        }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "mutation",
+        "payload"
+      ],
+      "properties": {
+        "mutation": {
+          "const": "moveMorphTargetAttribute"
+        },
+        "payload": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/gltf/2.0/any/mutation/move-morph-target-attribute/schema.json#/$defs/MoveMorphTargetAttributeMutation"
+        }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "mutation",
+        "payload"
+      ],
+      "properties": {
+        "mutation": {
+          "const": "moveNode"
+        },
+        "payload": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/gltf/2.0/any/mutation/move-node/schema.json#/$defs/MoveNodeMutation"
+        }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "mutation",
+        "payload"
+      ],
+      "properties": {
+        "mutation": {
+          "const": "moveNodeChild"
+        },
+        "payload": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/gltf/2.0/any/mutation/move-node-child/schema.json#/$defs/MoveNodeChildMutation"
+        }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "mutation",
+        "payload"
+      ],
+      "properties": {
+        "mutation": {
+          "const": "movePrimitive"
+        },
+        "payload": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/gltf/2.0/any/mutation/move-primitive/schema.json#/$defs/MovePrimitiveMutation"
+        }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "mutation",
+        "payload"
+      ],
+      "properties": {
+        "mutation": {
+          "const": "movePrimitiveAttribute"
+        },
+        "payload": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/gltf/2.0/any/mutation/move-primitive-attribute/schema.json#/$defs/MovePrimitiveAttributeMutation"
+        }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "mutation",
+        "payload"
+      ],
+      "properties": {
+        "mutation": {
+          "const": "moveRequiredExtension"
+        },
+        "payload": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/gltf/2.0/any/mutation/move-required-extension/schema.json#/$defs/MoveRequiredExtensionMutation"
+        }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "mutation",
+        "payload"
+      ],
+      "properties": {
+        "mutation": {
+          "const": "moveSampler"
+        },
+        "payload": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/gltf/2.0/any/mutation/move-sampler/schema.json#/$defs/MoveSamplerMutation"
+        }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "mutation",
+        "payload"
+      ],
+      "properties": {
+        "mutation": {
+          "const": "moveScene"
+        },
+        "payload": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/gltf/2.0/any/mutation/move-scene/schema.json#/$defs/MoveSceneMutation"
+        }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "mutation",
+        "payload"
+      ],
+      "properties": {
+        "mutation": {
+          "const": "moveSceneRootNode"
+        },
+        "payload": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/gltf/2.0/any/mutation/move-scene-root-node/schema.json#/$defs/MoveSceneRootNodeMutation"
+        }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "mutation",
+        "payload"
+      ],
+      "properties": {
+        "mutation": {
+          "const": "moveSkin"
+        },
+        "payload": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/gltf/2.0/any/mutation/move-skin/schema.json#/$defs/MoveSkinMutation"
+        }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "mutation",
+        "payload"
+      ],
+      "properties": {
+        "mutation": {
+          "const": "moveTexture"
+        },
+        "payload": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/gltf/2.0/any/mutation/move-texture/schema.json#/$defs/MoveTextureMutation"
         }
       }
     },
@@ -1888,7 +1360,7 @@
           "const": "moveUsedExtension"
         },
         "payload": {
-          "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/gltf/2.0/any/mutation/move-used-extension/schema.json"
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/gltf/2.0/any/mutation/move-used-extension/schema.json#/$defs/MoveUsedExtensionMutation"
         }
       }
     },
@@ -1901,10 +1373,314 @@
       ],
       "properties": {
         "mutation": {
-          "const": "removeUsedExtension"
+          "const": "reorderAccessors"
         },
         "payload": {
-          "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/gltf/2.0/any/mutation/remove-used-extension/schema.json"
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/gltf/2.0/any/mutation/reorder-accessors/schema.json#/$defs/ReorderAccessorsMutation"
+        }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "mutation",
+        "payload"
+      ],
+      "properties": {
+        "mutation": {
+          "const": "reorderAnimations"
+        },
+        "payload": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/gltf/2.0/any/mutation/reorder-animations/schema.json#/$defs/ReorderAnimationsMutation"
+        }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "mutation",
+        "payload"
+      ],
+      "properties": {
+        "mutation": {
+          "const": "reorderBufferViews"
+        },
+        "payload": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/gltf/2.0/any/mutation/reorder-buffer-views/schema.json#/$defs/ReorderBufferViewsMutation"
+        }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "mutation",
+        "payload"
+      ],
+      "properties": {
+        "mutation": {
+          "const": "reorderBuffers"
+        },
+        "payload": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/gltf/2.0/any/mutation/reorder-buffers/schema.json#/$defs/ReorderBuffersMutation"
+        }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "mutation",
+        "payload"
+      ],
+      "properties": {
+        "mutation": {
+          "const": "reorderCameras"
+        },
+        "payload": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/gltf/2.0/any/mutation/reorder-cameras/schema.json#/$defs/ReorderCamerasMutation"
+        }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "mutation",
+        "payload"
+      ],
+      "properties": {
+        "mutation": {
+          "const": "reorderImages"
+        },
+        "payload": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/gltf/2.0/any/mutation/reorder-images/schema.json#/$defs/ReorderImagesMutation"
+        }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "mutation",
+        "payload"
+      ],
+      "properties": {
+        "mutation": {
+          "const": "reorderMaterials"
+        },
+        "payload": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/gltf/2.0/any/mutation/reorder-materials/schema.json#/$defs/ReorderMaterialsMutation"
+        }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "mutation",
+        "payload"
+      ],
+      "properties": {
+        "mutation": {
+          "const": "reorderMeshs"
+        },
+        "payload": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/gltf/2.0/any/mutation/reorder-meshs/schema.json#/$defs/ReorderMeshsMutation"
+        }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "mutation",
+        "payload"
+      ],
+      "properties": {
+        "mutation": {
+          "const": "reorderMorphTargetAttributes"
+        },
+        "payload": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/gltf/2.0/any/mutation/reorder-morph-target-attributes/schema.json#/$defs/ReorderMorphTargetAttributesMutation"
+        }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "mutation",
+        "payload"
+      ],
+      "properties": {
+        "mutation": {
+          "const": "reorderMorphTargets"
+        },
+        "payload": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/gltf/2.0/any/mutation/reorder-morph-targets/schema.json#/$defs/ReorderMorphTargetsMutation"
+        }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "mutation",
+        "payload"
+      ],
+      "properties": {
+        "mutation": {
+          "const": "reorderNodeChildren"
+        },
+        "payload": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/gltf/2.0/any/mutation/reorder-node-children/schema.json#/$defs/ReorderNodeChildrenMutation"
+        }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "mutation",
+        "payload"
+      ],
+      "properties": {
+        "mutation": {
+          "const": "reorderNodes"
+        },
+        "payload": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/gltf/2.0/any/mutation/reorder-nodes/schema.json#/$defs/ReorderNodesMutation"
+        }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "mutation",
+        "payload"
+      ],
+      "properties": {
+        "mutation": {
+          "const": "reorderPrimitiveAttributes"
+        },
+        "payload": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/gltf/2.0/any/mutation/reorder-primitive-attributes/schema.json#/$defs/ReorderPrimitiveAttributesMutation"
+        }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "mutation",
+        "payload"
+      ],
+      "properties": {
+        "mutation": {
+          "const": "reorderPrimitives"
+        },
+        "payload": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/gltf/2.0/any/mutation/reorder-primitives/schema.json#/$defs/ReorderPrimitivesMutation"
+        }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "mutation",
+        "payload"
+      ],
+      "properties": {
+        "mutation": {
+          "const": "reorderRequiredExtensions"
+        },
+        "payload": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/gltf/2.0/any/mutation/reorder-required-extensions/schema.json#/$defs/ReorderRequiredExtensionsMutation"
+        }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "mutation",
+        "payload"
+      ],
+      "properties": {
+        "mutation": {
+          "const": "reorderSamplers"
+        },
+        "payload": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/gltf/2.0/any/mutation/reorder-samplers/schema.json#/$defs/ReorderSamplersMutation"
+        }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "mutation",
+        "payload"
+      ],
+      "properties": {
+        "mutation": {
+          "const": "reorderSceneRootNodes"
+        },
+        "payload": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/gltf/2.0/any/mutation/reorder-scene-root-nodes/schema.json#/$defs/ReorderSceneRootNodesMutation"
+        }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "mutation",
+        "payload"
+      ],
+      "properties": {
+        "mutation": {
+          "const": "reorderScenes"
+        },
+        "payload": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/gltf/2.0/any/mutation/reorder-scenes/schema.json#/$defs/ReorderScenesMutation"
+        }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "mutation",
+        "payload"
+      ],
+      "properties": {
+        "mutation": {
+          "const": "reorderSkins"
+        },
+        "payload": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/gltf/2.0/any/mutation/reorder-skins/schema.json#/$defs/ReorderSkinsMutation"
+        }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "mutation",
+        "payload"
+      ],
+      "properties": {
+        "mutation": {
+          "const": "reorderTextures"
+        },
+        "payload": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/gltf/2.0/any/mutation/reorder-textures/schema.json#/$defs/ReorderTexturesMutation"
         }
       }
     },
@@ -1920,7 +1696,7 @@
           "const": "reorderUsedExtensions"
         },
         "payload": {
-          "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/gltf/2.0/any/mutation/reorder-used-extensions/schema.json"
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/gltf/2.0/any/mutation/reorder-used-extensions/schema.json#/$defs/ReorderUsedExtensionsMutation"
         }
       }
     },
@@ -1933,10 +1709,234 @@
       ],
       "properties": {
         "mutation": {
-          "const": "setSnapshot"
+          "const": "moveNodeParent"
         },
         "payload": {
-          "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/gltf/2.0/any/mutation/set-snapshot/schema.json"
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/gltf/2.0/any/mutation/move-node-parent/schema.json#/$defs/MoveNodeParentMutation"
+        }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "mutation",
+        "payload"
+      ],
+      "properties": {
+        "mutation": {
+          "const": "addRequiredExtension"
+        },
+        "payload": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/gltf/2.0/any/mutation/add-required-extension/schema.json#/$defs/AddRequiredExtensionMutation"
+        }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "mutation",
+        "payload"
+      ],
+      "properties": {
+        "mutation": {
+          "const": "changeNodeTransform"
+        },
+        "payload": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/gltf/2.0/any/mutation/change-node-transform/schema.json#/$defs/ChangeNodeTransformMutation"
+        }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "mutation",
+        "payload"
+      ],
+      "properties": {
+        "mutation": {
+          "const": "unbindDefaultScene"
+        },
+        "payload": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/gltf/2.0/any/mutation/unbind-default-scene/schema.json#/$defs/UnbindDefaultSceneMutation"
+        }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "mutation",
+        "payload"
+      ],
+      "properties": {
+        "mutation": {
+          "const": "unbindMorphTargetAttribute"
+        },
+        "payload": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/gltf/2.0/any/mutation/unbind-morph-target-attribute/schema.json#/$defs/UnbindMorphTargetAttributeMutation"
+        }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "mutation",
+        "payload"
+      ],
+      "properties": {
+        "mutation": {
+          "const": "unbindNodeCamera"
+        },
+        "payload": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/gltf/2.0/any/mutation/unbind-node-camera/schema.json#/$defs/UnbindNodeCameraMutation"
+        }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "mutation",
+        "payload"
+      ],
+      "properties": {
+        "mutation": {
+          "const": "unbindNodeChild"
+        },
+        "payload": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/gltf/2.0/any/mutation/unbind-node-child/schema.json#/$defs/UnbindNodeChildMutation"
+        }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "mutation",
+        "payload"
+      ],
+      "properties": {
+        "mutation": {
+          "const": "unbindNodeMesh"
+        },
+        "payload": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/gltf/2.0/any/mutation/unbind-node-mesh/schema.json#/$defs/UnbindNodeMeshMutation"
+        }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "mutation",
+        "payload"
+      ],
+      "properties": {
+        "mutation": {
+          "const": "unbindNodeSkin"
+        },
+        "payload": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/gltf/2.0/any/mutation/unbind-node-skin/schema.json#/$defs/UnbindNodeSkinMutation"
+        }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "mutation",
+        "payload"
+      ],
+      "properties": {
+        "mutation": {
+          "const": "unbindPrimitiveAttribute"
+        },
+        "payload": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/gltf/2.0/any/mutation/unbind-primitive-attribute/schema.json#/$defs/UnbindPrimitiveAttributeMutation"
+        }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "mutation",
+        "payload"
+      ],
+      "properties": {
+        "mutation": {
+          "const": "unbindPrimitiveIndices"
+        },
+        "payload": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/gltf/2.0/any/mutation/unbind-primitive-indices/schema.json#/$defs/UnbindPrimitiveIndicesMutation"
+        }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "mutation",
+        "payload"
+      ],
+      "properties": {
+        "mutation": {
+          "const": "unbindPrimitiveMaterial"
+        },
+        "payload": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/gltf/2.0/any/mutation/unbind-primitive-material/schema.json#/$defs/UnbindPrimitiveMaterialMutation"
+        }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "mutation",
+        "payload"
+      ],
+      "properties": {
+        "mutation": {
+          "const": "unbindSceneRootNode"
+        },
+        "payload": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/gltf/2.0/any/mutation/unbind-scene-root-node/schema.json#/$defs/UnbindSceneRootNodeMutation"
+        }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "mutation",
+        "payload"
+      ],
+      "properties": {
+        "mutation": {
+          "const": "removeRequiredExtension"
+        },
+        "payload": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/gltf/2.0/any/mutation/remove-required-extension/schema.json#/$defs/RemoveRequiredExtensionMutation"
+        }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "mutation",
+        "payload"
+      ],
+      "properties": {
+        "mutation": {
+          "const": "removeUsedExtension"
+        },
+        "payload": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/gltf/2.0/any/mutation/remove-used-extension/schema.json#/$defs/RemoveUsedExtensionMutation"
         }
       }
     }

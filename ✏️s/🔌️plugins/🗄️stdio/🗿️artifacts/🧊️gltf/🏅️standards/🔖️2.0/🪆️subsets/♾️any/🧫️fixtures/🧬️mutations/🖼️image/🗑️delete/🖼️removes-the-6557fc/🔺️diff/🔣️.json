@@ -1,17 +1,25 @@
 {
-  "id": "s.stdio.gltf.mutation.delete-image.v1",
-  "version": 1,
-  "touchedPaths": [
-    "document/images/0"
-  ],
-  "payload": {
-    "index": 0
+  "textures": {
+    "modified": [
+      {
+        "index": 0,
+        "diff": {
+          "source": 0
+        }
+      }
+    ]
   },
-  "operation": {
-    "kind": "delete",
-    "index": 0,
-    "removed": {
-      "uri": "albedo.png"
-    }
+  "images": {
+    "removed": [
+      1
+    ],
+    "modified": [
+      {
+        "index": 0,
+        "diff": {
+          "uri": "normal.png"
+        }
+      }
+    ]
   }
 }

@@ -1,7 +1,7 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
   "$id": "https://json.schemas.assets.semio-tech.com/s/stdio/gltf/2.0/any/mutation/change-primitive-topology-mode/schema.json",
-  "title": "GltfChangePrimitiveTopologyModeMutation",
+  "title": "GltfChangePrimitiveTopologyModePayload",
   "type": "object",
   "additionalProperties": false,
   "required": [
@@ -12,26 +12,96 @@
   "properties": {
     "mesh": {
       "type": "integer",
-      "minimum": 0
+      "minimum": 0,
+      "x-semio-ui": {
+        "widget": "stepper",
+        "label": {
+          "en": "Mesh",
+          "de": "Netz"
+        },
+        "description": {
+          "en": "Index of the mesh, counted from 0.",
+          "de": "Index des Netzes, ab 0 gezählt."
+        },
+        "precision": 0,
+        "group": "target",
+        "order": 10
+      }
     },
     "primitive": {
       "type": "integer",
-      "minimum": 0
+      "minimum": 0,
+      "x-semio-ui": {
+        "widget": "stepper",
+        "label": {
+          "en": "Primitive",
+          "de": "Primitiv"
+        },
+        "description": {
+          "en": "Index of the primitive within the mesh, counted from 0.",
+          "de": "Index des Primitivs im Netz, ab 0 gezählt."
+        },
+        "precision": 0,
+        "group": "target",
+        "order": 20
+      }
     },
     "mode": {
       "type": "integer",
-      "minimum": 0
+      "minimum": 0,
+      "x-semio-ui": {
+        "widget": "stepper",
+        "label": {
+          "en": "Topology mode",
+          "de": "Topologiemodus"
+        },
+        "description": {
+          "en": "0 points, 1 lines, 2 line loop, 3 line strip, 4 triangles, 5 triangle strip, 6 triangle fan.",
+          "de": "0 Punkte, 1 Linien, 2 Linienschleife, 3 Linienzug, 4 Dreiecke, 5 Dreiecksstreifen, 6 Dreiecksfächer."
+        },
+        "precision": 0,
+        "group": "value",
+        "order": 30
+      }
     }
   },
-  "x-semio": {
-    "id": "s.stdio.gltf.mutation.change-primitive-topology-mode.v1",
-    "version": 1,
-    "phase": "mutation",
-    "kind": "change",
-    "touchedPaths": [
-      "document/meshes/*/primitives/*/mode"
-    ],
-    "referencePolicy": "accepts only the glTF primitive topology domain 0 through 6"
-  },
-  "x-semio-mutation": "change-primitive-topology-mode"
+  "$defs": {
+    "ChangePrimitiveTopologyModeMutation": {
+      "description": "The whole wire of ChangePrimitiveTopologyModeMutation: the editable apply payload (this document's root) or the inert restore.",
+      "oneOf": [
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "phase",
+            "value"
+          ],
+          "properties": {
+            "phase": {
+              "const": "apply"
+            },
+            "value": {
+              "$ref": "#"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "phase",
+            "value"
+          ],
+          "properties": {
+            "phase": {
+              "const": "restore"
+            },
+            "value": {
+              "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/gltf/2.0/any/diff.json"
+            }
+          }
+        }
+      ]
+    }
+  }
 }

@@ -1,6 +1,6 @@
 {
   "status": "rejected",
-  "code": "mutation.invariant",
+  "code": "mutation.id-mismatch",
   "path": [
     "10"
   ]

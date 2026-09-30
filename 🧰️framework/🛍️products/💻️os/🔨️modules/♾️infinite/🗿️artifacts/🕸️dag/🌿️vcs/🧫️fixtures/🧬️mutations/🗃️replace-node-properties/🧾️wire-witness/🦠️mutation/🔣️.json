@@ -1,0 +1,18 @@
+{
+  "operation": "replaceNodeProperties",
+  "id": "a",
+  "newProperties": {
+    "nil": null,
+    "bool": true,
+    "number": 1.5,
+    "string": "x",
+    "array": [
+      1.0,
+      "x",
+      null
+    ],
+    "object": {
+      "key": false
+    }
+  }
+}

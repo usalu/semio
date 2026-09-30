@@ -25,13 +25,11 @@ import * as Owner17 from "../../♻️activation/🧰️preparation/🟦️.ts";
 import * as Owner18 from "../../♻️activation/🏃️execution/🟦️.ts";
 import * as Owner19 from "../../♻️activation/🌐️serve/🟦️.ts";
 import * as Owner20 from "../🧹️capability-policy/🟦️.ts";
-import * as Owner21 from "../🧹️layering-policy/🟦️.ts";
 import * as Owner22 from "../🧹️export-path-policy/🟦️.ts";
 import * as Owner23 from "../🧹️host-handle-policy/🟦️.ts";
 import * as Owner24 from "../🏃️execution/🟦️.ts";
 import * as Owner25 from "../🎬️studio/🟦️.ts";
 import * as Owner26 from "../🔬️catalog-smoke/🟦️.ts";
-import * as Owner27 from "../🤝️collaboration/🟦️.ts";
 import * as Owner28 from "../✅️verification/🟦️.ts";
 import * as Owner29 from "../../⚖️parity/🏗️structure/🟦️.ts";
 import * as Owner30 from "../../⚖️parity/🖼️pixels/🟦️.ts";
@@ -1945,5 +1943,5 @@ const testPackageDirectory = Path.resolve(Path.dirname(Url.fileURLToPath(import.
  * `buildPluginCatalog` is pinned for the same reason: `📇️registry/🟦️.ts` exports a zero-argument
  * projection builder under that same name and spreads later, so only the pin reaches the
  * `📇️registry/🔄️refresh` catalog BUILD these cases drive. */
-const testDependencies = { ...Fs, ...Crypto, ...Events, ...Os, ...Url, ...Path, ...Owner01, ...Owner02, ...Owner03, ...Owner04, ...Owner05, ...Owner06, ...Owner07, ...Owner08, ...Owner09, ...Owner10, ...Owner11, ...Owner12, ...Owner13, ...Owner14, ...Owner15, ...Owner16, ...Owner17, ...Owner18, ...Owner19, ...Owner20, ...Owner21, ...Owner22, ...Owner23, ...Owner24, ...Owner25, ...Owner26, ...Owner27, ...Owner28, ...Owner29, ...Owner30, ...Owner31, ...Owner32, ...Owner33, ...Owner34, ...Owner35, ...Owner36, ...Owner37, ...Owner38, ...Owner39, ...Owner40, ...Owner41, ...Owner42, ...Owner43, ...Owner44, ...Owner45, ...Owner46, ...Owner47, ...Owner48, ...Owner49, ...External01, ...External02, ...External03, ...External04, ...External05, ...External06, ...External07, ...External08, ...External09, ...External10, ...External11, ...External12, ...External13, ...External14, ...External15, buildPluginCatalog: Owner02.buildPluginCatalog, repoRoot: External01.getWorkspaceRoot() };
+const testDependencies = { ...Fs, ...Crypto, ...Events, ...Os, ...Url, ...Path, ...Owner01, ...Owner02, ...Owner03, ...Owner04, ...Owner05, ...Owner06, ...Owner07, ...Owner08, ...Owner09, ...Owner10, ...Owner11, ...Owner12, ...Owner13, ...Owner14, ...Owner15, ...Owner16, ...Owner17, ...Owner18, ...Owner19, ...Owner20, ...Owner22, ...Owner23, ...Owner24, ...Owner25, ...Owner26, ...Owner28, ...Owner29, ...Owner30, ...Owner31, ...Owner32, ...Owner33, ...Owner34, ...Owner35, ...Owner36, ...Owner37, ...Owner38, ...Owner39, ...Owner40, ...Owner41, ...Owner42, ...Owner43, ...Owner44, ...Owner45, ...Owner46, ...Owner47, ...Owner48, ...Owner49, ...External01, ...External02, ...External03, ...External04, ...External05, ...External06, ...External07, ...External08, ...External09, ...External10, ...External11, ...External12, ...External13, ...External14, ...External15, buildPluginCatalog: Owner02.buildPluginCatalog, repoRoot: External01.getWorkspaceRoot() };
 await registerTests1(Vitest as unknown as NonNullable<ImportMeta["vitest"]>, testDependencies, { directory: testPackageDirectory, url: Url.pathToFileURL(Path.resolve(testPackageDirectory, "📜️script.ts")).href });

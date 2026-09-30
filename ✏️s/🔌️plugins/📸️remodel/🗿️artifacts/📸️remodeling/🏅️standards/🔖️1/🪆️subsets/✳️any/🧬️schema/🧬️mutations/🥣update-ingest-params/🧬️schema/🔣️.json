@@ -5,9 +5,13 @@
   "type": "object",
   "additionalProperties": false,
   "required": [
+    "mutation",
     "params"
   ],
   "properties": {
+    "mutation": {
+      "const": "updateIngestParams"
+    },
     "params": {
       "type": "object",
       "title": "IngestParams",
@@ -22,22 +26,91 @@
         "frameSampleStride": {
           "type": "integer",
           "format": "uint32",
-          "minimum": 0
+          "minimum": 1,
+          "x-semio-ui": {
+            "widget": "stepper",
+            "role": "value",
+            "label": {
+              "en": "Frame Sample Stride",
+              "de": "Bild-Abtastschrittweite"
+            },
+            "description": {
+              "en": "Keeps every n-th frame.",
+              "de": "Übernimmt jedes n-te Bild."
+            },
+            "step": 1,
+            "precision": 0,
+            "group": "parameters",
+            "order": 10
+          }
         },
         "maxFrames": {
           "type": "integer",
           "format": "uint32",
-          "minimum": 0
+          "minimum": 1,
+          "x-semio-ui": {
+            "widget": "stepper",
+            "role": "value",
+            "label": {
+              "en": "Max. Frames",
+              "de": "Max. Bilder"
+            },
+            "step": 1,
+            "precision": 0,
+            "group": "parameters",
+            "order": 20
+          }
         },
         "downscaleLongEdgePx": {
           "type": "integer",
           "format": "uint32",
-          "minimum": 0
+          "minimum": 0,
+          "x-semio-ui": {
+            "widget": "stepper",
+            "role": "value",
+            "label": {
+              "en": "Downscale Long Edge (px)",
+              "de": "Verkleinerung der langen Kante (px)"
+            },
+            "unit": "px",
+            "step": 100,
+            "precision": 0,
+            "group": "parameters",
+            "order": 30
+          }
         },
         "minSharpness": {
           "type": "number",
-          "format": "float"
+          "format": "float",
+          "minimum": 0,
+          "x-semio-ui": {
+            "widget": "slider",
+            "role": "value",
+            "label": {
+              "en": "Min. Sharpness",
+              "de": "Min. Schärfe"
+            },
+            "description": {
+              "en": "Drops a frame whose sharpness is below this fraction of the recent median.",
+              "de": "Verwirft ein Bild, dessen Schärfe unter diesem Anteil des gleitenden Medians liegt."
+            },
+            "step": 0.01,
+            "precision": 2,
+            "softMin": 0,
+            "softMax": 1,
+            "group": "parameters",
+            "order": 40
+          }
         }
+      },
+      "x-semio-ui": {
+        "role": "value",
+        "label": {
+          "en": "Ingest Parameters",
+          "de": "Ingest-Parameter"
+        },
+        "group": "parameters",
+        "order": 10
       }
     }
   }

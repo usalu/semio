@@ -5,11 +5,16 @@
   "type": "object",
   "additionalProperties": false,
   "required": [
+    "mutation",
     "path",
     "index",
     "value"
   ],
   "properties": {
+    "mutation": {
+      "const": "insertListItem",
+      "description": "Aggregate discriminator spliced in by SemioValueMutation; absent when the payload stands alone."
+    },
     "path": {
       "type": "array",
       "items": {
@@ -22,10 +27,6 @@
     },
     "value": {
       "$ref": "#/$defs/SemioValue"
-    },
-    "mutation": {
-      "const": "insertListItem",
-      "description": "Aggregate discriminator spliced in by SemioValueMutation; absent when the payload stands alone."
     }
   },
   "$defs": {

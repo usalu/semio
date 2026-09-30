@@ -26,7 +26,7 @@ pub fn apply(payload: &GltfDeleteBufferViewPayload, base: &GltfSnapshot) -> Resu
 
 //#region 🧬️DirectMutation
 #[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::MutationLeaf)]
-#[mutation_leaf(contract = ::protocol)]
+#[mutation_leaf(contract = ::protocol, payload = Apply)]
 #[value(tag = "phase", content = "value", rename_all = "camelCase")]
 pub enum DeleteBufferViewMutation {
     Apply(GltfDeleteBufferViewPayload),
@@ -70,6 +70,6 @@ impl protocol::MutationKind<GltfSnapshot, super::GltfMutation> for DeleteBufferV
 
 //#region 🧪️Tests
 #[cfg(test)]
-#[path = "🧪️tests/🔬️direct-leaf/🦀️.rs"]
-mod direct_leaf_tests;
+#[path = "🧪️tests/🔬️t067/🦀️.rs"]
+mod case_t067;
 //#endregion 🧪️Tests

@@ -1,9 +1,9 @@
 //! 🧪️ Hierarchical fixture triad `🧱️update-plated-inputs` / `📈️makes-the-plate-panel-more-slender-and-more-stressed`.
 use crate::{En1993Diff, En1993Mutation, En1993Snapshot};
-const BEFORE: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🧱️update-plated-inputs/📈️makes-the-plate-panel-more-slender-and-more-stressed/📸️snapshot/⬅️before/🔣️.json");
-const AFTER: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🧱️update-plated-inputs/📈️makes-the-plate-panel-more-slender-and-more-stressed/📸️snapshot/➡️after/🔣️.json");
-const MUTATION: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🧱️update-plated-inputs/📈️makes-the-plate-panel-more-slender-and-more-stressed/🦠️mutation/🔣️.json");
-const OUTCOME: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🧱️update-plated-inputs/📈️makes-the-plate-panel-more-slender-and-more-stressed/🎯️outcome/🔣️.json");
+const BEFORE: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🧱️update-plated-inputs/📈️makes-plate-panel-more-slender-more-stressed/📸️snapshot/⬅️before/🔣️.json");
+const AFTER: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🧱️update-plated-inputs/📈️makes-plate-panel-more-slender-more-stressed/📸️snapshot/➡️after/🔣️.json");
+const MUTATION: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🧱️update-plated-inputs/📈️makes-plate-panel-more-slender-more-stressed/🦠️mutation/🔣️.json");
+const OUTCOME: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🧱️update-plated-inputs/📈️makes-plate-panel-more-slender-more-stressed/🎯️outcome/🔣️.json");
 fn before() -> En1993Snapshot { serde_json::from_str(BEFORE).expect("before") }
 fn expected_after() -> En1993Snapshot { serde_json::from_str(AFTER).expect("after") }
 fn mutation() -> En1993Mutation { serde_json::from_str(MUTATION).expect("mutation") }

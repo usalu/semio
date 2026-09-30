@@ -41,12 +41,17 @@ pub fn emit(
     doc: &ArtifactView<'_, Generation3dSnapshot>,
     preview: Option<&semio_s_artifact_stdio_semio::standards::v1::subsets::mesh::schema::snapshot::SemioMeshSnapshot>,
 ) -> Result<Emit<Generation3dMutation, Generation3dConfigMutation>, Fault> {
-    let export = document_io::export_document_with_preview(doc.snapshot, &payload.format, preview).map_err(|error| Fault::new(FaultOrigin::App, FaultCode::new("generation3d.io.export"), error.to_string()))?;
+    let export = (if payload.format == "txt" {
+        document_io::export_document(doc.snapshot)
+    } else {
+        preview.ok_or_else(|| crate::standards::v1::subsets::any::io::mesh_bridge::io_error("generation3d geometry export requires prepared geometry from the retained evaluation"))
+            .and_then(|mesh| document_io::export_geometry(mesh, &payload.format))
+    }).map_err(|error| Fault::new(FaultOrigin::App, FaultCode::new("generation3d.io.export"), error.to_string()))?;
     Ok(Emit::effect(Effect::DownloadMediaExport { filename: export.filename, mime_type: export.mime_type, data: export.data, encoding: export.encoding }))
 }
 
 /// 📤️ The session-aware entry point: the retained evaluation IS the geometry, so the export reads
-/// its merged preview and falls back to an in-process evaluation only when that session is empty.
+/// its merged preview; absent prepared geometry produces a named export fault.
 pub fn handle(
     payload: &ExportDocument,
     doc: &ArtifactView<'_, Generation3dSnapshot>,
@@ -57,7 +62,7 @@ pub fn handle(
 }
 
 /// 👁️ The retained session's merged preview as this repo's own typed mesh, or `None` when nothing
-/// has been evaluated yet — in which case the caller's fallback says so honestly.
+/// has been evaluated yet.
 pub fn retained_preview(
     doc: &ArtifactView<'_, Generation3dSnapshot>,
     cfg: &ConfigView<'_, Generation3dConfig>,

@@ -1,0 +1,256 @@
+{
+  "surface": "conformance.composite.dialog-choices",
+  "revision": 0,
+  "root": 0,
+  "nodes": [
+    {
+      "id": 0,
+      "key": "#0",
+      "component": {
+        "type": "container"
+      },
+      "layout": {
+        "kind": "overlay",
+        "anchor": "center",
+        "inset": {
+          "all": "none"
+        },
+        "dismissible": true
+      },
+      "style": {},
+      "activity": "idle",
+      "accessibility": {
+        "label": "Finish editing history",
+        "description": "Keep the edit as a new alternative or overwrite the existing history."
+      },
+      "children": [
+        1,
+        2,
+        3,
+        5,
+        6
+      ]
+    },
+    {
+      "id": 1,
+      "key": "title",
+      "component": {
+        "type": "text",
+        "value": "Finish editing history",
+        "emphasize": true
+      },
+      "layout": {
+        "kind": "leaf",
+        "width": "hug",
+        "height": "hug"
+      },
+      "style": {},
+      "activity": "idle",
+      "accessibility": {}
+    },
+    {
+      "id": 2,
+      "key": "body",
+      "component": {
+        "type": "text",
+        "value": "Keep the edit as a new alternative or overwrite the existing history."
+      },
+      "layout": {
+        "kind": "leaf",
+        "width": "hug",
+        "height": "hug"
+      },
+      "style": {},
+      "activity": "idle",
+      "accessibility": {}
+    },
+    {
+      "id": 3,
+      "key": "name",
+      "component": {
+        "type": "container",
+        "role": "field",
+        "label": "Alternative name",
+        "required": true
+      },
+      "layout": {
+        "kind": "stack",
+        "axis": "vertical",
+        "gap": "none",
+        "padding": {
+          "all": "none"
+        },
+        "align": "stretch",
+        "justify": "start",
+        "grow": false,
+        "wrap": false
+      },
+      "style": {},
+      "activity": "idle",
+      "accessibility": {},
+      "children": [
+        4
+      ]
+    },
+    {
+      "id": 4,
+      "key": "name.input",
+      "component": {
+        "type": "input",
+        "value": "Variant B"
+      },
+      "layout": {
+        "kind": "leaf",
+        "width": "hug",
+        "height": "hug"
+      },
+      "style": {},
+      "activity": "idle",
+      "accessibility": {
+        "label": "Alternative name"
+      }
+    },
+    {
+      "id": 5,
+      "key": "overwrite.description",
+      "component": {
+        "type": "text",
+        "value": "Replaces the edited mutations in every alternative that contains them."
+      },
+      "layout": {
+        "kind": "leaf",
+        "width": "hug",
+        "height": "hug"
+      },
+      "style": {},
+      "activity": "idle",
+      "accessibility": {}
+    },
+    {
+      "id": 6,
+      "key": "actions",
+      "component": {
+        "type": "container",
+        "role": "toolbar"
+      },
+      "layout": {
+        "kind": "stack",
+        "axis": "horizontal",
+        "gap": "none",
+        "padding": {
+          "all": "none"
+        },
+        "align": "stretch",
+        "justify": "spaceBetween",
+        "grow": false,
+        "wrap": false
+      },
+      "style": {},
+      "activity": "idle",
+      "accessibility": {},
+      "children": [
+        7,
+        8,
+        9
+      ]
+    },
+    {
+      "id": 7,
+      "key": "cancel",
+      "component": {
+        "type": "button",
+        "icon": "x",
+        "label": "Back"
+      },
+      "layout": {
+        "kind": "leaf",
+        "width": "hug",
+        "height": "hug"
+      },
+      "style": {
+        "variant": "ghost"
+      },
+      "activity": "idle",
+      "accessibility": {
+        "label": "Back"
+      },
+      "bindings": [
+        {
+          "trigger": "activate",
+          "action": {
+            "scope": "app",
+            "name": "historyEditBack",
+            "version": 1
+          }
+        }
+      ]
+    },
+    {
+      "id": 8,
+      "key": "overwrite",
+      "component": {
+        "type": "button",
+        "icon": "triangle-alert",
+        "label": "Overwrite"
+      },
+      "layout": {
+        "kind": "leaf",
+        "width": "hug",
+        "height": "hug"
+      },
+      "style": {
+        "tone": "danger"
+      },
+      "activity": "idle",
+      "accessibility": {
+        "label": "Overwrite",
+        "description": "Replaces the edited mutations in every alternative that contains them."
+      },
+      "bindings": [
+        {
+          "trigger": "activate",
+          "action": {
+            "scope": "app",
+            "name": "historyEditCommit",
+            "version": 1
+          },
+          "args": {
+            "choice": "overwrite"
+          }
+        }
+      ]
+    },
+    {
+      "id": 9,
+      "key": "submit",
+      "component": {
+        "type": "button",
+        "icon": "check",
+        "label": "New alternative"
+      },
+      "layout": {
+        "kind": "leaf",
+        "width": "hug",
+        "height": "hug"
+      },
+      "style": {
+        "tone": "primary"
+      },
+      "activity": "idle",
+      "accessibility": {
+        "label": "New alternative"
+      },
+      "bindings": [
+        {
+          "trigger": "activate",
+          "action": {
+            "scope": "app",
+            "name": "historyEditCommit",
+            "version": 1
+          }
+        }
+      ]
+    }
+  ],
+  "layoutEpoch": 0
+}

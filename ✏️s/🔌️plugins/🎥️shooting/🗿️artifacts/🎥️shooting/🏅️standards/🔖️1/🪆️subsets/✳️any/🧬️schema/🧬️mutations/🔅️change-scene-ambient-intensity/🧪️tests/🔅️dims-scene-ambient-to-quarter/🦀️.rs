@@ -76,7 +76,7 @@ async fn declared_outcome_holds_and_a_negative_intensity_is_fatal() {
     assert_eq!(outcome.get("status").and_then(serde_json::Value::as_str), Some("applied"), "change-scene-ambient-intensity/dims-scene-ambient-to-quarter: this fixture declares `applied`");
     assert!(mutation().diff(&before()).messages().is_empty(), "change-scene-ambient-intensity/dims-scene-ambient-to-quarter: a real dim must raise no diagnostic");
 
-    let negative: ShootingMutation = serde_json::from_str(r#"{"mutation":"changeSceneAmbientIntensity","new_intensity":-0.5}"#).expect("probe mutation decodes");
+    let negative: ShootingMutation = serde_json::from_str(r#"{"mutation":"changeSceneAmbientIntensity","newIntensity":-0.5}"#).expect("probe mutation decodes");
     let rejected = negative.diff(&before());
     assert_eq!(rejected.worst_level(), Some(protocol::Severity::Fatal), "change-scene-ambient-intensity/dims-scene-ambient-to-quarter: a negative ambient intensity must be Fatal");
     assert_eq!(rejected.messages()[0].code.0, "mutation.invariant", "change-scene-ambient-intensity/dims-scene-ambient-to-quarter: the non-negativity guard's frozen code");

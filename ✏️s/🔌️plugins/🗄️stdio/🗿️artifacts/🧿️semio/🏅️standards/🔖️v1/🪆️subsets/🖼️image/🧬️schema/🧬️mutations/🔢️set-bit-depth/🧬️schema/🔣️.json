@@ -5,17 +5,26 @@
   "type": "object",
   "additionalProperties": false,
   "required": [
+    "mutation",
     "bit_depth"
   ],
   "properties": {
-    "bit_depth": {
-      "type": "integer",
-      "minimum": 0,
-      "maximum": 255
-    },
     "mutation": {
       "const": "setBitDepth",
       "description": "Aggregate discriminator spliced in by SemioImageMutation; absent when the payload stands alone."
+    },
+    "bit_depth": {
+      "type": "integer",
+      "minimum": 0,
+      "maximum": 255,
+      "x-semio-ui": {
+        "widget": "stepper",
+        "label": {
+          "en": "Bit depth",
+          "de": "Bittiefe"
+        },
+        "unit": "bit"
+      }
     }
   }
 }

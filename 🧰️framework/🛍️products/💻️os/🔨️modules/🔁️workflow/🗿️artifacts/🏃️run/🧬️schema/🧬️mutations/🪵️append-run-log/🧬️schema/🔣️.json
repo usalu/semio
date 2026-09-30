@@ -2,43 +2,82 @@
   "$schema": "http://json-schema.org/draft-07/schema#",
   "$id": "https://json.schemas.assets.semio-tech.com/os/workflow/artifacts/run/mutation/append-run-log/schema.json",
   "title": "AppendRunLog",
-  "type": "object",
-  "$defs": {
-    "Payload": {
-      "type": "object",
-      "required": [
-        "nodeId",
-        "level",
-        "message",
-        "at"
-      ],
-      "properties": {
-        "nodeId": {
-          "type": "string"
-        },
-        "level": {
-          "type": "string"
-        },
-        "message": {
-          "type": "string"
-        },
-        "at": {
-          "type": "string"
-        }
-      }
-    }
-  },
-  "allOf": [
-    {
-      "$ref": "#/$defs/Payload"
-    }
-  ],
   "propertyNames": {
     "enum": [
+      "operation",
       "at",
       "level",
       "message",
       "nodeId"
     ]
+  },
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "operation",
+    "nodeId",
+    "level",
+    "message",
+    "at"
+  ],
+  "properties": {
+    "operation": {
+      "const": "appendRunLog"
+    },
+    "nodeId": {
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Node",
+          "de": "Knoten"
+        },
+        "ref": {
+          "kind": "node"
+        },
+        "group": "target",
+        "order": 10
+      }
+    },
+    "level": {
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "text",
+        "role": "value",
+        "label": {
+          "en": "Level",
+          "de": "Stufe"
+        },
+        "group": "log",
+        "order": 20
+      }
+    },
+    "message": {
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "multiline",
+        "role": "value",
+        "label": {
+          "en": "Message",
+          "de": "Nachricht"
+        },
+        "group": "log",
+        "order": 30
+      }
+    },
+    "at": {
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "text",
+        "role": "value",
+        "label": {
+          "en": "Time",
+          "de": "Zeitpunkt"
+        },
+        "group": "log",
+        "order": 40
+      }
+    }
   }
 }

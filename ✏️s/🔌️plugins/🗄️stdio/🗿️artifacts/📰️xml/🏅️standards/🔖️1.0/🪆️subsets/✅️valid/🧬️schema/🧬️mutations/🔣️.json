@@ -5,148 +5,28 @@
   "description": "Discriminated union over this module's mutation leaves (internally tagged); every payload is the leaf's own schema, referenced, never restated.",
   "oneOf": [
     {
-      "allOf": [
-        {
-          "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/xml/1.0/valid/mutation/declare-doctype/schema.json"
-        },
-        {
-          "type": "object",
-          "required": [
-            "mutation"
-          ],
-          "properties": {
-            "mutation": {
-              "const": "declareDoctype"
-            }
-          }
-        }
-      ]
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/xml/1.0/valid/mutation/set-snapshot/schema.json"
     },
     {
-      "allOf": [
-        {
-          "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/xml/1.0/valid/mutation/declare-entity/schema.json"
-        },
-        {
-          "type": "object",
-          "required": [
-            "mutation"
-          ],
-          "properties": {
-            "mutation": {
-              "const": "declareEntity"
-            }
-          }
-        }
-      ]
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/xml/1.0/valid/mutation/declare-doctype/schema.json"
     },
     {
-      "allOf": [
-        {
-          "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/xml/1.0/valid/mutation/rename-document-element/schema.json"
-        },
-        {
-          "type": "object",
-          "required": [
-            "mutation"
-          ],
-          "properties": {
-            "mutation": {
-              "const": "renameDocumentElement"
-            }
-          }
-        }
-      ]
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/xml/1.0/valid/mutation/rename-document-element/schema.json"
     },
     {
-      "allOf": [
-        {
-          "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/xml/1.0/valid/mutation/set-external-subset/schema.json"
-        },
-        {
-          "type": "object",
-          "required": [
-            "mutation"
-          ],
-          "properties": {
-            "mutation": {
-              "const": "setExternalSubset"
-            }
-          }
-        }
-      ]
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/xml/1.0/valid/mutation/set-external-subset/schema.json"
     },
     {
-      "allOf": [
-        {
-          "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/xml/1.0/valid/mutation/set-internal-subset/schema.json"
-        },
-        {
-          "type": "object",
-          "required": [
-            "mutation"
-          ],
-          "properties": {
-            "mutation": {
-              "const": "setInternalSubset"
-            }
-          }
-        }
-      ]
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/xml/1.0/valid/mutation/set-standalone/schema.json"
     },
     {
-      "allOf": [
-        {
-          "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/xml/1.0/valid/mutation/set-snapshot/schema.json"
-        },
-        {
-          "type": "object",
-          "required": [
-            "mutation"
-          ],
-          "properties": {
-            "mutation": {
-              "const": "setSnapshot"
-            }
-          }
-        }
-      ]
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/xml/1.0/valid/mutation/declare-entity/schema.json"
     },
     {
-      "allOf": [
-        {
-          "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/xml/1.0/valid/mutation/set-standalone/schema.json"
-        },
-        {
-          "type": "object",
-          "required": [
-            "mutation"
-          ],
-          "properties": {
-            "mutation": {
-              "const": "setStandalone"
-            }
-          }
-        }
-      ]
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/xml/1.0/valid/mutation/set-internal-subset/schema.json"
     },
     {
-      "allOf": [
-        {
-          "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/xml/1.0/valid/mutation/set-text/schema.json"
-        },
-        {
-          "type": "object",
-          "required": [
-            "mutation"
-          ],
-          "properties": {
-            "mutation": {
-              "const": "setText"
-            }
-          }
-        }
-      ]
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/xml/1.0/valid/mutation/set-text/schema.json"
     }
   ]
 }

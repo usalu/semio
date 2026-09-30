@@ -10,7 +10,7 @@ pub fn diff(payload: &super::RemoveConstructionLayer, base: &EnergyModelSnapshot
         return protocol::MutationOutcome::error("mutation.target-missing", format!("Construction {} does not exist.", payload.id.0), [payload.id.0.to_string()]);
     };
     if existing.layer_material_ids.get(payload.index as usize).is_none() {
-        return protocol::MutationOutcome::error("mutation.invariant", format!("Construction {} has no layer at index {}.", payload.id.0, payload.index), [payload.id.0.to_string()]);
+        return protocol::MutationOutcome::error("mutation.target-missing", format!("Construction {} has no layer at index {}.", payload.id.0, payload.index), [payload.id.0.to_string()]);
     }
     let mut model = base.model.clone();
     if let Some(construction) = model.constructions.iter_mut().find(|item| item.id == payload.id) {

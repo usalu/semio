@@ -4,109 +4,340 @@
   "title": "En1992Mutation",
   "oneOf": [
     {
-      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1992/mutation/change-ac-mm2/schema.json"
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "ChangeAnnex"
+      ],
+      "properties": {
+        "ChangeAnnex": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1992/mutation/change-annex/schema.json"
+        }
+      }
     },
     {
-      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1992/mutation/change-anchor-as-mm2/schema.json"
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "ChangeTitle"
+      ],
+      "properties": {
+        "ChangeTitle": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1992/mutation/change-title/schema.json"
+        }
+      }
     },
     {
-      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1992/mutation/change-anchor-c1-mm/schema.json"
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "ChangeDesignWorkingLife"
+      ],
+      "properties": {
+        "ChangeDesignWorkingLife": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1992/mutation/change-design-working-life/schema.json"
+        }
+      }
     },
     {
-      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1992/mutation/change-anchor-cracked/schema.json"
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "ChangeDeltaCDev"
+      ],
+      "properties": {
+        "ChangeDeltaCDev": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1992/mutation/change-delta-c-dev/schema.json"
+        }
+      }
     },
     {
-      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1992/mutation/change-anchor-d-mm/schema.json"
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "ChangeCementType"
+      ],
+      "properties": {
+        "ChangeCementType": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1992/mutation/change-cement-type/schema.json"
+        }
+      }
     },
     {
-      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1992/mutation/change-anchor-f-uk-mpa/schema.json"
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "ChangeConcreteFCk"
+      ],
+      "properties": {
+        "ChangeConcreteFCk": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1992/mutation/change-concrete-f-ck/schema.json"
+        }
+      }
     },
     {
-      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1992/mutation/change-anchor-f-yk-mpa/schema.json"
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "ChangeReinforcementFYk"
+      ],
+      "properties": {
+        "ChangeReinforcementFYk": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1992/mutation/change-reinforcement-f-yk/schema.json"
+        }
+      }
     },
     {
-      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1992/mutation/change-anchor-h-ef-mm/schema.json"
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "InsertMember"
+      ],
+      "properties": {
+        "InsertMember": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1992/mutation/insert-member/schema.json"
+        }
+      }
     },
     {
-      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1992/mutation/change-anchor-n-ed-kn/schema.json"
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "RemoveMember"
+      ],
+      "properties": {
+        "RemoveMember": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1992/mutation/remove-member/schema.json"
+        }
+      }
     },
     {
-      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1992/mutation/change-anchor-v-ed-kn/schema.json"
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "ReorderMembers"
+      ],
+      "properties": {
+        "ReorderMembers": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1992/mutation/reorder-members/schema.json"
+        }
+      }
     },
     {
-      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1992/mutation/change-annex/schema.json"
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "ChangeMemberWidth"
+      ],
+      "properties": {
+        "ChangeMemberWidth": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1992/mutation/change-member-width/schema.json"
+        }
+      }
     },
     {
-      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1992/mutation/change-as-mm2/schema.json"
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "ChangeMemberHeight"
+      ],
+      "properties": {
+        "ChangeMemberHeight": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1992/mutation/change-member-height/schema.json"
+        }
+      }
     },
     {
-      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1992/mutation/change-b-mm/schema.json"
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "ChangeMemberEffectiveDepth"
+      ],
+      "properties": {
+        "ChangeMemberEffectiveDepth": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1992/mutation/change-member-effective-depth/schema.json"
+        }
+      }
     },
     {
-      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1992/mutation/change-bridge-delta-sigma-s-mpa/schema.json"
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "ChangeMemberCover"
+      ],
+      "properties": {
+        "ChangeMemberCover": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1992/mutation/change-member-cover/schema.json"
+        }
+      }
     },
     {
-      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1992/mutation/change-bridge-sigma-c-mpa/schema.json"
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "ChangeMemberExposure"
+      ],
+      "properties": {
+        "ChangeMemberExposure": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1992/mutation/change-member-exposure/schema.json"
+        }
+      }
     },
     {
-      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1992/mutation/change-d-mm/schema.json"
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "ChangeMemberSpan"
+      ],
+      "properties": {
+        "ChangeMemberSpan": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1992/mutation/change-member-span/schema.json"
+        }
+      }
     },
     {
-      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1992/mutation/change-f-ck/schema.json"
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "ChangeMemberStirrupSpacing"
+      ],
+      "properties": {
+        "ChangeMemberStirrupSpacing": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1992/mutation/change-member-stirrup-spacing/schema.json"
+        }
+      }
     },
     {
-      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1992/mutation/change-f-yk/schema.json"
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "ChangeMemberAxisDistance"
+      ],
+      "properties": {
+        "ChangeMemberAxisDistance": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1992/mutation/change-member-axis-distance/schema.json"
+        }
+      }
     },
     {
-      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1992/mutation/change-fire-rating/schema.json"
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "ChangeMemberFireRating"
+      ],
+      "properties": {
+        "ChangeMemberFireRating": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1992/mutation/change-member-fire-rating/schema.json"
+        }
+      }
     },
     {
-      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1992/mutation/change-hd-over-h/schema.json"
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "ChangeBarLayerCount"
+      ],
+      "properties": {
+        "ChangeBarLayerCount": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1992/mutation/change-bar-layer-count/schema.json"
+        }
+      }
     },
     {
-      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1992/mutation/change-liquid-es-mpa/schema.json"
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "ChangeBarLayerDiameter"
+      ],
+      "properties": {
+        "ChangeBarLayerDiameter": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1992/mutation/change-bar-layer-diameter/schema.json"
+        }
+      }
     },
     {
-      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1992/mutation/change-liquid-f-ct-eff-mpa/schema.json"
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "ChangeActionMk"
+      ],
+      "properties": {
+        "ChangeActionMk": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1992/mutation/change-action-mk/schema.json"
+        }
+      }
     },
     {
-      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1992/mutation/change-liquid-rho-p-eff/schema.json"
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "ChangeActionNEd"
+      ],
+      "properties": {
+        "ChangeActionNEd": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1992/mutation/change-action-n-ed/schema.json"
+        }
+      }
     },
     {
-      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1992/mutation/change-liquid-sigma-s-mpa/schema.json"
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "ChangeActionVEd"
+      ],
+      "properties": {
+        "ChangeActionVEd": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1992/mutation/change-action-v-ed/schema.json"
+        }
+      }
     },
     {
-      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1992/mutation/change-liquid-sr-max-mm/schema.json"
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "InsertAnchor"
+      ],
+      "properties": {
+        "InsertAnchor": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1992/mutation/insert-anchor/schema.json"
+        }
+      }
     },
     {
-      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1992/mutation/change-m-ed-knm/schema.json"
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "RemoveAnchor"
+      ],
+      "properties": {
+        "RemoveAnchor": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1992/mutation/remove-anchor/schema.json"
+        }
+      }
     },
     {
-      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1992/mutation/change-n-ed-kn/schema.json"
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "ChangeAnchorHEf"
+      ],
+      "properties": {
+        "ChangeAnchorHEf": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1992/mutation/change-anchor-h-ef/schema.json"
+        }
+      }
     },
     {
-      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1992/mutation/change-p-kn/schema.json"
-    },
-    {
-      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1992/mutation/change-provided-axis-distance-mm/schema.json"
-    },
-    {
-      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1992/mutation/change-rho-l/schema.json"
-    },
-    {
-      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1992/mutation/change-span-m/schema.json"
-    },
-    {
-      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1992/mutation/change-tightness-class/schema.json"
-    },
-    {
-      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1992/mutation/change-udl-kn-m/schema.json"
-    },
-    {
-      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1992/mutation/change-use-fem/schema.json"
-    },
-    {
-      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1992/mutation/change-v-ed-kn/schema.json"
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "ChangeAnchorAs"
+      ],
+      "properties": {
+        "ChangeAnchorAs": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1992/mutation/change-anchor-as/schema.json"
+        }
+      }
     }
   ]
 }

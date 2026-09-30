@@ -5,5 +5,10 @@
   "type": "object",
   "additionalProperties": false,
   "required": ["snapshot"],
-  "properties": { "snapshot": { "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/bmp/v3/any/snapshot.json" } }
+  "properties": {
+    "snapshot": {
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/bmp/v3/any/snapshot.json",
+      "x-semio-ui": { "label": { "en": "Bitmap", "de": "Bitmap" }, "group": "value", "order": 10 }
+    }
+  }
 }

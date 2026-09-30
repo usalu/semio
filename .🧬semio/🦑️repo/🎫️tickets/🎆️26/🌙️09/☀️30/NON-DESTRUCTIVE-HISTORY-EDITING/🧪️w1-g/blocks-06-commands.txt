@@ -1,0 +1,657 @@
+<<<<<<< ANCHOR
+    ResolveConflict {
+        conflict_id: String,
+        resolution: crate::os_spr::ConflictResolution,
+    },
+}
+
+impl<Mutation> ArtifactCommand<Mutation> {
+=======
+    ResolveConflict {
+        conflict_id: String,
+        resolution: crate::os_spr::ConflictResolution,
+    },
+    /// ✏️ Supersedes the effective input of applied operations, non-destructively: each input replaces its target's
+    /// input (`None` withdraws it) in every alternative, or only within the alternative `scope`. Refused atomically
+    /// with `Rejected { policy: Normal }` when the Report replay of everything downstream raises an `Error` or `Fatal`.
+    /// Ordinal 17.
+    Supersede {
+        #[value(default, skip_serializing_if = "Option::is_none")]
+        scope: Option<String>,
+        inputs: Vec<SupersedeInput<Mutation>>,
+    },
+    /// 🌿️ Commits the pending edits, branches the alternative `name` at the head and supersedes `inputs` within it —
+    /// one atomic dispatch leaving in one outbound batch. Ordinal 18.
+    CreateAlternativeWithSupersede {
+        name: String,
+        inputs: Vec<SupersedeInput<Mutation>>,
+    },
+}
+
+/// ✏️ One input of [`ArtifactCommand::Supersede`]: the superseded operation and the replacement it folds as from now
+/// on (`None` withdraws it).
+#[derive(Clone, Debug, PartialEq, ToValue, FromValue)]
+#[value(rename_all = "camelCase")]
+pub struct SupersedeInput<Mutation> {
+    pub target: MutationId,
+    #[value(default, skip_serializing_if = "Option::is_none")]
+    pub replacement: Option<Mutation>,
+}
+
+impl<Mutation> ArtifactCommand<Mutation> {
+>>>>>>> END
+<<<<<<< ANCHOR
+            Self::ResolveConflict { .. } => Some(ArtifactProjectionCause::RemoteIngest),
+        }
+=======
+            Self::ResolveConflict { .. } => Some(ArtifactProjectionCause::RemoteIngest),
+            Self::Supersede { .. } | Self::CreateAlternativeWithSupersede { .. } => Some(ArtifactProjectionCause::Replay),
+        }
+>>>>>>> END
+<<<<<<< ANCHOR
+    ResolveConflict {
+        #[dsl(positional)]
+        conflict_id: String,
+        resolution: String,
+    },
+}
+=======
+    ResolveConflict {
+        #[dsl(positional)]
+        conflict_id: String,
+        resolution: String,
+    },
+    /// ✏️ Text twin of `ArtifactCommand::Supersede`; its inputs follow as [`SupersedeInputLine`]s.
+    Supersede {
+        scope: Option<String>,
+    },
+    /// 🌿️ Text twin of `ArtifactCommand::CreateAlternativeWithSupersede`; its inputs follow as [`SupersedeInputLine`]s.
+    CreateAlternativeWithSupersede {
+        name: String,
+    },
+}
+
+/// ✏️ One 2-space-indented input line under a `supersede` command: `replace <target>` followed by the replacement's
+/// 4-space-indented `print_op` line, or `withdraw <target>`.
+#[derive(Clone, Debug, PartialEq, DslOps)]
+enum SupersedeInputLine {
+    Replace {
+        #[dsl(positional)]
+        target: String,
+    },
+    Withdraw {
+        #[dsl(positional)]
+        target: String,
+    },
+}
+
+impl OpText for SupersedeInputLine {
+    fn parse_op(line: &str) -> Result<Self, TextError> {
+        let variants = <Self as crate::os_dsl::DslVariants>::variants();
+        for (keyword, spec_fn) in &variants {
+            let probe = format!("{} ", keyword);
+            if line == keyword.as_str() || line.starts_with(&probe) {
+                let record = crate::os_dsl::parse(line, &spec_fn(), &crate::os_dsl::ParseOptions { limits: crate::os_dsl::Limits::default(), mode: crate::os_dsl::SourceMode::Inline })?;
+                return <Self as crate::os_dsl::DslVariants>::from_named_record(keyword, &record);
+            }
+        }
+        Err(crate::os_dsl::__rt::field_error(format!("unknown supersede input line '{line}'")))
+    }
+    fn print_op(&self) -> String {
+        let (keyword, record) = <Self as crate::os_dsl::DslVariants>::to_named_record(self);
+        let variants = <Self as crate::os_dsl::DslVariants>::variants();
+        let spec_fn = variants.iter().find(|(k, _)| k == &keyword).map(|(_, s)| *s).expect("variant spec must exist for its own keyword");
+        crate::os_dsl::print(&record, &spec_fn(), crate::os_dsl::JoinMode::Inline)
+    }
+}
+
+/// 📤️ Prints supersede inputs as their indented input lines (see [`SupersedeInputLine`]).
+fn print_supersede_inputs<Op: OpText>(out: &mut String, inputs: &[SupersedeInput<Op>]) -> Result<(), VcsError> {
+    for input in inputs {
+        let line = match &input.replacement {
+            Some(_) => SupersedeInputLine::Replace { target: input.target.0.clone() },
+            None => SupersedeInputLine::Withdraw { target: input.target.0.clone() },
+        };
+        out.push_str("  ");
+        out.push_str(&line.print_op());
+        out.push('\n');
+        if let Some(replacement) = &input.replacement {
+            let printed = replacement.print_op();
+            if printed.contains('\n') {
+                return Err(VcsError::Serialize("op-text print_op must not contain a newline".into()));
+            }
+            out.push_str("    ");
+            out.push_str(&printed);
+            out.push('\n');
+        }
+    }
+    Ok(())
+}
+
+/// 📥️ Parses the indented input lines [`print_supersede_inputs`] prints; at least one input is required.
+fn parse_supersede_inputs<Op: OpText>(lines: &[&str]) -> Result<Vec<SupersedeInput<Op>>, TextError> {
+    let mut inputs: Vec<SupersedeInput<Op>> = Vec::new();
+    let mut awaiting_replacement = false;
+    for raw in lines {
+        if let Some(operation) = raw.strip_prefix("    ") {
+            if !awaiting_replacement {
+                return Err(crate::os_dsl::__rt::field_error(format!("replacement operation without a replace line: {raw:?}")));
+            }
+            let input = inputs.last_mut().expect("a replace line precedes its replacement");
+            input.replacement = Some(Op::parse_op(operation.trim())?);
+            awaiting_replacement = false;
+            continue;
+        }
+        if awaiting_replacement {
+            return Err(crate::os_dsl::__rt::field_error("a replace line needs its 4-space-indented replacement operation"));
+        }
+        let Some(line) = raw.strip_prefix("  ") else {
+            return Err(crate::os_dsl::__rt::field_error(format!("expected a 2-space-indented supersede input line, got: {raw:?}")));
+        };
+        match SupersedeInputLine::parse_op(line.trim())? {
+            SupersedeInputLine::Replace { target } => {
+                inputs.push(SupersedeInput { target: MutationId(target), replacement: None });
+                awaiting_replacement = true;
+            }
+            SupersedeInputLine::Withdraw { target } => inputs.push(SupersedeInput { target: MutationId(target), replacement: None }),
+        }
+    }
+    if awaiting_replacement {
+        return Err(crate::os_dsl::__rt::field_error("a replace line needs its 4-space-indented replacement operation"));
+    }
+    if inputs.is_empty() {
+        return Err(crate::os_dsl::__rt::field_error("supersede requires at least one input line"));
+    }
+    Ok(inputs)
+}
+
+/// 🎯️ Binary twin of [`print_supersede_inputs`]: `count varint | (target str | 0 u8 | op len varint | op bytes | 1 u8)*`.
+fn write_supersede_inputs<Op: OpBinary>(out: &mut Vec<u8>, inputs: &[SupersedeInput<Op>]) -> Result<(), crate::os_spr::ProtocolError> {
+    crate::os_pack::write_varint_u64(out, inputs.len() as u64);
+    for input in inputs {
+        write_command_str(out, &input.target.0);
+        match &input.replacement {
+            Some(replacement) => {
+                out.push(0);
+                let bytes = replacement.encode_op()?;
+                crate::os_pack::write_varint_u64(out, bytes.len() as u64);
+                out.extend_from_slice(&bytes);
+            }
+            None => out.push(1),
+        }
+    }
+    Ok(())
+}
+
+fn read_supersede_inputs<Op: OpBinary>(reader: &mut crate::os_pack::ByteReader<'_>) -> Result<Vec<SupersedeInput<Op>>, crate::os_spr::ProtocolError> {
+    let count = reader.read_varint_u64()?;
+    let mut inputs = Vec::with_capacity(count.min(1_024) as usize);
+    for _ in 0..count {
+        let target = MutationId(read_command_str(reader)?);
+        let replacement = match reader.read_u8()? {
+            0 => {
+                let len = reader.read_varint_u64()?;
+                Some(Op::decode_op(reader.read_bytes(len as usize)?)?)
+            }
+            1 => None,
+            tag => return Err(crate::os_spr::ProtocolError::Malformed { what: "supersede input tag", offset: 0, detail: format!("unknown supersede input tag {tag}") }),
+        };
+        inputs.push(SupersedeInput { target, replacement });
+    }
+    Ok(inputs)
+}
+>>>>>>> END
+<<<<<<< ANCHOR
+        ArtifactCommand::ResolveConflict { conflict_id, resolution } => {
+            out.push_str(&CommandHeaderLine::ResolveConflict { conflict_id: conflict_id.clone(), resolution: conflict_resolution_to_token(*resolution).await.to_string() }.print_op());
+            out.push('\n');
+        }
+    }
+    Ok(out)
+}
+=======
+        ArtifactCommand::ResolveConflict { conflict_id, resolution } => {
+            out.push_str(&CommandHeaderLine::ResolveConflict { conflict_id: conflict_id.clone(), resolution: conflict_resolution_to_token(*resolution).await.to_string() }.print_op());
+            out.push('\n');
+        }
+        ArtifactCommand::Supersede { scope, inputs } => {
+            out.push_str(&CommandHeaderLine::Supersede { scope: scope.clone() }.print_op());
+            out.push('\n');
+            print_supersede_inputs(&mut out, inputs)?;
+        }
+        ArtifactCommand::CreateAlternativeWithSupersede { name, inputs } => {
+            out.push_str(&CommandHeaderLine::CreateAlternativeWithSupersede { name: name.clone() }.print_op());
+            out.push('\n');
+            print_supersede_inputs(&mut out, inputs)?;
+        }
+    }
+    Ok(out)
+}
+>>>>>>> END
+<<<<<<< ANCHOR
+        CommandHeaderLine::ResolveConflict { conflict_id, resolution } => Ok(ArtifactCommand::ResolveConflict { conflict_id, resolution: parse_conflict_resolution_token(&resolution).await? }),
+=======
+        CommandHeaderLine::ResolveConflict { conflict_id, resolution } => Ok(ArtifactCommand::ResolveConflict { conflict_id, resolution: parse_conflict_resolution_token(&resolution).await? }),
+        CommandHeaderLine::Supersede { scope } => Ok(ArtifactCommand::Supersede { scope, inputs: parse_supersede_inputs(&body_lines)? }),
+        CommandHeaderLine::CreateAlternativeWithSupersede { name } => Ok(ArtifactCommand::CreateAlternativeWithSupersede { name, inputs: parse_supersede_inputs(&body_lines)? }),
+>>>>>>> END
+<<<<<<< ANCHOR
+            ArtifactCommand::ResolveConflict { conflict_id, resolution } => {
+                crate::os_pack::write_varint_u64(&mut out, 16);
+                write_command_str(&mut out, conflict_id);
+                out.push(conflict_resolution_ordinal(*resolution));
+            }
+=======
+            ArtifactCommand::ResolveConflict { conflict_id, resolution } => {
+                crate::os_pack::write_varint_u64(&mut out, 16);
+                write_command_str(&mut out, conflict_id);
+                out.push(conflict_resolution_ordinal(*resolution));
+            }
+            ArtifactCommand::Supersede { scope, inputs } => {
+                crate::os_pack::write_varint_u64(&mut out, 17);
+                out.push(if scope.is_some() { 0b01 } else { 0 });
+                if let Some(scope) = scope {
+                    write_command_str(&mut out, scope);
+                }
+                write_supersede_inputs(&mut out, inputs)?;
+            }
+            ArtifactCommand::CreateAlternativeWithSupersede { name, inputs } => {
+                crate::os_pack::write_varint_u64(&mut out, 18);
+                write_command_str(&mut out, name);
+                write_supersede_inputs(&mut out, inputs)?;
+            }
+>>>>>>> END
+<<<<<<< ANCHOR
+            other => Err(crate::os_spr::ProtocolError::Malformed { what: "command variant", offset: 1, detail: format!("unknown command ordinal {other}") }),
+=======
+            17 => {
+                let presence = reader.read_u8()?;
+                let scope = if presence & 0b01 != 0 { Some(read_command_str(&mut reader)?) } else { None };
+                Ok(ArtifactCommand::Supersede { scope, inputs: read_supersede_inputs(&mut reader)? })
+            }
+            18 => {
+                let name = read_command_str(&mut reader)?;
+                Ok(ArtifactCommand::CreateAlternativeWithSupersede { name, inputs: read_supersede_inputs(&mut reader)? })
+            }
+            other => Err(crate::os_spr::ProtocolError::Malformed { what: "command variant", offset: 1, detail: format!("unknown command ordinal {other}") }),
+>>>>>>> END
+<<<<<<< ANCHOR
+            ArtifactCommand::ResolveConflict { conflict_id, resolution } => {
+                let report = self.resolve_conflict(&conflict_id, resolution).await?;
+                self.absorb_merge_report(&report);
+                Ok(())
+            }
+        }
+    }
+=======
+            ArtifactCommand::ResolveConflict { conflict_id, resolution } => {
+                let report = self.resolve_conflict(&conflict_id, resolution).await?;
+                self.absorb_merge_report(&report);
+                Ok(())
+            }
+            ArtifactCommand::Supersede { scope, inputs } => self.supersede_command(scope, inputs).await,
+            ArtifactCommand::CreateAlternativeWithSupersede { name, inputs } => self.create_alternative_with_supersede(name, inputs).await,
+        }
+    }
+
+    //#region 🔖️Supersede
+    /// ✏️ `Supersede`: supersedes typed inputs in every alternative or within one existing alternative
+    /// ([`Self::author_supersession`]).
+    async fn supersede_command(&mut self, scope: Option<String>, inputs: Vec<SupersedeInput<Mutation>>) -> Result<(), VcsError> {
+        let scope = match scope {
+            None => SupersedeScope::Document,
+            Some(alternative) if self.envelope.vcs.alternatives.iter().any(|known| known.id == alternative) => SupersedeScope::Alternative(alternative),
+            Some(alternative) => {
+                for input in inputs {
+                    if let Some(replacement) = input.replacement {
+                        self::Mutation::<P>::retire_cold(replacement);
+                    }
+                }
+                return Err(VcsError::UnknownAlternative(alternative));
+            }
+        };
+        let (inputs, target) = self.supersede_inputs(inputs)?;
+        self.author_supersession(scope, inputs, target, None).await.map(|_| ())
+    }
+
+    /// 🌿️ `CreateAlternativeWithSupersede`: the pending-edit commit, a `Branch` at the head and the supersession scoped to
+    /// the new alternative, authored as one batch ([`Self::author_supersession`]).
+    async fn create_alternative_with_supersede(&mut self, name: String, inputs: Vec<SupersedeInput<Mutation>>) -> Result<(), VcsError> {
+        let (inputs, target) = self.supersede_inputs(inputs)?;
+        self.author_supersession(SupersedeScope::NewAlternative(name), inputs, target, None).await.map(|_| ())
+    }
+
+    /// 🏁️ Finalizes a time-travel session without replaying again: `finished` is the completed Report replay of the
+    /// session's drafts ([`Self::begin_report_replay`]). Refused with `Stale` when this store moved since the replay began
+    /// (the session replays again) and with `Rejected { policy: Normal }` when its report blocks finalizing; otherwise the
+    /// drafts are authored as an overwrite or a new alternative and installed atomically with the replay's projection,
+    /// rebased inverses and messages in one outbound batch — the same install the `Supersede` command takes.
+    pub async fn commit_finished_replay(&mut self, finished: EditReplayResult<P, Mutation>, finalization: HistoryFinalization) -> Result<CommandReceipt, VcsError>
+    where
+        P: Sync,
+    {
+        self.ensure_durable_group_idle()?;
+        if finished.generation != self.generation || finished.revision != self.content_revision {
+            return Err(VcsError::Stale { expected_generation: finished.generation, generation: self.generation });
+        }
+        if finished.drafts.is_empty() {
+            return Err(VcsError::ValidationFailed("a finished replay without drafts supersedes nothing".into()));
+        }
+        let (inputs, target) = self.draft_inputs(&finished.drafts)?;
+        let scope = match finalization {
+            HistoryFinalization::Overwrite => SupersedeScope::Document,
+            HistoryFinalization::Alternative { name } => SupersedeScope::NewAlternative(name),
+        };
+        self.replace_pending_report_retained(PendingCommandReport::default())?;
+        self.author_supersession(scope, inputs, target, Some(finished)).await?;
+        self.last_projection_cause = Some(ArtifactProjectionCause::Replay);
+        self.flush_outbound().await?;
+        Ok(CommandReceipt { edit_ids: Vec::new(), generation: self.generation(), messages: std::mem::take(&mut self.pending_report.messages), worst: self.pending_report.worst.take() })
+    }
+
+    /// ✍️ The one authoring path of every supersession: builds its transitions (`Document`/`Alternative`: one `Supersede`;
+    /// `NewAlternative`: the pending-edit commit, a `Branch` at the head and the scoped `Supersede`), takes `replayed` when it
+    /// is the Report replay of exactly the resulting log and dry-runs it otherwise, refuses a report that blocks finalizing
+    /// (`Error`/`Fatal`, the hub check-in strictness) with `Rejected { policy: Normal }` and every replay message, and installs
+    /// everything atomically without replaying again.
+    async fn author_supersession(&mut self, scope: SupersedeScope, inputs: Vec<protocol::SupersededInput>, target: Vec<String>, replayed: Option<EditReplayResult<P, Mutation>>) -> Result<protocol::ReplayReport, VcsError> {
+        let mut clock = self.clock;
+        let mut envelopes = Vec::with_capacity(3);
+        let scope = match scope {
+            SupersedeScope::Document => None,
+            SupersedeScope::Alternative(alternative_id) => Some(alternative_id),
+            SupersedeScope::NewAlternative(name) => Some(self.author_head_alternative(name, &mut clock, &mut envelopes).await?),
+        };
+        let supersede = protocol::TransitionSupersede { scope, inputs };
+        supersede.validate().map_err(|error| VcsError::ValidationFailed(error.to_string()))?;
+        let dependencies = supersede.targets();
+        clock.tick(now_ms());
+        envelopes.push(self.transition_envelope(&crate::os_spr::HistoryTransition::Supersede(supersede), dependencies, target, clock));
+        let fold = self.prospective_fold(&envelopes)?;
+        let result = match replayed {
+            Some(result) if result.order == fold.applied && same_effective_inputs(&result.supersessions, &fold.supersessions) => result,
+            other => {
+                drop(other);
+                self.dry_run(&fold)?
+            }
+        };
+        let report = self.replay_report(&result)?;
+        if report.blocks_finalize() {
+            drop(result);
+            return Err(VcsError::Rejected { policy: crate::os_spr::MergePolicy::Normal, messages: report.outcomes.iter().flat_map(|outcome| outcome.messages.iter().cloned()).collect() });
+        }
+        self.install_transitions(envelopes, clock, Some(result)).await?;
+        self.record_replay_report(&report);
+        Ok(report)
+    }
+
+    /// 🌿️ Authors into `envelopes` the commit of every pending edit (when one is pending or no checkpoint exists) and a
+    /// `Branch` of `name` at the resulting head, answering the new alternative's id.
+    async fn author_head_alternative(&self, name: String, clock: &mut HybridLogicalTimestamp, envelopes: &mut Vec<crate::os_spr::MutationEnvelope>) -> Result<String, VcsError> {
+        let pending = uncommitted_edit_ids(&self.envelope, &self.applied_edit_ids).await;
+        let checkpoint_id = if !pending.is_empty() || self.envelope.vcs.checkpoints.is_empty() {
+            if self.applied_edit_ids.is_empty() {
+                return Err(VcsError::NoCheckpoint);
+            }
+            let (transition, dependencies, checkpoint_id) = self.pending_checkpoint_transition(None, Vec::new()).await?;
+            clock.tick(now_ms());
+            envelopes.push(self.transition_envelope(&transition, dependencies, Vec::new(), *clock));
+            checkpoint_id
+        } else {
+            (*self.current_checkpoint_id).clone().or_else(|| self.envelope.vcs.checkpoints.last().map(|checkpoint| checkpoint.id.clone())).ok_or(VcsError::NoCheckpoint)?
+        };
+        let alternative_id = mint_alternative_id(&name, std::slice::from_ref(&checkpoint_id)).await;
+        if self.envelope.vcs.alternatives.iter().any(|alternative| alternative.id == alternative_id) {
+            return Err(VcsError::ValidationFailed(format!("alternative {alternative_id} already exists")));
+        }
+        let dependencies = match envelopes.last() {
+            Some(commit) => vec![commit.mutation_id.clone()],
+            None => self.checkpoint_origin(&checkpoint_id).into_iter().collect(),
+        };
+        clock.tick(now_ms());
+        envelopes.push(self.transition_envelope(&crate::os_spr::HistoryTransition::Branch { alternative_id: alternative_id.clone(), name, checkpoint_id }, dependencies, Vec::new(), *clock));
+        Ok(alternative_id)
+    }
+
+    /// 🔮️ The history fold of the event log with `candidates` joined, touching nothing.
+    fn prospective_fold(&self, candidates: &[crate::os_spr::MutationEnvelope]) -> Result<crate::os_spr::HistoryFold, VcsError> {
+        let mut transitions = self.envelope.transitions.clone();
+        transitions.extend(candidates.iter().cloned());
+        fold_event_log::<P, Mutation>(&self.envelope.vcs.edits.iter().collect::<Vec<_>>(), &transitions, &self.envelope.conflicts)
+    }
+
+    /// 🧪️ The Report replay of everything `fold` changes against the live projection, driven to completion, touching nothing.
+    fn dry_run(&self, fold: &crate::os_spr::HistoryFold) -> Result<EditReplayResult<P, Mutation>, VcsError> {
+        let (from, horizon) = self.replay_window(&fold.applied, &fold.supersessions)?;
+        let mut replay = self.report_replay(&fold.applied, from, fold.supersessions.clone(), horizon)?.recording(Self::prefix_stride(fold.applied.len()));
+        replay.step(&self.envelope.vcs.edits, &mut || false)?;
+        replay.finish()
+    }
+
+    /// ✏️ Validates and encodes supersede inputs: every target is an applied operation that plans no foreign steps, every
+    /// replacement plans none either and re-encodes canonically under this document's schema. Also answers the conflict
+    /// target the transition envelope declares — the longest address every superseded and replacing operation shares.
+    /// Every replacement retires once encoded, on success and refusal alike.
+    fn supersede_inputs(&self, inputs: Vec<SupersedeInput<Mutation>>) -> Result<(Vec<protocol::SupersededInput>, Vec<String>), VcsError> {
+        let mut applied: HashMap<MutationId, &Mutation> = HashMap::new();
+        let mut failure = None;
+        for edit_id in self.applied_edit_ids.iter() {
+            match self.envelope.vcs.edits.iter().find(|edit| edit.id == *edit_id) {
+                Some(edit) => applied.extend(crate::os_spr::mutation_ids_for_edit::<P, Mutation>(edit).into_iter().zip(edit.forwards.iter())),
+                None => {
+                    failure = Some(VcsError::UnknownEdit(edit_id.clone()));
+                    break;
+                }
+            }
+        }
+        let mut encoded = Vec::with_capacity(inputs.len());
+        let mut address: Option<Vec<String>> = None;
+        for SupersedeInput { target, replacement } in inputs {
+            let checked = match (failure.is_some(), applied.get(&target)) {
+                (true, _) => None,
+                (false, None) => Some(Err(VcsError::ValidationFailed(format!("supersede target {} is not an applied operation", target.0)))),
+                (false, Some(original)) => Some(self.supersede_input(&target, original, replacement.as_ref())),
+            };
+            if let Some(replacement) = replacement {
+                self::Mutation::<P>::retire_cold(replacement);
+            }
+            match checked {
+                Some(Ok((input, written))) => {
+                    address = Some(match address {
+                        Some(known) => common_address(&known, &written),
+                        None => written,
+                    });
+                    encoded.push(input);
+                }
+                Some(Err(error)) => failure = Some(error),
+                None => {}
+            }
+        }
+        match failure {
+            Some(error) => Err(error),
+            None => Ok((encoded, address.unwrap_or_default())),
+        }
+    }
+
+    /// ✏️ One supersede input: its encoded replacement and the address it and the original operation share.
+    fn supersede_input(&self, target: &MutationId, original: &Mutation, replacement: Option<&Mutation>) -> Result<(protocol::SupersededInput, Vec<String>), VcsError> {
+        if original.may_emit_foreign_steps() {
+            return Err(VcsError::ValidationFailed(format!("supersede target {} plans foreign steps and cannot be edited", target.0)));
+        }
+        let mut address = original.conflict_target();
+        let replacement = match replacement {
+            None => protocol::InputReplacement::Withdrawn,
+            Some(operation) => {
+                if operation.may_emit_foreign_steps() {
+                    return Err(VcsError::ValidationFailed(format!("the replacement of {} plans foreign steps", target.0)));
+                }
+                let payload = operation.encode_op().map_err(|error| VcsError::Serialize(error.to_string()))?;
+                let canonical = Mutation::decode_op(&payload).map_err(|error| VcsError::Deserialize(error.to_string()))?;
+                let recoded = canonical.encode_op();
+                self::Mutation::<P>::retire_cold(canonical);
+                if recoded.map_err(|error| VcsError::Serialize(error.to_string()))? != payload {
+                    return Err(VcsError::ValidationFailed(format!("the replacement of {} does not re-encode canonically", target.0)));
+                }
+                let written = operation.conflict_target();
+                address = common_address(&address, &written);
+                protocol::InputReplacement::Input { schema: self.envelope.schema.clone(), payload }
+            }
+        };
+        Ok((protocol::SupersededInput { target: target.clone(), replacement }, address))
+    }
+
+    /// ✍️ Draft inputs a time-travel session previewed, validated exactly like typed supersede inputs.
+    fn draft_inputs(&self, drafts: &BTreeMap<MutationId, protocol::InputReplacement>) -> Result<(Vec<protocol::SupersededInput>, Vec<String>), VcsError> {
+        let mut typed = Vec::with_capacity(drafts.len());
+        let mut failure = None;
+        for (target, replacement) in drafts {
+            let decoded = match replacement {
+                protocol::InputReplacement::Withdrawn => Ok(None),
+                protocol::InputReplacement::Input { schema, payload } if *schema == self.envelope.schema => Mutation::decode_op(payload).map(Some).map_err(|error| VcsError::Deserialize(format!("draft of {} does not decode: {error}", target.0))),
+                protocol::InputReplacement::Input { schema, .. } => Err(VcsError::ValidationFailed(format!("draft of {} names schema {schema}, not {}", target.0, self.envelope.schema))),
+            };
+            match decoded {
+                Ok(replacement) => typed.push(SupersedeInput { target: target.clone(), replacement }),
+                Err(error) => {
+                    failure.get_or_insert(error);
+                }
+            }
+        }
+        if let Some(error) = failure {
+            for input in typed {
+                if let Some(replacement) = input.replacement {
+                    self::Mutation::<P>::retire_cold(replacement);
+                }
+            }
+            return Err(error);
+        }
+        self.supersede_inputs(typed)
+    }
+
+    /// 🛂️ A remote supersession must replace inputs with this document's own canonical operations.
+    fn validate_remote_supersede(&self, supersede: &protocol::TransitionSupersede) -> Result<(), VcsError> {
+        for input in &supersede.inputs {
+            let protocol::InputReplacement::Input { schema, payload } = &input.replacement else { continue };
+            if *schema != self.envelope.schema {
+                return Err(VcsError::ValidationFailed(format!("remote supersession of {} names schema {schema}, not {}", input.target.0, self.envelope.schema)));
+            }
+            let decoded = Mutation::decode_op(payload).map_err(|error| VcsError::Deserialize(format!("remote supersession of {} does not decode: {error}", input.target.0)))?;
+            let recoded = decoded.encode_op();
+            self::Mutation::<P>::retire_cold(decoded);
+            if recoded.map_err(|error| VcsError::Serialize(error.to_string()))? != *payload {
+                return Err(VcsError::ValidationFailed(format!("remote supersession of {} is not canonical", input.target.0)));
+            }
+        }
+        Ok(())
+    }
+
+    /// 📨️ Hands a supersession's replay messages to the dispatch receipt, grouped by edit.
+    fn record_replay_report(&mut self, report: &protocol::ReplayReport) {
+        let mut grouped: Vec<crate::os_spr::EditMessages> = Vec::new();
+        for outcome in report.outcomes.iter().filter(|outcome| !outcome.messages.is_empty()) {
+            match grouped.last_mut() {
+                Some(entry) if entry.edit_id == outcome.edit_id => entry.messages.extend(outcome.messages.iter().cloned()),
+                _ => grouped.push(crate::os_spr::EditMessages { edit_id: outcome.edit_id.clone(), messages: outcome.messages.clone() }),
+            }
+        }
+        self.pending_report.messages = grouped;
+        self.pending_report.worst = report.worst;
+    }
+    //#endregion 🔖️Supersede
+>>>>>>> END
+<<<<<<< ANCHOR
+        for envelope in transitions {
+            crate::os_spr::history_transition_from_envelope(&envelope).map_err(|error| VcsError::Deserialize(error.to_string()))?;
+            if let Some(known) = self.envelope.transitions.iter().find(|known| known.mutation_id == envelope.mutation_id) {
+=======
+        for envelope in transitions {
+            let transition = crate::os_spr::history_transition_from_envelope(&envelope).map_err(|error| VcsError::Deserialize(error.to_string()));
+            let admissible = transition.and_then(|transition| match transition {
+                Some(crate::os_spr::HistoryTransition::Supersede(supersede)) => self.validate_remote_supersede(&supersede),
+                _ => Ok(()),
+            });
+            if let Err(error) = admissible {
+                self.envelope.transitions.retain(|known| !admitted.contains(&known.mutation_id));
+                return Err(error);
+            }
+            if let Some(known) = self.envelope.transitions.iter().find(|known| known.mutation_id == envelope.mutation_id) {
+>>>>>>> END
+<<<<<<< ANCHOR
+    async fn commit_transition(&mut self, transition: crate::os_spr::HistoryTransition, dependencies: Vec<MutationId>) -> Result<(), VcsError> {
+        let actor = ActorId((*self.local_actor_id).clone().unwrap_or_else(|| "local".to_string()));
+        let mut timestamp = self.clock;
+        timestamp.tick(now_ms());
+        let envelope = crate::os_spr::history_transition_envelope(&transition, &ArtifactId(self.envelope.id.clone()), &actor, dependencies, timestamp);
+        let transition_id = envelope.mutation_id.clone();
+        self.insert_transition(envelope.clone());
+        if let Err(error) = self.reproject().await {
+            self.envelope.transitions.retain(|known| known.mutation_id != transition_id);
+            return Err(error);
+        }
+        self.dag.seed_applied(transition_id).map_err(|error| VcsError::ValidationFailed(error.to_string()))?;
+        self.clock = timestamp;
+        self.pending_report.outbound.push(envelope);
+        self.bump()
+    }
+=======
+    async fn commit_transition(&mut self, transition: crate::os_spr::HistoryTransition, dependencies: Vec<MutationId>) -> Result<(), VcsError> {
+        let mut timestamp = self.clock;
+        timestamp.tick(now_ms());
+        let envelope = self.transition_envelope(&transition, dependencies, Vec::new(), timestamp);
+        self.install_transitions(vec![envelope], timestamp, None).await
+    }
+
+    /// ✉️ The envelope of one locally authored transition at `timestamp`, declaring `target` as the address it writes.
+    fn transition_envelope(&self, transition: &crate::os_spr::HistoryTransition, dependencies: Vec<MutationId>, target: Vec<String>, timestamp: HybridLogicalTimestamp) -> crate::os_spr::MutationEnvelope {
+        let actor = ActorId((*self.local_actor_id).clone().unwrap_or_else(|| "local".to_string()));
+        let mut envelope = crate::os_spr::history_transition_envelope(transition, &ArtifactId(self.envelope.id.clone()), &actor, dependencies, timestamp);
+        envelope.target = target;
+        envelope
+    }
+
+    /// ✍️ Records locally authored transition envelopes and materializes the projection once — adopting `replayed` when it
+    /// is the Report replay of exactly the resulting log, replaying otherwise. All of them leave in this dispatch's outbound
+    /// batch, or none is recorded.
+    async fn install_transitions(&mut self, envelopes: Vec<crate::os_spr::MutationEnvelope>, clock: HybridLogicalTimestamp, replayed: Option<EditReplayResult<P, Mutation>>) -> Result<(), VcsError> {
+        let identities: Vec<MutationId> = envelopes.iter().map(|envelope| envelope.mutation_id.clone()).collect();
+        for envelope in &envelopes {
+            self.insert_transition(envelope.clone());
+        }
+        let projected = match replayed {
+            Some(result) => self.reproject_replayed(result),
+            None => self.reproject().await,
+        };
+        if let Err(error) = projected {
+            self.envelope.transitions.retain(|known| !identities.contains(&known.mutation_id));
+            return Err(error);
+        }
+        for identity in identities {
+            self.dag.seed_applied(identity).map_err(|error| VcsError::ValidationFailed(error.to_string()))?;
+        }
+        self.clock = clock;
+        self.pending_report.outbound.extend(envelopes);
+        self.bump()
+    }
+>>>>>>> END
+<<<<<<< ANCHOR
+    async fn commit_pending_checkpoint(&mut self, message: Option<String>, authors: Vec<Author>) -> Result<(), VcsError> {
+        let pending = uncommitted_edit_ids(&self.envelope, &self.applied_edit_ids).await;
+=======
+    async fn commit_pending_checkpoint(&mut self, message: Option<String>, authors: Vec<Author>) -> Result<(), VcsError> {
+        let (transition, dependencies, _) = self.pending_checkpoint_transition(message, authors).await?;
+        self.commit_transition(transition, dependencies).await
+    }
+
+    /// 🚩️ The `Commit` transition (with its dependencies and new checkpoint id) grouping every applied-but-uncommitted edit.
+    async fn pending_checkpoint_transition(&self, message: Option<String>, authors: Vec<Author>) -> Result<(crate::os_spr::HistoryTransition, Vec<MutationId>, String), VcsError> {
+        let pending = uncommitted_edit_ids(&self.envelope, &self.applied_edit_ids).await;
+>>>>>>> END
+<<<<<<< ANCHOR
+        let checkpoint = crate::os_spr::TransitionCheckpoint { checkpoint_id, parent_id, change_id, mutation_ids, description: message.clone(), saved_at, authors, message, timestamp };
+        self.commit_transition(crate::os_spr::HistoryTransition::Commit(checkpoint), dependencies).await
+    }
+=======
+        let checkpoint = crate::os_spr::TransitionCheckpoint { checkpoint_id: checkpoint_id.clone(), parent_id, change_id, mutation_ids, description: message.clone(), saved_at, authors, message, timestamp };
+        Ok((crate::os_spr::HistoryTransition::Commit(checkpoint), dependencies, checkpoint_id))
+    }
+>>>>>>> END

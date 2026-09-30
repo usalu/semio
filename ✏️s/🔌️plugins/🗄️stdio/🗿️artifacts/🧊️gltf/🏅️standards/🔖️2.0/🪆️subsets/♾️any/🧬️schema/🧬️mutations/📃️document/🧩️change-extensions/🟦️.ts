@@ -1,7 +1,13 @@
-/** 🦠️ change-document-extension-data executable glTF command. */
-import type { GltfJson, GltfSnapshot } from '../../📸️snapshot/🟦️.ts';
-import { clone, reject, run, same, type GltfLeafResult, type GltfMutationRejection } from './🟦️';
-export const GltfChangeDocumentExtensionDataDescriptor = { id: 's.stdio.gltf.mutation.change-document-extension-data.v1', version: 1, touchedPaths: ["document/extensions"], referencePolicy: 'none' } as const;
-export interface GltfChangeDocumentExtensionDataPayload { data: GltfJson | null }
-export const validateGltfChangeDocumentExtensionData = (payload: GltfChangeDocumentExtensionDataPayload, base: GltfSnapshot): GltfMutationRejection | undefined => { if (same(payload.data, base.document.extensions ?? null)) return reject('gltf.mutation.no-observable-change', 'document/extensions', 'value already has this value'); return undefined; };
-export const applyGltfChangeDocumentExtensionData = (base: GltfSnapshot, payload: GltfChangeDocumentExtensionDataPayload): GltfLeafResult => run(base, payload, validateGltfChangeDocumentExtensionData, (next, payload) => { next.document.extensions = payload.data ?? undefined; });
+/** 🧩️ `change-document-extension-data` wire twin: the flat `Apply` payload `GltfChangeDocumentExtensionDataPayload` and the phase wire `ChangeDocumentExtensionDataMutation`, exactly as `./🦀️.rs` writes them.
+ * @see ./🧬️schema/🔣️.json */
+import { type GltfJson, gltfWireObject, gltfWireRequired, parseGltfJson } from "../../../📸️snapshot/🟦️.ts";
+import { type GltfDiff, type GltfPhase, gltfWirePhase, parseGltfDiff } from "../../../🔺️diff/🟦️.ts";
+
+export interface GltfChangeDocumentExtensionDataPayload {
+  data: GltfJson;
+}
+
+export type ChangeDocumentExtensionDataMutation = GltfPhase<GltfChangeDocumentExtensionDataPayload, GltfDiff>;
+
+export const parseGltfChangeDocumentExtensionDataPayload = gltfWireObject<GltfChangeDocumentExtensionDataPayload>({ data: gltfWireRequired(parseGltfJson) });
+export const parseChangeDocumentExtensionDataMutation = gltfWirePhase(parseGltfChangeDocumentExtensionDataPayload, parseGltfDiff);

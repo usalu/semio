@@ -11,10 +11,37 @@
   ],
   "properties": {
     "mutation": {
-      "const": "disconnectHandles"
+      "const": "disconnectHandles",
+      "x-semio-ui": {
+        "widget": "hidden",
+        "role": "discriminator",
+        "label": {
+          "en": "Mutation",
+          "de": "Mutation"
+        }
+      }
     },
     "id": {
-      "type": "string"
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Edge",
+          "de": "Kante"
+        },
+        "description": {
+          "en": "The edge this mutation addresses.",
+          "de": "Die Kante, die diese Mutation adressiert."
+        },
+        "ref": {
+          "kind": "edge",
+          "domain": "vortex",
+          "granularity": "edge"
+        },
+        "group": "target",
+        "order": 10
+      }
     }
   }
 }

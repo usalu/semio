@@ -1,0 +1,10 @@
+{
+  "mutation": "changeMaterialDoubleSided",
+  "payload": {
+    "phase": "apply",
+    "value": {
+      "material": 0,
+      "doubleSided": true
+    }
+  }
+}

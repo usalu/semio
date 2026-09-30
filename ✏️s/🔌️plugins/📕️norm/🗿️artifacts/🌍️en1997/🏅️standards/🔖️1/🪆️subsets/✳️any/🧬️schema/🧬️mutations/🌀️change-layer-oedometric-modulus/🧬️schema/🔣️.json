@@ -5,15 +5,52 @@
   "type": "object",
   "additionalProperties": false,
   "required": [
+    "mutation",
     "id",
     "newOedometricModulus"
   ],
   "properties": {
+    "mutation": {
+      "const": "changeLayerOedometricModulus"
+    },
     "id": {
-      "type": "string"
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Soil layer",
+          "de": "Bodenschicht"
+        },
+        "description": {
+          "en": "The soil layer this mutation addresses.",
+          "de": "Die Bodenschicht, die diese Mutation adressiert."
+        },
+        "ref": {
+          "kind": "soilLayer"
+        },
+        "group": "target",
+        "order": 10
+      }
     },
     "newOedometricModulus": {
-      "type": "number"
+      "type": "number",
+      "exclusiveMinimum": 0,
+      "x-semio-ui": {
+        "widget": "stepper",
+        "role": "value",
+        "label": {
+          "en": "Oedometer modulus E_oed",
+          "de": "Steifemodul E_s"
+        },
+        "unit": "Pa",
+        "displayUnit": "N/mm²",
+        "displayFactor": 1e-06,
+        "step": 1000000.0,
+        "precision": 1,
+        "group": "soil",
+        "order": 20
+      }
     }
   }
 }

@@ -37,7 +37,7 @@ use semio_repo_test_host::Json;
 /// here only by this module's own real-fixture sweep test, which is what keeps this copy honest
 /// against a drift (the case adapter's own `KINDS` is the one the runner actually dispatches on).
 #[cfg(test)]
-const KINDS: &[&str] = &["no-mutation", "set-snapshot", "set-doctype", "insert-node", "remove-node", "set-element-name", "set-attribute", "set-text", "set-comment", "set-raw-text"];
+const KINDS: &[&str] = &["set-snapshot", "set-doctype", "insert-node", "remove-node", "set-element-name", "set-attribute", "set-text", "set-comment", "set-raw-text"];
 //#endregion 🔖️Kinds
 
 #[cfg(feature = "oracles")]
@@ -105,10 +105,9 @@ mod oracles {
         }
     }
 
-    /// 🔎️ Owned node-spec JSON grammar mutation params speak: `{"kind":"element","name":...,
-    /// "attributes":[{"name":...,"value":string|null}],"children":[...]}` |
-    /// `{"kind":"text"|"comment","text":...}` | `{"kind":"rawText","parentKind":"script"|"style",
-    /// "text":...}`.
+    /// 🔎️ One `HtmlNode` wire value — the node union the leaf payload schema declares: `{"kind":"element","name":...,
+    /// "attributes":[{"name":...,"value"?:string}],"children":[...]}` (empty lists and a valueless attribute's `value`
+    /// omitted) | `{"kind":"text"|"comment","text":...}` | `{"kind":"rawText","parentKind":"script"|"style","text":...}`.
     fn json_to_hnode(value: &Json) -> Result<HNode, String> {
         match value.str("kind").as_str() {
             "element" => Ok(HNode::Element {
@@ -135,45 +134,6 @@ mod oracles {
         }
     }
 
-    /// 🔁️ The reverse of [`json_to_hnode`] — used to capture a removed node's exact value so an
-    /// inverse spec can hand it back to [`json_to_hnode`] as the undo's own `insert-node` params, and
-    /// to project a node for comparison.
-    fn hnode_to_json(node: &HNode) -> Json {
-        match node {
-            HNode::Element { name, attrs, children } => Json::Object(vec![
-                ("kind".to_string(), Json::String("element".to_string())),
-                ("name".to_string(), Json::String(name.clone())),
-                (
-                    "attributes".to_string(),
-                    Json::Array(
-                        attrs
-                            .iter()
-                            .map(|(key, value)| {
-                                Json::Object(vec![
-                                    ("name".to_string(), Json::String(key.clone())),
-                                    (
-                                        "value".to_string(),
-                                        match value {
-                                            Some(v) => Json::String(v.clone()),
-                                            None => Json::Null,
-                                        },
-                                    ),
-                                ])
-                            })
-                            .collect(),
-                    ),
-                ),
-                ("children".to_string(), Json::Array(children.iter().map(hnode_to_json).collect())),
-            ]),
-            HNode::Text(text) => Json::Object(vec![("kind".to_string(), Json::String("text".to_string())), ("text".to_string(), Json::String(text.clone()))]),
-            HNode::Comment(text) => Json::Object(vec![("kind".to_string(), Json::String("comment".to_string())), ("text".to_string(), Json::String(text.clone()))]),
-            HNode::RawText { script, text } => Json::Object(vec![
-                ("kind".to_string(), Json::String("rawText".to_string())),
-                ("parentKind".to_string(), Json::String(if *script { "script".to_string() } else { "style".to_string() })),
-                ("text".to_string(), Json::String(text.clone())),
-            ]),
-        }
-    }
     //#endregion 🔖️JsonValue
 
     //#region 🔖️PathAddressing
@@ -316,13 +276,13 @@ mod oracles {
     /// every example this subset's own feature exercises resolves against the real document.
     fn apply_kind(doc: &mut HDoc, kind: &str, params: &Json) -> Result<(), String> {
         match kind {
-            "no-mutation" => {}
             "set-snapshot" => {
-                let doctype = match params.get("doctype") {
+                let snapshot = params.get("snapshot").cloned().unwrap_or(Json::Null);
+                let doctype = match snapshot.get("doctype") {
                     Some(Json::String(text)) => Some(text.clone()),
                     _ => None,
                 };
-                let root = Some(json_to_hnode(&params.get("root").cloned().unwrap_or(Json::Null))?);
+                let root = Some(json_to_hnode(&snapshot.get("root").cloned().unwrap_or(Json::Null))?);
                 *doc = HDoc { doctype, root };
             }
             "set-doctype" => {
@@ -404,115 +364,53 @@ mod oracles {
     //#endregion 🔖️Forward
 
     //#region 🔖️Inverse
-    /// ↩️ Reads `base` (the CURRENT, pre-mutation document) to build the spec that undoes `{kind,
-    /// params}` — same law `HtmlMutation::inverse` proves at the Rust-model level
-    /// (`schema/🧬️mutations/🦀️.rs`), computed here independently against this oracle's own
-    /// tree instead.
-    fn inverse_spec(base: &HDoc, kind: &str, params: &Json) -> Json {
-        let spec = |inverse_kind: &str, inverse_params: Json| Json::Object(vec![("kind".to_string(), Json::String(inverse_kind.to_string())), ("params".to_string(), inverse_params)]);
-        let obj = |entries: Vec<(&str, Json)>| Json::Object(entries.into_iter().map(|(key, value)| (key.to_string(), value)).collect());
+    /// ↩️ Undoes `{kind, params}` on `doc` (the tree the forward step left behind) by restoring what the forward step
+    /// discarded from `base` — the same law `HtmlMutation::inverse` proves at the Rust-model level
+    /// (`schema/🧬️mutations/🦀️.rs`), computed here independently against this oracle's own tree instead.
+    fn invert(base: &HDoc, doc: &mut HDoc, kind: &str, params: &Json) -> Result<(), String> {
+        let path = usize_path(params.array("path"));
+        let at = |root: Option<&HNode>, path: &[usize]| resolve(root, path).cloned().ok_or_else(|| format!("inverse {kind}: the original document has no node at {path:?}"));
+        let replace = |doc: &mut HDoc, path: &[usize], node: HNode| -> Result<(), String> {
+            *resolve_mut(doc.root.as_mut(), path).ok_or_else(|| format!("inverse {kind}: the mutated document has no node at {path:?}"))? = node;
+            Ok(())
+        };
         match kind {
-            "no-mutation" => spec("no-mutation", obj(vec![])),
-            "set-snapshot" => spec(
-                "set-snapshot",
-                obj(vec![
-                    (
-                        "doctype",
-                        match &base.doctype {
-                            Some(text) => Json::String(text.clone()),
-                            None => Json::Null,
-                        },
-                    ),
-                    (
-                        "root",
-                        match &base.root {
-                            Some(root) => hnode_to_json(root),
-                            None => Json::Null,
-                        },
-                    ),
-                ]),
-            ),
-            "set-doctype" => spec(
-                "set-doctype",
-                obj(vec![(
-                    "doctype",
-                    match &base.doctype {
-                        Some(text) => Json::String(text.clone()),
-                        None => Json::Null,
-                    },
-                )]),
-            ),
-            "insert-node" => {
-                let parent = params.array("parent");
-                let index = usize_field(params, "index");
-                spec("remove-node", obj(vec![("parent", Json::Array(parent)), ("index", Json::Number(index as f64))]))
+            "set-snapshot" => *doc = base.clone(),
+            "set-doctype" => doc.doctype = base.doctype.clone(),
+            "insert-node" | "remove-node" => {
+                let parent = usize_path(params.array("parent"));
+                replace(doc, &parent, at(base.root.as_ref(), &parent)?)?;
             }
-            "remove-node" => {
-                let parent_json = params.array("parent");
-                let parent = usize_path(parent_json.clone());
-                let index = usize_field(params, "index");
-                let node = match resolve(base.root.as_ref(), &parent) {
-                    Some(HNode::Element { children, .. }) => children.get(index).cloned(),
-                    _ => None,
+            "set-attribute" => {
+                let name = params.str("name");
+                let prior = match at(base.root.as_ref(), &path)? {
+                    HNode::Element { attrs, .. } => attrs.into_iter().find(|(key, _)| key == &name).map(|(_, value)| value),
+                    _ => return Err("inverse set-attribute: the original target is not an element".to_string()),
                 };
-                match node {
-                    Some(existing) => spec("insert-node", obj(vec![("parent", Json::Array(parent_json)), ("index", Json::Number(index as f64)), ("node", hnode_to_json(&existing))])),
-                    None => spec("no-mutation", obj(vec![])),
+                let Some(HNode::Element { attrs, .. }) = resolve_mut(doc.root.as_mut(), &path) else {
+                    return Err("inverse set-attribute: path does not address an element".to_string());
+                };
+                match prior {
+                    Some(value) => match attrs.iter_mut().find(|(key, _)| key == &name) {
+                        Some(entry) => entry.1 = value,
+                        None => attrs.push((name, value)),
+                    },
+                    None => attrs.retain(|(key, _)| key != &name),
                 }
             }
             "set-element-name" => {
-                let path_json = params.array("path");
-                let path = usize_path(path_json.clone());
-                let prior = match resolve(base.root.as_ref(), &path) {
-                    Some(HNode::Element { name, .. }) => name.clone(),
-                    _ => return spec("no-mutation", obj(vec![])),
+                let prior = match at(base.root.as_ref(), &path)? {
+                    HNode::Element { name, .. } => name,
+                    _ => return Err("inverse set-element-name: the original target is not an element".to_string()),
                 };
-                spec("set-element-name", obj(vec![("path", Json::Array(path_json)), ("name", Json::String(prior))]))
+                if let Some(HNode::Element { name, .. }) = resolve_mut(doc.root.as_mut(), &path) {
+                    *name = prior;
+                }
             }
-            "set-attribute" => {
-                let path_json = params.array("path");
-                let path = usize_path(path_json.clone());
-                let name = params.str("name");
-                let prior = match resolve(base.root.as_ref(), &path) {
-                    Some(HNode::Element { attrs, .. }) => attrs.iter().find(|(key, _)| key == &name).map(|(_, value)| value.clone()),
-                    _ => None,
-                };
-                let value_json = match prior {
-                    Some(Some(value)) => Json::String(value),
-                    Some(None) => Json::Null,
-                    None => Json::Null,
-                };
-                spec("set-attribute", obj(vec![("path", Json::Array(path_json)), ("name", Json::String(name)), ("value", value_json)]))
-            }
-            "set-text" => {
-                let path_json = params.array("path");
-                let path = usize_path(path_json.clone());
-                let prior = match resolve(base.root.as_ref(), &path) {
-                    Some(HNode::Text(text)) => text.clone(),
-                    _ => String::new(),
-                };
-                spec("set-text", obj(vec![("path", Json::Array(path_json)), ("text", Json::String(prior))]))
-            }
-            "set-comment" => {
-                let path_json = params.array("path");
-                let path = usize_path(path_json.clone());
-                let prior = match resolve(base.root.as_ref(), &path) {
-                    Some(HNode::Comment(text)) => text.clone(),
-                    _ => String::new(),
-                };
-                spec("set-comment", obj(vec![("path", Json::Array(path_json)), ("text", Json::String(prior))]))
-            }
-            "set-raw-text" => {
-                let path_json = params.array("path");
-                let path = usize_path(path_json.clone());
-                let prior = match resolve(base.root.as_ref(), &path) {
-                    Some(HNode::RawText { text, .. }) => text.clone(),
-                    _ => String::new(),
-                };
-                spec("set-raw-text", obj(vec![("path", Json::Array(path_json)), ("text", Json::String(prior))]))
-            }
-            other => spec(other, params.clone()),
+            "set-text" | "set-comment" | "set-raw-text" => replace(doc, &path, at(base.root.as_ref(), &path)?)?,
+            other => return Err(format!("mutation kind {other:?} has no oracle inverse implementation")),
         }
+        Ok(())
     }
     //#endregion 🔖️Inverse
 
@@ -540,11 +438,15 @@ mod oracles {
     /// share no code with `crate::standards::v5::subsets::any`.
     pub fn apply_mutation_inverse(input: &[u8], kind: &str, params: &Json) -> Result<Vec<u8>, String> {
         let base = parse(input)?;
-        let inverse = inverse_spec(&base, kind, params);
-        let mut doc = base;
+        let mut doc = base.clone();
         apply_kind(&mut doc, kind, params)?;
-        apply_kind(&mut doc, &inverse.str("kind"), inverse.get("params").unwrap_or(&Json::Null))?;
+        invert(&base, &mut doc, kind, params)?;
         serialize_doc(&doc)
+    }
+
+    /// 🔁️ Decode then re-encode through `html5ever` alone — the oracle half of the identity law.
+    pub fn round_trip(input: &[u8]) -> Result<Vec<u8>, String> {
+        serialize_doc(&parse(input)?)
     }
 
     //#region 🔖️Projection
@@ -643,6 +545,12 @@ pub fn oracle_apply_mutation_inverse(input: &[u8], spec: &Json) -> Result<Vec<u8
     oracles::apply_mutation_inverse(input, &kind, &params)
 }
 
+/// 🔁️ Decodes and re-encodes one real artifact through the reference implementation alone.
+#[cfg(feature = "oracles")]
+pub fn oracle_round_trip(input: &[u8]) -> Result<Vec<u8>, String> {
+    oracles::round_trip(input)
+}
+
 /// 👁️ This subset's own semantic projection. @see [`oracles::project`].
 #[cfg(feature = "oracles")]
 pub fn project_html_5(bytes: &[u8]) -> Result<Json, String> {
@@ -657,6 +565,11 @@ pub fn oracle_apply_mutation(_input: &[u8], _spec: &Json) -> Result<Vec<u8>, Str
 
 #[cfg(not(feature = "oracles"))]
 pub fn oracle_apply_mutation_inverse(_input: &[u8], _spec: &Json) -> Result<Vec<u8>, String> {
+    Err("the `oracles` feature is disabled — this host was not built with the registered reference implementations".to_string())
+}
+
+#[cfg(not(feature = "oracles"))]
+pub fn oracle_round_trip(_input: &[u8]) -> Result<Vec<u8>, String> {
     Err("the `oracles` feature is disabled — this host was not built with the registered reference implementations".to_string())
 }
 

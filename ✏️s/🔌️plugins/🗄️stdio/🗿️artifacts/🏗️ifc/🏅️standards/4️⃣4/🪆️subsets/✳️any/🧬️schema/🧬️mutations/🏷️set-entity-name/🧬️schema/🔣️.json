@@ -5,20 +5,48 @@
   "type": "object",
   "additionalProperties": false,
   "required": [
+    "mutation",
     "id",
     "name"
   ],
   "properties": {
-    "id": {
-      "type": "integer",
-      "minimum": 0
-    },
-    "name": {
-      "type": "string"
-    },
     "mutation": {
       "const": "setEntityName",
       "description": "Aggregate discriminator spliced in by IfcMutation; absent when the payload stands alone."
+    },
+    "id": {
+      "type": "integer",
+      "minimum": 0,
+      "x-semio-ui": {
+        "widget": "stepper",
+        "label": {
+          "en": "Entity",
+          "de": "Entität"
+        },
+        "description": {
+          "en": "STEP instance id (#n) of the entity.",
+          "de": "STEP-Instanz-ID (#n) der Entität."
+        },
+        "precision": 0,
+        "group": "target",
+        "order": 10
+      }
+    },
+    "name": {
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "text",
+        "label": {
+          "en": "Entity type",
+          "de": "Entitätstyp"
+        },
+        "description": {
+          "en": "Upper-case IFC entity name, e.g. IFCSLAB.",
+          "de": "IFC-Entitätsname in Großbuchstaben, z. B. IFCSLAB."
+        },
+        "group": "value",
+        "order": 20
+      }
     }
   }
 }

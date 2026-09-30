@@ -4,7 +4,7 @@
   "title": "SetCell",
   "type": "object",
   "additionalProperties": false,
-  "required": ["address", "value"],
+  "required": ["mutation","address", "value"],
   "properties": {
     "address": { "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/xlsx/ecma-376/base/cell-address.json" },
     "value": { "$ref": "#/$defs/XlsxCellValue" },

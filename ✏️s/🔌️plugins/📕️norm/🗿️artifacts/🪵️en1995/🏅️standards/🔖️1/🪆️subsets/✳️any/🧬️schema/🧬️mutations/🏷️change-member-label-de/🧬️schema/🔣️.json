@@ -10,10 +10,37 @@
   ],
   "properties": {
     "memberId": {
-      "type": "string"
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Member",
+          "de": "Bauteil"
+        },
+        "description": {
+          "en": "The timber member this mutation addresses.",
+          "de": "Das Holzbauteil, das diese Mutation adressiert."
+        },
+        "ref": {
+          "kind": "member"
+        },
+        "group": "target",
+        "order": 10
+      }
     },
     "newValue": {
-      "type": "string"
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "text",
+        "role": "value",
+        "label": {
+          "en": "German label",
+          "de": "Deutsche Bezeichnung"
+        },
+        "group": "labels",
+        "order": 20
+      }
     }
   }
 }

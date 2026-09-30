@@ -1,5 +1,5 @@
 /** 🏠️ Strict local-interaction contracts and independent immutable restore semantics. */
-import Ajv from "ajv";
+import { semioSchemaAjvV1 } from "../../../../../../🛍️products/💻️os/🧪️tests/🧬️schema-oracle/🟦️.ts";
 import { produce } from "immer";
 import { applyEdits, modify, parse } from "jsonc-parser";
 import { sumBy } from "lodash";
@@ -10,7 +10,7 @@ import leb from "@webassemblyjs/leb128/lib/leb.js";
 //#region 🧬️Contract
 const schema = await Bun.file(new URL("../../🧬️schema/🔣️.json", import.meta.url)).json();
 const fixture = await Bun.file(new URL("../../🧫️fixtures/🏠️local-interaction/🔣️.json", import.meta.url)).json();
-const ajv = new Ajv({ strict: true, allErrors: true }).addSchema(schema);
+const ajv = semioSchemaAjvV1({ allErrors: true }).addSchema(schema);
 const validate = ajv.getSchema(`${schema.$id}#/$defs/LocalInteractionFixture`)!;
 assert(validate(fixture), JSON.stringify(validate.errors));
 assert.equal(new Set(fixture.cases.map((row: any) => row.id)).size, fixture.cases.length);
@@ -242,8 +242,7 @@ for (const invalid of [{ ...mutationFixture, localInteraction: {} }, { ...mutati
 
 //#region ♻️RetirementContract
 const retirement: RetirementFixture = await Bun.file(new URL("../../🧫️fixtures/♻️retirement/🔣️.json", import.meta.url)).json();
-const retirementSchema = await Bun.file(new URL("../../🧬️schema/🔣️.json", import.meta.url)).json();
-const validateRetirement = ajv.addSchema(retirementSchema).getSchema(`${retirementSchema.$id}#/$defs/RetirementFixture`)!;
+const validateRetirement = ajv.getSchema(`${schema.$id}#/$defs/RetirementFixture`)!;
 assert(validateRetirement(retirement), JSON.stringify(validateRetirement.errors));
 for (const row of retirement.cases) {
   const source = fixture.cases.find((value: any) => value.id === row.sourceCase)[row.sourceField];
@@ -264,7 +263,7 @@ for (const mutant of [{ ...retirement, terminalOwners: 1 }, { ...retirement, zer
 
 //#region 📃️QueryContract
 const query: QueryFixture = await Bun.file(new URL("../../🧫️fixtures/📃️query/🔣️.json", import.meta.url)).json();
-const validateQuery = ajv.getSchema(`${retirementSchema.$id}#/$defs/QueryFixture`)!;
+const validateQuery = ajv.getSchema(`${schema.$id}#/$defs/QueryFixture`)!;
 assert(validateQuery(query), JSON.stringify(validateQuery.errors));
 assert.equal(`{"first":${JSON.stringify(query.partialError.first)},"second":`, query.partialError.expectedPrefix);
 assert.equal(Buffer.byteLength(query.partialError.expectedPrefix), new TextEncoder().encode(query.partialError.expectedPrefix).length);
@@ -294,8 +293,7 @@ for (const mutant of [{ ...query, unacknowledgedPageAdvances: true }, { ...query
 
 //#region 🔐️TopologyInputAuthority
 const topologyAuthority: TopologyAuthorityFixture = await Bun.file(new URL("../../🧫️fixtures/🔐️topology-authority/🔣️.json", import.meta.url)).json();
-const topologyAuthoritySchema = await Bun.file(new URL("../../🧬️schema/🔣️.json", import.meta.url)).json();
-const validateTopologyAuthority = ajv.addSchema(topologyAuthoritySchema).getSchema(`${topologyAuthoritySchema.$id}#/$defs/TopologyAuthorityFixture`)!;
+const validateTopologyAuthority = ajv.getSchema(`${schema.$id}#/$defs/TopologyAuthorityFixture`)!;
 assert(validateTopologyAuthority(topologyAuthority), JSON.stringify(validateTopologyAuthority.errors));
 for (const row of topologyAuthority.cases) {
   const generation = Buffer.alloc(8); generation.writeBigUInt64LE(BigInt(row.uiGeneration));

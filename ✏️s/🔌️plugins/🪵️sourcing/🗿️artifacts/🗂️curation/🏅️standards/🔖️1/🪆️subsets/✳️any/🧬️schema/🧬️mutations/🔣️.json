@@ -4,13 +4,13 @@
   "title": "SourcingMutation",
   "oneOf": [
     {
-      "$ref": "https://json.schemas.assets.semio-tech.com/s/sourcing/curation/mutation/change-curated-item-count/schema.json"
-    },
-    {
       "$ref": "https://json.schemas.assets.semio-tech.com/s/sourcing/curation/mutation/create-curated-item/schema.json"
     },
     {
       "$ref": "https://json.schemas.assets.semio-tech.com/s/sourcing/curation/mutation/delete-curated-item/schema.json"
+    },
+    {
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/sourcing/curation/mutation/change-curated-item-count/schema.json"
     }
   ]
 }

@@ -1,0 +1,30 @@
+{
+  "mutation": "insertListItem",
+  "path": [
+    {
+      "kind": "key",
+      "key": "models"
+    },
+    {
+      "kind": "index",
+      "index": 0
+    },
+    {
+      "kind": "key",
+      "key": "model"
+    },
+    {
+      "kind": "key",
+      "key": "geometry"
+    },
+    {
+      "kind": "key",
+      "key": "vertices"
+    }
+  ],
+  "index": 0,
+  "value": {
+    "kind": "str",
+    "value": "placeholder"
+  }
+}

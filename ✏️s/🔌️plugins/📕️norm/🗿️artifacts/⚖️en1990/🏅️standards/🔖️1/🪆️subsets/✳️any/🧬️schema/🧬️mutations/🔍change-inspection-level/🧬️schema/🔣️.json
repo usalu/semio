@@ -1,4 +1,30 @@
 {
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/norm/en1990/mutation/change-inspection-level/schema.json",
   "title": "ChangeInspectionLevel",
-  "type": "object"
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "mutation",
+    "newInspectionLevel"
+  ],
+  "properties": {
+    "mutation": {
+      "const": "changeInspectionLevel"
+    },
+    "newInspectionLevel": {
+      "type": "string",
+      "x-semio-ui": {
+        "label": {
+          "en": "Inspection level",
+          "de": "Inspektionsstufe"
+        },
+        "description": {
+          "en": "IL1, IL2 or IL3 (EN 1990 Table B5).",
+          "de": "IL1, IL2 oder IL3 (EN 1990 Tabelle B5)."
+        },
+        "widget": "text"
+      }
+    }
+  }
 }

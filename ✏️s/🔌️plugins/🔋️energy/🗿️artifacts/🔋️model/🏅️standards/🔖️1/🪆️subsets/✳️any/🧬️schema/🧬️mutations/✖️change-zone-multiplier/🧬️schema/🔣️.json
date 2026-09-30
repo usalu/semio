@@ -5,15 +5,56 @@
   "type": "object",
   "additionalProperties": false,
   "required": [
+    "mutation",
     "id",
     "newMultiplier"
   ],
   "properties": {
+    "mutation": {
+      "const": "changeZoneMultiplier"
+    },
     "id": {
-      "type": "integer"
+      "type": "integer",
+      "minimum": 0,
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Zone",
+          "de": "Zone"
+        },
+        "description": {
+          "en": "The zone this mutation changes, by id.",
+          "de": "Zone, die diese Mutation ändert, per ID."
+        },
+        "ref": {
+          "kind": "zone",
+          "domain": "energyModel",
+          "granularity": "zone"
+        },
+        "group": "target",
+        "order": 10
+      }
     },
     "newMultiplier": {
-      "type": "integer"
+      "type": "integer",
+      "minimum": 1,
+      "x-semio-ui": {
+        "widget": "stepper",
+        "role": "value",
+        "label": {
+          "en": "Multiplier",
+          "de": "Multiplikator"
+        },
+        "description": {
+          "en": "Number of identical instances this object stands for; at least 1.",
+          "de": "Anzahl gleicher Exemplare, die dieses Objekt vertritt; mindestens 1."
+        },
+        "step": 1,
+        "precision": 0,
+        "group": "geometry",
+        "order": 20
+      }
     }
   }
 }

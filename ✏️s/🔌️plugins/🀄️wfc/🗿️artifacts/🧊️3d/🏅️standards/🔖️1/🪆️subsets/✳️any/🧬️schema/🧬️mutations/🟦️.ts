@@ -11,7 +11,7 @@ export interface MoveSlot { id: string; x: number; y: number; z: number; }
 export interface ResizeSlot { id: string; width: number; height: number; depth: number; }
 export interface ConnectSlots { index: number; edge: SlotEdge; }
 export interface DisconnectSlots { id: string; }
-export interface PinSlot { id: string; tile_id: string; }
+export interface PinSlot { id: string; tileId: string; }
 export interface UnpinSlot { id: string; }
 export interface CreateTile { index: number; tile: Tile; }
 export interface DeleteTile { id: string; }

@@ -21,7 +21,7 @@ import { PLAYWRIGHT_MODULE_SPECIFIER } from "../../../🔌️plugin/🏗️build
 import { ensureParityPlaywrightBrowsersPath } from "../../⚖️parity/🏃️execution/🟦️.ts";
 import { FAULT, NOISE, clickUncovered, fillStagedArgument, readMatrixPins, readShell, submitStagedVerb, unfoldActionsRail, withDevServe } from "../🧮️program-matrix/🟦️.ts";
 import { acceptanceCheckResult, publishAcceptanceCheckResult, withAcceptanceRecord } from "../../../../../🦑️repo/🔨️modules/🧪️test/🎯️acceptance/📋️orchestration/🟦️.ts";
-import { hubProbeCall, hubProbeOpenDocument, hubProbeSignIn } from "../../../../../../../🌎️hub/🤝️integration-harness/🟦️.ts";
+import { hubProbeCall, hubProbeOpenDocument, hubProbeSignIn } from "../../../📇️directory/🧪️testkit/📡️client-probe/🟦️.ts";
 import { createSpaceCommandV1 } from "../../../📇️directory/🏘️spaces/🟦️.ts";
 import { directoryCommandRequestJson, sealDirectoryCommandRequestV1, type DirectorySpaceRole } from "../../../📇️directory/🧬️schema/🟦️.ts";
 
@@ -645,7 +645,7 @@ function revertTransitionEnvelope(documentId: string, mutationIds: readonly stri
     varint(utf8.length);
     payload.push(...utf8);
   }
-  return { mutation_id: `transition-crafted-${crypto.randomUUID()}`, document_id: documentId, actor: "", dependencies: [...mutationIds], observed: null, target: [], diff: { schema: "semio.history.transition", payload }, inverse: { schema: "semio.history.transition", payload: [] }, timestamp: { actor: 1, physical_ms: Date.now(), logical: 0 } };
+  return { mutation_id: `transition-crafted-${crypto.randomUUID()}`, document_id: documentId, actor: "", dependencies: [...mutationIds], observed: null, target: [], diff: { schema: "semio.history.transition", payload }, inverse: { schema: "semio.history.transition", payload: [] }, timestamp: { actor: 1, physical_ms: Date.now(), logical: 0 }, transaction: null };
 }
 
 /** 🪞️ B's edit arguments where the pinned verb would otherwise make B's element indistinguishable from A's (a default text

@@ -9,7 +9,7 @@
 /// (RUNTIME-DEPENDENCY-ELIMINATION-FOR-S-PLUGINS-AND-ARTIFACTS, 26/09/02): `🎠️kernel`/`🛂️manifest`
 /// (off-limits, owned by another agent) still fan out through this id via their own serde derives,
 /// so blind-removing here breaks `cargo check -p semio-framework`. Drop once those consumers move.
-#[derive(Clone, Debug, PartialEq, Eq, Hash, serde::Serialize, serde::Deserialize)]
+#[derive(Clone, Debug, PartialEq, Eq, PartialOrd, Ord, Hash, serde::Serialize, serde::Deserialize)]
 #[serde(transparent)]
 pub struct MutationId(pub String);
 

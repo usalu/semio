@@ -10,6 +10,7 @@ use protocol::{MutationKind, SemanticDescriptor};
 /// 📝️ Sets a step's `description` scalar (a `None` clears it).
 #[derive(Clone, Debug, PartialEq, dsl::ToValue, dsl::FromValue, dsl::MutationLeaf)]
 #[mutation_leaf(contract = ::protocol)]
+#[value(rename_all = "camelCase")]
 pub struct ChangeStepDescription {
     pub id: String,
     pub new_description: Option<String>,

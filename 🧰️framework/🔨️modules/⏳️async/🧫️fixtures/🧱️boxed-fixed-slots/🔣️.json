@@ -22,7 +22,7 @@
       "capacityConstant": "ENGINE_SURFACE_CAPACITY",
       "capacity": 256,
       "elementType": "EngineSurfaceSlot",
-      "elementSizeBytes": 81320,
+      "elementSizeBytes": 81600,
       "ownerSizeBytes": 32
     },
     {

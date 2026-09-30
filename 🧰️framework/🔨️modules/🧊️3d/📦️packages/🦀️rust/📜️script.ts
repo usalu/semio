@@ -1,11 +1,27 @@
 #!/usr/bin/env bun
 /** 🦀️ `semio-framework-3d` router: `bun ./📜️script.ts test`. */
-import { BundleScript, ScriptRouter, buildBudgetMs, resolveTestLevel, runBundleScriptMain, runCargoLint, runCargoTestBudgeted, runCmd } from "../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
+import { BundleScript, ScriptRouter, buildBudgetMs, resolveTestLevel, runBundleScriptMain, runCargoLint, runCargoTestBudgeted, runExactCargoLaws, runCmd } from "../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
 
 class TestScript extends BundleScript {
-  run(segments: string[]): void {
+  async run(segments: string[]): Promise<void> {
     const { rest } = resolveTestLevel(segments);
-    runCargoTestBudgeted(["semio-framework-3d"], this.repoRoot, rest);
+    await runCargoTestBudgeted(["semio-framework-3d"], this.repoRoot, rest);
+  }
+}
+
+class CanonicalArchitectureScript extends BundleScript {
+  async run(segments: string[]): Promise<void> {
+    if (segments.length) throw new Error("canonical-architecture accepts no arguments");
+    const receipts = await runExactCargoLaws({
+      cwd: this.repoRoot,
+      groups: [{ package: "semio-framework-3d", target: { kind: "lib" }, laws: ["retained_modeling_jobs_slice_work_and_match_synchronous_geometry"] }],
+      artifactDir: process.env.SEMIO_TEST_ARTIFACT_DIR,
+      buildBudgetMs: buildBudgetMs(),
+      listBudgetMs: 60_000,
+      lawBudgetMs: 120_000,
+      progress(event) { console.log(`canonical-mesh-modeling ${event.stage}: ${event.law ?? ""}`); },
+    });
+    console.log(`canonical-mesh-modeling receipts=${receipts.length}`);
   }
 }
 
@@ -25,6 +41,6 @@ class LintScript extends BundleScript {
   }
 }
 
-const router = new ScriptRouter(import.meta.dir).register("test", TestScript).register("bench", BenchScript).register("lint", LintScript);
+const router = new ScriptRouter(import.meta.dir).register("canonical-architecture", CanonicalArchitectureScript).register("test", TestScript).register("bench", BenchScript).register("lint", LintScript);
 
 await runBundleScriptMain(router, import.meta.url, { defaultCommand: "test" });

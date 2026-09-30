@@ -10,7 +10,15 @@
   ],
   "properties": {
     "mutation": {
-      "const": "replaceKindCatalogs"
+      "const": "replaceKindCatalogs",
+      "x-semio-ui": {
+        "widget": "hidden",
+        "role": "discriminator",
+        "label": {
+          "en": "Mutation",
+          "de": "Mutation"
+        }
+      }
     },
     "newCatalogs": {
       "anyOf": [
@@ -20,7 +28,20 @@
         {
           "type": "null"
         }
-      ]
+      ],
+      "x-semio-ui": {
+        "role": "value",
+        "label": {
+          "en": "Kind catalogs",
+          "de": "Artenkataloge"
+        },
+        "description": {
+          "en": "Node, handle, edge and wire kind tables; empty removes them.",
+          "de": "Knoten-, Anschluss-, Kanten- und Leitungsartentabellen; leer entfernt sie."
+        },
+        "group": "record",
+        "order": 10
+      }
     }
   },
   "$defs": {
@@ -35,16 +56,56 @@
       ],
       "properties": {
         "id": {
-          "type": "string"
+          "type": "string",
+          "x-semio-ui": {
+            "widget": "text",
+            "role": "value",
+            "label": {
+              "en": "ID",
+              "de": "ID"
+            },
+            "group": "identity",
+            "order": 10
+          }
         },
         "key": {
-          "type": "string"
+          "type": "string",
+          "x-semio-ui": {
+            "widget": "text",
+            "role": "value",
+            "label": {
+              "en": "Key",
+              "de": "Schlüssel"
+            },
+            "group": "metadata",
+            "order": 20
+          }
         },
         "value": {
-          "type": "string"
+          "type": "string",
+          "x-semio-ui": {
+            "widget": "text",
+            "role": "value",
+            "label": {
+              "en": "Value",
+              "de": "Wert"
+            },
+            "group": "metadata",
+            "order": 30
+          }
         },
         "definition": {
-          "type": "string"
+          "type": "string",
+          "x-semio-ui": {
+            "widget": "text",
+            "role": "value",
+            "label": {
+              "en": "Definition",
+              "de": "Definition"
+            },
+            "group": "metadata",
+            "order": 40
+          }
         }
       }
     },
@@ -59,19 +120,72 @@
       ],
       "properties": {
         "id": {
-          "type": "string"
+          "type": "string",
+          "x-semio-ui": {
+            "widget": "text",
+            "role": "value",
+            "label": {
+              "en": "ID",
+              "de": "ID"
+            },
+            "group": "identity",
+            "order": 10
+          }
         },
         "name": {
-          "type": "string"
+          "type": "string",
+          "x-semio-ui": {
+            "widget": "text",
+            "role": "value",
+            "label": {
+              "en": "Name",
+              "de": "Name"
+            },
+            "group": "identity",
+            "order": 20
+          }
         },
         "email": {
-          "type": "string"
+          "type": "string",
+          "x-semio-ui": {
+            "widget": "text",
+            "role": "value",
+            "label": {
+              "en": "Email",
+              "de": "E-Mail"
+            },
+            "group": "identity",
+            "order": 30
+          }
         },
         "role": {
-          "type": "string"
+          "type": "string",
+          "x-semio-ui": {
+            "widget": "text",
+            "role": "value",
+            "label": {
+              "en": "Role",
+              "de": "Rolle"
+            },
+            "group": "metadata",
+            "order": 40
+          }
         },
         "rank": {
-          "type": "integer"
+          "type": "integer",
+          "minimum": 0,
+          "x-semio-ui": {
+            "widget": "stepper",
+            "role": "value",
+            "label": {
+              "en": "Rank",
+              "de": "Rang"
+            },
+            "step": 1,
+            "precision": 0,
+            "group": "order",
+            "order": 50
+          }
         }
       }
     },
@@ -89,22 +203,82 @@
       ],
       "properties": {
         "id": {
-          "type": "string"
+          "type": "string",
+          "x-semio-ui": {
+            "widget": "text",
+            "role": "value",
+            "label": {
+              "en": "ID",
+              "de": "ID"
+            },
+            "group": "identity",
+            "order": 10
+          }
         },
         "name": {
-          "type": "string"
+          "type": "string",
+          "x-semio-ui": {
+            "widget": "text",
+            "role": "value",
+            "label": {
+              "en": "Name",
+              "de": "Name"
+            },
+            "group": "identity",
+            "order": 20
+          }
         },
         "label": {
-          "type": "string"
+          "type": "string",
+          "x-semio-ui": {
+            "widget": "text",
+            "role": "value",
+            "label": {
+              "en": "Label",
+              "de": "Beschriftung"
+            },
+            "group": "appearance",
+            "order": 30
+          }
         },
         "description": {
-          "type": "string"
+          "type": "string",
+          "x-semio-ui": {
+            "widget": "multiline",
+            "role": "value",
+            "label": {
+              "en": "Description",
+              "de": "Beschreibung"
+            },
+            "group": "appearance",
+            "order": 40
+          }
         },
         "icon": {
-          "type": "string"
+          "type": "string",
+          "x-semio-ui": {
+            "widget": "text",
+            "role": "value",
+            "label": {
+              "en": "Icon",
+              "de": "Symbol"
+            },
+            "group": "appearance",
+            "order": 50
+          }
         },
         "color": {
-          "type": "string"
+          "type": "string",
+          "x-semio-ui": {
+            "widget": "text",
+            "role": "value",
+            "label": {
+              "en": "Color",
+              "de": "Farbe"
+            },
+            "group": "appearance",
+            "order": 60
+          }
         }
       }
     },
@@ -122,34 +296,126 @@
       ],
       "properties": {
         "id": {
-          "type": "string"
+          "type": "string",
+          "x-semio-ui": {
+            "widget": "text",
+            "role": "value",
+            "label": {
+              "en": "ID",
+              "de": "ID"
+            },
+            "group": "identity",
+            "order": 10
+          }
         },
         "code": {
-          "type": "string"
+          "type": "string",
+          "x-semio-ui": {
+            "widget": "text",
+            "role": "value",
+            "label": {
+              "en": "Code",
+              "de": "Code"
+            },
+            "group": "identity",
+            "order": 20
+          }
         },
         "label": {
-          "type": "string"
+          "type": "string",
+          "x-semio-ui": {
+            "widget": "text",
+            "role": "value",
+            "label": {
+              "en": "Label",
+              "de": "Beschriftung"
+            },
+            "group": "appearance",
+            "order": 30
+          }
         },
         "order": {
-          "type": "integer"
+          "type": "integer",
+          "minimum": 0,
+          "x-semio-ui": {
+            "widget": "stepper",
+            "role": "value",
+            "label": {
+              "en": "Order",
+              "de": "Reihenfolge"
+            },
+            "step": 1,
+            "precision": 0,
+            "group": "order",
+            "order": 70
+          }
         },
         "compatibleWith": {
           "type": "array",
           "items": {
             "type": "string"
+          },
+          "x-semio-ui": {
+            "role": "value",
+            "label": {
+              "en": "Compatible with",
+              "de": "Kompatibel mit"
+            },
+            "group": "kind",
+            "order": 80
           }
         },
         "description": {
-          "type": "string"
+          "type": "string",
+          "x-semio-ui": {
+            "widget": "multiline",
+            "role": "value",
+            "label": {
+              "en": "Description",
+              "de": "Beschreibung"
+            },
+            "group": "appearance",
+            "order": 40
+          }
         },
         "icon": {
-          "type": "string"
+          "type": "string",
+          "x-semio-ui": {
+            "widget": "text",
+            "role": "value",
+            "label": {
+              "en": "Icon",
+              "de": "Symbol"
+            },
+            "group": "appearance",
+            "order": 50
+          }
         },
         "color": {
-          "type": "string"
+          "type": "string",
+          "x-semio-ui": {
+            "widget": "text",
+            "role": "value",
+            "label": {
+              "en": "Color",
+              "de": "Farbe"
+            },
+            "group": "appearance",
+            "order": 60
+          }
         },
         "defaultWireKind": {
-          "type": "string"
+          "type": "string",
+          "x-semio-ui": {
+            "widget": "text",
+            "role": "value",
+            "label": {
+              "en": "Default wire kind",
+              "de": "Standard-Leitungsart"
+            },
+            "group": "kind",
+            "order": 90
+          }
         }
       }
     },
@@ -174,57 +440,182 @@
       ],
       "properties": {
         "id": {
-          "type": "string"
+          "type": "string",
+          "x-semio-ui": {
+            "widget": "text",
+            "role": "value",
+            "label": {
+              "en": "ID",
+              "de": "ID"
+            },
+            "group": "identity",
+            "order": 10
+          }
         },
         "name": {
-          "type": "string"
+          "type": "string",
+          "x-semio-ui": {
+            "widget": "text",
+            "role": "value",
+            "label": {
+              "en": "Name",
+              "de": "Name"
+            },
+            "group": "identity",
+            "order": 20
+          }
         },
         "label": {
-          "type": "string"
+          "type": "string",
+          "x-semio-ui": {
+            "widget": "text",
+            "role": "value",
+            "label": {
+              "en": "Label",
+              "de": "Beschriftung"
+            },
+            "group": "appearance",
+            "order": 30
+          }
         },
         "description": {
-          "type": "string"
+          "type": "string",
+          "x-semio-ui": {
+            "widget": "multiline",
+            "role": "value",
+            "label": {
+              "en": "Description",
+              "de": "Beschreibung"
+            },
+            "group": "appearance",
+            "order": 40
+          }
         },
         "icon": {
-          "type": "string"
+          "type": "string",
+          "x-semio-ui": {
+            "widget": "text",
+            "role": "value",
+            "label": {
+              "en": "Icon",
+              "de": "Symbol"
+            },
+            "group": "appearance",
+            "order": 50
+          }
         },
         "image": {
-          "type": "string"
+          "type": "string",
+          "x-semio-ui": {
+            "widget": "text",
+            "role": "value",
+            "label": {
+              "en": "Image",
+              "de": "Bild"
+            },
+            "group": "appearance",
+            "order": 60
+          }
         },
         "unit": {
-          "type": "string"
+          "type": "string",
+          "x-semio-ui": {
+            "widget": "text",
+            "role": "value",
+            "label": {
+              "en": "Unit",
+              "de": "Einheit"
+            },
+            "group": "geometry",
+            "order": 70
+          }
         },
         "abstract": {
-          "type": "boolean"
+          "type": "boolean",
+          "x-semio-ui": {
+            "widget": "toggle",
+            "role": "value",
+            "label": {
+              "en": "Abstract",
+              "de": "Abstrakt"
+            },
+            "group": "kind",
+            "order": 80
+          }
         },
         "baseKinds": {
           "type": "array",
           "items": {
             "type": "string"
+          },
+          "x-semio-ui": {
+            "role": "value",
+            "label": {
+              "en": "Base kinds",
+              "de": "Basisarten"
+            },
+            "group": "kind",
+            "order": 90
           }
         },
         "representations": {
           "type": "array",
           "items": {
             "$ref": "#/$defs/Puzzle2dRepresentation"
+          },
+          "x-semio-ui": {
+            "role": "value",
+            "label": {
+              "en": "Representations",
+              "de": "Darstellungen"
+            },
+            "group": "appearance",
+            "order": 100
           }
         },
         "handles": {
           "type": "array",
           "items": {
             "$ref": "#/$defs/Puzzle2dHandleTemplate"
+          },
+          "x-semio-ui": {
+            "role": "value",
+            "label": {
+              "en": "Handles",
+              "de": "Anschlüsse"
+            },
+            "group": "topology",
+            "order": 110
           }
         },
         "attributes": {
           "type": "array",
           "items": {
             "$ref": "#/$defs/Puzzle2dAttribute"
+          },
+          "x-semio-ui": {
+            "role": "value",
+            "label": {
+              "en": "Attributes",
+              "de": "Attribute"
+            },
+            "group": "metadata",
+            "order": 120
           }
         },
         "authors": {
           "type": "array",
           "items": {
             "$ref": "#/$defs/Puzzle2dAuthor"
+          },
+          "x-semio-ui": {
+            "role": "value",
+            "label": {
+              "en": "Authors",
+              "de": "Autoren"
+            },
+            "group": "metadata",
+            "order": 130
           }
         }
       }
@@ -244,25 +635,95 @@
       ],
       "properties": {
         "id": {
-          "type": "string"
+          "type": "string",
+          "x-semio-ui": {
+            "widget": "text",
+            "role": "value",
+            "label": {
+              "en": "ID",
+              "de": "ID"
+            },
+            "group": "identity",
+            "order": 10
+          }
         },
         "name": {
-          "type": "string"
+          "type": "string",
+          "x-semio-ui": {
+            "widget": "text",
+            "role": "value",
+            "label": {
+              "en": "Name",
+              "de": "Name"
+            },
+            "group": "identity",
+            "order": 20
+          }
         },
         "label": {
-          "type": "string"
+          "type": "string",
+          "x-semio-ui": {
+            "widget": "text",
+            "role": "value",
+            "label": {
+              "en": "Label",
+              "de": "Beschriftung"
+            },
+            "group": "appearance",
+            "order": 30
+          }
         },
         "description": {
-          "type": "string"
+          "type": "string",
+          "x-semio-ui": {
+            "widget": "multiline",
+            "role": "value",
+            "label": {
+              "en": "Description",
+              "de": "Beschreibung"
+            },
+            "group": "appearance",
+            "order": 40
+          }
         },
         "icon": {
-          "type": "string"
+          "type": "string",
+          "x-semio-ui": {
+            "widget": "text",
+            "role": "value",
+            "label": {
+              "en": "Icon",
+              "de": "Symbol"
+            },
+            "group": "appearance",
+            "order": 50
+          }
         },
         "color": {
-          "type": "string"
+          "type": "string",
+          "x-semio-ui": {
+            "widget": "text",
+            "role": "value",
+            "label": {
+              "en": "Color",
+              "de": "Farbe"
+            },
+            "group": "appearance",
+            "order": 60
+          }
         },
         "defaultEdgeKind": {
-          "type": "string"
+          "type": "string",
+          "x-semio-ui": {
+            "widget": "text",
+            "role": "value",
+            "label": {
+              "en": "Default edge kind",
+              "de": "Standard-Kantenart"
+            },
+            "group": "kind",
+            "order": 70
+          }
         }
       }
     },
@@ -280,34 +741,160 @@
       ],
       "properties": {
         "id": {
-          "type": "string"
+          "type": "string",
+          "x-semio-ui": {
+            "widget": "text",
+            "role": "value",
+            "label": {
+              "en": "ID",
+              "de": "ID"
+            },
+            "group": "identity",
+            "order": 10
+          }
         },
         "name": {
-          "type": "string"
+          "type": "string",
+          "x-semio-ui": {
+            "widget": "text",
+            "role": "value",
+            "label": {
+              "en": "Name",
+              "de": "Name"
+            },
+            "group": "identity",
+            "order": 20
+          }
         },
         "label": {
-          "type": "string"
+          "type": "string",
+          "x-semio-ui": {
+            "widget": "text",
+            "role": "value",
+            "label": {
+              "en": "Label",
+              "de": "Beschriftung"
+            },
+            "group": "appearance",
+            "order": 30
+          }
         },
         "description": {
-          "type": "string"
+          "type": "string",
+          "x-semio-ui": {
+            "widget": "multiline",
+            "role": "value",
+            "label": {
+              "en": "Description",
+              "de": "Beschreibung"
+            },
+            "group": "appearance",
+            "order": 40
+          }
         },
         "icon": {
-          "type": "string"
+          "type": "string",
+          "x-semio-ui": {
+            "widget": "text",
+            "role": "value",
+            "label": {
+              "en": "Icon",
+              "de": "Symbol"
+            },
+            "group": "appearance",
+            "order": 50
+          }
         },
         "handleKind": {
-          "type": "string"
+          "type": "string",
+          "x-semio-ui": {
+            "widget": "text",
+            "role": "value",
+            "label": {
+              "en": "Handle kind",
+              "de": "Anschlussart"
+            },
+            "group": "kind",
+            "order": 60
+          }
         },
         "angle": {
-          "type": "number"
+          "type": "number",
+          "x-semio-ui": {
+            "widget": "dial",
+            "role": "value",
+            "label": {
+              "en": "Angle",
+              "de": "Winkel"
+            },
+            "unit": "rad",
+            "displayUnit": "deg",
+            "displayFactor": 57.29577951308232,
+            "step": 0.017453292519943295,
+            "softMin": -3.141592653589793,
+            "softMax": 3.141592653589793,
+            "snaps": [
+              -3.141592653589793,
+              -1.5707963267948966,
+              0,
+              1.5707963267948966,
+              3.141592653589793
+            ],
+            "group": "geometry",
+            "order": 70
+          }
         },
         "t": {
-          "type": "number"
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1,
+          "x-semio-ui": {
+            "widget": "slider",
+            "role": "value",
+            "label": {
+              "en": "Rim parameter",
+              "de": "Randparameter"
+            },
+            "description": {
+              "en": "Position along the node outline, 0 to 1.",
+              "de": "Position entlang des Knotenumrisses, 0 bis 1."
+            },
+            "step": 0.01,
+            "precision": 2,
+            "softMin": 0,
+            "softMax": 1,
+            "group": "geometry",
+            "order": 90
+          }
         },
         "mandatory": {
-          "type": "boolean"
+          "type": "boolean",
+          "x-semio-ui": {
+            "widget": "toggle",
+            "role": "value",
+            "label": {
+              "en": "Mandatory",
+              "de": "Pflicht"
+            },
+            "group": "kind",
+            "order": 100
+          }
         },
         "radius": {
-          "type": "number"
+          "type": "number",
+          "exclusiveMinimum": 0,
+          "x-semio-ui": {
+            "widget": "stepper",
+            "role": "value",
+            "label": {
+              "en": "Radius",
+              "de": "Radius"
+            },
+            "step": 0.1,
+            "precision": 2,
+            "group": "geometry",
+            "order": 80
+          }
         }
       }
     },
@@ -326,24 +913,60 @@
           "type": "array",
           "items": {
             "$ref": "#/$defs/Puzzle2dCatalogNodeKind"
+          },
+          "x-semio-ui": {
+            "role": "value",
+            "label": {
+              "en": "Node kinds",
+              "de": "Knotenarten"
+            },
+            "group": "catalog",
+            "order": 10
           }
         },
         "handles": {
           "type": "array",
           "items": {
             "$ref": "#/$defs/Puzzle2dCatalogHandleKind"
+          },
+          "x-semio-ui": {
+            "role": "value",
+            "label": {
+              "en": "Handle kinds",
+              "de": "Anschlussarten"
+            },
+            "group": "catalog",
+            "order": 20
           }
         },
         "edges": {
           "type": "array",
           "items": {
             "$ref": "#/$defs/Puzzle2dCatalogEdgeKind"
+          },
+          "x-semio-ui": {
+            "role": "value",
+            "label": {
+              "en": "Edge kinds",
+              "de": "Kantenarten"
+            },
+            "group": "catalog",
+            "order": 30
           }
         },
         "wires": {
           "type": "array",
           "items": {
             "$ref": "#/$defs/Puzzle2dCatalogWireKind"
+          },
+          "x-semio-ui": {
+            "role": "value",
+            "label": {
+              "en": "Wire kinds",
+              "de": "Leitungsarten"
+            },
+            "group": "catalog",
+            "order": 40
           }
         }
       }
@@ -362,28 +985,97 @@
       ],
       "properties": {
         "id": {
-          "type": "string"
+          "type": "string",
+          "x-semio-ui": {
+            "widget": "text",
+            "role": "value",
+            "label": {
+              "en": "ID",
+              "de": "ID"
+            },
+            "group": "identity",
+            "order": 10
+          }
         },
         "name": {
-          "type": "string"
+          "type": "string",
+          "x-semio-ui": {
+            "widget": "text",
+            "role": "value",
+            "label": {
+              "en": "Name",
+              "de": "Name"
+            },
+            "group": "identity",
+            "order": 20
+          }
         },
         "url": {
-          "type": "string"
+          "type": "string",
+          "x-semio-ui": {
+            "widget": "text",
+            "role": "value",
+            "label": {
+              "en": "URL",
+              "de": "URL"
+            },
+            "group": "source",
+            "order": 30
+          }
         },
         "mime": {
-          "type": "string"
+          "type": "string",
+          "x-semio-ui": {
+            "widget": "text",
+            "role": "value",
+            "label": {
+              "en": "Media type",
+              "de": "Medientyp"
+            },
+            "group": "source",
+            "order": 40
+          }
         },
         "tags": {
           "type": "array",
           "items": {
             "type": "string"
+          },
+          "x-semio-ui": {
+            "role": "value",
+            "label": {
+              "en": "Tags",
+              "de": "Schlagwörter"
+            },
+            "group": "metadata",
+            "order": 60
           }
         },
         "lod": {
-          "type": "string"
+          "type": "string",
+          "x-semio-ui": {
+            "widget": "text",
+            "role": "value",
+            "label": {
+              "en": "Level of detail",
+              "de": "Detailstufe"
+            },
+            "group": "source",
+            "order": 50
+          }
         },
         "description": {
-          "type": "string"
+          "type": "string",
+          "x-semio-ui": {
+            "widget": "multiline",
+            "role": "value",
+            "label": {
+              "en": "Description",
+              "de": "Beschreibung"
+            },
+            "group": "appearance",
+            "order": 70
+          }
         }
       }
     }

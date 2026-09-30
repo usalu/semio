@@ -5,15 +5,53 @@
   "type": "object",
   "additionalProperties": false,
   "required": [
+    "mutation",
     "id",
     "newFrameConductanceWK"
   ],
   "properties": {
+    "mutation": {
+      "const": "changeFenestrationFrameConductance"
+    },
     "id": {
-      "type": "integer"
+      "type": "integer",
+      "minimum": 0,
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Window",
+          "de": "Fenster"
+        },
+        "description": {
+          "en": "The window this mutation changes, by id.",
+          "de": "Fenster, das diese Mutation ändert, per ID."
+        },
+        "ref": {
+          "kind": "fenestration",
+          "domain": "energyModel",
+          "granularity": "fenestration"
+        },
+        "group": "target",
+        "order": 10
+      }
     },
     "newFrameConductanceWK": {
-      "type": "number"
+      "type": "number",
+      "minimum": 0,
+      "x-semio-ui": {
+        "widget": "stepper",
+        "role": "value",
+        "label": {
+          "en": "Frame conductance",
+          "de": "Rahmen-Wärmeleitwert"
+        },
+        "unit": "W/K",
+        "step": 0.01,
+        "precision": 2,
+        "group": "thermal",
+        "order": 20
+      }
     }
   }
 }

@@ -13,7 +13,18 @@
   "properties": {
     "schema": {
       "type": "string",
-      "x-semio-state": "artifact"
+      "x-semio-state": "artifact",
+      "x-semio-ui": {
+        "widget": "text",
+        "label": {
+          "en": "Snapshot schema",
+          "de": "Snapshot-Schema"
+        },
+        "description": {
+          "en": "Identifier of the snapshot schema version.",
+          "de": "Kennung der Version des Snapshot-Schemas."
+        }
+      }
     },
     "styles": {
       "type": "array",
@@ -35,8 +46,25 @@
             "type": [
               "string",
               "null"
-            ]
+            ],
+            "x-semio-ui": {
+              "widget": "reference",
+              "role": "target",
+              "label": {
+                "en": "Based on style",
+                "de": "Basiert auf Formatvorlage"
+              },
+              "ref": {
+                "kind": "style"
+              }
+            }
           }
+        }
+      },
+      "x-semio-ui": {
+        "label": {
+          "en": "Styles",
+          "de": "Formatvorlagen"
         }
       }
     },
@@ -55,7 +83,14 @@
             "type": "string"
           },
           "mime": {
-            "type": "string"
+            "type": "string",
+            "x-semio-ui": {
+              "widget": "text",
+              "label": {
+                "en": "Media type",
+                "de": "Medientyp"
+              }
+            }
           },
           "bytes": {
             "type": "array",
@@ -63,8 +98,20 @@
               "type": "integer",
               "minimum": 0,
               "maximum": 255
+            },
+            "x-semio-ui": {
+              "label": {
+                "en": "Bytes",
+                "de": "Bytes"
+              }
             }
           }
+        }
+      },
+      "x-semio-ui": {
+        "label": {
+          "en": "Images",
+          "de": "Bilder"
         }
       }
     },
@@ -73,6 +120,12 @@
       "x-semio-state": "artifact",
       "items": {
         "$ref": "#/$defs/DocBlock"
+      },
+      "x-semio-ui": {
+        "label": {
+          "en": "Content blocks",
+          "de": "Inhaltsblöcke"
+        }
       }
     }
   },
@@ -93,7 +146,35 @@
             "quote",
             "image",
             "pageBreak"
-          ]
+          ],
+          "x-semio-ui": {
+            "options": {
+              "paragraph": {
+                "en": "Paragraph",
+                "de": "Absatz"
+              },
+              "heading": {
+                "en": "Heading",
+                "de": "Überschrift"
+              },
+              "list": {
+                "en": "List",
+                "de": "Liste"
+              },
+              "code": {
+                "en": "Code block",
+                "de": "Codeblock"
+              },
+              "quote": {
+                "en": "Block quote",
+                "de": "Zitat"
+              },
+              "pageBreak": {
+                "en": "Page break",
+                "de": "Seitenumbruch"
+              }
+            }
+          }
         }
       },
       "oneOf": [
@@ -275,25 +356,60 @@
       "type": "object",
       "properties": {
         "bold": {
-          "type": "boolean"
+          "type": "boolean",
+          "x-semio-ui": {
+            "widget": "toggle",
+            "label": {
+              "en": "Bold",
+              "de": "Fett"
+            }
+          }
         },
         "italic": {
-          "type": "boolean"
+          "type": "boolean",
+          "x-semio-ui": {
+            "widget": "toggle",
+            "label": {
+              "en": "Italic",
+              "de": "Kursiv"
+            }
+          }
         },
         "underline": {
-          "type": "boolean"
+          "type": "boolean",
+          "x-semio-ui": {
+            "widget": "toggle",
+            "label": {
+              "en": "Underline",
+              "de": "Unterstrichen"
+            }
+          }
         },
         "size": {
           "type": [
             "number",
             "null"
-          ]
+          ],
+          "x-semio-ui": {
+            "widget": "stepper",
+            "label": {
+              "en": "Font size",
+              "de": "Schriftgröße"
+            }
+          }
         },
         "font": {
           "type": [
             "string",
             "null"
-          ]
+          ],
+          "x-semio-ui": {
+            "widget": "text",
+            "label": {
+              "en": "Font",
+              "de": "Schriftart"
+            }
+          }
         },
         "color": {
           "type": [
@@ -305,7 +421,14 @@
           "type": [
             "string",
             "null"
-          ]
+          ],
+          "x-semio-ui": {
+            "widget": "text",
+            "label": {
+              "en": "Link target",
+              "de": "Linkziel"
+            }
+          }
         }
       }
     }

@@ -17,11 +17,11 @@ use crate::standards::v1::subsets::any::schema::inferences::find_board_node;
 use crate::{materialize_wires_content, WiresDiff, WiresSnapshot};
 use dsl::DslValue;
 
-const BEFORE: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🔷change-node-shape/🧪️reports-a-no-op-when-the-shape-already-reads-circle/📸️snapshot/⬅️before/🔣️.json");
-const AFTER: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🔷change-node-shape/🧪️reports-a-no-op-when-the-shape-already-reads-circle/📸️snapshot/➡️after/🔣️.json");
-const MUTATION: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🔷change-node-shape/🧪️reports-a-no-op-when-the-shape-already-reads-circle/🦠️mutation/🔣️.json");
-const DIFF: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🔷change-node-shape/🧪️reports-a-no-op-when-the-shape-already-reads-circle/🔺️diff/🔣️.json");
-const OUTCOME: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🔷change-node-shape/🧪️reports-a-no-op-when-the-shape-already-reads-circle/🎯️outcome/🔣️.json");
+const BEFORE: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🔷change-node-shape/🧪️reports-no-op-when-shape-already-reads-circle/📸️snapshot/⬅️before/🔣️.json");
+const AFTER: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🔷change-node-shape/🧪️reports-no-op-when-shape-already-reads-circle/📸️snapshot/➡️after/🔣️.json");
+const MUTATION: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🔷change-node-shape/🧪️reports-no-op-when-shape-already-reads-circle/🦠️mutation/🔣️.json");
+const DIFF: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🔷change-node-shape/🧪️reports-no-op-when-shape-already-reads-circle/🔺️diff/🔣️.json");
+const OUTCOME: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🔷change-node-shape/🧪️reports-no-op-when-shape-already-reads-circle/🎯️outcome/🔣️.json");
 
 fn board_entries(board: &DslValue, key: &str) -> Vec<DslValue> {
     board.get(key).and_then(|value| value.as_array()).map(|items| items.to_vec()).unwrap_or_default()

@@ -5,15 +5,51 @@
   "type": "object",
   "additionalProperties": false,
   "required": [
+    "mutation",
     "id",
     "newAngleDeg"
   ],
   "properties": {
+    "mutation": {
+      "const": "changeSlopeAngle"
+    },
     "id": {
-      "type": "string"
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Slope",
+          "de": "Böschung"
+        },
+        "description": {
+          "en": "The slope this mutation addresses.",
+          "de": "Die Böschung, die diese Mutation adressiert."
+        },
+        "ref": {
+          "kind": "slope"
+        },
+        "group": "target",
+        "order": 10
+      }
     },
     "newAngleDeg": {
-      "type": "number"
+      "type": "number",
+      "minimum": 0,
+      "maximum": 90,
+      "x-semio-ui": {
+        "widget": "dial",
+        "role": "value",
+        "label": {
+          "en": "Slope angle β",
+          "de": "Böschungswinkel β"
+        },
+        "unit": "°",
+        "step": 0.5,
+        "precision": 1,
+        "group": "slope",
+        "order": 20
+      }
     }
   }
 }

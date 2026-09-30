@@ -9,7 +9,13 @@
   ],
   "properties": {
     "texture": {
-      "$ref": "#/$defs/SemioTexture"
+      "$ref": "#/$defs/SemioTexture",
+      "x-semio-ui": {
+        "label": {
+          "en": "Texture",
+          "de": "Textur"
+        }
+      }
     }
   },
   "$defs": {

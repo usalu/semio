@@ -53,8 +53,7 @@ mod oracles {
 
     //#region 🔖️Json
     /// 🔎️ `value.get(key)`'s numeric leg — the shared `Json` reader has no numeric accessor of its
-    /// own, and a missing or mistyped field in a feature-authored docstring is a legitimate default
-    /// rather than a panic.
+    /// own; an absent or `null` `Option` member of the wire payload is the fallback.
     fn number(value: &Json, key: &str, fallback: f64) -> f64 {
         match value.get(key) {
             Some(Json::Number(found)) => *found,
@@ -66,26 +65,12 @@ mod oracles {
         value.str(key)
     }
 
-    /// 🎨️ Reads an `[r,g,b,a]` fill out of `params.fill`, defaulting to a mid-grey opaque pixel.
-    fn fill_of(params: &Json) -> [u8; 4] {
-        let values = params.array("fill");
-        let component = |index: usize, fallback: u8| {
-            values
-                .get(index)
-                .and_then(|found| match found {
-                    Json::Number(value) => Some(*value as u8),
-                    _ => None,
-                })
-                .unwrap_or(fallback)
-        };
-        [component(0, 128), component(1, 128), component(2, 128), component(3, 255)]
-    }
-
-    fn hex_decode(value: &str) -> Result<Vec<u8>, String> {
-        if !value.len().is_multiple_of(2) {
-            return Err(format!("odd-length hex payload {value:?}"));
+    /// 🔢️ A byte-array member of a wire value.
+    fn bytes_of(value: &Json, key: &str) -> Result<Vec<u8>, String> {
+        match value.get(key) {
+            Some(Json::Array(items)) => items.iter().map(|item| match item { Json::Number(n) if (0.0..=255.0).contains(n) && n.fract() == 0.0 => Ok(*n as u8), other => Err(format!("`{key}` carries {} where a byte belongs", other.to_string())) }).collect(),
+            other => Err(format!("`{key}` must be a byte array, not {}", other.map(Json::to_string).unwrap_or_else(|| "nothing".to_string()))),
         }
-        (0..value.len()).step_by(2).map(|at| u8::from_str_radix(&value[at..at + 2], 16).map_err(|error| error.to_string())).collect()
     }
 
     fn hex_encode(bytes: &[u8]) -> String {
@@ -241,10 +226,6 @@ mod oracles {
     //#endregion 🔖️Codec
 
     //#region 🔖️Apply
-    fn solid_fill(width: u32, height: u32, fill: [u8; 4]) -> Vec<u8> {
-        fill.iter().copied().cycle().take((width as usize) * (height as usize) * 4).collect()
-    }
-
     /// 🦠️ One `match` arm per `JpgMutation` variant, reimplemented independently against
     /// [`OracleDoc`] rather than calling into the subject's own `apply_jpg_mutation`. The five
     /// table/restart kinds are accepted and change nothing, because nothing they touch survives
@@ -265,17 +246,22 @@ mod oracles {
                 };
                 doc.version = (component(0, doc.version.0), component(1, doc.version.1));
                 doc.density_units = match text(params, "densityUnits").as_str() {
-                    "pixels-per-inch" => 1,
-                    "pixels-per-cm" => 2,
-                    _ => 0,
+                    "aspect" => 0,
+                    "pixelsPerInch" => 1,
+                    "pixelsPerCm" => 2,
+                    other => return Err(format!("{other:?} is no JFIF density unit")),
                 };
+                if !matches!(params.get("thumbnail"), None | Some(Json::Null)) {
+                    return Err("this oracle writes no JFIF thumbnail".to_string());
+                }
                 doc.x_density = number(params, "xDensity", doc.x_density as f64) as u16;
                 doc.y_density = number(params, "yDensity", doc.y_density as f64) as u16;
             }
             "replace-quant-table" | "remove-quant-table" | "replace-huffman-table" | "remove-huffman-table" | "change-restart-interval" => {}
             "insert-other-segment" => {
                 let at = (number(params, "index", 0.0).max(0.0) as usize).min(doc.other_segments.len());
-                doc.other_segments.insert(at, (number(params, "marker", 226.0) as u8, hex_decode(&text(params, "data"))?));
+                let segment = params.get("segment").ok_or("insert-other-segment carries no segment")?;
+                doc.other_segments.insert(at, (number(segment, "marker", 0.0) as u8, bytes_of(segment, "data")?));
             }
             "remove-other-segment" => {
                 let at = number(params, "index", 0.0).max(0.0) as usize;
@@ -283,7 +269,13 @@ mod oracles {
                     doc.other_segments.remove(at);
                 }
             }
-            "replace-pixels" => doc.rgba = solid_fill(doc.width, doc.height, fill_of(params)),
+            "replace-pixels" => {
+                let rgba = bytes_of(params, "pixels")?;
+                if rgba.len() != doc.width as usize * doc.height as usize * 4 {
+                    return Err(format!("replace-pixels carries {} bytes, not the {}x{} RGBA raster", rgba.len(), doc.width, doc.height));
+                }
+                doc.rgba = rgba;
+            }
             "change-re-encode-quality" => doc.quality = number(params, "quality", DEFAULT_QUALITY as f64).clamp(1.0, 100.0) as u8,
             other => return Err(format!("mutation kind {other:?} has no oracle implementation")),
         }

@@ -33,10 +33,7 @@ mod subject {
     use semio_repo_test_host::{digest, Context, Json, Outcome};
     use semio_s_plugin_stdio_test_oracle::law::carrier_is_exact;
     use semio_s_artifact_stdio_semio::standards::v1::subsets::base::schema::mutations::semio_mutation_refusals;
-    use semio_s_artifact_stdio_semio::standards::v1::subsets::animation::schema::mutations::{
-        apply_semio_animation_mutation, insert_channel, insert_keyframe, insert_timeline, inverse_semio_animation_mutation, remove_channel, remove_keyframe, remove_timeline, set_channel_interpolation, set_channel_target, set_keyframe_time,
-        set_keyframe_value, set_snapshot, set_timeline_name, SemioAnimationMutation,
-    };
+    use semio_s_artifact_stdio_semio::standards::v1::subsets::animation::schema::mutations::{apply_semio_animation_mutation, decode_semio_animation_mutation_json, inverse_semio_animation_mutation, set_snapshot, SemioAnimationMutation};
     use semio_s_artifact_stdio_semio::standards::v1::subsets::animation::schema::snapshot::{parse_semio_animation_dsl, print_semio_animation_dsl, AnimChannel, AnimInterpolation, AnimKeyframe, AnimTarget, AnimTargetProperty, AnimTimeline, AnimValue, SemioAnimationSnapshot};
     use semio_s_artifact_stdio_semio::standards::v1::subsets::base::schema::geometry::{SemioPoint3, SemioQuaternion};
 
@@ -139,39 +136,14 @@ mod subject {
         Ok(SemioAnimationSnapshot { schema: text(value, "schema")?, timelines: list(value, "timelines")?.iter().map(timeline_of).collect::<Result<Vec<_>, String>>()? })
     }
 
-    /// 🦠️ The committed vector's `{kind, params}` pair, decoded into the real typed mutation.
-    fn mutation_of(vector: &Json) -> Result<SemioAnimationMutation, String> {
-        let kind = text(vector, "kind")?;
-        let params = object(vector, "params")?;
-        let index = |key: &str| -> Result<usize, String> { Ok(number(&params, key)? as usize) };
-        match kind.as_str() {
-            "no-mutation" => Ok(SemioAnimationMutation::SetSnapshot(set_snapshot::SetSnapshot { snapshot: snapshot_of(&object(vector, "before")?)? })),
-            "set-snapshot" => Ok(SemioAnimationMutation::SetSnapshot(set_snapshot::SetSnapshot { snapshot: snapshot_of(&object(&params, "snapshot")?)? })),
-            "insert-timeline" => Ok(SemioAnimationMutation::InsertTimeline(insert_timeline::InsertTimeline { index: index("index")?, timeline: timeline_of(&object(&params, "timeline")?)? })),
-            "remove-timeline" => Ok(SemioAnimationMutation::RemoveTimeline(remove_timeline::RemoveTimeline { index: index("index")? })),
-            "set-timeline-name" => Ok(SemioAnimationMutation::SetTimelineName(set_timeline_name::SetTimelineName { index: index("index")?, name: optional_text(&params, "name")? })),
-            "insert-channel" => Ok(SemioAnimationMutation::InsertChannel(insert_channel::InsertChannel { timeline_index: index("timelineIndex")?, index: index("index")?, channel: channel_of(&object(&params, "channel")?)? })),
-            "remove-channel" => Ok(SemioAnimationMutation::RemoveChannel(remove_channel::RemoveChannel { timeline_index: index("timelineIndex")?, index: index("index")? })),
-            "set-channel-target" => Ok(SemioAnimationMutation::SetChannelTarget(set_channel_target::SetChannelTarget { timeline_index: index("timelineIndex")?, index: index("index")?, target: target_of(&object(&params, "target")?)? })),
-            "set-channel-interpolation" => {
-                Ok(SemioAnimationMutation::SetChannelInterpolation(set_channel_interpolation::SetChannelInterpolation { timeline_index: index("timelineIndex")?, index: index("index")?, interpolation: interpolation_of(&text(&params, "interpolation")?)? }))
-            }
-            "insert-keyframe" => Ok(SemioAnimationMutation::InsertKeyframe(insert_keyframe::InsertKeyframe {
-                timeline_index: index("timelineIndex")?,
-                channel_index: index("channelIndex")?,
-                index: index("index")?,
-                keyframe: keyframe_of(&object(&params, "keyframe")?)?,
-            })),
-            "remove-keyframe" => Ok(SemioAnimationMutation::RemoveKeyframe(remove_keyframe::RemoveKeyframe { timeline_index: index("timelineIndex")?, channel_index: index("channelIndex")?, index: index("index")? })),
-            "set-keyframe-time" => Ok(SemioAnimationMutation::SetKeyframeTime(set_keyframe_time::SetKeyframeTime { timeline_index: index("timelineIndex")?, channel_index: index("channelIndex")?, index: index("index")?, t: number(&params, "t")? })),
-            "set-keyframe-value" => Ok(SemioAnimationMutation::SetKeyframeValue(set_keyframe_value::SetKeyframeValue {
-                timeline_index: index("timelineIndex")?,
-                channel_index: index("channelIndex")?,
-                index: index("index")?,
-                value: value_of(&object(&params, "value")?)?,
-            })),
-            other => Err(format!("mutate-semio-animation: no decoder for kind {other:?}")),
+    /// 🦠️ A committed wire value (`{"mutation": "<camelCaseVariant>", …}`), decoded through this subset's own
+    /// production JSON bridge. `noMutation` is the `no-mutation` baselines' scenario sentinel — the dropped `NoMutation`
+    /// verb's spelling, `no` not being an approved verb — and maps to the identity `set-snapshot(base)`.
+    fn mutation_of(wire: &Json, base: &SemioAnimationSnapshot) -> Result<SemioAnimationMutation, String> {
+        if matches!(wire.get("mutation"), Some(Json::String(tag)) if tag.as_str() == "noMutation") {
+            return Ok(SemioAnimationMutation::SetSnapshot(set_snapshot::SetSnapshot { snapshot: base.clone() }));
         }
+        decode_semio_animation_mutation_json(&wire.to_string())
     }
     //#endregion 🔖️FixtureDecoding
 
@@ -249,9 +221,10 @@ mod subject {
     /// has to equal. All three come out of the SAME file the oracle role reads literally.
     fn vector_of(ctx: &Context, kind: &str) -> Result<(SemioAnimationSnapshot, SemioAnimationMutation, SemioAnimationSnapshot), String> {
         let vector = vector(ctx, kind)?;
-        let before = vector.get("before").ok_or_else(|| "specification vector is missing its \"before\" member".to_string())?;
+        let before = snapshot_of(vector.get("before").ok_or_else(|| "specification vector is missing its \"before\" member".to_string())?)?;
         let after = vector.get("after").ok_or_else(|| "specification vector is missing its \"after\" member".to_string())?;
-        Ok((snapshot_of(before)?, mutation_of(&vector)?, snapshot_of(after)?))
+        let mutation = mutation_of(vector.get("mutation").ok_or_else(|| "specification vector is missing its \"mutation\" member".to_string())?, &before)?;
+        Ok((before, mutation, snapshot_of(after)?))
     }
 
     /// 🚨️ A failure message that names WHAT disagreed, in the same structural JSON the committed
@@ -272,8 +245,8 @@ mod subject {
     }
 
     /// 🦠️ The verb the scenario declares, read from the feature's own doc string.
-    fn declared(ctx: &Context) -> Result<SemioAnimationMutation, String> {
-        mutation_of(&ctx.doc_json()?)
+    fn declared(ctx: &Context, base: &SemioAnimationSnapshot) -> Result<SemioAnimationMutation, String> {
+        mutation_of(&ctx.doc_json()?, base)
     }
 
     fn run(current: &mut SemioAnimationSnapshot, mutation: &SemioAnimationMutation, what: &str) -> Result<(), String> {
@@ -290,7 +263,8 @@ mod subject {
     /// 🎯️ One verb applied to the real committed walk through the production entry point.
     pub fn mutate(ctx: &Context) -> Result<Outcome, String> {
         let mut current = artifact(ctx)?;
-        run(&mut current, &declared(ctx)?, ctx.scenario.id.as_str())?;
+        let mutation = declared(ctx, &current)?;
+        run(&mut current, &mutation, ctx.scenario.id.as_str())?;
         Ok(outcome(snapshot_json(&current)))
     }
 
@@ -300,7 +274,7 @@ mod subject {
     /// value and compare vacuously.
     pub fn inverse(ctx: &Context) -> Result<Outcome, String> {
         let base = artifact(ctx)?;
-        let mutation = declared(ctx)?;
+        let mutation = declared(ctx, &base)?;
         let mut current = base.clone();
         run(&mut current, &mutation, ctx.scenario.id.as_str())?;
         let mutated = snapshot_json(&current);

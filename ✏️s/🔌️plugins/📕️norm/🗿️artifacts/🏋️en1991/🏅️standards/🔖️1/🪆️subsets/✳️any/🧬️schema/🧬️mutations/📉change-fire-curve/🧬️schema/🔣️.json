@@ -1,13 +1,28 @@
 {
-  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/norm/en1991/mutation/change-fire-curve/schema.json",
+  "title": "ChangeFireCurve",
   "type": "object",
   "additionalProperties": false,
   "required": [
-    "new_fire_curve"
+    "newFireCurve"
   ],
   "properties": {
-    "new_fire_curve": {
-      "type": "string"
+    "newFireCurve": {
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1991/snapshot.json#/$defs/FireCurve",
+      "x-semio-ui": {
+        "role": "value",
+        "label": {
+          "en": "Nominal temperature-time curve",
+          "de": "Nominelle Temperaturzeitkurve"
+        },
+        "description": {
+          "en": "Standard (ISO 834), External, Hydrocarbon or Parametric (EN 1991-1-2 §3.2, Annex A).",
+          "de": "Standard (Einheits-Temperaturzeitkurve), External (Außenbrandkurve), Hydrocarbon (Hydrokarbonkurve) oder Parametric (Anhang A)."
+        },
+        "group": "fire",
+        "order": 10
+      }
     }
   }
 }

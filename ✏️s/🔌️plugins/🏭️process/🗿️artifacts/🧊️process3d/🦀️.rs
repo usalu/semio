@@ -432,7 +432,7 @@ pub struct StepOrigin {
 /// (WRITE, real) below for the analytic converter that turns a `WorkingSolid` into real,
 /// content-addressable `SemioBrepSnapshot` topology.
 #[derive(Clone, Debug, PartialEq, ToValue, FromValue, dsl::DslEnum)]
-#[value(tag = "kind", rename_all = "camelCase")]
+#[value(tag = "kind", rename_all = "camelCase", rename_all_fields = "camelCase")]
 pub enum WorkingSolid {
     Box {
         #[dsl(unit = "m")]

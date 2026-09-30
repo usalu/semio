@@ -11,13 +11,55 @@
   ],
   "properties": {
     "pageId": {
-      "type": "string"
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Page",
+          "de": "Seite"
+        },
+        "ref": {
+          "kind": "page"
+        },
+        "group": "target",
+        "order": 10
+      }
     },
     "frameId": {
-      "type": "string"
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Frame",
+          "de": "Rahmen"
+        },
+        "ref": {
+          "kind": "frame",
+          "domain": "elements",
+          "granularity": "element"
+        },
+        "group": "target",
+        "order": 20
+      }
     },
     "newWrapMode": {
-      "type": "string"
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "text",
+        "role": "value",
+        "label": {
+          "en": "Text wrap",
+          "de": "Textumfluss"
+        },
+        "description": {
+          "en": "none, box or contour.",
+          "de": "none, box oder contour."
+        },
+        "group": "text",
+        "order": 30
+      }
     }
   }
 }

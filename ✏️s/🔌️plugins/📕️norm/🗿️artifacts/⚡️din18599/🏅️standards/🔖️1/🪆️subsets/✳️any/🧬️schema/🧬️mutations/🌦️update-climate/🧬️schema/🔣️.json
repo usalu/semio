@@ -5,34 +5,27 @@
   "type": "object",
   "additionalProperties": false,
   "required": [
+    "mutation",
     "newClimate"
   ],
   "properties": {
+    "mutation": {
+      "const": "updateClimate"
+    },
     "newClimate": {
-      "title": "MonthlyClimate",
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "gHWM2",
-        "thetaEC"
-      ],
-      "properties": {
-        "thetaEC": {
-          "type": "array",
-          "items": {
-            "type": "number"
-          },
-          "minItems": 12,
-          "maxItems": 12
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/din18599/snapshot/schema.json#/$defs/MonthlyClimate",
+      "x-semio-ui": {
+        "role": "value",
+        "label": {
+          "en": "Monthly climate",
+          "de": "Monatsklima"
         },
-        "gHWM2": {
-          "type": "array",
-          "items": {
-            "type": "number"
-          },
-          "minItems": 12,
-          "maxItems": 12
-        }
+        "description": {
+          "en": "Monthly mean outdoor temperatures and global irradiances (DIN V 18599-10).",
+          "de": "Monatsmittelwerte der Außentemperatur und der Globalstrahlung (DIN V 18599-10)."
+        },
+        "group": "climate",
+        "order": 10
       }
     }
   }

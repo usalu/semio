@@ -5,15 +5,51 @@
   "type": "object",
   "additionalProperties": false,
   "required": [
+    "mutation",
     "id",
     "newIlluminanceTargetLux"
   ],
   "properties": {
+    "mutation": {
+      "const": "changeDaylightZoneIlluminanceTarget"
+    },
     "id": {
-      "type": "integer"
+      "type": "integer",
+      "minimum": 0,
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Daylight zone",
+          "de": "Tageslichtzone"
+        },
+        "description": {
+          "en": "The daylight zone this mutation changes, by id.",
+          "de": "Tageslichtzone, die diese Mutation ändert, per ID."
+        },
+        "ref": {
+          "kind": "daylightZone"
+        },
+        "group": "target",
+        "order": 10
+      }
     },
     "newIlluminanceTargetLux": {
-      "type": "number"
+      "type": "number",
+      "exclusiveMinimum": 0,
+      "x-semio-ui": {
+        "widget": "stepper",
+        "role": "value",
+        "label": {
+          "en": "Illuminance target",
+          "de": "Soll-Beleuchtungsstärke"
+        },
+        "unit": "lx",
+        "step": 10,
+        "precision": 0,
+        "group": "daylight",
+        "order": 20
+      }
     }
   }
 }

@@ -10,11 +10,28 @@
   "properties": {
     "schema": {
       "type": "string",
-      "x-semio-state": "artifact"
+      "x-semio-state": "artifact",
+      "x-semio-ui": {
+        "widget": "text",
+        "label": {
+          "en": "Snapshot schema",
+          "de": "Snapshot-Schema"
+        },
+        "description": {
+          "en": "Identifier of the snapshot schema version.",
+          "de": "Kennung der Version des Snapshot-Schemas."
+        }
+      }
     },
     "doc": {
-      "type": "object",
-      "x-semio-state": "artifact"
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/xml/1.0/base/snapshot.json#/$defs/XmlDocument",
+      "x-semio-state": "artifact",
+      "x-semio-ui": {
+        "label": {
+          "en": "Document",
+          "de": "Dokument"
+        }
+      }
     }
   }
 }

@@ -28,7 +28,7 @@ pub fn apply(payload: &GltfCreateAnimationPayload, base: &GltfSnapshot) -> Resul
 
 //#region 🧬️DirectMutation
 #[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::MutationLeaf)]
-#[mutation_leaf(contract = ::protocol)]
+#[mutation_leaf(contract = ::protocol, payload = Apply)]
 #[value(tag = "phase", content = "value", rename_all = "camelCase")]
 pub enum CreateAnimationMutation {
     Apply(GltfCreateAnimationPayload),
@@ -72,6 +72,6 @@ impl protocol::MutationKind<GltfSnapshot, super::GltfMutation> for CreateAnimati
 
 //#region 🧪️Tests
 #[cfg(test)]
-#[path = "🧪️tests/🔬️direct-leaf/🦀️.rs"]
-mod direct_leaf_tests;
+#[path = "🧪️tests/🎞️inserts-an-empty-99ef88/🦀️.rs"]
+mod case_inserts_an_empty_99ef88;
 //#endregion 🧪️Tests

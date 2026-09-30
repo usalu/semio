@@ -1,12 +1,10 @@
-/** 🧬️ Iso16757Mutation — mirrors `Iso16757Mutation` in `🦀️.rs` (21 variants over
+/** 🧬️ Iso16757Mutation — mirrors `Iso16757Mutation` in `🦀️.rs` (29 variants over
  * document-root scalars, catalogue/manufacturer naming, and full create/delete(+rename) coverage
- * of `product_groups`/`products`/`property_definitions`/dictionary `subjects`). `Iso16757Mutation`
- * carries only `#[derive(dsl::Mutations)]` — no `#[serde(tag = ...)]` — so it serializes with
- * serde's default EXTERNALLY TAGGED shape: `{ "<PascalCaseVariantName>": { ...leaf-struct-fields }
- * }`, confirmed by every committed `🧪️tests/*​/🦠️mutation/🔣️.json` fixture (e.g.
- * `{"ChangeExchangeProcess": {"new_exchange_process": "DetermineProduct"}}`). None of the 21 leaf
- * structs carry `#[serde(rename_all = ...)]`, so every leaf's own field names are the literal Rust
- * snake_case names verbatim. */
+ * of `productGroups`/`products`/`propertyDefinitions`/dictionary `subjects`). `Iso16757Mutation`
+ * is EXTERNALLY TAGGED on the wire: `{ "<PascalCaseVariantName>": { ...leaf-struct-fields } }` (e.g.
+ * `{"ChangeExchangeProcess": {"newExchangeProcess": "DetermineProduct"}}`). Every leaf struct and every
+ * catalogue record carries `rename_all = "camelCase"` on its value wire and its test serde twin alike, so
+ * field names are camelCase. */
 
 export interface LocalizedText {
   locale: string;
@@ -204,22 +202,22 @@ export interface SelectionConstraint {
 }
 
 export interface ChangeExchangeProcess {
-  new_exchange_process: ExchangeProcess;
+  newExchangeProcess: ExchangeProcess;
 }
 
 export interface ChangeScriptLimits {
-  new_max_steps: number;
-  new_max_recursion: number;
-  new_timeout_ms: number;
+  newMaxSteps: number;
+  newMaxRecursion: number;
+  newTimeoutMs: number;
 }
 
 export interface ReplacePartNumberRule {
-  new_rule: PartNumberRule;
+  newRule: PartNumberRule;
 }
 
 export interface ChangePartNumberInput {
   key: string;
-  new_value: CatalogueValue;
+  newValue: CatalogueValue;
 }
 
 export interface RemovePartNumberInput {
@@ -227,11 +225,11 @@ export interface RemovePartNumberInput {
 }
 
 export interface ChangeSelectionClass {
-  new_class_id: string;
+  newClassId: string;
 }
 
 export interface ChangeSelectionSeries {
-  new_series_id?: string;
+  newSeriesId?: string;
 }
 
 export interface AddSelectionConstraint {
@@ -243,15 +241,15 @@ export interface RemoveSelectionConstraint {
 }
 
 export interface RenameCatalogue {
-  new_name: string;
+  newName: string;
 }
 
 export interface RenameManufacturer {
-  new_name: string;
+  newName: string;
 }
 
 export interface IntroduceProductGroup {
-  product_group: ProductGroup;
+  productGroup: ProductGroup;
   index?: number;
 }
 
@@ -261,7 +259,7 @@ export interface RetireProductGroup {
 
 export interface RenameProductGroup {
   id: string;
-  new_name: string;
+  newName: string;
 }
 
 export interface IntroduceProduct {
@@ -275,11 +273,11 @@ export interface RetireProduct {
 
 export interface RenameProduct {
   id: string;
-  new_name: string;
+  newName: string;
 }
 
 export interface IntroducePropertyDefinition {
-  property_definition: PropertyDefinition;
+  propertyDefinition: PropertyDefinition;
   index?: number;
 }
 
@@ -297,7 +295,7 @@ export interface RetireSubject {
 }
 
 export interface IntroduceProductClass {
-  product_class: ProductClass;
+  productClass: ProductClass;
   index?: number;
 }
 
@@ -306,7 +304,7 @@ export interface RetireProductClass {
 }
 
 export interface IntroduceProductSeries {
-  product_series: ProductSeries;
+  productSeries: ProductSeries;
   index?: number;
 }
 
@@ -315,7 +313,7 @@ export interface RetireProductSeries {
 }
 
 export interface IntroduceProductIndex {
-  product_index: ProductIndex;
+  productIndex: ProductIndex;
   index?: number;
 }
 
@@ -324,7 +322,7 @@ export interface RetireProductIndex {
 }
 
 export interface IntroduceGeometryObject {
-  geometry_object: GeometryObject;
+  geometryObject: GeometryObject;
 }
 
 export interface RetireGeometryObject {

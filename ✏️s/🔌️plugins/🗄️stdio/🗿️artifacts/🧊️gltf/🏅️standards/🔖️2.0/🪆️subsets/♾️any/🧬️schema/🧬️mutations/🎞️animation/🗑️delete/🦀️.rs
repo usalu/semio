@@ -26,7 +26,7 @@ pub fn apply(payload: &GltfDeleteAnimationPayload, base: &GltfSnapshot) -> Resul
 
 //#region 🧬️DirectMutation
 #[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::MutationLeaf)]
-#[mutation_leaf(contract = ::protocol)]
+#[mutation_leaf(contract = ::protocol, payload = Apply)]
 #[value(tag = "phase", content = "value", rename_all = "camelCase")]
 pub enum DeleteAnimationMutation {
     Apply(GltfDeleteAnimationPayload),
@@ -70,6 +70,6 @@ impl protocol::MutationKind<GltfSnapshot, super::GltfMutation> for DeleteAnimati
 
 //#region 🧪️Tests
 #[cfg(test)]
-#[path = "🧪️tests/🔬️direct-leaf/🦀️.rs"]
-mod direct_leaf_tests;
+#[path = "🧪️tests/🚫️removes-the-bob-e4e346/🦀️.rs"]
+mod case_removes_the_bob_e4e346;
 //#endregion 🧪️Tests

@@ -5,15 +5,27 @@
   "type": "object",
   "additionalProperties": false,
   "required": [
+    "mutation",
     "job"
   ],
   "properties": {
-    "job": {
-      "type": "string"
-    },
     "mutation": {
       "const": "setDpartMetadata",
       "description": "Aggregate discriminator spliced in by PdfVtMutation; absent when the payload stands alone."
+    },
+    "job": {
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "text",
+        "label": {
+          "en": "Job name",
+          "de": "Auftragsname"
+        },
+        "description": {
+          "en": "Name of the PDF/VT document part job.",
+          "de": "Name des PDF/VT-Auftrags der Dokumentteile."
+        }
+      }
     }
   }
 }

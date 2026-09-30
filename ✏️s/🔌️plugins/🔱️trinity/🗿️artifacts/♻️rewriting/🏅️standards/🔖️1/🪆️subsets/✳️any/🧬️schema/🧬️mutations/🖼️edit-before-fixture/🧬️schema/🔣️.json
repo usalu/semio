@@ -5,11 +5,27 @@
   "type": "object",
   "additionalProperties": false,
   "required": [
+    "mutation",
     "newBeforeFixtureJson"
   ],
   "properties": {
+    "mutation": {
+      "const": "editBeforeFixture"
+    },
     "newBeforeFixtureJson": {
-      "type": "string"
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "multiline",
+        "role": "value",
+        "label": {
+          "en": "New Before Graph",
+          "de": "Neuer Vorher-Graph"
+        },
+        "description": {
+          "en": "Working graph the rule is applied to, as trinity.graph JSON.",
+          "de": "Arbeitsgraph, auf den die Regel angewendet wird, als trinity.graph-JSON."
+        }
+      }
     }
   }
 }

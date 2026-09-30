@@ -1,5 +1,6 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/norm/en1996/mutation/change-qk-snow/schema.json",
   "title": "ChangeQKSnow",
   "type": "object",
   "additionalProperties": false,
@@ -10,13 +11,63 @@
   ],
   "properties": {
     "wallIndex": {
-      "type": "integer"
+      "type": "integer",
+      "minimum": 0,
+      "x-semio-ui": {
+        "widget": "stepper",
+        "role": "value",
+        "label": {
+          "en": "Wall",
+          "de": "Wand"
+        },
+        "description": {
+          "en": "Zero-based position of the wall in its list.",
+          "de": "Nullbasierte Position der Wand in der Liste."
+        },
+        "step": 1,
+        "precision": 0,
+        "group": "target",
+        "order": 10
+      }
     },
     "index": {
-      "type": "integer"
+      "type": "integer",
+      "minimum": 0,
+      "x-semio-ui": {
+        "widget": "stepper",
+        "role": "value",
+        "label": {
+          "en": "Load case",
+          "de": "Lastfall"
+        },
+        "description": {
+          "en": "Zero-based position of the load case within the wall in its list.",
+          "de": "Nullbasierte Position des Lastfalls in der Wand in der Liste."
+        },
+        "step": 1,
+        "precision": 0,
+        "group": "target",
+        "order": 20
+      }
     },
     "newQKSnowPa": {
-      "type": "number"
+      "type": "number",
+      "minimum": 0,
+      "x-semio-ui": {
+        "widget": "stepper",
+        "role": "value",
+        "label": {
+          "en": "Characteristic snow load s_k",
+          "de": "Charakteristische Schneelast s_k"
+        },
+        "unit": "Pa",
+        "displayUnit": "kN/m²",
+        "displayFactor": 0.001,
+        "step": 50,
+        "precision": 2,
+        "group": "actions",
+        "order": 30
+      }
     }
   }
 }

@@ -5,15 +5,48 @@
   "type": "object",
   "additionalProperties": false,
   "required": [
+    "mutation",
     "caseId",
     "newSelfWeight"
   ],
   "properties": {
+    "mutation": {
+      "const": "changeLoadCaseSelfWeight"
+    },
     "caseId": {
-      "type": "string"
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Load case",
+          "de": "Lastfall"
+        },
+        "ref": {
+          "kind": "loadCase",
+          "domain": "fem3d",
+          "granularity": "loadCase"
+        },
+        "group": "target",
+        "order": 10
+      }
     },
     "newSelfWeight": {
-      "type": "boolean"
+      "type": "boolean",
+      "x-semio-ui": {
+        "widget": "toggle",
+        "role": "value",
+        "label": {
+          "en": "Self weight",
+          "de": "Eigengewicht"
+        },
+        "description": {
+          "en": "Includes the structure's self weight in this load case.",
+          "de": "Berücksichtigt das Eigengewicht des Tragwerks in diesem Lastfall."
+        },
+        "group": "value",
+        "order": 20
+      }
     }
   }
 }

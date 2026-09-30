@@ -1,0 +1,10 @@
+{
+  "mutation": "changeMeshName",
+  "payload": {
+    "phase": "apply",
+    "value": {
+      "mesh": 0,
+      "value": "deck"
+    }
+  }
+}

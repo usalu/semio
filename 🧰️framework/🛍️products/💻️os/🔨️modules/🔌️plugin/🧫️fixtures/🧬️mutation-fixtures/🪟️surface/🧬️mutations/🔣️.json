@@ -1,0 +1,23 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/framework/os/plugin/tests/mutation-fixtures/surface/mutations.json",
+  "title": "SurfaceMutation",
+  "oneOf": [
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "operation",
+        "payload"
+      ],
+      "properties": {
+        "operation": {
+          "const": "setSurfaceCount"
+        },
+        "payload": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/framework/os/plugin/tests/mutation-fixtures/surface/mutation/set-surface-count/schema.json"
+        }
+      }
+    }
+  ]
+}

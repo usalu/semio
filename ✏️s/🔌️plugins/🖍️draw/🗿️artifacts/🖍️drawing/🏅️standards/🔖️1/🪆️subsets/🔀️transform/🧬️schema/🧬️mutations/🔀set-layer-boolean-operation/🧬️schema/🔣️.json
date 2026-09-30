@@ -5,15 +5,52 @@
   "type": "object",
   "additionalProperties": false,
   "required": [
+    "mutation",
     "booleanOperation",
     "layerId"
   ],
   "properties": {
+    "mutation": {
+      "const": "setLayerBooleanOperation"
+    },
     "layerId": {
-      "type": "string"
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Layer",
+          "de": "Ebene"
+        },
+        "description": {
+          "en": "The layer this mutation addresses.",
+          "de": "Die Ebene, die diese Mutation adressiert."
+        },
+        "ref": {
+          "kind": "layer",
+          "domain": "strokes",
+          "granularity": "stroke"
+        },
+        "group": "target",
+        "order": 10
+      }
     },
     "booleanOperation": {
-      "type": "string"
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "text",
+        "role": "value",
+        "label": {
+          "en": "Boolean operation",
+          "de": "Boolesche Operation"
+        },
+        "description": {
+          "en": "union, intersect or subtract.",
+          "de": "union (Vereinigung), intersect (Schnitt) oder subtract (Differenz)."
+        },
+        "group": "geometry",
+        "order": 20
+      }
     }
   }
 }

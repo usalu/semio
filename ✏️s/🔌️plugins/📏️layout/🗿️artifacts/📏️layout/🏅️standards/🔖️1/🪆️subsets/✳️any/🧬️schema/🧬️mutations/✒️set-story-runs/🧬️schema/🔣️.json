@@ -1,1 +1,139 @@
-{"$schema":"http://json-schema.org/draft-07/schema#","title":"SetStoryRuns","type":"object"}
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/layout/layout/mutation/set-story-runs/schema.json",
+  "title": "SetStoryRuns",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "id",
+    "runs"
+  ],
+  "properties": {
+    "id": {
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Story",
+          "de": "Textfluss"
+        },
+        "ref": {
+          "kind": "story"
+        },
+        "group": "target",
+        "order": 10
+      }
+    },
+    "runs": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/TextStyleRun"
+      },
+      "x-semio-ui": {
+        "role": "value",
+        "label": {
+          "en": "Style runs",
+          "de": "Formatbereiche"
+        },
+        "description": {
+          "en": "Replaces every style run of the story.",
+          "de": "Ersetzt alle Formatbereiche des Textflusses."
+        },
+        "group": "record",
+        "order": 20
+      }
+    }
+  },
+  "$defs": {
+    "TextStyleRun": {
+      "title": "TextStyleRun",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "start",
+        "end"
+      ],
+      "properties": {
+        "start": {
+          "type": "integer",
+          "minimum": 0,
+          "x-semio-ui": {
+            "widget": "stepper",
+            "role": "value",
+            "label": {
+              "en": "Start",
+              "de": "Beginn"
+            },
+            "description": {
+              "en": "First character offset of the run.",
+              "de": "Zeichenposition, an der der Bereich beginnt."
+            },
+            "step": 1,
+            "precision": 0,
+            "group": "range",
+            "order": 10
+          }
+        },
+        "end": {
+          "type": "integer",
+          "minimum": 0,
+          "x-semio-ui": {
+            "widget": "stepper",
+            "role": "value",
+            "label": {
+              "en": "End",
+              "de": "Ende"
+            },
+            "description": {
+              "en": "Character offset after the run.",
+              "de": "Zeichenposition nach dem Bereich."
+            },
+            "step": 1,
+            "precision": 0,
+            "group": "range",
+            "order": 20
+          }
+        },
+        "paragraphStyleId": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "x-semio-ui": {
+            "widget": "reference",
+            "role": "value",
+            "label": {
+              "en": "Paragraph style",
+              "de": "Absatzformat"
+            },
+            "ref": {
+              "kind": "paragraphStyle"
+            },
+            "group": "style",
+            "order": 30
+          }
+        },
+        "characterStyleId": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "x-semio-ui": {
+            "widget": "reference",
+            "role": "value",
+            "label": {
+              "en": "Character style",
+              "de": "Zeichenformat"
+            },
+            "ref": {
+              "kind": "characterStyle"
+            },
+            "group": "style",
+            "order": 40
+          }
+        }
+      }
+    }
+  }
+}

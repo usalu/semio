@@ -5,6 +5,10 @@ edition.workspace = true
 rust-version.workspace = true
 description = "Persisted OS space manifest artifact"
 
+[package.metadata.semio]
+role = "artifact"
+id = "space-space"
+
 [lints]
 workspace = true
 

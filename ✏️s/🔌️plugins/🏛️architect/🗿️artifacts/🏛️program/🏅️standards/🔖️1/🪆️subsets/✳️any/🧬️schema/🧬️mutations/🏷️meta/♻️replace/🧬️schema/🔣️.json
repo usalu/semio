@@ -5,9 +5,13 @@
   "type": "object",
   "additionalProperties": false,
   "required": [
+    "mutation",
     "newMeta"
   ],
   "properties": {
+    "mutation": {
+      "const": "replaceMeta"
+    },
     "newMeta": {
       "title": "ProgramMeta",
       "type": "object",
@@ -16,28 +20,78 @@
         "authorIds",
         "classification",
         "documentId",
+        "exportProfile",
         "industrySector",
         "locale",
         "projectType",
         "purpose",
         "revision",
         "schema",
+        "sourceSystem",
+        "subtitle",
         "terminology",
         "timestamps",
         "title"
       ],
       "properties": {
         "schema": {
-          "type": "string"
+          "type": "string",
+          "x-semio-ui": {
+            "widget": "text",
+            "role": "value",
+            "label": {
+              "en": "Schema",
+              "de": "Schema"
+            },
+            "group": "identity",
+            "order": 10
+          }
         },
         "documentId": {
-          "type": "string"
+          "type": "string",
+          "x-semio-ui": {
+            "widget": "text",
+            "role": "value",
+            "label": {
+              "en": "Document ID",
+              "de": "Dokument-ID"
+            },
+            "group": "identity",
+            "order": 20
+          }
         },
         "title": {
-          "type": "string"
+          "type": "string",
+          "x-semio-ui": {
+            "widget": "text",
+            "role": "value",
+            "label": {
+              "en": "Title",
+              "de": "Titel"
+            },
+            "group": "identity",
+            "order": 30
+          }
         },
         "subtitle": {
-          "type": "string"
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "x-semio-ui": {
+            "widget": "text",
+            "role": "value",
+            "label": {
+              "en": "Subtitle",
+              "de": "Untertitel"
+            },
+            "group": "identity",
+            "order": 40
+          }
         },
         "purpose": {
           "title": "TextField",
@@ -48,49 +102,192 @@
           ],
           "properties": {
             "text": {
-              "type": "string"
+              "type": "string",
+              "x-semio-ui": {
+                "widget": "multiline",
+                "role": "value",
+                "label": {
+                  "en": "Text",
+                  "de": "Text"
+                },
+                "group": "details",
+                "order": 10
+              }
             },
             "format": {
-              "type": "string"
+              "type": "string",
+              "x-semio-ui": {
+                "widget": "text",
+                "role": "value",
+                "label": {
+                  "en": "Format",
+                  "de": "Format"
+                },
+                "description": {
+                  "en": "Text format hint, e.g. plain or markdown.",
+                  "de": "Hinweis auf das Textformat, z. B. plain oder markdown."
+                },
+                "group": "details",
+                "order": 20
+              }
             }
+          },
+          "x-semio-ui": {
+            "role": "value",
+            "label": {
+              "en": "Purpose",
+              "de": "Zweck"
+            },
+            "group": "narrative",
+            "order": 50
           }
         },
         "terminology": {
           "type": "array",
           "items": {
             "type": "string"
+          },
+          "x-semio-ui": {
+            "role": "value",
+            "label": {
+              "en": "Terminology",
+              "de": "Terminologie"
+            },
+            "group": "details",
+            "order": 60
           }
         },
         "classification": {
           "type": "array",
           "items": {
             "type": "string"
+          },
+          "x-semio-ui": {
+            "role": "value",
+            "label": {
+              "en": "Classification Systems",
+              "de": "Klassifikationssysteme"
+            },
+            "description": {
+              "en": "Classification systems the program follows, e.g. DIN 276, DIN 277 or Uniclass.",
+              "de": "Klassifikationssysteme, denen das Programm folgt, z. B. DIN 276, DIN 277 oder Uniclass."
+            },
+            "group": "details",
+            "order": 70
           }
         },
         "industrySector": {
-          "type": "string"
+          "type": "string",
+          "x-semio-ui": {
+            "widget": "text",
+            "role": "value",
+            "label": {
+              "en": "Industry Sector",
+              "de": "Branche"
+            },
+            "group": "details",
+            "order": 80
+          }
         },
         "projectType": {
-          "type": "string"
+          "type": "string",
+          "x-semio-ui": {
+            "widget": "text",
+            "role": "value",
+            "label": {
+              "en": "Project Type",
+              "de": "Projektart"
+            },
+            "group": "details",
+            "order": 90
+          }
         },
         "locale": {
-          "type": "string"
+          "type": "string",
+          "x-semio-ui": {
+            "widget": "text",
+            "role": "value",
+            "label": {
+              "en": "Locale",
+              "de": "Gebietsschema"
+            },
+            "group": "identity",
+            "order": 100
+          }
         },
         "revision": {
-          "type": "string"
+          "type": "string",
+          "x-semio-ui": {
+            "widget": "text",
+            "role": "value",
+            "label": {
+              "en": "Revision",
+              "de": "Revision"
+            },
+            "group": "identity",
+            "order": 110
+          }
         },
         "authorIds": {
           "type": "array",
           "items": {
-            "type": "integer",
-            "minimum": 0
+            "type": "string"
+          },
+          "x-semio-ui": {
+            "widget": "reference",
+            "role": "target",
+            "label": {
+              "en": "Authors",
+              "de": "Autoren"
+            },
+            "ref": {
+              "kind": "stakeholder",
+              "domain": "program",
+              "granularity": "entity"
+            },
+            "group": "links",
+            "order": 120
           }
         },
         "sourceSystem": {
-          "type": "string"
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "x-semio-ui": {
+            "widget": "text",
+            "role": "value",
+            "label": {
+              "en": "Source System",
+              "de": "Quellsystem"
+            },
+            "group": "details",
+            "order": 130
+          }
         },
         "exportProfile": {
-          "type": "string"
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "x-semio-ui": {
+            "widget": "text",
+            "role": "value",
+            "label": {
+              "en": "Export Profile",
+              "de": "Exportprofil"
+            },
+            "group": "details",
+            "order": 140
+          }
         },
         "timestamps": {
           "title": "TimestampMeta",
@@ -102,21 +299,99 @@
           ],
           "properties": {
             "created": {
-              "type": "string"
+              "type": "string",
+              "x-semio-ui": {
+                "widget": "text",
+                "role": "value",
+                "label": {
+                  "en": "Created",
+                  "de": "Erstellt am"
+                },
+                "description": {
+                  "en": "Date or date-time per ISO 8601.",
+                  "de": "Datum oder Zeitpunkt nach ISO 8601."
+                },
+                "group": "audit",
+                "order": 10
+              }
             },
             "updated": {
-              "type": "string"
+              "type": "string",
+              "x-semio-ui": {
+                "widget": "text",
+                "role": "value",
+                "label": {
+                  "en": "Updated",
+                  "de": "Geändert am"
+                },
+                "description": {
+                  "en": "Date or date-time per ISO 8601.",
+                  "de": "Datum oder Zeitpunkt nach ISO 8601."
+                },
+                "group": "audit",
+                "order": 20
+              }
             },
             "createdBy": {
-              "type": "integer",
-              "minimum": 0
+              "type": "string",
+              "x-semio-ui": {
+                "widget": "reference",
+                "role": "target",
+                "label": {
+                  "en": "Created By",
+                  "de": "Erstellt von"
+                },
+                "ref": {
+                  "kind": "stakeholder",
+                  "domain": "program",
+                  "granularity": "entity"
+                },
+                "group": "links",
+                "order": 30
+              }
             },
             "updatedBy": {
-              "type": "integer",
-              "minimum": 0
+              "type": "string",
+              "x-semio-ui": {
+                "widget": "reference",
+                "role": "target",
+                "label": {
+                  "en": "Updated By",
+                  "de": "Geändert von"
+                },
+                "ref": {
+                  "kind": "stakeholder",
+                  "domain": "program",
+                  "granularity": "entity"
+                },
+                "group": "links",
+                "order": 40
+              }
             }
+          },
+          "x-semio-ui": {
+            "role": "value",
+            "label": {
+              "en": "Timestamps",
+              "de": "Zeitstempel"
+            },
+            "group": "audit",
+            "order": 150
           }
         }
+      },
+      "x-semio-ui": {
+        "role": "value",
+        "label": {
+          "en": "Program Metadata",
+          "de": "Programm-Metadaten"
+        },
+        "description": {
+          "en": "The complete program metadata; replaces the current metadata.",
+          "de": "Vollständige Programm-Metadaten; ersetzen die bisherigen."
+        },
+        "group": "record",
+        "order": 10
       }
     }
   }

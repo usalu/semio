@@ -1,0 +1,137 @@
+    /// 🧮️ Re-derives every history position from the event log (`crate::os_spr::fold_history`)
+    /// and materializes the payload projection for it. The single path local commands and remote
+    /// ingest converge through: the document is always the fold of its events, never a merge.
+    /// Transactional: the projection is computed and every capacity its adoption needs is checked before the first fact
+    /// is adopted. Answers the messages of every edit a replay re-evaluated.
+    async fn reproject(&mut self) -> Result<Vec<crate::os_spr::EditMessages>, VcsError> {
+        let fold = fold_envelope_history(&self.envelope)?;
+        let replay = self.reprojection_replay(&fold)?;
+        self.adopt_reprojection(fold, replay)
+    }
+
+    /// ⏪️ The Report replay `fold` needs: none when its applied order and effective inputs are live or it only drops applied
+    /// edits from the tail (every remaining edit keeps its prefix, so its durable messages and inverses stay
+    /// replay-consistent), otherwise a replay from the first position whose order or effective input differs — an interior
+    /// undo, redo or checkout rewrites every downstream edit's messages and inverses exactly as a supersession does.
+    fn reprojection_replay(&self, fold: &crate::os_spr::HistoryFold) -> Result<Option<EditReplayResult<P, Mutation>>, VcsError> {
+        if fold.supersessions == *self.supersessions && self.applied_edit_ids.starts_with(&fold.applied) {
+            return Ok(None);
+        }
+        let (from, horizon) = self.replay_window(&fold.applied, &fold.supersessions)?;
+        let mut replay = self.report_replay(&fold.applied, from, fold.supersessions.clone(), horizon)?.recording(Self::prefix_stride(fold.applied.len()));
+        replay.step(&self.envelope.vcs.edits, &mut || false)?;
+        replay.finish().map(Some)
+    }
+
+    /// ✍️ Adopts an already finished Report replay of exactly the folded event log instead of replaying again — the fast path
+    /// of a supersession whose replay was computed before it was authored (a dry run, or a time-travel session). A replay of
+    /// another order or other effective inputs is dropped and the log is replayed as usual.
+    fn reproject_replayed(&mut self, result: EditReplayResult<P, Mutation>) -> Result<Vec<crate::os_spr::EditMessages>, VcsError> {
+        let fold = fold_envelope_history(&self.envelope)?;
+        if fold.applied != result.order || !same_effective_inputs(&fold.supersessions, &result.supersessions) {
+            drop(result);
+            let replay = self.reprojection_replay(&fold)?;
+            return self.adopt_reprojection(fold, replay);
+        }
+        self.adopt_reprojection(fold, Some(result))
+    }
+
+    /// ✍️ Adopts `fold` and the replay it needed ([`Self::reprojection_replay`]): a tail-only removal re-projects through
+    /// the tail snapshot or the nearest retained prefix, a replay publishes its projection, inverses and messages. Nothing
+    /// is adopted unless [`Self::preflight_reprojection`] admits all of it.
+    fn adopt_reprojection(&mut self, fold: crate::os_spr::HistoryFold, replay: Option<EditReplayResult<P, Mutation>>) -> Result<Vec<crate::os_spr::EditMessages>, VcsError> {
+        let prefix = match &replay {
+            None if fold.applied != *self.applied_edit_ids => Some(self.prefix_projection(&fold.applied)?),
+            _ => None,
+        };
+        let recorded = prefix.as_ref().map_or(0, |(_, recorded)| recorded.len()) + replay.as_ref().map_or(0, |result| result.recorded.len());
+        if let Err(error) = self.preflight_reprojection(&fold, replay.as_ref(), recorded) {
+            if let Some((current, recorded)) = prefix {
+                retire_shared_projection::<P, Mutation>(current);
+                for (_, snapshot) in recorded {
+                    retire_shared_projection::<P, Mutation>(snapshot);
+                }
+            }
+            return Err(error);
+        }
+        self.adopt_history_facts(&fold)?;
+        let crate::os_spr::HistoryFold { applied, redo, checkpoint, alternative, supersessions, .. } = fold;
+        let replayed = match (replay, prefix) {
+            (Some(result), _) => self.adopt_replayed_projection(applied, supersessions, result)?,
+            (None, Some((current, recorded))) => {
+                self.replace_current_retained(current)?;
+                self.replace_tail_undo_cache_retained(None)?;
+                self.replace_applied_edit_ids_retained(applied)?;
+                self.retain_prefix_snapshots(recorded)?;
+                Vec::new()
+            }
+            (None, None) => Vec::new(),
+        };
+        self.adopt_history_positions(redo, checkpoint, alternative)?;
+        Ok(replayed)
+    }
+
+    /// 🎞️ The projection after `applied`, a strict prefix of the live applied history: the tail snapshot when exactly the
+    /// tail edit left, otherwise the nearest retained prefix folded forward, with the prefix projections it folded
+    /// through. Reads only; every returned projection is an owner the caller adopts or retires.
+    fn prefix_projection(&self, applied: &[String]) -> Result<(Arc<P>, Vec<(usize, Arc<P>)>), VcsError> {
+        if let Some((_, snapshot)) = self.tail_undo_cache.as_ref().filter(|(edit_id, _)| applied.len() + 1 == self.applied_edit_ids.len() && self.applied_edit_ids.last() == Some(edit_id)) {
+            return Ok((Arc::clone(snapshot), Vec::new()));
+        }
+        self.prefix_state_recorded(applied, applied.len(), &self.supersessions, Self::prefix_stride(applied.len()))
+    }
+
+    /// 🛫️ Refuses a reprojection before it adopts anything: `fold`'s new history facts fit their ledgers and their pins
+    /// parse, `replay`'s new message entries fit the message ledger, and the displaced-owner queue holds every owner the
+    /// adoption (with `recorded` prefix projections) and the revision bump that follows it displace.
+    fn preflight_reprojection(&self, fold: &crate::os_spr::HistoryFold, replay: Option<&EditReplayResult<P, Mutation>>, recorded: usize) -> Result<(), VcsError> {
+        let vcs = &self.envelope.vcs;
+        let changes = fold.changes.iter().filter(|change| !vcs.changes.iter().any(|known| known.id == change.id)).count();
+        let checkpoints = fold
+            .checkpoints
+            .iter()
+            .filter(|checkpoint| !vcs.checkpoints.iter().any(|known| known.id == checkpoint.id || (known.parent_id == checkpoint.parent_id && known.change_ids == checkpoint.change_ids && !fold.checkpoints.iter().any(|folded| folded.id == known.id))))
+            .count();
+        let alternatives = fold.alternatives.iter().filter(|alternative| !vcs.alternatives.iter().any(|known| known.id == alternative.id)).count();
+        if changes > vcs.changes.vacancies() || checkpoints > vcs.checkpoints.vacancies() || alternatives > vcs.alternatives.vacancies() {
+            return Err(VcsError::ValidationFailed("history ledgers cannot hold the folded facts".into()));
+        }
+        for pin in fold.checkpoints.iter().flat_map(|checkpoint| checkpoint.pins.iter()) {
+            crate::os_io::ArtifactRef::parse_uri(&pin.child_uri).map_err(VcsError::Deserialize)?;
+        }
+        let entries = replay.map_or(&[][..], |result| result.replayed.as_slice());
+        let admitted = entries.iter().filter(|entry| !entry.messages.is_empty() && self.envelope.edit_messages.get_by_id(&entry.edit_id).is_none()).count();
+        if admitted > ARTIFACT_EDIT_MESSAGE_INDEX_CAPACITY.saturating_sub(self.envelope.edit_messages.len()) {
+            return Err(VcsError::ValidationFailed("artifact edit-message ledger cannot hold the replayed messages".into()));
+        }
+        self.displaced_retirements.reserve(usize::from(changes + checkpoints + alternatives > 0) + entries.len() + 2 * recorded + REPROJECTION_OWNER_SLOTS)
+    }
+
+    /// ✍️ Publishes a finished Report replay of `applied` under `supersessions`. A replay that only appended one edit to the
+    /// live tail keeps the live head as that edit's tail snapshot (an undo answers from it again).
+    fn adopt_replayed_projection(&mut self, applied: Vec<String>, supersessions: EffectiveSupersessions, mut result: EditReplayResult<P, Mutation>) -> Result<Vec<crate::os_spr::EditMessages>, VcsError> {
+        let from = result.from;
+        let appended = from == self.applied_edit_ids.len() && from + 1 == applied.len() && applied.starts_with(&self.applied_edit_ids) && supersessions == *self.supersessions && !self.current_detached;
+        let tail = appended.then(|| (applied[from].clone(), Arc::clone(&*self.current)));
+        let recorded = result.take_recorded();
+        let replayed = self.adopt_report_replay(result, tail)?;
+        self.replace_applied_edit_ids_retained(applied)?;
+        self.replace_supersessions_retained(supersessions)?;
+        self.retain_prefix_snapshots(recorded)?;
+        self.revision_dirty_from = Some(self.revision_dirty_from.map_or(from, |dirty| dirty.min(from)));
+        self.last_projection_cause = Some(ArtifactProjectionCause::Replay);
+        Ok(replayed)
+    }
+
+    /// 🧭️ Adopts the fold's redo stack, checkpoint and active alternative.
+    fn adopt_history_positions(&mut self, redo: Vec<String>, checkpoint: Option<String>, alternative: Option<String>) -> Result<(), VcsError> {
+        if redo != *self.redo_edit_ids {
+            self.replace_redo_edit_ids_retained(redo)?;
+        }
+        if checkpoint != *self.current_checkpoint_id {
+            self.replace_current_checkpoint_retained(checkpoint)?;
+        }
+        self.envelope.active_alternative_id = alternative;
+        Ok(())
+    }
+

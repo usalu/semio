@@ -5,58 +5,172 @@
   "type": "object",
   "additionalProperties": false,
   "required": [
+    "mutation",
     "grip",
     "partId"
   ],
   "properties": {
+    "mutation": {
+      "const": "addPartGrip"
+    },
     "partId": {
-      "type": "string"
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Part",
+          "de": "Teil"
+        },
+        "description": {
+          "en": "The part that owns the grip.",
+          "de": "Das Teil, dem der Griff gehört."
+        },
+        "ref": {
+          "kind": "part",
+          "domain": "vortex",
+          "granularity": "part"
+        },
+        "group": "target",
+        "order": 10
+      }
     },
     "grip": {
       "title": "Puzzle5dGrip",
       "type": "object",
       "additionalProperties": false,
       "required": [
-        "grip2d",
-        "grip3d",
-        "gripKind",
+        "2d",
+        "3d",
         "id"
       ],
       "properties": {
         "id": {
-          "type": "string"
+          "type": "string",
+          "x-semio-ui": {
+            "widget": "text",
+            "role": "value",
+            "label": {
+              "en": "ID",
+              "de": "ID"
+            },
+            "description": {
+              "en": "Id of the grip, unique on its part.",
+              "de": "ID des Griffs, eindeutig an seinem Teil."
+            },
+            "group": "identity",
+            "order": 10
+          }
         },
         "gripKind": {
-          "type": "string"
+          "type": "string",
+          "x-semio-ui": {
+            "widget": "text",
+            "role": "value",
+            "label": {
+              "en": "Grip kind",
+              "de": "Griffart"
+            },
+            "description": {
+              "en": "Id of a kind from the kind catalog.",
+              "de": "ID einer Art aus dem Artenkatalog."
+            },
+            "group": "kind",
+            "order": 20
+          }
         },
-        "grip2d": {
+        "2d": {
           "title": "Puzzle5dGrip2d",
           "type": "object",
           "additionalProperties": false,
           "required": [
-            "angle",
-            "gripKind",
-            "radius"
+            "angle"
           ],
           "properties": {
             "angle": {
-              "type": "number"
+              "type": "number",
+              "x-semio-ui": {
+                "widget": "dial",
+                "role": "value",
+                "label": {
+                  "en": "Angle",
+                  "de": "Winkel"
+                },
+                "description": {
+                  "en": "Position on the part rim, counter-clockwise.",
+                  "de": "Position auf dem Teilrand, gegen den Uhrzeigersinn."
+                },
+                "unit": "rad",
+                "displayUnit": "deg",
+                "displayFactor": 57.29577951308232,
+                "step": 0.017453292519943295,
+                "precision": 4,
+                "softMin": -3.141592653589793,
+                "softMax": 3.141592653589793,
+                "snaps": [
+                  -3.141592653589793,
+                  -1.5707963267948966,
+                  0,
+                  1.5707963267948966,
+                  3.141592653589793
+                ],
+                "group": "board",
+                "order": 10
+              }
             },
             "gripKind": {
-              "type": "string"
+              "type": "string",
+              "x-semio-ui": {
+                "widget": "text",
+                "role": "value",
+                "label": {
+                  "en": "Grip kind",
+                  "de": "Griffart"
+                },
+                "description": {
+                  "en": "Id of a kind from the kind catalog.",
+                  "de": "ID einer Art aus dem Artenkatalog."
+                },
+                "group": "kind",
+                "order": 20
+              }
             },
             "radius": {
-              "type": "number"
+              "type": "number",
+              "x-semio-ui": {
+                "widget": "stepper",
+                "role": "value",
+                "label": {
+                  "en": "Radius",
+                  "de": "Radius"
+                },
+                "step": 0.1,
+                "precision": 2,
+                "group": "board",
+                "order": 30
+              }
             }
+          },
+          "x-semio-ui": {
+            "role": "value",
+            "label": {
+              "en": "Board",
+              "de": "Brett"
+            },
+            "description": {
+              "en": "How the grip appears on the 2D board.",
+              "de": "Wie der Griff auf dem 2D-Brett erscheint."
+            },
+            "group": "board",
+            "order": 30
           }
         },
-        "grip3d": {
+        "3d": {
           "title": "Puzzle5dGrip3d",
           "type": "object",
           "additionalProperties": false,
           "required": [
-            "position",
-            "radius"
+            "position"
           ],
           "properties": {
             "position": {
@@ -65,7 +179,26 @@
                 "type": "number"
               },
               "minItems": 3,
-              "maxItems": 3
+              "maxItems": 3,
+              "x-semio-ui": {
+                "widget": "vector",
+                "role": "value",
+                "label": {
+                  "en": "Position",
+                  "de": "Position"
+                },
+                "description": {
+                  "en": "Where the grip sits in the part's local frame.",
+                  "de": "Lage des Griffs im lokalen System des Teils."
+                },
+                "unit": "m",
+                "step": 0.1,
+                "group": "pose",
+                "order": 10,
+                "snapSource": {
+                  "config": "gridSpacing"
+                }
+              }
             },
             "direction": {
               "type": "array",
@@ -73,21 +206,104 @@
                 "type": "number"
               },
               "minItems": 3,
-              "maxItems": 3
+              "maxItems": 3,
+              "x-semio-ui": {
+                "widget": "vector",
+                "role": "value",
+                "label": {
+                  "en": "Direction",
+                  "de": "Richtung"
+                },
+                "description": {
+                  "en": "Direction the grip points in.",
+                  "de": "Richtung, in die der Griff zeigt."
+                },
+                "step": 0.1,
+                "group": "geometry",
+                "order": 20
+              }
             },
             "radius": {
-              "type": "number"
+              "type": "number",
+              "x-semio-ui": {
+                "widget": "stepper",
+                "role": "value",
+                "label": {
+                  "en": "Radius",
+                  "de": "Radius"
+                },
+                "unit": "m",
+                "step": 0.01,
+                "precision": 3,
+                "group": "geometry",
+                "order": 30
+              }
             },
             "label": {
-              "type": "string"
+              "type": "string",
+              "x-semio-ui": {
+                "widget": "text",
+                "role": "value",
+                "label": {
+                  "en": "Label",
+                  "de": "Bezeichnung"
+                },
+                "group": "appearance",
+                "order": 40
+              }
             }
+          },
+          "x-semio-ui": {
+            "role": "value",
+            "label": {
+              "en": "World",
+              "de": "Welt"
+            },
+            "description": {
+              "en": "How the grip appears in the 3D world.",
+              "de": "Wie der Griff in der 3D-Welt erscheint."
+            },
+            "group": "pose",
+            "order": 40
           }
         }
+      },
+      "x-semio-ui": {
+        "role": "value",
+        "label": {
+          "en": "Grip",
+          "de": "Griff"
+        },
+        "description": {
+          "en": "The complete grip record to add.",
+          "de": "Der vollständige hinzuzufügende Griff."
+        },
+        "group": "record",
+        "order": 20
       }
     },
     "index": {
-      "type": "integer",
-      "minimum": 0
+      "type": [
+        "integer",
+        "null"
+      ],
+      "minimum": 0,
+      "x-semio-ui": {
+        "widget": "stepper",
+        "role": "value",
+        "label": {
+          "en": "Index",
+          "de": "Index"
+        },
+        "description": {
+          "en": "Position in the list; the end when omitted.",
+          "de": "Position in der Liste; ohne Angabe am Ende."
+        },
+        "step": 1,
+        "precision": 0,
+        "group": "order",
+        "order": 30
+      }
     }
   }
 }

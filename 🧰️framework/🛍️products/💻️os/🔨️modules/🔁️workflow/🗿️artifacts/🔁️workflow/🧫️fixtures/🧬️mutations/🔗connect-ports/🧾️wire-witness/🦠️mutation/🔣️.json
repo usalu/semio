@@ -1,0 +1,22 @@
+{
+  "operation": "connectPorts",
+  "edge": {
+    "id": "e1",
+    "sourceNodeId": "a",
+    "sourcePortId": "out",
+    "targetNodeId": "b",
+    "targetPortId": "in",
+    "contract": {
+      "kindId": "data.value",
+      "mediaType": {
+        "class": "data",
+        "form": "value"
+      },
+      "wire": {
+        "kind": "document",
+        "schema": "data.value"
+      },
+      "conversion": null
+    }
+  }
+}

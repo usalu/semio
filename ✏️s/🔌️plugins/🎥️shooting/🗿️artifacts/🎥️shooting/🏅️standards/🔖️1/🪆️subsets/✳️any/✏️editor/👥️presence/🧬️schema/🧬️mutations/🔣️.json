@@ -1,0 +1,19 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/app/shooting/shooting/presence/mutations.json",
+  "title": "ShootingPresenceMutation",
+  "oneOf": [
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "ReplacePresence"
+      ],
+      "properties": {
+        "ReplacePresence": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/app/shooting/shooting/presence/mutation/replace-presence/schema.json"
+        }
+      }
+    }
+  ]
+}

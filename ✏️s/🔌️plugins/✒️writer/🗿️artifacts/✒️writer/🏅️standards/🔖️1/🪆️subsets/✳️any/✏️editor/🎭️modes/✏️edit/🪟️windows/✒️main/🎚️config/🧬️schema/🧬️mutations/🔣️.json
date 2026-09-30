@@ -4,22 +4,10 @@
   "title": "WriterMainWindowConfigMutation",
   "oneOf": [
     {
-      "type": "object",
-      "additionalProperties": false,
-      "required": ["kind", "camera"],
-      "properties": {
-        "kind": { "const": "set-camera" },
-        "camera": { "$ref": "schema.json#/properties/camera" }
-      }
+      "$ref": "https://json.schemas.assets.semio-tech.com/app/writer/writer/window/main/config/mutation/set-camera/schema.json"
     },
     {
-      "type": "object",
-      "additionalProperties": false,
-      "required": ["kind", "settings"],
-      "properties": {
-        "kind": { "const": "set-editor-settings" },
-        "settings": { "$ref": "schema.json#/properties/editorSettings" }
-      }
+      "$ref": "https://json.schemas.assets.semio-tech.com/app/writer/writer/window/main/config/mutation/set-editor-settings/schema.json"
     }
   ]
 }

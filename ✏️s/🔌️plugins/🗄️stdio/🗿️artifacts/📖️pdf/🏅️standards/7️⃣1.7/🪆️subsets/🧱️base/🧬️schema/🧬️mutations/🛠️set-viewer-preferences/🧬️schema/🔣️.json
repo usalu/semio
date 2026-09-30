@@ -4,8 +4,14 @@
   "title": "SetViewerPreferences",
   "type": "object",
   "additionalProperties": false,
-  "required": [],
+  "required": [
+    "mutation"
+  ],
   "properties": {
+    "mutation": {
+      "const": "setViewerPreferences",
+      "description": "Aggregate discriminator spliced in by PdfMutation; absent when the payload stands alone."
+    },
     "preferences": {
       "anyOf": [
         {
@@ -14,11 +20,13 @@
         {
           "type": "null"
         }
-      ]
-    },
-    "mutation": {
-      "const": "setViewerPreferences",
-      "description": "Aggregate discriminator spliced in by PdfMutation; absent when the payload stands alone."
+      ],
+      "x-semio-ui": {
+        "label": {
+          "en": "Viewer preferences",
+          "de": "Anzeigeeinstellungen"
+        }
+      }
     }
   }
 }

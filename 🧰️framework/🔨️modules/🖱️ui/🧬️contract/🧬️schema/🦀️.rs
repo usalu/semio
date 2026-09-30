@@ -391,7 +391,7 @@ export type InputKind = "text" | "longText" | "number" | "date" | "color" | "fil
     },
     SchemaMetadata {
         name: "InputProps",
-        version: 1,
+        version: 3,
         typescript: r####"/**
  * ⌨️ Props for `Component::Input`. `on_change` moved to the record's `bindings`
  * (`Trigger::Change`/`Trigger::Commit`).
@@ -401,7 +401,16 @@ export type InputProps = { kind: InputKind, value: string, placeholder: Label | 
  * 🫳️ Commit convention string carried verbatim from the old wire shape (e.g. `"blur"`) — no
  * closed set of these was found in the fleet, unlike `input_kind`.
  */
-commit: string | null, min: number | null, max: number | null, step: number | null, accept: string | null, };"####,
+commit: string | null, min: number | null, max: number | null, step: number | null, accept: string | null,
+/**
+ * 🔣️ Fraction digits a `InputKind::Number` field shows and commits — see [`round_ui_number`].
+ */
+precision: number | null,
+/**
+ * 📌️ Detents of a `InputKind::Number` field under the detent law of [`SliderProps::snaps`] against `min`/`max`
+ * (unbounded when absent): its page keys jump between them ([`ui_number_key_value`]), typing never snaps.
+ */
+snaps: Array<number>, };"####,
     },
     SchemaMetadata {
         name: "Justify",
@@ -483,12 +492,12 @@ export type MenuRef = { id: string, args: UiValue | null, };"####,
     },
     SchemaMetadata {
         name: "NumberStepperProps",
-        version: 1,
+        version: 2,
         typescript: r####"/**
  * 🔢️ Props for `Component::NumberStepper`. `on_absolute`/`on_delta` both moved to the record's
- * `bindings`, distinguished by `Trigger`.
+ * `bindings`, distinguished by `Trigger`. `precision` is the fraction digits it shows and commits.
  */
-export type NumberStepperProps = { value: number, step: number, uniform: boolean, min: number | null, max: number | null, };"####,
+export type NumberStepperProps = { value: number, step: number, uniform: boolean, min: number | null, max: number | null, precision: number | null, };"####,
     },
     SchemaMetadata {
         name: "OverlayLayout",
@@ -693,11 +702,14 @@ export type Sizing = "hug" | "fill" | { "fixed": SpaceToken };"####,
     },
     SchemaMetadata {
         name: "SliderProps",
-        version: 1,
+        version: 3,
         typescript: r####"/**
- * 🎚️ Props for `Component::Slider`. `on_change` moved to the record's `bindings`.
+ * 🎚️ Props for `Component::Slider`. `on_change` moved to the record's `bindings`. `snaps` are the
+ * slider's detents: strictly ascending, finite, inside `min..=max`, at most
+ * [`crate::UI_FIXED_LIST_ITEMS`] of them — every renderer paints one tick per snap and resolves a
+ * pointer value through [`slider_pointer_value`] and a key through [`slider_key_value`].
  */
-export type SliderProps = { value: number, min: number, max: number, step: number, unit: string | null, };"####,
+export type SliderProps = { value: number, min: number, max: number, step: number, unit: string | null, snaps: Array<number>, };"####,
     },
     SchemaMetadata {
         name: "SpaceToken",
@@ -998,12 +1010,12 @@ export type Trigger = "activate" | "change" | "commit" | "delta" | "drop" | "sub
     },
     SchemaMetadata {
         name: "UiContractViolation",
-        version: 2,
+        version: 4,
         typescript: r####"/**
  * ⚠️ One structural invariant a [`crate::UiSnapshot`] fails — every variant here is a whole-document
  * shape property, never a per-patch wire quota (those are [`PatchRejection::QuotaExceeded`]).
  */
-export type UiContractViolation = { "type": "cycle", node: UiNodeId, } | { "type": "orphanChild", parent: UiNodeId, child: UiNodeId, } | { "type": "duplicateSiblingKey", parent: UiNodeId, key: string, } | { "type": "nodeQuota", count: number, max: number, } | { "type": "depthQuota", node: UiNodeId, depth: number, max: number, } | { "type": "danglingRoot", node: UiNodeId, } | { "type": "sectionNested", node: UiNodeId, } | { "type": "nonFiniteNumber", node: UiNodeId, } | { "type": "invalidTreeInlineToolbar", node: UiNodeId, toolbar: UiNodeId, } | { "type": "invalidTreeSectionHeaderToolbar", node: UiNodeId, toolbar: UiNodeId, } | { "type": "invalidTreeDetail", node: UiNodeId, detail: UiNodeId, } | { "type": "invalidRowTarget", node: UiNodeId, };"####,
+export type UiContractViolation = { "type": "cycle", node: UiNodeId, } | { "type": "orphanChild", parent: UiNodeId, child: UiNodeId, } | { "type": "duplicateSiblingKey", parent: UiNodeId, key: string, } | { "type": "nodeQuota", count: number, max: number, } | { "type": "depthQuota", node: UiNodeId, depth: number, max: number, } | { "type": "danglingRoot", node: UiNodeId, } | { "type": "sectionNested", node: UiNodeId, } | { "type": "nonFiniteNumber", node: UiNodeId, } | { "type": "invalidTreeInlineToolbar", node: UiNodeId, toolbar: UiNodeId, } | { "type": "invalidTreeSectionHeaderToolbar", node: UiNodeId, toolbar: UiNodeId, } | { "type": "invalidTreeDetail", node: UiNodeId, detail: UiNodeId, } | { "type": "invalidRowTarget", node: UiNodeId, } | { "type": "invalidSnaps", node: UiNodeId, };"####,
     },
     SchemaMetadata {
         name: "UiDocumentLimits",

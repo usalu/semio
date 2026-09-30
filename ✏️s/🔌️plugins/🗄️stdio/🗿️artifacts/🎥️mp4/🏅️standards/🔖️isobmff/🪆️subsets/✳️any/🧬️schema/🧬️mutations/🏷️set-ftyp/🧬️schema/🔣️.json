@@ -5,15 +5,22 @@
   "type": "object",
   "additionalProperties": false,
   "required": [
+    "mutation",
     "ftyp"
   ],
   "properties": {
-    "ftyp": {
-      "$ref": "#/$defs/Mp4Ftyp"
-    },
     "mutation": {
       "const": "setFtyp",
       "description": "Aggregate discriminator spliced in by Mp4Mutation; absent when the payload stands alone."
+    },
+    "ftyp": {
+      "$ref": "#/$defs/Mp4Ftyp",
+      "x-semio-ui": {
+        "label": {
+          "en": "File type (ftyp)",
+          "de": "Dateityp (ftyp)"
+        }
+      }
     }
   },
   "$defs": {
@@ -26,17 +33,37 @@
       ],
       "properties": {
         "majorBrand": {
-          "type": "string"
+          "type": "string",
+          "x-semio-ui": {
+            "widget": "text",
+            "label": {
+              "en": "Major brand",
+              "de": "Hauptmarke"
+            }
+          }
         },
         "minorVersion": {
           "type": "integer",
           "minimum": 0,
-          "maximum": 4294967295
+          "maximum": 4294967295,
+          "x-semio-ui": {
+            "widget": "stepper",
+            "label": {
+              "en": "Minor version",
+              "de": "Nebenversion"
+            }
+          }
         },
         "compatibleBrands": {
           "type": "array",
           "items": {
             "type": "string"
+          },
+          "x-semio-ui": {
+            "label": {
+              "en": "Compatible brands",
+              "de": "Kompatible Marken"
+            }
           }
         }
       }

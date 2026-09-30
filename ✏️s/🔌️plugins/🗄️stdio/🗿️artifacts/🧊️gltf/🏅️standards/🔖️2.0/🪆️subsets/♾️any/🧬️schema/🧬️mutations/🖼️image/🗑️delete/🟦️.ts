@@ -1,7 +1,13 @@
-/** 🦠️ delete-image executable structural glTF command. */
-import type { GltfOrthographic, GltfPerspective, GltfSnapshot } from '../../📸️snapshot/🟦️.ts';
-import { clone, insert, order, position, reject, remove, relocate, reorder, repair, type GltfMutationRejection, type GltfStructuralResult } from './🟦️';
-export const GltfDeleteImageDescriptor = { id: 's.stdio.gltf.mutation.delete-image.v1', version: 1, touchedPathPattern: 'document/images', referencePolicy: 'all typed image references are remapped, repaired, or rejected' } as const;
-export interface GltfDeleteImagePayload { index: number }
-export const validateGltfDeleteImage = (payload: GltfDeleteImagePayload, base: GltfSnapshot): GltfMutationRejection | undefined => { const index = position(payload.index, base.document.images.length, 'document/images'); if (index) return index;  return undefined; };
-export const applyGltfDeleteImage = (base: GltfSnapshot, payload: GltfDeleteImagePayload): GltfStructuralResult => { const rejection = validateGltfDeleteImage(payload, base); if (rejection) return { accepted: false, rejection }; try { const next = clone(base); remove(next, 'images', payload.index); return { accepted: true, snapshot: clone(next) }; } catch (error) { return { accepted: false, rejection: typeof error === 'object' && error && 'code' in error ? error as GltfMutationRejection : reject('gltf.mutation.apply-failed', 'document/images', String(error)) }; } };
+/** 🗑️ `delete-image` wire twin: the flat `Apply` payload `GltfDeleteImagePayload` and the phase wire `DeleteImageMutation`, exactly as `./🦀️.rs` writes them.
+ * @see ./🧬️schema/🔣️.json */
+import { gltfWireIndex, gltfWireObject, gltfWireRequired } from "../../../📸️snapshot/🟦️.ts";
+import { type GltfDiff, type GltfPhase, gltfWirePhase, parseGltfDiff } from "../../../🔺️diff/🟦️.ts";
+
+export interface GltfDeleteImagePayload {
+  index: number;
+}
+
+export type DeleteImageMutation = GltfPhase<GltfDeleteImagePayload, GltfDiff>;
+
+export const parseGltfDeleteImagePayload = gltfWireObject<GltfDeleteImagePayload>({ index: gltfWireRequired(gltfWireIndex) });
+export const parseDeleteImageMutation = gltfWirePhase(parseGltfDeleteImagePayload, parseGltfDiff);

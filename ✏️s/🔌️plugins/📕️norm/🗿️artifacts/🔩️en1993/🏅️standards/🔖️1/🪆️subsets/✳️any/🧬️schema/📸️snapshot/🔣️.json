@@ -1,6 +1,6 @@
 {
-  "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "s.norm.en1993.snapshot",
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/norm/en1993/snapshot.json",
   "title": "En1993Snapshot",
   "type": "object",
   "additionalProperties": false,
@@ -35,118 +35,119 @@
     "materials": {
       "type": "array",
       "items": {
-        "$ref": "#/definitions/SteelMaterial"
+        "$ref": "#/$defs/SteelMaterial"
       },
       "x-semio-state": "artifact"
     },
     "sections": {
       "type": "array",
       "items": {
-        "$ref": "#/definitions/SteelSection"
+        "$ref": "#/$defs/SteelSection"
       },
       "x-semio-state": "artifact"
     },
     "members": {
       "type": "array",
       "items": {
-        "$ref": "#/definitions/SteelMember"
+        "$ref": "#/$defs/SteelMember"
       },
       "x-semio-state": "artifact"
     },
     "loadCases": {
       "type": "array",
       "items": {
-        "$ref": "#/definitions/LoadCase"
+        "$ref": "#/$defs/LoadCase"
       },
       "x-semio-state": "artifact"
     },
     "memberActions": {
       "type": "array",
       "items": {
-        "$ref": "#/definitions/MemberAction"
+        "$ref": "#/$defs/MemberAction"
       },
       "x-semio-state": "artifact"
     },
     "joints": {
       "type": "array",
       "items": {
-        "$ref": "#/definitions/SteelJoint"
+        "$ref": "#/$defs/SteelJoint"
       },
       "x-semio-state": "artifact"
     },
     "fatigueDetails": {
       "type": "array",
       "items": {
-        "$ref": "#/definitions/FatigueDetail"
+        "$ref": "#/$defs/FatigueDetail"
       },
       "x-semio-state": "artifact"
     },
     "fireExposures": {
       "type": "array",
       "items": {
-        "$ref": "#/definitions/FireExposure"
+        "$ref": "#/$defs/FireExposure"
       },
       "x-semio-state": "artifact"
     },
     "coldFormedMembers": {
       "type": "array",
       "items": {
-        "$ref": "#/definitions/ColdFormedMember"
+        "$ref": "#/$defs/ColdFormedMember"
       },
       "x-semio-state": "artifact"
     },
     "platedPanels": {
       "type": "array",
       "items": {
-        "$ref": "#/definitions/PlatedPanel"
+        "$ref": "#/$defs/PlatedPanel"
       },
       "x-semio-state": "artifact"
     },
     "siloShells": {
       "type": "array",
       "items": {
-        "$ref": "#/definitions/SiloShell"
+        "$ref": "#/$defs/SiloShell"
       },
       "x-semio-state": "artifact"
     },
     "tensionComponents": {
       "type": "array",
       "items": {
-        "$ref": "#/definitions/TensionComponent"
+        "$ref": "#/$defs/TensionComponent"
       },
       "x-semio-state": "artifact"
     },
     "bridgeFatigue": {
       "type": "array",
       "items": {
-        "$ref": "#/definitions/BridgeFatigue"
+        "$ref": "#/$defs/BridgeFatigue"
       },
       "x-semio-state": "artifact"
     },
     "towerLegs": {
       "type": "array",
       "items": {
-        "$ref": "#/definitions/TowerLeg"
+        "$ref": "#/$defs/TowerLeg"
       },
       "x-semio-state": "artifact"
     },
     "piles": {
       "type": "array",
       "items": {
-        "$ref": "#/definitions/SteelPile"
+        "$ref": "#/$defs/SteelPile"
       },
       "x-semio-state": "artifact"
     },
     "craneRunways": {
       "type": "array",
       "items": {
-        "$ref": "#/definitions/CraneRunway"
+        "$ref": "#/$defs/CraneRunway"
       },
       "x-semio-state": "artifact"
     }
   },
-  "definitions": {
+  "$defs": {
     "SteelMaterial": {
+      "title": "SteelMaterial",
       "type": "object",
       "additionalProperties": false,
       "required": [
@@ -164,22 +165,88 @@
           "type": "string"
         },
         "grade": {
-          "type": "string"
+          "type": "string",
+          "x-semio-ui": {
+            "label": {
+              "en": "Steel grade",
+              "de": "Stahlsorte"
+            },
+            "description": {
+              "en": "e.g. S235, S355, S460.",
+              "de": "z. B. S235, S355, S460."
+            },
+            "widget": "text"
+          }
         },
         "fy": {
-          "type": "number"
+          "type": "number",
+          "x-semio-ui": {
+            "label": {
+              "en": "Yield strength f_y",
+              "de": "Streckgrenze f_y"
+            },
+            "widget": "stepper",
+            "unit": "Pa",
+            "displayUnit": "N/mm²",
+            "displayFactor": 1e-06,
+            "precision": 1
+          }
         },
         "fu": {
-          "type": "number"
+          "type": "number",
+          "x-semio-ui": {
+            "label": {
+              "en": "Ultimate tensile strength f_u",
+              "de": "Zugfestigkeit f_u"
+            },
+            "widget": "stepper",
+            "unit": "Pa",
+            "displayUnit": "N/mm²",
+            "displayFactor": 1e-06,
+            "precision": 1
+          }
         },
         "eModulus": {
-          "type": "number"
+          "type": "number",
+          "x-semio-ui": {
+            "label": {
+              "en": "Modulus of elasticity E",
+              "de": "Elastizitätsmodul E"
+            },
+            "widget": "stepper",
+            "unit": "Pa",
+            "displayUnit": "N/mm²",
+            "displayFactor": 1e-06,
+            "precision": 1
+          }
         },
         "gModulus": {
-          "type": "number"
+          "type": "number",
+          "x-semio-ui": {
+            "label": {
+              "en": "Shear modulus G",
+              "de": "Schubmodul G"
+            },
+            "widget": "stepper",
+            "unit": "Pa",
+            "displayUnit": "N/mm²",
+            "displayFactor": 1e-06,
+            "precision": 1
+          }
         },
         "subgrade": {
-          "type": "string"
+          "type": "string",
+          "x-semio-ui": {
+            "label": {
+              "en": "Steel subgrade",
+              "de": "Gütegruppe"
+            },
+            "description": {
+              "en": "JR, J0, J2 or K2 (EN 10025).",
+              "de": "JR, J0, J2 oder K2 (EN 10025)."
+            },
+            "widget": "text"
+          }
         },
         "kind": {
           "type": "string"
@@ -187,6 +254,7 @@
       }
     },
     "SteelSection": {
+      "title": "SteelSection",
       "type": "object",
       "additionalProperties": false,
       "required": [
@@ -216,83 +284,282 @@
           "type": "string"
         },
         "designation": {
-          "type": "string"
+          "type": "string",
+          "x-semio-ui": {
+            "label": {
+              "en": "Section designation",
+              "de": "Profilbezeichnung"
+            },
+            "description": {
+              "en": "e.g. IPE 300, HEB 200.",
+              "de": "z. B. IPE 300, HEB 200."
+            },
+            "widget": "text"
+          }
         },
         "kind": {
           "type": "string"
         },
         "h": {
-          "type": "number"
+          "type": "number",
+          "x-semio-ui": {
+            "label": {
+              "en": "Section depth h",
+              "de": "Querschnittshöhe h"
+            },
+            "widget": "stepper",
+            "unit": "m",
+            "displayUnit": "mm",
+            "displayFactor": 1000,
+            "precision": 1
+          }
         },
         "b": {
-          "type": "number"
+          "type": "number",
+          "x-semio-ui": {
+            "label": {
+              "en": "Flange width b",
+              "de": "Flanschbreite b"
+            },
+            "widget": "stepper",
+            "unit": "m",
+            "displayUnit": "mm",
+            "displayFactor": 1000,
+            "precision": 1
+          }
         },
         "tw": {
-          "type": "number"
+          "type": "number",
+          "x-semio-ui": {
+            "label": {
+              "en": "Web thickness t_w",
+              "de": "Stegdicke t_w"
+            },
+            "widget": "stepper",
+            "unit": "m",
+            "displayUnit": "mm",
+            "displayFactor": 1000,
+            "precision": 1
+          }
         },
         "tf": {
-          "type": "number"
+          "type": "number",
+          "x-semio-ui": {
+            "label": {
+              "en": "Flange thickness t_f",
+              "de": "Flanschdicke t_f"
+            },
+            "widget": "stepper",
+            "unit": "m",
+            "displayUnit": "mm",
+            "displayFactor": 1000,
+            "precision": 1
+          }
         },
         "r": {
-          "type": "number"
+          "type": "number",
+          "x-semio-ui": {
+            "label": {
+              "en": "Root radius r",
+              "de": "Ausrundungsradius r"
+            },
+            "widget": "stepper",
+            "unit": "m",
+            "displayUnit": "mm",
+            "displayFactor": 1000,
+            "precision": 1
+          }
         },
         "area": {
-          "type": "number"
+          "type": "number",
+          "x-semio-ui": {
+            "label": {
+              "en": "Cross-sectional area A",
+              "de": "Querschnittsfläche A"
+            },
+            "widget": "stepper",
+            "unit": "m²",
+            "displayUnit": "cm²",
+            "displayFactor": 10000.0,
+            "precision": 2
+          }
         },
         "shearAreaY": {
-          "type": "number"
+          "type": "number",
+          "x-semio-ui": {
+            "label": {
+              "en": "Shear area A_v,y",
+              "de": "Schubfläche A_v,y"
+            },
+            "widget": "stepper",
+            "unit": "m²",
+            "displayUnit": "cm²",
+            "displayFactor": 10000.0,
+            "precision": 2
+          }
         },
         "shearAreaZ": {
-          "type": "number"
+          "type": "number",
+          "x-semio-ui": {
+            "label": {
+              "en": "Shear area A_v,z",
+              "de": "Schubfläche A_v,z"
+            },
+            "widget": "stepper",
+            "unit": "m²",
+            "displayUnit": "cm²",
+            "displayFactor": 10000.0,
+            "precision": 2
+          }
         },
         "iy": {
-          "type": "number"
+          "type": "number",
+          "x-semio-ui": {
+            "label": {
+              "en": "Second moment of area I_y",
+              "de": "Flächenträgheitsmoment I_y"
+            },
+            "widget": "stepper",
+            "unit": "m⁴",
+            "displayUnit": "cm⁴",
+            "displayFactor": 100000000.0,
+            "precision": 0
+          }
         },
         "iz": {
-          "type": "number"
+          "type": "number",
+          "x-semio-ui": {
+            "label": {
+              "en": "Second moment of area I_z",
+              "de": "Flächenträgheitsmoment I_z"
+            },
+            "widget": "stepper",
+            "unit": "m⁴",
+            "displayUnit": "cm⁴",
+            "displayFactor": 100000000.0,
+            "precision": 0
+          }
         },
         "it": {
-          "type": "number"
+          "type": "number",
+          "x-semio-ui": {
+            "label": {
+              "en": "Torsion constant I_t",
+              "de": "Torsionsträgheitsmoment I_t"
+            },
+            "widget": "stepper",
+            "unit": "m⁴",
+            "displayUnit": "cm⁴",
+            "displayFactor": 100000000.0,
+            "precision": 1
+          }
         },
         "iw": {
-          "type": "number"
+          "type": "number",
+          "x-semio-ui": {
+            "label": {
+              "en": "Warping constant I_w",
+              "de": "Wölbwiderstand I_w"
+            },
+            "widget": "stepper",
+            "unit": "m⁶",
+            "displayUnit": "cm⁶",
+            "displayFactor": 1000000000000.0,
+            "precision": 0
+          }
         },
         "wElY": {
-          "type": "number"
+          "type": "number",
+          "x-semio-ui": {
+            "label": {
+              "en": "Elastic section modulus W_el,y",
+              "de": "Elastisches Widerstandsmoment W_el,y"
+            },
+            "widget": "stepper",
+            "unit": "m³",
+            "displayUnit": "cm³",
+            "displayFactor": 1000000.0,
+            "precision": 0
+          }
         },
         "wElZ": {
-          "type": "number"
+          "type": "number",
+          "x-semio-ui": {
+            "label": {
+              "en": "Elastic section modulus W_el,z",
+              "de": "Elastisches Widerstandsmoment W_el,z"
+            },
+            "widget": "stepper",
+            "unit": "m³",
+            "displayUnit": "cm³",
+            "displayFactor": 1000000.0,
+            "precision": 0
+          }
         },
         "wPlY": {
-          "type": "number"
+          "type": "number",
+          "x-semio-ui": {
+            "label": {
+              "en": "Plastic section modulus W_pl,y",
+              "de": "Plastisches Widerstandsmoment W_pl,y"
+            },
+            "widget": "stepper",
+            "unit": "m³",
+            "displayUnit": "cm³",
+            "displayFactor": 1000000.0,
+            "precision": 0
+          }
         },
         "wPlZ": {
-          "type": "number"
+          "type": "number",
+          "x-semio-ui": {
+            "label": {
+              "en": "Plastic section modulus W_pl,z",
+              "de": "Plastisches Widerstandsmoment W_pl,z"
+            },
+            "widget": "stepper",
+            "unit": "m³",
+            "displayUnit": "cm³",
+            "displayFactor": 1000000.0,
+            "precision": 0
+          }
         },
         "areaNet": {
-          "type": "number"
+          "type": "number",
+          "x-semio-ui": {
+            "label": {
+              "en": "Net area A_net",
+              "de": "Nettoquerschnittsfläche A_net"
+            },
+            "widget": "stepper",
+            "unit": "m²",
+            "displayUnit": "cm²",
+            "displayFactor": 10000.0,
+            "precision": 2
+          }
         }
       }
     },
     "SteelMember": {
+      "title": "SteelMember",
       "type": "object",
       "additionalProperties": false,
       "required": [
-        "analysis",
-        "bucklingLengthY",
-        "bucklingLengthZ",
-        "deflectionLimitRatio",
-        "endMomentRatioPsi",
         "id",
         "label",
+        "memberType",
+        "sectionId",
+        "materialId",
         "length",
-        "loadApplication",
+        "bucklingLengthY",
+        "bucklingLengthZ",
         "ltbLength",
         "ltbRestraintSpacing",
-        "materialId",
-        "memberType",
+        "loadApplication",
+        "endMomentRatioPsi",
         "momentDiagram",
-        "sectionId"
+        "deflectionLimitRatio",
+        "analysis"
       ],
       "properties": {
         "id": {
@@ -302,47 +569,171 @@
           "type": "string"
         },
         "memberType": {
-          "type": "string"
+          "type": "string",
+          "x-semio-ui": {
+            "label": {
+              "en": "Member type",
+              "de": "Bauteilart"
+            },
+            "widget": "text"
+          }
         },
         "sectionId": {
-          "type": "string"
+          "type": "string",
+          "x-semio-ui": {
+            "label": {
+              "en": "Cross-section",
+              "de": "Querschnitt"
+            },
+            "widget": "reference",
+            "role": "value",
+            "ref": {
+              "kind": "section"
+            }
+          }
         },
         "materialId": {
-          "type": "string"
+          "type": "string",
+          "x-semio-ui": {
+            "label": {
+              "en": "Steel material",
+              "de": "Stahlwerkstoff"
+            },
+            "widget": "reference",
+            "role": "value",
+            "ref": {
+              "kind": "material"
+            }
+          }
         },
         "length": {
-          "type": "number"
+          "type": "number",
+          "x-semio-ui": {
+            "label": {
+              "en": "System length L",
+              "de": "Systemlänge L"
+            },
+            "widget": "stepper",
+            "unit": "m",
+            "precision": 2
+          }
         },
         "bucklingLengthY": {
-          "type": "number"
+          "type": "number",
+          "x-semio-ui": {
+            "label": {
+              "en": "Buckling length L_cr,y",
+              "de": "Knicklänge L_cr,y"
+            },
+            "widget": "stepper",
+            "unit": "m",
+            "precision": 2
+          }
         },
         "bucklingLengthZ": {
-          "type": "number"
+          "type": "number",
+          "x-semio-ui": {
+            "label": {
+              "en": "Buckling length L_cr,z",
+              "de": "Knicklänge L_cr,z"
+            },
+            "widget": "stepper",
+            "unit": "m",
+            "precision": 2
+          }
         },
         "ltbLength": {
-          "type": "number"
+          "type": "number",
+          "x-semio-ui": {
+            "label": {
+              "en": "Lateral-torsional buckling length L_LT",
+              "de": "Kipplänge L_LT"
+            },
+            "widget": "stepper",
+            "unit": "m",
+            "precision": 2
+          }
         },
         "ltbRestraintSpacing": {
-          "type": "number"
+          "type": "number",
+          "x-semio-ui": {
+            "label": {
+              "en": "Spacing of lateral restraints",
+              "de": "Abstand der seitlichen Halterungen"
+            },
+            "widget": "stepper",
+            "unit": "m",
+            "precision": 2
+          }
         },
         "loadApplication": {
-          "type": "string"
+          "type": "string",
+          "x-semio-ui": {
+            "label": {
+              "en": "Point of load application",
+              "de": "Lastangriffspunkt"
+            },
+            "description": {
+              "en": "top flange, shear centre or bottom flange.",
+              "de": "Obergurt, Schubmittelpunkt oder Untergurt."
+            },
+            "widget": "text"
+          }
         },
         "endMomentRatioPsi": {
-          "type": "number"
+          "type": "number",
+          "x-semio-ui": {
+            "label": {
+              "en": "End moment ratio ψ",
+              "de": "Randmomentenverhältnis ψ"
+            },
+            "widget": "stepper",
+            "precision": 2
+          }
         },
         "momentDiagram": {
-          "type": "string"
+          "type": "string",
+          "x-semio-ui": {
+            "label": {
+              "en": "Bending moment diagram",
+              "de": "Momentenverlauf"
+            },
+            "widget": "text"
+          }
         },
         "deflectionLimitRatio": {
-          "type": "number"
+          "type": "number",
+          "x-semio-ui": {
+            "label": {
+              "en": "Deflection limit l/…",
+              "de": "Durchbiegungsgrenze l/…"
+            },
+            "description": {
+              "en": "Denominator of the admissible deflection l/n.",
+              "de": "Nenner der zulässigen Durchbiegung l/n."
+            },
+            "widget": "stepper",
+            "precision": 0
+          }
         },
         "analysis": {
-          "type": "string"
+          "type": "string",
+          "x-semio-ui": {
+            "label": {
+              "en": "Global analysis method",
+              "de": "Verfahren der Tragwerksberechnung"
+            },
+            "description": {
+              "en": "elastic or plastic.",
+              "de": "elastisch oder plastisch."
+            },
+            "widget": "text"
+          }
         }
       }
     },
     "LoadCase": {
+      "title": "LoadCase",
       "type": "object",
       "additionalProperties": false,
       "required": [
@@ -362,11 +753,19 @@
           "type": "string"
         },
         "category": {
-          "type": "string"
+          "type": "string",
+          "x-semio-ui": {
+            "label": {
+              "en": "Action category",
+              "de": "Einwirkungskategorie"
+            },
+            "widget": "text"
+          }
         }
       }
     },
     "DesignAction": {
+      "title": "DesignAction",
       "type": "object",
       "additionalProperties": false,
       "required": [
@@ -379,26 +778,93 @@
       ],
       "properties": {
         "n": {
-          "type": "number"
+          "type": "number",
+          "x-semio-ui": {
+            "label": {
+              "en": "Axial force N_Ed",
+              "de": "Normalkraft N_Ed"
+            },
+            "widget": "stepper",
+            "unit": "N",
+            "displayUnit": "kN",
+            "displayFactor": 0.001,
+            "precision": 2
+          }
         },
         "vy": {
-          "type": "number"
+          "type": "number",
+          "x-semio-ui": {
+            "label": {
+              "en": "Shear force V_y,Ed",
+              "de": "Querkraft V_y,Ed"
+            },
+            "widget": "stepper",
+            "unit": "N",
+            "displayUnit": "kN",
+            "displayFactor": 0.001,
+            "precision": 2
+          }
         },
         "vz": {
-          "type": "number"
+          "type": "number",
+          "x-semio-ui": {
+            "label": {
+              "en": "Shear force V_z,Ed",
+              "de": "Querkraft V_z,Ed"
+            },
+            "widget": "stepper",
+            "unit": "N",
+            "displayUnit": "kN",
+            "displayFactor": 0.001,
+            "precision": 2
+          }
         },
         "my": {
-          "type": "number"
+          "type": "number",
+          "x-semio-ui": {
+            "label": {
+              "en": "Bending moment M_y,Ed",
+              "de": "Biegemoment M_y,Ed"
+            },
+            "widget": "stepper",
+            "unit": "N·m",
+            "displayUnit": "kN·m",
+            "displayFactor": 0.001,
+            "precision": 2
+          }
         },
         "mz": {
-          "type": "number"
+          "type": "number",
+          "x-semio-ui": {
+            "label": {
+              "en": "Bending moment M_z,Ed",
+              "de": "Biegemoment M_z,Ed"
+            },
+            "widget": "stepper",
+            "unit": "N·m",
+            "displayUnit": "kN·m",
+            "displayFactor": 0.001,
+            "precision": 2
+          }
         },
         "t": {
-          "type": "number"
+          "type": "number",
+          "x-semio-ui": {
+            "label": {
+              "en": "Torsional moment T_Ed",
+              "de": "Torsionsmoment T_Ed"
+            },
+            "widget": "stepper",
+            "unit": "N·m",
+            "displayUnit": "kN·m",
+            "displayFactor": 0.001,
+            "precision": 2
+          }
         }
       }
     },
     "MemberAction": {
+      "title": "MemberAction",
       "type": "object",
       "additionalProperties": false,
       "required": [
@@ -415,14 +881,36 @@
           "type": "string"
         },
         "loadCaseId": {
-          "type": "string"
+          "type": "string",
+          "x-semio-ui": {
+            "label": {
+              "en": "Load case",
+              "de": "Lastfall"
+            },
+            "widget": "reference",
+            "role": "value",
+            "ref": {
+              "kind": "loadCase"
+            }
+          }
         },
         "action": {
-          "$ref": "#/definitions/DesignAction"
+          "$ref": "#/$defs/DesignAction",
+          "x-semio-ui": {
+            "label": {
+              "en": "Member action",
+              "de": "Bauteilbeanspruchung"
+            },
+            "description": {
+              "en": "The complete member action record to insert.",
+              "de": "Der vollständige einzufügende Datensatz der Bauteilbeanspruchung."
+            }
+          }
         }
       }
     },
     "SteelJoint": {
+      "title": "SteelJoint",
       "type": "object",
       "additionalProperties": false,
       "required": [
@@ -434,6 +922,7 @@
         "boltRows",
         "boltsPerRow",
         "pitch",
+        "gauge",
         "endDistance",
         "edgeDistance",
         "shearPlanes",
@@ -443,13 +932,12 @@
         "weldLength",
         "weldFu",
         "weldGrade",
+        "actions",
         "category",
         "frictionMu",
         "preloadForce",
         "slipFactorKs",
-        "frictionSurfaces",
-        "gauge",
-        "actions"
+        "frictionSurfaces"
       ],
       "properties": {
         "id": {
@@ -462,74 +950,287 @@
           "type": "string"
         },
         "boltClass": {
-          "type": "string"
+          "type": "string",
+          "x-semio-ui": {
+            "label": {
+              "en": "Bolt property class",
+              "de": "Festigkeitsklasse der Schrauben"
+            },
+            "description": {
+              "en": "e.g. 8.8, 10.9.",
+              "de": "z. B. 8.8, 10.9."
+            },
+            "widget": "text"
+          }
         },
         "boltDiameter": {
-          "type": "number"
+          "type": "number",
+          "x-semio-ui": {
+            "label": {
+              "en": "Bolt diameter d",
+              "de": "Schraubendurchmesser d"
+            },
+            "widget": "stepper",
+            "unit": "m",
+            "displayUnit": "mm",
+            "displayFactor": 1000,
+            "precision": 1
+          }
         },
         "boltRows": {
-          "type": "integer"
+          "type": "integer",
+          "minimum": 0,
+          "x-semio-ui": {
+            "label": {
+              "en": "Bolt rows",
+              "de": "Schraubenreihen"
+            },
+            "widget": "stepper",
+            "step": 1,
+            "precision": 0
+          }
         },
         "boltsPerRow": {
-          "type": "integer"
+          "type": "integer",
+          "minimum": 0,
+          "x-semio-ui": {
+            "label": {
+              "en": "Bolts per row",
+              "de": "Schrauben je Reihe"
+            },
+            "widget": "stepper",
+            "step": 1,
+            "precision": 0
+          }
         },
         "pitch": {
-          "type": "number"
-        },
-        "endDistance": {
-          "type": "number"
-        },
-        "edgeDistance": {
-          "type": "number"
-        },
-        "shearPlanes": {
-          "type": "integer"
-        },
-        "plateThickness": {
-          "type": "number"
-        },
-        "plateFu": {
-          "type": "number"
-        },
-        "weldThroat": {
-          "type": "number"
-        },
-        "weldLength": {
-          "type": "number"
-        },
-        "weldFu": {
-          "type": "number"
-        },
-        "weldGrade": {
-          "type": "string"
-        },
-        "category": {
-          "type": "string"
-        },
-        "frictionMu": {
-          "type": "number"
-        },
-        "preloadForce": {
-          "type": "number"
-        },
-        "slipFactorKs": {
-          "type": "number"
-        },
-        "frictionSurfaces": {
-          "type": "integer"
+          "type": "number",
+          "x-semio-ui": {
+            "label": {
+              "en": "Pitch p₁",
+              "de": "Lochabstand p₁"
+            },
+            "widget": "stepper",
+            "unit": "m",
+            "displayUnit": "mm",
+            "displayFactor": 1000,
+            "precision": 1
+          }
         },
         "gauge": {
-          "type": "number"
+          "type": "number",
+          "x-semio-ui": {
+            "label": {
+              "en": "Gauge p₂",
+              "de": "Lochabstand quer p₂"
+            },
+            "widget": "stepper",
+            "unit": "m",
+            "displayUnit": "mm",
+            "displayFactor": 1000,
+            "precision": 1
+          }
+        },
+        "endDistance": {
+          "type": "number",
+          "x-semio-ui": {
+            "label": {
+              "en": "End distance e₁",
+              "de": "Randabstand in Kraftrichtung e₁"
+            },
+            "widget": "stepper",
+            "unit": "m",
+            "displayUnit": "mm",
+            "displayFactor": 1000,
+            "precision": 1
+          }
+        },
+        "edgeDistance": {
+          "type": "number",
+          "x-semio-ui": {
+            "label": {
+              "en": "Edge distance e₂",
+              "de": "Randabstand quer zur Kraftrichtung e₂"
+            },
+            "widget": "stepper",
+            "unit": "m",
+            "displayUnit": "mm",
+            "displayFactor": 1000,
+            "precision": 1
+          }
+        },
+        "shearPlanes": {
+          "type": "integer",
+          "minimum": 0,
+          "x-semio-ui": {
+            "label": {
+              "en": "Shear planes",
+              "de": "Scherfugen"
+            },
+            "widget": "stepper",
+            "step": 1,
+            "precision": 0
+          }
+        },
+        "plateThickness": {
+          "type": "number",
+          "x-semio-ui": {
+            "label": {
+              "en": "Plate thickness t",
+              "de": "Blechdicke t"
+            },
+            "widget": "stepper",
+            "unit": "m",
+            "displayUnit": "mm",
+            "displayFactor": 1000,
+            "precision": 1
+          }
+        },
+        "plateFu": {
+          "type": "number",
+          "x-semio-ui": {
+            "label": {
+              "en": "Plate tensile strength f_u",
+              "de": "Zugfestigkeit des Blechs f_u"
+            },
+            "widget": "stepper",
+            "unit": "Pa",
+            "displayUnit": "N/mm²",
+            "displayFactor": 1e-06,
+            "precision": 1
+          }
+        },
+        "weldThroat": {
+          "type": "number",
+          "x-semio-ui": {
+            "label": {
+              "en": "Weld throat thickness a",
+              "de": "Nahtdicke a"
+            },
+            "widget": "stepper",
+            "unit": "m",
+            "displayUnit": "mm",
+            "displayFactor": 1000,
+            "precision": 1
+          }
+        },
+        "weldLength": {
+          "type": "number",
+          "x-semio-ui": {
+            "label": {
+              "en": "Weld length l_w",
+              "de": "Nahtlänge l_w"
+            },
+            "widget": "stepper",
+            "unit": "m",
+            "displayUnit": "mm",
+            "displayFactor": 1000,
+            "precision": 1
+          }
+        },
+        "weldFu": {
+          "type": "number",
+          "x-semio-ui": {
+            "label": {
+              "en": "Weld metal tensile strength f_u",
+              "de": "Zugfestigkeit des Schweißguts f_u"
+            },
+            "widget": "stepper",
+            "unit": "Pa",
+            "displayUnit": "N/mm²",
+            "displayFactor": 1e-06,
+            "precision": 1
+          }
+        },
+        "weldGrade": {
+          "type": "string",
+          "x-semio-ui": {
+            "label": {
+              "en": "Weld grade",
+              "de": "Schweißgüte"
+            },
+            "widget": "text"
+          }
         },
         "actions": {
           "type": "array",
           "items": {
-            "$ref": "#/definitions/JointForceAction"
+            "$ref": "#/$defs/JointForceAction"
+          },
+          "x-semio-ui": {
+            "label": {
+              "en": "Joint forces per load case",
+              "de": "Anschlusskräfte je Lastfall"
+            }
+          }
+        },
+        "category": {
+          "type": "string",
+          "x-semio-ui": {
+            "label": {
+              "en": "Bolted connection category",
+              "de": "Kategorie der Schraubenverbindung"
+            },
+            "description": {
+              "en": "A to E (EN 1993-1-8 3.4).",
+              "de": "A bis E (EN 1993-1-8 3.4)."
+            },
+            "widget": "text"
+          }
+        },
+        "frictionMu": {
+          "type": "number",
+          "x-semio-ui": {
+            "label": {
+              "en": "Slip factor μ",
+              "de": "Reibungszahl μ"
+            },
+            "widget": "stepper",
+            "precision": 2
+          }
+        },
+        "preloadForce": {
+          "type": "number",
+          "x-semio-ui": {
+            "label": {
+              "en": "Preloading force F_p,C",
+              "de": "Vorspannkraft F_p,C"
+            },
+            "widget": "stepper",
+            "unit": "N",
+            "displayUnit": "kN",
+            "displayFactor": 0.001,
+            "precision": 2
+          }
+        },
+        "slipFactorKs": {
+          "type": "number",
+          "x-semio-ui": {
+            "label": {
+              "en": "Hole-type factor k_s",
+              "de": "Lochbeiwert k_s"
+            },
+            "widget": "stepper",
+            "precision": 2
+          }
+        },
+        "frictionSurfaces": {
+          "type": "integer",
+          "minimum": 0,
+          "x-semio-ui": {
+            "label": {
+              "en": "Friction surfaces n",
+              "de": "Reibflächen n"
+            },
+            "widget": "stepper",
+            "step": 1,
+            "precision": 0
           }
         }
       }
     },
     "FatigueDetail": {
+      "title": "FatigueDetail",
       "type": "object",
       "additionalProperties": false,
       "required": [
@@ -547,20 +1248,52 @@
           "type": "string"
         },
         "category": {
-          "type": "integer"
+          "type": "integer",
+          "minimum": 0,
+          "x-semio-ui": {
+            "label": {
+              "en": "Detail category Δσ_C",
+              "de": "Kerbfall Δσ_C"
+            },
+            "description": {
+              "en": "Detail category in N/mm² (EN 1993-1-9 Tables 8.1–8.10).",
+              "de": "Kerbfall in N/mm² (EN 1993-1-9 Tabellen 8.1–8.10)."
+            },
+            "widget": "stepper",
+            "step": 1,
+            "precision": 0
+          }
         },
         "method": {
-          "type": "string"
+          "type": "string",
+          "x-semio-ui": {
+            "label": {
+              "en": "Assessment method",
+              "de": "Nachweiskonzept"
+            },
+            "description": {
+              "en": "safe-life or damage-tolerant.",
+              "de": "Sicherheitsnachweis Safe-Life oder schadenstolerant."
+            },
+            "widget": "text"
+          }
         },
         "spectrum": {
           "type": "array",
           "items": {
-            "$ref": "#/definitions/FatigueBand"
+            "$ref": "#/$defs/FatigueBand"
+          },
+          "x-semio-ui": {
+            "label": {
+              "en": "Stress-range spectrum",
+              "de": "Spannungskollektiv"
+            }
           }
         }
       }
     },
     "FireExposure": {
+      "title": "FireExposure",
       "type": "object",
       "additionalProperties": false,
       "required": [
@@ -583,32 +1316,108 @@
           "type": "string"
         },
         "rating": {
-          "type": "string"
+          "type": "string",
+          "x-semio-ui": {
+            "label": {
+              "en": "Fire resistance class",
+              "de": "Feuerwiderstandsklasse"
+            },
+            "description": {
+              "en": "e.g. R30, R60, R90.",
+              "de": "z. B. R30, R60, R90."
+            },
+            "widget": "text"
+          }
         },
         "protectionThickness": {
-          "type": "number"
+          "type": "number",
+          "x-semio-ui": {
+            "label": {
+              "en": "Fire protection thickness d_p",
+              "de": "Dicke der Brandschutzbekleidung d_p"
+            },
+            "widget": "stepper",
+            "unit": "m",
+            "displayUnit": "mm",
+            "displayFactor": 1000,
+            "precision": 1
+          }
         },
         "sectionFactor": {
-          "type": "number"
+          "type": "number",
+          "x-semio-ui": {
+            "label": {
+              "en": "Section factor A_m/V",
+              "de": "Profilfaktor A_m/V"
+            },
+            "widget": "stepper",
+            "unit": "1/m",
+            "precision": 0
+          }
         },
         "mu0": {
-          "type": "number"
-        },
-        "protectionConductivity": {
-          "type": "number"
-        },
-        "protectionDensity": {
-          "type": "number"
-        },
-        "protectionSpecificHeat": {
-          "type": "number"
+          "type": "number",
+          "x-semio-ui": {
+            "label": {
+              "en": "Degree of utilisation μ₀",
+              "de": "Ausnutzungsgrad μ₀"
+            },
+            "widget": "stepper",
+            "precision": 2
+          }
         },
         "designTemperature": {
-          "type": "number"
+          "type": "number",
+          "x-semio-ui": {
+            "label": {
+              "en": "Design steel temperature θ_a",
+              "de": "Bemessungstemperatur des Stahls θ_a"
+            },
+            "widget": "stepper",
+            "unit": "°C",
+            "precision": 0
+          }
+        },
+        "protectionConductivity": {
+          "type": "number",
+          "x-semio-ui": {
+            "label": {
+              "en": "Thermal conductivity of the protection λ_p",
+              "de": "Wärmeleitfähigkeit der Bekleidung λ_p"
+            },
+            "widget": "stepper",
+            "unit": "W/(m·K)",
+            "precision": 3
+          }
+        },
+        "protectionDensity": {
+          "type": "number",
+          "x-semio-ui": {
+            "label": {
+              "en": "Density of the protection ρ_p",
+              "de": "Rohdichte der Bekleidung ρ_p"
+            },
+            "widget": "stepper",
+            "unit": "kg/m³",
+            "precision": 0
+          }
+        },
+        "protectionSpecificHeat": {
+          "type": "number",
+          "x-semio-ui": {
+            "label": {
+              "en": "Specific heat of the protection c_p",
+              "de": "Spezifische Wärmekapazität der Bekleidung c_p"
+            },
+            "widget": "stepper",
+            "unit": "J/(kg·K)",
+            "precision": 0
+          }
         }
       }
     },
     "ColdFormedMember": {
+      "title": "ColdFormedMember",
       "type": "object",
       "additionalProperties": false,
       "required": [
@@ -626,32 +1435,99 @@
           "type": "string"
         },
         "bBar": {
-          "type": "number"
+          "type": "number",
+          "x-semio-ui": {
+            "label": {
+              "en": "Notional flat width b_p",
+              "de": "Rechnerische ebene Breite b_p"
+            },
+            "widget": "stepper",
+            "unit": "m",
+            "displayUnit": "mm",
+            "displayFactor": 1000,
+            "precision": 1
+          }
         },
         "thickness": {
-          "type": "number"
+          "type": "number",
+          "x-semio-ui": {
+            "label": {
+              "en": "Nominal thickness t",
+              "de": "Nennblechdicke t"
+            },
+            "widget": "stepper",
+            "unit": "m",
+            "displayUnit": "mm",
+            "displayFactor": 1000,
+            "precision": 1
+          }
         },
         "kSigma": {
-          "type": "number"
+          "type": "number",
+          "x-semio-ui": {
+            "label": {
+              "en": "Buckling factor k_σ",
+              "de": "Beulwert k_σ"
+            },
+            "widget": "stepper",
+            "precision": 2
+          }
         },
         "psi": {
-          "type": "number"
+          "type": "number",
+          "x-semio-ui": {
+            "label": {
+              "en": "Stress ratio ψ",
+              "de": "Randspannungsverhältnis ψ"
+            },
+            "widget": "stepper",
+            "precision": 2
+          }
         },
         "fy": {
-          "type": "number"
+          "type": "number",
+          "x-semio-ui": {
+            "label": {
+              "en": "Yield strength f_yb",
+              "de": "Basisstreckgrenze f_yb"
+            },
+            "widget": "stepper",
+            "unit": "Pa",
+            "displayUnit": "N/mm²",
+            "displayFactor": 1e-06,
+            "precision": 1
+          }
         },
         "grossResistance": {
-          "type": "number"
+          "type": "number",
+          "x-semio-ui": {
+            "label": {
+              "en": "Gross cross-section resistance",
+              "de": "Widerstand des Bruttoquerschnitts"
+            },
+            "widget": "stepper",
+            "unit": "N",
+            "displayUnit": "kN",
+            "displayFactor": 0.001,
+            "precision": 2
+          }
         },
         "actions": {
           "type": "array",
           "items": {
-            "$ref": "#/definitions/ForceAction"
+            "$ref": "#/$defs/ForceAction"
+          },
+          "x-semio-ui": {
+            "label": {
+              "en": "Forces per load case",
+              "de": "Kräfte je Lastfall"
+            }
           }
         }
       }
     },
     "PlatedPanel": {
+      "title": "PlatedPanel",
       "type": "object",
       "additionalProperties": false,
       "required": [
@@ -668,29 +1544,88 @@
           "type": "string"
         },
         "a": {
-          "type": "number"
+          "type": "number",
+          "x-semio-ui": {
+            "label": {
+              "en": "Panel length a",
+              "de": "Feldlänge a"
+            },
+            "widget": "stepper",
+            "unit": "m",
+            "displayUnit": "mm",
+            "displayFactor": 1000,
+            "precision": 1
+          }
         },
         "b": {
-          "type": "number"
+          "type": "number",
+          "x-semio-ui": {
+            "label": {
+              "en": "Panel width b",
+              "de": "Feldbreite b"
+            },
+            "widget": "stepper",
+            "unit": "m",
+            "displayUnit": "mm",
+            "displayFactor": 1000,
+            "precision": 1
+          }
         },
         "thickness": {
-          "type": "number"
+          "type": "number",
+          "x-semio-ui": {
+            "label": {
+              "en": "Plate thickness t",
+              "de": "Blechdicke t"
+            },
+            "widget": "stepper",
+            "unit": "m",
+            "displayUnit": "mm",
+            "displayFactor": 1000,
+            "precision": 1
+          }
         },
         "fy": {
-          "type": "number"
+          "type": "number",
+          "x-semio-ui": {
+            "label": {
+              "en": "Yield strength f_y",
+              "de": "Streckgrenze f_y"
+            },
+            "widget": "stepper",
+            "unit": "Pa",
+            "displayUnit": "N/mm²",
+            "displayFactor": 1e-06,
+            "precision": 1
+          }
         },
         "kSigma": {
-          "type": "number"
+          "type": "number",
+          "x-semio-ui": {
+            "label": {
+              "en": "Buckling factor k_σ",
+              "de": "Beulwert k_σ"
+            },
+            "widget": "stepper",
+            "precision": 2
+          }
         },
         "actions": {
           "type": "array",
           "items": {
-            "$ref": "#/definitions/ForceAction"
+            "$ref": "#/$defs/ForceAction"
+          },
+          "x-semio-ui": {
+            "label": {
+              "en": "Forces per load case",
+              "de": "Kräfte je Lastfall"
+            }
           }
         }
       }
     },
     "SiloShell": {
+      "title": "SiloShell",
       "type": "object",
       "additionalProperties": false,
       "required": [
@@ -707,26 +1642,77 @@
           "type": "string"
         },
         "thickness": {
-          "type": "number"
+          "type": "number",
+          "x-semio-ui": {
+            "label": {
+              "en": "Shell thickness t",
+              "de": "Schalendicke t"
+            },
+            "widget": "stepper",
+            "unit": "m",
+            "displayUnit": "mm",
+            "displayFactor": 1000,
+            "precision": 1
+          }
         },
         "radius": {
           "type": "number"
         },
         "depth": {
-          "type": "number"
+          "type": "number",
+          "x-semio-ui": {
+            "label": {
+              "en": "Depth below the equivalent surface z",
+              "de": "Tiefe unter der Ersatzoberfläche z"
+            },
+            "widget": "stepper",
+            "unit": "m",
+            "precision": 2
+          }
         },
         "k": {
-          "type": "number"
+          "type": "number",
+          "x-semio-ui": {
+            "label": {
+              "en": "Lateral pressure ratio K",
+              "de": "Horizontallastverhältnis K"
+            },
+            "widget": "stepper",
+            "precision": 2
+          }
         },
         "gamma": {
-          "type": "number"
+          "type": "number",
+          "x-semio-ui": {
+            "label": {
+              "en": "Unit weight of the stored solid γ",
+              "de": "Wichte des Schüttguts γ"
+            },
+            "widget": "stepper",
+            "unit": "N/m³",
+            "displayUnit": "kN/m³",
+            "displayFactor": 0.001,
+            "precision": 1
+          }
         },
         "fy": {
-          "type": "number"
+          "type": "number",
+          "x-semio-ui": {
+            "label": {
+              "en": "Yield strength f_y",
+              "de": "Streckgrenze f_y"
+            },
+            "widget": "stepper",
+            "unit": "Pa",
+            "displayUnit": "N/mm²",
+            "displayFactor": 1e-06,
+            "precision": 1
+          }
         }
       }
     },
     "TensionComponent": {
+      "title": "TensionComponent",
       "type": "object",
       "additionalProperties": false,
       "required": [
@@ -740,20 +1726,49 @@
           "type": "string"
         },
         "fUk": {
-          "type": "number"
+          "type": "number",
+          "x-semio-ui": {
+            "label": {
+              "en": "Characteristic breaking strength F_uk",
+              "de": "Charakteristische Bruchkraft F_uk"
+            },
+            "widget": "stepper",
+            "unit": "N",
+            "displayUnit": "kN",
+            "displayFactor": 0.001,
+            "precision": 2
+          }
         },
         "fK": {
-          "type": "number"
+          "type": "number",
+          "x-semio-ui": {
+            "label": {
+              "en": "Characteristic 0.2 % proof force F_k",
+              "de": "Charakteristische 0,2-%-Dehngrenzkraft F_k"
+            },
+            "widget": "stepper",
+            "unit": "N",
+            "displayUnit": "kN",
+            "displayFactor": 0.001,
+            "precision": 2
+          }
         },
         "actions": {
           "type": "array",
           "items": {
-            "$ref": "#/definitions/ForceAction"
+            "$ref": "#/$defs/ForceAction"
+          },
+          "x-semio-ui": {
+            "label": {
+              "en": "Forces per load case",
+              "de": "Kräfte je Lastfall"
+            }
           }
         }
       }
     },
     "BridgeFatigue": {
+      "title": "BridgeFatigue",
       "type": "object",
       "additionalProperties": false,
       "required": [
@@ -773,23 +1788,72 @@
           "type": "string"
         },
         "lambda": {
-          "type": "number"
+          "type": "number",
+          "x-semio-ui": {
+            "label": {
+              "en": "Damage equivalence factor λ",
+              "de": "Schadensäquivalenzfaktor λ"
+            },
+            "widget": "stepper",
+            "precision": 2
+          }
         },
         "phi2": {
-          "type": "number"
+          "type": "number",
+          "x-semio-ui": {
+            "label": {
+              "en": "Damage equivalent impact factor Φ₂",
+              "de": "Schadensäquivalenter Stoßbeiwert Φ₂"
+            },
+            "widget": "stepper",
+            "precision": 2
+          }
         },
         "deltaSigmaP": {
-          "type": "number"
+          "type": "number",
+          "x-semio-ui": {
+            "label": {
+              "en": "Stress range Δσ_p",
+              "de": "Spannungsschwingbreite Δσ_p"
+            },
+            "widget": "stepper",
+            "unit": "Pa",
+            "displayUnit": "N/mm²",
+            "displayFactor": 1e-06,
+            "precision": 1
+          }
         },
         "category": {
-          "type": "integer"
+          "type": "integer",
+          "minimum": 0,
+          "x-semio-ui": {
+            "label": {
+              "en": "Detail category Δσ_C",
+              "de": "Kerbfall Δσ_C"
+            },
+            "description": {
+              "en": "Detail category in N/mm².",
+              "de": "Kerbfall in N/mm²."
+            },
+            "widget": "stepper",
+            "step": 1,
+            "precision": 0
+          }
         },
         "method": {
-          "type": "string"
+          "type": "string",
+          "x-semio-ui": {
+            "label": {
+              "en": "Assessment method",
+              "de": "Nachweiskonzept"
+            },
+            "widget": "text"
+          }
         }
       }
     },
     "TowerLeg": {
+      "title": "TowerLeg",
       "type": "object",
       "additionalProperties": false,
       "required": [
@@ -807,20 +1871,43 @@
           "type": "string"
         },
         "forceCoefficient": {
-          "type": "number"
+          "type": "number",
+          "x-semio-ui": {
+            "label": {
+              "en": "Force coefficient c_f",
+              "de": "Kraftbeiwert c_f"
+            },
+            "widget": "stepper",
+            "precision": 2
+          }
         },
         "dynamicFactor": {
-          "type": "number"
+          "type": "number",
+          "x-semio-ui": {
+            "label": {
+              "en": "Structural factor c_s·c_d",
+              "de": "Strukturbeiwert c_s·c_d"
+            },
+            "widget": "stepper",
+            "precision": 2
+          }
         },
         "actions": {
           "type": "array",
           "items": {
-            "$ref": "#/definitions/ForceAction"
+            "$ref": "#/$defs/ForceAction"
+          },
+          "x-semio-ui": {
+            "label": {
+              "en": "Forces per load case",
+              "de": "Kräfte je Lastfall"
+            }
           }
         }
       }
     },
     "SteelPile": {
+      "title": "SteelPile",
       "type": "object",
       "additionalProperties": false,
       "required": [
@@ -837,29 +1924,87 @@
           "type": "string"
         },
         "sectionId": {
-          "type": "string"
+          "type": "string",
+          "x-semio-ui": {
+            "label": {
+              "en": "Cross-section",
+              "de": "Querschnitt"
+            },
+            "widget": "reference",
+            "role": "value",
+            "ref": {
+              "kind": "section"
+            }
+          }
         },
         "materialId": {
-          "type": "string"
+          "type": "string",
+          "x-semio-ui": {
+            "label": {
+              "en": "Steel material",
+              "de": "Stahlwerkstoff"
+            },
+            "widget": "reference",
+            "role": "value",
+            "ref": {
+              "kind": "material"
+            }
+          }
         },
         "drivingStress": {
-          "type": "number"
+          "type": "number",
+          "x-semio-ui": {
+            "label": {
+              "en": "Driving stress σ",
+              "de": "Rammspannung σ"
+            },
+            "widget": "stepper",
+            "unit": "Pa",
+            "displayUnit": "N/mm²",
+            "displayFactor": 1e-06,
+            "precision": 1
+          }
         },
         "embeddedLength": {
-          "type": "number"
+          "type": "number",
+          "x-semio-ui": {
+            "label": {
+              "en": "Embedded length",
+              "de": "Einbindelänge"
+            },
+            "widget": "stepper",
+            "unit": "m",
+            "precision": 2
+          }
         },
         "shaftPerimeter": {
-          "type": "number"
+          "type": "number",
+          "x-semio-ui": {
+            "label": {
+              "en": "Shaft perimeter",
+              "de": "Mantelumfang"
+            },
+            "widget": "stepper",
+            "unit": "m",
+            "precision": 3
+          }
         },
         "actions": {
           "type": "array",
           "items": {
-            "$ref": "#/definitions/ForceAction"
+            "$ref": "#/$defs/ForceAction"
+          },
+          "x-semio-ui": {
+            "label": {
+              "en": "Forces per load case",
+              "de": "Kräfte je Lastfall"
+            }
           }
         }
       }
     },
     "CraneRunway": {
+      "title": "CraneRunway",
       "type": "object",
       "additionalProperties": false,
       "required": [
@@ -880,29 +2025,88 @@
           "type": "string"
         },
         "wheelContactLength": {
-          "type": "number"
+          "type": "number",
+          "x-semio-ui": {
+            "label": {
+              "en": "Wheel contact length",
+              "de": "Radaufstandslänge"
+            },
+            "widget": "stepper",
+            "unit": "m",
+            "displayUnit": "mm",
+            "displayFactor": 1000,
+            "precision": 1
+          }
         },
         "dispersion": {
-          "type": "number"
+          "type": "number",
+          "x-semio-ui": {
+            "label": {
+              "en": "Load dispersion length",
+              "de": "Lastausbreitungslänge"
+            },
+            "widget": "stepper",
+            "unit": "m",
+            "displayUnit": "mm",
+            "displayFactor": 1000,
+            "precision": 1
+          }
         },
         "webThickness": {
-          "type": "number"
+          "type": "number",
+          "x-semio-ui": {
+            "label": {
+              "en": "Web thickness t_w",
+              "de": "Stegdicke t_w"
+            },
+            "widget": "stepper",
+            "unit": "m",
+            "displayUnit": "mm",
+            "displayFactor": 1000,
+            "precision": 1
+          }
         },
         "fy": {
-          "type": "number"
+          "type": "number",
+          "x-semio-ui": {
+            "label": {
+              "en": "Yield strength f_y",
+              "de": "Streckgrenze f_y"
+            },
+            "widget": "stepper",
+            "unit": "Pa",
+            "displayUnit": "N/mm²",
+            "displayFactor": 1e-06,
+            "precision": 1
+          }
         },
         "phi": {
-          "type": "number"
+          "type": "number",
+          "x-semio-ui": {
+            "label": {
+              "en": "Dynamic factor φ",
+              "de": "Dynamischer Faktor φ"
+            },
+            "widget": "stepper",
+            "precision": 2
+          }
         },
         "actions": {
           "type": "array",
           "items": {
-            "$ref": "#/definitions/ForceAction"
+            "$ref": "#/$defs/ForceAction"
+          },
+          "x-semio-ui": {
+            "label": {
+              "en": "Wheel loads per load case",
+              "de": "Radlasten je Lastfall"
+            }
           }
         }
       }
     },
     "ForceAction": {
+      "title": "ForceAction",
       "type": "object",
       "additionalProperties": false,
       "required": [
@@ -915,14 +2119,37 @@
           "type": "string"
         },
         "loadCaseId": {
-          "type": "string"
+          "type": "string",
+          "x-semio-ui": {
+            "label": {
+              "en": "Load case",
+              "de": "Lastfall"
+            },
+            "widget": "reference",
+            "role": "value",
+            "ref": {
+              "kind": "loadCase"
+            }
+          }
         },
         "force": {
-          "type": "number"
+          "type": "number",
+          "x-semio-ui": {
+            "label": {
+              "en": "Characteristic force",
+              "de": "Charakteristische Kraft"
+            },
+            "widget": "stepper",
+            "unit": "N",
+            "displayUnit": "kN",
+            "displayFactor": 0.001,
+            "precision": 2
+          }
         }
       }
     },
     "JointForceAction": {
+      "title": "JointForceAction",
       "type": "object",
       "additionalProperties": false,
       "required": [
@@ -936,17 +2163,51 @@
           "type": "string"
         },
         "loadCaseId": {
-          "type": "string"
+          "type": "string",
+          "x-semio-ui": {
+            "label": {
+              "en": "Load case",
+              "de": "Lastfall"
+            },
+            "widget": "reference",
+            "role": "value",
+            "ref": {
+              "kind": "loadCase"
+            }
+          }
         },
         "shear": {
-          "type": "number"
+          "type": "number",
+          "x-semio-ui": {
+            "label": {
+              "en": "Shear force per joint",
+              "de": "Querkraft je Anschluss"
+            },
+            "widget": "stepper",
+            "unit": "N",
+            "displayUnit": "kN",
+            "displayFactor": 0.001,
+            "precision": 2
+          }
         },
         "tension": {
-          "type": "number"
+          "type": "number",
+          "x-semio-ui": {
+            "label": {
+              "en": "Tension force per joint",
+              "de": "Zugkraft je Anschluss"
+            },
+            "widget": "stepper",
+            "unit": "N",
+            "displayUnit": "kN",
+            "displayFactor": 0.001,
+            "precision": 2
+          }
         }
       }
     },
     "FatigueBand": {
+      "title": "FatigueBand",
       "type": "object",
       "additionalProperties": false,
       "required": [
@@ -959,10 +2220,49 @@
           "type": "string"
         },
         "deltaSigma": {
-          "type": "number"
+          "type": "number",
+          "x-semio-ui": {
+            "label": {
+              "en": "Stress range Δσ_i",
+              "de": "Spannungsschwingbreite Δσ_i"
+            },
+            "widget": "stepper",
+            "unit": "Pa",
+            "displayUnit": "N/mm²",
+            "displayFactor": 1e-06,
+            "precision": 1
+          }
         },
         "cycles": {
-          "type": "number"
+          "type": "number",
+          "x-semio-ui": {
+            "label": {
+              "en": "Number of cycles n_i",
+              "de": "Lastspielzahl n_i"
+            },
+            "widget": "stepper",
+            "precision": 0
+          }
+        }
+      }
+    },
+    "AnnexChoice": {
+      "title": "AnnexChoice",
+      "type": "string",
+      "enum": [
+        "En",
+        "De"
+      ],
+      "x-semio-ui": {
+        "options": {
+          "En": {
+            "en": "Recommended CEN values (EN)",
+            "de": "Empfohlene CEN-Werte (EN)"
+          },
+          "De": {
+            "en": "German national annex (DIN EN)",
+            "de": "Deutscher Nationaler Anhang (DIN EN)"
+          }
         }
       }
     }

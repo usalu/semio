@@ -5,20 +5,39 @@
   "type": "object",
   "additionalProperties": false,
   "required": [
+    "mutation",
     "index",
     "extension"
   ],
   "properties": {
-    "index": {
-      "type": "integer",
-      "minimum": 0
-    },
-    "extension": {
-      "$ref": "#/$defs/GifAppExtension"
-    },
     "mutation": {
       "const": "addAppExtension",
       "description": "Aggregate discriminator spliced in by GifMutation; absent when the payload stands alone."
+    },
+    "index": {
+      "type": "integer",
+      "minimum": 0,
+      "x-semio-ui": {
+        "widget": "stepper",
+        "label": {
+          "en": "Insert position",
+          "de": "Einfügeposition"
+        },
+        "precision": 0,
+        "group": "target",
+        "order": 10
+      }
+    },
+    "extension": {
+      "$ref": "#/$defs/GifAppExtension",
+      "x-semio-ui": {
+        "label": {
+          "en": "Application extension",
+          "de": "Anwendungserweiterung"
+        },
+        "group": "value",
+        "order": 20
+      }
     }
   },
   "$defs": {
@@ -38,7 +57,17 @@
             "maximum": 255
           },
           "minItems": 8,
-          "maxItems": 8
+          "maxItems": 8,
+          "x-semio-ui": {
+            "label": {
+              "en": "Application identifier",
+              "de": "Anwendungskennung"
+            },
+            "description": {
+              "en": "Eight ASCII bytes, e.g. NETSCAPE.",
+              "de": "Acht ASCII-Bytes, z. B. NETSCAPE."
+            }
+          }
         },
         "authCode": {
           "type": "array",
@@ -48,7 +77,17 @@
             "maximum": 255
           },
           "minItems": 3,
-          "maxItems": 3
+          "maxItems": 3,
+          "x-semio-ui": {
+            "label": {
+              "en": "Authentication code",
+              "de": "Authentifizierungscode"
+            },
+            "description": {
+              "en": "Three bytes, e.g. 2.0.",
+              "de": "Drei Bytes, z. B. 2.0."
+            }
+          }
         },
         "data": {
           "type": "array",
@@ -56,6 +95,12 @@
             "type": "integer",
             "minimum": 0,
             "maximum": 255
+          },
+          "x-semio-ui": {
+            "label": {
+              "en": "Sub-block data",
+              "de": "Unterblockdaten"
+            }
           }
         }
       }

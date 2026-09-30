@@ -1,7 +1,7 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
   "$id": "https://json.schemas.assets.semio-tech.com/s/stdio/gltf/2.0/any/mutation/change-node-morph-weights/schema.json",
-  "title": "GltfChangeNodeMorphWeightsMutation",
+  "title": "GltfChangeNodeMorphWeightsPayload",
   "type": "object",
   "additionalProperties": false,
   "required": [
@@ -11,24 +11,74 @@
   "properties": {
     "node": {
       "type": "integer",
-      "minimum": 0
+      "minimum": 0,
+      "x-semio-ui": {
+        "widget": "stepper",
+        "label": {
+          "en": "Node",
+          "de": "Knoten"
+        },
+        "description": {
+          "en": "Index of the node, counted from 0.",
+          "de": "Index des Knotens, ab 0 gezählt."
+        },
+        "precision": 0,
+        "group": "target",
+        "order": 10
+      }
     },
     "weights": {
       "type": "array",
       "items": {
         "type": "number"
+      },
+      "x-semio-ui": {
+        "label": {
+          "en": "Morph weights",
+          "de": "Morph-Gewichte"
+        },
+        "group": "value",
+        "order": 20
       }
     }
   },
-  "x-semio": {
-    "id": "s.stdio.gltf.mutation.change-node-morph-weights.v1",
-    "version": 1,
-    "phase": "mutation",
-    "kind": "change",
-    "touchedPaths": [
-      "document/nodes/*/weights"
-    ],
-    "referencePolicy": "requires finite weights and verifies the bound mesh target arity"
-  },
-  "x-semio-mutation": "change-node-morph-weights"
+  "$defs": {
+    "ChangeNodeMorphWeightsMutation": {
+      "description": "The whole wire of ChangeNodeMorphWeightsMutation: the editable apply payload (this document's root) or the inert restore.",
+      "oneOf": [
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "phase",
+            "value"
+          ],
+          "properties": {
+            "phase": {
+              "const": "apply"
+            },
+            "value": {
+              "$ref": "#"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "phase",
+            "value"
+          ],
+          "properties": {
+            "phase": {
+              "const": "restore"
+            },
+            "value": {
+              "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/gltf/2.0/any/diff.json"
+            }
+          }
+        }
+      ]
+    }
+  }
 }

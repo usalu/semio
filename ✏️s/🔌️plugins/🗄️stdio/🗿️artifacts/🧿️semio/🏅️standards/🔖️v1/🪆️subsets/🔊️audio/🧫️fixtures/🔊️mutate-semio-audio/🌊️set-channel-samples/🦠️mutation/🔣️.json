@@ -1,6 +1,7 @@
 {
   "kind": "set-channel-samples",
-  "params": {
+  "mutation": {
+    "mutation": "setChannelSamples",
     "index": 0,
     "samples": [
       1.0,

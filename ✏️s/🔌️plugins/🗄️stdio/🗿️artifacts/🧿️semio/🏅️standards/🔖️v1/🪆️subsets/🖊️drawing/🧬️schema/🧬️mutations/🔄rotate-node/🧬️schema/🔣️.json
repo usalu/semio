@@ -13,7 +13,13 @@
       "$ref": "#/$defs/NodePath"
     },
     "new_rotation": {
-      "$ref": "#/$defs/SemioQuaternion"
+      "$ref": "#/$defs/SemioQuaternion",
+      "x-semio-ui": {
+        "label": {
+          "en": "Rotation",
+          "de": "Drehung"
+        }
+      }
     }
   },
   "$defs": {
@@ -57,7 +63,18 @@
           "type": "number"
         },
         "w": {
-          "type": "number"
+          "type": "number",
+          "x-semio-ui": {
+            "widget": "stepper",
+            "label": {
+              "en": "W",
+              "de": "W"
+            },
+            "description": {
+              "en": "Scalar part of the rotation quaternion.",
+              "de": "Skalarteil des Rotationsquaternions."
+            }
+          }
         }
       }
     }

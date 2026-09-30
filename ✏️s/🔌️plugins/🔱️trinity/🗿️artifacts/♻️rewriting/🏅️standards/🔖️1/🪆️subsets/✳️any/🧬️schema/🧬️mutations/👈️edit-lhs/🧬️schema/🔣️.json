@@ -5,11 +5,27 @@
   "type": "object",
   "additionalProperties": false,
   "required": [
+    "mutation",
     "newLhsJson"
   ],
   "properties": {
+    "mutation": {
+      "const": "editLhs"
+    },
     "newLhsJson": {
-      "type": "string"
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "multiline",
+        "role": "value",
+        "label": {
+          "en": "New Match Pattern",
+          "de": "Neues Suchmuster"
+        },
+        "description": {
+          "en": "Left-hand side of the rule as JSON.",
+          "de": "Linke Regelseite als JSON."
+        }
+      }
     }
   }
 }

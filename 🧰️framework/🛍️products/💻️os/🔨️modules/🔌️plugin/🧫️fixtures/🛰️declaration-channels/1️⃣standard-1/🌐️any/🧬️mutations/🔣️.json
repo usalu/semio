@@ -2,14 +2,18 @@
   "$schema": "http://json-schema.org/draft-07/schema#",
   "$id": "https://json.schemas.assets.semio-tech.com/framework/os/plugin/tests/declaration-channels/standard-1/any/mutations.json",
   "title": "Std1Any direct mutations",
-  "type": "object",
-  "properties": {
-    "SetValue": {
-      "$ref": "https://json.schemas.assets.semio-tech.com/framework/os/plugin/tests/declaration-channels/standard-1/any/mutation/set-value/schema.json"
+  "oneOf": [
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "SetValue"
+      ],
+      "properties": {
+        "SetValue": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/framework/os/plugin/tests/declaration-channels/standard-1/any/mutation/set-value/schema.json"
+        }
+      }
     }
-  },
-  "required": [
-    "SetValue"
-  ],
-  "additionalProperties": false
+  ]
 }

@@ -1,0 +1,10 @@
+{
+  "mutation": "createEdge",
+  "edge": {
+    "id": "shaft-to-capsule-a",
+    "kind": "Connection",
+    "source": "shaft@out-a",
+    "target": "capsule-a@in-a",
+    "properties": {}
+  }
+}

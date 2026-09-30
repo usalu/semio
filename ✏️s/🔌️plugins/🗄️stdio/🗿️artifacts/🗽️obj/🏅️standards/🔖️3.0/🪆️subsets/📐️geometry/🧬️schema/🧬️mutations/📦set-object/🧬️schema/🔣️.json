@@ -5,10 +5,15 @@
   "type": "object",
   "additionalProperties": false,
   "required": [
+    "mutation",
     "name",
     "faces"
   ],
   "properties": {
+    "mutation": {
+      "const": "setObject",
+      "description": "Aggregate discriminator spliced in by ObjMutation; absent when the payload stands alone."
+    },
     "name": {
       "type": "string"
     },
@@ -18,10 +23,6 @@
         "type": "integer",
         "minimum": 0
       }
-    },
-    "mutation": {
-      "const": "setObject",
-      "description": "Aggregate discriminator spliced in by ObjMutation; absent when the payload stands alone."
     }
   }
 }

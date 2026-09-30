@@ -5,9 +5,13 @@
   "type": "object",
   "additionalProperties": false,
   "required": [
+    "mutation",
     "camera"
   ],
   "properties": {
+    "mutation": {
+      "const": "updateCameraCalibration"
+    },
     "camera": {
       "type": "object",
       "title": "CameraCalibration",
@@ -27,33 +31,138 @@
       ],
       "properties": {
         "id": {
-          "type": "string"
+          "type": "string",
+          "x-semio-ui": {
+            "widget": "reference",
+            "role": "target",
+            "label": {
+              "en": "Camera",
+              "de": "Kamera"
+            },
+            "description": {
+              "en": "The camera this calibration replaces.",
+              "de": "Kamera, deren Kalibrierung ersetzt wird."
+            },
+            "ref": {
+              "kind": "camera"
+            },
+            "group": "identity",
+            "order": 10
+          }
         },
         "label": {
-          "type": "string"
+          "type": "string",
+          "x-semio-ui": {
+            "widget": "text",
+            "role": "value",
+            "label": {
+              "en": "Label",
+              "de": "Bezeichnung"
+            },
+            "group": "identity",
+            "order": 20
+          }
         },
         "model": {
-          "type": "string"
+          "type": "string",
+          "x-semio-ui": {
+            "widget": "text",
+            "role": "value",
+            "label": {
+              "en": "Camera Model",
+              "de": "Kameramodell"
+            },
+            "description": {
+              "en": "pinhole, brownConrady or fisheye; decides which distortion coefficients apply.",
+              "de": "pinhole, brownConrady oder fisheye; bestimmt, welche Verzeichnungskoeffizienten gelten."
+            },
+            "group": "intrinsics",
+            "order": 30
+          }
         },
         "fx": {
           "type": "number",
-          "format": "double"
+          "format": "double",
+          "x-semio-ui": {
+            "widget": "stepper",
+            "role": "value",
+            "label": {
+              "en": "Focal Length x (px)",
+              "de": "Brennweite x (px)"
+            },
+            "unit": "px",
+            "step": 1,
+            "precision": 2,
+            "group": "intrinsics",
+            "order": 40
+          }
         },
         "fy": {
           "type": "number",
-          "format": "double"
+          "format": "double",
+          "x-semio-ui": {
+            "widget": "stepper",
+            "role": "value",
+            "label": {
+              "en": "Focal Length y (px)",
+              "de": "Brennweite y (px)"
+            },
+            "unit": "px",
+            "step": 1,
+            "precision": 2,
+            "group": "intrinsics",
+            "order": 50
+          }
         },
         "cx": {
           "type": "number",
-          "format": "double"
+          "format": "double",
+          "x-semio-ui": {
+            "widget": "stepper",
+            "role": "value",
+            "label": {
+              "en": "Principal Point x (px)",
+              "de": "Hauptpunkt x (px)"
+            },
+            "unit": "px",
+            "step": 1,
+            "precision": 2,
+            "group": "intrinsics",
+            "order": 60
+          }
         },
         "cy": {
           "type": "number",
-          "format": "double"
+          "format": "double",
+          "x-semio-ui": {
+            "widget": "stepper",
+            "role": "value",
+            "label": {
+              "en": "Principal Point y (px)",
+              "de": "Hauptpunkt y (px)"
+            },
+            "unit": "px",
+            "step": 1,
+            "precision": 2,
+            "group": "intrinsics",
+            "order": 70
+          }
         },
         "skew": {
           "type": "number",
-          "format": "double"
+          "format": "double",
+          "x-semio-ui": {
+            "widget": "stepper",
+            "role": "value",
+            "label": {
+              "en": "Skew",
+              "de": "Scherung"
+            },
+            "step": 0.001,
+            "precision": 4,
+            "group": "intrinsics",
+            "order": 80
+          }
         },
         "distortion": {
           "type": "array",
@@ -62,18 +171,67 @@
             "format": "float"
           },
           "minItems": 5,
-          "maxItems": 5
+          "maxItems": 5,
+          "x-semio-ui": {
+            "role": "value",
+            "label": {
+              "en": "Distortion [k1, k2, k3, p1, p2]",
+              "de": "Verzeichnung [k1, k2, k3, p1, p2]"
+            },
+            "description": {
+              "en": "Radial (k) and tangential (p) distortion coefficients.",
+              "de": "Radiale (k) und tangentiale (p) Verzeichnungskoeffizienten."
+            },
+            "group": "intrinsics",
+            "order": 90
+          }
         },
         "rmsReprojectionPx": {
           "type": [
             "number",
             "null"
           ],
-          "format": "float"
+          "format": "float",
+          "x-semio-ui": {
+            "widget": "stepper",
+            "role": "value",
+            "label": {
+              "en": "Reprojection RMS (px)",
+              "de": "RMS des Rückprojektionsfehlers (px)"
+            },
+            "unit": "px",
+            "step": 0.01,
+            "precision": 3,
+            "group": "quality",
+            "order": 100
+          }
         },
         "locked": {
-          "type": "boolean"
+          "type": "boolean",
+          "x-semio-ui": {
+            "widget": "toggle",
+            "role": "value",
+            "label": {
+              "en": "Locked",
+              "de": "Gesperrt"
+            },
+            "group": "intrinsics",
+            "order": 110
+          }
         }
+      },
+      "x-semio-ui": {
+        "role": "value",
+        "label": {
+          "en": "Camera Calibration",
+          "de": "Kamerakalibrierung"
+        },
+        "description": {
+          "en": "Complete calibration; replaces the camera with the same ID.",
+          "de": "Vollständige Kalibrierung; ersetzt die Kamera mit derselben ID."
+        },
+        "group": "record",
+        "order": 10
       }
     }
   }

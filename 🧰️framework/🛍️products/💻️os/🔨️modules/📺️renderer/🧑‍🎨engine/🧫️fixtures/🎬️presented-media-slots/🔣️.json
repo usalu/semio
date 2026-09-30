@@ -226,6 +226,64 @@
         "width": 155,
         "height": 0
       }
+    },
+    {
+      "name": "fractional-extent-canonical-json",
+      "localRect": {
+        "x": 0,
+        "y": 0,
+        "width": 0.1,
+        "height": 0.1
+      },
+      "body": {
+        "x": 0,
+        "y": 0,
+        "width": 1,
+        "height": 1
+      },
+      "expectedCount": 1,
+      "expectedRect": {
+        "x": 0,
+        "y": 0,
+        "width": 0.1,
+        "height": 0.1
+      },
+      "expectedClip": {
+        "x": 0,
+        "y": 0,
+        "width": 0.1,
+        "height": 0.1
+      },
+      "expectedOccluded": false
+    },
+    {
+      "name": "large-extent-canonical-json",
+      "localRect": {
+        "x": 0,
+        "y": 0,
+        "width": 1e+20,
+        "height": 1e+20
+      },
+      "body": {
+        "x": 0,
+        "y": 0,
+        "width": 1e+21,
+        "height": 1e+21
+      },
+      "expectedCount": 1,
+      "expectedRect": {
+        "x": 0,
+        "y": 0,
+        "width": 1e+20,
+        "height": 1e+20
+      },
+      "expectedClip": {
+        "x": 0,
+        "y": 0,
+        "width": 1e+20,
+        "height": 1e+20
+      },
+      "expectedOccluded": false
     }
   ],
   "occlusionCases": [
@@ -406,5 +464,9 @@
       "accepted": false,
       "document": null
     }
-  ]
+  ],
+  "descriptorBudget": {
+    "labelBytes": 512,
+    "expectedAcceptedSlots": 8
+  }
 }

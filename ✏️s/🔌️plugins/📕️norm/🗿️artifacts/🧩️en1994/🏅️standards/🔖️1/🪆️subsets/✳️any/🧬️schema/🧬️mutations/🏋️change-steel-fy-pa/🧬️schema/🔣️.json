@@ -9,7 +9,29 @@
   ],
   "properties": {
     "newSteelFYPa": {
-      "type": "number"
+      "type": "number",
+      "exclusiveMinimum": 0,
+      "x-semio-ui": {
+        "widget": "stepper",
+        "role": "value",
+        "label": {
+          "en": "Yield strength of structural steel f_y",
+          "de": "Streckgrenze des Baustahls f_y"
+        },
+        "unit": "Pa",
+        "displayUnit": "N/mm²",
+        "displayFactor": 1e-06,
+        "step": 5000000.0,
+        "precision": 0,
+        "snaps": [
+          235000000.0,
+          275000000.0,
+          355000000.0,
+          460000000.0
+        ],
+        "group": "material",
+        "order": 10
+      }
     }
   }
 }

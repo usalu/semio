@@ -14,27 +14,112 @@
   "properties": {
     "lodMode": {
       "type": "string",
-      "x-semio-state": "config"
+      "x-semio-state": "config",
+      "x-semio-ui": {
+        "widget": "text",
+        "role": "value",
+        "label": {
+          "en": "Level of detail",
+          "de": "Detailstufe"
+        },
+        "description": {
+          "en": "coarse, medium or fine.",
+          "de": "coarse (grob), medium (mittel) oder fine (fein)."
+        },
+        "group": "view",
+        "order": 10
+      }
     },
     "showMode": {
       "type": "string",
-      "x-semio-state": "config"
+      "x-semio-state": "config",
+      "x-semio-ui": {
+        "widget": "text",
+        "role": "value",
+        "label": {
+          "en": "Display mode",
+          "de": "Darstellungsmodus"
+        },
+        "description": {
+          "en": "shaded, shaded+edges, wireframe or points.",
+          "de": "shaded (schattiert), shaded+edges (schattiert mit Kanten), wireframe (Drahtgitter) oder points (Punkte)."
+        },
+        "group": "view",
+        "order": 20
+      }
     },
     "camera": {
       "$ref": "https://json.schemas.assets.semio-tech.com/s/procedural/generation3d/artifact.json#/$defs/CameraJson",
-      "x-semio-state": "config"
+      "x-semio-state": "config",
+      "x-semio-ui": {
+        "role": "value",
+        "label": {
+          "en": "Graph camera",
+          "de": "Graphkamera"
+        },
+        "description": {
+          "en": "Pan and zoom of the graph canvas.",
+          "de": "Verschiebung und Zoom der Graphfläche."
+        },
+        "group": "camera",
+        "order": 30
+      }
     },
     "previewCamera": {
       "$ref": "#/$defs/Generation3dPreviewCamera",
-      "x-semio-state": "config"
+      "x-semio-state": "config",
+      "x-semio-ui": {
+        "role": "value",
+        "label": {
+          "en": "Preview camera",
+          "de": "Vorschaukamera"
+        },
+        "description": {
+          "en": "Camera of the 3D preview.",
+          "de": "Kamera der 3D-Vorschau."
+        },
+        "group": "camera",
+        "order": 40
+      }
     },
     "sunJson": {
       "type": "string",
-      "x-semio-state": "config"
+      "x-semio-state": "config",
+      "x-semio-ui": {
+        "widget": "multiline",
+        "role": "value",
+        "label": {
+          "en": "Sun",
+          "de": "Sonne"
+        },
+        "description": {
+          "en": "Sun settings as JSON text.",
+          "de": "Sonneneinstellungen als JSON-Text."
+        },
+        "group": "lighting",
+        "order": 50
+      }
     },
     "selectedGenerationId": {
       "type": "string",
-      "x-semio-state": "config"
+      "x-semio-state": "config",
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Selected generation",
+          "de": "Ausgewählte Generierung"
+        },
+        "description": {
+          "en": "The generation shown in the preview.",
+          "de": "Die in der Vorschau gezeigte Generierung."
+        },
+        "ref": {
+          "kind": "generation"
+        },
+        "group": "target",
+        "order": 60
+      }
     }
   },
   "$defs": {
@@ -55,7 +140,22 @@
             "format": "double"
           },
           "minItems": 3,
-          "maxItems": 3
+          "maxItems": 3,
+          "x-semio-ui": {
+            "widget": "vector",
+            "role": "value",
+            "label": {
+              "en": "Position",
+              "de": "Position"
+            },
+            "description": {
+              "en": "Where the camera stands.",
+              "de": "Standpunkt der Kamera."
+            },
+            "step": 0.1,
+            "group": "camera",
+            "order": 10
+          }
         },
         "target": {
           "type": "array",
@@ -64,11 +164,51 @@
             "format": "double"
           },
           "minItems": 3,
-          "maxItems": 3
+          "maxItems": 3,
+          "x-semio-ui": {
+            "widget": "vector",
+            "role": "value",
+            "label": {
+              "en": "Look at",
+              "de": "Blickziel"
+            },
+            "description": {
+              "en": "The point the camera looks at.",
+              "de": "Der Punkt, auf den die Kamera blickt."
+            },
+            "step": 0.1,
+            "group": "camera",
+            "order": 20
+          }
         },
         "fov": {
           "type": "number",
-          "format": "double"
+          "format": "double",
+          "x-semio-ui": {
+            "widget": "slider",
+            "role": "value",
+            "label": {
+              "en": "Field of view",
+              "de": "Sichtfeld"
+            },
+            "description": {
+              "en": "Vertical opening angle of the camera.",
+              "de": "Vertikaler Öffnungswinkel der Kamera."
+            },
+            "unit": "deg",
+            "step": 1,
+            "precision": 1,
+            "softMin": 10,
+            "softMax": 120,
+            "snaps": [
+              30,
+              45,
+              60,
+              90
+            ],
+            "group": "camera",
+            "order": 30
+          }
         }
       }
     }

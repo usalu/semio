@@ -5,15 +5,57 @@
   "type": "object",
   "additionalProperties": false,
   "required": [
+    "mutation",
     "id",
     "newTimestepSeconds"
   ],
   "properties": {
+    "mutation": {
+      "const": "changeTimeSeriesScheduleTimestep"
+    },
     "id": {
-      "type": "integer"
+      "type": "integer",
+      "minimum": 0,
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Time series schedule",
+          "de": "Zeitreihenzeitplan"
+        },
+        "description": {
+          "en": "The time series schedule this mutation changes, by id.",
+          "de": "Zeitreihenzeitplan, den diese Mutation ändert, per ID."
+        },
+        "ref": {
+          "kind": "timeSeriesSchedule",
+          "domain": "energyModel",
+          "granularity": "schedule"
+        },
+        "group": "target",
+        "order": 10
+      }
     },
     "newTimestepSeconds": {
-      "type": "integer"
+      "type": "integer",
+      "minimum": 1,
+      "x-semio-ui": {
+        "widget": "stepper",
+        "role": "value",
+        "label": {
+          "en": "Timestep",
+          "de": "Zeitschritt"
+        },
+        "description": {
+          "en": "Duration each value holds.",
+          "de": "Dauer, für die jeder Wert gilt."
+        },
+        "unit": "s",
+        "step": 60,
+        "precision": 0,
+        "group": "values",
+        "order": 20
+      }
     }
   }
 }

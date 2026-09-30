@@ -5,19 +5,71 @@
   "type": "object",
   "additionalProperties": false,
   "required": [
+    "mutation",
     "modelDefinitionId",
     "newWidthWorld",
     "referenceId"
   ],
   "properties": {
+    "mutation": {
+      "const": "changeReferenceWidth"
+    },
     "modelDefinitionId": {
-      "type": "string"
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "text",
+        "role": "value",
+        "label": {
+          "en": "Model definition",
+          "de": "Modelldefinition"
+        },
+        "description": {
+          "en": "Id of the model the reference belongs to, e.g. aec.building.",
+          "de": "ID des Modells, zu dem die Referenz gehört, z. B. aec.building."
+        },
+        "group": "target",
+        "order": 10
+      }
     },
     "referenceId": {
-      "type": "string"
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Reference",
+          "de": "Referenz"
+        },
+        "description": {
+          "en": "The reference image this mutation addresses.",
+          "de": "Das Referenzbild, das diese Mutation adressiert."
+        },
+        "ref": {
+          "kind": "reference"
+        },
+        "group": "target",
+        "order": 20
+      }
     },
     "newWidthWorld": {
-      "type": "number"
+      "type": "number",
+      "exclusiveMinimum": 0,
+      "x-semio-ui": {
+        "widget": "stepper",
+        "role": "value",
+        "label": {
+          "en": "Width",
+          "de": "Breite"
+        },
+        "description": {
+          "en": "Width of the reference plane in the world.",
+          "de": "Breite der Referenzebene in der Welt."
+        },
+        "step": 0.1,
+        "precision": 3,
+        "group": "geometry",
+        "order": 30
+      }
     }
   }
 }

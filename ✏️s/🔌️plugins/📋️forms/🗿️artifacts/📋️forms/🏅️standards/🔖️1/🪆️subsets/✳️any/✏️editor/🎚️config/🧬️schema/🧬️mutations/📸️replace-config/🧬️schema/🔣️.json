@@ -8,13 +8,40 @@
       "type": "object",
       "properties": {
         "contributionsJson": {
-          "type": "string"
+          "type": "string",
+          "x-semio-ui": {
+            "widget": "multiline",
+            "role": "value",
+            "label": {
+              "en": "Contributions",
+              "de": "Beiträge"
+            },
+            "description": {
+              "en": "Host-declared plugin contributions, as JSON text.",
+              "de": "Vom Host deklarierte Plugin-Beiträge als JSON-Text."
+            },
+            "group": "plugins",
+            "order": 10
+          }
         }
       },
       "required": [
         "contributionsJson"
       ],
-      "additionalProperties": false
+      "additionalProperties": false,
+      "x-semio-ui": {
+        "role": "value",
+        "label": {
+          "en": "Configuration",
+          "de": "Konfiguration"
+        },
+        "description": {
+          "en": "The complete editor configuration.",
+          "de": "Die vollständige Editorkonfiguration."
+        },
+        "group": "record",
+        "order": 10
+      }
     }
   },
   "required": [

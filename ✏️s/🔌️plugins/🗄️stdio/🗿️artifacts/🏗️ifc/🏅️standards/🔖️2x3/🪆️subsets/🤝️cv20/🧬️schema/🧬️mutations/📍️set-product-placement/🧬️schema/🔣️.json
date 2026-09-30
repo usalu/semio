@@ -10,7 +10,21 @@
   "properties": {
     "product": {
       "type": "integer",
-      "minimum": 0
+      "minimum": 0,
+      "x-semio-ui": {
+        "widget": "stepper",
+        "label": {
+          "en": "Product",
+          "de": "Produkt"
+        },
+        "description": {
+          "en": "STEP instance id of the IfcProduct.",
+          "de": "STEP-Instanz-ID des IfcProduct."
+        },
+        "precision": 0,
+        "group": "target",
+        "order": 10
+      }
     },
     "placement": {
       "anyOf": [
@@ -21,7 +35,21 @@
         {
           "type": "null"
         }
-      ]
+      ],
+      "x-semio-ui": {
+        "widget": "stepper",
+        "label": {
+          "en": "Placement",
+          "de": "Platzierung"
+        },
+        "description": {
+          "en": "STEP instance id of the IfcObjectPlacement; empty clears it.",
+          "de": "STEP-Instanz-ID der IfcObjectPlacement; leer löscht sie."
+        },
+        "precision": 0,
+        "group": "value",
+        "order": 20
+      }
     }
   }
 }

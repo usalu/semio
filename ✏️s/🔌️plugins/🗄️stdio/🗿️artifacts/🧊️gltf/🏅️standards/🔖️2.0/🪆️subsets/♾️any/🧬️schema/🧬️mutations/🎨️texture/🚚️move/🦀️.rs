@@ -30,7 +30,7 @@ pub fn apply(payload: &GltfMoveTexturePayload, base: &GltfSnapshot) -> Result<Gl
 
 //#region 🧬️DirectMutation
 #[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::MutationLeaf)]
-#[mutation_leaf(contract = ::protocol)]
+#[mutation_leaf(contract = ::protocol, payload = Apply)]
 #[value(tag = "phase", content = "value", rename_all = "camelCase")]
 pub enum MoveTextureMutation {
     Apply(GltfMoveTexturePayload),
@@ -74,6 +74,6 @@ impl protocol::MutationKind<GltfSnapshot, super::GltfMutation> for MoveTextureMu
 
 //#region 🧪️Tests
 #[cfg(test)]
-#[path = "🧪️tests/🔬️direct-leaf/🦀️.rs"]
-mod direct_leaf_tests;
+#[path = "🧪️tests/🚚️swaps-the-albedo-e77287/🦀️.rs"]
+mod case_swaps_the_albedo_e77287;
 //#endregion 🧪️Tests

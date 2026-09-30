@@ -12,11 +12,11 @@ use crate::standards::v1::subsets::any::schema::mutations::{apply_generation2d_m
 use crate::standards::v1::subsets::any::schema::snapshot::Generation2dSnapshotRead;
 use crate::Generation2dSnapshot;
 
-const BEFORE: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🔢️change-generation-value/📏️raises-the-height-answer-in-generation-1/📸️snapshot/⬅️before/🔣️.json");
-const AFTER: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🔢️change-generation-value/📏️raises-the-height-answer-in-generation-1/📸️snapshot/➡️after/🔣️.json");
-const MUTATION: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🔢️change-generation-value/📏️raises-the-height-answer-in-generation-1/🦠️mutation/🔣️.json");
-const DIFF: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🔢️change-generation-value/📏️raises-the-height-answer-in-generation-1/🔺️diff/🔣️.json");
-const OUTCOME: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🔢️change-generation-value/📏️raises-the-height-answer-in-generation-1/🎯️outcome/🔣️.json");
+const BEFORE: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🔢️change-generation-value/📏️raises-height-answer-generation/📸️snapshot/⬅️before/🔣️.json");
+const AFTER: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🔢️change-generation-value/📏️raises-height-answer-generation/📸️snapshot/➡️after/🔣️.json");
+const MUTATION: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🔢️change-generation-value/📏️raises-height-answer-generation/🦠️mutation/🔣️.json");
+const DIFF: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🔢️change-generation-value/📏️raises-height-answer-generation/🔺️diff/🔣️.json");
+const OUTCOME: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🔢️change-generation-value/📏️raises-height-answer-generation/🎯️outcome/🔣️.json");
 
 fn before() -> Generation2dSnapshotRead {
     Generation2dSnapshotRead::new(dsl::json::from_json_str(BEFORE).expect("before snapshot decodes"))

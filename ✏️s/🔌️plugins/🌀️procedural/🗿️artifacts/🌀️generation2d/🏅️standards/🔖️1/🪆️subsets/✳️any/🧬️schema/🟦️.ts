@@ -10,8 +10,29 @@ export interface Generation2dArtifact {
 export type CameraJson = { x: number; y: number; zoom: number };
 export type WidgetLayout = { x: number; y: number };
 export type SynapseSpec = { id: string; from: string; to: string; fromPort: string; toPort: string };
-/** @description Polymorphic flow widget — JSON blob. */
-export type Widget = string;
+/** 🎛️ One flow widget, internally tagged by `kind` — the flow `Widget` enum's wire form (`tag = "kind"`, camelCase). */
+export type Widget =
+  | { kind: "neuron"; id: string; neuronKind: string; params: Record<string, unknown>; inputPorts: string[]; outputPorts: string[]; preview: boolean }
+  | { kind: "inputSlider"; id: string; label: string; value: number; min: number; max: number; step: number }
+  | { kind: "inputNote"; id: string; text: string }
+  | { kind: "inputImage"; id: string; src: string }
+  | { kind: "variable"; id: string; name: string; schema: string }
+  | { kind: "outputPreview"; id: string; preview: Record<string, unknown>; expanded: string[] }
+  | { kind: "outputAction"; id: string; action: string }
+  | { kind: "outputExport"; id: string; format: string }
+  | { kind: "cluster"; id: string; name: string; tree: FlowTree; flow: FlowUi };
+export type FlowTree = { neurons: FlowNeuron[]; synapses: SynapseSpec[] };
+export type FlowNeuron = { id: string; kind: string; params: Record<string, unknown>; tree: FlowTree | null };
+export type FlowUi = { camera: CameraJson; nodes: Record<string, FlowNodeGui>; previews: FlowPreviewGui[] };
+export type FlowNodeGui = { layout: WidgetLayout; chrome: NodeChrome };
+export type NodeChrome =
+  | { kind: "plain"; preview: boolean }
+  | { kind: "slider"; label: string; min: number; max: number; step: number; value: number }
+  | { kind: "note"; text: string }
+  | { kind: "image"; src: string }
+  | { kind: "variable"; name: string; schema: string };
+export type FlowPreviewGui = { id: string; source: FlowChannelRef | null; mode: string; preview: Record<string, unknown>; expanded: string[]; layout: WidgetLayout | null };
+export type FlowChannelRef = { neuron: string; channel: string };
 export type FlowHostSnapshot = {
   schema: string;
   camera: CameraJson;
@@ -109,8 +130,32 @@ export function parseSynapseSpec(value: unknown, at = "$"): SynapseSpec {
   };
 }
 
+/** 🎛️ The member kinds every widget kind carries beside `kind` and `id`. */
+const WIDGET_MEMBERS: Readonly<Record<Widget["kind"], Readonly<Record<string, "string" | "number" | "boolean" | "strings" | "object">>>> = {
+  neuron: { neuronKind: "string", params: "object", inputPorts: "strings", outputPorts: "strings", preview: "boolean" },
+  inputSlider: { label: "string", value: "number", min: "number", max: "number", step: "number" },
+  inputNote: { text: "string" },
+  inputImage: { src: "string" },
+  variable: { name: "string", schema: "string" },
+  outputPreview: { preview: "object", expanded: "strings" },
+  outputAction: { action: "string" },
+  outputExport: { format: "string" },
+  cluster: { name: "string", tree: "object", flow: "object" },
+};
+
 export function parseWidget(value: unknown, at = "$"): Widget {
-  return proceduralGeneration2dArtifactGuardString(value, `${at}`);
+  const row = proceduralGeneration2dArtifactGuardObject(value, at);
+  const kind = proceduralGeneration2dArtifactGuardMember(row["kind"], `${at}.kind`, Object.keys(WIDGET_MEMBERS) as Widget["kind"][]);
+  proceduralGeneration2dArtifactGuardString(row["id"], `${at}.id`);
+  for (const [member, shape] of Object.entries(WIDGET_MEMBERS[kind])) {
+    const where = `${at}.${member}`;
+    if (shape === "string") proceduralGeneration2dArtifactGuardString(row[member], where);
+    else if (shape === "number") proceduralGeneration2dArtifactGuardNumber(row[member], where);
+    else if (shape === "boolean") proceduralGeneration2dArtifactGuardBoolean(row[member], where);
+    else if (shape === "strings") proceduralGeneration2dArtifactGuardArray(row[member], where).forEach((item, index) => proceduralGeneration2dArtifactGuardString(item, `${where}[${index}]`));
+    else proceduralGeneration2dArtifactGuardObject(row[member], where);
+  }
+  return row as unknown as Widget;
 }
 
 export function parseFlowHostSnapshot(value: unknown, at = "$"): FlowHostSnapshot {
@@ -120,7 +165,7 @@ export function parseFlowHostSnapshot(value: unknown, at = "$"): FlowHostSnapsho
     camera: parseCameraJson(row["camera"], `${at}.camera`),
     widgets: proceduralGeneration2dArtifactGuardArray(row["widgets"], `${at}.widgets`).map((item, index) => parseWidget(item, `${at}.widgets[${index}]`)),
     synapses: proceduralGeneration2dArtifactGuardArray(row["synapses"], `${at}.synapses`).map((item, index) => parseSynapseSpec(item, `${at}.synapses[${index}]`)),
-    layout: proceduralGeneration2dArtifactGuardObject(row["layout"], `${at}.layout`),
+    layout: Object.fromEntries(Object.entries(proceduralGeneration2dArtifactGuardObject(row["layout"], `${at}.layout`)).map(([key, item]) => [key, parseWidgetLayout(item, `${at}.layout.${key}`)])),
   };
 }
 
@@ -129,7 +174,7 @@ export function parseFormGeneration(value: unknown, at = "$"): FormGeneration {
   return {
     id: proceduralGeneration2dArtifactGuardString(row["id"], `${at}.id`),
     name: proceduralGeneration2dArtifactGuardString(row["name"], `${at}.name`),
-    valuesJson: proceduralGeneration2dArtifactGuardString(row["valuesJson"], `${at}.valuesJson`),
+    values: proceduralGeneration2dArtifactGuardObject(row["values"], `${at}.values`) as Record<string, unknown>,
   };
 }
 
@@ -137,6 +182,7 @@ export function parseGenerationPlayState(value: unknown, at = "$"): GenerationPl
   const row = proceduralGeneration2dArtifactGuardObject(value, at);
   return {
     generations: proceduralGeneration2dArtifactGuardArray(row["generations"], `${at}.generations`).map((item, index) => parseFormGeneration(item, `${at}.generations[${index}]`)),
+    selectedGenerationId: row["selectedGenerationId"] === undefined ? undefined : proceduralGeneration2dArtifactGuardString(row["selectedGenerationId"], `${at}.selectedGenerationId`),
     previewText: row["previewText"] === undefined ? undefined : proceduralGeneration2dArtifactGuardString(row["previewText"], `${at}.previewText`),
   };
 }

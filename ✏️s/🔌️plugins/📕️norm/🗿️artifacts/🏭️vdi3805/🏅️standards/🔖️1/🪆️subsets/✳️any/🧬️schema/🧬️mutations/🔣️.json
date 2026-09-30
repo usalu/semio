@@ -4,58 +4,232 @@
   "title": "Vdi3805Mutation",
   "oneOf": [
     {
-      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/vdi3805/mutation/add-geometry-connection/schema.json"
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "ChangeManufacturerFile"
+      ],
+      "properties": {
+        "ChangeManufacturerFile": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/vdi3805/mutation/change-manufacturer-file/schema.json"
+        }
+      }
     },
     {
-      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/vdi3805/mutation/change-correction-as-of/schema.json"
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "ChangeLimits"
+      ],
+      "properties": {
+        "ChangeLimits": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/vdi3805/mutation/change-limits/schema.json"
+        }
+      }
     },
     {
-      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/vdi3805/mutation/change-edition-profile/schema.json"
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "ChangeCorrectionAsOf"
+      ],
+      "properties": {
+        "ChangeCorrectionAsOf": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/vdi3805/mutation/change-correction-as-of/schema.json"
+        }
+      }
     },
     {
-      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/vdi3805/mutation/change-strict-mode/schema.json"
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "ChangeStrictMode"
+      ],
+      "properties": {
+        "ChangeStrictMode": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/vdi3805/mutation/change-strict-mode/schema.json"
+        }
+      }
     },
     {
-      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/vdi3805/mutation/add-curve/schema.json"
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "ChangeEditionProfile"
+      ],
+      "properties": {
+        "ChangeEditionProfile": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/vdi3805/mutation/change-edition-profile/schema.json"
+        }
+      }
     },
     {
-      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/vdi3805/mutation/add-geometry/schema.json"
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "RemoveEditionProfile"
+      ],
+      "properties": {
+        "RemoveEditionProfile": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/vdi3805/mutation/remove-edition-profile/schema.json"
+        }
+      }
     },
     {
-      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/vdi3805/mutation/add-product/schema.json"
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "AddProduct"
+      ],
+      "properties": {
+        "AddProduct": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/vdi3805/mutation/add-product/schema.json"
+        }
+      }
     },
     {
-      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/vdi3805/mutation/remove-curve/schema.json"
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "RemoveProduct"
+      ],
+      "properties": {
+        "RemoveProduct": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/vdi3805/mutation/remove-product/schema.json"
+        }
+      }
     },
     {
-      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/vdi3805/mutation/remove-geometry/schema.json"
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "RenameProduct"
+      ],
+      "properties": {
+        "RenameProduct": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/vdi3805/mutation/rename-product/schema.json"
+        }
+      }
     },
     {
-      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/vdi3805/mutation/remove-product/schema.json"
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "ChangeProductConfiguration"
+      ],
+      "properties": {
+        "ChangeProductConfiguration": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/vdi3805/mutation/change-product-configuration/schema.json"
+        }
+      }
     },
     {
-      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/vdi3805/mutation/remove-edition-profile/schema.json"
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "AddGeometry"
+      ],
+      "properties": {
+        "AddGeometry": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/vdi3805/mutation/add-geometry/schema.json"
+        }
+      }
     },
     {
-      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/vdi3805/mutation/remove-geometry-connection/schema.json"
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "RemoveGeometry"
+      ],
+      "properties": {
+        "RemoveGeometry": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/vdi3805/mutation/remove-geometry/schema.json"
+        }
+      }
     },
     {
-      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/vdi3805/mutation/rename-product/schema.json"
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "ResizeGeometry"
+      ],
+      "properties": {
+        "ResizeGeometry": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/vdi3805/mutation/resize-geometry/schema.json"
+        }
+      }
     },
     {
-      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/vdi3805/mutation/change-curve-points/schema.json"
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "AddGeometryConnection"
+      ],
+      "properties": {
+        "AddGeometryConnection": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/vdi3805/mutation/add-geometry-connection/schema.json"
+        }
+      }
     },
     {
-      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/vdi3805/mutation/change-geometry-parameters/schema.json"
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "RemoveGeometryConnection"
+      ],
+      "properties": {
+        "RemoveGeometryConnection": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/vdi3805/mutation/remove-geometry-connection/schema.json"
+        }
+      }
     },
     {
-      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/vdi3805/mutation/change-product-configuration/schema.json"
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "ChangeGeometryParameters"
+      ],
+      "properties": {
+        "ChangeGeometryParameters": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/vdi3805/mutation/change-geometry-parameters/schema.json"
+        }
+      }
     },
     {
-      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/vdi3805/mutation/resize-geometry/schema.json"
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "AddCurve"
+      ],
+      "properties": {
+        "AddCurve": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/vdi3805/mutation/add-curve/schema.json"
+        }
+      }
     },
     {
-      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/vdi3805/mutation/change-manufacturer-file/schema.json"
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "RemoveCurve"
+      ],
+      "properties": {
+        "RemoveCurve": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/vdi3805/mutation/remove-curve/schema.json"
+        }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "ChangeCurvePoints"
+      ],
+      "properties": {
+        "ChangeCurvePoints": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/vdi3805/mutation/change-curve-points/schema.json"
+        }
+      }
     }
   ]
 }

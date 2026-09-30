@@ -22,7 +22,7 @@ async fn a_settled_add_stream_appends_one_uncalibrated_stream_the_media_panel_co
 }
 
 /// 🚫️ The manifest's Actions form used to default `cameraId` to `cam-0`: on a document without that
-/// calibration `CreateStream::diff` answered a FATAL outcome, and the bounded lane journaled a
+/// calibration `CreateStream::diff` answered a refusal with an empty diff, and the bounded lane journaled a
 /// `create-stream` edit whose head equalled its base (the Media panel kept "Streams: 0" while the
 /// history ledger and undo both claimed a stream). The handler refuses an unknown camera up front.
 #[semio_framework_async_macros::async_test]

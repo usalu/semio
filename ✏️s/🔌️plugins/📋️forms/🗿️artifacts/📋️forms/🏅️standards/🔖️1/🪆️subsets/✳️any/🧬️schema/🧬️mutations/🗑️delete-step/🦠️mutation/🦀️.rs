@@ -10,6 +10,7 @@ use protocol::{MutationKind, SemanticDescriptor};
 /// captured base position and blocks) via `create-step`.
 #[derive(Clone, Debug, PartialEq, dsl::ToValue, dsl::FromValue, dsl::MutationLeaf)]
 #[mutation_leaf(contract = ::protocol)]
+#[value(rename_all = "camelCase")]
 pub struct DeleteStep {
     pub id: String,
 }

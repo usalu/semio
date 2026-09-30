@@ -9,7 +9,24 @@
   ],
   "properties": {
     "newRhInt": {
-      "type": "number"
+      "type": "number",
+      "minimum": 0,
+      "maximum": 1,
+      "x-semio-ui": {
+        "widget": "slider",
+        "role": "value",
+        "label": {
+          "en": "Indoor relative humidity φ_i",
+          "de": "Relative Raumluftfeuchte φ_i"
+        },
+        "unit": "1",
+        "displayUnit": "%",
+        "displayFactor": 100,
+        "step": 0.01,
+        "precision": 0,
+        "group": "climate",
+        "order": 10
+      }
     }
   }
 }

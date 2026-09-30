@@ -1,0 +1,8 @@
+{
+  "operation": "bindInput",
+  "binding": {
+    "inputId": "in-1",
+    "nodeId": "n1",
+    "portId": "n1:in:in"
+  }
+}

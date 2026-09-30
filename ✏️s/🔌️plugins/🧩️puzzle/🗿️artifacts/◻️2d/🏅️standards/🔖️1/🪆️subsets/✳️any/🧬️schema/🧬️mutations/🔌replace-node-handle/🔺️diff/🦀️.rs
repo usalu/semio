@@ -4,9 +4,13 @@
 //! AFTER the replacement loop rather than before it.
 use crate::standards::v1::subsets::any::schema::diff::{Puzzle2dDiff, Puzzle2dNodePatch, Puzzle2dNodePatchEntry, Puzzle2dNodesDelta};
 use crate::Puzzle2dSnapshot;
+use crate::standards::v1::subsets::any::schema::mutations::puzzle2d_handle_invariant;
 
 //#region 🔖️Diff
 pub fn diff(payload: &super::ReplaceNodeHandle, base: &Puzzle2dSnapshot) -> protocol::MutationOutcome<Puzzle2dDiff> {
+    if let Err(reason) = puzzle2d_handle_invariant(&payload.new_handle) {
+        return protocol::MutationOutcome::fatal("mutation.invariant", reason, vec![payload.node_id.clone(), payload.handle_id.clone()]);
+    }
     let Some(node) = base.nodes.iter().find(|entry| entry.id == payload.node_id) else {
         return protocol::MutationOutcome::error("mutation.target-missing", format!("{} \"{}\" not found", "node-handle", payload.node_id), vec![payload.node_id.clone()]);
     };

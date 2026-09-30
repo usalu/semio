@@ -1,5 +1,5 @@
 {
   "mutation": "deleteBlock",
-  "step_id": "step-basics",
+  "stepId": "step-basics",
   "id": "q-nickname"
 }

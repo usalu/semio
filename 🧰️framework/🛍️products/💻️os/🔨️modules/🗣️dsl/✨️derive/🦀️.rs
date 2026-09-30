@@ -492,10 +492,11 @@ mod mutation_leaf_json_tests;
 
 //#region 🪪️MutationLeaf
 #[derive(Debug)]
-struct MutationLeafAttrs { contract: syn::Path }
+struct MutationLeafAttrs { contract: syn::Path, payload: Option<syn::Ident> }
 
 fn parse_mutation_leaf_attrs(input: &DeriveInput) -> syn::Result<MutationLeafAttrs> {
     let mut contract = None;
+    let mut payload = None;
     let mut found = false;
     for attribute in &input.attrs {
         if !attribute.path().is_ident("mutation_leaf") { continue; }
@@ -503,6 +504,11 @@ fn parse_mutation_leaf_attrs(input: &DeriveInput) -> syn::Result<MutationLeafAtt
         found = true;
         if matches!(&attribute.meta, syn::Meta::Path(_)) { continue; }
         attribute.parse_nested_meta(|meta| {
+            if meta.path.is_ident("payload") {
+                if payload.is_some() { return Err(meta.error("duplicate mutation_leaf payload")); }
+                payload = Some(meta.value()?.parse::<syn::Ident>()?);
+                return Ok(());
+            }
             if !meta.path.is_ident("contract") { return Err(meta.error("unsupported mutation_leaf attribute")); }
             if contract.is_some() { return Err(meta.error("duplicate mutation_leaf contract")); }
             let path: syn::Path = meta.value()?.parse()?;
@@ -512,7 +518,13 @@ fn parse_mutation_leaf_attrs(input: &DeriveInput) -> syn::Result<MutationLeafAtt
         })?;
     }
     if !found { return Err(syn::Error::new_spanned(input, "MutationLeaf requires #[mutation_leaf(contract = ::protocol)]")); }
-    contract.map(|contract| MutationLeafAttrs { contract }).ok_or_else(|| syn::Error::new_spanned(input, "MutationLeaf requires mutation_leaf contract"))
+    let contract = contract.ok_or_else(|| syn::Error::new_spanned(input, "MutationLeaf requires mutation_leaf contract"))?;
+    if let Some(variant) = &payload {
+        let Data::Enum(data) = &input.data else { return Err(syn::Error::new_spanned(variant, "mutation_leaf payload names a variant of an enum leaf")); };
+        let wraps_one = data.variants.iter().find(|candidate| candidate.ident == *variant).is_some_and(|candidate| matches!(&candidate.fields, Fields::Unnamed(fields) if fields.unnamed.len() == 1));
+        if !wraps_one { return Err(syn::Error::new_spanned(variant, "mutation_leaf payload names a variant that wraps exactly one payload")); }
+    }
+    Ok(MutationLeafAttrs { contract, payload })
 }
 
 fn mutation_leaf_portable_path(path: &Path) -> Result<String, String> { path.to_str().map(|path| path.replace('\\', "/")).filter(|path| !path.is_empty()).ok_or_else(|| "metadata path is not UTF-8".to_string()) }
@@ -551,12 +563,30 @@ pub fn expand_mutation_leaf(input: TokenStream) -> TokenStream {
     let source_path = match mutation_authority_relative(&authority.workspace_root, &authority.source_path) { Ok(path) => path, Err(error) => return syn::Error::new_spanned(&input, error).to_compile_error().into() };
     let descriptor_path = match mutation_authority_relative(&authority.workspace_root, &authority.descriptor_path) { Ok(path) => path, Err(error) => return syn::Error::new_spanned(&input, error).to_compile_error().into() };
     let taxonomy_path = match mutation_authority_relative(&authority.workspace_root, &authority.taxonomy_path) { Ok(path) => path, Err(error) => return syn::Error::new_spanned(&input, error).to_compile_error().into() };
-    let dependency_paths = [authority.taxonomy_path.clone(), authority.descriptor_path.clone()];
+    let payload_schema_path = match mutation_leaf_payload_schema_path(&authority, &descriptor.payload_schema) { Ok(path) => path, Err(error) => return syn::Error::new_spanned(&input, format!("MutationLeaf payload schema failed: {error}")).to_compile_error().into() };
+    let dependency_paths = [authority.taxonomy_path.clone(), authority.descriptor_path.clone(), payload_schema_path];
     let dependency_paths: Result<Vec<_>, _> = dependency_paths.iter().map(|path| mutation_leaf_include_path(path)).collect();
     let dependency_paths = match dependency_paths { Ok(paths) => paths, Err(error) => return syn::Error::new_spanned(&input, error).to_compile_error().into() };
-    let [taxonomy_dependency, descriptor_dependency]: [String; 2] = match dependency_paths.try_into() { Ok(paths) => paths, Err(_) => unreachable!() };
+    let [taxonomy_dependency, descriptor_dependency, payload_schema_dependency]: [String; 3] = match dependency_paths.try_into() { Ok(paths) => paths, Err(_) => unreachable!() };
     let name = &input.ident;
     let contract = &attrs.contract;
+    let editable = attrs.payload.as_ref().map(|variant| quote! {
+        fn input_schema(&self) -> ::core::option::Option<&'static str> {
+            match self { Self::#variant(_) => ::core::option::Option::Some(<Self as #contract::MutationLeaf>::PAYLOAD_SCHEMA), _ => ::core::option::Option::None }
+        }
+        fn input_value(&self) -> #contract::DslValue {
+            match self { Self::#variant(payload) => #contract::ToValue::to_value(payload), _ => #contract::ToValue::to_value(self) }
+        }
+        fn with_input_value(&self, value: #contract::DslValue) -> ::core::result::Result<Self, #contract::ValueError> {
+            match self {
+                Self::#variant(_) => #contract::FromValue::from_value(value).map(Self::#variant),
+                _ => ::core::result::Result::Err(#contract::ValueError::new(::std::format!("{} is editable only as {}", ::core::stringify!(#name), ::core::stringify!(#variant)))),
+            }
+        }
+        fn from_input_value(value: #contract::DslValue) -> ::core::result::Result<Self, #contract::ValueError> {
+            #contract::FromValue::from_value(value).map(Self::#variant)
+        }
+    });
     let owner = &authority.owner;
     let (impl_generics, ty_generics, where_clause) = input.generics.split_for_impl();
     let descriptor = emit_mutation_leaf_descriptor(contract, &descriptor);
@@ -567,8 +597,24 @@ pub fn expand_mutation_leaf(input: TokenStream) -> TokenStream {
         impl #impl_generics #contract::MutationLeaf for #name #ty_generics #where_clause {
             const DESCRIPTOR: #contract::MutationLeafDescriptor = #descriptor;
             const PROVENANCE: #contract::MutationSourceProvenance = #contract::MutationSourceProvenance { workspace_token: [#(#workspace_token),*], mutation_root: #mutation_root, owner: #owner, source_path: #source_path, descriptor_path: #descriptor_path, taxonomy_path: #taxonomy_path };
+            const PAYLOAD_SCHEMA: &'static str = ::core::include_str!(#payload_schema_dependency);
+            #editable
         }
     }.into()
+}
+
+/// 🧬️ The descriptor's `payloadSchema`, resolved beside the descriptor: a normalized relative path of portable
+/// segments that stays inside the leaf and names a regular file reached without a symlink.
+fn mutation_leaf_payload_schema_path(authority: &MutationSourceAuthority, payload_schema: &str) -> Result<PathBuf, String> {
+    let leaf = authority.descriptor_path.parent().ok_or_else(|| "descriptor has no leaf directory".to_string())?;
+    if payload_schema.starts_with('/') || payload_schema.contains('\\') || payload_schema.contains('\0') { return Err("payloadSchema is not a relative portable path".to_string()); }
+    let mut path = leaf.to_path_buf();
+    for segment in payload_schema.split('/') {
+        if segment.is_empty() || segment == "." || segment == ".." || segment.eq_ignore_ascii_case("compose") { return Err("payloadSchema has a rejected path segment".to_string()); }
+        path.push(segment);
+    }
+    mutation_authority_no_follow(&authority.workspace_root, &path, false)?;
+    Ok(path)
 }
 //#endregion 🪪️MutationLeaf
 
@@ -1688,6 +1734,11 @@ fn expand_mutations(input: &DeriveInput, authority: &MutationAggregateSourceAuth
     let mut target_arms = Vec::new();
     let mut may_emit_foreign_steps_arms = Vec::new();
     let mut foreign_steps_arms = Vec::new();
+    let mut input_schema_arms = Vec::new();
+    let mut payload_value_arms = Vec::new();
+    let mut with_payload_value_arms = Vec::new();
+    let mut from_payload_value_arms = Vec::new();
+    let mut input_schemas = Vec::new();
     let mut kind_consts = Vec::new();
     let mut leaf_descriptors = Vec::new();
     let mut leaf_checks = Vec::new();
@@ -1722,6 +1773,11 @@ fn expand_mutations(input: &DeriveInput, authority: &MutationAggregateSourceAuth
         target_arms.push(quote! { Self::#variant_ident(payload) => #kind::target(payload) });
         may_emit_foreign_steps_arms.push(quote! { Self::#variant_ident(payload) => #kind::may_emit_foreign_steps(payload) });
         foreign_steps_arms.push(quote! { Self::#variant_ident(payload) => #kind::foreign_steps(payload, base) });
+        input_schema_arms.push(quote! { Self::#variant_ident(payload) => #leaf::input_schema(payload) });
+        payload_value_arms.push(quote! { Self::#variant_ident(payload) => #leaf::input_value(payload) });
+        with_payload_value_arms.push(quote! { Self::#variant_ident(payload) => #leaf::with_input_value(payload, value).map(Self::#variant_ident) });
+        from_payload_value_arms.push(quote! { if kind == #kind::SEMANTICS.kind { return #leaf::from_input_value(value).map(Self::#variant_ident); } });
+        input_schemas.push(quote! { #leaf::PAYLOAD_SCHEMA });
         kind_consts.push(quote! { #kind::SEMANTICS });
         leaf_descriptors.push(quote! { #leaf::DESCRIPTOR });
         leaf_checks.push(quote! { const {
@@ -1757,6 +1813,7 @@ fn expand_mutations(input: &DeriveInput, authority: &MutationAggregateSourceAuth
     }
 
     let register_fn_ident = syn::Ident::new(&format!("register_{}_descriptors", to_kebab(&name.to_string()).replace('-', "_")), name.span());
+    let payload_law = mutation_payload_law_test(name, &snapshot_ty, authority, &input.generics);
     let eager_check = input.generics.params.is_empty().then(|| quote! {
         const _: () = { let _ = <#name as ::semio_framework_os_kernel::Mutation<#snapshot_ty>>::DESCRIPTORS; };
     });
@@ -1804,6 +1861,20 @@ fn expand_mutations(input: &DeriveInput, authority: &MutationAggregateSourceAuth
                 let _ = <Self as ::semio_framework_os_kernel::Mutation<#snapshot_ty>>::DESCRIPTORS;
                 match self { #(#foreign_steps_arms),* }
             }
+            const INPUT_SCHEMAS: &'static [&'static str] = &[#(#input_schemas),*];
+            fn input_schema(&self) -> ::core::option::Option<&'static str> {
+                match self { #(#input_schema_arms),* }
+            }
+            fn payload_value(&self) -> ::semio_framework_os_kernel::DslValue {
+                match self { #(#payload_value_arms),* }
+            }
+            fn with_payload_value(&self, value: ::semio_framework_os_kernel::DslValue) -> ::core::result::Result<Self, ::semio_framework_os_kernel::ValueError> {
+                match self { #(#with_payload_value_arms),* }
+            }
+            fn from_payload_value(kind: &str, value: ::semio_framework_os_kernel::DslValue) -> ::core::result::Result<Self, ::semio_framework_os_kernel::ValueError> {
+                #(#from_payload_value_arms)*
+                ::core::result::Result::Err(::semio_framework_os_kernel::ValueError::new(::std::format!("{kind} is no leaf kind of {}", ::core::stringify!(#name))))
+            }
             #retire_cold
         }
 
@@ -1834,7 +1905,58 @@ fn expand_mutations(input: &DeriveInput, authority: &MutationAggregateSourceAuth
             let descriptors = [#(#register_calls),*];
             ::semio_framework_os_kernel::register_mutation_descriptors(descriptors)
         }
+
+        #payload_law
     })
+}
+
+/// ⚖️ The `#[cfg(test)]` editable-payload law `#[derive(Mutations)]` emits for a non-generic aggregate: every committed fixture
+/// under the aggregate's owner directory (the one holding its `🧬️schema`) that decodes as the aggregate and, when the aggregate's
+/// own file defines a top-level `demo_mutation_cases() -> Vec<Aggregate>`, every demo case must rebuild itself from its own
+/// editable payload (`::semio_framework_os_kernel::mutation_payload_round_trip_failures`). Nothing is emitted when the owner
+/// directory cannot be addressed from the compiling crate.
+fn mutation_payload_law_test(name: &syn::Ident, snapshot_ty: &syn::Type, authority: &MutationAggregateSourceAuthority, generics: &syn::Generics) -> proc_macro2::TokenStream {
+    if !generics.params.is_empty() {
+        return quote! {};
+    }
+    let parent = authority.mutation_root.parent();
+    let owner = match parent {
+        Some(schema) if schema.file_name().and_then(|segment| segment.to_str()) == Some("🧬️schema") => schema.parent(),
+        other => other,
+    };
+    let (Some(owner), Ok(manifest)) = (owner, std::env::var("CARGO_MANIFEST_DIR")) else { return quote! {} };
+    let Some(relative) = mutation_relative_path(Path::new(&manifest), owner) else { return quote! {} };
+    let source = fs::read_to_string(authority.mutation_root.join(&authority.source_filename)).unwrap_or_default();
+    let signature = format!("demo_mutation_cases() -> Vec<{name}>");
+    let demo_cases = source.lines().any(|line| ["fn ", "pub fn ", "pub(crate) fn "].iter().any(|prefix| line.strip_prefix(prefix).is_some_and(|rest| rest.starts_with(&signature)))).then(|| quote! { ops.extend(demo_mutation_cases()); });
+    let test_ident = syn::Ident::new(&format!("semio_payload_law_{}", to_kebab(&name.to_string()).replace('-', "_")), name.span());
+    quote! {
+        #[cfg(test)]
+        #[test]
+        fn #test_ident() {
+            let root = ::std::path::Path::new(::core::env!("CARGO_MANIFEST_DIR")).join(#relative);
+            let (mut ops, _) = ::semio_framework_os_kernel::mutation_fixture_ops::<#name>(&root);
+            #demo_cases
+            let count = ops.len();
+            let failures = ::semio_framework_os_kernel::mutation_payload_round_trip_failures::<#snapshot_ty, #name>(ops);
+            assert!(failures.is_empty(), "{} of {} {} operations break the editable-payload law: {:#?}", failures.len(), count, ::core::stringify!(#name), failures);
+        }
+    }
+}
+
+/// 🧭️ `to` relative to `from` (both canonical), in `/` segments — `None` when they share no root or a segment is not UTF-8.
+fn mutation_relative_path(from: &Path, to: &Path) -> Option<String> {
+    let (from, to) = (mutation_authority_canonical(from).ok()?, mutation_authority_canonical(to).ok()?);
+    let (from, to): (Vec<_>, Vec<_>) = (from.components().collect(), to.components().collect());
+    let shared = from.iter().zip(&to).take_while(|(left, right)| left == right).count();
+    if shared == 0 {
+        return None;
+    }
+    let mut segments: Vec<String> = std::iter::repeat_n("..".to_string(), from.len() - shared).collect();
+    for component in &to[shared..] {
+        segments.push(component.as_os_str().to_str()?.to_string());
+    }
+    Some(segments.join("/"))
 }
 //#endregion 🔖️Mutations
 

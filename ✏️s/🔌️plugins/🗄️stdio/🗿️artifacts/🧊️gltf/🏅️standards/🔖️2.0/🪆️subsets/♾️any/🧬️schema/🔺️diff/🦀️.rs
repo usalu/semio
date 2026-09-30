@@ -63,6 +63,16 @@ pub mod json_presence {
 }
 //#endregion 🔖️JsonPresence
 
+/// 🕳️ Tri-state decode of every non-JSON `Option<Option<T>>` slot (the shape the value derive's docs call
+/// `deserialize_double_option`): the key is skipped when unchanged (`None`), and a PRESENT `null` is the clear
+/// `Some(None)`, never the unchanged slot the blanket `Option<T>` decode would fold it into — so a restore diff that
+/// clears `scale`/`mesh`/`name` survives every wire round trip. JSON slots use [`json_presence`] instead, since a
+/// glTF JSON value may itself be `null`.
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn deserialize_double_option<T: dsl::FromValue>(value: dsl::DslValue) -> Result<Option<Option<T>>, dsl::ValueError> {
+    <Option<T> as dsl::FromValue>::from_value(value).map(Some)
+}
+
 // 🧬️ `GltfDocument` is only reached through `mod tests`' `use super::*;` glob (its non-test uses
 // below are all inside `#[cfg(test)]`), so — like the reactor/puzzle wasm-only imports elsewhere in
 // this ticket — it must be gated to its actual consumer or it warns unused on the plain `lib` build.
@@ -400,11 +410,11 @@ pub type GltfWeakCollectionDiff<T> = GltfCollectionDiff<T, T>;
 pub struct GltfAssetDiff {
     #[value(default, skip_serializing_if = "Option::is_none")]
     pub version: Option<String>,
-    #[value(default, skip_serializing_if = "Option::is_none")]
+    #[value(default, skip_serializing_if = "Option::is_none", deserialize_with = "deserialize_double_option")]
     pub generator: Option<Option<String>>,
-    #[value(default, skip_serializing_if = "Option::is_none")]
+    #[value(default, skip_serializing_if = "Option::is_none", deserialize_with = "deserialize_double_option")]
     pub copyright: Option<Option<String>>,
-    #[value(default, skip_serializing_if = "Option::is_none")]
+    #[value(default, skip_serializing_if = "Option::is_none", deserialize_with = "deserialize_double_option")]
     pub min_version: Option<Option<String>>,
     #[value(default, skip_serializing_if = "Option::is_none", with = "json_presence")]
     pub extensions: Option<Option<GltfJson>>,
@@ -492,7 +502,7 @@ impl GltfAssetDiff {
 pub struct GltfSceneDiff {
     #[value(default, skip_serializing_if = "Option::is_none")]
     pub nodes: Option<Vec<usize>>,
-    #[value(default, skip_serializing_if = "Option::is_none")]
+    #[value(default, skip_serializing_if = "Option::is_none", deserialize_with = "deserialize_double_option")]
     pub name: Option<Option<String>>,
     #[value(default, skip_serializing_if = "Option::is_none", with = "json_presence")]
     pub extensions: Option<Option<GltfJson>>,
@@ -556,23 +566,23 @@ impl ItemDiff<GltfScene> for GltfSceneDiff {
 pub struct GltfNodeDiff {
     #[value(default, skip_serializing_if = "Option::is_none")]
     pub children: Option<Vec<usize>>,
-    #[value(default, skip_serializing_if = "Option::is_none")]
+    #[value(default, skip_serializing_if = "Option::is_none", deserialize_with = "deserialize_double_option")]
     pub mesh: Option<Option<usize>>,
-    #[value(default, skip_serializing_if = "Option::is_none")]
+    #[value(default, skip_serializing_if = "Option::is_none", deserialize_with = "deserialize_double_option")]
     pub camera: Option<Option<usize>>,
-    #[value(default, skip_serializing_if = "Option::is_none")]
+    #[value(default, skip_serializing_if = "Option::is_none", deserialize_with = "deserialize_double_option")]
     pub skin: Option<Option<usize>>,
-    #[value(default, skip_serializing_if = "Option::is_none")]
+    #[value(default, skip_serializing_if = "Option::is_none", deserialize_with = "deserialize_double_option")]
     pub matrix: Option<Option<[f64; 16]>>,
-    #[value(default, skip_serializing_if = "Option::is_none")]
+    #[value(default, skip_serializing_if = "Option::is_none", deserialize_with = "deserialize_double_option")]
     pub translation: Option<Option<[f64; 3]>>,
-    #[value(default, skip_serializing_if = "Option::is_none")]
+    #[value(default, skip_serializing_if = "Option::is_none", deserialize_with = "deserialize_double_option")]
     pub rotation: Option<Option<[f64; 4]>>,
-    #[value(default, skip_serializing_if = "Option::is_none")]
+    #[value(default, skip_serializing_if = "Option::is_none", deserialize_with = "deserialize_double_option")]
     pub scale: Option<Option<[f64; 3]>>,
     #[value(default, skip_serializing_if = "Option::is_none")]
     pub weights: Option<Vec<f64>>,
-    #[value(default, skip_serializing_if = "Option::is_none")]
+    #[value(default, skip_serializing_if = "Option::is_none", deserialize_with = "deserialize_double_option")]
     pub name: Option<Option<String>>,
     #[value(default, skip_serializing_if = "Option::is_none", with = "json_presence")]
     pub extensions: Option<Option<GltfJson>>,
@@ -702,7 +712,7 @@ pub struct GltfMeshDiff {
     pub primitives: Option<Vec<GltfPrimitive>>,
     #[value(default, skip_serializing_if = "Option::is_none")]
     pub weights: Option<Vec<f64>>,
-    #[value(default, skip_serializing_if = "Option::is_none")]
+    #[value(default, skip_serializing_if = "Option::is_none", deserialize_with = "deserialize_double_option")]
     pub name: Option<Option<String>>,
     #[value(default, skip_serializing_if = "Option::is_none", with = "json_presence")]
     pub extensions: Option<Option<GltfJson>>,
@@ -772,7 +782,7 @@ impl ItemDiff<GltfMesh> for GltfMeshDiff {
 #[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue)]
 #[value(rename_all = "camelCase")]
 pub struct GltfAccessorDiff {
-    #[value(default, skip_serializing_if = "Option::is_none")]
+    #[value(default, skip_serializing_if = "Option::is_none", deserialize_with = "deserialize_double_option")]
     pub buffer_view: Option<Option<usize>>,
     #[value(default, skip_serializing_if = "Option::is_none")]
     pub byte_offset: Option<usize>,
@@ -784,13 +794,13 @@ pub struct GltfAccessorDiff {
     pub count: Option<usize>,
     #[value(default, skip_serializing_if = "Option::is_none")]
     pub kind: Option<GltfAccessorType>,
-    #[value(default, skip_serializing_if = "Option::is_none")]
+    #[value(default, skip_serializing_if = "Option::is_none", deserialize_with = "deserialize_double_option")]
     pub max: Option<Option<Vec<f64>>>,
-    #[value(default, skip_serializing_if = "Option::is_none")]
+    #[value(default, skip_serializing_if = "Option::is_none", deserialize_with = "deserialize_double_option")]
     pub min: Option<Option<Vec<f64>>>,
-    #[value(default, skip_serializing_if = "Option::is_none")]
+    #[value(default, skip_serializing_if = "Option::is_none", deserialize_with = "deserialize_double_option")]
     pub sparse: Option<Option<GltfSparseAccessor>>,
-    #[value(default, skip_serializing_if = "Option::is_none")]
+    #[value(default, skip_serializing_if = "Option::is_none", deserialize_with = "deserialize_double_option")]
     pub name: Option<Option<String>>,
     #[value(default, skip_serializing_if = "Option::is_none", with = "json_presence")]
     pub extensions: Option<Option<GltfJson>>,
@@ -916,15 +926,15 @@ impl ItemDiff<GltfAccessor> for GltfAccessorDiff {
 #[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue)]
 #[value(rename_all = "camelCase")]
 pub struct GltfMaterialDiff {
-    #[value(default, skip_serializing_if = "Option::is_none")]
+    #[value(default, skip_serializing_if = "Option::is_none", deserialize_with = "deserialize_double_option")]
     pub name: Option<Option<String>>,
-    #[value(default, skip_serializing_if = "Option::is_none")]
+    #[value(default, skip_serializing_if = "Option::is_none", deserialize_with = "deserialize_double_option")]
     pub pbr_metallic_roughness: Option<Option<GltfPbrMetallicRoughness>>,
-    #[value(default, skip_serializing_if = "Option::is_none")]
+    #[value(default, skip_serializing_if = "Option::is_none", deserialize_with = "deserialize_double_option")]
     pub normal_texture: Option<Option<GltfNormalTextureInfo>>,
-    #[value(default, skip_serializing_if = "Option::is_none")]
+    #[value(default, skip_serializing_if = "Option::is_none", deserialize_with = "deserialize_double_option")]
     pub occlusion_texture: Option<Option<GltfOcclusionTextureInfo>>,
-    #[value(default, skip_serializing_if = "Option::is_none")]
+    #[value(default, skip_serializing_if = "Option::is_none", deserialize_with = "deserialize_double_option")]
     pub emissive_texture: Option<Option<GltfTextureInfo>>,
     #[value(default, skip_serializing_if = "Option::is_none")]
     pub emissive_factor: Option<[f64; 3]>,
@@ -1057,9 +1067,9 @@ impl ItemDiff<GltfMaterial> for GltfMaterialDiff {
 pub struct GltfBufferDiff {
     #[value(default, skip_serializing_if = "Option::is_none")]
     pub byte_length: Option<usize>,
-    #[value(default, skip_serializing_if = "Option::is_none")]
+    #[value(default, skip_serializing_if = "Option::is_none", deserialize_with = "deserialize_double_option")]
     pub uri: Option<Option<String>>,
-    #[value(default, skip_serializing_if = "Option::is_none")]
+    #[value(default, skip_serializing_if = "Option::is_none", deserialize_with = "deserialize_double_option")]
     pub name: Option<Option<String>>,
     #[value(default, skip_serializing_if = "Option::is_none", with = "json_presence")]
     pub extensions: Option<Option<GltfJson>>,
@@ -1152,7 +1162,7 @@ pub struct GltfDiff {
     #[value(default, skip_serializing_if = "Option::is_none")]
     pub asset: Option<GltfAssetDiff>,
     #[state(artifact)]
-    #[value(default, skip_serializing_if = "Option::is_none")]
+    #[value(default, skip_serializing_if = "Option::is_none", deserialize_with = "deserialize_double_option")]
     pub scene: Option<Option<usize>>,
     #[state(artifact)]
     #[value(default, skip_serializing_if = "Option::is_none")]

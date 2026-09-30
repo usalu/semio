@@ -5,18 +5,62 @@
   "type": "object",
   "additionalProperties": false,
   "required": [
+    "mutation",
     "id",
     "newTransmittanceScheduleId"
   ],
   "properties": {
+    "mutation": {
+      "const": "changeShadingSurfaceTransmittanceSchedule"
+    },
     "id": {
-      "type": "integer"
+      "type": "integer",
+      "minimum": 0,
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Shading surface",
+          "de": "Verschattungsfläche"
+        },
+        "description": {
+          "en": "The shading surface this mutation changes, by id.",
+          "de": "Verschattungsfläche, die diese Mutation ändert, per ID."
+        },
+        "ref": {
+          "kind": "shadingSurface",
+          "domain": "energyModel",
+          "granularity": "shading"
+        },
+        "group": "target",
+        "order": 10
+      }
     },
     "newTransmittanceScheduleId": {
       "type": [
         "integer",
         "null"
-      ]
+      ],
+      "minimum": 0,
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Transmittance schedule",
+          "de": "Transmissionszeitplan"
+        },
+        "description": {
+          "en": "Solar transmittance of the shade over time, by id; empty means none.",
+          "de": "Solarer Transmissionsgrad der Verschattung im Zeitverlauf, per ID; leer bedeutet keiner."
+        },
+        "ref": {
+          "kind": "schedule",
+          "domain": "energyModel",
+          "granularity": "schedule"
+        },
+        "group": "schedule",
+        "order": 20
+      }
     }
   }
 }

@@ -19,11 +19,11 @@ use crate::standards::v1::subsets::graph::schema::mutations::change_graph_direct
 use crate::{equation_graph, EquationDiff, EquationMutation, EquationSnapshot};
 use semio_framework_os_kernel::ToValue;
 
-const BEFORE: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🧭️change-graph-directed/🧪️keeps-an-already-directed-graph-directed/📸️snapshot/⬅️before/🔣️.json");
-const AFTER: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🧭️change-graph-directed/🧪️keeps-an-already-directed-graph-directed/📸️snapshot/➡️after/🔣️.json");
-const MUTATION: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🧭️change-graph-directed/🧪️keeps-an-already-directed-graph-directed/🦠️mutation/🔣️.json");
-const DIFF: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🧭️change-graph-directed/🧪️keeps-an-already-directed-graph-directed/🔺️diff/🔣️.json");
-const OUTCOME: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🧭️change-graph-directed/🧪️keeps-an-already-directed-graph-directed/🎯️outcome/🔣️.json");
+const BEFORE: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🧭️change-graph-directed/🧪️keeps-already-directed-graph/📸️snapshot/⬅️before/🔣️.json");
+const AFTER: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🧭️change-graph-directed/🧪️keeps-already-directed-graph/📸️snapshot/➡️after/🔣️.json");
+const MUTATION: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🧭️change-graph-directed/🧪️keeps-already-directed-graph/🦠️mutation/🔣️.json");
+const DIFF: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🧭️change-graph-directed/🧪️keeps-already-directed-graph/🔺️diff/🔣️.json");
+const OUTCOME: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🧭️change-graph-directed/🧪️keeps-already-directed-graph/🎯️outcome/🔣️.json");
 
 fn before() -> EquationSnapshot {
     pack::from_json_str(BEFORE).expect("before snapshot decodes")

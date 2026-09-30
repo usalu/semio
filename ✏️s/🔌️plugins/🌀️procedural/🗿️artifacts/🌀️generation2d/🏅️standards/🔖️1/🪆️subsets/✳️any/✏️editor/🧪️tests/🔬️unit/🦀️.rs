@@ -1147,7 +1147,7 @@ async fn every_emitted_action_is_declared_on_its_window_kind() {
     let mut emitted: std::collections::BTreeMap<String, std::collections::BTreeSet<String>> = Default::default();
     for (kind_id, body_key, _) in &windows {
         let projection = crate::editor::generation2d::unit_tests::context::render(&mut app, body_key).await;
-        emitted.insert(kind_id.clone(), crate::emitted_action_ids(&projection));
+        emitted.insert(kind_id.clone(), semio_framework_plugin::ui_action_laws::emitted_action_ids(&projection));
     }
     close(app);
     let window_scoped: std::collections::BTreeSet<String> = emitted.values().flatten().cloned().collect();

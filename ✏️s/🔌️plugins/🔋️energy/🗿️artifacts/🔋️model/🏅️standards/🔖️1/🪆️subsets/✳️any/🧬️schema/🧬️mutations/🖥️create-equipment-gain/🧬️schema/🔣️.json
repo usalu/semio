@@ -5,6 +5,7 @@
   "type": "object",
   "additionalProperties": false,
   "required": [
+    "mutation",
     "index",
     "id",
     "zoneId",
@@ -14,26 +15,160 @@
     "latentFraction"
   ],
   "properties": {
+    "mutation": {
+      "const": "createEquipmentGain"
+    },
     "index": {
-      "type": "integer"
+      "type": "integer",
+      "minimum": 0,
+      "x-semio-ui": {
+        "widget": "stepper",
+        "role": "value",
+        "label": {
+          "en": "Position",
+          "de": "Position"
+        },
+        "description": {
+          "en": "Insertion position in the model's list; 0 is first.",
+          "de": "Einfügeposition in der Modellliste; 0 ist die erste."
+        },
+        "step": 1,
+        "precision": 0,
+        "group": "order",
+        "order": 10
+      }
     },
     "id": {
-      "type": "integer"
+      "type": "integer",
+      "minimum": 0,
+      "x-semio-ui": {
+        "widget": "stepper",
+        "role": "value",
+        "label": {
+          "en": "ID",
+          "de": "ID"
+        },
+        "description": {
+          "en": "Id the new equipment gain is created under; later mutations address it by this id.",
+          "de": "ID, unter der das neue Objekt angelegt wird; spätere Mutationen adressieren es darüber."
+        },
+        "step": 1,
+        "precision": 0,
+        "group": "identity",
+        "order": 20
+      }
     },
     "zoneId": {
-      "type": "integer"
+      "type": "integer",
+      "minimum": 0,
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Zone",
+          "de": "Zone"
+        },
+        "description": {
+          "en": "Assigned zone, by id.",
+          "de": "Zugeordnete Zone, per ID."
+        },
+        "ref": {
+          "kind": "zone",
+          "domain": "energyModel",
+          "granularity": "zone"
+        },
+        "group": "assignment",
+        "order": 30
+      }
     },
     "scheduleId": {
-      "type": "integer"
+      "type": "integer",
+      "minimum": 0,
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Schedule",
+          "de": "Zeitplan"
+        },
+        "description": {
+          "en": "Fraction schedule scaling the design value over time, by id.",
+          "de": "Anteilszeitplan, der den Bemessungswert zeitlich skaliert, per ID."
+        },
+        "ref": {
+          "kind": "schedule",
+          "domain": "energyModel",
+          "granularity": "schedule"
+        },
+        "group": "schedule",
+        "order": 40
+      }
     },
     "wattsPerArea": {
-      "type": "number"
+      "type": "number",
+      "x-semio-ui": {
+        "widget": "stepper",
+        "role": "value",
+        "label": {
+          "en": "Power per area",
+          "de": "Leistung pro Fläche"
+        },
+        "description": {
+          "en": "Installed power density per m² floor area.",
+          "de": "Installierte Leistungsdichte je m² Geschossfläche."
+        },
+        "unit": "W/m²",
+        "step": 0.1,
+        "precision": 1,
+        "group": "gains",
+        "order": 50
+      }
     },
     "radiantFraction": {
-      "type": "number"
+      "type": "number",
+      "x-semio-ui": {
+        "widget": "slider",
+        "role": "value",
+        "label": {
+          "en": "Radiant fraction",
+          "de": "Strahlungsanteil"
+        },
+        "description": {
+          "en": "Share of the heat output released as long-wave radiation.",
+          "de": "Anteil der Wärmeabgabe als langwellige Strahlung."
+        },
+        "displayUnit": "%",
+        "displayFactor": 100,
+        "step": 0.01,
+        "precision": 0,
+        "softMin": 0,
+        "softMax": 1,
+        "group": "gains",
+        "order": 60
+      }
     },
     "latentFraction": {
-      "type": "number"
+      "type": "number",
+      "x-semio-ui": {
+        "widget": "slider",
+        "role": "value",
+        "label": {
+          "en": "Latent fraction",
+          "de": "Latenter Anteil"
+        },
+        "description": {
+          "en": "Share of the heat output released as moisture.",
+          "de": "Anteil der Wärmeabgabe als latente Wärme (Feuchte)."
+        },
+        "displayUnit": "%",
+        "displayFactor": 100,
+        "step": 0.01,
+        "precision": 0,
+        "softMin": 0,
+        "softMax": 1,
+        "group": "gains",
+        "order": 70
+      }
     }
   }
 }

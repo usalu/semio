@@ -9,7 +9,21 @@
   ],
   "properties": {
     "newUsage": {
-      "type": "string"
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "text",
+        "role": "value",
+        "label": {
+          "en": "Building usage",
+          "de": "Gebäudenutzung"
+        },
+        "description": {
+          "en": "residential or nonResidential.",
+          "de": "residential (Wohngebäude) oder nonResidential (Nichtwohngebäude)."
+        },
+        "group": "climate",
+        "order": 10
+      }
     }
   }
 }

@@ -219,7 +219,7 @@ async fn large_raster_metadata_and_pixel_edits_publish_and_replay_compactly() {
     let [gamma] = gamma_emit.artifact_mutations.as_slice() else { panic!("one gamma mutation") };
     assert!(matches!(gamma, PngMutation::ChangeGamma(_)));
     assert!(gamma.encode_op().expect("gamma encodes").len() < store::ARTIFACT_STORE_ONE_ITEM_MAXIMUM_BYTES);
-    let mut gamma_publication = store.begin_apply_batch(semio_framework_job::OperationId(11), store.generation_now(), store.content_revision_now(), "png-large-gamma".into(), vec![gamma.clone()], Some("Edit PNG gamma".into()), store::HistoryLane::Document, Some(&factory)).expect("compact gamma admits against large raster");
+    let mut gamma_publication = store.begin_apply_batch(semio_framework_job::OperationId(11), store.generation_now(), store.content_revision_now(), "png-large-gamma".into(), vec![gamma.clone()], Some("Edit PNG gamma".into()), store::HistoryLane::Document, Some(&factory), None).expect("compact gamma admits against large raster");
     let mut gamma_published = false;
     for _ in 0..64 {
         match store.advance_apply_batch(&mut gamma_publication, grant).expect("gamma publication advances") {
@@ -246,7 +246,7 @@ async fn large_raster_metadata_and_pixel_edits_publish_and_replay_compactly() {
     let [pixel] = pixel_emit.artifact_mutations.as_slice() else { panic!("one pixel mutation") };
     assert!(matches!(pixel, PngMutation::PatchPixels(_)));
     assert!(pixel.encode_op().expect("pixel patch encodes").len() < store::ARTIFACT_STORE_ONE_ITEM_MAXIMUM_BYTES);
-    let mut pixel_publication = store.begin_apply_batch(semio_framework_job::OperationId(12), store.generation_now(), store.content_revision_now(), "png-large-pixel".into(), vec![pixel.clone()], Some("Edit PNG pixel".into()), store::HistoryLane::Document, Some(&factory)).expect("compact pixel patch admits against large raster");
+    let mut pixel_publication = store.begin_apply_batch(semio_framework_job::OperationId(12), store.generation_now(), store.content_revision_now(), "png-large-pixel".into(), vec![pixel.clone()], Some("Edit PNG pixel".into()), store::HistoryLane::Document, Some(&factory), None).expect("compact pixel patch admits against large raster");
     let mut pixel_published = false;
     for _ in 0..64 {
         match store.advance_apply_batch(&mut pixel_publication, grant).expect("pixel publication advances") {

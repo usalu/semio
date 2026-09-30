@@ -5,14 +5,31 @@
   "type": "object",
   "additionalProperties": false,
   "required": [
+    "mutation",
     "connections"
   ],
   "properties": {
-    "connections": {}
-  },
-  "owner": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/🪶️en1999/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔗change-connections",
-  "semanticKind": "change-connections",
-  "emoji": "🔗",
-  "aggregateVariant": "ChangeConnections",
-  "displayName": "Change Connections"
+    "mutation": {
+      "const": "changeConnections"
+    },
+    "connections": {
+      "type": "array",
+      "items": {
+        "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1999/snapshot.json#/$defs/AluminiumConnection"
+      },
+      "x-semio-ui": {
+        "role": "value",
+        "label": {
+          "en": "Connections",
+          "de": "Verbindungen"
+        },
+        "description": {
+          "en": "The complete list of bolted and welded connections.",
+          "de": "Die vollständige Liste der Schrauben- und Schweißverbindungen."
+        },
+        "group": "record",
+        "order": 10
+      }
+    }
+  }
 }

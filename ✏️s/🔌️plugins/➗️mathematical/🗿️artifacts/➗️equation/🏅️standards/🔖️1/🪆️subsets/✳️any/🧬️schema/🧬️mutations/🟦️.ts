@@ -1,29 +1,51 @@
 /** ➗️ EquationMutation — closed semantic mutation vocabulary for the equation document,
- *  mirrors `🧬️mutations/🦀️.rs`'s `EquationMutation` enum and its 15 per-verb leaf
- *  structs. The enum carries NO `#[serde(tag = ...)]` — confirmed absent — so it serializes with
- *  serde's default EXTERNALLY TAGGED shape: `{ "<PascalCaseVariantName>": { ...leaf-struct-fields }
- *  }`, proven by every committed `🧪️tests/*​/🦠️mutation/🔣️.json` fixture (e.g.
- *  `{"ChangeNodeLabel":{"id":"n-alpha","new_label":"Alpha"}}`). NONE of the 15 leaf structs carry
- *  `#[serde(rename_all = ...)]` either, so every leaf's own field names are the literal Rust
- *  snake_case names verbatim (matches layout's convention, not present/note's camelCase leaves) —
- *  confirmed field-by-field against the committed fixtures. `EquationGraph`/`EquationPoint`
- *  themselves DO carry their own `rename_all = "camelCase"` (or have no snake_case fields), so
- *  `ReplaceGraph.graph.algorithmSeed` stays camelCase — that casing belongs to the referenced type,
- *  not to this leaf's own fields. */
-import type { EquationGraph, EquationPoint } from "../🟦️.ts";
+ *  mirrors `🧬️mutations/🦀️.rs`'s `EquationMutation` enum and its 15 per-verb leaf structs. The enum
+ *  carries no `#[value(tag)]`, so it wires EXTERNALLY TAGGED: `{ "<PascalCaseVariantName>": { ...leaf
+ *  fields } }`. Every leaf struct carries `#[value(rename_all = "camelCase")]`, so its fields wire
+ *  camelCase (`{"ChangeNodeLabel":{"id":"n-alpha","newLabel":"Alpha"}}`), like the referenced
+ *  `EquationGraph`/`EquationPoint` records (`ReplaceGraph.graph.algorithmSeed`). */
+/** 🔵️ One graph-playground node — mirrors the artifact's `EquationNode` record (`rename_all = "camelCase"`). */
+export interface EquationNode {
+  id: string;
+  label: string;
+  x: number;
+  y: number;
+}
+
+/** 🔌️ One graph-playground edge — mirrors `EquationEdge`. */
+export interface EquationEdge {
+  id: string;
+  source: string;
+  target: string;
+}
+
+/** 🕸️ The graph playground — mirrors `EquationGraph`; `algorithmSeed` wires `null` when unset. */
+export interface EquationGraph {
+  directed: boolean;
+  nodes: EquationNode[];
+  edges: EquationEdge[];
+  algorithm: string;
+  algorithmSeed: string | null;
+}
+
+/** 📍️ One geometry-playground point — mirrors `EquationPoint`. */
+export interface EquationPoint {
+  x: number;
+  y: number;
+}
 
 /** 🔢️ Addresses one numeric leaf in the equation tree — a `u64` newtype, wire-plain as a number. */
 export type EquationNodeLabel = number;
 
 /** 🔀️ `change-graph-directed` payload. */
 export interface ChangeGraphDirected {
-  new_directed: boolean;
+  newDirected: boolean;
 }
 
 /** 🧮️ `update-graph-algorithm` payload — algorithm id and seed are validated together. */
 export interface UpdateGraphAlgorithm {
-  new_algorithm: string;
-  new_algorithm_seed: string | null;
+  newAlgorithm: string;
+  newAlgorithmSeed: string | null;
 }
 
 /** 🔁️ `replace-graph` payload — whole-value swap of the graph playground's structured payload. */
@@ -37,6 +59,7 @@ export interface CreateNode {
   label: string;
   x: number;
   y: number;
+  index?: number;
 }
 
 /** ❌️ `delete-node` payload. */
@@ -52,7 +75,7 @@ export interface DeleteNodes {
 /** 🏷️ `change-node-label` payload. */
 export interface ChangeNodeLabel {
   id: string;
-  new_label: string;
+  newLabel: string;
 }
 
 /** 🕹️ `move-node` payload. */
@@ -67,6 +90,7 @@ export interface ConnectNodes {
   id: string;
   source: string;
   target: string;
+  index?: number;
 }
 
 /** ✂️ `disconnect-nodes` payload. */

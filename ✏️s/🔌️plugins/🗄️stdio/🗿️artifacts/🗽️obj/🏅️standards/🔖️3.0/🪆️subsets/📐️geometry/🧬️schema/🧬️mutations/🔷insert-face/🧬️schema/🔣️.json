@@ -5,20 +5,27 @@
   "type": "object",
   "additionalProperties": false,
   "required": [
+    "mutation",
     "index",
     "face"
   ],
   "properties": {
+    "mutation": {
+      "const": "insertFace",
+      "description": "Aggregate discriminator spliced in by ObjMutation; absent when the payload stands alone."
+    },
     "index": {
       "type": "integer",
       "minimum": 0
     },
     "face": {
-      "$ref": "#/$defs/ObjFace"
-    },
-    "mutation": {
-      "const": "insertFace",
-      "description": "Aggregate discriminator spliced in by ObjMutation; absent when the payload stands alone."
+      "$ref": "#/$defs/ObjFace",
+      "x-semio-ui": {
+        "label": {
+          "en": "Face",
+          "de": "Fläche"
+        }
+      }
     }
   },
   "$defs": {
@@ -33,6 +40,12 @@
           "type": "array",
           "items": {
             "$ref": "#/$defs/ObjFaceVertex"
+          },
+          "x-semio-ui": {
+            "label": {
+              "en": "Face vertices",
+              "de": "Flächeneckpunkte"
+            }
           }
         }
       }
@@ -47,7 +60,18 @@
         "vertex": {
           "type": "integer",
           "minimum": 0,
-          "maximum": 4294967295
+          "maximum": 4294967295,
+          "x-semio-ui": {
+            "widget": "stepper",
+            "label": {
+              "en": "Vertex number",
+              "de": "Eckpunktnummer"
+            },
+            "description": {
+              "en": "Zero-based index into the geometric vertices; the file writes it one-based.",
+              "de": "Nullbasierter Index in die geometrischen Eckpunkte; die Datei schreibt ihn einsbasiert."
+            }
+          }
         },
         "texcoord": {
           "anyOf": [
@@ -59,7 +83,18 @@
             {
               "type": "null"
             }
-          ]
+          ],
+          "x-semio-ui": {
+            "widget": "stepper",
+            "label": {
+              "en": "Texture coordinate number",
+              "de": "Texturkoordinatennummer"
+            },
+            "description": {
+              "en": "Zero-based index into the texture coordinates; the file writes it one-based.",
+              "de": "Nullbasierter Index in die Texturkoordinaten; die Datei schreibt ihn einsbasiert."
+            }
+          }
         },
         "normal": {
           "anyOf": [

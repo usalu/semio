@@ -1,4 +1,33 @@
 {
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/norm/en1990/mutation/change-consequence-class/schema.json",
   "title": "ChangeConsequenceClass",
-  "type": "object"
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "mutation",
+    "newConsequenceClass"
+  ],
+  "properties": {
+    "mutation": {
+      "const": "changeConsequenceClass"
+    },
+    "newConsequenceClass": {
+      "type": "integer",
+      "minimum": 0,
+      "x-semio-ui": {
+        "label": {
+          "en": "Consequence class CC",
+          "de": "Schadensfolgeklasse CC"
+        },
+        "description": {
+          "en": "1 = CC1, 2 = CC2, 3 = CC3 (EN 1990 Annex B).",
+          "de": "1 = CC1, 2 = CC2, 3 = CC3 (EN 1990 Anhang B)."
+        },
+        "widget": "stepper",
+        "step": 1,
+        "precision": 0
+      }
+    }
+  }
 }

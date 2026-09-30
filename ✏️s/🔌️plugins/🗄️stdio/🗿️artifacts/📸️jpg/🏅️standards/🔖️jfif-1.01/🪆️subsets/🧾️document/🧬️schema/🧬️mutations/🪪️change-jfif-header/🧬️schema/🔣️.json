@@ -30,17 +30,52 @@
       "maxItems": 2
     },
     "densityUnits": {
-      "$ref": "#/$defs/JfifDensityUnits"
+      "$ref": "#/$defs/JfifDensityUnits",
+      "x-semio-ui": {
+        "widget": "segmented",
+        "label": {
+          "en": "Density unit",
+          "de": "Dichteeinheit"
+        },
+        "options": {
+          "aspect": {
+            "en": "Aspect ratio only",
+            "de": "Nur Seitenverhältnis"
+          },
+          "pixelsPerInch": {
+            "en": "Pixels per inch",
+            "de": "Pixel pro Zoll"
+          },
+          "pixelsPerCm": {
+            "en": "Pixels per centimeter",
+            "de": "Pixel pro Zentimeter"
+          }
+        }
+      }
     },
     "xDensity": {
       "type": "integer",
       "minimum": 0,
-      "maximum": 65535
+      "maximum": 65535,
+      "x-semio-ui": {
+        "widget": "stepper",
+        "label": {
+          "en": "Horizontal pixel density",
+          "de": "Horizontale Pixeldichte"
+        }
+      }
     },
     "yDensity": {
       "type": "integer",
       "minimum": 0,
-      "maximum": 65535
+      "maximum": 65535,
+      "x-semio-ui": {
+        "widget": "stepper",
+        "label": {
+          "en": "Vertical pixel density",
+          "de": "Vertikale Pixeldichte"
+        }
+      }
     },
     "thumbnail": {
       "anyOf": [
@@ -50,7 +85,13 @@
         {
           "type": "null"
         }
-      ]
+      ],
+      "x-semio-ui": {
+        "label": {
+          "en": "Thumbnail",
+          "de": "Vorschaubild"
+        }
+      }
     }
   },
   "$defs": {
@@ -86,6 +127,16 @@
             "type": "integer",
             "minimum": 0,
             "maximum": 255
+          },
+          "x-semio-ui": {
+            "label": {
+              "en": "RGB data",
+              "de": "RGB-Daten"
+            },
+            "description": {
+              "en": "Uncompressed 24-bit RGB thumbnail pixels.",
+              "de": "Unkomprimierte 24-Bit-RGB-Pixel des Vorschaubilds."
+            }
           }
         }
       }

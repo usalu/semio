@@ -9,7 +9,24 @@
   ],
   "properties": {
     "id": {
-      "type": "string"
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Dictionary subject",
+          "de": "Wörterbuch-Subjekt"
+        },
+        "description": {
+          "en": "The dictionary subject this mutation addresses.",
+          "de": "Das Katalogelement (Wörterbuch-Subjekt), das diese Mutation adressiert."
+        },
+        "ref": {
+          "kind": "subject"
+        },
+        "group": "target",
+        "order": 10
+      }
     }
   }
 }

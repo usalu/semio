@@ -49,5 +49,5 @@ export const stdioGltf20AnySnapshotTextGuardConstant = <T extends string | numbe
 //#endregion 🚪️Parsers
 
 export function parseGltfSnapshotText(value: unknown, at = "$"): GltfSnapshotText {
-  return stdioGltf20AnySnapshotTextGuardObject(value, `${at}`);
+  return stdioGltf20AnySnapshotTextGuardString(value, at);
 }

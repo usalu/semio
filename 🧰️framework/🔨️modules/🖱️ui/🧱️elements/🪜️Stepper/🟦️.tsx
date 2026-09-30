@@ -11,6 +11,7 @@ import { cn } from "../../🔨️modules/🏷️class-name-composition/🟦️.t
 import { reactHostPort } from "../🔌️Ports/🟦️.tsx";
 import { PropertyValueColumnContext } from "../🌳️Tree/🟦️.tsx";
 import { formatNumber } from "../✏️Input/🟦️.tsx";
+import { formatUiNumberFixed, roundUiNumber } from "../../🧬️contract/🔢️number-format/🟦️.ts";
 import { borderNormalClass } from "../../🔨️modules/📏️border-presentation/🟦️.ts";
 import { uiFormControlBrowserDefaultProps } from "../../🔨️modules/📝️form-control-presentation/🟦️.ts";
 import { type ElementProps } from "../../🔨️modules/🆔️element-identity/🟦️.ts";
@@ -33,6 +34,8 @@ interface StepperProps extends ElementProps {
   step?: number;
   /** 🔀️ Mixed-selection state: shows a blank/placeholder value instead of {@link value}, mirroring {@link Input}'s `mixed` prop. */
   mixed?: boolean;
+  /** 🎯️ Fraction digits shown and committed (`NumberStepperProps.precision`); every value is rounded by the shared law. */
+  precision?: number;
   onChange?: (value: number) => void;
   /** ➕️➖️ Relative-delta path for increment/decrement (click, drag, arrow keys); falls back to computing an absolute {@link onChange} when omitted. */
   onDelta?: (delta: number) => void;
@@ -41,14 +44,19 @@ interface StepperProps extends ElementProps {
   onPointerCancel?: () => void;
   interactionId?: string;
   showLabel?: boolean;
+  /** 🏷️ The element naming the value field when an enclosing form owns the label (a staged dialog field). */
+  "aria-labelledby"?: string;
+  disabled?: boolean;
 }
 
 /**
  * Numeric stepper with increment, decrement, and drag-to-adjust.
  **/
-export const Stepper: React.FC<StepperProps> = ({ value, defaultValue = 0, min, max, step = 1, mixed, onChange, onDelta, onPointerDown, onPointerUp, onPointerCancel, interactionId, id, showLabel }) => {
+export const Stepper: React.FC<StepperProps> = ({ value, defaultValue = 0, min, max, step = 1, mixed, precision, onChange, onDelta, onPointerDown, onPointerUp, onPointerCancel, interactionId, id, showLabel, "aria-labelledby": labelledBy, disabled = false }) => {
   const isInPropertyValueColumn = reactHostPort.useContext(PropertyValueColumnContext);
   const mixedLabel = useLabel("ui.common.mixedValues");
+  const decrementLabel = useLabel("ui.tableStepper.decrement");
+  const incrementLabel = useLabel("ui.tableStepper.increment");
   const borderClass = borderNormalClass;
   const [internalValue, setInternalValue] = reactHostPort.useState(value ?? defaultValue);
   const [isEditing, setIsEditing] = reactHostPort.useState(false);
@@ -69,9 +77,9 @@ export const Stepper: React.FC<StepperProps> = ({ value, defaultValue = 0, min, 
       let clampedValue = val;
       if (min !== undefined) clampedValue = Math.max(clampedValue, min);
       if (max !== undefined) clampedValue = Math.min(clampedValue, max);
-      return clampedValue;
+      return precision === undefined ? clampedValue : roundUiNumber(clampedValue, precision);
     },
-    [min, max],
+    [min, max, precision],
   );
 
   const updateValue = reactHostPort.useCallback(
@@ -178,8 +186,8 @@ export const Stepper: React.FC<StepperProps> = ({ value, defaultValue = 0, min, 
     onPointerCancel?.();
   };
 
-  const canStepDown = min === undefined || internalValue > min;
-  const canStepUp = max === undefined || internalValue < max;
+  const canStepDown = !disabled && (min === undefined || internalValue > min);
+  const canStepUp = !disabled && (max === undefined || internalValue < max);
   const displayedValue = Number.isFinite(internalValue) ? internalValue : defaultValue;
 
   const labelElementId = id ? `${id.split(".").join("-")}-label` : undefined;
@@ -195,6 +203,7 @@ export const Stepper: React.FC<StepperProps> = ({ value, defaultValue = 0, min, 
     >
       <button
         data-slot="stepper-minus"
+        aria-label={decrementLabel}
         type="button"
         onMouseDown={handleMouseDown(-step)}
         onMouseUp={handleMouseUp}
@@ -212,7 +221,7 @@ export const Stepper: React.FC<StepperProps> = ({ value, defaultValue = 0, min, 
         data-stepper-input="true"
         data-mixed={mixed ? "true" : undefined}
         placeholder={mixed && !hasBeenEdited ? mixedLabel || "—" : undefined}
-        value={mixed && !hasBeenEdited ? "" : isEditing ? displayedValue : formatNumber(displayedValue)}
+        value={mixed && !hasBeenEdited ? "" : isEditing ? displayedValue : precision === undefined ? formatNumber(displayedValue) : formatUiNumberFixed(displayedValue, precision)}
         onChange={handleInputChange}
         onFocus={() => {
           if (!hasBeenEdited) setHasBeenEdited(true);
@@ -255,13 +264,15 @@ export const Stepper: React.FC<StepperProps> = ({ value, defaultValue = 0, min, 
         step={step}
         min={min}
         max={max}
-        aria-labelledby={labelElementId}
+        disabled={disabled}
+        aria-labelledby={labelledBy ?? labelElementId}
         id={id}
         inputMode="decimal"
         {...uiFormControlBrowserDefaultProps}
       />
       <button
         data-slot="stepper-plus"
+        aria-label={incrementLabel}
         type="button"
         onMouseDown={handleMouseDown(step)}
         onMouseUp={handleMouseUp}

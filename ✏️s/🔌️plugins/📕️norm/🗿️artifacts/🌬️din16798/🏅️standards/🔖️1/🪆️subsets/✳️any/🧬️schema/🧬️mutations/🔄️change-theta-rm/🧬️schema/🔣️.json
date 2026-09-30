@@ -9,7 +9,20 @@
   ],
   "properties": {
     "newThetaRmC": {
-      "type": "number"
+      "type": "number",
+      "x-semio-ui": {
+        "widget": "stepper",
+        "role": "value",
+        "label": {
+          "en": "Running mean outdoor temperature θ_rm",
+          "de": "Gleitender Mittelwert der Außenlufttemperatur θ_rm"
+        },
+        "unit": "°C",
+        "step": 0.5,
+        "precision": 1,
+        "group": "comfort",
+        "order": 10
+      }
     }
   }
 }

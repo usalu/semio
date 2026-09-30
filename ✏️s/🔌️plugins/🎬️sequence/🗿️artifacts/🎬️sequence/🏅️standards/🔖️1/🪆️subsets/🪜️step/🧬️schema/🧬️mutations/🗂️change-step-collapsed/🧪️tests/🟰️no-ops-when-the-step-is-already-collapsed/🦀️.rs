@@ -16,11 +16,11 @@ use crate::diff::SequenceDiff;
 use crate::mutations::{apply_sequence_mutation, inverse_sequence_mutation, SequenceMutation};
 use crate::{SequenceSnapshot, SequenceStep, SequenceWorkingScene, StepParams};
 
-const BEFORE: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🗂️change-step-collapsed/🟰️no-ops-when-the-step-is-already-collapsed/📸️snapshot/⬅️before/🔣️.json");
-const AFTER: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🗂️change-step-collapsed/🟰️no-ops-when-the-step-is-already-collapsed/📸️snapshot/➡️after/🔣️.json");
-const MUTATION: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🗂️change-step-collapsed/🟰️no-ops-when-the-step-is-already-collapsed/🦠️mutation/🔣️.json");
-const DIFF: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🗂️change-step-collapsed/🟰️no-ops-when-the-step-is-already-collapsed/🔺️diff/🔣️.json");
-const OUTCOME: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🗂️change-step-collapsed/🟰️no-ops-when-the-step-is-already-collapsed/🎯️outcome/🔣️.json");
+const BEFORE: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🗂️change-step-collapsed/🟰️no-ops-when-step-is-already-collapsed/📸️snapshot/⬅️before/🔣️.json");
+const AFTER: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🗂️change-step-collapsed/🟰️no-ops-when-step-is-already-collapsed/📸️snapshot/➡️after/🔣️.json");
+const MUTATION: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🗂️change-step-collapsed/🟰️no-ops-when-step-is-already-collapsed/🦠️mutation/🔣️.json");
+const DIFF: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🗂️change-step-collapsed/🟰️no-ops-when-step-is-already-collapsed/🔺️diff/🔣️.json");
+const OUTCOME: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🗂️change-step-collapsed/🟰️no-ops-when-step-is-already-collapsed/🎯️outcome/🔣️.json");
 
 fn mutation() -> SequenceMutation {
     dsl::os_pack::from_json_str(MUTATION).expect("mutation decodes")

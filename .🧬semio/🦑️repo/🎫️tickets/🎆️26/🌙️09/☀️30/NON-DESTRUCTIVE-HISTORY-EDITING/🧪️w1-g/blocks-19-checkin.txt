@@ -1,0 +1,217 @@
+<<<<<<< ANCHOR
+    async fn reproject(&mut self) -> Result<(), VcsError> {
+        let fold = fold_envelope_history(&self.envelope)?;
+        self.adopt_history_facts(&fold)?;
+        let crate::os_spr::HistoryFold { applied, redo, checkpoint, alternative, supersessions, .. } = fold;
+        if supersessions != *self.supersessions {
+            self.replay_supersessions(applied, supersessions)?;
+        } else if applied != *self.applied_edit_ids {
+            let (current, recorded) = self.project_applied(&applied).await?;
+            self.replace_applied_edit_ids_retained(applied)?;
+            self.replace_current_retained(current)?;
+            self.retain_prefix_snapshots(recorded)?;
+        }
+        if redo != *self.redo_edit_ids {
+            self.replace_redo_edit_ids_retained(redo)?;
+        }
+        if checkpoint != *self.current_checkpoint_id {
+            self.replace_current_checkpoint_retained(checkpoint)?;
+        }
+        self.envelope.active_alternative_id = alternative;
+        Ok(())
+    }
+=======
+    /// Answers the messages of every edit a supersession replay re-evaluated (none when no effective input changed).
+    async fn reproject(&mut self) -> Result<Vec<crate::os_spr::EditMessages>, VcsError> {
+        let fold = fold_envelope_history(&self.envelope)?;
+        self.adopt_history_facts(&fold)?;
+        let crate::os_spr::HistoryFold { applied, redo, checkpoint, alternative, supersessions, .. } = fold;
+        let mut replayed = Vec::new();
+        if supersessions != *self.supersessions {
+            replayed = self.replay_supersessions(applied, supersessions)?;
+        } else if applied != *self.applied_edit_ids {
+            let (current, recorded) = self.project_applied(&applied).await?;
+            self.replace_applied_edit_ids_retained(applied)?;
+            self.replace_current_retained(current)?;
+            self.retain_prefix_snapshots(recorded)?;
+        }
+        self.adopt_history_positions(redo, checkpoint, alternative)?;
+        Ok(replayed)
+    }
+>>>>>>> END
+<<<<<<< ANCHOR
+    fn reproject_replayed(&mut self, mut result: EditReplayResult<P, Mutation>) -> Result<(), VcsError> {
+=======
+    fn reproject_replayed(&mut self, mut result: EditReplayResult<P, Mutation>) -> Result<Vec<crate::os_spr::EditMessages>, VcsError> {
+>>>>>>> END
+<<<<<<< ANCHOR
+        let from = result.from;
+        let recorded = result.take_recorded();
+        self.adopt_report_replay(result)?;
+        self.replace_applied_edit_ids_retained(applied)?;
+        self.replace_supersessions_retained(supersessions)?;
+        self.retain_prefix_snapshots(recorded)?;
+        self.revision_dirty_from = Some(self.revision_dirty_from.map_or(from, |dirty| dirty.min(from)));
+        self.last_projection_cause = Some(ArtifactProjectionCause::Replay);
+        self.adopt_history_positions(redo, checkpoint, alternative)
+    }
+=======
+        let from = result.from;
+        let recorded = result.take_recorded();
+        let replayed = self.adopt_report_replay(result)?;
+        self.replace_applied_edit_ids_retained(applied)?;
+        self.replace_supersessions_retained(supersessions)?;
+        self.retain_prefix_snapshots(recorded)?;
+        self.revision_dirty_from = Some(self.revision_dirty_from.map_or(from, |dirty| dirty.min(from)));
+        self.last_projection_cause = Some(ArtifactProjectionCause::Replay);
+        self.adopt_history_positions(redo, checkpoint, alternative)?;
+        Ok(replayed)
+    }
+>>>>>>> END
+<<<<<<< ANCHOR
+    fn adopt_fold_replaying(&mut self, fold: crate::os_spr::HistoryFold) -> Result<(), VcsError> {
+        self.adopt_history_facts(&fold)?;
+        let crate::os_spr::HistoryFold { applied, redo, checkpoint, alternative, supersessions, .. } = fold;
+        self.replay_supersessions(applied, supersessions)?;
+        self.adopt_history_positions(redo, checkpoint, alternative)
+    }
+=======
+    fn adopt_fold_replaying(&mut self, fold: crate::os_spr::HistoryFold) -> Result<Vec<crate::os_spr::EditMessages>, VcsError> {
+        self.adopt_history_facts(&fold)?;
+        let crate::os_spr::HistoryFold { applied, redo, checkpoint, alternative, supersessions, .. } = fold;
+        let replayed = self.replay_supersessions(applied, supersessions)?;
+        self.adopt_history_positions(redo, checkpoint, alternative)?;
+        Ok(replayed)
+    }
+>>>>>>> END
+<<<<<<< ANCHOR
+    fn replay_supersessions(&mut self, applied: Vec<String>, supersessions: EffectiveSupersessions) -> Result<(), VcsError> {
+=======
+    fn replay_supersessions(&mut self, applied: Vec<String>, supersessions: EffectiveSupersessions) -> Result<Vec<crate::os_spr::EditMessages>, VcsError> {
+>>>>>>> END
+<<<<<<< ANCHOR
+        let recorded = result.take_recorded();
+        self.adopt_report_replay(result)?;
+        self.replace_applied_edit_ids_retained(applied)?;
+        self.replace_supersessions_retained(supersessions)?;
+        self.retain_prefix_snapshots(recorded)?;
+        self.revision_dirty_from = Some(self.revision_dirty_from.map_or(from, |dirty| dirty.min(from)));
+        self.last_projection_cause = Some(ArtifactProjectionCause::Replay);
+        Ok(())
+    }
+=======
+        let recorded = result.take_recorded();
+        let replayed = self.adopt_report_replay(result)?;
+        self.replace_applied_edit_ids_retained(applied)?;
+        self.replace_supersessions_retained(supersessions)?;
+        self.retain_prefix_snapshots(recorded)?;
+        self.revision_dirty_from = Some(self.revision_dirty_from.map_or(from, |dirty| dirty.min(from)));
+        self.last_projection_cause = Some(ArtifactProjectionCause::Replay);
+        Ok(replayed)
+    }
+>>>>>>> END
+<<<<<<< ANCHOR
+    fn adopt_report_replay(&mut self, mut result: EditReplayResult<P, Mutation>) -> Result<(), VcsError> {
+=======
+    fn adopt_report_replay(&mut self, mut result: EditReplayResult<P, Mutation>) -> Result<Vec<crate::os_spr::EditMessages>, VcsError> {
+>>>>>>> END
+<<<<<<< ANCHOR
+        self.replace_tail_undo_cache_retained(None)?;
+        self.replace_current_retained(state)?;
+        for entry in replayed {
+            self.replace_edit_messages(&entry.edit_id, entry.messages)?;
+        }
+        Ok(())
+    }
+=======
+        self.replace_tail_undo_cache_retained(None)?;
+        self.replace_current_retained(state)?;
+        for entry in &replayed {
+            self.replace_edit_messages(&entry.edit_id, entry.messages.clone())?;
+        }
+        Ok(replayed)
+    }
+>>>>>>> END
+<<<<<<< ANCHOR
+    async fn admit_remote_transitions(&mut self, transitions: Vec<crate::os_spr::MutationEnvelope>) -> Result<(), VcsError> {
+=======
+    async fn admit_remote_transitions(&mut self, transitions: Vec<crate::os_spr::MutationEnvelope>) -> Result<Vec<crate::os_spr::EditMessages>, VcsError> {
+>>>>>>> END
+<<<<<<< ANCHOR
+        if let Err(error) = self.reproject().await {
+            self.envelope.transitions.retain(|known| !admitted.contains(&known.mutation_id));
+            return Err(error);
+        }
+        Ok(())
+    }
+=======
+        match self.reproject().await {
+            Ok(replayed) => Ok(replayed),
+            Err(error) => {
+                self.envelope.transitions.retain(|known| !admitted.contains(&known.mutation_id));
+                Err(error)
+            }
+        }
+    }
+>>>>>>> END
+<<<<<<< ANCHOR
+            self.last_projection_cause = None;
+            if let Err(error) = self.admit_remote_transitions(ready_transitions).await {
+                return self.refuse_with_candidate_dag(candidate_dag, error);
+            }
+            self.replace_causal_dag_retained(candidate_dag)?;
+            self.pending_report.edit_ids = Some(Vec::new());
+            self.bump()?;
+            self.last_projection_cause = Some(self.last_projection_cause.filter(|cause| *cause == ArtifactProjectionCause::Replay).unwrap_or(ArtifactProjectionCause::RemoteIngest));
+            return Ok(no_op_report(self.merge_policy, self.applied_edit_ids.len()));
+=======
+            self.last_projection_cause = None;
+            let replayed = match self.admit_remote_transitions(ready_transitions).await {
+                Ok(replayed) => replayed,
+                Err(error) => return self.refuse_with_candidate_dag(candidate_dag, error),
+            };
+            self.replace_causal_dag_retained(candidate_dag)?;
+            self.pending_report.edit_ids = Some(Vec::new());
+            self.bump()?;
+            self.last_projection_cause = Some(self.last_projection_cause.filter(|cause| *cause == ArtifactProjectionCause::Replay).unwrap_or(ArtifactProjectionCause::RemoteIngest));
+            let worst = replayed.iter().flat_map(|entry| entry.messages.iter()).map(|message| message.level).max();
+            return Ok(crate::os_spr::MergeReport { policy: self.merge_policy, accepted: true, insertion_index: self.applied_edit_ids.len() as u32, replayed, worst, conflict: None });
+>>>>>>> END
+<<<<<<< ANCHOR
+        self.last_projection_cause = None;
+        if !ready_transitions.is_empty() || !self.envelope.transitions.is_empty() {
+            self.admit_remote_transitions(ready_transitions).await?;
+        }
+=======
+        self.last_projection_cause = None;
+        let mut replayed = replayed;
+        if !ready_transitions.is_empty() || !self.envelope.transitions.is_empty() {
+            replayed.extend(self.admit_remote_transitions(ready_transitions).await?);
+        }
+        let worst = replayed.iter().flat_map(|edit_messages| edit_messages.messages.iter()).map(|message| message.level).max();
+>>>>>>> END
+<<<<<<< ANCHOR
+            Ok(report) if report.accepted && report.conflict.is_none() => {}
+=======
+            Ok(report) if report.accepted && report.conflict.is_none() && report.worst.is_some_and(|level| crate::os_spr::MergePolicy::Normal.rejects(level)) => {
+                folded = Err(VcsError::Rejected { policy: crate::os_spr::MergePolicy::Normal, messages: report.replayed.into_iter().flat_map(|entry| entry.messages).collect() });
+                break;
+            }
+            Ok(report) if report.accepted && report.conflict.is_none() => {}
+>>>>>>> END
+<<<<<<< ANCHOR
+        let actor = ActorId((*self.local_actor_id).clone().unwrap_or_else(|| "local".to_string()));
+        let mut envelope = crate::os_spr::history_transition_envelope(transition, &ArtifactId(self.envelope.id.clone()), &actor, dependencies, timestamp);
+        envelope.target = target;
+        envelope
+    }
+=======
+        let actor = ActorId((*self.local_actor_id).clone().unwrap_or_else(|| "local".to_string()));
+        let mut envelope = crate::os_spr::history_transition_envelope(transition, &ArtifactId(self.envelope.id.clone()), &actor, dependencies, timestamp);
+        if matches!(transition, crate::os_spr::HistoryTransition::Supersede(_)) {
+            envelope.observed = self.observed_foreign_operation(&actor.0);
+        }
+        envelope.target = target;
+        envelope
+    }
+>>>>>>> END

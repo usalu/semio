@@ -5,6 +5,8 @@ use crate::{Din4108Mutation, Din4108Snapshot};
 #[derive(Clone, Debug, PartialEq, dsl::MutationLeaf, value_derive::ToValue, value_derive::FromValue)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 #[mutation_leaf(contract = ::protocol)]
+#[cfg_attr(test, serde(rename_all = "camelCase"))]
+#[value(rename_all = "camelCase")]
 pub struct ChangeThermalBridgeLength {
     pub bridge_id: String,
     pub new_length_m: f64,

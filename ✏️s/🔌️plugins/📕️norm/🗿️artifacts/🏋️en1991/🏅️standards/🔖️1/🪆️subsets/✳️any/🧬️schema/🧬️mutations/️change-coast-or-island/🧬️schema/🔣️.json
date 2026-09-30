@@ -9,7 +9,21 @@
   ],
   "properties": {
     "newCoastOrIsland": {
-      "type": "boolean"
+      "type": "boolean",
+      "x-semio-ui": {
+        "widget": "toggle",
+        "role": "value",
+        "label": {
+          "en": "Coastal or island location",
+          "de": "Küsten- oder Insellage"
+        },
+        "description": {
+          "en": "Site at the coast or on an island (DIN EN 1991-1-4/NA wind profile).",
+          "de": "Standort an der Küste oder auf einer Insel (Windprofil nach DIN EN 1991-1-4/NA)."
+        },
+        "group": "site",
+        "order": 10
+      }
     }
   }
 }

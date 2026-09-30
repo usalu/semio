@@ -5,15 +5,16 @@
   "type": "object",
   "additionalProperties": false,
   "required": [
+    "mutation",
     "snapshot"
   ],
   "properties": {
-    "snapshot": {
-      "$ref": "#/$defs/JsonSnapshot"
-    },
     "mutation": {
       "const": "setSnapshot",
       "description": "Aggregate discriminator spliced in by JsonIJsonMutation; absent when the payload stands alone."
+    },
+    "snapshot": {
+      "$ref": "#/$defs/JsonSnapshot"
     }
   },
   "$defs": {
@@ -25,7 +26,18 @@
       ],
       "properties": {
         "schema": {
-          "type": "string"
+          "type": "string",
+          "x-semio-ui": {
+            "widget": "text",
+            "label": {
+              "en": "Snapshot schema",
+              "de": "Snapshot-Schema"
+            },
+            "description": {
+              "en": "Identifier of the snapshot schema version.",
+              "de": "Kennung der Version des Snapshot-Schemas."
+            }
+          }
         },
         "value": {
           "description": "any JSON value"

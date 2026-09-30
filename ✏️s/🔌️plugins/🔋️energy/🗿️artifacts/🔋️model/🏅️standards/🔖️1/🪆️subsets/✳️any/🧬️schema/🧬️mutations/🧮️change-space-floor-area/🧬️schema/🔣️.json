@@ -5,15 +5,53 @@
   "type": "object",
   "additionalProperties": false,
   "required": [
+    "mutation",
     "id",
     "newFloorAreaM2"
   ],
   "properties": {
+    "mutation": {
+      "const": "changeSpaceFloorArea"
+    },
     "id": {
-      "type": "integer"
+      "type": "integer",
+      "minimum": 0,
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Space",
+          "de": "Raum"
+        },
+        "description": {
+          "en": "The space this mutation changes, by id.",
+          "de": "Raum, den diese Mutation ändert, per ID."
+        },
+        "ref": {
+          "kind": "space",
+          "domain": "energyModel",
+          "granularity": "space"
+        },
+        "group": "target",
+        "order": 10
+      }
     },
     "newFloorAreaM2": {
-      "type": "number"
+      "type": "number",
+      "minimum": 0,
+      "x-semio-ui": {
+        "widget": "stepper",
+        "role": "value",
+        "label": {
+          "en": "Floor area",
+          "de": "Geschossfläche"
+        },
+        "unit": "m²",
+        "step": 0.1,
+        "precision": 2,
+        "group": "geometry",
+        "order": 20
+      }
     }
   }
 }

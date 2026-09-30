@@ -1,4 +1,4 @@
 {
   "mutation": "setActiveAsset",
-  "asset_id": "asset-prop"
+  "assetId": "asset-prop"
 }

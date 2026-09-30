@@ -4,6 +4,12 @@
   "title": "DisconnectReferencedModel",
   "type": "object",
   "additionalProperties": false,
-  "required": [],
-  "properties": {}
+  "required": [
+    "mutation"
+  ],
+  "properties": {
+    "mutation": {
+      "const": "disconnectReferencedModel"
+    }
+  }
 }

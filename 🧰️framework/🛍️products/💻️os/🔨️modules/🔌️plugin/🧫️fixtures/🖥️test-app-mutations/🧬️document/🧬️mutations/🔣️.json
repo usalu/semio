@@ -1,0 +1,55 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/framework/os/plugin/tests/test-app-mutations/document/mutations.json",
+  "title": "TestMutation",
+  "oneOf": [
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "operation",
+        "payload"
+      ],
+      "properties": {
+        "operation": {
+          "const": "setCount"
+        },
+        "payload": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/framework/os/plugin/tests/test-app-mutations/document/mutation/set-count/schema.json"
+        }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "operation",
+        "payload"
+      ],
+      "properties": {
+        "operation": {
+          "const": "setLabel"
+        },
+        "payload": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/framework/os/plugin/tests/test-app-mutations/document/mutation/set-label/schema.json"
+        }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "operation",
+        "payload"
+      ],
+      "properties": {
+        "operation": {
+          "const": "setSlotChildren"
+        },
+        "payload": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/framework/os/plugin/tests/test-app-mutations/document/mutation/set-slot-children/schema.json"
+        }
+      }
+    }
+  ]
+}

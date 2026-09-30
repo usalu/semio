@@ -1,0 +1,12 @@
+{
+  "mutation": "reorderAccessors",
+  "payload": {
+    "phase": "apply",
+    "value": {
+      "order": [
+        1,
+        0
+      ]
+    }
+  }
+}

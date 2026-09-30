@@ -1,0 +1,19 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/app/space/home/transient/mutations.json",
+  "title": "HomeTransientMutation",
+  "oneOf": [
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "ApplyDirectoryPage"
+      ],
+      "properties": {
+        "ApplyDirectoryPage": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/app/space/home/transient/mutation/apply-directory-page/schema.json"
+        }
+      }
+    }
+  ]
+}

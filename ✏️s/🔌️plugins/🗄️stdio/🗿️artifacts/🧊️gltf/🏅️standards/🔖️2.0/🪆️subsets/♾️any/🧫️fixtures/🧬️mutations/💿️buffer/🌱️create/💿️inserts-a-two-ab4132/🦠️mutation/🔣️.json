@@ -1,0 +1,13 @@
+{
+  "mutation": "createBuffer",
+  "payload": {
+    "phase": "apply",
+    "value": {
+      "position": 0,
+      "bytes": [
+        10,
+        20
+      ]
+    }
+  }
+}

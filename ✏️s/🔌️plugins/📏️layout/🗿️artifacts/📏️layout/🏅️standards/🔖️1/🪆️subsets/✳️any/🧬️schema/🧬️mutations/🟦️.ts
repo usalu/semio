@@ -1,15 +1,9 @@
 /** 🧬️ LayoutMutation — closed semantic mutation vocabulary for the layout document, mirrors
- *  `🧬️mutations/🦀️.rs`'s `LayoutMutation` enum and its 28 per-verb leaf structs
- *  field-for-field (`.../🧬️mutations/<verb-folder>/🦀️.rs`, one flat leaf file per verb, no nested
- *  `🦠️mutation` subfolder). `LayoutMutation` carries NO `#[serde(tag = ...)]` — confirmed absent on
- *  the enum itself and on every one of its 28 leaf structs — so it serializes with serde's default
- *  EXTERNALLY TAGGED shape: `{ "<PascalCaseVariantName>": { ...leaf-struct-fields } }`, proven by
- *  every committed `🧪️tests/*​/🦠️mutation/🔣️.json` fixture (e.g. `{"ChangePageWidth":
- *  {"id":"page-1","new_width":240.0}}`). This is NOT raster/jack's internally-tagged `{ mutation:
- *  'camelCase', ...fields }` shape — those enums carry an explicit `#[serde(tag = "mutation",
- *  rename_all = "camelCase")]` that layout's `LayoutMutation` lacks. None of the 28 leaf structs
- *  carry `#[serde(rename_all = ...)]` either, so every leaf's own field names are the literal Rust
- *  snake_case names verbatim (also confirmed field-by-field against the committed fixtures). */
+ *  `🧬️mutations/🦀️.rs`'s `LayoutMutation` enum and its per-verb leaf structs field-for-field
+ *  (`.../🧬️mutations/<verb-folder>/🦀️.rs`). The enum carries no `#[value(tag)]`, so it wires
+ *  EXTERNALLY TAGGED: `{ "<PascalCaseVariantName>": { ...leaf fields } }`. Every leaf struct carries
+ *  `#[value(rename_all = "camelCase")]`, so its fields wire camelCase (`{"ChangePageWidth":
+ *  {"id":"page-1","newWidth":240.0}}`); an `Option` field wires `null` when absent. */
 
 export interface LayoutBounds {
   x: number;
@@ -133,20 +127,20 @@ export interface ImageLink {
 
 //#region 🔖️Leaves
 export interface RenameLayout {
-  new_name: string;
+  newName: string;
 }
 
 export interface ChangePrintTarget {
-  new_print_target?: string;
+  newPrintTarget: string | null;
 }
 
 export interface ChangeDataFields {
-  new_json?: string;
+  newJson: string | null;
 }
 
 export interface CreatePage {
   page: Page;
-  index?: number;
+  index: number | null;
 }
 
 export interface DeletePage {
@@ -155,17 +149,17 @@ export interface DeletePage {
 
 export interface RenamePage {
   id: string;
-  new_name: string;
+  newName: string;
 }
 
 export interface ChangePageWidth {
   id: string;
-  new_width: number;
+  newWidth: number;
 }
 
 export interface ChangePageHeight {
   id: string;
-  new_height: number;
+  newHeight: number;
 }
 
 export interface UpdatePageMargins {
@@ -184,12 +178,12 @@ export interface UpdatePageColumns {
 
 export interface ReorderPages {
   id: string;
-  to_index: number;
+  toIndex: number;
 }
 
 export interface CreateStory {
   story: TextStory;
-  index?: number;
+  index: number | null;
 }
 
 export interface DeleteStory {
@@ -198,12 +192,12 @@ export interface DeleteStory {
 
 export interface EditStory {
   id: string;
-  new_content: string;
+  newContent: string;
 }
 
 export interface CreateLink {
   link: ImageLink;
-  index?: number;
+  index: number | null;
 }
 
 export interface DeleteLink {
@@ -212,122 +206,191 @@ export interface DeleteLink {
 
 export interface ChangeLinkPath {
   id: string;
-  new_path: string;
+  newPath: string;
 }
 
 export interface CreateFrame {
-  page_id: string;
+  pageId: string;
   frame: Frame;
-  index?: number;
-  layer_id?: string;
+  index: number | null;
+  layerId: string | null;
 }
 
 export interface DeleteFrame {
-  page_id: string;
-  frame_id: string;
+  pageId: string;
+  frameId: string;
 }
 
 export interface MoveFrame {
-  page_id: string;
-  frame_id: string;
-  new_x: number;
-  new_y: number;
+  pageId: string;
+  frameId: string;
+  newX: number;
+  newY: number;
 }
 
 export interface ResizeFrame {
-  page_id: string;
-  frame_id: string;
-  new_width: number;
-  new_height: number;
+  pageId: string;
+  frameId: string;
+  newWidth: number;
+  newHeight: number;
 }
 
 export interface RotateFrame {
-  page_id: string;
-  frame_id: string;
-  new_rotation: number;
+  pageId: string;
+  frameId: string;
+  newRotation: number;
 }
 
 export interface ChangeFrameFill {
-  page_id: string;
-  frame_id: string;
-  new_fill?: [number, number, number, number];
+  pageId: string;
+  frameId: string;
+  newFill: [number, number, number, number] | null;
 }
 
 export interface ChangeFrameStroke {
-  page_id: string;
-  frame_id: string;
-  new_stroke?: [number, number, number, number];
+  pageId: string;
+  frameId: string;
+  newStroke: [number, number, number, number] | null;
 }
 
 export interface ChangeFrameWrapMode {
-  page_id: string;
-  frame_id: string;
-  new_wrap_mode: string;
+  pageId: string;
+  frameId: string;
+  newWrapMode: string;
 }
 
 export interface ChangeFrameColumns {
-  page_id: string;
-  frame_id: string;
-  new_columns: number;
+  pageId: string;
+  frameId: string;
+  newColumns: number;
 }
 
 export interface UpdateGrid {
-  baseline_grid: number;
-  baseline_offset: number;
-  snap_to_baseline: boolean;
+  baselineGrid: number;
+  baselineOffset: number;
+  snapToBaseline: boolean;
 }
 
 export interface SetFrameFlags {
-  page_id: string;
-  frame_id: string;
-  locked?: boolean;
-  visible?: boolean;
+  pageId: string;
+  frameId: string;
+  locked: boolean | null;
+  visible: boolean | null;
 }
 
 export interface UpdateParagraphStyle {
   id: string;
   name: string;
-  font_family: string;
-  font_size: number;
-  font_weight: number;
+  fontFamily: string;
+  fontSize: number;
+  fontWeight: number;
   leading: number;
   tracking: number;
   alignment: string;
 }
 
 export interface UpdateTextFrame {
-  page_id: string;
-  frame_id: string;
-  story_id: string;
-  thread_next?: string;
-  inset_x: number;
-  inset_y: number;
-  inset_width: number;
-  inset_height: number;
+  pageId: string;
+  frameId: string;
+  storyId: string;
+  threadNext: string | null;
+  insetX: number;
+  insetY: number;
+  insetWidth: number;
+  insetHeight: number;
 }
 
 export interface UpdateLayer {
-  page_id: string;
-  layer_id: string;
+  pageId: string;
+  layerId: string;
   name: string;
   visible: boolean;
   locked: boolean;
 }
 
-export interface CreateCharacterStyle { id: string }
-export interface DeleteCharacterStyle { id: string }
-export interface UpdateCharacterStyle { id: string }
-export interface UpdateParentPage { id: string }
-export interface UpdateSpread { id: string }
-export interface SetPageParent { id: string }
-export interface SetPageGuides { id: string }
-export interface SetStoryRuns { id: string }
-export interface UpdateLink { id: string }
-export interface SetPageOverrides { id: string }
-export interface CreateLayer { id: string }
-export interface SetFrameLayer { id: string }
-export interface SetDrawingText { id: string }
-export interface ReorderFrame { id: string }
+export interface CreateCharacterStyle {
+  id: string;
+  name: string | null;
+}
+
+export interface DeleteCharacterStyle {
+  id: string;
+}
+
+export interface UpdateCharacterStyle {
+  id: string;
+  name: string | null;
+  fontFamily: string | null;
+  fontSize: number | null;
+  fontWeight: number | null;
+  italic: boolean | null;
+  color: [number, number, number, number] | null;
+  tracking: number | null;
+}
+
+export interface UpdateParentPage {
+  id: string;
+  name: string;
+  width: number;
+  height: number;
+}
+
+export interface UpdateSpread {
+  id: string;
+  name: string;
+}
+
+export interface SetPageParent {
+  id: string;
+  parentPageId: string | null;
+}
+
+export interface SetPageGuides {
+  id: string;
+  guides: LayoutRect[];
+}
+
+export interface SetStoryRuns {
+  id: string;
+  runs: TextStyleRun[];
+}
+
+export interface UpdateLink {
+  id: string;
+  width: number;
+  height: number;
+  dpi: number;
+  colorProfile: string | null;
+}
+
+export interface SetPageOverrides {
+  id: string;
+  overrides: PageOverride[];
+}
+
+export interface CreateLayer {
+  pageId: string;
+  id: string;
+  name: string;
+  remove?: boolean;
+}
+
+export interface SetFrameLayer {
+  pageId: string;
+  frameId: string;
+  layerId: string;
+}
+
+export interface SetDrawingText {
+  index: number;
+  text: string;
+}
+
+export interface ReorderFrame {
+  pageId: string;
+  frameId: string;
+  forward: boolean;
+}
 //#endregion 🔖️Leaves
 
 //#region 🔖️Mutations

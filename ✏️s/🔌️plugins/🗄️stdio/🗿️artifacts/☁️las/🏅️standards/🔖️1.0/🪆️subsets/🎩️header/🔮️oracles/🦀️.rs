@@ -210,6 +210,17 @@ fn u32x5(value: &Json, key: &str) -> Option<[u32; 5]> {
     }
 }
 #[cfg(feature = "oracles")]
+fn bytes_of(value: &Json, key: &str) -> Option<Vec<u8>> {
+    match value.get(key) {
+        Some(Json::Array(items)) => items.iter().map(|item| if let Json::Number(byte) = item { Some(*byte as u8) } else { None }).collect(),
+        _ => None,
+    }
+}
+#[cfg(feature = "oracles")]
+fn bytes_json(bytes: &[u8]) -> Json {
+    Json::Array(bytes.iter().map(|byte| Json::Number(*byte as f64)).collect())
+}
+#[cfg(feature = "oracles")]
 fn spec_of(kind: &str, params: Json) -> Json {
     Json::Object(vec![("kind".to_string(), Json::String(kind.to_string())), ("params".to_string(), params)])
 }
@@ -225,9 +236,19 @@ fn vlr_to_json(vlr: &las::raw::Vlr) -> Json {
         ("data".to_string(), Json::String(String::from_utf8_lossy(&vlr.data).to_string())),
     ])
 }
+/// 🧾️ One VLR as the `LasVlr` wire: `data` is the retained byte array.
 #[cfg(feature = "oracles")]
-fn vlr_of_json(value: &Json) -> Option<las::raw::Vlr> {
-    let data = string(value, "data")?.into_bytes();
+fn vlr_to_wire(vlr: &las::raw::Vlr) -> Json {
+    Json::Object(vec![
+        ("userId".to_string(), Json::String(read_fixed_str(&vlr.user_id))),
+        ("recordId".to_string(), Json::Number(vlr.record_id as f64)),
+        ("description".to_string(), Json::String(read_fixed_str(&vlr.description))),
+        ("data".to_string(), bytes_json(&vlr.data)),
+    ])
+}
+#[cfg(feature = "oracles")]
+fn vlr_of_wire(value: &Json) -> Option<las::raw::Vlr> {
+    let data = bytes_of(value, "data")?;
     Some(las::raw::Vlr {
         reserved: 0,
         user_id: write_fixed(&string(value, "userId")?),
@@ -333,42 +354,70 @@ fn header_to_json(header: &las::raw::Header) -> Json {
         ("counts".to_string(), Json::Array(header.number_of_points_by_return.iter().map(|count| Json::Number(*count as f64)).collect())),
     ])
 }
+/// 🧾️ The header as the `LasHeader` wire, every field keyed as the snapshot names it — the six STRUCTURAL ones as the raw
+/// header carries them, which [`raw_doc::write`] recomputes regardless.
 #[cfg(feature = "oracles")]
-fn header_of_json(value: &Json) -> Option<las::raw::Header> {
-    let scale = f64x3(value, "scale")?;
-    let offset = f64x3(value, "offset")?;
-    let max = f64x3(value, "max")?;
-    let min = f64x3(value, "min")?;
-    let counts = u32x5(value, "counts")?;
+fn header_to_wire(header: &las::raw::Header) -> Json {
+    Json::Object(vec![
+        ("versionMajor".to_string(), Json::Number(header.version.major as f64)),
+        ("versionMinor".to_string(), Json::Number(header.version.minor as f64)),
+        ("systemIdentifier".to_string(), Json::String(read_fixed_str(&header.system_identifier))),
+        ("generatingSoftware".to_string(), Json::String(read_fixed_str(&header.generating_software))),
+        ("creationDayOfYear".to_string(), Json::Number(header.file_creation_day_of_year as f64)),
+        ("creationYear".to_string(), Json::Number(header.file_creation_year as f64)),
+        ("headerSize".to_string(), Json::Number(header.header_size as f64)),
+        ("offsetToPointData".to_string(), Json::Number(header.offset_to_point_data as f64)),
+        ("numberOfVlrs".to_string(), Json::Number(header.number_of_variable_length_records as f64)),
+        ("pointDataFormatId".to_string(), Json::Number(header.point_data_record_format as f64)),
+        ("pointDataRecordLength".to_string(), Json::Number(header.point_data_record_length as f64)),
+        ("numberOfPointRecords".to_string(), Json::Number(header.number_of_point_records as f64)),
+        ("pointsByReturn".to_string(), Json::Array(header.number_of_points_by_return.iter().map(|count| Json::Number(*count as f64)).collect())),
+        ("xScale".to_string(), Json::Number(header.x_scale_factor)),
+        ("yScale".to_string(), Json::Number(header.y_scale_factor)),
+        ("zScale".to_string(), Json::Number(header.z_scale_factor)),
+        ("xOffset".to_string(), Json::Number(header.x_offset)),
+        ("yOffset".to_string(), Json::Number(header.y_offset)),
+        ("zOffset".to_string(), Json::Number(header.z_offset)),
+        ("maxX".to_string(), Json::Number(header.max_x)),
+        ("minX".to_string(), Json::Number(header.min_x)),
+        ("maxY".to_string(), Json::Number(header.max_y)),
+        ("minY".to_string(), Json::Number(header.min_y)),
+        ("maxZ".to_string(), Json::Number(header.max_z)),
+        ("minZ".to_string(), Json::Number(header.min_z)),
+    ])
+}
+#[cfg(feature = "oracles")]
+fn header_of_wire(value: &Json) -> Option<las::raw::Header> {
+    let at = |key: &str| number(value, key);
     Some(las::raw::Header {
         file_signature: las::raw::LASF,
-        version: las::Version::new(number(value, "versionMajor")? as u8, number(value, "versionMinor")? as u8),
+        version: las::Version::new(at("versionMajor")? as u8, at("versionMinor")? as u8),
         system_identifier: write_fixed(&string(value, "systemIdentifier")?),
         generating_software: write_fixed(&string(value, "generatingSoftware")?),
-        file_creation_day_of_year: number(value, "dayOfYear")? as u16,
-        file_creation_year: number(value, "year")? as u16,
-        number_of_points_by_return: counts,
-        x_scale_factor: scale.0,
-        y_scale_factor: scale.1,
-        z_scale_factor: scale.2,
-        x_offset: offset.0,
-        y_offset: offset.1,
-        z_offset: offset.2,
-        max_x: max.0,
-        max_y: max.1,
-        max_z: max.2,
-        min_x: min.0,
-        min_y: min.1,
-        min_z: min.2,
+        file_creation_day_of_year: at("creationDayOfYear")? as u16,
+        file_creation_year: at("creationYear")? as u16,
+        number_of_points_by_return: u32x5(value, "pointsByReturn")?,
+        x_scale_factor: at("xScale")?,
+        y_scale_factor: at("yScale")?,
+        z_scale_factor: at("zScale")?,
+        x_offset: at("xOffset")?,
+        y_offset: at("yOffset")?,
+        z_offset: at("zOffset")?,
+        max_x: at("maxX")?,
+        max_y: at("maxY")?,
+        max_z: at("maxZ")?,
+        min_x: at("minX")?,
+        min_y: at("minY")?,
+        min_z: at("minZ")?,
         ..Default::default()
     })
 }
 //#endregion 🔖️HeaderJson
 
 //#region 🔖️SnapshotJson
-/// 🧭️ The whole document as JSON — `{header, vlrs, points}` — reused for THREE roles: `set-snapshot`
-/// params, `set-snapshot`'s inverse payload (the base document in this same shape), and
-/// `project_las`'s comparison projection. One shape, three call sites, per CLAUDE.md.
+/// 🧭️ The whole document as `project_las`'s `semantic-las-v1` comparison projection — `{header, vlrs,
+/// points}` with the NON-STRUCTURAL header fields only and VLR data as text; the `set-snapshot` payload is
+/// the separate wire form [`snapshot_to_wire`].
 #[cfg(feature = "oracles")]
 fn snapshot_to_json(doc: &raw_doc::RawDoc) -> Json {
     Json::Object(vec![
@@ -377,11 +426,22 @@ fn snapshot_to_json(doc: &raw_doc::RawDoc) -> Json {
         ("points".to_string(), Json::Array(doc.points.iter().map(|point| point_to_json(point, &doc.header)).collect())),
     ])
 }
+/// 🧾️ The whole document as the `LasSnapshot` wire — `set-snapshot`'s payload and its inverse: `schema`, [`header_to_wire`],
+/// [`vlr_to_wire`] per VLR, and every point as [`point_to_json`] spells it, which is already the `LasPoint` wire.
 #[cfg(feature = "oracles")]
-fn snapshot_of_json(value: &Json) -> Option<raw_doc::RawDoc> {
-    let header = header_of_json(value.get("header")?)?;
+fn snapshot_to_wire(doc: &raw_doc::RawDoc) -> Json {
+    Json::Object(vec![
+        ("schema".to_string(), Json::String("stdio.las".to_string())),
+        ("header".to_string(), header_to_wire(&doc.header)),
+        ("vlrs".to_string(), Json::Array(doc.vlrs.iter().map(vlr_to_wire).collect())),
+        ("points".to_string(), Json::Array(doc.points.iter().map(|point| point_to_json(point, &doc.header)).collect())),
+    ])
+}
+#[cfg(feature = "oracles")]
+fn snapshot_of_wire(value: &Json) -> Option<raw_doc::RawDoc> {
+    let header = header_of_wire(value.get("header")?)?;
     let vlrs: Vec<las::raw::Vlr> = match value.get("vlrs")? {
-        Json::Array(items) => items.iter().map(vlr_of_json).collect::<Option<Vec<_>>>()?,
+        Json::Array(items) => items.iter().map(vlr_of_wire).collect::<Option<Vec<_>>>()?,
         _ => return None,
     };
     let points: Vec<las::raw::Point> = match value.get("points")? {
@@ -412,8 +472,7 @@ pub fn oracle_apply_mutation(input: &[u8], spec: &Json) -> Result<Vec<u8>, Strin
     let params = mutation_params(spec);
     match spec.str("kind").as_str() {
         "" => Err("mutation spec carries no `kind`".to_string()),
-        "no-mutation" => Ok(input.to_vec()),
-        "set-snapshot" => raw_doc::write(&snapshot_of_json(&params).ok_or("set-snapshot: malformed snapshot")?),
+        "set-snapshot" => raw_doc::write(&snapshot_of_wire(params.get("snapshot").ok_or("set-snapshot: missing `snapshot`")?).ok_or("set-snapshot: malformed `snapshot`")?),
         "set-version" => {
             let mut doc = raw_doc::read(input)?;
             doc.header.version = las::Version::new(number(&params, "major").ok_or("set-version: missing `major`")? as u8, number(&params, "minor").ok_or("set-version: missing `minor`")? as u8);
@@ -459,7 +518,7 @@ pub fn oracle_apply_mutation(input: &[u8], spec: &Json) -> Result<Vec<u8>, Strin
         "insert-vlr" => {
             let mut doc = raw_doc::read(input)?;
             let index = number(&params, "index").ok_or("insert-vlr: missing `index`")? as usize;
-            let vlr = vlr_of_json(params.get("vlr").ok_or("insert-vlr: missing `vlr`")?).ok_or("insert-vlr: malformed `vlr`")?;
+            let vlr = vlr_of_wire(params.get("vlr").ok_or("insert-vlr: missing `vlr`")?).ok_or("insert-vlr: malformed `vlr`")?;
             doc.vlrs.insert(index.min(doc.vlrs.len()), vlr);
             raw_doc::write(&doc)
         }
@@ -474,7 +533,7 @@ pub fn oracle_apply_mutation(input: &[u8], spec: &Json) -> Result<Vec<u8>, Strin
         "set-vlr-data" => {
             let mut doc = raw_doc::read(input)?;
             let index = number(&params, "index").ok_or("set-vlr-data: missing `index`")? as usize;
-            let data = string(&params, "data").ok_or("set-vlr-data: missing `data`")?.into_bytes();
+            let data = bytes_of(&params, "data").ok_or("set-vlr-data: missing `data`")?;
             if let Some(vlr) = doc.vlrs.get_mut(index) {
                 vlr.record_length_after_header = las::raw::vlr::RecordLength::Vlr(data.len() as u16);
                 vlr.data = data;
@@ -520,16 +579,15 @@ pub fn oracle_apply_mutation(_input: &[u8], _spec: &Json) -> Result<Vec<u8>, Str
 /// ↩️ The spec that undoes `spec` when applied AFTER `oracle_apply_mutation(base, spec)`'s own
 /// result — index-aware and computed from `base` (the pre-mutation document), mirroring
 /// `LasMutation::inverse()` (`../🧬️schema/🧬️mutations/🦀️.rs`) independently: an
-/// out-of-range index that the forward mutation would have rejected inverts to `no-mutation`,
-/// exactly as that hand-rolled method does.
+/// out-of-range index that the forward mutation would have rejected leaves nothing to undo
+/// (`None`), exactly as that method's empty inverse does. Every spec carries the leaf wire payload.
 #[cfg(feature = "oracles")]
-pub fn oracle_inverse_spec(base: &[u8], spec: &Json) -> Result<Json, String> {
+pub fn oracle_inverse_spec(base: &[u8], spec: &Json) -> Result<Option<Json>, String> {
     let params = mutation_params(spec);
     let doc = raw_doc::read(base)?;
-    Ok(match spec.str("kind").as_str() {
+    Ok(Some(match spec.str("kind").as_str() {
         "" => return Err("mutation spec carries no `kind`".to_string()),
-        "no-mutation" => spec_of("no-mutation", Json::Object(vec![])),
-        "set-snapshot" => spec_of("set-snapshot", snapshot_to_json(&doc)),
+        "set-snapshot" => spec_of("set-snapshot", Json::Object(vec![("snapshot".to_string(), snapshot_to_wire(&doc))])),
         "set-version" => spec_of("set-version", Json::Object(vec![("major".to_string(), Json::Number(doc.header.version.major as f64)), ("minor".to_string(), Json::Number(doc.header.version.minor as f64))])),
         "set-system-identifier" => spec_of("set-system-identifier", Json::Object(vec![("systemIdentifier".to_string(), Json::String(read_fixed_str(&doc.header.system_identifier)))])),
         "set-software-info" => spec_of("set-software-info", Json::Object(vec![("generatingSoftware".to_string(), Json::String(read_fixed_str(&doc.header.generating_software)))])),
@@ -556,15 +614,15 @@ pub fn oracle_inverse_spec(base: &[u8], spec: &Json) -> Result<Json, String> {
         "remove-vlr" => {
             let index = number(&params, "index").ok_or("remove-vlr: missing `index`")? as usize;
             match doc.vlrs.get(index) {
-                Some(vlr) => spec_of("insert-vlr", Json::Object(vec![("index".to_string(), Json::Number(index as f64)), ("vlr".to_string(), vlr_to_json(vlr))])),
-                None => spec_of("no-mutation", Json::Object(vec![])),
+                Some(vlr) => spec_of("insert-vlr", Json::Object(vec![("index".to_string(), Json::Number(index as f64)), ("vlr".to_string(), vlr_to_wire(vlr))])),
+                None => return Ok(None),
             }
         }
         "set-vlr-data" => {
             let index = number(&params, "index").ok_or("set-vlr-data: missing `index`")? as usize;
             match doc.vlrs.get(index) {
-                Some(vlr) => spec_of("set-vlr-data", Json::Object(vec![("index".to_string(), Json::Number(index as f64)), ("data".to_string(), Json::String(String::from_utf8_lossy(&vlr.data).to_string()))])),
-                None => spec_of("no-mutation", Json::Object(vec![])),
+                Some(vlr) => spec_of("set-vlr-data", Json::Object(vec![("index".to_string(), Json::Number(index as f64)), ("data".to_string(), bytes_json(&vlr.data))])),
+                None => return Ok(None),
             }
         }
         "insert-point" => {
@@ -575,23 +633,23 @@ pub fn oracle_inverse_spec(base: &[u8], spec: &Json) -> Result<Json, String> {
             let index = number(&params, "index").ok_or("remove-point: missing `index`")? as usize;
             match doc.points.get(index) {
                 Some(point) => spec_of("insert-point", Json::Object(vec![("index".to_string(), Json::Number(index as f64)), ("point".to_string(), point_to_json(point, &doc.header))])),
-                None => spec_of("no-mutation", Json::Object(vec![])),
+                None => return Ok(None),
             }
         }
         "set-point" => {
             let index = number(&params, "index").ok_or("set-point: missing `index`")? as usize;
             match doc.points.get(index) {
                 Some(point) => spec_of("set-point", Json::Object(vec![("index".to_string(), Json::Number(index as f64)), ("point".to_string(), point_to_json(point, &doc.header))])),
-                None => spec_of("no-mutation", Json::Object(vec![])),
+                None => return Ok(None),
             }
         }
         kind => return Err(format!("mutation kind {kind:?} has no oracle implementation ({} base byte(s))", base.len())),
-    })
+    }))
 }
 
 /// 🚫️ Without the `oracles` feature the reference implementation is not linked at all.
 #[cfg(not(feature = "oracles"))]
-pub fn oracle_inverse_spec(_base: &[u8], _spec: &Json) -> Result<Json, String> {
+pub fn oracle_inverse_spec(_base: &[u8], _spec: &Json) -> Result<Option<Json>, String> {
     Err("the `oracles` feature is disabled — this host was not built with the registered reference implementations".to_string())
 }
 //#endregion 🔖️Inverse

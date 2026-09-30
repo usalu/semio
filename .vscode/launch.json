@@ -3796,7 +3796,7 @@
       "name": "🛠️dev🗄️os-hub🎫️local",
       "type": "node-terminal",
       "request": "launch",
-      "command": "bun nx run @semio-tech/framework-os-dev:local-hub",
+      "command": "bun nx run os-hub:local-hub-owner",
       "cwd": "${workspaceFolder}",
       "env": {
         "S_HUB_URL": "http://127.0.0.1:8787",
@@ -3915,7 +3915,7 @@
       "name": "🛠️dev🤝️os-collab-e2e",
       "type": "node-terminal",
       "request": "launch",
-      "command": "bun nx run @semio-tech/framework-os-dev:collab-e2e",
+      "command": "bun nx run os-hub:dev-collaboration",
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "3_dev",
@@ -5087,6 +5087,17 @@
       }
     },
     {
+      "name": "🏛️check🧩️canonical-architecture",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run workspace:verify-canonical-architecture",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "4_gate",
+        "order": 899.99
+      }
+    },
+    {
       "name": "📦️check🧅️layering",
       "type": "node-terminal",
       "request": "launch",
@@ -5178,11 +5189,33 @@
       "name": "📦️check🧹️fixture-sweep",
       "type": "node-terminal",
       "request": "launch",
-      "command": "bun nx run @semio-tech/dsl-fixture-sweep-rs:source-check",
+      "command": "bun nx run @semio-tech/s-fixture-sweep-rs:source-check",
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_build",
         "order": 206.17
+      }
+    },
+    {
+      "name": "📦️check🌊️flow-composition",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run @semio-tech/s-flow-composition-rs:source-check",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "4_build",
+        "order": 206.1701
+      }
+    },
+    {
+      "name": "📦️check🌐️semio-session",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run @semio-tech/s-spatial-kernel-semio-session-rs:source-check",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "4_build",
+        "order": 206.1702
       }
     },
     {
@@ -11618,6 +11651,17 @@
       }
     },
     {
+      "name": "▶️canonical-architecture📋️",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run ${input:projectTarget.canonical-architecture}:canonical-architecture",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "3_dev",
+        "order": 949
+      }
+    },
+    {
       "name": "⚖️check📋️",
       "type": "node-terminal",
       "request": "launch",
@@ -11757,7 +11801,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "3_dev",
-        "order": 949
+        "order": 949.0001
       }
     },
     {
@@ -11772,6 +11816,17 @@
       }
     },
     {
+      "name": "⚖️source-check📋️",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run ${input:projectTarget.source-check}:source-check",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "4_gate",
+        "order": 899.0005
+      }
+    },
+    {
       "name": "⚖️test📋️",
       "type": "node-terminal",
       "request": "launch",
@@ -11779,7 +11834,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 899.0005
+        "order": 899.0006
       }
     },
     {
@@ -11790,7 +11845,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 899.0006
+        "order": 899.0007
       }
     },
     {
@@ -11801,7 +11856,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 899.0007
+        "order": 899.0008
       }
     },
     {
@@ -11812,7 +11867,18 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 899.0008
+        "order": 899.0009
+      }
+    },
+    {
+      "name": "⚖️test-renderer-contract📋️",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run ${input:projectTarget.test-renderer-contract}:test-renderer-contract",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "4_gate",
+        "order": 899.001
       }
     },
     {
@@ -11823,7 +11889,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 899.0009
+        "order": 899.0011
       }
     },
     {
@@ -11834,7 +11900,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 899.001
+        "order": 899.0012
       }
     },
     {
@@ -14291,17 +14357,6 @@
       }
     },
     {
-      "name": "⚖️verify-layering-write-baseline",
-      "type": "node-terminal",
-      "request": "launch",
-      "command": "bun nx run workspace:verify-layering-write-baseline",
-      "cwd": "${workspaceFolder}",
-      "presentation": {
-        "group": "4_gate",
-        "order": 900.0151
-      }
-    },
-    {
       "name": "⚖️verify-package-purity",
       "type": "node-terminal",
       "request": "launch",
@@ -14309,7 +14364,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.0152
+        "order": 900.0151
       }
     },
     {
@@ -14320,7 +14375,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.0153
+        "order": 900.0152
       }
     },
     {
@@ -14331,7 +14386,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.0154
+        "order": 900.0153
       }
     },
     {
@@ -14342,7 +14397,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.0155
+        "order": 900.0154
       }
     },
     {
@@ -14353,7 +14408,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.0156
+        "order": 900.0155
       }
     },
     {
@@ -14364,7 +14419,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.0157
+        "order": 900.0156
       }
     },
     {
@@ -14375,7 +14430,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.0158
+        "order": 900.0157
       }
     },
     {
@@ -14386,7 +14441,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.0159
+        "order": 900.0158
       }
     },
     {
@@ -14397,7 +14452,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.016
+        "order": 900.0159
       }
     },
     {
@@ -14408,7 +14463,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.0161
+        "order": 900.016
       }
     },
     {
@@ -14419,7 +14474,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.0162
+        "order": 900.0161
       }
     },
     {
@@ -14430,7 +14485,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.0163
+        "order": 900.0162
       }
     },
     {
@@ -14441,7 +14496,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.0164
+        "order": 900.0163
       }
     },
     {
@@ -14452,7 +14507,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.0165
+        "order": 900.0164
       }
     },
     {
@@ -14463,7 +14518,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.0166
+        "order": 900.0165
       }
     },
     {
@@ -14474,7 +14529,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.0167
+        "order": 900.0166
       }
     },
     {
@@ -14496,7 +14551,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.0168
+        "order": 900.0167
       }
     },
     {
@@ -14507,7 +14562,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.0169
+        "order": 900.0168
       }
     },
     {
@@ -14518,7 +14573,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.017
+        "order": 900.0169
       }
     },
     {
@@ -14540,7 +14595,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.0171
+        "order": 900.017
       }
     },
     {
@@ -14551,7 +14606,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.0172
+        "order": 900.0171
       }
     },
     {
@@ -14562,7 +14617,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.0173
+        "order": 900.0172
       }
     },
     {
@@ -14573,7 +14628,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.0174
+        "order": 900.0173
       }
     },
     {
@@ -14584,7 +14639,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.0175
+        "order": 900.0174
       }
     },
     {
@@ -14595,7 +14650,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.0176
+        "order": 900.0175
       }
     },
     {
@@ -14606,7 +14661,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.0177
+        "order": 900.0176
       }
     },
     {
@@ -14617,7 +14672,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.0178
+        "order": 900.0177
       }
     },
     {
@@ -14628,7 +14683,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.0179
+        "order": 900.0178
       }
     },
     {
@@ -14683,7 +14738,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.018
+        "order": 900.0179
       }
     },
     {
@@ -14705,7 +14760,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.0181
+        "order": 900.018
       }
     },
     {
@@ -14727,7 +14782,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.0182
+        "order": 900.0181
       }
     },
     {
@@ -14738,7 +14793,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.0183
+        "order": 900.0182
       }
     },
     {
@@ -14749,7 +14804,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.0184
+        "order": 900.0183
       }
     },
     {
@@ -14760,7 +14815,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.0185
+        "order": 900.0184
       }
     },
     {
@@ -14782,7 +14837,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.0186
+        "order": 900.0185
       }
     },
     {
@@ -14793,7 +14848,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.0187
+        "order": 900.0186
       }
     },
     {
@@ -14815,7 +14870,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.0188
+        "order": 900.0187
       }
     },
     {
@@ -14826,7 +14881,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.0189
+        "order": 900.0188
       }
     },
     {
@@ -14837,7 +14892,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.019
+        "order": 900.0189
       }
     },
     {
@@ -14848,7 +14903,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.0191
+        "order": 900.019
       }
     },
     {
@@ -14859,7 +14914,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.0192
+        "order": 900.0191
       }
     },
     {
@@ -14870,7 +14925,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.0193
+        "order": 900.0192
       }
     },
     {
@@ -14881,7 +14936,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.0194
+        "order": 900.0193
       }
     },
     {
@@ -14892,7 +14947,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.0195
+        "order": 900.0194
       }
     },
     {
@@ -14903,7 +14958,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.0196
+        "order": 900.0195
       }
     },
     {
@@ -14925,7 +14980,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.0197
+        "order": 900.0196
       }
     },
     {
@@ -14936,7 +14991,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.0198
+        "order": 900.0197
       }
     },
     {
@@ -14944,6 +14999,17 @@
       "type": "node-terminal",
       "request": "launch",
       "command": "bun nx run @semio-tech/framework-os-mcp:inference-bridge-source-check",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "4_gate",
+        "order": 900.0198
+      }
+    },
+    {
+      "name": "⚖️browser-test🌊️session🦀️",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run @semio-tech/s-spatial-kernel-semio-session-rs:browser-test",
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
@@ -15996,6 +16062,17 @@
       }
     },
     {
+      "name": "⚖️test-build-freshness🌎️hub🟦️",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run os-hub-ts:test-build-freshness",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "4_gate",
+        "order": 900.0284
+      }
+    },
+    {
       "name": "⚖️pending-host-close-check🌐️browser-bundle",
       "type": "node-terminal",
       "request": "launch",
@@ -16003,7 +16080,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.0284
+        "order": 900.0285
       }
     },
     {
@@ -16014,7 +16091,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.0285
+        "order": 900.0286
       }
     },
     {
@@ -16069,7 +16146,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.0286
+        "order": 900.0287
       }
     },
     {
@@ -16080,7 +16157,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.0287
+        "order": 900.0288
       }
     },
     {
@@ -16091,7 +16168,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.0288
+        "order": 900.0289
       }
     },
     {
@@ -16102,7 +16179,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.0289
+        "order": 900.029
       }
     },
     {
@@ -16157,7 +16234,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.029
+        "order": 900.0291
       }
     },
     {
@@ -16168,7 +16245,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.0291
+        "order": 900.0292
       }
     },
     {
@@ -16179,7 +16256,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.0292
+        "order": 900.0293
       }
     },
     {
@@ -16190,7 +16267,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.0293
+        "order": 900.0294
       }
     },
     {
@@ -16201,7 +16278,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.0294
+        "order": 900.0295
       }
     },
     {
@@ -16212,7 +16289,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.0295
+        "order": 900.0296
       }
     },
     {
@@ -16234,7 +16311,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.0296
+        "order": 900.0297
       }
     },
     {
@@ -16245,7 +16322,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.0297
+        "order": 900.0298
       }
     },
     {
@@ -16267,7 +16344,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.0298
+        "order": 900.0299
       }
     },
     {
@@ -16300,7 +16377,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.0299
+        "order": 900.03
       }
     },
     {
@@ -16311,7 +16388,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.03
+        "order": 900.0301
       }
     },
     {
@@ -16322,7 +16399,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.0301
+        "order": 900.0302
       }
     },
     {
@@ -16333,7 +16410,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.0302
+        "order": 900.0303
       }
     },
     {
@@ -16344,7 +16421,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.0303
+        "order": 900.0304
       }
     },
     {
@@ -16355,7 +16432,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.0304
+        "order": 900.0305
       }
     },
     {
@@ -16366,7 +16443,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.0305
+        "order": 900.0306
       }
     },
     {
@@ -16377,7 +16454,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.0306
+        "order": 900.0307
       }
     },
     {
@@ -16388,7 +16465,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.0307
+        "order": 900.0308
       }
     },
     {
@@ -16410,7 +16487,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.0308
+        "order": 900.0309
       }
     },
     {
@@ -16421,7 +16498,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.0309
+        "order": 900.031
       }
     },
     {
@@ -16432,7 +16509,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.031
+        "order": 900.0311
       }
     },
     {
@@ -16443,7 +16520,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.0311
+        "order": 900.0312
       }
     },
     {
@@ -16454,7 +16531,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.0312
+        "order": 900.0313
       }
     },
     {
@@ -16465,7 +16542,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.0313
+        "order": 900.0314
       }
     },
     {
@@ -16476,7 +16553,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.0314
+        "order": 900.0315
       }
     },
     {
@@ -16487,7 +16564,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.0315
+        "order": 900.0316
       }
     },
     {
@@ -16498,7 +16575,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.0316
+        "order": 900.0317
       }
     },
     {
@@ -16509,7 +16586,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.0317
+        "order": 900.0318
       }
     },
     {
@@ -16520,7 +16597,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.0318
+        "order": 900.0319
       }
     },
     {
@@ -16531,7 +16608,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.0319
+        "order": 900.032
       }
     },
     {
@@ -16542,7 +16619,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.032
+        "order": 900.0321
       }
     },
     {
@@ -16564,7 +16641,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.0321
+        "order": 900.0322
       }
     },
     {
@@ -16575,7 +16652,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.0322
+        "order": 900.0323
       }
     },
     {
@@ -16586,7 +16663,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.0323
+        "order": 900.0324
       }
     },
     {
@@ -16597,7 +16674,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.0324
+        "order": 900.0325
       }
     },
     {
@@ -16608,7 +16685,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.0325
+        "order": 900.0326
       }
     },
     {
@@ -16619,7 +16696,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.0326
+        "order": 900.0327
       }
     },
     {
@@ -16630,7 +16707,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.0327
+        "order": 900.0328
       }
     },
     {
@@ -16641,7 +16718,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.0328
+        "order": 900.0329
       }
     },
     {
@@ -16652,7 +16729,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.0329
+        "order": 900.033
       }
     },
     {
@@ -16663,7 +16740,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.033
+        "order": 900.0331
       }
     },
     {
@@ -16674,7 +16751,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.0331
+        "order": 900.0332
       }
     },
     {
@@ -16685,7 +16762,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.0332
+        "order": 900.0333
       }
     },
     {
@@ -16696,7 +16773,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.0333
+        "order": 900.0334
       }
     },
     {
@@ -16707,7 +16784,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.0334
+        "order": 900.0335
       }
     },
     {
@@ -16718,7 +16795,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.0335
+        "order": 900.0336
       }
     },
     {
@@ -16729,7 +16806,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.0336
+        "order": 900.0337
       }
     },
     {
@@ -16740,7 +16817,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.0337
+        "order": 900.0338
       }
     },
     {
@@ -16751,7 +16828,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.0338
+        "order": 900.0339
       }
     },
     {
@@ -16762,7 +16839,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.0339
+        "order": 900.034
       }
     },
     {
@@ -16773,7 +16850,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.034
+        "order": 900.0341
       }
     },
     {
@@ -16784,7 +16861,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.0341
+        "order": 900.0342
       }
     },
     {
@@ -16795,7 +16872,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.0342
+        "order": 900.0343
       }
     },
     {
@@ -16806,7 +16883,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.0343
+        "order": 900.0344
       }
     },
     {
@@ -16817,7 +16894,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.0344
+        "order": 900.0345
       }
     },
     {
@@ -16839,7 +16916,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.0345
+        "order": 900.0346
       }
     },
     {
@@ -16850,7 +16927,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.0346
+        "order": 900.0347
       }
     },
     {
@@ -16872,7 +16949,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.0347
+        "order": 900.0348
       }
     },
     {
@@ -16894,7 +16971,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.0348
+        "order": 900.0349
       }
     },
     {
@@ -16905,7 +16982,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.0349
+        "order": 900.035
       }
     },
     {
@@ -16927,7 +17004,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.035
+        "order": 900.0351
       }
     },
     {
@@ -16938,7 +17015,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.0351
+        "order": 900.0352
       }
     },
     {
@@ -16983,6 +17060,17 @@
       "presentation": {
         "group": "4_build",
         "order": 900.0041
+      }
+    },
+    {
+      "name": "⚖️test-mesh-oracle📐️brep🦀️",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run @semio-tech/flow-extension-brep-rust:test-mesh-oracle",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "4_gate",
+        "order": 900.0353
       }
     },
     {
@@ -17048,7 +17136,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.0352
+        "order": 900.0354
       }
     },
     {
@@ -17059,7 +17147,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.0353
+        "order": 900.0355
       }
     },
     {
@@ -17070,7 +17158,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.0354
+        "order": 900.0356
       }
     },
     {
@@ -17081,7 +17169,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.0355
+        "order": 900.0357
       }
     },
     {
@@ -17092,7 +17180,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.0356
+        "order": 900.0358
       }
     },
     {
@@ -17103,7 +17191,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.0357
+        "order": 900.0359
       }
     },
     {
@@ -17114,7 +17202,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.0358
+        "order": 900.036
       }
     },
     {
@@ -17125,7 +17213,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.0359
+        "order": 900.0361
       }
     },
     {
@@ -17158,7 +17246,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.036
+        "order": 900.0362
       }
     },
     {
@@ -17180,7 +17268,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.0361
+        "order": 900.0363
       }
     },
     {
@@ -17191,7 +17279,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.0362
+        "order": 900.0364
       }
     },
     {
@@ -17202,7 +17290,29 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.0363
+        "order": 900.0365
+      }
+    },
+    {
+      "name": "⚖️lint-cargo-dependency-direction📚️library🟦️",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run @semio-tech/repo-lib:lint-cargo-dependency-direction",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "4_gate",
+        "order": 900.0366
+      }
+    },
+    {
+      "name": "⚖️lint-dependency-direction📚️library🟦️",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run @semio-tech/repo-lib:lint-dependency-direction",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "4_gate",
+        "order": 900.0367
       }
     },
     {
@@ -17213,7 +17323,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.0364
+        "order": 900.0368
       }
     },
     {
@@ -17224,7 +17334,29 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.0365
+        "order": 900.0369
+      }
+    },
+    {
+      "name": "⚖️test-canonical-execution📚️library🟦️",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run @semio-tech/repo-lib:test-canonical-execution",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "4_gate",
+        "order": 900.037
+      }
+    },
+    {
+      "name": "⚖️test-cargo-dependency-direction📚️library🟦️",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run @semio-tech/repo-lib:test-cargo-dependency-direction",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "4_gate",
+        "order": 900.0371
       }
     },
     {
@@ -17235,7 +17367,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.0366
+        "order": 900.0372
       }
     },
     {
@@ -17246,7 +17378,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.0367
+        "order": 900.0373
       }
     },
     {
@@ -17257,7 +17389,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.0368
+        "order": 900.0374
       }
     },
     {
@@ -17268,7 +17400,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.0369
+        "order": 900.0375
       }
     },
     {
@@ -17279,7 +17411,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.037
+        "order": 900.0376
       }
     },
     {
@@ -17290,7 +17422,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.0371
+        "order": 900.0377
       }
     },
     {
@@ -17301,7 +17433,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.0372
+        "order": 900.0378
       }
     },
     {
@@ -17312,7 +17444,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.0373
+        "order": 900.0379
       }
     },
     {
@@ -17323,7 +17455,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.0374
+        "order": 900.038
       }
     },
     {
@@ -17334,7 +17466,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.0375
+        "order": 900.0381
       }
     },
     {
@@ -17345,7 +17477,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.0376
+        "order": 900.0382
       }
     },
     {
@@ -17356,7 +17488,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.0377
+        "order": 900.0383
       }
     },
     {
@@ -17367,7 +17499,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.0378
+        "order": 900.0384
       }
     },
     {
@@ -17378,7 +17510,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.0379
+        "order": 900.0385
       }
     },
     {
@@ -17389,7 +17521,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.038
+        "order": 900.0386
       }
     },
     {
@@ -17400,7 +17532,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.0381
+        "order": 900.0387
       }
     },
     {
@@ -17411,7 +17543,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.0382
+        "order": 900.0388
       }
     },
     {
@@ -17422,7 +17554,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.0383
+        "order": 900.0389
       }
     },
     {
@@ -17433,7 +17565,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.0384
+        "order": 900.039
       }
     },
     {
@@ -17444,7 +17576,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.0385
+        "order": 900.0391
       }
     },
     {
@@ -17455,7 +17587,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.0386
+        "order": 900.0392
       }
     },
     {
@@ -17466,7 +17598,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.0387
+        "order": 900.0393
       }
     },
     {
@@ -17477,7 +17609,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.0388
+        "order": 900.0394
       }
     },
     {
@@ -17488,7 +17620,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.0389
+        "order": 900.0395
       }
     },
     {
@@ -17499,7 +17631,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.039
+        "order": 900.0396
       }
     },
     {
@@ -17510,7 +17642,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.0391
+        "order": 900.0397
       }
     },
     {
@@ -17521,7 +17653,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.0392
+        "order": 900.0398
       }
     },
     {
@@ -17532,7 +17664,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.0393
+        "order": 900.0399
       }
     },
     {
@@ -17543,7 +17675,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.0394
+        "order": 900.04
       }
     },
     {
@@ -17554,7 +17686,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.0395
+        "order": 900.0401
       }
     },
     {
@@ -17565,7 +17697,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.0396
+        "order": 900.0402
       }
     },
     {
@@ -17576,7 +17708,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.0397
+        "order": 900.0403
       }
     },
     {
@@ -17587,7 +17719,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.0398
+        "order": 900.0404
       }
     },
     {
@@ -17598,7 +17730,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.0399
+        "order": 900.0405
       }
     },
     {
@@ -17609,7 +17741,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.04
+        "order": 900.0406
       }
     },
     {
@@ -17620,7 +17752,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.0401
+        "order": 900.0407
       }
     },
     {
@@ -17631,7 +17763,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.0402
+        "order": 900.0408
       }
     },
     {
@@ -17642,7 +17774,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.0403
+        "order": 900.0409
       }
     },
     {
@@ -17653,7 +17785,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.0404
+        "order": 900.041
       }
     },
     {
@@ -17664,7 +17796,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.0405
+        "order": 900.0411
       }
     },
     {
@@ -17675,7 +17807,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.0406
+        "order": 900.0412
       }
     },
     {
@@ -17686,7 +17818,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.0407
+        "order": 900.0413
       }
     },
     {
@@ -17697,7 +17829,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.0408
+        "order": 900.0414
       }
     },
     {
@@ -17719,7 +17851,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.0409
+        "order": 900.0415
       }
     },
     {
@@ -17730,7 +17862,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.041
+        "order": 900.0416
       }
     },
     {
@@ -17741,7 +17873,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.0411
+        "order": 900.0417
       }
     },
     {
@@ -17752,7 +17884,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.0412
+        "order": 900.0418
       }
     },
     {
@@ -17763,7 +17895,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.0413
+        "order": 900.0419
       }
     },
     {
@@ -17774,7 +17906,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.0414
+        "order": 900.042
       }
     },
     {
@@ -17789,6 +17921,17 @@
       }
     },
     {
+      "name": "⚖️test-toolchain-authority🔋️energy🟦️",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run @semio-tech/energy-js:test-toolchain-authority",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "4_gate",
+        "order": 900.0421
+      }
+    },
+    {
       "name": "⚖️test-bestest-regenerate🔋️model🦀️",
       "type": "node-terminal",
       "request": "launch",
@@ -17796,7 +17939,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.0415
+        "order": 900.0422
       }
     },
     {
@@ -17807,7 +17950,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.0416
+        "order": 900.0423
       }
     },
     {
@@ -17818,7 +17961,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.0417
+        "order": 900.0424
       }
     },
     {
@@ -17829,7 +17972,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.0418
+        "order": 900.0425
       }
     },
     {
@@ -17840,7 +17983,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.0419
+        "order": 900.0426
       }
     },
     {
@@ -17851,7 +17994,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.042
+        "order": 900.0427
       }
     },
     {
@@ -17862,7 +18005,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.0421
+        "order": 900.0428
       }
     },
     {
@@ -17873,7 +18016,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.0422
+        "order": 900.0429
       }
     },
     {
@@ -17884,7 +18027,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.0423
+        "order": 900.043
       }
     },
     {
@@ -17895,7 +18038,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.0424
+        "order": 900.0431
       }
     },
     {
@@ -17906,7 +18049,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.0425
+        "order": 900.0432
       }
     },
     {
@@ -17917,7 +18060,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.0426
+        "order": 900.0433
       }
     },
     {
@@ -17928,7 +18071,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.0427
+        "order": 900.0434
       }
     },
     {
@@ -17939,7 +18082,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.0428
+        "order": 900.0435
       }
     },
     {
@@ -17972,7 +18115,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.0429
+        "order": 900.0436
       }
     },
     {
@@ -17983,7 +18126,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.043
+        "order": 900.0437
       }
     },
     {
@@ -17994,7 +18137,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.0431
+        "order": 900.0438
       }
     },
     {
@@ -18005,7 +18148,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.0432
+        "order": 900.0439
       }
     },
     {
@@ -18016,7 +18159,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.0433
+        "order": 900.044
       }
     },
     {
@@ -18027,7 +18170,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.0434
+        "order": 900.0441
       }
     },
     {
@@ -18038,7 +18181,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.0435
+        "order": 900.0442
       }
     },
     {
@@ -18049,7 +18192,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.0436
+        "order": 900.0443
       }
     },
     {
@@ -18060,7 +18203,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.0437
+        "order": 900.0444
       }
     },
     {
@@ -18071,7 +18214,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.0438
+        "order": 900.0445
       }
     },
     {
@@ -18082,7 +18225,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.0439
+        "order": 900.0446
       }
     },
     {
@@ -18093,7 +18236,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.044
+        "order": 900.0447
       }
     },
     {
@@ -18104,7 +18247,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.0441
+        "order": 900.0448
       }
     },
     {
@@ -18115,7 +18258,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.0442
+        "order": 900.0449
       }
     },
     {
@@ -18126,7 +18269,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.0443
+        "order": 900.045
       }
     },
     {
@@ -18247,7 +18390,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.0444
+        "order": 900.0451
       }
     },
     {
@@ -18258,7 +18401,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.0445
+        "order": 900.0452
       }
     },
     {
@@ -18269,7 +18412,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.0446
+        "order": 900.0453
       }
     },
     {
@@ -18280,7 +18423,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.0447
+        "order": 900.0454
       }
     },
     {
@@ -18291,7 +18434,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.0448
+        "order": 900.0455
       }
     },
     {
@@ -18302,7 +18445,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.0449
+        "order": 900.0456
       }
     },
     {
@@ -18313,7 +18456,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.045
+        "order": 900.0457
       }
     },
     {
@@ -18335,7 +18478,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.0451
+        "order": 900.0458
       }
     },
     {
@@ -18357,7 +18500,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.0452
+        "order": 900.0459
       }
     },
     {
@@ -18368,7 +18511,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.0453
+        "order": 900.046
       }
     },
     {
@@ -18379,7 +18522,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.0454
+        "order": 900.0461
       }
     },
     {
@@ -18390,7 +18533,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.0455
+        "order": 900.0462
       }
     },
     {
@@ -18401,7 +18544,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.0456
+        "order": 900.0463
       }
     },
     {
@@ -18434,7 +18577,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.0457
+        "order": 900.0464
       }
     },
     {
@@ -18467,7 +18610,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.0458
+        "order": 900.0465
       }
     },
     {
@@ -18478,7 +18621,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.0459
+        "order": 900.0466
       }
     },
     {
@@ -18489,7 +18632,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.046
+        "order": 900.0467
       }
     },
     {
@@ -18500,7 +18643,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.0461
+        "order": 900.0468
       }
     },
     {
@@ -18522,7 +18665,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.0462
+        "order": 900.0469
       }
     },
     {
@@ -18533,7 +18676,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.0463
+        "order": 900.047
       }
     },
     {
@@ -18544,7 +18687,29 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.0464
+        "order": 900.0471
+      }
+    },
+    {
+      "name": "⚖️io-descriptor-parity🗿️artifacts🎬️sequence🦀️",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run @semio-tech/sequence-sequence-rs:io-descriptor-parity",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "4_gate",
+        "order": 900.0472
+      }
+    },
+    {
+      "name": "⚖️io-descriptor-parity-oracle🗿️artifacts🎬️sequence🦀️",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run @semio-tech/sequence-sequence-rs:io-descriptor-parity-oracle",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "4_gate",
+        "order": 900.0473
       }
     },
     {
@@ -18555,7 +18720,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.0465
+        "order": 900.0474
       }
     },
     {
@@ -18566,7 +18731,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.0466
+        "order": 900.0475
       }
     },
     {
@@ -18577,7 +18742,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.0467
+        "order": 900.0476
       }
     },
     {
@@ -18632,7 +18797,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.0468
+        "order": 900.0477
       }
     },
     {
@@ -18643,7 +18808,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.0469
+        "order": 900.0478
       }
     },
     {
@@ -18654,7 +18819,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.047
+        "order": 900.0479
       }
     },
     {
@@ -18665,7 +18830,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.0471
+        "order": 900.048
       }
     },
     {
@@ -18676,7 +18841,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.0472
+        "order": 900.0481
       }
     },
     {
@@ -18687,7 +18852,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.0473
+        "order": 900.0482
       }
     },
     {
@@ -18698,7 +18863,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.0474
+        "order": 900.0483
       }
     },
     {
@@ -18709,7 +18874,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.0475
+        "order": 900.0484
       }
     },
     {
@@ -18720,7 +18885,18 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.0476
+        "order": 900.0485
+      }
+    },
+    {
+      "name": "⚖️test-media-slots🧊️wgpu🟦️",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run @semio-tech/framework-renderer-wgpu:test-media-slots",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "4_gate",
+        "order": 900.0486
       }
     },
     {
@@ -18731,7 +18907,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.0477
+        "order": 900.0487
       }
     },
     {
@@ -18742,7 +18918,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.0478
+        "order": 900.0488
       }
     },
     {
@@ -18753,7 +18929,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.0479
+        "order": 900.0489
       }
     },
     {
@@ -18764,7 +18940,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.048
+        "order": 900.049
       }
     },
     {
@@ -18786,7 +18962,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.0481
+        "order": 900.0491
       }
     },
     {
@@ -18797,7 +18973,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.0482
+        "order": 900.0492
       }
     },
     {
@@ -18808,7 +18984,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.0483
+        "order": 900.0493
       }
     },
     {
@@ -18819,7 +18995,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.0484
+        "order": 900.0494
       }
     },
     {
@@ -18830,7 +19006,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.0485
+        "order": 900.0495
       }
     },
     {
@@ -18841,7 +19017,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.0486
+        "order": 900.0496
       }
     },
     {
@@ -18852,7 +19028,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.0487
+        "order": 900.0497
       }
     },
     {
@@ -18863,7 +19039,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.0488
+        "order": 900.0498
       }
     },
     {
@@ -18874,7 +19050,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.0489
+        "order": 900.0499
       }
     },
     {
@@ -18885,7 +19061,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.049
+        "order": 900.05
       }
     },
     {
@@ -18896,7 +19072,18 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.0491
+        "order": 900.0501
+      }
+    },
+    {
+      "name": "⚖️port-sides-test🧑‍💻dev🌊️flow🦀️",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run @semio-tech/s-flow-composition-rs:port-sides-test",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "4_gate",
+        "order": 900.0502
       }
     },
     {
@@ -18907,7 +19094,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.0492
+        "order": 900.0503
       }
     },
     {
@@ -18918,7 +19105,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.0493
+        "order": 900.0504
       }
     },
     {
@@ -18929,7 +19116,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.0494
+        "order": 900.0505
       }
     },
     {
@@ -18940,7 +19127,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.0495
+        "order": 900.0506
       }
     },
     {
@@ -18962,7 +19149,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.0496
+        "order": 900.0507
       }
     },
     {
@@ -19006,7 +19193,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.0497
+        "order": 900.0508
       }
     },
     {
@@ -19017,7 +19204,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.0498
+        "order": 900.0509
       }
     },
     {
@@ -19028,7 +19215,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.0499
+        "order": 900.051
       }
     },
     {
@@ -19039,7 +19226,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.05
+        "order": 900.0511
       }
     },
     {
@@ -19072,7 +19259,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.0501
+        "order": 900.0512
       }
     },
     {
@@ -19083,18 +19270,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.0502
-      }
-    },
-    {
-      "name": "⚖️layer-lint🧑‍💻dev🟦️",
-      "type": "node-terminal",
-      "request": "launch",
-      "command": "bun nx run @semio-tech/framework-os-dev:layer-lint",
-      "cwd": "${workspaceFolder}",
-      "presentation": {
-        "group": "4_gate",
-        "order": 900.0503
+        "order": 900.0513
       }
     },
     {
@@ -19105,7 +19281,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.0504
+        "order": 900.0514
       }
     },
     {
@@ -19138,7 +19314,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.0505
+        "order": 900.0515
       }
     },
     {
@@ -19182,7 +19358,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.0506
+        "order": 900.0516
       }
     },
     {
@@ -19193,7 +19369,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.0507
+        "order": 900.0517
       }
     },
     {
@@ -19204,7 +19380,84 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.0508
+        "order": 900.0518
+      }
+    },
+    {
+      "name": "⚖️test-generation2d🧩️composition-laws🦀️",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run @semio-tech/s-composition-laws-rs:test-generation2d",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "4_gate",
+        "order": 900.0519
+      }
+    },
+    {
+      "name": "⚖️test-generation3d-app-laws🧩️composition-laws🦀️",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run @semio-tech/s-composition-laws-rs:test-generation3d-app-laws",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "4_gate",
+        "order": 900.052
+      }
+    },
+    {
+      "name": "⚖️test-generation3d-geometry🧩️composition-laws🦀️",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run @semio-tech/s-composition-laws-rs:test-generation3d-geometry",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "4_gate",
+        "order": 900.0521
+      }
+    },
+    {
+      "name": "⚖️test-generation3d-incremental🧩️composition-laws🦀️",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run @semio-tech/s-composition-laws-rs:test-generation3d-incremental",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "4_gate",
+        "order": 900.0522
+      }
+    },
+    {
+      "name": "⚖️test-generation3d-unit-laws🧩️composition-laws🦀️",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run @semio-tech/s-composition-laws-rs:test-generation3d-unit-laws",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "4_gate",
+        "order": 900.0523
+      }
+    },
+    {
+      "name": "⚖️test-sequence🧩️composition-laws🦀️",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run @semio-tech/s-composition-laws-rs:test-sequence",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "4_gate",
+        "order": 900.0524
+      }
+    },
+    {
+      "name": "⚖️geometry-contract🧩️extensions🌀️procedural🦀️",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run @semio-tech/playbook-extension-procedural-rust:geometry-contract",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "4_gate",
+        "order": 900.0525
       }
     },
     {
@@ -19215,7 +19468,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.0509
+        "order": 900.0526
       }
     },
     {
@@ -19237,7 +19490,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.051
+        "order": 900.0527
       }
     },
     {
@@ -19248,7 +19501,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.0511
+        "order": 900.0528
       }
     },
     {
@@ -19259,7 +19512,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.0512
+        "order": 900.0529
       }
     },
     {
@@ -19270,7 +19523,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.0513
+        "order": 900.053
       }
     },
     {
@@ -19281,7 +19534,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.0514
+        "order": 900.0531
       }
     },
     {
@@ -19292,7 +19545,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.0515
+        "order": 900.0532
       }
     },
     {
@@ -19303,7 +19556,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.0516
+        "order": 900.0533
       }
     },
     {
@@ -19314,7 +19567,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.0517
+        "order": 900.0534
       }
     },
     {
@@ -19325,7 +19578,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.0518
+        "order": 900.0535
       }
     },
     {
@@ -19336,7 +19589,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.0519
+        "order": 900.0536
       }
     },
     {
@@ -19347,7 +19600,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.052
+        "order": 900.0537
       }
     },
     {
@@ -19358,7 +19611,18 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.0521
+        "order": 900.0538
+      }
+    },
+    {
+      "name": "⚖️test-mutation-payload-parity🧪️test",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run @semio-tech/repo-test-domain:test-mutation-payload-parity",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "4_gate",
+        "order": 900.0539
       }
     },
     {
@@ -19369,7 +19633,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.0522
+        "order": 900.054
       }
     },
     {
@@ -19380,7 +19644,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.0523
+        "order": 900.0541
       }
     },
     {
@@ -19391,7 +19655,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.0524
+        "order": 900.0542
       }
     },
     {
@@ -19402,7 +19666,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.0525
+        "order": 900.0543
       }
     },
     {
@@ -19413,7 +19677,51 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.0526
+        "order": 900.0544
+      }
+    },
+    {
+      "name": "⚖️test-schema-mutation-inputs🧪️test",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run @semio-tech/repo-test-domain:test-schema-mutation-inputs",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "4_gate",
+        "order": 900.0545
+      }
+    },
+    {
+      "name": "⚖️test-schema-mutation-inputs-census🧪️test",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run @semio-tech/repo-test-domain:test-schema-mutation-inputs-census",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "4_gate",
+        "order": 900.0546
+      }
+    },
+    {
+      "name": "⚖️test-schema-mutation-payloads🧪️test",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run @semio-tech/repo-test-domain:test-schema-mutation-payloads",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "4_gate",
+        "order": 900.0547
+      }
+    },
+    {
+      "name": "⚖️test-schema-mutation-payloads-census🧪️test",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run @semio-tech/repo-test-domain:test-schema-mutation-payloads-census",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "4_gate",
+        "order": 900.0548
       }
     },
     {
@@ -19424,7 +19732,18 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.0527
+        "order": 900.0549
+      }
+    },
+    {
+      "name": "⚖️test-discovery-boundaries🧪️test🟦️",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run @semio-tech/repo-test:test-discovery-boundaries",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "4_gate",
+        "order": 900.055
       }
     },
     {
@@ -19435,7 +19754,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.0528
+        "order": 900.0551
       }
     },
     {
@@ -19446,7 +19765,18 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.0529
+        "order": 900.0552
+      }
+    },
+    {
+      "name": "⚖️test-history-edit-actions🧰️framework🦀️",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run @semio-tech/framework-rs:test-history-edit-actions",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "4_gate",
+        "order": 900.0553
       }
     },
     {
@@ -19457,7 +19787,18 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.053
+        "order": 900.0554
+      }
+    },
+    {
+      "name": "⚖️test-mutation-inputs🧰️framework🦀️",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run @semio-tech/framework-rs:test-mutation-inputs",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "4_gate",
+        "order": 900.0555
       }
     },
     {
@@ -19468,7 +19809,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.0531
+        "order": 900.0556
       }
     },
     {
@@ -19479,7 +19820,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.0532
+        "order": 900.0557
       }
     },
     {
@@ -19490,7 +19831,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.0533
+        "order": 900.0558
       }
     },
     {
@@ -19501,7 +19842,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.0534
+        "order": 900.0559
       }
     },
     {
@@ -19567,7 +19908,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.0535
+        "order": 900.056
       }
     },
     {
@@ -20140,6 +20481,38 @@
       ]
     },
     {
+      "id": "projectTarget.canonical-architecture",
+      "type": "pickString",
+      "description": "Project whose canonical-architecture target runs",
+      "options": [
+        "@semio-tech/cad-cad-rs",
+        "@semio-tech/flow-extension-brep-rust",
+        "@semio-tech/framework-job-rs",
+        "@semio-tech/framework-os",
+        "@semio-tech/framework-os-dev",
+        "@semio-tech/framework-os-kernel",
+        "@semio-tech/framework-plugin",
+        "@semio-tech/framework-renderer-wgpu",
+        "@semio-tech/layout-js",
+        "@semio-tech/mit-bestand-demonstrator",
+        "@semio-tech/mit-bestand-praesentation-projektetage",
+        "@semio-tech/playbook-extension-procedural-rust",
+        "@semio-tech/procedural-generation3d-rs",
+        "@semio-tech/procedural-js",
+        "@semio-tech/puzzle-plugin",
+        "@semio-tech/raster-js",
+        "@semio-tech/repo-lib",
+        "@semio-tech/s-composition-laws-rs",
+        "@semio-tech/s-fixture-sweep-rs",
+        "@semio-tech/s-flow-composition-rs",
+        "@semio-tech/s-spatial-kernel-semio-session-rs",
+        "@semio-tech/sequence-sequence-rs",
+        "@semio-tech/ui-react",
+        "os-hub",
+        "semio-framework-3d"
+      ]
+    },
+    {
       "id": "projectTarget.check",
       "type": "pickString",
       "description": "Project whose check target runs",
@@ -20179,6 +20552,8 @@
         "@semio-tech/framework-schema",
         "@semio-tech/framework-space-collection-rs",
         "@semio-tech/framework-space-space-rs",
+        "@semio-tech/framework-time-travel-rs",
+        "@semio-tech/framework-tool-machine-rs",
         "@semio-tech/framework-tool-run-rs",
         "@semio-tech/framework-workflow-run-rs",
         "@semio-tech/framework-workflow-workflow-rs",
@@ -20217,6 +20592,7 @@
         "@semio-tech/raster-raster-rs",
         "@semio-tech/reasoning-wires-rs",
         "@semio-tech/remodel-remodeling-rs",
+        "@semio-tech/s-spatial-kernel-semio-session-rs",
         "@semio-tech/sequence-sequence",
         "@semio-tech/sequence-sequence-rs",
         "@semio-tech/shooting-shooting-rs",
@@ -20530,6 +20906,17 @@
       ]
     },
     {
+      "id": "projectTarget.source-check",
+      "type": "pickString",
+      "description": "Project whose source-check target runs",
+      "options": [
+        "@semio-tech/s-composition-laws-rs",
+        "@semio-tech/s-fixture-sweep-rs",
+        "@semio-tech/s-flow-composition-rs",
+        "@semio-tech/s-spatial-kernel-semio-session-rs"
+      ]
+    },
+    {
       "id": "projectTarget.test",
       "type": "pickString",
       "description": "Project whose test target runs",
@@ -20574,7 +20961,6 @@
         "@semio-tech/drawing-fsm",
         "@semio-tech/drawing-fsm-macros",
         "@semio-tech/dsl-derive-rs",
-        "@semio-tech/dsl-fixture-sweep-rs",
         "@semio-tech/energy-js",
         "@semio-tech/energy-model-rs",
         "@semio-tech/energy-oracle-py",
@@ -20638,6 +21024,8 @@
         "@semio-tech/framework-space-collection-rs",
         "@semio-tech/framework-space-space-rs",
         "@semio-tech/framework-surface-rs",
+        "@semio-tech/framework-time-travel-rs",
+        "@semio-tech/framework-tool-machine-rs",
         "@semio-tech/framework-tool-run-rs",
         "@semio-tech/framework-trace-rs",
         "@semio-tech/framework-typeset",
@@ -20670,6 +21058,7 @@
         "@semio-tech/mathematical-plugin",
         "@semio-tech/mit-bestand-bericht",
         "@semio-tech/mit-bestand-demonstrator",
+        "@semio-tech/mit-bestand-praesentation-projektetage",
         "@semio-tech/neural-engine-rs",
         "@semio-tech/norm-artifact-contract-rs",
         "@semio-tech/norm-din16798-rs",
@@ -20787,7 +21176,11 @@
         "@semio-tech/repo-yaml-rs",
         "@semio-tech/s-2d-js",
         "@semio-tech/s-3d-js",
+        "@semio-tech/s-composition-laws-rs",
+        "@semio-tech/s-fixture-sweep-rs",
+        "@semio-tech/s-flow-composition-rs",
         "@semio-tech/s-imperative",
+        "@semio-tech/s-spatial-kernel-semio-session-rs",
         "@semio-tech/schema-derive-rs",
         "@semio-tech/schema-registry-rs",
         "@semio-tech/semio-tech-play",
@@ -20966,7 +21359,6 @@
         "@semio-tech/drawing-fsm",
         "@semio-tech/drawing-fsm-macros",
         "@semio-tech/dsl-derive-rs",
-        "@semio-tech/dsl-fixture-sweep-rs",
         "@semio-tech/energy-plugin",
         "@semio-tech/fem-plugin",
         "@semio-tech/flow-extension-bim-rust",
@@ -21004,6 +21396,8 @@
         "@semio-tech/framework-renderer-wgpu",
         "@semio-tech/framework-rs",
         "@semio-tech/framework-surface-rs",
+        "@semio-tech/framework-time-travel-rs",
+        "@semio-tech/framework-tool-machine-rs",
         "@semio-tech/framework-tool-run-rs",
         "@semio-tech/framework-trace-rs",
         "@semio-tech/framework-typeset",
@@ -21096,6 +21490,7 @@
         "@semio-tech/repo-yaml-rs",
         "@semio-tech/s-2d-js",
         "@semio-tech/s-3d-js",
+        "@semio-tech/s-fixture-sweep-rs",
         "@semio-tech/s-imperative",
         "@semio-tech/schema-derive-rs",
         "@semio-tech/schema-registry-rs",
@@ -21167,7 +21562,6 @@
         "@semio-tech/drawing-fsm",
         "@semio-tech/drawing-fsm-macros",
         "@semio-tech/dsl-derive-rs",
-        "@semio-tech/dsl-fixture-sweep-rs",
         "@semio-tech/energy-plugin",
         "@semio-tech/fem-plugin",
         "@semio-tech/flow-extension-bim-rust",
@@ -21205,6 +21599,8 @@
         "@semio-tech/framework-renderer-wgpu",
         "@semio-tech/framework-rs",
         "@semio-tech/framework-surface-rs",
+        "@semio-tech/framework-time-travel-rs",
+        "@semio-tech/framework-tool-machine-rs",
         "@semio-tech/framework-tool-run-rs",
         "@semio-tech/framework-trace-rs",
         "@semio-tech/framework-typeset",
@@ -21297,6 +21693,7 @@
         "@semio-tech/repo-yaml-rs",
         "@semio-tech/s-2d-js",
         "@semio-tech/s-3d-js",
+        "@semio-tech/s-fixture-sweep-rs",
         "@semio-tech/s-imperative",
         "@semio-tech/schema-derive-rs",
         "@semio-tech/schema-registry-rs",
@@ -21372,7 +21769,6 @@
         "@semio-tech/drawing-fsm",
         "@semio-tech/drawing-fsm-macros",
         "@semio-tech/dsl-derive-rs",
-        "@semio-tech/dsl-fixture-sweep-rs",
         "@semio-tech/energy-plugin",
         "@semio-tech/fem-plugin",
         "@semio-tech/flow-extension-bim-rust",
@@ -21410,6 +21806,8 @@
         "@semio-tech/framework-renderer-wgpu",
         "@semio-tech/framework-rs",
         "@semio-tech/framework-surface-rs",
+        "@semio-tech/framework-time-travel-rs",
+        "@semio-tech/framework-tool-machine-rs",
         "@semio-tech/framework-tool-run-rs",
         "@semio-tech/framework-trace-rs",
         "@semio-tech/framework-typeset",
@@ -21503,6 +21901,8 @@
         "@semio-tech/repo-yaml-rs",
         "@semio-tech/s-2d-js",
         "@semio-tech/s-3d-js",
+        "@semio-tech/s-composition-laws-rs",
+        "@semio-tech/s-fixture-sweep-rs",
         "@semio-tech/s-imperative",
         "@semio-tech/schema-derive-rs",
         "@semio-tech/schema-registry-rs",
@@ -21549,6 +21949,17 @@
         "semio-framework-os-flow-core",
         "semio-framework-os-infinite",
         "workspace"
+      ]
+    },
+    {
+      "id": "projectTarget.test-renderer-contract",
+      "type": "pickString",
+      "description": "Project whose test-renderer-contract target runs",
+      "options": [
+        "@semio-tech/layout-js",
+        "@semio-tech/procedural-js",
+        "@semio-tech/puzzle-js",
+        "@semio-tech/raster-js"
       ]
     },
     {
@@ -21599,6 +22010,7 @@
         "@semio-tech/framework-renderer-wgpu",
         "@semio-tech/framework-surface-rs",
         "@semio-tech/puzzle-plugin",
+        "@semio-tech/s-spatial-kernel-semio-session-rs",
         "@semio-tech/trinity-jack-lsp",
         "semio-framework-os-flow-core"
       ]

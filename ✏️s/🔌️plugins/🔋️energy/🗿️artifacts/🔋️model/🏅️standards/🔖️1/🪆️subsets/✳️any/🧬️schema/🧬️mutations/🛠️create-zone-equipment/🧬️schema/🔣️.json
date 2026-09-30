@@ -5,6 +5,7 @@
   "type": "object",
   "additionalProperties": false,
   "required": [
+    "mutation",
     "id",
     "zoneId",
     "equipmentType",
@@ -13,11 +14,51 @@
     "coolingCapacityW"
   ],
   "properties": {
+    "mutation": {
+      "const": "createZoneEquipment"
+    },
     "id": {
-      "type": "integer"
+      "type": "integer",
+      "minimum": 0,
+      "x-semio-ui": {
+        "widget": "stepper",
+        "role": "value",
+        "label": {
+          "en": "ID",
+          "de": "ID"
+        },
+        "description": {
+          "en": "Id the new zone equipment is created under; later mutations address it by this id.",
+          "de": "ID, unter der das neue Objekt angelegt wird; spätere Mutationen adressieren es darüber."
+        },
+        "step": 1,
+        "precision": 0,
+        "group": "identity",
+        "order": 10
+      }
     },
     "zoneId": {
-      "type": "integer"
+      "type": "integer",
+      "minimum": 0,
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Zone",
+          "de": "Zone"
+        },
+        "description": {
+          "en": "Assigned zone, by id.",
+          "de": "Zugeordnete Zone, per ID."
+        },
+        "ref": {
+          "kind": "zone",
+          "domain": "energyModel",
+          "granularity": "zone"
+        },
+        "group": "assignment",
+        "order": 20
+      }
     },
     "equipmentType": {
       "enum": [
@@ -29,16 +70,111 @@
         "Erv",
         "UnitHeater",
         "WaterToAirHp"
-      ]
+      ],
+      "x-semio-ui": {
+        "widget": "select",
+        "role": "value",
+        "label": {
+          "en": "Equipment type",
+          "de": "Gerätetyp"
+        },
+        "options": {
+          "Baseboard": {
+            "en": "Baseboard heater",
+            "de": "Sockelleistenheizung"
+          },
+          "Radiant": {
+            "en": "Radiant system",
+            "de": "Flächenheizung/-kühlung"
+          },
+          "FanCoil": {
+            "en": "Fan coil unit",
+            "de": "Gebläsekonvektor"
+          },
+          "Ptac": {
+            "en": "Packaged terminal air conditioner",
+            "de": "Kompaktklimagerät"
+          },
+          "VrfTerminal": {
+            "en": "VRF terminal unit",
+            "de": "VRF-Inneneinheit"
+          },
+          "Erv": {
+            "en": "Energy recovery ventilator",
+            "de": "Lüftungsgerät mit Wärmerückgewinnung"
+          },
+          "UnitHeater": {
+            "en": "Unit heater",
+            "de": "Lufterhitzer"
+          },
+          "WaterToAirHp": {
+            "en": "Water-to-air heat pump",
+            "de": "Wasser-Luft-Wärmepumpe"
+          }
+        },
+        "group": "equipment",
+        "order": 30
+      }
     },
     "priority": {
-      "type": "integer"
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 255,
+      "x-semio-ui": {
+        "widget": "stepper",
+        "role": "value",
+        "label": {
+          "en": "Priority",
+          "de": "Priorität"
+        },
+        "description": {
+          "en": "Load allocation order; 1 is served first.",
+          "de": "Reihenfolge der Lastverteilung; 1 wird zuerst bedient."
+        },
+        "step": 1,
+        "precision": 0,
+        "softMin": 1,
+        "group": "equipment",
+        "order": 40
+      }
     },
     "heatingCapacityW": {
-      "type": "number"
+      "type": "number",
+      "minimum": 0,
+      "x-semio-ui": {
+        "widget": "stepper",
+        "role": "value",
+        "label": {
+          "en": "Heating capacity",
+          "de": "Heizleistung"
+        },
+        "unit": "W",
+        "displayUnit": "kW",
+        "displayFactor": 0.001,
+        "step": 100,
+        "precision": 2,
+        "group": "capacity",
+        "order": 50
+      }
     },
     "coolingCapacityW": {
-      "type": "number"
+      "type": "number",
+      "minimum": 0,
+      "x-semio-ui": {
+        "widget": "stepper",
+        "role": "value",
+        "label": {
+          "en": "Cooling capacity",
+          "de": "Kühlleistung"
+        },
+        "unit": "W",
+        "displayUnit": "kW",
+        "displayFactor": 0.001,
+        "step": 100,
+        "precision": 2,
+        "group": "capacity",
+        "order": 60
+      }
     }
   }
 }

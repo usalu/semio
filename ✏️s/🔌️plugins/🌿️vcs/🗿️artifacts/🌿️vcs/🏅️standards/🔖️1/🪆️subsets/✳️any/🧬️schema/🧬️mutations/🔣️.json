@@ -4,7 +4,7 @@
   "title": "VcsMutation",
   "oneOf": [
     {
-      "$ref": "https://json.schemas.assets.semio-tech.com/s/vcs/vcs/mutation/add-tag/schema.json"
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/vcs/vcs/mutation/rename-vcs/schema.json"
     },
     {
       "$ref": "https://json.schemas.assets.semio-tech.com/s/vcs/vcs/mutation/change-counter/schema.json"
@@ -16,10 +16,10 @@
       "$ref": "https://json.schemas.assets.semio-tech.com/s/vcs/vcs/mutation/change-status/schema.json"
     },
     {
-      "$ref": "https://json.schemas.assets.semio-tech.com/s/vcs/vcs/mutation/remove-tag/schema.json"
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/vcs/vcs/mutation/add-tag/schema.json"
     },
     {
-      "$ref": "https://json.schemas.assets.semio-tech.com/s/vcs/vcs/mutation/rename-vcs/schema.json"
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/vcs/vcs/mutation/remove-tag/schema.json"
     }
   ]
 }

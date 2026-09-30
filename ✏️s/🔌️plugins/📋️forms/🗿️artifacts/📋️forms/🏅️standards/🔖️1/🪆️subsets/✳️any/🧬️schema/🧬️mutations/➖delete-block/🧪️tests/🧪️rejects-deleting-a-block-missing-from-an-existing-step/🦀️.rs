@@ -81,8 +81,8 @@ async fn inverse_has_no_block_to_recreate() {
 }
 
 /// 🔣️ Both committed snapshots and the committed mutation are already canonical. `DeleteBlock`
-/// declares no `rename_all` of its own, so `step_id` stays snake_case on the wire while the enum
-/// tag is camelCased to `deleteBlock`.
+/// declares `rename_all = "camelCase"` like its enum tag, so the wire spells `stepId` beside
+/// `deleteBlock`.
 #[semio_framework_async_macros::async_test]
 async fn committed_json_is_canonical() {
     for (label, text) in [("before", BEFORE), ("after", AFTER)] {

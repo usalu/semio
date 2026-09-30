@@ -5,14 +5,50 @@
   "type": "object",
   "additionalProperties": false,
   "required": [
+    "mutation",
     "id"
   ],
   "properties": {
+    "mutation": {
+      "const": "changeNodeOperatorKind"
+    },
     "id": {
-      "type": "string"
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Node",
+          "de": "Knoten"
+        },
+        "description": {
+          "en": "The node to change.",
+          "de": "Der zu ändernde Knoten."
+        },
+        "ref": {
+          "kind": "node",
+          "domain": "graph",
+          "granularity": "node"
+        }
+      }
     },
     "newOperatorKind": {
-      "type": "string"
+      "type": [
+        "string",
+        "null"
+      ],
+      "x-semio-ui": {
+        "widget": "text",
+        "role": "value",
+        "label": {
+          "en": "New Operator Kind",
+          "de": "Neue Operatorart"
+        },
+        "description": {
+          "en": "Operator a computation node evaluates; empty clears it.",
+          "de": "Operator, den ein Berechnungsknoten auswertet; leer entfernt ihn."
+        }
+      }
     }
   }
 }

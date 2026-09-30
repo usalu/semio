@@ -5,15 +5,65 @@
   "type": "object",
   "additionalProperties": false,
   "required": [
+    "mutation",
     "id",
     "newAzimuthDeg"
   ],
   "properties": {
+    "mutation": {
+      "const": "changePvSystemAzimuth"
+    },
     "id": {
-      "type": "integer"
+      "type": "integer",
+      "minimum": 0,
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "PV system",
+          "de": "PV-Anlage"
+        },
+        "description": {
+          "en": "The PV system this mutation changes, by id.",
+          "de": "PV-Anlage, die diese Mutation ändert, per ID."
+        },
+        "ref": {
+          "kind": "pvSystem"
+        },
+        "group": "target",
+        "order": 10
+      }
     },
     "newAzimuthDeg": {
-      "type": "number"
+      "type": "number",
+      "minimum": 0,
+      "maximum": 360,
+      "x-semio-ui": {
+        "widget": "dial",
+        "role": "value",
+        "label": {
+          "en": "Azimuth",
+          "de": "Azimut"
+        },
+        "description": {
+          "en": "Compass bearing the collector faces: 0 north, 90 east, 180 south, 270 west.",
+          "de": "Himmelsrichtung der Ausrichtung: 0 Nord, 90 Ost, 180 Süd, 270 West."
+        },
+        "unit": "deg",
+        "step": 1,
+        "precision": 0,
+        "softMin": 0,
+        "softMax": 360,
+        "snaps": [
+          0,
+          90,
+          180,
+          270,
+          360
+        ],
+        "group": "orientation",
+        "order": 20
+      }
     }
   }
 }

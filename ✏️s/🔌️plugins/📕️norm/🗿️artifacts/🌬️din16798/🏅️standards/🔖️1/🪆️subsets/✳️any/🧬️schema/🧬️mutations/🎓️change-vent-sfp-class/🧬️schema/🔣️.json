@@ -10,11 +10,45 @@
   ],
   "properties": {
     "ventId": {
-      "type": "string"
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Ventilation system",
+          "de": "Lüftungsanlage"
+        },
+        "description": {
+          "en": "The ventilation system this mutation addresses.",
+          "de": "Die Lüftungsanlage, die diese Mutation adressiert."
+        },
+        "ref": {
+          "kind": "ventSystem"
+        },
+        "group": "target",
+        "order": 10
+      }
     },
     "newSfpRequiredClass": {
       "type": "integer",
-      "minimum": 0
+      "minimum": 0,
+      "maximum": 7,
+      "x-semio-ui": {
+        "widget": "stepper",
+        "role": "value",
+        "label": {
+          "en": "Required SFP class",
+          "de": "Geforderte SFP-Klasse"
+        },
+        "description": {
+          "en": "EN 16798-3 class SFP 0 (≤ 300 W/(m³/s)) to SFP 7 (≤ 6500 W/(m³/s)).",
+          "de": "Klasse nach EN 16798-3 von SFP 0 (≤ 300 W/(m³/s)) bis SFP 7 (≤ 6500 W/(m³/s))."
+        },
+        "step": 1,
+        "precision": 0,
+        "group": "ventilation",
+        "order": 20
+      }
     }
   }
 }

@@ -6,13 +6,13 @@
   "additionalProperties": false,
   "required": ["pageId", "frameId", "storyId", "insetX", "insetY", "insetWidth", "insetHeight"],
   "properties": {
-    "pageId": { "type": "string" },
-    "frameId": { "type": "string" },
-    "storyId": { "type": "string" },
-    "threadNext": { "type": "string" },
-    "insetX": { "type": "number" },
-    "insetY": { "type": "number" },
-    "insetWidth": { "type": "number", "minimum": 0 },
-    "insetHeight": { "type": "number", "minimum": 0 }
+    "pageId": { "type": "string", "x-semio-ui": { "widget": "reference", "role": "target", "label": { "en": "Page", "de": "Seite" }, "ref": { "kind": "page" }, "group": "target", "order": 10 } },
+    "frameId": { "type": "string", "x-semio-ui": { "widget": "reference", "role": "target", "label": { "en": "Frame", "de": "Rahmen" }, "ref": { "kind": "frame", "domain": "elements", "granularity": "element" }, "group": "target", "order": 20 } },
+    "storyId": { "type": "string", "x-semio-ui": { "widget": "reference", "role": "target", "label": { "en": "Story", "de": "Textfluss" }, "ref": { "kind": "story" }, "group": "target", "order": 30 } },
+    "threadNext": { "type": ["string", "null"], "x-semio-ui": { "widget": "reference", "role": "target", "label": { "en": "Next frame", "de": "Nächster Rahmen" }, "description": { "en": "The frame the story flows on to; empty ends the thread.", "de": "Der Rahmen, in dem der Textfluss weiterläuft; leer beendet die Verkettung." }, "ref": { "kind": "frame", "domain": "elements", "granularity": "element" }, "group": "target", "order": 40 } },
+    "insetX": { "type": "number", "x-semio-ui": { "widget": "stepper", "role": "value", "label": { "en": "Inset X", "de": "Innenabstand X" }, "unit": "mm", "step": 1, "precision": 1, "group": "inset", "order": 50 } },
+    "insetY": { "type": "number", "x-semio-ui": { "widget": "stepper", "role": "value", "label": { "en": "Inset Y", "de": "Innenabstand Y" }, "unit": "mm", "step": 1, "precision": 1, "group": "inset", "order": 60 } },
+    "insetWidth": { "type": "number", "minimum": 0, "x-semio-ui": { "widget": "stepper", "role": "value", "label": { "en": "Inset width", "de": "Innenabstand Breite" }, "unit": "mm", "step": 1, "precision": 1, "group": "inset", "order": 70 } },
+    "insetHeight": { "type": "number", "minimum": 0, "x-semio-ui": { "widget": "stepper", "role": "value", "label": { "en": "Inset height", "de": "Innenabstand Höhe" }, "unit": "mm", "step": 1, "precision": 1, "group": "inset", "order": 80 } }
   }
 }

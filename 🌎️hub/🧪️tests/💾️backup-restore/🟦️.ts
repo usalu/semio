@@ -18,7 +18,8 @@ import { spawnSync } from "node:child_process";
 import { mkdirSync, mkdtempSync, readFileSync, readdirSync, rmSync, statSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join, relative } from "node:path";
-import { hubProbeCall, hubProbeCreateArtifact, hubProbeCreateSpace, hubProbeCreationCatalog, hubProbeOpenDocument, hubProbeSignIn, hubSeedTrustedCatalog } from "../../🤝️integration-harness/🟦️.ts";
+import { hubSeedTrustedCatalog } from "../../🤝️integration-harness/🟦️.ts";
+import { hubProbeCall, hubProbeCreateArtifact, hubProbeCreateSpace, hubProbeCreationCatalog, hubProbeOpenDocument, hubProbeSignIn } from "../../../🧰️framework/🛍️products/💻️os/🔨️modules/📇️directory/🧪️testkit/📡️client-probe/🟦️.ts";
 import { sealSpaceArtifactCreateV1 } from "../../../🧰️framework/🛍️products/💻️os/🔨️modules/📇️directory/🧬️schema/🌱️space-artifact-creation-v1/🟦️.ts";
 import { finishLocalHub, startLocalHub, TRUSTED_CATALOG_READINESS_STALL_BOUND_MS, waitForChildExit, waitForReadiness } from "../../🚀️local-bootstrap/🏃️execution/🟦️.ts";
 

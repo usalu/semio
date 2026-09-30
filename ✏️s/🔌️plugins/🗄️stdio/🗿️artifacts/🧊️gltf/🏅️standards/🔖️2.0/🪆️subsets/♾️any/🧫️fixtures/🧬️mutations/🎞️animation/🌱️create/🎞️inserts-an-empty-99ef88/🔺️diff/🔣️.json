@@ -1,15 +1,18 @@
 {
-  "id": "s.stdio.gltf.mutation.create-animation.v1",
-  "version": 1,
-  "touchedPaths": [
-    "document/animations/0"
-  ],
-  "payload": {
-    "position": 0
-  },
-  "operation": {
-    "kind": "insert",
-    "position": 0,
-    "item": {}
+  "animations": {
+    "modified": [
+      {
+        "index": 0,
+        "diff": {}
+      }
+    ],
+    "added": [
+      {
+        "index": 1,
+        "item": {
+          "name": "spin"
+        }
+      }
+    ]
   }
 }

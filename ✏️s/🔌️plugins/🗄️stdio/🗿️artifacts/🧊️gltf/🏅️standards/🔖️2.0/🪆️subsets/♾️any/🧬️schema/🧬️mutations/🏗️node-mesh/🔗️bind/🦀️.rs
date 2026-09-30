@@ -4,8 +4,7 @@ use crate::schema::modules::mutation_support::top_level::rejection_outcome;
 use crate::schema::modules::mutation_support::top_level::GltfTopLevelMutationRejection;
 use crate::GltfSnapshot;
 pub const ID: &str = "s.stdio.gltf.mutation.bind-node-mesh.v1";
-#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::MutationLeaf)]
-#[mutation_leaf(contract = ::protocol)]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
 #[value(rename_all = "camelCase")]
 pub struct GltfBindNodeMeshPayload {
     pub node: usize,
@@ -27,7 +26,7 @@ pub fn apply(payload: &GltfBindNodeMeshPayload, base: &GltfSnapshot) -> Result<G
 
 //#region 🧬️DirectMutation
 #[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::MutationLeaf)]
-#[mutation_leaf(contract = ::protocol)]
+#[mutation_leaf(contract = ::protocol, payload = Apply)]
 #[value(tag = "phase", content = "value", rename_all = "camelCase")]
 pub enum BindNodeMeshMutation {
     Apply(GltfBindNodeMeshPayload),
@@ -71,6 +70,6 @@ impl protocol::MutationKind<GltfSnapshot, super::GltfMutation> for BindNodeMeshM
 
 //#region 🧪️Tests
 #[cfg(test)]
-#[path = "🧪️tests/🔬️direct-leaf/🦀️.rs"]
-mod direct_leaf_tests;
+#[path = "🧪️tests/🔗️binds-the-hull-fe46fd/🦀️.rs"]
+mod case_binds_the_hull_fe46fd;
 //#endregion 🧪️Tests

@@ -1,0 +1,80 @@
+{
+  "case": "color-input",
+  "kind": "composite",
+  "description": "The `color_input` recipe: a labelled group holding the swatch, the hex field and the alpha slider of an sRGB colour with alpha.",
+  "outcome": "accept",
+  "limits": null,
+  "tree": {
+    "root": 0,
+    "nodeCount": 4,
+    "shape": [
+      {
+        "id": 0,
+        "key": "#0",
+        "type": "container",
+        "children": [
+          1,
+          2,
+          3
+        ]
+      },
+      {
+        "id": 1,
+        "key": "swatch",
+        "type": "input",
+        "children": []
+      },
+      {
+        "id": 2,
+        "key": "hex",
+        "type": "input",
+        "children": []
+      },
+      {
+        "id": 3,
+        "key": "alpha",
+        "type": "slider",
+        "children": []
+      }
+    ]
+  },
+  "accessibility": [
+    {
+      "id": 0,
+      "label": null,
+      "description": null,
+      "live": "off",
+      "shortcut": null,
+      "hidden": false
+    },
+    {
+      "id": 1,
+      "label": "Tint",
+      "description": null,
+      "live": "off",
+      "shortcut": null,
+      "hidden": false
+    },
+    {
+      "id": 2,
+      "label": "Hex",
+      "description": null,
+      "live": "off",
+      "shortcut": null,
+      "hidden": false
+    },
+    {
+      "id": 3,
+      "label": "Alpha",
+      "description": null,
+      "live": "off",
+      "shortcut": null,
+      "hidden": false
+    }
+  ],
+  "actionIds": [
+    "app.setTint@1",
+    "app.setTint@1",
+    "app.setTintAlpha@1"
+  ]
+}

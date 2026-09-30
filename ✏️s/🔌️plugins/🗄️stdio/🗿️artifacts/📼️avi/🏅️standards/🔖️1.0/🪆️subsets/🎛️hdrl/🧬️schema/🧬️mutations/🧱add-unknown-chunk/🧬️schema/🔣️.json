@@ -5,20 +5,39 @@
   "type": "object",
   "additionalProperties": false,
   "required": [
+    "mutation",
     "index",
     "item"
   ],
   "properties": {
-    "index": {
-      "type": "integer",
-      "minimum": 0
-    },
-    "item": {
-      "$ref": "#/$defs/RiffChunk"
-    },
     "mutation": {
       "const": "addUnknownChunk",
       "description": "Aggregate discriminator spliced in by AviMutation; absent when the payload stands alone."
+    },
+    "index": {
+      "type": "integer",
+      "minimum": 0,
+      "x-semio-ui": {
+        "widget": "stepper",
+        "label": {
+          "en": "Insert position",
+          "de": "Einfügeposition"
+        },
+        "precision": 0,
+        "group": "target",
+        "order": 10
+      }
+    },
+    "item": {
+      "$ref": "#/$defs/RiffChunk",
+      "x-semio-ui": {
+        "label": {
+          "en": "Chunk",
+          "de": "Chunk"
+        },
+        "group": "value",
+        "order": 20
+      }
     }
   },
   "$defs": {
@@ -30,7 +49,13 @@
       ],
       "properties": {
         "fourcc": {
-          "type": "string"
+          "type": "string",
+          "x-semio-ui": {
+            "label": {
+              "en": "FourCC",
+              "de": "FourCC"
+            }
+          }
         },
         "data": {
           "type": "array",
@@ -38,6 +63,12 @@
             "type": "integer",
             "minimum": 0,
             "maximum": 255
+          },
+          "x-semio-ui": {
+            "label": {
+              "en": "Chunk data",
+              "de": "Chunk-Daten"
+            }
           }
         }
       }

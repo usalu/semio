@@ -5,16 +5,54 @@
   "type": "object",
   "additionalProperties": false,
   "required": [
+    "mutation",
     "id",
     "newSyncOffsetMs"
   ],
   "properties": {
+    "mutation": {
+      "const": "changeStreamSync"
+    },
     "id": {
-      "type": "string"
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Stream",
+          "de": "Stream"
+        },
+        "description": {
+          "en": "The stream whose synchronisation offset changes.",
+          "de": "Stream, dessen Synchronisationsversatz geändert wird."
+        },
+        "ref": {
+          "kind": "stream"
+        },
+        "group": "target",
+        "order": 10
+      }
     },
     "newSyncOffsetMs": {
       "type": "number",
-      "format": "double"
+      "format": "double",
+      "x-semio-ui": {
+        "widget": "stepper",
+        "role": "value",
+        "label": {
+          "en": "Sync Offset (ms)",
+          "de": "Synchronisationsversatz (ms)"
+        },
+        "description": {
+          "en": "Time shift that aligns this stream with the other streams.",
+          "de": "Zeitversatz, der diesen Stream mit den anderen Streams synchronisiert."
+        },
+        "unit": "ms",
+        "step": 1,
+        "precision": 1,
+        "group": "timing",
+        "order": 20
+      }
     }
   }
 }

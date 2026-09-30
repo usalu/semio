@@ -8,47 +8,11 @@
       "type": "object",
       "additionalProperties": false,
       "required": [
-        "InsertVmlPart"
+        "SetSnapshot"
       ],
       "properties": {
-        "InsertVmlPart": {
-          "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/xlsx/ecma-376/strict/mutation/insert-vml-part/schema.json"
-        }
-      }
-    },
-    {
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "RemoveConformanceAttribute"
-      ],
-      "properties": {
-        "RemoveConformanceAttribute": {
-          "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/xlsx/ecma-376/strict/mutation/remove-conformance-attribute/schema.json"
-        }
-      }
-    },
-    {
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "RemoveVmlPart"
-      ],
-      "properties": {
-        "RemoveVmlPart": {
-          "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/xlsx/ecma-376/strict/mutation/remove-vml-part/schema.json"
-        }
-      }
-    },
-    {
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "SetConformanceAttribute"
-      ],
-      "properties": {
-        "SetConformanceAttribute": {
-          "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/xlsx/ecma-376/strict/mutation/set-conformance-attribute/schema.json"
+        "SetSnapshot": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/xlsx/ecma-376/strict/mutation/set-snapshot/schema.json"
         }
       }
     },
@@ -80,11 +44,47 @@
       "type": "object",
       "additionalProperties": false,
       "required": [
-        "SetSnapshot"
+        "SetConformanceAttribute"
       ],
       "properties": {
-        "SetSnapshot": {
-          "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/xlsx/ecma-376/strict/mutation/set-snapshot/schema.json"
+        "SetConformanceAttribute": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/xlsx/ecma-376/strict/mutation/set-conformance-attribute/schema.json"
+        }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "RemoveConformanceAttribute"
+      ],
+      "properties": {
+        "RemoveConformanceAttribute": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/xlsx/ecma-376/strict/mutation/remove-conformance-attribute/schema.json"
+        }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "InsertVmlPart"
+      ],
+      "properties": {
+        "InsertVmlPart": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/xlsx/ecma-376/strict/mutation/insert-vml-part/schema.json"
+        }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "RemoveVmlPart"
+      ],
+      "properties": {
+        "RemoveVmlPart": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/xlsx/ecma-376/strict/mutation/remove-vml-part/schema.json"
         }
       }
     },

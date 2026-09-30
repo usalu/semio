@@ -11,7 +11,18 @@
   "properties": {
     "schema": {
       "type": "string",
-      "x-semio-state": "artifact"
+      "x-semio-state": "artifact",
+      "x-semio-ui": {
+        "widget": "text",
+        "label": {
+          "en": "Snapshot schema",
+          "de": "Snapshot-Schema"
+        },
+        "description": {
+          "en": "Identifier of the snapshot schema version.",
+          "de": "Kennung der Version des Snapshot-Schemas."
+        }
+      }
     },
     "runs": {
       "type": "array",
@@ -21,7 +32,18 @@
         "properties": {
           "language": {
             "type": "string",
-            "description": "BCP-47 tag; empty = unspecified"
+            "description": "BCP-47 tag; empty = unspecified",
+            "x-semio-ui": {
+              "widget": "text",
+              "label": {
+                "en": "Language",
+                "de": "Sprache"
+              },
+              "description": {
+                "en": "BCP 47 tag; empty means unspecified.",
+                "de": "BCP-47-Kennung; leer bedeutet unbestimmt."
+              }
+            }
           },
           "content": {
             "type": "string"
@@ -37,15 +59,58 @@
                     "italic",
                     "code",
                     "link"
-                  ]
+                  ],
+                  "x-semio-ui": {
+                    "options": {
+                      "bold": {
+                        "en": "Bold",
+                        "de": "Fett"
+                      },
+                      "italic": {
+                        "en": "Italic",
+                        "de": "Kursiv"
+                      },
+                      "code": {
+                        "en": "Code",
+                        "de": "Code"
+                      },
+                      "link": {
+                        "en": "Link",
+                        "de": "Link"
+                      }
+                    }
+                  }
                 },
                 "href": {
                   "type": "string",
-                  "description": "populated only when kind == link"
+                  "description": "populated only when kind == link",
+                  "x-semio-ui": {
+                    "widget": "text",
+                    "label": {
+                      "en": "Link target",
+                      "de": "Linkziel"
+                    },
+                    "description": {
+                      "en": "URL of a link mark.",
+                      "de": "URL einer Link-Auszeichnung."
+                    }
+                  }
                 }
+              }
+            },
+            "x-semio-ui": {
+              "label": {
+                "en": "Marks",
+                "de": "Auszeichnungen"
               }
             }
           }
+        }
+      },
+      "x-semio-ui": {
+        "label": {
+          "en": "Text runs",
+          "de": "Textläufe"
         }
       }
     }

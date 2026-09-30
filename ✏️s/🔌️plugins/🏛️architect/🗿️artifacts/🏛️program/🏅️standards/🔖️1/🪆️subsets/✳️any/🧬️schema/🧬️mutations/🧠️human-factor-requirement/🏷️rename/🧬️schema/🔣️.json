@@ -5,16 +5,52 @@
   "type": "object",
   "additionalProperties": false,
   "required": [
+    "mutation",
     "id",
     "newName"
   ],
   "properties": {
+    "mutation": {
+      "const": "renameHumanFactorRequirement"
+    },
     "id": {
-      "type": "integer",
-      "minimum": 0
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Human Factors Requirement",
+          "de": "Human-Factors-Anforderung"
+        },
+        "description": {
+          "en": "The human factors requirement to rename.",
+          "de": "Umzubenennender Eintrag vom Typ „Human-Factors-Anforderung“."
+        },
+        "ref": {
+          "kind": "humanFactorRequirement",
+          "domain": "program",
+          "granularity": "entity"
+        },
+        "group": "target",
+        "order": 10
+      }
     },
     "newName": {
-      "type": "string"
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "text",
+        "role": "value",
+        "label": {
+          "en": "New Name",
+          "de": "Neuer Name"
+        },
+        "description": {
+          "en": "New name of the human factors requirement.",
+          "de": "Neuer Name des Eintrags vom Typ „Human-Factors-Anforderung“."
+        },
+        "group": "identity",
+        "order": 20
+      }
     }
   }
 }

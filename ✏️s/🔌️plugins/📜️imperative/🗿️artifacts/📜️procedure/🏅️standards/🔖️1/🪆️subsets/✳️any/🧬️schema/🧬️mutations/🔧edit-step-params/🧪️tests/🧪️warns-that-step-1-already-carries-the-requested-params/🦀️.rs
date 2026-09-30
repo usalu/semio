@@ -18,11 +18,11 @@ use crate::mutations::ProcedureMutation;
 use crate::{Dictionary, Path, ProcedureSnapshot, Step};
 use neural_engine::{Atom, Value};
 
-const BEFORE: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🔧edit-step-params/🧪️warns-that-step-1-already-carries-the-requested-params/📸️snapshot/⬅️before/🔣️.json");
-const AFTER: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🔧edit-step-params/🧪️warns-that-step-1-already-carries-the-requested-params/📸️snapshot/➡️after/🔣️.json");
-const MUTATION: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🔧edit-step-params/🧪️warns-that-step-1-already-carries-the-requested-params/🦠️mutation/🔣️.json");
-const DIFF: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🔧edit-step-params/🧪️warns-that-step-1-already-carries-the-requested-params/🔺️diff/🔣️.json");
-const OUTCOME: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🔧edit-step-params/🧪️warns-that-step-1-already-carries-the-requested-params/🎯️outcome/🔣️.json");
+const BEFORE: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🔧edit-step-params/🧪️warns-step-1-already-carries-requested/📸️snapshot/⬅️before/🔣️.json");
+const AFTER: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🔧edit-step-params/🧪️warns-step-1-already-carries-requested/📸️snapshot/➡️after/🔣️.json");
+const MUTATION: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🔧edit-step-params/🧪️warns-step-1-already-carries-requested/🦠️mutation/🔣️.json");
+const DIFF: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🔧edit-step-params/🧪️warns-step-1-already-carries-requested/🔺️diff/🔣️.json");
+const OUTCOME: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🔧edit-step-params/🧪️warns-step-1-already-carries-requested/🎯️outcome/🔣️.json");
 
 /// 🛤️ The program the committed `flow` handle stands for: `step-1` already prints "Guten Tag",
 /// while `step-2` carries the empty dictionary that makes the guard's target unambiguous.

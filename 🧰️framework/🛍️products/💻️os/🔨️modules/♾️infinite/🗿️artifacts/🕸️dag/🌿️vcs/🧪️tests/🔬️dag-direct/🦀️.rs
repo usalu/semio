@@ -6,6 +6,32 @@ fn fixture() -> Value {
     dsl::os_pack::json::parse(include_str!("../../🧫️fixtures/🔣️mutations.json")).expect("neutral Dag mutation fixture")
 }
 
+/// 🧾️ The committed wire witness of each direct leaf, in roster order: the Rust `ToValue` of one aggregate operation.
+const WITNESSES: [&str; 14] = [
+    include_str!("../../🧫️fixtures/🧬️mutations/➕️create-node/🧾️wire-witness/🦠️mutation/🔣️.json"),
+    include_str!("../../🧫️fixtures/🧬️mutations/🗑️delete-node/🧾️wire-witness/🦠️mutation/🔣️.json"),
+    include_str!("../../🧫️fixtures/🧬️mutations/✏️rename-node/🧾️wire-witness/🦠️mutation/🔣️.json"),
+    include_str!("../../🧫️fixtures/🧬️mutations/🔤️change-node-name/🧾️wire-witness/🦠️mutation/🔣️.json"),
+    include_str!("../../🧫️fixtures/🧬️mutations/↔️move-node/🧾️wire-witness/🦠️mutation/🔣️.json"),
+    include_str!("../../🧫️fixtures/🧬️mutations/📐️resize-node/🧾️wire-witness/🦠️mutation/🔣️.json"),
+    include_str!("../../🧫️fixtures/🧬️mutations/🖼️change-node-icon/🧾️wire-witness/🦠️mutation/🔣️.json"),
+    include_str!("../../🧫️fixtures/🧬️mutations/🔡️change-node-abbreviation/🧾️wire-witness/🦠️mutation/🔣️.json"),
+    include_str!("../../🧫️fixtures/🧬️mutations/🧮️change-node-operator-kind/🧾️wire-witness/🦠️mutation/🔣️.json"),
+    include_str!("../../🧫️fixtures/🧬️mutations/🔁️replace-node-kind/🧾️wire-witness/🦠️mutation/🔣️.json"),
+    include_str!("../../🧫️fixtures/🧬️mutations/🗃️replace-node-properties/🧾️wire-witness/🦠️mutation/🔣️.json"),
+    include_str!("../../🧫️fixtures/🧬️mutations/🔀️reorder-nodes/🧾️wire-witness/🦠️mutation/🔣️.json"),
+    include_str!("../../🧫️fixtures/🧬️mutations/🔗️connect-nodes/🧾️wire-witness/🦠️mutation/🔣️.json"),
+    include_str!("../../🧫️fixtures/🧬️mutations/✂️disconnect-nodes/🧾️wire-witness/🦠️mutation/🔣️.json"),
+];
+
+fn witness(index: usize) -> Value {
+    dsl::os_pack::json::parse(WITNESSES[index]).expect("committed Dag wire witness")
+}
+
+fn witness_payload(index: usize) -> Value {
+    Value::Object(witness(index).as_object().expect("wire object").iter().filter(|(key, _)| *key != "operation").map(|(key, value)| (key.to_string(), value.clone())).collect())
+}
+
 /// 🌉️ `T: FromValue` decode of a pack JSON [`Value`] — the in-house `serde_json::from_value` analog.
 fn from_pack_value<T: dsl::FromValue>(value: &Value) -> Result<T, dsl::ValueError> {
     <T as dsl::FromValue>::from_value(dsl::os_pack::json::to_dsl_value(value))
@@ -52,15 +78,15 @@ pub(crate) fn assert_leaf_contract<T>(index: usize, wrap: fn(T) -> DagMutation, 
 where
     T: MutationLeaf + dsl::ToValue + dsl::FromValue,
 {
-    let fixture = fixture();
-    let row = &fixture["valid"][index];
-    let payload = from_pack_value::<T>(&row["payload"]).expect("neutral direct payload");
+    let wire = witness(index);
+    let payload_value = witness_payload(index);
+    let payload = from_pack_value::<T>(&payload_value).expect("neutral direct payload");
     let mutation = wrap(payload);
     assert_eq!(serde_json::from_str::<serde_json::Value>(&dsl::os_pack::json::to_json_string(&T::DESCRIPTOR)).expect("descriptor JSON"), serde_json::from_str::<serde_json::Value>(descriptor).expect("owned descriptor"));
     assert_eq!(mutation.descriptor(), &T::DESCRIPTOR);
     assert_eq!(mutation.descriptor().binary_tag, Some(u32::try_from(index).expect("small roster index")));
-    assert_eq!(to_pack_value(&mutation)["operation"], row["operation"]);
-    let mut unknown_payload = row["payload"].clone();
+    assert_eq!(to_pack_value(&mutation)["operation"], wire["operation"]);
+    let mut unknown_payload = payload_value.clone();
     if let Some(object) = unknown_payload.as_object_mut() {
         object.insert("unknown".to_string(), Value::from(true));
     }
@@ -70,14 +96,14 @@ where
         object.insert("unknown".to_string(), Value::from(true));
     }
     assert!(from_pack_value::<DagMutation>(&unknown_operation).is_err());
-    let payload_object = row["payload"].as_object().expect("payload object");
+    let payload_object = payload_value.as_object().expect("payload object");
     let payload_keys: Vec<String> = payload_object.iter().map(|(key, _)| key.to_string()).filter(|key| key != "newOperatorKind").collect();
     for key in payload_keys {
         let missing: Value = Value::Object(payload_object.iter().filter(|(k, _)| *k != key).map(|(k, v)| (k.to_string(), v.clone())).collect());
         assert!(from_pack_value::<T>(&missing).is_err(), "missing {key}");
         let mut missing_aggregate = missing;
         if let Some(object) = missing_aggregate.as_object_mut() {
-            object.insert("operation".to_string(), row["operation"].clone());
+            object.insert("operation".to_string(), wire["operation"].clone());
         }
         assert!(from_pack_value::<DagMutation>(&missing_aggregate).is_err(), "missing aggregate {key}");
     }
@@ -97,12 +123,9 @@ fn direct_leaf_roster_and_codec_contracts() {
     let fixture = fixture();
     assert_eq!(DagMutation::kinds().len(), 14);
     assert_eq!(<DagMutation as Mutation<DagSnapshot>>::DESCRIPTORS.len(), 14);
-    for (index, row) in fixture["valid"].as_array().expect("valid vectors").iter().enumerate() {
-        let mut json = row["payload"].clone();
-        if let Some(object) = json.as_object_mut() {
-            object.insert("operation".to_string(), row["operation"].clone());
-        }
-        let mutation = from_pack_value::<DagMutation>(&json).expect("neutral aggregate");
+    for index in 0..WITNESSES.len() {
+        let mutation = from_pack_value::<DagMutation>(&witness(index)).expect("committed aggregate wire witness");
+        assert_eq!(serde_json::from_str::<serde_json::Value>(&dsl::os_pack::json::to_json_string(&mutation)).expect("wire JSON"), serde_json::from_str::<serde_json::Value>(WITNESSES[index]).expect("witness JSON"), "the committed wire witness is the canonical Rust wire");
         assert_eq!(mutation.descriptor().binary_tag, Some(u32::try_from(index).expect("small index")));
         assert_eq!(mutation.descriptor().diff_participation, protocol::MutationDiffParticipation::ApplyOnly);
         assert_codecs(&mutation);
@@ -145,7 +168,7 @@ fn direct_delete_inverse_declares_descending_edges_before_node() {
 async fn direct_store_undo_restores_incident_edge_order() {
     let before = base();
     let mut store = create_dag_store("dag", before.clone()).await.expect("store");
-    store.dispatch(ArtifactCommand::Apply { mutations: vec![DagMutation::DeleteNode(DeleteNode { id: "a".into() })], description: None }).await.expect("delete");
+    store.dispatch(ArtifactCommand::Apply { mutations: vec![DagMutation::DeleteNode(DeleteNode { id: "a".into() })], description: None, transaction: None }).await.expect("delete");
     store.dispatch(ArtifactCommand::Undo).await.expect("undo");
     assert_eq!(store.snapshot().expect("restored projection"), before);
     store.dispatch(ArtifactCommand::Redo).await.expect("redo");

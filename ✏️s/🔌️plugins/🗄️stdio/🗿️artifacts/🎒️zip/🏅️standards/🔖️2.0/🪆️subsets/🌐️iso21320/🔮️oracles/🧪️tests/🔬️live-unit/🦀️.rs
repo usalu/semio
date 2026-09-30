@@ -12,6 +12,14 @@ mod tests {
         Json::Object(vec![("kind".into(), Json::String(kind.into())), ("params".into(), Json::Object(params.into_iter().map(|(k, v)| (k.to_string(), v)).collect()))])
     }
 
+    fn bytes(text: &str) -> Json {
+        Json::Array(text.bytes().map(|byte| Json::Number(byte as f64)).collect())
+    }
+
+    fn entry(name: &str, data: &str, method: f64) -> Json {
+        Json::Object(vec![("name".into(), Json::String(name.into())), ("data".into(), bytes(data)), ("metadata".into(), Json::Object(vec![("compressionMethod".into(), Json::Number(method))]))])
+    }
+
     #[test]
     fn both_declared_methods_survive_a_reference_write_and_read() {
         let bytes = write_archive(&archive()).expect("writes");
@@ -22,8 +30,8 @@ mod tests {
 
     #[test]
     fn add_stored_entry_and_add_deflated_entry_are_different_operations() {
-        let stored = apply(archive(), &spec("add-stored-entry", vec![("name", Json::String("neu.bin".into())), ("content", Json::String("payload".into()))])).expect("applies");
-        let deflated = apply(archive(), &spec("add-deflated-entry", vec![("name", Json::String("neu.bin".into())), ("content", Json::String("payload".into()))])).expect("applies");
+        let stored = apply(archive(), &spec("add-stored-entry", vec![("entry", entry("neu.bin", "payload", 8.0))])).expect("applies");
+        let deflated = apply(archive(), &spec("add-deflated-entry", vec![("entry", entry("neu.bin", "payload", 0.0))])).expect("applies");
         assert_eq!(stored.entries.last().expect("member").method, IsoMethod::Stored);
         assert_eq!(deflated.entries.last().expect("member").method, IsoMethod::Deflate);
     }
@@ -36,14 +44,13 @@ mod tests {
     #[test]
     fn every_declared_kind_round_trips_through_its_own_inverse() {
         let specs = vec![
-            spec("no-mutation", vec![]),
-            spec("set-snapshot", vec![("entries", Json::Array(vec![Json::Object(vec![("name".into(), Json::String("x".into())), ("content".into(), Json::String("y".into()))])])), ("comment", Json::String("neu".into()))]),
-            spec("set-archive-comment", vec![("comment", Json::String("geaendert".into()))]),
-            spec("add-stored-entry", vec![("name", Json::String("a.png".into())), ("content", Json::String("p".into()))]),
-            spec("add-deflated-entry", vec![("name", Json::String("a.txt".into())), ("content", Json::String("p".into()))]),
+            spec("set-snapshot", vec![("snapshot", Json::Object(vec![("schema".into(), Json::String("stdio.zip".into())), ("entries".into(), Json::Array(vec![entry("x", "y", 0.0)])), ("comment".into(), Json::String("neu".into())), ("commentUtf8".into(), Json::Bool(true))]))]),
+            spec("set-archive-comment", vec![("comment", Json::String("geaendert".into())), ("commentUtf8", Json::Bool(true))]),
+            spec("add-stored-entry", vec![("entry", entry("a.png", "p", 0.0))]),
+            spec("add-deflated-entry", vec![("entry", entry("a.txt", "p", 8.0))]),
             spec("remove-entry", vec![("name", Json::String("notiz.txt".into()))]),
-            spec("rename-entry", vec![("name", Json::String("notiz.txt".into())), ("newName", Json::String("notiz2.txt".into()))]),
-            spec("set-entry-data", vec![("name", Json::String("notiz.txt".into())), ("content", Json::String("anders".into()))]),
+            spec("rename-entry", vec![("name", Json::String("notiz.txt".into())), ("new_name", Json::String("notiz2.txt".into()))]),
+            spec("set-entry-data", vec![("name", Json::String("notiz.txt".into())), ("data", bytes("anders"))]),
         ];
         for one in specs {
             let base = archive();

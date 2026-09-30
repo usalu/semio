@@ -9,7 +9,20 @@
   ],
   "properties": {
     "path": {
-      "type": "string"
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "text",
+        "label": {
+          "en": "Part",
+          "de": "Paketteil"
+        },
+        "description": {
+          "en": "OPC part name inside the package, e.g. word/document.xml.",
+          "de": "OPC-Teilname im Paket, z. B. word/document.xml."
+        },
+        "group": "target",
+        "order": 10
+      }
     }
   }
 }

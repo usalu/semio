@@ -5,26 +5,96 @@
   "type": "object",
   "additionalProperties": false,
   "required": [
+    "mutation",
     "index",
     "id",
     "values",
     "timestepSeconds"
   ],
   "properties": {
+    "mutation": {
+      "const": "createTimeSeriesSchedule"
+    },
     "index": {
-      "type": "integer"
+      "type": "integer",
+      "minimum": 0,
+      "x-semio-ui": {
+        "widget": "stepper",
+        "role": "value",
+        "label": {
+          "en": "Position",
+          "de": "Position"
+        },
+        "description": {
+          "en": "Insertion position in the model's list; 0 is first.",
+          "de": "Einfügeposition in der Modellliste; 0 ist die erste."
+        },
+        "step": 1,
+        "precision": 0,
+        "group": "order",
+        "order": 10
+      }
     },
     "id": {
-      "type": "integer"
+      "type": "integer",
+      "minimum": 0,
+      "x-semio-ui": {
+        "widget": "stepper",
+        "role": "value",
+        "label": {
+          "en": "ID",
+          "de": "ID"
+        },
+        "description": {
+          "en": "Id the new time series schedule is created under; later mutations address it by this id.",
+          "de": "ID, unter der das neue Objekt angelegt wird; spätere Mutationen adressieren es darüber."
+        },
+        "step": 1,
+        "precision": 0,
+        "group": "identity",
+        "order": 20
+      }
     },
     "values": {
       "type": "array",
       "items": {
         "type": "number"
+      },
+      "minItems": 1,
+      "x-semio-ui": {
+        "role": "value",
+        "label": {
+          "en": "Values",
+          "de": "Werte"
+        },
+        "description": {
+          "en": "One value per timestep.",
+          "de": "Ein Wert je Zeitschritt."
+        },
+        "group": "values",
+        "order": 30
       }
     },
     "timestepSeconds": {
-      "type": "integer"
+      "type": "integer",
+      "minimum": 1,
+      "x-semio-ui": {
+        "widget": "stepper",
+        "role": "value",
+        "label": {
+          "en": "Timestep",
+          "de": "Zeitschritt"
+        },
+        "description": {
+          "en": "Duration each value holds.",
+          "de": "Dauer, für die jeder Wert gilt."
+        },
+        "unit": "s",
+        "step": 60,
+        "precision": 0,
+        "group": "values",
+        "order": 40
+      }
     }
   }
 }

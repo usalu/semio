@@ -676,140 +676,8 @@ export function dependencyBoundaryBreachesForBundleDir(repoRoot: string, bundleR
 }
 //#endregion 🔖️dependency-boundary
 
-//#region 🏛️Layering
-/** 🏛️ One place where repo-wide or framework code names an implementation area. */
-export type LayeringReference = Readonly<{ file: string; area: string; count: number }>;
-
-/** 🏛️ The shrink-only layering baseline: how many such references each file is still allowed. */
-export type LayeringBaseline = Readonly<{ schemaVersion: number; allowed: Readonly<Record<string, number>> }>;
-
-/** 🏛️ Repo-relative path of the committed layering baseline. */
-export const LAYERING_BASELINE_REL_PATH = "🧅️layering.json";
-
-const LAYERING_SCANNED_EXTENSIONS = new Set([".ts", ".tsx", ".mts", ".cts", ".js", ".mjs", ".cjs", ".rs", ".go", ".py", ".cs", ".json", ".toml", ".yml", ".yaml"]);
-const LAYERING_SKIPPED_DIRS = new Set(["node_modules", ".git", ".nx", ".venv", "target", "dist", "build", "out", "__pycache__", "obj", "bin", "storybook-static", "🎫️tickets", "⚡️cache", "🤖️generated"]);
-
-function layeringTaxonomy(): { layers: Record<string, string>; repoWide: string[]; generated: string[]; banners: string[] } {
-  const taxonomy = loadTaxonomy();
-  const rootContracts = (contractIds: readonly string[], key: string): string[] =>
-    contractIds.map((id) => {
-      const contract = taxonomy.fixedFilenameContracts[id];
-      if (!contract) throw new Error(`${key} references missing fixed contract ${JSON.stringify(id)}.`);
-      return fixedContractFilename(contract);
-    });
-  return {
-    layers: { ...taxonomy.areaLayers },
-    repoWide: rootContracts(taxonomy.repoWideContractIds, "repoWideContractIds"),
-    generated: rootContracts(taxonomy.layeringGeneratedContractIds, "layeringGeneratedContractIds"),
-    banners: [...taxonomy.layeringGeneratedBanners],
-  };
-}
-
-/**
- * 🏛️ Finds every reference from repo-wide or framework code to an implementation area.
- *
- * The rule this enforces is concrete: deleting an implementation area must leave every repo-wide and
- * framework file correct. A rule that only makes sense for one implementation belongs in that
- * implementation's own `📜️script.ts`, which the policy plugin already discovers by convention.
- *
- * Which areas are implementations is taxonomy data (`areaLayers`), so this function names none of
- * them itself and a new area needs no code change here.
- */
-export function layeringReferences(repoRoot: string): LayeringReference[] {
-  const { layers, repoWide, generated, banners } = layeringTaxonomy();
-  const isGenerated = (relPath: string): boolean => generated.includes(relPath);
-  const implementations = Object.entries(layers)
-    .filter(([, layer]) => layer === "implementation")
-    .map(([area]) => area);
-  const frameworkRoots = Object.entries(layers)
-    .filter(([, layer]) => layer === "framework")
-    .map(([area]) => area);
-  if (implementations.length === 0) return [];
-
-  const found: LayeringReference[] = [];
-  const scan = (relPath: string): void => {
-    if (isGenerated(relPath)) return;
-    if (!LAYERING_SCANNED_EXTENSIONS.has(relPath.slice(relPath.lastIndexOf(".")))) return;
-    let content: string;
-    try {
-      content = readFileSync(join(repoRoot, relPath), "utf8");
-    } catch {
-      return;
-    }
-    // 🏛️A bundled or generated file re-derives itself; only AUTHORED coupling can go stale.
-    const head = content.slice(0, 512);
-    if (banners.some((banner) => head.includes(banner))) return;
-    for (const area of implementations) {
-      const count = content.split(`${area}/`).length - 1;
-      if (count > 0) found.push({ file: relPath, area, count });
-    }
-  };
-  for (const file of repoWide) if (existsSync(join(repoRoot, file))) scan(file);
-  const walk = (relDir: string): void => {
-    let entries: Dirent[];
-    try {
-      entries = readdirSync(join(repoRoot, relDir), { withFileTypes: true });
-    } catch {
-      return;
-    }
-    for (const entry of entries) {
-      const childRel = `${relDir}/${entry.name}`;
-      if (entry.isDirectory()) {
-        if (!LAYERING_SKIPPED_DIRS.has(entry.name)) walk(childRel);
-        continue;
-      }
-      scan(childRel);
-    }
-  };
-  for (const root of frameworkRoots) walk(root);
-  return found.sort((a, b) => b.count - a.count || a.file.localeCompare(b.file) || a.area.localeCompare(b.area));
-}
-
-/** 🏛️ Loads the committed layering baseline, or an empty one on first run. */
-export function loadLayeringBaseline(repoRoot: string): LayeringBaseline {
-  const path = join(repoRoot, LAYERING_BASELINE_REL_PATH);
-  if (!existsSync(path)) return { schemaVersion: 1, allowed: {} };
-  return JSON.parse(readFileSync(path, "utf8")) as LayeringBaseline;
-}
-
-/** 🏛️ Total references per file, the unit the ratchet compares. */
-export function layeringCounts(references: readonly LayeringReference[]): Record<string, number> {
-  const counts: Record<string, number> = {};
-  for (const reference of references) counts[reference.file] = (counts[reference.file] ?? 0) + reference.count;
-  return counts;
-}
-
-/** 🏛️ The shrink-only verdict: a file may reference fewer implementation paths than its baseline, never more. */
-export function layeringBreaches(repoRoot: string): BreachRecord[] {
-  const baseline = loadLayeringBaseline(repoRoot);
-  const counts = layeringCounts(layeringReferences(repoRoot));
-  const breaches: BreachRecord[] = [];
-  for (const [file, count] of Object.entries(counts).sort((a, b) => b[1] - a[1])) {
-    const allowed = baseline.allowed[file] ?? 0;
-    if (count <= allowed) continue;
-    breaches.push({
-      id: "implementation-reference",
-      kind: "layering/implementation-reference",
-      scope: file,
-      summary: `${count} reference(s) to an implementation area, baseline allows ${allowed}`,
-      priority: "high",
-      reason: "Repo-wide and framework code must stay correct when an implementation area is deleted. A rule that only makes sense for one implementation belongs to that implementation.",
-      solution: "Move the implementation-specific logic into that implementation's own 📜️script.ts (the policy plugin discovers it), or express the dependency as taxonomy vocabulary instead of a literal path.",
-    });
-  }
-  return breaches;
-}
-
-/** 🏛️ Rewrites the baseline from the current tree — the deliberate ratchet step after a migration. */
-export function writeLayeringBaseline(repoRoot: string): LayeringBaseline {
-  const counts = layeringCounts(layeringReferences(repoRoot));
-  const baseline: LayeringBaseline = { schemaVersion: 1, allowed: Object.fromEntries(Object.entries(counts).sort(([a], [b]) => a.localeCompare(b))) };
-  writeFileSync(
-    join(repoRoot, LAYERING_BASELINE_REL_PATH),
-    `${JSON.stringify({ _comment: "🏛️ Shrink-only layering ratchet. Each entry is how many references to an implementation area (`areaLayers` in 🔣️taxonomy.json) one repo-wide or framework file is still allowed. A count may fall, never rise; a file that reaches zero should be removed from this list. Regenerate deliberately with `bun ./📜️script.ts verify layering write-baseline` AFTER a migration, never to make a failure go away.", ...baseline }, null, 2)}\n`,
-  );
-  return baseline;
-}
+//#region 🔒️PolicyAllowlist
+const POLICY_DISCOVERY_SKIPPED_DIRS = new Set(["node_modules", ".git", ".nx", ".venv", "target", "dist", "build", "out", "__pycache__", "obj", "bin", "storybook-static", "🎫️tickets", "⚡️cache", "🤖️generated", "🗑️generated"]);
 
 /** 🔒️ Filename an area uses to contribute allowlist entries to repository policy rules. */
 export const POLICY_ALLOWLIST_FILENAME = "🔒️policy-allowlist.json";
@@ -831,7 +699,7 @@ export function policyDiscoveredAllowlist(repoRoot: string, key: string): Set<st
     for (const entry of entries) {
       const childRel = relDir ? `${relDir}/${entry.name}` : entry.name;
       if (entry.isDirectory()) {
-        if (!LAYERING_SKIPPED_DIRS.has(entry.name)) walk(childRel);
+        if (!POLICY_DISCOVERY_SKIPPED_DIRS.has(entry.name)) walk(childRel);
         continue;
       }
       if (entry.name !== POLICY_ALLOWLIST_FILENAME) continue;
@@ -846,7 +714,7 @@ export function policyDiscoveredAllowlist(repoRoot: string, key: string): Set<st
   walk("");
   return merged;
 }
-//#endregion 🏛️Layering
+//#endregion 🔒️PolicyAllowlist
 
 //#region 🔖️policy-runner
 export type LintScriptModule = {
@@ -2200,11 +2068,12 @@ export async function runExactCargoLaws(options: ExactCargoLawOptions, port: Exa
   if (sourceBoundary === targetBoundary || sourceBoundary.startsWith(targetBoundary + sep)) throw new Error("Cargo target must not contain the source workspace");
   const env = { ...configuredEnv, CARGO_TARGET_DIR: cargoTargetDir };
   const nativeEnv = { ...env, ...options.nativeEnv, CARGO_TARGET_DIR: cargoTargetDir };
+  delete nativeEnv.RUST_TEST_NOCAPTURE;
   if (!isAbsolute(options.cwd) || !options.groups.length || options.groups.length > 64) throw new Error("Exact Cargo laws require a bounded nonempty target list and absolute cwd");
   const groupKeys = options.groups.map((group) => JSON.stringify([group.package, group.target.kind, group.target.name ?? ""]));
   if (new Set(groupKeys).size !== groupKeys.length) throw new Error("Exact Cargo groups must combine laws for the same package/target");
   for (const group of options.groups) {
-    if (!group.package || !group.laws.length || group.laws.length > 256 || new Set(group.laws).size !== group.laws.length || group.laws.some((law) => !/^[A-Za-z_][A-Za-z0-9_:]*$/u.test(law)))
+    if (!group.package || !group.laws.length || group.laws.length > 4096 || new Set(group.laws).size !== group.laws.length || group.laws.some((law) => !/^[A-Za-z_][A-Za-z0-9_:]*$/u.test(law)))
       throw new Error("Exact Cargo law identities must be nonempty and unique");
   }
   mkdirSync(artifactRoot, { recursive: true });

@@ -1,3 +1,8 @@
+import { DEV_LOCAL_HUB_DATA_ENV, DEV_LOCAL_HUB_PROFILE_ENV, DEV_LOCAL_HUB_PROVIDER_ENV, parseDevLocalHubProviderV1, type DevLocalHubProviderV1 } from "../🧬️schema/🟦️.ts";
+
+export const DEV_LOCAL_HUB_READINESS_STALL_BOUND_MS = 300_000;
+
+import { requestLocalBrokerSession } from "../../../📇️directory/🎫️local-session/🗄️broker/🟦️.ts";
 /** 🚀️ Zero-touch loopback development hub for `dev s`: ONE detached owner per hub port and data root holds the hub's
  * local-bootstrap pipe and its session broker, and every `s` serve — single-user rows and both two-user rows — signs in
  * through that broker. Which launch row reaches a clean data root first (`▶️start`, a `dev s` row, the compound rows) no
@@ -11,38 +16,20 @@
  * The owner republishes a catalog the current hub cannot load ({@link devHubCatalogFreshnessV1}) instead of crashing on it.
  * Contracts: `🧑‍💻dev/🧬️schema/🔣️.json` `DevHubLeaseV1`, `DevHubCatalogHeaderV1`, `DevHubCatalogPointerV1`; laws
  * `🧑‍💻dev/🧪️tests/🚀️local-hub` over `🧑‍💻dev/🧫️fixtures/🚀️local-hub.json`.
- * @see ../../../../../../../🌎️hub/🚀️local-bootstrap/🔐️credential-issuance/🟦️.ts */
+ * @see ../../../📇️directory/🎫️local-session/🗄️broker/🟦️.ts */
 
-import { spawn } from "node:child_process";
+import { spawn, type ChildProcess } from "node:child_process";
 import { closeSync, existsSync, linkSync, mkdirSync, openSync, readFileSync, renameSync, rmSync, statSync, writeFileSync } from "node:fs";
 import { createConnection } from "node:net";
 import { dirname, join, resolve } from "node:path";
-import { BundleScript, isDevPortInUse } from "../../../../../🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
+import { isDevPortInUse } from "../../../../../🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
 import { protectOwnerOnly } from "../../../../../🦑️repo/🔨️modules/📚️library/🏃️process/🔐️owner-only/🟦️.ts";
 import { terminateOwnedProcessTree } from "../../../../../🦑️repo/🔨️modules/📚️library/🏃️process/🟦️.ts";
-import { LOCAL_ADMIN_CAPABILITY_FILE, requestLocalBrokerSession, startLocalSessionBroker } from "../../../../../../../🌎️hub/🚀️local-bootstrap/🔐️credential-issuance/🟦️.ts";
-import {
-  finishLocalHub,
-  hubDevBinaryPath,
-  LOCAL_HUB_ADMINISTRATOR_PROFILE,
-  LOCAL_HUB_ADMINISTRATOR_SUBJECT,
-  LOCAL_HUB_DEVELOPMENT_CATALOG_PACKAGES,
-  LOCAL_HUB_DEVELOPMENT_PROFILES,
-  startLocalHub,
-  TRUSTED_CATALOG_READINESS_STALL_BOUND_MS,
-  waitForReadiness,
-} from "../../../../../../../🌎️hub/🚀️local-bootstrap/🏃️execution/🟦️.ts";
+
 
 export const DEV_LOCAL_HUB_DEFAULT_URL = "http://127.0.0.1:8787";
-/** 🗄️ Env naming the data root whose session broker a serve's `/_semio/dev/local-session` asks
- * (`📇️directory/🎫️local-session`). */
-export const DEV_LOCAL_HUB_DATA_ENV = "SEMIO_DEV_LOCAL_HUB_DATA";
-/** 👤️ Env naming the local profile a serve signs in as (`developer`, `user-1`, `user-2`). */
-export const DEV_LOCAL_HUB_PROFILE_ENV = "SEMIO_DEV_LOCAL_HUB_PROFILE";
-const DEV_LOCAL_HUB_DEFAULT_PROFILE = "developer";
 const DEV_LOCAL_HUB_OWNER_FILE = "local-hub-owner.json";
 const DEV_LOCAL_HUB_LOG_FILE = "local-hub.log";
-const DEV_LOCAL_HUB_OWNER_SCRIPT = "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript/📜️script.ts";
 /** ⏳️ How long a serve waits for a hub it only joins before it continues local-first. The shell's own session refresh
  * reconnects whenever that hub comes up later, so the bound only decides how long the terminal waits, not whether the app
  * ever reaches the hub. */
@@ -269,47 +256,6 @@ export function devHubCatalogFreshnessV1(dataDir: string): DevHubCatalogFreshnes
 /** 📤️ Publishes a catalog into a data root, streaming its progress lines, and stops when `signal` aborts. */
 export type DevHubCatalogPublisherV1 = (dataDir: string, packages: string, signal: AbortSignal, onLine: (line: string) => void) => Promise<void>;
 
-/** 🛑️ Ends a child and everything it started (the publisher's `nx` → `cargo` → `rustc` chain): its process group on POSIX,
- * `taskkill /T` on Windows. Killing only the wrapper would orphan the builds under it. */
-function terminateProcessTree(pid: number | undefined): void {
-  if (pid === undefined) return;
-  try {
-    if (process.platform === "win32") spawn("taskkill", ["/pid", String(pid), "/T", "/F"], { stdio: "ignore", shell: false });
-    else process.kill(-pid, "SIGTERM");
-  } catch {
-    return;
-  }
-}
-
-/** 📤️ The hub's own product verb (`os-hub:trusted-catalog-bootstrap`), as a child the signal terminates; the publisher
- * writes a new immutable generation and moves `current.json` only after a candidate hub loaded it, so a cancelled run
- * leaves the previous generation in place.
- * @see ../../../../../../../🌎️hub/📦️packages/🦀️rust/📜️script.ts TrustedCatalogBootstrapScript */
-export function devHubCatalogBootstrapPublisherV1(repoRoot: string): DevHubCatalogPublisherV1 {
-  return (dataDir, packages, signal, onLine) =>
-    new Promise<void>((resolvePublished, rejectPublished) => {
-      const child = spawn("bun", ["nx", "run", "os-hub:trusted-catalog-bootstrap", "--packages", packages, "--outputStyle=stream"], { cwd: repoRoot, env: { ...process.env, OS_HUB_DATA: dataDir }, stdio: ["ignore", "pipe", "pipe"], shell: false, detached: process.platform !== "win32" });
-      const abort = (): void => terminateProcessTree(child.pid);
-      signal.addEventListener("abort", abort, { once: true });
-      let pending = "";
-      const lines = (chunk: Buffer): void => {
-        pending += chunk.toString("utf8");
-        const parts = pending.split("\n");
-        pending = parts.pop() ?? "";
-        for (const line of parts) if (line.trim().length > 0) onLine(line);
-      };
-      child.stdout.on("data", lines);
-      child.stderr.on("data", lines);
-      child.once("error", rejectPublished);
-      child.once("exit", (code, exitSignal) => {
-        signal.removeEventListener("abort", abort);
-        if (signal.aborted) rejectPublished(new DOMException("catalog publication cancelled", "AbortError"));
-        else if (code === 0) resolvePublished();
-        else rejectPublished(new Error(`os-hub:trusted-catalog-bootstrap exited ${code ?? exitSignal}`));
-      });
-    });
-}
-
 /** 🔏️ Makes the data root's catalog one the current hub loads: an absent or stale one is (re)published through
  * `publish`, with every progress line reported; a stale one is never handed to the hub, which refuses it at boot.
  * `cancelled` when `signal` aborted the publication (the previous generation stays current). */
@@ -326,7 +272,7 @@ export async function ensureCurrentTrustedCatalogV1(
   protectOwnerOnly(dataDir, "directory");
   const signal = options.signal ?? new AbortController().signal;
   try {
-    await publish(dataDir, options.packages ?? LOCAL_HUB_DEVELOPMENT_CATALOG_PACKAGES, signal, (line) => report({ kind: "catalog-publishing", line }));
+    await publish(dataDir, options.packages ?? "", signal, (line) => report({ kind: "catalog-publishing", line }));
   } catch (error) {
     if (signal.aborted) {
       report({ kind: "catalog-cancelled", dataDir });
@@ -342,7 +288,7 @@ export async function ensureCurrentTrustedCatalogV1(
 //#endregion 🔖️Catalog
 
 //#region 🔖️Join
-function parseHubPort(hubUrl: string): number {
+export function parseHubPort(hubUrl: string): number {
   const port = Number(new URL(hubUrl).port || (hubUrl.startsWith("https:") ? 443 : 80));
   if (!Number.isSafeInteger(port) || port <= 0) throw new Error(`dev local hub: invalid hub url ${hubUrl}`);
   return port;
@@ -364,18 +310,21 @@ export type DevHubWorldV1 = Readonly<{
   now: () => number;
   sleep: (ms: number) => Promise<void>;
   report: (status: DevHubStatusV1) => void;
-  spawnOwner: (hubUrl: string, dataDir: string) => number | null;
+  spawnOwner: (hubUrl: string, dataDir: string, signal?: AbortSignal) => Promise<number | null>;
+  stopOwner: (pid: number) => Promise<void>;
   alive: (pid: number) => boolean;
   logBytes: (dataDir: string) => number;
 }>;
 
 /** 🤝️ Waits for a hub this serve does not own: never starts one, says it is waiting every `intervalMs`, and ends with a
  * typed `joined` or `gave-up` after `boundMs`. */
-export async function joinDevHubV1(hubUrl: string, world: DevHubWorldV1, boundMs: number = DEV_HUB_JOIN_BOUND_MS, intervalMs: number = DEV_HUB_STATUS_INTERVAL_MS): Promise<Extract<DevHubStatusV1, { kind: "joined" | "gave-up" }>> {
+export async function joinDevHubV1(hubUrl: string, world: DevHubWorldV1, boundMs: number = DEV_HUB_JOIN_BOUND_MS, intervalMs: number = DEV_HUB_STATUS_INTERVAL_MS, signal?: AbortSignal): Promise<Extract<DevHubStatusV1, { kind: "joined" | "gave-up" }>> {
   const started = world.now();
   let reportedAt = Number.NEGATIVE_INFINITY;
   for (;;) {
+    if (signal?.aborted) return { kind: "gave-up", hubUrl, waitedMs: world.now() - started };
     if (await world.ready(hubUrl)) {
+      if (signal?.aborted) return { kind: "gave-up", hubUrl, waitedMs: world.now() - started };
       const joined = { kind: "joined", hubUrl } as const;
       world.report(joined);
       return joined;
@@ -398,9 +347,11 @@ export async function joinDevHubV1(hubUrl: string, world: DevHubWorldV1, boundMs
  * (a hub that has not bound yet is still owned), refuses to start a second hub on a port someone else holds, and otherwise
  * starts one owner. Readiness is bounded by no progress (the owner's log stops growing) rather than wall time, because a
  * clean data root first publishes its catalog. */
-export async function ownDevHubV1(hubUrl: string, dataDir: string, leaseRoot: string, world: DevHubWorldV1): Promise<boolean> {
+export async function ownDevHubV1(hubUrl: string, dataDir: string, leaseRoot: string, world: DevHubWorldV1, signal?: AbortSignal): Promise<boolean> {
+  if (signal?.aborted) return false;
   const paths = devHubLeasePathsV1(leaseRoot, parseHubPort(hubUrl), dataDir);
   if (await world.ready(hubUrl)) {
+    if (signal?.aborted) return false;
     world.report({ kind: "joined", hubUrl });
     return true;
   }
@@ -412,15 +363,20 @@ export async function ownDevHubV1(hubUrl: string, dataDir: string, leaseRoot: st
     world.report({ kind: "port-taken", hubUrl });
     return false;
   } else {
-    spawned = world.spawnOwner(hubUrl, dataDir);
+    spawned = await world.spawnOwner(hubUrl, dataDir, signal);
     if (spawned === null) return false;
     world.report({ kind: "starting", hubUrl, pid: spawned });
   }
+  let handedOff = false;
+  try {
   let observation = "";
   let observedAt = world.now();
   for (;;) {
+    if (signal?.aborted) return false;
     if (await world.ready(hubUrl)) {
+    if (signal?.aborted) return false;
       world.report({ kind: "joined", hubUrl });
+      handedOff = true;
       return true;
     }
     const owner = holder();
@@ -430,9 +386,10 @@ export async function ownDevHubV1(hubUrl: string, dataDir: string, leaseRoot: st
     if (next !== observation) {
       observation = next;
       observedAt = now;
-    } else if (now - observedAt >= TRUSTED_CATALOG_READINESS_STALL_BOUND_MS) return false;
+    } else if (now - observedAt >= DEV_LOCAL_HUB_READINESS_STALL_BOUND_MS) return false;
     await world.sleep(1_000);
   }
+  } finally { if (!handedOff && spawned !== null) await world.stopOwner(spawned); }
 }
 
 function ownerLogBytes(dataDir: string): number {
@@ -444,24 +401,52 @@ function ownerLogBytes(dataDir: string): number {
 }
 
 /** 🚀️ Starts the detached owner for `dataDir` (its output goes to `<dataDir>/local-hub.log`). */
-function spawnDevLocalHubOwner(repoRoot: string, hubUrl: string, dataDir: string): number | null {
+async function stopDevLocalHubOwner(child: ChildProcess): Promise<void> {
+  if (child.pid === undefined || child.exitCode !== null || child.signalCode !== null) return;
+  terminateOwnedProcessTree(child.pid);
+  const deadline = Date.now() + 2_000;
+  while (child.exitCode === null && child.signalCode === null && Date.now() < deadline) await new Promise<void>((done) => setTimeout(done, 20));
+  if (child.exitCode === null && child.signalCode === null) child.kill("SIGKILL");
+}
+
+async function spawnDevLocalHubOwner(repoRoot: string, hubUrl: string, dataDir: string, provider: DevLocalHubProviderV1 | null, children: Map<number, ChildProcess>, signal?: AbortSignal): Promise<number | null> {
+  if (provider === null || signal?.aborted) return null;
   mkdirSync(dataDir, { recursive: true });
   protectOwnerOnly(dataDir, "directory");
   const log = openSync(join(dataDir, DEV_LOCAL_HUB_LOG_FILE), "a", 0o600);
-  const child = spawn("bun", [join(repoRoot, DEV_LOCAL_HUB_OWNER_SCRIPT), "local-hub", hubUrl, dataDir], { cwd: repoRoot, env: { ...process.env, OS_HUB_DATA: dataDir }, stdio: ["ignore", log, log], detached: true, shell: false });
+  let child: ChildProcess;
+  try {
+    child = spawn(provider.owner.program, [...provider.owner.args, hubUrl, dataDir], { cwd: repoRoot, env: { ...process.env, OS_HUB_DATA: dataDir }, stdio: ["ignore", log, log], detached: true, shell: false });
+  } catch { return null; }
+  finally { closeSync(log); }
+  const started = await new Promise<boolean>((done) => {
+    const finish = (accepted: boolean) => { clearTimeout(timer); signal?.removeEventListener("abort", cancelled); done(accepted); };
+    const cancelled = () => finish(false);
+    const timer = setTimeout(cancelled, 5_000);
+    child.once("spawn", () => finish(!signal?.aborted));
+    child.on("error", () => finish(false));
+    signal?.addEventListener("abort", cancelled, { once: true });
+    if (signal?.aborted) cancelled();
+  });
+  if (!started || child.pid === undefined || signal?.aborted) { await stopDevLocalHubOwner(child); return null; }
+  const pid = child.pid;
+  children.set(pid, child);
+  child.once("exit", () => children.delete(pid));
   child.unref();
-  return child.pid ?? null;
+  return pid;
 }
 
 /** 🔌️ The real world of {@link ownDevHubV1} and {@link joinDevHubV1}, reporting in the terminal's language. */
-export function devHubWorldV1(repoRoot: string, locale: DevHubLocaleV1 = devHubLocaleV1()): DevHubWorldV1 {
+export function devHubWorldV1(repoRoot: string, locale: DevHubLocaleV1 = devHubLocaleV1(), provider: DevLocalHubProviderV1 | null = null): DevHubWorldV1 {
+  const children = new Map<number, ChildProcess>();
   return {
     ready: hubReady,
     portInUse: (port) => isDevPortInUse("127.0.0.1", port),
     now: () => Date.now(),
     sleep: (ms) => new Promise<void>((resolveDelay) => setTimeout(resolveDelay, ms)),
     report: (status) => (status.kind === "gave-up" || status.kind === "port-taken" ? console.warn : console.log)(devHubStatusTextV1(status, locale)),
-    spawnOwner: (hubUrl, dataDir) => spawnDevLocalHubOwner(repoRoot, hubUrl, dataDir),
+    spawnOwner: (hubUrl, dataDir, signal) => spawnDevLocalHubOwner(repoRoot, hubUrl, dataDir, provider, children, signal),
+    stopOwner: async (pid) => { const child = children.get(pid); if (child) await stopDevLocalHubOwner(child); },
     alive: isPidAliveV1,
     logBytes: ownerLogBytes,
   };
@@ -479,90 +464,27 @@ export function devLocalHubDataDir(repoRoot: string, env: NodeJS.ProcessEnv = pr
  * root) is joined without a session, and the shell's own sign-in stays available. */
 export async function ensureDevLocalHub(
   repoRoot: string,
-  options: { readonly hubUrl?: string; readonly dataDir?: string; readonly profileId?: string; readonly world?: DevHubWorldV1; readonly joinBoundMs?: number } = {},
+  options: { readonly hubUrl?: string; readonly dataDir?: string; readonly profileId?: string; readonly world?: DevHubWorldV1; readonly joinBoundMs?: number; readonly provider?: DevLocalHubProviderV1; readonly signal?: AbortSignal } = {},
 ): Promise<DevLocalHubSession | null> {
   if (process.env.S_LOCAL_ONLY === "1" || process.env.S_LOCAL_ONLY === "true") return null;
   const explicit = options.hubUrl ?? process.env.S_HUB_URL;
   const role = devHubRoleV1(explicit);
   const hubUrl = (role === "join" ? explicit! : DEV_LOCAL_HUB_DEFAULT_URL).trim().replace(/\/+$/u, "");
   const dataDir = options.dataDir ?? devLocalHubDataDir(repoRoot);
-  const profileId = options.profileId ?? process.env[DEV_LOCAL_HUB_PROFILE_ENV] ?? DEV_LOCAL_HUB_DEFAULT_PROFILE;
-  const world = options.world ?? devHubWorldV1(repoRoot);
+  const provider = options.provider ?? (process.env[DEV_LOCAL_HUB_PROVIDER_ENV] ? parseDevLocalHubProviderV1(JSON.parse(process.env[DEV_LOCAL_HUB_PROVIDER_ENV]!)) : null);
+  const profileId = options.profileId ?? process.env[DEV_LOCAL_HUB_PROFILE_ENV] ?? provider?.defaultProfileId ?? "";
+  const world = options.world ?? devHubWorldV1(repoRoot, devHubLocaleV1(), provider);
   process.env.S_HUB_URL = hubUrl;
-  const up = role === "join" ? (await joinDevHubV1(hubUrl, world, options.joinBoundMs ?? DEV_HUB_JOIN_BOUND_MS)).kind === "joined" : await ownDevHubV1(hubUrl, dataDir, devHubLeaseRootV1(repoRoot), world);
-  if (!up) return null;
-  const session = await requestLocalBrokerSession(dataDir, hubUrl, profileId).catch(() => null);
+  const up = role === "join" ? (await joinDevHubV1(hubUrl, world, options.joinBoundMs ?? DEV_HUB_JOIN_BOUND_MS, DEV_HUB_STATUS_INTERVAL_MS, options.signal)).kind === "joined" : await ownDevHubV1(hubUrl, dataDir, devHubLeaseRootV1(repoRoot), world, options.signal);
+  if (!up || options.signal?.aborted) return null;
+  const session = await requestLocalBrokerSession(dataDir, hubUrl, profileId, options.signal).catch(() => null);
+  if (options.signal?.aborted) return null;
   if (session === null) {
     world.report({ kind: "no-broker", hubUrl, dataDir });
     return { hubUrl, dataDir, profileId, userId: "" };
   }
   world.report({ kind: "session", hubUrl, userId: session.userId, profileId });
   return { hubUrl, dataDir, profileId, userId: session.userId };
-}
-
-/** 🗄️ `local-hub [hubUrl] [dataDir]`: the owner process — claims the hub port and the data root, makes the catalog one the
- * current hub loads (republishing a stale one, cancelled by SIGINT/SIGTERM), stages the hub binary, boots the hub with the
- * development profiles, runs the session broker, and holds until signalled. An owner that finds either claim held by a
- * live owner, or the port bound by anyone, exits at once. */
-export class DevLocalHubScript extends BundleScript {
-  async run(segments: string[]): Promise<void> {
-    const [hubArg, dataArg] = segments;
-    const hubUrl = (hubArg ?? DEV_LOCAL_HUB_DEFAULT_URL).replace(/\/+$/u, "");
-    const dataDir = dataArg ? resolve(dataArg) : devLocalHubDataDir(this.repoRoot);
-    const locale = devHubLocaleV1();
-    const report = (status: DevHubStatusV1): void => console.log(devHubStatusTextV1(status, locale));
-    const port = parseHubPort(hubUrl);
-    const paths = devHubLeasePathsV1(devHubLeaseRootV1(this.repoRoot), port, dataDir);
-    mkdirSync(dataDir, { recursive: true });
-    protectOwnerOnly(dataDir, "directory");
-    const claim = claimDevHubLeaseV1(paths, { pid: process.pid, port, dataDir, hubUrl, acquiredAt: Date.now() });
-    if (claim.kind === "held") {
-      report({ kind: "owned", hubUrl, pid: claim.lease.pid });
-      return;
-    }
-    const cancel = new AbortController();
-    const stopPublishing = (): void => cancel.abort();
-    process.once("SIGINT", stopPublishing);
-    process.once("SIGTERM", stopPublishing);
-    try {
-      if (isDevPortInUse("127.0.0.1", port)) {
-        report({ kind: "port-taken", hubUrl });
-        return;
-      }
-      const catalog = await ensureCurrentTrustedCatalogV1(dataDir, devHubCatalogBootstrapPublisherV1(this.repoRoot), { signal: cancel.signal, report });
-      process.off("SIGINT", stopPublishing);
-      process.off("SIGTERM", stopPublishing);
-      if (catalog === "cancelled") return;
-      const hubPkg = join(this.repoRoot, "🌎️hub", "📦️packages", "🦀️rust");
-      const binaryPath = hubDevBinaryPath(hubPkg);
-      process.env.OS_HUB_CREDENTIAL_SIGN_IN = "1";
-      const adminToken = process.env.OS_HUB_ADMIN_TOKEN ?? "dev-local-hub-admin";
-      const profiles = [...LOCAL_HUB_DEVELOPMENT_PROFILES, LOCAL_HUB_ADMINISTRATOR_PROFILE];
-      const run = await startLocalHub(this.repoRoot, hubPkg, profiles, { port, dataDir, binaryPath, adminToken, adminSubjects: [LOCAL_HUB_ADMINISTRATOR_SUBJECT], capture: false });
-      let broker: ReturnType<typeof startLocalSessionBroker> | null = null;
-      const stop = (): void => {
-        broker?.stop();
-        void finishLocalHub(run);
-      };
-      process.once("SIGINT", stop);
-      process.once("SIGTERM", stop);
-      try {
-        await waitForReadiness(run, false, TRUSTED_CATALOG_READINESS_STALL_BOUND_MS);
-        broker = startLocalSessionBroker(run, dataDir, profiles, 2, LOCAL_HUB_ADMINISTRATOR_PROFILE.profileId);
-        console.log(`[dev-local-hub] ready at ${hubUrl}; session broker for ${broker.record.profiles.join(",")}; admin capability in ${join(dataDir, LOCAL_ADMIN_CAPABILITY_FILE)}`);
-        await new Promise<void>((resolveExit) => (run.child.exitCode !== null ? resolveExit() : run.child.once("exit", () => resolveExit())));
-      } finally {
-        process.off("SIGINT", stop);
-        process.off("SIGTERM", stop);
-        broker?.stop();
-        await finishLocalHub(run);
-      }
-    } finally {
-      process.off("SIGINT", stopPublishing);
-      process.off("SIGTERM", stopPublishing);
-      releaseDevHubLeaseV1(paths, process.pid);
-    }
-  }
 }
 
 //#region 🔖️DevServeFixture
@@ -632,6 +554,7 @@ export type DevServeSpawnRequestV1 = Readonly<{ port: number; variant: string; r
  * caller's environment — a `null` value removes the variable, so a local-only serve never inherits a hub. */
 export type DevServeCommandV1 = Readonly<{ script: string; args: readonly string[]; cwd: string; env: Readonly<Record<string, string | null>> }>;
 
+const DEV_SERVE_REACT_SCRIPT = "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript/📜️script.ts";
 const DEV_SERVE_WGPU_SCRIPT = "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/🌐️server/📜️script.ts";
 
 /** 🧾️ Both spawn shapes, as data: HMR is off for either shell so no peer's edit reloads a page mid-run. */
@@ -639,7 +562,7 @@ export function devServeCommandV1(request: DevServeSpawnRequestV1): DevServeComm
   const link = request.hubUrl === null ? { S_LOCAL_ONLY: "1", S_HUB_URL: null } : { S_LOCAL_ONLY: null, S_HUB_URL: request.hubUrl };
   const env = { SEMIO_PLUGIN: request.variant, SEMIO_RENDERER: request.renderer, SEMIO_VITE_HMR: "0", S_OS_PORT: String(request.port), ...link };
   return request.renderer === "react"
-    ? { script: DEV_LOCAL_HUB_OWNER_SCRIPT, args: ["serve", request.variant, "react", request.profile], cwd: dirname(DEV_LOCAL_HUB_OWNER_SCRIPT), env }
+    ? { script: DEV_SERVE_REACT_SCRIPT, args: ["serve", request.variant, "react", request.profile], cwd: dirname(DEV_SERVE_REACT_SCRIPT), env }
     : { script: DEV_SERVE_WGPU_SCRIPT, args: ["serve", request.variant, request.profile, "--port", String(request.port)], cwd: dirname(DEV_SERVE_WGPU_SCRIPT), env };
 }
 

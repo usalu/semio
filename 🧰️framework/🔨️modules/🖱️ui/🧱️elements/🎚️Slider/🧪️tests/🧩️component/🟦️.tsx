@@ -5,6 +5,8 @@ import { fireEvent, render } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
 import sliderPresentationFixture from "../../../../🧫️fixtures/🎚️slider-presentation/🔣️.json";
 import sliderPresentationSchema from "../../../../🧬️schema/🎚️slider-presentation/🔣️.json";
+import numberControlsFixture from "../../../../🧬️contract/🧫️fixtures/🧫️number-controls/🔣️.json";
+import numberControlsSchema from "../../../../🧬️contract/🧫️fixtures/🧫️number-controls/🧬️schema/🔣️.json";
 import { Slider, clampSliderValuesToReady, normalizeSliderRange, normalizeSliderValues, resolveSliderDraftClear, sliderValuesMatch } from "../../🟦️.tsx";
 // #endregion 🔌️Adapters
 
@@ -239,6 +241,69 @@ describe("Slider", () => {
     fireEvent.keyDown(getByRole("slider"), { key: "End" });
     expect(change).toHaveBeenCalledWith([55]);
     expect(getByRole("slider").getAttribute("aria-valuenow")).toBe("55");
+  });
+
+  it("lands pointer gestures on the shared detents, jumps page keys between them and paints one tick each", () => {
+    const validate = new Ajv2020({ strict: true, allErrors: true }).compile(numberControlsSchema);
+    expect(validate(numberControlsFixture), JSON.stringify(validate.errors)).toBe(true);
+    for (const row of numberControlsFixture.pointer) {
+      const change = vi.fn();
+      const start = row.expected === row.min ? row.max : row.min;
+      const { container, unmount } = render(<Slider id={`slider.${row.case}`} value={[start]} min={row.min} max={row.max} step={row.step || undefined} snapValues={row.snaps} onValueChange={change} />);
+      const track = container.querySelector<HTMLElement>('[data-slot="slider-track"]')!;
+      track.getBoundingClientRect = () => ({ left: 0, right: 1000, top: 0, bottom: 4, width: 1000, height: 4 }) as DOMRect;
+      expect(container.querySelectorAll('[data-slot="slider-tick"]').length).toBe(row.snaps.length);
+      fireEvent.pointerDown(track, { pointerId: 1, clientX: ((row.value - row.min) / (row.max - row.min)) * 1000, clientY: 2 });
+      if (row.step > 0) expect(change, row.case).toHaveBeenLastCalledWith([row.expected]);
+      else expect(change.mock.lastCall?.[0]?.[0], row.case).toBe(row.expected);
+      unmount();
+    }
+    for (const row of numberControlsFixture.adjacent) {
+      const change = vi.fn();
+      const { getByRole, unmount } = render(<Slider id={`slider.${row.case}`} value={[row.current]} min={0} max={10} step={0.5} snapValues={row.snaps} onValueChange={change} />);
+      fireEvent.keyDown(getByRole("slider"), { key: row.forward ? "PageUp" : "PageDown" });
+      const fallback = Math.min(10, Math.max(0, row.current + (row.forward ? 5 : -5)));
+      const landed = row.expected ?? fallback;
+      if (landed === row.current) expect(change, row.case).not.toHaveBeenCalled();
+      else expect(change, row.case).toHaveBeenLastCalledWith([landed]);
+      unmount();
+    }
+  });
+
+  it("keeps an off-step detent exactly while arrows walk the next rung beyond it", () => {
+    const change = vi.fn();
+    const { getByRole } = render(<Slider id="slider.off-step-detent" value={[3.3]} min={0} max={10} step={0.5} snapValues={[3.3]} onValueChange={change} />);
+    const thumb = getByRole("slider");
+    expect(thumb.getAttribute("aria-valuenow")).toBe("3.3");
+    fireEvent.keyDown(thumb, { key: "ArrowRight" });
+    expect(change).toHaveBeenLastCalledWith([3.5]);
+  });
+
+  it("answers every bounded shared keyboard-law row through the physical keys", () => {
+    const physical = { increment: "ArrowRight", decrement: "ArrowLeft", pageUp: "PageUp", pageDown: "PageDown", home: "Home", end: "End" } as const;
+    for (const row of numberControlsFixture.keys) {
+      if (row.min == null || row.max == null) continue;
+      const rung = row.step > 0 ? row.step : 1;
+      const settled = row.snaps.includes(row.current) || Math.abs((row.current - row.min) / rung - Math.round((row.current - row.min) / rung)) < 1e-9;
+      if (!settled) continue;
+      const change = vi.fn();
+      const { getByRole, unmount } = render(<Slider id={`slider.${row.case}`} value={[row.current]} min={row.min} max={row.max} step={row.step || undefined} snapValues={row.snaps} onValueChange={change} />);
+      fireEvent.keyDown(getByRole("slider"), { key: physical[row.key as keyof typeof physical], shiftKey: row.large });
+      if (row.expected === row.current) expect(change, row.case).not.toHaveBeenCalled();
+      else expect(change, row.case).toHaveBeenLastCalledWith([row.expected]);
+      unmount();
+    }
+  });
+
+  it("publishes a pointer landing on a detent within a quarter step of the current ladder value", () => {
+    const change = vi.fn();
+    const { container } = render(<Slider id="slider.quarter-step-detent" defaultValue={[5]} min={0} max={10} step={0.5} snapValues={[5.1]} onValueChange={change} />);
+    const track = container.querySelector<HTMLElement>('[data-slot="slider-track"]')!;
+    track.getBoundingClientRect = () => ({ left: 0, right: 1000, top: 0, bottom: 4, width: 1000, height: 4 }) as DOMRect;
+    fireEvent.pointerDown(track, { pointerId: 1, clientX: 505, clientY: 2 });
+    expect(change).toHaveBeenLastCalledWith([5.1]);
+    expect(sliderValuesMatch([5.1], [5], 0.5, [5.1])).toBe(false);
+    expect(resolveSliderDraftClear([5.1], [5], 0.5, [5.1])).toEqual([5.1]);
   });
 });
 // #endregion 🎚️SliderMatrix

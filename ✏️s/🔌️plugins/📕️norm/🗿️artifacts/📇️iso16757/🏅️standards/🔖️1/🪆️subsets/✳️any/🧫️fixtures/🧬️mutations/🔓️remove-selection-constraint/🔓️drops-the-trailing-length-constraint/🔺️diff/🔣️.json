@@ -4,10 +4,10 @@
   "dictionary": null,
   "geometry": null,
   "selection": {
-    "class_id": "class.panel-radiator",
+    "classId": "class.panel-radiator",
     "constraints": [
       {
-        "property_id": "prop.height",
+        "propertyId": "prop.height",
         "operator": "Equal",
         "value": {
           "kind": "decimal",
@@ -16,7 +16,7 @@
         "id": "constraint-prop.height-0"
       }
     ],
-    "series_id": "series-pr"
+    "seriesId": "series-pr"
   },
   "partNumberRule": null,
   "partNumberInputs": null,

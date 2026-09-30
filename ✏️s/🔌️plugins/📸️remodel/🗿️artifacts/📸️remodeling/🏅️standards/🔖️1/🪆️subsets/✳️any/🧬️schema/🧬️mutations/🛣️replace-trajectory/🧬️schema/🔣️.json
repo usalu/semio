@@ -5,9 +5,13 @@
   "type": "object",
   "additionalProperties": false,
   "required": [
+    "mutation",
     "trajectory"
   ],
   "properties": {
+    "mutation": {
+      "const": "replaceTrajectory"
+    },
     "trajectory": {
       "anyOf": [
         {
@@ -31,7 +35,24 @@
                 ],
                 "properties": {
                   "cameraId": {
-                    "type": "string"
+                    "type": "string",
+                    "x-semio-ui": {
+                      "widget": "reference",
+                      "role": "target",
+                      "label": {
+                        "en": "Camera",
+                        "de": "Kamera"
+                      },
+                      "description": {
+                        "en": "The camera this pose belongs to.",
+                        "de": "Kamera, zu der diese Pose gehört."
+                      },
+                      "ref": {
+                        "kind": "camera"
+                      },
+                      "group": "pose",
+                      "order": 10
+                    }
                   },
                   "rotationWxyz": {
                     "type": "array",
@@ -40,7 +61,22 @@
                       "format": "float"
                     },
                     "minItems": 4,
-                    "maxItems": 4
+                    "maxItems": 4,
+                    "x-semio-ui": {
+                      "widget": "vector",
+                      "role": "value",
+                      "label": {
+                        "en": "Rotation (Quaternion w, x, y, z)",
+                        "de": "Rotation (Quaternion w, x, y, z)"
+                      },
+                      "description": {
+                        "en": "Unit quaternion of the camera orientation.",
+                        "de": "Einheitsquaternion der Kameraorientierung."
+                      },
+                      "step": 0.001,
+                      "group": "pose",
+                      "order": 20
+                    }
                   },
                   "translation": {
                     "type": "array",
@@ -49,9 +85,33 @@
                       "format": "float"
                     },
                     "minItems": 3,
-                    "maxItems": 3
+                    "maxItems": 3,
+                    "x-semio-ui": {
+                      "widget": "vector",
+                      "role": "value",
+                      "label": {
+                        "en": "Translation",
+                        "de": "Translation"
+                      },
+                      "description": {
+                        "en": "Camera position in reconstruction coordinates.",
+                        "de": "Kameraposition in Rekonstruktionskoordinaten."
+                      },
+                      "step": 0.001,
+                      "group": "pose",
+                      "order": 30
+                    }
                   }
                 }
+              },
+              "x-semio-ui": {
+                "role": "value",
+                "label": {
+                  "en": "Camera Poses",
+                  "de": "Kameraposen"
+                },
+                "group": "result",
+                "order": 10
               }
             }
           }
@@ -59,7 +119,20 @@
         {
           "type": "null"
         }
-      ]
+      ],
+      "x-semio-ui": {
+        "role": "value",
+        "label": {
+          "en": "Camera Trajectory",
+          "de": "Kameratrajektorie"
+        },
+        "description": {
+          "en": "Recovered camera poses; empty clears the trajectory.",
+          "de": "Rekonstruierte Kameraposen; leer entfernt die Trajektorie."
+        },
+        "group": "result",
+        "order": 10
+      }
     }
   }
 }

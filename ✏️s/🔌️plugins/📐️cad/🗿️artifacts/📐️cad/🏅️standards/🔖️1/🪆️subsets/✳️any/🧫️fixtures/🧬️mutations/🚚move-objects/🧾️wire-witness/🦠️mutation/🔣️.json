@@ -1,0 +1,14 @@
+{
+  "mutation": "moveObjects",
+  "pane": "shape",
+  "placements": [
+    {
+      "objectId": "object-a",
+      "newOrigin": [
+        1.5,
+        -2.25,
+        0.5
+      ]
+    }
+  ]
+}

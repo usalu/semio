@@ -5,9 +5,13 @@
   "type": "object",
   "additionalProperties": false,
   "required": [
+    "mutation",
     "newLabel"
   ],
   "properties": {
+    "mutation": {
+      "const": "changeStockLabel"
+    },
     "newLabel": {
       "type": "string"
     }

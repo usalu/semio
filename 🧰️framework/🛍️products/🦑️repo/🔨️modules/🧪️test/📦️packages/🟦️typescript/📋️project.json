@@ -4,6 +4,20 @@
   "sourceRoot": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test",
   "projectType": "library",
   "targets": {
+    "test-discovery-boundaries": {
+      "executor": "nx:run-commands",
+      "cache": true,
+      "options": {
+        "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/📦️packages/🟦️typescript",
+        "command": "bun ./📜️script.ts test discovery-boundaries"
+      },
+      "inputs": [
+        "sharedGlobals",
+        "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/{🟨️.mjs,📦️packages/🟦️typescript/📜️script.ts}",
+        "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/{🧪️tests,🧫️fixtures,🧬️schema}/🚷️discovery-boundaries/**/*",
+        "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔣️taxonomy.json"
+      ]
+    },
     "lint": {
       "executor": "nx:run-commands",
       "options": {

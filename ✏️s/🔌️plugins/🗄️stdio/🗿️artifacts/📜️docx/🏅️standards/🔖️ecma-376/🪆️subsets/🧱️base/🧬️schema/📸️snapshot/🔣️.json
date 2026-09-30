@@ -12,18 +12,40 @@
   "properties": {
     "schema": {
       "type": "string",
-      "x-semio-state": "artifact"
+      "x-semio-state": "artifact",
+      "x-semio-ui": {
+        "label": {
+          "en": "Schema",
+          "de": "Schema"
+        },
+        "description": {
+          "en": "Identifier of the snapshot schema this document follows.",
+          "de": "Kennung des Snapshot-Schemas, dem dieses Dokument folgt."
+        }
+      }
     },
     "opc": {
       "$ref": "#/$defs/OpcPackage",
-      "x-semio-state": "artifact"
+      "x-semio-state": "artifact",
+      "x-semio-ui": {
+        "label": {
+          "en": "OPC package",
+          "de": "OPC-Paket"
+        }
+      }
     },
     "xmlParts": {
       "type": "array",
       "items": {
         "$ref": "#/$defs/DocxXmlPart"
       },
-      "x-semio-state": "artifact"
+      "x-semio-state": "artifact",
+      "x-semio-ui": {
+        "label": {
+          "en": "XML parts",
+          "de": "XML-Teile"
+        }
+      }
     }
   },
   "$defs": {
@@ -35,10 +57,22 @@
           "type": "array",
           "items": {
             "$ref": "#/$defs/OpcPart"
+          },
+          "x-semio-ui": {
+            "label": {
+              "en": "Parts",
+              "de": "Paketteile"
+            }
           }
         },
         "contentTypes": {
-          "$ref": "#/$defs/OpcContentTypes"
+          "$ref": "#/$defs/OpcContentTypes",
+          "x-semio-ui": {
+            "label": {
+              "en": "Content types",
+              "de": "Inhaltstypen"
+            }
+          }
         },
         "relationships": {
           "type": "object",
@@ -47,10 +81,22 @@
             "items": {
               "$ref": "#/$defs/OpcRelationship"
             }
+          },
+          "x-semio-ui": {
+            "label": {
+              "en": "Relationships",
+              "de": "Beziehungen"
+            }
           }
         },
         "comment": {
-          "type": "string"
+          "type": "string",
+          "x-semio-ui": {
+            "label": {
+              "en": "ZIP comment",
+              "de": "ZIP-Kommentar"
+            }
+          }
         }
       }
     },
@@ -63,10 +109,22 @@
       ],
       "properties": {
         "path": {
-          "type": "string"
+          "type": "string",
+          "x-semio-ui": {
+            "label": {
+              "en": "Part name",
+              "de": "Teilname"
+            }
+          }
         },
         "contentType": {
-          "type": "string"
+          "type": "string",
+          "x-semio-ui": {
+            "label": {
+              "en": "Content type",
+              "de": "Inhaltstyp"
+            }
+          }
         },
         "bytes": {
           "type": "array",
@@ -74,6 +132,12 @@
             "type": "integer",
             "minimum": 0,
             "maximum": 255
+          },
+          "x-semio-ui": {
+            "label": {
+              "en": "Part bytes",
+              "de": "Teilinhalt (Bytes)"
+            }
           }
         }
       }
@@ -97,6 +161,16 @@
             "additionalItems": false,
             "minItems": 2,
             "maxItems": 2
+          },
+          "x-semio-ui": {
+            "label": {
+              "en": "Default mappings",
+              "de": "Standardzuordnungen"
+            },
+            "description": {
+              "en": "Extension to content type.",
+              "de": "Dateierweiterung zu Inhaltstyp."
+            }
           }
         },
         "overrides": {
@@ -114,6 +188,16 @@
             "additionalItems": false,
             "minItems": 2,
             "maxItems": 2
+          },
+          "x-semio-ui": {
+            "label": {
+              "en": "Override mappings",
+              "de": "Überschreibungen"
+            },
+            "description": {
+              "en": "Part name to content type.",
+              "de": "Teilname zu Inhaltstyp."
+            }
           }
         }
       }
@@ -160,14 +244,32 @@
       "properties": {
         "path": {
           "type": "string",
-          "minLength": 1
+          "minLength": 1,
+          "x-semio-ui": {
+            "label": {
+              "en": "Part name",
+              "de": "Teilname"
+            }
+          }
         },
         "contentType": {
           "type": "string",
-          "minLength": 1
+          "minLength": 1,
+          "x-semio-ui": {
+            "label": {
+              "en": "Content type",
+              "de": "Inhaltstyp"
+            }
+          }
         },
         "document": {
-          "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/xml/1.0/base/snapshot.json#/$defs/XmlDocument"
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/xml/1.0/base/snapshot.json#/$defs/XmlDocument",
+          "x-semio-ui": {
+            "label": {
+              "en": "XML document",
+              "de": "XML-Dokument"
+            }
+          }
         }
       }
     }

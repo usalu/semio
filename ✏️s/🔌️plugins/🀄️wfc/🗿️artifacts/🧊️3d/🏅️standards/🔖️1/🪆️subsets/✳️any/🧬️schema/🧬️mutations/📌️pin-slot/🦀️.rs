@@ -8,6 +8,7 @@ use protocol::{MutationKind, SemanticDescriptor};
 use semio_framework_value_derive::{FromValue, ToValue};
 //#region 🔖️PinSlot
 #[derive(Clone, Debug, PartialEq, ToValue, FromValue, dsl::MutationLeaf)]
+#[value(rename_all = "camelCase")]
 #[mutation_leaf(contract = ::protocol)]
 pub struct PinSlot {
     pub id: String,

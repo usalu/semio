@@ -1,0 +1,9 @@
+{
+  "mutation": "applyPresentation",
+  "payload": {
+    "mutation": {
+      "mutation": "removeSlide",
+      "index": 2
+    }
+  }
+}

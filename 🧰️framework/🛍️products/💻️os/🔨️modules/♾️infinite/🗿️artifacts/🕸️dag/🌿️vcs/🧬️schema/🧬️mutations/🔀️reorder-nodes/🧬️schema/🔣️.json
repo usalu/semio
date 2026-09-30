@@ -2,31 +2,40 @@
   "$schema": "http://json-schema.org/draft-07/schema#",
   "$id": "https://json.schemas.assets.semio-tech.com/os/infinite/artifacts/dag/vcs/mutation/reorder-nodes/schema.json",
   "title": "ReorderNodes",
-  "type": "object",
-  "$defs": {
-    "Payload": {
-      "type": "object",
-      "required": [
-        "order"
-      ],
-      "properties": {
-        "order": {
-          "type": "array",
-          "items": {
-            "type": "string"
-          }
-        }
-      }
-    }
-  },
-  "allOf": [
-    {
-      "$ref": "#/$defs/Payload"
-    }
-  ],
   "propertyNames": {
     "enum": [
+      "operation",
       "order"
     ]
+  },
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "operation",
+    "order"
+  ],
+  "properties": {
+    "operation": {
+      "const": "reorderNodes"
+    },
+    "order": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "x-semio-ui": {
+        "role": "value",
+        "label": {
+          "en": "Node order",
+          "de": "Knotenreihenfolge"
+        },
+        "description": {
+          "en": "Every node id in its new order.",
+          "de": "Alle Knoten-IDs in ihrer neuen Reihenfolge."
+        },
+        "group": "record",
+        "order": 10
+      }
+    }
   }
 }

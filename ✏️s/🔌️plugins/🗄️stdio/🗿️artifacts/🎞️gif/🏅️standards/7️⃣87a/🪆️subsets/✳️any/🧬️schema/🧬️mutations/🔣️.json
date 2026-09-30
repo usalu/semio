@@ -5,202 +5,37 @@
   "description": "Discriminated union over this module's mutation leaves (internally tagged); every payload is the leaf's own schema, referenced, never restated.",
   "oneOf": [
     {
-      "allOf": [
-        {
-          "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/gif/87a/any/mutation/insert-image/schema.json"
-        },
-        {
-          "type": "object",
-          "required": [
-            "mutation"
-          ],
-          "properties": {
-            "mutation": {
-              "const": "insertImage"
-            }
-          }
-        }
-      ]
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/gif/87a/any/mutation/set-snapshot/schema.json"
     },
     {
-      "allOf": [
-        {
-          "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/gif/87a/any/mutation/move-image/schema.json"
-        },
-        {
-          "type": "object",
-          "required": [
-            "mutation"
-          ],
-          "properties": {
-            "mutation": {
-              "const": "moveImage"
-            }
-          }
-        }
-      ]
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/gif/87a/any/mutation/set-screen-size/schema.json"
     },
     {
-      "allOf": [
-        {
-          "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/gif/87a/any/mutation/remove-image/schema.json"
-        },
-        {
-          "type": "object",
-          "required": [
-            "mutation"
-          ],
-          "properties": {
-            "mutation": {
-              "const": "removeImage"
-            }
-          }
-        }
-      ]
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/gif/87a/any/mutation/set-global-color-table/schema.json"
     },
     {
-      "allOf": [
-        {
-          "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/gif/87a/any/mutation/set-background-color-index/schema.json"
-        },
-        {
-          "type": "object",
-          "required": [
-            "mutation"
-          ],
-          "properties": {
-            "mutation": {
-              "const": "setBackgroundColorIndex"
-            }
-          }
-        }
-      ]
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/gif/87a/any/mutation/set-background-color-index/schema.json"
     },
     {
-      "allOf": [
-        {
-          "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/gif/87a/any/mutation/set-global-color-table/schema.json"
-        },
-        {
-          "type": "object",
-          "required": [
-            "mutation"
-          ],
-          "properties": {
-            "mutation": {
-              "const": "setGlobalColorTable"
-            }
-          }
-        }
-      ]
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/gif/87a/any/mutation/set-pixel-aspect-ratio/schema.json"
     },
     {
-      "allOf": [
-        {
-          "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/gif/87a/any/mutation/set-image-geometry/schema.json"
-        },
-        {
-          "type": "object",
-          "required": [
-            "mutation"
-          ],
-          "properties": {
-            "mutation": {
-              "const": "setImageGeometry"
-            }
-          }
-        }
-      ]
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/gif/87a/any/mutation/insert-image/schema.json"
     },
     {
-      "allOf": [
-        {
-          "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/gif/87a/any/mutation/set-image-interlace/schema.json"
-        },
-        {
-          "type": "object",
-          "required": [
-            "mutation"
-          ],
-          "properties": {
-            "mutation": {
-              "const": "setImageInterlace"
-            }
-          }
-        }
-      ]
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/gif/87a/any/mutation/remove-image/schema.json"
     },
     {
-      "allOf": [
-        {
-          "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/gif/87a/any/mutation/set-image-pixels/schema.json"
-        },
-        {
-          "type": "object",
-          "required": [
-            "mutation"
-          ],
-          "properties": {
-            "mutation": {
-              "const": "setImagePixels"
-            }
-          }
-        }
-      ]
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/gif/87a/any/mutation/move-image/schema.json"
     },
     {
-      "allOf": [
-        {
-          "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/gif/87a/any/mutation/set-pixel-aspect-ratio/schema.json"
-        },
-        {
-          "type": "object",
-          "required": [
-            "mutation"
-          ],
-          "properties": {
-            "mutation": {
-              "const": "setPixelAspectRatio"
-            }
-          }
-        }
-      ]
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/gif/87a/any/mutation/set-image-geometry/schema.json"
     },
     {
-      "allOf": [
-        {
-          "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/gif/87a/any/mutation/set-screen-size/schema.json"
-        },
-        {
-          "type": "object",
-          "required": [
-            "mutation"
-          ],
-          "properties": {
-            "mutation": {
-              "const": "setScreenSize"
-            }
-          }
-        }
-      ]
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/gif/87a/any/mutation/set-image-pixels/schema.json"
     },
     {
-      "allOf": [
-        {
-          "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/gif/87a/any/mutation/set-snapshot/schema.json"
-        },
-        {
-          "type": "object",
-          "required": [
-            "mutation"
-          ],
-          "properties": {
-            "mutation": {
-              "const": "setSnapshot"
-            }
-          }
-        }
-      ]
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/gif/87a/any/mutation/set-image-interlace/schema.json"
     }
   ]
 }

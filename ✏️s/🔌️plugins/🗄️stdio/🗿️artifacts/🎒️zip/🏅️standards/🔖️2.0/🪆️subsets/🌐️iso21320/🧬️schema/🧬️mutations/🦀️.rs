@@ -122,12 +122,6 @@ pub fn apply_zip_iso21320_mutation(snapshot: &mut ZipSnapshot, mutation: &ZipIso
         Err(error) => protocol::MutationOutcome::error(error.code, error.message, error.target).absorb_messages(outcome.messages().to_vec()),
     }
 }
-
-/// ↩️ This subset's own inverse algebra as a free function, so a caller that legitimately drives the
-/// vocabulary from outside the crate can reach it without naming the `protocol::Mutation` trait.
-pub fn inverse_zip_iso21320_mutation(mutation: &ZipIso21320Mutation, base: &ZipSnapshot) -> Vec<ZipIso21320Mutation> {
-    <ZipIso21320Mutation as protocol::Mutation<ZipSnapshot>>::inverse(mutation, base)
-}
 //#endregion 🔖️Apply
 
 //#region 🔖️MutationTrait

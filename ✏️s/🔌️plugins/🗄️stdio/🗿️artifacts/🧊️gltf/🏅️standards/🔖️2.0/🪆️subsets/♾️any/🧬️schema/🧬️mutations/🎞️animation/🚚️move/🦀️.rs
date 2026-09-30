@@ -30,7 +30,7 @@ pub fn apply(payload: &GltfMoveAnimationPayload, base: &GltfSnapshot) -> Result<
 
 //#region 🧬️DirectMutation
 #[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::MutationLeaf)]
-#[mutation_leaf(contract = ::protocol)]
+#[mutation_leaf(contract = ::protocol, payload = Apply)]
 #[value(tag = "phase", content = "value", rename_all = "camelCase")]
 pub enum MoveAnimationMutation {
     Apply(GltfMoveAnimationPayload),
@@ -74,6 +74,6 @@ impl protocol::MutationKind<GltfSnapshot, super::GltfMutation> for MoveAnimation
 
 //#region 🧪️Tests
 #[cfg(test)]
-#[path = "🧪️tests/🔬️direct-leaf/🦀️.rs"]
-mod direct_leaf_tests;
+#[path = "🧪️tests/⏫️promotes-the-bob-104b5a/🦀️.rs"]
+mod case_promotes_the_bob_104b5a;
 //#endregion 🧪️Tests

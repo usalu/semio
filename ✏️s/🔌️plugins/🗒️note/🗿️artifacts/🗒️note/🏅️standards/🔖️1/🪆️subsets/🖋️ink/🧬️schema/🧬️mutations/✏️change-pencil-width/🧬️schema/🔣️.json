@@ -4,9 +4,33 @@
   "title": "ChangePencilWidth",
   "type": "object",
   "additionalProperties": false,
+  "required": [
+    "mutation"
+  ],
   "properties": {
+    "mutation": {
+      "const": "changePencilWidth"
+    },
     "newWidth": {
-      "type": "number"
+      "type": [
+        "number",
+        "null"
+      ],
+      "exclusiveMinimum": 0,
+      "x-semio-ui": {
+        "widget": "stepper",
+        "role": "value",
+        "label": {
+          "en": "Pencil width",
+          "de": "Stiftbreite"
+        },
+        "step": 0.5,
+        "precision": 1,
+        "softMin": 0.5,
+        "softMax": 32,
+        "group": "tool",
+        "order": 10
+      }
     }
   }
 }

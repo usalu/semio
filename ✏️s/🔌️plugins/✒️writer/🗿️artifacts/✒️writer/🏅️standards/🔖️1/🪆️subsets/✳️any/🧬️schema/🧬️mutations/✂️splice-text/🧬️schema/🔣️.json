@@ -5,12 +5,57 @@
   "description": "One range-text operation (semio.ui.scene.text-splice.v1): positions and lengths in Unicode scalar values; before/after are up to 32 scalars of the author's context.",
   "type": "object",
   "additionalProperties": false,
-  "required": ["start", "deleted", "insert", "before", "after"],
+  "required": ["mutation","start", "deleted", "insert", "before", "after"],
   "properties": {
-    "start": { "type": "integer", "minimum": 0, "maximum": 4294967295 },
-    "deleted": { "type": "string" },
-    "insert": { "type": "string" },
-    "before": { "type": "string" },
-    "after": { "type": "string" }
+    "mutation": {
+      "const": "spliceText"
+    },
+    "start": {
+      "type": "integer",
+      "minimum": 0,
+      "maximum": 4294967295,
+      "x-semio-ui": {
+        "widget": "stepper",
+        "role": "value",
+        "label": { "en": "Start", "de": "Anfang" },
+        "description": { "en": "Offset of the splice in Unicode scalar values.", "de": "Position des Eingriffs in Unicode-Skalarwerten." },
+        "step": 1,
+        "precision": 0
+      }
+    },
+    "deleted": {
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "multiline",
+        "role": "value",
+        "label": { "en": "Deleted Text", "de": "Gelöschter Text" }
+      }
+    },
+    "insert": {
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "multiline",
+        "role": "value",
+        "label": { "en": "Inserted Text", "de": "Eingefügter Text" }
+      }
+    },
+    "before": {
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "multiline",
+        "role": "value",
+        "label": { "en": "Context Before", "de": "Kontext davor" },
+        "description": { "en": "Up to 32 characters of the author's context, used to relocate the splice.", "de": "Bis zu 32 Zeichen Kontext des Autors, um die Stelle wiederzufinden." }
+      }
+    },
+    "after": {
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "multiline",
+        "role": "value",
+        "label": { "en": "Context After", "de": "Kontext danach" },
+        "description": { "en": "Up to 32 characters of the author's context, used to relocate the splice.", "de": "Bis zu 32 Zeichen Kontext des Autors, um die Stelle wiederzufinden." }
+      }
+    }
   }
 }

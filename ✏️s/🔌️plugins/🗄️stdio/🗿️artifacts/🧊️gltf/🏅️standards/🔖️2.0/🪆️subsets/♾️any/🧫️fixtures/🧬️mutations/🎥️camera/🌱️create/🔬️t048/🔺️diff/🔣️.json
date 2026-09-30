@@ -1,27 +1,40 @@
 {
-  "id": "s.stdio.gltf.mutation.create-camera.v1",
-  "version": 1,
-  "touchedPaths": [
-    "document/cameras/0"
-  ],
-  "payload": {
-    "position": 0,
-    "projection": {
-      "Perspective": {
-        "yfov": 0.5,
-        "znear": 0.5
+  "nodes": {
+    "modified": [
+      {
+        "index": 0,
+        "diff": {
+          "camera": 1
+        }
       }
-    }
+    ]
   },
-  "operation": {
-    "kind": "insert",
-    "position": 0,
-    "item": {
-      "type": "perspective",
-      "perspective": {
-        "yfov": 0.5,
-        "znear": 0.5
+  "cameras": {
+    "modified": [
+      {
+        "index": 0,
+        "diff": {
+          "type": "perspective",
+          "perspective": {
+            "yfov": 0.5,
+            "znear": 0.5
+          }
+        }
       }
-    }
+    ],
+    "added": [
+      {
+        "index": 1,
+        "item": {
+          "type": "orthographic",
+          "orthographic": {
+            "xmag": 1,
+            "ymag": 1,
+            "zfar": 2,
+            "znear": 0.5
+          }
+        }
+      }
+    ]
   }
 }

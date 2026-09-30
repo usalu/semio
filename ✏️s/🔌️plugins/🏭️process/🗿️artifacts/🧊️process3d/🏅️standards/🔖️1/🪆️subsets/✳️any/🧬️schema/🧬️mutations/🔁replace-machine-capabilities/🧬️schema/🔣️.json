@@ -5,12 +5,31 @@
   "type": "object",
   "additionalProperties": false,
   "required": [
+    "mutation",
     "id",
     "newCapabilities"
   ],
   "properties": {
+    "mutation": {
+      "const": "replaceMachineCapabilities"
+    },
     "id": {
-      "type": "string"
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Machine",
+          "de": "Maschine"
+        },
+        "description": {
+          "en": "The workshop machine to change.",
+          "de": "Die zu ändernde Werkstattmaschine."
+        },
+        "ref": {
+          "kind": "machine"
+        }
+      }
     },
     "newCapabilities": {
       "type": "array",
@@ -34,83 +53,414 @@
             "type": "string"
           },
           "iconId": {
-            "type": "string"
+            "type": "string",
+            "x-semio-ui": {
+              "widget": "text",
+              "role": "value",
+              "label": {
+                "en": "Icon",
+                "de": "Symbol"
+              },
+              "description": {
+                "en": "Icon id shown for the entry.",
+                "de": "Für den Eintrag angezeigte Symbol-ID."
+              }
+            }
           },
           "recipe": {
             "oneOf": [
               {
                 "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "recipe",
+                  "diameter",
+                  "kerf"
+                ],
                 "properties": {
                   "recipe": {
-                    "const": "DiscCut"
+                    "const": "discCut",
+                    "x-semio-ui": {
+                      "widget": "hidden",
+                      "role": "discriminator",
+                      "label": {
+                        "en": "Recipe type",
+                        "de": "Rezeptart"
+                      }
+                    }
+                  },
+                  "diameter": {
+                    "type": "string",
+                    "x-semio-ui": {
+                      "widget": "text",
+                      "role": "value",
+                      "label": {
+                        "en": "Diameter",
+                        "de": "Durchmesser"
+                      },
+                      "description": {
+                        "en": "Id of the capability parameter that supplies this size.",
+                        "de": "ID des Fähigkeitsparameters, der dieses Maß liefert."
+                      }
+                    }
+                  },
+                  "kerf": {
+                    "type": "string",
+                    "x-semio-ui": {
+                      "widget": "text",
+                      "role": "value",
+                      "label": {
+                        "en": "Kerf",
+                        "de": "Schnittbreite"
+                      },
+                      "description": {
+                        "en": "Id of the capability parameter that supplies this size.",
+                        "de": "ID des Fähigkeitsparameters, der dieses Maß liefert."
+                      }
+                    }
                   }
                 },
-                "required": [
-                  "recipe"
-                ],
-                "additionalProperties": false
+                "x-semio-ui": {
+                  "label": {
+                    "en": "Disc cut",
+                    "de": "Scheibenschnitt"
+                  }
+                }
               },
               {
                 "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "recipe",
+                  "kerf",
+                  "length",
+                  "depth"
+                ],
                 "properties": {
                   "recipe": {
-                    "const": "BladeCut"
+                    "const": "bladeCut",
+                    "x-semio-ui": {
+                      "widget": "hidden",
+                      "role": "discriminator",
+                      "label": {
+                        "en": "Recipe type",
+                        "de": "Rezeptart"
+                      }
+                    }
+                  },
+                  "kerf": {
+                    "type": "string",
+                    "x-semio-ui": {
+                      "widget": "text",
+                      "role": "value",
+                      "label": {
+                        "en": "Kerf",
+                        "de": "Schnittbreite"
+                      },
+                      "description": {
+                        "en": "Id of the capability parameter that supplies this size.",
+                        "de": "ID des Fähigkeitsparameters, der dieses Maß liefert."
+                      }
+                    }
+                  },
+                  "length": {
+                    "type": "string",
+                    "x-semio-ui": {
+                      "widget": "text",
+                      "role": "value",
+                      "label": {
+                        "en": "Length",
+                        "de": "Länge"
+                      },
+                      "description": {
+                        "en": "Id of the capability parameter that supplies this size.",
+                        "de": "ID des Fähigkeitsparameters, der dieses Maß liefert."
+                      }
+                    }
+                  },
+                  "depth": {
+                    "type": "string",
+                    "x-semio-ui": {
+                      "widget": "text",
+                      "role": "value",
+                      "label": {
+                        "en": "Depth",
+                        "de": "Tiefe"
+                      },
+                      "description": {
+                        "en": "Id of the capability parameter that supplies this size.",
+                        "de": "ID des Fähigkeitsparameters, der dieses Maß liefert."
+                      }
+                    }
                   }
                 },
-                "required": [
-                  "recipe"
-                ],
-                "additionalProperties": false
+                "x-semio-ui": {
+                  "label": {
+                    "en": "Blade cut",
+                    "de": "Klingenschnitt"
+                  }
+                }
               },
               {
                 "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "recipe",
+                  "diameter",
+                  "depth"
+                ],
                 "properties": {
                   "recipe": {
-                    "const": "PocketCut"
+                    "const": "pocketCut",
+                    "x-semio-ui": {
+                      "widget": "hidden",
+                      "role": "discriminator",
+                      "label": {
+                        "en": "Recipe type",
+                        "de": "Rezeptart"
+                      }
+                    }
+                  },
+                  "diameter": {
+                    "type": "string",
+                    "x-semio-ui": {
+                      "widget": "text",
+                      "role": "value",
+                      "label": {
+                        "en": "Diameter",
+                        "de": "Durchmesser"
+                      },
+                      "description": {
+                        "en": "Id of the capability parameter that supplies this size.",
+                        "de": "ID des Fähigkeitsparameters, der dieses Maß liefert."
+                      }
+                    }
+                  },
+                  "depth": {
+                    "type": "string",
+                    "x-semio-ui": {
+                      "widget": "text",
+                      "role": "value",
+                      "label": {
+                        "en": "Depth",
+                        "de": "Tiefe"
+                      },
+                      "description": {
+                        "en": "Id of the capability parameter that supplies this size.",
+                        "de": "ID des Fähigkeitsparameters, der dieses Maß liefert."
+                      }
+                    }
                   }
                 },
-                "required": [
-                  "recipe"
-                ],
-                "additionalProperties": false
+                "x-semio-ui": {
+                  "label": {
+                    "en": "Pocket cut",
+                    "de": "Taschenschnitt"
+                  }
+                }
               },
               {
                 "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "recipe",
+                  "radius",
+                  "depth"
+                ],
                 "properties": {
                   "recipe": {
-                    "const": "BoreDrill"
+                    "const": "boreDrill",
+                    "x-semio-ui": {
+                      "widget": "hidden",
+                      "role": "discriminator",
+                      "label": {
+                        "en": "Recipe type",
+                        "de": "Rezeptart"
+                      }
+                    }
+                  },
+                  "radius": {
+                    "type": "string",
+                    "x-semio-ui": {
+                      "widget": "text",
+                      "role": "value",
+                      "label": {
+                        "en": "Radius",
+                        "de": "Radius"
+                      },
+                      "description": {
+                        "en": "Id of the capability parameter that supplies this size.",
+                        "de": "ID des Fähigkeitsparameters, der dieses Maß liefert."
+                      }
+                    }
+                  },
+                  "depth": {
+                    "type": "string",
+                    "x-semio-ui": {
+                      "widget": "text",
+                      "role": "value",
+                      "label": {
+                        "en": "Depth",
+                        "de": "Tiefe"
+                      },
+                      "description": {
+                        "en": "Id of the capability parameter that supplies this size.",
+                        "de": "ID des Fähigkeitsparameters, der dieses Maß liefert."
+                      }
+                    }
                   }
                 },
-                "required": [
-                  "recipe"
-                ],
-                "additionalProperties": false
+                "x-semio-ui": {
+                  "label": {
+                    "en": "Bore drill",
+                    "de": "Bohrung"
+                  }
+                }
               },
               {
                 "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "recipe",
+                  "radius",
+                  "length"
+                ],
                 "properties": {
                   "recipe": {
-                    "const": "CylinderAttach"
+                    "const": "cylinderAttach",
+                    "x-semio-ui": {
+                      "widget": "hidden",
+                      "role": "discriminator",
+                      "label": {
+                        "en": "Recipe type",
+                        "de": "Rezeptart"
+                      }
+                    }
+                  },
+                  "radius": {
+                    "type": "string",
+                    "x-semio-ui": {
+                      "widget": "text",
+                      "role": "value",
+                      "label": {
+                        "en": "Radius",
+                        "de": "Radius"
+                      },
+                      "description": {
+                        "en": "Id of the capability parameter that supplies this size.",
+                        "de": "ID des Fähigkeitsparameters, der dieses Maß liefert."
+                      }
+                    }
+                  },
+                  "length": {
+                    "type": "string",
+                    "x-semio-ui": {
+                      "widget": "text",
+                      "role": "value",
+                      "label": {
+                        "en": "Length",
+                        "de": "Länge"
+                      },
+                      "description": {
+                        "en": "Id of the capability parameter that supplies this size.",
+                        "de": "ID des Fähigkeitsparameters, der dieses Maß liefert."
+                      }
+                    }
                   }
                 },
-                "required": [
-                  "recipe"
-                ],
-                "additionalProperties": false
+                "x-semio-ui": {
+                  "label": {
+                    "en": "Cylinder attach",
+                    "de": "Zylinderanbau"
+                  }
+                }
               },
               {
                 "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "recipe",
+                  "width",
+                  "depth",
+                  "height"
+                ],
                 "properties": {
                   "recipe": {
-                    "const": "BoxAttach"
+                    "const": "boxAttach",
+                    "x-semio-ui": {
+                      "widget": "hidden",
+                      "role": "discriminator",
+                      "label": {
+                        "en": "Recipe type",
+                        "de": "Rezeptart"
+                      }
+                    }
+                  },
+                  "width": {
+                    "type": "string",
+                    "x-semio-ui": {
+                      "widget": "text",
+                      "role": "value",
+                      "label": {
+                        "en": "Width",
+                        "de": "Breite"
+                      },
+                      "description": {
+                        "en": "Id of the capability parameter that supplies this size.",
+                        "de": "ID des Fähigkeitsparameters, der dieses Maß liefert."
+                      }
+                    }
+                  },
+                  "depth": {
+                    "type": "string",
+                    "x-semio-ui": {
+                      "widget": "text",
+                      "role": "value",
+                      "label": {
+                        "en": "Depth",
+                        "de": "Tiefe"
+                      },
+                      "description": {
+                        "en": "Id of the capability parameter that supplies this size.",
+                        "de": "ID des Fähigkeitsparameters, der dieses Maß liefert."
+                      }
+                    }
+                  },
+                  "height": {
+                    "type": "string",
+                    "x-semio-ui": {
+                      "widget": "text",
+                      "role": "value",
+                      "label": {
+                        "en": "Height",
+                        "de": "Höhe"
+                      },
+                      "description": {
+                        "en": "Id of the capability parameter that supplies this size.",
+                        "de": "ID des Fähigkeitsparameters, der dieses Maß liefert."
+                      }
+                    }
                   }
                 },
-                "required": [
-                  "recipe"
-                ],
-                "additionalProperties": false
+                "x-semio-ui": {
+                  "label": {
+                    "en": "Box attach",
+                    "de": "Quaderanbau"
+                  }
+                }
               }
-            ]
+            ],
+            "x-semio-ui": {
+              "role": "value",
+              "label": {
+                "en": "Recipe",
+                "de": "Rezept"
+              },
+              "description": {
+                "en": "How the parameters size the tool: disc, blade or pocket cut, bore drill, cylinder or box attach.",
+                "de": "Wie die Parameter das Werkzeug bemessen: Scheiben-, Klingen- oder Taschenschnitt, Bohrung, Zylinder- oder Quaderanbau."
+              }
+            }
           },
           "parameters": {
             "type": "array",
@@ -134,6 +484,17 @@
                   "type": "number"
                 }
               }
+            },
+            "x-semio-ui": {
+              "role": "value",
+              "label": {
+                "en": "Parameters",
+                "de": "Parameter"
+              },
+              "description": {
+                "en": "Named tool sizes in metres, referenced by the recipe and rules.",
+                "de": "Benannte Werkzeugmaße in Metern, auf die Rezept und Regeln verweisen."
+              }
             }
           },
           "rules": {
@@ -142,31 +503,237 @@
               "oneOf": [
                 {
                   "type": "object",
+                  "additionalProperties": false,
+                  "required": [
+                    "kind",
+                    "quantity",
+                    "parameter",
+                    "margin"
+                  ],
                   "properties": {
                     "kind": {
-                      "const": "Min"
+                      "const": "min",
+                      "x-semio-ui": {
+                        "widget": "hidden",
+                        "role": "discriminator",
+                        "label": {
+                          "en": "Rule type",
+                          "de": "Regelart"
+                        }
+                      }
+                    },
+                    "quantity": {
+                      "type": "string",
+                      "enum": [
+                        "width",
+                        "depth",
+                        "height",
+                        "maxDimension",
+                        "minDimension"
+                      ],
+                      "x-semio-ui": {
+                        "widget": "select",
+                        "role": "value",
+                        "label": {
+                          "en": "Stock dimension",
+                          "de": "Rohteilmaß"
+                        },
+                        "options": {
+                          "width": {
+                            "en": "Width",
+                            "de": "Breite"
+                          },
+                          "depth": {
+                            "en": "Depth",
+                            "de": "Tiefe"
+                          },
+                          "height": {
+                            "en": "Height",
+                            "de": "Höhe"
+                          },
+                          "maxDimension": {
+                            "en": "Largest dimension",
+                            "de": "Größtes Maß"
+                          },
+                          "minDimension": {
+                            "en": "Smallest dimension",
+                            "de": "Kleinstes Maß"
+                          }
+                        }
+                      }
+                    },
+                    "parameter": {
+                      "type": "string",
+                      "x-semio-ui": {
+                        "widget": "text",
+                        "role": "value",
+                        "label": {
+                          "en": "Parameter",
+                          "de": "Parameter"
+                        },
+                        "description": {
+                          "en": "Id of the capability parameter the stock dimension is compared with.",
+                          "de": "ID des Fähigkeitsparameters, mit dem das Rohteilmaß verglichen wird."
+                        }
+                      }
+                    },
+                    "margin": {
+                      "type": "number",
+                      "x-semio-ui": {
+                        "widget": "stepper",
+                        "role": "value",
+                        "label": {
+                          "en": "Margin",
+                          "de": "Zugabe"
+                        },
+                        "description": {
+                          "en": "Added to the parameter value before the comparison.",
+                          "de": "Wird vor dem Vergleich zum Parameterwert addiert."
+                        },
+                        "unit": "m",
+                        "displayUnit": "mm",
+                        "displayFactor": 1000,
+                        "step": 0.001,
+                        "precision": 1
+                      }
                     }
                   },
-                  "required": [
-                    "kind"
-                  ],
-                  "additionalProperties": false
+                  "x-semio-ui": {
+                    "label": {
+                      "en": "At least",
+                      "de": "Mindestens"
+                    }
+                  }
                 },
                 {
                   "type": "object",
+                  "additionalProperties": false,
+                  "required": [
+                    "kind",
+                    "quantity",
+                    "parameter",
+                    "margin"
+                  ],
                   "properties": {
                     "kind": {
-                      "const": "Max"
+                      "const": "max",
+                      "x-semio-ui": {
+                        "widget": "hidden",
+                        "role": "discriminator",
+                        "label": {
+                          "en": "Rule type",
+                          "de": "Regelart"
+                        }
+                      }
+                    },
+                    "quantity": {
+                      "type": "string",
+                      "enum": [
+                        "width",
+                        "depth",
+                        "height",
+                        "maxDimension",
+                        "minDimension"
+                      ],
+                      "x-semio-ui": {
+                        "widget": "select",
+                        "role": "value",
+                        "label": {
+                          "en": "Stock dimension",
+                          "de": "Rohteilmaß"
+                        },
+                        "options": {
+                          "width": {
+                            "en": "Width",
+                            "de": "Breite"
+                          },
+                          "depth": {
+                            "en": "Depth",
+                            "de": "Tiefe"
+                          },
+                          "height": {
+                            "en": "Height",
+                            "de": "Höhe"
+                          },
+                          "maxDimension": {
+                            "en": "Largest dimension",
+                            "de": "Größtes Maß"
+                          },
+                          "minDimension": {
+                            "en": "Smallest dimension",
+                            "de": "Kleinstes Maß"
+                          }
+                        }
+                      }
+                    },
+                    "parameter": {
+                      "type": "string",
+                      "x-semio-ui": {
+                        "widget": "text",
+                        "role": "value",
+                        "label": {
+                          "en": "Parameter",
+                          "de": "Parameter"
+                        },
+                        "description": {
+                          "en": "Id of the capability parameter the stock dimension is compared with.",
+                          "de": "ID des Fähigkeitsparameters, mit dem das Rohteilmaß verglichen wird."
+                        }
+                      }
+                    },
+                    "margin": {
+                      "type": "number",
+                      "x-semio-ui": {
+                        "widget": "stepper",
+                        "role": "value",
+                        "label": {
+                          "en": "Margin",
+                          "de": "Zugabe"
+                        },
+                        "description": {
+                          "en": "Added to the parameter value before the comparison.",
+                          "de": "Wird vor dem Vergleich zum Parameterwert addiert."
+                        },
+                        "unit": "m",
+                        "displayUnit": "mm",
+                        "displayFactor": 1000,
+                        "step": 0.001,
+                        "precision": 1
+                      }
                     }
                   },
-                  "required": [
-                    "kind"
-                  ],
-                  "additionalProperties": false
+                  "x-semio-ui": {
+                    "label": {
+                      "en": "At most",
+                      "de": "Höchstens"
+                    }
+                  }
                 }
               ]
+            },
+            "x-semio-ui": {
+              "role": "value",
+              "label": {
+                "en": "Rules",
+                "de": "Regeln"
+              },
+              "description": {
+                "en": "Stock limits the capability requires; all must hold.",
+                "de": "Rohteilgrenzen, die die Fähigkeit voraussetzt; alle müssen gelten."
+              }
             }
           }
+        }
+      },
+      "x-semio-ui": {
+        "role": "value",
+        "label": {
+          "en": "New Capabilities",
+          "de": "Neue Fähigkeiten"
+        },
+        "description": {
+          "en": "What the machine can do; each capability turns into a step.",
+          "de": "Was die Maschine kann; jede Fähigkeit wird zu einem Schritt."
         }
       }
     }

@@ -73,7 +73,7 @@ use semio_hub::artifact_authority::{
 };
 use semio_hub::auth::rate_limit::{HubRateLimiterV1, HubStreamLimiterV1, RateLimitClassV1, RateLimitDecisionV1, RateLimitRefusalV1, RateLimitSubjectV1, StreamLimitClassV1, StreamPermitV1};
 use semio_hub::auth::password::PasswordCredentialV1;
-use semio_hub::auth::access_policy::{hub_access_permits, HubAccessActionV1, HubAccessRoleV1};
+use directory::os_directory::access_policy::{directory_access_permits, DirectoryAccessActionV1, DirectoryAccessRoleV1};
 use semio_hub::auth::agent::{
     decide_agent_session, AgentDelegationListV1, AgentDelegationReceiptV1, AgentDelegationSummaryV1, AgentErrorCodeV1, AgentErrorV1, AgentSessionDecisionV1, AgentSessionMintResponseV1, AgentSessionRequestV1,
     CreateAgentDelegationRequestV1,
@@ -847,6 +847,7 @@ impl PresenceIdentityV1 {
             tool_run: None,
             principal_kind: Some(self.principal_kind),
             active_tool: None,
+            history_edit: None,
         })
         .await
     }
@@ -1189,17 +1190,17 @@ impl SocketSubjectV1 {
     }
 
     /// 🎭️ The roles this socket subject holds under the declared access policy.
-    fn access_roles(&self) -> Vec<HubAccessRoleV1> {
+    fn access_roles(&self) -> Vec<DirectoryAccessRoleV1> {
         match self {
             Self::Session { role, session_kind, .. } => session_access_roles(*session_kind, *role),
-            Self::Share { .. } => vec![HubAccessRoleV1::Share],
+            Self::Share { .. } => vec![DirectoryAccessRoleV1::Share],
         }
     }
 
     /// ✍️ Whether this subject is issued a writable surface. The plan decides it from roles alone; the
     /// space-kind-limited denies (an archive) are enforced where each write is admitted.
     fn surface_writable(&self) -> bool {
-        hub_access_permits(&self.access_roles(), HubAccessActionV1::DocumentWrite, None)
+        directory_access_permits(&self.access_roles(), DirectoryAccessActionV1::DocumentWrite, None)
     }
 
     fn admission_bindings(&self) -> Vec<SocketBindingKeyV1> {
@@ -2424,6 +2425,7 @@ impl HubState {
                 tool_run: input.tool_run,
                 principal_kind: Some(slot.principal_kind),
                 active_tool: input.active_tool,
+                history_edit: input.history_edit,
             })
         });
         let Some(normalized) = normalized else { return PresenceLeaseTransition::NoChange };
@@ -2648,21 +2650,21 @@ async fn resolve_auth(state: &HubState, space_id: &str, document_id: &str, token
 /// [`HubDirectory::principal_role`]): a human session is signed in plus its membership role; an agent session holds
 /// only its agent role — `agent-editor` under an author ceiling, `agent-reader` under a spectator one — so no grant the
 /// policy writes for humans (space creation, administration, delegation, preferences) ever reaches an agent.
-fn session_access_roles(session_kind: AuthSessionKind, role: Option<SpaceRole>) -> Vec<HubAccessRoleV1> {
+fn session_access_roles(session_kind: AuthSessionKind, role: Option<SpaceRole>) -> Vec<DirectoryAccessRoleV1> {
     if session_kind.is_agent() {
         return role
             .map(|role| match role {
-                SpaceRole::Author => HubAccessRoleV1::AgentEditor,
-                SpaceRole::Spectator => HubAccessRoleV1::AgentReader,
+                SpaceRole::Author => DirectoryAccessRoleV1::AgentEditor,
+                SpaceRole::Spectator => DirectoryAccessRoleV1::AgentReader,
             })
             .into_iter()
             .collect();
     }
-    [HubAccessRoleV1::Authenticated]
+    [DirectoryAccessRoleV1::Authenticated]
         .into_iter()
         .chain(role.map(|role| match role {
-            SpaceRole::Author => HubAccessRoleV1::Author,
-            SpaceRole::Spectator => HubAccessRoleV1::Spectator,
+            SpaceRole::Author => DirectoryAccessRoleV1::Author,
+            SpaceRole::Spectator => DirectoryAccessRoleV1::Spectator,
         }))
         .collect()
 }
@@ -2670,10 +2672,10 @@ fn session_access_roles(session_kind: AuthSessionKind, role: Option<SpaceRole>) 
 impl AuthOutcome {
     /// 🎭️ The roles this bearer holds for its document: a session holds [`session_access_roles`], a share token is a
     /// share, and a refused bearer holds nothing.
-    fn access_roles(&self) -> Vec<HubAccessRoleV1> {
+    fn access_roles(&self) -> Vec<DirectoryAccessRoleV1> {
         match self {
             Self::Session { role, session_kind, .. } => session_access_roles(*session_kind, Some(*role)),
-            Self::ShareToken => vec![HubAccessRoleV1::Share],
+            Self::ShareToken => vec![DirectoryAccessRoleV1::Share],
             Self::Denied => Vec::new(),
         }
     }
@@ -2682,20 +2684,20 @@ impl AuthOutcome {
 /// 🛡️ The declared policy's decision for `roles` doing `action` inside one space. The space's kind is
 /// read here because kind-limited grants (an archive denies writes) must see it; a space that cannot
 /// be read is a refusal, never an unconstrained allow.
-async fn access_permits_in_space(state: &HubState, roles: &[HubAccessRoleV1], action: HubAccessActionV1, space_id: &str) -> bool {
+async fn access_permits_in_space(state: &HubState, roles: &[DirectoryAccessRoleV1], action: DirectoryAccessActionV1, space_id: &str) -> bool {
     match state.directory.get_space(space_id).await {
-        Ok(Some(space)) => hub_access_permits(roles, action, Some(space.kind.as_str())),
+        Ok(Some(space)) => directory_access_permits(roles, action, Some(space.kind.as_str())),
         Ok(None) | Err(_) => false,
     }
 }
 
 async fn authorized(state: &HubState, space_id: &str, document_id: &str, token: Option<&str>) -> bool {
-    access_permits_in_space(state, &resolve_auth(state, space_id, document_id, token).await.access_roles(), HubAccessActionV1::DocumentRead, space_id).await
+    access_permits_in_space(state, &resolve_auth(state, space_id, document_id, token).await.access_roles(), DirectoryAccessActionV1::DocumentRead, space_id).await
 }
 
 /// 📦️ A space-scoped blob read or write under the declared policy: a share never reaches the
 /// space's content-addressed store, and only a writer may add to it.
-async fn authorized_for_blob(state: &HubState, space_id: &str, hash: &str, token: Option<&str>, action: HubAccessActionV1) -> bool {
+async fn authorized_for_blob(state: &HubState, space_id: &str, hash: &str, token: Option<&str>, action: DirectoryAccessActionV1) -> bool {
     access_permits_in_space(state, &resolve_auth(state, space_id, hash, token).await.access_roles(), action, space_id).await
 }
 
@@ -4302,7 +4304,7 @@ async fn db_io_pages_into_http_bytes(mut pages: db::db_storage::DbIoPages) -> Re
 /// storage-computed hash means the client sent the wrong bytes for that address — a bad
 /// request, distinct from a document CAS conflict.
 async fn put_blob(Path((space_id, hash)): Path<(String, String)>, headers: HeaderMap, State(state): State<HubState>, body: Bytes) -> Result<Json<BlobRecord>, StatusCode> {
-    if !authorized_for_blob(&state, &space_id, &hash, bearer(&headers).as_deref(), HubAccessActionV1::BlobWrite).await {
+    if !authorized_for_blob(&state, &space_id, &hash, bearer(&headers).as_deref(), DirectoryAccessActionV1::BlobWrite).await {
         return Err(StatusCode::UNAUTHORIZED);
     }
     let media_type = headers.get(axum::http::header::CONTENT_TYPE).and_then(|value| value.to_str().ok()).unwrap_or("application/octet-stream").to_string();
@@ -4317,7 +4319,7 @@ async fn put_blob(Path((space_id, hash)): Path<(String, String)>, headers: Heade
 }
 
 async fn get_blob(Path((space_id, hash)): Path<(String, String)>, headers: HeaderMap, State(state): State<HubState>) -> Result<impl IntoResponse, StatusCode> {
-    if !authorized_for_blob(&state, &space_id, &hash, bearer(&headers).as_deref(), HubAccessActionV1::BlobRead).await {
+    if !authorized_for_blob(&state, &space_id, &hash, bearer(&headers).as_deref(), DirectoryAccessActionV1::BlobRead).await {
         return Err(StatusCode::UNAUTHORIZED);
     }
     let content_hash = parse_content_hash(&hash).ok_or(StatusCode::BAD_REQUEST)?;
@@ -4331,7 +4333,7 @@ async fn get_blob(Path((space_id, hash)): Path<(String, String)>, headers: Heade
 }
 
 async fn head_blob(Path((space_id, hash)): Path<(String, String)>, headers: HeaderMap, State(state): State<HubState>) -> StatusCode {
-    if !authorized_for_blob(&state, &space_id, &hash, bearer(&headers).as_deref(), HubAccessActionV1::BlobRead).await {
+    if !authorized_for_blob(&state, &space_id, &hash, bearer(&headers).as_deref(), DirectoryAccessActionV1::BlobRead).await {
         return StatusCode::UNAUTHORIZED;
     }
     let Some(content_hash) = parse_content_hash(&hash) else { return StatusCode::BAD_REQUEST };
@@ -4681,7 +4683,7 @@ async fn run_policy_check_in(state: HubState, subject: SocketSubjectV1, scope: D
 async fn start_policy_check_in(state: &HubState, subject: SocketSubjectV1, scope: &DocumentScope, handle: &db::ArtifactHandle) -> Option<DocumentCheckInStatusV1> {
     let SocketSubjectV1::Session { user_id, .. } = &subject else { return None };
     let user_id = user_id.clone();
-    if state.artifact_authority.is_none() || !access_permits_in_space(state, &subject.access_roles(), HubAccessActionV1::DocumentCheckIn, &scope.space_id).await {
+    if state.artifact_authority.is_none() || !access_permits_in_space(state, &subject.access_roles(), DirectoryAccessActionV1::DocumentCheckIn, &scope.space_id).await {
         return None;
     }
     let snapshot = handle.checkpoint_publication_snapshot().await.ok()?;
@@ -4888,7 +4890,7 @@ async fn check_in_author(state: &HubState, scope: &DocumentScope, headers: &Head
         Err(_) if resolve_bearer_user(state, Some(&bearer)).await.is_some() => return Err(StatusCode::FORBIDDEN),
         Err(_) => return Err(StatusCode::UNAUTHORIZED),
     };
-    if !access_permits_in_space(state, &subject.access_roles(), HubAccessActionV1::DocumentCheckIn, &scope.space_id).await {
+    if !access_permits_in_space(state, &subject.access_roles(), DirectoryAccessActionV1::DocumentCheckIn, &scope.space_id).await {
         return Err(StatusCode::FORBIDDEN);
     }
     let SocketSubjectV1::Session { user_id, .. } = &subject else { return Err(StatusCode::FORBIDDEN) };
@@ -5283,14 +5285,15 @@ const HUB_CATCH_UP_ORIGIN: &str = "hub.catch-up";
 /// from: a receipt that does not advance `commit_seq` is the engine's idempotent replay of an
 /// already-committed `command_id` — acknowledged again for the resending client, never relayed as new.
 /// An accepted batch's operations join `gate`'s replay guard; a refused one's never do, so its resend
-/// is admitted again.
-async fn submit_commands(handle: &db::ArtifactHandle, gate: &db::security::SecurityGate, actor: &ActorId, batch_id: u64, envelopes: Vec<MutationEnvelope>, policy: protocol::MergePolicy) -> (ServerFrame, Option<ServerFrame>) {
+/// is admitted again. The third answer says whether a refusal is for good: only `db::DbError::Unavailable` is
+/// transient, and its author resends the batch.
+async fn submit_commands(handle: &db::ArtifactHandle, gate: &db::security::SecurityGate, actor: &ActorId, batch_id: u64, envelopes: Vec<MutationEnvelope>, policy: protocol::MergePolicy) -> (ServerFrame, Option<ServerFrame>, bool) {
     let committed_before = handle.frontier().await.map(|frontier| frontier.commit_seq).ok();
     let batch = match db::document::CommandBatch::new(envelopes.clone()).await {
         Ok(batch) => batch,
         Err(error) => {
             let frontier = best_effort_frontier(handle).await;
-            return (ServerFrame::Ack { batch_id, stages: vec![AckStage::Applied { outcome: Box::new(ApplyOutcome::Rejected { reason: error.to_string(), messages: Vec::new() }) }], frontier }, None);
+            return (ServerFrame::Ack { batch_id, stages: vec![AckStage::Applied { outcome: Box::new(ApplyOutcome::Rejected { reason: error.to_string(), messages: Vec::new() }) }], frontier }, None, true);
         }
     };
     match handle.submit(batch, db::document::SubmitOptions { durability: db::DurabilityClass::Fsync, policy }).await {
@@ -5299,12 +5302,13 @@ async fn submit_commands(handle: &db::ArtifactHandle, gate: &db::security::Secur
             let frontier = engine_frontier_to_wire(&receipt.frontier, receipt.command_id.0.clone());
             let ack = ServerFrame::Ack { batch_id, stages: vec![AckStage::Received, AckStage::Persisted, AckStage::Applied { outcome: Box::new(ApplyOutcome::Accepted) }], frontier: frontier.clone() };
             let advanced = committed_before.is_some_and(|before| receipt.frontier.commit_seq > before);
-            (ack, advanced.then(|| ServerFrame::Commands { envelopes, origin: actor.clone(), frontier }))
+            (ack, advanced.then(|| ServerFrame::Commands { envelopes, origin: actor.clone(), frontier }), false)
         }
         Ok(Err(error)) | Err(error) => {
             let frontier = best_effort_frontier(handle).await;
             let messages = messages_for_error(&error);
-            (ServerFrame::Ack { batch_id, stages: vec![AckStage::Applied { outcome: Box::new(ApplyOutcome::Rejected { reason: error.to_string(), messages }) }], frontier }, None)
+            let for_good = !matches!(error, db::DbError::Unavailable(_));
+            (ServerFrame::Ack { batch_id, stages: vec![AckStage::Applied { outcome: Box::new(ApplyOutcome::Rejected { reason: error.to_string(), messages }) }], frontier }, None, for_good)
         }
     }
 }
@@ -5387,17 +5391,17 @@ async fn handle_client_frame(
             if envelopes.iter().any(|envelope| &envelope.actor != actor) {
                 let frontier = best_effort_frontier(handle).await;
                 let ack = ServerFrame::Ack { batch_id, stages: vec![AckStage::Applied { outcome: Box::new(ApplyOutcome::Rejected { reason: "socket subject actor mismatch".into(), messages: Vec::new() }) }], frontier };
-                return ClientFrameStepV1::after_send(sender.send(encode(&ack, document_id).await).await.is_ok());
+                return ClientFrameStepV1::after_refusal(sender.send(encode(&ack, document_id).await).await.is_ok(), holds_history_transition(&envelopes));
             }
             if envelopes.iter().any(|envelope| envelope.document_id.0 != document_id) {
                 let frontier = best_effort_frontier(handle).await;
                 let ack = ServerFrame::Ack { batch_id, stages: vec![AckStage::Applied { outcome: Box::new(ApplyOutcome::Rejected { reason: "envelope document does not match this socket".into(), messages: Vec::new() }) }], frontier };
-                return ClientFrameStepV1::after_send(sender.send(encode(&ack, document_id).await).await.is_ok());
+                return ClientFrameStepV1::after_refusal(sender.send(encode(&ack, document_id).await).await.is_ok(), holds_history_transition(&envelopes));
             }
             if let Some(outcome) = undeclared_batch_refusal(&envelopes) {
                 let frontier = best_effort_frontier(handle).await;
                 let ack = ServerFrame::Ack { batch_id, stages: vec![AckStage::Applied { outcome: Box::new(outcome) }], frontier };
-                return ClientFrameStepV1::after_send(sender.send(encode(&ack, document_id).await).await.is_ok());
+                return ClientFrameStepV1::after_refusal(sender.send(encode(&ack, document_id).await).await.is_ok(), holds_history_transition(&envelopes));
             }
             for envelope in &mut envelopes {
                 envelope.document_id = db_id.clone();
@@ -5405,7 +5409,7 @@ async fn handle_client_frame(
             if let Err(error) = admit_writes(gate, principal, tenant, db_id, &envelopes, now_ms().max(0) as u64).await {
                 let frontier = best_effort_frontier(handle).await;
                 let ack = ServerFrame::Ack { batch_id, stages: vec![AckStage::Applied { outcome: Box::new(ApplyOutcome::Rejected { reason: error.to_string(), messages: messages_for_error(&error) }) }], frontier };
-                return ClientFrameStepV1::after_send(sender.send(encode(&ack, document_id).await).await.is_ok());
+                return ClientFrameStepV1::after_refusal(sender.send(encode(&ack, document_id).await).await.is_ok(), holds_history_transition(&envelopes) && !matches!(error, db::DbError::Unavailable(_)));
             }
             let document_write = state.socket_binding_gates.document_write(&DocumentScope::new(space_id, document_id)).lock_owned().await;
             ClientFrameStepV1::Commit(AdmittedCommandsV1 { batch_id, envelopes, _document_write: document_write })
@@ -5438,10 +5442,12 @@ async fn handle_client_frame(
 }
 
 /// 🚦️ What one decoded frame leaves its socket to do once its admission finished within the frame deadline.
+/// `Rebootstrap` makes its client rebuild from the canonical checkpoint pair ([`rebootstrap_document_socket`]).
 enum ClientFrameStepV1 {
     Continue,
     End,
     Commit(AdmittedCommandsV1),
+    Rebootstrap,
 }
 
 impl ClientFrameStepV1 {
@@ -5449,6 +5455,23 @@ impl ClientFrameStepV1 {
     fn after_send(sent: bool) -> Self {
         if sent { Self::Continue } else { Self::End }
     }
+
+    /// 🛟️ The step after a `Commands` batch's refusal was answered. A history transition has no inverse, so its author
+    /// cannot roll back a refused one (`rollback_envelope`) and stays ahead of the hub: an `irreversible` refusal — a
+    /// batch holding one, refused for good — makes its author rebuild from the document's canonical checkpoint pair, which
+    /// no refused transition is in. A transient refusal is resent by its author and never rebuilds (ticket 26/09/30
+    /// NON-DESTRUCTIVE-HISTORY-EDITING, a refused `Supersede`).
+    fn after_refusal(sent: bool, irreversible: bool) -> Self {
+        match Self::after_send(sent) {
+            Self::Continue if irreversible => Self::Rebootstrap,
+            step => step,
+        }
+    }
+}
+
+/// 🔀️ Whether a `Commands` batch holds a history transition, which no inverse rolls back.
+fn holds_history_transition(envelopes: &[MutationEnvelope]) -> bool {
+    envelopes.iter().any(protocol::is_history_transition)
 }
 
 /// ✍️ One `Commands` batch admitted within the frame deadline, holding its document's write gate until its
@@ -5461,13 +5484,15 @@ struct AdmittedCommandsV1 {
 
 /// 🧾️ Commits one admitted batch and answers it: the engine's receipt (or refusal) always reaches the socket as
 /// the batch's `Ack` — never cut by the frame deadline, the engine's own bounds end the wait — and an advanced
-/// frontier's relay reaches every peer; a committed batch is tallied for the checkpoint policy. Returns `false` when the
-/// Ack could not be sent.
+/// frontier's relay reaches every peer; a committed batch is tallied for the checkpoint policy. Answers the socket's
+/// next step: `End` when the Ack could not be sent, `Rebootstrap` after an irreversible refusal
+/// ([`ClientFrameStepV1::after_refusal`]).
 #[allow(clippy::too_many_arguments)]
-async fn commit_admitted_commands(state: &HubState, handle: &db::ArtifactHandle, scope: &DocumentScope, subject: &SocketSubjectV1, fanout: &broadcast::Sender<ServerFrame>, actor: &ActorId, gate: &db::security::SecurityGate, admitted: AdmittedCommandsV1, sender: &mut SplitSink<WebSocket, Message>) -> bool {
+async fn commit_admitted_commands(state: &HubState, handle: &db::ArtifactHandle, scope: &DocumentScope, subject: &SocketSubjectV1, fanout: &broadcast::Sender<ServerFrame>, actor: &ActorId, gate: &db::security::SecurityGate, admitted: AdmittedCommandsV1, sender: &mut SplitSink<WebSocket, Message>) -> ClientFrameStepV1 {
     let document_id = scope.document_id.as_str();
     let AdmittedCommandsV1 { batch_id, envelopes, _document_write } = admitted;
-    let (ack, relay) = submit_commands(handle, gate, actor, batch_id, envelopes, state.merge_policy).await;
+    let holds_transition = holds_history_transition(&envelopes);
+    let (ack, relay, refused_for_good) = submit_commands(handle, gate, actor, batch_id, envelopes, state.merge_policy).await;
     if let Some(ServerFrame::Commands { envelopes, .. }) = relay.as_ref() {
         observe_checkpoint_policy(state, scope, subject, handle, envelopes);
     }
@@ -5480,7 +5505,8 @@ async fn commit_admitted_commands(state: &HubState, handle: &db::ArtifactHandle,
     if let Some(commands_frame) = relay {
         let _ = fanout.send(commands_frame);
     }
-    sender.send(encode(&ack, document_id).await).await.is_ok()
+    let sent = sender.send(encode(&ack, document_id).await).await.is_ok();
+    ClientFrameStepV1::after_refusal(sent, refused_for_good && holds_transition)
 }
 
 /// 🤖️ ticket 26/09/18 slice M6b — M6 §4's remaining step. The actor id stays the opaque,
@@ -5613,9 +5639,9 @@ async fn serve_document_socket(sender: &mut SplitSink<WebSocket, Message>, recei
 
     let space_kind = state.directory.get_space(&space_id).await.ok().flatten().map(|space| space.kind);
     let access_roles = auth.access_roles();
-    let granted: Vec<db::security::Action> = [(HubAccessActionV1::DocumentRead, db::security::Action::Read), (HubAccessActionV1::DocumentWrite, db::security::Action::Write)]
+    let granted: Vec<db::security::Action> = [(DirectoryAccessActionV1::DocumentRead, db::security::Action::Read), (DirectoryAccessActionV1::DocumentWrite, db::security::Action::Write)]
         .into_iter()
-        .filter(|(action, _)| space_kind.as_deref().is_some_and(|kind| hub_access_permits(&access_roles, *action, Some(kind))))
+        .filter(|(action, _)| space_kind.as_deref().is_some_and(|kind| directory_access_permits(&access_roles, *action, Some(kind))))
         .map(|(_, granted)| granted)
         .collect();
     let tenant = db::security::TenantId::from(space_id.clone());
@@ -5912,11 +5938,20 @@ async fn serve_document_socket(sender: &mut SplitSink<WebSocket, Message>, recei
                             {
                                 Ok(ClientFrameStepV1::Continue) => {}
                                 Ok(ClientFrameStepV1::End) => break,
-                                Ok(ClientFrameStepV1::Commit(admitted)) => {
-                                    if !commit_admitted_commands(&state, &handle, &DocumentScope::new(space_id.as_str(), document_id.as_str()), &socket_grant.subject, &fanout, &actor, &gate, admitted, sender).await {
+                                Ok(ClientFrameStepV1::Rebootstrap) => {
+                                    if !rebootstrap_document_socket(sender, &state, &socket_grant, &socket_live.id, &scope, false).await {
                                         break;
                                     }
                                 }
+                                Ok(ClientFrameStepV1::Commit(admitted)) => match commit_admitted_commands(&state, &handle, &DocumentScope::new(space_id.as_str(), document_id.as_str()), &socket_grant.subject, &fanout, &actor, &gate, admitted, sender).await {
+                                    ClientFrameStepV1::Continue | ClientFrameStepV1::Commit(_) => {}
+                                    ClientFrameStepV1::End => break,
+                                    ClientFrameStepV1::Rebootstrap => {
+                                        if !rebootstrap_document_socket(sender, &state, &socket_grant, &socket_live.id, &scope, false).await {
+                                            break;
+                                        }
+                                    }
+                                },
                                 Err(_) => {
                                     let _ = sender.send(Message::Close(Some(CloseFrame { code: 1013, reason: "frame-deadline".into() }))).await;
                                     break;
@@ -5965,21 +6000,7 @@ async fn serve_document_socket(sender: &mut SplitSink<WebSocket, Message>, recei
                             live_gate.socket_lag_received.add_permits(1);
                             live_gate.socket_lag_release.acquire().await.expect("socket lag test release").forget();
                         }
-                        match send_socket_document_rebootstrap(sender, &state, &socket_grant, &socket_live.id, &scope).await {
-                            SocketBindingValidityV1::Active => {
-                                let _ = tokio::time::timeout(
-                                    std::time::Duration::from_secs(2),
-                                    sender.send(Message::Close(Some(CloseFrame { code: 1013, reason: "rebootstrap-required".into() }))),
-                                )
-                                .await;
-                            }
-                            SocketBindingValidityV1::Unauthorized => {
-                                let _ = sender.send(Message::Close(Some(CloseFrame { code: 4401, reason: "unauthorized".into() }))).await;
-                            }
-                            SocketBindingValidityV1::Unavailable => {
-                                let _ = sender.send(Message::Close(Some(CloseFrame { code: 1013, reason: "authorization-unavailable".into() }))).await;
-                            }
-                        }
+                        rebootstrap_document_socket(sender, &state, &socket_grant, &socket_live.id, &scope, true).await;
                         break;
                     }
                     Err(broadcast::error::RecvError::Closed) => break,
@@ -6155,26 +6176,38 @@ async fn verified_rebootstrap_control(state: &HubState, scope: &DocumentScope) -
 }
 
 
-async fn send_socket_document_rebootstrap(sender: &mut SplitSink<WebSocket, Message>, state: &HubState, record: &SocketGrantRecordV1, live_id: &str, scope: &DocumentScope) -> SocketBindingValidityV1 {
-    let _admission = match socket_live_authority(state, record, live_id).await {
-        Ok(admission) => admission,
-        Err(validity) => return validity,
+/// 🛟️ Makes a document socket's client rebuild from the canonical checkpoint pair: the `RebootstrapRequired` control,
+/// then `1013 rebootstrap-required`; a revoked or unreadable authority closes as it always does. A `lagged` socket
+/// lost frames and always closes; one whose history transition the hub refused for good
+/// ([`ClientFrameStepV1::after_refusal`]) goes on when its document has no canonical checkpoint to rebuild from.
+/// Answers whether the socket goes on.
+async fn rebootstrap_document_socket(sender: &mut SplitSink<WebSocket, Message>, state: &HubState, record: &SocketGrantRecordV1, live_id: &str, scope: &DocumentScope, lagged: bool) -> bool {
+    let close = match send_socket_document_rebootstrap(sender, state, record, live_id, scope).await {
+        Ok(false) if !lagged => return true,
+        Ok(_) => CloseFrame { code: 1013, reason: "rebootstrap-required".into() },
+        Err(SocketBindingValidityV1::Unauthorized) => CloseFrame { code: 4401, reason: "unauthorized".into() },
+        Err(SocketBindingValidityV1::Unavailable | SocketBindingValidityV1::Active) => CloseFrame { code: 1013, reason: "authorization-unavailable".into() },
     };
+    let _ = tokio::time::timeout(std::time::Duration::from_secs(2), sender.send(Message::Close(Some(close)))).await;
+    false
+}
+
+/// 📨️ Sends the document's `RebootstrapRequired` control under the socket's live authority: `Ok(true)` when it was sent,
+/// `Ok(false)` when the document has no canonical checkpoint, the refused validity otherwise.
+async fn send_socket_document_rebootstrap(sender: &mut SplitSink<WebSocket, Message>, state: &HubState, record: &SocketGrantRecordV1, live_id: &str, scope: &DocumentScope) -> Result<bool, SocketBindingValidityV1> {
+    let _admission = socket_live_authority(state, record, live_id).await?;
     #[cfg(test)]
     if let Some(gate) = &state.live_gate {
         gate.socket_rebootstrap_read.add_permits(1);
     }
-    let control = match tokio::time::timeout(std::time::Duration::from_secs(2), verified_rebootstrap_control(state, scope)).await {
-        Ok(control) => control,
-        Err(_) => return SocketBindingValidityV1::Unavailable,
+    let Some(control) = tokio::time::timeout(std::time::Duration::from_secs(2), verified_rebootstrap_control(state, scope)).await.map_err(|_| SocketBindingValidityV1::Unavailable)? else {
+        return Ok(false);
     };
-    if let Some(control) = control {
-        let frame = encode(&ServerFrame::RebootstrapRequired { control: wire_rebootstrap(&control) }, &scope.document_id).await;
-        if !matches!(tokio::time::timeout(std::time::Duration::from_secs(2), sender.send(frame)).await, Ok(Ok(()))) {
-            return SocketBindingValidityV1::Unavailable;
-        }
+    let frame = encode(&ServerFrame::RebootstrapRequired { control: wire_rebootstrap(&control) }, &scope.document_id).await;
+    if !matches!(tokio::time::timeout(std::time::Duration::from_secs(2), sender.send(frame)).await, Ok(Ok(()))) {
+        return Err(SocketBindingValidityV1::Unavailable);
     }
-    SocketBindingValidityV1::Active
+    Ok(true)
 }
 
 
@@ -6393,7 +6426,7 @@ impl ArtifactCreationCommitAuthorityV1 for HubArtifactCreationCommitAuthorityV1 
             .map_err(|_| DirectoryError::Backend("artifact creation final authority unavailable".into()))?;
             let space_kind = self.directory.get_space(space_id).await.ok().flatten().map(|space| space.kind);
             match tokio::time::timeout(std::time::Duration::from_secs(2), self.directory.socket_session_binding(&actor.session_id, &actor.user_id, actor.authorization_generation, Some(space_id), now_ms())).await {
-                Ok(Ok(SocketSessionBindingStatus::Active { role: Some(role), session_kind, .. })) if space_kind.as_deref().is_some_and(|kind| hub_access_permits(&session_access_roles(session_kind, Some(role)), HubAccessActionV1::ArtifactCreate, Some(kind))) => {
+                Ok(Ok(SocketSessionBindingStatus::Active { role: Some(role), session_kind, .. })) if space_kind.as_deref().is_some_and(|kind| directory_access_permits(&session_access_roles(session_kind, Some(role)), DirectoryAccessActionV1::ArtifactCreate, Some(kind))) => {
                     Ok(Box::new(HubArtifactCreationCommitLeaseV1 { _guards: guards }) as Box<dyn ArtifactCreationCommitLeaseV1>)
                 }
                 Ok(Ok(SocketSessionBindingStatus::Unavailable)) | Ok(Err(_)) | Err(_) => Err(DirectoryError::Backend("artifact creation final authority unavailable".into())),
@@ -6428,7 +6461,7 @@ async fn acquire_artifact_creation_actor(state: &HubState, space_id: &str, token
     let binding = tokio::time::timeout(std::time::Duration::from_secs(2), state.directory.socket_session_binding(&caller.session_id, &caller.user_id, caller.authorization_generation, Some(space_id), now_ms())).await;
     let space_kind = state.directory.get_space(space_id).await.ok().flatten().map(|space| space.kind);
     match binding {
-        Ok(Ok(SocketSessionBindingStatus::Active { role: Some(role), session_kind, .. })) if space_kind.as_deref().is_some_and(|kind| hub_access_permits(&session_access_roles(session_kind, Some(role)), HubAccessActionV1::ArtifactCreate, Some(kind))) => {
+        Ok(Ok(SocketSessionBindingStatus::Active { role: Some(role), session_kind, .. })) if space_kind.as_deref().is_some_and(|kind| directory_access_permits(&session_access_roles(session_kind, Some(role)), DirectoryAccessActionV1::ArtifactCreate, Some(kind))) => {
             Ok((ArtifactCreationActorV1 { user_id: caller.user_id, session_id: caller.session_id, authorization_generation: caller.authorization_generation }, guards))
         }
         Ok(Ok(SocketSessionBindingStatus::Active { .. } | SocketSessionBindingStatus::MembershipLost)) => Err(StatusCode::FORBIDDEN),
@@ -7153,19 +7186,19 @@ fn member_space_view(space: SpaceView, role: DirectorySpaceRole) -> MemberSpaceV
 /// `archive-space` owner or admin; everything else any AUTHOR of the named space or admin. `decide`
 /// itself performs zero authorization (its own doc) — this is that check, run before `execute`.
 /// 🎬️ The declared-policy action one directory command asks for.
-fn directory_command_access_action(command: &DirectoryCommand) -> HubAccessActionV1 {
+fn directory_command_access_action(command: &DirectoryCommand) -> DirectoryAccessActionV1 {
     match command {
-        DirectoryCommand::CreateSpace { .. } => HubAccessActionV1::SpaceCreate,
-        DirectoryCommand::RenameSpace { .. } => HubAccessActionV1::SpaceRename,
-        DirectoryCommand::SetVisibility { .. } => HubAccessActionV1::SpaceVisibility,
-        DirectoryCommand::ArchiveSpace { .. } => HubAccessActionV1::SpaceArchive,
-        DirectoryCommand::DeleteSpace { .. } => HubAccessActionV1::SpaceDelete,
-        DirectoryCommand::UpsertMember { .. } => HubAccessActionV1::MemberUpsert,
-        DirectoryCommand::RemoveMember { .. } => HubAccessActionV1::MemberRemove,
-        DirectoryCommand::CreateInvite { .. } => HubAccessActionV1::InviteCreate,
-        DirectoryCommand::RevokeInvite { .. } => HubAccessActionV1::InviteRevoke,
-        DirectoryCommand::AnnounceDocument { .. } => HubAccessActionV1::DocumentAnnounce,
-        DirectoryCommand::RecordUserPreference { .. } => HubAccessActionV1::PreferenceRecord,
+        DirectoryCommand::CreateSpace { .. } => DirectoryAccessActionV1::SpaceCreate,
+        DirectoryCommand::RenameSpace { .. } => DirectoryAccessActionV1::SpaceRename,
+        DirectoryCommand::SetVisibility { .. } => DirectoryAccessActionV1::SpaceVisibility,
+        DirectoryCommand::ArchiveSpace { .. } => DirectoryAccessActionV1::SpaceArchive,
+        DirectoryCommand::DeleteSpace { .. } => DirectoryAccessActionV1::SpaceDelete,
+        DirectoryCommand::UpsertMember { .. } => DirectoryAccessActionV1::MemberUpsert,
+        DirectoryCommand::RemoveMember { .. } => DirectoryAccessActionV1::MemberRemove,
+        DirectoryCommand::CreateInvite { .. } => DirectoryAccessActionV1::InviteCreate,
+        DirectoryCommand::RevokeInvite { .. } => DirectoryAccessActionV1::InviteRevoke,
+        DirectoryCommand::AnnounceDocument { .. } => DirectoryAccessActionV1::DocumentAnnounce,
+        DirectoryCommand::RecordUserPreference { .. } => DirectoryAccessActionV1::PreferenceRecord,
     }
 }
 
@@ -7175,7 +7208,7 @@ fn directory_command_access_action(command: &DirectoryCommand) -> HubAccessActio
 /// ([`session_access_roles`] of its [`HubDirectory::principal_role`]). A space-scoped command naming a
 /// space that does not exist is `404`.
 async fn authorize_directory_command(state: &HubState, principal: DirectoryPrincipalV1<'_>, admin: bool, command: &DirectoryCommand) -> Result<(), StatusCode> {
-    let mut roles = if admin { vec![HubAccessRoleV1::Admin] } else { Vec::new() };
+    let mut roles = if admin { vec![DirectoryAccessRoleV1::Admin] } else { Vec::new() };
     let space_kind = match directory_command_space(command) {
         None => {
             roles.extend(session_access_roles(principal.session_kind, None));
@@ -7184,13 +7217,13 @@ async fn authorize_directory_command(state: &HubState, principal: DirectoryPrinc
         Some(space_id) => {
             let space = state.directory.get_space(space_id).await.map_err(directory_error_status)?.ok_or(StatusCode::NOT_FOUND)?;
             if space.owner_user_id == principal.user_id && !principal.session_kind.is_agent() {
-                roles.push(HubAccessRoleV1::Owner);
+                roles.push(DirectoryAccessRoleV1::Owner);
             }
             roles.extend(session_access_roles(principal.session_kind, state.directory.principal_role(space_id, principal).await.map_err(directory_error_status)?));
             Some(space.kind)
         }
     };
-    if hub_access_permits(&roles, directory_command_access_action(command), space_kind.as_deref()) {
+    if directory_access_permits(&roles, directory_command_access_action(command), space_kind.as_deref()) {
         Ok(())
     } else {
         Err(StatusCode::FORBIDDEN)
@@ -8070,7 +8103,7 @@ async fn serve_directory_event_page_v1(uri: axum::http::Uri, headers: HeaderMap,
     }
     let operation = async {
         let caller = resolve_bearer_user(&state, bearer(&headers).as_deref()).await.ok_or(StatusCode::UNAUTHORIZED)?;
-        if lane == DirectoryEventLaneV1::Preferences && !hub_access_permits(&session_access_roles(caller.session_kind, None), HubAccessActionV1::PreferenceRead, None) {
+        if lane == DirectoryEventLaneV1::Preferences && !directory_access_permits(&session_access_roles(caller.session_kind, None), DirectoryAccessActionV1::PreferenceRead, None) {
             return Err(StatusCode::FORBIDDEN);
         }
         build_directory_event_page_v1(&state, &caller, after, control.as_ref(), lane).await.map(DirectoryJson)
@@ -9086,7 +9119,7 @@ async fn post_agent_delegation(headers: HeaderMap, State(state): State<HubState>
         return agent_error_response(AgentErrorCodeV1::RateLimited, Some(retry_after_ms));
     }
     match state.directory.principal_role(verified.space_id(), session.principal()).await {
-        Ok(role) if access_permits_in_space(&state, &session_access_roles(session.session_kind, role), HubAccessActionV1::AgentDelegate, verified.space_id()).await => {}
+        Ok(role) if access_permits_in_space(&state, &session_access_roles(session.session_kind, role), DirectoryAccessActionV1::AgentDelegate, verified.space_id()).await => {}
         Ok(_) => {
             span.refused("forbidden");
             return agent_error_response(AgentErrorCodeV1::Forbidden, None);
@@ -11087,7 +11120,7 @@ async fn revalidate_gis_map_approval_authority(state: &HubState, authority: &Hub
     let role =
         tokio::time::timeout(std::time::Duration::from_secs(2), state.directory.principal_role(&authority.scope.space_id, authority.caller.principal())).await.map_err(|_| InferenceRouteErrorV1::Unavailable)?.map_err(|_| InferenceRouteErrorV1::Unavailable)?;
     let roles = session_access_roles(authority.caller.session_kind, role);
-    if !access_permits_in_space(state, &roles, HubAccessActionV1::DocumentWrite, &authority.scope.space_id).await {
+    if !access_permits_in_space(state, &roles, DirectoryAccessActionV1::DocumentWrite, &authority.scope.space_id).await {
         return Err(InferenceRouteErrorV1::Denied);
     }
     Ok(())
@@ -11234,7 +11267,7 @@ async fn post_inference_gis_map_approval_undo(Path((space_id, document_id)): Pat
 fn inference_routes(router: Router<HubState>) -> Router<HubState> {
     router
         .route("/spaces/{space_id}/documents/{document_id}/inference/gis-map/jobs", post(post_inference_gis_map_job).layer(DefaultBodyLimit::max(INFERENCE_REQUEST_MAX_BYTES)))
-        .route("/spaces/{space_id}/documents/{document_id}/inference/gis-map/jobs/reconcile", post(post_inference_gis_map_job_reconcile).layer(DefaultBodyLimit::max(semio_hub::inference::schema::RECONCILE_REQUEST_MAX_BYTES)))
+        .route("/spaces/{space_id}/documents/{document_id}/inference/gis-map/jobs/reconcile", post(post_inference_gis_map_job_reconcile).layer(DefaultBodyLimit::max(semio_framework_job::reconcile::JOB_RECONCILE_REQUEST_MAX_BYTES)))
         .route("/spaces/{space_id}/documents/{document_id}/inference/gis-map/jobs/{job_id}/events", get(get_inference_gis_map_job_events))
         .route("/spaces/{space_id}/documents/{document_id}/inference/gis-map/jobs/{job_id}/cancel", post(post_inference_gis_map_job_cancel).layer(DefaultBodyLimit::max(INFERENCE_REQUEST_MAX_BYTES)))
         .route("/spaces/{space_id}/documents/{document_id}/inference/gis-map/jobs/{job_id}/approval", post(post_inference_gis_map_job_approval).layer(DefaultBodyLimit::max(INFERENCE_REQUEST_MAX_BYTES)))

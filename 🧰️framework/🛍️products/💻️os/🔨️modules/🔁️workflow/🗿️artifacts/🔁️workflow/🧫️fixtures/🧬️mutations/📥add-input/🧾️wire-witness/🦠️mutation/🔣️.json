@@ -1,0 +1,10 @@
+{
+  "operation": "addInput",
+  "input": {
+    "id": "in-1",
+    "kindId": "kind.a",
+    "selector": "**/*.a",
+    "required": true,
+    "multiplicity": "one"
+  }
+}

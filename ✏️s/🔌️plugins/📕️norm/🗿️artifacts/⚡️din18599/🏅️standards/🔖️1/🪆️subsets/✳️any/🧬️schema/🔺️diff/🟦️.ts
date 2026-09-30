@@ -1,34 +1,44 @@
-/** 🪪️ Din18599Diff contains document fields and canonical child identities. */
+/** 🪪️ Din18599Diff — the sparse field delta of `Din18599Diff` in `🦀️.rs`: every field optional and nullable, whole lists as `{ values }`. */
 import { type ArtifactChild } from "../../../../../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🪆️child/🧬️schema/🟦️.ts";
-import { parseDin18599Fields } from "../🟦️.ts";
+import { parseDin18599Fields, type CoolingSystem, type DhwSystem, type EnvelopeElement, type HeatingSystem, type LightingSystem, type Renewables, type ThermalZone, type VentilationSystem } from "../🟦️.ts";
 
 export interface Din18599Diff {
   /** 🗿️ @state artifact */
-  useClass?: "Residential" | "Office" | "School" | null;
+  buildingCategory?: string | null;
   /** 🗿️ @state artifact */
-  heatedAreaM2?: number | null;
+  attachment?: string | null;
   /** 🗿️ @state artifact */
-  occupants?: number | null;
+  useClass?: string | null;
   /** 🗿️ @state artifact */
-  hT?: number | null;
+  method?: string | null;
   /** 🗿️ @state artifact */
-  hV?: number | null;
+  netFloorAreaM2?: number | null;
+  /** 🗿️ @state artifact */
+  heatedVolumeM3?: number | null;
+  /** 🗿️ @state artifact */
+  gegQpFactor?: number | null;
+  /** 🗿️ @state artifact */
+  deltaUWbWM2k?: number | null;
+  /** 🗿️ @state artifact */
+  automationClass?: string | null;
+  /** 🗿️ @state artifact */
+  zones?: { values: ThermalZone[] } | null;
+  /** 🗿️ @state artifact */
+  elements?: { values: EnvelopeElement[] } | null;
+  /** 🗿️ @state artifact */
+  heating?: HeatingSystem | null;
+  /** 🗿️ @state artifact */
+  dhw?: DhwSystem | null;
+  /** 🗿️ @state artifact */
+  ventilation?: VentilationSystem | null;
+  /** 🗿️ @state artifact */
+  cooling?: CoolingSystem | null;
+  /** 🗿️ @state artifact */
+  lighting?: LightingSystem | null;
+  /** 🗿️ @state artifact */
+  renewables?: Renewables | null;
   /** 🗿️ @state artifact @child kind=s.stdio.semio */
   climate?: ArtifactChild | null;
-  /** 🗿️ @state artifact */
-  internalGainsWM2?: number | null;
-  /** 🗿️ @state artifact */
-  solarGainsKwh?: number | null;
-  /** 🗿️ @state artifact */
-  systemLossesKwh?: number | null;
-  /** 🗿️ @state artifact */
-  renewableKwh?: number | null;
-  /** 🗿️ @state artifact */
-  annualLimitKwh?: number | null;
-  /** 🗿️ @state artifact */
-  energyCarrier?: string | null;
-  /** 🗿️ @state artifact */
-  referenceQPKwh?: number | null;
 }
 
 /** 📥️ Decodes the exact Din18599Diff wire contract. */

@@ -1,0 +1,24 @@
+# Cargo Direction Metadata Inventory
+
+Fresh `cargo metadata --format-version 1 --no-deps --offline` succeeded against the shared authored workspace, with 275 packages/members. These 16 packages have no `package.metadata.semio.role`; physical ownership remains available and will still be enforced. This is an explicit metadata defect rather than a reason to omit their dependencies. No role was invented from a crate-name prefix.
+
+| Manifest | Package | Authored purpose | Cargo target kinds |
+| --- | --- | --- | --- |
+| `🧰️framework/🔨️modules/⏳️async/✨️macros/📦️packages/🦀️rust/Cargo.toml` | `semio-framework-async-macros` | Proc-macro #[async_test]: keeps a test fn's literal `async fn` in source (the repo's universal-async convention) while expanding it to a plain #[test] harness that drives the body through an inline, dependency-free block_on — the fix for the ~16k `#[test] async fn` sites the universal-async codemod left uncompilable. | proc-macro |
+| `🧰️framework/🔨️modules/🌱️value/✨️derive/📦️packages/🦀️rust/Cargo.toml` | `semio-framework-value-derive` | Proc-macros for #[derive(ToValue, FromValue)] with #[value(...)] container/field attributes | proc-macro, test |
+| `🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/✨️derive/📦️packages/🦀️rust/Cargo.toml` | `semio-framework-os-kernel-dsl-derive` | Proc-macros compiling #[dsl(...)]-annotated struct/enum declarations into DocumentDsl/OpText impls | proc-macro |
+| `🧰️framework/🔨️modules/🧬️schema/✨️derive/📦️packages/🦀️rust/Cargo.toml` | `semio-framework-schema-derive` | Proc-macros for #[derive(ArtifactSchema)] with #[state]/#[artifact_schema] field annotations | proc-macro |
+| `🧰️framework/🛍️products/💻️os/🔨️modules/🪐️space/🗿️artifacts/🪐️space/📦️packages/🦀️rust/Cargo.toml` | `semio-framework-artifact-space-space` | Persisted OS space manifest artifact | lib |
+| `🧰️framework/🛍️products/💻️os/🔨️modules/🪐️space/🗿️artifacts/🗂️collection/📦️packages/🦀️rust/Cargo.toml` | `semio-framework-artifact-space-collection` | Persisted OS collection artifact | lib |
+| `🧰️framework/🛍️products/💻️os/🔨️modules/📖️playbook/🗿️artifacts/📖️playbook/📦️packages/🦀️rust/Cargo.toml` | `semio-framework-artifact-playbook-playbook` | Shared playbook document artifact and generation model | lib |
+| `🧰️framework/🛍️products/💻️os/🔨️modules/🔁️workflow/🗿️artifacts/🔁️workflow/📦️packages/🦀️rust/Cargo.toml` | `semio-framework-artifact-workflow-workflow` | Persisted workflow graph artifact | lib |
+| `🧰️framework/🛍️products/💻️os/🔨️modules/🔁️workflow/🗿️artifacts/🏃️run/📦️packages/🦀️rust/Cargo.toml` | `semio-framework-artifact-workflow-run` | Persisted workflow run artifact | lib |
+| `🧰️framework/🔨️modules/🔀️dispatch/📦️packages/🦀️rust/Cargo.toml` | `semio-framework-dispatch-macros` | #[dyn_enum] / dyn_enum! — enum-dispatch codegen replacing dyn Trait objects (O1: drop dyn dispatch) so AFIT traits stay object-usable without Box<dyn Future> | proc-macro, test |
+| `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/Cargo.toml` | `semio-framework-plugin` | Declarative app plugin SDK for semio framework WASM components | lib |
+| `✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/✏️editor/🪆️1-any/🎮️commands/🖱️canvas-pointer-down/🔄️fsm/📦️packages/🦀️rust/Cargo.toml` | `semio-s-plugin-draw-fsm` | Draw plugin - statechart kernel, actor runtime and hosts (used by the drawing app's canvas gesture machine); kept as its own crate because its proc-macro sibling cannot be merged into the main plugin crate | rlib |
+| `✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/✏️editor/🪆️1-any/🎮️commands/🖱️canvas-pointer-down/🔄️fsm/✨️macros/📦️packages/🦀️rust/Cargo.toml` | `semio-s-plugin-draw-fsm-macros` | Draw plugin - fsm statechart! proc-macro (draw-fsm's sibling; a proc-macro crate can never be merged into a normal rlib/cdylib crate) | proc-macro |
+| `✏️s/🔨️modules/📜️imperative/🧩️extension_sdk/📦️packages/🦀️rust/Cargo.toml` | `semio-s-imperative-extension-sdk` | Shared manifest + evaluate helpers for imperative path extensions | rlib |
+| `🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🖼️canvas/🔤️fonts/📦️packages/🦀️rust/Cargo.toml` | `semio-framework-os-font-assets` | Packed font assets for OS hosts | bin |
+| `🧰️framework/🔨️modules/🔄️machine/✨️derive/📦️packages/🦀️rust/Cargo.toml` | `semio-framework-machine-derive` | Proc-macros compiling statechart! declarations into semio-framework-machine static tables | proc-macro |
+
+Observed declared roles: `artifact`, `extension`, `framework`, `hub`, `library`, `plugin`, `product`, `s-module`, `test`, `tool`. The current taxonomy general role list omits `library`, `artifact` and `test`, which are distinct existing Cargo labels. The Cargo contract will include those labels without equating them with physical framework/implementation areas. Known `product` inside framework still gets the physical framework direction. The OS kernel declares `framework`, so it remains a semantic framework peer despite its product directory.

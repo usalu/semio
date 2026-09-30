@@ -19,13 +19,53 @@
       ],
       "properties": {
         "id": {
-          "type": "string"
+          "type": "string",
+          "x-semio-ui": {
+            "widget": "text",
+            "role": "value",
+            "label": {
+              "en": "ID",
+              "de": "ID"
+            },
+            "description": {
+              "en": "Unique id of the record.",
+              "de": "Eindeutige ID des Eintrags."
+            },
+            "group": "identity",
+            "order": 10
+          }
         },
         "label": {
-          "type": "string"
+          "type": "string",
+          "x-semio-ui": {
+            "widget": "text",
+            "role": "value",
+            "label": {
+              "en": "Label",
+              "de": "Bezeichnung"
+            },
+            "group": "value",
+            "order": 20
+          }
         },
         "weight": {
-          "type": "number"
+          "type": "number",
+          "x-semio-ui": {
+            "widget": "stepper",
+            "role": "value",
+            "label": {
+              "en": "Weight",
+              "de": "Gewicht"
+            },
+            "description": {
+              "en": "Relative frequency of the tile in a solution.",
+              "de": "Relative Häufigkeit der Kachel in einer Lösung."
+            },
+            "step": 0.1,
+            "precision": 2,
+            "group": "solver",
+            "order": 30
+          }
         },
         "media": {
           "title": "WfcTileMedia2d",
@@ -39,15 +79,65 @@
                 "bitmap",
                 "vector",
                 "image"
-              ]
+              ],
+              "x-semio-ui": {
+                "widget": "segmented",
+                "role": "value",
+                "label": {
+                  "en": "Media kind",
+                  "de": "Medienart"
+                },
+                "options": {
+                  "bitmap": {
+                    "en": "Bitmap",
+                    "de": "Bitmap"
+                  },
+                  "vector": {
+                    "en": "Vector",
+                    "de": "Vektor"
+                  },
+                  "image": {
+                    "en": "Image",
+                    "de": "Bild"
+                  }
+                },
+                "group": "kind",
+                "order": 10
+              }
             },
             "width": {
               "type": "integer",
-              "minimum": 0
+              "minimum": 0,
+              "x-semio-ui": {
+                "widget": "stepper",
+                "role": "value",
+                "label": {
+                  "en": "Width",
+                  "de": "Breite"
+                },
+                "unit": "px",
+                "step": 1,
+                "precision": 0,
+                "group": "source",
+                "order": 20
+              }
             },
             "height": {
               "type": "integer",
-              "minimum": 0
+              "minimum": 0,
+              "x-semio-ui": {
+                "widget": "stepper",
+                "role": "value",
+                "label": {
+                  "en": "Height",
+                  "de": "Höhe"
+                },
+                "unit": "px",
+                "step": 1,
+                "precision": 0,
+                "group": "source",
+                "order": 30
+              }
             },
             "palette": {
               "type": "array",
@@ -65,29 +155,100 @@
                   "r": {
                     "type": "integer",
                     "minimum": 0,
-                    "maximum": 255
+                    "maximum": 255,
+                    "x-semio-ui": {
+                      "widget": "slider",
+                      "role": "value",
+                      "label": {
+                        "en": "Red",
+                        "de": "Rot"
+                      },
+                      "step": 1,
+                      "precision": 0,
+                      "group": "color",
+                      "order": 10
+                    }
                   },
                   "g": {
                     "type": "integer",
                     "minimum": 0,
-                    "maximum": 255
+                    "maximum": 255,
+                    "x-semio-ui": {
+                      "widget": "slider",
+                      "role": "value",
+                      "label": {
+                        "en": "Green",
+                        "de": "Grün"
+                      },
+                      "step": 1,
+                      "precision": 0,
+                      "group": "color",
+                      "order": 20
+                    }
                   },
                   "b": {
                     "type": "integer",
                     "minimum": 0,
-                    "maximum": 255
+                    "maximum": 255,
+                    "x-semio-ui": {
+                      "widget": "slider",
+                      "role": "value",
+                      "label": {
+                        "en": "Blue",
+                        "de": "Blau"
+                      },
+                      "step": 1,
+                      "precision": 0,
+                      "group": "color",
+                      "order": 30
+                    }
                   },
                   "a": {
                     "type": "integer",
                     "minimum": 0,
-                    "maximum": 255
+                    "maximum": 255,
+                    "x-semio-ui": {
+                      "widget": "slider",
+                      "role": "value",
+                      "label": {
+                        "en": "Alpha",
+                        "de": "Alpha"
+                      },
+                      "step": 1,
+                      "precision": 0,
+                      "group": "color",
+                      "order": 40
+                    }
                   }
                 }
+              },
+              "x-semio-ui": {
+                "role": "value",
+                "label": {
+                  "en": "Palette",
+                  "de": "Palette"
+                },
+                "group": "record",
+                "order": 40
               }
             },
             "pixels": {
               "type": "string",
-              "format": "base64"
+              "format": "base64",
+              "x-semio-ui": {
+                "widget": "hidden",
+                "role": "value",
+                "label": {
+                  "en": "Pixels",
+                  "de": "Pixel"
+                },
+                "description": {
+                  "en": "Base64-encoded palette indices.",
+                  "de": "Base64-codierte Palettenindizes."
+                },
+                "group": "source",
+                "order": 50
+              }
             },
             "paths": {
               "type": "array",
@@ -116,7 +277,39 @@
                             "quadTo",
                             "cubicTo",
                             "close"
-                          ]
+                          ],
+                          "x-semio-ui": {
+                            "widget": "select",
+                            "role": "value",
+                            "label": {
+                              "en": "Segment",
+                              "de": "Segment"
+                            },
+                            "options": {
+                              "moveTo": {
+                                "en": "Move to",
+                                "de": "Bewegen zu"
+                              },
+                              "lineTo": {
+                                "en": "Line to",
+                                "de": "Linie zu"
+                              },
+                              "quadTo": {
+                                "en": "Quadratic curve to",
+                                "de": "Quadratische Kurve zu"
+                              },
+                              "cubicTo": {
+                                "en": "Cubic curve to",
+                                "de": "Kubische Kurve zu"
+                              },
+                              "close": {
+                                "en": "Close",
+                                "de": "Schließen"
+                              }
+                            },
+                            "group": "kind",
+                            "order": 10
+                          }
                         },
                         "to": {
                           "title": "WfcPoint2",
@@ -128,11 +321,44 @@
                           ],
                           "properties": {
                             "x": {
-                              "type": "number"
+                              "type": "number",
+                              "x-semio-ui": {
+                                "widget": "stepper",
+                                "role": "value",
+                                "label": {
+                                  "en": "X",
+                                  "de": "X"
+                                },
+                                "step": 1,
+                                "precision": 2,
+                                "group": "position",
+                                "order": 10
+                              }
                             },
                             "y": {
-                              "type": "number"
+                              "type": "number",
+                              "x-semio-ui": {
+                                "widget": "stepper",
+                                "role": "value",
+                                "label": {
+                                  "en": "Y",
+                                  "de": "Y"
+                                },
+                                "step": 1,
+                                "precision": 2,
+                                "group": "position",
+                                "order": 20
+                              }
                             }
+                          },
+                          "x-semio-ui": {
+                            "role": "value",
+                            "label": {
+                              "en": "End point",
+                              "de": "Endpunkt"
+                            },
+                            "group": "record",
+                            "order": 20
                           }
                         },
                         "ctrl": {
@@ -145,11 +371,44 @@
                           ],
                           "properties": {
                             "x": {
-                              "type": "number"
+                              "type": "number",
+                              "x-semio-ui": {
+                                "widget": "stepper",
+                                "role": "value",
+                                "label": {
+                                  "en": "X",
+                                  "de": "X"
+                                },
+                                "step": 1,
+                                "precision": 2,
+                                "group": "position",
+                                "order": 10
+                              }
                             },
                             "y": {
-                              "type": "number"
+                              "type": "number",
+                              "x-semio-ui": {
+                                "widget": "stepper",
+                                "role": "value",
+                                "label": {
+                                  "en": "Y",
+                                  "de": "Y"
+                                },
+                                "step": 1,
+                                "precision": 2,
+                                "group": "position",
+                                "order": 20
+                              }
                             }
+                          },
+                          "x-semio-ui": {
+                            "role": "value",
+                            "label": {
+                              "en": "Control point",
+                              "de": "Kontrollpunkt"
+                            },
+                            "group": "record",
+                            "order": 30
                           }
                         },
                         "ctrl1": {
@@ -162,11 +421,44 @@
                           ],
                           "properties": {
                             "x": {
-                              "type": "number"
+                              "type": "number",
+                              "x-semio-ui": {
+                                "widget": "stepper",
+                                "role": "value",
+                                "label": {
+                                  "en": "X",
+                                  "de": "X"
+                                },
+                                "step": 1,
+                                "precision": 2,
+                                "group": "position",
+                                "order": 10
+                              }
                             },
                             "y": {
-                              "type": "number"
+                              "type": "number",
+                              "x-semio-ui": {
+                                "widget": "stepper",
+                                "role": "value",
+                                "label": {
+                                  "en": "Y",
+                                  "de": "Y"
+                                },
+                                "step": 1,
+                                "precision": 2,
+                                "group": "position",
+                                "order": 20
+                              }
                             }
+                          },
+                          "x-semio-ui": {
+                            "role": "value",
+                            "label": {
+                              "en": "First control point",
+                              "de": "Erster Kontrollpunkt"
+                            },
+                            "group": "record",
+                            "order": 40
                           }
                         },
                         "ctrl2": {
@@ -179,14 +471,56 @@
                           ],
                           "properties": {
                             "x": {
-                              "type": "number"
+                              "type": "number",
+                              "x-semio-ui": {
+                                "widget": "stepper",
+                                "role": "value",
+                                "label": {
+                                  "en": "X",
+                                  "de": "X"
+                                },
+                                "step": 1,
+                                "precision": 2,
+                                "group": "position",
+                                "order": 10
+                              }
                             },
                             "y": {
-                              "type": "number"
+                              "type": "number",
+                              "x-semio-ui": {
+                                "widget": "stepper",
+                                "role": "value",
+                                "label": {
+                                  "en": "Y",
+                                  "de": "Y"
+                                },
+                                "step": 1,
+                                "precision": 2,
+                                "group": "position",
+                                "order": 20
+                              }
                             }
+                          },
+                          "x-semio-ui": {
+                            "role": "value",
+                            "label": {
+                              "en": "Second control point",
+                              "de": "Zweiter Kontrollpunkt"
+                            },
+                            "group": "record",
+                            "order": 50
                           }
                         }
                       }
+                    },
+                    "x-semio-ui": {
+                      "role": "value",
+                      "label": {
+                        "en": "Segments",
+                        "de": "Segmente"
+                      },
+                      "group": "record",
+                      "order": 10
                     }
                   },
                   "fill": {
@@ -203,23 +537,80 @@
                       "r": {
                         "type": "integer",
                         "minimum": 0,
-                        "maximum": 255
+                        "maximum": 255,
+                        "x-semio-ui": {
+                          "widget": "slider",
+                          "role": "value",
+                          "label": {
+                            "en": "Red",
+                            "de": "Rot"
+                          },
+                          "step": 1,
+                          "precision": 0,
+                          "group": "color",
+                          "order": 10
+                        }
                       },
                       "g": {
                         "type": "integer",
                         "minimum": 0,
-                        "maximum": 255
+                        "maximum": 255,
+                        "x-semio-ui": {
+                          "widget": "slider",
+                          "role": "value",
+                          "label": {
+                            "en": "Green",
+                            "de": "Grün"
+                          },
+                          "step": 1,
+                          "precision": 0,
+                          "group": "color",
+                          "order": 20
+                        }
                       },
                       "b": {
                         "type": "integer",
                         "minimum": 0,
-                        "maximum": 255
+                        "maximum": 255,
+                        "x-semio-ui": {
+                          "widget": "slider",
+                          "role": "value",
+                          "label": {
+                            "en": "Blue",
+                            "de": "Blau"
+                          },
+                          "step": 1,
+                          "precision": 0,
+                          "group": "color",
+                          "order": 30
+                        }
                       },
                       "a": {
                         "type": "integer",
                         "minimum": 0,
-                        "maximum": 255
+                        "maximum": 255,
+                        "x-semio-ui": {
+                          "widget": "slider",
+                          "role": "value",
+                          "label": {
+                            "en": "Alpha",
+                            "de": "Alpha"
+                          },
+                          "step": 1,
+                          "precision": 0,
+                          "group": "color",
+                          "order": 40
+                        }
                       }
+                    },
+                    "x-semio-ui": {
+                      "role": "value",
+                      "label": {
+                        "en": "Fill color",
+                        "de": "Füllfarbe"
+                      },
+                      "group": "record",
+                      "order": 20
                     }
                   },
                   "stroke": {
@@ -236,36 +627,144 @@
                       "r": {
                         "type": "integer",
                         "minimum": 0,
-                        "maximum": 255
+                        "maximum": 255,
+                        "x-semio-ui": {
+                          "widget": "slider",
+                          "role": "value",
+                          "label": {
+                            "en": "Red",
+                            "de": "Rot"
+                          },
+                          "step": 1,
+                          "precision": 0,
+                          "group": "color",
+                          "order": 10
+                        }
                       },
                       "g": {
                         "type": "integer",
                         "minimum": 0,
-                        "maximum": 255
+                        "maximum": 255,
+                        "x-semio-ui": {
+                          "widget": "slider",
+                          "role": "value",
+                          "label": {
+                            "en": "Green",
+                            "de": "Grün"
+                          },
+                          "step": 1,
+                          "precision": 0,
+                          "group": "color",
+                          "order": 20
+                        }
                       },
                       "b": {
                         "type": "integer",
                         "minimum": 0,
-                        "maximum": 255
+                        "maximum": 255,
+                        "x-semio-ui": {
+                          "widget": "slider",
+                          "role": "value",
+                          "label": {
+                            "en": "Blue",
+                            "de": "Blau"
+                          },
+                          "step": 1,
+                          "precision": 0,
+                          "group": "color",
+                          "order": 30
+                        }
                       },
                       "a": {
                         "type": "integer",
                         "minimum": 0,
-                        "maximum": 255
+                        "maximum": 255,
+                        "x-semio-ui": {
+                          "widget": "slider",
+                          "role": "value",
+                          "label": {
+                            "en": "Alpha",
+                            "de": "Alpha"
+                          },
+                          "step": 1,
+                          "precision": 0,
+                          "group": "color",
+                          "order": 40
+                        }
                       }
+                    },
+                    "x-semio-ui": {
+                      "role": "value",
+                      "label": {
+                        "en": "Stroke color",
+                        "de": "Konturfarbe"
+                      },
+                      "group": "record",
+                      "order": 30
                     }
                   },
                   "strokeWidth": {
-                    "type": "number"
+                    "type": "number",
+                    "x-semio-ui": {
+                      "widget": "stepper",
+                      "role": "value",
+                      "label": {
+                        "en": "Stroke width",
+                        "de": "Konturbreite"
+                      },
+                      "step": 0.5,
+                      "precision": 2,
+                      "group": "appearance",
+                      "order": 40
+                    }
                   }
                 }
+              },
+              "x-semio-ui": {
+                "role": "value",
+                "label": {
+                  "en": "Paths",
+                  "de": "Pfade"
+                },
+                "group": "record",
+                "order": 60
               }
             },
             "child": {
-              "type": "object"
+              "$ref": "https://json.schemas.assets.semio-tech.com/os/store/child/schema.json",
+              "x-semio-ui": {
+                "widget": "hidden",
+                "role": "value",
+                "label": {
+                  "en": "Child artifact",
+                  "de": "Kindartefakt"
+                },
+                "description": {
+                  "en": "Handle of the child artifact an image tile renders.",
+                  "de": "Verweis auf das Kindartefakt, das eine Bildkachel darstellt."
+                }
+              }
             }
+          },
+          "x-semio-ui": {
+            "role": "value",
+            "label": {
+              "en": "Tile media",
+              "de": "Kachelmedien"
+            },
+            "group": "record",
+            "order": 40
           }
         }
+      },
+      "x-semio-ui": {
+        "role": "value",
+        "label": {
+          "en": "Tile",
+          "de": "Kachel"
+        },
+        "group": "record",
+        "order": 10
       }
     }
   }

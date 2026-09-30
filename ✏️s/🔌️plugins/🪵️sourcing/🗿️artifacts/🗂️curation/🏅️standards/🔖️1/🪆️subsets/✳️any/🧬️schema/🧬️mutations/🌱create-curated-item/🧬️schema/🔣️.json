@@ -5,9 +5,13 @@
   "type": "object",
   "additionalProperties": false,
   "required": [
+    "mutation",
     "item"
   ],
   "properties": {
+    "mutation": {
+      "const": "createCuratedItem"
+    },
     "item": {
       "type": "object",
       "additionalProperties": false,
@@ -17,7 +21,24 @@
       ],
       "properties": {
         "objectId": {
-          "type": "string"
+          "type": "string",
+          "x-semio-ui": {
+            "widget": "reference",
+            "role": "value",
+            "label": {
+              "en": "Object",
+              "de": "Objekt"
+            },
+            "description": {
+              "en": "The pool object to curate.",
+              "de": "Das zu kuratierende Pool-Objekt."
+            },
+            "ref": {
+              "kind": "object",
+              "domain": "rows",
+              "granularity": "object"
+            }
+          }
         },
         "count": {
           "type": "integer",

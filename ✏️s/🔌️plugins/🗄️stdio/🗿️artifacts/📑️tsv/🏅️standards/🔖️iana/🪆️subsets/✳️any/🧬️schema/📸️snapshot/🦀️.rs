@@ -102,6 +102,17 @@ pub fn encode_tsv(snap: &TsvSnapshot) -> String {
     }
     out
 }
+
+/// 📄️ The persisted document (`semio iana.tsv.dsl v1` envelope + body) through the artifact's own `ArtifactDsl` codec,
+/// reachable for a caller that cannot name the trait.
+pub fn parse_tsv_document(text: &str) -> Result<TsvSnapshot, String> {
+    <TsvSnapshot as store::ArtifactDsl>::parse_dsl(text).map_err(|error| error.to_string())
+}
+
+/// 📄️ The inverse of [`parse_tsv_document`]: the snapshot printed as its enveloped document.
+pub fn print_tsv_document(snapshot: &TsvSnapshot) -> String {
+    <TsvSnapshot as store::ArtifactDsl>::print_dsl(snapshot)
+}
 //#endregion 🔖️SnapshotCodec
 
 //#region 🔖️HandcraftedArtifactCodecs

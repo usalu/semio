@@ -15,6 +15,8 @@ pub use schema::diff::StepDiff;
 pub use schema::mutations::StepMutation;
 pub use schema::snapshot::StepSnapshot;
 pub use schema::StepArtifact;
+/// 🧾️ The shared Part-21 codec and the leaf wire bridges, re-exported for the case adapters that link only this crate.
+pub use semio_s_artifact_stdio_contract::{apply_mutation_checked, mutation_from_payload_json, mutation_inverse, part21};
 
 /// 🏷️ Document schema / DSL envelope id.
 pub const STDIO_STEP_DOCUMENT_SCHEMA: &str = "stdio.step";

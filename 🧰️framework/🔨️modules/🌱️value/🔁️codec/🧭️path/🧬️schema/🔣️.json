@@ -1,7 +1,7 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "$id": "https://json.schemas.assets.semio-tech.com/framework/value/path-edit.json",
-  "title": "Typed Value Path Edit",
+  "$id": "https://json.schemas.assets.semio-tech.com/framework/value/codec/path/schema.json",
+  "title": "TypedValuePathEdit",
   "description": "🧭️ A typed edit at decoded RFC 6901 path segments, without serializing unrelated fields.",
   "definitions": {
     "edit": {

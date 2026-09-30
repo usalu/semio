@@ -11,11 +11,11 @@ use crate::standards::v1::subsets::mesh::schema::mutations::SemioMeshMutation;
 use crate::standards::v1::subsets::mesh::schema::snapshot::SemioMeshSnapshot;
 use protocol::{Mutation, MutationDiff};
 
-const BEFORE: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/📀replace-texture-bytes/📀️swaps-the-texture-payload-without-retagging-its-mime/📸️snapshot/⬅️before/🔣️.json");
-const AFTER: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/📀replace-texture-bytes/📀️swaps-the-texture-payload-without-retagging-its-mime/📸️snapshot/➡️after/🔣️.json");
-const MUTATION: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/📀replace-texture-bytes/📀️swaps-the-texture-payload-without-retagging-its-mime/🦠️mutation/🔣️.json");
-const DIFF: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/📀replace-texture-bytes/📀️swaps-the-texture-payload-without-retagging-its-mime/🔺️diff/🔣️.json");
-const OUTCOME: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/📀replace-texture-bytes/📀️swaps-the-texture-payload-without-retagging-its-mime/🎯️outcome/🔣️.json");
+const BEFORE: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/📀replace-texture-bytes/📀️swaps-texture-payload-without-retagging-mime/📸️snapshot/⬅️before/🔣️.json");
+const AFTER: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/📀replace-texture-bytes/📀️swaps-texture-payload-without-retagging-mime/📸️snapshot/➡️after/🔣️.json");
+const MUTATION: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/📀replace-texture-bytes/📀️swaps-texture-payload-without-retagging-mime/🦠️mutation/🔣️.json");
+const DIFF: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/📀replace-texture-bytes/📀️swaps-texture-payload-without-retagging-mime/🔺️diff/🔣️.json");
+const OUTCOME: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/📀replace-texture-bytes/📀️swaps-texture-payload-without-retagging-mime/🎯️outcome/🔣️.json");
 
 fn before() -> SemioMeshSnapshot {
     dsl::json::from_json_str(BEFORE).expect("replace-texture-bytes before snapshot decodes")

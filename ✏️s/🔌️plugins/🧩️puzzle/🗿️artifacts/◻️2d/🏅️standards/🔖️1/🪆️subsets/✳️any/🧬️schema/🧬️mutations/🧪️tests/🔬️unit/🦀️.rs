@@ -138,7 +138,7 @@ fn dispatch_registers_semantic_descriptors() {
     for kind in <Puzzle2dMutation as protocol::SemanticMutation<Puzzle2dSnapshot>>::kinds() {
         assert!(protocol::is_approved_verb(kind.verb), "verb '{}' must be in APPROVED_VERBS", kind.verb);
     }
-    assert_eq!(<Puzzle2dMutation as protocol::SemanticMutation<Puzzle2dSnapshot>>::kinds().len(), 33);
+    assert_eq!(<Puzzle2dMutation as protocol::SemanticMutation<Puzzle2dSnapshot>>::kinds().len(), 36);
 }
 //#endregion 🔖️MutationLaws
 
@@ -157,6 +157,9 @@ fn missing_target_is_error_per_verb_family() {
     semio_framework::io::resolve_ready(assert_missing_target_is_error(&base, &move_node("missing".into(), 1.0, 1.0))); // move/drag/rotate/scale/resize
     semio_framework::io::resolve_ready(assert_missing_target_is_error(&base, &edit_node_text("missing".into(), Some("x".into())))); // edit/replace
     semio_framework::io::resolve_ready(assert_missing_target_is_error(&base, &disconnect_handles("missing".into())));
+    semio_framework::io::resolve_ready(assert_missing_target_is_error(&base, &drag_selection(vec!["missing".into()], 1.0, 1.0)));
+    semio_framework::io::resolve_ready(assert_missing_target_is_error(&base, &rotate_selection(vec!["missing".into()], 0.0, 0.0, 1.0)));
+    semio_framework::io::resolve_ready(assert_missing_target_is_error(&base, &scale_selection(vec!["missing".into()], 0.0, 0.0, 2.0)));
     // disconnect/unbind
 }
 
@@ -172,6 +175,180 @@ fn create_duplicate_id_is_fatal_and_never_applies() {
     assert!(outcome.messages().iter().any(|message| message.code.0 == "mutation.duplicate-id"));
 }
 //#endregion 🔖️OutcomeLaws
+
+//#region 🔖️SelectionTransformLaws
+/// 🧫️ A board with awkward (non-dyadic) coordinates: a node with a handle, a LOCKED node and a target
+/// region — the negated-offset inverse these leaves deliberately do not use would drift on it.
+fn selection_board() -> Puzzle2dSnapshot {
+    use crate::{Puzzle2dHandle, Puzzle2dNode, Puzzle2dTargetRegion};
+    let mut base = empty_puzzle2d_snapshot();
+    base.nodes = vec![
+        Puzzle2dNode { id: "a".into(), x: 0.1, y: 0.2, handles: vec![Puzzle2dHandle { id: "ha".into(), angle: 0.3, ..Default::default() }], ..Default::default() },
+        Puzzle2dNode { id: "b".into(), x: 7.3, y: -2.9, locked: Some(true), ..Default::default() },
+    ];
+    base.target_regions = vec![Puzzle2dTargetRegion { id: "r".into(), x: 1.7, y: 2.3, width: 3.1, height: 4.9, ..Default::default() }];
+    base
+}
+
+/// ↩️ Every selection transform inverts EXACTLY through its base-derived absolute setters.
+#[test]
+fn selection_transforms_invert_exactly_on_awkward_floats() {
+    let base = selection_board();
+    for mutation in [drag_selection(vec!["a".into(), "r".into()], 0.7, -1.3), rotate_selection(vec!["a".into()], 0.3, 0.9, 0.61), scale_selection(vec!["a".into(), "r".into()], 0.3, 0.9, 1.7)] {
+        semio_framework::io::resolve_ready(assert_mutation_inverse_law(&base, &mutation));
+    }
+}
+
+/// 🚨️ Non-finite parameters, a non-positive factor and an empty or repeated target set are Fatal
+/// `mutation.invariant` with no change — exactly what the payload schemas' hard bounds forbid.
+#[test]
+fn selection_transforms_refuse_non_finite_and_collapsing_parameters() {
+    let base = selection_board();
+    for mutation in [
+        drag_selection(vec!["a".into()], f64::NAN, 0.0),
+        rotate_selection(vec!["a".into()], 0.0, f64::INFINITY, 1.0),
+        rotate_selection(vec!["a".into()], 0.0, 0.0, f64::NAN),
+        scale_selection(vec!["a".into()], 0.0, 0.0, 0.0),
+        scale_selection(vec!["a".into()], 0.0, 0.0, -2.0),
+        drag_selection(Vec::new(), 1.0, 1.0),
+        rotate_selection(vec!["a".into(), "r".into(), "a".into()], 0.0, 0.0, 1.0),
+        scale_selection(vec!["ghost".into(), "ghost".into()], 0.0, 0.0, 2.0),
+    ] {
+        let outcome = mutation.diff(&base);
+        semio_framework::io::resolve_ready(assert_fatal_never_applies(&outcome));
+        assert_eq!(outcome.worst_level(), Some(dsl::Severity::Fatal), "{mutation:?} must be Fatal");
+        assert_eq!(outcome.messages()[0].code.0, "mutation.invariant", "{mutation:?} breaks the verb family's finite/positive invariant");
+    }
+}
+
+/// ⚠️ Missing and locked members degrade to `mutation.partial` (one message per reason, ids in payload
+/// order) while every survivor still moves.
+#[test]
+fn selection_transforms_skip_missing_and_locked_members_as_partial() {
+    let base = selection_board();
+    let outcome = drag_selection(vec!["b".into(), "ghost".into(), "a".into()], 1.0, 2.0).diff(&base);
+    assert_eq!(outcome.worst_level(), Some(dsl::Severity::Warning));
+    let reported: Vec<(&str, Vec<String>)> = outcome.messages().iter().map(|message| (message.code.0.as_str(), message.target.clone())).collect();
+    assert_eq!(reported, vec![("mutation.partial", vec!["ghost".to_string()]), ("mutation.partial", vec!["b".to_string()])]);
+    let moved = MutationDiff::<Puzzle2dSnapshot>::apply(outcome.diff(), &base).expect("partial drag applies");
+    assert_eq!((moved.nodes[0].x, moved.nodes[0].y), (0.1 + 1.0, 0.2 + 2.0), "node a moves by the offset");
+    assert_eq!((moved.nodes[1].x, moved.nodes[1].y), (7.3, -2.9), "the locked node stays");
+}
+
+/// 🔄️ A rotation skips a target region (axis-aligned by construction) as partial, and a rotation of
+/// regions alone has nothing left: `mutation.target-missing`.
+#[test]
+fn rotating_target_regions_is_partial_and_regions_alone_are_target_missing() {
+    let base = selection_board();
+    let mixed = rotate_selection(vec!["a".into(), "r".into()], 0.0, 0.0, 1.0).diff(&base);
+    assert_eq!(mixed.messages().len(), 1);
+    assert_eq!((mixed.messages()[0].code.0.as_str(), mixed.messages()[0].target.clone()), ("mutation.partial", vec!["r".to_string()]));
+    assert!(mixed.diff().target_regions.is_none(), "a rotation never patches a target region");
+    semio_framework::io::resolve_ready(assert_missing_target_is_error(&base, &rotate_selection(vec!["r".into()], 0.0, 0.0, 1.0)));
+    semio_framework::io::resolve_ready(assert_missing_target_is_error(&base, &rotate_selection(vec!["b".into()], 0.0, 0.0, 1.0)));
+}
+
+/// ⏸️ The identity parameters (zero offset, zero angle, unit factor) are warning-level no-ops.
+#[test]
+fn identity_selection_transforms_are_no_ops() {
+    let base = selection_board();
+    for mutation in [drag_selection(vec!["a".into(), "r".into()], 0.0, 0.0), rotate_selection(vec!["a".into()], 0.3, 0.9, 0.0), scale_selection(vec!["a".into(), "r".into()], 0.3, 0.9, 1.0)] {
+        let outcome = mutation.diff(&base);
+        assert_eq!(outcome.diff(), &Puzzle2dDiff::default(), "{mutation:?}");
+        assert_eq!(outcome.messages().iter().map(|message| message.code.0.as_str()).collect::<Vec<_>>(), vec!["mutation.no-op"], "{mutation:?}");
+        assert!(inverse_puzzle2d_mutation(&base, &mutation).is_empty(), "{mutation:?}: nothing moved, nothing to undo");
+    }
+}
+
+/// 🔁️ The diff reads BASE positions: replayed on a base where the node already moved, the drag
+/// re-derives from there — the property that makes an edited upstream drag meaningful downstream.
+#[test]
+fn selection_diff_replays_on_a_moved_base() {
+    let base = selection_board();
+    let moved_base = MutationDiff::<Puzzle2dSnapshot>::apply(move_node("a".into(), 10.0, 20.0).diff(&base).diff(), &base).expect("move applies");
+    let replayed = MutationDiff::<Puzzle2dSnapshot>::apply(drag_selection(vec!["a".into()], 1.0, -1.0).diff(&moved_base).diff(), &moved_base).expect("drag applies");
+    assert_eq!((replayed.nodes[0].x, replayed.nodes[0].y), (11.0, 19.0));
+}
+
+/// 🗣️ Labels name the count and the parameters in every locale.
+#[test]
+fn selection_labels_name_count_and_parameters() {
+    let label = |mutation: Puzzle2dMutation| serde_json::to_string(&<Puzzle2dMutation as protocol::SemanticMutation<Puzzle2dSnapshot>>::label(&mutation)).expect("label serializes");
+    let drag = label(drag_selection(vec!["a".into(), "r".into()], 5.0, -2.5));
+    assert!(drag.contains("Drag 2 items by (5, -2.5)") && drag.contains("2 Elemente um (5; -2,5) ziehen"), "{drag}");
+    let rotate = label(rotate_selection(vec!["a".into()], 0.0, 0.0, std::f64::consts::FRAC_PI_2));
+    assert!(rotate.contains("Rotate 1 item by 90°") && rotate.contains("1 Element um 90° drehen"), "{rotate}");
+    let scale = label(scale_selection(vec!["a".into()], 0.0, 0.0, 0.5));
+    assert!(scale.contains("Scale 1 item by a factor of 0.5") && scale.contains("1 Element um den Faktor 0,5 skalieren"), "{scale}");
+}
+/// 🧱️ Schema-first: every value a leaf payload schema forbids through a hard bound is a Fatal
+/// `mutation.invariant` in that leaf's diff, with the default diff, before the base is consulted — on a
+/// board that does hold every addressed record, so the refusal cannot be a missing target in disguise.
+#[test]
+fn every_bounded_leaf_refuses_what_its_schema_forbids() {
+    use crate::{Puzzle2dCatalogHandleKind, Puzzle2dCatalogNodeKind, Puzzle2dHandle, Puzzle2dHandleTemplate, Puzzle2dKindCatalogs, Puzzle2dNode, Puzzle2dTargetRegion};
+    let mut base = selection_board();
+    base.edges = vec![crate::Puzzle2dEdge { id: "e".into(), source: "ha".into(), target: "ha".into(), ..Default::default() }];
+    let handle = |angle: f64, radius: Option<f64>, scale: Option<f64>| Puzzle2dHandle { id: "hn".into(), angle, radius, scale, ..Default::default() };
+    let node = |edit: fn(&mut Puzzle2dNode)| {
+        let mut node = Puzzle2dNode { id: "n".into(), ..Default::default() };
+        edit(&mut node);
+        node
+    };
+    let region = |x: f64, width: f64| Puzzle2dTargetRegion { id: "rn".into(), x, width, ..Default::default() };
+    let template = |t: Option<f64>, radius: Option<f64>, angle: f64| Puzzle2dKindCatalogs {
+        nodes: vec![Puzzle2dCatalogNodeKind { id: "k".into(), handles: vec![Puzzle2dHandleTemplate { id: "tpl".into(), angle, t, radius, ..Default::default() }], ..Default::default() }],
+        ..Default::default()
+    };
+    let forbidden = [
+        move_node("a".into(), f64::NAN, 0.0),
+        move_node("a".into(), 0.0, f64::INFINITY),
+        move_target_region("r".into(), f64::NEG_INFINITY, 0.0),
+        resize_target_region("r".into(), f64::NAN, 1.0),
+        replace_node_geometry("a".into(), Some("hexagon".into()), None, None, None),
+        replace_node_geometry("a".into(), Some("circle".into()), Some(-4.0), None, None),
+        replace_node_geometry("a".into(), Some("rectangle".into()), None, Some(0.0), Some(2.0)),
+        replace_node_geometry("a".into(), None, None, None, Some(f64::NAN)),
+        scale_node("a".into(), Some(0.0)),
+        scale_node("a".into(), Some(-1.5)),
+        scale_node("a".into(), Some(f64::INFINITY)),
+        create_node(node(|node| node.x = f64::NAN), None),
+        create_node(node(|node| node.shape = Some("triangle".into())), None),
+        create_node(node(|node| node.radius = Some(0.0)), None),
+        create_node(node(|node| node.width = Some(-1.0)), None),
+        create_node(node(|node| node.scale = Some(0.0)), None),
+        create_node(node(|node| node.handles = vec![Puzzle2dHandle { id: "hx".into(), angle: f64::NAN, ..Default::default() }]), None),
+        add_node_handle("a".into(), handle(f64::INFINITY, None, None), None),
+        add_node_handle("a".into(), handle(0.0, Some(0.0), None), None),
+        replace_node_handle("a".into(), "ha".into(), handle(0.0, None, Some(-1.0))),
+        connect_handles("e2".into(), "ha".into(), "ha".into(), None, f64::NAN, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, None, None),
+        connect_handles("e2".into(), "ha".into(), "ha".into(), None, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, f64::INFINITY, None, None),
+        replace_edge_geometry("e".into(), 0.0, 0.0, 0.0, f64::NAN, 0.0, 0.0, 0.0, 0.0),
+        create_target_region(region(f64::NAN, 1.0), None),
+        create_target_region(region(0.0, f64::INFINITY), None),
+        replace_kind_catalogs(Some(template(Some(1.5), None, 0.0))),
+        replace_kind_catalogs(Some(template(Some(-0.1), None, 0.0))),
+        replace_kind_catalogs(Some(template(None, Some(0.0), 0.0))),
+        replace_kind_catalogs(Some(template(None, None, f64::NAN))),
+        replace_kind_catalogs(Some(Puzzle2dKindCatalogs { handles: vec![Puzzle2dCatalogHandleKind { id: "hk".into(), order: Some(-1), ..Default::default() }], ..Default::default() })),
+    ];
+    for mutation in forbidden {
+        let outcome = mutation.diff(&base);
+        semio_framework::io::resolve_ready(assert_fatal_never_applies(&outcome));
+        let codes: Vec<(dsl::Severity, &str)> = outcome.messages().iter().map(|message| (message.level, message.code.0.as_str())).collect();
+        assert_eq!(codes, vec![(dsl::Severity::Fatal, "mutation.invariant")], "{mutation:?} must be refused as the schema forbids it");
+    }
+    let admitted = [
+        resize_target_region("r".into(), -3.0, 0.0),
+        replace_node_geometry("a".into(), Some("rectangle".into()), None, Some(4.0), Some(2.0)),
+        scale_node("a".into(), None),
+        replace_kind_catalogs(Some(template(Some(1.0), Some(2.0), 0.5))),
+    ];
+    for mutation in admitted {
+        assert!(!mutation.diff(&base).messages().iter().any(|message| message.code.0 == "mutation.invariant"), "{mutation:?} is inside every hard bound its schema declares");
+    }
+}
+//#endregion 🔖️SelectionTransformLaws
 
 //#region 🧪️KindsCatalog
 /// 🏷️ [`KINDS`] must name every declared variant, in the exact order and spelling

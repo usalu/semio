@@ -1,5 +1,6 @@
 {
-  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/norm/din4108/snapshot.json",
   "title": "Din4108Snapshot",
   "type": "object",
   "required": [
@@ -239,6 +240,686 @@
           },
           "bb2Type": {
             "type": "string"
+          }
+        }
+      }
+    }
+  },
+  "$defs": {
+    "LayerDocument": {
+      "title": "LayerDocument",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "materialId",
+        "thicknessM",
+        "lambda",
+        "mu",
+        "density",
+        "applicationType",
+        "compressiveClass",
+        "waterClass",
+        "tensileClass",
+        "acousticClass",
+        "segments"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "materialId": {
+          "type": "string",
+          "x-semio-ui": {
+            "widget": "reference",
+            "label": {
+              "en": "Building material",
+              "de": "Baustoff"
+            },
+            "description": {
+              "en": "Catalogue material of the layer.",
+              "de": "Katalogbaustoff der Schicht."
+            },
+            "ref": {
+              "kind": "material"
+            },
+            "role": "value"
+          }
+        },
+        "thicknessM": {
+          "type": "number",
+          "x-semio-ui": {
+            "widget": "stepper",
+            "label": {
+              "en": "Layer thickness d",
+              "de": "Schichtdicke d"
+            },
+            "unit": "m",
+            "displayUnit": "mm",
+            "displayFactor": 1000,
+            "step": 0.001,
+            "precision": 0
+          }
+        },
+        "lambda": {
+          "type": "number",
+          "x-semio-ui": {
+            "widget": "stepper",
+            "label": {
+              "en": "Design thermal conductivity λ",
+              "de": "Bemessungswert der Wärmeleitfähigkeit λ"
+            },
+            "unit": "W/(m·K)",
+            "step": 0.001,
+            "precision": 3
+          }
+        },
+        "mu": {
+          "type": "number",
+          "x-semio-ui": {
+            "widget": "stepper",
+            "label": {
+              "en": "Water vapour diffusion resistance factor μ",
+              "de": "Wasserdampf-Diffusionswiderstandszahl μ"
+            },
+            "step": 1,
+            "precision": 0
+          }
+        },
+        "density": {
+          "type": "number",
+          "x-semio-ui": {
+            "label": {
+              "en": "Bulk density ρ",
+              "de": "Rohdichte ρ"
+            },
+            "widget": "stepper",
+            "unit": "kg/m³",
+            "precision": 0
+          }
+        },
+        "applicationType": {
+          "type": "string",
+          "x-semio-ui": {
+            "widget": "text",
+            "label": {
+              "en": "Application type",
+              "de": "Anwendungsgebiet"
+            },
+            "description": {
+              "en": "DIN 4108-10 code, e.g. DAD, DAA, DUK, DZ, DI, DEO, WAB, WAP, WI or PW.",
+              "de": "Kurzzeichen nach DIN 4108-10, z. B. DAD, DAA, DUK, DZ, DI, DEO, WAB, WAP, WI oder PW."
+            }
+          }
+        },
+        "compressiveClass": {
+          "type": "string",
+          "x-semio-ui": {
+            "widget": "text",
+            "label": {
+              "en": "Compressive load class",
+              "de": "Druckbelastbarkeit"
+            },
+            "description": {
+              "en": "DIN 4108-10 class dh, ds, dm, dk or dx.",
+              "de": "Kurzzeichen nach DIN 4108-10: dh, ds, dm, dk oder dx."
+            }
+          }
+        },
+        "waterClass": {
+          "type": "string",
+          "x-semio-ui": {
+            "label": {
+              "en": "Water-absorption class",
+              "de": "Wasseraufnahmeklasse"
+            },
+            "description": {
+              "en": "DIN 4108-10 class wk, wf or wd.",
+              "de": "Klasse nach DIN 4108-10: wk, wf oder wd."
+            },
+            "widget": "text"
+          }
+        },
+        "tensileClass": {
+          "type": "string",
+          "x-semio-ui": {
+            "label": {
+              "en": "Tensile-strength class",
+              "de": "Zugfestigkeitsklasse"
+            },
+            "description": {
+              "en": "DIN 4108-10 class tk or tf.",
+              "de": "Klasse nach DIN 4108-10: tk oder tf."
+            },
+            "widget": "text"
+          }
+        },
+        "acousticClass": {
+          "type": "string",
+          "x-semio-ui": {
+            "label": {
+              "en": "Acoustic class",
+              "de": "Schalltechnische Klasse"
+            },
+            "description": {
+              "en": "DIN 4108-10 class sh, sm or sg.",
+              "de": "Klasse nach DIN 4108-10: sh, sm oder sg."
+            },
+            "widget": "text"
+          }
+        },
+        "segments": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/LayerSegment"
+          },
+          "x-semio-ui": {
+            "label": {
+              "en": "Inhomogeneous segments",
+              "de": "Inhomogene Teilbereiche"
+            },
+            "description": {
+              "en": "Parallel material segments of an inhomogeneous layer (DIN EN ISO 6946).",
+              "de": "Parallele Materialbereiche einer inhomogenen Schicht (DIN EN ISO 6946)."
+            }
+          }
+        }
+      }
+    },
+    "ThermalZone": {
+      "title": "ThermalZone",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "floorAreaM2",
+        "heaviness",
+        "nightVentilation",
+        "windows"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "floorAreaM2": {
+          "type": "number",
+          "x-semio-ui": {
+            "widget": "stepper",
+            "label": {
+              "en": "Net floor area A_G",
+              "de": "Nettogrundfläche A_G"
+            },
+            "unit": "m²",
+            "step": 1,
+            "precision": 1
+          }
+        },
+        "heaviness": {
+          "type": "string",
+          "x-semio-ui": {
+            "widget": "text",
+            "label": {
+              "en": "Construction type",
+              "de": "Bauart"
+            },
+            "description": {
+              "en": "light, medium or heavy (DIN 4108-2).",
+              "de": "light (leicht), medium (mittel) oder heavy (schwer) nach DIN 4108-2."
+            }
+          }
+        },
+        "nightVentilation": {
+          "type": "string",
+          "x-semio-ui": {
+            "widget": "text",
+            "label": {
+              "en": "Night ventilation",
+              "de": "Nachtlüftung"
+            },
+            "description": {
+              "en": "none, moderate or high (DIN 4108-2 summer heat protection).",
+              "de": "none (keine), moderate (erhöhte) oder high (hohe Nachtlüftung) nach DIN 4108-2."
+            }
+          }
+        },
+        "windows": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/ZoneWindow"
+          },
+          "x-semio-ui": {
+            "label": {
+              "en": "Windows",
+              "de": "Fenster"
+            }
+          }
+        }
+      }
+    },
+    "ThermalBridge": {
+      "title": "ThermalBridge",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "psi",
+        "lengthM",
+        "bb2Type"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "psi": {
+          "type": "number",
+          "x-semio-ui": {
+            "widget": "stepper",
+            "label": {
+              "en": "Linear thermal transmittance ψ",
+              "de": "Längenbezogener Wärmedurchgangskoeffizient ψ"
+            },
+            "unit": "W/(m·K)",
+            "step": 0.001,
+            "precision": 3
+          }
+        },
+        "lengthM": {
+          "type": "number",
+          "x-semio-ui": {
+            "widget": "stepper",
+            "label": {
+              "en": "Length l",
+              "de": "Länge l"
+            },
+            "unit": "m",
+            "step": 0.1,
+            "precision": 2
+          }
+        },
+        "bb2Type": {
+          "type": "string",
+          "x-semio-ui": {
+            "widget": "text",
+            "label": {
+              "en": "Supplement 2 equivalence category",
+              "de": "Gleichwertigkeitskategorie nach Beiblatt 2"
+            },
+            "description": {
+              "en": "categoryA, categoryB or detailed (individual ψ).",
+              "de": "categoryA (Kategorie A), categoryB (Kategorie B) oder detailed (detaillierter ψ-Wert)."
+            }
+          }
+        }
+      }
+    },
+    "ClimateZoneDe": {
+      "title": "ClimateZoneDe",
+      "type": "string",
+      "enum": [
+        "Zone1",
+        "Zone2",
+        "Zone3",
+        "Zone4"
+      ],
+      "x-semio-ui": {
+        "options": {
+          "Zone1": {
+            "en": "Summer climate region A (cool)",
+            "de": "Sommerklimaregion A (sommerkühl)"
+          },
+          "Zone2": {
+            "en": "Summer climate region B (moderate)",
+            "de": "Sommerklimaregion B (gemäßigt)"
+          },
+          "Zone3": {
+            "en": "Summer climate region C (hot)",
+            "de": "Sommerklimaregion C (sommerheiß)"
+          },
+          "Zone4": {
+            "en": "Summer climate region D",
+            "de": "Sommerklimaregion D"
+          }
+        }
+      }
+    },
+    "EnvelopeElement": {
+      "title": "EnvelopeElement",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "kind",
+        "zoneId",
+        "orientationDeg",
+        "inclinationDeg",
+        "adjacent",
+        "areaM2",
+        "deltaUG",
+        "deltaUF",
+        "deltaUR",
+        "layers"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "kind": {
+          "type": "string",
+          "x-semio-ui": {
+            "widget": "text",
+            "label": {
+              "en": "Element type",
+              "de": "Bauteilart"
+            },
+            "description": {
+              "en": "wall, roof, floor, window, door, frameOpaque or rollerShutterBox.",
+              "de": "wall (Wand), roof (Dach), floor (Boden), window (Fenster), door (Tür), frameOpaque (opaker Rahmen) oder rollerShutterBox (Rollladenkasten)."
+            }
+          }
+        },
+        "zoneId": {
+          "type": "string"
+        },
+        "orientationDeg": {
+          "type": "number",
+          "x-semio-ui": {
+            "widget": "dial",
+            "label": {
+              "en": "Orientation (azimuth)",
+              "de": "Orientierung (Azimut)"
+            },
+            "description": {
+              "en": "Azimuth of the outward normal, clockwise from north (0° north, 180° south).",
+              "de": "Azimut der äußeren Flächennormalen, im Uhrzeigersinn ab Nord (0° Nord, 180° Süd)."
+            },
+            "unit": "°",
+            "step": 1,
+            "precision": 0,
+            "softMin": 0,
+            "softMax": 360
+          }
+        },
+        "inclinationDeg": {
+          "type": "number",
+          "x-semio-ui": {
+            "widget": "dial",
+            "label": {
+              "en": "Inclination",
+              "de": "Neigung"
+            },
+            "description": {
+              "en": "Angle to the horizontal: 0° horizontal (roof, floor), 90° vertical (wall).",
+              "de": "Winkel zur Horizontalen: 0° waagerecht (Dach, Boden), 90° senkrecht (Wand)."
+            },
+            "unit": "°",
+            "step": 1,
+            "precision": 0
+          }
+        },
+        "adjacent": {
+          "type": "string",
+          "x-semio-ui": {
+            "widget": "text",
+            "label": {
+              "en": "Adjacent space",
+              "de": "Angrenzender Bereich"
+            },
+            "description": {
+              "en": "exterior, ground, unheated or otherHeated.",
+              "de": "exterior (Außenluft), ground (Erdreich), unheated (unbeheizter Raum) oder otherHeated (anderer beheizter Raum)."
+            }
+          }
+        },
+        "areaM2": {
+          "type": "number",
+          "x-semio-ui": {
+            "widget": "stepper",
+            "label": {
+              "en": "Element area A",
+              "de": "Bauteilfläche A"
+            },
+            "unit": "m²",
+            "step": 0.1,
+            "precision": 2
+          }
+        },
+        "deltaUG": {
+          "type": "number",
+          "x-semio-ui": {
+            "widget": "stepper",
+            "label": {
+              "en": "Correction for air voids ΔU_g",
+              "de": "Korrekturwert für Luftspalte ΔU_g"
+            },
+            "description": {
+              "en": "Correction to the thermal transmittance per DIN EN ISO 6946 Annex F.",
+              "de": "Korrektur des Wärmedurchgangskoeffizienten nach DIN EN ISO 6946 Anhang F."
+            },
+            "unit": "W/(m²·K)",
+            "step": 0.001,
+            "precision": 3
+          }
+        },
+        "deltaUF": {
+          "type": "number",
+          "x-semio-ui": {
+            "widget": "stepper",
+            "label": {
+              "en": "Correction for mechanical fasteners ΔU_f",
+              "de": "Korrekturwert für mechanische Befestigungsteile ΔU_f"
+            },
+            "description": {
+              "en": "Correction to the thermal transmittance per DIN EN ISO 6946 Annex F.",
+              "de": "Korrektur des Wärmedurchgangskoeffizienten nach DIN EN ISO 6946 Anhang F."
+            },
+            "unit": "W/(m²·K)",
+            "step": 0.001,
+            "precision": 3
+          }
+        },
+        "deltaUR": {
+          "type": "number",
+          "x-semio-ui": {
+            "widget": "stepper",
+            "label": {
+              "en": "Correction for inverted roofs ΔU_r",
+              "de": "Korrekturwert für Umkehrdächer ΔU_r"
+            },
+            "description": {
+              "en": "Correction to the thermal transmittance per DIN EN ISO 6946 Annex F.",
+              "de": "Korrektur des Wärmedurchgangskoeffizienten nach DIN EN ISO 6946 Anhang F."
+            },
+            "unit": "W/(m²·K)",
+            "step": 0.001,
+            "precision": 3
+          }
+        },
+        "layers": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/LayerDocument"
+          },
+          "x-semio-ui": {
+            "label": {
+              "en": "From position",
+              "de": "Von Position"
+            },
+            "description": {
+              "en": "Zero-based position of the layer to move in its list.",
+              "de": "Nullbasierte Position der zu verschiebenden Schicht in der Liste."
+            }
+          }
+        }
+      }
+    },
+    "ZoneWindow": {
+      "title": "ZoneWindow",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "orientation",
+        "inclinationDeg",
+        "areaM2",
+        "gValue",
+        "shadingFc"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "orientation": {
+          "type": "string",
+          "x-semio-ui": {
+            "widget": "text",
+            "label": {
+              "en": "Window orientation",
+              "de": "Fensterorientierung"
+            },
+            "description": {
+              "en": "Compass direction N, NE, E, SE, S, SW, W or NW.",
+              "de": "Himmelsrichtung N, NE (NO), E (O), SE (SO), S, SW, W oder NW."
+            }
+          }
+        },
+        "inclinationDeg": {
+          "type": "number",
+          "x-semio-ui": {
+            "widget": "dial",
+            "label": {
+              "en": "Window inclination",
+              "de": "Fensterneigung"
+            },
+            "description": {
+              "en": "Angle to the horizontal: 90° is a vertical window.",
+              "de": "Winkel zur Horizontalen: 90° ist ein senkrechtes Fenster."
+            },
+            "unit": "°",
+            "step": 1,
+            "precision": 0
+          }
+        },
+        "areaM2": {
+          "type": "number",
+          "x-semio-ui": {
+            "widget": "stepper",
+            "label": {
+              "en": "Window area A_w",
+              "de": "Fensterfläche A_w"
+            },
+            "unit": "m²",
+            "step": 0.1,
+            "precision": 2
+          }
+        },
+        "gValue": {
+          "type": "number",
+          "x-semio-ui": {
+            "widget": "slider",
+            "label": {
+              "en": "Total solar energy transmittance g",
+              "de": "Gesamtenergiedurchlassgrad g"
+            },
+            "unit": "1",
+            "displayUnit": "%",
+            "displayFactor": 100,
+            "step": 0.01,
+            "precision": 0
+          }
+        },
+        "shadingFc": {
+          "type": "number",
+          "x-semio-ui": {
+            "widget": "slider",
+            "label": {
+              "en": "Shading reduction factor F_C",
+              "de": "Abminderungsfaktor für Sonnenschutzvorrichtungen F_C"
+            },
+            "unit": "1",
+            "displayUnit": "%",
+            "displayFactor": 100,
+            "step": 0.01,
+            "precision": 0
+          }
+        }
+      }
+    },
+    "LayerSegment": {
+      "title": "LayerSegment",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "materialId": {
+          "type": "string",
+          "x-semio-ui": {
+            "widget": "reference",
+            "label": {
+              "en": "Building material",
+              "de": "Baustoff"
+            },
+            "description": {
+              "en": "Catalogue material of the layer.",
+              "de": "Katalogbaustoff der Schicht."
+            },
+            "ref": {
+              "kind": "material"
+            },
+            "role": "value"
+          }
+        },
+        "fraction": {
+          "type": "number",
+          "x-semio-ui": {
+            "label": {
+              "en": "Area fraction",
+              "de": "Flächenanteil"
+            },
+            "widget": "stepper",
+            "unit": "1",
+            "displayUnit": "%",
+            "displayFactor": 100,
+            "precision": 0
+          }
+        },
+        "lambda": {
+          "type": "number",
+          "x-semio-ui": {
+            "widget": "stepper",
+            "label": {
+              "en": "Design thermal conductivity λ",
+              "de": "Bemessungswert der Wärmeleitfähigkeit λ"
+            },
+            "unit": "W/(m·K)",
+            "step": 0.001,
+            "precision": 3
+          }
+        },
+        "mu": {
+          "type": "number",
+          "x-semio-ui": {
+            "widget": "stepper",
+            "label": {
+              "en": "Water vapour diffusion resistance factor μ",
+              "de": "Wasserdampf-Diffusionswiderstandszahl μ"
+            },
+            "step": 1,
+            "precision": 0
+          }
+        },
+        "density": {
+          "type": "number",
+          "x-semio-ui": {
+            "label": {
+              "en": "Bulk density ρ",
+              "de": "Rohdichte ρ"
+            },
+            "widget": "stepper",
+            "unit": "kg/m³",
+            "precision": 0
           }
         }
       }

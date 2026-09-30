@@ -9,7 +9,21 @@
   ],
   "properties": {
     "newFatigueDetail": {
-      "type": "string"
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "text",
+        "role": "value",
+        "label": {
+          "en": "Fatigue detail category",
+          "de": "Kerbfall"
+        },
+        "description": {
+          "en": "stud_welded, shear_connector, reinforcement or flange_butt_weld.",
+          "de": "stud_welded (geschweißter Kopfbolzen), shear_connector (Verbundmittel), reinforcement (Bewehrung) oder flange_butt_weld (Flanschstumpfstoß)."
+        },
+        "group": "fatigue",
+        "order": 10
+      }
     }
   }
 }

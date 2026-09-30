@@ -2,43 +2,10 @@
   "$schema": "http://json-schema.org/draft-07/schema#",
   "$id": "https://json.schemas.assets.semio-tech.com/s/stdio/dwg/ac1018/any/mutations.json",
   "title": "DwgMutation",
-  "description": "Discriminated union over this module's mutation leaves (internally tagged); every payload is the leaf's own schema, referenced, never restated.",
-  "oneOf": [
+  "description": "AC1018 owns no mutation leaves: its vocabulary is the AC1024 aggregate, which the Rust module re-exports, referenced rather than restated.",
+  "allOf": [
     {
-      "allOf": [
-        {
-          "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/dwg/ac1018/any/mutation/set-snapshot/schema.json"
-        },
-        {
-          "type": "object",
-          "required": [
-            "mutation"
-          ],
-          "properties": {
-            "mutation": {
-              "const": "setSnapshot"
-            }
-          }
-        }
-      ]
-    },
-    {
-      "allOf": [
-        {
-          "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/dwg/ac1018/any/mutation/set-version-info/schema.json"
-        },
-        {
-          "type": "object",
-          "required": [
-            "mutation"
-          ],
-          "properties": {
-            "mutation": {
-              "const": "setVersionInfo"
-            }
-          }
-        }
-      ]
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/dwg/ac1024/any/mutations.json"
     }
   ]
 }

@@ -5,15 +5,55 @@
   "type": "object",
   "additionalProperties": false,
   "required": [
+    "mutation",
     "id",
     "newOutdoorAirPerAreaM3SM2"
   ],
   "properties": {
+    "mutation": {
+      "const": "changeIdealLoadsSystemOutdoorAirPerArea"
+    },
     "id": {
-      "type": "integer"
+      "type": "integer",
+      "minimum": 0,
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Ideal loads system",
+          "de": "Ideallastsystem"
+        },
+        "description": {
+          "en": "The ideal loads system this mutation changes, by id.",
+          "de": "Ideallastsystem, das diese Mutation ändert, per ID."
+        },
+        "ref": {
+          "kind": "idealLoadsSystem",
+          "domain": "energyModel",
+          "granularity": "hvac"
+        },
+        "group": "target",
+        "order": 10
+      }
     },
     "newOutdoorAirPerAreaM3SM2": {
-      "type": "number"
+      "type": "number",
+      "minimum": 0,
+      "x-semio-ui": {
+        "widget": "stepper",
+        "role": "value",
+        "label": {
+          "en": "Outdoor air per floor area",
+          "de": "Außenluftrate pro Geschossfläche"
+        },
+        "unit": "m³/(s·m²)",
+        "displayUnit": "m³/(h·m²)",
+        "displayFactor": 3600,
+        "step": 2.777777777777778e-05,
+        "precision": 2,
+        "group": "ventilation",
+        "order": 20
+      }
     }
   }
 }

@@ -11,11 +11,11 @@ use crate::standards::v1::subsets::drawing::schema::mutations::SemioDrawingMutat
 use crate::standards::v1::subsets::drawing::schema::snapshot::{DrawNode, SemioDrawingSnapshot};
 use protocol::{Mutation, MutationDiff};
 
-const BEFORE: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🔀reorder-nodes/🔀️moves-the-leading-path-node-to-the-end-of-the-layer-root/📸️snapshot/⬅️before/🔣️.json");
-const AFTER: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🔀reorder-nodes/🔀️moves-the-leading-path-node-to-the-end-of-the-layer-root/📸️snapshot/➡️after/🔣️.json");
-const MUTATION: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🔀reorder-nodes/🔀️moves-the-leading-path-node-to-the-end-of-the-layer-root/🦠️mutation/🔣️.json");
-const DIFF: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🔀reorder-nodes/🔀️moves-the-leading-path-node-to-the-end-of-the-layer-root/🔺️diff/🔣️.json");
-const OUTCOME: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🔀reorder-nodes/🔀️moves-the-leading-path-node-to-the-end-of-the-layer-root/🎯️outcome/🔣️.json");
+const BEFORE: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🔀reorder-nodes/🔀️moves-leading-path-node-end-layer-root/📸️snapshot/⬅️before/🔣️.json");
+const AFTER: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🔀reorder-nodes/🔀️moves-leading-path-node-end-layer-root/📸️snapshot/➡️after/🔣️.json");
+const MUTATION: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🔀reorder-nodes/🔀️moves-leading-path-node-end-layer-root/🦠️mutation/🔣️.json");
+const DIFF: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🔀reorder-nodes/🔀️moves-leading-path-node-end-layer-root/🔺️diff/🔣️.json");
+const OUTCOME: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🔀reorder-nodes/🔀️moves-leading-path-node-end-layer-root/🎯️outcome/🔣️.json");
 
 fn before() -> SemioDrawingSnapshot {
     dsl::json::from_json_str(BEFORE).expect("reorder-nodes before snapshot decodes")

@@ -2,36 +2,18 @@
   "$schema": "http://json-schema.org/draft-07/schema#",
   "$id": "https://json.schemas.assets.semio-tech.com/s/vcs/vcs/mutation/rename-vcs/schema.json",
   "title": "RenameVcs",
-  "$ref": "#/$defs/Payload",
-  "$defs": {
-    "Payload": {
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "newTitle"
-      ],
-      "properties": {
-        "newTitle": {
-          "type": "string"
-        }
-      }
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "mutation",
+    "newTitle"
+  ],
+  "properties": {
+    "mutation": {
+      "const": "renameVcs"
     },
-    "Wire": {
-      "title": "RenameVcsMutation",
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "mutation",
-        "newTitle"
-      ],
-      "properties": {
-        "mutation": {
-          "const": "renameVcs"
-        },
-        "newTitle": {
-          "$ref": "#/$defs/Payload/properties/newTitle"
-        }
-      }
+    "newTitle": {
+      "type": "string"
     }
   }
 }

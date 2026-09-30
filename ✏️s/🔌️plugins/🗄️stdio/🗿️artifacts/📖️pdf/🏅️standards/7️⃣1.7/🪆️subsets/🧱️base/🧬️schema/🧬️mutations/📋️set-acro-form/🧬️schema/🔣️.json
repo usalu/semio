@@ -4,8 +4,14 @@
   "title": "SetAcroForm",
   "type": "object",
   "additionalProperties": false,
-  "required": [],
+  "required": [
+    "mutation"
+  ],
   "properties": {
+    "mutation": {
+      "const": "setAcroForm",
+      "description": "Aggregate discriminator spliced in by PdfMutation; absent when the payload stands alone."
+    },
     "form": {
       "anyOf": [
         {
@@ -14,11 +20,13 @@
         {
           "type": "null"
         }
-      ]
-    },
-    "mutation": {
-      "const": "setAcroForm",
-      "description": "Aggregate discriminator spliced in by PdfMutation; absent when the payload stands alone."
+      ],
+      "x-semio-ui": {
+        "label": {
+          "en": "Interactive form",
+          "de": "Interaktives Formular (AcroForm)"
+        }
+      }
     }
   }
 }

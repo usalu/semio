@@ -50,7 +50,7 @@ impl protocol::MutationKind<EnergyModelSnapshot, EnergyModelMutation> for Create
     }
 
     fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native(&format!("Create setpoint manager {}", self.id.0), &format!("Sollwertmanager {} erstellen", self.id.0))
+        protocol::LocalizedLabel::native(&format!("Create setpoint manager {}", self.id.0), &format!("Sollwertführung {} erstellen", self.id.0))
     }
 
     fn target(&self) -> Vec<String> {

@@ -5,11 +5,28 @@
   "type": "object",
   "additionalProperties": false,
   "required": [
+    "mutation",
     "site"
   ],
   "properties": {
+    "mutation": {
+      "const": "updateSite"
+    },
     "site": {
-      "type": "object"
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1998/snapshot.json#/$defs/En1998Site",
+      "x-semio-ui": {
+        "role": "value",
+        "label": {
+          "en": "Site seismicity",
+          "de": "Standortseismizität"
+        },
+        "description": {
+          "en": "Seismic zone, ground conditions, spectrum type and importance class.",
+          "de": "Erdbebenzone, Untergrundverhältnisse, Spektrumtyp und Bedeutungskategorie."
+        },
+        "group": "site",
+        "order": 10
+      }
     }
   }
 }

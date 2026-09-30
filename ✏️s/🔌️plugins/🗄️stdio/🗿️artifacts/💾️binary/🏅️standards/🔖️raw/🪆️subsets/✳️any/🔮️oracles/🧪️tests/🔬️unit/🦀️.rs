@@ -14,16 +14,15 @@ fn num_array(values: &[u8]) -> Json {
 }
 
 #[test]
-fn no_mutation_is_identity() {
+fn round_trip_is_identity() {
     let input = vec![1, 2, 3, 4, 5];
-    let out = oracle_apply_mutation(&input, &spec("no-mutation", obj(vec![]))).unwrap();
-    assert_eq!(out, input);
+    assert_eq!(oracle_round_trip(&input).unwrap(), input);
 }
 
 #[test]
 fn set_snapshot_replaces_the_whole_buffer() {
     let input = vec![1, 2, 3];
-    let params = obj(vec![("snapshot", obj(vec![("bytes", num_array(&[9, 9]))]))]);
+    let params = obj(vec![("snapshot", obj(vec![("schema", Json::String("stdio.binary".to_string())), ("bytes", num_array(&[9, 9]))]))]);
     let out = oracle_apply_mutation(&input, &spec("set-snapshot", params)).unwrap();
     assert_eq!(out, vec![9, 9]);
 }
@@ -31,7 +30,7 @@ fn set_snapshot_replaces_the_whole_buffer() {
 #[test]
 fn replace_byte_range_replaces_the_named_range() {
     let input = vec![1, 2, 3, 4, 5];
-    let params = obj(vec![("offset", Json::Number(1.0)), ("removeLen", Json::Number(2.0)), ("insert", num_array(&[0xAA, 0xBB, 0xCC]))]);
+    let params = obj(vec![("offset", Json::Number(1.0)), ("remove_len", Json::Number(2.0)), ("insert", num_array(&[0xAA, 0xBB, 0xCC]))]);
     let out = oracle_apply_mutation(&input, &spec("replace-byte-range", params)).unwrap();
     assert_eq!(out, vec![1, 0xAA, 0xBB, 0xCC, 4, 5]);
 }
@@ -39,14 +38,14 @@ fn replace_byte_range_replaces_the_named_range() {
 #[test]
 fn replace_byte_range_out_of_range_offset_is_rejected_without_corrupting() {
     let input = vec![1, 2, 3];
-    let params = obj(vec![("offset", Json::Number(4.0)), ("removeLen", Json::Number(0.0)), ("insert", num_array(&[]))]);
+    let params = obj(vec![("offset", Json::Number(4.0)), ("remove_len", Json::Number(0.0)), ("insert", num_array(&[]))]);
     assert!(oracle_apply_mutation(&input, &spec("replace-byte-range", params)).is_err());
 }
 
 #[test]
 fn replace_byte_range_remove_len_past_the_end_is_rejected() {
     let input = vec![1, 2, 3];
-    let params = obj(vec![("offset", Json::Number(2.0)), ("removeLen", Json::Number(5.0)), ("insert", num_array(&[]))]);
+    let params = obj(vec![("offset", Json::Number(2.0)), ("remove_len", Json::Number(5.0)), ("insert", num_array(&[]))]);
     assert!(oracle_apply_mutation(&input, &spec("replace-byte-range", params)).is_err());
 }
 

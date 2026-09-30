@@ -4,6 +4,8 @@ use crate::{En1996Mutation, En1996Snapshot};
 #[derive(Clone, Debug, PartialEq, dsl::MutationLeaf, value_derive::ToValue, value_derive::FromValue)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 #[mutation_leaf(contract = ::protocol)]
+#[cfg_attr(test, serde(rename_all = "camelCase"))]
+#[value(rename_all = "camelCase")]
 pub struct ChangeDensity {
     pub index: usize,
     pub new_density_kg_m3: f64,

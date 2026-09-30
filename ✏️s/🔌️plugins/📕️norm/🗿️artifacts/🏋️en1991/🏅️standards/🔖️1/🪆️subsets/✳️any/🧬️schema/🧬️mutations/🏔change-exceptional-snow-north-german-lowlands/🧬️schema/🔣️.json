@@ -9,7 +9,21 @@
   ],
   "properties": {
     "newExceptionalSnowNorthGermanLowlands": {
-      "type": "boolean"
+      "type": "boolean",
+      "x-semio-ui": {
+        "widget": "toggle",
+        "role": "value",
+        "label": {
+          "en": "Exceptional snow in the North German Lowlands",
+          "de": "Außergewöhnliche Schneelast im Norddeutschen Tiefland"
+        },
+        "description": {
+          "en": "Accidental snow load per DIN EN 1991-1-3/NA for the North German Lowlands.",
+          "de": "Schnee als außergewöhnliche Einwirkung nach DIN EN 1991-1-3/NA im Norddeutschen Tiefland."
+        },
+        "group": "site",
+        "order": 10
+      }
     }
   }
 }

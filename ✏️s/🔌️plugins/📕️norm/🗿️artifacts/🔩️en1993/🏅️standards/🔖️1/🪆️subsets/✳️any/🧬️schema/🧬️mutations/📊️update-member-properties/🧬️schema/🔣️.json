@@ -5,51 +5,17 @@
   "type": "object",
   "additionalProperties": false,
   "required": [
-    "newAMm2",
-    "newANetMm2",
-    "newAVMm2",
-    "newChi",
-    "newFUMpa",
-    "newFYMpa",
-    "newMEdKnm",
-    "newNEdKn",
-    "newTensionNEdKn",
-    "newVEdKn",
-    "newWPlMm3"
+    "member"
   ],
   "properties": {
-    "newNEdKn": {
-      "type": "number"
-    },
-    "newMEdKnm": {
-      "type": "number"
-    },
-    "newVEdKn": {
-      "type": "number"
-    },
-    "newAMm2": {
-      "type": "number"
-    },
-    "newAVMm2": {
-      "type": "number"
-    },
-    "newWPlMm3": {
-      "type": "number"
-    },
-    "newFYMpa": {
-      "type": "number"
-    },
-    "newFUMpa": {
-      "type": "number"
-    },
-    "newChi": {
-      "type": "number"
-    },
-    "newANetMm2": {
-      "type": "number"
-    },
-    "newTensionNEdKn": {
-      "type": "number"
+    "member": {
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1993/snapshot.json#/$defs/SteelMember",
+      "x-semio-ui": {
+        "label": {
+          "en": "Member",
+          "de": "Bauteil"
+        }
+      }
     }
   }
 }

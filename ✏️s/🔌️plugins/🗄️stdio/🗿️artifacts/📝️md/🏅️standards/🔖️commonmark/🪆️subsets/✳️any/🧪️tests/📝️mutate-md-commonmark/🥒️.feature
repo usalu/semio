@@ -26,7 +26,7 @@ Feature: Apply every typed CommonMark mutation to a real-world document
   the subject's `mutate`/`inverse`/`round_trip` and the oracle's `round_trip_oracle` — but is not
   expected in practice here regardless: this repository's own CommonMark renderer and `comrak`'s
   renderer choose different concrete syntax for the same semantic tree (see below), so byte-for-byte
-  collision on 47 KB of real prose essentially never happens even for `no-mutation`. CommonMark is
+  collision on 47 KB of real prose essentially never happens even for a plain re-encode. CommonMark is
   not a byte-preserving carrier, so the law applies in full and is asserted, not documented away.
 
   Both laws this feature names are asserted IN ROLE, not deferred to the oracle-vs-subject
@@ -82,7 +82,7 @@ Feature: Apply every typed CommonMark mutation to a real-world document
       {"kind": "<id>", "params": <params>}
       """
     Then the oracle and the subject agree on the semantic projection
-    And the semantic projection moved, unless the kind is no-mutation
+    And the semantic projection moved
     Examples:
       | id            | params                                                                                                                                                                                                                                                                                                                                                                                                                            |
       | set-snapshot  | {"snapshot":{"schema":"stdio.md","blocks":[{"kind":"heading","level":1,"inlines":[{"kind":"text","text":"This heading is the complete replacement snapshot for the set-snapshot mutation kind"}]},{"kind":"paragraph","inlines":[{"kind":"text","text":"Every block of the original real-world README is discarded by this mutation and substituted with this hand-authored real UTF-8 document instead, proving SetSnapshot performs a genuine whole-document replacement rather than a token edit."}]},{"kind":"list","ordered":false,"tight":true,"items":[[{"kind":"paragraph","inlines":[{"kind":"text","text":"First replacement item"}]}],[{"kind":"paragraph","inlines":[{"kind":"text","text":"Second replacement item, nested under its own list"}]}]]},{"kind":"codeBlock","info":"bash","literal":"echo \"the set-snapshot mutation replaced the entire document\"\n"},{"kind":"blockQuote","blocks":[{"kind":"paragraph","inlines":[{"kind":"text","text":"A block quote inside the replacement snapshot, proving nested containers survive a whole-document SetSnapshot."}]}]}]}} |
@@ -90,18 +90,6 @@ Feature: Apply every typed CommonMark mutation to a real-world document
       | remove-block  | {"path":[],"index":8}                                                                                                                                                                                                                                                                                                                                                                                                            |
       | replace-block | {"path":[{"step":"listItem","index":7,"item":0}],"index":0,"block":{"kind":"paragraph","inlines":[{"kind":"text","text":"This paragraph replaced the original table-of-contents entry for the products section, proving ReplaceBlock performs a genuine nested wholesale block replacement inside a real list item rather than a top-level-only edit."}]}}                                                                    |
       | set-inlines   | {"path":[],"index":6,"inlines":[{"kind":"text","text":"📑️ Overview (rewritten by the set-inlines mutation)"}]}                                                                                                                                                                                                                                                                                                                  |
-
-  @id-no-mutation-baseline-mutate
-  @level-exhaustive
-  @mode-differential
-  Scenario: Apply no-mutation to the real document
-    Given the real input document shared://📖️readme.md
-    When the no-mutation mutation is applied with its parameters
-      """
-      {"kind": "no-mutation", "params": {}}
-      """
-    Then the oracle and the subject agree on the semantic projection
-    And the semantic projection moved, unless the kind is no-mutation
 
   @id-inverse
   @level-exhaustive
@@ -120,17 +108,6 @@ Feature: Apply every typed CommonMark mutation to a real-world document
       | remove-block  | {"path":[],"index":8}                                                                                                                                                                                                                                                                                                                                                                                                            |
       | replace-block | {"path":[{"step":"listItem","index":7,"item":0}],"index":0,"block":{"kind":"paragraph","inlines":[{"kind":"text","text":"This paragraph replaced the original table-of-contents entry for the products section, proving ReplaceBlock performs a genuine nested wholesale block replacement inside a real list item rather than a top-level-only edit."}]}}                                                                    |
       | set-inlines   | {"path":[],"index":6,"inlines":[{"kind":"text","text":"📑️ Overview (rewritten by the set-inlines mutation)"}]}                                                                                                                                                                                                                                                                                                                  |
-
-  @id-no-mutation-baseline-inverse
-  @level-exhaustive
-  @mode-property
-  Scenario: Undoing no-mutation restores the real document
-    Given the real input document shared://📖️readme.md
-    When the no-mutation mutation is applied and then undone
-      """
-      {"kind": "no-mutation", "params": {}}
-      """
-    Then the restored document's semantic projection matches its state before no-mutation was applied
 
   @id-identity-round-trip
   @level-long

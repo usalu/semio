@@ -2,3 +2,6 @@ syntax = "proto3";
 package semio.framework.io;
 message ArtifactDialect { string artifact_kind = 1; string standard = 2; string subset = 3; }
 message ArtifactRef { string artifact_id = 1; ArtifactDialect dialect = 2; }
+enum IoFidelity { IO_FIDELITY_EXACT = 0; IO_FIDELITY_CANONICAL = 1; IO_FIDELITY_SEMANTIC = 2; IO_FIDELITY_LOSSY = 3; }
+message IoEntryDescriptor { ArtifactDialect from = 1; ArtifactDialect into = 2; IoFidelity fidelity = 3; bool sniffs = 4; }
+message IoRoute { repeated IoEntryDescriptor hops = 1; IoFidelity fidelity = 2; }

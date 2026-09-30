@@ -44,7 +44,7 @@ async fn fem3d_document_text_round_trips_through_the_store() {
         Fem3dMutation::CreateSupport(schema::mutations::create_support::CreateSupport { support: fixture.supports[0].clone() }),
         Fem3dMutation::CreateLoadCase(schema::mutations::create_load_case::CreateLoadCase { load_case: fixture.load_cases[0].clone() }),
     ];
-    store.dispatch(ArtifactCommand::Apply { mutations, description: None }).await.expect("apply");
+    store.dispatch(ArtifactCommand::Apply { mutations, description: None, transaction: None }).await.expect("apply");
     assert_eq!(store.snapshot().expect("snapshot"), fixture);
     semio_framework_os_kernel::os_store::test_support::assert_document_text_round_trip(&store).await;
     semio_framework_os_kernel::os_store::test_support::assert_document_pack_round_trip(&store).await;

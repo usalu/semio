@@ -4,34 +4,43 @@
   "title": "GltfChangeDocumentExtraDataPayload",
   "type": "object",
   "additionalProperties": false,
+  "required": [
+    "data"
+  ],
   "properties": {
     "data": {
-      "anyOf": [
-        {
-          "$ref": "#/$defs/GltfJson"
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/gltf/2.0/any/snapshot.json#/$defs/GltfJson",
+      "x-semio-ui": {
+        "label": {
+          "en": "Extras",
+          "de": "Zusatzdaten (extras)"
         },
-        {
-          "type": "null"
-        }
-      ]
+        "description": {
+          "en": "Application-specific JSON; empty removes it.",
+          "de": "Anwendungsspezifisches JSON; leer entfernt es."
+        },
+        "group": "value",
+        "order": 10
+      }
     }
   },
   "$defs": {
-    "GltfJson": {
+    "ChangeDocumentExtraDataMutation": {
+      "description": "The whole wire of ChangeDocumentExtraDataMutation: the editable apply payload (this document's root) or the inert restore.",
       "oneOf": [
         {
-          "type": "string",
-          "const": "Null"
-        },
-        {
           "type": "object",
           "additionalProperties": false,
           "required": [
-            "Bool"
+            "phase",
+            "value"
           ],
           "properties": {
-            "Bool": {
-              "type": "boolean"
+            "phase": {
+              "const": "apply"
+            },
+            "value": {
+              "$ref": "#"
             }
           }
         },
@@ -39,78 +48,19 @@
           "type": "object",
           "additionalProperties": false,
           "required": [
-            "Number"
+            "phase",
+            "value"
           ],
           "properties": {
-            "Number": {
-              "type": "number"
-            }
-          }
-        },
-        {
-          "type": "object",
-          "additionalProperties": false,
-          "required": [
-            "String"
-          ],
-          "properties": {
-            "String": {
-              "type": "string"
-            }
-          }
-        },
-        {
-          "type": "object",
-          "additionalProperties": false,
-          "required": [
-            "Array"
-          ],
-          "properties": {
-            "Array": {
-              "type": "array",
-              "items": {
-                "$ref": "#/$defs/GltfJson"
-              }
-            }
-          }
-        },
-        {
-          "type": "object",
-          "additionalProperties": false,
-          "required": [
-            "Object"
-          ],
-          "properties": {
-            "Object": {
-              "type": "array",
-              "items": {
-                "type": "array",
-                "items": [
-                  {
-                    "type": "string"
-                  },
-                  {
-                    "$ref": "#/$defs/GltfJson"
-                  }
-                ],
-                "additionalItems": false,
-                "minItems": 2,
-                "maxItems": 2
-              }
+            "phase": {
+              "const": "restore"
+            },
+            "value": {
+              "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/gltf/2.0/any/diff.json"
             }
           }
         }
       ]
     }
-  },
-  "x-semio": {
-    "id": "s.stdio.gltf.mutation.change-document-extra-data.v1",
-    "version": 1,
-    "phase": "mutation",
-    "touchedPaths": [
-      "document/extras"
-    ],
-    "referencePolicy": "none"
-  },
-  "x-semio-mutation": "change-document-extra-data"
+  }
 }

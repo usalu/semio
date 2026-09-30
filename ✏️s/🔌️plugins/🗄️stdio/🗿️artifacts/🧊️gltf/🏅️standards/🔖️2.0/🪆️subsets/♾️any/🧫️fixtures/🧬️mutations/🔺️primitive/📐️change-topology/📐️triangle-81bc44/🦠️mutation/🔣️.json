@@ -1,0 +1,11 @@
+{
+  "mutation": "changePrimitiveTopologyMode",
+  "payload": {
+    "phase": "apply",
+    "value": {
+      "mesh": 0,
+      "primitive": 0,
+      "mode": 5
+    }
+  }
+}

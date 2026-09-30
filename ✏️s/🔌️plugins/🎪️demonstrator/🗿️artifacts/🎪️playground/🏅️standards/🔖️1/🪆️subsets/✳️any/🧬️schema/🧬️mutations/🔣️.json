@@ -4,7 +4,16 @@
   "title": "PlaygroundMutation",
   "oneOf": [
     {
-      "$ref": "https://json.schemas.assets.semio-tech.com/s/demonstrator/playground/mutation/change-schema/schema.json"
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "ChangeSchema"
+      ],
+      "properties": {
+        "ChangeSchema": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/demonstrator/playground/mutation/change-schema/schema.json"
+        }
+      }
     }
   ]
 }

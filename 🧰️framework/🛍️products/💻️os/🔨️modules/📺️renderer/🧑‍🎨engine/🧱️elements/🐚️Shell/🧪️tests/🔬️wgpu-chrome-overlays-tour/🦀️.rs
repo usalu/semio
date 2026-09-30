@@ -143,14 +143,7 @@ fn tooltip_closes_immediately_on_hover_out() {
 fn dialog_open_and_close_topmost() {
     let mut chrome = chrome_state();
     assert!(!chrome.dialog_open());
-    chrome.open_dialog(ChromeDialogRequest {
-        id: "confirm-1".into(),
-        title: "Delete?".into(),
-        body: "This cannot be undone.".into(),
-        confirm_label: "Delete".into(),
-        confirm_action: ActionDescriptor { controller_id: "test".into(), action: "delete".into(), args: None },
-        cancel_label: "Cancel".into(),
-    });
+    chrome.open_dialog(ChromeDialogRequest::confirm("confirm-1", "Delete?", "delete"));
     assert!(chrome.dialog_open());
     chrome.close_topmost_dialog();
     assert!(!chrome.dialog_open());
@@ -159,22 +152,8 @@ fn dialog_open_and_close_topmost() {
 #[test]
 fn dialog_stack_supports_nesting_close_order() {
     let mut chrome = chrome_state();
-    chrome.open_dialog(ChromeDialogRequest {
-        id: "outer".into(),
-        title: "Outer".into(),
-        body: String::new(),
-        confirm_label: "OK".into(),
-        confirm_action: ActionDescriptor { controller_id: "test".into(), action: "outer".into(), args: None },
-        cancel_label: "Cancel".into(),
-    });
-    chrome.open_dialog(ChromeDialogRequest {
-        id: "inner".into(),
-        title: "Inner".into(),
-        body: String::new(),
-        confirm_label: "OK".into(),
-        confirm_action: ActionDescriptor { controller_id: "test".into(), action: "inner".into(), args: None },
-        cancel_label: "Cancel".into(),
-    });
+    chrome.open_dialog(ChromeDialogRequest::confirm("outer", "Outer", "outer"));
+    chrome.open_dialog(ChromeDialogRequest::confirm("inner", "Inner", "inner"));
     assert_eq!(chrome.dialog_stack.last().map(|dialog| dialog.id.clone()), Some("inner".to_string()));
     chrome.close_topmost_dialog();
     assert_eq!(chrome.dialog_stack.last().map(|dialog| dialog.id.clone()), Some("outer".to_string()));
@@ -193,14 +172,7 @@ fn dialog_scrim_click_dismisses_without_confirm_action() {
     let mut atlas = FontAtlas::builtin();
     let mut input = InputState::<ActionDescriptor>::default();
     let theme = Theme::light();
-    shell.chrome_build.open_dialog(ChromeDialogRequest {
-        id: "confirm-1".into(),
-        title: "Delete?".into(),
-        body: "Sure?".into(),
-        confirm_label: "Delete".into(),
-        confirm_action: ActionDescriptor { controller_id: "test".into(), action: "delete".into(), args: None },
-        cancel_label: "Cancel".into(),
-    });
+    shell.chrome_build.open_dialog(ChromeDialogRequest::confirm("confirm-1", "Delete?", "delete"));
     input.pointer_x = 4.0;
     input.pointer_y = 4.0;
     shell.chrome_build.compute_click_edge(false);
@@ -216,16 +188,266 @@ fn dialog_scrim_click_dismisses_without_confirm_action() {
 #[test]
 fn dialog_open_blocks_other_chrome_owned_click_handlers() {
     let mut chrome = chrome_state();
-    chrome.open_dialog(ChromeDialogRequest {
-        id: "blocker".into(),
-        title: "Blocking".into(),
-        body: String::new(),
-        confirm_label: "OK".into(),
-        confirm_action: ActionDescriptor { controller_id: "test".into(), action: "noOperation".into(), args: None },
-        cancel_label: "Cancel".into(),
-    });
+    chrome.open_dialog(ChromeDialogRequest::confirm("blocker", "Blocking", "noOperation"));
     assert!(chrome.dialog_open());
     assert!(!(!chrome.dialog_open()));
+}
+
+fn dialog_choices_fixture() -> serde_json::Value {
+    serde_json::from_str(include_str!("../../../../../../../../../🔨️modules/🛂️manifest/🧫️fixtures/🧫️dialog-choices/🔣️.json")).expect("dialog-choices fixture")
+}
+
+fn dialog_choices_request(locale: Locale) -> (serde_json::Value, ChromeDialogRequest) {
+    let fixture = dialog_choices_fixture();
+    let dialog: semio_framework::DialogDefinition = serde_json::from_value(fixture["dialog"].clone()).expect("fixture dialog");
+    let request = ChromeDialogRequest::from_definition("test", &dialog, Some(DslValue::from(fixture["seed"].clone())), Terminology::default(), locale);
+    (fixture, request)
+}
+
+fn dialog_stop_name(request: &ChromeDialogRequest, stop: ChromeDialogStop) -> String {
+    match stop {
+        ChromeDialogStop::Field(index) => format!("field:{}", request.fields[index].id),
+        ChromeDialogStop::Chip(index, chip) => format!("chip:{}:{chip}", request.fields[index].id),
+        ChromeDialogStop::Cancel => "cancel".to_string(),
+        ChromeDialogStop::Choice(index) => format!("choice:{}", request.choices[index].choice.id),
+        ChromeDialogStop::Confirm => "submit".to_string(),
+    }
+}
+
+/// ✍️ Stages one fixture case's field values as typed drafts.
+fn stage_dialog_case(request: &mut ChromeDialogRequest, case: &serde_json::Value) {
+    for (id, value) in case["staged"].as_object().expect("staged") {
+        let index = request.fields.iter().position(|field| field.id == *id).expect("staged field");
+        request.set_draft(index, value.as_str().expect("text value").to_string());
+    }
+}
+
+/// 🔀️ The shared `🧫️dialog-choices` law, on the wgpu renderer: focus visits the fixture's order, the destructive
+/// choice paints in the error colour and publishes its consequence as its accessible description, and for every
+/// case each button is enabled or gated exactly as listed — the submit on the dialog's required args, a choice only
+/// on the args it requires, so a cleared name gates the submit alone — and every enabled button's hit carries
+/// exactly the fixture's dispatch.
+#[test]
+fn dialog_choices_fixture_lays_out_gates_and_dispatches_like_every_renderer() {
+    for locale in [Locale::En, Locale::De] {
+        let (fixture, request) = dialog_choices_request(locale);
+        let order: Vec<String> = request.stops().into_iter().map(|stop| dialog_stop_name(&request, stop)).collect();
+        let expected: Vec<String> = fixture["focusOrder"].as_array().expect("focus order").iter().map(|entry| entry.as_str().expect("entry").to_string()).collect();
+        assert_eq!(order, expected);
+        let key = if locale == Locale::De { "de" } else { "en" };
+        assert_eq!(request.choices[0].label, fixture["dialog"]["choices"][0]["label"]["native"][key].as_str().expect("label"));
+        let theme = Theme::light();
+        for case in fixture["cases"].as_array().expect("cases") {
+            let name = case["case"].as_str().expect("case");
+            let mut request = request.clone();
+            stage_dialog_case(&mut request, case);
+            let ops = ShellState::chrome_dialog_paint_ops(&request, 1440.0, 900.0, &theme);
+            let button = |entry: &serde_json::Value| {
+                ops.iter()
+                    .find_map(|op| match op {
+                        ChromeDialogPaintOp::Hit { stop, event, disabled, .. } if dialog_stop_name(&request, *stop) == *entry => Some((event.clone(), *disabled)),
+                        _ => None,
+                    })
+                    .unwrap_or_else(|| panic!("{name}: {entry} paints a hit"))
+            };
+            for (list, enabled) in [("enabled", true), ("disabled", false)] {
+                for entry in case[list].as_array().expect("buttons") {
+                    let (event, disabled) = button(entry);
+                    assert_eq!((event.is_some(), disabled), (enabled, !enabled), "{name}: {entry} {list}");
+                }
+            }
+            for dispatch in case["dispatches"].as_array().expect("dispatches") {
+                let event = button(&dispatch["button"]).0.expect("an enabled button dispatches");
+                assert_eq!(event.action, dispatch["action"].as_str().expect("action"), "{name}");
+                assert_eq!(event.args.map(|args| serde_json::to_value(args).expect("args wire")).unwrap_or(serde_json::Value::Null), dispatch["args"], "{name}: {}", dispatch["button"]);
+            }
+            let destructive = ops.iter().find_map(|op| match op {
+                ChromeDialogPaintOp::Hit { stop: ChromeDialogStop::Choice(0), description, .. } => Some(description.clone()),
+                _ => None,
+            });
+            assert_eq!(destructive.flatten().as_deref(), fixture["dialog"]["choices"][0]["description"]["native"][key].as_str());
+            assert!(ops.iter().any(|op| matches!(op, ChromeDialogPaintOp::Fill { color, .. } if *color == theme.error)), "the destructive choice paints in the error colour");
+        }
+    }
+}
+
+/// ⌨️ The open dialog owns the keyboard: Backspace clears the name, Tab walks the fixture order, Enter on the
+/// gated submit does nothing, Enter on the destructive choice — which requires no name — dispatches it with the
+/// seed context and its id, and Escape cancels with the declared cancel action; every dismissal closes the dialog.
+#[test]
+fn dialog_choices_keyboard_clears_the_name_takes_the_ungated_choice_and_escape_cancels() {
+    let mut shell = ShellState::new(Vec::new(), String::new());
+    let (fixture, request) = dialog_choices_request(Locale::En);
+    let draft = request.fields[0].draft.clone();
+    shell.chrome_build.open_dialog(request);
+    let mut input = InputState::<ActionDescriptor>::default();
+    let modifiers = PointerModifiers::default();
+    for _ in draft.chars() {
+        shell.handle_keyboard(ui_wgpu::wgpu::KeyAction::Backspace, &modifiers, &mut input);
+    }
+    for _ in 0..3 {
+        shell.handle_keyboard(ui_wgpu::wgpu::KeyAction::Tab, &modifiers, &mut input);
+    }
+    shell.handle_keyboard(ui_wgpu::wgpu::KeyAction::Enter, &modifiers, &mut input);
+    assert!(shell.chrome_build.dialog_open() && shell.deferred_actions.is_empty(), "the gated submit takes no Enter");
+    shell.handle_keyboard(ui_wgpu::wgpu::KeyAction::Tab, &PointerModifiers { shift: true, ..PointerModifiers::default() }, &mut input);
+    shell.handle_keyboard(ui_wgpu::wgpu::KeyAction::Enter, &modifiers, &mut input);
+    assert!(!shell.chrome_build.dialog_open());
+    let taken = shell.deferred_actions.pop().expect("the choice dispatched");
+    let cleared = fixture["cases"].as_array().expect("cases").iter().find(|case| case["case"] == "cleared").expect("cleared case");
+    assert_eq!(taken.action, cleared["dispatches"][0]["action"].as_str().expect("action"));
+    assert_eq!(serde_json::to_value(taken.args.expect("args")).expect("args wire"), cleared["dispatches"][0]["args"]);
+    let (_, request) = dialog_choices_request(Locale::En);
+    shell.chrome_build.open_dialog(request);
+    shell.handle_keyboard(ui_wgpu::wgpu::KeyAction::Escape, &modifiers, &mut input);
+    assert!(!shell.chrome_build.dialog_open());
+    assert_eq!(shell.deferred_actions.pop().map(|event| event.action), Some("historyEditBack".to_string()));
+}
+
+/// ♿️ The open dialog is published as a modal accessibility tree, as React's `UIDialog` is: one `dialog` node named
+/// by the title and described by the body, every painted control one level below it — the name field, Cancel, the
+/// destructive choice described by its consequence, the submit — with a gated button `disabled`, the dialog's own
+/// keyboard focus as the focused node, and nothing of the shell behind the veil.
+#[test]
+fn the_open_dialog_publishes_a_modal_accessibility_tree_with_gated_and_focused_controls() {
+    for locale in [Locale::En, Locale::De] {
+        let mut shell = ShellState::new(Vec::new(), String::new());
+        let (fixture, mut request) = dialog_choices_request(locale);
+        let cleared = fixture["cases"].as_array().expect("cases").iter().find(|case| case["case"] == "cleared").expect("cleared case");
+        stage_dialog_case(&mut request, cleared);
+        request.focus_stop(ChromeDialogStop::Choice(0));
+        shell.chrome_build.open_dialog(request);
+        let (mut draw, mut atlas, mut input, theme) = (DrawList::default(), FontAtlas::builtin(), InputState::<ActionDescriptor>::default(), Theme::light());
+        shell.render_chrome_dialog(&mut draw, &mut atlas, &mut input, &theme, 1440.0, 900.0);
+        let hits = input.staged_hits().to_vec();
+        let nodes = shell.chrome_accessibility_nodes(&hits);
+        let key = if locale == Locale::De { "de" } else { "en" };
+        let text = |label: &serde_json::Value| label["native"][key].as_str().expect("localized text").to_string();
+        let dialog = &nodes[0];
+        assert_eq!((dialog.key.as_str(), dialog.role.as_str(), dialog.depth), ("shell.dialog.finalizeHistoryEdit", "dialog", 0));
+        assert_eq!((dialog.label.clone(), dialog.description.clone()), (Some(text(&fixture["dialog"]["title"])), Some(text(&fixture["dialog"]["body"]))));
+        assert!(nodes[1..].iter().all(|node| node.depth == 1 && node.key.starts_with("shell.dialog.finalizeHistoryEdit.")), "the modal publishes only its own controls");
+        let node = |suffix: &str| nodes.iter().find(|node| node.key == format!("shell.dialog.finalizeHistoryEdit.{suffix}")).unwrap_or_else(|| panic!("{suffix} is published"));
+        let name = node("field.name");
+        assert_eq!((name.role.as_str(), name.label.clone(), name.editable, name.value_text.as_deref()), ("textbox", Some(text(&fixture["dialog"]["args"][0]["label"])), true, Some("")));
+        let submit = node("confirm");
+        assert_eq!((submit.label.clone(), submit.disabled, submit.actionable), (Some(text(&fixture["dialog"]["submitLabel"])), true, false), "the cleared name gates the submit");
+        let overwrite = node("choice.overwrite");
+        assert_eq!((overwrite.role.as_str(), overwrite.disabled, overwrite.focused, overwrite.tabbable), ("button", false, true, true), "the ungated choice holds the dialog's keyboard focus");
+        assert_eq!(overwrite.description, Some(text(&fixture["dialog"]["choices"][0]["description"])));
+        assert_eq!(nodes.iter().filter(|node| node.focused).count(), 1);
+        assert_eq!(node("cancel").label, Some(text(&fixture["dialog"]["cancelLabel"])));
+        assert!(shell.chrome_surface_census().iter().any(|(id, level, _)| id == "shell.dialog.finalizeHistoryEdit" && *level == "dialog"), "the census reports the dialog level");
+    }
+}
+
+/// 🦯️ The published dialog tree is operable: focusing a node moves the dialog's focus stop, a value edits the name
+/// field, activating the gated submit does nothing, and activating the choice dispatches it and closes the dialog.
+#[test]
+fn the_dialog_accessibility_tree_is_operable_like_its_keyboard() {
+    let mut shell = ShellState::new(Vec::new(), String::new());
+    let (fixture, request) = dialog_choices_request(Locale::En);
+    shell.chrome_build.open_dialog(request);
+    let key = |suffix: &str| format!("shell.dialog.finalizeHistoryEdit.{suffix}");
+    assert!(shell.handle_chrome_dialog_accessibility_event(&key("choice.overwrite"), &ui_render::AccessibilityEvent::Focus));
+    assert_eq!(shell.chrome_build.dialog_stack.last().map(ChromeDialogRequest::focused), Some(ChromeDialogStop::Choice(0)));
+    assert!(shell.handle_chrome_dialog_accessibility_event(&key("field.name"), &ui_render::AccessibilityEvent::Value(String::new())));
+    assert!(shell.handle_chrome_dialog_accessibility_event(&key("confirm"), &ui_render::AccessibilityEvent::Activate));
+    assert!(shell.chrome_build.dialog_open() && shell.deferred_actions.is_empty(), "a gated submit ignores activation");
+    assert!(!shell.handle_chrome_dialog_accessibility_event("ui.search.toggle", &ui_render::AccessibilityEvent::Activate), "a key outside the dialog is not the dialog's");
+    assert!(shell.handle_chrome_dialog_accessibility_event(&key("choice.overwrite"), &ui_render::AccessibilityEvent::Activate));
+    assert!(!shell.chrome_build.dialog_open());
+    let taken = shell.deferred_actions.pop().expect("the choice dispatched");
+    assert_eq!(serde_json::to_value(taken.args.expect("args")).expect("args wire"), fixture["cases"][1]["dispatches"][0]["args"]);
+}
+/// 🎨️ A colour arg and a vector arg of a declared dialog.
+fn color_and_vector_dialog() -> semio_framework::DialogDefinition {
+    let mut fill = semio_framework::ActionArgDef::vector("fill", LocalizedLabel::native("Fill", "Füllung"), 4);
+    fill.presentation = Some(semio_framework::ArgPresentation::Color);
+    let mut turn = semio_framework::ActionArgDef::vector("turn", LocalizedLabel::native("Turn", "Drehung"), 2);
+    if let semio_framework::ArgSchema::Vector { min, max, precision, snaps, .. } = &mut turn.schema {
+        (*min, *max, *precision, *snaps) = (Some(-3.0), Some(3.0), Some(1), vec![-1.5, 0.0, 1.5]);
+    }
+    semio_framework::DialogDefinition::new("paint", LocalizedLabel::native("Paint", "Malen"), semio_framework::ActionRef::new("paint")).args(vec![fill, turn])
+}
+
+/// 🎨️ A colour arg renders the `color_input` recipe in the dialog: a hex field painted beside a swatch of the staged
+/// colour, which stages a typed hex once it parses (keeping the alpha when the text carries none), and an opacity
+/// slider over the fourth component that walks the shared keyboard law and reads as a slider — in both languages.
+#[test]
+fn a_dialog_colour_field_stages_hex_and_opacity_like_the_recipe() {
+    for (locale, opacity) in [(Locale::En, "Fill Opacity"), (Locale::De, "Füllung Deckkraft")] {
+        let mut shell = ShellState::new(Vec::new(), String::new());
+        let seed = DslValue::from(serde_json::json!({ "fill": [1.0, 0.0, 0.0, 0.5] }));
+        let request = ChromeDialogRequest::from_definition("test", &color_and_vector_dialog(), Some(seed), Terminology::default(), locale);
+        assert_eq!(request.fields.iter().map(|field| field.label.as_str()).take(2).collect::<Vec<_>>(), [if locale == Locale::En { "Fill" } else { "Füllung" }, opacity]);
+        assert_eq!(request.fields[0].draft, "#ff000080");
+        let theme = Theme::light();
+        let ops = ShellState::chrome_dialog_paint_ops(&request, 1440.0, 900.0, &theme);
+        assert!(ops.iter().any(|op| matches!(op, ChromeDialogPaintOp::Fill { color, .. } if *color == Rgba::from_srgb8(255, 0, 0, 128))), "the swatch paints the staged colour");
+        let alpha = ops.iter().find_map(|op| match op {
+            ChromeDialogPaintOp::Hit { control_id, semantics, label, .. } if control_id == "shell.dialog.paint.field.fill.alpha" => Some((label.clone(), semantics.clone())),
+            _ => None,
+        });
+        let (label, semantics) = alpha.expect("the opacity slider paints a hit");
+        assert_eq!((label.as_str(), semantics.role, semantics.value_range), (opacity, Some("slider"), Some([0.0, 1.0, 0.5])));
+        shell.chrome_build.open_dialog(request);
+        let mut input = InputState::<ActionDescriptor>::default();
+        let modifiers = PointerModifiers::default();
+        for _ in 0.."#ff000080".len() {
+            shell.handle_keyboard(ui_wgpu::wgpu::KeyAction::Backspace, &modifiers, &mut input);
+        }
+        shell.handle_keyboard(ui_wgpu::wgpu::KeyAction::Char("#0f0".into()), &modifiers, &mut input);
+        let staged = |shell: &ShellState| shell.chrome_build.dialog_stack.last().and_then(|request| request.effective().get("fill").map(dsl_value_as_json));
+        assert_eq!(staged(&shell), Some(serde_json::json!([0.0, 1.0, 0.0, 0.5])), "a typed hex without alpha keeps the opacity");
+        shell.handle_keyboard(ui_wgpu::wgpu::KeyAction::Tab, &modifiers, &mut input);
+        shell.handle_keyboard(ui_wgpu::wgpu::KeyAction::ArrowRight, &modifiers, &mut input);
+        assert_eq!(staged(&shell), Some(serde_json::json!([0.0, 1.0, 0.0, 0.51])));
+        shell.handle_keyboard(ui_wgpu::wgpu::KeyAction::Home, &modifiers, &mut input);
+        assert_eq!(staged(&shell), Some(serde_json::json!([0.0, 1.0, 0.0, 0.0])));
+    }
+}
+
+/// 🧭️ Every vector axis of a dialog honours the vector's facets: its precision formats the draft and sets its step,
+/// its bounds clamp a typed value, its detents are what the page keys jump to, and its arrows walk its step ladder.
+#[test]
+fn a_dialog_vector_axis_honours_bounds_precision_and_detents() {
+    let mut shell = ShellState::new(Vec::new(), String::new());
+    let seed = DslValue::from(serde_json::json!({ "turn": [0.25, 1.0] }));
+    let request = ChromeDialogRequest::from_definition("test", &color_and_vector_dialog(), Some(seed), Terminology::default(), Locale::En);
+    let axes: Vec<&str> = request.fields.iter().filter(|field| field.id == "turn").map(|field| field.draft.as_str()).collect();
+    assert_eq!(axes, ["0.3", "1.0"], "each axis shows the vector's precision");
+    let x = request.fields.iter().position(|field| field.id == "turn").expect("the x axis");
+    shell.chrome_build.open_dialog(request);
+    let mut input = InputState::<ActionDescriptor>::default();
+    let modifiers = PointerModifiers::default();
+    shell.chrome_build.dialog_stack.last_mut().expect("dialog").focus_stop(ChromeDialogStop::Field(x));
+    let staged = |shell: &ShellState| shell.chrome_build.dialog_stack.last().and_then(|request| request.effective().get("turn").map(dsl_value_as_json));
+    let mut walk = Vec::new();
+    for action in [ui_wgpu::wgpu::KeyAction::PageUp, ui_wgpu::wgpu::KeyAction::PageUp, ui_wgpu::wgpu::KeyAction::ArrowDown, ui_wgpu::wgpu::KeyAction::PageDown] {
+        shell.handle_keyboard(action, &modifiers, &mut input);
+        walk.push(staged(&shell).and_then(|tuple| tuple[0].as_f64()).unwrap_or(f64::NAN));
+    }
+    assert_eq!(walk, [1.5, 2.5, 2.4, 1.5], "detent, ten rungs of the precision's step, one rung, detent");
+    for _ in 0..3 {
+        shell.handle_keyboard(ui_wgpu::wgpu::KeyAction::Backspace, &modifiers, &mut input);
+    }
+    shell.handle_keyboard(ui_wgpu::wgpu::KeyAction::Char("9".into()), &modifiers, &mut input);
+    assert_eq!(staged(&shell).and_then(|tuple| tuple[0].as_f64()), Some(3.0), "a typed value is clamped to the vector's bounds");
+}
+
+/// 🎨️ An Actions-form colour row stages the hex its swatch or hex field commits and the opacity its slider commits,
+/// over the colour already staged — the same law the dialog and React's staged colour field follow.
+#[test]
+fn a_staged_colour_row_stages_hex_and_opacity() {
+    let color = serde_json::json!({ "alpha": true, "rgba": [1.0, 0.0, 0.0, 0.5] });
+    let rgb = serde_json::json!({ "alpha": false, "rgba": [1.0, 0.0, 0.0] });
+    assert_eq!(staged_color_value(&color, Some(&serde_json::json!("#00ff00")), None), serde_json::json!([0.0, 1.0, 0.0, 0.5]));
+    assert_eq!(staged_color_value(&color, Some(&serde_json::json!("#00ff0040")), None), serde_json::json!([0.0, 1.0, 0.0, 64.0 / 255.0]));
+    assert_eq!(staged_color_value(&color, Some(&serde_json::json!(0.25)), Some(&serde_json::json!([0.0, 0.0, 1.0, 1.0]))), serde_json::json!([0.0, 0.0, 1.0, 0.25]));
+    assert_eq!(staged_color_value(&color, Some(&serde_json::json!("nope")), None), serde_json::json!([1.0, 0.0, 0.0, 0.5]), "an unreadable hex keeps the colour");
+    assert_eq!(staged_color_value(&rgb, Some(&serde_json::json!("#fff")), None), serde_json::json!([1.0, 1.0, 1.0]));
+    assert_eq!(staged_arg_value(&serde_json::json!({ "color": color, "value": "#0000ff" }), None), serde_json::json!([0.0, 0.0, 1.0, 0.5]));
 }
 //#endregion Dialog
 

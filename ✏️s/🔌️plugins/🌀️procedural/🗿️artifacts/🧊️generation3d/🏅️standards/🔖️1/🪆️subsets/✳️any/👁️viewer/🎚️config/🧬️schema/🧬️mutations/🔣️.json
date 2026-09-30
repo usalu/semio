@@ -1,0 +1,67 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/app/procedural/3d/viewer/config/mutations.json",
+  "title": "Generation3dViewConfigMutation",
+  "oneOf": [
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "SetShowMode"
+      ],
+      "properties": {
+        "SetShowMode": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/app/procedural/3d/viewer/config/mutation/set-show-mode/schema.json"
+        }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "SetLodMode"
+      ],
+      "properties": {
+        "SetLodMode": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/app/procedural/3d/viewer/config/mutation/set-lod-mode/schema.json"
+        }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "SetPreviewCamera"
+      ],
+      "properties": {
+        "SetPreviewCamera": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/app/procedural/3d/viewer/config/mutation/set-preview-camera/schema.json"
+        }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "SetSun"
+      ],
+      "properties": {
+        "SetSun": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/app/procedural/3d/viewer/config/mutation/set-sun/schema.json"
+        }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "SetActiveExample"
+      ],
+      "properties": {
+        "SetActiveExample": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/app/procedural/3d/viewer/config/mutation/set-active-example/schema.json"
+        }
+      }
+    }
+  ]
+}

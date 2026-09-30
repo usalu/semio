@@ -10,10 +10,40 @@
   ],
   "properties": {
     "zoneId": {
-      "type": "string"
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Zone",
+          "de": "Zone"
+        },
+        "description": {
+          "en": "The ventilation zone this mutation addresses.",
+          "de": "Die Lüftungszone, die diese Mutation adressiert."
+        },
+        "ref": {
+          "kind": "zone"
+        },
+        "group": "target",
+        "order": 10
+      }
     },
     "newTOpWinterC": {
-      "type": "number"
+      "type": "number",
+      "x-semio-ui": {
+        "widget": "stepper",
+        "role": "value",
+        "label": {
+          "en": "Operative temperature in winter θ_o",
+          "de": "Operative Temperatur im Winter θ_o"
+        },
+        "unit": "°C",
+        "step": 0.5,
+        "precision": 1,
+        "group": "comfort",
+        "order": 20
+      }
     }
   }
 }

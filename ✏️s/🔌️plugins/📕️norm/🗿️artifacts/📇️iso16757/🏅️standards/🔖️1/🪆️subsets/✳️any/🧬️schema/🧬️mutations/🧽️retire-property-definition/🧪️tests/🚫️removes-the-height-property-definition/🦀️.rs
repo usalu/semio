@@ -60,7 +60,7 @@ async fn recreating_the_height_property_definition_restores_before() {
 
 /// 🔣️ Both committed snapshots and the committed `retire-property-definition` payload are already canonical:
 /// decode → encode is a fixed point. The committed payload is spelled `{"RetirePropertyDefinition": {"id":
-/// "prop.height"}}` — externally tagged, snake_case payload key.
+/// "prop.height"}}` — externally tagged, camelCase payload key.
 #[semio_framework_async_macros::async_test]
 async fn committed_json_is_canonical() {
     for (side, text) in [("before", BEFORE), ("after", AFTER)] {

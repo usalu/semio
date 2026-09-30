@@ -62,30 +62,18 @@ Feature: Apply every typed SVG Tiny 1.1 mutation to a real-world Full 1.1 drawin
       {"kind": "<id>", "params": <params>}
       """
     Then the oracle and the subject agree on the semantic projection
-    And the semantic projection moved, unless the kind is no-mutation
+    And the semantic projection moved
     Examples:
       | id                  | params                                                                                                                                                                                        |
-      | set-snapshot        | {"rootId": "wave8-tiny-snapshot-marker", "viewBoxWidth": 2030}                                                                                                                                |
+      | set-snapshot        | {"snapshot": {"schema": "stdio.svg", "doc": {"root": {"kind": "element", "name": "svg", "attrs": [{"name": "xmlns", "value": "http://www.w3.org/2000/svg"}, {"name": "version", "value": "1.1"}, {"name": "baseProfile", "value": "tiny"}, {"name": "id", "value": "wave8-tiny-snapshot-marker"}, {"name": "viewBox", "value": "0 0 2030 1015"}], "children": [{"kind": "element", "name": "rect", "attrs": [{"name": "width", "value": "35"}, {"name": "height", "value": "35"}], "children": []}]}, "declaration": {"version": "1.0", "encoding": "UTF-8"}}}} |
       | stamp-base-profile  | {"baseProfile": "tiny", "version": "1.1"}                                                                                                                                                     |
       | insert-tiny-element | {"parent": [4, 0, 0], "index": 1, "node": {"kind": "element", "name": "rect", "attrs": [{"name": "x", "value": "0"}, {"name": "y", "value": "0"}, {"name": "width", "value": "35"}, {"name": "height", "value": "35"}, {"name": "id", "value": "wave8-tiny-marker"}], "children": []}} |
       | remove-element      | {"parent": [], "index": 0}                                                                                                                                                                    |
       | set-tiny-attribute  | {"path": [4, 0, 0], "name": "fill", "value": "#123456"}                                                                                                                                       |
       | set-text            | {"path": [2], "text": "wave8 tiny mutation marker"}                                                                                                                                           |
-      | set-view-box        | {"path": [], "viewBox": [0, 0, 2030, 2030]}                                                                                                                                                   |
-      | set-transform       | {"path": [4, 0, 0], "transform": [{"kind": "translate", "x": 50, "y": 50}, {"kind": "rotate", "angle": 45}]}                                                                                  |
+      | set-view-box        | {"path": [], "viewBox": {"minX": 0, "minY": 0, "width": 2030, "height": 2030}} |
+      | set-transform       | {"path": [4, 0, 0], "transform": [{"op": "translate", "x": 50, "y": 50}, {"op": "rotate", "angle": 45}]} |
       | strip-non-tiny      | {}                                                                                                                                                                                            |
-
-  @id-no-mutation-baseline-mutate
-  @level-exhaustive
-  @mode-differential
-  Scenario: Apply no-mutation to the real drawing
-    Given the real input document shared://🔳️qr-code.svg
-    When the no-mutation mutation is applied with its parameters
-      """
-      {"kind": "no-mutation", "params": {}}
-      """
-    Then the oracle and the subject agree on the semantic projection
-    And the semantic projection moved, unless the kind is no-mutation
 
   @id-inverse
   @level-exhaustive
@@ -99,26 +87,15 @@ Feature: Apply every typed SVG Tiny 1.1 mutation to a real-world Full 1.1 drawin
     Then the oracle and the subject agree on the semantic projection
     Examples:
       | id                  | params                                                                                                                                                                                        |
-      | set-snapshot        | {"rootId": "wave8-tiny-snapshot-marker", "viewBoxWidth": 2030}                                                                                                                                |
+      | set-snapshot        | {"snapshot": {"schema": "stdio.svg", "doc": {"root": {"kind": "element", "name": "svg", "attrs": [{"name": "xmlns", "value": "http://www.w3.org/2000/svg"}, {"name": "version", "value": "1.1"}, {"name": "baseProfile", "value": "tiny"}, {"name": "id", "value": "wave8-tiny-snapshot-marker"}, {"name": "viewBox", "value": "0 0 2030 1015"}], "children": [{"kind": "element", "name": "rect", "attrs": [{"name": "width", "value": "35"}, {"name": "height", "value": "35"}], "children": []}]}, "declaration": {"version": "1.0", "encoding": "UTF-8"}}}} |
       | stamp-base-profile  | {"baseProfile": "tiny", "version": "1.1"}                                                                                                                                                     |
       | insert-tiny-element | {"parent": [4, 0, 0], "index": 1, "node": {"kind": "element", "name": "rect", "attrs": [{"name": "x", "value": "0"}, {"name": "y", "value": "0"}, {"name": "width", "value": "35"}, {"name": "height", "value": "35"}, {"name": "id", "value": "wave8-tiny-marker"}], "children": []}} |
       | remove-element      | {"parent": [], "index": 0}                                                                                                                                                                    |
       | set-tiny-attribute  | {"path": [4, 0, 0], "name": "fill", "value": "#123456"}                                                                                                                                       |
       | set-text            | {"path": [2], "text": "wave8 tiny mutation marker"}                                                                                                                                           |
-      | set-view-box        | {"path": [], "viewBox": [0, 0, 2030, 2030]}                                                                                                                                                   |
-      | set-transform       | {"path": [4, 0, 0], "transform": [{"kind": "translate", "x": 50, "y": 50}, {"kind": "rotate", "angle": 45}]}                                                                                  |
+      | set-view-box        | {"path": [], "viewBox": {"minX": 0, "minY": 0, "width": 2030, "height": 2030}} |
+      | set-transform       | {"path": [4, 0, 0], "transform": [{"op": "translate", "x": 50, "y": 50}, {"op": "rotate", "angle": 45}]} |
       | strip-non-tiny      | {}                                                                                                                                                                                            |
-
-  @id-no-mutation-baseline-inverse
-  @level-exhaustive
-  @mode-differential
-  Scenario: Undoing no-mutation restores the real drawing
-    Given the real input document shared://🔳️qr-code.svg
-    When the no-mutation mutation is applied and then undone with its own inverse
-      """
-      {"kind": "no-mutation", "params": {}}
-      """
-    Then the oracle and the subject agree on the semantic projection
 
   @id-identity-round-trip
   @level-long

@@ -5,76 +5,16 @@
   "description": "Discriminated union over this module's mutation leaves (internally tagged); every payload is the leaf's own schema, referenced, never restated.",
   "oneOf": [
     {
-      "allOf": [
-        {
-          "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/deflate/rfc1950/any/mutation/set-compression-params/schema.json"
-        },
-        {
-          "type": "object",
-          "required": [
-            "mutation"
-          ],
-          "properties": {
-            "mutation": {
-              "const": "setCompressionParams"
-            }
-          }
-        }
-      ]
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/deflate/rfc1950/any/mutation/set-snapshot/schema.json"
     },
     {
-      "allOf": [
-        {
-          "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/deflate/rfc1950/any/mutation/set-payload/schema.json"
-        },
-        {
-          "type": "object",
-          "required": [
-            "mutation"
-          ],
-          "properties": {
-            "mutation": {
-              "const": "setPayload"
-            }
-          }
-        }
-      ]
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/deflate/rfc1950/any/mutation/set-compression-params/schema.json"
     },
     {
-      "allOf": [
-        {
-          "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/deflate/rfc1950/any/mutation/set-preset-dictionary/schema.json"
-        },
-        {
-          "type": "object",
-          "required": [
-            "mutation"
-          ],
-          "properties": {
-            "mutation": {
-              "const": "setPresetDictionary"
-            }
-          }
-        }
-      ]
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/deflate/rfc1950/any/mutation/set-preset-dictionary/schema.json"
     },
     {
-      "allOf": [
-        {
-          "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/deflate/rfc1950/any/mutation/set-snapshot/schema.json"
-        },
-        {
-          "type": "object",
-          "required": [
-            "mutation"
-          ],
-          "properties": {
-            "mutation": {
-              "const": "setSnapshot"
-            }
-          }
-        }
-      ]
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/deflate/rfc1950/any/mutation/set-payload/schema.json"
     }
   ]
 }

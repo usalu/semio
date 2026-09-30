@@ -1800,6 +1800,7 @@ impl<B: BlobStore + 'static> WasmtimeNodeHost<B> {
                 record: service.semantics.record.clone(),
                 contributor: None,
                 artifact_kind: None,
+                inputs: semio_framework_plugin_host::HostMutationInputs::Opaque,
             })
             .collect();
         for contribution in &descriptor.contributions.artifact_contributions {
@@ -1812,6 +1813,7 @@ impl<B: BlobStore + 'static> WasmtimeNodeHost<B> {
                     record: mutation.semantics.record.clone(),
                     contributor: Some(plugin_id.to_string()),
                     artifact_kind: Some(contribution.artifact_kind.clone()),
+                    inputs: semio_framework_plugin_host::HostMutationInputs::Opaque,
                 });
             }
         }

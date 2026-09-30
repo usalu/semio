@@ -1,0 +1,9 @@
+{
+  "mutation": "deleteCamera",
+  "payload": {
+    "phase": "apply",
+    "value": {
+      "index": 0
+    }
+  }
+}

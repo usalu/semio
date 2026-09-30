@@ -15,13 +15,50 @@
         "x",
         "y",
         "z"
-      ]
+      ],
+      "x-semio-ui": {
+        "widget": "segmented",
+        "role": "value",
+        "label": {
+          "en": "Axis",
+          "de": "Achse"
+        },
+        "options": {
+          "x": {
+            "en": "X axis",
+            "de": "x-Achse"
+          },
+          "y": {
+            "en": "Y axis",
+            "de": "y-Achse"
+          },
+          "z": {
+            "en": "Z axis",
+            "de": "z-Achse"
+          }
+        },
+        "group": "grid",
+        "order": 10
+      }
     },
     "sizes": {
       "type": "array",
       "items": {
         "type": "number",
         "exclusiveMinimum": 0
+      },
+      "x-semio-ui": {
+        "role": "value",
+        "label": {
+          "en": "Cell sizes",
+          "de": "Zellgrößen"
+        },
+        "description": {
+          "en": "Size of every cell along the axis, in order.",
+          "de": "Größe jeder Zelle entlang der Achse, der Reihe nach."
+        },
+        "group": "record",
+        "order": 20
       }
     }
   }

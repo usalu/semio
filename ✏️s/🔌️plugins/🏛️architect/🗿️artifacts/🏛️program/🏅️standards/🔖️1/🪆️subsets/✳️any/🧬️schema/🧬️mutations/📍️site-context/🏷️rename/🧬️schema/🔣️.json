@@ -5,16 +5,52 @@
   "type": "object",
   "additionalProperties": false,
   "required": [
+    "mutation",
     "id",
     "newName"
   ],
   "properties": {
+    "mutation": {
+      "const": "renameSiteContext"
+    },
     "id": {
-      "type": "integer",
-      "minimum": 0
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Site Context",
+          "de": "Standortkontext"
+        },
+        "description": {
+          "en": "The site context to rename.",
+          "de": "Umzubenennender Eintrag vom Typ „Standortkontext“."
+        },
+        "ref": {
+          "kind": "siteContext",
+          "domain": "program",
+          "granularity": "entity"
+        },
+        "group": "target",
+        "order": 10
+      }
     },
     "newName": {
-      "type": "string"
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "text",
+        "role": "value",
+        "label": {
+          "en": "New Name",
+          "de": "Neuer Name"
+        },
+        "description": {
+          "en": "New name of the site context.",
+          "de": "Neuer Name des Eintrags vom Typ „Standortkontext“."
+        },
+        "group": "identity",
+        "order": 20
+      }
     }
   }
 }

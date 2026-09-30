@@ -5,20 +5,32 @@
   "type": "object",
   "additionalProperties": false,
   "required": [
-    "element_name",
+    "mutation",
+    "elementName",
     "index"
   ],
   "properties": {
-    "element_name": {
-      "type": "string"
+    "mutation": {
+      "const": "removeRow",
+      "description": "Aggregate discriminator spliced in by PlyMutation; absent when the payload stands alone."
+    },
+    "elementName": {
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "text",
+        "label": {
+          "en": "Element",
+          "de": "Element"
+        },
+        "description": {
+          "en": "Name of the PLY element whose rows are addressed.",
+          "de": "Name des PLY-Elements, dessen Zeilen adressiert werden."
+        }
+      }
     },
     "index": {
       "type": "integer",
       "minimum": 0
-    },
-    "mutation": {
-      "const": "removeRow",
-      "description": "Aggregate discriminator spliced in by PlyMutation; absent when the payload stands alone."
     }
   }
 }

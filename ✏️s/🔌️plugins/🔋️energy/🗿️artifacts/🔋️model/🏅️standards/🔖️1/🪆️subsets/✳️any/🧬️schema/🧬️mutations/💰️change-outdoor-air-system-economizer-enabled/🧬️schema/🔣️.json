@@ -5,15 +5,51 @@
   "type": "object",
   "additionalProperties": false,
   "required": [
+    "mutation",
     "id",
     "newEconomizerEnabled"
   ],
   "properties": {
+    "mutation": {
+      "const": "changeOutdoorAirSystemEconomizerEnabled"
+    },
     "id": {
-      "type": "integer"
+      "type": "integer",
+      "minimum": 0,
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Outdoor air system",
+          "de": "Außenluftsystem"
+        },
+        "description": {
+          "en": "The outdoor air system this mutation changes, by id.",
+          "de": "Außenluftsystem, das diese Mutation ändert, per ID."
+        },
+        "ref": {
+          "kind": "outdoorAirSystem"
+        },
+        "group": "target",
+        "order": 10
+      }
     },
     "newEconomizerEnabled": {
-      "type": "boolean"
+      "type": "boolean",
+      "x-semio-ui": {
+        "widget": "toggle",
+        "role": "value",
+        "label": {
+          "en": "Economizer",
+          "de": "Economizer (freie Kühlung)"
+        },
+        "description": {
+          "en": "Raises the outdoor air share when outdoor air can cool.",
+          "de": "Erhöht den Außenluftanteil, wenn Außenluft kühlen kann."
+        },
+        "group": "ventilation",
+        "order": 20
+      }
     }
   }
 }

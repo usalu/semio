@@ -5,19 +5,80 @@
   "type": "object",
   "additionalProperties": false,
   "required": [
+    "mutation",
     "index",
     "layerId"
   ],
   "properties": {
+    "mutation": {
+      "const": "reorderLayers"
+    },
     "layerId": {
-      "type": "string"
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Layer",
+          "de": "Ebene"
+        },
+        "description": {
+          "en": "The layer this mutation addresses.",
+          "de": "Die Ebene, die diese Mutation adressiert."
+        },
+        "ref": {
+          "kind": "layer",
+          "domain": "layers",
+          "granularity": "layer"
+        },
+        "group": "target",
+        "order": 10
+      }
     },
     "parentId": {
-      "type": "string"
+      "type": [
+        "string",
+        "null"
+      ],
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Parent group",
+          "de": "Übergeordnete Gruppe"
+        },
+        "description": {
+          "en": "Group layer that holds the layer; the root when omitted.",
+          "de": "Gruppenebene, die die Ebene enthält; ohne Angabe die Wurzel."
+        },
+        "ref": {
+          "kind": "layer",
+          "domain": "layers",
+          "granularity": "layer"
+        },
+        "group": "placement",
+        "order": 20
+      }
     },
     "index": {
       "type": "integer",
-      "minimum": 0
+      "minimum": 0,
+      "x-semio-ui": {
+        "widget": "stepper",
+        "role": "value",
+        "label": {
+          "en": "Index",
+          "de": "Index"
+        },
+        "description": {
+          "en": "Position in the list; the end when omitted.",
+          "de": "Position in der Liste; ohne Angabe am Ende."
+        },
+        "step": 1,
+        "precision": 0,
+        "group": "order",
+        "order": 30
+      }
     }
   }
 }

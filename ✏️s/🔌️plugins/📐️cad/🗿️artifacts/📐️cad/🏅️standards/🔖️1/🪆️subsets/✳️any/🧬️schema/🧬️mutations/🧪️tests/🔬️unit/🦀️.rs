@@ -222,3 +222,35 @@ fn kinds_match_the_enum_and_the_catalog() {
     }
 }
 //#endregion 🧪️KindsCatalog
+//#region 🧾️WireWitnesses
+/// 🧾️ The committed wire witnesses of the five object-lifecycle kinds — whose pane-materialized state no before/after
+/// quintet can carry — keyed by semantic kind, in [`every_mutation`]'s object-lifecycle order.
+const OBJECT_WIRE_WITNESSES: [(&str, &str); 5] = [
+    ("create-object", include_str!("../../../../🧫️fixtures/🧬️mutations/🆕create-object/🧾️wire-witness/🦠️mutation/🔣️.json")),
+    ("delete-object", include_str!("../../../../🧫️fixtures/🧬️mutations/❌delete-object/🧾️wire-witness/🦠️mutation/🔣️.json")),
+    ("move-objects", include_str!("../../../../🧫️fixtures/🧬️mutations/🚚move-objects/🧾️wire-witness/🦠️mutation/🔣️.json")),
+    ("rotate-objects", include_str!("../../../../🧫️fixtures/🧬️mutations/🌀rotate-objects/🧾️wire-witness/🦠️mutation/🔣️.json")),
+    ("scale-objects", include_str!("../../../../🧫️fixtures/🧬️mutations/⚖️scale-objects/🧾️wire-witness/🦠️mutation/🔣️.json")),
+];
+
+/// 🧾️ Each committed object-lifecycle wire witness is the canonical Rust wire (decodes, and re-encodes to exactly the
+/// committed JSON) of the operation the leaf laws construct against a materialized pane, and names its own kind.
+#[test]
+fn object_lifecycle_wire_witnesses_are_the_canonical_rust_wire() {
+    use crate::mutations::{cad_object_primitives_of, cad_object_spec_of};
+    use crate::sample_scene_fixture::sample_object;
+    let box_b = sample_object("object-b", [2.0, 0.0, 0.0]);
+    let expected = [
+        CadMutation::CreateObject(CreateObject { pane: CadPaneId::Shape, index: 1, object: cad_object_spec_of(&box_b), primitives: cad_object_primitives_of(&box_b) }),
+        CadMutation::DeleteObject(DeleteObject { pane: CadPaneId::Shape, object_id: "object-b".into() }),
+        CadMutation::MoveObjects(MoveObjects { pane: CadPaneId::Shape, placements: vec![CadObjectOrigin { object_id: "object-a".into(), new_origin: [1.5, -2.25, 0.5] }] }),
+        CadMutation::RotateObjects(RotateObjects { pane: CadPaneId::Shape, placements: vec![CadObjectOrientation { object_id: "object-a".into(), new_orientation: [0.0, 0.0, 0.6, 0.8] }] }),
+        CadMutation::ScaleObjects(ScaleObjects { pane: CadPaneId::Shape, placements: vec![CadObjectScale { object_id: "object-a".into(), new_scale: [2.0, 1.5, 0.5] }] }),
+    ];
+    for ((kind, witness), expected) in OBJECT_WIRE_WITNESSES.into_iter().zip(expected) {
+        let committed: CadMutation = store::os_store::test_support::assert_wire_witness(witness);
+        assert_eq!(committed.descriptor().semantic_kind, kind, "the {kind} wire witness names another kind");
+        assert_eq!(committed, expected, "the {kind} wire witness is not the operation its leaf law constructs");
+    }
+}
+//#endregion 🧾️WireWitnesses

@@ -5,166 +5,31 @@
   "description": "Discriminated union over this module's mutation leaves (internally tagged); every payload is the leaf's own schema, referenced, never restated.",
   "oneOf": [
     {
-      "allOf": [
-        {
-          "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/json/rfc8259/i-json/mutation/insert-array-element/schema.json"
-        },
-        {
-          "type": "object",
-          "required": [
-            "mutation"
-          ],
-          "properties": {
-            "mutation": {
-              "const": "insertArrayElement"
-            }
-          }
-        }
-      ]
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/json/rfc8259/i-json/mutation/set-snapshot/schema.json"
     },
     {
-      "allOf": [
-        {
-          "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/json/rfc8259/i-json/mutation/remove-array-element/schema.json"
-        },
-        {
-          "type": "object",
-          "required": [
-            "mutation"
-          ],
-          "properties": {
-            "mutation": {
-              "const": "removeArrayElement"
-            }
-          }
-        }
-      ]
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/json/rfc8259/i-json/mutation/set-top-level/schema.json"
     },
     {
-      "allOf": [
-        {
-          "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/json/rfc8259/i-json/mutation/remove-member/schema.json"
-        },
-        {
-          "type": "object",
-          "required": [
-            "mutation"
-          ],
-          "properties": {
-            "mutation": {
-              "const": "removeMember"
-            }
-          }
-        }
-      ]
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/json/rfc8259/i-json/mutation/upsert-member/schema.json"
     },
     {
-      "allOf": [
-        {
-          "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/json/rfc8259/i-json/mutation/rename-member/schema.json"
-        },
-        {
-          "type": "object",
-          "required": [
-            "mutation"
-          ],
-          "properties": {
-            "mutation": {
-              "const": "renameMember"
-            }
-          }
-        }
-      ]
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/json/rfc8259/i-json/mutation/remove-member/schema.json"
     },
     {
-      "allOf": [
-        {
-          "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/json/rfc8259/i-json/mutation/set-safe-number/schema.json"
-        },
-        {
-          "type": "object",
-          "required": [
-            "mutation"
-          ],
-          "properties": {
-            "mutation": {
-              "const": "setSafeNumber"
-            }
-          }
-        }
-      ]
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/json/rfc8259/i-json/mutation/rename-member/schema.json"
     },
     {
-      "allOf": [
-        {
-          "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/json/rfc8259/i-json/mutation/set-snapshot/schema.json"
-        },
-        {
-          "type": "object",
-          "required": [
-            "mutation"
-          ],
-          "properties": {
-            "mutation": {
-              "const": "setSnapshot"
-            }
-          }
-        }
-      ]
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/json/rfc8259/i-json/mutation/set-safe-number/schema.json"
     },
     {
-      "allOf": [
-        {
-          "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/json/rfc8259/i-json/mutation/set-string/schema.json"
-        },
-        {
-          "type": "object",
-          "required": [
-            "mutation"
-          ],
-          "properties": {
-            "mutation": {
-              "const": "setString"
-            }
-          }
-        }
-      ]
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/json/rfc8259/i-json/mutation/set-string/schema.json"
     },
     {
-      "allOf": [
-        {
-          "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/json/rfc8259/i-json/mutation/set-top-level/schema.json"
-        },
-        {
-          "type": "object",
-          "required": [
-            "mutation"
-          ],
-          "properties": {
-            "mutation": {
-              "const": "setTopLevel"
-            }
-          }
-        }
-      ]
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/json/rfc8259/i-json/mutation/insert-array-element/schema.json"
     },
     {
-      "allOf": [
-        {
-          "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/json/rfc8259/i-json/mutation/upsert-member/schema.json"
-        },
-        {
-          "type": "object",
-          "required": [
-            "mutation"
-          ],
-          "properties": {
-            "mutation": {
-              "const": "upsertMember"
-            }
-          }
-        }
-      ]
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/json/rfc8259/i-json/mutation/remove-array-element/schema.json"
     }
   ]
 }

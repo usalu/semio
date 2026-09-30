@@ -5,20 +5,21 @@
   "type": "object",
   "additionalProperties": false,
   "required": [
+    "mutation",
     "index",
     "frame"
   ],
   "properties": {
+    "mutation": {
+      "const": "insertFrame",
+      "description": "Aggregate discriminator spliced in by SemioImageMutation; absent when the payload stands alone."
+    },
     "index": {
       "type": "integer",
       "minimum": 0
     },
     "frame": {
       "$ref": "#/$defs/SemioImageFrame"
-    },
-    "mutation": {
-      "const": "insertFrame",
-      "description": "Aggregate discriminator spliced in by SemioImageMutation; absent when the payload stands alone."
     }
   },
   "$defs": {
@@ -32,7 +33,15 @@
         "delayMs": {
           "type": "integer",
           "minimum": 0,
-          "maximum": 4294967295
+          "maximum": 4294967295,
+          "x-semio-ui": {
+            "widget": "stepper",
+            "label": {
+              "en": "Frame delay",
+              "de": "Bildverzögerung"
+            },
+            "unit": "ms"
+          }
         },
         "rgba8": {
           "type": "array",
@@ -40,6 +49,16 @@
             "type": "integer",
             "minimum": 0,
             "maximum": 255
+          },
+          "x-semio-ui": {
+            "label": {
+              "en": "RGBA pixels",
+              "de": "RGBA-Pixel"
+            },
+            "description": {
+              "en": "8-bit red, green, blue, alpha per pixel, row by row.",
+              "de": "8 Bit Rot, Grün, Blau, Alpha je Pixel, zeilenweise."
+            }
           }
         }
       }

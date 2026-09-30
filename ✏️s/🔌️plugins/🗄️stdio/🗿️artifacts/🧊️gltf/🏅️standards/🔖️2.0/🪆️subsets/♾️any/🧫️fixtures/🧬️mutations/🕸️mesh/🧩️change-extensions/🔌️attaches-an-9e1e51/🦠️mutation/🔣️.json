@@ -1,0 +1,15 @@
+{
+  "mutation": "changeMeshExtensionData",
+  "payload": {
+    "phase": "apply",
+    "value": {
+      "mesh": 0,
+      "data": {
+        "state": "present",
+        "value": {
+          "KHR_materials_unlit": {}
+        }
+      }
+    }
+  }
+}

@@ -5,11 +5,43 @@
   "type": "object",
   "additionalProperties": false,
   "required": [
+    "mutation",
     "newElevation"
   ],
   "properties": {
+    "mutation": {
+      "const": "changeSceneSunElevation"
+    },
     "newElevation": {
-      "type": "number"
+      "type": "number",
+      "minimum": -90,
+      "maximum": 90,
+      "x-semio-ui": {
+        "widget": "dial",
+        "role": "value",
+        "label": {
+          "en": "Sun elevation",
+          "de": "Sonnenhöhe"
+        },
+        "description": {
+          "en": "Height of the sun above the horizon.",
+          "de": "Höhe der Sonne über dem Horizont."
+        },
+        "unit": "deg",
+        "step": 1,
+        "precision": 1,
+        "softMin": -90,
+        "softMax": 90,
+        "snaps": [
+          -90,
+          -45,
+          0,
+          45,
+          90
+        ],
+        "group": "lighting",
+        "order": 10
+      }
     }
   }
 }

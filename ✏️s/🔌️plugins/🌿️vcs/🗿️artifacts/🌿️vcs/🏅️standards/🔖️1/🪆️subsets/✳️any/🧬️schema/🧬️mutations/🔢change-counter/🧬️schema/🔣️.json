@@ -2,35 +2,27 @@
   "$schema": "http://json-schema.org/draft-07/schema#",
   "$id": "https://json.schemas.assets.semio-tech.com/s/vcs/vcs/mutation/change-counter/schema.json",
   "title": "ChangeCounter",
-  "$ref": "#/$defs/Payload",
-  "$defs": {
-    "Payload": {
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "newCounter"
-      ],
-      "properties": {
-        "newCounter": {
-          "type": "integer"
-        }
-      }
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "mutation",
+    "newCounter"
+  ],
+  "properties": {
+    "mutation": {
+      "const": "changeCounter"
     },
-    "Wire": {
-      "title": "ChangeCounterMutation",
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "mutation",
-        "newCounter"
-      ],
-      "properties": {
-        "mutation": {
-          "const": "changeCounter"
+    "newCounter": {
+      "type": "integer",
+      "x-semio-ui": {
+        "widget": "stepper",
+        "role": "value",
+        "label": {
+          "en": "New Counter",
+          "de": "Neuer Zähler"
         },
-        "newCounter": {
-          "$ref": "#/$defs/Payload/properties/newCounter"
-        }
+        "step": 1,
+        "precision": 0
       }
     }
   }

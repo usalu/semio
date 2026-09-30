@@ -5,19 +5,46 @@
   "type": "object",
   "additionalProperties": false,
   "required": [
+    "mutation",
     "name",
-    "header_var"
+    "headerVar"
   ],
   "properties": {
-    "name": {
-      "type": "string"
-    },
-    "header_var": {
-      "$ref": "#/$defs/DxfHeaderVar"
-    },
     "mutation": {
       "const": "setHeaderVar",
       "description": "Aggregate discriminator spliced in by DxfMutation; absent when the payload stands alone."
+    },
+    "name": {
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Header variable",
+          "de": "Systemvariable"
+        },
+        "description": {
+          "en": "Name including $, e.g. $ACADVER.",
+          "de": "Name mit $, z. B. $ACADVER."
+        },
+        "ref": {
+          "kind": "headerVariable",
+          "domain": "dxf"
+        },
+        "group": "target",
+        "order": 10
+      }
+    },
+    "headerVar": {
+      "$ref": "#/$defs/DxfHeaderVar",
+      "x-semio-ui": {
+        "label": {
+          "en": "Header variable",
+          "de": "Systemvariable"
+        },
+        "group": "value",
+        "order": 20
+      }
     }
   },
   "$defs": {
@@ -36,10 +63,22 @@
         "groupCode": {
           "type": "integer",
           "minimum": -2147483648,
-          "maximum": 2147483647
+          "maximum": 2147483647,
+          "x-semio-ui": {
+            "label": {
+              "en": "Group code",
+              "de": "Gruppencode"
+            }
+          }
         },
         "value": {
-          "$ref": "#/$defs/DxfValue"
+          "$ref": "#/$defs/DxfValue",
+          "x-semio-ui": {
+            "label": {
+              "en": "Value",
+              "de": "Wert"
+            }
+          }
         },
         "extraGroupCodes": {
           "type": "array",
@@ -58,6 +97,12 @@
             "additionalItems": false,
             "minItems": 2,
             "maxItems": 2
+          },
+          "x-semio-ui": {
+            "label": {
+              "en": "Additional group codes",
+              "de": "Zusätzliche Gruppencodes"
+            }
           }
         }
       }

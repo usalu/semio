@@ -1,0 +1,10 @@
+{
+  "mutation": "bindNodeMesh",
+  "payload": {
+    "phase": "apply",
+    "value": {
+      "node": 0,
+      "mesh": 0
+    }
+  }
+}

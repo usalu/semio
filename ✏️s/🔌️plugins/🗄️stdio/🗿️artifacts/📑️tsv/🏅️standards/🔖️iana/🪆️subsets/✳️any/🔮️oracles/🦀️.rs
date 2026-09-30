@@ -203,8 +203,10 @@ pub fn oracle_apply_mutation(input: &[u8], spec: &Json) -> Result<Vec<u8>, Strin
     let params = mutation_params(spec);
     match spec.str("kind").as_str() {
         "" => Err("mutation spec carries no `kind`".to_string()),
-        "no-mutation" => Ok(input.to_vec()),
-        "set-snapshot" => write_tsv(&TsvBody { records: rows(&params, "records"), trailing_newline: boolean(&params, "trailingNewline").unwrap_or(true), line_ending: line_ending_param(&params, "lineEnding")?.unwrap_or(TsvLineEnding::Lf) }),
+        "set-snapshot" => {
+            let snapshot = params.get("snapshot").cloned().unwrap_or(Json::Null);
+            write_tsv(&TsvBody { records: rows(&snapshot, "records"), trailing_newline: boolean(&snapshot, "trailingNewline").unwrap_or(false), line_ending: line_ending_param(&snapshot, "lineEnding")?.unwrap_or(TsvLineEnding::Lf) })
+        }
         "set-trailing-newline" => {
             let mut body = read_tsv(input)?;
             body.trailing_newline = boolean(&params, "trailingNewline").ok_or("set-trailing-newline: missing `trailingNewline`")?;

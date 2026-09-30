@@ -5,20 +5,27 @@
   "type": "object",
   "additionalProperties": false,
   "required": [
+    "mutation",
     "index",
     "vertex"
   ],
   "properties": {
+    "mutation": {
+      "const": "setVertex",
+      "description": "Aggregate discriminator spliced in by ObjMutation; absent when the payload stands alone."
+    },
     "index": {
       "type": "integer",
       "minimum": 0
     },
     "vertex": {
-      "$ref": "#/$defs/ObjVertex"
-    },
-    "mutation": {
-      "const": "setVertex",
-      "description": "Aggregate discriminator spliced in by ObjMutation; absent when the payload stands alone."
+      "$ref": "#/$defs/ObjVertex",
+      "x-semio-ui": {
+        "label": {
+          "en": "Vertex",
+          "de": "Eckpunkt"
+        }
+      }
     }
   },
   "$defs": {
@@ -48,7 +55,18 @@
             {
               "type": "null"
             }
-          ]
+          ],
+          "x-semio-ui": {
+            "widget": "stepper",
+            "label": {
+              "en": "Weight (w)",
+              "de": "Gewicht (w)"
+            },
+            "description": {
+              "en": "Optional fourth component of a geometric vertex; defaults to 1.",
+              "de": "Optionale vierte Komponente eines geometrischen Eckpunkts; Standard 1."
+            }
+          }
         }
       }
     }

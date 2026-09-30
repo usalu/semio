@@ -1,11 +1,11 @@
 {
   "schemaVersion": 1,
   "mutations": [
-    {"operation":"addCounter","payload":{"delta":5},"text":"add-counter 5","base":10,"next":15,"outcome":"applied","inverseCount":1},
-    {"operation":"addMissingCounter","payload":{},"text":"add-missing-counter","base":10,"next":10,"outcome":"error","inverseCount":0},
-    {"operation":"addUncheckedCounter","payload":{},"text":"add-unchecked-counter","base":10,"next":11,"outcome":"applied","inverseCount":1},
-    {"operation":"addObservedCounter","payload":{},"text":"add-observed-counter","base":10,"next":10,"outcome":"applied","inverseCount":0},
-    {"operation":"addRejectedCounter","payload":{},"text":"add-rejected-counter","base":10,"next":10,"outcome":"fatal","inverseCount":0}
+    {"text":"add-counter 5","base":10,"next":15,"outcome":"applied","inverseCount":1},
+    {"text":"add-missing-counter","base":10,"next":10,"outcome":"error","inverseCount":0},
+    {"text":"add-unchecked-counter","base":10,"next":11,"outcome":"applied","inverseCount":1},
+    {"text":"add-observed-counter","base":10,"next":10,"outcome":"applied","inverseCount":0},
+    {"text":"add-rejected-counter","base":10,"next":10,"outcome":"fatal","inverseCount":0}
   ],
   "addition": [
     {"base":"10","deltas":["3","4"],"expected":"17"},

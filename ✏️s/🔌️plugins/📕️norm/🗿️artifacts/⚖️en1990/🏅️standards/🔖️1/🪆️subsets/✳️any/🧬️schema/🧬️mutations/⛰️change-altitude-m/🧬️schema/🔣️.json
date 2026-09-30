@@ -1,4 +1,28 @@
 {
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/norm/en1990/mutation/change-altitude-m/schema.json",
   "title": "ChangeAltitudeM",
-  "type": "object"
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "mutation",
+    "newAltitudeM"
+  ],
+  "properties": {
+    "mutation": {
+      "const": "changeAltitudeM"
+    },
+    "newAltitudeM": {
+      "type": "number",
+      "x-semio-ui": {
+        "label": {
+          "en": "Site altitude above sea level",
+          "de": "Geländehöhe über NN"
+        },
+        "widget": "stepper",
+        "unit": "m",
+        "precision": 0
+      }
+    }
+  }
 }

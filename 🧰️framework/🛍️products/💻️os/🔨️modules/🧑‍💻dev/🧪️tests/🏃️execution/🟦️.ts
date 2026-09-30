@@ -39,6 +39,7 @@ import {
 class TestScript extends BundleScript {
   async run(segments: string[]): Promise<void> {
     const { rest } = resolveTestLevel(segments);
+    if (rest[0] === "dev-contribution") return runVitest(this.root, ["../../🧪️tests/🧩️contribution/🟦️.ts", ...rest.slice(1)], "../../🧪️tests/🎚️config/🟦️.ts");
     await runVitest(this.root, rest, "../../🧪️tests/🎚️config/🟦️.ts");
   }
 }

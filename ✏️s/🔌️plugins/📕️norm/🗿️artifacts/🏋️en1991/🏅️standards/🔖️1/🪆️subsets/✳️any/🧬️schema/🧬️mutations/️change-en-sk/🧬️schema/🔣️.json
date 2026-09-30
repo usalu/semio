@@ -9,7 +9,23 @@
   ],
   "properties": {
     "newEnSk": {
-      "type": "number"
+      "type": "number",
+      "minimum": 0,
+      "x-semio-ui": {
+        "widget": "stepper",
+        "role": "value",
+        "label": {
+          "en": "Characteristic ground snow load s_k (EN)",
+          "de": "Charakteristischer Wert der Schneelast auf dem Boden s_k (EN)"
+        },
+        "unit": "Pa",
+        "displayUnit": "kN/m²",
+        "displayFactor": 0.001,
+        "step": 50,
+        "precision": 2,
+        "group": "site",
+        "order": 10
+      }
     }
   }
 }

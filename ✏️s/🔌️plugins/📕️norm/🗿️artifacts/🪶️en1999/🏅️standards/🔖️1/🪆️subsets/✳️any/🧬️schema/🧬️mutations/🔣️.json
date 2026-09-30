@@ -1,25 +1,61 @@
 {
-  "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "semio.norm.en1999.mutation",
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/norm/en1999/mutations.json",
   "title": "En1999Mutation",
-  "kinds": [
-    "change-annex",
-    "change-materials",
-    "change-sections",
-    "change-members",
-    "change-connections",
-    "change-fire-scenarios",
-    "change-fatigue-details",
-    "change-cold-formed",
-    "change-shells",
-    "add-member",
-    "remove-member",
-    "change-member-n-ed",
-    "change-member-my-ed",
-    "change-member-buckling-length",
-    "change-material-designation",
-    "change-plate-thickness",
-    "change-weld-throat",
-    "change-bolt-count"
+  "oneOf": [
+    {
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1999/mutation/change-annex/schema.json"
+    },
+    {
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1999/mutation/change-materials/schema.json"
+    },
+    {
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1999/mutation/change-sections/schema.json"
+    },
+    {
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1999/mutation/change-members/schema.json"
+    },
+    {
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1999/mutation/change-connections/schema.json"
+    },
+    {
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1999/mutation/change-fire-scenarios/schema.json"
+    },
+    {
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1999/mutation/change-fatigue-details/schema.json"
+    },
+    {
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1999/mutation/change-cold-formed/schema.json"
+    },
+    {
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1999/mutation/change-shells/schema.json"
+    },
+    {
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1999/mutation/add-member/schema.json"
+    },
+    {
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1999/mutation/remove-member/schema.json"
+    },
+    {
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1999/mutation/change-member-n-ed/schema.json"
+    },
+    {
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1999/mutation/change-member-my-ed/schema.json"
+    },
+    {
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1999/mutation/change-member-buckling-length/schema.json"
+    },
+    {
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1999/mutation/change-material-designation/schema.json"
+    },
+    {
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1999/mutation/change-plate-thickness/schema.json"
+    },
+    {
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1999/mutation/change-weld-throat/schema.json"
+    },
+    {
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1999/mutation/change-bolt-count/schema.json"
+    }
   ]
 }

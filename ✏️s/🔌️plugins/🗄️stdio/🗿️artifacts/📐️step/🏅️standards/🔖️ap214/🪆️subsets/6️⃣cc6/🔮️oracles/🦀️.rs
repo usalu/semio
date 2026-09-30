@@ -52,41 +52,13 @@ mod oracles {
         spec.get("params").cloned().unwrap_or(Json::Object(Vec::new()))
     }
 
-    /// 🌱 The minimal exchange structure `set-snapshot` builds when it is given fields rather than a
-    /// document: a header carrying the stated schema and, optionally, a product identity chain — and
-    /// nothing on the ladder, which is the one shape every conformance class accepts.
-    ///
-    /// The seed carries all three records ISO 10303-21 §8.2 makes mandatory in `HEADER` —
-    /// `FILE_DESCRIPTION`, `FILE_NAME`, `FILE_SCHEMA`. That is not decoration: `ruststep` rejects a
-    /// header with none of them outright ("expected '(', found ;" at the `ENDSEC`), which is the
-    /// reader correctly refusing a document the standard does not permit.
-    fn minimal_document(params: &Json) -> Result<Vec<u8>, String> {
-        let seed = b"ISO-10303-21;\nHEADER;\nFILE_DESCRIPTION((''),'2;1');\nFILE_NAME('','',(''),(''),'','','');\nFILE_SCHEMA(('AUTOMOTIVE_DESIGN'));\nENDSEC;\nDATA;\nENDSEC;\nEND-ISO-10303-21;\n";
-        let mut exchange = part21::read(seed)?;
-        let schemas = part21::str_array(params, "fileSchema");
-        if schemas.is_empty() {
-            return Err("set-snapshot requires a non-empty fileSchema field, or a documentText to restore".to_string());
-        }
-        part21::set_file_schema_names(&mut exchange, &schemas);
-        if let Some(identity) = params.get("productIdentity").filter(|value| !matches!(value, Json::Null)) {
-            ladder::set_product_identity(&mut exchange, Some(identity))?;
-        }
-        Ok(part21::write(&exchange))
-    }
-
     /// 🦠️ One declared kind, performed against a real independently-parsed exchange structure and
     /// re-serialized from the parsed model alone. An unrecognised kind is an error, never a silent
     /// no-op: a quietly skipped mutation reports as a passing test.
     pub fn apply_mutation(input: &[u8], kind: &str, params: &Json) -> Result<Vec<u8>, String> {
-        if kind == "set-snapshot" {
-            return match params.get("documentText") {
-                Some(Json::String(text)) => Ok(part21::write(&part21::read(text.as_bytes())?)),
-                _ => minimal_document(params),
-            };
-        }
         let mut exchange = part21::read(input)?;
         match kind {
-            "no-mutation" => {}
+            "set-snapshot" => part21::replace_with_snapshot(&mut exchange, params.get("snapshot").ok_or("set-snapshot carries `snapshot`")?)?,
             "set-file-schema" => {
                 let schemas = part21::str_array(params, "schemas");
                 if schemas.is_empty() {
@@ -126,17 +98,16 @@ mod oracles {
     pub fn inverse_spec(base: &[u8], kind: &str, _params: &Json) -> Result<Json, String> {
         let exchange = part21::read(base)?;
         let object = |entries: Vec<(&str, Json)>| Json::Object(entries.into_iter().map(|(key, value)| (key.to_string(), value)).collect());
-        let restore = || object(vec![("documentText", Json::String(String::from_utf8_lossy(&part21::write(&exchange)).to_string()))]);
+        let restore = || part21::snapshot_payload(&exchange);
         let (inverse_kind, inverse_params) = match kind {
-            "no-mutation" => ("no-mutation", Json::Object(Vec::new())),
-            "set-snapshot" => ("set-snapshot", restore()),
+            "set-snapshot" => ("set-snapshot", restore()?),
             "set-file-schema" => ("set-file-schema", object(vec![("schemas", Json::Array(part21::file_schema_names(&exchange).into_iter().map(Json::String).collect()))])),
             "set-product-identity" => ("set-product-identity", object(vec![("identity", ladder::product_identity_json(&exchange))])),
             "set-shape-representation" => match ladder::representation_json(&exchange, part21::u64_field(_params, "id")?) {
                 None => ("set-shape-representation", object(vec![("id", Json::Number(part21::u64_field(_params, "id")? as f64)), ("representation", Json::Null)])),
                 Some(row) => match ladder::rung_of(&part21::str_field(&row, "typeName")?) {
                     Some(rung) if rung <= MAX_RUNG => ("set-shape-representation", object(vec![("id", Json::Number(part21::u64_field(_params, "id")? as f64)), ("representation", row)])),
-                    _ => ("set-snapshot", restore()),
+                    _ => ("set-snapshot", restore()?),
                 },
             },
             other => return Err(format!("mutation kind {other:?} has no oracle inverse in {CLASS}")),

@@ -611,12 +611,22 @@ pub mod types {
         pub select_handles: bool,
     }
 
+    /// 🪪️ One pointer gesture's identity and the selection change its press staged. The press changes the
+    /// engine selection at once; its `select` row waits for the release, so `select` and the gesture record
+    /// leave as ONE batch tagged with `id`, and a cancel restores `restore` and publishes nothing.
+    #[derive(Clone, Debug, Default, PartialEq, Eq)]
+    pub struct GestureStage {
+        pub id: String,
+        pub select: Option<(Vec<String>, Option<String>)>,
+        pub restore: Option<BTreeSet<String>>,
+    }
+
     #[derive(Clone, Debug, Default)]
     pub enum Interaction {
         #[default]
         None,
         Pan { origin: Camera, start_screen: Point },
-        DragNodes { offset: Vec2, primary_id: String, start_positions: BTreeMap<String, (f64, f64)>, proximity_pair: Option<(String, String)> },
+        DragNodes { offset: Vec2, primary_id: String, start_positions: BTreeMap<String, (f64, f64)>, proximity_pair: Option<(String, String)>, gesture: GestureStage, delta: Vec2 },
         SelectionPending { initial_ids: BTreeSet<String>, start: Point, start_screen: Point },
         Selection { initial_ids: BTreeSet<String>, points: Vec<Point>, screen_points: Vec<Point>, start: Point, start_screen: Point },
         LinkAtSourceHandle { source_id: String, start_screen: Point },

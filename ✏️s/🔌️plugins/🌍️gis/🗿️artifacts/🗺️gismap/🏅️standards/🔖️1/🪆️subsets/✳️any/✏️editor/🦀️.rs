@@ -587,6 +587,7 @@ fn gis2d_one_item_edit<M>(forward: M, inverse: Vec<M>, description: Option<Strin
             label: None,
             group_id: authority.group_id().map(str::to_owned),
             origin: Default::default(),
+            transaction: None,
         }],
         description,
         coalesce_key: None,

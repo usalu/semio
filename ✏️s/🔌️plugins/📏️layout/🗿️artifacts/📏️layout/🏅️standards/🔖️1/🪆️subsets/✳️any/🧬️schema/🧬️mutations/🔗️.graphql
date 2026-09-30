@@ -126,15 +126,15 @@ type ImageLink {
 }
 
 type RenameLayout {
-  new_name: String!
+  newName: String!
 }
 
 type ChangePrintTarget {
-  new_print_target: String
+  newPrintTarget: String
 }
 
 type ChangeDataFields {
-  new_json: String
+  newJson: String
 }
 
 type CreatePage {
@@ -148,17 +148,17 @@ type DeletePage {
 
 type RenamePage {
   id: String!
-  new_name: String!
+  newName: String!
 }
 
 type ChangePageWidth {
   id: String!
-  new_width: Float!
+  newWidth: Float!
 }
 
 type ChangePageHeight {
   id: String!
-  new_height: Float!
+  newHeight: Float!
 }
 
 type UpdatePageMargins {
@@ -177,7 +177,7 @@ type UpdatePageColumns {
 
 type ReorderPages {
   id: String!
-  to_index: Int!
+  toIndex: Int!
 }
 
 type CreateStory {
@@ -191,7 +191,7 @@ type DeleteStory {
 
 type EditStory {
   id: String!
-  new_content: String!
+  newContent: String!
 }
 
 type CreateLink {
@@ -205,74 +205,74 @@ type DeleteLink {
 
 type ChangeLinkPath {
   id: String!
-  new_path: String!
+  newPath: String!
 }
 
 type CreateFrame {
-  page_id: String!
+  pageId: String!
   frame: Frame!
   index: Int
-  layer_id: String
+  layerId: String
 }
 
 type DeleteFrame {
-  page_id: String!
-  frame_id: String!
+  pageId: String!
+  frameId: String!
 }
 
 type MoveFrame {
-  page_id: String!
-  frame_id: String!
-  new_x: Float!
-  new_y: Float!
+  pageId: String!
+  frameId: String!
+  newX: Float!
+  newY: Float!
 }
 
 type ResizeFrame {
-  page_id: String!
-  frame_id: String!
-  new_width: Float!
-  new_height: Float!
+  pageId: String!
+  frameId: String!
+  newWidth: Float!
+  newHeight: Float!
 }
 
 type RotateFrame {
-  page_id: String!
-  frame_id: String!
-  new_rotation: Float!
+  pageId: String!
+  frameId: String!
+  newRotation: Float!
 }
 
 type ChangeFrameFill {
-  page_id: String!
-  frame_id: String!
-  new_fill: [Float!]
+  pageId: String!
+  frameId: String!
+  newFill: [Float!]
 }
 
 type ChangeFrameStroke {
-  page_id: String!
-  frame_id: String!
-  new_stroke: [Float!]
+  pageId: String!
+  frameId: String!
+  newStroke: [Float!]
 }
 
 type ChangeFrameWrapMode {
-  page_id: String!
-  frame_id: String!
-  new_wrap_mode: String!
+  pageId: String!
+  frameId: String!
+  newWrapMode: String!
 }
 
 type ChangeFrameColumns {
-  page_id: String!
-  frame_id: String!
-  new_columns: Int!
+  pageId: String!
+  frameId: String!
+  newColumns: Int!
 }
 
 type UpdateGrid {
-  baseline_grid: Float!
-  baseline_offset: Float!
-  snap_to_baseline: Boolean!
+  baselineGrid: Float!
+  baselineOffset: Float!
+  snapToBaseline: Boolean!
 }
 
 type SetFrameFlags {
-  page_id: String!
-  frame_id: String!
+  pageId: String!
+  frameId: String!
   locked: Boolean
   visible: Boolean
 }
@@ -280,47 +280,116 @@ type SetFrameFlags {
 type UpdateParagraphStyle {
   id: String!
   name: String!
-  font_family: String!
-  font_size: Float!
-  font_weight: Int!
+  fontFamily: String!
+  fontSize: Float!
+  fontWeight: Int!
   leading: Float!
   tracking: Float!
   alignment: String!
 }
 
 type UpdateTextFrame {
-  page_id: String!
-  frame_id: String!
-  story_id: String!
-  thread_next: String
-  inset_x: Float!
-  inset_y: Float!
-  inset_width: Float!
-  inset_height: Float!
+  pageId: String!
+  frameId: String!
+  storyId: String!
+  threadNext: String
+  insetX: Float!
+  insetY: Float!
+  insetWidth: Float!
+  insetHeight: Float!
 }
 
 type UpdateLayer {
-  page_id: String!
-  layer_id: String!
+  pageId: String!
+  layerId: String!
   name: String!
   visible: Boolean!
   locked: Boolean!
 }
 
-type CreateCharacterStyle { id: String! }
-type DeleteCharacterStyle { id: String! }
-type UpdateCharacterStyle { id: String! }
-type UpdateParentPage { id: String! }
-type UpdateSpread { id: String! }
-type SetPageParent { id: String! }
-type SetPageGuides { id: String! }
-type SetStoryRuns { id: String! }
-type UpdateLink { id: String! }
-type SetPageOverrides { id: String! }
-type CreateLayer { id: String! }
-type SetFrameLayer { id: String! }
-type SetDrawingText { id: String! }
-type ReorderFrame { id: String! }
+type CreateCharacterStyle {
+  id: String!
+  name: String
+}
+
+type DeleteCharacterStyle {
+  id: String!
+}
+
+type UpdateCharacterStyle {
+  id: String!
+  name: String
+  fontFamily: String
+  fontSize: Float
+  fontWeight: Int
+  italic: Boolean
+  color: [Float!]
+  tracking: Float
+}
+
+type UpdateParentPage {
+  id: String!
+  name: String!
+  width: Float!
+  height: Float!
+}
+
+type UpdateSpread {
+  id: String!
+  name: String!
+}
+
+type SetPageParent {
+  id: String!
+  parentPageId: String
+}
+
+type SetPageGuides {
+  id: String!
+  guides: [LayoutRect!]!
+}
+
+type SetStoryRuns {
+  id: String!
+  runs: [TextStyleRun!]!
+}
+
+type UpdateLink {
+  id: String!
+  width: Int!
+  height: Int!
+  dpi: Int!
+  colorProfile: String
+}
+
+type SetPageOverrides {
+  id: String!
+  overrides: [PageOverride!]!
+}
+
+type CreateLayer {
+  pageId: String!
+  id: String!
+  name: String!
+  remove: Boolean!
+}
+
+type SetFrameLayer {
+  pageId: String!
+  frameId: String!
+  layerId: String!
+}
+
+type SetDrawingText {
+  index: Int!
+  text: String!
+}
+
+type ReorderFrame {
+  pageId: String!
+  frameId: String!
+  forward: Boolean!
+}
 
 union LayoutMutation =
     RenameLayout

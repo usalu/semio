@@ -9,7 +9,7 @@
     "height"
   ],
   "properties": {
-    "width": { "type": "integer", "minimum": 1, "maximum": 512 },
-    "height": { "type": "integer", "minimum": 1, "maximum": 512 }
+    "width": { "type": "integer", "minimum": 1, "maximum": 512, "x-semio-ui": { "widget": "stepper", "role": "value", "label": { "en": "Width", "de": "Breite" }, "unit": "px", "step": 1, "precision": 0, "group": "size", "order": 10 } },
+    "height": { "type": "integer", "minimum": 1, "maximum": 512, "x-semio-ui": { "widget": "stepper", "role": "value", "label": { "en": "Height", "de": "Höhe" }, "unit": "px", "step": 1, "precision": 0, "group": "size", "order": 20 } }
   }
 }

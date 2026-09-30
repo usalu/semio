@@ -5,15 +5,57 @@
   "type": "object",
   "additionalProperties": false,
   "required": [
+    "mutation",
     "id",
     "zoneId"
   ],
   "properties": {
+    "mutation": {
+      "const": "addAirLoopTerminalZone"
+    },
     "id": {
-      "type": "integer"
+      "type": "integer",
+      "minimum": 0,
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Air loop",
+          "de": "Luftkreislauf"
+        },
+        "description": {
+          "en": "The air loop this mutation changes, by id.",
+          "de": "Luftkreislauf, den diese Mutation ändert, per ID."
+        },
+        "ref": {
+          "kind": "airLoop"
+        },
+        "group": "target",
+        "order": 10
+      }
     },
     "zoneId": {
-      "type": "integer"
+      "type": "integer",
+      "minimum": 0,
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Served zone",
+          "de": "Versorgte Zone"
+        },
+        "description": {
+          "en": "Zone the air loop starts serving, by id.",
+          "de": "Zone, die der Luftkreislauf zusätzlich versorgt, per ID."
+        },
+        "ref": {
+          "kind": "zone",
+          "domain": "energyModel",
+          "granularity": "zone"
+        },
+        "group": "member",
+        "order": 20
+      }
     }
   }
 }

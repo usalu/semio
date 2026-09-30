@@ -27,6 +27,10 @@ Feature: Answer every committed puzzle2d vector with four third-party Python lib
   `affinity.scale(origin=…)` about the node's own position, `change-node-anchor` becomes a claim of
   geometric invariance, and `replace-node-geometry`'s null-dropping circle→rectangle rebuild is held
   to the area its own arguments imply (πr², or width × height) and to a centroid that did not move.
+  The three parametric selection transforms are held to `affinity.translate`, `affinity.rotate` and
+  `affinity.scale` about their recorded pivot, survivor by survivor: a node footprint moves to where
+  the library puts its centre and keeps its area, a target region translates or scales as a whole
+  rectangle, and a locked, absent or (for a rotation) rectangular member does not move at all.
   Every other kind is required to leave every footprint on the board exactly where it was.
 
   **`jsonschema` (MIT) speaks the PAYLOAD SHAPE.** Every committed `🦠️mutation`, with its
@@ -92,6 +96,7 @@ Feature: Answer every committed puzzle2d vector with four third-party Python lib
     And scale-node equals shapely's scale about the node's own position and multiplies the area by its square
     And change-node-anchor leaves the footprint geometrically equal
     And replace-node-geometry rebuilds an extent whose area its arguments imply and whose centroid did not move
+    And drag-selection, rotate-selection and scale-selection move exactly their unlocked survivors to where shapely's translate, rotate and scale put each centre, without resizing a node, while a target region translates or scales as a whole rectangle and never rotates
     And every other kind leaves every footprint on the board exactly where it was
 
   @id-payload-schemas
@@ -101,7 +106,8 @@ Feature: Answer every committed puzzle2d vector with four third-party Python lib
     Given every committed vector under shared://🧬️mutations/🔣️.json
     When each payload is validated against its leaf 🧬️schema/🔣️.json by the draft the schema itself names
     Then the committed payload carries its kind's own internally tagged discriminator
-    And the validator accepts the committed payload with no error
+    And the validator accepts every committed payload whose outcome is not a mutation.invariant refusal, with no error
+    And the validator rejects every committed payload the subject refuses as a mutation.invariant, because its own schema forbids it
     And the validator rejects the same payload once a member the schema does not declare is added
 
   @id-diff-reproduction

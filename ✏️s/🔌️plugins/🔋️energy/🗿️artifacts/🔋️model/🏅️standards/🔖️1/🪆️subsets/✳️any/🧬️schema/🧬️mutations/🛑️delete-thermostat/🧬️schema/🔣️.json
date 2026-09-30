@@ -5,11 +5,35 @@
   "type": "object",
   "additionalProperties": false,
   "required": [
+    "mutation",
     "id"
   ],
   "properties": {
+    "mutation": {
+      "const": "deleteThermostat"
+    },
     "id": {
-      "type": "integer"
+      "type": "integer",
+      "minimum": 0,
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Thermostat",
+          "de": "Thermostat"
+        },
+        "description": {
+          "en": "The thermostat to delete, by id.",
+          "de": "Thermostat, den diese Mutation löscht, per ID."
+        },
+        "ref": {
+          "kind": "thermostat",
+          "domain": "energyModel",
+          "granularity": "thermostat"
+        },
+        "group": "target",
+        "order": 10
+      }
     }
   }
 }

@@ -40,7 +40,7 @@ pub struct HtmlDiff {
 //#region 🔖️NodeDiff
 /// 🌳 Recursive per-node diff, shaped like the `HtmlNode` it targets.
 #[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
-#[value(tag = "kind", rename_all = "camelCase")]
+#[value(tag = "kind", rename_all = "camelCase", rename_all_fields = "camelCase")]
 pub enum HtmlNodeDiff {
     Element(HtmlElementDiff),
     Text {

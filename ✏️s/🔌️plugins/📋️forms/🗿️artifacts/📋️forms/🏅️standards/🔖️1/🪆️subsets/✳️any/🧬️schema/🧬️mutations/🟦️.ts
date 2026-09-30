@@ -1,10 +1,9 @@
 /** 🧬️ FormsMutation union — closed semantic mutation vocabulary for the forms document.
  * Mirrors Rust `FormMutation` (sibling `🦀️.rs`'s `KINDS`,
  * `#[serde(tag = "mutation", rename_all = "camelCase")]`), same declaration order.
- * The enum-level `rename_all` renames the VARIANTS (the `mutation` tag), not the payload
- * fields: none of the payload structs carries its own `#[serde(rename_all)]`, so every
- * payload field stays snake_case — confirmed against the committed
- * committed per-verb `🧪️tests` mutation fixtures (e.g. `"new_description": null`).
+ * The enum-level `rename_all` renames the VARIANTS (the `mutation` tag); every payload struct
+ * carries its own `#[value(rename_all = "camelCase")]`, so every payload field is camelCase too,
+ * as in the committed per-verb mutation fixtures (e.g. `"newDescription": null`).
  * Payloads are imported from each verb's own `🦠️mutation` leaf; `changeStepDescription`
  * is declared inline because that verb has no TS leaf on disk (Rust only). */
 
@@ -74,7 +73,7 @@ export interface FormStep {
  * (`📝change-step-description/🦠️mutation/🦀️.rs`); that verb has no TS leaf on disk. */
 export interface ChangeStepDescription {
   id: string;
-  new_description: string | null;
+  newDescription: string | null;
 }
 
 export type FormsMutation =

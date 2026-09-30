@@ -5,10 +5,15 @@
   "type": "object",
   "additionalProperties": false,
   "required": [
+    "mutation",
     "index",
     "row"
   ],
   "properties": {
+    "mutation": {
+      "const": "insertRow",
+      "description": "Aggregate discriminator spliced in by TsvMutation; absent when the payload stands alone."
+    },
     "index": {
       "type": "integer",
       "minimum": 0
@@ -18,10 +23,6 @@
       "items": {
         "type": "string"
       }
-    },
-    "mutation": {
-      "const": "insertRow",
-      "description": "Aggregate discriminator spliced in by TsvMutation; absent when the payload stands alone."
     }
   }
 }

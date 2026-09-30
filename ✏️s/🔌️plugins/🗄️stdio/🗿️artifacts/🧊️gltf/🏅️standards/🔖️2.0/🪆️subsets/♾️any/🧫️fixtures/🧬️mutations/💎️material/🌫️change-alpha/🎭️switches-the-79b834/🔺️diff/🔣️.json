@@ -1,8 +1,12 @@
 {
-  "material": 0,
-  "expectedAlphaMode": "OPAQUE",
-  "alphaMode": "MASK",
-  "touchedPaths": [
-    "document/materials/0/alphaMode"
-  ]
+  "materials": {
+    "modified": [
+      {
+        "index": 0,
+        "diff": {
+          "alphaMode": "MASK"
+        }
+      }
+    ]
+  }
 }

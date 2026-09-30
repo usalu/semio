@@ -1,5 +1,5 @@
 {
-  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$schema": "http://json-schema.org/draft-07/schema#",
   "$id": "https://semio.tech/test/procedural/generation2d/window-camera-ownership",
   "type": "object",
   "additionalProperties": false,
@@ -36,7 +36,7 @@
     "mutations": { "type": "array", "items": { "$ref": "#/$defs/addressedMutation" }, "minItems": 6 },
     "expected": { "type": "object", "additionalProperties": { "$ref": "#/$defs/config" } },
     "rejections": { "type": "array", "items": { "$ref": "#/$defs/rejection" }, "minItems": 3 },
-    "canvasCommands": { "type": "array", "minItems": 4, "maxItems": 4, "prefixItems": [{"const":"canvas-pointer-down"},{"const":"canvas-pointer-move"},{"const":"canvas-pointer-up"},{"const":"canvas-wheel"}], "items": false }
+    "canvasCommands": { "type": "array", "minItems": 4, "maxItems": 4, "items": [{"const":"canvas-pointer-down"},{"const":"canvas-pointer-move"},{"const":"canvas-pointer-up"},{"const":"canvas-wheel"}], "additionalItems": false }
   },
   "$defs": {
     "viewport": {

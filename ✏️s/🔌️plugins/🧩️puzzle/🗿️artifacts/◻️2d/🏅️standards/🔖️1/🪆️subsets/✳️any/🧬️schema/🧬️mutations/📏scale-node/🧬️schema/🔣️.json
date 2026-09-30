@@ -11,16 +11,70 @@
   ],
   "properties": {
     "mutation": {
-      "const": "scaleNode"
+      "const": "scaleNode",
+      "x-semio-ui": {
+        "widget": "hidden",
+        "role": "discriminator",
+        "label": {
+          "en": "Mutation",
+          "de": "Mutation"
+        }
+      }
     },
     "id": {
-      "type": "string"
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Node",
+          "de": "Knoten"
+        },
+        "description": {
+          "en": "The node this mutation addresses.",
+          "de": "Der Knoten, den diese Mutation adressiert."
+        },
+        "ref": {
+          "kind": "node",
+          "domain": "vortex",
+          "granularity": "node"
+        },
+        "group": "target",
+        "order": 10
+      }
     },
     "newScale": {
       "type": [
         "number",
         "null"
-      ]
+      ],
+      "exclusiveMinimum": 0,
+      "x-semio-ui": {
+        "widget": "slider",
+        "role": "value",
+        "label": {
+          "en": "Scale",
+          "de": "Skalierung"
+        },
+        "description": {
+          "en": "The node's own size factor; empty resets to 1.",
+          "de": "Eigener Größenfaktor des Knotens; leer setzt auf 1 zurück."
+        },
+        "step": 0.01,
+        "precision": 2,
+        "softMin": 0.1,
+        "softMax": 10,
+        "scale": "log",
+        "snaps": [
+          0.25,
+          0.5,
+          1,
+          2,
+          4
+        ],
+        "group": "appearance",
+        "order": 20
+      }
     }
   }
 }

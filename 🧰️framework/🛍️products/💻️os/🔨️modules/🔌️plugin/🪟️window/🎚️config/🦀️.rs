@@ -145,6 +145,7 @@ impl<O: WindowConfigOwner> store::ArtifactStoreOneItemPreparation<O::State, O::M
                 label: None,
                 group_id: None,
                 origin: Default::default(),
+                transaction: None,
             }],
             description: self.description.clone(),
             coalesce_key: None,
@@ -444,7 +445,7 @@ impl<O: WindowConfigOwner> ErasedWindowConfigStoreOwner for TypedWindowConfigSto
             partition.store.set_local_actor_id(Some(actor.to_string())).map_err(|error| error.into_fault())?;
             let command = match coalesce_key {
                 Some(key) => store::ArtifactCommand::AmendLast { mutations: vec![*typed], coalesce_key: Some(format!("window:{window_id}:{key}")) },
-                None => store::ArtifactCommand::Apply { mutations: vec![*typed], description },
+                None => store::ArtifactCommand::Apply { mutations: vec![*typed], description, transaction: None },
             };
             partition.store.dispatch(command).await.map_err(|error| error.into_fault())?;
             Ok(())
@@ -481,7 +482,7 @@ impl<O: WindowConfigOwner> ErasedWindowConfigStoreOwner for TypedWindowConfigSto
             return Err(reject(typed, "window-config.partition", "captured window config partition is absent"));
         };
         let factory = O::build_one_item_preparation_factory();
-        let mut publication = match partition.store.begin_apply_batch(operation, authority.generation, authority.revision, actor, vec![*typed], None, store::HistoryLane::Document, Some(&factory)) {
+        let mut publication = match partition.store.begin_apply_batch(operation, authority.generation, authority.revision, actor, vec![*typed], None, store::HistoryLane::Document, Some(&factory), None) {
             Ok(publication) => publication,
             Err(rejected) => {
                 let (reason, mut mutations, _) = rejected.into_owners();

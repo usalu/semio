@@ -1,0 +1,13 @@
+{
+  "mutation": "patch-pixels",
+  "payload": {
+    "index": 4,
+    "removeCount": 4,
+    "pixels": [
+      0,
+      255,
+      0,
+      255
+    ]
+  }
+}

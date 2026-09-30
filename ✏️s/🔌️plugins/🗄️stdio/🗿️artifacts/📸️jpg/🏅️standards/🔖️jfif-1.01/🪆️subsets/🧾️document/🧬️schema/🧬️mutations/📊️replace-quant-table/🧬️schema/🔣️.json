@@ -30,7 +30,18 @@
         "precision": {
           "type": "integer",
           "minimum": 0,
-          "maximum": 255
+          "maximum": 255,
+          "x-semio-ui": {
+            "widget": "stepper",
+            "label": {
+              "en": "Table precision",
+              "de": "Tabellengenauigkeit"
+            },
+            "description": {
+              "en": "Pq: 0 = 8-bit, 1 = 16-bit quantization values.",
+              "de": "Pq: 0 = 8-Bit-, 1 = 16-Bit-Quantisierungswerte."
+            }
+          }
         },
         "values": {
           "type": "array",

@@ -10,11 +10,32 @@
   ],
   "properties": {
     "tileId": {
-      "type": "string"
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Tile",
+          "de": "Kachel"
+        },
+        "ref": {
+          "kind": "tile"
+        },
+        "group": "target",
+        "order": 10
+      }
     },
     "media": {
-      "$comment": "Grid3dTileMedia — tagged by `kind`.",
-      "type": "object"
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/wfc/grid3d/1/any/snapshot/schema.json#/$defs/Grid3dTileMedia",
+      "x-semio-ui": {
+        "role": "value",
+        "label": {
+          "en": "Tile media",
+          "de": "Kachelmedien"
+        },
+        "group": "record",
+        "order": 20
+      }
     }
   }
 }

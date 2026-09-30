@@ -28,7 +28,7 @@ pub fn apply(payload: &GltfCreateImagePayload, base: &GltfSnapshot) -> Result<Gl
 
 //#region 🧬️DirectMutation
 #[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::MutationLeaf)]
-#[mutation_leaf(contract = ::protocol)]
+#[mutation_leaf(contract = ::protocol, payload = Apply)]
 #[value(tag = "phase", content = "value", rename_all = "camelCase")]
 pub enum CreateImageMutation {
     Apply(GltfCreateImagePayload),
@@ -72,6 +72,6 @@ impl protocol::MutationKind<GltfSnapshot, super::GltfMutation> for CreateImageMu
 
 //#region 🧪️Tests
 #[cfg(test)]
-#[path = "🧪️tests/🔬️direct-leaf/🦀️.rs"]
-mod direct_leaf_tests;
+#[path = "🧪️tests/🖼️inserts-an-empty-e3b07a/🦀️.rs"]
+mod case_inserts_an_empty_e3b07a;
 //#endregion 🧪️Tests

@@ -5,12 +5,34 @@
   "type": "object",
   "additionalProperties": false,
   "required": [
+    "mutation",
     "id",
     "newFaultType"
   ],
   "properties": {
+    "mutation": {
+      "const": "changeFaultType"
+    },
     "id": {
-      "type": "integer"
+      "type": "integer",
+      "minimum": 0,
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Fault",
+          "de": "Fehler"
+        },
+        "description": {
+          "en": "The fault this mutation changes, by id.",
+          "de": "Fehler, den diese Mutation ändert, per ID."
+        },
+        "ref": {
+          "kind": "fault"
+        },
+        "group": "target",
+        "order": 10
+      }
     },
     "newFaultType": {
       "enum": [
@@ -19,7 +41,39 @@
         "DamperStuck",
         "ChillerFouling",
         "BoilerEfficiencyDegradation"
-      ]
+      ],
+      "x-semio-ui": {
+        "widget": "select",
+        "role": "value",
+        "label": {
+          "en": "Fault type",
+          "de": "Fehlertyp"
+        },
+        "options": {
+          "SensorBias": {
+            "en": "Sensor bias",
+            "de": "Sensorabweichung"
+          },
+          "CoilFouling": {
+            "en": "Coil fouling",
+            "de": "Registerverschmutzung"
+          },
+          "DamperStuck": {
+            "en": "Stuck damper",
+            "de": "Klemmende Klappe"
+          },
+          "ChillerFouling": {
+            "en": "Chiller fouling",
+            "de": "Verschmutzung der Kältemaschine"
+          },
+          "BoilerEfficiencyDegradation": {
+            "en": "Boiler efficiency degradation",
+            "de": "Wirkungsgradverlust des Kessels"
+          }
+        },
+        "group": "fault",
+        "order": 20
+      }
     }
   }
 }

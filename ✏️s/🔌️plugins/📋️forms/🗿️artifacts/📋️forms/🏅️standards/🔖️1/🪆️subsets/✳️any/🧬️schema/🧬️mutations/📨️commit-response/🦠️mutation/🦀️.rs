@@ -4,6 +4,7 @@ use protocol::{MutationKind, SemanticDescriptor};
 
 #[derive(Clone, Debug, PartialEq, dsl::ToValue, dsl::FromValue, dsl::MutationLeaf)]
 #[mutation_leaf(contract = ::protocol)]
+#[value(rename_all = "camelCase")]
 pub struct CommitResponse {
     pub response: crate::schema::response::FormsResponse,
     pub index: Option<usize>,

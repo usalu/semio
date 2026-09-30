@@ -17,11 +17,11 @@
 use crate::mutations::{apply_presentation_mutation, inverse_presentation_mutation, PresentationMutation};
 use crate::{default_figure_tile_source, PresentationDiff, PresentationSnapshot};
 
-const BEFORE: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🔲resize-source-frame/🧪️no-ops-when-the-frame-is-already-identical/📸️snapshot/⬅️before/🔣️.json");
-const AFTER: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🔲resize-source-frame/🧪️no-ops-when-the-frame-is-already-identical/📸️snapshot/➡️after/🔣️.json");
-const MUTATION: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🔲resize-source-frame/🧪️no-ops-when-the-frame-is-already-identical/🦠️mutation/🔣️.json");
-const DIFF: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🔲resize-source-frame/🧪️no-ops-when-the-frame-is-already-identical/🔺️diff/🔣️.json");
-const OUTCOME: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🔲resize-source-frame/🧪️no-ops-when-the-frame-is-already-identical/🎯️outcome/🔣️.json");
+const BEFORE: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🔲resize-source-frame/🧪️no-ops-when-frame-is-already-identical/📸️snapshot/⬅️before/🔣️.json");
+const AFTER: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🔲resize-source-frame/🧪️no-ops-when-frame-is-already-identical/📸️snapshot/➡️after/🔣️.json");
+const MUTATION: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🔲resize-source-frame/🧪️no-ops-when-frame-is-already-identical/🦠️mutation/🔣️.json");
+const DIFF: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🔲resize-source-frame/🧪️no-ops-when-frame-is-already-identical/🔺️diff/🔣️.json");
+const OUTCOME: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🔲resize-source-frame/🧪️no-ops-when-frame-is-already-identical/🎯️outcome/🔣️.json");
 
 fn mutation() -> PresentationMutation {
     dsl::os_pack::from_json_str(MUTATION).expect("mutation decodes")

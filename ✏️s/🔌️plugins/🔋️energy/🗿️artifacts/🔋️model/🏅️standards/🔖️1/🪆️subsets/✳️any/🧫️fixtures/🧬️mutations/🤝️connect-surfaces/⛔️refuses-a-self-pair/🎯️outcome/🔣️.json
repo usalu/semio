@@ -4,5 +4,6 @@
   "path": [
     "3",
     "3"
-  ]
+  ],
+  "invariant": "distinct-surfaces"
 }

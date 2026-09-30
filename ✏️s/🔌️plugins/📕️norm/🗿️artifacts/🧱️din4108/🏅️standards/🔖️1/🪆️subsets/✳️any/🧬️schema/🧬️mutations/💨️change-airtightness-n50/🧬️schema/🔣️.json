@@ -9,7 +9,21 @@
   ],
   "properties": {
     "newAirtightnessN50": {
-      "type": "number"
+      "type": "number",
+      "minimum": 0,
+      "x-semio-ui": {
+        "widget": "stepper",
+        "role": "value",
+        "label": {
+          "en": "Air change rate at 50 Pa n₅₀",
+          "de": "Luftwechselrate bei 50 Pa n₅₀"
+        },
+        "unit": "1/h",
+        "step": 0.1,
+        "precision": 2,
+        "group": "climate",
+        "order": 10
+      }
     }
   }
 }

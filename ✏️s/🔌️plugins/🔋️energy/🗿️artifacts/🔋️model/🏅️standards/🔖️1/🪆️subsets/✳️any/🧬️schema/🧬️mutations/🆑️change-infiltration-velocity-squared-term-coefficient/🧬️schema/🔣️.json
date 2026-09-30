@@ -5,15 +5,53 @@
   "type": "object",
   "additionalProperties": false,
   "required": [
+    "mutation",
     "id",
     "newVelocitySquaredTermCoefficient"
   ],
   "properties": {
+    "mutation": {
+      "const": "changeInfiltrationVelocitySquaredTermCoefficient"
+    },
     "id": {
-      "type": "integer"
+      "type": "integer",
+      "minimum": 0,
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Infiltration",
+          "de": "Infiltration"
+        },
+        "description": {
+          "en": "The infiltration this mutation changes, by id.",
+          "de": "Infiltration, die diese Mutation ändert, per ID."
+        },
+        "ref": {
+          "kind": "infiltration",
+          "domain": "energyModel",
+          "granularity": "load"
+        },
+        "group": "target",
+        "order": 10
+      }
     },
     "newVelocitySquaredTermCoefficient": {
-      "type": "number"
+      "type": "number",
+      "minimum": 0,
+      "x-semio-ui": {
+        "widget": "stepper",
+        "role": "value",
+        "label": {
+          "en": "Wind velocity squared term coefficient D",
+          "de": "Quadratischer Windkoeffizient D"
+        },
+        "unit": "s²/m²",
+        "step": 0.001,
+        "precision": 4,
+        "group": "infiltration",
+        "order": 20
+      }
     }
   }
 }

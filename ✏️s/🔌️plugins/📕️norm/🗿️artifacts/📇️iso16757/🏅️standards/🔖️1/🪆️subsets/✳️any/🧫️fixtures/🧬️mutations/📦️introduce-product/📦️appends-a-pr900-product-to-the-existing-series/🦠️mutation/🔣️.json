@@ -2,18 +2,18 @@
   "IntroduceProduct": {
     "product": {
       "id": "product.pr900",
-      "series_id": "series-pr",
+      "seriesId": "series-pr",
       "names": {
         "preferred": {
           "locale": "en",
           "text": "PR-900"
         },
-        "short_name": null,
+        "shortName": null,
         "alternatives": []
       },
-      "parameter_domains": [],
+      "parameterDomains": [],
       "variants": [],
-      "static_properties": []
+      "staticProperties": []
     },
     "index": null
   }

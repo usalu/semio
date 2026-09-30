@@ -218,12 +218,16 @@ mod panel_kit_tests {
             edit_id: Some(format!("edit-{seq}")),
             config_edit_id: None,
             child_edit_ids: Vec::new(),
+            transition_id: None,
+            author: None,
             op_lines: Vec::new(),
             op_count: 0,
             applied: true,
             revertible: false,
             count: 1,
             inverse: None,
+            transaction: None,
+            mutations: Vec::new(),
         };
         let history = HistoryView {
             columns: Vec::new(),
@@ -235,7 +239,7 @@ mod panel_kit_tests {
             command_filter: HistoryCommandFilter::All,
         };
         let view = ViewModel { tree_viewport_rows: Some(500), ..ViewModel::default() };
-        let panel = ui_history_panel(&history, "ctrl", false, false, &view).await.expect("a log of any length must assemble");
+        let panel = ui_history_panel(&history, None, "ctrl", Locale::En, false, &view).await.expect("a log of any length must assemble");
         let commands = &panel.children[1];
         let fixed = body_nodes(&panel) - commands.children.len() - 1;
         assert_eq!(section_window(commands), Some(TreeWindow { row_extent: Default::default(), total: 300, offset: 0 }), "the scrollbar spans the whole log");
@@ -623,12 +627,16 @@ mod panel_kit_tests {
             edit_id: Some(format!("edit-{seq}")),
             config_edit_id: None,
             child_edit_ids: Vec::new(),
+            transition_id: None,
+            author: None,
             op_lines: Vec::new(),
             op_count: 0,
             applied: true,
             revertible: false,
             count: 1,
             inverse: None,
+            transaction: None,
+            mutations: Vec::new(),
         };
         let history = HistoryView {
             columns: Vec::new(),
@@ -639,7 +647,7 @@ mod panel_kit_tests {
             commands: (1..=100).map(entry).collect(),
             command_filter: HistoryCommandFilter::All,
         };
-        let panel = ui_history_panel(&history, "ctrl", false, false, &ViewModel::default()).await.expect("bounded fixture");
+        let panel = ui_history_panel(&history, None, "ctrl", Locale::En, false, &ViewModel::default()).await.expect("bounded fixture");
         let commands = &panel.children[1];
         assert_eq!(commands.children.len(), (TREE_WINDOW_DEFAULT_ROWS as usize).min(UI_BUILT_CHILDREN_MAX), "a cold paint materialises one viewport of commands, clamped by the built-children ceiling");
         assert_eq!(section_window(commands), Some(TreeWindow { row_extent: Default::default(), total: 100, offset: 0 }), "the scrollbar spans the whole log");

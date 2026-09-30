@@ -5,6 +5,7 @@
   "type": "object",
   "additionalProperties": false,
   "required": [
+    "mutation",
     "id",
     "name",
     "surfaceId",
@@ -23,56 +24,317 @@
     "glazingConstructionId"
   ],
   "properties": {
+    "mutation": {
+      "const": "createFenestration"
+    },
     "id": {
-      "type": "integer"
+      "type": "integer",
+      "minimum": 0,
+      "x-semio-ui": {
+        "widget": "stepper",
+        "role": "value",
+        "label": {
+          "en": "ID",
+          "de": "ID"
+        },
+        "description": {
+          "en": "Id the new window is created under; later mutations address it by this id.",
+          "de": "ID, unter der das neue Objekt angelegt wird; spätere Mutationen adressieren es darüber."
+        },
+        "step": 1,
+        "precision": 0,
+        "group": "identity",
+        "order": 10
+      }
     },
     "name": {
-      "type": "string"
+      "type": "string",
+      "pattern": "[^\\t\\n\\u000B\\f\\r \\u0085\\u00A0\\u1680\\u2000-\\u200A\\u2028\\u2029\\u202F\\u205F\\u3000]",
+      "x-semio-ui": {
+        "widget": "text",
+        "role": "value",
+        "label": {
+          "en": "Name",
+          "de": "Name"
+        },
+        "group": "identity",
+        "order": 20
+      }
     },
     "surfaceId": {
-      "type": "integer"
+      "type": "integer",
+      "minimum": 0,
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Host surface",
+          "de": "Trägerfläche"
+        },
+        "description": {
+          "en": "Surface the window sits in, by id.",
+          "de": "Oberfläche, in der das Fenster sitzt, per ID."
+        },
+        "ref": {
+          "kind": "surface",
+          "domain": "energyModel",
+          "granularity": "surface"
+        },
+        "group": "assignment",
+        "order": 30
+      }
     },
     "uValueWM2k": {
-      "type": "number"
+      "type": "number",
+      "exclusiveMinimum": 0,
+      "x-semio-ui": {
+        "widget": "stepper",
+        "role": "value",
+        "label": {
+          "en": "U-value",
+          "de": "U-Wert"
+        },
+        "description": {
+          "en": "Thermal transmittance of the whole window.",
+          "de": "Wärmedurchgangskoeffizient des gesamten Fensters."
+        },
+        "unit": "W/(m²·K)",
+        "step": 0.01,
+        "precision": 2,
+        "group": "thermal",
+        "order": 40
+      }
     },
     "shgc": {
-      "type": "number"
+      "type": "number",
+      "minimum": 0,
+      "maximum": 1,
+      "x-semio-ui": {
+        "widget": "slider",
+        "role": "value",
+        "label": {
+          "en": "Solar heat gain coefficient",
+          "de": "Gesamtenergiedurchlassgrad"
+        },
+        "description": {
+          "en": "SHGC (g-value): share of incident solar energy that enters the room.",
+          "de": "g-Wert: Anteil der einfallenden Sonnenenergie, der in den Raum gelangt."
+        },
+        "step": 0.01,
+        "precision": 2,
+        "softMin": 0,
+        "softMax": 1,
+        "group": "optics",
+        "order": 50
+      }
     },
     "vlt": {
-      "type": "number"
+      "type": "number",
+      "minimum": 0,
+      "maximum": 1,
+      "x-semio-ui": {
+        "widget": "slider",
+        "role": "value",
+        "label": {
+          "en": "Visible transmittance",
+          "de": "Lichttransmissionsgrad"
+        },
+        "step": 0.01,
+        "precision": 2,
+        "softMin": 0,
+        "softMax": 1,
+        "group": "optics",
+        "order": 60
+      }
     },
     "areaM2": {
-      "type": "number"
+      "type": "number",
+      "exclusiveMinimum": 0,
+      "x-semio-ui": {
+        "widget": "stepper",
+        "role": "value",
+        "label": {
+          "en": "Area",
+          "de": "Fläche"
+        },
+        "unit": "m²",
+        "step": 0.01,
+        "precision": 2,
+        "group": "geometry",
+        "order": 70
+      }
     },
     "heightM": {
-      "type": "number"
+      "type": "number",
+      "exclusiveMinimum": 0,
+      "x-semio-ui": {
+        "widget": "stepper",
+        "role": "value",
+        "label": {
+          "en": "Height",
+          "de": "Höhe"
+        },
+        "unit": "m",
+        "step": 0.01,
+        "precision": 2,
+        "group": "geometry",
+        "order": 80
+      }
     },
     "sillHeightM": {
-      "type": "number"
+      "type": "number",
+      "minimum": 0,
+      "x-semio-ui": {
+        "widget": "stepper",
+        "role": "value",
+        "label": {
+          "en": "Sill height",
+          "de": "Brüstungshöhe"
+        },
+        "unit": "m",
+        "step": 0.01,
+        "precision": 2,
+        "group": "geometry",
+        "order": 90
+      }
     },
     "frameConductanceWK": {
-      "type": "number"
+      "type": "number",
+      "x-semio-ui": {
+        "widget": "stepper",
+        "role": "value",
+        "label": {
+          "en": "Frame conductance",
+          "de": "Rahmen-Wärmeleitwert"
+        },
+        "unit": "W/K",
+        "step": 0.01,
+        "precision": 2,
+        "group": "thermal",
+        "order": 100
+      }
     },
     "dividerConductanceWK": {
-      "type": "number"
+      "type": "number",
+      "x-semio-ui": {
+        "widget": "stepper",
+        "role": "value",
+        "label": {
+          "en": "Divider conductance",
+          "de": "Sprossen-Wärmeleitwert"
+        },
+        "unit": "W/K",
+        "step": 0.01,
+        "precision": 2,
+        "group": "thermal",
+        "order": 110
+      }
     },
     "overhangDepthM": {
-      "type": "number"
+      "type": "number",
+      "x-semio-ui": {
+        "widget": "stepper",
+        "role": "value",
+        "label": {
+          "en": "Overhang depth",
+          "de": "Überstandstiefe"
+        },
+        "description": {
+          "en": "Projection of the horizontal overhang above the head; 0 means none.",
+          "de": "Auskragung des horizontalen Überstands über dem Sturz; 0 bedeutet keiner."
+        },
+        "unit": "m",
+        "step": 0.01,
+        "precision": 2,
+        "group": "shading",
+        "order": 120
+      }
     },
     "overhangOffsetM": {
-      "type": "number"
+      "type": "number",
+      "x-semio-ui": {
+        "widget": "stepper",
+        "role": "value",
+        "label": {
+          "en": "Overhang offset",
+          "de": "Überstandsabstand"
+        },
+        "description": {
+          "en": "Height of the overhang above the window head.",
+          "de": "Höhe des Überstands über dem Fenstersturz."
+        },
+        "unit": "m",
+        "step": 0.01,
+        "precision": 2,
+        "group": "shading",
+        "order": 130
+      }
     },
     "finDepthM": {
-      "type": "number"
+      "type": "number",
+      "x-semio-ui": {
+        "widget": "stepper",
+        "role": "value",
+        "label": {
+          "en": "Fin depth",
+          "de": "Seitenblendentiefe"
+        },
+        "description": {
+          "en": "Projection of the vertical fins beside the jambs; 0 means none.",
+          "de": "Auskragung der seitlichen Blenden an den Laibungen; 0 bedeutet keine."
+        },
+        "unit": "m",
+        "step": 0.01,
+        "precision": 2,
+        "group": "shading",
+        "order": 140
+      }
     },
     "finOffsetM": {
-      "type": "number"
+      "type": "number",
+      "x-semio-ui": {
+        "widget": "stepper",
+        "role": "value",
+        "label": {
+          "en": "Fin offset",
+          "de": "Seitenblendenabstand"
+        },
+        "description": {
+          "en": "Distance of the fins from the window jambs.",
+          "de": "Abstand der Seitenblenden von den Fensterlaibungen."
+        },
+        "unit": "m",
+        "step": 0.01,
+        "precision": 2,
+        "group": "shading",
+        "order": 150
+      }
     },
     "glazingConstructionId": {
       "type": [
         "integer",
         "null"
-      ]
+      ],
+      "minimum": 0,
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Glazing construction",
+          "de": "Verglasungsaufbau"
+        },
+        "description": {
+          "en": "Layered glazing stack, by id; empty uses the U-value, SHGC and visible transmittance.",
+          "de": "Geschichteter Verglasungsaufbau, per ID; leer verwendet U-Wert, g-Wert und Lichttransmissionsgrad."
+        },
+        "ref": {
+          "kind": "construction",
+          "domain": "energyModel",
+          "granularity": "construction"
+        },
+        "group": "optics",
+        "order": 160
+      }
     }
   }
 }

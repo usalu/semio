@@ -8,23 +8,11 @@
       "type": "object",
       "additionalProperties": false,
       "required": [
-        "ChangeStrokeColor"
+        "SetSnapshot"
       ],
       "properties": {
-        "ChangeStrokeColor": {
-          "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/semio/v1/drawing/mutation/change-stroke-color/schema.json"
-        }
-      }
-    },
-    {
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "ChangeStrokeWidth"
-      ],
-      "properties": {
-        "ChangeStrokeWidth": {
-          "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/semio/v1/drawing/mutation/change-stroke-width/schema.json"
+        "SetSnapshot": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/semio/v1/drawing/mutation/set-snapshot/schema.json"
         }
       }
     },
@@ -44,11 +32,11 @@
       "type": "object",
       "additionalProperties": false,
       "required": [
-        "CreateNode"
+        "DeleteLayer"
       ],
       "properties": {
-        "CreateNode": {
-          "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/semio/v1/drawing/mutation/create-node/schema.json"
+        "DeleteLayer": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/semio/v1/drawing/mutation/delete-layer/schema.json"
         }
       }
     },
@@ -56,11 +44,11 @@
       "type": "object",
       "additionalProperties": false,
       "required": [
-        "DeleteLayer"
+        "CreateNode"
       ],
       "properties": {
-        "DeleteLayer": {
-          "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/semio/v1/drawing/mutation/delete-layer/schema.json"
+        "CreateNode": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/semio/v1/drawing/mutation/create-node/schema.json"
         }
       }
     },
@@ -80,42 +68,6 @@
       "type": "object",
       "additionalProperties": false,
       "required": [
-        "DragNodes"
-      ],
-      "properties": {
-        "DragNodes": {
-          "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/semio/v1/drawing/mutation/drag-nodes/schema.json"
-        }
-      }
-    },
-    {
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "FlattenNode"
-      ],
-      "properties": {
-        "FlattenNode": {
-          "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/semio/v1/drawing/mutation/flatten-node/schema.json"
-        }
-      }
-    },
-    {
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "GroupNodes"
-      ],
-      "properties": {
-        "GroupNodes": {
-          "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/semio/v1/drawing/mutation/group-nodes/schema.json"
-        }
-      }
-    },
-    {
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
         "MoveNode"
       ],
       "properties": {
@@ -128,35 +80,11 @@
       "type": "object",
       "additionalProperties": false,
       "required": [
-        "ReorderNodes"
+        "DragNodes"
       ],
       "properties": {
-        "ReorderNodes": {
-          "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/semio/v1/drawing/mutation/reorder-nodes/schema.json"
-        }
-      }
-    },
-    {
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "ReplaceFill"
-      ],
-      "properties": {
-        "ReplaceFill": {
-          "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/semio/v1/drawing/mutation/replace-fill/schema.json"
-        }
-      }
-    },
-    {
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "ReplacePath"
-      ],
-      "properties": {
-        "ReplacePath": {
-          "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/semio/v1/drawing/mutation/replace-path/schema.json"
+        "DragNodes": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/semio/v1/drawing/mutation/drag-nodes/schema.json"
         }
       }
     },
@@ -188,11 +116,23 @@
       "type": "object",
       "additionalProperties": false,
       "required": [
-        "UnflattenNode"
+        "ReorderNodes"
       ],
       "properties": {
-        "UnflattenNode": {
-          "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/semio/v1/drawing/mutation/unflatten-node/schema.json"
+        "ReorderNodes": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/semio/v1/drawing/mutation/reorder-nodes/schema.json"
+        }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "GroupNodes"
+      ],
+      "properties": {
+        "GroupNodes": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/semio/v1/drawing/mutation/group-nodes/schema.json"
         }
       }
     },
@@ -212,11 +152,71 @@
       "type": "object",
       "additionalProperties": false,
       "required": [
-        "SetSnapshot"
+        "FlattenNode"
       ],
       "properties": {
-        "SetSnapshot": {
-          "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/semio/v1/drawing/mutation/set-snapshot/schema.json"
+        "FlattenNode": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/semio/v1/drawing/mutation/flatten-node/schema.json"
+        }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "UnflattenNode"
+      ],
+      "properties": {
+        "UnflattenNode": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/semio/v1/drawing/mutation/unflatten-node/schema.json"
+        }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "ReplacePath"
+      ],
+      "properties": {
+        "ReplacePath": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/semio/v1/drawing/mutation/replace-path/schema.json"
+        }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "ReplaceFill"
+      ],
+      "properties": {
+        "ReplaceFill": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/semio/v1/drawing/mutation/replace-fill/schema.json"
+        }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "ChangeStrokeColor"
+      ],
+      "properties": {
+        "ChangeStrokeColor": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/semio/v1/drawing/mutation/change-stroke-color/schema.json"
+        }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "ChangeStrokeWidth"
+      ],
+      "properties": {
+        "ChangeStrokeWidth": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/semio/v1/drawing/mutation/change-stroke-width/schema.json"
         }
       }
     }

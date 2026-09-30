@@ -5,6 +5,7 @@
   "type": "object",
   "additionalProperties": false,
   "required": [
+    "mutation",
     "from",
     "fromPort",
     "id",
@@ -13,6 +14,9 @@
     "toPort"
   ],
   "properties": {
+    "mutation": {
+      "const": "connectWidgets"
+    },
     "index": {
       "type": "integer",
       "minimum": 0
@@ -21,13 +25,47 @@
       "type": "string"
     },
     "from": {
-      "type": "string"
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "value",
+        "label": {
+          "en": "Source Widget",
+          "de": "Quell-Widget"
+        },
+        "description": {
+          "en": "The widget the connection starts at.",
+          "de": "Das Widget, an dem die Verbindung beginnt."
+        },
+        "ref": {
+          "kind": "widget",
+          "domain": "graph",
+          "granularity": "node"
+        }
+      }
     },
     "fromPort": {
       "type": "string"
     },
     "to": {
-      "type": "string"
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "value",
+        "label": {
+          "en": "Target Widget",
+          "de": "Ziel-Widget"
+        },
+        "description": {
+          "en": "The widget the connection ends at.",
+          "de": "Das Widget, an dem die Verbindung endet."
+        },
+        "ref": {
+          "kind": "widget",
+          "domain": "graph",
+          "granularity": "node"
+        }
+      }
     },
     "toPort": {
       "type": "string"

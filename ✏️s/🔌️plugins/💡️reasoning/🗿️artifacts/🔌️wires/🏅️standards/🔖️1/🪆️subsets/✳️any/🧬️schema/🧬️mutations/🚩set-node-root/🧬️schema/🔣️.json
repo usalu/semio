@@ -5,15 +5,48 @@
   "type": "object",
   "additionalProperties": false,
   "required": [
+    "mutation",
     "newRoot",
     "nodeId"
   ],
   "properties": {
+    "mutation": {
+      "const": "setNodeRoot"
+    },
     "nodeId": {
-      "type": "string"
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Node",
+          "de": "Knoten"
+        },
+        "description": {
+          "en": "The node to change.",
+          "de": "Der zu ändernde Knoten."
+        },
+        "ref": {
+          "kind": "node",
+          "domain": "graph",
+          "granularity": "node"
+        }
+      }
     },
     "newRoot": {
-      "type": "boolean"
+      "type": "boolean",
+      "x-semio-ui": {
+        "widget": "toggle",
+        "role": "value",
+        "label": {
+          "en": "Root",
+          "de": "Wurzel"
+        },
+        "description": {
+          "en": "The node starts a line of reasoning.",
+          "de": "Der Knoten beginnt eine Argumentationslinie."
+        }
+      }
     }
   }
 }

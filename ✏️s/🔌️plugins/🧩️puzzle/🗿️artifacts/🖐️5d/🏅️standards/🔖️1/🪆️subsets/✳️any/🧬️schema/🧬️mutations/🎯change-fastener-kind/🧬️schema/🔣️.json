@@ -5,14 +5,54 @@
   "type": "object",
   "additionalProperties": false,
   "required": [
+    "mutation",
     "id"
   ],
   "properties": {
+    "mutation": {
+      "const": "changeFastenerKind"
+    },
     "id": {
-      "type": "string"
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Fastener",
+          "de": "Verbinder"
+        },
+        "description": {
+          "en": "The fastener this mutation addresses.",
+          "de": "Der Verbinder, den diese Mutation adressiert."
+        },
+        "ref": {
+          "kind": "fastener",
+          "domain": "vortex",
+          "granularity": "fastener"
+        },
+        "group": "target",
+        "order": 10
+      }
     },
     "newFastenerKind": {
-      "type": "string"
+      "type": [
+        "string",
+        "null"
+      ],
+      "x-semio-ui": {
+        "widget": "text",
+        "role": "value",
+        "label": {
+          "en": "Fastener kind",
+          "de": "Verbinderart"
+        },
+        "description": {
+          "en": "Id of a kind from the kind catalog.",
+          "de": "ID einer Art aus dem Artenkatalog."
+        },
+        "group": "kind",
+        "order": 20
+      }
     }
   }
 }

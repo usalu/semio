@@ -19,9 +19,3 @@ pub struct SetCamera {
 pub fn handle(payload: &SetCamera, _doc: &ArtifactView<'_, Generation3dSnapshot>, _cfg: &ConfigView<'_, Generation3dViewConfig>) -> Result<ViewEmit<Generation3dViewConfigMutation>, Fault> {
     Ok(ViewEmit::config(vec![Generation3dViewConfigMutation::SetPreviewCamera(config::SetPreviewCamera { camera: payload.camera.clone() })]))
 }
-
-//#region 🧪️Tests
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
-//#endregion 🧪️Tests

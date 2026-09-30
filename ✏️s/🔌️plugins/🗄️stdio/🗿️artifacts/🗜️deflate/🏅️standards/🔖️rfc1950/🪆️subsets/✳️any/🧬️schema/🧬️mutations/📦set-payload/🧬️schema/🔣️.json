@@ -5,20 +5,33 @@
   "type": "object",
   "additionalProperties": false,
   "required": [
+    "mutation",
     "payload"
   ],
   "properties": {
+    "mutation": {
+      "const": "setPayload",
+      "description": "Aggregate discriminator spliced in by DeflateMutation; absent when the payload stands alone."
+    },
     "payload": {
       "type": "array",
       "items": {
         "type": "integer",
         "minimum": 0,
         "maximum": 255
+      },
+      "x-semio-ui": {
+        "label": {
+          "en": "Payload",
+          "de": "Nutzdaten"
+        },
+        "description": {
+          "en": "Uncompressed bytes carried by the zlib stream.",
+          "de": "Unkomprimierte Bytes des zlib-Datenstroms."
+        },
+        "group": "value",
+        "order": 10
       }
-    },
-    "mutation": {
-      "const": "setPayload",
-      "description": "Aggregate discriminator spliced in by DeflateMutation; absent when the payload stands alone."
     }
   }
 }

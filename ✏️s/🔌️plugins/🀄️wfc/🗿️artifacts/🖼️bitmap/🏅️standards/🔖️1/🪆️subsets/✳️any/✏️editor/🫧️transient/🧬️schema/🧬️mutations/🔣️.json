@@ -1,0 +1,19 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/wfc/bitmap/1/any/transient/mutations.json",
+  "title": "BitmapTransientMutation",
+  "oneOf": [
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "SetSolve"
+      ],
+      "properties": {
+        "SetSolve": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/wfc/bitmap/1/any/transient/mutation/set-solve/schema.json"
+        }
+      }
+    }
+  ]
+}

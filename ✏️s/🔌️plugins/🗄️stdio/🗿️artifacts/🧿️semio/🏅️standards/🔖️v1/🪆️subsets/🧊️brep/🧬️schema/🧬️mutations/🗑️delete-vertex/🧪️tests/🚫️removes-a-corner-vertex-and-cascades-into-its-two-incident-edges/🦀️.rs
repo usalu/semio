@@ -12,11 +12,11 @@ use crate::standards::v1::subsets::brep::schema::snapshot::{decode_semio_brep_sn
 use pack::value::ToValue;
 use protocol::{Mutation, MutationDiff};
 
-const BEFORE: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🗑️delete-vertex/🚫️removes-a-corner-vertex-and-cascades-into-its-two-incident-edges/📸️snapshot/⬅️before/🔣️.json");
-const AFTER: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🗑️delete-vertex/🚫️removes-a-corner-vertex-and-cascades-into-its-two-incident-edges/📸️snapshot/➡️after/🔣️.json");
-const MUTATION: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🗑️delete-vertex/🚫️removes-a-corner-vertex-and-cascades-into-its-two-incident-edges/🦠️mutation/🔣️.json");
-const DIFF: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🗑️delete-vertex/🚫️removes-a-corner-vertex-and-cascades-into-its-two-incident-edges/🔺️diff/🔣️.json");
-const OUTCOME: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🗑️delete-vertex/🚫️removes-a-corner-vertex-and-cascades-into-its-two-incident-edges/🎯️outcome/🔣️.json");
+const BEFORE: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🗑️delete-vertex/🚫️removes-corner-vertex-cascades-two-incident-edges/📸️snapshot/⬅️before/🔣️.json");
+const AFTER: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🗑️delete-vertex/🚫️removes-corner-vertex-cascades-two-incident-edges/📸️snapshot/➡️after/🔣️.json");
+const MUTATION: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🗑️delete-vertex/🚫️removes-corner-vertex-cascades-two-incident-edges/🦠️mutation/🔣️.json");
+const DIFF: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🗑️delete-vertex/🚫️removes-corner-vertex-cascades-two-incident-edges/🔺️diff/🔣️.json");
+const OUTCOME: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🗑️delete-vertex/🚫️removes-corner-vertex-cascades-two-incident-edges/🎯️outcome/🔣️.json");
 
 fn before() -> SemioBrepSnapshot {
     decode_semio_brep_snapshot_json(BEFORE).expect("delete-vertex before snapshot decodes")

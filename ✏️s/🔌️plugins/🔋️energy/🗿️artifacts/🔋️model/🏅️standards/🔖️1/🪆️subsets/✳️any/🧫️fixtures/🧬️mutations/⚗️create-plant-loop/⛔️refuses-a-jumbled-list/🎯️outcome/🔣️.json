@@ -3,5 +3,6 @@
   "code": "mutation.invariant",
   "path": [
     "18"
-  ]
+  ],
+  "invariant": "equipment-ids-ascending"
 }

@@ -5,19 +5,83 @@
   "type": "object",
   "additionalProperties": false,
   "required": [
+    "mutation",
     "id",
     "dayIndex",
     "newDailyScheduleId"
   ],
   "properties": {
+    "mutation": {
+      "const": "changeWeeklyScheduleDay"
+    },
     "id": {
-      "type": "integer"
+      "type": "integer",
+      "minimum": 0,
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Weekly schedule",
+          "de": "Wochenzeitplan"
+        },
+        "description": {
+          "en": "The weekly schedule this mutation changes, by id.",
+          "de": "Wochenzeitplan, den diese Mutation ändert, per ID."
+        },
+        "ref": {
+          "kind": "weeklySchedule",
+          "domain": "energyModel",
+          "granularity": "schedule"
+        },
+        "group": "target",
+        "order": 10
+      }
     },
     "dayIndex": {
-      "type": "integer"
+      "type": "integer",
+      "minimum": 0,
+      "maximum": 6,
+      "x-semio-ui": {
+        "widget": "stepper",
+        "role": "value",
+        "label": {
+          "en": "Weekday slot",
+          "de": "Wochentag"
+        },
+        "description": {
+          "en": "Slot of the week, 0 to 6.",
+          "de": "Tag der Woche, 0 bis 6."
+        },
+        "step": 1,
+        "precision": 0,
+        "softMin": 0,
+        "softMax": 6,
+        "group": "calendar",
+        "order": 20
+      }
     },
     "newDailyScheduleId": {
-      "type": "integer"
+      "type": "integer",
+      "minimum": 0,
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Daily schedule",
+          "de": "Tageszeitplan"
+        },
+        "description": {
+          "en": "Daily profile of this weekday slot, by id.",
+          "de": "Tagesprofil dieses Wochentags, per ID."
+        },
+        "ref": {
+          "kind": "schedule",
+          "domain": "energyModel",
+          "granularity": "schedule"
+        },
+        "group": "schedule",
+        "order": 30
+      }
     }
   }
 }

@@ -8,20 +8,6 @@ use semio_framework_os_flow::FlowEvalSession;
 use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
 use semio_framework_value_derive::{FromValue, ToValue};
 
-//#region 🔖️AddGeneration
-//#endregion 🔖️AddGeneration
-
-//#region 🔖️RemoveGeneration
-//#endregion 🔖️RemoveGeneration
-
-//#region 🔖️RenameGeneration
-//#endregion 🔖️RenameGeneration
-
-//#region 🔖️UpdateGenerationValues
-//#endregion 🔖️UpdateGenerationValues
-
-//#region 🔖️SelectGeneration
-//#endregion 🔖️SelectGeneration
 
 #[derive(Clone, Debug, PartialEq, ToValue, FromValue, dsl::DslRecord)]
 #[dsl(keyword = "add-generation")]
@@ -30,9 +16,3 @@ pub struct AddGeneration {}
 pub fn handle(_payload: &AddGeneration, doc: &ArtifactView<'_, Generation3dSnapshot>, cfg: &ConfigView<'_, Generation3dConfig>, _session: &mut FlowEvalSession) -> Result<Emit<Generation3dMutation, Generation3dConfigMutation>, Fault> {
     Ok(generation_command_result("addGeneration", None, doc.snapshot, cfg.snapshot).map(|result| result.emit).unwrap_or_default())
 }
-
-//#region 🧪️Tests
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
-//#endregion 🧪️Tests

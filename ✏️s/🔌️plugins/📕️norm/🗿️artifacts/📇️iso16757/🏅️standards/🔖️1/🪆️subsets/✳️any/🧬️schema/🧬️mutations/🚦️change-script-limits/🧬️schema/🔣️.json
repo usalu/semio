@@ -5,22 +5,59 @@
   "type": "object",
   "additionalProperties": false,
   "required": [
-    "newMaxRecursion",
     "newMaxSteps",
+    "newMaxRecursion",
     "newTimeoutMs"
   ],
   "properties": {
     "newMaxSteps": {
       "type": "integer",
-      "minimum": 0
+      "minimum": 0,
+      "x-semio-ui": {
+        "widget": "stepper",
+        "role": "value",
+        "label": {
+          "en": "Maximum script steps",
+          "de": "Maximale Skriptschritte"
+        },
+        "step": 1,
+        "precision": 0,
+        "group": "limits",
+        "order": 10
+      }
     },
     "newMaxRecursion": {
       "type": "integer",
-      "minimum": 0
+      "minimum": 0,
+      "x-semio-ui": {
+        "widget": "stepper",
+        "role": "value",
+        "label": {
+          "en": "Maximum recursion depth",
+          "de": "Maximale Rekursionstiefe"
+        },
+        "step": 1,
+        "precision": 0,
+        "group": "limits",
+        "order": 20
+      }
     },
     "newTimeoutMs": {
       "type": "integer",
-      "minimum": 0
+      "minimum": 0,
+      "x-semio-ui": {
+        "widget": "stepper",
+        "role": "value",
+        "label": {
+          "en": "Script timeout",
+          "de": "Zeitlimit des Skripts"
+        },
+        "unit": "ms",
+        "step": 1,
+        "precision": 0,
+        "group": "limits",
+        "order": 30
+      }
     }
   }
 }

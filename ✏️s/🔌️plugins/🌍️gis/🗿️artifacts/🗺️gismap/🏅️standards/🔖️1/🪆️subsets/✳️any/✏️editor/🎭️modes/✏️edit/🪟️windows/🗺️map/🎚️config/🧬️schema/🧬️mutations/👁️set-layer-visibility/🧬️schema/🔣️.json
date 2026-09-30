@@ -3,29 +3,48 @@
   "$id": "https://json.schemas.assets.semio-tech.com/window/gis/map/config/mutation/set-layer-visibility/schema.json",
   "title": "SetLayerVisibility",
   "type": "object",
-  "$defs": {
-    "Payload": {
-      "type": "object",
-      "required": [
-        "layerId",
-        "visible"
-      ],
-      "properties": {
-        "layerId": {
-          "type": "string"
+  "additionalProperties": false,
+  "required": [
+    "operation",
+    "layerId",
+    "visible"
+  ],
+  "properties": {
+    "operation": {
+      "const": "setLayerVisibility"
+    },
+    "layerId": {
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "text",
+        "role": "value",
+        "label": {
+          "en": "Layer",
+          "de": "Ebene"
         },
-        "visible": {
-          "type": [
-            "boolean",
-            "null"
-          ]
-        }
+        "group": "layer",
+        "order": 10
+      }
+    },
+    "visible": {
+      "type": [
+        "boolean",
+        "null"
+      ],
+      "x-semio-ui": {
+        "widget": "toggle",
+        "role": "value",
+        "label": {
+          "en": "Visible",
+          "de": "Sichtbar"
+        },
+        "description": {
+          "en": "Empty follows the layer default.",
+          "de": "Leer folgt der Voreinstellung der Ebene."
+        },
+        "group": "layer",
+        "order": 20
       }
     }
-  },
-  "allOf": [
-    {
-      "$ref": "#/$defs/Payload"
-    }
-  ]
+  }
 }

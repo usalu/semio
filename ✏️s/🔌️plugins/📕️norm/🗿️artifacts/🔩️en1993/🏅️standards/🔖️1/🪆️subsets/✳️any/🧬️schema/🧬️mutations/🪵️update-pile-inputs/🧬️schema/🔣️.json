@@ -5,19 +5,17 @@
   "type": "object",
   "additionalProperties": false,
   "required": [
-    "newPileKRed",
-    "newPileNEdKn",
-    "newPileSigmaMpa"
+    "pile"
   ],
   "properties": {
-    "newPileSigmaMpa": {
-      "type": "number"
-    },
-    "newPileKRed": {
-      "type": "number"
-    },
-    "newPileNEdKn": {
-      "type": "number"
+    "pile": {
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1993/snapshot.json#/$defs/SteelPile",
+      "x-semio-ui": {
+        "label": {
+          "en": "Steel pile",
+          "de": "Stahlpfahl"
+        }
+      }
     }
   }
 }

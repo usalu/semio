@@ -5,15 +5,16 @@
   "type": "object",
   "additionalProperties": false,
   "required": [
+    "mutation",
     "style"
   ],
   "properties": {
-    "style": {
-      "$ref": "#/$defs/DocStyle"
-    },
     "mutation": {
       "const": "insertStyle",
       "description": "Aggregate discriminator spliced in by SemioDocumentMutation; absent when the payload stands alone."
+    },
+    "style": {
+      "$ref": "#/$defs/DocStyle"
     }
   },
   "$defs": {
@@ -35,7 +36,18 @@
             {
               "type": "null"
             }
-          ]
+          ],
+          "x-semio-ui": {
+            "widget": "reference",
+            "role": "target",
+            "label": {
+              "en": "Based on style",
+              "de": "Basiert auf Formatvorlage"
+            },
+            "ref": {
+              "kind": "style"
+            }
+          }
         }
       }
     }

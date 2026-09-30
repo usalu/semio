@@ -64,6 +64,7 @@ mod imp {
     }
 
     /// 🧩️ An application extension other than NETSCAPE2.0 (modeled separately as `loop_count`).
+    #[derive(Clone)]
     struct OAppExt {
         identifier: [u8; 8],
         auth_code: [u8; 3],
@@ -71,6 +72,7 @@ mod imp {
     }
 
     /// 🖼️ The whole document: logical screen + optional GCT + ordered frames + comments + extensions.
+    #[derive(Clone)]
     struct OSnapshot {
         width: u16,
         height: u16,
@@ -119,30 +121,18 @@ mod imp {
             _ => None,
         }
     }
-    fn palette_to_json(palette: Option<&[u8]>) -> Json {
-        match palette {
-            None => Json::Null,
-            Some(bytes) => Json::Array(bytes.chunks_exact(3).map(|rgb| Json::Array(vec![Json::Number(rgb[0] as f64), Json::Number(rgb[1] as f64), Json::Number(rgb[2] as f64)])).collect()),
+    /// 🎨️ A `GifColorTable` wire value (`null` = no table) as `gif`'s flat RGB palette; an empty table is no table.
+    /// `gif`'s writer never sets a table's sort flag, so a sorted table is refused rather than silently unsorted.
+    fn color_table_from_json(value: Option<&Json>) -> Result<Option<Vec<u8>>, String> {
+        match value {
+            None | Some(Json::Null) => Ok(None),
+            Some(table) if bool_or(table, "sorted", false) => Err("gif's writer cannot set a colour table's sort flag".to_string()),
+            Some(table) => Ok(Some(table.array("colors").iter().flat_map(|color| ["r", "g", "b"].map(|channel| num_or(color, channel, 0.0) as u8)).collect::<Vec<u8>>()).filter(|palette| !palette.is_empty())),
         }
     }
-    fn palette_from_json(value: Option<&Json>) -> Option<Vec<u8>> {
-        match value {
-            Some(Json::Array(items)) if !items.is_empty() => {
-                let mut out = Vec::with_capacity(items.len() * 3);
-                for item in items {
-                    if let Json::Array(rgb) = item {
-                        for channel in rgb.iter().take(3) {
-                            out.push(match channel {
-                                Json::Number(n) => *n as u8,
-                                _ => 0,
-                            });
-                        }
-                    }
-                }
-                Some(out)
-            }
-            _ => None,
-        }
+    /// 🔢️ A fixed-width byte-array member of a wire value.
+    fn fixed_bytes<const N: usize>(value: &Json, key: &str) -> Result<[u8; N], String> {
+        indices_from_json(value, key).unwrap_or_default().try_into().map_err(|_| format!("`{key}` must carry exactly {N} bytes"))
     }
     fn disposal_to_str(dispose: gif::DisposalMethod) -> &'static str {
         match dispose {
@@ -152,99 +142,54 @@ mod imp {
             gif::DisposalMethod::Previous => "restoreToPrevious",
         }
     }
-    fn disposal_from_str(value: &str) -> gif::DisposalMethod {
+    fn disposal_from_str(value: &str) -> Result<gif::DisposalMethod, String> {
         match value {
-            "doNotDispose" => gif::DisposalMethod::Keep,
-            "restoreToBackground" => gif::DisposalMethod::Background,
-            "restoreToPrevious" => gif::DisposalMethod::Previous,
-            _ => gif::DisposalMethod::Any,
+            "unspecified" => Ok(gif::DisposalMethod::Any),
+            "doNotDispose" => Ok(gif::DisposalMethod::Keep),
+            "restoreToBackground" => Ok(gif::DisposalMethod::Background),
+            "restoreToPrevious" => Ok(gif::DisposalMethod::Previous),
+            other => Err(format!("{other:?} is no GIF disposal method")),
         }
     }
     //#endregion 🔖️JsonHelpers
 
     //#region 🔖️SnapshotJson
-    /// 🔁️ Both directions of `OSnapshot <-> Json` are needed for `SetSnapshot`: the FORWARD
-    /// direction parses the mutation's small synthetic replacement payload, and the INVERSE
-    /// direction re-embeds the real, full original snapshot (however large) so the property test
-    /// can restore it exactly — an in-memory `Json` value never touches the feature file's text.
-    fn snapshot_to_json(snap: &OSnapshot) -> Json {
-        Json::Object(vec![
-            ("width".to_string(), Json::Number(snap.width as f64)),
-            ("height".to_string(), Json::Number(snap.height as f64)),
-            ("globalPalette".to_string(), palette_to_json(snap.global_palette.as_deref())),
-            ("backgroundColorIndex".to_string(), Json::Number(snap.bg_color_index as f64)),
-            ("aspectRatio".to_string(), Json::Number(snap.aspect_ratio as f64)),
-            ("loopCount".to_string(), snap.loop_count.map(|n| Json::Number(n as f64)).unwrap_or(Json::Null)),
-            ("frames".to_string(), Json::Array(snap.frames.iter().map(frame_to_json).collect())),
-            ("comments".to_string(), Json::Array(snap.comments.iter().cloned().map(Json::String).collect())),
-            ("appExtensions".to_string(), Json::Array(snap.app_extensions.iter().map(app_ext_to_json).collect())),
-        ])
-    }
-    fn frame_to_json(frame: &OFrame) -> Json {
-        Json::Object(vec![
-            ("left".to_string(), Json::Number(frame.left as f64)),
-            ("top".to_string(), Json::Number(frame.top as f64)),
-            ("width".to_string(), Json::Number(frame.width as f64)),
-            ("height".to_string(), Json::Number(frame.height as f64)),
-            ("interlace".to_string(), Json::Bool(frame.interlaced)),
-            ("palette".to_string(), palette_to_json(frame.palette.as_deref())),
-            ("indices".to_string(), Json::Array(frame.indices.iter().map(|b| Json::Number(*b as f64)).collect())),
-            ("delayCs".to_string(), Json::Number(frame.delay as f64)),
-            ("disposal".to_string(), Json::String(disposal_to_str(frame.dispose).to_string())),
-            ("transparentIndex".to_string(), frame.transparent.map(|t| Json::Number(t as f64)).unwrap_or(Json::Null)),
-            ("userInput".to_string(), Json::Bool(frame.needs_user_input)),
-        ])
-    }
-    fn app_ext_to_json(ext: &OAppExt) -> Json {
-        Json::Object(vec![
-            ("identifier".to_string(), Json::String(String::from_utf8_lossy(&ext.identifier).into_owned())),
-            ("authCode".to_string(), Json::String(String::from_utf8_lossy(&ext.auth_code).into_owned())),
-            ("data".to_string(), Json::Array(ext.data.iter().map(|b| Json::Number(*b as f64)).collect())),
-        ])
-    }
-    fn snapshot_from_json(value: &Json) -> OSnapshot {
-        OSnapshot {
+    /// 📸️ A `GifSnapshot` wire value (`set-snapshot`'s replacement document) as this oracle's own model.
+    fn snapshot_from_json(value: &Json) -> Result<OSnapshot, String> {
+        Ok(OSnapshot {
             width: num_or(value, "width", 0.0) as u16,
             height: num_or(value, "height", 0.0) as u16,
-            global_palette: palette_from_json(value.get("globalPalette")),
+            global_palette: color_table_from_json(value.get("gct"))?,
             bg_color_index: num_or(value, "backgroundColorIndex", 0.0) as u8,
-            aspect_ratio: num_or(value, "aspectRatio", 0.0) as u8,
+            aspect_ratio: num_or(value, "pixelAspectRatio", 0.0) as u8,
             loop_count: opt_num(value, "loopCount").map(|n| n as u16),
-            frames: value.array("frames").iter().map(frame_from_json).collect(),
-            comments: value
-                .array("comments")
-                .iter()
-                .map(|item| match item {
-                    Json::String(s) => s.clone(),
-                    _ => String::new(),
-                })
-                .collect(),
-            app_extensions: value.array("appExtensions").iter().map(app_ext_from_json).collect(),
-        }
+            frames: value.array("frames").iter().map(frame_from_json).collect::<Result<_, _>>()?,
+            comments: value.array("comments").iter().map(|item| match item { Json::String(text) => Ok(text.clone()), other => Err(format!("a comment must be text, not {}", other.to_string())) }).collect::<Result<_, String>>()?,
+            app_extensions: value.array("appExtensions").iter().map(app_ext_from_json).collect::<Result<_, _>>()?,
+        })
     }
-    fn frame_from_json(value: &Json) -> OFrame {
-        OFrame {
+    /// 🎞️ A `GifFrame` wire value. `gif` writes no Plain Text Extension, so a frame carrying one is refused.
+    fn frame_from_json(value: &Json) -> Result<OFrame, String> {
+        if !matches!(value.get("plainText"), None | Some(Json::Null)) {
+            return Err("gif's writer carries no Plain Text Extension".to_string());
+        }
+        Ok(OFrame {
             left: num_or(value, "left", 0.0) as u16,
             top: num_or(value, "top", 0.0) as u16,
             width: num_or(value, "width", 0.0) as u16,
             height: num_or(value, "height", 0.0) as u16,
             interlaced: bool_or(value, "interlace", false),
-            palette: palette_from_json(value.get("palette")),
+            palette: color_table_from_json(value.get("lct"))?,
             indices: indices_from_json(value, "indices").unwrap_or_default(),
             delay: num_or(value, "delayCs", 0.0) as u16,
-            dispose: disposal_from_str(&value.str("disposal")),
+            dispose: match value.get("disposal") { None => gif::DisposalMethod::Any, Some(_) => disposal_from_str(&value.str("disposal"))? },
             transparent: opt_num(value, "transparentIndex").map(|n| n as u8),
             needs_user_input: bool_or(value, "userInput", false),
-        }
+        })
     }
-    fn app_ext_from_json(value: &Json) -> OAppExt {
-        let mut identifier = [0u8; 8];
-        let id_bytes = value.str("identifier").into_bytes();
-        identifier[..id_bytes.len().min(8)].copy_from_slice(&id_bytes[..id_bytes.len().min(8)]);
-        let mut auth_code = [0u8; 3];
-        let auth_bytes = value.str("authCode").into_bytes();
-        auth_code[..auth_bytes.len().min(3)].copy_from_slice(&auth_bytes[..auth_bytes.len().min(3)]);
-        OAppExt { identifier, auth_code, data: indices_from_json(value, "data").unwrap_or_default() }
+    /// 🧩️ A `GifAppExtension` wire value: an 8-byte identifier, a 3-byte authentication code and the payload.
+    fn app_ext_from_json(value: &Json) -> Result<OAppExt, String> {
+        Ok(OAppExt { identifier: fixed_bytes(value, "identifier")?, auth_code: fixed_bytes(value, "authCode")?, data: indices_from_json(value, "data").unwrap_or_default() })
     }
     //#endregion 🔖️SnapshotJson
 
@@ -485,32 +430,17 @@ mod imp {
     /// this independent oracle deliberately mirrors rather than diverging from without reason.
     fn apply_kind(snap: &mut OSnapshot, kind: &str, params: &Json) -> Result<(), String> {
         match kind {
-            "no-mutation" => {}
-            "set-snapshot" => *snap = snapshot_from_json(params),
+            "set-snapshot" => *snap = snapshot_from_json(params.get("snapshot").ok_or("set-snapshot carries no snapshot")?)?,
             "set-screen-size" => {
                 snap.width = num_or(params, "width", snap.width as f64) as u16;
                 snap.height = num_or(params, "height", snap.height as f64) as u16;
             }
-            "set-global-color-table" => snap.global_palette = palette_from_json(params.get("colors")),
+            "set-global-color-table" => snap.global_palette = color_table_from_json(params.get("gct"))?,
             "set-background-color-index" => snap.bg_color_index = num_or(params, "index", snap.bg_color_index as f64) as u8,
             "set-pixel-aspect-ratio" => snap.aspect_ratio = num_or(params, "ratio", snap.aspect_ratio as f64) as u8,
             "set-loop-count" => snap.loop_count = opt_num(params, "loopCount").map(|n| n as u16),
             "insert-frame" => {
-                // 🧭️ Two ways to name the frame to insert: `frame` (a fully inlined frame, as
-                // produced by `frame_to_json` — what `remove-frame`'s inverse needs, since the
-                // removed frame no longer exists anywhere to clone by index) or `sourceFrame` (an
-                // index into THIS snapshot — what the feature file's forward scenario uses, cloning
-                // a real frame from the document under mutation).
-                let mut frame = match params.get("frame") {
-                    Some(frame_json) => frame_from_json(frame_json),
-                    None => {
-                        let source = num_or(params, "sourceFrame", 0.0) as usize;
-                        snap.frames.get(source).cloned().ok_or("insert-frame: sourceFrame out of range")?
-                    }
-                };
-                if let Some(delay) = opt_num(params, "delayCs") {
-                    frame.delay = delay as u16;
-                }
+                let frame = frame_from_json(params.get("frame").ok_or("insert-frame carries no frame")?)?;
                 let at = (num_or(params, "index", snap.frames.len() as f64) as usize).min(snap.frames.len());
                 snap.frames.insert(at, frame);
             }
@@ -533,14 +463,7 @@ mod imp {
                 if let Some(frame) = snap.frames.get_mut(index) {
                     let new_width = num_or(params, "width", frame.width as f64) as u16;
                     let new_height = num_or(params, "height", frame.height as f64) as u16;
-                    // 🧭️ `indices`, when given, is an exact replacement (what the inverse of a
-                    // shrink needs — resizing truncates real pixels, so undoing it must restore
-                    // them by value rather than re-deriving them from a smaller buffer). Absent, it
-                    // falls back to the forward scenario's truncate-or-zero-pad.
-                    match indices_from_json(params, "indices") {
-                        Some(indices) => frame.indices = indices,
-                        None => resize_indices(frame, new_width, new_height),
-                    }
+                    resize_indices(frame, new_width, new_height);
                     frame.left = num_or(params, "left", frame.left as f64) as u16;
                     frame.top = num_or(params, "top", frame.top as f64) as u16;
                     frame.width = new_width;
@@ -549,14 +472,9 @@ mod imp {
             }
             "set-frame-pixels" => {
                 let index = num_or(params, "index", 0.0) as usize;
+                let indices = indices_from_json(params, "indices").ok_or("set-frame-pixels carries no indices")?;
                 if let Some(frame) = snap.frames.get_mut(index) {
-                    match indices_from_json(params, "indices") {
-                        Some(indices) => frame.indices = indices,
-                        None => {
-                            let fill = num_or(params, "fillIndex", 0.0) as u8;
-                            frame.indices.iter_mut().for_each(|pixel| *pixel = fill);
-                        }
-                    }
+                    frame.indices = indices;
                 }
             }
             "set-frame-interlace" => {
@@ -573,8 +491,9 @@ mod imp {
             }
             "set-frame-disposal" => {
                 let index = num_or(params, "index", 0.0) as usize;
+                let dispose = disposal_from_str(&params.str("disposal"))?;
                 if let Some(frame) = snap.frames.get_mut(index) {
-                    frame.dispose = disposal_from_str(&params.str("disposal"));
+                    frame.dispose = dispose;
                 }
             }
             "set-frame-transparency" => {
@@ -601,7 +520,7 @@ mod imp {
             }
             "add-app-extension" => {
                 let at = (num_or(params, "index", snap.app_extensions.len() as f64) as usize).min(snap.app_extensions.len());
-                snap.app_extensions.insert(at, app_ext_from_json(params));
+                snap.app_extensions.insert(at, app_ext_from_json(params.get("extension").ok_or("add-app-extension carries no extension")?)?);
             }
             "remove-app-extension" => {
                 let index = num_or(params, "index", 0.0) as usize;
@@ -616,133 +535,74 @@ mod imp {
     //#endregion 🔖️Apply
 
     //#region 🔖️Inverse
-    /// ↩️ The (kind, params) pair that undoes `kind`/`params` as applied to `original` — mirrors the
-    /// subject's own `GifMutation::inverse` shape (index-targeted ops fall back to `no-mutation` when
-    /// their target no longer exists, exactly as the subject documents).
-    fn inverse_spec(original: &OSnapshot, kind: &str, params: &Json) -> (String, Json) {
-        let obj = |pairs: Vec<(&str, Json)>| Json::Object(pairs.into_iter().map(|(k, v)| (k.to_string(), v)).collect());
-        let no_op = || ("no-mutation".to_string(), obj(vec![]));
+    /// ↩️ Restores on `snap` exactly the facet `kind`/`params` replaced, read back out of `original` — the
+    /// subject's own `GifMutation::inverse` law ("put `base`'s own value back"), reimplemented over this model.
+    /// An index-targeted kind whose target `original` does not hold changed nothing, and restores nothing.
+    fn restore(original: &OSnapshot, kind: &str, params: &Json, snap: &mut OSnapshot) -> Result<(), String> {
+        let index = num_or(params, "index", 0.0) as usize;
+        let frame = |snap: &mut OSnapshot, restore: fn(&OFrame, &mut OFrame)| {
+            if let (Some(source), Some(target)) = (original.frames.get(index), snap.frames.get_mut(index)) {
+                restore(source, target);
+            }
+        };
         match kind {
-            "no-mutation" => no_op(),
-            "set-snapshot" => ("set-snapshot".to_string(), snapshot_to_json(original)),
-            "set-screen-size" => ("set-screen-size".to_string(), obj(vec![("width", Json::Number(original.width as f64)), ("height", Json::Number(original.height as f64))])),
-            "set-global-color-table" => ("set-global-color-table".to_string(), obj(vec![("colors", palette_to_json(original.global_palette.as_deref()))])),
-            "set-background-color-index" => ("set-background-color-index".to_string(), obj(vec![("index", Json::Number(original.bg_color_index as f64))])),
-            "set-pixel-aspect-ratio" => ("set-pixel-aspect-ratio".to_string(), obj(vec![("ratio", Json::Number(original.aspect_ratio as f64))])),
-            "set-loop-count" => ("set-loop-count".to_string(), obj(vec![("loopCount", original.loop_count.map(|n| Json::Number(n as f64)).unwrap_or(Json::Null))])),
+            "set-snapshot" => *snap = original.clone(),
+            "set-screen-size" => (snap.width, snap.height) = (original.width, original.height),
+            "set-global-color-table" => snap.global_palette = original.global_palette.clone(),
+            "set-background-color-index" => snap.bg_color_index = original.bg_color_index,
+            "set-pixel-aspect-ratio" => snap.aspect_ratio = original.aspect_ratio,
+            "set-loop-count" => snap.loop_count = original.loop_count,
             "insert-frame" => {
-                let at = (num_or(params, "index", original.frames.len() as f64) as usize).min(original.frames.len());
-                ("remove-frame".to_string(), obj(vec![("index", Json::Number(at as f64))]))
+                let at = index.min(original.frames.len());
+                if at < snap.frames.len() {
+                    snap.frames.remove(at);
+                }
             }
             "remove-frame" => {
-                let index = num_or(params, "index", 0.0) as usize;
-                match original.frames.get(index) {
-                    Some(frame) => ("insert-frame".to_string(), obj(vec![("index", Json::Number(index as f64)), ("frame", frame_to_json(frame))])),
-                    None => no_op(),
+                if let Some(removed) = original.frames.get(index) {
+                    snap.frames.insert(index.min(snap.frames.len()), removed.clone());
                 }
             }
             "move-frame" => {
-                // 🧭️ Mirrors the subject's own `MoveFrame` inverse exactly: after removing index
-                // `from`, the item lands at `to.min(len - 1)` — the inverse moves it back from there.
                 let from = num_or(params, "from", 0.0) as usize;
                 if from < original.frames.len() {
                     let landed_at = (num_or(params, "to", 0.0) as usize).min(original.frames.len() - 1);
-                    ("move-frame".to_string(), obj(vec![("from", Json::Number(landed_at as f64)), ("to", Json::Number(from as f64))]))
-                } else {
-                    no_op()
+                    let moved = snap.frames.remove(landed_at);
+                    snap.frames.insert(from, moved);
                 }
             }
-            "set-frame-geometry" => {
-                let index = num_or(params, "index", 0.0) as usize;
-                match original.frames.get(index) {
-                    Some(frame) => (
-                        "set-frame-geometry".to_string(),
-                        obj(vec![
-                            ("index", Json::Number(index as f64)),
-                            ("left", Json::Number(frame.left as f64)),
-                            ("top", Json::Number(frame.top as f64)),
-                            ("width", Json::Number(frame.width as f64)),
-                            ("height", Json::Number(frame.height as f64)),
-                            ("indices", Json::Array(frame.indices.iter().map(|b| Json::Number(*b as f64)).collect())),
-                        ]),
-                    ),
-                    None => no_op(),
-                }
-            }
-            "set-frame-pixels" => {
-                let index = num_or(params, "index", 0.0) as usize;
-                match original.frames.get(index) {
-                    Some(frame) => ("set-frame-pixels".to_string(), obj(vec![("index", Json::Number(index as f64)), ("indices", Json::Array(frame.indices.iter().map(|b| Json::Number(*b as f64)).collect()))])),
-                    None => no_op(),
-                }
-            }
-            "set-frame-interlace" => {
-                let index = num_or(params, "index", 0.0) as usize;
-                match original.frames.get(index) {
-                    Some(frame) => ("set-frame-interlace".to_string(), obj(vec![("index", Json::Number(index as f64)), ("interlace", Json::Bool(frame.interlaced))])),
-                    None => no_op(),
-                }
-            }
-            "set-frame-delay" => {
-                let index = num_or(params, "index", 0.0) as usize;
-                match original.frames.get(index) {
-                    Some(frame) => ("set-frame-delay".to_string(), obj(vec![("index", Json::Number(index as f64)), ("delayCs", Json::Number(frame.delay as f64))])),
-                    None => no_op(),
-                }
-            }
-            "set-frame-disposal" => {
-                let index = num_or(params, "index", 0.0) as usize;
-                match original.frames.get(index) {
-                    Some(frame) => ("set-frame-disposal".to_string(), obj(vec![("index", Json::Number(index as f64)), ("disposal", Json::String(disposal_to_str(frame.dispose).to_string()))])),
-                    None => no_op(),
-                }
-            }
-            "set-frame-transparency" => {
-                let index = num_or(params, "index", 0.0) as usize;
-                match original.frames.get(index) {
-                    Some(frame) => ("set-frame-transparency".to_string(), obj(vec![("index", Json::Number(index as f64)), ("transparentIndex", frame.transparent.map(|t| Json::Number(t as f64)).unwrap_or(Json::Null))])),
-                    None => no_op(),
-                }
-            }
-            "set-frame-user-input" => {
-                let index = num_or(params, "index", 0.0) as usize;
-                match original.frames.get(index) {
-                    Some(frame) => ("set-frame-user-input".to_string(), obj(vec![("index", Json::Number(index as f64)), ("userInput", Json::Bool(frame.needs_user_input))])),
-                    None => no_op(),
-                }
-            }
+            "set-frame-geometry" => frame(snap, |source, target| (target.left, target.top, target.width, target.height, target.indices) = (source.left, source.top, source.width, source.height, source.indices.clone())),
+            "set-frame-pixels" => frame(snap, |source, target| target.indices = source.indices.clone()),
+            "set-frame-interlace" => frame(snap, |source, target| target.interlaced = source.interlaced),
+            "set-frame-delay" => frame(snap, |source, target| target.delay = source.delay),
+            "set-frame-disposal" => frame(snap, |source, target| target.dispose = source.dispose),
+            "set-frame-transparency" => frame(snap, |source, target| target.transparent = source.transparent),
+            "set-frame-user-input" => frame(snap, |source, target| target.needs_user_input = source.needs_user_input),
             "insert-comment" => {
-                let at = (num_or(params, "index", original.comments.len() as f64) as usize).min(original.comments.len());
-                ("remove-comment".to_string(), obj(vec![("index", Json::Number(at as f64))]))
+                let at = index.min(original.comments.len());
+                if at < snap.comments.len() {
+                    snap.comments.remove(at);
+                }
             }
             "remove-comment" => {
-                let index = num_or(params, "index", 0.0) as usize;
-                match original.comments.get(index) {
-                    Some(text) => ("insert-comment".to_string(), obj(vec![("index", Json::Number(index as f64)), ("text", Json::String(text.clone()))])),
-                    None => no_op(),
+                if let Some(text) = original.comments.get(index) {
+                    snap.comments.insert(index.min(snap.comments.len()), text.clone());
                 }
             }
             "add-app-extension" => {
-                let at = (num_or(params, "index", original.app_extensions.len() as f64) as usize).min(original.app_extensions.len());
-                ("remove-app-extension".to_string(), obj(vec![("index", Json::Number(at as f64))]))
-            }
-            "remove-app-extension" => {
-                let index = num_or(params, "index", 0.0) as usize;
-                match original.app_extensions.get(index) {
-                    Some(ext) => (
-                        "add-app-extension".to_string(),
-                        obj(vec![
-                            ("index", Json::Number(index as f64)),
-                            ("identifier", Json::String(String::from_utf8_lossy(&ext.identifier).into_owned())),
-                            ("authCode", Json::String(String::from_utf8_lossy(&ext.auth_code).into_owned())),
-                            ("data", Json::Array(ext.data.iter().map(|b| Json::Number(*b as f64)).collect())),
-                        ]),
-                    ),
-                    None => no_op(),
+                let at = index.min(original.app_extensions.len());
+                if at < snap.app_extensions.len() {
+                    snap.app_extensions.remove(at);
                 }
             }
-            _ => no_op(),
+            "remove-app-extension" => {
+                if let Some(extension) = original.app_extensions.get(index) {
+                    snap.app_extensions.insert(index.min(snap.app_extensions.len()), extension.clone());
+                }
+            }
+            other => return Err(format!("mutation kind {other:?} has no oracle inverse")),
         }
+        Ok(())
     }
     //#endregion 🔖️Inverse
 
@@ -763,11 +623,10 @@ mod imp {
         if forward.str("kind") != "remove-app-extension" {
             return Ok(input.to_vec());
         }
+        let bytes = |text: &[u8]| Json::Array(text.iter().map(|byte| Json::Number(f64::from(*byte))).collect());
         let seed = Json::Object(vec![
             ("index".to_string(), Json::Number(0.0)),
-            ("identifier".to_string(), Json::String("ARRANGE1".to_string())),
-            ("authCode".to_string(), Json::String("SED".to_string())),
-            ("data".to_string(), Json::Array(vec![Json::Number(1.0), Json::Number(2.0), Json::Number(3.0)])),
+            ("extension".to_string(), Json::Object(vec![("identifier".to_string(), bytes(b"ARRANGE1")), ("authCode".to_string(), bytes(b"SED")), ("data".to_string(), bytes(&[1, 2, 3]))])),
         ]);
         let mut snap = decode(input)?;
         apply_kind(&mut snap, "add-app-extension", &seed)?;
@@ -786,19 +645,16 @@ mod imp {
     }
 
     pub fn oracle_apply_mutation_inverse(original_input: &[u8], spec: &Json, mutated: &[u8]) -> Result<Vec<u8>, String> {
-        let kind = spec.str("kind");
-        // 🚀️ `set-snapshot`'s inverse is definitionally "the original document" — re-decoding and
-        // re-encoding the pristine input bytes IS that, without routing the (possibly large, full
-        // 54-frame) original snapshot through a `Vec<Json::Number>` round trip just to get there.
-        if kind == "set-snapshot" {
-            return encode(&decode(original_input)?);
-        }
         let original = decode(original_input)?;
         let params = spec.get("params").cloned().unwrap_or(Json::Object(Vec::new()));
-        let (inverse_kind, inverse_params) = inverse_spec(&original, &kind, &params);
         let mut snap = decode(mutated)?;
-        apply_kind(&mut snap, &inverse_kind, &inverse_params)?;
+        restore(&original, &spec.str("kind"), &params, &mut snap)?;
         encode(&snap)
+    }
+
+    /// 🔁️ The `@id-identity-round-trip` computation: a full `gif` decode re-encoded from this model alone.
+    pub fn oracle_identity_round_trip(input: &[u8]) -> Result<Vec<u8>, String> {
+        encode(&decode(input)?)
     }
 
     pub fn project(input: &[u8]) -> Result<Json, String> {
@@ -808,7 +664,7 @@ mod imp {
 }
 
 #[cfg(feature = "oracles")]
-pub use imp::{oracle_apply_mutation, oracle_apply_mutation_inverse, oracle_arrange, project};
+pub use imp::{oracle_apply_mutation, oracle_apply_mutation_inverse, oracle_arrange, oracle_identity_round_trip, project};
 //#endregion 🔖️Available
 
 //#region 🔖️Unavailable
@@ -826,6 +682,11 @@ pub fn oracle_arrange(_input: &[u8], _forward: &Json) -> Result<Vec<u8>, String>
 
 #[cfg(not(feature = "oracles"))]
 pub fn oracle_apply_mutation_inverse(_original_input: &[u8], _spec: &Json, _mutated: &[u8]) -> Result<Vec<u8>, String> {
+    Err("the `oracles` feature is disabled — this host was not built with the registered reference implementations".to_string())
+}
+
+#[cfg(not(feature = "oracles"))]
+pub fn oracle_identity_round_trip(_input: &[u8]) -> Result<Vec<u8>, String> {
     Err("the `oracles` feature is disabled — this host was not built with the registered reference implementations".to_string())
 }
 

@@ -5,15 +5,50 @@
   "type": "object",
   "additionalProperties": false,
   "required": [
+    "mutation",
     "id",
     "newLength"
   ],
   "properties": {
+    "mutation": {
+      "const": "changePileLength"
+    },
     "id": {
-      "type": "string"
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Pile",
+          "de": "Pfahl"
+        },
+        "description": {
+          "en": "The pile group this mutation addresses.",
+          "de": "Die Pfahlgruppe, die diese Mutation adressiert."
+        },
+        "ref": {
+          "kind": "pile"
+        },
+        "group": "target",
+        "order": 10
+      }
     },
     "newLength": {
-      "type": "number"
+      "type": "number",
+      "exclusiveMinimum": 0,
+      "x-semio-ui": {
+        "widget": "stepper",
+        "role": "value",
+        "label": {
+          "en": "Pile length L",
+          "de": "Pfahllänge L"
+        },
+        "unit": "m",
+        "step": 0.5,
+        "precision": 2,
+        "group": "piles",
+        "order": 20
+      }
     }
   }
 }

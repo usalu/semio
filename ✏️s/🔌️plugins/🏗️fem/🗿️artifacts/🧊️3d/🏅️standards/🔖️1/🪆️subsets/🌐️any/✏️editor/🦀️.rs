@@ -426,6 +426,7 @@ fn fem3d_artifact_edit(forward: Fem3dMutation, inverse: Vec<Fem3dMutation>, desc
             label: None,
             group_id: None,
             origin: Default::default(),
+            transaction: None,
         }],
         description,
         coalesce_key: None,

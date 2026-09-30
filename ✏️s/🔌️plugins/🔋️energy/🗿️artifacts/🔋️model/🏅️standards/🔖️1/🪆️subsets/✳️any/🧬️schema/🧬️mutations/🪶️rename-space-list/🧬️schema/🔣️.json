@@ -5,15 +5,48 @@
   "type": "object",
   "additionalProperties": false,
   "required": [
+    "mutation",
     "id",
     "newName"
   ],
   "properties": {
+    "mutation": {
+      "const": "renameSpaceList"
+    },
     "id": {
-      "type": "integer"
+      "type": "integer",
+      "minimum": 0,
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Space list",
+          "de": "Raumliste"
+        },
+        "description": {
+          "en": "The space list to rename, by id.",
+          "de": "Raumliste, die diese Mutation umbenennt, per ID."
+        },
+        "ref": {
+          "kind": "spaceList"
+        },
+        "group": "target",
+        "order": 10
+      }
     },
     "newName": {
-      "type": "string"
+      "type": "string",
+      "pattern": "[^\\t\\n\\u000B\\f\\r \\u0085\\u00A0\\u1680\\u2000-\\u200A\\u2028\\u2029\\u202F\\u205F\\u3000]",
+      "x-semio-ui": {
+        "widget": "text",
+        "role": "value",
+        "label": {
+          "en": "Name",
+          "de": "Name"
+        },
+        "group": "identity",
+        "order": 20
+      }
     }
   }
 }

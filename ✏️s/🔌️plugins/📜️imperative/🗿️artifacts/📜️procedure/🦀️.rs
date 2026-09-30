@@ -567,7 +567,7 @@ pub mod standards {
                             #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔀reorder-steps/↩️inverse/🦀️.rs"]
                             pub mod inverse;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔀reorder-steps/🧪️tests/🧪️warns-that-an-over-clamped-index-leaves-the-tail-step-in-place/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔀reorder-steps/🧪️tests/🧪️warns-over-clamped-index-leaves-tail-step-place/🦀️.rs"]
                             mod tests_warns_that_an_over_clamped_index_leaves_the_tail_step_in_place;
                             #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔀reorder-steps/📝️text/🦀️.rs"]
                             pub mod text;

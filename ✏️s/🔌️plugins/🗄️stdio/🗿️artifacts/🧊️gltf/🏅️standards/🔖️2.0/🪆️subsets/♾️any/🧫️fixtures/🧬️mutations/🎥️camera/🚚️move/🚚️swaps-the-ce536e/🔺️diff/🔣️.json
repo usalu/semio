@@ -1,17 +1,44 @@
 {
-  "id": "s.stdio.gltf.mutation.move-camera.v1",
-  "version": 1,
-  "touchedPaths": [
-    "document/cameras/0",
-    "document/cameras/1"
-  ],
-  "payload": {
-    "index": 0,
-    "position": 1
+  "nodes": {
+    "modified": [
+      {
+        "index": 0,
+        "diff": {
+          "camera": 1
+        }
+      },
+      {
+        "index": 1,
+        "diff": {
+          "camera": 0
+        }
+      }
+    ]
   },
-  "operation": {
-    "kind": "move",
-    "index": 0,
-    "position": 1
+  "cameras": {
+    "modified": [
+      {
+        "index": 0,
+        "diff": {
+          "type": "orthographic",
+          "orthographic": {
+            "xmag": 1,
+            "ymag": 1,
+            "zfar": 2,
+            "znear": 0.5
+          }
+        }
+      },
+      {
+        "index": 1,
+        "diff": {
+          "type": "perspective",
+          "perspective": {
+            "yfov": 0.5,
+            "znear": 0.5
+          }
+        }
+      }
+    ]
   }
 }

@@ -12,13 +12,50 @@
   ],
   "properties": {
     "mutation": {
-      "const": "changeTargetRegionHidden"
+      "const": "changeTargetRegionHidden",
+      "x-semio-ui": {
+        "widget": "hidden",
+        "role": "discriminator",
+        "label": {
+          "en": "Mutation",
+          "de": "Mutation"
+        }
+      }
     },
     "id": {
-      "type": "string"
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Target region",
+          "de": "Zielregion"
+        },
+        "description": {
+          "en": "The target region this mutation addresses.",
+          "de": "Die Zielregion, die diese Mutation adressiert."
+        },
+        "ref": {
+          "kind": "targetRegion",
+          "domain": "vortex",
+          "granularity": "node"
+        },
+        "group": "target",
+        "order": 10
+      }
     },
     "newHidden": {
-      "type": "boolean"
+      "type": "boolean",
+      "x-semio-ui": {
+        "widget": "toggle",
+        "role": "value",
+        "label": {
+          "en": "Hidden",
+          "de": "Ausgeblendet"
+        },
+        "group": "state",
+        "order": 20
+      }
     }
   }
 }

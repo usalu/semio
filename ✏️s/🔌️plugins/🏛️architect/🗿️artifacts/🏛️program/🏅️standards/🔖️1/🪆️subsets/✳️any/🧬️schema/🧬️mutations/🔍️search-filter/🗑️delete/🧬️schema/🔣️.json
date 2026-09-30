@@ -5,12 +5,34 @@
   "type": "object",
   "additionalProperties": false,
   "required": [
+    "mutation",
     "id"
   ],
   "properties": {
+    "mutation": {
+      "const": "deleteSearchFilter"
+    },
     "id": {
-      "type": "integer",
-      "minimum": 0
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Search Filter",
+          "de": "Suchfilter"
+        },
+        "description": {
+          "en": "The search filter to delete.",
+          "de": "Zu löschender Eintrag vom Typ „Suchfilter“."
+        },
+        "ref": {
+          "kind": "searchFilter",
+          "domain": "program",
+          "granularity": "entity"
+        },
+        "group": "target",
+        "order": 10
+      }
     }
   }
 }

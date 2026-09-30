@@ -5,6 +5,10 @@ edition = "2021"
 rust-version.workspace = true
 description = "Proc-macros for #[derive(ToValue, FromValue)] with #[value(...)] container/field attributes"
 
+[package.metadata.semio]
+role = "framework"
+id = "value-derive"
+
 [lints]
 workspace = true
 

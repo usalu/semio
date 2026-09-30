@@ -1,0 +1,114 @@
+{
+  "name": "@semio-tech/s-composition-laws-rs",
+  "root": "✏️s/🧑‍💻dev/🧩️composition-laws/📦️packages/🦀️rust",
+  "sourceRoot": "✏️s/🧑‍💻dev/🧩️composition-laws",
+  "projectType": "library",
+  "tags": [
+    "lang:rust",
+    "role:test",
+    "family:s-composition-laws",
+    "scope:s"
+  ],
+  "targets": {
+    "source-check": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "options": {
+        "command": "bun ./📜️script.ts source-check",
+        "cwd": "✏️s/🧑‍💻dev/🧩️composition-laws/📦️packages/🦀️rust",
+        "forwardAllArgs": true
+      },
+      "outputs": []
+    },
+    "test": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "options": {
+        "command": "bun ./📜️script.ts test",
+        "cwd": "✏️s/🧑‍💻dev/🧩️composition-laws/📦️packages/🦀️rust",
+        "forwardAllArgs": true
+      },
+      "outputs": []
+    },
+    "test-quick": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "options": {
+        "command": "bun ./📜️script.ts test quick",
+        "cwd": "✏️s/🧑‍💻dev/🧩️composition-laws/📦️packages/🦀️rust",
+        "forwardAllArgs": true
+      },
+      "outputs": []
+    },
+    "canonical-architecture": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "options": {
+        "command": "bun ./📜️script.ts test quick",
+        "cwd": "✏️s/🧑‍💻dev/🧩️composition-laws/📦️packages/🦀️rust",
+        "forwardAllArgs": true
+      },
+      "outputs": []
+    },
+    "test-generation2d": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "options": {
+        "command": "bun ./📜️script.ts test quick --test generation2d-example-export",
+        "cwd": "✏️s/🧑‍💻dev/🧩️composition-laws/📦️packages/🦀️rust",
+        "forwardAllArgs": true
+      },
+      "outputs": []
+    },
+    "test-sequence": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "options": {
+        "command": "bun ./📜️script.ts test quick --test sequence-runtime",
+        "cwd": "✏️s/🧑‍💻dev/🧩️composition-laws/📦️packages/🦀️rust",
+        "forwardAllArgs": true
+      },
+      "outputs": []
+    },
+    "test-generation3d-geometry": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "options": {
+        "command": "bun ./📜️script.ts test quick --test generation3d-example-geometry",
+        "cwd": "✏️s/🧑‍💻dev/🧩️composition-laws/📦️packages/🦀️rust",
+        "forwardAllArgs": true
+      },
+      "outputs": []
+    },
+    "test-generation3d-incremental": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "options": {
+        "command": "bun ./📜️script.ts test quick --test generation3d-incremental-eval",
+        "cwd": "✏️s/🧑‍💻dev/🧩️composition-laws/📦️packages/🦀️rust",
+        "forwardAllArgs": true
+      },
+      "outputs": []
+    },
+    "test-generation3d-app-laws": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "options": {
+        "command": "bun ./📜️script.ts test quick --test generation3d-app-laws",
+        "cwd": "✏️s/🧑‍💻dev/🧩️composition-laws/📦️packages/🦀️rust",
+        "forwardAllArgs": true
+      },
+      "outputs": []
+    },
+    "test-generation3d-unit-laws": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "options": {
+        "command": "bun ./📜️script.ts test quick --test semio_s_artifact_procedural_generation3d",
+        "cwd": "✏️s/🧑‍💻dev/🧩️composition-laws/📦️packages/🦀️rust",
+        "forwardAllArgs": true
+      },
+      "outputs": []
+    }
+  }
+}

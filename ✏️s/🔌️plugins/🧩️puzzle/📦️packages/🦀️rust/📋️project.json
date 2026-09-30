@@ -70,6 +70,14 @@
         "forwardAllArgs": true
       },
       "outputs": []
+    },
+    "canonical-architecture": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "options": {
+        "cwd": "✏️s/🔌️plugins/🧩️puzzle/📦️packages/🦀️rust",
+        "command": "bun ./📜️script.ts canonical-architecture"
+      }
     }
   }
 }

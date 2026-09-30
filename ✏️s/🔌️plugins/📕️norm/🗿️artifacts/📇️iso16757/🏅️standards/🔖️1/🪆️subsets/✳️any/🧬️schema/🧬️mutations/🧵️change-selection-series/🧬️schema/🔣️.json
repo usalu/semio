@@ -4,9 +4,30 @@
   "title": "ChangeSelectionSeries",
   "type": "object",
   "additionalProperties": false,
+  "required": [],
   "properties": {
     "newSeriesId": {
-      "type": "string"
+      "type": [
+        "string",
+        "null"
+      ],
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "value",
+        "label": {
+          "en": "Product series",
+          "de": "Produktserie"
+        },
+        "description": {
+          "en": "Product series the selection request narrows to.",
+          "de": "Produktserie, auf die der Auswahlauftrag eingeschränkt wird."
+        },
+        "ref": {
+          "kind": "productSeries"
+        },
+        "group": "selection",
+        "order": 10
+      }
     }
   }
 }

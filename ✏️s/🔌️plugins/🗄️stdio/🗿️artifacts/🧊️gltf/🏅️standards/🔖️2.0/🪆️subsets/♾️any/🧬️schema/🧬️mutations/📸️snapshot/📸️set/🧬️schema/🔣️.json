@@ -9,7 +9,15 @@
   ],
   "properties": {
     "snapshot": {
-      "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/gltf/2.0/any/snapshot.json"
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/gltf/2.0/any/snapshot.json",
+      "x-semio-ui": {
+        "label": {
+          "en": "glTF asset",
+          "de": "glTF-Asset"
+        },
+        "group": "value",
+        "order": 10
+      }
     }
   }
 }

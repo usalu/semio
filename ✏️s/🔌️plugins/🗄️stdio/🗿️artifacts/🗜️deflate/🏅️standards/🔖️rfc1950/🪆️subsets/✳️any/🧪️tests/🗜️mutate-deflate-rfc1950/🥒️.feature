@@ -30,6 +30,12 @@ Feature: Apply every typed RFC1950 mutation to a real-world zlib stream
   block splits and Huffman tables for the same payload, so byte equality is deliberately not the
   normative property here (RFC1951 leaves that choice to the writer).
 
+  Every `params` cell is the leaf's own wire payload, exactly what `DeflateMutation::payload_value()`
+  emits and the leaf schema describes — the replacement texts are spelled as their UTF-8 byte arrays,
+  the snapshot carries its schema id, and an absent preset dictionary is simply absent. Both
+  implementations read that one wire: the oracle by field name, the subject through
+  `Mutation::from_payload_value`, and the subject undoes each kind with `Mutation::inverse` itself.
+
   @id-mutate
   @level-exhaustive
   @mode-differential
@@ -41,22 +47,11 @@ Feature: Apply every typed RFC1950 mutation to a real-world zlib stream
       """
     Then the oracle and the subject agree on the semantic projection
     Examples:
-      | id                    | params                                                                                                                                          |
-      | set-snapshot          | {"method": 8, "windowBits": 6, "levelHint": "default", "dictId": null, "payload": "This is the complete replacement snapshot for the set-snapshot mutation kind, written as real UTF-8 text rather than a synthetic placeholder."} |
-      | set-compression-params | {"method": 8, "windowBits": 5, "levelHint": "fastest"}                                                                                        |
-      | set-preset-dictionary | {"dictId": 305419896}                                                                                                                          |
-      | set-payload           | {"payload": "This replacement payload proves SetPayload discards the original real-world content and substitutes this text instead."}         |
-
-  @id-no-mutation-baseline-mutate
-  @level-exhaustive
-  @mode-differential
-  Scenario: Apply no-mutation to the real zlib stream
-    Given the real input document shared://🗜️readme-level9.zz
-    When the no-mutation mutation is applied with its parameters
-      """
-      {"kind": "no-mutation", "params": {}}
-      """
-    Then the oracle and the subject agree on the semantic projection
+      | id                     | params                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                             |
+      | set-snapshot           | {"snapshot":{"schema":"stdio.deflate","compressionMethod":8,"windowBits":6,"compressionLevelHint":"default","payload":[84,104,105,115,32,105,115,32,116,104,101,32,99,111,109,112,108,101,116,101,32,114,101,112,108,97,99,101,109,101,110,116,32,115,110,97,112,115,104,111,116,32,102,111,114,32,116,104,101,32,115,101,116,45,115,110,97,112,115,104,111,116,32,109,117,116,97,116,105,111,110,32,107,105,110,100,44,32,119,114,105,116,116,101,110,32,97,115,32,114,101,97,108,32,85,84,70,45,56,32,116,101,120,116,32,114,97,116,104,101,114,32,116,104,97,110,32,97,32,115,121,110,116,104,101,116,105,99,32,112,108,97,99,101,104,111,108,100,101,114,46]}} |
+      | set-compression-params | {"method":8,"window_bits":5,"level_hint":"fastest"}                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                |
+      | set-preset-dictionary  | {"dict_id":305419896}                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                              |
+      | set-payload            | {"payload":[84,104,105,115,32,114,101,112,108,97,99,101,109,101,110,116,32,112,97,121,108,111,97,100,32,112,114,111,118,101,115,32,83,101,116,80,97,121,108,111,97,100,32,100,105,115,99,97,114,100,115,32,116,104,101,32,111,114,105,103,105,110,97,108,32,114,101,97,108,45,119,111,114,108,100,32,99,111,110,116,101,110,116,32,97,110,100,32,115,117,98,115,116,105,116,117,116,101,115,32,116,104,105,115,32,116,101,120,116,32,105,110,115,116,101,97,100,46]}                                                                                                                                                                                               |
 
   @id-inverse
   @level-exhaustive
@@ -69,22 +64,11 @@ Feature: Apply every typed RFC1950 mutation to a real-world zlib stream
       """
     Then the restored document's semantic projection matches its state before <id> was applied
     Examples:
-      | id                    | params                                                                                                                                          |
-      | set-snapshot          | {"method": 8, "windowBits": 6, "levelHint": "default", "dictId": null, "payload": "This is the complete replacement snapshot for the set-snapshot mutation kind, written as real UTF-8 text rather than a synthetic placeholder."} |
-      | set-compression-params | {"method": 8, "windowBits": 5, "levelHint": "fastest"}                                                                                        |
-      | set-preset-dictionary | {"dictId": 305419896}                                                                                                                          |
-      | set-payload           | {"payload": "This replacement payload proves SetPayload discards the original real-world content and substitutes this text instead."}         |
-
-  @id-no-mutation-baseline-inverse
-  @level-exhaustive
-  @mode-property
-  Scenario: Undoing no-mutation restores the real zlib stream
-    Given the real input document shared://🗜️readme-level9.zz
-    When the no-mutation mutation is applied and then undone
-      """
-      {"kind": "no-mutation", "params": {}}
-      """
-    Then the restored document's semantic projection matches its state before no-mutation was applied
+      | id                     | params                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                             |
+      | set-snapshot           | {"snapshot":{"schema":"stdio.deflate","compressionMethod":8,"windowBits":6,"compressionLevelHint":"default","payload":[84,104,105,115,32,105,115,32,116,104,101,32,99,111,109,112,108,101,116,101,32,114,101,112,108,97,99,101,109,101,110,116,32,115,110,97,112,115,104,111,116,32,102,111,114,32,116,104,101,32,115,101,116,45,115,110,97,112,115,104,111,116,32,109,117,116,97,116,105,111,110,32,107,105,110,100,44,32,119,114,105,116,116,101,110,32,97,115,32,114,101,97,108,32,85,84,70,45,56,32,116,101,120,116,32,114,97,116,104,101,114,32,116,104,97,110,32,97,32,115,121,110,116,104,101,116,105,99,32,112,108,97,99,101,104,111,108,100,101,114,46]}} |
+      | set-compression-params | {"method":8,"window_bits":5,"level_hint":"fastest"}                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                |
+      | set-preset-dictionary  | {"dict_id":305419896}                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                              |
+      | set-payload            | {"payload":[84,104,105,115,32,114,101,112,108,97,99,101,109,101,110,116,32,112,97,121,108,111,97,100,32,112,114,111,118,101,115,32,83,101,116,80,97,121,108,111,97,100,32,100,105,115,99,97,114,100,115,32,116,104,101,32,111,114,105,103,105,110,97,108,32,114,101,97,108,45,119,111,114,108,100,32,99,111,110,116,101,110,116,32,97,110,100,32,115,117,98,115,116,105,116,117,116,101,115,32,116,104,105,115,32,116,101,120,116,32,105,110,115,116,101,97,100,46]}                                                                                                                                                                                               |
 
   @id-identity-round-trip
   @level-long

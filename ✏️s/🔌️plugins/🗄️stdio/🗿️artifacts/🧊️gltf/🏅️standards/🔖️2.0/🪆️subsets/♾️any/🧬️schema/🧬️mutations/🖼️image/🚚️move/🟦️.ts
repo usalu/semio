@@ -1,7 +1,14 @@
-/** 🦠️ move-image executable structural glTF command. */
-import type { GltfOrthographic, GltfPerspective, GltfSnapshot } from '../../📸️snapshot/🟦️.ts';
-import { clone, insert, order, position, reject, remove, relocate, reorder, repair, type GltfMutationRejection, type GltfStructuralResult } from './🟦️';
-export const GltfMoveImageDescriptor = { id: 's.stdio.gltf.mutation.move-image.v1', version: 1, touchedPathPattern: 'document/images', referencePolicy: 'all typed image references are remapped, repaired, or rejected' } as const;
-export interface GltfMoveImagePayload { index: number; position: number }
-export const validateGltfMoveImage = (payload: GltfMoveImagePayload, base: GltfSnapshot): GltfMutationRejection | undefined => { const index = position(payload.index, base.document.images.length, 'document/images'); if (index) return index; const destination = position(payload.position, base.document.images.length, 'document/images'); if (destination) return destination; if (payload.index === payload.position) return reject('gltf.mutation.no-observable-change', 'document/images', 'destination equals source');  return undefined; };
-export const applyGltfMoveImage = (base: GltfSnapshot, payload: GltfMoveImagePayload): GltfStructuralResult => { const rejection = validateGltfMoveImage(payload, base); if (rejection) return { accepted: false, rejection }; try { const next = clone(base); relocate(next, 'images', payload.index, payload.position); return { accepted: true, snapshot: clone(next) }; } catch (error) { return { accepted: false, rejection: typeof error === 'object' && error && 'code' in error ? error as GltfMutationRejection : reject('gltf.mutation.apply-failed', 'document/images', String(error)) }; } };
+/** 🚚️ `move-image` wire twin: the flat `Apply` payload `GltfMoveImagePayload` and the phase wire `MoveImageMutation`, exactly as `./🦀️.rs` writes them.
+ * @see ./🧬️schema/🔣️.json */
+import { gltfWireIndex, gltfWireObject, gltfWireRequired } from "../../../📸️snapshot/🟦️.ts";
+import { type GltfDiff, type GltfPhase, gltfWirePhase, parseGltfDiff } from "../../../🔺️diff/🟦️.ts";
+
+export interface GltfMoveImagePayload {
+  index: number;
+  position: number;
+}
+
+export type MoveImageMutation = GltfPhase<GltfMoveImagePayload, GltfDiff>;
+
+export const parseGltfMoveImagePayload = gltfWireObject<GltfMoveImagePayload>({ index: gltfWireRequired(gltfWireIndex), position: gltfWireRequired(gltfWireIndex) });
+export const parseMoveImageMutation = gltfWirePhase(parseGltfMoveImagePayload, parseGltfDiff);

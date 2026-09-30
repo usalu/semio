@@ -5,19 +5,73 @@
   "type": "object",
   "additionalProperties": false,
   "required": [
+    "mutation",
     "sectionId",
     "elementId",
     "newThickness"
   ],
   "properties": {
+    "mutation": {
+      "const": "changePlateThickness"
+    },
     "sectionId": {
-      "type": "string"
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Cross-section",
+          "de": "Querschnitt"
+        },
+        "description": {
+          "en": "The cross-section containing the plate element.",
+          "de": "Der Querschnitt, der das Blechelement enthält."
+        },
+        "ref": {
+          "kind": "section"
+        },
+        "group": "target",
+        "order": 10
+      }
     },
     "elementId": {
-      "type": "string"
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Plate element",
+          "de": "Blechelement"
+        },
+        "description": {
+          "en": "The plate element of the cross-section.",
+          "de": "Das Blechelement des Querschnitts."
+        },
+        "ref": {
+          "kind": "element"
+        },
+        "group": "target",
+        "order": 20
+      }
     },
     "newThickness": {
-      "type": "number"
+      "type": "number",
+      "exclusiveMinimum": 0,
+      "x-semio-ui": {
+        "widget": "stepper",
+        "role": "value",
+        "label": {
+          "en": "Plate thickness t",
+          "de": "Blechdicke t"
+        },
+        "unit": "m",
+        "displayUnit": "mm",
+        "displayFactor": 1000,
+        "step": 0.0005,
+        "precision": 1,
+        "group": "section",
+        "order": 30
+      }
     }
   }
 }

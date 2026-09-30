@@ -1,0 +1,19 @@
+{
+  "mutation": "patchSnapshot",
+  "payload": {
+    "patch": {
+      "edits": [
+        {
+          "path": ["value"],
+          "edit": {
+            "operation": "set",
+            "value": {
+              "kind": "object",
+              "members": [{ "key": "revision", "value": { "kind": "number", "lexeme": "2" } }]
+            }
+          }
+        }
+      ]
+    }
+  }
+}

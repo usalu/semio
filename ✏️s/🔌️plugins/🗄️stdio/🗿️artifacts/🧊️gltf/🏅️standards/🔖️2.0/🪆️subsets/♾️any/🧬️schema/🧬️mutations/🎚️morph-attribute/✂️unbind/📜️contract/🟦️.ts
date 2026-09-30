@@ -1,6 +1,0 @@
-/** 🧪️ Focused unbind-morph-target-attribute mutation-law probe. */
-import type { GltfSnapshot } from '../../../📸️snapshot/🟦️.ts';
-import { applyGltfUnbindMorphTargetAttribute, type GltfUnbindMorphTargetAttributePayload } from './🟦️';
-import { deriveGltfUnbindMorphTargetAttributeDiff } from './🟦️';
-import { deriveGltfUnbindMorphTargetAttributeInverse } from './🟦️';
-export const assertGltfUnbindMorphTargetAttributeLaws = (base: GltfSnapshot, payload: GltfUnbindMorphTargetAttributePayload) => { const applied = applyGltfUnbindMorphTargetAttribute(base, payload); if (!applied.accepted) return applied; const replay = applyGltfUnbindMorphTargetAttribute(base, payload); const direct = deriveGltfUnbindMorphTargetAttributeDiff(base, payload); const undo = deriveGltfUnbindMorphTargetAttributeInverse(base, payload); if (!replay.accepted || !direct.accepted || !undo.accepted || JSON.stringify(applied.snapshot) !== JSON.stringify(replay.snapshot) || JSON.stringify(applied.diff) !== JSON.stringify(replay.diff) || JSON.stringify(applied.touchedPaths) !== JSON.stringify(undo.touchedPaths)) throw new Error('unbind-morph-target-attribute violates replay, direct-diff, or undo determinism'); return { applied, direct, undo }; };

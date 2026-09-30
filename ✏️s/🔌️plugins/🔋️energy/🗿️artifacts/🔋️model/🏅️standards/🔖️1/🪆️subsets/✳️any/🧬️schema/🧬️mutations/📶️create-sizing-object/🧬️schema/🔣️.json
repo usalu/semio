@@ -5,30 +5,115 @@
   "type": "object",
   "additionalProperties": false,
   "required": [
+    "mutation",
     "id",
     "zoneId",
     "sizingType",
     "designDayType"
   ],
   "properties": {
+    "mutation": {
+      "const": "createSizingObject"
+    },
     "id": {
-      "type": "integer"
+      "type": "integer",
+      "minimum": 0,
+      "x-semio-ui": {
+        "widget": "stepper",
+        "role": "value",
+        "label": {
+          "en": "ID",
+          "de": "ID"
+        },
+        "description": {
+          "en": "Id the new sizing object is created under; later mutations address it by this id.",
+          "de": "ID, unter der das neue Objekt angelegt wird; spätere Mutationen adressieren es darüber."
+        },
+        "step": 1,
+        "precision": 0,
+        "group": "identity",
+        "order": 10
+      }
     },
     "zoneId": {
-      "type": "integer"
+      "type": "integer",
+      "minimum": 0,
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Zone",
+          "de": "Zone"
+        },
+        "description": {
+          "en": "Assigned zone, by id.",
+          "de": "Zugeordnete Zone, per ID."
+        },
+        "ref": {
+          "kind": "zone",
+          "domain": "energyModel",
+          "granularity": "zone"
+        },
+        "group": "assignment",
+        "order": 20
+      }
     },
     "sizingType": {
       "enum": [
         "Heating",
         "Cooling",
         "OutdoorAir"
-      ]
+      ],
+      "x-semio-ui": {
+        "widget": "segmented",
+        "role": "value",
+        "label": {
+          "en": "Sizing type",
+          "de": "Auslegungsart"
+        },
+        "options": {
+          "Heating": {
+            "en": "Heating",
+            "de": "Heizung"
+          },
+          "Cooling": {
+            "en": "Cooling",
+            "de": "Kühlung"
+          },
+          "OutdoorAir": {
+            "en": "Outdoor air",
+            "de": "Außenluft"
+          }
+        },
+        "group": "sizing",
+        "order": 30
+      }
     },
     "designDayType": {
       "enum": [
         "Heating",
         "Cooling"
-      ]
+      ],
+      "x-semio-ui": {
+        "widget": "segmented",
+        "role": "value",
+        "label": {
+          "en": "Design day type",
+          "de": "Auslegungstagtyp"
+        },
+        "options": {
+          "Heating": {
+            "en": "Heating design day",
+            "de": "Heizauslegungstag"
+          },
+          "Cooling": {
+            "en": "Cooling design day",
+            "de": "Kühlauslegungstag"
+          }
+        },
+        "group": "sizing",
+        "order": 40
+      }
     }
   }
 }

@@ -102,10 +102,6 @@ import {
   runCanonicalGoBuild,
   runCanonicalGoTests,
   runProbe,
-  layeringBreaches,
-  layeringCounts,
-  layeringReferences,
-  writeLayeringBaseline,
   runTestBudgeted,
   spawnDaemon,
   summarizeCoverage,
@@ -124,6 +120,7 @@ import {
   type TestLevel,
 } from "./🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
 import { repoCacheDirectory } from "./🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🟦️.ts";
+import { canonicalArchitectureEnvironment } from "./🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🦀️cargo/🟦️.ts";
 import {
   buildSemanticCensus,
   fileKindIdForSourcePath,
@@ -309,7 +306,7 @@ export const AGENT_INSTRUCTION_ALIASES = ["CLAUDE.md", "GEMINI.md", ".github/cop
 
 /** 🧷️ The repo-local git settings `setup git` writes into `.git/config`; the user's global git config is never
  * touched. `core.longpaths` lets Git for Windows check out, track and clean paths past `MAX_PATH` (tracked fixture paths
- * reach 239 UTF-16 units below the clone root; git ignores the key elsewhere) and `core.symlinks` materializes the
+ * reach 210 UTF-16 units below the clone root; git ignores the key elsewhere) and `core.symlinks` materializes the
  * committed symlinks. A first clone on Windows needs `git clone -c core.longpaths=true`, which writes the same key.
  * @see README.md */
 export const REPO_LOCAL_GIT_CONFIG = [
@@ -1637,6 +1634,14 @@ function toolJobImportPreparationBounded(source: string): boolean {
   return !!block && !block.body.includes("serde_json::to_vec(&(port, media))") && !block.body.includes("raw.clone()") && block.body.includes("build_artifact_reserved_media_job(port, media");
 }
 
+function toolJobTypedCaptureBody(source: string): string | undefined {
+  const start = source.lastIndexOf("async fn capture_typed_command_roots(");
+  if (start < 0 || source.split("async fn capture_typed_command_roots(").length !== 2) return undefined;
+  const body = toolJobRustBlock(source, source.indexOf("{", start))?.body;
+  const expected = "\n            self.refresh_cache().await?;\n            let (snapshot, config, history) = self.command_cache_inputs();\n            let canonical_base_revision = self.store.content_revision();\n            let window_config_authority = self.window_config_store.capture(meta.view_state.as_ref()).await?;\n            let targeted_window_transient_view = match A::retained_window_transient_target(command) {\n                Some((window_id, expected_kind)) => {\n                    let view = meta.view_state.as_ref().ok_or_else(|| plugin_sdk_fault(\"targeted window transient capture requires an exact ViewModel roster\"))?;\n                    let window = view.window_instances.iter().find(|window| window.id == window_id).ok_or_else(|| plugin_sdk_fault(\"targeted window transient capture requires an attached window instance\"))?;\n                    if window.window_kind_id != expected_kind {\n                        return Err(plugin_sdk_fault(\"targeted window transient capture does not match the command owner's expected window kind\"));\n                    }\n                    Some(view.for_window_instance(window_id).ok_or_else(|| plugin_sdk_fault(\"targeted window transient capture lost its attached window instance\"))?)\n                }\n                None => None,\n            };\n            let window_transient_authority = self.window_transient_store.capture(targeted_window_transient_view.as_ref().or(meta.view_state.as_ref()))?;\n            Ok(TypedCommandRoots {\n                snapshot,\n                config,\n                history,\n                children: std::sync::Arc::new(ChildContentView::clone(&self.child_content_root)),\n                draft_snapshot: self.draft_store.snapshot_root(),\n                interaction_state: self.interaction_store.snapshot_root(),\n                interaction_hover: self.interaction_hover.clone(),\n                presence_peers: self.presence_store.peers_root(),\n                transient: self.transient_store.current_root(),\n                peer_presence: std::sync::Arc::clone(&self.peer_presence),\n                canonical_base_revision,\n                base_revision: semio_framework_job::RevisionId(u64::from_be_bytes(canonical_base_revision[..8].try_into().expect(\"revision lane width\"))),\n                generation: semio_framework_job::Generation(self.store.generation()),\n                config_generation: self.config_store.generation(),\n                draft_generation: self.draft_store.generation(),\n                presence_generation: self.presence_store.generation().await,\n                transient_generation: self.transient_store.generation().await,\n                window_config_authority,\n                window_transient_authority,\n            })\n        ";
+  return body && body.replace(/\s+/gu, "") === expected.replace(/\s+/gu, "") ? body : undefined;
+}
+
 function toolJobRetainedDispatchSetup(source: string): string | undefined {
   const body = (name: string): string | undefined => {
     const start = source.lastIndexOf(`async fn ${name}(`);
@@ -1649,9 +1654,10 @@ function toolJobRetainedDispatchSetup(source: string): string | undefined {
   const direct = dispatch.indexOf("self.start_typed_command_operation(command, admission, meta, operation_id, None).await");
   const retained = dispatch.indexOf("self.latest_wins_commands.insert_admitted(");
   const reservation = setup.indexOf("assert!(self.tool_operations.can_insert(operation_id.0)");
-  const prepare = setup.indexOf("self.refresh_cache().await?");
+  const capture = toolJobTypedCaptureBody(source);
+  const prepare = setup.indexOf("self.capture_typed_command_roots(command.as_ref(), meta).await?");
   return guard >= 0 && direct > guard && retained > guard && !dispatch.includes("refresh_cache().await")
-    && reservation >= 0 && prepare > reservation && setup.includes("self.typed_operation_reservations[") && setup.includes("self.can_admit_typed_operation(operation_id.0)") ? setup : undefined;
+    && !!capture && reservation >= 0 && prepare > reservation && setup.includes("self.typed_operation_reservations[") && setup.includes("self.can_admit_typed_operation(operation_id.0)") ? setup : undefined;
 }
 
 function toolJobMountedDispatchOneTurnExact(raw: string): boolean {
@@ -1703,16 +1709,17 @@ function toolJobFullOperationBounded(source: string): boolean {
   const publisherOpen = publisherStart < 0 ? -1 : source.indexOf("{", publisherStart);
   const publisher = publisherOpen < 0 ? undefined : toolJobRustBlock(source, publisherOpen);
   const retainedSetup = toolJobRetainedDispatchSetup(source);
+  const capturedRoots = toolJobTypedCaptureBody(source);
   const retainedMountedOperation =
     !!retainedSetup &&
     retainedSetup.includes("MountedWorkerJobSession::try_new") &&
     retainedSetup.includes("dispatch_wire_retained_with_spec") &&
     retainedSetup.includes("self.tool_operations.insert_admitted(") &&
-    retainedSetup.includes("let draft_snapshot = self.draft_store.snapshot_root()") &&
-    retainedSetup.includes("let interaction_state = self.interaction_store.snapshot_root()") &&
+    capturedRoots?.includes("draft_snapshot: self.draft_store.snapshot_root()") &&
+    capturedRoots?.includes("interaction_state: self.interaction_store.snapshot_root()") &&
     retainedSetup.includes("presence_local: Some(self.presence_store.local_read().map_err(Fault::from)?)") &&
-    retainedSetup.includes("let presence_peers = self.presence_store.peers_root()") &&
-    retainedSetup.includes("let transient = self.transient_store.current_root()") &&
+    capturedRoots?.includes("presence_peers: self.presence_store.peers_root()") &&
+    capturedRoots?.includes("transient: self.transient_store.current_root()") &&
     source.includes("MountedTypedCommandFullOperationStage::AwaitingAck") &&
     source.includes("fn acknowledge_result_page") &&
     source.includes("if page.token != token") &&
@@ -1741,7 +1748,7 @@ function toolJobFullOperationBounded(source: string): boolean {
     boundedControl &&
     freshness &&
     !monolithicOutput;
-  return legacyMountedOperation || retainedMountedOperation;
+  return !!(legacyMountedOperation || retainedMountedOperation);
 }
 
 /** 🔒️ Requires document freshness before either resuming or beginning one retained publication turn. */
@@ -1997,6 +2004,10 @@ function toolJobImmutableOperationRootsExact(store: string): boolean {
   const local = blockOf("pub fn local_read(&self) -> Result<SnapshotRead<P>, String>");
   const transient = blockOf("pub fn current_root(&self) -> Arc<P>");
   const snapshot = blockOf("pub fn snapshot_root(&self) -> Arc<P>");
+  const owner = blockOf("pub fn snapshot_owner(&self) -> Arc<P>");
+  const group = blockOf("fn durable_group_read_root(&self)");
+  const groupRoot = owner?.body.trim() === 'self.durable_group_read_root().map_or_else(|| Arc::clone(&*self.current), |root| Arc::clone(root.current.as_ref().expect("unadopted durable group root retains its current snapshot")))' && group?.body.trim() === "self.durable_group_root.as_ref().filter(|root| root.visibility.committed() && !root.adopted)";
+  const arcClone = (body: string | undefined) => body?.trim() === "self.current.clone()" || body?.trim() === "Arc::clone(&*self.current)";
   return (
     !!local &&
     !!transient &&
@@ -2008,13 +2019,10 @@ function toolJobImmutableOperationRootsExact(store: string): boolean {
     local.body.includes("self.close_started || self.local_retirement_factory.is_none()") &&
     !store.includes("pub fn local_root(") &&
     transient.body.trim() === "self.current.clone()" &&
-    (snapshot.body.trim() === "self.current.clone()" || snapshot.body.trim() === "Arc::clone(&*self.current)") &&
+    (arcClone(snapshot.body) || (snapshot.body.trim() === "self.snapshot_owner()" && (arcClone(owner?.body) || groupRoot))) &&
     store.includes("self.local = Arc::new(candidate)") &&
     store.includes("self.current = Arc::new(candidate)") &&
     store.includes("pub fn content_revision_now(&self) -> [u8; 32]") &&
-    store.includes("artifact_snapshot_root_is_o1_and_generation_stable_until_the_next_event") &&
-    store.includes("presence_local_read_is_o1_and_never_clones_the_payload_at_capture") &&
-    store.includes("transient_root_is_o1_and_retains_the_exact_pre_reset_value") &&
     !local.body.includes("Arc::new") &&
     !transient.body.includes("Arc::new") &&
     !snapshot.body.includes("Arc::new")
@@ -3399,24 +3407,24 @@ function toolJobPeerCommitAuthorityExact(store: string, retirement: string): boo
     && store.includes('base_root: self.base_root.take().expect("peer candidate retains its exact immutable base")')
     && store.includes("self.base_root.is_none() && self.candidate.is_none()")
     && retirement.includes("base_root: std::mem::ManuallyDrop::new(Some(self.base_root))")
-    && retirement.includes("if self.base_root.take().is_some()") && retirement.includes("self.base_root.is_none() && self.local.is_none()");
+    && retirement.includes("if self.base_root.take().is_some()") && /self\.base_root\.is_none\(\)\s*&&\s*self\.local\.is_none\(\)/u.test(retirement);
 }
 
 function toolJobPeerInteractionRootsExact(plugin: string, store: string, channel: string, retirement = ""): boolean {
   const setup = toolJobRetainedDispatchSetup(plugin);
-  return (
+  const capture = toolJobTypedCaptureBody(plugin);
+  return !!(
     !!setup && toolJobMountedDispatchOneTurnExact(plugin) && toolJobPeerCommitAuthorityExact(store, retirement) &&
     plugin.includes("struct PeerPresenceRoot") &&
     plugin.includes("entries: [Option<std::sync::Arc<PeerPresenceEntry>>; PEER_PRESENCE_SLOTS]") &&
     plugin.includes("peer_presence: std::mem::ManuallyDrop<std::sync::Arc<PeerPresenceRoot>>") &&
     plugin.includes("peer_presence_retirements: ArtifactFixedRegistry<PeerPresenceRootRetirement>") &&
     plugin.includes("PeerPresenceRootRetirement::terminal_is_empty") &&
-    plugin.includes("peer_presence_capture_is_one_arc_and_retirement_waits_for_then_drains_the_exact_root") &&
     plugin.includes("struct PeerRosterPublication") &&
     plugin.includes("fn reserve_presence_ingress(&mut self, seq: u64) -> Result<PresenceRosterAdmission, Fault>") &&
     plugin.includes("fn admit_presence_ingress(&mut self, admission: PresenceRosterAdmission, command: protocol::PresenceCommandCursor, now_ms: i64)") &&
-    plugin.includes("fn push_presence_ingress(&mut self, generation: u64, page_index: u32, page: semio_framework::kernel::FixedCommandPage)") &&
-    plugin.includes("fn reject_presence_ingress(&mut self, admission: PresenceRosterAdmission, command: semio_framework::kernel::FixedCommandPage, fault: Fault)") &&
+    plugin.includes("fn push_presence_ingress(&mut self, generation: u64, page_index: u32, page: FixedCommandPage)") &&
+    plugin.includes("fn reject_presence_ingress(&mut self, admission: PresenceRosterAdmission, command: FixedCommandPage, fault: Fault)") &&
     plugin.includes("PeerRosterPublication::<A>::rejected(admission, command, fault)") &&
     plugin.includes("peer_roster_reservations: [Option<(u64, u64)>; ARTIFACT_LIVE_OUTPUT_SLOTS]") &&
     plugin.includes("self.validate_peer_roster_publication(seq, generation, &cancel)") &&
@@ -3424,7 +3432,7 @@ function toolJobPeerInteractionRootsExact(plugin: string, store: string, channel
     plugin.includes("self.peer_roster_outcomes.insert_admitted(generation, PresenceRosterOutcome { seq, fault })") &&
     plugin.includes("pub async fn plugin_reserve_presence_ingress<PA: PluginApp>") &&
     plugin.includes("pub async fn plugin_admit_reserved_presence<PA: PluginApp>") &&
-    plugin.includes("protocol::PresenceCommandCursor::admit_page(seq, own_color, item_count, page)") &&
+    plugin.includes("protocol::PresenceCommandCursor::admit_page(admission.sequence(), own_color, item_count, page)") &&
     plugin.includes("pub async fn plugin_push_reserved_presence_page<PA: PluginApp>") &&
     plugin.includes("Result<(), (Fault, semio_framework::kernel::FixedCommandPage)>") &&
     plugin.includes("self.peer_roster_publications.insert_admitted(generation, PeerRosterPublication::<A>::rejected(admission, command, fault))") &&
@@ -3452,13 +3460,12 @@ function toolJobPeerInteractionRootsExact(plugin: string, store: string, channel
     channel.includes('28 => return Err(malformed("channel presence command"') &&
     !channel.includes("async fn read_presence_roster") &&
     !channel.includes("#[derive(Clone, Debug, PartialEq)]\npub struct PresenceRosterWire") &&
-    setup.includes("let peer_presence = std::sync::Arc::clone(&self.peer_presence)") &&
-    setup.includes("let draft_snapshot = self.draft_store.snapshot_root()") &&
-    setup.includes("let interaction_state = self.interaction_store.snapshot_root()") &&
+    capture?.includes("peer_presence: std::sync::Arc::clone(&self.peer_presence)") &&
+    capture?.includes("draft_snapshot: self.draft_store.snapshot_root()") &&
+    capture?.includes("interaction_state: self.interaction_store.snapshot_root()") &&
     setup.includes("presence_local: Some(self.presence_store.local_read().map_err(Fault::from)?)") &&
-    setup.includes("let presence_peers = self.presence_store.peers_root()") &&
-    setup.includes("let transient = self.transient_store.current_root()") &&
-    plugin.includes("peer_roster_saturation_cancel_stale_and_interrupted_close_preserve_exact_authority") &&
+    capture?.includes("presence_peers: self.presence_store.peers_root()") &&
+    capture?.includes("transient: self.transient_store.current_root()") &&
     !setup.includes("self.presence_store.peers().await") &&
     !plugin.includes("let mut decoded: Vec<protocol::PresencePeer> = Vec::with_capacity(peers.len())")
   );
@@ -7261,6 +7268,11 @@ async function runInterfaceImportGate(root: string): Promise<void> {
 
 export class VerifyScript extends Script {
   async run(segments: string[]): Promise<void> {
+    if (segments[0] === "canonical-architecture") {
+      if (segments.length !== 1) throw new Error("Expected verify canonical-architecture");
+      this.runCanonicalArchitecture();
+      return;
+    }
     if (segments[0] === "taxonomy") {
       await this.runTaxonomy(segments.slice(1));
       return;
@@ -8936,29 +8948,23 @@ export class VerifyScript extends Script {
     runDependencyVerification(this.root, args, { jsLockParity: dependencyJsLockParitySelfTests, truth: dependencyTruthSelfTests });
   }
 
-  /**
-   * 🏛️Dependency-direction gate. Repo-wide and framework code must stay correct when an
-   * implementation area is deleted, so every reference from the former to the latter is counted
-   * against a shrink-only baseline. Which areas are implementations is taxonomy vocabulary.
-   */
+  /** 🧱️ Enforces dependency direction through the repository library's taxonomy-owned graph rule. */
   private runLayering(segments: string[]): void {
-    if (segments.includes("write-baseline")) {
-      const baseline = writeLayeringBaseline(this.root);
-      console.log(`[verify layering] baseline rewritten: ${Object.keys(baseline.allowed).length} file(s) still referencing an implementation area.`);
-      return;
-    }
-    const counts = layeringCounts(layeringReferences(this.root));
-    const total = Object.values(counts).reduce((sum, count) => sum + count, 0);
-    console.log(`[verify layering] ${Object.keys(counts).length} authored repo-wide/framework file(s) reference an implementation area (${total} reference(s)).`);
-    const breaches = layeringBreaches(this.root);
-    for (const breach of breaches) console.error(`[verify layering] ${breach.scope}: ${breach.summary}`);
-    if (breaches.length > 0) {
-      throw new Error(`[verify layering] ${breaches.length} file(s) grew past their baseline — move the implementation-specific logic into that implementation's own 📜️script.ts.`);
-    }
-    console.log("[verify layering] clean — no file references more implementation paths than its baseline.");
+    if (segments.length) throw new Error("Expected verify layering");
+    runCmd("bun", ["nx", "run", "@semio-tech/repo-lib:lint-dependency-direction"], { cwd: this.root, ...orchestratorBudgetOpts() });
+  }
+
+  /** 🏛️ Executes architecture contract checks contributed by their owning Nx projects. */
+  private runCanonicalArchitecture(): void {
+    console.log("[verify canonical-architecture] checking owner-contributed dependency, state and I/O contracts…");
+    runCmd("bun", ["nx", "run-many", "-t", "canonical-architecture", "--all", "--exclude", "workspace", "--skip-nx-cache", ...semioNxParallelFlag()], {
+      cwd: this.root,
+      ...orchestratorBudgetOpts(canonicalArchitectureEnvironment(this.root, process.env)),
+    });
   }
 
   private async runGate(): Promise<void> {
+    this.runCanonicalArchitecture();
     // Deliberately calls dependency-cruiser directly rather than `LintScript`/`nx run-many -t lint --all`:
     // several unrelated projects have pre-existing broken eslint configs,
     // and framework-renderer-wgpu:lint has known pending color-literal violations (see spawn_task follow-ups) —
@@ -8978,7 +8984,7 @@ export class VerifyScript extends Script {
     runCmd("bun", ["nx", "run", "@semio-tech/ui-rs:check"], { cwd: this.root, ...orchestratorBudgetOpts() });
     console.log("[verify] chrome i18n literal scan…");
     runCmd("bun", ["nx", "run", "@semio-tech/ui-react:check-chrome-i18n"], { cwd: this.root, ...orchestratorBudgetOpts() });
-    console.log("[verify] dependency direction (repo-wide/framework must not name an implementation)…");
+    console.log("[verify] TypeScript/JavaScript dependency direction…");
     this.runLayering([]);
     console.log("[verify] owner-root test taxonomy and feature contract…");
     {
@@ -9101,7 +9107,7 @@ export class VerifyScript extends Script {
     }
     console.log("[verify] dsl fixture laws…");
     // Quick level here: the full repo-wide sweep (parse→print→reparse fixpoint, canonicalize
-    // idempotence over every real 📚️examples fixture — @semio-tech/dsl-fixture-sweep-rs) runs at
+    // idempotence over every real 📚️examples fixture — @semio-tech/s-fixture-sweep-rs) runs at
     // `test dsl`/`test dsl exhaustive`; the gate only needs the engine crates' own quick-level unit tests.
     runCmd("bun", ["nx", "run-many", "-t", "test-quick", "-p", "@semio-tech/dsl-rs", "@semio-tech/dsl-schema-rs", "@semio-tech/dsl-derive-rs", "@semio-tech/dsl-rs", ...semioNxParallelFlag()], {
       cwd: this.root,

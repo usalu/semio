@@ -11,11 +11,11 @@ use crate::standards::v1::subsets::mesh::schema::mutations::SemioMeshMutation;
 use crate::standards::v1::subsets::mesh::schema::snapshot::SemioMeshSnapshot;
 use protocol::{Mutation, MutationDiff};
 
-const BEFORE: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/✂️delete-primitive/🚫️removes-the-leading-primitive-and-keeps-the-trailing-one/📸️snapshot/⬅️before/🔣️.json");
-const AFTER: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/✂️delete-primitive/🚫️removes-the-leading-primitive-and-keeps-the-trailing-one/📸️snapshot/➡️after/🔣️.json");
-const MUTATION: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/✂️delete-primitive/🚫️removes-the-leading-primitive-and-keeps-the-trailing-one/🦠️mutation/🔣️.json");
-const DIFF: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/✂️delete-primitive/🚫️removes-the-leading-primitive-and-keeps-the-trailing-one/🔺️diff/🔣️.json");
-const OUTCOME: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/✂️delete-primitive/🚫️removes-the-leading-primitive-and-keeps-the-trailing-one/🎯️outcome/🔣️.json");
+const BEFORE: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/✂️delete-primitive/🚫️removes-leading-primitive-keeps-trailing-one/📸️snapshot/⬅️before/🔣️.json");
+const AFTER: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/✂️delete-primitive/🚫️removes-leading-primitive-keeps-trailing-one/📸️snapshot/➡️after/🔣️.json");
+const MUTATION: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/✂️delete-primitive/🚫️removes-leading-primitive-keeps-trailing-one/🦠️mutation/🔣️.json");
+const DIFF: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/✂️delete-primitive/🚫️removes-leading-primitive-keeps-trailing-one/🔺️diff/🔣️.json");
+const OUTCOME: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/✂️delete-primitive/🚫️removes-leading-primitive-keeps-trailing-one/🎯️outcome/🔣️.json");
 
 fn before() -> SemioMeshSnapshot {
     dsl::json::from_json_str(BEFORE).expect("delete-primitive before snapshot decodes")

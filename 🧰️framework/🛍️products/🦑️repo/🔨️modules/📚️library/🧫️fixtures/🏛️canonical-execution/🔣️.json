@@ -1,0 +1,71 @@
+{
+  "schema": "semio.repo.canonical-execution/v1",
+  "cases": [
+    {
+      "name": "empty input",
+      "environment": {},
+      "target": {
+        "mode": "default",
+        "segments": []
+      },
+      "expectedTarget": [
+        ".🧬semio",
+        "🦑️repo",
+        "⚡️cache",
+        "cargo",
+        "canonical-architecture"
+      ]
+    },
+    {
+      "name": "relative override replaces stale build root",
+      "environment": {
+        "CARGO_BUILD_BUILD_DIR": "shared-build",
+        "NX_DAEMON": "false",
+        "SEMIO_TEST_SECRET": "fixture-only-sentinel"
+      },
+      "target": {
+        "mode": "relative",
+        "segments": [
+          "isolated",
+          "target"
+        ]
+      },
+      "expectedTarget": [
+        "isolated",
+        "target"
+      ]
+    },
+    {
+      "name": "absolute override preserves ordinary environment",
+      "environment": {
+        "CARGO_BUILD_BUILD_DIR": "shared-build",
+        "PATH": "fixture-path",
+        "CARGO_INCREMENTAL": "0"
+      },
+      "target": {
+        "mode": "absolute",
+        "segments": [
+          "absolute",
+          "target"
+        ]
+      },
+      "expectedTarget": [
+        "absolute",
+        "target"
+      ]
+    },
+    {
+      "name": "empty explicit override retains nullish semantics",
+      "environment": {
+        "CARGO_TARGET_DIR": "",
+        "CARGO_BUILD_TARGET_DIR": "ignored-secondary",
+        "CARGO_BUILD_BUILD_DIR": "shared-build"
+      },
+      "target": {
+        "mode": "empty",
+        "segments": []
+      },
+      "expectedTarget": []
+    }
+  ]
+}

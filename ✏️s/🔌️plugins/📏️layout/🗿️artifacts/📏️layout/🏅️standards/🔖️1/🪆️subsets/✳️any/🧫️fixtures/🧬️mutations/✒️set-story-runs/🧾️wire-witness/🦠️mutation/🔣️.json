@@ -1,0 +1,19 @@
+{
+  "SetStoryRuns": {
+    "id": "story-1",
+    "runs": [
+      {
+        "start": 0,
+        "end": 5,
+        "paragraphStyleId": "para-body",
+        "characterStyleId": null
+      },
+      {
+        "start": 5,
+        "end": 11,
+        "paragraphStyleId": "para-body",
+        "characterStyleId": "char-emphasis"
+      }
+    ]
+  }
+}

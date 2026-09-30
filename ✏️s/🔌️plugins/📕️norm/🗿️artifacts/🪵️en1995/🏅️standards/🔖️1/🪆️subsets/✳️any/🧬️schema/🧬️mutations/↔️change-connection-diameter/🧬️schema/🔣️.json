@@ -10,11 +10,43 @@
   ],
   "properties": {
     "connectionId": {
-      "type": "string"
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Connection",
+          "de": "Verbindung"
+        },
+        "description": {
+          "en": "The timber connection this mutation addresses.",
+          "de": "Die Holzverbindung, die diese Mutation adressiert."
+        },
+        "ref": {
+          "kind": "connection"
+        },
+        "group": "target",
+        "order": 10
+      }
     },
     "newValue": {
       "type": "number",
-      "format": "double"
+      "exclusiveMinimum": 0,
+      "x-semio-ui": {
+        "widget": "stepper",
+        "role": "value",
+        "label": {
+          "en": "Fastener diameter d",
+          "de": "Durchmesser des Verbindungsmittels d"
+        },
+        "unit": "m",
+        "displayUnit": "mm",
+        "displayFactor": 1000,
+        "step": 0.001,
+        "precision": 0,
+        "group": "connection",
+        "order": 20
+      }
     }
   }
 }

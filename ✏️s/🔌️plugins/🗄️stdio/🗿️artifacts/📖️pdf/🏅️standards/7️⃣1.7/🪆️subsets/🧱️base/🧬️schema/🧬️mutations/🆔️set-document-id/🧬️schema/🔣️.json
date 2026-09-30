@@ -4,8 +4,14 @@
   "title": "SetDocumentId",
   "type": "object",
   "additionalProperties": false,
-  "required": [],
+  "required": [
+    "mutation"
+  ],
   "properties": {
+    "mutation": {
+      "const": "setDocumentId",
+      "description": "Aggregate discriminator spliced in by PdfMutation; absent when the payload stands alone."
+    },
     "id": {
       "anyOf": [
         {
@@ -24,10 +30,6 @@
           "type": "null"
         }
       ]
-    },
-    "mutation": {
-      "const": "setDocumentId",
-      "description": "Aggregate discriminator spliced in by PdfMutation; absent when the payload stands alone."
     }
   }
 }

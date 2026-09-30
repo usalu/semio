@@ -8,9 +8,14 @@
   "properties": {
     "preview": {
       "anyOf": [
-        { "$ref": "https://json.schemas.assets.semio-tech.com/app/block/3d/world-window/transient/schema.json#/$defs/Block3dBrushPreview" },
+        { "$ref": "#/$defs/Block3dBrushPreview" },
         { "type": "null" }
-      ]
+      ],
+      "x-semio-ui": { "role": "value", "label": { "en": "Brush preview", "de": "Pinselvorschau" }, "group": "record", "order": 10 }
     }
+  },
+  "$defs": {
+    "Block3dBrushPreview": {"type": "object", "additionalProperties": false, "required": ["position", "direction"], "properties": {"position": {"$ref": "#/$defs/Vec3", "x-semio-ui": {"widget": "vector", "role": "value", "label": {"en": "Position", "de": "Position"}, "group": "geometry", "order": 10}}, "direction": {"$ref": "#/$defs/Vec3", "x-semio-ui": {"widget": "vector", "role": "value", "label": {"en": "Direction", "de": "Richtung"}, "description": {"en": "Outward connection direction.", "de": "Nach außen gerichtete Verbindungsrichtung."}, "group": "geometry", "order": 20}}}},
+    "Vec3": {"type": "array", "items": {"type": "number"}, "minItems": 3, "maxItems": 3}
   }
 }

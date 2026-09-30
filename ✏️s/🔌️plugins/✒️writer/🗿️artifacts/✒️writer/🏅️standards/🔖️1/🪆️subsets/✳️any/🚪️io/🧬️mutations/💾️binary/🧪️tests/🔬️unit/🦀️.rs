@@ -250,7 +250,7 @@ async fn writer_document_text_round_trips_through_the_store() {
     // and `reserve_edit_history_slot` then refuses every `Apply`
     // (`edit history insertion requires its exact mutation retirement factory`).
     let mut store = new_writer_store(store::create_document_envelope(crate::WRITER_DOCUMENT_SCHEMA, "writer", schema::empty_writer_snapshot(), None)).await.expect("valid artifact store fixture");
-    store.dispatch(store::ArtifactCommand::Apply { mutations: jack_mutations(), description: None }).await.expect("apply");
+    store.dispatch(store::ArtifactCommand::Apply { mutations: jack_mutations(), description: None, transaction: None }).await.expect("apply");
     assert_eq!(store.snapshot().expect("snapshot"), jack_snapshot());
     store::os_store::test_support::assert_document_text_round_trip(&store).await;
     store::os_store::test_support::assert_document_pack_round_trip(&store).await;
@@ -268,7 +268,7 @@ async fn command_envelope_round_trip_holds_for_an_applied_operation() {
     // and `reserve_edit_history_slot` then refuses every `Apply`
     // (`edit history insertion requires its exact mutation retirement factory`).
     let mut store = new_writer_store(store::create_document_envelope(crate::WRITER_DOCUMENT_SCHEMA, "writer", schema::empty_writer_snapshot(), None)).await.expect("valid artifact store fixture");
-    store.dispatch(store::ArtifactCommand::Apply { mutations: jack_mutations(), description: None }).await.expect("apply");
+    store.dispatch(store::ArtifactCommand::Apply { mutations: jack_mutations(), description: None, transaction: None }).await.expect("apply");
     let edit: &Edit<WriterMutation> = store.envelope().vcs.edits.last().expect("dispatch must have recorded an edit");
     store::os_store::test_support::assert_command_envelope_round_trip::<WriterSnapshot, WriterMutation>(edit, &ArtifactId(store.envelope().id.clone()), &SchemaId(store.envelope().schema.clone())).await;
 }
@@ -321,6 +321,7 @@ fn hub_tail_envelope(value: &serde_json::Value) -> protocol::MutationEnvelope {
         diff: protocol::ArtifactDiff { schema: protocol::SchemaId(text(&value["diff"]["schema"])), payload: bytes(&value["diff"]) },
         inverse: protocol::InverseMutation { schema: protocol::SchemaId(text(&value["inverse"]["schema"])), payload: bytes(&value["inverse"]) },
         timestamp: protocol::HybridLogicalTimestamp { actor: number(&value["timestamp"]["actor"]), physical_ms: number(&value["timestamp"]["physical_ms"]), logical: number(&value["timestamp"]["logical"]) },
+        transaction: None,
     }
 }
 
@@ -335,11 +336,11 @@ async fn a_document_folded_from_the_hub_tail_initializes_again() {
     let tail = fixture["envelopes"].as_array().expect("hub tail envelopes");
     assert_eq!(tail.len(), 17, "the captured tail: four edits, a Check In, eleven two-author edits, a second Check In");
     let mut folded = new_writer_store(store::create_document_envelope(crate::WRITER_DOCUMENT_SCHEMA, document_id, schema::empty_writer_snapshot(), None)).await.expect("valid writer store fixture");
-    folded.dispatch(store::ArtifactCommand::Apply { mutations: vec![schema::mutations::edit_text("user1 typed before the hub tail".to_string())], description: None }).await.expect("a locally authored edit before the tail");
+    folded.dispatch(store::ArtifactCommand::Apply { mutations: vec![schema::mutations::edit_text("user1 typed before the hub tail".to_string())], description: None, transaction: None }).await.expect("a locally authored edit before the tail");
     for value in tail {
         folded.ingest_remote(hub_tail_envelope(value)).await.expect("every operation and transition of the hub tail folds");
     }
-    folded.dispatch(store::ArtifactCommand::Apply { mutations: vec![schema::mutations::edit_text("user1 typed after the hub tail".to_string())], description: None }).await.expect("a locally authored edit after the tail");
+    folded.dispatch(store::ArtifactCommand::Apply { mutations: vec![schema::mutations::edit_text("user1 typed after the hub tail".to_string())], description: None, transaction: None }).await.expect("a locally authored edit after the tail");
     let hub_actors: std::collections::BTreeSet<&str> = tail.iter().map(|value| value["actor"].as_str().expect("hub tail actor")).collect();
     let edits = &folded.envelope().vcs.edits;
     let from_hub = edits.iter().filter(|edit| edit.actor.as_deref().is_some_and(|actor| hub_actors.contains(actor))).count();

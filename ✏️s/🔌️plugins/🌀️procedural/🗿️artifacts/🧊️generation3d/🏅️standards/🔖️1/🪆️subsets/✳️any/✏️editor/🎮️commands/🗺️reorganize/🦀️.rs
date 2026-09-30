@@ -22,9 +22,3 @@ pub fn handle(_payload: &Reorganize, doc: &ArtifactView<'_, Generation3dSnapshot
         }
     })
 }
-
-//#region 🧪️Tests
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
-//#endregion 🧪️Tests

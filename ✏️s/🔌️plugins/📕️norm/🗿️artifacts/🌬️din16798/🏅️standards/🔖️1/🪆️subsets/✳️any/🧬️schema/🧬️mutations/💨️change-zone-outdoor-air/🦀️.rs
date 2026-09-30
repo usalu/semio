@@ -3,6 +3,8 @@ use crate::{Din16798Mutation, Din16798Snapshot};
 #[derive(Clone, Debug, PartialEq, dsl::MutationLeaf, value_derive::ToValue, value_derive::FromValue)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 #[mutation_leaf(contract = ::protocol)]
+#[cfg_attr(test, serde(rename_all = "camelCase"))]
+#[value(rename_all = "camelCase")]
 pub struct ChangeZoneOutdoorAir {
     pub zone_id: String,
     pub new_outdoor_air_supplied_m3_h: f64,

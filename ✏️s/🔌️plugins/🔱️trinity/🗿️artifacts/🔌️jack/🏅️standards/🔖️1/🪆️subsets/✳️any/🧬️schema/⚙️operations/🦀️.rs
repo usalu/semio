@@ -288,7 +288,7 @@ pub async fn dispatch_trinity_graph_mutations(store: &mut TrinityGraphStore, ope
         validate_trinity_graph_operation(operation, &snapshot)?;
         apply_trinity_graph_mutation(&mut snapshot, operation)?;
     }
-    store.dispatch(ArtifactCommand::Apply { mutations: operations, description: None }).await.map_err(crate::TrinityRamError::from).map(|_| ())
+    store.dispatch(ArtifactCommand::Apply { mutations: operations, description: None, transaction: None }).await.map_err(crate::TrinityRamError::from).map(|_| ())
 }
 //#endregion 🔖️BatchHelpers
 

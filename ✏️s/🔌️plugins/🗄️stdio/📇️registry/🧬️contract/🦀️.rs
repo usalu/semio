@@ -17,6 +17,43 @@ pub mod editing;
 #[path = "📐️part21/🦀️.rs"]
 pub mod part21;
 
+//#region 🧾️PayloadWire
+/// 🧾️ Builds the operation of semantic kind `kind` from its leaf wire payload — JSON text in the exact `payload_value()`
+/// shape — through the derive-generated [`kernel::Mutation::from_payload_value`]: the one decoder a wire-form `🥒️.feature`
+/// row goes through, so no case adapter maps parameters onto an operation by hand. An artifact crate re-exports it for the
+/// adapters that link only that crate.
+pub fn mutation_from_payload_json<P, M: kernel::Mutation<P>>(kind: &str, payload: &str) -> Result<M, String> {
+    let value = pack::parse_json(payload).map_err(|error| format!("{kind} payload is not JSON: {error}"))?;
+    M::from_payload_value(kind, pack::json_to_dsl_value(&value)).map_err(|error| format!("{kind} payload does not decode: {error}"))
+}
+
+/// ▶️ Applies `operation` to `snapshot` through its own diff and refuses — leaving `snapshot` untouched — when the
+/// outcome carries a message, so a case adapter sees a rejection instead of encoding an unchanged model.
+pub fn apply_mutation_checked<P, M: kernel::Mutation<P>>(snapshot: &mut P, operation: &M) -> Result<(), String> {
+    let outcome = operation.diff(snapshot);
+    if let Some(message) = outcome.messages().first() {
+        return Err(format!("[{}] {}", message.code.0, message.message));
+    }
+    *snapshot = kernel::MutationDiff::apply(outcome.diff(), snapshot).map_err(|error| format!("[{}] {}", error.code, error.message))?;
+    Ok(())
+}
+
+/// ↩️ [`kernel::Mutation::inverse`] against `base`, reachable from a crate that cannot name the kernel trait — the
+/// production inverse itself, never a copy of its rules.
+pub fn mutation_inverse<P, M: kernel::Mutation<P>>(operation: &M, base: &P) -> Vec<M> {
+    operation.inverse(base)
+}
+//#endregion 🧾️PayloadWire
+
+/// 📚️ The `s.stdio.registry` shared schema documents: contracts several stdio artifacts `$ref` that no single artifact
+/// owns — `$defs/SnapshotPatch` of every `patch-snapshot` leaf. Every package that runs those artifacts' editors declares
+/// them (`PluginBuilder::schema_documents`: `stdio` itself and its `stdio-image`/`stdio-media` hosts), so the runtime
+/// input reader (`registered_input_schema_document`) resolves them.
+pub const STDIO_REGISTRY_SCHEMA_DOCUMENTS: semio_framework_schema::ScopeSchemaExports = semio_framework_schema::ScopeSchemaExports {
+    scope: "s.stdio.registry",
+    exports: &[semio_framework_schema::SchemaExport { id: "schema", leaves: semio_framework_schema::FacetLeaves { rust: "", typescript: "", graphql: "", json_schema: include_str!("../🧬️schema/🔣️.json"), proto: "" } }],
+};
+
 /// 🧩 One schema definition paired with its optional executable declaration.
 pub enum ArtifactAssembly {
     Definition(ArtifactDefinition),

@@ -5,16 +5,17 @@
   "type": "object",
   "additionalProperties": false,
   "required": [
+    "mutation",
     "pageIndex"
   ],
   "properties": {
-    "pageIndex": {
-      "type": "integer",
-      "minimum": 0
-    },
     "mutation": {
       "const": "removeTrimBox",
       "description": "Aggregate discriminator spliced in by PdfVtMutation; absent when the payload stands alone."
+    },
+    "pageIndex": {
+      "type": "integer",
+      "minimum": 0
     }
   }
 }

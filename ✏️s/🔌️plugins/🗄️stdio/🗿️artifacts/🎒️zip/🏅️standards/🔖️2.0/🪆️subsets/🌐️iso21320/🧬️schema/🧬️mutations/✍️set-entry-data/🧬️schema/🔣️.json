@@ -5,10 +5,15 @@
   "type": "object",
   "additionalProperties": false,
   "required": [
+    "mutation",
     "name",
     "data"
   ],
   "properties": {
+    "mutation": {
+      "const": "setEntryData",
+      "description": "Aggregate discriminator spliced in by ZipIso21320Mutation; absent when the payload stands alone."
+    },
     "name": {
       "type": "string"
     },
@@ -19,10 +24,6 @@
         "minimum": 0,
         "maximum": 255
       }
-    },
-    "mutation": {
-      "const": "setEntryData",
-      "description": "Aggregate discriminator spliced in by ZipIso21320Mutation; absent when the payload stands alone."
     }
   }
 }

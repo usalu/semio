@@ -1,0 +1,358 @@
+<<<<<<< ANCHOR
+    async fn project_applied(&mut self, next: &[String]) -> Result<Arc<P>, VcsError> {
+        if next.len() + 1 == self.applied_edit_ids.len() && self.applied_edit_ids.starts_with(next) && self.tail_undo_cache.as_ref().is_some_and(|(cached_id, _)| self.applied_edit_ids.last() == Some(cached_id)) {
+            return self.take_tail_snapshot_for_current();
+        }
+=======
+    async fn project_applied(&mut self, next: &[String]) -> Result<(Arc<P>, Vec<(usize, Arc<P>)>), VcsError> {
+        if next.len() + 1 == self.applied_edit_ids.len() && self.applied_edit_ids.starts_with(next) && self.tail_undo_cache.as_ref().is_some_and(|(cached_id, _)| self.applied_edit_ids.last() == Some(cached_id)) {
+            return self.take_tail_snapshot_for_current().map(|snapshot| (snapshot, Vec::new()));
+        }
+>>>>>>> END
+<<<<<<< ANCHOR
+    async fn reproject(&mut self) -> Result<(), VcsError> {
+        let fold = fold_envelope_history(&self.envelope)?;
+        self.adopt_history_facts(&fold)?;
+        let crate::os_spr::HistoryFold { applied, redo, checkpoint, alternative, .. } = fold;
+        if applied != *self.applied_edit_ids {
+            let current = self.project_applied(&applied).await?;
+            self.replace_applied_edit_ids_retained(applied)?;
+            self.replace_current_retained(current)?;
+        }
+=======
+    async fn reproject(&mut self) -> Result<(), VcsError> {
+        let fold = fold_envelope_history(&self.envelope)?;
+        self.adopt_history_facts(&fold)?;
+        let crate::os_spr::HistoryFold { applied, redo, checkpoint, alternative, supersessions, .. } = fold;
+        if supersessions != *self.supersessions {
+            self.replay_supersessions(applied, supersessions)?;
+        } else if applied != *self.applied_edit_ids {
+            let (current, recorded) = self.project_applied(&applied).await?;
+            self.replace_applied_edit_ids_retained(applied)?;
+            self.replace_current_retained(current)?;
+            self.retain_prefix_snapshots(recorded)?;
+        }
+>>>>>>> END
+<<<<<<< ANCHOR
+        if next.len() == self.applied_edit_ids.len() + 1 && next.starts_with(&self.applied_edit_ids) {
+            let added = next[next.len() - 1].clone();
+            let edit = self.envelope.vcs.edits.iter().find(|edit| edit.id == added).ok_or_else(|| VcsError::UnknownEdit(added.clone()))?;
+            let pre = Arc::clone(&*self.current);
+            let mut folded = ReplayProjection::<P, Mutation>::new(pre.as_ref().clone());
+            for operation in &edit.forwards {
+                let next = apply_mutation(&*folded, operation)?.0;
+                folded.advance(next);
+            }
+            self.replace_tail_undo_cache_retained(Some((added, pre)))?;
+            return Ok(Arc::new(folded.into_inner()));
+        }
+        self.replace_tail_undo_cache_retained(None)?;
+        Ok(Arc::new(Self::fold_history(&self.envelope, next).await?))
+    }
+=======
+        if next.len() == self.applied_edit_ids.len() + 1 && next.starts_with(&self.applied_edit_ids) {
+            let added = next[next.len() - 1].clone();
+            let edit = self.envelope.vcs.edits.iter().find(|edit| edit.id == added).ok_or_else(|| VcsError::UnknownEdit(added.clone()))?;
+            let pre = Arc::clone(&*self.current);
+            let mut folded = ReplayProjection::<P, Mutation>::new(pre.as_ref().clone());
+            fold_effective_edit(&mut folded, edit, &self.supersessions)?;
+            self.replace_tail_undo_cache_retained(Some((added, pre)))?;
+            return Ok((Arc::new(folded.into_inner()), Vec::new()));
+        }
+        self.replace_tail_undo_cache_retained(None)?;
+        fold_recorded::<P, Mutation>(Arc::new(self.envelope.vcs.initial_snapshot.clone()), next, 0, next.len(), &self.envelope.vcs.edits, &self.supersessions, Self::prefix_stride(next.len()))
+    }
+
+    /// ✍️ Adopts an already finished Report replay of exactly the folded event log instead of replaying again — the fast path
+    /// of a supersession whose replay was computed before it was authored (a dry run, or a time-travel session). A replay of
+    /// another order or other effective inputs is dropped and the log is replayed as usual.
+    fn reproject_replayed(&mut self, mut result: EditReplayResult<P, Mutation>) -> Result<(), VcsError> {
+        let fold = fold_envelope_history(&self.envelope)?;
+        if fold.applied != result.order || !same_effective_inputs(&fold.supersessions, &result.supersessions) {
+            drop(result);
+            return self.adopt_fold_replaying(fold);
+        }
+        self.adopt_history_facts(&fold)?;
+        let crate::os_spr::HistoryFold { applied, redo, checkpoint, alternative, supersessions, .. } = fold;
+        let from = result.from;
+        let recorded = result.take_recorded();
+        self.adopt_report_replay(result)?;
+        self.replace_applied_edit_ids_retained(applied)?;
+        self.replace_supersessions_retained(supersessions)?;
+        self.retain_prefix_snapshots(recorded)?;
+        self.revision_dirty_from = Some(self.revision_dirty_from.map_or(from, |dirty| dirty.min(from)));
+        self.last_projection_cause = Some(ArtifactProjectionCause::Replay);
+        self.adopt_history_positions(redo, checkpoint, alternative)
+    }
+
+    /// 🧮️ [`Self::reproject`] for a fold already taken.
+    fn adopt_fold_replaying(&mut self, fold: crate::os_spr::HistoryFold) -> Result<(), VcsError> {
+        self.adopt_history_facts(&fold)?;
+        let crate::os_spr::HistoryFold { applied, redo, checkpoint, alternative, supersessions, .. } = fold;
+        self.replay_supersessions(applied, supersessions)?;
+        self.adopt_history_positions(redo, checkpoint, alternative)
+    }
+
+    /// 🧭️ Adopts the fold's redo stack, checkpoint and active alternative.
+    fn adopt_history_positions(&mut self, redo: Vec<String>, checkpoint: Option<String>, alternative: Option<String>) -> Result<(), VcsError> {
+        if redo != *self.redo_edit_ids {
+            self.replace_redo_edit_ids_retained(redo)?;
+        }
+        if checkpoint != *self.current_checkpoint_id {
+            self.replace_current_checkpoint_retained(checkpoint)?;
+        }
+        self.envelope.active_alternative_id = alternative;
+        Ok(())
+    }
+
+    /// ✏️ Re-projects after the effective supersessions changed: a Report replay of `applied` from the first position
+    /// whose edit order or effective input differs from the live projection. Every replayed edit's rebased inverse and
+    /// messages are recorded, the tail cache resets and the projection cause is `Replay` — local and remote
+    /// supersessions converge through this one path.
+    fn replay_supersessions(&mut self, applied: Vec<String>, supersessions: EffectiveSupersessions) -> Result<(), VcsError> {
+        let (from, horizon) = self.replay_window(&applied, &supersessions)?;
+        let mut replay = self.report_replay(&applied, from, supersessions.clone(), horizon)?.recording(Self::prefix_stride(applied.len()));
+        replay.step(&self.envelope.vcs.edits, &mut || false)?;
+        let mut result = replay.finish()?;
+        let recorded = result.take_recorded();
+        self.adopt_report_replay(result)?;
+        self.replace_applied_edit_ids_retained(applied)?;
+        self.replace_supersessions_retained(supersessions)?;
+        self.retain_prefix_snapshots(recorded)?;
+        self.revision_dirty_from = Some(self.revision_dirty_from.map_or(from, |dirty| dirty.min(from)));
+        self.last_projection_cause = Some(ArtifactProjectionCause::Replay);
+        Ok(())
+    }
+
+    /// 📍️ Where a replay of `applied` under `supersessions` must start (the first position whose order or effective
+    /// input differs from the live projection) and, when the order is unchanged, the prefix length from which it may
+    /// converge onto the live projection (just past the last changed input).
+    fn replay_window(&self, applied: &[String], supersessions: &EffectiveSupersessions) -> Result<(usize, Option<usize>), VcsError> {
+        let changed = superseded_positions::<P, Mutation>(applied, &self.envelope.vcs.edits, &self.supersessions, supersessions)?;
+        let common = applied.iter().zip(self.applied_edit_ids.iter()).take_while(|(next, live)| next == live).count();
+        let reordered = common != applied.len() || common != self.applied_edit_ids.len();
+        let from = changed.first().copied().unwrap_or(applied.len()).min(if reordered { common } else { applied.len() });
+        let horizon = if reordered { None } else { changed.last().map(|position| position + 1) };
+        Ok((from, horizon))
+    }
+
+    /// ⏪️ A Report replay of `applied[from..]` under `supersessions`, starting from the retained projection nearest
+    /// before `from`. With snapshot equality enabled and the live order unchanged it may converge onto the live
+    /// projection from prefix length `horizon` on.
+    fn report_replay(&self, applied: &[String], from: usize, supersessions: EffectiveSupersessions, horizon: Option<usize>) -> Result<EditReplay<P, Mutation>, VcsError> {
+        let base = self.prefix_state(applied, from, &supersessions)?;
+        let replay = EditReplay::new(ReplayMode::Report, base, applied.to_vec(), from, supersessions, &self.envelope.vcs.edits)?.with_base(self.generation, self.content_revision);
+        let convergence = match (horizon, self.snapshot_equality) {
+            (Some(horizon), Some(equal)) if applied == self.applied_edit_ids.as_slice() => Some(self.convergence_checkpoints(horizon, equal)?),
+            _ => None,
+        };
+        Ok(replay.with_convergence(convergence))
+    }
+
+    /// 🏁️ The live projection's retained states from prefix length `horizon` on — ring entries whose digest still names
+    /// the live prefix, the tail snapshot and the head — as a convergence probe. Every state is an alias of a root this
+    /// store keeps, so the probe never owns a last reference.
+    fn convergence_checkpoints(&self, horizon: usize, equal: fn(&P, &P) -> bool) -> Result<ReplayConvergence<P>, VcsError> {
+        let length = self.applied_edit_ids.len();
+        let digests = forward_prefix_digests::<P, Mutation>(self.revision_accumulator.identity_digest, &self.applied_edit_ids, &self.envelope.vcs.edits, &self.supersessions)?;
+        let mut checkpoints: Vec<(usize, Arc<P>)> = self.prefix_ring.iter().filter(|entry| entry.length >= horizon && entry.length < length && digests.get(entry.length) == Some(&entry.digest)).map(|entry| (entry.length, Arc::clone(&entry.snapshot))).collect();
+        if let Some((edit_id, snapshot)) = self.tail_undo_cache.as_ref() {
+            if length > horizon && self.applied_edit_ids.last() == Some(edit_id) && !checkpoints.iter().any(|(known, _)| *known == length - 1) {
+                checkpoints.push((length - 1, Arc::clone(snapshot)));
+            }
+        }
+        checkpoints.push((length, Arc::clone(&self.current)));
+        checkpoints.sort_by_key(|(prefix, _)| *prefix);
+        Ok(ReplayConvergence { horizon, checkpoints, equal })
+    }
+
+    /// 🧭️ The projection after `applied[..from]` under `supersessions` ([`Self::prefix_state_recorded`]).
+    fn prefix_state(&self, applied: &[String], from: usize, supersessions: &EffectiveSupersessions) -> Result<Arc<P>, VcsError> {
+        Ok(self.prefix_state_recorded(applied, from, supersessions, usize::MAX)?.0)
+    }
+
+    /// 🧭️ The projection after `applied[..from]` under `supersessions`: the live head, the tail snapshot or the nearest
+    /// retained prefix whose digest names the same prefix, folded forward — the genesis when none lies before `from` —
+    /// with the projections it folded through at every multiple of `stride`.
+    fn prefix_state_recorded(&self, applied: &[String], from: usize, supersessions: &EffectiveSupersessions, stride: usize) -> Result<(Arc<P>, Vec<(usize, Arc<P>)>), VcsError> {
+        let identity = self.revision_accumulator.identity_digest;
+        let digests = forward_prefix_digests::<P, Mutation>(identity, &applied[..from], &self.envelope.vcs.edits, supersessions)?;
+        let live = forward_prefix_digests::<P, Mutation>(identity, &self.applied_edit_ids, &self.envelope.vcs.edits, &self.supersessions)?;
+        let length = self.applied_edit_ids.len();
+        let mut candidates: Vec<(usize, [u8; 32], &Arc<P>)> = self.prefix_ring.iter().map(|entry| (entry.length, entry.digest, &entry.snapshot)).collect();
+        if !self.current_detached {
+            candidates.push((length, live[length], &*self.current));
+        }
+        if let Some((edit_id, snapshot)) = self.tail_undo_cache.as_ref() {
+            if self.applied_edit_ids.last() == Some(edit_id) {
+                candidates.push((length - 1, live[length - 1], snapshot));
+            }
+        }
+        let best = candidates.into_iter().filter(|(prefix, digest, _)| *prefix <= from && digests.get(*prefix) == Some(digest)).max_by_key(|(prefix, _, _)| *prefix).map(|(prefix, _, snapshot)| (prefix, snapshot));
+        let (length, base) = match best {
+            Some((length, snapshot)) => (length, Arc::clone(snapshot)),
+            None => (0, Arc::new(self.envelope.vcs.initial_snapshot.clone())),
+        };
+        if length == from {
+            return Ok((base, Vec::new()));
+        }
+        fold_recorded::<P, Mutation>(base, applied, length, from, &self.envelope.vcs.edits, supersessions, stride)
+    }
+
+    /// ✍️ Publishes a finished Report replay: every replayed edit gets its rebased inverse and its messages — the message
+    /// ledger bound is checked for every entry before anything is written — and the reached projection becomes `current`.
+    fn adopt_report_replay(&mut self, mut result: EditReplayResult<P, Mutation>) -> Result<(), VcsError> {
+        let replayed = result.take_replayed();
+        for entry in &replayed {
+            if entry.edit_id.len() > ARTIFACT_EDIT_MESSAGE_ID_BYTES || (!entry.messages.is_empty() && ArtifactEditMessageLedger::entry_bytes(entry).is_none_or(|bytes| bytes > ARTIFACT_EDIT_MESSAGE_ENTRY_BYTES)) {
+                return Err(VcsError::ValidationFailed(format!("replayed messages of edit {} exceed their exact byte authority", entry.edit_id)));
+            }
+        }
+        let state = result.take_state().ok_or_else(|| VcsError::ValidationFailed("report replay lost its reached projection".into()))?;
+        for (edit_id, inverse) in result.take_rebased_inverse() {
+            match self.envelope.vcs.edits.iter_mut().find(|edit| edit.id == edit_id) {
+                Some(edit) => retire_scratch_operations::<P, Mutation>(std::mem::replace(&mut edit.inverse, inverse)),
+                None => retire_scratch_operations::<P, Mutation>(inverse),
+            }
+        }
+        drop(result);
+        self.replace_tail_undo_cache_retained(None)?;
+        self.replace_current_retained(state)?;
+        for entry in replayed {
+            self.replace_edit_messages(&entry.edit_id, entry.messages)?;
+        }
+        Ok(())
+    }
+
+    /// ✏️ Replaces the supersessions `current` is projected with; the displaced map retires one byte grant at a time.
+    fn replace_supersessions_retained(&mut self, next: EffectiveSupersessions) -> Result<(), VcsError> {
+        if *self.supersessions == next {
+            return Ok(());
+        }
+        self.displaced_retirements.reserve(usize::from(!self.supersessions.is_empty()))?;
+        let previous = std::mem::replace(&mut *self.supersessions, next);
+        if !previous.is_empty() {
+            self.displaced_retirements.push_reserved(Box::new(ArtifactStoreSupersessionRetirement::new(previous)));
+        }
+        Ok(())
+    }
+
+    /// 🧭️ The prefix-ring stride for `length` applied edits: [`PREFIX_SNAPSHOT_RING_CAPACITY`] entries span them all.
+    fn prefix_stride(length: usize) -> usize {
+        length.div_ceil(PREFIX_SNAPSHOT_RING_CAPACITY).max(1)
+    }
+
+    /// 🧭️ Admits prefix projections `(length, projection)` of the live applied history into the ring at the current
+    /// stride, evicting whatever a stale digest or a coarser stride no longer justifies. Without a snapshot retirement
+    /// factory nothing is retained; a refused admission retires every offered projection.
+    fn retain_prefix_snapshots(&mut self, snapshots: Vec<(usize, Arc<P>)>) -> Result<(), VcsError> {
+        if snapshots.is_empty() {
+            return Ok(());
+        }
+        let admitted = match (*self.snapshot_retirement_factory).clone() {
+            Some(factory) => self
+                .displaced_retirements
+                .reserve(2 * snapshots.len())
+                .and_then(|()| forward_prefix_digests::<P, Mutation>(self.revision_accumulator.identity_digest, &self.applied_edit_ids, &self.envelope.vcs.edits, &self.supersessions))
+                .map(|digests| Some((factory, digests))),
+            None => Ok(None),
+        };
+        let (factory, digests) = match admitted {
+            Ok(Some(admitted)) => admitted,
+            refused => {
+                for (_, snapshot) in snapshots {
+                    retire_shared_projection::<P, Mutation>(snapshot);
+                }
+                return refused.map(|_| ());
+            }
+        };
+        let stride = Self::prefix_stride(self.applied_edit_ids.len());
+        for (length, snapshot) in snapshots {
+            let Some(digest) = digests.get(length).copied().filter(|_| length != 0 && length % stride == 0) else {
+                retire_shared_projection::<P, Mutation>(snapshot);
+                continue;
+            };
+            if let Some(position) = self.prefix_ring.iter().position(|entry| entry.length == length) {
+                if self.prefix_ring[position].digest == digest {
+                    retire_shared_projection::<P, Mutation>(snapshot);
+                    continue;
+                }
+                self.evict_prefix_snapshot_reserved(position, &factory);
+            }
+            if self.prefix_ring.len() == PREFIX_SNAPSHOT_RING_CAPACITY {
+                let victim = self.prefix_ring.iter().position(|entry| entry.length % stride != 0).unwrap_or(0);
+                self.evict_prefix_snapshot_reserved(victim, &factory);
+            }
+            let position = self.prefix_ring.partition_point(|entry| entry.length < length);
+            self.prefix_ring.insert(position, PrefixSnapshot { length, digest, snapshot });
+        }
+        Ok(())
+    }
+
+    /// 🧭️ Evicts ring entry `position` into a displaced slot the caller reserved: an alias another owner holds only
+    /// drops its count, the last owner retires through `factory`.
+    fn evict_prefix_snapshot_reserved(&mut self, position: usize, factory: &Arc<dyn SnapshotRetirementFactory<P>>) {
+        let entry = self.prefix_ring.remove(position);
+        if Arc::strong_count(&entry.snapshot) > 1 {
+            drop(entry);
+        } else {
+            self.displaced_retirements.push_reserved(factory.retire(entry.snapshot));
+        }
+    }
+
+    /// 🧭️ Evicts every ring entry whose digest no longer names the live effective prefix.
+    fn prune_prefix_ring(&mut self) -> Result<(), VcsError> {
+        if self.prefix_ring.is_empty() {
+            return Ok(());
+        }
+        let digests = forward_prefix_digests::<P, Mutation>(self.revision_accumulator.identity_digest, &self.applied_edit_ids, &self.envelope.vcs.edits, &self.supersessions)?;
+        let stale: Vec<usize> = self.prefix_ring.iter().enumerate().filter(|(_, entry)| digests.get(entry.length) != Some(&entry.digest)).map(|(position, _)| position).collect();
+        if stale.is_empty() {
+            return Ok(());
+        }
+        self.displaced_retirements.reserve(stale.len())?;
+        let factory = (*self.snapshot_retirement_factory).clone().ok_or_else(|| VcsError::ValidationFailed("artifact store prefix ring eviction requires its exact snapshot retirement factory".into()))?;
+        for position in stale.into_iter().rev() {
+            self.evict_prefix_snapshot_reserved(position, &factory);
+        }
+        Ok(())
+    }
+
+    /// 🧭️ Evicts every ring entry (a reload adopts a different history).
+    fn clear_prefix_ring(&mut self) -> Result<(), VcsError> {
+        if self.prefix_ring.is_empty() {
+            return Ok(());
+        }
+        self.displaced_retirements.reserve(self.prefix_ring.len())?;
+        let factory = (*self.snapshot_retirement_factory).clone().ok_or_else(|| VcsError::ValidationFailed("artifact store prefix ring eviction requires its exact snapshot retirement factory".into()))?;
+        while !self.prefix_ring.is_empty() {
+            self.evict_prefix_snapshot_reserved(self.prefix_ring.len() - 1, &factory);
+        }
+        Ok(())
+    }
+>>>>>>> END
+<<<<<<< ANCHOR
+        let (applied_retired, redo_retired) = self.revision_accumulator.reconcile(&self.applied_edit_ids, &self.redo_edit_ids, &self.envelope.vcs.edits);
+        if !applied_retired.is_empty() || applied_retired.capacity() != 0 {
+            self.displaced_retirements.push_reserved(Box::new(ArtifactStoreStringVectorRetirement::new(applied_retired)));
+        }
+        if !redo_retired.is_empty() || redo_retired.capacity() != 0 {
+            self.displaced_retirements.push_reserved(Box::new(ArtifactStoreStringVectorRetirement::new(redo_retired)));
+        }
+        self.content_revision = self.revision_accumulator.revision(self.current_checkpoint_id.as_deref());
+        assert!(self.snapshot_read_leases.publish_authority(self.generation, self.content_revision), "single-owner store bump must advance its snapshot commit authority");
+        Ok(())
+    }
+=======
+        let (applied_retired, redo_retired) = self.revision_accumulator.reconcile::<P, Mutation>(&self.applied_edit_ids, &self.redo_edit_ids, &self.envelope.vcs.edits, &self.supersessions, self.revision_dirty_from.take());
+        if !applied_retired.is_empty() || applied_retired.capacity() != 0 {
+            self.displaced_retirements.push_reserved(Box::new(ArtifactStoreStringVectorRetirement::new(applied_retired)));
+        }
+        if !redo_retired.is_empty() || redo_retired.capacity() != 0 {
+            self.displaced_retirements.push_reserved(Box::new(ArtifactStoreStringVectorRetirement::new(redo_retired)));
+        }
+        self.content_revision = self.revision_accumulator.revision(self.current_checkpoint_id.as_deref());
+        assert!(self.snapshot_read_leases.publish_authority(self.generation, self.content_revision), "single-owner store bump must advance its snapshot commit authority");
+        self.prune_prefix_ring()
+    }
+>>>>>>> END

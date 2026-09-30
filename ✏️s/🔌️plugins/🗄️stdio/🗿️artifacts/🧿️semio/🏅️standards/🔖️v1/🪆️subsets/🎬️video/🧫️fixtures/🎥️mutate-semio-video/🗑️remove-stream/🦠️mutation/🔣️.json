@@ -1,6 +1,7 @@
 {
   "kind": "remove-stream",
-  "params": {
+  "mutation": {
+    "mutation": "removeStream",
     "index": 1
   },
   "before": {

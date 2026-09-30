@@ -8,6 +8,7 @@ use super::*;
 //#region 🔖️Payload
 #[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::MutationLeaf)]
 #[mutation_leaf(contract = ::protocol)]
+#[value(rename_all = "camelCase")]
 pub struct SetArchiveComment {
     pub(crate) comment: String,
     pub(crate) comment_utf8: bool,

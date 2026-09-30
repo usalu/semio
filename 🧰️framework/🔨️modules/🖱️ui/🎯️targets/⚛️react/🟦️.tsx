@@ -117,6 +117,9 @@ export type { CSSProperties, FC, KeyboardEvent, MouseEvent as ReactMouseEvent, R
 export { createRoot } from "react-dom/client";
 export type { Root } from "react-dom/client";
 export type { Camera as ThreeCamera, NormalBufferAttributes, Ray, Scene as ThreeScene, Texture as ThreeTexture } from "three";
+/** 🔺️ Geometry acceleration used by the public scene host's collision API. */
+export { MeshBVH } from "three-mesh-bvh";
+export type { HitPointInfo } from "three-mesh-bvh";
 
 import { closestCenter, DndContext, DragEndEvent, PointerSensor, useDraggable, useDroppable, useSensor, useSensors } from "@dnd-kit/core";
 import { SortableContext, useSortable, verticalListSortingStrategy } from "@dnd-kit/sortable";
@@ -6959,6 +6962,7 @@ import {
   PanelTreeUnitsPane,
   PanelEmptyDockZone,
 } from "../../🧱️elements/🖼️Panel/🟦️.tsx";
+export { liveTreePanelDefinition } from "../../🧱️elements/🖼️Panel/🟦️.tsx";
 export { Panel, staticTreePanelDefinition, usePointerDrag, useNativeDragAndDrop, PanelTreeUnitsPane, PanelEmptyDockZone };
 export type { PanelProps, TreePanelConfig, TreePanelDefinition, TreePanelSource };
 // #endregion 🧭️Panel

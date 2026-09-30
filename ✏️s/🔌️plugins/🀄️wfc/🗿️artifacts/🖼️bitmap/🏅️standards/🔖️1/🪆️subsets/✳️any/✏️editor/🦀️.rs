@@ -608,6 +608,7 @@ fn bitmap_next_edit(forward: BitmapMutation, inverse: Vec<BitmapMutation>, descr
             label: None,
             group_id: None,
             origin: Default::default(),
+            transaction: None,
         }],
         description,
         coalesce_key: None,

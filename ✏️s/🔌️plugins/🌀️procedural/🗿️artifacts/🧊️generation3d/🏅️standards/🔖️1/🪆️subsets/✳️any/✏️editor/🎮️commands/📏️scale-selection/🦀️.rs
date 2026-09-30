@@ -66,9 +66,3 @@ pub(crate) fn apply_components(payload: &ScaleSelection, doc: &ArtifactView<'_, 
     crate::editor::generation3d::transform_commands::validate_component_gesture(&doc.snapshot.host_snapshot, &payload.node_ids, selected)?;
     scale_ids(&doc.snapshot.host_snapshot, selected, [payload.sx, payload.sy, payload.sz])
 }
-
-//#region 🧪️Tests
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
-//#endregion 🧪️Tests

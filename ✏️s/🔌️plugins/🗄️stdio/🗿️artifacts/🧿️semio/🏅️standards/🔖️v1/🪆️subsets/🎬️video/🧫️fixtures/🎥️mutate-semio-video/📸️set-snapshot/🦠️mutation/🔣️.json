@@ -1,11 +1,12 @@
 {
   "kind": "set-snapshot",
-  "params": {
+  "mutation": {
+    "mutation": "setSnapshot",
     "snapshot": {
       "schema": "stdio.semio.video",
       "streams": [
         {
-          "kind": "S",
+          "kind": "subtitle",
           "codec": "srt",
           "width": 0,
           "height": 0,
@@ -17,7 +18,13 @@
             {
               "pts": 0,
               "key": true,
-              "data": "48656c6c6f"
+              "data": [
+                72,
+                101,
+                108,
+                108,
+                111
+              ]
             }
           ]
         }

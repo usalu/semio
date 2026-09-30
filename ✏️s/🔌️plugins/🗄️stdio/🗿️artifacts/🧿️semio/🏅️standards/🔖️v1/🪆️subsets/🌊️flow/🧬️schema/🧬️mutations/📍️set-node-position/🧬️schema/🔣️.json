@@ -5,19 +5,20 @@
   "type": "object",
   "additionalProperties": false,
   "required": [
+    "mutation",
     "id",
     "position"
   ],
   "properties": {
+    "mutation": {
+      "const": "setNodePosition",
+      "description": "Aggregate discriminator spliced in by SemioFlowMutation; absent when the payload stands alone."
+    },
     "id": {
       "type": "string"
     },
     "position": {
       "$ref": "#/$defs/SemioPoint2"
-    },
-    "mutation": {
-      "const": "setNodePosition",
-      "description": "Aggregate discriminator spliced in by SemioFlowMutation; absent when the payload stands alone."
     }
   },
   "$defs": {

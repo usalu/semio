@@ -5,6 +5,10 @@ edition = "2021"
 rust-version.workspace = true
 description = "Proc-macros for #[derive(ArtifactSchema)] with #[state]/#[artifact_schema] field annotations"
 
+[package.metadata.semio]
+role = "framework"
+id = "schema-derive"
+
 [lints]
 workspace = true
 

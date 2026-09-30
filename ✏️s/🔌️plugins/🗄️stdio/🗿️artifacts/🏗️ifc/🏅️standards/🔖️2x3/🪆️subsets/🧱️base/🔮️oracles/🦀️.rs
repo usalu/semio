@@ -37,67 +37,16 @@
 
 use semio_repo_test_host::Json;
 
-//#region 🔖️JsonHelpers
-#[cfg(feature = "oracles")]
-fn num_field(value: &Json, key: &str) -> Result<f64, String> {
-    match value.get(key) {
-        Some(Json::Number(number)) => Ok(*number),
-        _ => Err(format!("expected numeric field {key:?}")),
-    }
-}
-#[cfg(feature = "oracles")]
-fn str_field(value: &Json, key: &str) -> Result<String, String> {
-    match value.get(key) {
-        Some(Json::String(text)) => Ok(text.clone()),
-        _ => Err(format!("expected string field {key:?}")),
-    }
-}
-#[cfg(feature = "oracles")]
-fn str_array(value: &Json, key: &str) -> Vec<String> {
-    value
-        .array(key)
-        .iter()
-        .filter_map(|entry| match entry {
-            Json::String(s) => Some(s.clone()),
-            _ => None,
-        })
-        .collect()
-}
-#[cfg(feature = "oracles")]
-fn u64_field(value: &Json, key: &str) -> Result<u64, String> {
-    num_field(value, key).map(|number| number as u64)
-}
-//#endregion 🔖️JsonHelpers
-
 #[cfg(feature = "oracles")]
 mod oracles {
-    use super::{num_field, str_array, str_field, u64_field, Json};
+    use super::Json;
+    use crate::artifacts::ifc::standards::v2x3::reference::part21::{header_from_wire, instance_from_wire, replace_with_snapshot, snapshot_payload as document_snapshot_payload, u64_field};
     use ruststep::ast::{DataSection, EntityInstance, Exchange, Name, Parameter, Record};
     use std::str::FromStr;
 
     //#region 🔖️ValueGrammar
-    /// 🔤️ This module's own JSON wire grammar for one Part-21 argument value — the wire shape the
-    /// feature file's `Examples` tables and this subset's subject-side `mutation_from_spec` both
-    /// speak (`{"t":"real","v":1.0}`-shaped), the same grammar `step/🔖️ap214/🧱️base`'s oracle uses,
-    /// independent of `Part21Value`'s own serde tagging.
-    fn value_from_json(value: &Json) -> Result<Parameter, String> {
-        match str_field(value, "t")?.as_str() {
-            "unset" => Ok(Parameter::NotProvided),
-            "derived" => Ok(Parameter::Omitted),
-            "integer" => Ok(Parameter::Integer(num_field(value, "v")? as i64)),
-            "real" => Ok(Parameter::Real(num_field(value, "v")?)),
-            "string" => Ok(Parameter::String(str_field(value, "v")?)),
-            "enum" => Ok(Parameter::Enumeration(str_field(value, "v")?)),
-            "reference" => Ok(Parameter::Ref(Name::Entity(u64_field(value, "v")?))),
-            "aggregate" => Ok(Parameter::List(value.array("v").iter().map(value_from_json).collect::<Result<Vec<_>, String>>()?)),
-            "typed" => Ok(Parameter::Typed { keyword: str_field(value, "name")?, parameter: Box::new(value_from_json(value.get("v").ok_or("typed value requires a v field")?)?) }),
-            other => Err(format!("unknown value type {other:?}")),
-        }
-    }
-
-    /// 🔤️ The inverse projection: an independently-parsed `Parameter` back into this module's own
-    /// canonical JSON shape — used both to echo a real argument back out in `project_ifc_2x3_any`
-    /// and, transitively, inside `aggregate`'s recursion.
+    /// 🔤️ An independently-parsed `Parameter` in this module's own canonical projection shape — the argument form
+    /// `project_ifc_2x3_any` echoes back, recursively for aggregates.
     fn value_to_json(param: &Parameter) -> Json {
         let tv = |t: &str, v: Json| Json::Object(vec![("t".to_string(), Json::String(t.to_string())), ("v".to_string(), v)]);
         match param {
@@ -237,9 +186,6 @@ mod oracles {
     fn header_record<'e>(exchange: &'e Exchange, name: &str) -> Option<&'e Record> {
         exchange.header.iter().find(|record| record.name == name)
     }
-    fn header_record_mut<'e>(exchange: &'e mut Exchange, name: &str) -> Option<&'e mut Record> {
-        exchange.header.iter_mut().find(|record| record.name == name)
-    }
     fn records(entity: &EntityInstance) -> Vec<&Record> {
         match entity {
             EntityInstance::Simple { record, .. } => vec![record],
@@ -249,41 +195,12 @@ mod oracles {
     //#endregion 🔖️EntityAccess
 
     //#region 🔖️Apply
-    fn string_list_param(values: &[String]) -> Parameter {
-        Parameter::List(values.iter().cloned().map(Parameter::String).collect())
-    }
-
-    /// 🧩️ Builds one `EntityInstance` (simple or complex) from this module's own wire shape:
-    /// `{"id": u64, "entities": [{"name": str, "args": [value...]}, ...]}` — mirrors
-    /// `Part21Instance{id, entities: Vec<(String, Vec<Part21Value>)>}` exactly (this subset's own
-    /// per-instance vocabulary carries a WHOLE instance, simple or complex, never a single arg).
-    fn instance_from_json(value: &Json) -> Result<EntityInstance, String> {
-        let id = u64_field(value, "id")?;
-        let entities = value.array("entities");
-        if entities.is_empty() {
-            return Err("instance requires a non-empty entities array".to_string());
-        }
-        let records = entities
-            .iter()
-            .map(|entry| -> Result<Record, String> {
-                let name = str_field(entry, "name")?;
-                let args = entry.array("args").iter().map(value_from_json).collect::<Result<Vec<_>, String>>()?;
-                Ok(Record { name, parameter: Parameter::List(args) })
-            })
-            .collect::<Result<Vec<_>, String>>()?;
-        if records.len() == 1 {
-            Ok(EntityInstance::Simple { id, record: records.into_iter().next().expect("checked len == 1") })
-        } else {
-            Ok(EntityInstance::Complex { id, subsuper: ruststep::ast::SubSuperRecord(records) })
-        }
-    }
-
     /// 🦠️ Applies one declared `Ifc2x3Mutation::KINDS` kind to a real, independently-parsed
-    /// `ruststep::ast::Exchange` — one arm per variant, matched by its kebab-case spelling. An
-    /// unrecognised kind is an error, never a silent no-op.
+    /// `ruststep::ast::Exchange` — one arm per variant, matched by its kebab-case spelling, each reading
+    /// the leaf wire payload through the standard's own `🧾️Wire` grammar. An unrecognised kind is an
+    /// error, never a silent no-op. `set-snapshot` replaces the whole document with the snapshot record.
     ///
-    /// `upsert-instance`/`remove-instance` are this subset's OWN vocabulary (richer than `4`'s
-    /// `{NoMutation, SetSnapshot}` stub) and operate on the real entity graph exactly like
+    /// `upsert-instance`/`remove-instance` operate on the real entity graph exactly like
     /// `Ifc2x3Mutation::{UpsertInstance,RemoveInstance}` do in production: upsert replaces an
     /// existing id's whole instance or appends a brand-new one at the end (never a positional
     /// insert), remove deletes an id with NO cascading reference-integrity check — mechanical,
@@ -293,40 +210,17 @@ mod oracles {
     /// this fixture's own forward-reference closure).
     fn apply(exchange: &mut Exchange, kind: &str, params: &Json) -> Result<(), String> {
         match kind {
-            "no-mutation" => Ok(()),
-
-            "set-snapshot" => {
-                let schemas = str_array(params, "fileSchema");
-                if schemas.is_empty() {
-                    return Err("set-snapshot requires a non-empty fileSchema field".to_string());
-                }
-                let record = header_record_mut(exchange, "FILE_SCHEMA").ok_or("input carries no FILE_SCHEMA header record")?;
-                record.parameter = Parameter::List(vec![string_list_param(&schemas)]);
-                Ok(())
-            }
-
-            "set-header" => {
-                let header = params.get("header").ok_or("set-header requires a header field")?;
-                for (record_name, field) in [("FILE_DESCRIPTION", "fileDescription"), ("FILE_NAME", "fileName"), ("FILE_SCHEMA", "fileSchema")] {
-                    let values = header.array(field).iter().map(value_from_json).collect::<Result<Vec<_>, String>>()?;
-                    let record = header_record_mut(exchange, record_name).ok_or_else(|| format!("input carries no {record_name} header record"))?;
-                    record.parameter = Parameter::List(values);
-                }
-                Ok(())
-            }
-
+            "set-snapshot" => replace_with_snapshot(exchange, params.get("snapshot").ok_or("set-snapshot carries `snapshot`")?),
+            "set-header" => header_from_wire(exchange, params.get("header").ok_or("set-header carries `header`")?),
             "upsert-instance" => {
-                let instance_json = params.get("instance").ok_or("upsert-instance requires an instance field")?;
-                let id = u64_field(instance_json, "id")?;
-                let instance = instance_from_json(instance_json)?;
+                let instance = instance_from_wire(params.get("instance").ok_or("upsert-instance carries `instance`")?)?;
                 let section = exchange.data.first_mut().ok_or("input carries no DATA section")?;
-                match section.entities.iter_mut().find(|entity| entity_id(entity) == id) {
+                match section.entities.iter_mut().find(|entity| entity_id(entity) == entity_id(&instance)) {
                     Some(existing) => *existing = instance,
                     None => section.entities.push(instance),
                 }
                 Ok(())
             }
-
             "remove-instance" => {
                 let id = u64_field(params, "id")?;
                 let section = exchange.data.first_mut().ok_or("input carries no DATA section")?;
@@ -337,21 +231,35 @@ mod oracles {
                 }
                 Ok(())
             }
-
             other => Err(format!("mutation kind {other:?} has no oracle implementation")),
         }
     }
     //#endregion 🔖️Apply
 
     //#region 🔖️Dispatch
-    pub fn apply_mutation(input: &[u8], kind: &str, params: &Json) -> Result<Vec<u8>, String> {
+    fn read(input: &[u8]) -> Result<Exchange, String> {
         let text = std::str::from_utf8(input).map_err(|error| format!("input is not UTF-8: {error}"))?;
         let mut exchange = Exchange::from_str(text).map_err(|error| format!("ruststep could not parse the input: {error}"))?;
         if exchange.data.is_empty() {
             exchange.data.push(DataSection { meta: Vec::new(), entities: Vec::new() });
         }
+        Ok(exchange)
+    }
+
+    pub fn apply_mutation(input: &[u8], kind: &str, params: &Json) -> Result<Vec<u8>, String> {
+        let mut exchange = read(input)?;
         apply(&mut exchange, kind, params)?;
         Ok(write_exchange(&exchange).into_bytes())
+    }
+
+    /// 🔁️ Decode and re-encode with no mutation: `ruststep`'s parse, this module's writer.
+    pub fn round_trip(input: &[u8]) -> Result<Vec<u8>, String> {
+        Ok(write_exchange(&read(input)?).into_bytes())
+    }
+
+    /// 📸️ The untouched document as the `set-snapshot` payload that restores it.
+    pub fn snapshot_payload(input: &[u8]) -> Result<Json, String> {
+        Ok(document_snapshot_payload(&read(input)?))
     }
     //#endregion 🔖️Dispatch
 
@@ -467,6 +375,18 @@ pub fn oracle_apply_mutation(input: &[u8], spec: &Json) -> Result<Vec<u8>, Strin
     oracles::apply_mutation(input, &kind, params)
 }
 
+/// 🔁️ Decodes and re-encodes the artifact with no mutation — the identity cycle every law's baseline runs.
+#[cfg(feature = "oracles")]
+pub fn oracle_round_trip(input: &[u8]) -> Result<Vec<u8>, String> {
+    oracles::round_trip(input)
+}
+
+/// 📸️ The untouched artifact as the `set-snapshot` wire payload that restores it — the inverse of `set-snapshot`.
+#[cfg(feature = "oracles")]
+pub fn oracle_snapshot_payload(input: &[u8]) -> Result<Json, String> {
+    oracles::snapshot_payload(input)
+}
+
 /// 👁️ This subset's own semantic projection, re-exported at the module's public surface so the
 /// case adapter can reach it as `oracle_apply_mutation`'s sibling.
 #[cfg(feature = "oracles")]
@@ -477,6 +397,16 @@ pub fn project_ifc_2x3_any(bytes: &[u8]) -> Result<Json, String> {
 /// 🚫️ Without the `oracles` feature the reference implementation is not linked at all.
 #[cfg(not(feature = "oracles"))]
 pub fn oracle_apply_mutation(_input: &[u8], _spec: &Json) -> Result<Vec<u8>, String> {
+    Err("the `oracles` feature is disabled — this host was not built with the registered reference implementations".to_string())
+}
+
+#[cfg(not(feature = "oracles"))]
+pub fn oracle_round_trip(_input: &[u8]) -> Result<Vec<u8>, String> {
+    Err("the `oracles` feature is disabled — this host was not built with the registered reference implementations".to_string())
+}
+
+#[cfg(not(feature = "oracles"))]
+pub fn oracle_snapshot_payload(_input: &[u8]) -> Result<Json, String> {
     Err("the `oracles` feature is disabled — this host was not built with the registered reference implementations".to_string())
 }
 

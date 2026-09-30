@@ -11,8 +11,7 @@ pub enum GltfDataPresence {
     Absent,
     Present { value: GltfJson },
 }
-#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::MutationLeaf)]
-#[mutation_leaf(contract = ::protocol)]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
 #[value(rename_all = "camelCase")]
 pub struct GltfChangeMeshExtensionDataPayload {
     pub mesh: usize,
@@ -36,7 +35,7 @@ pub fn apply(payload: &GltfChangeMeshExtensionDataPayload, base: &GltfSnapshot) 
 
 //#region 🧬️DirectMutation
 #[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::MutationLeaf)]
-#[mutation_leaf(contract = ::protocol)]
+#[mutation_leaf(contract = ::protocol, payload = Apply)]
 #[value(tag = "phase", content = "value", rename_all = "camelCase")]
 pub enum ChangeMeshExtensionDataMutation {
     Apply(GltfChangeMeshExtensionDataPayload),
@@ -80,6 +79,6 @@ impl protocol::MutationKind<GltfSnapshot, super::GltfMutation> for ChangeMeshExt
 
 //#region 🧪️Tests
 #[cfg(test)]
-#[path = "🧪️tests/🔬️direct-leaf/🦀️.rs"]
-mod direct_leaf_tests;
+#[path = "🧪️tests/🔌️attaches-an-9e1e51/🦀️.rs"]
+mod case_attaches_an_9e1e51;
 //#endregion 🧪️Tests

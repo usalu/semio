@@ -5,6 +5,10 @@ edition = "2021"
 rust-version.workspace = true
 description = "Proc-macro #[async_test]: keeps a test fn's literal `async fn` in source (the repo's universal-async convention) while expanding it to a plain #[test] harness that drives the body through an inline, dependency-free block_on — the fix for the ~16k `#[test] async fn` sites the universal-async codemod left uncompilable."
 
+[package.metadata.semio]
+role = "framework"
+id = "async-macros"
+
 [lints]
 workspace = true
 

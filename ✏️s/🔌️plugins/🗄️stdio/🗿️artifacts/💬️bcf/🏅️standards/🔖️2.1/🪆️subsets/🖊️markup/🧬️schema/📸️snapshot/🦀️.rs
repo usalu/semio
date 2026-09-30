@@ -23,7 +23,7 @@ pub struct BcfPoint3 {
 /// typed as a real Rust enum rather than two optional fields (the XSD makes them mutually
 /// exclusive via `xs:choice`).
 #[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
-#[value(tag = "kind", rename_all = "camelCase")]
+#[value(tag = "kind", rename_all = "camelCase", rename_all_fields = "camelCase")]
 pub enum BcfCamera {
     Perspective { view_point: BcfPoint3, direction: BcfPoint3, up_vector: BcfPoint3, field_of_view: f64 },
     Orthogonal { view_point: BcfPoint3, direction: BcfPoint3, up_vector: BcfPoint3, view_to_world_scale: f64 },

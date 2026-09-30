@@ -1,0 +1,11 @@
+{
+  "mutation": "bindPrimitiveMaterial",
+  "payload": {
+    "phase": "apply",
+    "value": {
+      "mesh": 0,
+      "primitive": 0,
+      "material": 0
+    }
+  }
+}

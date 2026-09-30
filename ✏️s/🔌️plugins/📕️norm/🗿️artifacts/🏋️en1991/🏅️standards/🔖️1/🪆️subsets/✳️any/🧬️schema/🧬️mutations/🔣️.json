@@ -4,100 +4,964 @@
   "title": "En1991Mutation",
   "oneOf": [
     {
-      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1991/mutation/change-accidental-mass-t/schema.json"
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "ChangeAnnex"
+      ],
+      "properties": {
+        "ChangeAnnex": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1991/mutation/change-annex/schema.json"
+        }
+      }
     },
     {
-      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1991/mutation/change-accidental-speed-km-h/schema.json"
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "ChangeSnowZone"
+      ],
+      "properties": {
+        "ChangeSnowZone": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1991/mutation/change-snow-zone/schema.json"
+        }
+      }
     },
     {
-      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1991/mutation/change-annex/schema.json"
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "ChangeAltitude"
+      ],
+      "properties": {
+        "ChangeAltitude": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1991/mutation/change-altitude/schema.json"
+        }
+      }
     },
     {
-      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1991/mutation/change-area-m2/schema.json"
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "ChangeEnSk"
+      ],
+      "properties": {
+        "ChangeEnSk": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1991/mutation/change-en-sk/schema.json"
+        }
+      }
     },
     {
-      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1991/mutation/change-assumed-gk-kn-m2/schema.json"
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "ChangeExceptionalSnowNorthGermanLowlands"
+      ],
+      "properties": {
+        "ChangeExceptionalSnowNorthGermanLowlands": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1991/mutation/change-exceptional-snow-north-german-lowlands/schema.json"
+        }
+      }
     },
     {
-      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1991/mutation/change-bridge-lane/schema.json"
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "ChangeWindZone"
+      ],
+      "properties": {
+        "ChangeWindZone": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1991/mutation/change-wind-zone/schema.json"
+        }
+      }
     },
     {
-      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1991/mutation/change-bridge-lane-width-m/schema.json"
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "ChangeEnVb"
+      ],
+      "properties": {
+        "ChangeEnVb": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1991/mutation/change-en-vb/schema.json"
+        }
+      }
     },
     {
-      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1991/mutation/change-bridge-moment-resistance-knm/schema.json"
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "ChangeTerrainCategory"
+      ],
+      "properties": {
+        "ChangeTerrainCategory": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1991/mutation/change-terrain-category/schema.json"
+        }
+      }
     },
     {
-      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1991/mutation/change-bridge-span-m/schema.json"
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "ChangeMixedTerrainUpwind"
+      ],
+      "properties": {
+        "ChangeMixedTerrainUpwind": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1991/mutation/change-mixed-terrain-upwind/schema.json"
+        }
+      }
     },
     {
-      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1991/mutation/change-category/schema.json"
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "ChangeMixedTerrainDistance"
+      ],
+      "properties": {
+        "ChangeMixedTerrainDistance": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1991/mutation/change-mixed-terrain-distance/schema.json"
+        }
+      }
     },
     {
-      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1991/mutation/change-cd/schema.json"
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "ChangeOrographyFactor"
+      ],
+      "properties": {
+        "ChangeOrographyFactor": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1991/mutation/change-orography-factor/schema.json"
+        }
+      }
     },
     {
-      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1991/mutation/change-construction-activity/schema.json"
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "ChangeCoastOrIsland"
+      ],
+      "properties": {
+        "ChangeCoastOrIsland": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1991/mutation/change-coast-or-island/schema.json"
+        }
+      }
     },
     {
-      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1991/mutation/change-crane-class/schema.json"
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "ChangeAirDensity"
+      ],
+      "properties": {
+        "ChangeAirDensity": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1991/mutation/change-air-density/schema.json"
+        }
+      }
     },
     {
-      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1991/mutation/change-cs/schema.json"
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "ChangeHeight"
+      ],
+      "properties": {
+        "ChangeHeight": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1991/mutation/change-height/schema.json"
+        }
+      }
     },
     {
-      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1991/mutation/change-delta-tk/schema.json"
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "ChangeWidth"
+      ],
+      "properties": {
+        "ChangeWidth": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1991/mutation/change-width/schema.json"
+        }
+      }
     },
     {
-      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1991/mutation/change-en-sk-kn-m2/schema.json"
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "ChangeDepth"
+      ],
+      "properties": {
+        "ChangeDepth": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1991/mutation/change-depth/schema.json"
+        }
+      }
     },
     {
-      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1991/mutation/change-en-vbms/schema.json"
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "ChangeAssumedDeltaT"
+      ],
+      "properties": {
+        "ChangeAssumedDeltaT": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1991/mutation/change-assumed-delta-t/schema.json"
+        }
+      }
     },
     {
-      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1991/mutation/change-fire-curve/schema.json"
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "ChangeConstructionActivity"
+      ],
+      "properties": {
+        "ChangeConstructionActivity": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1991/mutation/change-construction-activity/schema.json"
+        }
+      }
     },
     {
-      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1991/mutation/change-fire-member-capacity-c/schema.json"
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "ChangeAssumedConstructionQk"
+      ],
+      "properties": {
+        "ChangeAssumedConstructionQk": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1991/mutation/change-assumed-construction-qk/schema.json"
+        }
+      }
     },
     {
-      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1991/mutation/change-fire-resistance-min/schema.json"
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "ChangeStructureKind"
+      ],
+      "properties": {
+        "ChangeStructureKind": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1991/mutation/change-structure-kind/schema.json"
+        }
+      }
     },
     {
-      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1991/mutation/change-hoist-class/schema.json"
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "ChangeBridgeLane"
+      ],
+      "properties": {
+        "ChangeBridgeLane": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1991/mutation/change-bridge-lane/schema.json"
+        }
+      }
     },
     {
-      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1991/mutation/change-hoisting-speed-ms/schema.json"
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "ChangeBridgeSpan"
+      ],
+      "properties": {
+        "ChangeBridgeSpan": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1991/mutation/change-bridge-span/schema.json"
+        }
+      }
     },
     {
-      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1991/mutation/change-self-weight-material/schema.json"
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "ChangeBridgeLaneWidth"
+      ],
+      "properties": {
+        "ChangeBridgeLaneWidth": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1991/mutation/change-bridge-lane-width/schema.json"
+        }
+      }
     },
     {
-      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1991/mutation/change-self-weight-thickness-m/schema.json"
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "ChangeAssumedBridgeTandem"
+      ],
+      "properties": {
+        "ChangeAssumedBridgeTandem": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1991/mutation/change-assumed-bridge-tandem/schema.json"
+        }
+      }
     },
     {
-      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1991/mutation/change-silo-bulk-density-kn-m3/schema.json"
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "ChangeAssumedBridgeUdl"
+      ],
+      "properties": {
+        "ChangeAssumedBridgeUdl": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1991/mutation/change-assumed-bridge-udl/schema.json"
+        }
+      }
     },
     {
-      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1991/mutation/change-silo-height-m/schema.json"
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "ChangeAssumedBridgeLm2"
+      ],
+      "properties": {
+        "ChangeAssumedBridgeLm2": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1991/mutation/change-assumed-bridge-lm2/schema.json"
+        }
+      }
     },
     {
-      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1991/mutation/change-silo-hydraulic-radius-m/schema.json"
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "ChangeAssumedBridgeFootway"
+      ],
+      "properties": {
+        "ChangeAssumedBridgeFootway": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1991/mutation/change-assumed-bridge-footway/schema.json"
+        }
+      }
     },
     {
-      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1991/mutation/change-silo-k/schema.json"
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "ChangeStoreyCount"
+      ],
+      "properties": {
+        "ChangeStoreyCount": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1991/mutation/change-storey-count/schema.json"
+        }
+      }
     },
     {
-      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1991/mutation/change-silo-mu/schema.json"
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "ChangeTMax"
+      ],
+      "properties": {
+        "ChangeTMax": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1991/mutation/change-t-max/schema.json"
+        }
+      }
     },
     {
-      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1991/mutation/change-snow-altitude-m/schema.json"
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "ChangeTMin"
+      ],
+      "properties": {
+        "ChangeTMin": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1991/mutation/change-t-min/schema.json"
+        }
+      }
     },
     {
-      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1991/mutation/change-snow-zone/schema.json"
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "ChangeInitialTemperature"
+      ],
+      "properties": {
+        "ChangeInitialTemperature": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1991/mutation/change-initial-temperature/schema.json"
+        }
+      }
     },
     {
-      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1991/mutation/change-wind-zone/schema.json"
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "ChangeThermalElementType"
+      ],
+      "properties": {
+        "ChangeThermalElementType": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1991/mutation/change-thermal-element-type/schema.json"
+        }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "ChangeThermalBridgeType"
+      ],
+      "properties": {
+        "ChangeThermalBridgeType": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1991/mutation/change-thermal-bridge-type/schema.json"
+        }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "ChangeLinearTemperatureGradient"
+      ],
+      "properties": {
+        "ChangeLinearTemperatureGradient": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1991/mutation/change-linear-temperature-gradient/schema.json"
+        }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "ChangeFireMode"
+      ],
+      "properties": {
+        "ChangeFireMode": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1991/mutation/change-fire-mode/schema.json"
+        }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "ChangeFireCurve"
+      ],
+      "properties": {
+        "ChangeFireCurve": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1991/mutation/change-fire-curve/schema.json"
+        }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "ChangeFireDuration"
+      ],
+      "properties": {
+        "ChangeFireDuration": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1991/mutation/change-fire-duration/schema.json"
+        }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "ChangeAssumedGasTemperature"
+      ],
+      "properties": {
+        "ChangeAssumedGasTemperature": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1991/mutation/change-assumed-gas-temperature/schema.json"
+        }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "ChangeAssumedHNet"
+      ],
+      "properties": {
+        "ChangeAssumedHNet": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1991/mutation/change-assumed-h-net/schema.json"
+        }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "ChangeFireCompartmentArea"
+      ],
+      "properties": {
+        "ChangeFireCompartmentArea": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1991/mutation/change-fire-compartment-area/schema.json"
+        }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "ChangeFireCompartmentHeight"
+      ],
+      "properties": {
+        "ChangeFireCompartmentHeight": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1991/mutation/change-fire-compartment-height/schema.json"
+        }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "ChangeFireOpeningFactor"
+      ],
+      "properties": {
+        "ChangeFireOpeningFactor": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1991/mutation/change-fire-opening-factor/schema.json"
+        }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "ChangeFireThermalInertia"
+      ],
+      "properties": {
+        "ChangeFireThermalInertia": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1991/mutation/change-fire-thermal-inertia/schema.json"
+        }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "ChangeFireOccupancy"
+      ],
+      "properties": {
+        "ChangeFireOccupancy": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1991/mutation/change-fire-occupancy/schema.json"
+        }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "ChangeFireLoadDensityQf"
+      ],
+      "properties": {
+        "ChangeFireLoadDensityQf": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1991/mutation/change-fire-load-density-qf/schema.json"
+        }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "ChangeAssumedQfD"
+      ],
+      "properties": {
+        "ChangeAssumedQfD": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1991/mutation/change-assumed-qf-d/schema.json"
+        }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "ChangeAssumedBridgeLm3"
+      ],
+      "properties": {
+        "ChangeAssumedBridgeLm3": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1991/mutation/change-assumed-bridge-lm3/schema.json"
+        }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "ChangeAssumedBridgeLm4"
+      ],
+      "properties": {
+        "ChangeAssumedBridgeLm4": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1991/mutation/change-assumed-bridge-lm4/schema.json"
+        }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "ChangeBridgeLoadGroup"
+      ],
+      "properties": {
+        "ChangeBridgeLoadGroup": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1991/mutation/change-bridge-load-group/schema.json"
+        }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "ChangeCraneClaimed"
+      ],
+      "properties": {
+        "ChangeCraneClaimed": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1991/mutation/change-crane-claimed/schema.json"
+        }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "ChangeCraneClass"
+      ],
+      "properties": {
+        "ChangeCraneClass": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1991/mutation/change-crane-class/schema.json"
+        }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "ChangeHoistClass"
+      ],
+      "properties": {
+        "ChangeHoistClass": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1991/mutation/change-hoist-class/schema.json"
+        }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "ChangeHoistingSpeed"
+      ],
+      "properties": {
+        "ChangeHoistingSpeed": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1991/mutation/change-hoisting-speed/schema.json"
+        }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "ChangeAssumedCraneWheel"
+      ],
+      "properties": {
+        "ChangeAssumedCraneWheel": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1991/mutation/change-assumed-crane-wheel/schema.json"
+        }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "ChangeAssumedCraneHorizontal"
+      ],
+      "properties": {
+        "ChangeAssumedCraneHorizontal": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1991/mutation/change-assumed-crane-horizontal/schema.json"
+        }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "ChangeSiloClaimed"
+      ],
+      "properties": {
+        "ChangeSiloClaimed": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1991/mutation/change-silo-claimed/schema.json"
+        }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "ChangeSiloKind"
+      ],
+      "properties": {
+        "ChangeSiloKind": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1991/mutation/change-silo-kind/schema.json"
+        }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "ChangeSiloBulkDensity"
+      ],
+      "properties": {
+        "ChangeSiloBulkDensity": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1991/mutation/change-silo-bulk-density/schema.json"
+        }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "ChangeSiloHeight"
+      ],
+      "properties": {
+        "ChangeSiloHeight": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1991/mutation/change-silo-height/schema.json"
+        }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "ChangeSiloHydraulicRadius"
+      ],
+      "properties": {
+        "ChangeSiloHydraulicRadius": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1991/mutation/change-silo-hydraulic-radius/schema.json"
+        }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "ChangeSiloMu"
+      ],
+      "properties": {
+        "ChangeSiloMu": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1991/mutation/change-silo-mu/schema.json"
+        }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "ChangeSiloK"
+      ],
+      "properties": {
+        "ChangeSiloK": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1991/mutation/change-silo-k/schema.json"
+        }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "ChangeAssumedSiloPressure"
+      ],
+      "properties": {
+        "ChangeAssumedSiloPressure": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1991/mutation/change-assumed-silo-pressure/schema.json"
+        }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "ChangeAssumedSiloPatch"
+      ],
+      "properties": {
+        "ChangeAssumedSiloPatch": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1991/mutation/change-assumed-silo-patch/schema.json"
+        }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "ChangeAssumedSiloWallFriction"
+      ],
+      "properties": {
+        "ChangeAssumedSiloWallFriction": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1991/mutation/change-assumed-silo-wall-friction/schema.json"
+        }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "ChangeFloorAssumedQk"
+      ],
+      "properties": {
+        "ChangeFloorAssumedQk": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1991/mutation/change-floor-assumed-qk/schema.json"
+        }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "ChangeSelfWeightAssumedGk"
+      ],
+      "properties": {
+        "ChangeSelfWeightAssumedGk": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1991/mutation/change-self-weight-assumed-gk/schema.json"
+        }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "ChangeRoofAssumedSk"
+      ],
+      "properties": {
+        "ChangeRoofAssumedSk": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1991/mutation/change-roof-assumed-sk/schema.json"
+        }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "ChangeWindFaceAssumedWp"
+      ],
+      "properties": {
+        "ChangeWindFaceAssumedWp": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1991/mutation/change-wind-face-assumed-wp/schema.json"
+        }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "ChangeAccidentalAssumedForce"
+      ],
+      "properties": {
+        "ChangeAccidentalAssumedForce": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1991/mutation/change-accidental-assumed-force/schema.json"
+        }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "InsertFloors"
+      ],
+      "properties": {
+        "InsertFloors": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1991/mutation/insert-floors/schema.json"
+        }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "RemoveFloors"
+      ],
+      "properties": {
+        "RemoveFloors": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1991/mutation/remove-floors/schema.json"
+        }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "InsertSelfWeightElements"
+      ],
+      "properties": {
+        "InsertSelfWeightElements": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1991/mutation/insert-self-weight-elements/schema.json"
+        }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "RemoveSelfWeightElements"
+      ],
+      "properties": {
+        "RemoveSelfWeightElements": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1991/mutation/remove-self-weight-elements/schema.json"
+        }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "InsertRoofs"
+      ],
+      "properties": {
+        "InsertRoofs": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1991/mutation/insert-roofs/schema.json"
+        }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "RemoveRoofs"
+      ],
+      "properties": {
+        "RemoveRoofs": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1991/mutation/remove-roofs/schema.json"
+        }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "InsertWindFaces"
+      ],
+      "properties": {
+        "InsertWindFaces": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1991/mutation/insert-wind-faces/schema.json"
+        }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "RemoveWindFaces"
+      ],
+      "properties": {
+        "RemoveWindFaces": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1991/mutation/remove-wind-faces/schema.json"
+        }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "InsertAccidentalCases"
+      ],
+      "properties": {
+        "InsertAccidentalCases": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1991/mutation/insert-accidental-cases/schema.json"
+        }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "RemoveAccidentalCases"
+      ],
+      "properties": {
+        "RemoveAccidentalCases": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1991/mutation/remove-accidental-cases/schema.json"
+        }
+      }
     }
   ]
 }

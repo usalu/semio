@@ -4,9 +4,12 @@
 //!
 //! Reference: csv, exactly as the sibling `csv-rfc4180-mutate` entry uses it — genuinely
 //! independent for EPW's 8,760 comma-separated hourly RECORDS (35 columns each), authoritative for
-//! record structure and field values. `no-mutation`/`insert-record`/`remove-record`/
-//! `set-record-field` go through it both as producer and reader and are typed `@mode-differential`
-//! in this case's feature file.
+//! record structure and field values. `insert-record`/`remove-record`/`set-record-field` go through
+//! it both as producer and reader and are typed `@mode-differential` in this case's feature file.
+//!
+//! Every spec's `params` is the leaf wire payload (design §11): a record travels as the `EpwRecord`
+//! object keyed by its data-dictionary column name ([`EPW_RECORD_COLUMNS`]), a snapshot as the
+//! whole `EpwSnapshot` wire ([`epw_snapshot_wire`]).
 //!
 //! The 8 EPW header lines (LOCATION, DESIGN CONDITIONS, TYPICAL/EXTREME PERIODS, GROUND
 //! TEMPERATURES, HOLIDAYS/DAYLIGHT SAVINGS, COMMENTS 1, COMMENTS 2, DATA PERIODS) are
@@ -108,7 +111,7 @@ fn encode_doc(doc: &EpwDoc) -> Result<Vec<u8>, String> {
 
 /// 🔁️ Independent decode/re-encode: the 8 header lines copied raw, the record grid genuinely
 /// round-tripped through `csv`'s reader then writer. Used by the case's own `identity-round-trip`
-/// oracle role — distinct from the `no-mutation` KIND, which is a true byte identity by design.
+/// oracle role.
 #[cfg(feature = "oracles")]
 pub fn round_trip_epw(bytes: &[u8]) -> Result<Vec<u8>, String> {
     encode_doc(&parse_doc(bytes)?)
@@ -195,18 +198,85 @@ fn number(value: &Json, key: &str) -> Option<f64> {
         _ => None,
     }
 }
-#[cfg(feature = "oracles")]
-fn strings(value: &Json, key: &str) -> Vec<String> {
-    value
-        .array(key)
-        .iter()
-        .map(|entry| match entry {
-            Json::String(text) => text.clone(),
-            _ => String::new(),
-        })
-        .collect()
-}
 //#endregion 🔖️JsonHelpers
+
+//#region 🔖️RecordWire
+/// 🗂️ The 35 hourly-record columns in EPW data-dictionary order, spelled as the `EpwRecord` wire keys them
+/// (https://bigladdersoftware.com/epx/docs/9-6/auxiliary-programs/energyplus-weather-file-epw-data-dictionary.html).
+pub const EPW_RECORD_COLUMNS: [&str; 35] = [
+    "year",
+    "month",
+    "day",
+    "hour",
+    "minute",
+    "dataSourceUncertainty",
+    "dryBulbTemp",
+    "dewPointTemp",
+    "relativeHumidity",
+    "atmosphericPressure",
+    "extraterrestrialHorizontalRadiation",
+    "extraterrestrialDirectNormalRadiation",
+    "horizontalInfraredRadiation",
+    "globalHorizontalRadiation",
+    "directNormalRadiation",
+    "diffuseHorizontalRadiation",
+    "globalHorizontalIlluminance",
+    "directNormalIlluminance",
+    "diffuseHorizontalIlluminance",
+    "zenithLuminance",
+    "windDirection",
+    "windSpeed",
+    "totalSkyCover",
+    "opaqueSkyCover",
+    "visibility",
+    "ceilingHeight",
+    "presentWeatherObservation",
+    "presentWeatherCodes",
+    "precipitableWater",
+    "aerosolOpticalDepth",
+    "snowDepth",
+    "daysSinceLastSnowfall",
+    "albedo",
+    "liquidPrecipDepth",
+    "liquidPrecipQuantity",
+];
+
+/// 📋️ One `EpwRecord` wire object as its 35 csv cells, in column order.
+#[cfg(feature = "oracles")]
+fn record_cells(record: &Json) -> Vec<String> {
+    EPW_RECORD_COLUMNS.iter().map(|column| record.str(column)).collect()
+}
+
+/// 🧾️ One csv record grid row as the `EpwRecord` wire object.
+#[cfg(feature = "oracles")]
+fn record_wire(cells: &[String]) -> Json {
+    json_object(EPW_RECORD_COLUMNS.iter().enumerate().map(|(index, column)| (*column, Json::String(cells.get(index).cloned().unwrap_or_default()))).collect())
+}
+
+/// 📸️ The `EpwSnapshot` wire (`set-snapshot`'s payload) of EPW bytes, read independently of the subject codec: `schema` is
+/// the `stdio.epw` document schema id, the header lines as [`project_epw`] reads them, every record as [`record_wire`].
+#[cfg(feature = "oracles")]
+pub fn epw_snapshot_wire(bytes: &[u8]) -> Result<Json, String> {
+    let doc = parse_doc(bytes)?;
+    Ok(json_object(vec![
+        ("schema", Json::String("stdio.epw".to_string())),
+        ("location", parse_location_line(&doc.header[0])?),
+        ("designConditions", Json::String(doc.header[1].clone())),
+        ("typicalExtremePeriods", Json::String(doc.header[2].clone())),
+        ("groundTemperatures", Json::String(doc.header[3].clone())),
+        ("holidaysDst", Json::String(doc.header[4].clone())),
+        ("comments1", Json::String(doc.header[5].clone())),
+        ("comments2", Json::String(doc.header[6].clone())),
+        ("dataPeriods", parse_data_periods_line(&doc.header[7])?),
+        ("records", Json::Array(doc.records.iter().map(|row| record_wire(row)).collect())),
+    ]))
+}
+
+#[cfg(not(feature = "oracles"))]
+pub fn epw_snapshot_wire(_bytes: &[u8]) -> Result<Json, String> {
+    Err("the `oracles` feature is disabled — this host was not built with the registered reference implementations".to_string())
+}
+//#endregion 🔖️RecordWire
 
 //#region 🔖️Dispatch
 /// 🦠️ Applies one declared mutation kind to a real artifact and returns the re-serialized bytes.
@@ -217,7 +287,6 @@ pub fn oracle_apply_mutation(input: &[u8], spec: &Json) -> Result<Vec<u8>, Strin
     let params = mutation_params(spec);
     match spec.str("kind").as_str() {
         "" => Err("mutation spec carries no `kind`".to_string()),
-        "no-mutation" => Ok(input.to_vec()),
         "set-snapshot" => {
             let snapshot = params.get("snapshot").cloned().unwrap_or(Json::Null);
             let header: [String; 8] = [
@@ -230,14 +299,7 @@ pub fn oracle_apply_mutation(input: &[u8], spec: &Json) -> Result<Vec<u8>, Strin
                 snapshot.str("comments2"),
                 data_periods_line(&snapshot.get("dataPeriods").cloned().unwrap_or(Json::Null)),
             ];
-            let records: Vec<Vec<String>> = snapshot
-                .array("records")
-                .iter()
-                .map(|row| match row {
-                    Json::Array(cells) => cells.iter().map(|c| if let Json::String(s) = c { s.clone() } else { String::new() }).collect(),
-                    _ => Vec::new(),
-                })
-                .collect();
+            let records = snapshot.array("records").iter().map(record_cells).collect();
             encode_doc(&EpwDoc { header, records })
         }
         "set-location" => {
@@ -283,7 +345,7 @@ pub fn oracle_apply_mutation(input: &[u8], spec: &Json) -> Result<Vec<u8>, Strin
         "insert-record" => {
             let mut doc = parse_doc(input)?;
             let index = number(&params, "index").ok_or("insert-record: missing `index`")? as usize;
-            let record = strings(&params, "fields");
+            let record = record_cells(&params.get("record").cloned().unwrap_or(Json::Null));
             doc.records.insert(index.min(doc.records.len()), record);
             encode_doc(&doc)
         }

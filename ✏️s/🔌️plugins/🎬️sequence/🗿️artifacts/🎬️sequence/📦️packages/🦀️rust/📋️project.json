@@ -39,6 +39,30 @@
         "command": "bun ./📜️script.ts test",
         "forwardAllArgs": true
       }
+    },
+    "io-descriptor-parity": {
+      "executor": "nx:run-commands",
+      "options": {
+        "cwd": "✏️s/🔌️plugins/🎬️sequence/🗿️artifacts/🎬️sequence/📦️packages/🦀️rust",
+        "command": "bun ./📜️script.ts test io-descriptor-parity",
+        "forwardAllArgs": true
+      }
+    },
+    "io-descriptor-parity-oracle": {
+      "executor": "nx:run-commands",
+      "options": {
+        "cwd": "✏️s/🔌️plugins/🎬️sequence/🗿️artifacts/🎬️sequence/📦️packages/🦀️rust",
+        "command": "bun ./📜️script.ts test io-descriptor-parity oracle",
+        "forwardAllArgs": true
+      }
+    },
+    "canonical-architecture": {
+      "executor": "nx:run-commands",
+      "options": {
+        "cwd": "✏️s/🔌️plugins/🎬️sequence/🗿️artifacts/🎬️sequence/📦️packages/🦀️rust",
+        "command": "bun ./📜️script.ts test io-descriptor-parity",
+        "forwardAllArgs": true
+      }
     }
   }
 }

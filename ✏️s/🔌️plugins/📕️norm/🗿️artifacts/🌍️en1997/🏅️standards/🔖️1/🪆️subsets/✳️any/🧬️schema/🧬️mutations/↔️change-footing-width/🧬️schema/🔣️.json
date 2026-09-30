@@ -5,15 +5,50 @@
   "type": "object",
   "additionalProperties": false,
   "required": [
+    "mutation",
     "id",
     "newWidth"
   ],
   "properties": {
+    "mutation": {
+      "const": "changeFootingWidth"
+    },
     "id": {
-      "type": "string"
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Spread foundation",
+          "de": "Flachgründung"
+        },
+        "description": {
+          "en": "The spread foundation this mutation addresses.",
+          "de": "Die Flachgründung, die diese Mutation adressiert."
+        },
+        "ref": {
+          "kind": "footing"
+        },
+        "group": "target",
+        "order": 10
+      }
     },
     "newWidth": {
-      "type": "number"
+      "type": "number",
+      "exclusiveMinimum": 0,
+      "x-semio-ui": {
+        "widget": "stepper",
+        "role": "value",
+        "label": {
+          "en": "Foundation width b",
+          "de": "Fundamentbreite b"
+        },
+        "unit": "m",
+        "step": 0.05,
+        "precision": 2,
+        "group": "foundation",
+        "order": 20
+      }
     }
   }
 }

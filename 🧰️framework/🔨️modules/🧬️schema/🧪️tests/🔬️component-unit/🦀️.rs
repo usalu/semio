@@ -577,6 +577,19 @@ async fn owned_validator_agrees_with_the_shared_draft07_vectors() {
     }
 }
 
+/// 🏷️ The shared corpus pins the format policy: `assertedFormats` are exactly [`crate::ASSERTED_STRING_FORMATS`], and every
+/// `annotationFormats` spelling (the proto-derived ones the strict Ajv oracle registers as annotations) never rejects.
+#[semio_framework_async_macros::async_test]
+async fn owned_format_policy_matches_the_shared_format_lists() {
+    let vectors = parse_json(DRAFT07_VECTORS).expect("vectors json");
+    let list = |key: &str| -> Vec<String> { vectors.get(key).and_then(Value::as_array).unwrap_or_else(|| panic!("{key} list")).iter().map(|entry| entry.as_str().expect("format name").to_string()).collect() };
+    assert_eq!(list("assertedFormats"), crate::ASSERTED_STRING_FORMATS.map(str::to_string).to_vec());
+    for format in list("annotationFormats") {
+        assert!(!crate::ASSERTED_STRING_FORMATS.contains(&format.as_str()), "{format} is both asserted and an annotation");
+        assert_eq!(crate::string_format_matches(&format, "not-a-value!!"), None, "{format} must stay an annotation");
+    }
+}
+
 #[semio_framework_async_macros::async_test]
 async fn owned_pattern_matcher_covers_the_supported_ecma_subset() {
     let corpus: [(&str, &[(&str, bool)]); 11] = [

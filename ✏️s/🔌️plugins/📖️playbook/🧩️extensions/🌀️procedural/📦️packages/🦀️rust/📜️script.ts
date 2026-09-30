@@ -1,11 +1,38 @@
 #!/usr/bin/env bun
 /** 📦️ Extension package router: `bun ./📜️script.ts <test|package>`. */
-import { BundleScript, ScriptRouter, resolveTestLevel, runBundleScriptMain, runCargoTestBudgeted, runExtensionComponentPackage } from "../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
+import { BundleScript, ScriptRouter, buildBudgetMs, resolveTestLevel, runBundleScriptMain, runCargoTestBudgeted, runExactCargoLaws, runExtensionComponentPackage, runBun } from "../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
 
 class TestScript extends BundleScript {
-  run(segments: string[]): void {
+  async run(segments: string[]): Promise<void> {
     const { rest } = resolveTestLevel(segments);
-    runCargoTestBudgeted(["semio-s-plugin-playbook-procedural"], this.repoRoot, rest);
+    await runCargoTestBudgeted(["semio-s-plugin-playbook-procedural"], this.repoRoot, rest);
+  }
+}
+
+class GeometryContractScript extends BundleScript {
+  async run(segments: string[]): Promise<void> {
+    if (segments.length) throw new Error("geometry-contract accepts no arguments");
+    runBun(["test", "./✏️s/🔌️plugins/📖️playbook/🧩️extensions/🌀️procedural/🧪️tests/🔬️geometry-lifetime/🟦️.ts"], this.repoRoot);
+    const receipts = await runExactCargoLaws({
+      cwd: this.repoRoot,
+      env: { ...process.env, RUST_MIN_STACK: process.env.SEMIO_BUILD_RUST_MIN_STACK ?? "33554432" },
+      nativeEnv: { RUST_MIN_STACK: "268435456" },
+      groups: [{ package: "semio-s-plugin-playbook-procedural", target: { kind: "lib" }, laws: [
+        "instance_geometry_admits_session_shell_before_terminal",
+        "instance_geometry_replays_durable_sources_and_preserves_preview_authority",
+        "preview_body_emits_world_scene",
+        "export_solid_action_stashes_result_and_is_undoable",
+        "import_solid_action_stashes_result_on_params",
+        "import_solid_action_reports_error_when_no_data_given",
+        "procedural_payload_vectors_match_the_json_oracle",
+      ] }],
+      artifactDir: process.env.SEMIO_TEST_ARTIFACT_DIR,
+      buildBudgetMs: buildBudgetMs(),
+      listBudgetMs: 60_000,
+      lawBudgetMs: 120_000,
+      progress(event) { console.log(`playbook-geometry-contract ${event.stage}: ${event.law ?? ""}`); },
+    });
+    console.log(`playbook-geometry-contract receipts=${receipts.length}`);
   }
 }
 
@@ -16,5 +43,5 @@ class PackageScript extends BundleScript {
   }
 }
 
-const router = new ScriptRouter(import.meta.dir).register("test", TestScript).register("package", PackageScript);
+const router = new ScriptRouter(import.meta.dir).register("test", TestScript).register("geometry-contract", GeometryContractScript).register("canonical-architecture", GeometryContractScript).register("package", PackageScript);
 await runBundleScriptMain(router, import.meta.url, { defaultCommand: "test" });

@@ -5,15 +5,22 @@
   "type": "object",
   "additionalProperties": false,
   "required": [
+    "mutation",
     "master"
   ],
   "properties": {
-    "master": {
-      "$ref": "#/$defs/SlideMaster"
-    },
     "mutation": {
       "const": "insertMaster",
       "description": "Aggregate discriminator spliced in by SemioPresentationMutation; absent when the payload stands alone."
+    },
+    "master": {
+      "$ref": "#/$defs/SlideMaster",
+      "x-semio-ui": {
+        "label": {
+          "en": "Slide master",
+          "de": "Folienmaster"
+        }
+      }
     }
   },
   "$defs": {

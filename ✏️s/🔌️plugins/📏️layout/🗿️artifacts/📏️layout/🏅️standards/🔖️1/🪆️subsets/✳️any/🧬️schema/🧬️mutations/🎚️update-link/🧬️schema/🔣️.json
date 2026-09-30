@@ -1,1 +1,112 @@
-{"$schema":"http://json-schema.org/draft-07/schema#","title":"UpdateLink","type":"object"}
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/layout/layout/mutation/update-link/schema.json",
+  "title": "UpdateLink",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "id",
+    "width",
+    "height",
+    "dpi"
+  ],
+  "properties": {
+    "id": {
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Link",
+          "de": "Verknüpfung"
+        },
+        "ref": {
+          "kind": "link"
+        },
+        "group": "target",
+        "order": 10
+      }
+    },
+    "width": {
+      "type": "integer",
+      "minimum": 0,
+      "x-semio-ui": {
+        "widget": "stepper",
+        "role": "value",
+        "label": {
+          "en": "Width",
+          "de": "Breite"
+        },
+        "description": {
+          "en": "Image width in pixels.",
+          "de": "Bildbreite in Pixeln."
+        },
+        "unit": "px",
+        "step": 1,
+        "precision": 0,
+        "group": "print",
+        "order": 20
+      }
+    },
+    "height": {
+      "type": "integer",
+      "minimum": 0,
+      "x-semio-ui": {
+        "widget": "stepper",
+        "role": "value",
+        "label": {
+          "en": "Height",
+          "de": "Höhe"
+        },
+        "description": {
+          "en": "Image height in pixels.",
+          "de": "Bildhöhe in Pixeln."
+        },
+        "unit": "px",
+        "step": 1,
+        "precision": 0,
+        "group": "print",
+        "order": 30
+      }
+    },
+    "dpi": {
+      "type": "integer",
+      "minimum": 0,
+      "x-semio-ui": {
+        "widget": "stepper",
+        "role": "value",
+        "label": {
+          "en": "Resolution",
+          "de": "Auflösung"
+        },
+        "unit": "dpi",
+        "step": 1,
+        "precision": 0,
+        "softMin": 72,
+        "softMax": 2400,
+        "group": "print",
+        "order": 40
+      }
+    },
+    "colorProfile": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "x-semio-ui": {
+        "widget": "text",
+        "role": "value",
+        "label": {
+          "en": "Color profile",
+          "de": "Farbprofil"
+        },
+        "description": {
+          "en": "ICC profile name; empty uses the document profile.",
+          "de": "Name des ICC-Profils; leer verwendet das Dokumentprofil."
+        },
+        "group": "print",
+        "order": 50
+      }
+    }
+  }
+}

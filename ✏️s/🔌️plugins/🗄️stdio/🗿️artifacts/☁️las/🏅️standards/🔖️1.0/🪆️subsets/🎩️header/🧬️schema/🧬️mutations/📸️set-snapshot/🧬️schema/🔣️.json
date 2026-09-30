@@ -5,15 +5,16 @@
   "type": "object",
   "additionalProperties": false,
   "required": [
+    "mutation",
     "snapshot"
   ],
   "properties": {
-    "snapshot": {
-      "$ref": "#/$defs/LasSnapshot"
-    },
     "mutation": {
       "const": "setSnapshot",
       "description": "Aggregate discriminator spliced in by LasMutation; absent when the payload stands alone."
+    },
+    "snapshot": {
+      "$ref": "#/$defs/LasSnapshot"
     }
   },
   "$defs": {
@@ -25,21 +26,50 @@
       ],
       "properties": {
         "schema": {
-          "type": "string"
+          "type": "string",
+          "x-semio-ui": {
+            "widget": "text",
+            "label": {
+              "en": "Snapshot schema",
+              "de": "Snapshot-Schema"
+            },
+            "description": {
+              "en": "Identifier of the snapshot schema version.",
+              "de": "Kennung der Version des Snapshot-Schemas."
+            }
+          }
         },
         "header": {
-          "$ref": "#/$defs/LasHeader"
+          "$ref": "#/$defs/LasHeader",
+          "x-semio-ui": {
+            "label": {
+              "en": "Public header block",
+              "de": "Öffentlicher Header-Block"
+            }
+          }
         },
         "vlrs": {
           "type": "array",
           "items": {
             "$ref": "#/$defs/LasVlr"
+          },
+          "x-semio-ui": {
+            "label": {
+              "en": "Variable length records",
+              "de": "Datensätze variabler Länge (VLRs)"
+            }
           }
         },
         "points": {
           "type": "array",
           "items": {
             "$ref": "#/$defs/LasPoint"
+          },
+          "x-semio-ui": {
+            "label": {
+              "en": "Points",
+              "de": "Punkte"
+            }
           }
         }
       }
@@ -78,58 +108,153 @@
         "versionMajor": {
           "type": "integer",
           "minimum": 0,
-          "maximum": 255
+          "maximum": 255,
+          "x-semio-ui": {
+            "widget": "stepper",
+            "label": {
+              "en": "Major version",
+              "de": "Hauptversion"
+            }
+          }
         },
         "versionMinor": {
           "type": "integer",
           "minimum": 0,
-          "maximum": 255
+          "maximum": 255,
+          "x-semio-ui": {
+            "widget": "stepper",
+            "label": {
+              "en": "Minor version",
+              "de": "Nebenversion"
+            }
+          }
         },
         "systemIdentifier": {
-          "type": "string"
+          "type": "string",
+          "x-semio-ui": {
+            "widget": "text",
+            "label": {
+              "en": "System identifier",
+              "de": "Systemkennung"
+            },
+            "description": {
+              "en": "Hardware or process that produced the data.",
+              "de": "Hardware oder Prozess, der die Daten erzeugt hat."
+            }
+          }
         },
         "generatingSoftware": {
-          "type": "string"
+          "type": "string",
+          "x-semio-ui": {
+            "widget": "text",
+            "label": {
+              "en": "Generating software",
+              "de": "Erzeugende Software"
+            }
+          }
         },
         "creationDayOfYear": {
           "type": "integer",
           "minimum": 0,
-          "maximum": 65535
+          "maximum": 65535,
+          "x-semio-ui": {
+            "widget": "stepper",
+            "label": {
+              "en": "Creation day of year",
+              "de": "Erstellungstag im Jahr"
+            }
+          }
         },
         "creationYear": {
           "type": "integer",
           "minimum": 0,
-          "maximum": 65535
+          "maximum": 65535,
+          "x-semio-ui": {
+            "widget": "stepper",
+            "label": {
+              "en": "Creation year",
+              "de": "Erstellungsjahr"
+            }
+          }
         },
         "headerSize": {
           "type": "integer",
           "minimum": 0,
-          "maximum": 65535
+          "maximum": 65535,
+          "x-semio-ui": {
+            "widget": "stepper",
+            "label": {
+              "en": "Header size",
+              "de": "Header-Größe"
+            },
+            "unit": "B"
+          }
         },
         "offsetToPointData": {
           "type": "integer",
           "minimum": 0,
-          "maximum": 4294967295
+          "maximum": 4294967295,
+          "x-semio-ui": {
+            "widget": "stepper",
+            "label": {
+              "en": "Offset to point data",
+              "de": "Offset zu den Punktdaten"
+            },
+            "unit": "B"
+          }
         },
         "numberOfVlrs": {
           "type": "integer",
           "minimum": 0,
-          "maximum": 4294967295
+          "maximum": 4294967295,
+          "x-semio-ui": {
+            "widget": "stepper",
+            "label": {
+              "en": "Number of VLRs",
+              "de": "Anzahl der VLRs"
+            }
+          }
         },
         "pointDataFormatId": {
           "type": "integer",
           "minimum": 0,
-          "maximum": 255
+          "maximum": 255,
+          "x-semio-ui": {
+            "widget": "stepper",
+            "label": {
+              "en": "Point data format",
+              "de": "Punktdatenformat"
+            },
+            "description": {
+              "en": "Point data record format number (0 to 10).",
+              "de": "Nummer des Punktdatensatzformats (0 bis 10)."
+            }
+          }
         },
         "pointDataRecordLength": {
           "type": "integer",
           "minimum": 0,
-          "maximum": 65535
+          "maximum": 65535,
+          "x-semio-ui": {
+            "widget": "stepper",
+            "label": {
+              "en": "Point data record length",
+              "de": "Länge des Punktdatensatzes"
+            },
+            "unit": "B"
+          }
         },
         "numberOfPointRecords": {
           "type": "integer",
           "minimum": 0,
-          "maximum": 4294967295
+          "maximum": 4294967295,
+          "x-semio-ui": {
+            "widget": "stepper",
+            "label": {
+              "en": "Number of point records",
+              "de": "Anzahl der Punktdatensätze"
+            }
+          }
         },
         "pointsByReturn": {
           "type": "array",
@@ -139,43 +264,137 @@
             "maximum": 4294967295
           },
           "minItems": 5,
-          "maxItems": 5
+          "maxItems": 5,
+          "x-semio-ui": {
+            "label": {
+              "en": "Points by return",
+              "de": "Punkte je Echo"
+            },
+            "description": {
+              "en": "Number of points of the first to fifth return.",
+              "de": "Anzahl der Punkte des ersten bis fünften Echos."
+            }
+          }
         },
         "xScale": {
-          "type": "number"
+          "type": "number",
+          "x-semio-ui": {
+            "widget": "stepper",
+            "label": {
+              "en": "X scale factor",
+              "de": "X-Skalierungsfaktor"
+            }
+          }
         },
         "yScale": {
-          "type": "number"
+          "type": "number",
+          "x-semio-ui": {
+            "widget": "stepper",
+            "label": {
+              "en": "Y scale factor",
+              "de": "Y-Skalierungsfaktor"
+            }
+          }
         },
         "zScale": {
-          "type": "number"
+          "type": "number",
+          "x-semio-ui": {
+            "widget": "stepper",
+            "label": {
+              "en": "Z scale factor",
+              "de": "Z-Skalierungsfaktor"
+            }
+          }
         },
         "xOffset": {
-          "type": "number"
+          "type": "number",
+          "x-semio-ui": {
+            "widget": "stepper",
+            "label": {
+              "en": "X offset",
+              "de": "X-Offset"
+            }
+          }
         },
         "yOffset": {
-          "type": "number"
+          "type": "number",
+          "x-semio-ui": {
+            "widget": "stepper",
+            "label": {
+              "en": "Y offset",
+              "de": "Y-Offset"
+            }
+          }
         },
         "zOffset": {
-          "type": "number"
+          "type": "number",
+          "x-semio-ui": {
+            "widget": "stepper",
+            "label": {
+              "en": "Z offset",
+              "de": "Z-Offset"
+            }
+          }
         },
         "maxX": {
-          "type": "number"
+          "type": "number",
+          "x-semio-ui": {
+            "widget": "stepper",
+            "label": {
+              "en": "Maximum X",
+              "de": "Maximum X"
+            }
+          }
         },
         "minX": {
-          "type": "number"
+          "type": "number",
+          "x-semio-ui": {
+            "widget": "stepper",
+            "label": {
+              "en": "Minimum X",
+              "de": "Minimum X"
+            }
+          }
         },
         "maxY": {
-          "type": "number"
+          "type": "number",
+          "x-semio-ui": {
+            "widget": "stepper",
+            "label": {
+              "en": "Maximum Y",
+              "de": "Maximum Y"
+            }
+          }
         },
         "minY": {
-          "type": "number"
+          "type": "number",
+          "x-semio-ui": {
+            "widget": "stepper",
+            "label": {
+              "en": "Minimum Y",
+              "de": "Minimum Y"
+            }
+          }
         },
         "maxZ": {
-          "type": "number"
+          "type": "number",
+          "x-semio-ui": {
+            "widget": "stepper",
+            "label": {
+              "en": "Maximum Z",
+              "de": "Maximum Z"
+            }
+          }
         },
         "minZ": {
-          "type": "number"
+          "type": "number",
+          "x-semio-ui": {
+            "widget": "stepper",
+            "label": {
+              "en": "Minimum Z",
+              "de": "Minimum Z"
+            }
+          }
         }
       }
     },
@@ -190,12 +409,30 @@
       ],
       "properties": {
         "userId": {
-          "type": "string"
+          "type": "string",
+          "x-semio-ui": {
+            "widget": "text",
+            "label": {
+              "en": "User ID",
+              "de": "Benutzerkennung"
+            },
+            "description": {
+              "en": "Registered VLR owner, e.g. LASF_Projection.",
+              "de": "Registrierter VLR-Eigentümer, z. B. LASF_Projection."
+            }
+          }
         },
         "recordId": {
           "type": "integer",
           "minimum": 0,
-          "maximum": 65535
+          "maximum": 65535,
+          "x-semio-ui": {
+            "widget": "stepper",
+            "label": {
+              "en": "Record ID",
+              "de": "Datensatz-ID"
+            }
+          }
         },
         "description": {
           "type": "string"
@@ -240,43 +477,131 @@
         "intensity": {
           "type": "integer",
           "minimum": 0,
-          "maximum": 65535
+          "maximum": 65535,
+          "x-semio-ui": {
+            "widget": "stepper",
+            "label": {
+              "en": "Intensity",
+              "de": "Intensität"
+            }
+          }
         },
         "returnNumber": {
           "type": "integer",
           "minimum": 0,
-          "maximum": 255
+          "maximum": 255,
+          "x-semio-ui": {
+            "widget": "stepper",
+            "label": {
+              "en": "Return number",
+              "de": "Echonummer"
+            }
+          }
         },
         "numberOfReturns": {
           "type": "integer",
           "minimum": 0,
-          "maximum": 255
+          "maximum": 255,
+          "x-semio-ui": {
+            "widget": "stepper",
+            "label": {
+              "en": "Number of returns",
+              "de": "Anzahl der Echos"
+            },
+            "description": {
+              "en": "Returns of the pulse this point belongs to.",
+              "de": "Echos des Impulses, zu dem dieser Punkt gehört."
+            }
+          }
         },
         "scanDirectionFlag": {
-          "type": "boolean"
+          "type": "boolean",
+          "x-semio-ui": {
+            "widget": "toggle",
+            "label": {
+              "en": "Scan direction",
+              "de": "Scanrichtung"
+            },
+            "description": {
+              "en": "On: the mirror moved in positive scan direction.",
+              "de": "An: Der Spiegel bewegte sich in positiver Scanrichtung."
+            }
+          }
         },
         "edgeOfFlightLine": {
-          "type": "boolean"
+          "type": "boolean",
+          "x-semio-ui": {
+            "widget": "toggle",
+            "label": {
+              "en": "Edge of flight line",
+              "de": "Flugstreifenrand"
+            },
+            "description": {
+              "en": "Point lies at the end of a scan line before the direction changes.",
+              "de": "Punkt liegt am Ende einer Scanlinie vor dem Richtungswechsel."
+            }
+          }
         },
         "classification": {
           "type": "integer",
           "minimum": 0,
-          "maximum": 255
+          "maximum": 255,
+          "x-semio-ui": {
+            "widget": "stepper",
+            "label": {
+              "en": "Classification",
+              "de": "Klassifizierung"
+            },
+            "description": {
+              "en": "ASPRS class code, e.g. 2 = ground, 6 = building.",
+              "de": "ASPRS-Klassencode, z. B. 2 = Boden, 6 = Gebäude."
+            }
+          }
         },
         "scanAngleRank": {
           "type": "integer",
           "minimum": -128,
-          "maximum": 127
+          "maximum": 127,
+          "x-semio-ui": {
+            "widget": "stepper",
+            "label": {
+              "en": "Scan angle rank",
+              "de": "Scanwinkel"
+            },
+            "description": {
+              "en": "Rounded scan angle, -90 to 90 degrees, 0 at nadir.",
+              "de": "Gerundeter Scanwinkel, -90 bis 90 Grad, 0 im Nadir."
+            },
+            "unit": "deg"
+          }
         },
         "userData": {
           "type": "integer",
           "minimum": 0,
-          "maximum": 255
+          "maximum": 255,
+          "x-semio-ui": {
+            "widget": "stepper",
+            "label": {
+              "en": "User data",
+              "de": "Benutzerdaten"
+            }
+          }
         },
         "pointSourceId": {
           "type": "integer",
           "minimum": 0,
-          "maximum": 65535
+          "maximum": 65535,
+          "x-semio-ui": {
+            "widget": "stepper",
+            "label": {
+              "en": "Point source ID",
+              "de": "Punktquellen-ID"
+            },
+            "description": {
+              "en": "Flight line or source the point originates from.",
+              "de": "Flugstreifen oder Quelle, aus der der Punkt stammt."
+            }
+          }
         },
         "gpsTime": {
           "anyOf": [
@@ -286,7 +611,15 @@
             {
               "type": "null"
             }
-          ]
+          ],
+          "x-semio-ui": {
+            "widget": "stepper",
+            "label": {
+              "en": "GPS time",
+              "de": "GPS-Zeit"
+            },
+            "unit": "s"
+          }
         },
         "rgb": {
           "anyOf": [
@@ -316,7 +649,13 @@
             {
               "type": "null"
             }
-          ]
+          ],
+          "x-semio-ui": {
+            "label": {
+              "en": "RGB color",
+              "de": "RGB-Farbe"
+            }
+          }
         }
       }
     }

@@ -1,0 +1,102 @@
+{
+  "slides": {
+    "modified": [
+      {
+        "index": 0,
+        "diff": {
+          "id": "s-2",
+          "shapes": {
+            "modified": [
+              {
+                "index": 0,
+                "diff": {
+                  "shapeKind": "textBox",
+                  "frame": {
+                    "origin": {
+                      "x": 0.0,
+                      "y": 140.0
+                    },
+                    "height": 400.0
+                  },
+                  "blocks": {
+                    "modified": [
+                      {
+                        "index": 0,
+                        "diff": {
+                          "kind": "paragraph",
+                          "style_id": null,
+                          "runs": [
+                            {
+                              "text": "Draft agenda",
+                              "style": {
+                                "bold": false,
+                                "italic": false,
+                                "underline": false,
+                                "size": null,
+                                "font": null,
+                                "color": null,
+                                "link": null
+                              }
+                            }
+                          ]
+                        }
+                      }
+                    ]
+                  }
+                }
+              }
+            ]
+          }
+        }
+      },
+      {
+        "index": 1,
+        "diff": {
+          "id": "s-1",
+          "shapes": {
+            "modified": [
+              {
+                "index": 0,
+                "diff": {
+                  "shapeKind": "textBox",
+                  "frame": {
+                    "origin": {
+                      "x": 0.0,
+                      "y": 0.0
+                    },
+                    "height": 120.0
+                  },
+                  "blocks": {
+                    "modified": [
+                      {
+                        "index": 0,
+                        "diff": {
+                          "kind": "paragraph",
+                          "style_id": null,
+                          "runs": [
+                            {
+                              "text": "Title Slide",
+                              "style": {
+                                "bold": false,
+                                "italic": false,
+                                "underline": false,
+                                "size": null,
+                                "font": null,
+                                "color": null,
+                                "link": null
+                              }
+                            }
+                          ]
+                        }
+                      }
+                    ]
+                  }
+                }
+              }
+            ]
+          }
+        }
+      }
+    ]
+  }
+}

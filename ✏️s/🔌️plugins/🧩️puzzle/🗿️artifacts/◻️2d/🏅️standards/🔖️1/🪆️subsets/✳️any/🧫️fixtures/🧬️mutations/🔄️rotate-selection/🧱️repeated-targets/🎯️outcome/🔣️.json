@@ -1,0 +1,9 @@
+{
+  "code": "mutation.invariant",
+  "path": [
+    "node-a",
+    "node-b",
+    "node-a"
+  ],
+  "status": "rejected"
+}

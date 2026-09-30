@@ -1,9 +1,15 @@
-/** 🦠️ bind-scene-root-node is an atomic, typed glTF 2.0 command. */
-import type { GltfSnapshot } from '../../📸️snapshot/🟦️.ts';
-import { reject, run, type GltfLeafResult, type GltfMutationRejection } from './🟦️';
-import { itemIndex, positionIn } from './🟦️';
-export const GltfBindSceneRootNodeDescriptor = { id: 's.stdio.gltf.mutation.bind-scene-root-node.v1', version: 1, kind: 'bind', touchedPaths: ["document/scenes/*/nodes"], referencePolicy: 'validates the scene and node identities; one scene root may not be duplicated' } as const;
-export interface GltfBindSceneRootNodePayload { scene: number; node: number; position: number }
-export type GltfBindSceneRootNodeResult = GltfLeafResult;
-export const validateGltfBindSceneRootNode = (payload: GltfBindSceneRootNodePayload, base: GltfSnapshot): GltfMutationRejection | undefined => { const scene = itemIndex(payload.scene, base.document.scenes.length, 'document/scenes'); if (scene) return scene; const node = itemIndex(payload.node, base.document.nodes.length, 'document/nodes'); if (node) return node; const position = positionIn(payload.position, base.document.scenes[payload.scene]!.nodes.length, `document/scenes/${payload.scene}/nodes`); if (position) return position; if (base.document.scenes[payload.scene]!.nodes.includes(payload.node)) return reject('gltf.mutation.duplicate-scene-root', `document/scenes/${payload.scene}/nodes`, 'node is already a scene root'); return undefined; };
-export const applyGltfBindSceneRootNode = (base: GltfSnapshot, payload: GltfBindSceneRootNodePayload): GltfBindSceneRootNodeResult => run(base, payload, validateGltfBindSceneRootNode, (next, payload) => { next.document.scenes[payload.scene]!.nodes.splice(payload.position, 0, payload.node); });
+/** 🔗️ `bind-scene-root-node` wire twin: the flat `Apply` payload `GltfBindSceneRootNodePayload` and the phase wire `BindSceneRootNodeMutation`, exactly as `./🦀️.rs` writes them.
+ * @see ./🧬️schema/🔣️.json */
+import { gltfWireIndex, gltfWireObject, gltfWireRequired } from "../../../📸️snapshot/🟦️.ts";
+import { type GltfDiff, type GltfPhase, gltfWirePhase, parseGltfDiff } from "../../../🔺️diff/🟦️.ts";
+
+export interface GltfBindSceneRootNodePayload {
+  scene: number;
+  node: number;
+  position: number;
+}
+
+export type BindSceneRootNodeMutation = GltfPhase<GltfBindSceneRootNodePayload, GltfDiff>;
+
+export const parseGltfBindSceneRootNodePayload = gltfWireObject<GltfBindSceneRootNodePayload>({ scene: gltfWireRequired(gltfWireIndex), node: gltfWireRequired(gltfWireIndex), position: gltfWireRequired(gltfWireIndex) });
+export const parseBindSceneRootNodeMutation = gltfWirePhase(parseGltfBindSceneRootNodePayload, parseGltfDiff);

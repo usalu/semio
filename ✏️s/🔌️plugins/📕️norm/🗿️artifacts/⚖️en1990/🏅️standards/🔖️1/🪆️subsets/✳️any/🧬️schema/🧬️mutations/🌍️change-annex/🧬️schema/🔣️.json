@@ -1,4 +1,26 @@
 {
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/norm/en1990/mutation/change-annex/schema.json",
   "title": "ChangeAnnex",
-  "type": "object"
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "mutation",
+    "newAnnex"
+  ],
+  "properties": {
+    "mutation": {
+      "const": "changeAnnex"
+    },
+    "newAnnex": {
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1990/snapshot.json#/$defs/AnnexChoice",
+      "x-semio-ui": {
+        "label": {
+          "en": "National annex",
+          "de": "Nationaler Anhang"
+        },
+        "widget": "segmented"
+      }
+    }
+  }
 }

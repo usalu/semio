@@ -25,11 +25,9 @@ const INPUT: &str = "shared://🔣️.json";
 mod subject {
     use super::INPUT;
     use semio_repo_test_host::{Context, Json, Outcome};
-    use semio_s_artifact_stdio_json::standards::v_rfc8259::subsets::base::schema::mutations::{JsonPath, JsonPathSegment};
-    use semio_s_artifact_stdio_json::standards::v_rfc8259::subsets::base::schema::snapshot::{parse_json_text, write_json_text, JsonMember, JsonSnapshot, JsonValue};
+    use semio_s_artifact_stdio_json::standards::v_rfc8259::subsets::base::schema::snapshot::{parse_json_text, write_json_text, JsonSnapshot, JsonValue};
     use semio_s_artifact_stdio_json::standards::v_rfc8259::subsets::i_json::schema::mutations::{
-        apply_json_i_json_mutation, insert_array_element, inverse_json_i_json_mutation, is_safe_number_lexeme, is_unicode_noncharacter, remove_array_element, remove_member, rename_member, set_safe_number, set_snapshot, set_string, set_top_level, upsert_member,
-        JsonIJsonMutation, JsonIJsonRoot,
+        apply_json_i_json_mutation, decode_json_i_json_mutation_payload_json, inverse_json_i_json_mutation, is_safe_number_lexeme, is_unicode_noncharacter, JsonIJsonMutation,
     };
     use semio_s_plugin_stdio_test_oracle::artifacts::json::standards::v_rfc8259::subsets::base::project_json_value;
 
@@ -52,78 +50,10 @@ mod subject {
     //#endregion 🔖️Input
 
     //#region 🔖️SpecCodec
-    /// 🔢️ A `Json::Number` back to an RFC 8259 lexeme. An integral value prints without a fractional
-    /// part so `99` stays `99` rather than becoming `99.0`, which the `set-safe-number` clause reads
-    /// as an integer and the profile compares by value either way.
-    fn lexeme_of(value: f64) -> String {
-        if value.fract() == 0.0 && value.abs() < 9.007_199_254_740_992e15 {
-            format!("{}", value as i64)
-        } else {
-            format!("{value}")
-        }
-    }
-
-    /// 🔀️ The scenario's JSON payload into this repository's own `JsonValue`.
-    fn json_to_value(value: &Json) -> JsonValue {
-        match value {
-            Json::Null => JsonValue::Null,
-            Json::Bool(flag) => JsonValue::Bool { value: *flag },
-            Json::Number(number) => JsonValue::Number { lexeme: lexeme_of(*number) },
-            Json::String(text) => JsonValue::String { value: text.clone() },
-            Json::Array(items) => JsonValue::Array { items: items.iter().map(json_to_value).collect() },
-            Json::Object(members) => JsonValue::Object { members: members.iter().map(|(key, item)| JsonMember { key: key.clone(), value: json_to_value(item) }).collect() },
-        }
-    }
-
-    /// 🧭️ A `["models", 0, "model"]` spec path into a typed `JsonPath` — a string entry is an object
-    /// member name, a number entry is an array index.
-    fn path_of(params: &Json) -> JsonPath {
-        params
-            .array("path")
-            .iter()
-            .map(|segment| match segment {
-                Json::Number(index) => JsonPathSegment::Index(index.max(0.0) as usize),
-                other => JsonPathSegment::Key(match other {
-                    Json::String(text) => text.clone(),
-                    _ => String::new(),
-                }),
-            })
-            .collect()
-    }
-
-    fn usize_field(params: &Json, key: &str) -> usize {
-        match params.get(key) {
-            Some(Json::Number(number)) => number.max(0.0) as usize,
-            _ => 0,
-        }
-    }
-
-    /// 📄️ The scenario's `<id>`/`<params>` spec turned into the ONE typed `JsonIJsonMutation` this
-    /// subset declares for it.
+    /// 📄️ The scenario's `<id>`/`<params>` spec decoded as the leaf wire payload it is, through the aggregate's own
+    /// derive-generated payload constructor — never re-declared field by field here.
     fn mutation_from_spec(spec: &Json) -> Result<JsonIJsonMutation, String> {
-        let params = spec.get("params").cloned().unwrap_or(Json::Null);
-        match spec.str("kind").as_str() {
-            "set-snapshot" => Ok(JsonIJsonMutation::SetSnapshot(set_snapshot::SetSnapshot { snapshot: JsonSnapshot { value: json_to_value(&params.get("value").cloned().unwrap_or(Json::Null)), ..JsonSnapshot::default() } })),
-            "set-top-level" => match (params.get("object"), params.get("array")) {
-                (Some(object), _) => match json_to_value(object) {
-                    JsonValue::Object { members } => Ok(JsonIJsonMutation::SetTopLevel(set_top_level::SetTopLevel { root: JsonIJsonRoot::Object { members } })),
-                    _ => Err("set-top-level: the `object` payload is not an object".to_string()),
-                },
-                (_, Some(array)) => match json_to_value(array) {
-                    JsonValue::Array { items } => Ok(JsonIJsonMutation::SetTopLevel(set_top_level::SetTopLevel { root: JsonIJsonRoot::Array { items } })),
-                    _ => Err("set-top-level: the `array` payload is not an array".to_string()),
-                },
-                _ => Err("set-top-level: RFC 7493 §2.1 — neither an `object` nor an `array` payload, and a scalar root is unrepresentable".to_string()),
-            },
-            "upsert-member" => Ok(JsonIJsonMutation::UpsertMember(upsert_member::UpsertMember { path: path_of(&params), key: params.str("key"), value: json_to_value(&params.get("value").cloned().unwrap_or(Json::Null)) })),
-            "remove-member" => Ok(JsonIJsonMutation::RemoveMember(remove_member::RemoveMember { path: path_of(&params), key: params.str("key") })),
-            "rename-member" => Ok(JsonIJsonMutation::RenameMember(rename_member::RenameMember { path: path_of(&params), from: params.str("from"), to: params.str("to") })),
-            "set-safe-number" => Ok(JsonIJsonMutation::SetSafeNumber(set_safe_number::SetSafeNumber { path: path_of(&params), lexeme: params.str("lexeme") })),
-            "set-string" => Ok(JsonIJsonMutation::SetString(set_string::SetString { path: path_of(&params), value: params.str("value") })),
-            "insert-array-element" => Ok(JsonIJsonMutation::InsertArrayElement(insert_array_element::InsertArrayElement { path: path_of(&params), index: usize_field(&params, "index"), value: json_to_value(&params.get("value").cloned().unwrap_or(Json::Null)) })),
-            "remove-array-element" => Ok(JsonIJsonMutation::RemoveArrayElement(remove_array_element::RemoveArrayElement { path: path_of(&params), index: usize_field(&params, "index") })),
-            other => Err(format!("mutation kind {other:?} has no subject implementation")),
-        }
+        decode_json_i_json_mutation_payload_json(&spec.str("kind"), &spec.get("params").cloned().unwrap_or(Json::Null).to_string())
     }
     //#endregion 🔖️SpecCodec
 
@@ -246,7 +176,7 @@ pub fn adapter() -> Adapter {
     let mut built = Adapter::new("rust");
     #[cfg(feature = "sut")]
     {
-        built = built.subject("mutate", subject::mutate).subject("no-mutation-baseline-mutate", subject::mutate).subject("inverse", subject::inverse).subject("no-mutation-baseline-inverse", subject::inverse);
+        built = built.subject("mutate", subject::mutate).subject("inverse", subject::inverse);
         built = built.subject("i-json-conformance", subject::i_json_conformance).subject("identity-round-trip", subject::identity_round_trip);
     }
     built

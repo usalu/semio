@@ -1298,7 +1298,7 @@ where
                 let description = admission.description.take();
                 let store = self.parent.as_ref().ok_or(DurableOwnedGroupDecisionError::InvalidOutcome)?;
                 let factory = self.parent_factory.as_ref().ok_or(DurableOwnedGroupDecisionError::InvalidOutcome)?;
-                match store.begin_apply_batch(admission.operation, admission.expected_generation, admission.expected_revision, admission.actor.clone(), vec![mutation], description, super::HistoryLane::Document, Some(factory)) {
+                match store.begin_apply_batch(admission.operation, admission.expected_generation, admission.expected_revision, admission.actor.clone(), vec![mutation], description, super::HistoryLane::Document, Some(factory), None) {
                     Ok(publication) => {
                         *self.parent_publication = Some(publication);
                         self.parent_admission = None;
@@ -1319,7 +1319,7 @@ where
                 let description = admission.description.take();
                 let store = self.drawing.as_ref().ok_or(DurableOwnedGroupDecisionError::InvalidOutcome)?;
                 let factory = self.drawing_factory.as_ref().ok_or(DurableOwnedGroupDecisionError::InvalidOutcome)?;
-                match store.begin_apply_batch(admission.operation, admission.expected_generation, admission.expected_revision, admission.actor.clone(), vec![mutation], description, super::HistoryLane::Document, Some(factory)) {
+                match store.begin_apply_batch(admission.operation, admission.expected_generation, admission.expected_revision, admission.actor.clone(), vec![mutation], description, super::HistoryLane::Document, Some(factory), None) {
                     Ok(publication) => {
                         *self.drawing_publication = Some(publication);
                         self.drawing_admission = None;
@@ -1340,7 +1340,7 @@ where
                 let description = admission.description.take();
                 let store = self.value.as_ref().ok_or(DurableOwnedGroupDecisionError::InvalidOutcome)?;
                 let factory = self.value_factory.as_ref().ok_or(DurableOwnedGroupDecisionError::InvalidOutcome)?;
-                match store.begin_apply_batch(admission.operation, admission.expected_generation, admission.expected_revision, admission.actor.clone(), vec![mutation], description, super::HistoryLane::Document, Some(factory)) {
+                match store.begin_apply_batch(admission.operation, admission.expected_generation, admission.expected_revision, admission.actor.clone(), vec![mutation], description, super::HistoryLane::Document, Some(factory), None) {
                     Ok(publication) => {
                         *self.value_publication = Some(publication);
                         self.value_admission = None;

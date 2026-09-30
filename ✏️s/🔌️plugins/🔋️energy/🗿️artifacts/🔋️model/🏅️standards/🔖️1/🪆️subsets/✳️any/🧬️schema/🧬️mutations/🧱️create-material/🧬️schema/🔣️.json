@@ -5,9 +5,11 @@
   "type": "object",
   "additionalProperties": false,
   "required": [
+    "mutation",
     "index",
     "id",
     "name",
+    "roughness",
     "thicknessM",
     "conductivityWMK",
     "densityKgM3",
@@ -17,35 +19,232 @@
     "visibleAbsorptance"
   ],
   "properties": {
+    "mutation": {
+      "const": "createMaterial"
+    },
     "index": {
-      "type": "integer"
+      "type": "integer",
+      "minimum": 0,
+      "x-semio-ui": {
+        "widget": "stepper",
+        "role": "value",
+        "label": {
+          "en": "Position",
+          "de": "Position"
+        },
+        "description": {
+          "en": "Insertion position in the model's list; 0 is first.",
+          "de": "Einfügeposition in der Modellliste; 0 ist die erste."
+        },
+        "step": 1,
+        "precision": 0,
+        "group": "order",
+        "order": 10
+      }
     },
     "id": {
-      "type": "integer"
+      "type": "integer",
+      "minimum": 0,
+      "x-semio-ui": {
+        "widget": "stepper",
+        "role": "value",
+        "label": {
+          "en": "ID",
+          "de": "ID"
+        },
+        "description": {
+          "en": "Id the new material is created under; later mutations address it by this id.",
+          "de": "ID, unter der das neue Objekt angelegt wird; spätere Mutationen adressieren es darüber."
+        },
+        "step": 1,
+        "precision": 0,
+        "group": "identity",
+        "order": 20
+      }
     },
     "name": {
-      "type": "string"
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "text",
+        "role": "value",
+        "label": {
+          "en": "Name",
+          "de": "Name"
+        },
+        "group": "identity",
+        "order": 30
+      }
+    },
+    "roughness": {
+      "enum": [
+        "VeryRough",
+        "Rough",
+        "MediumRough",
+        "MediumSmooth",
+        "Smooth",
+        "VerySmooth"
+      ],
+      "x-semio-ui": {
+        "widget": "select",
+        "role": "value",
+        "label": {
+          "en": "Roughness",
+          "de": "Rauigkeit"
+        },
+        "description": {
+          "en": "Outside surface roughness; scales forced convection.",
+          "de": "Rauigkeit der Außenoberfläche; skaliert die erzwungene Konvektion."
+        },
+        "options": {
+          "VeryRough": {
+            "en": "Very rough",
+            "de": "Sehr rau"
+          },
+          "Rough": {
+            "en": "Rough",
+            "de": "Rau"
+          },
+          "MediumRough": {
+            "en": "Medium rough",
+            "de": "Mittelrau"
+          },
+          "MediumSmooth": {
+            "en": "Medium smooth",
+            "de": "Mittelglatt"
+          },
+          "Smooth": {
+            "en": "Smooth",
+            "de": "Glatt"
+          },
+          "VerySmooth": {
+            "en": "Very smooth",
+            "de": "Sehr glatt"
+          }
+        },
+        "group": "thermal",
+        "order": 40
+      }
     },
     "thicknessM": {
-      "type": "number"
+      "type": "number",
+      "x-semio-ui": {
+        "widget": "stepper",
+        "role": "value",
+        "label": {
+          "en": "Thickness",
+          "de": "Dicke"
+        },
+        "unit": "m",
+        "displayUnit": "mm",
+        "displayFactor": 1000,
+        "step": 0.001,
+        "precision": 1,
+        "group": "geometry",
+        "order": 50
+      }
     },
     "conductivityWMK": {
-      "type": "number"
+      "type": "number",
+      "x-semio-ui": {
+        "widget": "stepper",
+        "role": "value",
+        "label": {
+          "en": "Thermal conductivity",
+          "de": "Wärmeleitfähigkeit"
+        },
+        "unit": "W/(m·K)",
+        "step": 0.001,
+        "precision": 3,
+        "group": "thermal",
+        "order": 60
+      }
     },
     "densityKgM3": {
-      "type": "number"
+      "type": "number",
+      "x-semio-ui": {
+        "widget": "stepper",
+        "role": "value",
+        "label": {
+          "en": "Density",
+          "de": "Rohdichte"
+        },
+        "unit": "kg/m³",
+        "step": 1,
+        "precision": 0,
+        "group": "thermal",
+        "order": 70
+      }
     },
     "specificHeatJKgK": {
-      "type": "number"
+      "type": "number",
+      "x-semio-ui": {
+        "widget": "stepper",
+        "role": "value",
+        "label": {
+          "en": "Specific heat capacity",
+          "de": "Spezifische Wärmekapazität"
+        },
+        "unit": "J/(kg·K)",
+        "step": 10,
+        "precision": 0,
+        "group": "thermal",
+        "order": 80
+      }
     },
     "thermalAbsorptance": {
-      "type": "number"
+      "type": "number",
+      "x-semio-ui": {
+        "widget": "slider",
+        "role": "value",
+        "label": {
+          "en": "Thermal absorptance",
+          "de": "Thermischer Absorptionsgrad"
+        },
+        "description": {
+          "en": "Long-wave absorptance, equal to the emissivity.",
+          "de": "Langwelliger Absorptionsgrad, gleich dem Emissionsgrad."
+        },
+        "step": 0.01,
+        "precision": 2,
+        "softMin": 0,
+        "softMax": 1,
+        "group": "optics",
+        "order": 90
+      }
     },
     "solarAbsorptance": {
-      "type": "number"
+      "type": "number",
+      "x-semio-ui": {
+        "widget": "slider",
+        "role": "value",
+        "label": {
+          "en": "Solar absorptance",
+          "de": "Solarer Absorptionsgrad"
+        },
+        "step": 0.01,
+        "precision": 2,
+        "softMin": 0,
+        "softMax": 1,
+        "group": "optics",
+        "order": 100
+      }
     },
     "visibleAbsorptance": {
-      "type": "number"
+      "type": "number",
+      "x-semio-ui": {
+        "widget": "slider",
+        "role": "value",
+        "label": {
+          "en": "Visible absorptance",
+          "de": "Sichtbarer Absorptionsgrad"
+        },
+        "step": 0.01,
+        "precision": 2,
+        "softMin": 0,
+        "softMax": 1,
+        "group": "optics",
+        "order": 110
+      }
     }
   }
 }

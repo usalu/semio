@@ -9,7 +9,18 @@
   ],
   "properties": {
     "arithmetic": {
-      "type": "boolean"
+      "type": "boolean",
+      "x-semio-ui": {
+        "widget": "toggle",
+        "label": {
+          "en": "Arithmetic coding",
+          "de": "Arithmetische Kodierung"
+        },
+        "description": {
+          "en": "Uses arithmetic instead of Huffman entropy coding.",
+          "de": "Verwendet arithmetische statt Huffman-Entropiekodierung."
+        }
+      }
     }
   }
 }

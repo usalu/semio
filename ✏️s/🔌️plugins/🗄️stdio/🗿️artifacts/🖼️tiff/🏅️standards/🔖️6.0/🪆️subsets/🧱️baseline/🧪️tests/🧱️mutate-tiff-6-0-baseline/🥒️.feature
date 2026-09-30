@@ -32,13 +32,21 @@ Feature: Move a real scanned TIFF across every axis of the Adobe TIFF 6.0 Baseli
 
   The input is the real scanned TIFF the `✳️any` case reads, shared by both subsets rather than
   copied. The `code` column names the diagnostic each kind must raise on it, and it is empty for
-  three rows that move their axis in the direction that stays INSIDE the class: `remove-tile-tags`
-  restores strip organization, `set-strip-offsets` rewrites a pointer list the IFD already carries,
-  and `no-mutation` is the identity element. `remove-tile-tags` is the one row that cannot be
+  the two rows that move their axis in the direction that stays INSIDE the class: `remove-tile-tags`
+  restores strip organization and `set-strip-offsets` rewrites a pointer list the IFD already carries. `remove-tile-tags` is the one row that cannot be
   exercised against the committed document as it stands — a strip-organized scan has no tile tags to
   remove — so its `setup` column names the mutation that makes the removal meaningful, and its
   observability is measured from THAT state rather than from the untouched file. Every other row's
   `setup` is empty.
+
+  Every `params` cell — and the `setup` column's own `params` — is exactly the leaf's wire payload:
+  its `payload_value()`, camelCase, no aggregate tag, decoded by the subject through the
+  derive-generated `from_payload_value` and read by the reference by the same field names.
+  `set-snapshot` therefore carries the whole replacement document rather than three stamps on the
+  scan: the committed 4x4 grayscale vector (`🧫️fixtures/📸️set-snapshot/⬅️before.json`) with its
+  canonical RGBA raster and the three value axes stamped out of the class (`Compression` 5,
+  `PhotometricInterpretation` 6, `BitsPerSample` 16). The reference reads that document's axes off
+  its IFD 0 exactly as it reads the scan's.
 
   @id-mutate
   @level-exhaustive
@@ -51,26 +59,15 @@ Feature: Move a real scanned TIFF across every axis of the Adobe TIFF 6.0 Baseli
       """
     Then the conformance verdict gains exactly <code>, and the projection moves on this kind's own axis
     Examples:
-      | id                             | code                                            | setup                                                                    | params                                          |
-      | set-snapshot                   | stdio.tiff.baseline.unsupported-compression     | {}                                                                       | {"compression": 5, "photometric": 6, "bits": [16, 16, 16]} |
-      | set-compression                | stdio.tiff.baseline.unsupported-compression     | {}                                                                       | {"compression": 5}                              |
-      | set-photometric-interpretation | stdio.tiff.baseline.unsupported-photometric     | {}                                                                       | {"photometric": 6}                              |
-      | set-bits-per-sample            | stdio.tiff.baseline.unsupported-bits-per-sample | {}                                                                       | {"bits": [16, 16, 16]}                          |
-      | insert-tile-tags               | stdio.tiff.baseline.tiled-not-baseline          | {}                                                                       | {"tileWidth": 256, "tileLength": 256}           |
-      | remove-tile-tags               |                                                 | {"kind": "insert-tile-tags", "params": {"tileWidth": 256, "tileLength": 256}} | {}                                          |
-      | set-strip-offsets              |                                                 | {}                                                                       | {"offsets": [8, 65536]}                         |
-      | remove-strip-offsets           | stdio.tiff.baseline.missing-strip-offsets       | {}                                                                       | {}                                              |
-
-  @id-no-mutation-baseline-mutate
-  @level-exhaustive
-  @mode-conformance
-  Scenario: Apply no-mutation to the real scan and read the class verdict back
-    Given the real input document shared://🧪️abbau-aufbau-masterarbeit-grundriss/🖼️.tiff
-    When the no-mutation mutation is applied to the decoded snapshot
-      """
-      {"kind": "no-mutation", "code": "", "setup": {}, "params": {}}
-      """
-    Then the conformance verdict gains exactly , and the projection moves on this kind's own axis
+      | id | code | setup | params |
+      | set-snapshot | stdio.tiff.baseline.unsupported-compression | {} | {"snapshot":{"schema":"stdio.tiff","byteOrder":"littleEndian","ifds":[{"entries":[{"tag":256,"kind":"long","values":{"kind":"long","value":[4]}},{"tag":257,"kind":"long","values":{"kind":"long","value":[4]}},{"tag":258,"kind":"short","values":{"kind":"short","value":[16]}},{"tag":259,"kind":"short","values":{"kind":"short","value":[5]}},{"tag":262,"kind":"short","values":{"kind":"short","value":[6]}},{"tag":273,"kind":"long","values":{"kind":"long","value":[8]}},{"tag":277,"kind":"short","values":{"kind":"short","value":[1]}},{"tag":278,"kind":"long","values":{"kind":"long","value":[4]}},{"tag":279,"kind":"long","values":{"kind":"long","value":[16]}}],"pixels":[]}],"pixels":[0,0,0,255,1,1,1,255,2,2,2,255,3,3,3,255,4,4,4,255,5,5,5,255,6,6,6,255,7,7,7,255,8,8,8,255,9,9,9,255,10,10,10,255,11,11,11,255,12,12,12,255,13,13,13,255,14,14,14,255,15,15,15,255]}} |
+      | set-compression | stdio.tiff.baseline.unsupported-compression | {} | {"compression":5} |
+      | set-photometric-interpretation | stdio.tiff.baseline.unsupported-photometric | {} | {"photometric":6} |
+      | set-bits-per-sample | stdio.tiff.baseline.unsupported-bits-per-sample | {} | {"bits":[16,16,16]} |
+      | insert-tile-tags | stdio.tiff.baseline.tiled-not-baseline | {} | {"tileWidth":256,"tileLength":256} |
+      | remove-tile-tags |  | {"kind": "insert-tile-tags", "params": {"tileWidth": 256, "tileLength": 256}} | {} |
+      | set-strip-offsets |  | {} | {"offsets":[8,65536]} |
+      | remove-strip-offsets | stdio.tiff.baseline.missing-strip-offsets | {} | {} |
 
   @id-inverse
   @level-exhaustive
@@ -83,23 +80,13 @@ Feature: Move a real scanned TIFF across every axis of the Adobe TIFF 6.0 Baseli
       """
     Then the conformance projection is the pre-mutation one again, tag for tag
     Examples:
-      | id                             | code                                            | setup                                                                    | params                                          |
-      | set-snapshot                   | stdio.tiff.baseline.unsupported-compression     | {}                                                                       | {"compression": 5, "photometric": 6, "bits": [16, 16, 16]} |
-      | set-compression                | stdio.tiff.baseline.unsupported-compression     | {}                                                                       | {"compression": 5}                              |
-      | set-photometric-interpretation | stdio.tiff.baseline.unsupported-photometric     | {}                                                                       | {"photometric": 6}                              |
-      | set-bits-per-sample            | stdio.tiff.baseline.unsupported-bits-per-sample | {}                                                                       | {"bits": [16, 16, 16]}                          |
-      | insert-tile-tags               | stdio.tiff.baseline.tiled-not-baseline          | {}                                                                       | {"tileWidth": 256, "tileLength": 256}           |
-      | remove-tile-tags               |                                                 | {"kind": "insert-tile-tags", "params": {"tileWidth": 256, "tileLength": 256}} | {}                                          |
-      | set-strip-offsets              |                                                 | {}                                                                       | {"offsets": [8, 65536]}                         |
-      | remove-strip-offsets           | stdio.tiff.baseline.missing-strip-offsets       | {}                                                                       | {}                                              |
+      | id | code | setup | params |
+      | set-snapshot | stdio.tiff.baseline.unsupported-compression | {} | {"snapshot":{"schema":"stdio.tiff","byteOrder":"littleEndian","ifds":[{"entries":[{"tag":256,"kind":"long","values":{"kind":"long","value":[4]}},{"tag":257,"kind":"long","values":{"kind":"long","value":[4]}},{"tag":258,"kind":"short","values":{"kind":"short","value":[16]}},{"tag":259,"kind":"short","values":{"kind":"short","value":[5]}},{"tag":262,"kind":"short","values":{"kind":"short","value":[6]}},{"tag":273,"kind":"long","values":{"kind":"long","value":[8]}},{"tag":277,"kind":"short","values":{"kind":"short","value":[1]}},{"tag":278,"kind":"long","values":{"kind":"long","value":[4]}},{"tag":279,"kind":"long","values":{"kind":"long","value":[16]}}],"pixels":[]}],"pixels":[0,0,0,255,1,1,1,255,2,2,2,255,3,3,3,255,4,4,4,255,5,5,5,255,6,6,6,255,7,7,7,255,8,8,8,255,9,9,9,255,10,10,10,255,11,11,11,255,12,12,12,255,13,13,13,255,14,14,14,255,15,15,15,255]}} |
+      | set-compression | stdio.tiff.baseline.unsupported-compression | {} | {"compression":5} |
+      | set-photometric-interpretation | stdio.tiff.baseline.unsupported-photometric | {} | {"photometric":6} |
+      | set-bits-per-sample | stdio.tiff.baseline.unsupported-bits-per-sample | {} | {"bits":[16,16,16]} |
+      | insert-tile-tags | stdio.tiff.baseline.tiled-not-baseline | {} | {"tileWidth":256,"tileLength":256} |
+      | remove-tile-tags |  | {"kind": "insert-tile-tags", "params": {"tileWidth": 256, "tileLength": 256}} | {} |
+      | set-strip-offsets |  | {} | {"offsets":[8,65536]} |
+      | remove-strip-offsets | stdio.tiff.baseline.missing-strip-offsets | {} | {} |
 
-  @id-no-mutation-baseline-inverse
-  @level-exhaustive
-  @mode-property
-  Scenario: Undoing no-mutation puts the real scan back where it started
-    Given the real input document shared://🧪️abbau-aufbau-masterarbeit-grundriss/🖼️.tiff
-    When no-mutation is applied to the decoded snapshot and then its own computed inverse steps are applied
-      """
-      {"kind": "no-mutation", "code": "", "setup": {}, "params": {}}
-      """
-    Then the conformance projection is the pre-mutation one again, tag for tag

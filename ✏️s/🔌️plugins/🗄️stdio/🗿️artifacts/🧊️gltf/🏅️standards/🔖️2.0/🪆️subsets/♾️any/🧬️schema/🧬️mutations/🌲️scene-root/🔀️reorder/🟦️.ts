@@ -1,8 +1,14 @@
-/** 🦠️ reorder-scene-root-nodes is an atomic, typed glTF 2.0 command. */
-import type { GltfJson, GltfSnapshot, GltfPrimitive, GltfMorphTarget, GltfAccessor, GltfSparseAccessor, GltfSparseIndices, GltfSparseValues } from '../../📸️snapshot/🟦️.ts';
-import { run, reject, positionIn, itemIndex, moveItem, type GltfLeafResult, type GltfMutationRejection } from './🟦️';
-export const GltfReorderSceneRootNodesDescriptor = { id: 's.stdio.gltf.mutation.reorder-scene-root-nodes.v1', version: 1, kind: 'reorder', touchedPaths: ["document/scenes/*/nodes"], referencePolicy: 'accepts only a complete permutation of the current root-node identities' } as const;
-export interface GltfReorderSceneRootNodesPayload { scene: number; order: number[] }
-export type GltfReorderSceneRootNodesResult = GltfLeafResult;
-export const validateGltfReorderSceneRootNodes = (payload: GltfReorderSceneRootNodesPayload, base: GltfSnapshot): GltfMutationRejection | undefined => { const scene = itemIndex(payload.scene, base.document.scenes.length, 'document/scenes'); if (scene) return scene; const roots = base.document.scenes[payload.scene]!.nodes; if (payload.order.length !== roots.length || new Set(payload.order).size !== roots.length || payload.order.some(node => !roots.includes(node))) return reject('gltf.mutation.invalid-permutation', `document/scenes/${payload.scene}/nodes`, 'order must contain every root identity once'); if (payload.order.every((node, index) => node === roots[index])) return reject('gltf.mutation.no-observable-change', `document/scenes/${payload.scene}/nodes`, 'reorder must change order'); return undefined; };
-export const applyGltfReorderSceneRootNodes = (base: GltfSnapshot, payload: GltfReorderSceneRootNodesPayload): GltfReorderSceneRootNodesResult => run(base, payload, validateGltfReorderSceneRootNodes, (next, payload) => { next.document.scenes[payload.scene]!.nodes = [...payload.order]; }, GltfReorderSceneRootNodesDescriptor.touchedPaths);
+/** 🔀️ `reorder-scene-root-nodes` wire twin: the flat `Apply` payload `GltfReorderSceneRootNodesPayload` and the phase wire `ReorderSceneRootNodesMutation`, exactly as `./🦀️.rs` writes them.
+ * @see ./🧬️schema/🔣️.json */
+import { gltfWireArray, gltfWireIndex, gltfWireObject, gltfWireRequired } from "../../../📸️snapshot/🟦️.ts";
+import { type GltfDiff, type GltfPhase, gltfWirePhase, parseGltfDiff } from "../../../🔺️diff/🟦️.ts";
+
+export interface GltfReorderSceneRootNodesPayload {
+  scene: number;
+  order: number[];
+}
+
+export type ReorderSceneRootNodesMutation = GltfPhase<GltfReorderSceneRootNodesPayload, GltfDiff>;
+
+export const parseGltfReorderSceneRootNodesPayload = gltfWireObject<GltfReorderSceneRootNodesPayload>({ scene: gltfWireRequired(gltfWireIndex), order: gltfWireRequired(gltfWireArray(gltfWireIndex)) });
+export const parseReorderSceneRootNodesMutation = gltfWirePhase(parseGltfReorderSceneRootNodesPayload, parseGltfDiff);

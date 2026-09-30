@@ -5,14 +5,13 @@ import { PlaygroundSessionGenerateScript, PlaygroundSessionPreviewScript } from 
 import { PreparationScript } from "../../♻️activation/🧰️preparation/🟦️.ts";
 import { ActivationScript } from "../../♻️activation/🏃️execution/🟦️.ts";
 import { ServeScript } from "../../♻️activation/🌐️serve/🟦️.ts";
-import { DevLocalHubScript, devServePortV1, ensureDevServe } from "../../🚀️local-hub/🏃️execution/🟦️.ts";
+import { devServePortV1, ensureDevServe } from "../../🚀️local-hub/🏃️execution/🟦️.ts";
 import { ColdBootCheckScript } from "../../♻️activation/🩺️readiness/🟦️.ts";
 import { CanonicalBootstrapFolderMirrorCheckScript } from "../../🧪️tests/📇️canonical-bootstrap-folder-mirror/🟦️.ts";
 import { TestScript } from "../../🧪️tests/🏃️execution/🟦️.ts";
 import { VerifyScript } from "../../🧪️tests/✅️verification/🟦️.ts";
 import { BenchPluginsScript } from "../../📊️benchmarks/🔌️plugins/🏃️execution/🟦️.ts";
 import { ScaleFixtureGenerateScript, ScaleFixturePreviewGeneratedScript, ScaleFixtureCheckScript } from "../../../../🧫️fixtures/⚖️scale/📤️publication/🟦️.ts";
-import { CapabilityLayeringLintScript } from "../../🧪️tests/🧹️layering-policy/🟦️.ts";
 import { PluginIndexExportPathLintScript } from "../../🧪️tests/🧹️export-path-policy/🟦️.ts";
 import { HostHandleReachLintScript } from "../../🧪️tests/🧹️host-handle-policy/🟦️.ts";
 import { ChannelVersionScript } from "../../🔖️channel-version/🟦️.ts";
@@ -23,11 +22,21 @@ import { PluginSizeScript } from "../../../🔌️plugin/📊️size/🟦️.ts"
 import { PluginBuildScript } from "../../../🔌️plugin/🏗️build/🏃️execution/🟦️.ts";
 import { ensurePluginRegistry } from "../../../🔌️plugin/📇️registry/🔄️refresh/🟦️.ts";
 
+/** 🔬️ Checks neutral development process and local-session contracts against independent oracles. */
+class CanonicalArchitectureScript extends BundleScript {
+  async run(): Promise<void> {
+    const { proveDevLocalHubProviderContract } = await import("../../🚀️local-hub/🧪️tests/🔬️contract/🟦️.ts");
+    const { nextestArtifactLocation } = await import("../../../../../🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts");
+    const artifacts = nextestArtifactLocation(this.repoRoot).directory;
+    await proveDevLocalHubProviderContract(this.repoRoot, artifacts);
+    await new TestScript(this.root).run(["dev-contribution"]);
+  }
+}
+
 const router = new ScriptRouter(import.meta.dir)
   .register("prepare", PreparationScript)
   .register("activate", ActivationScript)
   .register("serve", ServeScript)
-  .register("local-hub", DevLocalHubScript)
   .register("serve-hold", class extends BundleScript {
     /** 🛎️ `serve-hold --serve <url> [--hub <url>] [--variant <v>]`: holds the shared serve fixture (`ensureDevServe`) until
      * SIGINT/SIGTERM, then stops only what it started — the zero-touch serve provider of the repository goal gate. */
@@ -86,7 +95,7 @@ const router = new ScriptRouter(import.meta.dir)
       return new DistributionBundleScript(this.root).run(segments);
     }
   })
-  .register("layer-lint", CapabilityLayeringLintScript)
+  .register("canonical-architecture", CanonicalArchitectureScript)
   .register("index-lint", PluginIndexExportPathLintScript)
   .register("host-handle-lint", HostHandleReachLintScript)
   .register("channel-version", ChannelVersionScript)
@@ -101,7 +110,7 @@ const router = new ScriptRouter(import.meta.dir)
   .register("plugin", class extends BundleScript {
     async run(segments: string[]): Promise<void> {
       if (segments[0] === "watch") return new PluginWatchScript(this.root).run(segments.slice(1));
-      if (segments[0] === "lint") { await new PluginCapabilityLintScript(this.root).run(); return new CapabilityLayeringLintScript(this.root).run(); }
+      if (segments[0] === "lint") return new PluginCapabilityLintScript(this.root).run();
       if (segments[0] === "registry") return ensurePluginRegistry(segments[1] || process.env.SEMIO_PLUGIN || process.env.PLAYGROUND_APP_KIND);
       if (segments[0] === "size") return new PluginSizeScript(this.root).run(segments.slice(1));
       return new PluginBuildScript(this.root).run(segments);

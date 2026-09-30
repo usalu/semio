@@ -5,14 +5,54 @@
   "type": "object",
   "additionalProperties": false,
   "required": [
+    "mutation",
     "id"
   ],
   "properties": {
+    "mutation": {
+      "const": "changeObjectMesh"
+    },
     "id": {
-      "type": "string"
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Object",
+          "de": "Objekt"
+        },
+        "description": {
+          "en": "The object this mutation addresses.",
+          "de": "Das Objekt, das diese Mutation adressiert."
+        },
+        "ref": {
+          "kind": "object",
+          "domain": "vortex",
+          "granularity": "object"
+        },
+        "group": "target",
+        "order": 10
+      }
     },
     "newMeshUrl": {
-      "type": "string"
+      "type": [
+        "string",
+        "null"
+      ],
+      "x-semio-ui": {
+        "widget": "text",
+        "role": "value",
+        "label": {
+          "en": "Mesh URL",
+          "de": "Mesh-URL"
+        },
+        "description": {
+          "en": "Address of the file, e.g. an https or data URL.",
+          "de": "Adresse der Datei, z. B. eine https- oder data-URL."
+        },
+        "group": "source",
+        "order": 20
+      }
     }
   }
 }

@@ -3,29 +3,7 @@
   "$id": "https://json.schemas.assets.semio-tech.com/framework/os/store/presence/retirement/fixtures/mutations.json",
   "oneOf": [
     {
-      "type": "object",
-      "allOf": [
-        {
-          "$ref": "https://json.schemas.assets.semio-tech.com/framework/os/store/presence/retirement/fixtures/mutation/set-value/schema.json#/$defs/Payload"
-        },
-        {
-          "type": "object",
-          "properties": {
-            "operation": {
-              "const": "setValue"
-            }
-          },
-          "required": [
-            "operation"
-          ]
-        }
-      ],
-      "propertyNames": {
-        "enum": [
-          "n",
-          "operation"
-        ]
-      }
+      "$ref": "https://json.schemas.assets.semio-tech.com/framework/os/store/presence/retirement/fixtures/mutation/set-value/schema.json"
     }
   ]
 }

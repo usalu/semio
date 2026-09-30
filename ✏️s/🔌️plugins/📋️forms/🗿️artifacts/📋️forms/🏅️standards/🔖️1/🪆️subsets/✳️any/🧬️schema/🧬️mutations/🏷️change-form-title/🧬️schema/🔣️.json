@@ -5,12 +5,31 @@
   "type": "object",
   "additionalProperties": false,
   "properties": {
-    "new_title": {
+    "mutation": {
+      "const": "changeFormTitle"
+    },
+    "newTitle": {
       "type": [
         "string",
         "null"
-      ]
+      ],
+      "x-semio-ui": {
+        "widget": "text",
+        "role": "value",
+        "label": {
+          "en": "Title",
+          "de": "Titel"
+        },
+        "description": {
+          "en": "Title of the form; empty removes it.",
+          "de": "Titel des Formulars; leer entfernt ihn."
+        },
+        "group": "identity",
+        "order": 10
+      }
     }
   },
-  "required": []
+  "required": [
+    "mutation"
+  ]
 }

@@ -5,11 +5,35 @@
   "type": "object",
   "additionalProperties": false,
   "required": [
+    "mutation",
     "id"
   ],
   "properties": {
+    "mutation": {
+      "const": "deletePeopleGain"
+    },
     "id": {
-      "type": "integer"
+      "type": "integer",
+      "minimum": 0,
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "People gain",
+          "de": "Personenwärmegewinn"
+        },
+        "description": {
+          "en": "The people gain to delete, by id.",
+          "de": "Personenwärmegewinn, den diese Mutation löscht, per ID."
+        },
+        "ref": {
+          "kind": "peopleGain",
+          "domain": "energyModel",
+          "granularity": "load"
+        },
+        "group": "target",
+        "order": 10
+      }
     }
   }
 }

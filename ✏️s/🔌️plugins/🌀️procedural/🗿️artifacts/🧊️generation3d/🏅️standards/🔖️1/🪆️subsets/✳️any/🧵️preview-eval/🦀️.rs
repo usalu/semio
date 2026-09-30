@@ -163,7 +163,7 @@ fn hop_effect(action: &str, window_id: &str, window_kind_id: &str) -> Effect {
 /// continuation — a fault nothing in this process can clear owes no continuation at all. The run
 /// therefore neither starts on such a graph nor continues it.
 pub fn may_rearm(host_snapshot: &semio_framework_artifact_flow_flow::FlowHostSnapshot) -> bool {
-    semio_framework_os_flow::unserved_flow_operator_kinds(host_snapshot).is_empty()
+    semio_framework_os_flow::unserved_flow_operator_kinds(host_snapshot, &semio_framework_os_flow::flow_operator_registry()).is_empty()
 }
 
 /// 🪟️ The one argument object every hop of the chain carries, on the redispatch and on the
@@ -302,7 +302,7 @@ pub const PREVIEW_TESSELLATE_STEP_BUDGET: u32 = 24;
 /// microsecond-long steps each pay a WHOLE `flowEvalTick` round trip — seconds apiece in a served
 /// build — which is most of why `box-fillet-preview` needed eight round trips to paint and never
 /// finished inside a patience window (`📓️preview-mesh-delivery-2026-09-12.md`).
-pub const PREVIEW_TESSELLATE_STEP_WALL_MICROS: u64 = semio_framework_os_flow::brep_geometry::TESSELLATE_STEP_WALL_MICROS;
+pub const PREVIEW_TESSELLATE_STEP_WALL_MICROS: u64 = semio_framework_os_flow::mesh::TESSELLATE_STEP_WALL_MICROS;
 
 /// 🔬️ The deflection one LOD step asks the kernel for — the ONE mapping both surfaces read, so an
 /// editor mesh and a viewer mesh of the same handle at the same LOD are byte-identical.
@@ -623,8 +623,8 @@ pub fn apply_show_mode_mesh(mut data: MeshData, show_mode: &str) -> MeshData {
 /// 🎒️ Decodes a base64 `pack` mesh body the extension shipped back — the single decode seam every
 /// preview reader goes through.
 pub fn decode_preview_mesh_pack(base64_body: &str) -> Option<MeshData> {
-    let bytes = semio_framework_os_flow::brep_geometry::decode_base64(base64_body).ok()?;
-    semio_framework_os_flow::brep_geometry::decode_mesh_pack(&bytes).ok()
+    let bytes = semio_framework_os_flow::mesh::decode_base64(base64_body).ok()?;
+    semio_framework_os_flow::mesh::decode_mesh_pack(&bytes).ok()
 }
 
 /// 🧵️ The mesh the CHAIN produced for this handle: the retained session's resolved `pack` body,
@@ -635,9 +635,9 @@ pub fn session_preview_mesh(handle: &str, session: &FlowEvalSession) -> Option<M
     mesh_has_preview_geometry(&data).then_some(data)
 }
 
-/// 🧵️ Pure per-render mesh lookup: the chain's own answer first, and only a SESSION-FREE caller
-/// (the mesh-export bridge, a schema test) falls back to tessellating in-process — a served guest
-/// links no geometry kernel, so that fallback is never the live path.
+/// 🧵️ Reads the chain's resolved mesh first, then advances only the retained session's supplied
+/// geometry authority. Working retains its job for the next turn. A caller without an authority
+/// receives no native fallback; component guests resolve meshes through the explicit broker.
 pub fn mesh_data_for_preview_handle(handle: &str, tolerance: f64, session: Option<&FlowEvalSession>) -> Option<MeshData> {
     if let Some(session) = session {
         if let Some(data) = session_preview_mesh(handle, session) {
@@ -647,8 +647,11 @@ pub fn mesh_data_for_preview_handle(handle: &str, tolerance: f64, session: Optio
             return None;
         }
     }
-    let data = semio_framework_os_flow::tessellate_geometry(handle, tolerance).ok()?;
-    mesh_has_preview_geometry(&data).then_some(data)
+    let port = session?.geometry_port()?;
+    match port.tessellate_step(handle, tolerance, 24) {
+        semio_framework_os_flow::geometry::GeometryStep::Ready(data) => mesh_has_preview_geometry(&data).then_some(data),
+        _ => None,
+    }
 }
 
 /// 🔁️ The converged walk's brep handle for the same preview channel leaf — used while a slider edit
@@ -1102,9 +1105,7 @@ fn note_eval_answer_fault(payload: &FlowEvalResolve, session: &mut FlowEvalSessi
     });
 }
 
-/// 🧯️ The kernel release a closed run owes the geometry extension: the guest's linked copy of
-/// `brep_geometry::cancel_all_tessellations` only ever sees an EMPTY registry (two components, two
-/// globals), so the retained `TessellationJob`s and parked budgeted evaluations are reached through
+/// 🧯️ A closed run reaches the geometry extension's owned Session jobs and parked evaluations through
 /// the extension's own `evaluateCancel` and `tessellateCancel` capabilities — two doors, because
 /// there are two registries and each names its own (`📓️preview-eval-cancellation-2026-09-12.md`).
 /// Both answers land on `flowTessellateCancelResolve`, which arms nothing.
@@ -1456,8 +1457,6 @@ mod tool_run;
 pub use tool_run::*;
 //#endregion ⏯️Run
 
-//#region 🧪️Tests
 #[cfg(test)]
 #[path = "🧪️tests/🔬️unit/🦀️.rs"]
 mod tests;
-//#endregion 🧪️Tests

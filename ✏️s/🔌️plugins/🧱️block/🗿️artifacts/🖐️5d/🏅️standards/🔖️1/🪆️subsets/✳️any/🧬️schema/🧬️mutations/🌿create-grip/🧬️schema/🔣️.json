@@ -5,9 +5,13 @@
   "type": "object",
   "additionalProperties": false,
   "required": [
+    "mutation",
     "grip"
   ],
   "properties": {
+    "mutation": {
+      "const": "createGrip"
+    },
     "grip": {
       "title": "Block5dGripTemplate",
       "type": "object",
@@ -23,16 +27,84 @@
       ],
       "properties": {
         "id": {
-          "type": "string"
+          "type": "string",
+          "x-semio-ui": {
+            "widget": "text",
+            "role": "value",
+            "label": {
+              "en": "ID",
+              "de": "ID"
+            },
+            "description": {
+              "en": "Unique id of the record.",
+              "de": "Eindeutige ID des Eintrags."
+            },
+            "group": "identity",
+            "order": 10
+          }
         },
         "gripKind": {
-          "type": "string"
+          "type": "string",
+          "x-semio-ui": {
+            "widget": "reference",
+            "role": "target",
+            "label": {
+              "en": "Grip kind",
+              "de": "Griffart"
+            },
+            "ref": {
+              "kind": "gripKind",
+              "domain": "grip",
+              "granularity": "gripKind"
+            },
+            "group": "target",
+            "order": 20
+          }
         },
         "angle": {
-          "type": "number"
+          "type": "number",
+          "x-semio-ui": {
+            "widget": "dial",
+            "role": "value",
+            "label": {
+              "en": "Angle",
+              "de": "Winkel"
+            },
+            "description": {
+              "en": "Position on the node rim, counter-clockwise.",
+              "de": "Lage auf dem Knotenrand, gegen den Uhrzeigersinn."
+            },
+            "unit": "rad",
+            "displayUnit": "deg",
+            "displayFactor": 57.29577951308232,
+            "step": 0.017453292519943295,
+            "softMin": -3.141592653589793,
+            "softMax": 3.141592653589793,
+            "snaps": [
+              -3.141592653589793,
+              -1.5707963267948966,
+              0,
+              1.5707963267948966,
+              3.141592653589793
+            ],
+            "group": "geometry",
+            "order": 30
+          }
         },
         "radius2d": {
-          "type": "number"
+          "type": "number",
+          "x-semio-ui": {
+            "widget": "stepper",
+            "role": "value",
+            "label": {
+              "en": "2D radius",
+              "de": "2D-Radius"
+            },
+            "step": 0.01,
+            "precision": 2,
+            "group": "geometry",
+            "order": 40
+          }
         },
         "position": {
           "type": "array",
@@ -40,7 +112,21 @@
             "type": "number"
           },
           "minItems": 3,
-          "maxItems": 3
+          "maxItems": 3,
+          "x-semio-ui": {
+            "widget": "vector",
+            "role": "value",
+            "label": {
+              "en": "3D position",
+              "de": "3D-Position"
+            },
+            "group": "geometry",
+            "order": 50,
+            "step": 0.1,
+            "snapSource": {
+              "step": true
+            }
+          }
         },
         "direction": {
           "type": "array",
@@ -48,11 +134,46 @@
             "type": "number"
           },
           "minItems": 3,
-          "maxItems": 3
+          "maxItems": 3,
+          "x-semio-ui": {
+            "widget": "vector",
+            "role": "value",
+            "label": {
+              "en": "3D direction",
+              "de": "3D-Richtung"
+            },
+            "description": {
+              "en": "Outward connection direction.",
+              "de": "Nach außen gerichtete Verbindungsrichtung."
+            },
+            "group": "geometry",
+            "order": 60
+          }
         },
         "radius3d": {
-          "type": "number"
+          "type": "number",
+          "x-semio-ui": {
+            "widget": "stepper",
+            "role": "value",
+            "label": {
+              "en": "3D radius",
+              "de": "3D-Radius"
+            },
+            "step": 0.01,
+            "precision": 3,
+            "group": "geometry",
+            "order": 70
+          }
         }
+      },
+      "x-semio-ui": {
+        "role": "value",
+        "label": {
+          "en": "Grip",
+          "de": "Griff"
+        },
+        "group": "record",
+        "order": 10
       }
     }
   }

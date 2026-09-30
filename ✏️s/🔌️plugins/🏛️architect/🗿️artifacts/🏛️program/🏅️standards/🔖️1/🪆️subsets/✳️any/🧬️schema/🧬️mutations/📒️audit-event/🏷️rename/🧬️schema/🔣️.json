@@ -5,16 +5,52 @@
   "type": "object",
   "additionalProperties": false,
   "required": [
+    "mutation",
     "id",
     "newName"
   ],
   "properties": {
+    "mutation": {
+      "const": "renameAuditEvent"
+    },
     "id": {
-      "type": "integer",
-      "minimum": 0
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Audit Event",
+          "de": "Audit-Ereignis"
+        },
+        "description": {
+          "en": "The audit event to rename.",
+          "de": "Umzubenennender Eintrag vom Typ „Audit-Ereignis“."
+        },
+        "ref": {
+          "kind": "auditEvent",
+          "domain": "program",
+          "granularity": "entity"
+        },
+        "group": "target",
+        "order": 10
+      }
     },
     "newName": {
-      "type": "string"
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "text",
+        "role": "value",
+        "label": {
+          "en": "New Name",
+          "de": "Neuer Name"
+        },
+        "description": {
+          "en": "New name of the audit event.",
+          "de": "Neuer Name des Eintrags vom Typ „Audit-Ereignis“."
+        },
+        "group": "identity",
+        "order": 20
+      }
     }
   }
 }

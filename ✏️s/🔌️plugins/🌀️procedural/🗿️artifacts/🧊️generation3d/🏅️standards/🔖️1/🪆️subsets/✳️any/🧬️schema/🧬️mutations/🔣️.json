@@ -4,28 +4,19 @@
   "title": "Generation3dMutation",
   "oneOf": [
     {
-      "$ref": "https://json.schemas.assets.semio-tech.com/s/procedural/generation3d/mutation/change-generation-value/schema.json"
-    },
-    {
-      "$ref": "https://json.schemas.assets.semio-tech.com/s/procedural/generation3d/mutation/change-schema/schema.json"
-    },
-    {
-      "$ref": "https://json.schemas.assets.semio-tech.com/s/procedural/generation3d/mutation/connect-synapse/schema.json"
-    },
-    {
-      "$ref": "https://json.schemas.assets.semio-tech.com/s/procedural/generation3d/mutation/create-generation/schema.json"
-    },
-    {
       "$ref": "https://json.schemas.assets.semio-tech.com/s/procedural/generation3d/mutation/create-widget/schema.json"
     },
     {
-      "$ref": "https://json.schemas.assets.semio-tech.com/s/procedural/generation3d/mutation/delete-generation/schema.json"
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/procedural/generation3d/mutation/update-widget/schema.json"
     },
     {
       "$ref": "https://json.schemas.assets.semio-tech.com/s/procedural/generation3d/mutation/delete-widget/schema.json"
     },
     {
-      "$ref": "https://json.schemas.assets.semio-tech.com/s/procedural/generation3d/mutation/delete-widget-position/schema.json"
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/procedural/generation3d/mutation/connect-synapse/schema.json"
+    },
+    {
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/procedural/generation3d/mutation/update-synapse/schema.json"
     },
     {
       "$ref": "https://json.schemas.assets.semio-tech.com/s/procedural/generation3d/mutation/disconnect-synapse/schema.json"
@@ -34,16 +25,25 @@
       "$ref": "https://json.schemas.assets.semio-tech.com/s/procedural/generation3d/mutation/move-widget/schema.json"
     },
     {
-      "$ref": "https://json.schemas.assets.semio-tech.com/s/procedural/generation3d/mutation/rename-generation/schema.json"
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/procedural/generation3d/mutation/delete-widget-position/schema.json"
     },
     {
       "$ref": "https://json.schemas.assets.semio-tech.com/s/procedural/generation3d/mutation/update-camera/schema.json"
     },
     {
-      "$ref": "https://json.schemas.assets.semio-tech.com/s/procedural/generation3d/mutation/update-synapse/schema.json"
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/procedural/generation3d/mutation/change-schema/schema.json"
     },
     {
-      "$ref": "https://json.schemas.assets.semio-tech.com/s/procedural/generation3d/mutation/update-widget/schema.json"
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/procedural/generation3d/mutation/create-generation/schema.json"
+    },
+    {
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/procedural/generation3d/mutation/delete-generation/schema.json"
+    },
+    {
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/procedural/generation3d/mutation/rename-generation/schema.json"
+    },
+    {
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/procedural/generation3d/mutation/change-generation-value/schema.json"
     }
   ]
 }

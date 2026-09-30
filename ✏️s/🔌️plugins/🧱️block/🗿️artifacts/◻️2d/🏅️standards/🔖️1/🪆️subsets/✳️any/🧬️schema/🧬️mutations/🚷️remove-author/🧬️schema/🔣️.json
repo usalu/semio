@@ -5,11 +5,28 @@
   "type": "object",
   "additionalProperties": false,
   "required": [
+    "mutation",
     "id"
   ],
   "properties": {
+    "mutation": {
+      "const": "removeAuthor"
+    },
     "id": {
-      "type": "string"
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Author",
+          "de": "Autor"
+        },
+        "ref": {
+          "kind": "author"
+        },
+        "group": "target",
+        "order": 10
+      }
     }
   }
 }

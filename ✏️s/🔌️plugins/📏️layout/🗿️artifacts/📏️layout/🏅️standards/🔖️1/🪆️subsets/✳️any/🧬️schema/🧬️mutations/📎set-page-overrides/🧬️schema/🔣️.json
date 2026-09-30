@@ -1,1 +1,241 @@
-{"$schema":"http://json-schema.org/draft-07/schema#","title":"SetPageOverrides","type":"object"}
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/layout/layout/mutation/set-page-overrides/schema.json",
+  "title": "SetPageOverrides",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "id",
+    "overrides"
+  ],
+  "properties": {
+    "id": {
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Page",
+          "de": "Seite"
+        },
+        "ref": {
+          "kind": "page"
+        },
+        "group": "target",
+        "order": 10
+      }
+    },
+    "overrides": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/PageOverride"
+      },
+      "x-semio-ui": {
+        "role": "value",
+        "label": {
+          "en": "Overrides",
+          "de": "Abweichungen"
+        },
+        "description": {
+          "en": "Replaces every override of a parent-page frame on this page.",
+          "de": "Ersetzt alle Abweichungen von Rahmen der Mustervorlage auf dieser Seite."
+        },
+        "group": "record",
+        "order": 20
+      }
+    }
+  },
+  "$defs": {
+    "PageOverride": {
+      "title": "PageOverride",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "objectId"
+      ],
+      "properties": {
+        "objectId": {
+          "type": "string",
+          "x-semio-ui": {
+            "widget": "reference",
+            "role": "value",
+            "label": {
+              "en": "Frame",
+              "de": "Rahmen"
+            },
+            "description": {
+              "en": "The parent-page frame this override changes.",
+              "de": "Der Rahmen der Mustervorlage, den diese Abweichung ändert."
+            },
+            "ref": {
+              "kind": "frame",
+              "domain": "elements",
+              "granularity": "element"
+            },
+            "group": "target",
+            "order": 10
+          }
+        },
+        "bounds": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/LayoutBounds"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "x-semio-ui": {
+            "role": "value",
+            "label": {
+              "en": "Bounds",
+              "de": "Begrenzung"
+            },
+            "description": {
+              "en": "Empty keeps the parent-page bounds.",
+              "de": "Leer übernimmt die Begrenzung der Mustervorlage."
+            },
+            "group": "geometry",
+            "order": 20
+          }
+        },
+        "visible": {
+          "type": [
+            "boolean",
+            "null"
+          ],
+          "x-semio-ui": {
+            "widget": "toggle",
+            "role": "value",
+            "label": {
+              "en": "Visible",
+              "de": "Sichtbar"
+            },
+            "group": "state",
+            "order": 30
+          }
+        },
+        "locked": {
+          "type": [
+            "boolean",
+            "null"
+          ],
+          "x-semio-ui": {
+            "widget": "toggle",
+            "role": "value",
+            "label": {
+              "en": "Locked",
+              "de": "Gesperrt"
+            },
+            "group": "state",
+            "order": 40
+          }
+        }
+      }
+    },
+    "LayoutBounds": {
+      "title": "LayoutBounds",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "x",
+        "y",
+        "w",
+        "h",
+        "rotation"
+      ],
+      "properties": {
+        "x": {
+          "type": "number",
+          "x-semio-ui": {
+            "widget": "stepper",
+            "role": "value",
+            "label": {
+              "en": "X",
+              "de": "X"
+            },
+            "unit": "mm",
+            "step": 1,
+            "precision": 1,
+            "group": "position",
+            "order": 10
+          }
+        },
+        "y": {
+          "type": "number",
+          "x-semio-ui": {
+            "widget": "stepper",
+            "role": "value",
+            "label": {
+              "en": "Y",
+              "de": "Y"
+            },
+            "unit": "mm",
+            "step": 1,
+            "precision": 1,
+            "group": "position",
+            "order": 20
+          }
+        },
+        "w": {
+          "type": "number",
+          "x-semio-ui": {
+            "widget": "stepper",
+            "role": "value",
+            "label": {
+              "en": "Width",
+              "de": "Breite"
+            },
+            "unit": "mm",
+            "step": 1,
+            "precision": 1,
+            "group": "geometry",
+            "order": 30
+          }
+        },
+        "h": {
+          "type": "number",
+          "x-semio-ui": {
+            "widget": "stepper",
+            "role": "value",
+            "label": {
+              "en": "Height",
+              "de": "Höhe"
+            },
+            "unit": "mm",
+            "step": 1,
+            "precision": 1,
+            "group": "geometry",
+            "order": 40
+          }
+        },
+        "rotation": {
+          "type": "number",
+          "x-semio-ui": {
+            "widget": "dial",
+            "role": "value",
+            "label": {
+              "en": "Rotation",
+              "de": "Drehung"
+            },
+            "unit": "rad",
+            "displayUnit": "deg",
+            "displayFactor": 57.29577951308232,
+            "step": 0.017453292519943295,
+            "softMin": -3.141592653589793,
+            "softMax": 3.141592653589793,
+            "snaps": [
+              -3.141592653589793,
+              -1.5707963267948966,
+              0,
+              1.5707963267948966,
+              3.141592653589793
+            ],
+            "group": "geometry",
+            "order": 50
+          }
+        }
+      }
+    }
+  }
+}

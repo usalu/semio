@@ -6,6 +6,8 @@ use crate::{En1991Mutation, En1991Snapshot};
 #[derive(Clone, Debug, PartialEq, dsl::MutationLeaf, value_derive::ToValue, value_derive::FromValue)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 #[mutation_leaf(contract = ::protocol)]
+#[cfg_attr(test, serde(rename_all = "camelCase"))]
+#[value(rename_all = "camelCase")]
 pub struct ChangeFireLoadDensityQf {
     pub new_fire_load_density_qf: f64,
 }

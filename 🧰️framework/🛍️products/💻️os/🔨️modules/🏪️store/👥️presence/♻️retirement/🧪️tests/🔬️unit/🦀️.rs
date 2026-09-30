@@ -6,6 +6,13 @@ pub(super) fn assert_fixture_descriptor<T: crate::os_spr::MutationLeaf>(descript
     assert!(T::DESCRIPTOR.validate().is_ok());
 }
 
+/// 🧾️ The committed wire witness of `set-value` decodes through `ValueMutation`'s `FromValue` and re-encodes to exactly the
+/// committed JSON: it is the canonical Rust wire of the leaf.
+#[test]
+fn committed_wire_witness_is_the_canonical_wire() {
+    crate::os_store::test_support::assert_wire_witness::<ValueMutation>(include_str!("../../🧫️fixtures/🧬️mutations/🔢️set-value/🧫️fixtures/🧾️wire-witness/🦠️mutation/🔣️.json"));
+}
+
 #[test]
 fn direct_presence_fixture_value_inverse() {
     let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../../🧫️fixtures/🔣️.json")).unwrap();

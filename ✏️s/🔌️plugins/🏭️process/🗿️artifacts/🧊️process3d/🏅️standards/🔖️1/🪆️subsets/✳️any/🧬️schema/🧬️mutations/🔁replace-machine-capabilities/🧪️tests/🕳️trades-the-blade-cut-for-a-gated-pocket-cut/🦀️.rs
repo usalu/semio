@@ -11,11 +11,11 @@ use crate::diff::Process3dDiff;
 use crate::mutations::Process3dMutation;
 use crate::Process3dSnapshot;
 
-const BEFORE: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🔁replace-machine-capabilities/🕳️trades-the-blade-cut-for-a-gated-pocket-cut/📸️snapshot/⬅️before/🔣️.json");
-const AFTER: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🔁replace-machine-capabilities/🕳️trades-the-blade-cut-for-a-gated-pocket-cut/📸️snapshot/➡️after/🔣️.json");
-const MUTATION: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🔁replace-machine-capabilities/🕳️trades-the-blade-cut-for-a-gated-pocket-cut/🦠️mutation/🔣️.json");
-const DIFF: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🔁replace-machine-capabilities/🕳️trades-the-blade-cut-for-a-gated-pocket-cut/🔺️diff/🔣️.json");
-const OUTCOME: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🔁replace-machine-capabilities/🕳️trades-the-blade-cut-for-a-gated-pocket-cut/🎯️outcome/🔣️.json");
+const BEFORE: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🔁replace-machine-capabilities/🕳️trades-blade-cut-gated-pocket-cut/📸️snapshot/⬅️before/🔣️.json");
+const AFTER: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🔁replace-machine-capabilities/🕳️trades-blade-cut-gated-pocket-cut/📸️snapshot/➡️after/🔣️.json");
+const MUTATION: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🔁replace-machine-capabilities/🕳️trades-blade-cut-gated-pocket-cut/🦠️mutation/🔣️.json");
+const DIFF: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🔁replace-machine-capabilities/🕳️trades-blade-cut-gated-pocket-cut/🔺️diff/🔣️.json");
+const OUTCOME: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🔁replace-machine-capabilities/🕳️trades-blade-cut-gated-pocket-cut/🎯️outcome/🔣️.json");
 
 fn before() -> Process3dSnapshot {
     semio_framework_os_kernel::json::from_json_str(BEFORE).expect("before snapshot decodes")

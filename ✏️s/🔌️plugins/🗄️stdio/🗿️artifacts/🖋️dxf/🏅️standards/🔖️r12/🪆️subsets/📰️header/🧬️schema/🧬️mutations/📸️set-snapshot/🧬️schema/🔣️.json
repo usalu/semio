@@ -5,15 +5,24 @@
   "type": "object",
   "additionalProperties": false,
   "required": [
+    "mutation",
     "snapshot"
   ],
   "properties": {
-    "snapshot": {
-      "$ref": "#/$defs/DxfSnapshot"
-    },
     "mutation": {
       "const": "setSnapshot",
       "description": "Aggregate discriminator spliced in by DxfMutation; absent when the payload stands alone."
+    },
+    "snapshot": {
+      "$ref": "#/$defs/DxfSnapshot",
+      "x-semio-ui": {
+        "label": {
+          "en": "DXF drawing",
+          "de": "DXF-Zeichnung"
+        },
+        "group": "value",
+        "order": 10
+      }
     }
   },
   "$defs": {
@@ -25,33 +34,73 @@
       ],
       "properties": {
         "schema": {
-          "type": "string"
+          "type": "string",
+          "x-semio-ui": {
+            "label": {
+              "en": "Schema",
+              "de": "Schema"
+            },
+            "description": {
+              "en": "Identifier of the snapshot schema this document follows.",
+              "de": "Kennung des Snapshot-Schemas, dem dieses Dokument folgt."
+            }
+          }
         },
         "headerVars": {
           "type": "array",
           "items": {
             "$ref": "#/$defs/DxfHeaderVar"
+          },
+          "x-semio-ui": {
+            "label": {
+              "en": "Header variables",
+              "de": "Systemvariablen"
+            }
           }
         },
         "tables": {
-          "$ref": "#/$defs/DxfTables"
+          "$ref": "#/$defs/DxfTables",
+          "x-semio-ui": {
+            "label": {
+              "en": "Tables",
+              "de": "Tabellen"
+            }
+          }
         },
         "otherTables": {
           "type": "array",
           "items": {
             "$ref": "#/$defs/DxfOtherTable"
+          },
+          "x-semio-ui": {
+            "label": {
+              "en": "Other tables",
+              "de": "Weitere Tabellen"
+            }
           }
         },
         "blocks": {
           "type": "array",
           "items": {
             "$ref": "#/$defs/DxfBlock"
+          },
+          "x-semio-ui": {
+            "label": {
+              "en": "Blocks",
+              "de": "Blöcke"
+            }
           }
         },
         "entities": {
           "type": "array",
           "items": {
             "$ref": "#/$defs/DxfEntity"
+          },
+          "x-semio-ui": {
+            "label": {
+              "en": "Entities",
+              "de": "Objekte"
+            }
           }
         }
       }
@@ -71,10 +120,22 @@
         "groupCode": {
           "type": "integer",
           "minimum": -2147483648,
-          "maximum": 2147483647
+          "maximum": 2147483647,
+          "x-semio-ui": {
+            "label": {
+              "en": "Group code",
+              "de": "Gruppencode"
+            }
+          }
         },
         "value": {
-          "$ref": "#/$defs/DxfValue"
+          "$ref": "#/$defs/DxfValue",
+          "x-semio-ui": {
+            "label": {
+              "en": "Value",
+              "de": "Wert"
+            }
+          }
         },
         "extraGroupCodes": {
           "type": "array",
@@ -93,6 +154,12 @@
             "additionalItems": false,
             "minItems": 2,
             "maxItems": 2
+          },
+          "x-semio-ui": {
+            "label": {
+              "en": "Additional group codes",
+              "de": "Zusätzliche Gruppencodes"
+            }
           }
         }
       }
@@ -178,18 +245,36 @@
           "type": "array",
           "items": {
             "$ref": "#/$defs/DxfLayer"
+          },
+          "x-semio-ui": {
+            "label": {
+              "en": "Layers",
+              "de": "Layer"
+            }
           }
         },
         "styles": {
           "type": "array",
           "items": {
             "$ref": "#/$defs/DxfStyle"
+          },
+          "x-semio-ui": {
+            "label": {
+              "en": "Text styles",
+              "de": "Textstile"
+            }
           }
         },
         "linetypes": {
           "type": "array",
           "items": {
             "$ref": "#/$defs/DxfLinetype"
+          },
+          "x-semio-ui": {
+            "label": {
+              "en": "Linetypes",
+              "de": "Linientypen"
+            }
           }
         }
       }
@@ -210,15 +295,41 @@
         "color": {
           "type": "integer",
           "minimum": -2147483648,
-          "maximum": 2147483647
+          "maximum": 2147483647,
+          "x-semio-ui": {
+            "label": {
+              "en": "Color number (ACI)",
+              "de": "Farbnummer (ACI)"
+            },
+            "description": {
+              "en": "AutoCAD Color Index; negative means the layer is off.",
+              "de": "AutoCAD-Farbindex; negativ bedeutet, der Layer ist ausgeschaltet."
+            }
+          }
         },
         "linetype": {
-          "type": "string"
+          "type": "string",
+          "x-semio-ui": {
+            "label": {
+              "en": "Linetype",
+              "de": "Linientyp"
+            }
+          }
         },
         "flags": {
           "type": "integer",
           "minimum": -2147483648,
-          "maximum": 2147483647
+          "maximum": 2147483647,
+          "x-semio-ui": {
+            "label": {
+              "en": "Standard flags",
+              "de": "Standard-Flags"
+            },
+            "description": {
+              "en": "Group code 70.",
+              "de": "Gruppencode 70."
+            }
+          }
         },
         "unknownGroupCodes": {
           "type": "array",
@@ -237,6 +348,12 @@
             "additionalItems": false,
             "minItems": 2,
             "maxItems": 2
+          },
+          "x-semio-ui": {
+            "label": {
+              "en": "Unknown group codes",
+              "de": "Unbekannte Gruppencodes"
+            }
           }
         }
       }
@@ -256,10 +373,26 @@
         "flags": {
           "type": "integer",
           "minimum": -2147483648,
-          "maximum": 2147483647
+          "maximum": 2147483647,
+          "x-semio-ui": {
+            "label": {
+              "en": "Standard flags",
+              "de": "Standard-Flags"
+            },
+            "description": {
+              "en": "Group code 70.",
+              "de": "Gruppencode 70."
+            }
+          }
         },
         "fontName": {
-          "type": "string"
+          "type": "string",
+          "x-semio-ui": {
+            "label": {
+              "en": "Font file",
+              "de": "Schriftdatei"
+            }
+          }
         },
         "unknownGroupCodes": {
           "type": "array",
@@ -278,6 +411,12 @@
             "additionalItems": false,
             "minItems": 2,
             "maxItems": 2
+          },
+          "x-semio-ui": {
+            "label": {
+              "en": "Unknown group codes",
+              "de": "Unbekannte Gruppencodes"
+            }
           }
         }
       }
@@ -297,7 +436,17 @@
         "flags": {
           "type": "integer",
           "minimum": -2147483648,
-          "maximum": 2147483647
+          "maximum": 2147483647,
+          "x-semio-ui": {
+            "label": {
+              "en": "Standard flags",
+              "de": "Standard-Flags"
+            },
+            "description": {
+              "en": "Group code 70.",
+              "de": "Gruppencode 70."
+            }
+          }
         },
         "description": {
           "type": "string"
@@ -319,6 +468,12 @@
             "additionalItems": false,
             "minItems": 2,
             "maxItems": 2
+          },
+          "x-semio-ui": {
+            "label": {
+              "en": "Unknown group codes",
+              "de": "Unbekannte Gruppencodes"
+            }
           }
         }
       }
@@ -331,12 +486,24 @@
       ],
       "properties": {
         "name": {
-          "type": "string"
+          "type": "string",
+          "x-semio-ui": {
+            "label": {
+              "en": "Table name",
+              "de": "Tabellenname"
+            }
+          }
         },
         "tags": {
           "type": "array",
           "items": {
             "$ref": "#/$defs/DxfTag"
+          },
+          "x-semio-ui": {
+            "label": {
+              "en": "Group code pairs",
+              "de": "Gruppencode-Paare"
+            }
           }
         }
       }
@@ -352,10 +519,22 @@
         "code": {
           "type": "integer",
           "minimum": -2147483648,
-          "maximum": 2147483647
+          "maximum": 2147483647,
+          "x-semio-ui": {
+            "label": {
+              "en": "Group code",
+              "de": "Gruppencode"
+            }
+          }
         },
         "value": {
-          "type": "string"
+          "type": "string",
+          "x-semio-ui": {
+            "label": {
+              "en": "Value",
+              "de": "Wert"
+            }
+          }
         }
       }
     },
@@ -377,12 +556,24 @@
             "type": "number"
           },
           "minItems": 3,
-          "maxItems": 3
+          "maxItems": 3,
+          "x-semio-ui": {
+            "label": {
+              "en": "Base point",
+              "de": "Basispunkt"
+            }
+          }
         },
         "entities": {
           "type": "array",
           "items": {
             "$ref": "#/$defs/DxfEntity"
+          },
+          "x-semio-ui": {
+            "label": {
+              "en": "Entities",
+              "de": "Objekte"
+            }
           }
         },
         "unknownGroupCodes": {
@@ -402,6 +593,12 @@
             "additionalItems": false,
             "minItems": 2,
             "maxItems": 2
+          },
+          "x-semio-ui": {
+            "label": {
+              "en": "Unknown group codes",
+              "de": "Unbekannte Gruppencodes"
+            }
           }
         }
       }

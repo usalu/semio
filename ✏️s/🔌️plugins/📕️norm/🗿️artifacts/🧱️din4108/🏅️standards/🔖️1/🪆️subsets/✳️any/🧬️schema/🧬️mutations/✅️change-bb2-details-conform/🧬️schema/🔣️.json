@@ -9,7 +9,21 @@
   ],
   "properties": {
     "newBb2DetailsConform": {
-      "type": "boolean"
+      "type": "boolean",
+      "x-semio-ui": {
+        "widget": "toggle",
+        "role": "value",
+        "label": {
+          "en": "Details conform to Supplement 2",
+          "de": "Anschlussdetails gleichwertig nach Beiblatt 2"
+        },
+        "description": {
+          "en": "Whether every junction detail is equivalent to DIN 4108 Supplement 2.",
+          "de": "Ob alle Anschlussdetails gleichwertig zu DIN 4108 Beiblatt 2 ausgeführt sind."
+        },
+        "group": "thermal-bridges",
+        "order": 10
+      }
     }
   }
 }

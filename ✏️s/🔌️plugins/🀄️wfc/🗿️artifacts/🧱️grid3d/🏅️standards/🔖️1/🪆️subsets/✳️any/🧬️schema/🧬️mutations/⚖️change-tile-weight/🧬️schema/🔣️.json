@@ -10,11 +10,40 @@
   ],
   "properties": {
     "tileId": {
-      "type": "string"
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Tile",
+          "de": "Kachel"
+        },
+        "ref": {
+          "kind": "tile"
+        },
+        "group": "target",
+        "order": 10
+      }
     },
     "weight": {
       "type": "number",
-      "exclusiveMinimum": 0
+      "exclusiveMinimum": 0,
+      "x-semio-ui": {
+        "widget": "stepper",
+        "role": "value",
+        "label": {
+          "en": "Weight",
+          "de": "Gewicht"
+        },
+        "description": {
+          "en": "Relative frequency of the tile in a solution.",
+          "de": "Relative Häufigkeit der Kachel in einer Lösung."
+        },
+        "step": 0.1,
+        "precision": 2,
+        "group": "solver",
+        "order": 20
+      }
     }
   }
 }

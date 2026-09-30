@@ -213,6 +213,24 @@ mod app_builder_tests {
         }
     }
 
+    /// ⏪️ Every editor declares the eleven history-edit verbs (no chord of their own, never in the palette) and the
+    /// finalize prompt they open; a viewer declares neither, since its guard rejects every one of them.
+    #[semio_framework_async_macros::async_test]
+    async fn build_definition_injects_the_history_edit_verbs_and_prompt_into_an_editor_only() {
+        let viewer = surface_app("history-edit", AppRole::Viewer).await;
+        let editor = surface_app("history-edit", AppRole::Editor).await;
+        let editor_ids: HashSet<&str> = declared_actions(&editor).map(|action| action.id.as_str()).collect();
+        let viewer_ids: HashSet<&str> = declared_actions(&viewer).map(|action| action.id.as_str()).collect();
+        for verb in semio_framework::HISTORY_EDIT_ACTION_IDS {
+            assert!(editor_ids.contains(verb), "the editor declares {verb}");
+            assert!(!viewer_ids.contains(verb), "a viewer never declares {verb}");
+            assert!(editor.keybindings.iter().all(|binding| binding.action.action != verb), "{verb} carries no framework chord");
+        }
+        assert!(declared_actions(&editor).filter(|action| is_time_travel_action_id(&action.id)).all(|action| !action.in_palette && action.kind == ActionKind::History));
+        assert!(editor.dialogs.iter().any(|dialog| dialog.id == semio_framework::HISTORY_EDIT_FINALIZE_DIALOG_ID), "the editor declares the finalize prompt");
+        assert!(viewer.dialogs.iter().all(|dialog| dialog.id != semio_framework::HISTORY_EDIT_FINALIZE_DIALOG_ID), "a viewer declares no finalize prompt");
+    }
+
     #[semio_framework_async_macros::async_test]
     async fn build_definition_does_not_duplicate_manually_declared_history_keybinding() {
         let definition = minimal_app("manual-undo-app").await.keybinding("mod+z", "undo").await.build_definition();
@@ -493,7 +511,7 @@ mod app_builder_tests {
         };
         let definition = built("entity-ids-app", "graph", "node").await.expect("a declared granularity builds");
         let rename = declared_actions(&definition).find(|action| action.id == "rename").expect("declared");
-        let schema = rename.args[0].json_schema();
+        let schema = rename.args[0].json_schema(semio_framework::Terminology::Native, semio_framework::Locale::En);
         let items = schema.get("items").expect("an entity-id argument is a list");
         assert_eq!(
             (schema.get("type").and_then(DslValue::as_str), items.get("type").and_then(DslValue::as_str), items.get("x-semio-format").and_then(DslValue::as_str), items.get("x-semio-entity-kind").and_then(DslValue::as_str)),
@@ -777,8 +795,7 @@ mod app_builder_tests {
     async fn declaring_dialog_appends_to_definition() {
         use semio_framework::{ActionRef, DialogDefinition};
         let definition = minimal_app("dialog-app").await.mutation("addLayer", LocalizedLabel::data("Add Layer")).await.dialog(DialogDefinition::new("addLayer", LocalizedLabel::data("Add Layer"), ActionRef::new("addLayer"))).await.interactive_jobs(semio_framework::InteractiveJobClassification::Migrated).await.build_definition();
-        assert_eq!(definition.dialogs.len(), 1);
-        assert_eq!(definition.dialogs[0].id, "addLayer");
+        assert_eq!(definition.dialogs.iter().map(|dialog| dialog.id.as_str()).collect::<Vec<_>>(), ["addLayer", semio_framework::HISTORY_EDIT_FINALIZE_DIALOG_ID], "the app's own dialog, then the framework-injected finalize prompt");
         assert_eq!(definition.dialogs[0].submit_label, LocalizedLabel::data("OK"));
     }
 

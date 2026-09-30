@@ -1,7 +1,13 @@
-/** 🦠️ reorder-required-extensions executable glTF command. */
-import type { GltfJson, GltfSnapshot } from '../../📸️snapshot/🟦️.ts';
-import { clone, reject, run, same, type GltfLeafResult, type GltfMutationRejection } from './🟦️';
-export const GltfReorderRequiredExtensionsDescriptor = { id: 's.stdio.gltf.mutation.reorder-required-extensions.v1', version: 1, touchedPaths: ["document/extensionsRequired"], referencePolicy: 'exact permutation preserves all declaration identities' } as const;
-export interface GltfReorderRequiredExtensionsPayload { order: string[] }
-export const validateGltfReorderRequiredExtensions = (payload: GltfReorderRequiredExtensionsPayload, base: GltfSnapshot): GltfMutationRejection | undefined => { if (payload.order.length !== base.document.extensionsRequired.length || new Set(payload.order).size !== payload.order.length || !payload.order.every(value => base.document.extensionsRequired.includes(value))) return reject('gltf.mutation.invalid-permutation', 'document/extensionsRequired', 'order must contain every declaration exactly once'); if (payload.order.every((value, index) => value === base.document.extensionsRequired[index])) return reject('gltf.mutation.no-observable-change', 'document/extensionsRequired', 'order already matches'); return undefined; };
-export const applyGltfReorderRequiredExtensions = (base: GltfSnapshot, payload: GltfReorderRequiredExtensionsPayload): GltfLeafResult => run(base, payload, validateGltfReorderRequiredExtensions, (next, payload) => { next.document.extensionsRequired = [...payload.order]; });
+/** 🔀️ `reorder-required-extensions` wire twin: the flat `Apply` payload `GltfReorderRequiredExtensionsPayload` and the phase wire `ReorderRequiredExtensionsMutation`, exactly as `./🦀️.rs` writes them.
+ * @see ./🧬️schema/🔣️.json */
+import { gltfWireArray, gltfWireObject, gltfWireRequired, gltfWireString } from "../../../📸️snapshot/🟦️.ts";
+import { type GltfDiff, type GltfPhase, gltfWirePhase, parseGltfDiff } from "../../../🔺️diff/🟦️.ts";
+
+export interface GltfReorderRequiredExtensionsPayload {
+  order: string[];
+}
+
+export type ReorderRequiredExtensionsMutation = GltfPhase<GltfReorderRequiredExtensionsPayload, GltfDiff>;
+
+export const parseGltfReorderRequiredExtensionsPayload = gltfWireObject<GltfReorderRequiredExtensionsPayload>({ order: gltfWireRequired(gltfWireArray(gltfWireString)) });
+export const parseReorderRequiredExtensionsMutation = gltfWirePhase(parseGltfReorderRequiredExtensionsPayload, parseGltfDiff);

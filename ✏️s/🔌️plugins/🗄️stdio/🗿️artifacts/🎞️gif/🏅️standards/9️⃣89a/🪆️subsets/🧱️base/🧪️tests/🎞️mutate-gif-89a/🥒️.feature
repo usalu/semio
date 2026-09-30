@@ -28,6 +28,16 @@ Feature: Apply every typed GIF 89a mutation to a real-world animation
       trusting the decoder meant the round trip erased both the flag and the row permutation and
       landed back exactly where it started.
 
+  Every Examples `params` cell is exactly the leaf's wire payload — its `payload_value()`, camelCase,
+  no aggregate tag — decoded by the subject through the derive-generated `from_payload_value` and
+  read by the `gif` oracle by the same field names; a colour table is `{sorted, colors}` and an
+  application extension's identifier and authentication code are their raw bytes. A row states
+  every frame it hands over instead of naming one to clone: `insert-frame` inserts a real 4x4 crop of
+  frame 0 at (398,398), re-indexed onto the four colours it uses. `set-frame-pixels` carries a frame's
+  WHOLE index buffer, and every frame of this animation holds at least 122 470 indices, so that kind
+  runs in its own outlines on the committed 8x6, three-frame GIF89a
+  (`shared://🧱️set-frame-pixels-applied/⬅️before.gif`) with that recipe's own replacement indices.
+
   ⚠️ TWO KNOWN OPEN DIVERGENCES (this case's parity ratio is recorded in the ticket, not here),
   both the same disagreement: a mutation
   edits one field and leaves a dependent one behind, and the two implementations resolve the
@@ -59,29 +69,31 @@ Feature: Apply every typed GIF 89a mutation to a real-world animation
       """
     Then the oracle and the subject agree on the semantic projection
     Examples:
-      | id                          | params                                                                   |
-      | set-snapshot                | {"width":2,"height":2,"globalPalette":[[4,5,6],[4,5,6]],"backgroundColorIndex":0,"aspectRatio":0,"loopCount":0,"frames":[{"left":0,"top":0,"width":2,"height":2,"interlace":false,"palette":[[9,9,9],[9,9,9]],"indices":[0,1,1,0],"delayCs":10,"disposal":"doNotDispose","transparentIndex":null,"userInput":false}],"comments":["c0"],"appExtensions":[]} |
-      | set-screen-size             | {"width":801,"height":799}                                              |
-      | set-global-color-table      | {"colors":[[10,20,30],[40,50,60]]}                                      |
-      | set-background-color-index  | {"index":3}                                                              |
-      | set-pixel-aspect-ratio      | {"ratio":12}                                                             |
-      | insert-frame                | {"index":10,"sourceFrame":0,"delayCs":33}                                |
-      | remove-frame                | {"index":10}                                                             |
-      | move-frame                  | {"from":5,"to":20}                                                       |
-      | set-frame-geometry          | {"index":0,"left":5,"top":5,"width":100,"height":100}                   |
-      | set-frame-pixels            | {"index":0,"fillIndex":7}                                                |
-      | set-frame-interlace         | {"index":1,"interlace":true}                                             |
+      | id | params |
+      | set-snapshot | {"snapshot":{"schema":"stdio.gif.89a","width":2,"height":2,"gct":{"sorted":false,"colors":[{"r":4,"g":5,"b":6},{"r":4,"g":5,"b":6}]},"backgroundColorIndex":0,"pixelAspectRatio":0,"loopCount":0,"frames":[{"left":0,"top":0,"width":2,"height":2,"interlace":false,"lct":{"sorted":false,"colors":[{"r":9,"g":9,"b":9},{"r":9,"g":9,"b":9}]},"indices":[0,1,1,0],"delayCs":10,"disposal":"doNotDispose","transparentIndex":null,"userInput":false,"plainText":null}],"comments":["c0"],"appExtensions":[]}} |
+      | set-screen-size | {"width":801,"height":799} |
+      | set-global-color-table | {"gct":{"sorted":false,"colors":[{"r":10,"g":20,"b":30},{"r":40,"g":50,"b":60}]}} |
+      | set-background-color-index | {"index":3} |
+      | set-pixel-aspect-ratio | {"ratio":12} |
+      | insert-frame | {"index":10,"frame":{"left":398,"top":398,"width":4,"height":4,"interlace":false,"lct":{"sorted":false,"colors":[{"r":85,"g":95,"b":10},{"r":79,"g":94,"b":10},{"r":72,"g":93,"b":14},{"r":114,"g":99,"b":15},{"r":115,"g":108,"b":16},{"r":123,"g":98,"b":110},{"r":124,"g":124,"b":22},{"r":131,"g":214,"b":145}]},"indices":[6,4,4,0,4,3,0,1,0,0,1,2,5,5,7,7],"delayCs":33,"disposal":"unspecified","transparentIndex":null,"userInput":false,"plainText":null}} |
+      | remove-frame | {"index":10} |
+      | move-frame | {"from":5,"to":20} |
+      | set-frame-geometry | {"index":0,"left":5,"top":5,"width":100,"height":100} |
+      | set-frame-interlace | {"index":1,"interlace":true} |
 
-  @id-no-mutation-baseline-mutate
+  @id-mutate-raster
   @level-exhaustive
   @mode-differential
-  Scenario: Apply no-mutation to the real animation
-    Given the real input document asset://💃️dancing/🧪️dancing/🖼️.gif
-    When the no-mutation mutation is applied with its parameters
+  Scenario Outline: Apply <id> to a small animation
+    Given the small input animation shared://🧱️set-frame-pixels-applied/⬅️before.gif
+    When the <id> mutation is applied with its parameters
       """
-      {"kind": "no-mutation", "params": {}}
+      {"kind": "<id>", "params": <params>}
       """
     Then the oracle and the subject agree on the semantic projection
+    Examples:
+      | id | params |
+      | set-frame-pixels | {"index":0,"indices":[3,2,1,0,3,2,1,0,3,2,1,0]} |
 
   @id-inverse
   @level-exhaustive
@@ -94,29 +106,31 @@ Feature: Apply every typed GIF 89a mutation to a real-world animation
       """
     Then the original semantic projection is recovered
     Examples:
-      | id                          | params                                                                   |
-      | set-snapshot                | {"width":2,"height":2,"globalPalette":[[4,5,6],[4,5,6]],"backgroundColorIndex":0,"aspectRatio":0,"loopCount":0,"frames":[{"left":0,"top":0,"width":2,"height":2,"interlace":false,"palette":[[9,9,9],[9,9,9]],"indices":[0,1,1,0],"delayCs":10,"disposal":"doNotDispose","transparentIndex":null,"userInput":false}],"comments":["c0"],"appExtensions":[]} |
-      | set-screen-size             | {"width":801,"height":799}                                              |
-      | set-global-color-table      | {"colors":[[10,20,30],[40,50,60]]}                                      |
-      | set-background-color-index  | {"index":3}                                                              |
-      | set-pixel-aspect-ratio      | {"ratio":12}                                                             |
-      | insert-frame                | {"index":10,"sourceFrame":0,"delayCs":33}                                |
-      | remove-frame                | {"index":10}                                                             |
-      | move-frame                  | {"from":5,"to":20}                                                       |
-      | set-frame-geometry          | {"index":0,"left":5,"top":5,"width":100,"height":100}                   |
-      | set-frame-pixels            | {"index":0,"fillIndex":7}                                                |
-      | set-frame-interlace         | {"index":1,"interlace":true}                                             |
+      | id | params |
+      | set-snapshot | {"snapshot":{"schema":"stdio.gif.89a","width":2,"height":2,"gct":{"sorted":false,"colors":[{"r":4,"g":5,"b":6},{"r":4,"g":5,"b":6}]},"backgroundColorIndex":0,"pixelAspectRatio":0,"loopCount":0,"frames":[{"left":0,"top":0,"width":2,"height":2,"interlace":false,"lct":{"sorted":false,"colors":[{"r":9,"g":9,"b":9},{"r":9,"g":9,"b":9}]},"indices":[0,1,1,0],"delayCs":10,"disposal":"doNotDispose","transparentIndex":null,"userInput":false,"plainText":null}],"comments":["c0"],"appExtensions":[]}} |
+      | set-screen-size | {"width":801,"height":799} |
+      | set-global-color-table | {"gct":{"sorted":false,"colors":[{"r":10,"g":20,"b":30},{"r":40,"g":50,"b":60}]}} |
+      | set-background-color-index | {"index":3} |
+      | set-pixel-aspect-ratio | {"ratio":12} |
+      | insert-frame | {"index":10,"frame":{"left":398,"top":398,"width":4,"height":4,"interlace":false,"lct":{"sorted":false,"colors":[{"r":85,"g":95,"b":10},{"r":79,"g":94,"b":10},{"r":72,"g":93,"b":14},{"r":114,"g":99,"b":15},{"r":115,"g":108,"b":16},{"r":123,"g":98,"b":110},{"r":124,"g":124,"b":22},{"r":131,"g":214,"b":145}]},"indices":[6,4,4,0,4,3,0,1,0,0,1,2,5,5,7,7],"delayCs":33,"disposal":"unspecified","transparentIndex":null,"userInput":false,"plainText":null}} |
+      | remove-frame | {"index":10} |
+      | move-frame | {"from":5,"to":20} |
+      | set-frame-geometry | {"index":0,"left":5,"top":5,"width":100,"height":100} |
+      | set-frame-interlace | {"index":1,"interlace":true} |
 
-  @id-no-mutation-baseline-inverse
+  @id-inverse-raster
   @level-exhaustive
   @mode-property
-  Scenario: Undoing no-mutation restores the real animation
-    Given the real input document asset://💃️dancing/🧪️dancing/🖼️.gif
-    When the no-mutation mutation is applied and its computed inverse is applied back
+  Scenario Outline: Undoing <id> restores a small animation
+    Given the small input animation shared://🧱️set-frame-pixels-applied/⬅️before.gif
+    When the <id> mutation is applied and its computed inverse is applied back
       """
-      {"kind": "no-mutation", "params": {}}
+      {"kind": "<id>", "params": <params>}
       """
     Then the original semantic projection is recovered
+    Examples:
+      | id | params |
+      | set-frame-pixels | {"index":0,"indices":[3,2,1,0,3,2,1,0,3,2,1,0]} |
 
   @id-identity-round-trip
   @level-long

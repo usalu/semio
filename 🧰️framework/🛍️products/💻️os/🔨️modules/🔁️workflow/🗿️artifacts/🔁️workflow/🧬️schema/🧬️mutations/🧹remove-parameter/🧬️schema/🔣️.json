@@ -4,12 +4,29 @@
   "title": "RemoveParameter",
   "type": "object",
   "properties": {
-    "parameter_id": {
-      "type": "string"
+    "operation": {
+      "const": "removeParameter"
+    },
+    "parameterId": {
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Parameter",
+          "de": "Parameter"
+        },
+        "ref": {
+          "kind": "parameter"
+        },
+        "group": "target",
+        "order": 10
+      }
     }
   },
   "required": [
-    "parameter_id"
+    "operation",
+    "parameterId"
   ],
   "additionalProperties": false
 }

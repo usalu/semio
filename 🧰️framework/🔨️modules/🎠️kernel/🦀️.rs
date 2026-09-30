@@ -1787,13 +1787,213 @@ fn union_body_keys(first: Vec<String>, second: Vec<String>) -> Vec<String> {
 #[path = "🧪️tests/🐢️ui-dirty-scope/🦀️.rs"]
 mod ui_dirty_scope_tests;
 
-/// 🧾️ One host-projectable row in the session command timeline. The payload is deliberately
-/// presentation-neutral: the host owns windowing and retains entries beyond any visible range.
+//#region 🔖️HistoryWire
+/// 🚦️ `Severity` crosses the serde half of the history wire as its bare camelCase name, like its value form.
+mod history_severity_serde {
+    use super::Severity;
+    use serde::{Deserialize, Deserializer, Serializer};
+
+    fn name(severity: Severity) -> &'static str {
+        match severity {
+            Severity::Info => "info",
+            Severity::Warning => "warning",
+            Severity::Error => "error",
+            Severity::Fatal => "fatal",
+        }
+    }
+
+    fn parse<E: serde::de::Error>(text: &str) -> Result<Severity, E> {
+        match text {
+            "info" => Ok(Severity::Info),
+            "warning" => Ok(Severity::Warning),
+            "error" => Ok(Severity::Error),
+            "fatal" => Ok(Severity::Fatal),
+            other => Err(E::custom(format!("unknown severity {other:?}"))),
+        }
+    }
+
+    pub fn serialize<S: Serializer>(severity: &Severity, serializer: S) -> Result<S::Ok, S::Error> {
+        serializer.serialize_str(name(*severity))
+    }
+
+    pub fn deserialize<'de, D: Deserializer<'de>>(deserializer: D) -> Result<Severity, D::Error> {
+        parse(&String::deserialize(deserializer)?)
+    }
+
+    /// 🫥️ The optional twin: absent or `null` is `None`.
+    pub mod option {
+        use super::Severity;
+        use serde::{Deserialize, Deserializer, Serializer};
+
+        pub fn serialize<S: Serializer>(severity: &Option<Severity>, serializer: S) -> Result<S::Ok, S::Error> {
+            match severity {
+                Some(severity) => serializer.serialize_some(super::name(*severity)),
+                None => serializer.serialize_none(),
+            }
+        }
+
+        pub fn deserialize<'de, D: Deserializer<'de>>(deserializer: D) -> Result<Option<Severity>, D::Error> {
+            Option::<String>::deserialize(deserializer)?.map(|text| super::parse(&text)).transpose()
+        }
+    }
+}
+
+/// 🛠️ The committed tool transaction a history row's edit carries (`MutationMeta.transaction`): its id and the
+/// `<appId>#<toolId>` tool that authored it.
+#[derive(Clone, Debug, Default, PartialEq, Eq, Serialize, Deserialize, ToValue, FromValue)]
+#[serde(rename_all = "camelCase")]
+#[value(rename_all = "camelCase")]
+pub struct HistoryTransaction {
+    pub id: String,
+    pub tool: String,
+}
+
+/// 📨️ One outcome message of a history mutation row, the wire mirror of `MutationMessage`: `code` is one of the frozen
+/// `mutation.*` codes a host localizes, `message` is English prose for logs.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValue, FromValue)]
+#[serde(rename_all = "camelCase")]
+#[value(rename_all = "camelCase")]
+pub struct HistoryMutationMessage {
+    #[serde(with = "history_severity_serde")]
+    pub level: Severity,
+    pub code: String,
+    pub message: String,
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    #[value(default, skip_serializing_if = "Vec::is_empty")]
+    pub target: Vec<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[value(default, skip_serializing_if = "Option::is_none")]
+    pub op_index: Option<u32>,
+}
+
+/// ✏️ One applied mutation of a history row: its replica-independent id, applied position and index inside its edit,
+/// its localized kind label, its outcome (the time-travel replay's while a session holds a report, else the durable
+/// one) and its editing state. `editable` = the op has an input schema and emits no foreign steps; `pending` = it is
+/// downstream of the mutation being edited and not applied in the preview; `edited` = the session holds a draft for it.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValue, FromValue)]
+#[serde(rename_all = "camelCase")]
+#[value(rename_all = "camelCase")]
+pub struct HistoryMutationEntry {
+    pub mutation_id: String,
+    pub position: u32,
+    pub op_index: u32,
+    pub label: dsl::LocalizedLabel,
+    #[serde(default, skip_serializing_if = "Option::is_none", with = "history_severity_serde::option")]
+    #[value(default, skip_serializing_if = "Option::is_none")]
+    pub worst: Option<Severity>,
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    #[value(default, skip_serializing_if = "Vec::is_empty")]
+    pub messages: Vec<HistoryMutationMessage>,
+    #[serde(default)]
+    #[value(default)]
+    pub superseded: bool,
+    #[serde(default)]
+    #[value(default)]
+    pub withdrawn: bool,
+    #[serde(default)]
+    #[value(default)]
+    pub editable: bool,
+    #[serde(default)]
+    #[value(default)]
+    pub pending: bool,
+    #[serde(default)]
+    #[value(default)]
+    pub edited: bool,
+}
+
+/// 🚦️ The stage of a live history-edit session (an inactive session is an absent `HistoryPatch.timeTravel`).
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Serialize, Deserialize, ToValue, FromValue)]
+#[serde(rename_all = "camelCase")]
+#[value(rename_all = "camelCase")]
+pub enum HistoryTimeTravelStage {
+    #[default]
+    Editing,
+    Replaying,
+    Reviewing,
+    Choosing,
+    Finalizing,
+}
+
+/// 🧭️ What a reviewing session shows: nothing accepted (the committed head), drafts awaiting a replay (after a cancelled or
+/// faulted one), a report that blocks finalizing, or a report ready to finalize.
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize, ToValue, FromValue)]
+#[serde(rename_all = "camelCase")]
+#[value(rename_all = "camelCase")]
+pub enum HistoryTimeTravelReview {
+    NoChanges,
+    NeedsReplay,
+    Blocked,
+    Ready,
+}
+
+/// ⏪️ The live history-edit session of one instance, as every host renders its band: identity and generation (every
+/// `historyEdit*` verb may echo `generation`; a stale one is `timeTravel.stale`), stage, the edited mutation and its
+/// label, replay progress, the report's worst severity, whether that report blocks finalizing, the last fault code, how
+/// many drafts are accepted, what a review shows and whether a replay can be run again.
+#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize, ToValue, FromValue)]
+#[serde(rename_all = "camelCase")]
+#[value(rename_all = "camelCase")]
+pub struct HistoryTimeTravel {
+    pub session_id: String,
+    pub generation: u32,
+    pub stage: HistoryTimeTravelStage,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[value(default, skip_serializing_if = "Option::is_none")]
+    pub target: Option<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[value(default, skip_serializing_if = "Option::is_none")]
+    pub target_label: Option<dsl::LocalizedLabel>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[value(default, skip_serializing_if = "Option::is_none")]
+    pub done: Option<u32>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[value(default, skip_serializing_if = "Option::is_none")]
+    pub total: Option<u32>,
+    #[serde(default, skip_serializing_if = "Option::is_none", with = "history_severity_serde::option")]
+    #[value(default, skip_serializing_if = "Option::is_none")]
+    pub worst: Option<Severity>,
+    #[serde(default)]
+    #[value(default)]
+    pub blocking: bool,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[value(default, skip_serializing_if = "Option::is_none")]
+    pub fault: Option<String>,
+    #[serde(default)]
+    #[value(default)]
+    pub accepted_count: u32,
+    /// 🧭️ While reviewing: what the review shows (absent in every other stage).
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[value(default, skip_serializing_if = "Option::is_none")]
+    pub review: Option<HistoryTimeTravelReview>,
+    /// 🔁️ Whether `historyEditRerun` would start a replay now (a cancelled or faulted replay left drafts to replay).
+    #[serde(default)]
+    #[value(default)]
+    pub rerunnable: bool,
+}
+
+/// 🧾️ One host-projectable row in the session command timeline, one per committed tool transaction (else per edit;
+/// rows without an edit are session commands such as undo or a noted shell command). Hosts key rows by `edit_id`,
+/// falling back to `seq` for a row without an edit. The payload is deliberately presentation-neutral: the host owns
+/// windowing and retains entries beyond any visible range.
 #[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize, ToValue, FromValue)]
 #[serde(rename_all = "camelCase")]
 #[value(rename_all = "camelCase")]
 pub struct HistoryEntry {
     pub seq: u64,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[value(default, skip_serializing_if = "Option::is_none")]
+    pub edit_id: Option<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[value(default, skip_serializing_if = "Option::is_none")]
+    pub transaction: Option<HistoryTransaction>,
+    /// ✏️ The `Supersede` history transition this row is — a history edit, or the undo or redo of one.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[value(default, skip_serializing_if = "Option::is_none")]
+    pub transition_id: Option<String>,
+    /// 🖋️ The actor who authored this row's edit or history transition.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[value(default, skip_serializing_if = "Option::is_none")]
+    pub author: Option<String>,
     pub action_id: String,
     /// 🏷️ Every shell locale's text for this row, resolved by the renderer against the
     /// active locale — never a pre-resolved string, so switching the shell locale re-renders the
@@ -1819,11 +2019,31 @@ pub struct HistoryEntry {
     #[serde(default = "history_entry_count")]
     #[value(default = "history_entry_count")]
     pub count: u32,
+    /// 🚦️ The worst severity over `mutations`.
+    #[serde(default, skip_serializing_if = "Option::is_none", with = "history_severity_serde::option")]
+    #[value(default, skip_serializing_if = "Option::is_none")]
+    pub worst: Option<Severity>,
+    /// ✏️ The edit's applied mutations in op order, empty for a row without an applied edit.
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    #[value(default, skip_serializing_if = "Vec::is_empty")]
+    pub mutations: Vec<HistoryMutationEntry>,
 }
 
 // 🚫️async: E4 fn-pointer slot
 fn history_entry_count() -> u32 {
     1
+}
+
+impl HistoryEntry {
+    /// 🔑️ The key a host folds this row under: `edit:<editId>`, else `transition:<transitionId>`, else `seq:<seq>`.
+    /// TypeScript twin `historyEntryKey`.
+    pub fn key(&self) -> String {
+        match (&self.edit_id, &self.transition_id) {
+            (Some(edit_id), _) => format!("edit:{edit_id}"),
+            (None, Some(transition_id)) => format!("transition:{transition_id}"),
+            (None, None) => format!("seq:{}", self.seq),
+        }
+    }
 }
 
 /// 🧾️ Ordered history delta returned in the same response as an accepted interaction.
@@ -1852,7 +2072,16 @@ pub struct HistoryPatch {
     #[serde(default)]
     #[value(default)]
     pub command_filter: String,
+    /// ⏪️ The live history-edit session; absent while none is open. Every patch carries the current status in full.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[value(default, skip_serializing_if = "Option::is_none")]
+    pub time_travel: Option<HistoryTimeTravel>,
 }
+
+#[cfg(test)]
+#[path = "🧪️tests/🧪️history-patch/🦀️.rs"]
+mod history_patch_tests;
+//#endregion 🔖️HistoryWire
 
 #[derive(Clone, Debug, PartialEq, ToValue, FromValue)]
 #[value(rename_all = "camelCase")]
@@ -1899,7 +2128,7 @@ pub struct CommandContext {
 //#endregion 🔖️Invocation
 
 //#region 🔖️Presence
-pub use semio_framework_os_kernel::{decode_presence_peer, encode_presence_peer, PresencePeer, PresenceToolRun, PresenceToolRunState, PresenceUi, PresenceViewKind, PresenceWindowView};
+pub use semio_framework_os_kernel::{decode_presence_history_edit, decode_presence_peer, encode_presence_history_edit, encode_presence_peer, PresenceHistoryEdit, PresenceHistoryEditStage, PresencePeer, PresenceToolRun, PresenceToolRunState, PresenceUi, PresenceViewKind, PresenceWindowView};
 //#endregion 🔖️Presence
 
 //#region 🔖️Window

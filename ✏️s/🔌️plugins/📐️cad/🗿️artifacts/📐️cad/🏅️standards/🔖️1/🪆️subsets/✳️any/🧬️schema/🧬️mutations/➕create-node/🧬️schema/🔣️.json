@@ -5,9 +5,13 @@
   "type": "object",
   "additionalProperties": false,
   "required": [
+    "mutation",
     "node"
   ],
   "properties": {
+    "mutation": {
+      "const": "createNode"
+    },
     "node": {
       "title": "CadNode",
       "type": "object",
@@ -19,14 +23,61 @@
       ],
       "properties": {
         "id": {
-          "type": "string"
+          "type": "string",
+          "x-semio-ui": {
+            "widget": "text",
+            "role": "value",
+            "label": {
+              "en": "ID",
+              "de": "ID"
+            },
+            "description": {
+              "en": "Unique node id in this document.",
+              "de": "Eindeutige Knoten-ID in diesem Dokument."
+            },
+            "group": "identity",
+            "order": 10
+          }
         },
         "label": {
-          "type": "string"
+          "type": "string",
+          "x-semio-ui": {
+            "widget": "text",
+            "role": "value",
+            "label": {
+              "en": "Label",
+              "de": "Bezeichnung"
+            },
+            "group": "identity",
+            "order": 20
+          }
         },
         "kind": {
-          "type": "string"
+          "type": "string",
+          "x-semio-ui": {
+            "widget": "text",
+            "role": "value",
+            "label": {
+              "en": "Kind",
+              "de": "Art"
+            },
+            "group": "kind",
+            "order": 30
+          }
         }
+      },
+      "x-semio-ui": {
+        "role": "value",
+        "label": {
+          "en": "Node",
+          "de": "Knoten"
+        },
+        "description": {
+          "en": "The complete node record to add.",
+          "de": "Der vollständige hinzuzufügende Knoten."
+        },
+        "group": "record",
+        "order": 10
       }
     }
   }

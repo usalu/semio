@@ -12,14 +12,51 @@
   "properties": {
     "x": {
       "type": "integer",
-      "minimum": 0
+      "minimum": 0,
+      "x-semio-ui": {
+        "widget": "stepper",
+        "role": "value",
+        "label": {
+          "en": "Column",
+          "de": "Spalte"
+        },
+        "step": 1,
+        "precision": 0,
+        "group": "cell",
+        "order": 10
+      }
     },
     "y": {
       "type": "integer",
-      "minimum": 0
+      "minimum": 0,
+      "x-semio-ui": {
+        "widget": "stepper",
+        "role": "value",
+        "label": {
+          "en": "Row",
+          "de": "Zeile"
+        },
+        "step": 1,
+        "precision": 0,
+        "group": "cell",
+        "order": 20
+      }
     },
     "tileId": {
-      "type": "string"
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Tile",
+          "de": "Kachel"
+        },
+        "ref": {
+          "kind": "tile"
+        },
+        "group": "target",
+        "order": 30
+      }
     }
   }
 }

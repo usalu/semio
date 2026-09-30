@@ -15,6 +15,7 @@ import { loadingBorderStateClass, waitingBorderStateClass } from "../../🔨️m
 import { type ElementProps } from "../../🔨️modules/🆔️element-identity/🟦️.ts";
 import { useLabel, useControlAccessibleLabel, Label } from "../🏷️Label/🟦️.tsx";
 import { useInteractionCommands } from "../../🎯️targets/⚛️react/🟦️";
+import { sliderKeyValue, sliderPointerValue, type SliderKey } from "../../🧬️contract/🧩️component/🟦️.ts";
 // #endregion 🔌️Adapters
 
 // #region 🏩️Slider
@@ -26,6 +27,9 @@ const sliderRangeClassName = cn("bg-element absolute transition-[background-colo
 
 /** 🎚️ Slider ready extent presentation. */
 const sliderReadyClassName = cn("bg-[var(--accent-secondary)] pointer-events-none absolute data-[orientation=horizontal]:h-full data-[orientation=vertical]:w-full");
+
+/** 🧲️ Slider detent tick presentation — one per snap, never interactive, never announced. */
+const sliderTickClassName = cn("bg-element pointer-events-none absolute w-px data-[orientation=horizontal]:top-1/2 data-[orientation=horizontal]:h-small data-[orientation=horizontal]:-translate-x-1/2 data-[orientation=horizontal]:-translate-y-1/2 data-[orientation=vertical]:left-1/2 data-[orientation=vertical]:h-px data-[orientation=vertical]:w-small data-[orientation=vertical]:-translate-x-1/2 data-[orientation=vertical]:translate-y-1/2 opacity-60");
 
 /** 🎚️ Slider thumb presentation (extent token applied per instance). */
 const sliderThumbBaseClassName = cn(
@@ -70,7 +74,8 @@ export interface SliderProps extends Omit<React.HTMLAttributes<HTMLDivElement>, 
   onPointerUp?: () => void;
   onPointerCancel?: () => void;
   interactionId?: string;
-  snapValues?: number[];
+  /** 📍️ Detents (`SliderProps.snaps`): a pointer value within the shared radius lands on one, a page key jumps to the next (the shared keyboard law), and each paints a tick. */
+  snapValues?: readonly number[];
   thumbClassName?: string;
 }
 
@@ -111,17 +116,20 @@ interface SliderGestureStart {
   thumbIds: string[];
 }
 
-/** 🎚️ Whether two slider value tuples match within a step-aware epsilon. */
-export function sliderValuesMatch(lhs: readonly number[], rhs: readonly number[], step?: number): boolean {
+/** 🟰️ Whether two slider value tuples match within a step-aware epsilon; a detent is its own value, so it matches only itself even within a quarter step of a ladder value. */
+export function sliderValuesMatch(lhs: readonly number[], rhs: readonly number[], step?: number, snaps: readonly number[] = []): boolean {
   if (lhs.length !== rhs.length) return false;
   const epsilon = step != null && step > 0 ? step * 0.25 : 1e-9;
-  return lhs.every((value, index) => Math.abs(value - (rhs[index] ?? value)) <= epsilon);
+  return lhs.every((value, index) => {
+    const other = rhs[index] ?? value;
+    return Math.abs(value - other) <= (snaps.includes(value) || snaps.includes(other) ? 1e-9 : epsilon);
+  });
 }
 
-/** 🎚️ Clears a pending draft once the controlled `value` prop catches up. */
-export function resolveSliderDraftClear(pending: number[] | null, external: readonly number[], step?: number): number[] | null {
+/** 🧹️ Clears a pending draft once the controlled `value` prop catches up. */
+export function resolveSliderDraftClear(pending: number[] | null, external: readonly number[], step?: number, snaps: readonly number[] = []): number[] | null {
   if (pending === null) return null;
-  return sliderValuesMatch(pending, external, step) ? null : pending;
+  return sliderValuesMatch(pending, external, step, snaps) ? null : pending;
 }
 
 /** 🪣️ Clamps every value to `ready` (a preloaded/planned extent, e.g. a background fill plan's
@@ -131,6 +139,15 @@ export function clampSliderValuesToReady(values: readonly number[], ready: numbe
   if (ready == null) return values.slice();
   const ceiling = Math.max(min, ready);
   return values.map((value) => Math.min(value, ceiling));
+}
+
+/** 🗝️ Maps a physical key onto the value axis: the horizontal arrows follow `dir`, and `inverted` swaps arrows and pages. */
+export function sliderKeyOf(key: string, dir: SliderDirection, inverted: boolean): SliderKey | null {
+  const forward = key === "ArrowUp" || key === (dir === "rtl" ? "ArrowLeft" : "ArrowRight");
+  const backward = key === "ArrowDown" || key === (dir === "rtl" ? "ArrowRight" : "ArrowLeft");
+  if (forward || backward) return forward !== inverted ? "increment" : "decrement";
+  if (key === "PageUp" || key === "PageDown") return (key === "PageUp") !== inverted ? "pageUp" : "pageDown";
+  return key === "Home" ? "home" : key === "End" ? "end" : null;
 }
 
 /** 🎚️ Renders an owned pointer- and keyboard-operable slider tuple. */
@@ -185,19 +202,22 @@ const Slider = React.forwardRef<HTMLDivElement, SliderProps>(function Slider(
   const setActiveInteraction = commands?.setActiveInteraction;
   const doubleClickToEditLabel = useLabel("ui.common.doubleClickToEdit");
   const range = reactHostPort.useMemo(() => normalizeSliderRange(min, max, step), [max, min, step]);
+  const snaps = reactHostPort.useMemo(() => snapValues ?? [], [snapValues]);
+  const settle = reactHostPort.useCallback((value: number): number => (snaps.includes(value) ? value : normalizeSliderValue(value, range)), [range, snaps]);
+  const settleAll = reactHostPort.useCallback((values: readonly number[]): SliderValue => values.map(settle).sort((lhs, rhs) => lhs - rhs), [settle]);
   const controlled = Array.isArray(value);
-  const [uncontrolledValues, setUncontrolledValues] = reactHostPort.useState<SliderValue>(() => normalizeSliderValues(Array.isArray(defaultValue) ? defaultValue : [range.min, range.max], range));
-  const externalValues = reactHostPort.useMemo(() => normalizeSliderValues(controlled ? value : uncontrolledValues, range), [controlled, range, uncontrolledValues, value]);
+  const [uncontrolledValues, setUncontrolledValues] = reactHostPort.useState<SliderValue>(() => settleAll(Array.isArray(defaultValue) ? defaultValue : [range.min, range.max]));
+  const externalValues = reactHostPort.useMemo(() => settleAll(controlled ? value : uncontrolledValues), [controlled, settleAll, uncontrolledValues, value]);
   const [pendingDraftValues, setPendingDraftValues] = reactHostPort.useState<number[] | null>(null);
-  const draftValues = controlled ? resolveSliderDraftClear(pendingDraftValues, externalValues, range.step) : null;
+  const draftValues = controlled ? resolveSliderDraftClear(pendingDraftValues, externalValues, range.step, snaps) : null;
   reactHostPort.useEffect(() => {
-    if (controlled) setPendingDraftValues((pending) => resolveSliderDraftClear(pending, externalValues, range.step));
+    if (controlled) setPendingDraftValues((pending) => resolveSliderDraftClear(pending, externalValues, range.step, snaps));
     else
       setUncontrolledValues((current) => {
-        const normalized = normalizeSliderValues(current, range);
-        return sliderValuesMatch(current, normalized, range.step) ? current : normalized;
+        const normalized = settleAll(current);
+        return sliderValuesMatch(current, normalized, range.step, snaps) ? current : normalized;
       });
-  }, [controlled, externalValues, range]);
+  }, [controlled, externalValues, range, settleAll, snaps]);
   const _values = draftValues ?? externalValues;
   const valuesRef = reactHostPort.useRef(_values);
   valuesRef.current = _values;
@@ -213,35 +233,17 @@ const Slider = React.forwardRef<HTMLDivElement, SliderProps>(function Slider(
   const readyExtent = ready == null || span <= 0 ? null : Math.min(range.max, Math.max(range.min, ready));
   const readyWidthPct = readyExtent == null || readyExtent <= displayValue || span <= 0 ? 0 : ((readyExtent - displayValue) / span) * 100;
 
-  const findNearestSnapValue = reactHostPort.useCallback(
-    (val: number): number => {
-      if (!snapValues || snapValues.length === 0) return val;
-      let nearest = snapValues[0];
-      let minDistance = Math.abs(val - nearest);
-      for (const snapValue of snapValues) {
-        const distance = Math.abs(val - snapValue);
-        if (distance < minDistance) {
-          minDistance = distance;
-          nearest = snapValue;
-        }
-      }
-      return nearest;
-    },
-    [snapValues],
-  );
-
   const publishValues = reactHostPort.useCallback(
     (rawValues: SliderValue, rawThumbIds: readonly string[] = thumbIdsRef.current): SliderValue => {
       const records = rawValues
-        .map((rawValue, index) => ({ id: rawThumbIds[index] ?? `${thumbIdBase}-thumb-${nextThumbIdRef.current++}`, value: normalizeSliderValue(rawValue, range) }))
-        .map((record) => ({ ...record, value: snapValues?.length ? findNearestSnapValue(record.value) : record.value }))
+        .map((rawValue, index) => ({ id: rawThumbIds[index] ?? `${thumbIdBase}-thumb-${nextThumbIdRef.current++}`, value: settle(rawValue) }))
         .map((record) => ({ ...record, value: clampToReady ? (clampSliderValuesToReady([record.value], ready, range.min)[0] ?? range.min) : record.value }))
-        .map((record) => ({ ...record, value: normalizeSliderValue(record.value, range) }))
+        .map((record) => ({ ...record, value: settle(record.value) }))
         .sort((lhs, rhs) => lhs.value - rhs.value);
       const nextValues = records.map((record) => record.value);
       const minimumGap = Math.max(0, Number.isFinite(minStepsBetweenThumbs) ? minStepsBetweenThumbs : 0) * range.step;
       if (nextValues.some((next, index) => index > 0 && next - (nextValues[index - 1] ?? next) < minimumGap)) return valuesRef.current;
-      const changed = !sliderValuesMatch(nextValues, valuesRef.current, range.step);
+      const changed = !sliderValuesMatch(nextValues, valuesRef.current, range.step, snaps);
       if (!changed) return valuesRef.current;
       valuesRef.current = nextValues;
       thumbIdsRef.current = records.map((record) => record.id);
@@ -251,7 +253,7 @@ const Slider = React.forwardRef<HTMLDivElement, SliderProps>(function Slider(
       onValueChange?.(nextValues.slice());
       return nextValues;
     },
-    [clampToReady, controlled, findNearestSnapValue, minStepsBetweenThumbs, onValueChange, range, ready, snapValues, thumbIdBase],
+    [clampToReady, controlled, minStepsBetweenThumbs, onValueChange, range, ready, settle, snaps, thumbIdBase],
   );
 
   const updateThumb = reactHostPort.useCallback(
@@ -328,9 +330,9 @@ const Slider = React.forwardRef<HTMLDivElement, SliderProps>(function Slider(
       let ratio = orientation === "horizontal" ? (event.clientX - rect.left) / Math.max(1, rect.width) : 1 - (event.clientY - rect.top) / Math.max(1, rect.height);
       if (orientation === "horizontal" && dir === "rtl") ratio = 1 - ratio;
       if (inverted) ratio = 1 - ratio;
-      return range.min + Math.min(1, Math.max(0, ratio)) * span;
+      return sliderPointerValue(range.min + Math.min(1, Math.max(0, ratio)) * span, range.min, range.max, range.step, snaps);
     },
-    [dir, inverted, orientation, range.min, span],
+    [dir, inverted, orientation, range.max, range.min, range.step, snaps, span],
   );
 
   const handlePointerDown = (event: React.PointerEvent<HTMLDivElement>) => {
@@ -381,20 +383,15 @@ const Slider = React.forwardRef<HTMLDivElement, SliderProps>(function Slider(
       cancelGesture();
       return;
     }
-    const positiveHorizontal = dir === "rtl" ? "ArrowLeft" : "ArrowRight";
-    const negativeHorizontal = dir === "rtl" ? "ArrowRight" : "ArrowLeft";
-    let delta = event.key === positiveHorizontal || event.key === "ArrowUp" || event.key === "PageUp" ? 1 : event.key === negativeHorizontal || event.key === "ArrowDown" || event.key === "PageDown" ? -1 : 0;
-    if (inverted) delta *= -1;
-    const handled = delta !== 0 || event.key === "Home" || event.key === "End";
-    if (!handled) return;
+    const key = sliderKeyOf(event.key, dir, inverted);
+    if (!key) return;
     event.preventDefault();
     if (!keyboardActiveRef.current) {
       beginGesture();
       keyboardActiveRef.current = true;
     }
-    const multiplier = event.key === "PageUp" || event.key === "PageDown" || event.shiftKey ? 10 : 1;
     const current = valuesRef.current[thumbIdsRef.current.indexOf(thumbId)] ?? range.min;
-    updateThumb(thumbId, event.key === "Home" ? range.min : event.key === "End" ? range.max : current + delta * range.step * multiplier);
+    updateThumb(thumbId, sliderKeyValue(current, range.min, range.max, range.step, snaps, key, event.shiftKey));
   };
 
   const handleKeyUp = (event: React.KeyboardEvent<HTMLElement>) => {
@@ -468,6 +465,9 @@ const Slider = React.forwardRef<HTMLDivElement, SliderProps>(function Slider(
             />
           ) : null}
         </div>
+        {snaps.map((snap) => (
+          <span key={snap} data-slot="slider-tick" data-snap={snap} data-orientation={orientation} aria-hidden="true" className={sliderTickClassName} style={orientation === "horizontal" ? { left: `${physicalPercent(snap)}%` } : { bottom: `${physicalPercent(snap)}%` }} />
+        ))}
       </div>
       {_values.map((sliderValue, index) => {
         const thumbId = thumbIdsRef.current[index]!;

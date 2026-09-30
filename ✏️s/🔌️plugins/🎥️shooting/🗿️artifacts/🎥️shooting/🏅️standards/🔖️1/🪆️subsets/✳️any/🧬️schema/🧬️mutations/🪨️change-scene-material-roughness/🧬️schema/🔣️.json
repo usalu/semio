@@ -5,11 +5,42 @@
   "type": "object",
   "additionalProperties": false,
   "required": [
+    "mutation",
     "newRoughness"
   ],
   "properties": {
+    "mutation": {
+      "const": "changeSceneMaterialRoughness"
+    },
     "newRoughness": {
-      "type": "number"
+      "type": "number",
+      "minimum": 0,
+      "maximum": 1,
+      "x-semio-ui": {
+        "widget": "slider",
+        "role": "value",
+        "label": {
+          "en": "Roughness",
+          "de": "Rauheit"
+        },
+        "description": {
+          "en": "0 is mirror-smooth, 1 is fully matte.",
+          "de": "0 ist spiegelglatt, 1 ist vollständig matt."
+        },
+        "step": 0.01,
+        "precision": 2,
+        "softMin": 0,
+        "softMax": 1,
+        "snaps": [
+          0,
+          0.25,
+          0.5,
+          0.75,
+          1
+        ],
+        "group": "material",
+        "order": 10
+      }
     }
   }
 }

@@ -13,7 +13,17 @@
         {
           "type": "null"
         }
-      ]
+      ],
+      "x-semio-ui": {
+        "label": {
+          "en": "Chromaticities (cHRM)",
+          "de": "Chromatizität (cHRM)"
+        },
+        "description": {
+          "en": "CIE 1931 x,y of the primaries and white point, times 100000.",
+          "de": "CIE-1931-x,y der Primärfarben und des Weißpunkts, mal 100000."
+        }
+      }
     }
   },
   "$defs": {
@@ -34,42 +44,114 @@
         "whiteX": {
           "type": "integer",
           "minimum": 0,
-          "maximum": 4294967295
+          "maximum": 4294967295,
+          "x-semio-ui": {
+            "widget": "stepper",
+            "label": {
+              "en": "White point x",
+              "de": "Weißpunkt x"
+            },
+            "displayFactor": 1e-05,
+            "precision": 5
+          }
         },
         "whiteY": {
           "type": "integer",
           "minimum": 0,
-          "maximum": 4294967295
+          "maximum": 4294967295,
+          "x-semio-ui": {
+            "widget": "stepper",
+            "label": {
+              "en": "White point y",
+              "de": "Weißpunkt y"
+            },
+            "displayFactor": 1e-05,
+            "precision": 5
+          }
         },
         "redX": {
           "type": "integer",
           "minimum": 0,
-          "maximum": 4294967295
+          "maximum": 4294967295,
+          "x-semio-ui": {
+            "widget": "stepper",
+            "label": {
+              "en": "Red x",
+              "de": "Rot x"
+            },
+            "displayFactor": 1e-05,
+            "precision": 5
+          }
         },
         "redY": {
           "type": "integer",
           "minimum": 0,
-          "maximum": 4294967295
+          "maximum": 4294967295,
+          "x-semio-ui": {
+            "widget": "stepper",
+            "label": {
+              "en": "Red y",
+              "de": "Rot y"
+            },
+            "displayFactor": 1e-05,
+            "precision": 5
+          }
         },
         "greenX": {
           "type": "integer",
           "minimum": 0,
-          "maximum": 4294967295
+          "maximum": 4294967295,
+          "x-semio-ui": {
+            "widget": "stepper",
+            "label": {
+              "en": "Green x",
+              "de": "Grün x"
+            },
+            "displayFactor": 1e-05,
+            "precision": 5
+          }
         },
         "greenY": {
           "type": "integer",
           "minimum": 0,
-          "maximum": 4294967295
+          "maximum": 4294967295,
+          "x-semio-ui": {
+            "widget": "stepper",
+            "label": {
+              "en": "Green y",
+              "de": "Grün y"
+            },
+            "displayFactor": 1e-05,
+            "precision": 5
+          }
         },
         "blueX": {
           "type": "integer",
           "minimum": 0,
-          "maximum": 4294967295
+          "maximum": 4294967295,
+          "x-semio-ui": {
+            "widget": "stepper",
+            "label": {
+              "en": "Blue x",
+              "de": "Blau x"
+            },
+            "displayFactor": 1e-05,
+            "precision": 5
+          }
         },
         "blueY": {
           "type": "integer",
           "minimum": 0,
-          "maximum": 4294967295
+          "maximum": 4294967295,
+          "x-semio-ui": {
+            "widget": "stepper",
+            "label": {
+              "en": "Blue y",
+              "de": "Blau y"
+            },
+            "displayFactor": 1e-05,
+            "precision": 5
+          }
         }
       }
     }

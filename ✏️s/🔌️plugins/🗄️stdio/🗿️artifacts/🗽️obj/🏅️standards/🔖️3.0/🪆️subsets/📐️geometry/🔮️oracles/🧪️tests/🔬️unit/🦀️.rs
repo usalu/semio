@@ -62,7 +62,23 @@ fn the_emitted_snapshot_carries_every_retained_concern() {
     assert_eq!(snapshot.str("mtllib"), "pattern.mtl");
     assert_eq!(snapshot.array("groups").len(), 1);
     assert_eq!(snapshot.array("objects").len(), 1);
-    assert_eq!(snapshot.array("usemtlRanges").len(), 1);
+    assert_eq!(snapshot.str("schema"), "stdio.obj");
+    assert_eq!(snapshot.array("usemtl").len(), 1);
     assert_eq!(snapshot.array("smoothingGroups").len(), 1);
-    assert_eq!(snapshot.array("unknownStatements").len(), 1);
+    assert_eq!(snapshot.array("unknownStatements"), vec![Json::Object(vec![("lineIndex".to_string(), Json::Number(0.0)), ("raw".to_string(), Json::String("# a retained comment".to_string()))])]);
+}
+
+#[test]
+fn set_unknown_statements_and_smoothing_groups_read_the_leaf_wire_root_keys() {
+    let statements = Json::Array(vec![Json::Object(vec![("lineIndex".to_string(), Json::Number(0.0)), ("raw".to_string(), Json::String("# replaced".to_string()))])]);
+    let replaced = oracle_apply_mutation(DOCUMENT.as_bytes(), &spec("set-unknown-statements", Json::Object(vec![("unknownStatements".to_string(), statements)]))).unwrap();
+    assert!(String::from_utf8(replaced).unwrap().contains("# replaced\n"));
+    let ranges = Json::Array(vec![Json::Object(vec![("faceIndexFrom".to_string(), Json::Number(0.0)), ("group".to_string(), Json::Number(4.0))])]);
+    let smoothed = oracle_apply_mutation(DOCUMENT.as_bytes(), &spec("set-smoothing-groups", Json::Object(vec![("smoothingGroups".to_string(), ranges)]))).unwrap();
+    assert_eq!(oracle_snapshot_json(&smoothed).unwrap().array("smoothingGroups")[0].get("group"), Some(&Json::Number(4.0)));
+}
+
+#[test]
+fn round_trip_re_renders_the_parsed_model() {
+    assert_eq!(String::from_utf8(oracle_round_trip(DOCUMENT.as_bytes()).unwrap()).unwrap(), render(&parse(DOCUMENT).unwrap()));
 }

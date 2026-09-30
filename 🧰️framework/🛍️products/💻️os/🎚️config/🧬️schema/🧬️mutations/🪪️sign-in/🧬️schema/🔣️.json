@@ -5,6 +5,7 @@
   "type": "object",
   "additionalProperties": false,
   "required": [
+    "mutation",
     "displayName",
     "email",
     "hubBaseUrl",
@@ -12,21 +13,81 @@
     "userId"
   ],
   "properties": {
+    "mutation": {
+      "const": "signIn"
+    },
     "userId": {
-      "type": "string"
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "text",
+        "role": "value",
+        "label": {
+          "en": "User ID",
+          "de": "Benutzer-ID"
+        },
+        "group": "identity",
+        "order": 10
+      }
     },
     "email": {
-      "type": "string"
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "text",
+        "role": "value",
+        "label": {
+          "en": "Email",
+          "de": "E-Mail"
+        },
+        "group": "identity",
+        "order": 20
+      }
     },
     "displayName": {
-      "type": "string"
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "text",
+        "role": "value",
+        "label": {
+          "en": "Display name",
+          "de": "Anzeigename"
+        },
+        "group": "identity",
+        "order": 30
+      }
     },
     "hubBaseUrl": {
-      "type": "string"
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "text",
+        "role": "value",
+        "label": {
+          "en": "Hub URL",
+          "de": "Hub-URL"
+        },
+        "group": "hub",
+        "order": 40
+      }
     },
     "issuedAtMs": {
       "type": "integer",
-      "minimum": 0
+      "minimum": 0,
+      "x-semio-ui": {
+        "widget": "stepper",
+        "role": "value",
+        "label": {
+          "en": "Issued at",
+          "de": "Ausgestellt am"
+        },
+        "description": {
+          "en": "Unix time in milliseconds.",
+          "de": "Unix-Zeit in Millisekunden."
+        },
+        "unit": "ms",
+        "step": 1,
+        "precision": 0,
+        "group": "metadata",
+        "order": 50
+      }
     }
   }
 }

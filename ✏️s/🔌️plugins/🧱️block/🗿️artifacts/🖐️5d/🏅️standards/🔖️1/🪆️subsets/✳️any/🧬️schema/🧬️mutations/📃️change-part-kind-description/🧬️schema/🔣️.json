@@ -5,11 +5,25 @@
   "type": "object",
   "additionalProperties": false,
   "required": [
+    "mutation",
     "newDescription"
   ],
   "properties": {
+    "mutation": {
+      "const": "changePartKindDescription"
+    },
     "newDescription": {
-      "type": "string"
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "multiline",
+        "role": "value",
+        "label": {
+          "en": "Description",
+          "de": "Beschreibung"
+        },
+        "group": "value",
+        "order": 10
+      }
     }
   }
 }

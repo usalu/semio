@@ -5,15 +5,55 @@
   "type": "object",
   "additionalProperties": false,
   "required": [
+    "mutation",
     "gripId",
     "partId"
   ],
   "properties": {
+    "mutation": {
+      "const": "removePartGrip"
+    },
     "partId": {
-      "type": "string"
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Part",
+          "de": "Teil"
+        },
+        "description": {
+          "en": "The part that owns the grip.",
+          "de": "Das Teil, dem der Griff gehört."
+        },
+        "ref": {
+          "kind": "part",
+          "domain": "vortex",
+          "granularity": "part"
+        },
+        "group": "target",
+        "order": 10
+      }
     },
     "gripId": {
-      "type": "string"
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Grip",
+          "de": "Griff"
+        },
+        "description": {
+          "en": "Id of the grip on its part.",
+          "de": "ID des Griffs an seinem Teil."
+        },
+        "ref": {
+          "kind": "grip"
+        },
+        "group": "target",
+        "order": 20
+      }
     }
   }
 }

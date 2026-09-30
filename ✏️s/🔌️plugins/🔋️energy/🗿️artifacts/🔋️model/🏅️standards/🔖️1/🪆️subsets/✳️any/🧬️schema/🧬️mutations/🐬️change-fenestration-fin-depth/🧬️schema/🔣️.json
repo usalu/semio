@@ -5,15 +5,57 @@
   "type": "object",
   "additionalProperties": false,
   "required": [
+    "mutation",
     "id",
     "newFinDepthM"
   ],
   "properties": {
+    "mutation": {
+      "const": "changeFenestrationFinDepth"
+    },
     "id": {
-      "type": "integer"
+      "type": "integer",
+      "minimum": 0,
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Window",
+          "de": "Fenster"
+        },
+        "description": {
+          "en": "The window this mutation changes, by id.",
+          "de": "Fenster, das diese Mutation ändert, per ID."
+        },
+        "ref": {
+          "kind": "fenestration",
+          "domain": "energyModel",
+          "granularity": "fenestration"
+        },
+        "group": "target",
+        "order": 10
+      }
     },
     "newFinDepthM": {
-      "type": "number"
+      "type": "number",
+      "minimum": 0,
+      "x-semio-ui": {
+        "widget": "stepper",
+        "role": "value",
+        "label": {
+          "en": "Fin depth",
+          "de": "Seitenblendentiefe"
+        },
+        "description": {
+          "en": "Projection of the vertical fins beside the jambs; 0 means none.",
+          "de": "Auskragung der seitlichen Blenden an den Laibungen; 0 bedeutet keine."
+        },
+        "unit": "m",
+        "step": 0.01,
+        "precision": 2,
+        "group": "shading",
+        "order": 20
+      }
     }
   }
 }

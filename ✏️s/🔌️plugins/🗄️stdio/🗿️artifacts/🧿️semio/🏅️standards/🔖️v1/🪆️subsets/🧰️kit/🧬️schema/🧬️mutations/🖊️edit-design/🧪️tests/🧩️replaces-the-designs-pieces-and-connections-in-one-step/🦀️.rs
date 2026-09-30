@@ -11,11 +11,11 @@ use crate::standards::v1::subsets::kit::schema::mutations::SemioKitMutation;
 use crate::standards::v1::subsets::kit::schema::snapshot::SemioKitSnapshot;
 use protocol::{Mutation, MutationDiff};
 
-const BEFORE: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🖊️edit-design/🧩️replaces-the-designs-pieces-and-connections-in-one-step/📸️snapshot/⬅️before/🔣️.json");
-const AFTER: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🖊️edit-design/🧩️replaces-the-designs-pieces-and-connections-in-one-step/📸️snapshot/➡️after/🔣️.json");
-const MUTATION: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🖊️edit-design/🧩️replaces-the-designs-pieces-and-connections-in-one-step/🦠️mutation/🔣️.json");
-const DIFF: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🖊️edit-design/🧩️replaces-the-designs-pieces-and-connections-in-one-step/🔺️diff/🔣️.json");
-const OUTCOME: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🖊️edit-design/🧩️replaces-the-designs-pieces-and-connections-in-one-step/🎯️outcome/🔣️.json");
+const BEFORE: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🖊️edit-design/🧩️replaces-designs-pieces-connections-one-step/📸️snapshot/⬅️before/🔣️.json");
+const AFTER: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🖊️edit-design/🧩️replaces-designs-pieces-connections-one-step/📸️snapshot/➡️after/🔣️.json");
+const MUTATION: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🖊️edit-design/🧩️replaces-designs-pieces-connections-one-step/🦠️mutation/🔣️.json");
+const DIFF: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🖊️edit-design/🧩️replaces-designs-pieces-connections-one-step/🔺️diff/🔣️.json");
+const OUTCOME: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🖊️edit-design/🧩️replaces-designs-pieces-connections-one-step/🎯️outcome/🔣️.json");
 
 fn before() -> SemioKitSnapshot {
     dsl::json::from_json_str(BEFORE).expect("edit-design before snapshot decodes")

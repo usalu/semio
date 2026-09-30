@@ -1,8 +1,9 @@
 {
   "kind": "set-stream-meta",
-  "params": {
+  "mutation": {
+    "mutation": "setStreamMeta",
     "index": 0,
-    "kind": "V",
+    "kind": "video",
     "codec": "vp9",
     "width": 1280,
     "height": 720,

@@ -88,13 +88,18 @@ const KINDS: &[&str] = &[
     "edit-target-region-label",
     "change-target-region-hidden",
     "change-target-region-locked",
+    "drag-selection",
+    "rotate-selection",
+    "scale-selection",
 ];
 
 /// 🧾️ The row ids of the third Examples table, in its own order. They are NOT kinds: the completeness
 /// gate reads a `mutate-<kind>` scenario id as a claim about that kind's vocabulary entry, so a second
 /// row per kind has to carry its own identity. `<kind>-alpha` is a synthetic two-node-board vector kept
 /// from before this corpus was rebuilt on the shipped examples, `<kind>-refused` a contract-D6 refusal,
-/// `<kind>-duplicate`/`<kind>-cleared` the two warning-level branches.
+/// `<kind>-duplicate`/`<kind>-cleared` the two warning-level branches. The three selection transforms
+/// add `<kind>-mixed` (nodes and target regions in one target set), `<kind>-partial` (missing and locked
+/// members skipped as `mutation.partial`) and `<kind>-unchanged` (identity parameters, a `no-op`).
 const SPEC_VECTORS: &[&str] = &[
     "create-node-alpha",
     "create-node-refused",
@@ -153,6 +158,28 @@ const SPEC_VECTORS: &[&str] = &[
     "edit-target-region-label-refused",
     "change-target-region-hidden-refused",
     "change-target-region-locked-refused",
+    "drag-selection-mixed",
+    "drag-selection-partial",
+    "drag-selection-refused",
+    "drag-selection-unchanged",
+    "rotate-selection-mixed",
+    "rotate-selection-partial",
+    "rotate-selection-refused",
+    "rotate-selection-unchanged",
+    "scale-selection-mixed",
+    "scale-selection-partial",
+    "scale-selection-refused",
+    "scale-selection-unchanged",
+    "drag-selection-invariant",
+    "rotate-selection-invariant",
+    "scale-selection-invariant",
+    "scale-selection-invariant-negative",
+    "scale-node-invariant",
+    "replace-node-geometry-invariant",
+    "create-node-invariant",
+    "add-node-handle-invariant",
+    "replace-node-handle-invariant",
+    "replace-kind-catalogs-invariant",
 ];
 
 /// 🔀️ Snapshot field → the diff field(s) allowed to declare it. `Puzzle2dDiff` mirrors `Puzzle2dSnapshot` name for name, so the table is empty and every field is matched by its own name; the sibling `🀄️wfc` and `🧱️block` subsets, whose diffs split, rename or fold their fields, carry real rows here.
@@ -379,8 +406,8 @@ fn spec_vector(ctx: &Context) -> Result<Outcome, String> {
             }
         }
         "noop" => {
-            if status != "applied" || !declares_no_op(&outcome) {
-                return Err(format!("the {kind:?} no-op vector must declare an applied outcome carrying mutation.no-op, got {status:?}"));
+            if status != "no-op" || !declares_no_op(&outcome) {
+                return Err(format!("the {kind:?} no-op vector must declare the no-op outcome class carrying mutation.no-op, got {status:?}"));
             }
             no_op_law(&Vector { kind: kind.clone(), before: before.clone(), mutation, diff: ctx.fixture_json(&spec.str("diff"))?, after: after.clone(), outcome })?;
         }

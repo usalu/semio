@@ -73,8 +73,8 @@ Feature: Apply every typed XML 1.0 valid-subset mutation to a real 40 KB DOCTYPE
   each other's writing.
 
   Three laws are asserted IN ROLE, by the handler that plays the role, and are not deferred to the
-  oracle-vs-subject comparison. Every `mutate-<kind>` row other than `no-mutation` requires the
-  semantic projection to MOVE — a row whose parameters make the mutation a no-op against the real
+  oracle-vs-subject comparison. Every `mutate-<kind>` row requires the semantic projection to
+  MOVE — a row whose parameters make the mutation a no-op against the real
   document tests nothing, and every `Examples` value below is chosen against this document's actual
   content for that reason: `set-text` addresses `[1,3,0]`, the real
   `<string>reuse-marketplaces</string>` text node, and `set-standalone` sets the pseudo-attribute the
@@ -95,29 +95,17 @@ Feature: Apply every typed XML 1.0 valid-subset mutation to a real 40 KB DOCTYPE
       {"kind": "<id>", "params": <params>}
       """
     Then the oracle and the subject agree on the semantic projection
-    And the semantic projection moved, unless the kind is no-mutation
+    And the semantic projection moved
     Examples:
       | id | params |
-      | set-snapshot | {"xml": "<?xml version=\"1.0\" encoding=\"UTF-8\"?><!DOCTYPE plist SYSTEM \"PropertyList-1.0.dtd\"><plist version=\"1.0\"><dict><key>UTTypeIdentifier</key><string>tech.semio.kit</string></dict></plist>"} |
+      | set-snapshot | {"snapshot": {"schema": "stdio.xml", "doc": {"root": {"kind": "element", "name": "plist", "attrs": [{"name": "version", "value": "1.0"}], "children": [{"kind": "element", "name": "dict", "attrs": [], "children": [{"kind": "element", "name": "key", "attrs": [], "children": [{"kind": "text", "text": "UTTypeIdentifier"}]}, {"kind": "element", "name": "string", "attrs": [], "children": [{"kind": "text", "text": "tech.semio.kit"}]}]}]}, "doctype": {"name": "plist", "externalId": {"kind": "system", "systemId": "PropertyList-1.0.dtd"}}, "declaration": {"version": "1.0", "encoding": "UTF-8"}}}} |
       | declare-doctype | {"externalId": {"kind": "system", "systemId": "https://www.apple.com/DTDs/PropertyList-1.0.dtd"}} |
       | rename-document-element | {"name": "propertyList"} |
       | set-external-subset | {"externalId": null} |
       | set-standalone | {"standalone": true} |
       | declare-entity | {"index": 0, "parameter": false, "name": "semioVendor", "value": "tech.semio"} |
-      | set-internal-subset | {"declarations": [{"parameter": false, "name": "semioVendor", "value": "tech.semio"}, {"parameter": true, "name": "semioShared", "value": "tech.semio.shared"}]} |
+      | set-internal-subset | {"declarations": [{"kind": "entity", "parameter": false, "name": "semioVendor", "value": "tech.semio"}, {"kind": "entity", "parameter": true, "name": "semioShared", "value": "tech.semio.shared"}]} |
       | set-text | {"path": [1, 3, 0], "text": "reuse-marketplaces-2026"} |
-
-  @id-no-mutation-baseline-mutate
-  @level-exhaustive
-  @mode-differential
-  Scenario: Apply no-mutation to the real property-list document
-    Given the real input document shared://♻️reuse-marketplaces-plist/🏷️.xml
-    When the no-mutation mutation is applied with its parameters
-      """
-      {"kind": "no-mutation", "params": {}}
-      """
-    Then the oracle and the subject agree on the semantic projection
-    And the semantic projection moved, unless the kind is no-mutation
 
   @id-inverse
   @level-exhaustive
@@ -131,25 +119,14 @@ Feature: Apply every typed XML 1.0 valid-subset mutation to a real 40 KB DOCTYPE
     Then the restored document's semantic projection equals the original document's own
     Examples:
       | id | params |
-      | set-snapshot | {"xml": "<?xml version=\"1.0\" encoding=\"UTF-8\"?><!DOCTYPE plist SYSTEM \"PropertyList-1.0.dtd\"><plist version=\"1.0\"><dict><key>UTTypeIdentifier</key><string>tech.semio.kit</string></dict></plist>"} |
+      | set-snapshot | {"snapshot": {"schema": "stdio.xml", "doc": {"root": {"kind": "element", "name": "plist", "attrs": [{"name": "version", "value": "1.0"}], "children": [{"kind": "element", "name": "dict", "attrs": [], "children": [{"kind": "element", "name": "key", "attrs": [], "children": [{"kind": "text", "text": "UTTypeIdentifier"}]}, {"kind": "element", "name": "string", "attrs": [], "children": [{"kind": "text", "text": "tech.semio.kit"}]}]}]}, "doctype": {"name": "plist", "externalId": {"kind": "system", "systemId": "PropertyList-1.0.dtd"}}, "declaration": {"version": "1.0", "encoding": "UTF-8"}}}} |
       | declare-doctype | {"externalId": {"kind": "system", "systemId": "https://www.apple.com/DTDs/PropertyList-1.0.dtd"}} |
       | rename-document-element | {"name": "propertyList"} |
       | set-external-subset | {"externalId": null} |
       | set-standalone | {"standalone": true} |
       | declare-entity | {"index": 0, "parameter": false, "name": "semioVendor", "value": "tech.semio"} |
-      | set-internal-subset | {"declarations": [{"parameter": false, "name": "semioVendor", "value": "tech.semio"}, {"parameter": true, "name": "semioShared", "value": "tech.semio.shared"}]} |
+      | set-internal-subset | {"declarations": [{"kind": "entity", "parameter": false, "name": "semioVendor", "value": "tech.semio"}, {"kind": "entity", "parameter": true, "name": "semioShared", "value": "tech.semio.shared"}]} |
       | set-text | {"path": [1, 3, 0], "text": "reuse-marketplaces-2026"} |
-
-  @id-no-mutation-baseline-inverse
-  @level-exhaustive
-  @mode-property
-  Scenario: Undoing no-mutation restores the real property-list document
-    Given the real input document shared://♻️reuse-marketplaces-plist/🏷️.xml
-    When the no-mutation mutation is applied and then its own computed inverse is applied to that result
-      """
-      {"kind": "no-mutation", "params": {}}
-      """
-    Then the restored document's semantic projection equals the original document's own
 
   @id-identity-round-trip
   @level-long

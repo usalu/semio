@@ -4,6 +4,18 @@ use super::*;
 use protocol::{Mutation, MutationDiff, OpBinary, OpText};
 use semio_framework_plugin::WindowConfigOwner;
 
+/// 🧾️ The committed wire witnesses a fixture case names by its leaf folder (`"witness"`).
+const WITNESSES: [(&str, &str); 2] = [
+    ("🎥️set-camera", include_str!("../../🧫️fixtures/🧬️mutations/🎥️set-camera/🧾️wire-witness/🦠️mutation/🔣️.json")),
+    ("🔍️set-lod-mode", include_str!("../../🧫️fixtures/🧬️mutations/🔍️set-lod-mode/🧾️wire-witness/🦠️mutation/🔣️.json")),
+];
+
+/// 🧾️ The committed wire witness of one fixture case, decoded as the canonical Rust wire of its mutation.
+fn witness(row: &serde_json::Value) -> (serde_json::Value, RewritingWindowConfigMutation) {
+    let text = WITNESSES.iter().find(|(leaf, _)| row["witness"] == *leaf).map(|(_, text)| *text).expect("case names a committed wire witness");
+    (serde_json::from_str(text).unwrap(), store::os_store::test_support::assert_wire_witness(text))
+}
+
 /// 🧭 Finds a named semantic scene field in the independent serialized UI projection.
 fn scene_field(value: &serde_json::Value, field: &str) -> Option<serde_json::Value> {
     match value {
@@ -44,12 +56,13 @@ async fn rewriting_window_config_retained_publication_renders_and_reloads_two_co
         let right_before = render(&mut app, &right).await?;
         for row in fixture["cases"].as_array().unwrap() {
             let context = view.for_window_instance(row["windowId"].as_str().unwrap()).unwrap();
-            let command = match row["mutation"]["kind"].as_str().unwrap() {
+            let (mutation, _) = witness(row);
+            let command = match mutation["kind"].as_str().unwrap() {
                 "set-camera" => TrinityRewritingCommand::SetViewport {
                     surface_id: None,
-                    viewport: serde_json::from_value(row["mutation"]["camera"].clone()).map_err(|error| format!("independent viewport oracle rejected fixture: {error}"))?,
+                    viewport: serde_json::from_value(mutation["camera"].clone()).map_err(|error| format!("independent viewport oracle rejected fixture: {error}"))?,
                 },
-                "set-lod-mode" => TrinityRewritingCommand::SetLodMode { value: row["mutation"]["value"].as_str().unwrap().into() },
+                "set-lod-mode" => TrinityRewritingCommand::SetLodMode { value: mutation["value"].as_str().unwrap().into() },
                 other => return Err(format!("unexpected neutral command {other}")),
             };
             app.dispatch_typed(command, &ActionMeta { view_state: Some(context), ..artifact_app_laws::meta("window-config") }).await.map_err(|error| format!("{error:?}"))?;
@@ -94,7 +107,7 @@ async fn rewriting_window_config_retained_publication_renders_and_reloads_two_co
         let left_tree = render(&mut app, &left).await?;
         let right_tree = render(&mut app, &right).await?;
         let left_camera = scene_field(&left_tree, "viewport").ok_or_else(|| "left window is missing its rendered viewport".to_string())?;
-        if ["x", "y", "zoom"].iter().any(|key| left_camera[key].as_f64() != fixture["cases"][0]["mutation"]["camera"][key].as_f64()) {
+        if ["x", "y", "zoom"].iter().any(|key| left_camera[key].as_f64() != witness(&fixture["cases"][0]).0["camera"][key].as_f64()) {
             return Err(format!("left window did not render its own camera: {left_tree}"));
         }
         if scene_field(&right_tree, "viewport") != scene_field(&right_before, "viewport") {
@@ -148,7 +161,7 @@ fn rewriting_window_config_mutations_match_the_independent_patch_trace() {
     let mut windows = std::collections::BTreeMap::from([(fixture["leftWindowId"].as_str().unwrap().to_string(), base.clone()), (fixture["rightWindowId"].as_str().unwrap().to_string(), base)]);
     for row in fixture["cases"].as_array().unwrap() {
         let id = row["windowId"].as_str().unwrap();
-        let mutation: RewritingWindowConfigMutation = pack::from_json_str(&row["mutation"].to_string()).unwrap();
+        let (_, mutation) = witness(row);
         let before = windows[id].clone();
         let after = mutation.diff(&before).diff().apply(&before).unwrap();
         let restored = mutation.inverse(&before).into_iter().fold(after.clone(), |state, inverse| inverse.diff(&state).diff().apply(&state).unwrap());

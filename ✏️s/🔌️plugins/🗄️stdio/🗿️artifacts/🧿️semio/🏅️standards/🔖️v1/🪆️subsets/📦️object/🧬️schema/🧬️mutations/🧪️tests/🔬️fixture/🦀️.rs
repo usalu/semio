@@ -8,7 +8,7 @@ mod tests_create_properties_attaches_a_properties_child_to_an_object_that_has_no
 mod tests_delete_brep_detaches_the_brep_child_and_leaves_the_mesh_child_alone;
 #[path = "../../🧨delete-mesh/🧪️tests/🧨️detaches-the-mesh-child-and-leaves-the-brep-child-alone/🦀️.rs"]
 mod tests_delete_mesh_detaches_the_mesh_child_and_leaves_the_brep_child_alone;
-#[path = "../../🚫delete-properties/🧪️tests/🚫️detaches-the-properties-child-and-leaves-the-mesh-child-alone/🦀️.rs"]
+#[path = "../../🚫delete-properties/🧪️tests/🚫️detaches-properties-child-leaves-mesh-child-alone/🦀️.rs"]
 mod tests_delete_properties_detaches_the_properties_child_and_leaves_the_mesh_child_alone;
 #[path = "../../🚚move-object/🧪️tests/🚚️moves-the-object-to-a-new-translation/🦀️.rs"]
 mod tests_move_object_moves_the_object_to_a_new_translation;

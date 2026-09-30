@@ -5,16 +5,38 @@
   "type": "object",
   "additionalProperties": false,
   "required": [
+    "mutation",
     "index",
     "record"
   ],
   "properties": {
+    "mutation": {
+      "const": "insertRecord"
+    },
     "index": {
       "type": "integer",
-      "minimum": 0
+      "minimum": 0,
+      "x-semio-ui": {
+        "widget": "stepper",
+        "label": {
+          "en": "Insert position",
+          "de": "Einfügeposition"
+        },
+        "precision": 0,
+        "group": "target",
+        "order": 10
+      }
     },
     "record": {
-      "$ref": "#/$defs/CsvRecord"
+      "$ref": "#/$defs/CsvRecord",
+      "x-semio-ui": {
+        "label": {
+          "en": "Record",
+          "de": "Datensatz"
+        },
+        "group": "value",
+        "order": 20
+      }
     }
   },
   "$defs": {
@@ -26,6 +48,12 @@
           "type": "array",
           "items": {
             "$ref": "#/$defs/CsvField"
+          },
+          "x-semio-ui": {
+            "label": {
+              "en": "Fields",
+              "de": "Felder"
+            }
           }
         }
       }
@@ -35,10 +63,22 @@
       "additionalProperties": false,
       "properties": {
         "value": {
-          "type": "string"
+          "type": "string",
+          "x-semio-ui": {
+            "label": {
+              "en": "Field value",
+              "de": "Feldwert"
+            }
+          }
         },
         "quoted": {
-          "type": "boolean"
+          "type": "boolean",
+          "x-semio-ui": {
+            "label": {
+              "en": "Quoted",
+              "de": "In Anführungszeichen"
+            }
+          }
         }
       }
     }

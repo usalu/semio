@@ -1,6 +1,6 @@
 {
   "mutation": "replaceBlock",
-  "step_id": "step-basics",
+  "stepId": "step-basics",
   "block": {
     "id": "q-site-name",
     "label": "Site name",

@@ -5,15 +5,57 @@
   "type": "object",
   "additionalProperties": false,
   "required": [
+    "mutation",
     "id",
     "newDefrostScheduleId"
   ],
   "properties": {
+    "mutation": {
+      "const": "changeRefrigerationSystemDefrostSchedule"
+    },
     "id": {
-      "type": "integer"
+      "type": "integer",
+      "minimum": 0,
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Refrigeration system",
+          "de": "Kälteanlage"
+        },
+        "description": {
+          "en": "The refrigeration system this mutation changes, by id.",
+          "de": "Kälteanlage, die diese Mutation ändert, per ID."
+        },
+        "ref": {
+          "kind": "refrigerationSystem"
+        },
+        "group": "target",
+        "order": 10
+      }
     },
     "newDefrostScheduleId": {
-      "type": "integer"
+      "type": "integer",
+      "minimum": 0,
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Defrost schedule",
+          "de": "Abtauzeitplan"
+        },
+        "description": {
+          "en": "When the display cases defrost, by id.",
+          "de": "Wann die Kühlmöbel abtauen, per ID."
+        },
+        "ref": {
+          "kind": "schedule",
+          "domain": "energyModel",
+          "granularity": "schedule"
+        },
+        "group": "schedule",
+        "order": 20
+      }
     }
   }
 }

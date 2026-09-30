@@ -1,8 +1,12 @@
 {
-  "node": 0,
-  "before": "root",
-  "after": "pivot",
-  "touchedPaths": [
-    "document/nodes/0/name"
-  ]
+  "nodes": {
+    "modified": [
+      {
+        "index": 0,
+        "diff": {
+          "name": "pivot"
+        }
+      }
+    ]
+  }
 }

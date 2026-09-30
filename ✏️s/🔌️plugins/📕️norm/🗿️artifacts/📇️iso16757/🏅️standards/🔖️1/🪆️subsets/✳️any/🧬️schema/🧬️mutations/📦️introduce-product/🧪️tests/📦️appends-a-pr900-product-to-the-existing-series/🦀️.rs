@@ -60,8 +60,8 @@ async fn deleting_the_pr900_product_restores_before() {
 
 /// 🔣️ Both committed snapshots and the committed `introduce-product` payload are already canonical: decode → encode
 /// is a fixed point. The committed payload is spelled `{"IntroduceProduct": {"product": {…}, "index": null}}` —
-/// the nested `series_id`/`parameter_domains`/`static_properties` keys stay snake_case, because `Product`
-/// carries no `rename_all`.
+/// the nested `seriesId`/`parameterDomains`/`staticProperties` keys are camelCase, because `Product` carries
+/// `rename_all = "camelCase"` on both its value and its test serde derive.
 #[semio_framework_async_macros::async_test]
 async fn committed_json_is_canonical() {
     for (side, text) in [("before", BEFORE), ("after", AFTER)] {

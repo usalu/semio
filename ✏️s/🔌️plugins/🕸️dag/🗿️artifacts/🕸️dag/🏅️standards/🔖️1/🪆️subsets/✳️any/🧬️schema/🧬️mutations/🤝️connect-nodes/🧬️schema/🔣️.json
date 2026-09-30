@@ -5,6 +5,7 @@
   "type": "object",
   "additionalProperties": false,
   "required": [
+    "mutation",
     "id",
     "source",
     "target",
@@ -12,21 +13,76 @@
     "properties"
   ],
   "properties": {
+    "mutation": {
+      "const": "connectNodes"
+    },
     "id": {
       "type": "string"
     },
     "source": {
-      "type": "string"
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "value",
+        "label": {
+          "en": "Source Node",
+          "de": "Quellknoten"
+        },
+        "description": {
+          "en": "The node the edge starts at.",
+          "de": "Der Knoten, an dem die Kante beginnt."
+        },
+        "ref": {
+          "kind": "node",
+          "domain": "graph",
+          "granularity": "node"
+        }
+      }
     },
     "target": {
-      "type": "string"
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "value",
+        "label": {
+          "en": "Target Node",
+          "de": "Zielknoten"
+        },
+        "description": {
+          "en": "The node the edge ends at.",
+          "de": "Der Knoten, an dem die Kante endet."
+        },
+        "ref": {
+          "kind": "node",
+          "domain": "graph",
+          "granularity": "node"
+        }
+      }
     },
     "routeStyle": {
       "type": "string",
       "enum": [
         "bezier",
         "sharpSz"
-      ]
+      ],
+      "x-semio-ui": {
+        "widget": "segmented",
+        "role": "value",
+        "label": {
+          "en": "Route Style",
+          "de": "Linienführung"
+        },
+        "options": {
+          "bezier": {
+            "en": "Bézier Curve",
+            "de": "Bézierkurve"
+          },
+          "sharpSz": {
+            "en": "Orthogonal S/Z",
+            "de": "Orthogonales S/Z"
+          }
+        }
+      }
     },
     "properties": {
       "type": "object",

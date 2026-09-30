@@ -13,16 +13,81 @@
   ],
   "properties": {
     "mutation": {
-      "const": "moveTargetRegion"
+      "const": "moveTargetRegion",
+      "x-semio-ui": {
+        "widget": "hidden",
+        "role": "discriminator",
+        "label": {
+          "en": "Mutation",
+          "de": "Mutation"
+        }
+      }
     },
     "id": {
-      "type": "string"
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Target region",
+          "de": "Zielregion"
+        },
+        "description": {
+          "en": "The target region this mutation addresses.",
+          "de": "Die Zielregion, die diese Mutation adressiert."
+        },
+        "ref": {
+          "kind": "targetRegion",
+          "domain": "vortex",
+          "granularity": "node"
+        },
+        "group": "target",
+        "order": 10
+      }
     },
     "newX": {
-      "type": "number"
+      "type": "number",
+      "x-semio-ui": {
+        "widget": "stepper",
+        "role": "value",
+        "label": {
+          "en": "X",
+          "de": "X"
+        },
+        "description": {
+          "en": "Absolute final x of the corner.",
+          "de": "Absolute x-Endposition der Ecke."
+        },
+        "step": 1,
+        "precision": 2,
+        "snapSource": {
+          "config": "gridFactor"
+        },
+        "group": "position",
+        "order": 20
+      }
     },
     "newY": {
-      "type": "number"
+      "type": "number",
+      "x-semio-ui": {
+        "widget": "stepper",
+        "role": "value",
+        "label": {
+          "en": "Y",
+          "de": "Y"
+        },
+        "description": {
+          "en": "Absolute final y of the corner.",
+          "de": "Absolute y-Endposition der Ecke."
+        },
+        "step": 1,
+        "precision": 2,
+        "snapSource": {
+          "config": "gridFactor"
+        },
+        "group": "position",
+        "order": 30
+      }
     }
   }
 }

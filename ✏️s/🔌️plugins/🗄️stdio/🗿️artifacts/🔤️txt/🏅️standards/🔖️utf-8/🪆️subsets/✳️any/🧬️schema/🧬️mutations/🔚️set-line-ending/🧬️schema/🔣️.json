@@ -10,7 +10,19 @@
   ],
   "properties": {
     "value": {
-      "$ref": "#/$defs/LineEnding"
+      "$ref": "#/$defs/LineEnding",
+      "x-semio-ui": {
+        "options": {
+          "lf": {
+            "en": "LF (Unix)",
+            "de": "LF (Unix)"
+          },
+          "crLf": {
+            "en": "CRLF (Windows)",
+            "de": "CRLF (Windows)"
+          }
+        }
+      }
     }
   },
   "$defs": {

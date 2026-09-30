@@ -10,10 +10,10 @@
       "$ref": "https://json.schemas.assets.semio-tech.com/s/imperative/imperative/mutation/delete-step/schema.json"
     },
     {
-      "$ref": "https://json.schemas.assets.semio-tech.com/s/imperative/imperative/mutation/edit-step-params/schema.json"
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/imperative/imperative/mutation/reorder-steps/schema.json"
     },
     {
-      "$ref": "https://json.schemas.assets.semio-tech.com/s/imperative/imperative/mutation/reorder-steps/schema.json"
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/imperative/imperative/mutation/edit-step-params/schema.json"
     }
   ]
 }

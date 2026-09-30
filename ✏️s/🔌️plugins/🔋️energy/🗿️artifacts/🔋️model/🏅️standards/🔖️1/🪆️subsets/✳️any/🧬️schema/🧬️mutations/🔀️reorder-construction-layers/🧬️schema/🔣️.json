@@ -5,17 +5,64 @@
   "type": "object",
   "additionalProperties": false,
   "required": [
+    "mutation",
     "id",
     "newLayerMaterialIds"
   ],
   "properties": {
+    "mutation": {
+      "const": "reorderConstructionLayers"
+    },
     "id": {
-      "type": "integer"
+      "type": "integer",
+      "minimum": 0,
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Construction",
+          "de": "Konstruktion"
+        },
+        "description": {
+          "en": "The construction this mutation changes, by id.",
+          "de": "Konstruktion, die diese Mutation ändert, per ID."
+        },
+        "ref": {
+          "kind": "construction",
+          "domain": "energyModel",
+          "granularity": "construction"
+        },
+        "group": "target",
+        "order": 10
+      }
     },
     "newLayerMaterialIds": {
       "type": "array",
       "items": {
-        "type": "integer"
+        "type": "integer",
+        "minimum": 0
+      },
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Layers",
+          "de": "Schichten"
+        },
+        "description": {
+          "en": "The same layer materials in their new order by id, outside layer first.",
+          "de": "Dieselben Schichtmaterialien in neuer Reihenfolge per ID, äußere Schicht zuerst."
+        },
+        "ref": {
+          "kind": [
+            "material",
+            "glazingMaterial",
+            "gasMaterial"
+          ],
+          "domain": "energyModel"
+        },
+        "group": "construction",
+        "order": 20
       }
     }
   }

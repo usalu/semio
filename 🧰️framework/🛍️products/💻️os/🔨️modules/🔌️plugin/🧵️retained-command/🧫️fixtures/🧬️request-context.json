@@ -17,5 +17,22 @@
   "restartBoundary": {
     "workerThreadLoss": "exact-resume-with-retained-context",
     "processRestartWithoutExactTransientSnapshot": "fail-closed"
+  },
+  "ephemeralPublication": {
+    "mounted": {
+      "presenceGeneration": 0,
+      "transientGeneration": 0,
+      "documentEdits": 0
+    },
+    "completed": {
+      "presenceGeneration": 1,
+      "transientGeneration": 1,
+      "documentEdits": 1
+    },
+    "undone": {
+      "presenceGeneration": 1,
+      "transientGeneration": 1,
+      "documentCount": 0
+    }
   }
 }

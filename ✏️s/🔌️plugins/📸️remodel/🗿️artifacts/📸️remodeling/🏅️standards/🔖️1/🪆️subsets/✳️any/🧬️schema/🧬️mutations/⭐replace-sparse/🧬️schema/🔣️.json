@@ -5,9 +5,13 @@
   "type": "object",
   "additionalProperties": false,
   "required": [
+    "mutation",
     "sparse"
   ],
   "properties": {
+    "mutation": {
+      "const": "replaceSparse"
+    },
     "sparse": {
       "anyOf": [
         {
@@ -22,7 +26,21 @@
             "points": {
               "type": "string",
               "format": "base64",
-              "description": "base64 of little-endian f32 lanes (semio_s_plugin_remodel PackedF32)"
+              "description": "base64 of little-endian f32 lanes (semio_s_plugin_remodel PackedF32)",
+              "x-semio-ui": {
+                "widget": "hidden",
+                "role": "value",
+                "label": {
+                  "en": "Points",
+                  "de": "Punkte"
+                },
+                "description": {
+                  "en": "Packed float32 xyz triples (base64).",
+                  "de": "Gepackte float32-xyz-Tripel (Base64)."
+                },
+                "group": "result",
+                "order": 10
+              }
             },
             "colors": {
               "type": [
@@ -30,14 +48,41 @@
                 "null"
               ],
               "format": "base64",
-              "description": "base64 of raw u8 lanes (semio_s_plugin_remodel PackedU8)"
+              "description": "base64 of raw u8 lanes (semio_s_plugin_remodel PackedU8)",
+              "x-semio-ui": {
+                "widget": "hidden",
+                "role": "value",
+                "label": {
+                  "en": "Colours",
+                  "de": "Farben"
+                },
+                "description": {
+                  "en": "Packed 8-bit RGB triples (base64).",
+                  "de": "Gepackte 8-Bit-RGB-Tripel (Base64)."
+                },
+                "group": "result",
+                "order": 20
+              }
             }
           }
         },
         {
           "type": "null"
         }
-      ]
+      ],
+      "x-semio-ui": {
+        "role": "value",
+        "label": {
+          "en": "Sparse Point Cloud",
+          "de": "Dünne Punktwolke"
+        },
+        "description": {
+          "en": "Packed sparse cloud from bundle adjustment; empty clears it.",
+          "de": "Gepackte dünne Punktwolke aus der Bündelblockausgleichung; leer entfernt sie."
+        },
+        "group": "result",
+        "order": 10
+      }
     }
   }
 }

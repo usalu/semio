@@ -1,0 +1,9 @@
+{
+  "mutation": "createSampler",
+  "payload": {
+    "phase": "apply",
+    "value": {
+      "position": 0
+    }
+  }
+}

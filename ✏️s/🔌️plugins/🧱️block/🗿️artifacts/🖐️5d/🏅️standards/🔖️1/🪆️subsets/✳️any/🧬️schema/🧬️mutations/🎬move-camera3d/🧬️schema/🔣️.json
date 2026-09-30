@@ -5,17 +5,31 @@
   "type": "object",
   "additionalProperties": false,
   "required": [
+    "mutation",
     "newPosition",
     "newTarget"
   ],
   "properties": {
+    "mutation": {
+      "const": "moveCamera3d"
+    },
     "newPosition": {
       "type": "array",
       "items": {
         "type": "number"
       },
       "minItems": 3,
-      "maxItems": 3
+      "maxItems": 3,
+      "x-semio-ui": {
+        "widget": "vector",
+        "role": "value",
+        "label": {
+          "en": "Camera position",
+          "de": "Kameraposition"
+        },
+        "group": "camera",
+        "order": 10
+      }
     },
     "newTarget": {
       "type": "array",
@@ -23,7 +37,21 @@
         "type": "number"
       },
       "minItems": 3,
-      "maxItems": 3
+      "maxItems": 3,
+      "x-semio-ui": {
+        "widget": "vector",
+        "role": "value",
+        "label": {
+          "en": "Camera target",
+          "de": "Kameraziel"
+        },
+        "description": {
+          "en": "Point the camera looks at.",
+          "de": "Punkt, auf den die Kamera blickt."
+        },
+        "group": "camera",
+        "order": 20
+      }
     }
   }
 }

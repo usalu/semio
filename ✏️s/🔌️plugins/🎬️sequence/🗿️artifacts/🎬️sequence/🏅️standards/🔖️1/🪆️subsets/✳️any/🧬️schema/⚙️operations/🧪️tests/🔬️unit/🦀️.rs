@@ -68,7 +68,7 @@ async fn snapshot_mutations_capture_move_and_connect() {
 async fn store_applies_and_undoes_step_create() {
     let mut store = new_sequence_store(create_document_envelope(SEQUENCE_DOCUMENT_SCHEMA, "sequence", default_snapshot(), None)).await.expect("valid artifact store fixture");
     store
-        .dispatch(ArtifactCommand::Apply { mutations: vec![create_step(SequenceStep { id: "step-7".into(), kind: "log.print".into(), params: StepParams::new(), x: 0.0, y: 0.0, slot: None, collapsed: false })], description: None })
+        .dispatch(ArtifactCommand::Apply { mutations: vec![create_step(SequenceStep { id: "step-7".into(), kind: "log.print".into(), params: StepParams::new(), x: 0.0, y: 0.0, slot: None, collapsed: false })], description: None, transaction: None })
         .await
         .expect("apply");
     assert_eq!(store.snapshot().expect("snapshot").to_host_snapshot().steps.len(), 3);

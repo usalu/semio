@@ -1,21 +1,42 @@
 {
-  "id": "s.stdio.gltf.mutation.reorder-textures.v1",
-  "version": 1,
-  "touchedPaths": [
-    "document/textures/1",
-    "document/textures/0"
-  ],
-  "payload": {
-    "order": [
-      1,
-      0
+  "materials": {
+    "modified": [
+      {
+        "index": 0,
+        "diff": {
+          "pbrMetallicRoughness": {
+            "baseColorTexture": {
+              "index": 1
+            }
+          }
+        }
+      },
+      {
+        "index": 1,
+        "diff": {
+          "pbrMetallicRoughness": {
+            "baseColorTexture": {
+              "index": 0
+            }
+          }
+        }
+      }
     ]
   },
-  "operation": {
-    "kind": "reorder",
-    "order": [
-      1,
-      0
+  "textures": {
+    "modified": [
+      {
+        "index": 0,
+        "diff": {
+          "name": "normal"
+        }
+      },
+      {
+        "index": 1,
+        "diff": {
+          "name": "albedo"
+        }
+      }
     ]
   }
 }

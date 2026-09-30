@@ -5,18 +5,31 @@
   "type": "object",
   "additionalProperties": false,
   "required": [
+    "mutation",
     "values"
   ],
   "properties": {
+    "mutation": {
+      "const": "setFileName",
+      "description": "Aggregate discriminator spliced in by IfcMutation; absent when the payload stands alone."
+    },
     "values": {
       "type": "array",
       "items": {
         "$ref": "#/$defs/IfcValue"
+      },
+      "x-semio-ui": {
+        "label": {
+          "en": "FILE_NAME values",
+          "de": "FILE_NAME-Werte"
+        },
+        "description": {
+          "en": "Parameters of the STEP header entity FILE_NAME.",
+          "de": "Parameter der STEP-Kopfentität FILE_NAME."
+        },
+        "group": "value",
+        "order": 10
       }
-    },
-    "mutation": {
-      "const": "setFileName",
-      "description": "Aggregate discriminator spliced in by IfcMutation; absent when the payload stands alone."
     }
   },
   "$defs": {

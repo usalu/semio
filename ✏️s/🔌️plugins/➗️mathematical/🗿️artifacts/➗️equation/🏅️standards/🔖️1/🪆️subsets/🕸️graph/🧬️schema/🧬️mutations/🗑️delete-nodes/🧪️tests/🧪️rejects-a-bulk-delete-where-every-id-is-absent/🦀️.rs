@@ -16,10 +16,10 @@
 use crate::{equation_graph, EquationDiff, EquationMutation, EquationSnapshot};
 use semio_framework_os_kernel::ToValue;
 
-const BEFORE: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🗑️delete-nodes/🧪️rejects-a-bulk-delete-where-every-id-is-absent/📸️snapshot/⬅️before/🔣️.json");
-const AFTER: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🗑️delete-nodes/🧪️rejects-a-bulk-delete-where-every-id-is-absent/📸️snapshot/➡️after/🔣️.json");
-const MUTATION: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🗑️delete-nodes/🧪️rejects-a-bulk-delete-where-every-id-is-absent/🦠️mutation/🔣️.json");
-const OUTCOME: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🗑️delete-nodes/🧪️rejects-a-bulk-delete-where-every-id-is-absent/🎯️outcome/🔣️.json");
+const BEFORE: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🗑️delete-nodes/🧪️rejects-bulk-delete-where-every-id-is-absent/📸️snapshot/⬅️before/🔣️.json");
+const AFTER: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🗑️delete-nodes/🧪️rejects-bulk-delete-where-every-id-is-absent/📸️snapshot/➡️after/🔣️.json");
+const MUTATION: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🗑️delete-nodes/🧪️rejects-bulk-delete-where-every-id-is-absent/🦠️mutation/🔣️.json");
+const OUTCOME: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🗑️delete-nodes/🧪️rejects-bulk-delete-where-every-id-is-absent/🎯️outcome/🔣️.json");
 
 fn before() -> EquationSnapshot {
     pack::from_json_str(BEFORE).expect("before snapshot decodes")

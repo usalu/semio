@@ -100,35 +100,35 @@
       "files": [
         {
           "role": "expected-before",
-          "path": "../🧫️fixtures/📊️replace-query-result/✅️replace-query-result-applied/📸️snapshot/⬅️before/🔣️.json",
+          "path": "../🧫️fixtures/📊️replace-query/✅️replac/📸️snapshot/⬅️before/🔣️.json",
           "mediaType": "application/json",
           "sha256": "sha256:8e58fef21380acf43e29940397d44793497bd859b29273cacf3a86e54895b8ec",
           "bytes": 71
         },
         {
           "role": "mutation",
-          "path": "../🧫️fixtures/📊️replace-query-result/✅️replace-query-result-applied/🦠️mutation/🔣️.json",
+          "path": "../🧫️fixtures/📊️replace-query/✅️replac/🦠️mutation/🔣️.json",
           "mediaType": "application/json",
           "sha256": "sha256:8f0d7bb0b34d0d41d66721db235e12d9467494dfa625d9e8e09e1f701a46d13c",
           "bytes": 121
         },
         {
           "role": "expected-after",
-          "path": "../🧫️fixtures/📊️replace-query-result/✅️replace-query-result-applied/📸️snapshot/➡️after/🔣️.json",
+          "path": "../🧫️fixtures/📊️replace-query/✅️replac/📸️snapshot/➡️after/🔣️.json",
           "mediaType": "application/json",
           "sha256": "sha256:a05266520c0d206dda9863ee25493645a6f26cfc956316ee78d37847f35cd375",
           "bytes": 96
         },
         {
           "role": "expected-diff",
-          "path": "../🧫️fixtures/📊️replace-query-result/✅️replace-query-result-applied/🔺️diff/🔣️.json",
+          "path": "../🧫️fixtures/📊️replace-query/✅️replac/🔺️diff/🔣️.json",
           "mediaType": "application/json",
           "sha256": "sha256:a05266520c0d206dda9863ee25493645a6f26cfc956316ee78d37847f35cd375",
           "bytes": 96
         },
         {
           "role": "declared-outcome",
-          "path": "../🧫️fixtures/📊️replace-query-result/✅️replace-query-result-applied/🎯️outcome/🔣️.json",
+          "path": "../🧫️fixtures/📊️replace-query/✅️replac/🎯️outcome/🔣️.json",
           "mediaType": "application/json",
           "sha256": "sha256:7a5a7d68df9ad1703f7e5415caa03230228f1a6a4edf85b60d86f8ee5391f8ab",
           "bytes": 44

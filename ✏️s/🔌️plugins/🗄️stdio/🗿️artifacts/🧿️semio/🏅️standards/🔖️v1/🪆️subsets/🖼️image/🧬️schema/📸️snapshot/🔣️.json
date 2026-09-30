@@ -16,7 +16,18 @@
   "properties": {
     "schema": {
       "type": "string",
-      "x-semio-state": "artifact"
+      "x-semio-state": "artifact",
+      "x-semio-ui": {
+        "widget": "text",
+        "label": {
+          "en": "Snapshot schema",
+          "de": "Snapshot-Schema"
+        },
+        "description": {
+          "en": "Identifier of the snapshot schema version.",
+          "de": "Kennung der Version des Snapshot-Schemas."
+        }
+      }
     },
     "width": {
       "type": "integer",
@@ -36,13 +47,50 @@
         "grayscaleAlpha",
         "indexed"
       ],
-      "x-semio-state": "artifact"
+      "x-semio-state": "artifact",
+      "x-semio-ui": {
+        "widget": "select",
+        "label": {
+          "en": "Color space",
+          "de": "Farbraum"
+        },
+        "options": {
+          "rgb": {
+            "en": "RGB",
+            "de": "RGB"
+          },
+          "rgba": {
+            "en": "RGB with alpha",
+            "de": "RGB mit Alpha"
+          },
+          "grayscale": {
+            "en": "Grayscale",
+            "de": "Graustufen"
+          },
+          "grayscaleAlpha": {
+            "en": "Grayscale with alpha",
+            "de": "Graustufen mit Alpha"
+          },
+          "indexed": {
+            "en": "Indexed color",
+            "de": "Indizierte Farben"
+          }
+        }
+      }
     },
     "bitDepth": {
       "type": "integer",
       "minimum": 0,
       "maximum": 255,
-      "x-semio-state": "artifact"
+      "x-semio-state": "artifact",
+      "x-semio-ui": {
+        "widget": "stepper",
+        "label": {
+          "en": "Bit depth",
+          "de": "Bittiefe"
+        },
+        "unit": "bit"
+      }
     },
     "frames": {
       "type": "array",
@@ -52,7 +100,15 @@
         "properties": {
           "delayMs": {
             "type": "integer",
-            "minimum": 0
+            "minimum": 0,
+            "x-semio-ui": {
+              "widget": "stepper",
+              "label": {
+                "en": "Frame delay",
+                "de": "Bildverzögerung"
+              },
+              "unit": "ms"
+            }
           },
           "rgba8": {
             "type": "array",
@@ -60,8 +116,24 @@
               "type": "integer",
               "minimum": 0,
               "maximum": 255
+            },
+            "x-semio-ui": {
+              "label": {
+                "en": "RGBA pixels",
+                "de": "RGBA-Pixel"
+              },
+              "description": {
+                "en": "8-bit red, green, blue, alpha per pixel, row by row.",
+                "de": "8 Bit Rot, Grün, Blau, Alpha je Pixel, zeilenweise."
+              }
             }
           }
+        }
+      },
+      "x-semio-ui": {
+        "label": {
+          "en": "Frames",
+          "de": "Einzelbilder"
         }
       }
     },
@@ -79,7 +151,13 @@
           "type": "null"
         }
       ],
-      "x-semio-state": "artifact"
+      "x-semio-state": "artifact",
+      "x-semio-ui": {
+        "label": {
+          "en": "ICC profile",
+          "de": "ICC-Profil"
+        }
+      }
     },
     "metadata": {
       "type": "array",
@@ -93,6 +171,12 @@
           "value": {
             "type": "string"
           }
+        }
+      },
+      "x-semio-ui": {
+        "label": {
+          "en": "Metadata",
+          "de": "Metadaten"
         }
       }
     }

@@ -5,12 +5,36 @@
   "type": "object",
   "additionalProperties": false,
   "required": [
+    "mutation",
     "id",
     "newVerticesM"
   ],
   "properties": {
+    "mutation": {
+      "const": "replaceSurfaceVertices"
+    },
     "id": {
-      "type": "integer"
+      "type": "integer",
+      "minimum": 0,
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Surface",
+          "de": "Oberfläche"
+        },
+        "description": {
+          "en": "The surface this mutation changes, by id.",
+          "de": "Oberfläche, die diese Mutation ändert, per ID."
+        },
+        "ref": {
+          "kind": "surface",
+          "domain": "energyModel",
+          "granularity": "surface"
+        },
+        "group": "target",
+        "order": 10
+      }
     },
     "newVerticesM": {
       "type": "array",
@@ -21,6 +45,21 @@
         },
         "minItems": 3,
         "maxItems": 3
+      },
+      "minItems": 3,
+      "x-semio-ui": {
+        "role": "value",
+        "label": {
+          "en": "Vertices",
+          "de": "Eckpunkte"
+        },
+        "description": {
+          "en": "Polygon corners in world coordinates, counter-clockwise seen from outside.",
+          "de": "Polygonecken in Weltkoordinaten, von außen gesehen gegen den Uhrzeigersinn."
+        },
+        "unit": "m",
+        "group": "geometry",
+        "order": 20
       }
     }
   }

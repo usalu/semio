@@ -13,7 +13,18 @@
       "type": "string"
     },
     "new_metallic": {
-      "type": "number"
+      "type": "number",
+      "x-semio-ui": {
+        "widget": "stepper",
+        "label": {
+          "en": "Metallic",
+          "de": "Metallizität"
+        },
+        "description": {
+          "en": "PBR metalness, 0 dielectric to 1 metal.",
+          "de": "PBR-Metallizität, 0 Dielektrikum bis 1 Metall."
+        }
+      }
     }
   }
 }

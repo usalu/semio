@@ -5,15 +5,52 @@
   "type": "object",
   "additionalProperties": false,
   "required": [
+    "mutation",
     "id",
     "newUrl"
   ],
   "properties": {
+    "mutation": {
+      "const": "changeAssetUrl"
+    },
     "id": {
-      "type": "string"
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Asset",
+          "de": "Objekt"
+        },
+        "description": {
+          "en": "The asset this mutation addresses.",
+          "de": "Das Objekt, das diese Mutation adressiert."
+        },
+        "ref": {
+          "kind": "asset",
+          "domain": "assets",
+          "granularity": "asset"
+        },
+        "group": "target",
+        "order": 10
+      }
     },
     "newUrl": {
-      "type": "string"
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "text",
+        "role": "value",
+        "label": {
+          "en": "URL",
+          "de": "URL"
+        },
+        "description": {
+          "en": "Address of the file, e.g. an https or data URL.",
+          "de": "Adresse der Datei, z. B. eine https- oder data-URL."
+        },
+        "group": "source",
+        "order": 20
+      }
     }
   }
 }

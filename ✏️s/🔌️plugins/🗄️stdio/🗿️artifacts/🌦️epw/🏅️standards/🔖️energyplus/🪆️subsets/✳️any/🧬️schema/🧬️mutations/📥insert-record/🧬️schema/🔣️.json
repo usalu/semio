@@ -5,20 +5,43 @@
   "type": "object",
   "additionalProperties": false,
   "required": [
+    "mutation",
     "index",
     "record"
   ],
   "properties": {
-    "index": {
-      "type": "integer",
-      "minimum": 0
-    },
-    "record": {
-      "$ref": "#/$defs/EpwRecord"
-    },
     "mutation": {
       "const": "insertRecord",
       "description": "Aggregate discriminator spliced in by EpwMutation; absent when the payload stands alone."
+    },
+    "index": {
+      "type": "integer",
+      "minimum": 0,
+      "x-semio-ui": {
+        "widget": "stepper",
+        "label": {
+          "en": "Record position",
+          "de": "Datensatzposition"
+        },
+        "description": {
+          "en": "Index of the hourly data record, counted from 0.",
+          "de": "Index des stündlichen Datensatzes, ab 0 gezählt."
+        },
+        "precision": 0,
+        "group": "target",
+        "order": 10
+      }
+    },
+    "record": {
+      "$ref": "#/$defs/EpwRecord",
+      "x-semio-ui": {
+        "label": {
+          "en": "Record",
+          "de": "Datensatz"
+        },
+        "group": "value",
+        "order": 20
+      }
     }
   },
   "$defs": {
@@ -67,106 +90,406 @@
           "type": "string"
         },
         "month": {
-          "type": "string"
+          "type": "string",
+          "x-semio-ui": {
+            "label": {
+              "en": "Month",
+              "de": "Monat"
+            }
+          }
         },
         "day": {
-          "type": "string"
+          "type": "string",
+          "x-semio-ui": {
+            "label": {
+              "en": "Day",
+              "de": "Tag"
+            }
+          }
         },
         "hour": {
-          "type": "string"
+          "type": "string",
+          "x-semio-ui": {
+            "label": {
+              "en": "Hour",
+              "de": "Stunde"
+            }
+          }
         },
         "minute": {
-          "type": "string"
+          "type": "string",
+          "x-semio-ui": {
+            "label": {
+              "en": "Minute",
+              "de": "Minute"
+            }
+          }
         },
         "dataSourceUncertainty": {
-          "type": "string"
+          "type": "string",
+          "x-semio-ui": {
+            "label": {
+              "en": "Data source and uncertainty flags",
+              "de": "Datenquellen- und Unsicherheitskennzeichen"
+            }
+          }
         },
         "dryBulbTemp": {
-          "type": "string"
+          "type": "string",
+          "x-semio-ui": {
+            "label": {
+              "en": "Dry-bulb temperature",
+              "de": "Trockenkugeltemperatur"
+            },
+            "description": {
+              "en": "Unit: °C",
+              "de": "Einheit: °C"
+            }
+          }
         },
         "dewPointTemp": {
-          "type": "string"
+          "type": "string",
+          "x-semio-ui": {
+            "label": {
+              "en": "Dew-point temperature",
+              "de": "Taupunkttemperatur"
+            },
+            "description": {
+              "en": "Unit: °C",
+              "de": "Einheit: °C"
+            }
+          }
         },
         "relativeHumidity": {
-          "type": "string"
+          "type": "string",
+          "x-semio-ui": {
+            "label": {
+              "en": "Relative humidity",
+              "de": "Relative Luftfeuchte"
+            },
+            "description": {
+              "en": "Unit: %",
+              "de": "Einheit: %"
+            }
+          }
         },
         "atmosphericPressure": {
-          "type": "string"
+          "type": "string",
+          "x-semio-ui": {
+            "label": {
+              "en": "Atmospheric station pressure",
+              "de": "Luftdruck auf Stationshöhe"
+            },
+            "description": {
+              "en": "Unit: Pa",
+              "de": "Einheit: Pa"
+            }
+          }
         },
         "extraterrestrialHorizontalRadiation": {
-          "type": "string"
+          "type": "string",
+          "x-semio-ui": {
+            "label": {
+              "en": "Extraterrestrial horizontal radiation",
+              "de": "Extraterrestrische Horizontalstrahlung"
+            },
+            "description": {
+              "en": "Unit: Wh/m²",
+              "de": "Einheit: Wh/m²"
+            }
+          }
         },
         "extraterrestrialDirectNormalRadiation": {
-          "type": "string"
+          "type": "string",
+          "x-semio-ui": {
+            "label": {
+              "en": "Extraterrestrial direct normal radiation",
+              "de": "Extraterrestrische Direktnormalstrahlung"
+            },
+            "description": {
+              "en": "Unit: Wh/m²",
+              "de": "Einheit: Wh/m²"
+            }
+          }
         },
         "horizontalInfraredRadiation": {
-          "type": "string"
+          "type": "string",
+          "x-semio-ui": {
+            "label": {
+              "en": "Horizontal infrared radiation intensity",
+              "de": "Atmosphärische Gegenstrahlung (horizontal)"
+            },
+            "description": {
+              "en": "Unit: Wh/m²",
+              "de": "Einheit: Wh/m²"
+            }
+          }
         },
         "globalHorizontalRadiation": {
-          "type": "string"
+          "type": "string",
+          "x-semio-ui": {
+            "label": {
+              "en": "Global horizontal radiation",
+              "de": "Globalstrahlung (horizontal)"
+            },
+            "description": {
+              "en": "Unit: Wh/m²",
+              "de": "Einheit: Wh/m²"
+            }
+          }
         },
         "directNormalRadiation": {
-          "type": "string"
+          "type": "string",
+          "x-semio-ui": {
+            "label": {
+              "en": "Direct normal radiation",
+              "de": "Direktnormalstrahlung"
+            },
+            "description": {
+              "en": "Unit: Wh/m²",
+              "de": "Einheit: Wh/m²"
+            }
+          }
         },
         "diffuseHorizontalRadiation": {
-          "type": "string"
+          "type": "string",
+          "x-semio-ui": {
+            "label": {
+              "en": "Diffuse horizontal radiation",
+              "de": "Diffusstrahlung (horizontal)"
+            },
+            "description": {
+              "en": "Unit: Wh/m²",
+              "de": "Einheit: Wh/m²"
+            }
+          }
         },
         "globalHorizontalIlluminance": {
-          "type": "string"
+          "type": "string",
+          "x-semio-ui": {
+            "label": {
+              "en": "Global horizontal illuminance",
+              "de": "Globale Beleuchtungsstärke (horizontal)"
+            },
+            "description": {
+              "en": "Unit: lx",
+              "de": "Einheit: lx"
+            }
+          }
         },
         "directNormalIlluminance": {
-          "type": "string"
+          "type": "string",
+          "x-semio-ui": {
+            "label": {
+              "en": "Direct normal illuminance",
+              "de": "Direkte Beleuchtungsstärke (normal)"
+            },
+            "description": {
+              "en": "Unit: lx",
+              "de": "Einheit: lx"
+            }
+          }
         },
         "diffuseHorizontalIlluminance": {
-          "type": "string"
+          "type": "string",
+          "x-semio-ui": {
+            "label": {
+              "en": "Diffuse horizontal illuminance",
+              "de": "Diffuse Beleuchtungsstärke (horizontal)"
+            },
+            "description": {
+              "en": "Unit: lx",
+              "de": "Einheit: lx"
+            }
+          }
         },
         "zenithLuminance": {
-          "type": "string"
+          "type": "string",
+          "x-semio-ui": {
+            "label": {
+              "en": "Zenith luminance",
+              "de": "Zenitleuchtdichte"
+            },
+            "description": {
+              "en": "Unit: cd/m²",
+              "de": "Einheit: cd/m²"
+            }
+          }
         },
         "windDirection": {
-          "type": "string"
+          "type": "string",
+          "x-semio-ui": {
+            "label": {
+              "en": "Wind direction",
+              "de": "Windrichtung"
+            },
+            "description": {
+              "en": "Degrees clockwise from north.",
+              "de": "Grad im Uhrzeigersinn ab Nord."
+            }
+          }
         },
         "windSpeed": {
-          "type": "string"
+          "type": "string",
+          "x-semio-ui": {
+            "label": {
+              "en": "Wind speed",
+              "de": "Windgeschwindigkeit"
+            },
+            "description": {
+              "en": "Unit: m/s",
+              "de": "Einheit: m/s"
+            }
+          }
         },
         "totalSkyCover": {
-          "type": "string"
+          "type": "string",
+          "x-semio-ui": {
+            "label": {
+              "en": "Total sky cover",
+              "de": "Gesamtbedeckungsgrad"
+            },
+            "description": {
+              "en": "Tenths of the sky.",
+              "de": "Zehntel des Himmels."
+            }
+          }
         },
         "opaqueSkyCover": {
-          "type": "string"
+          "type": "string",
+          "x-semio-ui": {
+            "label": {
+              "en": "Opaque sky cover",
+              "de": "Opaker Bedeckungsgrad"
+            },
+            "description": {
+              "en": "Tenths of the sky.",
+              "de": "Zehntel des Himmels."
+            }
+          }
         },
         "visibility": {
-          "type": "string"
+          "type": "string",
+          "x-semio-ui": {
+            "label": {
+              "en": "Visibility",
+              "de": "Sichtweite"
+            },
+            "description": {
+              "en": "Unit: km",
+              "de": "Einheit: km"
+            }
+          }
         },
         "ceilingHeight": {
-          "type": "string"
+          "type": "string",
+          "x-semio-ui": {
+            "label": {
+              "en": "Ceiling height",
+              "de": "Wolkenuntergrenze"
+            },
+            "description": {
+              "en": "Unit: m",
+              "de": "Einheit: m"
+            }
+          }
         },
         "presentWeatherObservation": {
-          "type": "string"
+          "type": "string",
+          "x-semio-ui": {
+            "label": {
+              "en": "Present weather observation",
+              "de": "Wetterbeobachtung vorhanden"
+            }
+          }
         },
         "presentWeatherCodes": {
-          "type": "string"
+          "type": "string",
+          "x-semio-ui": {
+            "label": {
+              "en": "Present weather codes",
+              "de": "Wettercodes"
+            }
+          }
         },
         "precipitableWater": {
-          "type": "string"
+          "type": "string",
+          "x-semio-ui": {
+            "label": {
+              "en": "Precipitable water",
+              "de": "Niederschlagbares Wasser"
+            },
+            "description": {
+              "en": "Unit: mm",
+              "de": "Einheit: mm"
+            }
+          }
         },
         "aerosolOpticalDepth": {
-          "type": "string"
+          "type": "string",
+          "x-semio-ui": {
+            "label": {
+              "en": "Aerosol optical depth",
+              "de": "Aerosol-optische Dicke"
+            }
+          }
         },
         "snowDepth": {
-          "type": "string"
+          "type": "string",
+          "x-semio-ui": {
+            "label": {
+              "en": "Snow depth",
+              "de": "Schneehöhe"
+            },
+            "description": {
+              "en": "Unit: cm",
+              "de": "Einheit: cm"
+            }
+          }
         },
         "daysSinceLastSnowfall": {
-          "type": "string"
+          "type": "string",
+          "x-semio-ui": {
+            "label": {
+              "en": "Days since last snowfall",
+              "de": "Tage seit dem letzten Schneefall"
+            }
+          }
         },
         "albedo": {
-          "type": "string"
+          "type": "string",
+          "x-semio-ui": {
+            "label": {
+              "en": "Albedo",
+              "de": "Albedo"
+            }
+          }
         },
         "liquidPrecipDepth": {
-          "type": "string"
+          "type": "string",
+          "x-semio-ui": {
+            "label": {
+              "en": "Liquid precipitation depth",
+              "de": "Niederschlagshöhe"
+            },
+            "description": {
+              "en": "Unit: mm",
+              "de": "Einheit: mm"
+            }
+          }
         },
         "liquidPrecipQuantity": {
-          "type": "string"
+          "type": "string",
+          "x-semio-ui": {
+            "label": {
+              "en": "Liquid precipitation period",
+              "de": "Niederschlagsmessdauer"
+            },
+            "description": {
+              "en": "Hours over which the precipitation depth was measured.",
+              "de": "Stunden, über die die Niederschlagshöhe gemessen wurde."
+            }
+          }
         }
       }
     }

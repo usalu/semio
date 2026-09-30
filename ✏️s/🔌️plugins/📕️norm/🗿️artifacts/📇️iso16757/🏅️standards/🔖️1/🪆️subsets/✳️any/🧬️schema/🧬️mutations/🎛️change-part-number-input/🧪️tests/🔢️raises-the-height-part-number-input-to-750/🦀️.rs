@@ -11,11 +11,11 @@
 
 use crate::{Iso16757Diff, Iso16757Mutation, Iso16757Snapshot};
 
-const BEFORE: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🎛️change-part-number-input/🔢️raises-the-height-part-number-input-to-750/📸️snapshot/⬅️before/🔣️.json");
-const AFTER: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🎛️change-part-number-input/🔢️raises-the-height-part-number-input-to-750/📸️snapshot/➡️after/🔣️.json");
-const MUTATION: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🎛️change-part-number-input/🔢️raises-the-height-part-number-input-to-750/🦠️mutation/🔣️.json");
-const DIFF: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🎛️change-part-number-input/🔢️raises-the-height-part-number-input-to-750/🔺️diff/🔣️.json");
-const OUTCOME: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🎛️change-part-number-input/🔢️raises-the-height-part-number-input-to-750/🎯️outcome/🔣️.json");
+const BEFORE: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🎛️change-part-number-input/🔢️raises-height-part-number-input-750/📸️snapshot/⬅️before/🔣️.json");
+const AFTER: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🎛️change-part-number-input/🔢️raises-height-part-number-input-750/📸️snapshot/➡️after/🔣️.json");
+const MUTATION: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🎛️change-part-number-input/🔢️raises-height-part-number-input-750/🦠️mutation/🔣️.json");
+const DIFF: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🎛️change-part-number-input/🔢️raises-height-part-number-input-750/🔺️diff/🔣️.json");
+const OUTCOME: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🎛️change-part-number-input/🔢️raises-height-part-number-input-750/🎯️outcome/🔣️.json");
 
 fn before() -> Iso16757Snapshot {
     serde_json::from_str(BEFORE).expect("the committed before-snapshot decodes")
@@ -61,7 +61,7 @@ async fn restoring_the_600_height_input_restores_before() {
 
 /// 🔣️ Both committed snapshots and the committed `change-part-number-input` payload are already canonical:
 /// decode → encode is a fixed point. The committed payload is spelled `{"ChangePartNumberInput": {"key": …,
-/// "new_value": {"kind": "decimal", …}}}` — externally tagged variant, snake_case payload keys, and an
+/// "newValue": {"kind": "decimal", …}}}` — externally tagged variant, camelCase payload keys, and an
 /// internally `kind`-tagged CatalogueValue.
 #[semio_framework_async_macros::async_test]
 async fn committed_json_is_canonical() {

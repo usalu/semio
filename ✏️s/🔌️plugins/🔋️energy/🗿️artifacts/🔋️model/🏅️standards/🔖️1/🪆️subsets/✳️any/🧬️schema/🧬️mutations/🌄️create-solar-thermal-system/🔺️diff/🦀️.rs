@@ -10,7 +10,7 @@ pub fn diff(payload: &super::CreateSolarThermalSystem, base: &EnergyModelSnapsho
         return protocol::MutationOutcome::error("mutation.duplicate-id", format!("Solar thermal system {} already exists.", payload.id.0), [payload.id.0.to_string()]);
     }
     if payload.index as usize > base.model.solar_thermal_systems.len() {
-        return protocol::MutationOutcome::error("mutation.invariant", format!("Index {} is past the end of the model's {} solar_thermal_systems.", payload.index, base.model.solar_thermal_systems.len()), [payload.id.0.to_string()]);
+        return protocol::MutationOutcome::error("mutation.target-missing", format!("Index {} is past the end of the model's {} solar_thermal_systems.", payload.index, base.model.solar_thermal_systems.len()), [payload.id.0.to_string()]);
     }
     let mut model = base.model.clone();
     model.solar_thermal_systems.insert(

@@ -1,8 +1,16 @@
-/** 🦠️ unbind-morph-target-attribute: cohesive atomic mesh mutation. */
-import type { GltfJson, GltfSnapshot, GltfPrimitive, GltfMorphTarget } from '../../📸️snapshot/🟦️.ts';
-import { run, reject, positionIn, itemIndex, permutation, moveItem, type GltfLeafResult, type GltfMutationRejection } from './🟦️';
-export const GltfUnbindMorphTargetAttributeDescriptor = { id: 's.stdio.gltf.mutation.unbind-morph-target-attribute.v1', version: 1, kind: 'unbind', touchedPaths: ["document/meshes/*/primitives/*/targets/*/attributes"], referencePolicy: 'removes one target semantic relationship' } as const;
-export interface GltfUnbindMorphTargetAttributePayload { mesh: number; primitive: number; target: number; semantic: string }
-export type GltfUnbindMorphTargetAttributeResult = GltfLeafResult;
-export const validateGltfUnbindMorphTargetAttribute = (payload: GltfUnbindMorphTargetAttributePayload, base: GltfSnapshot): GltfMutationRejection | undefined => { const mesh = itemIndex(payload.mesh, base.document.meshes.length, 'document/meshes'); if (mesh) return mesh; const primitive = itemIndex(payload.primitive, base.document.meshes[payload.mesh]!.primitives.length, `document/meshes/${payload.mesh}/primitives`); if (primitive) return primitive; const target = itemIndex(payload.target, base.document.meshes[payload.mesh]!.primitives[payload.primitive]!.targets.length, 'document/meshes/primitives/targets'); if (target) return target; if (!Object.prototype.hasOwnProperty.call(base.document.meshes[payload.mesh]!.primitives[payload.primitive]!.targets[payload.target]!, payload.semantic)) return reject('gltf.mutation.relation-absent', 'document/meshes/primitives/targets', 'semantic is not bound'); return undefined; };
-export const applyGltfUnbindMorphTargetAttribute = (base: GltfSnapshot, payload: GltfUnbindMorphTargetAttributePayload): GltfUnbindMorphTargetAttributeResult => run(base, payload, validateGltfUnbindMorphTargetAttribute, (next, payload) => { delete next.document.meshes[payload.mesh]!.primitives[payload.primitive]!.targets[payload.target]![payload.semantic]; }, GltfUnbindMorphTargetAttributeDescriptor.touchedPaths);
+/** ✂️ `unbind-morph-target-attribute` wire twin: the flat `Apply` payload `GltfUnbindMorphTargetAttributePayload` and the phase wire `UnbindMorphTargetAttributeMutation`, exactly as `./🦀️.rs` writes them.
+ * @see ./🧬️schema/🔣️.json */
+import { gltfWireIndex, gltfWireObject, gltfWireRequired, gltfWireString } from "../../../📸️snapshot/🟦️.ts";
+import { type GltfDiff, type GltfPhase, gltfWirePhase, parseGltfDiff } from "../../../🔺️diff/🟦️.ts";
+
+export interface GltfUnbindMorphTargetAttributePayload {
+  mesh: number;
+  primitive: number;
+  target: number;
+  semantic: string;
+}
+
+export type UnbindMorphTargetAttributeMutation = GltfPhase<GltfUnbindMorphTargetAttributePayload, GltfDiff>;
+
+export const parseGltfUnbindMorphTargetAttributePayload = gltfWireObject<GltfUnbindMorphTargetAttributePayload>({ mesh: gltfWireRequired(gltfWireIndex), primitive: gltfWireRequired(gltfWireIndex), target: gltfWireRequired(gltfWireIndex), semantic: gltfWireRequired(gltfWireString) });
+export const parseUnbindMorphTargetAttributeMutation = gltfWirePhase(parseGltfUnbindMorphTargetAttributePayload, parseGltfDiff);

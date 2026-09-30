@@ -60,6 +60,7 @@ struct BorrowedLeaf<'a, T>(&'a T);
 impl<'a, T> MutationLeaf for BorrowedLeaf<'a, T> {
     const DESCRIPTOR: MutationLeafDescriptor = LEAF_DESCRIPTOR;
     const PROVENANCE: MutationSourceProvenance = LEAF_PROVENANCE;
+    const PAYLOAD_SCHEMA: &'static str = r#"{"type":"object","properties":{}}"#;
 }
 fn metadata_from<T: MutationLeaf>(_: &T) -> (MutationLeafDescriptor, MutationSourceProvenance) {
     (T::DESCRIPTOR, T::PROVENANCE)

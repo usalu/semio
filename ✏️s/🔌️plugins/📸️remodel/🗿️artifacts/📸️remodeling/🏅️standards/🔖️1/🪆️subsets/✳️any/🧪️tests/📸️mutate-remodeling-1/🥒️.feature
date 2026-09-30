@@ -210,7 +210,7 @@ Feature: Apply every typed remodeling-scene mutation to its committed specificat
     Examples:
       | id                       | kind                      | vector                                                | code                                   |
       | refuses-to-pick-3c0570   | add-gcp-observation       | 🔎add-gcp-observation/🚫️refuses-to-pick-3c0570         | mutation.target-missing                |
-      | refuses-a-frame-81beea   | add-stream-frame          | ➕add-stream-frame/🎬️refuses-a-frame-81beea            | mutation.invariant                     |
+      | refuses-a-frame-81beea   | add-stream-frame          | ➕add-stream-frame/🎬️refuses-a-frame-81beea            | mutation.target-missing                |
       | refuses-to-c93e98        | add-stream-frame          | ➕add-stream-frame/🚫️refuses-to-c93e98                 | mutation.target-missing                |
       | refuses-a-gap            | append-content            | 📦append-content/🚫️refuses-a-gap                       | mutation.content-gap                   |
       | refuses-to-8095d3        | change-stream-sync        | ⏱️change-stream-sync/🚫️refuses-to-8095d3              | mutation.target-missing                |
@@ -221,9 +221,9 @@ Feature: Apply every typed remodeling-scene mutation to its committed specificat
       | refuses-a-camera-e92a02  | create-camera-calibration | 🔭create-camera-calibration/🚫️refuses-a-camera-e92a02  | mutation.duplicate-id                  |
       | refuses-a-19c1ab         | create-gcp                | 🧿create-gcp/🚫️refuses-a-19c1ab                        | mutation.duplicate-id                  |
       | refuses-a-second-95e04d  | create-rig-extrinsic      | ⛓️create-rig-extrinsic/🚫️refuses-a-second-95e04d      | mutation.duplicate-id                  |
-      | refuses-a-rig-cb71ba     | create-rig-extrinsic      | ⛓️create-rig-extrinsic/🚫️refuses-a-rig-cb71ba         | mutation.invariant                     |
+      | refuses-a-rig-cb71ba     | create-rig-extrinsic      | ⛓️create-rig-extrinsic/🚫️refuses-a-rig-cb71ba         | mutation.target-missing                |
       | rejects-a-6b58da         | create-stream             | 🌱create-stream/🔂️rejects-a-6b58da                     | mutation.duplicate-id                  |
-      | rejects-a-stream-aac5c2  | create-stream             | 🌱create-stream/👻️rejects-a-stream-aac5c2              | mutation.invariant                     |
+      | rejects-a-stream-aac5c2  | create-stream             | 🌱create-stream/👻️rejects-a-stream-aac5c2              | mutation.target-missing                |
       | refuses-to-5c6f74        | delete-asset              | 🗞️delete-asset/🗺️refuses-to-5c6f74                    | mutation.referenced                    |
       | refuses-to-c4563a        | delete-asset              | 🗞️delete-asset/🚫️refuses-to-c4563a                    | mutation.target-missing                |
       | refuses-to-f9541f        | delete-asset              | 🗞️delete-asset/🖼️refuses-to-f9541f                    | mutation.referenced                    |
@@ -423,7 +423,7 @@ Feature: Apply every typed remodeling-scene mutation to its committed specificat
       | id                          | kind                      | vector                                                | code                                   |
       | refuses-to-pick-3c0570      | add-gcp-observation       | 🔎add-gcp-observation/🚫️refuses-to-pick-3c0570         | mutation.target-missing                |
       | warns-that-this-dca661      | add-gcp-observation       | 🔎add-gcp-observation/🔁️warns-that-this-dca661         | mutation.no-op                         |
-      | refuses-a-frame-81beea      | add-stream-frame          | ➕add-stream-frame/🎬️refuses-a-frame-81beea            | mutation.invariant                     |
+      | refuses-a-frame-81beea      | add-stream-frame          | ➕add-stream-frame/🎬️refuses-a-frame-81beea            | mutation.target-missing                |
       | refuses-to-c93e98           | add-stream-frame          | ➕add-stream-frame/🚫️refuses-to-c93e98                 | mutation.target-missing                |
       | warns-that-the-1e8abe       | add-stream-frame          | ➕add-stream-frame/🔁️warns-that-the-1e8abe             | mutation.no-op                         |
       | refuses-a-gap               | append-content            | 📦append-content/🚫️refuses-a-gap                       | mutation.content-gap                   |
@@ -437,9 +437,9 @@ Feature: Apply every typed remodeling-scene mutation to its committed specificat
       | refuses-a-camera-e92a02     | create-camera-calibration | 🔭create-camera-calibration/🚫️refuses-a-camera-e92a02  | mutation.duplicate-id                  |
       | refuses-a-19c1ab            | create-gcp                | 🧿create-gcp/🚫️refuses-a-19c1ab                        | mutation.duplicate-id                  |
       | refuses-a-second-95e04d     | create-rig-extrinsic      | ⛓️create-rig-extrinsic/🚫️refuses-a-second-95e04d      | mutation.duplicate-id                  |
-      | refuses-a-rig-cb71ba        | create-rig-extrinsic      | ⛓️create-rig-extrinsic/🚫️refuses-a-rig-cb71ba         | mutation.invariant                     |
+      | refuses-a-rig-cb71ba        | create-rig-extrinsic      | ⛓️create-rig-extrinsic/🚫️refuses-a-rig-cb71ba         | mutation.target-missing                |
       | rejects-a-6b58da            | create-stream             | 🌱create-stream/🔂️rejects-a-6b58da                     | mutation.duplicate-id                  |
-      | rejects-a-stream-aac5c2     | create-stream             | 🌱create-stream/👻️rejects-a-stream-aac5c2              | mutation.invariant                     |
+      | rejects-a-stream-aac5c2     | create-stream             | 🌱create-stream/👻️rejects-a-stream-aac5c2              | mutation.target-missing                |
       | refuses-to-5c6f74           | delete-asset              | 🗞️delete-asset/🗺️refuses-to-5c6f74                    | mutation.referenced                    |
       | refuses-to-c4563a           | delete-asset              | 🗞️delete-asset/🚫️refuses-to-c4563a                    | mutation.target-missing                |
       | refuses-to-f9541f           | delete-asset              | 🗞️delete-asset/🖼️refuses-to-f9541f                    | mutation.referenced                    |

@@ -13,6 +13,7 @@ use semio_framework_value_derive::{FromValue, ToValue};
 /// 🔗 `connect-synapse` payload — the full new edge plus a FINAL-state insertion index.
 #[derive(Clone, Debug, PartialEq, ToValue, FromValue, dsl::MutationLeaf)]
 #[mutation_leaf(contract = ::protocol)]
+#[value(rename_all = "camelCase")]
 pub struct ConnectSynapse {
     pub index: usize,
     pub synapse: SynapseSpec,

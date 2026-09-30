@@ -1,0 +1,6 @@
+{
+  "operation": "changeTestConfigSelection",
+  "payload": {
+    "selected": "b"
+  }
+}

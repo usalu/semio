@@ -168,3 +168,162 @@ fn check_in_jobs_join_bound_retain_and_cancel_by_document() {
     assert_eq!(check_in_refusal_of_authority_error(&AuthorityError::Codec { stage: ArtifactValidationStage::Output, message: String::new() }), Some(DocumentCheckInRefusalV1::CodecRefused));
     assert_eq!(check_in_refusal_of_authority_error(&AuthorityError::Publication(String::new())), Some(DocumentCheckInRefusalV1::ActiveCheckpointChanged));
 }
+
+//#region 🔖️Supersede
+/// 🗺️ A linked GIS Map codec — the shape `PluginHostArtifactCodec` and a linked `VerifiedNativeArtifactCodec` give a
+/// hub: `codec.replay-envelopes` is `store::replay_envelopes_onto_pair`, a replica's own fold.
+#[cfg(feature = "native-artifact-execution")]
+struct LinkedGisMapCodec {
+    identity: TrustedArtifactIdentity,
+    codec: ::directory::os_store::ArtifactCodec,
+}
+
+#[cfg(feature = "native-artifact-execution")]
+impl TrustedArtifactCodec for LinkedGisMapCodec {
+    fn identity(&self) -> &TrustedArtifactIdentity {
+        &self.identity
+    }
+
+    async fn validate_pair(&self, pair: &ArtifactPair, stage: ArtifactValidationStage, context: &OperationContext<'_>) -> Result<(), AuthorityError> {
+        context.checkpoint()?;
+        (self.codec.print_mirror)(&pair.pack, &pair.spr).await.map_err(|error| AuthorityError::Codec { stage, message: error.to_string() })?;
+        Ok(())
+    }
+
+    async fn apply_operation(&self, pair: ArtifactPair, _operation: &AcceptedArtifactOperation, _context: &OperationContext<'_>) -> Result<ArtifactPair, AuthorityError> {
+        Ok(pair)
+    }
+}
+
+#[cfg(feature = "native-artifact-execution")]
+impl TrustedArtifactReplayCodec for LinkedGisMapCodec {
+    async fn replay_envelopes(&self, pair: ArtifactPair, envelopes: &[u8], context: &OperationContext<'_>) -> Result<ArtifactPair, AuthorityError> {
+        context.checkpoint()?;
+        let (pack, spr, _) = (self.codec.replay_envelopes)(&pair.pack, &pair.spr, envelopes).await.map_err(|error| AuthorityError::Codec { stage: ArtifactValidationStage::Output, message: error.to_string() })?;
+        Ok(ArtifactPair { pack, spr })
+    }
+}
+
+#[cfg(feature = "native-artifact-execution")]
+struct LinkedGisMapCatalog(LinkedGisMapCodec);
+
+#[cfg(feature = "native-artifact-execution")]
+impl TrustedArtifactCatalog for LinkedGisMapCatalog {
+    type Codec = LinkedGisMapCodec;
+
+    async fn resolve<'a>(&'a self, _required: &TrustedArtifactIdentity) -> Result<&'a Self::Codec, AuthorityError> {
+        Ok(&self.0)
+    }
+}
+
+/// 🌱️ The GIS Map genesis pair of the check-in document and the ledger a real map editor emits for `mutations`, one
+/// one-operation edit each — exactly its store's own event log.
+#[cfg(feature = "native-artifact-execution")]
+async fn gis_map_ledger(mutations: Vec<semio_s_artifact_gis_gismap::GisMapMutation>) -> (ArtifactPair, Vec<protocol::MutationEnvelope>) {
+    use ::directory::os_store::{ArtifactCommand, ArtifactPack, ArtifactStore, SnapshotRetirementStep};
+    use semio_s_artifact_gis_gismap::{GisMapMutation, GisMapSnapshot, GIS_MAP_SCHEMA};
+    let pack = <GisMapSnapshot as ArtifactPack>::encode_pack(&GisMapSnapshot::default());
+    let spr = ::directory::os_store::empty_document_spr("karte", GIS_MAP_SCHEMA).await;
+    let parsed = ::directory::os_store::parse_document_pack::<GisMapSnapshot, GisMapMutation>(&pack, &spr).await.expect("genesis pair parses");
+    let mut store = ArtifactStore::<GisMapSnapshot, GisMapMutation>::new(parsed.into_envelope()).await.expect("editor store");
+    store.install_document_store_owners_exact(::directory::os_store::bounded_artifact_store_owners());
+    let mut applied = Ok(());
+    for mutation in mutations {
+        if let Err(error) = store.dispatch(ArtifactCommand::Apply { mutations: vec![mutation], description: None, transaction: None }).await {
+            applied = Err(error);
+            break;
+        }
+    }
+    let events = store.event_log();
+    loop {
+        match store.close_owned_step(1, ::directory::os_store::ARTIFACT_STORE_ONE_ITEM_MAXIMUM_BYTES).expect("editor store closes") {
+            SnapshotRetirementStep::Complete => break,
+            SnapshotRetirementStep::Pending { .. } => {}
+            SnapshotRetirementStep::Blocked => panic!("editor store close blocked"),
+        }
+    }
+    drop(store);
+    applied.expect("editor edits apply");
+    (ArtifactPair { pack, spr }, events.expect("editor ledger"))
+}
+
+/// ✏️ A collaborator's supersession of `targets` authored after the whole `ledger`: its envelope depends on exactly its
+/// targets, and a replacement input is the aggregate op's canonical `OpBinary` bytes under the artifact schema.
+#[cfg(feature = "native-artifact-execution")]
+fn gis_map_supersede(ledger: &[protocol::MutationEnvelope], inputs: Vec<(usize, Option<semio_s_artifact_gis_gismap::GisMapMutation>)>) -> protocol::MutationEnvelope {
+    use protocol::OpBinary;
+    let last = ledger.last().expect("a ledger to supersede").timestamp;
+    let inputs: Vec<protocol::SupersededInput> = inputs
+        .into_iter()
+        .map(|(position, replacement)| protocol::SupersededInput {
+            target: ledger[position].mutation_id.clone(),
+            replacement: match replacement {
+                Some(mutation) => protocol::InputReplacement::Input { schema: semio_s_artifact_gis_gismap::GIS_MAP_SCHEMA.to_string(), payload: mutation.encode_op().expect("canonical op bytes") },
+                None => protocol::InputReplacement::Withdrawn,
+            },
+        })
+        .collect();
+    let supersede = protocol::TransitionSupersede { scope: None, inputs };
+    let dependencies = supersede.targets();
+    let timestamp = protocol::HybridLogicalTimestamp { actor: last.actor.wrapping_add(1), physical_ms: last.physical_ms + 1, logical: 0 };
+    protocol::history_transition_envelope(&protocol::HistoryTransition::Supersede(supersede), &ledger[0].document_id, &protocol::ActorId("collaborator".into()), dependencies, timestamp)
+}
+
+/// 📍️ A GIS Map position `id` at longitude `lon`.
+#[cfg(feature = "native-artifact-execution")]
+fn gis_map_position(index: usize, id: &str, lon: f64) -> semio_s_artifact_gis_gismap::GisMapMutation {
+    use semio_s_artifact_gis_gismap::mutations::create_position::CreatePosition;
+    let data = ::directory::DslValue::object([("lon".into(), ::directory::DslValue::float(lon)), ("lat".into(), ::directory::DslValue::float(47.0))]);
+    semio_s_artifact_gis_gismap::GisMapMutation::CreatePosition(CreatePosition { index, item: semio_s_artifact_gis_gismap::MapFeature { id: id.into(), data } })
+}
+
+/// 🏗️ The check-in authority over the linked GIS Map codec.
+#[cfg(feature = "native-artifact-execution")]
+fn gis_map_authority() -> ValidatingCanonicalArtifactAuthority<LinkedGisMapCatalog> {
+    let codec = ::directory::os_store::ArtifactCodec::of::<semio_s_artifact_gis_gismap::GisMapSnapshot, semio_s_artifact_gis_gismap::GisMapMutation>(semio_s_artifact_gis_gismap::GIS_MAP_SCHEMA);
+    ValidatingCanonicalArtifactAuthority::new(LinkedGisMapCatalog(LinkedGisMapCodec { identity: TrustedArtifactIdentity::from_descriptor(&descriptor()), codec }))
+}
+
+/// ✏️ A committed ledger holding a collaborator's `Supersede` of another author's operation materializes through Check In
+/// into a pair that keeps the supersession and whose reload folds it: the position carries the replacement input, the
+/// superseded edit keeps its slot and identity (ticket 26/09/30 NON-DESTRUCTIVE-HISTORY-EDITING `📋️design.md` §2, §3.1).
+#[cfg(feature = "native-artifact-execution")]
+#[tokio::test]
+async fn materialize_check_in_folds_a_supersession_of_the_ledger() {
+    use semio_s_artifact_gis_gismap::{GisMapMutation, GisMapSnapshot};
+    let (genesis, mut ledger) = gis_map_ledger(vec![gis_map_position(0, "p", 7.0)]).await;
+    ledger.push(gis_map_supersede(&ledger, vec![(0, Some(gis_map_position(0, "p", 9.0)))]));
+    let authority = gis_map_authority();
+    let job = DocumentCheckInJob::new("0a1b2c3d4e5f60718293a4b5c6d7e8f9", "aa");
+    let context = OperationContext::stall_bounded(DOCUMENT_CHECK_IN_STALL_BOUND_MS, AuthorityLimits::maximum(), job.as_ref()).unwrap();
+    let request = CheckInMaterialization { base_pair: genesis, envelopes: ::directory::os_spr::encode_envelopes(&ledger), ..materialization(b"+0") };
+    let candidate = authority.materialize_check_in(request, &context).await.expect("a ledger holding a supersession checks in");
+    let history = ::directory::os_spr::decode_history(&candidate.pair.spr, &::directory::os_spr::DecodeOptions::default()).await.expect("checked-in history");
+    assert_eq!((history.edits.len(), history.transitions.len()), (1, 1), "the superseded edit keeps its slot and the supersession is kept, not applied away");
+    let head = ::directory::os_store::parse_document_pack::<GisMapSnapshot, GisMapMutation>(&candidate.pair.pack, &candidate.pair.spr).await.expect("the checked-in pair reloads").into_snapshot();
+    assert_eq!(head.positions.iter().map(|position| (position.id.clone(), position.data.clone())).collect::<Vec<_>>(), vec![("p".to_string(), ::directory::DslValue::object([("lat".into(), ::directory::DslValue::float(47.0)), ("lon".into(), ::directory::DslValue::float(9.0))]))], "the reload folds the effective input (in the pack's canonical key order)");
+}
+
+/// ⛔️ A supersession that makes the ledger's replay block under `Normal` (a withdrawn create leaves the later delete of
+/// the same position `mutation.target-missing`, an `Error`) fails Check In with the codec's typed output refusal, the
+/// same on every attempt, while the same ledger without it checks in (design §9.2: Error and Fatal block, the check-in
+/// strictness).
+#[cfg(feature = "native-artifact-execution")]
+#[tokio::test]
+async fn materialize_check_in_refuses_a_supersession_that_blocks_the_replay() {
+    use semio_s_artifact_gis_gismap::mutations::delete_position::DeletePosition;
+    let (genesis, ledger) = gis_map_ledger(vec![gis_map_position(0, "p", 7.0), semio_s_artifact_gis_gismap::GisMapMutation::DeletePosition(DeletePosition { id: "p".into() })]).await;
+    let authority = gis_map_authority();
+    let job = DocumentCheckInJob::new("0a1b2c3d4e5f60718293a4b5c6d7e8f9", "aa");
+    let context = OperationContext::stall_bounded(DOCUMENT_CHECK_IN_STALL_BOUND_MS, AuthorityLimits::maximum(), job.as_ref()).unwrap();
+    let request = |ledger: &[protocol::MutationEnvelope]| CheckInMaterialization { base_pair: genesis.clone(), envelopes: ::directory::os_spr::encode_envelopes(ledger), ..materialization(b"+0") };
+    authority.materialize_check_in(request(&ledger), &context).await.expect("the ledger without the supersession checks in");
+    let mut blocked = ledger.clone();
+    blocked.push(gis_map_supersede(&ledger, vec![(0, None)]));
+    let first = authority.materialize_check_in(request(&blocked), &context).await.expect_err("a supersession that blocks the replay never checks in");
+    assert!(matches!(&first, AuthorityError::Codec { stage: ArtifactValidationStage::Output, message } if message.contains("rejected by merge policy Normal")), "the codec refuses the replayed ledger under Normal: {first:?}");
+    assert_eq!(check_in_refusal_of_authority_error(&first), Some(DocumentCheckInRefusalV1::CodecRefused));
+    let second = authority.materialize_check_in(request(&blocked), &context).await.expect_err("the refusal is deterministic");
+    assert_eq!(first, second, "the same ledger is refused the same way every time");
+}
+//#endregion 🔖️Supersede

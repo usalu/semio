@@ -27,7 +27,10 @@
           "const": "change-print-target"
         },
         "newPrintTarget": {
-          "type": "string"
+          "type": [
+            "string",
+            "null"
+          ]
         }
       },
       "required": [
@@ -42,7 +45,10 @@
           "const": "change-data-fields"
         },
         "newJson": {
-          "type": "string"
+          "type": [
+            "string",
+            "null"
+          ]
         }
       },
       "required": [
@@ -60,7 +66,10 @@
           "type": "object"
         },
         "index": {
-          "type": "integer"
+          "type": [
+            "integer",
+            "null"
+          ]
         }
       },
       "required": [
@@ -231,7 +240,10 @@
           "type": "object"
         },
         "index": {
-          "type": "integer"
+          "type": [
+            "integer",
+            "null"
+          ]
         }
       },
       "required": [
@@ -286,7 +298,10 @@
           "type": "object"
         },
         "index": {
-          "type": "integer"
+          "type": [
+            "integer",
+            "null"
+          ]
         }
       },
       "required": [
@@ -344,10 +359,16 @@
           "type": "object"
         },
         "index": {
-          "type": "integer"
+          "type": [
+            "integer",
+            "null"
+          ]
         },
         "layerId": {
-          "type": "string"
+          "type": [
+            "string",
+            "null"
+          ]
         }
       },
       "required": [
@@ -470,7 +491,10 @@
           "type": "string"
         },
         "newFill": {
-          "type": "object"
+          "type": [
+            "array",
+            "null"
+          ]
         }
       },
       "required": [
@@ -493,7 +517,10 @@
           "type": "string"
         },
         "newStroke": {
-          "type": "object"
+          "type": [
+            "array",
+            "null"
+          ]
         }
       },
       "required": [
@@ -588,16 +615,499 @@
           "type": "string"
         },
         "locked": {
-          "type": "boolean"
+          "type": [
+            "boolean",
+            "null"
+          ]
         },
         "visible": {
-          "type": "boolean"
+          "type": [
+            "boolean",
+            "null"
+          ]
         }
       },
       "required": [
         "kind",
         "pageId",
         "frameId"
+      ]
+    },
+    {
+      "type": "object",
+      "title": "UpdateParagraphStyle",
+      "properties": {
+        "kind": {
+          "const": "update-paragraph-style"
+        },
+        "id": {
+          "type": "string"
+        },
+        "name": {
+          "type": "string"
+        },
+        "fontFamily": {
+          "type": "string"
+        },
+        "fontSize": {
+          "type": "number"
+        },
+        "fontWeight": {
+          "type": "integer"
+        },
+        "leading": {
+          "type": "number"
+        },
+        "tracking": {
+          "type": "number"
+        },
+        "alignment": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "kind",
+        "id",
+        "name",
+        "fontFamily",
+        "fontSize",
+        "fontWeight",
+        "leading",
+        "tracking",
+        "alignment"
+      ]
+    },
+    {
+      "type": "object",
+      "title": "UpdateTextFrame",
+      "properties": {
+        "kind": {
+          "const": "update-text-frame"
+        },
+        "pageId": {
+          "type": "string"
+        },
+        "frameId": {
+          "type": "string"
+        },
+        "storyId": {
+          "type": "string"
+        },
+        "threadNext": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "insetX": {
+          "type": "number"
+        },
+        "insetY": {
+          "type": "number"
+        },
+        "insetWidth": {
+          "type": "number"
+        },
+        "insetHeight": {
+          "type": "number"
+        }
+      },
+      "required": [
+        "kind",
+        "pageId",
+        "frameId",
+        "storyId",
+        "insetX",
+        "insetY",
+        "insetWidth",
+        "insetHeight"
+      ]
+    },
+    {
+      "type": "object",
+      "title": "UpdateLayer",
+      "properties": {
+        "kind": {
+          "const": "update-layer"
+        },
+        "pageId": {
+          "type": "string"
+        },
+        "layerId": {
+          "type": "string"
+        },
+        "name": {
+          "type": "string"
+        },
+        "visible": {
+          "type": "boolean"
+        },
+        "locked": {
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "kind",
+        "pageId",
+        "layerId",
+        "name",
+        "visible",
+        "locked"
+      ]
+    },
+    {
+      "type": "object",
+      "title": "CreateCharacterStyle",
+      "properties": {
+        "kind": {
+          "const": "create-character-style"
+        },
+        "id": {
+          "type": "string"
+        },
+        "name": {
+          "type": [
+            "string",
+            "null"
+          ]
+        }
+      },
+      "required": [
+        "kind",
+        "id"
+      ]
+    },
+    {
+      "type": "object",
+      "title": "DeleteCharacterStyle",
+      "properties": {
+        "kind": {
+          "const": "delete-character-style"
+        },
+        "id": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "kind",
+        "id"
+      ]
+    },
+    {
+      "type": "object",
+      "title": "UpdateCharacterStyle",
+      "properties": {
+        "kind": {
+          "const": "update-character-style"
+        },
+        "id": {
+          "type": "string"
+        },
+        "name": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "fontFamily": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "fontSize": {
+          "type": [
+            "number",
+            "null"
+          ]
+        },
+        "fontWeight": {
+          "type": [
+            "integer",
+            "null"
+          ]
+        },
+        "italic": {
+          "type": [
+            "boolean",
+            "null"
+          ]
+        },
+        "color": {
+          "type": [
+            "array",
+            "null"
+          ]
+        },
+        "tracking": {
+          "type": [
+            "number",
+            "null"
+          ]
+        }
+      },
+      "required": [
+        "kind",
+        "id"
+      ]
+    },
+    {
+      "type": "object",
+      "title": "UpdateParentPage",
+      "properties": {
+        "kind": {
+          "const": "update-parent-page"
+        },
+        "id": {
+          "type": "string"
+        },
+        "name": {
+          "type": "string"
+        },
+        "width": {
+          "type": "number"
+        },
+        "height": {
+          "type": "number"
+        }
+      },
+      "required": [
+        "kind",
+        "id",
+        "name",
+        "width",
+        "height"
+      ]
+    },
+    {
+      "type": "object",
+      "title": "UpdateSpread",
+      "properties": {
+        "kind": {
+          "const": "update-spread"
+        },
+        "id": {
+          "type": "string"
+        },
+        "name": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "kind",
+        "id",
+        "name"
+      ]
+    },
+    {
+      "type": "object",
+      "title": "SetPageParent",
+      "properties": {
+        "kind": {
+          "const": "set-page-parent"
+        },
+        "id": {
+          "type": "string"
+        },
+        "parentPageId": {
+          "type": [
+            "string",
+            "null"
+          ]
+        }
+      },
+      "required": [
+        "kind",
+        "id"
+      ]
+    },
+    {
+      "type": "object",
+      "title": "SetPageGuides",
+      "properties": {
+        "kind": {
+          "const": "set-page-guides"
+        },
+        "id": {
+          "type": "string"
+        },
+        "guides": {
+          "type": "array"
+        }
+      },
+      "required": [
+        "kind",
+        "id",
+        "guides"
+      ]
+    },
+    {
+      "type": "object",
+      "title": "SetStoryRuns",
+      "properties": {
+        "kind": {
+          "const": "set-story-runs"
+        },
+        "id": {
+          "type": "string"
+        },
+        "runs": {
+          "type": "array"
+        }
+      },
+      "required": [
+        "kind",
+        "id",
+        "runs"
+      ]
+    },
+    {
+      "type": "object",
+      "title": "UpdateLink",
+      "properties": {
+        "kind": {
+          "const": "update-link"
+        },
+        "id": {
+          "type": "string"
+        },
+        "width": {
+          "type": "integer"
+        },
+        "height": {
+          "type": "integer"
+        },
+        "dpi": {
+          "type": "integer"
+        },
+        "colorProfile": {
+          "type": [
+            "string",
+            "null"
+          ]
+        }
+      },
+      "required": [
+        "kind",
+        "id",
+        "width",
+        "height",
+        "dpi"
+      ]
+    },
+    {
+      "type": "object",
+      "title": "SetPageOverrides",
+      "properties": {
+        "kind": {
+          "const": "set-page-overrides"
+        },
+        "id": {
+          "type": "string"
+        },
+        "overrides": {
+          "type": "array"
+        }
+      },
+      "required": [
+        "kind",
+        "id",
+        "overrides"
+      ]
+    },
+    {
+      "type": "object",
+      "title": "CreateLayer",
+      "properties": {
+        "kind": {
+          "const": "create-layer"
+        },
+        "pageId": {
+          "type": "string"
+        },
+        "id": {
+          "type": "string"
+        },
+        "name": {
+          "type": "string"
+        },
+        "remove": {
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "kind",
+        "pageId",
+        "id",
+        "name"
+      ]
+    },
+    {
+      "type": "object",
+      "title": "SetFrameLayer",
+      "properties": {
+        "kind": {
+          "const": "set-frame-layer"
+        },
+        "pageId": {
+          "type": "string"
+        },
+        "frameId": {
+          "type": "string"
+        },
+        "layerId": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "kind",
+        "pageId",
+        "frameId",
+        "layerId"
+      ]
+    },
+    {
+      "type": "object",
+      "title": "SetDrawingText",
+      "properties": {
+        "kind": {
+          "const": "set-drawing-text"
+        },
+        "index": {
+          "type": "integer"
+        },
+        "text": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "kind",
+        "index",
+        "text"
+      ]
+    },
+    {
+      "type": "object",
+      "title": "ReorderFrame",
+      "properties": {
+        "kind": {
+          "const": "reorder-frame"
+        },
+        "pageId": {
+          "type": "string"
+        },
+        "frameId": {
+          "type": "string"
+        },
+        "forward": {
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "kind",
+        "pageId",
+        "frameId",
+        "forward"
       ]
     }
   ],

@@ -5,11 +5,33 @@
   "type": "object",
   "additionalProperties": false,
   "required": [
+    "mutation",
     "id"
   ],
   "properties": {
+    "mutation": {
+      "const": "deleteMechanicalVentilation"
+    },
     "id": {
-      "type": "integer"
+      "type": "integer",
+      "minimum": 0,
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Mechanical ventilation",
+          "de": "Mechanische Lüftung"
+        },
+        "description": {
+          "en": "The mechanical ventilation to delete, by id.",
+          "de": "Mechanische Lüftung, die diese Mutation löscht, per ID."
+        },
+        "ref": {
+          "kind": "mechanicalVentilation"
+        },
+        "group": "target",
+        "order": 10
+      }
     }
   }
 }

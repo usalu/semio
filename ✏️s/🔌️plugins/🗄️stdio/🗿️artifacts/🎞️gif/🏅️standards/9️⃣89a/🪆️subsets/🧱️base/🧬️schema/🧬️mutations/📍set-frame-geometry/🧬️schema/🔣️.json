@@ -5,6 +5,7 @@
   "type": "object",
   "additionalProperties": false,
   "required": [
+    "mutation",
     "index",
     "left",
     "top",
@@ -12,33 +13,91 @@
     "height"
   ],
   "properties": {
+    "mutation": {
+      "const": "setFrameGeometry",
+      "description": "Aggregate discriminator spliced in by GifMutation; absent when the payload stands alone."
+    },
     "index": {
       "type": "integer",
-      "minimum": 0
+      "minimum": 0,
+      "x-semio-ui": {
+        "widget": "stepper",
+        "label": {
+          "en": "Frame",
+          "de": "Einzelbild"
+        },
+        "description": {
+          "en": "Index of the frame, counted from 0.",
+          "de": "Index des Einzelbildes, ab 0 gezählt."
+        },
+        "precision": 0,
+        "group": "target",
+        "order": 10
+      }
     },
     "left": {
       "type": "integer",
       "minimum": 0,
-      "maximum": 4294967295
+      "maximum": 4294967295,
+      "x-semio-ui": {
+        "widget": "stepper",
+        "label": {
+          "en": "Left offset",
+          "de": "Abstand links"
+        },
+        "unit": "px",
+        "precision": 0,
+        "group": "value",
+        "order": 20
+      }
     },
     "top": {
       "type": "integer",
       "minimum": 0,
-      "maximum": 4294967295
+      "maximum": 4294967295,
+      "x-semio-ui": {
+        "widget": "stepper",
+        "label": {
+          "en": "Top offset",
+          "de": "Abstand oben"
+        },
+        "unit": "px",
+        "precision": 0,
+        "group": "value",
+        "order": 30
+      }
     },
     "width": {
       "type": "integer",
       "minimum": 0,
-      "maximum": 4294967295
+      "maximum": 4294967295,
+      "x-semio-ui": {
+        "widget": "stepper",
+        "label": {
+          "en": "Width",
+          "de": "Breite"
+        },
+        "unit": "px",
+        "precision": 0,
+        "group": "value",
+        "order": 40
+      }
     },
     "height": {
       "type": "integer",
       "minimum": 0,
-      "maximum": 4294967295
-    },
-    "mutation": {
-      "const": "setFrameGeometry",
-      "description": "Aggregate discriminator spliced in by GifMutation; absent when the payload stands alone."
+      "maximum": 4294967295,
+      "x-semio-ui": {
+        "widget": "stepper",
+        "label": {
+          "en": "Height",
+          "de": "Höhe"
+        },
+        "unit": "px",
+        "precision": 0,
+        "group": "value",
+        "order": 50
+      }
     }
   }
 }

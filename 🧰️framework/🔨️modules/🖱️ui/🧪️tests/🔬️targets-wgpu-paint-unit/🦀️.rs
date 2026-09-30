@@ -282,7 +282,7 @@ fn painting_a_waiting_tree_emits_a_waiting_border_instance() {
 }
 
 fn stepper(id: &str, value: f64, uniform: bool) -> UiNode {
-    UiNode::NumberStepper(UiNumberStepperNode { id: id.into(), value, step: 1.0, uniform, min: None, max: None, on_absolute: action(), on_delta: action(), presence: UiPresence::default(), menu: None })
+    UiNode::NumberStepper(UiNumberStepperNode { id: id.into(), value, step: 1.0, uniform, min: None, max: None, precision: None, on_absolute: action(), on_delta: action(), presence: UiPresence::default(), menu: None })
 }
 
 #[test]
@@ -312,7 +312,7 @@ fn painting_a_mixed_number_stepper_shows_the_mixed_placeholder_in_muted_color() 
 }
 
 fn slider(id: &str, unit: Option<&str>) -> UiNode {
-    UiNode::Slider(UiSliderNode { id: id.into(), value: 0.5, min: 0.0, max: 1.0, step: 0.01, unit: unit.map(String::from), on_change: action(), presence: UiPresence::default(), menu: None })
+    UiNode::Slider(UiSliderNode { id: id.into(), value: 0.5, min: 0.0, max: 1.0, step: 0.01, unit: unit.map(String::from), snaps: Vec::new(), on_change: action(), presence: UiPresence::default(), menu: None })
 }
 
 #[test]
@@ -396,7 +396,7 @@ fn slider_paints_the_shared_rail_range_thumb_and_numeric_readout() {
     let case = law["cases"].as_array().unwrap().iter().find(|case| case["id"] == "fractional-middle").unwrap();
     let rect = |value: &serde_json::Value| [value[0].as_f64().unwrap() as f32, value[1].as_f64().unwrap() as f32, value[2].as_f64().unwrap() as f32, value[3].as_f64().unwrap() as f32];
     let node =
-        UiSliderNode { id: "slider".into(), value: case["value"].as_f64().unwrap(), min: case["min"].as_f64().unwrap(), max: case["max"].as_f64().unwrap(), step: 0.1, unit: None, on_change: action(), presence: UiPresence::default(), menu: None };
+        UiSliderNode { id: "slider".into(), value: case["value"].as_f64().unwrap(), min: case["min"].as_f64().unwrap(), max: case["max"].as_f64().unwrap(), step: 0.1, unit: None, snaps: Vec::new(), on_change: action(), presence: UiPresence::default(), menu: None };
     let bounds = Rect::new(case["bounds"][0].as_f64().unwrap() as f32, case["bounds"][1].as_f64().unwrap() as f32, case["bounds"][2].as_f64().unwrap() as f32, case["bounds"][3].as_f64().unwrap() as f32);
     let theme = Theme::default();
     let mut atlas = FontAtlas::builtin();
@@ -818,6 +818,8 @@ fn input(id: &str, value: &str) -> UiNode {
         max: None,
         step: None,
         accept: None,
+        precision: None,
+        snaps: Vec::new(),
         on_change: action(),
         on_submit: None,
         on_abort: None,

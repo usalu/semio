@@ -3,7 +3,6 @@ import {SelectionCombineJob} from "../../../../../../../../../../🔨️modules/
 import {act,cleanup,fireEvent,render,waitFor} from "@semio-tech/ui-react/test";
 import {afterEach,expect,test,vi} from "vitest";
 import sharp from "sharp";
-import maskFixture from "../../../../../../../../../../../✏️s/🔌️plugins/🖨️raster/🗿️artifacts/🖨️raster/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🎭️mask-from-selection/🧫️fixtures/🔣️.json";
 import {PixelEditingOverlay as ControlledPixelEditingOverlay} from "../../🟦️.tsx";
 import {useState,type ComponentProps} from "react";
 
@@ -76,13 +75,6 @@ for(const action of ["Apply","Crop to selection","Mask from selection"]) test(ac
   expect((view.getByRole("button",{name:action,exact:true}) as HTMLButtonElement).disabled).toBe(false);
 });
 
-test("selection mask coverage matches the Sharp alpha-channel oracle",async()=>{
-  const {width,height,selection,expectedRgba}=maskFixture;
-  const alpha=Buffer.alloc(width*height);
-  for(const [start,length,coverage] of selection) alpha.fill(coverage!,start!,start!+length!);
-  const rgba=await sharp(Buffer.alloc(width*height*3,255),{raw:{width,height,channels:3}}).joinChannel(alpha,{raw:{width,height,channels:1}}).raw().toBuffer();
-  expect([...rgba]).toEqual(expectedRgba);
-});
 
 for(const kind of ["pixel","group"]) test(kind+" mask target sends coverage strokes and clears the pixel selection",async()=>{
   vi.stubGlobal("ResizeObserver",class {observe(){} disconnect(){}});

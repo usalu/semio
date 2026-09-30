@@ -2,7 +2,7 @@
  * (13 variants: one `change-<field>` leaf per document-root scalar, plus one `update-climate` for
  * the inseparable two-array `MonthlyClimate` facet). */
 
-export type UseClass = "residential" | "office" | "school";
+export type UseClass = "Residential" | "Office" | "School";
 
 export interface MonthlyClimate {
   thetaEC: [number, number, number, number, number, number, number, number, number, number, number, number];

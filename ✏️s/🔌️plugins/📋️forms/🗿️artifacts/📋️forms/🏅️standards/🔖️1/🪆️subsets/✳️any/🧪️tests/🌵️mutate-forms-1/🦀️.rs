@@ -1,27 +1,18 @@
 //! 🦀️ Forms document exhaustive mutation case — Rust adapter. Ticket `26/08/23/END-TO-END-TESTING-REFACTOR`.
 //!
-//! Recorded no-oracle decision `forms-document-mutation-semantics`
-//! (`../../🏅️standards/🔖️1/🪆️subsets/✳️any/🔣️oracle.json`): `s.forms.form` is a
-//! semio-NATIVE artifact with no third-party reader or writer, so this case registers SUBJECT
-//! handlers only. That is not an omission — the runner resolves an oracle implementation from the
-//! feature's `@oracle-` tag, this feature carries `@no-oracle-` instead, and the oracle role is
-//! therefore never dispatched for it. Registering an oracle handler here would be dead code that
-//! reads as coverage in every listing, so there is none; every law this case claims is asserted
-//! inside the subject handlers, through the shared
+//! This case is a cross-language differential: the feature's `@oracle-forms-python-independent` tag
+//! dispatches the independent Python reference `🐍️.py` beside this file in the ORACLE role, and this
+//! adapter registers the SUBJECT half — this subset's own codec and mutation vocabulary. Every law the
+//! subject claims is asserted inside its handlers through the shared
 //! `✏️s/🔌️plugins/🗄️stdio/🔮️oracles/⚖️law/🦀️.rs` module.
 //!
-//! ⚠️ What this case can and cannot prove is set by the vectors it has. Nine of the ten pin a
-//! rejection or a no-op branch, because `FormsSnapshot` keeps its steps tree behind
-//! content-addressed child handles whose successful re-mint is a `DefaultHasher` digest no one can
-//! hand-author. So the forward assertion here is the committed `🎯️outcome`'s status AND code, not
-//! a moved projection, and `GUARD_VECTORS` names all nine. The inverse law is unexempted for all
-//! ten: a refused mutation's inverse is EMPTY, and applying nothing must still land on the
-//! before-snapshot, which is a real check that a spuriously non-empty inverse would fail.
+//! ⚠️ What this case can and cannot prove is set by the vectors it has. Nine of the ten pin a rejection
+//! or a no-op branch, so the forward assertion is the committed `🎯️outcome`'s status AND code, not a
+//! moved projection, and `GUARD_VECTORS` names all nine. The inverse law is unexempted for all ten: a
+//! refused mutation's inverse is EMPTY, and applying nothing must still land on the before-snapshot.
 //!
-//! The `scene` cell each row carries is the working-scene half of that row's before-state,
-//! transcribed from the same leaf's own `🧪️tests/<fixture>/🦀️.rs::before()`. It is the one
-//! thing in this adapter that is not read from a digest-pinned committed file, and it is in the
-//! feature as visible data rather than a per-kind `match` here for exactly that reason.
+//! The `scene` cell each row carries is the before-document's own `definition.steps`; the subject seeds
+//! it and the reference requires it to equal the committed before-document, so the row cannot drift.
 
 use semio_repo_test_host::Adapter;
 
@@ -46,13 +37,9 @@ const KINDS: &[&str] = &[
 ];
 
 #[cfg(feature = "sut")]
-/// 👁️ The nine kinds whose committed vector pins a REJECTION or NO-OP branch rather than
-/// an effect, so `before` and `after` are the same document and the observability law cannot hold.
-/// The reason is structural and is stated in the leaves themselves: a successful forms mutation
-/// re-mints the content-addressed `structure`/`results` child handles from a `DefaultHasher` digest,
-/// and that value cannot be hand-authored into a committed `➡️after`. Naming them here is a claim
-/// the reader can check against the vectors, and the feature description states the same. Only
-/// `change-form-title`, the one kind that touches a persisted scalar, carries an effect vector.
+/// 👁️ The nine kinds whose committed vector pins a REJECTION or NO-OP branch rather than an effect, so
+/// `before` and `after` are the same document and the observability law cannot hold. Only
+/// `change-form-title` carries an effect vector; successful step/block vectors are still owed.
 const GUARD_VECTORS: &[&str] = &[
     "create-step",
     "delete-step",
@@ -80,7 +67,7 @@ const EXAMPLE_ASSET: &str = "asset://🎬️demo/🗣️.dsl.semio";
 mod subject {
     use semio_repo_test_host::{parse_json, Context, Json, Outcome};
     use semio_s_plugin_stdio_test_oracle::law;
-    use semio_s_artifact_forms_forms::standards::v1::subsets::any::io::snapshot::text::{parse_form_dsl, print_form_dsl};
+    use semio_s_artifact_forms_forms::standards::v1::subsets::any::io::snapshot::text::{parse_forms_dsl, print_forms_dsl};
     use semio_s_artifact_forms_forms::standards::v1::subsets::any::schema::mutations::{apply_form_mutation_outcome, decode_form_mutation_json, decode_form_snapshot_json, encode_form_snapshot_json, inverse_form_mutation_steps, seed_form_scene_json, FormMutation};
     use semio_s_artifact_forms_forms::FormsSnapshot;
 
@@ -200,9 +187,9 @@ mod subject {
     pub fn round_trip(ctx: &Context) -> Result<Outcome, String> {
         let committed = ctx.fixture_bytes(super::EXAMPLE_ASSET)?;
         let text = String::from_utf8(committed.clone()).map_err(|error| format!("identity-round-trip: the committed artifact is not UTF-8: {error}"))?;
-        let parsed = parse_form_dsl(&text)?;
-        let printed = print_form_dsl(&parsed);
-        let reparsed = parse_form_dsl(&printed)?;
+        let parsed = parse_forms_dsl(&text)?;
+        let printed = print_forms_dsl(&parsed);
+        let reparsed = parse_forms_dsl(&printed)?;
         let (before, after) = (projection(&parsed)?, projection(&reparsed)?);
         law::round_trip_preserves(&after, &before)?;
         law::carrier_is_exact(printed.as_bytes(), &committed)?;

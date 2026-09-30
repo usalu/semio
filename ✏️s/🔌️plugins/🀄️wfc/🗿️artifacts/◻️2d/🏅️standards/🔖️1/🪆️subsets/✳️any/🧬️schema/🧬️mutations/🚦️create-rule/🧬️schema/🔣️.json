@@ -20,20 +20,97 @@
       ],
       "properties": {
         "id": {
-          "type": "string"
+          "type": "string",
+          "x-semio-ui": {
+            "widget": "text",
+            "role": "value",
+            "label": {
+              "en": "ID",
+              "de": "ID"
+            },
+            "description": {
+              "en": "Unique id of the record.",
+              "de": "Eindeutige ID des Eintrags."
+            },
+            "group": "identity",
+            "order": 10
+          }
         },
         "tileAId": {
-          "type": "string"
+          "type": "string",
+          "x-semio-ui": {
+            "widget": "reference",
+            "role": "target",
+            "label": {
+              "en": "Tile A",
+              "de": "Kachel A"
+            },
+            "ref": {
+              "kind": "tile"
+            },
+            "group": "target",
+            "order": 20
+          }
         },
         "tileBId": {
-          "type": "string"
+          "type": "string",
+          "x-semio-ui": {
+            "widget": "reference",
+            "role": "target",
+            "label": {
+              "en": "Tile B",
+              "de": "Kachel B"
+            },
+            "ref": {
+              "kind": "tile"
+            },
+            "group": "target",
+            "order": 30
+          }
         },
         "relation": {
-          "type": "string"
+          "type": "string",
+          "x-semio-ui": {
+            "widget": "text",
+            "role": "value",
+            "label": {
+              "en": "Relation",
+              "de": "Relation"
+            },
+            "description": {
+              "en": "Adjacency class, e.g. adjacent, above or beside.",
+              "de": "Nachbarschaftsklasse, z. B. adjacent, above oder beside."
+            },
+            "group": "rule",
+            "order": 40
+          }
         },
         "allowed": {
-          "type": "boolean"
+          "type": "boolean",
+          "x-semio-ui": {
+            "widget": "toggle",
+            "role": "value",
+            "label": {
+              "en": "Allowed",
+              "de": "Erlaubt"
+            },
+            "description": {
+              "en": "Whether the pair may be neighbours; off forbids it.",
+              "de": "Ob das Paar benachbart sein darf; aus verbietet es."
+            },
+            "group": "rule",
+            "order": 50
+          }
         }
+      },
+      "x-semio-ui": {
+        "role": "value",
+        "label": {
+          "en": "Adjacency rule",
+          "de": "Nachbarschaftsregel"
+        },
+        "group": "record",
+        "order": 10
       }
     }
   }

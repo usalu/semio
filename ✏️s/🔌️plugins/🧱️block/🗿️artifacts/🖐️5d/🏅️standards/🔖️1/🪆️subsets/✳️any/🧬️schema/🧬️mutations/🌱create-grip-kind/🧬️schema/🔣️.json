@@ -5,9 +5,13 @@
   "type": "object",
   "additionalProperties": false,
   "required": [
+    "mutation",
     "gripKind"
   ],
   "properties": {
+    "mutation": {
+      "const": "createGripKind"
+    },
     "gripKind": {
       "title": "Block5dGripKind",
       "type": "object",
@@ -21,20 +25,87 @@
       ],
       "properties": {
         "id": {
-          "type": "string"
+          "type": "string",
+          "x-semio-ui": {
+            "widget": "text",
+            "role": "value",
+            "label": {
+              "en": "ID",
+              "de": "ID"
+            },
+            "description": {
+              "en": "Unique id of the record.",
+              "de": "Eindeutige ID des Eintrags."
+            },
+            "group": "identity",
+            "order": 10
+          }
         },
         "name": {
-          "type": "string"
+          "type": "string",
+          "x-semio-ui": {
+            "widget": "text",
+            "role": "value",
+            "label": {
+              "en": "Name",
+              "de": "Name"
+            },
+            "group": "identity",
+            "order": 20
+          }
         },
         "label": {
-          "type": "string"
+          "type": "string",
+          "x-semio-ui": {
+            "widget": "text",
+            "role": "value",
+            "label": {
+              "en": "Label",
+              "de": "Bezeichnung"
+            },
+            "group": "value",
+            "order": 30
+          }
         },
         "color": {
-          "type": "string"
+          "type": "string",
+          "x-semio-ui": {
+            "widget": "text",
+            "role": "value",
+            "label": {
+              "en": "Color",
+              "de": "Farbe"
+            },
+            "description": {
+              "en": "CSS color, e.g. #3366ff.",
+              "de": "CSS-Farbe, z. B. #3366ff."
+            },
+            "group": "appearance",
+            "order": 40
+          }
         },
         "defaultRopeKind": {
-          "type": "string"
+          "type": "string",
+          "x-semio-ui": {
+            "widget": "text",
+            "role": "value",
+            "label": {
+              "en": "Default rope kind",
+              "de": "Standard-Seilart"
+            },
+            "group": "kind",
+            "order": 50
+          }
         }
+      },
+      "x-semio-ui": {
+        "role": "value",
+        "label": {
+          "en": "Grip kind",
+          "de": "Griffart"
+        },
+        "group": "record",
+        "order": 10
       }
     }
   }

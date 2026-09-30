@@ -108,6 +108,8 @@ const ARIA_NAMED_KEYS: Readonly<Record<string, string>> = {
   enter: "Enter",
   space: "Space",
   tab: "Tab",
+  backspace: "Backspace",
+  delete: "Delete",
 };
 
 function ariaKeyToken(token: string, usesMeta: boolean): string {

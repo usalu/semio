@@ -1834,5 +1834,1839 @@
       "type": "string",
       "x-semio-state": "artifact"
     }
+  },
+  "$defs": {
+    "Subject": {
+      "title": "Subject",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "kind",
+        "names",
+        "definition"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "kind": {
+          "$ref": "#/$defs/SubjectKind"
+        },
+        "names": {
+          "$ref": "#/$defs/Names",
+          "x-semio-ui": {
+            "label": {
+              "en": "Names",
+              "de": "Benennungen"
+            }
+          }
+        },
+        "definition": {
+          "$ref": "#/$defs/LocalizedText",
+          "x-semio-ui": {
+            "label": {
+              "en": "Definition",
+              "de": "Definition"
+            }
+          }
+        },
+        "parentId": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "x-semio-ui": {
+            "widget": "reference",
+            "label": {
+              "en": "Parent",
+              "de": "Übergeordnetes Element"
+            },
+            "ref": {
+              "kind": "subject"
+            },
+            "role": "value"
+          }
+        }
+      }
+    },
+    "CatalogueValue": {
+      "title": "CatalogueValue",
+      "oneOf": [
+        {
+          "title": "Boolean",
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "value"
+          ],
+          "properties": {
+            "kind": {
+              "const": "boolean"
+            },
+            "value": {
+              "type": "boolean"
+            }
+          }
+        },
+        {
+          "title": "Integer",
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "value"
+          ],
+          "properties": {
+            "kind": {
+              "const": "integer"
+            },
+            "value": {
+              "type": "integer"
+            }
+          }
+        },
+        {
+          "title": "Decimal",
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "value"
+          ],
+          "properties": {
+            "kind": {
+              "const": "decimal"
+            },
+            "value": {
+              "type": "number"
+            }
+          }
+        },
+        {
+          "title": "Text",
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "value"
+          ],
+          "properties": {
+            "kind": {
+              "const": "text"
+            },
+            "value": {
+              "type": "string"
+            }
+          }
+        },
+        {
+          "title": "Identifier",
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "value"
+          ],
+          "properties": {
+            "kind": {
+              "const": "identifier"
+            },
+            "value": {
+              "type": "string"
+            }
+          }
+        },
+        {
+          "title": "Enumeration",
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "value"
+          ],
+          "properties": {
+            "kind": {
+              "const": "enumeration"
+            },
+            "value": {
+              "type": "string"
+            }
+          }
+        },
+        {
+          "title": "Controlled",
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "value",
+            "list_id"
+          ],
+          "properties": {
+            "kind": {
+              "const": "controlled"
+            },
+            "value": {
+              "type": "string"
+            },
+            "list_id": {
+              "type": "string"
+            }
+          }
+        },
+        {
+          "title": "Quantity",
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "value",
+            "unit"
+          ],
+          "properties": {
+            "kind": {
+              "const": "quantity"
+            },
+            "value": {
+              "type": "number"
+            },
+            "unit": {
+              "$ref": "#/$defs/CatalogueUnit"
+            }
+          }
+        },
+        {
+          "title": "Range",
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "min",
+            "max"
+          ],
+          "properties": {
+            "kind": {
+              "const": "range"
+            },
+            "min": {
+              "type": "number"
+            },
+            "max": {
+              "type": "number"
+            },
+            "unit": {
+              "oneOf": [
+                {
+                  "$ref": "#/$defs/CatalogueUnit"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "title": "Null",
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "state"
+          ],
+          "properties": {
+            "kind": {
+              "const": "null"
+            },
+            "state": {
+              "$ref": "#/$defs/NullState"
+            }
+          }
+        },
+        {
+          "title": "Reference",
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "target_id"
+          ],
+          "properties": {
+            "kind": {
+              "const": "reference"
+            },
+            "target_id": {
+              "type": "string"
+            }
+          }
+        },
+        {
+          "title": "List",
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "items"
+          ],
+          "properties": {
+            "kind": {
+              "const": "list"
+            },
+            "items": {
+              "type": "array",
+              "items": {
+                "$ref": "#/$defs/CatalogueValue"
+              }
+            }
+          }
+        }
+      ]
+    },
+    "ProductClass": {
+      "title": "ProductClass",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "groupId",
+        "names",
+        "requiredPropertyIds",
+        "optionalPropertyIds"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "groupId": {
+          "type": "string",
+          "x-semio-ui": {
+            "widget": "reference",
+            "label": {
+              "en": "Product group",
+              "de": "Produktgruppe"
+            },
+            "ref": {
+              "kind": "productGroup"
+            },
+            "role": "value"
+          }
+        },
+        "parentId": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "x-semio-ui": {
+            "widget": "reference",
+            "label": {
+              "en": "Parent",
+              "de": "Übergeordnetes Element"
+            },
+            "ref": {
+              "kind": "subject"
+            },
+            "role": "value"
+          }
+        },
+        "names": {
+          "$ref": "#/$defs/Names",
+          "x-semio-ui": {
+            "label": {
+              "en": "Names",
+              "de": "Benennungen"
+            }
+          }
+        },
+        "requiredPropertyIds": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "x-semio-ui": {
+            "widget": "reference",
+            "label": {
+              "en": "Required properties",
+              "de": "Pflichtmerkmale"
+            },
+            "ref": {
+              "kind": "propertyDefinition"
+            },
+            "role": "value"
+          }
+        },
+        "optionalPropertyIds": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "x-semio-ui": {
+            "widget": "reference",
+            "label": {
+              "en": "Optional properties",
+              "de": "Optionale Merkmale"
+            },
+            "ref": {
+              "kind": "propertyDefinition"
+            },
+            "role": "value"
+          }
+        }
+      }
+    },
+    "GeometryObject": {
+      "title": "GeometryObject",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "spaces",
+        "surfaces",
+        "ports",
+        "parameterBindings"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "shape": {
+          "oneOf": [
+            {
+              "$ref": "#/$defs/GeometryNode"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "x-semio-ui": {
+            "label": {
+              "en": "Shape",
+              "de": "Form"
+            }
+          }
+        },
+        "symbolic": {
+          "oneOf": [
+            {
+              "$ref": "#/$defs/GeometryNode"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "x-semio-ui": {
+            "label": {
+              "en": "Symbolic representation",
+              "de": "Symbolische Darstellung"
+            }
+          }
+        },
+        "spaces": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/SpaceEnvelope"
+          },
+          "x-semio-ui": {
+            "label": {
+              "en": "Spaces",
+              "de": "Räume"
+            },
+            "description": {
+              "en": "Overall, operation, access, placement and installation spaces.",
+              "de": "Gesamt-, Bedien-, Zugangs-, Einbring- und Installationsraum."
+            }
+          }
+        },
+        "surfaces": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/SurfaceDefinition"
+          },
+          "x-semio-ui": {
+            "label": {
+              "en": "Surfaces",
+              "de": "Flächen"
+            }
+          }
+        },
+        "ports": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/PortDefinition"
+          },
+          "x-semio-ui": {
+            "label": {
+              "en": "Ports",
+              "de": "Anschlüsse"
+            }
+          }
+        },
+        "parameterBindings": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "string"
+          },
+          "x-semio-ui": {
+            "label": {
+              "en": "Parameter bindings",
+              "de": "Parameterbindungen"
+            }
+          }
+        }
+      }
+    },
+    "PropertyDefinition": {
+      "title": "PropertyDefinition",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "names",
+        "dataType",
+        "cardinality",
+        "kind"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "names": {
+          "$ref": "#/$defs/Names",
+          "x-semio-ui": {
+            "label": {
+              "en": "Names",
+              "de": "Benennungen"
+            }
+          }
+        },
+        "dataType": {
+          "type": "string",
+          "x-semio-ui": {
+            "widget": "text",
+            "label": {
+              "en": "Data type",
+              "de": "Datentyp"
+            },
+            "description": {
+              "en": "E.g. boolean, integer, decimal, text, quantity or range.",
+              "de": "Z. B. boolean, integer, decimal, text, quantity oder range."
+            }
+          }
+        },
+        "unit": {
+          "oneOf": [
+            {
+              "$ref": "#/$defs/CatalogueUnit"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "x-semio-ui": {
+            "label": {
+              "en": "Unit",
+              "de": "Einheit"
+            }
+          }
+        },
+        "cardinality": {
+          "$ref": "#/$defs/Cardinality",
+          "x-semio-ui": {
+            "label": {
+              "en": "Cardinality",
+              "de": "Kardinalität"
+            }
+          }
+        },
+        "kind": {
+          "$ref": "#/$defs/PropertyKind"
+        },
+        "dictionaryPropertyId": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "x-semio-ui": {
+            "widget": "reference",
+            "label": {
+              "en": "Dictionary property",
+              "de": "Wörterbuch-Merkmal"
+            },
+            "ref": {
+              "kind": "subject"
+            },
+            "role": "value"
+          }
+        }
+      }
+    },
+    "ProductSeries": {
+      "title": "ProductSeries",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "classId",
+        "names",
+        "sharedPropertyValues"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "classId": {
+          "type": "string",
+          "x-semio-ui": {
+            "widget": "reference",
+            "label": {
+              "en": "Product class",
+              "de": "Produktklasse"
+            },
+            "ref": {
+              "kind": "productClass"
+            },
+            "role": "value"
+          }
+        },
+        "names": {
+          "$ref": "#/$defs/Names",
+          "x-semio-ui": {
+            "label": {
+              "en": "Names",
+              "de": "Benennungen"
+            }
+          }
+        },
+        "sharedPropertyValues": {
+          "type": "object",
+          "additionalProperties": {
+            "$ref": "#/$defs/CatalogueValue"
+          },
+          "x-semio-ui": {
+            "label": {
+              "en": "Shared property values",
+              "de": "Gemeinsame Merkmalswerte"
+            }
+          }
+        },
+        "geometryId": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "x-semio-ui": {
+            "widget": "reference",
+            "label": {
+              "en": "Geometry object",
+              "de": "Geometrieobjekt"
+            },
+            "ref": {
+              "kind": "geometryObject"
+            },
+            "role": "value"
+          }
+        }
+      }
+    },
+    "Product": {
+      "title": "Product",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "seriesId",
+        "names",
+        "parameterDomains",
+        "variants",
+        "staticProperties"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "seriesId": {
+          "type": "string",
+          "x-semio-ui": {
+            "widget": "reference",
+            "label": {
+              "en": "Product series",
+              "de": "Produktserie"
+            },
+            "ref": {
+              "kind": "productSeries"
+            },
+            "role": "value"
+          }
+        },
+        "names": {
+          "$ref": "#/$defs/Names",
+          "x-semio-ui": {
+            "label": {
+              "en": "Names",
+              "de": "Benennungen"
+            }
+          }
+        },
+        "parameterDomains": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/ParameterDomain"
+          },
+          "x-semio-ui": {
+            "label": {
+              "en": "Parameter domains",
+              "de": "Parameterbereiche"
+            }
+          }
+        },
+        "variants": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/ProductVariant"
+          },
+          "x-semio-ui": {
+            "label": {
+              "en": "Variants",
+              "de": "Varianten"
+            }
+          }
+        },
+        "staticProperties": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/PropertyValue"
+          },
+          "x-semio-ui": {
+            "label": {
+              "en": "Static properties",
+              "de": "Statische Merkmale"
+            }
+          }
+        }
+      }
+    },
+    "ExchangeProcess": {
+      "title": "ExchangeProcess",
+      "type": "string",
+      "enum": [
+        "CreateFromDictionary",
+        "ProvideCatalogue",
+        "DetermineProduct",
+        "IntegrateIntoSystem",
+        "ExchangeSystemModel"
+      ],
+      "x-semio-ui": {
+        "options": {
+          "CreateFromDictionary": {
+            "en": "Create from dictionary",
+            "de": "Aus Merkmalsverzeichnis erstellen"
+          },
+          "ProvideCatalogue": {
+            "en": "Provide catalogue",
+            "de": "Katalog bereitstellen"
+          },
+          "DetermineProduct": {
+            "en": "Determine product",
+            "de": "Produkt bestimmen"
+          },
+          "IntegrateIntoSystem": {
+            "en": "Integrate into system",
+            "de": "In System einbinden"
+          },
+          "ExchangeSystemModel": {
+            "en": "Exchange system model",
+            "de": "Systemmodell austauschen"
+          }
+        }
+      }
+    },
+    "ProductIndex": {
+      "title": "ProductIndex",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "productId",
+        "searchTags"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "productId": {
+          "type": "string",
+          "x-semio-ui": {
+            "widget": "reference",
+            "label": {
+              "en": "Product",
+              "de": "Produkt"
+            },
+            "ref": {
+              "kind": "product"
+            },
+            "role": "value"
+          }
+        },
+        "variantId": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "x-semio-ui": {
+            "widget": "reference",
+            "label": {
+              "en": "Variant",
+              "de": "Variante"
+            },
+            "ref": {
+              "kind": "variant"
+            },
+            "role": "value"
+          }
+        },
+        "searchTags": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "x-semio-ui": {
+            "label": {
+              "en": "Search tags",
+              "de": "Suchbegriffe"
+            }
+          }
+        }
+      }
+    },
+    "SelectionConstraint": {
+      "title": "SelectionConstraint",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "propertyId",
+        "operator",
+        "value"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "propertyId": {
+          "type": "string",
+          "x-semio-ui": {
+            "widget": "reference",
+            "label": {
+              "en": "Property",
+              "de": "Merkmal"
+            },
+            "ref": {
+              "kind": "propertyDefinition"
+            },
+            "role": "value"
+          }
+        },
+        "operator": {
+          "$ref": "#/$defs/ConstraintOperator",
+          "x-semio-ui": {
+            "label": {
+              "en": "Comparison operator",
+              "de": "Vergleichsoperator"
+            }
+          }
+        },
+        "value": {
+          "$ref": "#/$defs/CatalogueValue"
+        }
+      }
+    },
+    "PartNumberRule": {
+      "title": "PartNumberRule",
+      "oneOf": [
+        {
+          "title": "Literal",
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "value"
+          ],
+          "properties": {
+            "kind": {
+              "const": "literal"
+            },
+            "value": {
+              "type": "string"
+            }
+          }
+        },
+        {
+          "title": "Table",
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "rows",
+            "output_column"
+          ],
+          "properties": {
+            "kind": {
+              "const": "table"
+            },
+            "rows": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "additionalProperties": {
+                  "type": "string"
+                }
+              }
+            },
+            "output_column": {
+              "type": "string"
+            }
+          }
+        },
+        {
+          "title": "Script",
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "function_id",
+            "source"
+          ],
+          "properties": {
+            "kind": {
+              "const": "script"
+            },
+            "function_id": {
+              "type": "string"
+            },
+            "source": {
+              "type": "string"
+            }
+          }
+        }
+      ]
+    },
+    "ProductGroup": {
+      "title": "ProductGroup",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "names"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "names": {
+          "$ref": "#/$defs/Names",
+          "x-semio-ui": {
+            "label": {
+              "en": "Names",
+              "de": "Benennungen"
+            }
+          }
+        },
+        "dictionarySubjectId": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "x-semio-ui": {
+            "widget": "reference",
+            "label": {
+              "en": "Dictionary subject",
+              "de": "Wörterbuch-Subjekt"
+            },
+            "ref": {
+              "kind": "subject"
+            },
+            "role": "value"
+          }
+        }
+      }
+    },
+    "SubjectKind": {
+      "title": "SubjectKind",
+      "type": "string",
+      "enum": [
+        "ProductGroup",
+        "ProductClass",
+        "ProductSpecialization",
+        "CatalogueMetadata",
+        "ManufacturerMetadata",
+        "PropertyBlock",
+        "Port",
+        "Inlet",
+        "Outlet",
+        "InOutlet"
+      ],
+      "x-semio-ui": {
+        "options": {
+          "ProductGroup": {
+            "en": "Product group",
+            "de": "Produktgruppe"
+          },
+          "ProductClass": {
+            "en": "Product class",
+            "de": "Produktklasse"
+          },
+          "ProductSpecialization": {
+            "en": "Product specialization",
+            "de": "Produktspezialisierung"
+          },
+          "CatalogueMetadata": {
+            "en": "Catalogue metadata",
+            "de": "Katalog-Metadaten"
+          },
+          "ManufacturerMetadata": {
+            "en": "Manufacturer metadata",
+            "de": "Hersteller-Metadaten"
+          },
+          "PropertyBlock": {
+            "en": "Property block",
+            "de": "Merkmalsblock"
+          },
+          "Port": {
+            "en": "Port",
+            "de": "Anschluss"
+          },
+          "Inlet": {
+            "en": "Inlet",
+            "de": "Eintritt"
+          },
+          "Outlet": {
+            "en": "Outlet",
+            "de": "Austritt"
+          },
+          "InOutlet": {
+            "en": "Inlet/outlet",
+            "de": "Ein-/Austritt"
+          }
+        }
+      }
+    },
+    "Names": {
+      "title": "Names",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "preferred",
+        "alternatives"
+      ],
+      "properties": {
+        "preferred": {
+          "$ref": "#/$defs/LocalizedText",
+          "x-semio-ui": {
+            "label": {
+              "en": "Preferred name",
+              "de": "Vorzugsbenennung"
+            }
+          }
+        },
+        "shortName": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "x-semio-ui": {
+            "widget": "text",
+            "label": {
+              "en": "Short name",
+              "de": "Kurzbezeichnung"
+            }
+          }
+        },
+        "alternatives": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/LocalizedText"
+          },
+          "x-semio-ui": {
+            "label": {
+              "en": "Synonyms",
+              "de": "Synonyme"
+            }
+          }
+        }
+      }
+    },
+    "LocalizedText": {
+      "title": "LocalizedText",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "locale",
+        "text"
+      ],
+      "properties": {
+        "locale": {
+          "type": "string",
+          "x-semio-ui": {
+            "widget": "text",
+            "label": {
+              "en": "Language",
+              "de": "Sprache"
+            },
+            "description": {
+              "en": "BCP 47 language tag, e.g. en or de.",
+              "de": "Sprachkennung nach BCP 47, z. B. en oder de."
+            }
+          }
+        },
+        "text": {
+          "type": "string",
+          "x-semio-ui": {
+            "widget": "text",
+            "label": {
+              "en": "Text",
+              "de": "Text"
+            }
+          }
+        }
+      }
+    },
+    "CatalogueUnit": {
+      "title": "CatalogueUnit",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "symbol",
+        "dimension",
+        "siFactor"
+      ],
+      "properties": {
+        "symbol": {
+          "type": "string",
+          "x-semio-ui": {
+            "widget": "text",
+            "label": {
+              "en": "Unit symbol",
+              "de": "Einheitenzeichen"
+            }
+          }
+        },
+        "dimension": {
+          "$ref": "#/$defs/DimensionSignature",
+          "x-semio-ui": {
+            "label": {
+              "en": "Dimension",
+              "de": "Dimension"
+            },
+            "description": {
+              "en": "Exponents of the SI base quantities.",
+              "de": "Exponenten der SI-Basisgrößen."
+            }
+          }
+        },
+        "siFactor": {
+          "type": "number",
+          "x-semio-ui": {
+            "widget": "stepper",
+            "label": {
+              "en": "Factor to SI",
+              "de": "Umrechnungsfaktor zur SI-Einheit"
+            },
+            "step": 0.001,
+            "precision": 6
+          }
+        }
+      }
+    },
+    "NullState": {
+      "title": "NullState",
+      "type": "string",
+      "enum": [
+        "Unavailable",
+        "Unknown",
+        "NotApplicable"
+      ],
+      "x-semio-ui": {
+        "options": {
+          "Unavailable": {
+            "en": "Unavailable",
+            "de": "Nicht verfügbar"
+          },
+          "Unknown": {
+            "en": "Unknown",
+            "de": "Unbekannt"
+          },
+          "NotApplicable": {
+            "en": "Not applicable",
+            "de": "Nicht zutreffend"
+          }
+        }
+      }
+    },
+    "GeometryNode": {
+      "title": "GeometryNode",
+      "oneOf": [
+        {
+          "title": "Primitive",
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "node",
+            "kind",
+            "parameters"
+          ],
+          "properties": {
+            "node": {
+              "const": "primitive"
+            },
+            "kind": {
+              "type": "string"
+            },
+            "parameters": {
+              "type": "object",
+              "additionalProperties": {
+                "type": "number"
+              }
+            }
+          }
+        },
+        {
+          "title": "Transform",
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "node",
+            "translation",
+            "rotation_deg",
+            "child"
+          ],
+          "properties": {
+            "node": {
+              "const": "transform"
+            },
+            "translation": {
+              "type": "array",
+              "items": {
+                "type": "number"
+              },
+              "minItems": 3,
+              "maxItems": 3
+            },
+            "rotation_deg": {
+              "type": "array",
+              "items": {
+                "type": "number"
+              },
+              "minItems": 3,
+              "maxItems": 3
+            },
+            "child": {
+              "$ref": "#/$defs/GeometryNode"
+            }
+          }
+        },
+        {
+          "title": "Boolean",
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "node",
+            "operator",
+            "children"
+          ],
+          "properties": {
+            "node": {
+              "const": "boolean"
+            },
+            "operator": {
+              "$ref": "#/$defs/BooleanOperator"
+            },
+            "children": {
+              "type": "array",
+              "items": {
+                "$ref": "#/$defs/GeometryNode"
+              }
+            }
+          }
+        },
+        {
+          "title": "Reference",
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "node",
+            "geometry_id"
+          ],
+          "properties": {
+            "node": {
+              "const": "reference"
+            },
+            "geometry_id": {
+              "type": "string"
+            }
+          }
+        }
+      ]
+    },
+    "SpaceEnvelope": {
+      "title": "SpaceEnvelope",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "kind",
+        "bounds"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "kind": {
+          "$ref": "#/$defs/SpaceKind"
+        },
+        "bounds": {
+          "$ref": "#/$defs/BoundingBox",
+          "x-semio-ui": {
+            "label": {
+              "en": "Bounding box",
+              "de": "Hüllquader"
+            }
+          }
+        }
+      }
+    },
+    "SurfaceDefinition": {
+      "title": "SurfaceDefinition",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "purpose",
+        "bounds"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "purpose": {
+          "type": "string",
+          "x-semio-ui": {
+            "label": {
+              "en": "Surface purpose",
+              "de": "Zweck der Fläche"
+            },
+            "widget": "text"
+          }
+        },
+        "bounds": {
+          "$ref": "#/$defs/BoundingBox",
+          "x-semio-ui": {
+            "label": {
+              "en": "Bounding box",
+              "de": "Hüllquader"
+            }
+          }
+        }
+      }
+    },
+    "PortDefinition": {
+      "title": "PortDefinition",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "medium",
+        "position",
+        "direction",
+        "portType"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "medium": {
+          "type": "string",
+          "x-semio-ui": {
+            "label": {
+              "en": "Medium",
+              "de": "Medium"
+            },
+            "description": {
+              "en": "e.g. water, air, gas.",
+              "de": "z. B. Wasser, Luft, Gas."
+            },
+            "widget": "text"
+          }
+        },
+        "position": {
+          "type": "array",
+          "items": {
+            "type": "number"
+          },
+          "minItems": 3,
+          "maxItems": 3
+        },
+        "direction": {
+          "type": "array",
+          "items": {
+            "type": "number"
+          },
+          "minItems": 3,
+          "maxItems": 3,
+          "x-semio-ui": {
+            "label": {
+              "en": "Direction vector",
+              "de": "Richtungsvektor"
+            },
+            "widget": "vector"
+          }
+        },
+        "portType": {
+          "type": "string",
+          "x-semio-ui": {
+            "label": {
+              "en": "Port type",
+              "de": "Anschlussart"
+            },
+            "widget": "text"
+          }
+        }
+      }
+    },
+    "Cardinality": {
+      "title": "Cardinality",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "min"
+      ],
+      "properties": {
+        "min": {
+          "type": "integer",
+          "minimum": 0,
+          "x-semio-ui": {
+            "widget": "stepper",
+            "label": {
+              "en": "Minimum occurrences",
+              "de": "Mindestanzahl"
+            },
+            "step": 1,
+            "precision": 0
+          }
+        },
+        "max": {
+          "type": [
+            "integer",
+            "null"
+          ],
+          "minimum": 0,
+          "x-semio-ui": {
+            "widget": "stepper",
+            "label": {
+              "en": "Maximum occurrences",
+              "de": "Höchstanzahl"
+            },
+            "step": 1,
+            "precision": 0
+          }
+        }
+      }
+    },
+    "PropertyKind": {
+      "title": "PropertyKind",
+      "type": "string",
+      "enum": [
+        "Static",
+        "Dynamic",
+        "Selection",
+        "External"
+      ],
+      "x-semio-ui": {
+        "options": {
+          "Static": {
+            "en": "Static",
+            "de": "Statisch"
+          },
+          "Dynamic": {
+            "en": "Dynamic",
+            "de": "Dynamisch"
+          },
+          "Selection": {
+            "en": "Selection",
+            "de": "Auswahl"
+          },
+          "External": {
+            "en": "External",
+            "de": "Extern"
+          }
+        }
+      }
+    },
+    "ParameterDomain": {
+      "title": "ParameterDomain",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "parameterId",
+        "allowedValues"
+      ],
+      "properties": {
+        "parameterId": {
+          "type": "string",
+          "x-semio-ui": {
+            "widget": "reference",
+            "label": {
+              "en": "Parameter",
+              "de": "Parameter"
+            },
+            "ref": {
+              "kind": "propertyDefinition"
+            },
+            "role": "value"
+          }
+        },
+        "allowedValues": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/CatalogueValue"
+          },
+          "x-semio-ui": {
+            "label": {
+              "en": "Allowed values",
+              "de": "Zulässige Werte"
+            }
+          }
+        },
+        "defaultValue": {
+          "oneOf": [
+            {
+              "$ref": "#/$defs/CatalogueValue"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "x-semio-ui": {
+            "label": {
+              "en": "Default value",
+              "de": "Vorgabewert"
+            }
+          }
+        }
+      }
+    },
+    "ProductVariant": {
+      "title": "ProductVariant",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "parameterValues",
+        "propertyValues"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "parameterValues": {
+          "type": "object",
+          "additionalProperties": {
+            "$ref": "#/$defs/CatalogueValue"
+          },
+          "x-semio-ui": {
+            "label": {
+              "en": "Parameter values",
+              "de": "Parameterwerte"
+            }
+          }
+        },
+        "propertyValues": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/PropertyValue"
+          },
+          "x-semio-ui": {
+            "label": {
+              "en": "Property values",
+              "de": "Merkmalswerte"
+            }
+          }
+        },
+        "articleNumber": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "x-semio-ui": {
+            "widget": "text",
+            "label": {
+              "en": "Article number",
+              "de": "Artikelnummer"
+            }
+          }
+        },
+        "geometryId": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "x-semio-ui": {
+            "widget": "reference",
+            "label": {
+              "en": "Geometry object",
+              "de": "Geometrieobjekt"
+            },
+            "ref": {
+              "kind": "geometryObject"
+            },
+            "role": "value"
+          }
+        }
+      }
+    },
+    "PropertyValue": {
+      "title": "PropertyValue",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "definitionId",
+        "value"
+      ],
+      "properties": {
+        "definitionId": {
+          "type": "string",
+          "x-semio-ui": {
+            "widget": "reference",
+            "label": {
+              "en": "Property definition",
+              "de": "Merkmalsdefinition"
+            },
+            "ref": {
+              "kind": "propertyDefinition"
+            },
+            "role": "value"
+          }
+        },
+        "value": {
+          "$ref": "#/$defs/CatalogueValue"
+        },
+        "functionId": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "x-semio-ui": {
+            "widget": "text",
+            "label": {
+              "en": "Function",
+              "de": "Funktion"
+            },
+            "description": {
+              "en": "Id of the script function that computes the value.",
+              "de": "Kennung der Skriptfunktion, die den Wert berechnet."
+            }
+          }
+        }
+      }
+    },
+    "ConstraintOperator": {
+      "title": "ConstraintOperator",
+      "type": "string",
+      "enum": [
+        "Equal",
+        "NotEqual",
+        "LessThan",
+        "GreaterThan",
+        "InRange"
+      ],
+      "x-semio-ui": {
+        "options": {
+          "Equal": {
+            "en": "Equal",
+            "de": "Gleich"
+          },
+          "NotEqual": {
+            "en": "Not equal",
+            "de": "Ungleich"
+          },
+          "LessThan": {
+            "en": "Less than",
+            "de": "Kleiner als"
+          },
+          "GreaterThan": {
+            "en": "Greater than",
+            "de": "Größer als"
+          },
+          "InRange": {
+            "en": "In range",
+            "de": "Im Bereich"
+          }
+        }
+      }
+    },
+    "DimensionSignature": {
+      "title": "DimensionSignature",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "length",
+        "mass",
+        "time",
+        "temperature"
+      ],
+      "properties": {
+        "length": {
+          "type": "integer",
+          "x-semio-ui": {
+            "widget": "stepper",
+            "label": {
+              "en": "Length exponent",
+              "de": "Exponent der Länge"
+            },
+            "step": 1,
+            "precision": 0
+          }
+        },
+        "mass": {
+          "type": "integer",
+          "x-semio-ui": {
+            "widget": "stepper",
+            "label": {
+              "en": "Mass exponent",
+              "de": "Exponent der Masse"
+            },
+            "step": 1,
+            "precision": 0
+          }
+        },
+        "time": {
+          "type": "integer",
+          "x-semio-ui": {
+            "widget": "stepper",
+            "label": {
+              "en": "Time exponent",
+              "de": "Exponent der Zeit"
+            },
+            "step": 1,
+            "precision": 0
+          }
+        },
+        "temperature": {
+          "type": "integer",
+          "x-semio-ui": {
+            "widget": "stepper",
+            "label": {
+              "en": "Temperature exponent",
+              "de": "Exponent der Temperatur"
+            },
+            "step": 1,
+            "precision": 0
+          }
+        }
+      }
+    },
+    "BooleanOperator": {
+      "title": "BooleanOperator",
+      "type": "string",
+      "enum": [
+        "Union",
+        "Intersection",
+        "Difference"
+      ],
+      "x-semio-ui": {
+        "options": {
+          "Union": {
+            "en": "Union",
+            "de": "Vereinigung"
+          },
+          "Intersection": {
+            "en": "Intersection",
+            "de": "Schnittmenge"
+          },
+          "Difference": {
+            "en": "Difference",
+            "de": "Differenz"
+          }
+        }
+      }
+    },
+    "SpaceKind": {
+      "title": "SpaceKind",
+      "type": "string",
+      "enum": [
+        "Overall",
+        "Operation",
+        "Access",
+        "PlacementTransportation",
+        "Installation"
+      ],
+      "x-semio-ui": {
+        "options": {
+          "Overall": {
+            "en": "Overall space",
+            "de": "Gesamtraum"
+          },
+          "Operation": {
+            "en": "Operating space",
+            "de": "Bedienraum"
+          },
+          "Access": {
+            "en": "Access space",
+            "de": "Zugangsraum"
+          },
+          "PlacementTransportation": {
+            "en": "Placement and transport space",
+            "de": "Einbring- und Transportraum"
+          },
+          "Installation": {
+            "en": "Installation space",
+            "de": "Montageraum"
+          }
+        }
+      }
+    },
+    "BoundingBox": {
+      "title": "BoundingBox",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "min",
+        "max"
+      ],
+      "properties": {
+        "min": {
+          "type": "array",
+          "items": {
+            "type": "number"
+          },
+          "minItems": 3,
+          "maxItems": 3,
+          "x-semio-ui": {
+            "label": {
+              "en": "Minimum occurrences",
+              "de": "Mindestanzahl"
+            },
+            "step": 1,
+            "precision": 0
+          }
+        },
+        "max": {
+          "type": "array",
+          "items": {
+            "type": "number"
+          },
+          "minItems": 3,
+          "maxItems": 3,
+          "x-semio-ui": {
+            "label": {
+              "en": "Maximum occurrences",
+              "de": "Höchstanzahl"
+            },
+            "step": 1,
+            "precision": 0
+          }
+        }
+      }
+    }
   }
 }

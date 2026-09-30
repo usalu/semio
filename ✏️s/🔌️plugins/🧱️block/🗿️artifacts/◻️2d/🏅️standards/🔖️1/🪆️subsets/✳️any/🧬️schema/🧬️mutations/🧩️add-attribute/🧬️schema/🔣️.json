@@ -5,9 +5,13 @@
   "type": "object",
   "additionalProperties": false,
   "required": [
+    "mutation",
     "attribute"
   ],
   "properties": {
+    "mutation": {
+      "const": "addAttribute"
+    },
     "attribute": {
       "title": "BlockAttribute",
       "type": "object",
@@ -18,14 +22,57 @@
       ],
       "properties": {
         "key": {
-          "type": "string"
+          "type": "string",
+          "x-semio-ui": {
+            "widget": "text",
+            "role": "value",
+            "label": {
+              "en": "Key",
+              "de": "Schlüssel"
+            },
+            "group": "metadata",
+            "order": 10
+          }
         },
         "value": {
-          "type": "string"
+          "type": "string",
+          "x-semio-ui": {
+            "widget": "text",
+            "role": "value",
+            "label": {
+              "en": "Value",
+              "de": "Wert"
+            },
+            "group": "metadata",
+            "order": 20
+          }
         },
         "definition": {
-          "type": "string"
+          "type": "string",
+          "x-semio-ui": {
+            "widget": "text",
+            "role": "value",
+            "label": {
+              "en": "Definition",
+              "de": "Definition"
+            },
+            "description": {
+              "en": "Name or URI of the attribute's definition.",
+              "de": "Name oder URI der Attributdefinition."
+            },
+            "group": "metadata",
+            "order": 30
+          }
         }
+      },
+      "x-semio-ui": {
+        "role": "value",
+        "label": {
+          "en": "Attribute",
+          "de": "Attribut"
+        },
+        "group": "record",
+        "order": 10
       }
     }
   }

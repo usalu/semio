@@ -88,42 +88,42 @@
     "permanents": {
       "type": "array",
       "items": {
-        "$ref": "#/definitions/PermanentAction"
+        "$ref": "#/$defs/PermanentAction"
       },
       "x-semio-state": "artifact"
     },
     "variables": {
       "type": "array",
       "items": {
-        "$ref": "#/definitions/VariableAction"
+        "$ref": "#/$defs/VariableAction"
       },
       "x-semio-state": "artifact"
     },
     "accidentals": {
       "type": "array",
       "items": {
-        "$ref": "#/definitions/AccidentalAction"
+        "$ref": "#/$defs/AccidentalAction"
       },
       "x-semio-state": "artifact"
     },
     "seismics": {
       "type": "array",
       "items": {
-        "$ref": "#/definitions/SeismicAction"
+        "$ref": "#/$defs/SeismicAction"
       },
       "x-semio-state": "artifact"
     },
     "members": {
       "type": "array",
       "items": {
-        "$ref": "#/definitions/Member"
+        "$ref": "#/$defs/Member"
       },
       "x-semio-state": "artifact"
     },
     "effects": {
       "type": "array",
       "items": {
-        "$ref": "#/definitions/MemberEffect"
+        "$ref": "#/$defs/MemberEffect"
       },
       "x-semio-state": "artifact"
     },
@@ -134,13 +134,14 @@
     "bridgeSls": {
       "type": "array",
       "items": {
-        "$ref": "#/definitions/BridgeSls"
+        "$ref": "#/$defs/BridgeSls"
       },
       "x-semio-state": "artifact"
     }
   },
-  "definitions": {
+  "$defs": {
     "PermanentAction": {
+      "title": "PermanentAction",
       "type": "object",
       "additionalProperties": false,
       "required": [
@@ -153,19 +154,26 @@
           "type": "string"
         },
         "kind": {
-          "type": "string",
-          "enum": [
-            "g_sup",
-            "g_inf",
-            "prestress"
-          ]
+          "type": "string"
         },
         "gk": {
-          "type": "number"
+          "type": "number",
+          "x-semio-ui": {
+            "label": {
+              "en": "Characteristic permanent action G_k",
+              "de": "Charakteristischer Wert der ständigen Einwirkung G_k"
+            },
+            "widget": "stepper",
+            "unit": "N",
+            "displayUnit": "kN",
+            "displayFactor": 0.001,
+            "precision": 2
+          }
         }
       }
     },
     "VariableAction": {
+      "title": "VariableAction",
       "type": "object",
       "additionalProperties": false,
       "required": [
@@ -178,14 +186,37 @@
           "type": "string"
         },
         "category": {
-          "type": "string"
+          "type": "string",
+          "x-semio-ui": {
+            "label": {
+              "en": "Action category",
+              "de": "Einwirkungskategorie"
+            },
+            "description": {
+              "en": "EN 1990 Table A1.1 category selecting ψ₀, ψ₁, ψ₂ (e.g. Q_imposed_A, Q_snow, Q_wind).",
+              "de": "Kategorie nach EN 1990 Tabelle A1.1, die ψ₀, ψ₁, ψ₂ bestimmt (z. B. Q_imposed_A, Q_snow, Q_wind)."
+            },
+            "widget": "text"
+          }
         },
         "qk": {
-          "type": "number"
+          "type": "number",
+          "x-semio-ui": {
+            "label": {
+              "en": "Characteristic variable action Q_k",
+              "de": "Charakteristischer Wert der veränderlichen Einwirkung Q_k"
+            },
+            "widget": "stepper",
+            "unit": "N",
+            "displayUnit": "kN",
+            "displayFactor": 0.001,
+            "precision": 2
+          }
         }
       }
     },
     "AccidentalAction": {
+      "title": "AccidentalAction",
       "type": "object",
       "additionalProperties": false,
       "required": [
@@ -197,11 +228,23 @@
           "type": "string"
         },
         "ad": {
-          "type": "number"
+          "type": "number",
+          "x-semio-ui": {
+            "label": {
+              "en": "Design accidental action A_d",
+              "de": "Bemessungswert der außergewöhnlichen Einwirkung A_d"
+            },
+            "widget": "stepper",
+            "unit": "N",
+            "displayUnit": "kN",
+            "displayFactor": 0.001,
+            "precision": 2
+          }
         }
       }
     },
     "SeismicAction": {
+      "title": "SeismicAction",
       "type": "object",
       "additionalProperties": false,
       "required": [
@@ -214,20 +257,32 @@
           "type": "string"
         },
         "aEk": {
-          "type": "number"
+          "type": "number",
+          "x-semio-ui": {
+            "label": {
+              "en": "Characteristic seismic action A_Ek",
+              "de": "Charakteristischer Wert der Erdbebeneinwirkung A_Ek"
+            },
+            "widget": "stepper",
+            "unit": "N",
+            "displayUnit": "kN",
+            "displayFactor": 0.001,
+            "precision": 2
+          }
         },
         "importanceClass": {
-          "type": "string",
-          "enum": [
-            "I",
-            "II",
-            "III",
-            "IV"
-          ]
+          "$ref": "#/$defs/ImportanceClass",
+          "x-semio-ui": {
+            "label": {
+              "en": "Importance class",
+              "de": "Bedeutungskategorie"
+            }
+          }
         }
       }
     },
     "Member": {
+      "title": "Member",
       "type": "object",
       "additionalProperties": false,
       "required": [
@@ -250,44 +305,164 @@
           "type": "string"
         },
         "labelEn": {
-          "type": "string"
+          "type": "string",
+          "x-semio-ui": {
+            "label": {
+              "en": "Label (English)",
+              "de": "Bezeichnung (Englisch)"
+            },
+            "widget": "text"
+          }
         },
         "labelDe": {
-          "type": "string"
+          "type": "string",
+          "x-semio-ui": {
+            "label": {
+              "en": "Label (German)",
+              "de": "Bezeichnung (Deutsch)"
+            },
+            "widget": "text"
+          }
         },
         "rdStr": {
-          "type": "number"
+          "type": "number",
+          "x-semio-ui": {
+            "label": {
+              "en": "Design resistance R_d (STR)",
+              "de": "Bemessungswert des Widerstands R_d (STR)"
+            },
+            "widget": "stepper",
+            "unit": "N",
+            "displayUnit": "kN",
+            "displayFactor": 0.001,
+            "precision": 2
+          }
         },
         "rdGeo": {
-          "type": "number"
+          "type": "number",
+          "x-semio-ui": {
+            "label": {
+              "en": "Design resistance R_d (GEO)",
+              "de": "Bemessungswert des Widerstands R_d (GEO)"
+            },
+            "widget": "stepper",
+            "unit": "N",
+            "displayUnit": "kN",
+            "displayFactor": 0.001,
+            "precision": 2
+          }
         },
         "rdEquStab": {
-          "type": "number"
+          "type": "number",
+          "x-semio-ui": {
+            "label": {
+              "en": "Stabilising design effect (EQU)",
+              "de": "Bemessungswert der stabilisierenden Einwirkung (EQU)"
+            },
+            "widget": "stepper",
+            "unit": "N",
+            "displayUnit": "kN",
+            "displayFactor": 0.001,
+            "precision": 2
+          }
         },
         "rdEquDestab": {
-          "type": "number"
+          "type": "number",
+          "x-semio-ui": {
+            "label": {
+              "en": "Destabilising design effect (EQU)",
+              "de": "Bemessungswert der destabilisierenden Einwirkung (EQU)"
+            },
+            "widget": "stepper",
+            "unit": "N",
+            "displayUnit": "kN",
+            "displayFactor": 0.001,
+            "precision": 2
+          }
         },
         "rdFat": {
-          "type": "number"
+          "type": "number",
+          "x-semio-ui": {
+            "label": {
+              "en": "Design fatigue resistance (FAT)",
+              "de": "Bemessungswert des Ermüdungswiderstands (FAT)"
+            },
+            "widget": "stepper",
+            "unit": "N",
+            "displayUnit": "kN",
+            "displayFactor": 0.001,
+            "precision": 2
+          }
         },
         "span": {
-          "type": "number"
+          "type": "number",
+          "x-semio-ui": {
+            "label": {
+              "en": "Span l",
+              "de": "Stützweite l"
+            },
+            "widget": "stepper",
+            "unit": "m",
+            "precision": 3
+          }
         },
         "deflectionW": {
-          "type": "number"
+          "type": "number",
+          "x-semio-ui": {
+            "label": {
+              "en": "Deflection w",
+              "de": "Durchbiegung w"
+            },
+            "widget": "stepper",
+            "unit": "m",
+            "displayUnit": "mm",
+            "displayFactor": 1000,
+            "precision": 1
+          }
         },
         "deflectionLimitRatio": {
-          "type": "number"
+          "type": "number",
+          "x-semio-ui": {
+            "label": {
+              "en": "Deflection limit l/…",
+              "de": "Durchbiegungsgrenze l/…"
+            },
+            "description": {
+              "en": "Denominator of the admissible deflection l/n.",
+              "de": "Nenner der zulässigen Durchbiegung l/n."
+            },
+            "widget": "stepper",
+            "precision": 0
+          }
         },
         "vibrationFrequency": {
-          "type": "number"
+          "type": "number",
+          "x-semio-ui": {
+            "label": {
+              "en": "Natural frequency f",
+              "de": "Eigenfrequenz f"
+            },
+            "widget": "stepper",
+            "unit": "Hz",
+            "precision": 2
+          }
         },
         "vibrationFrequencyMin": {
-          "type": "number"
+          "type": "number",
+          "x-semio-ui": {
+            "label": {
+              "en": "Minimum natural frequency f_min",
+              "de": "Mindesteigenfrequenz f_min"
+            },
+            "widget": "stepper",
+            "unit": "Hz",
+            "precision": 2
+          }
         }
       }
     },
     "MemberEffect": {
+      "title": "MemberEffect",
       "type": "object",
       "additionalProperties": false,
       "required": [
@@ -297,17 +472,52 @@
       ],
       "properties": {
         "memberId": {
-          "type": "string"
+          "type": "string",
+          "x-semio-ui": {
+            "label": {
+              "en": "Member",
+              "de": "Bauteil"
+            },
+            "widget": "reference",
+            "role": "value",
+            "ref": {
+              "kind": "member"
+            }
+          }
         },
         "actionId": {
-          "type": "string"
+          "type": "string",
+          "x-semio-ui": {
+            "label": {
+              "en": "Action",
+              "de": "Einwirkung"
+            },
+            "widget": "reference",
+            "role": "value",
+            "ref": {
+              "kind": "action"
+            }
+          }
         },
         "influence": {
-          "type": "number"
+          "type": "number",
+          "x-semio-ui": {
+            "label": {
+              "en": "Influence coefficient",
+              "de": "Einflussbeiwert"
+            },
+            "description": {
+              "en": "Factor mapping the action magnitude onto the member effect.",
+              "de": "Faktor, der die Größe der Einwirkung auf die Beanspruchung des Bauteils abbildet."
+            },
+            "widget": "stepper",
+            "precision": 3
+          }
         }
       }
     },
     "BridgeSls": {
+      "title": "BridgeSls",
       "type": "object",
       "additionalProperties": false,
       "required": [
@@ -325,25 +535,144 @@
           "type": "string"
         },
         "memberId": {
-          "type": "string"
+          "type": "string",
+          "x-semio-ui": {
+            "label": {
+              "en": "Member",
+              "de": "Bauteil"
+            },
+            "widget": "reference",
+            "role": "value",
+            "ref": {
+              "kind": "member"
+            }
+          }
         },
         "deckAcceleration": {
-          "type": "number"
+          "type": "number",
+          "x-semio-ui": {
+            "label": {
+              "en": "Deck acceleration a",
+              "de": "Überbaubeschleunigung a"
+            },
+            "widget": "stepper",
+            "unit": "m/s²",
+            "precision": 2
+          }
         },
         "deckAccelerationLimit": {
-          "type": "number"
+          "type": "number",
+          "x-semio-ui": {
+            "label": {
+              "en": "Admissible deck acceleration a_max",
+              "de": "Zulässige Überbaubeschleunigung a_max"
+            },
+            "widget": "stepper",
+            "unit": "m/s²",
+            "precision": 2
+          }
         },
         "deckTwist": {
-          "type": "number"
+          "type": "number",
+          "x-semio-ui": {
+            "label": {
+              "en": "Deck twist t",
+              "de": "Verwindung des Überbaus t"
+            },
+            "widget": "stepper",
+            "unit": "rad",
+            "precision": 4
+          }
         },
         "deckTwistLimit": {
-          "type": "number"
+          "type": "number",
+          "x-semio-ui": {
+            "label": {
+              "en": "Admissible deck twist t_max",
+              "de": "Zulässige Verwindung t_max"
+            },
+            "widget": "stepper",
+            "unit": "rad",
+            "precision": 4
+          }
         },
         "bridgeDeflection": {
-          "type": "number"
+          "type": "number",
+          "x-semio-ui": {
+            "label": {
+              "en": "Vertical deflection δ",
+              "de": "Vertikale Durchbiegung δ"
+            },
+            "widget": "stepper",
+            "unit": "m",
+            "displayUnit": "mm",
+            "displayFactor": 1000,
+            "precision": 1
+          }
         },
         "bridgeDeflectionLimit": {
-          "type": "number"
+          "type": "number",
+          "x-semio-ui": {
+            "label": {
+              "en": "Admissible vertical deflection δ_max",
+              "de": "Zulässige vertikale Durchbiegung δ_max"
+            },
+            "widget": "stepper",
+            "unit": "m",
+            "displayUnit": "mm",
+            "displayFactor": 1000,
+            "precision": 1
+          }
+        }
+      }
+    },
+    "AnnexChoice": {
+      "title": "AnnexChoice",
+      "type": "string",
+      "enum": [
+        "En",
+        "De"
+      ],
+      "x-semio-ui": {
+        "options": {
+          "En": {
+            "en": "Recommended CEN values (EN)",
+            "de": "Empfohlene CEN-Werte (EN)"
+          },
+          "De": {
+            "en": "German national annex (DIN EN)",
+            "de": "Deutscher Nationaler Anhang (DIN EN)"
+          }
+        }
+      }
+    },
+    "ImportanceClass": {
+      "title": "ImportanceClass",
+      "type": "string",
+      "enum": [
+        "I",
+        "II",
+        "III",
+        "IV"
+      ],
+      "x-semio-ui": {
+        "options": {
+          "I": {
+            "en": "I — minor importance",
+            "de": "I — geringe Bedeutung"
+          },
+          "II": {
+            "en": "II — ordinary buildings",
+            "de": "II — gewöhnliche Hochbauten"
+          },
+          "III": {
+            "en": "III — large occupancy",
+            "de": "III — große Menschenansammlungen"
+          },
+          "IV": {
+            "en": "IV — vital for civil protection",
+            "de": "IV — lebenswichtig für den Katastrophenschutz"
+          }
         }
       }
     }

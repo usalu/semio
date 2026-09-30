@@ -6,7 +6,24 @@
   "additionalProperties": false,
   "properties": {
     "newJson": {
-      "type": "string"
+      "type": [
+        "string",
+        "null"
+      ],
+      "x-semio-ui": {
+        "widget": "multiline",
+        "role": "value",
+        "label": {
+          "en": "Data fields (JSON)",
+          "de": "Datenfelder (JSON)"
+        },
+        "description": {
+          "en": "JSON object of the document's data fields; empty clears them.",
+          "de": "JSON-Objekt der Datenfelder des Dokuments; leer entfernt sie."
+        },
+        "group": "data",
+        "order": 10
+      }
     }
   }
 }

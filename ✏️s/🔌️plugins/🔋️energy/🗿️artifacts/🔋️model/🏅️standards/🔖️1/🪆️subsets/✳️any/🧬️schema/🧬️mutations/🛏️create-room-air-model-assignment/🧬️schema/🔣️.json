@@ -5,12 +5,36 @@
   "type": "object",
   "additionalProperties": false,
   "required": [
+    "mutation",
     "zoneId",
     "model"
   ],
   "properties": {
+    "mutation": {
+      "const": "createRoomAirModelAssignment"
+    },
     "zoneId": {
-      "type": "integer"
+      "type": "integer",
+      "minimum": 0,
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Zone",
+          "de": "Zone"
+        },
+        "description": {
+          "en": "Zone the room air model applies to, by id.",
+          "de": "Zone, für die das Raumluftmodell gilt, per ID."
+        },
+        "ref": {
+          "kind": "zone",
+          "domain": "energyModel",
+          "granularity": "zone"
+        },
+        "group": "target",
+        "order": 10
+      }
     },
     "model": {
       "enum": [
@@ -18,7 +42,35 @@
         "OneNodeDisplacement",
         "TwoNodeBuoyancy",
         "UnderFloorAirDistribution"
-      ]
+      ],
+      "x-semio-ui": {
+        "widget": "select",
+        "role": "value",
+        "label": {
+          "en": "Room air model",
+          "de": "Raumluftmodell"
+        },
+        "options": {
+          "WellMixed": {
+            "en": "Well mixed",
+            "de": "Vollständig durchmischt"
+          },
+          "OneNodeDisplacement": {
+            "en": "One-node displacement",
+            "de": "Quelllüftung, Einknotenmodell"
+          },
+          "TwoNodeBuoyancy": {
+            "en": "Two-node buoyancy",
+            "de": "Thermischer Auftrieb, Zweiknotenmodell"
+          },
+          "UnderFloorAirDistribution": {
+            "en": "Underfloor air distribution",
+            "de": "Unterflur-Luftverteilung"
+          }
+        },
+        "group": "airflow",
+        "order": 20
+      }
     }
   }
 }

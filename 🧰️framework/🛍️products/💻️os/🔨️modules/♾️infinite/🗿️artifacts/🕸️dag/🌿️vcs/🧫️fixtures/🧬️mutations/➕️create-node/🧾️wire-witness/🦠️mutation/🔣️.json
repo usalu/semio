@@ -1,0 +1,56 @@
+{
+  "operation": "createNode",
+  "node": {
+    "id": "created",
+    "name": "Alpha",
+    "kind": "computation",
+    "inputs": [
+      {
+        "id": "in",
+        "label": "Input",
+        "code": "I",
+        "abbreviation": "In",
+        "fullName": "Full Input",
+        "type": "number",
+        "default": {
+          "a": [
+            1.0,
+            null
+          ]
+        },
+        "value": false,
+        "connected": true,
+        "resourceKind": "text",
+        "cardinality": "!",
+        "shape": "triangle",
+        "visible": true,
+        "resolved": false
+      }
+    ],
+    "outputs": [],
+    "abbreviation": "A",
+    "icon": "circle",
+    "x": 1.0,
+    "y": -2.0,
+    "width": 72.0,
+    "height": 24.0,
+    "operatorKind": "add",
+    "properties": {
+      "nil": null,
+      "bool": true,
+      "number": 1.5,
+      "string": "x",
+      "array": [
+        1.0,
+        "x",
+        null
+      ],
+      "object": {
+        "key": false
+      }
+    },
+    "variadic_inputs": true,
+    "variadic_outputs": false
+  },
+  "index": 1
+}

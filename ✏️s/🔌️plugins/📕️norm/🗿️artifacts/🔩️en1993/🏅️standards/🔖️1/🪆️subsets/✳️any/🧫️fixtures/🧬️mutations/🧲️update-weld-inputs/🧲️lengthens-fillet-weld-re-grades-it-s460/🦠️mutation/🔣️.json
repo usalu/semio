@@ -1,0 +1,17 @@
+{
+  "UpdateWeldInputs": {
+    "memberAction": {
+      "id": "act-b1-uls",
+      "memberId": "member-b1",
+      "loadCaseId": "uls-1",
+      "action": {
+        "n": 200000,
+        "vy": 0,
+        "vz": 50000,
+        "my": 120000.0,
+        "mz": 0,
+        "t": 0
+      }
+    }
+  }
+}

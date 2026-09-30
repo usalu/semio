@@ -5,12 +5,33 @@
   "type": "object",
   "additionalProperties": false,
   "required": [
+    "mutation",
     "id",
     "newCamera"
   ],
   "properties": {
+    "mutation": {
+      "const": "replaceSavedCameraView"
+    },
     "id": {
-      "type": "string"
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Saved camera",
+          "de": "Gespeicherte Kamera"
+        },
+        "description": {
+          "en": "The saved camera this mutation addresses.",
+          "de": "Die gespeicherte Kamera, die diese Mutation adressiert."
+        },
+        "ref": {
+          "kind": "savedCamera"
+        },
+        "group": "target",
+        "order": 10
+      }
     },
     "newCamera": {
       "title": "ShootingCamera",
@@ -29,7 +50,22 @@
             "type": "number"
           },
           "minItems": 3,
-          "maxItems": 3
+          "maxItems": 3,
+          "x-semio-ui": {
+            "widget": "vector",
+            "role": "value",
+            "label": {
+              "en": "Position",
+              "de": "Position"
+            },
+            "description": {
+              "en": "Where the camera stands.",
+              "de": "Standpunkt der Kamera."
+            },
+            "step": 0.1,
+            "group": "camera",
+            "order": 10
+          }
         },
         "target": {
           "type": "array",
@@ -37,13 +73,73 @@
             "type": "number"
           },
           "minItems": 3,
-          "maxItems": 3
+          "maxItems": 3,
+          "x-semio-ui": {
+            "widget": "vector",
+            "role": "value",
+            "label": {
+              "en": "Look at",
+              "de": "Blickziel"
+            },
+            "description": {
+              "en": "The point the camera looks at.",
+              "de": "Der Punkt, auf den die Kamera blickt."
+            },
+            "step": 0.1,
+            "group": "camera",
+            "order": 20
+          }
         },
         "zoom": {
-          "type": "number"
+          "type": "number",
+          "x-semio-ui": {
+            "widget": "slider",
+            "role": "value",
+            "label": {
+              "en": "Zoom",
+              "de": "Zoom"
+            },
+            "step": 0.01,
+            "precision": 2,
+            "softMin": 0.1,
+            "softMax": 10,
+            "scale": "log",
+            "snaps": [
+              0.5,
+              1,
+              2
+            ],
+            "group": "camera",
+            "order": 30
+          }
         },
         "fov": {
-          "type": "number"
+          "type": "number",
+          "x-semio-ui": {
+            "widget": "slider",
+            "role": "value",
+            "label": {
+              "en": "Field of view",
+              "de": "Sichtfeld"
+            },
+            "description": {
+              "en": "Vertical opening angle of a perspective camera.",
+              "de": "Vertikaler Öffnungswinkel einer perspektivischen Kamera."
+            },
+            "unit": "deg",
+            "step": 1,
+            "precision": 1,
+            "softMin": 10,
+            "softMax": 120,
+            "snaps": [
+              30,
+              45,
+              60,
+              90
+            ],
+            "group": "camera",
+            "order": 40
+          }
         },
         "up": {
           "type": "array",
@@ -51,11 +147,53 @@
             "type": "number"
           },
           "minItems": 3,
-          "maxItems": 3
+          "maxItems": 3,
+          "x-semio-ui": {
+            "widget": "vector",
+            "role": "value",
+            "label": {
+              "en": "Up",
+              "de": "Oben"
+            },
+            "description": {
+              "en": "Up direction of the camera image.",
+              "de": "Aufwärtsrichtung des Kamerabilds."
+            },
+            "step": 0.1,
+            "group": "camera",
+            "order": 50
+          }
         },
         "projection": {
-          "type": "string"
+          "type": "string",
+          "x-semio-ui": {
+            "widget": "text",
+            "role": "value",
+            "label": {
+              "en": "Projection",
+              "de": "Projektion"
+            },
+            "description": {
+              "en": "perspective or orthographic.",
+              "de": "perspective (perspektivisch) oder orthographic (orthografisch)."
+            },
+            "group": "camera",
+            "order": 60
+          }
         }
+      },
+      "x-semio-ui": {
+        "role": "value",
+        "label": {
+          "en": "Camera",
+          "de": "Kamera"
+        },
+        "description": {
+          "en": "The view the saved camera now holds.",
+          "de": "Die Ansicht, die die gespeicherte Kamera nun hält."
+        },
+        "group": "camera",
+        "order": 20
       }
     }
   }

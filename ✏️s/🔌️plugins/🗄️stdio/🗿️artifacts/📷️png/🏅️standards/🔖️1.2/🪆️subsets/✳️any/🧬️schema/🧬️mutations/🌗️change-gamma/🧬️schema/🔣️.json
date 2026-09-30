@@ -15,7 +15,20 @@
         {
           "type": "null"
         }
-      ]
+      ],
+      "x-semio-ui": {
+        "widget": "stepper",
+        "label": {
+          "en": "Gamma (gAMA)",
+          "de": "Gamma (gAMA)"
+        },
+        "description": {
+          "en": "Image gamma times 100000.",
+          "de": "Bildgamma mal 100000."
+        },
+        "displayFactor": 1e-05,
+        "precision": 5
+      }
     }
   }
 }

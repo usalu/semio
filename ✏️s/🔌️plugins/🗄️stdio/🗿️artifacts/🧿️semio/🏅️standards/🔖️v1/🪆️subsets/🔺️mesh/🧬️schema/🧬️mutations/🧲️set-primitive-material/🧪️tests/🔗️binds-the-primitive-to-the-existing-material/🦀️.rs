@@ -12,11 +12,11 @@ use crate::standards::v1::subsets::mesh::schema::mutations::SemioMeshMutation;
 use crate::standards::v1::subsets::mesh::schema::snapshot::SemioMeshSnapshot;
 use protocol::{Mutation, MutationDiff};
 
-const BEFORE: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🧲️set-primitive-material/🔗️binds-the-primitive-to-the-existing-material/📸️snapshot/⬅️before/🔣️.json");
-const AFTER: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🧲️set-primitive-material/🔗️binds-the-primitive-to-the-existing-material/📸️snapshot/➡️after/🔣️.json");
-const MUTATION: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🧲️set-primitive-material/🔗️binds-the-primitive-to-the-existing-material/🦠️mutation/🔣️.json");
-const DIFF: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🧲️set-primitive-material/🔗️binds-the-primitive-to-the-existing-material/🔺️diff/🔣️.json");
-const OUTCOME: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🧲️set-primitive-material/🔗️binds-the-primitive-to-the-existing-material/🎯️outcome/🔣️.json");
+const BEFORE: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🧲️set-primitive-material/🔗️binds-primitive-existing-material/📸️snapshot/⬅️before/🔣️.json");
+const AFTER: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🧲️set-primitive-material/🔗️binds-primitive-existing-material/📸️snapshot/➡️after/🔣️.json");
+const MUTATION: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🧲️set-primitive-material/🔗️binds-primitive-existing-material/🦠️mutation/🔣️.json");
+const DIFF: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🧲️set-primitive-material/🔗️binds-primitive-existing-material/🔺️diff/🔣️.json");
+const OUTCOME: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🧲️set-primitive-material/🔗️binds-primitive-existing-material/🎯️outcome/🔣️.json");
 
 fn before() -> SemioMeshSnapshot {
     dsl::json::from_json_str(BEFORE).expect("set-primitive-material before snapshot decodes")

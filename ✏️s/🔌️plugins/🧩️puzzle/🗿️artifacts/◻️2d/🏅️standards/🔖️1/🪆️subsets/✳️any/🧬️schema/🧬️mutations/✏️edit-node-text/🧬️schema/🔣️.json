@@ -11,16 +11,53 @@
   ],
   "properties": {
     "mutation": {
-      "const": "editNodeText"
+      "const": "editNodeText",
+      "x-semio-ui": {
+        "widget": "hidden",
+        "role": "discriminator",
+        "label": {
+          "en": "Mutation",
+          "de": "Mutation"
+        }
+      }
     },
     "id": {
-      "type": "string"
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Node",
+          "de": "Knoten"
+        },
+        "description": {
+          "en": "The node this mutation addresses.",
+          "de": "Der Knoten, den diese Mutation adressiert."
+        },
+        "ref": {
+          "kind": "node",
+          "domain": "vortex",
+          "granularity": "node"
+        },
+        "group": "target",
+        "order": 10
+      }
     },
     "newText": {
       "type": [
         "string",
         "null"
-      ]
+      ],
+      "x-semio-ui": {
+        "widget": "text",
+        "role": "value",
+        "label": {
+          "en": "Text",
+          "de": "Text"
+        },
+        "group": "appearance",
+        "order": 20
+      }
     }
   }
 }

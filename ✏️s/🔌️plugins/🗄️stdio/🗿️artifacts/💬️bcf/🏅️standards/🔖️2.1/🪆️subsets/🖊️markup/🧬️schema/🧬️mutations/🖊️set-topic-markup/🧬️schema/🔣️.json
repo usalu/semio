@@ -5,11 +5,33 @@
   "type": "object",
   "additionalProperties": false,
   "required": [
+    "mutation",
     "guid"
   ],
   "properties": {
+    "mutation": {
+      "const": "setTopicMarkup"
+    },
     "guid": {
-      "type": "string"
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Topic",
+          "de": "Thema"
+        },
+        "description": {
+          "en": "GUID of the topic.",
+          "de": "GUID des Themas."
+        },
+        "ref": {
+          "kind": "topic",
+          "domain": "bcf"
+        },
+        "group": "target",
+        "order": 10
+      }
     },
     "title": {
       "anyOf": [
@@ -19,7 +41,16 @@
         {
           "type": "null"
         }
-      ]
+      ],
+      "x-semio-ui": {
+        "widget": "text",
+        "label": {
+          "en": "Title",
+          "de": "Titel"
+        },
+        "group": "value",
+        "order": 20
+      }
     },
     "description": {
       "anyOf": [
@@ -29,7 +60,16 @@
         {
           "type": "null"
         }
-      ]
+      ],
+      "x-semio-ui": {
+        "widget": "multiline",
+        "label": {
+          "en": "Description",
+          "de": "Beschreibung"
+        },
+        "group": "value",
+        "order": 30
+      }
     },
     "status": {
       "anyOf": [
@@ -39,7 +79,20 @@
         {
           "type": "null"
         }
-      ]
+      ],
+      "x-semio-ui": {
+        "widget": "text",
+        "label": {
+          "en": "Status",
+          "de": "Status"
+        },
+        "description": {
+          "en": "Topic status, e.g. Open or Closed.",
+          "de": "Themenstatus, z. B. Open oder Closed."
+        },
+        "group": "value",
+        "order": 40
+      }
     },
     "priority": {
       "anyOf": [
@@ -49,7 +102,16 @@
         {
           "type": "null"
         }
-      ]
+      ],
+      "x-semio-ui": {
+        "widget": "text",
+        "label": {
+          "en": "Priority",
+          "de": "Priorität"
+        },
+        "group": "value",
+        "order": 50
+      }
     },
     "labels": {
       "anyOf": [
@@ -62,9 +124,17 @@
         {
           "type": "null"
         }
-      ]
+      ],
+      "x-semio-ui": {
+        "label": {
+          "en": "Labels",
+          "de": "Schlagwörter"
+        },
+        "group": "value",
+        "order": 60
+      }
     },
-    "creation_date": {
+    "creationDate": {
       "anyOf": [
         {
           "type": "string"
@@ -72,9 +142,22 @@
         {
           "type": "null"
         }
-      ]
+      ],
+      "x-semio-ui": {
+        "widget": "text",
+        "label": {
+          "en": "Creation date",
+          "de": "Erstellungsdatum"
+        },
+        "description": {
+          "en": "ISO 8601 date and time.",
+          "de": "Datum und Uhrzeit nach ISO 8601."
+        },
+        "group": "value",
+        "order": 70
+      }
     },
-    "creation_author": {
+    "creationAuthor": {
       "anyOf": [
         {
           "type": "string"
@@ -82,7 +165,16 @@
         {
           "type": "null"
         }
-      ]
+      ],
+      "x-semio-ui": {
+        "widget": "text",
+        "label": {
+          "en": "Created by",
+          "de": "Erstellt von"
+        },
+        "group": "value",
+        "order": 80
+      }
     }
   }
 }

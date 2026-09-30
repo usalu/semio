@@ -4,9 +4,33 @@
   "title": "ChangeEraserRadius",
   "type": "object",
   "additionalProperties": false,
+  "required": [
+    "mutation"
+  ],
   "properties": {
+    "mutation": {
+      "const": "changeEraserRadius"
+    },
     "newRadius": {
-      "type": "number"
+      "type": [
+        "number",
+        "null"
+      ],
+      "exclusiveMinimum": 0,
+      "x-semio-ui": {
+        "widget": "stepper",
+        "role": "value",
+        "label": {
+          "en": "Eraser radius",
+          "de": "Radiergummiradius"
+        },
+        "step": 1,
+        "precision": 1,
+        "softMin": 1,
+        "softMax": 100,
+        "group": "tool",
+        "order": 10
+      }
     }
   }
 }

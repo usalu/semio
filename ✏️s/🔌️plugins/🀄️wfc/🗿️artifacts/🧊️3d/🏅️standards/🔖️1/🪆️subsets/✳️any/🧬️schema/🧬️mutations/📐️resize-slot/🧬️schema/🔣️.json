@@ -12,16 +12,67 @@
   ],
   "properties": {
     "id": {
-      "type": "string"
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Slot",
+          "de": "Slot"
+        },
+        "ref": {
+          "kind": "slot",
+          "domain": "slot",
+          "granularity": "slot"
+        },
+        "group": "target",
+        "order": 10
+      }
     },
     "width": {
-      "type": "number"
+      "type": "number",
+      "x-semio-ui": {
+        "widget": "stepper",
+        "role": "value",
+        "label": {
+          "en": "Width",
+          "de": "Breite"
+        },
+        "step": 1,
+        "precision": 2,
+        "group": "geometry",
+        "order": 20
+      }
     },
     "height": {
-      "type": "number"
+      "type": "number",
+      "x-semio-ui": {
+        "widget": "stepper",
+        "role": "value",
+        "label": {
+          "en": "Height",
+          "de": "Höhe"
+        },
+        "step": 1,
+        "precision": 2,
+        "group": "geometry",
+        "order": 30
+      }
     },
     "depth": {
-      "type": "number"
+      "type": "number",
+      "x-semio-ui": {
+        "widget": "stepper",
+        "role": "value",
+        "label": {
+          "en": "Depth",
+          "de": "Tiefe"
+        },
+        "step": 1,
+        "precision": 2,
+        "group": "geometry",
+        "order": 40
+      }
     }
   }
 }

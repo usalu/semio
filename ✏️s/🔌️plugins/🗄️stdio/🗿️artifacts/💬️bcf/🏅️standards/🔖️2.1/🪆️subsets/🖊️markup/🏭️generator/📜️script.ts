@@ -120,7 +120,6 @@ const REPLACEMENT_TOPIC: TopicRecipe = { guid: "topic-replacement-04", title: "S
 type Recipe = { id: string; subset: "🖊️markup" | "👁️viewpoint"; directory: string; outcome: "applied" | "rejected"; build: () => { before: TopicRecipe[]; after?: TopicRecipe[]; beforeVersion?: string; afterVersion?: string } };
 
 const RECIPES: Recipe[] = [
-  { id: "no-mutation-applied", subset: "🖊️markup", directory: "⏸️no-mutation-applied", outcome: "applied", build: () => ({ before: BASE_TOPICS, after: BASE_TOPICS }) },
   { id: "set-snapshot-applied", subset: "🖊️markup", directory: "🗃️set-snapshot-applied", outcome: "applied", build: () => ({ before: BASE_TOPICS, after: [REPLACEMENT_TOPIC] }) },
   { id: "set-version-applied", subset: "🖊️markup", directory: "🔢️set-version-applied", outcome: "applied", build: () => ({ before: BASE_TOPICS, after: BASE_TOPICS, beforeVersion: "2.1", afterVersion: "2.2" }) },
   {

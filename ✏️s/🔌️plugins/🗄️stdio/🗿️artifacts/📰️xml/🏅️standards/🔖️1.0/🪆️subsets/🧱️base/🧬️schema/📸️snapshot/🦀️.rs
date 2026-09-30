@@ -91,7 +91,7 @@ impl From<&str> for XmlDoctype {
 
 /// 🔗️ Standard SYSTEM or PUBLIC external identifier.
 #[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
-#[value(tag = "kind", rename_all = "camelCase")]
+#[value(tag = "kind", rename_all = "camelCase", rename_all_fields = "camelCase")]
 pub enum XmlExternalId {
     System { system_id: String },
     Public { public_id: String, system_id: String },

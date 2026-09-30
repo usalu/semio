@@ -5,11 +5,30 @@
   "type": "object",
   "additionalProperties": false,
   "required": [
+    "mutation",
     "id"
   ],
   "properties": {
+    "mutation": {
+      "const": "deleteSolid"
+    },
     "id": {
-      "type": "string"
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Solid",
+          "de": "Volumenkörper"
+        },
+        "ref": {
+          "kind": "solid",
+          "domain": "fem3d",
+          "granularity": "solid"
+        },
+        "group": "target",
+        "order": 10
+      }
     }
   }
 }

@@ -1,6 +1,7 @@
 //! 🪟️ Exact-instance persisted and ephemeral ownership for Puzzle 2D panes.
 
 use crate::editor::puzzle2d::config::Puzzle2dSuggestionMenu;
+use crate::editor::puzzle2d::modes::edit::windows::overview::utilities::select::Puzzle2dSelectToolState;
 use crate::editor::puzzle2d::modes::edit::windows::{detail, overview, selection};
 use std::collections::BTreeMap;
 
@@ -187,6 +188,9 @@ pub struct Puzzle2dWindowTransient {
     /// 💡️ The one-shot handle-suggestions popup this exact window has open — per-gesture scratch,
     /// never a persisted option, and never shared with a sibling pane.
     pub suggestion_menu: Option<Puzzle2dSuggestionMenu>,
+    /// 🛠️ The window's in-flight select-tool gesture: statechart configuration and open transaction, persisted
+    /// between dispatches so one streamed gesture stays ONE transaction; `None` at rest.
+    pub select_tool: Option<Puzzle2dSelectToolState>,
 }
 
 #[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
@@ -235,7 +239,7 @@ impl protocol::MutationDiff<Puzzle2dWindowTransient> for Puzzle2dWindowTransient
 }
 
 store::artifact_retire_struct!(Puzzle2dSuggestionMenu { x, y, window_id, handle_id });
-store::artifact_retire_struct!(Puzzle2dWindowTransient { engagement_input, brush_candidate_index, brush_candidates, brush_candidate_source_handle_id, suggestion_menu });
+store::artifact_retire_struct!(Puzzle2dWindowTransient { engagement_input, brush_candidate_index, brush_candidates, brush_candidate_source_handle_id, suggestion_menu, select_tool });
 
 impl store::retirement::RetireOwned for Puzzle2dWindowTransientMutation {
     fn retirement(self) -> Box<dyn store::retirement::RetirementCursor> {
@@ -260,9 +264,11 @@ fn puzzle2d_window_transient_retained_bytes(transient: &Puzzle2dWindowTransient)
         charge(&mut bytes, menu.handle_id.capacity())?;
     }
     charge(&mut bytes, transient.brush_candidates.capacity().checked_mul(std::mem::size_of::<dsl::DslValue>())?)?;
+    let select_tool = transient.select_tool.as_ref().map(dsl::ToValue::to_value);
     let mut pending = Vec::new();
-    pending.try_reserve(transient.brush_candidates.len()).ok()?;
+    pending.try_reserve(transient.brush_candidates.len() + 1).ok()?;
     pending.extend(transient.brush_candidates.iter());
+    pending.extend(select_tool.iter());
     while let Some(value) = pending.pop() {
         match value {
             dsl::DslValue::String(value) => charge(&mut bytes, value.capacity())?,
@@ -463,6 +469,7 @@ pub fn runtime(config: &crate::editor::puzzle2d::config::Puzzle2dConfig, window:
         brush_candidates: transient.brush_candidates.clone(),
         brush_candidate_source_handle_id: transient.brush_candidate_source_handle_id.clone(),
         suggestion_menu: transient.suggestion_menu.clone(),
+        select_tool: transient.select_tool.clone(),
         fill_count: config.fill_count,
         grid_snap_enabled: window.grid_snap_enabled,
         grid_factor: window.grid_factor,
@@ -515,6 +522,7 @@ pub fn split(runtime: &crate::editor::puzzle2d::config::Puzzle2dPlayRuntime, win
             brush_candidates: runtime.brush_candidates.clone(),
             brush_candidate_source_handle_id: runtime.brush_candidate_source_handle_id.clone(),
             suggestion_menu: runtime.suggestion_menu.clone(),
+            select_tool: runtime.select_tool.clone(),
         },
     )
 }

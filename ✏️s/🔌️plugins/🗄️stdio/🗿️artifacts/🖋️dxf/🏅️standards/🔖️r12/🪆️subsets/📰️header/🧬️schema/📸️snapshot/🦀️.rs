@@ -192,7 +192,7 @@ pub struct DxfVertex {
 /// has no typed view for (`3DFACE`, `POINT`, `DIMENSION`, `SHAPE`, `ATTRIB`, …) — its whole
 /// group-code body verbatim, never silently dropped.
 #[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
-#[value(rename_all = "camelCase")]
+#[value(rename_all = "camelCase", rename_all_fields = "camelCase")]
 pub enum DxfEntity {
     /// `LINE` — 10/20/30 (start), 11/21/31 (end), 8 (layer).
     Line {

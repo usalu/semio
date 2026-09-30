@@ -4,9 +4,28 @@
   "title": "RenamePuzzle5d",
   "type": "object",
   "additionalProperties": false,
+  "required": [
+    "mutation"
+  ],
   "properties": {
+    "mutation": {
+      "const": "renamePuzzle5d"
+    },
     "newLabel": {
-      "type": "string"
+      "type": [
+        "string",
+        "null"
+      ],
+      "x-semio-ui": {
+        "widget": "text",
+        "role": "value",
+        "label": {
+          "en": "Name",
+          "de": "Name"
+        },
+        "group": "metadata",
+        "order": 10
+      }
     }
   }
 }

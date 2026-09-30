@@ -5,6 +5,7 @@
   "type": "object",
   "additionalProperties": false,
   "required": [
+    "mutation",
     "snapshot"
   ],
   "properties": {
@@ -29,10 +30,27 @@
       ],
       "properties": {
         "schema": {
-          "type": "string"
+          "type": "string",
+          "x-semio-ui": {
+            "widget": "text",
+            "label": {
+              "en": "Snapshot schema",
+              "de": "Snapshot-Schema"
+            },
+            "description": {
+              "en": "Identifier of the snapshot schema version.",
+              "de": "Kennung der Version des Snapshot-Schemas."
+            }
+          }
         },
         "fmt": {
-          "$ref": "#/$defs/WavFmt"
+          "$ref": "#/$defs/WavFmt",
+          "x-semio-ui": {
+            "label": {
+              "en": "Format chunk (fmt)",
+              "de": "Format-Chunk (fmt)"
+            }
+          }
         },
         "data": {
           "$ref": "#/$defs/WavData"
@@ -42,25 +60,63 @@
           "minimum": 0,
           "maximum": 255,
           "default": 0,
-          "description": "Word-alignment byte; must be zero when the serialized fmt payload length is even."
+          "description": "Word-alignment byte; must be zero when the serialized fmt payload length is even.",
+          "x-semio-ui": {
+            "widget": "stepper",
+            "label": {
+              "en": "Format pad byte",
+              "de": "Füllbyte des Formats"
+            },
+            "description": {
+              "en": "Word-alignment byte after the fmt chunk; zero when its length is even.",
+              "de": "Byte zur Wortausrichtung nach dem fmt-Chunk; null bei gerader Länge."
+            }
+          }
         },
         "dataPadByte": {
           "type": "integer",
           "minimum": 0,
           "maximum": 255,
           "default": 0,
-          "description": "Word-alignment byte; must be zero when the serialized data payload length is even."
+          "description": "Word-alignment byte; must be zero when the serialized data payload length is even.",
+          "x-semio-ui": {
+            "widget": "stepper",
+            "label": {
+              "en": "Data pad byte",
+              "de": "Füllbyte der Daten"
+            },
+            "description": {
+              "en": "Word-alignment byte after the data chunk; zero when its length is even.",
+              "de": "Byte zur Wortausrichtung nach dem Daten-Chunk; null bei gerader Länge."
+            }
+          }
         },
         "otherChunks": {
           "type": "array",
           "items": {
             "$ref": "#/$defs/RiffChunk"
+          },
+          "x-semio-ui": {
+            "label": {
+              "en": "Other chunks",
+              "de": "Weitere Chunks"
+            },
+            "description": {
+              "en": "RIFF chunks without a dedicated field, kept verbatim.",
+              "de": "RIFF-Chunks ohne eigenes Feld, unverändert erhalten."
+            }
           }
         },
         "chunkOrder": {
           "type": "array",
           "items": {
             "$ref": "#/$defs/WavChunkRef"
+          },
+          "x-semio-ui": {
+            "label": {
+              "en": "Chunk order",
+              "de": "Chunk-Reihenfolge"
+            }
           }
         }
       }
@@ -80,32 +136,90 @@
         "audioFormat": {
           "type": "integer",
           "minimum": 0,
-          "maximum": 65535
+          "maximum": 65535,
+          "x-semio-ui": {
+            "widget": "stepper",
+            "label": {
+              "en": "Audio format",
+              "de": "Audioformat"
+            },
+            "description": {
+              "en": "wFormatTag, e.g. 1 = PCM, 3 = IEEE float, 0xFFFE = extensible.",
+              "de": "wFormatTag, z. B. 1 = PCM, 3 = IEEE-Gleitkomma, 0xFFFE = Extensible."
+            }
+          }
         },
         "channels": {
           "type": "integer",
           "minimum": 0,
-          "maximum": 65535
+          "maximum": 65535,
+          "x-semio-ui": {
+            "widget": "stepper",
+            "label": {
+              "en": "Channels",
+              "de": "Kanäle"
+            }
+          }
         },
         "sampleRate": {
           "type": "integer",
           "minimum": 0,
-          "maximum": 4294967295
+          "maximum": 4294967295,
+          "x-semio-ui": {
+            "widget": "stepper",
+            "label": {
+              "en": "Sample rate",
+              "de": "Abtastrate"
+            },
+            "unit": "Hz"
+          }
         },
         "byteRate": {
           "type": "integer",
           "minimum": 0,
-          "maximum": 4294967295
+          "maximum": 4294967295,
+          "x-semio-ui": {
+            "widget": "stepper",
+            "label": {
+              "en": "Byte rate",
+              "de": "Byterate"
+            },
+            "description": {
+              "en": "Average bytes per second.",
+              "de": "Durchschnittliche Bytes pro Sekunde."
+            },
+            "unit": "B/s"
+          }
         },
         "blockAlign": {
           "type": "integer",
           "minimum": 0,
-          "maximum": 65535
+          "maximum": 65535,
+          "x-semio-ui": {
+            "widget": "stepper",
+            "label": {
+              "en": "Block align",
+              "de": "Blockausrichtung"
+            },
+            "description": {
+              "en": "Bytes per sample frame across all channels.",
+              "de": "Bytes je Sample-Frame über alle Kanäle."
+            },
+            "unit": "B"
+          }
         },
         "bitsPerSample": {
           "type": "integer",
           "minimum": 0,
-          "maximum": 65535
+          "maximum": 65535,
+          "x-semio-ui": {
+            "widget": "stepper",
+            "label": {
+              "en": "Bits per sample",
+              "de": "Bits pro Sample"
+            },
+            "unit": "bit"
+          }
         },
         "ext": {
           "anyOf": [
@@ -121,7 +235,17 @@
             {
               "type": "null"
             }
-          ]
+          ],
+          "x-semio-ui": {
+            "label": {
+              "en": "Format extension",
+              "de": "Formaterweiterung"
+            },
+            "description": {
+              "en": "cbSize extension bytes of WAVEFORMATEX.",
+              "de": "cbSize-Erweiterungsbytes von WAVEFORMATEX."
+            }
+          }
         }
       }
     },
@@ -223,7 +347,14 @@
           "type": "string",
           "minLength": 4,
           "maxLength": 4,
-          "pattern": "^[ -~]{4}$"
+          "pattern": "^[ -~]{4}$",
+          "x-semio-ui": {
+            "widget": "text",
+            "label": {
+              "en": "Chunk ID (FourCC)",
+              "de": "Chunk-ID (FourCC)"
+            }
+          }
         },
         "data": {
           "type": "array",
@@ -238,7 +369,18 @@
           "minimum": 0,
           "maximum": 255,
           "default": 0,
-          "description": "Word-alignment byte; must be zero when data has even length."
+          "description": "Word-alignment byte; must be zero when data has even length.",
+          "x-semio-ui": {
+            "widget": "stepper",
+            "label": {
+              "en": "Pad byte",
+              "de": "Füllbyte"
+            },
+            "description": {
+              "en": "Word-alignment byte; zero when the data length is even.",
+              "de": "Byte zur Wortausrichtung; null bei gerader Datenlänge."
+            }
+          }
         }
       }
     },

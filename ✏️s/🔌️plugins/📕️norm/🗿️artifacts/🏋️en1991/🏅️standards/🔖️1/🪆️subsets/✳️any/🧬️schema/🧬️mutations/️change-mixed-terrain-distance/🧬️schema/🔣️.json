@@ -9,7 +9,25 @@
   ],
   "properties": {
     "newMixedTerrainDistance": {
-      "type": "number"
+      "type": "number",
+      "minimum": 0,
+      "x-semio-ui": {
+        "widget": "stepper",
+        "role": "value",
+        "label": {
+          "en": "Distance to the terrain category change",
+          "de": "Abstand zum Geländekategoriewechsel"
+        },
+        "description": {
+          "en": "Upwind distance to the change of roughness (EN 1991-1-4 Annex A.2).",
+          "de": "Abstand in Luv zum Rauigkeitswechsel (EN 1991-1-4 Anhang A.2)."
+        },
+        "unit": "m",
+        "step": 10,
+        "precision": 0,
+        "group": "site",
+        "order": 10
+      }
     }
   }
 }

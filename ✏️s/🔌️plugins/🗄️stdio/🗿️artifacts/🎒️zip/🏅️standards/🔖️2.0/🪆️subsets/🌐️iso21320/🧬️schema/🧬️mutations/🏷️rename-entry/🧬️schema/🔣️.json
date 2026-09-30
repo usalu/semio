@@ -5,19 +5,20 @@
   "type": "object",
   "additionalProperties": false,
   "required": [
+    "mutation",
     "name",
-    "new_name"
+    "newName"
   ],
   "properties": {
-    "name": {
-      "type": "string"
-    },
-    "new_name": {
-      "type": "string"
-    },
     "mutation": {
       "const": "renameEntry",
       "description": "Aggregate discriminator spliced in by ZipIso21320Mutation; absent when the payload stands alone."
+    },
+    "name": {
+      "type": "string"
+    },
+    "newName": {
+      "type": "string"
     }
   }
 }

@@ -76,7 +76,7 @@ struct Model {
     mtllib: Option<String>,
     usemtl: Vec<(usize, String)>,
     smoothing: Vec<(usize, Option<u32>)>,
-    unknown: Vec<String>,
+    unknown: Vec<(usize, String)>,
 }
 //#endregion 🔖️Model
 
@@ -116,13 +116,13 @@ fn parse(text: &str) -> Result<Model, String> {
     let mut active_smoothing: Option<u32> = None;
     let mut have_smoothing = false;
 
-    for raw_line in text.lines() {
+    for (line_index, raw_line) in text.lines().enumerate() {
         let line = raw_line.trim();
         if line.is_empty() {
             continue;
         }
         if line.starts_with('#') {
-            model.unknown.push(line.to_string());
+            model.unknown.push((line_index, line.to_string()));
             continue;
         }
         let mut parts = line.split_whitespace();
@@ -199,7 +199,7 @@ fn parse(text: &str) -> Result<Model, String> {
                     have_smoothing = true;
                 }
             }
-            _ => model.unknown.push(line.to_string()),
+            _ => model.unknown.push((line_index, line.to_string())),
         }
     }
     Ok(model)
@@ -341,7 +341,7 @@ fn render(model: &Model) -> String {
         out.push_str(&face.vertices.iter().map(write_face_vertex).collect::<Vec<_>>().join(" "));
         out.push('\n');
     }
-    for line in &model.unknown {
+    for (_, line) in &model.unknown {
         out.push_str(line);
         out.push('\n');
     }
@@ -449,16 +449,20 @@ fn model_from_json(value: &Json) -> Result<Model, String> {
         model.objects.push((str_field(&entry, "name")?, usize_array(&entry, "faces")?));
     }
     model.mtllib = str_opt(value, "mtllib");
-    for entry in value.array("usemtlRanges") {
+    for entry in value.array("usemtl") {
         model.usemtl.push((usize_field(&entry, "faceIndexFrom")?, str_field(&entry, "material")?));
     }
     for entry in value.array("smoothingGroups") {
         model.smoothing.push((usize_field(&entry, "faceIndexFrom")?, num_opt(&entry, "group").map(|number| number as u32)));
     }
-    for entry in value.array("unknownStatements") {
-        model.unknown.push(str_field(&entry, "raw")?);
-    }
+    model.unknown = unknown_statements(&value.array("unknownStatements"))?;
     Ok(model)
+}
+
+/// 🕳️ `ObjUnknownStatement` wire entries — `{lineIndex, raw}` — as the model's retained lines.
+#[cfg(feature = "oracles")]
+fn unknown_statements(entries: &[Json]) -> Result<Vec<(usize, String)>, String> {
+    entries.iter().map(|entry| Ok((usize_field(entry, "lineIndex")?, str_field(entry, "raw")?))).collect()
 }
 //#endregion 🔖️ItemParsing
 
@@ -524,20 +528,21 @@ fn membership_to_json(entries: &[(String, Vec<usize>)]) -> Json {
     Json::Array(entries.iter().map(|(name, faces)| json_object(vec![("name", Json::String(name.clone())), ("faces", Json::Array(faces.iter().map(|index| Json::Number(*index as f64)).collect()))])).collect())
 }
 
-/// 📦️ The exact `snapshot` payload [`model_from_json`] consumes, emitted from an independently
-/// parsed model — the round trip `set-snapshot`'s own inverse needs. Without it an adapter has no
+/// 📦️ The exact `snapshot` payload [`model_from_json`] consumes — the `ObjSnapshot` wire — emitted from an
+/// independently parsed model — the round trip `set-snapshot`'s own inverse needs. Without it an adapter has no
 /// honest way to say "put the whole document back": it would have to hand the pristine input bytes
 /// straight to the comparison, which asserts nothing about the reference at all.
 #[cfg(feature = "oracles")]
 fn model_to_json(model: &Model) -> Json {
     let mut entries = vec![
+        ("schema", Json::String("stdio.obj".to_string())),
         ("vertices", Json::Array(model.vertices.iter().map(vertex_to_json).collect())),
         ("texcoords", Json::Array(model.texcoords.iter().map(texcoord_to_json).collect())),
         ("normals", Json::Array(model.normals.iter().map(normal_to_json).collect())),
         ("faces", Json::Array(model.faces.iter().map(face_to_json).collect())),
         ("groups", membership_to_json(&model.groups)),
         ("objects", membership_to_json(&model.objects)),
-        ("usemtlRanges", Json::Array(model.usemtl.iter().map(|(from, material)| json_object(vec![("faceIndexFrom", Json::Number(*from as f64)), ("material", Json::String(material.clone()))])).collect())),
+        ("usemtl", Json::Array(model.usemtl.iter().map(|(from, material)| json_object(vec![("faceIndexFrom", Json::Number(*from as f64)), ("material", Json::String(material.clone()))])).collect())),
         (
             "smoothingGroups",
             Json::Array(
@@ -554,7 +559,7 @@ fn model_to_json(model: &Model) -> Json {
                     .collect(),
             ),
         ),
-        ("unknownStatements", Json::Array(model.unknown.iter().map(|raw| json_object(vec![("raw", Json::String(raw.clone()))])).collect())),
+        ("unknownStatements", Json::Array(model.unknown.iter().map(|(line_index, raw)| json_object(vec![("lineIndex", Json::Number(*line_index as f64)), ("raw", Json::String(raw.clone()))])).collect())),
     ];
     if let Some(lib) = &model.mtllib {
         entries.push(("mtllib", Json::String(lib.clone())));
@@ -628,7 +633,7 @@ pub fn oracle_document_projection(input: &[u8]) -> Result<Json, String> {
             "smoothingGroups",
             Json::Array(model.smoothing.iter().map(|(from, group)| json_object(vec![("faceIndexFrom", Json::Number(*from as f64)), ("group", group.map(|value| Json::Number(value as f64)).unwrap_or(Json::Null))])).collect()),
         ),
-        ("unknownStatements", Json::Array(model.unknown.iter().map(|raw| Json::String(raw.clone())).collect())),
+        ("unknownStatements", Json::Array(model.unknown.iter().map(|(_, raw)| Json::String(raw.clone())).collect())),
     ]))
 }
 
@@ -697,7 +702,6 @@ fn shift_face_index_space_for_remove(model: &mut Model, index: usize) {
 #[cfg(feature = "oracles")]
 fn apply(model: &mut Model, kind: &str, params: &Json) -> Result<(), String> {
     match kind {
-        "no-mutation" => Ok(()),
         "set-snapshot" => {
             *model = model_from_json(params.get("snapshot").ok_or("set-snapshot requires a snapshot field")?)?;
             Ok(())
@@ -830,11 +834,7 @@ fn apply(model: &mut Model, kind: &str, params: &Json) -> Result<(), String> {
             Ok(())
         }
         "set-unknown-statements" => {
-            let mut lines = Vec::new();
-            for entry in params.array("unknownStatements") {
-                lines.push(str_field(&entry, "raw")?);
-            }
-            model.unknown = lines;
+            model.unknown = unknown_statements(&params.array("unknownStatements"))?;
             Ok(())
         }
         other => Err(format!("mutation kind {other:?} has no oracle implementation")),
@@ -860,6 +860,13 @@ pub fn oracle_apply_mutation(input: &[u8], spec: &Json) -> Result<Vec<u8>, Strin
     Ok(render(&model).into_bytes())
 }
 
+/// 🔁️ The identity round trip's own producer: the independent parse re-rendered from the model alone, never the input bytes.
+#[cfg(feature = "oracles")]
+pub fn oracle_round_trip(input: &[u8]) -> Result<Vec<u8>, String> {
+    let text = std::str::from_utf8(input).map_err(|error| format!("input is not UTF-8: {error}"))?;
+    Ok(render(&parse(text)?).into_bytes())
+}
+
 /// 📦️ The whole document as the `snapshot` payload `set-snapshot` carries, read independently of
 /// this subset's own `ObjSnapshot`. This is what makes `set-snapshot`'s INVERSE a real mutation
 /// (replace the document with the original one) instead of a hand-back of the pristine input bytes.
@@ -872,6 +879,11 @@ pub fn oracle_snapshot_json(input: &[u8]) -> Result<Json, String> {
 /// 🚫️ Without the `oracles` feature the reference implementation is not linked at all.
 #[cfg(not(feature = "oracles"))]
 pub fn oracle_apply_mutation(_input: &[u8], _spec: &Json) -> Result<Vec<u8>, String> {
+    Err("the `oracles` feature is disabled — this host was not built with the registered reference implementations".to_string())
+}
+
+#[cfg(not(feature = "oracles"))]
+pub fn oracle_round_trip(_input: &[u8]) -> Result<Vec<u8>, String> {
     Err("the `oracles` feature is disabled — this host was not built with the registered reference implementations".to_string())
 }
 

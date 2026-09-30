@@ -78,6 +78,19 @@ pub fn apply_mp4_mutation(snapshot: &mut Mp4Snapshot, mutation: &Mp4Mutation) ->
         Err(error) => protocol::MutationOutcome::error(error.code, error.message, error.target).absorb_messages(outcome.messages().to_vec()),
     }
 }
+
+/// ↩️ The vocabulary's own inverse of `mutation` against the pre-mutation `base`, reachable without naming the trait.
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn inverse_mp4_mutation(mutation: &Mp4Mutation, base: &Mp4Snapshot) -> Vec<Mp4Mutation> {
+    <Mp4Mutation as Mutation<Mp4Snapshot>>::inverse(mutation, base)
+}
+
+/// 📥️ Decodes one leaf's wire payload — its `payload_value()` JSON, no aggregate tag, the form every committed
+/// `{kind, params}` feature row carries — by semantic kind through the derive-generated `from_payload_value`.
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn decode_mp4_mutation_payload(kind: &str, params: &str) -> Result<Mp4Mutation, String> {
+    <Mp4Mutation as Mutation<Mp4Snapshot>>::from_payload_value(kind, pack::from_json_str(params).map_err(|error| error.to_string())?).map_err(|error| error.to_string())
+}
 //#endregion 🔖️Mutation
 
 //#region OpCodecs

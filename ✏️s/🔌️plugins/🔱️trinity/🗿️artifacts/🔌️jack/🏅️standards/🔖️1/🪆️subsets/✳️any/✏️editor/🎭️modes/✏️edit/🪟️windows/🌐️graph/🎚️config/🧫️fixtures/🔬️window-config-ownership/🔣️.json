@@ -74,8 +74,7 @@
           "result": {
             "kind": "table",
             "columns": ["a.name"],
-            "rows": [["b"]],
-            "graphFixture": null
+            "rows": [["b"]]
           },
           "error": null
         }
@@ -88,8 +87,7 @@
           "result": {
             "kind": "table",
             "columns": ["a.name"],
-            "rows": [["t_f0_b_c0"]],
-            "graphFixture": null
+            "rows": [["t_f0_b_c0"]]
           },
           "error": null
         }

@@ -4,15 +4,350 @@
   "title": "ChangeParameter",
   "type": "object",
   "properties": {
-    "parameter_id": {
-      "type": "string"
+    "operation": {
+      "const": "changeParameter"
+    },
+    "parameterId": {
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Parameter",
+          "de": "Parameter"
+        },
+        "ref": {
+          "kind": "parameter"
+        },
+        "group": "target",
+        "order": 10
+      }
     },
     "parameter": {
-      "type": "object"
+      "oneOf": [
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "type",
+            "id",
+            "name",
+            "value"
+          ],
+          "properties": {
+            "type": {
+              "const": "numeric",
+              "x-semio-ui": {
+                "widget": "hidden",
+                "role": "discriminator",
+                "label": {
+                  "en": "Parameter type",
+                  "de": "Parameterart"
+                }
+              }
+            },
+            "id": {
+              "type": "string",
+              "x-semio-ui": {
+                "widget": "text",
+                "role": "value",
+                "label": {
+                  "en": "Parameter ID",
+                  "de": "Parameter-ID"
+                }
+              }
+            },
+            "name": {
+              "type": "string",
+              "x-semio-ui": {
+                "widget": "text",
+                "role": "value",
+                "label": {
+                  "en": "Name",
+                  "de": "Name"
+                }
+              }
+            },
+            "value": {
+              "type": "number",
+              "x-semio-ui": {
+                "widget": "stepper",
+                "role": "value",
+                "label": {
+                  "en": "Value",
+                  "de": "Wert"
+                }
+              }
+            },
+            "min": {
+              "type": [
+                "number",
+                "null"
+              ],
+              "x-semio-ui": {
+                "widget": "stepper",
+                "role": "value",
+                "label": {
+                  "en": "Minimum",
+                  "de": "Minimum"
+                }
+              }
+            },
+            "max": {
+              "type": [
+                "number",
+                "null"
+              ],
+              "x-semio-ui": {
+                "widget": "stepper",
+                "role": "value",
+                "label": {
+                  "en": "Maximum",
+                  "de": "Maximum"
+                }
+              }
+            },
+            "step": {
+              "type": [
+                "number",
+                "null"
+              ],
+              "x-semio-ui": {
+                "widget": "stepper",
+                "role": "value",
+                "label": {
+                  "en": "Step",
+                  "de": "Schrittweite"
+                }
+              }
+            }
+          },
+          "x-semio-ui": {
+            "role": "value",
+            "label": {
+              "en": "Numeric",
+              "de": "Numerisch"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "type",
+            "id",
+            "name",
+            "value",
+            "options"
+          ],
+          "properties": {
+            "type": {
+              "const": "categorical",
+              "x-semio-ui": {
+                "widget": "hidden",
+                "role": "discriminator",
+                "label": {
+                  "en": "Parameter type",
+                  "de": "Parameterart"
+                }
+              }
+            },
+            "id": {
+              "type": "string",
+              "x-semio-ui": {
+                "widget": "text",
+                "role": "value",
+                "label": {
+                  "en": "Parameter ID",
+                  "de": "Parameter-ID"
+                }
+              }
+            },
+            "name": {
+              "type": "string",
+              "x-semio-ui": {
+                "widget": "text",
+                "role": "value",
+                "label": {
+                  "en": "Name",
+                  "de": "Name"
+                }
+              }
+            },
+            "value": {
+              "type": "string",
+              "x-semio-ui": {
+                "widget": "text",
+                "role": "value",
+                "label": {
+                  "en": "Value",
+                  "de": "Wert"
+                }
+              }
+            },
+            "options": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              },
+              "x-semio-ui": {
+                "role": "value",
+                "label": {
+                  "en": "Options",
+                  "de": "Optionen"
+                }
+              }
+            }
+          },
+          "x-semio-ui": {
+            "role": "value",
+            "label": {
+              "en": "Categorical",
+              "de": "Kategorial"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "type",
+            "id",
+            "name",
+            "value"
+          ],
+          "properties": {
+            "type": {
+              "const": "toggle",
+              "x-semio-ui": {
+                "widget": "hidden",
+                "role": "discriminator",
+                "label": {
+                  "en": "Parameter type",
+                  "de": "Parameterart"
+                }
+              }
+            },
+            "id": {
+              "type": "string",
+              "x-semio-ui": {
+                "widget": "text",
+                "role": "value",
+                "label": {
+                  "en": "Parameter ID",
+                  "de": "Parameter-ID"
+                }
+              }
+            },
+            "name": {
+              "type": "string",
+              "x-semio-ui": {
+                "widget": "text",
+                "role": "value",
+                "label": {
+                  "en": "Name",
+                  "de": "Name"
+                }
+              }
+            },
+            "value": {
+              "type": "boolean",
+              "x-semio-ui": {
+                "widget": "toggle",
+                "role": "value",
+                "label": {
+                  "en": "Value",
+                  "de": "Wert"
+                }
+              }
+            }
+          },
+          "x-semio-ui": {
+            "role": "value",
+            "label": {
+              "en": "Toggle",
+              "de": "Schalter"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "type",
+            "id",
+            "name",
+            "value"
+          ],
+          "properties": {
+            "type": {
+              "const": "text",
+              "x-semio-ui": {
+                "widget": "hidden",
+                "role": "discriminator",
+                "label": {
+                  "en": "Parameter type",
+                  "de": "Parameterart"
+                }
+              }
+            },
+            "id": {
+              "type": "string",
+              "x-semio-ui": {
+                "widget": "text",
+                "role": "value",
+                "label": {
+                  "en": "Parameter ID",
+                  "de": "Parameter-ID"
+                }
+              }
+            },
+            "name": {
+              "type": "string",
+              "x-semio-ui": {
+                "widget": "text",
+                "role": "value",
+                "label": {
+                  "en": "Name",
+                  "de": "Name"
+                }
+              }
+            },
+            "value": {
+              "type": "string",
+              "x-semio-ui": {
+                "widget": "text",
+                "role": "value",
+                "label": {
+                  "en": "Value",
+                  "de": "Wert"
+                }
+              }
+            }
+          },
+          "x-semio-ui": {
+            "role": "value",
+            "label": {
+              "en": "Text",
+              "de": "Text"
+            }
+          }
+        }
+      ],
+      "x-semio-ui": {
+        "role": "value",
+        "label": {
+          "en": "Parameter",
+          "de": "Parameter"
+        },
+        "group": "record",
+        "order": 20
+      }
     }
   },
   "required": [
-    "parameter_id",
+    "operation",
+    "parameterId",
     "parameter"
   ],
   "additionalProperties": false

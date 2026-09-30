@@ -1,7 +1,7 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
   "$id": "https://json.schemas.assets.semio-tech.com/s/stdio/gltf/2.0/any/mutation/move-scene-root-node/schema.json",
-  "title": "GltfMoveSceneRootNodeMutation",
+  "title": "GltfMoveSceneRootNodePayload",
   "type": "object",
   "additionalProperties": false,
   "required": [
@@ -12,26 +12,96 @@
   "properties": {
     "scene": {
       "type": "integer",
-      "minimum": 0
+      "minimum": 0,
+      "x-semio-ui": {
+        "widget": "stepper",
+        "label": {
+          "en": "Scene",
+          "de": "Szene"
+        },
+        "description": {
+          "en": "Index of the scene, counted from 0.",
+          "de": "Index der Szene, ab 0 gezählt."
+        },
+        "precision": 0,
+        "group": "target",
+        "order": 10
+      }
     },
     "node": {
       "type": "integer",
-      "minimum": 0
+      "minimum": 0,
+      "x-semio-ui": {
+        "widget": "stepper",
+        "label": {
+          "en": "Node",
+          "de": "Knoten"
+        },
+        "description": {
+          "en": "Index of the node, counted from 0.",
+          "de": "Index des Knotens, ab 0 gezählt."
+        },
+        "precision": 0,
+        "group": "target",
+        "order": 20
+      }
     },
     "position": {
       "type": "integer",
-      "minimum": 0
+      "minimum": 0,
+      "x-semio-ui": {
+        "widget": "stepper",
+        "label": {
+          "en": "Insert position",
+          "de": "Einfügeposition"
+        },
+        "description": {
+          "en": "Target index in the list, counted from 0.",
+          "de": "Zielindex in der Liste, ab 0 gezählt."
+        },
+        "precision": 0,
+        "group": "value",
+        "order": 30
+      }
     }
   },
-  "x-semio": {
-    "id": "s.stdio.gltf.mutation.move-scene-root-node.v1",
-    "version": 1,
-    "phase": "mutation",
-    "kind": "move",
-    "touchedPaths": [
-      "document/scenes/*/nodes"
-    ],
-    "referencePolicy": "reorders one identified scene root without retargeting any node reference"
-  },
-  "x-semio-mutation": "move-scene-root-node"
+  "$defs": {
+    "MoveSceneRootNodeMutation": {
+      "description": "The whole wire of MoveSceneRootNodeMutation: the editable apply payload (this document's root) or the inert restore.",
+      "oneOf": [
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "phase",
+            "value"
+          ],
+          "properties": {
+            "phase": {
+              "const": "apply"
+            },
+            "value": {
+              "$ref": "#"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "phase",
+            "value"
+          ],
+          "properties": {
+            "phase": {
+              "const": "restore"
+            },
+            "value": {
+              "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/gltf/2.0/any/diff.json"
+            }
+          }
+        }
+      ]
+    }
+  }
 }

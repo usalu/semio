@@ -1,7 +1,7 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
   "$id": "https://json.schemas.assets.semio-tech.com/s/stdio/gltf/2.0/any/mutation/delete-scene/schema.json",
-  "title": "GltfDeleteScenePayloadV1",
+  "title": "GltfDeleteScenePayload",
   "type": "object",
   "additionalProperties": false,
   "required": [
@@ -10,17 +10,60 @@
   "properties": {
     "index": {
       "type": "integer",
-      "minimum": 0
+      "minimum": 0,
+      "x-semio-ui": {
+        "widget": "stepper",
+        "label": {
+          "en": "Index",
+          "de": "Index"
+        },
+        "description": {
+          "en": "Index of the item to delete, counted from 0.",
+          "de": "Index des zu löschenden Eintrags, ab 0 gezählt."
+        },
+        "precision": 0,
+        "group": "target",
+        "order": 10
+      }
     }
   },
-  "x-semio": {
-    "id": "s.stdio.gltf.mutation.delete-scene.v1",
-    "version": 1,
-    "phase": "mutation",
-    "touchedPathPatterns": [
-      "document/scenes/{index}",
-      "document/scene"
-    ]
-  },
-  "x-semio-mutation": "delete-scene"
+  "$defs": {
+    "DeleteSceneMutation": {
+      "description": "The whole wire of DeleteSceneMutation: the editable apply payload (this document's root) or the inert restore.",
+      "oneOf": [
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "phase",
+            "value"
+          ],
+          "properties": {
+            "phase": {
+              "const": "apply"
+            },
+            "value": {
+              "$ref": "#"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "phase",
+            "value"
+          ],
+          "properties": {
+            "phase": {
+              "const": "restore"
+            },
+            "value": {
+              "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/gltf/2.0/any/diff.json"
+            }
+          }
+        }
+      ]
+    }
+  }
 }

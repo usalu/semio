@@ -10,10 +10,34 @@
   ],
   "properties": {
     "cellWidth": {
-      "type": "number"
+      "type": "number",
+      "x-semio-ui": {
+        "widget": "stepper",
+        "role": "value",
+        "label": {
+          "en": "Cell width",
+          "de": "Zellbreite"
+        },
+        "step": 1,
+        "precision": 2,
+        "group": "grid",
+        "order": 10
+      }
     },
     "cellHeight": {
-      "type": "number"
+      "type": "number",
+      "x-semio-ui": {
+        "widget": "stepper",
+        "role": "value",
+        "label": {
+          "en": "Cell height",
+          "de": "Zellhöhe"
+        },
+        "step": 1,
+        "precision": 2,
+        "group": "grid",
+        "order": 20
+      }
     }
   }
 }

@@ -100,35 +100,35 @@
       "files": [
         {
           "role": "expected-before",
-          "path": "../🧫️fixtures/🔤️set-editor-selection/✅️set-editor-selection-applied/📸️snapshot/⬅️before/🔣️.json",
+          "path": "../🧫️fixtures/🔤️set-editor/✅️set/📸️snapshot/⬅️before/🔣️.json",
           "mediaType": "application/json",
           "sha256": "sha256:688f5cbbd140f2899b33bb88ca6b6a296efcdb31d03313d18570209259724806",
           "bytes": 24
         },
         {
           "role": "mutation",
-          "path": "../🧫️fixtures/🔤️set-editor-selection/✅️set-editor-selection-applied/🦠️mutation/🔣️.json",
+          "path": "../🧫️fixtures/🔤️set-editor/✅️set/🦠️mutation/🔣️.json",
           "mediaType": "application/json",
           "sha256": "sha256:aad91e8bf637771a620d3a269ab62d0e75e2f92e6299087b4978dcbae1c4f5a7",
           "bytes": 92
         },
         {
           "role": "expected-after",
-          "path": "../🧫️fixtures/🔤️set-editor-selection/✅️set-editor-selection-applied/📸️snapshot/➡️after/🔣️.json",
+          "path": "../🧫️fixtures/🔤️set-editor/✅️set/📸️snapshot/➡️after/🔣️.json",
           "mediaType": "application/json",
           "sha256": "sha256:7801c3b017f904237dc8655540a39d4a716574a5d2f11eeb9a0624fd5e02c249",
           "bytes": 54
         },
         {
           "role": "expected-diff",
-          "path": "../🧫️fixtures/🔤️set-editor-selection/✅️set-editor-selection-applied/🔺️diff/🔣️.json",
+          "path": "../🧫️fixtures/🔤️set-editor/✅️set/🔺️diff/🔣️.json",
           "mediaType": "application/json",
           "sha256": "sha256:7801c3b017f904237dc8655540a39d4a716574a5d2f11eeb9a0624fd5e02c249",
           "bytes": 54
         },
         {
           "role": "declared-outcome",
-          "path": "../🧫️fixtures/🔤️set-editor-selection/✅️set-editor-selection-applied/🎯️outcome/🔣️.json",
+          "path": "../🧫️fixtures/🔤️set-editor/✅️set/🎯️outcome/🔣️.json",
           "mediaType": "application/json",
           "sha256": "sha256:7a5a7d68df9ad1703f7e5415caa03230228f1a6a4edf85b60d86f8ee5391f8ab",
           "bytes": 44

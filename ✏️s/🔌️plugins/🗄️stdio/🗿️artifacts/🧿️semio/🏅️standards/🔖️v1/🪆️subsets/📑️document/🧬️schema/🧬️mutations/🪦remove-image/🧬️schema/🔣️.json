@@ -5,15 +5,16 @@
   "type": "object",
   "additionalProperties": false,
   "required": [
+    "mutation",
     "id"
   ],
   "properties": {
-    "id": {
-      "type": "string"
-    },
     "mutation": {
       "const": "removeImage",
       "description": "Aggregate discriminator spliced in by SemioDocumentMutation; absent when the payload stands alone."
+    },
+    "id": {
+      "type": "string"
     }
   }
 }

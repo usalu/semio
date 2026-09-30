@@ -5,15 +5,50 @@
   "type": "object",
   "additionalProperties": false,
   "required": [
+    "mutation",
     "materialId",
     "newDesignation"
   ],
   "properties": {
+    "mutation": {
+      "const": "changeMaterialDesignation"
+    },
     "materialId": {
-      "type": "string"
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Material",
+          "de": "Werkstoff"
+        },
+        "description": {
+          "en": "The aluminium material this mutation addresses.",
+          "de": "Der Aluminiumwerkstoff, den diese Mutation adressiert."
+        },
+        "ref": {
+          "kind": "material"
+        },
+        "group": "target",
+        "order": 10
+      }
     },
     "newDesignation": {
-      "type": "string"
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "text",
+        "role": "value",
+        "label": {
+          "en": "Alloy and temper",
+          "de": "Legierung und Werkstoffzustand"
+        },
+        "description": {
+          "en": "EN 573/EN 755 designation, e.g. aw6060-t6, aw6082-t6 or aw5083-o.",
+          "de": "Bezeichnung nach EN 573/EN 755, z. B. aw6060-t6, aw6082-t6 oder aw5083-o."
+        },
+        "group": "material",
+        "order": 20
+      }
     }
   }
 }

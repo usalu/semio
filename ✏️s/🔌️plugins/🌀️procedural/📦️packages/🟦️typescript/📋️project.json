@@ -25,6 +25,30 @@
         "{workspaceRoot}/🧰️framework/🔨️modules/🧊️3d/🥽️mesh/🧬️schema/**/*",
         "{workspaceRoot}/bun.lock"
       ]
+    },
+    "test-renderer-contract": {
+      "executor": "nx:run-commands",
+      "inputs": [
+        "{workspaceRoot}/✏️s/🔌️plugins/🌀️procedural/**/*",
+        "{workspaceRoot}/🧰️framework/**/*"
+      ],
+      "options": {
+        "cwd": "✏️s/🔌️plugins/🌀️procedural/📦️packages/🟦️typescript",
+        "command": "bun ./📜️script.ts test renderer-contract",
+        "forwardAllArgs": true
+      }
+    },
+    "canonical-architecture": {
+      "executor": "nx:run-commands",
+      "inputs": [
+        "{workspaceRoot}/✏️s/🔌️plugins/🌀️procedural/**/*",
+        "{workspaceRoot}/🧰️framework/**/*"
+      ],
+      "options": {
+        "cwd": "✏️s/🔌️plugins/🌀️procedural/📦️packages/🟦️typescript",
+        "command": "bun ./📜️script.ts test renderer-contract",
+        "forwardAllArgs": true
+      }
     }
   }
 }

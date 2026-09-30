@@ -5,6 +5,7 @@
   "type": "object",
   "additionalProperties": false,
   "required": [
+    "mutation",
     "index",
     "id",
     "dcCapacityW",
@@ -15,29 +16,180 @@
     "inverterEfficiency"
   ],
   "properties": {
+    "mutation": {
+      "const": "createPvSystem"
+    },
     "index": {
-      "type": "integer"
+      "type": "integer",
+      "minimum": 0,
+      "x-semio-ui": {
+        "widget": "stepper",
+        "role": "value",
+        "label": {
+          "en": "Position",
+          "de": "Position"
+        },
+        "description": {
+          "en": "Insertion position in the model's list; 0 is first.",
+          "de": "Einfügeposition in der Modellliste; 0 ist die erste."
+        },
+        "step": 1,
+        "precision": 0,
+        "group": "order",
+        "order": 10
+      }
     },
     "id": {
-      "type": "integer"
+      "type": "integer",
+      "minimum": 0,
+      "x-semio-ui": {
+        "widget": "stepper",
+        "role": "value",
+        "label": {
+          "en": "ID",
+          "de": "ID"
+        },
+        "description": {
+          "en": "Id the new PV system is created under; later mutations address it by this id.",
+          "de": "ID, unter der das neue Objekt angelegt wird; spätere Mutationen adressieren es darüber."
+        },
+        "step": 1,
+        "precision": 0,
+        "group": "identity",
+        "order": 20
+      }
     },
     "dcCapacityW": {
-      "type": "number"
+      "type": "number",
+      "x-semio-ui": {
+        "widget": "stepper",
+        "role": "value",
+        "label": {
+          "en": "DC rated power",
+          "de": "DC-Nennleistung"
+        },
+        "unit": "W",
+        "displayUnit": "kWp",
+        "displayFactor": 0.001,
+        "step": 100,
+        "precision": 2,
+        "group": "capacity",
+        "order": 30
+      }
     },
     "areaM2": {
-      "type": "number"
+      "type": "number",
+      "x-semio-ui": {
+        "widget": "stepper",
+        "role": "value",
+        "label": {
+          "en": "Aperture area",
+          "de": "Aperturfläche"
+        },
+        "unit": "m²",
+        "step": 0.1,
+        "precision": 2,
+        "group": "geometry",
+        "order": 40
+      }
     },
     "tiltDeg": {
-      "type": "number"
+      "type": "number",
+      "x-semio-ui": {
+        "widget": "slider",
+        "role": "value",
+        "label": {
+          "en": "Tilt",
+          "de": "Neigung"
+        },
+        "description": {
+          "en": "Angle from horizontal: 0 is flat, 90 is vertical.",
+          "de": "Winkel zur Horizontalen: 0 ist waagerecht, 90 senkrecht."
+        },
+        "unit": "deg",
+        "step": 1,
+        "precision": 0,
+        "softMin": 0,
+        "softMax": 90,
+        "snaps": [
+          0,
+          15,
+          30,
+          45,
+          60,
+          75,
+          90
+        ],
+        "group": "orientation",
+        "order": 50
+      }
     },
     "azimuthDeg": {
-      "type": "number"
+      "type": "number",
+      "x-semio-ui": {
+        "widget": "dial",
+        "role": "value",
+        "label": {
+          "en": "Azimuth",
+          "de": "Azimut"
+        },
+        "description": {
+          "en": "Compass bearing the collector faces: 0 north, 90 east, 180 south, 270 west.",
+          "de": "Himmelsrichtung der Ausrichtung: 0 Nord, 90 Ost, 180 Süd, 270 West."
+        },
+        "unit": "deg",
+        "step": 1,
+        "precision": 0,
+        "softMin": 0,
+        "softMax": 360,
+        "snaps": [
+          0,
+          90,
+          180,
+          270,
+          360
+        ],
+        "group": "orientation",
+        "order": 60
+      }
     },
     "moduleEfficiency": {
-      "type": "number"
+      "type": "number",
+      "x-semio-ui": {
+        "widget": "slider",
+        "role": "value",
+        "label": {
+          "en": "Module efficiency",
+          "de": "Modulwirkungsgrad"
+        },
+        "displayUnit": "%",
+        "displayFactor": 100,
+        "step": 0.001,
+        "precision": 1,
+        "softMin": 0.001,
+        "softMax": 1,
+        "group": "efficiency",
+        "order": 70
+      }
     },
     "inverterEfficiency": {
-      "type": "number"
+      "type": "number",
+      "x-semio-ui": {
+        "widget": "slider",
+        "role": "value",
+        "label": {
+          "en": "Inverter efficiency",
+          "de": "Wechselrichterwirkungsgrad"
+        },
+        "displayUnit": "%",
+        "displayFactor": 100,
+        "step": 0.001,
+        "precision": 1,
+        "softMin": 0.001,
+        "softMax": 1,
+        "group": "efficiency",
+        "order": 80
+      }
     }
   }
 }

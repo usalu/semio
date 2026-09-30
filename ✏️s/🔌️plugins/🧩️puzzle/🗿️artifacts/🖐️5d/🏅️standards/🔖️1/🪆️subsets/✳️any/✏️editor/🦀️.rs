@@ -7345,8 +7345,8 @@ struct Puzzle5dBoardEventsWork {
     drag_moves: Option<Value>,
     drag_cursor: usize,
     pending_move_id: Option<String>,
-    pending_move_x: Option<f64>,
-    pending_move_y: Option<f64>,
+    /// 🎬️ The offset of the `drag` gesture record whose targets `drag_moves` walks.
+    drag_offset: (f64, f64),
     part_cursor: usize,
     pending_source: Option<String>,
     pending_target: Option<String>,
@@ -7388,8 +7388,7 @@ impl Default for Puzzle5dBoardEventsWork {
             drag_moves: None,
             drag_cursor: 0,
             pending_move_id: None,
-            pending_move_x: None,
-            pending_move_y: None,
+            drag_offset: (0.0, 0.0),
             part_cursor: 0,
             pending_source: None,
             pending_target: None,
@@ -7505,10 +7504,8 @@ impl Puzzle5dBoardEventsWork {
         self.event.as_mut().and_then(Value::as_object_mut).and_then(|event| event.get_mut("payload")).map_or(Value::Null, |value| std::mem::replace(value, Value::Null))
     }
 
-    fn schedule_move(&mut self, payload: &Value) {
-        self.pending_move_id = payload.get("id").and_then(Value::as_str).filter(|id| !id.is_empty()).map(str::to_string);
-        self.pending_move_x = payload.get("x").and_then(Value::as_f64);
-        self.pending_move_y = payload.get("y").and_then(Value::as_f64);
+    fn schedule_move(&mut self, target: &Value) {
+        self.pending_move_id = target.as_str().filter(|id| !id.is_empty()).map(str::to_string);
         self.part_cursor = 0;
         self.stage = Puzzle5dBoardEventsStage::FindMovePart;
     }
@@ -7568,12 +7565,22 @@ impl crate::retained_command::PuzzleCommandWork<EditorApp<Puzzle5dPlayApp>> for 
                         self.camera2d = Some(<Puzzle5dCamera2d as dsl::FromValue>::from_value(dsl::os_pack::json::to_dsl_value(&payload)).map_err(|_| Fault::from("puzzle5d-board-events-camera-malformed"))?);
                         self.next_event();
                     }
-                    Some("nodeMove") => self.schedule_move(&payload),
-                    Some("nodeDragEnd") => {
-                        let mut payload = payload;
-                        self.drag_moves = Some(payload.as_object_mut().and_then(|payload| payload.get_mut("moves")).map_or(Value::Array(Vec::new()), |value| std::mem::replace(value, Value::Null)));
-                        self.drag_cursor = 0;
-                        self.stage = Puzzle5dBoardEventsStage::DragMove;
+                    // 🎬️ A board drag is ONE `drag` gesture record: its targets move by its offset from wherever
+                    // each part's flat pose stands, one part per step and each id once. Other gesture kinds move no
+                    // part here.
+                    Some("gesture") => {
+                        let drag = payload.get("kind").and_then(Value::as_str) == Some("drag");
+                        let offset = payload.get("dx").and_then(Value::as_f64).zip(payload.get("dy").and_then(Value::as_f64)).filter(|(dx, dy)| dx.is_finite() && dy.is_finite());
+                        match offset.filter(|_| drag) {
+                            Some(offset) => {
+                                let mut payload = payload;
+                                self.drag_moves = Some(payload.as_object_mut().and_then(|payload| payload.get_mut("targets")).map_or(Value::Array(Vec::new()), |value| std::mem::replace(value, Value::Null)));
+                                self.drag_offset = offset;
+                                self.drag_cursor = 0;
+                                self.stage = Puzzle5dBoardEventsStage::DragMove;
+                            }
+                            None => self.next_event(),
+                        }
                     }
                     Some("edgeCreate") => {
                         self.pending_source = payload.get("source").and_then(Value::as_str).filter(|id| !id.is_empty()).map(str::to_string);
@@ -7616,13 +7623,15 @@ impl crate::retained_command::PuzzleCommandWork<EditorApp<Puzzle5dPlayApp>> for 
                 Ok(Self::progress("puzzle5d-board-event-dispatch", "Applying board event", "Board-Ereignis wird angewendet"))
             }
             Puzzle5dBoardEventsStage::DragMove => {
-                let Some(move_payload) = self.drag_moves.as_ref().and_then(Value::as_array).and_then(|moves| moves.get(self.drag_cursor)).cloned() else {
+                let Some(target) = self.drag_moves.as_ref().and_then(Value::as_array).and_then(|targets| targets.get(self.drag_cursor)).cloned() else {
                     self.drag_moves = None;
                     self.next_event();
                     return Ok(Self::progress("puzzle5d-board-event-scan", "Reading board event", "Board-Ereignis wird gelesen"));
                 };
                 self.drag_cursor += 1;
-                self.schedule_move(&move_payload);
+                if !self.drag_moves.as_ref().and_then(Value::as_array).is_some_and(|targets| targets[..self.drag_cursor - 1].contains(&target)) {
+                    self.schedule_move(&target);
+                }
                 Ok(Self::progress("puzzle5d-board-drag", "Moving board node", "Board-Knoten wird verschoben"))
             }
             Puzzle5dBoardEventsStage::FindMovePart => {
@@ -7642,8 +7651,8 @@ impl crate::retained_command::PuzzleCommandWork<EditorApp<Puzzle5dPlayApp>> for 
                         self.stage = if self.drag_moves.is_some() { Puzzle5dBoardEventsStage::DragMove } else { Puzzle5dBoardEventsStage::Scan };
                         return Ok(Self::progress("puzzle5d-board-move", "Skipping locked node", "Gesperrter Knoten wird übersprungen"));
                     }
-                    let x = self.pending_move_x.unwrap_or_else(|| current.and_then(|value| value.get("x")).and_then(Value::as_f64).unwrap_or_default());
-                    let y = self.pending_move_y.unwrap_or_else(|| current.and_then(|value| value.get("y")).and_then(Value::as_f64).unwrap_or_default());
+                    let x = current.and_then(|value| value.get("x")).and_then(Value::as_f64).unwrap_or_default() + self.drag_offset.0;
+                    let y = current.and_then(|value| value.get("y")).and_then(Value::as_f64).unwrap_or_default() + self.drag_offset.1;
                     let id = self.pending_move_id.take().expect("matched move id");
                     self.push(crate::standards::v1::subsets::any::schema::mutations::move_part_2d(id, x, y))?;
                     self.stage = if self.drag_moves.is_some() { Puzzle5dBoardEventsStage::DragMove } else { Puzzle5dBoardEventsStage::Scan };
@@ -8919,6 +8928,7 @@ fn puzzle5d_store_edit(
             label: None,
             group_id: None,
             origin: Default::default(),
+            transaction: None,
         }],
         description,
         coalesce_key: None,
@@ -9121,6 +9131,7 @@ impl store::ArtifactStoreOneItemPreparation<Puzzle5dConfig, Puzzle5dConfigMutati
                 label: None,
                 group_id: None,
                 origin: Default::default(),
+                transaction: None,
             }],
             description: self.description.take(),
             coalesce_key: None,

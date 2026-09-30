@@ -5,9 +5,13 @@
   "type": "object",
   "additionalProperties": false,
   "required": [
+    "mutation",
     "rule"
   ],
   "properties": {
+    "mutation": {
+      "const": "addCompatibilityRule"
+    },
     "rule": {
       "title": "BlockCompatibilityRule",
       "type": "object",
@@ -20,17 +24,84 @@
       ],
       "properties": {
         "id": {
-          "type": "string"
+          "type": "string",
+          "x-semio-ui": {
+            "widget": "text",
+            "role": "value",
+            "label": {
+              "en": "ID",
+              "de": "ID"
+            },
+            "description": {
+              "en": "Unique id of the record.",
+              "de": "Eindeutige ID des Eintrags."
+            },
+            "group": "identity",
+            "order": 10
+          }
         },
         "source": {
-          "type": "string"
+          "type": "string",
+          "x-semio-ui": {
+            "widget": "reference",
+            "role": "target",
+            "label": {
+              "en": "Source handle kind",
+              "de": "Quell-Griffart"
+            },
+            "ref": {
+              "kind": "handleKind",
+              "domain": "handle",
+              "granularity": "handleKind"
+            },
+            "group": "target",
+            "order": 20
+          }
         },
         "target": {
-          "type": "string"
+          "type": "string",
+          "x-semio-ui": {
+            "widget": "reference",
+            "role": "target",
+            "label": {
+              "en": "Target handle kind",
+              "de": "Ziel-Griffart"
+            },
+            "ref": {
+              "kind": "handleKind",
+              "domain": "handle",
+              "granularity": "handleKind"
+            },
+            "group": "target",
+            "order": 30
+          }
         },
         "bidirectional": {
-          "type": "boolean"
+          "type": "boolean",
+          "x-semio-ui": {
+            "widget": "toggle",
+            "role": "value",
+            "label": {
+              "en": "Bidirectional",
+              "de": "Beidseitig"
+            },
+            "description": {
+              "en": "The rule also allows the reverse direction.",
+              "de": "Die Regel erlaubt auch die Gegenrichtung."
+            },
+            "group": "kind",
+            "order": 40
+          }
         }
+      },
+      "x-semio-ui": {
+        "role": "value",
+        "label": {
+          "en": "Compatibility rule",
+          "de": "Kompatibilitätsregel"
+        },
+        "group": "record",
+        "order": 10
       }
     }
   }

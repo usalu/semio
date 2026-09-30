@@ -1,0 +1,14 @@
+{
+  "index": null,
+  "mutation": "createNode",
+  "node": {
+    "anchor": "fixed",
+    "handles": [],
+    "height": 5.0,
+    "id": "node-d",
+    "shape": "rectangle",
+    "width": 0.0,
+    "x": 1.0,
+    "y": 2.0
+  }
+}

@@ -1,6 +1,6 @@
 {
   "UpdateSiloShellInputs": {
-    "silo_shell": {
+    "siloShell": {
       "id": "silo-1",
       "thickness": 0.012,
       "radius": 3.0,

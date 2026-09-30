@@ -5,15 +5,50 @@
   "type": "object",
   "additionalProperties": false,
   "required": [
+    "mutation",
     "id",
     "newFormat"
   ],
   "properties": {
+    "mutation": {
+      "const": "changeShotFormat"
+    },
     "id": {
-      "type": "string"
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Shot",
+          "de": "Aufnahme"
+        },
+        "description": {
+          "en": "The shot this mutation addresses.",
+          "de": "Die Aufnahme, die diese Mutation adressiert."
+        },
+        "ref": {
+          "kind": "shot"
+        },
+        "group": "target",
+        "order": 10
+      }
     },
     "newFormat": {
-      "type": "string"
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "text",
+        "role": "value",
+        "label": {
+          "en": "Format",
+          "de": "Format"
+        },
+        "description": {
+          "en": "Image format, e.g. png or svg.",
+          "de": "Bildformat, z. B. png oder svg."
+        },
+        "group": "output",
+        "order": 20
+      }
     }
   }
 }

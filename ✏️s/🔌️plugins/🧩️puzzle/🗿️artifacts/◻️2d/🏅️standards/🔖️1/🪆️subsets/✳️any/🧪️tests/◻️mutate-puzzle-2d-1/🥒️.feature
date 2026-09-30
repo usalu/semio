@@ -4,7 +4,7 @@
 @mutations-puzzle-2d-1-any
 Feature: Apply every typed puzzle2d board mutation twice — once in Rust, once in Python — and require the same answer
   This case is a CROSS-LANGUAGE DIFFERENTIAL. The reference is `🐍️component.py` in this directory: a
-  second implementation of the `s.puzzle.2d` board document and its thirty-three typed mutations,
+  second implementation of the `s.puzzle.2d` board document and its thirty-six typed mutations,
   written in Python from `🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🔣️.json`, from
   rules 2, 4 and 7 of
   `.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️12/SEMANTIC-MUTATIONS-OVERHAUL/📓️derivation-rules.md`, and
@@ -46,7 +46,15 @@ Feature: Apply every typed puzzle2d board mutation twice — once in Rust, once 
   two-node board no real example offers; twenty-nine REFUSAL vectors, each committing
   `🔺️diff/🚫️.absent` under contract D6 rather than an invented empty patch; and the two vectors that
   pin the warning-level branches — a duplicate edge id is a `mutation.no-op`, not a rejection, and a
-  null catalogue argument clears rather than refuses.
+  null catalogue argument clears rather than refuses. The three parametric selection transforms
+  (`drag-`, `rotate-`, `scale-selection`) run on one synthetic selection board carrying a locked node
+  and a locked target region, and add four rows each: a target set mixing nodes and target regions,
+  a PARTIAL vector whose missing and locked members degrade to `mutation.partial` while the survivors
+  move, a refusal whose every target is absent, and identity parameters that are a `no-op`. Ten
+  `<kind>-invariant` refusals state the schema-first rule on the same board: a payload that breaks a hard
+  bound of its own leaf schema (an empty or repeated target set, a zero or negative factor or scale, a
+  negative radius, a zero-width node, a zero-radius or negative-scale handle, a template rim parameter
+  off the outline) is refused as a Fatal `mutation.invariant` by both implementations.
 
   📌️ TWO CEILINGS ON WHAT THIS COMPARISON ESTABLISHES, stated rather than implied. First, the
   SUBJECT half does not run this subset's codec: `🦀️component.rs` beside this file links no plugin
@@ -117,6 +125,9 @@ Feature: Apply every typed puzzle2d board mutation twice — once in Rust, once 
       | edit-target-region-label      | 🖋️edit-target-region-label/🖋️renames-region-1                            |
       | change-target-region-hidden   | 🙈change-target-region-hidden/🙈️hides-region-1                            |
       | change-target-region-locked   | 🔏change-target-region-locked/🔏️locks-region-1                            |
+      | drag-selection                | ✋️drag-selection/✋️drags-two-nodes                                        |
+      | rotate-selection              | 🔄️rotate-selection/🔄️turns-two-nodes                             |
+      | scale-selection               | 🔍️scale-selection/🔍️doubles-two-nodes                             |
 
   @id-inverse
   @level-exhaustive
@@ -170,6 +181,9 @@ Feature: Apply every typed puzzle2d board mutation twice — once in Rust, once 
       | edit-target-region-label      | 🖋️edit-target-region-label/🖋️renames-region-1                            |
       | change-target-region-hidden   | 🙈change-target-region-hidden/🙈️hides-region-1                            |
       | change-target-region-locked   | 🔏change-target-region-locked/🔏️locks-region-1                            |
+      | drag-selection                | ✋️drag-selection/✋️drags-two-nodes                                        |
+      | rotate-selection              | 🔄️rotate-selection/🔄️turns-two-nodes                             |
+      | scale-selection               | 🔍️scale-selection/🔍️doubles-two-nodes                             |
 
   @id-spec-vector
   @level-exhaustive
@@ -236,7 +250,7 @@ Feature: Apply every typed puzzle2d board mutation twice — once in Rust, once 
       | change-manifest-id-alpha              | change-manifest-id            | applied | 🆔change-manifest-id/📦️repoints-manifest                                             | 🔣️.json   |
       | connect-kind-compatibility-alpha      | connect-kind-compatibility    | applied | 🤝connect-kind-compatibility/🤝️adds-handle-kind-pair                                 | 🔣️.json   |
       | disconnect-kind-compatibility-alpha   | disconnect-kind-compatibility | applied | 💔disconnect-kind-compatibility/🚫️removes-handle-kind-pair                           | 🔣️.json   |
-      | disconnect-kind-compatibility-refused | disconnect-kind-compatibility | refused | 💔disconnect-kind-compatibility/🚫️rejects-withdrawing-a-pair-the-relation-never-held | 🚫️.absent |
+      | disconnect-kind-compatibility-refused | disconnect-kind-compatibility | refused | 💔disconnect-kind-compatibility/🚫️rejects-withdrawing-pair-relation-never | 🚫️.absent |
       | replace-kind-catalogs-alpha           | replace-kind-catalogs         | applied | 📚replace-kind-catalogs/📇️installs-handle-kind-catalog                               | 🔣️.json   |
       | replace-kind-catalogs-cleared         | replace-kind-catalogs         | applied | 📚replace-kind-catalogs/🗑️clears-the-installed-handle-catalog                        | 🔣️.json   |
       | create-target-region-alpha            | create-target-region          | applied | 🌍create-target-region/🌍️appends-region-2                                            | 🔣️.json   |
@@ -246,7 +260,29 @@ Feature: Apply every typed puzzle2d board mutation twice — once in Rust, once 
       | resize-target-region-refused          | resize-target-region          | refused | 📐resize-target-region/🚫️rejects-resizing-a-region-the-board-never-held              | 🚫️.absent |
       | edit-target-region-label-refused      | edit-target-region-label      | refused | 🖋️edit-target-region-label/🚫️rejects-renaming-a-region-the-board-never-held         | 🚫️.absent |
       | change-target-region-hidden-refused   | change-target-region-hidden   | refused | 🙈change-target-region-hidden/🚫️rejects-hiding-a-region-the-board-never-held         | 🚫️.absent |
-      | change-target-region-locked-refused   | change-target-region-locked   | refused | 🔏change-target-region-locked/🚫️rejects-locking-a-region-the-board-never-held        | 🚫️.absent |
+      | change-target-region-locked-refused   | change-target-region-locked   | refused | 🔏change-target-region-locked/🚫️rejects-locking-region-board-never-held        | 🚫️.absent |
+      | drag-selection-mixed                  | drag-selection                | applied | ✋️drag-selection/🎯️drags-node-and-region                                            | 🔣️.json   |
+      | drag-selection-partial                | drag-selection                | applied | ✋️drag-selection/⚠️skips-locked-ghost                                            | 🔣️.json   |
+      | drag-selection-refused                | drag-selection                | refused | ✋️drag-selection/🚫️rejects-ghosts                                             | 🚫️.absent |
+      | drag-selection-unchanged              | drag-selection                | noop    | ✋️drag-selection/⏸️keeps-a-zero-offset                                               | 🔣️.json   |
+      | rotate-selection-mixed                | rotate-selection              | applied | 🔄️rotate-selection/🎯️skips-the-region                                         | 🔣️.json   |
+      | rotate-selection-partial              | rotate-selection              | applied | 🔄️rotate-selection/⚠️skips-locked-ghost                                          | 🔣️.json   |
+      | rotate-selection-refused              | rotate-selection              | refused | 🔄️rotate-selection/🚫️rejects-ghosts                                           | 🚫️.absent |
+      | rotate-selection-unchanged            | rotate-selection              | noop    | 🔄️rotate-selection/⏸️keeps-a-zero-angle                                              | 🔣️.json   |
+      | scale-selection-mixed                 | scale-selection               | applied | 🔍️scale-selection/🎯️halves-node-region                                           | 🔣️.json   |
+      | scale-selection-partial               | scale-selection               | applied | 🔍️scale-selection/⚠️skips-locked-ghost                                           | 🔣️.json   |
+      | scale-selection-refused               | scale-selection               | refused | 🔍️scale-selection/🚫️rejects-ghosts                                            | 🚫️.absent |
+      | scale-selection-unchanged             | scale-selection               | noop    | 🔍️scale-selection/⏸️keeps-a-unit-factor                                              | 🔣️.json   |
+      | drag-selection-invariant              | drag-selection                | refused | ✋️drag-selection/🧱️no-targets                                                        | 🚫️.absent |
+      | rotate-selection-invariant            | rotate-selection              | refused | 🔄️rotate-selection/🧱️repeated-targets                                                | 🚫️.absent |
+      | scale-selection-invariant             | scale-selection               | refused | 🔍️scale-selection/🧱️zero-factor                                                      | 🚫️.absent |
+      | scale-selection-invariant-negative    | scale-selection               | refused | 🔍️scale-selection/⛔️negative-factor                                                  | 🚫️.absent |
+      | scale-node-invariant                  | scale-node                    | refused | 📏scale-node/🧱️zero-scale                                                             | 🚫️.absent |
+      | replace-node-geometry-invariant       | replace-node-geometry         | refused | 🧊replace-node-geometry/🧱️negative-radius                                             | 🚫️.absent |
+      | create-node-invariant                 | create-node                   | refused | 🌱create-node/🧱️zero-width-node                                                       | 🚫️.absent |
+      | add-node-handle-invariant             | add-node-handle               | refused | ➕add-node-handle/🧱️zero-radius-handle                                                | 🚫️.absent |
+      | replace-node-handle-invariant         | replace-node-handle           | refused | 🔌replace-node-handle/🧱️negative-scale                                                | 🚫️.absent |
+      | replace-kind-catalogs-invariant       | replace-kind-catalogs         | refused | 📚replace-kind-catalogs/🧱️off-rim-template                                            | 🚫️.absent |
 
   @id-identity-round-trip
   @level-long

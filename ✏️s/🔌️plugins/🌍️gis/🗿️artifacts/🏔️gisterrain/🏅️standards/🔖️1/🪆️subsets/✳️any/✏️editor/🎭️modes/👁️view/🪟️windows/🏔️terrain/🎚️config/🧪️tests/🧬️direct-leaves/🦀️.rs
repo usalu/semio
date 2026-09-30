@@ -35,14 +35,13 @@ where
 fn strict_snapshot_and_aggregate_json_vectors() {
     let fixture = vectors();
     assert_schema_cases::<GisTerrainWindowConfig>(&fixture["config"]);
-    assert_schema_cases::<GisTerrainWindowConfigMutation>(&fixture["mutations"]);
     for value in fixture["config"]["valid"].as_array().expect("valid snapshots") {
         let snapshot: GisTerrainWindowConfig = decode(value);
         assert_eq!(serde_json::from_str::<Value>(&dsl::json::to_json_string(&snapshot)).expect("snapshot JSON"), *value);
     }
-    for value in fixture["mutations"]["valid"].as_array().expect("valid operations") {
-        let operation: GisTerrainWindowConfigMutation = decode(value);
-        assert_eq!(serde_json::from_str::<Value>(&dsl::json::to_json_string(&operation)).expect("operation JSON"), *value);
+    store::os_store::test_support::assert_wire_witness::<GisTerrainWindowConfigMutation>(include_str!("../../🧫️fixtures/🧬️mutations/🎥️set-camera/🧾️wire-witness/🦠️mutation/🔣️.json"));
+    for value in fixture["mutations"]["invalid"].as_array().expect("invalid operations") {
+        assert!(dsl::json::from_json_str::<GisTerrainWindowConfigMutation>(&value.to_string()).is_err(), "accepted {value}");
     }
 }
 

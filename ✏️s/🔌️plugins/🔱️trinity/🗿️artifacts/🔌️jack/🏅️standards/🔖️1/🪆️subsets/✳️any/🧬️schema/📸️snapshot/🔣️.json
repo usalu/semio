@@ -12,7 +12,7 @@
     "manifest": { "$ref": "https://json.schemas.assets.semio-tech.com/s/trinity/jack/artifact.json#/$defs/Manifest", "x-semio-state": "artifact" },
     "camera": { "$ref": "https://json.schemas.assets.semio-tech.com/s/trinity/jack/artifact.json#/$defs/Camera", "x-semio-state": "artifact" },
     "content": {
-      "$ref": "https://json.schemas.assets.semio-tech.com/os/store/child.json",
+      "$ref": "https://json.schemas.assets.semio-tech.com/os/store/child/schema.json",
       "x-semio-state": "artifact",
       "x-semio-child-kind": "s.stdio.semio"
     },

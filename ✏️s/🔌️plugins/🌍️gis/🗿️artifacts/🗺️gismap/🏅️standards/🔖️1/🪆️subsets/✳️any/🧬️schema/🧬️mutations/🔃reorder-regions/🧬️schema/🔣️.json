@@ -10,7 +10,22 @@
   ],
   "properties": {
     "id": {
-      "type": "string"
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Region",
+          "de": "Region"
+        },
+        "description": {
+          "en": "The region this mutation addresses.",
+          "de": "Die Region, die diese Mutation adressiert."
+        },
+        "ref": {
+          "kind": "region"
+        }
+      }
     },
     "toIndex": {
       "type": "integer",

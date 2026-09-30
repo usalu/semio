@@ -5,15 +5,55 @@
   "type": "object",
   "additionalProperties": false,
   "required": [
+    "mutation",
     "id",
     "newAirLoopId"
   ],
   "properties": {
+    "mutation": {
+      "const": "changeOutdoorAirSystemAirLoop"
+    },
     "id": {
-      "type": "integer"
+      "type": "integer",
+      "minimum": 0,
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Outdoor air system",
+          "de": "Außenluftsystem"
+        },
+        "description": {
+          "en": "The outdoor air system this mutation changes, by id.",
+          "de": "Außenluftsystem, das diese Mutation ändert, per ID."
+        },
+        "ref": {
+          "kind": "outdoorAirSystem"
+        },
+        "group": "target",
+        "order": 10
+      }
     },
     "newAirLoopId": {
-      "type": "integer"
+      "type": "integer",
+      "minimum": 0,
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Air loop",
+          "de": "Luftkreislauf"
+        },
+        "description": {
+          "en": "Air loop the outdoor air system feeds, by id.",
+          "de": "Luftkreislauf, den das Außenluftsystem versorgt, per ID."
+        },
+        "ref": {
+          "kind": "airLoop"
+        },
+        "group": "assignment",
+        "order": 20
+      }
     }
   }
 }

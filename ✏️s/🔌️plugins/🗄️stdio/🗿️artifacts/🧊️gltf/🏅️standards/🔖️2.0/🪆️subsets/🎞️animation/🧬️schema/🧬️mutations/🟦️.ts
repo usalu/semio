@@ -1,11 +1,14 @@
-/** 🧬 Transparent TypeScript aggregate for the animation slice of the glTF 2.0 mutation vocabulary. */
-import type { GltfCreateAnimationPayload } from '../../../♾️any/🧬️schema/🧬️mutations/🎞️animation/🌱️create/🟦️.ts';
-import type { GltfDeleteAnimationPayload } from '../../../♾️any/🧬️schema/🧬️mutations/🎞️animation/🗑️delete/🟦️.ts';
-import type { GltfMoveAnimationPayload } from '../../../♾️any/🧬️schema/🧬️mutations/🎞️animation/🚚️move/🟦️.ts';
-import type { GltfReorderAnimationsPayload } from '../../../♾️any/🧬️schema/🧬️mutations/🎞️animation/🔀️reorder/🟦️.ts';
+/** 🎞️ `GltfAnimationMutation` twin: the animation slice of the glTF 2.0 mutation vocabulary, a view over the any subset's `GltfMutation`
+ * that selects branches and never restates a payload.
+ * @see ./🔣️.json */
+import { gltfWireRefuse, type GltfWireReader } from "../../../♾️any/🧬️schema/📸️snapshot/🟦️.ts";
+import { parseGltfMutation, type GltfMutation } from "../../../♾️any/🧬️schema/🧬️mutations/🟦️.ts";
 
-export type GltfAnimationMutation =
-  | { readonly mutation: 'createAnimation'; readonly payload: GltfCreateAnimationPayload }
-  | { readonly mutation: 'reorderAnimations'; readonly payload: GltfReorderAnimationsPayload }
-  | { readonly mutation: 'deleteAnimation'; readonly payload: GltfDeleteAnimationPayload }
-  | { readonly mutation: 'moveAnimation'; readonly payload: GltfMoveAnimationPayload };
+export type GltfAnimationMutation = Extract<GltfMutation, { readonly mutation: "createAnimation" | "deleteAnimation" | "moveAnimation" | "reorderAnimations" }>;
+
+const members: readonly GltfMutation["mutation"][] = ["createAnimation", "deleteAnimation", "moveAnimation", "reorderAnimations"];
+
+export const parseGltfAnimationMutation: GltfWireReader<GltfAnimationMutation> = (value, at = "$") => {
+  const mutation = parseGltfMutation(value, at);
+  return members.includes(mutation.mutation) ? (mutation as GltfAnimationMutation) : gltfWireRefuse(`${at}.mutation`, `value is not one of ${members.join(", ")}`);
+};

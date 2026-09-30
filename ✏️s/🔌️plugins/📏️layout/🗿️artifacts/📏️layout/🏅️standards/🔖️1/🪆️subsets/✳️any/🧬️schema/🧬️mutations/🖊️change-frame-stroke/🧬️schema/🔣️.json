@@ -10,18 +10,63 @@
   ],
   "properties": {
     "pageId": {
-      "type": "string"
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Page",
+          "de": "Seite"
+        },
+        "ref": {
+          "kind": "page"
+        },
+        "group": "target",
+        "order": 10
+      }
     },
     "frameId": {
-      "type": "string"
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Frame",
+          "de": "Rahmen"
+        },
+        "ref": {
+          "kind": "frame",
+          "domain": "elements",
+          "granularity": "element"
+        },
+        "group": "target",
+        "order": 20
+      }
     },
     "newStroke": {
-      "type": "array",
+      "type": [
+        "array",
+        "null"
+      ],
       "items": {
         "type": "number"
       },
       "minItems": 4,
-      "maxItems": 4
+      "maxItems": 4,
+      "x-semio-ui": {
+        "widget": "vector",
+        "role": "value",
+        "label": {
+          "en": "Stroke color",
+          "de": "Konturfarbe"
+        },
+        "description": {
+          "en": "RGBA, each channel 0 to 1; empty removes the stroke.",
+          "de": "RGBA, jeder Kanal 0 bis 1; leer entfernt die Kontur."
+        },
+        "group": "appearance",
+        "order": 30
+      }
     }
   }
 }

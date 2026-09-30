@@ -5,14 +5,31 @@
   "type": "object",
   "additionalProperties": false,
   "required": [
+    "mutation",
     "sections"
   ],
   "properties": {
-    "sections": {}
-  },
-  "owner": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/🪶️en1999/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📐️change-sections",
-  "semanticKind": "change-sections",
-  "emoji": "📐️",
-  "aggregateVariant": "ChangeSections",
-  "displayName": "Change Sections"
+    "mutation": {
+      "const": "changeSections"
+    },
+    "sections": {
+      "type": "array",
+      "items": {
+        "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1999/snapshot.json#/$defs/AluminiumSection"
+      },
+      "x-semio-ui": {
+        "role": "value",
+        "label": {
+          "en": "Cross-sections",
+          "de": "Querschnitte"
+        },
+        "description": {
+          "en": "The complete list of aluminium cross-sections.",
+          "de": "Die vollständige Liste der Aluminiumquerschnitte."
+        },
+        "group": "record",
+        "order": 10
+      }
+    }
+  }
 }

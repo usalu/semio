@@ -5,20 +5,27 @@
   "type": "object",
   "additionalProperties": false,
   "required": [
+    "mutation",
     "index",
     "timeline"
   ],
   "properties": {
+    "mutation": {
+      "const": "insertTimeline",
+      "description": "Aggregate discriminator spliced in by SemioAnimationMutation; absent when the payload stands alone."
+    },
     "index": {
       "type": "integer",
       "minimum": 0
     },
     "timeline": {
-      "$ref": "#/$defs/AnimTimeline"
-    },
-    "mutation": {
-      "const": "insertTimeline",
-      "description": "Aggregate discriminator spliced in by SemioAnimationMutation; absent when the payload stands alone."
+      "$ref": "#/$defs/AnimTimeline",
+      "x-semio-ui": {
+        "label": {
+          "en": "Timeline",
+          "de": "Zeitleiste"
+        }
+      }
     }
   },
   "$defs": {

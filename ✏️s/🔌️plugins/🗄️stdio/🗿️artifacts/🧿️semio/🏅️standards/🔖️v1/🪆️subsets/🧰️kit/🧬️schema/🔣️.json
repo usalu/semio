@@ -36,7 +36,7 @@
     },
     "representations": {
       "type": "array",
-      "items": { "$ref": "https://json.schemas.assets.semio-tech.com/os/store/link.json" },
+      "items": { "$ref": "https://json.schemas.assets.semio-tech.com/os/store/link/schema.json" },
       "x-semio-state": "artifact",
       "x-semio-link": "representation"
     }

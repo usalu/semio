@@ -1,0 +1,87 @@
+{
+  "$schema": "./🧬️schema/🔣️.json",
+  "note": "⏪️ Non-destructive history editing on a toy document seeded with four one-op edits (ticket 26/09/30/NON-DESTRUCTIVE-HISTORY-EDITING design §4, §7). `begin` names a seeded edit by index; `replay` pumps the per-turn Report replay to completion (`clean` or `fatal` is the report the TypeScript oracle synthesizes for the reducer); `commit` finalizes (a missing `choice` is a new alternative). Indices in `pending`/`superseded`/`withdrawn` name seeded edits. The body is what every window renders: the session preview while one is open, else the committed document.",
+  "actor": "local",
+  "seed": [
+    { "kind": "setCount", "value": 1 },
+    { "kind": "setLabel", "value": "a" },
+    { "kind": "setSlotChildren", "value": [] },
+    { "kind": "setCount", "value": 5 }
+  ],
+  "committedBody": "count=5 label=a",
+  "scenarios": [
+    {
+      "id": "preview-applies-the-draft-before-the-target-and-nothing-downstream",
+      "steps": [{ "begin": 0 }, { "input": { "path": "/value", "value": 7 } }],
+      "status": { "stage": "editing", "blocking": false, "acceptedCount": 0 },
+      "body": "count=7 label=",
+      "pending": [1, 2, 3]
+    },
+    {
+      "id": "accept-replays-downstream-and-reviews-the-replayed-head",
+      "steps": [{ "begin": 1 }, { "input": { "path": "/value", "value": "b" } }, { "accept": null }, { "replay": "clean" }],
+      "status": { "stage": "reviewing", "blocking": false, "acceptedCount": 1 },
+      "body": "count=5 label=b",
+      "finalizeRefusal": null
+    },
+    {
+      "id": "a-fatal-replay-blocks-finalizing",
+      "steps": [{ "begin": 2 }, { "input": { "path": "/children", "value": ["not a uri"] } }, { "accept": null }, { "replay": "fatal" }],
+      "status": { "stage": "reviewing", "blocking": true, "acceptedCount": 1 },
+      "body": "count=5 label=a",
+      "finalizeRefusal": "timeTravel.blocked"
+    },
+    {
+      "id": "withdrawing-the-failing-mutation-unblocks-finalizing",
+      "steps": [
+        { "begin": 2 },
+        { "input": { "path": "/children", "value": ["not a uri"] } },
+        { "accept": null },
+        { "replay": "fatal" },
+        { "begin": 2 },
+        { "withdraw": null },
+        { "accept": null },
+        { "replay": "clean" }
+      ],
+      "status": { "stage": "reviewing", "blocking": false, "acceptedCount": 1 },
+      "body": "count=5 label=a",
+      "finalizeRefusal": null
+    },
+    {
+      "id": "overwrite-supersedes-in-place",
+      "steps": [{ "begin": 1 }, { "input": { "path": "/value", "value": "b" } }, { "accept": null }, { "replay": "clean" }, { "finalize": null }, { "commit": { "choice": "overwrite" } }],
+      "status": null,
+      "body": "count=5 label=b",
+      "superseded": [1]
+    },
+    {
+      "id": "a-new-alternative-keeps-the-original",
+      "steps": [{ "begin": 1 }, { "input": { "path": "/value", "value": "b" } }, { "accept": null }, { "replay": "clean" }, { "finalize": null }, { "commit": { "name": "Variant" } }],
+      "status": null,
+      "body": "count=5 label=b",
+      "superseded": [1],
+      "alternative": "Variant"
+    },
+    {
+      "id": "exit-leaves-zero-trace",
+      "steps": [{ "begin": 0 }, { "input": { "path": "/value", "value": 7 } }, { "accept": null }, { "replay": "clean" }, { "exit": null }],
+      "status": null,
+      "body": "count=5 label=a",
+      "superseded": []
+    },
+    {
+      "id": "discarding-the-only-draft-exits",
+      "steps": [{ "begin": 3 }, { "input": { "path": "/value", "value": 8 } }, { "discard": null }],
+      "status": null,
+      "body": "count=5 label=a"
+    }
+  ],
+  "refusals": {
+    "frozen": "timeTravel.frozen",
+    "frozenVerbs": ["undo", "redo", "commitCheckpoint", "createAlternative"],
+    "stale": "timeTravel.stale",
+    "invalidInput": "timeTravel.invalid-input",
+    "schemaUnavailable": "timeTravel.schema-unavailable",
+    "invalidInputValue": "seven"
+  }
+}

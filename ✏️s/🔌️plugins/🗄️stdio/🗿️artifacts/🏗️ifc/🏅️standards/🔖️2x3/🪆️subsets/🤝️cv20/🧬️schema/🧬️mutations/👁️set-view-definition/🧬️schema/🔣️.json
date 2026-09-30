@@ -9,7 +9,20 @@
   ],
   "properties": {
     "view": {
-      "type": "string"
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "text",
+        "label": {
+          "en": "Model view definition",
+          "de": "Modellansichtsdefinition (MVD)"
+        },
+        "description": {
+          "en": "ViewDefinition named in the FILE_DESCRIPTION header.",
+          "de": "Im FILE_DESCRIPTION-Kopf genannte ViewDefinition."
+        },
+        "group": "value",
+        "order": 10
+      }
     }
   }
 }

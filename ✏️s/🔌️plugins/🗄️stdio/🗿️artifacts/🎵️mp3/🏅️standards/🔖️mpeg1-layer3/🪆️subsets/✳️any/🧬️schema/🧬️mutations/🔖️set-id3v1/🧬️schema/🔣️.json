@@ -4,7 +4,13 @@
   "title": "SetId3v1",
   "type": "object",
   "additionalProperties": false,
+  "required": [
+    "mutation"
+  ],
   "properties": {
+    "mutation": {
+      "const": "setId3v1"
+    },
     "id3v1": {
       "anyOf": [
         {
@@ -13,7 +19,13 @@
         {
           "type": "null"
         }
-      ]
+      ],
+      "x-semio-ui": {
+        "label": {
+          "en": "ID3v1 tag",
+          "de": "ID3v1-Tag"
+        }
+      }
     }
   },
   "$defs": {
@@ -27,6 +39,16 @@
             "type": "integer",
             "minimum": 0,
             "maximum": 255
+          },
+          "x-semio-ui": {
+            "label": {
+              "en": "Raw tag bytes",
+              "de": "Rohbytes des Tags"
+            },
+            "description": {
+              "en": "The 128 bytes of the ID3v1 tag.",
+              "de": "Die 128 Bytes des ID3v1-Tags."
+            }
           }
         }
       }

@@ -1,3 +1,5 @@
+import type { ShellBrand } from "@semio-tech/framework";
+import { resolveShellBrandById } from "../../🏷️brand/🟦️.ts";
 import {readFileSync, existsSync } from "node:fs";
 import path from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
@@ -18,12 +20,13 @@ import { DISTRIBUTION_LAYOUT, distributionChunkName, distributionAssetName } fro
 const configDir = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "../../📦️packages/🟦️typescript");
 const playDir = path.resolve(configDir, "../..");
 const repoRoot = path.resolve(playDir, "../../../../..");
-export default defineOwnedBuildConfigFactory(async ({ command }): Promise<OwnedBuildConfig> => {
+/** 🏗️ Builds a neutral shell using entry points and brands supplied by its owner. */
+export function createFrameworkOsDevConfig(options: { readonly brands: readonly ShellBrand[]; readonly browserEntry: string }) {
+return defineOwnedBuildConfigFactory(async ({ command }): Promise<OwnedBuildConfig> => {
 
 /** 📦️ Config-shaped graph: heavy owners load through opaque dynamic imports so Vite's native
  * config parse/watch set stays inside the declared module bound (see fixtures config-graph). */
 const { playgroundAssetVitePlugins, playgroundFlowWasmDevStubPlugin, playgroundSceneHostOptimizeDeps, playgroundSceneHostResolveAliases, resolveGisMapTileServeMode, semioBrandHtmlVitePlugins, semioEmojiIndexHtmlVitePlugin, semioHostHtmlVitePlugin, semioViteProductionBuild, staticDirMountVitePlugins, staticDirVitePlugin, semioAssetsVitePlugin, semioServeCloseVitePlugin } = await import(['../../../../../../🔨️modules/🖱️ui/🎨️styling/🏗️builder/🌐️vite', '🟦️.ts'].join("/"));
-const { resolveShellBrandById } = await import(['../../🏷️brand', '🟦️.ts'].join("/"));
 const { semioExtensionStoreVitePlugin } = await import(['../../../🔌️plugin/🏪️store/📥️installation', '🟦️.ts'].join("/"));
 const { repoCacheDirectory } = await import(['../../../../../🦑️repo/🔨️modules/📚️library/⚡️caching', '🟦️.ts'].join("/"));
 void _semioPlaygroundGraphAnchor;
@@ -45,7 +48,7 @@ const sessionAlias = playgroundSessionViteAlias(sessionRoot, plugin);
 const sessionPath = sessionAlias.replacement;
 const playgroundTarget = PLAYGROUND_BUILD_TARGETS.find((target) => target.variant === plugin || target.aliases.includes(plugin));
 const brandId = process.env.SEMIO_BRAND ?? playgroundTarget?.brand;
-const brand = resolveShellBrandById(brandId);
+const brand = resolveShellBrandById(options.brands, brandId);
 const playgroundDistDir = playgroundTarget?.distDir;
 const distributionSource = (source: string) => source === "\0vite/preload-helper.js" ? "virtual/vite/preload-helper.js" : path.relative(repoRoot, path.resolve(playDir, source)).replaceAll("\\", "/");
 const distributionRollupOutput = {
@@ -206,7 +209,7 @@ return {
       // deep-link fallbacks like `/spaces/{id}` — a `./`-relative entry resolves against the CURRENT
       // path there, 404ing on any nested route (26/08/16 HUB-SPACES lane 4-I: this is why user2's hard
       // navigation to `/spaces/{id}` never rendered — the browser requested `/spaces/🟦️.ts`).
-      entry: "/🟦️.ts",
+      entry: options.browserEntry,
     }),
     semioEmojiIndexHtmlVitePlugin(playDir),
     playgroundFlowWasmDevStubPlugin(repoRoot),
@@ -251,3 +254,7 @@ return {
   },
 };
 });
+
+}
+
+export default createFrameworkOsDevConfig({ brands: [], browserEntry: "/🚀️entry/🟦️.ts" });

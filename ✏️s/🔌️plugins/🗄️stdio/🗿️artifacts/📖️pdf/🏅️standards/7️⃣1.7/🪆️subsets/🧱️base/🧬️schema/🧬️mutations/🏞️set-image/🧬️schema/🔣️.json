@@ -5,15 +5,16 @@
   "type": "object",
   "additionalProperties": false,
   "required": [
+    "mutation",
     "image"
   ],
   "properties": {
-    "image": {
-      "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/pdf/1.7/base/snapshot.json#/$defs/PdfImage"
-    },
     "mutation": {
       "const": "setImage",
       "description": "Aggregate discriminator spliced in by PdfMutation; absent when the payload stands alone."
+    },
+    "image": {
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/pdf/1.7/base/snapshot.json#/$defs/PdfImage"
     }
   }
 }

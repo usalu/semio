@@ -29,7 +29,7 @@ pub fn apply(payload: &GltfReorderTexturesPayload, base: &GltfSnapshot) -> Resul
 
 //#region 🧬️DirectMutation
 #[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::MutationLeaf)]
-#[mutation_leaf(contract = ::protocol)]
+#[mutation_leaf(contract = ::protocol, payload = Apply)]
 #[value(tag = "phase", content = "value", rename_all = "camelCase")]
 pub enum ReorderTexturesMutation {
     Apply(GltfReorderTexturesPayload),
@@ -73,6 +73,6 @@ impl protocol::MutationKind<GltfSnapshot, super::GltfMutation> for ReorderTextur
 
 //#region 🧪️Tests
 #[cfg(test)]
-#[path = "🧪️tests/🔬️direct-leaf/🦀️.rs"]
-mod direct_leaf_tests;
+#[path = "🧪️tests/🔀️flips-the-albedo-fc33d9/🦀️.rs"]
+mod case_flips_the_albedo_fc33d9;
 //#endregion 🧪️Tests

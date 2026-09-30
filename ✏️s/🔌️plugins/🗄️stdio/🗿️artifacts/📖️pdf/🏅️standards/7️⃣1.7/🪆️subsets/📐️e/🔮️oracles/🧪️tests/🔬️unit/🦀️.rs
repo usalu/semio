@@ -24,7 +24,7 @@ fn params_for(kind: &str) -> Json {
         "remove-media-annotation" => json_object(vec![("subtype", Json::String("Sound".to_string())), ("title", Json::String("narration".to_string()))]),
         "set-output-intent" => json_object(vec![("identifier", Json::String("sRGB IEC61966-2.1".to_string()))]),
         "remove-output-intent" => json_object(vec![]),
-        "embed-font-file" => json_object(vec![("descriptorOrdinal", Json::Number(4.0)), ("key", Json::String("FontFile2".to_string())), ("programOrdinal", Json::Number(0.0))]),
+        "embed-font-file" => json_object(vec![("descriptorOrdinal", Json::Number(4.0)), ("key", Json::String("FontFile2".to_string())), ("program", json_object(vec![("num", Json::Number(803.0)), ("gen", Json::Number(0.0))]))]),
         "remove-font-file" => json_object(vec![("descriptorOrdinal", Json::Number(4.0))]),
         other => panic!("no test parameters for kind {other:?}"),
     }

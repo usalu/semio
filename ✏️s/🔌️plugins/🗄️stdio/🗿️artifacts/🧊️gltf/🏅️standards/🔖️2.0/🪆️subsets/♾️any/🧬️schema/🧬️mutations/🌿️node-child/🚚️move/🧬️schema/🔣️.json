@@ -1,7 +1,7 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
   "$id": "https://json.schemas.assets.semio-tech.com/s/stdio/gltf/2.0/any/mutation/move-node-child/schema.json",
-  "title": "GltfMoveNodeChildMutation",
+  "title": "GltfMoveNodeChildPayload",
   "type": "object",
   "additionalProperties": false,
   "required": [
@@ -12,26 +12,96 @@
   "properties": {
     "parent": {
       "type": "integer",
-      "minimum": 0
+      "minimum": 0,
+      "x-semio-ui": {
+        "widget": "stepper",
+        "label": {
+          "en": "Parent node",
+          "de": "Elternknoten"
+        },
+        "description": {
+          "en": "Index of the parent node, counted from 0.",
+          "de": "Index des Elternknotens, ab 0 gezählt."
+        },
+        "precision": 0,
+        "group": "target",
+        "order": 10
+      }
     },
     "child": {
       "type": "integer",
-      "minimum": 0
+      "minimum": 0,
+      "x-semio-ui": {
+        "widget": "stepper",
+        "label": {
+          "en": "Child node",
+          "de": "Kindknoten"
+        },
+        "description": {
+          "en": "Index of the child node, counted from 0.",
+          "de": "Index des Kindknotens, ab 0 gezählt."
+        },
+        "precision": 0,
+        "group": "target",
+        "order": 20
+      }
     },
     "position": {
       "type": "integer",
-      "minimum": 0
+      "minimum": 0,
+      "x-semio-ui": {
+        "widget": "stepper",
+        "label": {
+          "en": "Insert position",
+          "de": "Einfügeposition"
+        },
+        "description": {
+          "en": "Target index in the list, counted from 0.",
+          "de": "Zielindex in der Liste, ab 0 gezählt."
+        },
+        "precision": 0,
+        "group": "value",
+        "order": 30
+      }
     }
   },
-  "x-semio": {
-    "id": "s.stdio.gltf.mutation.move-node-child.v1",
-    "version": 1,
-    "phase": "mutation",
-    "kind": "move",
-    "touchedPaths": [
-      "document/nodes/*/children"
-    ],
-    "referencePolicy": "reorders one identified child without changing node identities"
-  },
-  "x-semio-mutation": "move-node-child"
+  "$defs": {
+    "MoveNodeChildMutation": {
+      "description": "The whole wire of MoveNodeChildMutation: the editable apply payload (this document's root) or the inert restore.",
+      "oneOf": [
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "phase",
+            "value"
+          ],
+          "properties": {
+            "phase": {
+              "const": "apply"
+            },
+            "value": {
+              "$ref": "#"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "phase",
+            "value"
+          ],
+          "properties": {
+            "phase": {
+              "const": "restore"
+            },
+            "value": {
+              "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/gltf/2.0/any/diff.json"
+            }
+          }
+        }
+      ]
+    }
+  }
 }

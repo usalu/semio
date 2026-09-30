@@ -5,9 +5,13 @@
   "type": "object",
   "additionalProperties": false,
   "required": [
+    "mutation",
     "text"
   ],
   "properties": {
+    "mutation": {
+      "const": "editText"
+    },
     "text": {
       "type": "string"
     }

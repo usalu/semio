@@ -1,0 +1,9 @@
+# Shared Compile Blocker Owners
+
+Read-only source inventory, no builds or edits. These findings distinguish current files from prior failed Cargo logs; they do not claim successful fresh compilation.
+
+Replication FoldEvent is owned by `🧰️framework/🔨️modules/📡️replication/🔗️causal/🔀️transition/🦀️.rs`. Current source at line667 already contains the HistoryTransition::Supersede match arm: it checks owned targets, queues effective replacement transitions and applies scoped supersessions after folding. The earlier non-exhaustive-match blocker is therefore already addressed in concurrent source. Runtime/canonical verification remains the owning implementation's responsibility.
+
+MeshModelingJob, MeshModelingStep, MeshModelingProgress, bevel_job and decimate_job belong to neutral `🧰️framework/🔨️modules/🧊️3d/🥽️mesh/🦀️.rs`, publicly mounted as semio_framework_3d::mesh by its actual package root. Current production source contains synchronous bevel_edges_with_progress and decimate_with_progress but no named retained job/step/progress types or factories. Repo-wide Rust search finds those names only in the newly authored framework modeling law and the concrete Flow BREP mesh extension consumer. No other concurrent implementation currently supplies them on disk.
+
+The existing framework `🥽️mesh/🧪️tests/🔬️modeling/🦀️.rs:521` specifies sliced work, zero-fuel no-op, bounded progress, cancellation preserving progress, and batching parity against synchronous geometry. Concrete Flow extension already expects that resumable contract for expensive bevel/decimate operations. This is a genuine absent canonical production implementation, not a missing reexport from a different owner. Repair must supply budgeted retained operations in the mesh owner; removing consumers, loosening the law or reducing the jobs to a one-shot wrapper would discard the requested progress/cancellation behavior.

@@ -10,7 +10,7 @@ pub fn diff(payload: &super::CreateFault, base: &EnergyModelSnapshot) -> protoco
         return protocol::MutationOutcome::error("mutation.duplicate-id", format!("Fault {} already exists.", payload.id.0), [payload.id.0.to_string()]);
     }
     if payload.index as usize > base.model.faults.len() {
-        return protocol::MutationOutcome::error("mutation.invariant", format!("Index {} is past the end of the model's {} faults.", payload.index, base.model.faults.len()), [payload.id.0.to_string()]);
+        return protocol::MutationOutcome::error("mutation.target-missing", format!("Index {} is past the end of the model's {} faults.", payload.index, base.model.faults.len()), [payload.id.0.to_string()]);
     }
     if !base.model.ideal_loads.iter().any(|row| row.id == payload.target_equipment_id) {
         return protocol::MutationOutcome::error("mutation.target-missing", format!("Ideal loads system {} does not exist.", payload.target_equipment_id.0), [payload.target_equipment_id.0.to_string()]);

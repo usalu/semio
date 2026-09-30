@@ -5,15 +5,16 @@
   "type": "object",
   "additionalProperties": false,
   "required": [
+    "mutation",
     "title"
   ],
   "properties": {
-    "title": {
-      "type": "string"
-    },
     "mutation": {
       "const": "setInfoTitle",
       "description": "Aggregate discriminator spliced in by PdfUaMutation; absent when the payload stands alone."
+    },
+    "title": {
+      "type": "string"
     }
   }
 }

@@ -5,19 +5,20 @@
   "type": "object",
   "additionalProperties": false,
   "required": [
+    "mutation",
     "handle",
     "entity"
   ],
   "properties": {
+    "mutation": {
+      "const": "setEntityGeometry",
+      "description": "Aggregate discriminator spliced in by SemioCadMutation; absent when the payload stands alone."
+    },
     "handle": {
       "type": "string"
     },
     "entity": {
       "$ref": "#/$defs/CadEntity"
-    },
-    "mutation": {
-      "const": "setEntityGeometry",
-      "description": "Aggregate discriminator spliced in by SemioCadMutation; absent when the payload stands alone."
     }
   },
   "$defs": {

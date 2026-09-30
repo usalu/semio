@@ -28,15 +28,14 @@ fn scan_axes(ctx: &Context) -> Result<Axes, String> {
     read_axes(&ctx.copy_fixture(SCAN, Some("scan.jpg"))?)
 }
 
-/// 🎯️ The reference answer for one row: the axes after the kind, which must have moved unless the row
-/// is the identity baseline.
+/// 🎯️ The reference answer for one row: the axes after the kind, which must have moved.
 fn mutate_oracle(ctx: &Context) -> Result<Outcome, String> {
     let row = ctx.doc_json()?;
     let kind = row.str("kind");
     let base = scan_axes(ctx)?;
     let next = apply(&base, &kind, &row.get("params").cloned().unwrap_or(Json::Object(Vec::new())))?;
     let projection = project(&next);
-    if kind != "no-mutation" && projection == project(&base) {
+    if projection == project(&base) {
         return Err(format!("mutate-{kind}: the reference reading of the scan did not move"));
     }
     Ok(Outcome::with_raw(projection.to_string().into_bytes(), projection))
@@ -47,7 +46,7 @@ fn inverse_oracle(ctx: &Context) -> Result<Outcome, String> {
     let row = ctx.doc_json()?;
     let kind = row.str("kind");
     let base = scan_axes(ctx)?;
-    if kind != "no-mutation" && project(&apply(&base, &kind, &row.get("params").cloned().unwrap_or(Json::Object(Vec::new())))?) == project(&base) {
+    if project(&apply(&base, &kind, &row.get("params").cloned().unwrap_or(Json::Object(Vec::new())))?) == project(&base) {
         return Err(format!("inverse-{kind}: the forward kind left the reference reading untouched, so restoring it proves nothing"));
     }
     let restored = project(&base);
@@ -59,66 +58,16 @@ fn inverse_oracle(ctx: &Context) -> Result<Outcome, String> {
 #[cfg(feature = "sut")]
 mod subject {
     use semio_repo_test_host::{parse_json, Context, Json, Outcome};
-    use semio_s_artifact_stdio_jpg::io::{decode_jpg, encode_jpg};
-    use semio_s_artifact_stdio_jpg::schema::snapshot::{JpgFrameComponent, JpgHuffmanClass, JpgHuffmanTable};
-    use semio_s_artifact_stdio_jpg::standards::v_jfif_1_01::subsets::baseline::schema::mutations::{apply_jpg_baseline_mutation, encode_jpg_baseline_projection_json, inverse_jpg_baseline_mutation, jpg_baseline_conformance_codes, JpgBaselineMutation};
-    use semio_s_artifact_stdio_jpg::schema::diff::JpgHuffmanTableKey;
+    use semio_s_artifact_stdio_jpg::io::decode_jpg;
+    use semio_s_artifact_stdio_jpg::standards::v_jfif_1_01::subsets::baseline::schema::mutations::{apply_jpg_baseline_mutation, decode_jpg_baseline_mutation_payload, encode_jpg_baseline_projection_json, inverse_jpg_baseline_mutation, jpg_baseline_conformance_codes, JpgBaselineMutation};
     use semio_s_artifact_stdio_jpg::JpgSnapshot;
-    use semio_s_plugin_stdio_test_oracle::artifacts::jpg::standards::v_jfif_1_01::subsets::document::project_jpg_mutation;
     use semio_s_plugin_stdio_test_oracle::law;
 
-    //#region 🔖️Json
-    fn number(value: &Json, key: &str, fallback: f64) -> f64 {
-        match value.get(key) {
-            Some(Json::Number(found)) => *found,
-            _ => fallback,
-        }
-    }
-
-    fn class_of(params: &Json) -> JpgHuffmanClass {
-        match params.str("class").as_str() {
-            "ac" => JpgHuffmanClass::Ac,
-            _ => JpgHuffmanClass::Dc,
-        }
-    }
-
-    /// 🧾️ A Huffman table whose bit-length counts and values are irrelevant to every axis this
-    /// vocabulary reads — the class only counts tables per class, it never inspects one. Spelled out
-    /// rather than defaulted so a reader can see that the payload is deliberately inert.
-    fn inert_table(class: JpgHuffmanClass, id: u8) -> JpgHuffmanTable {
-        JpgHuffmanTable { id, class, bits: [0u8; 16], values: Vec::new() }
-    }
-    //#endregion 🔖️Json
-
     //#region 🔖️MutationFromSpec
-    /// 🧬️ The feature's ten-kind params grammar, translated into the REAL typed
-    /// `JpgBaselineMutation` this subset applies. `set-snapshot` is built from the decoded document
-    /// with the three hard axes stamped at once, because a conformance class is a whole-document
-    /// property and that variant is the class stamp in its total form.
-    fn mutation_from_spec(kind: &str, params: &Json, base: &JpgSnapshot) -> Result<JpgBaselineMutation, String> {
-        match kind {
-            "set-snapshot" => {
-                let mut snapshot = base.clone();
-                snapshot.sof_marker = number(params, "sofMarker", 194.0) as u8;
-                snapshot.arithmetic = matches!(params.get("arithmetic"), Some(Json::Bool(true)));
-                if let Some(frame) = snapshot.frame.as_mut() {
-                    frame.precision = number(params, "precision", 12.0) as u8;
-                }
-                Ok(JpgBaselineMutation::SetSnapshot(semio_s_artifact_stdio_jpg::standards::v_jfif_1_01::subsets::baseline::schema::mutations::set_snapshot::SetSnapshot { snapshot }))
-            }
-            "set-sof-marker" => Ok(JpgBaselineMutation::SetSofMarker(semio_s_artifact_stdio_jpg::standards::v_jfif_1_01::subsets::baseline::schema::mutations::set_sof_marker::SetSofMarker { marker: number(params, "marker", 194.0) as u8 })),
-            "set-sample-precision" => Ok(JpgBaselineMutation::SetSamplePrecision(semio_s_artifact_stdio_jpg::standards::v_jfif_1_01::subsets::baseline::schema::mutations::set_sample_precision::SetSamplePrecision { precision: number(params, "precision", 12.0) as u8 })),
-            "set-arithmetic" => Ok(JpgBaselineMutation::SetArithmetic(semio_s_artifact_stdio_jpg::standards::v_jfif_1_01::subsets::baseline::schema::mutations::set_arithmetic::SetArithmetic { arithmetic: matches!(params.get("arithmetic"), Some(Json::Bool(true))) })),
-            "insert-huffman-table" => Ok(JpgBaselineMutation::InsertHuffmanTable(semio_s_artifact_stdio_jpg::standards::v_jfif_1_01::subsets::baseline::schema::mutations::insert_huffman_table::InsertHuffmanTable { index: number(params, "index", 0.0) as usize, table: inert_table(class_of(params), number(params, "id", 2.0) as u8) })),
-            "remove-huffman-table" => Ok(JpgBaselineMutation::RemoveHuffmanTable(semio_s_artifact_stdio_jpg::standards::v_jfif_1_01::subsets::baseline::schema::mutations::remove_huffman_table::RemoveHuffmanTable { key: JpgHuffmanTableKey { class: class_of(params), id: number(params, "id", 0.0) as u8 } })),
-            "insert-frame-component" => Ok(JpgBaselineMutation::InsertFrameComponent(semio_s_artifact_stdio_jpg::standards::v_jfif_1_01::subsets::baseline::schema::mutations::insert_frame_component::InsertFrameComponent {
-                index: number(params, "index", 0.0) as usize,
-                component: JpgFrameComponent { id: number(params, "id", 4.0) as u8, h_sampling: number(params, "hSampling", 1.0) as u8, v_sampling: number(params, "vSampling", 1.0) as u8, quant_table_id: 0 },
-            })),
-            "remove-frame-component" => Ok(JpgBaselineMutation::RemoveFrameComponent(semio_s_artifact_stdio_jpg::standards::v_jfif_1_01::subsets::baseline::schema::mutations::remove_frame_component::RemoveFrameComponent { id: number(params, "id", 3.0) as u8 })),
-            "set-component-sampling" => Ok(JpgBaselineMutation::SetComponentSampling(semio_s_artifact_stdio_jpg::standards::v_jfif_1_01::subsets::baseline::schema::mutations::set_component_sampling::SetComponentSampling { id: number(params, "id", 1.0) as u8, h_sampling: number(params, "hSampling", 5.0) as u8, v_sampling: number(params, "vSampling", 1.0) as u8 })),
-            other => Err(format!("mutate-jpg-jfif-1-01-baseline: no params grammar for kind {other:?}")),
-        }
+    /// 🦠️ Decodes the scenario's `{"kind", "params"}` doc string: `params` is the leaf's own wire payload, read
+    /// through the vocabulary's derive-generated decoder rather than a params grammar written beside it.
+    fn mutation_from_spec(row: &Json) -> Result<JpgBaselineMutation, String> {
+        decode_jpg_baseline_mutation_payload(&row.str("kind"), &row.get("params").cloned().unwrap_or(Json::Null).to_string())
     }
     //#endregion 🔖️MutationFromSpec
 
@@ -160,8 +109,7 @@ mod subject {
         if !before.is_empty() {
             return Err(format!("mutate-{kind}: the committed scan must start INSIDE the baseline class for a departure from it to mean anything, but it already reports {before:?}"));
         }
-        let params = row.get("params").cloned().unwrap_or(Json::Object(Vec::new()));
-        let mutation = mutation_from_spec(kind, &params, &base)?;
+        let mutation = mutation_from_spec(&row)?;
         let mut current = base.clone();
         apply_jpg_baseline_mutation(&mut current, &mutation);
         let after = jpg_baseline_conformance_codes(&current);
@@ -174,11 +122,7 @@ mod subject {
             return Err(format!("mutate-{kind}: the class verdict must gain {expected:?}, but it reports {after:?} — the mutation did not reach the axis its own diagnostic guards"));
         }
         let (was, now) = (projection(&base)?, projection(&current)?);
-        if kind != "no-mutation" {
-            law::mutation_is_observable(kind, &now, &was, &[])?;
-        } else if now != was {
-            return Err("mutate-no-mutation: the identity element moved the projection".to_string());
-        }
+        law::mutation_is_observable(kind, &now, &was, &[])?;
         Ok(Outcome::with_raw(now.to_string().into_bytes(), now))
     }
 
@@ -193,11 +137,10 @@ mod subject {
         let kind = kind.as_str();
         let base = decoded(ctx)?;
         let original = projection(&base)?;
-        let params = row.get("params").cloned().unwrap_or(Json::Object(Vec::new()));
-        let mutation = mutation_from_spec(kind, &params, &base)?;
+        let mutation = mutation_from_spec(&row)?;
         let mut current = base.clone();
         apply_jpg_baseline_mutation(&mut current, &mutation);
-        if kind != "no-mutation" && projection(&current)? == original {
+        if projection(&current)? == original {
             return Err(format!("inverse-{kind}: the forward mutation left the conformance projection untouched, so restoring it proves nothing"));
         }
         for step in inverse_jpg_baseline_mutation(&mutation, &base) {
@@ -218,10 +161,10 @@ mod subject {
 pub fn adapter() -> Adapter {
     #[allow(unused_mut)]
     let mut built = Adapter::new("rust");
-    built = built.oracle("mutate", mutate_oracle).oracle("no-mutation-baseline-mutate", mutate_oracle).oracle("inverse", inverse_oracle).oracle("no-mutation-baseline-inverse", inverse_oracle);
+    built = built.oracle("mutate", mutate_oracle).oracle("inverse", inverse_oracle);
     #[cfg(feature = "sut")]
     {
-        built = built.subject("mutate", subject::mutate).subject("no-mutation-baseline-mutate", subject::mutate).subject("inverse", subject::inverse).subject("no-mutation-baseline-inverse", subject::inverse);
+        built = built.subject("mutate", subject::mutate).subject("inverse", subject::inverse);
     }
     built
 }

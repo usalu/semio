@@ -1,6 +1,6 @@
 {
   "CreateFrame": {
-    "page_id": "page-1",
+    "pageId": "page-1",
     "frame": {
       "kind": "rect",
       "id": "frame-badge",
@@ -23,6 +23,6 @@
       "stroke": null
     },
     "index": 1,
-    "layer_id": "layer-1"
+    "layerId": "layer-1"
   }
 }

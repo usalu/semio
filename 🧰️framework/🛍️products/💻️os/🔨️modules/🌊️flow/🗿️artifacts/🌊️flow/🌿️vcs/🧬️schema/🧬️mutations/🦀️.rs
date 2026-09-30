@@ -29,7 +29,7 @@ pub use replace_flow_host_snapshot::ReplaceFlowHostSnapshot;
 /// 🔮️ First-party Flow mutation wire aggregate.
 #[derive(Clone, Debug, PartialEq, ToValue, FromValue, dsl::Mutations, crate::os_dsl::DslOps)]
 #[value(tag = "operation", rename_all = "camelCase", deny_unknown_fields)]
-#[mutations(snapshot = FlowHostSnapshot, diff = FlowDiff, schema = "flow.host_snapshot")]
+#[mutations(snapshot = FlowHostSnapshot, diff = FlowDiff, schema = "flow.host_snapshot", retire_cold = retire_flow_mutation)]
 pub enum FlowMutation {
     AddWidget(AddWidget),
     RemoveWidget(RemoveWidget),
@@ -41,6 +41,17 @@ pub enum FlowMutation {
     ChangeSynapse(ChangeSynapse),
     ChangeLayout(ChangeLayout),
     ReplaceFlowHostSnapshot(ReplaceFlowHostSnapshot),
+}
+
+/// 🧊️ Cold-retires one flow host operation — the generated `Mutation::retire_cold`. A widget or a whole host snapshot owns
+/// fail-closed roots (`Dictionary`, `OrderedSet`, `OrderedMap`, `Tree`) that refuse a bare drop; every other payload is plain data.
+pub fn retire_flow_mutation(mutation: FlowMutation) {
+    match mutation {
+        FlowMutation::AddWidget(add) => add.widget.retire_cold(),
+        FlowMutation::ChangeWidget(change) => change.widget.retire_cold(),
+        FlowMutation::ReplaceFlowHostSnapshot(replace) => replace.host_snapshot.retire_cold(),
+        _ => {}
+    }
 }
 //#endregion 🧬️Aggregate
 

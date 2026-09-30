@@ -766,7 +766,7 @@ async fn command_envelope_round_trip_holds_for_an_applied_operation() {
 
     let mut store = puzzle5d_store(create_document_envelope(PUZZLE_5D_SCHEMA, "puzzle5d", Puzzle5dSnapshot::default(), None)).await.expect("store");
     let part = Puzzle5dPart { id: "p1".into(), part_kind: None, anchor: Default::default(), part_2d: Puzzle5dPart2d::default(), part_3d: Puzzle5dPart3d::default(), grips: Vec::new() };
-    semio_framework::io::resolve_ready(store.dispatch(store::ArtifactCommand::Apply { mutations: vec![crate::standards::v1::subsets::any::schema::mutations::create_part(part, None)], description: None })).expect("apply");
+    semio_framework::io::resolve_ready(store.dispatch(store::ArtifactCommand::Apply { mutations: vec![crate::standards::v1::subsets::any::schema::mutations::create_part(part, None)], description: None, transaction: None })).expect("apply");
     let envelope = store.envelope();
     let edit: &Edit<Puzzle5dMutation> = envelope.vcs.edits.last().expect("dispatch must have recorded an edit");
     semio_framework::io::resolve_ready(semio_framework_os_kernel::os_store::test_support::assert_command_envelope_round_trip::<Puzzle5dSnapshot, Puzzle5dMutation>(edit, &ArtifactId(envelope.id.clone()), &SchemaId(envelope.schema.clone())));
@@ -2003,6 +2003,25 @@ async fn board_node_delete_removes_the_part_and_its_fasteners() {
         "the deleted node is no longer selected"
     );
     close_app(&mut app);
+}
+
+/// 🎬️ LAW (board drag): one `gesture` drag record — what the board engine publishes at release instead of
+/// per-frame moves — moves every target's flat pose by its offset exactly once, repeated ids included, and leaves
+/// an untargeted part where it stands.
+#[semio_framework_async_macros::async_test]
+async fn a_board_gesture_drag_moves_each_target_once() {
+    let mut app = Box::new(app_with_registry());
+    let parts = seeded_parts(&mut app, 2);
+    let pose = |app: &Puzzle5dApp, id: &str| {
+        let parts = projection_of(app).get("parts").and_then(Value::as_array).cloned().unwrap_or_default();
+        let flat = parts.iter().find(|part| part.get("id").and_then(Value::as_str) == Some(id)).and_then(|part| part.get("2d")).cloned().unwrap_or(Value::Null);
+        (flat.get("x").and_then(Value::as_f64).unwrap_or(0.0), flat.get("y").and_then(Value::as_f64).unwrap_or(0.0))
+    };
+    let (moved, still) = (pose(&app, &parts[0]), pose(&app, &parts[1]));
+    let drag = dsl::json!({ "windowId": board2d::WINDOW_KIND_ID, "eventsJson": format!("[{{\"name\":\"gesture\",\"payload\":{{\"gestureId\":\"g-1\",\"kind\":\"drag\",\"targets\":[\"{0}\",\"{0}\"],\"dx\":12.5,\"dy\":-4.0,\"proximity\":[]}}}}]", parts[0]) });
+    dispatch(&mut app, "applyBoardEvents", Some(&drag), Some(board2d::WINDOW_KIND_ID)).expect("applyBoardEvents gesture");
+    assert_eq!(pose(&app, &parts[0]), (moved.0 + 12.5, moved.1 - 4.0), "the target moved by the offset once");
+    assert_eq!(pose(&app, &parts[1]), still, "an untargeted part stays");
 }
 
 /// 🛍️ LAW: a catalogue add really adds and re-selects — the placed part is what every follow-up verb then

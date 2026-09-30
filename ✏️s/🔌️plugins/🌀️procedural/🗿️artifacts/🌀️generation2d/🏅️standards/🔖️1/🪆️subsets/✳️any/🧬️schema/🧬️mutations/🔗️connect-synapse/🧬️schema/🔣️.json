@@ -11,7 +11,23 @@
   "properties": {
     "index": {
       "type": "integer",
-      "minimum": 0
+      "minimum": 0,
+      "x-semio-ui": {
+        "widget": "stepper",
+        "role": "value",
+        "label": {
+          "en": "Index",
+          "de": "Index"
+        },
+        "description": {
+          "en": "Position in the list; the end when omitted.",
+          "de": "Position in der Liste; ohne Angabe am Ende."
+        },
+        "step": 1,
+        "precision": 0,
+        "group": "order",
+        "order": 10
+      }
     },
     "synapse": {
       "title": "SynapseSpec",
@@ -26,20 +42,113 @@
       ],
       "properties": {
         "id": {
-          "type": "string"
+          "type": "string",
+          "x-semio-ui": {
+            "widget": "text",
+            "role": "value",
+            "label": {
+              "en": "ID",
+              "de": "ID"
+            },
+            "description": {
+              "en": "Unique synapse id in this graph.",
+              "de": "Eindeutige Synapsen-ID in diesem Graphen."
+            },
+            "group": "identity",
+            "order": 10
+          }
         },
         "from": {
-          "type": "string"
+          "type": "string",
+          "x-semio-ui": {
+            "widget": "reference",
+            "role": "target",
+            "label": {
+              "en": "From widget",
+              "de": "Von Baustein"
+            },
+            "description": {
+              "en": "The widget the synapse starts at.",
+              "de": "Der Baustein, an dem die Synapse beginnt."
+            },
+            "ref": {
+              "kind": "widget",
+              "domain": "graph",
+              "granularity": "node"
+            },
+            "group": "target",
+            "order": 20
+          }
         },
         "to": {
-          "type": "string"
+          "type": "string",
+          "x-semio-ui": {
+            "widget": "reference",
+            "role": "target",
+            "label": {
+              "en": "To widget",
+              "de": "Zu Baustein"
+            },
+            "description": {
+              "en": "The widget the synapse ends at.",
+              "de": "Der Baustein, an dem die Synapse endet."
+            },
+            "ref": {
+              "kind": "widget",
+              "domain": "graph",
+              "granularity": "node"
+            },
+            "group": "target",
+            "order": 30
+          }
         },
         "fromPort": {
-          "type": "string"
+          "type": "string",
+          "x-semio-ui": {
+            "widget": "text",
+            "role": "value",
+            "label": {
+              "en": "From port",
+              "de": "Von Anschluss"
+            },
+            "description": {
+              "en": "Output port on the start widget.",
+              "de": "Ausgang am Startbaustein."
+            },
+            "group": "target",
+            "order": 40
+          }
         },
         "toPort": {
-          "type": "string"
+          "type": "string",
+          "x-semio-ui": {
+            "widget": "text",
+            "role": "value",
+            "label": {
+              "en": "To port",
+              "de": "Zu Anschluss"
+            },
+            "description": {
+              "en": "Input port on the end widget.",
+              "de": "Eingang am Zielbaustein."
+            },
+            "group": "target",
+            "order": 50
+          }
         }
+      },
+      "x-semio-ui": {
+        "role": "value",
+        "label": {
+          "en": "Synapse",
+          "de": "Synapse"
+        },
+        "description": {
+          "en": "The complete synapse to add.",
+          "de": "Die vollständige hinzuzufügende Synapse."
+        },
+        "group": "record",
+        "order": 20
       }
     }
   }

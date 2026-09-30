@@ -1,0 +1,12 @@
+{
+  "UpdateTextFrame": {
+    "pageId": "page-1",
+    "frameId": "frame-text",
+    "storyId": "story-1",
+    "threadNext": null,
+    "insetX": 2.0,
+    "insetY": 2.0,
+    "insetWidth": 4.0,
+    "insetHeight": 4.0
+  }
+}

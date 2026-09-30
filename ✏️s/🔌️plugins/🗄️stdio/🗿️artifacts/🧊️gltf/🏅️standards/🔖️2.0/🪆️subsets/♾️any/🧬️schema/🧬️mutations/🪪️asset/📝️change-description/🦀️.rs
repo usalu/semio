@@ -4,8 +4,7 @@ use crate::schema::modules::mutation_support::top_level::{reject, GltfTopLevelMu
 use crate::GltfSnapshot;
 pub const ID: &str = "s.stdio.gltf.mutation.change-asset-descriptive-metadata.v1";
 pub const TOUCHED_PATHS: &[&str] = &["document/asset/generator", "document/asset/copyright", "document/asset/minVersion"];
-#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::MutationLeaf)]
-#[mutation_leaf(contract = ::protocol)]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
 #[value(rename_all = "camelCase")]
 pub struct GltfChangeAssetDescriptiveMetadataPayload {
     pub generator: Option<String>,
@@ -31,7 +30,7 @@ pub fn apply(payload: &GltfChangeAssetDescriptiveMetadataPayload, base: &GltfSna
 
 //#region 🧬️DirectMutation
 #[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::MutationLeaf)]
-#[mutation_leaf(contract = ::protocol)]
+#[mutation_leaf(contract = ::protocol, payload = Apply)]
 #[value(tag = "phase", content = "value", rename_all = "camelCase")]
 pub enum ChangeAssetDescriptiveMetadataMutation {
     Apply(GltfChangeAssetDescriptiveMetadataPayload),
@@ -75,6 +74,6 @@ impl protocol::MutationKind<GltfSnapshot, super::GltfMutation> for ChangeAssetDe
 
 //#region 🧪️Tests
 #[cfg(test)]
-#[path = "🧪️tests/🔬️direct-leaf/🦀️.rs"]
-mod direct_leaf_tests;
+#[path = "🧪️tests/🔬️t068/🦀️.rs"]
+mod case_t068;
 //#endregion 🧪️Tests

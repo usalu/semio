@@ -1,0 +1,91 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/app/procedural/3d/config/mutations.json",
+  "title": "Generation3dConfigMutation",
+  "oneOf": [
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "SetSnapshot"
+      ],
+      "properties": {
+        "SetSnapshot": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/app/procedural/3d/config/mutation/set-snapshot/schema.json"
+        }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "SetLodMode"
+      ],
+      "properties": {
+        "SetLodMode": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/app/procedural/3d/config/mutation/set-lod-mode/schema.json"
+        }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "SetShowMode"
+      ],
+      "properties": {
+        "SetShowMode": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/app/procedural/3d/config/mutation/set-show-mode/schema.json"
+        }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "SetCamera"
+      ],
+      "properties": {
+        "SetCamera": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/app/procedural/3d/config/mutation/set-camera/schema.json"
+        }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "SetPreviewCamera"
+      ],
+      "properties": {
+        "SetPreviewCamera": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/app/procedural/3d/config/mutation/set-preview-camera/schema.json"
+        }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "SetSun"
+      ],
+      "properties": {
+        "SetSun": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/app/procedural/3d/config/mutation/set-sun/schema.json"
+        }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "SetSelectedGeneration"
+      ],
+      "properties": {
+        "SetSelectedGeneration": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/app/procedural/3d/config/mutation/set-selected-generation/schema.json"
+        }
+      }
+    }
+  ]
+}

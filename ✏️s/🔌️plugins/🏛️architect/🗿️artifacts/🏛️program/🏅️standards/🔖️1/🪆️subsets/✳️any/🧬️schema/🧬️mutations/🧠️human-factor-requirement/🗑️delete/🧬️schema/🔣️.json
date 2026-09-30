@@ -5,12 +5,34 @@
   "type": "object",
   "additionalProperties": false,
   "required": [
+    "mutation",
     "id"
   ],
   "properties": {
+    "mutation": {
+      "const": "deleteHumanFactorRequirement"
+    },
     "id": {
-      "type": "integer",
-      "minimum": 0
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Human Factors Requirement",
+          "de": "Human-Factors-Anforderung"
+        },
+        "description": {
+          "en": "The human factors requirement to delete.",
+          "de": "Zu löschender Eintrag vom Typ „Human-Factors-Anforderung“."
+        },
+        "ref": {
+          "kind": "humanFactorRequirement",
+          "domain": "program",
+          "granularity": "entity"
+        },
+        "group": "target",
+        "order": 10
+      }
     }
   }
 }

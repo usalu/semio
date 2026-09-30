@@ -11,7 +11,18 @@
   "properties": {
     "ifdIndex": {
       "type": "integer",
-      "minimum": 0
+      "minimum": 0,
+      "x-semio-ui": {
+        "widget": "stepper",
+        "label": {
+          "en": "IFD index",
+          "de": "IFD-Index"
+        },
+        "description": {
+          "en": "Zero-based image file directory.",
+          "de": "Nullbasiertes Bilddateiverzeichnis."
+        }
+      }
     },
     "tag": {
       "type": "integer",

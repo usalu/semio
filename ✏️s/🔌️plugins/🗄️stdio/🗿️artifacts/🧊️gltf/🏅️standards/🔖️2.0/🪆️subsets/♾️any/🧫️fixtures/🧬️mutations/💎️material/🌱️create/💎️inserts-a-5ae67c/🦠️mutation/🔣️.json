@@ -1,0 +1,9 @@
+{
+  "mutation": "createMaterial",
+  "payload": {
+    "phase": "apply",
+    "value": {
+      "position": 0
+    }
+  }
+}

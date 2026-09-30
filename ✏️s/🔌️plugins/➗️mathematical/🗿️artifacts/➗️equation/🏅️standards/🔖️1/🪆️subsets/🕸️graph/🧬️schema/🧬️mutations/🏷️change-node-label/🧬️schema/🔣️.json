@@ -10,7 +10,22 @@
   ],
   "properties": {
     "id": {
-      "type": "string"
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Node",
+          "de": "Knoten"
+        },
+        "description": {
+          "en": "The node this mutation addresses.",
+          "de": "Der Knoten, den diese Mutation adressiert."
+        },
+        "ref": {
+          "kind": "node"
+        }
+      }
     },
     "newLabel": {
       "type": "string"

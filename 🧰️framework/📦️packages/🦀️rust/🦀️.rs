@@ -78,8 +78,8 @@ pub use semio_framework_mesh_engine::{
 // still imported by `🟦️.ts`) was NOT touched — only the Rust DWG codec shared that directory.
 // 🔀️ OsMediaCapability/ArtifactKindSpec/MediaClass/MediaForm/MediaType/MediaWireFormat/MediaPortDirection/
 // PortMultiplicity/MediaPortSpec/MediaCompat/media_types_compatible/Media/MediaPayload/MediaFingerprint/
-// MediaError/MediaConverter/AppIo/ArtifactPresentation/ConfigFieldShape/ConfigFieldSpec/ConfigSpec/
-// CommandFieldSpec/CommandVariantSpec/CommandGrammar relocated from `mesh` into `manifest` (ticket
+// MediaError/MediaConverter/AppIo/ArtifactPresentation/ConfigSpec/
+// CommandVariantSpec/CommandGrammar relocated from `mesh` into `manifest` (ticket
 // 26/08/11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT wave 4a) — reachable below via `pub use manifest::*;`
 // instead, so no external call site needs to change.
 pub use abi::*;

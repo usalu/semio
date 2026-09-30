@@ -10,7 +10,7 @@ pub fn diff(payload: &super::CreateElectricalLoadCenter, base: &EnergyModelSnaps
         return protocol::MutationOutcome::error("mutation.duplicate-id", format!("Electrical load center {} already exists.", payload.id.0), [payload.id.0.to_string()]);
     }
     if payload.index as usize > base.model.electrical_load_centers.len() {
-        return protocol::MutationOutcome::error("mutation.invariant", format!("Index {} is past the end of the model's {} electrical_load_centers.", payload.index, base.model.electrical_load_centers.len()), [payload.id.0.to_string()]);
+        return protocol::MutationOutcome::error("mutation.target-missing", format!("Index {} is past the end of the model's {} electrical_load_centers.", payload.index, base.model.electrical_load_centers.len()), [payload.id.0.to_string()]);
     }
     if let Some(missing) = payload.pv_ids.iter().find(|candidate| !base.model.pv_systems.iter().any(|row| row.id == **candidate)) {
         return protocol::MutationOutcome::error("mutation.target-missing", format!("PV system {} does not exist.", missing.0), [missing.0.to_string()]);

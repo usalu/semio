@@ -54,9 +54,9 @@ fn projection_divergence(actual: &Json, expected: &Json) -> Option<String> {
     Some(format!("first divergence at char {at} of {} vs {} -- got …{}… want …{}…", left.len(), right.len(), window(&left), window(&right)))
 }
 
-/// 🔮️ The forward mutation, with the OBSERVABILITY law asserted in role: a kind other than
-/// `no-mutation` whose parameters leave the semantic projection exactly where it was has not been
-/// tested by this scenario at all -- it proves only that the reference library declined to error.
+/// 🔮️ The forward mutation, with the OBSERVABILITY law asserted in role: a kind whose parameters
+/// leave the semantic projection exactly where it was has not been tested by this scenario at all
+/// -- it proves only that the reference library declined to error.
 /// The `Examples` rows are chosen against the real document's actual content for exactly this
 /// reason, and this check is what keeps them so.
 fn mutate_oracle(ctx: &Context) -> Result<Outcome, String> {
@@ -65,7 +65,7 @@ fn mutate_oracle(ctx: &Context) -> Result<Outcome, String> {
     let kind = spec.str("kind");
     let bytes = oracle_apply_mutation(&input, &spec)?;
     let projection = project_xml_valid(&bytes)?;
-    if kind != "no-mutation" && projection_divergence(&projection, &project_xml_valid(&input)?).is_none() {
+    if projection_divergence(&projection, &project_xml_valid(&input)?).is_none() {
         return Err(format!("{kind:?} left the semantic projection exactly as it found it -- a mutation whose parameters make it a no-op against the real document is not a test of that kind"));
     }
     Ok(Outcome::with_raw(bytes, projection))
@@ -120,74 +120,15 @@ fn round_trip_oracle_once(input: &[u8], what: &str) -> Result<(Vec<u8>, Json), S
 mod subject {
     use super::{mutable_input, projection_divergence};
     use semio_repo_test_host::{Context, Json, Outcome};
-    use semio_s_artifact_stdio_xml::standards::v1_0::subsets::base::schema::mutations::XmlNodePath;
-    use semio_s_artifact_stdio_xml::standards::v1_0::subsets::base::schema::snapshot::{XmlDtdDeclaration, XmlExternalId};
-    use semio_s_artifact_stdio_xml::standards::v1_0::subsets::valid::schema::valid_mutations::{declare_doctype::DeclareDoctype, declare_entity::DeclareEntity, rename_document_element::RenameDocumentElement, set_external_subset::SetExternalSubset, set_internal_subset::SetInternalSubset, set_snapshot::SetSnapshot, set_standalone::SetStandalone, set_text::SetText};
-    use semio_s_artifact_stdio_xml::standards::v1_0::subsets::valid::schema::{apply_xml_valid_mutation, inverse_xml_valid_mutation, XmlValidMutation};
+    use semio_s_artifact_stdio_xml::standards::v1_0::subsets::valid::schema::{apply_xml_valid_mutation, decode_xml_valid_mutation_payload_json, inverse_xml_valid_mutation, XmlValidMutation};
     use semio_s_artifact_stdio_xml::XmlSnapshot;
     use semio_s_plugin_stdio_test_oracle::artifacts::xml::standards::v1_0::subsets::valid::project_xml_valid;
 
     //#region 🔖️SpecCodec
-    fn usize_field(value: &Json, key: &str) -> usize {
-        match value.get(key) {
-            Some(Json::Number(number)) => number.max(0.0) as usize,
-            _ => 0,
-        }
-    }
-
-    fn bool_field(value: &Json, key: &str) -> bool {
-        matches!(value.get(key), Some(Json::Bool(true)))
-    }
-
-    fn usize_path(items: Vec<Json>) -> Vec<usize> {
-        items
-            .iter()
-            .map(|item| match item {
-                Json::Number(number) => number.max(0.0) as usize,
-                _ => 0,
-            })
-            .collect()
-    }
-
-    /// 🔗️ The same `{"kind":"system"|"public", ...}` external-identifier grammar the oracle side
-    /// speaks, decoded into the PRODUCTION `XmlExternalId` here instead of the oracle's own type.
-    fn json_to_external_id(value: &Json) -> Option<XmlExternalId> {
-        match value.get("externalId") {
-            Some(entry) if !matches!(entry, Json::Null) => match entry.str("kind").as_str() {
-                "system" => Some(XmlExternalId::System { system_id: entry.str("systemId") }),
-                "public" => Some(XmlExternalId::Public { public_id: entry.str("publicId"), system_id: entry.str("systemId") }),
-                _ => None,
-            },
-            _ => None,
-        }
-    }
-
-    fn json_to_declarations(value: &Json) -> Vec<XmlDtdDeclaration> {
-        value.array("declarations").iter().map(|entry| XmlDtdDeclaration::Entity { parameter: bool_field(entry, "parameter"), name: entry.str("name"), value: entry.str("value") }).collect()
-    }
-
-    /// 📄️ The scenario's `<id>`/`<params>` spec turned into the ONE typed `XmlValidMutation` this
-    /// subset declares for it. `no-mutation` has no arm here -- it carries no `XmlValidMutation`
-    /// variant (dropped by the `26/08/29/S-END-TO-END` mutation-leaf migration) and is handled
-    /// directly by `mutate`/`inverse` below before this function is ever called.
+    /// 📄️ The scenario's `<id>`/`<params>` spec decoded as the leaf wire payload it is, through the aggregate's own
+    /// derive-generated payload constructor — never re-declared field by field here.
     fn mutation_from_spec(spec: &Json) -> Result<XmlValidMutation, String> {
-        let params = spec.get("params").cloned().unwrap_or(Json::Null);
-        match spec.str("kind").as_str() {
-            "set-snapshot" => Ok(XmlValidMutation::SetSnapshot(SetSnapshot { snapshot: XmlSnapshot::import_utf8(params.str("xml").as_bytes()).map_err(|error| format!("set-snapshot xml parse failed: {error}"))? })),
-            "declare-doctype" => Ok(XmlValidMutation::DeclareDoctype(DeclareDoctype { external_id: json_to_external_id(&params) })),
-            "rename-document-element" => Ok(XmlValidMutation::RenameDocumentElement(RenameDocumentElement { name: params.str("name") })),
-            "set-external-subset" => Ok(XmlValidMutation::SetExternalSubset(SetExternalSubset { external_id: json_to_external_id(&params) })),
-            "set-standalone" => Ok(XmlValidMutation::SetStandalone(SetStandalone {
-                standalone: match params.get("standalone") {
-                    Some(Json::Bool(value)) => Some(*value),
-                    _ => None,
-                },
-            })),
-            "declare-entity" => Ok(XmlValidMutation::DeclareEntity(DeclareEntity { index: usize_field(&params, "index"), parameter: bool_field(&params, "parameter"), name: params.str("name"), value: params.str("value") })),
-            "set-internal-subset" => Ok(XmlValidMutation::SetInternalSubset(SetInternalSubset { declarations: json_to_declarations(&params) })),
-            "set-text" => Ok(XmlValidMutation::SetText(SetText { path: XmlNodePath(usize_path(params.array("path"))), text: params.str("text") })),
-            other => Err(format!("mutation kind {other:?} has no subject implementation")),
-        }
+        decode_xml_valid_mutation_payload_json(&spec.str("kind"), &spec.get("params").cloned().unwrap_or(Json::Null).to_string())
     }
     //#endregion 🔖️SpecCodec
 
@@ -205,19 +146,10 @@ mod subject {
     /// 🔮️ The forward mutation, with the same observability law the oracle side asserts: this
     /// subset's vocabulary REJECTS rather than silently ignores, so a kind that left the projection
     /// untouched here means either a refused mutation or parameters that address nothing.
-    /// `no-mutation` is handled BEFORE `mutation_from_spec` is even called: it carries no
-    /// `XmlValidMutation` variant of its own (dropped by the `26/08/29/S-END-TO-END` mutation-leaf
-    /// migration), so its identity is asserted directly here rather than through the vocabulary --
-    /// the base, rendered and re-projected but otherwise untouched, exactly what `NoMutation`'s own
-    /// `XmlDiff::default()` used to produce.
     pub fn mutate(ctx: &Context) -> Result<Outcome, String> {
         let base = base_snapshot(ctx)?;
         let spec = ctx.doc_json()?;
         let kind = spec.str("kind");
-        if kind == "no-mutation" {
-            let (bytes, projection) = rendered(&base)?;
-            return Ok(Outcome::with_raw(bytes, projection));
-        }
         let mutation = mutation_from_spec(&spec)?;
         let mut snapshot = base.clone();
         apply_xml_valid_mutation(&mut snapshot, &mutation);
@@ -229,16 +161,10 @@ mod subject {
     }
 
     /// ↩️ `inverse_xml_valid_mutation` is called for real rather than transcribed: the property
-    /// under test is the implementation's own algebra, not a copy of it in the adapter. `no-mutation`
-    /// is handled the same way `mutate` handles it above: no `XmlValidMutation` to construct, no
-    /// inverse to compute, the base restores itself trivially.
+    /// under test is the implementation's own algebra, not a copy of it in the adapter.
     pub fn inverse(ctx: &Context) -> Result<Outcome, String> {
         let base = base_snapshot(ctx)?;
         let spec = ctx.doc_json()?;
-        if spec.str("kind") == "no-mutation" {
-            let (bytes, projection) = rendered(&base)?;
-            return Ok(Outcome::with_raw(bytes, projection));
-        }
         let mutation = mutation_from_spec(&spec)?;
         let undo = inverse_xml_valid_mutation(&mutation, &base);
         let mut snapshot = base.clone();
@@ -282,11 +208,11 @@ mod subject {
 /// base ids, which the host resolves for every Examples row, and plain scenarios under their own ids.
 pub fn adapter() -> Adapter {
     let mut built = Adapter::new("rust");
-    built = built.oracle("mutate", mutate_oracle).oracle("no-mutation-baseline-mutate", mutate_oracle).oracle("inverse", inverse_oracle).oracle("no-mutation-baseline-inverse", inverse_oracle);
+    built = built.oracle("mutate", mutate_oracle).oracle("inverse", inverse_oracle);
     built = built.oracle("identity-round-trip", identity_round_trip_oracle);
     #[cfg(feature = "sut")]
     {
-        built = built.subject("mutate", subject::mutate).subject("no-mutation-baseline-mutate", subject::mutate).subject("inverse", subject::inverse).subject("no-mutation-baseline-inverse", subject::inverse);
+        built = built.subject("mutate", subject::mutate).subject("inverse", subject::inverse);
         built = built.subject("identity-round-trip", subject::identity_round_trip);
     }
     built

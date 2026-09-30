@@ -1,5 +1,5 @@
 import { expect, test } from "bun:test";
-import Ajv from "ajv/dist/2020";
+import Ajv from "ajv";
 import fixture from "../../🧫️fixtures/🔣️.json";
 import schema from "../../🧬️schema/🔣️.json";
 import { editInputValue } from "../../🟦️.ts";

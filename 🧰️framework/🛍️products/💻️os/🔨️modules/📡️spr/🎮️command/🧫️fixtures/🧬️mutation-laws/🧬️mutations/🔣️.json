@@ -3,115 +3,19 @@
   "$id": "https://json.schemas.assets.semio-tech.com/framework/os/spr/command/tests/mutation-laws/mutations.json",
   "oneOf": [
     {
-      "type": "object",
-      "required": [
-        "operation"
-      ],
-      "properties": {
-        "operation": {
-          "const": "addCounter"
-        }
-      },
-      "allOf": [
-        {
-          "$ref": "https://json.schemas.assets.semio-tech.com/framework/os/spr/command/tests/mutation-laws/mutation/add-counter/schema.json#/$defs/Payload"
-        }
-      ],
-      "propertyNames": {
-        "enum": [
-          "delta",
-          "operation"
-        ]
-      }
+      "$ref": "https://json.schemas.assets.semio-tech.com/framework/os/spr/command/tests/mutation-laws/mutation/add-counter/schema.json"
     },
     {
-      "type": "object",
-      "required": [
-        "operation"
-      ],
-      "properties": {
-        "operation": {
-          "const": "addCounterTwice"
-        }
-      },
-      "allOf": [
-        {
-          "$ref": "https://json.schemas.assets.semio-tech.com/framework/os/spr/command/tests/mutation-laws/mutation/add-counter-twice/schema.json#/$defs/Payload"
-        }
-      ],
-      "propertyNames": {
-        "enum": [
-          "delta",
-          "operation"
-        ]
-      }
+      "$ref": "https://json.schemas.assets.semio-tech.com/framework/os/spr/command/tests/mutation-laws/mutation/add-counter-twice/schema.json"
     },
     {
-      "type": "object",
-      "required": [
-        "operation"
-      ],
-      "properties": {
-        "operation": {
-          "const": "addCounterFourTimes"
-        }
-      },
-      "allOf": [
-        {
-          "$ref": "https://json.schemas.assets.semio-tech.com/framework/os/spr/command/tests/mutation-laws/mutation/add-counter-four-times/schema.json#/$defs/Payload"
-        }
-      ],
-      "propertyNames": {
-        "enum": [
-          "delta",
-          "operation"
-        ]
-      }
+      "$ref": "https://json.schemas.assets.semio-tech.com/framework/os/spr/command/tests/mutation-laws/mutation/add-counter-four-times/schema.json"
     },
     {
-      "type": "object",
-      "required": [
-        "operation"
-      ],
-      "properties": {
-        "operation": {
-          "const": "addCounterThenNotifyForeign"
-        }
-      },
-      "allOf": [
-        {
-          "$ref": "https://json.schemas.assets.semio-tech.com/framework/os/spr/command/tests/mutation-laws/mutation/add-counter-then-notify-foreign/schema.json#/$defs/Payload"
-        }
-      ],
-      "propertyNames": {
-        "enum": [
-          "delta",
-          "foreignCount",
-          "operation"
-        ]
-      }
+      "$ref": "https://json.schemas.assets.semio-tech.com/framework/os/spr/command/tests/mutation-laws/mutation/add-counter-then-notify-foreign/schema.json"
     },
     {
-      "type": "object",
-      "required": [
-        "operation"
-      ],
-      "properties": {
-        "operation": {
-          "const": "addCounterSequence"
-        }
-      },
-      "allOf": [
-        {
-          "$ref": "https://json.schemas.assets.semio-tech.com/framework/os/spr/command/tests/mutation-laws/mutation/add-counter-sequence/schema.json#/$defs/Payload"
-        }
-      ],
-      "propertyNames": {
-        "enum": [
-          "deltas",
-          "operation"
-        ]
-      }
+      "$ref": "https://json.schemas.assets.semio-tech.com/framework/os/spr/command/tests/mutation-laws/mutation/add-counter-sequence/schema.json"
     }
   ]
 }

@@ -1,0 +1,39 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/app/energy/model/config/mutations.json",
+  "title": "EnergyModelConfigMutation",
+  "oneOf": [
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "mutation",
+        "payload"
+      ],
+      "properties": {
+        "mutation": {
+          "const": "changeSimulationSettings"
+        },
+        "payload": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/app/energy/model/config/mutation/change-simulation-settings/schema.json"
+        }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "mutation",
+        "payload"
+      ],
+      "properties": {
+        "mutation": {
+          "const": "changeResultField"
+        },
+        "payload": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/app/energy/model/config/mutation/change-result-field/schema.json"
+        }
+      }
+    }
+  ]
+}

@@ -5,5 +5,5 @@
   "type": "object",
   "additionalProperties": false,
   "required": ["previewText"],
-  "properties": { "previewText": { "anyOf": [{ "type": "string" }, { "type": "null" }] } }
+  "properties": { "previewText": { "anyOf": [{ "type": "string" }, { "type": "null" }], "x-semio-ui": {"widget": "multiline", "role": "value", "label": {"en": "Preview text", "de": "Vorschautext"}, "description": {"en": "Text of the last generation preview; empty clears it.", "de": "Text der letzten Generierungsvorschau; leer löscht ihn."}, "group": "preview", "order": 10} } }
 }

@@ -11,13 +11,76 @@
   "properties": {
     "node": {
       "type": "integer",
-      "minimum": 0
+      "minimum": 0,
+      "x-semio-ui": {
+        "widget": "stepper",
+        "label": {
+          "en": "Node",
+          "de": "Knoten"
+        },
+        "description": {
+          "en": "Index of the node, counted from 0.",
+          "de": "Index des Knotens, ab 0 gezählt."
+        },
+        "precision": 0,
+        "group": "target",
+        "order": 10
+      }
     },
     "transform": {
-      "$ref": "#/$defs/GltfNodeTransform"
+      "$ref": "#/$defs/GltfNodeTransform",
+      "x-semio-ui": {
+        "label": {
+          "en": "Transform",
+          "de": "Transformation"
+        },
+        "description": {
+          "en": "Either a 4×4 matrix or translation, rotation and scale.",
+          "de": "Entweder eine 4×4-Matrix oder Verschiebung, Drehung und Skalierung."
+        },
+        "group": "value",
+        "order": 20
+      }
     }
   },
   "$defs": {
+    "ChangeNodeTransformMutation": {
+      "description": "The whole wire of ChangeNodeTransformMutation: the editable apply payload (this document's root) or the inert restore.",
+      "oneOf": [
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "phase",
+            "value"
+          ],
+          "properties": {
+            "phase": {
+              "const": "apply"
+            },
+            "value": {
+              "$ref": "#"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "phase",
+            "value"
+          ],
+          "properties": {
+            "phase": {
+              "const": "restore"
+            },
+            "value": {
+              "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/gltf/2.0/any/diff.json"
+            }
+          }
+        }
+      ]
+    },
     "GltfNodeTransform": {
       "oneOf": [
         {
@@ -37,7 +100,17 @@
                 "type": "number"
               },
               "minItems": 16,
-              "maxItems": 16
+              "maxItems": 16,
+              "x-semio-ui": {
+                "label": {
+                  "en": "Matrix",
+                  "de": "Matrix"
+                },
+                "description": {
+                  "en": "4×4 transform, column-major.",
+                  "de": "4×4-Transformationsmatrix, spaltenweise."
+                }
+              }
             }
           }
         },
@@ -45,7 +118,10 @@
           "type": "object",
           "additionalProperties": false,
           "required": [
-            "kind"
+            "kind",
+            "translation",
+            "rotation",
+            "scale"
           ],
           "properties": {
             "kind": {
@@ -64,7 +140,13 @@
                 {
                   "type": "null"
                 }
-              ]
+              ],
+              "x-semio-ui": {
+                "label": {
+                  "en": "Translation",
+                  "de": "Verschiebung"
+                }
+              }
             },
             "rotation": {
               "anyOf": [
@@ -79,7 +161,17 @@
                 {
                   "type": "null"
                 }
-              ]
+              ],
+              "x-semio-ui": {
+                "label": {
+                  "en": "Rotation",
+                  "de": "Drehung"
+                },
+                "description": {
+                  "en": "Unit quaternion (x, y, z, w).",
+                  "de": "Einheitsquaternion (x, y, z, w)."
+                }
+              }
             },
             "scale": {
               "anyOf": [
@@ -94,25 +186,17 @@
                 {
                   "type": "null"
                 }
-              ]
+              ],
+              "x-semio-ui": {
+                "label": {
+                  "en": "Scale",
+                  "de": "Skalierung"
+                }
+              }
             }
           }
         }
       ]
     }
-  },
-  "x-semio": {
-    "id": "s.stdio.gltf.mutation.change-node-transform.v1",
-    "version": 1,
-    "phase": "mutation",
-    "kind": "change",
-    "touchedPaths": [
-      "document/nodes/*/matrix",
-      "document/nodes/*/translation",
-      "document/nodes/*/rotation",
-      "document/nodes/*/scale"
-    ],
-    "referencePolicy": "matrix and TRS are mutually exclusive; every scalar must be finite"
-  },
-  "x-semio-mutation": "change-node-transform"
+  }
 }

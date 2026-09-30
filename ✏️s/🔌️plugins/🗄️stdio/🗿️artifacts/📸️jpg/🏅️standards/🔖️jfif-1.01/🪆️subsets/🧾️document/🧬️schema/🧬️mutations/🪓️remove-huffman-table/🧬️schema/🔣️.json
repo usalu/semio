@@ -22,7 +22,24 @@
       ],
       "properties": {
         "class": {
-          "$ref": "#/$defs/JpgHuffmanClass"
+          "$ref": "#/$defs/JpgHuffmanClass",
+          "x-semio-ui": {
+            "widget": "segmented",
+            "label": {
+              "en": "Table class",
+              "de": "Tabellenklasse"
+            },
+            "options": {
+              "dc": {
+                "en": "DC coefficients",
+                "de": "DC-Koeffizienten"
+              },
+              "ac": {
+                "en": "AC coefficients",
+                "de": "AC-Koeffizienten"
+              }
+            }
+          }
         },
         "id": {
           "type": "integer",

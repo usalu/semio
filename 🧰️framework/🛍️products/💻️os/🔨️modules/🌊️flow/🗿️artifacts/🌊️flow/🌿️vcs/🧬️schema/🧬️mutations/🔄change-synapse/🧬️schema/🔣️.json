@@ -2,32 +2,44 @@
   "$schema": "http://json-schema.org/draft-07/schema#",
   "$id": "https://json.schemas.assets.semio-tech.com/os/flow/artifacts/flow/vcs/mutation/change-synapse/schema.json",
   "title": "ChangeSynapse",
-  "$defs": {
-    "Payload": {
-      "type": "object",
-      "properties": {
-        "id": {
-          "type": "string"
-        },
-        "synapse": {
-          "$ref": "https://json.schemas.assets.semio-tech.com/os/flow/artifacts/flow/vcs/snapshot.json#/$defs/Synapse"
-        }
-      },
-      "required": [
-        "id",
-        "synapse"
-      ]
-    }
-  },
-  "allOf": [
-    {
-      "$ref": "#/$defs/Payload"
-    }
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "operation",
+    "id",
+    "synapse"
   ],
-  "propertyNames": {
-    "enum": [
-      "id",
-      "synapse"
-    ]
+  "properties": {
+    "operation": {
+      "const": "changeSynapse"
+    },
+    "id": {
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Synapse",
+          "de": "Synapse"
+        },
+        "ref": {
+          "kind": "synapse"
+        },
+        "group": "target",
+        "order": 10
+      }
+    },
+    "synapse": {
+      "$ref": "https://json.schemas.assets.semio-tech.com/os/flow/artifacts/flow/vcs/snapshot.json#/$defs/Synapse",
+      "x-semio-ui": {
+        "role": "value",
+        "label": {
+          "en": "Synapse",
+          "de": "Synapse"
+        },
+        "group": "record",
+        "order": 20
+      }
+    }
   }
 }

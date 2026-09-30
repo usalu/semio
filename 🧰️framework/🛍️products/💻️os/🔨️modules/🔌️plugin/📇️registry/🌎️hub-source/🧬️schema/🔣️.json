@@ -47,7 +47,7 @@
       "properties": {
         "schema": { "const": "semio.os.plugin-module-store-record/v1" },
         "generationId": { "type": "string", "pattern": "^[0-9a-f]{64}$" },
-        "entry": { "$ref": "https://json.schemas.assets.semio-tech.com/hub/artifact-authority/trusted-catalog/schema.json#/$defs/TrustedPluginModuleIndexEntryV1" },
+        "entry": { "$ref": "https://json.schemas.assets.semio-tech.com/os/plugin/registry/deployment/component.json#/$defs/TrustedPluginModuleIndexEntryV1" },
         "installedAtMs": { "type": "integer", "minimum": 0, "maximum": 9007199254740991 }
       }
     }

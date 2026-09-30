@@ -9,7 +9,26 @@
   ],
   "properties": {
     "id": {
-      "type": "string"
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Synapse",
+          "de": "Synapse"
+        },
+        "description": {
+          "en": "The synapse this mutation addresses.",
+          "de": "Die Synapse, die diese Mutation adressiert."
+        },
+        "ref": {
+          "kind": "synapse",
+          "domain": "graph",
+          "granularity": "edge"
+        },
+        "group": "target",
+        "order": 10
+      }
     }
   }
 }

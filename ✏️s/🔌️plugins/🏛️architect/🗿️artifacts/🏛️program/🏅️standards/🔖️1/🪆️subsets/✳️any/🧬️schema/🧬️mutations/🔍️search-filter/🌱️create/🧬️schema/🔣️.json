@@ -5,41 +5,74 @@
   "type": "object",
   "additionalProperties": false,
   "required": [
+    "mutation",
     "searchFilter"
   ],
   "properties": {
+    "mutation": {
+      "const": "createSearchFilter"
+    },
     "searchFilter": {
       "title": "SearchFilter",
       "type": "object",
       "additionalProperties": false,
       "required": [
         "categories",
+        "createdBy",
+        "dateFrom",
+        "dateTo",
         "entityKinds",
+        "filterDescription",
         "filterName",
         "id",
         "isPublic",
         "keywords",
+        "lastUsed",
         "name",
-        "notes",
         "ownerIds",
         "ownership",
         "pinned",
         "priorities",
         "priority",
+        "sortDirection",
+        "sortField",
         "sources",
         "status",
         "statuses",
         "tagFilters",
-        "tags",
         "timestamps",
         "useCount"
       ],
       "properties": {
         "id": {
-          "type": "string"
+          "type": "string",
+          "x-semio-ui": {
+            "widget": "text",
+            "role": "value",
+            "label": {
+              "en": "ID",
+              "de": "ID"
+            },
+            "description": {
+              "en": "Unique ID of the new entry.",
+              "de": "Eindeutige ID des neuen Eintrags."
+            },
+            "group": "identity",
+            "order": 10
+          }
         },
         "name": {
-          "type": "string"
+          "type": "string",
+          "x-semio-ui": {
+            "widget": "text",
+            "role": "value",
+            "label": {
+              "en": "Name",
+              "de": "Bezeichnung"
+            },
+            "group": "identity",
+            "order": 20
+          }
         },
         "description": {
           "title": "TextField",
@@ -50,77 +83,328 @@
           ],
           "properties": {
             "text": {
-              "type": "string"
+              "type": "string",
+              "x-semio-ui": {
+                "widget": "multiline",
+                "role": "value",
+                "label": {
+                  "en": "Text",
+                  "de": "Text"
+                },
+                "group": "details",
+                "order": 10
+              }
             },
             "format": {
-              "type": "string"
+              "type": "string",
+              "x-semio-ui": {
+                "widget": "text",
+                "role": "value",
+                "label": {
+                  "en": "Format",
+                  "de": "Format"
+                },
+                "description": {
+                  "en": "Text format hint, e.g. plain or markdown.",
+                  "de": "Hinweis auf das Textformat, z. B. plain oder markdown."
+                },
+                "group": "details",
+                "order": 20
+              }
             }
+          },
+          "x-semio-ui": {
+            "role": "value",
+            "label": {
+              "en": "Description",
+              "de": "Beschreibung"
+            },
+            "group": "narrative",
+            "order": 30
           }
         },
         "status": {
           "type": "string",
           "enum": [
-            "Draft",
-            "Proposed",
-            "UnderReview",
-            "Validated",
-            "Approved",
-            "Rejected",
-            "Deferred",
-            "Superseded",
-            "Archived",
-            "Open",
-            "Closed",
-            "AtRisk",
-            "Blocked",
-            "InProgress",
-            "Complete"
-          ]
+            "draft",
+            "proposed",
+            "underReview",
+            "validated",
+            "approved",
+            "rejected",
+            "deferred",
+            "superseded",
+            "archived",
+            "open",
+            "closed",
+            "atRisk",
+            "blocked",
+            "inProgress",
+            "complete"
+          ],
+          "x-semio-ui": {
+            "widget": "select",
+            "role": "value",
+            "label": {
+              "en": "Status",
+              "de": "Status"
+            },
+            "options": {
+              "draft": {
+                "en": "Draft",
+                "de": "Entwurf"
+              },
+              "proposed": {
+                "en": "Proposed",
+                "de": "Vorgeschlagen"
+              },
+              "underReview": {
+                "en": "Under Review",
+                "de": "In Prüfung"
+              },
+              "validated": {
+                "en": "Validated",
+                "de": "Validiert"
+              },
+              "approved": {
+                "en": "Approved",
+                "de": "Freigegeben"
+              },
+              "rejected": {
+                "en": "Rejected",
+                "de": "Abgelehnt"
+              },
+              "deferred": {
+                "en": "Deferred",
+                "de": "Zurückgestellt"
+              },
+              "superseded": {
+                "en": "Superseded",
+                "de": "Ersetzt"
+              },
+              "archived": {
+                "en": "Archived",
+                "de": "Archiviert"
+              },
+              "open": {
+                "en": "Open",
+                "de": "Offen"
+              },
+              "closed": {
+                "en": "Closed",
+                "de": "Geschlossen"
+              },
+              "atRisk": {
+                "en": "At Risk",
+                "de": "Gefährdet"
+              },
+              "blocked": {
+                "en": "Blocked",
+                "de": "Blockiert"
+              },
+              "inProgress": {
+                "en": "In Progress",
+                "de": "In Bearbeitung"
+              },
+              "complete": {
+                "en": "Complete",
+                "de": "Abgeschlossen"
+              }
+            },
+            "group": "status",
+            "order": 40
+          }
         },
         "priority": {
           "type": "string",
           "enum": [
-            "Mandatory",
-            "Essential",
-            "Preferred",
-            "Optional",
-            "Deferred",
-            "Prohibited"
-          ]
+            "mandatory",
+            "essential",
+            "preferred",
+            "optional",
+            "deferred",
+            "prohibited"
+          ],
+          "x-semio-ui": {
+            "widget": "select",
+            "role": "value",
+            "label": {
+              "en": "Priority",
+              "de": "Priorität"
+            },
+            "options": {
+              "mandatory": {
+                "en": "Mandatory",
+                "de": "Zwingend"
+              },
+              "essential": {
+                "en": "Essential",
+                "de": "Wesentlich"
+              },
+              "preferred": {
+                "en": "Preferred",
+                "de": "Wünschenswert"
+              },
+              "optional": {
+                "en": "Optional",
+                "de": "Optional"
+              },
+              "deferred": {
+                "en": "Deferred",
+                "de": "Zurückgestellt"
+              },
+              "prohibited": {
+                "en": "Prohibited",
+                "de": "Unzulässig"
+              }
+            },
+            "group": "status",
+            "order": 50
+          }
         },
         "ownership": {
           "title": "Ownership",
           "type": "object",
           "additionalProperties": false,
           "required": [
+            "authorityId",
             "consultantIds",
+            "ownerId",
             "participantIds"
           ],
           "properties": {
             "ownerId": {
-              "type": "string"
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "x-semio-ui": {
+                "widget": "reference",
+                "role": "target",
+                "label": {
+                  "en": "Owner",
+                  "de": "Verantwortlich"
+                },
+                "description": {
+                  "en": "The stakeholder responsible for this entry.",
+                  "de": "Der Beteiligte, der für diesen Eintrag verantwortlich ist."
+                },
+                "ref": {
+                  "kind": "stakeholder",
+                  "domain": "program",
+                  "granularity": "entity"
+                },
+                "group": "links",
+                "order": 10
+              }
             },
             "authorityId": {
-              "type": "string"
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "x-semio-ui": {
+                "widget": "reference",
+                "role": "target",
+                "label": {
+                  "en": "Accountable",
+                  "de": "Entscheidungsbefugt"
+                },
+                "description": {
+                  "en": "The stakeholder accountable for this entry.",
+                  "de": "Der Beteiligte, der für diesen Eintrag entscheidungsbefugt ist."
+                },
+                "ref": {
+                  "kind": "stakeholder",
+                  "domain": "program",
+                  "granularity": "entity"
+                },
+                "group": "links",
+                "order": 20
+              }
             },
             "consultantIds": {
               "type": "array",
               "items": {
                 "type": "string"
+              },
+              "x-semio-ui": {
+                "widget": "reference",
+                "role": "target",
+                "label": {
+                  "en": "Consulted",
+                  "de": "Konsultiert"
+                },
+                "description": {
+                  "en": "Stakeholders consulted on this entry.",
+                  "de": "Beteiligte, die zu diesem Eintrag konsultiert werden."
+                },
+                "ref": {
+                  "kind": "stakeholder",
+                  "domain": "program",
+                  "granularity": "entity"
+                },
+                "group": "links",
+                "order": 30
               }
             },
             "participantIds": {
               "type": "array",
               "items": {
                 "type": "string"
+              },
+              "x-semio-ui": {
+                "widget": "reference",
+                "role": "target",
+                "label": {
+                  "en": "Participants",
+                  "de": "Mitwirkende"
+                },
+                "description": {
+                  "en": "Stakeholders taking part in this entry.",
+                  "de": "Beteiligte, die an diesem Eintrag mitwirken."
+                },
+                "ref": {
+                  "kind": "stakeholder",
+                  "domain": "program",
+                  "granularity": "entity"
+                },
+                "group": "links",
+                "order": 40
               }
             }
+          },
+          "x-semio-ui": {
+            "role": "value",
+            "label": {
+              "en": "Ownership",
+              "de": "Zuständigkeiten"
+            },
+            "group": "ownership",
+            "order": 60
           }
         },
         "tags": {
           "type": "array",
           "items": {
             "type": "string"
+          },
+          "x-semio-ui": {
+            "role": "value",
+            "label": {
+              "en": "Tags",
+              "de": "Schlagwörter"
+            },
+            "group": "audit",
+            "order": 70
           }
         },
         "notes": {
@@ -135,12 +419,41 @@
             ],
             "properties": {
               "tag": {
-                "type": "string"
+                "type": "string",
+                "x-semio-ui": {
+                  "widget": "text",
+                  "role": "value",
+                  "label": {
+                    "en": "Tag",
+                    "de": "Schlagwort"
+                  },
+                  "group": "details",
+                  "order": 10
+                }
               },
               "text": {
-                "type": "string"
+                "type": "string",
+                "x-semio-ui": {
+                  "widget": "multiline",
+                  "role": "value",
+                  "label": {
+                    "en": "Text",
+                    "de": "Text"
+                  },
+                  "group": "details",
+                  "order": 20
+                }
               }
             }
+          },
+          "x-semio-ui": {
+            "role": "value",
+            "label": {
+              "en": "Notes",
+              "de": "Notizen"
+            },
+            "group": "audit",
+            "order": 80
           }
         },
         "timestamps": {
@@ -153,54 +466,204 @@
           ],
           "properties": {
             "created": {
-              "type": "string"
+              "type": "string",
+              "x-semio-ui": {
+                "widget": "text",
+                "role": "value",
+                "label": {
+                  "en": "Created",
+                  "de": "Erstellt am"
+                },
+                "description": {
+                  "en": "Date or date-time per ISO 8601.",
+                  "de": "Datum oder Zeitpunkt nach ISO 8601."
+                },
+                "group": "audit",
+                "order": 10
+              }
             },
             "updated": {
-              "type": "string"
+              "type": "string",
+              "x-semio-ui": {
+                "widget": "text",
+                "role": "value",
+                "label": {
+                  "en": "Updated",
+                  "de": "Geändert am"
+                },
+                "description": {
+                  "en": "Date or date-time per ISO 8601.",
+                  "de": "Datum oder Zeitpunkt nach ISO 8601."
+                },
+                "group": "audit",
+                "order": 20
+              }
             },
             "createdBy": {
-              "type": "string"
+              "type": "string",
+              "x-semio-ui": {
+                "widget": "reference",
+                "role": "target",
+                "label": {
+                  "en": "Created By",
+                  "de": "Erstellt von"
+                },
+                "ref": {
+                  "kind": "stakeholder",
+                  "domain": "program",
+                  "granularity": "entity"
+                },
+                "group": "links",
+                "order": 30
+              }
             },
             "updatedBy": {
-              "type": "string"
+              "type": "string",
+              "x-semio-ui": {
+                "widget": "reference",
+                "role": "target",
+                "label": {
+                  "en": "Updated By",
+                  "de": "Geändert von"
+                },
+                "ref": {
+                  "kind": "stakeholder",
+                  "domain": "program",
+                  "granularity": "entity"
+                },
+                "group": "links",
+                "order": 40
+              }
             }
+          },
+          "x-semio-ui": {
+            "role": "value",
+            "label": {
+              "en": "Timestamps",
+              "de": "Zeitstempel"
+            },
+            "group": "audit",
+            "order": 90
           }
         },
         "filterName": {
-          "type": "string"
+          "type": "string",
+          "x-semio-ui": {
+            "widget": "text",
+            "role": "value",
+            "label": {
+              "en": "Filter Name",
+              "de": "Filtername"
+            },
+            "group": "identity",
+            "order": 100
+          }
         },
         "filterDescription": {
-          "title": "TextField",
-          "type": "object",
-          "additionalProperties": false,
-          "required": [
-            "text"
-          ],
-          "properties": {
-            "text": {
-              "type": "string"
+          "anyOf": [
+            {
+              "title": "TextField",
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "text"
+              ],
+              "properties": {
+                "text": {
+                  "type": "string",
+                  "x-semio-ui": {
+                    "widget": "multiline",
+                    "role": "value",
+                    "label": {
+                      "en": "Text",
+                      "de": "Text"
+                    },
+                    "group": "details",
+                    "order": 10
+                  }
+                },
+                "format": {
+                  "type": "string",
+                  "x-semio-ui": {
+                    "widget": "text",
+                    "role": "value",
+                    "label": {
+                      "en": "Format",
+                      "de": "Format"
+                    },
+                    "description": {
+                      "en": "Text format hint, e.g. plain or markdown.",
+                      "de": "Hinweis auf das Textformat, z. B. plain oder markdown."
+                    },
+                    "group": "details",
+                    "order": 20
+                  }
+                }
+              }
             },
-            "format": {
-              "type": "string"
+            {
+              "type": "null"
             }
+          ],
+          "x-semio-ui": {
+            "role": "value",
+            "label": {
+              "en": "Filter Description",
+              "de": "Filterbeschreibung"
+            },
+            "group": "narrative",
+            "order": 110
           }
         },
         "keywords": {
           "type": "array",
           "items": {
             "type": "string"
+          },
+          "x-semio-ui": {
+            "role": "value",
+            "label": {
+              "en": "Keywords",
+              "de": "Schlüsselwörter"
+            },
+            "group": "details",
+            "order": 120
           }
         },
         "categories": {
           "type": "array",
           "items": {
             "type": "string"
+          },
+          "x-semio-ui": {
+            "role": "value",
+            "label": {
+              "en": "Categories",
+              "de": "Kategorien"
+            },
+            "group": "details",
+            "order": 130
           }
         },
         "ownerIds": {
           "type": "array",
           "items": {
             "type": "string"
+          },
+          "x-semio-ui": {
+            "widget": "reference",
+            "role": "target",
+            "label": {
+              "en": "Owners",
+              "de": "Verantwortliche"
+            },
+            "ref": {
+              "kind": "stakeholder",
+              "domain": "program",
+              "granularity": "entity"
+            },
+            "group": "links",
+            "order": 140
           }
         },
         "statuses": {
@@ -208,22 +671,95 @@
           "items": {
             "type": "string",
             "enum": [
-              "Draft",
-              "Proposed",
-              "UnderReview",
-              "Validated",
-              "Approved",
-              "Rejected",
-              "Deferred",
-              "Superseded",
-              "Archived",
-              "Open",
-              "Closed",
-              "AtRisk",
-              "Blocked",
-              "InProgress",
-              "Complete"
-            ]
+              "draft",
+              "proposed",
+              "underReview",
+              "validated",
+              "approved",
+              "rejected",
+              "deferred",
+              "superseded",
+              "archived",
+              "open",
+              "closed",
+              "atRisk",
+              "blocked",
+              "inProgress",
+              "complete"
+            ],
+            "x-semio-ui": {
+              "options": {
+                "draft": {
+                  "en": "Draft",
+                  "de": "Entwurf"
+                },
+                "proposed": {
+                  "en": "Proposed",
+                  "de": "Vorgeschlagen"
+                },
+                "underReview": {
+                  "en": "Under Review",
+                  "de": "In Prüfung"
+                },
+                "validated": {
+                  "en": "Validated",
+                  "de": "Validiert"
+                },
+                "approved": {
+                  "en": "Approved",
+                  "de": "Freigegeben"
+                },
+                "rejected": {
+                  "en": "Rejected",
+                  "de": "Abgelehnt"
+                },
+                "deferred": {
+                  "en": "Deferred",
+                  "de": "Zurückgestellt"
+                },
+                "superseded": {
+                  "en": "Superseded",
+                  "de": "Ersetzt"
+                },
+                "archived": {
+                  "en": "Archived",
+                  "de": "Archiviert"
+                },
+                "open": {
+                  "en": "Open",
+                  "de": "Offen"
+                },
+                "closed": {
+                  "en": "Closed",
+                  "de": "Geschlossen"
+                },
+                "atRisk": {
+                  "en": "At Risk",
+                  "de": "Gefährdet"
+                },
+                "blocked": {
+                  "en": "Blocked",
+                  "de": "Blockiert"
+                },
+                "inProgress": {
+                  "en": "In Progress",
+                  "de": "In Bearbeitung"
+                },
+                "complete": {
+                  "en": "Complete",
+                  "de": "Abgeschlossen"
+                }
+              }
+            }
+          },
+          "x-semio-ui": {
+            "role": "value",
+            "label": {
+              "en": "Statuses",
+              "de": "Status"
+            },
+            "group": "status",
+            "order": 150
           }
         },
         "priorities": {
@@ -231,61 +767,289 @@
           "items": {
             "type": "string",
             "enum": [
-              "Mandatory",
-              "Essential",
-              "Preferred",
-              "Optional",
-              "Deferred",
-              "Prohibited"
-            ]
+              "mandatory",
+              "essential",
+              "preferred",
+              "optional",
+              "deferred",
+              "prohibited"
+            ],
+            "x-semio-ui": {
+              "options": {
+                "mandatory": {
+                  "en": "Mandatory",
+                  "de": "Zwingend"
+                },
+                "essential": {
+                  "en": "Essential",
+                  "de": "Wesentlich"
+                },
+                "preferred": {
+                  "en": "Preferred",
+                  "de": "Wünschenswert"
+                },
+                "optional": {
+                  "en": "Optional",
+                  "de": "Optional"
+                },
+                "deferred": {
+                  "en": "Deferred",
+                  "de": "Zurückgestellt"
+                },
+                "prohibited": {
+                  "en": "Prohibited",
+                  "de": "Unzulässig"
+                }
+              }
+            }
+          },
+          "x-semio-ui": {
+            "role": "value",
+            "label": {
+              "en": "Priorities",
+              "de": "Prioritäten"
+            },
+            "group": "status",
+            "order": 160
           }
         },
         "sources": {
           "type": "array",
           "items": {
             "type": "string"
+          },
+          "x-semio-ui": {
+            "role": "value",
+            "label": {
+              "en": "Sources",
+              "de": "Quellen"
+            },
+            "group": "details",
+            "order": 170
           }
         },
         "dateFrom": {
-          "type": "string"
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "x-semio-ui": {
+            "widget": "text",
+            "role": "value",
+            "label": {
+              "en": "Date From",
+              "de": "Datum von"
+            },
+            "description": {
+              "en": "Date or date-time per ISO 8601.",
+              "de": "Datum oder Zeitpunkt nach ISO 8601."
+            },
+            "group": "schedule",
+            "order": 180
+          }
         },
         "dateTo": {
-          "type": "string"
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "x-semio-ui": {
+            "widget": "text",
+            "role": "value",
+            "label": {
+              "en": "Date To",
+              "de": "Datum bis"
+            },
+            "description": {
+              "en": "Date or date-time per ISO 8601.",
+              "de": "Datum oder Zeitpunkt nach ISO 8601."
+            },
+            "group": "schedule",
+            "order": 190
+          }
         },
         "entityKinds": {
           "type": "array",
           "items": {
             "type": "string"
+          },
+          "x-semio-ui": {
+            "role": "value",
+            "label": {
+              "en": "Entity Kinds",
+              "de": "Entitätsarten"
+            },
+            "group": "details",
+            "order": 200
           }
         },
         "tagFilters": {
           "type": "array",
           "items": {
             "type": "string"
+          },
+          "x-semio-ui": {
+            "role": "value",
+            "label": {
+              "en": "Tag Filters",
+              "de": "Schlagwortfilter"
+            },
+            "group": "details",
+            "order": 210
           }
         },
         "sortField": {
-          "type": "string"
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "x-semio-ui": {
+            "widget": "text",
+            "role": "value",
+            "label": {
+              "en": "Sort Field",
+              "de": "Sortierfeld"
+            },
+            "group": "details",
+            "order": 220
+          }
         },
         "sortDirection": {
-          "type": "string"
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "x-semio-ui": {
+            "widget": "text",
+            "role": "value",
+            "label": {
+              "en": "Sort Direction",
+              "de": "Sortierrichtung"
+            },
+            "group": "details",
+            "order": 230
+          }
         },
         "isPublic": {
-          "type": "boolean"
+          "type": "boolean",
+          "x-semio-ui": {
+            "widget": "toggle",
+            "role": "value",
+            "label": {
+              "en": "Public",
+              "de": "Öffentlich"
+            },
+            "group": "flags",
+            "order": 240
+          }
         },
         "createdBy": {
-          "type": "string"
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "x-semio-ui": {
+            "widget": "reference",
+            "role": "target",
+            "label": {
+              "en": "Created By",
+              "de": "Erstellt von"
+            },
+            "ref": {
+              "kind": "stakeholder",
+              "domain": "program",
+              "granularity": "entity"
+            },
+            "group": "links",
+            "order": 250
+          }
         },
         "lastUsed": {
-          "type": "string"
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "x-semio-ui": {
+            "widget": "text",
+            "role": "value",
+            "label": {
+              "en": "Last Used",
+              "de": "Zuletzt verwendet"
+            },
+            "description": {
+              "en": "Date or date-time per ISO 8601.",
+              "de": "Datum oder Zeitpunkt nach ISO 8601."
+            },
+            "group": "schedule",
+            "order": 260
+          }
         },
         "useCount": {
           "type": "integer",
-          "minimum": 0
+          "minimum": 0,
+          "x-semio-ui": {
+            "widget": "stepper",
+            "role": "value",
+            "label": {
+              "en": "Use Count",
+              "de": "Verwendungsanzahl"
+            },
+            "step": 1,
+            "precision": 0,
+            "group": "metrics",
+            "order": 270
+          }
         },
         "pinned": {
-          "type": "boolean"
+          "type": "boolean",
+          "x-semio-ui": {
+            "widget": "toggle",
+            "role": "value",
+            "label": {
+              "en": "Pinned",
+              "de": "Angeheftet"
+            },
+            "group": "flags",
+            "order": 280
+          }
         }
+      },
+      "x-semio-ui": {
+        "role": "value",
+        "label": {
+          "en": "Search Filter",
+          "de": "Suchfilter"
+        },
+        "description": {
+          "en": "The new search filter with all of its fields.",
+          "de": "Neuer Eintrag vom Typ „Suchfilter“ mit allen Feldern."
+        },
+        "group": "record",
+        "order": 10
       }
     }
   }

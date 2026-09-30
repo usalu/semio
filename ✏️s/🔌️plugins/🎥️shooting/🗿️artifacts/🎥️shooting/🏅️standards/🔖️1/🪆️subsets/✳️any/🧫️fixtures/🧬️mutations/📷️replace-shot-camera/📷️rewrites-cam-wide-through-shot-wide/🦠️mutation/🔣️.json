@@ -1,7 +1,7 @@
 {
   "mutation": "replaceShotCamera",
-  "shot_id": "shot-wide",
-  "new_camera": {
+  "shotId": "shot-wide",
+  "newCamera": {
     "position": [
       3.0,
       -3.0,

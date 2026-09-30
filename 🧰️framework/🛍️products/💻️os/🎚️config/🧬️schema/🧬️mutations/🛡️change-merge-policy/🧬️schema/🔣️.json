@@ -5,21 +5,48 @@
   "type": "object",
   "additionalProperties": false,
   "required": [
+    "mutation",
     "policy"
   ],
   "properties": {
+    "mutation": {
+      "const": "changeMergePolicy"
+    },
     "policy": {
       "title": "MergePolicy",
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "maxRunsBeforeMerge"
+      "type": "string",
+      "enum": [
+        "LaissezFaire",
+        "Normal",
+        "Vigilant"
       ],
-      "properties": {
-        "maxRunsBeforeMerge": {
-          "type": "integer",
-          "minimum": 0
-        }
+      "x-semio-ui": {
+        "widget": "segmented",
+        "role": "value",
+        "label": {
+          "en": "Merge policy",
+          "de": "Zusammenführungsrichtlinie"
+        },
+        "description": {
+          "en": "Lowest outcome severity that rejects incoming history: laissez-faire rejects fatal only, normal rejects errors, vigilant rejects warnings too.",
+          "de": "Niedrigster Schweregrad, ab dem eingehende Historie abgelehnt wird: Laissez-faire lehnt nur Fatales ab, Normal lehnt Fehler ab, Wachsam auch Warnungen."
+        },
+        "options": {
+          "LaissezFaire": {
+            "en": "Laissez-faire",
+            "de": "Laissez-faire"
+          },
+          "Normal": {
+            "en": "Normal",
+            "de": "Normal"
+          },
+          "Vigilant": {
+            "en": "Vigilant",
+            "de": "Wachsam"
+          }
+        },
+        "group": "policy",
+        "order": 10
       }
     }
   }

@@ -9,7 +9,24 @@
   ],
   "properties": {
     "id": {
-      "type": "string"
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Product index",
+          "de": "Produktindex"
+        },
+        "description": {
+          "en": "The product index this mutation addresses.",
+          "de": "Das Katalogelement (Produktindex), das diese Mutation adressiert."
+        },
+        "ref": {
+          "kind": "productIndex"
+        },
+        "group": "target",
+        "order": 10
+      }
     }
   }
 }

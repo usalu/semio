@@ -14,11 +14,11 @@ use semio_s_plugin_stdio_test_oracle::law::vector::Vector;
 fn vector(kind: &str) -> Result<Vector, String> {
     Ok(match kind {
         "set-playback-clock" => Vector {
-            before: include_str!("../../✏️editor/🎭️modes/✏️edit/🪟️windows/📊️results/🫧️transient/🧫️fixtures/⏱️set-playback-clock/✅️set-playback-clock-applied/📸️snapshot/⬅️before/🔣️.json"),
-            mutation: include_str!("../../✏️editor/🎭️modes/✏️edit/🪟️windows/📊️results/🫧️transient/🧫️fixtures/⏱️set-playback-clock/✅️set-playback-clock-applied/🦠️mutation/🔣️.json"),
-            after: include_str!("../../✏️editor/🎭️modes/✏️edit/🪟️windows/📊️results/🫧️transient/🧫️fixtures/⏱️set-playback-clock/✅️set-playback-clock-applied/📸️snapshot/➡️after/🔣️.json"),
-            diff: include_str!("../../✏️editor/🎭️modes/✏️edit/🪟️windows/📊️results/🫧️transient/🧫️fixtures/⏱️set-playback-clock/✅️set-playback-clock-applied/🔺️diff/🔣️.json"),
-            outcome: include_str!("../../✏️editor/🎭️modes/✏️edit/🪟️windows/📊️results/🫧️transient/🧫️fixtures/⏱️set-playback-clock/✅️set-playback-clock-applied/🎯️outcome/🔣️.json"),
+            before: include_str!("../../✏️editor/🎭️modes/✏️edit/🪟️windows/📊️results/🫧️transient/🧫️fixtures/⏱️set-playback-clock/✅️set/📸️snapshot/⬅️before/🔣️.json"),
+            mutation: include_str!("../../✏️editor/🎭️modes/✏️edit/🪟️windows/📊️results/🫧️transient/🧫️fixtures/⏱️set-playback-clock/✅️set/🦠️mutation/🔣️.json"),
+            after: include_str!("../../✏️editor/🎭️modes/✏️edit/🪟️windows/📊️results/🫧️transient/🧫️fixtures/⏱️set-playback-clock/✅️set/📸️snapshot/➡️after/🔣️.json"),
+            diff: include_str!("../../✏️editor/🎭️modes/✏️edit/🪟️windows/📊️results/🫧️transient/🧫️fixtures/⏱️set-playback-clock/✅️set/🔺️diff/🔣️.json"),
+            outcome: include_str!("../../✏️editor/🎭️modes/✏️edit/🪟️windows/📊️results/🫧️transient/🧫️fixtures/⏱️set-playback-clock/✅️set/🎯️outcome/🔣️.json"),
             observable: true,
         },
         other => return Err(format!("no committed vector for {other:?}")),

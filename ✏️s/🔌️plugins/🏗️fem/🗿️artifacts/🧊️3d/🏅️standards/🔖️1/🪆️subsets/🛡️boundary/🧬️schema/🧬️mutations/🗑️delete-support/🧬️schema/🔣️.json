@@ -5,11 +5,30 @@
   "type": "object",
   "additionalProperties": false,
   "required": [
+    "mutation",
     "id"
   ],
   "properties": {
+    "mutation": {
+      "const": "deleteSupport"
+    },
     "id": {
-      "type": "string"
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Support",
+          "de": "Lager"
+        },
+        "ref": {
+          "kind": "support",
+          "domain": "fem3d",
+          "granularity": "support"
+        },
+        "group": "target",
+        "order": 10
+      }
     }
   }
 }

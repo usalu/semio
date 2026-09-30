@@ -72,14 +72,12 @@ pub fn inverse_presentation_mutation(snapshot: &PresentationSnapshot, mutation: 
     mutation.inverse(snapshot)
 }
 
-/// 📥️ Decodes this facet's own externally-tagged (`{"CreateTile": { … }}`) JSON projection — the
-/// shape the `🧭️mutate-presentation-1` case's `Examples` rows carry — into a real [`PresentationMutation`]. A
-/// thin first-party `dsl::os_pack::json` wrapper, so the test adapter reads the committed feature row
-/// instead of re-declaring it as a Rust literal beside it.
-pub fn decode_presentation_mutation_json(text: &str) -> Result<PresentationMutation, String> {
+/// 📥️ Decodes one mutation of leaf `kind` (the descriptor `semanticKind`) from its leaf wire payload — the leaf's
+/// `payload_value()`, exactly what the leaf schema describes and what the `🧭️mutate-presentation-1` case's `Examples`
+/// `params` cells carry — through the derive-generated `Mutation::from_payload_value`. No per-kind mapping.
+pub fn decode_presentation_mutation_json(kind: &str, text: &str) -> Result<PresentationMutation, String> {
     let json = dsl::os_pack::json::parse(text).map_err(|error| error.to_string())?;
-    let value = dsl::os_pack::json::to_dsl_value(&json);
-    dsl::FromValue::from_value(value).map_err(|error| error.to_string())
+    PresentationMutation::from_payload_value(kind, dsl::os_pack::json::to_dsl_value(&json)).map_err(|error| error.to_string())
 }
 
 /// ⚖️ The SEMANTIC PROJECTION this subset is compared through — `(schema, source, tiles)` read back

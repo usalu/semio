@@ -364,12 +364,13 @@ pub struct CapabilityDefinition {
 //#region 🔖️SchemaBuilders
 /// 📐️ `📋️master.md` §3.2 step 1's input envelope, folding one action/command's declared args in as
 /// `properties`. Leaf schemas come from `ActionArgDef::json_schema()` (P3, `🛂️manifest/🦀️.rs`
-/// `🔖️ActionArgs`); the envelope itself is `crate::schema`'s `CapabilityActionInput` export.
-fn action_input_schema(capability_id: &str, args: &[manifest::ActionArgDef]) -> serde_json::Value {
+/// `🔖️ActionArgs`), their descriptions resolved to the catalog's `locale`×`terminology`; the envelope itself is
+/// `crate::schema`'s `CapabilityActionInput` export.
+fn action_input_schema(capability_id: &str, args: &[manifest::ActionArgDef], locale: Locale, terminology: Terminology) -> serde_json::Value {
     let mut properties = serde_json::Map::new();
     let mut required = Vec::new();
     for arg in args {
-        properties.insert(arg.id.clone(), dsl_to_json_value(arg.json_schema()).expect("DslValue to JSON schema conversion is infallible"));
+        properties.insert(arg.id.clone(), dsl_to_json_value(arg.json_schema(terminology, locale)).expect("DslValue to JSON schema conversion is infallible"));
         if arg.required {
             required.push(arg.id.clone());
         }
@@ -503,7 +504,7 @@ fn capability_from_action(id: &str, owner: CapabilityOwner, artifact_kind: Optio
         description,
         artifact_kind,
         use_when: action.semantics.use_when.clone(),
-        input_schema: action_input_schema(id, &action.args),
+        input_schema: action_input_schema(id, &action.args, locale, terminology),
         output_schema: capability_generic_output_schema(id),
         effects: action.semantics.effects.clone(),
         policy: action.semantics.policy.clone(),
@@ -537,7 +538,7 @@ fn capability_from_command(id: &str, owner: CapabilityOwner, artifact_kind: Opti
         description,
         artifact_kind,
         use_when: command.semantics.use_when.clone(),
-        input_schema: action_input_schema(id, &command.args),
+        input_schema: action_input_schema(id, &command.args, locale, terminology),
         output_schema: capability_generic_output_schema(id),
         effects: command.semantics.effects.clone(),
         policy: command.semantics.policy.clone(),

@@ -74,13 +74,13 @@
             "params": {
               "$ref": "#/definitions/dictionary"
             },
-            "input_ports": {
+            "inputPorts": {
               "type": "array",
               "items": {
                 "type": "string"
               }
             },
-            "output_ports": {
+            "outputPorts": {
               "type": "array",
               "items": {
                 "type": "string"
@@ -275,27 +275,79 @@
       "type": "object",
       "properties": {
         "schema": {
-          "type": "string"
+          "type": "string",
+          "x-semio-ui": {
+            "widget": "text",
+            "role": "value",
+            "label": {
+              "en": "Schema",
+              "de": "Schema"
+            },
+            "description": {
+              "en": "Document schema id of the host snapshot.",
+              "de": "Dokumentschema-ID der Host-Momentaufnahme."
+            }
+          }
         },
         "camera": {
-          "$ref": "#/definitions/camera"
+          "$ref": "#/definitions/camera",
+          "x-semio-ui": {
+            "role": "value",
+            "label": {
+              "en": "Camera",
+              "de": "Kamera"
+            }
+          }
         },
         "widgets": {
           "type": "array",
           "items": {
             "$ref": "#/$defs/Widget"
+          },
+          "x-semio-ui": {
+            "role": "value",
+            "label": {
+              "en": "Widgets",
+              "de": "Widgets"
+            },
+            "description": {
+              "en": "Every widget on the canvas.",
+              "de": "Alle Widgets auf der Arbeitsfläche."
+            }
           }
         },
         "synapses": {
           "type": "array",
           "items": {
             "$ref": "#/$defs/Synapse"
+          },
+          "x-semio-ui": {
+            "role": "value",
+            "label": {
+              "en": "Synapses",
+              "de": "Synapsen"
+            },
+            "description": {
+              "en": "Every connection between widget ports.",
+              "de": "Alle Verbindungen zwischen Widget-Anschlüssen."
+            }
           }
         },
         "layout": {
           "type": "object",
           "additionalProperties": {
             "$ref": "#/definitions/layout"
+          },
+          "x-semio-ui": {
+            "role": "value",
+            "label": {
+              "en": "Layout",
+              "de": "Anordnung"
+            },
+            "description": {
+              "en": "Canvas position per widget id.",
+              "de": "Position auf der Arbeitsfläche je Widget-ID."
+            }
           }
         }
       },

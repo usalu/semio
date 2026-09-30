@@ -4,9 +4,9 @@
   "title": "PatchSnapshot",
   "type": "object",
   "additionalProperties": false,
-  "required": ["patch"],
+  "required": ["mutation","patch"],
   "properties": {
-    "patch": { "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/snapshot-patch/schema.json" },
+    "patch": { "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/registry/schema.json#/$defs/SnapshotPatch" },
     "mutation": { "const": "patchSnapshot", "description": "Aggregate discriminator spliced in by Mp4Mutation; absent when the payload stands alone." }
   }
 }

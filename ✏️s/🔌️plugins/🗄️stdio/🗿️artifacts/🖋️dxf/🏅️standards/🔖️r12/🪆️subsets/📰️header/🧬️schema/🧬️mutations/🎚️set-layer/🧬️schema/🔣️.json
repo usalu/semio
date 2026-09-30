@@ -5,19 +5,46 @@
   "type": "object",
   "additionalProperties": false,
   "required": [
+    "mutation",
     "name",
     "layer"
   ],
   "properties": {
-    "name": {
-      "type": "string"
-    },
-    "layer": {
-      "$ref": "#/$defs/DxfLayer"
-    },
     "mutation": {
       "const": "setLayer",
       "description": "Aggregate discriminator spliced in by DxfMutation; absent when the payload stands alone."
+    },
+    "name": {
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Layer",
+          "de": "Layer"
+        },
+        "description": {
+          "en": "Name of the layer to replace.",
+          "de": "Name des zu ersetzenden Layers."
+        },
+        "ref": {
+          "kind": "layer",
+          "domain": "dxf"
+        },
+        "group": "target",
+        "order": 10
+      }
+    },
+    "layer": {
+      "$ref": "#/$defs/DxfLayer",
+      "x-semio-ui": {
+        "label": {
+          "en": "Layer",
+          "de": "Layer"
+        },
+        "group": "value",
+        "order": 20
+      }
     }
   },
   "$defs": {
@@ -37,15 +64,41 @@
         "color": {
           "type": "integer",
           "minimum": -2147483648,
-          "maximum": 2147483647
+          "maximum": 2147483647,
+          "x-semio-ui": {
+            "label": {
+              "en": "Color number (ACI)",
+              "de": "Farbnummer (ACI)"
+            },
+            "description": {
+              "en": "AutoCAD Color Index; negative means the layer is off.",
+              "de": "AutoCAD-Farbindex; negativ bedeutet, der Layer ist ausgeschaltet."
+            }
+          }
         },
         "linetype": {
-          "type": "string"
+          "type": "string",
+          "x-semio-ui": {
+            "label": {
+              "en": "Linetype",
+              "de": "Linientyp"
+            }
+          }
         },
         "flags": {
           "type": "integer",
           "minimum": -2147483648,
-          "maximum": 2147483647
+          "maximum": 2147483647,
+          "x-semio-ui": {
+            "label": {
+              "en": "Standard flags",
+              "de": "Standard-Flags"
+            },
+            "description": {
+              "en": "Group code 70.",
+              "de": "Gruppencode 70."
+            }
+          }
         },
         "unknownGroupCodes": {
           "type": "array",
@@ -64,6 +117,12 @@
             "additionalItems": false,
             "minItems": 2,
             "maxItems": 2
+          },
+          "x-semio-ui": {
+            "label": {
+              "en": "Unknown group codes",
+              "de": "Unbekannte Gruppencodes"
+            }
           }
         }
       }

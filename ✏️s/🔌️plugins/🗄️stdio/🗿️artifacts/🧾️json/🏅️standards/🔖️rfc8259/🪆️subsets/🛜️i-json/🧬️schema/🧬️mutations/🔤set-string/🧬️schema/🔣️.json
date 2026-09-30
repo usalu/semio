@@ -5,10 +5,15 @@
   "type": "object",
   "additionalProperties": false,
   "required": [
+    "mutation",
     "path",
     "value"
   ],
   "properties": {
+    "mutation": {
+      "const": "setString",
+      "description": "Aggregate discriminator spliced in by JsonIJsonMutation; absent when the payload stands alone."
+    },
     "path": {
       "type": "array",
       "items": {
@@ -17,10 +22,6 @@
     },
     "value": {
       "type": "string"
-    },
-    "mutation": {
-      "const": "setString",
-      "description": "Aggregate discriminator spliced in by JsonIJsonMutation; absent when the payload stands alone."
     }
   },
   "$defs": {

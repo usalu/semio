@@ -13,7 +13,35 @@
       "type": "string"
     },
     "kind": {
-      "$ref": "#/$defs/SemioTableCellKind"
+      "$ref": "#/$defs/SemioTableCellKind",
+      "x-semio-ui": {
+        "options": {
+          "null": {
+            "en": "Null",
+            "de": "Null"
+          },
+          "bool": {
+            "en": "Boolean",
+            "de": "Wahrheitswert"
+          },
+          "int": {
+            "en": "Integer",
+            "de": "Ganzzahl"
+          },
+          "float": {
+            "en": "Floating point",
+            "de": "Gleitkommazahl"
+          },
+          "str": {
+            "en": "Text",
+            "de": "Text"
+          },
+          "bytes": {
+            "en": "Bytes",
+            "de": "Bytes"
+          }
+        }
+      }
     },
     "index": {
       "anyOf": [

@@ -5,9 +5,13 @@
   "type": "object",
   "additionalProperties": false,
   "required": [
+    "mutation",
     "node"
   ],
   "properties": {
+    "mutation": {
+      "const": "createNode"
+    },
     "node": {
       "title": "FemNode",
       "type": "object",
@@ -20,17 +24,79 @@
       ],
       "properties": {
         "id": {
-          "type": "string"
+          "type": "string",
+          "x-semio-ui": {
+            "widget": "text",
+            "role": "value",
+            "label": {
+              "en": "ID",
+              "de": "ID"
+            },
+            "description": {
+              "en": "Unique id of the record.",
+              "de": "Eindeutige ID des Eintrags."
+            },
+            "group": "identity",
+            "order": 10
+          }
         },
         "x": {
-          "type": "number"
+          "type": "number",
+          "x-semio-ui": {
+            "widget": "stepper",
+            "role": "value",
+            "label": {
+              "en": "X",
+              "de": "X"
+            },
+            "unit": "m",
+            "step": 0.1,
+            "precision": 3,
+            "group": "position",
+            "order": 20
+          }
         },
         "y": {
-          "type": "number"
+          "type": "number",
+          "x-semio-ui": {
+            "widget": "stepper",
+            "role": "value",
+            "label": {
+              "en": "Y",
+              "de": "Y"
+            },
+            "unit": "m",
+            "step": 0.1,
+            "precision": 3,
+            "group": "position",
+            "order": 30
+          }
         },
         "z": {
-          "type": "number"
+          "type": "number",
+          "x-semio-ui": {
+            "widget": "stepper",
+            "role": "value",
+            "label": {
+              "en": "Z",
+              "de": "Z"
+            },
+            "unit": "m",
+            "step": 0.1,
+            "precision": 3,
+            "group": "position",
+            "order": 40
+          }
         }
+      },
+      "x-semio-ui": {
+        "role": "value",
+        "label": {
+          "en": "Node",
+          "de": "Knoten"
+        },
+        "group": "record",
+        "order": 10
       }
     }
   }

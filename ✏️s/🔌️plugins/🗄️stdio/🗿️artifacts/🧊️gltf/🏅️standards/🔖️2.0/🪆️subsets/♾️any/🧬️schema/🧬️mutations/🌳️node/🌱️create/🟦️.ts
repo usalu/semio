@@ -1,7 +1,13 @@
-/** 🦠️ create-node executable structural glTF command. */
-import type { GltfOrthographic, GltfPerspective, GltfSnapshot } from '../../📸️snapshot/🟦️.ts';
-import { clone, insert, order, position, reject, remove, relocate, reorder, repair, type GltfMutationRejection, type GltfStructuralResult } from './🟦️';
-export const GltfCreateNodeDescriptor = { id: 's.stdio.gltf.mutation.create-node.v1', version: 1, touchedPathPattern: 'document/nodes', referencePolicy: 'all typed node references are remapped, repaired, or rejected' } as const;
-export interface GltfCreateNodePayload { position: number }
-export const validateGltfCreateNode = (payload: GltfCreateNodePayload, base: GltfSnapshot): GltfMutationRejection | undefined => { const index = position(payload.position, base.document.nodes.length, 'document/nodes', true); if (index) return index;    return undefined; };
-export const applyGltfCreateNode = (base: GltfSnapshot, payload: GltfCreateNodePayload): GltfStructuralResult => { const rejection = validateGltfCreateNode(payload, base); if (rejection) return { accepted: false, rejection }; try { const next = clone(base); insert(next, 'nodes', payload.position, { children: [], weights: [] }); return { accepted: true, snapshot: clone(next) }; } catch (error) { return { accepted: false, rejection: typeof error === 'object' && error && 'code' in error ? error as GltfMutationRejection : reject('gltf.mutation.apply-failed', 'document/nodes', String(error)) }; } };
+/** 🌱️ `create-node` wire twin: the flat `Apply` payload `GltfCreateNodePayload` and the phase wire `CreateNodeMutation`, exactly as `./🦀️.rs` writes them.
+ * @see ./🧬️schema/🔣️.json */
+import { gltfWireIndex, gltfWireObject, gltfWireRequired } from "../../../📸️snapshot/🟦️.ts";
+import { type GltfDiff, type GltfPhase, gltfWirePhase, parseGltfDiff } from "../../../🔺️diff/🟦️.ts";
+
+export interface GltfCreateNodePayload {
+  position: number;
+}
+
+export type CreateNodeMutation = GltfPhase<GltfCreateNodePayload, GltfDiff>;
+
+export const parseGltfCreateNodePayload = gltfWireObject<GltfCreateNodePayload>({ position: gltfWireRequired(gltfWireIndex) });
+export const parseCreateNodeMutation = gltfWirePhase(parseGltfCreateNodePayload, parseGltfDiff);

@@ -19,7 +19,7 @@
 
 // #region 🔌️Adapters
 import { useCallback, useSyncExternalStore } from "react";
-import { DEFAULT_UI_DOCUMENT_LIMITS } from "../../../../../../../🔨️modules/🖱️ui/🧬️contract/🛡️limits/🟦️.ts";
+import { DEFAULT_UI_DOCUMENT_LIMITS, snapsAreValid } from "../../../../../../../🔨️modules/🖱️ui/🧬️contract/🛡️limits/🟦️.ts";
 export { DEFAULT_UI_DOCUMENT_LIMITS } from "../../../../../../../🔨️modules/🖱️ui/🧬️contract/🛡️limits/🟦️.ts";
 import { RetainedUiPatchCursor, RetainedUiSnapshotCursor, RetainedUiSurfaceOwner, type RetainedUiTransaction, type RetainedUiState } from "@semio-tech/framework";
 import {
@@ -152,7 +152,7 @@ function isFiniteOrUndefined(value: number | null | undefined): boolean {
 function componentIsFinite(component: Component): boolean {
   switch (component.type) {
     case "slider":
-      return [component.value, component.min, component.max, component.step].every(Number.isFinite);
+      return [component.value, component.min, component.max, component.step, ...(component.snaps ?? [])].every(Number.isFinite);
     case "numberStepper":
       return [component.value, component.step].every(Number.isFinite);
     case "ring":
@@ -160,10 +160,16 @@ function componentIsFinite(component: Component): boolean {
     case "progress":
       return isFiniteOrUndefined(component.completed) && isFiniteOrUndefined(component.total);
     case "input":
-      return isFiniteOrUndefined(component.min) && isFiniteOrUndefined(component.max) && isFiniteOrUndefined(component.step);
+      return isFiniteOrUndefined(component.min) && isFiniteOrUndefined(component.max) && isFiniteOrUndefined(component.step) && (component.snaps ?? []).every(Number.isFinite);
     default:
       return true;
   }
+}
+
+/** 🧲️ Mirrors `🦀️limits.rs`'s `component_snaps_are_valid`: a slider's and a number field's detents obey the detent law. */
+function componentSnapsAreValid(component: Component): boolean {
+  if (component.type === "slider") return snapsAreValid(component.snaps ?? [], component.min, component.max);
+  return component.type !== "input" || snapsAreValid(component.snaps ?? [], component.min ?? Number.NEGATIVE_INFINITY, component.max ?? Number.POSITIVE_INFINITY);
 }
 
 function isSection(component: Component): boolean {
@@ -209,6 +215,7 @@ export function validateUiDocumentCore(root: UiNodeId | null, nodes: ReadonlyMap
       const inSection = parentInSection || isSection(record.component);
       if (parentInSection && isSection(record.component)) violations.push({ type: "sectionNested", node: id });
       if (!componentIsFinite(record.component)) violations.push({ type: "nonFiniteNumber", node: id });
+      else if (!componentSnapsAreValid(record.component)) violations.push({ type: "invalidSnaps", node: id });
       if (depth > limits.maxDepth) {
         violations.push({ type: "depthQuota", node: id, depth, max: limits.maxDepth });
         continue;

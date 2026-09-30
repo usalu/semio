@@ -1,10 +1,22 @@
-/** 🦠️ change-node-extra-data is an atomic, typed glTF 2.0 command. */
-import type { GltfJson, GltfSnapshot } from '../../📸️snapshot/🟦️.ts';
-import { reject, run, same, type GltfLeafResult, type GltfMutationRejection } from './🟦️';
-import { itemIndex } from './🟦️';
-export const GltfChangeNodeExtraDataDescriptor = { id: 's.stdio.gltf.mutation.change-node-extra-data.v1', version: 1, kind: 'change', touchedPaths: ["document/nodes/*/extras"], referencePolicy: 'none' } as const;
-export type GltfDataPresence = { state: 'absent' } | { state: 'present'; value: GltfJson };
-export interface GltfChangeNodeExtraDataPayload { node: number; data: GltfDataPresence }
-export type GltfChangeNodeExtraDataResult = GltfLeafResult;
-export const validateGltfChangeNodeExtraData = (payload: GltfChangeNodeExtraDataPayload, base: GltfSnapshot): GltfMutationRejection | undefined => { const node = itemIndex(payload.node, base.document.nodes.length, 'document/nodes'); if (node) return node; const before = base.document.nodes[payload.node]!.extras; const unchanged = payload.data.state === 'absent' ? before === undefined : before !== undefined && same(before, payload.data.value); return unchanged ? reject('gltf.mutation.no-observable-change', `document/nodes/${payload.node}/extras`, 'extras already has the requested presence and value') : undefined; };
-export const applyGltfChangeNodeExtraData = (base: GltfSnapshot, payload: GltfChangeNodeExtraDataPayload): GltfChangeNodeExtraDataResult => run(base, payload, validateGltfChangeNodeExtraData, (next, payload) => { next.document.nodes[payload.node]!.extras = payload.data.state === 'present' ? structuredClone(payload.data.value) : undefined; });
+/** 📝️ `change-node-extra-data` wire twin: the flat `Apply` payload `GltfChangeNodeExtraDataPayload` and the phase wire `ChangeNodeExtraDataMutation`, exactly as `./🦀️.rs` writes them.
+ * @see ./🧬️schema/🔣️.json */
+import { type GltfJson, gltfWireIndex, gltfWireLiteral, gltfWireObject, gltfWireRequired, gltfWireTagged, parseGltfJson } from "../../../📸️snapshot/🟦️.ts";
+import { type GltfDiff, type GltfPhase, gltfWirePhase, parseGltfDiff } from "../../../🔺️diff/🟦️.ts";
+
+export type GltfDataPresence =
+  | { state: "absent" }
+  | { state: "present"; value: GltfJson };
+
+export interface GltfChangeNodeExtraDataPayload {
+  node: number;
+  data: GltfDataPresence;
+}
+
+export type ChangeNodeExtraDataMutation = GltfPhase<GltfChangeNodeExtraDataPayload, GltfDiff>;
+
+export const parseGltfDataPresence = gltfWireTagged<GltfDataPresence, "state">("state", {
+  absent: gltfWireObject<Extract<GltfDataPresence, { state: "absent" }>>({ state: gltfWireRequired(gltfWireLiteral("absent")) }),
+  present: gltfWireObject<Extract<GltfDataPresence, { state: "present" }>>({ state: gltfWireRequired(gltfWireLiteral("present")), value: gltfWireRequired(parseGltfJson) }),
+});
+export const parseGltfChangeNodeExtraDataPayload = gltfWireObject<GltfChangeNodeExtraDataPayload>({ node: gltfWireRequired(gltfWireIndex), data: gltfWireRequired(parseGltfDataPresence) });
+export const parseChangeNodeExtraDataMutation = gltfWirePhase(parseGltfChangeNodeExtraDataPayload, parseGltfDiff);

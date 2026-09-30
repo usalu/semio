@@ -1,4 +1,43 @@
 {
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/norm/en1990/mutation/insert-accidental/schema.json",
   "title": "InsertAccidental",
-  "type": "object"
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "mutation",
+    "index",
+    "item"
+  ],
+  "properties": {
+    "mutation": {
+      "const": "insertAccidental"
+    },
+    "index": {
+      "type": "integer",
+      "minimum": 0,
+      "x-semio-ui": {
+        "label": {
+          "en": "Position",
+          "de": "Position"
+        },
+        "widget": "stepper",
+        "step": 1,
+        "precision": 0,
+        "description": {
+          "en": "Zero-based list position.",
+          "de": "Nullbasierte Listenposition."
+        }
+      }
+    },
+    "item": {
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1990/snapshot.json#/$defs/AccidentalAction",
+      "x-semio-ui": {
+        "label": {
+          "en": "Accidental action",
+          "de": "Außergewöhnliche Einwirkung"
+        }
+      }
+    }
+  }
 }

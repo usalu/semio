@@ -1,9 +1,14 @@
 #!/usr/bin/env bun
 /** 🌀️ Procedural TypeScript package and authored-example verification. */
-import { join } from "node:path";
+import { join, resolve } from "node:path";
 import { BundleScript, ScriptRouter, runBundleScriptMain, runCmd } from "../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
 class TestScript extends BundleScript {
-  run(): void {
+  run(segments: string[]): void {
+    const rendererCases = ["✏️s/🔌️plugins/🌀️procedural/🧪️tests/💥️extension-evaluate-fault/🟦️.ts"];
+    if (segments[0] === "renderer-contract") {
+      runCmd(process.execPath, ["test", ...rendererCases.map(path => resolve(this.repoRoot, path))], { cwd: this.repoRoot });
+      return;
+    }
     const cases = [
       "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🎚️set-widget-input/🧪️tests/🔬️unit/🟦️.ts",
       "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🧪️tests/🔬️generate-interactions/🟦️.ts",
@@ -23,7 +28,7 @@ class TestScript extends BundleScript {
       "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🌀️generation2d/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🎬️demo/🧪️tests/🧩️example/🟦️.ts",
       "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🌀️generation2d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/📚️examples/🎬️demo-session/🧪️tests/🧩️example/🟦️.ts",
     ];
-    runCmd(process.execPath, ["test", ...cases.map(path => join(this.repoRoot, path))]);
+    runCmd(process.execPath, ["test", ...[...cases, ...rendererCases].map(path => join(this.repoRoot, path))]);
   }
 }
 const router = new ScriptRouter(import.meta.dir).register("test", TestScript);

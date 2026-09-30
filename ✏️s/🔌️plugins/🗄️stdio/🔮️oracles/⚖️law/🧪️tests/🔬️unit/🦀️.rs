@@ -104,3 +104,11 @@ fn the_two_byte_laws_are_mirrors_of_each_other() {
     assert!(carrier_is_exact(b"abc", b"abc").is_ok());
     assert!(carrier_is_exact(b"abd", b"abc").unwrap_err().contains("byte 2"));
 }
+
+#[test]
+fn witness_params_must_be_the_emitted_wire_member_for_member() {
+    let params = object(vec![("offset", Json::Number(6.0)), ("remove_len", Json::Number(5.0))]);
+    assert!(params_are_wire("replace-byte-range", &params, r#"{"remove_len":5,"offset":6}"#).is_ok(), "member order is not part of the wire");
+    assert!(params_are_wire("replace-byte-range", &object(vec![("offset", Json::Number(6.0)), ("removeLen", Json::Number(5.0))]), r#"{"offset":6,"remove_len":5}"#).unwrap_err().contains("removeLen"));
+    assert!(params_are_wire("replace-byte-range", &params, r#"{"offset":6,"remove_len":5,"insert":[]}"#).unwrap_err().contains("insert"), "a member the row omits is a shorthand, not the wire");
+}

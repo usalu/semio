@@ -21,7 +21,7 @@ async fn semantic_artifact_prepare_publish_retry_cancel_and_close_use_production
                 let generation = store.generation_now();
                 let mutation = dsl::FromValue::from_value(dsl::DslValue::from(row["mutation"].clone())).unwrap();
                 let factory: std::sync::Arc<dyn store::ArtifactStoreOneItemPreparationFactory<FlowSnapshot, FlowMutation>> = std::sync::Arc::new(PreparationFactory);
-                let mut publication = store.begin_apply_batch(semio_framework_job::OperationId(1), generation, store.content_revision_now(), "flow-test".into(), vec![mutation], None, store::HistoryLane::Document, Some(&factory)).unwrap();
+                let mut publication = store.begin_apply_batch(semio_framework_job::OperationId(1), generation, store.content_revision_now(), "flow-test".into(), vec![mutation], None, store::HistoryLane::Document, Some(&factory), None).unwrap();
                 let mut finished = false;
                 let mut published = false;
                 let mut previous = 0;

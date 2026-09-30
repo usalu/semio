@@ -42,11 +42,11 @@ indexed-removed-list = INT {"," INT}*
 # Per-entity diff grammars — field order matches `🦀️.rs`'s `enc_master_diff`/
 # `enc_layout_diff`/`enc_slide_diff`/`enc_shape_diff`/`enc_frame_diff`/`enc_image_diff` exactly (the
 # authoritative source). Every `Option<T>` field prints via the shared `[0]` (unchanged) /
-# `[1,<value>]` (changed) tri-state tag; `slide-diff`'s `layout_id` is DOUBLY optional
-# (`Option<Option<String>>`) and nests a second tri-state tag inside the first.
+# `[1,<value>]` (changed) tri-state tag; `slide-diff` leads with the slide's changed `id` and its
+# `layout_id` is DOUBLY optional (`Option<Option<String>>`), nesting a second tri-state tag inside the first.
 master-diff = "[" option-shapes-diff "]"
 layout-diff = "[" option-hex "," option-shapes-diff "]"
-slide-diff = "[" option-option-hex "," option-shapes-diff "," option-blocks-diff "]"
+slide-diff = "[" option-hex "," option-option-hex "," option-shapes-diff "," option-blocks-diff "]"
 
 option-shapes-diff = "[" "0" "]" | "[" "1" "," shapes-diff "]"
 shapes-diff = "[" indexed-removed-list? "]" ";" "[" shape-modified-list? "]" ";" "[" shape-added-list? "]"

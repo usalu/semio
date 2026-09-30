@@ -9,7 +9,21 @@
   ],
   "properties": {
     "newFireRating": {
-      "type": "string"
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "text",
+        "role": "value",
+        "label": {
+          "en": "Fire resistance class",
+          "de": "Feuerwiderstandsklasse"
+        },
+        "description": {
+          "en": "r30, r60, r90 or r120.",
+          "de": "r30, r60, r90 oder r120 (R 30 bis R 120)."
+        },
+        "group": "fire",
+        "order": 10
+      }
     }
   }
 }

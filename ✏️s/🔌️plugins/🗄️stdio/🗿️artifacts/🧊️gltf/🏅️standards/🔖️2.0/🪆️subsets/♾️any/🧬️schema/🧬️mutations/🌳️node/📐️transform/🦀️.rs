@@ -4,8 +4,7 @@ use crate::schema::modules::mutation_support::top_level::rejection_outcome;
 use crate::schema::modules::mutation_support::top_level::{reject, GltfTopLevelMutationRejection};
 use crate::GltfSnapshot;
 pub const ID: &str = "s.stdio.gltf.mutation.change-node-transform.v1";
-#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::MutationLeaf)]
-#[mutation_leaf(contract = ::protocol)]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
 #[value(rename_all = "camelCase")]
 pub struct GltfTransformNodePayload {
     pub node: usize,
@@ -53,7 +52,7 @@ pub fn apply(payload: &GltfTransformNodePayload, base: &GltfSnapshot) -> Result<
 
 //#region 🧬️DirectMutation
 #[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::MutationLeaf)]
-#[mutation_leaf(contract = ::protocol)]
+#[mutation_leaf(contract = ::protocol, payload = Apply)]
 #[value(tag = "phase", content = "value", rename_all = "camelCase")]
 pub enum ChangeNodeTransformMutation {
     Apply(GltfTransformNodePayload),
@@ -97,6 +96,6 @@ impl protocol::MutationKind<GltfSnapshot, super::GltfMutation> for ChangeNodeTra
 
 //#region 🧪️Tests
 #[cfg(test)]
-#[path = "🧪️tests/🔬️direct-leaf/🦀️.rs"]
-mod direct_leaf_tests;
+#[path = "🧪️tests/🔀️replaces-a-f09fa4/🦀️.rs"]
+mod case_replaces_a_f09fa4;
 //#endregion 🧪️Tests

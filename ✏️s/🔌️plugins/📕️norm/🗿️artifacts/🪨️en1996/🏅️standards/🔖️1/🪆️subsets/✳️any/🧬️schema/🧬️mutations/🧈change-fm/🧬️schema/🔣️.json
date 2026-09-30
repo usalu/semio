@@ -10,10 +10,43 @@
   ],
   "properties": {
     "index": {
-      "type": "integer"
+      "type": "integer",
+      "minimum": 0,
+      "x-semio-ui": {
+        "widget": "stepper",
+        "role": "value",
+        "label": {
+          "en": "Wall",
+          "de": "Wand"
+        },
+        "description": {
+          "en": "Zero-based position of the wall in its list.",
+          "de": "Nullbasierte Position der Wand in der Liste."
+        },
+        "step": 1,
+        "precision": 0,
+        "group": "target",
+        "order": 10
+      }
     },
     "newMortarStrengthPa": {
-      "type": "number"
+      "type": "number",
+      "minimum": 0,
+      "x-semio-ui": {
+        "widget": "stepper",
+        "role": "value",
+        "label": {
+          "en": "Mortar compressive strength f_m",
+          "de": "Mörteldruckfestigkeit f_m"
+        },
+        "unit": "Pa",
+        "displayUnit": "N/mm²",
+        "displayFactor": 1e-06,
+        "step": 500000.0,
+        "precision": 1,
+        "group": "material",
+        "order": 20
+      }
     }
   }
 }

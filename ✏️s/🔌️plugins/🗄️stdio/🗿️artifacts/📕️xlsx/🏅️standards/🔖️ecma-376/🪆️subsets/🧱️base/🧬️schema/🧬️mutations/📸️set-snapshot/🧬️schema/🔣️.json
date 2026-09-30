@@ -4,7 +4,7 @@
   "title": "SetSnapshot",
   "type": "object",
   "additionalProperties": false,
-  "required": ["snapshot"],
+  "required": ["mutation","snapshot"],
   "properties": {
     "snapshot": { "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/xlsx/ecma-376/base/snapshot.json" },
     "mutation": {

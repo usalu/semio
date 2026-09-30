@@ -1,0 +1,9 @@
+{
+  "mutation": "unbindNodeSkin",
+  "payload": {
+    "phase": "apply",
+    "value": {
+      "node": 0
+    }
+  }
+}

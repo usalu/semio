@@ -224,6 +224,9 @@ pub mod os_identity;
 // 📇️ ticket 26/08/16/HUB-SPACES-LIVE-PRESENCE-AND-COLLABORATIVE-STUDIOS C1: directory event log
 // schema + pure read model (`DirectoryEvent`/`DirectoryReadModel`/`fold`) — plain serde data, no
 // cross-crate dependency, so it mounts cleanly unlike `🔁️workflow` below.
+#[path = "../../🔨️modules/🔌️plugin/📇️registry/📦️deployment/🧬️schema/🦀️.rs"]
+pub mod os_plugin_module_schema;
+
 #[path = "../../🔨️modules/📇️directory/🦀️.rs"]
 pub mod os_directory;
 

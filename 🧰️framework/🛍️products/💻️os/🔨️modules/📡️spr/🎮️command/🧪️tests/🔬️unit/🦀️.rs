@@ -115,6 +115,7 @@ fn operation_meta_value_round_trip_matches_serde_oracle() {
         label: None,
         group_id: Some("invocation-1".to_string()),
         origin: MutationOrigin::Owner,
+        transaction: None,
     };
     let json = crate::os_pack::json::to_json_string(&meta);
     assert!(json.contains("\"group_id\":\"invocation-1\""), "group_id must serialize under its own field name (MutationMeta has no rename_all), got {json}");
@@ -148,6 +149,7 @@ fn edit_value_round_trip_matches_serde_oracle() {
             label: None,
             group_id: None,
             origin: MutationOrigin::Owner,
+            transaction: None,
         }],
         description: Some("two adds".into()),
         coalesce_key: None,
@@ -356,7 +358,10 @@ fn mutation_descriptor_semantics_participate_in_immutable_identity() {
 fn derive_mutations_wires_complete_leaf_and_atomic_registration() {
     use super::registry_fixture::*;
     let base = MiniDoc { name: "a".into() };
-    let mutation: MiniMutation = RenameMini { new_name: "b".into() }.into();
+    let witness: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/📔️registry/🧬️mutations/📛️rename-mini/🧫️fixtures/🧾️wire-witness/🦠️mutation/🔣️.json")).unwrap();
+    let mutation: MiniMutation = crate::os_pack::json::from_json_str(&witness.to_string()).expect("committed rename-mini wire witness");
+    assert_eq!(mutation, RenameMini { new_name: "b".into() }.into());
+    assert_eq!(json_oracle(&mutation), witness);
     let after = mutation.diff(&base).diff().apply(&base).expect("valid forward diff");
     assert_eq!(after.name, "b");
     let inverse = mutation.inverse(&base);

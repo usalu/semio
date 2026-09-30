@@ -5,15 +5,46 @@
   "type": "object",
   "additionalProperties": false,
   "required": [
+    "mutation",
     "id",
     "newLabel"
   ],
   "properties": {
+    "mutation": {
+      "const": "renameSavedCamera"
+    },
     "id": {
-      "type": "string"
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Saved camera",
+          "de": "Gespeicherte Kamera"
+        },
+        "description": {
+          "en": "The saved camera this mutation addresses.",
+          "de": "Die gespeicherte Kamera, die diese Mutation adressiert."
+        },
+        "ref": {
+          "kind": "savedCamera"
+        },
+        "group": "target",
+        "order": 10
+      }
     },
     "newLabel": {
-      "type": "string"
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "text",
+        "role": "value",
+        "label": {
+          "en": "Name",
+          "de": "Name"
+        },
+        "group": "identity",
+        "order": 20
+      }
     }
   }
 }

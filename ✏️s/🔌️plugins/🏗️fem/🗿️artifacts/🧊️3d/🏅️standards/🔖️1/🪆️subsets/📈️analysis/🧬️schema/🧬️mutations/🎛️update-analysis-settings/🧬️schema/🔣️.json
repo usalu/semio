@@ -5,9 +5,13 @@
   "type": "object",
   "additionalProperties": false,
   "required": [
+    "mutation",
     "settings"
   ],
   "properties": {
+    "mutation": {
+      "const": "updateAnalysisSettings"
+    },
     "settings": {
       "title": "FemAnalysisSettings",
       "type": "object",
@@ -20,15 +24,65 @@
       "properties": {
         "modalCount": {
           "type": "integer",
-          "minimum": 0
+          "minimum": 1,
+          "x-semio-ui": {
+            "widget": "stepper",
+            "role": "value",
+            "label": {
+              "en": "Number of vibration modes",
+              "de": "Anzahl Eigenformen"
+            },
+            "step": 1,
+            "precision": 0,
+            "group": "analysis",
+            "order": 10
+          }
         },
         "bucklingCount": {
           "type": "integer",
-          "minimum": 0
+          "minimum": 1,
+          "x-semio-ui": {
+            "widget": "stepper",
+            "role": "value",
+            "label": {
+              "en": "Number of buckling modes",
+              "de": "Anzahl Knickformen"
+            },
+            "step": 1,
+            "precision": 0,
+            "group": "analysis",
+            "order": 20
+          }
         },
         "deformationScale": {
-          "type": "number"
+          "type": "number",
+          "exclusiveMinimum": 0,
+          "x-semio-ui": {
+            "widget": "stepper",
+            "role": "value",
+            "label": {
+              "en": "Deformation scale",
+              "de": "Verformungsmaßstab"
+            },
+            "description": {
+              "en": "Magnification the deformed shape is drawn with.",
+              "de": "Überhöhung, mit der die Verformungsfigur gezeichnet wird."
+            },
+            "step": 1,
+            "precision": 1,
+            "group": "analysis",
+            "order": 30
+          }
         }
+      },
+      "x-semio-ui": {
+        "role": "value",
+        "label": {
+          "en": "Analysis settings",
+          "de": "Analyseeinstellungen"
+        },
+        "group": "record",
+        "order": 10
       }
     }
   }

@@ -33,9 +33,7 @@ mod subject {
     use semio_repo_test_host::{digest, Context, Json, Outcome};
     use semio_s_plugin_stdio_test_oracle::law::carrier_is_exact;
     use semio_s_artifact_stdio_semio::standards::v1::subsets::base::schema::mutations::semio_mutation_refusals;
-    use semio_s_artifact_stdio_semio::standards::v1::subsets::video::schema::mutations::{
-        apply_semio_video_mutation, insert_sample, insert_stream, inverse_semio_video_mutation, remove_sample, remove_stream, set_sample_data, set_sample_flags, set_snapshot, set_stream_meta, SemioVideoMutation,
-    };
+    use semio_s_artifact_stdio_semio::standards::v1::subsets::video::schema::mutations::{apply_semio_video_mutation, decode_semio_video_mutation_json, inverse_semio_video_mutation, set_snapshot, SemioVideoMutation};
     use semio_s_artifact_stdio_semio::standards::v1::subsets::video::schema::snapshot::{parse_semio_video_dsl, print_semio_video_dsl, SemioRational, SemioVideoSample, SemioVideoSnapshot, SemioVideoStream, SemioVideoStreamKind};
 
     //#region 🔖️JsonReaders
@@ -117,39 +115,14 @@ mod subject {
         Ok(SemioVideoSnapshot { schema: text(value, "schema")?, streams: list(value, "streams")?.iter().map(stream_of).collect::<Result<Vec<_>, String>>()? })
     }
 
-    /// 🦠️ The committed vector's `{kind, params}` pair, decoded into the real typed mutation.
-    ///
-    /// 🧭️ `"no-mutation"` is the dropped `NoMutation` verb's committed spelling (`no` is not an
-    /// APPROVED_VERB, so the leaf migration could not keep it as a variant) — it maps to the
-    /// identity mutation `SetSnapshot(base.clone())` rather than failing, so the committed
-    /// `no-mutation` scenario keeps exercising the "nothing changes" law instead of being deleted.
-    fn mutation_of(vector: &Json, base: &SemioVideoSnapshot) -> Result<SemioVideoMutation, String> {
-        let kind = text(vector, "kind")?;
-        let params = object(vector, "params")?;
-        match kind.as_str() {
-            "no-mutation" => Ok(SemioVideoMutation::SetSnapshot(set_snapshot::SetSnapshot { snapshot: base.clone() })),
-            "set-snapshot" => Ok(SemioVideoMutation::SetSnapshot(set_snapshot::SetSnapshot { snapshot: snapshot_of(&object(&params, "snapshot")?)? })),
-            "insert-stream" => Ok(SemioVideoMutation::InsertStream(insert_stream::InsertStream { index: number(&params, "index")? as usize, stream: stream_of(&object(&params, "stream")?)? })),
-            "remove-stream" => Ok(SemioVideoMutation::RemoveStream(remove_stream::RemoveStream { index: number(&params, "index")? as usize })),
-            "set-stream-meta" => Ok(SemioVideoMutation::SetStreamMeta(set_stream_meta::SetStreamMeta {
-                index: number(&params, "index")? as usize,
-                kind: kind_of(&text(&params, "kind")?)?,
-                codec: text(&params, "codec")?,
-                width: number(&params, "width")? as u32,
-                height: number(&params, "height")? as u32,
-                rate: rational_of(&object(&params, "rate")?)?,
-            })),
-            "insert-sample" => Ok(SemioVideoMutation::InsertSample(insert_sample::InsertSample { stream_index: number(&params, "streamIndex")? as usize, index: number(&params, "index")? as usize, sample: sample_of(&object(&params, "sample")?)? })),
-            "remove-sample" => Ok(SemioVideoMutation::RemoveSample(remove_sample::RemoveSample { stream_index: number(&params, "streamIndex")? as usize, index: number(&params, "index")? as usize })),
-            "set-sample-data" => Ok(SemioVideoMutation::SetSampleData(set_sample_data::SetSampleData { stream_index: number(&params, "streamIndex")? as usize, index: number(&params, "index")? as usize, data: hex_of(&text(&params, "data")?)? })),
-            "set-sample-flags" => Ok(SemioVideoMutation::SetSampleFlags(set_sample_flags::SetSampleFlags {
-                stream_index: number(&params, "streamIndex")? as usize,
-                index: number(&params, "index")? as usize,
-                pts: number(&params, "pts")? as u64,
-                key: flag(&params, "key")?,
-            })),
-            other => Err(format!("mutate-semio-video: no decoder for kind {other:?}")),
+    /// 🦠️ A committed wire value (`{"mutation": "<camelCaseVariant>", …}`), decoded through this subset's own
+    /// production JSON bridge. `noMutation` is the `no-mutation` baselines' scenario sentinel — the dropped `NoMutation`
+    /// verb's spelling, `no` not being an approved verb — and maps to the identity `set-snapshot(base)`.
+    fn mutation_of(wire: &Json, base: &SemioVideoSnapshot) -> Result<SemioVideoMutation, String> {
+        if matches!(wire.get("mutation"), Some(Json::String(tag)) if tag.as_str() == "noMutation") {
+            return Ok(SemioVideoMutation::SetSnapshot(set_snapshot::SetSnapshot { snapshot: base.clone() }));
         }
+        decode_semio_video_mutation_json(&wire.to_string())
     }
     //#endregion 🔖️FixtureDecoding
 
@@ -200,7 +173,7 @@ mod subject {
         let before = vector.get("before").ok_or_else(|| "specification vector is missing its \"before\" member".to_string())?;
         let after = vector.get("after").ok_or_else(|| "specification vector is missing its \"after\" member".to_string())?;
         let before_snapshot = snapshot_of(before)?;
-        let mutation = mutation_of(&vector, &before_snapshot)?;
+        let mutation = mutation_of(vector.get("mutation").ok_or_else(|| "specification vector is missing its \"mutation\" member".to_string())?, &before_snapshot)?;
         Ok((before_snapshot, mutation, snapshot_of(after)?))
     }
 
@@ -226,7 +199,7 @@ mod subject {
     }
 
     /// 🦠️ The verb the scenario declares, read from the feature's own doc string. `base` is only
-    /// consulted for the `no-mutation` scenario's identity mapping.
+    /// consulted for the `noMutation` sentinel's identity mapping.
     fn declared(ctx: &Context, base: &SemioVideoSnapshot) -> Result<SemioVideoMutation, String> {
         mutation_of(&ctx.doc_json()?, base)
     }

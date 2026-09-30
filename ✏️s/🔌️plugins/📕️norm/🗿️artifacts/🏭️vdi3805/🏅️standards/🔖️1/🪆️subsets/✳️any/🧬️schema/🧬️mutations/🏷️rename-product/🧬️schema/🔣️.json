@@ -10,26 +10,42 @@
   ],
   "properties": {
     "id": {
-      "type": "string"
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Product",
+          "de": "Produkt"
+        },
+        "description": {
+          "en": "The catalogue product (article number) this mutation addresses.",
+          "de": "Das Katalogprodukt (Artikelnummer), das diese Mutation adressiert."
+        },
+        "ref": {
+          "kind": "product"
+        },
+        "group": "target",
+        "order": 10
+      }
     },
     "newTitle": {
       "type": "array",
       "items": {
-        "title": "LocalizedText",
-        "type": "object",
-        "additionalProperties": false,
-        "required": [
-          "locale",
-          "text"
-        ],
-        "properties": {
-          "locale": {
-            "type": "string"
-          },
-          "text": {
-            "type": "string"
-          }
-        }
+        "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/vdi3805/snapshot.json#/$defs/LocalizedText"
+      },
+      "x-semio-ui": {
+        "role": "value",
+        "label": {
+          "en": "Product title",
+          "de": "Produktbezeichnung"
+        },
+        "description": {
+          "en": "Localized product titles, one per language.",
+          "de": "Lokalisierte Produktbezeichnungen, je Sprache eine."
+        },
+        "group": "product",
+        "order": 20
       }
     }
   }

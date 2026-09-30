@@ -3,22 +3,27 @@
   "$id": "https://json.schemas.assets.semio-tech.com/window/gis/map/config/mutation/set-render-mode/schema.json",
   "title": "SetRenderMode",
   "type": "object",
-  "$defs": {
-    "Payload": {
-      "type": "object",
-      "required": [
-        "value"
-      ],
-      "properties": {
-        "value": {
-          "type": "string"
-        }
+  "additionalProperties": false,
+  "required": [
+    "operation",
+    "value"
+  ],
+  "properties": {
+    "operation": {
+      "const": "setRenderMode"
+    },
+    "value": {
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "text",
+        "role": "value",
+        "label": {
+          "en": "Render mode",
+          "de": "Darstellungsmodus"
+        },
+        "group": "view",
+        "order": 10
       }
     }
-  },
-  "allOf": [
-    {
-      "$ref": "#/$defs/Payload"
-    }
-  ]
+  }
 }

@@ -5,16 +5,52 @@
   "type": "object",
   "additionalProperties": false,
   "required": [
+    "mutation",
     "id",
     "newName"
   ],
   "properties": {
+    "mutation": {
+      "const": "renameRisk"
+    },
     "id": {
-      "type": "integer",
-      "minimum": 0
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Risk",
+          "de": "Risiko"
+        },
+        "description": {
+          "en": "The risk to rename.",
+          "de": "Umzubenennender Eintrag vom Typ „Risiko“."
+        },
+        "ref": {
+          "kind": "risk",
+          "domain": "program",
+          "granularity": "entity"
+        },
+        "group": "target",
+        "order": 10
+      }
     },
     "newName": {
-      "type": "string"
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "text",
+        "role": "value",
+        "label": {
+          "en": "New Name",
+          "de": "Neuer Name"
+        },
+        "description": {
+          "en": "New name of the risk.",
+          "de": "Neuer Name des Eintrags vom Typ „Risiko“."
+        },
+        "group": "identity",
+        "order": 20
+      }
     }
   }
 }

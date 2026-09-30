@@ -1,0 +1,49 @@
+{
+  "schema": "semio.framework.replication.apply-refusal-fixture/v1",
+  "answer": {
+    "level": "warning",
+    "code": "hub.unavailable",
+    "message": "temporary admission shortage"
+  },
+  "causes": [
+    {
+      "cause": "storage admission",
+      "reason": "storage admission temporarily exhausted"
+    },
+    {
+      "cause": "command pacing",
+      "reason": "command admission temporarily paced"
+    }
+  ],
+  "permanentCauses": [
+    {
+      "cause": "invalid command"
+    },
+    {
+      "cause": "oversized batch"
+    }
+  ],
+  "invalidMessages": [
+    {
+      "level": "error",
+      "code": "hub.unavailable",
+      "message": "invalid level"
+    },
+    {
+      "level": "warning",
+      "code": "hub.batch-limit",
+      "message": "permanent refusal"
+    },
+    {
+      "level": "warning",
+      "code": "hub.unavailable",
+      "message": ""
+    },
+    {
+      "level": "warning",
+      "code": "hub.unavailable",
+      "message": "overposted",
+      "operationIndex": 0
+    }
+  ]
+}

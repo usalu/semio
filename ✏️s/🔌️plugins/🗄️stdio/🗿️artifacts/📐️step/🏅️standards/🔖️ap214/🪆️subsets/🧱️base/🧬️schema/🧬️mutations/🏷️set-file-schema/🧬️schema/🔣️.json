@@ -5,15 +5,26 @@
   "type": "object",
   "additionalProperties": false,
   "required": [
-    "file_schema"
+    "mutation",
+    "fileSchema"
   ],
   "properties": {
-    "file_schema": {
-      "$ref": "#/$defs/StepFileSchema"
-    },
     "mutation": {
       "const": "setFileSchema",
       "description": "Aggregate discriminator spliced in by StepMutation; absent when the payload stands alone."
+    },
+    "fileSchema": {
+      "$ref": "#/$defs/StepFileSchema",
+      "x-semio-ui": {
+        "label": {
+          "en": "File schema (FILE_SCHEMA)",
+          "de": "Dateischema (FILE_SCHEMA)"
+        },
+        "description": {
+          "en": "EXPRESS schemas the data section conforms to, e.g. AP214 or AP242.",
+          "de": "EXPRESS-Schemata, denen der Datenabschnitt entspricht, z. B. AP214 oder AP242."
+        }
+      }
     }
   },
   "$defs": {

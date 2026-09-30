@@ -1,12 +1,35 @@
 {
-  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/norm/din18599/mutation/replace-elements/schema.json",
   "title": "ReplaceElements",
   "type": "object",
-  "properties": {
-    "newElements": {
-      "type": "object"
-    }
-  },
   "additionalProperties": false,
-  "$id": "https://json.schemas.assets.semio-tech.com/s/norm/din18599/mutation/replace-elements/schema.json"
+  "required": [
+    "mutation",
+    "newElements"
+  ],
+  "properties": {
+    "mutation": {
+      "const": "replaceElements"
+    },
+    "newElements": {
+      "type": "array",
+      "items": {
+        "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/din18599/snapshot/schema.json#/$defs/EnvelopeElement"
+      },
+      "x-semio-ui": {
+        "role": "value",
+        "label": {
+          "en": "Envelope elements",
+          "de": "Bauteile der Gebäudehülle"
+        },
+        "description": {
+          "en": "The complete list of envelope elements replacing the current one.",
+          "de": "Die vollständige Liste der Hüllbauteile, die die aktuelle ersetzt."
+        },
+        "group": "record",
+        "order": 10
+      }
+    }
+  }
 }

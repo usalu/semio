@@ -76,7 +76,7 @@ async fn declared_outcome_holds_and_an_unbound_shot_is_a_no_op() {
     assert_eq!(outcome.get("status").and_then(serde_json::Value::as_str), Some("applied"), "replace-shot-camera/rewrites-cam-wide-through-shot-wide: this fixture declares `applied`");
     assert!(mutation().diff(&before()).messages().is_empty(), "replace-shot-camera/rewrites-cam-wide-through-shot-wide: a bound shot must raise no diagnostic");
 
-    let unbound: ShootingMutation = serde_json::from_str(r#"{"mutation":"replaceShotCamera","shot_id":"shot-close","new_camera":{"position":[3.0,-3.0,2.0],"target":[0.0,0.0,0.5],"zoom":1.5,"fov":40.0}}"#).expect("probe mutation decodes");
+    let unbound: ShootingMutation = serde_json::from_str(r#"{"mutation":"replaceShotCamera","shotId":"shot-close","newCamera":{"position":[3.0,-3.0,2.0],"target":[0.0,0.0,0.5],"zoom":1.5,"fov":40.0}}"#).expect("probe mutation decodes");
     let skipped = unbound.diff(&before());
     assert_eq!(skipped.worst_level(), Some(protocol::Severity::Warning), "replace-shot-camera/rewrites-cam-wide-through-shot-wide: an unbound shot is a Warning, not an Error");
     assert_eq!(skipped.messages()[0].code.0, "mutation.no-op", "replace-shot-camera/rewrites-cam-wide-through-shot-wide: the dereference guard's frozen code");

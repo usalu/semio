@@ -1,7 +1,11 @@
-/** 🦠️ unbind-default-scene executable glTF command. */
-import type { GltfJson, GltfSnapshot } from '../../📸️snapshot/🟦️.ts';
-import { clone, reject, run, same, type GltfLeafResult, type GltfMutationRejection } from './🟦️';
-export const GltfUnbindDefaultSceneDescriptor = { id: 's.stdio.gltf.mutation.unbind-default-scene.v1', version: 1, touchedPaths: ["document/scene"], referencePolicy: 'none' } as const;
-export interface GltfUnbindDefaultScenePayload {  }
-export const validateGltfUnbindDefaultScene = (payload: GltfUnbindDefaultScenePayload, base: GltfSnapshot): GltfMutationRejection | undefined => { if (base.document.scene === undefined) return reject('gltf.mutation.relation-absent', 'document/scene', 'no default scene is bound'); return undefined; };
-export const applyGltfUnbindDefaultScene = (base: GltfSnapshot, payload: GltfUnbindDefaultScenePayload): GltfLeafResult => run(base, payload, validateGltfUnbindDefaultScene, (next, payload) => { next.document.scene = undefined; });
+/** ✂️ `unbind-default-scene` wire twin: the flat `Apply` payload `GltfUnbindDefaultScenePayload` and the phase wire `UnbindDefaultSceneMutation`, exactly as `./🦀️.rs` writes them.
+ * @see ./🧬️schema/🔣️.json */
+import { gltfWireObject } from "../../../📸️snapshot/🟦️.ts";
+import { type GltfDiff, type GltfPhase, gltfWirePhase, parseGltfDiff } from "../../../🔺️diff/🟦️.ts";
+
+export type GltfUnbindDefaultScenePayload = Record<string, never>;
+
+export type UnbindDefaultSceneMutation = GltfPhase<GltfUnbindDefaultScenePayload, GltfDiff>;
+
+export const parseGltfUnbindDefaultScenePayload = gltfWireObject<GltfUnbindDefaultScenePayload>({});
+export const parseUnbindDefaultSceneMutation = gltfWirePhase(parseGltfUnbindDefaultScenePayload, parseGltfDiff);

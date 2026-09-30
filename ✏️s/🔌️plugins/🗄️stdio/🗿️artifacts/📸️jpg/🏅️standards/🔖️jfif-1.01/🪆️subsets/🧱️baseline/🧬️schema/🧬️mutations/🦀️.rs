@@ -181,6 +181,13 @@ pub fn apply_jpg_baseline_mutation(snapshot: &mut JpgSnapshot, mutation: &JpgBas
 pub fn inverse_jpg_baseline_mutation(mutation: &JpgBaselineMutation, base: &JpgSnapshot) -> Vec<JpgBaselineMutation> {
     Mutation::inverse(mutation, base)
 }
+
+/// 📥️ Decodes one leaf's wire payload — its `payload_value()` JSON, no aggregate tag, the form every committed
+/// `{kind, params}` feature row carries — by semantic kind through the derive-generated `from_payload_value`.
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn decode_jpg_baseline_mutation_payload(kind: &str, params: &str) -> Result<JpgBaselineMutation, String> {
+    <JpgBaselineMutation as Mutation<JpgSnapshot>>::from_payload_value(kind, pack::from_json_str(params).map_err(|error| error.to_string())?).map_err(|error| error.to_string())
+}
 //#endregion 🔖️Apply
 
 //#region 🔖️Axes

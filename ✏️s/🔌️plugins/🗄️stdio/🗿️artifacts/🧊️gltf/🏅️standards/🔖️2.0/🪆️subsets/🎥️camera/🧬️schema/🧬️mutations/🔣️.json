@@ -16,7 +16,7 @@
           "const": "createCamera"
         },
         "payload": {
-          "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/gltf/2.0/any/mutation/create-camera/schema.json"
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/gltf/2.0/any/mutation/create-camera/schema.json#/$defs/CreateCameraMutation"
         }
       }
     },
@@ -32,7 +32,7 @@
           "const": "deleteCamera"
         },
         "payload": {
-          "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/gltf/2.0/any/mutation/delete-camera/schema.json"
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/gltf/2.0/any/mutation/delete-camera/schema.json#/$defs/DeleteCameraMutation"
         }
       }
     },
@@ -48,7 +48,7 @@
           "const": "moveCamera"
         },
         "payload": {
-          "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/gltf/2.0/any/mutation/move-camera/schema.json"
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/gltf/2.0/any/mutation/move-camera/schema.json#/$defs/MoveCameraMutation"
         }
       }
     },
@@ -64,7 +64,7 @@
           "const": "reorderCameras"
         },
         "payload": {
-          "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/gltf/2.0/any/mutation/reorder-cameras/schema.json"
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/gltf/2.0/any/mutation/reorder-cameras/schema.json#/$defs/ReorderCamerasMutation"
         }
       }
     }

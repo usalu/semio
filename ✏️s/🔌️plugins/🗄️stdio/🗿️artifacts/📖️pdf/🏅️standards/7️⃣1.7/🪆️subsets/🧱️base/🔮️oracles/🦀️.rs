@@ -43,20 +43,18 @@ pub const UNOBSERVABLE: &[&str] = &["insert-object"];
 //#endregion 🔖️Vocabulary
 
 //#region 🔖️PageContentLaw
-/// 🧱️ The three kinds whose undo has to REBUILD a page's content stream, and therefore cannot
-/// restore `contentOperators`. This is a property of the `pdf-1-7-base` VOCABULARY, not of the
-/// reference implementation, and it was found by asserting the law rather than by reasoning about
-/// it: `PdfPage`'s only content field is `text` (`../🧬️schema/📸️snapshot/🦀️.rs`), so
-/// `InsertPage`/`SetPageContent` carry extracted text and nothing else, and both producers
-/// regenerate a five-operator `BT /F1 12 Tf 72 720 Td (…) Tj ET` stream from it. Page 8 of the real
-/// thesis carries 294 operators — glyph positioning, graphics state, the lot — and no round trip
-/// through a single `text` field can bring them back. `AppendPageContent` was documented from the
-/// start as having no minimal inverse in this vocabulary; this is the same gap, measured.
+/// 🧱️ The three kinds whose REFERENCE undo has to rebuild a page's content stream, and therefore
+/// cannot restore `contentOperators`. The vocabulary itself carries the typed operator list
+/// (`PdfPage.content`, `InsertPage`/`SetPageContent`/`AppendPageContent` all speak `PdfOp`), so the
+/// subject restores a page's original stream exactly; the loss is this reference's own undo, which
+/// captures a page's prior text through `Tj` alone ([`page_text`]) and rebuilds a minimal
+/// `BT /F1 12 Tf 72 720 Td (…) Tj ET` from it. Page 8 of the real thesis carries 294 operators —
+/// glyph positioning, graphics state, the lot — set with `TJ`, and no `Tj` capture can bring them
+/// back.
 ///
 /// ⚖️ Exactly ONE axis is exempted, and only for these three kinds. `version`, `pageCount`, every
-/// page's `mediaBox`, `cropBox`, `rotate` and — critically — the shown `text` the vocabulary DOES
-/// carry all stay under the full law, as does the whole `objectGraph` surface. Widening `PdfPage`
-/// to retain a real content stream is the fix; it belongs to whoever owns that snapshot. Lives here
+/// page's `mediaBox`, `cropBox`, `rotate` and — critically — the shown `text` all stay under the
+/// full law, as does the whole `objectGraph` surface. Lives here
 /// rather than in the case adapter because the adapter's `inverse-<kind>` handler and this module's
 /// own `every_declared_kind_is_observable_and_its_inverse_restores_the_document` must exempt the
 /// same axis for the same three kinds or one of them is measuring a different law.
@@ -94,58 +92,91 @@ pub fn without_content_operators(projection: &Json) -> Json {
 //#region 🔖️Oracles
 mod oracles {
     use crate::document::{self, oracle_delete_page, oracle_replace_metadata};
-    use lopdf::{Dictionary, Document, Object, ObjectId, Stream};
+    use lopdf::content::{Content, Operation};
+    use lopdf::{Dictionary, Document, Object, ObjectId, Stream, StringFormat};
     use semio_repo_test_host::Json;
 
     //#region 🔖️JsonValue
-    /// 🔎️ Owned PDF-object JSON grammar this module's mutation params speak, independent of the
-    /// wire `PdfObject` enum (this crate never depends on `semio-s-plugin-stdio`, the production
-    /// crate `PdfObject` lives in — see this file's own header) but shaped identically field for
-    /// field, so a spec written for the oracle reads the same as one written for the subject.
-    /// `{"kind":"null"|"bool"|"int"|"real"|"str"|"name"|"array"|"dict"|"ref", ...}`.
-    fn json_to_object(value: &Json) -> Object {
-        match value.str("kind").as_str() {
+    /// 🔎️ The leaf wire's `PdfObject` — `{"kind": "null"|"bool"|"int"|"real"|"str"|"name"|"array"|"dict"|"ref"|"stream", …}`
+    /// with newtype payloads under `value` and the `real`/`ref` records flattened — read into `lopdf`'s own object. It is
+    /// the very JSON the subject decodes (this crate never depends on the production crate that owns `PdfObject`), so a
+    /// row means the same thing on both sides. A stream is only accepted with its logical filter chain empty.
+    fn json_to_object(value: &Json) -> Result<Object, String> {
+        Ok(match value.str("kind").as_str() {
+            "null" => Object::Null,
             "bool" => Object::Boolean(matches!(value.get("value"), Some(Json::Bool(true)))),
             "int" => Object::Integer(number_field(value, "value") as i64),
-            "real" => Object::Real(number_field(value, "value") as f32),
-            "str" => Object::string_literal(value.str("value")),
+            "real" => Object::Real(decimal_to_f32(value)?),
+            "str" => Object::String(byte_array(value.get("value"))?, StringFormat::Literal),
             "name" => Object::Name(value.str("value").into_bytes()),
-            "array" => Object::Array(value.array("items").iter().map(json_to_object).collect()),
-            "dict" => Object::Dictionary(json_to_dictionary(value)),
+            "array" => Object::Array(value.array("value").iter().map(json_to_object).collect::<Result<_, _>>()?),
+            "dict" => Object::Dictionary(json_to_dictionary(&value.array("value"))?),
             "ref" => Object::Reference(json_object_id(value)),
-            _ => Object::Null,
-        }
+            "stream" if value.array("filters").is_empty() => Object::Stream(Stream::new(json_to_dictionary(&value.array("dict"))?, byte_array(value.get("data"))?)),
+            "stream" => return Err("a stream with a logical filter chain is outside this oracle's object grammar".to_string()),
+            other => return Err(format!("{other:?} is not a PdfObject kind")),
+        })
     }
 
-    fn json_to_dictionary(value: &Json) -> Dictionary {
+    fn json_to_dictionary(entries: &[Json]) -> Result<Dictionary, String> {
         let mut dict = Dictionary::new();
-        for entry in value.array("entries") {
-            dict.set(entry.str("key"), json_to_object(entry.get("value").unwrap_or(&Json::Null)));
+        for entry in entries {
+            dict.set(entry.str("key"), json_to_object(entry.get("value").unwrap_or(&Json::Null))?);
         }
-        dict
+        Ok(dict)
     }
 
-    /// 🔁️ The reverse of [`json_to_object`] — used to capture an object's CURRENT value before a
-    /// mutation touches it, so `oracle_apply_mutation_inverse` can hand that exact value back to
-    /// [`json_to_object`] as the undo's own params.
+    /// 🔢️ A `PdfDecimal` wire record (`negative`, decimal `coefficient` digits, `scale`) as the `f32` `lopdf` stores.
+    fn decimal_to_f32(value: &Json) -> Result<f32, String> {
+        let digits = value.str("coefficient");
+        let scale = number_field(value, "scale") as usize;
+        let padded = format!("{digits:0>width$}", width = scale + 1);
+        let (integer, fraction) = padded.split_at(padded.len() - scale);
+        let sign = if matches!(value.get("negative"), Some(Json::Bool(true))) { "-" } else { "" };
+        format!("{sign}{integer}.{fraction}").parse().map_err(|error| format!("PdfDecimal {digits:?}/{scale} is not a number: {error}"))
+    }
+
+    /// 🔢️ The `PdfDecimal` wire record of a stored `f32`, the inverse of [`decimal_to_f32`].
+    fn f32_to_decimal(value: f32) -> Vec<(String, Json)> {
+        let text = format!("{}", value.abs());
+        let (integer, fraction) = text.split_once('.').unwrap_or((&text, ""));
+        vec![("negative".to_string(), Json::Bool(value.is_sign_negative() && value != 0.0)), ("coefficient".to_string(), Json::String(format!("{integer}{fraction}"))), ("scale".to_string(), Json::Number(fraction.len() as f64))]
+    }
+
+    /// 🧮️ A wire byte array (`[0..=255, …]`).
+    fn byte_array(value: Option<&Json>) -> Result<Vec<u8>, String> {
+        match value {
+            Some(Json::Array(items)) => items.iter().map(|item| match item {
+                Json::Number(byte) if (0.0..=255.0).contains(byte) && byte.fract() == 0.0 => Ok(*byte as u8),
+                other => Err(format!("{other:?} is not a byte")),
+            }).collect(),
+            other => Err(format!("{other:?} is not a byte array")),
+        }
+    }
+
+    fn bytes_to_json(bytes: &[u8]) -> Json {
+        Json::Array(bytes.iter().map(|byte| Json::Number(*byte as f64)).collect())
+    }
+
+    fn tagged(kind: &str, members: Vec<(String, Json)>) -> Json {
+        Json::Object([("kind".to_string(), Json::String(kind.to_string()))].into_iter().chain(members).collect())
+    }
+
+    /// 🔁️ The reverse of [`json_to_object`] — captures an object's CURRENT value in the same wire before a mutation
+    /// touches it, so the computed undo hands that exact value back through [`json_to_object`].
     fn object_to_json(object: &Object) -> Json {
+        let entries = |dict: &Dictionary| Json::Array(dict.iter().map(|(key, value)| Json::Object(vec![("key".to_string(), Json::String(String::from_utf8_lossy(key).to_string())), ("value".to_string(), object_to_json(value))])).collect());
         match object {
-            Object::Null => Json::Object(vec![("kind".to_string(), Json::String("null".to_string()))]),
-            Object::Boolean(value) => Json::Object(vec![("kind".to_string(), Json::String("bool".to_string())), ("value".to_string(), Json::Bool(*value))]),
-            Object::Integer(value) => Json::Object(vec![("kind".to_string(), Json::String("int".to_string())), ("value".to_string(), Json::Number(*value as f64))]),
-            Object::Real(value) => Json::Object(vec![("kind".to_string(), Json::String("real".to_string())), ("value".to_string(), Json::Number(*value as f64))]),
-            Object::String(bytes, _) => Json::Object(vec![("kind".to_string(), Json::String("str".to_string())), ("value".to_string(), Json::String(String::from_utf8_lossy(bytes).to_string()))]),
-            Object::Name(bytes) => Json::Object(vec![("kind".to_string(), Json::String("name".to_string())), ("value".to_string(), Json::String(String::from_utf8_lossy(bytes).to_string()))]),
-            Object::Array(items) => Json::Object(vec![("kind".to_string(), Json::String("array".to_string())), ("items".to_string(), Json::Array(items.iter().map(object_to_json).collect()))]),
-            Object::Dictionary(dict) => Json::Object(vec![
-                ("kind".to_string(), Json::String("dict".to_string())),
-                ("entries".to_string(), Json::Array(dict.iter().map(|(key, value)| Json::Object(vec![("key".to_string(), Json::String(String::from_utf8_lossy(key).to_string())), ("value".to_string(), object_to_json(value))])).collect())),
-            ]),
-            Object::Stream(stream) => Json::Object(vec![
-                ("kind".to_string(), Json::String("dict".to_string())),
-                ("entries".to_string(), Json::Array(stream.dict.iter().map(|(key, value)| Json::Object(vec![("key".to_string(), Json::String(String::from_utf8_lossy(key).to_string())), ("value".to_string(), object_to_json(value))])).collect())),
-            ]),
-            Object::Reference(id) => Json::Object(vec![("kind".to_string(), Json::String("ref".to_string())), ("num".to_string(), Json::Number(id.0 as f64)), ("gen".to_string(), Json::Number(id.1 as f64))]),
+            Object::Null => tagged("null", vec![]),
+            Object::Boolean(value) => tagged("bool", vec![("value".to_string(), Json::Bool(*value))]),
+            Object::Integer(value) => tagged("int", vec![("value".to_string(), Json::Number(*value as f64))]),
+            Object::Real(value) => tagged("real", f32_to_decimal(*value)),
+            Object::String(bytes, _) => tagged("str", vec![("value".to_string(), bytes_to_json(bytes))]),
+            Object::Name(bytes) => tagged("name", vec![("value".to_string(), Json::String(String::from_utf8_lossy(bytes).to_string()))]),
+            Object::Array(items) => tagged("array", vec![("value".to_string(), Json::Array(items.iter().map(object_to_json).collect()))]),
+            Object::Dictionary(dict) => tagged("dict", vec![("value".to_string(), entries(dict))]),
+            Object::Stream(stream) => tagged("stream", vec![("dict".to_string(), entries(&stream.dict)), ("data".to_string(), bytes_to_json(&stream.content)), ("filters".to_string(), Json::Array(vec![]))]),
+            Object::Reference(id) => tagged("ref", vec![("num".to_string(), Json::Number(id.0 as f64)), ("gen".to_string(), Json::Number(id.1 as f64))]),
         }
     }
 
@@ -180,44 +211,79 @@ mod oracles {
             _ => None,
         }
     }
+
+    fn number_array(values: &[f32]) -> Json {
+        Json::Array(values.iter().map(|value| Json::Number(*value as f64)).collect())
+    }
+
+    fn object(entries: Vec<(&str, Json)>) -> Json {
+        Json::Object(entries.into_iter().map(|(key, value)| (key.to_string(), value)).collect())
+    }
+
+    /// 🚧️ Refuses a wire record member this oracle does not reproduce, so a row can never pass on a field nobody applied.
+    fn only_members(value: &Json, allowed: &[&str], what: &str) -> Result<(), String> {
+        match value {
+            Json::Object(entries) => entries.iter().find(|(key, _)| !allowed.contains(&key.as_str())).map_or(Ok(()), |(key, _)| Err(format!("{what} member {key:?} is outside this oracle's reference implementation"))),
+            other => Err(format!("{what} must be an object, got {other:?}")),
+        }
+    }
     //#endregion 🔖️JsonValue
 
     //#region 🔖️ContentStream
-    /// ✏️️ A minimal `BT ... Tj ET` content stream carrying `text` as one `Tj`-shown string — the
-    /// same operator `document::project_pdf`'s independent reader already scans for.
-    fn text_content_stream(text: &str) -> Vec<u8> {
-        // 🕳️ A page with NO extractable text gets a text object with no text-showing operator, not a
-        // `() Tj` showing the empty string. Found by asserting the inverse law: the real thesis sets
-        // its type with `TJ` (the positioned-array form), so `page_text` — which reads `Tj`, the only
-        // form this writer emits — extracts nothing from it, and re-encoding an empty `text` as
-        // `() Tj` turned a page the independent reader projects as `text: []` into one it projects
-        // as `text: [""]`. Writing no operator is the faithful reconstruction of "no text".
+    /// ✏️️ The leaf wire's `PdfOp` list (`{"op": "beginText"|"setFont"|"moveText"|"showText"|"endText", …}`) written as a
+    /// content stream by `lopdf`'s own encoder — the text-object operators the case's rows and this module's undo capture
+    /// speak. Any other operator is refused rather than skipped.
+    fn content_stream(ops: &[Json]) -> Result<Vec<u8>, String> {
+        let operations = ops
+            .iter()
+            .map(|op| {
+                Ok(match op.str("op").as_str() {
+                    "beginText" => Operation::new("BT", vec![]),
+                    "endText" => Operation::new("ET", vec![]),
+                    "setFont" => Operation::new("Tf", vec![Object::Name(op.str("name").into_bytes()), Object::Real(number_field(op, "size") as f32)]),
+                    "moveText" => Operation::new("Td", vec![Object::Real(number_field(op, "tx") as f32), Object::Real(number_field(op, "ty") as f32)]),
+                    "showText" => Operation::new("Tj", vec![text_operand(op.get("text").unwrap_or(&Json::Null))?]),
+                    other => return Err(format!("content operator {other:?} is outside this oracle's text-object vocabulary")),
+                })
+            })
+            .collect::<Result<Vec<_>, String>>()?;
+        Content { operations }.encode().map_err(|error| format!("lopdf could not encode the content stream: {error}"))
+    }
+
+    /// 🔤️ A `PdfTextString` wire operand (`{"kind": "text", "text"}` or `{"kind": "codes", "bytes"}`) as a literal string.
+    fn text_operand(text: &Json) -> Result<Object, String> {
+        match text.str("kind").as_str() {
+            "text" => Ok(Object::string_literal(text.str("text"))),
+            "codes" => Ok(Object::String(byte_array(text.get("bytes"))?, StringFormat::Literal)),
+            other => Err(format!("{other:?} is not a PdfTextString kind")),
+        }
+    }
+
+    /// ✏️️ The minimal `BT /F1 12 Tf 72 720 Td (…) Tj ET` op list carrying `text` as one `Tj` — the reference's own lossy
+    /// rebuild of a page from its captured `Tj` text. A page with NO extractable text gets a bare `BT ET`: the real
+    /// thesis sets its type with `TJ`, so [`page_text`] extracts nothing from it, and a `() Tj` would turn a page the
+    /// independent reader projects as `text: []` into one it projects as `text: [""]`.
+    fn text_ops(text: &str) -> Json {
+        let op = |name: &str, members: Vec<(&str, Json)>| object([("op", Json::String(name.to_string()))].into_iter().chain(members).collect());
         if text.is_empty() {
-            return b"BT ET".to_vec();
+            return Json::Array(vec![op("beginText", vec![]), op("endText", vec![])]);
         }
-        let mut out = Vec::new();
-        out.extend_from_slice(b"BT /F1 12 Tf 72 720 Td (");
-        for byte in text.as_bytes() {
-            match byte {
-                b'(' | b')' | b'\\' => {
-                    out.push(b'\\');
-                    out.push(*byte);
-                }
-                b'\n' => out.extend_from_slice(b"\\n"),
-                other => out.push(*other),
-            }
-        }
-        out.extend_from_slice(b") Tj ET");
-        out
+        Json::Array(vec![
+            op("beginText", vec![]),
+            op("setFont", vec![("name", Json::String("F1".to_string())), ("size", Json::Number(12.0))]),
+            op("moveText", vec![("tx", Json::Number(72.0)), ("ty", Json::Number(720.0))]),
+            op("showText", vec![("text", object(vec![("kind", Json::String("text".to_string())), ("text", Json::String(text.to_string()))]))]),
+            op("endText", vec![]),
+        ])
     }
 
     /// 🔎️ Concatenated `Tj` operand text of one page's content -- the independent-reader counterpart
-    /// of what `text_content_stream` writes, used to capture a page's prior text before mutating it.
+    /// of what [`text_ops`] writes, used to capture a page's prior text before mutating it.
     fn page_text(document: &Document, page_id: ObjectId) -> String {
         let content = document.get_page_content(page_id);
         let tj_operand_separator = "
 ";
-        lopdf::content::Content::decode(&content)
+        Content::decode(&content)
             .map(|decoded| {
                 decoded
                     .operations
@@ -262,15 +328,16 @@ mod oracles {
     //#endregion 🔖️PageTree
 
     //#region 🔖️PathAddressing
-    /// 🔎️ Immutable walk of `path` (`{"kind":"index","index":N}` / `{"kind":"key","key":"K"}` steps)
+    /// 🔎️ Immutable walk of `path` (the wire's `PdfPathSegment` steps `{"kind":"arrayIndex","index":N}` /
+    /// `{"kind":"dictKey","key":"K"}`)
     /// from object `id`'s own value down to the dict/stream-dict the leaf `key` lives in.
     fn navigate<'d>(document: &'d Document, id: ObjectId, path: &[Json]) -> Option<&'d Dictionary> {
         let mut current = document.get_object(id).ok()?;
         for segment in path {
             current = match (segment.str("kind").as_str(), current) {
-                ("index", Object::Array(items)) => items.get(usize_field(segment, "index"))?,
-                ("key", Object::Dictionary(dict)) => dict.get(segment.str("key").as_bytes()).ok()?,
-                ("key", Object::Stream(stream)) => stream.dict.get(segment.str("key").as_bytes()).ok()?,
+                ("arrayIndex", Object::Array(items)) => items.get(usize_field(segment, "index"))?,
+                ("dictKey", Object::Dictionary(dict)) => dict.get(segment.str("key").as_bytes()).ok()?,
+                ("dictKey", Object::Stream(stream)) => stream.dict.get(segment.str("key").as_bytes()).ok()?,
                 _ => return None,
             };
         }
@@ -286,9 +353,9 @@ mod oracles {
         let mut current = document.get_object_mut(id).ok()?;
         for segment in path {
             current = match (segment.str("kind").as_str(), current) {
-                ("index", Object::Array(items)) => items.get_mut(usize_field(segment, "index"))?,
-                ("key", Object::Dictionary(dict)) => dict.get_mut(segment.str("key").as_bytes()).ok()?,
-                ("key", Object::Stream(stream)) => stream.dict.get_mut(segment.str("key").as_bytes()).ok()?,
+                ("arrayIndex", Object::Array(items)) => items.get_mut(usize_field(segment, "index"))?,
+                ("dictKey", Object::Dictionary(dict)) => dict.get_mut(segment.str("key").as_bytes()).ok()?,
+                ("dictKey", Object::Stream(stream)) => stream.dict.get_mut(segment.str("key").as_bytes()).ok()?,
                 _ => return None,
             };
         }
@@ -310,14 +377,17 @@ mod oracles {
         match kind {
             "insert-page" => {
                 let page = params.get("page").cloned().unwrap_or(Json::Null);
-                let media_box = media_box_field(&page, "mediaBox").unwrap_or([0.0, 0.0, 612.0, 792.0]);
+                only_members(&page, &["mediaBox", "cropBox", "rotate", "content"], "PdfPage")?;
+                let media_box = media_box_field(&page, "mediaBox").ok_or("insert-page: `page.mediaBox` must be four numbers")?;
                 let rotate = number_field(&page, "rotate") as i64;
-                let text = page.str("text");
                 let mut order: Vec<ObjectId> = document.get_pages().into_values().collect();
-                let content_id = document.add_object(Object::Stream(Stream::new(Dictionary::new(), text_content_stream(&text))));
+                let content_id = document.add_object(Object::Stream(Stream::new(Dictionary::new(), content_stream(&page.array("content"))?)));
                 let mut dict = Dictionary::new();
                 dict.set("Type", Object::Name(b"Page".to_vec()));
                 dict.set("MediaBox", Object::Array(media_box.iter().map(|value| Object::Real(*value)).collect()));
+                if let Some(crop_box) = media_box_field(&page, "cropBox") {
+                    dict.set("CropBox", Object::Array(crop_box.iter().map(|value| Object::Real(*value)).collect()));
+                }
                 dict.set("Rotate", Object::Integer(rotate));
                 dict.set("Resources", Object::Dictionary(Dictionary::new()));
                 dict.set("Contents", Object::Reference(content_id));
@@ -349,25 +419,26 @@ mod oracles {
             }
             "append-page-content" => {
                 if let Some(page_id) = page_id_at(document, usize_field(params, "index")) {
-                    let _ = document.add_page_contents(page_id, text_content_stream(&params.str("text")));
+                    document.add_page_contents(page_id, content_stream(&params.array("content"))?).map_err(|error| format!("append-page-content: {error}"))?;
                 }
             }
             "insert-object" => {
                 let id = json_object_id(params);
-                document.objects.entry(id).or_insert_with(|| json_to_object(&params.get("value").cloned().unwrap_or(Json::Null)));
+                let value = json_to_object(params.get("value").unwrap_or(&Json::Null))?;
+                document.objects.entry(id).or_insert(value);
             }
             "remove-object" => {
                 document.objects.remove(&json_object_id(params));
             }
             "set-object-value" => {
                 let id = json_object_id(params);
-                document.objects.insert(id, json_to_object(&params.get("value").cloned().unwrap_or(Json::Null)));
+                document.objects.insert(id, json_to_object(params.get("value").unwrap_or(&Json::Null))?);
             }
             "set-dict-entry" => {
                 let id = json_object_id(params);
                 let path = params.array("path");
                 let key = params.str("key");
-                let value = json_to_object(&params.get("value").cloned().unwrap_or(Json::Null));
+                let value = json_to_object(params.get("value").unwrap_or(&Json::Null))?;
                 if let Some(dict) = navigate_mut(document, id, &path) {
                     dict.set(key, value);
                 }
@@ -382,7 +453,7 @@ mod oracles {
             }
             "set-trailer-entry" => {
                 let key = params.str("key");
-                let value = json_to_object(&params.get("value").cloned().unwrap_or(Json::Null));
+                let value = json_to_object(params.get("value").unwrap_or(&Json::Null))?;
                 document.trailer.set(key, value);
             }
             "remove-trailer-entry" => {
@@ -400,7 +471,7 @@ mod oracles {
             }
             "set-page-content" => {
                 if let Some(page_id) = page_id_at(document, usize_field(params, "index")) {
-                    let _ = document.change_page_content(page_id, text_content_stream(&params.str("text")));
+                    document.change_page_content(page_id, content_stream(&params.array("content"))?).map_err(|error| format!("set-page-content: {error}"))?;
                 }
             }
             "set-page-rotation" => {
@@ -426,7 +497,6 @@ mod oracles {
     /// back `{kind, params}` unchanged is not an inverse.
     fn inverse_spec(document: &Document, kind: &str, params: &Json) -> Result<Json, String> {
         let spec = |inverse_kind: &str, inverse_params: Json| Json::Object(vec![("kind".to_string(), Json::String(inverse_kind.to_string())), ("params".to_string(), inverse_params)]);
-        let obj = |entries: Vec<(&str, Json)>| Json::Object(entries.into_iter().map(|(key, value)| (key.to_string(), value)).collect());
         Ok(match kind {
             "set-info" => {
                 let mut entries = Vec::new();
@@ -436,11 +506,11 @@ mod oracles {
                 if let Some(author) = info_entry(document, b"Author") {
                     entries.push(("author", Json::String(author)));
                 }
-                spec("set-info", obj(entries))
+                spec("set-info", object(vec![("info", object(entries))]))
             }
             "insert-page" => {
                 let clamped = usize_field(params, "index").min(document.get_pages().len());
-                spec("remove-page", obj(vec![("index", Json::Number(clamped as f64))]))
+                spec("remove-page", object(vec![("index", Json::Number(clamped as f64))]))
             }
             "remove-page" => {
                 let index = usize_field(params, "index");
@@ -454,9 +524,8 @@ mod oracles {
                             .map(|items| items.iter().map(|item| item.as_float().unwrap_or(0.0)).collect::<Vec<f32>>())
                             .unwrap_or_else(|| vec![0.0, 0.0, 612.0, 792.0]);
                         let rotate = document.get_dictionary(page_id).ok().and_then(|dict| dict.get(b"Rotate").ok()).and_then(|value| value.as_i64().ok()).unwrap_or(0);
-                        let text = page_text(document, page_id);
-                        let page = obj(vec![("mediaBox", Json::Array(media_box.into_iter().map(|value| Json::Number(value as f64)).collect())), ("rotate", Json::Number(rotate as f64)), ("text", Json::String(text))]);
-                        spec("insert-page", obj(vec![("index", Json::Number(index as f64)), ("page", page)]))
+                        let page = object(vec![("mediaBox", number_array(&media_box)), ("rotate", Json::Number(rotate as f64)), ("content", text_ops(&page_text(document, page_id)))]);
+                        spec("insert-page", object(vec![("index", Json::Number(index as f64)), ("page", page)]))
                     }
                     None => return Err(format!("remove-page index {index} has no inverse target")),
                 }
@@ -469,36 +538,36 @@ mod oracles {
                     .and_then(|value| value.as_array().ok())
                     .map(|items| items.iter().map(|item| item.as_float().unwrap_or(0.0)).collect::<Vec<f32>>())
                     .unwrap_or_else(|| vec![0.0, 0.0, 612.0, 792.0]);
-                spec("set-page-media-box", obj(vec![("index", Json::Number(index as f64)), ("mediaBox", Json::Array(prior.into_iter().map(|value| Json::Number(value as f64)).collect()))]))
+                spec("set-page-media-box", object(vec![("index", Json::Number(index as f64)), ("mediaBox", number_array(&prior))]))
             }
             "set-page-crop-box" => {
                 let index = usize_field(params, "index");
                 match page_id_at(document, index).and_then(|page_id| document.get_dictionary(page_id).ok()).and_then(|dict| dict.get(b"CropBox").ok()).and_then(|value| value.as_array().ok()) {
                     Some(items) => {
                         let prior: Vec<f32> = items.iter().map(|item| item.as_float().unwrap_or(0.0)).collect();
-                        spec("set-page-crop-box", obj(vec![("index", Json::Number(index as f64)), ("cropBox", Json::Array(prior.into_iter().map(|value| Json::Number(value as f64)).collect()))]))
+                        spec("set-page-crop-box", object(vec![("index", Json::Number(index as f64)), ("cropBox", number_array(&prior))]))
                     }
-                    None => spec("set-page-crop-box", obj(vec![("index", Json::Number(index as f64))])),
+                    None => spec("set-page-crop-box", object(vec![("index", Json::Number(index as f64)), ("cropBox", Json::Null)])),
                 }
             }
             "append-page-content" => {
                 let index = usize_field(params, "index");
                 let prior = page_id_at(document, index).map(|page_id| page_text(document, page_id)).unwrap_or_default();
-                spec("set-page-content", obj(vec![("index", Json::Number(index as f64)), ("text", Json::String(prior))]))
+                spec("set-page-content", object(vec![("index", Json::Number(index as f64)), ("content", text_ops(&prior))]))
             }
-            "insert-object" => spec("remove-object", obj(vec![("id", params.get("id").cloned().unwrap_or(Json::Null))])),
+            "insert-object" => spec("remove-object", object(vec![("id", params.get("id").cloned().unwrap_or(Json::Null))])),
             "remove-object" => {
                 let id = json_object_id(params);
                 match document.objects.get(&id) {
-                    Some(value) => spec("insert-object", obj(vec![("id", params.get("id").cloned().unwrap_or(Json::Null)), ("value", object_to_json(value))])),
+                    Some(value) => spec("insert-object", object(vec![("id", params.get("id").cloned().unwrap_or(Json::Null)), ("value", object_to_json(value))])),
                     None => return Err(format!("remove-object id {id:?} has no inverse target")),
                 }
             }
             "set-object-value" => {
                 let id = json_object_id(params);
                 match document.objects.get(&id) {
-                    Some(value) => spec("set-object-value", obj(vec![("id", params.get("id").cloned().unwrap_or(Json::Null)), ("value", object_to_json(value))])),
-                    None => spec("remove-object", obj(vec![("id", params.get("id").cloned().unwrap_or(Json::Null))])),
+                    Some(value) => spec("set-object-value", object(vec![("id", params.get("id").cloned().unwrap_or(Json::Null)), ("value", object_to_json(value))])),
+                    None => spec("remove-object", object(vec![("id", params.get("id").cloned().unwrap_or(Json::Null))])),
                 }
             }
             "set-dict-entry" => {
@@ -507,9 +576,9 @@ mod oracles {
                 let key = params.str("key");
                 match navigate(document, id, &path).and_then(|dict| dict.get(key.as_bytes()).ok()) {
                     Some(prior) => {
-                        spec("set-dict-entry", obj(vec![("id", params.get("id").cloned().unwrap_or(Json::Null)), ("path", params.get("path").cloned().unwrap_or(Json::Array(vec![]))), ("key", Json::String(key)), ("value", object_to_json(prior))]))
+                        spec("set-dict-entry", object(vec![("id", params.get("id").cloned().unwrap_or(Json::Null)), ("path", params.get("path").cloned().unwrap_or(Json::Array(vec![]))), ("key", Json::String(key)), ("value", object_to_json(prior))]))
                     }
-                    None => spec("remove-dict-entry", obj(vec![("id", params.get("id").cloned().unwrap_or(Json::Null)), ("path", params.get("path").cloned().unwrap_or(Json::Array(vec![]))), ("key", Json::String(key))])),
+                    None => spec("remove-dict-entry", object(vec![("id", params.get("id").cloned().unwrap_or(Json::Null)), ("path", params.get("path").cloned().unwrap_or(Json::Array(vec![]))), ("key", Json::String(key))])),
                 }
             }
             "remove-dict-entry" => {
@@ -518,7 +587,7 @@ mod oracles {
                 let key = params.str("key");
                 match navigate(document, id, &path).and_then(|dict| dict.get(key.as_bytes()).ok()) {
                     Some(prior) => {
-                        spec("set-dict-entry", obj(vec![("id", params.get("id").cloned().unwrap_or(Json::Null)), ("path", params.get("path").cloned().unwrap_or(Json::Array(vec![]))), ("key", Json::String(key)), ("value", object_to_json(prior))]))
+                        spec("set-dict-entry", object(vec![("id", params.get("id").cloned().unwrap_or(Json::Null)), ("path", params.get("path").cloned().unwrap_or(Json::Array(vec![]))), ("key", Json::String(key)), ("value", object_to_json(prior))]))
                     }
                     None => return Err(format!("remove-dict-entry key {key:?} has no inverse target")),
                 }
@@ -526,14 +595,14 @@ mod oracles {
             "set-trailer-entry" => {
                 let key = params.str("key");
                 match document.trailer.get(key.as_bytes()).ok() {
-                    Some(prior) => spec("set-trailer-entry", obj(vec![("key", Json::String(key)), ("value", object_to_json(prior))])),
-                    None => spec("remove-trailer-entry", obj(vec![("key", Json::String(key))])),
+                    Some(prior) => spec("set-trailer-entry", object(vec![("key", Json::String(key)), ("value", object_to_json(prior))])),
+                    None => spec("remove-trailer-entry", object(vec![("key", Json::String(key))])),
                 }
             }
             "remove-trailer-entry" => {
                 let key = params.str("key");
                 match document.trailer.get(key.as_bytes()).ok() {
-                    Some(prior) => spec("set-trailer-entry", obj(vec![("key", Json::String(key)), ("value", object_to_json(prior))])),
+                    Some(prior) => spec("set-trailer-entry", object(vec![("key", Json::String(key)), ("value", object_to_json(prior))])),
                     None => return Err(format!("remove-trailer-entry key {key:?} has no inverse target")),
                 }
             }
@@ -544,17 +613,17 @@ mod oracles {
                     return Err(format!("move-page index {from} has no inverse target"));
                 }
                 let clamped_to = usize_field(params, "to").min(len.saturating_sub(1));
-                spec("move-page", obj(vec![("from", Json::Number(clamped_to as f64)), ("to", Json::Number(from as f64))]))
+                spec("move-page", object(vec![("from", Json::Number(clamped_to as f64)), ("to", Json::Number(from as f64))]))
             }
             "set-page-content" => {
                 let index = usize_field(params, "index");
                 let prior = page_id_at(document, index).map(|page_id| page_text(document, page_id)).unwrap_or_default();
-                spec("set-page-content", obj(vec![("index", Json::Number(index as f64)), ("text", Json::String(prior))]))
+                spec("set-page-content", object(vec![("index", Json::Number(index as f64)), ("content", text_ops(&prior))]))
             }
             "set-page-rotation" => {
                 let index = usize_field(params, "index");
                 let prior = page_id_at(document, index).and_then(|page_id| document.get_dictionary(page_id).ok()).and_then(|dict| dict.get(b"Rotate").ok()).and_then(|value| value.as_i64().ok()).unwrap_or(0);
-                spec("set-page-rotation", obj(vec![("index", Json::Number(index as f64)), ("rotation", Json::Number(prior as f64))]))
+                spec("set-page-rotation", object(vec![("index", Json::Number(index as f64)), ("rotation", Json::Number(prior as f64))]))
             }
             other => return Err(format!("mutation kind {other:?} has no oracle inverse implementation")),
         })
@@ -569,7 +638,11 @@ mod oracles {
         match kind {
             "" => Err("mutation spec carries no `kind`".to_string()),
             "remove-page" => oracle_delete_page(input, usize_field(params, "index") as u32 + 1),
-            "set-info" => oracle_replace_metadata(input, present_string(params, "title").as_deref(), present_string(params, "author").as_deref()),
+            "set-info" => {
+                let info = params.get("info").cloned().unwrap_or(Json::Null);
+                only_members(&info, &["title", "author"], "PdfInfo")?;
+                oracle_replace_metadata(input, present_string(&info, "title").as_deref(), present_string(&info, "author").as_deref())
+            }
             _ => {
                 let mut document = Document::load_mem(input).map_err(|error| format!("lopdf could not parse the input: {error}"))?;
                 apply_kind(&mut document, kind, params)?;

@@ -24,11 +24,11 @@ use crate::standards::v1::subsets::any::schema::mutations::TrinityGraphMutation;
 use crate::{apply_trinity_graph_mutation, inverse_trinity_graph_mutation};
 use crate::{jack_working_scene, materialize_jack_content, Edge, EntityRef, JackSnapshot, PropertyBag};
 
-const BEFORE: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🧹️remove-data-property/🧹️keeps-an-edge-without-the-property-it-never-had/📸️snapshot/⬅️before/🔣️.json");
-const AFTER: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🧹️remove-data-property/🧹️keeps-an-edge-without-the-property-it-never-had/📸️snapshot/➡️after/🔣️.json");
-const MUTATION: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🧹️remove-data-property/🧹️keeps-an-edge-without-the-property-it-never-had/🦠️mutation/🔣️.json");
-const DIFF: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🧹️remove-data-property/🧹️keeps-an-edge-without-the-property-it-never-had/🔺️diff/🔣️.json");
-const OUTCOME: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🧹️remove-data-property/🧹️keeps-an-edge-without-the-property-it-never-had/🎯️outcome/🔣️.json");
+const BEFORE: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🧹️remove-data-property/🧹️keeps-edge-without-property-it-never-had/📸️snapshot/⬅️before/🔣️.json");
+const AFTER: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🧹️remove-data-property/🧹️keeps-edge-without-property-it-never-had/📸️snapshot/➡️after/🔣️.json");
+const MUTATION: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🧹️remove-data-property/🧹️keeps-edge-without-property-it-never-had/🦠️mutation/🔣️.json");
+const DIFF: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🧹️remove-data-property/🧹️keeps-edge-without-property-it-never-had/🔺️diff/🔣️.json");
+const OUTCOME: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🧹️remove-data-property/🧹️keeps-edge-without-property-it-never-had/🎯️outcome/🔣️.json");
 
 fn expected_after() -> JackSnapshot {
     pack::from_json_str(AFTER).expect("after snapshot decodes")

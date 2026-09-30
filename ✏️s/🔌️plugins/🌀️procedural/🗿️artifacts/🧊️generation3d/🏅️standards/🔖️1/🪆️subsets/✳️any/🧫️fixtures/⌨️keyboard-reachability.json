@@ -17,6 +17,7 @@
     { "chord": "arrowright", "action": "selectDownstreamNode", "framework": false, "windowScoped": true, "ownerWindowKindId": "procedural-main", "liveInModes": ["edit"], "why": "Graph — follows a wire OUT of the anchor node." },
     { "chord": "mod+o", "action": "importDocumentRequest", "framework": false, "why": "IO — the chord every application in the world uses to open a file." },
     { "chord": "mod+shift+e", "action": "exportDocument", "framework": false, "why": "IO — export; carries a required format, so this chord opens the staged form on purpose.", "staged": true },
+    { "chord": "mod+shift+m", "action": "editMeshSelection", "framework": false, "windowScoped": true, "ownerWindowKindId": "procedural-preview", "liveInModes": ["edit"], "why": "Mesh — edit the selected faces, edges, or vertices using the staged operation controls.", "staged": true },
     { "chord": "mod+shift+k", "action": "knifeMeshSelection", "framework": false, "windowScoped": true, "ownerWindowKindId": "procedural-preview", "liveInModes": ["edit"], "why": "Mesh — cut the selected face using the staged start and end point controls.", "staged": true }
   ],
   "surfaceBindings": [

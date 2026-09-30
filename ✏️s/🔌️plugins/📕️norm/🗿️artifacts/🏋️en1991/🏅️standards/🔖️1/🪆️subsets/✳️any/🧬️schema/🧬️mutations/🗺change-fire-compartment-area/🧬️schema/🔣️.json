@@ -1,13 +1,29 @@
 {
-  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/norm/en1991/mutation/change-fire-compartment-area/schema.json",
+  "title": "ChangeFireCompartmentArea",
   "type": "object",
   "additionalProperties": false,
   "required": [
-    "new_fire_compartment_area"
+    "newFireCompartmentArea"
   ],
   "properties": {
-    "new_fire_compartment_area": {
-      "type": "number"
+    "newFireCompartmentArea": {
+      "type": "number",
+      "minimum": 0,
+      "x-semio-ui": {
+        "widget": "stepper",
+        "role": "value",
+        "label": {
+          "en": "Fire compartment floor area A_f",
+          "de": "Grundfläche des Brandabschnitts A_f"
+        },
+        "unit": "m²",
+        "step": 1,
+        "precision": 1,
+        "group": "fire",
+        "order": 10
+      }
     }
   }
 }

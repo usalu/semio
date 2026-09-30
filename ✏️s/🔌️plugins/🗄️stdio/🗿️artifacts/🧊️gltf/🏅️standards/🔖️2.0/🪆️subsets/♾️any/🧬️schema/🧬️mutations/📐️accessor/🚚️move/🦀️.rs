@@ -30,7 +30,7 @@ pub fn apply(payload: &GltfMoveAccessorPayload, base: &GltfSnapshot) -> Result<G
 
 //#region 🧬️DirectMutation
 #[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::MutationLeaf)]
-#[mutation_leaf(contract = ::protocol)]
+#[mutation_leaf(contract = ::protocol, payload = Apply)]
 #[value(tag = "phase", content = "value", rename_all = "camelCase")]
 pub enum MoveAccessorMutation {
     Apply(GltfMoveAccessorPayload),
@@ -74,6 +74,6 @@ impl protocol::MutationKind<GltfSnapshot, super::GltfMutation> for MoveAccessorM
 
 //#region 🧪️Tests
 #[cfg(test)]
-#[path = "🧪️tests/🔬️direct-leaf/🦀️.rs"]
-mod direct_leaf_tests;
+#[path = "🧪️tests/🚚️swaps-the-257557/🦀️.rs"]
+mod case_swaps_the_257557;
 //#endregion 🧪️Tests

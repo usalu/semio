@@ -5,55 +5,208 @@
   "description": "Seventeen-variant mutation dispatch envelope — real facet mirror of the Rust `LowpolyMutation` enum (`dsl::Mutations`-derived). serde's default externally-tagged representation: exactly one key, the PascalCase Rust variant name, whose value is that variant's payload — confirmed against every mutation family's committed `🧪️tests/…/🦠️mutation/🔣️.json` fixture. Each branch references its sibling `<mutation>/🧬️schema/🔣️.json` leaf rather than duplicating it.",
   "oneOf": [
     {
-      "$ref": "https://json.schemas.assets.semio-tech.com/s/lowpoly/lowpoly/mutation/change-object-smooth-shading/schema.json"
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "CreateObject"
+      ],
+      "properties": {
+        "CreateObject": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/lowpoly/lowpoly/mutation/create-object/schema.json"
+        }
+      }
     },
     {
-      "$ref": "https://json.schemas.assets.semio-tech.com/s/lowpoly/lowpoly/mutation/change-paint-layer-blend-mode/schema.json"
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "DeleteObject"
+      ],
+      "properties": {
+        "DeleteObject": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/lowpoly/lowpoly/mutation/delete-object/schema.json"
+        }
+      }
     },
     {
-      "$ref": "https://json.schemas.assets.semio-tech.com/s/lowpoly/lowpoly/mutation/change-paint-layer-opacity/schema.json"
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "ReorderObjects"
+      ],
+      "properties": {
+        "ReorderObjects": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/lowpoly/lowpoly/mutation/reorder-objects/schema.json"
+        }
+      }
     },
     {
-      "$ref": "https://json.schemas.assets.semio-tech.com/s/lowpoly/lowpoly/mutation/change-paint-layer-visible/schema.json"
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "RenameObject"
+      ],
+      "properties": {
+        "RenameObject": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/lowpoly/lowpoly/mutation/rename-object/schema.json"
+        }
+      }
     },
     {
-      "$ref": "https://json.schemas.assets.semio-tech.com/s/lowpoly/lowpoly/mutation/create-mesh/schema.json"
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "ChangeObjectSmoothShading"
+      ],
+      "properties": {
+        "ChangeObjectSmoothShading": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/lowpoly/lowpoly/mutation/change-object-smooth-shading/schema.json"
+        }
+      }
     },
     {
-      "$ref": "https://json.schemas.assets.semio-tech.com/s/lowpoly/lowpoly/mutation/create-object/schema.json"
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "MoveObject"
+      ],
+      "properties": {
+        "MoveObject": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/lowpoly/lowpoly/mutation/move-object/schema.json"
+        }
+      }
     },
     {
-      "$ref": "https://json.schemas.assets.semio-tech.com/s/lowpoly/lowpoly/mutation/delete-mesh/schema.json"
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "RotateObject"
+      ],
+      "properties": {
+        "RotateObject": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/lowpoly/lowpoly/mutation/rotate-object/schema.json"
+        }
+      }
     },
     {
-      "$ref": "https://json.schemas.assets.semio-tech.com/s/lowpoly/lowpoly/mutation/delete-object/schema.json"
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "ScaleObject"
+      ],
+      "properties": {
+        "ScaleObject": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/lowpoly/lowpoly/mutation/scale-object/schema.json"
+        }
+      }
     },
     {
-      "$ref": "https://json.schemas.assets.semio-tech.com/s/lowpoly/lowpoly/mutation/edit-paint-layer/schema.json"
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "CreateMesh"
+      ],
+      "properties": {
+        "CreateMesh": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/lowpoly/lowpoly/mutation/create-mesh/schema.json"
+        }
+      }
     },
     {
-      "$ref": "https://json.schemas.assets.semio-tech.com/s/lowpoly/lowpoly/mutation/insert-paint-layer/schema.json"
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "DeleteMesh"
+      ],
+      "properties": {
+        "DeleteMesh": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/lowpoly/lowpoly/mutation/delete-mesh/schema.json"
+        }
+      }
     },
     {
-      "$ref": "https://json.schemas.assets.semio-tech.com/s/lowpoly/lowpoly/mutation/move-object/schema.json"
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "InsertPaintLayer"
+      ],
+      "properties": {
+        "InsertPaintLayer": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/lowpoly/lowpoly/mutation/insert-paint-layer/schema.json"
+        }
+      }
     },
     {
-      "$ref": "https://json.schemas.assets.semio-tech.com/s/lowpoly/lowpoly/mutation/remove-paint-layer/schema.json"
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "RemovePaintLayer"
+      ],
+      "properties": {
+        "RemovePaintLayer": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/lowpoly/lowpoly/mutation/remove-paint-layer/schema.json"
+        }
+      }
     },
     {
-      "$ref": "https://json.schemas.assets.semio-tech.com/s/lowpoly/lowpoly/mutation/rename-object/schema.json"
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "RenamePaintLayer"
+      ],
+      "properties": {
+        "RenamePaintLayer": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/lowpoly/lowpoly/mutation/rename-paint-layer/schema.json"
+        }
+      }
     },
     {
-      "$ref": "https://json.schemas.assets.semio-tech.com/s/lowpoly/lowpoly/mutation/rename-paint-layer/schema.json"
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "ChangePaintLayerVisible"
+      ],
+      "properties": {
+        "ChangePaintLayerVisible": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/lowpoly/lowpoly/mutation/change-paint-layer-visible/schema.json"
+        }
+      }
     },
     {
-      "$ref": "https://json.schemas.assets.semio-tech.com/s/lowpoly/lowpoly/mutation/reorder-objects/schema.json"
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "ChangePaintLayerOpacity"
+      ],
+      "properties": {
+        "ChangePaintLayerOpacity": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/lowpoly/lowpoly/mutation/change-paint-layer-opacity/schema.json"
+        }
+      }
     },
     {
-      "$ref": "https://json.schemas.assets.semio-tech.com/s/lowpoly/lowpoly/mutation/rotate-object/schema.json"
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "ChangePaintLayerBlendMode"
+      ],
+      "properties": {
+        "ChangePaintLayerBlendMode": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/lowpoly/lowpoly/mutation/change-paint-layer-blend-mode/schema.json"
+        }
+      }
     },
     {
-      "$ref": "https://json.schemas.assets.semio-tech.com/s/lowpoly/lowpoly/mutation/scale-object/schema.json"
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "EditPaintLayer"
+      ],
+      "properties": {
+        "EditPaintLayer": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/lowpoly/lowpoly/mutation/edit-paint-layer/schema.json"
+        }
+      }
     }
   ]
 }

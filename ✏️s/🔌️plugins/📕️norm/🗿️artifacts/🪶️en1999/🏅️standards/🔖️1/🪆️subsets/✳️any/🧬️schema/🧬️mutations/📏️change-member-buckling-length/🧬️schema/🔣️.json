@@ -5,19 +5,68 @@
   "type": "object",
   "additionalProperties": false,
   "required": [
+    "mutation",
     "memberId",
     "axis",
     "newLength"
   ],
   "properties": {
+    "mutation": {
+      "const": "changeMemberBucklingLength"
+    },
     "memberId": {
-      "type": "string"
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Member",
+          "de": "Bauteil"
+        },
+        "description": {
+          "en": "The aluminium member this mutation addresses.",
+          "de": "Das Aluminiumbauteil, das diese Mutation adressiert."
+        },
+        "ref": {
+          "kind": "member"
+        },
+        "group": "target",
+        "order": 10
+      }
     },
     "axis": {
-      "type": "string"
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "text",
+        "role": "value",
+        "label": {
+          "en": "Buckling axis",
+          "de": "Knickachse"
+        },
+        "description": {
+          "en": "y, z, t (torsional) or ltb (lateral-torsional); anything else sets y.",
+          "de": "y, z, t (Drillknicken) oder ltb (Biegedrillknicken); jeder andere Wert setzt y."
+        },
+        "group": "stability",
+        "order": 20
+      }
     },
     "newLength": {
-      "type": "number"
+      "type": "number",
+      "minimum": 0,
+      "x-semio-ui": {
+        "widget": "stepper",
+        "role": "value",
+        "label": {
+          "en": "Buckling length L_cr",
+          "de": "Knicklänge L_cr"
+        },
+        "unit": "m",
+        "step": 0.05,
+        "precision": 2,
+        "group": "stability",
+        "order": 30
+      }
     }
   }
 }

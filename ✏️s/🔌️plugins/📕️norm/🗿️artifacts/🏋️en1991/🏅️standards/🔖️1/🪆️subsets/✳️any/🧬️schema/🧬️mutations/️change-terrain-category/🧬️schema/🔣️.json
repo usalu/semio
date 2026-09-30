@@ -9,7 +9,25 @@
   ],
   "properties": {
     "newTerrainCategory": {
-      "type": "integer"
+      "type": "integer",
+      "minimum": 0,
+      "maximum": 4,
+      "x-semio-ui": {
+        "widget": "stepper",
+        "role": "value",
+        "label": {
+          "en": "Terrain category",
+          "de": "Geländekategorie"
+        },
+        "description": {
+          "en": "0 (sea) and I to IV as 1 to 4 (EN 1991-1-4 Table 4.1).",
+          "de": "0 (See) sowie I bis IV als 1 bis 4 (EN 1991-1-4 Tabelle 4.1)."
+        },
+        "step": 1,
+        "precision": 0,
+        "group": "site",
+        "order": 10
+      }
     }
   }
 }

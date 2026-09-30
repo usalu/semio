@@ -5,18 +5,25 @@
   "type": "object",
   "additionalProperties": false,
   "required": [
+    "mutation",
     "chunks"
   ],
   "properties": {
+    "mutation": {
+      "const": "setOtherChunks",
+      "description": "Aggregate discriminator spliced in by WavMutation; absent when the payload stands alone."
+    },
     "chunks": {
       "type": "array",
       "items": {
         "$ref": "#/$defs/RiffChunk"
+      },
+      "x-semio-ui": {
+        "label": {
+          "en": "Other chunks",
+          "de": "Weitere Chunks"
+        }
       }
-    },
-    "mutation": {
-      "const": "setOtherChunks",
-      "description": "Aggregate discriminator spliced in by WavMutation; absent when the payload stands alone."
     }
   },
   "$defs": {
@@ -32,7 +39,14 @@
           "type": "string",
           "minLength": 4,
           "maxLength": 4,
-          "pattern": "^[ -~]{4}$"
+          "pattern": "^[ -~]{4}$",
+          "x-semio-ui": {
+            "widget": "text",
+            "label": {
+              "en": "Chunk ID (FourCC)",
+              "de": "Chunk-ID (FourCC)"
+            }
+          }
         },
         "data": {
           "type": "array",
@@ -47,7 +61,18 @@
           "minimum": 0,
           "maximum": 255,
           "default": 0,
-          "description": "Word-alignment byte; must be zero when data has even length."
+          "description": "Word-alignment byte; must be zero when data has even length.",
+          "x-semio-ui": {
+            "widget": "stepper",
+            "label": {
+              "en": "Pad byte",
+              "de": "Füllbyte"
+            },
+            "description": {
+              "en": "Word-alignment byte; zero when the data length is even.",
+              "de": "Byte zur Wortausrichtung; null bei gerader Datenlänge."
+            }
+          }
         }
       }
     }

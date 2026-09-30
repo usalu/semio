@@ -6,7 +6,7 @@ use semio_s_artifact_cad_cad::CadNode;
 
 #[semio_framework_async_macros::async_test]
 async fn bundle_contributes_building_import_profile() {
-    let manifest = bundle().manifest;
+    let manifest = bundle().into_manifest_cold().unwrap();
     let topic_contribution = &manifest.topic_contributions[0];
     assert_eq!(topic_contribution.topic, "cad.computer");
     assert_eq!(topic_contribution.payload["moduleId"].as_str(), Some(MODULE_ID));
@@ -21,7 +21,7 @@ async fn bundle_contributes_building_import_profile() {
 /// registration gate accepted it; this test additionally pins the exact ids landed.
 #[semio_framework_async_macros::async_test]
 async fn bundle_declares_the_cad_dependency_and_registers_the_building_storey_contribution() {
-    let manifest = bundle().manifest;
+    let manifest = bundle().into_manifest_cold().unwrap();
     assert_eq!(manifest.extends, "cad");
     assert_eq!(manifest.dependencies[0].plugin_id, "cad");
 
@@ -71,7 +71,7 @@ async fn contribution_onto_cad_requires_a_declared_dependency() {
 /// `CadMutation::kinds()` roster.
 #[semio_framework_async_macros::async_test]
 async fn contributed_mutation_id_structurally_cannot_collide_with_any_cad_owner_kind() {
-    let mutation_id = bundle().manifest.contributions[0].mutations[0].mutation_id.clone();
+    let mutation_id = bundle().into_manifest_cold().unwrap().contributions[0].mutations[0].mutation_id.clone();
     let hash_at = mutation_id.rfind('#').expect("contributed id has a #");
     assert!(mutation_id[hash_at + 1..].contains(':'), "contributed id must carry the contributor ':' segment");
 

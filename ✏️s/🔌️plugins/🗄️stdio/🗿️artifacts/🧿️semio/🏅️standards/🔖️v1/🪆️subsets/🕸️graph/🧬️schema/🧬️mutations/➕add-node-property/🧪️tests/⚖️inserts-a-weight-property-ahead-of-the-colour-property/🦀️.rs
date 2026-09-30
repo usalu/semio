@@ -10,11 +10,11 @@ use crate::standards::v1::subsets::graph::schema::mutations::SemioGraphMutation;
 use crate::standards::v1::subsets::graph::schema::snapshot::SemioGraphSnapshot;
 use protocol::{Mutation, MutationDiff};
 
-const BEFORE: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/➕add-node-property/⚖️inserts-a-weight-property-ahead-of-the-colour-property/📸️snapshot/⬅️before/🔣️.json");
-const AFTER: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/➕add-node-property/⚖️inserts-a-weight-property-ahead-of-the-colour-property/📸️snapshot/➡️after/🔣️.json");
-const MUTATION: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/➕add-node-property/⚖️inserts-a-weight-property-ahead-of-the-colour-property/🦠️mutation/🔣️.json");
-const DIFF: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/➕add-node-property/⚖️inserts-a-weight-property-ahead-of-the-colour-property/🔺️diff/🔣️.json");
-const OUTCOME: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/➕add-node-property/⚖️inserts-a-weight-property-ahead-of-the-colour-property/🎯️outcome/🔣️.json");
+const BEFORE: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/➕add-node-property/⚖️inserts-weight-property-ahead-colour-property/📸️snapshot/⬅️before/🔣️.json");
+const AFTER: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/➕add-node-property/⚖️inserts-weight-property-ahead-colour-property/📸️snapshot/➡️after/🔣️.json");
+const MUTATION: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/➕add-node-property/⚖️inserts-weight-property-ahead-colour-property/🦠️mutation/🔣️.json");
+const DIFF: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/➕add-node-property/⚖️inserts-weight-property-ahead-colour-property/🔺️diff/🔣️.json");
+const OUTCOME: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/➕add-node-property/⚖️inserts-weight-property-ahead-colour-property/🎯️outcome/🔣️.json");
 
 fn before() -> SemioGraphSnapshot {
     dsl::json::from_json_str(BEFORE).expect("add-node-property before snapshot decodes")

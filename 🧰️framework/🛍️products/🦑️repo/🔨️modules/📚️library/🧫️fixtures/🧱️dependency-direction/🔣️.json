@@ -1,0 +1,784 @@
+{
+  "schemaVersion": 1,
+  "cases": [
+    {
+      "id": "framework-peer",
+      "from": "🧰️framework/🔨️modules/🧵️job/🟦️.ts",
+      "dependencies": [
+        {
+          "id": "edge",
+          "target": "🧰️framework/🔨️modules/🧬️schema/🟦️.ts",
+          "reference": "relative",
+          "syntax": "static"
+        }
+      ],
+      "forbidden": []
+    },
+    {
+      "id": "product-framework-peer",
+      "from": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🟦️.ts",
+      "dependencies": [
+        {
+          "id": "edge",
+          "target": "🧰️framework/🔨️modules/🧬️schema/🟦️.ts",
+          "reference": "relative",
+          "syntax": "static"
+        }
+      ],
+      "forbidden": []
+    },
+    {
+      "id": "implementation-consumes-framework",
+      "from": "🌎️hub/💡️inference/🧬️schema/🟦️.ts",
+      "dependencies": [
+        {
+          "id": "edge",
+          "target": "🧰️framework/🔨️modules/🧬️schema/🟦️.ts",
+          "reference": "relative",
+          "syntax": "static"
+        }
+      ],
+      "forbidden": []
+    },
+    {
+      "id": "implementation-composition",
+      "from": "🌎️hub/💡️inference/🧬️schema/🟦️.ts",
+      "dependencies": [
+        {
+          "id": "edge",
+          "target": "✏️s/🔌️plugins/📐️cad/🟦️.ts",
+          "reference": "relative",
+          "syntax": "static"
+        }
+      ],
+      "forbidden": []
+    },
+    {
+      "id": "framework-relative-hub",
+      "from": "🧰️framework/🔨️modules/🧵️job/🟦️.ts",
+      "dependencies": [
+        {
+          "id": "edge",
+          "target": "🌎️hub/💡️inference/🧬️schema/🟦️.ts",
+          "reference": "relative",
+          "syntax": "static"
+        }
+      ],
+      "forbidden": [
+        "edge"
+      ]
+    },
+    {
+      "id": "framework-dynamic-hub",
+      "from": "🧰️framework/🔨️modules/🧵️job/🟦️.ts",
+      "dependencies": [
+        {
+          "id": "edge",
+          "target": "🌎️hub/💡️inference/🧬️schema/🟦️.ts",
+          "reference": "relative",
+          "syntax": "dynamic"
+        }
+      ],
+      "forbidden": [
+        "edge"
+      ]
+    },
+    {
+      "id": "framework-type-hub",
+      "from": "🧰️framework/🔨️modules/🧵️job/🟦️.ts",
+      "dependencies": [
+        {
+          "id": "edge",
+          "target": "🌎️hub/💡️inference/🧬️schema/🟦️.ts",
+          "reference": "relative",
+          "syntax": "type"
+        }
+      ],
+      "forbidden": [
+        "edge"
+      ]
+    },
+    {
+      "id": "framework-export-hub",
+      "from": "🧰️framework/🔨️modules/🧵️job/🟦️.ts",
+      "dependencies": [
+        {
+          "id": "edge",
+          "target": "🌎️hub/💡️inference/🧬️schema/🟦️.ts",
+          "reference": "relative",
+          "syntax": "export"
+        }
+      ],
+      "forbidden": [
+        "edge"
+      ]
+    },
+    {
+      "id": "framework-require-hub",
+      "from": "🧰️framework/🔨️modules/🧵️job/🟦️.ts",
+      "dependencies": [
+        {
+          "id": "edge",
+          "target": "🌎️hub/💡️inference/🧬️schema/🟦️.ts",
+          "reference": "relative",
+          "syntax": "require"
+        }
+      ],
+      "forbidden": [
+        "edge"
+      ]
+    },
+    {
+      "id": "framework-package-hub",
+      "from": "🧰️framework/🔨️modules/🧵️job/🟦️.ts",
+      "dependencies": [
+        {
+          "id": "edge",
+          "target": "🌎️hub/💡️inference/🧬️schema/🟦️.ts",
+          "reference": "package",
+          "syntax": "static",
+          "package": "os-hub-ts"
+        }
+      ],
+      "forbidden": [
+        "edge"
+      ]
+    },
+    {
+      "id": "framework-package-subpath-hub",
+      "from": "🧰️framework/🔨️modules/🧵️job/🟦️.ts",
+      "dependencies": [
+        {
+          "id": "edge",
+          "target": "🌎️hub/💡️inference/🧬️schema/🟦️.ts",
+          "reference": "package-subpath",
+          "syntax": "static",
+          "package": "os-hub-ts"
+        }
+      ],
+      "forbidden": [
+        "edge"
+      ]
+    },
+    {
+      "id": "framework-unresolved-package-hub",
+      "from": "🧰️framework/🔨️modules/🧵️job/🟦️.ts",
+      "dependencies": [
+        {
+          "id": "edge",
+          "target": "🌎️hub/💡️inference/🧬️schema/🟦️.ts",
+          "reference": "unresolved-package",
+          "syntax": "static",
+          "package": "os-hub-ts"
+        }
+      ],
+      "forbidden": [
+        "edge"
+      ]
+    },
+    {
+      "id": "framework-unresolved-package-plugin",
+      "from": "🧰️framework/🔨️modules/🧵️job/🟦️.ts",
+      "dependencies": [
+        {
+          "id": "edge",
+          "target": "✏️s/🔌️plugins/📐️cad/🟦️.ts",
+          "reference": "unresolved-package",
+          "syntax": "static",
+          "package": "@semio-tech/cad-js"
+        }
+      ],
+      "forbidden": [
+        "edge"
+      ]
+    },
+    {
+      "id": "framework-package-peer",
+      "from": "🧰️framework/🔨️modules/🧵️job/🟦️.ts",
+      "dependencies": [
+        {
+          "id": "edge",
+          "target": "🧰️framework/🔨️modules/🧬️schema/🟦️.ts",
+          "reference": "package",
+          "syntax": "static",
+          "package": "@semio-tech/framework"
+        }
+      ],
+      "forbidden": []
+    },
+    {
+      "id": "framework-test-hub",
+      "from": "🧰️framework/🔨️modules/🧵️job/🧪️tests/🟦️.ts",
+      "dependencies": [
+        {
+          "id": "edge",
+          "target": "🌎️hub/💡️inference/🧬️schema/🟦️.ts",
+          "reference": "relative",
+          "syntax": "static"
+        }
+      ],
+      "forbidden": [
+        "edge"
+      ]
+    },
+    {
+      "id": "framework-bootstrap-hub",
+      "from": "🧰️framework/🔨️modules/🧵️job/📜️script.ts",
+      "dependencies": [
+        {
+          "id": "edge",
+          "target": "🌎️hub/💡️inference/🧬️schema/🟦️.ts",
+          "reference": "relative",
+          "syntax": "static"
+        }
+      ],
+      "forbidden": [
+        "edge"
+      ]
+    },
+    {
+      "id": "framework-♻️mit-bestand",
+      "from": "🧰️framework/🔨️modules/🧵️job/🟦️.ts",
+      "dependencies": [
+        {
+          "id": "edge",
+          "target": "♻️mit-bestand/🟦️.ts",
+          "reference": "relative",
+          "syntax": "static"
+        }
+      ],
+      "forbidden": [
+        "edge"
+      ]
+    },
+    {
+      "id": "framework-🏢️semio-tech",
+      "from": "🧰️framework/🔨️modules/🧵️job/🟦️.ts",
+      "dependencies": [
+        {
+          "id": "edge",
+          "target": "🏢️semio-tech/🟦️.ts",
+          "reference": "relative",
+          "syntax": "static"
+        }
+      ],
+      "forbidden": [
+        "edge"
+      ]
+    },
+    {
+      "id": "framework-👴️leutwiler",
+      "from": "🧰️framework/🔨️modules/🧵️job/🟦️.ts",
+      "dependencies": [
+        {
+          "id": "edge",
+          "target": "👴️leutwiler/🟦️.ts",
+          "reference": "relative",
+          "syntax": "static"
+        }
+      ],
+      "forbidden": [
+        "edge"
+      ]
+    },
+    {
+      "id": "framework-🎓️teaching",
+      "from": "🧰️framework/🔨️modules/🧵️job/🟦️.ts",
+      "dependencies": [
+        {
+          "id": "edge",
+          "target": "🎓️teaching/🟦️.ts",
+          "reference": "relative",
+          "syntax": "static"
+        }
+      ],
+      "forbidden": [
+        "edge"
+      ]
+    },
+    {
+      "id": "comments-and-false-generated-banner",
+      "from": "🧰️framework/🔨️modules/🧵️job/🟦️.ts",
+      "comments": [
+        "GENERATED FILE — do not edit",
+        "import \"os-hub-ts\";",
+        "import \"🌎️hub/💡️inference/🧬️schema/🟦️.ts\";",
+        "import \"✏️s/🔌️plugins/📐️cad/🟦️.ts\";"
+      ],
+      "dependencies": [],
+      "forbidden": []
+    },
+    {
+      "id": "same-count-different-forbidden-target",
+      "from": "🧰️framework/🔨️modules/🧵️job/🟦️.ts",
+      "dependencies": [
+        {
+          "id": "edge",
+          "target": "✏️s/🔌️plugins/📐️cad/🟦️.ts",
+          "reference": "relative",
+          "syntax": "static"
+        }
+      ],
+      "forbidden": [
+        "edge"
+      ]
+    },
+    {
+      "id": "io-relative-ui",
+      "from": "🧰️framework/🔨️modules/🚪️io/🔬️probe/🟦️.ts",
+      "dependencies": [
+        {
+          "id": "edge",
+          "target": "🧰️framework/🔨️modules/🖱️ui/🎯️targets/⚛️react/🟦️.tsx",
+          "reference": "relative",
+          "syntax": "static"
+        }
+      ],
+      "forbidden": [
+        "edge"
+      ]
+    },
+    {
+      "id": "io-dynamic-renderer",
+      "from": "🧰️framework/🔨️modules/🚪️io/🔬️probe/🟦️.ts",
+      "dependencies": [
+        {
+          "id": "edge",
+          "target": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🟦️.ts",
+          "reference": "relative",
+          "syntax": "dynamic"
+        }
+      ],
+      "forbidden": [
+        "edge"
+      ]
+    },
+    {
+      "id": "io-type-only-ui-alias",
+      "from": "🧰️framework/🔨️modules/🚪️io/🔬️probe/🟦️.ts",
+      "dependencies": [
+        {
+          "id": "edge",
+          "target": "🧰️framework/🔨️modules/🖱️ui/🎯️targets/⚛️react/🟦️.tsx",
+          "reference": "package",
+          "syntax": "type",
+          "package": "@semio-tech/ui-react"
+        }
+      ],
+      "forbidden": [
+        "edge"
+      ]
+    },
+    {
+      "id": "io-ui-alias-subpath",
+      "from": "🧰️framework/🔨️modules/🚪️io/🔬️probe/🟦️.ts",
+      "dependencies": [
+        {
+          "id": "edge",
+          "target": "🧰️framework/🔨️modules/🖱️ui/🎯️targets/⚛️react/🟦️.tsx",
+          "reference": "package-subpath",
+          "syntax": "static",
+          "package": "@semio-tech/ui-react"
+        }
+      ],
+      "forbidden": [
+        "edge"
+      ]
+    },
+    {
+      "id": "io-react-vendor",
+      "from": "🧰️framework/🔨️modules/🚪️io/🔬️probe/🟦️.ts",
+      "dependencies": [
+        {
+          "id": "edge",
+          "target": "🧰️framework/🔨️modules/🖱️ui/🎯️targets/⚛️react/🟦️.tsx",
+          "reference": "package",
+          "syntax": "static",
+          "package": "react"
+        }
+      ],
+      "forbidden": [
+        "edge"
+      ]
+    },
+    {
+      "id": "io-three-vendor-dynamic",
+      "from": "🧰️framework/🔨️modules/🚪️io/🔬️probe/🟦️.ts",
+      "dependencies": [
+        {
+          "id": "edge",
+          "target": "🧰️framework/🔨️modules/🖱️ui/🎯️targets/⚛️react/🟦️.tsx",
+          "reference": "package",
+          "syntax": "dynamic",
+          "package": "three"
+        }
+      ],
+      "forbidden": [
+        "edge"
+      ]
+    },
+    {
+      "id": "io-fiber-vendor-unresolved",
+      "from": "🧰️framework/🔨️modules/🚪️io/🔬️probe/🟦️.ts",
+      "dependencies": [
+        {
+          "id": "edge",
+          "target": "🧰️framework/🔨️modules/🖱️ui/🎯️targets/⚛️react/🟦️.tsx",
+          "reference": "unresolved-package",
+          "syntax": "type",
+          "package": "@react-three/fiber"
+        }
+      ],
+      "forbidden": [
+        "edge"
+      ]
+    },
+    {
+      "id": "renderer-consumes-io",
+      "from": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🟦️.ts",
+      "dependencies": [
+        {
+          "id": "edge",
+          "target": "🧰️framework/🔨️modules/🚪️io/🔬️probe/🟦️.ts",
+          "reference": "relative",
+          "syntax": "static"
+        }
+      ],
+      "forbidden": []
+    },
+    {
+      "id": "io-consumes-neutral-schema",
+      "from": "🧰️framework/🔨️modules/🚪️io/🔬️probe/🟦️.ts",
+      "dependencies": [
+        {
+          "id": "edge",
+          "target": "🧰️framework/🔨️modules/🧬️schema/🟦️.ts",
+          "reference": "relative",
+          "syntax": "static"
+        }
+      ],
+      "forbidden": []
+    },
+    {
+      "id": "io-comment-ui-reference",
+      "from": "🧰️framework/🔨️modules/🚪️io/🔬️probe/🟦️.ts",
+      "comments": [
+        "import \"react\";",
+        "import \"@semio-tech/ui-react\";"
+      ],
+      "dependencies": [],
+      "forbidden": []
+    }
+  ],
+  "graphCases": [
+    {
+      "id": "complete-allowed",
+      "accept": true
+    },
+    {
+      "id": "complete-forbidden",
+      "accept": true
+    },
+    {
+      "id": "missing-modules",
+      "accept": false
+    },
+    {
+      "id": "empty-modules",
+      "accept": false
+    },
+    {
+      "id": "wrong-module-total",
+      "accept": false
+    },
+    {
+      "id": "wrong-dependency-total",
+      "accept": false
+    },
+    {
+      "id": "missing-resolved-path",
+      "accept": false
+    },
+    {
+      "id": "missing-import-specifier",
+      "accept": false
+    },
+    {
+      "id": "unknown-policy",
+      "accept": false
+    },
+    {
+      "id": "unreported-forbidden-edge",
+      "accept": false
+    },
+    {
+      "id": "phantom-violation",
+      "accept": false
+    },
+    {
+      "id": "duplicate-source",
+      "accept": false
+    },
+    {
+      "id": "complete-two-rules",
+      "accept": true
+    },
+    {
+      "id": "missing-followed-local-source",
+      "accept": false
+    },
+    {
+      "id": "missing-disconnected-root",
+      "accept": false
+    },
+    {
+      "id": "unresolved-local-source",
+      "accept": false
+    },
+    {
+      "id": "fake-nonfollowed-local-source",
+      "accept": false
+    },
+    {
+      "id": "terminal-vendor",
+      "accept": true
+    },
+    {
+      "id": "terminal-builtin",
+      "accept": true
+    },
+    {
+      "id": "terminal-unresolved-package",
+      "accept": true
+    },
+    {
+      "id": "terminal-json",
+      "accept": true
+    },
+    {
+      "id": "terminal-policy-exclusion",
+      "accept": true
+    },
+    {
+      "id": "terminal-policy-nonfollow",
+      "accept": true
+    },
+    {
+      "id": "identical-leaf-records",
+      "accept": true
+    },
+    {
+      "id": "missing-source-inventory",
+      "accept": false
+    },
+    {
+      "id": "terminal-unresolved-relative",
+      "accept": false
+    },
+    {
+      "id": "unresolved-workspace-alias",
+      "accept": true
+    },
+    {
+      "id": "unresolved-workspace-subpath",
+      "accept": true
+    },
+    {
+      "id": "missing-scope-metadata",
+      "accept": false
+    },
+    {
+      "id": "invalid-scope-pattern",
+      "accept": false
+    }
+  ],
+  "graphScope": {
+    "workspaceRoots": [
+      "🧰️framework",
+      "🌎️hub"
+    ],
+    "excludedPaths": [
+      "(^|/)🗑️generated(/|$)",
+      "(^|/)\\.next(/|$)"
+    ],
+    "nonFollowedPaths": [
+      "(^|/)node_modules(/|$)",
+      "^🧰️framework/nonfollowed/"
+    ],
+    "expectedSources": [
+      "🧰️framework/🔨️modules/🧵️job/🟦️.ts",
+      "🧰️framework/🔨️modules/🧬️schema/🟦️.ts"
+    ],
+    "workspacePackages": [
+      {
+        "name": "@neutral/framework",
+        "owner": "🧰️framework",
+        "exports": [
+          ".",
+          "./schema"
+        ]
+      },
+      {
+        "name": "@neutral/implementation",
+        "owner": "🌎️hub",
+        "exports": [
+          ".",
+          "./schema"
+        ]
+      }
+    ]
+  },
+  "inventoryCases": [
+    {
+      "id": "complete-supported-roots",
+      "roots": [
+        "🧰️framework"
+      ],
+      "files": [
+        "🧰️framework/a.ts",
+        "🧰️framework/orphan.mjs",
+        "🧰️framework/nested/b.tsx",
+        "🧰️framework/nested/types.d.mts",
+        "🧰️framework/schema.json",
+        "🧰️framework/styles.css",
+        "🧰️framework/🗑️generated/excluded.ts",
+        "🧰️framework/nonfollowed/leaf.ts",
+        "🧰️framework/node_modules/vendor/entry.js",
+        "🧰️framework/.next/types/routes.d.ts"
+      ],
+      "links": [
+        {
+          "path": "🧰️framework/🗑️generated/loop",
+          "target": "🧰️framework"
+        }
+      ],
+      "expectedSources": [
+        "🧰️framework/a.ts",
+        "🧰️framework/nested/b.tsx",
+        "🧰️framework/nested/types.d.mts",
+        "🧰️framework/orphan.mjs"
+      ],
+      "accept": true
+    },
+    {
+      "id": "nonexcluded-linked-root-refused",
+      "accept": false,
+      "roots": [
+        "🧰️framework"
+      ],
+      "files": [
+        "🧰️framework/a.ts"
+      ],
+      "links": [
+        {
+          "path": "🧰️framework/loop",
+          "target": "🧰️framework"
+        }
+      ],
+      "expectedSources": [
+        "🧰️framework/a.ts"
+      ]
+    }
+  ],
+  "resolutionCases": [
+    {
+      "id": "missing-relative-source",
+      "specifier": "./absent.ts",
+      "authored": false,
+      "accept": false,
+      "owner": "",
+      "forbidden": 0,
+      "from": "🧰️framework/a.ts"
+    },
+    {
+      "id": "missing-relative-data",
+      "specifier": "./absent.json",
+      "authored": false,
+      "accept": false,
+      "owner": "",
+      "forbidden": 0,
+      "from": "🧰️framework/a.ts"
+    },
+    {
+      "id": "missing-workspace-alias",
+      "specifier": "@neutral/framework",
+      "authored": true,
+      "accept": true,
+      "owner": "🧰️framework",
+      "forbidden": 0,
+      "from": "🧰️framework/a.ts"
+    },
+    {
+      "id": "missing-workspace-subpath",
+      "specifier": "@neutral/framework/schema",
+      "authored": true,
+      "accept": true,
+      "owner": "🧰️framework",
+      "forbidden": 0,
+      "from": "🧰️framework/a.ts"
+    },
+    {
+      "id": "unknown-external-package",
+      "specifier": "neutral-external",
+      "authored": false,
+      "accept": true,
+      "owner": "",
+      "forbidden": 0,
+      "from": "🧰️framework/a.ts"
+    },
+    {
+      "id": "unreported-authored-implementation-owner",
+      "specifier": "@neutral/implementation/schema",
+      "authored": true,
+      "owner": "🌎️hub",
+      "accept": false,
+      "forbidden": 0,
+      "from": "🧰️framework/a.ts"
+    },
+    {
+      "id": "unknown-authored-subpath",
+      "specifier": "@neutral/framework/absent",
+      "authored": true,
+      "owner": "🧰️framework",
+      "accept": false,
+      "from": "🧰️framework/a.ts",
+      "forbidden": 0
+    },
+    {
+      "id": "unresolved-upward-authored-alias",
+      "specifier": "os-hub-ts/schema",
+      "authored": true,
+      "owner": "🌎️hub",
+      "accept": true,
+      "from": "🧰️framework/a.ts",
+      "forbidden": 1
+    },
+    {
+      "id": "unresolved-io-ui-authored-alias",
+      "specifier": "@semio-tech/ui-react/schema",
+      "authored": true,
+      "owner": "🧰️framework/🔨️modules/🖱️ui",
+      "accept": true,
+      "from": "🧰️framework/🔨️modules/🚪️io/a.ts",
+      "forbidden": 1
+    },
+    {
+      "id": "invalid-authored-traversal-subpath",
+      "specifier": "@neutral/framework/schema/../absent",
+      "authored": true,
+      "owner": "🧰️framework",
+      "accept": false,
+      "from": "🧰️framework/a.ts",
+      "forbidden": 0
+    },
+    {
+      "id": "explicit-unfollowed-generated-reference",
+      "specifier": "./.next/types/routes.d.ts",
+      "authored": false,
+      "owner": "",
+      "accept": true,
+      "from": "🧰️framework/a.ts",
+      "forbidden": 0
+    }
+  ]
+}

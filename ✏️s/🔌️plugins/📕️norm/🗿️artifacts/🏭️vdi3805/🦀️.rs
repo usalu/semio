@@ -49,6 +49,7 @@ pub fn text_in(variants: &[LocalizedText], locale: &str) -> String {
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, dsl::DslScalar, value_derive::ToValue, value_derive::FromValue)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 #[cfg_attr(test, serde(rename_all = "camelCase"))]
+#[value(rename_all = "camelCase")]
 pub enum VdiQuantityKind {
     Dimensionless,
     Length,
@@ -193,6 +194,7 @@ impl dsl::DslField for VdiValue {
 #[derive(Clone, Debug, Default, PartialEq, dsl::DslRecord, value_derive::ToValue, value_derive::FromValue)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 #[cfg_attr(test, serde(rename_all = "camelCase"))]
+#[value(rename_all = "camelCase")]
 pub struct ExtensionBag {
     pub fields: BTreeMap<String, String>,
 }
@@ -350,6 +352,7 @@ impl dsl::DslField for SheetId {
 #[derive(Clone, Copy, Debug, PartialEq, Eq, PartialOrd, Ord, Hash, dsl::DslRecord, value_derive::ToValue, value_derive::FromValue)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 #[cfg_attr(test, serde(rename_all = "camelCase"))]
+#[value(rename_all = "camelCase")]
 pub struct EditionId {
     pub year: u16,
     pub month: u8,
@@ -369,6 +372,7 @@ impl EditionId {
 #[derive(Clone, Copy, Debug, PartialEq, Eq, value_derive::ToValue, value_derive::FromValue)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 #[cfg_attr(test, serde(rename_all = "camelCase"))]
+#[value(rename_all = "camelCase")]
 pub enum SchemaStatus {
     Published,
     Checked,
@@ -390,6 +394,7 @@ impl SchemaStatus {
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, value_derive::ToValue, value_derive::FromValue)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 #[cfg_attr(test, serde(rename_all = "camelCase"))]
+#[value(rename_all = "camelCase")]
 pub enum Domain {
     Heating,
     Ventilation,
@@ -1300,6 +1305,7 @@ impl CatalogIndex {
 #[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 #[cfg_attr(test, serde(rename_all = "camelCase"))]
+#[value(rename_all = "camelCase")]
 pub struct Diagnostic {
     pub field: String,
     pub message: String,
@@ -1310,6 +1316,7 @@ pub struct Diagnostic {
 #[derive(Clone, Copy, Debug, PartialEq, Eq, value_derive::ToValue, value_derive::FromValue)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 #[cfg_attr(test, serde(rename_all = "camelCase"))]
+#[value(rename_all = "camelCase")]
 pub enum Severity {
     Info,
     Warning,
@@ -1337,6 +1344,7 @@ impl Diagnostic {
 #[derive(Clone, Copy, Debug, PartialEq, Eq, dsl::DslScalar, value_derive::ToValue, value_derive::FromValue)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 #[cfg_attr(test, serde(rename_all = "camelCase"))]
+#[value(rename_all = "camelCase")]
 pub enum EditionProfileChoice {
     Legacy,
     Current,

@@ -5,25 +5,93 @@
   "type": "object",
   "additionalProperties": false,
   "required": [
+    "mutation",
     "index",
     "id",
     "name",
     "zoneIds"
   ],
   "properties": {
+    "mutation": {
+      "const": "createThermalEnclosure"
+    },
     "index": {
-      "type": "integer"
+      "type": "integer",
+      "minimum": 0,
+      "x-semio-ui": {
+        "widget": "stepper",
+        "role": "value",
+        "label": {
+          "en": "Position",
+          "de": "Position"
+        },
+        "description": {
+          "en": "Insertion position in the model's list; 0 is first.",
+          "de": "Einfügeposition in der Modellliste; 0 ist die erste."
+        },
+        "step": 1,
+        "precision": 0,
+        "group": "order",
+        "order": 10
+      }
     },
     "id": {
-      "type": "integer"
+      "type": "integer",
+      "minimum": 0,
+      "x-semio-ui": {
+        "widget": "stepper",
+        "role": "value",
+        "label": {
+          "en": "ID",
+          "de": "ID"
+        },
+        "description": {
+          "en": "Id the new thermal enclosure is created under; later mutations address it by this id.",
+          "de": "ID, unter der das neue Objekt angelegt wird; spätere Mutationen adressieren es darüber."
+        },
+        "step": 1,
+        "precision": 0,
+        "group": "identity",
+        "order": 20
+      }
     },
     "name": {
-      "type": "string"
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "text",
+        "role": "value",
+        "label": {
+          "en": "Name",
+          "de": "Name"
+        },
+        "group": "identity",
+        "order": 30
+      }
     },
     "zoneIds": {
       "type": "array",
       "items": {
-        "type": "integer"
+        "type": "integer",
+        "minimum": 0
+      },
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Zones",
+          "de": "Zonen"
+        },
+        "description": {
+          "en": "Zones grouped in the enclosure, by id.",
+          "de": "Im Zonenverbund zusammengefasste Zonen, per ID."
+        },
+        "ref": {
+          "kind": "zone",
+          "domain": "energyModel",
+          "granularity": "zone"
+        },
+        "group": "member",
+        "order": 40
       }
     }
   }

@@ -234,6 +234,7 @@ mod plugin_builder_contract_tests {
                         label: None,
                         group_id: None,
                         origin: Default::default(),
+                        transaction: None,
                     }],
                     description: request.description.clone(),
                     coalesce_key: None,
@@ -918,6 +919,20 @@ mod plugin_builder_contract_tests {
         fn build_config_store_one_item_preparation_factory() -> Option<std::sync::Arc<dyn store::ArtifactStoreOneItemPreparationFactory<Self::Config, Self::ConfigMutation>>> {
             (TOOLS != TEST_APP_TOOLS_NONE).then(|| crate::app::bounded_config_store_one_item_preparation_factory::<Self::Config, Self::ConfigMutation>("test-app-config-retained", 4_096))
         }
+
+        fn build_presence_store_one_item_preparation_factory() -> Option<std::sync::Arc<dyn store::ArtifactEphemeralOneItemPreparationFactory<Self::Presence, Self::PresenceMutation>>> {
+            (TOOLS != TEST_APP_TOOLS_NONE).then(crate::bounded_transient_preparation_factory::<Self::Presence, Self::PresenceMutation>)
+        }
+
+        fn build_transient_store_one_item_preparation_factory() -> Option<std::sync::Arc<dyn store::ArtifactEphemeralOneItemPreparationFactory<Self::Transient, Self::TransientMutation>>> {
+            (TOOLS != TEST_APP_TOOLS_NONE).then(crate::bounded_transient_preparation_factory::<Self::Transient, Self::TransientMutation>)
+        }
+
+        fn build_transient_local_root_retirement_factory() -> Option<std::sync::Arc<dyn store::SnapshotRetirementFactory<Self::Transient>>> {
+            Some(crate::bounded_transient_root_retirement_factory::<Self::Transient>())
+        }
+
+
 
         fn build_presence_local_root_retirement_factory() -> Option<std::sync::Arc<dyn store::SnapshotRetirementFactory<Self::Presence>>> {
             Some(std::sync::Arc::new(PublicationPresenceRetirementFactory))
@@ -2545,7 +2560,11 @@ mod plugin_builder_contract_tests {
             .collect();
         let framework_registered_without_declaration: std::collections::BTreeSet<String> =
             ["clearSelection", "configuration-binary", "import-media", "interactionHover", "interactionSelect", "selectAll", "setInteractionGranularity", "setSelectionMode"].into_iter().map(String::from).collect();
-        let framework_directly_routed_migrated: std::collections::BTreeSet<String> = ["cancelTypedOperation", "setActiveUtility"].into_iter().map(String::from).collect();
+        let framework_directly_routed_migrated: std::collections::BTreeSet<String> = ["cancelTypedOperation", "setActiveUtility", semio_framework::EXPORT_ARTIFACT_DOCUMENT_ACTION_ID, semio_framework::IMPORT_ARTIFACT_DOCUMENT_ACTION_ID]
+            .into_iter()
+            .chain(semio_framework::HISTORY_EDIT_ACTION_IDS)
+            .map(String::from)
+            .collect();
         assert_eq!(registered.difference(&declared).cloned().collect::<std::collections::BTreeSet<_>>(), framework_registered_without_declaration, "an activated factory without a manifest declaration must be one of the framework's own reserved surface verbs");
         assert_eq!(declared.difference(&registered).cloned().collect::<std::collections::BTreeSet<_>>(), framework_directly_routed_migrated, "a migrated declaration with no activated factory is a dead action unless the framework routes it directly");
         assert!(
@@ -2555,6 +2574,14 @@ mod plugin_builder_contract_tests {
         assert!(
             include_str!(concat!(env!("CARGO_MANIFEST_DIR"), "/../../🦀️.rs")).split_whitespace().collect::<String>().contains("ifaction==CANCEL_TYPED_OPERATION_ACTION_ID{returnself.dispatch_operation_cancellation(args,meta).await;}"),
             "the only reason `cancelTypedOperation` may carry no factory is its direct `dispatch_operation_cancellation` arm at the head of `dispatch_action`"
+        );
+        assert!(
+            include_str!(concat!(env!("CARGO_MANIFEST_DIR"), "/../../🦀️.rs")).split_whitespace().collect::<String>().contains("ifis_time_travel_action_id(action){returnBox::pin(self.dispatch_time_travel_action(action,args,meta)).await;}"),
+            "the only reason the history-edit verbs may carry no factory is their host-driven, boxed arm at the head of `dispatch_action`"
+        );
+        assert!(
+            include_str!(concat!(env!("CARGO_MANIFEST_DIR"), "/../../🦀️.rs")).split_whitespace().collect::<String>().contains("ifmatches!(action,semio_framework::EXPORT_ARTIFACT_DOCUMENT_ACTION_ID|semio_framework::IMPORT_ARTIFACT_DOCUMENT_ACTION_ID){returnErr(Fault::new(FaultOrigin::Framework,FaultCode::new(\"framework.document-transfer.shell-owned\")"),
+            "the only reason the document transfer verbs may carry no factory is their shell-owned refusal at the head of `dispatch_action`"
         );
         let platform_visible = platform.action_bus.keys().into_iter().filter(|key| key.controller_id == controller_id).map(|key| key.tool_id).collect::<std::collections::BTreeSet<_>>();
         assert_eq!(platform_visible, registered, "every activated factory key is joined on the platform bus under this controller, and nothing else is");
@@ -3977,26 +4004,36 @@ mod plugin_builder_contract_tests {
     /// were never part of the undoable gesture in the first place.
     #[semio_framework_async_macros::async_test]
     async fn a_command_reaches_both_ephemeral_lanes_without_touching_history() {
+        let fixture: Value = serde_json::from_str(include_str!("../../🧵️retained-command/🧫️fixtures/🧬️request-context.json")).expect("neutral captured-context fixture");
+        let vectors = &fixture["ephemeralPublication"];
         let mut app = contract_app().await;
         assert_eq!(app.presence_store.generation().await, 0);
         assert_eq!(app.transient_store.generation().await, 0);
 
-        app.dispatch_typed(TestCommand::Increment, &meta()).await.expect("increment");
+        let frame = meta();
+        let started = app.test_mount_typed_command(TestCommand::Increment, "increment", &frame).await.expect("mount increment");
+        assert!(started.mutations.is_empty(), "mounting does not publish a producer emission");
+        assert_eq!(app.presence_store.generation().await, 0, "dispatch did not run an ephemeral prelude");
+        assert_eq!(app.transient_store.generation().await, 0, "dispatch did not apply transient work before its worker completion");
+        assert_eq!(json!({ "presenceGeneration": app.presence_store.generation().await, "transientGeneration": app.transient_store.generation().await, "documentEdits": app.test_store().await.envelope().vcs.edits.len() }), vectors["mounted"]);
+        settle_contract_app(&mut app).await;
 
         assert_eq!(app.presence_store.generation().await, 1, "presence lane never received the command's emission");
         assert_eq!(app.transient_store.generation().await, 1, "transient lane never received the command's emission");
         assert_eq!(
             app.ephemeral_snapshot().await,
-            EphemeralSnapshot { presence: PublicationPresence { revision: 1 }.encode_pack(), presence_generation: 1, transient_generation: 1, interaction: Vec::new(), tool_run: None },
+            EphemeralSnapshot { presence: PublicationPresence { revision: 1 }.encode_pack(), presence_generation: 1, transient_generation: 1, interaction: Vec::new(), tool_run: None, history_edit: None },
             "object-safe channel snapshot must carry the typed presence pack, both generations, and (declaring no interaction domain) empty interaction bytes"
         );
 
         assert_eq!(app.test_store().await.envelope().vcs.edits.len(), 1, "an ephemeral lane leaked into the document's edit log");
 
+        assert_eq!(json!({ "presenceGeneration": app.presence_store.generation().await, "transientGeneration": app.transient_store.generation().await, "documentEdits": app.test_store().await.envelope().vcs.edits.len() }), vectors["completed"]);
         app.dispatch_action("undo", None, &meta()).await.expect("undo");
         assert_eq!(app.test_snapshot().await.count, 0);
         assert_eq!(app.presence_store.generation().await, 1, "undo must not rewind presence");
         assert_eq!(app.transient_store.generation().await, 1, "undo must not rewind transient");
+        assert_eq!(json!({ "presenceGeneration": app.presence_store.generation().await, "transientGeneration": app.transient_store.generation().await, "documentCount": app.test_snapshot().await.count }), vectors["undone"]);
     }
 
     #[semio_framework_async_macros::async_test]
@@ -4076,6 +4113,7 @@ mod plugin_builder_contract_tests {
             tool_run: None,
             principal_kind: None,
             active_tool: None,
+            history_edit: None,
         }
     }
 
@@ -4145,8 +4183,7 @@ mod plugin_builder_contract_tests {
         let alice = sample_presence_peer("user:alice#s1", Some(3), true);
         let bob = sample_presence_peer("user:bob#s1", Some(5), false);
         assert!(publish_presence_roster(&mut app, 1, Some(9), &[alice.clone(), bob], 1000).await.fault.is_none());
-        let captured = std::sync::Arc::clone(&app.peer_presence);
-        let typed_captured = app.presence_store.peers_root();
+        let (captured, typed_captured) = app.test_capture_presence_roots(&TestCommand::Increment, &meta()).await.expect("actual shared typed capture helper");
         assert!(std::sync::Arc::ptr_eq(&captured, &app.peer_presence), "operation capture clones one peer root Arc");
 
         assert!(publish_presence_roster(&mut app, 2, Some(9), &[alice], 2000).await.fault.is_none());
@@ -4700,6 +4737,7 @@ mod plugin_builder_contract_tests {
             .dispatch(store::ArtifactCommand::Apply {
                 mutations: vec![TestMutation::SetSlotChildren(SetSlotChildren { children: vec![declared] })],
                 description: Some("declare the composed member".into()),
+                transaction: None,
             })
             .await
             .expect("the parent declares the member it owns");
@@ -4929,7 +4967,7 @@ mod plugin_builder_contract_tests {
             let TestMembers::Child(child) = &mut app.children.get_mut(&("slot".to_string(), "child-a".to_string())).expect("exact child owner").member;
             for value in 1..=2 {
                 child
-                    .dispatch(store::ArtifactCommand::Apply { mutations: vec![TestMutation::SetCount(SetCount { value })], description: Some("advance past the captured snapshot".into()) })
+                    .dispatch(store::ArtifactCommand::Apply { mutations: vec![TestMutation::SetCount(SetCount { value })], description: Some("advance past the captured snapshot".into()), transaction: None })
                     .await
                     .expect("member advances past the captured snapshot");
             }
@@ -5024,7 +5062,7 @@ mod plugin_builder_contract_tests {
         let mut app = contract_composed_app().await;
         app.register_child("slot", "child-maximum", test_child_dialect().await, new_test_child("child-maximum").await.expect("construct maximum child")).await.expect("register maximum child");
         let TestMembers::Child(child) = &mut app.children.get_mut(&("slot".to_string(), "child-maximum".to_string())).expect("maximum child").member;
-        child.dispatch(store::ArtifactCommand::Apply { mutations: vec![TestMutation::SetLabel(SetLabel { value: "x".repeat(MAXIMUM_CHILD_PROBE_BYTES) })], description: None }).await.expect("seed maximum child");
+        child.dispatch(store::ArtifactCommand::Apply { mutations: vec![TestMutation::SetLabel(SetLabel { value: "x".repeat(MAXIMUM_CHILD_PROBE_BYTES) })], description: None, transaction: None }).await.expect("seed maximum child");
         let publication_generation = app.admit_child_content_publication().expect("admit maximum child publication");
         app.publish_child_content_member(publication_generation, "slot", "child-maximum").await.expect("publish maximum child root");
         MAXIMUM_CHILD_CLONES.store(0, std::sync::atomic::Ordering::Release);
@@ -5370,7 +5408,7 @@ mod plugin_builder_contract_tests {
         let mut app = contract_app().await;
         app.test_store_mut()
             .await
-            .dispatch(store::ArtifactCommand::Apply { mutations: vec![TestMutation::SetCount(SetCount { value: 1 })], description: Some("seed".into()) })
+            .dispatch(store::ArtifactCommand::Apply { mutations: vec![TestMutation::SetCount(SetCount { value: 1 })], description: Some("seed".into()), transaction: None })
             .await
             .expect("seed document edit");
         assert_eq!(app.test_snapshot().await.count, 1);
@@ -5416,7 +5454,7 @@ mod plugin_builder_contract_tests {
         let mut app = contract_app().await;
         app.test_store_mut()
             .await
-            .dispatch(store::ArtifactCommand::Apply { mutations: vec![TestMutation::SetCount(SetCount { value: 1 })], description: Some("seed".into()) })
+            .dispatch(store::ArtifactCommand::Apply { mutations: vec![TestMutation::SetCount(SetCount { value: 1 })], description: Some("seed".into()), transaction: None })
             .await
             .expect("seed document edit");
         assert_eq!(app.test_snapshot().await.count, 1);
@@ -5563,7 +5601,7 @@ mod plugin_builder_contract_tests {
         let mut app = contract_app().await;
         app.test_store_mut()
             .await
-            .dispatch(store::ArtifactCommand::Apply { mutations: vec![TestMutation::SetCount(SetCount { value: 1 })], description: Some("Set Active Example".into()) })
+            .dispatch(store::ArtifactCommand::Apply { mutations: vec![TestMutation::SetCount(SetCount { value: 1 })], description: Some("Set Active Example".into()), transaction: None })
             .await
             .expect("document example");
         let _ = app.test_history().await;
@@ -5609,7 +5647,7 @@ mod plugin_builder_contract_tests {
         app.bind_instance_id(1).await;
         app.test_store_mut()
             .await
-            .dispatch(store::ArtifactCommand::Apply { mutations: vec![TestMutation::SetCount(SetCount { value: 1 })], description: Some("seed".into()) })
+            .dispatch(store::ArtifactCommand::Apply { mutations: vec![TestMutation::SetCount(SetCount { value: 1 })], description: Some("seed".into()), transaction: None })
             .await
             .expect("seed document edit");
         let runtime = super::PluginRuntime::<TestRuntimeApps>::new();
@@ -5700,7 +5738,7 @@ mod plugin_builder_contract_tests {
         let mut app = contract_app().await;
         app.test_store_mut()
             .await
-            .dispatch(store::ArtifactCommand::Apply { mutations: vec![TestMutation::SetCount(SetCount { value: 1 })], description: Some("Increment".into()) })
+            .dispatch(store::ArtifactCommand::Apply { mutations: vec![TestMutation::SetCount(SetCount { value: 1 })], description: Some("Increment".into()), transaction: None })
             .await
             .expect("document edit");
         let _ = app.test_history().await;
@@ -5887,12 +5925,16 @@ mod plugin_builder_contract_tests {
                     edit_id: Some("e1".into()),
                     config_edit_id: None,
                     child_edit_ids: Vec::new(),
+                    transition_id: None,
+                    author: None,
                     op_lines: vec!["set-count value=1".into()],
                     op_count: 1,
                     applied: true,
                     revertible: true,
                     count: 1,
                     inverse: None,
+                    transaction: None,
+                    mutations: Vec::new(),
                 },
                 CommandView {
                     seq: 2,
@@ -5903,23 +5945,27 @@ mod plugin_builder_contract_tests {
                     edit_id: None,
                     config_edit_id: None,
                     child_edit_ids: Vec::new(),
+                    transition_id: None,
+                    author: None,
                     op_lines: Vec::new(),
                     op_count: 0,
                     applied: false,
                     revertible: false,
                     count: 1,
                     inverse: None,
+                    transaction: None,
+                    mutations: Vec::new(),
                 },
             ],
             command_filter: HistoryCommandFilter::All,
         };
-        let all_panel = ui_history_panel(&history, "ctrl", false, false, &ViewModel::default()).await.expect("bounded history panel");
+        let all_panel = ui_history_panel(&history, None, "ctrl", Locale::En, false, &ViewModel::default()).await.expect("bounded history panel");
         assert_eq!(all_panel.children.len(), 2, "Actions + Commands sections");
         let Component::TreeSection(actions_props) = &all_panel.children[0].component else { panic!("expected a TreeSection") };
         assert_eq!(actions_props.label.as_ref().map(|label| label.0.as_str()), Some("Actions"));
         assert_eq!(all_panel.children[0].children.len(), 6, "undo/redo/commit/checkin/alternative/filter");
         assert_eq!(all_panel.children[0].children[3].key.as_str(), "framework.history.checkin", "the check-in row follows Commit Checkpoint");
-        let viewer_panel = ui_history_panel(&history, "ctrl", false, true, &ViewModel::default()).await.expect("viewer history panel");
+        let viewer_panel = ui_history_panel(&history, None, "ctrl", Locale::En, true, &ViewModel::default()).await.expect("viewer history panel");
         assert_eq!(viewer_panel.children[0].children.len(), 5, "a viewer never gets the check-in row at all \u{2014} React's `canCheckIn` gate removes it rather than disabling it");
         assert!(all_panel.children[0].children.iter().all(|item| !item.children.is_empty()), "Actions rows carry their control as a child node");
         let Component::TreeSection(commands_props) = &all_panel.children[1].component else { panic!("expected a TreeSection") };
@@ -5931,12 +5977,12 @@ mod plugin_builder_contract_tests {
         assert!(non_revertible_props.row_actions.is_empty(), "the non-revertible entry must not offer inverse");
 
         let only_ops = HistoryView { command_filter: HistoryCommandFilter::OnlyMutations, ..history.clone() };
-        let ops_panel = ui_history_panel(&only_ops, "ctrl", false, false, &ViewModel::default()).await.expect("bounded history panel");
+        let ops_panel = ui_history_panel(&only_ops, None, "ctrl", Locale::En, false, &ViewModel::default()).await.expect("bounded history panel");
         assert_eq!(ops_panel.children[1].children.len(), 1);
         assert_eq!(ops_panel.children[1].children[0].key.as_str(), "framework.history.entry.1");
 
         let without_ops = HistoryView { command_filter: HistoryCommandFilter::WithoutMutations, ..history };
-        let no_ops_panel = ui_history_panel(&without_ops, "ctrl", false, false, &ViewModel::default()).await.expect("bounded history panel");
+        let no_ops_panel = ui_history_panel(&without_ops, None, "ctrl", Locale::En, false, &ViewModel::default()).await.expect("bounded history panel");
         assert_eq!(no_ops_panel.children[1].children.len(), 1);
         assert_eq!(no_ops_panel.children[1].children[0].key.as_str(), "framework.history.entry.2");
     }
@@ -5958,16 +6004,20 @@ mod plugin_builder_contract_tests {
                 edit_id: Some("e1".into()),
                 config_edit_id: None,
                 child_edit_ids: Vec::new(),
+                transition_id: None,
+                author: None,
                 op_lines: vec![format!("register-mesh vertices=[{}]", "1.0 ".repeat(1_024))],
                 op_count: 1,
                 applied: true,
                 revertible: true,
                 count: 1,
                 inverse: None,
+                transaction: None,
+                mutations: Vec::new(),
             }],
             command_filter: HistoryCommandFilter::All,
         };
-        let panel = ui_history_panel(&history, "ctrl", false, false, &ViewModel::default()).await.expect("an oversized operation line must not fail admission");
+        let panel = ui_history_panel(&history, None, "ctrl", Locale::En, false, &ViewModel::default()).await.expect("an oversized operation line must not fail admission");
         let Component::TreeItem(props) = &panel.children[1].children[0].component else { panic!("expected a TreeItem") };
         let description = props.description.as_ref().expect("clipped description").as_str();
         assert!(description.starts_with("register-mesh vertices=[1.0 "));
@@ -5990,15 +6040,19 @@ mod plugin_builder_contract_tests {
             edit_id: Some("e1".into()),
             config_edit_id: None,
             child_edit_ids: Vec::new(),
+            transition_id: None,
+            author: None,
             op_lines: Vec::new(),
             op_count: 0,
             applied: true,
             revertible: true,
             count,
             inverse: None,
+            transaction: None,
+            mutations: Vec::new(),
         };
         let history = HistoryView { columns: Vec::new(), can_undo: true, can_redo: false, active_alternative_id: None, current_checkpoint_id: None, commands: vec![entry(1, 1), entry(2, 3)], command_filter: HistoryCommandFilter::All };
-        let panel = ui_history_panel(&history, "ctrl", false, false, &ViewModel::default()).await.expect("an oversized command label must not fail admission");
+        let panel = ui_history_panel(&history, None, "ctrl", Locale::En, false, &ViewModel::default()).await.expect("an oversized command label must not fail admission");
         for (index, expected_tail) in [(0, UI_TEXT_CLIP_MARK), (1, UI_TEXT_CLIP_MARK)] {
             let Component::TreeItem(props) = &panel.children[1].children[index].component else { panic!("expected a TreeItem") };
             let label = props.label.0.as_str();
@@ -6025,12 +6079,16 @@ mod plugin_builder_contract_tests {
             edit_id: Some(format!("edit-{seq}")),
             config_edit_id: None,
             child_edit_ids: Vec::new(),
+            transition_id: None,
+            author: None,
             op_lines: Vec::new(),
             op_count: 0,
             applied: true,
             revertible,
             count: 1,
             inverse: None,
+            transaction: None,
+            mutations: Vec::new(),
         };
         HistoryView { columns: Vec::new(), can_undo: true, can_redo: false, active_alternative_id: None, current_checkpoint_id: None, commands: (1..=rows as u64).map(entry).collect(), command_filter: HistoryCommandFilter::All }
     }
@@ -6065,7 +6123,7 @@ mod plugin_builder_contract_tests {
         let prefix = fixture["entryKeyPrefix"].as_str().unwrap();
         let history = history_window_log(rows, false);
 
-        let cold = ui_history_panel(&history, "ctrl", false, false, &ViewModel::default()).await.expect("a log of any length must assemble");
+        let cold = ui_history_panel(&history, None, "ctrl", Locale::En, false, &ViewModel::default()).await.expect("a log of any length must assemble");
         assert_eq!(cold.children[1].children.len(), default_rows.min(UI_BUILT_CHILDREN_MAX), "a cold paint materialises one viewport, clamped by the built-children ceiling");
         assert!(cold.children[1].children.iter().all(|row| row.key.as_str().starts_with(prefix)), "rows are the entries themselves, never page columns");
         assert_eq!(history_commands_window(&cold), Some(TreeWindow { row_extent: Default::default(), total: rows as u32, offset: 0 }), "the host sees the whole extent");
@@ -6083,7 +6141,7 @@ mod plugin_builder_contract_tests {
             }],
             ..ViewModel::default()
         };
-        let scrolled = ui_history_panel(&history, "ctrl", false, false, &view).await.expect("a scrolled window must assemble");
+        let scrolled = ui_history_panel(&history, None, "ctrl", Locale::En, false, &view).await.expect("a scrolled window must assemble");
         assert_eq!(scrolled.children[1].children.len(), requested as usize);
         assert_eq!(scrolled.children[1].children[0].key.as_str(), format!("{prefix}{}", offset + 1), "the slice starts where the host scrolled to");
         assert_eq!(history_commands_window(&scrolled), Some(TreeWindow { row_extent: Default::default(), total: rows as u32, offset }));
@@ -6103,7 +6161,7 @@ mod plugin_builder_contract_tests {
     async fn ui_history_panel_keeps_every_materialised_revert_inside_the_arena_page() {
         let entries = 20usize;
         let history = history_window_log(entries, true);
-        let panel = ui_history_panel(&history, "ctrl", false, false, &ViewModel::default()).await.expect("revertible entries must assemble without an alias refusal");
+        let panel = ui_history_panel(&history, None, "ctrl", Locale::En, false, &ViewModel::default()).await.expect("revertible entries must assemble without an alias refusal");
         fn census(node: &BuiltNode, rows: &mut usize, actions: &mut usize) {
             if node.key.as_str().starts_with("framework.history.entry.") {
                 *rows += 1;

@@ -4,6 +4,9 @@
   "title": "RemoveDisplayDocTitle",
   "type": "object",
   "additionalProperties": false,
+  "required": [
+    "mutation"
+  ],
   "properties": {
     "mutation": {
       "const": "removeDisplayDocTitle",

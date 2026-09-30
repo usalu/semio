@@ -12,7 +12,7 @@ async fn block5d_document_vcs_replays_granular_operations() {
     // (`edit history insertion requires its exact mutation retirement factory`); install the
     // exact owners production installs through `Block5dPlayApp::build_document_store_owners`.
     store.install_document_store_owners_exact(crate::standards::v1::subsets::any::schema::retirement::document_store_owners());
-    store.dispatch(ArtifactCommand::Apply { mutations: vec![m::rename_part_kind("p1".into())], description: None }).await.expect("apply");
+    store.dispatch(ArtifactCommand::Apply { mutations: vec![m::rename_part_kind("p1".into())], description: None, transaction: None }).await.expect("apply");
     let projection = store.snapshot().expect("snapshot");
     assert_eq!(projection.part_kind.name, "p1");
     while !store.close_owned_terminal_is_empty() {

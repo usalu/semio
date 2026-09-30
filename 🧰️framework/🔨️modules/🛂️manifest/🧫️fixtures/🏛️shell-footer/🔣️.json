@@ -1,0 +1,53 @@
+{
+  "item": {
+    "id": "fixture-credit",
+    "placement": "leading",
+    "caption": {
+      "en": "Created by",
+      "de": "Erstellt von"
+    },
+    "separator": {
+      "en": "and",
+      "de": "und"
+    },
+    "logos": [
+      {
+        "href": "https://example.test/first",
+        "src": "/first.png",
+        "darkSrc": "/first-dark.png",
+        "alt": "First partner"
+      },
+      {
+        "href": "https://example.test/second",
+        "src": "/second.png",
+        "alt": "Second partner"
+      }
+    ]
+  },
+  "cases": [
+    {
+      "locale": "en",
+      "compact": false,
+      "caption": "Created by",
+      "separator": "and"
+    },
+    {
+      "locale": "de",
+      "compact": false,
+      "caption": "Erstellt von",
+      "separator": "und"
+    },
+    {
+      "locale": "en",
+      "compact": true,
+      "caption": null,
+      "separator": null
+    },
+    {
+      "locale": "de",
+      "compact": true,
+      "caption": null,
+      "separator": null
+    }
+  ]
+}

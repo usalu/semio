@@ -23,7 +23,7 @@ use semio_repo_test_host::Json;
 /// 🧾️ Kebab-case spelling of every variant this subset's `XlsxTransitionalMutation` declares, in
 /// declaration order. The catalog `xlsx-ecma-376-transitional` is measured against this exact list, and the
 /// subject-side `KINDS` carries the test that proves enum, constant and manifest never drift apart.
-pub const KINDS: &[&str] = &["no-mutation", "set-snapshot", "set-main-namespace", "set-relationships-namespace", "set-conformance-attribute", "remove-conformance-attribute", "set-worksheet-content-type"];
+pub const KINDS: &[&str] = &["set-main-namespace", "set-relationships-namespace", "set-conformance-attribute", "remove-conformance-attribute", "set-worksheet-content-type"];
 //#endregion 🔖️Vocabulary
 
 //#region 🔖️Profile
@@ -82,6 +82,22 @@ pub fn project_package(_input: &[u8]) -> Result<Json, String> {
     Err("the `oracles` feature is disabled — this host was not built with the registered reference implementations".to_string())
 }
 //#endregion 🔖️Dispatch
+
+//#region 🔖️Stamp
+/// 🏅️ Stamps the whole package into (`strict`) or out of the strict conformance class — the reference half of the
+/// `mutate-set-snapshot`/`inverse-set-snapshot` scenarios, whose subject replaces its whole snapshot with its own stamp.
+#[cfg(feature = "oracles")]
+pub fn oracle_stamp(input: &[u8], strict: bool) -> Result<Vec<u8>, String> {
+    let mut parts = crate::document::ooxml::read_parts(input)?;
+    crate::document::ooxml::stamp_conformance_class(&mut parts, &PROFILE, strict)?;
+    crate::document::ooxml::write_parts(&parts)
+}
+
+#[cfg(not(feature = "oracles"))]
+pub fn oracle_stamp(_input: &[u8], _strict: bool) -> Result<Vec<u8>, String> {
+    Err("the `oracles` feature is disabled — this host was not built with the registered reference implementations".to_string())
+}
+//#endregion 🔖️Stamp
 
 //#region 🔖️Bridge
 /// 🎬️ Prepares the input a removal kind needs its target to be present in — see the shared engine's

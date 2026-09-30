@@ -1,0 +1,9 @@
+{
+  "mutation": "applyAudio",
+  "payload": {
+    "mutation": {
+      "mutation": "removeTag",
+      "index": 0
+    }
+  }
+}

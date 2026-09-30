@@ -13,24 +13,21 @@
 //! independently against the registered `image` reference crate. The subject side fully parses the
 //! real document into the typed `BmpSnapshot` and re-serializes from it — never splices bytes.
 
-use semio_repo_test_host::{Adapter, Context, Json, Outcome};
+use semio_repo_test_host::{Adapter, Context, Outcome};
 use semio_s_plugin_stdio_test_oracle::artifacts::bmp::standards::v_v3::subsets::any::{oracle_apply_mutation, oracle_identity_round_trip, oracle_undo_mutation, project_bmp_mutation};
 use semio_s_plugin_stdio_test_oracle::law;
 
 
 //#region 🔖️Input
-const INPUT: &str = "shared://🏛️rathaus-ahlen-grundriss/🖼️.bmp";
-
-/// 🧫️ Copies the immutable real fixture into the work directory and returns the mutable copy's
-/// bytes — the committed 250 KB-source, 2334x2560, 8-bit palette architectural floor plan
-/// (`🏛️rathaus-ahlen-grundriss/🖼️.bmp`, derived once — see `🥒️.feature`'s own description) is
-/// never written to.
+/// 🧫️ Copies the immutable document the scenario's own `Given` names into the work directory and returns the
+/// mutable copy's bytes — the committed 2334x2560, 8-bit palette architectural floor plan
+/// (`🏛️rathaus-ahlen-grundriss/🖼️.bmp`, derived once — see `🥒️.feature`'s own description), or for the
+/// raster outlines the small indexed document a whole-raster wire payload fits in. Neither is ever written to.
 fn mutable_input(ctx: &Context) -> Result<Vec<u8>, String> {
-    let copy = ctx.copy_fixture(INPUT, Some("input.bmp"))?;
+    let input = ctx.step_fixture_uris().into_iter().next().ok_or_else(|| format!("scenario {} names no input document", ctx.scenario.id))?;
+    let copy = ctx.copy_fixture(&input, Some("input.bmp"))?;
     std::fs::read(&copy).map_err(|error| error.to_string())
 }
-
-
 //#endregion 🔖️Input
 
 //#region 🔖️Oracle
@@ -95,87 +92,22 @@ mod subject {
     use semio_repo_test_host::{Context, Json, Outcome};
     use semio_s_plugin_stdio_test_oracle::artifacts::bmp::standards::v_v3::subsets::any::project_bmp_mutation;
     use semio_s_artifact_stdio_bmp::standards::v_v3::subsets::any::io::{decode_bmp, encode_bmp};
-    use semio_s_artifact_stdio_bmp::standards::v_v3::subsets::any::schema::mutations::{apply_bmp_mutation, inverse_bmp_mutation, BmpMutation};
-    use semio_s_artifact_stdio_bmp::standards::v_v3::subsets::any::schema::snapshot::{BmpPaletteEntry, BmpRowOrder};
+    use semio_s_artifact_stdio_bmp::standards::v_v3::subsets::any::schema::mutations::{apply_bmp_mutation, decode_bmp_mutation_payload, inverse_bmp_mutation, BmpMutation};
     use semio_s_artifact_stdio_bmp::BmpSnapshot;
-    use semio_framework_os_kernel::ArtifactDsl;
-
-    //#region 🔖️Json
-    fn num(params: &Json, key: &str) -> Option<f64> {
-        match params.get(key) {
-            Some(Json::Number(value)) => Some(*value),
-            _ => None,
-        }
-    }
-    fn as_str<'a>(params: &'a Json, key: &str) -> Option<&'a str> {
-        match params.get(key) {
-            Some(Json::String(value)) => Some(value.as_str()),
-            _ => None,
-        }
-    }
-    fn as_arr(value: &Json) -> &[Json] {
-        match value {
-            Json::Array(items) => items,
-            _ => &[],
-        }
-    }
-    fn num_at(items: &[Json], index: usize) -> Option<f64> {
-        match items.get(index) {
-            Some(Json::Number(value)) => Some(*value),
-            _ => None,
-        }
-    }
-    fn fill_quad(params: &Json) -> Vec<u8> {
-        let fill = as_arr(params.get("fill").unwrap_or(&Json::Null));
-        (0..4).map(|index| num_at(fill, index).unwrap_or(0.0) as u8).collect()
-    }
-    fn solid_pixels(width: u32, height: u32, quad: &[u8]) -> Vec<u8> {
-        let mut pixels = Vec::with_capacity(width as usize * height as usize * 4);
-        for _ in 0..(width as usize * height as usize) {
-            pixels.extend_from_slice(quad);
-        }
-        pixels
-    }
-    fn entry_from(value: &Json) -> BmpPaletteEntry {
-        BmpPaletteEntry { b: num(value, "b").unwrap_or(0.0) as u8, g: num(value, "g").unwrap_or(0.0) as u8, r: num(value, "r").unwrap_or(0.0) as u8, reserved: num(value, "reserved").unwrap_or(0.0) as u8 }
-    }
-    //#endregion 🔖️Json
+    use semio_s_artifact_stdio_bmp::ArtifactDsl;
 
     //#region 🔖️MutationFromSpec
-    /// 🔮️ Builds the real typed `BmpMutation` the feature's `{"kind","params"}` docstring
-    /// describes — the ONLY channel from the scenario's authored parameters to the production
-    /// mutation pipeline; `apply_bmp_mutation` does the rest.
-    fn mutation_from_spec(kind: &str, params: &Json, base: &BmpSnapshot) -> Result<BmpMutation, String> {
-        match kind {
-            "change-header-fields" => Ok(BmpMutation::ChangeHeaderFields(semio_s_artifact_stdio_bmp::schema::mutations::ChangeHeaderFieldsMutation {
-                header_size: None,
-                width: None,
-                height: None,
-                row_order: as_str(params, "rowOrder").map(|value| if value == "top-down" { BmpRowOrder::TopDown } else { BmpRowOrder::BottomUp }),
-                planes: None,
-                bits_per_pixel: None,
-                compression: None,
-                image_size: None,
-                x_pixels_per_meter: num(params, "xPixelsPerMeter").map(|value| value as i32),
-                y_pixels_per_meter: num(params, "yPixelsPerMeter").map(|value| value as i32),
-                colors_used: None,
-                colors_important: None,
-            })),
-            "insert-palette-entry" => Ok(BmpMutation::InsertPaletteEntry(semio_s_artifact_stdio_bmp::schema::mutations::InsertPaletteEntryMutation { index: num(params, "index").unwrap_or(0.0) as usize, entry: entry_from(params.get("entry").unwrap_or(&Json::Null)) })),
-            "remove-palette-entry" => Ok(BmpMutation::RemovePaletteEntry(semio_s_artifact_stdio_bmp::schema::mutations::RemovePaletteEntryMutation { index: num(params, "index").unwrap_or(0.0) as usize })),
-            "replace-palette-entry" => Ok(BmpMutation::ReplacePaletteEntry(semio_s_artifact_stdio_bmp::schema::mutations::ReplacePaletteEntryMutation { index: num(params, "index").unwrap_or(0.0) as usize, entry: entry_from(params.get("entry").unwrap_or(&Json::Null)) })),
-            "replace-pixel-data" => Ok(BmpMutation::ReplacePixelData(semio_s_artifact_stdio_bmp::schema::mutations::ReplacePixelDataMutation { pixels: solid_pixels(base.width, base.height, &fill_quad(params)) })),
-            other => Err(format!("mutation kind {other:?} has no subject implementation")),
-        }
+    /// 🦠️ Decodes the scenario's `{"kind", "params"}` doc string: `params` is the leaf's own wire payload, read
+    /// through the vocabulary's derive-generated decoder rather than a params grammar written beside it.
+    fn mutation_from_spec(spec: &Json) -> Result<BmpMutation, String> {
+        decode_bmp_mutation_payload(&spec.str("kind"), &spec.get("params").cloned().unwrap_or(Json::Null).to_string())
     }
     //#endregion 🔖️MutationFromSpec
 
     //#region 🔖️Handlers
     pub fn mutate(ctx: &Context) -> Result<Outcome, String> {
         let mut snapshot = decode_bmp(&mutable_input(ctx)?).map_err(|error| format!("decode_bmp failed: {error}"))?;
-        let spec = ctx.doc_json()?;
-        let mutation = mutation_from_spec(&spec.str("kind"), spec.get("params").unwrap_or(&Json::Null), &snapshot)?;
-        let _ = apply_bmp_mutation(&mut snapshot, &mutation);
+        let _ = apply_bmp_mutation(&mut snapshot, &mutation_from_spec(&ctx.doc_json()?)?);
         let bytes = encode_bmp(&snapshot).map_err(|error| format!("encode_bmp failed: {error}"))?;
         let projection = project_bmp_mutation(&bytes)?;
         Ok(Outcome::with_raw(bytes, projection))
@@ -186,8 +118,7 @@ mod subject {
     /// — the real production undo pipeline, not a hand-derived counter-mutation.
     pub fn undo(ctx: &Context) -> Result<Outcome, String> {
         let base = decode_bmp(&mutable_input(ctx)?).map_err(|error| format!("decode_bmp failed: {error}"))?;
-        let spec = ctx.doc_json()?;
-        let mutation = mutation_from_spec(&spec.str("kind"), spec.get("params").unwrap_or(&Json::Null), &base)?;
+        let mutation = mutation_from_spec(&ctx.doc_json()?)?;
         let mut snapshot = base.clone();
         let _ = apply_bmp_mutation(&mut snapshot, &mutation);
         for inverse in inverse_bmp_mutation(&mutation, &base) {
@@ -228,12 +159,12 @@ mod subject {
 /// base ids, which the host resolves for every Examples row, and plain scenarios under their own ids.
 pub fn adapter() -> Adapter {
     let mut built = Adapter::new("rust");
-    built = built.oracle("mutate", mutate_oracle);
-    built = built.oracle("inverse", inverse_oracle);
+    built = built.oracle("mutate", mutate_oracle).oracle("mutate-raster", mutate_oracle);
+    built = built.oracle("inverse", inverse_oracle).oracle("inverse-raster", inverse_oracle);
     #[cfg(feature = "sut")]
     {
-        built = built.subject("mutate", subject::mutate);
-        built = built.subject("inverse", subject::undo);
+        built = built.subject("mutate", subject::mutate).subject("mutate-raster", subject::mutate);
+        built = built.subject("inverse", subject::undo).subject("inverse-raster", subject::undo);
     }
     built = built.oracle("identity-round-trip", identity_round_trip_oracle);
     #[cfg(feature = "sut")]

@@ -17,7 +17,7 @@ type Fixture = Readonly<{
   generatorContracts: readonly Readonly<{ id: "dev-distribution-bundle" | "playground-session" | "scale-fixture"; ownerPath: string; ownerIds: readonly string[] }>[];
   generatedBoundaries: readonly Readonly<{ id: "shard-worker" | "module-bridge"; filename: string; constant: "SHARD_WORKER_FILE" | "MODULE_BRIDGE_FILE"; authorityPath: string; producerOwner: "browser-host-staging"; producerToken: string }>[];
   routerForbiddenSymbols: readonly string[];
-  registration: Readonly<{ target: string; name: string; command: string; packagePath: string; projectPath: string; seedLaunchPath: string; derivedLaunchPath: string }>;
+  registration: Readonly<{ target: string; command: string; packagePath: string; projectPath: string; launchContribution: "declaredProjectTargets"; derivedLaunchPath: string }>;
 }>;
 
 const libraryRoot = resolve(import.meta.dir, "../..");
@@ -30,9 +30,9 @@ describe("OS development composition ownership", () => {
     const validate = new Ajv({ strict: true, allErrors: true }).compile(schema);
     expect(validate(fixture), JSON.stringify(validate.errors)).toBe(true);
     expect(validate({ ...fixture, extra: true })).toBe(false);
-    expect(fixture.owners).toHaveLength(49);
-    expect(new Set(fixture.owners.map(({ id }) => id)).size).toBe(49);
-    expect(new Set(fixture.owners.map(({ path }) => path)).size).toBe(49);
+    expect(fixture.owners).toHaveLength(47);
+    expect(new Set(fixture.owners.map(({ id }) => id)).size).toBe(47);
+    expect(new Set(fixture.owners.map(({ path }) => path)).size).toBe(47);
     expect(fixture.contextChains.map(({ owner }) => owner).sort()).toEqual(fixture.owners.map(({ id }) => id).sort());
     expect(new Set(fixture.consumers.map(({ id }) => id)).size).toBe(fixture.consumers.length);
     expect(new Set(fixture.projectInputs.map(({ project }) => project)).size).toBe(fixture.projectInputs.length);
@@ -71,7 +71,7 @@ describe("OS development composition ownership", () => {
     }
   });
 
-  test("imports all 49 behavior owners directly into their existing verification concern", () => {
+  test("imports all 47 behavior owners directly into their existing verification concern", () => {
     const importerPath = resolve(repoRoot, fixture.ownerImporterPath);
     const source = ts.createSourceFile(importerPath, readFileSync(importerPath, "utf8"), ts.ScriptTarget.Latest, true, ts.ScriptKind.TS);
     const ownerPaths = new Set(fixture.owners.map(({ path }) => resolve(repoRoot, path)));
@@ -81,7 +81,7 @@ describe("OS development composition ownership", () => {
       return ownerPaths.has(imported) ? [imported] : [];
     });
     expect(new Set(importedOwners)).toEqual(ownerPaths);
-    expect(importedOwners).toHaveLength(49);
+    expect(importedOwners).toHaveLength(47);
   });
 
   test("publishes every declared owner API and binds router imports to that public map", () => {
@@ -138,7 +138,7 @@ describe("OS development composition ownership", () => {
     }
   });
 
-  test("registers one Bun/Nx route in package, project, seed and derived launch authorities", () => {
+  test("registers one Bun/Nx owner route through declared project target launch contributions", () => {
     const registration = fixture.registration;
     const packageManifest = JSON.parse(readFileSync(resolve(repoRoot, registration.packagePath), "utf8")) as { scripts?: Record<string, string> };
     expect(packageManifest.scripts?.[registration.target]).toBe(`nx run @semio-tech/repo-lib:${registration.target}`);
@@ -154,7 +154,6 @@ describe("OS development composition ownership", () => {
       fixture.ownerImporterPath,
       registration.packagePath,
       registration.projectPath,
-      registration.seedLaunchPath,
       registration.derivedLaunchPath,
       ...fixture.owners.map(({ path }) => path),
       ...fixture.consumers.map(({ path }) => path),
@@ -166,10 +165,9 @@ describe("OS development composition ownership", () => {
     const packageRouter = readFileSync(resolve(repoRoot, dirname(registration.projectPath), "📜️script.ts"), "utf8");
     expect(packageRouter).toContain('segments[0] === "os-dev-composition-ownership"');
     expect(packageRouter).toContain("🧪️tests/🧑‍💻os-dev-composition-ownership/🟦️.ts");
-    for (const path of [registration.seedLaunchPath, registration.derivedLaunchPath]) {
-      const launch = Bun.JSONC.parse(readFileSync(resolve(repoRoot, path), "utf8")) as { configurations: readonly { name?: string; command?: string }[] };
-      expect(launch.configurations.filter(({ name, command }) => name === registration.name && command === registration.command), path).toHaveLength(1);
-    }
+    expect(registration.launchContribution).toBe("declaredProjectTargets");
+    const launch = Bun.JSONC.parse(readFileSync(resolve(repoRoot, registration.derivedLaunchPath), "utf8")) as { configurations: readonly { command?: string }[] };
+    expect(launch.configurations.filter(({ command }) => command === registration.command), registration.derivedLaunchPath).toHaveLength(1);
   });
 
   test("keeps exact generated boundary names visible to their staging producer", () => {

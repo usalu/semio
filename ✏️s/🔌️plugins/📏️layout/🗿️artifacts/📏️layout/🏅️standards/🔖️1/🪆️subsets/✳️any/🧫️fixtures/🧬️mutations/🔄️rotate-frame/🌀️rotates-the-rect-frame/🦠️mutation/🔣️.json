@@ -1,7 +1,7 @@
 {
   "RotateFrame": {
-    "page_id": "page-1",
-    "frame_id": "frame-rect",
-    "new_rotation": 15.0
+    "pageId": "page-1",
+    "frameId": "frame-rect",
+    "newRotation": 15.0
   }
 }

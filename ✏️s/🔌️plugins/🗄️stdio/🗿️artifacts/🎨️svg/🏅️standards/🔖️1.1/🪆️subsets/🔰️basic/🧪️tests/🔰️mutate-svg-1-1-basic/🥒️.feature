@@ -73,10 +73,10 @@ Feature: Apply every typed SVG Basic 1.1 mutation to a real 138 KB clipped drawi
       {"kind": "<id>", "params": <params>}
       """
     Then the oracle and the subject agree on the semantic projection
-    And the semantic projection moved, unless the kind is no-mutation
+    And the semantic projection moved
     Examples:
       | id                      | params                                                                                                                                                                                    |
-      | set-snapshot            | {"rootId": "wave8-basic-snapshot-marker", "viewBoxWidth": 96}                                                                                                                             |
+      | set-snapshot            | {"snapshot": {"schema": "stdio.svg", "doc": {"root": {"kind": "element", "name": "svg", "attrs": [{"name": "xmlns", "value": "http://www.w3.org/2000/svg"}, {"name": "version", "value": "1.1"}, {"name": "baseProfile", "value": "basic"}, {"name": "id", "value": "wave8-basic-snapshot-marker"}, {"name": "viewBox", "value": "0 0 96 144"}], "children": [{"kind": "element", "name": "rect", "attrs": [{"name": "width", "value": "35"}, {"name": "height", "value": "35"}], "children": []}]}, "declaration": {"version": "1.0", "encoding": "UTF-8"}}}} |
       | stamp-base-profile      | {"baseProfile": "basic", "version": "1.1"}                                                                                                                                                |
       | insert-basic-element    | {"parent": [51], "index": 1, "node": {"kind": "element", "name": "filter", "attrs": [{"name": "id", "value": "wave8-basic-blur"}], "children": [{"kind": "element", "name": "feGaussianBlur", "attrs": [{"name": "stdDeviation", "value": "2"}], "children": []}]}} |
       | remove-element          | {"parent": [53], "index": 5}                                                                                                                                                               |
@@ -84,20 +84,8 @@ Feature: Apply every typed SVG Basic 1.1 mutation to a real 138 KB clipped drawi
       | set-clip-path-reference | {"path": [55], "clipPathId": "introduction-demo-mouse-clip"}                                                                                                                               |
       | insert-clip-path-shape  | {"clipPathId": "introduction-demo-mouse-clip", "index": 1, "node": {"kind": "element", "name": "circle", "attrs": [{"name": "cx", "value": "24"}, {"name": "cy", "value": "36"}, {"name": "r", "value": "20"}], "children": []}} |
       | set-text                | {"path": [1, 0], "text": "wave8 basic mutation marker"}                                                                                                                                      |
-      | set-view-box            | {"path": [], "viewBox": [0, 0, 96, 144]}                                                                                                                                                  |
-      | set-transform           | {"path": [53], "transform": [{"kind": "translate", "x": 4, "y": 4}, {"kind": "scale", "x": 2}]}                                                                                            |
-
-  @id-no-mutation-baseline-mutate
-  @level-exhaustive
-  @mode-differential
-  Scenario: Apply no-mutation to the real drawing
-    Given the real input document shared://🎨️semio-brand-and-onboarding.svg
-    When the no-mutation mutation is applied with its parameters
-      """
-      {"kind": "no-mutation", "params": {}}
-      """
-    Then the oracle and the subject agree on the semantic projection
-    And the semantic projection moved, unless the kind is no-mutation
+      | set-view-box            | {"path": [], "viewBox": {"minX": 0, "minY": 0, "width": 96, "height": 144}} |
+      | set-transform           | {"path": [53], "transform": [{"op": "translate", "x": 4, "y": 4}, {"op": "scale", "x": 2}]} |
 
   @id-inverse
   @level-exhaustive
@@ -111,7 +99,7 @@ Feature: Apply every typed SVG Basic 1.1 mutation to a real 138 KB clipped drawi
     Then the oracle and the subject agree on the semantic projection
     Examples:
       | id                      | params                                                                                                                                                                                    |
-      | set-snapshot            | {"rootId": "wave8-basic-snapshot-marker", "viewBoxWidth": 96}                                                                                                                             |
+      | set-snapshot            | {"snapshot": {"schema": "stdio.svg", "doc": {"root": {"kind": "element", "name": "svg", "attrs": [{"name": "xmlns", "value": "http://www.w3.org/2000/svg"}, {"name": "version", "value": "1.1"}, {"name": "baseProfile", "value": "basic"}, {"name": "id", "value": "wave8-basic-snapshot-marker"}, {"name": "viewBox", "value": "0 0 96 144"}], "children": [{"kind": "element", "name": "rect", "attrs": [{"name": "width", "value": "35"}, {"name": "height", "value": "35"}], "children": []}]}, "declaration": {"version": "1.0", "encoding": "UTF-8"}}}} |
       | stamp-base-profile      | {"baseProfile": "basic", "version": "1.1"}                                                                                                                                                |
       | insert-basic-element    | {"parent": [51], "index": 1, "node": {"kind": "element", "name": "filter", "attrs": [{"name": "id", "value": "wave8-basic-blur"}], "children": [{"kind": "element", "name": "feGaussianBlur", "attrs": [{"name": "stdDeviation", "value": "2"}], "children": []}]}} |
       | remove-element          | {"parent": [53], "index": 5}                                                                                                                                                               |
@@ -119,19 +107,8 @@ Feature: Apply every typed SVG Basic 1.1 mutation to a real 138 KB clipped drawi
       | set-clip-path-reference | {"path": [55], "clipPathId": "introduction-demo-mouse-clip"}                                                                                                                               |
       | insert-clip-path-shape  | {"clipPathId": "introduction-demo-mouse-clip", "index": 1, "node": {"kind": "element", "name": "circle", "attrs": [{"name": "cx", "value": "24"}, {"name": "cy", "value": "36"}, {"name": "r", "value": "20"}], "children": []}} |
       | set-text                | {"path": [1, 0], "text": "wave8 basic mutation marker"}                                                                                                                                      |
-      | set-view-box            | {"path": [], "viewBox": [0, 0, 96, 144]}                                                                                                                                                  |
-      | set-transform           | {"path": [53], "transform": [{"kind": "translate", "x": 4, "y": 4}, {"kind": "scale", "x": 2}]}                                                                                            |
-
-  @id-no-mutation-baseline-inverse
-  @level-exhaustive
-  @mode-differential
-  Scenario: Undoing no-mutation restores the real drawing
-    Given the real input document shared://🎨️semio-brand-and-onboarding.svg
-    When the no-mutation mutation is applied and then undone with its own inverse
-      """
-      {"kind": "no-mutation", "params": {}}
-      """
-    Then the oracle and the subject agree on the semantic projection
+      | set-view-box            | {"path": [], "viewBox": {"minX": 0, "minY": 0, "width": 96, "height": 144}} |
+      | set-transform           | {"path": [53], "transform": [{"op": "translate", "x": 4, "y": 4}, {"op": "scale", "x": 2}]} |
 
   @id-identity-round-trip
   @level-long

@@ -25,6 +25,15 @@ Feature: Apply every typed PNG 1.2 mutation to a real-world document
   the private chunks by type and payload digest. tIME and private chunks come from a fixed-grammar
   walk over §5.3's chunk chain, because `png::Info` models neither.
 
+  Every Examples `params` cell is exactly the leaf's wire payload — its `payload_value()`, camelCase,
+  `Option`s as `null`, no aggregate tag — decoded by the subject through the derive-generated
+  `from_payload_value` and read by the `png` oracle by the same field names; the oracle refuses a
+  member it cannot write (a zTXt/iTXt or compressed text chunk, a non-RGB bKGD) rather than
+  approximating it. `replace-pixels` carries the whole replacement RGBA raster, which for this
+  2334x2560 plan would be 23.9 million numbers in one cell, so it runs in its own outlines on the
+  committed 4x2 COLORMAP document (`shared://🎨️replace-palette-applied/⬅️before.png`) — the same
+  PLTE decode path as the real plan.
+
   ⚠️ Two of the seventeen kinds genuinely cannot reach the bytes, and the case says so rather than
   letting them pass as though they had:
     – change-header — IHDR must describe the IDAT that follows it, and both encoders always write
@@ -50,22 +59,35 @@ Feature: Apply every typed PNG 1.2 mutation to a real-world document
       """
     Then the oracle and the subject agree on the semantic projection
     Examples:
-      | id                    | params                                                                                                                       |
-      | change-header            | {"width":2334,"height":2560,"bitDepth":16,"colorType":"grayscale","interlace":true}                                         |
-      | replace-palette           | {"plte":[[255,0,0],[0,255,0],[0,0,255],[255,255,0]]}                                                                        |
-      | change-transparency      | {"trns":null}                                                                                                                |
-      | change-gamma             | {"gama":45455}                                                                                                               |
-      | change-chromaticities    | {"whiteX":31270,"whiteY":32900,"redX":64000,"redY":33000,"greenX":30000,"greenY":60000,"blueX":15000,"blueY":6000}          |
-      | change-srgb-intent       | {"srgb":"perceptual"}                                                                                                        |
-      | change-physical-dims     | {"ppuX":2835,"ppuY":2835,"unitIsMeter":true}                                                                                 |
-      | change-timestamp         | {"year":2024,"month":1,"day":2,"hour":3,"minute":4,"second":5}                                                              |
-      | change-background        | {"r":255,"g":255,"b":255}                                                                                                    |
-      | insert-text-chunk     | {"index":0,"keyword":"Comment","value":"Wave 7 oracle probe"}                                                               |
-      | remove-text-chunk     | {"index":0}                                                                                                                  |
-      | replace-text-chunk        | {"index":0,"keyword":"Author","value":"replaces the arranged chunk outright"}                                               |
-      | replace-pixels            | {"fill":[200,40,40,255]}                                                                                                     |
-      | insert-unknown-chunk  | {"index":0,"kind":"waVe","data":"wave7-probe"}                                                                              |
-      | remove-unknown-chunk  | {"index":0}                                                                                                                  |
+      | id | params |
+      | change-header | {"width":2334,"height":2560,"bitDepth":16,"colorType":"grayscale","interlace":true} |
+      | replace-palette | {"plte":[{"r":255,"g":0,"b":0},{"r":0,"g":255,"b":0},{"r":0,"g":0,"b":255},{"r":255,"g":255,"b":0}]} |
+      | change-transparency | {"trns":null} |
+      | change-gamma | {"gama":45455} |
+      | change-chromaticities | {"chrm":{"whiteX":31270,"whiteY":32900,"redX":64000,"redY":33000,"greenX":30000,"greenY":60000,"blueX":15000,"blueY":6000}} |
+      | change-srgb-intent | {"srgb":"perceptual"} |
+      | change-physical-dims | {"phys":{"ppuX":2835,"ppuY":2835,"unitIsMeter":true}} |
+      | change-timestamp | {"time":{"year":2024,"month":1,"day":2,"hour":3,"minute":4,"second":5}} |
+      | change-background | {"bkgd":{"colorType":"rgb","r":255,"g":255,"b":255}} |
+      | insert-text-chunk | {"index":0,"chunk":{"keyword":"Comment","value":"Wave 7 oracle probe","compressed":false,"kind":"text","languageTag":"","translatedKeyword":""}} |
+      | remove-text-chunk | {"index":0} |
+      | replace-text-chunk | {"index":0,"chunk":{"keyword":"Author","value":"replaces the arranged chunk outright","compressed":false,"kind":"text","languageTag":"","translatedKeyword":""}} |
+      | insert-unknown-chunk | {"index":0,"chunk":{"kind":[119,97,86,101],"data":[119,97,118,101,55,45,112,114,111,98,101]}} |
+      | remove-unknown-chunk | {"index":0} |
+
+  @id-mutate-raster
+  @level-exhaustive
+  @mode-differential
+  Scenario Outline: Apply <id> to a small palette document
+    Given the small palette input document shared://🎨️replace-palette-applied/⬅️before.png
+    When the <id> mutation is applied with its parameters
+      """
+      {"kind": "<id>", "params": <params>}
+      """
+    Then the oracle and the subject agree on the semantic projection
+    Examples:
+      | id | params |
+      | replace-pixels | {"pixels":[200,40,40,255,200,40,40,255,200,40,40,255,200,40,40,255,200,40,40,255,200,40,40,255,200,40,40,255,200,40,40,255]} |
 
   @id-inverse
   @level-exhaustive
@@ -80,22 +102,37 @@ Feature: Apply every typed PNG 1.2 mutation to a real-world document
     Then the oracle and the subject agree on the semantic projection
     And that projection matches the untouched original document
     Examples:
-      | id                    | params                                                                                                                       |
-      | change-header            | {"width":2334,"height":2560,"bitDepth":16,"colorType":"grayscale","interlace":true}                                         |
-      | replace-palette           | {"plte":[[255,0,0],[0,255,0],[0,0,255],[255,255,0]]}                                                                        |
-      | change-transparency      | {"trns":null}                                                                                                                |
-      | change-gamma             | {"gama":45455}                                                                                                               |
-      | change-chromaticities    | {"whiteX":31270,"whiteY":32900,"redX":64000,"redY":33000,"greenX":30000,"greenY":60000,"blueX":15000,"blueY":6000}          |
-      | change-srgb-intent       | {"srgb":"perceptual"}                                                                                                        |
-      | change-physical-dims     | {"ppuX":2835,"ppuY":2835,"unitIsMeter":true}                                                                                 |
-      | change-timestamp         | {"year":2024,"month":1,"day":2,"hour":3,"minute":4,"second":5}                                                              |
-      | change-background        | {"r":255,"g":255,"b":255}                                                                                                    |
-      | insert-text-chunk     | {"index":0,"keyword":"Comment","value":"Wave 7 oracle probe"}                                                               |
-      | remove-text-chunk     | {"index":0}                                                                                                                  |
-      | replace-text-chunk        | {"index":0,"keyword":"Author","value":"replaces the arranged chunk outright"}                                               |
-      | replace-pixels            | {"fill":[200,40,40,255]}                                                                                                     |
-      | insert-unknown-chunk  | {"index":0,"kind":"waVe","data":"wave7-probe"}                                                                              |
-      | remove-unknown-chunk  | {"index":0}                                                                                                                  |
+      | id | params |
+      | change-header | {"width":2334,"height":2560,"bitDepth":16,"colorType":"grayscale","interlace":true} |
+      | replace-palette | {"plte":[{"r":255,"g":0,"b":0},{"r":0,"g":255,"b":0},{"r":0,"g":0,"b":255},{"r":255,"g":255,"b":0}]} |
+      | change-transparency | {"trns":null} |
+      | change-gamma | {"gama":45455} |
+      | change-chromaticities | {"chrm":{"whiteX":31270,"whiteY":32900,"redX":64000,"redY":33000,"greenX":30000,"greenY":60000,"blueX":15000,"blueY":6000}} |
+      | change-srgb-intent | {"srgb":"perceptual"} |
+      | change-physical-dims | {"phys":{"ppuX":2835,"ppuY":2835,"unitIsMeter":true}} |
+      | change-timestamp | {"time":{"year":2024,"month":1,"day":2,"hour":3,"minute":4,"second":5}} |
+      | change-background | {"bkgd":{"colorType":"rgb","r":255,"g":255,"b":255}} |
+      | insert-text-chunk | {"index":0,"chunk":{"keyword":"Comment","value":"Wave 7 oracle probe","compressed":false,"kind":"text","languageTag":"","translatedKeyword":""}} |
+      | remove-text-chunk | {"index":0} |
+      | replace-text-chunk | {"index":0,"chunk":{"keyword":"Author","value":"replaces the arranged chunk outright","compressed":false,"kind":"text","languageTag":"","translatedKeyword":""}} |
+      | insert-unknown-chunk | {"index":0,"chunk":{"kind":[119,97,86,101],"data":[119,97,118,101,55,45,112,114,111,98,101]}} |
+      | remove-unknown-chunk | {"index":0} |
+
+  @id-inverse-raster
+  @level-exhaustive
+  @mode-property
+  Scenario Outline: Undoing <id> restores a small palette document
+    Given the small palette input document shared://🎨️replace-palette-applied/⬅️before.png
+    When the <id> mutation is applied with its parameters
+      """
+      {"kind": "<id>", "params": <params>}
+      """
+    And the mutation's own algebraic inverse is applied next
+    Then the oracle and the subject agree on the semantic projection
+    And that projection matches the untouched original document
+    Examples:
+      | id | params |
+      | replace-pixels | {"pixels":[200,40,40,255,200,40,40,255,200,40,40,255,200,40,40,255,200,40,40,255,200,40,40,255,200,40,40,255,200,40,40,255]} |
 
   @id-identity-round-trip
   @level-long

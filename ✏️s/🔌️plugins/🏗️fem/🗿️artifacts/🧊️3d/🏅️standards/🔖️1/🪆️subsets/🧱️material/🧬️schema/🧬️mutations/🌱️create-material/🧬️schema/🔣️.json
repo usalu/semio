@@ -5,9 +5,13 @@
   "type": "object",
   "additionalProperties": false,
   "required": [
+    "mutation",
     "material"
   ],
   "properties": {
+    "mutation": {
+      "const": "createMaterial"
+    },
     "material": {
       "title": "FemMaterial",
       "type": "object",
@@ -22,23 +26,118 @@
       ],
       "properties": {
         "id": {
-          "type": "string"
+          "type": "string",
+          "x-semio-ui": {
+            "widget": "text",
+            "role": "value",
+            "label": {
+              "en": "ID",
+              "de": "ID"
+            },
+            "description": {
+              "en": "Unique id of the record.",
+              "de": "Eindeutige ID des Eintrags."
+            },
+            "group": "identity",
+            "order": 10
+          }
         },
         "name": {
-          "type": "string"
+          "type": "string",
+          "x-semio-ui": {
+            "widget": "text",
+            "role": "value",
+            "label": {
+              "en": "Name",
+              "de": "Bezeichnung"
+            },
+            "group": "identity",
+            "order": 20
+          }
         },
         "e": {
-          "type": "number"
+          "type": "number",
+          "exclusiveMinimum": 0,
+          "x-semio-ui": {
+            "widget": "stepper",
+            "role": "value",
+            "label": {
+              "en": "Young's modulus",
+              "de": "Elastizitätsmodul"
+            },
+            "unit": "Pa",
+            "displayUnit": "GPa",
+            "displayFactor": 1e-09,
+            "step": 1000000000.0,
+            "precision": 1,
+            "group": "material",
+            "order": 30
+          }
         },
         "g": {
-          "type": "number"
+          "type": "number",
+          "exclusiveMinimum": 0,
+          "x-semio-ui": {
+            "widget": "stepper",
+            "role": "value",
+            "label": {
+              "en": "Shear modulus",
+              "de": "Schubmodul"
+            },
+            "unit": "Pa",
+            "displayUnit": "GPa",
+            "displayFactor": 1e-09,
+            "step": 1000000000.0,
+            "precision": 1,
+            "group": "material",
+            "order": 40
+          }
         },
         "nu": {
-          "type": "number"
+          "type": "number",
+          "exclusiveMinimum": -1,
+          "exclusiveMaximum": 0.5,
+          "x-semio-ui": {
+            "widget": "stepper",
+            "role": "value",
+            "label": {
+              "en": "Poisson's ratio",
+              "de": "Querdehnzahl"
+            },
+            "step": 0.01,
+            "precision": 3,
+            "softMin": 0,
+            "softMax": 0.49,
+            "group": "material",
+            "order": 50
+          }
         },
         "rho": {
-          "type": "number"
+          "type": "number",
+          "exclusiveMinimum": 0,
+          "x-semio-ui": {
+            "widget": "stepper",
+            "role": "value",
+            "label": {
+              "en": "Density",
+              "de": "Dichte"
+            },
+            "unit": "kg/m³",
+            "step": 10,
+            "precision": 0,
+            "group": "material",
+            "order": 60
+          }
         }
+      },
+      "x-semio-ui": {
+        "role": "value",
+        "label": {
+          "en": "Material",
+          "de": "Material"
+        },
+        "group": "record",
+        "order": 10
       }
     }
   }

@@ -9,11 +9,11 @@
 
 use crate::{Vdi3805Diff, Vdi3805Mutation, Vdi3805Snapshot};
 
-const BEFORE: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/✂️remove-geometry-connection/🔌️detaches-the-out-connection-from-geom-valve-50/📸️snapshot/⬅️before/🔣️.json");
-const AFTER: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/✂️remove-geometry-connection/🔌️detaches-the-out-connection-from-geom-valve-50/📸️snapshot/➡️after/🔣️.json");
-const MUTATION: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/✂️remove-geometry-connection/🔌️detaches-the-out-connection-from-geom-valve-50/🦠️mutation/🔣️.json");
-const DIFF: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/✂️remove-geometry-connection/🔌️detaches-the-out-connection-from-geom-valve-50/🔺️diff/🔣️.json");
-const OUTCOME: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/✂️remove-geometry-connection/🔌️detaches-the-out-connection-from-geom-valve-50/🎯️outcome/🔣️.json");
+const BEFORE: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/✂️remove-geometry-connection/🔌️detaches-out-connection-geom-valve-50/📸️snapshot/⬅️before/🔣️.json");
+const AFTER: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/✂️remove-geometry-connection/🔌️detaches-out-connection-geom-valve-50/📸️snapshot/➡️after/🔣️.json");
+const MUTATION: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/✂️remove-geometry-connection/🔌️detaches-out-connection-geom-valve-50/🦠️mutation/🔣️.json");
+const DIFF: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/✂️remove-geometry-connection/🔌️detaches-out-connection-geom-valve-50/🔺️diff/🔣️.json");
+const OUTCOME: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/✂️remove-geometry-connection/🔌️detaches-out-connection-geom-valve-50/🎯️outcome/🔣️.json");
 
 fn before() -> Vdi3805Snapshot {
     serde_json::from_str(BEFORE).expect("before snapshot decodes")

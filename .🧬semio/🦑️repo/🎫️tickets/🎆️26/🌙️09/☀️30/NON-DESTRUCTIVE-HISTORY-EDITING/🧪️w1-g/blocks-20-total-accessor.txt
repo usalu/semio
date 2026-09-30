@@ -1,0 +1,309 @@
+<<<<<<< ANCHOR
+/// 🎭️ One forward operation as every fold site reads it: the recorded original, its decoded replacement, or nothing
+/// when withdrawn. A decoded replacement retires itself through [`Mutation::retire_cold`].
+pub struct EffectiveOperation<'a, P, Mutation>
+where
+    Mutation: self::Mutation<P>,
+{
+    pub op_index: u32,
+    pub mutation_id: MutationId,
+    original: &'a Mutation,
+    replacement: Option<Mutation>,
+    withdrawn: bool,
+    marker: PhantomData<fn() -> P>,
+}
+
+impl<P, Mutation> EffectiveOperation<'_, P, Mutation>
+where
+    Mutation: self::Mutation<P>,
+{
+    /// ▶️ The operation a fold applies, `None` when withdrawn.
+    pub fn operation(&self) -> Option<&Mutation> {
+        if self.withdrawn {
+            return None;
+        }
+        Some(self.replacement.as_ref().unwrap_or(self.original))
+    }
+
+    /// 🗿️ The recorded forward, whatever supersedes it.
+    pub fn original(&self) -> &Mutation {
+        self.original
+    }
+
+    /// ✏️ Whether a supersession replaced or withdrew the recorded forward.
+    pub fn superseded(&self) -> bool {
+        self.withdrawn || self.replacement.is_some()
+    }
+
+    /// 🚫️ Whether the operation folds as a no-op.
+    pub fn withdrawn(&self) -> bool {
+        self.withdrawn
+    }
+}
+=======
+/// 🎭️ One forward operation as every fold site reads it: the recorded original, its decoded replacement, or nothing
+/// when withdrawn or when its supersession breaks the supersede law ([`admit_replacement`]). A decoded replacement
+/// retires itself through [`Mutation::retire_cold`].
+pub struct EffectiveOperation<'a, P, Mutation>
+where
+    Mutation: self::Mutation<P>,
+{
+    pub op_index: u32,
+    pub mutation_id: MutationId,
+    original: &'a Mutation,
+    replacement: Option<Mutation>,
+    withdrawn: bool,
+    fault: Option<crate::os_spr::MutationMessage>,
+    marker: PhantomData<fn() -> P>,
+}
+
+impl<P, Mutation> EffectiveOperation<'_, P, Mutation>
+where
+    Mutation: self::Mutation<P>,
+{
+    /// ▶️ The operation a fold applies, `None` when withdrawn or faulted.
+    pub fn operation(&self) -> Option<&Mutation> {
+        if self.withdrawn || self.fault.is_some() {
+            return None;
+        }
+        Some(self.replacement.as_ref().unwrap_or(self.original))
+    }
+
+    /// ✏️ Whether a supersession replaced or withdrew the recorded forward (validly or not).
+    pub fn superseded(&self) -> bool {
+        self.withdrawn || self.replacement.is_some() || self.fault.is_some()
+    }
+
+    /// 🚫️ Whether a valid supersession withdrew the operation.
+    pub fn withdrawn(&self) -> bool {
+        self.withdrawn
+    }
+
+    /// 🧯️ The `Fatal` message of a supersession breaking the supersede law; the operation then folds as a no-op.
+    pub fn fault(&self) -> Option<&crate::os_spr::MutationMessage> {
+        self.fault.as_ref()
+    }
+}
+>>>>>>> END
+<<<<<<< ANCHOR
+/// 🪞️ The effective input of `operation` — operation `op_index` of its edit, identified as `mutation_id` — under `supersessions`.
+pub fn effective_operation<'a, P, Mutation>(operation: &'a Mutation, op_index: u32, mutation_id: MutationId, supersessions: &EffectiveSupersessions) -> Result<EffectiveOperation<'a, P, Mutation>, VcsError>
+where
+    Mutation: self::Mutation<P> + OpBinary,
+{
+    let (replacement, withdrawn) = match supersessions.get(&mutation_id).map(|supersession| &supersession.replacement) {
+        None => (None, false),
+        Some(protocol::InputReplacement::Withdrawn) => (None, true),
+        Some(protocol::InputReplacement::Input { payload, .. }) => (Some(Mutation::decode_op(payload).map_err(|error| VcsError::Deserialize(format!("supersession of {} does not decode: {error}", mutation_id.0)))?), false),
+    };
+    Ok(EffectiveOperation { op_index, mutation_id, original: operation, replacement, withdrawn, marker: PhantomData })
+}
+
+/// 🪞️ `edit`'s effective forwards in operation order: every operation replaced by its effective supersession, a
+/// withdrawn one reported as such. The single accessor every fold site reads an edit through.
+pub fn effective_forwards<'a, P, Mutation>(edit: &'a Edit<Mutation>, supersessions: &'a EffectiveSupersessions) -> impl Iterator<Item = Result<EffectiveOperation<'a, P, Mutation>, VcsError>> + 'a
+where
+    P: 'a,
+    Mutation: self::Mutation<P> + OpBinary + 'a,
+{
+    let ids = crate::os_spr::mutation_ids_for_edit::<P, Mutation>(edit);
+    edit.forwards.iter().zip(ids).enumerate().map(move |(index, (operation, mutation_id))| effective_operation::<P, Mutation>(operation, index as u32, mutation_id, supersessions))
+}
+
+/// 🔂️ Folds `edit`'s effective forwards into `projection` with keep-and-record semantics ([`fold_operation`]).
+fn fold_effective_edit<P, Mutation>(projection: &mut ReplayProjection<P, Mutation>, edit: &Edit<Mutation>, supersessions: &EffectiveSupersessions) -> Result<(), VcsError>
+where
+    Mutation: self::Mutation<P> + OpBinary,
+{
+    if supersessions.is_empty() {
+        for (index, operation) in edit.forwards.iter().enumerate() {
+            fold_operation_into(projection, operation, index as u32);
+        }
+        return Ok(());
+    }
+    for effective in effective_forwards::<P, Mutation>(edit, supersessions) {
+        let effective = effective?;
+        if let Some(operation) = effective.operation() {
+            fold_operation_into(projection, operation, effective.op_index);
+        }
+    }
+    Ok(())
+}
+
+/// ▶️ [`fold_operation`] into a replay projection, the recorded messages discarded.
+fn fold_operation_into<P, Mutation>(projection: &mut ReplayProjection<P, Mutation>, operation: &Mutation, op_index: u32)
+where
+    Mutation: self::Mutation<P>,
+{
+    if let (Some(next), _) = fold_operation::<P, Mutation>(projection, operation, op_index) {
+        projection.advance(next);
+    }
+}
+=======
+/// 🪞️ The effective input of `operation` — operation `op_index` of its edit, identified as `mutation_id` — under
+/// `supersessions` in a document of `schema`. Total: a supersession breaking the supersede law ([`admit_replacement`])
+/// folds the operation as a no-op carrying one `Fatal` `mutation.invariant` message that targets the operation —
+/// identically at every fold site, so a garbage or foreign replacement never aborts a projection.
+pub fn effective_operation<'a, P, Mutation>(operation: &'a Mutation, op_index: u32, mutation_id: MutationId, schema: &str, supersessions: &EffectiveSupersessions) -> EffectiveOperation<'a, P, Mutation>
+where
+    Mutation: self::Mutation<P> + OpBinary,
+{
+    let mut effective = EffectiveOperation { op_index, mutation_id, original: operation, replacement: None, withdrawn: false, fault: None, marker: PhantomData };
+    let Some(supersession) = supersessions.get(&effective.mutation_id) else { return effective };
+    match admit_replacement::<P, Mutation>(operation, &supersession.replacement, schema) {
+        Ok(Some(replacement)) => effective.replacement = Some(replacement),
+        Ok(None) => effective.withdrawn = true,
+        Err(reason) => {
+            let mut fault = crate::os_spr::MutationMessage::fatal("mutation.invariant", format!("supersession {} of {} {reason}; the operation folds as a no-op", supersession.transition_id, effective.mutation_id.0)).at([effective.mutation_id.0.clone()]);
+            fault.op_index = Some(op_index);
+            effective.fault = Some(fault);
+        }
+    }
+    effective
+}
+
+/// 🛂️ The supersede law every input obeys — authored, ingested, loaded or folded: `original` plans no foreign steps, and
+/// a replacement is an operation of `schema` in its canonical encoding, of `original`'s semantic kind (history edits a
+/// mutation's inputs, never its kind) and planning no foreign steps. Answers the decoded replacement (`None` for a
+/// withdrawal) or why the input breaks the law.
+pub fn admit_replacement<P, Mutation>(original: &Mutation, replacement: &protocol::InputReplacement, schema: &str) -> Result<Option<Mutation>, String>
+where
+    Mutation: self::Mutation<P> + OpBinary,
+{
+    if original.may_emit_foreign_steps() {
+        return Err("targets an operation that plans foreign steps".to_string());
+    }
+    let protocol::InputReplacement::Input { schema: named, payload } = replacement else { return Ok(None) };
+    if named != schema {
+        return Err(format!("names schema {named}, not {schema}"));
+    }
+    let decoded = Mutation::decode_op(payload).map_err(|error| format!("does not decode: {error}"))?;
+    let refusal = match decoded.encode_op() {
+        Err(error) => Some(format!("does not re-encode: {error}")),
+        Ok(recoded) if recoded != *payload => Some("is not canonically encoded".to_string()),
+        Ok(_) if decoded.may_emit_foreign_steps() => Some("plans foreign steps".to_string()),
+        Ok(_) if decoded.descriptor().semantic_kind != original.descriptor().semantic_kind => Some(format!("replaces a {} operation with a {} operation", original.descriptor().semantic_kind, decoded.descriptor().semantic_kind)),
+        Ok(_) => None,
+    };
+    match refusal {
+        None => Ok(Some(decoded)),
+        Some(reason) => {
+            self::Mutation::<P>::retire_cold(decoded);
+            Err(reason)
+        }
+    }
+}
+
+/// 🪞️ `edit`'s effective forwards in operation order ([`effective_operation`]). The single accessor every fold site
+/// reads an edit through.
+pub fn effective_forwards<'a, P, Mutation>(edit: &'a Edit<Mutation>, schema: &'a str, supersessions: &'a EffectiveSupersessions) -> impl Iterator<Item = EffectiveOperation<'a, P, Mutation>> + 'a
+where
+    P: 'a,
+    Mutation: self::Mutation<P> + OpBinary + 'a,
+{
+    let ids = crate::os_spr::mutation_ids_for_edit::<P, Mutation>(edit);
+    edit.forwards.iter().zip(ids).enumerate().map(move |(index, (operation, mutation_id))| effective_operation::<P, Mutation>(operation, index as u32, mutation_id, schema, supersessions))
+}
+
+/// 🪜️ A fold's running projection: what the next operation diffs against, and how its successor displaces it.
+trait FoldProjection<P, Mutation> {
+    fn projection(&self) -> &P;
+    fn advance(&mut self, next: P);
+}
+
+impl<P, Mutation> FoldProjection<P, Mutation> for ReplayProjection<P, Mutation>
+where
+    Mutation: self::Mutation<P>,
+{
+    fn projection(&self) -> &P {
+        self
+    }
+
+    fn advance(&mut self, next: P) {
+        ReplayProjection::advance(self, next);
+    }
+}
+
+impl<P, Mutation> FoldProjection<P, Mutation> for Arc<P>
+where
+    Mutation: self::Mutation<P>,
+{
+    fn projection(&self) -> &P {
+        self
+    }
+
+    fn advance(&mut self, next: P) {
+        retire_shared_projection::<P, Mutation>(std::mem::replace(self, Arc::new(next)));
+    }
+}
+
+/// 🔂️ Folds the first `take` effective forwards of `edit` into `projection` with keep-and-record semantics
+/// ([`fold_operation`]) — the one loop every messageless fold site shares.
+fn fold_effective_edit<P, Mutation>(projection: &mut impl FoldProjection<P, Mutation>, edit: &Edit<Mutation>, schema: &str, supersessions: &EffectiveSupersessions, take: usize)
+where
+    Mutation: self::Mutation<P> + OpBinary,
+{
+    if supersessions.is_empty() {
+        for (index, operation) in edit.forwards.iter().enumerate().take(take) {
+            if let (Some(next), _) = fold_operation::<P, Mutation>(projection.projection(), operation, index as u32) {
+                projection.advance(next);
+            }
+        }
+        return;
+    }
+    for effective in effective_forwards::<P, Mutation>(edit, schema, supersessions).take(take) {
+        if let Some(operation) = effective.operation() {
+            if let (Some(next), _) = fold_operation::<P, Mutation>(projection.projection(), operation, effective.op_index) {
+                projection.advance(next);
+            }
+        }
+    }
+}
+>>>>>>> END
+<<<<<<< ANCHOR
+fn fold_recorded<P, Mutation>(base: Arc<P>, applied: &[String], from: usize, to: usize, edits: &ArtifactHistoryLedger<Edit<Mutation>>, supersessions: &EffectiveSupersessions, stride: usize) -> Result<(Arc<P>, Vec<(usize, Arc<P>)>), VcsError>
+where
+    Mutation: self::Mutation<P> + OpBinary,
+{
+    let mut running = base;
+    let mut recorded: Vec<(usize, Arc<P>)> = Vec::new();
+    let mut failure = None;
+    for (offset, edit_id) in applied[from..to].iter().enumerate() {
+        let Some(edit) = edits.iter().find(|edit| edit.id == *edit_id) else {
+            failure = Some(VcsError::UnknownEdit(edit_id.clone()));
+            break;
+        };
+        for effective in effective_forwards::<P, Mutation>(edit, supersessions) {
+            let effective = match effective {
+                Ok(effective) => effective,
+                Err(error) => {
+                    failure = Some(error);
+                    break;
+                }
+            };
+            if let Some(operation) = effective.operation() {
+                if let (Some(next), _) = fold_operation::<P, Mutation>(&running, operation, effective.op_index) {
+                    retire_shared_projection::<P, Mutation>(std::mem::replace(&mut running, Arc::new(next)));
+                }
+            }
+        }
+        if failure.is_some() {
+            break;
+        }
+        let length = from + offset + 1;
+=======
+fn fold_recorded<P, Mutation>(base: Arc<P>, applied: &[String], from: usize, to: usize, edits: &ArtifactHistoryLedger<Edit<Mutation>>, schema: &str, supersessions: &EffectiveSupersessions, stride: usize) -> Result<(Arc<P>, Vec<(usize, Arc<P>)>), VcsError>
+where
+    Mutation: self::Mutation<P> + OpBinary,
+{
+    let mut running = base;
+    let mut recorded: Vec<(usize, Arc<P>)> = Vec::new();
+    let mut failure = None;
+    for (offset, edit_id) in applied[from..to].iter().enumerate() {
+        let Some(edit) = edits.iter().find(|edit| edit.id == *edit_id) else {
+            failure = Some(VcsError::UnknownEdit(edit_id.clone()));
+            break;
+        };
+        fold_effective_edit(&mut running, edit, schema, supersessions, usize::MAX);
+        let length = from + offset + 1;
+>>>>>>> END

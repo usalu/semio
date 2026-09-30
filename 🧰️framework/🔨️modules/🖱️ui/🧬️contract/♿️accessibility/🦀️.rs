@@ -227,10 +227,17 @@ pub struct AccessibilityValue {
 /// default.
 pub fn accessibility_value(component: &crate::Component) -> AccessibilityValue {
     match component {
-        crate::Component::Input(props) => AccessibilityValue { min: props.min, max: props.max, now: props.value.as_str().parse().ok(), text: Some(props.value.as_str().to_string()), busy: false },
+        crate::Component::Input(props) => {
+            let now = props.value.as_str().parse::<f64>().ok();
+            let text = match (props.kind, props.precision, now) {
+                (crate::InputKind::Number, Some(precision), Some(now)) if now.is_finite() => crate::format_ui_number_fixed(now, precision),
+                _ => props.value.as_str().to_string(),
+            };
+            AccessibilityValue { min: props.min, max: props.max, now, text: Some(text), busy: false }
+        }
         crate::Component::Select(props) => AccessibilityValue { text: Some(props.value.as_str().to_string()), ..AccessibilityValue::default() },
         crate::Component::Slider(props) => AccessibilityValue { min: Some(props.min), max: Some(props.max), now: Some(props.value), text: props.unit.as_ref().map(|unit| format!("{} {}", props.value, unit.as_str())), busy: false },
-        crate::Component::NumberStepper(props) => AccessibilityValue { min: props.min, max: props.max, now: props.uniform.then_some(props.value), text: props.uniform.then(|| crate::format_ui_number(props.value)), busy: false },
+        crate::Component::NumberStepper(props) => AccessibilityValue { min: props.min, max: props.max, now: props.uniform.then_some(props.value), text: props.uniform.then(|| props.precision.map_or_else(|| crate::format_ui_number(props.value), |precision| crate::format_ui_number_fixed(props.value, precision))), busy: false },
         crate::Component::Ring(props) => AccessibilityValue { min: Some(0.0), max: Some(1.0), now: Some(props.t), text: Some(props.t.to_string()), busy: false },
         crate::Component::IconSelect(props) => AccessibilityValue { text: Some(props.value.as_str().to_string()), ..AccessibilityValue::default() },
         crate::Component::Progress(props) => match props.total {

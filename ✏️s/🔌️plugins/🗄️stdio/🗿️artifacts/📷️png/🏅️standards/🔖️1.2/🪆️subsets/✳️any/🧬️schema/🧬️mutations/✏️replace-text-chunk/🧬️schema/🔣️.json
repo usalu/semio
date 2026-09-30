@@ -27,22 +27,62 @@
       ],
       "properties": {
         "keyword": {
-          "type": "string"
+          "type": "string",
+          "x-semio-ui": {
+            "widget": "text",
+            "label": {
+              "en": "Keyword",
+              "de": "Schlüsselwort"
+            }
+          }
         },
         "value": {
           "type": "string"
         },
         "compressed": {
-          "type": "boolean"
+          "type": "boolean",
+          "x-semio-ui": {
+            "widget": "toggle",
+            "label": {
+              "en": "Compressed",
+              "de": "Komprimiert"
+            }
+          }
         },
         "kind": {
-          "$ref": "#/$defs/PngTextKind"
+          "$ref": "#/$defs/PngTextKind",
+          "x-semio-ui": {
+            "options": {
+              "zText": {
+                "en": "Compressed text (zTXt)",
+                "de": "Komprimierter Text (zTXt)"
+              },
+              "iText": {
+                "en": "International text (iTXt)",
+                "de": "Internationaler Text (iTXt)"
+              }
+            }
+          }
         },
         "languageTag": {
-          "type": "string"
+          "type": "string",
+          "x-semio-ui": {
+            "widget": "text",
+            "label": {
+              "en": "Language tag",
+              "de": "Sprachkennung"
+            }
+          }
         },
         "translatedKeyword": {
-          "type": "string"
+          "type": "string",
+          "x-semio-ui": {
+            "widget": "text",
+            "label": {
+              "en": "Translated keyword",
+              "de": "Übersetztes Schlüsselwort"
+            }
+          }
         }
       }
     },

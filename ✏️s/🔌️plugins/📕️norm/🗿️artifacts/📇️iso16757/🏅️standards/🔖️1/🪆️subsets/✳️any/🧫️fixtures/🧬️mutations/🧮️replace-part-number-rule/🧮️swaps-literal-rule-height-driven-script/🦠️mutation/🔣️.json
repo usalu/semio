@@ -1,0 +1,9 @@
+{
+  "ReplacePartNumberRule": {
+    "newRule": {
+      "kind": "script",
+      "function_id": "partno",
+      "source": "height"
+    }
+  }
+}

@@ -1,7 +1,14 @@
-/** 🦠️ move-skin executable structural glTF command. */
-import type { GltfOrthographic, GltfPerspective, GltfSnapshot } from '../../📸️snapshot/🟦️.ts';
-import { clone, insert, order, position, reject, remove, relocate, reorder, repair, type GltfMutationRejection, type GltfStructuralResult } from './🟦️';
-export const GltfMoveSkinDescriptor = { id: 's.stdio.gltf.mutation.move-skin.v1', version: 1, touchedPathPattern: 'document/skins', referencePolicy: 'all typed skin references are remapped, repaired, or rejected' } as const;
-export interface GltfMoveSkinPayload { index: number; position: number }
-export const validateGltfMoveSkin = (payload: GltfMoveSkinPayload, base: GltfSnapshot): GltfMutationRejection | undefined => { const index = position(payload.index, base.document.skins.length, 'document/skins'); if (index) return index; const destination = position(payload.position, base.document.skins.length, 'document/skins'); if (destination) return destination; if (payload.index === payload.position) return reject('gltf.mutation.no-observable-change', 'document/skins', 'destination equals source');  return undefined; };
-export const applyGltfMoveSkin = (base: GltfSnapshot, payload: GltfMoveSkinPayload): GltfStructuralResult => { const rejection = validateGltfMoveSkin(payload, base); if (rejection) return { accepted: false, rejection }; try { const next = clone(base); relocate(next, 'skins', payload.index, payload.position); return { accepted: true, snapshot: clone(next) }; } catch (error) { return { accepted: false, rejection: typeof error === 'object' && error && 'code' in error ? error as GltfMutationRejection : reject('gltf.mutation.apply-failed', 'document/skins', String(error)) }; } };
+/** 🚚️ `move-skin` wire twin: the flat `Apply` payload `GltfMoveSkinPayload` and the phase wire `MoveSkinMutation`, exactly as `./🦀️.rs` writes them.
+ * @see ./🧬️schema/🔣️.json */
+import { gltfWireIndex, gltfWireObject, gltfWireRequired } from "../../../📸️snapshot/🟦️.ts";
+import { type GltfDiff, type GltfPhase, gltfWirePhase, parseGltfDiff } from "../../../🔺️diff/🟦️.ts";
+
+export interface GltfMoveSkinPayload {
+  index: number;
+  position: number;
+}
+
+export type MoveSkinMutation = GltfPhase<GltfMoveSkinPayload, GltfDiff>;
+
+export const parseGltfMoveSkinPayload = gltfWireObject<GltfMoveSkinPayload>({ index: gltfWireRequired(gltfWireIndex), position: gltfWireRequired(gltfWireIndex) });
+export const parseMoveSkinMutation = gltfWirePhase(parseGltfMoveSkinPayload, parseGltfDiff);

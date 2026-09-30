@@ -41,7 +41,7 @@ pub fn eval_tick_effect(window_id: &str, window_kind_id: &str) -> Effect {
 /// contributed extension serves faults identically on every hop, so a chain that re-armed on it
 /// would re-park the identical request forever. The twin of generation2d's `preview_eval::may_rearm`.
 pub fn may_rearm(host_snapshot: &semio_framework_artifact_flow_flow::FlowHostSnapshot) -> bool {
-    flow::unserved_flow_operator_kinds(host_snapshot).is_empty()
+    flow::unserved_flow_operator_kinds(host_snapshot, &flow::flow_operator_registry()).is_empty()
 }
 //#endregion 🔖️Constants
 
@@ -125,4 +125,3 @@ pub fn handle(payload: &FlowEvalTick, doc: &ArtifactView<'_, FlowSnapshot>, cfg:
 #[path = "🧪️tests/🔬️unit/🦀️.rs"]
 mod tests;
 //#endregion 🧪️Tests
-

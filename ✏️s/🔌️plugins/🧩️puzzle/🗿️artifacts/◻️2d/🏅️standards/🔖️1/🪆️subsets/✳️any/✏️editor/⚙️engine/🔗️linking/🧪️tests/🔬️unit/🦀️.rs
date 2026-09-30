@@ -21,11 +21,10 @@ mod tests {
         h.pointer_move_screen(overlap.x, overlap.y, false, false, false);
         assert!(matches!(h.interaction, Interaction::DragNodes { proximity_pair: Some(_), .. }), "expected proximity preview wire while overlapping compatible nodes");
         h.pointer_up_screen(overlap.x, overlap.y, false, false, false);
-        let ev = h.drain_events_json();
-        assert!(ev.contains("edgeCreate"), "expected edgeCreate, got: {ev}");
-        assert!(ev.contains("proximityConnect"), "expected proximityConnect, got: {ev}");
-        assert!(ev.contains("b:h0"));
-        assert!(ev.contains("a:h0"));
+        let rows: Vec<serde_json::Value> = serde_json::from_str(&h.drain_events_json()).expect("release rows");
+        assert!(!rows.iter().any(|row| row["name"] == "edgeCreate"), "the drop's link rides the gesture record, never a separate edge row: {rows:?}");
+        let record = rows.iter().find(|row| row["name"] == "gesture").expect("the release is one gesture record");
+        assert_eq!(record["payload"]["proximity"], json!([{ "source": "a:h0", "target": "b:h0" }]), "the record carries the previewed proximity pair: {record}");
     }
 
     #[test]
@@ -42,8 +41,9 @@ mod tests {
         h.pointer_move_screen(overlap.x, overlap.y, false, false, false);
         assert!(matches!(h.interaction, Interaction::DragNodes { proximity_pair: None, .. }), "connected moving node must not preview node-drag proximity");
         h.pointer_up_screen(overlap.x, overlap.y, false, false, false);
-        let ev = h.drain_events_json();
-        assert!(!ev.contains("proximityConnect"), "expected no proximityConnect, got: {ev}");
+        let rows: Vec<serde_json::Value> = serde_json::from_str(&h.drain_events_json()).expect("release rows");
+        let record = rows.iter().find(|row| row["name"] == "gesture").expect("the release is one gesture record");
+        assert_eq!(record["payload"]["proximity"], json!([]), "a connected node records no proximity pair: {record}");
     }
 
     #[test]

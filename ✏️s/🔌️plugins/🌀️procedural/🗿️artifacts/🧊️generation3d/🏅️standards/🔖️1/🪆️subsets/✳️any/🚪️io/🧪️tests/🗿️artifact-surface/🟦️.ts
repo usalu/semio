@@ -1,4 +1,5 @@
 import assert from "node:assert/strict";
+import Ajv from "ajv";
 import { readFileSync, readdirSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 
@@ -45,6 +46,8 @@ interface ActionRow {
 interface ArtifactSurfaceFixture {
   readonly schema: string;
   readonly artifactKind: string;
+  readonly registryText: { readonly source: string; readonly sourceKinds: readonly string[]; readonly target: string; readonly preserveGraph: boolean };
+  readonly exportInputs: { readonly document: readonly string[]; readonly preparedGeometry: readonly string[]; readonly rejectGeometryAsDocument: string; readonly rejectDocumentAsGeometry: string };
   readonly exportFormats: readonly FormatRow[];
   readonly importFormats: readonly FormatRow[];
   readonly acceptFilter: string;
@@ -101,6 +104,7 @@ export function testGeneration3dDocumentIoSurface(): void {
   const fixture = JSON.parse(readFileSync(`${here}/../../../🧫️fixtures/🚪️io/🗿️artifact-surface.json`, "utf8")) as ArtifactSurfaceFixture;
   assert.equal(fixture.schema, "generation3d.artifact-io-surface.v1");
   assert.equal(fixture.artifactKind, "s.procedural.generation3d");
+  testGeneration3dIoInputContracts();
 
   const representations = stdioRepresentations(`${here}/../../../../../../../../../../🗄️stdio/🗿️artifacts`);
   assert.ok(representations.size > 0, "the stdio artifacts' own definitions were found on disk");
@@ -155,4 +159,24 @@ export function testGeneration3dDocumentIoSurface(): void {
       `editorActions=${fixture.editorActions.length} viewerActions=${fixture.viewerActions.length} faultCodes=${Object.keys(fixture.faultCodes).join(",")} ` +
       `accept=${fixture.acceptFilter}`,
   );
+}
+
+/** 🚪️ Validates the neutral document/prepared-geometry contract against the independent schema oracle. */
+export function testGeneration3dIoInputContracts(): number {
+  const here = fileURLToPath(new URL(".", import.meta.url));
+  const fixture = JSON.parse(readFileSync(`${here}/../../../🧫️fixtures/🚪️io/🗿️artifact-surface.json`, "utf8")) as ArtifactSurfaceFixture;
+  const schema = JSON.parse(readFileSync(`${here}/../../../🧬️schema/🔣️.json`, "utf8"));
+  const validate = new Ajv({ strict: false }).compile(schema.$defs.Generation3dExportInputs);
+  assert.ok(validate(fixture.exportInputs), JSON.stringify(validate.errors));
+  assert.equal(validate({ ...fixture.exportInputs, document: ["obj"] }), false);
+  assert.equal(validate({ ...fixture.exportInputs, preparedGeometry: ["txt"] }), false);
+  assert.deepEqual(fixture.exportInputs.document, fixture.exportFormats.filter(row => !row.geometry).map(row => row.id));
+  assert.deepEqual(fixture.exportInputs.preparedGeometry, fixture.exportFormats.filter(row => row.geometry).map(row => row.id));
+
+
+  const validateRegistry = new Ajv({ strict: false }).compile(schema.$defs.Generation3dRegistryTextRoundTrip);
+  assert.ok(validateRegistry(fixture.registryText), JSON.stringify(validateRegistry.errors));
+  assert.equal(validateRegistry({ ...fixture.registryText, target: "s.stdio.obj" }), false);
+  assert.equal(validateRegistry({ ...fixture.registryText, sourceKinds: ["prepared-mesh"] }), false);
+  return 8;
 }

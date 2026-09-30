@@ -44,6 +44,14 @@ Feature: Apply every typed PPTX ECMA-376 Transitional conformance-class mutation
   Every scenario copies the committed .pptx into the case work directory before touching it, so the
   7 real slides and 3 real media parts the 🧱️base case also reads are never written to by this one.
 
+  Every `params` cell is the leaf's own wire payload.
+  Both implementations read that one wire: the reference engine by field name, the subject through
+  `Mutation::from_payload_value`, whose re-emitted payload must equal the row exactly; the subject
+  undoes every row with `Mutation::inverse` itself. `set-snapshot` replaces the whole package, so its
+  payload is the entire stamped package and no table cell: it is the plain `mutate-set-snapshot`/
+  `inverse-set-snapshot` pair, in which the subject records `stamp_conformance_class_mutation` — one
+  `set-snapshot` of its own strict-class stamp — and the reference stamps with its own engine.
+
   @id-mutate
   @level-exhaustive
   @mode-differential
@@ -56,23 +64,11 @@ Feature: Apply every typed PPTX ECMA-376 Transitional conformance-class mutation
     Then the oracle and the subject agree on the conformance-class projection
     Examples:
       | id                           | params                                                              |
-      | set-snapshot                 | {"conformanceClass": "strict"}                                      |
       | set-main-namespace           | {"namespace": "http://purl.oclc.org/ooxml/presentationml/main"}     |
       | set-drawing-namespace        | {"namespace": "http://purl.oclc.org/ooxml/drawingml/main"}          |
       | set-relationship-base        | {"base": "http://purl.oclc.org/ooxml/officeDocument/relationships"} |
       | set-conformance-attribute    | {"value": "strict"}                                                 |
       | remove-conformance-attribute | {}                                                                  |
-
-  @id-no-mutation-baseline-mutate
-  @level-exhaustive
-  @mode-differential
-  Scenario: Apply no-mutation to the real presentation package
-    Given the real input package shared://📽️.pptx
-    When the no-mutation mutation is applied with its parameters
-      """
-      {"kind": "no-mutation", "params": {}}
-      """
-    Then the oracle and the subject agree on the conformance-class projection
 
   @id-inverse
   @level-exhaustive
@@ -87,24 +83,27 @@ Feature: Apply every typed PPTX ECMA-376 Transitional conformance-class mutation
     Then the conformance-class projection is the one the package started from
     Examples:
       | id                           | params                                                              |
-      | set-snapshot                 | {"conformanceClass": "strict"}                                      |
       | set-main-namespace           | {"namespace": "http://purl.oclc.org/ooxml/presentationml/main"}     |
       | set-drawing-namespace        | {"namespace": "http://purl.oclc.org/ooxml/drawingml/main"}          |
       | set-relationship-base        | {"base": "http://purl.oclc.org/ooxml/officeDocument/relationships"} |
       | set-conformance-attribute    | {"value": "strict"}                                                 |
       | remove-conformance-attribute | {}                                                                  |
 
-  @id-no-mutation-baseline-inverse
+  @id-mutate-set-snapshot
+  @level-exhaustive
+  @mode-differential
+  Scenario: Replace the real presentation package with its own strict-class stamp
+    Given the real input package shared://📽️.pptx
+    When the whole package is replaced by its own stamp into the strict conformance class
+    Then the oracle and the subject agree on the conformance-class projection
+
+  @id-inverse-set-snapshot
   @level-exhaustive
   @mode-property
-  Scenario: Undoing no-mutation restores the real package
+  Scenario: Undoing the strict-class stamp restores the real presentation package
     Given the real input package shared://📽️.pptx
-    When the no-mutation mutation is applied with its parameters
-      """
-      {"kind": "no-mutation", "params": {}}
-      """
-    And the inverse mutation is applied to that result
-    Then the conformance-class projection is the one the package started from
+    When the whole package is replaced by its own strict-class stamp and that replacement is undone
+    Then the oracle and the subject agree on the conformance-class projection of the original package
 
   @id-identity-round-trip
   @level-long

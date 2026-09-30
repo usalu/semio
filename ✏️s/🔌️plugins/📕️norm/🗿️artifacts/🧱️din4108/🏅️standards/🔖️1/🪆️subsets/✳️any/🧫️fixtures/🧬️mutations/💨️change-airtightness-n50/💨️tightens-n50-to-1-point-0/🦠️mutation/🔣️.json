@@ -1,1 +1,5 @@
-{"ChangeAirtightnessN50":{"new_airtightness_n50":1.0}}
+{
+  "ChangeAirtightnessN50": {
+    "newAirtightnessN50": 1.0
+  }
+}

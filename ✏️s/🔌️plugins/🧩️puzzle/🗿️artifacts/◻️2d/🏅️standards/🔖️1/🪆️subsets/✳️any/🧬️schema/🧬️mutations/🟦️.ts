@@ -232,6 +232,29 @@ export interface ChangeTargetRegionLocked {
   newLocked: boolean;
 }
 
+/** ✋️ `drag-selection` payload — node and target-region ids moved by one relative offset. */
+export interface DragSelection {
+  targets: string[];
+  dx: number;
+  dy: number;
+}
+
+/** 🔄️ `rotate-selection` payload — node ids rotated by `angle` radians about the pivot. */
+export interface RotateSelection {
+  targets: string[];
+  pivotX: number;
+  pivotY: number;
+  angle: number;
+}
+
+/** 🔍️ `scale-selection` payload — node and target-region ids scaled by `factor` about the pivot. */
+export interface ScaleSelection {
+  targets: string[];
+  pivotX: number;
+  pivotY: number;
+  factor: number;
+}
+
 export type Puzzle2dMutation =
   | ({ mutation: "createNode" } & CreateNode)
   | ({ mutation: "deleteNode" } & DeleteNode)
@@ -265,4 +288,7 @@ export type Puzzle2dMutation =
   | ({ mutation: "resizeTargetRegion" } & ResizeTargetRegion)
   | ({ mutation: "editTargetRegionLabel" } & EditTargetRegionLabel)
   | ({ mutation: "changeTargetRegionHidden" } & ChangeTargetRegionHidden)
-  | ({ mutation: "changeTargetRegionLocked" } & ChangeTargetRegionLocked);
+  | ({ mutation: "changeTargetRegionLocked" } & ChangeTargetRegionLocked)
+  | ({ mutation: "dragSelection" } & DragSelection)
+  | ({ mutation: "rotateSelection" } & RotateSelection)
+  | ({ mutation: "scaleSelection" } & ScaleSelection);

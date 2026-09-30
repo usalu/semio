@@ -5,8 +5,7 @@ use crate::schema::snapshot::GltfJson;
 use crate::GltfSnapshot;
 pub const ID: &str = "s.stdio.gltf.mutation.change-asset-extension-data.v1";
 pub const TOUCHED_PATHS: &[&str] = &["document/asset/extensions"];
-#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::MutationLeaf)]
-#[mutation_leaf(contract = ::protocol)]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
 #[value(rename_all = "camelCase")]
 pub struct GltfChangeAssetExtensionDataPayload {
     pub data: Option<GltfJson>,
@@ -28,7 +27,7 @@ pub fn apply(payload: &GltfChangeAssetExtensionDataPayload, base: &GltfSnapshot)
 
 //#region 🧬️DirectMutation
 #[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::MutationLeaf)]
-#[mutation_leaf(contract = ::protocol)]
+#[mutation_leaf(contract = ::protocol, payload = Apply)]
 #[value(tag = "phase", content = "value", rename_all = "camelCase")]
 pub enum ChangeAssetExtensionDataMutation {
     Apply(GltfChangeAssetExtensionDataPayload),
@@ -72,6 +71,6 @@ impl protocol::MutationKind<GltfSnapshot, super::GltfMutation> for ChangeAssetEx
 
 //#region 🧪️Tests
 #[cfg(test)]
-#[path = "🧪️tests/🔬️direct-leaf/🦀️.rs"]
-mod direct_leaf_tests;
+#[path = "🧪️tests/🔬️t069/🦀️.rs"]
+mod case_t069;
 //#endregion 🧪️Tests

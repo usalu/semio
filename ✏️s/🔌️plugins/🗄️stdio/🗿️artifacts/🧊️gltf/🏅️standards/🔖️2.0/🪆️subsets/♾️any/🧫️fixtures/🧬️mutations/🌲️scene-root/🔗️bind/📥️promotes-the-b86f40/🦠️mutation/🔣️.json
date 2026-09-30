@@ -1,0 +1,11 @@
+{
+  "mutation": "bindSceneRootNode",
+  "payload": {
+    "phase": "apply",
+    "value": {
+      "scene": 0,
+      "node": 0,
+      "position": 0
+    }
+  }
+}

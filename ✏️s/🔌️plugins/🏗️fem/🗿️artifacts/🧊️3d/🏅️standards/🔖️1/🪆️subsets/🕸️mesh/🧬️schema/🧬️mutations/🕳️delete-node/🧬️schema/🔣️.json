@@ -5,11 +5,30 @@
   "type": "object",
   "additionalProperties": false,
   "required": [
+    "mutation",
     "id"
   ],
   "properties": {
+    "mutation": {
+      "const": "deleteNode"
+    },
     "id": {
-      "type": "string"
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Node",
+          "de": "Knoten"
+        },
+        "ref": {
+          "kind": "node",
+          "domain": "fem3d",
+          "granularity": "node"
+        },
+        "group": "target",
+        "order": 10
+      }
     }
   }
 }

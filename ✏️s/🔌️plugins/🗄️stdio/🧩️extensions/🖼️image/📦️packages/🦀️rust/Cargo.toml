@@ -103,6 +103,7 @@ semio-s-artifact-stdio-bmp = { workspace = true, features = ["component-app-asse
 semio-s-artifact-stdio-tiff = { workspace = true, features = ["component-app-assembly"] }
 semio-s-artifact-stdio-gif = { workspace = true, features = ["component-app-assembly"] }
 semio-s-artifact-stdio-svg = { workspace = true, features = ["component-app-assembly"] }
+semio-s-artifact-stdio-contract = { workspace = true }
 semio-framework = { workspace = true }
 semio-framework-dispatch-macros = { workspace = true }
 semio-framework-plugin = { workspace = true }

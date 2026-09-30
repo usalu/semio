@@ -1,12 +1,36 @@
 {
-  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/norm/din18599/mutation/change-geg-qp-factor/schema.json",
   "title": "ChangeGegQpFactor",
   "type": "object",
-  "properties": {
-    "newGegQpFactor": {
-      "type": "number"
-    }
-  },
   "additionalProperties": false,
-  "$id": "https://json.schemas.assets.semio-tech.com/s/norm/din18599/mutation/change-geg-qp-factor/schema.json"
+  "required": [
+    "mutation",
+    "newGegQpFactor"
+  ],
+  "properties": {
+    "mutation": {
+      "const": "changeGegQpFactor"
+    },
+    "newGegQpFactor": {
+      "type": "number",
+      "exclusiveMinimum": 0,
+      "x-semio-ui": {
+        "widget": "stepper",
+        "role": "value",
+        "label": {
+          "en": "GEG primary energy requirement factor",
+          "de": "GEG-Anforderungsfaktor für den Jahres-Primärenergiebedarf"
+        },
+        "description": {
+          "en": "Factor applied to the reference building's annual primary energy demand Q_P (GEG § 15).",
+          "de": "Faktor auf den Jahres-Primärenergiebedarf Q_P des Referenzgebäudes (GEG § 15)."
+        },
+        "step": 0.01,
+        "precision": 2,
+        "group": "requirements",
+        "order": 10
+      }
+    }
+  }
 }

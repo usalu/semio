@@ -5,12 +5,30 @@
   "type": "object",
   "additionalProperties": false,
   "required": [
+    "mutation",
     "asset",
     "key"
   ],
   "properties": {
+    "mutation": {
+      "const": "createAsset"
+    },
     "key": {
-      "type": "string"
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "text",
+        "role": "value",
+        "label": {
+          "en": "Asset Key",
+          "de": "Asset-Schlüssel"
+        },
+        "description": {
+          "en": "Unique key of the new asset.",
+          "de": "Eindeutiger Schlüssel des neuen Assets."
+        },
+        "group": "identity",
+        "order": 10
+      }
     },
     "asset": {
       "type": "object",
@@ -24,21 +42,84 @@
       ],
       "properties": {
         "mime": {
-          "type": "string"
+          "type": "string",
+          "x-semio-ui": {
+            "widget": "text",
+            "role": "value",
+            "label": {
+              "en": "Media Type",
+              "de": "Medientyp"
+            },
+            "description": {
+              "en": "e.g. image/jpeg or image/png.",
+              "de": "z. B. image/jpeg oder image/png."
+            },
+            "group": "media",
+            "order": 10
+          }
         },
         "data": {
-          "type": "string"
+          "type": "string",
+          "x-semio-ui": {
+            "widget": "hidden",
+            "role": "value",
+            "label": {
+              "en": "Image Data",
+              "de": "Bilddaten"
+            },
+            "description": {
+              "en": "Base64-encoded image bytes.",
+              "de": "Base64-kodierte Bilddaten."
+            },
+            "group": "media",
+            "order": 20
+          }
         },
         "width": {
           "type": "integer",
           "format": "uint32",
-          "minimum": 0
+          "minimum": 0,
+          "x-semio-ui": {
+            "widget": "stepper",
+            "role": "value",
+            "label": {
+              "en": "Width (px)",
+              "de": "Breite (px)"
+            },
+            "unit": "px",
+            "step": 1,
+            "precision": 0,
+            "group": "media",
+            "order": 30
+          }
         },
         "height": {
           "type": "integer",
           "format": "uint32",
-          "minimum": 0
+          "minimum": 0,
+          "x-semio-ui": {
+            "widget": "stepper",
+            "role": "value",
+            "label": {
+              "en": "Height (px)",
+              "de": "Höhe (px)"
+            },
+            "unit": "px",
+            "step": 1,
+            "precision": 0,
+            "group": "media",
+            "order": 40
+          }
         }
+      },
+      "x-semio-ui": {
+        "role": "value",
+        "label": {
+          "en": "Image Asset",
+          "de": "Bild-Asset"
+        },
+        "group": "record",
+        "order": 20
       }
     }
   }

@@ -5,14 +5,14 @@ message RenameLayout {
   string new_name = 1;
 }
 message ChangePrintTarget {
-  string new_print_target = 1;
+  optional string new_print_target = 1;
 }
 message ChangeDataFields {
-  string new_json = 1;
+  optional string new_json = 1;
 }
 message CreatePage {
   bytes page = 1;
-  uint32 index = 2;
+  optional uint32 index = 2;
 }
 message DeletePage {
   string id = 1;
@@ -47,7 +47,7 @@ message ReorderPages {
 }
 message CreateStory {
   bytes story = 1;
-  uint32 index = 2;
+  optional uint32 index = 2;
 }
 message DeleteStory {
   string id = 1;
@@ -58,7 +58,7 @@ message EditStory {
 }
 message CreateLink {
   bytes link = 1;
-  uint32 index = 2;
+  optional uint32 index = 2;
 }
 message DeleteLink {
   string id = 1;
@@ -70,8 +70,8 @@ message ChangeLinkPath {
 message CreateFrame {
   string page_id = 1;
   bytes frame = 2;
-  uint32 index = 3;
-  string layer_id = 4;
+  optional uint32 index = 3;
+  optional string layer_id = 4;
 }
 message DeleteFrame {
   string page_id = 1;
@@ -89,15 +89,20 @@ message ResizeFrame {
   double new_width = 3;
   double new_height = 4;
 }
+message RotateFrame {
+  string page_id = 1;
+  string frame_id = 2;
+  double new_rotation = 3;
+}
 message ChangeFrameFill {
   string page_id = 1;
   string frame_id = 2;
-  bytes new_fill = 3;
+  optional bytes new_fill = 3;
 }
 message ChangeFrameStroke {
   string page_id = 1;
   string frame_id = 2;
-  bytes new_stroke = 3;
+  optional bytes new_stroke = 3;
 }
 message ChangeFrameWrapMode {
   string page_id = 1;
@@ -108,11 +113,6 @@ message ChangeFrameColumns {
   string page_id = 1;
   string frame_id = 2;
   uint32 new_columns = 3;
-}
-message RotateFrame {
-  string page_id = 1;
-  string frame_id = 2;
-  double new_rotation = 3;
 }
 message UpdateGrid {
   double baseline_grid = 1;
@@ -166,7 +166,7 @@ message UpdateCharacterStyle {
   optional double font_size = 4;
   optional uint32 font_weight = 5;
   optional bool italic = 6;
-  optional string color = 7;
+  optional bytes color = 7;
   optional double tracking = 8;
 }
 message UpdateParentPage {
@@ -185,28 +185,42 @@ message SetPageParent {
 }
 message SetPageGuides {
   string id = 1;
+  bytes guides = 2;
 }
 message SetStoryRuns {
   string id = 1;
+  bytes runs = 2;
 }
 message UpdateLink {
   string id = 1;
+  uint32 width = 2;
+  uint32 height = 3;
+  uint32 dpi = 4;
+  optional string color_profile = 5;
 }
 message SetPageOverrides {
   string id = 1;
+  bytes overrides = 2;
 }
 message CreateLayer {
-  string id = 1;
+  string page_id = 1;
+  string id = 2;
+  string name = 3;
+  bool remove = 4;
 }
 message SetFrameLayer {
-  string id = 1;
+  string page_id = 1;
+  string frame_id = 2;
+  string layer_id = 3;
+}
+message SetDrawingText {
+  uint32 index = 1;
+  string text = 2;
 }
 message ReorderFrame {
-  string id = 1;
-}
-
-message SetDrawingText {
-  string id = 1;
+  string page_id = 1;
+  string frame_id = 2;
+  bool forward = 3;
 }
 
 message LayoutMutation {

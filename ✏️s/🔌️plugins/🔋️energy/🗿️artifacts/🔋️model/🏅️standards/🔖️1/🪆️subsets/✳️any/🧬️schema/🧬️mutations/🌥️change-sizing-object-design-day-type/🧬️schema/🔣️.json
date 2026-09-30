@@ -5,18 +5,60 @@
   "type": "object",
   "additionalProperties": false,
   "required": [
+    "mutation",
     "id",
     "newDesignDayType"
   ],
   "properties": {
+    "mutation": {
+      "const": "changeSizingObjectDesignDayType"
+    },
     "id": {
-      "type": "integer"
+      "type": "integer",
+      "minimum": 0,
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Sizing object",
+          "de": "Auslegungsobjekt"
+        },
+        "description": {
+          "en": "The sizing object this mutation changes, by id.",
+          "de": "Auslegungsobjekt, das diese Mutation ändert, per ID."
+        },
+        "ref": {
+          "kind": "sizingObject"
+        },
+        "group": "target",
+        "order": 10
+      }
     },
     "newDesignDayType": {
       "enum": [
         "Heating",
         "Cooling"
-      ]
+      ],
+      "x-semio-ui": {
+        "widget": "segmented",
+        "role": "value",
+        "label": {
+          "en": "Design day type",
+          "de": "Auslegungstagtyp"
+        },
+        "options": {
+          "Heating": {
+            "en": "Heating design day",
+            "de": "Heizauslegungstag"
+          },
+          "Cooling": {
+            "en": "Cooling design day",
+            "de": "Kühlauslegungstag"
+          }
+        },
+        "group": "sizing",
+        "order": 20
+      }
     }
   }
 }

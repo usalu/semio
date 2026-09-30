@@ -353,6 +353,7 @@ impl store::ArtifactStoreOneItemPreparation<FlowSnapshot, FlowMutation> for Prep
                         label: None,
                         group_id: None,
                         origin: Default::default(),
+                        transaction: None,
                     }],
                     description: state.description.take(),
                     coalesce_key: None,

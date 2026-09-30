@@ -5,9 +5,10 @@ import Ajv from "ajv";
 import { BundleScript, ScriptRouter, resolveTestLevel, runBundleScriptMain, runVitest } from "../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
 
 class TestScript extends BundleScript {
-  run(segments: string[]): void {
+  async run(segments: string[]): Promise<void> {
     const { rest } = resolveTestLevel(segments);
-    runVitest(this.root, rest, "../../🧪️tests/🎚️config/🟦️.ts");
+    if (rest[0] !== "renderer-contract") await runVitest(this.root, rest, "../../🧪️tests/🎚️config/🟦️.ts");
+    await runVitest(this.root, rest[0] === "renderer-contract" ? rest.slice(1) : [], "../../🧪️tests/🎚️renderer-contract/🟦️.ts");
   }
 }
 
@@ -284,8 +285,8 @@ function ownerOracle(owner: PublicationOwner, source: string): boolean {
       // 🎬️ The one dispatch pipeline `handle` and every generic retained reduce share — a second,
       // divergent copy of the scene/host/delta body is exactly what this audit exists to refuse.
       && production.includes("fn puzzle2d_dispatch_emit(")
-      && production.includes("puzzle2d_dispatch_emit(command, &snapshot.0, config, &window_config, &window_transient, window_kind, self.view_state.as_ref(), puzzle2d_active_utility(self.view_state.as_ref()), &selection, None)?")
-      && production.includes("puzzle2d_dispatch_emit(command, &doc.snapshot.0, config, &window_config, &window_transient, window_kind, view_state, puzzle2d_active_utility(view_state), interaction.selection(PUZZLE2D_INTERACTION_DOMAIN), doc.operation_optional().cloned())")
+      && production.includes("puzzle2d_dispatch_emit(command, snapshot, config, &window_config, &window_transient, window_kind, self.view_state.as_ref(), puzzle2d_active_utility(self.view_state.as_ref()), &selection, &self.authoring_seed, &self.base_revision, None)?")
+      && production.includes("puzzle2d_dispatch_emit(command, doc.snapshot, config, &window_config, &window_transient, window_kind, view_state, puzzle2d_active_utility(view_state), interaction.selection(PUZZLE2D_INTERACTION_DOMAIN), authoring_seed, &base_revision, doc.operation_optional().cloned())")
       && production.includes("PUZZLE2D_SELECTION_BATCH_LIMIT: usize = 1_024")
       // 🧲️ An oversized selection is refused outright, never truncated, and a gesture that lands open
       // handles prices its fixed proximity auto-connect budget on top of the entities it rewrites.

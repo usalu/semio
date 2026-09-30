@@ -5,9 +5,14 @@
   "type": "object",
   "additionalProperties": false,
   "required": [
+    "mutation",
     "index"
   ],
   "properties": {
+    "mutation": {
+      "const": "setPageUserUnit",
+      "description": "Aggregate discriminator spliced in by PdfMutation; absent when the payload stands alone."
+    },
     "index": {
       "type": "integer",
       "minimum": 0
@@ -20,11 +25,18 @@
         {
           "type": "null"
         }
-      ]
-    },
-    "mutation": {
-      "const": "setPageUserUnit",
-      "description": "Aggregate discriminator spliced in by PdfMutation; absent when the payload stands alone."
+      ],
+      "x-semio-ui": {
+        "widget": "stepper",
+        "label": {
+          "en": "User unit",
+          "de": "Benutzereinheit"
+        },
+        "description": {
+          "en": "Size of one default user space unit in multiples of 1/72 inch.",
+          "de": "Größe einer Einheit des Standard-Benutzerraums in Vielfachen von 1/72 Zoll."
+        }
+      }
     }
   }
 }

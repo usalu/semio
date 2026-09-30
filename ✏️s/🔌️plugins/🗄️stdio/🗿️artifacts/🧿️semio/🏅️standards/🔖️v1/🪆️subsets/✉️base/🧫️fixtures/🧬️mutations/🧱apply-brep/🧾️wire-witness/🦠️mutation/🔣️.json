@@ -1,0 +1,10 @@
+{
+  "mutation": "applyBrep",
+  "payload": {
+    "mutation": {
+      "DeleteEdge": {
+        "id": "e4"
+      }
+    }
+  }
+}

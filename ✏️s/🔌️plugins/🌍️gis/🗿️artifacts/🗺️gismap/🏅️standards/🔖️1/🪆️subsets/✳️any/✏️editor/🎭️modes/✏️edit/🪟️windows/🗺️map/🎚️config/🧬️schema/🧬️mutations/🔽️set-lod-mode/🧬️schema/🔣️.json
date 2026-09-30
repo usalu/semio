@@ -3,22 +3,27 @@
   "$id": "https://json.schemas.assets.semio-tech.com/window/gis/map/config/mutation/set-lod-mode/schema.json",
   "title": "SetLodMode",
   "type": "object",
-  "$defs": {
-    "Payload": {
-      "type": "object",
-      "required": [
-        "value"
-      ],
-      "properties": {
-        "value": {
-          "type": "string"
-        }
+  "additionalProperties": false,
+  "required": [
+    "operation",
+    "value"
+  ],
+  "properties": {
+    "operation": {
+      "const": "setLodMode"
+    },
+    "value": {
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "text",
+        "role": "value",
+        "label": {
+          "en": "Level-of-detail mode",
+          "de": "Detailstufenmodus"
+        },
+        "group": "view",
+        "order": 10
       }
     }
-  },
-  "allOf": [
-    {
-      "$ref": "#/$defs/Payload"
-    }
-  ]
+  }
 }

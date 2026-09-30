@@ -1,6 +1,7 @@
 import * as React from "react";
-import { createMemoryStoragePort, isShellLocale } from "@semio-tech/framework";
+import { createMemoryStoragePort, dialogChoiceArgs, isShellLocale, type DialogChoice } from "@semio-tech/framework";
 import Ajv from "ajv";
+import Ajv2020 from "ajv/dist/2020.js";
 import { computeAccessibleDescription, computeAccessibleName } from "dom-accessibility-api";
 import { fireEvent, render } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
@@ -12,6 +13,8 @@ import { Popover, PopoverContent, PopoverTrigger } from "../../../🗨️Popover
 import { createShellScope, ShellScopeProvider } from "../../../🐚️ShellScope/🟦️.tsx";
 import fixture from "../../🧫️fixtures/♿️modal/🔣️.json";
 import uiSchema from "../../../../🧬️schema/🔣️.json";
+import dialogChoices from "../../../../../🛂️manifest/🧫️fixtures/🧫️dialog-choices/🔣️.json";
+import dialogChoicesSchema from "../../../../../🛂️manifest/🧫️fixtures/🧫️dialog-choices/🧬️schema/🔣️.json";
 
 /** 🌐️ Admits a fixture locale string into the shell's declared locale union at the test boundary. */
 const uiLocaleOf = (value: string): UiLocale => {
@@ -53,7 +56,7 @@ describe("UIDialog accessibility", () => {
     scopeB.portalLayerRef.current = portalB;
     const cancelA = vi.fn(), cancelB = vi.fn(), siblingAction = vi.fn();
     const scopedRenderField: UIDialogProps["renderField"] = (def, value, change, field) => def.id !== "kindChoice" ? renderField(def, value, change, field) : <Select id={`${field.id}-select`} value={String(value)} onValueChange={change}><SelectTrigger id={field.id} aria-labelledby={field.labelledBy}><SelectValue /></SelectTrigger><SelectContent><SelectItem value="map">Map</SelectItem><SelectItem value="terrain">Terrain</SelectItem></SelectContent></Select>;
-    const viewA = render(<ShellScopeProvider scope={scopeA}><UIDialog dialog={definition} renderField={scopedRenderField} onCancel={cancelA} onSubmit={vi.fn()} /></ShellScopeProvider>, { container: appA, baseElement: rootA });
+    const viewA = render(<ShellScopeProvider scope={scopeA}><UIDialog onChoose={vi.fn()} dialog={definition} renderField={scopedRenderField} onCancel={cancelA} onSubmit={vi.fn()} /></ShellScopeProvider>, { container: appA, baseElement: rootA });
     const viewB = render(<ShellScopeProvider scope={scopeB}><button type="button" onClick={siblingAction}>Sibling action</button></ShellScopeProvider>, { container: appB, baseElement: rootB });
     try {
       const dialogA = rootA.querySelector<HTMLElement>('[role="dialog"]')!;
@@ -70,7 +73,7 @@ describe("UIDialog accessibility", () => {
       expect(rootA.querySelector('[role="listbox"]')).not.toBeNull();
       fireEvent.keyDown(viewB.getByRole("button", { name: "Sibling action" }), { key: "Escape" });
       expect(cancelA).toHaveBeenCalledTimes(fixture.scoped.foreignEscapeCancels);
-      viewB.rerender(<ShellScopeProvider scope={scopeB}><UIDialog dialog={definition} renderField={scopedRenderField} onCancel={cancelB} onSubmit={vi.fn()} /></ShellScopeProvider>);
+      viewB.rerender(<ShellScopeProvider scope={scopeB}><UIDialog onChoose={vi.fn()} dialog={definition} renderField={scopedRenderField} onCancel={cancelB} onSubmit={vi.fn()} /></ShellScopeProvider>);
       fireEvent.click(rootB.querySelector<HTMLElement>('[role="combobox"]')!);
       const pickerB = rootB.querySelector<HTMLElement>('[role="listbox"]')!;
       expect(rootA.querySelector('[role="listbox"]')).not.toBeNull();
@@ -107,7 +110,7 @@ describe("UIDialog accessibility", () => {
     document.body.append(root);
     scope.rootRef.current = root;
     scope.portalLayerRef.current = portal;
-    const view = render(<ShellScopeProvider scope={scope}><UIDialog dialog={definition} renderField={renderField} onCancel={vi.fn()} onSubmit={vi.fn()} /></ShellScopeProvider>, { container: app, baseElement: root });
+    const view = render(<ShellScopeProvider scope={scope}><UIDialog onChoose={vi.fn()} dialog={definition} renderField={renderField} onCancel={vi.fn()} onSubmit={vi.fn()} /></ShellScopeProvider>, { container: app, baseElement: root });
     try {
       expect(scope.query("#kindChoice")).toBe(view.getByRole("combobox", { name: "Art" }));
       expect(scope.query('[id="ui.dialog.submit"]')).toBe(view.getByRole("button", { name: "Erstellen" }));
@@ -122,7 +125,7 @@ describe("UIDialog accessibility", () => {
   it("keeps a nested owned editor popover inside modal isolation and dismisses the child first", async () => {
     await uiI18n.changeLanguage("en");
     const cancel = vi.fn();
-    const view = render(<UIDialog dialog={definition} onCancel={cancel} onSubmit={vi.fn()} renderField={(def, value, change, field) => def.id !== "name" ? renderField(def, value, change, field) : <Popover><PopoverTrigger aria-labelledby={field.labelledBy}>Edit</PopoverTrigger><PopoverContent aria-label="Name editor"><input aria-label="Edited name" value={String(value ?? "")} onChange={event => change(event.target.value)} /></PopoverContent></Popover>} />);
+    const view = render(<UIDialog onChoose={vi.fn()} dialog={definition} onCancel={cancel} onSubmit={vi.fn()} renderField={(def, value, change, field) => def.id !== "name" ? renderField(def, value, change, field) : <Popover><PopoverTrigger aria-labelledby={field.labelledBy}>Edit</PopoverTrigger><PopoverContent aria-label="Name editor"><input aria-label="Edited name" value={String(value ?? "")} onChange={event => change(event.target.value)} /></PopoverContent></Popover>} />);
     const trigger = view.getByRole("button", { name: "Name" });
     fireEvent.click(trigger);
     const field = view.getByRole("textbox", { name: "Edited name" });
@@ -139,7 +142,7 @@ describe("UIDialog accessibility", () => {
     await uiI18n.changeLanguage("en");
     const cancel = vi.fn();
     const submit = vi.fn();
-    const view = render(<UIDialog dialog={definition} seedArgs={{ name: "Map C" }} onCancel={cancel} onSubmit={submit} renderField={(def, value, change, field) => def.id !== "kindChoice" ? renderField(def, value, change, field) : <Select id={`${field.id}-select`} value={String(value)} onValueChange={change}><SelectTrigger id={field.id} aria-labelledby={field.labelledBy}><SelectValue /></SelectTrigger><SelectContent><SelectItem value="map">Map</SelectItem><SelectItem value="terrain">Terrain</SelectItem></SelectContent></Select>} />);
+    const view = render(<UIDialog onChoose={vi.fn()} dialog={definition} seedArgs={{ name: "Map C" }} onCancel={cancel} onSubmit={submit} renderField={(def, value, change, field) => def.id !== "kindChoice" ? renderField(def, value, change, field) : <Select id={`${field.id}-select`} value={String(value)} onValueChange={change}><SelectTrigger id={field.id} aria-labelledby={field.labelledBy}><SelectValue /></SelectTrigger><SelectContent><SelectItem value="map">Map</SelectItem><SelectItem value="terrain">Terrain</SelectItem></SelectContent></Select>} />);
     const picker = view.getByRole("combobox", { name: "Kind" });
     fireEvent.click(picker);
     const options = view.getByRole("listbox");
@@ -167,7 +170,7 @@ describe("UIDialog accessibility", () => {
     opener.focus();
     const cancel = vi.fn();
     const submit = vi.fn();
-    const view = render(<UIDialog dialog={definition} renderField={renderField} onCancel={cancel} onSubmit={submit} />);
+    const view = render(<UIDialog onChoose={vi.fn()} dialog={definition} renderField={renderField} onCancel={cancel} onSubmit={submit} />);
     const modal = view.getByRole(fixture.expected.role, { name: row.title });
     expect(modal.getAttribute("aria-modal")).toBe(fixture.expected.modal);
     expect(computeAccessibleName(modal)).toBe(row.title);
@@ -208,7 +211,7 @@ describe("UIDialog accessibility", () => {
     await uiI18n.changeLanguage("en");
     const cancel = vi.fn();
     const submit = vi.fn();
-    const view = render(<UiKeybindingsProvider bindings={new Map([["ui.dialog.cancel", "alt+x"], ["ui.dialog.submit", "ctrl+enter"]])}><UIDialog dialog={definition} seedArgs={{ name: "Map B" }} renderField={renderField} onCancel={cancel} onSubmit={submit} /></UiKeybindingsProvider>);
+    const view = render(<UiKeybindingsProvider bindings={new Map([["ui.dialog.cancel", "alt+x"], ["ui.dialog.submit", "ctrl+enter"]])}><UIDialog onChoose={vi.fn()} dialog={definition} seedArgs={{ name: "Map B" }} renderField={renderField} onCancel={cancel} onSubmit={submit} /></UiKeybindingsProvider>);
     fireEvent.keyDown(window, { key: "Enter", ctrlKey: true });
     expect(submit).not.toHaveBeenCalled();
     const field = view.getByRole("textbox", { name: "Name" });
@@ -221,5 +224,59 @@ describe("UIDialog accessibility", () => {
     cancel.mockClear();
     fireEvent.pointerDown(document.querySelector('[data-slot="dialog-overlay"]')!);
     expect(cancel).toHaveBeenCalledTimes(fixture.expected.outsideCancels);
+  });
+
+  it.each(["en", "de"] as const)("lays out, describes, gates and dispatches the shared dialog-choices fixture in %s", async (locale) => {
+    expect(new Ajv2020({ strict: true }).compile(dialogChoicesSchema)(dialogChoices)).toBe(true);
+    await uiI18n.changeLanguage(locale);
+    const dialog = dialogChoices.dialog as unknown as UIDialogProps["dialog"];
+    const read = (label: { readonly native: Readonly<Record<string, string>> }) => label.native[locale]!;
+    const choiceOf = (id: string) => dialog.choices!.find((choice) => choice.id === id)! as DialogChoice & { readonly label: { readonly native: Record<string, string> }; readonly description: { readonly native: Record<string, string> } };
+    for (const fixtureCase of dialogChoices.cases) {
+      const submit = vi.fn(), choose = vi.fn(), cancel = vi.fn();
+      const view = render(<UIDialog dialog={dialog} seedArgs={dialogChoices.seed} renderField={renderField} onSubmit={submit} onChoose={choose} onCancel={cancel} />);
+      const control = (entry: string): HTMLElement => {
+        const [kind, id] = entry.split(":");
+        if (kind === "field") return view.getByRole("textbox", { name: read(dialogChoices.dialog.args.find((arg) => arg.id === id)!.label) });
+        if (kind === "cancel") return view.getByRole("button", { name: read(dialogChoices.dialog.cancelLabel) });
+        if (kind === "submit") return view.getByRole("button", { name: read(dialogChoices.dialog.submitLabel) });
+        return view.getByRole("button", { name: read(choiceOf(id!).label) });
+      };
+      const modal = view.getByRole("dialog");
+      const tabbable = [...modal.querySelectorAll<HTMLElement>("input,button,select")];
+      const positions = dialogChoices.focusOrder.map((entry) => tabbable.indexOf(control(entry)));
+      expect(positions.every((position) => position >= 0)).toBe(true);
+      expect(positions).toEqual([...positions].sort((left, right) => left - right));
+      const overwrite = choiceOf("overwrite");
+      const destructive = control("choice:overwrite");
+      expect(computeAccessibleDescription(destructive)).toBe(read(overwrite.description));
+      expect(destructive.getAttribute("data-destructive")).toBe("true");
+      expect(destructive.getAttribute("data-tone")).toBe("danger");
+      expect(destructive.closest('[data-slot="button-group"]')?.className).toContain("text-destructive");
+      for (const [id, value] of Object.entries(fixtureCase.staged)) fireEvent.change(control(`field:${id}`), { target: { value } });
+      for (const button of fixtureCase.enabled) expect((control(button) as HTMLButtonElement).disabled, `${fixtureCase.case}: ${button} enabled`).toBe(false);
+      for (const button of fixtureCase.disabled) expect((control(button) as HTMLButtonElement).disabled, `${fixtureCase.case}: ${button} disabled`).toBe(true);
+      for (const dispatch of fixtureCase.dispatches) {
+        fireEvent.click(control(dispatch.button));
+        if (dispatch.button.startsWith("choice:")) {
+          const [choice, args] = choose.mock.lastCall!;
+          expect(choice.action).toBe(dispatch.action);
+          expect(args).toEqual(dispatch.args);
+          expect(dialogChoiceArgs(choice, dialog.args, { ...dialogChoices.seed, ...fixtureCase.staged })).toEqual(dispatch.args);
+        } else if (dispatch.button === "submit") {
+          expect(dialog.submitAction).toBe(dispatch.action);
+          expect(submit).toHaveBeenLastCalledWith(dispatch.args);
+        } else {
+          expect(dialog.cancelAction).toBe(dispatch.action);
+          expect(cancel).toHaveBeenCalledTimes(1);
+        }
+      }
+      for (const button of fixtureCase.disabled) fireEvent.click(control(button));
+      expect(submit).toHaveBeenCalledTimes(fixtureCase.dispatches.filter((dispatch) => dispatch.button === "submit").length);
+      fireEvent.keyDown(control("field:name"), { key: "Escape" });
+      expect(cancel).toHaveBeenCalledTimes(2);
+      expect(choose).toHaveBeenCalledTimes(fixtureCase.dispatches.filter((dispatch) => dispatch.button.startsWith("choice:")).length);
+      view.unmount();
+    }
   });
 });

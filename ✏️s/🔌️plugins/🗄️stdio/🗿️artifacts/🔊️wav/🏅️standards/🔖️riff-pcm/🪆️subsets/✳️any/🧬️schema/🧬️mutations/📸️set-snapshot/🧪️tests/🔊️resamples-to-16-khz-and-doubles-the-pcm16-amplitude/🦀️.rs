@@ -13,11 +13,11 @@ use crate::standards::riff_pcm::subsets::any::schema::diff::WavDiff;
 use crate::standards::riff_pcm::subsets::any::schema::mutations::{apply_wav_mutation, WavMutation};
 use crate::standards::riff_pcm::subsets::any::schema::snapshot::{WavData, WavSnapshot};
 
-const BEFORE: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/📸️set-snapshot/🔊️resamples-to-16-khz-and-doubles-the-pcm16-amplitude/📸️snapshot/⬅️before/🔣️.json");
-const AFTER: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/📸️set-snapshot/🔊️resamples-to-16-khz-and-doubles-the-pcm16-amplitude/📸️snapshot/➡️after/🔣️.json");
-const MUTATION: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/📸️set-snapshot/🔊️resamples-to-16-khz-and-doubles-the-pcm16-amplitude/🦠️mutation/🔣️.json");
-const DIFF: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/📸️set-snapshot/🔊️resamples-to-16-khz-and-doubles-the-pcm16-amplitude/🔺️diff/🔣️.json");
-const OUTCOME: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/📸️set-snapshot/🔊️resamples-to-16-khz-and-doubles-the-pcm16-amplitude/🎯️outcome/🔣️.json");
+const BEFORE: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/📸️set-snapshot/🔊️resamples-16-khz-doubles-pcm16-amplitude/📸️snapshot/⬅️before/🔣️.json");
+const AFTER: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/📸️set-snapshot/🔊️resamples-16-khz-doubles-pcm16-amplitude/📸️snapshot/➡️after/🔣️.json");
+const MUTATION: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/📸️set-snapshot/🔊️resamples-16-khz-doubles-pcm16-amplitude/🦠️mutation/🔣️.json");
+const DIFF: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/📸️set-snapshot/🔊️resamples-16-khz-doubles-pcm16-amplitude/🔺️diff/🔣️.json");
+const OUTCOME: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/📸️set-snapshot/🔊️resamples-16-khz-doubles-pcm16-amplitude/🎯️outcome/🔣️.json");
 
 fn before() -> WavSnapshot {
     dsl::json::from_json_str(BEFORE).expect("before WAV snapshot decodes")

@@ -1,4 +1,7 @@
 #!/usr/bin/env bun
+import { parseLocalSessionBrokerRecordV1, parseLocalSessionRequestV1, parseLocalSessionV1 } from "../../../🧰️framework/🛍️products/💻️os/🔨️modules/📇️directory/🎫️local-session/🗄️broker/🧬️schema/🟦️.ts";
+import { runCollabE2eCli } from "../../🧪️tests/🤝️dev-collaboration/🟦️.ts";
+import { DevLocalHubScript } from "../../🚀️local-bootstrap/👷️dev-owner/🟦️.ts";
 import { createHash, randomBytes, timingSafeEqual, webcrypto } from "node:crypto";
 import { chmodSync, closeSync, existsSync, fsyncSync, lstatSync, mkdirSync, mkdtempSync, openSync, readFileSync, readdirSync, realpathSync, renameSync, rmSync, statSync, writeFileSync, writeSync, type Stats , cpSync } from "node:fs";
 import { basename, dirname, isAbsolute, join, relative, resolve } from "node:path";
@@ -76,7 +79,7 @@ import { verifyFreshCatalogPackageV1 } from "../../../🧰️framework/🛍️pr
 import { browserActorImportAdmissionV1, buildClosedBrowserActorArtifactV1, type ClosedBrowserActorArtifactV1 } from "../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🌐️browser-bundle/📜️script.ts";
 import { ensureGuestSlimTypstFontsAt, ensurePreview2ShimVendorAt, hostShimSource, PLUGIN_HOST_SHIM_FILE, PREVIEW2_VENDOR_RELATIVE, pluginComponentBridgeSource, transpilePluginComponentAsync } from "../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🌐️browser-bundle/🏗️materialization/🟦️.ts";
 import { MODULE_BRIDGE_FILE, moduleDirectoryName } from "../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/📦️deployment/🟦️.ts";
-import { decodeTrustedPluginModuleBundleV1, encodeTrustedPluginModuleBundleV1, TRUSTED_PLUGIN_MODULE_BUNDLE_MAX_BYTES, TRUSTED_PLUGIN_MODULE_DESCRIPTOR_JSON_FILE, TRUSTED_PLUGIN_MODULE_DESCRIPTOR_PACK_FILE, TRUSTED_PLUGIN_MODULE_FILE_MAX_BYTES, TRUSTED_PLUGIN_MODULE_SCHEMA, utf8OrderV1, type TrustedPluginModuleBundleV1 } from "../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/🌎️hub-source/🧬️schema/🟦️.ts";
+import { decodeTrustedPluginModuleBundleV1, encodeTrustedPluginModuleBundleV1, TRUSTED_PLUGIN_MODULE_BUNDLE_MAX_BYTES, TRUSTED_PLUGIN_MODULE_DESCRIPTOR_JSON_FILE, TRUSTED_PLUGIN_MODULE_DESCRIPTOR_PACK_FILE, TRUSTED_PLUGIN_MODULE_FILE_MAX_BYTES, TRUSTED_PLUGIN_MODULE_SCHEMA, utf8OrderV1, type TrustedPluginModuleBundleV1 } from "../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/📦️deployment/🧬️schema/🟦️.ts";
 import { proveGisComponentColdMapPatch } from "../../../✏️s/🔌️plugins/🌍️gis/🧪️tests/🌉️component-cold-map-patch/🟦️.ts";
 /** 🌎️ `os-hub` router: `bun ./📜️script.ts <setup|build|test|dev>`. */
 import {
@@ -111,7 +114,7 @@ import { LocalRelayRoutingScript } from "../../🚀️local-relay/🧭️routing
 import { proveScopedDirectorySocketRevocationFixture } from "../../📇️directory/🔐️authorization/🔌️socket-grant/🧪️tests/🧾️fixture-verification/🟦️.ts";
 import { SocketGrantCheckScript } from "../../📇️directory/🔐️authorization/🔌️socket-grant/🧪️tests/🏃️execution/🟦️.ts";
 import { localRelayExecutionTargetAsset, localRelayInferencePath, localRelaySpaceArtifactCreationPath, localRelayUpstreamPath } from "../../🚀️local-relay/🧭️routing/🟦️.ts";
-import { issueLocalCredential, type LocalSessionBrokerV1, parseLocalAdminCapabilityV1, parseLocalSessionBrokerRecordV1, parseLocalSessionRequestV1, parseLocalSessionV1, startLocalSessionBroker } from "../../🚀️local-bootstrap/🔐️credential-issuance/🟦️.ts";
+import { issueLocalCredential, type LocalSessionBrokerV1, parseLocalAdminCapabilityV1, startLocalSessionBroker } from "../../🚀️local-bootstrap/🔐️credential-issuance/🟦️.ts";
 import { authenticatedFrame, LOCAL_BOOTSTRAP_SCHEMA, type LocalClientClass, type LocalProfile, verifyAuthenticatedFrame } from "../../🚀️local-bootstrap/🛂authentication/🟦️.ts";
 import { LOCAL_BOOTSTRAP_DEADLINE_MS, LOCAL_BOOTSTRAP_FRAME_MAX, LocalFrameReader, writeLocalFrame } from "../../🚀️local-bootstrap/📡️framing/🟦️.ts";
 import { ensureHubBackend, finishLocalHub, freeLoopbackPort, HUB_BINARY_SOURCES_FILE, HUB_DEV_BINARY_TARGET, hubBackendIdentity, hubBackendName, type HubBackendName, hubBinaryPath, hubDevBinaryPath, hubDevPostgresBinaryPath, LOCAL_HUB_ADMINISTRATOR_PROFILE, LOCAL_HUB_ADMINISTRATOR_SUBJECT, LOCAL_HUB_DEVELOPMENT_CATALOG_PACKAGES, LOCAL_HUB_DEVELOPMENT_PROFILES, LOCAL_READINESS_STALL_BOUND_MS, TRUSTED_CATALOG_READINESS_STALL_BOUND_MS, type LocalHubRun, startLocalHub, waitForChildExit, waitForReadiness } from "../../🚀️local-bootstrap/🏃️execution/🟦️.ts";
@@ -889,6 +892,7 @@ async function commitCheckInProcessEdit(
       diff: { schema: envelope.diffSchema, payload: Array.from(Buffer.from(envelope.diff, "base64")) },
       inverse: { schema: envelope.inverseSchema, payload: Array.from(Buffer.from(envelope.inverse, "base64")) },
       timestamp: { actor: 1, physical_ms: physicalMs, logical: index + 1 },
+      transaction: null,
     }));
     socket.send(encodeClientFrame({ Commands: { batch_id: 1, envelopes: wire } }, "command"));
     const ack = await waitForDocumentSocketFrame(socket, frames, (frame) => ("Ack" in frame && frame.Ack.batch_id === 1 ? frame.Ack : undefined), "persisted command acknowledgement");
@@ -7464,11 +7468,17 @@ async function proveGisMapFrozenBindingFixture(repoRoot: string): Promise<number
 
 /** 🧭️ Proves request-id reconciliation is closed, reader-bound and expiry-independent. */
 async function proveInferenceJobReconcileFixture(repoRoot: string): Promise<void> {
+  const { proveJobReconcileContract } = await import(join(repoRoot, "🧰️framework/🔨️modules/🧵️job/🔎️reconcile/🧪️tests/🔬️contract/🟦️.ts"));
+  proveJobReconcileContract();
   const root = join(repoRoot, "🌎️hub", "🧫️fixtures", "🧭️inference-job-reconcile-v1");
   const fixture = JSON.parse(readFileSync(join(root, "🔣️.json"), "utf8"));
-  const validateRequest = hubSchemaExport(repoRoot, "schema://hub.inference/InferenceJobReconcileRequestV1");
+  const neutralSchema = JSON.parse(readFileSync(join(repoRoot, "🧰️framework/🔨️modules/🧵️job/🔎️reconcile/🧬️schema/🔣️.json"), "utf8"));
+  const validateRequest = new Ajv({ strict: true }).addKeyword("x-semio-formats").compile({ ...neutralSchema, $ref: "#/$defs/JobReconcileRequestV1" });
   const validateResult = hubSchemaExport(repoRoot, "schema://hub.inference/InferenceJobReconcileResultV1");
-  const { parseInferenceJobReconcileRequestV1, parseInferenceJobReconcileResultV1 } = await import(join(repoRoot, "🌎️hub", "💡️inference", "🧬️schema", "🟦️.ts"));
+  const { parseJobReconcileRequestV1 } = await import(join(repoRoot, "🧰️framework/🔨️modules/🧵️job/🔎️reconcile/🧬️schema/🟦️.ts"));
+  const { parseInferenceJobReconcileResultV1 } = await import(join(repoRoot, "🌎️hub", "💡️inference", "🧬️schema", "🟦️.ts"));
+  const { parseJobReconcileResultV1 } = await import(join(repoRoot, "🧰️framework/🔨️modules/🧵️job/🔎️reconcile/🧬️schema/🟦️.ts"));
+  const { parseInferenceReconcilePayloadV1 } = await import(join(repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/👷️worker/🔎️reconcile/🟦️.ts"));
   if (fixture.schema !== "semio.hub.inference-job-reconcile-fixture/v1" || fixture.maximumRequestBytes !== 256 || fixture.requestCases.length !== 8 || fixture.results.length !== 11 || fixture.readerCases.length !== 6) {
     throw new Error("inference reconcile fixture envelope drifted");
   }
@@ -7484,7 +7494,7 @@ async function proveInferenceJobReconcileFixture(repoRoot: string): Promise<void
     const candidate = mutate(fixture.request, row.path, row.value);
     let parsed = false;
     try {
-      parsed = JSON.stringify(parseInferenceJobReconcileRequestV1(candidate)) === JSON.stringify(candidate);
+      parsed = JSON.stringify(parseJobReconcileRequestV1(candidate)) === JSON.stringify(candidate);
     } catch {}
     if (validateRequest(candidate) !== row.accepted || parsed !== row.accepted) throw new Error(`inference reconcile request parity ${row.name}`);
   }
@@ -7507,7 +7517,9 @@ async function proveInferenceJobReconcileFixture(repoRoot: string): Promise<void
     try {
       parsed = JSON.stringify(parseInferenceJobReconcileResultV1(candidate)) === JSON.stringify(candidate);
     } catch {}
-    if (validateResult(candidate) !== row.accepted || parsed !== row.accepted) throw new Error(`inference reconcile result parity ${row.name}`);
+    let portAccepted = false;
+    try { parseJobReconcileResultV1(candidate, parseInferenceReconcilePayloadV1); portAccepted = true; } catch {}
+    if (validateResult(candidate) !== row.accepted || parsed !== row.accepted || portAccepted !== row.accepted) throw new Error(`inference reconcile result parity ${row.name}`);
   }
   const identity = { userId: "a".repeat(32), sessionId: "b".repeat(32), authorizationGeneration: 1, spaceId: "c".repeat(32), documentId: "d".repeat(32) };
   for (const row of fixture.readerCases) {
@@ -7516,6 +7528,25 @@ async function proveInferenceJobReconcileFixture(repoRoot: string): Promise<void
     if (matches !== row.accepted) throw new Error(`inference reconcile reader predicate ${row.name}`);
   }
   console.log(`inference-job-reconcile-oracle: requests=${fixture.requestCases.length} results=${fixture.results.length} readers=${fixture.readerCases.length} byte-boundaries=3 ajv+typescript=1; no lookup, route, cancel, or recovery claim`);
+}
+
+class CanonicalArchitectureScript extends BundleScript {
+  async run(): Promise<void> {
+    await proveInferenceJobReconcileFixture(this.repoRoot);
+    const { proveLocalSessionBrokerContract } = await import("../../../🧰️framework/🛍️products/💻️os/🔨️modules/📇️directory/🎫️local-session/🗄️broker/🧪️tests/🔬️contract/🟦️.ts");
+    const { nextestArtifactLocation } = await import("../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts");
+    await proveLocalSessionBrokerContract(nextestArtifactLocation(this.repoRoot).directory);
+    await runExactCargoLaws({ cwd: this.repoRoot, ...exactCargoStageEnvironments(),
+      groups: [{ package: "semio-hub", target: { kind: "lib" }, laws: [
+        "every_manifest_case_is_accepted_exactly_when_the_fixture_says_so",
+        "only_the_canonical_manifest_bytes_decode_and_both_digests_agree_with_the_fixture",
+        "every_listed_file_verifies_against_its_own_bytes_and_tampering_is_refused",
+        "every_index_case_is_accepted_exactly_when_the_fixture_says_so",
+        "every_file_is_served_with_the_fixture_media_type",
+        "an_assembled_module_is_the_fixture_manifest_and_writes_content_addressed_files",
+        "a_loaded_catalog_indexes_and_serves_every_verified_plugin_module_file_and_refuses_a_tampered_one",
+      ] }], artifactDir: process.env.SEMIO_TEST_ARTIFACT_DIR, buildBudgetMs: 3_600_000, listBudgetMs: 60_000, lawBudgetMs: 120_000 });
+  }
 }
 
 class GisInferenceLedgerOracleScript extends BundleScript {
@@ -16306,7 +16337,7 @@ async function provePresenceNormalizationFixture(repoRoot: string): Promise<numb
     return Array.from(bytes);
   };
   const independentEncode = (peer: ArtifactPresencePeer): Buffer => {
-    const fields = [peer.label, peer.presencePack, peer.userId, peer.role, peer.dragGhostJson, peer.interaction, peer.color, peer.surface, peer.views.length ? peer.views : undefined, peer.ui, peer.toolRun, peer.principalKind, peer.activeTool];
+    const fields = [peer.label, peer.presencePack, peer.userId, peer.role, peer.dragGhostJson, peer.interaction, peer.color, peer.surface, peer.views.length ? peer.views : undefined, peer.ui, peer.toolRun, peer.principalKind, peer.activeTool, peer.historyEdit];
     const flags = fields.reduce<number>((mask, value, index) => (value === undefined ? mask : mask | (1 << index)), 0);
     const out = [...text(peer.actor), ...integer(flags), ...integer(peer.connectedAtMs)];
     for (const [index, value] of fields.entries()) {
@@ -16350,6 +16381,10 @@ async function provePresenceNormalizationFixture(repoRoot: string): Promise<numb
         out.push(...text(toolRun.toolId), states.indexOf(toolRun.state), ...integer(toolRun.stage), ...integer(toolRun.completed), toolRun.total === undefined ? 0 : 1);
         if (toolRun.total !== undefined) out.push(...integer(toolRun.total));
       } else if (index === 11) out.push(PRESENCE_PRINCIPAL_KINDS.indexOf(value as ArtifactPresencePrincipalKind));
+      else if (index === 13) {
+        const historyEdit = peer.historyEdit!;
+        out.push(...text(historyEdit.mutationId), ["editing", "replaying", "reviewing", "choosing", "finalizing"].indexOf(historyEdit.stage), ...integer(historyEdit.drafts));
+      }
     }
     return Buffer.from(out);
   };
@@ -16376,6 +16411,7 @@ async function provePresenceNormalizationFixture(repoRoot: string): Promise<numb
         toolRun: input.toolRun,
         principalKind: admitted.principalKind ?? "human",
         activeTool: input.activeTool,
+        historyEdit: input.historyEdit,
       };
       normalized = independentEncode(output);
       if (!normalized.equals(Buffer.from(encodePresencePeer(output)))) throw new Error("output canonical oracle mismatch");
@@ -16398,7 +16434,7 @@ async function provePresenceNormalizationFixture(repoRoot: string): Promise<numb
     !ingress.includes("self.refresh_presence(")
   )
     throw new Error("Hub lacks canonical admitted presence reconstruction");
-  for (const field of ["tool_run: input.tool_run", "connected_at_ms: slot.connected_at_ms", "label: slot.label.clone()", "user_id: slot.user_id.clone()", "role: slot.role.clone()", "color: Some(slot.color)", "surface: slot.document_surface.clone()", "principal_kind: Some(slot.principal_kind)"])
+  for (const field of ["tool_run: input.tool_run", "history_edit: input.history_edit", "connected_at_ms: slot.connected_at_ms", "label: slot.label.clone()", "user_id: slot.user_id.clone()", "role: slot.role.clone()", "color: Some(slot.color)", "surface: slot.document_surface.clone()", "principal_kind: Some(slot.principal_kind)"])
     if (!ingress.includes(field)) throw new Error(`Hub presence authority missing: ${field}`);
   if (!hub.includes("state.refresh_document_presence(") || !hub.includes("socket_grant.document_plan.as_ref().map(|plan| plan.surface.surface_id.clone())")) throw new Error("presence ingress must use the admitted plan surface");
   return fixture.vectors.length;
@@ -17641,6 +17677,11 @@ class SpaceJourneyCheckScript extends BundleScript {
 }
 //#endregion 🔖️SpaceJourney
 
+/** 🤝️ Executes the hub-owned two-browser collaboration acceptance suite. */
+class DevCollaborationScript extends BundleScript {
+  async run(segments: string[]): Promise<void> { await runCollabE2eCli(segments); }
+}
+
 const router = new ScriptRouter(import.meta.dir)
   .register("setup", SetupScript)
   .register("foundation-source-check", HubFoundationSourceScript)
@@ -17695,6 +17736,9 @@ const router = new ScriptRouter(import.meta.dir)
   .register("gis-map-proposal-check", GisMapProposalCheckScript)
   .register("trusted-stdio-gis-bundle-check", TrustedStdioGisBundleCheckScript)
   .register("gis-inference-ledger-oracle", GisInferenceLedgerOracleScript)
+  .register("canonical-architecture", CanonicalArchitectureScript)
+  .register("local-hub-owner", DevLocalHubScript)
+  .register("dev-collaboration", DevCollaborationScript)
   .register("gis-inference-ledger-check", GisInferenceLedgerCheckScript)
   .register("gis-map-frozen-binding-check", GisMapFrozenBindingCheckScript)
   .register("native-document-open-check", NativeDocumentOpenCheckScript)

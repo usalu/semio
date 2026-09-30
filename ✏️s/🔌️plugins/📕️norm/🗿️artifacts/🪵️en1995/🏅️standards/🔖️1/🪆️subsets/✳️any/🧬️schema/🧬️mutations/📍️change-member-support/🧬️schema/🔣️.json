@@ -10,15 +10,51 @@
   ],
   "properties": {
     "memberId": {
-      "type": "string"
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Member",
+          "de": "Bauteil"
+        },
+        "description": {
+          "en": "The timber member this mutation addresses.",
+          "de": "Das Holzbauteil, das diese Mutation adressiert."
+        },
+        "ref": {
+          "kind": "member"
+        },
+        "group": "target",
+        "order": 10
+      }
     },
     "newValue": {
-      "type": "string",
-      "enum": [
-        "simplySupported",
-        "cantilever",
-        "continuousTwoSpan"
-      ]
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1995/snapshot.json#/$defs/SupportType",
+      "x-semio-ui": {
+        "widget": "segmented",
+        "role": "value",
+        "label": {
+          "en": "Support conditions",
+          "de": "Lagerungsart"
+        },
+        "options": {
+          "SimplySupported": {
+            "en": "Simply supported",
+            "de": "Einfeldträger"
+          },
+          "Cantilever": {
+            "en": "Cantilever",
+            "de": "Kragträger"
+          },
+          "ContinuousTwoSpan": {
+            "en": "Continuous over two spans",
+            "de": "Zweifeldträger"
+          }
+        },
+        "group": "geometry",
+        "order": 20
+      }
     }
   }
 }

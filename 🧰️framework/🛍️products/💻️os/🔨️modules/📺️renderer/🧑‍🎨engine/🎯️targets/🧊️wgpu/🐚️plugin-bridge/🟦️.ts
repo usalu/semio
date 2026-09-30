@@ -1057,6 +1057,35 @@ export class WgpuTypedOperationDrive {
  * right after its own `client.command()` call resolves. */
 const pendingTurnEffects = new Map<number, WireVariant[]>();
 
+/** ⏪️ Per-instance history patches the guest pushed on UNCORRELATED `Invocation` frames between two host calls — the
+ * throttled UI-progress answers of a history-edit replay (`HistoryPatch.timeTravel` done/total, stage changes). React
+ * receives them through `subscribeOperationProgress`; this target's typed-operation drain is where they surface, so the
+ * drain queues them here and the Rust shell takes them every frame ({@link takeProgressHistoryPatches}) instead of
+ * waiting for the next dispatch reply. Oldest first, bounded; the frame itself still reaches the leftover fold. */
+const pendingProgressHistoryPatches = new Map<number, unknown[]>();
+
+/** ⏪️ How many unread progress patches one instance keeps — each carries the whole session status, so the newest wins. */
+const WGPU_PROGRESS_HISTORY_PATCH_CAPACITY = 64;
+
+/** ⏪️ Queues the history patch one uncorrelated shell `Invocation` frame carries, if it carries one. */
+export function stashProgressHistoryPatch(instanceId: number, frame: Uint8Array): void {
+  const decoded = decodeAppFrame(frame) as AppFrameValue;
+  if (!("Invocation" in decoded) || decoded.Invocation.history_patch.length === 0) return;
+  const patch = decodeInvocationPayloads(decoded.Invocation).historyPatch;
+  if (patch === undefined) return;
+  const queue = pendingProgressHistoryPatches.get(instanceId) ?? [];
+  queue.push(patch);
+  if (queue.length > WGPU_PROGRESS_HISTORY_PATCH_CAPACITY) queue.splice(0, queue.length - WGPU_PROGRESS_HISTORY_PATCH_CAPACITY);
+  pendingProgressHistoryPatches.set(instanceId, queue);
+}
+
+/** ⏪️ Hands the shell every progress patch queued for `instanceId` since its last take, oldest first. */
+export function takeProgressHistoryPatches(instanceId: number): readonly unknown[] {
+  const queue = pendingProgressHistoryPatches.get(instanceId) ?? [];
+  pendingProgressHistoryPatches.delete(instanceId);
+  return queue;
+}
+
 /** 🪪️ Instance ids are unique across EVERY plugin `loadPluginModule` loads, not just within one call —
  * `pendingTurnEffects` is keyed by `instanceId` alone and shared module-wide, mirroring the kernel's own
  * single global `next_instance_id`. */
@@ -1200,6 +1229,9 @@ export interface WgpuPluginHandle extends MediaTransportPort {
   /** 👥️ The last `AppFrame::Ephemeral` this instance's guest appended to an answer (`AppChannelClient.ephemeral`),
    * or `null` — what the shell's presence heartbeat carries as the peer's app presence pack and interaction. */
   readonly ephemeralSnapshot: (instanceId: number) => WgpuEphemeralSnapshot | null;
+  /** ⏪️ The history patches the guest pushed on uncorrelated progress frames since the last take — the wgpu twin of
+   * React's `subscribeOperationProgress` history lane ({@link takeProgressHistoryPatches}). */
+  readonly takeProgressHistoryPatches: (instanceId: number) => readonly unknown[];
   readonly dispose: () => Promise<void>;
 }
 
@@ -1262,6 +1294,7 @@ export async function loadPluginModule(pluginId: string, moduleUrl: string, sign
     lifecycleByInstance.delete(instanceId);
     uiRouteByInstance.delete(instanceId);
     pendingTurnEffects.delete(instanceId);
+    pendingProgressHistoryPatches.delete(instanceId);
     actorTurnChains.delete(actorId);
     closingInstances.delete(instanceId);
   };
@@ -1486,7 +1519,10 @@ export async function loadPluginModule(pluginId: string, moduleUrl: string, sign
             if (admitSpawnedJob(instanceId, effect)) continue;
             const frame = shellFrameBytes(effect, instanceId);
             if (frame && shellFrameAnswersACaller(frame)) frames.push(frame);
-            else leftover.push(effect);
+            else {
+              if (frame) stashProgressHistoryPatch(instanceId, frame);
+              leftover.push(effect);
+            }
           }
           if (leftover.length > WGPU_TYPED_OPERATION_EFFECT_CAPACITY) throw new Error(`wgpu-bridge typed-operation host effects for instance ${instanceId} exceeded their ${WGPU_TYPED_OPERATION_EFFECT_CAPACITY}-entry authority`);
           pendingTurnEffects.set(instanceId, leftover);
@@ -1871,6 +1907,7 @@ export async function loadPluginModule(pluginId: string, moduleUrl: string, sign
       if (failed && "Error" in failed) throw new Error(faultDisplayMessage(failed.Error.fault, decodePackValue));
     },
     ephemeralSnapshot: (instanceId) => wgpuEphemeralSnapshot(channelByInstance.get(instanceId)?.ephemeral() ?? null),
+    takeProgressHistoryPatches,
     codec: async (request) => {
       const actorId = codecActorId();
       const answer: ShardCodecAnswer = await submitActorWork(actorId, () => shardClient.codec(actorId, request));
@@ -1931,6 +1968,8 @@ export interface WgpuJsBridge {
   readonly codecPrintMirror: (artifactKind: string, pack: Uint8Array, spr: Uint8Array) => Promise<readonly [string, string]>;
   /** 👥️ `WgpuPluginHandle.ephemeralSnapshot`, synchronous — read after every action and command. */
   readonly ephemeralSnapshot: (instanceId: number) => WgpuEphemeralSnapshot | null;
+  /** ⏪️ JSON array of `HistoryPatch` — synchronous, taken by the shell every frame; `u64` carriers cross as numbers. */
+  readonly takeProgressHistoryPatches: (instanceId: number) => string;
 }
 
 /** 📦️ `handle_action_js`/`handle_command_js` pass the INVOCATION as `pk:`-prefixed pack too, for the
@@ -1993,6 +2032,7 @@ export function pluginHandleForBridge(handle: WgpuPluginHandle): WgpuJsBridge {
     codecPackSchemaHash: (artifactKind) => handle.codec({ operation: "pack-schema-hash", artifactKind }).then((value) => codecBytes(value, "pack-schema-hash")),
     codecPrintMirror: (artifactKind, pack, spr) => handle.codec({ operation: "print-mirror", artifactKind, pair: { pack, spr } }).then((value) => codecMirror(value)),
     ephemeralSnapshot: (instanceId) => handle.ephemeralSnapshot(instanceId),
+    takeProgressHistoryPatches: (instanceId) => JSON.stringify(handle.takeProgressHistoryPatches(instanceId), (_key, value: unknown) => (typeof value === "bigint" ? Number(value) : value)),
   };
 }
 

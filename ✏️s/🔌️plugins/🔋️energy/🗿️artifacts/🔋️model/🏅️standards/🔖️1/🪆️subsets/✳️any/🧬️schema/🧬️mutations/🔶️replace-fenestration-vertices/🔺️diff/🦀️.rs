@@ -17,7 +17,7 @@ pub fn diff(payload: &super::ReplaceFenestrationVertices, base: &EnergyModelSnap
     }
     if let Some(host) = base.model.surfaces.iter().find(|item| item.id == existing.surface_id) {
         if !crate::geometry::polygon_lies_on_plane(&payload.new_vertices_m, &host.vertices_m, crate::model::FENESTRATION_PLANE_TOLERANCE_M) {
-            return protocol::MutationOutcome::error("mutation.invariant", format!("Fenestration {}: the polygon must lie in host surface {}'s own plane.", payload.id.0, host.id.0), [payload.id.0.to_string()]);
+            return protocol::MutationOutcome::error("mutation.target-mismatch", format!("Fenestration {}: the polygon must lie in host surface {}'s own plane.", payload.id.0, host.id.0), [payload.id.0.to_string()]);
         }
     }
     if existing.vertices_m == payload.new_vertices_m {

@@ -1,8 +1,15 @@
-/** 🦠️ reorder-primitive-attributes: cohesive atomic mesh mutation. */
-import type { GltfJson, GltfSnapshot, GltfPrimitive, GltfMorphTarget } from '../../📸️snapshot/🟦️.ts';
-import { run, reject, positionIn, itemIndex, permutation, moveItem, type GltfLeafResult, type GltfMutationRejection } from './🟦️';
-export const GltfReorderPrimitiveAttributesDescriptor = { id: 's.stdio.gltf.mutation.reorder-primitive-attributes.v1', version: 1, kind: 'reorder', touchedPaths: ["document/meshes/*/primitives/*/attributes"], referencePolicy: 'accepts only the complete semantic-key permutation' } as const;
-export interface GltfReorderPrimitiveAttributesPayload { mesh: number; primitive: number; order: string[] }
-export type GltfReorderPrimitiveAttributesResult = GltfLeafResult;
-export const validateGltfReorderPrimitiveAttributes = (payload: GltfReorderPrimitiveAttributesPayload, base: GltfSnapshot): GltfMutationRejection | undefined => { const mesh = itemIndex(payload.mesh, base.document.meshes.length, 'document/meshes'); if (mesh) return mesh; const primitive = itemIndex(payload.primitive, base.document.meshes[payload.mesh]!.primitives.length, `document/meshes/${payload.mesh}/primitives`); if (primitive) return primitive; const keys = Object.keys(base.document.meshes[payload.mesh]!.primitives[payload.primitive]!.attributes); if (payload.order.length !== keys.length || new Set(payload.order).size !== keys.length || payload.order.some(semantic => !keys.includes(semantic))) return reject('gltf.mutation.invalid-permutation', 'document/meshes/primitives/attributes', 'order must contain every semantic once'); if (payload.order.every((semantic, index) => semantic === keys[index])) return reject('gltf.mutation.no-observable-change', 'document/meshes/primitives/attributes', 'reorder must change order'); return undefined; };
-export const applyGltfReorderPrimitiveAttributes = (base: GltfSnapshot, payload: GltfReorderPrimitiveAttributesPayload): GltfReorderPrimitiveAttributesResult => run(base, payload, validateGltfReorderPrimitiveAttributes, (next, payload) => { const attributes = next.document.meshes[payload.mesh]!.primitives[payload.primitive]!.attributes; next.document.meshes[payload.mesh]!.primitives[payload.primitive]!.attributes = Object.fromEntries(payload.order.map(semantic => [semantic, attributes[semantic]! ])); }, GltfReorderPrimitiveAttributesDescriptor.touchedPaths);
+/** 🔀️ `reorder-primitive-attributes` wire twin: the flat `Apply` payload `GltfReorderPrimitiveAttributesPayload` and the phase wire `ReorderPrimitiveAttributesMutation`, exactly as `./🦀️.rs` writes them.
+ * @see ./🧬️schema/🔣️.json */
+import { gltfWireArray, gltfWireIndex, gltfWireObject, gltfWireRequired, gltfWireString } from "../../../📸️snapshot/🟦️.ts";
+import { type GltfDiff, type GltfPhase, gltfWirePhase, parseGltfDiff } from "../../../🔺️diff/🟦️.ts";
+
+export interface GltfReorderPrimitiveAttributesPayload {
+  mesh: number;
+  primitive: number;
+  order: string[];
+}
+
+export type ReorderPrimitiveAttributesMutation = GltfPhase<GltfReorderPrimitiveAttributesPayload, GltfDiff>;
+
+export const parseGltfReorderPrimitiveAttributesPayload = gltfWireObject<GltfReorderPrimitiveAttributesPayload>({ mesh: gltfWireRequired(gltfWireIndex), primitive: gltfWireRequired(gltfWireIndex), order: gltfWireRequired(gltfWireArray(gltfWireString)) });
+export const parseReorderPrimitiveAttributesMutation = gltfWirePhase(parseGltfReorderPrimitiveAttributesPayload, parseGltfDiff);

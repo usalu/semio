@@ -1,9 +1,13 @@
 {
   "kind": "set-sample-data",
-  "params": {
+  "mutation": {
+    "mutation": "setSampleData",
     "streamIndex": 0,
     "index": 1,
-    "data": "ff00"
+    "data": [
+      255,
+      0
+    ]
   },
   "before": {
     "schema": "stdio.semio.video",

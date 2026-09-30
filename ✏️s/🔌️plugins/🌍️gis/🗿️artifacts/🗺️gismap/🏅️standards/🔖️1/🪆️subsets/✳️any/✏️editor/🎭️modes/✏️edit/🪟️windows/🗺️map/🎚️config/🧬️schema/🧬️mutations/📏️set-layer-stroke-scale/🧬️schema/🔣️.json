@@ -3,29 +3,50 @@
   "$id": "https://json.schemas.assets.semio-tech.com/window/gis/map/config/mutation/set-layer-stroke-scale/schema.json",
   "title": "SetLayerStrokeScale",
   "type": "object",
-  "$defs": {
-    "Payload": {
-      "type": "object",
-      "required": [
-        "layerId",
-        "value"
-      ],
-      "properties": {
-        "layerId": {
-          "type": "string"
+  "additionalProperties": false,
+  "required": [
+    "operation",
+    "layerId",
+    "value"
+  ],
+  "properties": {
+    "operation": {
+      "const": "setLayerStrokeScale"
+    },
+    "layerId": {
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "text",
+        "role": "value",
+        "label": {
+          "en": "Layer",
+          "de": "Ebene"
         },
-        "value": {
-          "type": [
-            "number",
-            "null"
-          ]
-        }
+        "group": "layer",
+        "order": 10
+      }
+    },
+    "value": {
+      "type": [
+        "number",
+        "null"
+      ],
+      "x-semio-ui": {
+        "widget": "stepper",
+        "role": "value",
+        "label": {
+          "en": "Stroke scale",
+          "de": "Linienstärkenfaktor"
+        },
+        "description": {
+          "en": "Factor on the layer's line widths; empty resets it.",
+          "de": "Faktor auf die Linienstärken der Ebene; leer setzt ihn zurück."
+        },
+        "step": 0.1,
+        "precision": 2,
+        "group": "layer",
+        "order": 20
       }
     }
-  },
-  "allOf": [
-    {
-      "$ref": "#/$defs/Payload"
-    }
-  ]
+  }
 }

@@ -1,0 +1,49 @@
+{
+  "surface": "conformance.component.stepper-precision",
+  "revision": 0,
+  "root": 0,
+  "nodes": [
+    {
+      "id": 0,
+      "key": "#0",
+      "component": {
+        "type": "numberStepper",
+        "value": 2.5,
+        "step": 0.25,
+        "uniform": true,
+        "min": 0.0,
+        "max": 10.0,
+        "precision": 2
+      },
+      "layout": {
+        "kind": "leaf",
+        "width": "hug",
+        "height": "hug"
+      },
+      "style": {},
+      "activity": "idle",
+      "accessibility": {
+        "label": "Scale"
+      },
+      "bindings": [
+        {
+          "trigger": "change",
+          "action": {
+            "scope": "app",
+            "name": "setScale",
+            "version": 1
+          }
+        },
+        {
+          "trigger": "delta",
+          "action": {
+            "scope": "app",
+            "name": "nudgeScale",
+            "version": 1
+          }
+        }
+      ]
+    }
+  ],
+  "layoutEpoch": 0
+}

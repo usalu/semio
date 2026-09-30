@@ -1,6 +1,6 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "$id": "https://json.schemas.assets.semio-tech.com/app/wfc/wfc2d/transient/mutation/SetSolve/schema.json",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/wfc/wfc2d/1/any/transient/mutation/set-solve/schema.json",
   "title": "SetSolve",
   "type": "object",
   "additionalProperties": false,
@@ -20,16 +20,71 @@
         ],
         "properties": {
           "slotId": {
-            "type": "string"
+            "type": "string",
+            "x-semio-ui": {
+              "widget": "reference",
+              "role": "target",
+              "label": {
+                "en": "Slot",
+                "de": "Slot"
+              },
+              "ref": {
+                "kind": "slot",
+                "domain": "slot",
+                "granularity": "slot"
+              },
+              "group": "target",
+              "order": 10
+            }
           },
           "tileId": {
-            "type": "string"
+            "type": "string",
+            "x-semio-ui": {
+              "widget": "reference",
+              "role": "target",
+              "label": {
+                "en": "Tile",
+                "de": "Kachel"
+              },
+              "ref": {
+                "kind": "tile"
+              },
+              "group": "target",
+              "order": 20
+            }
           }
         }
+      },
+      "x-semio-ui": {
+        "role": "value",
+        "label": {
+          "en": "Assignments",
+          "de": "Zuordnungen"
+        },
+        "description": {
+          "en": "The tile the solver placed in each slot.",
+          "de": "Die Kachel, die der Löser in jeden Slot gesetzt hat."
+        },
+        "group": "record",
+        "order": 10
       }
     },
     "contradiction": {
-      "type": "boolean"
+      "type": "boolean",
+      "x-semio-ui": {
+        "widget": "toggle",
+        "role": "value",
+        "label": {
+          "en": "Contradiction",
+          "de": "Widerspruch"
+        },
+        "description": {
+          "en": "The solver found no consistent assignment.",
+          "de": "Der Löser fand keine widerspruchsfreie Zuordnung."
+        },
+        "group": "solver",
+        "order": 20
+      }
     }
   }
 }

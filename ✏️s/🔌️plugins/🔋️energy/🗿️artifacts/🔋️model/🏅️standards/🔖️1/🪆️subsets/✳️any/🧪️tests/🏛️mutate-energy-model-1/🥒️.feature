@@ -308,22 +308,22 @@ Feature: Apply every typed s.energy.model mutation against an independent Python
       | change-humidistat-zone-refuses-an-absent-zone | 🏙️change-humidistat-zone | ⛔️refuses-an-absent-zone |
       | change-humidistat-humidifying-setpoint-schedule-repoints-humidifying | ☔️change-humidistat-humidifying-setpoint-schedule | ✅️repoints-humidifying |
       | change-humidistat-humidifying-setpoint-schedule-refuses-an-absent-one | ☔️change-humidistat-humidifying-setpoint-schedule | ⛔️refuses-an-absent-one |
-      | change-humidistat-dehumidifying-setpoint-schedule-repoints-drying | 🏝️change-humidistat-dehumidifying-setpoint-schedule | ✅️repoints-drying |
-      | change-humidistat-dehumidifying-setpoint-schedule-refuses-an-absent-one | 🏝️change-humidistat-dehumidifying-setpoint-schedule | ⛔️refuses-an-absent-one |
+      | change-humidistat-dehumidifying-setpoint-schedule-repoints-drying | 🏝️change-humidistat-dehumidifying-setpoint | ✅️repoints-drying |
+      | change-humidistat-dehumidifying-setpoint-schedule-refuses-an-absent-one | 🏝️change-humidistat-dehumidifying-setpoint | ⛔️refuses-an-absent-one |
       | change-humidistat-humidifying-throttle-range-widens-the-band | 🌧️change-humidistat-humidifying-throttle-range | ✅️widens-the-band |
       | change-humidistat-humidifying-throttle-range-refuses-a-zero-band | 🌧️change-humidistat-humidifying-throttle-range | ⛔️refuses-a-zero-band |
-      | change-humidistat-dehumidifying-throttle-range-widens-the-band | 🧻️change-humidistat-dehumidifying-throttle-range | ✅️widens-the-band |
-      | change-humidistat-dehumidifying-throttle-range-refuses-a-negative-band | 🧻️change-humidistat-dehumidifying-throttle-range | ⛔️refuses-a-negative-band |
+      | change-humidistat-dehumidifying-throttle-range-widens-the-band | 🧻️change-humidistat-dehumidifying-throttle | ✅️widens-the-band |
+      | change-humidistat-dehumidifying-throttle-range-refuses-a-negative-band | 🧻️change-humidistat-dehumidifying-throttle | ⛔️refuses-a-negative-band |
       | create-ideal-loads-system-serves-zone-one | 🫁️create-ideal-loads-system | ✅️serves-zone-one |
       | create-ideal-loads-system-refuses-an-absent-zone | 🫁️create-ideal-loads-system | ⛔️refuses-an-absent-zone |
       | delete-ideal-loads-system-drops-the-system | 🫥️delete-ideal-loads-system | ✅️drops-the-system |
       | delete-ideal-loads-system-refuses-an-absent-one | 🫥️delete-ideal-loads-system | ⛔️refuses-an-absent-one |
       | change-ideal-loads-system-zone-moves-to-zone-two | 🏢️change-ideal-loads-system-zone | ✅️moves-to-zone-two |
       | change-ideal-loads-system-zone-refuses-an-absent-zone | 🏢️change-ideal-loads-system-zone | ⛔️refuses-an-absent-zone |
-      | change-ideal-loads-system-max-heating-supply-air-temp-cools-the-supply | 🔴️change-ideal-loads-system-max-heating-supply-air-temp | ✅️cools-the-supply |
-      | change-ideal-loads-system-max-heating-supply-air-temp-refuses-a-hot-supply | 🔴️change-ideal-loads-system-max-heating-supply-air-temp | ⛔️refuses-a-hot-supply |
-      | change-ideal-loads-system-min-cooling-supply-air-temp-lowers-the-supply | 🔵️change-ideal-loads-system-min-cooling-supply-air-temp | ✅️lowers-the-supply |
-      | change-ideal-loads-system-min-cooling-supply-air-temp-refuses-a-cold-supply | 🔵️change-ideal-loads-system-min-cooling-supply-air-temp | ⛔️refuses-a-cold-supply |
+      | change-ideal-loads-system-max-heating-supply-air-temp-cools-the-supply | 🔴️change-ideal-loads-system-max-heating-supply | ✅️cools-the-supply |
+      | change-ideal-loads-system-max-heating-supply-air-temp-refuses-a-hot-supply | 🔴️change-ideal-loads-system-max-heating-supply | ⛔️refuses-a-hot-supply |
+      | change-ideal-loads-system-min-cooling-supply-air-temp-lowers-the-supply | 🔵️change-ideal-loads-system-min-cooling-supply | ✅️lowers-the-supply |
+      | change-ideal-loads-system-min-cooling-supply-air-temp-refuses-a-cold-supply | 🔵️change-ideal-loads-system-min-cooling-supply | ⛔️refuses-a-cold-supply |
       | change-ideal-loads-system-max-heating-capacity-caps-the-heating | ⛽️change-ideal-loads-system-max-heating-capacity | ✅️caps-the-heating |
       | change-ideal-loads-system-max-heating-capacity-refuses-a-stray-value | ⛽️change-ideal-loads-system-max-heating-capacity | ⛔️refuses-a-stray-value |
       | change-ideal-loads-system-max-cooling-capacity-caps-the-cooling | 🟧️change-ideal-loads-system-max-cooling-capacity | ✅️caps-the-cooling |
@@ -895,22 +895,22 @@ Feature: Apply every typed s.energy.model mutation against an independent Python
       | change-humidistat-zone-refuses-an-absent-zone | 🏙️change-humidistat-zone | ⛔️refuses-an-absent-zone |
       | change-humidistat-humidifying-setpoint-schedule-repoints-humidifying | ☔️change-humidistat-humidifying-setpoint-schedule | ✅️repoints-humidifying |
       | change-humidistat-humidifying-setpoint-schedule-refuses-an-absent-one | ☔️change-humidistat-humidifying-setpoint-schedule | ⛔️refuses-an-absent-one |
-      | change-humidistat-dehumidifying-setpoint-schedule-repoints-drying | 🏝️change-humidistat-dehumidifying-setpoint-schedule | ✅️repoints-drying |
-      | change-humidistat-dehumidifying-setpoint-schedule-refuses-an-absent-one | 🏝️change-humidistat-dehumidifying-setpoint-schedule | ⛔️refuses-an-absent-one |
+      | change-humidistat-dehumidifying-setpoint-schedule-repoints-drying | 🏝️change-humidistat-dehumidifying-setpoint | ✅️repoints-drying |
+      | change-humidistat-dehumidifying-setpoint-schedule-refuses-an-absent-one | 🏝️change-humidistat-dehumidifying-setpoint | ⛔️refuses-an-absent-one |
       | change-humidistat-humidifying-throttle-range-widens-the-band | 🌧️change-humidistat-humidifying-throttle-range | ✅️widens-the-band |
       | change-humidistat-humidifying-throttle-range-refuses-a-zero-band | 🌧️change-humidistat-humidifying-throttle-range | ⛔️refuses-a-zero-band |
-      | change-humidistat-dehumidifying-throttle-range-widens-the-band | 🧻️change-humidistat-dehumidifying-throttle-range | ✅️widens-the-band |
-      | change-humidistat-dehumidifying-throttle-range-refuses-a-negative-band | 🧻️change-humidistat-dehumidifying-throttle-range | ⛔️refuses-a-negative-band |
+      | change-humidistat-dehumidifying-throttle-range-widens-the-band | 🧻️change-humidistat-dehumidifying-throttle | ✅️widens-the-band |
+      | change-humidistat-dehumidifying-throttle-range-refuses-a-negative-band | 🧻️change-humidistat-dehumidifying-throttle | ⛔️refuses-a-negative-band |
       | create-ideal-loads-system-serves-zone-one | 🫁️create-ideal-loads-system | ✅️serves-zone-one |
       | create-ideal-loads-system-refuses-an-absent-zone | 🫁️create-ideal-loads-system | ⛔️refuses-an-absent-zone |
       | delete-ideal-loads-system-drops-the-system | 🫥️delete-ideal-loads-system | ✅️drops-the-system |
       | delete-ideal-loads-system-refuses-an-absent-one | 🫥️delete-ideal-loads-system | ⛔️refuses-an-absent-one |
       | change-ideal-loads-system-zone-moves-to-zone-two | 🏢️change-ideal-loads-system-zone | ✅️moves-to-zone-two |
       | change-ideal-loads-system-zone-refuses-an-absent-zone | 🏢️change-ideal-loads-system-zone | ⛔️refuses-an-absent-zone |
-      | change-ideal-loads-system-max-heating-supply-air-temp-cools-the-supply | 🔴️change-ideal-loads-system-max-heating-supply-air-temp | ✅️cools-the-supply |
-      | change-ideal-loads-system-max-heating-supply-air-temp-refuses-a-hot-supply | 🔴️change-ideal-loads-system-max-heating-supply-air-temp | ⛔️refuses-a-hot-supply |
-      | change-ideal-loads-system-min-cooling-supply-air-temp-lowers-the-supply | 🔵️change-ideal-loads-system-min-cooling-supply-air-temp | ✅️lowers-the-supply |
-      | change-ideal-loads-system-min-cooling-supply-air-temp-refuses-a-cold-supply | 🔵️change-ideal-loads-system-min-cooling-supply-air-temp | ⛔️refuses-a-cold-supply |
+      | change-ideal-loads-system-max-heating-supply-air-temp-cools-the-supply | 🔴️change-ideal-loads-system-max-heating-supply | ✅️cools-the-supply |
+      | change-ideal-loads-system-max-heating-supply-air-temp-refuses-a-hot-supply | 🔴️change-ideal-loads-system-max-heating-supply | ⛔️refuses-a-hot-supply |
+      | change-ideal-loads-system-min-cooling-supply-air-temp-lowers-the-supply | 🔵️change-ideal-loads-system-min-cooling-supply | ✅️lowers-the-supply |
+      | change-ideal-loads-system-min-cooling-supply-air-temp-refuses-a-cold-supply | 🔵️change-ideal-loads-system-min-cooling-supply | ⛔️refuses-a-cold-supply |
       | change-ideal-loads-system-max-heating-capacity-caps-the-heating | ⛽️change-ideal-loads-system-max-heating-capacity | ✅️caps-the-heating |
       | change-ideal-loads-system-max-heating-capacity-refuses-a-stray-value | ⛽️change-ideal-loads-system-max-heating-capacity | ⛔️refuses-a-stray-value |
       | change-ideal-loads-system-max-cooling-capacity-caps-the-cooling | 🟧️change-ideal-loads-system-max-cooling-capacity | ✅️caps-the-cooling |

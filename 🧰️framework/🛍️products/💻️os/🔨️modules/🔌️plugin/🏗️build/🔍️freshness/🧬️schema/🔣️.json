@@ -1,0 +1,97 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/os/plugin/build/source-freshness/component.json",
+  "title": "Plugin Source Freshness Contracts",
+  "$defs": {
+    "SourceStatIndexV1": {
+      "title": "Staged Plugin Source Stat Index",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schema",
+        "contentSha256",
+        "files"
+      ],
+      "properties": {
+        "schema": {
+          "const": "semio.dev.source-stat-index/v1"
+        },
+        "contentSha256": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{64}$",
+          "description": "Aggregate SHA-256 of relative paths and file bytes (same digest as componentSourceContentHash)"
+        },
+        "files": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "path",
+              "size",
+              "mtimeNs",
+              "sha256"
+            ],
+            "properties": {
+              "path": {
+                "type": "string",
+                "minLength": 1,
+                "description": "Repo-relative POSIX path under the plugin owner root"
+              },
+              "size": {
+                "type": "integer",
+                "minimum": 0
+              },
+              "mtimeNs": {
+                "type": "string",
+                "pattern": "^[0-9]+$",
+                "description": "Nanosecond mtime as a decimal string"
+              },
+              "sha256": {
+                "type": "string",
+                "pattern": "^[a-f0-9]{64}$"
+              }
+            }
+          }
+        }
+      }
+    },
+    "SourceFreshnessFixtureV1": {
+      "type": "object",
+      "required": [
+        "metadataFiles",
+        "sourceFiles",
+        "componentBase",
+        "unexpected",
+        "schema"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "metadataFiles": {
+          "const": [
+            ".source-content-sha256",
+            ".source-stat-index.json"
+          ]
+        },
+        "sourceFiles": {
+          "type": "object",
+          "minProperties": 1,
+          "additionalProperties": {
+            "type": "string"
+          }
+        },
+        "componentBase": {
+          "type": "string",
+          "minLength": 1
+        },
+        "unexpected": {
+          "type": "string",
+          "minLength": 1
+        },
+        "schema": {
+          "const": "semio.dev.source-stat-index/v1"
+        }
+      }
+    }
+  }
+}

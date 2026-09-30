@@ -79,7 +79,7 @@ async fn declared_outcome_holds_and_reactivating_is_a_no_op() {
     assert_eq!(again.worst_level(), Some(protocol::Severity::Warning), "set-active-asset/activates-asset-prop: re-activating the current asset is a Warning, never a rejection");
     assert_eq!(again.messages()[0].code.0, "mutation.no-op", "set-active-asset/activates-asset-prop: the cursor-equality guard's frozen code");
 
-    let ghost: ShootingMutation = serde_json::from_str(r#"{"mutation":"setActiveAsset","asset_id":"asset-ghost"}"#).expect("probe mutation decodes");
+    let ghost: ShootingMutation = serde_json::from_str(r#"{"mutation":"setActiveAsset","assetId":"asset-ghost"}"#).expect("probe mutation decodes");
     let rejected = ghost.diff(&before());
     assert_eq!(rejected.worst_level(), Some(protocol::Severity::Error), "set-active-asset/activates-asset-prop: activating an unknown asset is an Error");
     assert_eq!(rejected.messages()[0].code.0, "mutation.target-missing", "set-active-asset/activates-asset-prop: the existence guard's frozen code");

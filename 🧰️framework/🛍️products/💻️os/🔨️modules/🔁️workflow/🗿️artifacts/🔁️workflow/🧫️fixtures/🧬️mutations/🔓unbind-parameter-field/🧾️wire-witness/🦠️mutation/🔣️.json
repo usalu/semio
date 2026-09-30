@@ -1,0 +1,5 @@
+{
+  "operation": "unbindParameterField",
+  "nodeId": "n1",
+  "fieldPath": "/zoom"
+}

@@ -1,8 +1,14 @@
-/** 🦠️ unbind-primitive-material: cohesive atomic mesh mutation. */
-import type { GltfJson, GltfSnapshot, GltfPrimitive, GltfMorphTarget } from '../../📸️snapshot/🟦️.ts';
-import { run, reject, positionIn, itemIndex, permutation, moveItem, type GltfLeafResult, type GltfMutationRejection } from './🟦️';
-export const GltfUnbindPrimitiveMaterialDescriptor = { id: 's.stdio.gltf.mutation.unbind-primitive-material.v1', version: 1, kind: 'unbind', touchedPaths: ["document/meshes/*/primitives/*/material"], referencePolicy: 'clears only the optional material relationship' } as const;
-export interface GltfUnbindPrimitiveMaterialPayload { mesh: number; primitive: number }
-export type GltfUnbindPrimitiveMaterialResult = GltfLeafResult;
-export const validateGltfUnbindPrimitiveMaterial = (payload: GltfUnbindPrimitiveMaterialPayload, base: GltfSnapshot): GltfMutationRejection | undefined => { const mesh = itemIndex(payload.mesh, base.document.meshes.length, 'document/meshes'); if (mesh) return mesh; const primitive = itemIndex(payload.primitive, base.document.meshes[payload.mesh]!.primitives.length, `document/meshes/${payload.mesh}/primitives`); if (primitive) return primitive; if (base.document.meshes[payload.mesh]!.primitives[payload.primitive]!.material === undefined) return reject('gltf.mutation.relation-absent', 'document/meshes/primitives/material', 'primitive has no material'); return undefined; };
-export const applyGltfUnbindPrimitiveMaterial = (base: GltfSnapshot, payload: GltfUnbindPrimitiveMaterialPayload): GltfUnbindPrimitiveMaterialResult => run(base, payload, validateGltfUnbindPrimitiveMaterial, (next, payload) => { next.document.meshes[payload.mesh]!.primitives[payload.primitive]!.material = undefined; }, GltfUnbindPrimitiveMaterialDescriptor.touchedPaths);
+/** ✂️ `unbind-primitive-material` wire twin: the flat `Apply` payload `GltfUnbindPrimitiveMaterialPayload` and the phase wire `UnbindPrimitiveMaterialMutation`, exactly as `./🦀️.rs` writes them.
+ * @see ./🧬️schema/🔣️.json */
+import { gltfWireIndex, gltfWireObject, gltfWireRequired } from "../../../📸️snapshot/🟦️.ts";
+import { type GltfDiff, type GltfPhase, gltfWirePhase, parseGltfDiff } from "../../../🔺️diff/🟦️.ts";
+
+export interface GltfUnbindPrimitiveMaterialPayload {
+  mesh: number;
+  primitive: number;
+}
+
+export type UnbindPrimitiveMaterialMutation = GltfPhase<GltfUnbindPrimitiveMaterialPayload, GltfDiff>;
+
+export const parseGltfUnbindPrimitiveMaterialPayload = gltfWireObject<GltfUnbindPrimitiveMaterialPayload>({ mesh: gltfWireRequired(gltfWireIndex), primitive: gltfWireRequired(gltfWireIndex) });
+export const parseUnbindPrimitiveMaterialMutation = gltfWirePhase(parseGltfUnbindPrimitiveMaterialPayload, parseGltfDiff);

@@ -1,6 +1,6 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "$id": "https://json.schemas.assets.semio-tech.com/app/wfc/wfc2d/config/mutation/ChangeCamera/schema.json",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/wfc/wfc2d/1/any/config/mutation/change-camera/schema.json",
   "title": "ChangeCamera",
   "type": "object",
   "additionalProperties": false,
@@ -11,13 +11,59 @@
   ],
   "properties": {
     "x": {
-      "type": "number"
+      "type": "number",
+      "x-semio-ui": {
+        "widget": "stepper",
+        "role": "value",
+        "label": {
+          "en": "Camera X",
+          "de": "Kamera X"
+        },
+        "step": 1,
+        "precision": 2,
+        "group": "camera",
+        "order": 10
+      }
     },
     "y": {
-      "type": "number"
+      "type": "number",
+      "x-semio-ui": {
+        "widget": "stepper",
+        "role": "value",
+        "label": {
+          "en": "Camera Y",
+          "de": "Kamera Y"
+        },
+        "step": 1,
+        "precision": 2,
+        "group": "camera",
+        "order": 20
+      }
     },
     "zoom": {
-      "type": "number"
+      "type": "number",
+      "x-semio-ui": {
+        "widget": "slider",
+        "role": "value",
+        "label": {
+          "en": "Zoom",
+          "de": "Zoom"
+        },
+        "step": 0.01,
+        "precision": 2,
+        "softMin": 0.1,
+        "softMax": 10,
+        "scale": "log",
+        "snaps": [
+          0.25,
+          0.5,
+          1,
+          2,
+          4
+        ],
+        "group": "camera",
+        "order": 30
+      }
     }
   }
 }

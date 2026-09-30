@@ -5,16 +5,49 @@
   "type": "object",
   "additionalProperties": false,
   "required": [
+    "mutation",
     "name",
     "key",
     "reportingFrequency"
   ],
   "properties": {
+    "mutation": {
+      "const": "addOutputVariable"
+    },
     "name": {
-      "type": "string"
+      "type": "string",
+      "pattern": "[^\\t\\n\\u000B\\f\\r \\u0085\\u00A0\\u1680\\u2000-\\u200A\\u2028\\u2029\\u202F\\u205F\\u3000]",
+      "x-semio-ui": {
+        "widget": "text",
+        "role": "value",
+        "label": {
+          "en": "Variable name",
+          "de": "Variablenname"
+        },
+        "description": {
+          "en": "Output variable to report, e.g. Zone Mean Air Temperature.",
+          "de": "Zu berichtende Ausgabevariable, z. B. Zone Mean Air Temperature."
+        },
+        "group": "output",
+        "order": 10
+      }
     },
     "key": {
-      "type": "string"
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "text",
+        "role": "value",
+        "label": {
+          "en": "Key value",
+          "de": "Schlüsselwert"
+        },
+        "description": {
+          "en": "Object the variable reports for, e.g. a zone name.",
+          "de": "Objekt, für das die Variable berichtet, z. B. ein Zonenname."
+        },
+        "group": "output",
+        "order": 20
+      }
     },
     "reportingFrequency": {
       "enum": [
@@ -23,7 +56,39 @@
         "Daily",
         "Monthly",
         "RunPeriod"
-      ]
+      ],
+      "x-semio-ui": {
+        "widget": "select",
+        "role": "value",
+        "label": {
+          "en": "Reporting frequency",
+          "de": "Berichtsintervall"
+        },
+        "options": {
+          "Timestep": {
+            "en": "Every timestep",
+            "de": "Jeder Zeitschritt"
+          },
+          "Hourly": {
+            "en": "Hourly",
+            "de": "Stündlich"
+          },
+          "Daily": {
+            "en": "Daily",
+            "de": "Täglich"
+          },
+          "Monthly": {
+            "en": "Monthly",
+            "de": "Monatlich"
+          },
+          "RunPeriod": {
+            "en": "Run period",
+            "de": "Simulationszeitraum"
+          }
+        },
+        "group": "output",
+        "order": 30
+      }
     }
   }
 }

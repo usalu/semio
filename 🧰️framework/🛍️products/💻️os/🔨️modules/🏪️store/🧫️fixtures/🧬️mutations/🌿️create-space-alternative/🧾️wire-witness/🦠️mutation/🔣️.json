@@ -1,0 +1,12 @@
+{
+  "operation": "createSpaceAlternative",
+  "payload": {
+    "alternative": {
+      "id": "sa-1",
+      "name": "branch",
+      "checkpointIds": [
+        "sc-1"
+      ]
+    }
+  }
+}

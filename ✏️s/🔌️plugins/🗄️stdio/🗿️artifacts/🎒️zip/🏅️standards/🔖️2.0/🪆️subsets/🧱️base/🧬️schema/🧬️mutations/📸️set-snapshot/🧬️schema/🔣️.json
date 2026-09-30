@@ -5,58 +5,16 @@
   "type": "object",
   "additionalProperties": false,
   "required": [
+    "mutation",
     "snapshot"
   ],
   "properties": {
-    "snapshot": {
-      "$ref": "#/$defs/ZipSnapshot"
-    },
     "mutation": {
       "const": "setSnapshot",
       "description": "Aggregate discriminator spliced in by ZipMutation; absent when the payload stands alone."
-    }
-  },
-  "$defs": {
-    "ZipSnapshot": {
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "schema"
-      ],
-      "properties": {
-        "schema": {
-          "type": "string"
-        },
-        "entries": {
-          "type": "array",
-          "items": {
-            "$ref": "#/$defs/ZipEntry"
-          }
-        },
-        "comment": {
-          "type": "string"
-        }
-      }
     },
-    "ZipEntry": {
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "name"
-      ],
-      "properties": {
-        "name": {
-          "type": "string"
-        },
-        "data": {
-          "type": "array",
-          "items": {
-            "type": "integer",
-            "minimum": 0,
-            "maximum": 255
-          }
-        }
-      }
+    "snapshot": {
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/zip/2.0/base/snapshot.json"
     }
   }
 }

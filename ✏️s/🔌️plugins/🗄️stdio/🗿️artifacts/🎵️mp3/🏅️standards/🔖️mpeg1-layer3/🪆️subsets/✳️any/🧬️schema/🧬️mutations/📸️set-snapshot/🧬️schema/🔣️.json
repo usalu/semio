@@ -5,9 +5,13 @@
   "type": "object",
   "additionalProperties": false,
   "required": [
+    "mutation",
     "snapshot"
   ],
   "properties": {
+    "mutation": {
+      "const": "setSnapshot"
+    },
     "snapshot": {
       "$ref": "#/$defs/Mp3Snapshot"
     }
@@ -21,7 +25,18 @@
       ],
       "properties": {
         "schema": {
-          "type": "string"
+          "type": "string",
+          "x-semio-ui": {
+            "widget": "text",
+            "label": {
+              "en": "Snapshot schema",
+              "de": "Snapshot-Schema"
+            },
+            "description": {
+              "en": "Identifier of the snapshot schema version.",
+              "de": "Kennung der Version des Snapshot-Schemas."
+            }
+          }
         },
         "id3v2": {
           "anyOf": [
@@ -31,12 +46,24 @@
             {
               "type": "null"
             }
-          ]
+          ],
+          "x-semio-ui": {
+            "label": {
+              "en": "ID3v2 tag",
+              "de": "ID3v2-Tag"
+            }
+          }
         },
         "frames": {
           "type": "array",
           "items": {
             "$ref": "#/$defs/Mp3Frame"
+          },
+          "x-semio-ui": {
+            "label": {
+              "en": "MPEG audio frames",
+              "de": "MPEG-Audio-Frames"
+            }
           }
         },
         "id3v1": {
@@ -47,7 +74,13 @@
             {
               "type": "null"
             }
-          ]
+          ],
+          "x-semio-ui": {
+            "label": {
+              "en": "ID3v1 tag",
+              "de": "ID3v1-Tag"
+            }
+          }
         }
       }
     },
@@ -63,22 +96,49 @@
         "majorVersion": {
           "type": "integer",
           "minimum": 0,
-          "maximum": 255
+          "maximum": 255,
+          "x-semio-ui": {
+            "widget": "stepper",
+            "label": {
+              "en": "Major version",
+              "de": "Hauptversion"
+            }
+          }
         },
         "minorVersion": {
           "type": "integer",
           "minimum": 0,
-          "maximum": 255
+          "maximum": 255,
+          "x-semio-ui": {
+            "widget": "stepper",
+            "label": {
+              "en": "Revision",
+              "de": "Revision"
+            }
+          }
         },
         "flags": {
           "type": "integer",
           "minimum": 0,
-          "maximum": 255
+          "maximum": 255,
+          "x-semio-ui": {
+            "widget": "stepper",
+            "label": {
+              "en": "Tag flags",
+              "de": "Tag-Flags"
+            }
+          }
         },
         "frames": {
           "type": "array",
           "items": {
             "$ref": "#/$defs/Id3Frame"
+          },
+          "x-semio-ui": {
+            "label": {
+              "en": "ID3v2 frames",
+              "de": "ID3v2-Frames"
+            }
           }
         }
       }
@@ -97,7 +157,14 @@
         "flags": {
           "type": "integer",
           "minimum": 0,
-          "maximum": 65535
+          "maximum": 65535,
+          "x-semio-ui": {
+            "widget": "stepper",
+            "label": {
+              "en": "Frame flags",
+              "de": "Frame-Flags"
+            }
+          }
         },
         "data": {
           "type": "array",
@@ -117,7 +184,13 @@
       ],
       "properties": {
         "header": {
-          "$ref": "#/$defs/Mp3FrameHeader"
+          "$ref": "#/$defs/Mp3FrameHeader",
+          "x-semio-ui": {
+            "label": {
+              "en": "Frame header",
+              "de": "Frame-Header"
+            }
+          }
         },
         "payload": {
           "type": "array",
@@ -125,6 +198,12 @@
             "type": "integer",
             "minimum": 0,
             "maximum": 255
+          },
+          "x-semio-ui": {
+            "label": {
+              "en": "Frame payload",
+              "de": "Frame-Nutzdaten"
+            }
           }
         }
       }
@@ -150,7 +229,18 @@
         "mpegVersionId": {
           "type": "integer",
           "minimum": 0,
-          "maximum": 255
+          "maximum": 255,
+          "x-semio-ui": {
+            "widget": "stepper",
+            "label": {
+              "en": "MPEG version",
+              "de": "MPEG-Version"
+            },
+            "description": {
+              "en": "0 = MPEG-2.5, 2 = MPEG-2, 3 = MPEG-1.",
+              "de": "0 = MPEG-2.5, 2 = MPEG-2, 3 = MPEG-1."
+            }
+          }
         },
         "layer": {
           "type": "integer",
@@ -158,44 +248,138 @@
           "maximum": 255
         },
         "protectionBit": {
-          "type": "boolean"
+          "type": "boolean",
+          "x-semio-ui": {
+            "widget": "toggle",
+            "label": {
+              "en": "Protection bit",
+              "de": "Schutzbit"
+            },
+            "description": {
+              "en": "Set when the frame has no CRC (inverted in the header).",
+              "de": "Gesetzt, wenn der Frame keine CRC hat (im Header invertiert)."
+            }
+          }
         },
         "bitrateIndex": {
           "type": "integer",
           "minimum": 0,
-          "maximum": 255
+          "maximum": 255,
+          "x-semio-ui": {
+            "widget": "stepper",
+            "label": {
+              "en": "Bitrate index",
+              "de": "Bitraten-Index"
+            },
+            "description": {
+              "en": "4-bit header field selecting the bitrate.",
+              "de": "4-Bit-Headerfeld, das die Bitrate wählt."
+            }
+          }
         },
         "sampleRateIndex": {
           "type": "integer",
           "minimum": 0,
-          "maximum": 255
+          "maximum": 255,
+          "x-semio-ui": {
+            "widget": "stepper",
+            "label": {
+              "en": "Sample rate index",
+              "de": "Abtastraten-Index"
+            }
+          }
         },
         "padding": {
-          "type": "boolean"
+          "type": "boolean",
+          "x-semio-ui": {
+            "widget": "toggle",
+            "label": {
+              "en": "Padding",
+              "de": "Auffüllung"
+            },
+            "description": {
+              "en": "Frame carries one extra padding slot.",
+              "de": "Frame enthält einen zusätzlichen Füllslot."
+            }
+          }
         },
         "privateBit": {
-          "type": "boolean"
+          "type": "boolean",
+          "x-semio-ui": {
+            "widget": "toggle",
+            "label": {
+              "en": "Private bit",
+              "de": "Privates Bit"
+            }
+          }
         },
         "channelMode": {
           "type": "integer",
           "minimum": 0,
-          "maximum": 255
+          "maximum": 255,
+          "x-semio-ui": {
+            "widget": "stepper",
+            "label": {
+              "en": "Channel mode",
+              "de": "Kanalmodus"
+            },
+            "description": {
+              "en": "0 = stereo, 1 = joint stereo, 2 = dual channel, 3 = mono.",
+              "de": "0 = Stereo, 1 = Joint Stereo, 2 = Zweikanal, 3 = Mono."
+            }
+          }
         },
         "modeExtension": {
           "type": "integer",
           "minimum": 0,
-          "maximum": 255
+          "maximum": 255,
+          "x-semio-ui": {
+            "widget": "stepper",
+            "label": {
+              "en": "Mode extension",
+              "de": "Modus-Erweiterung"
+            },
+            "description": {
+              "en": "Joint-stereo coding flags.",
+              "de": "Flags der Joint-Stereo-Kodierung."
+            }
+          }
         },
         "copyright": {
-          "type": "boolean"
+          "type": "boolean",
+          "x-semio-ui": {
+            "widget": "toggle",
+            "label": {
+              "en": "Copyright",
+              "de": "Urheberrechtlich geschützt"
+            }
+          }
         },
         "original": {
-          "type": "boolean"
+          "type": "boolean",
+          "x-semio-ui": {
+            "widget": "toggle",
+            "label": {
+              "en": "Original",
+              "de": "Original"
+            }
+          }
         },
         "emphasis": {
           "type": "integer",
           "minimum": 0,
-          "maximum": 255
+          "maximum": 255,
+          "x-semio-ui": {
+            "widget": "stepper",
+            "label": {
+              "en": "Emphasis",
+              "de": "Emphasis (Preemphasis)"
+            },
+            "description": {
+              "en": "0 = none, 1 = 50/15 µs, 3 = CCITT J.17.",
+              "de": "0 = keine, 1 = 50/15 µs, 3 = CCITT J.17."
+            }
+          }
         }
       }
     },
@@ -209,6 +393,16 @@
             "type": "integer",
             "minimum": 0,
             "maximum": 255
+          },
+          "x-semio-ui": {
+            "label": {
+              "en": "Raw tag bytes",
+              "de": "Rohbytes des Tags"
+            },
+            "description": {
+              "en": "The 128 bytes of the ID3v1 tag.",
+              "de": "Die 128 Bytes des ID3v1-Tags."
+            }
           }
         }
       }

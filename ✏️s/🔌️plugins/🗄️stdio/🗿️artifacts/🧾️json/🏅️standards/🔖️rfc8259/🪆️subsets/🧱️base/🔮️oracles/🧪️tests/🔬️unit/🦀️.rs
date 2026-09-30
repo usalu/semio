@@ -5,20 +5,15 @@ fn spec(kind: &str, params: Json) -> Json {
     Json::Object(vec![("kind".to_string(), Json::String(kind.to_string())), ("params".to_string(), params)])
 }
 
-/// 🔢️ Pins the worked-around `json` 0.12 defect and the fix together: the crate's own
-/// `From<f64>` moves these two real fixture coordinates by one ULP, and `library_number` does
-/// not. If a later release fixes the conversion, the first half of this test starts failing and
-/// the workaround can go.
+/// 🔢️ A number wire value reaches the reference as its verbatim lexeme: the two real fixture coordinates `json`
+/// 0.12's own `From<f64>` moves by one ULP arrive exactly, because no `f64` stands between the wire and the parser.
 #[test]
-fn the_library_number_conversion_survives_a_round_trip_the_crates_own_does_not() {
-    for value in [2.7000102824824506_f64, -8.881784197001252e-16] {
-        assert_ne!(json::JsonValue::from(value).as_f64().unwrap().to_bits(), value.to_bits(), "json 0.12's own From<f64> is documented here as lossy for {value:?}");
-        assert_eq!(library_number(value).as_f64().unwrap().to_bits(), value.to_bits(), "the workaround has to be exact for {value:?}");
+fn a_number_lexeme_reaches_the_reference_exactly() {
+    for lexeme in ["2.7000102824824506", "-8.881784197001252e-16", "0.1", "9007199254740991"] {
+        let parsed = library_from_wire(&number(lexeme)).expect("a number lexeme parses");
+        assert_eq!(parsed.dump(), json::parse(lexeme).unwrap().dump(), "the lexeme {lexeme} must reach the reference unchanged");
     }
-    for value in [0.1_f64, 1.0, 0.0, -0.0, 1e300, 1.0 / 3.0] {
-        assert_eq!(library_number(value).as_f64().unwrap().to_bits(), value.to_bits(), "and exact for {value:?} as well");
-    }
-    assert!(library_number(f64::NAN).is_null(), "a non-finite double is not a JSON number");
+    assert!(library_from_wire(&obj(vec![("kind", Json::String("decimal".into()))])).is_err(), "an unknown JsonValue kind is refused");
 }
 
 /// 🔢️ The mirror defect and its fix: reading a real fixture coordinate back out of the crate.
@@ -36,21 +31,24 @@ fn obj(pairs: Vec<(&str, Json)>) -> Json {
     Json::Object(pairs.into_iter().map(|(key, value)| (key.to_string(), value)).collect())
 }
 
-#[test]
-fn no_mutation_is_a_true_byte_identity() {
-    let input = br#"{"a":1,"b":2}"#;
-    let output = oracle_apply_mutation(input, &spec("no-mutation", Json::Object(vec![]))).unwrap();
-    assert_eq!(output, input);
+/// 🧭️ A `path` wire value of object keys.
+fn keys(names: &[&str]) -> Json {
+    Json::Array(names.iter().map(|name| obj(vec![("kind", Json::String("key".into())), ("value", Json::String((*name).into()))])).collect())
+}
+
+/// 🔢️ A `JsonValue` number wire value.
+fn number(lexeme: &str) -> Json {
+    obj(vec![("kind", Json::String("number".into())), ("lexeme", Json::String(lexeme.into()))])
 }
 
 #[test]
 fn set_member_upserts_and_remove_member_deletes() {
     let input = br#"{"a":1,"nested":{"b":2}}"#;
-    let updated = oracle_apply_mutation(input, &spec("set-member", obj(vec![("path", Json::Array(vec![Json::String("nested".into())])), ("key", Json::String("c".into())), ("value", Json::Number(3.0))]))).unwrap();
+    let updated = oracle_apply_mutation(input, &spec("set-member", obj(vec![("path", keys(&["nested"])), ("key", Json::String("c".into())), ("value", number("3"))]))).unwrap();
     let value = read_json(&updated).unwrap();
     assert_eq!(resolve(&value, &[PathSeg::Key("nested".into()), PathSeg::Key("c".into())]).and_then(|v| v.as_f64()), Some(3.0));
 
-    let removed = oracle_apply_mutation(&updated, &spec("remove-member", obj(vec![("path", Json::Array(vec![Json::String("nested".into())])), ("key", Json::String("c".into()))]))).unwrap();
+    let removed = oracle_apply_mutation(&updated, &spec("remove-member", obj(vec![("path", keys(&["nested"])), ("key", Json::String("c".into()))]))).unwrap();
     let value = read_json(&removed).unwrap();
     assert!(resolve(&value, &[PathSeg::Key("nested".into()), PathSeg::Key("c".into())]).is_none());
     assert_eq!(resolve(&value, &[PathSeg::Key("nested".into()), PathSeg::Key("b".into())]).and_then(|v| v.as_f64()), Some(2.0));
@@ -59,28 +57,21 @@ fn set_member_upserts_and_remove_member_deletes() {
 #[test]
 fn insert_and_remove_array_element_are_inverse_on_a_real_shaped_array() {
     let input = br#"{"items":[1,2,3]}"#;
-    let inserted = oracle_apply_mutation(input, &spec("insert-array-element", obj(vec![("path", Json::Array(vec![Json::String("items".into())])), ("index", Json::Number(1.0)), ("value", Json::Number(99.0))]))).unwrap();
+    let inserted = oracle_apply_mutation(input, &spec("insert-array-element", obj(vec![("path", keys(&["items"])), ("index", Json::Number(1.0)), ("value", number("99"))]))).unwrap();
     assert_eq!(project_json_value(&inserted).unwrap(), project_json_value(br#"{"items":[1,99,2,3]}"#).unwrap());
 
-    let removed = oracle_apply_mutation(&inserted, &spec("remove-array-element", obj(vec![("path", Json::Array(vec![Json::String("items".into())])), ("index", Json::Number(1.0))]))).unwrap();
+    let removed = oracle_apply_mutation(&inserted, &spec("remove-array-element", obj(vec![("path", keys(&["items"])), ("index", Json::Number(1.0))]))).unwrap();
     assert_eq!(project_json_value(&removed).unwrap(), project_json_value(input).unwrap());
 }
 
 #[test]
 fn set_scalar_replaces_regardless_of_kind_incl_whole_document() {
     let input = br#"{"a":{"b":1}}"#;
-    let output = oracle_apply_mutation(input, &spec("set-scalar", obj(vec![("path", Json::Array(vec![Json::String("a".into())])), ("value", Json::String("replaced".into()))]))).unwrap();
+    let output = oracle_apply_mutation(input, &spec("set-scalar", obj(vec![("path", keys(&["a"])), ("value", obj(vec![("kind", Json::String("string".into())), ("value", Json::String("replaced".into()))]))]))).unwrap();
     assert_eq!(project_json_value(&output).unwrap(), project_json_value(br#"{"a":"replaced"}"#).unwrap());
 
-    let whole = oracle_apply_mutation(input, &spec("set-scalar", obj(vec![("path", Json::Array(vec![])), ("value", Json::Bool(true))]))).unwrap();
+    let whole = oracle_apply_mutation(input, &spec("set-scalar", obj(vec![("path", keys(&[])), ("value", obj(vec![("kind", Json::String("bool".into())), ("value", Json::Bool(true))]))]))).unwrap();
     assert_eq!(project_json_value(&whole).unwrap(), project_json_value(b"true").unwrap());
-}
-
-#[test]
-fn set_snapshot_replaces_the_whole_document() {
-    let input = br#"{"old":true}"#;
-    let output = oracle_apply_mutation(input, &spec("set-snapshot", obj(vec![("value", obj(vec![("fresh", Json::Array(vec![Json::Number(1.0), Json::Number(2.0), Json::String("x".into())]))]))]))).unwrap();
-    assert_eq!(project_json_value(&output).unwrap(), project_json_value(br#"{"fresh":[1,2,"x"]}"#).unwrap());
 }
 
 /// 🔤️ Where order-insensitivity actually comes from. The projection is a faithful record of what

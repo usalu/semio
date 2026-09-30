@@ -8,6 +8,18 @@
       "type": "object",
       "additionalProperties": false,
       "required": [
+        "SetSnapshot"
+      ],
+      "properties": {
+        "SetSnapshot": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/semio/v1/table/mutation/set-snapshot/schema.json"
+        }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
         "CreateColumn"
       ],
       "properties": {
@@ -25,42 +37,6 @@
       "properties": {
         "DeleteColumn": {
           "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/semio/v1/table/mutation/delete-column/schema.json"
-        }
-      }
-    },
-    {
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "EditCell"
-      ],
-      "properties": {
-        "EditCell": {
-          "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/semio/v1/table/mutation/edit-cell/schema.json"
-        }
-      }
-    },
-    {
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "InsertRow"
-      ],
-      "properties": {
-        "InsertRow": {
-          "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/semio/v1/table/mutation/insert-row/schema.json"
-        }
-      }
-    },
-    {
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "RemoveRow"
-      ],
-      "properties": {
-        "RemoveRow": {
-          "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/semio/v1/table/mutation/remove-row/schema.json"
         }
       }
     },
@@ -92,6 +68,30 @@
       "type": "object",
       "additionalProperties": false,
       "required": [
+        "InsertRow"
+      ],
+      "properties": {
+        "InsertRow": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/semio/v1/table/mutation/insert-row/schema.json"
+        }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "RemoveRow"
+      ],
+      "properties": {
+        "RemoveRow": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/semio/v1/table/mutation/remove-row/schema.json"
+        }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
         "ReorderRows"
       ],
       "properties": {
@@ -104,11 +104,11 @@
       "type": "object",
       "additionalProperties": false,
       "required": [
-        "SetSnapshot"
+        "EditCell"
       ],
       "properties": {
-        "SetSnapshot": {
-          "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/semio/v1/table/mutation/set-snapshot/schema.json"
+        "EditCell": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/semio/v1/table/mutation/edit-cell/schema.json"
         }
       }
     }

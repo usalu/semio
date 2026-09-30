@@ -10,7 +10,21 @@
   "properties": {
     "id": {
       "type": "integer",
-      "minimum": 0
+      "minimum": 0,
+      "x-semio-ui": {
+        "widget": "stepper",
+        "label": {
+          "en": "Analysis model",
+          "de": "Berechnungsmodell"
+        },
+        "description": {
+          "en": "STEP instance id of the IfcStructuralAnalysisModel.",
+          "de": "STEP-Instanz-ID des IfcStructuralAnalysisModel."
+        },
+        "precision": 0,
+        "group": "target",
+        "order": 10
+      }
     },
     "model": {
       "anyOf": [
@@ -20,7 +34,19 @@
         {
           "type": "null"
         }
-      ]
+      ],
+      "x-semio-ui": {
+        "label": {
+          "en": "Analysis model",
+          "de": "Berechnungsmodell"
+        },
+        "description": {
+          "en": "Empty removes the model.",
+          "de": "Leer entfernt das Modell."
+        },
+        "group": "value",
+        "order": 20
+      }
     }
   },
   "$defs": {
@@ -33,7 +59,18 @@
       ],
       "properties": {
         "globalId": {
-          "type": "string"
+          "type": "string",
+          "x-semio-ui": {
+            "widget": "text",
+            "label": {
+              "en": "GlobalId",
+              "de": "GlobalId"
+            },
+            "description": {
+              "en": "22-character IFC GUID of the object.",
+              "de": "22-stellige IFC-GUID des Objekts."
+            }
+          }
         },
         "ownerHistory": {
           "anyOf": [
@@ -44,7 +81,17 @@
             {
               "type": "null"
             }
-          ]
+          ],
+          "x-semio-ui": {
+            "label": {
+              "en": "Owner history",
+              "de": "Eigentümerhistorie"
+            },
+            "description": {
+              "en": "STEP instance id of the IfcOwnerHistory.",
+              "de": "STEP-Instanz-ID der IfcOwnerHistory."
+            }
+          }
         },
         "name": {
           "type": "string"
@@ -57,7 +104,13 @@
             {
               "type": "null"
             }
-          ]
+          ],
+          "x-semio-ui": {
+            "label": {
+              "en": "Predefined type",
+              "de": "Vordefinierter Typ"
+            }
+          }
         }
       }
     }

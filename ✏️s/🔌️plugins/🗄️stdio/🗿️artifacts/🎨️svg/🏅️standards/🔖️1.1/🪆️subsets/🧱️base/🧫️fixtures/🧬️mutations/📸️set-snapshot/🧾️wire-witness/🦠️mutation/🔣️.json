@@ -1,0 +1,30 @@
+{
+  "mutation": "setSnapshot",
+  "payload": {
+    "snapshot": {
+      "schema": "stdio.svg",
+      "doc": {
+        "root": {
+          "kind": "element",
+          "name": "svg",
+          "attrs": [
+            { "name": "xmlns", "value": "http://www.w3.org/2000/svg" },
+            { "name": "viewBox", "value": "0 0 24 24" }
+          ],
+          "children": [
+            {
+              "kind": "element",
+              "name": "rect",
+              "attrs": [
+                { "name": "width", "value": "24" },
+                { "name": "height", "value": "24" }
+              ],
+              "children": []
+            }
+          ]
+        },
+        "declaration": { "version": "1.0", "encoding": "UTF-8" }
+      }
+    }
+  }
+}

@@ -7,10 +7,11 @@ use protocol::{MutationKind, SemanticDescriptor};
 
 //#region 🧩️CreateBlock
 /// 🧩️ Brings a new [`FormQuestion`] into existence inside `step_id`'s `blocks`, at an optional
-/// FINAL-state `index` (`None` appends). An unknown `step_id` is Fatal `mutation.invariant`; a
+/// FINAL-state `index` (`None` appends). An unknown `step_id` is Error `mutation.target-missing`; a
 /// duplicate `block.id` within that step is Fatal `mutation.duplicate-id`.
 #[derive(Clone, Debug, PartialEq, dsl::ToValue, dsl::FromValue, dsl::MutationLeaf)]
 #[mutation_leaf(contract = ::protocol)]
+#[value(rename_all = "camelCase")]
 pub struct CreateBlock {
     pub step_id: String,
     pub block: FormQuestion,

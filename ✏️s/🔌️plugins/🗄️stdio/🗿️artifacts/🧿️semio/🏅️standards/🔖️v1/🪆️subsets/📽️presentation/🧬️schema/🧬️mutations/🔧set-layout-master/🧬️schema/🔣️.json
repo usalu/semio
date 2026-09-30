@@ -5,19 +5,31 @@
   "type": "object",
   "additionalProperties": false,
   "required": [
+    "mutation",
     "id",
     "master_id"
   ],
   "properties": {
+    "mutation": {
+      "const": "setLayoutMaster",
+      "description": "Aggregate discriminator spliced in by SemioPresentationMutation; absent when the payload stands alone."
+    },
     "id": {
       "type": "string"
     },
     "master_id": {
-      "type": "string"
-    },
-    "mutation": {
-      "const": "setLayoutMaster",
-      "description": "Aggregate discriminator spliced in by SemioPresentationMutation; absent when the payload stands alone."
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Slide master",
+          "de": "Folienmaster"
+        },
+        "ref": {
+          "kind": "master"
+        }
+      }
     }
   }
 }

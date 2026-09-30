@@ -12,15 +12,51 @@
   "properties": {
     "width": {
       "type": "integer",
-      "minimum": 1
+      "minimum": 1,
+      "x-semio-ui": {
+        "widget": "stepper",
+        "role": "value",
+        "label": {
+          "en": "Width in cells",
+          "de": "Breite in Zellen"
+        },
+        "step": 1,
+        "precision": 0,
+        "group": "grid",
+        "order": 10
+      }
     },
     "height": {
       "type": "integer",
-      "minimum": 1
+      "minimum": 1,
+      "x-semio-ui": {
+        "widget": "stepper",
+        "role": "value",
+        "label": {
+          "en": "Height in cells",
+          "de": "Höhe in Zellen"
+        },
+        "step": 1,
+        "precision": 0,
+        "group": "grid",
+        "order": 20
+      }
     },
     "depth": {
       "type": "integer",
-      "minimum": 1
+      "minimum": 1,
+      "x-semio-ui": {
+        "widget": "stepper",
+        "role": "value",
+        "label": {
+          "en": "Depth in cells",
+          "de": "Tiefe in Zellen"
+        },
+        "step": 1,
+        "precision": 0,
+        "group": "grid",
+        "order": 30
+      }
     }
   }
 }

@@ -5,15 +5,46 @@
   "type": "object",
   "additionalProperties": false,
   "required": [
+    "mutation",
     "id",
     "newIconId"
   ],
   "properties": {
+    "mutation": {
+      "const": "changeMachineIcon"
+    },
     "id": {
-      "type": "string"
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Machine",
+          "de": "Maschine"
+        },
+        "description": {
+          "en": "The workshop machine to change.",
+          "de": "Die zu ändernde Werkstattmaschine."
+        },
+        "ref": {
+          "kind": "machine"
+        }
+      }
     },
     "newIconId": {
-      "type": "string"
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "text",
+        "role": "value",
+        "label": {
+          "en": "New Icon",
+          "de": "Neues Symbol"
+        },
+        "description": {
+          "en": "Icon id shown for the machine.",
+          "de": "Für die Maschine angezeigte Symbol-ID."
+        }
+      }
     }
   }
 }

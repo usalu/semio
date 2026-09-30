@@ -5,15 +5,55 @@
   "type": "object",
   "additionalProperties": false,
   "required": [
+    "mutation",
     "id",
     "pvId"
   ],
   "properties": {
+    "mutation": {
+      "const": "removeElectricalLoadCenterPv"
+    },
     "id": {
-      "type": "integer"
+      "type": "integer",
+      "minimum": 0,
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Electrical load center",
+          "de": "Stromverteiler"
+        },
+        "description": {
+          "en": "The electrical load center this mutation changes, by id.",
+          "de": "Stromverteiler, den diese Mutation ändert, per ID."
+        },
+        "ref": {
+          "kind": "electricalLoadCenter"
+        },
+        "group": "target",
+        "order": 10
+      }
     },
     "pvId": {
-      "type": "integer"
+      "type": "integer",
+      "minimum": 0,
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "PV system",
+          "de": "PV-Anlage"
+        },
+        "description": {
+          "en": "PV system to detach, by id.",
+          "de": "Zu lösende PV-Anlage, per ID."
+        },
+        "ref": {
+          "kind": "pvSystem"
+        },
+        "group": "member",
+        "order": 20
+      }
     }
   }
 }

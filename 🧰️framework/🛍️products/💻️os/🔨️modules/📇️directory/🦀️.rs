@@ -23,6 +23,9 @@ pub mod client;
 #[path = "🪪️identity/🦀️.rs"]
 pub mod identity;
 
+#[path = "🛡️access-policy/🧬️schema/🦀️.rs"]
+pub mod access_policy;
+
 use std::collections::BTreeMap;
 
 pub use schema::{

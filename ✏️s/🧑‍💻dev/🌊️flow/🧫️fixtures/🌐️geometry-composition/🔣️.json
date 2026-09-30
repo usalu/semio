@@ -1,0 +1,20 @@
+{
+  "schema": "semio.s.flow-geometry-composition/v1",
+  "operator": "brep.prim3d.box",
+  "boxes": [
+    {
+      "width": 2,
+      "depth": 3,
+      "height": 4,
+      "volume": 24
+    },
+    {
+      "width": 3,
+      "depth": 4,
+      "height": 5,
+      "volume": 60
+    }
+  ],
+  "tessellationGrant": 24,
+  "maximumTessellationSteps": 1000
+}

@@ -11,13 +11,61 @@
   ],
   "properties": {
     "memberId": {
-      "type": "string"
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Member",
+          "de": "Bauteil"
+        },
+        "description": {
+          "en": "The timber member this mutation addresses.",
+          "de": "Das Holzbauteil, das diese Mutation adressiert."
+        },
+        "ref": {
+          "kind": "member"
+        },
+        "group": "target",
+        "order": 10
+      }
     },
     "actionId": {
-      "type": "string"
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Action",
+          "de": "Einwirkung"
+        },
+        "description": {
+          "en": "The characteristic action of the member or connection.",
+          "de": "Die charakteristische Einwirkung des Bauteils oder der Verbindung."
+        },
+        "ref": {
+          "kind": "action"
+        },
+        "group": "target",
+        "order": 20
+      }
     },
     "newValue": {
-      "type": "string"
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "text",
+        "role": "value",
+        "label": {
+          "en": "Imposed load category",
+          "de": "Nutzungskategorie"
+        },
+        "description": {
+          "en": "A to H (EN 1991-1-1 Table 6.1); empty when the action is no imposed load.",
+          "de": "A bis H (EN 1991-1-1 Tabelle 6.1); leer, wenn die Einwirkung keine Nutzlast ist."
+        },
+        "group": "actions",
+        "order": 30
+      }
     }
   }
 }

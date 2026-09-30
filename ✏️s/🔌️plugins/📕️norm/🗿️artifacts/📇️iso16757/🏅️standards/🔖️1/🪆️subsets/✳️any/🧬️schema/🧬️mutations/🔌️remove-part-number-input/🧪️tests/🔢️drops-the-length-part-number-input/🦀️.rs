@@ -61,7 +61,7 @@ async fn reinserting_the_length_input_restores_before() {
 
 /// 🔣️ Both committed snapshots and the committed `remove-part-number-input` payload are already canonical:
 /// decode → encode is a fixed point. The committed payload is spelled `{"RemovePartNumberInput": {"key":
-/// "length"}}` — externally tagged, snake_case payload key.
+/// "length"}}` — externally tagged, camelCase payload key.
 #[semio_framework_async_macros::async_test]
 async fn committed_json_is_canonical() {
     for (side, text) in [("before", BEFORE), ("after", AFTER)] {

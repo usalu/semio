@@ -10,10 +10,39 @@
   ],
   "properties": {
     "id": {
-      "type": "string"
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Object",
+          "de": "Objekt"
+        },
+        "description": {
+          "en": "The object to shade.",
+          "de": "Das zu schattierende Objekt."
+        },
+        "ref": {
+          "kind": "object",
+          "domain": "mesh",
+          "granularity": "object"
+        }
+      }
     },
     "newSmoothShading": {
-      "type": "boolean"
+      "type": "boolean",
+      "x-semio-ui": {
+        "widget": "toggle",
+        "role": "value",
+        "label": {
+          "en": "Smooth Shading",
+          "de": "Glatte Schattierung"
+        },
+        "description": {
+          "en": "Interpolates normals across faces.",
+          "de": "Interpoliert Normalen über Flächen hinweg."
+        }
+      }
     }
   }
 }

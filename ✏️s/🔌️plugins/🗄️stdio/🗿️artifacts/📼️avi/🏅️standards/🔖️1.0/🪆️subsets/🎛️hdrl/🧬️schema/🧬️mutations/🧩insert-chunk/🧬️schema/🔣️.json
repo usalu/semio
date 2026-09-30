@@ -5,25 +5,58 @@
   "type": "object",
   "additionalProperties": false,
   "required": [
-    "stream_index",
+    "mutation",
+    "streamIndex",
     "index",
     "chunk"
   ],
   "properties": {
-    "stream_index": {
-      "type": "integer",
-      "minimum": 0
-    },
-    "index": {
-      "type": "integer",
-      "minimum": 0
-    },
-    "chunk": {
-      "$ref": "#/$defs/AviChunk"
-    },
     "mutation": {
       "const": "insertChunk",
       "description": "Aggregate discriminator spliced in by AviMutation; absent when the payload stands alone."
+    },
+    "streamIndex": {
+      "type": "integer",
+      "minimum": 0,
+      "x-semio-ui": {
+        "widget": "stepper",
+        "label": {
+          "en": "Stream",
+          "de": "Datenstrom"
+        },
+        "description": {
+          "en": "Index of the stream, counted from 0.",
+          "de": "Index des Datenstroms, ab 0 gezählt."
+        },
+        "precision": 0,
+        "group": "target",
+        "order": 10
+      }
+    },
+    "index": {
+      "type": "integer",
+      "minimum": 0,
+      "x-semio-ui": {
+        "widget": "stepper",
+        "label": {
+          "en": "Insert position",
+          "de": "Einfügeposition"
+        },
+        "precision": 0,
+        "group": "target",
+        "order": 20
+      }
+    },
+    "chunk": {
+      "$ref": "#/$defs/AviChunk",
+      "x-semio-ui": {
+        "label": {
+          "en": "Chunk",
+          "de": "Chunk"
+        },
+        "group": "value",
+        "order": 30
+      }
     }
   },
   "$defs": {
@@ -36,7 +69,13 @@
       ],
       "properties": {
         "fourcc": {
-          "type": "string"
+          "type": "string",
+          "x-semio-ui": {
+            "label": {
+              "en": "FourCC",
+              "de": "FourCC"
+            }
+          }
         },
         "data": {
           "type": "array",
@@ -44,10 +83,22 @@
             "type": "integer",
             "minimum": 0,
             "maximum": 255
+          },
+          "x-semio-ui": {
+            "label": {
+              "en": "Chunk data",
+              "de": "Chunk-Daten"
+            }
           }
         },
         "keyframe": {
-          "type": "boolean"
+          "type": "boolean",
+          "x-semio-ui": {
+            "label": {
+              "en": "Keyframe",
+              "de": "Schlüsselbild"
+            }
+          }
         }
       }
     }

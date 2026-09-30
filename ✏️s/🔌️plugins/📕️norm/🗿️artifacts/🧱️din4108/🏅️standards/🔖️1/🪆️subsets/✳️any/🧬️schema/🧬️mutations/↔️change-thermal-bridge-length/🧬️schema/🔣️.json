@@ -10,10 +10,41 @@
   ],
   "properties": {
     "bridgeId": {
-      "type": "string"
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Thermal bridge",
+          "de": "Wärmebrücke"
+        },
+        "description": {
+          "en": "The thermal bridge this mutation addresses.",
+          "de": "Die Wärmebrücke, die diese Mutation adressiert."
+        },
+        "ref": {
+          "kind": "thermalBridge"
+        },
+        "group": "target",
+        "order": 10
+      }
     },
     "newLengthM": {
-      "type": "number"
+      "type": "number",
+      "minimum": 0,
+      "x-semio-ui": {
+        "widget": "stepper",
+        "role": "value",
+        "label": {
+          "en": "Length l",
+          "de": "Länge l"
+        },
+        "unit": "m",
+        "step": 0.1,
+        "precision": 2,
+        "group": "thermal-bridges",
+        "order": 20
+      }
     }
   }
 }

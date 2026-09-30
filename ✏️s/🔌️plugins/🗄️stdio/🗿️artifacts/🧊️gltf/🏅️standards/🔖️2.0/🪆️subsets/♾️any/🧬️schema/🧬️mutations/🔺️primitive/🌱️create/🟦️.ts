@@ -1,8 +1,14 @@
-/** 🦠️ create-primitive: cohesive atomic mesh mutation. */
-import type { GltfJson, GltfSnapshot, GltfPrimitive, GltfMorphTarget } from '../../📸️snapshot/🟦️.ts';
-import { run, reject, positionIn, itemIndex, permutation, moveItem, type GltfLeafResult, type GltfMutationRejection } from './🟦️';
-export const GltfCreatePrimitiveDescriptor = { id: 's.stdio.gltf.mutation.create-primitive.v1', version: 1, kind: 'create', touchedPaths: ["document/meshes/*/primitives"], referencePolicy: 'creates an empty primitive only at a valid mesh-local position' } as const;
-export interface GltfCreatePrimitivePayload { mesh: number; position: number }
-export type GltfCreatePrimitiveResult = GltfLeafResult;
-export const validateGltfCreatePrimitive = (payload: GltfCreatePrimitivePayload, base: GltfSnapshot): GltfMutationRejection | undefined => { const mesh = itemIndex(payload.mesh, base.document.meshes.length, 'document/meshes'); if (mesh) return mesh; const position = positionIn(payload.position, base.document.meshes[payload.mesh]!.primitives.length, `document/meshes/${payload.mesh}/primitives`); if (position) return position; return undefined; };
-export const applyGltfCreatePrimitive = (base: GltfSnapshot, payload: GltfCreatePrimitivePayload): GltfCreatePrimitiveResult => run(base, payload, validateGltfCreatePrimitive, (next, payload) => { next.document.meshes[payload.mesh]!.primitives.splice(payload.position, 0, { attributes: {}, targets: [] } as GltfPrimitive); }, GltfCreatePrimitiveDescriptor.touchedPaths);
+/** 🌱️ `create-primitive` wire twin: the flat `Apply` payload `GltfCreatePrimitivePayload` and the phase wire `CreatePrimitiveMutation`, exactly as `./🦀️.rs` writes them.
+ * @see ./🧬️schema/🔣️.json */
+import { gltfWireIndex, gltfWireObject, gltfWireRequired } from "../../../📸️snapshot/🟦️.ts";
+import { type GltfDiff, type GltfPhase, gltfWirePhase, parseGltfDiff } from "../../../🔺️diff/🟦️.ts";
+
+export interface GltfCreatePrimitivePayload {
+  mesh: number;
+  position: number;
+}
+
+export type CreatePrimitiveMutation = GltfPhase<GltfCreatePrimitivePayload, GltfDiff>;
+
+export const parseGltfCreatePrimitivePayload = gltfWireObject<GltfCreatePrimitivePayload>({ mesh: gltfWireRequired(gltfWireIndex), position: gltfWireRequired(gltfWireIndex) });
+export const parseCreatePrimitiveMutation = gltfWirePhase(parseGltfCreatePrimitivePayload, parseGltfDiff);

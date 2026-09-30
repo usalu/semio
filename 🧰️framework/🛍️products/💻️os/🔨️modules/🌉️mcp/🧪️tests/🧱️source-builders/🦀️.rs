@@ -38,8 +38,11 @@ fn string_array_arg(id: &str, en: &str, de: &str) -> ActionArgDef {
         schema: ArgSchema::Array { items: Box::new(ArgSchema::String { options: Vec::new(), min_len: None, max_len: None, pattern: None, format: None }), min_items: None, max_items: None },
         presentation: None,
         required: false,
+        nullable: false,
         default: None,
         description: None,
+        group: None,
+        order: None,
     }
 }
 

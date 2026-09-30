@@ -40,3 +40,41 @@ fn exact_decimal_half(value: f64, decimal_power: i32) -> bool {
     if binary_power != decimal_power - 1 { return false }
     decimal_power <= 0 || (decimal_power <= 22 && (mantissa >> trailing) % 5_u64.pow(decimal_power as u32) == 0)
 }
+
+/// 🎯️ `value` with exactly `precision` fraction digits, ties away from zero — the twin of JavaScript's
+/// `toFixed`, so a number field reads identically in every renderer. Negative zero prints unsigned and a
+/// magnitude `toFixed` itself would print in exponent form falls back to [`format_ui_number`].
+pub fn format_ui_number_fixed(value: f64, precision: u16) -> String {
+    if !value.is_finite() { return String::new() }
+    if value.abs() >= 1e21 { return format_ui_number(value) }
+    let digits = usize::from(precision.min(crate::UI_NUMBER_PRECISION_MAX));
+    let magnitude = value.abs();
+    let text = if exact_decimal_half(magnitude, -(digits as i32)) {
+        let exact = format!("{magnitude:.*}", digits + 1);
+        decimal_increment(exact[..exact.len() - 1].trim_end_matches('.'))
+    } else {
+        format!("{magnitude:.digits$}")
+    };
+    if value.is_sign_negative() && text.bytes().any(|byte| byte.is_ascii_digit() && byte != b'0') { format!("-{text}") } else { text }
+}
+
+/// ➕️ A non-negative decimal string plus one unit in its last place, carrying through nines — the exact half-up
+/// step of a tie, done on the digits because a unit below one ulp would vanish in `f64`.
+fn decimal_increment(text: &str) -> String {
+    let mut digits = text.as_bytes().to_vec();
+    for byte in digits.iter_mut().rev().filter(|byte| byte.is_ascii_digit()) {
+        if *byte == b'9' {
+            *byte = b'0';
+        } else {
+            *byte += 1;
+            return String::from_utf8(digits).expect("ascii decimal");
+        }
+    }
+    format!("1{}", String::from_utf8(digits).expect("ascii decimal"))
+}
+
+/// 🧮️ `value` rounded to `precision` fraction digits by the same law [`format_ui_number_fixed`] prints.
+pub fn round_ui_number(value: f64, precision: u16) -> f64 {
+    if !value.is_finite() || value.abs() >= 1e21 { return value }
+    format_ui_number_fixed(value, precision).parse().unwrap_or(value)
+}

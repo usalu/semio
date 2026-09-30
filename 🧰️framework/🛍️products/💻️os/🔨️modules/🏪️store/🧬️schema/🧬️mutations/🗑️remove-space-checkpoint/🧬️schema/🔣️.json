@@ -10,7 +10,20 @@
   "properties": {
     "checkpointId": {
       "type": "string",
-      "minLength": 1
+      "minLength": 1,
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Checkpoint",
+          "de": "Checkpoint"
+        },
+        "ref": {
+          "kind": "checkpoint"
+        },
+        "group": "target",
+        "order": 10
+      }
     }
   }
 }

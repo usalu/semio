@@ -6,15 +6,41 @@
   "properties": {
     "schema": {
       "type": "string",
-      "x-semio-state": "artifact"
+      "x-semio-state": "artifact",
+      "x-semio-ui": {
+        "label": {
+          "en": "Schema",
+          "de": "Schema"
+        },
+        "description": {
+          "en": "Identifier of the snapshot schema this document follows.",
+          "de": "Kennung des Snapshot-Schemas, dem dieses Dokument folgt."
+        }
+      }
     },
     "document": {
       "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/ifc/2x3/base/artifact.json#/$defs/Part21Document",
-      "x-semio-state": "artifact"
+      "x-semio-state": "artifact",
+      "x-semio-ui": {
+        "label": {
+          "en": "STEP document",
+          "de": "STEP-Dokument"
+        }
+      }
     },
     "edmPreamble": {
       "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/ifc/2x3/base/artifact.json#/$defs/Ifc2x3EdmPreamble",
-      "x-semio-state": "artifact"
+      "x-semio-state": "artifact",
+      "x-semio-ui": {
+        "label": {
+          "en": "EDM preamble",
+          "de": "EDM-Präambel"
+        },
+        "description": {
+          "en": "Header comment block written by EDM-based exporters.",
+          "de": "Von EDM-basierten Exportern geschriebener Kommentarblock."
+        }
+      }
     }
   }
 }

@@ -13,42 +13,10 @@
       ],
       "properties": {
         "mutation": {
-          "const": "insertElement"
+          "const": "setSnapshot"
         },
         "payload": {
-          "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/svg/1.1/base/mutation/insert-element/schema.json"
-        }
-      }
-    },
-    {
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "mutation",
-        "payload"
-      ],
-      "properties": {
-        "mutation": {
-          "const": "removeElement"
-        },
-        "payload": {
-          "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/svg/1.1/base/mutation/remove-element/schema.json"
-        }
-      }
-    },
-    {
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "mutation",
-        "payload"
-      ],
-      "properties": {
-        "mutation": {
-          "const": "setAttribute"
-        },
-        "payload": {
-          "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/svg/1.1/base/mutation/set-attribute/schema.json"
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/svg/1.1/base/mutation/set-snapshot/schema.json"
         }
       }
     },
@@ -64,7 +32,7 @@
           "const": "setDeclaration"
         },
         "payload": {
-          "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/svg/1.1/base/mutation/set-declaration/schema.json"
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/svg/1.1/base/mutation/set-declaration/schema.json#/$defs/SetDeclarationMutation"
         }
       }
     },
@@ -80,7 +48,39 @@
           "const": "setDoctype"
         },
         "payload": {
-          "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/svg/1.1/base/mutation/set-doctype/schema.json"
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/svg/1.1/base/mutation/set-doctype/schema.json#/$defs/SetDoctypeMutation"
+        }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "mutation",
+        "payload"
+      ],
+      "properties": {
+        "mutation": {
+          "const": "insertElement"
+        },
+        "payload": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/svg/1.1/base/mutation/insert-element/schema.json#/$defs/InsertElementMutation"
+        }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "mutation",
+        "payload"
+      ],
+      "properties": {
+        "mutation": {
+          "const": "removeElement"
+        },
+        "payload": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/svg/1.1/base/mutation/remove-element/schema.json#/$defs/RemoveElementMutation"
         }
       }
     },
@@ -96,7 +96,23 @@
           "const": "setElementName"
         },
         "payload": {
-          "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/svg/1.1/base/mutation/set-element-name/schema.json"
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/svg/1.1/base/mutation/set-element-name/schema.json#/$defs/SetElementNameMutation"
+        }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "mutation",
+        "payload"
+      ],
+      "properties": {
+        "mutation": {
+          "const": "setAttribute"
+        },
+        "payload": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/svg/1.1/base/mutation/set-attribute/schema.json#/$defs/SetAttributeMutation"
         }
       }
     },
@@ -112,23 +128,7 @@
           "const": "setText"
         },
         "payload": {
-          "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/svg/1.1/base/mutation/set-text/schema.json"
-        }
-      }
-    },
-    {
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "mutation",
-        "payload"
-      ],
-      "properties": {
-        "mutation": {
-          "const": "setTransform"
-        },
-        "payload": {
-          "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/svg/1.1/base/mutation/set-transform/schema.json"
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/svg/1.1/base/mutation/set-text/schema.json#/$defs/SetTextMutation"
         }
       }
     },
@@ -144,7 +144,7 @@
           "const": "setViewBox"
         },
         "payload": {
-          "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/svg/1.1/base/mutation/set-view-box/schema.json"
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/svg/1.1/base/mutation/set-view-box/schema.json#/$defs/SetViewBoxMutation"
         }
       }
     },
@@ -157,10 +157,10 @@
       ],
       "properties": {
         "mutation": {
-          "const": "setSnapshot"
+          "const": "setTransform"
         },
         "payload": {
-          "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/svg/1.1/base/mutation/set-snapshot/schema.json"
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/svg/1.1/base/mutation/set-transform/schema.json#/$defs/SetTransformMutation"
         }
       }
     }

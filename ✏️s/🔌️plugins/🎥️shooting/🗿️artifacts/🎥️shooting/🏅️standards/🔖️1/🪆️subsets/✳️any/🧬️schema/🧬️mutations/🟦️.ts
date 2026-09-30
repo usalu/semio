@@ -15,24 +15,24 @@ export interface DeleteAsset {
 /** ✏️ Changes an asset's identity `name` field. */
 export interface RenameAsset {
   id: string;
-  new_name: string;
+  newName: string;
 }
 
 /** 🔗 Sets an asset's mesh `url`. */
 export interface ChangeAssetUrl {
   id: string;
-  new_url: string;
+  newUrl: string;
 }
 
 /** 🔀 Repositions an asset within the display-ordered `assets` list. */
 export interface ReorderAssets {
   id: string;
-  to_index: number;
+  toIndex: number;
 }
 
 /** ↔️ The bulk relative-offset gesture over multiple assets (gumball drag). */
 export interface DragAssets {
-  asset_ids: string[];
+  assetIds: string[];
   dx: number;
   dy: number;
   dz: number;
@@ -40,7 +40,7 @@ export interface DragAssets {
 
 /** 🔄 The bulk axis-angle rotation gesture over multiple assets. */
 export interface RotateAssets {
-  asset_ids: string[];
+  assetIds: string[];
   ax: number;
   ay: number;
   az: number;
@@ -49,7 +49,7 @@ export interface RotateAssets {
 
 /** ↕️ The bulk multiplicative-scale gesture over multiple assets. */
 export interface ScaleAssets {
-  asset_ids: string[];
+  assetIds: string[];
   sx: number;
   sy: number;
   sz: number;
@@ -69,48 +69,48 @@ export interface DeleteShot {
 /** 🏷️ Changes a shot's identity `label` field. */
 export interface RenameShot {
   id: string;
-  new_label: string;
+  newLabel: string;
 }
 
 /** 📏 Sets a shot's render `width`. */
 export interface ChangeShotWidth {
   id: string;
-  new_width: number;
+  newWidth: number;
 }
 
 /** 📐 Sets a shot's render `height`. */
 export interface ChangeShotHeight {
   id: string;
-  new_height: number;
+  newHeight: number;
 }
 
 /** 🖼️ Sets a shot's export `format`. */
 export interface ChangeShotFormat {
   id: string;
-  new_format: string;
+  newFormat: string;
 }
 
 /** ✂️ Sets a shot's crop `shape`. */
 export interface ChangeShotShape {
   id: string;
-  new_shape: string;
+  newShape: string;
 }
 
 /** 🔃 Repositions a shot within the display-ordered `shots` list. */
 export interface ReorderShots {
   id: string;
-  to_index: number;
+  toIndex: number;
 }
 
-/** 📷 Overwrites the saved camera `shot_id` references with a new pose. */
+/** 📷 Overwrites the saved camera `shotId` references with a new pose. */
 export interface ReplaceShotCamera {
-  shot_id: string;
-  new_camera: ShootingCamera;
+  shotId: string;
+  newCamera: ShootingCamera;
 }
 
 /** 🎥 Brings a new saved camera into existence (append-only apply). */
 export interface CreateSavedCamera {
-  saved_camera: ShootingSavedCamera;
+  savedCamera: ShootingSavedCamera;
   index: number | null;
 }
 
@@ -122,64 +122,64 @@ export interface DeleteSavedCamera {
 /** 🪪 Changes a saved camera's identity `label` field. */
 export interface RenameSavedCamera {
   id: string;
-  new_label: string;
+  newLabel: string;
 }
 
 /** 🎞️ Whole-value swap of a saved camera's `camera` pose. */
 export interface ReplaceSavedCameraView {
   id: string;
-  new_camera: ShootingCamera;
+  newCamera: ShootingCamera;
 }
 
 /** 🔁 Repositions a saved camera within the display-ordered `savedCameras` list. */
 export interface ReorderSavedCameras {
   id: string;
-  to_index: number;
+  toIndex: number;
 }
 
 /** 🎯 A narrow addressed single-field setter for the document's active shot. */
 export interface SetActiveShot {
-  shot_id: string | null;
+  shotId: string | null;
 }
 
 /** 📌 A narrow addressed single-field setter for the document's active asset. */
 export interface SetActiveAsset {
-  asset_id: string | null;
+  assetId: string | null;
 }
 
 /** ☀️ One of the scene's independently-settable fields — toggles the sun. */
 export interface ChangeSceneSunEnabled {
-  new_enabled: boolean;
+  newEnabled: boolean;
 }
 
 /** 🧭 One of the scene's independently-settable fields — the sun's azimuth. */
 export interface ChangeSceneSunAzimuth {
-  new_azimuth: number;
+  newAzimuth: number;
 }
 
 /** 🌅 One of the scene's independently-settable fields — the sun's elevation. */
 export interface ChangeSceneSunElevation {
-  new_elevation: number;
+  newElevation: number;
 }
 
 /** 💡 One of the scene's independently-settable fields — the sun's intensity. */
 export interface ChangeSceneSunIntensity {
-  new_intensity: number;
+  newIntensity: number;
 }
 
 /** 🔅️ One of the scene's independently-settable fields — the ambient light intensity. */
 export interface ChangeSceneAmbientIntensity {
-  new_intensity: number;
+  newIntensity: number;
 }
 
 /** 🌑 One of the scene's independently-settable fields — toggles shadows. */
 export interface ChangeSceneShadowEnabled {
-  new_enabled: boolean;
+  newEnabled: boolean;
 }
 
 /** 🪨 One of the scene's independently-settable fields — the material roughness. */
 export interface ChangeSceneMaterialRoughness {
-  new_roughness: number;
+  newRoughness: number;
 }
 
 export type ShootingMutation =

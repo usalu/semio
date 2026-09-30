@@ -5,10 +5,15 @@
   "type": "object",
   "additionalProperties": false,
   "required": [
+    "mutation",
     "from",
     "to"
   ],
   "properties": {
+    "mutation": {
+      "const": "moveSlide",
+      "description": "Aggregate discriminator spliced in by PptxMutation; absent when the payload stands alone."
+    },
     "from": {
       "type": "integer",
       "minimum": 0
@@ -16,10 +21,6 @@
     "to": {
       "type": "integer",
       "minimum": 0
-    },
-    "mutation": {
-      "const": "moveSlide",
-      "description": "Aggregate discriminator spliced in by PptxMutation; absent when the payload stands alone."
     }
   }
 }

@@ -7,6 +7,7 @@ use semio_framework_value_derive::{FromValue as FromValueDerive, ToValue as ToVa
 //#region 🔖️Payload
 #[derive(Clone, Debug, PartialEq, ToValueDerive, FromValueDerive, dsl::MutationLeaf)]
 #[mutation_leaf(contract = ::protocol)]
+#[value(rename_all = "camelCase")]
 pub struct ChangeNodeLabel {
     pub id: String,
     pub new_label: String,

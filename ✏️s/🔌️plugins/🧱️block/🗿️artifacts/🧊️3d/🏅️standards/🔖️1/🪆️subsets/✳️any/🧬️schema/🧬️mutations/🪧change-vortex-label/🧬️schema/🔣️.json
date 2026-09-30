@@ -5,14 +5,46 @@
   "type": "object",
   "additionalProperties": false,
   "required": [
+    "mutation",
     "id"
   ],
   "properties": {
+    "mutation": {
+      "const": "changeVortexLabel"
+    },
     "id": {
-      "type": "string"
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Vortex",
+          "de": "Wirbel"
+        },
+        "ref": {
+          "kind": "vortex",
+          "domain": "vortex",
+          "granularity": "vortex"
+        },
+        "group": "target",
+        "order": 10
+      }
     },
     "newLabel": {
-      "type": "string"
+      "type": [
+        "string",
+        "null"
+      ],
+      "x-semio-ui": {
+        "widget": "text",
+        "role": "value",
+        "label": {
+          "en": "Label",
+          "de": "Bezeichnung"
+        },
+        "group": "value",
+        "order": 20
+      }
     }
   }
 }

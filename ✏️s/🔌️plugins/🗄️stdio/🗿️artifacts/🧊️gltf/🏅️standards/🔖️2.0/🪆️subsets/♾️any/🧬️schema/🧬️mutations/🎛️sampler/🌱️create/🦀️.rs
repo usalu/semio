@@ -28,7 +28,7 @@ pub fn apply(payload: &GltfCreateSamplerPayload, base: &GltfSnapshot) -> Result<
 
 //#region 🧬️DirectMutation
 #[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::MutationLeaf)]
-#[mutation_leaf(contract = ::protocol)]
+#[mutation_leaf(contract = ::protocol, payload = Apply)]
 #[value(tag = "phase", content = "value", rename_all = "camelCase")]
 pub enum CreateSamplerMutation {
     Apply(GltfCreateSamplerPayload),
@@ -72,6 +72,6 @@ impl protocol::MutationKind<GltfSnapshot, super::GltfMutation> for CreateSampler
 
 //#region 🧪️Tests
 #[cfg(test)]
-#[path = "🧪️tests/🔬️direct-leaf/🦀️.rs"]
-mod direct_leaf_tests;
+#[path = "🧪️tests/🎛️inserts-a-repeat-512dbe/🦀️.rs"]
+mod case_inserts_a_repeat_512dbe;
 //#endregion 🧪️Tests

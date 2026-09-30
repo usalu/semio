@@ -5,19 +5,51 @@
   "type": "object",
   "additionalProperties": false,
   "required": [
+    "mutation",
     "memberId",
-    "loadCaseId",
-    "newMYEd"
+    "actionId",
+    "newMYK"
   ],
   "properties": {
+    "mutation": {
+      "const": "changeMemberMYEd"
+    },
     "memberId": {
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Member",
+          "de": "Bauteil"
+        },
+        "description": {
+          "en": "The aluminium member this mutation addresses.",
+          "de": "Das Aluminiumbauteil, das diese Mutation adressiert."
+        },
+        "ref": {
+          "kind": "member"
+        },
+        "group": "target",
+        "order": 10
+      }
+    },
+    "actionId": {
       "type": "string"
     },
-    "loadCaseId": {
-      "type": "string"
-    },
-    "newMYEd": {
-      "type": "number"
+    "newMYK": {
+      "type": "number",
+      "x-semio-ui": {
+        "label": {
+          "en": "Characteristic bending moment M_y,k",
+          "de": "Charakteristisches Biegemoment M_y,k"
+        },
+        "widget": "stepper",
+        "unit": "N·m",
+        "displayUnit": "kN·m",
+        "displayFactor": 0.001,
+        "precision": 2
+      }
     }
   }
 }

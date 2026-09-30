@@ -9,27 +9,16 @@ export type SheetAttributes =
 /** 🧬️ Vdi3805Mutation — mirrors `Vdi3805Mutation` in `🦀️.rs` (19 variants over the
  * manufacturer-file header, correction/strict-mode/limits scalars, edition profile overrides, and
  * full create/delete(+rename/replace) coverage of catalogue products, parametric geometry and
- * characteristic curves). `Vdi3805Mutation` carries only `#[derive(dsl::Mutations)]` — no
- * `#[serde(tag = ...)]` — so it serializes with serde's default EXTERNALLY TAGGED shape:
- * `{ "<PascalCaseVariantName>": { ...leaf-struct-fields } }`, confirmed by every committed
- * `🧪️tests/*​/🦠️mutation/🔣️.json` fixture (e.g. `{"ChangeStrictMode":
- * {"new_strict_mode":true}}`). None of the 19 leaf structs — nor any of the shared value types they
- * embed (`ManufacturerFile`, `SecurityLimits`, `EditionId`, `BuildingSystemNumber`, `VdiUnit`,
- * `ProductIdentity`, `NativeRecord`, `AccessoryLink`, `CompositionLink`, `Configuration`,
+ * characteristic curves). `Vdi3805Mutation` is EXTERNALLY TAGGED on the wire: `{ "<PascalCaseVariantName>":
+ * { ...leaf-struct-fields } }` (e.g. `{"ChangeStrictMode": {"newStrictMode": true}}`). Every leaf struct and
+ * every shared value type it embeds (`ManufacturerFile`, `SecurityLimits`, `EditionId`, `BuildingSystemNumber`,
+ * `VdiUnit`, `ProductIdentity`, `NativeRecord`, `AccessoryLink`, `CompositionLink`, `Configuration`,
  * `CatalogueProduct`, `BoundingBox`, `ConnectionPoint`, `ParametricGeometry`, `CurvePoint`,
- * `CharacteristicCurve`, `ExtensionBag`) — carry `#[serde(rename_all = ...)]`, so every one of
- * their own field names is the literal Rust snake_case name verbatim (confirmed field-by-field
- * against the committed fixtures, e.g. `{"x_unit":{"symbol":"%","kind":"Dimensionless",
- * "delta":true,"si_factor":0.01}}`). `VdiQuantityKind` (the `VdiUnit.kind` value) has NO
- * `#[serde(rename_all)]` either, so it serializes as the literal PascalCase Rust variant name
- * (`"Dimensionless"`, `"ThermalConductivity"`, …) — the `#[dsl(key = "thermalConductivity")]`
- * annotations on some of its variants are a DSL-engine binding key, not a serde rename, and do NOT
- * affect the JSON wire form. `VdiValue` is the one exception: its enum carries
- * `#[serde(tag = "kind", rename_all = "camelCase")]`, so its OWN tag values are camelCase
- * (`"boolean"`, `"decimal"`, …) — confirmed by fixture (`{"kind":"integer","value":80}`) — while
- * the fields nested inside each of its variants (`value`, `unit`, `min`, `max`, `code`, `items`)
- * are untouched by that container-level `rename_all` (which only renames variant tags, not
- * variant-payload field names) and stay their own literal (already lowercase, single-word) spelling. */
+ * `CharacteristicCurve`, `ExtensionBag`) carries `rename_all = "camelCase"` on its value wire and its test serde
+ * twin alike, so field names are camelCase (`{"xUnit":{"symbol":"%","kind":"dimensionless","delta":true,
+ * "siFactor":0.01}}`), and the unit enums `VdiQuantityKind` and `EditionProfileChoice` spell their variants
+ * camelCase too. `VdiValue` is internally tagged on `kind` with camelCase tags (`"boolean"`, `"decimal"`, …);
+ * the fields inside each of its variants (`value`, `unit`, `min`, `max`, `code`, `items`) are single words. */
 
 export interface LocalizedText {
   locale: string;
@@ -37,31 +26,31 @@ export interface LocalizedText {
 }
 
 export type VdiQuantityKind =
-  | "Dimensionless"
-  | "Length"
-  | "Area"
-  | "Volume"
-  | "Mass"
-  | "Time"
-  | "Temperature"
-  | "Force"
-  | "Pressure"
-  | "Stress"
-  | "Moment"
-  | "Energy"
-  | "Power"
-  | "ThermalConductivity"
-  | "ThermalResistance"
-  | "HeatTransferCoefficient"
-  | "AirPermeability"
-  | "VentilationRate"
-  | "Acceleration";
+  | "dimensionless"
+  | "length"
+  | "area"
+  | "volume"
+  | "mass"
+  | "time"
+  | "temperature"
+  | "force"
+  | "pressure"
+  | "stress"
+  | "moment"
+  | "energy"
+  | "power"
+  | "thermalConductivity"
+  | "thermalResistance"
+  | "heatTransferCoefficient"
+  | "airPermeability"
+  | "ventilationRate"
+  | "acceleration";
 
 export interface VdiUnit {
   symbol: string;
   kind: VdiQuantityKind;
   delta: boolean;
-  si_factor: number;
+  siFactor: number;
 }
 
 export type VdiValue =
@@ -80,26 +69,26 @@ export interface ExtensionBag {
 }
 
 export interface BuildingSystemNumber {
-  system_code: string;
+  systemCode: string;
   subsystem: string;
   sequence: number;
 }
 
 export interface ManufacturerFile {
-  header_version: string;
+  headerVersion: string;
   manufacturer: string;
-  building_system_number: BuildingSystemNumber;
+  buildingSystemNumber: BuildingSystemNumber;
   created: string;
   charset: string;
-  record_count: number;
+  recordCount: number;
   extensions: ExtensionBag;
 }
 
 export interface SecurityLimits {
-  max_file_bytes: number;
-  max_records: number;
-  max_field_length: number;
-  max_nesting_depth: number;
+  maxFileBytes: number;
+  maxRecords: number;
+  maxFieldLength: number;
+  maxNestingDepth: number;
 }
 
 export interface EditionId {
@@ -110,9 +99,9 @@ export interface EditionId {
 export type EditionProfileChoice = "legacy" | "current";
 
 export interface ProductIdentity {
-  manufacturer_code: string;
-  product_group: string;
-  article_number: string;
+  manufacturerCode: string;
+  productGroup: string;
+  articleNumber: string;
 }
 
 export interface NativeRecord {
@@ -122,21 +111,21 @@ export interface NativeRecord {
 }
 
 export interface AccessoryLink {
-  accessory_id: string;
+  accessoryId: string;
   required: boolean;
   quantity: number;
 }
 
 export interface CompositionLink {
-  component_id: string;
+  componentId: string;
   quantity: number;
 }
 
 export interface Configuration {
   id: string;
   attributes: SheetAttributes;
-  geometry_ref?: string;
-  function_refs: string[];
+  geometryRef?: string;
+  functionRefs: string[];
 }
 
 export interface CatalogueProduct {
@@ -151,12 +140,12 @@ export interface CatalogueProduct {
 }
 
 export interface BoundingBox {
-  min_x: number;
-  min_y: number;
-  min_z: number;
-  max_x: number;
-  max_y: number;
-  max_z: number;
+  minX: number;
+  minY: number;
+  minZ: number;
+  maxX: number;
+  maxY: number;
+  maxZ: number;
 }
 
 export interface ConnectionPoint {
@@ -164,7 +153,7 @@ export interface ConnectionPoint {
   medium: string;
   position: [number, number, number];
   direction: [number, number, number];
-  diameter_mm?: number;
+  diameterMm?: number;
 }
 
 export interface ParametricGeometry {
@@ -181,27 +170,27 @@ export interface CurvePoint {
 
 export interface CharacteristicCurve {
   id: string;
-  x_unit: VdiUnit;
-  y_unit: VdiUnit;
+  xUnit: VdiUnit;
+  yUnit: VdiUnit;
   points: CurvePoint[];
 }
 
 export interface ChangeManufacturerFile {
-  new_manufacturer_file: ManufacturerFile;
+  newManufacturerFile: ManufacturerFile;
 }
 
 export interface ChangeCorrectionAsOf {
-  new_correction_as_of: EditionId;
+  newCorrectionAsOf: EditionId;
 }
 
 export interface ChangeStrictMode {
-  new_strict_mode: boolean;
+  newStrictMode: boolean;
 }
 
 
 export interface ChangeEditionProfile {
   sheet: string;
-  new_choice: EditionProfileChoice;
+  newChoice: EditionProfileChoice;
 }
 
 export interface RemoveEditionProfile {
@@ -219,12 +208,12 @@ export interface RemoveProduct {
 
 export interface RenameProduct {
   id: string;
-  new_title: LocalizedText[];
+  newTitle: LocalizedText[];
 }
 
 export interface ChangeProductConfiguration {
   id: string;
-  new_configuration: Configuration;
+  newConfiguration: Configuration;
 }
 
 export interface AddGeometry {
@@ -237,7 +226,7 @@ export interface RemoveGeometry {
 
 export interface ResizeGeometry {
   id: string;
-  new_bbox: BoundingBox;
+  newBbox: BoundingBox;
 }
 
 export interface AddGeometryConnection {
@@ -247,12 +236,12 @@ export interface AddGeometryConnection {
 
 export interface RemoveGeometryConnection {
   id: string;
-  connection_id: string;
+  connectionId: string;
 }
 
 export interface ChangeGeometryParameters {
   id: string;
-  new_parameters: Record<string, number>;
+  newParameters: Record<string, number>;
 }
 
 export interface AddCurve {
@@ -265,7 +254,7 @@ export interface RemoveCurve {
 
 export interface ChangeCurvePoints {
   id: string;
-  new_points: CurvePoint[];
+  newPoints: CurvePoint[];
 }
 
 export type Vdi3805Mutation =

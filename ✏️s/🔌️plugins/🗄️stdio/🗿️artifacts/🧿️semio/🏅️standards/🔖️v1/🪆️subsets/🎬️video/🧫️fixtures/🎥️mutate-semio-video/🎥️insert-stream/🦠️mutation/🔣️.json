@@ -1,9 +1,10 @@
 {
   "kind": "insert-stream",
-  "params": {
+  "mutation": {
+    "mutation": "insertStream",
     "index": 1,
     "stream": {
-      "kind": "S",
+      "kind": "subtitle",
       "codec": "srt",
       "width": 0,
       "height": 0,

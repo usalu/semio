@@ -14,11 +14,11 @@ use semio_s_plugin_stdio_test_oracle::law::vector::Vector;
 fn vector(kind: &str) -> Result<Vector, String> {
     Ok(match kind {
         "replace-query-result" => Vector {
-            before: include_str!("../../✏️editor/🎭️modes/✏️edit/🪟️windows/📊️results/🫧️transient/🧫️fixtures/📊️replace-query-result/✅️replace-query-result-applied/📸️snapshot/⬅️before/🔣️.json"),
-            mutation: include_str!("../../✏️editor/🎭️modes/✏️edit/🪟️windows/📊️results/🫧️transient/🧫️fixtures/📊️replace-query-result/✅️replace-query-result-applied/🦠️mutation/🔣️.json"),
-            after: include_str!("../../✏️editor/🎭️modes/✏️edit/🪟️windows/📊️results/🫧️transient/🧫️fixtures/📊️replace-query-result/✅️replace-query-result-applied/📸️snapshot/➡️after/🔣️.json"),
-            diff: include_str!("../../✏️editor/🎭️modes/✏️edit/🪟️windows/📊️results/🫧️transient/🧫️fixtures/📊️replace-query-result/✅️replace-query-result-applied/🔺️diff/🔣️.json"),
-            outcome: include_str!("../../✏️editor/🎭️modes/✏️edit/🪟️windows/📊️results/🫧️transient/🧫️fixtures/📊️replace-query-result/✅️replace-query-result-applied/🎯️outcome/🔣️.json"),
+            before: include_str!("../../✏️editor/🎭️modes/✏️edit/🪟️windows/📊️results/🫧️transient/🧫️fixtures/📊️replace-query/✅️replac/📸️snapshot/⬅️before/🔣️.json"),
+            mutation: include_str!("../../✏️editor/🎭️modes/✏️edit/🪟️windows/📊️results/🫧️transient/🧫️fixtures/📊️replace-query/✅️replac/🦠️mutation/🔣️.json"),
+            after: include_str!("../../✏️editor/🎭️modes/✏️edit/🪟️windows/📊️results/🫧️transient/🧫️fixtures/📊️replace-query/✅️replac/📸️snapshot/➡️after/🔣️.json"),
+            diff: include_str!("../../✏️editor/🎭️modes/✏️edit/🪟️windows/📊️results/🫧️transient/🧫️fixtures/📊️replace-query/✅️replac/🔺️diff/🔣️.json"),
+            outcome: include_str!("../../✏️editor/🎭️modes/✏️edit/🪟️windows/📊️results/🫧️transient/🧫️fixtures/📊️replace-query/✅️replac/🎯️outcome/🔣️.json"),
             observable: true,
         },
         other => return Err(format!("no committed vector for {other:?}")),

@@ -5,16 +5,51 @@
   "type": "object",
   "additionalProperties": false,
   "required": [
+    "mutation",
     "modelDefinitionId",
     "newOrigin",
     "referenceId"
   ],
   "properties": {
+    "mutation": {
+      "const": "moveReference"
+    },
     "modelDefinitionId": {
-      "type": "string"
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "text",
+        "role": "value",
+        "label": {
+          "en": "Model definition",
+          "de": "Modelldefinition"
+        },
+        "description": {
+          "en": "Id of the model the reference belongs to, e.g. aec.building.",
+          "de": "ID des Modells, zu dem die Referenz gehört, z. B. aec.building."
+        },
+        "group": "target",
+        "order": 10
+      }
     },
     "referenceId": {
-      "type": "string"
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Reference",
+          "de": "Referenz"
+        },
+        "description": {
+          "en": "The reference image this mutation addresses.",
+          "de": "Das Referenzbild, das diese Mutation adressiert."
+        },
+        "ref": {
+          "kind": "reference"
+        },
+        "group": "target",
+        "order": 20
+      }
     },
     "newOrigin": {
       "type": "array",
@@ -22,7 +57,25 @@
         "type": "number"
       },
       "minItems": 3,
-      "maxItems": 3
+      "maxItems": 3,
+      "x-semio-ui": {
+        "widget": "vector",
+        "role": "value",
+        "label": {
+          "en": "Origin",
+          "de": "Ursprung"
+        },
+        "description": {
+          "en": "Absolute final origin in the world.",
+          "de": "Absoluter Endursprung in der Welt."
+        },
+        "step": 0.1,
+        "group": "pose",
+        "order": 30,
+        "snapSource": {
+          "step": true
+        }
+      }
     }
   }
 }

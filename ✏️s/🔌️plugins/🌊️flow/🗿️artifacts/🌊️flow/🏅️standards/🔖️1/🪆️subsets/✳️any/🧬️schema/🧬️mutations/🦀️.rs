@@ -19,7 +19,7 @@ use store::{ArtifactEnvelope, ArtifactStore};
 /// 🌊️ Typed, invertible flow-document semantic mutations.
 #[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, protocol::Mutations)]
 #[value(tag = "mutation", rename_all = "camelCase")]
-#[mutations(snapshot = FlowSnapshot, diff = FlowDiff, schema = "flow.flow")]
+#[mutations(snapshot = FlowSnapshot, diff = FlowDiff, schema = "flow.flow", retire_cold = retire_flow_mutation)]
 pub enum FlowMutation {
     CreateWidget(super::create_widget::CreateWidget),
     DeleteWidget(super::delete_widget::DeleteWidget),
@@ -55,6 +55,16 @@ pub fn apply_flow_mutation(snapshot: &mut FlowSnapshot, mutation: &FlowMutation)
 /// ↩️ Inverse mutations for undo.
 pub fn inverse_flow_mutation(snapshot: &FlowSnapshot, mutation: &FlowMutation) -> Vec<FlowMutation> {
     <FlowMutation as Mutation<FlowSnapshot>>::inverse(mutation, snapshot)
+}
+
+/// 🧊️ Cold-retires one flow operation — the generated `Mutation::retire_cold`. The widget a create or replace carries owns
+/// fail-closed roots (`Dictionary`, `OrderedSet`, `Tree`) that refuse a bare drop; every other payload is plain data.
+pub fn retire_flow_mutation(mutation: FlowMutation) {
+    match mutation {
+        FlowMutation::CreateWidget(create) => create.widget.retire_cold(),
+        FlowMutation::ReplaceWidget(replace) => replace.widget.retire_cold(),
+        _ => {}
+    }
 }
 //#endregion 🔹Operation
 

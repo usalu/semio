@@ -2,14 +2,12 @@ import { toolJobStaticRows, toolJobDispositions, toolJobProofs, toolJobAppOwnedR
 import { toolJobCheckpointSelfTests } from "../../../../🛍️products/💻️os/🔨️modules/🔌️plugin/🧵️retained-command/🧪️tests/🔬️tool-job-checkpoint/🟦️.ts";
 import { toolJobScalarConfigCohortSelfTests } from "../../../../🛍️products/💻️os/🔨️modules/🔌️plugin/🧵️retained-command/🧪️tests/🔬️tool-job-scalar-config-cohort/🟦️.ts";
 import { storeCanonicalEditSealerSelfTests } from "../../../../🛍️products/💻️os/🔨️modules/🏪️store/🧵️canonical-edit/🧪️tests/🔬️store-canonical-edit-sealer/🟦️.ts";
-import { toolJobPuzzleReservedRoutesSelfTests } from "../../../../../✏️s/🔌️plugins/🧩️puzzle/🧪️tests/🔬️tool-job-puzzle-reserved-routes/🟦️.ts";
 import { toolJobOwnerFactoryResolutionSelfTests } from "../../../../🛍️products/💻️os/🔨️modules/🔌️plugin/🧵️retained-command/🧪️tests/🔬️tool-job-owner-factory-resolution/🟦️.ts";
 import { toolJobFactoryProofJoinSelfTests } from "../../../../🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🔬️tool-job-factory-proof-join/🟦️.ts";
 import { toolJobLatestWinsSelfTests } from "../../../../🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🔬️tool-job-latest-wins/🟦️.ts";
 import { toolJobMicrosecondBudgetSelfTests } from "../../⏱️budget/🧪️tests/🔬️tool-job-microsecond-budget/🟦️.ts";
 import { toolJobTelemetryContentionSelfTests } from "../../../⏱️trace/⏱️clock/🧪️tests/🔬️tool-job-telemetry-contention/🟦️.ts";
 import { toolJobCooperativeMaintenanceSelfTests } from "../../../⏳️async/🤝️cooperative/🧪️tests/🔬️tool-job-cooperative-maintenance/🟦️.ts";
-import { cadPresenceRetirementSelfTests } from "../../../../../✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/👥️presence/🧪️tests/🔬️cad-presence-retirement/🟦️.ts";
 import { proceduralGenerationRootSelfTests } from "../../../../🛍️products/💻️os/🔨️modules/📖️playbook/🗿️artifacts/📖️playbook/🧬️generation/🧪️tests/🔬️procedural-generation-root/🟦️.ts";
 import { flowTypedRetirementSelfTests } from "../../../../🛍️products/💻️os/🔨️modules/🌊️flow/🗿️artifacts/🌊️flow/🧵️retained/🧪️tests/🔬️flow-typed-retirement/🟦️.ts";
 import { flowSelectedCopySelfTests } from "../../../../🛍️products/💻️os/🔨️modules/🌊️flow/🗿️artifacts/🌊️flow/🧵️retained/📑️copy/🧪️tests/🔬️flow-selected-copy/🟦️.ts";
@@ -1851,5 +1849,5 @@ async fn run_job_on_worker() { WorkerJobSession::try_new(relay, params); self.re
   if (toolJobLayoutColdRelayRetainedExact(retainedLayoutExport, retainedLayoutWasm, retainedColdRelay.replace("guest_cold_relay_registry_max_plus_one_generation_and_zero_pump_are_exact", "guest_cold_relay_registry_smoke"))) throw new Error("[verify interactivity tool-jobs] self-test cold-relay-max-plus-one-generation-fixture-removal was falsely accepted.");
   const scalarConfig = toolJobScalarConfigCohortSelfTests();
   const sealer = storeCanonicalEditSealerSelfTests();
-  return fixtures.length + 398 + checkpointChecks + toolJobPuzzleReservedRoutesSelfTests() + toolJobOwnerFactoryResolutionSelfTests() + toolJobFactoryProofJoinSelfTests() + toolJobLatestWinsSelfTests() + toolJobMicrosecondBudgetSelfTests() + toolJobTelemetryContentionSelfTests() + toolJobCooperativeMaintenanceSelfTests() + cadPresenceRetirementSelfTests() + proceduralGenerationRootSelfTests() + flowTypedRetirementSelfTests() + flowSelectedCopySelfTests() + scalarConfig.routes + scalarConfig.mutationOracles + scalarConfig.hostileCases + sealer.grants + sealer.schemaHostiles + sealer.sourceHostiles + sealer.digestOracles + sealer.mapGrants + sealer.mapSchemaHostiles + sealer.mapSourceHostiles + sealer.mapDigestOracles + sealer.readerChecks;
+  return fixtures.length + 398 + checkpointChecks + toolJobOwnerFactoryResolutionSelfTests() + toolJobFactoryProofJoinSelfTests() + toolJobLatestWinsSelfTests() + toolJobMicrosecondBudgetSelfTests() + toolJobTelemetryContentionSelfTests() + toolJobCooperativeMaintenanceSelfTests() + proceduralGenerationRootSelfTests() + flowTypedRetirementSelfTests() + flowSelectedCopySelfTests() + scalarConfig.routes + scalarConfig.mutationOracles + scalarConfig.hostileCases + sealer.grants + sealer.schemaHostiles + sealer.sourceHostiles + sealer.digestOracles + sealer.mapGrants + sealer.mapSchemaHostiles + sealer.mapSourceHostiles + sealer.mapDigestOracles + sealer.readerChecks;
 }

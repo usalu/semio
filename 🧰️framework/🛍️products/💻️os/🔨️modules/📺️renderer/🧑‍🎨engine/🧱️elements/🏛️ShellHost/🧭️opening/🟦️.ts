@@ -1,7 +1,9 @@
 import type { AppRole } from "@semio-tech/framework";
 import { emptyDirectoryReadModel, foldAll, type DirectoryEvent, type PersistenceBinding } from "@semio-tech/framework-os";
-import accessPolicy from "../../../../../../../../../🌎️hub/🔐️auth/🛡️access-policy/🔣️.json" with { type: "json" };
-import { hubAccessPermits, type HubAccessPolicyV1 } from "../../../../../../../../../🌎️hub/🔐️auth/🛡️access-policy/🟦️.ts";
+import accessPolicy from "../../../../../📇️directory/🛡️access-policy/🔣️.json" with { type: "json" };
+import { directoryAccessPermits, parseDirectoryAccessPolicyV1 } from "../../../../../📇️directory/🛡️access-policy/🧬️schema/🟦️.ts";
+
+const declaredAccessPolicy = parseDirectoryAccessPolicyV1(accessPolicy);
 
 /** 🧭 Pure target selection for attaching an opened document to the session that was just
  * created by an artifact-opening relay, even before React publishes that session as current. */
@@ -55,12 +57,12 @@ export function resolveDocumentOpeningBindings(
  * removed member or a non-member opens the viewer. `null` when the events hold no such space, so there is nothing to
  * decide from. Requesting any other surface is refused by the hub (`component-unavailable`), which is how a Spectator's
  * opening used to end in an unattached editor.
- * @see ../../../../../../../../../🌎️hub/🔐️auth/🛡️access-policy/🔣️.json */
+ * @see ../../../../../📇️directory/🛡️access-policy/🔣️.json */
 export function sharedDocumentOpeningRoleV1(events: readonly DirectoryEvent[], spaceId: string, userId: string): AppRole | null {
   const space = foldAll(emptyDirectoryReadModel(), events).spaces.get(spaceId);
   if (space === undefined) return null;
   const role = space.members.find((member) => member.userId === userId)?.role;
-  return role !== undefined && hubAccessPermits(accessPolicy as HubAccessPolicyV1, [role], "document.write") ? "editor" : "viewer";
+  return role !== undefined && directoryAccessPermits(declaredAccessPolicy, [role], "document.write") ? "editor" : "viewer";
 }
 
 /** 🔀️ Whether switching a shared document's surface to `to` is refused for a human whose access to its space is `access`

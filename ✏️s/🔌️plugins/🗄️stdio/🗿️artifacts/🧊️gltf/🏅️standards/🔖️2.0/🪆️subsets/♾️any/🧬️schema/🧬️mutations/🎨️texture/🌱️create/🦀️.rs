@@ -28,7 +28,7 @@ pub fn apply(payload: &GltfCreateTexturePayload, base: &GltfSnapshot) -> Result<
 
 //#region 🧬️DirectMutation
 #[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::MutationLeaf)]
-#[mutation_leaf(contract = ::protocol)]
+#[mutation_leaf(contract = ::protocol, payload = Apply)]
 #[value(tag = "phase", content = "value", rename_all = "camelCase")]
 pub enum CreateTextureMutation {
     Apply(GltfCreateTexturePayload),
@@ -72,6 +72,6 @@ impl protocol::MutationKind<GltfSnapshot, super::GltfMutation> for CreateTexture
 
 //#region 🧪️Tests
 #[cfg(test)]
-#[path = "🧪️tests/🔬️direct-leaf/🦀️.rs"]
-mod direct_leaf_tests;
+#[path = "🧪️tests/🎨️inserts-an-empty-736467/🦀️.rs"]
+mod case_inserts_an_empty_736467;
 //#endregion 🧪️Tests

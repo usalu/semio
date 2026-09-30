@@ -1,6 +1,7 @@
 {
   "kind": "remove-timeline",
-  "params": {
+  "mutation": {
+    "mutation": "removeTimeline",
     "index": 0
   },
   "before": {

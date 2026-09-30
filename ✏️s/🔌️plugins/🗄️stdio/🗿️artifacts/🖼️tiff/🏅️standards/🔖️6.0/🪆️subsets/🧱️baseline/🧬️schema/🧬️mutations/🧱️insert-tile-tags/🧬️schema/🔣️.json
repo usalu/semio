@@ -5,19 +5,43 @@
   "type": "object",
   "additionalProperties": false,
   "required": [
-    "tile_width",
-    "tile_length"
+    "tileWidth",
+    "tileLength"
   ],
   "properties": {
-    "tile_width": {
+    "tileWidth": {
       "type": "integer",
       "minimum": 0,
-      "maximum": 4294967295
+      "maximum": 4294967295,
+      "x-semio-ui": {
+        "widget": "stepper",
+        "label": {
+          "en": "Tile width",
+          "de": "Kachelbreite"
+        },
+        "description": {
+          "en": "TileWidth (tag 322) in pixels.",
+          "de": "TileWidth (Tag 322) in Pixeln."
+        },
+        "unit": "px"
+      }
     },
-    "tile_length": {
+    "tileLength": {
       "type": "integer",
       "minimum": 0,
-      "maximum": 4294967295
+      "maximum": 4294967295,
+      "x-semio-ui": {
+        "widget": "stepper",
+        "label": {
+          "en": "Tile length",
+          "de": "Kachelhöhe"
+        },
+        "description": {
+          "en": "TileLength (tag 323) in pixels.",
+          "de": "TileLength (Tag 323) in Pixeln."
+        },
+        "unit": "px"
+      }
     }
   }
 }

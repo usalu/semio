@@ -2937,18 +2937,18 @@ pub mod standards {
                         }
                         #[path = "."]
                         pub mod change_humidistat_dehumidifying_setpoint_schedule {
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏝️change-humidistat-dehumidifying-setpoint-schedule/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏝️change-humidistat-dehumidifying-setpoint/🦀️.rs"]
                             mod component;
                             pub use component::*;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏝️change-humidistat-dehumidifying-setpoint-schedule/🔺️diff/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏝️change-humidistat-dehumidifying-setpoint/🔺️diff/🦀️.rs"]
                             pub mod diff;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏝️change-humidistat-dehumidifying-setpoint-schedule/↩️inverse/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏝️change-humidistat-dehumidifying-setpoint/↩️inverse/🦀️.rs"]
                             pub mod inverse;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏝️change-humidistat-dehumidifying-setpoint-schedule/🧪️tests/⛔️refuses-an-absent-one/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏝️change-humidistat-dehumidifying-setpoint/🧪️tests/⛔️refuses-an-absent-one/🦀️.rs"]
                             mod tests_refuses_an_absent_one;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏝️change-humidistat-dehumidifying-setpoint-schedule/🧪️tests/✅️repoints-drying/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏝️change-humidistat-dehumidifying-setpoint/🧪️tests/✅️repoints-drying/🦀️.rs"]
                             mod tests_repoints_drying;
                         }
                         #[path = "."]
@@ -2969,18 +2969,18 @@ pub mod standards {
                         }
                         #[path = "."]
                         pub mod change_humidistat_dehumidifying_throttle_range {
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧻️change-humidistat-dehumidifying-throttle-range/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧻️change-humidistat-dehumidifying-throttle/🦀️.rs"]
                             mod component;
                             pub use component::*;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧻️change-humidistat-dehumidifying-throttle-range/🔺️diff/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧻️change-humidistat-dehumidifying-throttle/🔺️diff/🦀️.rs"]
                             pub mod diff;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧻️change-humidistat-dehumidifying-throttle-range/↩️inverse/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧻️change-humidistat-dehumidifying-throttle/↩️inverse/🦀️.rs"]
                             pub mod inverse;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧻️change-humidistat-dehumidifying-throttle-range/🧪️tests/⛔️refuses-a-negative-band/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧻️change-humidistat-dehumidifying-throttle/🧪️tests/⛔️refuses-a-negative-band/🦀️.rs"]
                             mod tests_refuses_a_negative_band;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧻️change-humidistat-dehumidifying-throttle-range/🧪️tests/✅️widens-the-band/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧻️change-humidistat-dehumidifying-throttle/🧪️tests/✅️widens-the-band/🦀️.rs"]
                             mod tests_widens_the_band;
                         }
                         #[path = "."]
@@ -3033,34 +3033,34 @@ pub mod standards {
                         }
                         #[path = "."]
                         pub mod change_ideal_loads_system_max_heating_supply_air_temp {
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔴️change-ideal-loads-system-max-heating-supply-air-temp/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔴️change-ideal-loads-system-max-heating-supply/🦀️.rs"]
                             mod component;
                             pub use component::*;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔴️change-ideal-loads-system-max-heating-supply-air-temp/🔺️diff/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔴️change-ideal-loads-system-max-heating-supply/🔺️diff/🦀️.rs"]
                             pub mod diff;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔴️change-ideal-loads-system-max-heating-supply-air-temp/↩️inverse/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔴️change-ideal-loads-system-max-heating-supply/↩️inverse/🦀️.rs"]
                             pub mod inverse;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔴️change-ideal-loads-system-max-heating-supply-air-temp/🧪️tests/✅️cools-the-supply/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔴️change-ideal-loads-system-max-heating-supply/🧪️tests/✅️cools-the-supply/🦀️.rs"]
                             mod tests_cools_the_supply;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔴️change-ideal-loads-system-max-heating-supply-air-temp/🧪️tests/⛔️refuses-a-hot-supply/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔴️change-ideal-loads-system-max-heating-supply/🧪️tests/⛔️refuses-a-hot-supply/🦀️.rs"]
                             mod tests_refuses_a_hot_supply;
                         }
                         #[path = "."]
                         pub mod change_ideal_loads_system_min_cooling_supply_air_temp {
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔵️change-ideal-loads-system-min-cooling-supply-air-temp/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔵️change-ideal-loads-system-min-cooling-supply/🦀️.rs"]
                             mod component;
                             pub use component::*;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔵️change-ideal-loads-system-min-cooling-supply-air-temp/🔺️diff/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔵️change-ideal-loads-system-min-cooling-supply/🔺️diff/🦀️.rs"]
                             pub mod diff;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔵️change-ideal-loads-system-min-cooling-supply-air-temp/↩️inverse/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔵️change-ideal-loads-system-min-cooling-supply/↩️inverse/🦀️.rs"]
                             pub mod inverse;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔵️change-ideal-loads-system-min-cooling-supply-air-temp/🧪️tests/✅️lowers-the-supply/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔵️change-ideal-loads-system-min-cooling-supply/🧪️tests/✅️lowers-the-supply/🦀️.rs"]
                             mod tests_lowers_the_supply;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔵️change-ideal-loads-system-min-cooling-supply-air-temp/🧪️tests/⛔️refuses-a-cold-supply/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔵️change-ideal-loads-system-min-cooling-supply/🧪️tests/⛔️refuses-a-cold-supply/🦀️.rs"]
                             mod tests_refuses_a_cold_supply;
                         }
                         #[path = "."]

@@ -19,6 +19,7 @@ fn sample_envelope(actor: &str) -> MutationEnvelope {
         // sites; its constructor body is a pure struct literal, so building it directly here
         // is behavior-identical without needing to thread `async` through this whole helper chain.
         timestamp: protocol::HybridLogicalTimestamp { actor: 0, physical_ms: 0, logical: 0 },
+        transaction: None,
     }
 }
 

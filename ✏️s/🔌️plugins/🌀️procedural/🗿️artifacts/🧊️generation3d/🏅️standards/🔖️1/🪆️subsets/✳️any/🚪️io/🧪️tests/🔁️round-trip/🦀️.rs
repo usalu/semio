@@ -32,8 +32,7 @@ use semio_s_artifact_stdio_semio::standards::v1::subsets::mesh::schema::snapshot
 /// 🧊️ The one committed geometry, as authored — see the fixture file's own `$comment`.
 pub const UNIT_CUBE_JSON: &str = include_str!("../../../🧫️fixtures/🚪️io/🧊️unit-cube/🔣️.json");
 
-/// 🧊️ The fixture in the renderer's own wire form, i.e. exactly what
-/// `crate::editor::generation3d::export_mesh_from_document` hands the mesh bridge at runtime.
+/// 🧊️ The neutral prepared geometry fixture consumed by the artifact IO bridge.
 pub fn unit_cube_mesh_data() -> semio_framework_plugin::MeshData {
     let parsed: serde_json::Value = serde_json::from_str(UNIT_CUBE_JSON).expect("unit-cube fixture is valid json");
     let positions: Vec<f32> = parsed["positions"].as_array().expect("positions array").iter().map(|value| value.as_f64().expect("position number") as f32).collect();
@@ -217,7 +216,7 @@ fn committed_unit_cube_fixture_is_a_closed_unit_cube() {
 #[test]
 fn empty_preview_mesh_is_a_typed_error_not_an_empty_export() {
     let error = semio_s_artifact_procedural_generation3d::standards::v1::subsets::any::io::mesh_bridge::semio_mesh_from_mesh_data(&semio_framework_plugin::MeshData::default()).expect_err("an empty preview must not convert");
-    assert!(error.to_string().contains("no preview geometry"), "the error names the cause, got {error}");
+    assert!(error.to_string().contains("prepared geometry has no positions"), "the error names the cause, got {error}");
 }
 //#endregion 🧪️FixtureLaws
 
@@ -259,3 +258,6 @@ fn ply_written_by_the_python_second_implementation_reads_back_as_the_unit_cube()
 }
 
 //#endregion 🌍️CrossLanguage
+
+#[path = "🛡️authority/🦀️.rs"]
+mod authority;

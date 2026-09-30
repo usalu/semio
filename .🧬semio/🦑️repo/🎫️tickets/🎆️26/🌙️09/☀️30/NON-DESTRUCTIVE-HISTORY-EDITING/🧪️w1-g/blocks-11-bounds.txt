@@ -1,0 +1,70 @@
+<<<<<<< ANCHOR
+async fn replay_ops<P, Mutation>(initial_snapshot: P, ops: &str) -> Result<ParsedDocumentText<P, Mutation>, TextError>
+where
+    P: Clone,
+    Mutation: OpText + self::Mutation<P>,
+{
+=======
+async fn replay_ops<P, Mutation>(initial_snapshot: P, ops: &str) -> Result<ParsedDocumentText<P, Mutation>, TextError>
+where
+    P: Clone,
+    Mutation: OpText + OpBinary + self::Mutation<P>,
+{
+>>>>>>> END
+<<<<<<< ANCHOR
+async fn settle_parsed_envelope<P, Mutation>(mut envelope: ArtifactEnvelope<P, Mutation>) -> Result<ParsedDocumentText<P, Mutation>, TextError>
+where
+    P: Clone,
+    Mutation: self::Mutation<P>,
+{
+=======
+async fn settle_parsed_envelope<P, Mutation>(mut envelope: ArtifactEnvelope<P, Mutation>) -> Result<ParsedDocumentText<P, Mutation>, TextError>
+where
+    P: Clone,
+    Mutation: self::Mutation<P> + OpBinary,
+{
+>>>>>>> END
+<<<<<<< ANCHOR
+pub async fn parse_document_text<P, Mutation>(dsl: &str, ops: &str) -> Result<ParsedDocumentText<P, Mutation>, TextError>
+where
+    P: Clone + ArtifactDsl,
+    Mutation: OpText + self::Mutation<P>,
+{
+=======
+pub async fn parse_document_text<P, Mutation>(dsl: &str, ops: &str) -> Result<ParsedDocumentText<P, Mutation>, TextError>
+where
+    P: Clone + ArtifactDsl,
+    Mutation: OpText + OpBinary + self::Mutation<P>,
+{
+>>>>>>> END
+<<<<<<< ANCHOR
+pub async fn materialize_document_snapshot<P, Mutation>(envelope: &ArtifactEnvelopeOwners<P, Mutation>, applied_edit_ids: &[String]) -> Result<P, VcsError>
+where
+    P: Clone,
+    Mutation: self::Mutation<P>,
+{
+    let mut snapshot = ReplayProjection::<P, Mutation>::new(envelope.vcs.initial_snapshot.clone());
+    for edit_id in applied_edit_ids {
+        let edit = envelope.vcs.edits.iter().find(|entry| entry.id == *edit_id).ok_or_else(|| VcsError::UnknownEdit(edit_id.clone()))?;
+        for operation in &edit.forwards {
+            let next = apply_mutation(&*snapshot, operation)?.0;
+            snapshot.advance(next);
+        }
+    }
+    Ok(snapshot.into_inner())
+}
+=======
+pub async fn materialize_document_snapshot<P, Mutation>(envelope: &ArtifactEnvelopeOwners<P, Mutation>, applied_edit_ids: &[String]) -> Result<P, VcsError>
+where
+    P: Clone,
+    Mutation: self::Mutation<P> + OpBinary,
+{
+    let supersessions = fold_envelope_history(envelope)?.supersessions;
+    let mut snapshot = ReplayProjection::<P, Mutation>::new(envelope.vcs.initial_snapshot.clone());
+    for edit_id in applied_edit_ids {
+        let edit = envelope.vcs.edits.iter().find(|entry| entry.id == *edit_id).ok_or_else(|| VcsError::UnknownEdit(edit_id.clone()))?;
+        fold_effective_edit(&mut snapshot, edit, &supersessions)?;
+    }
+    Ok(snapshot.into_inner())
+}
+>>>>>>> END

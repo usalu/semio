@@ -43,13 +43,15 @@ pub struct HistoryLog {
 /// 🔀️ One persisted history transition: the [`crate::os_spr::MutationEnvelope`] minus its
 /// document id and schema (implied by `REC_DOC` and [`crate::os_spr::HISTORY_TRANSITION_SCHEMA`]).
 /// `hlt` is `(actor, physical_ms, logical)` like [`HistoryConflict::hlt`]; `payload` is the encoded
-/// [`crate::os_spr::HistoryTransition`], opaque to this codec.
+/// [`crate::os_spr::HistoryTransition`], opaque to this codec. `observed` is the newest foreign operation the author had
+/// seen (a `Supersede`'s grading frontier), kept so a reloaded, still unacknowledged transition is announced as authored.
 #[derive(Clone, Debug, PartialEq)]
 pub struct HistoryTransitionRecord {
     pub id: String,
     pub actor: String,
     pub hlt: (u64, u64, u64),
     pub dependencies: Vec<String>,
+    pub observed: Option<String>,
     pub payload: Vec<u8>,
 }
 
@@ -170,6 +172,10 @@ pub struct HistoryOpMeta {
     /// predating this field" contract as `group_id`/`origin`) — empty `Vec` for logs predating
     /// this field.
     pub messages: Vec<HistoryMessage>,
+    /// 🧾️ Durable twin of `crate::os_spr::command::MutationMeta.transaction` — the committed tool transaction that
+    /// authored the op (bit7 of the same presence byte; id and tool dict-interned, since every op of one transaction
+    /// repeats them).
+    pub transaction: Option<crate::os_spr::command::TransactionRef>,
 }
 //#endregion 🔖️Model
 
@@ -182,6 +188,7 @@ impl HistoryTransitionRecord {
             actor: envelope.actor.0.clone(),
             hlt: (envelope.timestamp.actor, envelope.timestamp.physical_ms, envelope.timestamp.logical),
             dependencies: envelope.dependencies.iter().map(|dependency| dependency.0.clone()).collect(),
+            observed: envelope.observed.as_ref().map(|observed| observed.0.clone()),
             payload: envelope.diff.payload.clone(),
         }
     }
@@ -195,11 +202,12 @@ impl HistoryTransitionRecord {
             document_id: crate::os_spr::ArtifactId(document_id.to_string()),
             actor: crate::os_spr::ActorId(self.actor.clone()),
             dependencies: self.dependencies.iter().cloned().map(crate::os_spr::MutationId).collect(),
-            observed: None,
+            observed: self.observed.clone().map(crate::os_spr::MutationId),
             target: Vec::new(),
             diff: crate::os_spr::ArtifactDiff { schema: schema.clone(), payload: self.payload.clone() },
             inverse: crate::os_spr::InverseMutation { schema, payload: Vec::new() },
             timestamp: crate::os_spr::HybridLogicalTimestamp { actor: self.hlt.0, physical_ms: self.hlt.1, logical: self.hlt.2 },
+            transaction: None,
         }
     }
 }
@@ -270,6 +278,7 @@ const F_TRANSITION_ACTOR: u16 = 1;
 const F_TRANSITION_HLC: u16 = 2;
 const F_TRANSITION_DEPENDENCIES: u16 = 3;
 const F_TRANSITION_PAYLOAD: u16 = 4;
+const F_TRANSITION_OBSERVED: u16 = 5;
 
 fn doc_spec() -> RecordSpec {
     RecordSpec::new(Some("doc"), RecordLayout::Inline, vec![FieldSpec::new(F_DOC_ID, "", Shape::Text).positional(0), FieldSpec::new(F_DOC_SCHEMA, "schema", Shape::Text)])
@@ -291,7 +300,7 @@ fn edit_spec() -> RecordSpec {
 }
 
 /// 🔀️ `transition <id> actor=<actor> hlc=<actor>,<physical_ms>,<logical> dependencies=[...]
-/// payload=<base64>` — one [`HistoryTransitionRecord`].
+/// payload=<base64> [observed=<id>]` — one [`HistoryTransitionRecord`].
 fn transition_spec() -> RecordSpec {
     RecordSpec::new(
         Some("transition"),
@@ -302,6 +311,7 @@ fn transition_spec() -> RecordSpec {
             FieldSpec::new(F_TRANSITION_HLC, "hlc", Shape::Tuple(Box::new(Shape::UInt), Some(3))),
             FieldSpec::new(F_TRANSITION_DEPENDENCIES, "dependencies", Shape::List(Box::new(Shape::Text))),
             FieldSpec::new(F_TRANSITION_PAYLOAD, "payload", Shape::Bytes64),
+            FieldSpec::new(F_TRANSITION_OBSERVED, "observed", Shape::Text).optional(),
         ],
     )
 }
@@ -423,6 +433,7 @@ pub fn parse_ops_text(ops: &str) -> Result<HistoryLog, ProtocolError> {
                     actor: required_text(&record, F_TRANSITION_ACTOR, "transition actor")?,
                     hlt: field_hlc(&record, F_TRANSITION_HLC)?,
                     dependencies: field_text_list(&record, F_TRANSITION_DEPENDENCIES),
+                    observed: field_text(&record, F_TRANSITION_OBSERVED),
                     payload: field_bytes(&record, F_TRANSITION_PAYLOAD, "transition payload")?,
                 });
             }
@@ -472,13 +483,16 @@ pub fn print_ops_text(log: &HistoryLog) -> Result<String, ProtocolError> {
     }
 
     for transition in &log.transitions {
-        let fields = vec![
+        let mut fields = vec![
             (F_TRANSITION_ID, FieldValue::Text(transition.id.clone())),
             (F_TRANSITION_ACTOR, FieldValue::Text(transition.actor.clone())),
             (F_TRANSITION_HLC, FieldValue::Tuple(vec![FieldValue::UInt(transition.hlt.0), FieldValue::UInt(transition.hlt.1), FieldValue::UInt(transition.hlt.2)])),
             (F_TRANSITION_DEPENDENCIES, FieldValue::List(transition.dependencies.iter().map(|s| FieldValue::Text(s.clone())).collect())),
             (F_TRANSITION_PAYLOAD, FieldValue::Bytes64(transition.payload.clone())),
         ];
+        if let Some(observed) = &transition.observed {
+            fields.push((F_TRANSITION_OBSERVED, FieldValue::Text(observed.clone())));
+        }
         out.push_str(&crate::os_dsl::schema::print(&record_with(fields), &transition_spec(), JoinMode::Inline));
         out.push('\n');
     }
@@ -685,6 +699,9 @@ async fn write_op_meta(out: &mut ByteWriter, meta: &HistoryOpMeta, dict: &mut Di
     if !meta.messages.is_empty() {
         presence |= 1 << 6;
     }
+    if meta.transaction.is_some() {
+        presence |= 1 << 7;
+    }
     out.write_u8(presence);
     if let Some(op_id) = &meta.op_id {
         write_id_field(out, op_id, dict, edit_ordinal_of).await?;
@@ -728,6 +745,10 @@ async fn write_op_meta(out: &mut ByteWriter, meta: &HistoryOpMeta, dict: &mut Di
             write_history_message(out, message, dict).await?;
         }
     }
+    if let Some(transaction) = &meta.transaction {
+        write_id_field(out, &transaction.id, dict, edit_ordinal_of).await?;
+        write_id_field(out, &transaction.tool, dict, edit_ordinal_of).await?;
+    }
     Ok(())
 }
 
@@ -768,7 +789,8 @@ async fn read_op_meta<'d>(input: &mut ByteReader<'_>, dict: &'d DictReader, ordi
     } else {
         Vec::new()
     };
-    Ok(HistoryOpMeta { op_id, dependencies, base_version, author_id, hlt, undo_policy, payload_hash, group_id, origin, messages })
+    let transaction = if presence & (1 << 7) != 0 { Some(crate::os_spr::command::TransactionRef { id: read_id_field(input, dict, ordinal_to_id)?, tool: read_id_field(input, dict, ordinal_to_id)? }) } else { None };
+    Ok(HistoryOpMeta { op_id, dependencies, base_version, author_id, hlt, undo_policy, payload_hash, group_id, origin, messages, transaction })
 }
 
 pub async fn encode_edit(edit: &HistoryEdit, dict: &mut DictBuilder, edit_ordinal_of: impl Fn(&str) -> Option<u64> + Send + Sync) -> Result<Vec<u8>, ProtocolError> {
@@ -904,12 +926,13 @@ pub async fn decode_edit<'d>(payload: &[u8], dict: &'d DictReader, ordinal_to_id
 /// appended exactly like `REC_EDIT`.
 pub const REC_TRANSITION: u8 = 0x43;
 
-/// 🎯️ `format u8 (=1) | id(idfield) | actor(idfield) | hlt(actor varint, physical_ms
+/// 🎯️ `format u8 | id(idfield) | actor(idfield) | hlt(actor varint, physical_ms
 /// varint, logical varint) | dependency_count varint + dependency(idfield)* | payload_len varint +
-/// payload`. Ids, actor and dependencies are dict-interned like every other identifier here.
+/// payload | [observed(idfield)]` — format 1 without an observed operation, format 2 with one. Ids, actor, dependencies
+/// and the observed operation are dict-interned like every other identifier here.
 pub async fn encode_transition(transition: &HistoryTransitionRecord, dict: &mut DictBuilder) -> Result<Vec<u8>, ProtocolError> {
     let mut out = ByteWriter::new();
-    out.write_u8(1);
+    out.write_u8(if transition.observed.is_some() { 2 } else { 1 });
     write_id_field(&mut out, &transition.id, dict, &|_: &str| None).await?;
     write_id_field(&mut out, &transition.actor, dict, &|_: &str| None).await?;
     out.write_varint_u64(transition.hlt.0);
@@ -921,6 +944,9 @@ pub async fn encode_transition(transition: &HistoryTransitionRecord, dict: &mut 
     }
     out.write_varint_u64(transition.payload.len() as u64);
     out.write_bytes(&transition.payload);
+    if let Some(observed) = &transition.observed {
+        write_id_field(&mut out, observed, dict, &|_: &str| None).await?;
+    }
     Ok(out.into_bytes())
 }
 
@@ -929,7 +955,7 @@ pub async fn decode_transition(payload: &[u8], dict: &DictReader) -> Result<Hist
     let miss = &|ord: u64| Err(ProtocolError::DictMiss(ord as u32));
     let mut input = ByteReader::new(payload);
     let format = input.read_u8()?;
-    if format > 1 {
+    if !(1..=2).contains(&format) {
         return Err(malformed_fmt("transition", format).await);
     }
     let id = read_id_field(&mut input, dict, miss)?;
@@ -942,10 +968,11 @@ pub async fn decode_transition(payload: &[u8], dict: &DictReader) -> Result<Hist
     }
     let len = input.read_varint_u64()? as usize;
     let transition_payload = input.read_bytes(len)?.to_vec();
+    let observed = if format == 2 { Some(read_id_field(&mut input, dict, miss)?) } else { None };
     if input.remaining() != 0 {
         return Err(ProtocolError::Malformed { what: "transition", offset: input.position() as u64, detail: "trailing payload bytes".to_string() });
     }
-    Ok(HistoryTransitionRecord { id, actor, hlt, dependencies, payload: transition_payload })
+    Ok(HistoryTransitionRecord { id, actor, hlt, dependencies, observed, payload: transition_payload })
 }
 //#endregion 🔖️Transition
 

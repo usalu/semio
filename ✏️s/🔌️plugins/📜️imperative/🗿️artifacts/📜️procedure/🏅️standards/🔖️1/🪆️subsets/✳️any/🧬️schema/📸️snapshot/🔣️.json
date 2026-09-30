@@ -10,12 +10,12 @@
       "x-semio-state": "artifact"
     },
     "flow": {
-      "$ref": "https://json.schemas.assets.semio-tech.com/os/store/child.json",
+      "$ref": "https://json.schemas.assets.semio-tech.com/os/store/child/schema.json",
       "x-semio-state": "artifact",
       "x-semio-child-kind": "s.stdio.semio"
     },
     "text": {
-      "$ref": "https://json.schemas.assets.semio-tech.com/os/store/child.json",
+      "$ref": "https://json.schemas.assets.semio-tech.com/os/store/child/schema.json",
       "x-semio-state": "artifact",
       "x-semio-child-kind": "s.stdio.semio"
     }

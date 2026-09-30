@@ -33,7 +33,7 @@
     "assets": {
       "type": "object",
       "additionalProperties": {
-        "$ref": "https://json.schemas.assets.semio-tech.com/os/store/child.json"
+        "$ref": "https://json.schemas.assets.semio-tech.com/os/store/child/schema.json"
       },
       "x-semio-state": "artifact",
       "x-semio-child-kind": "s.stdio.semio.image"
@@ -76,28 +76,130 @@
           ],
           "properties": {
             "kind": {
-              "const": "pixel"
+              "const": "pixel",
+              "x-semio-ui": {
+                "widget": "hidden",
+                "role": "discriminator",
+                "label": {
+                  "en": "Kind",
+                  "de": "Art"
+                }
+              }
             },
             "id": {
-              "type": "string"
+              "type": "string",
+              "x-semio-ui": {
+                "widget": "text",
+                "role": "value",
+                "label": {
+                  "en": "ID",
+                  "de": "ID"
+                },
+                "description": {
+                  "en": "Unique layer id in this image.",
+                  "de": "Eindeutige Ebenen-ID in diesem Bild."
+                },
+                "group": "identity",
+                "order": 10
+              }
             },
             "name": {
-              "type": "string"
+              "type": "string",
+              "x-semio-ui": {
+                "widget": "text",
+                "role": "value",
+                "label": {
+                  "en": "Name",
+                  "de": "Name"
+                },
+                "group": "identity",
+                "order": 20
+              }
             },
             "visible": {
-              "type": "boolean"
+              "type": "boolean",
+              "x-semio-ui": {
+                "widget": "toggle",
+                "role": "value",
+                "label": {
+                  "en": "Visible",
+                  "de": "Sichtbar"
+                },
+                "group": "state",
+                "order": 30
+              }
             },
             "locked": {
-              "type": "boolean"
+              "type": "boolean",
+              "x-semio-ui": {
+                "widget": "toggle",
+                "role": "value",
+                "label": {
+                  "en": "Locked",
+                  "de": "Gesperrt"
+                },
+                "group": "state",
+                "order": 40
+              }
             },
             "opacity": {
-              "type": "number"
+              "type": "number",
+              "x-semio-ui": {
+                "widget": "slider",
+                "role": "value",
+                "label": {
+                  "en": "Opacity",
+                  "de": "Deckkraft"
+                },
+                "step": 0.01,
+                "precision": 2,
+                "softMin": 0,
+                "softMax": 1,
+                "snaps": [
+                  0,
+                  0.25,
+                  0.5,
+                  0.75,
+                  1
+                ],
+                "displayUnit": "%",
+                "displayFactor": 100,
+                "group": "appearance",
+                "order": 50
+              }
             },
             "blendMode": {
-              "type": "string"
+              "type": "string",
+              "x-semio-ui": {
+                "widget": "text",
+                "role": "value",
+                "label": {
+                  "en": "Blend mode",
+                  "de": "Füllmethode"
+                },
+                "description": {
+                  "en": "Compositing mode, e.g. normal, multiply or screen.",
+                  "de": "Mischmodus, z. B. normal, multiply oder screen."
+                },
+                "group": "appearance",
+                "order": 60
+              }
             },
             "transform": {
-              "$ref": "#/$defs/RasterTransform"
+              "$ref": "#/$defs/RasterTransform",
+              "x-semio-ui": {
+                "role": "value",
+                "label": {
+                  "en": "Transform",
+                  "de": "Transformation"
+                },
+                "description": {
+                  "en": "Affine placement of the layer.",
+                  "de": "Affine Platzierung der Ebene."
+                },
+                "group": "position",
+                "order": 70
+              }
             },
             "mask": {
               "anyOf": [
@@ -107,27 +209,86 @@
                 {
                   "type": "null"
                 }
-              ]
+              ],
+              "x-semio-ui": {
+                "role": "value",
+                "label": {
+                  "en": "Mask",
+                  "de": "Maske"
+                },
+                "description": {
+                  "en": "Layer mask; empty means none.",
+                  "de": "Ebenenmaske; leer bedeutet keine."
+                },
+                "group": "mask",
+                "order": 80
+              }
             },
             "width": {
               "type": [
                 "integer",
                 "null"
               ],
-              "minimum": 0
+              "minimum": 0,
+              "x-semio-ui": {
+                "widget": "stepper",
+                "role": "value",
+                "label": {
+                  "en": "Width",
+                  "de": "Breite"
+                },
+                "unit": "px",
+                "step": 1,
+                "precision": 0,
+                "group": "size",
+                "order": 90
+              }
             },
             "height": {
               "type": [
                 "integer",
                 "null"
               ],
-              "minimum": 0
+              "minimum": 0,
+              "x-semio-ui": {
+                "widget": "stepper",
+                "role": "value",
+                "label": {
+                  "en": "Height",
+                  "de": "Höhe"
+                },
+                "unit": "px",
+                "step": 1,
+                "precision": 0,
+                "group": "size",
+                "order": 100
+              }
             },
             "imageKey": {
               "type": [
                 "string",
                 "null"
-              ]
+              ],
+              "x-semio-ui": {
+                "widget": "text",
+                "role": "value",
+                "label": {
+                  "en": "Image",
+                  "de": "Bild"
+                },
+                "description": {
+                  "en": "Key of the image asset holding the pixels; empty means blank.",
+                  "de": "Schlüssel des Bild-Assets mit den Pixeln; leer bedeutet leer."
+                },
+                "group": "source",
+                "order": 110
+              }
+            }
+          },
+          "x-semio-ui": {
+            "label": {
+              "en": "Pixel layer",
+              "de": "Pixelebene"
             }
           }
         },
@@ -147,28 +308,130 @@
           ],
           "properties": {
             "kind": {
-              "const": "group"
+              "const": "group",
+              "x-semio-ui": {
+                "widget": "hidden",
+                "role": "discriminator",
+                "label": {
+                  "en": "Kind",
+                  "de": "Art"
+                }
+              }
             },
             "id": {
-              "type": "string"
+              "type": "string",
+              "x-semio-ui": {
+                "widget": "text",
+                "role": "value",
+                "label": {
+                  "en": "ID",
+                  "de": "ID"
+                },
+                "description": {
+                  "en": "Unique layer id in this image.",
+                  "de": "Eindeutige Ebenen-ID in diesem Bild."
+                },
+                "group": "identity",
+                "order": 10
+              }
             },
             "name": {
-              "type": "string"
+              "type": "string",
+              "x-semio-ui": {
+                "widget": "text",
+                "role": "value",
+                "label": {
+                  "en": "Name",
+                  "de": "Name"
+                },
+                "group": "identity",
+                "order": 20
+              }
             },
             "visible": {
-              "type": "boolean"
+              "type": "boolean",
+              "x-semio-ui": {
+                "widget": "toggle",
+                "role": "value",
+                "label": {
+                  "en": "Visible",
+                  "de": "Sichtbar"
+                },
+                "group": "state",
+                "order": 30
+              }
             },
             "locked": {
-              "type": "boolean"
+              "type": "boolean",
+              "x-semio-ui": {
+                "widget": "toggle",
+                "role": "value",
+                "label": {
+                  "en": "Locked",
+                  "de": "Gesperrt"
+                },
+                "group": "state",
+                "order": 40
+              }
             },
             "opacity": {
-              "type": "number"
+              "type": "number",
+              "x-semio-ui": {
+                "widget": "slider",
+                "role": "value",
+                "label": {
+                  "en": "Opacity",
+                  "de": "Deckkraft"
+                },
+                "step": 0.01,
+                "precision": 2,
+                "softMin": 0,
+                "softMax": 1,
+                "snaps": [
+                  0,
+                  0.25,
+                  0.5,
+                  0.75,
+                  1
+                ],
+                "displayUnit": "%",
+                "displayFactor": 100,
+                "group": "appearance",
+                "order": 50
+              }
             },
             "blendMode": {
-              "type": "string"
+              "type": "string",
+              "x-semio-ui": {
+                "widget": "text",
+                "role": "value",
+                "label": {
+                  "en": "Blend mode",
+                  "de": "Füllmethode"
+                },
+                "description": {
+                  "en": "Compositing mode, e.g. normal, multiply or screen.",
+                  "de": "Mischmodus, z. B. normal, multiply oder screen."
+                },
+                "group": "appearance",
+                "order": 60
+              }
             },
             "transform": {
-              "$ref": "#/$defs/RasterTransform"
+              "$ref": "#/$defs/RasterTransform",
+              "x-semio-ui": {
+                "role": "value",
+                "label": {
+                  "en": "Transform",
+                  "de": "Transformation"
+                },
+                "description": {
+                  "en": "Affine placement of the layer.",
+                  "de": "Affine Platzierung der Ebene."
+                },
+                "group": "position",
+                "order": 70
+              }
             },
             "mask": {
               "anyOf": [
@@ -178,13 +441,45 @@
                 {
                   "type": "null"
                 }
-              ]
+              ],
+              "x-semio-ui": {
+                "role": "value",
+                "label": {
+                  "en": "Mask",
+                  "de": "Maske"
+                },
+                "description": {
+                  "en": "Layer mask; empty means none.",
+                  "de": "Ebenenmaske; leer bedeutet keine."
+                },
+                "group": "mask",
+                "order": 80
+              }
             },
             "children": {
               "type": "array",
               "items": {
                 "$ref": "#/$defs/RasterLayerNode"
+              },
+              "x-semio-ui": {
+                "role": "value",
+                "label": {
+                  "en": "Layers",
+                  "de": "Ebenen"
+                },
+                "description": {
+                  "en": "The layers inside the group, bottom to top.",
+                  "de": "Die Ebenen in der Gruppe, von unten nach oben."
+                },
+                "group": "record",
+                "order": 120
               }
+            }
+          },
+          "x-semio-ui": {
+            "label": {
+              "en": "Group",
+              "de": "Gruppe"
             }
           }
         },
@@ -205,37 +500,172 @@
           ],
           "properties": {
             "kind": {
-              "const": "adjustment"
+              "const": "adjustment",
+              "x-semio-ui": {
+                "widget": "hidden",
+                "role": "discriminator",
+                "label": {
+                  "en": "Kind",
+                  "de": "Art"
+                }
+              }
             },
             "id": {
-              "type": "string"
+              "type": "string",
+              "x-semio-ui": {
+                "widget": "text",
+                "role": "value",
+                "label": {
+                  "en": "ID",
+                  "de": "ID"
+                },
+                "description": {
+                  "en": "Unique layer id in this image.",
+                  "de": "Eindeutige Ebenen-ID in diesem Bild."
+                },
+                "group": "identity",
+                "order": 10
+              }
             },
             "name": {
-              "type": "string"
+              "type": "string",
+              "x-semio-ui": {
+                "widget": "text",
+                "role": "value",
+                "label": {
+                  "en": "Name",
+                  "de": "Name"
+                },
+                "group": "identity",
+                "order": 20
+              }
             },
             "visible": {
-              "type": "boolean"
+              "type": "boolean",
+              "x-semio-ui": {
+                "widget": "toggle",
+                "role": "value",
+                "label": {
+                  "en": "Visible",
+                  "de": "Sichtbar"
+                },
+                "group": "state",
+                "order": 30
+              }
             },
             "locked": {
-              "type": "boolean"
+              "type": "boolean",
+              "x-semio-ui": {
+                "widget": "toggle",
+                "role": "value",
+                "label": {
+                  "en": "Locked",
+                  "de": "Gesperrt"
+                },
+                "group": "state",
+                "order": 40
+              }
             },
             "opacity": {
-              "type": "number"
+              "type": "number",
+              "x-semio-ui": {
+                "widget": "slider",
+                "role": "value",
+                "label": {
+                  "en": "Opacity",
+                  "de": "Deckkraft"
+                },
+                "step": 0.01,
+                "precision": 2,
+                "softMin": 0,
+                "softMax": 1,
+                "snaps": [
+                  0,
+                  0.25,
+                  0.5,
+                  0.75,
+                  1
+                ],
+                "displayUnit": "%",
+                "displayFactor": 100,
+                "group": "appearance",
+                "order": 50
+              }
             },
             "blendMode": {
-              "type": "string"
+              "type": "string",
+              "x-semio-ui": {
+                "widget": "text",
+                "role": "value",
+                "label": {
+                  "en": "Blend mode",
+                  "de": "Füllmethode"
+                },
+                "description": {
+                  "en": "Compositing mode, e.g. normal, multiply or screen.",
+                  "de": "Mischmodus, z. B. normal, multiply oder screen."
+                },
+                "group": "appearance",
+                "order": 60
+              }
             },
             "transform": {
-              "$ref": "#/$defs/RasterTransform"
+              "$ref": "#/$defs/RasterTransform",
+              "x-semio-ui": {
+                "role": "value",
+                "label": {
+                  "en": "Transform",
+                  "de": "Transformation"
+                },
+                "description": {
+                  "en": "Affine placement of the layer.",
+                  "de": "Affine Platzierung der Ebene."
+                },
+                "group": "position",
+                "order": 70
+              }
             },
             "adjustmentKind": {
-              "type": "string"
+              "type": "string",
+              "x-semio-ui": {
+                "widget": "text",
+                "role": "value",
+                "label": {
+                  "en": "Adjustment",
+                  "de": "Korrektur"
+                },
+                "description": {
+                  "en": "Adjustment kind, e.g. brightness, contrast or hue.",
+                  "de": "Korrekturart, z. B. brightness, contrast oder hue."
+                },
+                "group": "kind",
+                "order": 130
+              }
             },
             "params": {
               "type": "object",
               "additionalProperties": {
                 "$ref": "https://json.schemas.assets.semio-tech.com/framework/value/schema.json#/$defs/DslValue"
+              },
+              "x-semio-ui": {
+                "role": "value",
+                "label": {
+                  "en": "Parameters",
+                  "de": "Parameter"
+                },
+                "description": {
+                  "en": "Adjustment parameters by name.",
+                  "de": "Korrekturparameter je Name."
+                },
+                "group": "value",
+                "order": 140
               }
+            }
+          },
+          "x-semio-ui": {
+            "label": {
+              "en": "Adjustment layer",
+              "de": "Einstellungsebene"
             }
           }
         }
@@ -255,22 +685,112 @@
       ],
       "properties": {
         "x": {
-          "type": "number"
+          "type": "number",
+          "x-semio-ui": {
+            "widget": "stepper",
+            "role": "value",
+            "label": {
+              "en": "X",
+              "de": "X"
+            },
+            "unit": "px",
+            "step": 1,
+            "precision": 1,
+            "group": "position",
+            "order": 10
+          }
         },
         "y": {
-          "type": "number"
+          "type": "number",
+          "x-semio-ui": {
+            "widget": "stepper",
+            "role": "value",
+            "label": {
+              "en": "Y",
+              "de": "Y"
+            },
+            "unit": "px",
+            "step": 1,
+            "precision": 1,
+            "group": "position",
+            "order": 20
+          }
         },
         "a": {
-          "type": "number"
+          "type": "number",
+          "x-semio-ui": {
+            "widget": "stepper",
+            "role": "value",
+            "label": {
+              "en": "Matrix a",
+              "de": "Matrix a"
+            },
+            "description": {
+              "en": "Affine coefficient a of [a b c d x y]; 1 keeps the x scale.",
+              "de": "Affiner Koeffizient a von [a b c d x y]; 1 behält die x-Skalierung."
+            },
+            "step": 0.01,
+            "precision": 4,
+            "group": "matrix",
+            "order": 30
+          }
         },
         "b": {
-          "type": "number"
+          "type": "number",
+          "x-semio-ui": {
+            "widget": "stepper",
+            "role": "value",
+            "label": {
+              "en": "Matrix b",
+              "de": "Matrix b"
+            },
+            "description": {
+              "en": "Affine coefficient b of [a b c d x y]; 0 without skew.",
+              "de": "Affiner Koeffizient b von [a b c d x y]; 0 ohne Scherung."
+            },
+            "step": 0.01,
+            "precision": 4,
+            "group": "matrix",
+            "order": 40
+          }
         },
         "c": {
-          "type": "number"
+          "type": "number",
+          "x-semio-ui": {
+            "widget": "stepper",
+            "role": "value",
+            "label": {
+              "en": "Matrix c",
+              "de": "Matrix c"
+            },
+            "description": {
+              "en": "Affine coefficient c of [a b c d x y]; 0 without skew.",
+              "de": "Affiner Koeffizient c von [a b c d x y]; 0 ohne Scherung."
+            },
+            "step": 0.01,
+            "precision": 4,
+            "group": "matrix",
+            "order": 50
+          }
         },
         "d": {
-          "type": "number"
+          "type": "number",
+          "x-semio-ui": {
+            "widget": "stepper",
+            "role": "value",
+            "label": {
+              "en": "Matrix d",
+              "de": "Matrix d"
+            },
+            "description": {
+              "en": "Affine coefficient d of [a b c d x y]; 1 keeps the y scale.",
+              "de": "Affiner Koeffizient d von [a b c d x y]; 1 behält die y-Skalierung."
+            },
+            "step": 0.01,
+            "precision": 4,
+            "group": "matrix",
+            "order": 60
+          }
         }
       }
     },
@@ -286,13 +806,47 @@
       ],
       "properties": {
         "enabled": {
-          "type": "boolean"
+          "type": "boolean",
+          "x-semio-ui": {
+            "widget": "toggle",
+            "role": "value",
+            "label": {
+              "en": "Enabled",
+              "de": "Aktiv"
+            },
+            "group": "mask",
+            "order": 10
+          }
         },
         "linked": {
-          "type": "boolean"
+          "type": "boolean",
+          "x-semio-ui": {
+            "widget": "toggle",
+            "role": "value",
+            "label": {
+              "en": "Linked",
+              "de": "Verknüpft"
+            },
+            "description": {
+              "en": "A linked mask moves with its layer.",
+              "de": "Eine verknüpfte Maske bewegt sich mit ihrer Ebene."
+            },
+            "group": "mask",
+            "order": 20
+          }
         },
         "invert": {
-          "type": "boolean"
+          "type": "boolean",
+          "x-semio-ui": {
+            "widget": "toggle",
+            "role": "value",
+            "label": {
+              "en": "Inverted",
+              "de": "Invertiert"
+            },
+            "group": "mask",
+            "order": 30
+          }
         },
         "width": {
           "type": [
@@ -300,7 +854,20 @@
             "null"
           ],
           "minimum": 1,
-          "maximum": 16384
+          "maximum": 16384,
+          "x-semio-ui": {
+            "widget": "stepper",
+            "role": "value",
+            "label": {
+              "en": "Width",
+              "de": "Breite"
+            },
+            "unit": "px",
+            "step": 1,
+            "precision": 0,
+            "group": "mask",
+            "order": 40
+          }
         },
         "height": {
           "type": [
@@ -308,17 +875,53 @@
             "null"
           ],
           "minimum": 1,
-          "maximum": 16384
+          "maximum": 16384,
+          "x-semio-ui": {
+            "widget": "stepper",
+            "role": "value",
+            "label": {
+              "en": "Height",
+              "de": "Höhe"
+            },
+            "unit": "px",
+            "step": 1,
+            "precision": 0,
+            "group": "mask",
+            "order": 50
+          }
         },
         "imageKey": {
           "type": [
             "string",
             "null"
           ],
-          "minLength": 1
+          "minLength": 1,
+          "x-semio-ui": {
+            "widget": "text",
+            "role": "value",
+            "label": {
+              "en": "Image key",
+              "de": "Bildschlüssel"
+            },
+            "description": {
+              "en": "Asset key of the mask image; empty reveals everything.",
+              "de": "Asset-Schlüssel des Maskenbilds; leer zeigt alles."
+            },
+            "group": "mask",
+            "order": 60
+          }
         },
         "transform": {
-          "$ref": "#/$defs/RasterTransform"
+          "$ref": "#/$defs/RasterTransform",
+          "x-semio-ui": {
+            "role": "value",
+            "label": {
+              "en": "Placement",
+              "de": "Platzierung"
+            },
+            "group": "matrix",
+            "order": 70
+          }
         }
       }
     },

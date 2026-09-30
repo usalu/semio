@@ -9,7 +9,24 @@
   ],
   "properties": {
     "id": {
-      "type": "string"
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Generation",
+          "de": "Generierung"
+        },
+        "description": {
+          "en": "The generation this mutation addresses.",
+          "de": "Die Generierung, die diese Mutation adressiert."
+        },
+        "ref": {
+          "kind": "generation"
+        },
+        "group": "target",
+        "order": 10
+      }
     }
   }
 }

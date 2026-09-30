@@ -84,10 +84,10 @@ Feature: Apply every typed ISO 14289-1 (PDF/UA-1) conformance-class mutation to 
       | remove-struct-tree-root  | {}                                                                |
       | set-lang                 | {"lang": "en-GB"}                                                 |
       | remove-lang              | {}                                                                |
-      | set-display-doc-title    | {"displayDocTitle": true}                                         |
+      | set-display-doc-title    | {"display": true}                                         |
       | remove-display-doc-title | {}                                                                |
       | set-info-title           | {"title": "Reuse of load-bearing timber components"}              |
-      | embed-font-file          | {"descriptorOrdinal": 0, "key": "FontFile2", "programOrdinal": 0} |
+      | embed-font-file          | {"descriptorOrdinal": 0, "key": "FontFile2", "program": {"num": 5, "gen": 0}} |
       | remove-font-file         | {"descriptorOrdinal": 0}                                          |
 
   @id-inverse
@@ -109,10 +109,10 @@ Feature: Apply every typed ISO 14289-1 (PDF/UA-1) conformance-class mutation to 
       | remove-struct-tree-root  | {}                                                                |
       | set-lang                 | {"lang": "en-GB"}                                                 |
       | remove-lang              | {}                                                                |
-      | set-display-doc-title    | {"displayDocTitle": true}                                         |
+      | set-display-doc-title    | {"display": true}                                         |
       | remove-display-doc-title | {}                                                                |
       | set-info-title           | {"title": "Reuse of load-bearing timber components"}              |
-      | embed-font-file          | {"descriptorOrdinal": 0, "key": "FontFile2", "programOrdinal": 0} |
+      | embed-font-file          | {"descriptorOrdinal": 0, "key": "FontFile2", "program": {"num": 5, "gen": 0}} |
       | remove-font-file         | {"descriptorOrdinal": 0}                                          |
 
   @id-identity-round-trip

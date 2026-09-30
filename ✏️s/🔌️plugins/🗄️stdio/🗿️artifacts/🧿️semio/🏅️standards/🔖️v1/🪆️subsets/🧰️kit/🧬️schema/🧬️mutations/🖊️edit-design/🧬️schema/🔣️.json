@@ -9,11 +9,23 @@
     "id": { "type": "string" },
     "pieces": {
       "type": "array",
-      "items": { "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/semio/v1/kit/snapshot.json#/$defs/SemioKitPiece" }
+      "items": { "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/semio/v1/kit/snapshot.json#/$defs/SemioKitPiece" },
+      "x-semio-ui": {
+        "label": {
+          "en": "Pieces",
+          "de": "Teile"
+        }
+      }
     },
     "connections": {
       "type": "array",
-      "items": { "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/semio/v1/kit/snapshot.json#/$defs/SemioKitConnection" }
+      "items": { "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/semio/v1/kit/snapshot.json#/$defs/SemioKitConnection" },
+      "x-semio-ui": {
+        "label": {
+          "en": "Connections",
+          "de": "Verbindungen"
+        }
+      }
     }
   }
 }

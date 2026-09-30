@@ -10,10 +10,41 @@
   ],
   "properties": {
     "bridgeId": {
-      "type": "string"
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Thermal bridge",
+          "de": "Wärmebrücke"
+        },
+        "description": {
+          "en": "The thermal bridge this mutation addresses.",
+          "de": "Die Wärmebrücke, die diese Mutation adressiert."
+        },
+        "ref": {
+          "kind": "thermalBridge"
+        },
+        "group": "target",
+        "order": 10
+      }
     },
     "newBb2Type": {
-      "type": "string"
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "text",
+        "role": "value",
+        "label": {
+          "en": "Supplement 2 equivalence category",
+          "de": "Gleichwertigkeitskategorie nach Beiblatt 2"
+        },
+        "description": {
+          "en": "categoryA, categoryB or detailed (individual ψ).",
+          "de": "categoryA (Kategorie A), categoryB (Kategorie B) oder detailed (detaillierter ψ-Wert)."
+        },
+        "group": "thermal-bridges",
+        "order": 20
+      }
     }
   }
 }

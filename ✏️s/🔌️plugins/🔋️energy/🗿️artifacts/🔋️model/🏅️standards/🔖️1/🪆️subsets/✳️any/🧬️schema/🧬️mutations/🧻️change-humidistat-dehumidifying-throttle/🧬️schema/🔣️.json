@@ -1,0 +1,60 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/energy/model/mutation/change-humidistat-dehumidifying-throttle-range/schema.json",
+  "title": "ChangeHumidistatDehumidifyingThrottleRange",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "mutation",
+    "id",
+    "newDehumidifyingThrottleRange"
+  ],
+  "properties": {
+    "mutation": {
+      "const": "changeHumidistatDehumidifyingThrottleRange"
+    },
+    "id": {
+      "type": "integer",
+      "minimum": 0,
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Humidistat",
+          "de": "Feuchteregler"
+        },
+        "description": {
+          "en": "The humidistat this mutation changes, by id.",
+          "de": "Feuchteregler, den diese Mutation ändert, per ID."
+        },
+        "ref": {
+          "kind": "humidistat"
+        },
+        "group": "target",
+        "order": 10
+      }
+    },
+    "newDehumidifyingThrottleRange": {
+      "type": "number",
+      "exclusiveMinimum": 0,
+      "x-semio-ui": {
+        "widget": "stepper",
+        "role": "value",
+        "label": {
+          "en": "Dehumidifying throttle range",
+          "de": "Entfeuchtungs-Proportionalbereich"
+        },
+        "description": {
+          "en": "Band of relative humidity (as a fraction of saturation, shown in %) over which dehumidification ramps from off to full.",
+          "de": "Band der relativen Feuchte (als Anteil der Sättigung, in % angezeigt), in dem die Entfeuchtung von null auf voll ansteigt."
+        },
+        "displayUnit": "%",
+        "displayFactor": 100,
+        "step": 0.01,
+        "precision": 0,
+        "group": "control",
+        "order": 20
+      }
+    }
+  }
+}

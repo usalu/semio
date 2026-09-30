@@ -10,10 +10,41 @@
   ],
   "properties": {
     "zoneId": {
-      "type": "string"
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Zone",
+          "de": "Zone"
+        },
+        "description": {
+          "en": "The thermal zone this mutation addresses.",
+          "de": "Die thermische Zone, die diese Mutation adressiert."
+        },
+        "ref": {
+          "kind": "zone"
+        },
+        "group": "target",
+        "order": 10
+      }
     },
     "newNightVentilation": {
-      "type": "string"
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "text",
+        "role": "value",
+        "label": {
+          "en": "Night ventilation",
+          "de": "Nachtlüftung"
+        },
+        "description": {
+          "en": "none, moderate or high (DIN 4108-2 summer heat protection).",
+          "de": "none (keine), moderate (erhöhte) oder high (hohe Nachtlüftung) nach DIN 4108-2."
+        },
+        "group": "summer",
+        "order": 20
+      }
     }
   }
 }

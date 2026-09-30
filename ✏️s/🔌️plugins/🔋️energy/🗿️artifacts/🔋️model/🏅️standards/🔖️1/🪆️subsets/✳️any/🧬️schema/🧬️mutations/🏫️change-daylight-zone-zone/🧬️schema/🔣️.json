@@ -5,15 +5,57 @@
   "type": "object",
   "additionalProperties": false,
   "required": [
+    "mutation",
     "id",
     "newZoneId"
   ],
   "properties": {
+    "mutation": {
+      "const": "changeDaylightZoneZone"
+    },
     "id": {
-      "type": "integer"
+      "type": "integer",
+      "minimum": 0,
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Daylight zone",
+          "de": "Tageslichtzone"
+        },
+        "description": {
+          "en": "The daylight zone this mutation changes, by id.",
+          "de": "Tageslichtzone, die diese Mutation ändert, per ID."
+        },
+        "ref": {
+          "kind": "daylightZone"
+        },
+        "group": "target",
+        "order": 10
+      }
     },
     "newZoneId": {
-      "type": "integer"
+      "type": "integer",
+      "minimum": 0,
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Zone",
+          "de": "Zone"
+        },
+        "description": {
+          "en": "Assigned zone, by id.",
+          "de": "Zugeordnete Zone, per ID."
+        },
+        "ref": {
+          "kind": "zone",
+          "domain": "energyModel",
+          "granularity": "zone"
+        },
+        "group": "assignment",
+        "order": 20
+      }
     }
   }
 }

@@ -1,0 +1,9 @@
+{
+  "mutation": "setColorSpace",
+  "colorSpace": {
+    "name": "name",
+    "colorSpace": {
+      "kind": "deviceRgb"
+    }
+  }
+}

@@ -15,9 +15,10 @@ mod extension_bundle_dependency_tests {
 
     #[semio_framework_async_macros::async_test]
     async fn extends_matching_the_first_dependency_is_accepted_regardless_of_call_order() {
-        let bundle = ExtensionBundle::new("ext-ok", "Ext Ok", "0.1.0").extends("primary-dep").depends_on("primary-dep", semio_framework::tree_pin!()).depends_on("secondary-dep", semio_framework::tree_pin!());
+        let mut bundle = ExtensionBundle::new("ext-ok", "Ext Ok", "0.1.0").extends("primary-dep").depends_on("primary-dep", semio_framework::tree_pin!()).depends_on("secondary-dep", semio_framework::tree_pin!());
         assert_eq!(bundle.manifest.dependencies[0].plugin_id, "primary-dep");
         assert_eq!(bundle.manifest.dependencies[1].plugin_id, "secondary-dep");
         assert_eq!(bundle.manifest.extends, "primary-dep");
+        bundle.dispose_cold().unwrap();
     }
 }

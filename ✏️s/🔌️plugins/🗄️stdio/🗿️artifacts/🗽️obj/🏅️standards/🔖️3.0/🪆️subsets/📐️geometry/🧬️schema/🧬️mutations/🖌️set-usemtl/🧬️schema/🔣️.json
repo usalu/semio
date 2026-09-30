@@ -5,18 +5,29 @@
   "type": "object",
   "additionalProperties": false,
   "required": [
+    "mutation",
     "usemtl"
   ],
   "properties": {
+    "mutation": {
+      "const": "setUsemtl",
+      "description": "Aggregate discriminator spliced in by ObjMutation; absent when the payload stands alone."
+    },
     "usemtl": {
       "type": "array",
       "items": {
         "$ref": "#/$defs/ObjUsemtlRange"
+      },
+      "x-semio-ui": {
+        "label": {
+          "en": "Material assignments",
+          "de": "Materialzuweisungen"
+        },
+        "description": {
+          "en": "`usemtl` ranges over the faces.",
+          "de": "`usemtl`-Bereiche über die Flächen."
+        }
       }
-    },
-    "mutation": {
-      "const": "setUsemtl",
-      "description": "Aggregate discriminator spliced in by ObjMutation; absent when the payload stands alone."
     }
   },
   "$defs": {
@@ -30,7 +41,18 @@
       "properties": {
         "faceIndexFrom": {
           "type": "integer",
-          "minimum": 0
+          "minimum": 0,
+          "x-semio-ui": {
+            "widget": "stepper",
+            "label": {
+              "en": "First face",
+              "de": "Erste Fläche"
+            },
+            "description": {
+              "en": "Zero-based face index where the range starts.",
+              "de": "Nullbasierter Flächenindex, an dem der Bereich beginnt."
+            }
+          }
         },
         "material": {
           "type": "string"

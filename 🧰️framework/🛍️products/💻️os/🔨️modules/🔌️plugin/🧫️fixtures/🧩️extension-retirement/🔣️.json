@@ -1,0 +1,61 @@
+{
+  "allocationAdmission": { "tinyBytes": 1, "vectorCapacity": 257, "podWidth": 8, "stringCapacity": 1024, "ownerPaddingBytes": 4096 },
+  "actorAllocation": { "smallBytes": 65536, "stringBytes": 131072, "adequateBytes": 2097152 },
+  "dropBoundary": { "liveOwnerDrops": 0, "terminalOwnerDrops": 1, "fault": "extension bundle requires terminal-empty retirement before drop" },
+  "resource": "retained session payload 🧳",
+  "capability": "echo",
+  "request": "owned request",
+  "zeroGrants": [
+    [
+      0,
+      64
+    ],
+    [
+      1,
+      0
+    ]
+  ],
+  "grant": [
+    1,
+    4
+  ],
+  "handlerGrant": [
+    1,
+    1024
+  ],
+  "replacementSlots": 1,
+  "faults": {
+    "sealed": "extension.closing",
+    "exceeded": "extension.close-budget",
+    "falseComplete": "extension.close-live-owner"
+  },
+  "resourceBytes": 29,
+  "metadata": {
+    "nested": [
+      {
+        "payload": "manifest owned bytes 🗂"
+      },
+      [
+        "second",
+        "third"
+      ]
+    ]
+  },
+  "lifecycle": [
+    "open",
+    "sealed",
+    "paused",
+    "retiring",
+    "terminal"
+  ],
+  "controls": {
+    "cancel": "extension.close.cancel",
+    "resume": "extension.close.resume"
+  },
+  "nonClosingChanges": [
+    "granted",
+    "narrowed",
+    "revoked",
+    "quotaChanged"
+  ]
+}

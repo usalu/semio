@@ -5,16 +5,52 @@
   "type": "object",
   "additionalProperties": false,
   "required": [
+    "mutation",
     "id",
     "newName"
   ],
   "properties": {
+    "mutation": {
+      "const": "renameCommunicationRequirement"
+    },
     "id": {
-      "type": "integer",
-      "minimum": 0
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Communication Requirement",
+          "de": "Kommunikationsanforderung"
+        },
+        "description": {
+          "en": "The communication requirement to rename.",
+          "de": "Umzubenennender Eintrag vom Typ „Kommunikationsanforderung“."
+        },
+        "ref": {
+          "kind": "communicationRequirement",
+          "domain": "program",
+          "granularity": "entity"
+        },
+        "group": "target",
+        "order": 10
+      }
     },
     "newName": {
-      "type": "string"
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "text",
+        "role": "value",
+        "label": {
+          "en": "New Name",
+          "de": "Neuer Name"
+        },
+        "description": {
+          "en": "New name of the communication requirement.",
+          "de": "Neuer Name des Eintrags vom Typ „Kommunikationsanforderung“."
+        },
+        "group": "identity",
+        "order": 20
+      }
     }
   }
 }

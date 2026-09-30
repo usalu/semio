@@ -15,6 +15,8 @@ import { fixedListStorageSelfTests } from "../../🧪️tests/🔬️fixed-list-
 import { conformanceCorpusSelfTests } from "../../🧪️tests/🔬️conformance-corpus/🟦️.ts";
 import { accessibilityProjectionSelfTests } from "../../🧪️tests/🔬️accessibility-projection/🟦️.ts";
 import { catalogueCarrierMapSelfTests } from "../../🧪️tests/🛍️catalogue-carrier-map/🟦️.ts";
+import { numberControlsSelfTests } from "../../🧪️tests/🧪️number-controls/🟦️.ts";
+import { colorInputSelfTests } from "../../🧪️tests/🧪️color-input/🟦️.ts";
 
 const packageRoot = import.meta.dir ?? dirname(fileURLToPath(import.meta.url));
 
@@ -43,6 +45,8 @@ class TestScript extends BundleScript {
     console.log(`fixed-list-page-oracle checks=${fixedListStorageSelfTests()}`);
     console.log(`accessibility-projection-twin checks=${accessibilityProjectionSelfTests()}`);
     console.log(`catalogue-carrier-map-twin checks=${catalogueCarrierMapSelfTests()}`);
+    console.log(`number-controls-twin checks=${numberControlsSelfTests()}`);
+    console.log(`color-input-twin checks=${colorInputSelfTests()}`);
     await runCargoTestBudgeted([], packageRoot, ["--all-features", ...rest]);
   }
 }

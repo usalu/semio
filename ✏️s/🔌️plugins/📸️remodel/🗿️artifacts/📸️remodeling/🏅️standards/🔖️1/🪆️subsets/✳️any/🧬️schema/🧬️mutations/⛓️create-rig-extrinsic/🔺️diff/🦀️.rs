@@ -1,7 +1,7 @@
 //! 🔺️ Sparse diff builder for `CreateRigExtrinsic` — inserts at the entry's canonical `camera_id`
 //! position so `delete-rig-extrinsic` puts it back exactly where it was. A duplicate `camera_id` ⇒ Fatal
-//! `mutation.duplicate-id`; a `camera_id` referencing an unknown camera ⇒ Fatal
-//! `mutation.invariant`.
+//! `mutation.duplicate-id`; a `camera_id` naming a camera this base does not calibrate ⇒ Error
+//! `mutation.target-missing` (a base that calibrates it hosts the same payload).
 use crate::diff::RemodelingDiff;
 use crate::RemodelingSnapshot;
 
@@ -11,7 +11,7 @@ pub fn diff(payload: &super::CreateRigExtrinsic, base: &RemodelingSnapshot) -> p
         return protocol::MutationOutcome::fatal("mutation.duplicate-id", format!("A rig extrinsic for camera \"{}\" already exists.", payload.extrinsic.camera_id), [payload.extrinsic.camera_id.clone()]);
     }
     if !base.calibration.cameras.iter().any(|camera| camera.id == payload.extrinsic.camera_id) {
-        return protocol::MutationOutcome::fatal("mutation.invariant", format!("Rig extrinsic references unknown camera \"{}\".", payload.extrinsic.camera_id), [payload.extrinsic.camera_id.clone()]);
+        return protocol::MutationOutcome::error("mutation.target-missing", format!("Rig extrinsic references unknown camera \"{}\".", payload.extrinsic.camera_id), [payload.extrinsic.camera_id.clone()]);
     }
     let mut calibration = base.calibration.clone();
     let at = crate::mutations::ordered_index(&calibration.rig, &payload.extrinsic.camera_id, |extrinsic| extrinsic.camera_id.clone());

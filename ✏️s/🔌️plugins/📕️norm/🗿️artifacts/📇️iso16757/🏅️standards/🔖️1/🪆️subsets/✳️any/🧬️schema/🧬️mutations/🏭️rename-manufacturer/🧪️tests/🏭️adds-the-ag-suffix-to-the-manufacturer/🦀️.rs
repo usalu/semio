@@ -59,8 +59,8 @@ async fn dropping_the_ag_suffix_restores_before() {
 }
 
 /// 🔣️ Both committed snapshots and the committed `rename-manufacturer` payload are already canonical: decode →
-/// encode is a fixed point. The committed payload is spelled `{"RenameManufacturer": {"new_name": …}}` —
-/// externally tagged, snake_case payload key.
+/// encode is a fixed point. The committed payload is spelled `{"RenameManufacturer": {"newName": …}}` —
+/// externally tagged, camelCase payload key.
 #[semio_framework_async_macros::async_test]
 async fn committed_json_is_canonical() {
     for (side, text) in [("before", BEFORE), ("after", AFTER)] {

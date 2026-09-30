@@ -1,0 +1,11 @@
+{
+  "mutation": "changeAssetExtensionData",
+  "payload": {
+    "phase": "apply",
+    "value": {
+      "data": {
+        "KHR_xmp_json_ld": {}
+      }
+    }
+  }
+}

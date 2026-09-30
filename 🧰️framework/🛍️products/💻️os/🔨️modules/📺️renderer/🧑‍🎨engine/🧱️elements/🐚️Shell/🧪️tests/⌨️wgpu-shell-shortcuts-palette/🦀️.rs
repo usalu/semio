@@ -30,6 +30,7 @@ fn chord_event(chord: &str) -> (ui_wgpu::wgpu::KeyAction, PointerModifiers) {
     }
     let action = match key {
         "enter" => ui_wgpu::wgpu::KeyAction::Enter,
+        "backspace" => ui_wgpu::wgpu::KeyAction::Backspace,
         "escape" => ui_wgpu::wgpu::KeyAction::Escape,
         "tab" => ui_wgpu::wgpu::KeyAction::Tab,
         "up" | "arrowup" => ui_wgpu::wgpu::KeyAction::ArrowUp,
@@ -66,6 +67,9 @@ fn the_shortcut_table_transcribes_every_react_shell_keybinding_row() {
         ("ui.shell.mode.previous", "mod+alt+arrowleft"),
         ("playground.navbar.roles.editor", "mod+alt+e"),
         ("playground.navbar.roles.viewer", "mod+alt+v"),
+        ("ui.timeTravel.accept", "alt+enter"),
+        ("ui.timeTravel.discard", "alt+backspace"),
+        ("ui.timeTravel.exit", "alt+shift+backspace"),
     ];
     assert_eq!(SHELL_SHORTCUT_ROWS.to_vec(), expected, "every executable chrome accelerator row");
     assert!(!SHELL_SHORTCUT_ROWS.iter().any(|(id, _)| *id == "os.toggleFullscreen"));
@@ -85,7 +89,7 @@ fn every_row_dispatches_its_verb_and_outranks_app_keybindings() {
             chords += 1;
         }
     }
-    assert_eq!(chords, 28, "20 rows, eight of which spell both the ctrl and the meta accelerator");
+    assert_eq!(chords, 31, "23 rows, eight of which spell both the ctrl and the meta accelerator");
 }
 
 /// ⚖️ LAW: the two verbs with hand-written chord helpers (the surface-role and mode-cycle axes, kept as

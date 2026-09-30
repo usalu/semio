@@ -26,7 +26,7 @@ pub fn apply(payload: &GltfDeleteSkinPayload, base: &GltfSnapshot) -> Result<Glt
 
 //#region 🧬️DirectMutation
 #[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::MutationLeaf)]
-#[mutation_leaf(contract = ::protocol)]
+#[mutation_leaf(contract = ::protocol, payload = Apply)]
 #[value(tag = "phase", content = "value", rename_all = "camelCase")]
 pub enum DeleteSkinMutation {
     Apply(GltfDeleteSkinPayload),
@@ -70,6 +70,6 @@ impl protocol::MutationKind<GltfSnapshot, super::GltfMutation> for DeleteSkinMut
 
 //#region 🧪️Tests
 #[cfg(test)]
-#[path = "🧪️tests/🔬️direct-leaf/🦀️.rs"]
-mod direct_leaf_tests;
+#[path = "🧪️tests/🚫️removes-the-first-10a35c/🦀️.rs"]
+mod case_removes_the_first_10a35c;
 //#endregion 🧪️Tests

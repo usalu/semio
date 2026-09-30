@@ -4,7 +4,14 @@
   "title": "SetMtllib",
   "type": "object",
   "additionalProperties": false,
+  "required": [
+    "mutation"
+  ],
   "properties": {
+    "mutation": {
+      "const": "setMtllib",
+      "description": "Aggregate discriminator spliced in by ObjMutation; absent when the payload stands alone."
+    },
     "mtllib": {
       "anyOf": [
         {
@@ -13,11 +20,18 @@
         {
           "type": "null"
         }
-      ]
-    },
-    "mutation": {
-      "const": "setMtllib",
-      "description": "Aggregate discriminator spliced in by ObjMutation; absent when the payload stands alone."
+      ],
+      "x-semio-ui": {
+        "widget": "text",
+        "label": {
+          "en": "Material library",
+          "de": "Materialbibliothek"
+        },
+        "description": {
+          "en": "File name of the `mtllib` statement.",
+          "de": "Dateiname der Anweisung `mtllib`."
+        }
+      }
     }
   }
 }

@@ -5,11 +5,25 @@
   "type": "object",
   "additionalProperties": false,
   "required": [
+    "mutation",
     "key"
   ],
   "properties": {
+    "mutation": {
+      "const": "removeAttribute"
+    },
     "key": {
-      "type": "string"
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "text",
+        "role": "value",
+        "label": {
+          "en": "Key",
+          "de": "Schlüssel"
+        },
+        "group": "metadata",
+        "order": 10
+      }
     }
   }
 }

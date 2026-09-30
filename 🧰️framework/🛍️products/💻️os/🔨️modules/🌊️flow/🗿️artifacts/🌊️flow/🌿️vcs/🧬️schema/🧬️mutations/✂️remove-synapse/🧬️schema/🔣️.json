@@ -2,27 +2,31 @@
   "$schema": "http://json-schema.org/draft-07/schema#",
   "$id": "https://json.schemas.assets.semio-tech.com/os/flow/artifacts/flow/vcs/mutation/remove-synapse/schema.json",
   "title": "RemoveSynapse",
-  "$defs": {
-    "Payload": {
-      "type": "object",
-      "properties": {
-        "id": {
-          "type": "string"
-        }
-      },
-      "required": [
-        "id"
-      ]
-    }
-  },
-  "allOf": [
-    {
-      "$ref": "#/$defs/Payload"
-    }
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "operation",
+    "id"
   ],
-  "propertyNames": {
-    "enum": [
-      "id"
-    ]
+  "properties": {
+    "operation": {
+      "const": "removeSynapse"
+    },
+    "id": {
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Synapse",
+          "de": "Synapse"
+        },
+        "ref": {
+          "kind": "synapse"
+        },
+        "group": "target",
+        "order": 10
+      }
+    }
   }
 }

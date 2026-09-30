@@ -12,13 +12,51 @@
   "properties": {
     "label": {
       "type": "integer",
-      "minimum": 0
+      "minimum": 0,
+      "x-semio-ui": {
+        "widget": "stepper",
+        "role": "value",
+        "label": {
+          "en": "Coefficient",
+          "de": "Koeffizient"
+        },
+        "description": {
+          "en": "Label of the numeric leaf in the equation tree.",
+          "de": "Kennzeichen des Zahlenblatts im Gleichungsbaum."
+        },
+        "step": 1,
+        "precision": 0
+      }
     },
     "numer": {
-      "type": "string"
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "text",
+        "role": "value",
+        "label": {
+          "en": "Numerator",
+          "de": "Zähler"
+        },
+        "description": {
+          "en": "Integer as a decimal string.",
+          "de": "Ganzzahl als Dezimalzeichenkette."
+        }
+      }
     },
     "denom": {
-      "type": "string"
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "text",
+        "role": "value",
+        "label": {
+          "en": "Denominator",
+          "de": "Nenner"
+        },
+        "description": {
+          "en": "Integer as a decimal string; 1 for a plain integer.",
+          "de": "Ganzzahl als Dezimalzeichenkette; 1 für eine einfache Ganzzahl."
+        }
+      }
     }
   }
 }

@@ -9,7 +9,20 @@
   ],
   "properties": {
     "newTIntC": {
-      "type": "number"
+      "type": "number",
+      "x-semio-ui": {
+        "widget": "stepper",
+        "role": "value",
+        "label": {
+          "en": "Indoor air temperature θ_i",
+          "de": "Raumlufttemperatur θ_i"
+        },
+        "unit": "°C",
+        "step": 0.5,
+        "precision": 1,
+        "group": "climate",
+        "order": 10
+      }
     }
   }
 }

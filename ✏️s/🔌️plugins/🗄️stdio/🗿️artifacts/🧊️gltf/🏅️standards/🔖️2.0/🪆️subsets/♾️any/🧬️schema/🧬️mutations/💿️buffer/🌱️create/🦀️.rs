@@ -33,7 +33,7 @@ pub fn apply(payload: &GltfCreateBufferPayload, base: &GltfSnapshot) -> Result<G
 
 //#region 🧬️DirectMutation
 #[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::MutationLeaf)]
-#[mutation_leaf(contract = ::protocol)]
+#[mutation_leaf(contract = ::protocol, payload = Apply)]
 #[value(tag = "phase", content = "value", rename_all = "camelCase")]
 pub enum CreateBufferMutation {
     Apply(GltfCreateBufferPayload),
@@ -77,6 +77,6 @@ impl protocol::MutationKind<GltfSnapshot, super::GltfMutation> for CreateBufferM
 
 //#region 🧪️Tests
 #[cfg(test)]
-#[path = "🧪️tests/🔬️direct-leaf/🦀️.rs"]
-mod direct_leaf_tests;
+#[path = "🧪️tests/💿️inserts-a-two-ab4132/🦀️.rs"]
+mod case_inserts_a_two_ab4132;
 //#endregion 🧪️Tests

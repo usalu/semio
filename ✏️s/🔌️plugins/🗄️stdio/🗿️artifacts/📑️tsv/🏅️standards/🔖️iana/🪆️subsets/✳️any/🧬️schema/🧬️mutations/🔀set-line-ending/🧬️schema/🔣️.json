@@ -5,15 +5,33 @@
   "type": "object",
   "additionalProperties": false,
   "required": [
+    "mutation",
     "lineEnding"
   ],
   "properties": {
-    "lineEnding": {
-      "$ref": "#/$defs/LineEnding"
-    },
     "mutation": {
       "const": "setLineEnding",
       "description": "Aggregate discriminator spliced in by TsvMutation; absent when the payload stands alone."
+    },
+    "lineEnding": {
+      "$ref": "#/$defs/LineEnding",
+      "x-semio-ui": {
+        "widget": "segmented",
+        "label": {
+          "en": "Line ending",
+          "de": "Zeilenende"
+        },
+        "options": {
+          "lf": {
+            "en": "LF (Unix)",
+            "de": "LF (Unix)"
+          },
+          "crlf": {
+            "en": "CRLF (Windows)",
+            "de": "CRLF (Windows)"
+          }
+        }
+      }
     }
   },
   "$defs": {

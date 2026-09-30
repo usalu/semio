@@ -1,0 +1,4 @@
+{
+  "mutation": "removeCatalogEntry",
+  "key": "key"
+}

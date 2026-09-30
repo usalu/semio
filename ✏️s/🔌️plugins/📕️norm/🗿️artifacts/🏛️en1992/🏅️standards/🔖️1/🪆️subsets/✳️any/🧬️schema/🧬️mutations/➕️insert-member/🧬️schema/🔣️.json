@@ -10,10 +10,40 @@
   ],
   "properties": {
     "index": {
-      "type": "integer"
+      "type": "integer",
+      "minimum": 0,
+      "x-semio-ui": {
+        "widget": "stepper",
+        "role": "value",
+        "label": {
+          "en": "Position",
+          "de": "Position"
+        },
+        "description": {
+          "en": "Zero-based list position at which the record is inserted.",
+          "de": "Nullbasierte Listenposition, an der der Datensatz eingefügt wird."
+        },
+        "step": 1,
+        "precision": 0,
+        "group": "target",
+        "order": 10
+      }
     },
     "member": {
-      "type": "object"
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1992/snapshot.json#/$defs/RcMember",
+      "x-semio-ui": {
+        "role": "value",
+        "label": {
+          "en": "Member",
+          "de": "Bauteil"
+        },
+        "description": {
+          "en": "The complete reinforced concrete member record to insert.",
+          "de": "Der vollständige einzufügende Stahlbetonbauteil-Datensatz."
+        },
+        "group": "record",
+        "order": 20
+      }
     }
   }
 }

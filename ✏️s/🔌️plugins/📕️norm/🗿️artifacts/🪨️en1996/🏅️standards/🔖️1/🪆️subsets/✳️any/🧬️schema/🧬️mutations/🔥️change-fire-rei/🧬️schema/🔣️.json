@@ -10,10 +10,45 @@
   ],
   "properties": {
     "index": {
-      "type": "integer"
+      "type": "integer",
+      "minimum": 0,
+      "x-semio-ui": {
+        "widget": "stepper",
+        "role": "value",
+        "label": {
+          "en": "Wall",
+          "de": "Wand"
+        },
+        "description": {
+          "en": "Zero-based position of the wall in its list.",
+          "de": "Nullbasierte Position der Wand in der Liste."
+        },
+        "step": 1,
+        "precision": 0,
+        "group": "target",
+        "order": 10
+      }
     },
     "newFireReiMin": {
-      "type": "integer"
+      "type": "integer",
+      "minimum": 0,
+      "x-semio-ui": {
+        "widget": "stepper",
+        "role": "value",
+        "label": {
+          "en": "Required fire resistance REI",
+          "de": "Erforderliche Feuerwiderstandsdauer REI"
+        },
+        "description": {
+          "en": "Fire resistance in minutes, e.g. 30, 60, 90 (EN 1996-1-2).",
+          "de": "Feuerwiderstandsdauer in Minuten, z. B. 30, 60, 90 (EN 1996-1-2)."
+        },
+        "unit": "min",
+        "step": 1,
+        "precision": 0,
+        "group": "fire",
+        "order": 20
+      }
     }
   }
 }

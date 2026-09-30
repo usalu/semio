@@ -9,7 +9,20 @@
   ],
   "properties": {
     "id": {
-      "type": "string"
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Adjacency rule",
+          "de": "Nachbarschaftsregel"
+        },
+        "ref": {
+          "kind": "rule"
+        },
+        "group": "target",
+        "order": 10
+      }
     }
   }
 }

@@ -5,16 +5,17 @@
   "type": "object",
   "additionalProperties": false,
   "required": [
+    "mutation",
     "descriptorOrdinal"
   ],
   "properties": {
-    "descriptorOrdinal": {
-      "type": "integer",
-      "minimum": 0
-    },
     "mutation": {
       "const": "removeFontFile",
       "description": "Aggregate discriminator spliced in by PdfXMutation; absent when the payload stands alone."
+    },
+    "descriptorOrdinal": {
+      "type": "integer",
+      "minimum": 0
     }
   }
 }

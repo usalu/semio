@@ -9,22 +9,19 @@
   ],
   "properties": {
     "newCorrectionAsOf": {
-      "title": "EditionId",
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "month",
-        "year"
-      ],
-      "properties": {
-        "year": {
-          "type": "integer",
-          "minimum": 0
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/vdi3805/snapshot.json#/$defs/EditionId",
+      "x-semio-ui": {
+        "role": "value",
+        "label": {
+          "en": "Correction status",
+          "de": "Korrekturstand"
         },
-        "month": {
-          "type": "integer",
-          "minimum": 0
-        }
+        "description": {
+          "en": "Year and month of the catalogue correction.",
+          "de": "Jahr und Monat des Katalog-Korrekturstands."
+        },
+        "group": "catalogue",
+        "order": 10
       }
     }
   }

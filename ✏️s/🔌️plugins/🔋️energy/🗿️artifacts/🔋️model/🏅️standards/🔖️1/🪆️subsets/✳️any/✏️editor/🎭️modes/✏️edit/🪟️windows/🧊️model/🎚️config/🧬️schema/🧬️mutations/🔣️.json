@@ -4,13 +4,7 @@
   "title": "EnergyModelWindowConfigMutation",
   "oneOf": [
     {
-      "type": "object",
-      "additionalProperties": false,
-      "required": ["kind", "camera"],
-      "properties": {
-        "kind": { "const": "set-camera" },
-        "camera": { "$ref": "schema.json#/properties/camera" }
-      }
+      "$ref": "https://json.schemas.assets.semio-tech.com/app/energy/model/model3d-window/config/mutation/set-camera/schema.json"
     }
   ]
 }

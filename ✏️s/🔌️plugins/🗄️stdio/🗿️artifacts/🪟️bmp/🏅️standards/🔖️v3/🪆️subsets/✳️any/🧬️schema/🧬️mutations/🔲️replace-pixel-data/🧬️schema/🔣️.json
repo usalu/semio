@@ -14,6 +14,18 @@
         "type": "integer",
         "minimum": 0,
         "maximum": 255
+      },
+      "x-semio-ui": {
+        "label": {
+          "en": "Pixels",
+          "de": "Pixel"
+        },
+        "description": {
+          "en": "Canonical 8-bit RGBA, width × height × 4 bytes, row 0 at the top.",
+          "de": "Kanonisches 8-Bit-RGBA, Breite × Höhe × 4 Bytes, Zeile 0 oben."
+        },
+        "group": "value",
+        "order": 10
       }
     }
   }

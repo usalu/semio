@@ -218,6 +218,23 @@ pub fn apply_dxf_mutation(snapshot: &mut DxfSnapshot, mutation: &DxfMutation) ->
 }
 //#endregion 🔖️Apply
 
+//#region 🚪️Reachability
+/// 🪪️ The [`DxfMutation`] of semantic kind `kind` built from its leaf wire payload (`payload_value()`) in JSON text by the
+/// derive-generated `from_payload_value` — how a `{"kind", "params"}` feature row reaches the aggregate without naming the
+/// private `protocol` alias and without any hand mapping.
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn decode_dxf_mutation_payload(kind: &str, text: &str) -> Result<DxfMutation, String> {
+    protocol::os_pack::json::from_json_str(text).and_then(|payload| <DxfMutation as Mutation<DxfSnapshot>>::from_payload_value(kind, payload)).map_err(|error| error.to_string())
+}
+
+/// ↩️ `Mutation::inverse` for [`DxfMutation`] against the pre-mutation `base` — the production inverse itself, reachable
+/// without naming the `protocol` alias.
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn inverse_dxf_mutation(base: &DxfSnapshot, mutation: &DxfMutation) -> Vec<DxfMutation> {
+    <DxfMutation as Mutation<DxfSnapshot>>::inverse(mutation, base)
+}
+//#endregion 🚪️Reachability
+
 //#region 🔖️MutationTrait
 // 🚫️async: E1 pure codec/computation helper — lifted verbatim from the former `impl Mutation`.
 pub(crate) fn agg_diff(this: &DxfMutation, base: &DxfSnapshot) -> protocol::MutationOutcome<DxfDiff> {

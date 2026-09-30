@@ -5,16 +5,17 @@
   "type": "object",
   "additionalProperties": false,
   "required": [
+    "mutation",
     "id"
   ],
   "properties": {
-    "id": {
-      "type": "integer",
-      "minimum": 0
-    },
     "mutation": {
       "const": "removeEntity",
       "description": "Aggregate discriminator spliced in by StepMutation; absent when the payload stands alone."
+    },
+    "id": {
+      "type": "integer",
+      "minimum": 0
     }
   }
 }

@@ -103,13 +103,22 @@ describe("cross-platform bootstrap", () => {
 
   test("keeps every tracked path inside the stock Windows MAX_PATH budget below a declared clone root", () => {
     const { windowsMaxPath, cloneRootMax, componentMax } = fixture.pathBudget;
-    const budget = windowsMaxPath - 1 - cloneRootMax;
-    const ours = measurePaths(tracked, (value) => value.length, budget, componentMax);
-    const oracle = measurePaths(tracked, (value) => iconv.encode(value, "utf16le").length / 2, budget, componentMax);
+    const fileBudget = windowsMaxPath - 1 - cloneRootMax;
+    // CreateDirectoryW rejects a directory at MAX_PATH - 12, so the directory string itself stops one unit earlier.
+    const directoryBudget = windowsMaxPath - 12 - 1 - cloneRootMax;
+    const directories = [...new Set(tracked.flatMap((path) => path.split("/").slice(0, -1).map((_, index, parts) => parts.slice(0, index + 1).join("/"))))];
+    const utf16 = (value: string) => iconv.encode(value, "utf16le").length / 2;
+    const files = measurePaths(tracked, (value) => value.length, fileBudget, componentMax);
+    const fileOracle = measurePaths(tracked, utf16, fileBudget, componentMax);
+    const dirs = measurePaths(directories, (value) => value.length, directoryBudget, componentMax);
+    const dirOracle = measurePaths(directories, utf16, directoryBudget, componentMax);
     expect(tracked.length).toBeGreaterThan(1000);
-    expect(ours).toEqual(oracle);
-    expect(ours.overComponent).toEqual([]);
-    expect(ours.overBudget, `tracked relative paths above ${budget} UTF-16 units (max ${ours.max})`).toEqual([]);
+    expect(files).toEqual(fileOracle);
+    expect(dirs).toEqual(dirOracle);
+    expect(files.overComponent).toEqual([]);
+    expect(dirs.overComponent).toEqual([]);
+    expect(files.overBudget, `tracked relative paths above ${fileBudget} UTF-16 units (max ${files.max})`).toEqual([]);
+    expect(dirs.overBudget, `tracked directories above ${directoryBudget} UTF-16 units (max ${dirs.max})`).toEqual([]);
   }, 60_000);
 
   test("saves every non-ASCII PowerShell script with a UTF-8 BOM so Windows PowerShell 5.1 decodes it as UTF-8", () => {

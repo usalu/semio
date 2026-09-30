@@ -5,9 +5,13 @@
   "type": "object",
   "additionalProperties": false,
   "required": [
+    "mutation",
     "geo"
   ],
   "properties": {
+    "mutation": {
+      "const": "replaceGeoProducts"
+    },
     "geo": {
       "anyOf": [
         {
@@ -24,26 +28,96 @@
               "type": [
                 "string",
                 "null"
-              ]
+              ],
+              "x-semio-ui": {
+                "widget": "reference",
+                "role": "target",
+                "label": {
+                  "en": "DSM Raster",
+                  "de": "DOM-Raster"
+                },
+                "description": {
+                  "en": "Digital surface model raster.",
+                  "de": "Raster des digitalen Oberflächenmodells."
+                },
+                "ref": {
+                  "kind": "asset",
+                  "domain": "assets",
+                  "granularity": "asset"
+                },
+                "group": "result",
+                "order": 10
+              }
             },
             "dtmAssetId": {
               "type": [
                 "string",
                 "null"
-              ]
+              ],
+              "x-semio-ui": {
+                "widget": "reference",
+                "role": "target",
+                "label": {
+                  "en": "DTM Raster",
+                  "de": "DGM-Raster"
+                },
+                "description": {
+                  "en": "Digital terrain model raster.",
+                  "de": "Raster des digitalen Geländemodells."
+                },
+                "ref": {
+                  "kind": "asset",
+                  "domain": "assets",
+                  "granularity": "asset"
+                },
+                "group": "result",
+                "order": 20
+              }
             },
             "orthoAssetId": {
               "type": [
                 "string",
                 "null"
-              ]
+              ],
+              "x-semio-ui": {
+                "widget": "reference",
+                "role": "target",
+                "label": {
+                  "en": "Orthophoto",
+                  "de": "Orthofoto"
+                },
+                "description": {
+                  "en": "True orthophoto raster.",
+                  "de": "Raster des Orthofotos."
+                },
+                "ref": {
+                  "kind": "asset",
+                  "domain": "assets",
+                  "granularity": "asset"
+                },
+                "group": "result",
+                "order": 30
+              }
             }
           }
         },
         {
           "type": "null"
         }
-      ]
+      ],
+      "x-semio-ui": {
+        "role": "value",
+        "label": {
+          "en": "Geo Products",
+          "de": "Geoprodukte"
+        },
+        "description": {
+          "en": "DSM, DTM and orthophoto rasters; empty clears them.",
+          "de": "DOM-, DGM- und Orthofoto-Raster; leer entfernt sie."
+        },
+        "group": "result",
+        "order": 10
+      }
     }
   }
 }

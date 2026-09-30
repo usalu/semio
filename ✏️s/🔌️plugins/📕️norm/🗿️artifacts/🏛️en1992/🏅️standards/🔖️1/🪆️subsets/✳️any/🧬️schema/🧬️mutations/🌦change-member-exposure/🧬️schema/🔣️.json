@@ -10,10 +10,40 @@
   ],
   "properties": {
     "memberId": {
-      "type": "string"
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Member",
+          "de": "Bauteil"
+        },
+        "description": {
+          "en": "The reinforced concrete member this mutation addresses.",
+          "de": "Das Stahlbetonbauteil, das diese Mutation adressiert."
+        },
+        "ref": {
+          "kind": "member"
+        },
+        "group": "target",
+        "order": 10
+      }
     },
     "newExposure": {
-      "type": "string"
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1992/snapshot.json#/$defs/ExposureClass",
+      "x-semio-ui": {
+        "role": "value",
+        "label": {
+          "en": "Exposure class",
+          "de": "Expositionsklasse"
+        },
+        "description": {
+          "en": "EN 1992-1-1 Table 4.1: X0, Xc1–Xc4, Xd1–Xd3, Xs1–Xs3, Xf1–Xf4 or Xa1–Xa3.",
+          "de": "Nach EN 1992-1-1 Tabelle 4.1: X0, Xc1–Xc4, Xd1–Xd3, Xs1–Xs3, Xf1–Xf4 oder Xa1–Xa3."
+        },
+        "group": "durability",
+        "order": 20
+      }
     }
   }
 }

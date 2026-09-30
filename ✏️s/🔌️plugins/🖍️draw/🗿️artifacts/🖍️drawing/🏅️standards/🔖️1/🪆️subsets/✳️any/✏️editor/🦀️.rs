@@ -213,7 +213,7 @@ fn drawing_layer_field_arg() -> semio_framework_plugin::ActionArgDef {
 /// 🔤️ The patch `value` — one `String` wire field carrying JSON text, so one verb covers bool,
 /// number and string properties (see `patch_layer::patch_value_json`).
 fn drawing_layer_value_arg() -> semio_framework_plugin::ActionArgDef {
-    semio_framework_plugin::ActionArgDef::json_text("value", LocalizedLabel::native("Value", "Wert")).describe("JSON text: a quoted string for name/blendMode/fillColor, a number for opacity/strokeWidth/transforms, true/false for visible/locked.").required()
+    semio_framework_plugin::ActionArgDef::json_text("value", LocalizedLabel::native("Value", "Wert")).describe(LocalizedLabel::native("JSON text: a quoted string for name/blendMode/fillColor, a number for opacity/strokeWidth/transforms, true/false for visible/locked.", "JSON-Text: eine Zeichenkette in Anführungszeichen für name/blendMode/fillColor, eine Zahl für opacity/strokeWidth/Transformationen, true/false für visible/locked.")).required()
 }
 
 /// 🧰️ One canvas utility declaration (id/label/icon reused verbatim from the retired `utilities()` impl).
@@ -1365,6 +1365,7 @@ fn drawing_prepared_edit<M>(prefix: &str, forward: M, inverse: Vec<M>, descripti
             label: None,
             group_id: None,
             origin: Default::default(),
+            transaction: None,
         }],
         description,
         coalesce_key: None,
@@ -2006,7 +2007,7 @@ pub fn create_drawing_app() -> semio_framework_plugin::AppDefinition {
                         )
                         .default_value(&"union")
                         .required(),
-                        semio_framework_plugin::ActionArgDef::text_list("ids", LocalizedLabel::native("Layer Ids", "Ebenen-Ids")).describe("Ids of the layers to combine; empty uses the current selection."),
+                        semio_framework_plugin::ActionArgDef::text_list("ids", LocalizedLabel::native("Layer Ids", "Ebenen-Ids")).describe(LocalizedLabel::native("Ids of the layers to combine; empty uses the current selection.", "Ids der zu kombinierenden Ebenen; leer verwendet die aktuelle Auswahl.")),
                     ]),
             )
             .action_interactive_job("combineBoolean", semio_framework_plugin::InteractiveJobClassification::Migrated)

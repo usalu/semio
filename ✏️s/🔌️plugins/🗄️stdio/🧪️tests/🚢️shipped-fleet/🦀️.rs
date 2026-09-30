@@ -268,7 +268,7 @@ const CONTRACT_PROBE_PACKAGE: &str = "SEMIO_STDIO_CONTRACT_PROBE_PACKAGE";
 /// 🔗️ LAW (e): in every stdio package's own process — assembled alone, as its wasm guest is — every registered artifact's
 /// snapshot contract compiles: each `$ref` it makes resolves against a schema document registered in that process. Measured
 /// before (LB2 scratch, 2026-09-29): las/dwg/ifc refs named absent `$defs`, and semio brep/object/kit `$ref` shared documents
-/// (`base/geometry.json`, `base/child.json` → `os/store/child.json`, `brep/inference.json`) that no guest registered — every
+/// (`base/geometry.json`, `base/child.json` → `os/store/child/schema.json`, `brep/inference.json`) that no guest registered — every
 /// snapshot edit on those kinds was refused `snapshot-edit.invalid-schema-contract`.
 #[test]
 fn every_registered_snapshot_contract_resolves_in_each_package_process() {

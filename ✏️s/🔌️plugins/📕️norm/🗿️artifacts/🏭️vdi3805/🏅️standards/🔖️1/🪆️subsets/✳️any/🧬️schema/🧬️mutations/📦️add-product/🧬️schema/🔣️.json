@@ -9,205 +9,43 @@
   ],
   "properties": {
     "product": {
-      "title": "CatalogueProduct",
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "accessories",
-        "components",
-        "configuration",
-        "extensions",
-        "identity",
-        "records",
-        "sheet",
-        "title"
-      ],
-      "properties": {
-        "identity": {
-          "title": "ProductIdentity",
-          "type": "object",
-          "additionalProperties": false,
-          "required": [
-            "articleNumber",
-            "manufacturerCode",
-            "productGroup"
-          ],
-          "properties": {
-            "manufacturerCode": {
-              "type": "string"
-            },
-            "productGroup": {
-              "type": "string"
-            },
-            "articleNumber": {
-              "type": "string"
-            }
-          }
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/vdi3805/snapshot.json#/$defs/CatalogueProduct",
+      "x-semio-ui": {
+        "role": "value",
+        "label": {
+          "en": "Product",
+          "de": "Produkt"
         },
-        "title": {
-          "type": "array",
-          "items": {
-            "title": "LocalizedText",
-            "type": "object",
-            "additionalProperties": false,
-            "required": [
-              "locale",
-              "text"
-            ],
-            "properties": {
-              "locale": {
-                "type": "string"
-              },
-              "text": {
-                "type": "string"
-              }
-            }
-          }
+        "description": {
+          "en": "The complete catalogue product to add.",
+          "de": "Das vollständige hinzuzufügende Katalogprodukt."
         },
-        "sheet": {
-          "type": "integer",
-          "minimum": 0
-        },
-        "records": {
-          "type": "array",
-          "items": {
-            "title": "NativeRecord",
-            "type": "object",
-            "additionalProperties": false,
-            "required": [
-              "extensions",
-              "family",
-              "fields"
-            ],
-            "properties": {
-              "family": {
-                "type": "string"
-              },
-              "fields": {
-                "type": "array",
-                "items": {
-                  "type": "string"
-                }
-              },
-              "extensions": {
-                "title": "ExtensionBag",
-                "type": "object",
-                "additionalProperties": false,
-                "required": [
-                  "fields"
-                ],
-                "properties": {
-                  "fields": {
-                    "type": "object",
-                    "additionalProperties": {
-                      "description": "any JSON value"
-                    }
-                  }
-                }
-              }
-            }
-          }
-        },
-        "configuration": {
-          "title": "Configuration",
-          "type": "object",
-          "additionalProperties": false,
-          "required": [
-            "functionRefs",
-            "id",
-            "parameters"
-          ],
-          "properties": {
-            "id": {
-              "type": "string"
-            },
-            "geometryRef": {
-              "type": "string"
-            },
-            "functionRefs": {
-              "type": "array",
-              "items": {
-                "type": "string"
-              }
-            },
-            "attributes": {
-              "kind": "valveHeating",
-              "dn": 50,
-              "kvsM3S": 0.00125,
-              "pressureClass": "PN16",
-              "connectionType": "flange",
-              "authorityMin": 0.3,
-              "authorityMax": 0.7
-            }
-          }
-        },
-        "accessories": {
-          "type": "array",
-          "items": {
-            "title": "AccessoryLink",
-            "type": "object",
-            "additionalProperties": false,
-            "required": [
-              "accessoryId",
-              "quantity",
-              "required"
-            ],
-            "properties": {
-              "accessoryId": {
-                "type": "string"
-              },
-              "required": {
-                "type": "boolean"
-              },
-              "quantity": {
-                "type": "integer",
-                "minimum": 0
-              }
-            }
-          }
-        },
-        "components": {
-          "type": "array",
-          "items": {
-            "title": "CompositionLink",
-            "type": "object",
-            "additionalProperties": false,
-            "required": [
-              "componentId",
-              "quantity"
-            ],
-            "properties": {
-              "componentId": {
-                "type": "string"
-              },
-              "quantity": {
-                "type": "integer",
-                "minimum": 0
-              }
-            }
-          }
-        },
-        "extensions": {
-          "title": "ExtensionBag",
-          "type": "object",
-          "additionalProperties": false,
-          "required": [
-            "fields"
-          ],
-          "properties": {
-            "fields": {
-              "type": "object",
-              "additionalProperties": {
-                "description": "any JSON value"
-              }
-            }
-          }
-        }
+        "group": "record",
+        "order": 10
       }
     },
     "index": {
-      "type": "integer",
-      "minimum": 0
+      "type": [
+        "integer",
+        "null"
+      ],
+      "minimum": 0,
+      "x-semio-ui": {
+        "widget": "stepper",
+        "role": "value",
+        "label": {
+          "en": "Position",
+          "de": "Position"
+        },
+        "description": {
+          "en": "Zero-based position in the catalogue; a larger value appends.",
+          "de": "Nullbasierte Position im Katalog; ein größerer Wert hängt an."
+        },
+        "step": 1,
+        "precision": 0,
+        "group": "target",
+        "order": 20
+      }
     }
   }
 }

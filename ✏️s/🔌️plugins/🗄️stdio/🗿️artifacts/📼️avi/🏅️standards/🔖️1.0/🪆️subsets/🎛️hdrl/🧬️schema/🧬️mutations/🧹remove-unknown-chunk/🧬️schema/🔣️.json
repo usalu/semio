@@ -5,16 +5,31 @@
   "type": "object",
   "additionalProperties": false,
   "required": [
+    "mutation",
     "index"
   ],
   "properties": {
-    "index": {
-      "type": "integer",
-      "minimum": 0
-    },
     "mutation": {
       "const": "removeUnknownChunk",
       "description": "Aggregate discriminator spliced in by AviMutation; absent when the payload stands alone."
+    },
+    "index": {
+      "type": "integer",
+      "minimum": 0,
+      "x-semio-ui": {
+        "widget": "stepper",
+        "label": {
+          "en": "Chunk",
+          "de": "Chunk"
+        },
+        "description": {
+          "en": "Index of the unknown chunk, counted from 0.",
+          "de": "Index des unbekannten Chunks, ab 0 gezählt."
+        },
+        "precision": 0,
+        "group": "target",
+        "order": 10
+      }
     }
   }
 }

@@ -50,7 +50,7 @@ const TEST_APP_COMMAND_TOOL_IDS: &[&str] = &[
 /// lane whose store preparation authority the app does not install — so this table, the reducer and
 /// `build_*_store_one_item_preparation_factory` are one declaration in three places.
 const TEST_APP_COMMAND_PUBLICATION_CONTRACTS: &[ArtifactToolPublicationContract] = &[
-    ArtifactToolPublicationContract { tool_id: "increment", lanes: &[ArtifactToolPublicationLane::Artifact] },
+    ArtifactToolPublicationContract { tool_id: "increment", lanes: &[ArtifactToolPublicationLane::Artifact, ArtifactToolPublicationLane::Presence, ArtifactToolPublicationLane::Transient] },
     ArtifactToolPublicationContract { tool_id: "setLabel", lanes: &[ArtifactToolPublicationLane::Artifact] },
     ArtifactToolPublicationContract { tool_id: "amendLabel", lanes: &[ArtifactToolPublicationLane::Artifact] },
     ArtifactToolPublicationContract { tool_id: "commitLabel", lanes: &[ArtifactToolPublicationLane::Artifact] },
@@ -119,9 +119,18 @@ impl<const RETAINED: bool, const TOOLS: u8> semio_framework_job::InteractiveJob 
             self.page += 1;
             return semio_framework_job::StepOutcome::Yield;
         }
+        cx.set_stage("test-command-ephemeral");
+        cx.consume_fuel(1);
+        let command = self.command.as_deref().expect("exact worker command");
+        let context = self.context.as_ref().expect("exact worker context");
+        let doc = ArtifactView::with_children(self.snapshot.as_deref().unwrap(), self.history.as_deref().unwrap(), ChildContentView::clone(&context.children));
+        let cfg = ConfigView { snapshot: self.config.as_deref().unwrap(), window: context.window_config.as_ref() };
+        let presence = context.presence_view().expect("captured worker presence authority");
+        let transient = TransientView { snapshot: context.transient.as_ref(), window: context.window_transient.as_ref() };
+        let ephemeral = resolve_ready(TestApp::<RETAINED, TOOLS>::ephemeral(command, &doc, &cfg, &presence, &transient));
         let emit = test_app_command_emit(self);
         let completion = self.completion.as_ref().expect("exact test app command completion");
-        completion.complete(emit, EphemeralEmit::default()).expect("one test app command completion");
+        completion.complete(emit, ephemeral).expect("one test app command completion");
         self.command = None;
         semio_framework_job::StepOutcome::Complete(semio_framework_job::CommitCandidate {
             state: semio_framework_job::RetainedJobPayload::empty(semio_framework_job::JobPayloadStream::CommitState),

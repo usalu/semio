@@ -5,6 +5,10 @@ edition = "2021"
 rust-version.workspace = true
 description = "Proc-macros compiling #[dsl(...)]-annotated struct/enum declarations into DocumentDsl/OpText impls"
 
+[package.metadata.semio]
+role = "framework"
+id = "dsl-derive"
+
 [lints]
 workspace = true
 

@@ -5,10 +5,15 @@
   "type": "object",
   "additionalProperties": false,
   "required": [
+    "mutation",
     "index",
     "notes"
   ],
   "properties": {
+    "mutation": {
+      "const": "setSlideNotes",
+      "description": "Aggregate discriminator spliced in by SemioPresentationMutation; absent when the payload stands alone."
+    },
     "index": {
       "type": "integer",
       "minimum": 0
@@ -17,11 +22,13 @@
       "type": "array",
       "items": {
         "$ref": "#/$defs/DocBlock"
+      },
+      "x-semio-ui": {
+        "label": {
+          "en": "Speaker notes",
+          "de": "Notizen"
+        }
       }
-    },
-    "mutation": {
-      "const": "setSlideNotes",
-      "description": "Aggregate discriminator spliced in by SemioPresentationMutation; absent when the payload stands alone."
     }
   },
   "$defs": {

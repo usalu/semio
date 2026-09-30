@@ -1,6 +1,7 @@
 {
   "kind": "set-keyframe-value",
-  "params": {
+  "mutation": {
+    "mutation": "setKeyframeValue",
     "timelineIndex": 0,
     "channelIndex": 0,
     "index": 0,

@@ -5,6 +5,7 @@
   "type": "object",
   "additionalProperties": false,
   "required": [
+    "mutation",
     "id",
     "name",
     "zoneId",
@@ -18,14 +19,65 @@
     "multiplier"
   ],
   "properties": {
+    "mutation": {
+      "const": "createSurface"
+    },
     "id": {
-      "type": "integer"
+      "type": "integer",
+      "minimum": 0,
+      "x-semio-ui": {
+        "widget": "stepper",
+        "role": "value",
+        "label": {
+          "en": "ID",
+          "de": "ID"
+        },
+        "description": {
+          "en": "Id the new surface is created under; later mutations address it by this id.",
+          "de": "ID, unter der das neue Objekt angelegt wird; spätere Mutationen adressieren es darüber."
+        },
+        "step": 1,
+        "precision": 0,
+        "group": "identity",
+        "order": 10
+      }
     },
     "name": {
-      "type": "string"
+      "type": "string",
+      "pattern": "[^\\t\\n\\u000B\\f\\r \\u0085\\u00A0\\u1680\\u2000-\\u200A\\u2028\\u2029\\u202F\\u205F\\u3000]",
+      "x-semio-ui": {
+        "widget": "text",
+        "role": "value",
+        "label": {
+          "en": "Name",
+          "de": "Name"
+        },
+        "group": "identity",
+        "order": 20
+      }
     },
     "zoneId": {
-      "type": "integer"
+      "type": "integer",
+      "minimum": 0,
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Zone",
+          "de": "Zone"
+        },
+        "description": {
+          "en": "Assigned zone, by id.",
+          "de": "Zugeordnete Zone, per ID."
+        },
+        "ref": {
+          "kind": "zone",
+          "domain": "energyModel",
+          "granularity": "zone"
+        },
+        "group": "assignment",
+        "order": 30
+      }
     },
     "class": {
       "enum": [
@@ -37,7 +89,51 @@
         "Interzone",
         "Adiabatic",
         "Ground"
-      ]
+      ],
+      "x-semio-ui": {
+        "widget": "select",
+        "role": "value",
+        "label": {
+          "en": "Surface class",
+          "de": "Bauteilart"
+        },
+        "options": {
+          "ExteriorWall": {
+            "en": "Exterior wall",
+            "de": "Außenwand"
+          },
+          "InteriorWall": {
+            "en": "Interior wall",
+            "de": "Innenwand"
+          },
+          "Roof": {
+            "en": "Roof",
+            "de": "Dach"
+          },
+          "Ceiling": {
+            "en": "Ceiling",
+            "de": "Decke"
+          },
+          "Floor": {
+            "en": "Floor",
+            "de": "Fußboden"
+          },
+          "Interzone": {
+            "en": "Interzone partition",
+            "de": "Zonentrennbauteil"
+          },
+          "Adiabatic": {
+            "en": "Adiabatic",
+            "de": "Adiabates Bauteil"
+          },
+          "Ground": {
+            "en": "Ground contact",
+            "de": "Erdberührtes Bauteil"
+          }
+        },
+        "group": "construction",
+        "order": 40
+      }
     },
     "verticesM": {
       "type": "array",
@@ -48,10 +144,45 @@
         },
         "minItems": 3,
         "maxItems": 3
+      },
+      "minItems": 3,
+      "x-semio-ui": {
+        "role": "value",
+        "label": {
+          "en": "Vertices",
+          "de": "Eckpunkte"
+        },
+        "description": {
+          "en": "Polygon corners in world coordinates, counter-clockwise seen from outside.",
+          "de": "Polygonecken in Weltkoordinaten, von außen gesehen gegen den Uhrzeigersinn."
+        },
+        "unit": "m",
+        "group": "geometry",
+        "order": 50
       }
     },
     "constructionId": {
-      "type": "integer"
+      "type": "integer",
+      "minimum": 0,
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Construction",
+          "de": "Konstruktion"
+        },
+        "description": {
+          "en": "Layered construction of the surface, by id.",
+          "de": "Schichtaufbau der Oberfläche, per ID."
+        },
+        "ref": {
+          "kind": "construction",
+          "domain": "energyModel",
+          "granularity": "construction"
+        },
+        "group": "construction",
+        "order": 60
+      }
     },
     "boundary": {
       "enum": [
@@ -60,22 +191,139 @@
         "OtherSideTemperature",
         "Adiabatic",
         "Interzone"
-      ]
+      ],
+      "x-semio-ui": {
+        "widget": "select",
+        "role": "value",
+        "label": {
+          "en": "Outside boundary condition",
+          "de": "Außenrandbedingung"
+        },
+        "options": {
+          "OutdoorAir": {
+            "en": "Outdoor air",
+            "de": "Außenluft"
+          },
+          "Ground": {
+            "en": "Ground",
+            "de": "Erdreich"
+          },
+          "OtherSideTemperature": {
+            "en": "Other-side temperature",
+            "de": "Temperatur der Gegenseite"
+          },
+          "Adiabatic": {
+            "en": "Adiabatic",
+            "de": "Adiabat"
+          },
+          "Interzone": {
+            "en": "Adjacent zone",
+            "de": "Nachbarzone"
+          }
+        },
+        "group": "boundary",
+        "order": 70
+      }
     },
     "interzoneSurfaceId": {
       "type": [
         "integer",
         "null"
-      ]
+      ],
+      "minimum": 0,
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Interzone partner surface",
+          "de": "Partnerfläche der Nachbarzone"
+        },
+        "description": {
+          "en": "Required for the adjacent-zone boundary, empty for every other one.",
+          "de": "Erforderlich bei der Randbedingung Nachbarzone, sonst leer."
+        },
+        "ref": {
+          "kind": "surface",
+          "domain": "energyModel",
+          "granularity": "surface"
+        },
+        "group": "boundary",
+        "order": 80
+      }
     },
     "sunExposed": {
-      "type": "boolean"
+      "type": "boolean",
+      "x-semio-ui": {
+        "widget": "toggle",
+        "role": "value",
+        "label": {
+          "en": "Sun exposed",
+          "de": "Besonnt"
+        },
+        "group": "boundary",
+        "order": 90
+      }
     },
     "windExposed": {
-      "type": "boolean"
+      "type": "boolean",
+      "x-semio-ui": {
+        "widget": "toggle",
+        "role": "value",
+        "label": {
+          "en": "Wind exposed",
+          "de": "Windexponiert"
+        },
+        "group": "boundary",
+        "order": 100
+      }
     },
     "multiplier": {
-      "type": "integer"
+      "type": "integer",
+      "minimum": 1,
+      "x-semio-ui": {
+        "widget": "stepper",
+        "role": "value",
+        "label": {
+          "en": "Multiplier",
+          "de": "Multiplikator"
+        },
+        "description": {
+          "en": "Number of identical instances this object stands for; at least 1.",
+          "de": "Anzahl gleicher Exemplare, die dieses Objekt vertritt; mindestens 1."
+        },
+        "step": 1,
+        "precision": 0,
+        "group": "geometry",
+        "order": 110
+      }
     }
-  }
+  },
+  "allOf": [
+    {
+      "if": {
+        "type": "object",
+        "properties": {
+          "boundary": {
+            "const": "Interzone"
+          }
+        }
+      },
+      "then": {
+        "type": "object",
+        "properties": {
+          "interzoneSurfaceId": {
+            "type": "integer"
+          }
+        }
+      },
+      "else": {
+        "type": "object",
+        "properties": {
+          "interzoneSurfaceId": {
+            "type": "null"
+          }
+        }
+      }
+    }
+  ]
 }

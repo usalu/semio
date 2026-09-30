@@ -5,49 +5,44 @@
   "type": "object",
   "additionalProperties": false,
   "required": [
-    "connection",
-    "id"
+    "id",
+    "connection"
   ],
   "properties": {
     "id": {
-      "type": "string"
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Geometry",
+          "de": "Geometrie"
+        },
+        "description": {
+          "en": "The parametric geometry this mutation addresses.",
+          "de": "Die parametrische Geometrie, die diese Mutation adressiert."
+        },
+        "ref": {
+          "kind": "geometry"
+        },
+        "group": "target",
+        "order": 10
+      }
     },
     "connection": {
-      "title": "ConnectionPoint",
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "direction",
-        "id",
-        "medium",
-        "position"
-      ],
-      "properties": {
-        "id": {
-          "type": "string"
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/vdi3805/snapshot.json#/$defs/ConnectionPoint",
+      "x-semio-ui": {
+        "role": "value",
+        "label": {
+          "en": "Connection point",
+          "de": "Anschlusspunkt"
         },
-        "medium": {
-          "type": "string"
+        "description": {
+          "en": "Connection point with medium, position, direction and nominal diameter.",
+          "de": "Anschlusspunkt mit Medium, Lage, Richtung und Nennweite."
         },
-        "position": {
-          "type": "array",
-          "items": {
-            "type": "number"
-          },
-          "minItems": 3,
-          "maxItems": 3
-        },
-        "direction": {
-          "type": "array",
-          "items": {
-            "type": "number"
-          },
-          "minItems": 3,
-          "maxItems": 3
-        },
-        "diameterMm": {
-          "type": "number"
-        }
+        "group": "geometry",
+        "order": 20
       }
     }
   }

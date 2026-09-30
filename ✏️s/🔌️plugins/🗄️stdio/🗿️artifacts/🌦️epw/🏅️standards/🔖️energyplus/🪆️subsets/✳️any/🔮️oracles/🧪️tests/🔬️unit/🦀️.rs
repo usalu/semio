@@ -8,15 +8,17 @@ fn spec(kind: &str, params: Json) -> Json {
 }
 
 #[test]
-fn no_mutation_is_a_true_byte_identity() {
-    let output = oracle_apply_mutation(REAL_FIXTURE, &spec("no-mutation", Json::Object(vec![]))).unwrap();
+fn set_snapshot_of_the_fixture_own_snapshot_wire_is_a_true_byte_identity() {
+    let snapshot = epw_snapshot_wire(REAL_FIXTURE).unwrap();
+    assert_eq!(snapshot.array("records")[3].str("dryBulbTemp"), parse_doc(REAL_FIXTURE).unwrap().records[3][6]);
+    let output = oracle_apply_mutation(REAL_FIXTURE, &spec("set-snapshot", json_object(vec![("snapshot", snapshot)]))).unwrap();
     assert_eq!(output, REAL_FIXTURE);
 }
 
 #[test]
 fn insert_and_remove_record_are_inverse_on_the_real_fixture() {
-    let fields: Vec<Json> = vec!["2026", "1", "15", "99", "0"].into_iter().map(|s| Json::String(s.to_string())).chain((0..30).map(|_| Json::String(String::new()))).collect();
-    let inserted = oracle_apply_mutation(REAL_FIXTURE, &spec("insert-record", json_object(vec![("index", Json::Number(1.0)), ("fields", Json::Array(fields))]))).unwrap();
+    let cells: Vec<String> = ["2026", "1", "15", "99", "0"].into_iter().map(str::to_string).chain((0..30).map(|_| String::new())).collect();
+    let inserted = oracle_apply_mutation(REAL_FIXTURE, &spec("insert-record", json_object(vec![("index", Json::Number(1.0)), ("record", record_wire(&cells))]))).unwrap();
     let inserted_doc = parse_doc(&inserted).unwrap();
     assert_eq!(inserted_doc.records.len(), 25, "24 real records + 1 inserted");
     assert_eq!(inserted_doc.records[1][3], "99", "the inserted record's hour column must land at index 1");

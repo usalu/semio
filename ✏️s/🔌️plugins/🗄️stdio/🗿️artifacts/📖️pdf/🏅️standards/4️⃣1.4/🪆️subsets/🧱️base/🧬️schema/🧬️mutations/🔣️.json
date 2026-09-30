@@ -29,22 +29,6 @@
       ],
       "properties": {
         "mutation": {
-          "const": "move-page"
-        },
-        "payload": {
-          "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/pdf/1.4/base/mutation/move-page/schema.json"
-        }
-      }
-    },
-    {
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "mutation",
-        "payload"
-      ],
-      "properties": {
-        "mutation": {
           "const": "remove-page"
         },
         "payload": {
@@ -61,10 +45,10 @@
       ],
       "properties": {
         "mutation": {
-          "const": "replace-page-text"
+          "const": "move-page"
         },
         "payload": {
-          "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/pdf/1.4/base/mutation/replace-page-text/schema.json"
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/pdf/1.4/base/mutation/move-page/schema.json"
         }
       }
     },
@@ -81,6 +65,22 @@
         },
         "payload": {
           "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/pdf/1.4/base/mutation/resize-page/schema.json"
+        }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "mutation",
+        "payload"
+      ],
+      "properties": {
+        "mutation": {
+          "const": "replace-page-text"
+        },
+        "payload": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/pdf/1.4/base/mutation/replace-page-text/schema.json"
         }
       }
     }

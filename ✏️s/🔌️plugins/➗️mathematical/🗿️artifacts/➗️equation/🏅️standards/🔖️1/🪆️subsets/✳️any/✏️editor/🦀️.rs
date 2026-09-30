@@ -1110,6 +1110,7 @@ fn equation_store_edit<M>(forward: M, inverse: Vec<M>, description: Option<Strin
             label: None,
             group_id: None,
             origin: Default::default(),
+            transaction: None,
         }],
         description,
         coalesce_key: None,

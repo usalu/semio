@@ -1,6 +1,6 @@
 {
   "status": "rejected",
-  "code": "mutation.invariant",
+  "code": "mutation.target-missing",
   "path": [
     "30"
   ]

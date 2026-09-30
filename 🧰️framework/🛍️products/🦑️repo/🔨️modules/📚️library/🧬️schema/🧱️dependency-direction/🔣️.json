@@ -1,0 +1,445 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schemaVersion",
+    "cases",
+    "graphCases",
+    "graphScope",
+    "inventoryCases",
+    "resolutionCases"
+  ],
+  "properties": {
+    "schemaVersion": {
+      "const": 1
+    },
+    "cases": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "id",
+          "from",
+          "dependencies",
+          "forbidden"
+        ],
+        "properties": {
+          "id": {
+            "type": "string",
+            "minLength": 1
+          },
+          "from": {
+            "type": "string",
+            "minLength": 1
+          },
+          "comments": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "forbidden": {
+            "type": "array",
+            "uniqueItems": true,
+            "items": {
+              "type": "string"
+            }
+          },
+          "dependencies": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "id",
+                "target",
+                "reference",
+                "syntax"
+              ],
+              "properties": {
+                "id": {
+                  "type": "string",
+                  "minLength": 1
+                },
+                "target": {
+                  "type": "string",
+                  "minLength": 1
+                },
+                "reference": {
+                  "enum": [
+                    "relative",
+                    "package",
+                    "package-subpath",
+                    "unresolved-package"
+                  ]
+                },
+                "syntax": {
+                  "enum": [
+                    "static",
+                    "type",
+                    "dynamic",
+                    "export",
+                    "require"
+                  ]
+                },
+                "package": {
+                  "type": "string",
+                  "minLength": 1
+                }
+              },
+              "allOf": [
+                {
+                  "if": {
+                    "properties": {
+                      "reference": {
+                        "enum": [
+                          "package",
+                          "package-subpath",
+                          "unresolved-package"
+                        ]
+                      }
+                    }
+                  },
+                  "then": {
+                    "properties": {
+                      "package": {
+                        "type": "string"
+                      }
+                    },
+                    "required": [
+                      "package"
+                    ]
+                  }
+                }
+              ]
+            }
+          }
+        }
+      }
+    },
+    "graphCases": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "id",
+          "accept"
+        ],
+        "properties": {
+          "id": {
+            "enum": [
+              "complete-allowed",
+              "complete-forbidden",
+              "missing-modules",
+              "empty-modules",
+              "wrong-module-total",
+              "wrong-dependency-total",
+              "missing-resolved-path",
+              "missing-import-specifier",
+              "unknown-policy",
+              "unreported-forbidden-edge",
+              "phantom-violation",
+              "duplicate-source",
+              "complete-two-rules",
+              "missing-followed-local-source",
+              "missing-disconnected-root",
+              "unresolved-local-source",
+              "fake-nonfollowed-local-source",
+              "terminal-vendor",
+              "terminal-builtin",
+              "terminal-unresolved-package",
+              "terminal-json",
+              "terminal-policy-exclusion",
+              "terminal-policy-nonfollow",
+              "identical-leaf-records",
+              "missing-source-inventory",
+              "terminal-unresolved-relative",
+              "unresolved-workspace-alias",
+              "unresolved-workspace-subpath",
+              "missing-scope-metadata",
+              "invalid-scope-pattern"
+            ]
+          },
+          "accept": {
+            "type": "boolean"
+          }
+        }
+      }
+    },
+    "graphScope": {
+      "$ref": "#/$defs/GraphScope"
+    },
+    "inventoryCases": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "id",
+          "roots",
+          "files",
+          "links",
+          "expectedSources",
+          "accept"
+        ],
+        "properties": {
+          "id": {
+            "type": "string",
+            "minLength": 1
+          },
+          "roots": {
+            "type": "array",
+            "uniqueItems": true,
+            "items": {
+              "type": "string",
+              "minLength": 1
+            }
+          },
+          "files": {
+            "type": "array",
+            "uniqueItems": true,
+            "items": {
+              "type": "string",
+              "minLength": 1
+            }
+          },
+          "expectedSources": {
+            "type": "array",
+            "uniqueItems": true,
+            "items": {
+              "type": "string",
+              "minLength": 1
+            }
+          },
+          "links": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "path",
+                "target"
+              ],
+              "properties": {
+                "path": {
+                  "type": "string",
+                  "minLength": 1
+                },
+                "target": {
+                  "type": "string",
+                  "minLength": 1
+                }
+              }
+            }
+          },
+          "accept": {
+            "type": "boolean"
+          }
+        }
+      }
+    },
+    "resolutionCases": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "id",
+          "specifier",
+          "authored",
+          "accept",
+          "owner",
+          "from",
+          "forbidden"
+        ],
+        "properties": {
+          "id": {
+            "type": "string",
+            "minLength": 1
+          },
+          "specifier": {
+            "type": "string",
+            "minLength": 1
+          },
+          "authored": {
+            "type": "boolean"
+          },
+          "accept": {
+            "type": "boolean"
+          },
+          "owner": {
+            "type": "string"
+          },
+          "from": {
+            "type": "string",
+            "minLength": 1
+          },
+          "forbidden": {
+            "type": "integer",
+            "minimum": 0
+          }
+        }
+      }
+    }
+  },
+  "$defs": {
+    "DependencyDirections": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "roles",
+        "rules"
+      ],
+      "properties": {
+        "roles": {
+          "type": "object",
+          "minProperties": 1,
+          "additionalProperties": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "ownerPaths",
+              "externalPackages"
+            ],
+            "properties": {
+              "ownerPaths": {
+                "type": "array",
+                "uniqueItems": true,
+                "items": {
+                  "type": "string",
+                  "minLength": 1
+                }
+              },
+              "externalPackages": {
+                "type": "array",
+                "uniqueItems": true,
+                "items": {
+                  "type": "string",
+                  "minLength": 1
+                }
+              }
+            }
+          }
+        },
+        "rules": {
+          "type": "object",
+          "minProperties": 1,
+          "additionalProperties": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "fromRoles",
+              "toRoles"
+            ],
+            "properties": {
+              "fromRoles": {
+                "type": "array",
+                "uniqueItems": true,
+                "items": {
+                  "type": "string",
+                  "minLength": 1
+                },
+                "minItems": 1
+              },
+              "toRoles": {
+                "type": "array",
+                "uniqueItems": true,
+                "items": {
+                  "type": "string",
+                  "minLength": 1
+                },
+                "minItems": 1
+              }
+            }
+          }
+        }
+      }
+    },
+    "GraphScope": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "workspaceRoots",
+        "excludedPaths",
+        "nonFollowedPaths",
+        "expectedSources",
+        "workspacePackages"
+      ],
+      "properties": {
+        "workspaceRoots": {
+          "type": "array",
+          "uniqueItems": true,
+          "items": {
+            "type": "string",
+            "minLength": 1
+          },
+          "minItems": 1
+        },
+        "excludedPaths": {
+          "type": "array",
+          "uniqueItems": true,
+          "items": {
+            "type": "string",
+            "minLength": 1
+          }
+        },
+        "nonFollowedPaths": {
+          "type": "array",
+          "uniqueItems": true,
+          "items": {
+            "type": "string",
+            "minLength": 1
+          }
+        },
+        "expectedSources": {
+          "type": "array",
+          "uniqueItems": true,
+          "items": {
+            "type": "string",
+            "minLength": 1
+          },
+          "minItems": 1
+        },
+        "workspacePackages": {
+          "type": "array",
+          "uniqueItems": true,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "name",
+              "owner",
+              "exports"
+            ],
+            "properties": {
+              "name": {
+                "type": "string",
+                "minLength": 1
+              },
+              "owner": {
+                "type": "string",
+                "minLength": 1
+              },
+              "exports": {
+                "type": "array",
+                "minItems": 1,
+                "uniqueItems": true,
+                "items": {
+                  "type": "string",
+                  "pattern": "^\\.(?:/.*)?$"
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}

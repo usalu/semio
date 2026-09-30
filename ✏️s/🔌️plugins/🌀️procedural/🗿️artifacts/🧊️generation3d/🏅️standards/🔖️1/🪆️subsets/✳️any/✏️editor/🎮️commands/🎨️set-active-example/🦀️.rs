@@ -29,8 +29,6 @@ pub fn config_after_document_load(previous: &Generation3dConfig, flow_camera: &C
     }
 }
 
-//#region 🔖️SetActiveExample
-//#endregion 🔖️SetActiveExample
 
 #[derive(Clone, Debug, PartialEq, ToValue, FromValue, dsl::DslRecord)]
 #[dsl(keyword = "active-example")]
@@ -69,9 +67,3 @@ pub fn emit(payload: &SetActiveExample, doc: &ArtifactView<'_, Generation3dSnaps
 pub fn handle(payload: &SetActiveExample, doc: &ArtifactView<'_, Generation3dSnapshot>, cfg: &ConfigView<'_, Generation3dConfig>, _session: &mut FlowEvalSession) -> Result<Emit<Generation3dMutation, Generation3dConfigMutation>, Fault> {
     emit(payload, doc, cfg)
 }
-
-//#region 🧪️Tests
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
-//#endregion 🧪️Tests

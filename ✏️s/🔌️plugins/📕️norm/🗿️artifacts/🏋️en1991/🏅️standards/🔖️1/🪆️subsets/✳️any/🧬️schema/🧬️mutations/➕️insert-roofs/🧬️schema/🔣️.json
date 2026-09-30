@@ -10,10 +10,40 @@
   ],
   "properties": {
     "index": {
-      "type": "integer"
+      "type": "integer",
+      "minimum": 0,
+      "x-semio-ui": {
+        "widget": "stepper",
+        "role": "value",
+        "label": {
+          "en": "Position",
+          "de": "Position"
+        },
+        "description": {
+          "en": "Zero-based list position at which the record is inserted.",
+          "de": "Nullbasierte Listenposition, an der der Datensatz eingefügt wird."
+        },
+        "step": 1,
+        "precision": 0,
+        "group": "target",
+        "order": 10
+      }
     },
     "item": {
-      "type": "object"
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1991/snapshot.json#/$defs/RoofArea",
+      "x-semio-ui": {
+        "role": "value",
+        "label": {
+          "en": "Roof",
+          "de": "Dach"
+        },
+        "description": {
+          "en": "Roof with its shape and snow coefficients (EN 1991-1-3) to insert.",
+          "de": "Einzufügendes Dach mit Dachform und Schneelastbeiwerten (EN 1991-1-3)."
+        },
+        "group": "record",
+        "order": 20
+      }
     }
   }
 }

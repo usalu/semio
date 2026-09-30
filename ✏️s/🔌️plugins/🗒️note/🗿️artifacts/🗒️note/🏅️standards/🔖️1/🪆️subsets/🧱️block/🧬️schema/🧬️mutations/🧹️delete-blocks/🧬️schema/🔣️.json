@@ -5,13 +5,36 @@
   "type": "object",
   "additionalProperties": false,
   "required": [
+    "mutation",
     "ids"
   ],
   "properties": {
+    "mutation": {
+      "const": "deleteBlocks"
+    },
     "ids": {
       "type": "array",
       "items": {
         "type": "string"
+      },
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Blocks",
+          "de": "Blöcke"
+        },
+        "description": {
+          "en": "Blocks to delete.",
+          "de": "Zu löschende Blöcke."
+        },
+        "ref": {
+          "kind": "block",
+          "domain": "blocks",
+          "granularity": "block"
+        },
+        "group": "target",
+        "order": 10
       }
     }
   }

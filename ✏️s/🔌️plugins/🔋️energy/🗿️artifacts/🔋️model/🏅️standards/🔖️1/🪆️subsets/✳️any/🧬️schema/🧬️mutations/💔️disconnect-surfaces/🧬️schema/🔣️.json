@@ -5,15 +5,59 @@
   "type": "object",
   "additionalProperties": false,
   "required": [
+    "mutation",
     "surfaceAId",
     "surfaceBId"
   ],
   "properties": {
+    "mutation": {
+      "const": "disconnectSurfaces"
+    },
     "surfaceAId": {
-      "type": "integer"
+      "type": "integer",
+      "minimum": 0,
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Surface A",
+          "de": "Oberfläche A"
+        },
+        "description": {
+          "en": "First surface of the adjacency pair, by id.",
+          "de": "Erste Oberfläche des Nachbarschaftspaars, per ID."
+        },
+        "ref": {
+          "kind": "surface",
+          "domain": "energyModel",
+          "granularity": "surface"
+        },
+        "group": "assignment",
+        "order": 10
+      }
     },
     "surfaceBId": {
-      "type": "integer"
+      "type": "integer",
+      "minimum": 0,
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Surface B",
+          "de": "Oberfläche B"
+        },
+        "description": {
+          "en": "Second surface of the adjacency pair, by id.",
+          "de": "Zweite Oberfläche des Nachbarschaftspaars, per ID."
+        },
+        "ref": {
+          "kind": "surface",
+          "domain": "energyModel",
+          "granularity": "surface"
+        },
+        "group": "assignment",
+        "order": 20
+      }
     }
   }
 }

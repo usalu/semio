@@ -5,15 +5,44 @@
   "type": "object",
   "additionalProperties": false,
   "required": [
+    "mutation",
     "caseId",
     "newName"
   ],
   "properties": {
+    "mutation": {
+      "const": "changeLoadCaseName"
+    },
     "caseId": {
-      "type": "string"
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Load case",
+          "de": "Lastfall"
+        },
+        "ref": {
+          "kind": "loadCase",
+          "domain": "fem3d",
+          "granularity": "loadCase"
+        },
+        "group": "target",
+        "order": 10
+      }
     },
     "newName": {
-      "type": "string"
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "text",
+        "role": "value",
+        "label": {
+          "en": "Name",
+          "de": "Bezeichnung"
+        },
+        "group": "identity",
+        "order": 20
+      }
     }
   }
 }

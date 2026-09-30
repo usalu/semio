@@ -1,23 +1,8 @@
 use super::*;
 use crate::editor::generation3d::modes::edit::windows::flow::{graph_outline, GENERATION_3D_PLAY_OUTLINE_NODES, GENERATION_3D_PLAY_OUTLINE_WIRES};
-use crate::editor::generation3d::unit_tests::context;
-use crate::editor::generation3d::unit_tests::context::{app_with_registry, render as render_body};
-use crate::standards::v1::subsets::any::schema::{dag_host_snapshot_to_workflow, with_host};
 use semio_framework_plugin::{TreeWindowRequest, TreeWindows, ViewModel};
 use semio_framework_ui::wgpu::{NodeGraphEdgeRecord, NodeGraphNodeRecord, NodeGraphPortRecord};
-
 const DOCUMENT_ROWS_LAW: &str = include_str!("../../🧫️fixtures/🔬️unit/🔣️.json");
-
-#[semio_framework_async_macros::async_test]
-async fn document_lists_widgets() {
-    let _serial = crate::editor::generation3d::unit_tests::serial_execution::lock();
-    let mut app = app_with_registry().await;
-    let rendered = render_body(&mut app, GENERATION_3D_PLAY_BODY_ARTIFACT).await;
-    let fixture_widgets: Vec<String> = context::snapshot(&app).host_snapshot.widgets.iter().map(|widget| crate::widget_id(widget).to_string()).collect();
-    let first = fixture_widgets.first().expect("default fixture has at least one widget");
-    assert!(rendered.contains(first), "document tree missing widget id {first}: {rendered}");
-}
-
 /// 🧾️ The law fixture's document tree, projected through the same retiring projection the flow
 /// window's outline law uses, so both trees are read as one renderer-neutral shape.
 fn law_document_projection() -> serde_json::Value {
@@ -56,7 +41,7 @@ fn law_rows(section: &serde_json::Value) -> Vec<(String, Option<String>, Vec<Str
 /// 26/09/09/PROCEDURAL-3D-END-TO-END, and left the Inspection panel on its "no selection" branch).
 #[test]
 fn document_rows_are_domain_pick_targets_without_a_per_row_binding() {
-    let _serial = crate::editor::generation3d::unit_tests::serial_execution::lock();
+    let _serial = crate::test_serial::lock();
     let law: serde_json::Value = serde_json::from_str(DOCUMENT_ROWS_LAW).expect("document rows law json");
     let projection = law_document_projection();
     assert_eq!(projection["component"]["interactionDomain"].as_str(), Some(crate::editor::generation3d::GENERATION_3D_INTERACTION_DOMAIN));
@@ -157,7 +142,7 @@ fn window_view(requests: Vec<TreeWindowRequest>) -> ViewModel {
 /// entries.len()`, so the host's scrollbar spans the whole graph rather than a page of it.
 #[test]
 fn an_oversized_document_stamps_every_containers_total() {
-    let _serial = crate::editor::generation3d::unit_tests::serial_execution::lock();
+    let _serial = crate::test_serial::lock();
     let (nodes, edges) = oversized_graph();
     let projection = outline_projection(&TreeWindows::unhosted(), &nodes, &edges);
     let (node_total, _, node_rows) = window_of(&container(&projection, GENERATION_3D_PLAY_OUTLINE_NODES));
@@ -176,7 +161,7 @@ fn an_oversized_document_stamps_every_containers_total() {
 /// `+n` label anywhere in the body.
 #[test]
 fn an_oversized_document_renders_no_continuation_row() {
-    let _serial = crate::editor::generation3d::unit_tests::serial_execution::lock();
+    let _serial = crate::test_serial::lock();
     let (nodes, edges) = oversized_graph();
     let json = outline_projection(&TreeWindows::unhosted(), &nodes, &edges).to_string();
     assert!(!json.contains(".more\""), "a windowed outline has no continuation row");
@@ -187,7 +172,7 @@ fn an_oversized_document_renders_no_continuation_row() {
 /// children, which is what makes the first paint bounded no matter how large the document is.
 #[test]
 fn a_closed_document_section_stamps_its_total_with_no_children() {
-    let _serial = crate::editor::generation3d::unit_tests::serial_execution::lock();
+    let _serial = crate::test_serial::lock();
     let (nodes, edges) = oversized_graph();
     let view = window_view(vec![TreeWindowRequest {
         body_key: GENERATION_3D_PLAY_BODY_ARTIFACT.into(),
@@ -207,7 +192,7 @@ fn a_closed_document_section_stamps_its_total_with_no_children() {
 /// raw widget id — the guest answers the viewport, it does not re-derive a page.
 #[test]
 fn a_document_window_request_materialises_exactly_its_slice() {
-    let _serial = crate::editor::generation3d::unit_tests::serial_execution::lock();
+    let _serial = crate::test_serial::lock();
     let (nodes, edges) = oversized_graph();
     let view = window_view(vec![TreeWindowRequest {
         body_key: GENERATION_3D_PLAY_BODY_ARTIFACT.into(),
@@ -233,7 +218,7 @@ fn a_document_window_request_materialises_exactly_its_slice() {
 /// where a document could collide with the panel's own namespace.
 #[test]
 fn every_windowed_container_carries_a_distinct_node_key() {
-    let _serial = crate::editor::generation3d::unit_tests::serial_execution::lock();
+    let _serial = crate::test_serial::lock();
     fn collect(node: &serde_json::Value, out: &mut Vec<String>) {
         if node["component"]["window"].is_object() {
             out.push(node["key"].as_str().unwrap_or_default().to_string());

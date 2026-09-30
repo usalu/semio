@@ -4,9 +4,37 @@
   "title": "ChangeGridSubdivisions",
   "type": "object",
   "additionalProperties": false,
+  "required": [
+    "mutation"
+  ],
   "properties": {
+    "mutation": {
+      "const": "changeGridSubdivisions"
+    },
     "newSubdivisions": {
-      "type": "number"
+      "type": [
+        "number",
+        "null"
+      ],
+      "minimum": 1,
+      "x-semio-ui": {
+        "widget": "stepper",
+        "role": "value",
+        "label": {
+          "en": "Grid subdivisions",
+          "de": "Rasterunterteilungen"
+        },
+        "description": {
+          "en": "Minor lines between two major grid lines.",
+          "de": "Nebenlinien zwischen zwei Hauptrasterlinien."
+        },
+        "step": 1,
+        "precision": 0,
+        "softMin": 1,
+        "softMax": 16,
+        "group": "grid",
+        "order": 10
+      }
     }
   }
 }

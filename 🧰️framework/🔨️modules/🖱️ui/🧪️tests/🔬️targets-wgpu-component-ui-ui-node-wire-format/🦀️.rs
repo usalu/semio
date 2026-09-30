@@ -32,6 +32,8 @@ mod ui_node_wire_format_tests {
                     max: None,
                     step: None,
                     accept: None,
+                    precision: None,
+                    snaps: Vec::new(),
                     on_change: act("setValue"),
                     on_submit: None,
                     on_abort: None,
@@ -57,8 +59,8 @@ mod ui_node_wire_format_tests {
                     children: vec![UiNode::Text(UiTextNode { menu: None, value: Label::data("child"), emphasize: None, data_attributes: None, presence: UiPresence::default() })],
                 }),
                 UiNode::KeyValue(UiKeyValueNode { menu: None, entries: vec![UiKeyValueEntry { label: Label::data("K"), value: "V".into() }], presence: UiPresence::default() }),
-                UiNode::Slider(UiSliderNode { menu: None, id: "sl1".into(), value: 0.5, min: 0.0, max: 1.0, step: 0.1, unit: Some("%".into()), on_change: act("sliderChange"), presence: UiPresence::default() }),
-                UiNode::NumberStepper(UiNumberStepperNode { menu: None, id: "num1".into(), value: 2.0, step: 1.0, uniform: true, min: None, max: None, on_absolute: act("setAbs"), on_delta: act("setDelta"), presence: UiPresence::default() }),
+                UiNode::Slider(UiSliderNode { menu: None, id: "sl1".into(), value: 0.5, min: 0.0, max: 1.0, step: 0.1, unit: Some("%".into()), snaps: Vec::new(), on_change: act("sliderChange"), presence: UiPresence::default() }),
+                UiNode::NumberStepper(UiNumberStepperNode { menu: None, id: "num1".into(), value: 2.0, step: 1.0, uniform: true, min: None, max: None, precision: None, on_absolute: act("setAbs"), on_delta: act("setDelta"), presence: UiPresence::default() }),
                 UiNode::Ring(UiRingNode { menu: None, id: "ring1".into(), orb_id: "orb1".into(), t: 0.25, presence: UiPresence::default(), on_change: act("ringChange") }),
                 UiNode::IconSelect(UiIconSelectNode { menu: None, id: "icn1".into(), value: "star".into(), uniform: true, classifier_kind: "icon".into(), on_change: act("iconChange"), presence: UiPresence::default() }),
                 UiNode::Field(UiFieldNode {
@@ -244,6 +246,8 @@ mod ui_node_wire_format_tests {
                 max: None,
                 step: None,
                 accept: None,
+                precision: None,
+                snaps: Vec::new(),
                 on_change: act("a"),
                 on_submit: None,
                 on_abort: None,
@@ -258,9 +262,9 @@ mod ui_node_wire_format_tests {
             "Toggle",
         );
         assert_presence_serializes(UiNode::KeyValue(UiKeyValueNode { menu: None, entries: vec![], presence: UiPresence::default() }), "KeyValue");
-        assert_presence_serializes(UiNode::Slider(UiSliderNode { menu: None, id: "i".into(), value: 0.0, min: 0.0, max: 1.0, step: 0.1, unit: None, on_change: act("a"), presence: UiPresence::default() }), "Slider");
+        assert_presence_serializes(UiNode::Slider(UiSliderNode { menu: None, id: "i".into(), value: 0.0, min: 0.0, max: 1.0, step: 0.1, unit: None, snaps: Vec::new(), on_change: act("a"), presence: UiPresence::default() }), "Slider");
         assert_presence_serializes(
-            UiNode::NumberStepper(UiNumberStepperNode { menu: None, id: "i".into(), value: 0.0, step: 1.0, uniform: true, min: None, max: None, on_absolute: act("a"), on_delta: act("a"), presence: UiPresence::default() }),
+            UiNode::NumberStepper(UiNumberStepperNode { menu: None, id: "i".into(), value: 0.0, step: 1.0, uniform: true, min: None, max: None, precision: None, on_absolute: act("a"), on_delta: act("a"), presence: UiPresence::default() }),
             "NumberStepper",
         );
         assert_presence_serializes(UiNode::Ring(UiRingNode { menu: None, id: "i".into(), orb_id: "o".into(), t: 0.0, on_change: act("a"), presence: UiPresence::default() }), "Ring");

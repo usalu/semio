@@ -1,6 +1,6 @@
 {
-  "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "s.norm.en1993.diff",
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/norm/en1993/diff.json",
   "title": "En1993Diff",
   "type": "object",
   "additionalProperties": false,

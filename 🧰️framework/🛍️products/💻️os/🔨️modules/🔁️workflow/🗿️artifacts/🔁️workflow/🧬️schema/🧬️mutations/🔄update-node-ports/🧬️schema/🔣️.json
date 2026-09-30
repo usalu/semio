@@ -3,7 +3,13 @@
   "$id": "https://json.schemas.assets.semio-tech.com/os/workflow/artifacts/workflow/mutation/update-node-ports/schema.json",
   "title": "UpdateNodePorts",
   "type": "object",
-  "properties": {},
-  "required": [],
+  "properties": {
+    "operation": {
+      "const": "updateNodePorts"
+    }
+  },
+  "required": [
+    "operation"
+  ],
   "additionalProperties": false
 }

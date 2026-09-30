@@ -13,11 +13,11 @@ use crate::standards::v1::subsets::video::schema::diff::SemioVideoDiff;
 use crate::standards::v1::subsets::video::schema::mutations::{apply_semio_video_mutation, SemioVideoMutation};
 use crate::standards::v1::subsets::video::schema::snapshot::{SemioRational, SemioVideoSnapshot};
 
-const BEFORE: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/📸️set-snapshot/⏱️retimes-the-track-and-promotes-a-sample-to-a-keyframe/📸️snapshot/⬅️before/🔣️.json");
-const AFTER: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/📸️set-snapshot/⏱️retimes-the-track-and-promotes-a-sample-to-a-keyframe/📸️snapshot/➡️after/🔣️.json");
-const MUTATION: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/📸️set-snapshot/⏱️retimes-the-track-and-promotes-a-sample-to-a-keyframe/🦠️mutation/🔣️.json");
-const DIFF: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/📸️set-snapshot/⏱️retimes-the-track-and-promotes-a-sample-to-a-keyframe/🔺️diff/🔣️.json");
-const OUTCOME: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/📸️set-snapshot/⏱️retimes-the-track-and-promotes-a-sample-to-a-keyframe/🎯️outcome/🔣️.json");
+const BEFORE: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/📸️set-snapshot/⏱️retimes-track-promotes-sample-keyframe/📸️snapshot/⬅️before/🔣️.json");
+const AFTER: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/📸️set-snapshot/⏱️retimes-track-promotes-sample-keyframe/📸️snapshot/➡️after/🔣️.json");
+const MUTATION: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/📸️set-snapshot/⏱️retimes-track-promotes-sample-keyframe/🦠️mutation/🔣️.json");
+const DIFF: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/📸️set-snapshot/⏱️retimes-track-promotes-sample-keyframe/🔺️diff/🔣️.json");
+const OUTCOME: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/📸️set-snapshot/⏱️retimes-track-promotes-sample-keyframe/🎯️outcome/🔣️.json");
 
 fn before() -> SemioVideoSnapshot {
     dsl::json::from_json_str(BEFORE).expect("before video snapshot decodes")

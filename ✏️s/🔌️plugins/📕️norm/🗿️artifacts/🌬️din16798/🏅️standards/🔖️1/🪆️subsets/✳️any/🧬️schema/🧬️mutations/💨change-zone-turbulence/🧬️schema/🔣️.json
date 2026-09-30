@@ -10,10 +10,42 @@
   ],
   "properties": {
     "zoneId": {
-      "type": "string"
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Zone",
+          "de": "Zone"
+        },
+        "description": {
+          "en": "The ventilation zone this mutation addresses.",
+          "de": "Die Lüftungszone, die diese Mutation adressiert."
+        },
+        "ref": {
+          "kind": "zone"
+        },
+        "group": "target",
+        "order": 10
+      }
     },
     "newTurbulenceIntensityPercent": {
-      "type": "number"
+      "type": "number",
+      "minimum": 0,
+      "maximum": 100,
+      "x-semio-ui": {
+        "widget": "slider",
+        "role": "value",
+        "label": {
+          "en": "Turbulence intensity Tu",
+          "de": "Turbulenzgrad Tu"
+        },
+        "unit": "%",
+        "step": 1,
+        "precision": 0,
+        "group": "comfort",
+        "order": 20
+      }
     }
   }
 }

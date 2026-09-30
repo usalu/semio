@@ -112,7 +112,7 @@ fn default_rc_frame_width() -> u8 {
 //#region 🔖️StreamFormat
 /// 🎨️ `strf`, discriminated by the owning stream's `fccType`.
 #[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
-#[value(tag = "format", rename_all = "camelCase")]
+#[value(tag = "format", rename_all = "camelCase", rename_all_fields = "camelCase")]
 pub enum AviStreamFormat {
     /// 🖼️ `BITMAPINFOHEADER` (40 bytes; `vids`). <https://learn.microsoft.com/🪟️windows/win32/api/wingdi/ns-wingdi-bitmapinfoheader>
     BitmapInfo { size: u32, width: i32, height: i32, planes: u16, bit_count: u16, compression: String, size_image: u32, x_pels_per_meter: i32, y_pels_per_meter: i32, colors_used: u32, colors_important: u32 },

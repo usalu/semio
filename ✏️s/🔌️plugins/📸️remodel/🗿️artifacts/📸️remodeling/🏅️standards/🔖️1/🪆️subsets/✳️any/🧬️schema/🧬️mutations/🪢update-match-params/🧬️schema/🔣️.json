@@ -5,9 +5,13 @@
   "type": "object",
   "additionalProperties": false,
   "required": [
+    "mutation",
     "params"
   ],
   "properties": {
+    "mutation": {
+      "const": "updateMatchParams"
+    },
     "params": {
       "type": "object",
       "title": "MatchParams",
@@ -27,28 +31,125 @@
           "enum": [
             "brute-force",
             "kd-tree"
-          ]
+          ],
+          "x-semio-ui": {
+            "widget": "segmented",
+            "role": "value",
+            "label": {
+              "en": "Matcher",
+              "de": "Zuordnungsverfahren"
+            },
+            "options": {
+              "brute-force": {
+                "en": "Brute Force",
+                "de": "Brute Force"
+              },
+              "kd-tree": {
+                "en": "KD-Tree",
+                "de": "KD-Baum"
+              }
+            },
+            "group": "parameters",
+            "order": 10
+          }
         },
         "ratioTest": {
           "type": "number",
-          "format": "float"
+          "format": "float",
+          "exclusiveMinimum": 0,
+          "maximum": 1,
+          "x-semio-ui": {
+            "widget": "slider",
+            "role": "value",
+            "label": {
+              "en": "Ratio Test",
+              "de": "Verhältnistest"
+            },
+            "description": {
+              "en": "Lowe's ratio: keeps a match only when it clearly beats the second best.",
+              "de": "Lowe-Verhältnis: behält eine Zuordnung nur, wenn sie die zweitbeste deutlich übertrifft."
+            },
+            "step": 0.01,
+            "precision": 2,
+            "softMin": 0.1,
+            "softMax": 1,
+            "group": "parameters",
+            "order": 20
+          }
         },
         "crossCheck": {
-          "type": "boolean"
+          "type": "boolean",
+          "x-semio-ui": {
+            "widget": "toggle",
+            "role": "value",
+            "label": {
+              "en": "Cross Check",
+              "de": "Kreuzprüfung"
+            },
+            "group": "parameters",
+            "order": 30
+          }
         },
         "sequentialWindow": {
           "type": "integer",
           "format": "uint32",
-          "minimum": 0
+          "minimum": 0,
+          "x-semio-ui": {
+            "widget": "stepper",
+            "role": "value",
+            "label": {
+              "en": "Sequential Window",
+              "de": "Sequenzielles Fenster"
+            },
+            "description": {
+              "en": "Neighbouring frames each frame is matched against.",
+              "de": "Anzahl benachbarter Bilder, mit denen jedes Bild abgeglichen wird."
+            },
+            "step": 1,
+            "precision": 0,
+            "group": "parameters",
+            "order": 40
+          }
         },
         "maxPairsPerFrame": {
           "type": "integer",
           "format": "uint32",
-          "minimum": 0
+          "minimum": 0,
+          "x-semio-ui": {
+            "widget": "stepper",
+            "role": "value",
+            "label": {
+              "en": "Max. Pairs per Frame",
+              "de": "Max. Paare pro Bild"
+            },
+            "step": 1,
+            "precision": 0,
+            "group": "parameters",
+            "order": 50
+          }
         },
         "loopClosure": {
-          "type": "boolean"
+          "type": "boolean",
+          "x-semio-ui": {
+            "widget": "toggle",
+            "role": "value",
+            "label": {
+              "en": "Loop Closure",
+              "de": "Schleifenschluss"
+            },
+            "group": "parameters",
+            "order": 60
+          }
         }
+      },
+      "x-semio-ui": {
+        "role": "value",
+        "label": {
+          "en": "Feature Matching Parameters",
+          "de": "Parameter der Merkmalszuordnung"
+        },
+        "group": "parameters",
+        "order": 10
       }
     }
   }

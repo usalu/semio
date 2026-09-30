@@ -1,21 +1,34 @@
 {
-  "id": "s.stdio.gltf.mutation.reorder-images.v1",
-  "version": 1,
-  "touchedPaths": [
-    "document/images/1",
-    "document/images/0"
-  ],
-  "payload": {
-    "order": [
-      1,
-      0
+  "textures": {
+    "modified": [
+      {
+        "index": 0,
+        "diff": {
+          "source": 1
+        }
+      },
+      {
+        "index": 1,
+        "diff": {
+          "source": 0
+        }
+      }
     ]
   },
-  "operation": {
-    "kind": "reorder",
-    "order": [
-      1,
-      0
+  "images": {
+    "modified": [
+      {
+        "index": 0,
+        "diff": {
+          "uri": "normal.png"
+        }
+      },
+      {
+        "index": 1,
+        "diff": {
+          "uri": "albedo.png"
+        }
+      }
     ]
   }
 }

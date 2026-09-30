@@ -5129,9 +5129,11 @@ impl FlowActionState for FlowAction2599 {
             FlowProgramPhase::Domain => {
                 let result: Result<Vec<u8>, FlowFailure> = flow_result! {
                     {
-                        let value = match crate::tessellate_geometry(text(args, "handle")?, number(args, "tolerance")?) {
-                            Ok(mesh) => crate::os_pack::json::to_json_string(&mesh),
-                            Err(error) => json!({ "error": error }).to_string(),
+                        let value = match domain.host.geometry_port().map_err(domain_error)?.tessellate_step(text(args, "handle")?, number(args, "tolerance")?, 24) {
+                            crate::geometry::GeometryStep::Ready(mesh) => crate::os_pack::json::to_json_string(&mesh),
+                            crate::geometry::GeometryStep::Working { units_done, units_total, phase } => json!({ "done": false, "unitsDone": units_done, "unitsTotal": units_total, "phase": phase }).to_string(),
+                            crate::geometry::GeometryStep::Cancelled => json!({ "error": "cancelled" }).to_string(),
+                            crate::geometry::GeometryStep::Failed(error) => json!({ "error": error }).to_string(),
                         };
                         Ok(value.into_bytes())
                     }
@@ -5376,7 +5378,7 @@ impl FlowActionState for FlowAction2607 {
             FlowProgramPhase::Domain => {
                 let result: Result<Vec<u8>, FlowFailure> = flow_result! {
                     {
-                        crate::dispose_geometry(text(args, "handle")?);
+                        domain.host.geometry_port().map_err(domain_error)?.dispose(text(args, "handle")?).map_err(domain_error)?;
                         dispose_drawing(text(args, "handle")?);
                         ok()
                     }

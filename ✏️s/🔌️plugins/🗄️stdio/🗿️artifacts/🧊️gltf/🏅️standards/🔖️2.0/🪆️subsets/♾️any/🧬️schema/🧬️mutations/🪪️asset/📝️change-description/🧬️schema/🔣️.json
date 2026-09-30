@@ -4,6 +4,11 @@
   "title": "GltfChangeAssetDescriptiveMetadataPayload",
   "type": "object",
   "additionalProperties": false,
+  "required": [
+    "generator",
+    "copyright",
+    "minVersion"
+  ],
   "properties": {
     "generator": {
       "anyOf": [
@@ -13,7 +18,20 @@
         {
           "type": "null"
         }
-      ]
+      ],
+      "x-semio-ui": {
+        "widget": "text",
+        "label": {
+          "en": "Generator",
+          "de": "Generator"
+        },
+        "description": {
+          "en": "Tool that produced the asset.",
+          "de": "Werkzeug, das das Asset erzeugt hat."
+        },
+        "group": "value",
+        "order": 10
+      }
     },
     "copyright": {
       "anyOf": [
@@ -23,7 +41,16 @@
         {
           "type": "null"
         }
-      ]
+      ],
+      "x-semio-ui": {
+        "widget": "text",
+        "label": {
+          "en": "Copyright",
+          "de": "Urheberrechtsvermerk"
+        },
+        "group": "value",
+        "order": 20
+      }
     },
     "minVersion": {
       "anyOf": [
@@ -33,19 +60,59 @@
         {
           "type": "null"
         }
-      ]
+      ],
+      "x-semio-ui": {
+        "widget": "text",
+        "label": {
+          "en": "Minimum version",
+          "de": "Mindestversion"
+        },
+        "description": {
+          "en": "Minimum glTF version a loader must support.",
+          "de": "glTF-Mindestversion, die ein Lader unterstützen muss."
+        },
+        "group": "value",
+        "order": 30
+      }
     }
   },
-  "x-semio": {
-    "id": "s.stdio.gltf.mutation.change-asset-descriptive-metadata.v1",
-    "version": 1,
-    "phase": "mutation",
-    "touchedPaths": [
-      "document/asset/generator",
-      "document/asset/copyright",
-      "document/asset/minVersion"
-    ],
-    "referencePolicy": "none"
-  },
-  "x-semio-mutation": "change-asset-descriptive-metadata"
+  "$defs": {
+    "ChangeAssetDescriptiveMetadataMutation": {
+      "description": "The whole wire of ChangeAssetDescriptiveMetadataMutation: the editable apply payload (this document's root) or the inert restore.",
+      "oneOf": [
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "phase",
+            "value"
+          ],
+          "properties": {
+            "phase": {
+              "const": "apply"
+            },
+            "value": {
+              "$ref": "#"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "phase",
+            "value"
+          ],
+          "properties": {
+            "phase": {
+              "const": "restore"
+            },
+            "value": {
+              "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/gltf/2.0/any/diff.json"
+            }
+          }
+        }
+      ]
+    }
+  }
 }

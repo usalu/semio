@@ -98,7 +98,7 @@ async fn descriptor_round_trips_through_document() {
 async fn gis_map_document_vcs_replays_operations() {
     let mut store = GisMapStore::new(create_document_envelope(GIS_MAP_SCHEMA, "gis", empty_gis_map_snapshot(), None)).await.expect("map store");
     store.install_document_store_owners_exact(crate::spr::gis_map_document_store_owners());
-    store.dispatch(ArtifactCommand::Apply { mutations: vec![GisMapMutation::CreatePosition(create_position::CreatePosition { index: 0, item: feature("p1") })], description: None }).await.expect("apply");
+    store.dispatch(ArtifactCommand::Apply { mutations: vec![GisMapMutation::CreatePosition(create_position::CreatePosition { index: 0, item: feature("p1") })], description: None, transaction: None }).await.expect("apply");
     assert_eq!(store.snapshot().expect("snapshot").positions.len(), 1);
     use semio_framework_plugin::ArtifactOwnedDisposer;
     let mut disposer = semio_framework_plugin::ArtifactDocumentStoreDisposer::<GisMapSnapshot, GisMapMutation>::new();

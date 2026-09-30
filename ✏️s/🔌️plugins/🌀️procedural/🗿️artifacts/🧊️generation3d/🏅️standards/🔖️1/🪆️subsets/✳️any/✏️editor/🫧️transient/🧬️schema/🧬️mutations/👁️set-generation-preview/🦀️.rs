@@ -5,6 +5,7 @@ use super::{Generation3dTransient, Generation3dTransientMutation};
 #[derive(Clone, Debug, PartialEq, dsl::ToValue, dsl::FromValue, dsl::DslRecord, dsl::MutationLeaf)]
 #[dsl(keyword = "set-generation-preview")]
 #[mutation_leaf(contract = ::protocol)]
+#[value(rename_all = "camelCase")]
 pub struct SetGenerationPreview {
     pub preview_text: Option<String>,
 }

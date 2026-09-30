@@ -5,12 +5,31 @@
   "type": "object",
   "additionalProperties": false,
   "required": [
+    "mutation",
     "id",
     "newElement"
   ],
   "properties": {
+    "mutation": {
+      "const": "replaceElement"
+    },
     "id": {
-      "type": "string"
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Element",
+          "de": "Element"
+        },
+        "ref": {
+          "kind": "element",
+          "domain": "fem3d",
+          "granularity": "element"
+        },
+        "group": "target",
+        "order": 10
+      }
     },
     "newElement": {
       "title": "FemElement",
@@ -28,22 +47,110 @@
           ],
           "properties": {
             "kind": {
-              "const": "bar"
+              "const": "bar",
+              "x-semio-ui": {
+                "widget": "hidden",
+                "role": "discriminator",
+                "label": {
+                  "en": "Element type",
+                  "de": "Elementtyp"
+                }
+              }
             },
             "id": {
-              "type": "string"
+              "type": "string",
+              "x-semio-ui": {
+                "widget": "text",
+                "role": "value",
+                "label": {
+                  "en": "ID",
+                  "de": "ID"
+                },
+                "description": {
+                  "en": "Unique id of the record.",
+                  "de": "Eindeutige ID des Eintrags."
+                },
+                "group": "identity",
+                "order": 20
+              }
             },
             "start": {
-              "type": "string"
+              "type": "string",
+              "x-semio-ui": {
+                "widget": "reference",
+                "role": "target",
+                "label": {
+                  "en": "Start node",
+                  "de": "Anfangsknoten"
+                },
+                "ref": {
+                  "kind": "node",
+                  "domain": "fem3d",
+                  "granularity": "node"
+                },
+                "group": "target",
+                "order": 30
+              }
             },
             "end": {
-              "type": "string"
+              "type": "string",
+              "x-semio-ui": {
+                "widget": "reference",
+                "role": "target",
+                "label": {
+                  "en": "End node",
+                  "de": "Endknoten"
+                },
+                "ref": {
+                  "kind": "node",
+                  "domain": "fem3d",
+                  "granularity": "node"
+                },
+                "group": "target",
+                "order": 40
+              }
             },
             "materialId": {
-              "type": "string"
+              "type": "string",
+              "x-semio-ui": {
+                "widget": "reference",
+                "role": "target",
+                "label": {
+                  "en": "Material",
+                  "de": "Material"
+                },
+                "ref": {
+                  "kind": "material",
+                  "domain": "fem3d",
+                  "granularity": "material"
+                },
+                "group": "target",
+                "order": 50
+              }
             },
             "sectionId": {
-              "type": "string"
+              "type": "string",
+              "x-semio-ui": {
+                "widget": "reference",
+                "role": "target",
+                "label": {
+                  "en": "Cross-section",
+                  "de": "Querschnitt"
+                },
+                "ref": {
+                  "kind": "section",
+                  "domain": "fem3d",
+                  "granularity": "section"
+                },
+                "group": "target",
+                "order": 60
+              }
+            }
+          },
+          "x-semio-ui": {
+            "label": {
+              "en": "Bar (axial only)",
+              "de": "Fachwerkstab"
             }
           }
         },
@@ -61,29 +168,153 @@
           ],
           "properties": {
             "kind": {
-              "const": "frame"
+              "const": "frame",
+              "x-semio-ui": {
+                "widget": "hidden",
+                "role": "discriminator",
+                "label": {
+                  "en": "Element type",
+                  "de": "Elementtyp"
+                }
+              }
             },
             "id": {
-              "type": "string"
+              "type": "string",
+              "x-semio-ui": {
+                "widget": "text",
+                "role": "value",
+                "label": {
+                  "en": "ID",
+                  "de": "ID"
+                },
+                "description": {
+                  "en": "Unique id of the record.",
+                  "de": "Eindeutige ID des Eintrags."
+                },
+                "group": "identity",
+                "order": 20
+              }
             },
             "start": {
-              "type": "string"
+              "type": "string",
+              "x-semio-ui": {
+                "widget": "reference",
+                "role": "target",
+                "label": {
+                  "en": "Start node",
+                  "de": "Anfangsknoten"
+                },
+                "ref": {
+                  "kind": "node",
+                  "domain": "fem3d",
+                  "granularity": "node"
+                },
+                "group": "target",
+                "order": 30
+              }
             },
             "end": {
-              "type": "string"
+              "type": "string",
+              "x-semio-ui": {
+                "widget": "reference",
+                "role": "target",
+                "label": {
+                  "en": "End node",
+                  "de": "Endknoten"
+                },
+                "ref": {
+                  "kind": "node",
+                  "domain": "fem3d",
+                  "granularity": "node"
+                },
+                "group": "target",
+                "order": 40
+              }
             },
             "materialId": {
-              "type": "string"
+              "type": "string",
+              "x-semio-ui": {
+                "widget": "reference",
+                "role": "target",
+                "label": {
+                  "en": "Material",
+                  "de": "Material"
+                },
+                "ref": {
+                  "kind": "material",
+                  "domain": "fem3d",
+                  "granularity": "material"
+                },
+                "group": "target",
+                "order": 50
+              }
             },
             "sectionId": {
-              "type": "string"
+              "type": "string",
+              "x-semio-ui": {
+                "widget": "reference",
+                "role": "target",
+                "label": {
+                  "en": "Cross-section",
+                  "de": "Querschnitt"
+                },
+                "ref": {
+                  "kind": "section",
+                  "domain": "fem3d",
+                  "granularity": "section"
+                },
+                "group": "target",
+                "order": 60
+              }
             },
             "roll": {
-              "type": "number"
+              "type": "number",
+              "x-semio-ui": {
+                "widget": "dial",
+                "role": "value",
+                "label": {
+                  "en": "Roll angle",
+                  "de": "Verdrehwinkel"
+                },
+                "description": {
+                  "en": "Rotation of the section axes about the member axis.",
+                  "de": "Drehung der Querschnittshauptachsen um die Stabachse."
+                },
+                "unit": "rad",
+                "displayUnit": "deg",
+                "displayFactor": 57.29577951308232,
+                "step": 0.017453292519943295,
+                "softMin": -3.141592653589793,
+                "softMax": 3.141592653589793,
+                "snaps": [
+                  -3.141592653589793,
+                  -1.5707963267948966,
+                  0,
+                  1.5707963267948966,
+                  3.141592653589793
+                ],
+                "group": "geometry",
+                "order": 70
+              }
+            }
+          },
+          "x-semio-ui": {
+            "label": {
+              "en": "Frame member",
+              "de": "Rahmenstab"
             }
           }
         }
-      ]
+      ],
+      "x-semio-ui": {
+        "role": "value",
+        "label": {
+          "en": "New element",
+          "de": "Neues Element"
+        },
+        "group": "record",
+        "order": 20
+      }
     }
   }
 }

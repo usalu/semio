@@ -5,14 +5,31 @@
   "type": "object",
   "additionalProperties": false,
   "required": [
+    "mutation",
     "materials"
   ],
   "properties": {
-    "materials": {}
-  },
-  "owner": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/🪶️en1999/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧱change-materials",
-  "semanticKind": "change-materials",
-  "emoji": "🧱",
-  "aggregateVariant": "ChangeMaterials",
-  "displayName": "Change Materials"
+    "mutation": {
+      "const": "changeMaterials"
+    },
+    "materials": {
+      "type": "array",
+      "items": {
+        "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1999/snapshot.json#/$defs/AluminiumMaterial"
+      },
+      "x-semio-ui": {
+        "role": "value",
+        "label": {
+          "en": "Materials",
+          "de": "Werkstoffe"
+        },
+        "description": {
+          "en": "The complete list of aluminium materials.",
+          "de": "Die vollständige Liste der Aluminiumwerkstoffe."
+        },
+        "group": "record",
+        "order": 10
+      }
+    }
+  }
 }

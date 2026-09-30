@@ -84,7 +84,7 @@ pub fn tick_effect(window_id: &str, window_kind_id: &str) -> Effect {
 /// 🚧️ Whether an evaluation of `host_snapshot` may start or continue at all: an operator kind no contributed
 /// extension serves faults identically on every hop, and only `setContributions` can change that.
 pub fn may_rearm(host_snapshot: &semio_framework_artifact_flow_flow::FlowHostSnapshot) -> bool {
-    semio_framework_os_flow::unserved_flow_operator_kinds(host_snapshot).is_empty()
+    semio_framework_os_flow::unserved_flow_operator_kinds(host_snapshot, &semio_framework_os_flow::flow_operator_registry()).is_empty()
 }
 
 /// 🪟️ The one argument object every hop carries, on the redispatch and on the extension request alike.

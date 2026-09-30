@@ -5,23 +5,31 @@
   "type": "object",
   "additionalProperties": false,
   "required": [
+    "mutation",
     "dayOfYear",
     "year"
   ],
   "properties": {
+    "mutation": {
+      "const": "setCreationDate",
+      "description": "Aggregate discriminator spliced in by LasMutation; absent when the payload stands alone."
+    },
     "dayOfYear": {
       "type": "integer",
       "minimum": 0,
-      "maximum": 65535
+      "maximum": 65535,
+      "x-semio-ui": {
+        "widget": "stepper",
+        "label": {
+          "en": "Day of year",
+          "de": "Tag im Jahr"
+        }
+      }
     },
     "year": {
       "type": "integer",
       "minimum": 0,
       "maximum": 65535
-    },
-    "mutation": {
-      "const": "setCreationDate",
-      "description": "Aggregate discriminator spliced in by LasMutation; absent when the payload stands alone."
     }
   }
 }

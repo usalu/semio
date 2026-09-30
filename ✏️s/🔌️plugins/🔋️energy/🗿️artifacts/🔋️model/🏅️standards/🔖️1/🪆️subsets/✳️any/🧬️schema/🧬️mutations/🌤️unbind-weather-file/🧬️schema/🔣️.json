@@ -4,6 +4,12 @@
   "title": "UnbindWeatherFile",
   "type": "object",
   "additionalProperties": false,
-  "required": [],
-  "properties": {}
+  "required": [
+    "mutation"
+  ],
+  "properties": {
+    "mutation": {
+      "const": "unbindWeatherFile"
+    }
+  }
 }

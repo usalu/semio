@@ -346,6 +346,861 @@
             }
           }
         }
+      },
+      "x-semio-child-kind": "s.stdio.semio"
+    }
+  },
+  "$defs": {
+    "Renewables": {
+      "title": "Renewables",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "pvAreaM2",
+        "pvEfficiency",
+        "solarThermalKwhA"
+      ],
+      "properties": {
+        "pvAreaM2": {
+          "type": "number",
+          "x-semio-ui": {
+            "label": {
+              "en": "Photovoltaic module area",
+              "de": "Fläche der Photovoltaikmodule"
+            },
+            "widget": "stepper",
+            "unit": "m²",
+            "precision": 2
+          }
+        },
+        "pvEfficiency": {
+          "type": "number",
+          "x-semio-ui": {
+            "label": {
+              "en": "Photovoltaic module efficiency η_PV",
+              "de": "Modulwirkungsgrad η_PV"
+            },
+            "widget": "stepper",
+            "unit": "1",
+            "displayUnit": "%",
+            "displayFactor": 100,
+            "precision": 1
+          }
+        },
+        "solarThermalKwhA": {
+          "type": "number",
+          "x-semio-ui": {
+            "label": {
+              "en": "Solar thermal yield",
+              "de": "Solarthermischer Ertrag"
+            },
+            "widget": "stepper",
+            "unit": "kWh/a",
+            "precision": 0
+          }
+        }
+      }
+    },
+    "CoolingSystem": {
+      "title": "CoolingSystem",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [],
+      "properties": {
+        "plant": {
+          "oneOf": [
+            {
+              "$ref": "#/$defs/CoolingPlant"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "x-semio-ui": {
+            "label": {
+              "en": "Cooling plant",
+              "de": "Kälteerzeuger"
+            }
+          }
+        }
+      }
+    },
+    "MonthlyClimate": {
+      "title": "MonthlyClimate",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "thetaEC",
+        "gHWM2"
+      ],
+      "properties": {
+        "thetaEC": {
+          "type": "array",
+          "items": {
+            "type": "number"
+          },
+          "minItems": 12,
+          "maxItems": 12,
+          "x-semio-ui": {
+            "label": {
+              "en": "Monthly mean outdoor temperature θ_e",
+              "de": "Monatsmittelwert der Außentemperatur θ_e"
+            },
+            "description": {
+              "en": "Twelve values, January to December.",
+              "de": "Zwölf Werte, Januar bis Dezember."
+            },
+            "unit": "°C",
+            "step": 0.1
+          }
+        },
+        "gHWM2": {
+          "type": "array",
+          "items": {
+            "type": "number",
+            "minimum": 0
+          },
+          "minItems": 12,
+          "maxItems": 12,
+          "x-semio-ui": {
+            "label": {
+              "en": "Monthly mean global irradiance on the horizontal",
+              "de": "Monatsmittelwert der Globalstrahlung auf die Horizontale"
+            },
+            "description": {
+              "en": "Twelve values, January to December.",
+              "de": "Zwölf Werte, Januar bis Dezember."
+            },
+            "unit": "W/m²",
+            "step": 1
+          }
+        }
+      }
+    },
+    "VentilationSystem": {
+      "title": "VentilationSystem",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "airflowM3H",
+        "heatRecoveryEta",
+        "fanPowerW"
+      ],
+      "properties": {
+        "airflowM3H": {
+          "type": "number",
+          "x-semio-ui": {
+            "label": {
+              "en": "Air volume flow",
+              "de": "Luftvolumenstrom"
+            },
+            "widget": "stepper",
+            "unit": "m³/h",
+            "precision": 0
+          }
+        },
+        "heatRecoveryEta": {
+          "type": "number",
+          "x-semio-ui": {
+            "label": {
+              "en": "Heat-recovery efficiency η_WRG",
+              "de": "Wärmerückgewinnungsgrad η_WRG"
+            },
+            "widget": "stepper",
+            "unit": "1",
+            "displayUnit": "%",
+            "displayFactor": 100,
+            "precision": 0
+          }
+        },
+        "fanPowerW": {
+          "type": "number",
+          "x-semio-ui": {
+            "label": {
+              "en": "Fan power",
+              "de": "Ventilatorleistung"
+            },
+            "widget": "stepper",
+            "unit": "W",
+            "precision": 0
+          }
+        }
+      }
+    },
+    "AutomationClass": {
+      "title": "AutomationClass",
+      "type": "string",
+      "enum": [
+        "A",
+        "B",
+        "C",
+        "D"
+      ],
+      "x-semio-ui": {
+        "options": {
+          "A": {
+            "en": "A — high energy performance",
+            "de": "A — hohe Energieeffizienz"
+          },
+          "B": {
+            "en": "B — advanced",
+            "de": "B — weiterentwickelt"
+          },
+          "C": {
+            "en": "C — standard",
+            "de": "C — Standard"
+          },
+          "D": {
+            "en": "D — non energy efficient",
+            "de": "D — nicht energieeffizient"
+          }
+        }
+      }
+    },
+    "BuildingCategory": {
+      "title": "BuildingCategory",
+      "type": "string",
+      "enum": [
+        "Residential",
+        "NonResidential"
+      ],
+      "x-semio-ui": {
+        "options": {
+          "Residential": {
+            "en": "Residential building",
+            "de": "Wohngebäude"
+          },
+          "NonResidential": {
+            "en": "Non-residential building",
+            "de": "Nichtwohngebäude"
+          }
+        }
+      }
+    },
+    "UseClass": {
+      "title": "UseClass",
+      "type": "string",
+      "enum": [
+        "Residential",
+        "Office",
+        "School"
+      ],
+      "x-semio-ui": {
+        "options": {
+          "Residential": {
+            "en": "Residential",
+            "de": "Wohnen"
+          },
+          "Office": {
+            "en": "Office",
+            "de": "Büro"
+          },
+          "School": {
+            "en": "School",
+            "de": "Schule"
+          }
+        }
+      }
+    },
+    "LightingSystem": {
+      "title": "LightingSystem",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "controlFactor"
+      ],
+      "properties": {
+        "controlFactor": {
+          "type": "number",
+          "x-semio-ui": {
+            "label": {
+              "en": "Lighting control factor",
+              "de": "Faktor der Beleuchtungssteuerung"
+            },
+            "widget": "stepper",
+            "precision": 2
+          }
+        }
+      }
+    },
+    "HeatingSystem": {
+      "title": "HeatingSystem",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "generationEfficiency",
+        "distributionEfficiency",
+        "storageEfficiency",
+        "transferEfficiency",
+        "energyCarrier"
+      ],
+      "properties": {
+        "generationEfficiency": {
+          "type": "number",
+          "x-semio-ui": {
+            "label": {
+              "en": "Generation efficiency",
+              "de": "Erzeugernutzungsgrad"
+            },
+            "widget": "stepper",
+            "unit": "1",
+            "displayUnit": "%",
+            "displayFactor": 100,
+            "precision": 0
+          }
+        },
+        "distributionEfficiency": {
+          "type": "number",
+          "x-semio-ui": {
+            "label": {
+              "en": "Distribution efficiency",
+              "de": "Verteilnutzungsgrad"
+            },
+            "widget": "stepper",
+            "unit": "1",
+            "displayUnit": "%",
+            "displayFactor": 100,
+            "precision": 0
+          }
+        },
+        "storageEfficiency": {
+          "type": "number",
+          "x-semio-ui": {
+            "label": {
+              "en": "Storage efficiency",
+              "de": "Speichernutzungsgrad"
+            },
+            "widget": "stepper",
+            "unit": "1",
+            "displayUnit": "%",
+            "displayFactor": 100,
+            "precision": 0
+          }
+        },
+        "transferEfficiency": {
+          "type": "number",
+          "x-semio-ui": {
+            "label": {
+              "en": "Transfer efficiency",
+              "de": "Übergabenutzungsgrad"
+            },
+            "widget": "stepper",
+            "unit": "1",
+            "displayUnit": "%",
+            "displayFactor": 100,
+            "precision": 0
+          }
+        },
+        "energyCarrier": {
+          "type": "string",
+          "x-semio-ui": {
+            "label": {
+              "en": "Energy carrier",
+              "de": "Energieträger"
+            },
+            "widget": "text"
+          }
+        }
+      }
+    },
+    "ThermalZone": {
+      "title": "ThermalZone",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "labelEn",
+        "labelDe",
+        "usageProfile",
+        "areaM2",
+        "volumeM3",
+        "thetaIHeatC",
+        "thetaICoolC",
+        "occupants",
+        "internalGainsWM2",
+        "lightingPowerWM2"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "labelEn": {
+          "type": "string",
+          "x-semio-ui": {
+            "label": {
+              "en": "Label (English)",
+              "de": "Bezeichnung (Englisch)"
+            },
+            "widget": "text"
+          }
+        },
+        "labelDe": {
+          "type": "string",
+          "x-semio-ui": {
+            "label": {
+              "en": "Label (German)",
+              "de": "Bezeichnung (Deutsch)"
+            },
+            "widget": "text"
+          }
+        },
+        "usageProfile": {
+          "$ref": "#/$defs/UsageProfile",
+          "x-semio-ui": {
+            "label": {
+              "en": "Usage profile",
+              "de": "Nutzungsprofil"
+            }
+          }
+        },
+        "areaM2": {
+          "type": "number",
+          "x-semio-ui": {
+            "label": {
+              "en": "Reference floor area A_NGF",
+              "de": "Nettogrundfläche A_NGF"
+            },
+            "widget": "stepper",
+            "unit": "m²",
+            "precision": 2
+          }
+        },
+        "volumeM3": {
+          "type": "number",
+          "x-semio-ui": {
+            "label": {
+              "en": "Net air volume V",
+              "de": "Nettoluftvolumen V"
+            },
+            "widget": "stepper",
+            "unit": "m³",
+            "precision": 0
+          }
+        },
+        "thetaIHeatC": {
+          "type": "number",
+          "x-semio-ui": {
+            "label": {
+              "en": "Heating set-point θ_i,h",
+              "de": "Raum-Solltemperatur Heizen θ_i,h"
+            },
+            "widget": "stepper",
+            "unit": "°C",
+            "precision": 1
+          }
+        },
+        "thetaICoolC": {
+          "type": "number",
+          "x-semio-ui": {
+            "label": {
+              "en": "Cooling set-point θ_i,c",
+              "de": "Raum-Solltemperatur Kühlen θ_i,c"
+            },
+            "widget": "stepper",
+            "unit": "°C",
+            "precision": 1
+          }
+        },
+        "occupants": {
+          "type": "integer",
+          "minimum": 0,
+          "x-semio-ui": {
+            "label": {
+              "en": "Occupants",
+              "de": "Personen"
+            },
+            "widget": "stepper",
+            "step": 1,
+            "precision": 0
+          }
+        },
+        "internalGainsWM2": {
+          "type": "number",
+          "x-semio-ui": {
+            "label": {
+              "en": "Internal heat gains q_I",
+              "de": "Interne Wärmequellen q_I"
+            },
+            "widget": "stepper",
+            "unit": "W/m²",
+            "precision": 1
+          }
+        },
+        "lightingPowerWM2": {
+          "type": "number",
+          "x-semio-ui": {
+            "label": {
+              "en": "Installed lighting power",
+              "de": "Installierte Beleuchtungsleistung"
+            },
+            "widget": "stepper",
+            "unit": "W/m²",
+            "precision": 1
+          }
+        }
+      }
+    },
+    "DhwSystem": {
+      "title": "DhwSystem",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "specificDemandKwhPersonA",
+        "storageLossKwhA",
+        "distributionLossKwhA",
+        "energyCarrier"
+      ],
+      "properties": {
+        "specificDemandKwhPersonA": {
+          "type": "number",
+          "x-semio-ui": {
+            "label": {
+              "en": "Specific hot-water demand",
+              "de": "Spezifischer Trinkwarmwasserbedarf"
+            },
+            "widget": "stepper",
+            "unit": "kWh/(Person·a)",
+            "precision": 0
+          }
+        },
+        "storageLossKwhA": {
+          "type": "number",
+          "x-semio-ui": {
+            "label": {
+              "en": "Storage loss",
+              "de": "Speicherverlust"
+            },
+            "widget": "stepper",
+            "unit": "kWh/a",
+            "precision": 0
+          }
+        },
+        "distributionLossKwhA": {
+          "type": "number",
+          "x-semio-ui": {
+            "label": {
+              "en": "Distribution loss",
+              "de": "Verteilverlust"
+            },
+            "widget": "stepper",
+            "unit": "kWh/a",
+            "precision": 0
+          }
+        },
+        "energyCarrier": {
+          "type": "string",
+          "x-semio-ui": {
+            "label": {
+              "en": "Energy carrier",
+              "de": "Energieträger"
+            },
+            "widget": "text"
+          }
+        }
+      }
+    },
+    "EnvelopeElement": {
+      "title": "EnvelopeElement",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "labelEn",
+        "labelDe",
+        "kind",
+        "zoneId",
+        "areaM2",
+        "uValueWM2k",
+        "orientationDeg",
+        "tiltDeg",
+        "gValue",
+        "fc",
+        "adjacency"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "labelEn": {
+          "type": "string",
+          "x-semio-ui": {
+            "label": {
+              "en": "Label (English)",
+              "de": "Bezeichnung (Englisch)"
+            },
+            "widget": "text"
+          }
+        },
+        "labelDe": {
+          "type": "string",
+          "x-semio-ui": {
+            "label": {
+              "en": "Label (German)",
+              "de": "Bezeichnung (Deutsch)"
+            },
+            "widget": "text"
+          }
+        },
+        "kind": {
+          "$ref": "#/$defs/ElementKind"
+        },
+        "zoneId": {
+          "type": "string"
+        },
+        "areaM2": {
+          "type": "number",
+          "x-semio-ui": {
+            "label": {
+              "en": "Area A",
+              "de": "Fläche A"
+            },
+            "widget": "stepper",
+            "unit": "m²",
+            "precision": 2
+          }
+        },
+        "uValueWM2k": {
+          "type": "number",
+          "x-semio-ui": {
+            "widget": "stepper",
+            "label": {
+              "en": "Thermal transmittance U",
+              "de": "Wärmedurchgangskoeffizient U"
+            },
+            "unit": "W/(m²·K)",
+            "step": 0.01,
+            "precision": 3
+          }
+        },
+        "orientationDeg": {
+          "type": "number",
+          "x-semio-ui": {
+            "label": {
+              "en": "Orientation (azimuth)",
+              "de": "Orientierung (Azimut)"
+            },
+            "widget": "stepper",
+            "unit": "°",
+            "precision": 0
+          }
+        },
+        "tiltDeg": {
+          "type": "number",
+          "x-semio-ui": {
+            "label": {
+              "en": "Tilt",
+              "de": "Neigung"
+            },
+            "widget": "stepper",
+            "unit": "°",
+            "precision": 0
+          }
+        },
+        "gValue": {
+          "type": "number",
+          "x-semio-ui": {
+            "label": {
+              "en": "Total solar energy transmittance g",
+              "de": "Gesamtenergiedurchlassgrad g"
+            },
+            "widget": "stepper",
+            "unit": "1",
+            "precision": 2
+          }
+        },
+        "fc": {
+          "type": "number",
+          "x-semio-ui": {
+            "label": {
+              "en": "Shading reduction factor F_C",
+              "de": "Abminderungsfaktor für Sonnenschutz F_C"
+            },
+            "widget": "stepper",
+            "unit": "1",
+            "precision": 2
+          }
+        },
+        "adjacency": {
+          "$ref": "#/$defs/Adjacency",
+          "x-semio-ui": {
+            "label": {
+              "en": "Adjacent space",
+              "de": "Angrenzender Bereich"
+            }
+          }
+        }
+      }
+    },
+    "CalculationMethod": {
+      "title": "CalculationMethod",
+      "type": "string",
+      "enum": [
+        "DetailedMonthly",
+        "Tabular"
+      ],
+      "x-semio-ui": {
+        "options": {
+          "DetailedMonthly": {
+            "en": "Detailed monthly balance",
+            "de": "Detailliertes Monatsbilanzverfahren"
+          },
+          "Tabular": {
+            "en": "Tabular method",
+            "de": "Tabellenverfahren"
+          }
+        }
+      }
+    },
+    "Attachment": {
+      "title": "Attachment",
+      "type": "string",
+      "enum": [
+        "Detached",
+        "SemiDetached",
+        "EndTerrace",
+        "MidTerrace"
+      ],
+      "x-semio-ui": {
+        "options": {
+          "Detached": {
+            "en": "Detached",
+            "de": "Freistehend"
+          },
+          "SemiDetached": {
+            "en": "Semi-detached",
+            "de": "Doppelhaushälfte"
+          },
+          "EndTerrace": {
+            "en": "End of terrace",
+            "de": "Reihenendhaus"
+          },
+          "MidTerrace": {
+            "en": "Mid-terrace",
+            "de": "Reihenmittelhaus"
+          }
+        }
+      }
+    },
+    "CoolingPlant": {
+      "title": "CoolingPlant",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "eer",
+        "energyCarrier"
+      ],
+      "properties": {
+        "eer": {
+          "type": "number",
+          "x-semio-ui": {
+            "label": {
+              "en": "Energy efficiency ratio EER",
+              "de": "Leistungszahl EER"
+            },
+            "widget": "stepper",
+            "precision": 2
+          }
+        },
+        "energyCarrier": {
+          "type": "string",
+          "x-semio-ui": {
+            "label": {
+              "en": "Energy carrier",
+              "de": "Energieträger"
+            },
+            "widget": "text"
+          }
+        }
+      }
+    },
+    "UsageProfile": {
+      "title": "UsageProfile",
+      "type": "string",
+      "enum": [
+        "WFH",
+        "Office",
+        "School"
+      ],
+      "x-semio-ui": {
+        "options": {
+          "WFH": {
+            "en": "Residential (home)",
+            "de": "Wohnen"
+          },
+          "Office": {
+            "en": "Office",
+            "de": "Büro"
+          },
+          "School": {
+            "en": "School",
+            "de": "Schule"
+          }
+        }
+      }
+    },
+    "ElementKind": {
+      "title": "ElementKind",
+      "type": "string",
+      "enum": [
+        "Wall",
+        "Roof",
+        "Floor",
+        "Door",
+        "Window"
+      ],
+      "x-semio-ui": {
+        "options": {
+          "Wall": {
+            "en": "Wall",
+            "de": "Wand"
+          },
+          "Roof": {
+            "en": "Roof",
+            "de": "Dach"
+          },
+          "Floor": {
+            "en": "Floor",
+            "de": "Boden"
+          },
+          "Door": {
+            "en": "Door",
+            "de": "Tür"
+          },
+          "Window": {
+            "en": "Window",
+            "de": "Fenster"
+          }
+        }
+      }
+    },
+    "Adjacency": {
+      "title": "Adjacency",
+      "type": "string",
+      "enum": [
+        "Outdoor",
+        "Ground",
+        "Unheated",
+        "Heated"
+      ],
+      "x-semio-ui": {
+        "options": {
+          "Outdoor": {
+            "en": "Outdoor air",
+            "de": "Außenluft"
+          },
+          "Ground": {
+            "en": "Ground",
+            "de": "Erdreich"
+          },
+          "Unheated": {
+            "en": "Unheated space",
+            "de": "Unbeheizter Raum"
+          },
+          "Heated": {
+            "en": "Heated space",
+            "de": "Beheizter Raum"
+          }
+        }
       }
     }
   }

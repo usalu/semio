@@ -5,11 +5,16 @@
   "type": "object",
   "additionalProperties": false,
   "required": [
+    "mutation",
     "slide_index",
     "shape_index",
     "frame"
   ],
   "properties": {
+    "mutation": {
+      "const": "setShapeFrame",
+      "description": "Aggregate discriminator spliced in by SemioPresentationMutation; absent when the payload stands alone."
+    },
     "slide_index": {
       "type": "integer",
       "minimum": 0
@@ -20,10 +25,6 @@
     },
     "frame": {
       "$ref": "#/$defs/SlideFrame"
-    },
-    "mutation": {
-      "const": "setShapeFrame",
-      "description": "Aggregate discriminator spliced in by SemioPresentationMutation; absent when the payload stands alone."
     }
   },
   "$defs": {

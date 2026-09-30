@@ -4,139 +4,544 @@
   "title": "LayoutMutation",
   "oneOf": [
     {
-      "$ref": "https://json.schemas.assets.semio-tech.com/s/layout/layout/mutation/change-data-fields/schema.json"
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "RenameLayout"
+      ],
+      "properties": {
+        "RenameLayout": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/layout/layout/mutation/rename-layout/schema.json"
+        }
+      }
     },
     {
-      "$ref": "https://json.schemas.assets.semio-tech.com/s/layout/layout/mutation/change-frame-columns/schema.json"
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "ChangePrintTarget"
+      ],
+      "properties": {
+        "ChangePrintTarget": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/layout/layout/mutation/change-print-target/schema.json"
+        }
+      }
     },
     {
-      "$ref": "https://json.schemas.assets.semio-tech.com/s/layout/layout/mutation/change-frame-fill/schema.json"
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "ChangeDataFields"
+      ],
+      "properties": {
+        "ChangeDataFields": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/layout/layout/mutation/change-data-fields/schema.json"
+        }
+      }
     },
     {
-      "$ref": "https://json.schemas.assets.semio-tech.com/s/layout/layout/mutation/change-frame-stroke/schema.json"
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "CreatePage"
+      ],
+      "properties": {
+        "CreatePage": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/layout/layout/mutation/create-page/schema.json"
+        }
+      }
     },
     {
-      "$ref": "https://json.schemas.assets.semio-tech.com/s/layout/layout/mutation/change-frame-wrap-mode/schema.json"
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "DeletePage"
+      ],
+      "properties": {
+        "DeletePage": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/layout/layout/mutation/delete-page/schema.json"
+        }
+      }
     },
     {
-      "$ref": "https://json.schemas.assets.semio-tech.com/s/layout/layout/mutation/change-link-path/schema.json"
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "RenamePage"
+      ],
+      "properties": {
+        "RenamePage": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/layout/layout/mutation/rename-page/schema.json"
+        }
+      }
     },
     {
-      "$ref": "https://json.schemas.assets.semio-tech.com/s/layout/layout/mutation/change-page-height/schema.json"
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "ChangePageWidth"
+      ],
+      "properties": {
+        "ChangePageWidth": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/layout/layout/mutation/change-page-width/schema.json"
+        }
+      }
     },
     {
-      "$ref": "https://json.schemas.assets.semio-tech.com/s/layout/layout/mutation/change-page-width/schema.json"
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "ChangePageHeight"
+      ],
+      "properties": {
+        "ChangePageHeight": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/layout/layout/mutation/change-page-height/schema.json"
+        }
+      }
     },
     {
-      "$ref": "https://json.schemas.assets.semio-tech.com/s/layout/layout/mutation/change-print-target/schema.json"
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "UpdatePageMargins"
+      ],
+      "properties": {
+        "UpdatePageMargins": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/layout/layout/mutation/update-page-margins/schema.json"
+        }
+      }
     },
     {
-      "$ref": "https://json.schemas.assets.semio-tech.com/s/layout/layout/mutation/create-frame/schema.json"
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "UpdatePageColumns"
+      ],
+      "properties": {
+        "UpdatePageColumns": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/layout/layout/mutation/update-page-columns/schema.json"
+        }
+      }
     },
     {
-      "$ref": "https://json.schemas.assets.semio-tech.com/s/layout/layout/mutation/create-link/schema.json"
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "ReorderPages"
+      ],
+      "properties": {
+        "ReorderPages": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/layout/layout/mutation/reorder-pages/schema.json"
+        }
+      }
     },
     {
-      "$ref": "https://json.schemas.assets.semio-tech.com/s/layout/layout/mutation/create-page/schema.json"
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "CreateStory"
+      ],
+      "properties": {
+        "CreateStory": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/layout/layout/mutation/create-story/schema.json"
+        }
+      }
     },
     {
-      "$ref": "https://json.schemas.assets.semio-tech.com/s/layout/layout/mutation/create-story/schema.json"
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "DeleteStory"
+      ],
+      "properties": {
+        "DeleteStory": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/layout/layout/mutation/delete-story/schema.json"
+        }
+      }
     },
     {
-      "$ref": "https://json.schemas.assets.semio-tech.com/s/layout/layout/mutation/delete-frame/schema.json"
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "EditStory"
+      ],
+      "properties": {
+        "EditStory": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/layout/layout/mutation/edit-story/schema.json"
+        }
+      }
     },
     {
-      "$ref": "https://json.schemas.assets.semio-tech.com/s/layout/layout/mutation/delete-link/schema.json"
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "CreateLink"
+      ],
+      "properties": {
+        "CreateLink": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/layout/layout/mutation/create-link/schema.json"
+        }
+      }
     },
     {
-      "$ref": "https://json.schemas.assets.semio-tech.com/s/layout/layout/mutation/delete-page/schema.json"
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "DeleteLink"
+      ],
+      "properties": {
+        "DeleteLink": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/layout/layout/mutation/delete-link/schema.json"
+        }
+      }
     },
     {
-      "$ref": "https://json.schemas.assets.semio-tech.com/s/layout/layout/mutation/delete-story/schema.json"
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "ChangeLinkPath"
+      ],
+      "properties": {
+        "ChangeLinkPath": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/layout/layout/mutation/change-link-path/schema.json"
+        }
+      }
     },
     {
-      "$ref": "https://json.schemas.assets.semio-tech.com/s/layout/layout/mutation/edit-story/schema.json"
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "CreateFrame"
+      ],
+      "properties": {
+        "CreateFrame": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/layout/layout/mutation/create-frame/schema.json"
+        }
+      }
     },
     {
-      "$ref": "https://json.schemas.assets.semio-tech.com/s/layout/layout/mutation/move-frame/schema.json"
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "DeleteFrame"
+      ],
+      "properties": {
+        "DeleteFrame": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/layout/layout/mutation/delete-frame/schema.json"
+        }
+      }
     },
     {
-      "$ref": "https://json.schemas.assets.semio-tech.com/s/layout/layout/mutation/rename-layout/schema.json"
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "MoveFrame"
+      ],
+      "properties": {
+        "MoveFrame": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/layout/layout/mutation/move-frame/schema.json"
+        }
+      }
     },
     {
-      "$ref": "https://json.schemas.assets.semio-tech.com/s/layout/layout/mutation/rename-page/schema.json"
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "ResizeFrame"
+      ],
+      "properties": {
+        "ResizeFrame": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/layout/layout/mutation/resize-frame/schema.json"
+        }
+      }
     },
     {
-      "$ref": "https://json.schemas.assets.semio-tech.com/s/layout/layout/mutation/reorder-pages/schema.json"
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "RotateFrame"
+      ],
+      "properties": {
+        "RotateFrame": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/layout/layout/mutation/rotate-frame/schema.json"
+        }
+      }
     },
     {
-      "$ref": "https://json.schemas.assets.semio-tech.com/s/layout/layout/mutation/resize-frame/schema.json"
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "ChangeFrameFill"
+      ],
+      "properties": {
+        "ChangeFrameFill": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/layout/layout/mutation/change-frame-fill/schema.json"
+        }
+      }
     },
     {
-      "$ref": "https://json.schemas.assets.semio-tech.com/s/layout/layout/mutation/rotate-frame/schema.json"
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "ChangeFrameStroke"
+      ],
+      "properties": {
+        "ChangeFrameStroke": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/layout/layout/mutation/change-frame-stroke/schema.json"
+        }
+      }
     },
     {
-      "$ref": "https://json.schemas.assets.semio-tech.com/s/layout/layout/mutation/set-frame-flags/schema.json"
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "ChangeFrameWrapMode"
+      ],
+      "properties": {
+        "ChangeFrameWrapMode": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/layout/layout/mutation/change-frame-wrap-mode/schema.json"
+        }
+      }
     },
     {
-      "$ref": "https://json.schemas.assets.semio-tech.com/s/layout/layout/mutation/update-grid/schema.json"
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "ChangeFrameColumns"
+      ],
+      "properties": {
+        "ChangeFrameColumns": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/layout/layout/mutation/change-frame-columns/schema.json"
+        }
+      }
     },
     {
-      "$ref": "https://json.schemas.assets.semio-tech.com/s/layout/layout/mutation/update-page-columns/schema.json"
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "UpdateGrid"
+      ],
+      "properties": {
+        "UpdateGrid": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/layout/layout/mutation/update-grid/schema.json"
+        }
+      }
     },
     {
-      "$ref": "https://json.schemas.assets.semio-tech.com/s/layout/layout/mutation/update-page-margins/schema.json"
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "SetFrameFlags"
+      ],
+      "properties": {
+        "SetFrameFlags": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/layout/layout/mutation/set-frame-flags/schema.json"
+        }
+      }
     },
     {
-      "$ref": "https://json.schemas.assets.semio-tech.com/s/layout/layout/mutation/update-paragraph-style/schema.json"
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "UpdateParagraphStyle"
+      ],
+      "properties": {
+        "UpdateParagraphStyle": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/layout/layout/mutation/update-paragraph-style/schema.json"
+        }
+      }
     },
     {
-      "$ref": "https://json.schemas.assets.semio-tech.com/s/layout/layout/mutation/update-text-frame/schema.json"
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "UpdateTextFrame"
+      ],
+      "properties": {
+        "UpdateTextFrame": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/layout/layout/mutation/update-text-frame/schema.json"
+        }
+      }
     },
     {
-      "$ref": "https://json.schemas.assets.semio-tech.com/s/layout/layout/mutation/update-layer/schema.json"
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "UpdateLayer"
+      ],
+      "properties": {
+        "UpdateLayer": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/layout/layout/mutation/update-layer/schema.json"
+        }
+      }
     },
     {
-      "$ref": "https://json.schemas.assets.semio-tech.com/s/layout/layout/mutation/create-character-style/schema.json"
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "CreateCharacterStyle"
+      ],
+      "properties": {
+        "CreateCharacterStyle": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/layout/layout/mutation/create-character-style/schema.json"
+        }
+      }
     },
     {
-      "$ref": "https://json.schemas.assets.semio-tech.com/s/layout/layout/mutation/delete-character-style/schema.json"
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "DeleteCharacterStyle"
+      ],
+      "properties": {
+        "DeleteCharacterStyle": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/layout/layout/mutation/delete-character-style/schema.json"
+        }
+      }
     },
     {
-      "$ref": "https://json.schemas.assets.semio-tech.com/s/layout/layout/mutation/update-character-style/schema.json"
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "UpdateCharacterStyle"
+      ],
+      "properties": {
+        "UpdateCharacterStyle": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/layout/layout/mutation/update-character-style/schema.json"
+        }
+      }
     },
     {
-      "$ref": "https://json.schemas.assets.semio-tech.com/s/layout/layout/mutation/update-parent-page/schema.json"
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "UpdateParentPage"
+      ],
+      "properties": {
+        "UpdateParentPage": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/layout/layout/mutation/update-parent-page/schema.json"
+        }
+      }
     },
     {
-      "$ref": "https://json.schemas.assets.semio-tech.com/s/layout/layout/mutation/update-spread/schema.json"
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "UpdateSpread"
+      ],
+      "properties": {
+        "UpdateSpread": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/layout/layout/mutation/update-spread/schema.json"
+        }
+      }
     },
     {
-      "$ref": "https://json.schemas.assets.semio-tech.com/s/layout/layout/mutation/set-page-parent/schema.json"
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "SetPageParent"
+      ],
+      "properties": {
+        "SetPageParent": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/layout/layout/mutation/set-page-parent/schema.json"
+        }
+      }
     },
     {
-      "$ref": "https://json.schemas.assets.semio-tech.com/s/layout/layout/mutation/set-page-guides/schema.json"
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "SetPageGuides"
+      ],
+      "properties": {
+        "SetPageGuides": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/layout/layout/mutation/set-page-guides/schema.json"
+        }
+      }
     },
     {
-      "$ref": "https://json.schemas.assets.semio-tech.com/s/layout/layout/mutation/set-story-runs/schema.json"
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "SetStoryRuns"
+      ],
+      "properties": {
+        "SetStoryRuns": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/layout/layout/mutation/set-story-runs/schema.json"
+        }
+      }
     },
     {
-      "$ref": "https://json.schemas.assets.semio-tech.com/s/layout/layout/mutation/update-link/schema.json"
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "UpdateLink"
+      ],
+      "properties": {
+        "UpdateLink": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/layout/layout/mutation/update-link/schema.json"
+        }
+      }
     },
     {
-      "$ref": "https://json.schemas.assets.semio-tech.com/s/layout/layout/mutation/set-page-overrides/schema.json"
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "SetPageOverrides"
+      ],
+      "properties": {
+        "SetPageOverrides": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/layout/layout/mutation/set-page-overrides/schema.json"
+        }
+      }
     },
     {
-      "$ref": "https://json.schemas.assets.semio-tech.com/s/layout/layout/mutation/create-layer/schema.json"
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "CreateLayer"
+      ],
+      "properties": {
+        "CreateLayer": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/layout/layout/mutation/create-layer/schema.json"
+        }
+      }
     },
     {
-      "$ref": "https://json.schemas.assets.semio-tech.com/s/layout/layout/mutation/set-frame-layer/schema.json"
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "SetFrameLayer"
+      ],
+      "properties": {
+        "SetFrameLayer": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/layout/layout/mutation/set-frame-layer/schema.json"
+        }
+      }
     },
     {
-      "$ref": "https://json.schemas.assets.semio-tech.com/s/layout/layout/mutation/set-drawing-text/schema.json"
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "SetDrawingText"
+      ],
+      "properties": {
+        "SetDrawingText": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/layout/layout/mutation/set-drawing-text/schema.json"
+        }
+      }
     },
     {
-      "$ref": "https://json.schemas.assets.semio-tech.com/s/layout/layout/mutation/reorder-frame/schema.json"
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "ReorderFrame"
+      ],
+      "properties": {
+        "ReorderFrame": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/layout/layout/mutation/reorder-frame/schema.json"
+        }
+      }
     }
   ]
 }

@@ -5,15 +5,16 @@
   "type": "object",
   "additionalProperties": false,
   "required": [
+    "mutation",
     "edge"
   ],
   "properties": {
-    "edge": {
-      "$ref": "#/$defs/FlowEdge"
-    },
     "mutation": {
       "const": "insertEdge",
       "description": "Aggregate discriminator spliced in by SemioFlowMutation; absent when the payload stands alone."
+    },
+    "edge": {
+      "$ref": "#/$defs/FlowEdge"
     }
   },
   "$defs": {

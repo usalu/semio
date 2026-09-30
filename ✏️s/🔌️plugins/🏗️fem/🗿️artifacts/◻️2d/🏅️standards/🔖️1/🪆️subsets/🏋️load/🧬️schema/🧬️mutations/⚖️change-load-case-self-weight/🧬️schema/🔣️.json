@@ -2,7 +2,7 @@
   "$schema": "http://json-schema.org/draft-07/schema#",
   "$id": "https://json.schemas.assets.semio-tech.com/s/fem/2d/1/load/mutation/change-load-case-self-weight/schema.json",
   "title": "ChangeLoadCaseSelfWeight",
-  "description": "The `change-load-case-self-weight` mutation payload as it travels the wire: internally tagged with `\"mutation\": \"changeLoadCaseSelfWeight\"`, camelCase throughout. Structural only — the plausibility and geometry bounds this kind enforces live in the SNAPSHOT schema, because they are properties of a valid document rather than of a well-formed payload; each is annotated there with the `mutations::guards` function that raises them.",
+  "description": "The `change-load-case-self-weight` mutation payload as it travels the wire: internally tagged with `\"mutation\": \"changeLoadCaseSelfWeight\"`, camelCase throughout. Its hard bounds and `x-semio-invariant` entries state exactly the payload-intrinsic breaches `mutations::guards` refuses as `mutation.invariant`, so every such payload fails this schema; refusals that depend on the base (a missing, duplicate or still-referenced target) belong to the diff alone.",
   "type": "object",
   "additionalProperties": false,
   "required": [
@@ -13,13 +13,50 @@
   "properties": {
     "mutation": {
       "const": "changeLoadCaseSelfWeight",
-      "description": "The internally tagged discriminator `#[value(tag = \"mutation\")]` puts on the wire."
+      "description": "The internally tagged discriminator `#[value(tag = \"mutation\")]` puts on the wire.",
+      "x-semio-ui": {
+        "widget": "hidden",
+        "role": "discriminator",
+        "label": {
+          "en": "Mutation",
+          "de": "Mutation"
+        }
+      }
     },
     "caseId": {
-      "type": "string"
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Load case",
+          "de": "Lastfall"
+        },
+        "ref": {
+          "kind": "loadCase",
+          "domain": "fem2d",
+          "granularity": "loadCase"
+        },
+        "group": "target",
+        "order": 20
+      }
     },
     "newSelfWeight": {
-      "type": "boolean"
+      "type": "boolean",
+      "x-semio-ui": {
+        "widget": "toggle",
+        "role": "value",
+        "label": {
+          "en": "Self weight",
+          "de": "Eigengewicht"
+        },
+        "description": {
+          "en": "Includes the structure's self weight in this load case.",
+          "de": "Berücksichtigt das Eigengewicht des Tragwerks in diesem Lastfall."
+        },
+        "group": "value",
+        "order": 30
+      }
     }
   }
 }

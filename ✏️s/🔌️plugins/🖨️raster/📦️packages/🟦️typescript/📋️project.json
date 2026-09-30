@@ -9,6 +9,30 @@
         "command": "bun ./📜️script.ts test",
         "forwardAllArgs": true
       }
+    },
+    "test-renderer-contract": {
+      "executor": "nx:run-commands",
+      "inputs": [
+        "{workspaceRoot}/✏️s/🔌️plugins/🖨️raster/**/*",
+        "{workspaceRoot}/🧰️framework/**/*"
+      ],
+      "options": {
+        "cwd": "✏️s/🔌️plugins/🖨️raster/📦️packages/🟦️typescript",
+        "command": "bun ./📜️script.ts test renderer-contract",
+        "forwardAllArgs": true
+      }
+    },
+    "canonical-architecture": {
+      "executor": "nx:run-commands",
+      "inputs": [
+        "{workspaceRoot}/✏️s/🔌️plugins/🖨️raster/**/*",
+        "{workspaceRoot}/🧰️framework/**/*"
+      ],
+      "options": {
+        "cwd": "✏️s/🔌️plugins/🖨️raster/📦️packages/🟦️typescript",
+        "command": "bun ./📜️script.ts test renderer-contract",
+        "forwardAllArgs": true
+      }
     }
   }
 }

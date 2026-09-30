@@ -9,7 +9,21 @@
   ],
   "properties": {
     "newBridgeLaneWidth": {
-      "type": "number"
+      "type": "number",
+      "minimum": 0,
+      "x-semio-ui": {
+        "widget": "stepper",
+        "role": "value",
+        "label": {
+          "en": "Carriageway width w",
+          "de": "Fahrbahnbreite w"
+        },
+        "unit": "m",
+        "step": 0.1,
+        "precision": 2,
+        "group": "bridge",
+        "order": 10
+      }
     }
   }
 }

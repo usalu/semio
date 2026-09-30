@@ -12,6 +12,7 @@ line = create-node / delete-node / move-node / replace-node-geometry / change-no
      / disconnect-kind-compatibility / replace-kind-catalogs / create-target-region
      / delete-target-region / move-target-region / resize-target-region
      / edit-target-region-label / change-target-region-hidden / change-target-region-locked
+     / drag-selection / rotate-selection / scale-selection
 
 create-node = "create-node" SP node-block SP index-opt
 delete-node = "delete-node" SP id
@@ -46,6 +47,9 @@ resize-target-region = "resize-target-region" SP id SP number SP number
 edit-target-region-label = "edit-target-region-label" SP id SP text-opt
 change-target-region-hidden = "change-target-region-hidden" SP id SP boolean
 change-target-region-locked = "change-target-region-locked" SP id SP boolean
+drag-selection = "drag-selection" SP id-list SP number SP number
+rotate-selection = "rotate-selection" SP id-list SP number SP number SP number
+scale-selection = "scale-selection" SP id-list SP number SP number SP number
 
 node-block = "{" NL OCTET+ "}"
 handle-block = "{" NL OCTET+ "}"
@@ -58,6 +62,7 @@ index-opt = number / "none"
 text-opt = text / "none"
 number-opt = number / "none"
 boolean-opt = boolean / "none"
+id-list = "[" id* "]"
 id = OCTET+
 number = OCTET+
 text = OCTET+

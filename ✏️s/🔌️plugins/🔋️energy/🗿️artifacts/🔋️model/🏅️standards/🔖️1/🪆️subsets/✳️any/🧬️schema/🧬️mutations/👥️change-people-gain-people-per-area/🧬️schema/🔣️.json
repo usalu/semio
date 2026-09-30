@@ -5,15 +5,57 @@
   "type": "object",
   "additionalProperties": false,
   "required": [
+    "mutation",
     "id",
     "newPeoplePerArea"
   ],
   "properties": {
+    "mutation": {
+      "const": "changePeopleGainPeoplePerArea"
+    },
     "id": {
-      "type": "integer"
+      "type": "integer",
+      "minimum": 0,
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "People gain",
+          "de": "Personenwärmegewinn"
+        },
+        "description": {
+          "en": "The people gain this mutation changes, by id.",
+          "de": "Personenwärmegewinn, den diese Mutation ändert, per ID."
+        },
+        "ref": {
+          "kind": "peopleGain",
+          "domain": "energyModel",
+          "granularity": "load"
+        },
+        "group": "target",
+        "order": 10
+      }
     },
     "newPeoplePerArea": {
-      "type": "number"
+      "type": "number",
+      "minimum": 0,
+      "x-semio-ui": {
+        "widget": "stepper",
+        "role": "value",
+        "label": {
+          "en": "People per area",
+          "de": "Personen pro Fläche"
+        },
+        "description": {
+          "en": "Occupant density per m² floor area.",
+          "de": "Belegungsdichte je m² Geschossfläche."
+        },
+        "unit": "1/m²",
+        "step": 0.01,
+        "precision": 3,
+        "group": "gains",
+        "order": 20
+      }
     }
   }
 }

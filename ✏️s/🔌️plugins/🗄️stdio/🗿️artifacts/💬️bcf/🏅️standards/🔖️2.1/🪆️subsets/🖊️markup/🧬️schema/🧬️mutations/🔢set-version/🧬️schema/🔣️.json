@@ -5,11 +5,28 @@
   "type": "object",
   "additionalProperties": false,
   "required": [
+    "mutation",
     "version"
   ],
   "properties": {
+    "mutation": {
+      "const": "setVersion"
+    },
     "version": {
-      "type": "string"
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "text",
+        "label": {
+          "en": "BCF version",
+          "de": "BCF-Version"
+        },
+        "description": {
+          "en": "VersionId written to bcf.version, e.g. 2.1.",
+          "de": "In bcf.version geschriebene VersionId, z. B. 2.1."
+        },
+        "group": "value",
+        "order": 10
+      }
     }
   }
 }

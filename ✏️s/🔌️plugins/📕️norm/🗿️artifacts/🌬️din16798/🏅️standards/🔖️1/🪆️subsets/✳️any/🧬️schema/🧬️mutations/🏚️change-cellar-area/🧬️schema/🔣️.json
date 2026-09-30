@@ -9,7 +9,21 @@
   ],
   "properties": {
     "newCellarAreaM2": {
-      "type": "number"
+      "type": "number",
+      "minimum": 0,
+      "x-semio-ui": {
+        "widget": "stepper",
+        "role": "value",
+        "label": {
+          "en": "Cellar floor area",
+          "de": "Kellergrundfläche"
+        },
+        "unit": "m²",
+        "step": 1,
+        "precision": 1,
+        "group": "building",
+        "order": 10
+      }
     }
   }
 }

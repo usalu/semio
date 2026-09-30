@@ -5,19 +5,20 @@
   "type": "object",
   "additionalProperties": false,
   "required": [
+    "mutation",
     "key",
     "value"
   ],
   "properties": {
+    "mutation": {
+      "const": "setMetadataEntry",
+      "description": "Aggregate discriminator spliced in by SemioImageMutation; absent when the payload stands alone."
+    },
     "key": {
       "type": "string"
     },
     "value": {
       "type": "string"
-    },
-    "mutation": {
-      "const": "setMetadataEntry",
-      "description": "Aggregate discriminator spliced in by SemioImageMutation; absent when the payload stands alone."
     }
   }
 }

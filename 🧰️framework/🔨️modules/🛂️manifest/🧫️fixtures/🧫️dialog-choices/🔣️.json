@@ -1,0 +1,63 @@
+{
+  "$schema": "./🧬️schema/🔣️.json",
+  "note": "🔀️ A dialog offering decisions beside its submit: the finalize prompt of a history edit, opened with a `seed` context arg no field declares. Every renderer lays the buttons out in `focusOrder` (staged fields, Cancel, each choice in declared order, the submit last), announces a choice's description with it, and styles a destructive choice as danger. For each case's `staged` field values it enables exactly `enabled` and disables exactly `disabled` — the submit is gated on the dialog's required args, a choice only on the args it `requires` (none by default), so clearing the name disables only the submit — and dispatches exactly `dispatches`: a choice sends its own action with the seed context, the args it requires and `choice` naming it; the submit sends its action with the merged args; Cancel (button or Escape) sends the cancel action with no args. `invalid` dialogs are refused at app assembly with the listed reason.",
+  "dialog": {
+    "id": "finalizeHistoryEdit",
+    "title": { "native": { "en": "Finish editing history", "de": "Verlaufsbearbeitung abschließen" }, "reuse": { "en": "Finish editing history", "de": "Verlaufsbearbeitung abschließen" } },
+    "body": { "native": { "en": "Keep the edit as a new alternative or overwrite the existing history.", "de": "Die Bearbeitung als neue Alternative behalten oder den bestehenden Verlauf überschreiben." }, "reuse": { "en": "Keep the edit as a new alternative or overwrite the existing history.", "de": "Die Bearbeitung als neue Alternative behalten oder den bestehenden Verlauf überschreiben." } },
+    "args": [
+      {
+        "id": "name",
+        "label": { "native": { "en": "Alternative name", "de": "Name der Alternative" }, "reuse": { "en": "Alternative name", "de": "Name der Alternative" } },
+        "schema": { "kind": "string" },
+        "required": true,
+        "default": "Alternative 2"
+      }
+    ],
+    "submitAction": "historyEditCommit",
+    "submitLabel": { "native": { "en": "New alternative", "de": "Neue Alternative" }, "reuse": { "en": "New alternative", "de": "Neue Alternative" } },
+    "cancelAction": "historyEditBack",
+    "cancelLabel": { "native": { "en": "Back", "de": "Zurück" }, "reuse": { "en": "Back", "de": "Zurück" } },
+    "choices": [
+      {
+        "id": "overwrite",
+        "label": { "native": { "en": "Overwrite", "de": "Überschreiben" }, "reuse": { "en": "Overwrite", "de": "Überschreiben" } },
+        "description": { "native": { "en": "Replaces the edited mutations in every alternative that contains them.", "de": "Ersetzt die bearbeiteten Mutationen in jeder Alternative, die sie enthält." }, "reuse": { "en": "Replaces the edited mutations in every alternative that contains them.", "de": "Ersetzt die bearbeiteten Mutationen in jeder Alternative, die sie enthält." } },
+        "action": "historyEditCommit",
+        "tone": "danger",
+        "destructive": true
+      }
+    ]
+  },
+  "seed": { "generation": 7 },
+  "focusOrder": ["field:name", "cancel", "choice:overwrite", "submit"],
+  "cases": [
+    {
+      "case": "named",
+      "staged": { "name": "Variant B" },
+      "enabled": ["cancel", "choice:overwrite", "submit"],
+      "disabled": [],
+      "dispatches": [
+        { "button": "choice:overwrite", "action": "historyEditCommit", "args": { "generation": 7, "choice": "overwrite" } },
+        { "button": "submit", "action": "historyEditCommit", "args": { "generation": 7, "name": "Variant B" } },
+        { "button": "cancel", "action": "historyEditBack", "args": null }
+      ]
+    },
+    {
+      "case": "cleared",
+      "staged": { "name": "" },
+      "enabled": ["cancel", "choice:overwrite"],
+      "disabled": ["submit"],
+      "dispatches": [
+        { "button": "choice:overwrite", "action": "historyEditCommit", "args": { "generation": 7, "choice": "overwrite" } },
+        { "button": "cancel", "action": "historyEditBack", "args": null }
+      ]
+    }
+  ],
+  "invalid": [
+    { "case": "empty-choice-id", "choiceIds": [" "], "argIds": [], "reason": "choice id must be non-empty" },
+    { "case": "duplicate-choice-id", "choiceIds": ["overwrite", "overwrite"], "argIds": [], "reason": "duplicate choice id overwrite" },
+    { "case": "reserved-choice-arg", "choiceIds": ["overwrite"], "argIds": ["choice"], "reason": "arg choice is reserved in a dialog with choices" },
+    { "case": "requires-undeclared-arg", "choiceIds": ["overwrite"], "argIds": ["name"], "requires": ["title"], "reason": "choice overwrite requires undeclared arg title" }
+  ]
+}

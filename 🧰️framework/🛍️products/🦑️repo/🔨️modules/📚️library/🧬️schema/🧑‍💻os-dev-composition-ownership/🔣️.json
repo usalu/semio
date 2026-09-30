@@ -24,11 +24,25 @@
     "contractContext": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["name", "kind", "parentKinds"],
+      "required": [
+        "name",
+        "kind",
+        "parentKinds"
+      ],
       "properties": {
-        "name": { "const": "🧑‍💻os-dev-composition-ownership" },
-        "kind": { "const": "os-dev-composition-ownership" },
-        "parentKinds": { "const": ["fixtures", "schema", "tests"] }
+        "name": {
+          "const": "🧑‍💻os-dev-composition-ownership"
+        },
+        "kind": {
+          "const": "os-dev-composition-ownership"
+        },
+        "parentKinds": {
+          "const": [
+            "fixtures",
+            "schema",
+            "tests"
+          ]
+        }
       }
     },
     "routerPath": {
@@ -36,8 +50,8 @@
     },
     "owners": {
       "type": "array",
-      "minItems": 49,
-      "maxItems": 49,
+      "minItems": 47,
+      "maxItems": 47,
       "items": {
         "type": "object",
         "additionalProperties": false,
@@ -68,25 +82,44 @@
     },
     "contextChains": {
       "type": "array",
-      "minItems": 49,
-      "maxItems": 49,
+      "minItems": 47,
+      "maxItems": 47,
       "items": {
         "type": "object",
         "additionalProperties": false,
-        "required": ["owner", "parentKind", "members"],
+        "required": [
+          "owner",
+          "parentKind",
+          "members"
+        ],
         "properties": {
-          "owner": { "type": "string", "pattern": "^[a-z0-9]+(?:-[a-z0-9]+)*$" },
-          "parentKind": { "type": "string", "minLength": 1 },
+          "owner": {
+            "type": "string",
+            "pattern": "^[a-z0-9]+(?:-[a-z0-9]+)*$"
+          },
+          "parentKind": {
+            "type": "string",
+            "minLength": 1
+          },
           "members": {
             "type": "array",
             "minItems": 1,
             "items": {
               "type": "object",
               "additionalProperties": false,
-              "required": ["name", "kind"],
+              "required": [
+                "name",
+                "kind"
+              ],
               "properties": {
-                "name": { "type": "string", "minLength": 2 },
-                "kind": { "type": "string", "pattern": "^[a-z0-9]+(?:-[a-z0-9]+)*$" }
+                "name": {
+                  "type": "string",
+                  "minLength": 2
+                },
+                "kind": {
+                  "type": "string",
+                  "pattern": "^[a-z0-9]+(?:-[a-z0-9]+)*$"
+                }
               }
             }
           }
@@ -102,14 +135,49 @@
       "items": {
         "type": "object",
         "additionalProperties": false,
-        "required": ["id", "mode", "path", "requiredTokens", "forbiddenTokens"],
+        "required": [
+          "id",
+          "mode",
+          "path",
+          "requiredTokens",
+          "forbiddenTokens"
+        ],
         "properties": {
-          "id": { "type": "string", "pattern": "^[a-z0-9]+(?:-[a-z0-9]+)*$" },
-          "mode": { "enum": ["direct-import", "dynamic-import", "source-data", "detached-import"] },
-          "path": { "type": "string", "minLength": 1 },
-          "requiredTokens": { "type": "array", "minItems": 1, "items": { "type": "string", "minLength": 1 } },
-          "forbiddenTokens": { "type": "array", "items": { "type": "string", "minLength": 1 } },
-          "minimumOccurrences": { "type": "integer", "minimum": 1 }
+          "id": {
+            "type": "string",
+            "pattern": "^[a-z0-9]+(?:-[a-z0-9]+)*$"
+          },
+          "mode": {
+            "enum": [
+              "direct-import",
+              "dynamic-import",
+              "source-data",
+              "detached-import"
+            ]
+          },
+          "path": {
+            "type": "string",
+            "minLength": 1
+          },
+          "requiredTokens": {
+            "type": "array",
+            "minItems": 1,
+            "items": {
+              "type": "string",
+              "minLength": 1
+            }
+          },
+          "forbiddenTokens": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "minLength": 1
+            }
+          },
+          "minimumOccurrences": {
+            "type": "integer",
+            "minimum": 1
+          }
         }
       }
     },
@@ -119,10 +187,23 @@
       "items": {
         "type": "object",
         "additionalProperties": false,
-        "required": ["project", "inputs"],
+        "required": [
+          "project",
+          "inputs"
+        ],
         "properties": {
-          "project": { "type": "string", "pattern": "/📋️\\.project\\.json$|/📋️project\\.json$" },
-          "inputs": { "type": "array", "minItems": 1, "items": { "type": "string", "minLength": 1 } }
+          "project": {
+            "type": "string",
+            "pattern": "/📋️\\.project\\.json$|/📋️project\\.json$"
+          },
+          "inputs": {
+            "type": "array",
+            "minItems": 1,
+            "items": {
+              "type": "string",
+              "minLength": 1
+            }
+          }
         }
       }
     },
@@ -133,11 +214,32 @@
       "items": {
         "type": "object",
         "additionalProperties": false,
-        "required": ["id", "ownerPath", "ownerIds"],
+        "required": [
+          "id",
+          "ownerPath",
+          "ownerIds"
+        ],
         "properties": {
-          "id": { "enum": ["dev-distribution-bundle", "playground-session", "scale-fixture"] },
-          "ownerPath": { "type": "string", "minLength": 1 },
-          "ownerIds": { "type": "array", "minItems": 1, "uniqueItems": true, "items": { "type": "string", "pattern": "^[a-z0-9]+(?:-[a-z0-9]+)*$" } }
+          "id": {
+            "enum": [
+              "dev-distribution-bundle",
+              "playground-session",
+              "scale-fixture"
+            ]
+          },
+          "ownerPath": {
+            "type": "string",
+            "minLength": 1
+          },
+          "ownerIds": {
+            "type": "array",
+            "minItems": 1,
+            "uniqueItems": true,
+            "items": {
+              "type": "string",
+              "pattern": "^[a-z0-9]+(?:-[a-z0-9]+)*$"
+            }
+          }
         }
       }
     },
@@ -148,14 +250,42 @@
       "items": {
         "type": "object",
         "additionalProperties": false,
-        "required": ["id", "filename", "constant", "authorityPath", "producerOwner", "producerToken"],
+        "required": [
+          "id",
+          "filename",
+          "constant",
+          "authorityPath",
+          "producerOwner",
+          "producerToken"
+        ],
         "properties": {
-          "id": { "enum": ["shard-worker", "module-bridge"] },
-          "filename": { "type": "string", "pattern": "\\.js$" },
-          "constant": { "enum": ["SHARD_WORKER_FILE", "MODULE_BRIDGE_FILE"] },
-          "authorityPath": { "type": "string", "pattern": "/🟦️\\.ts$" },
-          "producerOwner": { "const": "browser-host-staging" },
-          "producerToken": { "type": "string", "minLength": 1 }
+          "id": {
+            "enum": [
+              "shard-worker",
+              "module-bridge"
+            ]
+          },
+          "filename": {
+            "type": "string",
+            "pattern": "\\.js$"
+          },
+          "constant": {
+            "enum": [
+              "SHARD_WORKER_FILE",
+              "MODULE_BRIDGE_FILE"
+            ]
+          },
+          "authorityPath": {
+            "type": "string",
+            "pattern": "/🟦️\\.ts$"
+          },
+          "producerOwner": {
+            "const": "browser-host-staging"
+          },
+          "producerToken": {
+            "type": "string",
+            "minLength": 1
+          }
         }
       }
     },
@@ -172,19 +302,15 @@
       "additionalProperties": false,
       "required": [
         "target",
-        "name",
         "command",
         "packagePath",
         "projectPath",
-        "seedLaunchPath",
-        "derivedLaunchPath"
+        "derivedLaunchPath",
+        "launchContribution"
       ],
       "properties": {
         "target": {
           "const": "test-os-dev-composition-ownership"
-        },
-        "name": {
-          "const": "🧹clean🧩️taxonomy🧑‍💻os-dev-composition-ownership"
         },
         "command": {
           "const": "bun nx run @semio-tech/repo-lib:test-os-dev-composition-ownership"
@@ -195,11 +321,11 @@
         "projectPath": {
           "const": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📋️project.json"
         },
-        "seedLaunchPath": {
-          "const": ".vscode/🧩️launch.seed.jsonc"
-        },
         "derivedLaunchPath": {
           "const": ".vscode/launch.json"
+        },
+        "launchContribution": {
+          "const": "declaredProjectTargets"
         }
       }
     }

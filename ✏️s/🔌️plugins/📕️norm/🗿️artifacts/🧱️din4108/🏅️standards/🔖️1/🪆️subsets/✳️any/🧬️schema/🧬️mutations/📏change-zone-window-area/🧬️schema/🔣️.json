@@ -11,13 +11,61 @@
   ],
   "properties": {
     "zoneId": {
-      "type": "string"
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Zone",
+          "de": "Zone"
+        },
+        "description": {
+          "en": "The thermal zone this mutation addresses.",
+          "de": "Die thermische Zone, die diese Mutation adressiert."
+        },
+        "ref": {
+          "kind": "zone"
+        },
+        "group": "target",
+        "order": 10
+      }
     },
     "windowId": {
-      "type": "string"
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Window",
+          "de": "Fenster"
+        },
+        "description": {
+          "en": "The window of the zone this mutation addresses.",
+          "de": "Das Fenster der Zone, das diese Mutation adressiert."
+        },
+        "ref": {
+          "kind": "window"
+        },
+        "group": "target",
+        "order": 20
+      }
     },
     "newAreaM2": {
-      "type": "number"
+      "type": "number",
+      "minimum": 0,
+      "x-semio-ui": {
+        "widget": "stepper",
+        "role": "value",
+        "label": {
+          "en": "Window area A_w",
+          "de": "Fensterfläche A_w"
+        },
+        "unit": "m²",
+        "step": 0.1,
+        "precision": 2,
+        "group": "summer",
+        "order": 30
+      }
     }
   }
 }

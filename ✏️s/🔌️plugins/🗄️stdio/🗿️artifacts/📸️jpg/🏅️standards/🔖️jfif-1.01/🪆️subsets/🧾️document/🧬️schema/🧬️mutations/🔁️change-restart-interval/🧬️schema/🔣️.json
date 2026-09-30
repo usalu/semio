@@ -15,7 +15,18 @@
         {
           "type": "null"
         }
-      ]
+      ],
+      "x-semio-ui": {
+        "widget": "stepper",
+        "label": {
+          "en": "Restart interval",
+          "de": "Restart-Intervall"
+        },
+        "description": {
+          "en": "MCUs between restart markers (DRI); 0 disables restarts.",
+          "de": "MCUs zwischen Restart-Markern (DRI); 0 deaktiviert sie."
+        }
+      }
     }
   }
 }

@@ -11,14 +11,60 @@
   ],
   "properties": {
     "zoneId": {
-      "type": "string"
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Zone",
+          "de": "Zone"
+        },
+        "description": {
+          "en": "The thermal zone this mutation addresses.",
+          "de": "Die thermische Zone, die diese Mutation adressiert."
+        },
+        "ref": {
+          "kind": "zone"
+        },
+        "group": "target",
+        "order": 10
+      }
     },
     "index": {
       "type": "integer",
-      "minimum": 0
+      "minimum": 0,
+      "x-semio-ui": {
+        "widget": "stepper",
+        "role": "value",
+        "label": {
+          "en": "Position",
+          "de": "Position"
+        },
+        "description": {
+          "en": "Zero-based list position at which the record is inserted.",
+          "de": "Nullbasierte Listenposition, an der der Datensatz eingefügt wird."
+        },
+        "step": 1,
+        "precision": 0,
+        "group": "target",
+        "order": 20
+      }
     },
     "window": {
-      "type": "object"
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/din4108/snapshot.json#/$defs/ZoneWindow",
+      "x-semio-ui": {
+        "role": "value",
+        "label": {
+          "en": "Window",
+          "de": "Fenster"
+        },
+        "description": {
+          "en": "The complete window record to insert into the zone.",
+          "de": "Der vollständige in die Zone einzufügende Fensterdatensatz."
+        },
+        "group": "record",
+        "order": 30
+      }
     }
   }
 }

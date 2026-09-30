@@ -5,6 +5,7 @@
   "type": "object",
   "additionalProperties": false,
   "required": [
+    "mutation",
     "fromPort",
     "newId",
     "sourceId",
@@ -12,14 +13,46 @@
     "toPort"
   ],
   "properties": {
+    "mutation": {
+      "const": "duplicateWidget"
+    },
     "sourceId": {
-      "type": "string"
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Source Widget",
+          "de": "Quell-Widget"
+        },
+        "description": {
+          "en": "The widget to duplicate.",
+          "de": "Das zu duplizierende Widget."
+        },
+        "ref": {
+          "kind": "widget",
+          "domain": "graph",
+          "granularity": "node"
+        }
+      }
     },
     "newId": {
       "type": "string"
     },
     "synapseId": {
-      "type": "string"
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "text",
+        "role": "value",
+        "label": {
+          "en": "Synapse ID",
+          "de": "Synapsen-ID"
+        },
+        "description": {
+          "en": "Id of the new synapse that wires the source to the copy.",
+          "de": "ID der neuen Synapse, die die Quelle mit der Kopie verbindet."
+        }
+      }
     },
     "fromPort": {
       "type": "string"

@@ -5,15 +5,16 @@
   "type": "object",
   "additionalProperties": false,
   "required": [
+    "mutation",
     "identifier"
   ],
   "properties": {
-    "identifier": {
-      "type": "string"
-    },
     "mutation": {
       "const": "setOutputIntent",
       "description": "Aggregate discriminator spliced in by PdfVtMutation; absent when the payload stands alone."
+    },
+    "identifier": {
+      "type": "string"
     }
   }
 }

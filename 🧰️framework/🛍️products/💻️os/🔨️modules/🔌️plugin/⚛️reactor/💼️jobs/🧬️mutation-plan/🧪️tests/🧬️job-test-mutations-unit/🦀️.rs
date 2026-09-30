@@ -118,4 +118,10 @@ fn ordered_diff_absorb_is_associative_at_boundaries() {
         }
     }
 }
+
+/// 🧾️ The committed wire witnesses decode through the aggregate's `FromValue` and re-encode to exactly the committed JSON.
+#[test]
+fn committed_wire_witnesses_are_the_canonical_wire() {
+    ::store::os_store::test_support::assert_wire_witness::<JobTestOp>(include_str!("../../🧫️fixtures/🧬️job-test-mutations/🧬️mutations/➕️add-value/🧫️fixtures/🧾️wire-witness/🦠️mutation/🔣️.json"));
+}
 //#endregion 🧪️JobTestMutationLaws

@@ -9,7 +9,27 @@
   ],
   "properties": {
     "newAssumedSiloPatch": {
-      "type": "number"
+      "type": "number",
+      "minimum": 0,
+      "x-semio-ui": {
+        "widget": "stepper",
+        "role": "value",
+        "label": {
+          "en": "Assumed patch pressure p_p",
+          "de": "Angesetzte Teilflächenlast p_p"
+        },
+        "description": {
+          "en": "Value claimed by the design; the check compares it with the value derived from the standard.",
+          "de": "Vom Entwurf angesetzter Wert; der Nachweis vergleicht ihn mit dem nach der Norm ermittelten Wert."
+        },
+        "unit": "Pa",
+        "displayUnit": "kN/m²",
+        "displayFactor": 0.001,
+        "step": 50,
+        "precision": 2,
+        "group": "silo",
+        "order": 10
+      }
     }
   }
 }

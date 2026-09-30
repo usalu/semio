@@ -5,5 +5,5 @@
   "type": "object",
   "additionalProperties": false,
   "required": ["evalText"],
-  "properties": { "evalText": { "anyOf": [{ "type": "string" }, { "type": "null" }] } }
+  "properties": { "evalText": { "anyOf": [{ "type": "string" }, { "type": "null" }], "x-semio-ui": {"widget": "multiline", "role": "value", "label": {"en": "Evaluation text", "de": "Auswertungstext"}, "description": {"en": "Text of the last preview evaluation; empty clears it.", "de": "Text der letzten Vorschauauswertung; leer löscht ihn."}, "group": "preview", "order": 10} } }
 }

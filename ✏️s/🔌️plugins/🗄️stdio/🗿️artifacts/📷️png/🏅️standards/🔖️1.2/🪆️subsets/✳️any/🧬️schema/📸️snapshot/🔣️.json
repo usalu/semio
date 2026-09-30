@@ -19,7 +19,18 @@
   "properties": {
     "schema": {
       "type": "string",
-      "x-semio-state": "artifact"
+      "x-semio-state": "artifact",
+      "x-semio-ui": {
+        "widget": "text",
+        "label": {
+          "en": "Snapshot schema",
+          "de": "Snapshot-Schema"
+        },
+        "description": {
+          "en": "Identifier of the snapshot schema version.",
+          "de": "Kennung der Version des Snapshot-Schemas."
+        }
+      }
     },
     "width": {
       "type": "integer",
@@ -35,11 +46,52 @@
       "type": "integer",
       "minimum": 0,
       "maximum": 16,
-      "x-semio-state": "artifact"
+      "x-semio-state": "artifact",
+      "x-semio-ui": {
+        "widget": "stepper",
+        "label": {
+          "en": "Bit depth",
+          "de": "Bittiefe"
+        },
+        "description": {
+          "en": "Bits per sample or palette index (1, 2, 4, 8 or 16).",
+          "de": "Bits je Abtastwert oder Palettenindex (1, 2, 4, 8 oder 16)."
+        },
+        "unit": "bit"
+      }
     },
     "colorType": {
       "$ref": "#/$defs/PngColorType",
-      "x-semio-state": "artifact"
+      "x-semio-state": "artifact",
+      "x-semio-ui": {
+        "widget": "select",
+        "label": {
+          "en": "Color type",
+          "de": "Farbtyp"
+        },
+        "options": {
+          "grayscale": {
+            "en": "Grayscale",
+            "de": "Graustufen"
+          },
+          "rgb": {
+            "en": "RGB",
+            "de": "RGB"
+          },
+          "palette": {
+            "en": "Palette",
+            "de": "Palette"
+          },
+          "grayscaleAlpha": {
+            "en": "Grayscale with alpha",
+            "de": "Graustufen mit Alpha"
+          },
+          "rgba": {
+            "en": "RGB with alpha",
+            "de": "RGB mit Alpha"
+          }
+        }
+      }
     },
     "interlace": {
       "type": "boolean",
@@ -50,43 +102,127 @@
       "items": {
         "$ref": "#/$defs/PngRgb"
       },
-      "x-semio-state": "artifact"
+      "x-semio-state": "artifact",
+      "x-semio-ui": {
+        "label": {
+          "en": "Palette (PLTE)",
+          "de": "Palette (PLTE)"
+        }
+      }
     },
     "trns": {
       "$ref": "#/$defs/PngTransparency",
-      "x-semio-state": "artifact"
+      "x-semio-state": "artifact",
+      "x-semio-ui": {
+        "label": {
+          "en": "Transparency (tRNS)",
+          "de": "Transparenz (tRNS)"
+        }
+      }
     },
     "gama": {
       "type": "integer",
       "minimum": 0,
-      "x-semio-state": "artifact"
+      "x-semio-state": "artifact",
+      "x-semio-ui": {
+        "widget": "stepper",
+        "label": {
+          "en": "Gamma (gAMA)",
+          "de": "Gamma (gAMA)"
+        },
+        "description": {
+          "en": "Image gamma times 100000.",
+          "de": "Bildgamma mal 100000."
+        },
+        "displayFactor": 1e-05,
+        "precision": 5
+      }
     },
     "chrm": {
       "$ref": "#/$defs/PngChromaticities",
-      "x-semio-state": "artifact"
+      "x-semio-state": "artifact",
+      "x-semio-ui": {
+        "label": {
+          "en": "Chromaticities (cHRM)",
+          "de": "Chromatizität (cHRM)"
+        },
+        "description": {
+          "en": "CIE 1931 x,y of the primaries and white point, times 100000.",
+          "de": "CIE-1931-x,y der Primärfarben und des Weißpunkts, mal 100000."
+        }
+      }
     },
     "srgb": {
       "$ref": "#/$defs/PngSrgbIntent",
-      "x-semio-state": "artifact"
+      "x-semio-state": "artifact",
+      "x-semio-ui": {
+        "widget": "select",
+        "label": {
+          "en": "Rendering intent (sRGB)",
+          "de": "Rendering Intent (sRGB)"
+        },
+        "options": {
+          "perceptual": {
+            "en": "Perceptual",
+            "de": "Wahrnehmungsorientiert"
+          },
+          "relativeColorimetric": {
+            "en": "Relative colorimetric",
+            "de": "Relativ farbmetrisch"
+          },
+          "saturation": {
+            "en": "Saturation",
+            "de": "Sättigung"
+          },
+          "absoluteColorimetric": {
+            "en": "Absolute colorimetric",
+            "de": "Absolut farbmetrisch"
+          }
+        }
+      }
     },
     "phys": {
       "$ref": "#/$defs/PngPhysicalDims",
-      "x-semio-state": "artifact"
+      "x-semio-state": "artifact",
+      "x-semio-ui": {
+        "label": {
+          "en": "Physical pixel dimensions (pHYs)",
+          "de": "Physikalische Pixelmaße (pHYs)"
+        }
+      }
     },
     "time": {
       "$ref": "#/$defs/PngTimestamp",
-      "x-semio-state": "artifact"
+      "x-semio-state": "artifact",
+      "x-semio-ui": {
+        "label": {
+          "en": "Last modification (tIME)",
+          "de": "Letzte Änderung (tIME)"
+        }
+      }
     },
     "bkgd": {
       "$ref": "#/$defs/PngBackground",
-      "x-semio-state": "artifact"
+      "x-semio-state": "artifact",
+      "x-semio-ui": {
+        "label": {
+          "en": "Background color (bKGD)",
+          "de": "Hintergrundfarbe (bKGD)"
+        }
+      }
     },
     "textChunks": {
       "type": "array",
       "items": {
         "$ref": "#/$defs/PngTextChunk"
       },
-      "x-semio-state": "artifact"
+      "x-semio-state": "artifact",
+      "x-semio-ui": {
+        "label": {
+          "en": "Text chunks",
+          "de": "Text-Chunks"
+        }
+      }
     },
     "pixels": {
       "type": "array",
@@ -102,14 +238,30 @@
       "items": {
         "$ref": "#/$defs/PngChunkMarker"
       },
-      "x-semio-state": "artifact"
+      "x-semio-state": "artifact",
+      "x-semio-ui": {
+        "label": {
+          "en": "Chunk order",
+          "de": "Chunk-Reihenfolge"
+        }
+      }
     },
     "unknownChunks": {
       "type": "array",
       "items": {
         "$ref": "#/$defs/PngChunk"
       },
-      "x-semio-state": "artifact"
+      "x-semio-state": "artifact",
+      "x-semio-ui": {
+        "label": {
+          "en": "Unknown chunks",
+          "de": "Unbekannte Chunks"
+        },
+        "description": {
+          "en": "Ancillary chunks without a dedicated field, kept verbatim.",
+          "de": "Zusatz-Chunks ohne eigenes Feld, unverändert erhalten."
+        }
+      }
     }
   },
   "$defs": {
@@ -135,17 +287,38 @@
         "r": {
           "type": "integer",
           "minimum": 0,
-          "maximum": 255
+          "maximum": 255,
+          "x-semio-ui": {
+            "widget": "stepper",
+            "label": {
+              "en": "Red",
+              "de": "Rot"
+            }
+          }
         },
         "g": {
           "type": "integer",
           "minimum": 0,
-          "maximum": 255
+          "maximum": 255,
+          "x-semio-ui": {
+            "widget": "stepper",
+            "label": {
+              "en": "Green",
+              "de": "Grün"
+            }
+          }
         },
         "b": {
           "type": "integer",
           "minimum": 0,
-          "maximum": 255
+          "maximum": 255,
+          "x-semio-ui": {
+            "widget": "stepper",
+            "label": {
+              "en": "Blue",
+              "de": "Blau"
+            }
+          }
         }
       }
     },
@@ -161,7 +334,28 @@
             "indexed",
             "grayscale",
             "rgb"
-          ]
+          ],
+          "x-semio-ui": {
+            "widget": "segmented",
+            "label": {
+              "en": "Color type",
+              "de": "Farbtyp"
+            },
+            "options": {
+              "indexed": {
+                "en": "Indexed color",
+                "de": "Indizierte Farben"
+              },
+              "grayscale": {
+                "en": "Grayscale",
+                "de": "Graustufen"
+              },
+              "rgb": {
+                "en": "RGB",
+                "de": "RGB"
+              }
+            }
+          }
         },
         "alpha": {
           "type": "array",
@@ -169,27 +363,65 @@
             "type": "integer",
             "minimum": 0,
             "maximum": 255
+          },
+          "x-semio-ui": {
+            "label": {
+              "en": "Palette alpha",
+              "de": "Paletten-Alpha"
+            },
+            "description": {
+              "en": "Alpha value per palette entry.",
+              "de": "Alphawert je Paletteneintrag."
+            }
           }
         },
         "gray": {
           "type": "integer",
           "minimum": 0,
-          "maximum": 65535
+          "maximum": 65535,
+          "x-semio-ui": {
+            "widget": "stepper",
+            "label": {
+              "en": "Gray level",
+              "de": "Graustufe"
+            }
+          }
         },
         "r": {
           "type": "integer",
           "minimum": 0,
-          "maximum": 65535
+          "maximum": 65535,
+          "x-semio-ui": {
+            "widget": "stepper",
+            "label": {
+              "en": "Red",
+              "de": "Rot"
+            }
+          }
         },
         "g": {
           "type": "integer",
           "minimum": 0,
-          "maximum": 65535
+          "maximum": 65535,
+          "x-semio-ui": {
+            "widget": "stepper",
+            "label": {
+              "en": "Green",
+              "de": "Grün"
+            }
+          }
         },
         "b": {
           "type": "integer",
           "minimum": 0,
-          "maximum": 65535
+          "maximum": 65535,
+          "x-semio-ui": {
+            "widget": "stepper",
+            "label": {
+              "en": "Blue",
+              "de": "Blau"
+            }
+          }
         }
       }
     },
@@ -208,28 +440,100 @@
       ],
       "properties": {
         "whiteX": {
-          "type": "integer"
+          "type": "integer",
+          "x-semio-ui": {
+            "widget": "stepper",
+            "label": {
+              "en": "White point x",
+              "de": "Weißpunkt x"
+            },
+            "displayFactor": 1e-05,
+            "precision": 5
+          }
         },
         "whiteY": {
-          "type": "integer"
+          "type": "integer",
+          "x-semio-ui": {
+            "widget": "stepper",
+            "label": {
+              "en": "White point y",
+              "de": "Weißpunkt y"
+            },
+            "displayFactor": 1e-05,
+            "precision": 5
+          }
         },
         "redX": {
-          "type": "integer"
+          "type": "integer",
+          "x-semio-ui": {
+            "widget": "stepper",
+            "label": {
+              "en": "Red x",
+              "de": "Rot x"
+            },
+            "displayFactor": 1e-05,
+            "precision": 5
+          }
         },
         "redY": {
-          "type": "integer"
+          "type": "integer",
+          "x-semio-ui": {
+            "widget": "stepper",
+            "label": {
+              "en": "Red y",
+              "de": "Rot y"
+            },
+            "displayFactor": 1e-05,
+            "precision": 5
+          }
         },
         "greenX": {
-          "type": "integer"
+          "type": "integer",
+          "x-semio-ui": {
+            "widget": "stepper",
+            "label": {
+              "en": "Green x",
+              "de": "Grün x"
+            },
+            "displayFactor": 1e-05,
+            "precision": 5
+          }
         },
         "greenY": {
-          "type": "integer"
+          "type": "integer",
+          "x-semio-ui": {
+            "widget": "stepper",
+            "label": {
+              "en": "Green y",
+              "de": "Grün y"
+            },
+            "displayFactor": 1e-05,
+            "precision": 5
+          }
         },
         "blueX": {
-          "type": "integer"
+          "type": "integer",
+          "x-semio-ui": {
+            "widget": "stepper",
+            "label": {
+              "en": "Blue x",
+              "de": "Blau x"
+            },
+            "displayFactor": 1e-05,
+            "precision": 5
+          }
         },
         "blueY": {
-          "type": "integer"
+          "type": "integer",
+          "x-semio-ui": {
+            "widget": "stepper",
+            "label": {
+              "en": "Blue y",
+              "de": "Blau y"
+            },
+            "displayFactor": 1e-05,
+            "precision": 5
+          }
         }
       }
     },
@@ -253,14 +557,39 @@
       "properties": {
         "ppuX": {
           "type": "integer",
-          "minimum": 0
+          "minimum": 0,
+          "x-semio-ui": {
+            "widget": "stepper",
+            "label": {
+              "en": "Pixels per unit, X",
+              "de": "Pixel pro Einheit, X"
+            }
+          }
         },
         "ppuY": {
           "type": "integer",
-          "minimum": 0
+          "minimum": 0,
+          "x-semio-ui": {
+            "widget": "stepper",
+            "label": {
+              "en": "Pixels per unit, Y",
+              "de": "Pixel pro Einheit, Y"
+            }
+          }
         },
         "unitIsMeter": {
-          "type": "boolean"
+          "type": "boolean",
+          "x-semio-ui": {
+            "widget": "toggle",
+            "label": {
+              "en": "Unit is meter",
+              "de": "Einheit ist Meter"
+            },
+            "description": {
+              "en": "On: pixels per meter; off: aspect ratio only.",
+              "de": "An: Pixel pro Meter; aus: nur Seitenverhältnis."
+            }
+          }
         }
       }
     },
@@ -280,19 +609,54 @@
           "type": "integer"
         },
         "month": {
-          "type": "integer"
+          "type": "integer",
+          "x-semio-ui": {
+            "widget": "stepper",
+            "label": {
+              "en": "Month",
+              "de": "Monat"
+            }
+          }
         },
         "day": {
-          "type": "integer"
+          "type": "integer",
+          "x-semio-ui": {
+            "widget": "stepper",
+            "label": {
+              "en": "Day",
+              "de": "Tag"
+            }
+          }
         },
         "hour": {
-          "type": "integer"
+          "type": "integer",
+          "x-semio-ui": {
+            "widget": "stepper",
+            "label": {
+              "en": "Hour",
+              "de": "Stunde"
+            }
+          }
         },
         "minute": {
-          "type": "integer"
+          "type": "integer",
+          "x-semio-ui": {
+            "widget": "stepper",
+            "label": {
+              "en": "Minute",
+              "de": "Minute"
+            }
+          }
         },
         "second": {
-          "type": "integer"
+          "type": "integer",
+          "x-semio-ui": {
+            "widget": "stepper",
+            "label": {
+              "en": "Second",
+              "de": "Sekunde"
+            }
+          }
         }
       }
     },
@@ -308,19 +672,68 @@
             "grayscale",
             "rgb",
             "indexed"
-          ]
+          ],
+          "x-semio-ui": {
+            "widget": "segmented",
+            "label": {
+              "en": "Color type",
+              "de": "Farbtyp"
+            },
+            "options": {
+              "grayscale": {
+                "en": "Grayscale",
+                "de": "Graustufen"
+              },
+              "rgb": {
+                "en": "RGB",
+                "de": "RGB"
+              },
+              "indexed": {
+                "en": "Indexed color",
+                "de": "Indizierte Farben"
+              }
+            }
+          }
         },
         "gray": {
-          "type": "integer"
+          "type": "integer",
+          "x-semio-ui": {
+            "widget": "stepper",
+            "label": {
+              "en": "Gray level",
+              "de": "Graustufe"
+            }
+          }
         },
         "r": {
-          "type": "integer"
+          "type": "integer",
+          "x-semio-ui": {
+            "widget": "stepper",
+            "label": {
+              "en": "Red",
+              "de": "Rot"
+            }
+          }
         },
         "g": {
-          "type": "integer"
+          "type": "integer",
+          "x-semio-ui": {
+            "widget": "stepper",
+            "label": {
+              "en": "Green",
+              "de": "Grün"
+            }
+          }
         },
         "b": {
-          "type": "integer"
+          "type": "integer",
+          "x-semio-ui": {
+            "widget": "stepper",
+            "label": {
+              "en": "Blue",
+              "de": "Blau"
+            }
+          }
         },
         "index": {
           "type": "integer"
@@ -348,22 +761,62 @@
       ],
       "properties": {
         "keyword": {
-          "type": "string"
+          "type": "string",
+          "x-semio-ui": {
+            "widget": "text",
+            "label": {
+              "en": "Keyword",
+              "de": "Schlüsselwort"
+            }
+          }
         },
         "value": {
           "type": "string"
         },
         "compressed": {
-          "type": "boolean"
+          "type": "boolean",
+          "x-semio-ui": {
+            "widget": "toggle",
+            "label": {
+              "en": "Compressed",
+              "de": "Komprimiert"
+            }
+          }
         },
         "kind": {
-          "$ref": "#/$defs/PngTextKind"
+          "$ref": "#/$defs/PngTextKind",
+          "x-semio-ui": {
+            "options": {
+              "zText": {
+                "en": "Compressed text (zTXt)",
+                "de": "Komprimierter Text (zTXt)"
+              },
+              "iText": {
+                "en": "International text (iTXt)",
+                "de": "Internationaler Text (iTXt)"
+              }
+            }
+          }
         },
         "languageTag": {
-          "type": "string"
+          "type": "string",
+          "x-semio-ui": {
+            "widget": "text",
+            "label": {
+              "en": "Language tag",
+              "de": "Sprachkennung"
+            }
+          }
         },
         "translatedKeyword": {
-          "type": "string"
+          "type": "string",
+          "x-semio-ui": {
+            "widget": "text",
+            "label": {
+              "en": "Translated keyword",
+              "de": "Übersetztes Schlüsselwort"
+            }
+          }
         }
       }
     },
@@ -417,7 +870,59 @@
             "iend",
             "text",
             "unknown"
-          ]
+          ],
+          "x-semio-ui": {
+            "options": {
+              "ihdr": {
+                "en": "IHDR (image header)",
+                "de": "IHDR (Bildkopf)"
+              },
+              "plte": {
+                "en": "PLTE (palette)",
+                "de": "PLTE (Palette)"
+              },
+              "trns": {
+                "en": "tRNS (transparency)",
+                "de": "tRNS (Transparenz)"
+              },
+              "gama": {
+                "en": "gAMA (gamma)",
+                "de": "gAMA (Gamma)"
+              },
+              "chrm": {
+                "en": "cHRM (chromaticities)",
+                "de": "cHRM (Chromatizität)"
+              },
+              "srgb": {
+                "en": "sRGB (rendering intent)",
+                "de": "sRGB (Rendering Intent)"
+              },
+              "phys": {
+                "en": "pHYs (physical dimensions)",
+                "de": "pHYs (physikalische Maße)"
+              },
+              "time": {
+                "en": "tIME (modification time)",
+                "de": "tIME (Änderungszeit)"
+              },
+              "bkgd": {
+                "en": "bKGD (background color)",
+                "de": "bKGD (Hintergrundfarbe)"
+              },
+              "idat": {
+                "en": "IDAT (image data)",
+                "de": "IDAT (Bilddaten)"
+              },
+              "iend": {
+                "en": "IEND (image end)",
+                "de": "IEND (Bildende)"
+              },
+              "unknown": {
+                "en": "Unknown chunk",
+                "de": "Unbekannter Chunk"
+              }
+            }
+          }
         },
         "index": {
           "type": "integer",

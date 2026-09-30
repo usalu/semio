@@ -6,9 +6,9 @@
   "additionalProperties": false,
   "required": ["notation", "results", "computed", "equation"],
   "properties": {
-    "notation": { "$ref": "https://json.schemas.assets.semio-tech.com/os/store/child.json", "x-semio-state": "artifact" },
-    "results": { "$ref": "https://json.schemas.assets.semio-tech.com/os/store/child.json", "x-semio-state": "artifact" },
-    "computed": { "$ref": "https://json.schemas.assets.semio-tech.com/os/store/child.json", "x-semio-state": "artifact" },
+    "notation": { "$ref": "https://json.schemas.assets.semio-tech.com/os/store/child/schema.json", "x-semio-state": "artifact" },
+    "results": { "$ref": "https://json.schemas.assets.semio-tech.com/os/store/child/schema.json", "x-semio-state": "artifact" },
+    "computed": { "$ref": "https://json.schemas.assets.semio-tech.com/os/store/child/schema.json", "x-semio-state": "artifact" },
     "equation": { "$ref": "https://json.schemas.assets.semio-tech.com/framework/value/schema.json", "x-semio-state": "artifact" }
   }
 }

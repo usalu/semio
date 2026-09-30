@@ -1,0 +1,10 @@
+{
+  "mutation": "applyTable",
+  "payload": {
+    "mutation": {
+      "RemoveRow": {
+        "index": 0
+      }
+    }
+  }
+}

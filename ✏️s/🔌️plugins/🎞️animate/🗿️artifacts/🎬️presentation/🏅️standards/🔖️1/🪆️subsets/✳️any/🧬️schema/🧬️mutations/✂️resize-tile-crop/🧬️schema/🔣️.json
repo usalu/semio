@@ -10,7 +10,24 @@
   ],
   "properties": {
     "id": {
-      "type": "string"
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Tile",
+          "de": "Kachel"
+        },
+        "description": {
+          "en": "The tile to crop.",
+          "de": "Die zuzuschneidende Kachel."
+        },
+        "ref": {
+          "kind": "tile",
+          "domain": "tiles",
+          "granularity": "tile"
+        }
+      }
     },
     "newCrop": {
       "title": "FigureTileFrame",
@@ -30,10 +47,23 @@
           "type": "number"
         },
         "width": {
-          "type": "number"
+          "type": "number",
+          "exclusiveMinimum": 0
         },
         "height": {
-          "type": "number"
+          "type": "number",
+          "exclusiveMinimum": 0
+        }
+      },
+      "x-semio-ui": {
+        "role": "value",
+        "label": {
+          "en": "New Crop",
+          "de": "Neuer Zuschnitt"
+        },
+        "description": {
+          "en": "Region of the source the tile shows, as fractions of the source size.",
+          "de": "Bereich der Quelle, den die Kachel zeigt, als Anteile der Quellgröße."
         }
       }
     }

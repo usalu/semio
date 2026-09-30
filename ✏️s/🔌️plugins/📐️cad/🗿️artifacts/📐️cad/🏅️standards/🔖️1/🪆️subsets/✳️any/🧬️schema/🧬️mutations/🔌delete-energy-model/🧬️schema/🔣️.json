@@ -4,5 +4,12 @@
   "title": "DeleteEnergyModel",
   "type": "object",
   "additionalProperties": false,
-  "properties": {}
+  "required": [
+    "mutation"
+  ],
+  "properties": {
+    "mutation": {
+      "const": "deleteEnergyModel"
+    }
+  }
 }

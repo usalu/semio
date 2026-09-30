@@ -5,18 +5,62 @@
   "type": "object",
   "additionalProperties": false,
   "required": [
+    "mutation",
     "id",
     "newHolidayDailyScheduleId"
   ],
   "properties": {
+    "mutation": {
+      "const": "changeAnnualScheduleHolidayDailySchedule"
+    },
     "id": {
-      "type": "integer"
+      "type": "integer",
+      "minimum": 0,
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Annual schedule",
+          "de": "Jahreszeitplan"
+        },
+        "description": {
+          "en": "The annual schedule this mutation changes, by id.",
+          "de": "Jahreszeitplan, den diese Mutation ändert, per ID."
+        },
+        "ref": {
+          "kind": "annualSchedule",
+          "domain": "energyModel",
+          "granularity": "schedule"
+        },
+        "group": "target",
+        "order": 10
+      }
     },
     "newHolidayDailyScheduleId": {
       "type": [
         "integer",
         "null"
-      ]
+      ],
+      "minimum": 0,
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Holiday daily schedule",
+          "de": "Feiertags-Tageszeitplan"
+        },
+        "description": {
+          "en": "Daily profile of the holidays, by id; empty means none.",
+          "de": "Tagesprofil der Feiertage, per ID; leer bedeutet keiner."
+        },
+        "ref": {
+          "kind": "schedule",
+          "domain": "energyModel",
+          "granularity": "schedule"
+        },
+        "group": "schedule",
+        "order": 20
+      }
     }
   }
 }

@@ -4,9 +4,32 @@
   "title": "ChangeObjectKindVariant",
   "type": "object",
   "additionalProperties": false,
+  "required": [
+    "mutation"
+  ],
   "properties": {
+    "mutation": {
+      "const": "changeObjectKindVariant"
+    },
     "newVariant": {
-      "type": "string"
+      "type": [
+        "string",
+        "null"
+      ],
+      "x-semio-ui": {
+        "widget": "text",
+        "role": "value",
+        "label": {
+          "en": "Variant",
+          "de": "Variante"
+        },
+        "description": {
+          "en": "Variant name of the kind; empty clears it.",
+          "de": "Variantenname der Art; leer entfernt ihn."
+        },
+        "group": "value",
+        "order": 10
+      }
     }
   }
 }

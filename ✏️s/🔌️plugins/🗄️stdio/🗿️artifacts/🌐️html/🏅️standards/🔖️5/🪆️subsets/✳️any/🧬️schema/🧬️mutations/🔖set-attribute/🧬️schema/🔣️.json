@@ -5,40 +5,64 @@
   "type": "object",
   "additionalProperties": false,
   "required": [
+    "mutation",
     "path",
     "name"
   ],
   "properties": {
+    "mutation": {
+      "const": "setAttribute",
+      "description": "Aggregate discriminator spliced in by HtmlMutation; absent when the payload stands alone."
+    },
     "path": {
       "type": "array",
       "items": {
         "type": "integer",
         "minimum": 0
+      },
+      "x-semio-ui": {
+        "label": {
+          "en": "Node path",
+          "de": "Knotenpfad"
+        },
+        "description": {
+          "en": "Child indices from the document root to the node.",
+          "de": "Kindindizes vom Dokumentstamm bis zum Knoten."
+        },
+        "group": "target",
+        "order": 10
       }
     },
     "name": {
-      "type": "string"
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "text",
+        "label": {
+          "en": "Attribute name",
+          "de": "Attributname"
+        },
+        "group": "value",
+        "order": 20
+      }
     },
     "value": {
-      "anyOf": [
-        {
-          "anyOf": [
-            {
-              "type": "string"
-            },
-            {
-              "type": "null"
-            }
-          ]
+      "type": [
+        "string",
+        "null"
+      ],
+      "x-semio-ui": {
+        "widget": "text",
+        "label": {
+          "en": "Attribute value",
+          "de": "Attributwert"
         },
-        {
-          "type": "null"
-        }
-      ]
-    },
-    "mutation": {
-      "const": "setAttribute",
-      "description": "Aggregate discriminator spliced in by HtmlMutation; absent when the payload stands alone."
+        "description": {
+          "en": "A string sets the value, null writes the attribute without a value, absent removes it.",
+          "de": "Eine Zeichenkette setzt den Wert, null schreibt das Attribut ohne Wert, fehlt der Wert, wird es entfernt."
+        },
+        "group": "value",
+        "order": 30
+      }
     }
   }
 }

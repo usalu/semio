@@ -10,10 +10,41 @@
   ],
   "properties": {
     "index": {
-      "type": "integer"
+      "type": "integer",
+      "minimum": 0,
+      "x-semio-ui": {
+        "widget": "stepper",
+        "role": "value",
+        "label": {
+          "en": "Composite column",
+          "de": "Verbundstütze"
+        },
+        "description": {
+          "en": "Zero-based position of the composite column in its list.",
+          "de": "Nullbasierte Position der Verbundstütze in der Liste."
+        },
+        "step": 1,
+        "precision": 0,
+        "group": "target",
+        "order": 10
+      }
     },
     "newKind": {
-      "type": "string"
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "text",
+        "role": "value",
+        "label": {
+          "en": "Column type",
+          "de": "Stützentyp"
+        },
+        "description": {
+          "en": "encased, concrete_filled or partially_encased (EN 1994-1-1 Figure 6.17).",
+          "de": "encased (vollständig einbetoniert), concrete_filled (ausbetoniertes Hohlprofil) oder partially_encased (teilweise einbetoniert) nach EN 1994-1-1 Bild 6.17."
+        },
+        "group": "column",
+        "order": 20
+      }
     }
   }
 }

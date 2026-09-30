@@ -5,16 +5,55 @@
   "type": "object",
   "additionalProperties": false,
   "required": [
+    "mutation",
     "id",
-    "to_index"
+    "toIndex"
   ],
   "properties": {
-    "id": {
-      "type": "string"
+    "mutation": {
+      "const": "reorderStep"
     },
-    "to_index": {
+    "id": {
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Step",
+          "de": "Schritt"
+        },
+        "description": {
+          "en": "The form step this mutation addresses.",
+          "de": "Der Formularschritt, den diese Mutation adressiert."
+        },
+        "ref": {
+          "kind": "step",
+          "domain": "fields",
+          "granularity": "section"
+        },
+        "group": "target",
+        "order": 10
+      }
+    },
+    "toIndex": {
       "type": "integer",
-      "minimum": 0
+      "minimum": 0,
+      "x-semio-ui": {
+        "widget": "stepper",
+        "role": "value",
+        "label": {
+          "en": "New index",
+          "de": "Neuer Index"
+        },
+        "description": {
+          "en": "Position in the list after the move.",
+          "de": "Position in der Liste nach dem Verschieben."
+        },
+        "step": 1,
+        "precision": 0,
+        "group": "order",
+        "order": 20
+      }
     }
   }
 }

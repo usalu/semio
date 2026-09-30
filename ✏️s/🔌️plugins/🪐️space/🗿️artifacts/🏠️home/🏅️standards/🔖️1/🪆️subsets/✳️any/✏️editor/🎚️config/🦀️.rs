@@ -293,6 +293,7 @@ fn home_config_edit(forward: HomeConfigMutation, inverse: HomeConfigMutation, de
             mutation_id: Some(protocol::MutationId(format!("{id}#0"))), dependencies: Vec::new(), base_version: authority.base_applied_edit_count() as u64,
             author_id: Some(protocol::ActorId(authority.actor().to_string())), timestamp: authority.next_clock(), undo_policy: protocol::UndoPolicy::ExactBaseOnly,
             payload_hash: None, semantic_kind: None, label: None, group_id: None, origin: Default::default(),
+            transaction: None,
         }],
         description, coalesce_key: None, sequence_number: authority.next_sequence_number(), started_at: String::new(), finished_at: None,
     }

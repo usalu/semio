@@ -10,10 +10,40 @@
   ],
   "properties": {
     "memberId": {
-      "type": "string"
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Member",
+          "de": "Bauteil"
+        },
+        "description": {
+          "en": "The reinforced concrete member this mutation addresses.",
+          "de": "Das Stahlbetonbauteil, das diese Mutation adressiert."
+        },
+        "ref": {
+          "kind": "member"
+        },
+        "group": "target",
+        "order": 10
+      }
     },
     "newRating": {
-      "type": "string"
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1992/snapshot.json#/$defs/FireRating",
+      "x-semio-ui": {
+        "role": "value",
+        "label": {
+          "en": "Fire resistance class",
+          "de": "Feuerwiderstandsklasse"
+        },
+        "description": {
+          "en": "R30, R60, R90 or R120 (EN 1992-1-2).",
+          "de": "R30, R60, R90 oder R120 (EN 1992-1-2)."
+        },
+        "group": "fire",
+        "order": 20
+      }
     }
   }
 }

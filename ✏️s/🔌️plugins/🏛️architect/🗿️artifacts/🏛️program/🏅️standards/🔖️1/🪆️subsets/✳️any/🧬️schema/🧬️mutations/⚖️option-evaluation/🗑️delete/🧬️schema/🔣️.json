@@ -5,12 +5,34 @@
   "type": "object",
   "additionalProperties": false,
   "required": [
+    "mutation",
     "id"
   ],
   "properties": {
+    "mutation": {
+      "const": "deleteOptionEvaluation"
+    },
     "id": {
-      "type": "integer",
-      "minimum": 0
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Option Evaluation",
+          "de": "Variantenbewertung"
+        },
+        "description": {
+          "en": "The option evaluation to delete.",
+          "de": "Zu löschender Eintrag vom Typ „Variantenbewertung“."
+        },
+        "ref": {
+          "kind": "optionEvaluation",
+          "domain": "program",
+          "granularity": "entity"
+        },
+        "group": "target",
+        "order": 10
+      }
     }
   }
 }

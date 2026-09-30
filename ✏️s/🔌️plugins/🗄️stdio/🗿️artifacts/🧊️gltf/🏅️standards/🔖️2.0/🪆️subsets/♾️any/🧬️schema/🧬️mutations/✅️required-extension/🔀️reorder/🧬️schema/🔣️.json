@@ -12,17 +12,58 @@
       "type": "array",
       "items": {
         "type": "string"
+      },
+      "x-semio-ui": {
+        "label": {
+          "en": "New order",
+          "de": "Neue Reihenfolge"
+        },
+        "description": {
+          "en": "The required extension names in their new order.",
+          "de": "Die erforderlichen Erweiterungsnamen in neuer Reihenfolge."
+        },
+        "group": "value",
+        "order": 10
       }
     }
   },
-  "x-semio": {
-    "id": "s.stdio.gltf.mutation.reorder-required-extensions.v1",
-    "version": 1,
-    "phase": "mutation",
-    "touchedPaths": [
-      "document/extensionsRequired"
-    ],
-    "referencePolicy": "exact permutation preserves all declaration identities"
-  },
-  "x-semio-mutation": "reorder-required-extensions"
+  "$defs": {
+    "ReorderRequiredExtensionsMutation": {
+      "description": "The whole wire of ReorderRequiredExtensionsMutation: the editable apply payload (this document's root) or the inert restore.",
+      "oneOf": [
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "phase",
+            "value"
+          ],
+          "properties": {
+            "phase": {
+              "const": "apply"
+            },
+            "value": {
+              "$ref": "#"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "phase",
+            "value"
+          ],
+          "properties": {
+            "phase": {
+              "const": "restore"
+            },
+            "value": {
+              "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/gltf/2.0/any/diff.json"
+            }
+          }
+        }
+      ]
+    }
+  }
 }

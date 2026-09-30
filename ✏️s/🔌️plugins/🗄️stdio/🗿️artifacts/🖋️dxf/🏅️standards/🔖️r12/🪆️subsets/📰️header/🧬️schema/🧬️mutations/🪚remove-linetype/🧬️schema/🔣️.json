@@ -5,15 +5,30 @@
   "type": "object",
   "additionalProperties": false,
   "required": [
+    "mutation",
     "name"
   ],
   "properties": {
-    "name": {
-      "type": "string"
-    },
     "mutation": {
       "const": "removeLinetype",
       "description": "Aggregate discriminator spliced in by DxfMutation; absent when the payload stands alone."
+    },
+    "name": {
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Linetype",
+          "de": "Linientyp"
+        },
+        "ref": {
+          "kind": "linetype",
+          "domain": "dxf"
+        },
+        "group": "target",
+        "order": 10
+      }
     }
   }
 }

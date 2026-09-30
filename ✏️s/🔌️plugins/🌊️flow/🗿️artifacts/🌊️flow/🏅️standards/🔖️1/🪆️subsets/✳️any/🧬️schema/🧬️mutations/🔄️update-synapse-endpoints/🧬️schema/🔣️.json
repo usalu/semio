@@ -5,6 +5,7 @@
   "type": "object",
   "additionalProperties": false,
   "required": [
+    "mutation",
     "from",
     "fromPort",
     "id",
@@ -12,17 +13,71 @@
     "toPort"
   ],
   "properties": {
+    "mutation": {
+      "const": "updateSynapseEndpoints"
+    },
     "id": {
-      "type": "string"
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Synapse",
+          "de": "Synapse"
+        },
+        "description": {
+          "en": "The synapse this mutation addresses.",
+          "de": "Die Synapse, die diese Mutation adressiert."
+        },
+        "ref": {
+          "kind": "synapse",
+          "domain": "graph",
+          "granularity": "edge"
+        }
+      }
     },
     "from": {
-      "type": "string"
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "value",
+        "label": {
+          "en": "Source Widget",
+          "de": "Quell-Widget"
+        },
+        "description": {
+          "en": "The widget the connection starts at.",
+          "de": "Das Widget, an dem die Verbindung beginnt."
+        },
+        "ref": {
+          "kind": "widget",
+          "domain": "graph",
+          "granularity": "node"
+        }
+      }
     },
     "fromPort": {
       "type": "string"
     },
     "to": {
-      "type": "string"
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "value",
+        "label": {
+          "en": "Target Widget",
+          "de": "Ziel-Widget"
+        },
+        "description": {
+          "en": "The widget the connection ends at.",
+          "de": "Das Widget, an dem die Verbindung endet."
+        },
+        "ref": {
+          "kind": "widget",
+          "domain": "graph",
+          "granularity": "node"
+        }
+      }
     },
     "toPort": {
       "type": "string"

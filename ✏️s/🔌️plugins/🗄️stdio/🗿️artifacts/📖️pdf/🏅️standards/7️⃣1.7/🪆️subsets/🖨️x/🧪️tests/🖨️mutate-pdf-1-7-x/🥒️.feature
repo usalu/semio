@@ -86,7 +86,7 @@ Feature: Apply every typed ISO 15930-7 (PDF/X-4) conformance-class mutation to a
       | remove-output-intent         | {}                                                                |
       | set-trim-box                 | {"pageIndex": 0, "trimBox": [8.5, 8.5, 586.776, 833.39]}          |
       | remove-trim-box              | {"pageIndex": 0}                                                  |
-      | embed-font-file              | {"descriptorOrdinal": 0, "key": "FontFile2", "programOrdinal": 0} |
+      | embed-font-file              | {"descriptorOrdinal": 0, "key": "FontFile2", "program": {"num": 5, "gen": 0}} |
       | remove-font-file             | {"descriptorOrdinal": 0}                                          |
       | insert-javascript-action     | {"script": "app.alert('this document phones home');"}             |
       | remove-javascript-action     | {"script": "app.alert('this document phones home');"}             |
@@ -114,7 +114,7 @@ Feature: Apply every typed ISO 15930-7 (PDF/X-4) conformance-class mutation to a
       | remove-output-intent         | {}                                                                |
       | set-trim-box                 | {"pageIndex": 0, "trimBox": [8.5, 8.5, 586.776, 833.39]}          |
       | remove-trim-box              | {"pageIndex": 0}                                                  |
-      | embed-font-file              | {"descriptorOrdinal": 0, "key": "FontFile2", "programOrdinal": 0} |
+      | embed-font-file              | {"descriptorOrdinal": 0, "key": "FontFile2", "program": {"num": 5, "gen": 0}} |
       | remove-font-file             | {"descriptorOrdinal": 0}                                          |
       | insert-javascript-action     | {"script": "app.alert('this document phones home');"}             |
       | remove-javascript-action     | {"script": "app.alert('this document phones home');"}             |

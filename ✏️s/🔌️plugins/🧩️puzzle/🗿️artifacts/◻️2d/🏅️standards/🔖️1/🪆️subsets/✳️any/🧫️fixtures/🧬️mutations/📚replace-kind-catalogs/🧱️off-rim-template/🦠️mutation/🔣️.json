@@ -1,0 +1,35 @@
+{
+  "mutation": "replaceKindCatalogs",
+  "newCatalogs": {
+    "edges": [],
+    "handles": [],
+    "nodes": [
+      {
+        "abstract": false,
+        "attributes": [],
+        "authors": [],
+        "baseKinds": [],
+        "description": "Capsule",
+        "handles": [
+          {
+            "angle": 0.0,
+            "description": "Door",
+            "icon": "door",
+            "id": "template-door",
+            "label": "Door",
+            "name": "door",
+            "t": 1.5
+          }
+        ],
+        "icon": "capsule",
+        "id": "kind-capsule",
+        "image": "",
+        "label": "Capsule",
+        "name": "capsule",
+        "representations": [],
+        "unit": "mm"
+      }
+    ],
+    "wires": []
+  }
+}

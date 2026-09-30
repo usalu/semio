@@ -5,5 +5,8 @@
   "type": "object",
   "additionalProperties": false,
   "required": ["camera"],
-  "properties": { "camera": { "$ref": "../../🔣️.json#/$defs/Generation3dViewCamera" } }
+  "properties": { "camera": { "$ref": "#/$defs/Generation3dViewCamera", "x-semio-ui": {"role": "value", "label": {"en": "Preview camera", "de": "Vorschaukamera"}, "description": {"en": "Camera of the 3D preview.", "de": "Kamera der 3D-Vorschau."}, "group": "camera", "order": 10} } },
+  "$defs": {
+    "Generation3dViewCamera": {"type": "object", "additionalProperties": false, "required": ["position", "target", "fov"], "properties": {"position": {"type": "array", "items": {"type": "number", "format": "double"}, "minItems": 3, "maxItems": 3, "x-semio-ui": {"widget": "vector", "role": "value", "label": {"en": "Position", "de": "Position"}, "description": {"en": "Where the camera stands.", "de": "Standpunkt der Kamera."}, "step": 0.1, "group": "camera", "order": 10}}, "target": {"type": "array", "items": {"type": "number", "format": "double"}, "minItems": 3, "maxItems": 3, "x-semio-ui": {"widget": "vector", "role": "value", "label": {"en": "Look at", "de": "Blickziel"}, "description": {"en": "The point the camera looks at.", "de": "Der Punkt, auf den die Kamera blickt."}, "step": 0.1, "group": "camera", "order": 20}}, "fov": {"type": "number", "format": "double", "x-semio-ui": {"widget": "slider", "role": "value", "label": {"en": "Field of view", "de": "Sichtfeld"}, "description": {"en": "Vertical opening angle of the camera.", "de": "Vertikaler Öffnungswinkel der Kamera."}, "unit": "deg", "step": 1, "precision": 1, "softMin": 10, "softMax": 120, "snaps": [30, 45, 60, 90], "group": "camera", "order": 30}}}}
+  }
 }

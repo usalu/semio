@@ -1,0 +1,31 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/framework/replication/apply-refusal/schema.json",
+  "$defs": {
+    "TransientApplyRefusalCodeV1": {
+      "const": "hub.unavailable"
+    },
+    "TransientApplyRefusalMessageV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "level",
+        "code",
+        "message"
+      ],
+      "properties": {
+        "level": {
+          "const": "warning"
+        },
+        "code": {
+          "$ref": "#/$defs/TransientApplyRefusalCodeV1"
+        },
+        "message": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 1024
+        }
+      }
+    }
+  }
+}

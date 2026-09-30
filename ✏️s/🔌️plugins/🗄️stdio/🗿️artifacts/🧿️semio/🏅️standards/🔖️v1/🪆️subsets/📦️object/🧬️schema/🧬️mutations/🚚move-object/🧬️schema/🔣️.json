@@ -9,7 +9,13 @@
   ],
   "properties": {
     "translation": {
-      "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/semio/v1/base/geometry.json#/$defs/SemioPoint3"
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/semio/v1/base/geometry.json#/$defs/SemioPoint3",
+      "x-semio-ui": {
+        "label": {
+          "en": "Translation",
+          "de": "Verschiebung"
+        }
+      }
     }
   }
 }

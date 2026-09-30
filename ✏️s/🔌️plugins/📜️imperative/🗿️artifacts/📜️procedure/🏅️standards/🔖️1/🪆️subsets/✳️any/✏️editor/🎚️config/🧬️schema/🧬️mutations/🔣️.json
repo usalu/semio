@@ -1,0 +1,43 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/app/imperative/imperative/config/mutations.json",
+  "title": "ImperativeConfigMutation",
+  "oneOf": [
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "ReplaceConfig"
+      ],
+      "properties": {
+        "ReplaceConfig": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/app/imperative/imperative/config/mutation/replace-config/schema.json"
+        }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "SetRunOutput"
+      ],
+      "properties": {
+        "SetRunOutput": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/app/imperative/imperative/config/mutation/set-run-output/schema.json"
+        }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "SetContributions"
+      ],
+      "properties": {
+        "SetContributions": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/app/imperative/imperative/config/mutation/set-contributions/schema.json"
+        }
+      }
+    }
+  ]
+}

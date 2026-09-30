@@ -11,14 +11,64 @@
   ],
   "properties": {
     "elementId": {
-      "type": "string"
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Envelope element",
+          "de": "Bauteil der Gebäudehülle"
+        },
+        "description": {
+          "en": "The envelope element this mutation addresses.",
+          "de": "Das Bauteil der Gebäudehülle, das diese Mutation adressiert."
+        },
+        "ref": {
+          "kind": "element"
+        },
+        "group": "target",
+        "order": 10
+      }
     },
     "index": {
       "type": "integer",
-      "minimum": 0
+      "minimum": 0,
+      "x-semio-ui": {
+        "widget": "stepper",
+        "role": "value",
+        "label": {
+          "en": "Layer",
+          "de": "Schicht"
+        },
+        "description": {
+          "en": "Zero-based position of the layer, counted from the interior in its list.",
+          "de": "Nullbasierte Position der Schicht, von innen gezählt, in der Liste."
+        },
+        "step": 1,
+        "precision": 0,
+        "group": "target",
+        "order": 20
+      }
     },
     "newMaterialId": {
-      "type": "string"
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "value",
+        "label": {
+          "en": "Building material",
+          "de": "Baustoff"
+        },
+        "description": {
+          "en": "Catalogue material of the layer.",
+          "de": "Katalogbaustoff der Schicht."
+        },
+        "ref": {
+          "kind": "material"
+        },
+        "group": "layer",
+        "order": 30
+      }
     }
   }
 }

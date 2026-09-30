@@ -1,6 +1,7 @@
 {
   "kind": "set-sample-flags",
-  "params": {
+  "mutation": {
+    "mutation": "setSampleFlags",
     "streamIndex": 0,
     "index": 0,
     "pts": 500,

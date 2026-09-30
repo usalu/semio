@@ -4,8 +4,7 @@ use crate::schema::modules::mutation_support::top_level::rejection_outcome;
 use crate::schema::modules::mutation_support::top_level::GltfTopLevelMutationRejection;
 use crate::GltfSnapshot;
 pub const ID: &str = "s.stdio.gltf.mutation.bind-primitive-material.v1";
-#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::MutationLeaf)]
-#[mutation_leaf(contract = ::protocol)]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
 #[value(rename_all = "camelCase")]
 pub struct GltfBindPrimitiveMaterialPayload {
     pub mesh: usize,
@@ -29,7 +28,7 @@ pub fn apply(payload: &GltfBindPrimitiveMaterialPayload, base: &GltfSnapshot) ->
 
 //#region 🧬️DirectMutation
 #[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::MutationLeaf)]
-#[mutation_leaf(contract = ::protocol)]
+#[mutation_leaf(contract = ::protocol, payload = Apply)]
 #[value(tag = "phase", content = "value", rename_all = "camelCase")]
 pub enum BindPrimitiveMaterialMutation {
     Apply(GltfBindPrimitiveMaterialPayload),
@@ -73,6 +72,6 @@ impl protocol::MutationKind<GltfSnapshot, super::GltfMutation> for BindPrimitive
 
 //#region 🧪️Tests
 #[cfg(test)]
-#[path = "🧪️tests/🔬️direct-leaf/🦀️.rs"]
-mod direct_leaf_tests;
+#[path = "🧪️tests/🔗️binds-the-steel-1cd6cc/🦀️.rs"]
+mod case_binds_the_steel_1cd6cc;
 //#endregion 🧪️Tests

@@ -5,15 +5,55 @@
   "type": "object",
   "additionalProperties": false,
   "required": [
+    "mutation",
     "id",
     "newSolarTransmittance"
   ],
   "properties": {
+    "mutation": {
+      "const": "changeGlazingMaterialSolarTransmittance"
+    },
     "id": {
-      "type": "integer"
+      "type": "integer",
+      "minimum": 0,
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Glazing material",
+          "de": "Verglasungsmaterial"
+        },
+        "description": {
+          "en": "The glazing material this mutation changes, by id.",
+          "de": "Verglasungsmaterial, das diese Mutation ändert, per ID."
+        },
+        "ref": {
+          "kind": "glazingMaterial",
+          "domain": "energyModel",
+          "granularity": "glazingMaterial"
+        },
+        "group": "target",
+        "order": 10
+      }
     },
     "newSolarTransmittance": {
-      "type": "number"
+      "type": "number",
+      "minimum": 0,
+      "maximum": 1,
+      "x-semio-ui": {
+        "widget": "slider",
+        "role": "value",
+        "label": {
+          "en": "Solar transmittance",
+          "de": "Solarer Transmissionsgrad"
+        },
+        "step": 0.01,
+        "precision": 2,
+        "softMin": 0,
+        "softMax": 1,
+        "group": "optics",
+        "order": 20
+      }
     }
   }
 }

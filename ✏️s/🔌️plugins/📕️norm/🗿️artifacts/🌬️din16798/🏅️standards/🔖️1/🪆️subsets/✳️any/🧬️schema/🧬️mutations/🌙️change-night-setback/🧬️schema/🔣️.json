@@ -9,7 +9,21 @@
   ],
   "properties": {
     "newNightSetbackK": {
-      "type": "number"
+      "type": "number",
+      "minimum": 0,
+      "x-semio-ui": {
+        "widget": "stepper",
+        "role": "value",
+        "label": {
+          "en": "Night setback Δθ",
+          "de": "Nachtabsenkung Δθ"
+        },
+        "unit": "K",
+        "step": 0.5,
+        "precision": 1,
+        "group": "building",
+        "order": 10
+      }
     }
   }
 }

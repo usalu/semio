@@ -9,7 +9,24 @@
   ],
   "properties": {
     "newClassId": {
-      "type": "string"
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "value",
+        "label": {
+          "en": "Product class",
+          "de": "Produktklasse"
+        },
+        "description": {
+          "en": "Product class the selection request searches in (ISO 16757-5).",
+          "de": "Produktklasse, in der der Auswahlauftrag sucht (ISO 16757-5)."
+        },
+        "ref": {
+          "kind": "productClass"
+        },
+        "group": "selection",
+        "order": 10
+      }
     }
   }
 }

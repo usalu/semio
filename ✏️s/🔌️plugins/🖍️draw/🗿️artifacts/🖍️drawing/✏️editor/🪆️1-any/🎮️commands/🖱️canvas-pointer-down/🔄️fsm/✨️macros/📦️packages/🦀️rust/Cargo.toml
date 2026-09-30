@@ -5,6 +5,10 @@ edition = "2021"
 rust-version.workspace = true
 description = "Draw plugin - fsm statechart! proc-macro (draw-fsm's sibling; a proc-macro crate can never be merged into a normal rlib/cdylib crate)"
 
+[package.metadata.semio]
+role = "library"
+id = "draw-fsm-macros"
+
 [lints]
 workspace = true
 

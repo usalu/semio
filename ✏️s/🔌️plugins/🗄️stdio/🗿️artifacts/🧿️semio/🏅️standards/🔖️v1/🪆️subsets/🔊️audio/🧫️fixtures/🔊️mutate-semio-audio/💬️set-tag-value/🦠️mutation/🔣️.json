@@ -1,6 +1,7 @@
 {
   "kind": "set-tag-value",
-  "params": {
+  "mutation": {
+    "mutation": "setTagValue",
     "index": 0,
     "value": "reference tone"
   },

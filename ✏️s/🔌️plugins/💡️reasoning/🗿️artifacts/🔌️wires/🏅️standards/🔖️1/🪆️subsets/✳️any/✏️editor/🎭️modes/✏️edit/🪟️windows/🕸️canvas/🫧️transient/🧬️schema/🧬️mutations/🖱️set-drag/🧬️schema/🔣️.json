@@ -8,19 +8,92 @@
       "type": [
         "string",
         "null"
-      ]
+      ],
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "value",
+        "label": {
+          "en": "Dragged Node",
+          "de": "Gezogener Knoten"
+        },
+        "description": {
+          "en": "The node being dragged; empty while panning.",
+          "de": "Der gezogene Knoten; leer beim Verschieben der Ansicht."
+        },
+        "ref": {
+          "kind": "node",
+          "domain": "graph",
+          "granularity": "node"
+        }
+      }
     },
     "startX": {
-      "type": "number"
+      "type": "number",
+      "x-semio-ui": {
+        "widget": "stepper",
+        "role": "value",
+        "label": {
+          "en": "Drag Start X",
+          "de": "Ziehbeginn X"
+        },
+        "description": {
+          "en": "Pointer x where the drag began.",
+          "de": "Zeiger-x-Position zu Beginn des Ziehens."
+        },
+        "step": 1,
+        "precision": 2
+      }
     },
     "startY": {
-      "type": "number"
+      "type": "number",
+      "x-semio-ui": {
+        "widget": "stepper",
+        "role": "value",
+        "label": {
+          "en": "Drag Start Y",
+          "de": "Ziehbeginn Y"
+        },
+        "description": {
+          "en": "Pointer y where the drag began.",
+          "de": "Zeiger-y-Position zu Beginn des Ziehens."
+        },
+        "step": 1,
+        "precision": 2
+      }
     },
     "lastX": {
-      "type": "number"
+      "type": "number",
+      "x-semio-ui": {
+        "widget": "stepper",
+        "role": "value",
+        "label": {
+          "en": "Last Pointer X",
+          "de": "Letzte Zeigerposition X"
+        },
+        "description": {
+          "en": "Pointer x at the latest drag event.",
+          "de": "Zeiger-x-Position beim letzten Ziehereignis."
+        },
+        "step": 1,
+        "precision": 2
+      }
     },
     "lastY": {
-      "type": "number"
+      "type": "number",
+      "x-semio-ui": {
+        "widget": "stepper",
+        "role": "value",
+        "label": {
+          "en": "Last Pointer Y",
+          "de": "Letzte Zeigerposition Y"
+        },
+        "description": {
+          "en": "Pointer y at the latest drag event.",
+          "de": "Zeiger-y-Position beim letzten Ziehereignis."
+        },
+        "step": 1,
+        "precision": 2
+      }
     },
     "zoom": {
       "type": "number",

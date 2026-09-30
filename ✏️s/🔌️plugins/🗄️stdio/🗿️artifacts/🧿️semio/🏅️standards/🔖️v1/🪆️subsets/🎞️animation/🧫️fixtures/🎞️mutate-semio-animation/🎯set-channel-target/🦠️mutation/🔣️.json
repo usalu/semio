@@ -1,6 +1,7 @@
 {
   "kind": "set-channel-target",
-  "params": {
+  "mutation": {
+    "mutation": "setChannelTarget",
     "timelineIndex": 0,
     "index": 0,
     "target": {

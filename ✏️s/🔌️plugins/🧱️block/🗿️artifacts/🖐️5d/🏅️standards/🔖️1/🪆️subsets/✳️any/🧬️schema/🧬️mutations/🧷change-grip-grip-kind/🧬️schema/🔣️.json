@@ -5,15 +5,49 @@
   "type": "object",
   "additionalProperties": false,
   "required": [
+    "mutation",
     "id",
     "newGripKind"
   ],
   "properties": {
+    "mutation": {
+      "const": "changeGripGripKind"
+    },
     "id": {
-      "type": "string"
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Grip",
+          "de": "Griff"
+        },
+        "ref": {
+          "kind": "grip",
+          "domain": "grip",
+          "granularity": "grip"
+        },
+        "group": "target",
+        "order": 10
+      }
     },
     "newGripKind": {
-      "type": "string"
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Grip kind",
+          "de": "Griffart"
+        },
+        "ref": {
+          "kind": "gripKind",
+          "domain": "grip",
+          "granularity": "gripKind"
+        },
+        "group": "target",
+        "order": 20
+      }
     }
   }
 }

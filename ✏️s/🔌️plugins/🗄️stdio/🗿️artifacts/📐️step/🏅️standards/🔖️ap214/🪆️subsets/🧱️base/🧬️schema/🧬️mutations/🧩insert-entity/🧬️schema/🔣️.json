@@ -5,20 +5,21 @@
   "type": "object",
   "additionalProperties": false,
   "required": [
+    "mutation",
     "index",
     "entity"
   ],
   "properties": {
+    "mutation": {
+      "const": "insertEntity",
+      "description": "Aggregate discriminator spliced in by StepMutation; absent when the payload stands alone."
+    },
     "index": {
       "type": "integer",
       "minimum": 0
     },
     "entity": {
       "$ref": "#/$defs/StepEntity"
-    },
-    "mutation": {
-      "const": "insertEntity",
-      "description": "Aggregate discriminator spliced in by StepMutation; absent when the payload stands alone."
     }
   },
   "$defs": {
@@ -41,12 +42,32 @@
           "type": "array",
           "items": {
             "$ref": "#/$defs/StepValue"
+          },
+          "x-semio-ui": {
+            "label": {
+              "en": "Parameters",
+              "de": "Parameter"
+            },
+            "description": {
+              "en": "Attribute values of the entity instance in declaration order.",
+              "de": "Attributwerte der Entitätsinstanz in Deklarationsreihenfolge."
+            }
           }
         },
         "complex": {
           "type": "array",
           "items": {
             "$ref": "#/$defs/StepComplexType"
+          },
+          "x-semio-ui": {
+            "label": {
+              "en": "Partial entity instances",
+              "de": "Teilentitätsinstanzen"
+            },
+            "description": {
+              "en": "Subtype records of a complex (multi-leaf) entity instance.",
+              "de": "Untertyp-Datensätze einer komplexen Entitätsinstanz."
+            }
           }
         }
       }
@@ -178,6 +199,16 @@
           "type": "array",
           "items": {
             "$ref": "#/$defs/StepValue"
+          },
+          "x-semio-ui": {
+            "label": {
+              "en": "Parameters",
+              "de": "Parameter"
+            },
+            "description": {
+              "en": "Attribute values of the entity instance in declaration order.",
+              "de": "Attributwerte der Entitätsinstanz in Deklarationsreihenfolge."
+            }
           }
         }
       }

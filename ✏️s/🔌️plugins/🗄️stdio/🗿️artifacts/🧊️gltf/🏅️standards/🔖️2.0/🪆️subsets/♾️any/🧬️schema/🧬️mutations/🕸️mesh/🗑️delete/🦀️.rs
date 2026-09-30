@@ -26,7 +26,7 @@ pub fn apply(payload: &GltfDeleteMeshPayload, base: &GltfSnapshot) -> Result<Glt
 
 //#region 🧬️DirectMutation
 #[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::MutationLeaf)]
-#[mutation_leaf(contract = ::protocol)]
+#[mutation_leaf(contract = ::protocol, payload = Apply)]
 #[value(tag = "phase", content = "value", rename_all = "camelCase")]
 pub enum DeleteMeshMutation {
     Apply(GltfDeleteMeshPayload),
@@ -70,6 +70,6 @@ impl protocol::MutationKind<GltfSnapshot, super::GltfMutation> for DeleteMeshMut
 
 //#region 🧪️Tests
 #[cfg(test)]
-#[path = "🧪️tests/🔬️direct-leaf/🦀️.rs"]
-mod direct_leaf_tests;
+#[path = "🧪️tests/🔗️removes-the-hull-b7a141/🦀️.rs"]
+mod case_removes_the_hull_b7a141;
 //#endregion 🧪️Tests

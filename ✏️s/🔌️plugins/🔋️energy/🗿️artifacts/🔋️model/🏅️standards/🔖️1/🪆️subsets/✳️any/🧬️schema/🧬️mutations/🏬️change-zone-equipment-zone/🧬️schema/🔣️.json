@@ -5,15 +5,57 @@
   "type": "object",
   "additionalProperties": false,
   "required": [
+    "mutation",
     "id",
     "newZoneId"
   ],
   "properties": {
+    "mutation": {
+      "const": "changeZoneEquipmentZone"
+    },
     "id": {
-      "type": "integer"
+      "type": "integer",
+      "minimum": 0,
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Zone equipment",
+          "de": "Zonengerät"
+        },
+        "description": {
+          "en": "The zone equipment this mutation changes, by id.",
+          "de": "Zonengerät, das diese Mutation ändert, per ID."
+        },
+        "ref": {
+          "kind": "zoneEquipment"
+        },
+        "group": "target",
+        "order": 10
+      }
     },
     "newZoneId": {
-      "type": "integer"
+      "type": "integer",
+      "minimum": 0,
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Zone",
+          "de": "Zone"
+        },
+        "description": {
+          "en": "Assigned zone, by id.",
+          "de": "Zugeordnete Zone, per ID."
+        },
+        "ref": {
+          "kind": "zone",
+          "domain": "energyModel",
+          "granularity": "zone"
+        },
+        "group": "assignment",
+        "order": 20
+      }
     }
   }
 }

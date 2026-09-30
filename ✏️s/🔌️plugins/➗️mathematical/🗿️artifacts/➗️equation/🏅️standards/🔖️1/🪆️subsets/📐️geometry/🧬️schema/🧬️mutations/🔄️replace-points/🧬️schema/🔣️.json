@@ -26,6 +26,17 @@
             "type": "number"
           }
         }
+      },
+      "x-semio-ui": {
+        "role": "value",
+        "label": {
+          "en": "Points",
+          "de": "Punkte"
+        },
+        "description": {
+          "en": "All points of the geometry in order.",
+          "de": "Alle Punkte der Geometrie in Reihenfolge."
+        }
       }
     }
   }

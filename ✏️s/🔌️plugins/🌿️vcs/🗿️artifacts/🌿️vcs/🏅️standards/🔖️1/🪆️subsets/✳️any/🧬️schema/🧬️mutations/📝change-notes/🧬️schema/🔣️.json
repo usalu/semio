@@ -2,34 +2,24 @@
   "$schema": "http://json-schema.org/draft-07/schema#",
   "$id": "https://json.schemas.assets.semio-tech.com/s/vcs/vcs/mutation/change-notes/schema.json",
   "title": "ChangeNotes",
-  "$ref": "#/$defs/Payload",
-  "$defs": {
-    "Payload": {
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "newNotes"
-      ],
-      "properties": {
-        "newNotes": {
-          "type": "string"
-        }
-      }
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "mutation",
+    "newNotes"
+  ],
+  "properties": {
+    "mutation": {
+      "const": "changeNotes"
     },
-    "Wire": {
-      "title": "ChangeNotesMutation",
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "mutation",
-        "newNotes"
-      ],
-      "properties": {
-        "mutation": {
-          "const": "changeNotes"
-        },
-        "newNotes": {
-          "$ref": "#/$defs/Payload/properties/newNotes"
+    "newNotes": {
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "multiline",
+        "role": "value",
+        "label": {
+          "en": "New Notes",
+          "de": "Neue Notizen"
         }
       }
     }

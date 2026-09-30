@@ -16,7 +16,7 @@
           "scenarios": [
             {
               "id": "restamps-generator-copyright-and-min-version",
-              "directoryName": "🏗️restamps-generator-copyright-and-min-version-together"
+              "directoryName": "🔬️t068"
             }
           ]
         },
@@ -27,7 +27,7 @@
           "scenarios": [
             {
               "id": "attaches-an-xmp-extension-object-to-the-asset-block",
-              "directoryName": "🧩️attaches-an-xmp-extension-object-to-the-asset-block"
+              "directoryName": "🔬️t069"
             }
           ]
         },
@@ -38,7 +38,7 @@
           "scenarios": [
             {
               "id": "attaches-a-pipeline-extras-object-to-the-asset-block",
-              "directoryName": "🧾️attaches-a-pipeline-extras-object-to-the-asset-block"
+              "directoryName": "🔬️t070"
             }
           ]
         },
@@ -49,7 +49,7 @@
           "scenarios": [
             {
               "id": "raises-the-asset-version-to-2-point-1",
-              "directoryName": "🔖️raises-the-asset-version-to-2-point-1"
+              "directoryName": "🔖️raises-the-asset-f95b77"
             }
           ]
         },
@@ -60,7 +60,7 @@
           "scenarios": [
             {
               "id": "attaches-punctual-lights-extension-to-document-root",
-              "directoryName": "📃️attaches-a-punctual-lights-extension-to-the-document-root"
+              "directoryName": "🔬️t053"
             }
           ]
         },
@@ -71,7 +71,7 @@
           "scenarios": [
             {
               "id": "attaches-an-exporter-extras-object-to-the-document-root",
-              "directoryName": "📃️attaches-an-exporter-extras-object-to-the-document-root"
+              "directoryName": "🔬️t052"
             }
           ]
         },
@@ -82,7 +82,7 @@
           "scenarios": [
             {
               "id": "declares-the-unlit-extension-ahead-of-the-transform-extension",
-              "directoryName": "🔌️declares-the-unlit-extension-ahead-of-the-transform-extension"
+              "directoryName": "🔬️t056"
             }
           ]
         },
@@ -93,7 +93,7 @@
           "scenarios": [
             {
               "id": "moves-unlit-requirement-behind-transform-requirement",
-              "directoryName": "⬇️demotes-the-unlit-requirement-behind-the-transform-requirement"
+              "directoryName": "🔬️t043"
             }
           ]
         },
@@ -104,7 +104,7 @@
           "scenarios": [
             {
               "id": "demotes-the-unlit-declaration-behind-the-transform-declaration",
-              "directoryName": "⬇️demotes-the-unlit-declaration-behind-the-transform-declaration"
+              "directoryName": "🔬️t058"
             }
           ]
         },
@@ -115,7 +115,7 @@
           "scenarios": [
             {
               "id": "flips-the-two-required-extension-declarations",
-              "directoryName": "🔌️flips-the-two-required-extension-declarations"
+              "directoryName": "🔌️flips-the-two-c3ca1e"
             }
           ]
         },
@@ -126,7 +126,7 @@
           "scenarios": [
             {
               "id": "flips-the-two-used-extension-declarations",
-              "directoryName": "🔌️flips-the-two-used-extension-declarations"
+              "directoryName": "🔌️flips-the-two-d1aa6d"
             }
           ]
         },
@@ -137,7 +137,7 @@
           "scenarios": [
             {
               "id": "promotes-the-unlit-declaration-to-a-hard-requirement",
-              "directoryName": "✅️promotes-the-unlit-declaration-to-a-hard-requirement"
+              "directoryName": "🔬️t041"
             }
           ]
         },
@@ -148,7 +148,7 @@
           "scenarios": [
             {
               "id": "relaxes-the-unlit-requirement-while-keeping-the-declaration",
-              "directoryName": "➖️relaxes-the-unlit-requirement-while-keeping-the-declaration"
+              "directoryName": "🔬️t042"
             }
           ]
         },
@@ -159,7 +159,7 @@
           "scenarios": [
             {
               "id": "withdraws-the-unlit-declaration-that-nothing-requires",
-              "directoryName": "➖️withdraws-the-unlit-declaration-that-nothing-requires"
+              "directoryName": "🔬️t057"
             }
           ]
         }

@@ -397,7 +397,7 @@ fn a_late_hidden_visibility_ack_cannot_suspend_a_reused_surface_id() {
     close_surface_to_terminal(&mut ui, retired);
 
     let stepper =
-        UiNode::NumberStepper(UiNumberStepperNode { id: "reused.stepper".into(), value: 2.0, step: 1.0, uniform: true, min: Some(0.0), max: Some(5.0), on_absolute: action(), on_delta: action(), presence: UiPresence::default(), menu: None });
+        UiNode::NumberStepper(UiNumberStepperNode { id: "reused.stepper".into(), value: 2.0, step: 1.0, uniform: true, min: Some(0.0), max: Some(5.0), precision: None, on_absolute: action(), on_delta: action(), presence: UiPresence::default(), menu: None });
     ui.apply_tree(window_id, &stack_ui(vec![stepper]));
     let successor = ui.surface_token(window_id).expect("successor surface token");
     assert_ne!(successor, retired);
@@ -2222,6 +2222,8 @@ fn golden_input() {
             max: None,
             step: None,
             accept: None,
+            precision: None,
+            snaps: Vec::new(),
             on_change: action(),
             on_submit: None,
             on_abort: None,
@@ -2303,7 +2305,7 @@ fn golden_key_value() {
 
 #[test]
 fn golden_slider() {
-    assert_equivalent("Slider", &leaf(UiNode::Slider(UiSliderNode { id: "sl".into(), value: 0.5, min: 0.0, max: 1.0, step: 0.01, unit: None, on_change: action(), presence: UiPresence::default(), menu: None })));
+    assert_equivalent("Slider", &leaf(UiNode::Slider(UiSliderNode { id: "sl".into(), value: 0.5, min: 0.0, max: 1.0, step: 0.01, unit: None, snaps: Vec::new(), on_change: action(), presence: UiPresence::default(), menu: None })));
 }
 
 /// 🔀️ Mixed values share the same placeholder and chrome in both WGPU painting paths.
@@ -2311,7 +2313,7 @@ fn golden_slider() {
 fn golden_mixed_number_stepper() {
     assert_equivalent(
         "MixedNumberStepper",
-        &leaf(UiNode::NumberStepper(UiNumberStepperNode { id: "ns".into(), value: 2.0, step: 1.0, uniform: false, min: None, max: None, on_absolute: action(), on_delta: action(), presence: UiPresence::default(), menu: None })),
+        &leaf(UiNode::NumberStepper(UiNumberStepperNode { id: "ns".into(), value: 2.0, step: 1.0, uniform: false, min: None, max: None, precision: None, on_absolute: action(), on_delta: action(), presence: UiPresence::default(), menu: None })),
     );
 }
 
@@ -2319,7 +2321,7 @@ fn golden_mixed_number_stepper() {
 fn golden_number_stepper() {
     assert_equivalent(
         "NumberStepper",
-        &leaf(UiNode::NumberStepper(UiNumberStepperNode { id: "ns".into(), value: 2.0, step: 1.0, uniform: true, min: None, max: None, on_absolute: action(), on_delta: action(), presence: UiPresence::default(), menu: None })),
+        &leaf(UiNode::NumberStepper(UiNumberStepperNode { id: "ns".into(), value: 2.0, step: 1.0, uniform: true, min: None, max: None, precision: None, on_absolute: action(), on_delta: action(), presence: UiPresence::default(), menu: None })),
     );
 }
 
@@ -2459,6 +2461,8 @@ fn golden_field_known_gap() {
             max: None,
             step: None,
             accept: None,
+            precision: None,
+            snaps: Vec::new(),
             on_change: action(),
             on_submit: None,
             on_abort: None,

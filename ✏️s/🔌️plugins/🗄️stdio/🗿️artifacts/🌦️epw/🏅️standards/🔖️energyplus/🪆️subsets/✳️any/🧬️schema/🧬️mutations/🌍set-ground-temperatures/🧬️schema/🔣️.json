@@ -5,15 +5,29 @@
   "type": "object",
   "additionalProperties": false,
   "required": [
+    "mutation",
     "value"
   ],
   "properties": {
-    "value": {
-      "type": "string"
-    },
     "mutation": {
       "const": "setGroundTemperatures",
       "description": "Aggregate discriminator spliced in by EpwMutation; absent when the payload stands alone."
+    },
+    "value": {
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "multiline",
+        "label": {
+          "en": "Ground temperatures",
+          "de": "Erdreichtemperaturen"
+        },
+        "description": {
+          "en": "Raw header line as written in the EPW file.",
+          "de": "Unveränderte Kopfzeile wie in der EPW-Datei."
+        },
+        "group": "value",
+        "order": 10
+      }
     }
   }
 }

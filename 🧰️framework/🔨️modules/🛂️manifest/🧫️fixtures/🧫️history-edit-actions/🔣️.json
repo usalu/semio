@@ -1,0 +1,27 @@
+{
+  "$schema": "./🧬️schema/🔣️.json",
+  "note": "✏️ The reserved history-edit verbs (ticket 26/09/30/NON-DESTRUCTIVE-HISTORY-EDITING design §7 and §10): History-kind, host-driven, never in the palette, no chords, absent from a viewer's manifest. `generation` is optional everywhere: absent addresses the live session. The finalize dialog is injected into every non-viewer app; its submit keeps the edit as a new alternative, its destructive `overwrite` choice overwrites every alternative, dismissing it goes back to reviewing.",
+  "kind": "history",
+  "actions": [
+    { "id": "historyEditBegin", "iconId": "pencil", "label": { "en": "Edit Mutation", "de": "Mutation bearbeiten" }, "destructive": false, "args": [{ "id": "mutationId", "schema": "text", "required": true, "hidden": true }] },
+    { "id": "historyEditInput", "iconId": "sliders-horizontal", "label": { "en": "Set Mutation Input", "de": "Mutationseingabe setzen" }, "destructive": false, "args": [{ "id": "path", "schema": "text", "required": true, "hidden": false }, { "id": "value", "schema": "any", "required": true, "hidden": false }, { "id": "generation", "schema": "integer", "required": false, "hidden": true }] },
+    { "id": "historyEditUseSelection", "iconId": "mouse-pointer", "label": { "en": "Use Selection", "de": "Auswahl verwenden" }, "destructive": false, "args": [{ "id": "path", "schema": "text", "required": true, "hidden": false }, { "id": "generation", "schema": "integer", "required": false, "hidden": true }] },
+    { "id": "historyEditWithdraw", "iconId": "eye-off", "label": { "en": "Withdraw Mutation", "de": "Mutation zurückziehen" }, "destructive": false, "args": [{ "id": "generation", "schema": "integer", "required": false, "hidden": true }] },
+    { "id": "historyEditAccept", "iconId": "check", "label": { "en": "Accept Draft", "de": "Entwurf übernehmen" }, "destructive": false, "args": [{ "id": "generation", "schema": "integer", "required": false, "hidden": true }] },
+    { "id": "historyEditDiscard", "iconId": "x", "label": { "en": "Discard Draft", "de": "Entwurf verwerfen" }, "destructive": false, "args": [{ "id": "generation", "schema": "integer", "required": false, "hidden": true }] },
+    { "id": "historyEditFinalize", "iconId": "list-checks", "label": { "en": "Finalize History Edit", "de": "Verlaufsbearbeitung abschließen" }, "destructive": false, "args": [{ "id": "generation", "schema": "integer", "required": false, "hidden": true }] },
+    { "id": "historyEditCommit", "iconId": "git-commit", "label": { "en": "Commit History Edit", "de": "Verlaufsbearbeitung festschreiben" }, "destructive": true, "args": [{ "id": "choice", "schema": "select", "required": false, "hidden": false }, { "id": "name", "schema": "text", "required": false, "hidden": false }, { "id": "generation", "schema": "integer", "required": false, "hidden": true }] },
+    { "id": "historyEditBack", "iconId": "arrow-left", "label": { "en": "Back to Review", "de": "Zurück zur Prüfung" }, "destructive": false, "args": [{ "id": "generation", "schema": "integer", "required": false, "hidden": true }] },
+    { "id": "historyEditExit", "iconId": "rotate-ccw", "label": { "en": "Exit History Editing", "de": "Verlaufsbearbeitung beenden" }, "destructive": false, "args": [] },
+    { "id": "historyEditCancelReplay", "iconId": "square", "label": { "en": "Cancel Replay", "de": "Neuanwendung abbrechen" }, "destructive": false, "args": [{ "id": "generation", "schema": "integer", "required": false, "hidden": true }] },
+    { "id": "historyEditRerun", "iconId": "skip-forward", "label": { "en": "Replay Again", "de": "Erneut anwenden" }, "destructive": false, "args": [{ "id": "generation", "schema": "integer", "required": false, "hidden": true }] }
+  ],
+  "constants": { "mutationId": "mutationId", "path": "path", "value": "value", "generation": "generation", "name": "name", "choice": "choice", "overwrite": "overwrite", "dialogId": "finalizeHistoryEdit" },
+  "finalizeDialog": {
+    "id": "finalizeHistoryEdit",
+    "submitAction": "historyEditCommit",
+    "cancelAction": "historyEditBack",
+    "args": ["name"],
+    "choices": [{ "id": "overwrite", "action": "historyEditCommit", "tone": "danger", "destructive": true }]
+  }
+}

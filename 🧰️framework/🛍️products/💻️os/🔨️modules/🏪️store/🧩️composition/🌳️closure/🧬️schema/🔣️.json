@@ -41,7 +41,7 @@
       }
     },
     "Owner": {
-      "$ref": "https://json.schemas.assets.semio-tech.com/os/store/child/owner.json"
+      "$ref": "https://json.schemas.assets.semio-tech.com/os/store/child/owner/schema.json"
     },
     "Root": {
       "type": "object",

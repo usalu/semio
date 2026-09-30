@@ -117,10 +117,11 @@ mod wasm_program_exchange {
     /// one to every command batch it answers), decoded: its interaction and tool run cross the presence wire
     /// typed, its presence pack verbatim.
     async fn observe_ephemeral(instance_id: u32, frames: &[AppFrame]) {
-        let Some(AppFrame::Ephemeral { presence, presence_generation, interaction, tool_run, .. }) = frames.iter().rev().find(|frame| matches!(frame, AppFrame::Ephemeral { .. })) else { return };
+        let Some(AppFrame::Ephemeral { presence, presence_generation, interaction, tool_run, history_edit, .. }) = frames.iter().rev().find(|frame| matches!(frame, AppFrame::Ephemeral { .. })) else { return };
         let interaction = if interaction.is_empty() { None } else { protocol::decode_presence_interaction(interaction, &mut 0).await.ok() };
         let tool_run = if tool_run.is_empty() { None } else { protocol::decode_presence_tool_run(tool_run).ok() };
-        let snapshot = ProgramEphemeralSnapshot { presence: (*presence_generation > 0).then(|| presence.clone()), interaction, tool_run };
+        let history_edit = if history_edit.is_empty() { None } else { protocol::decode_presence_history_edit(history_edit).ok() };
+        let snapshot = ProgramEphemeralSnapshot { presence: (*presence_generation > 0).then(|| presence.clone()), interaction, tool_run, history_edit };
         ephemeral_snapshots().lock().unwrap_or_else(std::sync::PoisonError::into_inner).insert(instance_id, snapshot);
     }
 
@@ -565,6 +566,7 @@ pub struct ProgramEphemeralSnapshot {
     pub presence: Option<Vec<u8>>,
     pub interaction: Option<protocol::PresenceInteraction>,
     pub tool_run: Option<protocol::PresenceToolRun>,
+    pub history_edit: Option<protocol::PresenceHistoryEdit>,
 }
 
 enum ProgramBridgeBackend {
@@ -603,6 +605,8 @@ pub struct ProgramBridgeEntry {
     fixture_render: Option<fn(u32, &str, &str, &ViewModel, Option<&str>, Option<&mut Vec<Effect>>) -> Result<UiDocumentLease, String>>,
     #[cfg(test)]
     fixture_action: Option<fn(u32, &str, &ViewModel) -> Result<semio_framework::kernel::InvocationResult, String>>,
+    #[cfg(test)]
+    fixture_progress: Option<fn(u32) -> Vec<semio_framework::kernel::HistoryPatch>>,
 }
 
 impl ProgramBridgeEntry {
@@ -625,6 +629,8 @@ impl ProgramBridgeEntry {
             fixture_render: None,
             #[cfg(test)]
             fixture_action: None,
+            #[cfg(test)]
+            fixture_progress: None,
         })
     }
 
@@ -646,6 +652,8 @@ impl ProgramBridgeEntry {
             fixture_render: None,
             #[cfg(test)]
             fixture_action: None,
+            #[cfg(test)]
+            fixture_progress: None,
         })
     }
 
@@ -657,6 +665,11 @@ impl ProgramBridgeEntry {
     #[cfg(test)]
     pub(crate) fn install_fixture_action(&mut self, action: fn(u32, &str, &ViewModel) -> Result<semio_framework::kernel::InvocationResult, String>) {
         self.fixture_action = Some(action);
+    }
+
+    #[cfg(test)]
+    pub(crate) fn install_fixture_progress(&mut self, progress: fn(u32) -> Vec<semio_framework::kernel::HistoryPatch>) {
+        self.fixture_progress = Some(progress);
     }
 
     /// 🎠️ H3-wgpu-native — replaces the old `Arc<WasmPluginRuntime>`-returning `wasm_runtime()`.
@@ -946,6 +959,26 @@ impl ProgramBridgeEntry {
         }
     }
 
+    /// ⏪️ The history patches this instance's guest pushed on uncorrelated progress frames since the last take —
+    /// the throttled UI-progress answers of a history-edit replay, React's `subscribeOperationProgress` history lane.
+    /// The browser takes them off the JS bridge's queue (`takeProgressHistoryPatches`); natively every such frame is
+    /// folded into the next exchange's reply (`invocation_from_frames`), so there is nothing queued to take.
+    pub fn take_progress_history_patches(&self, instance_id: u32) -> Vec<semio_framework::kernel::HistoryPatch> {
+        #[cfg(test)]
+        if let Some(progress) = self.fixture_progress {
+            return progress(instance_id);
+        }
+        match &self.backend {
+            #[cfg(not(target_arch = "wasm32"))]
+            ProgramBridgeBackend::Wasm { .. } => {
+                let _ = instance_id;
+                Vec::new()
+            }
+            #[cfg(target_arch = "wasm32")]
+            ProgramBridgeBackend::Js(handle) => take_progress_history_patches_js(handle, instance_id),
+        }
+    }
+
     pub async fn apply_mutations(&self, instance_id: u32, operations: &[u8]) -> Result<(), String> {
         match &self.backend {
             #[cfg(not(target_arch = "wasm32"))]
@@ -1105,7 +1138,7 @@ mod browser_ephemeral {
         let presence = field_bytes(&answer, "presence");
         let interaction = field_bytes(&answer, "interaction");
         let interaction = if interaction.is_empty() { None } else { protocol::decode_presence_interaction(&interaction, &mut 0).await.ok() };
-        let snapshot = ProgramEphemeralSnapshot { presence: (generation > 0.0).then_some(presence), interaction, tool_run: None };
+        let snapshot = ProgramEphemeralSnapshot { presence: (generation > 0.0).then_some(presence), interaction, tool_run: None, history_edit: None };
         SNAPSHOTS.with(|snapshots| snapshots.borrow_mut().insert(instance_id, snapshot));
     }
 
@@ -1208,6 +1241,15 @@ fn destroy_app_js(handle: &Rc<JsValue>, instance_id: u32) {
     if let Ok(destroy) = Reflect::get(handle.as_ref(), &JsValue::from_str("destroyApp")).and_then(|v| v.dyn_into::<Function>()) {
         let _ = destroy.call1(&JsValue::NULL, &JsValue::from_f64(instance_id as f64));
     }
+}
+
+/// ⏪️ Takes the JS bridge's queued progress patches — a JSON array of `HistoryPatch`; an absent door, a failed call or
+/// an unreadable answer takes nothing, the next dispatch reply still carries the session status.
+#[cfg(target_arch = "wasm32")]
+fn take_progress_history_patches_js(handle: &Rc<JsValue>, instance_id: u32) -> Vec<semio_framework::kernel::HistoryPatch> {
+    let Some(take) = Reflect::get(handle.as_ref(), &JsValue::from_str("takeProgressHistoryPatches")).ok().and_then(|value| value.dyn_into::<Function>().ok()) else { return Vec::new() };
+    let Some(text) = take.call1(&JsValue::NULL, &JsValue::from_f64(f64::from(instance_id))).ok().and_then(|answer| answer.as_string()) else { return Vec::new() };
+    dsl::os_pack::json::from_json_str::<Vec<semio_framework::kernel::HistoryPatch>>(&text).unwrap_or_default()
 }
 
 #[cfg(target_arch = "wasm32")]

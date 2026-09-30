@@ -1,0 +1,100 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/os/config/mutations.json",
+  "title": "OpeningConfigMutation | UiPreferencesConfigMutation | MergePolicyConfigMutation | IdentityConfigMutation | LocalCatalogConfigMutation",
+  "oneOf": [
+    {
+      "$ref": "#/$defs/OpeningConfigMutation"
+    },
+    {
+      "$ref": "#/$defs/UiPreferencesConfigMutation"
+    },
+    {
+      "$ref": "#/$defs/MergePolicyConfigMutation"
+    },
+    {
+      "$ref": "#/$defs/IdentityConfigMutation"
+    },
+    {
+      "$ref": "#/$defs/LocalCatalogConfigMutation"
+    }
+  ],
+  "$defs": {
+    "OpeningConfigMutation": {
+      "title": "OpeningConfigMutation",
+      "oneOf": [
+        {
+          "$ref": "https://json.schemas.assets.semio-tech.com/os/config/mutation/set-default-app/schema.json"
+        },
+        {
+          "$ref": "https://json.schemas.assets.semio-tech.com/os/config/mutation/clear-default-app/schema.json"
+        }
+      ]
+    },
+    "UiPreferencesConfigMutation": {
+      "title": "UiPreferencesConfigMutation",
+      "oneOf": [
+        {
+          "$ref": "https://json.schemas.assets.semio-tech.com/os/config/mutation/set-appearance/schema.json"
+        },
+        {
+          "$ref": "https://json.schemas.assets.semio-tech.com/os/config/mutation/set-layout/schema.json"
+        },
+        {
+          "$ref": "https://json.schemas.assets.semio-tech.com/os/config/mutation/set-driver/schema.json"
+        },
+        {
+          "$ref": "https://json.schemas.assets.semio-tech.com/os/config/mutation/set-custom-driver/schema.json"
+        },
+        {
+          "$ref": "https://json.schemas.assets.semio-tech.com/os/config/mutation/set-locale/schema.json"
+        },
+        {
+          "$ref": "https://json.schemas.assets.semio-tech.com/os/config/mutation/set-terminology/schema.json"
+        },
+        {
+          "$ref": "https://json.schemas.assets.semio-tech.com/os/config/mutation/set-theme/schema.json"
+        },
+        {
+          "$ref": "https://json.schemas.assets.semio-tech.com/os/config/mutation/set-custom-theme/schema.json"
+        },
+        {
+          "$ref": "https://json.schemas.assets.semio-tech.com/os/config/mutation/set-keybinding-override/schema.json"
+        },
+        {
+          "$ref": "https://json.schemas.assets.semio-tech.com/os/config/mutation/set-named-layout/schema.json"
+        }
+      ]
+    },
+    "MergePolicyConfigMutation": {
+      "title": "MergePolicyConfigMutation",
+      "oneOf": [
+        {
+          "$ref": "https://json.schemas.assets.semio-tech.com/os/config/mutation/change-merge-policy/schema.json"
+        }
+      ]
+    },
+    "IdentityConfigMutation": {
+      "title": "IdentityConfigMutation",
+      "oneOf": [
+        {
+          "$ref": "https://json.schemas.assets.semio-tech.com/os/config/mutation/sign-in/schema.json"
+        },
+        {
+          "$ref": "https://json.schemas.assets.semio-tech.com/os/config/mutation/sign-out/schema.json"
+        }
+      ]
+    },
+    "LocalCatalogConfigMutation": {
+      "title": "LocalCatalogConfigMutation",
+      "oneOf": [
+        {
+          "$ref": "https://json.schemas.assets.semio-tech.com/os/config/mutation/admit-local-document/schema.json"
+        },
+        {
+          "$ref": "https://json.schemas.assets.semio-tech.com/os/config/mutation/retire-local-document/schema.json"
+        }
+      ]
+    }
+  }
+}

@@ -9,7 +9,15 @@
   ],
   "properties": {
     "snapshot": {
-      "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/docx/ecma-376/base/snapshot.json"
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/docx/ecma-376/base/snapshot.json",
+      "x-semio-ui": {
+        "label": {
+          "en": "Word document",
+          "de": "Word-Dokument"
+        },
+        "group": "value",
+        "order": 10
+      }
     }
   }
 }

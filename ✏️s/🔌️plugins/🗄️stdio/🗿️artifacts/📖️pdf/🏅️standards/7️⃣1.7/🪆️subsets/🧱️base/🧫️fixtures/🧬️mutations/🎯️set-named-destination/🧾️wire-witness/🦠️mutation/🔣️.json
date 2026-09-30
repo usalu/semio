@@ -1,0 +1,10 @@
+{
+  "mutation": "setNamedDestination",
+  "destination": {
+    "name": "name",
+    "destination": {
+      "kind": "named",
+      "name": "name"
+    }
+  }
+}

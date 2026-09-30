@@ -11,11 +11,11 @@
 
 use crate::{Iso16757Diff, Iso16757Mutation, Iso16757Snapshot};
 
-const BEFORE: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🧵️change-selection-series/🧵️narrows-the-selection-to-the-pr-plus-series/📸️snapshot/⬅️before/🔣️.json");
-const AFTER: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🧵️change-selection-series/🧵️narrows-the-selection-to-the-pr-plus-series/📸️snapshot/➡️after/🔣️.json");
-const MUTATION: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🧵️change-selection-series/🧵️narrows-the-selection-to-the-pr-plus-series/🦠️mutation/🔣️.json");
-const DIFF: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🧵️change-selection-series/🧵️narrows-the-selection-to-the-pr-plus-series/🔺️diff/🔣️.json");
-const OUTCOME: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🧵️change-selection-series/🧵️narrows-the-selection-to-the-pr-plus-series/🎯️outcome/🔣️.json");
+const BEFORE: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🧵️change-selection-series/🧵️narrows-selection-pr-plus-series/📸️snapshot/⬅️before/🔣️.json");
+const AFTER: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🧵️change-selection-series/🧵️narrows-selection-pr-plus-series/📸️snapshot/➡️after/🔣️.json");
+const MUTATION: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🧵️change-selection-series/🧵️narrows-selection-pr-plus-series/🦠️mutation/🔣️.json");
+const DIFF: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🧵️change-selection-series/🧵️narrows-selection-pr-plus-series/🔺️diff/🔣️.json");
+const OUTCOME: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🧵️change-selection-series/🧵️narrows-selection-pr-plus-series/🎯️outcome/🔣️.json");
 
 fn before() -> Iso16757Snapshot {
     serde_json::from_str(BEFORE).expect("the committed before-snapshot decodes")
@@ -58,7 +58,7 @@ async fn widening_back_to_the_pr_series_restores_before() {
 }
 
 /// 🔣️ Both committed snapshots and the committed `change-selection-series` payload are already canonical: decode
-/// → encode is a fixed point. The committed payload is spelled `{"ChangeSelectionSeries": {"new_series_id":
+/// → encode is a fixed point. The committed payload is spelled `{"ChangeSelectionSeries": {"newSeriesId":
 /// "series-pr-plus"}}` — the payload field is an `Option<String>` with no `skip_serializing_if`, so a cleared
 /// series would encode as an explicit `null` here.
 #[semio_framework_async_macros::async_test]

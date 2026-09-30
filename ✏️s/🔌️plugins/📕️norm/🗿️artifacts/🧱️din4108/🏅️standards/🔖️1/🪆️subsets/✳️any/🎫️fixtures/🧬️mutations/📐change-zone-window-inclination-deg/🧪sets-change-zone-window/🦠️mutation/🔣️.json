@@ -1,0 +1,7 @@
+{
+  "ChangeZoneWindowInclinationDeg": {
+    "zoneId": "zone-living",
+    "windowId": "win-south",
+    "newInclinationDeg": 60.0
+  }
+}

@@ -10,6 +10,7 @@ use protocol::{MutationKind, SemanticDescriptor};
 /// 🏷️ Changes a step's identity `title` field.
 #[derive(Clone, Debug, PartialEq, dsl::ToValue, dsl::FromValue, dsl::MutationLeaf)]
 #[mutation_leaf(contract = ::protocol)]
+#[value(rename_all = "camelCase")]
 pub struct RenameStep {
     pub id: String,
     pub new_title: String,

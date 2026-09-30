@@ -5,15 +5,68 @@
   "type": "object",
   "additionalProperties": false,
   "required": [
+    "mutation",
     "surfaceAId",
     "surfaceBId"
   ],
   "properties": {
+    "mutation": {
+      "const": "connectSurfaces"
+    },
     "surfaceAId": {
-      "type": "integer"
+      "type": "integer",
+      "minimum": 0,
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Surface A",
+          "de": "Oberfläche A"
+        },
+        "description": {
+          "en": "First surface of the adjacency pair, by id.",
+          "de": "Erste Oberfläche des Nachbarschaftspaars, per ID."
+        },
+        "ref": {
+          "kind": "surface",
+          "domain": "energyModel",
+          "granularity": "surface"
+        },
+        "group": "assignment",
+        "order": 10
+      }
     },
     "surfaceBId": {
-      "type": "integer"
+      "type": "integer",
+      "minimum": 0,
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Surface B",
+          "de": "Oberfläche B"
+        },
+        "description": {
+          "en": "Second surface of the adjacency pair, by id.",
+          "de": "Zweite Oberfläche des Nachbarschaftspaars, per ID."
+        },
+        "ref": {
+          "kind": "surface",
+          "domain": "energyModel",
+          "granularity": "surface"
+        },
+        "group": "assignment",
+        "order": 20
+      }
     }
-  }
+  },
+  "x-semio-invariant": [
+    {
+      "id": "distinct-surfaces",
+      "description": {
+        "en": "Surface A and surface B are two different surfaces.",
+        "de": "Oberfläche A und Oberfläche B sind zwei verschiedene Oberflächen."
+      }
+    }
+  ]
 }

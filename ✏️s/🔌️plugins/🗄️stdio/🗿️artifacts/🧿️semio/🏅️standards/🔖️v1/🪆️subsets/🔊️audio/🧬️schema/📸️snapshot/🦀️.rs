@@ -35,7 +35,9 @@ pub enum SemioAudioFormat {
     Pcm16,
     Pcm24,
     Pcm32,
+    #[value(rename = "f32")]
     Float32,
+    #[value(rename = "f64")]
     Float64,
 }
 //#endregion 🔖️Format

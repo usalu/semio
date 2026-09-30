@@ -142,7 +142,7 @@ mod subject {
         let vector = vector(ctx, kind)?;
         let mut current = snapshot_of(&vector, "before")?;
         let expected = snapshot_of(&vector, "after")?;
-        let mutation = if kind == "no-mutation" { SemioCadMutation::SetSnapshot(set_snapshot::SetSnapshot { snapshot: current.clone() }) } else { decode_semio_cad_mutation_json(&member_text(&vector, "mutation")?)? };
+        let mutation = decode_semio_cad_mutation_json(&member_text(&vector, "mutation")?)?;
         run(&mut current, &mutation, ctx.scenario.id.as_str())?;
         if current != expected {
             return Err(disagreement(&format!("{}: the applied snapshot does not match the committed after-snapshot", ctx.scenario.id), &current, &expected));

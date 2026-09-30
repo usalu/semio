@@ -5,11 +5,33 @@
   "type": "object",
   "additionalProperties": false,
   "required": [
+    "mutation",
     "id"
   ],
   "properties": {
+    "mutation": {
+      "const": "deleteThermalEnclosure"
+    },
     "id": {
-      "type": "integer"
+      "type": "integer",
+      "minimum": 0,
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Thermal enclosure",
+          "de": "Zonenverbund"
+        },
+        "description": {
+          "en": "The thermal enclosure to delete, by id.",
+          "de": "Zonenverbund, den diese Mutation löscht, per ID."
+        },
+        "ref": {
+          "kind": "thermalEnclosure"
+        },
+        "group": "target",
+        "order": 10
+      }
     }
   }
 }

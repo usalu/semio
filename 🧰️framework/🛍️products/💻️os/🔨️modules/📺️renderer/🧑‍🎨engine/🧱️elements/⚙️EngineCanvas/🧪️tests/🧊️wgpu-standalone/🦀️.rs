@@ -442,54 +442,6 @@ fn saturated_graph_and_board_wheel_queues_preserve_cameras() {
 }
 
 #[cfg(test)]
-pub fn coalesce_board2d_events(rows: &[BoardEventRow]) -> CoalescedBoardEvents {
-    let has_drag_end = rows.iter().any(|row| row.name == "nodeDragEnd");
-    let mut flush_now = false;
-    let mut last_camera: Option<BoardEventRow> = None;
-    let mut node_move_order: Vec<String> = Vec::new();
-    let mut node_move_by_id: HashMap<String, BoardEventRow> = HashMap::new();
-    let mut rest: Vec<BoardEventRow> = Vec::new();
-
-    for row in rows {
-        if PUZZLE2D_TRANSIENT_EVENT_NAMES.contains(&row.name.as_str()) {
-            continue;
-        }
-        if row.name == "camera" {
-            last_camera = Some(row.clone());
-            continue;
-        }
-        if row.name == "nodeMove" {
-            if has_drag_end {
-                continue;
-            }
-            if let Some(id) = row.payload.get("id").and_then(Value::as_str) {
-                if !node_move_by_id.contains_key(id) {
-                    node_move_order.push(id.to_string());
-                }
-                node_move_by_id.insert(id.to_string(), row.clone());
-                continue;
-            }
-        }
-        if PUZZLE2D_FLUSH_NOW_EVENT_NAMES.contains(&row.name.as_str()) {
-            flush_now = true;
-        }
-        rest.push(row.clone());
-    }
-
-    let mut coalesced: Vec<BoardEventRow> = Vec::new();
-    if let Some(camera) = last_camera {
-        coalesced.push(camera);
-    }
-    for id in &node_move_order {
-        if let Some(row) = node_move_by_id.get(id) {
-            coalesced.push(row.clone());
-        }
-    }
-    coalesced.extend(rest);
-    CoalescedBoardEvents { flush_now, events_json: serde_json::to_string(&coalesced).unwrap_or_else(|_| "[]".into()) }
-}
-
-#[cfg(test)]
 pub fn board_action(controller_id: &str, action: &str, args: Value) -> ActionDescriptor {
     ActionDescriptor { controller_id: controller_id.to_string(), action: action.to_string(), args: Some(semio_framework::DslValue::from(args)) }
 }

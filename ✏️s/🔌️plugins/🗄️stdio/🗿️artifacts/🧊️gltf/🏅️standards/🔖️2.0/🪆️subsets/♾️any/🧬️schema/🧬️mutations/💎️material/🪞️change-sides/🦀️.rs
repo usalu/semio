@@ -8,8 +8,7 @@ pub const TOUCHED_PATHS: &[&str] = &["document/materials/{material}/doubleSided"
 pub fn touched_paths(payload: &GltfChangeMaterialDoubleSidedPayload) -> Vec<String> {
     vec![format!("document/materials/{}/doubleSided", payload.material)]
 }
-#[derive(Clone, Debug, PartialEq, Eq, value_derive::ToValue, value_derive::FromValue, dsl::MutationLeaf)]
-#[mutation_leaf(contract = ::protocol)]
+#[derive(Clone, Debug, PartialEq, Eq, value_derive::ToValue, value_derive::FromValue)]
 #[value(rename_all = "camelCase")]
 pub struct GltfChangeMaterialDoubleSidedRejection {
     pub code: String,
@@ -41,13 +40,10 @@ pub fn apply(snapshot: &mut GltfSnapshot, payload: &GltfChangeMaterialDoubleSide
     snapshot.document.materials[payload.material].double_sided = payload.double_sided;
     Ok(())
 }
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
 
 //#region 🧬️DirectMutation
 #[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::MutationLeaf)]
-#[mutation_leaf(contract = ::protocol)]
+#[mutation_leaf(contract = ::protocol, payload = Apply)]
 #[value(tag = "phase", content = "value", rename_all = "camelCase")]
 pub enum ChangeMaterialDoubleSidedMutation {
     Apply(GltfChangeMaterialDoubleSidedPayload),
@@ -94,8 +90,8 @@ impl protocol::MutationKind<GltfSnapshot, super::GltfMutation> for ChangeMateria
 
 //#region 🧪️Tests
 #[cfg(test)]
-#[path = "🧪️tests/🔬️direct-leaf/🦀️.rs"]
-mod direct_leaf_tests;
+#[path = "🧪️tests/🪞️makes-the-6261b2/🦀️.rs"]
+mod case_makes_the_6261b2;
 //#endregion 🧪️Tests
 
 #[cfg(test)]

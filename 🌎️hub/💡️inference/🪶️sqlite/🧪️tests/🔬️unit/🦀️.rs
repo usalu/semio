@@ -166,19 +166,19 @@ fn inference_request_reconciliation_is_existing_only_reader_bound_and_expiry_ind
     let fixture = fixture();
     let reconcile: serde_json::Value = serde_json::from_str(include_str!("../../../../🧫️fixtures/🧭️inference-job-reconcile-v1/🔣️.json")).unwrap();
     let request = &reconcile["request"];
-    assert!(InferenceJobReconcileRequestV1::decode(&serde_json::to_vec(request).unwrap()).is_ok());
+    assert!(decode_inference_job_reconcile_request_v1(&serde_json::to_vec(request).unwrap()).is_ok());
     for row in reconcile["requestCases"].as_array().unwrap() {
         let mut candidate = request.clone();
         if let Some(field) = row["path"].as_array().unwrap().first() {
             candidate[field.as_str().unwrap()] = row["value"].clone();
         }
-        assert_eq!(InferenceJobReconcileRequestV1::decode(&serde_json::to_vec(&candidate).unwrap()).is_ok(), row["accepted"].as_bool().unwrap(), "{}", row["name"]);
+        assert_eq!(decode_inference_job_reconcile_request_v1(&serde_json::to_vec(&candidate).unwrap()).is_ok(), row["accepted"].as_bool().unwrap(), "{}", row["name"]);
     }
     let mut boundary = serde_json::to_vec(request).unwrap();
-    boundary.resize(RECONCILE_REQUEST_MAX_BYTES, b' ');
-    assert!(InferenceJobReconcileRequestV1::decode(&boundary).is_ok());
+    boundary.resize(semio_framework_job::reconcile::JOB_RECONCILE_REQUEST_MAX_BYTES, b' ');
+    assert!(decode_inference_job_reconcile_request_v1(&boundary).is_ok());
     boundary.push(b' ');
-    assert_eq!(InferenceJobReconcileRequestV1::decode(&boundary), Err(InferenceErrorV1::Bounds));
+    assert_eq!(decode_inference_job_reconcile_request_v1(&boundary), Err(InferenceErrorV1::Bounds));
 
     let selected = selected(&fixture);
     let input = InferencePrivateBytesV1::new(fixture["input"].as_str().unwrap().as_bytes().to_vec(), INPUT_MAX_BYTES).unwrap();
@@ -189,7 +189,7 @@ fn inference_request_reconciliation_is_existing_only_reader_bound_and_expiry_ind
     assert_eq!(live.receipt.state, InferenceJobStateV1::Accepted);
     assert!(!live.page.expired);
     assert!(live.approval.is_none());
-    let live_result = InferenceJobReconcileResultV1 { schema: "semio.hub.inference-job-reconcile-result/v1", version: 1, request_id: selected.request.request_id.clone(), found: true, job: Some(live) };
+    let live_result = InferenceJobReconcileResultV1 { schema: "semio.framework.job-reconcile-result/v1", version: 1, request_id: selected.request.request_id.clone(), found: true, job: Some(live) };
     let expected_live = reconcile["results"].as_array().unwrap().iter().find(|row| row["name"] == "accepted-live").unwrap();
     assert_eq!(serde_json::to_value(live_result).unwrap(), expected_live["value"]);
 
@@ -205,7 +205,7 @@ fn inference_request_reconciliation_is_existing_only_reader_bound_and_expiry_ind
     let terminal = ledger.reconcile_request(&selected.request.request_id, &reader(&selected), accepted.expires_at_ms).unwrap().unwrap();
     assert_eq!(terminal.receipt.state, InferenceJobStateV1::Cancelled);
     assert!(terminal.page.expired);
-    let terminal_result = InferenceJobReconcileResultV1 { schema: "semio.hub.inference-job-reconcile-result/v1", version: 1, request_id: selected.request.request_id.clone(), found: true, job: Some(terminal) };
+    let terminal_result = InferenceJobReconcileResultV1 { schema: "semio.framework.job-reconcile-result/v1", version: 1, request_id: selected.request.request_id.clone(), found: true, job: Some(terminal) };
     let expected_terminal = reconcile["results"].as_array().unwrap().iter().find(|row| row["name"] == "cancelled-expired").unwrap();
     assert_eq!(serde_json::to_value(terminal_result).unwrap(), expected_terminal["value"]);
 }

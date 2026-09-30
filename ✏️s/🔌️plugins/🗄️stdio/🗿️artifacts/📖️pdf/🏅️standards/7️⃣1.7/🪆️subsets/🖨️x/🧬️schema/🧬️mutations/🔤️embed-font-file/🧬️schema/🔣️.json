@@ -5,11 +5,16 @@
   "type": "object",
   "additionalProperties": false,
   "required": [
+    "mutation",
     "descriptorOrdinal",
     "key",
     "program"
   ],
   "properties": {
+    "mutation": {
+      "const": "embedFontFile",
+      "description": "Aggregate discriminator spliced in by PdfXMutation; absent when the payload stands alone."
+    },
     "descriptorOrdinal": {
       "type": "integer",
       "minimum": 0
@@ -19,10 +24,6 @@
     },
     "program": {
       "$ref": "#/$defs/ObjRef"
-    },
-    "mutation": {
-      "const": "embedFontFile",
-      "description": "Aggregate discriminator spliced in by PdfXMutation; absent when the payload stands alone."
     }
   },
   "$defs": {
@@ -37,12 +38,26 @@
         "num": {
           "type": "integer",
           "minimum": 0,
-          "maximum": 4294967295
+          "maximum": 4294967295,
+          "x-semio-ui": {
+            "widget": "stepper",
+            "label": {
+              "en": "Object number",
+              "de": "Objektnummer"
+            }
+          }
         },
         "gen": {
           "type": "integer",
           "minimum": 0,
-          "maximum": 65535
+          "maximum": 65535,
+          "x-semio-ui": {
+            "widget": "stepper",
+            "label": {
+              "en": "Generation number",
+              "de": "Generationsnummer"
+            }
+          }
         }
       }
     }

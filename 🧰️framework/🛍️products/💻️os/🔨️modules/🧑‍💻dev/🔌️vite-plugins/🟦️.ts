@@ -13,12 +13,13 @@ import { BACKBONE_ENDPOINT_PATH, BLOB_ENDPOINT_PATH, DEV_STREAM_ROUTES, DOCUMENT
 import { AGENT_BRIDGE_OFFER_ENDPOINT, AGENT_BRIDGE_RENDEZVOUS_SCHEMA_VERSION, agentBridgeOfferAnswerV1, parseAgentBridgeOfferRecordV2, parseAgentBridgeOfferScopeV1, selectAgentBridgeOfferV1, type AgentBridgeOfferRecordV2, type AgentBridgeOfferScopeV1 } from "../../📺️renderer/🧑‍🎨engine/🧱️elements/🔗️AgentBridge/🛰️offer/🟦️.ts";
 import type { PluginSourceEvent } from "@semio-tech/framework";
 import { MODULE_BRIDGE_FILE } from "../../🔌️plugin/📇️registry/📦️deployment/🟦️.ts";
-import { ACTIVATION_RECEIPT_FILE, developmentRuntimeRoot, nextActivationReceipt, observeActivationReceipts, pluginModulesRoot, publishActivationReceipt, readActivationReceipt, resolveBootSourceContentHashes, SOURCE_FRESHNESS_COMPONENT_CONCURRENCY, mapBoundedV1, stagedModuleMtime, stagedModuleReportLines, stagedModuleVerdict, writeStagedSourceFreshness, type ActivationReceipt, type StagedModuleFacts } from "../♻️activation/🟦️.ts";
+import { resolveBootSourceContentHashes, SOURCE_FRESHNESS_COMPONENT_CONCURRENCY, mapBoundedV1, stagedModuleMtime, writeStagedSourceFreshness } from "../../🔌️plugin/🏗️build/🔍️freshness/🟦️.ts";
+import { ACTIVATION_RECEIPT_FILE, developmentRuntimeRoot, nextActivationReceipt, observeActivationReceipts, pluginModulesRoot, publishActivationReceipt, readActivationReceipt, stagedModuleReportLines, stagedModuleVerdict, type ActivationReceipt, type StagedModuleFacts } from "../♻️activation/🟦️.ts";
 import { blake3Hex } from "../../../../../🔨️modules/🔏️hash/🟦️.ts";
 import { STREAM_MUX_BOUNDS_V1, StreamMuxServerV1, type StreamMuxJobV1, type StreamMuxJsonV1 } from "../../../../../🔨️modules/🚪️io/🔀️stream-mux/🟦️.ts";
-import { requestLocalBrokerSession } from "../../../../../../🌎️hub/🚀️local-bootstrap/🔐️credential-issuance/🟦️.ts";
+import { requestLocalBrokerSession } from "../../📇️directory/🎫️local-session/🗄️broker/🟦️.ts";
 import { protectOwnerOnly } from "../../../../🦑️repo/🔨️modules/📚️library/🏃️process/🔐️owner-only/🟦️.ts";
-import { DEV_LOCAL_HUB_DATA_ENV, DEV_LOCAL_HUB_PROFILE_ENV } from "../🚀️local-hub/🏃️execution/🟦️.ts";
+import { DEV_LOCAL_HUB_DATA_ENV, DEV_LOCAL_HUB_PROFILE_ENV } from "../🚀️local-hub/🧬️schema/🟦️.ts";
 import { LOCAL_HUB_SESSION_ENDPOINT_V1, localHubSessionAnswerV1 } from "../../📇️directory/🎫️local-session/🟦️.ts";
 import { AGENT_CREDENTIAL_INSTALL_ENDPOINT_V1, AGENT_CREDENTIAL_INSTALL_RECEIPT_SCHEMA_V1, AGENT_CREDENTIAL_INSTALL_SCHEMA_V1, AGENT_CREDENTIAL_SCHEMA_V1, agentCredentialInstallFileNameV1, isAgentDelegationTokenV1 } from "../../📇️directory/🤖️delegations/🟦️.ts";
 /** 📥️ Filename owned by plugin store installation; inlined so the vite-plugin graph does not pull materialization. */

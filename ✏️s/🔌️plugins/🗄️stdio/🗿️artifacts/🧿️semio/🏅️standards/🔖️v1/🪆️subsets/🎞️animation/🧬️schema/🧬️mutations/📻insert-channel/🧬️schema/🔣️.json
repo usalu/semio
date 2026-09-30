@@ -5,11 +5,16 @@
   "type": "object",
   "additionalProperties": false,
   "required": [
+    "mutation",
     "timelineIndex",
     "index",
     "channel"
   ],
   "properties": {
+    "mutation": {
+      "const": "insertChannel",
+      "description": "Aggregate discriminator spliced in by SemioAnimationMutation; absent when the payload stands alone."
+    },
     "timelineIndex": {
       "type": "integer",
       "minimum": 0
@@ -19,11 +24,13 @@
       "minimum": 0
     },
     "channel": {
-      "$ref": "#/$defs/AnimChannel"
-    },
-    "mutation": {
-      "const": "insertChannel",
-      "description": "Aggregate discriminator spliced in by SemioAnimationMutation; absent when the payload stands alone."
+      "$ref": "#/$defs/AnimChannel",
+      "x-semio-ui": {
+        "label": {
+          "en": "Channel",
+          "de": "Kanal"
+        }
+      }
     }
   },
   "$defs": {

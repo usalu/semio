@@ -5,12 +5,36 @@
   "type": "object",
   "additionalProperties": false,
   "required": [
+    "mutation",
     "id",
     "newVerticesM"
   ],
   "properties": {
+    "mutation": {
+      "const": "replaceShadingSurfaceVertices"
+    },
     "id": {
-      "type": "integer"
+      "type": "integer",
+      "minimum": 0,
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Shading surface",
+          "de": "Verschattungsfläche"
+        },
+        "description": {
+          "en": "The shading surface this mutation changes, by id.",
+          "de": "Verschattungsfläche, die diese Mutation ändert, per ID."
+        },
+        "ref": {
+          "kind": "shadingSurface",
+          "domain": "energyModel",
+          "granularity": "shading"
+        },
+        "group": "target",
+        "order": 10
+      }
     },
     "newVerticesM": {
       "type": "array",
@@ -21,6 +45,21 @@
         },
         "minItems": 3,
         "maxItems": 3
+      },
+      "minItems": 3,
+      "x-semio-ui": {
+        "role": "value",
+        "label": {
+          "en": "Vertices",
+          "de": "Eckpunkte"
+        },
+        "description": {
+          "en": "Polygon corners in world coordinates, at least three.",
+          "de": "Polygonecken in Weltkoordinaten, mindestens drei."
+        },
+        "unit": "m",
+        "group": "geometry",
+        "order": 20
       }
     }
   }

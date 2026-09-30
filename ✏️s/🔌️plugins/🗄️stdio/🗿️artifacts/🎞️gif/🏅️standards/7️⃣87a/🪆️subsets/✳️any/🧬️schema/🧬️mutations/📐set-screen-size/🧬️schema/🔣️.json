@@ -5,23 +5,46 @@
   "type": "object",
   "additionalProperties": false,
   "required": [
+    "mutation",
     "width",
     "height"
   ],
   "properties": {
+    "mutation": {
+      "const": "setScreenSize",
+      "description": "Aggregate discriminator spliced in by GifMutation; absent when the payload stands alone."
+    },
     "width": {
       "type": "integer",
       "minimum": 0,
-      "maximum": 4294967295
+      "maximum": 4294967295,
+      "x-semio-ui": {
+        "widget": "stepper",
+        "label": {
+          "en": "Logical screen width",
+          "de": "Breite des logischen Bildschirms"
+        },
+        "unit": "px",
+        "precision": 0,
+        "group": "value",
+        "order": 10
+      }
     },
     "height": {
       "type": "integer",
       "minimum": 0,
-      "maximum": 4294967295
-    },
-    "mutation": {
-      "const": "setScreenSize",
-      "description": "Aggregate discriminator spliced in by GifMutation; absent when the payload stands alone."
+      "maximum": 4294967295,
+      "x-semio-ui": {
+        "widget": "stepper",
+        "label": {
+          "en": "Logical screen height",
+          "de": "Höhe des logischen Bildschirms"
+        },
+        "unit": "px",
+        "precision": 0,
+        "group": "value",
+        "order": 20
+      }
     }
   }
 }

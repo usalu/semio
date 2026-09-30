@@ -1,0 +1,9 @@
+{
+  "mutation": "deleteBufferView",
+  "payload": {
+    "phase": "apply",
+    "value": {
+      "index": 0
+    }
+  }
+}

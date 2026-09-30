@@ -1,4 +1,28 @@
 {
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/norm/en1990/mutation/change-seismics/schema.json",
   "title": "ChangeSeismics",
-  "type": "object"
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "mutation",
+    "newSeismics"
+  ],
+  "properties": {
+    "mutation": {
+      "const": "changeSeismics"
+    },
+    "newSeismics": {
+      "type": "array",
+      "items": {
+        "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1990/snapshot.json#/$defs/SeismicAction"
+      },
+      "x-semio-ui": {
+        "label": {
+          "en": "Seismic actions",
+          "de": "Erdbebeneinwirkungen"
+        }
+      }
+    }
+  }
 }

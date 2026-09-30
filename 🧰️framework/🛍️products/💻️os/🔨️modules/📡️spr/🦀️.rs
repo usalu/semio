@@ -30,7 +30,7 @@ pub use crate::os_spr::causal::{
 };
 pub use crate::os_spr::causal::transition::{
     decode_history_transition, encode_history_transition, fold_history, history_transition_envelope, history_transition_from_envelope, history_transition_id, is_history_transition, FoldAlternative, FoldChange, FoldCheckpoint, FoldEdit, HistoryFold, HistoryTransition,
-    TransitionAuthor, TransitionCheckpoint, TransitionPin, HISTORY_TRANSITION_SCHEMA,
+    TransitionAuthor, TransitionCheckpoint, TransitionPin, EffectiveSupersession, InputReplacement, SupersededInput, TransitionSupersede, HISTORY_TRANSITION_SCHEMA, SUPERSEDE_PAYLOAD_MAX_BYTES, SUPERSEDE_SCOPE_MAX_BYTES,
 };
 pub use crate::os_spr::channel::{
     decode_app_frame, decode_document_archive_bytes, encode_app_command, encode_app_frame, encode_document_archive_bytes, encode_local_interaction_query_frame_into, AppCommand, AppFrame, ChildPackEntry, DecodedAppCommandOwner, DocumentArchiveArtifactRef,
@@ -38,15 +38,16 @@ pub use crate::os_spr::channel::{
     INVOCATION_RESULT_PACK_MAXIMUM_BYTES,
 };
 pub use crate::os_spr::command::{
-    apply_collection_mutation, collection_diff_from_mutation, fold_plan_diff, fold_plan_inverse, indexed_apply, inverse_collection_mutation, is_approved_verb, mutation_descriptor, named_apply, plan_foreign_steps, plan_of,
+    apply_collection_mutation, collection_diff_from_mutation, fold_plan_diff, fold_plan_inverse, indexed_apply, inverse_collection_mutation, is_approved_verb, mutation_descriptor, mutation_fixture_ops, mutation_payload_round_trip_failures,
+    named_apply, plan_foreign_steps, plan_of,
     register_mutation_descriptor, register_mutation_descriptors, str_eq, validate_mutation_leaf_descriptor, validate_mutation_leaf_descriptor_roster, validate_mutation_leaf_descriptor_roster_uniqueness, validate_mutation_leaf_source, worst_level,
     CollectionDiff, CollectionMutation, CommandOutcome, CompositeMutationKind, DiffAlgebra, DiffCodec, DiffRegions, Edit, ForeignStep, ForeignTarget, Identified, IndexedTripleDiff, Inference, InferenceFieldSpec, InferenceSpec, ItemPatch, Mutation,
     MutationApplyError, MutationApplyResult, MutationComposition, MutationDescriptor, MutationDescriptorError, MutationDescriptorRegistry, MutationDiff, MutationDiffParticipation, MutationDomainOperation, MutationEvent, MutationInvertibility,
     MutationKind, MutationLanguageSurface, MutationLeaf, MutationLeafDescriptor, MutationLeafDescriptorRosterValidationError, MutationLeafDescriptorValidationError, MutationLeafSourceScope, MutationLeafSourceValidationError, MutationMessage,
     MutationMeta, MutationOrigin, MutationOutcome, MutationOutcomeClass, MutationOwnerLayout, MutationSourceProvenance, MutationUpcaster, NamedTripleDiff, OpBinary, OpText, Patchable, PlanError, PlanStep, Planner, SemanticDescriptor,
-    SemanticMutation, TouchedPaths, ValidatedMutationLeafSourceScope, APPROVED_VERBS, MAX_PLAN_DEPTH,
+    SemanticMutation, TouchedPaths, TransactionRef, ValidatedMutationLeafSourceScope, APPROVED_VERBS, MAX_PLAN_DEPTH,
 };
-pub use crate::os_spr::conflict::{Conflict, ConflictId, ConflictKind, ConflictResolution, ConflictStatus, DispatchReport, EditMessages, MergeReport};
+pub use crate::os_spr::conflict::{Conflict, ConflictId, ConflictKind, ConflictResolution, ConflictStatus, DispatchReport, EditMessages, MergeReport, MutationReplayOutcome, ReplayReport};
 pub use crate::os_spr::wire::{
     decode_client_frame, decode_presence_peer, decode_server_frame, encode_client_frame, encode_presence_peer, encode_server_frame, AckStage, ApplyOutcome, Bootstrap, ClientFrame, Lane, PresencePeer, PresenceToolRun, PresenceToolRunState, PresenceUi, PresenceViewKind, PresenceWindowView,
     ServerFrame,

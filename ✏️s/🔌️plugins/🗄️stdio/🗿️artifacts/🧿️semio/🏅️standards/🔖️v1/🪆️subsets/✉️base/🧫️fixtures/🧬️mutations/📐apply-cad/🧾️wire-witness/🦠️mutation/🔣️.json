@@ -1,0 +1,9 @@
+{
+  "mutation": "applyCad",
+  "payload": {
+    "mutation": {
+      "mutation": "removeLayer",
+      "name": "dim"
+    }
+  }
+}

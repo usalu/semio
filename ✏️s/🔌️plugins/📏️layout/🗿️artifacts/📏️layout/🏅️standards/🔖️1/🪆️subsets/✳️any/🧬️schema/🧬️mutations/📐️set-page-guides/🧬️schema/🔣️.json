@@ -1,1 +1,127 @@
-{"$schema":"http://json-schema.org/draft-07/schema#","title":"SetPageGuides","type":"object"}
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/layout/layout/mutation/set-page-guides/schema.json",
+  "title": "SetPageGuides",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "id",
+    "guides"
+  ],
+  "properties": {
+    "id": {
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Page",
+          "de": "Seite"
+        },
+        "ref": {
+          "kind": "page"
+        },
+        "group": "target",
+        "order": 10
+      }
+    },
+    "guides": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/LayoutRect"
+      },
+      "x-semio-ui": {
+        "role": "value",
+        "label": {
+          "en": "Guides",
+          "de": "Hilfslinien"
+        },
+        "description": {
+          "en": "Replaces every guide on the page.",
+          "de": "Ersetzt alle Hilfslinien der Seite."
+        },
+        "group": "record",
+        "order": 20
+      }
+    }
+  },
+  "$defs": {
+    "LayoutRect": {
+      "title": "LayoutRect",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "x",
+        "y",
+        "w",
+        "h"
+      ],
+      "properties": {
+        "x": {
+          "type": "number",
+          "x-semio-ui": {
+            "widget": "stepper",
+            "role": "value",
+            "label": {
+              "en": "X",
+              "de": "X"
+            },
+            "unit": "mm",
+            "step": 1,
+            "precision": 1,
+            "group": "position",
+            "order": 10
+          }
+        },
+        "y": {
+          "type": "number",
+          "x-semio-ui": {
+            "widget": "stepper",
+            "role": "value",
+            "label": {
+              "en": "Y",
+              "de": "Y"
+            },
+            "unit": "mm",
+            "step": 1,
+            "precision": 1,
+            "group": "position",
+            "order": 20
+          }
+        },
+        "w": {
+          "type": "number",
+          "x-semio-ui": {
+            "widget": "stepper",
+            "role": "value",
+            "label": {
+              "en": "Width",
+              "de": "Breite"
+            },
+            "unit": "mm",
+            "step": 1,
+            "precision": 1,
+            "group": "geometry",
+            "order": 30
+          }
+        },
+        "h": {
+          "type": "number",
+          "x-semio-ui": {
+            "widget": "stepper",
+            "role": "value",
+            "label": {
+              "en": "Height",
+              "de": "Höhe"
+            },
+            "unit": "mm",
+            "step": 1,
+            "precision": 1,
+            "group": "geometry",
+            "order": 40
+          }
+        }
+      }
+    }
+  }
+}

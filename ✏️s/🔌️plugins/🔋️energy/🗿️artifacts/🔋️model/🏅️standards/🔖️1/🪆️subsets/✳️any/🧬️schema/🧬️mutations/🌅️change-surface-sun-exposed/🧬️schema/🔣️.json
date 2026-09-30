@@ -5,15 +5,49 @@
   "type": "object",
   "additionalProperties": false,
   "required": [
+    "mutation",
     "id",
     "newSunExposed"
   ],
   "properties": {
+    "mutation": {
+      "const": "changeSurfaceSunExposed"
+    },
     "id": {
-      "type": "integer"
+      "type": "integer",
+      "minimum": 0,
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Surface",
+          "de": "Oberfläche"
+        },
+        "description": {
+          "en": "The surface this mutation changes, by id.",
+          "de": "Oberfläche, die diese Mutation ändert, per ID."
+        },
+        "ref": {
+          "kind": "surface",
+          "domain": "energyModel",
+          "granularity": "surface"
+        },
+        "group": "target",
+        "order": 10
+      }
     },
     "newSunExposed": {
-      "type": "boolean"
+      "type": "boolean",
+      "x-semio-ui": {
+        "widget": "toggle",
+        "role": "value",
+        "label": {
+          "en": "Sun exposed",
+          "de": "Besonnt"
+        },
+        "group": "boundary",
+        "order": 20
+      }
     }
   }
 }

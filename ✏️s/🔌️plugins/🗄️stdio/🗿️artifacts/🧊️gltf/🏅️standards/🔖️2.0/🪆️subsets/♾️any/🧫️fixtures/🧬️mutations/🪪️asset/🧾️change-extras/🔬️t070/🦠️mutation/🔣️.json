@@ -1,0 +1,12 @@
+{
+  "mutation": "changeAssetExtraData",
+  "payload": {
+    "phase": "apply",
+    "value": {
+      "data": {
+        "pipeline": "semio",
+        "step": 3
+      }
+    }
+  }
+}

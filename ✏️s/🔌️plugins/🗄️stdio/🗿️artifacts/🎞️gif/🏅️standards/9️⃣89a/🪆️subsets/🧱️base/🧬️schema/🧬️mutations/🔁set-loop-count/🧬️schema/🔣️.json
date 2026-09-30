@@ -4,8 +4,15 @@
   "title": "SetLoopCount",
   "type": "object",
   "additionalProperties": false,
+  "required": [
+    "mutation"
+  ],
   "properties": {
-    "loop_count": {
+    "mutation": {
+      "const": "setLoopCount",
+      "description": "Aggregate discriminator spliced in by GifMutation; absent when the payload stands alone."
+    },
+    "loopCount": {
       "anyOf": [
         {
           "type": "integer",
@@ -15,11 +22,21 @@
         {
           "type": "null"
         }
-      ]
-    },
-    "mutation": {
-      "const": "setLoopCount",
-      "description": "Aggregate discriminator spliced in by GifMutation; absent when the payload stands alone."
+      ],
+      "x-semio-ui": {
+        "widget": "stepper",
+        "label": {
+          "en": "Loop count",
+          "de": "Anzahl Wiederholungen"
+        },
+        "description": {
+          "en": "NETSCAPE2.0 loop count; 0 loops forever, empty removes the loop extension.",
+          "de": "NETSCAPE2.0-Wiederholungen; 0 wiederholt endlos, leer entfernt die Schleifenerweiterung."
+        },
+        "precision": 0,
+        "group": "value",
+        "order": 10
+      }
     }
   }
 }

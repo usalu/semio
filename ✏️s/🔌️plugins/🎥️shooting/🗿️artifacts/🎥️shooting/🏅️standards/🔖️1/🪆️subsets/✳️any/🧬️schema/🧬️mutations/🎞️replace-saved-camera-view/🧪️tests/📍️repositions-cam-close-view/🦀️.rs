@@ -81,7 +81,7 @@ async fn declared_outcome_holds_and_an_identical_pose_is_a_no_op() {
     assert_eq!(again.worst_level(), Some(protocol::Severity::Warning), "replace-saved-camera-view/repositions-cam-close-view: an identical pose is a Warning, never a rejection");
     assert_eq!(again.messages()[0].code.0, "mutation.no-op", "replace-saved-camera-view/repositions-cam-close-view: the pose-equality guard's frozen code");
 
-    let ghost: ShootingMutation = serde_json::from_str(r#"{"mutation":"replaceSavedCameraView","id":"cam-ghost","new_camera":{"position":[1.0,-1.0,0.75],"target":[0.0,0.0,1.0],"zoom":4.0,"fov":20.0}}"#).expect("probe mutation decodes");
+    let ghost: ShootingMutation = serde_json::from_str(r#"{"mutation":"replaceSavedCameraView","id":"cam-ghost","newCamera":{"position":[1.0,-1.0,0.75],"target":[0.0,0.0,1.0],"zoom":4.0,"fov":20.0}}"#).expect("probe mutation decodes");
     let rejected = ghost.diff(&before());
     assert_eq!(rejected.messages()[0].code.0, "mutation.target-missing", "replace-saved-camera-view/repositions-cam-close-view: an unknown camera id is target-missing, not a no-op");
 }

@@ -234,6 +234,8 @@ pub struct Renewables {
 /// needs its own `DslField` impl for `Din18599MutationDsl`'s `#[dsl(block)]`-nested encoding.
 #[derive(Clone, Debug, PartialEq, dsl::DslRecord, value_derive::ToValue, value_derive::FromValue)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
+#[cfg_attr(test, serde(rename_all = "camelCase"))]
+#[value(rename_all = "camelCase")]
 pub struct MonthlyClimate {
     pub theta_e_c: [f64; 12],
     pub g_h_w_m2: [f64; 12],

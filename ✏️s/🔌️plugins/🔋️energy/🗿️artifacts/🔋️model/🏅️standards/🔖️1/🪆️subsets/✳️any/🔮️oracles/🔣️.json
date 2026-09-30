@@ -2145,8 +2145,8 @@
         },
         {
           "mutationId": "change-humidistat-dehumidifying-setpoint-schedule",
-          "sourceMutationDirectoryName": "🏝️change-humidistat-dehumidifying-setpoint-schedule",
-          "mutationDirectoryName": "🏝️change-humidistat-dehumidifying-setpoint-schedule",
+          "sourceMutationDirectoryName": "🏝️change-humidistat-dehumidifying-setpoint",
+          "mutationDirectoryName": "🏝️change-humidistat-dehumidifying-setpoint",
           "scenarios": [
             {
               "id": "change-humidistat-dehumidifying-setpoint-schedule-repoints-drying",
@@ -2175,8 +2175,8 @@
         },
         {
           "mutationId": "change-humidistat-dehumidifying-throttle-range",
-          "sourceMutationDirectoryName": "🧻️change-humidistat-dehumidifying-throttle-range",
-          "mutationDirectoryName": "🧻️change-humidistat-dehumidifying-throttle-range",
+          "sourceMutationDirectoryName": "🧻️change-humidistat-dehumidifying-throttle",
+          "mutationDirectoryName": "🧻️change-humidistat-dehumidifying-throttle",
           "scenarios": [
             {
               "id": "change-humidistat-dehumidifying-throttle-range-widens-the-band",
@@ -2235,8 +2235,8 @@
         },
         {
           "mutationId": "change-ideal-loads-system-max-heating-supply-air-temp",
-          "sourceMutationDirectoryName": "🔴️change-ideal-loads-system-max-heating-supply-air-temp",
-          "mutationDirectoryName": "🔴️change-ideal-loads-system-max-heating-supply-air-temp",
+          "sourceMutationDirectoryName": "🔴️change-ideal-loads-system-max-heating-supply",
+          "mutationDirectoryName": "🔴️change-ideal-loads-system-max-heating-supply",
           "scenarios": [
             {
               "id": "change-ideal-loads-system-max-heating-supply-air-temp-cools-the-supply",
@@ -2250,8 +2250,8 @@
         },
         {
           "mutationId": "change-ideal-loads-system-min-cooling-supply-air-temp",
-          "sourceMutationDirectoryName": "🔵️change-ideal-loads-system-min-cooling-supply-air-temp",
-          "mutationDirectoryName": "🔵️change-ideal-loads-system-min-cooling-supply-air-temp",
+          "sourceMutationDirectoryName": "🔵️change-ideal-loads-system-min-cooling-supply",
+          "mutationDirectoryName": "🔵️change-ideal-loads-system-min-cooling-supply",
           "scenarios": [
             {
               "id": "change-ideal-loads-system-min-cooling-supply-air-temp-lowers-the-supply",

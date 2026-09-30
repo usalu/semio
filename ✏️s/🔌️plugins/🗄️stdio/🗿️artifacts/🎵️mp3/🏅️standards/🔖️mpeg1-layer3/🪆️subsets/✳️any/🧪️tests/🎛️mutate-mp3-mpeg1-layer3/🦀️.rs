@@ -14,7 +14,7 @@
 //! that merely projects and returns passes whenever the reference did not error.
 
 use semio_repo_test_host::{Adapter, Context, Outcome};
-use semio_s_plugin_stdio_test_oracle::artifacts::mp3::standards::v_mpeg1_layer3::subsets::any::{oracle_apply_mutation, oracle_inverse_spec, oracle_round_trip, project_mp3};
+use semio_s_plugin_stdio_test_oracle::artifacts::mp3::standards::v_mpeg1_layer3::subsets::any::{oracle_apply_mutation, oracle_apply_mutation_inverse, oracle_round_trip, project_mp3};
 use semio_s_plugin_stdio_test_oracle::law::{inverse_restores_within, mutation_is_observable, reparsed_not_copied, round_trip_preserves_within};
 
 
@@ -39,13 +39,10 @@ fn mutable_input(ctx: &Context) -> Result<Vec<u8>, String> {
 //#endregion 🔖️Input
 
 //#region 🔖️Oracle
-/// 🔮️ The forward reference answer. Correct by design that it asserts nothing beyond the
-/// reference's own success: this handler PRODUCES the reference result, and the comparison against
-/// the subject is the parity phase's job.
 /// 👁️ `@id-mutate`: applies the row's kind with the registered reference implementation and ASSERTS
 /// the result is distinguishable from the untouched fixture. The exemption list is empty — every
 /// kind this vocabulary declares reaches the compared projection — so a kind that stops moving it
-/// fails here rather than reporting a green identical to `no-mutation`'s.
+/// fails here rather than reporting a green identical to an unchanged stream's.
 fn mutate_oracle(ctx: &Context) -> Result<Outcome, String> {
     let input = mutable_input(ctx)?;
     let spec = ctx.doc_json()?;
@@ -56,16 +53,15 @@ fn mutate_oracle(ctx: &Context) -> Result<Outcome, String> {
     Ok(Outcome::with_raw(bytes, projection))
 }
 
-/// ↩️ Applies `<id>` forward, then its independently computed inverse — both derived from the SAME
-/// untouched input, matching `Mp3Mutation::inverse()`'s own base-relative semantics — and ASSERTS
-/// the law in role: the restored stream's projection must equal the real original's own. Without
+/// ↩️ Applies `<id>` forward, then its independently computed inverse — the layer(s) it replaced restored
+/// from the SAME untouched input, matching `Mp3Mutation::inverse()`'s own base-relative semantics — and
+/// ASSERTS the law in role: the restored stream's projection must equal the real original's own. Without
 /// the check the scenario would pass for any inverse `id3` merely tolerated.
 fn inverse_oracle(ctx: &Context) -> Result<Outcome, String> {
     let input = mutable_input(ctx)?;
     let spec = ctx.doc_json()?;
     let mutated = oracle_apply_mutation(&input, &spec)?;
-    let inverse_spec = oracle_inverse_spec(&input, &spec)?;
-    let restored = oracle_apply_mutation(&mutated, &inverse_spec)?;
+    let restored = oracle_apply_mutation_inverse(&input, &spec, &mutated)?;
     let projection = project_mp3(&restored)?;
     inverse_restores_within(&spec.str("kind"), &projection, &project_mp3(&input)?, MP3_WRITER_FREEDOM, MP3_TOLERANCE)?;
     Ok(Outcome::with_raw(restored, projection))
@@ -91,105 +87,15 @@ mod subject {
     use super::{mutable_input, MP3_TOLERANCE, MP3_WRITER_FREEDOM};
     use semio_repo_test_host::{Context, Json, Outcome};
     use semio_s_artifact_stdio_mp3::standards::mpeg1_layer3::subsets::any::io::{decode_mp3, encode_mp3};
-    use semio_s_artifact_stdio_mp3::standards::mpeg1_layer3::subsets::any::schema::mutations::{apply_mp3_mutation, set_frames, set_id3v1, set_id3v2, set_snapshot, Mp3Mutation};
-    use semio_s_artifact_stdio_mp3::standards::mpeg1_layer3::subsets::any::schema::snapshot::{Id3Frame, Id3v1Tag, Id3v2Tag, Mp3Snapshot};
+    use semio_s_artifact_stdio_mp3::standards::mpeg1_layer3::subsets::any::schema::mutations::{apply_mp3_mutation, decode_mp3_mutation_payload, inverse_mp3_mutation, Mp3Mutation};
     use semio_s_plugin_stdio_test_oracle::artifacts::mp3::standards::v_mpeg1_layer3::subsets::any::project_mp3;
     use semio_s_plugin_stdio_test_oracle::law::{carrier_is_exact, inverse_restores_within, round_trip_preserves_within};
 
-    //#region 🔖️SpecReaders
-    fn params_of(spec: &Json) -> Json {
-        spec.get("params").cloned().unwrap_or(Json::Null)
-    }
-
-    /// 🏷️ Encodes one ID3v2.3 text frame's data field: an encoding byte (`0x00` = ISO-8859-1)
-    /// followed by the text. This is the ID3v2.3 text-frame body the spec defines; the subject's
-    /// `Id3Frame` retains it as opaque `data`.
-    fn text_frame(id: &str, text: &str) -> Result<Id3Frame, String> {
-        let mut data = vec![0u8];
-        for ch in text.chars() {
-            if (ch as u32) >= 0x100 {
-                return Err(format!("text frame {id:?} carries {ch:?}, which is outside ISO-8859-1"));
-            }
-            data.push(ch as u8);
-        }
-        Ok(Id3Frame { id: id.to_string(), flags: 0, data })
-    }
-
-    fn tag_of(params: &Json) -> Result<Option<Id3v2Tag>, String> {
-        match params.get("text") {
-            Some(Json::Array(items)) if !items.is_empty() => {
-                let frames = items.iter().map(|item| text_frame(&item.str("id"), &item.str("text"))).collect::<Result<Vec<Id3Frame>, String>>()?;
-                Ok(Some(Id3v2Tag { major_version: 3, minor_version: 0, flags: 0, frames }))
-            }
-            _ => Ok(None),
-        }
-    }
-
-    /// 🏷️ Builds the 128-byte ID3v1 trailer this subset retains verbatim, from the same fields the
-    /// oracle writes — fixed offsets, fixed widths, zero-padded ISO-8859-1, per the ID3v1 layout.
-    fn v1_of(params: &Json) -> Result<Option<Id3v1Tag>, String> {
-        let Some(fields) = params.get("v1") else { return Ok(None) };
-        if matches!(fields, Json::Null) {
-            return Ok(None);
-        }
-        let mut raw = vec![0u8; 128];
-        raw[0..3].copy_from_slice(b"TAG");
-        for (key, start, width) in [("title", 3usize, 30usize), ("artist", 33, 30), ("album", 63, 30), ("year", 93, 4), ("comment", 97, 30)] {
-            let value = fields.str(key);
-            let bytes: Vec<u8> = value.chars().map(|ch| if (ch as u32) < 0x100 { Ok(ch as u8) } else { Err(format!("ID3v1 field {key} carries {ch:?}, which is outside ISO-8859-1")) }).collect::<Result<Vec<u8>, String>>()?;
-            if bytes.len() > width {
-                return Err(format!("ID3v1 field {key} is {} byte(s), past its {width}-byte slot", bytes.len()));
-            }
-            raw[start..start + bytes.len()].copy_from_slice(&bytes);
-        }
-        raw[127] = match fields.get("genreId") {
-            Some(Json::Number(value)) => *value as u8,
-            _ => 0,
-        };
-        Ok(Some(Id3v1Tag { raw }))
-    }
-
-    fn take_of(params: &Json, base: &Mp3Snapshot, kind: &str) -> Result<Vec<semio_s_artifact_stdio_mp3::standards::mpeg1_layer3::subsets::any::schema::snapshot::Mp3Frame>, String> {
-        match params.get("take") {
-            Some(Json::Number(count)) => {
-                let keep = *count as usize;
-                if keep > base.frames.len() {
-                    return Err(format!("{kind}: `take` is {keep} but the document carries only {} MPEG frame(s)", base.frames.len()));
-                }
-                Ok(base.frames[..keep].to_vec())
-            }
-            _ => Err(format!("{kind}: params carry no `take`")),
-        }
-    }
-    //#endregion 🔖️SpecReaders
-
     //#region 🔖️Mutation
-    /// 🧭️ Builds the real `Mp3Mutation` a spec describes.
-    fn mutation_of(spec: &Json, base: &Mp3Snapshot) -> Result<Mp3Mutation, String> {
-        let params = params_of(spec);
-        let kind = spec.str("kind");
-        Ok(match kind.as_str() {
-            "set-id3v2" => Mp3Mutation::SetId3v2(set_id3v2::SetId3v2 { id3v2: tag_of(&params)? }),
-            "set-frames" => Mp3Mutation::SetFrames(set_frames::SetFrames { frames: take_of(&params, base, &kind)? }),
-            "set-id3v1" => Mp3Mutation::SetId3v1(set_id3v1::SetId3v1 { id3v1: v1_of(&params)? }),
-            "set-snapshot" => Mp3Mutation::SetSnapshot(set_snapshot::SetSnapshot { snapshot: Mp3Snapshot { schema: base.schema.clone(), id3v2: tag_of(&params)?, frames: take_of(&params, base, &kind)?, id3v1: v1_of(&params)? } }),
-            other => return Err(format!("mutation kind {other:?} is not implemented by the subject")),
-        })
-    }
-
-    /// ↩️ Mirrors `Mp3Mutation::inverse()`
-    /// (`../../🏅️standards/🔖️mpeg1-layer3/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦀️.rs`)
-    /// independently — the generated oracle-role host never links `protocol`, so the trait method
-    /// itself is unreachable here. Every variant of this vocabulary is a whole-layer replace, so
-    /// its inverse is the same verb carrying the layer `base` already had.
-    fn inverse_of(spec: &Json, base: &Mp3Snapshot) -> Result<Mp3Mutation, String> {
-        Ok(match spec.str("kind").as_str() {
-            "set-id3v2" => Mp3Mutation::SetId3v2(set_id3v2::SetId3v2 { id3v2: base.id3v2.clone() }),
-            "set-frames" => Mp3Mutation::SetFrames(set_frames::SetFrames { frames: base.frames.clone() }),
-            "set-id3v1" => Mp3Mutation::SetId3v1(set_id3v1::SetId3v1 { id3v1: base.id3v1.clone() }),
-            "set-snapshot" => Mp3Mutation::SetSnapshot(set_snapshot::SetSnapshot { snapshot: base.clone() }),
-            other => return Err(format!("mutation kind {other:?} is not implemented by the subject")),
-        })
+    /// 🦠️ Decodes the scenario's `{"kind", "params"}` doc string: `params` is the leaf's own wire payload, read
+    /// through the vocabulary's derive-generated decoder rather than a params grammar written beside it.
+    fn mutation_of(spec: &Json) -> Result<Mp3Mutation, String> {
+        decode_mp3_mutation_payload(&spec.str("kind"), &spec.get("params").cloned().unwrap_or(Json::Null).to_string())
     }
     //#endregion 🔖️Mutation
 
@@ -197,8 +103,7 @@ mod subject {
     pub fn mutate(ctx: &Context) -> Result<Outcome, String> {
         let input = mutable_input(ctx)?;
         let mut snapshot = decode_mp3(&input).map_err(|error| format!("decode_mp3 failed: {error}"))?;
-        let spec = ctx.doc_json()?;
-        let mutation = mutation_of(&spec, &snapshot)?;
+        let mutation = mutation_of(&ctx.doc_json()?)?;
         apply_mp3_mutation(&mut snapshot, &mutation);
         let bytes = encode_mp3(&snapshot);
         let projection = project_mp3(&bytes)?;
@@ -209,11 +114,12 @@ mod subject {
         let input = mutable_input(ctx)?;
         let base = decode_mp3(&input).map_err(|error| format!("decode_mp3 failed: {error}"))?;
         let spec = ctx.doc_json()?;
-        let forward = mutation_of(&spec, &base)?;
-        let backward = inverse_of(&spec, &base)?;
-        let mut snapshot = base;
+        let forward = mutation_of(&spec)?;
+        let mut snapshot = base.clone();
         apply_mp3_mutation(&mut snapshot, &forward);
-        apply_mp3_mutation(&mut snapshot, &backward);
+        for backward in inverse_mp3_mutation(&forward, &base) {
+            apply_mp3_mutation(&mut snapshot, &backward);
+        }
         let bytes = encode_mp3(&snapshot);
         let projection = project_mp3(&bytes)?;
         inverse_restores_within(&spec.str("kind"), &projection, &project_mp3(&input)?, MP3_WRITER_FREEDOM, MP3_TOLERANCE)?;
@@ -245,10 +151,10 @@ mod subject {
 /// 🧭️ Registration entry point the generated host calls.
 pub fn adapter() -> Adapter {
     let mut built = Adapter::new("rust");
-    built = built.oracle("mutate", mutate_oracle).oracle("no-mutation-baseline-mutate", mutate_oracle).oracle("inverse", inverse_oracle).oracle("no-mutation-baseline-inverse", inverse_oracle);
+    built = built.oracle("mutate", mutate_oracle).oracle("inverse", inverse_oracle);
     #[cfg(feature = "sut")]
     {
-        built = built.subject("mutate", subject::mutate).subject("no-mutation-baseline-mutate", subject::mutate).subject("inverse", subject::inverse).subject("no-mutation-baseline-inverse", subject::inverse);
+        built = built.subject("mutate", subject::mutate).subject("inverse", subject::inverse);
     }
     built = built.oracle("identity-round-trip", round_trip_oracle);
     #[cfg(feature = "sut")]

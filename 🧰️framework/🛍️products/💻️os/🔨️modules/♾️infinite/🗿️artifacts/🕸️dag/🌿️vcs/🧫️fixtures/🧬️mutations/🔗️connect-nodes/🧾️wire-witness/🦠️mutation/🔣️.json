@@ -1,0 +1,18 @@
+{
+  "operation": "connectNodes",
+  "id": "added",
+  "source": "a@out",
+  "target": "b@in",
+  "routeStyle": "bezier",
+  "properties": {
+    "nested": {
+      "array": [
+        null,
+        1.0,
+        "x"
+      ]
+    },
+    "visible": true
+  },
+  "index": 1
+}

@@ -1,0 +1,216 @@
+{
+  "surface": "conformance.composite.reference-list",
+  "revision": 0,
+  "root": 0,
+  "nodes": [
+    {
+      "id": 0,
+      "key": "#0",
+      "component": {
+        "type": "container",
+        "role": "group",
+        "label": "Targets"
+      },
+      "layout": {
+        "kind": "stack",
+        "axis": "vertical",
+        "gap": "xs",
+        "padding": {
+          "all": "none"
+        },
+        "align": "stretch",
+        "justify": "start",
+        "grow": false,
+        "wrap": false
+      },
+      "style": {},
+      "activity": "idle",
+      "accessibility": {},
+      "children": [
+        1,
+        4
+      ]
+    },
+    {
+      "id": 1,
+      "key": "chips",
+      "component": {
+        "type": "container",
+        "role": "toolbar",
+        "label": "Targets"
+      },
+      "layout": {
+        "kind": "stack",
+        "axis": "horizontal",
+        "gap": "xs",
+        "padding": {
+          "all": "none"
+        },
+        "align": "stretch",
+        "justify": "start",
+        "grow": false,
+        "wrap": true
+      },
+      "style": {},
+      "activity": "idle",
+      "accessibility": {},
+      "children": [
+        2,
+        3
+      ]
+    },
+    {
+      "id": 2,
+      "key": "piece-3",
+      "component": {
+        "type": "button",
+        "icon": "x",
+        "label": "Piece 3"
+      },
+      "layout": {
+        "kind": "leaf",
+        "width": "hug",
+        "height": "hug"
+      },
+      "style": {
+        "variant": "outline"
+      },
+      "activity": "idle",
+      "accessibility": {
+        "label": "Remove Piece 3"
+      },
+      "bindings": [
+        {
+          "trigger": "activate",
+          "action": {
+            "scope": "app",
+            "name": "removeTarget",
+            "version": 1
+          }
+        }
+      ]
+    },
+    {
+      "id": 3,
+      "key": "piece-7",
+      "component": {
+        "type": "button",
+        "icon": "x",
+        "label": "Piece 7"
+      },
+      "layout": {
+        "kind": "leaf",
+        "width": "hug",
+        "height": "hug"
+      },
+      "style": {
+        "variant": "outline"
+      },
+      "activity": "idle",
+      "accessibility": {
+        "label": "Remove Piece 7"
+      },
+      "bindings": [
+        {
+          "trigger": "activate",
+          "action": {
+            "scope": "app",
+            "name": "removeTarget",
+            "version": 1
+          }
+        }
+      ]
+    },
+    {
+      "id": 4,
+      "key": "actions",
+      "component": {
+        "type": "container"
+      },
+      "layout": {
+        "kind": "stack",
+        "axis": "horizontal",
+        "gap": "xs",
+        "padding": {
+          "all": "none"
+        },
+        "align": "stretch",
+        "justify": "start",
+        "grow": false,
+        "wrap": true
+      },
+      "style": {},
+      "activity": "idle",
+      "accessibility": {},
+      "children": [
+        5,
+        6
+      ]
+    },
+    {
+      "id": 5,
+      "key": "useSelection",
+      "component": {
+        "type": "button",
+        "icon": "crosshair",
+        "label": "Use selection"
+      },
+      "layout": {
+        "kind": "leaf",
+        "width": "hug",
+        "height": "hug"
+      },
+      "style": {},
+      "activity": "idle",
+      "accessibility": {
+        "label": "Use selection"
+      },
+      "bindings": [
+        {
+          "trigger": "activate",
+          "action": {
+            "scope": "app",
+            "name": "useSelection",
+            "version": 1
+          }
+        }
+      ]
+    },
+    {
+      "id": 6,
+      "key": "candidates",
+      "component": {
+        "type": "select",
+        "value": "",
+        "items": [
+          {
+            "value": "piece-9",
+            "label": "Piece 9"
+          }
+        ],
+        "placeholder": "Add target"
+      },
+      "layout": {
+        "kind": "leaf",
+        "width": "hug",
+        "height": "hug"
+      },
+      "style": {},
+      "activity": "idle",
+      "accessibility": {
+        "label": "Add target"
+      },
+      "bindings": [
+        {
+          "trigger": "change",
+          "action": {
+            "scope": "app",
+            "name": "addTarget",
+            "version": 1
+          }
+        }
+      ]
+    }
+  ],
+  "layoutEpoch": 0
+}

@@ -17,7 +17,8 @@ import { mkdtempSync, rmSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import type { TrustedCatalogLoadProgressV1 } from "../../📊️observability/🟦️.ts";
-import { findFreePort, hubProbeCall, hubProbeSignIn, hubSeedTrustedCatalog, startHub, type HubHandle } from "../../🤝️integration-harness/🟦️.ts";
+import { findFreePort, hubSeedTrustedCatalog, startHub, type HubHandle } from "../../🤝️integration-harness/🟦️.ts";
+import { hubProbeCall, hubProbeSignIn } from "../../../🧰️framework/🛍️products/💻️os/🔨️modules/📇️directory/🧪️testkit/📡️client-probe/🟦️.ts";
 
 /** 🎛️ One watch. */
 export type BootWatchOptions = Readonly<{

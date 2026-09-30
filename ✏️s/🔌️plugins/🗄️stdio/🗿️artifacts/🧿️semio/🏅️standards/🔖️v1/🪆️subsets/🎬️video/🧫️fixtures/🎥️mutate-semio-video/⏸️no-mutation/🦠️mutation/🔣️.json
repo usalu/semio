@@ -1,6 +1,54 @@
 {
   "kind": "no-mutation",
-  "params": {},
+  "mutation": {
+    "mutation": "setSnapshot",
+    "snapshot": {
+      "schema": "stdio.semio.video",
+      "streams": [
+        {
+          "kind": "video",
+          "codec": "h264",
+          "width": 1920,
+          "height": 1080,
+          "rate": {
+            "num": 30,
+            "den": 1
+          },
+          "samples": [
+            {
+              "pts": 0,
+              "key": true,
+              "data": [
+                0,
+                1,
+                2,
+                3
+              ]
+            },
+            {
+              "pts": 33,
+              "key": false,
+              "data": [
+                4,
+                5
+              ]
+            }
+          ]
+        },
+        {
+          "kind": "audio",
+          "codec": "aac",
+          "width": 0,
+          "height": 0,
+          "rate": {
+            "num": 48000,
+            "den": 1000
+          },
+          "samples": []
+        }
+      ]
+    }
+  },
   "before": {
     "schema": "stdio.semio.video",
     "streams": [

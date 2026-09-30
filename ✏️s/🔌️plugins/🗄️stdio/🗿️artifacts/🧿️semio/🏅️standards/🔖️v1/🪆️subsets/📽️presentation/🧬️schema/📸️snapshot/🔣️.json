@@ -11,24 +11,53 @@
   ],
   "properties": {
     "schema": {
-      "type": "string"
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "text",
+        "label": {
+          "en": "Snapshot schema",
+          "de": "Snapshot-Schema"
+        },
+        "description": {
+          "en": "Identifier of the snapshot schema version.",
+          "de": "Kennung der Version des Snapshot-Schemas."
+        }
+      }
     },
     "masters": {
       "type": "array",
       "items": {
         "$ref": "#/definitions/SlideMaster"
+      },
+      "x-semio-ui": {
+        "label": {
+          "en": "Slide masters",
+          "de": "Folienmaster"
+        }
       }
     },
     "layouts": {
       "type": "array",
       "items": {
         "$ref": "#/definitions/SlideLayout"
+      },
+      "x-semio-ui": {
+        "label": {
+          "en": "Slide layouts",
+          "de": "Folienlayouts"
+        }
       }
     },
     "slides": {
       "type": "array",
       "items": {
         "$ref": "#/definitions/Slide"
+      },
+      "x-semio-ui": {
+        "label": {
+          "en": "Slides",
+          "de": "Folien"
+        }
       }
     }
   },
@@ -57,7 +86,13 @@
       ],
       "properties": {
         "origin": {
-          "$ref": "#/definitions/SemioPoint2"
+          "$ref": "#/definitions/SemioPoint2",
+          "x-semio-ui": {
+            "label": {
+              "en": "Origin",
+              "de": "Ursprung"
+            }
+          }
         },
         "width": {
           "type": "number"
@@ -79,7 +114,14 @@
           "type": "string"
         },
         "mime": {
-          "type": "string"
+          "type": "string",
+          "x-semio-ui": {
+            "widget": "text",
+            "label": {
+              "en": "Media type",
+              "de": "Medientyp"
+            }
+          }
         },
         "bytes": {
           "type": "array",
@@ -87,6 +129,12 @@
             "type": "integer",
             "minimum": 0,
             "maximum": 255
+          },
+          "x-semio-ui": {
+            "label": {
+              "en": "Bytes",
+              "de": "Bytes"
+            }
           }
         }
       }
@@ -106,7 +154,35 @@
             "slideNumber",
             "dateTime",
             "other"
-          ]
+          ],
+          "x-semio-ui": {
+            "options": {
+              "subtitle": {
+                "en": "Subtitle",
+                "de": "Untertitel"
+              },
+              "body": {
+                "en": "Body",
+                "de": "Textkörper"
+              },
+              "footer": {
+                "en": "Footer",
+                "de": "Fußzeile"
+              },
+              "slideNumber": {
+                "en": "Slide number",
+                "de": "Foliennummer"
+              },
+              "dateTime": {
+                "en": "Date and time",
+                "de": "Datum und Uhrzeit"
+              },
+              "other": {
+                "en": "Other",
+                "de": "Sonstiger"
+              }
+            }
+          }
         },
         "value": {
           "type": "string"
@@ -120,7 +196,13 @@
       ],
       "properties": {
         "blocks": {
-          "type": "array"
+          "type": "array",
+          "x-semio-ui": {
+            "label": {
+              "en": "Text blocks",
+              "de": "Textblöcke"
+            }
+          }
         }
       }
     },
@@ -134,6 +216,12 @@
           "type": "array",
           "items": {
             "$ref": "#/definitions/SlideTableCell"
+          },
+          "x-semio-ui": {
+            "label": {
+              "en": "Cells",
+              "de": "Zellen"
+            }
           }
         }
       }
@@ -151,7 +239,28 @@
             "picture",
             "table",
             "placeholder"
-          ]
+          ],
+          "x-semio-ui": {
+            "widget": "select",
+            "label": {
+              "en": "Shape kind",
+              "de": "Formart"
+            },
+            "options": {
+              "textBox": {
+                "en": "Text box",
+                "de": "Textfeld"
+              },
+              "picture": {
+                "en": "Picture",
+                "de": "Bild"
+              },
+              "placeholder": {
+                "en": "Placeholder",
+                "de": "Platzhalter"
+              }
+            }
+          }
         },
         "frame": {
           "$ref": "#/definitions/SlideFrame"
@@ -160,6 +269,12 @@
           "type": "array",
           "items": {
             "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/semio/v1/document/snapshot.json#/$defs/DocBlock"
+          },
+          "x-semio-ui": {
+            "label": {
+              "en": "Text blocks",
+              "de": "Textblöcke"
+            }
           }
         },
         "image": {
@@ -169,6 +284,12 @@
           "type": "array",
           "items": {
             "$ref": "#/definitions/SlideTableRow"
+          },
+          "x-semio-ui": {
+            "label": {
+              "en": "Rows",
+              "de": "Zeilen"
+            }
           }
         },
         "kind": {
@@ -190,6 +311,12 @@
           "type": "array",
           "items": {
             "$ref": "#/definitions/SlideShape"
+          },
+          "x-semio-ui": {
+            "label": {
+              "en": "Shapes",
+              "de": "Formen"
+            }
           }
         }
       }
@@ -206,12 +333,29 @@
           "type": "string"
         },
         "masterId": {
-          "type": "string"
+          "type": "string",
+          "x-semio-ui": {
+            "widget": "reference",
+            "role": "target",
+            "label": {
+              "en": "Slide master",
+              "de": "Folienmaster"
+            },
+            "ref": {
+              "kind": "master"
+            }
+          }
         },
         "shapes": {
           "type": "array",
           "items": {
             "$ref": "#/definitions/SlideShape"
+          },
+          "x-semio-ui": {
+            "label": {
+              "en": "Shapes",
+              "de": "Formen"
+            }
           }
         }
       }
@@ -231,16 +375,39 @@
           "type": [
             "string",
             "null"
-          ]
+          ],
+          "x-semio-ui": {
+            "widget": "reference",
+            "role": "target",
+            "label": {
+              "en": "Slide layout",
+              "de": "Folienlayout"
+            },
+            "ref": {
+              "kind": "layout"
+            }
+          }
         },
         "shapes": {
           "type": "array",
           "items": {
             "$ref": "#/definitions/SlideShape"
+          },
+          "x-semio-ui": {
+            "label": {
+              "en": "Shapes",
+              "de": "Formen"
+            }
           }
         },
         "notes": {
-          "type": "array"
+          "type": "array",
+          "x-semio-ui": {
+            "label": {
+              "en": "Speaker notes",
+              "de": "Notizen"
+            }
+          }
         }
       }
     }

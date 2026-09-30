@@ -1,6 +1,6 @@
 {
   "RemoveLayer": {
-    "element_id": "wall-north",
+    "elementId": "wall-north",
     "index": 0
   }
 }

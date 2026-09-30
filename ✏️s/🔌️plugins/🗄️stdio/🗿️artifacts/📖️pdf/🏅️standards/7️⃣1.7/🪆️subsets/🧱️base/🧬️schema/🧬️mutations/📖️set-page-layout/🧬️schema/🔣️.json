@@ -4,8 +4,14 @@
   "title": "SetPageLayout",
   "type": "object",
   "additionalProperties": false,
-  "required": [],
+  "required": [
+    "mutation"
+  ],
   "properties": {
+    "mutation": {
+      "const": "setPageLayout",
+      "description": "Aggregate discriminator spliced in by PdfMutation; absent when the payload stands alone."
+    },
     "layout": {
       "anyOf": [
         {
@@ -14,11 +20,35 @@
         {
           "type": "null"
         }
-      ]
-    },
-    "mutation": {
-      "const": "setPageLayout",
-      "description": "Aggregate discriminator spliced in by PdfMutation; absent when the payload stands alone."
+      ],
+      "x-semio-ui": {
+        "options": {
+          "singlePage": {
+            "en": "Single page",
+            "de": "Einzelne Seite"
+          },
+          "oneColumn": {
+            "en": "One column",
+            "de": "Fortlaufend"
+          },
+          "twoColumnLeft": {
+            "en": "Two columns, odd pages left",
+            "de": "Zwei Spalten, ungerade Seiten links"
+          },
+          "twoColumnRight": {
+            "en": "Two columns, odd pages right",
+            "de": "Zwei Spalten, ungerade Seiten rechts"
+          },
+          "twoPageLeft": {
+            "en": "Two pages, odd pages left",
+            "de": "Doppelseite, ungerade Seiten links"
+          },
+          "twoPageRight": {
+            "en": "Two pages, odd pages right",
+            "de": "Doppelseite, ungerade Seiten rechts"
+          }
+        }
+      }
     }
   }
 }

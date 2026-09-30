@@ -5,14 +5,50 @@
   "type": "object",
   "additionalProperties": false,
   "required": [
+    "mutation",
     "id"
   ],
   "properties": {
+    "mutation": {
+      "const": "changePart2dLocked"
+    },
     "id": {
-      "type": "string"
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Part",
+          "de": "Teil"
+        },
+        "description": {
+          "en": "The part this mutation addresses.",
+          "de": "Das Teil, das diese Mutation adressiert."
+        },
+        "ref": {
+          "kind": "part",
+          "domain": "vortex",
+          "granularity": "part"
+        },
+        "group": "target",
+        "order": 10
+      }
     },
     "newLocked": {
-      "type": "boolean"
+      "type": [
+        "boolean",
+        "null"
+      ],
+      "x-semio-ui": {
+        "widget": "toggle",
+        "role": "value",
+        "label": {
+          "en": "Locked",
+          "de": "Gesperrt"
+        },
+        "group": "state",
+        "order": 20
+      }
     }
   }
 }

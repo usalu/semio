@@ -23,23 +23,11 @@ Feature: Apply every typed RFC 4180 CSV mutation to a real-world table
     Then the oracle and the subject agree on the semantic projection
     Examples:
       | id | params |
-      | set-snapshot | {"hasHeader": true, "rows": [["Name", "Wert"], ["Testfeld", "Ünïcödé, mit Komma"]]} |
+      | set-snapshot | {"snapshot": {"schema": "stdio.csv", "hasHeader": true, "records": [{"fields": [{"value": "Name", "quoted": false}, {"value": "Wert", "quoted": false}]}, {"fields": [{"value": "Testfeld", "quoted": false}, {"value": "Ünïcödé, mit Komma", "quoted": false}]}]}} |
       | set-has-header | {"hasHeader": false} |
-      | insert-record | {"index": 5, "fields": ["BB-99", "Marktplätze", "Baustoffbörse Hannover", "Deutschland", "Angebotsübersicht, Detailseite", "öffentlich", "Website", "—", "Beschreibung, Bilder, Preis, Menge, Materialstandort", "Kategorien, Suche, Filter", "Anfrage, Reservierung", "Abholung, Lieferung"]} |
+      | insert-record | {"index": 5, "record": {"fields": [{"value": "BB-99", "quoted": false}, {"value": "Marktplätze", "quoted": false}, {"value": "Baustoffbörse Hannover", "quoted": false}, {"value": "Deutschland", "quoted": false}, {"value": "Angebotsübersicht, Detailseite", "quoted": false}, {"value": "öffentlich", "quoted": false}, {"value": "Website", "quoted": false}, {"value": "—", "quoted": false}, {"value": "Beschreibung, Bilder, Preis, Menge, Materialstandort", "quoted": false}, {"value": "Kategorien, Suche, Filter", "quoted": false}, {"value": "Anfrage, Reservierung", "quoted": false}, {"value": "Abholung, Lieferung", "quoted": false}]}} |
       | remove-record | {"index": 25} |
-      | set-field | {"recordIndex": 1, "fieldIndex": 8, "value": "Beschreibung, Bilder, Preis"} |
-
-  @id-no-mutation-baseline-mutate
-  @level-exhaustive
-  @mode-differential
-  Scenario: Apply no-mutation to the real table
-    Given the real input table shared://🧪️reuse-marketplaces/📊️.csv
-    When the no-mutation mutation is applied with its parameters
-      """
-      {"kind": "no-mutation", "params": {}}
-      """
-    Then the oracle and the subject agree on the semantic projection
-
+      | set-field | {"recordIndex": 1, "fieldIndex": 8, "value": "Beschreibung, Bilder, Preis", "quoted": false} |
   @id-inverse
   @level-exhaustive
   @mode-differential
@@ -53,24 +41,11 @@ Feature: Apply every typed RFC 4180 CSV mutation to a real-world table
     Then the oracle and the subject agree on the semantic projection of the original table
     Examples:
       | id | params |
-      | set-snapshot | {"hasHeader": true, "rows": [["Name", "Wert"], ["Testfeld", "Ünïcödé, mit Komma"]]} |
+      | set-snapshot | {"snapshot": {"schema": "stdio.csv", "hasHeader": true, "records": [{"fields": [{"value": "Name", "quoted": false}, {"value": "Wert", "quoted": false}]}, {"fields": [{"value": "Testfeld", "quoted": false}, {"value": "Ünïcödé, mit Komma", "quoted": false}]}]}} |
       | set-has-header | {"hasHeader": false} |
-      | insert-record | {"index": 5, "fields": ["BB-99", "Marktplätze", "Baustoffbörse Hannover", "Deutschland", "Angebotsübersicht, Detailseite", "öffentlich", "Website", "—", "Beschreibung, Bilder, Preis, Menge, Materialstandort", "Kategorien, Suche, Filter", "Anfrage, Reservierung", "Abholung, Lieferung"]} |
+      | insert-record | {"index": 5, "record": {"fields": [{"value": "BB-99", "quoted": false}, {"value": "Marktplätze", "quoted": false}, {"value": "Baustoffbörse Hannover", "quoted": false}, {"value": "Deutschland", "quoted": false}, {"value": "Angebotsübersicht, Detailseite", "quoted": false}, {"value": "öffentlich", "quoted": false}, {"value": "Website", "quoted": false}, {"value": "—", "quoted": false}, {"value": "Beschreibung, Bilder, Preis, Menge, Materialstandort", "quoted": false}, {"value": "Kategorien, Suche, Filter", "quoted": false}, {"value": "Anfrage, Reservierung", "quoted": false}, {"value": "Abholung, Lieferung", "quoted": false}]}} |
       | remove-record | {"index": 25} |
-      | set-field | {"recordIndex": 1, "fieldIndex": 8, "value": "Beschreibung, Bilder, Preis"} |
-
-  @id-no-mutation-baseline-inverse
-  @level-exhaustive
-  @mode-differential
-  Scenario: Undoing no-mutation restores the real table
-    Given the real input table shared://🧪️reuse-marketplaces/📊️.csv
-    When the no-mutation mutation is applied with its parameters
-      """
-      {"kind": "no-mutation", "params": {}}
-      """
-    And the inverse mutation is applied to that result
-    Then the oracle and the subject agree on the semantic projection of the original table
-
+      | set-field | {"recordIndex": 1, "fieldIndex": 8, "value": "Beschreibung, Bilder, Preis", "quoted": false} |
   @id-identity-round-trip
   @level-long
   @mode-round-trip

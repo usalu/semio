@@ -1,0 +1,9 @@
+# Final Attribution And Public API Review
+
+Read-only scoped audit; no source edits, Git inspection, builds or tests.
+
+Compared the Playbook geometry report's owned-path bullets with the union of root-integration-files, cargo-flow-session-files, dependency-composition-file-manifest, extension-resource-retirement, mesh-modeling-contract, and plugin-source-freshness-owner reports. The report has 17 unique domain source paths plus Cargo.lock's explicitly scoped dependency row: 18 unique owned files. All 17 domain paths exist and appear in the manifest union; Cargo.lock is explicitly in the root manifest. Missing owned paths: none. Repeated additional-owned bullets are duplicates, not extra files. The root manifest separately includes the reached wgpu read-only inspector field-default correction. Persistent audit reports remain retained separately from production attribution.
+
+Final public seams use standard primitives/containers and first-party types. SessionCapture exposes first-party Session as Deref::Target, bool/usize queries, and Result<ValueRetirementStep,String>; its actual allocator and shell Arc are private. GeometryPort/GeometryPortRetirement use first-party MeshData, GeometryStep, ValueRetirementStep and standard Rust types. ValueRetirementStep is explicitly reexported by the first-party neural engine (`🧰️framework/🛍️products/💻️os/🔨️modules/🧠️neural/⚙️engine/🦀️.rs:17`). ExtensionResourceOwner uses first-party Fault and PluginCloseStep and is explicitly reexported from the plugin runtime. extension_next_close_byte_demand returns Result<usize,Fault>. No newly leaked third-party type was found in these demand/capture/port interfaces.
+
+Existing browser bindings and unrelated backend wrappers were not broadened into this review. Source ownership and API inspection do not establish runtime success; final executor runs remain the runtime evidence.

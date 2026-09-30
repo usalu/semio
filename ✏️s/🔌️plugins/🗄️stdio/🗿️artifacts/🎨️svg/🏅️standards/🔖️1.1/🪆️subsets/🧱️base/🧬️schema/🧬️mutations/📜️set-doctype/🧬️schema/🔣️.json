@@ -26,7 +26,18 @@
       "properties": {
         "prologPosition": {
           "type": "integer",
-          "minimum": 0
+          "minimum": 0,
+          "x-semio-ui": {
+            "widget": "stepper",
+            "label": {
+              "en": "Prolog position",
+              "de": "Position im Prolog"
+            },
+            "description": {
+              "en": "Number of prolog nodes before the document type declaration.",
+              "de": "Anzahl der Prolog-Knoten vor der Dokumenttypdeklaration."
+            }
+          }
         },
         "name": {
           "type": "string"
@@ -39,12 +50,32 @@
             {
               "type": "null"
             }
-          ]
+          ],
+          "x-semio-ui": {
+            "label": {
+              "en": "External identifier",
+              "de": "Externer Bezeichner"
+            },
+            "description": {
+              "en": "SYSTEM or PUBLIC identifier of the external DTD subset.",
+              "de": "SYSTEM- oder PUBLIC-Bezeichner der externen DTD-Teilmenge."
+            }
+          }
         },
         "declarations": {
           "type": "array",
           "items": {
             "$ref": "#/$defs/XmlDtdDeclaration"
+          },
+          "x-semio-ui": {
+            "label": {
+              "en": "Markup declarations",
+              "de": "Markup-Deklarationen"
+            },
+            "description": {
+              "en": "Declarations of the internal DTD subset in document order.",
+              "de": "Deklarationen der internen DTD-Teilmenge in Dokumentreihenfolge."
+            }
           }
         }
       }
@@ -112,6 +143,43 @@
             },
             "value": {
               "type": "string"
+            }
+          }
+        }
+      ]
+    },
+    "SetDoctypeMutation": {
+      "description": "The whole wire of SetDoctypeMutation: the editable apply payload (this document's root) or the inert restore.",
+      "oneOf": [
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "phase",
+            "value"
+          ],
+          "properties": {
+            "phase": {
+              "const": "apply"
+            },
+            "value": {
+              "$ref": "#"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "phase",
+            "value"
+          ],
+          "properties": {
+            "phase": {
+              "const": "restore"
+            },
+            "value": {
+              "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/svg/1.1/base/diff.json"
             }
           }
         }

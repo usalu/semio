@@ -85,6 +85,7 @@ async fn raster_document_text_round_trips_store_with_applied_operation() {
                 }),
             })],
             description: None,
+            transaction: None,
         })
         .await
         .expect("apply");
@@ -1299,6 +1300,7 @@ async fn command_envelope_round_trip_holds_for_an_applied_operation() {
                 }),
             })],
             description: None,
+            transaction: None,
         })
         .await
         .expect("apply");

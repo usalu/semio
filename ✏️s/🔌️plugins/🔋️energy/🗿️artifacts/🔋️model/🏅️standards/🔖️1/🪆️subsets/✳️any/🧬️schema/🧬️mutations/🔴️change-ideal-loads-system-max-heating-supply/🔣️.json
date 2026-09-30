@@ -1,0 +1,25 @@
+{
+  "schemaVersion": 1,
+  "owner": "✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔴️change-ideal-loads-system-max-heating-supply",
+  "semanticKind": "change-ideal-loads-system-max-heating-supply-air-temp",
+  "displayName": "Change Ideal Loads System Max Heating Supply Air Temp",
+  "emoji": "🔴️",
+  "aggregateVariant": "ChangeIdealLoadsSystemMaxHeatingSupplyAirTemp",
+  "payloadSchema": "🧬️schema/🔣️.json",
+  "textOpcode": "change-ideal-loads-system-max-heating-supply-air-temp",
+  "binaryTag": 138,
+  "invertibility": "explicit-mutation",
+  "diffParticipation": "detect",
+  "outcomeClasses": [
+    "applied",
+    "no-op",
+    "rejected"
+  ],
+  "composition": "atomic",
+  "requiredLanguageSurfaces": [
+    "rust",
+    "json-schema",
+    "text",
+    "binary"
+  ]
+}

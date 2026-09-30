@@ -5,6 +5,7 @@
   "type": "object",
   "additionalProperties": false,
   "required": [
+    "mutation",
     "index",
     "id",
     "targetEquipmentId",
@@ -13,14 +14,71 @@
     "startScheduleId"
   ],
   "properties": {
+    "mutation": {
+      "const": "createFault"
+    },
     "index": {
-      "type": "integer"
+      "type": "integer",
+      "minimum": 0,
+      "x-semio-ui": {
+        "widget": "stepper",
+        "role": "value",
+        "label": {
+          "en": "Position",
+          "de": "Position"
+        },
+        "description": {
+          "en": "Insertion position in the model's list; 0 is first.",
+          "de": "Einfügeposition in der Modellliste; 0 ist die erste."
+        },
+        "step": 1,
+        "precision": 0,
+        "group": "order",
+        "order": 10
+      }
     },
     "id": {
-      "type": "integer"
+      "type": "integer",
+      "minimum": 0,
+      "x-semio-ui": {
+        "widget": "stepper",
+        "role": "value",
+        "label": {
+          "en": "ID",
+          "de": "ID"
+        },
+        "description": {
+          "en": "Id the new fault is created under; later mutations address it by this id.",
+          "de": "ID, unter der das neue Objekt angelegt wird; spätere Mutationen adressieren es darüber."
+        },
+        "step": 1,
+        "precision": 0,
+        "group": "identity",
+        "order": 20
+      }
     },
     "targetEquipmentId": {
-      "type": "integer"
+      "type": "integer",
+      "minimum": 0,
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Affected system",
+          "de": "Betroffene Anlage"
+        },
+        "description": {
+          "en": "Ideal loads system the fault acts on, by id.",
+          "de": "Ideallastsystem, auf das der Fehler wirkt, per ID."
+        },
+        "ref": {
+          "kind": "idealLoadsSystem",
+          "domain": "energyModel",
+          "granularity": "hvac"
+        },
+        "group": "assignment",
+        "order": 30
+      }
     },
     "faultType": {
       "enum": [
@@ -29,13 +87,85 @@
         "DamperStuck",
         "ChillerFouling",
         "BoilerEfficiencyDegradation"
-      ]
+      ],
+      "x-semio-ui": {
+        "widget": "select",
+        "role": "value",
+        "label": {
+          "en": "Fault type",
+          "de": "Fehlertyp"
+        },
+        "options": {
+          "SensorBias": {
+            "en": "Sensor bias",
+            "de": "Sensorabweichung"
+          },
+          "CoilFouling": {
+            "en": "Coil fouling",
+            "de": "Registerverschmutzung"
+          },
+          "DamperStuck": {
+            "en": "Stuck damper",
+            "de": "Klemmende Klappe"
+          },
+          "ChillerFouling": {
+            "en": "Chiller fouling",
+            "de": "Verschmutzung der Kältemaschine"
+          },
+          "BoilerEfficiencyDegradation": {
+            "en": "Boiler efficiency degradation",
+            "de": "Wirkungsgradverlust des Kessels"
+          }
+        },
+        "group": "fault",
+        "order": 40
+      }
     },
     "severity": {
-      "type": "number"
+      "type": "number",
+      "x-semio-ui": {
+        "widget": "slider",
+        "role": "value",
+        "label": {
+          "en": "Severity",
+          "de": "Schweregrad"
+        },
+        "description": {
+          "en": "0 is harmless, 100 % is the fault at full strength.",
+          "de": "0 ist wirkungslos, 100 % ist der Fehler in voller Stärke."
+        },
+        "displayUnit": "%",
+        "displayFactor": 100,
+        "step": 0.01,
+        "precision": 0,
+        "softMin": 0,
+        "softMax": 1,
+        "group": "fault",
+        "order": 50
+      }
     },
     "startScheduleId": {
-      "type": "integer"
+      "type": "integer",
+      "minimum": 0,
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Onset schedule",
+          "de": "Startzeitplan"
+        },
+        "description": {
+          "en": "When the fault is active, by id.",
+          "de": "Wann der Fehler wirkt, per ID."
+        },
+        "ref": {
+          "kind": "schedule",
+          "domain": "energyModel",
+          "granularity": "schedule"
+        },
+        "group": "schedule",
+        "order": 60
+      }
     }
   }
 }

@@ -11,15 +11,64 @@
   ],
   "properties": {
     "elementId": {
-      "type": "string"
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Envelope element",
+          "de": "Bauteil der Gebäudehülle"
+        },
+        "description": {
+          "en": "The envelope element this mutation addresses.",
+          "de": "Das Bauteil der Gebäudehülle, das diese Mutation adressiert."
+        },
+        "ref": {
+          "kind": "element"
+        },
+        "group": "target",
+        "order": 10
+      }
     },
     "from": {
       "type": "integer",
-      "minimum": 0
+      "minimum": 0,
+      "x-semio-ui": {
+        "widget": "stepper",
+        "role": "value",
+        "label": {
+          "en": "From position",
+          "de": "Von Position"
+        },
+        "description": {
+          "en": "Zero-based position of the layer to move in its list.",
+          "de": "Nullbasierte Position der zu verschiebenden Schicht in der Liste."
+        },
+        "step": 1,
+        "precision": 0,
+        "group": "target",
+        "order": 20
+      }
     },
     "to": {
       "type": "integer",
-      "minimum": 0
+      "minimum": 0,
+      "x-semio-ui": {
+        "widget": "stepper",
+        "role": "value",
+        "label": {
+          "en": "To position",
+          "de": "Nach Position"
+        },
+        "description": {
+          "en": "Zero-based target position of the moved layer.",
+          "de": "Nullbasierte Zielposition der verschobenen Schicht."
+        },
+        "step": 1,
+        "precision": 0,
+        "group": "target",
+        "order": 30
+      }
     }
   }
 }

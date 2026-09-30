@@ -5,15 +5,53 @@
   "type": "object",
   "additionalProperties": false,
   "required": [
+    "mutation",
     "id",
     "newConductivityWMK"
   ],
   "properties": {
+    "mutation": {
+      "const": "changeGlazingMaterialConductivity"
+    },
     "id": {
-      "type": "integer"
+      "type": "integer",
+      "minimum": 0,
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Glazing material",
+          "de": "Verglasungsmaterial"
+        },
+        "description": {
+          "en": "The glazing material this mutation changes, by id.",
+          "de": "Verglasungsmaterial, das diese Mutation ändert, per ID."
+        },
+        "ref": {
+          "kind": "glazingMaterial",
+          "domain": "energyModel",
+          "granularity": "glazingMaterial"
+        },
+        "group": "target",
+        "order": 10
+      }
     },
     "newConductivityWMK": {
-      "type": "number"
+      "type": "number",
+      "exclusiveMinimum": 0,
+      "x-semio-ui": {
+        "widget": "stepper",
+        "role": "value",
+        "label": {
+          "en": "Thermal conductivity",
+          "de": "Wärmeleitfähigkeit"
+        },
+        "unit": "W/(m·K)",
+        "step": 0.001,
+        "precision": 3,
+        "group": "thermal",
+        "order": 20
+      }
     }
   }
 }

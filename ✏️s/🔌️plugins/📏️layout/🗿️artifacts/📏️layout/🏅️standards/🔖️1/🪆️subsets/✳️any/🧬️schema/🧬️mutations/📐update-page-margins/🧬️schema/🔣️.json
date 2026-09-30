@@ -13,19 +13,84 @@
   ],
   "properties": {
     "id": {
-      "type": "string"
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Page",
+          "de": "Seite"
+        },
+        "ref": {
+          "kind": "page"
+        },
+        "group": "target",
+        "order": 10
+      }
     },
     "top": {
-      "type": "number"
+      "type": "number",
+      "x-semio-ui": {
+        "widget": "stepper",
+        "role": "value",
+        "label": {
+          "en": "Top margin",
+          "de": "Rand oben"
+        },
+        "unit": "mm",
+        "step": 1,
+        "precision": 1,
+        "group": "margins",
+        "order": 20
+      }
     },
     "right": {
-      "type": "number"
+      "type": "number",
+      "x-semio-ui": {
+        "widget": "stepper",
+        "role": "value",
+        "label": {
+          "en": "Right margin",
+          "de": "Rand rechts"
+        },
+        "unit": "mm",
+        "step": 1,
+        "precision": 1,
+        "group": "margins",
+        "order": 30
+      }
     },
     "bottom": {
-      "type": "number"
+      "type": "number",
+      "x-semio-ui": {
+        "widget": "stepper",
+        "role": "value",
+        "label": {
+          "en": "Bottom margin",
+          "de": "Rand unten"
+        },
+        "unit": "mm",
+        "step": 1,
+        "precision": 1,
+        "group": "margins",
+        "order": 40
+      }
     },
     "left": {
-      "type": "number"
+      "type": "number",
+      "x-semio-ui": {
+        "widget": "stepper",
+        "role": "value",
+        "label": {
+          "en": "Left margin",
+          "de": "Rand links"
+        },
+        "unit": "mm",
+        "step": 1,
+        "precision": 1,
+        "group": "margins",
+        "order": 50
+      }
     }
   }
 }

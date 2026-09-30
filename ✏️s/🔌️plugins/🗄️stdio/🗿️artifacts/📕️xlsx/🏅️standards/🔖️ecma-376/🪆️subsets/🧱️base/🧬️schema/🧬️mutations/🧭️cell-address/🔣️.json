@@ -11,14 +11,59 @@
       "type": "string",
       "minLength": 1,
       "pattern": "^[^/\\\\]+(?:/[^/\\\\]+)*$",
-      "not": { "pattern": "(^|/)\\.{1,2}(/|$)" }
+      "not": { "pattern": "(^|/)\\.{1,2}(/|$)" },
+      "x-semio-ui": {
+        "widget": "text",
+        "label": {
+          "en": "Worksheet part",
+          "de": "Arbeitsblatt-Teil"
+        },
+        "description": {
+          "en": "Package part name of the worksheet, e.g. xl/worksheets/sheet1.xml.",
+          "de": "Teilname des Arbeitsblatts im Paket, z. B. xl/worksheets/sheet1.xml."
+        }
+      }
     },
-    "nodePath": { "type": "array", "items": { "type": "integer", "minimum": 0, "maximum": 9007199254740991 } },
+    "nodePath": {
+      "type": "array",
+      "items": { "type": "integer", "minimum": 0, "maximum": 9007199254740991 },
+      "x-semio-ui": {
+        "label": {
+          "en": "Node path",
+          "de": "Knotenpfad"
+        },
+        "description": {
+          "en": "Child indices from the worksheet root to the cell element.",
+          "de": "Kindindizes vom Arbeitsblatt-Wurzelelement bis zum Zellelement."
+        }
+      }
+    },
     "namespaceUri": {
       "enum": [
         "http://schemas.openxmlformats.org/spreadsheetml/2006/main",
         "http://purl.oclc.org/ooxml/spreadsheetml/main"
-      ]
+      ],
+      "x-semio-ui": {
+        "widget": "segmented",
+        "label": {
+          "en": "SpreadsheetML namespace",
+          "de": "SpreadsheetML-Namensraum"
+        },
+        "description": {
+          "en": "Namespace of the worksheet XML: Transitional or Strict.",
+          "de": "Namensraum des Arbeitsblatt-XML: Transitional oder Strict."
+        },
+        "options": {
+          "http://schemas.openxmlformats.org/spreadsheetml/2006/main": {
+            "en": "Transitional (ECMA-376)",
+            "de": "Transitional (ECMA-376)"
+          },
+          "http://purl.oclc.org/ooxml/spreadsheetml/main": {
+            "en": "Strict (ISO/IEC 29500)",
+            "de": "Strict (ISO/IEC 29500)"
+          }
+        }
+      }
     },
     "localName": { "const": "c" },
     "revision": { "type": "string", "pattern": "^[0-9a-f]{16}$" }

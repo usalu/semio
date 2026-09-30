@@ -5,12 +5,36 @@
   "type": "object",
   "additionalProperties": false,
   "required": [
+    "mutation",
     "id",
     "newClass"
   ],
   "properties": {
+    "mutation": {
+      "const": "changeSurfaceClass"
+    },
     "id": {
-      "type": "integer"
+      "type": "integer",
+      "minimum": 0,
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Surface",
+          "de": "Oberfläche"
+        },
+        "description": {
+          "en": "The surface this mutation changes, by id.",
+          "de": "Oberfläche, die diese Mutation ändert, per ID."
+        },
+        "ref": {
+          "kind": "surface",
+          "domain": "energyModel",
+          "granularity": "surface"
+        },
+        "group": "target",
+        "order": 10
+      }
     },
     "newClass": {
       "enum": [
@@ -22,7 +46,51 @@
         "Interzone",
         "Adiabatic",
         "Ground"
-      ]
+      ],
+      "x-semio-ui": {
+        "widget": "select",
+        "role": "value",
+        "label": {
+          "en": "Surface class",
+          "de": "Bauteilart"
+        },
+        "options": {
+          "ExteriorWall": {
+            "en": "Exterior wall",
+            "de": "Außenwand"
+          },
+          "InteriorWall": {
+            "en": "Interior wall",
+            "de": "Innenwand"
+          },
+          "Roof": {
+            "en": "Roof",
+            "de": "Dach"
+          },
+          "Ceiling": {
+            "en": "Ceiling",
+            "de": "Decke"
+          },
+          "Floor": {
+            "en": "Floor",
+            "de": "Fußboden"
+          },
+          "Interzone": {
+            "en": "Interzone partition",
+            "de": "Zonentrennbauteil"
+          },
+          "Adiabatic": {
+            "en": "Adiabatic",
+            "de": "Adiabates Bauteil"
+          },
+          "Ground": {
+            "en": "Ground contact",
+            "de": "Erdberührtes Bauteil"
+          }
+        },
+        "group": "construction",
+        "order": 20
+      }
     }
   }
 }

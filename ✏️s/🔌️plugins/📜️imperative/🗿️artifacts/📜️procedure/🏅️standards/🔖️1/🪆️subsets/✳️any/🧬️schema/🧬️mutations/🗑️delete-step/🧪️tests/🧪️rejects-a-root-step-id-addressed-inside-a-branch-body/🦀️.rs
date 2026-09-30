@@ -16,11 +16,11 @@ use crate::diff::ProcedureDiff;
 use crate::mutations::ProcedureMutation;
 use crate::{Dictionary, Path, ProcedureSnapshot, Step};
 
-const BEFORE: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🗑️delete-step/🧪️rejects-a-root-step-id-addressed-inside-a-branch-body/📸️snapshot/⬅️before/🔣️.json");
-const AFTER: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🗑️delete-step/🧪️rejects-a-root-step-id-addressed-inside-a-branch-body/📸️snapshot/➡️after/🔣️.json");
-const MUTATION: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🗑️delete-step/🧪️rejects-a-root-step-id-addressed-inside-a-branch-body/🦠️mutation/🔣️.json");
-const ABSENT_DIFF: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🗑️delete-step/🧪️rejects-a-root-step-id-addressed-inside-a-branch-body/🔺️diff/🚫️.absent");
-const OUTCOME: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🗑️delete-step/🧪️rejects-a-root-step-id-addressed-inside-a-branch-body/🎯️outcome/🔣️.json");
+const BEFORE: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🗑️delete-step/🧪️rejects-root-step-id-addressed-inside-branch/📸️snapshot/⬅️before/🔣️.json");
+const AFTER: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🗑️delete-step/🧪️rejects-root-step-id-addressed-inside-branch/📸️snapshot/➡️after/🔣️.json");
+const MUTATION: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🗑️delete-step/🧪️rejects-root-step-id-addressed-inside-branch/🦠️mutation/🔣️.json");
+const ABSENT_DIFF: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🗑️delete-step/🧪️rejects-root-step-id-addressed-inside-branch/🔺️diff/🚫️.absent");
+const OUTCOME: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🗑️delete-step/🧪️rejects-root-step-id-addressed-inside-branch/🎯️outcome/🔣️.json");
 
 /// 🛤️ The nested program the committed `flow` handle stands for: `step-1` at the root, and a
 /// `control.if` step whose `then` body holds only `step-3a`.

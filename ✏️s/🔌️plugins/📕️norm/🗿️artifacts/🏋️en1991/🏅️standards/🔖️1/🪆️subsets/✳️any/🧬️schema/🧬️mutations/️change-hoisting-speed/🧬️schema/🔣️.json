@@ -9,7 +9,21 @@
   ],
   "properties": {
     "newHoistingSpeed": {
-      "type": "number"
+      "type": "number",
+      "minimum": 0,
+      "x-semio-ui": {
+        "widget": "stepper",
+        "role": "value",
+        "label": {
+          "en": "Steady hoisting speed v_h",
+          "de": "Stationäre Hubgeschwindigkeit v_h"
+        },
+        "unit": "m/s",
+        "step": 0.05,
+        "precision": 2,
+        "group": "crane",
+        "order": 10
+      }
     }
   }
 }

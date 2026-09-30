@@ -5,11 +5,30 @@
   "type": "object",
   "additionalProperties": false,
   "required": [
+    "mutation",
     "id"
   ],
   "properties": {
+    "mutation": {
+      "const": "deleteMaterial"
+    },
     "id": {
-      "type": "string"
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Material",
+          "de": "Material"
+        },
+        "ref": {
+          "kind": "material",
+          "domain": "fem3d",
+          "granularity": "material"
+        },
+        "group": "target",
+        "order": 10
+      }
     }
   }
 }

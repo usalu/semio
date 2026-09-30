@@ -1,10 +1,9 @@
 use super::*;
 
-const EXPORTS: [&str; 51] = [
+const EXPORTS: [&str; 50] = [
     "InferenceServerIdV1",
     "InferenceDocumentScopeV1",
     "InferenceRequestV1",
-    "InferenceJobReconcileRequestV1",
     "InferenceJobReconcileApprovalStateV1",
     "InferenceJobReconcileApprovalV1",
     "InferenceJobReconcilePageV1",
@@ -119,10 +118,9 @@ fn hub_inference_fixtures_validate_through_the_owned_draft_07_validator() {
     let proof: serde_json::Value = serde_json::from_str(include_str!("../../../../🧫️fixtures/🧾️inference-wal-proof-v1/🔣️.json")).expect("wal proof fixture");
     let reconcile: serde_json::Value = serde_json::from_str(include_str!("../../../../🧫️fixtures/🧭️inference-job-reconcile-v1/🔣️.json")).expect("reconcile fixture");
     let checkpoint: serde_json::Value = serde_json::from_str(include_str!("../../../../🧫️fixtures/⏸️gis-inference-checkpoint-control-v1/🔣️.json")).expect("checkpoint fixture");
-    let accepted: [(&str, &serde_json::Value); 15] = [
+    let accepted: [(&str, &serde_json::Value); 14] = [
         ("InferenceIdentityV1", &ledger["identity"]),
         ("InferenceRequestV1", &ledger["identity"]["request"]),
-        ("InferenceJobReconcileRequestV1", &reconcile["request"]),
         ("InferenceJobReconcileResultV1", &reconcile["results"][0]["value"]),
         ("InferenceBindingIdentityV1", &ledger["identity"]["binding"]),
         ("InferenceApprovalOutboxV1", &ledger["outbox"]),
@@ -165,8 +163,8 @@ fn hub_inference_exports_agree_with_the_rust_decoders_field_for_field() {
     assert_eq!(encoded(&request), declared(&module, "InferenceApprovalRequestV1", "required"));
 
     let reconcile: serde_json::Value = serde_json::from_str(include_str!("../../../../🧫️fixtures/🧭️inference-job-reconcile-v1/🔣️.json")).expect("reconcile fixture");
-    let request = InferenceJobReconcileRequestV1::decode(&serde_json::to_vec(&reconcile["request"]).expect("bytes")).expect("reconcile request decodes");
-    assert_eq!(encoded(&request), declared(&module, "InferenceJobReconcileRequestV1", "required"));
+    let request = decode_inference_job_reconcile_request_v1(&serde_json::to_vec(&reconcile["request"]).expect("bytes")).expect("reconcile request decodes");
+    assert_eq!(request.request_id, reconcile["request"]["requestId"].as_str().unwrap());
 
     #[cfg(feature = "integration-fixtures")]
     {

@@ -10,10 +10,37 @@
   ],
   "properties": {
     "connectionId": {
-      "type": "string"
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Connection",
+          "de": "Verbindung"
+        },
+        "description": {
+          "en": "The timber connection this mutation addresses.",
+          "de": "Die Holzverbindung, die diese Mutation adressiert."
+        },
+        "ref": {
+          "kind": "connection"
+        },
+        "group": "target",
+        "order": 10
+      }
     },
     "newValue": {
-      "type": "boolean"
+      "type": "boolean",
+      "x-semio-ui": {
+        "widget": "toggle",
+        "role": "value",
+        "label": {
+          "en": "Steel-to-timber connection",
+          "de": "Stahlblech-Holz-Verbindung"
+        },
+        "group": "connection",
+        "order": 20
+      }
     }
   }
 }

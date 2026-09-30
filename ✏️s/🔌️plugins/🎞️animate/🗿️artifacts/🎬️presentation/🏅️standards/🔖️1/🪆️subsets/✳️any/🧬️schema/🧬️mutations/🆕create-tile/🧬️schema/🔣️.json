@@ -52,7 +52,29 @@
             "height": {
               "type": "number"
             }
+          },
+          "x-semio-ui": {
+            "role": "value",
+            "label": {
+              "en": "Crop",
+              "de": "Zuschnitt"
+            },
+            "description": {
+              "en": "Region of the source the tile shows, as fractions of the source size.",
+              "de": "Bereich der Quelle, den die Kachel zeigt, als Anteile der Quellgröße."
+            }
           }
+        }
+      },
+      "x-semio-ui": {
+        "role": "value",
+        "label": {
+          "en": "Tile",
+          "de": "Kachel"
+        },
+        "description": {
+          "en": "The complete tile record to add.",
+          "de": "Die vollständige hinzuzufügende Kachel."
         }
       }
     }

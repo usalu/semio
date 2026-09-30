@@ -2,7 +2,7 @@ import assert from "node:assert/strict";
 import { existsSync, readFileSync, readdirSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
-import Ajv from "ajv";
+import { semioSchemaAjvV1 } from "../../../../../../../../../../../../🧰️framework/🛍️products/💻️os/🧪️tests/🧬️schema-oracle/🟦️.ts";
 import { parseProgramArtifact } from "../../🟦️.ts";
 import { parseProgramSnapshot } from "../../📸️snapshot/🟦️.ts";
 import { parseProgramDiff } from "../../🔺️diff/🟦️.ts";
@@ -33,7 +33,7 @@ const collect = (root: string, suffix: string): string[] => {
 };
 
 const expectedFields = [
-  "schema", "meta", "project", "stakeholders", "users", "activities", "functions", "elements", "quantities", "relationships", "adjacencies", "processes", "flows", "accessRules", "operations", "equipment", "resources", "storage", "environmental", "humanFactors", "accessibility", "privacy", "safety", "security", "regulatory", "siteContext", "organizational", "services", "infrastructure", "information", "communication", "wayfinding", "schedules", "flexibility", "growth", "sustainability", "resilience", "costs", "delivery", "risks", "conflicts", "requirements", "priorities", "scenarios", "options", "decisions", "validations", "performance", "quality", "artifacts", "assumptions", "constraints", "complianceRecords", "approvals", "meetings", "changes", "collaboration", "analyses", "reports", "searchFilters", "statusRecords", "workshops", "surveys", "issues", "auditEvents", "templates", "knowledge", "benchmarks", "traces", "governance",
+  "schema", "meta", "project", "stakeholders", "users", "activities", "functions", "elements", "quantities", "relationships", "adjacencies", "processes", "flows", "accessRules", "operations", "equipment", "resources", "storage", "environmental", "humanFactors", "accessibility", "privacy", "safety", "security", "regulatory", "siteContext", "organizational", "services", "infrastructure", "information", "communication", "wayfinding", "schedules", "flexibility", "growth", "sustainability", "resilience", "costs", "delivery", "risks", "conflicts", "requirements", "priorities", "scenarios", "options", "decisions", "validations", "performance", "quality", "artifacts", "assumptions", "constraints", "complianceRecords", "approvals", "meetings", "changes", "collaboration", "analyses", "reports", "searchFilters", "statusRecords", "workshops", "surveys", "issues", "auditEvents", "templates", "knowledgePayload", "knowledge", "benchmarksPayload", "benchmarks", "traces", "governance",
 ] as const;
 
 const assertChild = (child: JsonObject, label: string): void => {
@@ -43,8 +43,7 @@ const assertChild = (child: JsonObject, label: string): void => {
 };
 
 const compile = (schema: JsonObject, dependencies: JsonObject[] = []) => {
-  const ajv = new Ajv({ allErrors: true, strict: true });
-  for (const keyword of ["x-semio-state", "x-semio-child-kind", "x-semio-child-standard", "x-semio-child-subset"]) ajv.addKeyword(keyword);
+  const ajv = semioSchemaAjvV1({ allErrors: true });
   for (const dependency of dependencies) ajv.addSchema(dependency);
   return ajv.compile(schema);
 };

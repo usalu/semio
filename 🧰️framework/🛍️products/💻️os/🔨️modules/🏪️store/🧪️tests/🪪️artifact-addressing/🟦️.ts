@@ -44,9 +44,10 @@ export function testSharedArtifactAddressingOracle(): void {
     const dialect = row.child.target.dialect;
     const pin = { dialect, app: row.app, role: row.role };
     assert.equal(opening({ defaults: [pin] }), true, JSON.stringify(opening.errors));
-    assert.equal(setDefault(pin), true, JSON.stringify(setDefault.errors));
-    assert.equal(clearDefault({ dialect, role: row.role }), true, JSON.stringify(clearDefault.errors));
-    assert.equal(setDefault({ ...pin, role: "foreign" }), false);
+    assert.equal(setDefault({ mutation: "setDefaultApp", ...pin }), true, JSON.stringify(setDefault.errors));
+    assert.equal(clearDefault({ mutation: "clearDefaultApp", dialect, role: row.role }), true, JSON.stringify(clearDefault.errors));
+    assert.equal(setDefault({ mutation: "setDefaultApp", ...pin, role: "foreign" }), false);
+    assert.equal(setDefault(pin), false);
     assert.deepEqual(parseSurfaceAppId(surfaceAppId(dialect, "editor")), { dialect, role: "editor" });
   }
   for (const row of fixture.invalidChildren) {

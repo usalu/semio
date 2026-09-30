@@ -5,16 +5,52 @@
   "type": "object",
   "additionalProperties": false,
   "required": [
+    "mutation",
     "id",
     "newName"
   ],
   "properties": {
+    "mutation": {
+      "const": "renameChangeRecord"
+    },
     "id": {
-      "type": "integer",
-      "minimum": 0
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Change Record",
+          "de": "Änderungseintrag"
+        },
+        "description": {
+          "en": "The change record to rename.",
+          "de": "Umzubenennender Eintrag vom Typ „Änderungseintrag“."
+        },
+        "ref": {
+          "kind": "changeRecord",
+          "domain": "program",
+          "granularity": "entity"
+        },
+        "group": "target",
+        "order": 10
+      }
     },
     "newName": {
-      "type": "string"
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "text",
+        "role": "value",
+        "label": {
+          "en": "New Name",
+          "de": "Neuer Name"
+        },
+        "description": {
+          "en": "New name of the change record.",
+          "de": "Neuer Name des Eintrags vom Typ „Änderungseintrag“."
+        },
+        "group": "identity",
+        "order": 20
+      }
     }
   }
 }

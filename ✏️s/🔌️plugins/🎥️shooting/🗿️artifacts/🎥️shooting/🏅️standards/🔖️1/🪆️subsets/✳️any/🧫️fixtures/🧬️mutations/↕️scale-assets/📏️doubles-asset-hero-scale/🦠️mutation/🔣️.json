@@ -1,6 +1,6 @@
 {
   "mutation": "scaleAssets",
-  "asset_ids": [
+  "assetIds": [
     "asset-hero"
   ],
   "sx": 2.0,

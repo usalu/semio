@@ -23,11 +23,11 @@ use crate::standards::v1::subsets::any::schema::mutations::TrinityGraphMutation;
 use crate::{apply_trinity_graph_mutation, inverse_trinity_graph_mutation};
 use crate::{jack_working_scene, materialize_jack_content, EntityRef, JackSnapshot, Node, PropertyBag, PropertyValue};
 
-const BEFORE: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🔧️change-data-property/🏷️keeps-a-node-property-at-the-value-it-already-holds/📸️snapshot/⬅️before/🔣️.json");
-const AFTER: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🔧️change-data-property/🏷️keeps-a-node-property-at-the-value-it-already-holds/📸️snapshot/➡️after/🔣️.json");
-const MUTATION: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🔧️change-data-property/🏷️keeps-a-node-property-at-the-value-it-already-holds/🦠️mutation/🔣️.json");
-const DIFF: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🔧️change-data-property/🏷️keeps-a-node-property-at-the-value-it-already-holds/🔺️diff/🔣️.json");
-const OUTCOME: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🔧️change-data-property/🏷️keeps-a-node-property-at-the-value-it-already-holds/🎯️outcome/🔣️.json");
+const BEFORE: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🔧️change-data-property/🏷️keeps-node-property-value-it-already-holds/📸️snapshot/⬅️before/🔣️.json");
+const AFTER: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🔧️change-data-property/🏷️keeps-node-property-value-it-already-holds/📸️snapshot/➡️after/🔣️.json");
+const MUTATION: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🔧️change-data-property/🏷️keeps-node-property-value-it-already-holds/🦠️mutation/🔣️.json");
+const DIFF: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🔧️change-data-property/🏷️keeps-node-property-value-it-already-holds/🔺️diff/🔣️.json");
+const OUTCOME: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🔧️change-data-property/🏷️keeps-node-property-value-it-already-holds/🎯️outcome/🔣️.json");
 
 fn expected_after() -> JackSnapshot {
     pack::from_json_str(AFTER).expect("after snapshot decodes")

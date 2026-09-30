@@ -4,8 +4,7 @@ use crate::schema::modules::mutation_support::top_level::rejection_outcome;
 use crate::schema::modules::mutation_support::top_level::{reject, GltfTopLevelMutationRejection};
 use crate::GltfSnapshot;
 pub const ID: &str = "s.stdio.gltf.mutation.change-primitive-topology-mode.v1";
-#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::MutationLeaf)]
-#[mutation_leaf(contract = ::protocol)]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
 #[value(rename_all = "camelCase")]
 pub struct GltfChangePrimitiveTopologyModePayload {
     pub mesh: usize,
@@ -31,7 +30,7 @@ pub fn apply(payload: &GltfChangePrimitiveTopologyModePayload, base: &GltfSnapsh
 
 //#region 🧬️DirectMutation
 #[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::MutationLeaf)]
-#[mutation_leaf(contract = ::protocol)]
+#[mutation_leaf(contract = ::protocol, payload = Apply)]
 #[value(tag = "phase", content = "value", rename_all = "camelCase")]
 pub enum ChangePrimitiveTopologyModeMutation {
     Apply(GltfChangePrimitiveTopologyModePayload),
@@ -75,6 +74,6 @@ impl protocol::MutationKind<GltfSnapshot, super::GltfMutation> for ChangePrimiti
 
 //#region 🧪️Tests
 #[cfg(test)]
-#[path = "🧪️tests/🔬️direct-leaf/🦀️.rs"]
-mod direct_leaf_tests;
+#[path = "🧪️tests/📐️triangle-81bc44/🦀️.rs"]
+mod case_triangle_81bc44;
 //#endregion 🧪️Tests

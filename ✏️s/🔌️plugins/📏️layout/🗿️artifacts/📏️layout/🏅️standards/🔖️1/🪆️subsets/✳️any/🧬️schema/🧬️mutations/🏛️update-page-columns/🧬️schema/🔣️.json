@@ -11,14 +11,52 @@
   ],
   "properties": {
     "id": {
-      "type": "string"
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Page",
+          "de": "Seite"
+        },
+        "ref": {
+          "kind": "page"
+        },
+        "group": "target",
+        "order": 10
+      }
     },
     "count": {
       "type": "integer",
-      "minimum": 0
+      "minimum": 0,
+      "x-semio-ui": {
+        "widget": "stepper",
+        "role": "value",
+        "label": {
+          "en": "Columns",
+          "de": "Spalten"
+        },
+        "step": 1,
+        "precision": 0,
+        "group": "columns",
+        "order": 20
+      }
     },
     "gutter": {
-      "type": "number"
+      "type": "number",
+      "x-semio-ui": {
+        "widget": "stepper",
+        "role": "value",
+        "label": {
+          "en": "Gutter",
+          "de": "Spaltenabstand"
+        },
+        "unit": "mm",
+        "step": 1,
+        "precision": 1,
+        "group": "columns",
+        "order": 30
+      }
     }
   }
 }

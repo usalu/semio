@@ -74,18 +74,18 @@ Feature: Apply every typed SVG 1.1 mutation to a real-world document
       {"kind": "<id>", "params": <params>}
       """
     Then the oracle and the subject agree on the semantic projection
-    And the semantic projection moved, unless the kind is no-mutation
+    And the semantic projection moved
     Examples:
       | id                | params                                                                                                                                                      |
-      | set-declaration    | {"version": "1.1", "encoding": "UTF-8", "standalone": true}                                                                                                |
-      | set-doctype        | {"doctype": "svg PUBLIC \"-//W3C//DTD SVG 1.1//EN\" \"http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd\""}                                                |
+      | set-declaration    | {"declaration": {"version": "1.1", "encoding": "UTF-8", "standalone": true}}                                                                               |
+      | set-doctype        | {"doctype": {"name": "svg", "externalId": {"kind": "public", "publicId": "-//W3C//DTD SVG 1.1//EN", "systemId": "http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd"}}} |
       | insert-element     | {"parent": [4, 0, 0, 0], "index": 1, "node": {"kind": "element", "name": "circle", "attrs": [{"name": "cx", "value": "50"}, {"name": "cy", "value": "50"}, {"name": "r", "value": "10"}, {"name": "id", "value": "wave7-marker-circle"}], "children": []}} |
       | remove-element     | {"parent": [4, 0, 0, 0], "index": 1}                                                                                                                       |
       | set-element-name   | {"path": [4, 0, 0, 0], "name": "g-wave7"}                                                                                                                  |
       | set-attribute      | {"path": [3, 0], "name": "xlink:href", "value": "data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciLz4="}                     |
       | set-text           | {"path": [2], "text": "wave7 mutation marker"}                                                                                                             |
-      | set-view-box       | {"path": [], "viewBox": [0, 0, 2030, 2030]}                                                                                                                |
-      | set-transform      | {"path": [4, 0, 0], "transform": [{"kind": "translate", "x": 50, "y": 50}, {"kind": "rotate", "angle": 45}]}                                              |
+      | set-view-box       | {"path": [], "viewBox": {"minX": 0, "minY": 0, "width": 2030, "height": 2030}}                                                                             |
+      | set-transform      | {"path": [4, 0, 0], "transform": [{"op": "translate", "x": 50, "y": 50}, {"op": "rotate", "angle": 45}]}                                                  |
 
   @id-inverse
   @level-exhaustive
@@ -99,15 +99,15 @@ Feature: Apply every typed SVG 1.1 mutation to a real-world document
     Then the oracle and the subject agree on the semantic projection
     Examples:
       | id                | params                                                                                                                                                      |
-      | set-declaration    | {"version": "1.1", "encoding": "UTF-8", "standalone": true}                                                                                                |
-      | set-doctype        | {"doctype": "svg PUBLIC \"-//W3C//DTD SVG 1.1//EN\" \"http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd\""}                                                |
+      | set-declaration    | {"declaration": {"version": "1.1", "encoding": "UTF-8", "standalone": true}}                                                                               |
+      | set-doctype        | {"doctype": {"name": "svg", "externalId": {"kind": "public", "publicId": "-//W3C//DTD SVG 1.1//EN", "systemId": "http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd"}}} |
       | insert-element     | {"parent": [4, 0, 0, 0], "index": 1, "node": {"kind": "element", "name": "circle", "attrs": [{"name": "cx", "value": "50"}, {"name": "cy", "value": "50"}, {"name": "r", "value": "10"}, {"name": "id", "value": "wave7-marker-circle"}], "children": []}} |
       | remove-element     | {"parent": [4, 0, 0, 0], "index": 1}                                                                                                                       |
       | set-element-name   | {"path": [4, 0, 0, 0], "name": "g-wave7"}                                                                                                                  |
       | set-attribute      | {"path": [3, 0], "name": "xlink:href", "value": "data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciLz4="}                     |
       | set-text           | {"path": [2], "text": "wave7 mutation marker"}                                                                                                             |
-      | set-view-box       | {"path": [], "viewBox": [0, 0, 2030, 2030]}                                                                                                                |
-      | set-transform      | {"path": [4, 0, 0], "transform": [{"kind": "translate", "x": 50, "y": 50}, {"kind": "rotate", "angle": 45}]}                                              |
+      | set-view-box       | {"path": [], "viewBox": {"minX": 0, "minY": 0, "width": 2030, "height": 2030}}                                                                             |
+      | set-transform      | {"path": [4, 0, 0], "transform": [{"op": "translate", "x": 50, "y": 50}, {"op": "rotate", "angle": 45}]}                                                  |
 
   @id-identity-round-trip
   @level-long

@@ -6,9 +6,14 @@
     "DeploymentCatalogV1": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["version", "modules"],
+      "required": [
+        "version",
+        "modules"
+      ],
       "properties": {
-        "version": { "const": 1 },
+        "version": {
+          "const": 1
+        },
         "modules": {
           "type": "array",
           "minItems": 1,
@@ -16,23 +21,266 @@
           "items": {
             "type": "object",
             "additionalProperties": false,
-            "required": ["pluginId", "directoryName"],
+            "required": [
+              "pluginId",
+              "directoryName"
+            ],
             "properties": {
-              "pluginId": { "type": "string", "pattern": "^[a-z0-9]+(?:-[a-z0-9]+)*$", "maxLength": 128 },
-              "directoryName": { "$ref": "https://json.schemas.assets.semio-tech.com/os/extension/component.json#/$defs/InstallationDirectoryV1" }
+              "pluginId": {
+                "type": "string",
+                "pattern": "^[a-z0-9]+(?:-[a-z0-9]+)*$",
+                "maxLength": 128
+              },
+              "directoryName": {
+                "$ref": "https://json.schemas.assets.semio-tech.com/os/extension/component.json#/$defs/InstallationDirectoryV1"
+              }
             }
           }
         }
-      }
+      },
+      "x-semio-formats": [
+        "🔣️jsonschema"
+      ]
     },
     "DeploymentModuleRoutesV1": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["plugin", "extension"],
+      "required": [
+        "plugin",
+        "extension"
+      ],
       "properties": {
-        "plugin": { "const": "/🔌️plugin-modules" },
-        "extension": { "const": "/🧩️extension-modules" }
-      }
+        "plugin": {
+          "const": "/🔌️plugin-modules"
+        },
+        "extension": {
+          "const": "/🧩️extension-modules"
+        }
+      },
+      "x-semio-formats": [
+        "🔣️jsonschema"
+      ]
+    },
+    "PluginModuleIdentityV1": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 256,
+      "pattern": "^\\S(?:.*\\S)?$",
+      "x-semio-formats": [
+        "🔣️jsonschema"
+      ]
+    },
+    "PluginModuleDigestV1": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{64}$",
+      "x-semio-formats": [
+        "🔣️jsonschema"
+      ]
+    },
+    "TrustedPluginModulePathV1": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 1024,
+      "pattern": "^(?:(?!\\.{1,2}/)[^/\\\\\\u0000-\\u001f\\u007f?#%]+/){0,15}(?!\\.{1,2}$)[^/\\\\\\u0000-\\u001f\\u007f?#%]+$",
+      "x-semio-formats": [
+        "🔣️jsonschema",
+        "🦀️rust",
+        "🟦️typescript"
+      ]
+    },
+    "TrustedPluginModuleFileV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "path",
+        "byteLength",
+        "sha256",
+        "blake3"
+      ],
+      "properties": {
+        "path": {
+          "$ref": "#/$defs/TrustedPluginModulePathV1"
+        },
+        "byteLength": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 67108864
+        },
+        "sha256": {
+          "$ref": "#/$defs/PluginModuleDigestV1"
+        },
+        "blake3": {
+          "$ref": "#/$defs/PluginModuleDigestV1"
+        }
+      },
+      "x-semio-formats": [
+        "🔣️jsonschema",
+        "🦀️rust",
+        "🟦️typescript"
+      ]
+    },
+    "TrustedPluginModuleBundleV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schema",
+        "pluginId",
+        "packageId",
+        "version",
+        "sourceComponentSha256",
+        "sourceDescriptorByteSha256",
+        "moduleDirectory",
+        "entry",
+        "files"
+      ],
+      "properties": {
+        "schema": {
+          "const": "semio.os.plugin-module/v1"
+        },
+        "pluginId": {
+          "$ref": "#/$defs/PluginModuleIdentityV1"
+        },
+        "packageId": {
+          "$ref": "#/$defs/PluginModuleIdentityV1"
+        },
+        "version": {
+          "$ref": "#/$defs/PluginModuleIdentityV1"
+        },
+        "sourceComponentSha256": {
+          "$ref": "#/$defs/PluginModuleDigestV1"
+        },
+        "sourceDescriptorByteSha256": {
+          "$ref": "#/$defs/PluginModuleDigestV1"
+        },
+        "moduleDirectory": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 128,
+          "pattern": "^(?!\\.{1,2}$)[^/\\\\\\u0000-\\u001f\\u007f?#%]+$"
+        },
+        "entry": {
+          "$ref": "#/$defs/TrustedPluginModulePathV1"
+        },
+        "files": {
+          "type": "array",
+          "minItems": 3,
+          "maxItems": 256,
+          "items": {
+            "$ref": "#/$defs/TrustedPluginModuleFileV1"
+          }
+        }
+      },
+      "x-semio-formats": [
+        "🔣️jsonschema",
+        "🦀️rust",
+        "🟦️typescript"
+      ]
+    },
+    "TrustedPluginModuleIndexEntryV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "pluginId",
+        "packageId",
+        "version",
+        "componentSha256",
+        "descriptorByteSha256",
+        "dependencies",
+        "dialectArtifactKinds",
+        "extendsPluginId",
+        "bundleSha256",
+        "bundleByteLength",
+        "entry"
+      ],
+      "properties": {
+        "pluginId": {
+          "$ref": "#/$defs/PluginModuleIdentityV1"
+        },
+        "packageId": {
+          "$ref": "#/$defs/PluginModuleIdentityV1"
+        },
+        "version": {
+          "$ref": "#/$defs/PluginModuleIdentityV1"
+        },
+        "componentSha256": {
+          "$ref": "#/$defs/PluginModuleDigestV1"
+        },
+        "descriptorByteSha256": {
+          "$ref": "#/$defs/PluginModuleDigestV1"
+        },
+        "dependencies": {
+          "type": "array",
+          "maxItems": 256,
+          "uniqueItems": true,
+          "items": {
+            "$ref": "#/$defs/PluginModuleIdentityV1"
+          }
+        },
+        "dialectArtifactKinds": {
+          "type": "array",
+          "maxItems": 1024,
+          "uniqueItems": true,
+          "items": {
+            "$ref": "#/$defs/PluginModuleIdentityV1"
+          }
+        },
+        "extendsPluginId": {
+          "description": "The plugin an extension package extends (one of its dependencies); null for a plugin.",
+          "anyOf": [
+            {
+              "$ref": "#/$defs/PluginModuleIdentityV1"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "bundleSha256": {
+          "$ref": "#/$defs/PluginModuleDigestV1"
+        },
+        "bundleByteLength": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 65536
+        },
+        "entry": {
+          "$ref": "#/$defs/TrustedPluginModulePathV1"
+        }
+      },
+      "x-semio-formats": [
+        "🔣️jsonschema",
+        "🦀️rust",
+        "🟦️typescript"
+      ]
+    },
+    "TrustedPluginModuleIndexV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schema",
+        "generationId",
+        "modules"
+      ],
+      "properties": {
+        "schema": {
+          "const": "semio.os.plugin-module-index/v1"
+        },
+        "generationId": {
+          "$ref": "#/$defs/PluginModuleDigestV1"
+        },
+        "modules": {
+          "type": "array",
+          "maxItems": 4096,
+          "items": {
+            "$ref": "#/$defs/TrustedPluginModuleIndexEntryV1"
+          }
+        }
+      },
+      "x-semio-formats": [
+        "🔣️jsonschema",
+        "🦀️rust",
+        "🟦️typescript"
+      ]
     }
   }
 }

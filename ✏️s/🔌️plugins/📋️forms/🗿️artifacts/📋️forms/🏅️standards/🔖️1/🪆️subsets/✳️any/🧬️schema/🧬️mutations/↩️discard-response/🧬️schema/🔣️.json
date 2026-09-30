@@ -4,12 +4,33 @@
   "type": "object",
   "additionalProperties": false,
   "required": [
+    "mutation",
     "id"
   ],
   "properties": {
+    "mutation": {
+      "const": "discardResponse"
+    },
     "id": {
       "type": "string",
-      "minLength": 1
+      "minLength": 1,
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Response",
+          "de": "Antwort"
+        },
+        "description": {
+          "en": "The stored response to discard.",
+          "de": "Die zu verwerfende gespeicherte Antwort."
+        },
+        "ref": {
+          "kind": "response"
+        },
+        "group": "target",
+        "order": 10
+      }
     }
   },
   "title": "DiscardResponse"

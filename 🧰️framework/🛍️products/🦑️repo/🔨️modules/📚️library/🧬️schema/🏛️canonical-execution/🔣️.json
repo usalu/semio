@@ -1,0 +1,95 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://semio.tech/schema/repo/canonical-execution/v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema",
+    "cases"
+  ],
+  "properties": {
+    "schema": {
+      "const": "semio.repo.canonical-execution/v1"
+    },
+    "cases": {
+      "type": "array",
+      "minItems": 4,
+      "maxItems": 4,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "name",
+          "environment",
+          "target",
+          "expectedTarget"
+        ],
+        "properties": {
+          "name": {
+            "type": "string",
+            "minLength": 1
+          },
+          "environment": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "CARGO_TARGET_DIR": {
+                "type": "string"
+              },
+              "CARGO_BUILD_TARGET_DIR": {
+                "type": "string"
+              },
+              "CARGO_BUILD_BUILD_DIR": {
+                "type": "string"
+              },
+              "NX_DAEMON": {
+                "type": "string"
+              },
+              "SEMIO_TEST_SECRET": {
+                "type": "string"
+              },
+              "PATH": {
+                "type": "string"
+              },
+              "CARGO_INCREMENTAL": {
+                "type": "string"
+              }
+            }
+          },
+          "target": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "mode",
+              "segments"
+            ],
+            "properties": {
+              "mode": {
+                "enum": [
+                  "default",
+                  "relative",
+                  "absolute",
+                  "empty"
+                ]
+              },
+              "segments": {
+                "type": "array",
+                "items": {
+                  "type": "string",
+                  "pattern": "^[^/\\\\]+$"
+                }
+              }
+            }
+          },
+          "expectedTarget": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "pattern": "^[^/\\\\]+$"
+            }
+          }
+        }
+      }
+    }
+  }
+}

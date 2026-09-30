@@ -207,7 +207,7 @@ pub fn accessibility_projection(tree: &UiTree) -> Vec<AccessibilityProjectionNod
                         }
                     }
                     crate::wgpu::UiNode::NumberStepper(stepper) => {
-                        node.value_text = Some(arena_node.state.edit.as_ref().map(|edit| edit.text.clone()).unwrap_or_else(|| if stepper.uniform { ui_contract::format_ui_number(stepper.value) } else { String::new() }));
+                        node.value_text = Some(arena_node.state.edit.as_ref().map(|edit| edit.text.clone()).unwrap_or_else(|| if stepper.uniform { crate::wgpu::stepper::stepper_value_text(stepper.value, stepper.precision) } else { String::new() }));
                         node.value_now = arena_node.state.edit.as_ref().and_then(|edit| edit.text.parse().ok()).or_else(|| stepper.uniform.then_some(stepper.value));
                     }
                     crate::wgpu::UiNode::Select(_) => node.expanded = Some(arena_node.state.open),

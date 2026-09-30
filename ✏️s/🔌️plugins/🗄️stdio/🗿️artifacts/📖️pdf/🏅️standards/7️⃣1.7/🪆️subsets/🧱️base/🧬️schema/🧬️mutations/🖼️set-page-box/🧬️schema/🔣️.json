@@ -5,16 +5,41 @@
   "type": "object",
   "additionalProperties": false,
   "required": [
+    "mutation",
     "index",
     "kind"
   ],
   "properties": {
+    "mutation": {
+      "const": "setPageBox",
+      "description": "Aggregate discriminator spliced in by PdfMutation; absent when the payload stands alone."
+    },
     "index": {
       "type": "integer",
       "minimum": 0
     },
     "kind": {
-      "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/pdf/1.7/base/diff.json#/$defs/PdfPageBox"
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/pdf/1.7/base/diff.json#/$defs/PdfPageBox",
+      "x-semio-ui": {
+        "options": {
+          "crop": {
+            "en": "Crop box (CropBox)",
+            "de": "Maskenrahmen (CropBox)"
+          },
+          "bleed": {
+            "en": "Bleed box (BleedBox)",
+            "de": "Anschnittrahmen (BleedBox)"
+          },
+          "trim": {
+            "en": "Trim box (TrimBox)",
+            "de": "Endformatrahmen (TrimBox)"
+          },
+          "art": {
+            "en": "Art box (ArtBox)",
+            "de": "Objektrahmen (ArtBox)"
+          }
+        }
+      }
     },
     "rect": {
       "anyOf": [
@@ -29,11 +54,19 @@
         {
           "type": "null"
         }
-      ]
-    },
-    "mutation": {
-      "const": "setPageBox",
-      "description": "Aggregate discriminator spliced in by PdfMutation; absent when the payload stands alone."
+      ],
+      "x-semio-ui": {
+        "widget": "vector",
+        "label": {
+          "en": "Page box",
+          "de": "Seitenrahmen"
+        },
+        "description": {
+          "en": "Rectangle as [llx lly urx ury].",
+          "de": "Rechteck als [llx lly urx ury]."
+        },
+        "unit": "pt"
+      }
     }
   }
 }

@@ -2,33 +2,51 @@
   "$schema": "http://json-schema.org/draft-07/schema#",
   "$id": "https://json.schemas.assets.semio-tech.com/os/infinite/artifacts/dag/vcs/mutation/replace-node-properties/schema.json",
   "title": "ReplaceNodeProperties",
-  "type": "object",
-  "$defs": {
-    "Payload": {
-      "type": "object",
-      "required": [
-        "id",
-        "newProperties"
-      ],
-      "properties": {
-        "id": {
-          "type": "string"
-        },
-        "newProperties": {
-          "$ref": "https://json.schemas.assets.semio-tech.com/os/infinite/artifacts/dag/vcs/schema.json#/$defs/PropertyBag"
-        }
-      }
-    }
-  },
-  "allOf": [
-    {
-      "$ref": "#/$defs/Payload"
-    }
-  ],
   "propertyNames": {
     "enum": [
+      "operation",
       "id",
       "newProperties"
     ]
+  },
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "operation",
+    "id",
+    "newProperties"
+  ],
+  "properties": {
+    "operation": {
+      "const": "replaceNodeProperties"
+    },
+    "id": {
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Node",
+          "de": "Knoten"
+        },
+        "ref": {
+          "kind": "node"
+        },
+        "group": "target",
+        "order": 10
+      }
+    },
+    "newProperties": {
+      "$ref": "https://json.schemas.assets.semio-tech.com/os/infinite/artifacts/dag/vcs/schema.json#/$defs/PropertyBag",
+      "x-semio-ui": {
+        "role": "value",
+        "label": {
+          "en": "Properties",
+          "de": "Eigenschaften"
+        },
+        "group": "record",
+        "order": 20
+      }
+    }
   }
 }

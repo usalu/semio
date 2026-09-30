@@ -83,7 +83,7 @@ async fn publish_outbound_gesture(store: &mut ArtifactStore<DemoSnapshot, DemoMu
         })
         .collect();
     let mut publication = store
-        .begin_outbound_apply_batch(semio_framework_job::OperationId(operation), store.generation_now(), store.content_revision_now(), "retained-test".into(), mutations, None, Some(&factory))
+        .begin_outbound_apply_batch(semio_framework_job::OperationId(operation), store.generation_now(), store.content_revision_now(), "retained-test".into(), mutations, None, Some(&factory), None)
         .unwrap_or_else(|rejected| panic!("outbound batch admission: {}", rejected.reason));
     publication.set_coalesce_key(gesture.coalesce_key.clone());
     let grant = ArtifactStoreOneItemGrant { maximum_items: 1, maximum_bytes: 512 };

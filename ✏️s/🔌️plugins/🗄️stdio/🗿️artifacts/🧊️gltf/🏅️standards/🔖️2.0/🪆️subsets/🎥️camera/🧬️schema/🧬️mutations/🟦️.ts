@@ -1,11 +1,14 @@
-/** 🧬 Transparent TypeScript aggregate for the camera slice of the glTF 2.0 mutation vocabulary. */
-import type { GltfCreateCameraPayload } from '../../../♾️any/🧬️schema/🧬️mutations/🎥️camera/🌱️create/🟦️.ts';
-import type { GltfDeleteCameraPayload } from '../../../♾️any/🧬️schema/🧬️mutations/🎥️camera/🗑️delete/🟦️.ts';
-import type { GltfMoveCameraPayload } from '../../../♾️any/🧬️schema/🧬️mutations/🎥️camera/🚚️move/🟦️.ts';
-import type { GltfReorderCamerasPayload } from '../../../♾️any/🧬️schema/🧬️mutations/🎥️camera/🔀️reorder/🟦️.ts';
+/** 🎥️ `GltfCameraMutation` twin: the camera slice of the glTF 2.0 mutation vocabulary, a view over the any subset's `GltfMutation`
+ * that selects branches and never restates a payload.
+ * @see ./🔣️.json */
+import { gltfWireRefuse, type GltfWireReader } from "../../../♾️any/🧬️schema/📸️snapshot/🟦️.ts";
+import { parseGltfMutation, type GltfMutation } from "../../../♾️any/🧬️schema/🧬️mutations/🟦️.ts";
 
-export type GltfCameraMutation =
-  | { readonly mutation: 'createCamera'; readonly payload: GltfCreateCameraPayload }
-  | { readonly mutation: 'reorderCameras'; readonly payload: GltfReorderCamerasPayload }
-  | { readonly mutation: 'deleteCamera'; readonly payload: GltfDeleteCameraPayload }
-  | { readonly mutation: 'moveCamera'; readonly payload: GltfMoveCameraPayload };
+export type GltfCameraMutation = Extract<GltfMutation, { readonly mutation: "createCamera" | "deleteCamera" | "moveCamera" | "reorderCameras" }>;
+
+const members: readonly GltfMutation["mutation"][] = ["createCamera", "deleteCamera", "moveCamera", "reorderCameras"];
+
+export const parseGltfCameraMutation: GltfWireReader<GltfCameraMutation> = (value, at = "$") => {
+  const mutation = parseGltfMutation(value, at);
+  return members.includes(mutation.mutation) ? (mutation as GltfCameraMutation) : gltfWireRefuse(`${at}.mutation`, `value is not one of ${members.join(", ")}`);
+};

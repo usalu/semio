@@ -11,7 +11,7 @@ pub fn diff(payload: &super::DeleteConstruction, base: &EnergyModelSnapshot) -> 
     };
     let _ = existing;
     if base.model.surfaces.iter().any(|surface| surface.construction_id == payload.id) {
-        return protocol::MutationOutcome::error("mutation.invariant", format!("Construction {} is still assigned to a surface.", payload.id.0), [payload.id.0.to_string()]);
+        return protocol::MutationOutcome::error("mutation.target-referenced", format!("Construction {} is still assigned to a surface.", payload.id.0), [payload.id.0.to_string()]);
     }
     let mut model = base.model.clone();
     model.constructions.retain(|item| item.id != payload.id);

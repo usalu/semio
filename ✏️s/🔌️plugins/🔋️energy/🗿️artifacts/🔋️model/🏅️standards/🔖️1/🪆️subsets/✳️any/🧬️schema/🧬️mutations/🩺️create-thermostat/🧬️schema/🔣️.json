@@ -5,6 +5,7 @@
   "type": "object",
   "additionalProperties": false,
   "required": [
+    "mutation",
     "id",
     "zoneId",
     "heatingSetpointScheduleId",
@@ -13,23 +14,139 @@
     "coolingThrottleRangeK"
   ],
   "properties": {
+    "mutation": {
+      "const": "createThermostat"
+    },
     "id": {
-      "type": "integer"
+      "type": "integer",
+      "minimum": 0,
+      "x-semio-ui": {
+        "widget": "stepper",
+        "role": "value",
+        "label": {
+          "en": "ID",
+          "de": "ID"
+        },
+        "description": {
+          "en": "Id the new thermostat is created under; later mutations address it by this id.",
+          "de": "ID, unter der das neue Objekt angelegt wird; spätere Mutationen adressieren es darüber."
+        },
+        "step": 1,
+        "precision": 0,
+        "group": "identity",
+        "order": 10
+      }
     },
     "zoneId": {
-      "type": "integer"
+      "type": "integer",
+      "minimum": 0,
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Zone",
+          "de": "Zone"
+        },
+        "description": {
+          "en": "Assigned zone, by id.",
+          "de": "Zugeordnete Zone, per ID."
+        },
+        "ref": {
+          "kind": "zone",
+          "domain": "energyModel",
+          "granularity": "zone"
+        },
+        "group": "assignment",
+        "order": 20
+      }
     },
     "heatingSetpointScheduleId": {
-      "type": "integer"
+      "type": "integer",
+      "minimum": 0,
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Heating setpoint schedule",
+          "de": "Heiz-Sollwertzeitplan"
+        },
+        "description": {
+          "en": "Heating setpoint in °C over time, by id.",
+          "de": "Heizsollwert in °C im Zeitverlauf, per ID."
+        },
+        "ref": {
+          "kind": "schedule",
+          "domain": "energyModel",
+          "granularity": "schedule"
+        },
+        "group": "schedule",
+        "order": 30
+      }
     },
     "coolingSetpointScheduleId": {
-      "type": "integer"
+      "type": "integer",
+      "minimum": 0,
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Cooling setpoint schedule",
+          "de": "Kühl-Sollwertzeitplan"
+        },
+        "description": {
+          "en": "Cooling setpoint in °C over time, by id.",
+          "de": "Kühlsollwert in °C im Zeitverlauf, per ID."
+        },
+        "ref": {
+          "kind": "schedule",
+          "domain": "energyModel",
+          "granularity": "schedule"
+        },
+        "group": "schedule",
+        "order": 40
+      }
     },
     "heatingThrottleRangeK": {
-      "type": "number"
+      "type": "number",
+      "exclusiveMinimum": 0,
+      "x-semio-ui": {
+        "widget": "stepper",
+        "role": "value",
+        "label": {
+          "en": "Heating throttle range",
+          "de": "Heiz-Proportionalbereich"
+        },
+        "description": {
+          "en": "Temperature band over which heating ramps from off to full output.",
+          "de": "Temperaturband, in dem die Heizleistung von null auf voll ansteigt."
+        },
+        "unit": "K",
+        "step": 0.1,
+        "precision": 1,
+        "group": "control",
+        "order": 50
+      }
     },
     "coolingThrottleRangeK": {
-      "type": "number"
+      "type": "number",
+      "exclusiveMinimum": 0,
+      "x-semio-ui": {
+        "widget": "stepper",
+        "role": "value",
+        "label": {
+          "en": "Cooling throttle range",
+          "de": "Kühl-Proportionalbereich"
+        },
+        "description": {
+          "en": "Temperature band over which cooling ramps from off to full output.",
+          "de": "Temperaturband, in dem die Kühlleistung von null auf voll ansteigt."
+        },
+        "unit": "K",
+        "step": 0.1,
+        "precision": 1,
+        "group": "control",
+        "order": 60
+      }
     }
   }
 }

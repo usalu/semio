@@ -29,7 +29,7 @@ pub fn apply(payload: &GltfReorderNodesPayload, base: &GltfSnapshot) -> Result<G
 
 //#region 🧬️DirectMutation
 #[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::MutationLeaf)]
-#[mutation_leaf(contract = ::protocol)]
+#[mutation_leaf(contract = ::protocol, payload = Apply)]
 #[value(tag = "phase", content = "value", rename_all = "camelCase")]
 pub enum ReorderNodesMutation {
     Apply(GltfReorderNodesPayload),
@@ -73,6 +73,6 @@ impl protocol::MutationKind<GltfSnapshot, super::GltfMutation> for ReorderNodesM
 
 //#region 🧪️Tests
 #[cfg(test)]
-#[path = "🧪️tests/🔬️direct-leaf/🦀️.rs"]
-mod direct_leaf_tests;
+#[path = "🧪️tests/🔢️flips-the-two-f25cfb/🦀️.rs"]
+mod case_flips_the_two_f25cfb;
 //#endregion 🧪️Tests

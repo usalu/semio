@@ -12,11 +12,11 @@ use crate::standards::v1::subsets::any::schema::mutations::{apply_generation2d_m
 use crate::standards::v1::subsets::any::schema::snapshot::Generation2dSnapshotRead;
 use crate::Generation2dSnapshot;
 
-const BEFORE: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🗑️delete-widget/🚫️removes-note-a-and-flags-the-dangling-synapse/📸️snapshot/⬅️before/🔣️.json");
-const AFTER: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🗑️delete-widget/🚫️removes-note-a-and-flags-the-dangling-synapse/📸️snapshot/➡️after/🔣️.json");
-const MUTATION: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🗑️delete-widget/🚫️removes-note-a-and-flags-the-dangling-synapse/🦠️mutation/🔣️.json");
-const DIFF: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🗑️delete-widget/🚫️removes-note-a-and-flags-the-dangling-synapse/🔺️diff/🔣️.json");
-const OUTCOME: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🗑️delete-widget/🚫️removes-note-a-and-flags-the-dangling-synapse/🎯️outcome/🔣️.json");
+const BEFORE: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🗑️delete-widget/🚫️removes-note-flags-dangling-synapse/📸️snapshot/⬅️before/🔣️.json");
+const AFTER: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🗑️delete-widget/🚫️removes-note-flags-dangling-synapse/📸️snapshot/➡️after/🔣️.json");
+const MUTATION: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🗑️delete-widget/🚫️removes-note-flags-dangling-synapse/🦠️mutation/🔣️.json");
+const DIFF: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🗑️delete-widget/🚫️removes-note-flags-dangling-synapse/🔺️diff/🔣️.json");
+const OUTCOME: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🗑️delete-widget/🚫️removes-note-flags-dangling-synapse/🎯️outcome/🔣️.json");
 
 fn before() -> Generation2dSnapshotRead {
     Generation2dSnapshotRead::new(dsl::json::from_json_str(BEFORE).expect("before snapshot decodes"))

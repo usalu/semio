@@ -4,7 +4,14 @@
   "title": "SetIcc",
   "type": "object",
   "additionalProperties": false,
+  "required": [
+    "mutation"
+  ],
   "properties": {
+    "mutation": {
+      "const": "setIcc",
+      "description": "Aggregate discriminator spliced in by SemioImageMutation; absent when the payload stands alone."
+    },
     "icc": {
       "anyOf": [
         {
@@ -18,11 +25,13 @@
         {
           "type": "null"
         }
-      ]
-    },
-    "mutation": {
-      "const": "setIcc",
-      "description": "Aggregate discriminator spliced in by SemioImageMutation; absent when the payload stands alone."
+      ],
+      "x-semio-ui": {
+        "label": {
+          "en": "ICC profile",
+          "de": "ICC-Profil"
+        }
+      }
     }
   }
 }

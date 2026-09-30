@@ -9,7 +9,20 @@
   ],
   "properties": {
     "tileId": {
-      "type": "string"
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Tile",
+          "de": "Kachel"
+        },
+        "ref": {
+          "kind": "tile"
+        },
+        "group": "target",
+        "order": 10
+      }
     }
   }
 }

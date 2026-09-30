@@ -9,11 +9,11 @@ use crate::mutations::ShootingMutation;
 use crate::{ShootingDiff, ShootingSnapshot};
 use protocol::{Mutation, MutationDiff};
 
-const BEFORE: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🪨️change-scene-material-roughness/✨️polishes-scene-material-to-quarter/📸️snapshot/⬅️before/🔣️.json");
-const AFTER: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🪨️change-scene-material-roughness/✨️polishes-scene-material-to-quarter/📸️snapshot/➡️after/🔣️.json");
-const MUTATION: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🪨️change-scene-material-roughness/✨️polishes-scene-material-to-quarter/🦠️mutation/🔣️.json");
-const DIFF: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🪨️change-scene-material-roughness/✨️polishes-scene-material-to-quarter/🔺️diff/🔣️.json");
-const OUTCOME: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🪨️change-scene-material-roughness/✨️polishes-scene-material-to-quarter/🎯️outcome/🔣️.json");
+const BEFORE: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🪨️change-scene-material-roughness/✨️polishes-scene-material-quarter/📸️snapshot/⬅️before/🔣️.json");
+const AFTER: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🪨️change-scene-material-roughness/✨️polishes-scene-material-quarter/📸️snapshot/➡️after/🔣️.json");
+const MUTATION: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🪨️change-scene-material-roughness/✨️polishes-scene-material-quarter/🦠️mutation/🔣️.json");
+const DIFF: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🪨️change-scene-material-roughness/✨️polishes-scene-material-quarter/🔺️diff/🔣️.json");
+const OUTCOME: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🪨️change-scene-material-roughness/✨️polishes-scene-material-quarter/🎯️outcome/🔣️.json");
 
 fn before() -> ShootingSnapshot {
     dsl::os_pack::from_json_str(BEFORE).expect("before snapshot decodes")
@@ -76,10 +76,10 @@ async fn declared_outcome_holds_and_leaving_the_unit_interval_is_fatal() {
     assert_eq!(outcome.get("status").and_then(serde_json::Value::as_str), Some("applied"), "change-scene-material-roughness/polishes-scene-material-to-quarter: this fixture declares `applied`");
     assert!(mutation().diff(&before()).messages().is_empty(), "change-scene-material-roughness/polishes-scene-material-to-quarter: a real polish must raise no diagnostic");
 
-    let mirror: ShootingMutation = serde_json::from_str(r#"{"mutation":"changeSceneMaterialRoughness","new_roughness":0.0}"#).expect("probe mutation decodes");
+    let mirror: ShootingMutation = serde_json::from_str(r#"{"mutation":"changeSceneMaterialRoughness","newRoughness":0.0}"#).expect("probe mutation decodes");
     assert!(mirror.diff(&before()).messages().is_empty(), "change-scene-material-roughness/polishes-scene-material-to-quarter: the interval is CLOSED, so a perfect mirror at 0 is legal");
 
-    let overshoot: ShootingMutation = serde_json::from_str(r#"{"mutation":"changeSceneMaterialRoughness","new_roughness":1.5}"#).expect("probe mutation decodes");
+    let overshoot: ShootingMutation = serde_json::from_str(r#"{"mutation":"changeSceneMaterialRoughness","newRoughness":1.5}"#).expect("probe mutation decodes");
     let rejected = overshoot.diff(&before());
     assert_eq!(rejected.worst_level(), Some(protocol::Severity::Fatal), "change-scene-material-roughness/polishes-scene-material-to-quarter: leaving 0..=1 must be Fatal");
     assert_eq!(rejected.messages()[0].code.0, "mutation.invariant", "change-scene-material-roughness/polishes-scene-material-to-quarter: the unit-interval guard's frozen code");

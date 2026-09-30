@@ -77,3 +77,9 @@ record change-target-region-hidden tag=31
 field payload bytes
 record change-target-region-locked tag=32
 field payload bytes
+record drag-selection tag=33
+field payload bytes
+record rotate-selection tag=34
+field payload bytes
+record scale-selection tag=35
+field payload bytes

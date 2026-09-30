@@ -5,7 +5,8 @@
 //! first; the committed asset is never written to. `oracle` drives the registered `lopdf` reference
 //! implementation (`../../🏅️standards/7️⃣1.7/🪆️subsets/🧱️base/🔮️oracles/🦀️.rs`'s own
 //! `oracle_apply_mutation`/`oracle_apply_mutation_inverse`); `subject` drives this repository's own
-//! `decode_pdf`/`encode_pdf`/`apply_pdf_mutation` over the full 18-kind `PdfMutation` vocabulary.
+//! `decode_pdf`/`encode_pdf`/`apply_pdf_mutation` over the `PdfMutation` vocabulary, each row's `params` being the
+//! leaf wire payload `decode_pdf_mutation_payload` builds the operation from.
 //! Both results are read back by the SAME independent `project_pdf_1_7` (`lopdf`, augmented with
 //! each page's `/CropBox` and `/Rotate` and with the resolved trailer/catalog object graph) before
 //! the `semantic-pdf-v1` profile compares them. The subject half is gated behind the generated
@@ -36,7 +37,7 @@
 //! by the subset's own oracle module (`UNOBSERVABLE`, `regenerates_page_content`), argued there in
 //! full, and repeated in this case's feature description.
 
-use semio_repo_test_host::{Adapter, Context, Json, Outcome};
+use semio_repo_test_host::{Adapter, Context, Outcome};
 use semio_s_plugin_stdio_test_oracle::artifacts::pdf::standards::v1_7::subsets::base::{oracle_apply_mutation, oracle_apply_mutation_inverse, oracle_round_trip, project_pdf_1_7, regenerates_page_content, without_content_operators, UNOBSERVABLE};
 use semio_s_plugin_stdio_test_oracle::law::{inverse_restores_within, mutation_is_observable_within, reparsed_not_copied, round_trip_preserves_within};
 
@@ -116,105 +117,14 @@ mod subject {
     use semio_s_plugin_stdio_test_oracle::law::{inverse_restores_within, mutation_is_observable_within};
     use semio_s_plugin_stdio_test_oracle::artifacts::pdf::standards::v1_7::subsets::base::UNOBSERVABLE;
     use semio_s_artifact_stdio_pdf::standards::v1_7::subsets::base::io::{decode_pdf, encode_pdf};
-    use semio_s_artifact_stdio_pdf::standards::v1_7::subsets::base::schema::diff::PdfPathSegment;
-    use semio_s_artifact_stdio_pdf::standards::v1_7::subsets::base::schema::mutations::*;
-    use semio_s_artifact_stdio_pdf::standards::v1_7::subsets::base::schema::snapshot::{ObjRef, PdfDecimal, PdfDictEntry, PdfInfo, PdfObject, PdfPage, PdfSnapshot};
+    use semio_s_artifact_stdio_pdf::standards::v1_7::subsets::base::schema::mutations::{apply_pdf_mutation, decode_pdf_mutation_payload, inverse_pdf_mutation, PdfMutation};
     use semio_s_plugin_stdio_test_oracle::artifacts::pdf::standards::v1_7::subsets::base::project_pdf_1_7;
 
     //#region 🔖️SpecCodec
-    fn number_field(value: &Json, key: &str) -> f64 {
-        match value.get(key) {
-            Some(Json::Number(number)) => *number,
-            _ => 0.0,
-        }
-    }
-
-    fn usize_field(value: &Json, key: &str) -> usize {
-        number_field(value, key).max(0.0) as usize
-    }
-
-    fn str_field(value: &Json, key: &str) -> Option<String> {
-        match value.get(key) {
-            Some(Json::String(text)) if !text.is_empty() => Some(text.clone()),
-            _ => None,
-        }
-    }
-
-    fn media_box_field(value: &Json, key: &str) -> Option<[f64; 4]> {
-        match value.get(key) {
-            Some(Json::Array(items)) if items.len() == 4 => {
-                let n: Vec<f64> = items
-                    .iter()
-                    .map(|item| match item {
-                        Json::Number(number) => *number,
-                        _ => 0.0,
-                    })
-                    .collect();
-                Some([n[0], n[1], n[2], n[3]])
-            }
-            _ => None,
-        }
-    }
-
-    fn object_id_field(value: &Json) -> ObjRef {
-        let id = value.get("id").cloned().unwrap_or_else(|| value.clone());
-        ObjRef { num: number_field(&id, "num") as u32, gen: number_field(&id, "gen") as u16 }
-    }
-
-    fn path_field(items: Vec<Json>) -> Vec<PdfPathSegment> {
-        items
-            .iter()
-            .filter_map(|segment| match segment.str("kind").as_str() {
-                "index" => Some(PdfPathSegment::ArrayIndex { index: usize_field(segment, "index") }),
-                "key" => Some(PdfPathSegment::DictKey { key: segment.str("key") }),
-                _ => None,
-            })
-            .collect()
-    }
-
-    /// 🔎️ The same owned PDF-object JSON grammar the oracle side speaks
-    /// (`{"kind":"null"|"bool"|"int"|"real"|"str"|"name"|"array"|"dict"|"ref", ...}`), decoded into
-    /// the PRODUCTION `PdfObject` here instead of `lopdf::Object`.
-    fn json_to_pdf_object(value: &Json) -> PdfObject {
-        match value.str("kind").as_str() {
-            "bool" => PdfObject::Bool(matches!(value.get("value"), Some(Json::Bool(true)))),
-            "int" => PdfObject::Int(number_field(value, "value") as i64),
-            "real" => PdfObject::Real(PdfDecimal::from(number_field(value, "value"))),
-            "str" => PdfObject::Str(value.str("value").into_bytes()),
-            "name" => PdfObject::Name(value.str("value")),
-            "array" => PdfObject::Array(value.array("items").iter().map(json_to_pdf_object).collect()),
-            "dict" => PdfObject::Dict(value.array("entries").iter().map(|entry| PdfDictEntry { key: entry.str("key"), value: json_to_pdf_object(entry.get("value").unwrap_or(&Json::Null)) }).collect()),
-            "ref" => PdfObject::Ref(object_id_field(value)),
-            _ => PdfObject::Null,
-        }
-    }
-
-    fn json_to_pdf_page(value: &Json) -> PdfPage {
-        PdfPage { media_box: media_box_field(value, "mediaBox").unwrap_or([0.0, 0.0, 612.0, 792.0]), crop_box: media_box_field(value, "cropBox"), rotate: number_field(value, "rotate") as i32, text: value.str("text") }
-    }
-
-    /// 📄️ The scenario's `<id>`/`<params>` spec turned into the one typed direct mutation it owns.
+    /// 📨️ The scenario's `{kind, params}` row decoded generically: `params` is the leaf wire payload, the only channel
+    /// between the feature and the subject's typed `PdfMutation`.
     fn mutation_from_spec(spec: &Json) -> Result<PdfMutation, String> {
-        let params = spec.get("params").cloned().unwrap_or(Json::Null);
-        match spec.str("kind").as_str() {
-            "insert-page" => Ok(PdfMutation::InsertPage(InsertPage { index: usize_field(&params, "index"), page: json_to_pdf_page(&params.get("page").cloned().unwrap_or(Json::Null)) })),
-            "remove-page" => Ok(PdfMutation::RemovePage(RemovePage { index: usize_field(&params, "index") })),
-            "set-page-media-box" => Ok(PdfMutation::SetPageMediaBox(SetPageMediaBox { index: usize_field(&params, "index"), media_box: media_box_field(&params, "mediaBox").unwrap_or([0.0, 0.0, 612.0, 792.0]) })),
-            "set-page-crop-box" => Ok(PdfMutation::SetPageCropBox(SetPageCropBox { index: usize_field(&params, "index"), crop_box: media_box_field(&params, "cropBox") })),
-            "append-page-content" => Ok(PdfMutation::AppendPageContent(AppendPageContent { index: usize_field(&params, "index"), text: params.str("text") })),
-            "set-info" => Ok(PdfMutation::SetInfo(SetInfo { info: PdfInfo { title: str_field(&params, "title"), author: str_field(&params, "author"), ..Default::default() } })),
-            "insert-object" => Ok(PdfMutation::InsertObject(InsertObject { id: object_id_field(&params), value: json_to_pdf_object(&params.get("value").cloned().unwrap_or(Json::Null)) })),
-            "remove-object" => Ok(PdfMutation::RemoveObject(RemoveObject { id: object_id_field(&params) })),
-            "set-object-value" => Ok(PdfMutation::SetObjectValue(SetObjectValue { id: object_id_field(&params), value: json_to_pdf_object(&params.get("value").cloned().unwrap_or(Json::Null)) })),
-            "set-dict-entry" => Ok(PdfMutation::SetDictEntry(SetDictEntry { id: object_id_field(&params), path: path_field(params.array("path")), key: params.str("key"), value: json_to_pdf_object(&params.get("value").cloned().unwrap_or(Json::Null)) })),
-            "remove-dict-entry" => Ok(PdfMutation::RemoveDictEntry(RemoveDictEntry { id: object_id_field(&params), path: path_field(params.array("path")), key: params.str("key") })),
-            "set-trailer-entry" => Ok(PdfMutation::SetTrailerEntry(SetTrailerEntry { key: params.str("key"), value: json_to_pdf_object(&params.get("value").cloned().unwrap_or(Json::Null)) })),
-            "remove-trailer-entry" => Ok(PdfMutation::RemoveTrailerEntry(RemoveTrailerEntry { key: params.str("key") })),
-            "move-page" => Ok(PdfMutation::MovePage(MovePage { from: usize_field(&params, "from"), to: usize_field(&params, "to") })),
-            "set-page-content" => Ok(PdfMutation::SetPageContent(SetPageContent { index: usize_field(&params, "index"), text: params.str("text") })),
-            "set-page-rotation" => Ok(PdfMutation::SetPageRotation(SetPageRotation { index: usize_field(&params, "index"), rotation: number_field(&params, "rotation") as u16 })),
-            other => Err(format!("mutation kind {other:?} has no subject implementation")),
-        }
+        decode_pdf_mutation_payload(&spec.str("kind"), &spec.get("params").cloned().unwrap_or(Json::Null).to_string())
     }
     //#endregion 🔖️SpecCodec
 
@@ -251,7 +161,7 @@ mod subject {
         let base = decode_pdf(&input).map_err(|error| format!("decode_pdf failed: {error:?}"))?;
         let spec = ctx.doc_json()?;
         let mutation = mutation_from_spec(&spec)?;
-        let undo = protocol::Mutation::inverse(&mutation, &base);
+        let undo = inverse_pdf_mutation(&mutation, &base);
         let mut snapshot = base;
         apply_pdf_mutation(&mut snapshot, &mutation);
         for operation in undo {

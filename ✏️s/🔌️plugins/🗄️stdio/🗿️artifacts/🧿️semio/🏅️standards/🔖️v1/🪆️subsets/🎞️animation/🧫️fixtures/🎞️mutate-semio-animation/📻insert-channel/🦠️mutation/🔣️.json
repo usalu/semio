@@ -1,6 +1,7 @@
 {
   "kind": "insert-channel",
-  "params": {
+  "mutation": {
+    "mutation": "insertChannel",
     "timelineIndex": 0,
     "index": 1,
     "channel": {

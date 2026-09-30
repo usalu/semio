@@ -5,21 +5,71 @@
   "type": "object",
   "additionalProperties": false,
   "required": [
+    "mutation",
     "buildingIndex",
     "storeyIndex",
     "newStiffnessX"
   ],
   "properties": {
+    "mutation": {
+      "const": "changeStoreyStiffnessX"
+    },
     "buildingIndex": {
       "type": "integer",
-      "minimum": 0
+      "minimum": 0,
+      "x-semio-ui": {
+        "widget": "stepper",
+        "role": "value",
+        "label": {
+          "en": "Building",
+          "de": "Gebäude"
+        },
+        "description": {
+          "en": "Zero-based position of the building in its list.",
+          "de": "Nullbasierte Position des Gebäudes in der Liste."
+        },
+        "step": 1,
+        "precision": 0,
+        "group": "target",
+        "order": 10
+      }
     },
     "storeyIndex": {
       "type": "integer",
-      "minimum": 0
+      "minimum": 0,
+      "x-semio-ui": {
+        "widget": "stepper",
+        "role": "value",
+        "label": {
+          "en": "Storey",
+          "de": "Geschoss"
+        },
+        "description": {
+          "en": "Zero-based position of the storey within the building in its list.",
+          "de": "Nullbasierte Position des Geschosses im Gebäude in der Liste."
+        },
+        "step": 1,
+        "precision": 0,
+        "group": "target",
+        "order": 20
+      }
     },
     "newStiffnessX": {
-      "type": "number"
+      "type": "number",
+      "minimum": 0,
+      "x-semio-ui": {
+        "widget": "stepper",
+        "role": "value",
+        "label": {
+          "en": "Storey stiffness in x",
+          "de": "Geschosssteifigkeit in x-Richtung"
+        },
+        "unit": "N/m",
+        "step": 1000000.0,
+        "precision": 0,
+        "group": "regularity",
+        "order": 30
+      }
     }
   }
 }

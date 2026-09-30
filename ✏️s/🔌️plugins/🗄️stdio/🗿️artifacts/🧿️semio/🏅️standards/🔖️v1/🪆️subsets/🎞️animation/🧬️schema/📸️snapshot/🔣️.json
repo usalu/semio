@@ -125,7 +125,13 @@
           "type": "string"
         },
         "property": {
-          "$ref": "#/definitions/AnimTargetProperty"
+          "$ref": "#/definitions/AnimTargetProperty",
+          "x-semio-ui": {
+            "label": {
+              "en": "Animated property",
+              "de": "Animierte Eigenschaft"
+            }
+          }
         }
       },
       "required": [
@@ -204,7 +210,15 @@
       "type": "object",
       "properties": {
         "t": {
-          "type": "number"
+          "type": "number",
+          "x-semio-ui": {
+            "widget": "stepper",
+            "label": {
+              "en": "Time",
+              "de": "Zeit"
+            },
+            "unit": "s"
+          }
         },
         "value": {
           "$ref": "#/definitions/AnimValue"
@@ -222,12 +236,35 @@
           "$ref": "#/definitions/AnimTarget"
         },
         "interpolation": {
-          "$ref": "#/definitions/AnimInterpolation"
+          "$ref": "#/definitions/AnimInterpolation",
+          "x-semio-ui": {
+            "widget": "segmented",
+            "label": {
+              "en": "Interpolation",
+              "de": "Interpolation"
+            },
+            "options": {
+              "linear": {
+                "en": "Linear",
+                "de": "Linear"
+              },
+              "cubicSpline": {
+                "en": "Cubic spline",
+                "de": "Kubischer Spline"
+              }
+            }
+          }
         },
         "keyframes": {
           "type": "array",
           "items": {
             "$ref": "#/definitions/AnimKeyframe"
+          },
+          "x-semio-ui": {
+            "label": {
+              "en": "Keyframes",
+              "de": "Schlüsselbilder"
+            }
           }
         }
       },
@@ -250,6 +287,12 @@
           "type": "array",
           "items": {
             "$ref": "#/definitions/AnimChannel"
+          },
+          "x-semio-ui": {
+            "label": {
+              "en": "Channels",
+              "de": "Kanäle"
+            }
           }
         }
       },
@@ -261,13 +304,30 @@
   "properties": {
     "schema": {
       "type": "string",
-      "x-semio-state": "artifact"
+      "x-semio-state": "artifact",
+      "x-semio-ui": {
+        "widget": "text",
+        "label": {
+          "en": "Snapshot schema",
+          "de": "Snapshot-Schema"
+        },
+        "description": {
+          "en": "Identifier of the snapshot schema version.",
+          "de": "Kennung der Version des Snapshot-Schemas."
+        }
+      }
     },
     "timelines": {
       "type": "array",
       "x-semio-state": "artifact",
       "items": {
         "$ref": "#/definitions/AnimTimeline"
+      },
+      "x-semio-ui": {
+        "label": {
+          "en": "Timelines",
+          "de": "Zeitleisten"
+        }
       }
     }
   },

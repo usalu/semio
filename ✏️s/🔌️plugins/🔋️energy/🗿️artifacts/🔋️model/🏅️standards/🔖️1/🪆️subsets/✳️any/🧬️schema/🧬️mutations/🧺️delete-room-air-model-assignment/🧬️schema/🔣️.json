@@ -5,11 +5,35 @@
   "type": "object",
   "additionalProperties": false,
   "required": [
+    "mutation",
     "zoneId"
   ],
   "properties": {
+    "mutation": {
+      "const": "deleteRoomAirModelAssignment"
+    },
     "zoneId": {
-      "type": "integer"
+      "type": "integer",
+      "minimum": 0,
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Zone",
+          "de": "Zone"
+        },
+        "description": {
+          "en": "Zone whose room air model assignment is deleted, by id.",
+          "de": "Zone, deren Raumluftmodellzuordnung gelöscht wird, per ID."
+        },
+        "ref": {
+          "kind": "zone",
+          "domain": "energyModel",
+          "granularity": "zone"
+        },
+        "group": "target",
+        "order": 10
+      }
     }
   }
 }

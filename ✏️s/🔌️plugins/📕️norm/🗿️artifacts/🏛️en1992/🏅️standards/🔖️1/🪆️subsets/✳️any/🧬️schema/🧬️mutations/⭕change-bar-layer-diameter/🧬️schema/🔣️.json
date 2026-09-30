@@ -11,13 +11,76 @@
   ],
   "properties": {
     "memberId": {
-      "type": "string"
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Member",
+          "de": "Bauteil"
+        },
+        "description": {
+          "en": "The reinforced concrete member this mutation addresses.",
+          "de": "Das Stahlbetonbauteil, das diese Mutation adressiert."
+        },
+        "ref": {
+          "kind": "member"
+        },
+        "group": "target",
+        "order": 10
+      }
     },
     "layerId": {
-      "type": "string"
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Bar layer",
+          "de": "Bewehrungslage"
+        },
+        "description": {
+          "en": "The longitudinal reinforcement layer of the member.",
+          "de": "Die Längsbewehrungslage des Bauteils."
+        },
+        "ref": {
+          "kind": "barLayer"
+        },
+        "group": "target",
+        "order": 20
+      }
     },
     "newDiameter": {
-      "type": "number"
+      "type": "number",
+      "exclusiveMinimum": 0,
+      "x-semio-ui": {
+        "widget": "stepper",
+        "role": "value",
+        "label": {
+          "en": "Bar diameter Ø",
+          "de": "Stabdurchmesser Ø"
+        },
+        "unit": "m",
+        "displayUnit": "mm",
+        "displayFactor": 1000,
+        "step": 0.001,
+        "precision": 0,
+        "snaps": [
+          0.006,
+          0.008,
+          0.01,
+          0.012,
+          0.014,
+          0.016,
+          0.02,
+          0.025,
+          0.028,
+          0.032,
+          0.04
+        ],
+        "group": "reinforcement",
+        "order": 30
+      }
     }
   }
 }

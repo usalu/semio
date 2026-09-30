@@ -5,20 +5,41 @@
   "type": "object",
   "additionalProperties": false,
   "required": [
-    "track_index",
+    "mutation",
+    "trackIndex",
     "codec"
   ],
   "properties": {
-    "track_index": {
-      "type": "integer",
-      "minimum": 0
-    },
-    "codec": {
-      "$ref": "#/$defs/Mp4Codec"
-    },
     "mutation": {
       "const": "setTrackCodec",
       "description": "Aggregate discriminator spliced in by Mp4Mutation; absent when the payload stands alone."
+    },
+    "trackIndex": {
+      "type": "integer",
+      "minimum": 0,
+      "x-semio-ui": {
+        "widget": "stepper",
+        "label": {
+          "en": "Track",
+          "de": "Spur"
+        },
+        "description": {
+          "en": "Index of the track, counted from 0.",
+          "de": "Index der Spur, ab 0 gezählt."
+        },
+        "precision": 0,
+        "group": "target",
+        "order": 10
+      }
+    },
+    "codec": {
+      "$ref": "#/$defs/Mp4Codec",
+      "x-semio-ui": {
+        "label": {
+          "en": "Codec configuration",
+          "de": "Codec-Konfiguration"
+        }
+      }
     }
   },
   "$defs": {
@@ -39,7 +60,40 @@
             "jpeg",
             "mjpa"
           ],
-          "default": "avc1"
+          "default": "avc1",
+          "x-semio-ui": {
+            "widget": "select",
+            "label": {
+              "en": "Sample entry format",
+              "de": "Sample-Eintragsformat"
+            },
+            "options": {
+              "avc1": {
+                "en": "AVC / H.264 (avc1)",
+                "de": "AVC / H.264 (avc1)"
+              },
+              "avc3": {
+                "en": "AVC / H.264, in-band parameter sets (avc3)",
+                "de": "AVC / H.264, Parametersätze im Datenstrom (avc3)"
+              },
+              "hvc1": {
+                "en": "HEVC / H.265 (hvc1)",
+                "de": "HEVC / H.265 (hvc1)"
+              },
+              "hev1": {
+                "en": "HEVC / H.265, in-band parameter sets (hev1)",
+                "de": "HEVC / H.265, Parametersätze im Datenstrom (hev1)"
+              },
+              "jpeg": {
+                "en": "JPEG (jpeg)",
+                "de": "JPEG (jpeg)"
+              },
+              "mjpa": {
+                "en": "Motion JPEG A (mjpa)",
+                "de": "Motion JPEG A (mjpa)"
+              }
+            }
+          }
         },
         "sps": {
           "type": "array",
@@ -49,6 +103,12 @@
               "type": "integer",
               "minimum": 0,
               "maximum": 255
+            }
+          },
+          "x-semio-ui": {
+            "label": {
+              "en": "Sequence parameter sets (SPS)",
+              "de": "Sequenzparametersätze (SPS)"
             }
           }
         },
@@ -61,12 +121,30 @@
               "minimum": 0,
               "maximum": 255
             }
+          },
+          "x-semio-ui": {
+            "label": {
+              "en": "Picture parameter sets (PPS)",
+              "de": "Bildparametersätze (PPS)"
+            }
           }
         },
         "nalLengthSize": {
           "type": "integer",
           "minimum": 0,
-          "maximum": 255
+          "maximum": 255,
+          "x-semio-ui": {
+            "widget": "stepper",
+            "label": {
+              "en": "NAL length size",
+              "de": "Größe des NAL-Längenfelds"
+            },
+            "description": {
+              "en": "Bytes of the length prefix before each NAL unit (1, 2 or 4).",
+              "de": "Bytes des Längenpräfixes vor jeder NAL-Unit (1, 2 oder 4)."
+            },
+            "unit": "B"
+          }
         },
         "extension": {
           "anyOf": [
@@ -86,7 +164,13 @@
             {
               "type": "null"
             }
-          ]
+          ],
+          "x-semio-ui": {
+            "label": {
+              "en": "HEVC configuration (hvcC)",
+              "de": "HEVC-Konfiguration (hvcC)"
+            }
+          }
         }
       }
     },
@@ -102,17 +186,42 @@
         "chromaFormat": {
           "type": "integer",
           "minimum": 0,
-          "maximum": 255
+          "maximum": 255,
+          "x-semio-ui": {
+            "widget": "stepper",
+            "label": {
+              "en": "Chroma format",
+              "de": "Chroma-Format"
+            },
+            "description": {
+              "en": "0 = monochrome, 1 = 4:2:0, 2 = 4:2:2, 3 = 4:4:4.",
+              "de": "0 = monochrom, 1 = 4:2:0, 2 = 4:2:2, 3 = 4:4:4."
+            }
+          }
         },
         "bitDepthLumaMinus8": {
           "type": "integer",
           "minimum": 0,
-          "maximum": 255
+          "maximum": 255,
+          "x-semio-ui": {
+            "widget": "stepper",
+            "label": {
+              "en": "Luma bit depth − 8",
+              "de": "Luma-Bittiefe − 8"
+            }
+          }
         },
         "bitDepthChromaMinus8": {
           "type": "integer",
           "minimum": 0,
-          "maximum": 255
+          "maximum": 255,
+          "x-semio-ui": {
+            "widget": "stepper",
+            "label": {
+              "en": "Chroma bit depth − 8",
+              "de": "Chroma-Bittiefe − 8"
+            }
+          }
         },
         "spsExt": {
           "type": "array",
@@ -122,6 +231,12 @@
               "type": "integer",
               "minimum": 0,
               "maximum": 255
+            }
+          },
+          "x-semio-ui": {
+            "label": {
+              "en": "SPS extensions",
+              "de": "SPS-Erweiterungen"
             }
           }
         }
@@ -151,78 +266,213 @@
         "generalProfileSpace": {
           "type": "integer",
           "minimum": 0,
-          "maximum": 255
+          "maximum": 255,
+          "x-semio-ui": {
+            "widget": "stepper",
+            "label": {
+              "en": "Profile space",
+              "de": "Profilraum"
+            }
+          }
         },
         "generalTierFlag": {
-          "type": "boolean"
+          "type": "boolean",
+          "x-semio-ui": {
+            "widget": "toggle",
+            "label": {
+              "en": "High tier",
+              "de": "High Tier"
+            }
+          }
         },
         "generalProfileIdc": {
           "type": "integer",
           "minimum": 0,
-          "maximum": 255
+          "maximum": 255,
+          "x-semio-ui": {
+            "widget": "stepper",
+            "label": {
+              "en": "Profile",
+              "de": "Profil"
+            },
+            "description": {
+              "en": "general_profile_idc, e.g. 1 = Main, 2 = Main 10.",
+              "de": "general_profile_idc, z. B. 1 = Main, 2 = Main 10."
+            }
+          }
         },
         "generalProfileCompatibilityFlags": {
           "type": "integer",
           "minimum": 0,
-          "maximum": 4294967295
+          "maximum": 4294967295,
+          "x-semio-ui": {
+            "widget": "stepper",
+            "label": {
+              "en": "Profile compatibility flags",
+              "de": "Profil-Kompatibilitätsflags"
+            }
+          }
         },
         "generalConstraintIndicatorFlags": {
           "type": "integer",
           "minimum": 0,
-          "maximum": 281474976710655
+          "maximum": 281474976710655,
+          "x-semio-ui": {
+            "widget": "stepper",
+            "label": {
+              "en": "Constraint indicator flags",
+              "de": "Constraint-Indikator-Flags"
+            }
+          }
         },
         "generalLevelIdc": {
           "type": "integer",
           "minimum": 0,
-          "maximum": 255
+          "maximum": 255,
+          "x-semio-ui": {
+            "widget": "stepper",
+            "label": {
+              "en": "Level",
+              "de": "Level"
+            },
+            "description": {
+              "en": "general_level_idc: 30 × the HEVC level number.",
+              "de": "general_level_idc: 30 × die HEVC-Levelnummer."
+            }
+          }
         },
         "minSpatialSegmentationIdc": {
           "type": "integer",
           "minimum": 0,
-          "maximum": 65535
+          "maximum": 65535,
+          "x-semio-ui": {
+            "widget": "stepper",
+            "label": {
+              "en": "Minimum spatial segmentation",
+              "de": "Minimale räumliche Segmentierung"
+            }
+          }
         },
         "parallelismType": {
           "type": "integer",
           "minimum": 0,
-          "maximum": 255
+          "maximum": 255,
+          "x-semio-ui": {
+            "widget": "stepper",
+            "label": {
+              "en": "Parallelism type",
+              "de": "Parallelitätstyp"
+            },
+            "description": {
+              "en": "0 = mixed or unknown, 1 = slices, 2 = tiles, 3 = wavefront.",
+              "de": "0 = gemischt oder unbekannt, 1 = Slices, 2 = Tiles, 3 = Wavefront."
+            }
+          }
         },
         "chromaFormatIdc": {
           "type": "integer",
           "minimum": 0,
-          "maximum": 255
+          "maximum": 255,
+          "x-semio-ui": {
+            "widget": "stepper",
+            "label": {
+              "en": "Chroma format",
+              "de": "Chroma-Format"
+            },
+            "description": {
+              "en": "0 = monochrome, 1 = 4:2:0, 2 = 4:2:2, 3 = 4:4:4.",
+              "de": "0 = monochrom, 1 = 4:2:0, 2 = 4:2:2, 3 = 4:4:4."
+            }
+          }
         },
         "bitDepthLumaMinus8": {
           "type": "integer",
           "minimum": 0,
-          "maximum": 255
+          "maximum": 255,
+          "x-semio-ui": {
+            "widget": "stepper",
+            "label": {
+              "en": "Luma bit depth − 8",
+              "de": "Luma-Bittiefe − 8"
+            }
+          }
         },
         "bitDepthChromaMinus8": {
           "type": "integer",
           "minimum": 0,
-          "maximum": 255
+          "maximum": 255,
+          "x-semio-ui": {
+            "widget": "stepper",
+            "label": {
+              "en": "Chroma bit depth − 8",
+              "de": "Chroma-Bittiefe − 8"
+            }
+          }
         },
         "avgFrameRate": {
           "type": "integer",
           "minimum": 0,
-          "maximum": 65535
+          "maximum": 65535,
+          "x-semio-ui": {
+            "widget": "stepper",
+            "label": {
+              "en": "Average frame rate",
+              "de": "Durchschnittliche Bildrate"
+            },
+            "description": {
+              "en": "Frames per 256 seconds; 0 means unspecified.",
+              "de": "Bilder pro 256 Sekunden; 0 bedeutet unbestimmt."
+            }
+          }
         },
         "constantFrameRate": {
           "type": "integer",
           "minimum": 0,
-          "maximum": 255
+          "maximum": 255,
+          "x-semio-ui": {
+            "widget": "stepper",
+            "label": {
+              "en": "Constant frame rate",
+              "de": "Konstante Bildrate"
+            },
+            "description": {
+              "en": "0 = unknown, 1 = constant, 2 = constant per temporal layer.",
+              "de": "0 = unbekannt, 1 = konstant, 2 = je zeitlicher Ebene konstant."
+            }
+          }
         },
         "numTemporalLayers": {
           "type": "integer",
           "minimum": 0,
-          "maximum": 255
+          "maximum": 255,
+          "x-semio-ui": {
+            "widget": "stepper",
+            "label": {
+              "en": "Temporal layers",
+              "de": "Zeitliche Ebenen"
+            }
+          }
         },
         "temporalIdNested": {
-          "type": "boolean"
+          "type": "boolean",
+          "x-semio-ui": {
+            "widget": "toggle",
+            "label": {
+              "en": "Temporal ID nested",
+              "de": "Zeitliche ID verschachtelt"
+            }
+          }
         },
         "arrays": {
           "type": "array",
           "items": {
             "$ref": "#/$defs/Mp4HevcNalArray"
+          },
+          "x-semio-ui": {
+            "label": {
+              "en": "NAL unit arrays",
+              "de": "NAL-Unit-Arrays"
+            }
           }
         }
       }
@@ -236,12 +486,30 @@
       ],
       "properties": {
         "arrayCompleteness": {
-          "type": "boolean"
+          "type": "boolean",
+          "x-semio-ui": {
+            "widget": "toggle",
+            "label": {
+              "en": "Array complete",
+              "de": "Array vollständig"
+            },
+            "description": {
+              "en": "All NAL units of this type are in the configuration, none in-band.",
+              "de": "Alle NAL-Units dieses Typs stehen in der Konfiguration, keine im Datenstrom."
+            }
+          }
         },
         "nalUnitType": {
           "type": "integer",
           "minimum": 0,
-          "maximum": 255
+          "maximum": 255,
+          "x-semio-ui": {
+            "widget": "stepper",
+            "label": {
+              "en": "NAL unit type",
+              "de": "NAL-Unit-Typ"
+            }
+          }
         },
         "nalUnits": {
           "type": "array",
@@ -251,6 +519,12 @@
               "type": "integer",
               "minimum": 0,
               "maximum": 255
+            }
+          },
+          "x-semio-ui": {
+            "label": {
+              "en": "NAL units",
+              "de": "NAL-Units"
             }
           }
         }

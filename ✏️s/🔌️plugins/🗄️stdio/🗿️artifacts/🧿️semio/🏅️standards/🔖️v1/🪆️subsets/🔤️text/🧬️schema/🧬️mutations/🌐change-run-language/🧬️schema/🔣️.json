@@ -14,7 +14,18 @@
       "minimum": 0
     },
     "new_language": {
-      "type": "string"
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "text",
+        "label": {
+          "en": "Language",
+          "de": "Sprache"
+        },
+        "description": {
+          "en": "BCP 47 tag; empty means unspecified.",
+          "de": "BCP-47-Kennung; leer bedeutet unbestimmt."
+        }
+      }
     }
   }
 }

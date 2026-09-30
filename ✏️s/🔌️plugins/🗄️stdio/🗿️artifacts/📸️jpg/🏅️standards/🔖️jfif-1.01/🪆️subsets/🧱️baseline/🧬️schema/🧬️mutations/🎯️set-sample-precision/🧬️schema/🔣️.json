@@ -11,7 +11,15 @@
     "precision": {
       "type": "integer",
       "minimum": 0,
-      "maximum": 255
+      "maximum": 255,
+      "x-semio-ui": {
+        "widget": "stepper",
+        "label": {
+          "en": "Sample precision",
+          "de": "Abtastgenauigkeit"
+        },
+        "unit": "bit"
+      }
     }
   }
 }

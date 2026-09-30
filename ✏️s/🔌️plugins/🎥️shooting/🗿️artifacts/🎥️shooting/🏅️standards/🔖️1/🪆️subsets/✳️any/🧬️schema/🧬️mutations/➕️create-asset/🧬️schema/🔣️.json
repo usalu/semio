@@ -5,9 +5,13 @@
   "type": "object",
   "additionalProperties": false,
   "required": [
+    "mutation",
     "asset"
   ],
   "properties": {
+    "mutation": {
+      "const": "createAsset"
+    },
     "asset": {
       "title": "ShootingAsset",
       "type": "object",
@@ -21,16 +25,68 @@
       ],
       "properties": {
         "id": {
-          "type": "string"
+          "type": "string",
+          "x-semio-ui": {
+            "widget": "text",
+            "role": "value",
+            "label": {
+              "en": "ID",
+              "de": "ID"
+            },
+            "description": {
+              "en": "Unique asset id in this scene.",
+              "de": "Eindeutige Objekt-ID in dieser Szene."
+            },
+            "group": "identity",
+            "order": 10
+          }
         },
         "name": {
-          "type": "string"
+          "type": "string",
+          "x-semio-ui": {
+            "widget": "text",
+            "role": "value",
+            "label": {
+              "en": "Name",
+              "de": "Name"
+            },
+            "group": "identity",
+            "order": 20
+          }
         },
         "url": {
-          "type": "string"
+          "type": "string",
+          "x-semio-ui": {
+            "widget": "text",
+            "role": "value",
+            "label": {
+              "en": "URL",
+              "de": "URL"
+            },
+            "description": {
+              "en": "Address of the file, e.g. an https or data URL.",
+              "de": "Adresse der Datei, z. B. eine https- oder data-URL."
+            },
+            "group": "source",
+            "order": 30
+          }
         },
         "format": {
-          "type": "string"
+          "type": "string",
+          "x-semio-ui": {
+            "widget": "text",
+            "role": "value",
+            "label": {
+              "en": "Format",
+              "de": "Format"
+            },
+            "description": {
+              "en": "Model format, e.g. glb.",
+              "de": "Modellformat, z. B. glb."
+            },
+            "group": "source",
+            "order": 40
+          }
         },
         "origin": {
           "type": "array",
@@ -38,21 +94,112 @@
             "type": "number"
           },
           "minItems": 3,
-          "maxItems": 3
+          "maxItems": 3,
+          "x-semio-ui": {
+            "widget": "vector",
+            "role": "value",
+            "label": {
+              "en": "Origin",
+              "de": "Ursprung"
+            },
+            "step": 0.1,
+            "group": "pose",
+            "order": 50,
+            "snapSource": {
+              "step": true
+            }
+          }
         },
         "orientation": {
-          "type": "array",
+          "type": [
+            "array",
+            "null"
+          ],
           "items": {
             "type": "number"
           },
           "minItems": 4,
-          "maxItems": 4
+          "maxItems": 4,
+          "x-semio-ui": {
+            "widget": "vector",
+            "role": "value",
+            "label": {
+              "en": "Orientation",
+              "de": "Orientierung"
+            },
+            "description": {
+              "en": "Unit quaternion (x, y, z, w); (0, 0, 0, 1) is no rotation.",
+              "de": "Einheitsquaternion (x, y, z, w); (0, 0, 0, 1) ist keine Drehung."
+            },
+            "step": 0.01,
+            "group": "pose",
+            "order": 60
+          }
+        },
+        "scale": {
+          "type": [
+            "array",
+            "null"
+          ],
+          "items": {
+            "type": "number"
+          },
+          "minItems": 3,
+          "maxItems": 3,
+          "x-semio-ui": {
+            "widget": "vector",
+            "role": "value",
+            "label": {
+              "en": "Scale",
+              "de": "Skalierung"
+            },
+            "description": {
+              "en": "Scale factor per axis (x, y, z); empty keeps the mesh size.",
+              "de": "Skalierungsfaktor je Achse (x, y, z); leer behält die Netzgröße."
+            },
+            "step": 0.1,
+            "precision": 3,
+            "group": "pose",
+            "order": 70
+          }
         }
+      },
+      "x-semio-ui": {
+        "role": "value",
+        "label": {
+          "en": "Asset",
+          "de": "Objekt"
+        },
+        "description": {
+          "en": "The complete asset record to add.",
+          "de": "Das vollständige hinzuzufügende Objekt."
+        },
+        "group": "record",
+        "order": 10
       }
     },
     "index": {
-      "type": "integer",
-      "minimum": 0
+      "type": [
+        "integer",
+        "null"
+      ],
+      "minimum": 0,
+      "x-semio-ui": {
+        "widget": "stepper",
+        "role": "value",
+        "label": {
+          "en": "Index",
+          "de": "Index"
+        },
+        "description": {
+          "en": "Position in the list; the end when omitted.",
+          "de": "Position in der Liste; ohne Angabe am Ende."
+        },
+        "step": 1,
+        "precision": 0,
+        "group": "order",
+        "order": 20
+      }
     }
   }
 }

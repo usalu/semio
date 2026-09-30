@@ -9,7 +9,25 @@
   ],
   "properties": {
     "newWindZone": {
-      "type": "integer"
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 4,
+      "x-semio-ui": {
+        "widget": "stepper",
+        "role": "value",
+        "label": {
+          "en": "Wind zone",
+          "de": "Windzone"
+        },
+        "description": {
+          "en": "DIN EN 1991-1-4/NA wind zone 1 to 4.",
+          "de": "Windzone 1 bis 4 nach DIN EN 1991-1-4/NA."
+        },
+        "step": 1,
+        "precision": 0,
+        "group": "site",
+        "order": 10
+      }
     }
   }
 }

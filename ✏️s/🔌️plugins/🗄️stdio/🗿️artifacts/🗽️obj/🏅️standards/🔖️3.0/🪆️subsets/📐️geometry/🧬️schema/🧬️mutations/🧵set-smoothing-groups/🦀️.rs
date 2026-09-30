@@ -13,6 +13,7 @@ use super::*;
 //#region 🔖️Payload
 #[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::MutationLeaf, dsl::DslRecord)]
 #[mutation_leaf(contract = ::protocol)]
+#[value(rename_all = "camelCase")]
 #[dsl(keyword = "set-smoothing-groups")]
 pub struct SetSmoothingGroups {
     pub smoothing_groups: Vec<ObjSmoothingRange>,

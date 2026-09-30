@@ -1,17 +1,31 @@
 {
-  "id": "s.stdio.gltf.mutation.move-node.v1",
-  "version": 1,
-  "touchedPaths": [
-    "document/nodes/0",
-    "document/nodes/1"
-  ],
-  "payload": {
-    "index": 0,
-    "position": 1
+  "scenes": {
+    "modified": [
+      {
+        "index": 0,
+        "diff": {
+          "nodes": [
+            1,
+            0
+          ]
+        }
+      }
+    ]
   },
-  "operation": {
-    "kind": "move",
-    "index": 0,
-    "position": 1
+  "nodes": {
+    "modified": [
+      {
+        "index": 0,
+        "diff": {
+          "name": "b"
+        }
+      },
+      {
+        "index": 1,
+        "diff": {
+          "name": "a"
+        }
+      }
+    ]
   }
 }

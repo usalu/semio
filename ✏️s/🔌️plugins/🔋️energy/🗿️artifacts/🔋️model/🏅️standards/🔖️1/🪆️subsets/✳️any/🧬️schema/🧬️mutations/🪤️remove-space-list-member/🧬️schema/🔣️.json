@@ -5,15 +5,57 @@
   "type": "object",
   "additionalProperties": false,
   "required": [
+    "mutation",
     "id",
     "spaceId"
   ],
   "properties": {
+    "mutation": {
+      "const": "removeSpaceListMember"
+    },
     "id": {
-      "type": "integer"
+      "type": "integer",
+      "minimum": 0,
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Space list",
+          "de": "Raumliste"
+        },
+        "description": {
+          "en": "The space list this mutation changes, by id.",
+          "de": "Raumliste, die diese Mutation ändert, per ID."
+        },
+        "ref": {
+          "kind": "spaceList"
+        },
+        "group": "target",
+        "order": 10
+      }
     },
     "spaceId": {
-      "type": "integer"
+      "type": "integer",
+      "minimum": 0,
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Space",
+          "de": "Raum"
+        },
+        "description": {
+          "en": "Space to remove, by id.",
+          "de": "Zu entfernender Raum, per ID."
+        },
+        "ref": {
+          "kind": "space",
+          "domain": "energyModel",
+          "granularity": "space"
+        },
+        "group": "member",
+        "order": 20
+      }
     }
   }
 }

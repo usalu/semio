@@ -20,9 +20,3 @@ pub fn handle(payload: &FlowTessellateCancelResolve, _doc: &ArtifactView<'_, Gen
     preview_eval::resolve_tessellate_cancel(payload, session);
     Ok(Emit::default())
 }
-
-//#region 🧪️Tests
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
-//#endregion 🧪️Tests

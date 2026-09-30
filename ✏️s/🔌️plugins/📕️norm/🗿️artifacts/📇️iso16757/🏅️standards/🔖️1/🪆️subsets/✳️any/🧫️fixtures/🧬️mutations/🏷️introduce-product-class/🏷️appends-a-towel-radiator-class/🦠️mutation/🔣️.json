@@ -1,8 +1,8 @@
 {
   "IntroduceProductClass": {
     "index": null,
-    "product_class": {
-      "group_id": "group.radiators",
+    "productClass": {
+      "groupId": "group.radiators",
       "id": "class-towel-radiator",
       "names": {
         "alternatives": [
@@ -15,11 +15,11 @@
           "locale": "en",
           "text": "Towel radiator"
         },
-        "short_name": null
+        "shortName": null
       },
-      "optional_property_ids": [],
-      "parent_id": "class.panel-radiator",
-      "required_property_ids": []
+      "optionalPropertyIds": [],
+      "parentId": "class.panel-radiator",
+      "requiredPropertyIds": []
     }
   }
 }

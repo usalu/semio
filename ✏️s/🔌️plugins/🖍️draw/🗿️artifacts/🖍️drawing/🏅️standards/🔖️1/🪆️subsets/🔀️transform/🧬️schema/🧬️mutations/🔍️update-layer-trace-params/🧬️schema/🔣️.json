@@ -5,12 +5,35 @@
   "type": "object",
   "additionalProperties": false,
   "required": [
+    "mutation",
     "layerId",
     "params"
   ],
   "properties": {
+    "mutation": {
+      "const": "updateLayerTraceParams"
+    },
     "layerId": {
-      "type": "string"
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Layer",
+          "de": "Ebene"
+        },
+        "description": {
+          "en": "The layer this mutation addresses.",
+          "de": "Die Ebene, die diese Mutation adressiert."
+        },
+        "ref": {
+          "kind": "layer",
+          "domain": "strokes",
+          "granularity": "stroke"
+        },
+        "group": "target",
+        "order": 10
+      }
     },
     "params": {
       "title": "DrawingTraceParams",
@@ -22,11 +45,64 @@
       ],
       "properties": {
         "threshold": {
-          "type": "number"
+          "type": "number",
+          "x-semio-ui": {
+            "widget": "slider",
+            "role": "value",
+            "label": {
+              "en": "Threshold",
+              "de": "Schwellenwert"
+            },
+            "description": {
+              "en": "Brightness from which a pixel counts as ink.",
+              "de": "Helligkeit, ab der ein Pixel als Tinte gilt."
+            },
+            "step": 0.01,
+            "precision": 2,
+            "softMin": 0,
+            "softMax": 1,
+            "snaps": [
+              0,
+              0.25,
+              0.5,
+              0.75,
+              1
+            ],
+            "group": "trace",
+            "order": 10
+          }
         },
         "simplifyEpsilon": {
-          "type": "number"
+          "type": "number",
+          "minimum": 0,
+          "x-semio-ui": {
+            "widget": "stepper",
+            "role": "value",
+            "label": {
+              "en": "Simplification",
+              "de": "Vereinfachung"
+            },
+            "description": {
+              "en": "Largest deviation allowed when simplifying the traced path.",
+              "de": "Größte zulässige Abweichung beim Vereinfachen des Pfads."
+            },
+            "step": 0.05,
+            "precision": 2,
+            "softMin": 0,
+            "softMax": 10,
+            "group": "trace",
+            "order": 20
+          }
         }
+      },
+      "x-semio-ui": {
+        "role": "value",
+        "label": {
+          "en": "Trace settings",
+          "de": "Nachzeichnen-Einstellungen"
+        },
+        "group": "trace",
+        "order": 20
       }
     }
   }

@@ -1,13 +1,31 @@
 {
-  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/norm/en1991/mutation/change-fire-load-density-qf/schema.json",
+  "title": "ChangeFireLoadDensityQf",
   "type": "object",
   "additionalProperties": false,
   "required": [
-    "new_fire_load_density_qf"
+    "newFireLoadDensityQf"
   ],
   "properties": {
-    "new_fire_load_density_qf": {
-      "type": "number"
+    "newFireLoadDensityQf": {
+      "type": "number",
+      "minimum": 0,
+      "x-semio-ui": {
+        "widget": "stepper",
+        "role": "value",
+        "label": {
+          "en": "Characteristic fire load density q_f,k",
+          "de": "Charakteristische Brandlastdichte q_f,k"
+        },
+        "unit": "J/m²",
+        "displayUnit": "MJ/m²",
+        "displayFactor": 1e-06,
+        "step": 1000000.0,
+        "precision": 0,
+        "group": "fire",
+        "order": 10
+      }
     }
   }
 }

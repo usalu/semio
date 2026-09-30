@@ -5,12 +5,17 @@
   "type": "object",
   "additionalProperties": false,
   "required": [
+    "mutation",
     "streamIndex",
     "index",
     "pts",
     "key"
   ],
   "properties": {
+    "mutation": {
+      "const": "setSampleFlags",
+      "description": "Aggregate discriminator spliced in by SemioVideoMutation; absent when the payload stands alone."
+    },
     "streamIndex": {
       "type": "integer",
       "minimum": 0
@@ -21,14 +26,17 @@
     },
     "pts": {
       "type": "integer",
-      "minimum": 0
+      "minimum": 0,
+      "x-semio-ui": {
+        "widget": "stepper",
+        "label": {
+          "en": "Presentation time stamp",
+          "de": "Präsentationszeitstempel (PTS)"
+        }
+      }
     },
     "key": {
       "type": "boolean"
-    },
-    "mutation": {
-      "const": "setSampleFlags",
-      "description": "Aggregate discriminator spliced in by SemioVideoMutation; absent when the payload stands alone."
     }
   }
 }

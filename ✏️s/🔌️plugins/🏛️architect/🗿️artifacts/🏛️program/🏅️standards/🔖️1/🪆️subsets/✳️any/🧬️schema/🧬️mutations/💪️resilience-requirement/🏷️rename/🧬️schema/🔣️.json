@@ -5,16 +5,52 @@
   "type": "object",
   "additionalProperties": false,
   "required": [
+    "mutation",
     "id",
     "newName"
   ],
   "properties": {
+    "mutation": {
+      "const": "renameResilienceRequirement"
+    },
     "id": {
-      "type": "integer",
-      "minimum": 0
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Resilience Requirement",
+          "de": "Resilienzanforderung"
+        },
+        "description": {
+          "en": "The resilience requirement to rename.",
+          "de": "Umzubenennender Eintrag vom Typ „Resilienzanforderung“."
+        },
+        "ref": {
+          "kind": "resilienceRequirement",
+          "domain": "program",
+          "granularity": "entity"
+        },
+        "group": "target",
+        "order": 10
+      }
     },
     "newName": {
-      "type": "string"
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "text",
+        "role": "value",
+        "label": {
+          "en": "New Name",
+          "de": "Neuer Name"
+        },
+        "description": {
+          "en": "New name of the resilience requirement.",
+          "de": "Neuer Name des Eintrags vom Typ „Resilienzanforderung“."
+        },
+        "group": "identity",
+        "order": 20
+      }
     }
   }
 }

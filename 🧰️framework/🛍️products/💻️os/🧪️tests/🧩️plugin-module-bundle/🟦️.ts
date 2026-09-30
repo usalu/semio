@@ -1,25 +1,18 @@
 /** 🧩️ The browser twin of the hub's trusted plugin module contract (`🌎️hub-source/🧬️schema/🟦️.ts`), replayed from the
- * hub's own language-agnostic fixture `🌎️hub/🗿️artifact-authority/🔏️trusted-catalog/🧫️fixtures/🧩️plugin-module/🔣️.json`
+ * hub's own language-agnostic fixture `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/📦️deployment/🧫️fixtures/🧩️plugin-module/🔣️.json`
  * — the cases `🧩️plugin-module/🦀️.rs` answers — with Ajv as the independent oracle for every structural verdict. */
 import { describe, expect, it } from "vitest";
 import { readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
-import {
-  decodeTrustedPluginModuleBundleV1,
-  trustedPluginModuleBundleSha256V1,
-  validateTrustedPluginModuleBundleV1,
-  validateTrustedPluginModuleIndexV1,
-  verifyTrustedPluginModuleFileV1,
-  type TrustedPluginModuleSourceV1,
-} from "../../🔨️modules/🔌️plugin/📇️registry/🌎️hub-source/🧬️schema/🟦️.ts";
+import { decodeTrustedPluginModuleBundleV1, trustedPluginModuleBundleSha256V1, validateTrustedPluginModuleBundleV1, validateTrustedPluginModuleIndexV1, verifyTrustedPluginModuleFileV1, type TrustedPluginModuleSourceV1 } from "../../🔨️modules/🔌️plugin/📇️registry/📦️deployment/🧬️schema/🟦️.ts";
 import { semioSchemaAjvV1 } from "../🧬️schema-oracle/🟦️.ts";
 
-const root = "../../../../../🌎️hub/🗿️artifact-authority/🔏️trusted-catalog";
+const root = "../../🔨️modules/🔌️plugin/📇️registry/📦️deployment";
 const read = (path: string) => JSON.parse(readFileSync(fileURLToPath(new URL(`${root}/${path}`, import.meta.url)), "utf8"));
 const fixture = read("🧫️fixtures/🧩️plugin-module/🔣️.json");
 const schema = read("🧬️schema/🔣️.json");
 const ajv = semioSchemaAjvV1({ strict: false, allErrors: true });
-ajv.addSchema({ ...schema, $ref: undefined, $id: "https://json.schemas.assets.semio-tech.com/hub/artifact-authority/trusted-catalog/schema.json" }, "trusted-catalog");
+ajv.addSchema({ ...schema, $ref: undefined, $id: "https://json.schemas.assets.semio-tech.com/os/plugin/registry/deployment/component.json" }, "trusted-catalog");
 const oracle = (definition: string) => ajv.getSchema(`trusted-catalog#/$defs/${definition}`)!;
 const source: TrustedPluginModuleSourceV1 = fixture.record;
 const accepts = (run: () => unknown) => {

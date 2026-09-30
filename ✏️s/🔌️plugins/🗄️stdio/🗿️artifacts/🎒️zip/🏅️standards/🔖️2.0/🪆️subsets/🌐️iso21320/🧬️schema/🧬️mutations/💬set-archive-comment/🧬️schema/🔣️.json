@@ -5,20 +5,32 @@
   "type": "object",
   "additionalProperties": false,
   "required": [
+    "mutation",
     "comment",
     "commentUtf8"
   ],
   "properties": {
+    "mutation": {
+      "const": "setArchiveComment",
+      "description": "Aggregate discriminator spliced in by ZipIso21320Mutation; absent when the payload stands alone."
+    },
     "comment": {
       "type": "string"
     },
     "commentUtf8": {
       "type": "boolean",
-      "description": "True for UTF-8 EOCD bytes; false for an unambiguous CP437 representation."
-    },
-    "mutation": {
-      "const": "setArchiveComment",
-      "description": "Aggregate discriminator spliced in by ZipIso21320Mutation; absent when the payload stands alone."
+      "description": "True for UTF-8 EOCD bytes; false for an unambiguous CP437 representation.",
+      "x-semio-ui": {
+        "widget": "toggle",
+        "label": {
+          "en": "UTF-8 comment",
+          "de": "UTF-8-Kommentar"
+        },
+        "description": {
+          "en": "Stores the archive comment as UTF-8 bytes; off stores an unambiguous CP437 form.",
+          "de": "Speichert den Archivkommentar als UTF-8-Bytes; aus speichert eine eindeutige CP437-Form."
+        }
+      }
     }
   }
 }

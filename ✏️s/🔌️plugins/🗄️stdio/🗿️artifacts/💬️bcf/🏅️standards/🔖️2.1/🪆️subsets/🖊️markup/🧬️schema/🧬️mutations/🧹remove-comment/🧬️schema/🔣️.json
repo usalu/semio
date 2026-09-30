@@ -5,15 +5,55 @@
   "type": "object",
   "additionalProperties": false,
   "required": [
-    "topic_guid",
+    "mutation",
+    "topicGuid",
     "guid"
   ],
   "properties": {
-    "topic_guid": {
-      "type": "string"
+    "mutation": {
+      "const": "removeComment"
+    },
+    "topicGuid": {
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Topic",
+          "de": "Thema"
+        },
+        "description": {
+          "en": "GUID of the topic.",
+          "de": "GUID des Themas."
+        },
+        "ref": {
+          "kind": "topic",
+          "domain": "bcf"
+        },
+        "group": "target",
+        "order": 10
+      }
     },
     "guid": {
-      "type": "string"
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Comment",
+          "de": "Kommentar"
+        },
+        "description": {
+          "en": "GUID of the comment.",
+          "de": "GUID des Kommentars."
+        },
+        "ref": {
+          "kind": "comment",
+          "domain": "bcf"
+        },
+        "group": "target",
+        "order": 20
+      }
     }
   }
 }

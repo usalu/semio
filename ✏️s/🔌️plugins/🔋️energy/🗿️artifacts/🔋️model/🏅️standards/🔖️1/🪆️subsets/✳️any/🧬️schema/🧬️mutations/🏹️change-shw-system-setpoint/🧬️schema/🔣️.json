@@ -5,15 +5,52 @@
   "type": "object",
   "additionalProperties": false,
   "required": [
+    "mutation",
     "id",
     "newSetpointC"
   ],
   "properties": {
+    "mutation": {
+      "const": "changeShwSystemSetpoint"
+    },
     "id": {
-      "type": "integer"
+      "type": "integer",
+      "minimum": 0,
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Service hot water system",
+          "de": "Trinkwarmwasseranlage"
+        },
+        "description": {
+          "en": "The service hot water system this mutation changes, by id.",
+          "de": "Trinkwarmwasseranlage, die diese Mutation ändert, per ID."
+        },
+        "ref": {
+          "kind": "serviceHotWaterSystem"
+        },
+        "group": "target",
+        "order": 10
+      }
     },
     "newSetpointC": {
-      "type": "number"
+      "type": "number",
+      "minimum": 0,
+      "maximum": 100,
+      "x-semio-ui": {
+        "widget": "stepper",
+        "role": "value",
+        "label": {
+          "en": "Tank setpoint",
+          "de": "Speichersolltemperatur"
+        },
+        "unit": "°C",
+        "step": 0.5,
+        "precision": 1,
+        "group": "control",
+        "order": 20
+      }
     }
   }
 }

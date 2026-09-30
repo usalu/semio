@@ -71,8 +71,7 @@ pub(crate) fn apply_components(payload: &RotateSelection, doc: &ArtifactView<'_,
     rotate_ids(&doc.snapshot.host_snapshot, selected, payload.ax, payload.ay, payload.az, payload.angle)
 }
 
-//#region 🧪️Tests
+
 #[cfg(test)]
 #[path = "🧪️tests/🔬️unit/🦀️.rs"]
 mod tests;
-//#endregion 🧪️Tests

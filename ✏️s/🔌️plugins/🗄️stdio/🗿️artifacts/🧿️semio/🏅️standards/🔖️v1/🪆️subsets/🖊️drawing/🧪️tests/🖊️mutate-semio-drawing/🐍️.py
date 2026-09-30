@@ -248,8 +248,8 @@ def parse_segment(text: str) -> dict:
         "kind": "arcTo",
         "rx": float(parts[0]),
         "ry": float(parts[1]),
-        "x_rotation": float(parts[2]),
-        "large_arc": parse_bool(parts[3], "largeArc"),
+        "xRotation": float(parts[2]),
+        "largeArc": parse_bool(parts[3], "largeArc"),
         "sweep": parse_bool(parts[4], "sweep"),
         "to": parse_point2(parts[5]),
     }
@@ -270,8 +270,8 @@ def print_segment(segment: dict) -> str:
         return "A[%s,%s,%s,%s,%s,%s]" % (
             print_number(segment["rx"]),
             print_number(segment["ry"]),
-            print_number(segment["x_rotation"]),
-            print_bool(segment["large_arc"]),
+            print_number(segment["xRotation"]),
+            print_bool(segment["largeArc"]),
             print_bool(segment["sweep"]),
             print_point2(segment["to"]),
         )
@@ -563,7 +563,7 @@ def read_segment(reader: Reader) -> dict:
     if kind == "quadTo":
         return {"kind": "quadTo", "c": reader.point2(), "to": reader.point2()}
     if kind == "arcTo":
-        return {"kind": "arcTo", "rx": reader.f64(), "ry": reader.f64(), "x_rotation": reader.f64(), "large_arc": reader.flag(), "sweep": reader.flag(), "to": reader.point2()}
+        return {"kind": "arcTo", "rx": reader.f64(), "ry": reader.f64(), "xRotation": reader.f64(), "largeArc": reader.flag(), "sweep": reader.flag(), "to": reader.point2()}
     return {"kind": "close"}
 
 
@@ -586,8 +586,8 @@ def write_segment(writer: Writer, segment: dict) -> None:
     if kind == "arcTo":
         writer.f64(segment["rx"])
         writer.f64(segment["ry"])
-        writer.f64(segment["x_rotation"])
-        writer.byte(1 if segment["large_arc"] else 0)
+        writer.f64(segment["xRotation"])
+        writer.byte(1 if segment["largeArc"] else 0)
         writer.byte(1 if segment["sweep"] else 0)
         writer.point2(segment["to"])
 

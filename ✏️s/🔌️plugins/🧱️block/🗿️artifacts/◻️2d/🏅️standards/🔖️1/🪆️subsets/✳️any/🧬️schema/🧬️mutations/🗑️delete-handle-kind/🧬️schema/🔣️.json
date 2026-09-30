@@ -5,11 +5,30 @@
   "type": "object",
   "additionalProperties": false,
   "required": [
+    "mutation",
     "id"
   ],
   "properties": {
+    "mutation": {
+      "const": "deleteHandleKind"
+    },
     "id": {
-      "type": "string"
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Handle kind",
+          "de": "Griffart"
+        },
+        "ref": {
+          "kind": "handleKind",
+          "domain": "handle",
+          "granularity": "handleKind"
+        },
+        "group": "target",
+        "order": 10
+      }
     }
   }
 }

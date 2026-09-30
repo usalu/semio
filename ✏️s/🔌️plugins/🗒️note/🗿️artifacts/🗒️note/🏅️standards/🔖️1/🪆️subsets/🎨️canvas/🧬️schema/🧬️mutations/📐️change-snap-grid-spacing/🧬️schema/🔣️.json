@@ -4,9 +4,33 @@
   "title": "ChangeSnapGridSpacing",
   "type": "object",
   "additionalProperties": false,
+  "required": [
+    "mutation"
+  ],
   "properties": {
+    "mutation": {
+      "const": "changeSnapGridSpacing"
+    },
     "newSpacing": {
-      "type": "number"
+      "type": [
+        "number",
+        "null"
+      ],
+      "exclusiveMinimum": 0,
+      "x-semio-ui": {
+        "widget": "stepper",
+        "role": "value",
+        "label": {
+          "en": "Snap spacing",
+          "de": "Fangabstand"
+        },
+        "step": 1,
+        "precision": 1,
+        "softMin": 1,
+        "softMax": 200,
+        "group": "snap",
+        "order": 10
+      }
     }
   }
 }

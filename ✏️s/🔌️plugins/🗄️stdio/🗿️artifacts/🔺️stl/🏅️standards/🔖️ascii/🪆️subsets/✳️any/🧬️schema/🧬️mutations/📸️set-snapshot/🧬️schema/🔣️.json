@@ -5,15 +5,16 @@
   "type": "object",
   "additionalProperties": false,
   "required": [
+    "mutation",
     "snapshot"
   ],
   "properties": {
-    "snapshot": {
-      "$ref": "#/$defs/StlSnapshot"
-    },
     "mutation": {
       "const": "setSnapshot",
       "description": "Aggregate discriminator spliced in by StlMutation; absent when the payload stands alone."
+    },
+    "snapshot": {
+      "$ref": "#/$defs/StlSnapshot"
     }
   },
   "$defs": {
@@ -25,15 +26,43 @@
       ],
       "properties": {
         "schema": {
-          "type": "string"
+          "type": "string",
+          "x-semio-ui": {
+            "widget": "text",
+            "label": {
+              "en": "Snapshot schema",
+              "de": "Snapshot-Schema"
+            },
+            "description": {
+              "en": "Identifier of the snapshot schema version.",
+              "de": "Kennung der Version des Snapshot-Schemas."
+            }
+          }
         },
         "solidName": {
-          "type": "string"
+          "type": "string",
+          "x-semio-ui": {
+            "widget": "text",
+            "label": {
+              "en": "Solid name",
+              "de": "Körpername"
+            },
+            "description": {
+              "en": "Name after the ASCII STL `solid` keyword.",
+              "de": "Name nach dem Schlüsselwort `solid` in ASCII-STL."
+            }
+          }
         },
         "triangles": {
           "type": "array",
           "items": {
             "$ref": "#/$defs/StlTriangle"
+          },
+          "x-semio-ui": {
+            "label": {
+              "en": "Triangles",
+              "de": "Dreiecke"
+            }
           }
         }
       }
@@ -65,7 +94,17 @@
             "maxItems": 3
           },
           "minItems": 3,
-          "maxItems": 3
+          "maxItems": 3,
+          "x-semio-ui": {
+            "label": {
+              "en": "Vertices",
+              "de": "Eckpunkte"
+            },
+            "description": {
+              "en": "The three corner points in counter-clockwise order seen from outside.",
+              "de": "Die drei Eckpunkte gegen den Uhrzeigersinn, von außen gesehen."
+            }
+          }
         }
       }
     }

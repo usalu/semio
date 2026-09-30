@@ -1,32 +1,86 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
   "$id": "https://json.schemas.assets.semio-tech.com/s/stdio/gltf/2.0/any/mutation/change-material-double-sided/schema.json",
-  "title": "GltfChangeMaterialDoubleSidedRejection",
+  "title": "GltfChangeMaterialDoubleSidedPayload",
   "type": "object",
   "additionalProperties": false,
   "required": [
-    "code",
-    "path",
-    "detail"
+    "material",
+    "doubleSided"
   ],
   "properties": {
-    "code": {
-      "type": "string"
+    "material": {
+      "type": "integer",
+      "minimum": 0,
+      "x-semio-ui": {
+        "widget": "stepper",
+        "label": {
+          "en": "Material",
+          "de": "Material"
+        },
+        "description": {
+          "en": "Index of the material, counted from 0.",
+          "de": "Index des Materials, ab 0 gezählt."
+        },
+        "precision": 0,
+        "group": "target",
+        "order": 10
+      }
     },
-    "path": {
-      "type": "string"
-    },
-    "detail": {
-      "type": "string"
+    "doubleSided": {
+      "type": "boolean",
+      "x-semio-ui": {
+        "widget": "toggle",
+        "label": {
+          "en": "Double-sided",
+          "de": "Doppelseitig"
+        },
+        "description": {
+          "en": "Render back faces too instead of culling them.",
+          "de": "Rückseiten mitrendern statt sie auszublenden."
+        },
+        "group": "value",
+        "order": 20
+      }
     }
   },
-  "x-semio": {
-    "id": "s.stdio.gltf.mutation.change-material-double-sided.v1",
-    "version": 1,
-    "phase": "mutation",
-    "touchedPaths": [
-      "document/materials/{material}/doubleSided"
-    ]
-  },
-  "x-semio-mutation": "change-material-double-sided"
+  "$defs": {
+    "ChangeMaterialDoubleSidedMutation": {
+      "description": "The whole wire of ChangeMaterialDoubleSidedMutation: the editable apply payload (this document's root) or the inert restore.",
+      "oneOf": [
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "phase",
+            "value"
+          ],
+          "properties": {
+            "phase": {
+              "const": "apply"
+            },
+            "value": {
+              "$ref": "#"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "phase",
+            "value"
+          ],
+          "properties": {
+            "phase": {
+              "const": "restore"
+            },
+            "value": {
+              "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/gltf/2.0/any/diff.json"
+            }
+          }
+        }
+      ]
+    }
+  }
 }

@@ -12,6 +12,7 @@ use semio_framework_value_derive::{FromValue, ToValue};
 /// ✂️ `disconnect-synapse` payload — removes the edge with `id`.
 #[derive(Clone, Debug, PartialEq, ToValue, FromValue, dsl::MutationLeaf)]
 #[mutation_leaf(contract = ::protocol)]
+#[value(rename_all = "camelCase")]
 pub struct DisconnectSynapse {
     pub id: String,
 }

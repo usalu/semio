@@ -1,0 +1,19 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/app/trinity/jack/editor-window/transient/mutations.json",
+  "title": "JackEditorWindowTransientMutation",
+  "oneOf": [
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "SetEditorSelection"
+      ],
+      "properties": {
+        "SetEditorSelection": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/app/trinity/jack/editor-window/transient/mutation/set-editor-selection/schema.json"
+        }
+      }
+    }
+  ]
+}

@@ -5,15 +5,51 @@
   "type": "object",
   "additionalProperties": false,
   "required": [
+    "mutation",
     "id",
     "newValue"
   ],
   "properties": {
+    "mutation": {
+      "const": "changeConstantScheduleValue"
+    },
     "id": {
-      "type": "integer"
+      "type": "integer",
+      "minimum": 0,
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Constant schedule",
+          "de": "Konstanter Zeitplan"
+        },
+        "description": {
+          "en": "The constant schedule this mutation changes, by id.",
+          "de": "Konstanter Zeitplan, den diese Mutation ändert, per ID."
+        },
+        "ref": {
+          "kind": "constantSchedule",
+          "domain": "energyModel",
+          "granularity": "schedule"
+        },
+        "group": "target",
+        "order": 10
+      }
     },
     "newValue": {
-      "type": "number"
+      "type": "number",
+      "x-semio-ui": {
+        "widget": "stepper",
+        "role": "value",
+        "label": {
+          "en": "Value",
+          "de": "Wert"
+        },
+        "step": 0.01,
+        "precision": 2,
+        "group": "values",
+        "order": 20
+      }
     }
   }
 }

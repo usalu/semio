@@ -2,32 +2,40 @@
   "$schema": "http://json-schema.org/draft-07/schema#",
   "$id": "https://json.schemas.assets.semio-tech.com/os/flow/artifacts/flow/vcs/mutation/add-synapse/schema.json",
   "title": "AddSynapse",
-  "$defs": {
-    "Payload": {
-      "type": "object",
-      "properties": {
-        "index": {
-          "$ref": "https://json.schemas.assets.semio-tech.com/os/flow/artifacts/flow/vcs/snapshot.json#/$defs/Index"
-        },
-        "synapse": {
-          "$ref": "https://json.schemas.assets.semio-tech.com/os/flow/artifacts/flow/vcs/snapshot.json#/$defs/Synapse"
-        }
-      },
-      "required": [
-        "index",
-        "synapse"
-      ]
-    }
-  },
-  "allOf": [
-    {
-      "$ref": "#/$defs/Payload"
-    }
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "operation",
+    "index",
+    "synapse"
   ],
-  "propertyNames": {
-    "enum": [
-      "index",
-      "synapse"
-    ]
+  "properties": {
+    "operation": {
+      "const": "addSynapse"
+    },
+    "index": {
+      "$ref": "https://json.schemas.assets.semio-tech.com/os/flow/artifacts/flow/vcs/snapshot.json#/$defs/Index",
+      "x-semio-ui": {
+        "role": "value",
+        "label": {
+          "en": "Index",
+          "de": "Index"
+        },
+        "group": "record",
+        "order": 10
+      }
+    },
+    "synapse": {
+      "$ref": "https://json.schemas.assets.semio-tech.com/os/flow/artifacts/flow/vcs/snapshot.json#/$defs/Synapse",
+      "x-semio-ui": {
+        "role": "value",
+        "label": {
+          "en": "Synapse",
+          "de": "Synapse"
+        },
+        "group": "record",
+        "order": 20
+      }
+    }
   }
 }

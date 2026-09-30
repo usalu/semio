@@ -11,13 +11,61 @@
   ],
   "properties": {
     "connectionId": {
-      "type": "string"
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Connection",
+          "de": "Verbindung"
+        },
+        "description": {
+          "en": "The timber connection this mutation addresses.",
+          "de": "Die Holzverbindung, die diese Mutation adressiert."
+        },
+        "ref": {
+          "kind": "connection"
+        },
+        "group": "target",
+        "order": 10
+      }
     },
     "actionId": {
-      "type": "string"
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Action",
+          "de": "Einwirkung"
+        },
+        "description": {
+          "en": "The characteristic action of the member or connection.",
+          "de": "Die charakteristische Einwirkung des Bauteils oder der Verbindung."
+        },
+        "ref": {
+          "kind": "action"
+        },
+        "group": "target",
+        "order": 20
+      }
     },
     "newValue": {
-      "type": "string"
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "text",
+        "role": "value",
+        "label": {
+          "en": "Action type",
+          "de": "Einwirkungsart"
+        },
+        "description": {
+          "en": "permanent, imposed, snow, wind or accidental.",
+          "de": "permanent (ständig), imposed (Nutzlast), snow (Schnee), wind oder accidental (außergewöhnlich)."
+        },
+        "group": "actions",
+        "order": 30
+      }
     }
   }
 }

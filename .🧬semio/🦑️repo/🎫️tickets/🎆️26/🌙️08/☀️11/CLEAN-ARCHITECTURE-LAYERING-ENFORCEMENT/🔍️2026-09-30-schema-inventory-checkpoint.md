@@ -1,0 +1,5 @@
+# Schema Inventory Checkpoint
+
+The actual global `workspace:schema-check --skip-nx-cache` run failed (17.9s), producing 9356 concrete diagnostic records. The prior fixture-sweep owner and dev contribution title/support defects no longer appear. The selected remaining finding was the renderer presented-media law schema living inside its fixture collection; root subsequently moved it to the media-slot owner schema. This check predates that move and the new Flow/composition owner schemas, so final authored scope needs a fresh check. No passing full-tree inventory is claimed.
+
+- `🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧫️fixtures/🎬️presented-media-slots/🧬️schema/🔣️.json`: schema-fixture-defines-schema — 🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧫️fixtures/🎬️presented-media-slots/🧬️schema lies inside a test or fixture collection, which holds example data and never a contract. Move the contract into its owner's 🧬️schema module, or declare this file in the enclosing case's 🔣️.json under inertSchemaData.

@@ -4,11 +4,75 @@
   "title": "BindParameterField",
   "type": "object",
   "properties": {
+    "operation": {
+      "const": "bindParameterField"
+    },
     "binding": {
-      "type": "object"
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "parameterId",
+        "nodeId",
+        "fieldPath"
+      ],
+      "properties": {
+        "parameterId": {
+          "type": "string",
+          "x-semio-ui": {
+            "widget": "reference",
+            "role": "value",
+            "label": {
+              "en": "Parameter",
+              "de": "Parameter"
+            },
+            "ref": {
+              "kind": "parameter"
+            }
+          }
+        },
+        "nodeId": {
+          "type": "string",
+          "x-semio-ui": {
+            "widget": "reference",
+            "role": "value",
+            "label": {
+              "en": "Node",
+              "de": "Knoten"
+            },
+            "ref": {
+              "kind": "node"
+            }
+          }
+        },
+        "fieldPath": {
+          "type": "string",
+          "x-semio-ui": {
+            "widget": "text",
+            "role": "value",
+            "label": {
+              "en": "Field path",
+              "de": "Feldpfad"
+            },
+            "description": {
+              "en": "JSON pointer of the bound configuration field.",
+              "de": "JSON-Pointer des gebundenen Konfigurationsfelds."
+            }
+          }
+        }
+      },
+      "x-semio-ui": {
+        "role": "value",
+        "label": {
+          "en": "Binding",
+          "de": "Bindung"
+        },
+        "group": "record",
+        "order": 10
+      }
     }
   },
   "required": [
+    "operation",
     "binding"
   ],
   "additionalProperties": false

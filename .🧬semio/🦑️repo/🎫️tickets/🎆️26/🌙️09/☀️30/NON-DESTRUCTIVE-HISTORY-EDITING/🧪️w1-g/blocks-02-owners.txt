@@ -1,0 +1,219 @@
+<<<<<<< ANCHOR
+    LocalActorId,
+    TailUndoEditId,
+}
+
+struct ArtifactStoreStringRetirement {
+=======
+    LocalActorId,
+    TailUndoEditId,
+    Supersessions,
+}
+
+/// ✏️ Retires effective supersessions — their ids, actors, scopes, schemas and replacement payloads — one byte grant
+/// at a time, like [`ArtifactStoreStringRetirement`] does for one string.
+struct ArtifactStoreSupersessionRetirement {
+    bytes: Vec<Vec<u8>>,
+}
+
+impl ArtifactStoreSupersessionRetirement {
+    fn new(supersessions: EffectiveSupersessions) -> Self {
+        let mut bytes = Vec::with_capacity(supersessions.len() * 6);
+        for (target, supersession) in supersessions {
+            let protocol::EffectiveSupersession { transition_id, actor, timestamp: _, scope, replacement } = supersession;
+            bytes.push(target.0.into_bytes());
+            bytes.push(transition_id.into_bytes());
+            bytes.push(actor.into_bytes());
+            bytes.extend(scope.map(String::into_bytes));
+            if let protocol::InputReplacement::Input { schema, payload } = replacement {
+                bytes.push(schema.into_bytes());
+                bytes.push(payload);
+            }
+        }
+        Self { bytes }
+    }
+}
+
+impl ErasedSnapshotRetirement for ArtifactStoreSupersessionRetirement {
+    fn close_step(&mut self, maximum_items: usize, maximum_bytes: usize) -> Result<SnapshotRetirementStep, String> {
+        if maximum_items == 0 {
+            return Ok(SnapshotRetirementStep::Pending { released_items: 0, released_bytes: 0 });
+        }
+        while self.bytes.last().is_some_and(Vec::is_empty) {
+            self.bytes.pop();
+        }
+        let Some(last) = self.bytes.last_mut() else { return Ok(SnapshotRetirementStep::Complete) };
+        if maximum_bytes == 0 {
+            return Ok(SnapshotRetirementStep::Pending { released_items: 0, released_bytes: 0 });
+        }
+        let released_bytes = maximum_bytes.min(last.len());
+        last.truncate(last.len() - released_bytes);
+        Ok(SnapshotRetirementStep::Pending { released_items: 0, released_bytes })
+    }
+
+    fn terminal_is_empty(&self) -> bool {
+        self.bytes.is_empty()
+    }
+}
+
+impl Drop for ArtifactStoreSupersessionRetirement {
+    fn drop(&mut self) {
+        assert!(std::thread::panicking() || self.bytes.is_empty(), "artifact store supersession retirement reached Drop before its exact byte owners were terminal-empty");
+    }
+}
+
+struct ArtifactStoreStringRetirement {
+>>>>>>> END
+<<<<<<< ANCHOR
+    RuntimeStrings(u8),
+    EnvelopeMetadata,
+    TailSnapshot,
+=======
+    RuntimeStrings(u8),
+    EnvelopeMetadata,
+    PrefixSnapshots,
+    TailSnapshot,
+>>>>>>> END
+<<<<<<< ANCHOR
+                    6 => ArtifactStoreCloseStringLane::TailUndoEditId,
+=======
+                    6 => ArtifactStoreCloseStringLane::TailUndoEditId,
+                    7 => ArtifactStoreCloseStringLane::Supersessions,
+>>>>>>> END
+<<<<<<< ANCHOR
+            ArtifactStoreCursorDisposerPhase::EnvelopeMetadata => match store.take_envelope_metadata_string_retirement() {
+                Some(owner) => Ok(Self::retain(&mut self.active, Some(owner))),
+                None => {
+                    self.phase = ArtifactStoreCursorDisposerPhase::TailSnapshot;
+                    Ok(SnapshotRetirementStep::Pending { released_items: 1, released_bytes: 0 })
+                }
+            },
+=======
+            ArtifactStoreCursorDisposerPhase::EnvelopeMetadata => match store.take_envelope_metadata_string_retirement() {
+                Some(owner) => Ok(Self::retain(&mut self.active, Some(owner))),
+                None => {
+                    self.phase = ArtifactStoreCursorDisposerPhase::PrefixSnapshots;
+                    Ok(SnapshotRetirementStep::Pending { released_items: 1, released_bytes: 0 })
+                }
+            },
+            ArtifactStoreCursorDisposerPhase::PrefixSnapshots => match store.take_prefix_snapshot_retirement().map_err(|error| error.to_string())? {
+                Some(owner) => Ok(Self::retain(&mut self.active, Some(owner))),
+                None => {
+                    self.phase = ArtifactStoreCursorDisposerPhase::TailSnapshot;
+                    Ok(SnapshotRetirementStep::Pending { released_items: 1, released_bytes: 0 })
+                }
+            },
+>>>>>>> END
+<<<<<<< ANCHOR
+    pub fn structural_owners_terminal_is_empty(&self) -> bool {
+        self.store.close_structural_owners_terminal_is_empty()
+    }
+=======
+    pub fn take_prefix_snapshot_retirement(&mut self) -> Result<Option<Box<dyn ErasedSnapshotRetirement>>, VcsError> {
+        self.store.close_take_prefix_snapshot_retirement()
+    }
+
+    pub fn structural_owners_terminal_is_empty(&self) -> bool {
+        self.store.close_structural_owners_terminal_is_empty()
+    }
+>>>>>>> END
+<<<<<<< ANCHOR
+    tail_undo_cache: std::mem::ManuallyDrop<Option<(String, Arc<P>)>>,
+=======
+    tail_undo_cache: std::mem::ManuallyDrop<Option<(String, Arc<P>)>>,
+    /// ✏️ The effective supersessions `current` was projected with ([`crate::os_spr::HistoryFold::supersessions`]) —
+    /// what {@link reproject} compares a fresh fold against to find the first position whose effective input changed.
+    supersessions: std::mem::ManuallyDrop<EffectiveSupersessions>,
+    /// 🧭️ Retained projections after applied prefixes ([`PrefixSnapshot`]), at most [`PREFIX_SNAPSHOT_RING_CAPACITY`]
+    /// at an adaptive stride: "the state before operation X" costs at most one stride of folds. An entry is valid only
+    /// while its forwards-only digest names the live effective prefix; every evicted entry retires through the snapshot
+    /// retirement factory (or only drops its alias while another owner holds the root), never a bare drop.
+    prefix_ring: std::mem::ManuallyDrop<Vec<PrefixSnapshot<P>>>,
+    /// 📍️ The first applied position whose revision record a replay rewrote (effective input, inverse or messages);
+    /// the next {@link bump} rebuilds the cursor revision from there.
+    revision_dirty_from: Option<usize>,
+    /// 🟰️ Snapshot equality that lets a Report replay stop where it meets the previous projection
+    /// ({@link enable_convergence_early_exit}).
+    snapshot_equality: Option<fn(&P, &P) -> bool>,
+>>>>>>> END
+<<<<<<< ANCHOR
+        tail_undo_cache: std::mem::ManuallyDrop::new(None),
+        snapshot_retirement_factory: std::mem::ManuallyDrop::new(Some(owners.snapshot_retirement)),
+=======
+        tail_undo_cache: std::mem::ManuallyDrop::new(None),
+        supersessions: std::mem::ManuallyDrop::new(supersessions),
+        prefix_ring: std::mem::ManuallyDrop::new(Vec::with_capacity(PREFIX_SNAPSHOT_RING_CAPACITY)),
+        revision_dirty_from: None,
+        snapshot_equality: None,
+        snapshot_retirement_factory: std::mem::ManuallyDrop::new(Some(owners.snapshot_retirement)),
+>>>>>>> END
+<<<<<<< ANCHOR
+            tail_undo_cache: std::mem::ManuallyDrop::new(None),
+            pending_report: std::mem::ManuallyDrop::new(PendingCommandReport::default()),
+=======
+            tail_undo_cache: std::mem::ManuallyDrop::new(None),
+            supersessions: std::mem::ManuallyDrop::new(supersessions),
+            prefix_ring: std::mem::ManuallyDrop::new(Vec::with_capacity(PREFIX_SNAPSHOT_RING_CAPACITY)),
+            revision_dirty_from: None,
+            snapshot_equality: None,
+            pending_report: std::mem::ManuallyDrop::new(PendingCommandReport::default()),
+>>>>>>> END
+<<<<<<< ANCHOR
+            && self.tail_undo_cache.is_none()
+            && self.snapshot_read_leases.terminal_is_empty()
+=======
+            && self.tail_undo_cache.is_none()
+            && self.supersessions.is_empty()
+            && self.prefix_ring.is_empty()
+            && self.snapshot_read_leases.terminal_is_empty()
+>>>>>>> END
+<<<<<<< ANCHOR
+            drop(std::mem::ManuallyDrop::take(&mut self.tail_undo_cache));
+=======
+            drop(std::mem::ManuallyDrop::take(&mut self.tail_undo_cache));
+            drop(std::mem::ManuallyDrop::take(&mut self.supersessions));
+            drop(std::mem::ManuallyDrop::take(&mut self.prefix_ring));
+>>>>>>> END
+<<<<<<< ANCHOR
+    fn close_take_runtime_string_retirement(&mut self, lane: ArtifactStoreCloseStringLane) -> Option<Box<dyn ErasedSnapshotRetirement>> {
+        let value = match lane {
+=======
+    fn close_take_runtime_string_retirement(&mut self, lane: ArtifactStoreCloseStringLane) -> Option<Box<dyn ErasedSnapshotRetirement>> {
+        if lane == ArtifactStoreCloseStringLane::Supersessions {
+            return self.supersessions.pop_first().map(|entry| Box::new(ArtifactStoreSupersessionRetirement::new(BTreeMap::from([entry]))) as Box<dyn ErasedSnapshotRetirement>);
+        }
+        let value = match lane {
+            ArtifactStoreCloseStringLane::Supersessions => None,
+>>>>>>> END
+<<<<<<< ANCHOR
+    fn close_take_tail_snapshot_retirement(&mut self) -> Result<ArtifactStoreSnapshotRootClose, VcsError> {
+=======
+    /// 🧭️ Detaches one retained prefix projection: an alias another owner still holds only drops its count, the last
+    /// owner goes to the snapshot retirement factory.
+    fn close_take_prefix_snapshot_retirement(&mut self) -> Result<Option<Box<dyn ErasedSnapshotRetirement>>, VcsError> {
+        if self.prefix_ring.is_empty() {
+            return Ok(None);
+        }
+        let factory = (*self.snapshot_retirement_factory).clone().ok_or_else(|| VcsError::ValidationFailed("artifact store prefix snapshot close requires its exact snapshot retirement factory".into()))?;
+        while let Some(entry) = self.prefix_ring.pop() {
+            if Arc::strong_count(&entry.snapshot) > 1 {
+                drop(entry);
+                continue;
+            }
+            return Ok(Some(factory.retire(entry.snapshot)));
+        }
+        Ok(None)
+    }
+
+    fn close_take_tail_snapshot_retirement(&mut self) -> Result<ArtifactStoreSnapshotRootClose, VcsError> {
+>>>>>>> END
+<<<<<<< ANCHOR
+        let runtime_shell_is_empty = self.backbone.is_none() && self.member_inbox.is_empty() && self.pending_report.edit_ids.is_none() && self.pending_report.messages.is_empty() && self.pending_report.outbound.is_empty();
+=======
+        let runtime_shell_is_empty = self.backbone.is_none() && self.member_inbox.is_empty() && self.pending_report.edit_ids.is_none() && self.pending_report.messages.is_empty() && self.pending_report.outbound.is_empty() && self.supersessions.is_empty() && self.prefix_ring.is_empty();
+>>>>>>> END
+<<<<<<< ANCHOR
+        self.current_detached && self.envelope_detached && self.durable_group_root.is_none() && self.tail_undo_cache.is_none() && self.snapshot_read_leases_terminal_is_empty() && self.close_structural_owners_terminal_is_empty()
+=======
+        self.current_detached && self.envelope_detached && self.durable_group_root.is_none() && self.tail_undo_cache.is_none() && self.prefix_ring.is_empty() && self.snapshot_read_leases_terminal_is_empty() && self.close_structural_owners_terminal_is_empty()
+>>>>>>> END

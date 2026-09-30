@@ -5,11 +5,32 @@
   "type": "object",
   "additionalProperties": false,
   "required": [
+    "mutation",
     "assetId"
   ],
   "properties": {
+    "mutation": {
+      "const": "removeLayerAsset"
+    },
     "assetId": {
-      "type": "string"
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Asset",
+          "de": "Asset"
+        },
+        "description": {
+          "en": "The image asset this mutation addresses.",
+          "de": "Das Bild-Asset, das diese Mutation adressiert."
+        },
+        "ref": {
+          "kind": "asset"
+        },
+        "group": "target",
+        "order": 10
+      }
     }
   }
 }

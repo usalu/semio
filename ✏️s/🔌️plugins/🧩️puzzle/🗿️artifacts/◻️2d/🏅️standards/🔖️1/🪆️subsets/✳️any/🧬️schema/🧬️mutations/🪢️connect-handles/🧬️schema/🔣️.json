@@ -21,58 +21,250 @@
   ],
   "properties": {
     "mutation": {
-      "const": "connectHandles"
+      "const": "connectHandles",
+      "x-semio-ui": {
+        "widget": "hidden",
+        "role": "discriminator",
+        "label": {
+          "en": "Mutation",
+          "de": "Mutation"
+        }
+      }
     },
     "id": {
-      "type": "string"
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "text",
+        "role": "value",
+        "label": {
+          "en": "Edge ID",
+          "de": "Kanten-ID"
+        },
+        "description": {
+          "en": "Id of the new edge.",
+          "de": "ID der neuen Kante."
+        },
+        "group": "identity",
+        "order": 10
+      }
     },
     "source": {
-      "type": "string"
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Source handle",
+          "de": "Quellanschluss"
+        },
+        "description": {
+          "en": "The handle the edge starts at.",
+          "de": "Der Anschluss, an dem die Kante beginnt."
+        },
+        "ref": {
+          "kind": "handle",
+          "domain": "vortex",
+          "granularity": "handle"
+        },
+        "group": "target",
+        "order": 20
+      }
     },
     "target": {
-      "type": "string"
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Target handle",
+          "de": "Zielanschluss"
+        },
+        "description": {
+          "en": "The handle the edge ends at.",
+          "de": "Der Anschluss, an dem die Kante endet."
+        },
+        "ref": {
+          "kind": "handle",
+          "domain": "vortex",
+          "granularity": "handle"
+        },
+        "group": "target",
+        "order": 30
+      }
     },
     "edgeKind": {
       "type": [
         "string",
         "null"
-      ]
+      ],
+      "x-semio-ui": {
+        "widget": "text",
+        "role": "value",
+        "label": {
+          "en": "Edge kind",
+          "de": "Kantenart"
+        },
+        "group": "kind",
+        "order": 40
+      }
     },
     "gap": {
-      "type": "number"
+      "type": "number",
+      "x-semio-ui": {
+        "widget": "stepper",
+        "role": "value",
+        "label": {
+          "en": "Gap",
+          "de": "Abstand"
+        },
+        "step": 0.1,
+        "precision": 2,
+        "group": "geometry",
+        "order": 50
+      }
     },
     "shift": {
-      "type": "number"
+      "type": "number",
+      "x-semio-ui": {
+        "widget": "stepper",
+        "role": "value",
+        "label": {
+          "en": "Shift",
+          "de": "Versatz"
+        },
+        "step": 0.1,
+        "precision": 2,
+        "group": "geometry",
+        "order": 60
+      }
     },
     "rise": {
-      "type": "number"
+      "type": "number",
+      "x-semio-ui": {
+        "widget": "stepper",
+        "role": "value",
+        "label": {
+          "en": "Rise",
+          "de": "Anhebung"
+        },
+        "step": 0.1,
+        "precision": 2,
+        "group": "geometry",
+        "order": 70
+      }
     },
     "rotation": {
-      "type": "number"
+      "type": "number",
+      "x-semio-ui": {
+        "widget": "stepper",
+        "role": "value",
+        "label": {
+          "en": "Rotation",
+          "de": "Drehung"
+        },
+        "step": 0.1,
+        "precision": 2,
+        "group": "geometry",
+        "order": 80
+      }
     },
     "turn": {
-      "type": "number"
+      "type": "number",
+      "x-semio-ui": {
+        "widget": "stepper",
+        "role": "value",
+        "label": {
+          "en": "Turn",
+          "de": "Wendung"
+        },
+        "step": 0.1,
+        "precision": 2,
+        "group": "geometry",
+        "order": 90
+      }
     },
     "tilt": {
-      "type": "number"
+      "type": "number",
+      "x-semio-ui": {
+        "widget": "stepper",
+        "role": "value",
+        "label": {
+          "en": "Tilt",
+          "de": "Neigung"
+        },
+        "step": 0.1,
+        "precision": 2,
+        "group": "geometry",
+        "order": 100
+      }
     },
     "x": {
-      "type": "number"
+      "type": "number",
+      "x-semio-ui": {
+        "widget": "stepper",
+        "role": "value",
+        "label": {
+          "en": "X",
+          "de": "X"
+        },
+        "step": 1,
+        "precision": 2,
+        "snapSource": {
+          "config": "gridFactor"
+        },
+        "group": "position",
+        "order": 110
+      }
     },
     "y": {
-      "type": "number"
+      "type": "number",
+      "x-semio-ui": {
+        "widget": "stepper",
+        "role": "value",
+        "label": {
+          "en": "Y",
+          "de": "Y"
+        },
+        "step": 1,
+        "precision": 2,
+        "snapSource": {
+          "config": "gridFactor"
+        },
+        "group": "position",
+        "order": 120
+      }
     },
     "sourceTip": {
       "type": [
         "string",
         "null"
-      ]
+      ],
+      "x-semio-ui": {
+        "widget": "text",
+        "role": "value",
+        "label": {
+          "en": "Source tip",
+          "de": "Quellspitze"
+        },
+        "group": "appearance",
+        "order": 130
+      }
     },
     "targetTip": {
       "type": [
         "string",
         "null"
-      ]
+      ],
+      "x-semio-ui": {
+        "widget": "text",
+        "role": "value",
+        "label": {
+          "en": "Target tip",
+          "de": "Zielspitze"
+        },
+        "group": "appearance",
+        "order": 140
+      }
     }
   }
 }

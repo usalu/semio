@@ -1,0 +1,11 @@
+{
+  "dx": 2.0,
+  "dy": 3.0,
+  "mutation": "dragSelection",
+  "targets": [
+    "node-b",
+    "node-c",
+    "region-2",
+    "node-ghost"
+  ]
+}

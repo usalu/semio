@@ -5,15 +5,25 @@
   "type": "object",
   "additionalProperties": false,
   "required": [
+    "mutation",
     "value"
   ],
   "properties": {
-    "value": {
-      "type": "string"
-    },
     "mutation": {
       "const": "setComments2",
       "description": "Aggregate discriminator spliced in by EpwMutation; absent when the payload stands alone."
+    },
+    "value": {
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "multiline",
+        "label": {
+          "en": "Comments 2",
+          "de": "Kommentare 2"
+        },
+        "group": "value",
+        "order": 10
+      }
     }
   }
 }

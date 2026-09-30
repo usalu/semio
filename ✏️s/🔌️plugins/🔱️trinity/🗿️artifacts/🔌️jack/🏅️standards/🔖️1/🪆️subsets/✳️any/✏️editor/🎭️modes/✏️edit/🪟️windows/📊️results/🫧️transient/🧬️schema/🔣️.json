@@ -7,7 +7,7 @@
   "required": ["queryExecutionId", "result", "queryError"],
   "properties": {
     "queryExecutionId": { "type": ["string", "null"], "x-semio-state": "transient", "x-semio-owner": "window" },
-    "result": { "type": ["object", "null"], "x-semio-state": "transient", "x-semio-owner": "window" },
+    "result": { "oneOf": [{ "$ref": "https://json.schemas.assets.semio-tech.com/s/trinity/jack/artifact.json#/$defs/QueryResult" }, { "type": "null" }], "x-semio-state": "transient", "x-semio-owner": "window" },
     "queryError": { "type": ["string", "null"], "x-semio-state": "transient", "x-semio-owner": "window" }
   }
 }

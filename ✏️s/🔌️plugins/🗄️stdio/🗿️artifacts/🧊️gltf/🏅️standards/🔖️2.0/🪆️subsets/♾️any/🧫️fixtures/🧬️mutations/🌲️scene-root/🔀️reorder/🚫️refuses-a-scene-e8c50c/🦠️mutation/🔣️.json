@@ -1,0 +1,13 @@
+{
+  "mutation": "reorderSceneRootNodes",
+  "payload": {
+    "phase": "apply",
+    "value": {
+      "scene": 1,
+      "order": [
+        1,
+        0
+      ]
+    }
+  }
+}

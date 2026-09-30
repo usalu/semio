@@ -1,0 +1,122 @@
+<<<<<<< ANCHOR
+const ARTIFACT_EDIT_MESSAGE_ENTRY_BYTES: usize = 4_096;
+=======
+const ARTIFACT_EDIT_MESSAGE_ENTRY_BYTES: usize = 4_096;
+
+/// ✂️ Bounds `messages`, one edit's message ledger entry, to [`ARTIFACT_EDIT_MESSAGE_ENTRY_BYTES`] deterministically, so
+/// no replay yields an unstorable entry and every replica stores the same one: messages are kept worst level first (ties
+/// in recorded order) while they fit and stay in recorded order, and the dropped rest is summarized by one
+/// `mutation.cascade` info at the operation of the first dropped message. A worst message too large on its own keeps
+/// its code with its text cut to fit. Answers whether anything was cut.
+pub fn bound_edit_messages(edit_id: &str, messages: &mut Vec<crate::os_spr::MutationMessage>) -> bool {
+    let size = |message: &crate::os_spr::MutationMessage| message.code.0.len().saturating_add(message.message.len()).saturating_add(message.target.iter().map(String::len).sum::<usize>());
+    if messages.iter().fold(edit_id.len(), |bytes, message| bytes.saturating_add(size(message))) <= ARTIFACT_EDIT_MESSAGE_ENTRY_BYTES {
+        return false;
+    }
+    let summary = |dropped: usize, op_index: Option<u32>| {
+        let mut summary = crate::os_spr::MutationMessage::info("mutation.cascade", format!("{dropped} more messages"));
+        summary.op_index = op_index;
+        summary
+    };
+    let budget = ARTIFACT_EDIT_MESSAGE_ENTRY_BYTES.saturating_sub(edit_id.len()).saturating_sub(size(&summary(messages.len(), None)));
+    let mut ranked: Vec<usize> = (0..messages.len()).collect();
+    ranked.sort_by_key(|index| std::cmp::Reverse(messages[*index].level));
+    let mut kept = vec![false; messages.len()];
+    let mut used = 0usize;
+    for index in ranked.iter().copied() {
+        let bytes = size(&messages[index]);
+        if used.saturating_add(bytes) > budget {
+            break;
+        }
+        used += bytes;
+        kept[index] = true;
+    }
+    if let Some(worst) = ranked.first().copied().filter(|_| !kept.iter().any(|kept| *kept)) {
+        let message = &mut messages[worst];
+        message.target.clear();
+        let mut cut = budget.saturating_sub(message.code.0.len()).min(message.message.len());
+        while !message.message.is_char_boundary(cut) {
+            cut -= 1;
+        }
+        message.message.truncate(cut);
+        kept[worst] = true;
+    }
+    let first_dropped = kept.iter().position(|kept| !*kept).map(|index| messages[index].op_index);
+    let dropped = kept.iter().filter(|kept| !**kept).count();
+    let mut flags = kept.into_iter();
+    messages.retain(|_| flags.next().unwrap_or(false));
+    if let Some(op_index) = first_dropped {
+        messages.push(summary(dropped, op_index));
+    }
+    true
+}
+>>>>>>> END
+<<<<<<< ANCHOR
+        let candidate = if let Some(established) = self.envelope.edit_messages.get_by_id(edit_id) {
+            let mut combined = established.messages.clone();
+            combined.extend(messages.clone());
+            crate::os_spr::EditMessages { edit_id: edit_id.to_string(), messages: combined }
+        } else {
+            crate::os_spr::EditMessages { edit_id: edit_id.to_string(), messages: messages.clone() }
+        };
+        if ArtifactEditMessageLedger::entry_bytes(&candidate).is_none_or(|bytes| bytes > ARTIFACT_EDIT_MESSAGE_ENTRY_BYTES) {
+            return Err(VcsError::ValidationFailed("artifact edit-message entry exceeds its exact byte authority".into()));
+        }
+        self.displaced_retirements.reserve(1)?;
+=======
+        let mut candidate = if let Some(established) = self.envelope.edit_messages.get_by_id(edit_id) {
+            let mut combined = established.messages.clone();
+            combined.extend(messages.clone());
+            crate::os_spr::EditMessages { edit_id: edit_id.to_string(), messages: combined }
+        } else {
+            crate::os_spr::EditMessages { edit_id: edit_id.to_string(), messages: messages.clone() }
+        };
+        bound_edit_messages(edit_id, &mut candidate.messages);
+        self.displaced_retirements.reserve(1)?;
+>>>>>>> END
+<<<<<<< ANCHOR
+        let candidate = crate::os_spr::EditMessages { edit_id: edit_id.to_string(), messages };
+        if ArtifactEditMessageLedger::entry_bytes(&candidate).is_none_or(|bytes| bytes > ARTIFACT_EDIT_MESSAGE_ENTRY_BYTES) {
+            self.displaced_retirements.push_reserved(Box::new(ArtifactStoreMessageLedgerRetirement::new(candidate.edit_id, candidate.messages)));
+            return Err(VcsError::ValidationFailed("artifact edit-message replacement exceeds its exact byte authority".into()));
+        }
+        if established {
+=======
+        let mut candidate = crate::os_spr::EditMessages { edit_id: edit_id.to_string(), messages };
+        bound_edit_messages(edit_id, &mut candidate.messages);
+        if established {
+>>>>>>> END
+<<<<<<< ANCHOR
+    /// ✍️ Publishes a finished Report replay: every replayed edit gets its rebased inverse and its messages — the message
+    /// ledger bound is checked for every entry before anything is written — and the reached projection becomes `current`.
+    fn adopt_report_replay(&mut self, mut result: EditReplayResult<P, Mutation>) -> Result<Vec<crate::os_spr::EditMessages>, VcsError> {
+        let replayed = result.take_replayed();
+        for entry in &replayed {
+            if entry.edit_id.len() > ARTIFACT_EDIT_MESSAGE_ID_BYTES || (!entry.messages.is_empty() && ArtifactEditMessageLedger::entry_bytes(entry).is_none_or(|bytes| bytes > ARTIFACT_EDIT_MESSAGE_ENTRY_BYTES)) {
+                return Err(VcsError::ValidationFailed(format!("replayed messages of edit {} exceed their exact byte authority", entry.edit_id)));
+            }
+        }
+=======
+    /// ✍️ Publishes a finished Report replay: every replayed edit gets its rebased inverse and its messages (bounded by
+    /// the replay itself, [`bound_edit_messages`]) and the reached projection becomes `current`.
+    fn adopt_report_replay(&mut self, mut result: EditReplayResult<P, Mutation>) -> Result<Vec<crate::os_spr::EditMessages>, VcsError> {
+        let replayed = result.take_replayed();
+        if let Some(entry) = replayed.iter().find(|entry| entry.edit_id.len() > ARTIFACT_EDIT_MESSAGE_ID_BYTES) {
+            return Err(VcsError::ValidationFailed(format!("replayed edit id {} exceeds its fixed byte authority", entry.edit_id)));
+        }
+>>>>>>> END
+<<<<<<< ANCHOR
+    fn close_edit(&mut self, edit_id: &str) {
+        let messages = std::mem::take(&mut self.edit_messages);
+        let inverse = std::mem::take(&mut self.edit_inverse);
+=======
+    fn close_edit(&mut self, edit_id: &str) {
+        let mut messages = std::mem::take(&mut self.edit_messages);
+        if bound_edit_messages(edit_id, &mut messages) {
+            for outcome in self.outcomes.iter_mut().rev().take_while(|outcome| outcome.edit_id == edit_id) {
+                outcome.messages = messages.iter().filter(|message| message.op_index == Some(outcome.op_index)).cloned().collect();
+                outcome.worst = crate::os_spr::worst_level(&outcome.messages);
+            }
+        }
+        let inverse = std::mem::take(&mut self.edit_inverse);
+>>>>>>> END

@@ -9,7 +9,21 @@
   ],
   "properties": {
     "newSiloHeight": {
-      "type": "number"
+      "type": "number",
+      "minimum": 0,
+      "x-semio-ui": {
+        "widget": "stepper",
+        "role": "value",
+        "label": {
+          "en": "Silo height h_c",
+          "de": "Silohöhe h_c"
+        },
+        "unit": "m",
+        "step": 0.1,
+        "precision": 2,
+        "group": "silo",
+        "order": 10
+      }
     }
   }
 }

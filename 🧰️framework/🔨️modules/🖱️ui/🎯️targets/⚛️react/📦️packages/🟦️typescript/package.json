@@ -6,6 +6,7 @@
   "description": "ui · react",
   "type": "module",
   "semio": {
+    "dependencyRole": "ui",
     "role": "framework",
     "id": "ui-react"
   },

@@ -5,11 +5,33 @@
   "type": "object",
   "additionalProperties": false,
   "required": [
+    "mutation",
     "id"
   ],
   "properties": {
+    "mutation": {
+      "const": "deleteSolarThermalSystem"
+    },
     "id": {
-      "type": "integer"
+      "type": "integer",
+      "minimum": 0,
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Solar thermal system",
+          "de": "Solarthermieanlage"
+        },
+        "description": {
+          "en": "The solar thermal system to delete, by id.",
+          "de": "Solarthermieanlage, die diese Mutation löscht, per ID."
+        },
+        "ref": {
+          "kind": "solarThermalSystem"
+        },
+        "group": "target",
+        "order": 10
+      }
     }
   }
 }

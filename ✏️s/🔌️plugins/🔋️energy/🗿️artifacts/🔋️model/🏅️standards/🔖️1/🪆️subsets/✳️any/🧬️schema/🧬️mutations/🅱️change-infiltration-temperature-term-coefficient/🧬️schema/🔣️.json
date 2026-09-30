@@ -5,15 +5,53 @@
   "type": "object",
   "additionalProperties": false,
   "required": [
+    "mutation",
     "id",
     "newTemperatureTermCoefficient"
   ],
   "properties": {
+    "mutation": {
+      "const": "changeInfiltrationTemperatureTermCoefficient"
+    },
     "id": {
-      "type": "integer"
+      "type": "integer",
+      "minimum": 0,
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Infiltration",
+          "de": "Infiltration"
+        },
+        "description": {
+          "en": "The infiltration this mutation changes, by id.",
+          "de": "Infiltration, die diese Mutation ändert, per ID."
+        },
+        "ref": {
+          "kind": "infiltration",
+          "domain": "energyModel",
+          "granularity": "load"
+        },
+        "group": "target",
+        "order": 10
+      }
     },
     "newTemperatureTermCoefficient": {
-      "type": "number"
+      "type": "number",
+      "minimum": 0,
+      "x-semio-ui": {
+        "widget": "stepper",
+        "role": "value",
+        "label": {
+          "en": "Temperature term coefficient B",
+          "de": "Temperaturkoeffizient B"
+        },
+        "unit": "1/K",
+        "step": 0.001,
+        "precision": 4,
+        "group": "infiltration",
+        "order": 20
+      }
     }
   }
 }

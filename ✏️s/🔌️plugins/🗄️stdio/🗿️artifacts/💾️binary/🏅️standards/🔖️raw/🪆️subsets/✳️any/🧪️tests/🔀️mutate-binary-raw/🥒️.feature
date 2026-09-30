@@ -6,7 +6,7 @@ Feature: Apply every typed raw-binary mutation to a real-world byte buffer
   A raw byte buffer has no format — it is bytes, full stop. Unlike every sibling subset in this
   wave there is no grammar for a third-party crate to parse and no independent reader to project
   both sides through, so this feature records the no-oracle decision `raw-buffer-no-format` instead
-  of hunting for a weak or irrelevant one: the specification IS `BinaryMutation`'s own five-variant
+  of hunting for a weak or irrelevant one: the specification IS `BinaryMutation`'s own four-variant
   vocabulary and its documented offset/remove_len contract (`🏅️standards/🔖️raw/🪆️subsets/✳️any/
   🧬️schema/🧬️mutations/🦀️component.rs`), and the evidence is the specification vectors below plus
   the inverse law as a metamorphic property — both discharged by this subset's own independently
@@ -33,7 +33,7 @@ Feature: Apply every typed raw-binary mutation to a real-world byte buffer
   subset defines as VALID (a zero-length replacement, an offset of exactly 0, an offset of exactly the
   buffer's length, a replacement spanning the whole buffer, a truncate to 0, a truncate past the current length —
   the vocabulary's own documented no-op) versus which it defines as an ERROR (an offset beyond the
-  buffer, or a `removeLen` that reaches past it) — and the error cases below prove the rejection is
+  buffer, or a `remove_len` that reaches past it) — and the error cases below prove the rejection is
   clean, never a silent corruption.
 
   @id-mutate
@@ -47,22 +47,11 @@ Feature: Apply every typed raw-binary mutation to a real-world byte buffer
       """
     Then the oracle and the subject agree on the exact output bytes
     Examples:
-      | id                 | params                                                      |
-      | set-snapshot       | {"snapshot":{"bytes":[82,69,80,76,65,67,69,68]}}           |
-      | replace-byte-range | {"offset":6,"removeLen":5,"insert":[65,66,67]}             |
-      | append-bytes       | {"data":[84,82,65,73,76,69,82]}                            |
-      | truncate-at        | {"offset":200000}                                          |
-
-  @id-no-mutation-baseline-mutate
-  @level-exhaustive
-  @mode-conformance
-  Scenario: Apply no-mutation to the real buffer
-    Given the real input buffer shared://🏘️abbau-aufbau-masterarbeit-grundriss/🖼️.jpg
-    When the no-mutation mutation is applied with its parameters
-      """
-      {"kind": "no-mutation", "params": {}}
-      """
-    Then the oracle and the subject agree on the exact output bytes
+      | id                 | params                                                                   |
+      | set-snapshot       | {"snapshot":{"schema":"stdio.binary","bytes":[82,69,80,76,65,67,69,68]}} |
+      | replace-byte-range | {"offset":6,"remove_len":5,"insert":[65,66,67]}                          |
+      | append-bytes       | {"data":[84,82,65,73,76,69,82]}                                          |
+      | truncate-at        | {"offset":200000}                                                        |
 
   @id-inverse
   @level-exhaustive
@@ -76,23 +65,11 @@ Feature: Apply every typed raw-binary mutation to a real-world byte buffer
     And the mutation's own inverse is applied to the result
     Then the buffer matches its pre-mutation exact bytes
     Examples:
-      | id                 | params                                                      |
-      | set-snapshot       | {"snapshot":{"bytes":[82,69,80,76,65,67,69,68]}}           |
-      | replace-byte-range | {"offset":6,"removeLen":5,"insert":[65,66,67]}             |
-      | append-bytes       | {"data":[84,82,65,73,76,69,82]}                            |
-      | truncate-at        | {"offset":200000}                                          |
-
-  @id-no-mutation-baseline-inverse
-  @level-exhaustive
-  @mode-property
-  Scenario: Undoing no-mutation restores the real buffer
-    Given the real input buffer shared://🏘️abbau-aufbau-masterarbeit-grundriss/🖼️.jpg
-    When the no-mutation mutation is applied with its parameters
-      """
-      {"kind": "no-mutation", "params": {}}
-      """
-    And the mutation's own inverse is applied to the result
-    Then the buffer matches its pre-mutation exact bytes
+      | id                 | params                                                                   |
+      | set-snapshot       | {"snapshot":{"schema":"stdio.binary","bytes":[82,69,80,76,65,67,69,68]}} |
+      | replace-byte-range | {"offset":6,"remove_len":5,"insert":[65,66,67]}                          |
+      | append-bytes       | {"data":[84,82,65,73,76,69,82]}                                          |
+      | truncate-at        | {"offset":200000}                                                        |
 
   @id-identity-round-trip
   @level-long
@@ -114,13 +91,13 @@ Feature: Apply every typed raw-binary mutation to a real-world byte buffer
       """
     Then the oracle and the subject agree on the exact output bytes, per the specification's own definition of this case
     Examples:
-      | id                             | kind               | params                                              |
-      | zero-length-replacement        | replace-byte-range | {"offset":100000,"removeLen":0,"insert":[]}         |
-      | replacement-at-offset-zero     | replace-byte-range | {"offset":0,"removeLen":2,"insert":[255,217]}       |
-      | replacement-at-exact-end       | replace-byte-range | {"offset":483496,"removeLen":0,"insert":[90,90,90]} |
-      | replacement-spans-whole-buffer | replace-byte-range | {"offset":0,"removeLen":483496,"insert":[88,89]}    |
-      | truncate-to-zero               | truncate-at        | {"offset":0}                                        |
-      | truncate-beyond-length         | truncate-at        | {"offset":999999999}                                |
+      | id                             | kind               | params                                               |
+      | zero-length-replacement        | replace-byte-range | {"offset":100000,"remove_len":0,"insert":[]}         |
+      | replacement-at-offset-zero     | replace-byte-range | {"offset":0,"remove_len":2,"insert":[255,217]}       |
+      | replacement-at-exact-end       | replace-byte-range | {"offset":483496,"remove_len":0,"insert":[90,90,90]} |
+      | replacement-spans-whole-buffer | replace-byte-range | {"offset":0,"remove_len":483496,"insert":[88,89]}    |
+      | truncate-to-zero               | truncate-at        | {"offset":0}                                         |
+      | truncate-beyond-length         | truncate-at        | {"offset":999999999}                                 |
 
   @id-append-to-empty-buffer
   @level-exhaustive
@@ -144,6 +121,6 @@ Feature: Apply every typed raw-binary mutation to a real-world byte buffer
       """
     Then it is rejected and the buffer is left exactly as it was, never silently corrupted
     Examples:
-      | id                        | params                                             |
-      | offset-beyond-buffer      | {"offset":483497,"removeLen":0,"insert":[]}        |
-      | remove-len-exceeds-buffer | {"offset":483490,"removeLen":100,"insert":[]}      |
+      | id                        | params                                         |
+      | offset-beyond-buffer      | {"offset":483497,"remove_len":0,"insert":[]}   |
+      | remove-len-exceeds-buffer | {"offset":483490,"remove_len":100,"insert":[]} |

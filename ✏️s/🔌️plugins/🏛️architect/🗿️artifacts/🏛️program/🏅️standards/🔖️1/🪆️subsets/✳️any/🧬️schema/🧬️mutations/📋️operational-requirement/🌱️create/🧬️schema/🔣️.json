@@ -5,40 +5,79 @@
   "type": "object",
   "additionalProperties": false,
   "required": [
+    "mutation",
     "operationalRequirement"
   ],
   "properties": {
+    "mutation": {
+      "const": "createOperationalRequirement"
+    },
     "operationalRequirement": {
       "title": "OperationalRequirement",
       "type": "object",
       "additionalProperties": false,
       "required": [
+        "cleaningRegime",
         "contingencyPlan",
         "elementIds",
         "equipmentIds",
+        "escalationContactId",
         "id",
         "kpiTargets",
+        "maintenanceInterval",
         "name",
-        "notes",
+        "operatingHours",
         "operation",
+        "ownerId",
         "ownership",
         "priority",
         "processIds",
+        "redundancy",
+        "responseTime",
+        "serviceCategory",
+        "serviceLevel",
+        "shiftPattern",
+        "slaTarget",
         "sopReferences",
         "staffing",
         "status",
-        "tags",
         "timestamps",
         "trainingRequirements",
+        "turnaroundTime",
+        "uptimeTarget",
         "utilities",
         "wasteStreams"
       ],
       "properties": {
         "id": {
-          "type": "string"
+          "type": "string",
+          "x-semio-ui": {
+            "widget": "text",
+            "role": "value",
+            "label": {
+              "en": "ID",
+              "de": "ID"
+            },
+            "description": {
+              "en": "Unique ID of the new entry.",
+              "de": "Eindeutige ID des neuen Eintrags."
+            },
+            "group": "identity",
+            "order": 10
+          }
         },
         "name": {
-          "type": "string"
+          "type": "string",
+          "x-semio-ui": {
+            "widget": "text",
+            "role": "value",
+            "label": {
+              "en": "Name",
+              "de": "Bezeichnung"
+            },
+            "group": "identity",
+            "order": 20
+          }
         },
         "description": {
           "title": "TextField",
@@ -49,77 +88,328 @@
           ],
           "properties": {
             "text": {
-              "type": "string"
+              "type": "string",
+              "x-semio-ui": {
+                "widget": "multiline",
+                "role": "value",
+                "label": {
+                  "en": "Text",
+                  "de": "Text"
+                },
+                "group": "details",
+                "order": 10
+              }
             },
             "format": {
-              "type": "string"
+              "type": "string",
+              "x-semio-ui": {
+                "widget": "text",
+                "role": "value",
+                "label": {
+                  "en": "Format",
+                  "de": "Format"
+                },
+                "description": {
+                  "en": "Text format hint, e.g. plain or markdown.",
+                  "de": "Hinweis auf das Textformat, z. B. plain oder markdown."
+                },
+                "group": "details",
+                "order": 20
+              }
             }
+          },
+          "x-semio-ui": {
+            "role": "value",
+            "label": {
+              "en": "Description",
+              "de": "Beschreibung"
+            },
+            "group": "narrative",
+            "order": 30
           }
         },
         "status": {
           "type": "string",
           "enum": [
-            "Draft",
-            "Proposed",
-            "UnderReview",
-            "Validated",
-            "Approved",
-            "Rejected",
-            "Deferred",
-            "Superseded",
-            "Archived",
-            "Open",
-            "Closed",
-            "AtRisk",
-            "Blocked",
-            "InProgress",
-            "Complete"
-          ]
+            "draft",
+            "proposed",
+            "underReview",
+            "validated",
+            "approved",
+            "rejected",
+            "deferred",
+            "superseded",
+            "archived",
+            "open",
+            "closed",
+            "atRisk",
+            "blocked",
+            "inProgress",
+            "complete"
+          ],
+          "x-semio-ui": {
+            "widget": "select",
+            "role": "value",
+            "label": {
+              "en": "Status",
+              "de": "Status"
+            },
+            "options": {
+              "draft": {
+                "en": "Draft",
+                "de": "Entwurf"
+              },
+              "proposed": {
+                "en": "Proposed",
+                "de": "Vorgeschlagen"
+              },
+              "underReview": {
+                "en": "Under Review",
+                "de": "In Prüfung"
+              },
+              "validated": {
+                "en": "Validated",
+                "de": "Validiert"
+              },
+              "approved": {
+                "en": "Approved",
+                "de": "Freigegeben"
+              },
+              "rejected": {
+                "en": "Rejected",
+                "de": "Abgelehnt"
+              },
+              "deferred": {
+                "en": "Deferred",
+                "de": "Zurückgestellt"
+              },
+              "superseded": {
+                "en": "Superseded",
+                "de": "Ersetzt"
+              },
+              "archived": {
+                "en": "Archived",
+                "de": "Archiviert"
+              },
+              "open": {
+                "en": "Open",
+                "de": "Offen"
+              },
+              "closed": {
+                "en": "Closed",
+                "de": "Geschlossen"
+              },
+              "atRisk": {
+                "en": "At Risk",
+                "de": "Gefährdet"
+              },
+              "blocked": {
+                "en": "Blocked",
+                "de": "Blockiert"
+              },
+              "inProgress": {
+                "en": "In Progress",
+                "de": "In Bearbeitung"
+              },
+              "complete": {
+                "en": "Complete",
+                "de": "Abgeschlossen"
+              }
+            },
+            "group": "status",
+            "order": 40
+          }
         },
         "priority": {
           "type": "string",
           "enum": [
-            "Mandatory",
-            "Essential",
-            "Preferred",
-            "Optional",
-            "Deferred",
-            "Prohibited"
-          ]
+            "mandatory",
+            "essential",
+            "preferred",
+            "optional",
+            "deferred",
+            "prohibited"
+          ],
+          "x-semio-ui": {
+            "widget": "select",
+            "role": "value",
+            "label": {
+              "en": "Priority",
+              "de": "Priorität"
+            },
+            "options": {
+              "mandatory": {
+                "en": "Mandatory",
+                "de": "Zwingend"
+              },
+              "essential": {
+                "en": "Essential",
+                "de": "Wesentlich"
+              },
+              "preferred": {
+                "en": "Preferred",
+                "de": "Wünschenswert"
+              },
+              "optional": {
+                "en": "Optional",
+                "de": "Optional"
+              },
+              "deferred": {
+                "en": "Deferred",
+                "de": "Zurückgestellt"
+              },
+              "prohibited": {
+                "en": "Prohibited",
+                "de": "Unzulässig"
+              }
+            },
+            "group": "status",
+            "order": 50
+          }
         },
         "ownership": {
           "title": "Ownership",
           "type": "object",
           "additionalProperties": false,
           "required": [
+            "authorityId",
             "consultantIds",
+            "ownerId",
             "participantIds"
           ],
           "properties": {
             "ownerId": {
-              "type": "string"
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "x-semio-ui": {
+                "widget": "reference",
+                "role": "target",
+                "label": {
+                  "en": "Owner",
+                  "de": "Verantwortlich"
+                },
+                "description": {
+                  "en": "The stakeholder responsible for this entry.",
+                  "de": "Der Beteiligte, der für diesen Eintrag verantwortlich ist."
+                },
+                "ref": {
+                  "kind": "stakeholder",
+                  "domain": "program",
+                  "granularity": "entity"
+                },
+                "group": "links",
+                "order": 10
+              }
             },
             "authorityId": {
-              "type": "string"
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "x-semio-ui": {
+                "widget": "reference",
+                "role": "target",
+                "label": {
+                  "en": "Accountable",
+                  "de": "Entscheidungsbefugt"
+                },
+                "description": {
+                  "en": "The stakeholder accountable for this entry.",
+                  "de": "Der Beteiligte, der für diesen Eintrag entscheidungsbefugt ist."
+                },
+                "ref": {
+                  "kind": "stakeholder",
+                  "domain": "program",
+                  "granularity": "entity"
+                },
+                "group": "links",
+                "order": 20
+              }
             },
             "consultantIds": {
               "type": "array",
               "items": {
                 "type": "string"
+              },
+              "x-semio-ui": {
+                "widget": "reference",
+                "role": "target",
+                "label": {
+                  "en": "Consulted",
+                  "de": "Konsultiert"
+                },
+                "description": {
+                  "en": "Stakeholders consulted on this entry.",
+                  "de": "Beteiligte, die zu diesem Eintrag konsultiert werden."
+                },
+                "ref": {
+                  "kind": "stakeholder",
+                  "domain": "program",
+                  "granularity": "entity"
+                },
+                "group": "links",
+                "order": 30
               }
             },
             "participantIds": {
               "type": "array",
               "items": {
                 "type": "string"
+              },
+              "x-semio-ui": {
+                "widget": "reference",
+                "role": "target",
+                "label": {
+                  "en": "Participants",
+                  "de": "Mitwirkende"
+                },
+                "description": {
+                  "en": "Stakeholders taking part in this entry.",
+                  "de": "Beteiligte, die an diesem Eintrag mitwirken."
+                },
+                "ref": {
+                  "kind": "stakeholder",
+                  "domain": "program",
+                  "granularity": "entity"
+                },
+                "group": "links",
+                "order": 40
               }
             }
+          },
+          "x-semio-ui": {
+            "role": "value",
+            "label": {
+              "en": "Ownership",
+              "de": "Zuständigkeiten"
+            },
+            "group": "ownership",
+            "order": 60
           }
         },
         "tags": {
           "type": "array",
           "items": {
             "type": "string"
+          },
+          "x-semio-ui": {
+            "role": "value",
+            "label": {
+              "en": "Tags",
+              "de": "Schlagwörter"
+            },
+            "group": "audit",
+            "order": 70
           }
         },
         "notes": {
@@ -134,12 +424,41 @@
             ],
             "properties": {
               "tag": {
-                "type": "string"
+                "type": "string",
+                "x-semio-ui": {
+                  "widget": "text",
+                  "role": "value",
+                  "label": {
+                    "en": "Tag",
+                    "de": "Schlagwort"
+                  },
+                  "group": "details",
+                  "order": 10
+                }
               },
               "text": {
-                "type": "string"
+                "type": "string",
+                "x-semio-ui": {
+                  "widget": "multiline",
+                  "role": "value",
+                  "label": {
+                    "en": "Text",
+                    "de": "Text"
+                  },
+                  "group": "details",
+                  "order": 20
+                }
               }
             }
+          },
+          "x-semio-ui": {
+            "role": "value",
+            "label": {
+              "en": "Notes",
+              "de": "Notizen"
+            },
+            "group": "audit",
+            "order": 80
           }
         },
         "timestamps": {
@@ -152,27 +471,138 @@
           ],
           "properties": {
             "created": {
-              "type": "string"
+              "type": "string",
+              "x-semio-ui": {
+                "widget": "text",
+                "role": "value",
+                "label": {
+                  "en": "Created",
+                  "de": "Erstellt am"
+                },
+                "description": {
+                  "en": "Date or date-time per ISO 8601.",
+                  "de": "Datum oder Zeitpunkt nach ISO 8601."
+                },
+                "group": "audit",
+                "order": 10
+              }
             },
             "updated": {
-              "type": "string"
+              "type": "string",
+              "x-semio-ui": {
+                "widget": "text",
+                "role": "value",
+                "label": {
+                  "en": "Updated",
+                  "de": "Geändert am"
+                },
+                "description": {
+                  "en": "Date or date-time per ISO 8601.",
+                  "de": "Datum oder Zeitpunkt nach ISO 8601."
+                },
+                "group": "audit",
+                "order": 20
+              }
             },
             "createdBy": {
-              "type": "string"
+              "type": "string",
+              "x-semio-ui": {
+                "widget": "reference",
+                "role": "target",
+                "label": {
+                  "en": "Created By",
+                  "de": "Erstellt von"
+                },
+                "ref": {
+                  "kind": "stakeholder",
+                  "domain": "program",
+                  "granularity": "entity"
+                },
+                "group": "links",
+                "order": 30
+              }
             },
             "updatedBy": {
-              "type": "string"
+              "type": "string",
+              "x-semio-ui": {
+                "widget": "reference",
+                "role": "target",
+                "label": {
+                  "en": "Updated By",
+                  "de": "Geändert von"
+                },
+                "ref": {
+                  "kind": "stakeholder",
+                  "domain": "program",
+                  "granularity": "entity"
+                },
+                "group": "links",
+                "order": 40
+              }
             }
+          },
+          "x-semio-ui": {
+            "role": "value",
+            "label": {
+              "en": "Timestamps",
+              "de": "Zeitstempel"
+            },
+            "group": "audit",
+            "order": 90
           }
         },
         "operation": {
-          "type": "string"
+          "type": "string",
+          "x-semio-ui": {
+            "widget": "text",
+            "role": "value",
+            "label": {
+              "en": "Operation",
+              "de": "Betriebsablauf"
+            },
+            "group": "details",
+            "order": 100
+          }
         },
         "serviceLevel": {
-          "type": "string"
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "x-semio-ui": {
+            "widget": "text",
+            "role": "value",
+            "label": {
+              "en": "Service Level",
+              "de": "Servicelevel"
+            },
+            "group": "details",
+            "order": 110
+          }
         },
         "operatingHours": {
-          "type": "string"
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "x-semio-ui": {
+            "widget": "text",
+            "role": "value",
+            "label": {
+              "en": "Operating Hours",
+              "de": "Betriebszeiten"
+            },
+            "group": "details",
+            "order": 120
+          }
         },
         "staffing": {
           "title": "QuantitySpec",
@@ -183,118 +613,536 @@
           ],
           "properties": {
             "min": {
-              "type": "number"
+              "type": "number",
+              "x-semio-ui": {
+                "widget": "stepper",
+                "role": "value",
+                "label": {
+                  "en": "Minimum",
+                  "de": "Minimum"
+                },
+                "step": 0.1,
+                "precision": 2,
+                "group": "metrics",
+                "order": 10
+              }
             },
             "max": {
-              "type": "number"
+              "type": "number",
+              "x-semio-ui": {
+                "widget": "stepper",
+                "role": "value",
+                "label": {
+                  "en": "Maximum",
+                  "de": "Maximum"
+                },
+                "step": 0.1,
+                "precision": 2,
+                "group": "metrics",
+                "order": 20
+              }
             },
             "target": {
-              "type": "number"
+              "type": "number",
+              "x-semio-ui": {
+                "widget": "stepper",
+                "role": "value",
+                "label": {
+                  "en": "Target",
+                  "de": "Zielwert"
+                },
+                "step": 0.1,
+                "precision": 2,
+                "group": "metrics",
+                "order": 30
+              }
             },
             "current": {
-              "type": "number"
+              "type": "number",
+              "x-semio-ui": {
+                "widget": "stepper",
+                "role": "value",
+                "label": {
+                  "en": "Current",
+                  "de": "Istwert"
+                },
+                "step": 0.1,
+                "precision": 2,
+                "group": "metrics",
+                "order": 40
+              }
             },
             "forecast": {
-              "type": "number"
+              "type": "number",
+              "x-semio-ui": {
+                "widget": "stepper",
+                "role": "value",
+                "label": {
+                  "en": "Forecast",
+                  "de": "Prognose"
+                },
+                "step": 0.1,
+                "precision": 2,
+                "group": "metrics",
+                "order": 50
+              }
             },
             "peak": {
-              "type": "number"
+              "type": "number",
+              "x-semio-ui": {
+                "widget": "stepper",
+                "role": "value",
+                "label": {
+                  "en": "Peak",
+                  "de": "Spitzenwert"
+                },
+                "step": 0.1,
+                "precision": 2,
+                "group": "metrics",
+                "order": 60
+              }
             },
             "average": {
-              "type": "number"
+              "type": "number",
+              "x-semio-ui": {
+                "widget": "stepper",
+                "role": "value",
+                "label": {
+                  "en": "Average",
+                  "de": "Mittelwert"
+                },
+                "step": 0.1,
+                "precision": 2,
+                "group": "metrics",
+                "order": 70
+              }
             },
             "unit": {
-              "type": "string"
+              "type": "string",
+              "x-semio-ui": {
+                "widget": "text",
+                "role": "value",
+                "label": {
+                  "en": "Unit",
+                  "de": "Einheit"
+                },
+                "group": "details",
+                "order": 80
+              }
             }
+          },
+          "x-semio-ui": {
+            "role": "value",
+            "label": {
+              "en": "Staffing",
+              "de": "Personalbedarf"
+            },
+            "group": "quantities",
+            "order": 130
           }
         },
         "maintenanceInterval": {
-          "type": "string"
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "x-semio-ui": {
+            "widget": "text",
+            "role": "value",
+            "label": {
+              "en": "Maintenance Interval",
+              "de": "Wartungsintervall"
+            },
+            "group": "details",
+            "order": 140
+          }
         },
         "cleaningRegime": {
-          "type": "string"
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "x-semio-ui": {
+            "widget": "text",
+            "role": "value",
+            "label": {
+              "en": "Cleaning Regime",
+              "de": "Reinigungskonzept"
+            },
+            "group": "details",
+            "order": 150
+          }
         },
         "turnaroundTime": {
-          "type": "string"
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "x-semio-ui": {
+            "widget": "text",
+            "role": "value",
+            "label": {
+              "en": "Turnaround Time",
+              "de": "Bearbeitungszeit"
+            },
+            "group": "details",
+            "order": 160
+          }
         },
         "redundancy": {
-          "type": "string"
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "x-semio-ui": {
+            "widget": "text",
+            "role": "value",
+            "label": {
+              "en": "Redundancy",
+              "de": "Redundanz"
+            },
+            "group": "details",
+            "order": 170
+          }
         },
         "uptimeTarget": {
-          "type": "number"
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "x-semio-ui": {
+            "widget": "stepper",
+            "role": "value",
+            "label": {
+              "en": "Availability Target",
+              "de": "Verfügbarkeitsziel"
+            },
+            "step": 0.01,
+            "precision": 2,
+            "group": "metrics",
+            "order": 180
+          }
         },
         "responseTime": {
-          "type": "string"
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "x-semio-ui": {
+            "widget": "text",
+            "role": "value",
+            "label": {
+              "en": "Response Time",
+              "de": "Reaktionszeit"
+            },
+            "group": "details",
+            "order": 190
+          }
         },
         "equipmentIds": {
           "type": "array",
           "items": {
             "type": "string"
+          },
+          "x-semio-ui": {
+            "widget": "reference",
+            "role": "target",
+            "label": {
+              "en": "Equipment",
+              "de": "Ausstattung"
+            },
+            "ref": {
+              "kind": "equipment",
+              "domain": "program",
+              "granularity": "entity"
+            },
+            "group": "links",
+            "order": 200
           }
         },
         "elementIds": {
           "type": "array",
           "items": {
             "type": "string"
+          },
+          "x-semio-ui": {
+            "widget": "reference",
+            "role": "target",
+            "label": {
+              "en": "Program Elements",
+              "de": "Programmelemente"
+            },
+            "ref": {
+              "kind": "programElement",
+              "domain": "program",
+              "granularity": "entity"
+            },
+            "group": "links",
+            "order": 210
           }
         },
         "processIds": {
           "type": "array",
           "items": {
             "type": "string"
+          },
+          "x-semio-ui": {
+            "widget": "reference",
+            "role": "target",
+            "label": {
+              "en": "Processes",
+              "de": "Prozesse"
+            },
+            "ref": {
+              "kind": "process",
+              "domain": "program",
+              "granularity": "entity"
+            },
+            "group": "links",
+            "order": 220
           }
         },
         "utilities": {
           "type": "array",
           "items": {
             "type": "string"
+          },
+          "x-semio-ui": {
+            "role": "value",
+            "label": {
+              "en": "Utilities",
+              "de": "Medienversorgung"
+            },
+            "group": "details",
+            "order": 230
           }
         },
         "wasteStreams": {
           "type": "array",
           "items": {
             "type": "string"
+          },
+          "x-semio-ui": {
+            "role": "value",
+            "label": {
+              "en": "Waste Streams",
+              "de": "Abfallströme"
+            },
+            "group": "details",
+            "order": 240
           }
         },
         "contingencyPlan": {
           "type": "array",
           "items": {
             "type": "string"
+          },
+          "x-semio-ui": {
+            "role": "value",
+            "label": {
+              "en": "Contingency Plan",
+              "de": "Notfallplan"
+            },
+            "group": "details",
+            "order": 250
           }
         },
         "trainingRequirements": {
           "type": "array",
           "items": {
             "type": "string"
+          },
+          "x-semio-ui": {
+            "role": "value",
+            "label": {
+              "en": "Training Requirements",
+              "de": "Schulungsanforderungen"
+            },
+            "group": "details",
+            "order": 260
           }
         },
         "sopReferences": {
           "type": "array",
           "items": {
             "type": "string"
+          },
+          "x-semio-ui": {
+            "role": "value",
+            "label": {
+              "en": "SOP References",
+              "de": "Verweise auf Standardarbeitsanweisungen"
+            },
+            "group": "details",
+            "order": 270
           }
         },
         "kpiTargets": {
           "type": "array",
           "items": {
             "type": "string"
+          },
+          "x-semio-ui": {
+            "role": "value",
+            "label": {
+              "en": "KPI Targets",
+              "de": "Kennzahlenziele"
+            },
+            "group": "details",
+            "order": 280
           }
         },
         "ownerId": {
-          "type": "string"
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "x-semio-ui": {
+            "widget": "reference",
+            "role": "target",
+            "label": {
+              "en": "Owner",
+              "de": "Verantwortlich"
+            },
+            "description": {
+              "en": "The stakeholder responsible for this entry.",
+              "de": "Der Beteiligte, der für diesen Eintrag verantwortlich ist."
+            },
+            "ref": {
+              "kind": "stakeholder",
+              "domain": "program",
+              "granularity": "entity"
+            },
+            "group": "links",
+            "order": 290
+          }
         },
         "serviceCategory": {
-          "type": "string"
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "x-semio-ui": {
+            "widget": "text",
+            "role": "value",
+            "label": {
+              "en": "Service Category",
+              "de": "Leistungskategorie"
+            },
+            "group": "details",
+            "order": 300
+          }
         },
         "shiftPattern": {
-          "type": "string"
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "x-semio-ui": {
+            "widget": "text",
+            "role": "value",
+            "label": {
+              "en": "Shift Pattern",
+              "de": "Schichtmodell"
+            },
+            "group": "details",
+            "order": 310
+          }
         },
         "slaTarget": {
-          "type": "string"
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "x-semio-ui": {
+            "widget": "text",
+            "role": "value",
+            "label": {
+              "en": "SLA Target",
+              "de": "SLA-Zielwert"
+            },
+            "group": "details",
+            "order": 320
+          }
         },
         "escalationContactId": {
-          "type": "string"
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "x-semio-ui": {
+            "widget": "reference",
+            "role": "target",
+            "label": {
+              "en": "Escalation Contact",
+              "de": "Eskalationskontakt"
+            },
+            "ref": {
+              "kind": "stakeholder",
+              "domain": "program",
+              "granularity": "entity"
+            },
+            "group": "links",
+            "order": 330
+          }
         }
+      },
+      "x-semio-ui": {
+        "role": "value",
+        "label": {
+          "en": "Operational Requirement",
+          "de": "Betriebsanforderung"
+        },
+        "description": {
+          "en": "The new operational requirement with all of its fields.",
+          "de": "Neuer Eintrag vom Typ „Betriebsanforderung“ mit allen Feldern."
+        },
+        "group": "record",
+        "order": 10
       }
     }
   }

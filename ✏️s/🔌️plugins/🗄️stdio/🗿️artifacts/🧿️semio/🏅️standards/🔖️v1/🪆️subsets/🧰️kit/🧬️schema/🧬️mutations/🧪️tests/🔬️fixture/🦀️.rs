@@ -16,7 +16,7 @@ mod tests_create_properties_attaches_a_properties_child_to_a_kit_that_has_none;
 mod tests_delete_model_detaches_the_only_model_child_and_keeps_the_object_child;
 #[path = "../../🪓delete-object/🧪️tests/🪓️detaches-the-only-object-child-and-keeps-the-model-child/🦀️.rs"]
 mod tests_delete_object_detaches_the_only_object_child_and_keeps_the_model_child;
-#[path = "../../🚫delete-properties/🧪️tests/🚫️detaches-the-properties-child-and-leaves-every-other-collection-alone/🦀️.rs"]
+#[path = "../../🚫delete-properties/🧪️tests/🚫️detaches-properties-child-leaves-every-other-collection-alone/🦀️.rs"]
 mod tests_delete_properties_detaches_the_properties_child_and_leaves_every_other_collection_alone;
 #[path = "../../🖊️edit-design/🧪️tests/🧩️replaces-the-designs-pieces-and-connections-in-one-step/🦀️.rs"]
 mod tests_edit_design_replaces_the_designs_pieces_and_connections_in_one_step;
@@ -26,5 +26,5 @@ mod tests_remove_design_removes_the_only_design_together_with_its_pieces;
 mod tests_remove_type_removes_the_column_type_and_keeps_the_beam_type;
 #[path = "../../✏️rename-type/🧪️tests/✏️renames-the-beam-type-without-recategorising-it/🦀️.rs"]
 mod tests_rename_type_renames_the_beam_type_without_recategorising_it;
-#[path = "../../✂️unbind-representation/🧪️tests/🔗️unbinds-the-leading-representation-and-keeps-the-trailing-one/🦀️.rs"]
+#[path = "../../✂️unbind-representation/🧪️tests/🔗️unbinds-leading-representation-keeps-trailing-one/🦀️.rs"]
 mod tests_unbind_representation_unbinds_the_leading_representation_and_keeps_the_trailing_one;

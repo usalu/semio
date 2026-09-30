@@ -1619,22 +1619,18 @@
       },
       "outputs": []
     },
+    "verify-canonical-architecture": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "options": {
+        "command": "bun ./📜️script.ts verify canonical-architecture"
+      }
+    },
     "verify-layering": {
       "executor": "nx:run-commands",
       "dependsOn": [],
       "options": {
         "command": "bun ./📜️script.ts verify layering"
-      }
-    },
-    "verify-layering-write-baseline": {
-      "executor": "nx:run-commands",
-      "dependsOn": [],
-      "cache": true,
-      "outputs": [
-        "{workspaceRoot}/🧅️layering.json"
-      ],
-      "options": {
-        "command": "bun ./📜️script.ts verify layering write-baseline"
       }
     },
     "build": {

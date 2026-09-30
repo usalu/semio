@@ -89,7 +89,7 @@ fn every_inbound_request_row_is_answered_on_the_turn_it_arrives() {
         let mut installed = false;
         for (index, row) in fixture.rows.iter().enumerate() {
             if row.bundle && !installed {
-                crate::plugin_runtime::install_extension_bundle(inbound_request_bundle(&fixture.capability)).await;
+                assert!(crate::plugin_runtime::install_extension_bundle(&mut Some(inbound_request_bundle(&fixture.capability))).await.unwrap());
                 crate::plugin_runtime::extension_activate().await.expect("the fixture bundle activates");
                 installed = true;
             }
@@ -111,5 +111,6 @@ fn every_inbound_request_row_is_answered_on_the_turn_it_arrives() {
                 (expected, produced) => panic!("{} expected {expected}, got {produced:?}", row.name),
             }
         }
+        crate::plugin_runtime::extension_dispose_cold().unwrap();
     });
 }

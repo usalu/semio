@@ -5,15 +5,59 @@
   "type": "object",
   "additionalProperties": false,
   "required": [
+    "mutation",
     "id",
     "newCoolingSetpointScheduleId"
   ],
   "properties": {
+    "mutation": {
+      "const": "changeThermostatCoolingSetpointSchedule"
+    },
     "id": {
-      "type": "integer"
+      "type": "integer",
+      "minimum": 0,
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Thermostat",
+          "de": "Thermostat"
+        },
+        "description": {
+          "en": "The thermostat this mutation changes, by id.",
+          "de": "Thermostat, den diese Mutation ändert, per ID."
+        },
+        "ref": {
+          "kind": "thermostat",
+          "domain": "energyModel",
+          "granularity": "thermostat"
+        },
+        "group": "target",
+        "order": 10
+      }
     },
     "newCoolingSetpointScheduleId": {
-      "type": "integer"
+      "type": "integer",
+      "minimum": 0,
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Cooling setpoint schedule",
+          "de": "Kühl-Sollwertzeitplan"
+        },
+        "description": {
+          "en": "Cooling setpoint in °C over time, by id.",
+          "de": "Kühlsollwert in °C im Zeitverlauf, per ID."
+        },
+        "ref": {
+          "kind": "schedule",
+          "domain": "energyModel",
+          "granularity": "schedule"
+        },
+        "group": "schedule",
+        "order": 20
+      }
     }
   }
 }

@@ -11,7 +11,7 @@ pub fn diff(payload: &super::DeleteSurface, base: &EnergyModelSnapshot) -> proto
     };
     let _ = existing;
     if base.model.surfaces.iter().any(|item| item.outside_boundary_condition.interzone_partner() == Some(payload.id)) {
-        return protocol::MutationOutcome::error("mutation.invariant", format!("Surface {} is another surface's interzone partner; change that boundary condition first.", payload.id.0), [payload.id.0.to_string()]);
+        return protocol::MutationOutcome::error("mutation.target-referenced", format!("Surface {} is another surface's interzone partner; change that boundary condition first.", payload.id.0), [payload.id.0.to_string()]);
     }
     let fenestrations = base.model.fenestrations.iter().filter(|item| item.surface_id == payload.id).count();
     let pairs = base.model.adjacency_pairs.iter().filter(|item| item.surface_a_id == payload.id || item.surface_b_id == payload.id).count();

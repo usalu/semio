@@ -4,8 +4,7 @@ use crate::schema::modules::mutation_support::top_level::rejection_outcome;
 use crate::schema::modules::mutation_support::top_level::GltfTopLevelMutationRejection;
 use crate::GltfSnapshot;
 pub const ID: &str = "s.stdio.gltf.mutation.bind-node-skin.v1";
-#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::MutationLeaf)]
-#[mutation_leaf(contract = ::protocol)]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
 #[value(rename_all = "camelCase")]
 pub struct GltfBindNodeSkinPayload {
     pub node: usize,
@@ -27,7 +26,7 @@ pub fn apply(payload: &GltfBindNodeSkinPayload, base: &GltfSnapshot) -> Result<G
 
 //#region 🧬️DirectMutation
 #[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::MutationLeaf)]
-#[mutation_leaf(contract = ::protocol)]
+#[mutation_leaf(contract = ::protocol, payload = Apply)]
 #[value(tag = "phase", content = "value", rename_all = "camelCase")]
 pub enum BindNodeSkinMutation {
     Apply(GltfBindNodeSkinPayload),
@@ -71,6 +70,6 @@ impl protocol::MutationKind<GltfSnapshot, super::GltfMutation> for BindNodeSkinM
 
 //#region 🧪️Tests
 #[cfg(test)]
-#[path = "🧪️tests/🔬️direct-leaf/🦀️.rs"]
-mod direct_leaf_tests;
+#[path = "🧪️tests/🔗️binds-the-45cf18/🦀️.rs"]
+mod case_binds_the_45cf18;
 //#endregion 🧪️Tests

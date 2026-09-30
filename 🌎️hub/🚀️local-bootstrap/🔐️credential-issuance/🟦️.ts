@@ -1,3 +1,5 @@
+import { LOCAL_SESSION_BROKER_REQUEST_MAX_BYTES, isLocalSessionTokenV1, LOCAL_SESSION_BROKER_FILE, LOCAL_SESSION_BROKER_SCHEMA, LOCAL_SESSION_SCHEMA, parseLocalSessionBrokerRecordV1, parseLocalSessionRequestV1, parseLocalSessionV1, type LocalSessionBrokerRecordV1, type LocalSessionV1 } from "../../../🧰️framework/🛍️products/💻️os/🔨️modules/📇️directory/🎫️local-session/🗄️broker/🧬️schema/🟦️.ts";
+
 import { randomBytes, timingSafeEqual } from "node:crypto";
 import { existsSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
@@ -66,15 +68,6 @@ function verifyCredentialEnvelope(run: LocalHubRun, envelope: Record<string, any
  * secret; reading it is the same privilege as operating the hub. The broker listens on loopback only and mints only
  * the run's declared local profiles, through the authenticated pipe — never a password, never a network credential path.
  * @see ../🧬️schema/🔣️.json */
-export const LOCAL_SESSION_BROKER_SCHEMA = "semio.hub.local-session-broker/v1";
-export const LOCAL_SESSION_REQUEST_SCHEMA = "semio.hub.local-session-request/v1";
-export const LOCAL_SESSION_SCHEMA = "semio.hub.local-session/v1";
-/** 📄️ The broker record's file name inside the hub data root. */
-export const LOCAL_SESSION_BROKER_FILE = "local-session-broker.json";
-const LOCAL_SESSION_BROKER_REQUEST_MAX_BYTES = 256;
-const LOCAL_SESSION_TOKEN_PATTERN = /^session\.v1\.[0-9a-f]{32}\.[0-9a-f]{64}$/u;
-const LOCAL_PROFILE_ID_PATTERN = /^[a-z0-9](?:[a-z0-9.-]*[a-z0-9])?$/u;
-
 /** 🛡️ The admin-relay capability a broker started with an administrator profile keeps `0600` in the same data root — what
  * the hub's operator surfaces and the acceptance gates that read the hub's own state (head sequences, connection census)
  * present — and the sibling file a caller creates to ask for a fresh one (consumed; the capability lives 15 minutes). */
@@ -83,65 +76,8 @@ export const LOCAL_ADMIN_CAPABILITY_FILE = "admin-capability.json";
 export const LOCAL_ADMIN_REQUEST_FILE = "admin-request";
 const LOCAL_ADMIN_REQUEST_POLL_MS = 5_000;
 
-export type LocalSessionBrokerRecordV1 = Readonly<{ schema: typeof LOCAL_SESSION_BROKER_SCHEMA; hubOrigin: string; runId: string; port: number; secret: string; profiles: readonly string[] }>;
 export type LocalAdminCapabilityV1 = Readonly<{ schema: typeof LOCAL_ADMIN_CAPABILITY_SCHEMA; origin: string; capability: string; sessionId: string; expiresAt: number }>;
-export type LocalSessionV1 = Readonly<{ schema: typeof LOCAL_SESSION_SCHEMA; profileId: string; token: string; userId: string }>;
 export type LocalSessionBrokerV1 = Readonly<{ record: LocalSessionBrokerRecordV1; stop: () => void }>;
-
-/** 🧾️ Parses one broker record exactly; anything else is not a broker this launcher trusts. */
-export function parseLocalSessionBrokerRecordV1(value: unknown): LocalSessionBrokerRecordV1 {
-  const record = value as Record<string, unknown> | null;
-  if (
-    record === null ||
-    typeof record !== "object" ||
-    Object.keys(record).sort().join(",") !== "hubOrigin,port,profiles,runId,schema,secret" ||
-    record.schema !== LOCAL_SESSION_BROKER_SCHEMA ||
-    typeof record.hubOrigin !== "string" ||
-    !/^http:\/\/127\.0\.0\.1:\d{1,5}$/u.test(record.hubOrigin) ||
-    typeof record.runId !== "string" ||
-    !/^[0-9a-f]{32}$/u.test(record.runId) ||
-    !Number.isSafeInteger(record.port) ||
-    (record.port as number) < 1 ||
-    (record.port as number) > 65_535 ||
-    typeof record.secret !== "string" ||
-    !/^[0-9a-f]{64}$/u.test(record.secret) ||
-    !Array.isArray(record.profiles) ||
-    record.profiles.length < 1 ||
-    record.profiles.length > 8 ||
-    record.profiles.some((profile) => typeof profile !== "string" || profile.length > 64 || !LOCAL_PROFILE_ID_PATTERN.test(profile))
-  )
-    throw new Error("local session broker record invalid");
-  return Object.freeze({ ...(record as LocalSessionBrokerRecordV1), profiles: Object.freeze([...(record.profiles as string[])]) });
-}
-
-/** 🧾️ Parses one broker request exactly and answers its profile id. */
-export function parseLocalSessionRequestV1(value: unknown): string {
-  const request = value as Record<string, unknown> | null;
-  if (request === null || typeof request !== "object" || Object.keys(request).sort().join(",") !== "profileId,schema" || request.schema !== LOCAL_SESSION_REQUEST_SCHEMA || typeof request.profileId !== "string" || !LOCAL_PROFILE_ID_PATTERN.test(request.profileId) || request.profileId.length > 64)
-    throw new Error("local session request invalid");
-  return request.profileId;
-}
-
-/** 🧾️ Parses one issued session exactly. */
-export function parseLocalSessionV1(value: unknown): LocalSessionV1 {
-  const session = value as Record<string, unknown> | null;
-  if (
-    session === null ||
-    typeof session !== "object" ||
-    Object.keys(session).sort().join(",") !== "profileId,schema,token,userId" ||
-    session.schema !== LOCAL_SESSION_SCHEMA ||
-    typeof session.profileId !== "string" ||
-    session.profileId.length > 64 ||
-    !LOCAL_PROFILE_ID_PATTERN.test(session.profileId) ||
-    typeof session.token !== "string" ||
-    !LOCAL_SESSION_TOKEN_PATTERN.test(session.token) ||
-    typeof session.userId !== "string" ||
-    session.userId.length === 0 ||
-    session.userId.length > 128
-  )
-    throw new Error("local session invalid");
-  return Object.freeze({ ...(session as LocalSessionV1) });
-}
 
 /** 🧾️ Parses one admin capability file exactly. */
 export function parseLocalAdminCapabilityV1(value: unknown): LocalAdminCapabilityV1 {
@@ -154,7 +90,7 @@ export function parseLocalAdminCapabilityV1(value: unknown): LocalAdminCapabilit
     typeof file.origin !== "string" ||
     !/^http:\/\/127\.0\.0\.1:\d{1,5}$/u.test(file.origin) ||
     typeof file.capability !== "string" ||
-    !LOCAL_SESSION_TOKEN_PATTERN.test(file.capability) ||
+    !isLocalSessionTokenV1(file.capability) ||
     typeof file.sessionId !== "string" ||
     file.sessionId.length === 0 ||
     file.sessionId.length > 256 ||
@@ -260,27 +196,4 @@ export function startLocalSessionBroker(run: LocalHubRun, dataDir: string, profi
   });
 }
 
-/** 🎫️ Asks the live hub's broker (the record in `dataDir` whose `runId` the hub at `hubOrigin` answers `/readyz` with)
- * for a fresh session of `profileId`. `null` when that hub has no live broker — a hub someone else operates. */
-export async function requestLocalBrokerSession(dataDir: string, hubOrigin: string, profileId: string, signal: AbortSignal = AbortSignal.timeout(20_000)): Promise<LocalSessionV1 | null> {
-  const path = join(dataDir, LOCAL_SESSION_BROKER_FILE);
-  if (!existsSync(path)) return null;
-  let record: LocalSessionBrokerRecordV1;
-  try {
-    record = parseLocalSessionBrokerRecordV1(JSON.parse(readFileSync(path, "utf8")));
-  } catch {
-    return null;
-  }
-  if (record.hubOrigin !== hubOrigin.replace(/\/+$/u, "") || !record.profiles.includes(profileId)) return null;
-  const readiness = (await fetch(`${record.hubOrigin}/readyz`, { signal }).then((response) => response.json()).catch(() => null)) as { readonly runId?: unknown } | null;
-  if (readiness?.runId !== record.runId) return null;
-  const response = await fetch(`http://127.0.0.1:${record.port}/session`, {
-    method: "POST",
-    headers: { authorization: `Bearer ${record.secret}`, "content-type": "application/json" },
-    body: JSON.stringify({ schema: LOCAL_SESSION_REQUEST_SCHEMA, profileId }),
-    signal,
-  }).catch(() => null);
-  if (response === null || !response.ok) return null;
-  return parseLocalSessionV1(await response.json());
-}
 //#endregion 🎫️SessionBroker

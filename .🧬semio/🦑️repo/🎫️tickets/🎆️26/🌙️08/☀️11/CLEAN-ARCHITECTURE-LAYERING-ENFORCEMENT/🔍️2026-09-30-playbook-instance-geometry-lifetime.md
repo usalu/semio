@@ -1,0 +1,27 @@
+# Playbook Instance Geometry Lifetime Review
+
+Bounded read-only inspection on 2026-09-30 while the coordinator implements actual per-instance composition. No source edits, builds, runtime verification, or infrastructure mutations. Findings below concern the exact available lifetime APIs and imported-result consumers, not repeated baseline seam observations.
+
+## Existing App Owner And Registry Retirement
+
+`🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🦀️.rs:15221–15310` supplies `ArtifactInstanceOperationOwner` with item/byte-granted `maintenance_step`, `close_step`, and terminal-empty query, and a cloneable `ArtifactInstanceOperationOwnerHandle`. Its typed `with_mut` uses try_lock, reports wrong-owner type, and grants no independent geometry authority. Maintenance/close return zero-progress Pending on a busy worker. This is the real app-instance owner seam suitable for the coordinator's one Session plus one supplied SharedRegistry; retained work must carry the request's same owner handle to reach it.
+
+`🧰️framework/🛍️products/💻️os/🔨️modules/🧠️neural/⚙️engine/📔️registry/🦀️.rs:17–29` constructs the reader and its unique RegistryRetirement together. `close_step` at lines 61–116 waits for the final reader handoff and advances one structural frontier or one byte-granted value frontier, including individual operator retirement. Releasing a temporary host's supplied registry reader is therefore insufficient to release the registry while the instance or retained work still holds readers. The instance must preserve RegistryRetirement until terminal-empty after all its readers retire. The cursor's Drop asserts terminal-empty.
+
+## Native Geometry Close Has No Equivalent Bounded Cursor
+
+`✏️s/🔨️modules/🌐️spatial-kernel/⚙️engine/🧠️semio/🌊️session/🦀️.rs:753–760` implements only synchronous `Session::close`. It cancels and clears the authority's jobs, removes its claims, collects all remaining claims, calls native kernel retain, and clears/filters shared cached meshes. There is no item/byte grant, progress result, retained close cursor, or cancellation/resumption hook for this geometry teardown.
+
+The actual native kernel is `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🧊️brep/🧬️schema/⚙️engine/🦀️.rs`. `Brep` at lines 438–441 owns Body and the live Entity map. `dispose_sync` at lines 1747–1751 removes one handle and immediately runs complete GC. Trait `retain` at lines 2204–2206 scans live entries and runs complete GC. `compact_unreachable` at lines 676–681 filters stale entries, gathers all live roots, traverses reachability, and compacts the arena.
+
+Body topology `🧬️schema/📸️snapshot/🕸️topology/🦀️.rs:633` implements full reachable_from traversal, and `compact` at line 728 enumerates each entity store into Vec and loops over its slots. No native Brep retirement cursor or custom bounded Drop was found in the inspected kernel/snapshot sources. A Session dropped after synchronous close still owns allocated Body/store capacity until the shared kernel's ordinary final Arc destruction. Cached MeshData and retained jobs also have ordinary collection destruction in Session's current teardown.
+
+Consequently wrapping Session.close in an instance-owner close_step and reporting one released item does not make geometry destruction bounded. RegistryRetirement alone does not bound the Session/native Body held by registered operators. A real retained native geometry retirement authority, with terminal admission sealing and structural/value cursors, must exist if the app owner claims item/byte-bounded geometry teardown. Cold synchronous close remains the actual current API; no source-only review may label it budgeted progress/cancellation.
+
+## Imported Results Are Currently Persisted Strings Without Replay Inputs
+
+`✏️s/🔌️plugins/📖️playbook/🧩️extensions/🌀️procedural/🦀️.rs:495–504` imports a body then stores its result JSON handles into params.__solidImport. Retained reducer lines 669–685 clones the payload and emits SetPayload. The mutation is codec-backed and records a true inverse (lines 207–211 and `🧬️schema/🧬️mutations/🦀️.rs`); undo can restore the result strings, but does not restore Session topology.
+
+A repository-wide exact `__solidImport` search found only that producer/documentation and the module unit tests (around lines 203 and 213). No preview or shell consumer was found interpreting imported handles. `apply_flow_params` lines 352–366 passes the whole params object to neurons, while preview geometry lookup uses evaluated widget outputs at lines 344 and 393; it does not select __solidImport as geometry. The positive import test checks only presence, and the missing-data test checks an error field. Neither establishes reopen/undo geometry survival.
+
+Per-instance Session geometry handles are derived capabilities. A fresh Session receives no native Body, stable asset, or interchange data from the stored result handles, so they cannot establish rehydrated imported geometry. If importing is intended to survive reopen/undo, persist format plus actual interchange content or a durable asset reference, then derive and retain handles in the instance owner against that input. If it is merely a transient import notification, keep the result authority-local. No discovered consumer requires compatibility with the old raw-handle payload representation. The coordinator was informed of both the absent bounded teardown API and actual import-consumer evidence.

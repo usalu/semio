@@ -13,11 +13,11 @@ use crate::schema::diff::StlDiff;
 use crate::schema::mutations::{apply_stl_mutation, StlMutation};
 use crate::schema::snapshot::StlSnapshot;
 
-const BEFORE: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/📸️set-snapshot/✏️renames-the-solid-and-closes-the-wedge-with-a-third-facet/📸️snapshot/⬅️before/🔣️.json");
-const AFTER: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/📸️set-snapshot/✏️renames-the-solid-and-closes-the-wedge-with-a-third-facet/📸️snapshot/➡️after/🔣️.json");
-const MUTATION: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/📸️set-snapshot/✏️renames-the-solid-and-closes-the-wedge-with-a-third-facet/🦠️mutation/🔣️.json");
-const DIFF: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/📸️set-snapshot/✏️renames-the-solid-and-closes-the-wedge-with-a-third-facet/🔺️diff/🔣️.json");
-const OUTCOME: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/📸️set-snapshot/✏️renames-the-solid-and-closes-the-wedge-with-a-third-facet/🎯️outcome/🔣️.json");
+const BEFORE: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/📸️set-snapshot/✏️renames-solid-closes-wedge-third-facet/📸️snapshot/⬅️before/🔣️.json");
+const AFTER: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/📸️set-snapshot/✏️renames-solid-closes-wedge-third-facet/📸️snapshot/➡️after/🔣️.json");
+const MUTATION: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/📸️set-snapshot/✏️renames-solid-closes-wedge-third-facet/🦠️mutation/🔣️.json");
+const DIFF: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/📸️set-snapshot/✏️renames-solid-closes-wedge-third-facet/🔺️diff/🔣️.json");
+const OUTCOME: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/📸️set-snapshot/✏️renames-solid-closes-wedge-third-facet/🎯️outcome/🔣️.json");
 
 fn before() -> StlSnapshot {
     dsl::json::from_json_str(BEFORE).expect("before STL snapshot decodes")

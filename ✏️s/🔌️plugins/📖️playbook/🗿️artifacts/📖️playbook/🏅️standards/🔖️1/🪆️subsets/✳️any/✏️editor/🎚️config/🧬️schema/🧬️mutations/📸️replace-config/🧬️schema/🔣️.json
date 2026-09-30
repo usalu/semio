@@ -8,7 +8,19 @@
       "type": "object",
       "properties": {
         "contributionsJson": {
-          "type": "string"
+          "type": "string",
+          "x-semio-ui": {
+            "widget": "multiline",
+            "role": "value",
+            "label": {
+              "en": "Contributions",
+              "de": "Beiträge"
+            },
+            "description": {
+              "en": "Contributions of this editor as JSON text.",
+              "de": "Beiträge dieses Editors als JSON-Text."
+            }
+          }
         }
       },
       "required": [

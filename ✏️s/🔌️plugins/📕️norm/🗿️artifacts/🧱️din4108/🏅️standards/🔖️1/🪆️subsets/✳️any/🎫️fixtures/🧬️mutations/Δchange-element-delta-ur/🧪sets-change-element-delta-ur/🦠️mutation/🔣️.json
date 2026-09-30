@@ -1,6 +1,6 @@
 {
   "ChangeElementDeltaUr": {
-    "element_id": "wall-north",
-    "new_delta_u_r": 0.005
+    "elementId": "wall-north",
+    "newDeltaUR": 0.005
   }
 }

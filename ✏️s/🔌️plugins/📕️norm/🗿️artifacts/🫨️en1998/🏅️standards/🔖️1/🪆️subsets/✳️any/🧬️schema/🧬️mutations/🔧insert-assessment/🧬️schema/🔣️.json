@@ -5,16 +5,49 @@
   "type": "object",
   "additionalProperties": false,
   "required": [
+    "mutation",
     "index",
     "assessment"
   ],
   "properties": {
+    "mutation": {
+      "const": "insertAssessment"
+    },
     "index": {
       "type": "integer",
-      "minimum": 0
+      "minimum": 0,
+      "x-semio-ui": {
+        "widget": "stepper",
+        "role": "value",
+        "label": {
+          "en": "Position",
+          "de": "Position"
+        },
+        "description": {
+          "en": "Zero-based list position at which the record is inserted.",
+          "de": "Nullbasierte Listenposition, an der der Datensatz eingefügt wird."
+        },
+        "step": 1,
+        "precision": 0,
+        "group": "target",
+        "order": 10
+      }
     },
     "assessment": {
-      "type": "object"
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1998/snapshot.json#/$defs/En1998Assessment",
+      "x-semio-ui": {
+        "role": "value",
+        "label": {
+          "en": "Assessed element",
+          "de": "Bewertetes Bauteil"
+        },
+        "description": {
+          "en": "The complete existing-structure assessment record (EN 1998-3) to insert.",
+          "de": "Der vollständige einzufügende Datensatz zur Bewertung des Bestands (EN 1998-3)."
+        },
+        "group": "record",
+        "order": 20
+      }
     }
   }
 }

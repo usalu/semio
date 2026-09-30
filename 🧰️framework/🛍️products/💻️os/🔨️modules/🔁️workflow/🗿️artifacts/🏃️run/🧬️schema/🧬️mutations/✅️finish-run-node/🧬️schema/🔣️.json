@@ -2,7 +2,182 @@
   "$schema": "http://json-schema.org/draft-07/schema#",
   "$id": "https://json.schemas.assets.semio-tech.com/os/workflow/artifacts/run/mutation/finish-run-node/schema.json",
   "title": "FinishRunNode",
+  "propertyNames": {
+    "enum": [
+      "operation",
+      "nodeRecord"
+    ]
+  },
   "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "operation",
+    "nodeRecord"
+  ],
+  "properties": {
+    "operation": {
+      "const": "finishRunNode"
+    },
+    "nodeRecord": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "nodeId",
+        "status",
+        "documentFingerprint",
+        "configFingerprint",
+        "inputFingerprints",
+        "outputFingerprints",
+        "outputs",
+        "durationMs"
+      ],
+      "properties": {
+        "nodeId": {
+          "type": "string",
+          "x-semio-ui": {
+            "widget": "reference",
+            "role": "target",
+            "label": {
+              "en": "Node",
+              "de": "Knoten"
+            },
+            "ref": {
+              "kind": "node"
+            },
+            "group": "target",
+            "order": 10
+          }
+        },
+        "status": {
+          "enum": [
+            "computed",
+            "cacheHit",
+            "failed"
+          ],
+          "x-semio-ui": {
+            "widget": "select",
+            "role": "value",
+            "label": {
+              "en": "Status",
+              "de": "Status"
+            },
+            "options": {
+              "computed": {
+                "en": "Computed",
+                "de": "Berechnet"
+              },
+              "cacheHit": {
+                "en": "Cache hit",
+                "de": "Cache-Treffer"
+              },
+              "failed": {
+                "en": "Failed",
+                "de": "Fehlgeschlagen"
+              }
+            },
+            "group": "state",
+            "order": 20
+          }
+        },
+        "documentFingerprint": {
+          "type": "string",
+          "x-semio-ui": {
+            "widget": "text",
+            "role": "value",
+            "label": {
+              "en": "Document fingerprint",
+              "de": "Dokument-Fingerabdruck"
+            },
+            "group": "fingerprint",
+            "order": 30
+          }
+        },
+        "configFingerprint": {
+          "type": "string",
+          "x-semio-ui": {
+            "widget": "text",
+            "role": "value",
+            "label": {
+              "en": "Configuration fingerprint",
+              "de": "Konfigurations-Fingerabdruck"
+            },
+            "group": "fingerprint",
+            "order": 40
+          }
+        },
+        "inputFingerprints": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/Fingerprint"
+          },
+          "x-semio-ui": {
+            "role": "value",
+            "label": {
+              "en": "Input fingerprints",
+              "de": "Eingangs-Fingerabdrücke"
+            },
+            "group": "record",
+            "order": 50
+          }
+        },
+        "outputFingerprints": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/Fingerprint"
+          },
+          "x-semio-ui": {
+            "role": "value",
+            "label": {
+              "en": "Output fingerprints",
+              "de": "Ausgangs-Fingerabdrücke"
+            },
+            "group": "record",
+            "order": 60
+          }
+        },
+        "outputs": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/Output"
+          },
+          "x-semio-ui": {
+            "role": "value",
+            "label": {
+              "en": "Outputs",
+              "de": "Ausgaben"
+            },
+            "group": "record",
+            "order": 70
+          }
+        },
+        "durationMs": {
+          "type": "number",
+          "x-semio-ui": {
+            "widget": "stepper",
+            "role": "value",
+            "label": {
+              "en": "Duration",
+              "de": "Dauer"
+            },
+            "unit": "ms",
+            "step": 1,
+            "precision": 0,
+            "group": "timing",
+            "order": 80
+          }
+        }
+      },
+      "x-semio-ui": {
+        "role": "value",
+        "label": {
+          "en": "Node record",
+          "de": "Knotenprotokoll"
+        },
+        "group": "record",
+        "order": 10
+      }
+    }
+  },
   "$defs": {
     "Fingerprint": {
       "type": "object",
@@ -13,10 +188,30 @@
       ],
       "properties": {
         "portId": {
-          "type": "string"
+          "type": "string",
+          "x-semio-ui": {
+            "widget": "text",
+            "role": "value",
+            "label": {
+              "en": "Port",
+              "de": "Anschluss"
+            },
+            "group": "identity",
+            "order": 10
+          }
         },
         "fingerprint": {
-          "type": "string"
+          "type": "string",
+          "x-semio-ui": {
+            "widget": "text",
+            "role": "value",
+            "label": {
+              "en": "Fingerprint",
+              "de": "Fingerabdruck"
+            },
+            "group": "fingerprint",
+            "order": 20
+          }
         }
       }
     },
@@ -30,86 +225,45 @@
       ],
       "properties": {
         "portId": {
-          "type": "string"
+          "type": "string",
+          "x-semio-ui": {
+            "widget": "text",
+            "role": "value",
+            "label": {
+              "en": "Port",
+              "de": "Anschluss"
+            },
+            "group": "identity",
+            "order": 10
+          }
         },
         "artifactId": {
-          "type": "string"
+          "type": "string",
+          "x-semio-ui": {
+            "widget": "text",
+            "role": "value",
+            "label": {
+              "en": "Artifact ID",
+              "de": "Artefakt-ID"
+            },
+            "group": "identity",
+            "order": 20
+          }
         },
         "path": {
-          "type": "string"
-        }
-      }
-    },
-    "Payload": {
-      "type": "object",
-      "required": [
-        "nodeRecord"
-      ],
-      "properties": {
-        "nodeRecord": {
-          "type": "object",
-          "additionalProperties": false,
-          "required": [
-            "nodeId",
-            "status",
-            "documentFingerprint",
-            "configFingerprint",
-            "inputFingerprints",
-            "outputFingerprints",
-            "outputs",
-            "durationMs"
-          ],
-          "properties": {
-            "nodeId": {
-              "type": "string"
+          "type": "string",
+          "x-semio-ui": {
+            "widget": "text",
+            "role": "value",
+            "label": {
+              "en": "Path",
+              "de": "Pfad"
             },
-            "status": {
-              "enum": [
-                "computed",
-                "cacheHit",
-                "failed"
-              ]
-            },
-            "documentFingerprint": {
-              "type": "string"
-            },
-            "configFingerprint": {
-              "type": "string"
-            },
-            "inputFingerprints": {
-              "type": "array",
-              "items": {
-                "$ref": "#/$defs/Fingerprint"
-              }
-            },
-            "outputFingerprints": {
-              "type": "array",
-              "items": {
-                "$ref": "#/$defs/Fingerprint"
-              }
-            },
-            "outputs": {
-              "type": "array",
-              "items": {
-                "$ref": "#/$defs/Output"
-              }
-            },
-            "durationMs": {
-              "type": "number"
-            }
+            "group": "source",
+            "order": 30
           }
         }
       }
     }
-  },
-  "allOf": [
-    {
-      "$ref": "#/$defs/Payload"
-    }
-  ],
-  "propertyNames": {
-    "enum": [
-      "nodeRecord"
-    ]
   }
 }

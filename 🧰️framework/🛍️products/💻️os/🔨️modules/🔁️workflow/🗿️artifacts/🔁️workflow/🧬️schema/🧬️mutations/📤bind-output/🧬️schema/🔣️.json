@@ -4,11 +4,72 @@
   "title": "BindOutput",
   "type": "object",
   "properties": {
+    "operation": {
+      "const": "bindOutput"
+    },
     "binding": {
-      "type": "object"
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "nodeId",
+        "portId",
+        "pathTemplate"
+      ],
+      "properties": {
+        "nodeId": {
+          "type": "string",
+          "x-semio-ui": {
+            "widget": "reference",
+            "role": "value",
+            "label": {
+              "en": "Node",
+              "de": "Knoten"
+            },
+            "ref": {
+              "kind": "node"
+            }
+          }
+        },
+        "portId": {
+          "type": "string",
+          "x-semio-ui": {
+            "widget": "text",
+            "role": "value",
+            "label": {
+              "en": "Port",
+              "de": "Anschluss"
+            }
+          }
+        },
+        "pathTemplate": {
+          "type": "string",
+          "x-semio-ui": {
+            "widget": "text",
+            "role": "value",
+            "label": {
+              "en": "Path template",
+              "de": "Pfadvorlage"
+            },
+            "description": {
+              "en": "Where the output is written, with placeholders.",
+              "de": "Wohin die Ausgabe geschrieben wird, mit Platzhaltern."
+            }
+          }
+        }
+      },
+      "x-semio-ui": {
+        "role": "value",
+        "label": {
+          "en": "Binding",
+          "de": "Bindung"
+        },
+        "group": "record",
+        "order": 10
+      }
     }
   },
   "required": [
+    "operation",
     "binding"
   ],
   "additionalProperties": false

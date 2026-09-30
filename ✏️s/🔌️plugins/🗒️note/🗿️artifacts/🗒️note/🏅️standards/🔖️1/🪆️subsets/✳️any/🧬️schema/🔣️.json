@@ -138,7 +138,7 @@
           "type": "null"
         },
         {
-          "$ref": "https://json.schemas.assets.semio-tech.com/os/store/link.json"
+          "$ref": "https://json.schemas.assets.semio-tech.com/os/store/link/schema.json"
         }
       ],
       "x-semio-state": "artifact"
@@ -435,10 +435,27 @@
             "color": {
               "type": "array",
               "items": {
-                "type": "number"
+                "type": "number",
+                "minimum": 0,
+                "maximum": 1
               },
               "minItems": 4,
-              "maxItems": 4
+              "maxItems": 4,
+              "x-semio-ui": {
+                "widget": "color",
+                "role": "value",
+                "label": {
+                  "en": "Color",
+                  "de": "Farbe"
+                },
+                "description": {
+                  "en": "Red, green, blue and alpha, each from 0 to 1.",
+                  "de": "Rot, Grün, Blau und Alpha, jeweils von 0 bis 1."
+                },
+                "step": 0.01,
+                "group": "style",
+                "order": 130
+              }
             }
           }
         },
@@ -541,7 +558,7 @@
       ],
       "properties": {
         "handle": {
-          "$ref": "https://json.schemas.assets.semio-tech.com/os/store/child.json"
+          "$ref": "https://json.schemas.assets.semio-tech.com/os/store/child/schema.json"
         },
         "paragraphs": {
           "type": "array",

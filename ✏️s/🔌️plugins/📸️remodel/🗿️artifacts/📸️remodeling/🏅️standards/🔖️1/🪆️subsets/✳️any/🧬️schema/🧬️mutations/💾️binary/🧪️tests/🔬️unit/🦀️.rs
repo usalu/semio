@@ -22,7 +22,7 @@ async fn store_roundtrips_through_document_text() {
     store.install_document_store_owners_exact(semio_framework_plugin::bounded_document_store_owners::<crate::RemodelingSnapshot, RemodelingMutation>());
     let mut feature_params = store.snapshot().expect("initial projection").params.feature;
     feature_params.target_count = 12345;
-    store.dispatch(store::ArtifactCommand::Apply { mutations: vec![crate::mutations::update_feature_params(feature_params)], description: None }).await.expect("apply");
+    store.dispatch(store::ArtifactCommand::Apply { mutations: vec![crate::mutations::update_feature_params(feature_params)], description: None, transaction: None }).await.expect("apply");
     store::os_store::test_support::assert_document_text_round_trip(&store).await;
     store::os_store::test_support::assert_document_pack_round_trip(&store).await;
     while !store.close_owned_terminal_is_empty() {

@@ -75,7 +75,7 @@ async fn declared_outcome_holds_and_a_non_positive_factor_is_fatal() {
     assert_eq!(outcome.get("status").and_then(serde_json::Value::as_str), Some("applied"), "scale-assets/doubles-asset-hero-scale: this fixture declares `applied`");
     assert!(mutation().diff(&before()).messages().is_empty(), "scale-assets/doubles-asset-hero-scale: a positive finite scale must raise no diagnostic");
 
-    let collapsing: ShootingMutation = serde_json::from_str(r#"{"mutation":"scaleAssets","asset_ids":["asset-hero"],"sx":0.0,"sy":1.0,"sz":1.0}"#).expect("probe mutation decodes");
+    let collapsing: ShootingMutation = serde_json::from_str(r#"{"mutation":"scaleAssets","assetIds":["asset-hero"],"sx":0.0,"sy":1.0,"sz":1.0}"#).expect("probe mutation decodes");
     let rejected = collapsing.diff(&before());
     assert_eq!(rejected.worst_level(), Some(protocol::Severity::Fatal), "scale-assets/doubles-asset-hero-scale: collapsing an axis to zero must be Fatal");
     assert_eq!(rejected.messages()[0].code.0, "mutation.invariant", "scale-assets/doubles-asset-hero-scale: the positivity guard's frozen code");

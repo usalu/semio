@@ -12,13 +12,59 @@
   ],
   "properties": {
     "mutation": {
-      "const": "removeNodeHandle"
+      "const": "removeNodeHandle",
+      "x-semio-ui": {
+        "widget": "hidden",
+        "role": "discriminator",
+        "label": {
+          "en": "Mutation",
+          "de": "Mutation"
+        }
+      }
     },
     "nodeId": {
-      "type": "string"
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Node",
+          "de": "Knoten"
+        },
+        "description": {
+          "en": "The node that owns the handle.",
+          "de": "Der Knoten, dem der Anschluss gehört."
+        },
+        "ref": {
+          "kind": "node",
+          "domain": "vortex",
+          "granularity": "node"
+        },
+        "group": "target",
+        "order": 10
+      }
     },
     "handleId": {
-      "type": "string"
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Handle",
+          "de": "Anschluss"
+        },
+        "description": {
+          "en": "The handle this mutation addresses.",
+          "de": "Der Anschluss, den diese Mutation adressiert."
+        },
+        "ref": {
+          "kind": "handle",
+          "domain": "vortex",
+          "granularity": "handle"
+        },
+        "group": "target",
+        "order": 20
+      }
     }
   }
 }

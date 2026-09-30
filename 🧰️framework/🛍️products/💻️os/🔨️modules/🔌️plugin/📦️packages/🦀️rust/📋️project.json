@@ -9,6 +9,15 @@
     "family:os-plugin"
   ],
   "targets": {
+    "canonical-architecture": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "options": {
+        "command": "bun ./📜️script.ts canonical-architecture",
+        "cwd": "{projectRoot}"
+      },
+      "outputs": []
+    },
     "document-backbone-binding-check": {
       "executor": "nx:run-commands",
       "cache": true,

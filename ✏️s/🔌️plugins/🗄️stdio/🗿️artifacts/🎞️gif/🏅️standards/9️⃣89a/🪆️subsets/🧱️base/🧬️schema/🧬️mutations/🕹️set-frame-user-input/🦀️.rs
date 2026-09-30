@@ -8,6 +8,7 @@ use super::*;
 #[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::DslRecord, dsl::MutationLeaf)]
 #[mutation_leaf(contract = ::protocol)]
 #[dsl(keyword = "set-frame-user-input")]
+#[value(rename_all = "camelCase")]
 pub struct SetFrameUserInput {
     pub(crate) index: usize,
     pub(crate) user_input: bool,

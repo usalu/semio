@@ -12,7 +12,7 @@
     "manifest": { "$ref": "#/$defs/Manifest", "x-semio-state": "artifact" },
     "camera": { "$ref": "#/$defs/Camera", "x-semio-state": "artifact" },
     "content": {
-      "$ref": "https://json.schemas.assets.semio-tech.com/os/store/child.json",
+      "$ref": "https://json.schemas.assets.semio-tech.com/os/store/child/schema.json",
       "x-semio-state": "artifact",
       "x-semio-child-kind": "s.stdio.semio"
     },
@@ -53,6 +53,32 @@
       "properties": {
         "name": { "type": "string" },
         "direction": { "type": "string" }
+      }
+    },
+    "QueryResult": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["kind", "columns", "rows"],
+      "properties": {
+        "kind": {
+          "type": "string",
+          "enum": ["table", "graph"],
+          "x-semio-ui": { "widget": "segmented", "role": "value", "label": { "en": "Result Kind", "de": "Ergebnisart" }, "options": { "table": { "en": "Table", "de": "Tabelle" }, "graph": { "en": "Graph", "de": "Graph" } } }
+        },
+        "columns": {
+          "type": "array",
+          "items": { "type": "string" },
+          "x-semio-ui": { "role": "value", "label": { "en": "Columns", "de": "Spalten" }, "description": { "en": "Column names of the result table, in order.", "de": "Spaltennamen der Ergebnistabelle in Reihenfolge." } }
+        },
+        "rows": {
+          "type": "array",
+          "items": { "type": "array", "items": { "$ref": "https://json.schemas.assets.semio-tech.com/framework/value/schema.json#/$defs/DslValue" } },
+          "x-semio-ui": { "widget": "hidden", "role": "value", "label": { "en": "Rows", "de": "Zeilen" }, "description": { "en": "One value per column in every row.", "de": "Ein Wert je Spalte in jeder Zeile." } }
+        },
+        "graphFixture": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/trinity/jack/snapshot.json",
+          "x-semio-ui": { "widget": "hidden", "role": "value", "label": { "en": "Result Graph", "de": "Ergebnisgraph" }, "description": { "en": "Graph a graph query returned; absent for a table.", "de": "Graph, den eine Graphabfrage liefert; fehlt bei einer Tabelle." } }
+        }
       }
     }
   }

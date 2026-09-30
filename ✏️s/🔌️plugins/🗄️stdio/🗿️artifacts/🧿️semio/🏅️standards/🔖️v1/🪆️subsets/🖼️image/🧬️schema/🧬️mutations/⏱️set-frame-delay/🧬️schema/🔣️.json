@@ -5,10 +5,15 @@
   "type": "object",
   "additionalProperties": false,
   "required": [
+    "mutation",
     "index",
     "delay_ms"
   ],
   "properties": {
+    "mutation": {
+      "const": "setFrameDelay",
+      "description": "Aggregate discriminator spliced in by SemioImageMutation; absent when the payload stands alone."
+    },
     "index": {
       "type": "integer",
       "minimum": 0
@@ -16,11 +21,15 @@
     "delay_ms": {
       "type": "integer",
       "minimum": 0,
-      "maximum": 4294967295
-    },
-    "mutation": {
-      "const": "setFrameDelay",
-      "description": "Aggregate discriminator spliced in by SemioImageMutation; absent when the payload stands alone."
+      "maximum": 4294967295,
+      "x-semio-ui": {
+        "widget": "stepper",
+        "label": {
+          "en": "Frame delay",
+          "de": "Bildverzögerung"
+        },
+        "unit": "ms"
+      }
     }
   }
 }

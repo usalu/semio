@@ -621,6 +621,7 @@ fn space_retained_edit<M>(prefix: &'static str, forward: M, inverse: Vec<M>, des
             label: None,
             group_id: None,
             origin: Default::default(),
+            transaction: None,
         }],
         description,
         coalesce_key: None,

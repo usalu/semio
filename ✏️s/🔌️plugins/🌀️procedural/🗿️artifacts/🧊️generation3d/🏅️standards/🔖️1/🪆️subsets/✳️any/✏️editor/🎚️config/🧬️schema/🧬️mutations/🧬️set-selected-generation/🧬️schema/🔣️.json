@@ -5,5 +5,5 @@
   "type": "object",
   "additionalProperties": false,
   "required": ["selectedGenerationId"],
-  "properties": { "selectedGenerationId": { "type": ["string", "null"] } }
+  "properties": { "selectedGenerationId": { "type": ["string", "null"], "x-semio-ui": {"widget": "reference", "role": "target", "label": {"en": "Selected generation", "de": "Ausgewählte Generierung"}, "description": {"en": "The generation shown in the preview; empty selects none.", "de": "Die in der Vorschau gezeigte Generierung; leer wählt keine."}, "ref": {"kind": "generation"}, "group": "target", "order": 10} } }
 }

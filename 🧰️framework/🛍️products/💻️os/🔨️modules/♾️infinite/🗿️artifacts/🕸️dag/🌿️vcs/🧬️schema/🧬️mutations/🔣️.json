@@ -4,357 +4,46 @@
   "type": "object",
   "oneOf": [
     {
-      "allOf": [
-        {
-          "$ref": "https://json.schemas.assets.semio-tech.com/os/infinite/artifacts/dag/vcs/mutation/create-node/schema.json#/$defs/Payload"
-        },
-        {
-          "type": "object",
-          "required": [
-            "operation"
-          ],
-          "properties": {
-            "operation": {
-              "const": "createNode"
-            }
-          }
-        }
-      ],
-      "propertyNames": {
-        "enum": [
-          "index",
-          "node",
-          "operation"
-        ]
-      }
+      "$ref": "https://json.schemas.assets.semio-tech.com/os/infinite/artifacts/dag/vcs/mutation/create-node/schema.json"
     },
     {
-      "allOf": [
-        {
-          "$ref": "https://json.schemas.assets.semio-tech.com/os/infinite/artifacts/dag/vcs/mutation/delete-node/schema.json#/$defs/Payload"
-        },
-        {
-          "type": "object",
-          "required": [
-            "operation"
-          ],
-          "properties": {
-            "operation": {
-              "const": "deleteNode"
-            }
-          }
-        }
-      ],
-      "propertyNames": {
-        "enum": [
-          "id",
-          "operation"
-        ]
-      }
+      "$ref": "https://json.schemas.assets.semio-tech.com/os/infinite/artifacts/dag/vcs/mutation/delete-node/schema.json"
     },
     {
-      "allOf": [
-        {
-          "$ref": "https://json.schemas.assets.semio-tech.com/os/infinite/artifacts/dag/vcs/mutation/rename-node/schema.json#/$defs/Payload"
-        },
-        {
-          "type": "object",
-          "required": [
-            "operation"
-          ],
-          "properties": {
-            "operation": {
-              "const": "renameNode"
-            }
-          }
-        }
-      ],
-      "propertyNames": {
-        "enum": [
-          "id",
-          "newId",
-          "operation"
-        ]
-      }
+      "$ref": "https://json.schemas.assets.semio-tech.com/os/infinite/artifacts/dag/vcs/mutation/rename-node/schema.json"
     },
     {
-      "allOf": [
-        {
-          "$ref": "https://json.schemas.assets.semio-tech.com/os/infinite/artifacts/dag/vcs/mutation/change-node-name/schema.json#/$defs/Payload"
-        },
-        {
-          "type": "object",
-          "required": [
-            "operation"
-          ],
-          "properties": {
-            "operation": {
-              "const": "changeNodeName"
-            }
-          }
-        }
-      ],
-      "propertyNames": {
-        "enum": [
-          "id",
-          "newName",
-          "operation"
-        ]
-      }
+      "$ref": "https://json.schemas.assets.semio-tech.com/os/infinite/artifacts/dag/vcs/mutation/change-node-name/schema.json"
     },
     {
-      "allOf": [
-        {
-          "$ref": "https://json.schemas.assets.semio-tech.com/os/infinite/artifacts/dag/vcs/mutation/move-node/schema.json#/$defs/Payload"
-        },
-        {
-          "type": "object",
-          "required": [
-            "operation"
-          ],
-          "properties": {
-            "operation": {
-              "const": "moveNode"
-            }
-          }
-        }
-      ],
-      "propertyNames": {
-        "enum": [
-          "id",
-          "operation",
-          "x",
-          "y"
-        ]
-      }
+      "$ref": "https://json.schemas.assets.semio-tech.com/os/infinite/artifacts/dag/vcs/mutation/move-node/schema.json"
     },
     {
-      "allOf": [
-        {
-          "$ref": "https://json.schemas.assets.semio-tech.com/os/infinite/artifacts/dag/vcs/mutation/resize-node/schema.json#/$defs/Payload"
-        },
-        {
-          "type": "object",
-          "required": [
-            "operation"
-          ],
-          "properties": {
-            "operation": {
-              "const": "resizeNode"
-            }
-          }
-        }
-      ],
-      "propertyNames": {
-        "enum": [
-          "height",
-          "id",
-          "operation",
-          "width"
-        ]
-      }
+      "$ref": "https://json.schemas.assets.semio-tech.com/os/infinite/artifacts/dag/vcs/mutation/resize-node/schema.json"
     },
     {
-      "allOf": [
-        {
-          "$ref": "https://json.schemas.assets.semio-tech.com/os/infinite/artifacts/dag/vcs/mutation/change-node-icon/schema.json#/$defs/Payload"
-        },
-        {
-          "type": "object",
-          "required": [
-            "operation"
-          ],
-          "properties": {
-            "operation": {
-              "const": "changeNodeIcon"
-            }
-          }
-        }
-      ],
-      "propertyNames": {
-        "enum": [
-          "id",
-          "newIcon",
-          "operation"
-        ]
-      }
+      "$ref": "https://json.schemas.assets.semio-tech.com/os/infinite/artifacts/dag/vcs/mutation/change-node-icon/schema.json"
     },
     {
-      "allOf": [
-        {
-          "$ref": "https://json.schemas.assets.semio-tech.com/os/infinite/artifacts/dag/vcs/mutation/change-node-abbreviation/schema.json#/$defs/Payload"
-        },
-        {
-          "type": "object",
-          "required": [
-            "operation"
-          ],
-          "properties": {
-            "operation": {
-              "const": "changeNodeAbbreviation"
-            }
-          }
-        }
-      ],
-      "propertyNames": {
-        "enum": [
-          "id",
-          "newAbbreviation",
-          "operation"
-        ]
-      }
+      "$ref": "https://json.schemas.assets.semio-tech.com/os/infinite/artifacts/dag/vcs/mutation/change-node-abbreviation/schema.json"
     },
     {
-      "allOf": [
-        {
-          "$ref": "https://json.schemas.assets.semio-tech.com/os/infinite/artifacts/dag/vcs/mutation/change-node-operator-kind/schema.json#/$defs/Payload"
-        },
-        {
-          "type": "object",
-          "required": [
-            "operation"
-          ],
-          "properties": {
-            "operation": {
-              "const": "changeNodeOperatorKind"
-            }
-          }
-        }
-      ],
-      "propertyNames": {
-        "enum": [
-          "id",
-          "newOperatorKind",
-          "operation"
-        ]
-      }
+      "$ref": "https://json.schemas.assets.semio-tech.com/os/infinite/artifacts/dag/vcs/mutation/change-node-operator-kind/schema.json"
     },
     {
-      "allOf": [
-        {
-          "$ref": "https://json.schemas.assets.semio-tech.com/os/infinite/artifacts/dag/vcs/mutation/replace-node-kind/schema.json#/$defs/Payload"
-        },
-        {
-          "type": "object",
-          "required": [
-            "operation"
-          ],
-          "properties": {
-            "operation": {
-              "const": "replaceNodeKind"
-            }
-          }
-        }
-      ],
-      "propertyNames": {
-        "enum": [
-          "id",
-          "newKind",
-          "operation"
-        ]
-      }
+      "$ref": "https://json.schemas.assets.semio-tech.com/os/infinite/artifacts/dag/vcs/mutation/replace-node-kind/schema.json"
     },
     {
-      "allOf": [
-        {
-          "$ref": "https://json.schemas.assets.semio-tech.com/os/infinite/artifacts/dag/vcs/mutation/replace-node-properties/schema.json#/$defs/Payload"
-        },
-        {
-          "type": "object",
-          "required": [
-            "operation"
-          ],
-          "properties": {
-            "operation": {
-              "const": "replaceNodeProperties"
-            }
-          }
-        }
-      ],
-      "propertyNames": {
-        "enum": [
-          "id",
-          "newProperties",
-          "operation"
-        ]
-      }
+      "$ref": "https://json.schemas.assets.semio-tech.com/os/infinite/artifacts/dag/vcs/mutation/replace-node-properties/schema.json"
     },
     {
-      "allOf": [
-        {
-          "$ref": "https://json.schemas.assets.semio-tech.com/os/infinite/artifacts/dag/vcs/mutation/reorder-nodes/schema.json#/$defs/Payload"
-        },
-        {
-          "type": "object",
-          "required": [
-            "operation"
-          ],
-          "properties": {
-            "operation": {
-              "const": "reorderNodes"
-            }
-          }
-        }
-      ],
-      "propertyNames": {
-        "enum": [
-          "operation",
-          "order"
-        ]
-      }
+      "$ref": "https://json.schemas.assets.semio-tech.com/os/infinite/artifacts/dag/vcs/mutation/reorder-nodes/schema.json"
     },
     {
-      "allOf": [
-        {
-          "$ref": "https://json.schemas.assets.semio-tech.com/os/infinite/artifacts/dag/vcs/mutation/connect-nodes/schema.json#/$defs/Payload"
-        },
-        {
-          "type": "object",
-          "required": [
-            "operation"
-          ],
-          "properties": {
-            "operation": {
-              "const": "connectNodes"
-            }
-          }
-        }
-      ],
-      "propertyNames": {
-        "enum": [
-          "id",
-          "index",
-          "operation",
-          "properties",
-          "routeStyle",
-          "source",
-          "target"
-        ]
-      }
+      "$ref": "https://json.schemas.assets.semio-tech.com/os/infinite/artifacts/dag/vcs/mutation/connect-nodes/schema.json"
     },
     {
-      "allOf": [
-        {
-          "$ref": "https://json.schemas.assets.semio-tech.com/os/infinite/artifacts/dag/vcs/mutation/disconnect-nodes/schema.json#/$defs/Payload"
-        },
-        {
-          "type": "object",
-          "required": [
-            "operation"
-          ],
-          "properties": {
-            "operation": {
-              "const": "disconnectNodes"
-            }
-          }
-        }
-      ],
-      "propertyNames": {
-        "enum": [
-          "id",
-          "operation"
-        ]
-      }
+      "$ref": "https://json.schemas.assets.semio-tech.com/os/infinite/artifacts/dag/vcs/mutation/disconnect-nodes/schema.json"
     }
   ]
 }

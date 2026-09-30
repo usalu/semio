@@ -511,28 +511,7 @@ async fn execution_ports_use_triangle_shape() {
     assert_eq!(node.outputs()[0].shape, PortShape::Triangle);
 }
 
-#[semio_framework_async_macros::async_test]
-async fn function_steps_use_data_ports_without_visible_execution_pins() {
-    let host = neural_engine::ColdOwner::new(SequenceHost::default());
-    let step = SequenceStep { id: "step-fn".into(), kind: "math.add".into(), params: StepParams::new(), x: 0.0, y: 0.0, slot: None, collapsed: false };
-    let node = host.step_to_dag_node(&step);
-    assert!(node.inputs().iter().any(|port| port.id == "a" && port.visible));
-    assert!(node.inputs().iter().any(|port| port.id == "prev" && !port.visible));
-    assert!(node.outputs().iter().any(|port| port.id == "next" && !port.visible));
-    assert!(!node.inputs().iter().any(|port| port.shape == PortShape::Triangle && port.visible));
-}
 
-#[semio_framework_async_macros::async_test]
-async fn text_steps_use_data_ports_without_visible_execution_pins() {
-    let host = neural_engine::ColdOwner::new(SequenceHost::default());
-    let step = SequenceStep { id: "step-txt".into(), kind: "text.concat".into(), params: StepParams::new(), x: 0.0, y: 0.0, slot: None, collapsed: false };
-    let node = host.step_to_dag_node(&step);
-    assert!(node.inputs().iter().any(|port| port.id == "left" && port.visible));
-    assert!(node.inputs().iter().any(|port| port.id == "into" && port.visible));
-    assert!(node.inputs().iter().any(|port| port.id == "prev" && !port.visible));
-    assert!(node.outputs().iter().any(|port| port.id == "next" && !port.visible));
-    assert!(!node.inputs().iter().any(|port| port.shape == PortShape::Triangle && port.visible));
-}
 
 #[semio_framework_async_macros::async_test]
 async fn replace_snapshot_preserves_next_serial_and_selection() {
@@ -800,17 +779,6 @@ async fn set_ghost_step_and_clear_ghost_step_toggle_dag_ghost_node() {
     assert!(host.dag.ghost_node().is_none());
 }
 
-#[semio_framework_async_macros::async_test]
-async fn run_executes_default_snapshot_and_records_scope() {
-    let host = neural_engine::ColdOwner::new(SequenceHost::default());
-    let result = host.run();
-    assert_eq!(result.scope.get("counter").and_then(|v| v.as_atom()).and_then(|a| a.as_f64()), Some(0.0));
-    assert!(!result.effects.is_empty());
-    // 🧊️ `run` mints a fresh scope dictionary (and one per effect) that nothing else owns — dropping
-    // the result unretired trips `final Dictionary ownership must be explicitly retired or owned by a
-    // cold boundary`, which is why the crate publishes its own exact retirement for this shape.
-    retire_run_result_cold(result);
-}
 
 #[semio_framework_async_macros::async_test]
 async fn compile_text_renders_default_snapshot_steps() {

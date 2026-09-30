@@ -13,16 +13,73 @@
   ],
   "properties": {
     "mutation": {
-      "const": "resizeTargetRegion"
+      "const": "resizeTargetRegion",
+      "x-semio-ui": {
+        "widget": "hidden",
+        "role": "discriminator",
+        "label": {
+          "en": "Mutation",
+          "de": "Mutation"
+        }
+      }
     },
     "id": {
-      "type": "string"
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Target region",
+          "de": "Zielregion"
+        },
+        "description": {
+          "en": "The target region this mutation addresses.",
+          "de": "Die Zielregion, die diese Mutation adressiert."
+        },
+        "ref": {
+          "kind": "targetRegion",
+          "domain": "vortex",
+          "granularity": "node"
+        },
+        "group": "target",
+        "order": 10
+      }
     },
     "newWidth": {
-      "type": "number"
+      "type": "number",
+      "x-semio-ui": {
+        "widget": "stepper",
+        "role": "value",
+        "label": {
+          "en": "Width",
+          "de": "Breite"
+        },
+        "step": 1,
+        "precision": 2,
+        "snapSource": {
+          "config": "gridFactor"
+        },
+        "group": "geometry",
+        "order": 20
+      }
     },
     "newHeight": {
-      "type": "number"
+      "type": "number",
+      "x-semio-ui": {
+        "widget": "stepper",
+        "role": "value",
+        "label": {
+          "en": "Height",
+          "de": "Höhe"
+        },
+        "step": 1,
+        "precision": 2,
+        "snapSource": {
+          "config": "gridFactor"
+        },
+        "group": "geometry",
+        "order": 30
+      }
     }
   }
 }

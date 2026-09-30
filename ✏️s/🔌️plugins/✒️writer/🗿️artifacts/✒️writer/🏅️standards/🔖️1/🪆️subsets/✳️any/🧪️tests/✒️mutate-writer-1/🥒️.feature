@@ -62,7 +62,7 @@ Feature: Apply every typed writer document mutation twice — once in Rust, once
       | change-uri      | 🔗change-uri/🔗️republishes-the-brief-under-a-new-uri            |
       | change-language | 🌐change-language/🔤️switches-the-brief-from-plaintext-to-markdown |
       | edit-text       | ✏️edit-text/⚠️warns-that-the-brief-body-is-unchanged             |
-      | splice-text     | ✂️splice-text/⚠️warns-that-an-already-removed-run-leaves-the-brief-unchanged |
+      | splice-text     | ✂️splice-text/⚠️warns-already-removed-run-leaves-brief-unchanged |
 
   @id-inverse
   @level-exhaustive
@@ -81,7 +81,7 @@ Feature: Apply every typed writer document mutation twice — once in Rust, once
       | change-uri      | 🔗change-uri/🔗️republishes-the-brief-under-a-new-uri            |
       | change-language | 🌐change-language/🔤️switches-the-brief-from-plaintext-to-markdown |
       | edit-text       | ✏️edit-text/⚠️warns-that-the-brief-body-is-unchanged             |
-      | splice-text     | ✂️splice-text/⚠️warns-that-an-already-removed-run-leaves-the-brief-unchanged |
+      | splice-text     | ✂️splice-text/⚠️warns-already-removed-run-leaves-brief-unchanged |
 
   @id-identity-round-trip
   @level-long

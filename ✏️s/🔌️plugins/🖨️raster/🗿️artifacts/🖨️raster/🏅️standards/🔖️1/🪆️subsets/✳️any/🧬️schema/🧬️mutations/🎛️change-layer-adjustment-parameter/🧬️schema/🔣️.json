@@ -6,21 +6,64 @@
   "type": "object",
   "additionalProperties": false,
   "required": [
+    "mutation",
     "layerId",
     "parameter",
     "expected",
     "value"
   ],
   "properties": {
+    "mutation": {
+      "const": "changeLayerAdjustmentParameter"
+    },
     "layerId": {
       "type": "string",
-      "minLength": 1
+      "minLength": 1,
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Layer",
+          "de": "Ebene"
+        },
+        "description": {
+          "en": "The layer this mutation addresses.",
+          "de": "Die Ebene, die diese Mutation adressiert."
+        },
+        "ref": {
+          "kind": "layer",
+          "domain": "layers",
+          "granularity": "layer"
+        },
+        "group": "target",
+        "order": 10
+      }
     },
     "parameter": {
       "enum": [
         "brightness",
         "contrast"
-      ]
+      ],
+      "x-semio-ui": {
+        "widget": "segmented",
+        "role": "value",
+        "label": {
+          "en": "Parameter",
+          "de": "Parameter"
+        },
+        "options": {
+          "brightness": {
+            "en": "Brightness",
+            "de": "Helligkeit"
+          },
+          "contrast": {
+            "en": "Contrast",
+            "de": "Kontrast"
+          }
+        },
+        "group": "adjustment",
+        "order": 20
+      }
     },
     "expected": {
       "type": [
@@ -28,7 +71,32 @@
         "null"
       ],
       "minimum": -1,
-      "maximum": 1
+      "maximum": 1,
+      "x-semio-ui": {
+        "widget": "slider",
+        "role": "value",
+        "label": {
+          "en": "Expected value",
+          "de": "Erwarteter Wert"
+        },
+        "description": {
+          "en": "Value the layer must hold now; the edit is refused on a mismatch.",
+          "de": "Wert, den die Ebene jetzt haben muss; sonst wird die Bearbeitung abgelehnt."
+        },
+        "step": 0.01,
+        "precision": 2,
+        "softMin": -1,
+        "softMax": 1,
+        "snaps": [
+          -1,
+          -0.5,
+          0,
+          0.5,
+          1
+        ],
+        "group": "adjustment",
+        "order": 30
+      }
     },
     "value": {
       "type": [
@@ -36,7 +104,32 @@
         "null"
       ],
       "minimum": -1,
-      "maximum": 1
+      "maximum": 1,
+      "x-semio-ui": {
+        "widget": "slider",
+        "role": "value",
+        "label": {
+          "en": "Value",
+          "de": "Wert"
+        },
+        "description": {
+          "en": "New value; empty removes the parameter.",
+          "de": "Neuer Wert; leer entfernt den Parameter."
+        },
+        "step": 0.01,
+        "precision": 2,
+        "softMin": -1,
+        "softMax": 1,
+        "snaps": [
+          -1,
+          -0.5,
+          0,
+          0.5,
+          1
+        ],
+        "group": "adjustment",
+        "order": 40
+      }
     }
   }
 }

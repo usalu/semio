@@ -13,7 +13,13 @@
       "$ref": "#/$defs/NodePath"
     },
     "original": {
-      "$ref": "#/$defs/DrawNode"
+      "$ref": "#/$defs/DrawNode",
+      "x-semio-ui": {
+        "label": {
+          "en": "Original node",
+          "de": "Ursprünglicher Knoten"
+        }
+      }
     }
   },
   "$defs": {

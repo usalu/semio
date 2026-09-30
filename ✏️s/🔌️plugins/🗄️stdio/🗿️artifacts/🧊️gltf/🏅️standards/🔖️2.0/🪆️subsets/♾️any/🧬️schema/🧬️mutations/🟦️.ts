@@ -1,249 +1,379 @@
-/** 🧬 Transparent TypeScript aggregate for the complete glTF mutation vocabulary. `GltfMutation`
- * carries `#[serde(tag = "mutation", content = "payload", rename_all = "camelCase")]`, so the tag
- * values are the camelCase form of the Rust variant names (e.g. `ReorderMeshs` ->
- * `"reorderMeshs"`), NOT the kebab-case `semanticKind` slugs this previously used for the tag
- * value. */
-import type { SetSnapshot } from './📸️snapshot/📸️set/🟦️.ts';
-import type { GltfBindDefaultScenePayload } from './🏠️default-scene/🔗️bind/🟦️.ts';
-import type { GltfBindMorphTargetAttributePayload } from './🎚️morph-attribute/🔗️bind/🟦️.ts';
-import type { GltfBindNodeCameraPayload } from './📷️node-camera/🔗️bind/🟦️.ts';
-import type { GltfBindNodeChildPayload } from './🌿️node-child/🔗️bind/🟦️.ts';
-import type { GltfBindNodeMeshPayload } from './🏗️node-mesh/🔗️bind/🟦️.ts';
-import type { GltfBindNodeSkinPayload } from './🩻️node-skin/🔗️bind/🟦️.ts';
-import type { GltfBindPrimitiveAttributePayload } from './🔤️primitive-attribute/🔗️bind/🟦️.ts';
-import type { GltfBindPrimitiveIndicesPayload } from './🔢️primitive-indices/🔗️bind/🟦️.ts';
-import type { GltfBindPrimitiveMaterialPayload } from './🧱️primitive-material/🔗️bind/🟦️.ts';
-import type { GltfBindSceneRootNodePayload } from './🌲️scene-root/🔗️bind/🟦️.ts';
-import type { GltfChangeAssetDescriptiveMetadataPayload } from './🪪️asset/📝️change-description/🟦️.ts';
-import type { GltfChangeAssetExtensionDataPayload } from './🪪️asset/🧩️change-extensions/🟦️.ts';
-import type { GltfChangeAssetExtraDataPayload } from './🪪️asset/🧾️change-extras/🟦️.ts';
-import type { GltfChangeAssetVersionPayload } from './🪪️asset/🔖️version/🟦️.ts';
-import type { GltfChangeDocumentExtensionDataPayload } from './📃️document/🧩️change-extensions/🟦️.ts';
-import type { GltfChangeDocumentExtraDataPayload } from './📃️document/📝️change-extras/🟦️.ts';
-import type { GltfChangeMaterialAlphaModePayload } from './💎️material/🌫️change-alpha/🟦️.ts';
-import type { GltfChangeMaterialDoubleSidedPayload } from './💎️material/🪞️change-sides/🟦️.ts';
-import type { GltfChangeMeshExtensionDataPayload } from './🕸️mesh/🧩️change-extensions/🟦️.ts';
-import type { GltfChangeMeshExtraDataPayload } from './🕸️mesh/📝️change-extras/🟦️.ts';
-import type { GltfChangeMeshMorphWeightsPayload } from './🕸️mesh/⚖️change-weights/🟦️.ts';
-import type { GltfChangeMeshNamePayload } from './🕸️mesh/🏷️rename/🟦️.ts';
-import type { GltfChangeNodeExtensionDataPayload } from './🌳️node/🧩️change-extensions/🟦️.ts';
-import type { GltfChangeNodeExtraDataPayload } from './🌳️node/📝️change-extras/🟦️.ts';
-import type { GltfChangeNodeMorphWeightsPayload } from './🌳️node/⚖️change-weights/🟦️.ts';
-import type { GltfChangeNodeNameMutation } from './🌳️node/🏷️rename/🟦️.ts';
-import type { GltfChangePrimitiveExtensionDataPayload } from './🔺️primitive/🧩️change-extensions/🟦️.ts';
-import type { GltfChangePrimitiveExtraDataPayload } from './🔺️primitive/📝️change-extras/🟦️.ts';
-import type { GltfChangePrimitiveTopologyModePayload } from './🔺️primitive/📐️change-topology/🟦️.ts';
-import type { GltfChangeSceneExtensionDataPayload } from './🎬️scene/🧩️change-extensions/🟦️.ts';
-import type { GltfChangeSceneExtraDataPayload } from './🎬️scene/📝️change-extras/🟦️.ts';
-import type { GltfChangeSceneNamePayload } from './🎬️scene/🏷️rename/🟦️.ts';
-import type { GltfCreateAccessorPayload } from './📐️accessor/🌱️create/🟦️.ts';
-import type { GltfCreateAnimationPayload } from './🎞️animation/🌱️create/🟦️.ts';
-import type { GltfCreateBufferPayload } from './💿️buffer/🌱️create/🟦️.ts';
-import type { GltfCreateBufferViewPayload } from './🪟️buffer-view/🌱️create/🟦️.ts';
-import type { GltfCreateCameraPayload } from './🎥️camera/🌱️create/🟦️.ts';
-import type { GltfCreateImagePayload } from './🖼️image/🌱️create/🟦️.ts';
-import type { GltfCreateMaterialPayload } from './💎️material/🌱️create/🟦️.ts';
-import type { GltfCreateMeshPayload } from './🕸️mesh/🌱️create/🟦️.ts';
-import type { GltfCreateMorphTargetPayload } from './🧬️morph-target/🌱️create/🟦️.ts';
-import type { GltfCreateNodePayload } from './🌳️node/🌱️create/🟦️.ts';
-import type { GltfCreatePrimitivePayload } from './🔺️primitive/🌱️create/🟦️.ts';
-import type { GltfCreateSamplerPayload } from './🎛️sampler/🌱️create/🟦️.ts';
-import type { GltfCreateScenePayload } from './🎬️scene/🌱️create/🟦️.ts';
-import type { GltfCreateSkinPayload } from './🦴️skin/🌱️create/🟦️.ts';
-import type { GltfCreateTexturePayload } from './🎨️texture/🌱️create/🟦️.ts';
-import type { GltfDeclareUsedExtensionPayload } from './📣️used-extension/➕️add/🟦️.ts';
-import type { GltfDeleteAccessorPayload } from './📐️accessor/🗑️delete/🟦️.ts';
-import type { GltfDeleteAnimationPayload } from './🎞️animation/🗑️delete/🟦️.ts';
-import type { GltfDeleteBufferPayload } from './💿️buffer/🗑️delete/🟦️.ts';
-import type { GltfDeleteBufferViewPayload } from './🪟️buffer-view/🗑️delete/🟦️.ts';
-import type { GltfDeleteCameraPayload } from './🎥️camera/🗑️delete/🟦️.ts';
-import type { GltfDeleteImagePayload } from './🖼️image/🗑️delete/🟦️.ts';
-import type { GltfDeleteMaterialPayload } from './💎️material/🗑️delete/🟦️.ts';
-import type { GltfDeleteMeshPayload } from './🕸️mesh/🗑️delete/🟦️.ts';
-import type { GltfDeleteMorphTargetPayload } from './🧬️morph-target/🗑️delete/🟦️.ts';
-import type { GltfDeleteNodePayload } from './🌳️node/🗑️delete/🟦️.ts';
-import type { GltfDeletePrimitivePayload } from './🔺️primitive/🗑️delete/🟦️.ts';
-import type { GltfDeleteSamplerPayload } from './🎛️sampler/🗑️delete/🟦️.ts';
-import type { GltfDeleteScenePayload } from './🎬️scene/🗑️delete/🟦️.ts';
-import type { GltfDeleteSkinPayload } from './🦴️skin/🗑️delete/🟦️.ts';
-import type { GltfDeleteTexturePayload } from './🎨️texture/🗑️delete/🟦️.ts';
-import type { GltfMoveAccessorPayload } from './📐️accessor/🚚️move/🟦️.ts';
-import type { GltfMoveAnimationPayload } from './🎞️animation/🚚️move/🟦️.ts';
-import type { GltfMoveBufferPayload } from './💿️buffer/🚚️move/🟦️.ts';
-import type { GltfMoveBufferViewPayload } from './🪟️buffer-view/🚚️move/🟦️.ts';
-import type { GltfMoveCameraPayload } from './🎥️camera/🚚️move/🟦️.ts';
-import type { GltfMoveImagePayload } from './🖼️image/🚚️move/🟦️.ts';
-import type { GltfMoveMaterialPayload } from './💎️material/🚚️move/🟦️.ts';
-import type { GltfMoveMeshPayload } from './🕸️mesh/🚚️move/🟦️.ts';
-import type { GltfMoveMorphTargetPayload } from './🧬️morph-target/🚚️move/🟦️.ts';
-import type { GltfMoveMorphTargetAttributePayload } from './🎚️morph-attribute/🚚️move/🟦️.ts';
-import type { GltfMoveNodePayload } from './🌳️node/🚚️move/🟦️.ts';
-import type { GltfMoveNodeChildPayload } from './🌿️node-child/🚚️move/🟦️.ts';
-import type { GltfMovePrimitivePayload } from './🔺️primitive/🚚️move/🟦️.ts';
-import type { GltfMovePrimitiveAttributePayload } from './🔤️primitive-attribute/🚚️move/🟦️.ts';
-import type { GltfMoveRequiredExtensionPayload } from './✅️required-extension/🚚️move/🟦️.ts';
-import type { GltfMoveSamplerPayload } from './🎛️sampler/🚚️move/🟦️.ts';
-import type { GltfMoveScenePayload } from './🎬️scene/🚚️move/🟦️.ts';
-import type { GltfMoveSceneRootNodePayload } from './🌲️scene-root/🚚️move/🟦️.ts';
-import type { GltfMoveSkinPayload } from './🦴️skin/🚚️move/🟦️.ts';
-import type { GltfMoveTexturePayload } from './🎨️texture/🚚️move/🟦️.ts';
-import type { GltfMoveUsedExtensionPayload } from './📣️used-extension/🚚️move/🟦️.ts';
-import type { GltfReorderAccessorsPayload } from './📐️accessor/🔀️reorder/🟦️.ts';
-import type { GltfReorderAnimationsPayload } from './🎞️animation/🔀️reorder/🟦️.ts';
-import type { GltfReorderBufferViewsPayload } from './🪟️buffer-view/🔀️reorder/🟦️.ts';
-import type { GltfReorderBuffersPayload } from './💿️buffer/🔀️reorder/🟦️.ts';
-import type { GltfReorderCamerasPayload } from './🎥️camera/🔀️reorder/🟦️.ts';
-import type { GltfReorderImagesPayload } from './🖼️image/🔀️reorder/🟦️.ts';
-import type { GltfReorderMaterialsPayload } from './💎️material/🔀️reorder/🟦️.ts';
-import type { GltfReorderMeshsPayload } from './🕸️mesh/🔀️reorder/🟦️.ts';
-import type { GltfReorderMorphTargetAttributesPayload } from './🎚️morph-attribute/🔀️reorder/🟦️.ts';
-import type { GltfReorderMorphTargetsPayload } from './🧬️morph-target/🔀️reorder/🟦️.ts';
-import type { GltfReorderNodeChildrenPayload } from './🌿️node-child/🔀️reorder/🟦️.ts';
-import type { GltfReorderNodesPayload } from './🌳️node/🔀️reorder/🟦️.ts';
-import type { GltfReorderPrimitiveAttributesPayload } from './🔤️primitive-attribute/🔀️reorder/🟦️.ts';
-import type { GltfReorderPrimitivesPayload } from './🔺️primitive/🔀️reorder/🟦️.ts';
-import type { GltfReorderRequiredExtensionsPayload } from './✅️required-extension/🔀️reorder/🟦️.ts';
-import type { GltfReorderSamplersPayload } from './🎛️sampler/🔀️reorder/🟦️.ts';
-import type { GltfReorderSceneRootNodesPayload } from './🌲️scene-root/🔀️reorder/🟦️.ts';
-import type { GltfReorderScenesPayload } from './🎬️scene/🔀️reorder/🟦️.ts';
-import type { GltfReorderSkinsPayload } from './🦴️skin/🔀️reorder/🟦️.ts';
-import type { GltfReorderTexturesPayload } from './🎨️texture/🔀️reorder/🟦️.ts';
-import type { GltfReorderUsedExtensionsPayload } from './📣️used-extension/🔀️reorder/🟦️.ts';
-import type { GltfReparentNodePayload } from './🌳️node/🌿️reparent/🟦️.ts';
-import type { GltfRequireExtensionPayload } from './✅️required-extension/➕️add/🟦️.ts';
-import type { GltfTransformNodePayload } from './🌳️node/📐️transform/🟦️.ts';
-import type { GltfUnbindDefaultScenePayload } from './🏠️default-scene/✂️unbind/🟦️.ts';
-import type { GltfUnbindMorphTargetAttributePayload } from './🎚️morph-attribute/✂️unbind/🟦️.ts';
-import type { GltfUnbindNodeCameraPayload } from './📷️node-camera/✂️unbind/🟦️.ts';
-import type { GltfUnbindNodeChildPayload } from './🌿️node-child/✂️unbind/🟦️.ts';
-import type { GltfUnbindNodeMeshPayload } from './🏗️node-mesh/✂️unbind/🟦️.ts';
-import type { GltfUnbindNodeSkinPayload } from './🩻️node-skin/✂️unbind/🟦️.ts';
-import type { GltfUnbindPrimitiveAttributePayload } from './🔤️primitive-attribute/✂️unbind/🟦️.ts';
-import type { GltfUnbindPrimitiveIndicesPayload } from './🔢️primitive-indices/✂️unbind/🟦️.ts';
-import type { GltfUnbindPrimitiveMaterialPayload } from './🧱️primitive-material/✂️unbind/🟦️.ts';
-import type { GltfUnbindSceneRootNodePayload } from './🌲️scene-root/✂️unbind/🟦️.ts';
-import type { GltfUnrequireExtensionPayload } from './✅️required-extension/➖️remove/🟦️.ts';
-import type { GltfWithdrawUsedExtensionPayload } from './📣️used-extension/➖️remove/🟦️.ts';
+/** 🧬️ `GltfMutation` twin: the adjacently tagged (`mutation`/`payload`) aggregate over every glTF 2.0 leaf, branch for branch as
+ * `./🔣️.json` and `./🦀️.rs` spell it; a wrapped leaf's payload is its whole phase wire, the set-snapshot leaf's its plain record.
+ * @see ./🔣️.json */
+import { gltfWireLiteral, gltfWireObject, gltfWireRequired, type GltfWireReader } from "../📸️snapshot/🟦️.ts";
+import { parseSetSnapshot, type SetSnapshot } from "./📸️snapshot/📸️set/🟦️.ts";
+import { parseBindDefaultSceneMutation, type BindDefaultSceneMutation } from "./🏠️default-scene/🔗️bind/🟦️.ts";
+import { parseBindMorphTargetAttributeMutation, type BindMorphTargetAttributeMutation } from "./🎚️morph-attribute/🔗️bind/🟦️.ts";
+import { parseBindNodeCameraMutation, type BindNodeCameraMutation } from "./📷️node-camera/🔗️bind/🟦️.ts";
+import { parseBindNodeChildMutation, type BindNodeChildMutation } from "./🌿️node-child/🔗️bind/🟦️.ts";
+import { parseBindNodeMeshMutation, type BindNodeMeshMutation } from "./🏗️node-mesh/🔗️bind/🟦️.ts";
+import { parseBindNodeSkinMutation, type BindNodeSkinMutation } from "./🩻️node-skin/🔗️bind/🟦️.ts";
+import { parseBindPrimitiveAttributeMutation, type BindPrimitiveAttributeMutation } from "./🔤️primitive-attribute/🔗️bind/🟦️.ts";
+import { parseBindPrimitiveIndicesMutation, type BindPrimitiveIndicesMutation } from "./🔢️primitive-indices/🔗️bind/🟦️.ts";
+import { parseBindPrimitiveMaterialMutation, type BindPrimitiveMaterialMutation } from "./🧱️primitive-material/🔗️bind/🟦️.ts";
+import { parseBindSceneRootNodeMutation, type BindSceneRootNodeMutation } from "./🌲️scene-root/🔗️bind/🟦️.ts";
+import { parseChangeAssetDescriptiveMetadataMutation, type ChangeAssetDescriptiveMetadataMutation } from "./🪪️asset/📝️change-description/🟦️.ts";
+import { parseChangeAssetExtensionDataMutation, type ChangeAssetExtensionDataMutation } from "./🪪️asset/🧩️change-extensions/🟦️.ts";
+import { parseChangeAssetExtraDataMutation, type ChangeAssetExtraDataMutation } from "./🪪️asset/🧾️change-extras/🟦️.ts";
+import { parseChangeAssetVersionMutation, type ChangeAssetVersionMutation } from "./🪪️asset/🔖️version/🟦️.ts";
+import { parseChangeDocumentExtensionDataMutation, type ChangeDocumentExtensionDataMutation } from "./📃️document/🧩️change-extensions/🟦️.ts";
+import { parseChangeDocumentExtraDataMutation, type ChangeDocumentExtraDataMutation } from "./📃️document/📝️change-extras/🟦️.ts";
+import { parseChangeMaterialAlphaModeMutation, type ChangeMaterialAlphaModeMutation } from "./💎️material/🌫️change-alpha/🟦️.ts";
+import { parseChangeMaterialDoubleSidedMutation, type ChangeMaterialDoubleSidedMutation } from "./💎️material/🪞️change-sides/🟦️.ts";
+import { parseChangeMeshExtensionDataMutation, type ChangeMeshExtensionDataMutation } from "./🕸️mesh/🧩️change-extensions/🟦️.ts";
+import { parseChangeMeshExtraDataMutation, type ChangeMeshExtraDataMutation } from "./🕸️mesh/📝️change-extras/🟦️.ts";
+import { parseChangeMeshMorphWeightsMutation, type ChangeMeshMorphWeightsMutation } from "./🕸️mesh/⚖️change-weights/🟦️.ts";
+import { parseChangeMeshNameMutation, type ChangeMeshNameMutation } from "./🕸️mesh/🏷️rename/🟦️.ts";
+import { parseChangeNodeExtensionDataMutation, type ChangeNodeExtensionDataMutation } from "./🌳️node/🧩️change-extensions/🟦️.ts";
+import { parseChangeNodeExtraDataMutation, type ChangeNodeExtraDataMutation } from "./🌳️node/📝️change-extras/🟦️.ts";
+import { parseChangeNodeMorphWeightsMutation, type ChangeNodeMorphWeightsMutation } from "./🌳️node/⚖️change-weights/🟦️.ts";
+import { parseChangeNodeNameMutation, type ChangeNodeNameMutation } from "./🌳️node/🏷️rename/🟦️.ts";
+import { parseChangePrimitiveExtensionDataMutation, type ChangePrimitiveExtensionDataMutation } from "./🔺️primitive/🧩️change-extensions/🟦️.ts";
+import { parseChangePrimitiveExtraDataMutation, type ChangePrimitiveExtraDataMutation } from "./🔺️primitive/📝️change-extras/🟦️.ts";
+import { parseChangePrimitiveTopologyModeMutation, type ChangePrimitiveTopologyModeMutation } from "./🔺️primitive/📐️change-topology/🟦️.ts";
+import { parseChangeSceneExtensionDataMutation, type ChangeSceneExtensionDataMutation } from "./🎬️scene/🧩️change-extensions/🟦️.ts";
+import { parseChangeSceneExtraDataMutation, type ChangeSceneExtraDataMutation } from "./🎬️scene/📝️change-extras/🟦️.ts";
+import { parseChangeSceneNameMutation, type ChangeSceneNameMutation } from "./🎬️scene/🏷️rename/🟦️.ts";
+import { parseCreateAccessorMutation, type CreateAccessorMutation } from "./📐️accessor/🌱️create/🟦️.ts";
+import { parseCreateAnimationMutation, type CreateAnimationMutation } from "./🎞️animation/🌱️create/🟦️.ts";
+import { parseCreateBufferMutation, type CreateBufferMutation } from "./💿️buffer/🌱️create/🟦️.ts";
+import { parseCreateBufferViewMutation, type CreateBufferViewMutation } from "./🪟️buffer-view/🌱️create/🟦️.ts";
+import { parseCreateCameraMutation, type CreateCameraMutation } from "./🎥️camera/🌱️create/🟦️.ts";
+import { parseCreateImageMutation, type CreateImageMutation } from "./🖼️image/🌱️create/🟦️.ts";
+import { parseCreateMaterialMutation, type CreateMaterialMutation } from "./💎️material/🌱️create/🟦️.ts";
+import { parseCreateMeshMutation, type CreateMeshMutation } from "./🕸️mesh/🌱️create/🟦️.ts";
+import { parseCreateMorphTargetMutation, type CreateMorphTargetMutation } from "./🧬️morph-target/🌱️create/🟦️.ts";
+import { parseCreateNodeMutation, type CreateNodeMutation } from "./🌳️node/🌱️create/🟦️.ts";
+import { parseCreatePrimitiveMutation, type CreatePrimitiveMutation } from "./🔺️primitive/🌱️create/🟦️.ts";
+import { parseCreateSamplerMutation, type CreateSamplerMutation } from "./🎛️sampler/🌱️create/🟦️.ts";
+import { parseCreateSceneMutation, type CreateSceneMutation } from "./🎬️scene/🌱️create/🟦️.ts";
+import { parseCreateSkinMutation, type CreateSkinMutation } from "./🦴️skin/🌱️create/🟦️.ts";
+import { parseCreateTextureMutation, type CreateTextureMutation } from "./🎨️texture/🌱️create/🟦️.ts";
+import { parseAddUsedExtensionMutation, type AddUsedExtensionMutation } from "./📣️used-extension/➕️add/🟦️.ts";
+import { parseDeleteAccessorMutation, type DeleteAccessorMutation } from "./📐️accessor/🗑️delete/🟦️.ts";
+import { parseDeleteAnimationMutation, type DeleteAnimationMutation } from "./🎞️animation/🗑️delete/🟦️.ts";
+import { parseDeleteBufferMutation, type DeleteBufferMutation } from "./💿️buffer/🗑️delete/🟦️.ts";
+import { parseDeleteBufferViewMutation, type DeleteBufferViewMutation } from "./🪟️buffer-view/🗑️delete/🟦️.ts";
+import { parseDeleteCameraMutation, type DeleteCameraMutation } from "./🎥️camera/🗑️delete/🟦️.ts";
+import { parseDeleteImageMutation, type DeleteImageMutation } from "./🖼️image/🗑️delete/🟦️.ts";
+import { parseDeleteMaterialMutation, type DeleteMaterialMutation } from "./💎️material/🗑️delete/🟦️.ts";
+import { parseDeleteMeshMutation, type DeleteMeshMutation } from "./🕸️mesh/🗑️delete/🟦️.ts";
+import { parseDeleteMorphTargetMutation, type DeleteMorphTargetMutation } from "./🧬️morph-target/🗑️delete/🟦️.ts";
+import { parseDeleteNodeMutation, type DeleteNodeMutation } from "./🌳️node/🗑️delete/🟦️.ts";
+import { parseDeletePrimitiveMutation, type DeletePrimitiveMutation } from "./🔺️primitive/🗑️delete/🟦️.ts";
+import { parseDeleteSamplerMutation, type DeleteSamplerMutation } from "./🎛️sampler/🗑️delete/🟦️.ts";
+import { parseDeleteSceneMutation, type DeleteSceneMutation } from "./🎬️scene/🗑️delete/🟦️.ts";
+import { parseDeleteSkinMutation, type DeleteSkinMutation } from "./🦴️skin/🗑️delete/🟦️.ts";
+import { parseDeleteTextureMutation, type DeleteTextureMutation } from "./🎨️texture/🗑️delete/🟦️.ts";
+import { parseMoveAccessorMutation, type MoveAccessorMutation } from "./📐️accessor/🚚️move/🟦️.ts";
+import { parseMoveAnimationMutation, type MoveAnimationMutation } from "./🎞️animation/🚚️move/🟦️.ts";
+import { parseMoveBufferMutation, type MoveBufferMutation } from "./💿️buffer/🚚️move/🟦️.ts";
+import { parseMoveBufferViewMutation, type MoveBufferViewMutation } from "./🪟️buffer-view/🚚️move/🟦️.ts";
+import { parseMoveCameraMutation, type MoveCameraMutation } from "./🎥️camera/🚚️move/🟦️.ts";
+import { parseMoveImageMutation, type MoveImageMutation } from "./🖼️image/🚚️move/🟦️.ts";
+import { parseMoveMaterialMutation, type MoveMaterialMutation } from "./💎️material/🚚️move/🟦️.ts";
+import { parseMoveMeshMutation, type MoveMeshMutation } from "./🕸️mesh/🚚️move/🟦️.ts";
+import { parseMoveMorphTargetMutation, type MoveMorphTargetMutation } from "./🧬️morph-target/🚚️move/🟦️.ts";
+import { parseMoveMorphTargetAttributeMutation, type MoveMorphTargetAttributeMutation } from "./🎚️morph-attribute/🚚️move/🟦️.ts";
+import { parseMoveNodeMutation, type MoveNodeMutation } from "./🌳️node/🚚️move/🟦️.ts";
+import { parseMoveNodeChildMutation, type MoveNodeChildMutation } from "./🌿️node-child/🚚️move/🟦️.ts";
+import { parseMovePrimitiveMutation, type MovePrimitiveMutation } from "./🔺️primitive/🚚️move/🟦️.ts";
+import { parseMovePrimitiveAttributeMutation, type MovePrimitiveAttributeMutation } from "./🔤️primitive-attribute/🚚️move/🟦️.ts";
+import { parseMoveRequiredExtensionMutation, type MoveRequiredExtensionMutation } from "./✅️required-extension/🚚️move/🟦️.ts";
+import { parseMoveSamplerMutation, type MoveSamplerMutation } from "./🎛️sampler/🚚️move/🟦️.ts";
+import { parseMoveSceneMutation, type MoveSceneMutation } from "./🎬️scene/🚚️move/🟦️.ts";
+import { parseMoveSceneRootNodeMutation, type MoveSceneRootNodeMutation } from "./🌲️scene-root/🚚️move/🟦️.ts";
+import { parseMoveSkinMutation, type MoveSkinMutation } from "./🦴️skin/🚚️move/🟦️.ts";
+import { parseMoveTextureMutation, type MoveTextureMutation } from "./🎨️texture/🚚️move/🟦️.ts";
+import { parseMoveUsedExtensionMutation, type MoveUsedExtensionMutation } from "./📣️used-extension/🚚️move/🟦️.ts";
+import { parseReorderAccessorsMutation, type ReorderAccessorsMutation } from "./📐️accessor/🔀️reorder/🟦️.ts";
+import { parseReorderAnimationsMutation, type ReorderAnimationsMutation } from "./🎞️animation/🔀️reorder/🟦️.ts";
+import { parseReorderBufferViewsMutation, type ReorderBufferViewsMutation } from "./🪟️buffer-view/🔀️reorder/🟦️.ts";
+import { parseReorderBuffersMutation, type ReorderBuffersMutation } from "./💿️buffer/🔀️reorder/🟦️.ts";
+import { parseReorderCamerasMutation, type ReorderCamerasMutation } from "./🎥️camera/🔀️reorder/🟦️.ts";
+import { parseReorderImagesMutation, type ReorderImagesMutation } from "./🖼️image/🔀️reorder/🟦️.ts";
+import { parseReorderMaterialsMutation, type ReorderMaterialsMutation } from "./💎️material/🔀️reorder/🟦️.ts";
+import { parseReorderMeshsMutation, type ReorderMeshsMutation } from "./🕸️mesh/🔀️reorder/🟦️.ts";
+import { parseReorderMorphTargetAttributesMutation, type ReorderMorphTargetAttributesMutation } from "./🎚️morph-attribute/🔀️reorder/🟦️.ts";
+import { parseReorderMorphTargetsMutation, type ReorderMorphTargetsMutation } from "./🧬️morph-target/🔀️reorder/🟦️.ts";
+import { parseReorderNodeChildrenMutation, type ReorderNodeChildrenMutation } from "./🌿️node-child/🔀️reorder/🟦️.ts";
+import { parseReorderNodesMutation, type ReorderNodesMutation } from "./🌳️node/🔀️reorder/🟦️.ts";
+import { parseReorderPrimitiveAttributesMutation, type ReorderPrimitiveAttributesMutation } from "./🔤️primitive-attribute/🔀️reorder/🟦️.ts";
+import { parseReorderPrimitivesMutation, type ReorderPrimitivesMutation } from "./🔺️primitive/🔀️reorder/🟦️.ts";
+import { parseReorderRequiredExtensionsMutation, type ReorderRequiredExtensionsMutation } from "./✅️required-extension/🔀️reorder/🟦️.ts";
+import { parseReorderSamplersMutation, type ReorderSamplersMutation } from "./🎛️sampler/🔀️reorder/🟦️.ts";
+import { parseReorderSceneRootNodesMutation, type ReorderSceneRootNodesMutation } from "./🌲️scene-root/🔀️reorder/🟦️.ts";
+import { parseReorderScenesMutation, type ReorderScenesMutation } from "./🎬️scene/🔀️reorder/🟦️.ts";
+import { parseReorderSkinsMutation, type ReorderSkinsMutation } from "./🦴️skin/🔀️reorder/🟦️.ts";
+import { parseReorderTexturesMutation, type ReorderTexturesMutation } from "./🎨️texture/🔀️reorder/🟦️.ts";
+import { parseReorderUsedExtensionsMutation, type ReorderUsedExtensionsMutation } from "./📣️used-extension/🔀️reorder/🟦️.ts";
+import { parseMoveNodeParentMutation, type MoveNodeParentMutation } from "./🌳️node/🌿️reparent/🟦️.ts";
+import { parseAddRequiredExtensionMutation, type AddRequiredExtensionMutation } from "./✅️required-extension/➕️add/🟦️.ts";
+import { parseChangeNodeTransformMutation, type ChangeNodeTransformMutation } from "./🌳️node/📐️transform/🟦️.ts";
+import { parseUnbindDefaultSceneMutation, type UnbindDefaultSceneMutation } from "./🏠️default-scene/✂️unbind/🟦️.ts";
+import { parseUnbindMorphTargetAttributeMutation, type UnbindMorphTargetAttributeMutation } from "./🎚️morph-attribute/✂️unbind/🟦️.ts";
+import { parseUnbindNodeCameraMutation, type UnbindNodeCameraMutation } from "./📷️node-camera/✂️unbind/🟦️.ts";
+import { parseUnbindNodeChildMutation, type UnbindNodeChildMutation } from "./🌿️node-child/✂️unbind/🟦️.ts";
+import { parseUnbindNodeMeshMutation, type UnbindNodeMeshMutation } from "./🏗️node-mesh/✂️unbind/🟦️.ts";
+import { parseUnbindNodeSkinMutation, type UnbindNodeSkinMutation } from "./🩻️node-skin/✂️unbind/🟦️.ts";
+import { parseUnbindPrimitiveAttributeMutation, type UnbindPrimitiveAttributeMutation } from "./🔤️primitive-attribute/✂️unbind/🟦️.ts";
+import { parseUnbindPrimitiveIndicesMutation, type UnbindPrimitiveIndicesMutation } from "./🔢️primitive-indices/✂️unbind/🟦️.ts";
+import { parseUnbindPrimitiveMaterialMutation, type UnbindPrimitiveMaterialMutation } from "./🧱️primitive-material/✂️unbind/🟦️.ts";
+import { parseUnbindSceneRootNodeMutation, type UnbindSceneRootNodeMutation } from "./🌲️scene-root/✂️unbind/🟦️.ts";
+import { parseRemoveRequiredExtensionMutation, type RemoveRequiredExtensionMutation } from "./✅️required-extension/➖️remove/🟦️.ts";
+import { parseRemoveUsedExtensionMutation, type RemoveUsedExtensionMutation } from "./📣️used-extension/➖️remove/🟦️.ts";
 
 export type GltfMutation =
-  | { readonly mutation: 'bindDefaultScene'; readonly payload: GltfBindDefaultScenePayload }
-  | { readonly mutation: 'bindMorphTargetAttribute'; readonly payload: GltfBindMorphTargetAttributePayload }
-  | { readonly mutation: 'bindNodeCamera'; readonly payload: GltfBindNodeCameraPayload }
-  | { readonly mutation: 'bindNodeChild'; readonly payload: GltfBindNodeChildPayload }
-  | { readonly mutation: 'bindNodeMesh'; readonly payload: GltfBindNodeMeshPayload }
-  | { readonly mutation: 'bindNodeSkin'; readonly payload: GltfBindNodeSkinPayload }
-  | { readonly mutation: 'bindPrimitiveAttribute'; readonly payload: GltfBindPrimitiveAttributePayload }
-  | { readonly mutation: 'bindPrimitiveIndices'; readonly payload: GltfBindPrimitiveIndicesPayload }
-  | { readonly mutation: 'bindPrimitiveMaterial'; readonly payload: GltfBindPrimitiveMaterialPayload }
-  | { readonly mutation: 'bindSceneRootNode'; readonly payload: GltfBindSceneRootNodePayload }
-  | { readonly mutation: 'changeAssetDescriptiveMetadata'; readonly payload: GltfChangeAssetDescriptiveMetadataPayload }
-  | { readonly mutation: 'changeAssetExtensionData'; readonly payload: GltfChangeAssetExtensionDataPayload }
-  | { readonly mutation: 'changeAssetExtraData'; readonly payload: GltfChangeAssetExtraDataPayload }
-  | { readonly mutation: 'changeAssetVersion'; readonly payload: GltfChangeAssetVersionPayload }
-  | { readonly mutation: 'changeDocumentExtensionData'; readonly payload: GltfChangeDocumentExtensionDataPayload }
-  | { readonly mutation: 'changeDocumentExtraData'; readonly payload: GltfChangeDocumentExtraDataPayload }
-  | { readonly mutation: 'changeMaterialAlphaMode'; readonly payload: GltfChangeMaterialAlphaModePayload }
-  | { readonly mutation: 'changeMaterialDoubleSided'; readonly payload: GltfChangeMaterialDoubleSidedPayload }
-  | { readonly mutation: 'changeMeshExtensionData'; readonly payload: GltfChangeMeshExtensionDataPayload }
-  | { readonly mutation: 'changeMeshExtraData'; readonly payload: GltfChangeMeshExtraDataPayload }
-  | { readonly mutation: 'changeMeshMorphWeights'; readonly payload: GltfChangeMeshMorphWeightsPayload }
-  | { readonly mutation: 'changeMeshName'; readonly payload: GltfChangeMeshNamePayload }
-  | { readonly mutation: 'changeNodeExtensionData'; readonly payload: GltfChangeNodeExtensionDataPayload }
-  | { readonly mutation: 'changeNodeExtraData'; readonly payload: GltfChangeNodeExtraDataPayload }
-  | { readonly mutation: 'changeNodeMorphWeights'; readonly payload: GltfChangeNodeMorphWeightsPayload }
-  | { readonly mutation: 'changeNodeName'; readonly payload: GltfChangeNodeNameMutation }
-  | { readonly mutation: 'changePrimitiveExtensionData'; readonly payload: GltfChangePrimitiveExtensionDataPayload }
-  | { readonly mutation: 'changePrimitiveExtraData'; readonly payload: GltfChangePrimitiveExtraDataPayload }
-  | { readonly mutation: 'changePrimitiveTopologyMode'; readonly payload: GltfChangePrimitiveTopologyModePayload }
-  | { readonly mutation: 'changeSceneExtensionData'; readonly payload: GltfChangeSceneExtensionDataPayload }
-  | { readonly mutation: 'changeSceneExtraData'; readonly payload: GltfChangeSceneExtraDataPayload }
-  | { readonly mutation: 'changeSceneName'; readonly payload: GltfChangeSceneNamePayload }
-  | { readonly mutation: 'createAccessor'; readonly payload: GltfCreateAccessorPayload }
-  | { readonly mutation: 'createAnimation'; readonly payload: GltfCreateAnimationPayload }
-  | { readonly mutation: 'createBuffer'; readonly payload: GltfCreateBufferPayload }
-  | { readonly mutation: 'createBufferView'; readonly payload: GltfCreateBufferViewPayload }
-  | { readonly mutation: 'createCamera'; readonly payload: GltfCreateCameraPayload }
-  | { readonly mutation: 'createImage'; readonly payload: GltfCreateImagePayload }
-  | { readonly mutation: 'createMaterial'; readonly payload: GltfCreateMaterialPayload }
-  | { readonly mutation: 'createMesh'; readonly payload: GltfCreateMeshPayload }
-  | { readonly mutation: 'createMorphTarget'; readonly payload: GltfCreateMorphTargetPayload }
-  | { readonly mutation: 'createNode'; readonly payload: GltfCreateNodePayload }
-  | { readonly mutation: 'createPrimitive'; readonly payload: GltfCreatePrimitivePayload }
-  | { readonly mutation: 'createSampler'; readonly payload: GltfCreateSamplerPayload }
-  | { readonly mutation: 'createScene'; readonly payload: GltfCreateScenePayload }
-  | { readonly mutation: 'createSkin'; readonly payload: GltfCreateSkinPayload }
-  | { readonly mutation: 'createTexture'; readonly payload: GltfCreateTexturePayload }
-  | { readonly mutation: 'addUsedExtension'; readonly payload: GltfDeclareUsedExtensionPayload }
-  | { readonly mutation: 'deleteAccessor'; readonly payload: GltfDeleteAccessorPayload }
-  | { readonly mutation: 'deleteAnimation'; readonly payload: GltfDeleteAnimationPayload }
-  | { readonly mutation: 'deleteBuffer'; readonly payload: GltfDeleteBufferPayload }
-  | { readonly mutation: 'deleteBufferView'; readonly payload: GltfDeleteBufferViewPayload }
-  | { readonly mutation: 'deleteCamera'; readonly payload: GltfDeleteCameraPayload }
-  | { readonly mutation: 'deleteImage'; readonly payload: GltfDeleteImagePayload }
-  | { readonly mutation: 'deleteMaterial'; readonly payload: GltfDeleteMaterialPayload }
-  | { readonly mutation: 'deleteMesh'; readonly payload: GltfDeleteMeshPayload }
-  | { readonly mutation: 'deleteMorphTarget'; readonly payload: GltfDeleteMorphTargetPayload }
-  | { readonly mutation: 'deleteNode'; readonly payload: GltfDeleteNodePayload }
-  | { readonly mutation: 'deletePrimitive'; readonly payload: GltfDeletePrimitivePayload }
-  | { readonly mutation: 'deleteSampler'; readonly payload: GltfDeleteSamplerPayload }
-  | { readonly mutation: 'deleteScene'; readonly payload: GltfDeleteScenePayload }
-  | { readonly mutation: 'deleteSkin'; readonly payload: GltfDeleteSkinPayload }
-  | { readonly mutation: 'deleteTexture'; readonly payload: GltfDeleteTexturePayload }
-  | { readonly mutation: 'moveAccessor'; readonly payload: GltfMoveAccessorPayload }
-  | { readonly mutation: 'moveAnimation'; readonly payload: GltfMoveAnimationPayload }
-  | { readonly mutation: 'moveBuffer'; readonly payload: GltfMoveBufferPayload }
-  | { readonly mutation: 'moveBufferView'; readonly payload: GltfMoveBufferViewPayload }
-  | { readonly mutation: 'moveCamera'; readonly payload: GltfMoveCameraPayload }
-  | { readonly mutation: 'moveImage'; readonly payload: GltfMoveImagePayload }
-  | { readonly mutation: 'moveMaterial'; readonly payload: GltfMoveMaterialPayload }
-  | { readonly mutation: 'moveMesh'; readonly payload: GltfMoveMeshPayload }
-  | { readonly mutation: 'moveMorphTarget'; readonly payload: GltfMoveMorphTargetPayload }
-  | { readonly mutation: 'moveMorphTargetAttribute'; readonly payload: GltfMoveMorphTargetAttributePayload }
-  | { readonly mutation: 'moveNode'; readonly payload: GltfMoveNodePayload }
-  | { readonly mutation: 'moveNodeChild'; readonly payload: GltfMoveNodeChildPayload }
-  | { readonly mutation: 'movePrimitive'; readonly payload: GltfMovePrimitivePayload }
-  | { readonly mutation: 'movePrimitiveAttribute'; readonly payload: GltfMovePrimitiveAttributePayload }
-  | { readonly mutation: 'moveRequiredExtension'; readonly payload: GltfMoveRequiredExtensionPayload }
-  | { readonly mutation: 'moveSampler'; readonly payload: GltfMoveSamplerPayload }
-  | { readonly mutation: 'moveScene'; readonly payload: GltfMoveScenePayload }
-  | { readonly mutation: 'moveSceneRootNode'; readonly payload: GltfMoveSceneRootNodePayload }
-  | { readonly mutation: 'moveSkin'; readonly payload: GltfMoveSkinPayload }
-  | { readonly mutation: 'moveTexture'; readonly payload: GltfMoveTexturePayload }
-  | { readonly mutation: 'moveUsedExtension'; readonly payload: GltfMoveUsedExtensionPayload }
-  | { readonly mutation: 'reorderAccessors'; readonly payload: GltfReorderAccessorsPayload }
-  | { readonly mutation: 'reorderAnimations'; readonly payload: GltfReorderAnimationsPayload }
-  | { readonly mutation: 'reorderBufferViews'; readonly payload: GltfReorderBufferViewsPayload }
-  | { readonly mutation: 'reorderBuffers'; readonly payload: GltfReorderBuffersPayload }
-  | { readonly mutation: 'reorderCameras'; readonly payload: GltfReorderCamerasPayload }
-  | { readonly mutation: 'reorderImages'; readonly payload: GltfReorderImagesPayload }
-  | { readonly mutation: 'reorderMaterials'; readonly payload: GltfReorderMaterialsPayload }
-  | { readonly mutation: 'reorderMeshs'; readonly payload: GltfReorderMeshsPayload }
-  | { readonly mutation: 'reorderMorphTargetAttributes'; readonly payload: GltfReorderMorphTargetAttributesPayload }
-  | { readonly mutation: 'reorderMorphTargets'; readonly payload: GltfReorderMorphTargetsPayload }
-  | { readonly mutation: 'reorderNodeChildren'; readonly payload: GltfReorderNodeChildrenPayload }
-  | { readonly mutation: 'reorderNodes'; readonly payload: GltfReorderNodesPayload }
-  | { readonly mutation: 'reorderPrimitiveAttributes'; readonly payload: GltfReorderPrimitiveAttributesPayload }
-  | { readonly mutation: 'reorderPrimitives'; readonly payload: GltfReorderPrimitivesPayload }
-  | { readonly mutation: 'reorderRequiredExtensions'; readonly payload: GltfReorderRequiredExtensionsPayload }
-  | { readonly mutation: 'reorderSamplers'; readonly payload: GltfReorderSamplersPayload }
-  | { readonly mutation: 'reorderSceneRootNodes'; readonly payload: GltfReorderSceneRootNodesPayload }
-  | { readonly mutation: 'reorderScenes'; readonly payload: GltfReorderScenesPayload }
-  | { readonly mutation: 'reorderSkins'; readonly payload: GltfReorderSkinsPayload }
-  | { readonly mutation: 'reorderTextures'; readonly payload: GltfReorderTexturesPayload }
-  | { readonly mutation: 'reorderUsedExtensions'; readonly payload: GltfReorderUsedExtensionsPayload }
-  | { readonly mutation: 'moveNodeParent'; readonly payload: GltfReparentNodePayload }
-  | { readonly mutation: 'addRequiredExtension'; readonly payload: GltfRequireExtensionPayload }
-  | { readonly mutation: 'changeNodeTransform'; readonly payload: GltfTransformNodePayload }
-  | { readonly mutation: 'unbindDefaultScene'; readonly payload: GltfUnbindDefaultScenePayload }
-  | { readonly mutation: 'unbindMorphTargetAttribute'; readonly payload: GltfUnbindMorphTargetAttributePayload }
-  | { readonly mutation: 'unbindNodeCamera'; readonly payload: GltfUnbindNodeCameraPayload }
-  | { readonly mutation: 'unbindNodeChild'; readonly payload: GltfUnbindNodeChildPayload }
-  | { readonly mutation: 'unbindNodeMesh'; readonly payload: GltfUnbindNodeMeshPayload }
-  | { readonly mutation: 'unbindNodeSkin'; readonly payload: GltfUnbindNodeSkinPayload }
-  | { readonly mutation: 'unbindPrimitiveAttribute'; readonly payload: GltfUnbindPrimitiveAttributePayload }
-  | { readonly mutation: 'unbindPrimitiveIndices'; readonly payload: GltfUnbindPrimitiveIndicesPayload }
-  | { readonly mutation: 'unbindPrimitiveMaterial'; readonly payload: GltfUnbindPrimitiveMaterialPayload }
-  | { readonly mutation: 'unbindSceneRootNode'; readonly payload: GltfUnbindSceneRootNodePayload }
-  | { readonly mutation: 'removeRequiredExtension'; readonly payload: GltfUnrequireExtensionPayload }
-  | { readonly mutation: 'removeUsedExtension'; readonly payload: GltfWithdrawUsedExtensionPayload }
-  | { readonly mutation: 'setSnapshot'; readonly payload: SetSnapshot };
+  | { readonly mutation: "setSnapshot"; readonly payload: SetSnapshot }
+  | { readonly mutation: "bindDefaultScene"; readonly payload: BindDefaultSceneMutation }
+  | { readonly mutation: "bindMorphTargetAttribute"; readonly payload: BindMorphTargetAttributeMutation }
+  | { readonly mutation: "bindNodeCamera"; readonly payload: BindNodeCameraMutation }
+  | { readonly mutation: "bindNodeChild"; readonly payload: BindNodeChildMutation }
+  | { readonly mutation: "bindNodeMesh"; readonly payload: BindNodeMeshMutation }
+  | { readonly mutation: "bindNodeSkin"; readonly payload: BindNodeSkinMutation }
+  | { readonly mutation: "bindPrimitiveAttribute"; readonly payload: BindPrimitiveAttributeMutation }
+  | { readonly mutation: "bindPrimitiveIndices"; readonly payload: BindPrimitiveIndicesMutation }
+  | { readonly mutation: "bindPrimitiveMaterial"; readonly payload: BindPrimitiveMaterialMutation }
+  | { readonly mutation: "bindSceneRootNode"; readonly payload: BindSceneRootNodeMutation }
+  | { readonly mutation: "changeAssetDescriptiveMetadata"; readonly payload: ChangeAssetDescriptiveMetadataMutation }
+  | { readonly mutation: "changeAssetExtensionData"; readonly payload: ChangeAssetExtensionDataMutation }
+  | { readonly mutation: "changeAssetExtraData"; readonly payload: ChangeAssetExtraDataMutation }
+  | { readonly mutation: "changeAssetVersion"; readonly payload: ChangeAssetVersionMutation }
+  | { readonly mutation: "changeDocumentExtensionData"; readonly payload: ChangeDocumentExtensionDataMutation }
+  | { readonly mutation: "changeDocumentExtraData"; readonly payload: ChangeDocumentExtraDataMutation }
+  | { readonly mutation: "changeMaterialAlphaMode"; readonly payload: ChangeMaterialAlphaModeMutation }
+  | { readonly mutation: "changeMaterialDoubleSided"; readonly payload: ChangeMaterialDoubleSidedMutation }
+  | { readonly mutation: "changeMeshExtensionData"; readonly payload: ChangeMeshExtensionDataMutation }
+  | { readonly mutation: "changeMeshExtraData"; readonly payload: ChangeMeshExtraDataMutation }
+  | { readonly mutation: "changeMeshMorphWeights"; readonly payload: ChangeMeshMorphWeightsMutation }
+  | { readonly mutation: "changeMeshName"; readonly payload: ChangeMeshNameMutation }
+  | { readonly mutation: "changeNodeExtensionData"; readonly payload: ChangeNodeExtensionDataMutation }
+  | { readonly mutation: "changeNodeExtraData"; readonly payload: ChangeNodeExtraDataMutation }
+  | { readonly mutation: "changeNodeMorphWeights"; readonly payload: ChangeNodeMorphWeightsMutation }
+  | { readonly mutation: "changeNodeName"; readonly payload: ChangeNodeNameMutation }
+  | { readonly mutation: "changePrimitiveExtensionData"; readonly payload: ChangePrimitiveExtensionDataMutation }
+  | { readonly mutation: "changePrimitiveExtraData"; readonly payload: ChangePrimitiveExtraDataMutation }
+  | { readonly mutation: "changePrimitiveTopologyMode"; readonly payload: ChangePrimitiveTopologyModeMutation }
+  | { readonly mutation: "changeSceneExtensionData"; readonly payload: ChangeSceneExtensionDataMutation }
+  | { readonly mutation: "changeSceneExtraData"; readonly payload: ChangeSceneExtraDataMutation }
+  | { readonly mutation: "changeSceneName"; readonly payload: ChangeSceneNameMutation }
+  | { readonly mutation: "createAccessor"; readonly payload: CreateAccessorMutation }
+  | { readonly mutation: "createAnimation"; readonly payload: CreateAnimationMutation }
+  | { readonly mutation: "createBuffer"; readonly payload: CreateBufferMutation }
+  | { readonly mutation: "createBufferView"; readonly payload: CreateBufferViewMutation }
+  | { readonly mutation: "createCamera"; readonly payload: CreateCameraMutation }
+  | { readonly mutation: "createImage"; readonly payload: CreateImageMutation }
+  | { readonly mutation: "createMaterial"; readonly payload: CreateMaterialMutation }
+  | { readonly mutation: "createMesh"; readonly payload: CreateMeshMutation }
+  | { readonly mutation: "createMorphTarget"; readonly payload: CreateMorphTargetMutation }
+  | { readonly mutation: "createNode"; readonly payload: CreateNodeMutation }
+  | { readonly mutation: "createPrimitive"; readonly payload: CreatePrimitiveMutation }
+  | { readonly mutation: "createSampler"; readonly payload: CreateSamplerMutation }
+  | { readonly mutation: "createScene"; readonly payload: CreateSceneMutation }
+  | { readonly mutation: "createSkin"; readonly payload: CreateSkinMutation }
+  | { readonly mutation: "createTexture"; readonly payload: CreateTextureMutation }
+  | { readonly mutation: "addUsedExtension"; readonly payload: AddUsedExtensionMutation }
+  | { readonly mutation: "deleteAccessor"; readonly payload: DeleteAccessorMutation }
+  | { readonly mutation: "deleteAnimation"; readonly payload: DeleteAnimationMutation }
+  | { readonly mutation: "deleteBuffer"; readonly payload: DeleteBufferMutation }
+  | { readonly mutation: "deleteBufferView"; readonly payload: DeleteBufferViewMutation }
+  | { readonly mutation: "deleteCamera"; readonly payload: DeleteCameraMutation }
+  | { readonly mutation: "deleteImage"; readonly payload: DeleteImageMutation }
+  | { readonly mutation: "deleteMaterial"; readonly payload: DeleteMaterialMutation }
+  | { readonly mutation: "deleteMesh"; readonly payload: DeleteMeshMutation }
+  | { readonly mutation: "deleteMorphTarget"; readonly payload: DeleteMorphTargetMutation }
+  | { readonly mutation: "deleteNode"; readonly payload: DeleteNodeMutation }
+  | { readonly mutation: "deletePrimitive"; readonly payload: DeletePrimitiveMutation }
+  | { readonly mutation: "deleteSampler"; readonly payload: DeleteSamplerMutation }
+  | { readonly mutation: "deleteScene"; readonly payload: DeleteSceneMutation }
+  | { readonly mutation: "deleteSkin"; readonly payload: DeleteSkinMutation }
+  | { readonly mutation: "deleteTexture"; readonly payload: DeleteTextureMutation }
+  | { readonly mutation: "moveAccessor"; readonly payload: MoveAccessorMutation }
+  | { readonly mutation: "moveAnimation"; readonly payload: MoveAnimationMutation }
+  | { readonly mutation: "moveBuffer"; readonly payload: MoveBufferMutation }
+  | { readonly mutation: "moveBufferView"; readonly payload: MoveBufferViewMutation }
+  | { readonly mutation: "moveCamera"; readonly payload: MoveCameraMutation }
+  | { readonly mutation: "moveImage"; readonly payload: MoveImageMutation }
+  | { readonly mutation: "moveMaterial"; readonly payload: MoveMaterialMutation }
+  | { readonly mutation: "moveMesh"; readonly payload: MoveMeshMutation }
+  | { readonly mutation: "moveMorphTarget"; readonly payload: MoveMorphTargetMutation }
+  | { readonly mutation: "moveMorphTargetAttribute"; readonly payload: MoveMorphTargetAttributeMutation }
+  | { readonly mutation: "moveNode"; readonly payload: MoveNodeMutation }
+  | { readonly mutation: "moveNodeChild"; readonly payload: MoveNodeChildMutation }
+  | { readonly mutation: "movePrimitive"; readonly payload: MovePrimitiveMutation }
+  | { readonly mutation: "movePrimitiveAttribute"; readonly payload: MovePrimitiveAttributeMutation }
+  | { readonly mutation: "moveRequiredExtension"; readonly payload: MoveRequiredExtensionMutation }
+  | { readonly mutation: "moveSampler"; readonly payload: MoveSamplerMutation }
+  | { readonly mutation: "moveScene"; readonly payload: MoveSceneMutation }
+  | { readonly mutation: "moveSceneRootNode"; readonly payload: MoveSceneRootNodeMutation }
+  | { readonly mutation: "moveSkin"; readonly payload: MoveSkinMutation }
+  | { readonly mutation: "moveTexture"; readonly payload: MoveTextureMutation }
+  | { readonly mutation: "moveUsedExtension"; readonly payload: MoveUsedExtensionMutation }
+  | { readonly mutation: "reorderAccessors"; readonly payload: ReorderAccessorsMutation }
+  | { readonly mutation: "reorderAnimations"; readonly payload: ReorderAnimationsMutation }
+  | { readonly mutation: "reorderBufferViews"; readonly payload: ReorderBufferViewsMutation }
+  | { readonly mutation: "reorderBuffers"; readonly payload: ReorderBuffersMutation }
+  | { readonly mutation: "reorderCameras"; readonly payload: ReorderCamerasMutation }
+  | { readonly mutation: "reorderImages"; readonly payload: ReorderImagesMutation }
+  | { readonly mutation: "reorderMaterials"; readonly payload: ReorderMaterialsMutation }
+  | { readonly mutation: "reorderMeshs"; readonly payload: ReorderMeshsMutation }
+  | { readonly mutation: "reorderMorphTargetAttributes"; readonly payload: ReorderMorphTargetAttributesMutation }
+  | { readonly mutation: "reorderMorphTargets"; readonly payload: ReorderMorphTargetsMutation }
+  | { readonly mutation: "reorderNodeChildren"; readonly payload: ReorderNodeChildrenMutation }
+  | { readonly mutation: "reorderNodes"; readonly payload: ReorderNodesMutation }
+  | { readonly mutation: "reorderPrimitiveAttributes"; readonly payload: ReorderPrimitiveAttributesMutation }
+  | { readonly mutation: "reorderPrimitives"; readonly payload: ReorderPrimitivesMutation }
+  | { readonly mutation: "reorderRequiredExtensions"; readonly payload: ReorderRequiredExtensionsMutation }
+  | { readonly mutation: "reorderSamplers"; readonly payload: ReorderSamplersMutation }
+  | { readonly mutation: "reorderSceneRootNodes"; readonly payload: ReorderSceneRootNodesMutation }
+  | { readonly mutation: "reorderScenes"; readonly payload: ReorderScenesMutation }
+  | { readonly mutation: "reorderSkins"; readonly payload: ReorderSkinsMutation }
+  | { readonly mutation: "reorderTextures"; readonly payload: ReorderTexturesMutation }
+  | { readonly mutation: "reorderUsedExtensions"; readonly payload: ReorderUsedExtensionsMutation }
+  | { readonly mutation: "moveNodeParent"; readonly payload: MoveNodeParentMutation }
+  | { readonly mutation: "addRequiredExtension"; readonly payload: AddRequiredExtensionMutation }
+  | { readonly mutation: "changeNodeTransform"; readonly payload: ChangeNodeTransformMutation }
+  | { readonly mutation: "unbindDefaultScene"; readonly payload: UnbindDefaultSceneMutation }
+  | { readonly mutation: "unbindMorphTargetAttribute"; readonly payload: UnbindMorphTargetAttributeMutation }
+  | { readonly mutation: "unbindNodeCamera"; readonly payload: UnbindNodeCameraMutation }
+  | { readonly mutation: "unbindNodeChild"; readonly payload: UnbindNodeChildMutation }
+  | { readonly mutation: "unbindNodeMesh"; readonly payload: UnbindNodeMeshMutation }
+  | { readonly mutation: "unbindNodeSkin"; readonly payload: UnbindNodeSkinMutation }
+  | { readonly mutation: "unbindPrimitiveAttribute"; readonly payload: UnbindPrimitiveAttributeMutation }
+  | { readonly mutation: "unbindPrimitiveIndices"; readonly payload: UnbindPrimitiveIndicesMutation }
+  | { readonly mutation: "unbindPrimitiveMaterial"; readonly payload: UnbindPrimitiveMaterialMutation }
+  | { readonly mutation: "unbindSceneRootNode"; readonly payload: UnbindSceneRootNodeMutation }
+  | { readonly mutation: "removeRequiredExtension"; readonly payload: RemoveRequiredExtensionMutation }
+  | { readonly mutation: "removeUsedExtension"; readonly payload: RemoveUsedExtensionMutation };
+
+const payloads: { readonly [K in GltfMutation["mutation"]]: GltfWireReader<Extract<GltfMutation, { readonly mutation: K }>["payload"]> } = {
+  setSnapshot: parseSetSnapshot,
+  bindDefaultScene: parseBindDefaultSceneMutation,
+  bindMorphTargetAttribute: parseBindMorphTargetAttributeMutation,
+  bindNodeCamera: parseBindNodeCameraMutation,
+  bindNodeChild: parseBindNodeChildMutation,
+  bindNodeMesh: parseBindNodeMeshMutation,
+  bindNodeSkin: parseBindNodeSkinMutation,
+  bindPrimitiveAttribute: parseBindPrimitiveAttributeMutation,
+  bindPrimitiveIndices: parseBindPrimitiveIndicesMutation,
+  bindPrimitiveMaterial: parseBindPrimitiveMaterialMutation,
+  bindSceneRootNode: parseBindSceneRootNodeMutation,
+  changeAssetDescriptiveMetadata: parseChangeAssetDescriptiveMetadataMutation,
+  changeAssetExtensionData: parseChangeAssetExtensionDataMutation,
+  changeAssetExtraData: parseChangeAssetExtraDataMutation,
+  changeAssetVersion: parseChangeAssetVersionMutation,
+  changeDocumentExtensionData: parseChangeDocumentExtensionDataMutation,
+  changeDocumentExtraData: parseChangeDocumentExtraDataMutation,
+  changeMaterialAlphaMode: parseChangeMaterialAlphaModeMutation,
+  changeMaterialDoubleSided: parseChangeMaterialDoubleSidedMutation,
+  changeMeshExtensionData: parseChangeMeshExtensionDataMutation,
+  changeMeshExtraData: parseChangeMeshExtraDataMutation,
+  changeMeshMorphWeights: parseChangeMeshMorphWeightsMutation,
+  changeMeshName: parseChangeMeshNameMutation,
+  changeNodeExtensionData: parseChangeNodeExtensionDataMutation,
+  changeNodeExtraData: parseChangeNodeExtraDataMutation,
+  changeNodeMorphWeights: parseChangeNodeMorphWeightsMutation,
+  changeNodeName: parseChangeNodeNameMutation,
+  changePrimitiveExtensionData: parseChangePrimitiveExtensionDataMutation,
+  changePrimitiveExtraData: parseChangePrimitiveExtraDataMutation,
+  changePrimitiveTopologyMode: parseChangePrimitiveTopologyModeMutation,
+  changeSceneExtensionData: parseChangeSceneExtensionDataMutation,
+  changeSceneExtraData: parseChangeSceneExtraDataMutation,
+  changeSceneName: parseChangeSceneNameMutation,
+  createAccessor: parseCreateAccessorMutation,
+  createAnimation: parseCreateAnimationMutation,
+  createBuffer: parseCreateBufferMutation,
+  createBufferView: parseCreateBufferViewMutation,
+  createCamera: parseCreateCameraMutation,
+  createImage: parseCreateImageMutation,
+  createMaterial: parseCreateMaterialMutation,
+  createMesh: parseCreateMeshMutation,
+  createMorphTarget: parseCreateMorphTargetMutation,
+  createNode: parseCreateNodeMutation,
+  createPrimitive: parseCreatePrimitiveMutation,
+  createSampler: parseCreateSamplerMutation,
+  createScene: parseCreateSceneMutation,
+  createSkin: parseCreateSkinMutation,
+  createTexture: parseCreateTextureMutation,
+  addUsedExtension: parseAddUsedExtensionMutation,
+  deleteAccessor: parseDeleteAccessorMutation,
+  deleteAnimation: parseDeleteAnimationMutation,
+  deleteBuffer: parseDeleteBufferMutation,
+  deleteBufferView: parseDeleteBufferViewMutation,
+  deleteCamera: parseDeleteCameraMutation,
+  deleteImage: parseDeleteImageMutation,
+  deleteMaterial: parseDeleteMaterialMutation,
+  deleteMesh: parseDeleteMeshMutation,
+  deleteMorphTarget: parseDeleteMorphTargetMutation,
+  deleteNode: parseDeleteNodeMutation,
+  deletePrimitive: parseDeletePrimitiveMutation,
+  deleteSampler: parseDeleteSamplerMutation,
+  deleteScene: parseDeleteSceneMutation,
+  deleteSkin: parseDeleteSkinMutation,
+  deleteTexture: parseDeleteTextureMutation,
+  moveAccessor: parseMoveAccessorMutation,
+  moveAnimation: parseMoveAnimationMutation,
+  moveBuffer: parseMoveBufferMutation,
+  moveBufferView: parseMoveBufferViewMutation,
+  moveCamera: parseMoveCameraMutation,
+  moveImage: parseMoveImageMutation,
+  moveMaterial: parseMoveMaterialMutation,
+  moveMesh: parseMoveMeshMutation,
+  moveMorphTarget: parseMoveMorphTargetMutation,
+  moveMorphTargetAttribute: parseMoveMorphTargetAttributeMutation,
+  moveNode: parseMoveNodeMutation,
+  moveNodeChild: parseMoveNodeChildMutation,
+  movePrimitive: parseMovePrimitiveMutation,
+  movePrimitiveAttribute: parseMovePrimitiveAttributeMutation,
+  moveRequiredExtension: parseMoveRequiredExtensionMutation,
+  moveSampler: parseMoveSamplerMutation,
+  moveScene: parseMoveSceneMutation,
+  moveSceneRootNode: parseMoveSceneRootNodeMutation,
+  moveSkin: parseMoveSkinMutation,
+  moveTexture: parseMoveTextureMutation,
+  moveUsedExtension: parseMoveUsedExtensionMutation,
+  reorderAccessors: parseReorderAccessorsMutation,
+  reorderAnimations: parseReorderAnimationsMutation,
+  reorderBufferViews: parseReorderBufferViewsMutation,
+  reorderBuffers: parseReorderBuffersMutation,
+  reorderCameras: parseReorderCamerasMutation,
+  reorderImages: parseReorderImagesMutation,
+  reorderMaterials: parseReorderMaterialsMutation,
+  reorderMeshs: parseReorderMeshsMutation,
+  reorderMorphTargetAttributes: parseReorderMorphTargetAttributesMutation,
+  reorderMorphTargets: parseReorderMorphTargetsMutation,
+  reorderNodeChildren: parseReorderNodeChildrenMutation,
+  reorderNodes: parseReorderNodesMutation,
+  reorderPrimitiveAttributes: parseReorderPrimitiveAttributesMutation,
+  reorderPrimitives: parseReorderPrimitivesMutation,
+  reorderRequiredExtensions: parseReorderRequiredExtensionsMutation,
+  reorderSamplers: parseReorderSamplersMutation,
+  reorderSceneRootNodes: parseReorderSceneRootNodesMutation,
+  reorderScenes: parseReorderScenesMutation,
+  reorderSkins: parseReorderSkinsMutation,
+  reorderTextures: parseReorderTexturesMutation,
+  reorderUsedExtensions: parseReorderUsedExtensionsMutation,
+  moveNodeParent: parseMoveNodeParentMutation,
+  addRequiredExtension: parseAddRequiredExtensionMutation,
+  changeNodeTransform: parseChangeNodeTransformMutation,
+  unbindDefaultScene: parseUnbindDefaultSceneMutation,
+  unbindMorphTargetAttribute: parseUnbindMorphTargetAttributeMutation,
+  unbindNodeCamera: parseUnbindNodeCameraMutation,
+  unbindNodeChild: parseUnbindNodeChildMutation,
+  unbindNodeMesh: parseUnbindNodeMeshMutation,
+  unbindNodeSkin: parseUnbindNodeSkinMutation,
+  unbindPrimitiveAttribute: parseUnbindPrimitiveAttributeMutation,
+  unbindPrimitiveIndices: parseUnbindPrimitiveIndicesMutation,
+  unbindPrimitiveMaterial: parseUnbindPrimitiveMaterialMutation,
+  unbindSceneRootNode: parseUnbindSceneRootNodeMutation,
+  removeRequiredExtension: parseRemoveRequiredExtensionMutation,
+  removeUsedExtension: parseRemoveUsedExtensionMutation,
+};
+const mutations = Object.keys(payloads) as GltfMutation["mutation"][];
+
+/** 📥️ Reads one aggregate wire: the tag names the leaf, whose own reader decodes the payload. */
+export const parseGltfMutation: GltfWireReader<GltfMutation> = (value, at = "$") => {
+  const row = gltfWireObject<{ mutation: GltfMutation["mutation"]; payload: unknown }>({ mutation: gltfWireRequired(gltfWireLiteral(...mutations)), payload: gltfWireRequired((payload) => payload) })(value, at);
+  return { mutation: row.mutation, payload: payloads[row.mutation](row.payload, `${at}.payload`) } as GltfMutation;
+};

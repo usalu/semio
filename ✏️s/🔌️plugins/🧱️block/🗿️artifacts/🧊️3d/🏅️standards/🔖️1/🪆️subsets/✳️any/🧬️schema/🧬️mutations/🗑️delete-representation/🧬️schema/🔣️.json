@@ -5,11 +5,28 @@
   "type": "object",
   "additionalProperties": false,
   "required": [
+    "mutation",
     "id"
   ],
   "properties": {
+    "mutation": {
+      "const": "deleteRepresentation"
+    },
     "id": {
-      "type": "string"
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Representation",
+          "de": "Darstellung"
+        },
+        "ref": {
+          "kind": "representation"
+        },
+        "group": "target",
+        "order": 10
+      }
     }
   }
 }

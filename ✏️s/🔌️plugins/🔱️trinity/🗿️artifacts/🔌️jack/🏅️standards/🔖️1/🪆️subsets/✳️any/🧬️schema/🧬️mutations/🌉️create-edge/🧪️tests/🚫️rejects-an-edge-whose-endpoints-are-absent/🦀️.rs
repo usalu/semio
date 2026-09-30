@@ -9,9 +9,10 @@
 //! vocabulary's eight diff builders funnels its changed scene through `diff_replace_content`, which
 //! mints a fresh handle whose `child_id` is a `std::collections::hash_map::DefaultHasher` digest of
 //! the child content. Hand-authoring such an `➡️after` would mean hand-forging a value from `std`'s
-//! deliberately unspecified default hasher. `create-edge` has no `mutation.no-op` guard, and of its two rejection branches this case
-//! pins the SECOND — `mutation.invariant` for absent endpoints, the one its `create-node` sibling has
-//! no analogue of.
+//! deliberately unspecified default hasher. `create-edge` has no `mutation.no-op` guard; of its rejection branches this case pins the
+//! absent-endpoint one — an Error-level `mutation.target-missing` addressed by the absent NODE ids, a
+//! state-dependent refusal no payload schema can state (a malformed port key is the payload
+//! invariant, and the leaf schema's `pattern` already refuses it).
 //!
 //! 🔗️ `create-edge` is the only verb in this vocabulary that validates REFERENTIAL integrity inside
 //! its own diff builder: it checks the duplicate-id branch first, then resolves both port-qualified
@@ -51,10 +52,10 @@ async fn rejection_leaves_the_document_at_the_committed_after() {
     assert_eq!(snapshot.content.child_id, base.content.child_id, "a rejected create-edge must not mint a new content handle");
 }
 
-/// 🚨️ Endpoints that resolve to no node are a FATAL `mutation.invariant` addressed by the EDGE id —
-/// not `mutation.target-missing`, and not addressed by either endpoint's node id.
+/// 🚨️ Endpoints that resolve to no node are an Error-level `mutation.target-missing` addressed by the
+/// absent node ids — the same answer every jack verb gives a missing node.
 #[semio_framework_async_macros::async_test]
-async fn absent_endpoints_are_a_fatal_invariant_not_a_missing_target() {
+async fn absent_endpoints_are_missing_targets() {
     let base = before();
     let scene = jack_working_scene(&base);
     assert!(scene.nodes.is_empty() && scene.edges.is_empty(), "rejects-an-edge-whose-endpoints-are-absent's before-snapshot must decode to an unresolved, empty scene");
@@ -62,9 +63,9 @@ async fn absent_endpoints_are_a_fatal_invariant_not_a_missing_target() {
     assert_eq!(produced.diff(), &JackDiff::default(), "a rejecting create-edge must carry an empty diff, never a half-built content handle");
     let messages = produced.messages();
     assert_eq!(messages.len(), 1, "exactly one diagnostic is expected, got {messages:?}");
-    assert_eq!(messages[0].code.0, "mutation.invariant", "a dangling endpoint is an invariant breach, not a missing target");
-    assert_eq!(messages[0].level, protocol::Severity::Fatal, "mutation.invariant is Fatal here — an edge to nowhere would corrupt the graph, so it can never be absorbed");
-    assert_eq!(messages[0].target, vec!["shaft-to-capsule-a".to_string()], "the diagnostic names the EDGE id, never `shaft` or `capsule-a` — the absent endpoints are the reason, not the address");
+    assert_eq!(messages[0].code.0, "mutation.target-missing", "an endpoint naming a node the scene does not hold is a missing target");
+    assert_eq!(messages[0].level, protocol::Severity::Error, "a missing target is Error-level, like every other jack verb addressing an absent node");
+    assert_eq!(messages[0].target, vec!["shaft".to_string(), "capsule-a".to_string()], "the diagnostic names the absent endpoint NODES, source first");
     let semantics = <TrinityGraphMutation as protocol::SemanticMutation<JackSnapshot>>::semantics(&mutation());
     assert_eq!((semantics.verb, semantics.entity, semantics.kind, semantics.record), ("create", "edge", "create-edge", "CreatedEdge"), "the fixture must be bound to create-edge's own descriptor");
 }

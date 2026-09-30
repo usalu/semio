@@ -1,0 +1,244 @@
+<<<<<<< ANCHOR
+    let mut snapshot = ReplayProjection::<P, Mutation>::new(initial_snapshot.clone());
+    let mut edits: Vec<Edit<Mutation>> = Vec::with_capacity(log.edits.len());
+=======
+    let schema = log.schema.clone();
+    let mut edits: Vec<Edit<Mutation>> = Vec::with_capacity(log.edits.len());
+>>>>>>> END
+<<<<<<< ANCHOR
+        if !durable_messages.is_empty() {
+            edit_messages.push(crate::os_spr::EditMessages { edit_id: edit_id.clone(), messages: durable_messages });
+        }
+        for operation in &forwards {
+            let next = apply_mutation(&*snapshot, operation).map_err(|error| TextError::new(error.to_string(), TextSpan::at(1, 1)))?.0;
+            snapshot.advance(next);
+        }
+        edits.push(Edit {
+            id: history_edit.id,
+            actor: history_edit.actor,
+            forwards,
+            inverse,
+            mutation_meta,
+            description: history_edit.description,
+            coalesce_key: history_edit.coalesce_key,
+            sequence_number: index as i32 + 1,
+            started_at: history_edit.started_at,
+            finished_at: history_edit.finished_at,
+        });
+    }
+    drop(snapshot);
+=======
+        if !durable_messages.is_empty() {
+            edit_messages.push(crate::os_spr::EditMessages { edit_id: edit_id.clone(), messages: durable_messages });
+        }
+        let mut edit = Edit {
+            id: history_edit.id,
+            actor: history_edit.actor,
+            forwards,
+            inverse,
+            mutation_meta,
+            description: history_edit.description,
+            coalesce_key: history_edit.coalesce_key,
+            sequence_number: index as i32 + 1,
+            started_at: history_edit.started_at,
+            finished_at: history_edit.finished_at,
+        };
+        stamp_edit_semantics::<P, Mutation>(&mut edit, &schema);
+        edits.push(edit);
+    }
+>>>>>>> END
+<<<<<<< ANCHOR
+        edit.mutation_meta =
+            (0..edit.forwards.len() as u32).map(|index| metadata.get(&index).cloned().ok_or_else(|| TextError::new(format!("ops text metadata is missing index {index} for edit {}", edit.id), TextSpan::at(1, 1)))).collect::<Result<Vec<_>, _>>()?;
+    }
+=======
+        edit.mutation_meta =
+            (0..edit.forwards.len() as u32).map(|index| metadata.get(&index).cloned().ok_or_else(|| TextError::new(format!("ops text metadata is missing index {index} for edit {}", edit.id), TextSpan::at(1, 1)))).collect::<Result<Vec<_>, _>>()?;
+        stamp_edit_semantics::<P, Mutation>(edit, &schema);
+    }
+>>>>>>> END
+<<<<<<< ANCHOR
+fn project_envelope_history<P, Mutation>(envelope: &mut ArtifactEnvelope<P, Mutation>) -> Result<(), VcsError>
+where
+    Mutation: self::Mutation<P>,
+{
+    let fold = fold_envelope_history(envelope)?;
+=======
+fn project_envelope_history<P, Mutation>(envelope: &mut ArtifactEnvelope<P, Mutation>) -> Result<EffectiveSupersessions, VcsError>
+where
+    Mutation: self::Mutation<P>,
+{
+    let fold = fold_envelope_history(envelope)?;
+>>>>>>> END
+<<<<<<< ANCHOR
+    envelope.active_alternative_id = fold.alternative;
+    envelope.cursor = Some(ArtifactCursor::new(fold.applied, fold.redo, fold.checkpoint));
+    Ok(())
+}
+=======
+    envelope.active_alternative_id = fold.alternative;
+    envelope.cursor = Some(ArtifactCursor::new(fold.applied, fold.redo, fold.checkpoint));
+    Ok(fold.supersessions)
+}
+
+/// ✏️ Settles a loaded history under supersessions: persisted inverses and messages of applied edits are derived caches a
+/// later supersession made stale (an append-only log never rewrites the edit record), so one Report replay from the
+/// genesis recomputes them, and every supersession envelope regains the conflict target its record does not persist.
+/// Answers the replayed head projection.
+fn replay_superseded_history<P, Mutation>(envelope: &mut ArtifactEnvelope<P, Mutation>, applied: &[String], supersessions: EffectiveSupersessions) -> Result<P, VcsError>
+where
+    P: Clone,
+    Mutation: self::Mutation<P> + OpBinary,
+{
+    fill_supersession_targets::<P, Mutation>(envelope)?;
+    let mut replay = EditReplay::new(ReplayMode::Report, Arc::new(envelope.vcs.initial_snapshot.clone()), applied.to_vec(), 0, supersessions, &envelope.vcs.edits)?;
+    replay.step(&envelope.vcs.edits, &mut || false)?;
+    let mut result = replay.finish()?;
+    for (edit_id, inverse) in result.take_rebased_inverse() {
+        match envelope.vcs.edits.iter_mut().find(|edit| edit.id == edit_id) {
+            Some(edit) => retire_scratch_operations::<P, Mutation>(std::mem::replace(&mut edit.inverse, inverse)),
+            None => retire_scratch_operations::<P, Mutation>(inverse),
+        }
+    }
+    for entry in result.take_replayed() {
+        envelope.edit_messages.remove_id(&entry.edit_id);
+        if !entry.messages.is_empty() {
+            envelope.edit_messages.admit(entry).map_err(|rejected| VcsError::ValidationFailed(format!("replayed messages of edit {} exceed the message ledger", rejected.edit_id)))?;
+        }
+    }
+    let state = result.take_state().ok_or_else(|| VcsError::ValidationFailed("history replay lost its reached projection".into()))?;
+    match Arc::try_unwrap(state) {
+        Ok(state) => Ok(state),
+        Err(shared) => {
+            let state = (*shared).clone();
+            retire_shared_projection::<P, Mutation>(shared);
+            Ok(state)
+        }
+    }
+}
+
+/// 🎯️ Re-derives the conflict target of every supersession envelope that carries none — the persisted transition record
+/// does not — from the superseded and replacing operations ([`supersession_address`]).
+fn fill_supersession_targets<P, Mutation>(envelope: &mut ArtifactEnvelope<P, Mutation>) -> Result<(), VcsError>
+where
+    Mutation: self::Mutation<P> + OpBinary,
+{
+    let mut originals: HashMap<MutationId, &Mutation> = HashMap::new();
+    for edit in envelope.vcs.edits.iter() {
+        originals.extend(crate::os_spr::mutation_ids_for_edit::<P, Mutation>(edit).into_iter().zip(edit.forwards.iter()));
+    }
+    let mut targets = Vec::new();
+    for (index, transition) in envelope.transitions.iter().enumerate() {
+        if !transition.target.is_empty() {
+            continue;
+        }
+        if let Some(crate::os_spr::HistoryTransition::Supersede(supersede)) = crate::os_spr::history_transition_from_envelope(transition).map_err(|error| VcsError::Deserialize(error.to_string()))? {
+            targets.push((index, supersession_address::<P, Mutation>(&supersede, |target| originals.get(target).copied())?));
+        }
+    }
+    drop(originals);
+    for (index, target) in targets {
+        envelope.transitions[index].target = target;
+    }
+    Ok(())
+}
+
+/// 🎯️ The address a supersession writes: the longest prefix every superseded operation's and every replacement's
+/// conflict target share — the same law authoring stamps and loading re-derives.
+fn supersession_address<'a, P, Mutation>(supersede: &protocol::TransitionSupersede, original: impl Fn(&MutationId) -> Option<&'a Mutation>) -> Result<Vec<String>, VcsError>
+where
+    Mutation: self::Mutation<P> + OpBinary + 'a,
+{
+    let mut address: Option<Vec<String>> = None;
+    for input in &supersede.inputs {
+        let mut written = original(&input.target).map(self::Mutation::<P>::conflict_target).unwrap_or_default();
+        if let protocol::InputReplacement::Input { payload, .. } = &input.replacement {
+            let replacement = Mutation::decode_op(payload).map_err(|error| VcsError::Deserialize(format!("supersession of {} does not decode: {error}", input.target.0)))?;
+            written = common_address(&written, &replacement.conflict_target());
+            self::Mutation::<P>::retire_cold(replacement);
+        }
+        address = Some(match address {
+            Some(known) => common_address(&known, &written),
+            None => written,
+        });
+    }
+    Ok(address.unwrap_or_default())
+}
+
+/// 🎯️ The longest address prefix `left` and `right` share.
+fn common_address(left: &[String], right: &[String]) -> Vec<String> {
+    left.iter().zip(right.iter()).take_while(|(left, right)| left == right).map(|(segment, _)| segment.clone()).collect()
+}
+>>>>>>> END
+<<<<<<< ANCHOR
+    let settled = match project_envelope_history(&mut envelope) {
+        Ok(()) => validate_durable_history(&envelope).await,
+        Err(error) => Err(error),
+    };
+    let snapshot = match settled {
+        Ok(()) => {
+            let applied_edit_ids = envelope.cursor.as_ref().map(|cursor| cursor.applied_edit_ids.clone()).unwrap_or_default();
+            fold_history(&envelope, &applied_edit_ids).await
+        }
+        Err(error) => Err(error),
+    };
+=======
+    let settled = match project_envelope_history(&mut envelope) {
+        Ok(supersessions) => validate_durable_history(&envelope).await.map(|()| supersessions),
+        Err(error) => Err(error),
+    };
+    let snapshot = match settled {
+        Ok(supersessions) => {
+            let applied_edit_ids = envelope.cursor.as_ref().map(|cursor| cursor.applied_edit_ids.clone()).unwrap_or_default();
+            if supersessions.is_empty() {
+                fold_history(&envelope, &applied_edit_ids, &supersessions).await
+            } else {
+                replay_superseded_history(&mut envelope, &applied_edit_ids, supersessions)
+            }
+        }
+        Err(error) => Err(error),
+    };
+>>>>>>> END
+<<<<<<< ANCHOR
+                    edit.actor = Some(ready_envelope.actor.0.clone());
+=======
+                    edit.actor = Some(ready_envelope.actor.0.clone());
+                    stamp_edit_semantics::<P, Mutation>(&mut edit, &self.envelope.schema);
+>>>>>>> END
+<<<<<<< ANCHOR
+            edit.actor = Some(envelope.actor.0.clone());
+=======
+            edit.actor = Some(envelope.actor.0.clone());
+            stamp_edit_semantics::<P, Mutation>(&mut edit, &self.envelope.schema);
+>>>>>>> END
+<<<<<<< ANCHOR
+            payload_hash: meta.payload_hash.map(crate::os_spr::PayloadHash),
+            semantic_kind: None,
+            label: None,
+            group_id: meta.group_id,
+            origin: meta.origin,
+            transaction: None,
+        },
+=======
+            payload_hash: meta.payload_hash.map(crate::os_spr::PayloadHash),
+            semantic_kind: None,
+            label: None,
+            group_id: meta.group_id,
+            origin: meta.origin,
+            transaction: meta.transaction,
+        },
+>>>>>>> END
+<<<<<<< ANCHOR
+        group_id: meta.group_id.clone(),
+        origin: meta.origin.clone(),
+        messages: messages.into_iter().collect(),
+    }
+}
+=======
+        group_id: meta.group_id.clone(),
+        origin: meta.origin.clone(),
+        transaction: meta.transaction.clone(),
+        messages: messages.into_iter().collect(),
+    }
+}
+>>>>>>> END

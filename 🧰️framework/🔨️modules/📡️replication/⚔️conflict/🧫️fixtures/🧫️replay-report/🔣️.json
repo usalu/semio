@@ -1,0 +1,227 @@
+{
+  "schema": "semio.replication.replay-report",
+  "law": "blocksFinalize iff any outcome's worst is error or fatal (the MergePolicy::Normal floor); worst is the maximum outcome worst",
+  "cases": [
+    {
+      "id": "empty-suffix",
+      "report": {
+        "fromPosition": 3,
+        "outcomes": [],
+        "worst": null
+      },
+      "expect": {
+        "blocksFinalize": false
+      }
+    },
+    {
+      "id": "clean-suffix",
+      "report": {
+        "fromPosition": 0,
+        "outcomes": [
+          {
+            "mutationId": "op-a-1",
+            "editId": "e-1",
+            "opIndex": 0,
+            "worst": null,
+            "messages": [],
+            "superseded": true,
+            "withdrawn": false
+          },
+          {
+            "mutationId": "op-b-1",
+            "editId": "e-2",
+            "opIndex": 0,
+            "worst": null,
+            "messages": [],
+            "superseded": false,
+            "withdrawn": false
+          }
+        ],
+        "worst": null
+      },
+      "expect": {
+        "blocksFinalize": false
+      }
+    },
+    {
+      "id": "warnings-persist-without-blocking",
+      "report": {
+        "fromPosition": 1,
+        "outcomes": [
+          {
+            "mutationId": "op-a-1",
+            "editId": "e-1",
+            "opIndex": 0,
+            "worst": null,
+            "messages": [],
+            "superseded": true,
+            "withdrawn": false
+          },
+          {
+            "mutationId": "op-b-1",
+            "editId": "e-2",
+            "opIndex": 0,
+            "worst": "warning",
+            "messages": [
+              {
+                "level": "warning",
+                "code": "mutation.clamped",
+                "message": "value clamped to range",
+                "target": [
+                  "nodes",
+                  "n-1",
+                  "x"
+                ],
+                "opIndex": 0
+              }
+            ],
+            "superseded": false,
+            "withdrawn": false
+          },
+          {
+            "mutationId": "op-c-1",
+            "editId": "e-2",
+            "opIndex": 1,
+            "worst": "info",
+            "messages": [
+              {
+                "level": "info",
+                "code": "mutation.cascade",
+                "message": "cascaded",
+                "opIndex": 1
+              }
+            ],
+            "superseded": false,
+            "withdrawn": false
+          }
+        ],
+        "worst": "warning"
+      },
+      "expect": {
+        "blocksFinalize": false
+      }
+    },
+    {
+      "id": "withdrawn-operation-folds-as-no-op",
+      "report": {
+        "fromPosition": 0,
+        "outcomes": [
+          {
+            "mutationId": "op-a-1",
+            "editId": "e-1",
+            "opIndex": 0,
+            "worst": null,
+            "messages": [],
+            "superseded": true,
+            "withdrawn": true
+          },
+          {
+            "mutationId": "op-b-1",
+            "editId": "e-1",
+            "opIndex": 1,
+            "worst": "warning",
+            "messages": [
+              {
+                "level": "warning",
+                "code": "mutation.no-op",
+                "message": "nothing to move",
+                "opIndex": 1
+              }
+            ],
+            "superseded": false,
+            "withdrawn": false
+          }
+        ],
+        "worst": "warning"
+      },
+      "expect": {
+        "blocksFinalize": false
+      }
+    },
+    {
+      "id": "error-downstream-blocks",
+      "report": {
+        "fromPosition": 0,
+        "outcomes": [
+          {
+            "mutationId": "op-a-1",
+            "editId": "e-1",
+            "opIndex": 0,
+            "worst": null,
+            "messages": [],
+            "superseded": true,
+            "withdrawn": false
+          },
+          {
+            "mutationId": "op-b-1",
+            "editId": "e-2",
+            "opIndex": 0,
+            "worst": "error",
+            "messages": [
+              {
+                "level": "error",
+                "code": "mutation.target-missing",
+                "message": "node n-9 is gone",
+                "target": [
+                  "nodes",
+                  "n-9"
+                ],
+                "opIndex": 0
+              }
+            ],
+            "superseded": false,
+            "withdrawn": false
+          }
+        ],
+        "worst": "error"
+      },
+      "expect": {
+        "blocksFinalize": true
+      }
+    },
+    {
+      "id": "fatal-downstream-blocks",
+      "report": {
+        "fromPosition": 2,
+        "outcomes": [
+          {
+            "mutationId": "op-c-1",
+            "editId": "e-3",
+            "opIndex": 0,
+            "worst": "fatal",
+            "messages": [
+              {
+                "level": "fatal",
+                "code": "mutation.invariant",
+                "message": "apply failed",
+                "opIndex": 0
+              }
+            ],
+            "superseded": false,
+            "withdrawn": false
+          },
+          {
+            "mutationId": "op-d-1",
+            "editId": "e-4",
+            "opIndex": 0,
+            "worst": "warning",
+            "messages": [
+              {
+                "level": "warning",
+                "code": "mutation.partial",
+                "message": "one member locked",
+                "opIndex": 0
+              }
+            ],
+            "superseded": false,
+            "withdrawn": false
+          }
+        ],
+        "worst": "fatal"
+      },
+      "expect": {
+        "blocksFinalize": true
+      }
+    }
+  ]
+}

@@ -12,13 +12,49 @@
   "properties": {
     "baselineGrid": {
       "type": "number",
-      "exclusiveMinimum": 0
+      "exclusiveMinimum": 0,
+      "x-semio-ui": {
+        "widget": "stepper",
+        "role": "value",
+        "label": {
+          "en": "Baseline grid increment",
+          "de": "Grundlinienraster-Abstand"
+        },
+        "unit": "pt",
+        "step": 0.5,
+        "precision": 1,
+        "group": "grid",
+        "order": 10
+      }
     },
     "baselineOffset": {
-      "type": "number"
+      "type": "number",
+      "x-semio-ui": {
+        "widget": "stepper",
+        "role": "value",
+        "label": {
+          "en": "Baseline offset",
+          "de": "Grundlinienversatz"
+        },
+        "unit": "pt",
+        "step": 0.5,
+        "precision": 1,
+        "group": "grid",
+        "order": 20
+      }
     },
     "snapToBaseline": {
-      "type": "boolean"
+      "type": "boolean",
+      "x-semio-ui": {
+        "widget": "toggle",
+        "role": "value",
+        "label": {
+          "en": "Align to baseline grid",
+          "de": "Am Grundlinienraster ausrichten"
+        },
+        "group": "grid",
+        "order": 30
+      }
     }
   }
 }

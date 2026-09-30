@@ -212,12 +212,43 @@
         "activeTool": {
           "type": "string"
         },
+        "historyEdit": {
+          "$ref": "#/definitions/historyEdit"
+        },
         "principalKind": {
           "type": "string",
           "enum": [
             "human",
             "agent"
           ]
+        }
+      }
+    },
+    "historyEdit": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "mutationId",
+        "stage",
+        "drafts"
+      ],
+      "properties": {
+        "mutationId": {
+          "type": "string"
+        },
+        "stage": {
+          "enum": [
+            "editing",
+            "replaying",
+            "reviewing",
+            "choosing",
+            "finalizing"
+          ]
+        },
+        "drafts": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 4294967295
         }
       }
     },

@@ -4,7 +4,14 @@
   "title": "SetStandalone",
   "type": "object",
   "additionalProperties": false,
+  "required": [
+    "mutation"
+  ],
   "properties": {
+    "mutation": {
+      "const": "setStandalone",
+      "description": "Aggregate discriminator spliced in by XmlValidMutation; absent when the payload stands alone."
+    },
     "standalone": {
       "anyOf": [
         {
@@ -13,11 +20,18 @@
         {
           "type": "null"
         }
-      ]
-    },
-    "mutation": {
-      "const": "setStandalone",
-      "description": "Aggregate discriminator spliced in by XmlValidMutation; absent when the payload stands alone."
+      ],
+      "x-semio-ui": {
+        "widget": "toggle",
+        "label": {
+          "en": "Standalone document",
+          "de": "Standalone-Dokument"
+        },
+        "description": {
+          "en": "Declares that no external markup declaration affects the document content.",
+          "de": "Erklärt, dass keine externe Markup-Deklaration den Dokumentinhalt beeinflusst."
+        }
+      }
     }
   }
 }

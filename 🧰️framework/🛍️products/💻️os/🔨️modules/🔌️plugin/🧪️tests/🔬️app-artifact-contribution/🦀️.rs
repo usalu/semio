@@ -33,11 +33,12 @@ mod artifact_contribution_tests {
     }
 
     // 🚫️async: E4 fn-pointer slot — `commit_owner_mutation_roster` takes
-    // `&[fn() -> (&'static str, &'static [SemanticDescriptor])]`, a plain sync fn pointer; see R2/R9.
-    fn owner_roster_provider() -> (&'static str, &'static [::protocol::SemanticDescriptor]) {
+    // `&[fn() -> (&'static str, &'static [SemanticDescriptor], &'static [&'static str])]`, a plain sync fn pointer; see R2/R9.
+    fn owner_roster_provider() -> (&'static str, &'static [::protocol::SemanticDescriptor], &'static [&'static str]) {
         const KINDS: &[::protocol::SemanticDescriptor] =
             &[::protocol::SemanticDescriptor { verb: "add", entity: "widget", kind: "add-widget", record: "AddedWidget" }, ::protocol::SemanticDescriptor { verb: "remove", entity: "widget", kind: "remove-widget", record: "RemovedWidget" }];
-        ("roster-determinism-test.document", KINDS)
+        const INPUT_SCHEMAS: &[&str] = &[r#"{"type":"object","required":["mutation","id","x"],"properties":{"mutation":{"const":"addWidget"},"id":{"type":"string"},"x":{"type":"number","minimum":0,"maximum":10}}}"#];
+        ("roster-determinism-test.document", KINDS, INPUT_SCHEMAS)
     }
 
     #[semio_framework_async_macros::async_test]
@@ -51,5 +52,11 @@ mod artifact_contribution_tests {
         sorted.sort_by(|a, b| a.mutation_id.cmp(&b.mutation_id));
         assert_eq!(first, sorted);
         assert!(first.iter().any(|entry| entry.mutation_id == "roster-determinism-test.document#add-widget"));
+        let add = first.iter().find(|entry| entry.mutation_id == "roster-determinism-test.document#add-widget").expect("add row");
+        let crate::app::WireMutationInputs::Declared { inputs } = &add.inputs else { panic!("add-widget declares its inputs: {:?}", add.inputs) };
+        assert_eq!(inputs.iter().map(|input| input.id.as_str()).collect::<Vec<_>>(), ["/id", "/x"]);
+        assert!(matches!(inputs[1].control(), semio_framework::ActionArgControl::Slider { min, max, .. } if min == 0.0 && max == 10.0));
+        let remove = first.iter().find(|entry| entry.mutation_id == "roster-determinism-test.document#remove-widget").expect("remove row");
+        assert_eq!(remove.inputs, crate::app::WireMutationInputs::Opaque);
     }
 }

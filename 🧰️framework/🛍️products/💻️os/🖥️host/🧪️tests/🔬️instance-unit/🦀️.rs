@@ -43,10 +43,10 @@ mod tests {
     fn sample_config_spec() -> ConfigSpec {
         ConfigSpec {
             fields: vec![
-                semio_framework::ConfigFieldSpec { key: "zoom".into(), label: "Zoom".into(), shape: semio_framework::ConfigFieldShape::Number { min: None, max: None, step: None }, default: Some(dsl::DslValue::from(&serde_json::json!(1.0))) },
-                semio_framework::ConfigFieldSpec { key: "mode".into(), label: "Mode".into(), shape: semio_framework::ConfigFieldShape::Select { options: vec!["A".into(), "B".into()] }, default: Some(dsl::DslValue::from(&serde_json::json!("A"))) },
-                semio_framework::ConfigFieldSpec { key: "flag".into(), label: "Flag".into(), shape: semio_framework::ConfigFieldShape::Toggle, default: None },
-                semio_framework::ConfigFieldSpec { key: "label".into(), label: "Label".into(), shape: semio_framework::ConfigFieldShape::Text, default: None },
+                semio_framework::ActionArgDef::number("zoom", semio_framework::LocalizedLabel::native("Zoom", "Zoom")).default_value(&1.0),
+                semio_framework::ActionArgDef::select("mode", semio_framework::LocalizedLabel::native("Mode", "Modus"), vec![semio_framework::ActionArgOption::new("A", semio_framework::LocalizedLabel::data("A")), semio_framework::ActionArgOption::new("B", semio_framework::LocalizedLabel::data("B"))]).default_value(&"A"),
+                semio_framework::ActionArgDef::toggle("flag", semio_framework::LocalizedLabel::native("Flag", "Markierung")),
+                semio_framework::ActionArgDef::text("label", semio_framework::LocalizedLabel::native("Label", "Beschriftung")),
             ],
         }
     }

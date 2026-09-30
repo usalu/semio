@@ -5,15 +5,51 @@
   "type": "object",
   "additionalProperties": false,
   "required": [
+    "mutation",
     "id",
     "newPhiPrimeDeg"
   ],
   "properties": {
+    "mutation": {
+      "const": "changeLayerPhiPrime"
+    },
     "id": {
-      "type": "string"
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Soil layer",
+          "de": "Bodenschicht"
+        },
+        "description": {
+          "en": "The soil layer this mutation addresses.",
+          "de": "Die Bodenschicht, die diese Mutation adressiert."
+        },
+        "ref": {
+          "kind": "soilLayer"
+        },
+        "group": "target",
+        "order": 10
+      }
     },
     "newPhiPrimeDeg": {
-      "type": "number"
+      "type": "number",
+      "minimum": 0,
+      "maximum": 90,
+      "x-semio-ui": {
+        "widget": "dial",
+        "role": "value",
+        "label": {
+          "en": "Effective angle of shearing resistance φ′",
+          "de": "Effektiver Reibungswinkel φ′"
+        },
+        "unit": "°",
+        "step": 0.5,
+        "precision": 1,
+        "group": "soil",
+        "order": 20
+      }
     }
   }
 }

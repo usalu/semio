@@ -13,7 +13,13 @@
         {
           "type": "null"
         }
-      ]
+      ],
+      "x-semio-ui": {
+        "label": {
+          "en": "Transparency (tRNS)",
+          "de": "Transparenz (tRNS)"
+        }
+      }
     }
   },
   "$defs": {

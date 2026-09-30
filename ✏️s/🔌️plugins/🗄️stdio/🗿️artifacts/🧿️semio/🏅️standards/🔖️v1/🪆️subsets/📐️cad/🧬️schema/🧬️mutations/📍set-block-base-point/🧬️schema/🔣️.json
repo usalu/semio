@@ -5,19 +5,30 @@
   "type": "object",
   "additionalProperties": false,
   "required": [
+    "mutation",
     "name",
     "basePoint"
   ],
   "properties": {
+    "mutation": {
+      "const": "setBlockBasePoint",
+      "description": "Aggregate discriminator spliced in by SemioCadMutation; absent when the payload stands alone."
+    },
     "name": {
       "type": "string"
     },
     "basePoint": {
-      "$ref": "#/$defs/SemioPoint2"
-    },
-    "mutation": {
-      "const": "setBlockBasePoint",
-      "description": "Aggregate discriminator spliced in by SemioCadMutation; absent when the payload stands alone."
+      "$ref": "#/$defs/SemioPoint2",
+      "x-semio-ui": {
+        "label": {
+          "en": "Base point",
+          "de": "Basispunkt"
+        },
+        "description": {
+          "en": "Insertion base point of the block.",
+          "de": "Einfügebasispunkt des Blocks."
+        }
+      }
     }
   },
   "$defs": {

@@ -1,0 +1,45 @@
+{
+  "name": "@semio-tech/framework-tool-machine-rs",
+  "$schema": "../../../../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "🧰️framework/🔨️modules/🛠️tool-machine/📦️packages/🦀️rust",
+  "namedInputs": {
+    "default": ["{workspaceRoot}/🧰️framework/🔨️modules/🛠️tool-machine/**/*", "{projectRoot}/**/*"]
+  },
+  "targets": {
+    "test": {
+      "executor": "nx:run-commands",
+      "options": {
+        "cwd": "🧰️framework/🔨️modules/🛠️tool-machine/📦️packages/🦀️rust",
+        "command": "bun ./📜️script.ts test"
+      }
+    },
+    "test-quick": {
+      "executor": "nx:run-commands",
+      "options": {
+        "cwd": "🧰️framework/🔨️modules/🛠️tool-machine/📦️packages/🦀️rust",
+        "command": "bun ./📜️script.ts test quick"
+      }
+    },
+    "test-long": {
+      "executor": "nx:run-commands",
+      "options": {
+        "cwd": "🧰️framework/🔨️modules/🛠️tool-machine/📦️packages/🦀️rust",
+        "command": "bun ./📜️script.ts test long"
+      }
+    },
+    "test-exhaustive": {
+      "executor": "nx:run-commands",
+      "options": {
+        "cwd": "🧰️framework/🔨️modules/🛠️tool-machine/📦️packages/🦀️rust",
+        "command": "bun ./📜️script.ts test exhaustive"
+      }
+    },
+    "check": {
+      "executor": "nx:run-commands",
+      "options": {
+        "cwd": "🧰️framework/🔨️modules/🛠️tool-machine/📦️packages/🦀️rust",
+        "command": "bun ./📜️script.ts check"
+      }
+    }
+  }
+}

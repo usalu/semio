@@ -26,7 +26,7 @@ pub fn diff(payload: &super::DeleteConstantSchedule, base: &EnergyModelSnapshot)
         || base.model.schedules.weekly.iter().any(|row| row.daily_schedule_ids.contains(&payload.id))
         || base.model.schedules.annual.iter().any(|row| row.default_daily_schedule_id == payload.id || row.holiday_daily_schedule_id == Some(payload.id) || row.rules.iter().any(|rule| rule.daily_schedule_id == payload.id))
     {
-        return protocol::MutationOutcome::error("mutation.invariant", format!("Schedule {} is still referenced by the document.", payload.id.0), [payload.id.0.to_string()]);
+        return protocol::MutationOutcome::error("mutation.target-referenced", format!("Schedule {} is still referenced by the document.", payload.id.0), [payload.id.0.to_string()]);
     }
     let mut model = base.model.clone();
     model.schedules.constants.retain(|item| item.id != payload.id);

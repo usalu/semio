@@ -57,6 +57,7 @@
   },
   "$defs": {
     "LocalizedText": {
+      "title": "LocalizedText",
       "type": "object",
       "additionalProperties": false,
       "required": [
@@ -65,7 +66,18 @@
       ],
       "properties": {
         "locale": {
-          "type": "string"
+          "type": "string",
+          "x-semio-ui": {
+            "widget": "text",
+            "label": {
+              "en": "Language",
+              "de": "Sprache"
+            },
+            "description": {
+              "en": "Language tag, e.g. de or en.",
+              "de": "Sprachkennung, z. B. de oder en."
+            }
+          }
         },
         "text": {
           "type": "string"
@@ -73,6 +85,7 @@
       }
     },
     "BuildingSystemNumber": {
+      "title": "BuildingSystemNumber",
       "type": "object",
       "additionalProperties": false,
       "required": [
@@ -82,13 +95,37 @@
       ],
       "properties": {
         "systemCode": {
-          "type": "string"
+          "type": "string",
+          "x-semio-ui": {
+            "widget": "text",
+            "label": {
+              "en": "System code",
+              "de": "Systemkennung"
+            }
+          }
         },
         "subsystem": {
-          "type": "string"
+          "type": "string",
+          "x-semio-ui": {
+            "widget": "text",
+            "label": {
+              "en": "Subsystem",
+              "de": "Teilsystem"
+            }
+          }
         },
         "sequence": {
-          "type": "integer"
+          "type": "integer",
+          "minimum": 0,
+          "x-semio-ui": {
+            "widget": "stepper",
+            "label": {
+              "en": "Sequence number",
+              "de": "Laufende Nummer"
+            },
+            "step": 1,
+            "precision": 0
+          }
         }
       }
     },
@@ -108,6 +145,7 @@
       }
     },
     "ManufacturerFile": {
+      "title": "ManufacturerFile",
       "type": "object",
       "additionalProperties": false,
       "required": [
@@ -121,29 +159,80 @@
       ],
       "properties": {
         "headerVersion": {
-          "type": "string"
+          "type": "string",
+          "x-semio-ui": {
+            "widget": "text",
+            "label": {
+              "en": "Header version",
+              "de": "Kopfversion"
+            }
+          }
         },
         "manufacturer": {
-          "type": "string"
+          "type": "string",
+          "x-semio-ui": {
+            "widget": "text",
+            "label": {
+              "en": "Manufacturer code",
+              "de": "Herstellerkennung"
+            }
+          }
         },
         "buildingSystemNumber": {
-          "$ref": "#/$defs/BuildingSystemNumber"
+          "$ref": "#/$defs/BuildingSystemNumber",
+          "x-semio-ui": {
+            "label": {
+              "en": "Building services number",
+              "de": "Gewerknummer"
+            }
+          }
         },
         "created": {
-          "type": "string"
+          "type": "string",
+          "x-semio-ui": {
+            "widget": "text",
+            "label": {
+              "en": "Creation date",
+              "de": "Erstellungsdatum"
+            }
+          }
         },
         "charset": {
-          "type": "string"
+          "type": "string",
+          "x-semio-ui": {
+            "widget": "text",
+            "label": {
+              "en": "Character set",
+              "de": "Zeichensatz"
+            }
+          }
         },
         "recordCount": {
-          "type": "integer"
+          "type": "integer",
+          "minimum": 0,
+          "x-semio-ui": {
+            "widget": "stepper",
+            "label": {
+              "en": "Record count",
+              "de": "Satzanzahl"
+            },
+            "step": 1,
+            "precision": 0
+          }
         },
         "extensions": {
-          "$ref": "#/$defs/ExtensionFields"
+          "$ref": "#/$defs/ExtensionBag",
+          "x-semio-ui": {
+            "label": {
+              "en": "Extensions",
+              "de": "Erweiterungen"
+            }
+          }
         }
       }
     },
     "NativeRecord": {
+      "title": "NativeRecord",
       "type": "object",
       "additionalProperties": false,
       "required": [
@@ -153,23 +242,45 @@
       ],
       "properties": {
         "family": {
-          "type": "string"
+          "type": "string",
+          "x-semio-ui": {
+            "widget": "text",
+            "label": {
+              "en": "Record family",
+              "de": "Satzart"
+            }
+          }
         },
         "fields": {
           "type": "array",
           "items": {
             "type": "string"
+          },
+          "x-semio-ui": {
+            "label": {
+              "en": "Fields",
+              "de": "Felder"
+            }
           }
         },
         "extensions": {
-          "$ref": "#/$defs/ExtensionFields"
+          "$ref": "#/$defs/ExtensionBag",
+          "x-semio-ui": {
+            "label": {
+              "en": "Extensions",
+              "de": "Erweiterungen"
+            }
+          }
         }
       }
     },
     "SheetAttributes": {
+      "title": "SheetAttributes",
       "oneOf": [
         {
+          "title": "ValveHeating",
           "type": "object",
+          "additionalProperties": false,
           "required": [
             "kind",
             "dn",
@@ -184,7 +295,8 @@
               "const": "valveHeating"
             },
             "dn": {
-              "type": "integer"
+              "type": "integer",
+              "minimum": 0
             },
             "kvsM3S": {
               "type": "number"
@@ -204,7 +316,9 @@
           }
         },
         {
+          "title": "Radiator",
           "type": "object",
+          "additionalProperties": false,
           "required": [
             "kind",
             "standardOutputW",
@@ -239,7 +353,9 @@
           }
         },
         {
+          "title": "PumpHeating",
           "type": "object",
+          "additionalProperties": false,
           "required": [
             "kind",
             "dnSuction",
@@ -254,10 +370,12 @@
               "const": "pumpHeating"
             },
             "dnSuction": {
-              "type": "integer"
+              "type": "integer",
+              "minimum": 0
             },
             "dnDischarge": {
-              "type": "integer"
+              "type": "integer",
+              "minimum": 0
             },
             "nominalFlowM3S": {
               "type": "number"
@@ -280,7 +398,9 @@
           }
         },
         {
+          "title": "HeatGenerator",
           "type": "object",
+          "additionalProperties": false,
           "required": [
             "kind",
             "nominalHeatOutputW",
@@ -307,10 +427,11 @@
           }
         },
         {
+          "title": "Generic",
           "type": "object",
+          "additionalProperties": false,
           "required": [
-            "kind",
-            "entries"
+            "kind"
           ],
           "properties": {
             "kind": {
@@ -327,6 +448,7 @@
       ]
     },
     "Configuration": {
+      "title": "Configuration",
       "type": "object",
       "additionalProperties": false,
       "required": [
@@ -339,23 +461,52 @@
           "type": "string"
         },
         "attributes": {
-          "$ref": "#/$defs/SheetAttributes"
+          "$ref": "#/$defs/SheetAttributes",
+          "x-semio-ui": {
+            "label": {
+              "en": "Sheet attributes",
+              "de": "Blattattribute"
+            }
+          }
         },
         "geometryRef": {
           "type": [
             "string",
             "null"
-          ]
+          ],
+          "x-semio-ui": {
+            "widget": "reference",
+            "label": {
+              "en": "Geometry",
+              "de": "Geometrie"
+            },
+            "ref": {
+              "kind": "geometry"
+            },
+            "role": "value"
+          }
         },
         "functionRefs": {
           "type": "array",
           "items": {
             "type": "string"
+          },
+          "x-semio-ui": {
+            "widget": "reference",
+            "label": {
+              "en": "Characteristic curves",
+              "de": "Kennlinien"
+            },
+            "ref": {
+              "kind": "curve"
+            },
+            "role": "value"
           }
         }
       }
     },
     "ProductIdentity": {
+      "title": "ProductIdentity",
       "type": "object",
       "additionalProperties": false,
       "required": [
@@ -365,13 +516,34 @@
       ],
       "properties": {
         "manufacturerCode": {
-          "type": "string"
+          "type": "string",
+          "x-semio-ui": {
+            "widget": "text",
+            "label": {
+              "en": "Manufacturer code",
+              "de": "Herstellerkennung"
+            }
+          }
         },
         "productGroup": {
-          "type": "string"
+          "type": "string",
+          "x-semio-ui": {
+            "widget": "text",
+            "label": {
+              "en": "Product group",
+              "de": "Produktgruppe"
+            }
+          }
         },
         "articleNumber": {
-          "type": "string"
+          "type": "string",
+          "x-semio-ui": {
+            "widget": "text",
+            "label": {
+              "en": "Article number",
+              "de": "Artikelnummer"
+            }
+          }
         }
       }
     },
@@ -455,6 +627,7 @@
       }
     },
     "EditionId": {
+      "title": "EditionId",
       "type": "object",
       "additionalProperties": false,
       "required": [
@@ -463,10 +636,30 @@
       ],
       "properties": {
         "year": {
-          "type": "integer"
+          "type": "integer",
+          "minimum": 0,
+          "x-semio-ui": {
+            "widget": "stepper",
+            "label": {
+              "en": "Year",
+              "de": "Jahr"
+            },
+            "step": 1,
+            "precision": 0
+          }
         },
         "month": {
-          "type": "integer"
+          "type": "integer",
+          "minimum": 0,
+          "x-semio-ui": {
+            "widget": "stepper",
+            "label": {
+              "en": "Month",
+              "de": "Monat"
+            },
+            "step": 1,
+            "precision": 0
+          }
         }
       }
     },
@@ -515,6 +708,7 @@
       }
     },
     "BoundingBox": {
+      "title": "BoundingBox",
       "type": "object",
       "additionalProperties": false,
       "required": [
@@ -527,22 +721,94 @@
       ],
       "properties": {
         "minX": {
-          "type": "number"
+          "type": "number",
+          "x-semio-ui": {
+            "widget": "stepper",
+            "label": {
+              "en": "Minimum x",
+              "de": "Minimum x"
+            },
+            "unit": "m",
+            "displayUnit": "mm",
+            "displayFactor": 1000,
+            "step": 0.001,
+            "precision": 0
+          }
         },
         "minY": {
-          "type": "number"
+          "type": "number",
+          "x-semio-ui": {
+            "widget": "stepper",
+            "label": {
+              "en": "Minimum y",
+              "de": "Minimum y"
+            },
+            "unit": "m",
+            "displayUnit": "mm",
+            "displayFactor": 1000,
+            "step": 0.001,
+            "precision": 0
+          }
         },
         "minZ": {
-          "type": "number"
+          "type": "number",
+          "x-semio-ui": {
+            "widget": "stepper",
+            "label": {
+              "en": "Minimum z",
+              "de": "Minimum z"
+            },
+            "unit": "m",
+            "displayUnit": "mm",
+            "displayFactor": 1000,
+            "step": 0.001,
+            "precision": 0
+          }
         },
         "maxX": {
-          "type": "number"
+          "type": "number",
+          "x-semio-ui": {
+            "widget": "stepper",
+            "label": {
+              "en": "Maximum x",
+              "de": "Maximum x"
+            },
+            "unit": "m",
+            "displayUnit": "mm",
+            "displayFactor": 1000,
+            "step": 0.001,
+            "precision": 0
+          }
         },
         "maxY": {
-          "type": "number"
+          "type": "number",
+          "x-semio-ui": {
+            "widget": "stepper",
+            "label": {
+              "en": "Maximum y",
+              "de": "Maximum y"
+            },
+            "unit": "m",
+            "displayUnit": "mm",
+            "displayFactor": 1000,
+            "step": 0.001,
+            "precision": 0
+          }
         },
         "maxZ": {
-          "type": "number"
+          "type": "number",
+          "x-semio-ui": {
+            "widget": "stepper",
+            "label": {
+              "en": "Maximum z",
+              "de": "Maximum z"
+            },
+            "unit": "m",
+            "displayUnit": "mm",
+            "displayFactor": 1000,
+            "step": 0.001,
+            "precision": 0
+          }
         }
       }
     },
@@ -587,6 +853,7 @@
       }
     },
     "ParametricGeometry": {
+      "title": "ParametricGeometry",
       "type": "object",
       "additionalProperties": false,
       "required": [
@@ -600,23 +867,42 @@
           "type": "string"
         },
         "bbox": {
-          "$ref": "#/$defs/BoundingBox"
+          "$ref": "#/$defs/BoundingBox",
+          "x-semio-ui": {
+            "label": {
+              "en": "Bounding box",
+              "de": "Hüllquader"
+            }
+          }
         },
         "connections": {
           "type": "array",
           "items": {
-            "$ref": "#/$defs/GeometryConnection"
+            "$ref": "#/$defs/ConnectionPoint"
+          },
+          "x-semio-ui": {
+            "label": {
+              "en": "Connection points",
+              "de": "Anschlusspunkte"
+            }
           }
         },
         "parameters": {
           "type": "object",
           "additionalProperties": {
             "type": "number"
+          },
+          "x-semio-ui": {
+            "label": {
+              "en": "Parameters",
+              "de": "Parameter"
+            }
           }
         }
       }
     },
     "CurvePoint": {
+      "title": "CurvePoint",
       "type": "object",
       "additionalProperties": false,
       "required": [
@@ -633,31 +919,53 @@
       }
     },
     "CharacteristicCurve": {
+      "title": "CharacteristicCurve",
       "type": "object",
       "additionalProperties": false,
       "required": [
         "id",
+        "xUnit",
+        "yUnit",
         "points"
       ],
       "properties": {
         "id": {
           "type": "string"
         },
+        "xUnit": {
+          "$ref": "#/$defs/VdiUnit",
+          "x-semio-ui": {
+            "label": {
+              "en": "x-axis unit",
+              "de": "Einheit der x-Achse"
+            }
+          }
+        },
+        "yUnit": {
+          "$ref": "#/$defs/VdiUnit",
+          "x-semio-ui": {
+            "label": {
+              "en": "y-axis unit",
+              "de": "Einheit der y-Achse"
+            }
+          }
+        },
         "points": {
           "type": "array",
           "items": {
             "$ref": "#/$defs/CurvePoint"
+          },
+          "x-semio-ui": {
+            "label": {
+              "en": "Curve points",
+              "de": "Kennlinienpunkte"
+            }
           }
-        },
-        "xUnit": {
-          "$ref": "#/$defs/VdiUnit"
-        },
-        "yUnit": {
-          "$ref": "#/$defs/VdiUnit"
         }
       }
     },
     "SecurityLimits": {
+      "title": "SecurityLimits",
       "type": "object",
       "additionalProperties": false,
       "required": [
@@ -669,47 +977,114 @@
       "properties": {
         "maxFileBytes": {
           "type": "integer",
-          "minimum": 0
+          "minimum": 0,
+          "x-semio-ui": {
+            "widget": "stepper",
+            "label": {
+              "en": "Maximum file size",
+              "de": "Maximale Dateigröße"
+            },
+            "unit": "B",
+            "step": 1,
+            "precision": 0
+          }
         },
         "maxRecords": {
           "type": "integer",
-          "minimum": 0
+          "minimum": 0,
+          "x-semio-ui": {
+            "widget": "stepper",
+            "label": {
+              "en": "Maximum number of records",
+              "de": "Maximale Satzanzahl"
+            },
+            "step": 1,
+            "precision": 0
+          }
         },
         "maxFieldLength": {
           "type": "integer",
-          "minimum": 0
+          "minimum": 0,
+          "x-semio-ui": {
+            "widget": "stepper",
+            "label": {
+              "en": "Maximum field length",
+              "de": "Maximale Feldlänge"
+            },
+            "unit": "B",
+            "step": 1,
+            "precision": 0
+          }
         },
         "maxNestingDepth": {
           "type": "integer",
-          "minimum": 0
+          "minimum": 0,
+          "x-semio-ui": {
+            "widget": "stepper",
+            "label": {
+              "en": "Maximum nesting depth",
+              "de": "Maximale Verschachtelungstiefe"
+            },
+            "step": 1,
+            "precision": 0
+          }
         }
       }
     },
     "VdiUnit": {
+      "title": "VdiUnit",
       "type": "object",
       "additionalProperties": false,
       "required": [
         "symbol",
         "kind",
-        "siFactor",
-        "delta"
+        "delta",
+        "siFactor"
       ],
       "properties": {
         "symbol": {
-          "type": "string"
+          "type": "string",
+          "x-semio-ui": {
+            "widget": "text",
+            "label": {
+              "en": "Unit symbol",
+              "de": "Einheitenzeichen"
+            }
+          }
         },
         "kind": {
-          "type": "string"
-        },
-        "siFactor": {
-          "type": "number"
+          "$ref": "#/$defs/VdiQuantityKind"
         },
         "delta": {
-          "type": "boolean"
+          "type": "boolean",
+          "x-semio-ui": {
+            "widget": "toggle",
+            "label": {
+              "en": "Difference quantity",
+              "de": "Differenzgröße"
+            },
+            "description": {
+              "en": "The unit measures a difference, e.g. K instead of °C.",
+              "de": "Die Einheit misst eine Differenz, z. B. K statt °C."
+            }
+          }
+        },
+        "siFactor": {
+          "type": "number",
+          "x-semio-ui": {
+            "widget": "stepper",
+            "label": {
+              "en": "Factor to SI",
+              "de": "Umrechnungsfaktor zur SI-Einheit"
+            },
+            "step": 0.001,
+            "precision": 6
+          }
         }
       }
     },
     "GenericAttribute": {
+      "title": "GenericAttribute",
       "type": "object",
       "additionalProperties": false,
       "required": [
@@ -727,11 +1102,19 @@
           "type": [
             "string",
             "null"
-          ]
+          ],
+          "x-semio-ui": {
+            "label": {
+              "en": "Unit",
+              "de": "Einheit"
+            },
+            "widget": "text"
+          }
         }
       }
     },
     "AccessoryLink": {
+      "title": "AccessoryLink",
       "type": "object",
       "additionalProperties": false,
       "required": [
@@ -741,18 +1124,46 @@
       ],
       "properties": {
         "accessoryId": {
-          "type": "string"
+          "type": "string",
+          "x-semio-ui": {
+            "widget": "reference",
+            "label": {
+              "en": "Accessory",
+              "de": "Zubehörteil"
+            },
+            "ref": {
+              "kind": "product"
+            },
+            "role": "value"
+          }
         },
         "required": {
-          "type": "boolean"
+          "type": "boolean",
+          "x-semio-ui": {
+            "widget": "toggle",
+            "label": {
+              "en": "Required",
+              "de": "Erforderlich"
+            }
+          }
         },
         "quantity": {
           "type": "integer",
-          "minimum": 0
+          "minimum": 0,
+          "x-semio-ui": {
+            "widget": "stepper",
+            "label": {
+              "en": "Quantity",
+              "de": "Anzahl"
+            },
+            "step": 1,
+            "precision": 0
+          }
         }
       }
     },
     "CompositionLink": {
+      "title": "CompositionLink",
       "type": "object",
       "additionalProperties": false,
       "required": [
@@ -761,11 +1172,31 @@
       ],
       "properties": {
         "componentId": {
-          "type": "string"
+          "type": "string",
+          "x-semio-ui": {
+            "widget": "reference",
+            "label": {
+              "en": "Component",
+              "de": "Komponente"
+            },
+            "ref": {
+              "kind": "product"
+            },
+            "role": "value"
+          }
         },
         "quantity": {
           "type": "integer",
-          "minimum": 0
+          "minimum": 0,
+          "x-semio-ui": {
+            "widget": "stepper",
+            "label": {
+              "en": "Quantity",
+              "de": "Anzahl"
+            },
+            "step": 1,
+            "precision": 0
+          }
         }
       }
     },
@@ -780,6 +1211,347 @@
           "type": "array",
           "items": {
             "$ref": "#/$defs/GenericAttribute"
+          }
+        }
+      }
+    },
+    "CatalogueProduct": {
+      "title": "CatalogueProduct",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "identity",
+        "title",
+        "sheet",
+        "records",
+        "configuration",
+        "accessories",
+        "components",
+        "extensions"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "identity": {
+          "$ref": "#/$defs/ProductIdentity",
+          "x-semio-ui": {
+            "label": {
+              "en": "Product identity",
+              "de": "Produktidentität"
+            }
+          }
+        },
+        "title": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/LocalizedText"
+          },
+          "x-semio-ui": {
+            "label": {
+              "en": "Product title",
+              "de": "Produktbezeichnung"
+            }
+          }
+        },
+        "sheet": {
+          "type": "integer",
+          "minimum": 0,
+          "x-semio-ui": {
+            "widget": "stepper",
+            "label": {
+              "en": "Sheet",
+              "de": "Blatt"
+            },
+            "description": {
+              "en": "VDI 3805 sheet number of the product.",
+              "de": "Blattnummer der VDI 3805 des Produkts."
+            },
+            "step": 1,
+            "precision": 0
+          }
+        },
+        "records": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/NativeRecord"
+          },
+          "x-semio-ui": {
+            "label": {
+              "en": "Native records",
+              "de": "Originalsätze"
+            }
+          }
+        },
+        "configuration": {
+          "$ref": "#/$defs/Configuration",
+          "x-semio-ui": {
+            "label": {
+              "en": "Configuration",
+              "de": "Konfiguration"
+            }
+          }
+        },
+        "accessories": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/AccessoryLink"
+          },
+          "x-semio-ui": {
+            "label": {
+              "en": "Accessories",
+              "de": "Zubehör"
+            }
+          }
+        },
+        "components": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/CompositionLink"
+          },
+          "x-semio-ui": {
+            "label": {
+              "en": "Components",
+              "de": "Komponenten"
+            }
+          }
+        },
+        "extensions": {
+          "$ref": "#/$defs/ExtensionBag",
+          "x-semio-ui": {
+            "label": {
+              "en": "Extensions",
+              "de": "Erweiterungen"
+            }
+          }
+        }
+      }
+    },
+    "ConnectionPoint": {
+      "title": "ConnectionPoint",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "medium",
+        "position",
+        "direction"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "medium": {
+          "type": "string",
+          "x-semio-ui": {
+            "widget": "text",
+            "label": {
+              "en": "Medium",
+              "de": "Medium"
+            },
+            "description": {
+              "en": "Conveyed medium, e.g. water, air or gas.",
+              "de": "Gefördertes Medium, z. B. Wasser, Luft oder Gas."
+            }
+          }
+        },
+        "position": {
+          "type": "array",
+          "items": {
+            "type": "number"
+          },
+          "minItems": 3,
+          "maxItems": 3,
+          "x-semio-ui": {
+            "widget": "vector",
+            "label": {
+              "en": "Position",
+              "de": "Lage"
+            },
+            "unit": "m"
+          }
+        },
+        "direction": {
+          "type": "array",
+          "items": {
+            "type": "number"
+          },
+          "minItems": 3,
+          "maxItems": 3,
+          "x-semio-ui": {
+            "widget": "vector",
+            "label": {
+              "en": "Direction",
+              "de": "Richtung"
+            },
+            "description": {
+              "en": "Outward unit vector of the connection.",
+              "de": "Nach außen gerichteter Einheitsvektor des Anschlusses."
+            }
+          }
+        },
+        "diameterMm": {
+          "type": [
+            "number",
+            "null"
+          ],
+          "x-semio-ui": {
+            "widget": "stepper",
+            "label": {
+              "en": "Nominal diameter",
+              "de": "Nenndurchmesser"
+            },
+            "unit": "mm",
+            "step": 1,
+            "precision": 0
+          }
+        }
+      }
+    },
+    "EditionProfileChoice": {
+      "title": "EditionProfileChoice",
+      "type": "string",
+      "enum": [
+        "legacy",
+        "current"
+      ],
+      "x-semio-ui": {
+        "options": {
+          "legacy": {
+            "en": "Legacy edition",
+            "de": "Frühere Ausgabe"
+          },
+          "current": {
+            "en": "Current edition",
+            "de": "Aktuelle Ausgabe"
+          }
+        }
+      }
+    },
+    "ExtensionBag": {
+      "title": "ExtensionBag",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "fields"
+      ],
+      "properties": {
+        "fields": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "string"
+          },
+          "x-semio-ui": {
+            "label": {
+              "en": "Fields",
+              "de": "Felder"
+            }
+          }
+        }
+      }
+    },
+    "VdiQuantityKind": {
+      "title": "VdiQuantityKind",
+      "type": "string",
+      "enum": [
+        "dimensionless",
+        "length",
+        "area",
+        "volume",
+        "mass",
+        "time",
+        "temperature",
+        "force",
+        "pressure",
+        "stress",
+        "moment",
+        "energy",
+        "power",
+        "thermalConductivity",
+        "thermalResistance",
+        "heatTransferCoefficient",
+        "airPermeability",
+        "ventilationRate",
+        "acceleration"
+      ],
+      "x-semio-ui": {
+        "options": {
+          "dimensionless": {
+            "en": "Dimensionless",
+            "de": "Dimensionslos"
+          },
+          "length": {
+            "en": "Length",
+            "de": "Länge"
+          },
+          "area": {
+            "en": "Area",
+            "de": "Fläche"
+          },
+          "volume": {
+            "en": "Volume",
+            "de": "Volumen"
+          },
+          "mass": {
+            "en": "Mass",
+            "de": "Masse"
+          },
+          "time": {
+            "en": "Time",
+            "de": "Zeit"
+          },
+          "temperature": {
+            "en": "Temperature",
+            "de": "Temperatur"
+          },
+          "force": {
+            "en": "Force",
+            "de": "Kraft"
+          },
+          "pressure": {
+            "en": "Pressure",
+            "de": "Druck"
+          },
+          "stress": {
+            "en": "Stress",
+            "de": "Spannung"
+          },
+          "moment": {
+            "en": "Moment",
+            "de": "Moment"
+          },
+          "energy": {
+            "en": "Energy",
+            "de": "Energie"
+          },
+          "power": {
+            "en": "Power",
+            "de": "Leistung"
+          },
+          "thermalConductivity": {
+            "en": "Thermal conductivity",
+            "de": "Wärmeleitfähigkeit"
+          },
+          "thermalResistance": {
+            "en": "Thermal resistance",
+            "de": "Wärmedurchlasswiderstand"
+          },
+          "heatTransferCoefficient": {
+            "en": "Heat transfer coefficient",
+            "de": "Wärmeübergangskoeffizient"
+          },
+          "airPermeability": {
+            "en": "Air permeability",
+            "de": "Luftdurchlässigkeit"
+          },
+          "ventilationRate": {
+            "en": "Ventilation rate",
+            "de": "Luftwechselrate"
+          },
+          "acceleration": {
+            "en": "Acceleration",
+            "de": "Beschleunigung"
           }
         }
       }

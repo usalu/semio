@@ -1,0 +1,13 @@
+{
+  "mutation": "reorderPrimitives",
+  "payload": {
+    "phase": "apply",
+    "value": {
+      "mesh": 0,
+      "order": [
+        1,
+        0
+      ]
+    }
+  }
+}

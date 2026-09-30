@@ -1,7 +1,7 @@
 {
   "ChangeLayerApplicationType": {
-    "element_id": "wall-north",
+    "elementId": "wall-north",
     "index": 2,
-    "new_application_type": "WAB"
+    "newApplicationType": "WAB"
   }
 }

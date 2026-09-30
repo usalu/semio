@@ -5,15 +5,53 @@
   "type": "object",
   "additionalProperties": false,
   "required": [
+    "mutation",
     "id",
     "newSpecificHeatJKgK"
   ],
   "properties": {
+    "mutation": {
+      "const": "changeMaterialSpecificHeat"
+    },
     "id": {
-      "type": "integer"
+      "type": "integer",
+      "minimum": 0,
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Material",
+          "de": "Material"
+        },
+        "description": {
+          "en": "The material this mutation changes, by id.",
+          "de": "Material, das diese Mutation ändert, per ID."
+        },
+        "ref": {
+          "kind": "material",
+          "domain": "energyModel",
+          "granularity": "material"
+        },
+        "group": "target",
+        "order": 10
+      }
     },
     "newSpecificHeatJKgK": {
-      "type": "number"
+      "type": "number",
+      "exclusiveMinimum": 0,
+      "x-semio-ui": {
+        "widget": "stepper",
+        "role": "value",
+        "label": {
+          "en": "Specific heat capacity",
+          "de": "Spezifische Wärmekapazität"
+        },
+        "unit": "J/(kg·K)",
+        "step": 10,
+        "precision": 0,
+        "group": "thermal",
+        "order": 20
+      }
     }
   }
 }

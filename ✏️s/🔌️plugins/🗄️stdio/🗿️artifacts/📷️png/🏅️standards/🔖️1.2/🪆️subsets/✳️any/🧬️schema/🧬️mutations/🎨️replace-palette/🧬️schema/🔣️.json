@@ -16,7 +16,13 @@
         {
           "type": "null"
         }
-      ]
+      ],
+      "x-semio-ui": {
+        "label": {
+          "en": "Palette (PLTE)",
+          "de": "Palette (PLTE)"
+        }
+      }
     }
   },
   "$defs": {
@@ -32,17 +38,38 @@
         "r": {
           "type": "integer",
           "minimum": 0,
-          "maximum": 255
+          "maximum": 255,
+          "x-semio-ui": {
+            "widget": "stepper",
+            "label": {
+              "en": "Red",
+              "de": "Rot"
+            }
+          }
         },
         "g": {
           "type": "integer",
           "minimum": 0,
-          "maximum": 255
+          "maximum": 255,
+          "x-semio-ui": {
+            "widget": "stepper",
+            "label": {
+              "en": "Green",
+              "de": "Grün"
+            }
+          }
         },
         "b": {
           "type": "integer",
           "minimum": 0,
-          "maximum": 255
+          "maximum": 255,
+          "x-semio-ui": {
+            "widget": "stepper",
+            "label": {
+              "en": "Blue",
+              "de": "Blau"
+            }
+          }
         }
       }
     }

@@ -4,8 +4,7 @@ use crate::schema::modules::mutation_support::top_level::rejection_outcome;
 use crate::schema::modules::mutation_support::top_level::{reject, GltfTopLevelMutationRejection};
 use crate::GltfSnapshot;
 pub const ID: &str = "s.stdio.gltf.mutation.unbind-node-child.v1";
-#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::MutationLeaf)]
-#[mutation_leaf(contract = ::protocol)]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
 #[value(rename_all = "camelCase", deny_unknown_fields)]
 pub struct GltfUnbindNodeChildPayload {
     pub parent: usize,
@@ -32,7 +31,7 @@ pub fn apply(payload: &GltfUnbindNodeChildPayload, base: &GltfSnapshot) -> Resul
 
 //#region 🧬️DirectMutation
 #[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::MutationLeaf)]
-#[mutation_leaf(contract = ::protocol)]
+#[mutation_leaf(contract = ::protocol, payload = Apply)]
 #[value(tag = "phase", content = "value", rename_all = "camelCase")]
 pub enum UnbindNodeChildMutation {
     Apply(GltfUnbindNodeChildPayload),
@@ -76,8 +75,8 @@ impl protocol::MutationKind<GltfSnapshot, super::GltfMutation> for UnbindNodeChi
 
 //#region 🧪️Tests
 #[cfg(test)]
-#[path = "🧪️tests/🔬️direct-leaf/🦀️.rs"]
-mod direct_leaf_tests;
+#[path = "🧪️tests/✂️releases-the-8ba322/🦀️.rs"]
+mod case_releases_the_8ba322;
 //#endregion 🧪️Tests
 
 #[cfg(test)]

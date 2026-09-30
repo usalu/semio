@@ -9,7 +9,7 @@
     "y"
   ],
   "properties": {
-    "x": { "type": "integer", "minimum": 0 },
-    "y": { "type": "integer", "minimum": 0 }
+    "x": { "type": "integer", "minimum": 0, "x-semio-ui": { "widget": "stepper", "role": "value", "label": { "en": "X", "de": "X" }, "unit": "px", "step": 1, "precision": 0, "group": "position", "order": 10 } },
+    "y": { "type": "integer", "minimum": 0, "x-semio-ui": { "widget": "stepper", "role": "value", "label": { "en": "Y", "de": "Y" }, "unit": "px", "step": 1, "precision": 0, "group": "position", "order": 20 } }
   }
 }

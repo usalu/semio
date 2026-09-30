@@ -5,13 +5,28 @@
   "type": "object",
   "additionalProperties": false,
   "required": [
-    "clip_path_id",
+    "clipPathId",
     "index",
     "node"
   ],
   "properties": {
-    "clip_path_id": {
-      "type": "string"
+    "clipPathId": {
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Clipping path",
+          "de": "Beschneidungspfad"
+        },
+        "description": {
+          "en": "The `clipPath` element referenced by id.",
+          "de": "Das per ID referenzierte Element `clipPath`."
+        },
+        "ref": {
+          "kind": "clipPath"
+        }
+      }
     },
     "index": {
       "type": "integer",

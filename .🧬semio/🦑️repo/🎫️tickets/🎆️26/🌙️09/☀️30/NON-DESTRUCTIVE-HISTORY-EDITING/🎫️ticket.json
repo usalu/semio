@@ -1,0 +1,10 @@
+{
+  "title": "Non-Destructive History Editing",
+  "emoji": "⏳",
+  "status": "open",
+  "description": "Non-destructive editing of artifacts over the event-sourced history. Every mutation in history is editable; editing enters a time-travel mode that shows the edited mutation with downstream mutations not yet applied. The user accepts or discards input changes; every mutation input carries UI-element metadata (slider, stepper, min, max, snap points). On accept all downstream mutations replay and report success, warnings or errors; warnings are visible in history; fatal errors must be resolved by editing the failing mutation, repeated until the tail is clean. Finalizing prompts for a new alternative or overwriting the artifact. Tools are state machines that yield mutations within a transaction; tools are not history-editable but the mutations they yield are (puzzle 2d: selection and drag offset stay editable). Artifact-agnostic, clean mechanisms, end to end. Ticket bookkeeping is manual: repo MCP tools/call fails with invalid tool params because CallToolParams._meta is decoded with unknown-field rejection.",
+  "goal": "🎯runningframework",
+  "sessions": [
+    "⚪e476cf7857eb4795b6dc4a936d2ee5df"
+  ]
+}

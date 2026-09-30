@@ -5,15 +5,16 @@
   "type": "object",
   "additionalProperties": false,
   "required": [
+    "mutation",
     "snapshot"
   ],
   "properties": {
-    "snapshot": {
-      "$ref": "#/$defs/PptxSnapshot"
-    },
     "mutation": {
       "const": "setSnapshot",
       "description": "Aggregate discriminator spliced in by PptxMutation; absent when the payload stands alone."
+    },
+    "snapshot": {
+      "$ref": "#/$defs/PptxSnapshot"
     }
   },
   "$defs": {
@@ -25,19 +26,56 @@
       ],
       "properties": {
         "schema": {
-          "type": "string"
+          "type": "string",
+          "x-semio-ui": {
+            "widget": "text",
+            "label": {
+              "en": "Snapshot schema",
+              "de": "Snapshot-Schema"
+            },
+            "description": {
+              "en": "Identifier of the snapshot schema version.",
+              "de": "Kennung der Version des Snapshot-Schemas."
+            }
+          }
         },
         "opc": {
-          "$ref": "#/$defs/OpcPackage"
+          "$ref": "#/$defs/OpcPackage",
+          "x-semio-ui": {
+            "label": {
+              "en": "OPC package",
+              "de": "OPC-Paket"
+            },
+            "description": {
+              "en": "Open Packaging Conventions container of the document (ISO/IEC 29500-2).",
+              "de": "Container des Dokuments nach Open Packaging Conventions (ISO/IEC 29500-2)."
+            }
+          }
         },
         "xmlParts": {
           "type": "array",
           "items": {
             "$ref": "#/$defs/PptxXmlPart"
+          },
+          "x-semio-ui": {
+            "label": {
+              "en": "XML parts",
+              "de": "XML-Teile"
+            },
+            "description": {
+              "en": "Parsed XML parts of the package.",
+              "de": "Geparste XML-Teile des Pakets."
+            }
           }
         },
         "presentation": {
-          "$ref": "#/$defs/PptxPresentation"
+          "$ref": "#/$defs/PptxPresentation",
+          "x-semio-ui": {
+            "label": {
+              "en": "Presentation",
+              "de": "Präsentation"
+            }
+          }
         }
       }
     },
@@ -49,10 +87,26 @@
           "type": "array",
           "items": {
             "$ref": "#/$defs/OpcPart"
+          },
+          "x-semio-ui": {
+            "label": {
+              "en": "Package parts",
+              "de": "Paketteile"
+            }
           }
         },
         "contentTypes": {
-          "$ref": "#/$defs/OpcContentTypes"
+          "$ref": "#/$defs/OpcContentTypes",
+          "x-semio-ui": {
+            "label": {
+              "en": "Content types",
+              "de": "Inhaltstypen"
+            },
+            "description": {
+              "en": "Content of the [Content_Types].xml part.",
+              "de": "Inhalt des Teils [Content_Types].xml."
+            }
+          }
         },
         "relationships": {
           "type": "object",
@@ -60,6 +114,12 @@
             "type": "array",
             "items": {
               "$ref": "#/$defs/OpcRelationship"
+            }
+          },
+          "x-semio-ui": {
+            "label": {
+              "en": "Relationships",
+              "de": "Beziehungen"
             }
           }
         },
@@ -80,7 +140,18 @@
           "type": "string"
         },
         "contentType": {
-          "type": "string"
+          "type": "string",
+          "x-semio-ui": {
+            "widget": "text",
+            "label": {
+              "en": "Content type",
+              "de": "Inhaltstyp"
+            },
+            "description": {
+              "en": "MIME media type of the package part.",
+              "de": "MIME-Medientyp des Paketteils."
+            }
+          }
         },
         "bytes": {
           "type": "array",
@@ -88,6 +159,12 @@
             "type": "integer",
             "minimum": 0,
             "maximum": 255
+          },
+          "x-semio-ui": {
+            "label": {
+              "en": "Part bytes",
+              "de": "Bytes des Paketteils"
+            }
           }
         }
       }
@@ -111,6 +188,16 @@
             "additionalItems": false,
             "minItems": 2,
             "maxItems": 2
+          },
+          "x-semio-ui": {
+            "label": {
+              "en": "Default content types",
+              "de": "Standard-Inhaltstypen"
+            },
+            "description": {
+              "en": "Content type per file extension.",
+              "de": "Inhaltstyp je Dateierweiterung."
+            }
           }
         },
         "overrides": {
@@ -128,6 +215,16 @@
             "additionalItems": false,
             "minItems": 2,
             "maxItems": 2
+          },
+          "x-semio-ui": {
+            "label": {
+              "en": "Content type overrides",
+              "de": "Inhaltstyp-Überschreibungen"
+            },
+            "description": {
+              "en": "Content type per part name, overriding the extension default.",
+              "de": "Inhaltstyp je Teilname; überschreibt den Standard der Dateierweiterung."
+            }
           }
         }
       }
@@ -176,10 +273,27 @@
           "type": "string"
         },
         "contentType": {
-          "type": "string"
+          "type": "string",
+          "x-semio-ui": {
+            "widget": "text",
+            "label": {
+              "en": "Content type",
+              "de": "Inhaltstyp"
+            },
+            "description": {
+              "en": "MIME media type of the package part.",
+              "de": "MIME-Medientyp des Paketteils."
+            }
+          }
         },
         "document": {
-          "$ref": "#/$defs/XmlDocument"
+          "$ref": "#/$defs/XmlDocument",
+          "x-semio-ui": {
+            "label": {
+              "en": "XML document",
+              "de": "XML-Dokument"
+            }
+          }
         }
       }
     },
@@ -195,7 +309,13 @@
             {
               "type": "null"
             }
-          ]
+          ],
+          "x-semio-ui": {
+            "label": {
+              "en": "Root element",
+              "de": "Wurzelelement"
+            }
+          }
         },
         "doctype": {
           "anyOf": [
@@ -215,18 +335,44 @@
             {
               "type": "null"
             }
-          ]
+          ],
+          "x-semio-ui": {
+            "label": {
+              "en": "XML declaration",
+              "de": "XML-Deklaration"
+            }
+          }
         },
         "prolog": {
           "type": "array",
           "items": {
             "$ref": "#/$defs/XmlNode"
+          },
+          "x-semio-ui": {
+            "label": {
+              "en": "Prolog",
+              "de": "Prolog"
+            },
+            "description": {
+              "en": "Comments and processing instructions before the root element.",
+              "de": "Kommentare und Verarbeitungsanweisungen vor dem Wurzelelement."
+            }
           }
         },
         "epilog": {
           "type": "array",
           "items": {
             "$ref": "#/$defs/XmlNode"
+          },
+          "x-semio-ui": {
+            "label": {
+              "en": "Epilog",
+              "de": "Epilog"
+            },
+            "description": {
+              "en": "Comments and processing instructions after the root element.",
+              "de": "Kommentare und Verarbeitungsanweisungen nach dem Wurzelelement."
+            }
           }
         }
       }
@@ -357,7 +503,18 @@
         "prologPosition": {
           "type": "integer",
           "minimum": 0,
-          "description": "Number of prolog nodes preceding this declaration."
+          "description": "Number of prolog nodes preceding this declaration.",
+          "x-semio-ui": {
+            "widget": "stepper",
+            "label": {
+              "en": "Prolog position",
+              "de": "Position im Prolog"
+            },
+            "description": {
+              "en": "Number of prolog nodes before the document type declaration.",
+              "de": "Anzahl der Prolog-Knoten vor der Dokumenttypdeklaration."
+            }
+          }
         },
         "name": {
           "type": "string"
@@ -370,12 +527,32 @@
             {
               "type": "null"
             }
-          ]
+          ],
+          "x-semio-ui": {
+            "label": {
+              "en": "External identifier",
+              "de": "Externer Bezeichner"
+            },
+            "description": {
+              "en": "SYSTEM or PUBLIC identifier of the external DTD subset.",
+              "de": "SYSTEM- oder PUBLIC-Bezeichner der externen DTD-Teilmenge."
+            }
+          }
         },
         "declarations": {
           "type": "array",
           "items": {
             "$ref": "#/$defs/XmlDtdDeclaration"
+          },
+          "x-semio-ui": {
+            "label": {
+              "en": "Markup declarations",
+              "de": "Markup-Deklarationen"
+            },
+            "description": {
+              "en": "Declarations of the internal DTD subset in document order.",
+              "de": "Deklarationen der internen DTD-Teilmenge in Dokumentreihenfolge."
+            }
           }
         }
       }
@@ -466,7 +643,18 @@
             {
               "type": "null"
             }
-          ]
+          ],
+          "x-semio-ui": {
+            "widget": "text",
+            "label": {
+              "en": "Encoding",
+              "de": "Zeichenkodierung"
+            },
+            "description": {
+              "en": "Encoding name written in the XML declaration, e.g. UTF-8.",
+              "de": "In der XML-Deklaration angegebene Zeichenkodierung, z. B. UTF-8."
+            }
+          }
         },
         "standalone": {
           "anyOf": [
@@ -476,14 +664,46 @@
             {
               "type": "null"
             }
-          ]
+          ],
+          "x-semio-ui": {
+            "widget": "toggle",
+            "label": {
+              "en": "Standalone document",
+              "de": "Standalone-Dokument"
+            },
+            "description": {
+              "en": "Declares that no external markup declaration affects the document content.",
+              "de": "Erklärt, dass keine externe Markup-Deklaration den Dokumentinhalt beeinflusst."
+            }
+          }
         },
         "quote": {
           "type": "string",
           "enum": [
             "double",
             "single"
-          ]
+          ],
+          "x-semio-ui": {
+            "widget": "segmented",
+            "label": {
+              "en": "Quote character",
+              "de": "Anführungszeichen"
+            },
+            "description": {
+              "en": "Delimiter of the XML declaration's pseudo-attributes.",
+              "de": "Begrenzungszeichen der Pseudoattribute der XML-Deklaration."
+            },
+            "options": {
+              "double": {
+                "en": "Double quotes (\")",
+                "de": "Doppelte Anführungszeichen (\")"
+              },
+              "single": {
+                "en": "Single quotes (')",
+                "de": "Einfache Anführungszeichen (')"
+              }
+            }
+          }
         }
       }
     },
@@ -495,6 +715,12 @@
           "type": "array",
           "items": {
             "$ref": "#/$defs/PptxSlide"
+          },
+          "x-semio-ui": {
+            "label": {
+              "en": "Slides",
+              "de": "Folien"
+            }
           }
         }
       }
@@ -507,6 +733,12 @@
           "type": "array",
           "items": {
             "$ref": "#/$defs/PptxShape"
+          },
+          "x-semio-ui": {
+            "label": {
+              "en": "Shapes",
+              "de": "Formen"
+            }
           }
         }
       }

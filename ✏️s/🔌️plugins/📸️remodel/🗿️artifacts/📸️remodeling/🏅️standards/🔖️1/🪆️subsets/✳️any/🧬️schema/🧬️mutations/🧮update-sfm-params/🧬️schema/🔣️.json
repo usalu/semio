@@ -5,9 +5,13 @@
   "type": "object",
   "additionalProperties": false,
   "required": [
+    "mutation",
     "params"
   ],
   "properties": {
+    "mutation": {
+      "const": "updateSfmParams"
+    },
     "params": {
       "type": "object",
       "title": "SfmParams",
@@ -24,21 +28,72 @@
         "ransacIterations": {
           "type": "integer",
           "format": "uint32",
-          "minimum": 0
+          "minimum": 0,
+          "x-semio-ui": {
+            "widget": "stepper",
+            "role": "value",
+            "label": {
+              "en": "RANSAC Iterations",
+              "de": "RANSAC-Iterationen"
+            },
+            "step": 100,
+            "precision": 0,
+            "group": "parameters",
+            "order": 10
+          }
         },
         "ransacThresholdPx": {
           "type": "number",
-          "format": "float"
+          "format": "float",
+          "x-semio-ui": {
+            "widget": "slider",
+            "role": "value",
+            "label": {
+              "en": "RANSAC Threshold (px)",
+              "de": "RANSAC-Schwelle (px)"
+            },
+            "unit": "px",
+            "step": 0.1,
+            "precision": 1,
+            "softMin": 0.1,
+            "softMax": 10,
+            "group": "parameters",
+            "order": 20
+          }
         },
         "minTrackLength": {
           "type": "integer",
           "format": "uint32",
-          "minimum": 0
+          "minimum": 0,
+          "x-semio-ui": {
+            "widget": "stepper",
+            "role": "value",
+            "label": {
+              "en": "Min. Track Length",
+              "de": "Min. Spurlänge"
+            },
+            "step": 1,
+            "precision": 0,
+            "group": "parameters",
+            "order": 30
+          }
         },
         "baMaxIterations": {
           "type": "integer",
           "format": "uint32",
-          "minimum": 0
+          "minimum": 0,
+          "x-semio-ui": {
+            "widget": "stepper",
+            "role": "value",
+            "label": {
+              "en": "Bundle Adjustment Max. Iterations",
+              "de": "Max. Iterationen der Bündelblockausgleichung"
+            },
+            "step": 1,
+            "precision": 0,
+            "group": "parameters",
+            "order": 40
+          }
         },
         "robustLoss": {
           "type": "string",
@@ -47,12 +102,60 @@
             "l2",
             "huber",
             "cauchy"
-          ]
+          ],
+          "x-semio-ui": {
+            "widget": "segmented",
+            "role": "value",
+            "label": {
+              "en": "Robust Loss",
+              "de": "Robuste Verlustfunktion"
+            },
+            "options": {
+              "l2": {
+                "en": "L2",
+                "de": "L2"
+              },
+              "huber": {
+                "en": "Huber",
+                "de": "Huber"
+              },
+              "cauchy": {
+                "en": "Cauchy",
+                "de": "Cauchy"
+              }
+            },
+            "group": "parameters",
+            "order": 50
+          }
         },
         "huberDeltaPx": {
           "type": "number",
-          "format": "float"
+          "format": "float",
+          "x-semio-ui": {
+            "widget": "slider",
+            "role": "value",
+            "label": {
+              "en": "Huber Delta (px)",
+              "de": "Huber-Delta (px)"
+            },
+            "unit": "px",
+            "step": 0.1,
+            "precision": 1,
+            "softMin": 0.1,
+            "softMax": 10,
+            "group": "parameters",
+            "order": 60
+          }
         }
+      },
+      "x-semio-ui": {
+        "role": "value",
+        "label": {
+          "en": "Structure-from-Motion Parameters",
+          "de": "Structure-from-Motion-Parameter"
+        },
+        "group": "parameters",
+        "order": 10
       }
     }
   }

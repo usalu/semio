@@ -84,7 +84,7 @@ Feature: Apply every typed lowpoly mutation twice — once in Rust, once in Pyth
       | delete-object                 | 💀️delete-object/🚫️removes-obj-fin-without-touching-the-order           |
       | reorder-objects               | 🔀️reorder-objects/🔀️moves-obj-fin-in-front-of-obj-hull                 |
       | rename-object                 | 🏷️rename-object/🏷️retitles-obj-hull                                    |
-      | change-object-smooth-shading  | 🔘️change-object-smooth-shading/🟢️turns-on-smooth-shading-for-obj-hull  |
+      | change-object-smooth-shading  | 🔘️change-object-smooth-shading/🟢️turns-smooth-shading-obj-hull  |
       | move-object                   | ↗️move-object/📍️translates-obj-hull-along-x-and-z                      |
       | rotate-object                 | 🔄️rotate-object/🔄️yaws-obj-hull-about-the-y-axis                       |
       | scale-object                  | 📐️scale-object/📐️halves-obj-hull-uniformly                             |
@@ -96,7 +96,7 @@ Feature: Apply every typed lowpoly mutation twice — once in Rust, once in Pyth
       | change-paint-layer-visible    | 👁️change-paint-layer-visible/🙈️hides-the-base-layer                    |
       | change-paint-layer-opacity    | 🌫️change-paint-layer-opacity/🌫️fades-the-base-layer-to-half            |
       | change-paint-layer-blend-mode | 🎛️change-paint-layer-blend-mode/✖️switches-the-base-layer-to-multiply  |
-      | edit-paint-layer              | 🎨️edit-paint-layer/🖌️paints-red-over-the-second-half-of-the-base-layer |
+      | edit-paint-layer              | 🎨️edit-paint-layer/🖌️paints-red-over-second-half-base-layer |
 
   @id-inverse
   @level-exhaustive
@@ -121,7 +121,7 @@ Feature: Apply every typed lowpoly mutation twice — once in Rust, once in Pyth
       | delete-object                 | 💀️delete-object/🚫️removes-obj-fin-without-touching-the-order           |
       | reorder-objects               | 🔀️reorder-objects/🔀️moves-obj-fin-in-front-of-obj-hull                 |
       | rename-object                 | 🏷️rename-object/🏷️retitles-obj-hull                                    |
-      | change-object-smooth-shading  | 🔘️change-object-smooth-shading/🟢️turns-on-smooth-shading-for-obj-hull  |
+      | change-object-smooth-shading  | 🔘️change-object-smooth-shading/🟢️turns-smooth-shading-obj-hull  |
       | move-object                   | ↗️move-object/📍️translates-obj-hull-along-x-and-z                      |
       | rotate-object                 | 🔄️rotate-object/🔄️yaws-obj-hull-about-the-y-axis                       |
       | scale-object                  | 📐️scale-object/📐️halves-obj-hull-uniformly                             |
@@ -133,7 +133,7 @@ Feature: Apply every typed lowpoly mutation twice — once in Rust, once in Pyth
       | change-paint-layer-visible    | 👁️change-paint-layer-visible/🙈️hides-the-base-layer                    |
       | change-paint-layer-opacity    | 🌫️change-paint-layer-opacity/🌫️fades-the-base-layer-to-half            |
       | change-paint-layer-blend-mode | 🎛️change-paint-layer-blend-mode/✖️switches-the-base-layer-to-multiply  |
-      | edit-paint-layer              | 🎨️edit-paint-layer/🖌️paints-red-over-the-second-half-of-the-base-layer |
+      | edit-paint-layer              | 🎨️edit-paint-layer/🖌️paints-red-over-second-half-base-layer |
 
   @id-identity-round-trip
   @level-long

@@ -54,9 +54,11 @@ fn spec(kind: &str, params: Json) -> Json {
 }
 
 #[test]
-fn no_mutation_is_a_true_byte_identity() {
+fn set_snapshot_of_the_fixture_own_snapshot_wire_is_a_true_byte_identity() {
     let input = fixture();
-    let output = oracle_apply_mutation(&input, &spec("no-mutation", Json::Object(vec![]))).unwrap();
+    let snapshot = snapshot_to_wire(&raw_doc::read(&input).unwrap());
+    assert_eq!(snapshot.array("vlrs")[0].get("data").unwrap().clone(), Json::Array(b"vlr-a".iter().map(|byte| Json::Number(*byte as f64)).collect()));
+    let output = oracle_apply_mutation(&input, &spec("set-snapshot", Json::Object(vec![("snapshot".to_string(), snapshot)]))).unwrap();
     assert_eq!(output, input);
 }
 
@@ -77,7 +79,7 @@ fn insert_and_remove_vlr_are_inverse_on_the_real_fixture() {
         ("userId".to_string(), Json::String("semio-test".to_string())),
         ("recordId".to_string(), Json::Number(9.0)),
         ("description".to_string(), Json::String("test vlr".to_string())),
-        ("data".to_string(), Json::String("payload".to_string())),
+        ("data".to_string(), Json::Array(b"payload".iter().map(|byte| Json::Number(*byte as f64)).collect())),
     ]);
     let before_count = match project_las(&input).unwrap().get("vlrs").unwrap() {
         Json::Array(items) => items.len(),
@@ -90,7 +92,7 @@ fn insert_and_remove_vlr_are_inverse_on_the_real_fixture() {
         _ => panic!("vlrs must project as an array"),
     };
     assert_eq!(after_count, before_count + 1, "insert-vlr must grow the vlr list by exactly one");
-    let inverse = oracle_inverse_spec(&input, &insert_spec).unwrap();
+    let inverse = oracle_inverse_spec(&input, &insert_spec).unwrap().unwrap();
     assert_eq!(inverse.str("kind"), "remove-vlr");
     let restored = oracle_apply_mutation(&inserted, &inverse).unwrap();
     assert_eq!(project_las(&restored).unwrap(), project_las(&input).unwrap());
@@ -117,7 +119,7 @@ fn insert_and_remove_point_are_inverse_on_the_real_fixture() {
     ]);
     let insert_spec = spec("insert-point", Json::Object(vec![("index".to_string(), Json::Number(500.0)), ("point".to_string(), point)]));
     let inserted = oracle_apply_mutation(&input, &insert_spec).unwrap();
-    let inverse = oracle_inverse_spec(&input, &insert_spec).unwrap();
+    let inverse = oracle_inverse_spec(&input, &insert_spec).unwrap().unwrap();
     assert_eq!(inverse.str("kind"), "remove-point");
     let restored = oracle_apply_mutation(&inserted, &inverse).unwrap();
     assert_eq!(project_las(&restored).unwrap(), project_las(&input).unwrap());

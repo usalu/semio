@@ -5,17 +5,32 @@
   "type": "object",
   "additionalProperties": false,
   "required": [
+    "mutation",
     "ratio"
   ],
   "properties": {
-    "ratio": {
-      "type": "integer",
-      "minimum": 0,
-      "maximum": 255
-    },
     "mutation": {
       "const": "setPixelAspectRatio",
       "description": "Aggregate discriminator spliced in by GifMutation; absent when the payload stands alone."
+    },
+    "ratio": {
+      "type": "integer",
+      "minimum": 0,
+      "maximum": 255,
+      "x-semio-ui": {
+        "widget": "stepper",
+        "label": {
+          "en": "Pixel aspect ratio",
+          "de": "Pixel-Seitenverhältnis"
+        },
+        "description": {
+          "en": "Stored byte: aspect = (value + 15) / 64; 0 means no information.",
+          "de": "Gespeichertes Byte: Seitenverhältnis = (Wert + 15) / 64; 0 bedeutet keine Angabe."
+        },
+        "precision": 0,
+        "group": "value",
+        "order": 10
+      }
     }
   }
 }

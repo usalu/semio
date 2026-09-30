@@ -5,19 +5,17 @@
   "type": "object",
   "additionalProperties": false,
   "required": [
-    "newTensionComponentFKKn",
-    "newTensionComponentFUkKn",
-    "newTensionComponentNEdKn"
+    "tensionComponent"
   ],
   "properties": {
-    "newTensionComponentFUkKn": {
-      "type": "number"
-    },
-    "newTensionComponentFKKn": {
-      "type": "number"
-    },
-    "newTensionComponentNEdKn": {
-      "type": "number"
+    "tensionComponent": {
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1993/snapshot.json#/$defs/TensionComponent",
+      "x-semio-ui": {
+        "label": {
+          "en": "Tension component",
+          "de": "Zugglied"
+        }
+      }
     }
   }
 }

@@ -612,35 +612,35 @@
       "files": [
         {
           "role": "expected-before",
-          "path": "../🧫️fixtures/🧬️set-selected-generation/✅️set-selected-generation-applied/📸️snapshot/⬅️before/🔣️.json",
+          "path": "../🧫️fixtures/🧬️set-selected-generation/✅️set-selected-generation/📸️snapshot/⬅️before/🔣️.json",
           "mediaType": "application/json",
           "sha256": "sha256:be3d23f29d95eb23b4692a1e547e5efa0edb7b6eb761ee70171099eb034390cb",
           "bytes": 350
         },
         {
           "role": "mutation",
-          "path": "../🧫️fixtures/🧬️set-selected-generation/✅️set-selected-generation-applied/🦠️mutation/🔣️.json",
+          "path": "../🧫️fixtures/🧬️set-selected-generation/✅️set-selected-generation/🦠️mutation/🔣️.json",
           "mediaType": "application/json",
           "sha256": "sha256:41f45ca26538c7462a1029074ead7b818067b78a8f6117bb4ccc05a4d51cf81a",
           "bytes": 80
         },
         {
           "role": "expected-after",
-          "path": "../🧫️fixtures/🧬️set-selected-generation/✅️set-selected-generation-applied/📸️snapshot/➡️after/🔣️.json",
+          "path": "../🧫️fixtures/🧬️set-selected-generation/✅️set-selected-generation/📸️snapshot/➡️after/🔣️.json",
           "mediaType": "application/json",
           "sha256": "sha256:52ef07b2c36b5f155da556a9f0c190c4b061981b219b56d337e997fbd4c237de",
           "bytes": 360
         },
         {
           "role": "expected-diff",
-          "path": "../🧫️fixtures/🧬️set-selected-generation/✅️set-selected-generation-applied/🔺️diff/🔣️.json",
+          "path": "../🧫️fixtures/🧬️set-selected-generation/✅️set-selected-generation/🔺️diff/🔣️.json",
           "mediaType": "application/json",
           "sha256": "sha256:52ef07b2c36b5f155da556a9f0c190c4b061981b219b56d337e997fbd4c237de",
           "bytes": 360
         },
         {
           "role": "declared-outcome",
-          "path": "../🧫️fixtures/🧬️set-selected-generation/✅️set-selected-generation-applied/🎯️outcome/🔣️.json",
+          "path": "../🧫️fixtures/🧬️set-selected-generation/✅️set-selected-generation/🎯️outcome/🔣️.json",
           "mediaType": "application/json",
           "sha256": "sha256:7a5a7d68df9ad1703f7e5415caa03230228f1a6a4edf85b60d86f8ee5391f8ab",
           "bytes": 44

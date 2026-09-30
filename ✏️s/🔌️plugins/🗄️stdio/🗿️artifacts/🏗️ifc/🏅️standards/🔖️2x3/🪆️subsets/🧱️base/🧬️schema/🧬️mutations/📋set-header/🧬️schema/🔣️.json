@@ -5,15 +5,24 @@
   "type": "object",
   "additionalProperties": false,
   "required": [
+    "mutation",
     "header"
   ],
   "properties": {
-    "header": {
-      "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/ifc/2x3/base/artifact.json#/$defs/Part21Header"
-    },
     "mutation": {
       "const": "setHeader",
       "description": "Aggregate discriminator spliced in by Ifc2x3Mutation; absent when the payload stands alone."
+    },
+    "header": {
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/ifc/2x3/base/artifact.json#/$defs/Part21Header",
+      "x-semio-ui": {
+        "label": {
+          "en": "STEP header",
+          "de": "STEP-Kopfteil"
+        },
+        "group": "value",
+        "order": 10
+      }
     }
   }
 }

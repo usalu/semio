@@ -5,11 +5,16 @@
   "type": "object",
   "additionalProperties": false,
   "required": [
+    "mutation",
     "streamIndex",
     "index",
     "data"
   ],
   "properties": {
+    "mutation": {
+      "const": "setSampleData",
+      "description": "Aggregate discriminator spliced in by SemioVideoMutation; absent when the payload stands alone."
+    },
     "streamIndex": {
       "type": "integer",
       "minimum": 0
@@ -25,10 +30,6 @@
         "minimum": 0,
         "maximum": 255
       }
-    },
-    "mutation": {
-      "const": "setSampleData",
-      "description": "Aggregate discriminator spliced in by SemioVideoMutation; absent when the payload stands alone."
     }
   }
 }

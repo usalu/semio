@@ -2,33 +2,29 @@
   "$schema": "http://json-schema.org/draft-07/schema#",
   "$id": "https://json.schemas.assets.semio-tech.com/framework/os/spr/command/tests/mutation-laws/mutation/add-counter-then-notify-foreign/schema.json",
   "title": "AddCounterThenNotifyForeign",
-  "$defs": {
-    "Payload": {
-      "type": "object",
-      "required": [
-        "delta",
-        "foreignCount"
-      ],
-      "properties": {
-        "delta": {
-          "$ref": "https://json.schemas.assets.semio-tech.com/os/spr/command/component.json#/$defs/MutationLawsI64"
-        },
-        "foreignCount": {
-          "$ref": "https://json.schemas.assets.semio-tech.com/os/spr/command/component.json#/$defs/MutationLawsU8"
-        }
-      }
-    }
-  },
-  "type": "object",
-  "allOf": [
-    {
-      "$ref": "#/$defs/Payload"
-    }
-  ],
   "propertyNames": {
     "enum": [
+      "operation",
       "delta",
       "foreignCount"
     ]
+  },
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "operation",
+    "delta",
+    "foreignCount"
+  ],
+  "properties": {
+    "operation": {
+      "const": "addCounterThenNotifyForeign"
+    },
+    "delta": {
+      "$ref": "https://json.schemas.assets.semio-tech.com/os/spr/command/component.json#/$defs/MutationLawsI64"
+    },
+    "foreignCount": {
+      "$ref": "https://json.schemas.assets.semio-tech.com/os/spr/command/component.json#/$defs/MutationLawsU8"
+    }
   }
 }

@@ -89,7 +89,7 @@ Feature: Apply every typed ISO 24517-1:2008 (PDF/E-1) conformance-class mutation
       | remove-media-annotation      | {"subtype": "Sound", "title": "narration"}                        |
       | set-output-intent            | {"identifier": "sRGB IEC61966-2.1"}                               |
       | remove-output-intent         | {}                                                                |
-      | embed-font-file              | {"descriptorOrdinal": 0, "key": "FontFile2", "programOrdinal": 0} |
+      | embed-font-file              | {"descriptorOrdinal": 0, "key": "FontFile2", "program": {"num": 5, "gen": 0}} |
       | remove-font-file             | {"descriptorOrdinal": 0}                                          |
 
   @id-inverse
@@ -115,7 +115,7 @@ Feature: Apply every typed ISO 24517-1:2008 (PDF/E-1) conformance-class mutation
       | remove-media-annotation      | {"subtype": "Sound", "title": "narration"}                        |
       | set-output-intent            | {"identifier": "sRGB IEC61966-2.1"}                               |
       | remove-output-intent         | {}                                                                |
-      | embed-font-file              | {"descriptorOrdinal": 0, "key": "FontFile2", "programOrdinal": 0} |
+      | embed-font-file              | {"descriptorOrdinal": 0, "key": "FontFile2", "program": {"num": 5, "gen": 0}} |
       | remove-font-file             | {"descriptorOrdinal": 0}                                          |
 
   @id-identity-round-trip

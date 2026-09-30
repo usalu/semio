@@ -29,8 +29,8 @@ use semio_repo_test_host::Json;
 
 //#region 🔖️TriangleSoup
 /// 🧊️ Independent triangle-soup reading behind `stl_io` — the reader half every dispatch arm below
-/// starts from, including `no-mutation` (see this file's top doc comment for why the writer half
-/// cannot come from the same crate).
+/// starts from (see this file's top doc comment for why the writer half cannot come from the same
+/// crate).
 #[cfg(feature = "oracles")]
 mod triangle_soup {
     #[derive(Clone, Copy)]
@@ -176,7 +176,6 @@ pub fn oracle_apply_mutation(input: &[u8], spec: &Json) -> Result<Vec<u8>, Strin
     let params = mutation_params(spec);
     match spec.str("kind").as_str() {
         "" => Err("mutation spec carries no `kind`".to_string()),
-        "no-mutation" => ascii::write(&ascii::read_name(input)?, &triangle_soup::read(input)?),
         "set-solid-name" => ascii::write(&string(&params, "name").ok_or("set-solid-name: missing `name`")?, &triangle_soup::read(input)?),
         "insert-triangle" => {
             let mut triangles = triangle_soup::read(input)?;
@@ -211,7 +210,10 @@ pub fn oracle_apply_mutation(input: &[u8], spec: &Json) -> Result<Vec<u8>, Strin
             }
             ascii::write(&ascii::read_name(input)?, &triangles)
         }
-        "set-snapshot" => ascii::write(&ascii::read_name(input)?, &triangles_of(&params, "triangles").ok_or("set-snapshot: missing/malformed `triangles`")?),
+        "set-snapshot" => {
+            let snapshot = params.get("snapshot").cloned().unwrap_or(Json::Null);
+            ascii::write(&snapshot.str("solidName"), &triangles_of(&snapshot, "triangles").ok_or("set-snapshot: missing/malformed `snapshot.triangles`")?)
+        }
         kind => Err(format!("mutation kind {kind:?} has no oracle implementation ({} input byte(s))", input.len())),
     }
 }
@@ -227,14 +229,13 @@ pub fn oracle_apply_mutation(_input: &[u8], _spec: &Json) -> Result<Vec<u8>, Str
 /// ↩️ The spec that undoes `spec` when applied AFTER `oracle_apply_mutation(base, spec)`'s own
 /// result — index-aware and computed from `base` (the pre-mutation document), mirroring
 /// `StlMutation::inverse()` (`../🧬️schema/🧬️mutations/🦀️.rs`) independently: an
-/// out-of-range index that the forward mutation would have rejected inverts to `no-mutation`,
-/// exactly as that hand-rolled method does.
+/// out-of-range index that the forward mutation would have rejected leaves nothing to undo
+/// (`None`), exactly as that method's empty inverse does. Every spec carries the leaf wire payload.
 #[cfg(feature = "oracles")]
-pub fn oracle_inverse_spec(base: &[u8], spec: &Json) -> Result<Json, String> {
+pub fn oracle_inverse_spec(base: &[u8], spec: &Json) -> Result<Option<Json>, String> {
     let params = mutation_params(spec);
-    Ok(match spec.str("kind").as_str() {
+    Ok(Some(match spec.str("kind").as_str() {
         "" => return Err("mutation spec carries no `kind`".to_string()),
-        "no-mutation" => spec_of("no-mutation", Json::Object(vec![])),
         "set-solid-name" => spec_of("set-solid-name", Json::Object(vec![("name".to_string(), Json::String(ascii::read_name(base)?))])),
         "insert-triangle" => {
             let triangles = triangle_soup::read(base)?;
@@ -246,7 +247,7 @@ pub fn oracle_inverse_spec(base: &[u8], spec: &Json) -> Result<Json, String> {
             let index = number(&params, "index").ok_or("remove-triangle: missing `index`")? as usize;
             match triangles.get(index) {
                 Some(triangle) => spec_of("insert-triangle", Json::Object(vec![("index".to_string(), Json::Number(index as f64)), ("triangle".to_string(), triangle_json(triangle))])),
-                None => spec_of("no-mutation", Json::Object(vec![])),
+                None => return Ok(None),
             }
         }
         "set-triangle-normal" => {
@@ -254,7 +255,7 @@ pub fn oracle_inverse_spec(base: &[u8], spec: &Json) -> Result<Json, String> {
             let index = number(&params, "index").ok_or("set-triangle-normal: missing `index`")? as usize;
             match triangles.get(index) {
                 Some(triangle) => spec_of("set-triangle-normal", Json::Object(vec![("index".to_string(), Json::Number(index as f64)), ("normal".to_string(), Json::Array(triangle.normal.iter().map(|value| Json::Number(*value as f64)).collect()))])),
-                None => spec_of("no-mutation", Json::Object(vec![])),
+                None => return Ok(None),
             }
         }
         "set-triangle-vertices" => {
@@ -268,20 +269,25 @@ pub fn oracle_inverse_spec(base: &[u8], spec: &Json) -> Result<Json, String> {
                         ("vertices".to_string(), Json::Array(triangle.vertices.iter().map(|vertex| Json::Array(vertex.iter().map(|value| Json::Number(*value as f64)).collect())).collect())),
                     ]),
                 ),
-                None => spec_of("no-mutation", Json::Object(vec![])),
+                None => return Ok(None),
             }
         }
         "set-snapshot" => {
             let triangles = triangle_soup::read(base)?;
-            spec_of("set-snapshot", Json::Object(vec![("triangles".to_string(), Json::Array(triangles.iter().map(triangle_json).collect()))]))
+            let snapshot = Json::Object(vec![
+                ("schema".to_string(), Json::String("stdio.stl".to_string())),
+                ("solidName".to_string(), Json::String(ascii::read_name(base)?)),
+                ("triangles".to_string(), Json::Array(triangles.iter().map(triangle_json).collect())),
+            ]);
+            spec_of("set-snapshot", Json::Object(vec![("snapshot".to_string(), snapshot)]))
         }
         kind => return Err(format!("mutation kind {kind:?} has no oracle implementation ({} base byte(s))", base.len())),
-    })
+    }))
 }
 
 /// 🚫️ Without the `oracles` feature the reference implementation is not linked at all.
 #[cfg(not(feature = "oracles"))]
-pub fn oracle_inverse_spec(_base: &[u8], _spec: &Json) -> Result<Json, String> {
+pub fn oracle_inverse_spec(_base: &[u8], _spec: &Json) -> Result<Option<Json>, String> {
     Err("the `oracles` feature is disabled — this host was not built with the registered reference implementations".to_string())
 }
 //#endregion 🔖️Inverse
@@ -311,10 +317,9 @@ pub fn oracle_document_projection(_input: &[u8]) -> Result<Json, String> {
 
 //#region 🔖️RoundTrip
 /// 🔁️ The identity-round-trip scenario's own producer: `stl_io` parses the real ascii document into
-/// its `IndexedMesh` and this module re-emits the whole grammar from that model alone. It is exactly
-/// what `no-mutation` now does — that arm used to hand the input bytes straight back, which proves
-/// nothing about either half — and it cannot coincidentally reproduce the input, because `stl_io`
-/// resolves every coordinate through `f32` while the committed fixture carries `f64` decimals.
+/// its `IndexedMesh` and this module re-emits the whole grammar from that model alone. It cannot
+/// coincidentally reproduce the input, because `stl_io` resolves every coordinate through `f32`
+/// while the committed fixture carries `f64` decimals.
 #[cfg(feature = "oracles")]
 pub fn oracle_round_trip(input: &[u8]) -> Result<Vec<u8>, String> {
     ascii::write(&ascii::read_name(input)?, &triangle_soup::read(input)?)

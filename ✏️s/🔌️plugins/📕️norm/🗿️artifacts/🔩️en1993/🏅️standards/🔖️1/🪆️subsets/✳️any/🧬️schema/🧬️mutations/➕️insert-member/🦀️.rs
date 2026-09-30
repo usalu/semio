@@ -3,6 +3,8 @@ use crate::{SteelMember, En1993Mutation, En1993Snapshot};
 #[derive(Clone, Debug, PartialEq, dsl::MutationLeaf, value_derive::ToValue, value_derive::FromValue)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 #[mutation_leaf(contract = ::protocol)]
+#[cfg_attr(test, serde(rename_all = "camelCase"))]
+#[value(rename_all = "camelCase")]
 pub struct InsertMember { pub index: usize, pub member: SteelMember }
 impl protocol::MutationKind<En1993Snapshot, En1993Mutation> for InsertMember {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "insert", entity: "member", kind: "insert-member", record: "InsertedMember" };

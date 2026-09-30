@@ -5,5 +5,5 @@
   "type": "object",
   "additionalProperties": false,
   "required": ["camera"],
-  "properties": { "camera": { "$ref": "https://json.schemas.assets.semio-tech.com/s/procedural/generation3d/artifact.json#/$defs/CameraJson" } }
+  "properties": { "camera": { "$ref": "https://json.schemas.assets.semio-tech.com/s/procedural/generation3d/artifact.json#/$defs/CameraJson", "x-semio-ui": {"role": "value", "label": {"en": "Graph camera", "de": "Graphkamera"}, "description": {"en": "Pan and zoom of the graph canvas.", "de": "Verschiebung und Zoom der Graphfläche."}, "group": "camera", "order": 10} } }
 }

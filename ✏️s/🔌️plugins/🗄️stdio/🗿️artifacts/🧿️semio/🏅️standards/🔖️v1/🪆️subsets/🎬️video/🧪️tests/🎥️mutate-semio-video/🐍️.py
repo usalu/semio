@@ -54,8 +54,18 @@ KINDS = (
     "set-sample-flags",
 )
 
+
+#: 🦠️ Every verb's wire tag — the camelCase variant name its internally tagged aggregate carries in `mutation`;
+#: `noMutation` is the `no-mutation` baselines' scenario sentinel (the dropped `NoMutation` verb's spelling).
+TAG_OF_KIND = {kind: kind.split("-")[0] + "".join(part.capitalize() for part in kind.split("-")[1:]) for kind in KINDS}
+KIND_OF_TAG = {tag: kind for kind, tag in TAG_OF_KIND.items()}
+
 #: 🎬️ `kind = "V" | "A" | "S"`, verbatim from the grammar.
 STREAM_KINDS = ("V", "A", "S")
+
+#: 🎬️ `SemioVideoStreamKind`'s wire names for the grammar's stream-kind letters.
+KIND_NAMES = {"V": "video", "A": "audio", "S": "subtitle"}
+KIND_LETTERS = {name: letter for letter, name in KIND_NAMES.items()}
 
 DOCUMENT_SCHEMA = "stdio.semio.video"
 DSL_PREAMBLE = "semio stdio.semio.video.dsl v1"
@@ -225,12 +235,59 @@ def clone(value):
     return json.loads(json.dumps(value))
 
 
+def letter_of(name: str) -> str:
+    """🎬️ The grammar letter of one `SemioVideoStreamKind` wire name."""
+    if name not in KIND_LETTERS:
+        raise AssertionError("unknown stream kind %r — the wire declares %s" % (name, ", ".join(KIND_LETTERS)))
+    return KIND_LETTERS[name]
+
+
+def sample_from_wire(sample: dict) -> dict:
+    return {"pts": sample["pts"], "key": sample["key"], "data": bytes(sample["data"]).hex()}
+
+
+def sample_to_wire(sample: dict) -> dict:
+    return {"pts": sample["pts"], "key": sample["key"], "data": list(bytes.fromhex(sample["data"]))}
+
+
+def stream_from_wire(stream: dict) -> dict:
+    return {**stream, "kind": letter_of(stream["kind"]), "samples": [sample_from_wire(sample) for sample in stream["samples"]]}
+
+
+def stream_to_wire(stream: dict) -> dict:
+    return {**stream, "kind": KIND_NAMES[stream["kind"]], "samples": [sample_to_wire(sample) for sample in stream["samples"]]}
+
+
+#: 🔁️ Every wire argument carried into this projection's spelling — stream kinds as the grammar's letters, sample bytes
+#: as hex — and back.
+FROM_WIRE = {
+    "snapshot": lambda snapshot: {**snapshot, "streams": [stream_from_wire(stream) for stream in snapshot["streams"]]},
+    "stream": stream_from_wire,
+    "sample": sample_from_wire,
+    "kind": letter_of,
+    "data": lambda data: bytes(data).hex(),
+}
+TO_WIRE = {
+    "snapshot": lambda snapshot: {**snapshot, "streams": [stream_to_wire(stream) for stream in snapshot["streams"]]},
+    "stream": stream_to_wire,
+    "sample": sample_to_wire,
+    "kind": KIND_NAMES.__getitem__,
+    "data": lambda data: list(bytes.fromhex(data)),
+}
+
+
 def parts(mutation: dict) -> tuple:
-    """🔎️ Splits `{"kind": …, "params": {…}}` into its verb and its arguments."""
-    kind = mutation.get("kind")
-    if kind not in KINDS:
-        raise AssertionError("unknown verb %r — the vocabulary is %s" % (kind, ", ".join(KINDS)))
-    return kind, mutation.get("params") or {}
+    """🔎️ Splits the wire value `{"mutation": "<camelCaseVariant>", …}` into its verb and its arguments, each carried
+    into this projection's spelling."""
+    tag = mutation.get("mutation")
+    if tag not in KIND_OF_TAG:
+        raise AssertionError("unknown verb %r — the vocabulary is %s" % (tag, ", ".join(KIND_OF_TAG)))
+    return KIND_OF_TAG[tag], {key: FROM_WIRE[key](value) if key in FROM_WIRE else value for key, value in mutation.items() if key != "mutation"}
+
+
+def wire(kind: str, args: dict) -> dict:
+    """🦠️ The wire value of one verb and its arguments, each carried back from this projection's spelling."""
+    return {"mutation": TAG_OF_KIND[kind], **{key: TO_WIRE[key](value) if key in TO_WIRE else value for key, value in args.items()}}
 
 
 def index_at(count: int, index, verb: str, inclusive: bool) -> int:
@@ -289,26 +346,26 @@ def inverse_mutation(snapshot: dict, mutation: dict) -> dict:
     overwrite with the value it displaced."""
     kind, args = parts(mutation)
     if kind == "no-mutation":
-        return {"kind": "no-mutation", "params": {}}
+        return wire("no-mutation", {})
     if kind == "set-snapshot":
-        return {"kind": "set-snapshot", "params": {"snapshot": clone(snapshot)}}
+        return wire("set-snapshot", {"snapshot": clone(snapshot)})
     if kind == "insert-stream":
-        return {"kind": "remove-stream", "params": {"index": args["index"]}}
+        return wire("remove-stream", {"index": args["index"]})
     if kind == "remove-stream":
         index = index_at(len(snapshot["streams"]), args["index"], kind, False)
-        return {"kind": "insert-stream", "params": {"index": index, "stream": clone(snapshot["streams"][index])}}
+        return wire("insert-stream", {"index": index, "stream": clone(snapshot["streams"][index])})
     if kind == "set-stream-meta":
         was = snapshot["streams"][index_at(len(snapshot["streams"]), args["index"], kind, False)]
-        return {"kind": "set-stream-meta", "params": {"index": args["index"], "kind": was["kind"], "codec": was["codec"], "width": was["width"], "height": was["height"], "rate": clone(was["rate"])}}
+        return wire("set-stream-meta", {"index": args["index"], "kind": was["kind"], "codec": was["codec"], "width": was["width"], "height": was["height"], "rate": clone(was["rate"])})
     stream = stream_at(snapshot, args, kind)
     if kind == "insert-sample":
-        return {"kind": "remove-sample", "params": {"streamIndex": args["streamIndex"], "index": args["index"]}}
+        return wire("remove-sample", {"streamIndex": args["streamIndex"], "index": args["index"]})
     index = index_at(len(stream["samples"]), args["index"], kind, False)
     if kind == "remove-sample":
-        return {"kind": "insert-sample", "params": {"streamIndex": args["streamIndex"], "index": index, "sample": clone(stream["samples"][index])}}
+        return wire("insert-sample", {"streamIndex": args["streamIndex"], "index": index, "sample": clone(stream["samples"][index])})
     if kind == "set-sample-data":
-        return {"kind": "set-sample-data", "params": {"streamIndex": args["streamIndex"], "index": index, "data": stream["samples"][index]["data"]}}
-    return {"kind": "set-sample-flags", "params": {"streamIndex": args["streamIndex"], "index": index, "pts": stream["samples"][index]["pts"], "key": stream["samples"][index]["key"]}}
+        return wire("set-sample-data", {"streamIndex": args["streamIndex"], "index": index, "data": stream["samples"][index]["data"]})
+    return wire("set-sample-flags", {"streamIndex": args["streamIndex"], "index": index, "pts": stream["samples"][index]["pts"], "key": stream["samples"][index]["key"]})
 
 
 # endregion 🔖️Mutations
@@ -362,7 +419,7 @@ def spec_vector(ctx: Context) -> Outcome:
     what the verb means, independent of both implementations, kept from before this oracle existed."""
     kind = ctx.row()
     committed = vector(ctx, kind)
-    applied = apply_mutation(committed["before"], {"kind": committed["kind"], "params": committed["params"]})
+    applied = apply_mutation(committed["before"], committed["mutation"])
     if applied != committed["after"]:
         raise AssertionError("%s: the applied snapshot does not match the committed after-snapshot\n     got: %s\nexpected: %s" % (ctx.scenario["id"], json.dumps(applied), json.dumps(committed["after"])))
     return Outcome(applied)

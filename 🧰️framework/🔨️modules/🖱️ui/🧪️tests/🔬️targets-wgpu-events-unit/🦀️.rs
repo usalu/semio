@@ -54,6 +54,8 @@ fn input_ui(id: &str, value: &str) -> UiNode {
         max: None,
         step: None,
         accept: None,
+        precision: None,
+        snaps: Vec::new(),
         on_change: action(),
         on_submit: None,
         on_abort: None,
@@ -66,7 +68,7 @@ fn input_ui(id: &str, value: &str) -> UiNode {
 fn number_stepper_ui(value: f64, min: f64, max: f64, step: f64, uniform: bool, delta_binding: bool) -> UiNode {
     let absolute = ActionDescriptor { controller_id: "ctrl".into(), action: "absolute".into(), args: None };
     let delta = ActionDescriptor { controller_id: "ctrl".into(), action: if delta_binding { "delta" } else { "" }.into(), args: None };
-    UiNode::NumberStepper(UiNumberStepperNode { id: "stepper".into(), value, step, uniform, min: Some(min), max: Some(max), on_absolute: absolute, on_delta: delta, presence: UiPresence::default(), menu: None })
+    UiNode::NumberStepper(UiNumberStepperNode { id: "stepper".into(), value, step, uniform, min: Some(min), max: Some(max), precision: None, on_absolute: absolute, on_delta: delta, presence: UiPresence::default(), menu: None })
 }
 
 fn stack_ui() -> UiNode {
@@ -618,6 +620,37 @@ fn focusing_an_input_seeds_edit_state_from_its_value_and_blur_clears_it() {
     // clicking empty space blurs.
     router.dispatch(&mut tree, root, &UiEvent::PointerDown { x: 190.0, y: 190.0, button: PointerButton::Primary, modifiers: Default::default() });
     assert_eq!(tree.node(input).unwrap().state.edit, None, "blur must relinquish the buffer so the declarative value governs again");
+}
+
+/// 📌️ A number field's page keys follow the shared keyboard law — the adjacent detent, else ten steps — in its
+/// edit buffer, a committed detent stays off the step ladder, and a text field ignores them.
+#[test]
+fn a_number_fields_page_keys_jump_between_its_detents() {
+    let mut tree = UiTree::new();
+    let root = leaf(&mut tree, None, 0, stack_ui(), (0.0, 0.0, 200.0, 200.0));
+    let UiNode::Input(mut number) = input_ui("offset", "1.30") else { unreachable!() };
+    (number.input_kind, number.step, number.precision, number.snaps) = ("number".into(), Some(0.5), Some(2), vec![0.0, 2.25]);
+    leaf(&mut tree, Some(root), 1, UiNode::Input(number.clone()), (0.0, 0.0, 100.0, 20.0));
+    let mut router = EventRouter::new("main");
+    router.dispatch(&mut tree, root, &UiEvent::PointerDown { x: 10.0, y: 10.0, button: PointerButton::Primary, modifiers: Default::default() });
+    let input = router.focus.focused.expect("the field takes focus");
+    let text = |tree: &UiTree| tree.node(input).and_then(|node| node.state.edit.as_ref()).map(|edit| edit.text.clone());
+    let mut walk = Vec::new();
+    for pressed in ["PageUp", "PageUp", "PageDown", "PageDown", "PageDown"] {
+        router.dispatch(&mut tree, root, &key(pressed));
+        walk.push(text(&tree).expect("the buffer stays open"));
+    }
+    assert_eq!(walk, ["2.25", "7.00", "2.25", "0.00", "-5.00"], "detent, ten steps, detent, detent, ten steps");
+    assert_eq!(constrain_number_field(2.25, &number), 2.25, "a committed detent is kept off the ladder");
+    assert_eq!(constrain_number_field(1.6, &number), 1.5);
+    let mut tree = UiTree::new();
+    let root = leaf(&mut tree, None, 0, stack_ui(), (0.0, 0.0, 200.0, 200.0));
+    leaf(&mut tree, Some(root), 1, input_ui("name", "abc"), (0.0, 0.0, 100.0, 20.0));
+    let mut router = EventRouter::new("main");
+    router.dispatch(&mut tree, root, &UiEvent::PointerDown { x: 10.0, y: 10.0, button: PointerButton::Primary, modifiers: Default::default() });
+    let field = router.focus.focused.expect("the text field takes focus");
+    router.dispatch(&mut tree, root, &key("PageUp"));
+    assert_eq!(tree.node(field).and_then(|node| node.state.edit.as_ref()).map(|edit| edit.text.as_str()), Some("abc"));
 }
 
 #[test]
@@ -1302,7 +1335,7 @@ fn returning_to_the_anchor_disarms_the_hover_out_countdown() {
 // withholds) a command.
 
 fn slider_ui(id: &str, value: f64) -> UiNode {
-    UiNode::Slider(UiSliderNode { id: id.into(), value, min: 0.0, max: 10.0, step: 1.0, unit: None, on_change: action(), presence: UiPresence::default(), menu: None })
+    UiNode::Slider(UiSliderNode { id: id.into(), value, min: 0.0, max: 10.0, step: 1.0, unit: None, snaps: Vec::new(), on_change: action(), presence: UiPresence::default(), menu: None })
 }
 
 #[test]
@@ -1500,6 +1533,28 @@ fn slider_key_values_match_reacts_step_multiplier_and_clamp() {
     assert_eq!(slider_key_value(&slider, "Enter", false), None, "a key the slider does not own is never swallowed");
 }
 
+/// ⌨️ Every bounded (slider) keyboard-law row of `🧫️number-controls`, pressed as the physical key the retained
+/// canvas receives — the same rows the contract twins and React's `Slider` answer.
+#[test]
+fn slider_key_values_answer_the_shared_keyboard_law_rows() {
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧬️contract/🧫️fixtures/🧫️number-controls/🔣️.json")).expect("number-controls fixture");
+    for row in fixture["keys"].as_array().expect("key rows").iter().filter(|row| !row["min"].is_null() && !row["max"].is_null()) {
+        let number = |field: &str| row[field].as_f64().expect("fixture number");
+        let UiNode::Slider(mut slider) = slider_ui("s", number("current")) else { unreachable!() };
+        (slider.min, slider.max, slider.step) = (number("min"), number("max"), number("step"));
+        slider.snaps = row["snaps"].as_array().expect("snaps").iter().map(|snap| snap.as_f64().expect("snap")).collect();
+        let pressed = match row["key"].as_str().expect("key") {
+            "increment" => "ArrowRight",
+            "decrement" => "ArrowLeft",
+            "pageUp" => "PageUp",
+            "pageDown" => "PageDown",
+            "home" => "Home",
+            _ => "End",
+        };
+        assert_eq!(slider_key_value(&slider, pressed, row["large"].as_bool().expect("large")), Some(number("expected")), "{}", row["case"]);
+    }
+}
+
 /// 🎚️ The retained canvas consumes the same readout editing vectors as the mounted React Slider:
 /// only a double-click in the readout opens its numeric buffer, Enter validates/snaps once, and
 /// the local controlled draft drives later keys while an older declaration is still visible.
@@ -1690,7 +1745,7 @@ async fn an_rtl_window_swaps_the_horizontal_arrow_pair_and_leaves_every_other_ke
 
 #[semio_framework_async_macros::async_test]
 async fn an_rtl_slider_moves_the_other_way_for_the_same_arrow_key() {
-    let slider = UiSliderNode { id: "s".into(), value: 5.0, min: 0.0, max: 10.0, step: 1.0, unit: None, on_change: action(), presence: UiPresence::default(), menu: None };
+    let slider = UiSliderNode { id: "s".into(), value: 5.0, min: 0.0, max: 10.0, step: 1.0, unit: None, snaps: Vec::new(), on_change: action(), presence: UiPresence::default(), menu: None };
     let mut router = EventRouter::new("w");
     let ltr_right = slider_key_value(&slider, router.mirrored_inline_key("ArrowRight"), false);
     router.set_flow(UiFlow { inline: FlowInline::Rtl, block: ui_contract::FlowBlock::Down });
@@ -1745,6 +1800,8 @@ fn search_line_ui(id: &str, value: &str, repeat_last: bool) -> UiNode {
         max: None,
         step: None,
         accept: None,
+        precision: None,
+        snaps: Vec::new(),
         on_change: verb("engagementInput"),
         on_submit: Some(verb("engagementSubmit")),
         on_abort: Some(verb("engagementAbort")),

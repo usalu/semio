@@ -2,6 +2,7 @@ import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import Ajv from "ajv/dist/2020.js";
+import draft7 from "ajv/dist/refs/json-schema-draft-07.json" with { type: "json" };
 import { applyPatch } from "fast-json-patch";
 import { applyDrawingCanvasWindowConfigMutation, type DrawingCanvasWindowConfig, type DrawingCanvasWindowConfigMutation } from "../../🧬️schema/🟦️.ts";
 import { applyDrawingCanvasWindowTransientMutation, type DrawingCanvasWindowTransient, type DrawingCanvasWindowTransientMutation } from "../../../🫧️transient/🧬️schema/🟦️.ts";
@@ -34,7 +35,7 @@ const target = (instances: WindowInstance[], id: string, expectedKind: string): 
 };
 
 export function testDrawingCanvasWindowOwnershipOracle(): void {
-  const ajv = new Ajv({ strict: true, allErrors: true });
+  const ajv = new Ajv({ strict: true, allErrors: true }).addMetaSchema(draft7);
   ajv.addSchema(viewportSchema);
   assert(ajv.compile(configSchema)(fixture.baseConfig));
   assert(ajv.compile(transientSchema)(fixture.baseTransient));

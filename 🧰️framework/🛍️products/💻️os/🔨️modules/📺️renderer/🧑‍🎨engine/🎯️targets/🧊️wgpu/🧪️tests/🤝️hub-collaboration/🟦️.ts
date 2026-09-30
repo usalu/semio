@@ -41,7 +41,7 @@ import { type AddressInfo, connect, createServer, type Socket } from "node:net";
 import { join, resolve } from "node:path";
 import type { Browser, BrowserContext, Page } from "playwright";
 import { acceptanceCheckResult, publishAcceptanceCheckResult, withAcceptanceRecord } from "../../../../../../../../🦑️repo/🔨️modules/🧪️test/🎯️acceptance/📋️orchestration/🟦️.ts";
-import { hubProbeCall, hubProbeCreateArtifact, hubProbeCreateSpace, hubProbeCreationCatalog, hubProbeSignIn } from "../../../../../../../../../../🌎️hub/🤝️integration-harness/🟦️.ts";
+import { hubProbeCall, hubProbeCreateArtifact, hubProbeCreateSpace, hubProbeCreationCatalog, hubProbeSignIn } from "../../../../../../📇️directory/🧪️testkit/📡️client-probe/🟦️.ts";
 import { directoryCommandRequestJson, sealDirectoryCommandRequestV1 } from "../../../../../../📇️directory/🧬️schema/🟦️.ts";
 import { requireMcpBinary, spawnRawMcp } from "../../../../../../🌉️mcp/🟦️.ts";
 import { ensureParityPlaywrightBrowsersPath } from "../../../../../../🧑‍💻dev/⚖️parity/🏃️execution/🟦️.ts";

@@ -5,11 +5,32 @@
   "type": "object",
   "additionalProperties": false,
   "required": [
+    "mutation",
     "key"
   ],
   "properties": {
+    "mutation": {
+      "const": "deleteAsset"
+    },
     "key": {
-      "type": "string"
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Asset",
+          "de": "Asset"
+        },
+        "description": {
+          "en": "Key of the image asset this mutation addresses.",
+          "de": "Schlüssel des Bild-Assets, das diese Mutation adressiert."
+        },
+        "ref": {
+          "kind": "asset"
+        },
+        "group": "target",
+        "order": 10
+      }
     }
   }
 }

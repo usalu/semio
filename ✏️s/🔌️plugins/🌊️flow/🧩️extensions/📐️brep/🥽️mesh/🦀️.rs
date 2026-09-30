@@ -102,11 +102,21 @@ fn decode_mesh(text: &str) -> Result<HalfedgeMesh, EvalError> {
     }).collect::<Result<_, EvalError>>()?;
     HalfedgeMesh::from_faces(&positions, &polygons).map_err(mesh_error)
 }
-fn encode_mesh(mesh: &HalfedgeMesh) -> Result<String, EvalError> {
-    let vertices = (0..mesh.vertex_count()).map(|id| mesh.vertex_position(VertexId(id as u32)).map(|point| pack::json::array(point.0.into_iter().map(|number| pack::json::Value::from(number as f64))))).collect::<Result<Vec<_>, _>>().map_err(mesh_error)?;
-    let faces = (0..mesh.face_count()).map(|id| mesh.face_vertex_ids(FaceId(id as u32)).map(|vertices| pack::json::array(vertices.into_iter().map(|vertex| pack::json::Value::from(vertex.0))))).collect::<Result<Vec<_>, _>>().map_err(mesh_error)?;
-    Ok(pack::json::to_string(&pack::json::object([("vertices".into(), pack::json::array(vertices)), ("faces".into(), pack::json::array(faces))])))
+struct PolygonData { vertices:Vec<[f32;3]>, faces:Vec<Vec<u32>> }
+impl PolygonData {
+    fn from_mesh(mesh:&HalfedgeMesh) -> Result<Self,EvalError> {
+        let vertices = (0..mesh.vertex_count()).map(|id| mesh.vertex_position(VertexId(id as u32)).map(|point| point.0)).collect::<Result<Vec<_>,_>>().map_err(mesh_error)?;
+        let faces = (0..mesh.face_count()).map(|id| mesh.face_vertex_ids(FaceId(id as u32)).map(|vertices| vertices.into_iter().map(|vertex| vertex.0).collect())).collect::<Result<Vec<_>,_>>().map_err(mesh_error)?;
+        Ok(Self { vertices,faces })
+    }
+    fn encode(&self) -> String {
+        let vertices = self.vertices.iter().map(|point| pack::json::array(point.iter().map(|number| pack::json::Value::from(*number as f64))));
+        let faces = self.faces.iter().map(|vertices| pack::json::array(vertices.iter().map(|vertex| pack::json::Value::from(*vertex))));
+        pack::json::to_string(&pack::json::object([("vertices".into(),pack::json::array(vertices)),("faces".into(),pack::json::array(faces))]))
+    }
+    fn mesh(&self) -> Result<HalfedgeMesh,EvalError> { HalfedgeMesh::from_faces(&self.vertices,&self.faces).map_err(mesh_error) }
 }
+fn encode_mesh(mesh: &HalfedgeMesh) -> Result<String, EvalError> { Ok(PolygonData::from_mesh(mesh)?.encode()) }
 fn indexed_triangle_mesh(positions: &[f32], indices: &[u32]) -> Result<HalfedgeMesh, EvalError> {
     if positions.len() % 3 != 0 || indices.len() % 3 != 0 { return Err(invalid("invalid triangulation buffers")); }
     let mut unique = HashMap::new();
@@ -126,8 +136,9 @@ fn read_mesh(input: &Dictionary, name: &str) -> Result<HalfedgeMesh, EvalError> 
     decode_mesh(data)
 }
 fn mesh_output(mesh: &HalfedgeMesh) -> Result<Dictionary, EvalError> {
-    let data = encode_mesh(mesh)?;
-    let transfer = mesh.tessellate().map_err(mesh_error)?;
+    let polygons = PolygonData::from_mesh(mesh)?;
+    let data = polygons.encode();
+    let transfer = polygons.mesh()?.tessellate().map_err(mesh_error)?;
     let preview = semio_framework_mesh_engine::MeshData { positions: transfer.positions, normals: transfer.normals, indices: transfer.indices, face_ids: transfer.face_ids, vertex_ids: transfer.vertex_ids, edge_positions: transfer.edge_positions, edge_ids: transfer.edge_ids, uvs: transfer.uvs, edge_uvs: transfer.edge_uvs, edge_is_seam: transfer.edge_is_seam, ..Default::default() };
     if preview.positions.iter().any(|number| !number.is_finite()) { return Err(invalid("mesh operation produced non-finite coordinates")); }
     let preview = encode_base64(&encode_mesh_pack(&preview).map_err(invalid)?);
@@ -221,8 +232,9 @@ impl neural_engine::OperatorJob for MeshOperatorJob {
     }
 }
 
-struct MeshOperation(&'static str);
+struct MeshOperation(&'static str, SessionCapture);
 impl Operator for MeshOperation {
+    retire_geometry_capture!(1);
     fn step_plan(&self, input: &Dictionary) -> Result<Option<Box<dyn neural_engine::OperatorJob>>, EvalError> {
         if !matches!(self.0, "bevel" | "decimate") { return Ok(None); }
         let mesh = read_mesh(input, "mesh")?;
@@ -245,7 +257,7 @@ impl Operator for MeshOperation {
             "sphere" => HalfedgeMesh::ico_sphere_prim(positive(input, "radius")?, count(input, "subdivisions", 0, 5)?).map_err(mesh_error)?,
             "cylinder" => HalfedgeMesh::cylinder_prim(positive(input, "radius")?, positive(input, "height")?, count(input, "segments", 3, 1024)?).map_err(mesh_error)?,
             "cone" => HalfedgeMesh::cone_prim(positive(input, "radius")?, positive(input, "height")?, count(input, "segments", 3, 1024)?).map_err(mesh_error)?,
-            "fromBrep" => with_kernel_read(|kernel| {
+            "fromBrep" => self.1.with_kernel_read(|kernel| {
                 let transfer = kernel.tessellate(&read_geometry(input, "geometry")?, positive(input, "deflection")? as f64).map_err(|error| map_kernel_error(&error))?;
                 indexed_triangle_mesh(&transfer.position, &transfer.index)
             })?,
@@ -365,7 +377,7 @@ impl Operator for MeshOperation {
             "analyze" => return analyze(&mesh),
             "exportObj" => return Ok(channel_output("text", text_dictionary(mesh.to_obj().map_err(mesh_error)?))),
             "exportJson" => return Ok(channel_output("text", text_dictionary(encode_mesh(&mesh)?))),
-            "toBrep" => return with_kernel(|kernel| {
+            "toBrep" => return self.1.with_kernel(|kernel| {
                 let handle = kernel.import_obj(&mesh.to_obj().map_err(mesh_error)?, positive(input, "tolerance")? as f64).map_err(|error| map_kernel_error(&error))?;
                 Ok(channel_output("geometry", geometry_dict(kernel, &handle)?))
             }),
@@ -376,7 +388,7 @@ impl Operator for MeshOperation {
     }
 }
 
-pub(super) fn register_mesh(registry: &mut Registry) {
+pub(super) fn register_mesh(registry: &mut Registry, session: &Session) {
     registry.register_schema(Schema { id: "mesh".into(), module: "brep".into(), name: "Polygon Mesh".into(), icon: "emoji:🥽️".into(), summary: "Indexed polygon vertices and faces".into(), fields: vec![FieldSpec::new("data", ValueType::Text), FieldSpec::new("preview", ValueType::Text)] });
     let definitions: &[(&str, &str, &str, &[(&str, f64)])] = &[
         ("construct", "Construct Mesh", "Mesh Creation", &[]),
@@ -513,7 +525,7 @@ pub(super) fn register_mesh(registry: &mut Registry) {
             "exportJson" => "Serialize editable indexed vertices and polygon faces as JSON text.",
             _ => name,
         };
-        register_untyped(registry, operator_info_with_outputs(&id, name, name, "emoji:🥽️", summary, inputs, outputs, &[group]), Box::new(MeshOperation(operation)), &produced);
+        register_untyped(registry, operator_info_with_outputs(&id, name, name, "emoji:🥽️", summary, inputs, outputs, &[group]), Box::new(MeshOperation(operation, session.capture())), &produced);
     }
 }
 

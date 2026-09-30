@@ -12,10 +12,10 @@
     "pixels"
   ],
   "properties": {
-    "x": { "type": "integer", "minimum": 0 },
-    "y": { "type": "integer", "minimum": 0 },
-    "width": { "type": "integer", "minimum": 1, "maximum": 512 },
-    "height": { "type": "integer", "minimum": 1, "maximum": 512 },
-    "pixels": { "type": "string", "format": "base64" }
+    "x": { "type": "integer", "minimum": 0, "x-semio-ui": { "widget": "stepper", "role": "value", "label": { "en": "X", "de": "X" }, "unit": "px", "step": 1, "precision": 0, "group": "position", "order": 10 } },
+    "y": { "type": "integer", "minimum": 0, "x-semio-ui": { "widget": "stepper", "role": "value", "label": { "en": "Y", "de": "Y" }, "unit": "px", "step": 1, "precision": 0, "group": "position", "order": 20 } },
+    "width": { "type": "integer", "minimum": 1, "maximum": 512, "x-semio-ui": { "widget": "stepper", "role": "value", "label": { "en": "Width", "de": "Breite" }, "unit": "px", "step": 1, "precision": 0, "group": "size", "order": 30 } },
+    "height": { "type": "integer", "minimum": 1, "maximum": 512, "x-semio-ui": { "widget": "stepper", "role": "value", "label": { "en": "Height", "de": "Höhe" }, "unit": "px", "step": 1, "precision": 0, "group": "size", "order": 40 } },
+    "pixels": { "type": "string", "format": "base64", "x-semio-ui": { "widget": "hidden", "role": "value", "label": { "en": "Pixels", "de": "Pixel" }, "description": { "en": "Base64-encoded palette indices, row by row.", "de": "Base64-codierte Palettenindizes, zeilenweise." }, "group": "source", "order": 50 } }
   }
 }

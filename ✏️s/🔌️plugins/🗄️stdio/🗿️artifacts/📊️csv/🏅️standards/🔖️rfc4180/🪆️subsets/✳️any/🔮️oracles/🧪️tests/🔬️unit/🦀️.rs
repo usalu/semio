@@ -6,16 +6,9 @@ fn spec(kind: &str, params: Json) -> Json {
 }
 
 #[test]
-fn no_mutation_is_a_true_byte_identity() {
-    let input = b"a,b\n1,2\n";
-    let output = oracle_apply_mutation(input, &spec("no-mutation", Json::Object(vec![]))).unwrap();
-    assert_eq!(output, input);
-}
-
-#[test]
 fn insert_and_remove_record_are_inverse_on_a_real_shaped_grid() {
     let input = b"id,name\n1,Alpha\n2,Beta\n";
-    let inserted = oracle_apply_mutation(input, &spec("insert-record", Json::Object(vec![("index".to_string(), Json::Number(1.0)), ("fields".to_string(), Json::Array(vec![Json::String("9".to_string()), Json::String("Neu".to_string())]))]))).unwrap();
+    let inserted = oracle_apply_mutation(input, &spec("insert-record", Json::Object(vec![("index".to_string(), Json::Number(1.0)), ("record".to_string(), Json::Object(vec![("fields".to_string(), Json::Array(["9", "Neu"].iter().map(|value| Json::Object(vec![("value".to_string(), Json::String(value.to_string())), ("quoted".to_string(), Json::Bool(false))])).collect()))]))]))).unwrap();
     assert_eq!(read_grid(&inserted).unwrap(), vec![vec!["id".to_string(), "name".to_string()], vec!["9".to_string(), "Neu".to_string()], vec!["1".to_string(), "Alpha".to_string()], vec!["2".to_string(), "Beta".to_string()]]);
 
     let removed = oracle_apply_mutation(&inserted, &spec("remove-record", Json::Object(vec![("index".to_string(), Json::Number(1.0))]))).unwrap();
@@ -26,7 +19,7 @@ fn insert_and_remove_record_are_inverse_on_a_real_shaped_grid() {
 fn set_field_patches_a_single_cell_and_requotes_when_needed() {
     let input = b"id,note\n1,plain\n";
     let output =
-        oracle_apply_mutation(input, &spec("set-field", Json::Object(vec![("recordIndex".to_string(), Json::Number(1.0)), ("fieldIndex".to_string(), Json::Number(1.0)), ("value".to_string(), Json::String("has, comma".to_string()))]))).unwrap();
+        oracle_apply_mutation(input, &spec("set-field", Json::Object(vec![("recordIndex".to_string(), Json::Number(1.0)), ("fieldIndex".to_string(), Json::Number(1.0)), ("value".to_string(), Json::String("has, comma".to_string())), ("quoted".to_string(), Json::Bool(false))]))).unwrap();
     let text = String::from_utf8(output.clone()).unwrap();
     assert!(text.contains("\"has, comma\""), "a value containing a comma must come back quoted, got {text:?}");
     assert_eq!(read_grid(&output).unwrap()[1][1], "has, comma");

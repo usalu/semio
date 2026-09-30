@@ -10,11 +10,40 @@
   ],
   "properties": {
     "zoneId": {
-      "type": "string"
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Zone",
+          "de": "Zone"
+        },
+        "description": {
+          "en": "The ventilation zone this mutation addresses.",
+          "de": "Die Lüftungszone, die diese Mutation adressiert."
+        },
+        "ref": {
+          "kind": "zone"
+        },
+        "group": "target",
+        "order": 10
+      }
     },
     "newOccupants": {
       "type": "integer",
-      "minimum": 0
+      "minimum": 0,
+      "x-semio-ui": {
+        "widget": "stepper",
+        "role": "value",
+        "label": {
+          "en": "Number of occupants",
+          "de": "Personenanzahl"
+        },
+        "step": 1,
+        "precision": 0,
+        "group": "comfort",
+        "order": 20
+      }
     }
   }
 }

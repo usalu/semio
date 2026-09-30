@@ -19,34 +19,163 @@
   ],
   "properties": {
     "mutation": {
-      "const": "replaceEdgeGeometry"
+      "const": "replaceEdgeGeometry",
+      "x-semio-ui": {
+        "widget": "hidden",
+        "role": "discriminator",
+        "label": {
+          "en": "Mutation",
+          "de": "Mutation"
+        }
+      }
     },
     "id": {
-      "type": "string"
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Edge",
+          "de": "Kante"
+        },
+        "description": {
+          "en": "The edge this mutation addresses.",
+          "de": "Die Kante, die diese Mutation adressiert."
+        },
+        "ref": {
+          "kind": "edge",
+          "domain": "vortex",
+          "granularity": "edge"
+        },
+        "group": "target",
+        "order": 10
+      }
     },
     "newGap": {
-      "type": "number"
+      "type": "number",
+      "x-semio-ui": {
+        "widget": "stepper",
+        "role": "value",
+        "label": {
+          "en": "Gap",
+          "de": "Abstand"
+        },
+        "step": 0.1,
+        "precision": 2,
+        "group": "geometry",
+        "order": 20
+      }
     },
     "newShift": {
-      "type": "number"
+      "type": "number",
+      "x-semio-ui": {
+        "widget": "stepper",
+        "role": "value",
+        "label": {
+          "en": "Shift",
+          "de": "Versatz"
+        },
+        "step": 0.1,
+        "precision": 2,
+        "group": "geometry",
+        "order": 30
+      }
     },
     "newRise": {
-      "type": "number"
+      "type": "number",
+      "x-semio-ui": {
+        "widget": "stepper",
+        "role": "value",
+        "label": {
+          "en": "Rise",
+          "de": "Anhebung"
+        },
+        "step": 0.1,
+        "precision": 2,
+        "group": "geometry",
+        "order": 40
+      }
     },
     "newRotation": {
-      "type": "number"
+      "type": "number",
+      "x-semio-ui": {
+        "widget": "stepper",
+        "role": "value",
+        "label": {
+          "en": "Rotation",
+          "de": "Drehung"
+        },
+        "step": 0.1,
+        "precision": 2,
+        "group": "geometry",
+        "order": 50
+      }
     },
     "newTurn": {
-      "type": "number"
+      "type": "number",
+      "x-semio-ui": {
+        "widget": "stepper",
+        "role": "value",
+        "label": {
+          "en": "Turn",
+          "de": "Wendung"
+        },
+        "step": 0.1,
+        "precision": 2,
+        "group": "geometry",
+        "order": 60
+      }
     },
     "newTilt": {
-      "type": "number"
+      "type": "number",
+      "x-semio-ui": {
+        "widget": "stepper",
+        "role": "value",
+        "label": {
+          "en": "Tilt",
+          "de": "Neigung"
+        },
+        "step": 0.1,
+        "precision": 2,
+        "group": "geometry",
+        "order": 70
+      }
     },
     "newX": {
-      "type": "number"
+      "type": "number",
+      "x-semio-ui": {
+        "widget": "stepper",
+        "role": "value",
+        "label": {
+          "en": "X",
+          "de": "X"
+        },
+        "step": 1,
+        "precision": 2,
+        "snapSource": {
+          "config": "gridFactor"
+        },
+        "group": "position",
+        "order": 80
+      }
     },
     "newY": {
-      "type": "number"
+      "type": "number",
+      "x-semio-ui": {
+        "widget": "stepper",
+        "role": "value",
+        "label": {
+          "en": "Y",
+          "de": "Y"
+        },
+        "step": 1,
+        "precision": 2,
+        "snapSource": {
+          "config": "gridFactor"
+        },
+        "group": "position",
+        "order": 90
+      }
     }
   }
 }

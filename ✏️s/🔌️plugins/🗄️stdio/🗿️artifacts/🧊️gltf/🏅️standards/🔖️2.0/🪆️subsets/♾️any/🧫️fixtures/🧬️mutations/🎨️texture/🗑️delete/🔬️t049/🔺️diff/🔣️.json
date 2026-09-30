@@ -1,17 +1,29 @@
 {
-  "id": "s.stdio.gltf.mutation.delete-texture.v1",
-  "version": 1,
-  "touchedPaths": [
-    "document/textures/0"
-  ],
-  "payload": {
-    "index": 0
+  "materials": {
+    "modified": [
+      {
+        "index": 0,
+        "diff": {
+          "pbrMetallicRoughness": {
+            "baseColorTexture": {
+              "index": 0
+            }
+          }
+        }
+      }
+    ]
   },
-  "operation": {
-    "kind": "delete",
-    "index": 0,
-    "removed": {
-      "name": "albedo"
-    }
+  "textures": {
+    "removed": [
+      1
+    ],
+    "modified": [
+      {
+        "index": 0,
+        "diff": {
+          "name": "normal"
+        }
+      }
+    ]
   }
 }

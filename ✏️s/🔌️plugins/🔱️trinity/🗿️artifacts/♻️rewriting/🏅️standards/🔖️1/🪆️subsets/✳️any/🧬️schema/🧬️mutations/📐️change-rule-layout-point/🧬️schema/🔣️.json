@@ -5,10 +5,14 @@
   "type": "object",
   "additionalProperties": false,
   "required": [
+    "mutation",
     "key",
     "newPoint"
   ],
   "properties": {
+    "mutation": {
+      "const": "changeRuleLayoutPoint"
+    },
     "key": {
       "type": "string"
     },
@@ -25,6 +29,17 @@
         },
         "y": {
           "type": "number"
+        }
+      },
+      "x-semio-ui": {
+        "role": "value",
+        "label": {
+          "en": "New Point",
+          "de": "Neuer Punkt"
+        },
+        "description": {
+          "en": "Layout position of the rule element.",
+          "de": "Layoutposition des Regelelements."
         }
       }
     }

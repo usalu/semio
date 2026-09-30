@@ -1,21 +1,34 @@
 {
-  "id": "s.stdio.gltf.mutation.reorder-samplers.v1",
-  "version": 1,
-  "touchedPaths": [
-    "document/samplers/1",
-    "document/samplers/0"
-  ],
-  "payload": {
-    "order": [
-      1,
-      0
+  "textures": {
+    "modified": [
+      {
+        "index": 0,
+        "diff": {
+          "sampler": 1
+        }
+      },
+      {
+        "index": 1,
+        "diff": {
+          "sampler": 0
+        }
+      }
     ]
   },
-  "operation": {
-    "kind": "reorder",
-    "order": [
-      1,
-      0
+  "samplers": {
+    "modified": [
+      {
+        "index": 0,
+        "diff": {
+          "wrapS": 33071
+        }
+      },
+      {
+        "index": 1,
+        "diff": {
+          "magFilter": 9729
+        }
+      }
     ]
   }
 }

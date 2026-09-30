@@ -21,7 +21,127 @@ type SynapseSpec {
   fromPort: String!
   toPort: String!
 }
-scalar Widget
+scalar JSON
+"""🎛️ One flow widget, discriminated by `kind`."""
+union Widget = NeuronWidget | InputSliderWidget | InputNoteWidget | InputImageWidget | VariableWidget | OutputPreviewWidget | OutputActionWidget | OutputExportWidget | ClusterWidget
+type NeuronWidget {
+  kind: String!
+  id: String!
+  neuronKind: String!
+  params: JSON!
+  inputPorts: [String!]!
+  outputPorts: [String!]!
+  preview: Boolean!
+}
+type InputSliderWidget {
+  kind: String!
+  id: String!
+  label: String!
+  value: Float!
+  min: Float!
+  max: Float!
+  step: Float!
+}
+type InputNoteWidget {
+  kind: String!
+  id: String!
+  text: String!
+}
+type InputImageWidget {
+  kind: String!
+  id: String!
+  src: String!
+}
+type VariableWidget {
+  kind: String!
+  id: String!
+  name: String!
+  schema: String!
+}
+type OutputPreviewWidget {
+  kind: String!
+  id: String!
+  preview: JSON!
+  expanded: [String!]!
+}
+type OutputActionWidget {
+  kind: String!
+  id: String!
+  action: String!
+}
+type OutputExportWidget {
+  kind: String!
+  id: String!
+  format: String!
+}
+type ClusterWidget {
+  kind: String!
+  id: String!
+  name: String!
+  tree: FlowTree!
+  flow: FlowUi!
+}
+type FlowTree {
+  neurons: [FlowNeuron!]!
+  synapses: [SynapseSpec!]!
+}
+type FlowNeuron {
+  id: String!
+  kind: String!
+  params: JSON!
+  tree: FlowTree
+}
+type FlowUi {
+  camera: CameraJson!
+  nodes: [FlowUiNodesEntry!]!
+  previews: [FlowPreviewGui!]!
+}
+type FlowUiNodesEntry {
+  key: String!
+  value: FlowNodeGui!
+}
+type FlowNodeGui {
+  layout: WidgetLayout!
+  chrome: NodeChrome!
+}
+union NodeChrome = PlainChrome | SliderChrome | NoteChrome | ImageChrome | VariableChrome
+type PlainChrome {
+  kind: String!
+  preview: Boolean!
+}
+type SliderChrome {
+  kind: String!
+  label: String!
+  min: Float!
+  max: Float!
+  step: Float!
+  value: Float!
+}
+type NoteChrome {
+  kind: String!
+  text: String!
+}
+type ImageChrome {
+  kind: String!
+  src: String!
+}
+type VariableChrome {
+  kind: String!
+  name: String!
+  schema: String!
+}
+type FlowPreviewGui {
+  id: String!
+  source: FlowChannelRef
+  mode: String!
+  preview: JSON!
+  expanded: [String!]!
+  layout: WidgetLayout
+}
+type FlowChannelRef {
+  neuron: String!
+  channel: String!
+}
 type FlowHostSnapshot {
   schema: String!
   camera: CameraJson!
@@ -36,7 +156,7 @@ type FlowHostSnapshotLayoutEntry {
 type FormGeneration {
   id: String!
   name: String!
-  valuesJson: String!
+  values: JSON!
 }
 type GenerationPlayState {
   generations: [FormGeneration!]!

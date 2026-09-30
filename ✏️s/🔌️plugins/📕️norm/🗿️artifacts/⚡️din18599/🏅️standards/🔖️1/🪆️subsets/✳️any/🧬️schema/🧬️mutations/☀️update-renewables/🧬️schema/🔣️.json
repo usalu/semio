@@ -1,12 +1,32 @@
 {
-  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/norm/din18599/mutation/update-renewables/schema.json",
   "title": "UpdateRenewables",
   "type": "object",
-  "properties": {
-    "newRenewables": {
-      "type": "object"
-    }
-  },
   "additionalProperties": false,
-  "$id": "https://json.schemas.assets.semio-tech.com/s/norm/din18599/mutation/update-renewables/schema.json"
+  "required": [
+    "mutation",
+    "newRenewables"
+  ],
+  "properties": {
+    "mutation": {
+      "const": "updateRenewables"
+    },
+    "newRenewables": {
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/din18599/snapshot/schema.json#/$defs/Renewables",
+      "x-semio-ui": {
+        "role": "value",
+        "label": {
+          "en": "Renewable energy systems",
+          "de": "Anlagen zur Nutzung erneuerbarer Energien"
+        },
+        "description": {
+          "en": "Photovoltaic area and efficiency and the solar thermal yield.",
+          "de": "Photovoltaikfläche und -wirkungsgrad sowie der solarthermische Ertrag."
+        },
+        "group": "systems",
+        "order": 10
+      }
+    }
+  }
 }

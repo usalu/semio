@@ -1,0 +1,32 @@
+{
+  "case": "slider-with-snaps",
+  "kind": "component",
+  "description": "A Slider with three detents (snaps) and a millimetre unit — every renderer paints one tick per snap.",
+  "outcome": "accept",
+  "limits": null,
+  "tree": {
+    "root": 0,
+    "nodeCount": 1,
+    "shape": [
+      {
+        "id": 0,
+        "key": "#0",
+        "type": "slider",
+        "children": []
+      }
+    ]
+  },
+  "accessibility": [
+    {
+      "id": 0,
+      "label": "Offset",
+      "description": null,
+      "live": "off",
+      "shortcut": null,
+      "hidden": false
+    }
+  ],
+  "actionIds": [
+    "app.setOffset@1"
+  ]
+}

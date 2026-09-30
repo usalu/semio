@@ -5,24 +5,17 @@
   "type": "object",
   "additionalProperties": false,
   "required": [
-    "newHssFYMpa",
-    "newHssMEdKnm",
-    "newHssSectionClass",
-    "newHssWElMm3"
+    "loadCase"
   ],
   "properties": {
-    "newHssWElMm3": {
-      "type": "number"
-    },
-    "newHssFYMpa": {
-      "type": "number"
-    },
-    "newHssSectionClass": {
-      "type": "integer",
-      "minimum": 0
-    },
-    "newHssMEdKnm": {
-      "type": "number"
+    "loadCase": {
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1993/snapshot.json#/$defs/LoadCase",
+      "x-semio-ui": {
+        "label": {
+          "en": "Load case",
+          "de": "Lastfall"
+        }
+      }
     }
   }
 }

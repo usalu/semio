@@ -5,11 +5,16 @@
   "type": "object",
   "additionalProperties": false,
   "required": [
+    "mutation",
     "id",
     "path",
     "key"
   ],
   "properties": {
+    "mutation": {
+      "const": "removeDictEntry",
+      "description": "Aggregate discriminator spliced in by PdfMutation; absent when the payload stands alone."
+    },
     "id": {
       "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/pdf/1.7/base/snapshot.json#/$defs/ObjRef"
     },
@@ -21,10 +26,6 @@
     },
     "key": {
       "type": "string"
-    },
-    "mutation": {
-      "const": "removeDictEntry",
-      "description": "Aggregate discriminator spliced in by PdfMutation; absent when the payload stands alone."
     }
   }
 }

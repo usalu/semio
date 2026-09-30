@@ -2562,6 +2562,8 @@
         "schema-mutation-leaf-schema-absent",
         "schema-mutation-aggregate-id",
         "schema-mutation-aggregate-kinds-redundant",
+        "schema-mutation-input-ui",
+        "schema-mutation-payload-parity",
         "schema-fixture-defines-schema",
         "schema-fixture-local-schema-fallback",
         "schema-fixture-metadata-invalid",

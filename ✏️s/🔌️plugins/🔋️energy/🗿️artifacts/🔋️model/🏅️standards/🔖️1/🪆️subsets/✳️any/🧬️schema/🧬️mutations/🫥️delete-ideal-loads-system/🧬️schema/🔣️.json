@@ -5,11 +5,35 @@
   "type": "object",
   "additionalProperties": false,
   "required": [
+    "mutation",
     "id"
   ],
   "properties": {
+    "mutation": {
+      "const": "deleteIdealLoadsSystem"
+    },
     "id": {
-      "type": "integer"
+      "type": "integer",
+      "minimum": 0,
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Ideal loads system",
+          "de": "Ideallastsystem"
+        },
+        "description": {
+          "en": "The ideal loads system to delete, by id.",
+          "de": "Ideallastsystem, das diese Mutation löscht, per ID."
+        },
+        "ref": {
+          "kind": "idealLoadsSystem",
+          "domain": "energyModel",
+          "granularity": "hvac"
+        },
+        "group": "target",
+        "order": 10
+      }
     }
   }
 }

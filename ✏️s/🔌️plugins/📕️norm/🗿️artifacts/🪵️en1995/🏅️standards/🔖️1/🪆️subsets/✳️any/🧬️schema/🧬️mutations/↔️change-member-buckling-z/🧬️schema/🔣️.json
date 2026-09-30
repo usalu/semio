@@ -10,11 +10,41 @@
   ],
   "properties": {
     "memberId": {
-      "type": "string"
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Member",
+          "de": "Bauteil"
+        },
+        "description": {
+          "en": "The timber member this mutation addresses.",
+          "de": "Das Holzbauteil, das diese Mutation adressiert."
+        },
+        "ref": {
+          "kind": "member"
+        },
+        "group": "target",
+        "order": 10
+      }
     },
     "newValue": {
       "type": "number",
-      "format": "double"
+      "minimum": 0,
+      "x-semio-ui": {
+        "widget": "stepper",
+        "role": "value",
+        "label": {
+          "en": "Buckling length l_ef,z",
+          "de": "Knicklänge l_ef,z"
+        },
+        "unit": "m",
+        "step": 0.05,
+        "precision": 2,
+        "group": "stability",
+        "order": 20
+      }
     }
   }
 }

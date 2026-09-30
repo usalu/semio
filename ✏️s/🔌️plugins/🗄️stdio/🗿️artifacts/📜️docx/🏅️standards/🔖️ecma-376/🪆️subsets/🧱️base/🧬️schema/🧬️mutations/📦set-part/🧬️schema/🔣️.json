@@ -5,16 +5,47 @@
   "type": "object",
   "additionalProperties": false,
   "required": [
+    "mutation",
     "path",
     "content_type",
     "bytes"
   ],
   "properties": {
+    "mutation": {
+      "const": "setPart",
+      "description": "Aggregate discriminator spliced in by DocxMutation; absent when the payload stands alone."
+    },
     "path": {
-      "type": "string"
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "text",
+        "label": {
+          "en": "Part",
+          "de": "Paketteil"
+        },
+        "description": {
+          "en": "OPC part name inside the package, e.g. word/document.xml.",
+          "de": "OPC-Teilname im Paket, z. B. word/document.xml."
+        },
+        "group": "target",
+        "order": 10
+      }
     },
     "content_type": {
-      "type": "string"
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "text",
+        "label": {
+          "en": "Content type",
+          "de": "Inhaltstyp"
+        },
+        "description": {
+          "en": "MIME content type of the part.",
+          "de": "MIME-Inhaltstyp des Teils."
+        },
+        "group": "value",
+        "order": 20
+      }
     },
     "bytes": {
       "type": "array",
@@ -22,11 +53,15 @@
         "type": "integer",
         "minimum": 0,
         "maximum": 255
+      },
+      "x-semio-ui": {
+        "label": {
+          "en": "Part bytes",
+          "de": "Teilinhalt (Bytes)"
+        },
+        "group": "value",
+        "order": 30
       }
-    },
-    "mutation": {
-      "const": "setPart",
-      "description": "Aggregate discriminator spliced in by DocxMutation; absent when the payload stands alone."
     }
   }
 }

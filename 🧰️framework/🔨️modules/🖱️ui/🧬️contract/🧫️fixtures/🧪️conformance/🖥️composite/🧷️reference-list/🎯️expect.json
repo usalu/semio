@@ -1,0 +1,128 @@
+{
+  "case": "reference-list",
+  "kind": "composite",
+  "description": "The `reference_list` recipe: reference chips that remove on activation, a use-current-selection button and a candidate list.",
+  "outcome": "accept",
+  "limits": null,
+  "tree": {
+    "root": 0,
+    "nodeCount": 7,
+    "shape": [
+      {
+        "id": 0,
+        "key": "#0",
+        "type": "container",
+        "children": [
+          1,
+          4
+        ]
+      },
+      {
+        "id": 1,
+        "key": "chips",
+        "type": "container",
+        "children": [
+          2,
+          3
+        ]
+      },
+      {
+        "id": 2,
+        "key": "piece-3",
+        "type": "button",
+        "children": []
+      },
+      {
+        "id": 3,
+        "key": "piece-7",
+        "type": "button",
+        "children": []
+      },
+      {
+        "id": 4,
+        "key": "actions",
+        "type": "container",
+        "children": [
+          5,
+          6
+        ]
+      },
+      {
+        "id": 5,
+        "key": "useSelection",
+        "type": "button",
+        "children": []
+      },
+      {
+        "id": 6,
+        "key": "candidates",
+        "type": "select",
+        "children": []
+      }
+    ]
+  },
+  "accessibility": [
+    {
+      "id": 0,
+      "label": null,
+      "description": null,
+      "live": "off",
+      "shortcut": null,
+      "hidden": false
+    },
+    {
+      "id": 1,
+      "label": null,
+      "description": null,
+      "live": "off",
+      "shortcut": null,
+      "hidden": false
+    },
+    {
+      "id": 2,
+      "label": "Remove Piece 3",
+      "description": null,
+      "live": "off",
+      "shortcut": null,
+      "hidden": false
+    },
+    {
+      "id": 3,
+      "label": "Remove Piece 7",
+      "description": null,
+      "live": "off",
+      "shortcut": null,
+      "hidden": false
+    },
+    {
+      "id": 4,
+      "label": null,
+      "description": null,
+      "live": "off",
+      "shortcut": null,
+      "hidden": false
+    },
+    {
+      "id": 5,
+      "label": "Use selection",
+      "description": null,
+      "live": "off",
+      "shortcut": null,
+      "hidden": false
+    },
+    {
+      "id": 6,
+      "label": "Add target",
+      "description": null,
+      "live": "off",
+      "shortcut": null,
+      "hidden": false
+    }
+  ],
+  "actionIds": [
+    "app.removeTarget@1",
+    "app.removeTarget@1",
+    "app.useSelection@1",
+    "app.addTarget@1"
+  ]
+}

@@ -28,71 +28,15 @@
 
 use semio_repo_test_host::Json;
 
-//#region 🔖️JsonHelpers
-#[cfg(feature = "oracles")]
-fn num_field(value: &Json, key: &str) -> Result<f64, String> {
-    match value.get(key) {
-        Some(Json::Number(number)) => Ok(*number),
-        _ => Err(format!("expected numeric field {key:?}")),
-    }
-}
-#[cfg(feature = "oracles")]
-fn str_field(value: &Json, key: &str) -> Result<String, String> {
-    match value.get(key) {
-        Some(Json::String(text)) => Ok(text.clone()),
-        _ => Err(format!("expected string field {key:?}")),
-    }
-}
-#[cfg(feature = "oracles")]
-fn str_array(value: &Json, key: &str) -> Vec<String> {
-    value
-        .array(key)
-        .iter()
-        .filter_map(|entry| match entry {
-            Json::String(s) => Some(s.clone()),
-            _ => None,
-        })
-        .collect()
-}
-#[cfg(feature = "oracles")]
-fn usize_field(value: &Json, key: &str) -> Result<usize, String> {
-    num_field(value, key).map(|number| number as usize)
-}
-#[cfg(feature = "oracles")]
-fn u64_field(value: &Json, key: &str) -> Result<u64, String> {
-    num_field(value, key).map(|number| number as u64)
-}
-//#endregion 🔖️JsonHelpers
-
 #[cfg(feature = "oracles")]
 mod oracles {
-    use super::{num_field, str_array, str_field, u64_field, usize_field};
-    use ruststep::ast::{DataSection, EntityInstance, Exchange, Name, Parameter, Record};
+    use ruststep::ast::{DataSection, EntityInstance, Exchange, Name, Parameter};
     use semio_repo_test_host::Json;
     use std::str::FromStr;
 
     //#region 🔖️ValueGrammar
-    /// 🔤️ This module's own JSON wire grammar for one Part-21 argument value — the wire shape the
-    /// feature file's `Examples` tables and this subset's subject-side `mutation_from_spec` both
-    /// speak (`{"t":"real","v":1.0}`-shaped), independent of `StepValue`'s own serde tagging.
-    fn value_from_json(value: &Json) -> Result<Parameter, String> {
-        match str_field(value, "t")?.as_str() {
-            "unset" => Ok(Parameter::NotProvided),
-            "derived" => Ok(Parameter::Omitted),
-            "integer" => Ok(Parameter::Integer(num_field(value, "v")? as i64)),
-            "real" => Ok(Parameter::Real(num_field(value, "v")?)),
-            "string" => Ok(Parameter::String(str_field(value, "v")?)),
-            "enum" => Ok(Parameter::Enumeration(str_field(value, "v")?)),
-            "reference" => Ok(Parameter::Ref(Name::Entity(u64_field(value, "v")?))),
-            "aggregate" => Ok(Parameter::List(value.array("v").iter().map(value_from_json).collect::<Result<Vec<_>, String>>()?)),
-            "typed" => Ok(Parameter::Typed { keyword: str_field(value, "name")?, parameter: Box::new(value_from_json(value.get("v").ok_or("typed value requires a v field")?)?) }),
-            other => Err(format!("unknown value type {other:?}")),
-        }
-    }
-
-    /// 🔤️ The inverse projection: an independently-parsed `Parameter` back into this module's own
-    /// canonical JSON shape — used both to echo a real argument back out in `project_step_ap214_any`
-    /// and, transitively, inside `aggregate`'s recursion.
+    /// 🔤️ An independently-parsed `Parameter` in this module's own canonical projection shape — the argument form
+    /// `project_step_ap214_any` echoes back, recursively for aggregates.
     fn value_to_json(param: &Parameter) -> Json {
         let tv = |t: &str, v: Json| Json::Object(vec![("t".to_string(), Json::String(t.to_string())), ("v".to_string(), v)]);
         match param {
@@ -132,7 +76,9 @@ mod oracles {
     /// the six `✳️ccN` conformance-class subsets do, and a second copy in this file would be the
     /// duplication the family-module rule exists to prevent. What stays here is what is genuinely
     /// this subset's own: the eleven-verb Part-21 GRAMMAR vocabulary and its projection.
-    use crate::artifacts::step::standards::v_ap214::reference::part21::{args, args_mut, decode_string_literal, entity_id, header_record, header_record_mut, primary_record, primary_record_mut, string_list as string_list_param, write as write_exchange_bytes};
+    use crate::artifacts::step::standards::v_ap214::reference::part21::{
+        args, args_mut, decode_string_literal, entity_from_wire, entity_id, file_description_record, file_name_record, file_schema_record, header_record, primary_record, primary_record_mut, replace_with_snapshot, set_header_record, snapshot_payload as document_snapshot_payload, str_field, u64_field, value_from_wire, write as write_exchange_bytes,
+    };
 
     fn write_exchange(exchange: &Exchange) -> String {
         String::from_utf8_lossy(&write_exchange_bytes(exchange)).to_string()
@@ -141,70 +87,24 @@ mod oracles {
 
     //#region 🔖️Apply
     /// 🦠️ Applies one declared `StepMutation::KINDS` kind to a real, independently-parsed
-    /// `ruststep::ast::Exchange` — one arm per variant, matched by its kebab-case spelling. An
-    /// unrecognised kind is an error, never a silent no-op. `set-snapshot` is pragmatic: it
-    /// overrides the one header field the wave-7 scenario actually exercises (`FILE_SCHEMA`) on the
-    /// already-decoded document, the same precedent `🌴️mutate-pdf-1-7`'s own oracle uses for its
-    /// `set-snapshot` (patches known fields rather than requiring the full snapshot literal inline
-    /// in a Gherkin cell, which for a 1396-entity real document would be an unreadable blob).
+    /// `ruststep::ast::Exchange` — one arm per variant, matched by its kebab-case spelling, each reading the leaf
+    /// wire payload through the standard's own `🧾️Wire` grammar. An unrecognised kind is an error, never a
+    /// silent no-op. `set-snapshot` replaces the whole document with the snapshot record.
     fn apply(exchange: &mut Exchange, kind: &str, params: &Json) -> Result<(), String> {
+        let member = |key: &str| params.get(key).ok_or_else(|| format!("{kind} carries `{key}`"));
+        let index = |key: &str| u64_field(params, key).map(|index| index as usize);
         match kind {
-            "no-mutation" => Ok(()),
-
-            "set-snapshot" => {
-                let schemas = str_array(params, "fileSchema");
-                if schemas.is_empty() {
-                    return Err("set-snapshot requires a non-empty fileSchema field".to_string());
-                }
-                let record = header_record_mut(exchange, "FILE_SCHEMA").ok_or("input carries no FILE_SCHEMA header record")?;
-                record.parameter = Parameter::List(vec![string_list_param(&schemas)]);
-                Ok(())
-            }
-
-            "set-file-description" => {
-                let field = params.get("fileDescription").ok_or("set-file-description requires a fileDescription field")?;
-                let description = str_array(field, "description");
-                let implementation_level = str_field(field, "implementationLevel")?;
-                let record = header_record_mut(exchange, "FILE_DESCRIPTION").ok_or("input carries no FILE_DESCRIPTION header record")?;
-                record.parameter = Parameter::List(vec![string_list_param(&description), Parameter::String(implementation_level)]);
-                Ok(())
-            }
-
-            "set-file-name" => {
-                let field = params.get("fileName").ok_or("set-file-name requires a fileName field")?;
-                let record = header_record_mut(exchange, "FILE_NAME").ok_or("input carries no FILE_NAME header record")?;
-                record.parameter = Parameter::List(vec![
-                    Parameter::String(str_field(field, "name")?),
-                    Parameter::String(str_field(field, "timestamp")?),
-                    string_list_param(&str_array(field, "author")),
-                    string_list_param(&str_array(field, "organization")),
-                    Parameter::String(str_field(field, "preprocessorVersion")?),
-                    Parameter::String(str_field(field, "originatingSystem")?),
-                    Parameter::String(str_field(field, "authorization")?),
-                ]);
-                Ok(())
-            }
-
-            "set-file-schema" => {
-                let field = params.get("fileSchema").ok_or("set-file-schema requires a fileSchema field")?;
-                let schemas = str_array(field, "schemas");
-                if schemas.is_empty() {
-                    return Err("set-file-schema requires a non-empty schemas field".to_string());
-                }
-                let record = header_record_mut(exchange, "FILE_SCHEMA").ok_or("input carries no FILE_SCHEMA header record")?;
-                record.parameter = Parameter::List(vec![string_list_param(&schemas)]);
-                Ok(())
-            }
+            "set-snapshot" => replace_with_snapshot(exchange, member("snapshot")?),
+            "set-file-description" => file_description_record(member("fileDescription")?).map(|record| set_header_record(exchange, record)),
+            "set-file-name" => file_name_record(member("fileName")?).map(|record| set_header_record(exchange, record)),
+            "set-file-schema" => file_schema_record(member("fileSchema")?).map(|record| set_header_record(exchange, record)),
 
             "insert-entity" => {
-                let index = usize_field(params, "index")?;
-                let entity_json = params.get("entity").ok_or("insert-entity requires an entity field")?;
-                let id = u64_field(entity_json, "id")?;
-                let name = str_field(entity_json, "name")?;
-                let args: Vec<Parameter> = entity_json.array("args").iter().map(value_from_json).collect::<Result<Vec<_>, String>>()?;
+                let index = index("index")?;
+                let entity = entity_from_wire(member("entity")?)?;
                 let section = exchange.data.first_mut().ok_or("input carries no DATA section")?;
                 let clamped = index.min(section.entities.len());
-                section.entities.insert(clamped, EntityInstance::Simple { id, record: Record { name, parameter: Parameter::List(args) } });
+                section.entities.insert(clamped, entity);
                 Ok(())
             }
 
@@ -230,8 +130,8 @@ mod oracles {
 
             "set-entity-arg" => {
                 let id = u64_field(params, "id")?;
-                let arg_index = usize_field(params, "argIndex")?;
-                let value = value_from_json(params.get("value").ok_or("set-entity-arg requires a value field")?)?;
+                let arg_index = index("argIndex")?;
+                let value = value_from_wire(member("value")?)?;
                 let section = exchange.data.first_mut().ok_or("input carries no DATA section")?;
                 let entity = section.entities.iter_mut().find(|entity| entity_id(entity) == id).ok_or_else(|| format!("set-entity-arg: no entity with id {id}"))?;
                 let args = args_mut(primary_record_mut(entity))?;
@@ -241,8 +141,8 @@ mod oracles {
 
             "insert-entity-arg" => {
                 let id = u64_field(params, "id")?;
-                let arg_index = usize_field(params, "argIndex")?;
-                let value = value_from_json(params.get("value").ok_or("insert-entity-arg requires a value field")?)?;
+                let arg_index = index("argIndex")?;
+                let value = value_from_wire(member("value")?)?;
                 let section = exchange.data.first_mut().ok_or("input carries no DATA section")?;
                 let entity = section.entities.iter_mut().find(|entity| entity_id(entity) == id).ok_or_else(|| format!("insert-entity-arg: no entity with id {id}"))?;
                 let args = args_mut(primary_record_mut(entity))?;
@@ -253,7 +153,7 @@ mod oracles {
 
             "remove-entity-arg" => {
                 let id = u64_field(params, "id")?;
-                let arg_index = usize_field(params, "argIndex")?;
+                let arg_index = index("argIndex")?;
                 let section = exchange.data.first_mut().ok_or("input carries no DATA section")?;
                 let entity = section.entities.iter_mut().find(|entity| entity_id(entity) == id).ok_or_else(|| format!("remove-entity-arg: no entity with id {id}"))?;
                 let args = args_mut(primary_record_mut(entity))?;
@@ -270,14 +170,29 @@ mod oracles {
     //#endregion 🔖️Apply
 
     //#region 🔖️Dispatch
-    pub fn apply_mutation(input: &[u8], kind: &str, params: &Json) -> Result<Vec<u8>, String> {
+    fn read(input: &[u8]) -> Result<Exchange, String> {
         let text = std::str::from_utf8(input).map_err(|error| format!("input is not UTF-8: {error}"))?;
         let mut exchange = Exchange::from_str(text).map_err(|error| format!("ruststep could not parse the input: {error}"))?;
         if exchange.data.is_empty() {
             exchange.data.push(DataSection { meta: Vec::new(), entities: Vec::new() });
         }
+        Ok(exchange)
+    }
+
+    pub fn apply_mutation(input: &[u8], kind: &str, params: &Json) -> Result<Vec<u8>, String> {
+        let mut exchange = read(input)?;
         apply(&mut exchange, kind, params)?;
         Ok(write_exchange(&exchange).into_bytes())
+    }
+
+    /// 🔁️ Decode and re-encode with no mutation: `ruststep`'s parse, the standard's own writer.
+    pub fn round_trip(input: &[u8]) -> Result<Vec<u8>, String> {
+        Ok(write_exchange(&read(input)?).into_bytes())
+    }
+
+    /// 📸️ The untouched document as the `set-snapshot` payload that restores it.
+    pub fn snapshot_payload(input: &[u8]) -> Result<Json, String> {
+        document_snapshot_payload(&read(input)?)
     }
     //#endregion 🔖️Dispatch
 
@@ -373,6 +288,18 @@ pub fn oracle_apply_mutation(input: &[u8], spec: &Json) -> Result<Vec<u8>, Strin
     oracles::apply_mutation(input, &kind, params)
 }
 
+/// 🔁️ Decodes and re-encodes the artifact with no mutation — the identity cycle every law's baseline runs.
+#[cfg(feature = "oracles")]
+pub fn oracle_round_trip(input: &[u8]) -> Result<Vec<u8>, String> {
+    oracles::round_trip(input)
+}
+
+/// 📸️ The untouched artifact as the `set-snapshot` wire payload that restores it — the inverse of `set-snapshot`.
+#[cfg(feature = "oracles")]
+pub fn oracle_snapshot_payload(input: &[u8]) -> Result<Json, String> {
+    oracles::snapshot_payload(input)
+}
+
 /// 👁️ This subset's own semantic projection, re-exported at the module's public surface so the
 /// case adapter can reach it as `oracle_apply_mutation`'s sibling.
 #[cfg(feature = "oracles")]
@@ -383,6 +310,16 @@ pub fn project_step_ap214_any(bytes: &[u8]) -> Result<Json, String> {
 /// 🚫️ Without the `oracles` feature the reference implementation is not linked at all.
 #[cfg(not(feature = "oracles"))]
 pub fn oracle_apply_mutation(_input: &[u8], _spec: &Json) -> Result<Vec<u8>, String> {
+    Err("the `oracles` feature is disabled — this host was not built with the registered reference implementations".to_string())
+}
+
+#[cfg(not(feature = "oracles"))]
+pub fn oracle_round_trip(_input: &[u8]) -> Result<Vec<u8>, String> {
+    Err("the `oracles` feature is disabled — this host was not built with the registered reference implementations".to_string())
+}
+
+#[cfg(not(feature = "oracles"))]
+pub fn oracle_snapshot_payload(_input: &[u8]) -> Result<Json, String> {
     Err("the `oracles` feature is disabled — this host was not built with the registered reference implementations".to_string())
 }
 

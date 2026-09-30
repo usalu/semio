@@ -549,7 +549,7 @@ fn pump_pair(a: &mut ShellState, b: &mut ShellState, budget: std::time::Duration
 #[cfg(not(target_arch = "wasm32"))]
 fn applied_edits(shell: &mut ShellState) -> Vec<(String, bool)> {
     drive(shell.refresh_history_snapshot());
-    shell.history_entries.values().filter(|entry| entry.kind == "mutation").map(|entry| (entry.action_id.clone(), entry.applied)).collect()
+    history_rows_oldest_first(&shell.history_entries).into_iter().filter(|entry| entry.kind == "mutation").map(|entry| (entry.action_id.clone(), entry.applied)).collect()
 }
 
 #[cfg(not(target_arch = "wasm32"))]

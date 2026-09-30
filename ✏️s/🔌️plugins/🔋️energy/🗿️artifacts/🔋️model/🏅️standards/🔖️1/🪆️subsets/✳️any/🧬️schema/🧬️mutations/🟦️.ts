@@ -460,6 +460,7 @@ export interface CreateMaterial {
   readonly index: number;
   readonly id: number;
   readonly name: string;
+  readonly roughness: "VeryRough" | "Rough" | "MediumRough" | "MediumSmooth" | "Smooth" | "VerySmooth";
   readonly thicknessM: number;
   readonly conductivityWMK: number;
   readonly densityKgM3: number;
@@ -1253,7 +1254,7 @@ export interface CreateSetpointManager {
   readonly mutation: "createSetpointManager";
   readonly id: number;
   readonly name: string;
-  readonly kind: string;
+  readonly kind: "Scheduled" | "OutdoorAirReset" | "WarmestZone" | "ColdestZone";
   readonly lowOutdoorC: number;
   readonly highOutdoorC: number;
   readonly lowSetpointC: number;
@@ -1279,7 +1280,7 @@ export interface RenameSetpointManager {
 export interface ReplaceSetpointManagerKind {
   readonly mutation: "replaceSetpointManagerKind";
   readonly id: number;
-  readonly newKind: string;
+  readonly newKind: "Scheduled" | "OutdoorAirReset" | "WarmestZone" | "ColdestZone";
   readonly newLowOutdoorC: number;
   readonly newHighOutdoorC: number;
   readonly newLowSetpointC: number;

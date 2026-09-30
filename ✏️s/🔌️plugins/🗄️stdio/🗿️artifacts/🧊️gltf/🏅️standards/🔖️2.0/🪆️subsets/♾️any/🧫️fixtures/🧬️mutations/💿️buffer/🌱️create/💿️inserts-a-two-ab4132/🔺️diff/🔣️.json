@@ -1,26 +1,55 @@
 {
-  "id": "s.stdio.gltf.mutation.create-buffer.v1",
-  "version": 1,
-  "touchedPaths": [
-    "document/buffers/0",
-    "buffers/0"
-  ],
-  "payload": {
-    "position": 0,
-    "bytes": [
-      10,
-      20
+  "bufferViews": {
+    "modified": [
+      {
+        "index": 0,
+        "diff": {
+          "buffer": 1,
+          "byteLength": 4
+        }
+      }
     ]
   },
-  "operation": {
-    "kind": "insert",
-    "position": 0,
-    "item": {
-      "byteLength": 2
-    },
-    "bytes": [
-      10,
-      20
+  "buffers": {
+    "modified": [
+      {
+        "index": 0,
+        "diff": {
+          "byteLength": 2,
+          "uri": null
+        }
+      }
+    ],
+    "added": [
+      {
+        "index": 1,
+        "item": {
+          "byteLength": 4,
+          "uri": "data:application/octet-stream;base64,AAECAw=="
+        }
+      }
+    ]
+  },
+  "bufferBytes": {
+    "modified": [
+      {
+        "index": 0,
+        "diff": [
+          10,
+          20
+        ]
+      }
+    ],
+    "added": [
+      {
+        "index": 1,
+        "item": [
+          0,
+          1,
+          2,
+          3
+        ]
+      }
     ]
   }
 }

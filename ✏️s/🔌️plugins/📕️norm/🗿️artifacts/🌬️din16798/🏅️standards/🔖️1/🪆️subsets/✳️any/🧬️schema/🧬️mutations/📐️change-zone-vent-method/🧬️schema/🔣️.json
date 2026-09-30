@@ -10,10 +10,41 @@
   ],
   "properties": {
     "zoneId": {
-      "type": "string"
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Zone",
+          "de": "Zone"
+        },
+        "description": {
+          "en": "The ventilation zone this mutation addresses.",
+          "de": "Die Lüftungszone, die diese Mutation adressiert."
+        },
+        "ref": {
+          "kind": "zone"
+        },
+        "group": "target",
+        "order": 10
+      }
     },
     "newVentMethod": {
-      "type": "string"
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "text",
+        "role": "value",
+        "label": {
+          "en": "Ventilation design method",
+          "de": "Verfahren zur Lüftungsauslegung"
+        },
+        "description": {
+          "en": "method_1_perceived_air_quality, method_2_limit_concentration or method_3_predefined_rates (EN 16798-1 §6.3).",
+          "de": "method_1_perceived_air_quality (empfundene Luftqualität), method_2_limit_concentration (Grenzkonzentration) oder method_3_predefined_rates (vorgegebene Außenluftraten) nach EN 16798-1 §6.3."
+        },
+        "group": "air-quality",
+        "order": 20
+      }
     }
   }
 }

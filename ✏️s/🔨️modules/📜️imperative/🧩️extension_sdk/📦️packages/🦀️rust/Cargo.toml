@@ -5,6 +5,10 @@ edition.workspace = true
 rust-version.workspace = true
 description = "Shared manifest + evaluate helpers for imperative path extensions"
 
+[package.metadata.semio]
+role = "s-module"
+id = "imperative-extension-sdk"
+
 [lints]
 workspace = true
 

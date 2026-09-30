@@ -1,13 +1,28 @@
 {
-  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/norm/en1991/mutation/change-linear-temperature-gradient/schema.json",
+  "title": "ChangeLinearTemperatureGradient",
   "type": "object",
   "additionalProperties": false,
   "required": [
-    "new_delta_t_m"
+    "newDeltaTM"
   ],
   "properties": {
-    "new_delta_t_m": {
-      "type": "number"
+    "newDeltaTM": {
+      "type": "number",
+      "x-semio-ui": {
+        "widget": "stepper",
+        "role": "value",
+        "label": {
+          "en": "Linear temperature difference ΔT_M",
+          "de": "Linear veränderlicher Temperaturanteil ΔT_M"
+        },
+        "unit": "K",
+        "step": 1,
+        "precision": 1,
+        "group": "thermal",
+        "order": 10
+      }
     }
   }
 }

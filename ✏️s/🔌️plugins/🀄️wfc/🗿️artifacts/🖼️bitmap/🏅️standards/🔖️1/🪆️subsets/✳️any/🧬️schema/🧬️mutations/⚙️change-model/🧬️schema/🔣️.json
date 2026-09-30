@@ -10,9 +10,9 @@
     "periodicInput"
   ],
   "properties": {
-    "patternSize": { "type": "integer", "minimum": 2, "maximum": 5 },
-    "symmetry": { "type": "integer", "minimum": 1, "maximum": 8 },
-    "periodicInput": { "type": "boolean" },
-    "ground": { "type": ["integer", "null"], "minimum": 0, "maximum": 255 }
+    "patternSize": { "type": "integer", "minimum": 2, "maximum": 5, "x-semio-ui": { "widget": "stepper", "role": "value", "label": { "en": "Pattern size", "de": "Mustergröße" }, "description": { "en": "Edge length N of the N×N patterns read from the input.", "de": "Kantenlänge N der N×N-Muster, die aus der Eingabe gelesen werden." }, "step": 1, "precision": 0, "group": "model", "order": 10 } },
+    "symmetry": { "type": "integer", "minimum": 1, "maximum": 8, "x-semio-ui": { "widget": "stepper", "role": "value", "label": { "en": "Symmetry", "de": "Symmetrie" }, "description": { "en": "Number of rotated and mirrored pattern variants, 1 to 8.", "de": "Anzahl gedrehter und gespiegelter Mustervarianten, 1 bis 8." }, "step": 1, "precision": 0, "group": "model", "order": 20 } },
+    "periodicInput": { "type": "boolean", "x-semio-ui": { "widget": "toggle", "role": "value", "label": { "en": "Periodic input", "de": "Periodische Eingabe" }, "description": { "en": "Patterns wrap around the input edges.", "de": "Muster laufen über die Ränder der Eingabe um." }, "group": "model", "order": 30 } },
+    "ground": { "type": ["integer", "null"], "minimum": 0, "maximum": 255, "x-semio-ui": { "widget": "stepper", "role": "value", "label": { "en": "Ground", "de": "Boden" }, "description": { "en": "Palette index forced onto the bottom row; empty disables it.", "de": "Palettenindex, der die unterste Zeile vorgibt; leer schaltet es ab." }, "step": 1, "precision": 0, "group": "model", "order": 40 } }
   }
 }

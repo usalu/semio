@@ -1920,6 +1920,7 @@ fn energy_model_retained_edit<M>(id: String, authority: &store::ArtifactStoreOne
             label: None,
             group_id: None,
             origin: Default::default(),
+            transaction: None,
         }],
         description,
         coalesce_key: None,

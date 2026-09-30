@@ -5,21 +5,42 @@
   "type": "object",
   "additionalProperties": false,
   "required": [
+    "mutation",
     "from",
     "to"
   ],
   "properties": {
-    "from": {
-      "type": "integer",
-      "minimum": 0
-    },
-    "to": {
-      "type": "integer",
-      "minimum": 0
-    },
     "mutation": {
       "const": "moveFrame",
       "description": "Aggregate discriminator spliced in by GifMutation; absent when the payload stands alone."
+    },
+    "from": {
+      "type": "integer",
+      "minimum": 0,
+      "x-semio-ui": {
+        "widget": "stepper",
+        "label": {
+          "en": "From position",
+          "de": "Von Position"
+        },
+        "precision": 0,
+        "group": "value",
+        "order": 10
+      }
+    },
+    "to": {
+      "type": "integer",
+      "minimum": 0,
+      "x-semio-ui": {
+        "widget": "stepper",
+        "label": {
+          "en": "To position",
+          "de": "Nach Position"
+        },
+        "precision": 0,
+        "group": "value",
+        "order": 20
+      }
     }
   }
 }

@@ -306,41 +306,40 @@ export function board2dSuggestionMenuItems(menu: Board2dSuggestionMenu, labels: 
 //#region BoardEvents
 // 🐁️ `hover` is the highest-frequency row the engine emits and it is NOT an `applyBoardEvents` payload:
 // it travels on the framework's own `interactionHover` lane through {@link latestBoard2dHoverId}, so a
-// pointermove never queues a retained board-events job. Listing it here is what keeps it out of the batch.
-const PUZZLE2D_TRANSIENT_EVENT_NAMES = new Set(["preselect", "brushPreview", "linkCompatibleNodes", "linkTargetRing", "transformPreview", "hover"]);
-const PUZZLE2D_FLUSH_NOW_EVENT_NAMES = new Set(["select", "preselectCancel", "brushCandidates", "brushPlace", "edgeCreate", "edgeDelete", "nodeDelete", "nodeRotate", "regionCreate", "regionMove", "regionResize"]);
+// pointermove never queues a retained board-events job. `nodeMove` and `transformPreview` are live-preview
+// frames for sibling panes only: a finished gesture is ONE `gesture` record, never its frames.
+const PUZZLE2D_TRANSIENT_EVENT_NAMES = new Set(["nodeMove", "transformPreview", "preselect", "brushPreview", "linkCompatibleNodes", "linkTargetRing", "hover"]);
+const PUZZLE2D_FLUSH_NOW_EVENT_NAMES = new Set(["gesture", "select", "preselectCancel", "brushCandidates", "brushPlace", "edgeCreate", "edgeDelete", "nodeDelete", "regionCreate", "regionResize"]);
 
-/** 📬️ Drops transient rows, coalesces `camera` to its latest value and `nodeMove` to one row per id (unless a `nodeDragEnd` follows), and flags whether the buffer should flush immediately. */
+/** 🪪️ The `gestureId` a `select` or `gesture` row carries, `undefined` for an untagged row. */
+function board2dGestureId(row: BoardEventRow): string | undefined {
+  const id = (row.payload as { readonly gestureId?: unknown } | undefined)?.gestureId;
+  return typeof id === "string" ? id : undefined;
+}
+
+/**
+ * 📬️ Drops transient rows, keeps only the latest `camera` (first), keeps every other row in order, and flags
+ * whether the buffer should flush now: any terminal row does, except a `select` tagged with a `gestureId`
+ * whose `gesture` record the batch does not carry — an open gesture's selection leaves with its record, never
+ * mid-gesture. The wgpu twin `coalesce_owned_board_events` is pinned to this one by the shared corpus
+ * `🧫️fixtures/🧫️board-event-coalescing/🔣️.json`.
+ */
 export function coalesceBoard2dEvents(rows: readonly BoardEventRow[]): { readonly flushNow: boolean; readonly eventsJson: string } {
-  const hasDragEnd = rows.some((row) => row.name === "nodeDragEnd");
+  const recorded = new Set(rows.filter((row) => row.name === "gesture").map(board2dGestureId));
   let flushNow = false;
   let lastCamera: BoardEventRow | null = null;
-  const nodeMoveById = new Map<string, BoardEventRow>();
   const rest: BoardEventRow[] = [];
-
   for (const row of rows) {
     if (PUZZLE2D_TRANSIENT_EVENT_NAMES.has(row.name)) continue;
     if (row.name === "camera") {
       lastCamera = row;
       continue;
     }
-    if (row.name === "nodeMove") {
-      if (hasDragEnd) continue;
-      const id = (row.payload as { readonly id?: unknown } | undefined)?.id;
-      if (typeof id === "string") {
-        nodeMoveById.set(id, row);
-        continue;
-      }
-    }
-    if (PUZZLE2D_FLUSH_NOW_EVENT_NAMES.has(row.name)) flushNow = true;
+    const gestureId = row.name === "select" ? board2dGestureId(row) : undefined;
+    if (PUZZLE2D_FLUSH_NOW_EVENT_NAMES.has(row.name) && (gestureId === undefined || recorded.has(gestureId))) flushNow = true;
     rest.push(row);
   }
-
-  const coalesced: BoardEventRow[] = [];
-  if (lastCamera) coalesced.push(lastCamera);
-  coalesced.push(...nodeMoveById.values());
-  coalesced.push(...rest);
-  return { flushNow, eventsJson: JSON.stringify(coalesced) };
+  return { flushNow, eventsJson: JSON.stringify(lastCamera ? [lastCamera, ...rest] : rest) };
 }
 
 /** 🐢️ Live cross-pane mirror payload extracted from a batch of freshly-drained rows — positions/selection/preselect only, everything else (camera, brush/link chrome, hover) stays pane-local. */
@@ -358,7 +357,7 @@ function stringArray(value: unknown): readonly string[] {
 /**
  * 🐢️ Classifies a batch of raw board-event rows (as seen straight off `drainEventsJson`, before
  * the transient-event filter/coalescer runs) into the subset worth mirroring imperatively into sibling
- * panes: latest node position per id (from `nodeMove` frames and/or a terminal `nodeDragEnd`), and the
+ * panes: latest node position per id (from `nodeMove` drag frames and `transformPreview` rotate frames), and the
  * live selection/preselect state (`select`/`preselectCancel` commit or restore selection and clear
  * preselect; `preselect` sets the live marquee highlight). Multiple rows of the same kind in one batch
  * collapse to the latest.
@@ -379,8 +378,7 @@ export function collectPuzzle2dLiveMirrorMutations(rows: readonly BoardEventRow[
         if (typeof id === "string" && typeof x === "number" && typeof y === "number") positionsById.set(id, { id, x, y });
         break;
       }
-      case "transformPreview":
-      case "nodeDragEnd": {
+      case "transformPreview": {
         const moves = payload?.moves;
         if (!Array.isArray(moves)) break;
         for (const move of moves as readonly Record<string, unknown>[]) {
@@ -976,10 +974,10 @@ export function Board2dHost({ node, onAction, requestContextMenu }: ComponentSce
   /**
    * 🫧️ Call when a gesture on this pane ends, right before flushing. Drains first so we know
    * whether a commit is about to go out; if so, drops any pending fixture/selection stashed mid-gesture
-   * instead of applying it — that stashed snapshot is stale (typically from an early mid-gesture flush,
-   * e.g. the `select` event a node-drag's pointerdown pushes) and the flush response due back in a moment
-   * will supersede it anyway, so applying it here would flicker: correct live state -> stale snapshot ->
-   * correct committed state. Returns whether a flush is pending, so the caller can pass it on to peers.
+   * instead of applying it — that stashed snapshot is stale (a guest echo that landed while the gesture was
+   * live) and the flush response due back in a moment will supersede it anyway, so applying it here would
+   * flicker: correct live state -> stale snapshot -> correct committed state. Returns whether a flush is
+   * pending, so the caller can pass it on to peers.
    */
   const settleGestureEnd = useCallback(
     (session: Board2dWasmSession): boolean => {
@@ -1398,11 +1396,8 @@ export function Board2dHost({ node, onAction, requestContextMenu }: ComponentSce
       session.pointerCancelScreen();
       endPuzzle2dPeerGesture(peerScope, node.controllerId, node.surfaceId, peerRef.current);
       pendingCameraDispatchRef.current = null;
-      try {
-        session.drainEventsJson();
-      } catch {
-        /* session not ready */
-      }
+      // ↩️ A cancelled gesture publishes nothing; its restore frames still mirror into the sibling panes.
+      drainIntoBuffer();
       pendingEventRowsRef.current = [];
       boardStatusRef.current.pendingEvents = 0;
       setLocalSelectionJson(null);
@@ -1461,7 +1456,7 @@ export function Board2dHost({ node, onAction, requestContextMenu }: ComponentSce
       window.removeEventListener("pointercancel", onPointerCancel);
       container.removeEventListener("wheel", onWheel);
     };
-  }, [peerScope, applyPendingFixtureIfReady, applyPendingSelectionIfReady, beginCameraInteraction, dispatch, dispatchBufferedEvents, drainAndMaybeFlush, node.controllerId, node.surfaceId, publishBoardVitals, readContainerSize, scheduleRender, scene?.activeUtility, scene?.interactive, settleGestureEnd, publishBoardPresenceView]);
+  }, [peerScope, applyPendingFixtureIfReady, applyPendingSelectionIfReady, beginCameraInteraction, dispatch, dispatchBufferedEvents, drainAndMaybeFlush, drainIntoBuffer, node.controllerId, node.surfaceId, publishBoardVitals, readContainerSize, scheduleRender, scene?.activeUtility, scene?.interactive, settleGestureEnd, publishBoardPresenceView]);
   //#endregion Pointer
 
   //#region Keyboard

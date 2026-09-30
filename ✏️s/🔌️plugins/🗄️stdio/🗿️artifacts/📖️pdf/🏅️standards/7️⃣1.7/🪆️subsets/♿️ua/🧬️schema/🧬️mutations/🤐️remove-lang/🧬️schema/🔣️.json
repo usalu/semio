@@ -4,6 +4,9 @@
   "title": "RemoveLang",
   "type": "object",
   "additionalProperties": false,
+  "required": [
+    "mutation"
+  ],
   "properties": {
     "mutation": {
       "const": "removeLang",

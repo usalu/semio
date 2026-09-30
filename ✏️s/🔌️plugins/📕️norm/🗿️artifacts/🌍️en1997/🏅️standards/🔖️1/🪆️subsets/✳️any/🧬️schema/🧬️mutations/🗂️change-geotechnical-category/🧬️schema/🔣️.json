@@ -5,11 +5,33 @@
   "type": "object",
   "additionalProperties": false,
   "required": [
+    "mutation",
     "newGeotechnicalCategory"
   ],
   "properties": {
+    "mutation": {
+      "const": "changeGeotechnicalCategory"
+    },
     "newGeotechnicalCategory": {
-      "type": "integer"
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 3,
+      "x-semio-ui": {
+        "widget": "stepper",
+        "role": "value",
+        "label": {
+          "en": "Geotechnical category",
+          "de": "Geotechnische Kategorie"
+        },
+        "description": {
+          "en": "GK 1, 2 or 3 (EN 1997-1 §2.1, DIN 1054).",
+          "de": "GK 1, 2 oder 3 (EN 1997-1 §2.1, DIN 1054)."
+        },
+        "step": 1,
+        "precision": 0,
+        "group": "annex",
+        "order": 10
+      }
     }
   }
 }

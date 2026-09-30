@@ -5,11 +5,28 @@
   "type": "object",
   "additionalProperties": false,
   "required": [
+    "mutation",
     "id"
   ],
   "properties": {
+    "mutation": {
+      "const": "deleteVortexKind"
+    },
     "id": {
-      "type": "string"
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Vortex kind",
+          "de": "Wirbelart"
+        },
+        "ref": {
+          "kind": "vortexKind"
+        },
+        "group": "target",
+        "order": 10
+      }
     }
   }
 }

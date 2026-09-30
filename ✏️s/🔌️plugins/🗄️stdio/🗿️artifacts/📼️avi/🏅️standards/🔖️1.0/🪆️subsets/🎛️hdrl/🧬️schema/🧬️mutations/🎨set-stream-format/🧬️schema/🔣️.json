@@ -5,20 +5,47 @@
   "type": "object",
   "additionalProperties": false,
   "required": [
-    "stream_index",
+    "mutation",
+    "streamIndex",
     "strf"
   ],
   "properties": {
-    "stream_index": {
-      "type": "integer",
-      "minimum": 0
-    },
-    "strf": {
-      "$ref": "#/$defs/AviStreamFormat"
-    },
     "mutation": {
       "const": "setStreamFormat",
       "description": "Aggregate discriminator spliced in by AviMutation; absent when the payload stands alone."
+    },
+    "streamIndex": {
+      "type": "integer",
+      "minimum": 0,
+      "x-semio-ui": {
+        "widget": "stepper",
+        "label": {
+          "en": "Stream",
+          "de": "Datenstrom"
+        },
+        "description": {
+          "en": "Index of the stream, counted from 0.",
+          "de": "Index des Datenstroms, ab 0 gezählt."
+        },
+        "precision": 0,
+        "group": "target",
+        "order": 10
+      }
+    },
+    "strf": {
+      "$ref": "#/$defs/AviStreamFormat",
+      "x-semio-ui": {
+        "label": {
+          "en": "Stream format",
+          "de": "Datenstromformat"
+        },
+        "description": {
+          "en": "strf chunk: BITMAPINFOHEADER or WAVEFORMATEX.",
+          "de": "strf-Chunk: BITMAPINFOHEADER oder WAVEFORMATEX."
+        },
+        "group": "value",
+        "order": 20
+      }
     }
   },
   "$defs": {

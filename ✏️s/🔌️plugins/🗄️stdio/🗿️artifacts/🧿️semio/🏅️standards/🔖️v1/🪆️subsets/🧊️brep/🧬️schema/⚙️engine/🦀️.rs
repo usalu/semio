@@ -29,7 +29,7 @@
 /// 🧱 Vertex positions with outer and inner vertex loops for each face.
 pub type SolidFaceLoops = (Vec<[f32; 3]>, Vec<(Vec<u32>, Vec<Vec<u32>>)>);
 
-use std::collections::HashMap;
+use std::collections::{BTreeMap, HashMap};
 
 #[path = "📦️mesh-io/🦀️.rs"]
 mod mesh_io;
@@ -408,6 +408,9 @@ pub trait BrepKernel {
 }
 // #endregion 🔖️Kernel
 
+#[path = "🧹️retirement/🦀️.rs"]
+pub mod retirement;
+
 // #region 🔖️Types
 
 use crate::standards::v1::subsets::brep::schema::snapshot::arena::ShellId;
@@ -437,7 +440,7 @@ enum Entity {
 /// 🧠 Native B-Rep session.
 pub struct Brep {
     body: Body,
-    live: HashMap<String, Entity>,
+    live: BTreeMap<String, Entity>,
 }
 
 /// ⏱️ A retained resumable boolean plus the operation recorder its whole run accumulates into —
@@ -493,10 +496,13 @@ impl Default for Brep {
 }
 
 impl Brep {
+    /// 🪪️ Enumerates registered handles for explicit session operation claims.
+    pub fn live_handles(&self) -> std::collections::HashSet<String> { self.live.keys().cloned().collect() }
+
     /// 🏗️ Empty native kernel session.
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn new() -> Self {
-        Self { body: Body::new(), live: HashMap::new() }
+        Self { body: Body::new(), live: BTreeMap::new() }
     }
 }
 

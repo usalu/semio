@@ -1,13 +1,35 @@
 {
-  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/norm/en1991/mutation/change-assumed-qf-d/schema.json",
+  "title": "ChangeAssumedQfD",
   "type": "object",
   "additionalProperties": false,
   "required": [
-    "new_assumed_qf_d"
+    "newAssumedQfD"
   ],
   "properties": {
-    "new_assumed_qf_d": {
-      "type": "number"
+    "newAssumedQfD": {
+      "type": "number",
+      "minimum": 0,
+      "x-semio-ui": {
+        "widget": "stepper",
+        "role": "value",
+        "label": {
+          "en": "Assumed design fire load density q_f,d",
+          "de": "Angesetzter Bemessungswert der Brandlastdichte q_f,d"
+        },
+        "description": {
+          "en": "Value claimed by the design; the check compares it with the value derived from the standard.",
+          "de": "Vom Entwurf angesetzter Wert; der Nachweis vergleicht ihn mit dem nach der Norm ermittelten Wert."
+        },
+        "unit": "J/m²",
+        "displayUnit": "MJ/m²",
+        "displayFactor": 1e-06,
+        "step": 1000000.0,
+        "precision": 0,
+        "group": "fire",
+        "order": 10
+      }
     }
   }
 }

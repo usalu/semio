@@ -64,53 +64,26 @@ fn the_reference_reads_the_text_frames_a_real_encoder_wrote() {
     assert_eq!(projection.get("id3v1").unwrap().clone(), Json::Null);
 }
 
-#[test]
-fn no_mutation_is_a_true_byte_identity() {
-    let input = fixture();
-    assert_eq!(oracle_apply_mutation(&input, &spec("no-mutation", Json::Object(vec![]))).unwrap(), input);
-}
-
-/// 🧾️ The case's OWN `Examples` rows, transcribed in the feature file's order. Checking the
-/// laws against the parameters the scenarios actually carry is the point — a row whose params
-/// address nothing would report green while testing nothing, and the runner never dispatches an
-/// observability check of its own. `set-frames`'s `take` of 231 truncates at the midpoint of a
-/// 462-frame stream and `set-snapshot`'s take of 3 crosses the first padding-slot change
-/// (frames 0 and 1 are 417 bytes, frame 2 is 418), so both land on real offset arithmetic
-/// rather than on the head of the region.
+/// 🧾️ The case's OWN `Examples` rows, read straight out of the committed feature rather than transcribed:
+/// checking the laws against the wire payloads the scenarios actually carry is the point — a row whose payload
+/// addresses nothing would report green while testing nothing. `set-snapshot`'s three real frames cross the first
+/// padding-slot change (frames 0 and 1 are 417 bytes, frame 2 is 418), so the packed headers land on both
+/// branches of the frame-size formula.
 fn feature_example_rows() -> Vec<Json> {
-    let v1 = |title: &str| {
-        object(vec![
-            ("title", Json::String(title.to_string())),
-            ("artist", Json::String("semio".to_string())),
-            ("album", Json::String(String::new())),
-            ("year", Json::String("2026".to_string())),
-            ("comment", Json::String(String::new())),
-            ("genreId", Json::Number(12.0)),
-        ])
-    };
-    let text = |id: &str, value: &str| object(vec![("id", Json::String(id.to_string())), ("text", Json::String(value.to_string()))]);
-    vec![
-        spec("no-mutation", Json::Object(vec![])),
-        spec("set-snapshot", object(vec![("text", Json::Array(vec![text("TALB", "replaced wholesale")])), ("take", Json::Number(3.0)), ("v1", v1("snapshot"))])),
-        spec("set-id3v2", object(vec![("text", Json::Array(vec![text("TIT2", "renamed by the oracle"), text("TPE1", "semio")]))])),
-        spec("set-frames", object(vec![("take", Json::Number(231.0))])),
-        spec("set-id3v1", object(vec![("v1", v1("added trailer"))])),
-    ]
+    crate::law::feature_rows(include_str!("../../../🧪️tests/🎛️mutate-mp3-mpeg1-layer3/🥒️.feature")).into_iter().map(|(kind, params)| spec(&kind, params)).collect()
 }
 
 #[test]
 fn every_kind_is_observable_and_its_own_inverse_restores_the_projection() {
     let input = fixture();
     let original = project_mp3(&input).unwrap();
-    for case in feature_example_rows() {
+    let rows = feature_example_rows();
+    assert_eq!(rows.len(), KINDS.len(), "every declared kind carries one Examples row");
+    for case in rows {
         let kind = case.str("kind");
         let mutated = oracle_apply_mutation(&input, &case).unwrap_or_else(|error| panic!("{kind} failed: {error}"));
-        let after = project_mp3(&mutated).unwrap();
-        if kind != "no-mutation" {
-            assert_ne!(after, original, "{kind} left the projection unchanged — a mutation that is not observable proves nothing");
-        }
-        let inverse = oracle_inverse_spec(&input, &case).unwrap();
-        let restored = oracle_apply_mutation(&mutated, &inverse).unwrap_or_else(|error| panic!("{kind} inverse failed: {error}"));
+        assert_ne!(project_mp3(&mutated).unwrap(), original, "{kind} left the projection unchanged — a mutation that is not observable proves nothing");
+        let restored = oracle_apply_mutation_inverse(&input, &case, &mutated).unwrap_or_else(|error| panic!("{kind} inverse failed: {error}"));
         assert_eq!(project_mp3(&restored).unwrap(), original, "applying {kind} and then its own inverse must restore the original projection");
     }
 }
@@ -126,7 +99,7 @@ fn the_round_trip_preserves_the_projection_without_handing_the_input_back() {
 #[test]
 fn an_unknown_kind_is_an_error_not_a_silent_no_op() {
     assert!(oracle_apply_mutation(&fixture(), &spec("set-bitrate", Json::Object(vec![]))).is_err());
-    assert!(oracle_apply_mutation(&fixture(), &spec("set-id3v2", Json::Object(vec![]))).unwrap_err().contains("no `text`"));
+    assert!(oracle_apply_mutation(&fixture(), &spec("set-id3v1", object(vec![("id3v1", object(vec![("raw", Json::Array(vec![Json::Number(84.0)]))]))]))).unwrap_err().contains("128 bytes"));
 }
 
 /// 🏷️ `KINDS` must equal the committed catalog AND the committed production vocabulary. The

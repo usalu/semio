@@ -1,7 +1,9 @@
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
-import Ajv2020 from "ajv/dist/2020";
+import Ajv from "ajv";
+import Ajv2020 from "ajv/dist/2020.js";
+import draft7 from "ajv/dist/refs/json-schema-draft-07.json" with { type: "json" };
 import { applyPatch } from "fast-json-patch";
 import { applyGeneration2dMainWindowConfigMutation, type Generation2dMainWindowConfig } from "../../🎭️modes/✏️edit/🪟️windows/🕸️flow/🎚️config/🧬️schema/🟦️.ts";
 import { applyGeneration2dEditPreviewWindowConfigMutation } from "../../🎭️modes/✏️edit/🪟️windows/👁️preview/🎚️config/🧬️schema/🟦️.ts";
@@ -25,8 +27,8 @@ type Fixture = {
 const workspace = process.cwd();
 const editor = join(workspace, "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🌀️generation2d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor");
 const readJson = (path: string): any => JSON.parse(readFileSync(path, "utf8"));
-const fixture = readJson(join(editor, "🧪️tests/🪟️generation2d-window-camera-ownership/🧫️fixtures/🔣️.json")) as Fixture;
-const fixtureSchema = readJson(join(editor, "🧪️tests/🪟️generation2d-window-camera-ownership/🧬️schema/🔣️.json"));
+const fixture = readJson(join(editor, "🧫️fixtures/🪟️generation2d-window-camera-ownership/🔣️.json")) as Fixture;
+const fixtureSchema = readJson(join(editor, "🧫️fixtures/🪟️generation2d-window-camera-ownership/📐️schema/🔣️.json"));
 const viewportSchema = readJson(join(workspace, "🧰️framework/🔨️modules/🖱️ui/🪟️viewport/◻️2d/🧬️schema/🔣️.json"));
 const ownerSchemas = new Map<Kind, any>([
   ["generation2d-main", readJson(join(editor, "🎭️modes/✏️edit/🪟️windows/🕸️flow/🎚️config/🧬️schema/🔣️.json"))],
@@ -49,8 +51,8 @@ function applyOwned(base: Config, kind: Kind, mutation: Mutation): Config {
 }
 
 export function testGeneration2dWindowCameraOwnershipOracle(): void {
-  const ajv = new Ajv2020({ strict: true, allErrors: true });
-  assert(ajv.compile(fixtureSchema)(fixture));
+  assert(new Ajv({ strict: true, allErrors: true }).compile(fixtureSchema)(fixture));
+  const ajv = new Ajv2020({ strict: true, allErrors: true }).addMetaSchema(draft7);
   ajv.addSchema(viewportSchema);
   const schemaIds = new Set<string>();
   for (const [kind, schema] of ownerSchemas) {

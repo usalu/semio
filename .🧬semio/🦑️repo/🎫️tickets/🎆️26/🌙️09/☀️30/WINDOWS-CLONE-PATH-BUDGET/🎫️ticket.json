@@ -1,0 +1,12 @@
+{
+  "title": "Windows Clone Path Budget",
+  "emoji": "🪟",
+  "status": "open",
+  "description": "The repo must clone on Windows with default Git (core.longpaths unset) into a normal user folder such as C:\\Users\\abcdefghijklmnopqrst\\Documents\\semio. Remove or shorten every tracked path whose UTF-16 length plus that prefix exceeds 259 (Win32 MAX_PATH minus the terminating NUL). Ticket trees that embed full source copies are in scope. Add a durable check so new paths cannot exceed the budget. Do not rely on core.longpaths as the fix.",
+  "summary": "Removed six ticket payload copies that exceeded the Windows checkout budget (longest 271 UTF-16 units) and shortened five fixture directories that CreateDirectoryW rejects under a 20-unit clone root. The tracked tree now tops out at 238 for files and 227 for directories. The cross-platform bootstrap test enforces both limits and passed.",
+  "goal": "🎯zerotouchdevcontainer",
+  "sessions": [
+    "⚪cd6da9a918a747e9884774ad72ab1029",
+    "⚪69a57e375a794619ae107bd96c0a1c72"
+  ]
+}

@@ -1,13 +1,29 @@
 {
-  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/norm/en1991/mutation/change-bridge-load-group/schema.json",
+  "title": "ChangeBridgeLoadGroup",
   "type": "object",
   "additionalProperties": false,
   "required": [
-    "new_bridge_load_group"
+    "newBridgeLoadGroup"
   ],
   "properties": {
-    "new_bridge_load_group": {
-      "type": "string"
+    "newBridgeLoadGroup": {
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "text",
+        "role": "value",
+        "label": {
+          "en": "Traffic load group",
+          "de": "Verkehrslastgruppe"
+        },
+        "description": {
+          "en": "gr1a, gr1b, gr3, gr4 or gr5 (EN 1991-2 Table 4.4a).",
+          "de": "gr1a, gr1b, gr3, gr4 oder gr5 (EN 1991-2 Tabelle 4.4a)."
+        },
+        "group": "bridge",
+        "order": 10
+      }
     }
   }
 }

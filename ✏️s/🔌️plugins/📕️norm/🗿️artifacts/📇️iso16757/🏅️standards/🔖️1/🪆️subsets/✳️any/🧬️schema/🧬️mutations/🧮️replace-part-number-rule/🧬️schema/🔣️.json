@@ -9,71 +9,20 @@
   ],
   "properties": {
     "newRule": {
-      "title": "PartNumberRule",
-      "oneOf": [
-        {
-          "type": "object",
-          "additionalProperties": false,
-          "required": [
-            "kind",
-            "value"
-          ],
-          "properties": {
-            "kind": {
-              "const": "literal"
-            },
-            "value": {
-              "type": "string"
-            }
-          }
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/iso16757/snapshot.json#/$defs/PartNumberRule",
+      "x-semio-ui": {
+        "role": "value",
+        "label": {
+          "en": "Part-number rule",
+          "de": "Artikelnummernregel"
         },
-        {
-          "type": "object",
-          "additionalProperties": false,
-          "required": [
-            "kind",
-            "rows",
-            "outputColumn"
-          ],
-          "properties": {
-            "kind": {
-              "const": "table"
-            },
-            "rows": {
-              "type": "array",
-              "items": {
-                "type": "object",
-                "additionalProperties": {
-                  "type": "string"
-                }
-              }
-            },
-            "outputColumn": {
-              "type": "string"
-            }
-          }
+        "description": {
+          "en": "Literal, lookup table or script that derives the part number.",
+          "de": "Literal, Nachschlagetabelle oder Skript, das die Artikelnummer ableitet."
         },
-        {
-          "type": "object",
-          "additionalProperties": false,
-          "required": [
-            "kind",
-            "functionId",
-            "source"
-          ],
-          "properties": {
-            "kind": {
-              "const": "script"
-            },
-            "functionId": {
-              "type": "string"
-            },
-            "source": {
-              "type": "string"
-            }
-          }
-        }
-      ]
+        "group": "part-number",
+        "order": 10
+      }
     }
   }
 }

@@ -10,10 +10,47 @@
   ],
   "properties": {
     "index": {
-      "type": "integer"
+      "type": "integer",
+      "minimum": 0,
+      "x-semio-ui": {
+        "widget": "stepper",
+        "role": "value",
+        "label": {
+          "en": "Floor area",
+          "de": "Deckenfläche"
+        },
+        "description": {
+          "en": "Zero-based position of the floor in its list.",
+          "de": "Nullbasierte Position der Decke in der Liste."
+        },
+        "step": 1,
+        "precision": 0,
+        "group": "target",
+        "order": 10
+      }
     },
     "newAssumedQk": {
-      "type": "number"
+      "type": "number",
+      "minimum": 0,
+      "x-semio-ui": {
+        "widget": "stepper",
+        "role": "value",
+        "label": {
+          "en": "Assumed imposed load q_k",
+          "de": "Angesetzte Nutzlast q_k"
+        },
+        "description": {
+          "en": "Value claimed by the design; the check compares it with the value derived from the standard.",
+          "de": "Vom Entwurf angesetzter Wert; der Nachweis vergleicht ihn mit dem nach der Norm ermittelten Wert."
+        },
+        "unit": "Pa",
+        "displayUnit": "kN/m²",
+        "displayFactor": 0.001,
+        "step": 50,
+        "precision": 2,
+        "group": "floors",
+        "order": 20
+      }
     }
   }
 }

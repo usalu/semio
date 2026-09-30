@@ -57,20 +57,18 @@ Feature: Apply every typed PDF 1.7 mutation to a real-world document
   The inverse law is not scoped down either, with one exception, on one axis, for three kinds,
   stated here in full.
 
-  THE ONE AXIS THIS VOCABULARY CANNOT CARRY, FOUND BY ASSERTING THE LAW RATHER THAN BY REASONING
-  ABOUT IT. remove-page, append-page-content and set-page-content all have to REBUILD a page's
-  content stream on the way back, and PdfPage's only content field is text
-  (../../🏅️standards/7️⃣1.7/🪆️subsets/🧱️base/🧬️schema/📸️snapshot/🦀️.rs), so InsertPage and
-  SetPageContent carry extracted text and nothing else and both producers regenerate a minimal
-  BT /F1 12 Tf 72 720 Td (…) Tj ET stream from it. Page 8 of this thesis carries 294 operators —
-  glyph positioning, graphics state, the lot — and no round trip through a single text field can
-  bring them back. AppendPageContent was documented from the start as having no minimal inverse in
-  this vocabulary; this is the same gap, now measured. Those three inverse scenarios therefore compare
-  the projection with pages.N.contentOperators dropped and nothing else dropped: declared version,
-  page count, every page's media box, crop box, rotation, the whole objectGraph surface and —
-  critically — the shown text the vocabulary DOES carry all stay under the full law, and every other
-  kind in the catalog stays under it on every axis including contentOperators. Widening PdfPage to retain a real content stream is the fix, and it
-  belongs to whoever owns that snapshot.
+  THE ONE AXIS THE REFERENCE'S UNDO CANNOT CARRY, FOUND BY ASSERTING THE LAW RATHER THAN BY
+  REASONING ABOUT IT. remove-page, append-page-content and set-page-content all have to REBUILD a
+  page's content stream on the way back. The vocabulary carries the page's typed operator list
+  (PdfPage.content, and every Examples row below is the leaf wire payload those three kinds decode
+  from, BT /F1 12 Tf 72 720 Td (…) Tj ET spelled as PdfOp records), so the subject restores the
+  original stream exactly. The reference cannot: its undo captures a page's prior text through Tj
+  alone and rebuilds the minimal five-operator stream from it, and page 8 of this thesis carries 294
+  operators — glyph positioning, graphics state, the lot — set with TJ. Those three inverse
+  scenarios therefore compare the oracle's projection with pages.N.contentOperators dropped and
+  nothing else dropped: declared version, page count, every page's media box, crop box, rotation,
+  the whole objectGraph surface and — critically — the shown text all stay under the full law, and
+  every other kind in the catalog stays under it on every axis including contentOperators.
 
   All three laws are proven again at unit level, against the same real document and the same
   Examples rows, by `every_declared_kind_is_observable_and_its_inverse_restores_the_document` in
@@ -128,23 +126,23 @@ Feature: Apply every typed PDF 1.7 mutation to a real-world document
       """
     Then the oracle and the subject agree on the semantic projection
     Examples:
-      | id                   | params                                                                                                                                                                    |
-      | insert-page          | {"index": 30, "page": {"mediaBox": [0, 0, 612, 792], "rotate": 0, "text": "Inserted page for wave 7 mutation testing"}}                                                  |
-      | remove-page          | {"index": 7}                                                                                                                                                              |
-      | set-page-media-box   | {"index": 15, "mediaBox": [0, 0, 595, 842]}                                                                                                                              |
-      | set-page-crop-box    | {"index": 16, "cropBox": [10, 10, 580, 820]}                                                                                                                             |
-      | append-page-content  | {"index": 17, "text": "Appended content line for wave 7 testing"}                                                                                                        |
-      | set-info             | {"title": "Wave 7 Replaced Title", "author": "Wave 7 Test Author"}                                                                                                       |
-      | insert-object        | {"id": {"num": 900001, "gen": 0}, "value": {"kind": "dict", "entries": [{"key": "Type", "value": {"kind": "name", "value": "SemioWave7Marker"}}, {"key": "Note", "value": {"kind": "str", "value": "inserted by wave 7"}}]}} |
-      | remove-object        | {"id": {"num": 3015, "gen": 0}}                                                                                                                                          |
-      | set-object-value     | {"id": {"num": 145, "gen": 0}, "value": {"kind": "dict", "entries": [{"key": "S", "value": {"kind": "name", "value": "GoToR"}}, {"key": "Note", "value": {"kind": "str", "value": "replaced by wave 7"}}]}} |
-      | set-dict-entry       | {"id": {"num": 3188, "gen": 0}, "path": [], "key": "PageMode", "value": {"kind": "name", "value": "UseNone"}}                                                           |
-      | remove-dict-entry    | {"id": {"num": 3188, "gen": 0}, "path": [], "key": "Outlines"}                                                                                                           |
-      | set-trailer-entry    | {"key": "SemioWave7Marker", "value": {"kind": "int", "value": 42}}                                                                                                       |
-      | remove-trailer-entry | {"key": "ID"}                                                                                                                                                            |
-      | move-page            | {"from": 10, "to": 40}                                                                                                                                                   |
-      | set-page-content     | {"index": 20, "text": "Replaced page content for wave 7 mutation testing"}                                                                                               |
-      | set-page-rotation    | {"index": 5, "rotation": 90}                                                                                                                                             |
+      | id                   | params |
+      | insert-page          | {"index": 30, "page": {"mediaBox": [0, 0, 612, 792], "rotate": 0, "content": [{"op": "beginText"}, {"op": "setFont", "name": "F1", "size": 12}, {"op": "moveText", "tx": 72, "ty": 720}, {"op": "showText", "text": {"kind": "text", "text": "Inserted page for wave 7 mutation testing"}}, {"op": "endText"}]}} |
+      | remove-page          | {"index": 7} |
+      | set-page-media-box   | {"index": 15, "mediaBox": [0, 0, 595, 842]} |
+      | set-page-crop-box    | {"index": 16, "cropBox": [10, 10, 580, 820]} |
+      | append-page-content  | {"index": 17, "content": [{"op": "beginText"}, {"op": "setFont", "name": "F1", "size": 12}, {"op": "moveText", "tx": 72, "ty": 720}, {"op": "showText", "text": {"kind": "text", "text": "Appended content line for wave 7 testing"}}, {"op": "endText"}]} |
+      | set-info             | {"info": {"title": "Wave 7 Replaced Title", "author": "Wave 7 Test Author"}} |
+      | insert-object        | {"id": {"num": 900001, "gen": 0}, "value": {"kind": "dict", "value": [{"key": "Type", "value": {"kind": "name", "value": "SemioWave7Marker"}}, {"key": "Note", "value": {"kind": "str", "value": [105, 110, 115, 101, 114, 116, 101, 100, 32, 98, 121, 32, 119, 97, 118, 101, 32, 55]}}]}} |
+      | remove-object        | {"id": {"num": 3015, "gen": 0}} |
+      | set-object-value     | {"id": {"num": 145, "gen": 0}, "value": {"kind": "dict", "value": [{"key": "S", "value": {"kind": "name", "value": "GoToR"}}, {"key": "Note", "value": {"kind": "str", "value": [114, 101, 112, 108, 97, 99, 101, 100, 32, 98, 121, 32, 119, 97, 118, 101, 32, 55]}}]}} |
+      | set-dict-entry       | {"id": {"num": 3188, "gen": 0}, "path": [], "key": "PageMode", "value": {"kind": "name", "value": "UseNone"}} |
+      | remove-dict-entry    | {"id": {"num": 3188, "gen": 0}, "path": [], "key": "Outlines"} |
+      | set-trailer-entry    | {"key": "SemioWave7Marker", "value": {"kind": "int", "value": 42}} |
+      | remove-trailer-entry | {"key": "ID"} |
+      | move-page            | {"from": 10, "to": 40} |
+      | set-page-content     | {"index": 20, "content": [{"op": "beginText"}, {"op": "setFont", "name": "F1", "size": 12}, {"op": "moveText", "tx": 72, "ty": 720}, {"op": "showText", "text": {"kind": "text", "text": "Replaced page content for wave 7 mutation testing"}}, {"op": "endText"}]} |
+      | set-page-rotation    | {"index": 5, "rotation": 90} |
 
   @id-inverse
   @level-exhaustive
@@ -157,23 +155,23 @@ Feature: Apply every typed PDF 1.7 mutation to a real-world document
       """
     Then the oracle and the subject agree on the semantic projection
     Examples:
-      | id                   | params                                                                                                                                                                    |
-      | insert-page          | {"index": 30, "page": {"mediaBox": [0, 0, 612, 792], "rotate": 0, "text": "Inserted page for wave 7 mutation testing"}}                                                  |
-      | remove-page          | {"index": 7}                                                                                                                                                              |
-      | set-page-media-box   | {"index": 15, "mediaBox": [0, 0, 595, 842]}                                                                                                                              |
-      | set-page-crop-box    | {"index": 16, "cropBox": [10, 10, 580, 820]}                                                                                                                             |
-      | append-page-content  | {"index": 17, "text": "Appended content line for wave 7 testing"}                                                                                                        |
-      | set-info             | {"title": "Wave 7 Replaced Title", "author": "Wave 7 Test Author"}                                                                                                       |
-      | insert-object        | {"id": {"num": 900001, "gen": 0}, "value": {"kind": "dict", "entries": [{"key": "Type", "value": {"kind": "name", "value": "SemioWave7Marker"}}, {"key": "Note", "value": {"kind": "str", "value": "inserted by wave 7"}}]}} |
-      | remove-object        | {"id": {"num": 3015, "gen": 0}}                                                                                                                                          |
-      | set-object-value     | {"id": {"num": 145, "gen": 0}, "value": {"kind": "dict", "entries": [{"key": "S", "value": {"kind": "name", "value": "GoToR"}}, {"key": "Note", "value": {"kind": "str", "value": "replaced by wave 7"}}]}} |
-      | set-dict-entry       | {"id": {"num": 3188, "gen": 0}, "path": [], "key": "PageMode", "value": {"kind": "name", "value": "UseNone"}}                                                           |
-      | remove-dict-entry    | {"id": {"num": 3188, "gen": 0}, "path": [], "key": "Outlines"}                                                                                                           |
-      | set-trailer-entry    | {"key": "SemioWave7Marker", "value": {"kind": "int", "value": 42}}                                                                                                       |
-      | remove-trailer-entry | {"key": "ID"}                                                                                                                                                            |
-      | move-page            | {"from": 10, "to": 40}                                                                                                                                                   |
-      | set-page-content     | {"index": 20, "text": "Replaced page content for wave 7 mutation testing"}                                                                                               |
-      | set-page-rotation    | {"index": 5, "rotation": 90}                                                                                                                                             |
+      | id                   | params |
+      | insert-page          | {"index": 30, "page": {"mediaBox": [0, 0, 612, 792], "rotate": 0, "content": [{"op": "beginText"}, {"op": "setFont", "name": "F1", "size": 12}, {"op": "moveText", "tx": 72, "ty": 720}, {"op": "showText", "text": {"kind": "text", "text": "Inserted page for wave 7 mutation testing"}}, {"op": "endText"}]}} |
+      | remove-page          | {"index": 7} |
+      | set-page-media-box   | {"index": 15, "mediaBox": [0, 0, 595, 842]} |
+      | set-page-crop-box    | {"index": 16, "cropBox": [10, 10, 580, 820]} |
+      | append-page-content  | {"index": 17, "content": [{"op": "beginText"}, {"op": "setFont", "name": "F1", "size": 12}, {"op": "moveText", "tx": 72, "ty": 720}, {"op": "showText", "text": {"kind": "text", "text": "Appended content line for wave 7 testing"}}, {"op": "endText"}]} |
+      | set-info             | {"info": {"title": "Wave 7 Replaced Title", "author": "Wave 7 Test Author"}} |
+      | insert-object        | {"id": {"num": 900001, "gen": 0}, "value": {"kind": "dict", "value": [{"key": "Type", "value": {"kind": "name", "value": "SemioWave7Marker"}}, {"key": "Note", "value": {"kind": "str", "value": [105, 110, 115, 101, 114, 116, 101, 100, 32, 98, 121, 32, 119, 97, 118, 101, 32, 55]}}]}} |
+      | remove-object        | {"id": {"num": 3015, "gen": 0}} |
+      | set-object-value     | {"id": {"num": 145, "gen": 0}, "value": {"kind": "dict", "value": [{"key": "S", "value": {"kind": "name", "value": "GoToR"}}, {"key": "Note", "value": {"kind": "str", "value": [114, 101, 112, 108, 97, 99, 101, 100, 32, 98, 121, 32, 119, 97, 118, 101, 32, 55]}}]}} |
+      | set-dict-entry       | {"id": {"num": 3188, "gen": 0}, "path": [], "key": "PageMode", "value": {"kind": "name", "value": "UseNone"}} |
+      | remove-dict-entry    | {"id": {"num": 3188, "gen": 0}, "path": [], "key": "Outlines"} |
+      | set-trailer-entry    | {"key": "SemioWave7Marker", "value": {"kind": "int", "value": 42}} |
+      | remove-trailer-entry | {"key": "ID"} |
+      | move-page            | {"from": 10, "to": 40} |
+      | set-page-content     | {"index": 20, "content": [{"op": "beginText"}, {"op": "setFont", "name": "F1", "size": 12}, {"op": "moveText", "tx": 72, "ty": 720}, {"op": "showText", "text": {"kind": "text", "text": "Replaced page content for wave 7 mutation testing"}}, {"op": "endText"}]} |
+      | set-page-rotation    | {"index": 5, "rotation": 90} |
 
   @id-identity-round-trip
   @level-long

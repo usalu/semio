@@ -16,7 +16,7 @@
           "const": "createAnimation"
         },
         "payload": {
-          "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/gltf/2.0/any/mutation/create-animation/schema.json"
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/gltf/2.0/any/mutation/create-animation/schema.json#/$defs/CreateAnimationMutation"
         }
       }
     },
@@ -32,7 +32,7 @@
           "const": "deleteAnimation"
         },
         "payload": {
-          "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/gltf/2.0/any/mutation/delete-animation/schema.json"
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/gltf/2.0/any/mutation/delete-animation/schema.json#/$defs/DeleteAnimationMutation"
         }
       }
     },
@@ -48,7 +48,7 @@
           "const": "moveAnimation"
         },
         "payload": {
-          "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/gltf/2.0/any/mutation/move-animation/schema.json"
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/gltf/2.0/any/mutation/move-animation/schema.json#/$defs/MoveAnimationMutation"
         }
       }
     },
@@ -64,7 +64,7 @@
           "const": "reorderAnimations"
         },
         "payload": {
-          "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/gltf/2.0/any/mutation/reorder-animations/schema.json"
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/gltf/2.0/any/mutation/reorder-animations/schema.json#/$defs/ReorderAnimationsMutation"
         }
       }
     }

@@ -1,6 +1,7 @@
 {
   "kind": "remove-channel",
-  "params": {
+  "mutation": {
+    "mutation": "removeChannel",
     "index": 1
   },
   "before": {

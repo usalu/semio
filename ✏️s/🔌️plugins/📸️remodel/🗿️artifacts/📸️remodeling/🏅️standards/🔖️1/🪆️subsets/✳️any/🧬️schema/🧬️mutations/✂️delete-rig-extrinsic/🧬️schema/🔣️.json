@@ -5,11 +5,32 @@
   "type": "object",
   "additionalProperties": false,
   "required": [
+    "mutation",
     "cameraId"
   ],
   "properties": {
+    "mutation": {
+      "const": "deleteRigExtrinsic"
+    },
     "cameraId": {
-      "type": "string"
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Camera",
+          "de": "Kamera"
+        },
+        "description": {
+          "en": "The camera whose rig pose is removed.",
+          "de": "Kamera, deren Rig-Lage entfernt wird."
+        },
+        "ref": {
+          "kind": "camera"
+        },
+        "group": "target",
+        "order": 10
+      }
     }
   }
 }

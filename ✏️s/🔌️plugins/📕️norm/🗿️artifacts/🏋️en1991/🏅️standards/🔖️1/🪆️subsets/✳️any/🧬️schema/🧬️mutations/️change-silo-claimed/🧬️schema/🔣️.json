@@ -9,7 +9,21 @@
   ],
   "properties": {
     "newSiloClaimed": {
-      "type": "boolean"
+      "type": "boolean",
+      "x-semio-ui": {
+        "widget": "toggle",
+        "role": "value",
+        "label": {
+          "en": "Silo loads declared",
+          "de": "Silolasten angesetzt"
+        },
+        "description": {
+          "en": "Whether silo or tank actions apply (EN 1991-4).",
+          "de": "Ob Einwirkungen auf Silos oder Tanks angesetzt werden (EN 1991-4)."
+        },
+        "group": "silo",
+        "order": 10
+      }
     }
   }
 }

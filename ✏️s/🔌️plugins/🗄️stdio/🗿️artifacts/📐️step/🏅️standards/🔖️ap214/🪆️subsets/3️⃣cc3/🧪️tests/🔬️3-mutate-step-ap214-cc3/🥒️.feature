@@ -11,9 +11,9 @@ Feature: Apply every typed ISO 10303-214 CC3 (wireframe with topology) mutation 
   it into the case work directory first; the committed fixture is never written to.
 
   🎯️ What makes this case NOT a copy of the `🧱️base` case that reads the same bytes. `🧱️base` declares
-  the ISO 10303-21 GRAMMAR — insert an entity, set an argument, remove an argument — eleven verbs
+  the ISO 10303-21 GRAMMAR — insert an entity, set an argument, remove an argument — ten verbs
   that would read identically for any Part-21 file on earth. A conformance class is not a grammar,
-  it is a FILTER, and the 6 kinds here are one per axis `check_cc3_conformance` actually reads:
+  it is a FILTER, and the 5 kinds here are one per axis `check_cc3_conformance` actually reads:
   the `AUTOMOTIVE_DESIGN` declaration, the `*_SHAPE_REPRESENTATION` ladder, and the
   PRODUCT/formation/definition identity chain. The projection reports those three axes and nothing
   else — a projection carrying the whole entity graph would drown every class-level difference in
@@ -42,10 +42,10 @@ Feature: Apply every typed ISO 10303-214 CC3 (wireframe with topology) mutation 
   and the PRODUCT/formation/definition chain are required identically by all six. A vocabulary
   derived one kind per axis therefore depends only on WHERE the ceiling sits, and there are three
   places. Strictly inside the ladder (CC2, CC3, CC4, CC5) there is a ceiling type to write and at
-  least one rung above it to demote from, so both ladder verbs exist and the list is these six.
+  least one rung above it to demote from, so both ladder verbs exist and the list is these five.
   Below the ladder (CC1) no representation is admitted at all, so deletion replaces both verbs.
   On top of it (CC6) nothing can be above the ceiling, so no demotion has a subject. The two edge
-  classes declare five kinds each. This is asserted, not merely written down: the shared
+  classes declare four kinds each. This is asserted, not merely written down: the shared
   `🏅️standards/🔖️ap214/🔮️oracles/🦀️component.rs` carries
   `the_four_interior_classes_share_one_vocabulary_because_their_ceilings_share_one_place`, and the
   four classes share every line of classification and serialization through that one module —
@@ -63,10 +63,15 @@ Feature: Apply every typed ISO 10303-214 CC3 (wireframe with topology) mutation 
   called out of the production `engine::ladder` — an oracle that asked the code under test how to
   classify would be comparing an implementation with itself.
 
+  🧾️ Every row's `params` IS the leaf's wire payload, exactly as `payload_value()` emits it — camelCase,
+  the artifact's own value wire, `set-snapshot` carrying a whole snapshot record — so the subject decodes
+  it through the derive-generated `from_payload_value` and the reference reads the same wire; nothing maps a
+  parameter onto an operation by hand.
+
   📌️ Every row below was chosen against the file's REAL content: `#13` is the real
   `ADVANCED_BREP_SHAPE_REPRESENTATION` named `brep_rep_0`, `#836` is the real `SHAPE_REPRESENTATION`
   named `Document` carrying items `(#837,#895)` in context `#835`, and `#827`/`#822`/`#821` are the
-  real product chain. The adapter FAILS any row other than `no-mutation` whose projection did not
+  real product chain. The adapter FAILS any row whose projection did not
   move: a row whose parameters make the mutation a no-op is not a test.
 
   @id-mutate
@@ -80,23 +85,12 @@ Feature: Apply every typed ISO 10303-214 CC3 (wireframe with topology) mutation 
       """
     Then the independently read conformance projection shows the mutation's real effect, asserted in role
     Examples:
-      | id                          | params                                                                                                                                                                        |
-      | set-snapshot                | {"fileSchema": ["AUTOMOTIVE_DESIGN"], "productIdentity": {"product": 1, "productName": "Document", "formation": 2, "formationId": "A", "definition": 3, "definitionId": "A"}} |
-      | set-file-schema             | {"schemas": ["CONFIG_CONTROL_DESIGN"]}                                                                                                                                        |
-      | set-product-identity        | {"identity": null}                                                                                                                                                            |
-      | set-shape-representation    | {"id": 836, "representation": {"typeName": "GEOMETRICALLY_BOUNDED_SURFACE_SHAPE_REPRESENTATION", "name": "Document", "items": [837, 895], "context": 835}}                    |
-      | demote-shape-representation | {"id": 13}                                                                                                                                                                    |
-
-  @id-no-mutation-baseline-mutate
-  @level-exhaustive
-  @mode-property
-  Scenario: Apply no-mutation and read the conformance projection back
-    Given the real input document shared://🌲️hexagonal-cut-concrete-forest-left-ap214/📐️.stp
-    When the no-mutation mutation is applied with its parameters
-      """
-      {"kind": "no-mutation", "params": {}}
-      """
-    Then the independently read conformance projection shows the mutation's real effect, asserted in role
+      | id                          | params                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                        |
+      | set-snapshot                | {"snapshot": {"schema": "stdio.step", "header": {"fileDescription": {"description": [""], "implementationLevel": "2;1"}, "fileName": {"name": "", "timestamp": "", "author": [""], "organization": [""], "preprocessorVersion": "", "originatingSystem": "", "authorization": ""}, "fileSchema": {"schemas": ["AUTOMOTIVE_DESIGN"]}}, "entities": [{"id": 1, "name": "PRODUCT", "args": [{"string": "Document"}, {"string": "Document"}, {"string": ""}]}, {"id": 2, "name": "PRODUCT_DEFINITION_FORMATION", "args": [{"string": "A"}, "unset", {"reference": 1}]}, {"id": 3, "name": "PRODUCT_DEFINITION", "args": [{"string": "A"}, "unset", {"reference": 2}, "unset"]}]}} |
+      | set-file-schema             | {"schemas": ["CONFIG_CONTROL_DESIGN"]}                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                        |
+      | set-product-identity        | {"identity": null}                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                            |
+      | set-shape-representation    | {"id": 836, "representation": {"typeName": "GEOMETRICALLY_BOUNDED_SURFACE_SHAPE_REPRESENTATION", "name": "Document", "items": [837, 895], "context": 835}}                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    |
+      | demote-shape-representation | {"id": 13}                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    |
 
   @id-inverse
   @level-exhaustive
@@ -110,24 +104,12 @@ Feature: Apply every typed ISO 10303-214 CC3 (wireframe with topology) mutation 
     And the inverse computed against the untouched original is applied to that result
     Then the restored document's conformance projection equals the original's, asserted in role
     Examples:
-      | id                          | params                                                                                                                                                                        |
-      | set-snapshot                | {"fileSchema": ["AUTOMOTIVE_DESIGN"], "productIdentity": {"product": 1, "productName": "Document", "formation": 2, "formationId": "A", "definition": 3, "definitionId": "A"}} |
-      | set-file-schema             | {"schemas": ["CONFIG_CONTROL_DESIGN"]}                                                                                                                                        |
-      | set-product-identity        | {"identity": null}                                                                                                                                                            |
-      | set-shape-representation    | {"id": 836, "representation": {"typeName": "GEOMETRICALLY_BOUNDED_SURFACE_SHAPE_REPRESENTATION", "name": "Document", "items": [837, 895], "context": 835}}                    |
-      | demote-shape-representation | {"id": 13}                                                                                                                                                                    |
-
-  @id-no-mutation-baseline-inverse
-  @level-exhaustive
-  @mode-property
-  Scenario: Undoing no-mutation restores the real exchange structure
-    Given the real input document shared://🌲️hexagonal-cut-concrete-forest-left-ap214/📐️.stp
-    When the no-mutation mutation is applied with its parameters
-      """
-      {"kind": "no-mutation", "params": {}}
-      """
-    And the inverse computed against the untouched original is applied to that result
-    Then the restored document's conformance projection equals the original's, asserted in role
+      | id                          | params                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                        |
+      | set-snapshot                | {"snapshot": {"schema": "stdio.step", "header": {"fileDescription": {"description": [""], "implementationLevel": "2;1"}, "fileName": {"name": "", "timestamp": "", "author": [""], "organization": [""], "preprocessorVersion": "", "originatingSystem": "", "authorization": ""}, "fileSchema": {"schemas": ["AUTOMOTIVE_DESIGN"]}}, "entities": [{"id": 1, "name": "PRODUCT", "args": [{"string": "Document"}, {"string": "Document"}, {"string": ""}]}, {"id": 2, "name": "PRODUCT_DEFINITION_FORMATION", "args": [{"string": "A"}, "unset", {"reference": 1}]}, {"id": 3, "name": "PRODUCT_DEFINITION", "args": [{"string": "A"}, "unset", {"reference": 2}, "unset"]}]}} |
+      | set-file-schema             | {"schemas": ["CONFIG_CONTROL_DESIGN"]}                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                        |
+      | set-product-identity        | {"identity": null}                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                            |
+      | set-shape-representation    | {"id": 836, "representation": {"typeName": "GEOMETRICALLY_BOUNDED_SURFACE_SHAPE_REPRESENTATION", "name": "Document", "items": [837, 895], "context": 835}}                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    |
+      | demote-shape-representation | {"id": 13}                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    |
 
   @id-identity-round-trip
   @level-long

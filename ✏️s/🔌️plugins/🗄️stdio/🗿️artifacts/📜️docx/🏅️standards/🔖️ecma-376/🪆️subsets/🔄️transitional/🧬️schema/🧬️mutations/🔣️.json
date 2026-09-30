@@ -8,23 +8,11 @@
       "type": "object",
       "additionalProperties": false,
       "required": [
-        "RemoveConformanceAttribute"
+        "SetSnapshot"
       ],
       "properties": {
-        "RemoveConformanceAttribute": {
-          "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/docx/ecma-376/transitional/mutation/remove-conformance-attribute/schema.json"
-        }
-      }
-    },
-    {
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "SetConformanceAttribute"
-      ],
-      "properties": {
-        "SetConformanceAttribute": {
-          "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/docx/ecma-376/transitional/mutation/set-conformance-attribute/schema.json"
+        "SetSnapshot": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/docx/ecma-376/transitional/mutation/set-snapshot/schema.json"
         }
       }
     },
@@ -56,11 +44,23 @@
       "type": "object",
       "additionalProperties": false,
       "required": [
-        "SetSnapshot"
+        "SetConformanceAttribute"
       ],
       "properties": {
-        "SetSnapshot": {
-          "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/docx/ecma-376/transitional/mutation/set-snapshot/schema.json"
+        "SetConformanceAttribute": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/docx/ecma-376/transitional/mutation/set-conformance-attribute/schema.json"
+        }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "RemoveConformanceAttribute"
+      ],
+      "properties": {
+        "RemoveConformanceAttribute": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/docx/ecma-376/transitional/mutation/remove-conformance-attribute/schema.json"
         }
       }
     }

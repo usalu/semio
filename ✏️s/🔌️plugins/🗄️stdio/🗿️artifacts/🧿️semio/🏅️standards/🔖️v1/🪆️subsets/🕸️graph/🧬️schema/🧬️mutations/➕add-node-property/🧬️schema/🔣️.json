@@ -18,7 +18,13 @@
       "minimum": 0
     },
     "property": {
-      "$ref": "#/$defs/SemioValueEntry"
+      "$ref": "#/$defs/SemioValueEntry",
+      "x-semio-ui": {
+        "label": {
+          "en": "Property",
+          "de": "Eigenschaft"
+        }
+      }
     }
   },
   "$defs": {

@@ -1,7 +1,7 @@
 {
   "mutation": "updateClimate",
   "newClimate": {
-    "theta_e_c": [
+    "thetaEC": [
       -0.4,
       0.6,
       4.1,
@@ -15,7 +15,7 @@
       4.4,
       1.0
     ],
-    "g_h_w_m2": [
+    "gHWM2": [
       -30.0,
       50.0,
       95.0,

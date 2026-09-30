@@ -1,9 +1,9 @@
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
-import Ajv from "ajv";
 import fg from "fast-glob";
 import { applyPatch } from "fast-json-patch";
+import { addSemioMutationLeafSchemasV1, semioSchemaAjvV1 } from "../../../../../../../../../../../../🧰️framework/🛍️products/💻️os/🧪️tests/🧬️schema-oracle/🟦️.ts";
 import * as artifact from "../../🟦️.ts";
 import * as snapshot from "../../📸️snapshot/🟦️.ts";
 import * as diff from "../../🔺️diff/🟦️.ts";
@@ -44,8 +44,7 @@ function mutationChildIdentity(value: any): boolean {
 
 /** 🧪️ Kit catalog records, child identities and shared links agree with independent validators. */
 export function testSemioKitDocumentContract(): void {
-  const ajv = new Ajv({ strict: true, allErrors: true });
-  for (const key of ["x-semio-state", "x-semio-child", "x-semio-link"]) ajv.addKeyword(key);
+  const ajv = semioSchemaAjvV1({ allErrors: true });
   for (const path of [
     "../../../../../../../../../../../..//🧰️framework/🔨️modules/🚪️io/🧬️schema/🔣️.json",
     "../../../../../../../../../../../..//🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/📦️blob/🧬️schema/🔣️.json",
@@ -83,8 +82,7 @@ export function testSemioKitDocumentContract(): void {
     assert.deepEqual(diff.applySemioKitDiff(parseArtifact(entry.before), parseDiff(entry.diff)), expected, "Kit parent edit");
   }
 
-  const mutationRoot = fileURLToPath(new URL("../../🧬️mutations/", import.meta.url));
-  for (const file of fg.sync("*/🧬️schema/🔣️.json", { cwd: mutationRoot, absolute: true })) ajv.addSchema(JSON.parse(readFileSync(file, "utf8")));
+  addSemioMutationLeafSchemasV1(ajv, new URL("../../🧬️mutations/", import.meta.url));
   const mutationSchema = ajv.compile(read("../../🧬️mutations/🔣️.json"));
   const parseMutation = mutationContract.parseSemioKitMutation;
   let snapshots = 0, diffs = 0, mutations = 0;
@@ -127,8 +125,8 @@ export function testSemioKitDocumentContract(): void {
   }
   assert.equal(snapshots, 30, "every committed Kit snapshot");
   assert.equal(diffs, 15, "every committed Kit diff");
-  assert.equal(mutations, 15, "every committed Kit mutation");
-  assert.equal(mutationVariants.size, 15, "every typed mutation variant");
+  assert.equal(mutations, 16, "every committed Kit mutation, the set-snapshot wire witness included");
+  assert.equal(mutationVariants.size, 16, "every typed mutation variant");
   assert(!mutationSchema({ Unknown: {} }), "unknown mutation variant schema oracle");
   assert.throws(() => parseMutation({ Unknown: {} }), "unknown mutation variant parser");
 }

@@ -1,8 +1,15 @@
-/** 🦠️ move-primitive: cohesive atomic mesh mutation. */
-import type { GltfJson, GltfSnapshot, GltfPrimitive, GltfMorphTarget } from '../../📸️snapshot/🟦️.ts';
-import { run, reject, positionIn, itemIndex, permutation, moveItem, type GltfLeafResult, type GltfMutationRejection } from './🟦️';
-export const GltfMovePrimitiveDescriptor = { id: 's.stdio.gltf.mutation.move-primitive.v1', version: 1, kind: 'move', touchedPaths: ["document/meshes/*/primitives"], referencePolicy: 'reorders one mesh-local primitive without altering typed references' } as const;
-export interface GltfMovePrimitivePayload { mesh: number; primitive: number; position: number }
-export type GltfMovePrimitiveResult = GltfLeafResult;
-export const validateGltfMovePrimitive = (payload: GltfMovePrimitivePayload, base: GltfSnapshot): GltfMutationRejection | undefined => { const mesh = itemIndex(payload.mesh, base.document.meshes.length, 'document/meshes'); if (mesh) return mesh; const primitive = itemIndex(payload.primitive, base.document.meshes[payload.mesh]!.primitives.length, `document/meshes/${payload.mesh}/primitives`); if (primitive) return primitive; const position = itemIndex(payload.position, base.document.meshes[payload.mesh]!.primitives.length, `document/meshes/${payload.mesh}/primitives`); if (position) return position; if (payload.primitive === payload.position) return reject('gltf.mutation.no-observable-change', 'document/meshes/primitives', 'destination equals source'); return undefined; };
-export const applyGltfMovePrimitive = (base: GltfSnapshot, payload: GltfMovePrimitivePayload): GltfMovePrimitiveResult => run(base, payload, validateGltfMovePrimitive, (next, payload) => { moveItem(next.document.meshes[payload.mesh]!.primitives, payload.primitive, payload.position); }, GltfMovePrimitiveDescriptor.touchedPaths);
+/** 🚚️ `move-primitive` wire twin: the flat `Apply` payload `GltfMovePrimitivePayload` and the phase wire `MovePrimitiveMutation`, exactly as `./🦀️.rs` writes them.
+ * @see ./🧬️schema/🔣️.json */
+import { gltfWireIndex, gltfWireObject, gltfWireRequired } from "../../../📸️snapshot/🟦️.ts";
+import { type GltfDiff, type GltfPhase, gltfWirePhase, parseGltfDiff } from "../../../🔺️diff/🟦️.ts";
+
+export interface GltfMovePrimitivePayload {
+  mesh: number;
+  primitive: number;
+  position: number;
+}
+
+export type MovePrimitiveMutation = GltfPhase<GltfMovePrimitivePayload, GltfDiff>;
+
+export const parseGltfMovePrimitivePayload = gltfWireObject<GltfMovePrimitivePayload>({ mesh: gltfWireRequired(gltfWireIndex), primitive: gltfWireRequired(gltfWireIndex), position: gltfWireRequired(gltfWireIndex) });
+export const parseMovePrimitiveMutation = gltfWirePhase(parseGltfMovePrimitivePayload, parseGltfDiff);

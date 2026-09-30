@@ -10,39 +10,39 @@
   ],
   "properties": {
     "id": {
-      "type": "string"
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Product",
+          "de": "Produkt"
+        },
+        "description": {
+          "en": "The catalogue product (article number) this mutation addresses.",
+          "de": "Das Katalogprodukt (Artikelnummer), das diese Mutation adressiert."
+        },
+        "ref": {
+          "kind": "product"
+        },
+        "group": "target",
+        "order": 10
+      }
     },
     "newConfiguration": {
-      "title": "Configuration",
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "functionRefs",
-        "id",
-        "parameters"
-      ],
-      "properties": {
-        "id": {
-          "type": "string"
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/vdi3805/snapshot.json#/$defs/Configuration",
+      "x-semio-ui": {
+        "role": "value",
+        "label": {
+          "en": "Configuration",
+          "de": "Konfiguration"
         },
-        "geometryRef": {
-          "type": "string"
+        "description": {
+          "en": "Geometry reference, characteristic curve references and sheet attributes of the product.",
+          "de": "Geometriereferenz, Kennlinienreferenzen und Blattattribute des Produkts."
         },
-        "functionRefs": {
-          "type": "array",
-          "items": {
-            "type": "string"
-          }
-        },
-        "attributes": {
-          "kind": "valveHeating",
-          "dn": 50,
-          "kvsM3S": 0.00125,
-          "pressureClass": "PN16",
-          "connectionType": "flange",
-          "authorityMin": 0.3,
-          "authorityMax": 0.7
-        }
+        "group": "product",
+        "order": 20
       }
     }
   }

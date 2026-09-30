@@ -5,15 +5,53 @@
   "type": "object",
   "additionalProperties": false,
   "required": [
+    "mutation",
     "id",
     "newHeatingCapacityW"
   ],
   "properties": {
+    "mutation": {
+      "const": "changeZoneEquipmentHeatingCapacity"
+    },
     "id": {
-      "type": "integer"
+      "type": "integer",
+      "minimum": 0,
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Zone equipment",
+          "de": "Zonengerät"
+        },
+        "description": {
+          "en": "The zone equipment this mutation changes, by id.",
+          "de": "Zonengerät, das diese Mutation ändert, per ID."
+        },
+        "ref": {
+          "kind": "zoneEquipment"
+        },
+        "group": "target",
+        "order": 10
+      }
     },
     "newHeatingCapacityW": {
-      "type": "number"
+      "type": "number",
+      "minimum": 0,
+      "x-semio-ui": {
+        "widget": "stepper",
+        "role": "value",
+        "label": {
+          "en": "Heating capacity",
+          "de": "Heizleistung"
+        },
+        "unit": "W",
+        "displayUnit": "kW",
+        "displayFactor": 0.001,
+        "step": 100,
+        "precision": 2,
+        "group": "capacity",
+        "order": 20
+      }
     }
   }
 }

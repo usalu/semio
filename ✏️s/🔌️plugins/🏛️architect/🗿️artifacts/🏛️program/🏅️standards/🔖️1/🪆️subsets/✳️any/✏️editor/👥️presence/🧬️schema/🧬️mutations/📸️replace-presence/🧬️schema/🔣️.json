@@ -13,33 +13,142 @@
       "additionalProperties": false,
       "properties": {
         "activeRegister": {
-          "type": "string"
+          "type": "string",
+          "x-semio-ui": {
+            "widget": "text",
+            "role": "value",
+            "label": {
+              "en": "Active Register",
+              "de": "Aktives Register"
+            },
+            "description": {
+              "en": "Register shown in the register window, e.g. elements.",
+              "de": "Im Registerfenster angezeigtes Register, z. B. elements."
+            },
+            "group": "view",
+            "order": 10
+          }
         },
         "adjacencyKindFilter": {
-          "type": "string",
-          "enum": [
-            "required",
-            "preferred",
-            "optional",
-            "prohibited"
-          ]
+          "oneOf": [
+            {
+              "type": "string",
+              "enum": [
+                "required",
+                "preferred",
+                "optional",
+                "prohibited"
+              ]
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "x-semio-ui": {
+            "widget": "segmented",
+            "role": "value",
+            "label": {
+              "en": "Adjacency Filter",
+              "de": "Adjazenzfilter"
+            },
+            "options": {
+              "required": {
+                "en": "Required",
+                "de": "Erforderlich"
+              },
+              "preferred": {
+                "en": "Preferred",
+                "de": "Bevorzugt"
+              },
+              "optional": {
+                "en": "Optional",
+                "de": "Optional"
+              },
+              "prohibited": {
+                "en": "Prohibited",
+                "de": "Verboten"
+              }
+            },
+            "group": "view",
+            "order": 20
+          }
         },
         "graphCameraX": {
-          "type": "number"
+          "type": "number",
+          "x-semio-ui": {
+            "widget": "stepper",
+            "role": "value",
+            "label": {
+              "en": "Graph Camera X",
+              "de": "Graphkamera X"
+            },
+            "step": 1,
+            "precision": 1,
+            "group": "camera",
+            "order": 30
+          }
         },
         "graphCameraY": {
-          "type": "number"
+          "type": "number",
+          "x-semio-ui": {
+            "widget": "stepper",
+            "role": "value",
+            "label": {
+              "en": "Graph Camera Y",
+              "de": "Graphkamera Y"
+            },
+            "step": 1,
+            "precision": 1,
+            "group": "camera",
+            "order": 40
+          }
         },
         "graphCameraZoom": {
-          "type": "number"
+          "type": "number",
+          "x-semio-ui": {
+            "widget": "slider",
+            "role": "value",
+            "label": {
+              "en": "Graph Zoom",
+              "de": "Graph-Zoom"
+            },
+            "step": 0.01,
+            "precision": 2,
+            "softMin": 0.1,
+            "softMax": 10,
+            "scale": "log",
+            "snaps": [
+              0.25,
+              0.5,
+              1,
+              2,
+              4
+            ],
+            "group": "camera",
+            "order": 50
+          }
         }
       },
       "required": [
         "activeRegister",
+        "adjacencyKindFilter",
         "graphCameraX",
         "graphCameraY",
         "graphCameraZoom"
-      ]
+      ],
+      "x-semio-ui": {
+        "role": "value",
+        "label": {
+          "en": "Presence",
+          "de": "Präsenz"
+        },
+        "description": {
+          "en": "The complete ephemeral view state of one architect user.",
+          "de": "Vollständiger flüchtiger Ansichtszustand eines Architect-Nutzers."
+        },
+        "group": "record",
+        "order": 10
+      }
     }
   }
 }

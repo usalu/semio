@@ -18,7 +18,7 @@ fn round_trip(document: &DagSnapshot, operation: &DagMutation) -> DagSnapshot {
 #[semio_framework_async_macros::async_test]
 async fn dag_document_vcs_replays_node_operations() {
     let mut store = create_dag_store("dag", empty_dag_document()).await.expect("store");
-    store.dispatch(ArtifactCommand::Apply { mutations: vec![DagMutation::CreateNode(CreateNode { node: sample_node("n1"), index: 0 })], description: None }).await.expect("apply");
+    store.dispatch(ArtifactCommand::Apply { mutations: vec![DagMutation::CreateNode(CreateNode { node: sample_node("n1"), index: 0 })], description: None, transaction: None }).await.expect("apply");
     assert_eq!(store.snapshot().expect("projection").nodes.len(), 1);
     close_dag_test_store(store);
 }
@@ -322,7 +322,7 @@ fn op_text_round_trips_disconnect_nodes() {
 #[semio_framework_async_macros::async_test]
 async fn document_text_round_trips_a_store_with_an_applied_operation() {
     let mut store = create_dag_store("dag", kitchen_sink_snapshot()).await.expect("store");
-    store.dispatch(ArtifactCommand::Apply { mutations: vec![DagMutation::CreateNode(CreateNode { node: sample_node("extra"), index: 0 })], description: None }).await.expect("apply");
+    store.dispatch(ArtifactCommand::Apply { mutations: vec![DagMutation::CreateNode(CreateNode { node: sample_node("extra"), index: 0 })], description: None, transaction: None }).await.expect("apply");
     crate::os_store::test_support::assert_document_text_round_trip(&store).await;
     crate::os_store::test_support::assert_document_pack_round_trip(&store).await;
     close_dag_test_store(store);
@@ -332,7 +332,7 @@ async fn document_text_round_trips_a_store_with_an_applied_operation() {
 #[semio_framework_async_macros::async_test]
 async fn command_envelope_round_trip_holds_for_an_applied_operation() {
     let mut store = create_dag_store("dag", kitchen_sink_snapshot()).await.expect("store");
-    store.dispatch(ArtifactCommand::Apply { mutations: vec![DagMutation::CreateNode(CreateNode { node: sample_node("extra"), index: 0 })], description: None }).await.expect("apply");
+    store.dispatch(ArtifactCommand::Apply { mutations: vec![DagMutation::CreateNode(CreateNode { node: sample_node("extra"), index: 0 })], description: None, transaction: None }).await.expect("apply");
     let envelope = store.envelope();
     let edit: &Edit<DagMutation> = envelope.vcs.edits.last().expect("dispatch must have recorded an edit");
     crate::os_store::test_support::assert_command_envelope_round_trip::<DagSnapshot, DagMutation>(edit, &ArtifactId(envelope.id.clone()), &SchemaId(envelope.schema.clone())).await;

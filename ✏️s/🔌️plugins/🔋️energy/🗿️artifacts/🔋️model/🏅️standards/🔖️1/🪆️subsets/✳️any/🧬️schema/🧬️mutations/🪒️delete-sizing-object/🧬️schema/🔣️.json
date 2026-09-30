@@ -5,11 +5,33 @@
   "type": "object",
   "additionalProperties": false,
   "required": [
+    "mutation",
     "id"
   ],
   "properties": {
+    "mutation": {
+      "const": "deleteSizingObject"
+    },
     "id": {
-      "type": "integer"
+      "type": "integer",
+      "minimum": 0,
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Sizing object",
+          "de": "Auslegungsobjekt"
+        },
+        "description": {
+          "en": "The sizing object to delete, by id.",
+          "de": "Auslegungsobjekt, das diese Mutation löscht, per ID."
+        },
+        "ref": {
+          "kind": "sizingObject"
+        },
+        "group": "target",
+        "order": 10
+      }
     }
   }
 }

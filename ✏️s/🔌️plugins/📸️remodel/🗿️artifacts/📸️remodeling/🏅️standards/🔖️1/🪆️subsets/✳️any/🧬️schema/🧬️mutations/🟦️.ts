@@ -589,7 +589,7 @@ export function remodelingMutationOutcome(base: RemodelingSnapshot, mutation: Re
       const payloadStream = mutation.stream;
       if (base.streams.some((stream) => stream.id === payloadStream.id)) return refuse("fatal", "mutation.duplicate-id", `A stream with id "${payloadStream.id}" already exists.`, [payloadStream.id]);
       if (payloadStream.cameraId !== null && !base.calibration.cameras.some((camera) => camera.id === payloadStream.cameraId))
-        return refuse("fatal", "mutation.invariant", `Stream "${payloadStream.id}" references unknown camera "${payloadStream.cameraId}".`, [payloadStream.id]);
+        return refuse("error", "mutation.target-missing", `Stream "${payloadStream.id}" references unknown camera "${payloadStream.cameraId}".`, [payloadStream.cameraId]);
       const streams = clone(base.streams);
       return ok({ streams: streamList(inserted(streams, orderedIndex(streams, (stream) => stream.id < payloadStream.id), clone(payloadStream))) });
     }
@@ -611,7 +611,7 @@ export function remodelingMutationOutcome(base: RemodelingSnapshot, mutation: Re
     case "addStreamFrame": {
       const stream = base.streams.find((candidate) => candidate.id === mutation.id);
       if (stream === undefined) return refuse("error", "mutation.target-missing", `Stream "${mutation.id}" does not exist.`, [mutation.id]);
-      if (mutation.kind !== stream.kind) return refuse("fatal", "mutation.invariant", `Stream "${mutation.id}" is not of the media kind this frame declares.`, [mutation.id]);
+      if (mutation.kind !== stream.kind) return refuse("error", "mutation.target-missing", `Stream "${mutation.id}" is not of the media kind this frame declares.`, [mutation.id]);
       if (stream.frames.some((frame) => same(frame, mutation.frame))) return noted(empty(), "warn", "mutation.no-op", `Stream "${mutation.id}" already has frame ${mutation.frame.index}.`);
       const streams = clone(base.streams).map((candidate) =>
         candidate.id === mutation.id ? { ...candidate, frames: inserted(candidate.frames, orderedIndex(candidate.frames, (frame) => frameBefore(frame, mutation.frame)), clone(mutation.frame)) } : candidate,
@@ -679,7 +679,7 @@ export function remodelingMutationOutcome(base: RemodelingSnapshot, mutation: Re
     case "createRigExtrinsic": {
       const cameraId = mutation.extrinsic.cameraId;
       if (base.calibration.rig.some((extrinsic) => extrinsic.cameraId === cameraId)) return refuse("fatal", "mutation.duplicate-id", `A rig extrinsic for camera "${cameraId}" already exists.`, [cameraId]);
-      if (!base.calibration.cameras.some((camera) => camera.id === cameraId)) return refuse("fatal", "mutation.invariant", `Rig extrinsic references unknown camera "${cameraId}".`, [cameraId]);
+      if (!base.calibration.cameras.some((camera) => camera.id === cameraId)) return refuse("error", "mutation.target-missing", `Rig extrinsic references unknown camera "${cameraId}".`, [cameraId]);
       const rig = clone(base.calibration.rig);
       const calibration: CalibrationState = { ...clone(base.calibration), rig: inserted(rig, orderedIndex(rig, (entry) => entry.cameraId < cameraId), clone(mutation.extrinsic)) };
       return ok({ calibration });
@@ -715,7 +715,7 @@ export function remodelingMutationOutcome(base: RemodelingSnapshot, mutation: Re
       const gcp = base.gcps.find((candidate) => candidate.id === mutation.id);
       if (gcp === undefined) return refuse("error", "mutation.target-missing", `GCP "${mutation.id}" does not exist.`, [mutation.id]);
       if (!base.streams.some((stream) => stream.id === mutation.observation.streamId))
-        return refuse("fatal", "mutation.invariant", `GCP "${mutation.id}" cannot be observed in unknown stream "${mutation.observation.streamId}".`, [mutation.observation.streamId]);
+        return refuse("error", "mutation.target-missing", `GCP "${mutation.id}" cannot be observed in unknown stream "${mutation.observation.streamId}".`, [mutation.observation.streamId]);
       if (gcp.observations.some((observation) => same(observation, mutation.observation))) return noted(empty(), "warn", "mutation.no-op", `GCP "${mutation.id}" already has this observation.`);
       const gcps = clone(base.gcps).map((candidate) =>
         candidate.id === mutation.id

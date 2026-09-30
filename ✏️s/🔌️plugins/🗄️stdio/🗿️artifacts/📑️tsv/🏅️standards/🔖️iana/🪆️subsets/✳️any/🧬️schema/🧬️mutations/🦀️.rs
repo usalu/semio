@@ -67,6 +67,20 @@ pub fn apply_tsv_mutation(snapshot: &mut TsvSnapshot, mutation: &TsvMutation) ->
         Err(error) => protocol::MutationOutcome::error(error.code, error.message, error.target).absorb_messages(outcome.messages().to_vec()),
     }
 }
+
+/// ↩️ The aggregate's own `Mutation::inverse`, reachable for a caller that cannot name the trait.
+pub fn inverse_tsv_mutation(mutation: &TsvMutation, base: &TsvSnapshot) -> Vec<TsvMutation> {
+    <TsvMutation as Mutation<TsvSnapshot>>::inverse(mutation, base)
+}
+
+/// 📥️ Decodes one leaf wire payload (a `🥒️.feature` row's `params`: the leaf's `payload_value()`, no aggregate tag) into
+/// the operation of semantic kind `kind` through the derive-generated `Mutation::from_payload_value`, so a caller that
+/// cannot name the trait reads the committed wire instead of re-declaring it field by field.
+pub fn decode_tsv_mutation_payload_json(kind: &str, payload: &str) -> Result<TsvMutation, String> {
+    use semio_s_artifact_stdio_contract::pack;
+    let value = pack::parse_json(payload).map_err(|error| error.to_string())?;
+    <TsvMutation as Mutation<TsvSnapshot>>::from_payload_value(kind, pack::json_to_dsl_value(&value)).map_err(|error| error.to_string())
+}
 //#endregion 🔖️Apply
 
 //#region 🔖️MutationTrait

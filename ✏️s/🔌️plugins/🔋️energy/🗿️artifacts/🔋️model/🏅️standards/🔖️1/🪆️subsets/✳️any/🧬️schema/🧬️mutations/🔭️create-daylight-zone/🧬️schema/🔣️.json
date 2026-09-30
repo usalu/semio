@@ -5,6 +5,7 @@
   "type": "object",
   "additionalProperties": false,
   "required": [
+    "mutation",
     "id",
     "zoneId",
     "illuminanceTargetLux",
@@ -12,20 +13,113 @@
     "windowTransmittance"
   ],
   "properties": {
+    "mutation": {
+      "const": "createDaylightZone"
+    },
     "id": {
-      "type": "integer"
+      "type": "integer",
+      "minimum": 0,
+      "x-semio-ui": {
+        "widget": "stepper",
+        "role": "value",
+        "label": {
+          "en": "ID",
+          "de": "ID"
+        },
+        "description": {
+          "en": "Id the new daylight zone is created under; later mutations address it by this id.",
+          "de": "ID, unter der das neue Objekt angelegt wird; spätere Mutationen adressieren es darüber."
+        },
+        "step": 1,
+        "precision": 0,
+        "group": "identity",
+        "order": 10
+      }
     },
     "zoneId": {
-      "type": "integer"
+      "type": "integer",
+      "minimum": 0,
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Zone",
+          "de": "Zone"
+        },
+        "description": {
+          "en": "Assigned zone, by id.",
+          "de": "Zugeordnete Zone, per ID."
+        },
+        "ref": {
+          "kind": "zone",
+          "domain": "energyModel",
+          "granularity": "zone"
+        },
+        "group": "assignment",
+        "order": 20
+      }
     },
     "illuminanceTargetLux": {
-      "type": "number"
+      "type": "number",
+      "exclusiveMinimum": 0,
+      "x-semio-ui": {
+        "widget": "stepper",
+        "role": "value",
+        "label": {
+          "en": "Illuminance target",
+          "de": "Soll-Beleuchtungsstärke"
+        },
+        "unit": "lx",
+        "step": 10,
+        "precision": 0,
+        "group": "daylight",
+        "order": 30
+      }
     },
     "glareLimit": {
-      "type": "number"
+      "type": "number",
+      "exclusiveMinimum": 0,
+      "x-semio-ui": {
+        "widget": "slider",
+        "role": "value",
+        "label": {
+          "en": "Glare limit",
+          "de": "Blendungsgrenzwert"
+        },
+        "description": {
+          "en": "Largest acceptable simplified glare index, 0 to 1; higher means more glare.",
+          "de": "Größter zulässiger vereinfachter Blendungsindex, 0 bis 1; höher bedeutet mehr Blendung."
+        },
+        "step": 0.01,
+        "precision": 2,
+        "softMin": 0.01,
+        "softMax": 1,
+        "group": "daylight",
+        "order": 40
+      }
     },
     "windowTransmittance": {
-      "type": "number"
+      "type": "number",
+      "minimum": 0,
+      "maximum": 1,
+      "x-semio-ui": {
+        "widget": "slider",
+        "role": "value",
+        "label": {
+          "en": "Window transmittance",
+          "de": "Fenstertransmissionsgrad"
+        },
+        "description": {
+          "en": "Visible transmittance of the daylight apertures.",
+          "de": "Lichttransmissionsgrad der Tageslichtöffnungen."
+        },
+        "step": 0.01,
+        "precision": 2,
+        "softMin": 0,
+        "softMax": 1,
+        "group": "daylight",
+        "order": 50
+      }
     }
   }
 }

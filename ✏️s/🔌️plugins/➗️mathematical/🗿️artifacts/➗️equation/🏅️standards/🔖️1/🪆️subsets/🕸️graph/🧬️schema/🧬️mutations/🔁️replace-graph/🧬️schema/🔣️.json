@@ -20,7 +20,19 @@
       ],
       "properties": {
         "directed": {
-          "type": "boolean"
+          "type": "boolean",
+          "x-semio-ui": {
+            "widget": "toggle",
+            "role": "value",
+            "label": {
+              "en": "Directed",
+              "de": "Gerichtet"
+            },
+            "description": {
+              "en": "Edges point from source to target.",
+              "de": "Kanten zeigen von der Quelle zum Ziel."
+            }
+          }
         },
         "nodes": {
           "type": "array",
@@ -48,6 +60,13 @@
                 "type": "number"
               }
             }
+          },
+          "x-semio-ui": {
+            "role": "value",
+            "label": {
+              "en": "Nodes",
+              "de": "Knoten"
+            }
           }
         },
         "edges": {
@@ -66,19 +85,94 @@
                 "type": "string"
               },
               "source": {
-                "type": "string"
+                "type": "string",
+                "x-semio-ui": {
+                  "widget": "reference",
+                  "role": "value",
+                  "label": {
+                    "en": "Source Node",
+                    "de": "Quellknoten"
+                  },
+                  "description": {
+                    "en": "The node the connection starts at.",
+                    "de": "Der Knoten, an dem die Verbindung beginnt."
+                  },
+                  "ref": {
+                    "kind": "node"
+                  }
+                }
               },
               "target": {
-                "type": "string"
+                "type": "string",
+                "x-semio-ui": {
+                  "widget": "reference",
+                  "role": "value",
+                  "label": {
+                    "en": "Target Node",
+                    "de": "Zielknoten"
+                  },
+                  "description": {
+                    "en": "The node the connection ends at.",
+                    "de": "Der Knoten, an dem die Verbindung endet."
+                  },
+                  "ref": {
+                    "kind": "node"
+                  }
+                }
               }
+            }
+          },
+          "x-semio-ui": {
+            "role": "value",
+            "label": {
+              "en": "Edges",
+              "de": "Kanten"
             }
           }
         },
         "algorithm": {
-          "type": "string"
+          "type": "string",
+          "x-semio-ui": {
+            "widget": "text",
+            "role": "value",
+            "label": {
+              "en": "Algorithm",
+              "de": "Algorithmus"
+            },
+            "description": {
+              "en": "Graph algorithm to run, e.g. bfs or dfs.",
+              "de": "Auszuführender Graphalgorithmus, z. B. bfs oder dfs."
+            }
+          }
         },
         "algorithmSeed": {
-          "type": "string"
+          "type": [
+            "string",
+            "null"
+          ],
+          "x-semio-ui": {
+            "widget": "text",
+            "role": "value",
+            "label": {
+              "en": "Algorithm Seed",
+              "de": "Algorithmus-Startwert"
+            },
+            "description": {
+              "en": "Input of the algorithm, e.g. the start node id.",
+              "de": "Eingabe des Algorithmus, z. B. die ID des Startknotens."
+            }
+          }
+        }
+      },
+      "x-semio-ui": {
+        "role": "value",
+        "label": {
+          "en": "Graph",
+          "de": "Graph"
+        },
+        "description": {
+          "en": "The complete graph record.",
+          "de": "Der vollständige Graph."
         }
       }
     }

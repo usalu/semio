@@ -39,6 +39,7 @@ async fn envelope(id: &str, deps: &[&str], actor: &str, document: &protocol::Art
         diff: protocol::ArtifactDiff { schema: protocol::SchemaId(document::DB_PATHMAP_SCHEMA.to_string()), payload: document::encode_pathmap_json(&serde_json::Value::Object(payload)).await.unwrap() },
         inverse: protocol::InverseMutation { schema: protocol::SchemaId(document::DB_PATHMAP_SCHEMA.to_string()), payload: document::encode_pathmap_json(&serde_json::Value::Object(serde_json::Map::new())).await.unwrap() },
         timestamp: protocol::HybridLogicalTimestamp::new(0, 0),
+        transaction: None,
     }
 }
 //#endregion 🧸️Fixtures

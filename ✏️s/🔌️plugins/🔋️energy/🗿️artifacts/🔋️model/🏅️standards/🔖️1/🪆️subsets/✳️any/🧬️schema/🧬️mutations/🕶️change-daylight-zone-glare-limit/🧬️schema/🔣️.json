@@ -5,15 +5,56 @@
   "type": "object",
   "additionalProperties": false,
   "required": [
+    "mutation",
     "id",
     "newGlareLimit"
   ],
   "properties": {
+    "mutation": {
+      "const": "changeDaylightZoneGlareLimit"
+    },
     "id": {
-      "type": "integer"
+      "type": "integer",
+      "minimum": 0,
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Daylight zone",
+          "de": "Tageslichtzone"
+        },
+        "description": {
+          "en": "The daylight zone this mutation changes, by id.",
+          "de": "Tageslichtzone, die diese Mutation ändert, per ID."
+        },
+        "ref": {
+          "kind": "daylightZone"
+        },
+        "group": "target",
+        "order": 10
+      }
     },
     "newGlareLimit": {
-      "type": "number"
+      "type": "number",
+      "exclusiveMinimum": 0,
+      "x-semio-ui": {
+        "widget": "slider",
+        "role": "value",
+        "label": {
+          "en": "Glare limit",
+          "de": "Blendungsgrenzwert"
+        },
+        "description": {
+          "en": "Largest acceptable simplified glare index, 0 to 1; higher means more glare.",
+          "de": "Größter zulässiger vereinfachter Blendungsindex, 0 bis 1; höher bedeutet mehr Blendung."
+        },
+        "step": 0.01,
+        "precision": 2,
+        "softMin": 0.01,
+        "softMax": 1,
+        "group": "daylight",
+        "order": 20
+      }
     }
   }
 }

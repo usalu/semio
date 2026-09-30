@@ -5,15 +5,22 @@
   "type": "object",
   "additionalProperties": false,
   "required": [
-    "file_name"
+    "mutation",
+    "fileName"
   ],
   "properties": {
-    "file_name": {
-      "$ref": "#/$defs/StepFileName"
-    },
     "mutation": {
       "const": "setFileName",
       "description": "Aggregate discriminator spliced in by StepMutation; absent when the payload stands alone."
+    },
+    "fileName": {
+      "$ref": "#/$defs/StepFileName",
+      "x-semio-ui": {
+        "label": {
+          "en": "File name (FILE_NAME)",
+          "de": "Dateiname (FILE_NAME)"
+        }
+      }
     }
   },
   "$defs": {
@@ -25,7 +32,18 @@
           "type": "string"
         },
         "timestamp": {
-          "type": "string"
+          "type": "string",
+          "x-semio-ui": {
+            "widget": "text",
+            "label": {
+              "en": "Time stamp",
+              "de": "Zeitstempel"
+            },
+            "description": {
+              "en": "ISO 8601 creation time of the file.",
+              "de": "Erstellungszeitpunkt der Datei nach ISO 8601."
+            }
+          }
         },
         "author": {
           "type": "array",
@@ -37,16 +55,55 @@
           "type": "array",
           "items": {
             "type": "string"
+          },
+          "x-semio-ui": {
+            "label": {
+              "en": "Organization",
+              "de": "Organisation"
+            }
           }
         },
         "preprocessorVersion": {
-          "type": "string"
+          "type": "string",
+          "x-semio-ui": {
+            "widget": "text",
+            "label": {
+              "en": "Preprocessor version",
+              "de": "Präprozessorversion"
+            },
+            "description": {
+              "en": "STEP translator that wrote the file.",
+              "de": "STEP-Übersetzer, der die Datei geschrieben hat."
+            }
+          }
         },
         "originatingSystem": {
-          "type": "string"
+          "type": "string",
+          "x-semio-ui": {
+            "widget": "text",
+            "label": {
+              "en": "Originating system",
+              "de": "Ursprungssystem"
+            },
+            "description": {
+              "en": "CAD system that created the data.",
+              "de": "CAD-System, das die Daten erzeugt hat."
+            }
+          }
         },
         "authorization": {
-          "type": "string"
+          "type": "string",
+          "x-semio-ui": {
+            "widget": "text",
+            "label": {
+              "en": "Authorization",
+              "de": "Freigabe"
+            },
+            "description": {
+              "en": "Person who authorized sending the file.",
+              "de": "Person, die den Versand der Datei freigegeben hat."
+            }
+          }
         }
       }
     }

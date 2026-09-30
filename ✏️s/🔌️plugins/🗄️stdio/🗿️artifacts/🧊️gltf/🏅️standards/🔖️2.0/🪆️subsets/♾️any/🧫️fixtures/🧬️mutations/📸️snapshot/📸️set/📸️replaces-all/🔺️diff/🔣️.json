@@ -1,0 +1,20 @@
+{
+  "asset": {
+    "generator": "semio"
+  },
+  "nodes": {
+    "modified": [
+      {
+        "index": 0,
+        "diff": {
+          "translation": [
+            1,
+            0,
+            0
+          ],
+          "name": "hinge"
+        }
+      }
+    ]
+  }
+}

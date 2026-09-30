@@ -84,7 +84,7 @@ function parseEditDesign(value: unknown, at: string): EditDesign {
 
 /** 🧬️ Parses exactly one externally tagged native Kit mutation variant. */
 export function parseSemioKitMutation(value: unknown, at = "$"): SemioKitMutation {
-  const row = parseSchemaRecord(value, ["CreateObject", "DeleteObject", "CreateModel", "DeleteModel", "CreateProperties", "DeleteProperties", "BindRepresentation", "UnbindRepresentation", "ChangeRepresentationPin", "AddType", "RemoveType", "RenameType", "AddDesign", "RemoveDesign", "EditDesign"], at);
+  const row = parseSchemaRecord(value, ["CreateObject", "DeleteObject", "CreateModel", "DeleteModel", "CreateProperties", "DeleteProperties", "BindRepresentation", "UnbindRepresentation", "ChangeRepresentationPin", "AddType", "RemoveType", "RenameType", "AddDesign", "RemoveDesign", "EditDesign", "SetSnapshot"], at);
   const variants = Object.keys(row);
   if (variants.length !== 1) throw new Error(at + ": exactly one Kit mutation variant required");
   const variant = variants[0]!;

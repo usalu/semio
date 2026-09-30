@@ -5,15 +5,48 @@
   "type": "object",
   "additionalProperties": false,
   "required": [
+    "mutation",
     "id",
     "newVisible"
   ],
   "properties": {
+    "mutation": {
+      "const": "changeBlockVisible"
+    },
     "id": {
-      "type": "string"
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Block",
+          "de": "Block"
+        },
+        "description": {
+          "en": "The block this mutation addresses.",
+          "de": "Der Block, den diese Mutation adressiert."
+        },
+        "ref": {
+          "kind": "block",
+          "domain": "blocks",
+          "granularity": "block"
+        },
+        "group": "target",
+        "order": 10
+      }
     },
     "newVisible": {
-      "type": "boolean"
+      "type": "boolean",
+      "x-semio-ui": {
+        "widget": "toggle",
+        "role": "value",
+        "label": {
+          "en": "Visible",
+          "de": "Sichtbar"
+        },
+        "group": "state",
+        "order": 20
+      }
     }
   }
 }

@@ -4,133 +4,19 @@
   "type": "object",
   "oneOf": [
     {
-      "allOf": [
-        {
-          "$ref": "https://json.schemas.assets.semio-tech.com/os/workflow/artifacts/run/mutation/start-run/schema.json#/$defs/Payload"
-        },
-        {
-          "type": "object",
-          "required": [
-            "operation"
-          ],
-          "properties": {
-            "operation": {
-              "const": "startRun"
-            }
-          }
-        }
-      ],
-      "propertyNames": {
-        "enum": [
-          "inputCollectionRef",
-          "inputSnapshotId",
-          "operation",
-          "outputCollectionRef",
-          "parameterValues",
-          "trigger",
-          "workflowCheckpointId",
-          "workflowRef"
-        ]
-      }
+      "$ref": "https://json.schemas.assets.semio-tech.com/os/workflow/artifacts/run/mutation/start-run/schema.json"
     },
     {
-      "allOf": [
-        {
-          "$ref": "https://json.schemas.assets.semio-tech.com/os/workflow/artifacts/run/mutation/start-run-node/schema.json#/$defs/Payload"
-        },
-        {
-          "type": "object",
-          "required": [
-            "operation"
-          ],
-          "properties": {
-            "operation": {
-              "const": "startRunNode"
-            }
-          }
-        }
-      ],
-      "propertyNames": {
-        "enum": [
-          "nodeId",
-          "operation"
-        ]
-      }
+      "$ref": "https://json.schemas.assets.semio-tech.com/os/workflow/artifacts/run/mutation/start-run-node/schema.json"
     },
     {
-      "allOf": [
-        {
-          "$ref": "https://json.schemas.assets.semio-tech.com/os/workflow/artifacts/run/mutation/finish-run-node/schema.json#/$defs/Payload"
-        },
-        {
-          "type": "object",
-          "required": [
-            "operation"
-          ],
-          "properties": {
-            "operation": {
-              "const": "finishRunNode"
-            }
-          }
-        }
-      ],
-      "propertyNames": {
-        "enum": [
-          "nodeRecord",
-          "operation"
-        ]
-      }
+      "$ref": "https://json.schemas.assets.semio-tech.com/os/workflow/artifacts/run/mutation/finish-run-node/schema.json"
     },
     {
-      "allOf": [
-        {
-          "$ref": "https://json.schemas.assets.semio-tech.com/os/workflow/artifacts/run/mutation/append-run-log/schema.json#/$defs/Payload"
-        },
-        {
-          "type": "object",
-          "required": [
-            "operation"
-          ],
-          "properties": {
-            "operation": {
-              "const": "appendRunLog"
-            }
-          }
-        }
-      ],
-      "propertyNames": {
-        "enum": [
-          "at",
-          "level",
-          "message",
-          "nodeId",
-          "operation"
-        ]
-      }
+      "$ref": "https://json.schemas.assets.semio-tech.com/os/workflow/artifacts/run/mutation/append-run-log/schema.json"
     },
     {
-      "allOf": [
-        {
-          "$ref": "https://json.schemas.assets.semio-tech.com/os/workflow/artifacts/run/mutation/seal-run/schema.json#/$defs/Payload"
-        },
-        {
-          "type": "object",
-          "required": [
-            "operation"
-          ],
-          "properties": {
-            "operation": {
-              "const": "sealRun"
-            }
-          }
-        }
-      ],
-      "propertyNames": {
-        "enum": [
-          "operation",
-          "status"
-        ]
-      }
+      "$ref": "https://json.schemas.assets.semio-tech.com/os/workflow/artifacts/run/mutation/seal-run/schema.json"
     }
   ]
 }

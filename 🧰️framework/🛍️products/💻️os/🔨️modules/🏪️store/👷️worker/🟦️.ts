@@ -52,7 +52,7 @@ import type {
   DocumentSocketGrantReceiptV1,
   SocketGrantReceiptV1,
 } from "../../../🟦️";
-import { ArtifactBootstrapAssembler, DEFAULT_ARTIFACT_BOOTSTRAP_LIMITS, DOCUMENT_BACKBONE_BATCH_LIMITS, DOCUMENT_BACKBONE_RETENTION_LIMITS, HISTORY_TRANSITION_DIFF_SCHEMA, decodeClientFrame, decodePresenceInteraction, decodePresencePeer, decodeServerFrame, decodeDocumentBackboneEnvelopeBatchExact, encodeClientFrame, encodeDocumentBackboneEnvelopeBatchExact, encodePresencePeer, encodeServerFrame, extractServerCommandsDocumentBackboneBatchExact } from "@semio-tech/framework-replication";
+import { ArtifactBootstrapAssembler, DEFAULT_ARTIFACT_BOOTSTRAP_LIMITS, DOCUMENT_BACKBONE_BATCH_LIMITS, DOCUMENT_BACKBONE_RETENTION_LIMITS, HISTORY_TRANSITION_DIFF_SCHEMA, decodeClientFrame, decodePresenceHistoryEdit, decodePresenceInteraction, decodePresencePeer, decodePresenceToolRun, decodeServerFrame, decodeDocumentBackboneEnvelopeBatchExact, encodeClientFrame, encodeDocumentBackboneEnvelopeBatchExact, encodePresencePeer, encodeServerFrame, extractServerCommandsDocumentBackboneBatchExact } from "@semio-tech/framework-replication";
 import {
   DEV_STREAM_ROUTES,
   DirectoryClient,
@@ -95,7 +95,8 @@ import {
   socketGrantProtocolsV1,
 } from "../../../🟦️";
 import type { PackValue } from "../../../🟦️";
-import { parseInferenceJobReconcileRequestV1, parseInferenceJobReconcileResultV1 } from "../../../../../../🌎️hub/💡️inference/🧬️schema/🟦️.ts";
+import { JOB_RECONCILE_REQUEST_SCHEMA_V1, parseJobReconcileRequestV1, parseJobReconcileResultV1 } from "../../../../../🔨️modules/🧵️job/🔎️reconcile/🧬️schema/🟦️.ts";
+import { parseInferenceReconcilePayloadV1 } from "./🔎️reconcile/🟦️.ts";
 import { SPACE_ARTIFACT_CREATION_CATALOG_MAX_BYTES, SPACE_ARTIFACT_CREATION_MAX_BYTES, parseSpaceArtifactCreationCatalogJsonV1, parseSpaceArtifactCreationStatusJsonV1, sealSpaceArtifactCreateV1, type SpaceArtifactCreationCatalogV1 as HubSpaceArtifactCreationCatalogV1, type SpaceArtifactCreationStatusV1 as HubSpaceArtifactCreationStatusV1 } from "../../📇️directory/🧬️schema/🌱️space-artifact-creation-v1/🟦️.ts";
 import { browserActorChildCapacity, reserveBrowserActorChild, type BrowserActorChildValue } from "../../🔌️plugin/🌐️browser-bundle/🧵️child/🟦️.ts";
 import { DOCUMENT_ACTOR_RECOVERY_FRESH_V1, DOCUMENT_ACTOR_RECOVERY_V1, documentActorRecoveryStepV1, type DocumentActorLossCauseV1, type DocumentActorRecoveryMemoryV1 } from "./🚑️actor-recovery/🟦️.ts";
@@ -3719,6 +3720,7 @@ function toWireEnvelope(envelope: MutationEnvelope, timestamp: WireMutationEnvel
     diff: { schema: envelope.diff.schemaId, payload: encodePackPayload(envelope.diff.payload) },
     inverse: { schema: envelope.inverse.inverseDiff.schemaId, payload: encodePackPayload(envelope.inverse.inverseDiff.payload) },
     timestamp,
+    transaction: envelope.transaction ?? null,
   };
 }
 
@@ -3783,6 +3785,7 @@ function exactWireEnvelope(envelope: WireMutationEnvelope): ExactWireMutationEnv
       physical_ms: exactU64(envelope.timestamp.physical_ms, "timestamp.physical_ms"),
       logical: exactU64(envelope.timestamp.logical, "timestamp.logical"),
     },
+    transaction: envelope.transaction,
   };
 }
 
@@ -3807,17 +3810,20 @@ function emitMutationEvent(state: ArtifactState, envelopes: readonly MutationEnv
  * slice are its verified actor's own last `Ephemeral` (the native twin keeps the same frame per
  * program, `ProgramBridge::observe_ephemeral`), never the Shell's local instance's, which never sees
  * the live document: without this a React human's selections never reached a peer (ticket 26/09/23
- * C10, WG8 relay). */
+ * C10, WG8 relay). The same holds for the actor's tool-run and history-edit summaries (presence bits 10 and 13,
+ * ticket 26/09/30 NON-DESTRUCTIVE-HISTORY-EDITING). */
 function stampSession(peer: ArtifactPresencePeer, state: ArtifactState): ArtifactPresencePeer {
   const stamped = { ...peer, color: state.sessionColor ?? undefined, surface: hubBinding(state.config)?.installedTarget?.surface.surfaceId };
   const reservation = state.browserActorReservation;
   if (!reservation) return stamped;
   const ephemeral = reservation.ephemeralSnapshot;
-  const { presencePack: _local, interaction: _localInteraction, ...rest } = stamped;
+  const { presencePack: _local, interaction: _localInteraction, toolRun: _localToolRun, historyEdit: _localHistoryEdit, ...rest } = stamped;
   return {
     ...rest,
     ...(ephemeral !== null && ephemeral.presence.length > 0 ? { presencePack: ephemeral.presence } : {}),
     ...(ephemeral !== null && ephemeral.interaction.length > 0 ? { interaction: decodePresenceInteraction(Uint8Array.from(ephemeral.interaction), [0]) } : {}),
+    ...(ephemeral !== null && ephemeral.toolRun.length > 0 ? { toolRun: decodePresenceToolRun(Uint8Array.from(ephemeral.toolRun)) } : {}),
+    ...(ephemeral !== null && ephemeral.historyEdit.length > 0 ? { historyEdit: decodePresenceHistoryEdit(Uint8Array.from(ephemeral.historyEdit)) } : {}),
   };
 }
 
@@ -4239,6 +4245,7 @@ function hubWireEnvelope(state: ArtifactState, envelope: MutationEnvelope): Wire
     diff: { schema: exact.diff.schema, payload: Array.from(exact.diff.payload) },
     inverse: { schema: exact.inverse.schema, payload: Array.from(exact.inverse.payload) },
     timestamp,
+    transaction: exact.transaction,
   };
 }
 
@@ -6914,10 +6921,10 @@ async function reconcileInferenceJob(operation: InferenceOperationV1): Promise<v
   operation.turns += 1;
   operation.inFlight = true;
   try {
-    const request = parseInferenceJobReconcileRequestV1({ schema: "semio.hub.inference-job-reconcile/v1", version: 1, requestId: operation.request.requestId });
+    const request = parseJobReconcileRequestV1({ schema: JOB_RECONCILE_REQUEST_SCHEMA_V1, version: 1, requestId: operation.request.requestId });
     const response = await inferenceBrokerFetch(operation, "/jobs/reconcile", { method: "POST", body: JSON.stringify(request) });
     if (!response.ok) throw new DirectoryHttpError(response.status, "");
-    const result = parseInferenceJobReconcileResultV1(await readInferenceJson(response));
+    const result = parseJobReconcileResultV1(await readInferenceJson(response), parseInferenceReconcilePayloadV1);
     if (liveInferencePort(operation.operationEpoch) !== operation) return;
     if (result.requestId !== operation.request.requestId) throw new Error("gis map inference: different request");
     const job = result.job;

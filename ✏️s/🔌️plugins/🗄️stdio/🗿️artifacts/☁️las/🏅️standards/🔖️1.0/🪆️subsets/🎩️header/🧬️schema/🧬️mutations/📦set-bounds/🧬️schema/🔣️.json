@@ -5,10 +5,15 @@
   "type": "object",
   "additionalProperties": false,
   "required": [
+    "mutation",
     "max",
     "min"
   ],
   "properties": {
+    "mutation": {
+      "const": "setBounds",
+      "description": "Aggregate discriminator spliced in by LasMutation; absent when the payload stands alone."
+    },
     "max": {
       "type": "array",
       "items": [
@@ -24,7 +29,13 @@
       ],
       "additionalItems": false,
       "minItems": 3,
-      "maxItems": 3
+      "maxItems": 3,
+      "x-semio-ui": {
+        "label": {
+          "en": "Maximum (X, Y, Z)",
+          "de": "Maximum (X, Y, Z)"
+        }
+      }
     },
     "min": {
       "type": "array",
@@ -41,11 +52,13 @@
       ],
       "additionalItems": false,
       "minItems": 3,
-      "maxItems": 3
-    },
-    "mutation": {
-      "const": "setBounds",
-      "description": "Aggregate discriminator spliced in by LasMutation; absent when the payload stands alone."
+      "maxItems": 3,
+      "x-semio-ui": {
+        "label": {
+          "en": "Minimum (X, Y, Z)",
+          "de": "Minimum (X, Y, Z)"
+        }
+      }
     }
   }
 }

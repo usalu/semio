@@ -1,0 +1,36 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "DevContribution",
+  "$defs": {
+    "DevContributionPathV1": {
+      "type": "string",
+      "minLength": 1,
+      "pattern": "^(?![A-Za-z]:)(?!/)(?!.*\\\\)(?!.*(?:^|/)\\.{1,2}(?:/|$))(?!.*//)(?!.*[\\x00-\\x1f])[^/]+(?:/[^/]+)*$",
+      "x-semio-formats": [
+        "🔣️jsonschema"
+      ]
+    }
+  },
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "ownerRoot",
+    "viteConfig",
+    "browserEntry"
+  ],
+  "properties": {
+    "ownerRoot": {
+      "$ref": "#/$defs/DevContributionPathV1"
+    },
+    "viteConfig": {
+      "$ref": "#/$defs/DevContributionPathV1"
+    },
+    "browserEntry": {
+      "$ref": "#/$defs/DevContributionPathV1"
+    },
+    "localHub": {
+      "$ref": "https://json.schemas.assets.semio-tech.com/os/dev/local-hub/provider/schema.json"
+    }
+  },
+  "$id": "https://json.schemas.assets.semio-tech.com/os/dev/contribution/schema.json"
+}

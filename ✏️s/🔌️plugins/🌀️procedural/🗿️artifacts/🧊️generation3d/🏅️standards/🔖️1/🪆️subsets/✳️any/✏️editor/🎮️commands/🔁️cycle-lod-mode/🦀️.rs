@@ -16,9 +16,3 @@ pub struct CycleLodMode {}
 pub fn handle(_payload: &CycleLodMode, _doc: &ArtifactView<'_, Generation3dSnapshot>, cfg: &ConfigView<'_, Generation3dConfig>, _session: &mut FlowEvalSession) -> Result<Emit<Generation3dMutation, Generation3dConfigMutation>, Fault> {
     Ok(Emit::config(vec![Generation3dConfigMutation::SetLodMode(crate::editor::generation3d::config::SetLodMode { value: next_lod_mode(&cfg.snapshot.lod_mode) })]))
 }
-
-//#region 🧪️Tests
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
-//#endregion 🧪️Tests

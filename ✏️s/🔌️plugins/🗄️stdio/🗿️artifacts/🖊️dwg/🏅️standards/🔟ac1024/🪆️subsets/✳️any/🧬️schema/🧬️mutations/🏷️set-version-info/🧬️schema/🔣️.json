@@ -5,27 +5,65 @@
   "type": "object",
   "additionalProperties": false,
   "required": [
+    "mutation",
     "version",
-    "maintenance_version",
+    "maintenanceVersion",
     "codepage"
   ],
   "properties": {
-    "version": {
-      "type": "string"
+    "mutation": {
+      "const": "setVersionInfo",
+      "description": "Aggregate discriminator spliced in by DwgMutation; absent when the payload stands alone."
     },
-    "maintenance_version": {
+    "version": {
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "text",
+        "label": {
+          "en": "DWG version",
+          "de": "DWG-Version"
+        },
+        "description": {
+          "en": "Version string, e.g. AC1024.",
+          "de": "Versionskennung, z. B. AC1024."
+        },
+        "group": "value",
+        "order": 10
+      }
+    },
+    "maintenanceVersion": {
       "type": "integer",
       "minimum": 0,
-      "maximum": 255
+      "maximum": 255,
+      "x-semio-ui": {
+        "widget": "stepper",
+        "label": {
+          "en": "Maintenance version",
+          "de": "Wartungsversion"
+        },
+        "precision": 0,
+        "group": "value",
+        "order": 20
+      }
     },
     "codepage": {
       "type": "integer",
       "minimum": 0,
-      "maximum": 65535
-    },
-    "mutation": {
-      "const": "setVersionInfo",
-      "description": "Aggregate discriminator spliced in by DwgMutation; absent when the payload stands alone."
+      "maximum": 65535,
+      "x-semio-ui": {
+        "widget": "stepper",
+        "label": {
+          "en": "Code page",
+          "de": "Codepage"
+        },
+        "description": {
+          "en": "Windows code page number of the drawing text.",
+          "de": "Windows-Codepage des Zeichnungstexts."
+        },
+        "precision": 0,
+        "group": "value",
+        "order": 30
+      }
     }
   }
 }

@@ -5,12 +5,34 @@
   "type": "object",
   "additionalProperties": false,
   "required": [
+    "mutation",
     "id"
   ],
   "properties": {
+    "mutation": {
+      "const": "deleteTemplateRecord"
+    },
     "id": {
-      "type": "integer",
-      "minimum": 0
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Template",
+          "de": "Vorlage"
+        },
+        "description": {
+          "en": "The template to delete.",
+          "de": "Zu löschender Eintrag vom Typ „Vorlage“."
+        },
+        "ref": {
+          "kind": "templateRecord",
+          "domain": "program",
+          "granularity": "entity"
+        },
+        "group": "target",
+        "order": 10
+      }
     }
   }
 }

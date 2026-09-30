@@ -10,10 +10,40 @@
   ],
   "properties": {
     "index": {
-      "type": "integer"
+      "type": "integer",
+      "minimum": 0,
+      "x-semio-ui": {
+        "widget": "stepper",
+        "role": "value",
+        "label": {
+          "en": "Position",
+          "de": "Position"
+        },
+        "description": {
+          "en": "Zero-based list position at which the record is inserted.",
+          "de": "Nullbasierte Listenposition, an der der Datensatz eingefügt wird."
+        },
+        "step": 1,
+        "precision": 0,
+        "group": "target",
+        "order": 10
+      }
     },
     "item": {
-      "type": "object"
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1991/snapshot.json#/$defs/AccidentalCase",
+      "x-semio-ui": {
+        "role": "value",
+        "label": {
+          "en": "Accidental design situation",
+          "de": "Außergewöhnliche Bemessungssituation"
+        },
+        "description": {
+          "en": "Impact or explosion case (EN 1991-1-7) to insert.",
+          "de": "Einzufügender Anprall- oder Explosionsfall (EN 1991-1-7)."
+        },
+        "group": "record",
+        "order": 20
+      }
     }
   }
 }

@@ -5,15 +5,53 @@
   "type": "object",
   "additionalProperties": false,
   "required": [
+    "mutation",
     "blockId",
     "stepId"
   ],
   "properties": {
+    "mutation": {
+      "const": "removeBlock"
+    },
     "stepId": {
-      "type": "string"
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Step",
+          "de": "Schritt"
+        },
+        "description": {
+          "en": "The step that holds the block.",
+          "de": "Der Schritt, der den Block enthält."
+        },
+        "ref": {
+          "kind": "step",
+          "domain": "blocks",
+          "granularity": "step"
+        }
+      }
     },
     "blockId": {
-      "type": "string"
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Block",
+          "de": "Block"
+        },
+        "description": {
+          "en": "The block to remove.",
+          "de": "Der zu entfernende Block."
+        },
+        "ref": {
+          "kind": "block",
+          "domain": "blocks",
+          "granularity": "block"
+        }
+      }
     }
   }
 }

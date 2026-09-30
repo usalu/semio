@@ -5,15 +5,37 @@
   "type": "object",
   "additionalProperties": false,
   "required": [
+    "mutation",
     "id"
   ],
   "properties": {
+    "mutation": {
+      "const": "changeStepOrigin"
+    },
     "id": {
-      "type": "string"
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Step",
+          "de": "Schritt"
+        },
+        "description": {
+          "en": "The timeline step to change.",
+          "de": "Der zu ändernde Zeitleistenschritt."
+        },
+        "ref": {
+          "kind": "step"
+        }
+      }
     },
     "newOrigin": {
       "title": "StepOrigin",
-      "type": "object",
+      "type": [
+        "object",
+        "null"
+      ],
       "additionalProperties": false,
       "required": [
         "capabilityId",
@@ -21,10 +43,51 @@
       ],
       "properties": {
         "machineId": {
-          "type": "string"
+          "type": "string",
+          "x-semio-ui": {
+            "widget": "reference",
+            "role": "value",
+            "label": {
+              "en": "Machine",
+              "de": "Maschine"
+            },
+            "description": {
+              "en": "Workshop machine that produced the step; informational only.",
+              "de": "Werkstattmaschine, die den Schritt erzeugt hat; nur informativ."
+            },
+            "ref": {
+              "kind": "machine"
+            }
+          }
         },
         "capabilityId": {
-          "type": "string"
+          "type": "string",
+          "x-semio-ui": {
+            "widget": "reference",
+            "role": "value",
+            "label": {
+              "en": "Capability",
+              "de": "Fähigkeit"
+            },
+            "description": {
+              "en": "Machine capability that produced the step; informational only.",
+              "de": "Maschinenfähigkeit, die den Schritt erzeugt hat; nur informativ."
+            },
+            "ref": {
+              "kind": "capability"
+            }
+          }
+        }
+      },
+      "x-semio-ui": {
+        "role": "value",
+        "label": {
+          "en": "New Origin",
+          "de": "Neue Herkunft"
+        },
+        "description": {
+          "en": "Workshop machine and capability that produced the step; empty clears it.",
+          "de": "Werkstattmaschine und Fähigkeit, die den Schritt erzeugt haben; leer entfernt sie."
         }
       }
     }

@@ -34,20 +34,29 @@
             "forceLayout",
             "import-media",
             "importFixture",
-            "patchInspectorNodes",
             "proximityConnect",
             "redrawHandles",
             "relocateTargetRegion",
             "reorganize",
-            "rotateSelection",
-            "scaleSelection",
             "setActiveExample",
             "setSelectionFlag",
             "setSelectionHidden",
             "setSelectionLocked",
             "setTargetRegionFlag",
             "setTargetRegionHidden",
-            "setTargetRegionLocked",
+            "setTargetRegionLocked"
+          ]
+        },
+        {
+          "status": "migrated",
+          "lanes": [
+            "artifact",
+            "window-transient"
+          ],
+          "routes": [
+            "patchInspectorNodes",
+            "rotateSelection",
+            "scaleSelection",
             "translateSelection"
           ]
         },

@@ -35,7 +35,7 @@ pub fn apply(payload: &GltfMoveBufferPayload, base: &GltfSnapshot) -> Result<Glt
 
 //#region 🧬️DirectMutation
 #[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::MutationLeaf)]
-#[mutation_leaf(contract = ::protocol)]
+#[mutation_leaf(contract = ::protocol, payload = Apply)]
 #[value(tag = "phase", content = "value", rename_all = "camelCase")]
 pub enum MoveBufferMutation {
     Apply(GltfMoveBufferPayload),
@@ -79,6 +79,6 @@ impl protocol::MutationKind<GltfSnapshot, super::GltfMutation> for MoveBufferMut
 
 //#region 🧪️Tests
 #[cfg(test)]
-#[path = "🧪️tests/🔬️direct-leaf/🦀️.rs"]
-mod direct_leaf_tests;
+#[path = "🧪️tests/🚚️swaps-the-two-a9f8e2/🦀️.rs"]
+mod case_swaps_the_two_a9f8e2;
 //#endregion 🧪️Tests

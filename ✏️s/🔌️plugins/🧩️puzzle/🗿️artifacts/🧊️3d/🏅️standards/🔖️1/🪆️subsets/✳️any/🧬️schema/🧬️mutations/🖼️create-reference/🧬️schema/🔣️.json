@@ -5,9 +5,13 @@
   "type": "object",
   "additionalProperties": false,
   "required": [
+    "mutation",
     "reference"
   ],
   "properties": {
+    "mutation": {
+      "const": "createReference"
+    },
     "reference": {
       "title": "Puzzle3dReference",
       "type": "object",
@@ -22,7 +26,21 @@
       ],
       "properties": {
         "id": {
-          "type": "string"
+          "type": "string",
+          "x-semio-ui": {
+            "widget": "text",
+            "role": "value",
+            "label": {
+              "en": "ID",
+              "de": "ID"
+            },
+            "description": {
+              "en": "Unique reference id in this puzzle.",
+              "de": "Eindeutige Referenz-ID in diesem Puzzle."
+            },
+            "group": "identity",
+            "order": 10
+          }
         },
         "source": {
           "title": "Puzzle3dReferenceSource",
@@ -33,11 +51,48 @@
           ],
           "properties": {
             "url": {
-              "type": "string"
+              "type": "string",
+              "x-semio-ui": {
+                "widget": "text",
+                "role": "value",
+                "label": {
+                  "en": "Source URL",
+                  "de": "Quell-URL"
+                },
+                "description": {
+                  "en": "Address of the file, e.g. an https or data URL.",
+                  "de": "Adresse der Datei, z. B. eine https- oder data-URL."
+                },
+                "group": "source",
+                "order": 10
+              }
             },
             "mediaKind": {
-              "type": "string"
+              "type": "string",
+              "x-semio-ui": {
+                "widget": "text",
+                "role": "value",
+                "label": {
+                  "en": "Media kind",
+                  "de": "Medienart"
+                },
+                "description": {
+                  "en": "For example image or drawing.",
+                  "de": "Zum Beispiel image (Bild) oder drawing (Zeichnung)."
+                },
+                "group": "source",
+                "order": 20
+              }
             }
+          },
+          "x-semio-ui": {
+            "role": "value",
+            "label": {
+              "en": "Source",
+              "de": "Quelle"
+            },
+            "group": "source",
+            "order": 20
           }
         },
         "origin": {
@@ -46,22 +101,107 @@
             "type": "number"
           },
           "minItems": 3,
-          "maxItems": 3
+          "maxItems": 3,
+          "x-semio-ui": {
+            "widget": "vector",
+            "role": "value",
+            "label": {
+              "en": "Origin",
+              "de": "Ursprung"
+            },
+            "unit": "m",
+            "step": 0.1,
+            "group": "pose",
+            "order": 30,
+            "snapSource": {
+              "config": "gridSpacing"
+            }
+          }
         },
         "widthWorld": {
-          "type": "number"
+          "type": "number",
+          "exclusiveMinimum": 0,
+          "x-semio-ui": {
+            "widget": "stepper",
+            "role": "value",
+            "label": {
+              "en": "Width",
+              "de": "Breite"
+            },
+            "description": {
+              "en": "Width of the reference plane in the world.",
+              "de": "Breite der Referenzebene in der Welt."
+            },
+            "unit": "m",
+            "step": 0.1,
+            "precision": 3,
+            "group": "geometry",
+            "order": 40
+          }
         },
         "locked": {
-          "type": "boolean"
+          "type": "boolean",
+          "x-semio-ui": {
+            "widget": "toggle",
+            "role": "value",
+            "label": {
+              "en": "Locked",
+              "de": "Gesperrt"
+            },
+            "group": "state",
+            "order": 50
+          }
         },
         "hidden": {
-          "type": "boolean"
+          "type": "boolean",
+          "x-semio-ui": {
+            "widget": "toggle",
+            "role": "value",
+            "label": {
+              "en": "Hidden",
+              "de": "Ausgeblendet"
+            },
+            "group": "state",
+            "order": 60
+          }
         }
+      },
+      "x-semio-ui": {
+        "role": "value",
+        "label": {
+          "en": "Reference",
+          "de": "Referenz"
+        },
+        "description": {
+          "en": "The complete reference record to add.",
+          "de": "Die vollständige hinzuzufügende Referenz."
+        },
+        "group": "record",
+        "order": 10
       }
     },
     "index": {
-      "type": "integer",
-      "minimum": 0
+      "type": [
+        "integer",
+        "null"
+      ],
+      "minimum": 0,
+      "x-semio-ui": {
+        "widget": "stepper",
+        "role": "value",
+        "label": {
+          "en": "Index",
+          "de": "Index"
+        },
+        "description": {
+          "en": "Position in the list; the end when omitted.",
+          "de": "Position in der Liste; ohne Angabe am Ende."
+        },
+        "step": 1,
+        "precision": 0,
+        "group": "order",
+        "order": 20
+      }
     }
   }
 }

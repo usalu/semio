@@ -2,33 +2,52 @@
   "$schema": "http://json-schema.org/draft-07/schema#",
   "$id": "https://json.schemas.assets.semio-tech.com/os/infinite/artifacts/dag/vcs/mutation/change-node-icon/schema.json",
   "title": "ChangeNodeIcon",
-  "type": "object",
-  "$defs": {
-    "Payload": {
-      "type": "object",
-      "required": [
-        "id",
-        "newIcon"
-      ],
-      "properties": {
-        "id": {
-          "type": "string"
-        },
-        "newIcon": {
-          "type": "string"
-        }
-      }
-    }
-  },
-  "allOf": [
-    {
-      "$ref": "#/$defs/Payload"
-    }
-  ],
   "propertyNames": {
     "enum": [
+      "operation",
       "id",
       "newIcon"
     ]
+  },
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "operation",
+    "id",
+    "newIcon"
+  ],
+  "properties": {
+    "operation": {
+      "const": "changeNodeIcon"
+    },
+    "id": {
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Node",
+          "de": "Knoten"
+        },
+        "ref": {
+          "kind": "node"
+        },
+        "group": "target",
+        "order": 10
+      }
+    },
+    "newIcon": {
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "text",
+        "role": "value",
+        "label": {
+          "en": "Icon",
+          "de": "Symbol"
+        },
+        "group": "value",
+        "order": 20
+      }
+    }
   }
 }

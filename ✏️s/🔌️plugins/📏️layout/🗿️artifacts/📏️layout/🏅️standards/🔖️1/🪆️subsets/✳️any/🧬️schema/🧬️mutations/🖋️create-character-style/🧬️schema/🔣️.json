@@ -1,1 +1,49 @@
-{"$schema":"http://json-schema.org/draft-07/schema#","title":"CreateCharacterStyle","type":"object"}
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/layout/layout/mutation/create-character-style/schema.json",
+  "title": "CreateCharacterStyle",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "id"
+  ],
+  "properties": {
+    "id": {
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "text",
+        "role": "value",
+        "label": {
+          "en": "Character style ID",
+          "de": "Zeichenformat-ID"
+        },
+        "description": {
+          "en": "Id of the new character style.",
+          "de": "ID des neuen Zeichenformats."
+        },
+        "group": "identity",
+        "order": 10
+      }
+    },
+    "name": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "x-semio-ui": {
+        "widget": "text",
+        "role": "value",
+        "label": {
+          "en": "Style name",
+          "de": "Formatname"
+        },
+        "description": {
+          "en": "Empty leaves the style unnamed.",
+          "de": "Leer lässt das Format unbenannt."
+        },
+        "group": "identity",
+        "order": 20
+      }
+    }
+  }
+}

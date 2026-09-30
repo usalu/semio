@@ -5,9 +5,13 @@
   "type": "object",
   "additionalProperties": false,
   "required": [
+    "mutation",
     "node"
   ],
   "properties": {
+    "mutation": {
+      "const": "createNode"
+    },
     "node": {
       "title": "CreateNodeNode",
       "type": "object",
@@ -72,14 +76,54 @@
                 "enum": [
                   "in",
                   "out"
-                ]
+                ],
+                "x-semio-ui": {
+                  "widget": "segmented",
+                  "role": "value",
+                  "label": {
+                    "en": "Direction",
+                    "de": "Richtung"
+                  },
+                  "options": {
+                    "in": {
+                      "en": "Input",
+                      "de": "Eingang"
+                    },
+                    "out": {
+                      "en": "Output",
+                      "de": "Ausgang"
+                    }
+                  }
+                }
               },
               "properties": {
                 "type": "object",
                 "additionalProperties": true
               }
             }
+          },
+          "x-semio-ui": {
+            "role": "value",
+            "label": {
+              "en": "Ports",
+              "de": "Ports"
+            },
+            "description": {
+              "en": "Input and output ports of the node.",
+              "de": "Ein- und Ausgangsports des Knotens."
+            }
           }
+        }
+      },
+      "x-semio-ui": {
+        "role": "value",
+        "label": {
+          "en": "Node",
+          "de": "Knoten"
+        },
+        "description": {
+          "en": "The complete node record to add.",
+          "de": "Der vollständige hinzuzufügende Knoten."
         }
       }
     }

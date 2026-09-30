@@ -34,7 +34,18 @@
       ],
       "properties": {
         "typeName": {
-          "type": "string"
+          "type": "string",
+          "x-semio-ui": {
+            "widget": "text",
+            "label": {
+              "en": "Entity type",
+              "de": "Entitätstyp"
+            },
+            "description": {
+              "en": "EXPRESS entity name, e.g. ADVANCED_BREP_SHAPE_REPRESENTATION.",
+              "de": "EXPRESS-Entitätsname, z. B. ADVANCED_BREP_SHAPE_REPRESENTATION."
+            }
+          }
         },
         "name": {
           "type": "string"
@@ -44,6 +55,12 @@
           "items": {
             "type": "integer",
             "minimum": 0
+          },
+          "x-semio-ui": {
+            "label": {
+              "en": "Representation items",
+              "de": "Darstellungselemente"
+            }
           }
         },
         "context": {
@@ -55,7 +72,18 @@
             {
               "type": "null"
             }
-          ]
+          ],
+          "x-semio-ui": {
+            "widget": "stepper",
+            "label": {
+              "en": "Representation context",
+              "de": "Darstellungskontext"
+            },
+            "description": {
+              "en": "Instance number (#n) of the geometric representation context.",
+              "de": "Instanznummer (#n) des geometrischen Darstellungskontexts."
+            }
+          }
         }
       }
     }

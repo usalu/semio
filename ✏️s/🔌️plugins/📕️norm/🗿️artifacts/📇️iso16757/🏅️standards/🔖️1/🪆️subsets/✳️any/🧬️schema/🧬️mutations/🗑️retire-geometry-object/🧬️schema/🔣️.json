@@ -9,7 +9,24 @@
   ],
   "properties": {
     "id": {
-      "type": "string"
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Geometry object",
+          "de": "Geometrieobjekt"
+        },
+        "description": {
+          "en": "The geometry object this mutation addresses.",
+          "de": "Das Katalogelement (Geometrieobjekt), das diese Mutation adressiert."
+        },
+        "ref": {
+          "kind": "geometryObject"
+        },
+        "group": "target",
+        "order": 10
+      }
     }
   }
 }

@@ -7,13 +7,30 @@
   "properties": {
     "schema": {
       "type": "string",
-      "x-semio-state": "artifact"
+      "x-semio-state": "artifact",
+      "x-semio-ui": {
+        "widget": "text",
+        "label": {
+          "en": "Snapshot schema",
+          "de": "Snapshot-Schema"
+        },
+        "description": {
+          "en": "Identifier of the snapshot schema version.",
+          "de": "Kennung der Version des Snapshot-Schemas."
+        }
+      }
     },
     "layers": {
       "type": "array",
       "x-semio-state": "artifact",
       "items": {
         "$ref": "#/$defs/CadLayer"
+      },
+      "x-semio-ui": {
+        "label": {
+          "en": "Layers",
+          "de": "Layer"
+        }
       }
     },
     "blocks": {
@@ -21,6 +38,12 @@
       "x-semio-state": "artifact",
       "items": {
         "$ref": "#/$defs/CadBlock"
+      },
+      "x-semio-ui": {
+        "label": {
+          "en": "Block definitions",
+          "de": "Blockdefinitionen"
+        }
       }
     },
     "entities": {
@@ -28,6 +51,12 @@
       "x-semio-state": "artifact",
       "items": {
         "$ref": "#/$defs/CadEntityRecord"
+      },
+      "x-semio-ui": {
+        "label": {
+          "en": "Entities",
+          "de": "Objekte"
+        }
       }
     }
   },
@@ -45,12 +74,28 @@
           "type": "string"
         },
         "basePoint": {
-          "$ref": "#/$defs/SemioPoint2"
+          "$ref": "#/$defs/SemioPoint2",
+          "x-semio-ui": {
+            "label": {
+              "en": "Base point",
+              "de": "Basispunkt"
+            },
+            "description": {
+              "en": "Insertion base point of the block.",
+              "de": "Einfügebasispunkt des Blocks."
+            }
+          }
         },
         "entities": {
           "type": "array",
           "items": {
             "$ref": "#/$defs/CadEntityRecord"
+          },
+          "x-semio-ui": {
+            "label": {
+              "en": "Entities",
+              "de": "Objekte"
+            }
           }
         }
       },
@@ -317,10 +362,28 @@
           "type": "string"
         },
         "colorIndex": {
-          "type": "integer"
+          "type": "integer",
+          "x-semio-ui": {
+            "widget": "stepper",
+            "label": {
+              "en": "Color index",
+              "de": "Farbindex"
+            },
+            "description": {
+              "en": "ACI color number; 256 = by layer, 0 = by block.",
+              "de": "ACI-Farbnummer; 256 = von Layer, 0 = von Block."
+            }
+          }
         },
         "lineType": {
-          "type": "string"
+          "type": "string",
+          "x-semio-ui": {
+            "widget": "text",
+            "label": {
+              "en": "Line type",
+              "de": "Linientyp"
+            }
+          }
         },
         "visible": {
           "type": "boolean"

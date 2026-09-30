@@ -29,17 +29,22 @@ import { AcceptanceScript } from "./🎯️acceptance/📋️orchestration/🟦�
 class DslScript extends Script {
   run(segments: string[]): void {
     const { level, rest } = resolveTestLevel(segments);
-    runCmd("bun", ["nx", "run", "@semio-tech/dsl-fixture-sweep-rs:test", "--skip-nx-cache", "--", level, ...rest], { cwd: this.root, ...orchestratorBudgetOpts() });
+    runCmd("bun", ["nx", "run", "@semio-tech/s-fixture-sweep-rs:test", "--skip-nx-cache", "--", level, ...rest], { cwd: this.root, ...orchestratorBudgetOpts() });
   }
 }
 
-/** 🧪️ Selects the suite, schema gate, or portable command-composition source contract. */
+/** 🧪️ Selects the suite, schema gate, portable command-composition source contract, or the payload-parity lint corpus. */
 class TestScript extends Script {
   async run(segments: string[]): Promise<void> {
     if (segments[0] === "schema") return new SchemaScript(this.root, this.repoRoot).run(segments.slice(1));
     if (segments[0] === "command-composition-source") {
       if (segments.length !== 1) throw new Error("Expected test command-composition-source");
       runCmd(process.execPath, ["test", join(import.meta.dir, "🧪️tests", "🧱️command-composition-source", "🟦️.ts")], { cwd: this.repoRoot, ...orchestratorBudgetOpts() });
+      return;
+    }
+    if (segments[0] === "mutation-payload-parity") {
+      if (segments.length !== 1) throw new Error("Expected test mutation-payload-parity");
+      runCmd(process.execPath, ["test", `./${join(import.meta.dir, "🧪️tests", "🧪️mutation-payload-parity", "🟦️.ts").slice(this.repoRoot.length + 1)}`], { cwd: this.repoRoot, ...orchestratorBudgetOpts() });
       return;
     }
     return new RunScript(this.root, this.repoRoot).run(segments);

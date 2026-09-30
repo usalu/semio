@@ -4,16 +4,43 @@
   "title": "UnbindParameterField",
   "type": "object",
   "properties": {
-    "node_id": {
-      "type": "string"
+    "operation": {
+      "const": "unbindParameterField"
     },
-    "field_path": {
-      "type": "string"
+    "nodeId": {
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Node",
+          "de": "Knoten"
+        },
+        "ref": {
+          "kind": "node"
+        },
+        "group": "target",
+        "order": 10
+      }
+    },
+    "fieldPath": {
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "text",
+        "role": "value",
+        "label": {
+          "en": "Field path",
+          "de": "Feldpfad"
+        },
+        "group": "binding",
+        "order": 20
+      }
     }
   },
   "required": [
-    "node_id",
-    "field_path"
+    "operation",
+    "nodeId",
+    "fieldPath"
   ],
   "additionalProperties": false
 }

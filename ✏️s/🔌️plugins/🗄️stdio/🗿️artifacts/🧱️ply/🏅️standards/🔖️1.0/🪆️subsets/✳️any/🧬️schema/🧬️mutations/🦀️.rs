@@ -95,6 +95,23 @@ pub fn apply_ply_mutation(snapshot: &mut PlySnapshot, mutation: &PlyMutation) ->
 }
 //#endregion 🔖️Apply
 
+//#region 🚪️Reachability
+/// 🪪️ The [`PlyMutation`] of semantic kind `kind` built from its leaf wire payload (`payload_value()`) in JSON text by the
+/// derive-generated `from_payload_value` — how a `{"kind", "params"}` feature row reaches the aggregate without naming the
+/// private `protocol` alias and without any hand mapping.
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn decode_ply_mutation_payload(kind: &str, text: &str) -> Result<PlyMutation, String> {
+    protocol::os_pack::json::from_json_str(text).and_then(|payload| <PlyMutation as Mutation<PlySnapshot>>::from_payload_value(kind, payload)).map_err(|error| error.to_string())
+}
+
+/// ↩️ `Mutation::inverse` for [`PlyMutation`] against the pre-mutation `base` — the production inverse itself, reachable
+/// without naming the `protocol` alias.
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn inverse_ply_mutation(base: &PlySnapshot, mutation: &PlyMutation) -> Vec<PlyMutation> {
+    <PlyMutation as Mutation<PlySnapshot>>::inverse(mutation, base)
+}
+//#endregion 🚪️Reachability
+
 //#region 🔖️MutationTrait
 /// 🔺️ Every variant handcrafted directly — never apply-and-capture. Lifted verbatim from the
 /// former `impl Mutation<PlySnapshot> for PlyMutation`'s `diff`; only each match arm's pattern

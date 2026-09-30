@@ -2,7 +2,7 @@
   "$schema": "http://json-schema.org/draft-07/schema#",
   "$id": "https://json.schemas.assets.semio-tech.com/s/fem/2d/1/load/mutation/replace-load/schema.json",
   "title": "ReplaceLoad",
-  "description": "The `replace-load` mutation payload as it travels the wire: internally tagged with `\"mutation\": \"replaceLoad\"`, camelCase throughout. Structural only — the plausibility and geometry bounds this kind enforces live in the SNAPSHOT schema, because they are properties of a valid document rather than of a well-formed payload; each is annotated there with the `mutations::guards` function that raises them.",
+  "description": "The `replace-load` mutation payload as it travels the wire: internally tagged with `\"mutation\": \"replaceLoad\"`, camelCase throughout. Its hard bounds and `x-semio-invariant` entries state exactly the payload-intrinsic breaches `mutations::guards` refuses as `mutation.invariant`, so every such payload fails this schema; refusals that depend on the base (a missing, duplicate or still-referenced target) belong to the diff alone.",
   "type": "object",
   "additionalProperties": false,
   "required": [
@@ -14,13 +14,51 @@
   "properties": {
     "mutation": {
       "const": "replaceLoad",
-      "description": "The internally tagged discriminator `#[value(tag = \"mutation\")]` puts on the wire."
+      "description": "The internally tagged discriminator `#[value(tag = \"mutation\")]` puts on the wire.",
+      "x-semio-ui": {
+        "widget": "hidden",
+        "role": "discriminator",
+        "label": {
+          "en": "Mutation",
+          "de": "Mutation"
+        }
+      }
     },
     "caseId": {
-      "type": "string"
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Load case",
+          "de": "Lastfall"
+        },
+        "ref": {
+          "kind": "loadCase",
+          "domain": "fem2d",
+          "granularity": "loadCase"
+        },
+        "group": "target",
+        "order": 20
+      }
     },
     "loadId": {
-      "type": "string"
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Load",
+          "de": "Last"
+        },
+        "ref": {
+          "kind": "load",
+          "domain": "fem2d",
+          "granularity": "load"
+        },
+        "group": "target",
+        "order": 30
+      }
     },
     "newLoad": {
       "title": "FemLoad",
@@ -37,13 +75,50 @@
           ],
           "properties": {
             "kind": {
-              "const": "nodal"
+              "const": "nodal",
+              "x-semio-ui": {
+                "widget": "hidden",
+                "role": "discriminator",
+                "label": {
+                  "en": "Load type",
+                  "de": "Lastart"
+                }
+              }
             },
             "id": {
-              "type": "string"
+              "type": "string",
+              "x-semio-ui": {
+                "widget": "text",
+                "role": "value",
+                "label": {
+                  "en": "ID",
+                  "de": "ID"
+                },
+                "description": {
+                  "en": "Unique id of the record.",
+                  "de": "Eindeutige ID des Eintrags."
+                },
+                "group": "identity",
+                "order": 20
+              }
             },
             "nodeId": {
-              "type": "string"
+              "type": "string",
+              "x-semio-ui": {
+                "widget": "reference",
+                "role": "target",
+                "label": {
+                  "en": "Node",
+                  "de": "Knoten"
+                },
+                "ref": {
+                  "kind": "node",
+                  "domain": "fem2d",
+                  "granularity": "node"
+                },
+                "group": "target",
+                "order": 30
+              }
             },
             "dof": {
               "type": "string",
@@ -54,11 +129,69 @@
                 "Rx",
                 "Ry",
                 "Rz"
-              ]
+              ],
+              "x-semio-ui": {
+                "widget": "select",
+                "role": "value",
+                "label": {
+                  "en": "Degree of freedom",
+                  "de": "Freiheitsgrad"
+                },
+                "options": {
+                  "Tx": {
+                    "en": "Translation X",
+                    "de": "Verschiebung x"
+                  },
+                  "Ty": {
+                    "en": "Translation Y",
+                    "de": "Verschiebung y"
+                  },
+                  "Tz": {
+                    "en": "Translation Z",
+                    "de": "Verschiebung z"
+                  },
+                  "Rx": {
+                    "en": "Rotation about X",
+                    "de": "Verdrehung um x"
+                  },
+                  "Ry": {
+                    "en": "Rotation about Y",
+                    "de": "Verdrehung um y"
+                  },
+                  "Rz": {
+                    "en": "Rotation about Z",
+                    "de": "Verdrehung um z"
+                  }
+                },
+                "group": "load",
+                "order": 40
+              }
             },
             "value": {
               "type": "number",
-              "format": "double"
+              "format": "double",
+              "x-semio-ui": {
+                "widget": "stepper",
+                "role": "value",
+                "label": {
+                  "en": "Load value",
+                  "de": "Lastwert"
+                },
+                "description": {
+                  "en": "Force in N on a translation, moment in N·m on a rotation.",
+                  "de": "Kraft in N bei einer Verschiebung, Moment in N·m bei einer Verdrehung."
+                },
+                "step": 100,
+                "precision": 2,
+                "group": "load",
+                "order": 50
+              }
+            }
+          },
+          "x-semio-ui": {
+            "label": {
+              "en": "Nodal load",
+              "de": "Knotenlast"
             }
           }
         },
@@ -74,21 +207,102 @@
           ],
           "properties": {
             "kind": {
-              "const": "memberUdl"
+              "const": "memberUdl",
+              "x-semio-ui": {
+                "widget": "hidden",
+                "role": "discriminator",
+                "label": {
+                  "en": "Load type",
+                  "de": "Lastart"
+                }
+              }
             },
             "id": {
-              "type": "string"
+              "type": "string",
+              "x-semio-ui": {
+                "widget": "text",
+                "role": "value",
+                "label": {
+                  "en": "ID",
+                  "de": "ID"
+                },
+                "description": {
+                  "en": "Unique id of the record.",
+                  "de": "Eindeutige ID des Eintrags."
+                },
+                "group": "identity",
+                "order": 20
+              }
             },
             "elementId": {
-              "type": "string"
+              "type": "string",
+              "x-semio-ui": {
+                "widget": "reference",
+                "role": "target",
+                "label": {
+                  "en": "Element",
+                  "de": "Element"
+                },
+                "ref": {
+                  "kind": "element",
+                  "domain": "fem2d",
+                  "granularity": "element"
+                },
+                "group": "target",
+                "order": 30
+              }
             },
             "wx": {
               "type": "number",
-              "format": "double"
+              "format": "double",
+              "x-semio-ui": {
+                "widget": "stepper",
+                "role": "value",
+                "label": {
+                  "en": "Load wx (along)",
+                  "de": "Streckenlast wx (längs)"
+                },
+                "description": {
+                  "en": "Uniform load along the member axis (local x).",
+                  "de": "Gleichmäßig verteilte Last in Stabachsrichtung (lokal x)."
+                },
+                "unit": "N/m",
+                "displayUnit": "kN/m",
+                "displayFactor": 0.001,
+                "step": 100,
+                "precision": 2,
+                "group": "load",
+                "order": 40
+              }
             },
             "wy": {
               "type": "number",
-              "format": "double"
+              "format": "double",
+              "x-semio-ui": {
+                "widget": "stepper",
+                "role": "value",
+                "label": {
+                  "en": "Load wy (across)",
+                  "de": "Streckenlast wy (quer)"
+                },
+                "description": {
+                  "en": "Uniform load across the member axis (local y).",
+                  "de": "Gleichmäßig verteilte Last quer zur Stabachse (lokal y)."
+                },
+                "unit": "N/m",
+                "displayUnit": "kN/m",
+                "displayFactor": 0.001,
+                "step": 100,
+                "precision": 2,
+                "group": "load",
+                "order": 50
+              }
+            }
+          },
+          "x-semio-ui": {
+            "label": {
+              "en": "Uniform member load",
+              "de": "Gleichstreckenlast"
             }
           }
         },
@@ -103,21 +317,92 @@
           ],
           "properties": {
             "kind": {
-              "const": "area"
+              "const": "area",
+              "x-semio-ui": {
+                "widget": "hidden",
+                "role": "discriminator",
+                "label": {
+                  "en": "Load type",
+                  "de": "Lastart"
+                }
+              }
             },
             "id": {
-              "type": "string"
+              "type": "string",
+              "x-semio-ui": {
+                "widget": "text",
+                "role": "value",
+                "label": {
+                  "en": "ID",
+                  "de": "ID"
+                },
+                "description": {
+                  "en": "Unique id of the record.",
+                  "de": "Eindeutige ID des Eintrags."
+                },
+                "group": "identity",
+                "order": 20
+              }
             },
             "regionId": {
-              "type": "string"
+              "type": "string",
+              "x-semio-ui": {
+                "widget": "reference",
+                "role": "target",
+                "label": {
+                  "en": "Plate region",
+                  "de": "Scheibenbereich"
+                },
+                "ref": {
+                  "kind": "region",
+                  "domain": "fem2d",
+                  "granularity": "region"
+                },
+                "group": "target",
+                "order": 30
+              }
             },
             "pressure": {
               "type": "number",
-              "format": "double"
+              "format": "double",
+              "x-semio-ui": {
+                "widget": "stepper",
+                "role": "value",
+                "label": {
+                  "en": "Area load",
+                  "de": "Flächenlast"
+                },
+                "description": {
+                  "en": "Uniform pressure on the plate region.",
+                  "de": "Gleichmäßige Flächenlast auf den Scheibenbereich."
+                },
+                "unit": "Pa",
+                "displayUnit": "kN/m²",
+                "displayFactor": 0.001,
+                "step": 100,
+                "precision": 2,
+                "group": "load",
+                "order": 40
+              }
+            }
+          },
+          "x-semio-ui": {
+            "label": {
+              "en": "Area load",
+              "de": "Flächenlast"
             }
           }
         }
-      ]
+      ],
+      "x-semio-ui": {
+        "role": "value",
+        "label": {
+          "en": "New load",
+          "de": "Neue Last"
+        },
+        "group": "record",
+        "order": 40
+      }
     }
   }
 }

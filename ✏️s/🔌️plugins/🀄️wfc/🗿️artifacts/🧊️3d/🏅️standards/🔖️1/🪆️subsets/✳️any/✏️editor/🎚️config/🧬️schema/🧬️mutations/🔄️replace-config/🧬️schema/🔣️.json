@@ -19,17 +19,85 @@
       ],
       "properties": {
         "cameraX": {
-          "type": "number"
+          "type": "number",
+          "x-semio-ui": {
+            "widget": "stepper",
+            "role": "value",
+            "label": {
+              "en": "Camera X",
+              "de": "Kamera X"
+            },
+            "step": 1,
+            "precision": 2,
+            "group": "camera",
+            "order": 10
+          }
         },
         "cameraY": {
-          "type": "number"
+          "type": "number",
+          "x-semio-ui": {
+            "widget": "stepper",
+            "role": "value",
+            "label": {
+              "en": "Camera Y",
+              "de": "Kamera Y"
+            },
+            "step": 1,
+            "precision": 2,
+            "group": "camera",
+            "order": 20
+          }
         },
         "cameraZoom": {
-          "type": "number"
+          "type": "number",
+          "x-semio-ui": {
+            "widget": "slider",
+            "role": "value",
+            "label": {
+              "en": "Camera zoom",
+              "de": "Kamerazoom"
+            },
+            "step": 0.01,
+            "precision": 2,
+            "softMin": 0.1,
+            "softMax": 10,
+            "scale": "log",
+            "snaps": [
+              0.25,
+              0.5,
+              1,
+              2,
+              4
+            ],
+            "group": "camera",
+            "order": 30
+          }
         },
         "activeTileId": {
-          "type": "string"
+          "type": "string",
+          "x-semio-ui": {
+            "widget": "reference",
+            "role": "target",
+            "label": {
+              "en": "Active tile",
+              "de": "Aktive Kachel"
+            },
+            "ref": {
+              "kind": "tile"
+            },
+            "group": "target",
+            "order": 40
+          }
         }
+      },
+      "x-semio-ui": {
+        "role": "value",
+        "label": {
+          "en": "Configuration",
+          "de": "Konfiguration"
+        },
+        "group": "record",
+        "order": 10
       }
     }
   }

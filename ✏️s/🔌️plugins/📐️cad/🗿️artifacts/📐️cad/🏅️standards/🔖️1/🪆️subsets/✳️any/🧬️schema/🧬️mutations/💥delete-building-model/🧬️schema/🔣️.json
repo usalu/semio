@@ -4,5 +4,12 @@
   "title": "DeleteBuildingModel",
   "type": "object",
   "additionalProperties": false,
-  "properties": {}
+  "required": [
+    "mutation"
+  ],
+  "properties": {
+    "mutation": {
+      "const": "deleteBuildingModel"
+    }
+  }
 }

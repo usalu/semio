@@ -14,7 +14,18 @@
     },
     "to_index": {
       "type": "integer",
-      "minimum": 0
+      "minimum": 0,
+      "x-semio-ui": {
+        "widget": "stepper",
+        "label": {
+          "en": "Target index",
+          "de": "Zielindex"
+        },
+        "description": {
+          "en": "Zero-based position the column moves to.",
+          "de": "Nullbasierte Position, an die die Spalte verschoben wird."
+        }
+      }
     }
   }
 }

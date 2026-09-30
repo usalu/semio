@@ -5,12 +5,34 @@
   "type": "object",
   "additionalProperties": false,
   "required": [
+    "mutation",
     "id"
   ],
   "properties": {
+    "mutation": {
+      "const": "deleteDeliveryConstraint"
+    },
     "id": {
-      "type": "integer",
-      "minimum": 0
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Delivery Constraint",
+          "de": "Abwicklungsrandbedingung"
+        },
+        "description": {
+          "en": "The delivery constraint to delete.",
+          "de": "Zu löschender Eintrag vom Typ „Abwicklungsrandbedingung“."
+        },
+        "ref": {
+          "kind": "deliveryConstraint",
+          "domain": "program",
+          "granularity": "entity"
+        },
+        "group": "target",
+        "order": 10
+      }
     }
   }
 }

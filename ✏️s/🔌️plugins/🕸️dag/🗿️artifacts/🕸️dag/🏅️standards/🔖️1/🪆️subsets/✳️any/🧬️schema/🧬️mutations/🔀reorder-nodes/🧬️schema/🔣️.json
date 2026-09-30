@@ -5,14 +5,19 @@
   "type": "object",
   "additionalProperties": false,
   "required": [
+    "mutation",
     "order"
   ],
   "properties": {
+    "mutation": {
+      "const": "reorderNodes"
+    },
     "order": {
       "type": "array",
       "items": {
         "type": "string"
-      }
+      },
+      "uniqueItems": true
     }
   }
 }

@@ -5,23 +5,38 @@
   "type": "object",
   "additionalProperties": false,
   "required": [
+    "mutation",
     "major",
     "minor"
   ],
   "properties": {
+    "mutation": {
+      "const": "setVersion",
+      "description": "Aggregate discriminator spliced in by LasMutation; absent when the payload stands alone."
+    },
     "major": {
       "type": "integer",
       "minimum": 0,
-      "maximum": 255
+      "maximum": 255,
+      "x-semio-ui": {
+        "widget": "stepper",
+        "label": {
+          "en": "Major version",
+          "de": "Hauptversion"
+        }
+      }
     },
     "minor": {
       "type": "integer",
       "minimum": 0,
-      "maximum": 255
-    },
-    "mutation": {
-      "const": "setVersion",
-      "description": "Aggregate discriminator spliced in by LasMutation; absent when the payload stands alone."
+      "maximum": 255,
+      "x-semio-ui": {
+        "widget": "stepper",
+        "label": {
+          "en": "Minor version",
+          "de": "Nebenversion"
+        }
+      }
     }
   }
 }

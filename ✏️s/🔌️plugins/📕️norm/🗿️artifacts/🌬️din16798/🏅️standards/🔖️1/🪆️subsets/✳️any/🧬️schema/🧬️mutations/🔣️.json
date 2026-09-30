@@ -1,50 +1,499 @@
 {
-  "type": "object",
-  "properties": {
-    "kind": {
-      "enum": [
-        "change-annex",
-        "change-theta-rm",
-        "change-outdoor-co2",
-        "change-envelope-n50",
-        "change-envelope-volume",
-        "change-cellar-area",
-        "change-cellar-ventilation",
-        "change-night-setback",
-        "insert-zone",
-        "remove-zone",
-        "change-zone-usage-type",
-        "change-zone-floor-area",
-        "change-zone-occupants",
-        "change-zone-comfort-category",
-        "change-zone-pollution-class",
-        "change-zone-comfort-model",
-        "change-zone-t-op-winter",
-        "change-zone-t-op-summer",
-        "change-zone-air-speed",
-        "change-zone-clothing",
-        "change-zone-metabolic-rate",
-        "change-zone-rh",
-        "change-zone-outdoor-air",
-        "change-zone-co2",
-        "change-zone-illuminance",
-        "change-zone-noise",
-        "change-zone-vent-system-id",
-        "change-zone-turbulence",
-        "change-zone-vent-method",
-        "insert-vent-system",
-        "remove-vent-system",
-        "change-vent-system-type",
-        "change-vent-sfp",
-        "change-vent-sfp-class",
-        "change-vent-heat-recovery",
-        "change-vent-oda-class",
-        "change-vent-filter-sup",
-        "change-vent-inspection",
-        "change-vent-duct-class",
-        "change-vent-duct-leakage",
-        "change-vent-design-airflow"
-      ]
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/norm/din16798/mutations.json",
+  "title": "Din16798Mutation",
+  "oneOf": [
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "ChangeAnnex"
+      ],
+      "properties": {
+        "ChangeAnnex": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/din16798/mutation/change-annex/schema.json"
+        }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "ChangeThetaRm"
+      ],
+      "properties": {
+        "ChangeThetaRm": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/din16798/mutation/change-theta-rm/schema.json"
+        }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "ChangeOutdoorCo2"
+      ],
+      "properties": {
+        "ChangeOutdoorCo2": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/din16798/mutation/change-outdoor-co2/schema.json"
+        }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "ChangeEnvelopeN50"
+      ],
+      "properties": {
+        "ChangeEnvelopeN50": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/din16798/mutation/change-envelope-n50/schema.json"
+        }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "ChangeEnvelopeVolume"
+      ],
+      "properties": {
+        "ChangeEnvelopeVolume": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/din16798/mutation/change-envelope-volume/schema.json"
+        }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "ChangeCellarArea"
+      ],
+      "properties": {
+        "ChangeCellarArea": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/din16798/mutation/change-cellar-area/schema.json"
+        }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "ChangeCellarVentilation"
+      ],
+      "properties": {
+        "ChangeCellarVentilation": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/din16798/mutation/change-cellar-ventilation/schema.json"
+        }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "ChangeNightSetback"
+      ],
+      "properties": {
+        "ChangeNightSetback": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/din16798/mutation/change-night-setback/schema.json"
+        }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "InsertZone"
+      ],
+      "properties": {
+        "InsertZone": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/din16798/mutation/insert-zone/schema.json"
+        }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "RemoveZone"
+      ],
+      "properties": {
+        "RemoveZone": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/din16798/mutation/remove-zone/schema.json"
+        }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "ChangeZoneUsageType"
+      ],
+      "properties": {
+        "ChangeZoneUsageType": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/din16798/mutation/change-zone-usage-type/schema.json"
+        }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "ChangeZoneFloorArea"
+      ],
+      "properties": {
+        "ChangeZoneFloorArea": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/din16798/mutation/change-zone-floor-area/schema.json"
+        }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "ChangeZoneOccupants"
+      ],
+      "properties": {
+        "ChangeZoneOccupants": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/din16798/mutation/change-zone-occupants/schema.json"
+        }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "ChangeZoneComfortCategory"
+      ],
+      "properties": {
+        "ChangeZoneComfortCategory": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/din16798/mutation/change-zone-comfort-category/schema.json"
+        }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "ChangeZonePollutionClass"
+      ],
+      "properties": {
+        "ChangeZonePollutionClass": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/din16798/mutation/change-zone-pollution-class/schema.json"
+        }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "ChangeZoneComfortModel"
+      ],
+      "properties": {
+        "ChangeZoneComfortModel": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/din16798/mutation/change-zone-comfort-model/schema.json"
+        }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "ChangeZoneTOpWinter"
+      ],
+      "properties": {
+        "ChangeZoneTOpWinter": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/din16798/mutation/change-zone-t-op-winter/schema.json"
+        }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "ChangeZoneTOpSummer"
+      ],
+      "properties": {
+        "ChangeZoneTOpSummer": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/din16798/mutation/change-zone-t-op-summer/schema.json"
+        }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "ChangeZoneAirSpeed"
+      ],
+      "properties": {
+        "ChangeZoneAirSpeed": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/din16798/mutation/change-zone-air-speed/schema.json"
+        }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "ChangeZoneClothing"
+      ],
+      "properties": {
+        "ChangeZoneClothing": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/din16798/mutation/change-zone-clothing/schema.json"
+        }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "ChangeZoneMetabolicRate"
+      ],
+      "properties": {
+        "ChangeZoneMetabolicRate": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/din16798/mutation/change-zone-metabolic-rate/schema.json"
+        }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "ChangeZoneRh"
+      ],
+      "properties": {
+        "ChangeZoneRh": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/din16798/mutation/change-zone-rh/schema.json"
+        }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "ChangeZoneOutdoorAir"
+      ],
+      "properties": {
+        "ChangeZoneOutdoorAir": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/din16798/mutation/change-zone-outdoor-air/schema.json"
+        }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "ChangeZoneCo2"
+      ],
+      "properties": {
+        "ChangeZoneCo2": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/din16798/mutation/change-zone-co2/schema.json"
+        }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "ChangeZoneIlluminance"
+      ],
+      "properties": {
+        "ChangeZoneIlluminance": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/din16798/mutation/change-zone-illuminance/schema.json"
+        }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "ChangeZoneNoise"
+      ],
+      "properties": {
+        "ChangeZoneNoise": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/din16798/mutation/change-zone-noise/schema.json"
+        }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "ChangeZoneVentSystemId"
+      ],
+      "properties": {
+        "ChangeZoneVentSystemId": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/din16798/mutation/change-zone-vent-system-id/schema.json"
+        }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "ChangeZoneTurbulence"
+      ],
+      "properties": {
+        "ChangeZoneTurbulence": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/din16798/mutation/change-zone-turbulence/schema.json"
+        }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "ChangeZoneVentMethod"
+      ],
+      "properties": {
+        "ChangeZoneVentMethod": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/din16798/mutation/change-zone-vent-method/schema.json"
+        }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "InsertVentSystem"
+      ],
+      "properties": {
+        "InsertVentSystem": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/din16798/mutation/insert-vent-system/schema.json"
+        }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "RemoveVentSystem"
+      ],
+      "properties": {
+        "RemoveVentSystem": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/din16798/mutation/remove-vent-system/schema.json"
+        }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "ChangeVentSystemType"
+      ],
+      "properties": {
+        "ChangeVentSystemType": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/din16798/mutation/change-vent-system-type/schema.json"
+        }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "ChangeVentSfp"
+      ],
+      "properties": {
+        "ChangeVentSfp": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/din16798/mutation/change-vent-sfp/schema.json"
+        }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "ChangeVentSfpClass"
+      ],
+      "properties": {
+        "ChangeVentSfpClass": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/din16798/mutation/change-vent-sfp-class/schema.json"
+        }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "ChangeVentHeatRecovery"
+      ],
+      "properties": {
+        "ChangeVentHeatRecovery": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/din16798/mutation/change-vent-heat-recovery/schema.json"
+        }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "ChangeVentOdaClass"
+      ],
+      "properties": {
+        "ChangeVentOdaClass": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/din16798/mutation/change-vent-oda-class/schema.json"
+        }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "ChangeVentFilterSup"
+      ],
+      "properties": {
+        "ChangeVentFilterSup": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/din16798/mutation/change-vent-filter-sup/schema.json"
+        }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "ChangeVentInspection"
+      ],
+      "properties": {
+        "ChangeVentInspection": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/din16798/mutation/change-vent-inspection/schema.json"
+        }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "ChangeVentDuctClass"
+      ],
+      "properties": {
+        "ChangeVentDuctClass": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/din16798/mutation/change-vent-duct-class/schema.json"
+        }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "ChangeVentDuctLeakage"
+      ],
+      "properties": {
+        "ChangeVentDuctLeakage": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/din16798/mutation/change-vent-duct-leakage/schema.json"
+        }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "ChangeVentDesignAirflow"
+      ],
+      "properties": {
+        "ChangeVentDesignAirflow": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/din16798/mutation/change-vent-design-airflow/schema.json"
+        }
+      }
     }
-  }
+  ]
 }

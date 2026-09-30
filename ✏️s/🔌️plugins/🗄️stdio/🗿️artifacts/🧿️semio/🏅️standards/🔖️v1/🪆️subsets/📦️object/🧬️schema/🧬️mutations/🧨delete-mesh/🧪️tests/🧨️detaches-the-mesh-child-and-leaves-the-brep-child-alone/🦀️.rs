@@ -13,11 +13,11 @@ use crate::standards::v1::subsets::object::schema::mutations::SemioObjectMutatio
 use crate::standards::v1::subsets::object::schema::snapshot::SemioObjectSnapshot;
 use protocol::{Mutation, MutationDiff};
 
-const BEFORE: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🧨delete-mesh/🧨️detaches-the-mesh-child-and-leaves-the-brep-child-alone/📸️snapshot/⬅️before/🔣️.json");
-const AFTER: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🧨delete-mesh/🧨️detaches-the-mesh-child-and-leaves-the-brep-child-alone/📸️snapshot/➡️after/🔣️.json");
-const MUTATION: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🧨delete-mesh/🧨️detaches-the-mesh-child-and-leaves-the-brep-child-alone/🦠️mutation/🔣️.json");
-const DIFF: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🧨delete-mesh/🧨️detaches-the-mesh-child-and-leaves-the-brep-child-alone/🔺️diff/🔣️.json");
-const OUTCOME: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🧨delete-mesh/🧨️detaches-the-mesh-child-and-leaves-the-brep-child-alone/🎯️outcome/🔣️.json");
+const BEFORE: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🧨delete-mesh/🧨️detaches-mesh-child-leaves-brep-child-alone/📸️snapshot/⬅️before/🔣️.json");
+const AFTER: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🧨delete-mesh/🧨️detaches-mesh-child-leaves-brep-child-alone/📸️snapshot/➡️after/🔣️.json");
+const MUTATION: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🧨delete-mesh/🧨️detaches-mesh-child-leaves-brep-child-alone/🦠️mutation/🔣️.json");
+const DIFF: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🧨delete-mesh/🧨️detaches-mesh-child-leaves-brep-child-alone/🔺️diff/🔣️.json");
+const OUTCOME: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🧨delete-mesh/🧨️detaches-mesh-child-leaves-brep-child-alone/🎯️outcome/🔣️.json");
 
 fn before() -> SemioObjectSnapshot {
     dsl::json::from_json_str(BEFORE).expect("delete-mesh before snapshot decodes")

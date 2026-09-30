@@ -396,3 +396,32 @@ async fn create_page_duplicate_id_is_fatal() {
     assert_eq!(outcome.worst_level(), Some(protocol::Severity::Fatal));
 }
 //#endregion 🔖️OutcomeLaws
+
+//#region 🧾️WireWitnesses
+/// 🧾️ Every committed payload-only wire witness decodes through `LayoutMutation`'s `FromValue` and re-encodes to exactly the
+/// committed JSON — the leaves no before/after quintet covers.
+#[test]
+fn committed_wire_witnesses_are_the_canonical_wire() {
+    for witness in [
+        include_str!("../../../../🧫️fixtures/🧬️mutations/🖋️create-character-style/🧾️wire-witness/🦠️mutation/🔣️.json"),
+        include_str!("../../../../🧫️fixtures/🧬️mutations/🗑️delete-character-style/🧾️wire-witness/🦠️mutation/🔣️.json"),
+        include_str!("../../../../🧫️fixtures/🧬️mutations/🎨️update-character-style/🧾️wire-witness/🦠️mutation/🔣️.json"),
+        include_str!("../../../../🧫️fixtures/🧬️mutations/📖️update-parent-page/🧾️wire-witness/🦠️mutation/🔣️.json"),
+        include_str!("../../../../🧫️fixtures/🧬️mutations/📓️update-spread/🧾️wire-witness/🦠️mutation/🔣️.json"),
+        include_str!("../../../../🧫️fixtures/🧬️mutations/🗄️set-page-parent/🧾️wire-witness/🦠️mutation/🔣️.json"),
+        include_str!("../../../../🧫️fixtures/🧬️mutations/📐️set-page-guides/🧾️wire-witness/🦠️mutation/🔣️.json"),
+        include_str!("../../../../🧫️fixtures/🧬️mutations/✒️set-story-runs/🧾️wire-witness/🦠️mutation/🔣️.json"),
+        include_str!("../../../../🧫️fixtures/🧬️mutations/🎚️update-link/🧾️wire-witness/🦠️mutation/🔣️.json"),
+        include_str!("../../../../🧫️fixtures/🧬️mutations/📎set-page-overrides/🧾️wire-witness/🦠️mutation/🔣️.json"),
+        include_str!("../../../../🧫️fixtures/🧬️mutations/📑create-layer/🧾️wire-witness/🦠️mutation/🔣️.json"),
+        include_str!("../../../../🧫️fixtures/🧬️mutations/🧲set-frame-layer/🧾️wire-witness/🦠️mutation/🔣️.json"),
+        include_str!("../../../../🧫️fixtures/🧬️mutations/🏷️set-drawing-text/🧾️wire-witness/🦠️mutation/🔣️.json"),
+        include_str!("../../../../🧫️fixtures/🧬️mutations/🪜reorder-frame/🧾️wire-witness/🦠️mutation/🔣️.json"),
+        include_str!("../../../../🧫️fixtures/🧬️mutations/📑️update-text-frame/🧾️wire-witness/🦠️mutation/🔣️.json"),
+        include_str!("../../../../🧫️fixtures/🧬️mutations/🗂️update-layer/🧾️wire-witness/🦠️mutation/🔣️.json"),
+        include_str!("../../../../🧫️fixtures/🧬️mutations/📝️update-paragraph-style/🧾️wire-witness/🦠️mutation/🔣️.json"),
+    ] {
+        store::os_store::test_support::assert_wire_witness::<LayoutMutation>(witness);
+    }
+}
+//#endregion 🧾️WireWitnesses

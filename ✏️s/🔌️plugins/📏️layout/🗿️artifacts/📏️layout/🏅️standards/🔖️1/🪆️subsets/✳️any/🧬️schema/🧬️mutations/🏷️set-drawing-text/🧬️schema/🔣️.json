@@ -1,1 +1,48 @@
-{"$schema":"http://json-schema.org/draft-07/schema#","title":"SetDrawingText","type":"object"}
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/layout/layout/mutation/set-drawing-text/schema.json",
+  "title": "SetDrawingText",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "index",
+    "text"
+  ],
+  "properties": {
+    "index": {
+      "type": "integer",
+      "minimum": 0,
+      "x-semio-ui": {
+        "widget": "stepper",
+        "role": "value",
+        "label": {
+          "en": "Label index",
+          "de": "Beschriftungsindex"
+        },
+        "description": {
+          "en": "Position of the text label in the imported plan, counted from 0.",
+          "de": "Position der Beschriftung im importierten Plan, ab 0 gezählt."
+        },
+        "step": 1,
+        "precision": 0,
+        "softMin": 0,
+        "softMax": 31,
+        "group": "target",
+        "order": 10
+      }
+    },
+    "text": {
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "text",
+        "role": "value",
+        "label": {
+          "en": "Text",
+          "de": "Text"
+        },
+        "group": "text",
+        "order": 20
+      }
+    }
+  }
+}

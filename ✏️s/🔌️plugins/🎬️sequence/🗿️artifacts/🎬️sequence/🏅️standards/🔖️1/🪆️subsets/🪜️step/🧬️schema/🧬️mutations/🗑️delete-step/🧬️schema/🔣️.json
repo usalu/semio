@@ -2,34 +2,33 @@
   "$schema": "http://json-schema.org/draft-07/schema#",
   "$id": "https://json.schemas.assets.semio-tech.com/s/sequence/sequence/1/step/mutation/delete-step/schema.json",
   "title": "DeleteStep",
-  "$ref": "#/$defs/Payload",
-  "$defs": {
-    "Payload": {
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "id"
-      ],
-      "properties": {
-        "id": {
-          "type": "string"
-        }
-      }
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "mutation",
+    "id"
+  ],
+  "properties": {
+    "mutation": {
+      "const": "deleteStep"
     },
-    "Wire": {
-      "title": "DeleteStepMutation",
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "mutation",
-        "id"
-      ],
-      "properties": {
-        "mutation": {
-          "const": "deleteStep"
+    "id": {
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Step",
+          "de": "Schritt"
         },
-        "id": {
-          "$ref": "#/$defs/Payload/properties/id"
+        "description": {
+          "en": "The step this mutation addresses.",
+          "de": "Der Schritt, den diese Mutation adressiert."
+        },
+        "ref": {
+          "kind": "step",
+          "domain": "steps",
+          "granularity": "step"
         }
       }
     }

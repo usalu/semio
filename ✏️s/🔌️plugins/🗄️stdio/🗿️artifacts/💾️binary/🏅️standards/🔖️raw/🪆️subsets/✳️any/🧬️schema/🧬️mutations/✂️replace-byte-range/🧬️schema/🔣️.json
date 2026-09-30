@@ -5,18 +5,45 @@
   "type": "object",
   "additionalProperties": false,
   "required": [
+    "mutation",
     "offset",
     "remove_len",
     "insert"
   ],
   "properties": {
+    "mutation": {
+      "const": "replaceByteRange",
+      "description": "Aggregate discriminator spliced in by BinaryMutation; absent when the payload stands alone."
+    },
     "offset": {
       "type": "integer",
-      "minimum": 0
+      "minimum": 0,
+      "x-semio-ui": {
+        "widget": "stepper",
+        "label": {
+          "en": "Byte offset",
+          "de": "Byte-Versatz"
+        },
+        "unit": "B",
+        "precision": 0,
+        "group": "target",
+        "order": 10
+      }
     },
     "remove_len": {
       "type": "integer",
-      "minimum": 0
+      "minimum": 0,
+      "x-semio-ui": {
+        "widget": "stepper",
+        "label": {
+          "en": "Bytes to remove",
+          "de": "Zu entfernende Bytes"
+        },
+        "unit": "B",
+        "precision": 0,
+        "group": "value",
+        "order": 20
+      }
     },
     "insert": {
       "type": "array",
@@ -24,11 +51,15 @@
         "type": "integer",
         "minimum": 0,
         "maximum": 255
+      },
+      "x-semio-ui": {
+        "label": {
+          "en": "Bytes to insert",
+          "de": "Einzufügende Bytes"
+        },
+        "group": "value",
+        "order": 30
       }
-    },
-    "mutation": {
-      "const": "replaceByteRange",
-      "description": "Aggregate discriminator spliced in by BinaryMutation; absent when the payload stands alone."
     }
   }
 }

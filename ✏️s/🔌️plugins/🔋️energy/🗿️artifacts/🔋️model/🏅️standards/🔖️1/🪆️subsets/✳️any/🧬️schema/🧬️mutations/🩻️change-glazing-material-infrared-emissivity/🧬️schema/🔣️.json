@@ -5,19 +5,83 @@
   "type": "object",
   "additionalProperties": false,
   "required": [
+    "mutation",
     "id",
     "newInfraredEmissivityFront",
     "newInfraredEmissivityBack"
   ],
   "properties": {
+    "mutation": {
+      "const": "changeGlazingMaterialInfraredEmissivity"
+    },
     "id": {
-      "type": "integer"
+      "type": "integer",
+      "minimum": 0,
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Glazing material",
+          "de": "Verglasungsmaterial"
+        },
+        "description": {
+          "en": "The glazing material this mutation changes, by id.",
+          "de": "Verglasungsmaterial, das diese Mutation ändert, per ID."
+        },
+        "ref": {
+          "kind": "glazingMaterial",
+          "domain": "energyModel",
+          "granularity": "glazingMaterial"
+        },
+        "group": "target",
+        "order": 10
+      }
     },
     "newInfraredEmissivityFront": {
-      "type": "number"
+      "type": "number",
+      "minimum": 0,
+      "maximum": 1,
+      "x-semio-ui": {
+        "widget": "slider",
+        "role": "value",
+        "label": {
+          "en": "Front infrared emissivity",
+          "de": "Infrarot-Emissionsgrad außen"
+        },
+        "description": {
+          "en": "Long-wave emissivity of the outside-facing side.",
+          "de": "Langwelliger Emissionsgrad der nach außen gewandten Seite."
+        },
+        "step": 0.01,
+        "precision": 2,
+        "softMin": 0,
+        "softMax": 1,
+        "group": "optics",
+        "order": 20
+      }
     },
     "newInfraredEmissivityBack": {
-      "type": "number"
+      "type": "number",
+      "minimum": 0,
+      "maximum": 1,
+      "x-semio-ui": {
+        "widget": "slider",
+        "role": "value",
+        "label": {
+          "en": "Back infrared emissivity",
+          "de": "Infrarot-Emissionsgrad innen"
+        },
+        "description": {
+          "en": "Long-wave emissivity of the inside-facing side.",
+          "de": "Langwelliger Emissionsgrad der nach innen gewandten Seite."
+        },
+        "step": 0.01,
+        "precision": 2,
+        "softMin": 0,
+        "softMax": 1,
+        "group": "optics",
+        "order": 30
+      }
     }
   }
 }

@@ -6,12 +6,31 @@
   "properties": {
     "schema": {
       "type": "string",
-      "x-semio-state": "artifact"
+      "x-semio-state": "artifact",
+      "x-semio-ui": {
+        "widget": "text",
+        "label": {
+          "en": "Snapshot schema",
+          "de": "Snapshot-Schema"
+        },
+        "description": {
+          "en": "Identifier of the snapshot schema version.",
+          "de": "Kennung der Version des Snapshot-Schemas."
+        }
+      }
     },
     "sampleRate": {
       "type": "integer",
       "minimum": 0,
-      "x-semio-state": "artifact"
+      "x-semio-state": "artifact",
+      "x-semio-ui": {
+        "widget": "stepper",
+        "label": {
+          "en": "Sample rate",
+          "de": "Abtastrate"
+        },
+        "unit": "Hz"
+      }
     },
     "format": {
       "type": "string",
@@ -23,7 +42,40 @@
         "f32",
         "f64"
       ],
-      "x-semio-state": "artifact"
+      "x-semio-state": "artifact",
+      "x-semio-ui": {
+        "widget": "select",
+        "label": {
+          "en": "Sample format",
+          "de": "Sample-Format"
+        },
+        "options": {
+          "pcm8": {
+            "en": "PCM, 8-bit",
+            "de": "PCM, 8 Bit"
+          },
+          "pcm16": {
+            "en": "PCM, 16-bit",
+            "de": "PCM, 16 Bit"
+          },
+          "pcm24": {
+            "en": "PCM, 24-bit",
+            "de": "PCM, 24 Bit"
+          },
+          "pcm32": {
+            "en": "PCM, 32-bit",
+            "de": "PCM, 32 Bit"
+          },
+          "f32": {
+            "en": "Float, 32-bit",
+            "de": "Gleitkomma, 32 Bit"
+          },
+          "f64": {
+            "en": "Float, 64-bit",
+            "de": "Gleitkomma, 64 Bit"
+          }
+        }
+      }
     },
     "channels": {
       "type": "array",
@@ -35,8 +87,20 @@
             "type": "array",
             "items": {
               "type": "number"
+            },
+            "x-semio-ui": {
+              "label": {
+                "en": "Samples",
+                "de": "Samples"
+              }
             }
           }
+        }
+      },
+      "x-semio-ui": {
+        "label": {
+          "en": "Channels",
+          "de": "Kanäle"
         }
       }
     },
@@ -52,6 +116,12 @@
           "value": {
             "type": "string"
           }
+        }
+      },
+      "x-semio-ui": {
+        "label": {
+          "en": "Tags",
+          "de": "Tags"
         }
       }
     }

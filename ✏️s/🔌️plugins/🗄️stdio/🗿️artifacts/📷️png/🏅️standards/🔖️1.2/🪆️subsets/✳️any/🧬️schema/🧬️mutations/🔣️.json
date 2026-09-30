@@ -7,34 +7,16 @@
     {
       "type": "object",
       "additionalProperties": false,
-      "required": ["mutation", "payload"],
-      "properties": {
-        "mutation": { "const": "patch-snapshot" },
-        "payload": { "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/png/1.2/any/mutation/patch-snapshot/schema.json" }
-      }
-    },
-    {
-      "type": "object",
-      "additionalProperties": false,
-      "required": ["mutation", "payload"],
-      "properties": {
-        "mutation": { "const": "set-snapshot" },
-        "payload": { "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/png/1.2/any/mutation/set-snapshot/schema.json" }
-      }
-    },
-    {
-      "type": "object",
-      "additionalProperties": false,
       "required": [
         "mutation",
         "payload"
       ],
       "properties": {
         "mutation": {
-          "const": "change-background"
+          "const": "set-snapshot"
         },
         "payload": {
-          "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/png/1.2/any/mutation/change-background/schema.json"
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/png/1.2/any/mutation/set-snapshot/schema.json"
         }
       }
     },
@@ -47,26 +29,10 @@
       ],
       "properties": {
         "mutation": {
-          "const": "change-chromaticities"
+          "const": "patch-snapshot"
         },
         "payload": {
-          "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/png/1.2/any/mutation/change-chromaticities/schema.json"
-        }
-      }
-    },
-    {
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "mutation",
-        "payload"
-      ],
-      "properties": {
-        "mutation": {
-          "const": "change-gamma"
-        },
-        "payload": {
-          "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/png/1.2/any/mutation/change-gamma/schema.json"
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/png/1.2/any/mutation/patch-snapshot/schema.json"
         }
       }
     },
@@ -95,42 +61,10 @@
       ],
       "properties": {
         "mutation": {
-          "const": "change-physical-dims"
+          "const": "replace-palette"
         },
         "payload": {
-          "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/png/1.2/any/mutation/change-physical-dims/schema.json"
-        }
-      }
-    },
-    {
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "mutation",
-        "payload"
-      ],
-      "properties": {
-        "mutation": {
-          "const": "change-srgb-intent"
-        },
-        "payload": {
-          "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/png/1.2/any/mutation/change-srgb-intent/schema.json"
-        }
-      }
-    },
-    {
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "mutation",
-        "payload"
-      ],
-      "properties": {
-        "mutation": {
-          "const": "change-timestamp"
-        },
-        "payload": {
-          "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/png/1.2/any/mutation/change-timestamp/schema.json"
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/png/1.2/any/mutation/replace-palette/schema.json"
         }
       }
     },
@@ -159,10 +93,10 @@
       ],
       "properties": {
         "mutation": {
-          "const": "insert-text-chunk"
+          "const": "change-gamma"
         },
         "payload": {
-          "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/png/1.2/any/mutation/insert-text-chunk/schema.json"
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/png/1.2/any/mutation/change-gamma/schema.json"
         }
       }
     },
@@ -175,10 +109,90 @@
       ],
       "properties": {
         "mutation": {
-          "const": "insert-unknown-chunk"
+          "const": "change-chromaticities"
         },
         "payload": {
-          "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/png/1.2/any/mutation/insert-unknown-chunk/schema.json"
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/png/1.2/any/mutation/change-chromaticities/schema.json"
+        }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "mutation",
+        "payload"
+      ],
+      "properties": {
+        "mutation": {
+          "const": "change-srgb-intent"
+        },
+        "payload": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/png/1.2/any/mutation/change-srgb-intent/schema.json"
+        }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "mutation",
+        "payload"
+      ],
+      "properties": {
+        "mutation": {
+          "const": "change-physical-dims"
+        },
+        "payload": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/png/1.2/any/mutation/change-physical-dims/schema.json"
+        }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "mutation",
+        "payload"
+      ],
+      "properties": {
+        "mutation": {
+          "const": "change-timestamp"
+        },
+        "payload": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/png/1.2/any/mutation/change-timestamp/schema.json"
+        }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "mutation",
+        "payload"
+      ],
+      "properties": {
+        "mutation": {
+          "const": "change-background"
+        },
+        "payload": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/png/1.2/any/mutation/change-background/schema.json"
+        }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "mutation",
+        "payload"
+      ],
+      "properties": {
+        "mutation": {
+          "const": "insert-text-chunk"
+        },
+        "payload": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/png/1.2/any/mutation/insert-text-chunk/schema.json"
         }
       }
     },
@@ -207,26 +221,10 @@
       ],
       "properties": {
         "mutation": {
-          "const": "remove-unknown-chunk"
+          "const": "replace-text-chunk"
         },
         "payload": {
-          "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/png/1.2/any/mutation/remove-unknown-chunk/schema.json"
-        }
-      }
-    },
-    {
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "mutation",
-        "payload"
-      ],
-      "properties": {
-        "mutation": {
-          "const": "replace-palette"
-        },
-        "payload": {
-          "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/png/1.2/any/mutation/replace-palette/schema.json"
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/png/1.2/any/mutation/replace-text-chunk/schema.json"
         }
       }
     },
@@ -249,10 +247,17 @@
     {
       "type": "object",
       "additionalProperties": false,
-      "required": ["mutation", "payload"],
+      "required": [
+        "mutation",
+        "payload"
+      ],
       "properties": {
-        "mutation": { "const": "patch-pixels" },
-        "payload": { "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/png/1.2/any/mutation/patch-pixels/schema.json" }
+        "mutation": {
+          "const": "patch-pixels"
+        },
+        "payload": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/png/1.2/any/mutation/patch-pixels/schema.json"
+        }
       }
     },
     {
@@ -264,10 +269,26 @@
       ],
       "properties": {
         "mutation": {
-          "const": "replace-text-chunk"
+          "const": "insert-unknown-chunk"
         },
         "payload": {
-          "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/png/1.2/any/mutation/replace-text-chunk/schema.json"
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/png/1.2/any/mutation/insert-unknown-chunk/schema.json"
+        }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "mutation",
+        "payload"
+      ],
+      "properties": {
+        "mutation": {
+          "const": "remove-unknown-chunk"
+        },
+        "payload": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/png/1.2/any/mutation/remove-unknown-chunk/schema.json"
         }
       }
     }

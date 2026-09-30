@@ -1,13 +1,28 @@
 {
-  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/norm/en1991/mutation/change-initial-temperature/schema.json",
+  "title": "ChangeInitialTemperature",
   "type": "object",
   "additionalProperties": false,
   "required": [
-    "new_t_0"
+    "newT0"
   ],
   "properties": {
-    "new_t_0": {
-      "type": "number"
+    "newT0": {
+      "type": "number",
+      "x-semio-ui": {
+        "widget": "stepper",
+        "role": "value",
+        "label": {
+          "en": "Initial temperature T_0",
+          "de": "Aufstelltemperatur T_0"
+        },
+        "unit": "°C",
+        "step": 1,
+        "precision": 0,
+        "group": "thermal",
+        "order": 10
+      }
     }
   }
 }

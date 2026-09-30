@@ -3,5 +3,6 @@
   "code": "mutation.invariant",
   "path": [
     "17"
-  ]
+  ],
+  "invariant": "terminal-zone-ids-ascending"
 }

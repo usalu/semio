@@ -20,17 +20,15 @@ use semio_s_plugin_stdio_test_oracle::law;
 
 
 //#region 🔖️Input
-const INPUT: &str = "shared://🏛️rathaus-ahlen-grundriss/🖼️.png";
-
-/// 🧫️ Copies the immutable real fixture into the work directory and returns the mutable copy's
-/// bytes — the committed 250 KB, 2334x2560, 8-bit COLORMAP architectural floor plan
-/// (`rathaus-ahlen-grundriss.png`) is never written to.
+/// 🧫️ Copies the immutable document the scenario's own `Given` names into the work directory and returns the
+/// mutable copy's bytes — the committed 250 KB, 2334x2560, 8-bit COLORMAP architectural floor plan
+/// (`rathaus-ahlen-grundriss.png`), or for the raster outlines the small COLORMAP document a whole-raster wire
+/// payload fits in. Neither is ever written to.
 fn mutable_input(ctx: &Context) -> Result<Vec<u8>, String> {
-    let copy = ctx.copy_fixture(INPUT, Some("input.png"))?;
+    let input = ctx.step_fixture_uris().into_iter().next().ok_or_else(|| format!("scenario {} names no input document", ctx.scenario.id))?;
+    let copy = ctx.copy_fixture(&input, Some("input.png"))?;
     std::fs::read(&copy).map_err(|error| error.to_string())
 }
-
-
 
 /// 🎬️ The document a kind actually acts on. The committed floor plan carries exactly
 /// IHDR/PLTE/IDAT/IEND — no text chunk, no private chunk, no tRNS — so the three kinds that address
@@ -104,113 +102,14 @@ mod subject {
     use semio_s_plugin_stdio_test_oracle::artifacts::png::standards::v1_2::subsets::any::project_png_mutation;
     use semio_s_artifact_stdio_png::ArtifactDsl;
     use semio_s_artifact_stdio_png::standards::v1_2::subsets::any::io::{decode_png, encode_png};
-    use semio_s_artifact_stdio_png::standards::v1_2::subsets::any::schema::mutations::{apply_png_mutation, inverse_png_mutation, PngMutation};
-    use semio_s_artifact_stdio_png::standards::v1_2::subsets::any::schema::snapshot::{PngBackground, PngChromaticities, PngChunk, PngChunkMarker, PngColorType, PngPhysicalDims, PngRgb, PngSnapshot, PngSrgbIntent, PngTextChunk, PngTextKind, PngTimestamp};
-
-    //#region 🔖️Json
-    fn num(params: &Json, key: &str) -> Option<f64> {
-        match params.get(key) {
-            Some(Json::Number(value)) => Some(*value),
-            _ => None,
-        }
-    }
-    fn as_bool(params: &Json, key: &str) -> Option<bool> {
-        match params.get(key) {
-            Some(Json::Bool(value)) => Some(*value),
-            _ => None,
-        }
-    }
-    fn as_str<'a>(params: &'a Json, key: &str) -> Option<&'a str> {
-        match params.get(key) {
-            Some(Json::String(value)) => Some(value.as_str()),
-            _ => None,
-        }
-    }
-    fn as_arr(value: &Json) -> &[Json] {
-        match value {
-            Json::Array(items) => items,
-            _ => &[],
-        }
-    }
-    fn num_at(items: &[Json], index: usize) -> Option<f64> {
-        match items.get(index) {
-            Some(Json::Number(value)) => Some(*value),
-            _ => None,
-        }
-    }
-    fn color_type_from(value: &str) -> PngColorType {
-        match value {
-            "grayscale" => PngColorType::Grayscale,
-            "rgb" => PngColorType::Rgb,
-            "palette" => PngColorType::Palette,
-            "grayscale-alpha" => PngColorType::GrayscaleAlpha,
-            _ => PngColorType::Rgba,
-        }
-    }
-    fn srgb_from(value: &str) -> PngSrgbIntent {
-        match value {
-            "relative-colorimetric" => PngSrgbIntent::RelativeColorimetric,
-            "saturation" => PngSrgbIntent::Saturation,
-            "absolute-colorimetric" => PngSrgbIntent::AbsoluteColorimetric,
-            _ => PngSrgbIntent::Perceptual,
-        }
-    }
-    fn text_chunk_from(params: &Json) -> PngTextChunk {
-        PngTextChunk { keyword: as_str(params, "keyword").unwrap_or("Comment").to_string(), value: as_str(params, "value").unwrap_or("").to_string(), compressed: false, kind: PngTextKind::Text, language_tag: String::new(), translated_keyword: String::new() }
-    }
-    fn unknown_chunk_from(params: &Json) -> PngChunk {
-        let requested = as_str(params, "kind").unwrap_or("waVe");
-        let mut kind = *b"waVe";
-        for (slot, byte) in kind.iter_mut().zip(requested.bytes()) {
-            *slot = byte;
-        }
-        PngChunk { kind, data: as_str(params, "data").unwrap_or("").as_bytes().to_vec() }
-    }
-    fn solid_pixels(base: &PngSnapshot, params: &Json) -> Vec<u8> {
-        let fill = as_arr(params.get("fill").unwrap_or(&Json::Null));
-        let quad: Vec<u8> = (0..4).map(|index| num_at(fill, index).unwrap_or(0.0) as u8).collect();
-        let mut pixels = Vec::with_capacity(base.pixels.len());
-        for _ in 0..(base.width as usize * base.height as usize) {
-            pixels.extend_from_slice(&quad);
-        }
-        pixels
-    }
-    //#endregion 🔖️Json
+    use semio_s_artifact_stdio_png::standards::v1_2::subsets::any::schema::mutations::{apply_png_mutation, decode_png_mutation_payload, inverse_png_mutation, PngMutation};
+    use semio_s_artifact_stdio_png::standards::v1_2::subsets::any::schema::snapshot::PngSnapshot;
 
     //#region 🔖️MutationFromSpec
-    /// 🔮️ Builds the real typed `PngMutation` the feature's `{"kind","params"}` docstring
-    /// describes — the ONLY channel from the scenario's authored parameters to the production
-    /// mutation pipeline; `apply_png_mutation` does the rest.
-    fn mutation_from_spec(kind: &str, params: &Json, base: &PngSnapshot) -> Result<PngMutation, String> {
-        match kind {
-            "change-header" => Ok(PngMutation::ChangeHeader(semio_s_artifact_stdio_png::schema::mutations::ChangeHeaderMutation { width: num(params, "width").unwrap_or(base.width as f64) as u32, height: num(params, "height").unwrap_or(base.height as f64) as u32, bit_depth: num(params, "bitDepth").unwrap_or(base.bit_depth as f64) as u8, color_type: color_type_from(as_str(params, "colorType").unwrap_or("rgba")), interlace: as_bool(params, "interlace").unwrap_or(base.interlace) })),
-            "replace-palette" => {
-                let entries = as_arr(params.get("plte").unwrap_or(&Json::Null));
-                let plte = entries.iter().map(|entry| { let channels = as_arr(entry); PngRgb { r: num_at(channels, 0).unwrap_or(0.0) as u8, g: num_at(channels, 1).unwrap_or(0.0) as u8, b: num_at(channels, 2).unwrap_or(0.0) as u8 } }).collect();
-                Ok(PngMutation::ReplacePalette(semio_s_artifact_stdio_png::schema::mutations::ReplacePaletteMutation { plte: Some(plte) }))
-            }
-            // 👁️ tRNS is structurally invalid alongside color type 6 (truecolor+alpha) — see this
-            // subset's own oracle module for the full reasoning. `None` is the only decode-safe
-            // exercise given `encode_png`'s always-RGBA6 output.
-            "change-transparency" => Ok(PngMutation::ChangeTransparency(semio_s_artifact_stdio_png::schema::mutations::ChangeTransparencyMutation { trns: None })),
-            "change-gamma" => Ok(PngMutation::ChangeGamma(semio_s_artifact_stdio_png::schema::mutations::ChangeGammaMutation { gama: num(params, "gama").map(|value| value as u32) })),
-            "change-chromaticities" => Ok(PngMutation::ChangeChromaticities(semio_s_artifact_stdio_png::schema::mutations::ChangeChromaticitiesMutation {
-                chrm: Some(PngChromaticities { white_x: num(params, "whiteX").unwrap_or(0.0) as u32, white_y: num(params, "whiteY").unwrap_or(0.0) as u32, red_x: num(params, "redX").unwrap_or(0.0) as u32, red_y: num(params, "redY").unwrap_or(0.0) as u32, green_x: num(params, "greenX").unwrap_or(0.0) as u32, green_y: num(params, "greenY").unwrap_or(0.0) as u32, blue_x: num(params, "blueX").unwrap_or(0.0) as u32, blue_y: num(params, "blueY").unwrap_or(0.0) as u32 }),
-            })),
-            "change-srgb-intent" => Ok(PngMutation::ChangeSrgbIntent(semio_s_artifact_stdio_png::schema::mutations::ChangeSrgbIntentMutation { srgb: Some(srgb_from(as_str(params, "srgb").unwrap_or("perceptual"))) })),
-            "change-physical-dims" => Ok(PngMutation::ChangePhysicalDims(semio_s_artifact_stdio_png::schema::mutations::ChangePhysicalDimsMutation { phys: Some(PngPhysicalDims { ppu_x: num(params, "ppuX").unwrap_or(0.0) as u32, ppu_y: num(params, "ppuY").unwrap_or(0.0) as u32, unit_is_meter: as_bool(params, "unitIsMeter").unwrap_or(false) }) })),
-            "change-timestamp" => Ok(PngMutation::ChangeTimestamp(semio_s_artifact_stdio_png::schema::mutations::ChangeTimestampMutation { time: Some(PngTimestamp { year: num(params, "year").unwrap_or(2024.0) as u16, month: num(params, "month").unwrap_or(1.0) as u8, day: num(params, "day").unwrap_or(1.0) as u8, hour: num(params, "hour").unwrap_or(0.0) as u8, minute: num(params, "minute").unwrap_or(0.0) as u8, second: num(params, "second").unwrap_or(0.0) as u8 }) })),
-            // 🖼️ Always the `Rgb{r,g,b}` (6-byte) variant — the only bKGD layout compatible with
-            // the color-type-6 output every re-encode here produces (§11.3.5.1).
-            "change-background" => Ok(PngMutation::ChangeBackground(semio_s_artifact_stdio_png::schema::mutations::ChangeBackgroundMutation { bkgd: Some(PngBackground::Rgb { r: num(params, "r").unwrap_or(0.0) as u16, g: num(params, "g").unwrap_or(0.0) as u16, b: num(params, "b").unwrap_or(0.0) as u16 }) })),
-            "insert-text-chunk" => Ok(PngMutation::InsertTextChunk(semio_s_artifact_stdio_png::schema::mutations::InsertTextChunkMutation { index: num(params, "index").unwrap_or(0.0) as usize, chunk: text_chunk_from(params) })),
-            "remove-text-chunk" => Ok(PngMutation::RemoveTextChunk(semio_s_artifact_stdio_png::schema::mutations::RemoveTextChunkMutation { index: num(params, "index").unwrap_or(0.0) as usize })),
-            "replace-text-chunk" => Ok(PngMutation::ReplaceTextChunk(semio_s_artifact_stdio_png::schema::mutations::ReplaceTextChunkMutation { index: num(params, "index").unwrap_or(0.0) as usize, chunk: text_chunk_from(params) })),
-            "replace-pixels" => Ok(PngMutation::ReplacePixels(semio_s_artifact_stdio_png::schema::mutations::ReplacePixelsMutation { pixels: solid_pixels(base, params) })),
-            "insert-unknown-chunk" => Ok(PngMutation::InsertUnknownChunk(semio_s_artifact_stdio_png::schema::mutations::InsertUnknownChunkMutation { index: num(params, "index").unwrap_or(0.0) as usize, chunk: unknown_chunk_from(params) })),
-            "remove-unknown-chunk" => Ok(PngMutation::RemoveUnknownChunk(semio_s_artifact_stdio_png::schema::mutations::RemoveUnknownChunkMutation { index: num(params, "index").unwrap_or(0.0) as usize })),
-            other => Err(format!("mutation kind {other:?} has no subject implementation")),
-        }
+    /// 🦠️ Decodes the scenario's `{"kind", "params"}` doc string: `params` is the leaf's own wire payload, read
+    /// through the vocabulary's derive-generated decoder rather than a params grammar written beside it.
+    fn mutation_from_spec(spec: &Json) -> Result<PngMutation, String> {
+        decode_png_mutation_payload(&spec.str("kind"), &spec.get("params").cloned().unwrap_or(Json::Null).to_string())
     }
     //#endregion 🔖️MutationFromSpec
 
@@ -218,8 +117,7 @@ mod subject {
     pub fn mutate(ctx: &Context) -> Result<Outcome, String> {
         let spec = ctx.doc_json()?;
         let mut snapshot = decode_png(&arranged_input(ctx, &spec)?).map_err(|error| format!("decode_png failed: {error}"))?;
-        let mutation = mutation_from_spec(&spec.str("kind"), spec.get("params").unwrap_or(&Json::Null), &snapshot)?;
-        let _ = apply_png_mutation(&mut snapshot, &mutation);
+        let _ = apply_png_mutation(&mut snapshot, &mutation_from_spec(&spec)?);
         let bytes = encode_png(&snapshot).map_err(|error| format!("encode_png failed: {error}"))?;
         let projection = project_png_mutation(&bytes)?;
         Ok(Outcome::with_raw(bytes, projection))
@@ -231,7 +129,7 @@ mod subject {
     pub fn undo(ctx: &Context) -> Result<Outcome, String> {
         let spec = ctx.doc_json()?;
         let base = decode_png(&arranged_input(ctx, &spec)?).map_err(|error| format!("decode_png failed: {error}"))?;
-        let mutation = mutation_from_spec(&spec.str("kind"), spec.get("params").unwrap_or(&Json::Null), &base)?;
+        let mutation = mutation_from_spec(&spec)?;
         let mut snapshot = base.clone();
         let _ = apply_png_mutation(&mut snapshot, &mutation);
         for inverse in inverse_png_mutation(&mutation, &base) {
@@ -266,12 +164,12 @@ mod subject {
 /// base ids, which the host resolves for every Examples row, and plain scenarios under their own ids.
 pub fn adapter() -> Adapter {
     let mut built = Adapter::new("rust");
-    built = built.oracle("mutate", mutate_oracle);
-    built = built.oracle("inverse", inverse_oracle);
+    built = built.oracle("mutate", mutate_oracle).oracle("mutate-raster", mutate_oracle);
+    built = built.oracle("inverse", inverse_oracle).oracle("inverse-raster", inverse_oracle);
     #[cfg(feature = "sut")]
     {
-        built = built.subject("mutate", subject::mutate);
-        built = built.subject("inverse", subject::undo);
+        built = built.subject("mutate", subject::mutate).subject("mutate-raster", subject::mutate);
+        built = built.subject("inverse", subject::undo).subject("inverse-raster", subject::undo);
     }
     built = built.oracle("identity-round-trip", identity_round_trip_oracle);
     #[cfg(feature = "sut")]

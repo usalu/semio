@@ -161,22 +161,22 @@ Feature: Apply every typed semio DRAWING mutation to a real vector document, aga
     Then each reaches the committed after-snapshot and the two agree
     Examples:
       | id                  | dir                    | slug                                                        |
-      | change-stroke-color | 🖌️change-stroke-color | 🎨️recolours-the-primary-styles-stroke-to-translucent-white    |
+      | change-stroke-color | 🖌️change-stroke-color | 🎨️recolours-primary-styles-stroke    |
       | change-stroke-width | 📐change-stroke-width  | 📐️thickens-the-primary-styles-stroke                          |
       | create-layer        | 🌱create-layer         | 🪜️inserts-a-second-layer-above-the-base-layer                 |
       | create-node         | ➕create-node          | 🔤️appends-a-caption-text-node-to-the-layer-root               |
       | delete-layer        | 🗑️delete-layer        | 🚫️removes-the-leading-layer-and-keeps-the-overlay             |
       | delete-node         | ➖delete-node          | 🚫️removes-the-text-node-from-the-layer-root                   |
-      | drag-nodes          | 🖐️drag-nodes          | 🖐️drags-the-text-node-and-the-nested-group-by-the-same-offset |
+      | drag-nodes          | 🖐️drag-nodes          | 🖐️drags-text-node-nested-group-same-offset |
       | flatten             | 🫓flatten-node         | 🫓️flattens-an-identity-nested-group-into-its-leaves           |
       | group               | 🧷group-nodes          | 🧷️groups-the-two-leading-children-into-a-new-group            |
       | move-node           | 📍move-node            | 📍️moves-the-text-node-to-a-new-origin                         |
-      | reorder-nodes       | 🔀reorder-nodes        | 🔀️moves-the-leading-path-node-to-the-end-of-the-layer-root    |
+      | reorder-nodes       | 🔀reorder-nodes        | 🔀️moves-leading-path-node-end-layer-root    |
       | replace-fill        | 🪣replace-fill         | 🎨️repaints-the-primary-styles-fill-from-red-to-blue           |
       | replace-path        | 🛤️replace-path        | 🔺️swaps-the-open-path-for-a-closed-triangle                   |
       | rotate              | 🔄rotate-node          | 🔄️rotates-the-nested-group-a-half-turn-about-z                |
       | scale               | 📏scale-node           | 📏️scales-the-nested-group-non-uniformly                       |
-      | unflatten           | 🎈unflatten-node       | 🎈️restores-the-captured-hierarchy-over-the-flat-group         |
+      | unflatten           | 🎈unflatten-node       | 🎈️restores-captured-hierarchy-over-flat-group         |
       | ungroup             | 💫ungroup-node         | 💫️dissolves-the-nested-group-into-its-parent                  |
 
   @id-identity-round-trip

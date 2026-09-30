@@ -117,20 +117,12 @@ mod subject {
     use super::mutable_input;
     use semio_repo_test_host::{Context, Json, Outcome};
     use semio_s_artifact_stdio_pdf::standards::v1_4::subsets::base::io::{decode_pdf, encode_pdf};
-    use semio_s_artifact_stdio_pdf::standards::v1_4::subsets::x::schema::mutations::{apply_x_conformance_mutation, inverse_x_conformance_mutation, CollapsePageSize, PdfX1Mutation, SetPageSize};
+    use semio_s_artifact_stdio_pdf::standards::v1_4::subsets::x::schema::mutations::{apply_x_conformance_mutation, decode_x_conformance_mutation_payload, inverse_x_conformance_mutation, PdfX1Mutation};
     use semio_s_plugin_stdio_test_oracle::artifacts::pdf::standards::v1_4::subsets::x::project_conformance;
 
+    /// 📨️ The scenario's `{kind, params}` row: `params` is the leaf wire payload, decoded generically.
     fn mutation_from_spec(spec: &Json) -> Result<PdfX1Mutation, String> {
-        let params = spec.get("params").ok_or("Missing mutation parameters")?;
-        let number = |key| match params.get(key) {
-            Some(Json::Number(value)) if value.is_finite() => Ok(*value),
-            _ => Err(format!("{key} must be finite")),
-        };
-        Ok(match spec.str("kind").as_str() {
-            "set-page-size" => PdfX1Mutation::SetPageSize(SetPageSize { width: number("width")?, height: number("height")? }),
-            "collapse-page-size" => PdfX1Mutation::CollapsePageSize(CollapsePageSize {}),
-            other => return Err(format!("Unknown subject mutation {other:?}")),
-        })
+        decode_x_conformance_mutation_payload(&spec.str("kind"), &spec.get("params").cloned().unwrap_or(Json::Null).to_string())
     }
 
     pub fn mutate(ctx: &Context) -> Result<Outcome, String> {

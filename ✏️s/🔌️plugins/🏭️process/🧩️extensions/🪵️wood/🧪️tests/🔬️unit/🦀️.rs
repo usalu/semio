@@ -59,7 +59,7 @@ async fn catalog_has_wood_identity() {
 
 #[semio_framework_async_macros::async_test]
 async fn bundle_contributes_wood_machines_for_process3d_play() {
-    let manifest = bundle().manifest;
+    let manifest = bundle().into_manifest_cold().unwrap();
     assert_eq!(manifest.extension_id, "process-extension-wood");
     assert_eq!(manifest.extends, "process");
     assert_eq!(manifest.topic_contributions.len(), 1);

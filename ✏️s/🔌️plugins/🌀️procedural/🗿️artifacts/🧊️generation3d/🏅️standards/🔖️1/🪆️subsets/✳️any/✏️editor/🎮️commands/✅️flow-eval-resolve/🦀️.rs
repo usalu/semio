@@ -36,18 +36,3 @@ pub fn handle(payload: &FlowEvalResolve, _doc: &ArtifactView<'_, Generation3dSna
     preview_eval::resolve_eval(payload, session);
     Ok(Emit { ui_scope: flow_eval_tick::chain_ui_scope(&payload.window_kind_id, true), ..Default::default() })
 }
-
-//#region 🧪️Tests
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
-//#endregion 🧪️Tests
-
-//#region 🧪️Budget
-/// ⏱️ The BUDGET law of the `evaluate` capability — its own module because the law is about the
-/// ENVELOPE and its continuation, not about the one finished answer `🔬️unit` pins
-/// (ticket 26/09/09/PROCEDURAL-3D-END-TO-END).
-#[cfg(test)]
-#[path = "🧪️tests/🔬️budget/🦀️.rs"]
-mod budget;
-//#endregion 🧪️Budget

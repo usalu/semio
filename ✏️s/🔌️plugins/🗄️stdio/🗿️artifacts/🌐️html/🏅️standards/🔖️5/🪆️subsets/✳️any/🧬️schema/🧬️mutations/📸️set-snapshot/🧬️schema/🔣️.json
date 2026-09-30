@@ -5,15 +5,24 @@
   "type": "object",
   "additionalProperties": false,
   "required": [
+    "mutation",
     "snapshot"
   ],
   "properties": {
-    "snapshot": {
-      "$ref": "#/$defs/HtmlSnapshot"
-    },
     "mutation": {
       "const": "setSnapshot",
       "description": "Aggregate discriminator spliced in by HtmlMutation; absent when the payload stands alone."
+    },
+    "snapshot": {
+      "$ref": "#/$defs/HtmlSnapshot",
+      "x-semio-ui": {
+        "label": {
+          "en": "HTML document",
+          "de": "HTML-Dokument"
+        },
+        "group": "value",
+        "order": 10
+      }
     }
   },
   "$defs": {
@@ -26,7 +35,17 @@
       ],
       "properties": {
         "schema": {
-          "type": "string"
+          "type": "string",
+          "x-semio-ui": {
+            "label": {
+              "en": "Schema",
+              "de": "Schema"
+            },
+            "description": {
+              "en": "Identifier of the snapshot schema this document follows.",
+              "de": "Kennung des Snapshot-Schemas, dem dieses Dokument folgt."
+            }
+          }
         },
         "doctype": {
           "anyOf": [
@@ -36,10 +55,26 @@
             {
               "type": "null"
             }
-          ]
+          ],
+          "x-semio-ui": {
+            "label": {
+              "en": "Document type",
+              "de": "Dokumenttyp"
+            },
+            "description": {
+              "en": "DOCTYPE declaration; empty removes it.",
+              "de": "DOCTYPE-Deklaration; leer entfernt sie."
+            }
+          }
         },
         "root": {
-          "$ref": "#/$defs/HtmlNode"
+          "$ref": "#/$defs/HtmlNode",
+          "x-semio-ui": {
+            "label": {
+              "en": "Root node",
+              "de": "Wurzelknoten"
+            }
+          }
         }
       }
     },

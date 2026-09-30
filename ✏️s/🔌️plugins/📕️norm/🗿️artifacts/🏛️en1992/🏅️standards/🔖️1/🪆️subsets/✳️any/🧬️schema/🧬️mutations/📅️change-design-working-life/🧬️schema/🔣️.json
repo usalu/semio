@@ -9,7 +9,27 @@
   ],
   "properties": {
     "newYears": {
-      "type": "number"
+      "type": "number",
+      "exclusiveMinimum": 0,
+      "x-semio-ui": {
+        "widget": "stepper",
+        "role": "value",
+        "label": {
+          "en": "Design working life T_lg",
+          "de": "Geplante Nutzungsdauer T_lg"
+        },
+        "unit": "a",
+        "step": 1,
+        "precision": 0,
+        "snaps": [
+          10,
+          25,
+          50,
+          100
+        ],
+        "group": "durability",
+        "order": 10
+      }
     }
   }
 }

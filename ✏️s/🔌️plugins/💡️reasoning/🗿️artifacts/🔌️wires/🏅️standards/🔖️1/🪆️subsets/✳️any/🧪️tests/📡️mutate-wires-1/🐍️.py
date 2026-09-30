@@ -44,10 +44,10 @@ VECTORS = {
     "delete-node": (f"{_ROOT}/🗑️delete-node/🧪️rejects-deleting-a-node-the-board-never-held", "deleteNode", True),
     "move-node": (f"{_ROOT}/🧭move-node/🧪️reports-a-no-op-when-a-y-less-node-is-moved-to-y-zero", "moveNode", False),
     "resize-node": (f"{_ROOT}/📐resize-node/🧪️reports-a-no-op-when-the-radius-already-matches", "resizeNode", False),
-    "change-node-kind": (f"{_ROOT}/🏷️change-node-kind/🧪️reports-a-no-op-when-the-kind-already-reads-topic", "changeNodeKind", False),
-    "change-node-shape": (f"{_ROOT}/🔷change-node-shape/🧪️reports-a-no-op-when-the-shape-already-reads-circle", "changeNodeShape", False),
+    "change-node-kind": (f"{_ROOT}/🏷️change-node-kind/🧪️reports-no-op-when-kind-already-reads-topic", "changeNodeKind", False),
+    "change-node-shape": (f"{_ROOT}/🔷change-node-shape/🧪️reports-no-op-when-shape-already-reads-circle", "changeNodeShape", False),
     "edit-node-text": (f"{_ROOT}/✏️edit-node-text/🧪️reports-a-no-op-when-the-label-is-retyped-verbatim", "editNodeText", False),
-    "set-node-root": (f"{_ROOT}/🚩set-node-root/🧪️reports-a-no-op-when-an-unflagged-node-is-set-to-not-root", "setNodeRoot", False),
+    "set-node-root": (f"{_ROOT}/🚩set-node-root/🧪️reports-no-op-when-unflagged-node-is-set-not-root", "setNodeRoot", False),
     "connect-nodes": (f"{_ROOT}/🤝️connect-nodes/🧪️rejects-an-edge-whose-source-node-is-absent", "connectNodes", True),
     "disconnect-nodes": (f"{_ROOT}/✂️disconnect-nodes/🧪️rejects-cutting-an-edge-the-board-never-carried", "disconnectNodes", True),
 }

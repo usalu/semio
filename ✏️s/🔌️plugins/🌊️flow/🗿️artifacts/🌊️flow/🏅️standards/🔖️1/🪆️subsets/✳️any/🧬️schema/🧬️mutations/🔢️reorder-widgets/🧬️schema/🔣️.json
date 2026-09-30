@@ -5,12 +5,33 @@
   "type": "object",
   "additionalProperties": false,
   "required": [
+    "mutation",
     "id",
     "toIndex"
   ],
   "properties": {
+    "mutation": {
+      "const": "reorderWidgets"
+    },
     "id": {
-      "type": "string"
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Widget",
+          "de": "Widget"
+        },
+        "description": {
+          "en": "The widget this mutation addresses.",
+          "de": "Das Widget, das diese Mutation adressiert."
+        },
+        "ref": {
+          "kind": "widget",
+          "domain": "graph",
+          "granularity": "node"
+        }
+      }
     },
     "toIndex": {
       "type": "integer",

@@ -8,35 +8,23 @@
       "type": "object",
       "additionalProperties": false,
       "required": [
-        "SetProductPlacement"
-      ],
-      "properties": {
-        "SetProductPlacement": {
-          "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/ifc/2x3/cv20/mutation/set-product-placement/schema.json"
-        }
-      }
-    },
-    {
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "SetProjectUnits"
-      ],
-      "properties": {
-        "SetProjectUnits": {
-          "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/ifc/2x3/cv20/mutation/set-project-units/schema.json"
-        }
-      }
-    },
-    {
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
         "SetSnapshot"
       ],
       "properties": {
         "SetSnapshot": {
           "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/ifc/2x3/cv20/mutation/set-snapshot/schema.json"
+        }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "SetViewDefinition"
+      ],
+      "properties": {
+        "SetViewDefinition": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/ifc/2x3/cv20/mutation/set-view-definition/schema.json"
         }
       }
     },
@@ -56,11 +44,23 @@
       "type": "object",
       "additionalProperties": false,
       "required": [
-        "SetViewDefinition"
+        "SetProjectUnits"
       ],
       "properties": {
-        "SetViewDefinition": {
-          "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/ifc/2x3/cv20/mutation/set-view-definition/schema.json"
+        "SetProjectUnits": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/ifc/2x3/cv20/mutation/set-project-units/schema.json"
+        }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "SetProductPlacement"
+      ],
+      "properties": {
+        "SetProductPlacement": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/ifc/2x3/cv20/mutation/set-product-placement/schema.json"
         }
       }
     }

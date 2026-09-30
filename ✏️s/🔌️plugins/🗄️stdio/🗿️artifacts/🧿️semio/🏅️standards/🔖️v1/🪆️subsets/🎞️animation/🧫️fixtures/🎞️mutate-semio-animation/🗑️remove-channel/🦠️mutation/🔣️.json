@@ -1,6 +1,7 @@
 {
   "kind": "remove-channel",
-  "params": {
+  "mutation": {
+    "mutation": "removeChannel",
     "timelineIndex": 0,
     "index": 0
   },

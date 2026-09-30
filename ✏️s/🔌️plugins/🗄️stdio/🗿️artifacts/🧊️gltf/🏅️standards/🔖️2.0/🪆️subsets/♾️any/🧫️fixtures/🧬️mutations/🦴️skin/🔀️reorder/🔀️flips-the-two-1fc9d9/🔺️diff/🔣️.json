@@ -1,21 +1,38 @@
 {
-  "id": "s.stdio.gltf.mutation.reorder-skins.v1",
-  "version": 1,
-  "touchedPaths": [
-    "document/skins/1",
-    "document/skins/0"
-  ],
-  "payload": {
-    "order": [
-      1,
-      0
+  "nodes": {
+    "modified": [
+      {
+        "index": 0,
+        "diff": {
+          "skin": 1
+        }
+      },
+      {
+        "index": 1,
+        "diff": {
+          "skin": 0
+        }
+      }
     ]
   },
-  "operation": {
-    "kind": "reorder",
-    "order": [
-      1,
-      0
+  "skins": {
+    "modified": [
+      {
+        "index": 0,
+        "diff": {
+          "joints": [
+            1
+          ]
+        }
+      },
+      {
+        "index": 1,
+        "diff": {
+          "joints": [
+            0
+          ]
+        }
+      }
     ]
   }
 }

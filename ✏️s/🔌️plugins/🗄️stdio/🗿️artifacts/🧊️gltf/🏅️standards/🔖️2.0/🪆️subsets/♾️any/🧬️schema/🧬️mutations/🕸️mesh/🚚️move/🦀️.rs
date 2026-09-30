@@ -30,7 +30,7 @@ pub fn apply(payload: &GltfMoveMeshPayload, base: &GltfSnapshot) -> Result<GltfS
 
 //#region 🧬️DirectMutation
 #[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::MutationLeaf)]
-#[mutation_leaf(contract = ::protocol)]
+#[mutation_leaf(contract = ::protocol, payload = Apply)]
 #[value(tag = "phase", content = "value", rename_all = "camelCase")]
 pub enum MoveMeshMutation {
     Apply(GltfMoveMeshPayload),
@@ -74,6 +74,6 @@ impl protocol::MutationKind<GltfSnapshot, super::GltfMutation> for MoveMeshMutat
 
 //#region 🧪️Tests
 #[cfg(test)]
-#[path = "🧪️tests/🔬️direct-leaf/🦀️.rs"]
-mod direct_leaf_tests;
+#[path = "🧪️tests/🚚️swaps-the-hull-and-9758af/🦀️.rs"]
+mod case_swaps_the_hull_and_9758af;
 //#endregion 🧪️Tests

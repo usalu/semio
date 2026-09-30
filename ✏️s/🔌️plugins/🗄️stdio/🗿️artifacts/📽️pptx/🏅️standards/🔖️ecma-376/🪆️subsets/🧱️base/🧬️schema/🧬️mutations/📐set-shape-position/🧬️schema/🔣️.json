@@ -5,11 +5,16 @@
   "type": "object",
   "additionalProperties": false,
   "required": [
+    "mutation",
     "slide_index",
     "shape_index",
     "position"
   ],
   "properties": {
+    "mutation": {
+      "const": "setShapePosition",
+      "description": "Aggregate discriminator spliced in by PptxMutation; absent when the payload stands alone."
+    },
     "slide_index": {
       "type": "integer",
       "minimum": 0
@@ -20,10 +25,6 @@
     },
     "position": {
       "$ref": "#/$defs/PptxTransform"
-    },
-    "mutation": {
-      "const": "setShapePosition",
-      "description": "Aggregate discriminator spliced in by PptxMutation; absent when the payload stands alone."
     }
   },
   "$defs": {
@@ -44,10 +45,40 @@
           "type": "integer"
         },
         "cx": {
-          "type": "integer"
+          "type": "integer",
+          "x-semio-ui": {
+            "widget": "stepper",
+            "label": {
+              "en": "Width",
+              "de": "Breite"
+            },
+            "description": {
+              "en": "Shape extent in EMU (914400 per inch).",
+              "de": "Ausdehnung der Form in EMU (914400 je Zoll)."
+            },
+            "unit": "EMU",
+            "displayUnit": "cm",
+            "displayFactor": 2.777777777777778e-06,
+            "precision": 2
+          }
         },
         "cy": {
-          "type": "integer"
+          "type": "integer",
+          "x-semio-ui": {
+            "widget": "stepper",
+            "label": {
+              "en": "Height",
+              "de": "Höhe"
+            },
+            "description": {
+              "en": "Shape extent in EMU (914400 per inch).",
+              "de": "Ausdehnung der Form in EMU (914400 je Zoll)."
+            },
+            "unit": "EMU",
+            "displayUnit": "cm",
+            "displayFactor": 2.777777777777778e-06,
+            "precision": 2
+          }
         }
       }
     }

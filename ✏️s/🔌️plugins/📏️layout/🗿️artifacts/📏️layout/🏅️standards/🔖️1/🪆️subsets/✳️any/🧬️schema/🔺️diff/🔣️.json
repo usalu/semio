@@ -189,7 +189,7 @@
     "referencedModel": {
       "anyOf": [
         {
-          "$ref": "https://json.schemas.assets.semio-tech.com/os/store/link.json",
+          "$ref": "https://json.schemas.assets.semio-tech.com/os/store/link/schema.json",
           "x-semio-link-roles": [
             "model"
           ]
@@ -1029,7 +1029,7 @@
       ],
       "properties": {
         "handle": {
-          "$ref": "https://json.schemas.assets.semio-tech.com/os/store/child.json"
+          "$ref": "https://json.schemas.assets.semio-tech.com/os/store/child/schema.json"
         },
         "content": {
           "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/semio/v1/drawing/snapshot.json"

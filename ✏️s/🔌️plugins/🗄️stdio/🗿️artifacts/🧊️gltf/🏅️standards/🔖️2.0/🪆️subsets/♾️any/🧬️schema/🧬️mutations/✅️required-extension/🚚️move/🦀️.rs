@@ -4,8 +4,7 @@ use crate::schema::modules::mutation_support::top_level::{reject, GltfTopLevelMu
 use crate::GltfSnapshot;
 pub const ID: &str = "s.stdio.gltf.mutation.move-required-extension.v1";
 pub const TOUCHED_PATHS: &[&str] = &["document/extensionsRequired"];
-#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::MutationLeaf)]
-#[mutation_leaf(contract = ::protocol)]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
 #[value(rename_all = "camelCase")]
 pub struct GltfMoveRequiredExtensionPayload {
     pub extension: String,
@@ -33,7 +32,7 @@ pub fn apply(payload: &GltfMoveRequiredExtensionPayload, base: &GltfSnapshot) ->
 
 //#region 🧬️DirectMutation
 #[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::MutationLeaf)]
-#[mutation_leaf(contract = ::protocol)]
+#[mutation_leaf(contract = ::protocol, payload = Apply)]
 #[value(tag = "phase", content = "value", rename_all = "camelCase")]
 pub enum MoveRequiredExtensionMutation {
     Apply(GltfMoveRequiredExtensionPayload),
@@ -77,6 +76,6 @@ impl protocol::MutationKind<GltfSnapshot, super::GltfMutation> for MoveRequiredE
 
 //#region 🧪️Tests
 #[cfg(test)]
-#[path = "🧪️tests/🔬️direct-leaf/🦀️.rs"]
-mod direct_leaf_tests;
+#[path = "🧪️tests/🔬️t043/🦀️.rs"]
+mod case_t043;
 //#endregion 🧪️Tests

@@ -90,8 +90,8 @@ Feature: Apply every typed DIN EN 16798 mutation against an independent Python i
       | change-heat-recovery-eta-min        | 🚧️change-heat-recovery-eta-min       | 🚧️raises-the-required-heat-recovery-minimum-to-0-point-625       |
       | change-system-type                  | ⚙️change-system-type                 | ⚙️switches-to-a-decentral-mechanical-system                      |
       | change-years-since-inspection       | 📅️change-years-since-inspection      | 📅️ages-the-last-inspection-to-six-years                          |
-      | change-humidification-required-kg-h | ☁️change-humidification-required-kg-h | ☁️raises-the-required-humidification-to-3-point-5-kg-per-hour    |
-      | change-humidification-provided-kg-h | 💦️change-humidification-provided-kg-h | 💦️drops-the-provided-humidification-to-1-point-25-kg-per-hour    |
+      | change-humidification-required-kg-h | ☁️change-humidification-required-kg-h | ☁️raises-the-required-humidification-3-point-5-kg-per-hour    |
+      | change-humidification-provided-kg-h | 💦️change-humidification-provided-kg-h | 💦️drops-the-provided-humidification-1-point-25-kg-per-hour    |
       | change-fan-qvm3-s                   | 🪭️change-fan-qvm3-s                  | 🪭️raises-the-fan-volume-flow-to-1-point-5-m3-per-second          |
       | change-fan-t-run-h                  | ⏰️change-fan-t-run-h                 | ⏰️extends-the-daily-fan-runtime-to-12-hours                      |
       | change-fan-energy-reference-kwh     | 🔌️change-fan-energy-reference-kwh    | 🔌️raises-the-fan-energy-reference-to-18-kwh                      |
@@ -103,7 +103,7 @@ Feature: Apply every typed DIN EN 16798 mutation against an independent Python i
       | change-hr-savings-reference-kwh     | 💡️change-hr-savings-reference-kwh    | 💡️raises-the-heat-recovery-savings-reference-to-65-kwh           |
       | change-n50-h-inv                    | 🏠️change-n50-h-inv                   | 🏠️loosens-the-blower-door-result-to-2-point-5-per-hour           |
       | change-volume-m3                    | 🧊️change-volume-m3                   | 🧊️grows-the-air-volume-to-640-m3                                 |
-      | change-infiltration-allowance-m3-h  | 🚪️change-infiltration-allowance-m3-h | 🚪️raises-the-infiltration-allowance-to-52-point-5-m3-per-hour    |
+      | change-infiltration-allowance-m3-h  | 🚪️change-infiltration-allowance-m3-h | 🚪️raises-the-infiltration-allowance-52-point-5-m3-per-hour    |
       | change-cellar-area-m2               | 🏚️change-cellar-area-m2              | 🏚️grows-the-cellar-floor-area-to-62-point-5-m2                   |
       | change-cellar-ventilation-m3-h      | 🪟️change-cellar-ventilation-m3-h     | 🪟️raises-the-cellar-airflow-to-22-point-5-m3-per-hour            |
       | change-h-tr-wk                      | 🧱️change-h-tr-wk                     | 🧱️improves-the-transmission-heat-transfer-to-175-w-per-k         |
@@ -165,8 +165,8 @@ Feature: Apply every typed DIN EN 16798 mutation against an independent Python i
       | change-heat-recovery-eta-min        | 🚧️change-heat-recovery-eta-min       | 🚧️raises-the-required-heat-recovery-minimum-to-0-point-625       |
       | change-system-type                  | ⚙️change-system-type                 | ⚙️switches-to-a-decentral-mechanical-system                      |
       | change-years-since-inspection       | 📅️change-years-since-inspection      | 📅️ages-the-last-inspection-to-six-years                          |
-      | change-humidification-required-kg-h | ☁️change-humidification-required-kg-h | ☁️raises-the-required-humidification-to-3-point-5-kg-per-hour    |
-      | change-humidification-provided-kg-h | 💦️change-humidification-provided-kg-h | 💦️drops-the-provided-humidification-to-1-point-25-kg-per-hour    |
+      | change-humidification-required-kg-h | ☁️change-humidification-required-kg-h | ☁️raises-the-required-humidification-3-point-5-kg-per-hour    |
+      | change-humidification-provided-kg-h | 💦️change-humidification-provided-kg-h | 💦️drops-the-provided-humidification-1-point-25-kg-per-hour    |
       | change-fan-qvm3-s                   | 🪭️change-fan-qvm3-s                  | 🪭️raises-the-fan-volume-flow-to-1-point-5-m3-per-second          |
       | change-fan-t-run-h                  | ⏰️change-fan-t-run-h                 | ⏰️extends-the-daily-fan-runtime-to-12-hours                      |
       | change-fan-energy-reference-kwh     | 🔌️change-fan-energy-reference-kwh    | 🔌️raises-the-fan-energy-reference-to-18-kwh                      |
@@ -178,7 +178,7 @@ Feature: Apply every typed DIN EN 16798 mutation against an independent Python i
       | change-hr-savings-reference-kwh     | 💡️change-hr-savings-reference-kwh    | 💡️raises-the-heat-recovery-savings-reference-to-65-kwh           |
       | change-n50-h-inv                    | 🏠️change-n50-h-inv                   | 🏠️loosens-the-blower-door-result-to-2-point-5-per-hour           |
       | change-volume-m3                    | 🧊️change-volume-m3                   | 🧊️grows-the-air-volume-to-640-m3                                 |
-      | change-infiltration-allowance-m3-h  | 🚪️change-infiltration-allowance-m3-h | 🚪️raises-the-infiltration-allowance-to-52-point-5-m3-per-hour    |
+      | change-infiltration-allowance-m3-h  | 🚪️change-infiltration-allowance-m3-h | 🚪️raises-the-infiltration-allowance-52-point-5-m3-per-hour    |
       | change-cellar-area-m2               | 🏚️change-cellar-area-m2              | 🏚️grows-the-cellar-floor-area-to-62-point-5-m2                   |
       | change-cellar-ventilation-m3-h      | 🪟️change-cellar-ventilation-m3-h     | 🪟️raises-the-cellar-airflow-to-22-point-5-m3-per-hour            |
       | change-h-tr-wk                      | 🧱️change-h-tr-wk                     | 🧱️improves-the-transmission-heat-transfer-to-175-w-per-k         |

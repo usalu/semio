@@ -20,7 +20,8 @@
 //! also depends on (it predicts the JSON chunk's real length with `serde_json`). `#[value(default)]`
 //! keeps the read direction lenient, so an encoder that does spell `"children": []` still decodes.
 
-use crate::engine::{GltfAccessorType, GltfComponentType};
+pub use crate::engine::GltfAccessorType;
+pub use crate::engine::GltfComponentType;
 use crate::STDIO_GLTF_DOCUMENT_SCHEMA;
 use framework_schema::ArtifactSchema;
 use serde::de::{MapAccess, SeqAccess, Visitor};

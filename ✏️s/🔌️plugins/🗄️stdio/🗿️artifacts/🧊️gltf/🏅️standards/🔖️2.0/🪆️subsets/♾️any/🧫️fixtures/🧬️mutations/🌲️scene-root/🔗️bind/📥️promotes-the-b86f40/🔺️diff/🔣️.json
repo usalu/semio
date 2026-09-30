@@ -1,8 +1,14 @@
 {
-  "scene": 0,
-  "node": 0,
-  "position": 0,
-  "touchedPaths": [
-    "document/scenes/0/nodes/0"
-  ]
+  "scenes": {
+    "modified": [
+      {
+        "index": 0,
+        "diff": {
+          "nodes": [
+            0
+          ]
+        }
+      }
+    ]
+  }
 }

@@ -10,17 +10,74 @@
   ],
   "properties": {
     "pageId": {
-      "type": "string"
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Page",
+          "de": "Seite"
+        },
+        "ref": {
+          "kind": "page"
+        },
+        "group": "target",
+        "order": 10
+      }
     },
     "frame": {
-      "$ref": "#/$defs/Frame"
+      "$ref": "#/$defs/Frame",
+      "x-semio-ui": {
+        "role": "value",
+        "label": {
+          "en": "Frame",
+          "de": "Rahmen"
+        },
+        "group": "record",
+        "order": 20
+      }
     },
     "index": {
-      "type": "integer",
-      "minimum": 0
+      "type": [
+        "integer",
+        "null"
+      ],
+      "minimum": 0,
+      "x-semio-ui": {
+        "widget": "stepper",
+        "role": "value",
+        "label": {
+          "en": "Index",
+          "de": "Index"
+        },
+        "description": {
+          "en": "Position in the list; empty appends at the end.",
+          "de": "Position in der Liste; leer hängt am Ende an."
+        },
+        "step": 1,
+        "precision": 0,
+        "group": "order",
+        "order": 30
+      }
     },
     "layerId": {
-      "type": "string"
+      "type": [
+        "string",
+        "null"
+      ],
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Layer",
+          "de": "Ebene"
+        },
+        "ref": {
+          "kind": "layer"
+        },
+        "group": "target",
+        "order": 40
+      }
     }
   },
   "$defs": {
@@ -34,10 +91,38 @@
       ],
       "properties": {
         "kind": {
-          "type": "string"
+          "type": "string",
+          "x-semio-ui": {
+            "widget": "text",
+            "role": "value",
+            "label": {
+              "en": "Frame kind",
+              "de": "Rahmenart"
+            },
+            "description": {
+              "en": "Kind of frame, e.g. rect, text or image.",
+              "de": "Rahmenart, z. B. rect, text oder image."
+            },
+            "group": "kind",
+            "order": 10
+          }
         },
         "id": {
-          "type": "string"
+          "type": "string",
+          "x-semio-ui": {
+            "widget": "text",
+            "role": "value",
+            "label": {
+              "en": "ID",
+              "de": "ID"
+            },
+            "description": {
+              "en": "Unique id of the record.",
+              "de": "Eindeutige ID des Eintrags."
+            },
+            "group": "identity",
+            "order": 20
+          }
         }
       }
     }

@@ -22,7 +22,7 @@ const docx = {
     epilog: [{ kind: 'processingInstruction', target: 'after', data: 'retained' }],
   } }],
 } satisfies WithoutEntries<DocxBaseArtifact>;
-const xlsx = { schema: 's.stdio.xlsx', opc, workbook: { sheets: [], sharedStrings: [] } } satisfies WithoutEntries<XlsxBaseArtifact>;
+const xlsx = { schema: 's.stdio.xlsx', opc, xmlParts: docx.xmlParts } satisfies WithoutEntries<XlsxBaseArtifact>;
 const pptx = { schema: 's.stdio.pptx', opc, xmlParts: docx.xmlParts, presentation: { slides: [] } } satisfies WithoutEntries<PptxBaseArtifact>;
 
 /** 🧪️ Materialized public artifacts accepted identically by every ECMA-376 subset facet. */

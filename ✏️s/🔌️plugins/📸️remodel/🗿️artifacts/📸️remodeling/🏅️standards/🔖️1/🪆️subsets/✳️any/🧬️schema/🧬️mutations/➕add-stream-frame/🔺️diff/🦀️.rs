@@ -1,6 +1,8 @@
 //! 🔺️ Sparse diff builder for `AddStreamFrame`. Guard order is the vocabulary's: a missing owner
-//! stream ⇒ Error `mutation.target-missing`, then the invariant ⇒ Fatal `mutation.invariant`, then an
-//! already-present exact frame ⇒ Warning `mutation.no-op`. `kind` ASSERTS the owner stream's media
+//! stream ⇒ Error `mutation.target-missing`, then an owner stream of another media kind ⇒ Error
+//! `mutation.target-missing` too (this base holds no stream of the declared kind under that id; a base
+//! that does hosts the same payload), then an already-present exact frame ⇒ Warning `mutation.no-op`.
+//! `kind` ASSERTS the owner stream's media
 //! kind rather than rewriting it — a stream's provenance is fixed when the stream is created, and a
 //! verb that silently rewrote it had no inverse in this vocabulary. The frame lands at its canonical
 //! `(index, asset_id)` position so `remove-stream-frame` puts it back exactly where it was.
@@ -13,7 +15,7 @@ pub fn diff(payload: &super::AddStreamFrame, base: &RemodelingSnapshot) -> proto
         return protocol::MutationOutcome::error("mutation.target-missing", format!("Stream \"{}\" does not exist.", payload.id), [payload.id.clone()]);
     };
     if payload.kind != stream.kind {
-        return protocol::MutationOutcome::fatal("mutation.invariant", format!("Stream \"{}\" is not of the media kind this frame declares.", payload.id), [payload.id.clone()]);
+        return protocol::MutationOutcome::error("mutation.target-missing", format!("Stream \"{}\" is not of the media kind this frame declares.", payload.id), [payload.id.clone()]);
     }
     if stream.frames.contains(&payload.frame) {
         return protocol::MutationOutcome::empty().warn("mutation.no-op", format!("Stream \"{}\" already has frame {}.", payload.id, payload.frame.index));

@@ -5,15 +5,24 @@
   "type": "object",
   "additionalProperties": false,
   "required": [
+    "mutation",
     "snapshot"
   ],
   "properties": {
-    "snapshot": {
-      "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/ifc/2x3/base/snapshot.json"
-    },
     "mutation": {
       "const": "setSnapshot",
       "description": "Aggregate discriminator spliced in by Ifc2x3Mutation; absent when the payload stands alone."
+    },
+    "snapshot": {
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/ifc/2x3/base/snapshot.json",
+      "x-semio-ui": {
+        "label": {
+          "en": "IFC model",
+          "de": "IFC-Modell"
+        },
+        "group": "value",
+        "order": 10
+      }
     }
   }
 }

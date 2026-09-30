@@ -13,7 +13,13 @@
       "$ref": "#/$defs/GraphNodeId"
     },
     "new_position": {
-      "$ref": "#/$defs/SemioPoint2"
+      "$ref": "#/$defs/SemioPoint2",
+      "x-semio-ui": {
+        "label": {
+          "en": "Position",
+          "de": "Position"
+        }
+      }
     }
   },
   "$defs": {

@@ -1,4 +1,28 @@
 {
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/norm/en1990/mutation/change-bridge-sls/schema.json",
   "title": "ChangeBridgeSls",
-  "type": "object"
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "mutation",
+    "newBridgeSls"
+  ],
+  "properties": {
+    "mutation": {
+      "const": "changeBridgeSls"
+    },
+    "newBridgeSls": {
+      "type": "array",
+      "items": {
+        "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1990/snapshot.json#/$defs/BridgeSls"
+      },
+      "x-semio-ui": {
+        "label": {
+          "en": "Bridge serviceability criteria",
+          "de": "Gebrauchstauglichkeitskriterien der Brücke"
+        }
+      }
+    }
+  }
 }

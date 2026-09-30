@@ -78,7 +78,7 @@
         },
         "geometry": {
           "kind": "brep",
-          "brep_id": "brep-1"
+          "brepId": "brep-1"
         },
         "spatialId": "storey-1",
         "psets": [

@@ -10,7 +10,23 @@
   "properties": {
     "seed": {
       "type": "integer",
-      "minimum": 0
+      "minimum": 0,
+      "x-semio-ui": {
+        "widget": "stepper",
+        "role": "value",
+        "label": {
+          "en": "Seed",
+          "de": "Startwert"
+        },
+        "description": {
+          "en": "Seed of the random choices the solver makes.",
+          "de": "Startwert der Zufallsentscheidungen des Lösers."
+        },
+        "step": 1,
+        "precision": 0,
+        "group": "solver",
+        "order": 10
+      }
     }
   }
 }

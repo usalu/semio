@@ -5,11 +5,30 @@
   "type": "object",
   "additionalProperties": false,
   "required": [
+    "mutation",
     "id"
   ],
   "properties": {
+    "mutation": {
+      "const": "deleteGrip"
+    },
     "id": {
-      "type": "string"
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Grip",
+          "de": "Griff"
+        },
+        "ref": {
+          "kind": "grip",
+          "domain": "grip",
+          "granularity": "grip"
+        },
+        "group": "target",
+        "order": 10
+      }
     }
   }
 }

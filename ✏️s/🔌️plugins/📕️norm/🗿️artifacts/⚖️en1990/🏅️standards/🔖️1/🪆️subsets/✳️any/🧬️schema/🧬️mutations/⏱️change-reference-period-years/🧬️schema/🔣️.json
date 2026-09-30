@@ -1,4 +1,28 @@
 {
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/norm/en1990/mutation/change-reference-period-years/schema.json",
   "title": "ChangeReferencePeriodYears",
-  "type": "object"
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "mutation",
+    "newReferencePeriodYears"
+  ],
+  "properties": {
+    "mutation": {
+      "const": "changeReferencePeriodYears"
+    },
+    "newReferencePeriodYears": {
+      "type": "number",
+      "x-semio-ui": {
+        "label": {
+          "en": "Reference period",
+          "de": "Bezugszeitraum"
+        },
+        "widget": "stepper",
+        "unit": "a",
+        "precision": 0
+      }
+    }
+  }
 }

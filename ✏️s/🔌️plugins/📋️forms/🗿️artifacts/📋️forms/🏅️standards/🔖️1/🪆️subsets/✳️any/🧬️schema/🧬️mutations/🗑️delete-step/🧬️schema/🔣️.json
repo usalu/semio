@@ -5,11 +5,34 @@
   "type": "object",
   "additionalProperties": false,
   "required": [
+    "mutation",
     "id"
   ],
   "properties": {
+    "mutation": {
+      "const": "deleteStep"
+    },
     "id": {
-      "type": "string"
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Step",
+          "de": "Schritt"
+        },
+        "description": {
+          "en": "The form step this mutation addresses.",
+          "de": "Der Formularschritt, den diese Mutation adressiert."
+        },
+        "ref": {
+          "kind": "step",
+          "domain": "fields",
+          "granularity": "section"
+        },
+        "group": "target",
+        "order": 10
+      }
     }
   }
 }

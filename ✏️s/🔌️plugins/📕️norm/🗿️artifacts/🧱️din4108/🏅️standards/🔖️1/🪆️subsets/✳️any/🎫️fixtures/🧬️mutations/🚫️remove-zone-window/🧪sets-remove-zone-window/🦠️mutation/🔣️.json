@@ -1,6 +1,6 @@
 {
   "RemoveZoneWindow": {
-    "zone_id": "zone-living",
+    "zoneId": "zone-living",
     "index": 0
   }
 }

@@ -1,0 +1,22 @@
+{
+  "operation": "commitSpaceCheckpoint",
+  "payload": {
+    "checkpoint": {
+      "id": "sc-1",
+      "message": "root",
+      "authors": [],
+      "timestamp": {
+        "actor": 0,
+        "physical_ms": 1,
+        "logical": 0
+      },
+      "members": [
+        {
+          "documentId": "member-a",
+          "checkpointId": "cp-1",
+          "alternativeId": ""
+        }
+      ]
+    }
+  }
+}

@@ -9,7 +9,20 @@
   ],
   "properties": {
     "id": {
-      "type": "string"
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Story",
+          "de": "Textfluss"
+        },
+        "ref": {
+          "kind": "story"
+        },
+        "group": "target",
+        "order": 10
+      }
     }
   }
 }

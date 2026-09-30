@@ -1090,7 +1090,11 @@ const AUTO_CHECKIN_EDIT_THRESHOLD: u32 = 200;
 /// newer than the tracked cursor is a stale/duplicate reply and is ignored outright. Returns whether
 /// the fold actually changed anything, so callers only re-derive the uncommitted count when it could
 /// have moved.
-fn fold_history_patch(entries: &mut BTreeMap<u64, semio_framework::kernel::HistoryEntry>, cursor: &mut u64, patch: &semio_framework::kernel::HistoryPatch, replace: bool) -> bool {
+///
+/// 🔑️ Rows fold under [`semio_framework::kernel::HistoryEntry::key`] — `edit:<editId>`, else `seq:<seq>` — the
+/// identity the kernel wire names (ticket 26/09/30/NON-DESTRUCTIVE-HISTORY-EDITING), so a row re-emitted for the
+/// same edit replaces its predecessor instead of doubling it.
+fn fold_history_patch(entries: &mut BTreeMap<String, semio_framework::kernel::HistoryEntry>, cursor: &mut u64, patch: &semio_framework::kernel::HistoryPatch, replace: bool) -> bool {
     if !replace && patch.cursor <= *cursor {
         return false;
     }
@@ -1098,19 +1102,26 @@ fn fold_history_patch(entries: &mut BTreeMap<u64, semio_framework::kernel::Histo
         entries.clear();
     }
     for entry in &patch.upserts {
-        entries.insert(entry.seq, entry.clone());
+        entries.insert(entry.key(), entry.clone());
     }
     *cursor = patch.cursor;
     true
 }
 
+/// 🧾️ The folded rows oldest-first — by `seq`, the command-log order every walk over the ledger reads.
+fn history_rows_oldest_first(entries: &BTreeMap<String, semio_framework::kernel::HistoryEntry>) -> Vec<&semio_framework::kernel::HistoryEntry> {
+    let mut rows: Vec<&semio_framework::kernel::HistoryEntry> = entries.values().collect();
+    rows.sort_by_key(|entry| entry.seq);
+    rows
+}
+
 /// 🧾️ ticket §C5 — uncommitted-since-last-checkpoint count: the SAME "since the last Change" fold the
 /// React shell's `uncommittedEditCount` (`ShellHost/🟦️.tsx`) uses — every applied
 /// mutation-kind entry counts, reset to 0 the moment a `commitCheckpoint` history-kind entry is seen,
-/// walked oldest-first (`BTreeMap` keyed by `seq` iterates in order already).
-fn uncommitted_edit_count(entries: &BTreeMap<u64, semio_framework::kernel::HistoryEntry>) -> u32 {
+/// walked oldest-first.
+fn uncommitted_edit_count(entries: &BTreeMap<String, semio_framework::kernel::HistoryEntry>) -> u32 {
     let mut pending = 0u32;
-    for entry in entries.values() {
+    for entry in history_rows_oldest_first(entries) {
         if entry.kind == "history" && entry.action_id == "commitCheckpoint" {
             pending = 0;
             continue;
@@ -1740,6 +1751,10 @@ mod icon_export;
 
 #[path = "🪟️tree-windows/🦀️.rs"]
 mod tree_windows;
+
+#[path = "⏪️time-travel/🦀️.rs"]
+mod time_travel;
+use time_travel::TimeTravelVerb;
 
 //#region 🧵️ShellDetached
 /// 🧵️ One request the shell hands off and never waits on: the future owns everything it touches and
@@ -4182,10 +4197,16 @@ pub struct ShellState {
     /// (session/document mount, `replace=true`) and `AppFrame::Invocation.history_patch` (every
     /// dispatch response, `replace=false`) — see `fold_history_patch`/`observe_invocation_history`.
     pub history_cursor: u64,
-    pub history_entries: BTreeMap<u64, semio_framework::kernel::HistoryEntry>,
+    pub history_entries: BTreeMap<String, semio_framework::kernel::HistoryEntry>,
     /// 🧾️ The most recent checkpoint id `HistoryPatch.currentCheckpointId` reported — compared against
     /// its previous value to detect "a checkpoint landed" (§C5 item 6, `TouchArtifact`).
     pub history_current_checkpoint_id: Option<String>,
+    /// ⏪️ The live history-edit session `HistoryPatch.timeTravel` last carried (`None` = no session) — what the
+    /// time-travel band, the pane chips and the `ui.timeTravel.*` chords read (see `⏪️time-travel`).
+    history_time_travel: Option<semio_framework::kernel::HistoryTimeTravel>,
+    /// ⏱️ When the native shell last re-read the history for replay progress (`TIME_TRAVEL_POLL_MS` apart).
+    #[cfg(not(target_arch = "wasm32"))]
+    time_travel_polled_at_ms: f64,
     /// 📌️ Ms-since-epoch of the last uncommitted-count CHANGE (any direction — mirrors
     /// `AutoCheckinScheduler::notify` resetting its idle timer on every call, not just increases);
     /// `None` whenever nothing is uncommitted.
@@ -5120,7 +5141,7 @@ impl WindowMeasuresProjection<'_> {
     fn measure(&mut self, measure: &WindowMeasure) -> Result<Option<ui_contract::UiNodeId>, String> {
         match measure {
             WindowMeasure::Number { id, label, value, min, max, step, loading, waiting, disabled, on_change, .. } => {
-                let input = ui_contract::InputProps { kind: ui_contract::InputKind::Number, value: UiText::clipped(&value.to_string()), placeholder: None, commit: Some(UiText::clipped("blur")), min: *min, max: *max, step: *step, accept: None };
+                let input = ui_contract::InputProps { kind: ui_contract::InputKind::Number, value: UiText::clipped(&value.to_string()), placeholder: None, commit: Some(UiText::clipped("blur")), min: *min, max: *max, step: *step, accept: None, precision: None, snaps: Default::default() };
                 let record = MeasureRecord {
                     bindings: measure_bindings(ui_contract::Trigger::Commit, on_change, None)?,
                     activity: measure_activity(*loading, *waiting),
@@ -5203,7 +5224,7 @@ fn measure_container(role: ui_contract::ContainerRole, label: Option<&str>, defa
 }
 
 fn measure_slider(value: f64, min: f64, max: f64, step: Option<f64>, unit: Option<&str>) -> ui_contract::Component {
-    ui_contract::Component::Slider(ui_contract::SliderProps { value, min, max, step: step.unwrap_or(0.0), unit: unit.map(UiText::clipped) })
+    ui_contract::Component::Slider(ui_contract::SliderProps { value, min, max, step: step.unwrap_or(0.0), unit: unit.map(UiText::clipped), snaps: ui_contract::UiFixedList::default() })
 }
 
 fn measure_activity(loading: Option<bool>, waiting: Option<bool>) -> ui_contract::Activity {
@@ -5780,6 +5801,8 @@ impl PanelProjection<'_> {
                     max: input.max,
                     step: input.step,
                     accept: input.accept.as_deref().map(UiText::clipped),
+                    precision: None,
+                    snaps: Default::default(),
                 };
                 let trigger = if input.commit.is_some() { ui_contract::Trigger::Commit } else { ui_contract::Trigger::Change };
                 let mut bindings = measure_bindings(trigger, &input.on_change, None)?;
@@ -5831,7 +5854,7 @@ impl PanelProjection<'_> {
             UiNode::NumberStepper(stepper) => {
                 let key = self.key(Some(stepper.id.as_str()));
                 let id = self.reserve();
-                let props = ui_contract::NumberStepperProps { value: stepper.value, step: stepper.step, uniform: stepper.uniform, min: None, max: None };
+                let props = ui_contract::NumberStepperProps { value: stepper.value, step: stepper.step, uniform: stepper.uniform, min: None, max: None, precision: None };
                 let mut bindings = measure_bindings(ui_contract::Trigger::Change, &stepper.on_absolute, None)?;
                 bindings.try_push(measure_binding(ui_contract::Trigger::Delta, &stepper.on_delta, None)?).map_err(|_| format!("panel stepper '{}' binds more moments than one record admits", stepper.id))?;
                 self.place(id, key, ui_contract::Component::NumberStepper(props), Self::stack_layout(ui_contract::Axis::Horizontal, ui_contract::SpaceToken::None), PanelRecord { bindings, activity, disabled, ..PanelRecord::default() })
@@ -6265,6 +6288,7 @@ fn window_measure_tree_rows(measures: &[WindowMeasure]) -> Vec<UiTreeItemNode> {
                     max: *max,
                     step: step.unwrap_or(1.0),
                     unit: None,
+                    snaps: Vec::new(),
                     on_change: on_change.clone(),
                     presence: UiPresence { state: state(*disabled), ..UiPresence::default() },
                     menu: None,
@@ -6286,6 +6310,8 @@ fn window_measure_tree_rows(measures: &[WindowMeasure]) -> Vec<UiTreeItemNode> {
                     max: *max,
                     step: *step,
                     accept: None,
+                    precision: None,
+                    snaps: Vec::new(),
                     on_change: on_change.clone(),
                     on_submit: None,
                     on_abort: None,
@@ -6516,74 +6542,299 @@ fn settings_tree_select_item_with(id: &str, label: &str, value: &str, options: V
     }
 }
 
-/// 📝️ One staged command argument as a labelled control — the wgpu twin of React's
-/// `renderStagedArgControl` (`🛠️ShellHelpers/🟦️.tsx`), dispatching `stageCommandArg` on change so the
+/// 📝️ One staged command argument as a labelled row — [`staged_arg_row`] dispatching `stageCommandArg`, so the
 /// value buffers in {@link ShellState::staged_command_args} and nothing fires until Execute.
-fn staged_command_arg_row(command_key: &str, arg: &semio_framework::ActionArgDef, value: &str, terminology: Terminology, locale: Locale) -> UiTreeItemNode {
+fn staged_command_arg_row(command_key: &str, arg: &semio_framework::ActionArgDef, value: Option<&Value>, selection: &HashMap<String, semio_framework::DomainSelection>, terminology: Terminology, locale: Locale) -> UiTreeItemNode {
     let id = format!("command.{}.arg.{}", command_key.replace(':', "."), arg.id);
+    let stage = ActionDescriptor { controller_id: "framework".into(), action: "stageCommandArg".into(), args: crate::action_args_json!({ "command": command_key.to_string(), "arg": arg.id.clone() }) };
+    staged_arg_row(id.clone(), &id, arg, value, &stage, selection, terminology, locale)
+}
+
+/// 📝️ One staged argument's row — the wgpu twin of React's `renderStagedArgControl` (`🛠️ShellHelpers/🟦️.tsx`), shared
+/// by the command palette's staged form and a window's Actions form. `stage` is `stageCommandArg`/`stageActionArg`
+/// with the row's own coordinates; every editor sends it, so the value buffers and nothing fires until Execute.
+///
+/// 🎛️ One control per scalar kind — text, number, a stepper, a slider or dial with its detents painted as ticks, a
+/// toggle, a select. The multi-part kinds open child rows of one control each, so every part is its own focus stop
+/// with its own accessible name: a segmented choice's pressed buttons (`option`), a vector's labelled axes
+/// (`index`/`dims`, spliced into the staged tuple by [`staged_arg_value`]), and a reference list's removable chips
+/// plus its "use current selection" button, which stages the live selection of the argument's domain.
+#[allow(clippy::too_many_arguments, reason = "one staged row: its two ids, the definition, the value, its stage verb and the live selection")]
+fn staged_arg_row(row_id: String, control_id: &str, arg: &semio_framework::ActionArgDef, value: Option<&Value>, stage: &ActionDescriptor, selection: &HashMap<String, semio_framework::DomainSelection>, terminology: Terminology, locale: Locale) -> UiTreeItemNode {
+    use ui_wgpu::wgpu::component::ui::UiControlNode as Control;
     let label = arg.label.resolve(terminology, locale).to_string();
-    let args = crate::action_args_json!({ "command": command_key.to_string(), "arg": arg.id.clone() });
-    let on_change = ActionDescriptor { controller_id: "framework".into(), action: "stageCommandArg".into(), args };
-    let control = match arg.control() {
-        semio_framework::ActionArgControl::Select { options } => UiControlNode::Select(UiSelectNode {
-            presence: UiPresence::default(),
-            id: id.clone(),
-            value: value.to_string(),
-            items: options.iter().map(|option| UiSelectItem { value: option.value.clone(), label: Label::data(option.label.resolve(terminology, locale)) }).collect(),
+    let description = arg.description.as_ref().map(|description| description.resolve(terminology, locale).to_string());
+    let with = |extra: Value| ActionDescriptor { controller_id: stage.controller_id.clone(), action: stage.action.clone(), args: staged_arg_args(stage.args.as_ref(), extra) };
+    let text = value.map(|value| value.as_str().map(ToOwned::to_owned).unwrap_or_else(|| value.to_string())).unwrap_or_default();
+    let number = value.and_then(staged_number);
+    let precision = |precision: Option<u32>| precision.map(|precision| u16::try_from(precision).unwrap_or(ui_contract::UI_NUMBER_PRECISION_MAX));
+    let child = |id: String, label: String, control: Control| UiTreeItemNode { id, label: Label::data(label), control: Some(control), ..UiTreeItemNode::base(String::new(), Label::data(String::new())) };
+    let field = |id: String, input_kind: &str, value: String, accessibility_label: Option<String>, bounds: (Option<f64>, Option<f64>, Option<f64>), precision: Option<u16>, snaps: Vec<f64>, on_change: ActionDescriptor| {
+        Control::Input(UiInputNode {
+            id,
+            input_kind: input_kind.into(),
+            value,
             placeholder: Some(Label::data(label.clone())),
-            on_change: on_change.clone(),
-            menu: None,
-        }),
-        semio_framework::ActionArgControl::Toggle => UiControlNode::Toggle(UiToggleNode {
-            appearance: ui_contract::ToggleAppearance::Button,
-            id: id.clone(),
-            icon_id: IconName::Check,
-            text: Some(Label::data(label.clone())),
-            on_change: on_change.clone(),
-            presence: UiPresence { selected: value == "true", ..UiPresence::default() },
-            menu: None,
-        }),
-        semio_framework::ActionArgControl::Slider { min, max, step, unit } => {
-            UiControlNode::Slider(UiSliderNode { id: id.clone(), value: value.parse::<f64>().unwrap_or(min), min, max, step: step.unwrap_or(1.0), unit, on_change: on_change.clone(), presence: UiPresence::default(), menu: None })
-        }
-        semio_framework::ActionArgControl::Number { min, max, step } => UiControlNode::Input(UiInputNode {
-            id: id.clone(),
-            input_kind: "number".into(),
-            value: value.to_string(),
-            placeholder: Some(Label::data(label.clone())),
-            accessibility_label: None,
+            accessibility_label: accessibility_label.map(Label::data),
             commit: Some("blur".into()),
-            min,
-            max,
-            step,
+            min: bounds.0,
+            max: bounds.1,
+            step: bounds.2,
             accept: None,
-            on_change: on_change.clone(),
+            precision,
+            snaps,
+            on_change,
             on_submit: None,
             on_abort: None,
             on_repeat_last: None,
             presence: UiPresence::default(),
             menu: None,
-        }),
-        _ => UiControlNode::Input(UiInputNode {
-            id: id.clone(),
-            input_kind: "text".into(),
-            value: value.to_string(),
-            placeholder: Some(Label::data(label.clone())),
-            accessibility_label: None,
-            commit: Some("blur".into()),
-            min: None,
-            max: None,
-            step: None,
-            accept: None,
-            on_change: on_change.clone(),
-            on_submit: None,
-            on_abort: None,
-            on_repeat_last: None,
-            presence: UiPresence::default(),
-            menu: None,
-        }),
+        })
     };
-    UiTreeItemNode { id, label: Label::data(label), description: arg.description.clone(), control: Some(control), ..UiTreeItemNode::base(String::new(), Label::data(String::new())) }
+    let (control, mut items) = match arg.control() {
+        semio_framework::ActionArgControl::Select { options } => (
+            Some(Control::Select(UiSelectNode {
+                presence: UiPresence::default(),
+                id: control_id.to_string(),
+                value: text,
+                items: options.iter().map(|option| UiSelectItem { value: option.value.clone(), label: Label::data(option.label.resolve(terminology, locale)) }).collect(),
+                placeholder: Some(Label::data(label.clone())),
+                on_change: stage.clone(),
+                menu: None,
+            })),
+            None,
+        ),
+        semio_framework::ActionArgControl::Segmented { options } => (
+            None,
+            Some(
+                options
+                    .iter()
+                    .map(|option| {
+                        let option_label = option.label.resolve(terminology, locale).to_string();
+                        child(
+                            format!("{row_id}.option.{}", option.value),
+                            option_label.clone(),
+                            Control::Toggle(UiToggleNode {
+                                appearance: ui_contract::ToggleAppearance::Button,
+                                id: format!("{control_id}.option.{}", option.value),
+                                icon_id: IconName::Check,
+                                text: Some(Label::data(option_label)),
+                                on_change: with(serde_json::json!({ "option": option.value })),
+                                presence: UiPresence { selected: text == option.value, ..UiPresence::default() },
+                                menu: None,
+                            }),
+                        )
+                    })
+                    .collect(),
+            ),
+        ),
+        semio_framework::ActionArgControl::Toggle => (
+            Some(Control::Toggle(UiToggleNode {
+                appearance: ui_contract::ToggleAppearance::Button,
+                id: control_id.to_string(),
+                icon_id: IconName::Check,
+                text: Some(Label::data(label.clone())),
+                on_change: stage.clone(),
+                presence: UiPresence { selected: value.and_then(Value::as_bool).unwrap_or(text == "true"), ..UiPresence::default() },
+                menu: None,
+            })),
+            None,
+        ),
+        semio_framework::ActionArgControl::Slider { min, max, step, unit, snaps, .. } | semio_framework::ActionArgControl::Dial { min, max, step, unit, snaps, .. } => {
+            let snaps = if ui_contract::snaps_are_valid(snaps.iter().copied(), min, max) { snaps } else { Vec::new() };
+            (Some(Control::Slider(UiSliderNode { id: control_id.to_string(), value: number.unwrap_or(min).clamp(min, max.max(min)), min, max, step: step.filter(|step| *step > 0.0).unwrap_or(1.0), unit, snaps, on_change: stage.clone(), presence: UiPresence::default(), menu: None })), None)
+        }
+        semio_framework::ActionArgControl::Stepper { min, max, step, precision: digits, .. } => (
+            Some(Control::NumberStepper(UiNumberStepperNode {
+                id: control_id.to_string(),
+                value: number.or(min).unwrap_or(0.0),
+                step: step.filter(|step| *step > 0.0).unwrap_or(1.0),
+                uniform: true,
+                min,
+                max,
+                precision: precision(digits),
+                on_absolute: stage.clone(),
+                on_delta: ActionDescriptor { controller_id: String::new(), action: String::new(), args: None },
+                presence: UiPresence::default(),
+                menu: None,
+            })),
+            None,
+        ),
+        semio_framework::ActionArgControl::Number { min, max, step, precision: digits, .. } => (Some(field(control_id.to_string(), "number", text, None, (min, max, step), precision(digits), Vec::new(), stage.clone())), None),
+        semio_framework::ActionArgControl::Vector { dims, min, max, step, snaps, precision: digits, .. } => {
+            let dims = dims as usize;
+            let digits = precision(digits);
+            let snaps = if ui_contract::snaps_are_valid(snaps.iter().copied(), min.unwrap_or(f64::NEG_INFINITY), max.unwrap_or(f64::INFINITY)) { snaps } else { Vec::new() };
+            let mut tuple: Vec<f64> = value.and_then(Value::as_array).map(|components| components.iter().map(|component| staged_number(component).unwrap_or(0.0)).collect()).unwrap_or_default();
+            tuple.resize(dims, 0.0);
+            let axes = ["x", "y", "z", "w"];
+            let items = (0..dims)
+                .map(|index| {
+                    let axis = axes.get(index).map_or_else(|| index.to_string(), |axis| (*axis).to_string());
+                    let on_change = with(serde_json::json!({ "index": index, "dims": dims, "tuple": tuple }));
+                    let shown = digits.map_or_else(|| ui_contract::format_ui_number(tuple[index]), |digits| ui_contract::format_ui_number_fixed(tuple[index], digits));
+                    child(format!("{row_id}.{axis}"), axis.clone(), field(format!("{control_id}.{axis}"), "number", shown, Some(format!("{label} {axis}")), (min, max, step), digits, snaps.clone(), on_change))
+                })
+                .collect();
+            (None, Some(items))
+        }
+        semio_framework::ActionArgControl::Color { alpha } => {
+            let mut rgba = [0.0, 0.0, 0.0, 1.0];
+            for (slot, component) in rgba.iter_mut().zip(value.and_then(Value::as_array).into_iter().flatten()) {
+                *slot = staged_number(component).unwrap_or(0.0).clamp(0.0, 1.0);
+            }
+            let color = serde_json::json!({ "color": { "alpha": alpha, "rgba": &rgba[..if alpha { 4 } else { 3 }] } });
+            let hex = LocalizedLabel::native("Hex", "Hex").resolve(terminology, locale).to_string();
+            let opacity = LocalizedLabel::native("Opacity", "Deckkraft").resolve(terminology, locale).to_string();
+            let mut items = vec![
+                child(format!("{row_id}.swatch"), label.clone(), field(format!("{control_id}.swatch"), "color", ui_contract::ui_color_hex(&rgba, false), Some(label.clone()), (None, None, None), None, Vec::new(), with(color.clone()))),
+                child(format!("{row_id}.hex"), hex.clone(), field(format!("{control_id}.hex"), "text", ui_contract::ui_color_hex(&rgba, alpha), Some(hex), (None, None, None), None, Vec::new(), with(color.clone()))),
+            ];
+            if alpha {
+                items.push(child(format!("{row_id}.alpha"), opacity, Control::Slider(UiSliderNode { id: format!("{control_id}.alpha"), value: rgba[3], min: 0.0, max: 1.0, step: 0.01, unit: None, snaps: Vec::new(), on_change: with(color), presence: UiPresence::default(), menu: None })));
+            }
+            (None, Some(items))
+        }
+        semio_framework::ActionArgControl::Reference { domain, granularity, many, id_type, .. } => {
+            let text = |id: &Value| semio_framework::reference_id_text(&semio_framework::DslValue::from(id));
+            let ids: Vec<String> = match value {
+                Some(Value::Array(ids)) => ids.iter().filter_map(text).collect(),
+                Some(id) => text(id).into_iter().collect(),
+                None => Vec::new(),
+            };
+            let references = |ids: Vec<String>| {
+                let mut values = ids.iter().filter_map(|id| id_type.id_value(id)).map(Value::from);
+                if many { Value::Array(values.collect()) } else { values.next().unwrap_or(Value::Null) }
+            };
+            let use_label = LocalizedLabel::native("Use current selection", "Aktuelle Auswahl verwenden").resolve(terminology, locale).to_string();
+            let remove = LocalizedLabel::native("Remove {item}", "{item} entfernen").resolve(terminology, locale).to_string();
+            let empty = LocalizedLabel::native("Nothing selected", "Nichts ausgewählt").resolve(terminology, locale).to_string();
+            let picked = reference_selection_ids(selection, domain.as_deref(), granularity.as_deref());
+            let mut items: Vec<UiTreeItemNode> = ids
+                .iter()
+                .map(|id| {
+                    let remaining = references(ids.iter().filter(|other| *other != id).cloned().collect());
+                    child(
+                        format!("{row_id}.reference.{id}"),
+                        id.clone(),
+                        Control::Button(UiButtonNode { id: Some(format!("{control_id}.remove.{id}")), icon_id: IconName::X, label: Label::data(remove.replace("{item}", id)), action: with(serde_json::json!({ "value": remaining })), style: None, presence: UiPresence::default(), menu: None }),
+                    )
+                })
+                .collect();
+            if ids.is_empty() {
+                items.push(UiTreeItemNode { id: format!("{row_id}.empty"), label: Label::data(empty), dimmed: Some(true), ..UiTreeItemNode::base(String::new(), Label::data(String::new())) });
+            }
+            let use_selection = UiButtonNode {
+                id: Some(format!("{control_id}.useSelection")),
+                icon_id: IconName::Crosshair,
+                label: Label::data(use_label.clone()),
+                action: with(serde_json::json!({ "value": references(picked.clone()) })),
+                style: None,
+                presence: UiPresence { state: if picked.is_empty() { ui_wgpu::wgpu::component::ui::UiState::Disabled } else { ui_wgpu::wgpu::component::ui::UiState::Normal }, ..UiPresence::default() },
+                menu: None,
+            };
+            items.push(child(format!("{row_id}.useSelection"), use_label, Control::Button(use_selection)));
+            (None, Some(items))
+        }
+        _ => (Some(field(control_id.to_string(), "text", text, None, (None, None, None), None, Vec::new(), stage.clone())), None),
+    };
+    if arg.nullable {
+        let clear_label = match locale {
+            Locale::En => "Clear",
+            Locale::De => "Leeren",
+        };
+        let cleared = matches!(value, Some(Value::Null));
+        let clear = UiButtonNode {
+            id: Some(format!("{control_id}.clear")),
+            icon_id: IconName::X,
+            label: Label::data(format!("{clear_label} {label}")),
+            action: with(serde_json::json!({ "value": Value::Null })),
+            style: None,
+            presence: UiPresence { state: if cleared { ui_wgpu::wgpu::component::ui::UiState::Disabled } else { ui_wgpu::wgpu::component::ui::UiState::Normal }, ..UiPresence::default() },
+            menu: None,
+        };
+        items.get_or_insert_with(Vec::new).push(child(format!("{row_id}.clear"), clear_label.to_string(), Control::Button(clear)));
+    }
+    UiTreeItemNode { id: row_id, label: Label::data(label), description, control, default_open: items.as_ref().map(|_| true), items, ..UiTreeItemNode::base(String::new(), Label::data(String::new())) }
+}
+
+/// 🧮️ A staged value read as a number — a number, or the text a number field committed.
+fn staged_number(value: &Value) -> Option<f64> {
+    value.as_f64().or_else(|| value.as_str().and_then(|text| text.trim().parse::<f64>().ok())).filter(|number| number.is_finite())
+}
+
+/// 🧩️ A stage verb's own coordinates (`window`/`action`/`arg` or `command`/`arg`) with one editor part's extra keys.
+fn staged_arg_args(base: Option<&DslValue>, extra: Value) -> Option<DslValue> {
+    let mut args = base.map(dsl_value_as_json).and_then(|args| args.as_object().cloned()).unwrap_or_default();
+    if let Value::Object(extra) = extra {
+        args.extend(extra);
+    }
+    Some(DslValue::from(Value::Object(args)))
+}
+
+/// 📝️ The value one staged-arg dispatch stages: a segmented button's `option`, a colour part's colour, a vector axis
+/// spliced into the tuple at `index` (the tuple already staged, else the `tuple` the row painted), else the editor's
+/// own `value`.
+fn staged_arg_value(args: &Value, current: Option<&Value>) -> Value {
+    if let Some(option) = args.get("option") {
+        return option.clone();
+    }
+    if let Some(color) = args.get("color") {
+        return staged_color_value(color, args.get("value"), current);
+    }
+    if let (Some(index), Some(dims)) = (args.get("index").and_then(Value::as_u64), args.get("dims").and_then(Value::as_u64)) {
+        let mut tuple: Vec<Value> = current.or_else(|| args.get("tuple")).and_then(Value::as_array).cloned().unwrap_or_default();
+        tuple.resize(usize::try_from(dims).unwrap_or(0), Value::from(0.0));
+        if let (Some(slot), Some(number)) = (usize::try_from(index).ok().and_then(|index| tuple.get_mut(index)), args.get("value").and_then(staged_number)) {
+            *slot = Value::from(number);
+        }
+        return Value::Array(tuple);
+    }
+    args.get("value").cloned().unwrap_or(Value::Null)
+}
+
+/// 🎨️ A colour row's staged value: the hex its swatch or hex field committed (`ui_contract::parse_ui_color_hex`, keeping
+/// the alpha when the text carries none) or the alpha its slider committed, over the colour already staged, else the
+/// one the row painted; an unreadable hex keeps the colour.
+fn staged_color_value(color: &Value, value: Option<&Value>, current: Option<&Value>) -> Value {
+    let alpha = color.get("alpha").and_then(Value::as_bool).unwrap_or(false);
+    let mut rgba = [0.0, 0.0, 0.0, 1.0];
+    for (slot, component) in rgba.iter_mut().zip(current.or_else(|| color.get("rgba")).and_then(Value::as_array).into_iter().flatten()) {
+        *slot = staged_number(component).unwrap_or(0.0).clamp(0.0, 1.0);
+    }
+    match value {
+        Some(Value::String(text)) => {
+            if let Some(parsed) = ui_contract::parse_ui_color_hex(text) {
+                let typed_alpha = matches!(text.trim().trim_start_matches('#').len(), 4 | 8);
+                rgba = [parsed[0], parsed[1], parsed[2], if typed_alpha { parsed[3] } else { rgba[3] }];
+            }
+        }
+        Some(number) => {
+            if let Some(number) = staged_number(number) {
+                rgba[3] = number.clamp(0.0, 1.0);
+            }
+        }
+        None => {}
+    }
+    Value::Array(rgba[..if alpha { 4 } else { 3 }].iter().map(|component| Value::from(*component)).collect())
+}
+
+/// 🎯️ The ids "use current selection" stages for a reference argument: the live selection of its `domain` (or, when
+/// it names none, of the one domain that selects anything), kept only at its `granularity` when it declares one.
+fn reference_selection_ids(selection: &HashMap<String, semio_framework::DomainSelection>, domain: Option<&str>, granularity: Option<&str>) -> Vec<String> {
+    let picked = match domain {
+        Some(domain) => selection.get(domain),
+        None => {
+            let mut live = selection.values().filter(|selected| !selected.ids.is_empty());
+            let first = live.next();
+            if live.next().is_some() {
+                None
+            } else {
+                first
+            }
+        }
+    };
+    picked.filter(|selected| granularity.is_none_or(|granularity| selected.granularity == granularity)).map(|selected| selected.ids.clone()).unwrap_or_default()
 }
 
 /// ⌨️ A control id as a readable row label — React's `humanizeControlId`: the last dot segment,
@@ -6804,16 +7055,7 @@ impl ShellState {
     fn chrome_dialog_request(&self, dialog_id: &str, args: Option<DslValue>) -> Option<ChromeDialogRequest> {
         let session = self.session.as_ref()?;
         let dialog = session.app.dialogs.iter().find(|dialog| dialog.id == dialog_id)?;
-        let terminology = self.active_terminology();
-        let locale = self.active_locale();
-        Some(ChromeDialogRequest {
-            id: dialog.id.clone(),
-            title: dialog.title.resolve(terminology, locale).to_string(),
-            body: dialog.body.as_ref().map(|body| body.resolve(terminology, locale).to_string()).unwrap_or_default(),
-            confirm_label: dialog.submit_label.resolve(terminology, locale).to_string(),
-            confirm_action: ActionDescriptor { controller_id: session.app.controller_id.clone(), action: dialog.submit_action.as_str().to_string(), args },
-            cancel_label: dialog.cancel_label.as_ref().map(|label| label.resolve(terminology, locale).to_string()).unwrap_or_else(|| "Cancel".to_string()),
-        })
+        Some(ChromeDialogRequest::from_definition(&session.app.controller_id, dialog, args, self.active_terminology(), self.active_locale()))
     }
     //#endregion 🏷️LabelResolution
 
@@ -7064,6 +7306,9 @@ impl ShellState {
             history_cursor: 0,
             history_entries: BTreeMap::new(),
             history_current_checkpoint_id: None,
+            history_time_travel: None,
+            #[cfg(not(target_arch = "wasm32"))]
+            time_travel_polled_at_ms: 0.0,
             last_uncommitted_edit_at_ms: None,
             auto_checkin_pending: false,
             checkpoint_dispatched: false,
@@ -8979,6 +9224,8 @@ impl ShellState {
                 max: None,
                 step: None,
                 accept: None,
+                precision: None,
+                snaps: Vec::new(),
                 on_change: ActionDescriptor { controller_id: "framework".into(), action: "setDriverSaveLabel".into(), args: None },
                 on_submit: None,
                 on_abort: None,
@@ -9361,6 +9608,8 @@ impl ShellState {
                         max: None,
                         step: None,
                         accept: None,
+                        precision: None,
+                        snaps: Vec::new(),
                         on_change: ActionDescriptor { controller_id: "framework".into(), action: "setLayoutSaveLabel".into(), args: None },
                         on_submit: None,
                         on_abort: None,
@@ -9735,6 +9984,8 @@ impl ShellState {
             max: None,
             step: None,
             accept: None,
+            precision: None,
+            snaps: Vec::new(),
             on_change: ActionDescriptor { controller_id: "framework".into(), action: "setChatDraft".into(), args: None },
             on_submit: Some(ActionDescriptor { controller_id: "framework".into(), action: "sendChatDraft".into(), args: None }),
             on_abort: None,
@@ -9798,6 +10049,8 @@ impl ShellState {
                 max: None,
                 step: None,
                 accept: None,
+                precision: None,
+                snaps: Vec::new(),
                 on_change: ActionDescriptor { controller_id: "framework.sync".into(), action: "setSyncDraft".into(), args: None },
                 on_submit: Some(ActionDescriptor { controller_id: "framework.sync".into(), action: "attach".into(), args: crate::action_args_json!({ "kind": kind }) }),
                 on_abort: None,
@@ -10030,8 +10283,8 @@ impl ShellState {
     /// ⚙️ Bottom-right carries ONE Settings branch (the app's own Settings-group tabs first, then the
     /// five framework leaves — React's `integrateAppSettingsPanelTabsIntoFrameworkBranch`, which
     /// re-orders the framework children past the app's), then the Marketplace leaf, then the
-    /// framework-owned History leaf React re-adds after filtering it out of the app's own tabs
-    /// (`shellRendersPanelTabItself`/`frameworkUtilitiesHistoryTab`).
+    /// framework-owned History leaf — the guest's own `framework.body.history`, which React's dock
+    /// partitions into the same leaf (`partitionFrameworkHistoryPanelTab`).
     pub fn default_dock(&self) -> ShellDock {
         let mut dock = ShellDock::default();
         let is_de = self.locale_id == "de";
@@ -10587,6 +10840,9 @@ impl ShellState {
         #[cfg(target_arch = "wasm32")]
         let shell_io_changed = false;
         let directory_changed = self.pump_directory_events().await || shell_io_changed;
+        #[cfg(not(target_arch = "wasm32"))]
+        let directory_changed = self.poll_time_travel_progress().await || directory_changed;
+        let directory_changed = self.drain_progress_history_patches().await || directory_changed;
         self.poll_auto_checkin().await;
         let directory_changed = self.advance_document_opening().await || directory_changed;
         let directory_changed = self.advance_sync_reseed().await || directory_changed;
@@ -10676,6 +10932,9 @@ impl ShellState {
                     changed = true;
                 }
                 ArtifactEvent::Conflict(message) => {
+                    if let Some((code, text, severity)) = time_travel::history_refusal_notice(&message.code.0, self.active_locale()) {
+                        self.show_transient_notice(text, severity, Some(code));
+                    }
                     if let Some(terminal) = shell_sync_link_terminal(&message.code.0) {
                         self.sync_link = terminal;
                         self.sync_terminal_fault = Some(message.message);
@@ -10712,8 +10971,13 @@ impl ShellState {
                 }
                 ArtifactEvent::Preview { .. } => {
                 }
-                ArtifactEvent::CommandOutcome { .. } => {
+                ArtifactEvent::CommandOutcome { outcome: store_sync::sync::CommandAckOutcome::Rejected { reason, .. }, .. } => {
+                    if let Some((code, text, severity)) = time_travel::history_refusal_notice(&reason, self.active_locale()) {
+                        self.show_transient_notice(text, severity, Some(code));
+                        changed = true;
+                    }
                 }
+                ArtifactEvent::CommandOutcome { .. } => {}
             }
             if self.sync_terminal_fault.is_some() {
                 break;
@@ -10836,6 +11100,7 @@ impl ShellState {
         self.history_cursor = 0;
         self.history_entries.clear();
         self.history_current_checkpoint_id = None;
+        self.history_time_travel = None;
         self.last_uncommitted_edit_at_ms = None;
         self.auto_checkin_pending = false;
         self.checkpoint_dispatched = false;
@@ -10855,6 +11120,7 @@ impl ShellState {
         match plugin.read_history(session.instance_id).await {
             Ok(patch) => {
                 fold_history_patch(&mut self.history_entries, &mut self.history_cursor, &patch, true);
+                self.observe_history_time_travel(patch.time_travel.as_ref());
                 self.history_current_checkpoint_id = patch.current_checkpoint_id;
             }
             Err(error) => Self::debug_log(&format!("[TRACE] wgpu shell read_history failed: {error}")),
@@ -10886,6 +11152,9 @@ impl ShellState {
     fn observe_invocation_history<'a>(&'a mut self, history_patch: Option<&'a semio_framework::kernel::HistoryPatch>) -> ShellTurn<'a, ()> {
         shell_turn(async move {
             let Some(patch) = history_patch else { return };
+            if patch.cursor >= self.history_cursor {
+                self.observe_history_time_travel(patch.time_travel.as_ref());
+            }
             if !fold_history_patch(&mut self.history_entries, &mut self.history_cursor, patch, false) {
                 return;
             }
@@ -11850,8 +12119,9 @@ impl ShellState {
                     "stageCommandArg" => {
                         let args = action.args.as_ref().map(dsl_value_as_json).unwrap_or(Value::Null);
                         if let (Some(command), Some(arg)) = (args.get("command").and_then(Value::as_str), args.get("arg").and_then(Value::as_str)) {
-                            let value = args.get("value").cloned().unwrap_or(Value::Null);
-                            self.staged_command_args.entry(command.to_string()).or_default().insert(arg.to_string(), value);
+                            let staged = self.staged_command_args.entry(command.to_string()).or_default();
+                            let value = staged_arg_value(&args, staged.get(arg));
+                            staged.insert(arg.to_string(), value);
                         }
                         return Ok(());
                     }
@@ -11898,7 +12168,7 @@ impl ShellState {
                         let args = action.args.as_ref().map(dsl_value_as_json).unwrap_or(Value::Null);
                         if let (Some(window_id), Some(action_id), Some(arg_id)) = (args.get("window").and_then(Value::as_str), args.get("action").and_then(Value::as_str), args.get("arg").and_then(Value::as_str)) {
                             let (window_id, action_id, arg_id) = (window_id.to_string(), action_id.to_string(), arg_id.to_string());
-                            let value = args.get("value").cloned().unwrap_or(Value::Null);
+                            let value = staged_arg_value(&args, self.staged_map_for(&window_id, &action_id).get(&arg_id));
                             self.stage_arg(&window_id, &action_id, &arg_id, value);
                         }
                         return Ok(());
@@ -15633,6 +15903,9 @@ impl ShellState {
         if self.chrome_build.tour_state.is_some() {
             rows.push((UI_INTRODUCTION_DIALOG_ELEMENT_ID.to_string(), "dialog", UI_INTRODUCTION_DIALOG_ELEMENT_ID.to_string()));
         }
+        if let Some(request) = self.chrome_build.dialog_stack.last() {
+            rows.push((request.accessibility_key(), "dialog", request.accessibility_key()));
+        }
         if let Some(kind) = match self.overlay_state {
             OverlayState::Search => Some(ShellPaletteKind::Search),
             OverlayState::Find => Some(ShellPaletteKind::Find),
@@ -16054,6 +16327,9 @@ impl ShellState {
         }
         if !self.presented_chrome_accessibility.iter().any(|node| node.node_id == target.node_id && node.key == target.node_key) {
             return Ok(false);
+        }
+        if self.handle_chrome_dialog_accessibility_event(&target.node_key, event) {
+            return Ok(true);
         }
         if target.node_key == icon_export::CONTROL_ID {
             match event {
@@ -18003,6 +18279,9 @@ impl ShellState {
     /// 📌️ ticket §C5 item 3 — same shell-owned keyboard-routed draft-field idiom as
     /// `sync_card_kind` above, for the check-in message-prompt card.
     pub fn handle_keyboard(&mut self, action: ui_wgpu::wgpu::KeyAction, modifiers: &PointerModifiers, input: &mut InputState<ActionDescriptor>) {
+        if self.chrome_build.dialog_open() && self.handle_chrome_dialog_key(&action, modifiers) {
+            return;
+        }
         if action == ui_wgpu::wgpu::KeyAction::Escape {
             if crate::scenes::cancel_canvas_interactions(input) {
                 if let Some((window_id, pointer_id)) = crate::interpreter::retained_any_pointer_capture() {
@@ -18249,6 +18528,10 @@ impl ShellState {
     /// import picker has, and a browser grants user activation to the task that handled the
     /// key and to nothing after it (ticket 26/09/09/PROCEDURAL-3D-END-TO-END).
     ///
+    /// 🗨️ An open chrome dialog owns the keyboard before every rung below: a focused chrome control, a retained
+    /// content field, a shell chord or an app binding never takes a key from a modal — the finalize prompt of a
+    /// history edit is operated by keyboard alone ([`Self::handle_chrome_dialog_key`]).
+    ///
     /// ⏪️ Framework-universal undo/redo chords — LAST, after the app-keybinding loop, so an app that
     /// declares `mod+z` itself shadows them, exactly as React's `handleAppKeydown` orders its own
     /// `mod+z`/`mod+shift+z`/`mod+y` tail. Routed through the same `dispatch_action` funnel the
@@ -18256,6 +18539,11 @@ impl ShellState {
     /// the three doors to the verb cannot diverge. Before this wave the wgpu shell had NO undo chord
     /// at all: undo was reachable only by opening the palette and typing "undo".
     pub async fn handle_keyboard_async(&mut self, action: ui_wgpu::wgpu::KeyAction, modifiers: &PointerModifiers, input: &mut InputState<ActionDescriptor>) -> Result<(), String> {
+        if self.chrome_build.dialog_open() {
+            self.handle_keyboard(action, modifiers, input);
+            self.owe_settle();
+            return Ok(());
+        }
         if self.context_menu.is_some() {
             match self.context_menu_handle_key(action.clone()) {
                 ContextMenuKeyOutcome::Ignored | ContextMenuKeyOutcome::CloseMenu => {}
@@ -18860,7 +19148,7 @@ impl ShellState {
             ShellShortcut::CloseWindow => !palette_open && self.close_active_window(),
             ShellShortcut::FocusWindow => !palette_open && self.focus_active_window(),
             ShellShortcut::NewWindow => !palette_open && self.open_active_window_in_new_window(),
-            ShellShortcut::ModeStep(_) | ShellShortcut::SurfaceRole(_) => false,
+            ShellShortcut::ModeStep(_) | ShellShortcut::SurfaceRole(_) | ShellShortcut::TimeTravel(_) => false,
         }
     }
 
@@ -18875,6 +19163,13 @@ impl ShellState {
                 self.switch_to_session_role(role).await?;
                 Ok(true)
             }
+            ShellShortcut::TimeTravel(verb) => match self.time_travel_shortcut_action(verb) {
+                Some(action) => {
+                    self.dispatch_action(action).await?;
+                    Ok(true)
+                }
+                None => Ok(false),
+            },
             _ => Ok(false),
         }
     }
@@ -21049,13 +21344,18 @@ impl ShellState {
     /// one — pushing a region per paint opportunity would stack the same frosted band until the
     /// fixed layer filled, and painting the chip outside its own content layer is precisely the
     /// defect W3c §3 found (the glass samples the label away again).
+    ///
+    /// ⏪️ After the pane's own chips, an open history-edit session adds its time-travel indicator
+    /// ([`Self::paint_window_time_travel_indicator_step`]).
     #[allow(clippy::too_many_arguments, reason = "the chrome walk's own paint context, forwarded unchanged")]
     fn paint_window_pane_chips_step(&mut self, cursor: &mut ShellChromeChildCursor, draw: &mut DrawList, atlas: &mut FontAtlas, icons: &IconAtlas, input: &mut InputState<ActionDescriptor>, theme: &Theme, window_id: &str, window_rect: Rect) -> bool {
         if !surface_fits_overlay(theme, window_rect) {
             return true;
         }
         let chips = self.window_pane_chips(window_id);
-        let Some((chip, folded, disabled)) = chips.get(cursor.scalar).copied() else { return true };
+        let Some((chip, folded, disabled)) = chips.get(cursor.scalar).copied() else {
+            return self.paint_window_time_travel_indicator_step(cursor, draw, atlas, icons, input, theme, window_id, window_rect, chips.len());
+        };
         let is_de = self.locale_id == "de";
         let label = shell_chrome_string(chip.label_key(), is_de);
         let control_id = chip.control_id(window_id, folded);
@@ -21559,6 +21859,7 @@ fn engagement_control_rows(control: &ui_wgpu::wgpu::WindowEngagementControl, is_
             max: *max,
             step: step.unwrap_or(1.0),
             unit: unit.clone(),
+            snaps: Vec::new(),
             on_change: on_change.clone().unwrap_or_else(inert),
             presence: UiPresence { state: state(disabled.unwrap_or(false)), ..UiPresence::default() },
             menu: None,
@@ -21570,6 +21871,7 @@ fn engagement_control_rows(control: &ui_wgpu::wgpu::WindowEngagementControl, is_
             uniform: false,
             min: None,
             max: None,
+            precision: None,
             on_absolute: on_change.clone().unwrap_or_else(inert),
             on_delta: on_change.clone().unwrap_or_else(inert),
             presence: UiPresence { state: state(disabled.unwrap_or(false)), ..UiPresence::default() },
@@ -21668,87 +21970,17 @@ fn engagement_control_rows(control: &ui_wgpu::wgpu::WindowEngagementControl, is_
     vec![UiNode::Field(UiFieldNode { id: format!("{field_id}.field"), label: Label::data(label), description: None, required: None, error: None, child: Box::new(body.remove(0)), presence: UiPresence::default(), menu: None })]
 }
 
-/// 📝️ One staged ACTION argument as a labelled control — React's `renderStagedArgControl`
-/// (`🛠️ShellHelpers/🟦️.tsx:3839`) with React's own row id (`action.<actionId>.arg.<argId>`).
-/// Dispatching `stageActionArg` on change means the value buffers in
-/// [`ShellState::staged_action_args`] and NOTHING fires until Execute (P2).
+/// 📝️ One staged ACTION argument's row — [`staged_arg_row`] with React's own row id (`action.<actionId>.arg.<argId>`)
+/// dispatching `stageActionArg`, so the value buffers in [`ShellState::staged_action_args`] and NOTHING fires until
+/// Execute (P2).
 ///
 /// 🌳️ React's form row IS a `TreeDataItem` whose `control` is the editor: the ROW carries
 /// `action.<actionId>.arg.<argId>` and the editor inside it carries the bare `def.id`
 /// (`renderStagedArgControl`'s `fieldId = field?.id ?? def.id`, `🛠️ShellHelpers/🟦️.tsx:3869`), which
 /// is also why the two never collide on one published surface key.
-fn staged_action_arg_row(window_id: &str, action_id: &str, arg: &semio_framework::ActionArgDef, value: &str, terminology: Terminology, locale: Locale) -> UiTreeItemNode {
-    let id = arg.id.clone();
-    let label = arg.label.resolve(terminology, locale).to_string();
-    let args = crate::action_args_json!({ "window": window_id.to_string(), "action": action_id.to_string(), "arg": arg.id.clone() });
-    let on_change = ActionDescriptor { controller_id: "framework".into(), action: "stageActionArg".into(), args };
-    let child = match arg.control() {
-        semio_framework::ActionArgControl::Select { options } => UiNode::Select(UiSelectNode {
-            presence: UiPresence::default(),
-            id: id.clone(),
-            value: value.to_string(),
-            items: options.iter().map(|option| UiSelectItem { value: option.value.clone(), label: Label::data(option.label.resolve(terminology, locale)) }).collect(),
-            placeholder: Some(Label::data(label.clone())),
-            on_change,
-            menu: None,
-        }),
-        semio_framework::ActionArgControl::Toggle => UiNode::Toggle(UiToggleNode {
-            appearance: ui_contract::ToggleAppearance::Button,
-            id: id.clone(),
-            icon_id: IconName::Check,
-            text: Some(Label::data(label.clone())),
-            on_change,
-            presence: UiPresence { selected: value == "true", ..UiPresence::default() },
-            menu: None,
-        }),
-        semio_framework::ActionArgControl::Slider { min, max, step, unit } => {
-            UiNode::Slider(UiSliderNode { id: id.clone(), value: value.parse::<f64>().unwrap_or(min), min, max, step: step.unwrap_or(1.0), unit, on_change, presence: UiPresence::default(), menu: None })
-        }
-        semio_framework::ActionArgControl::Number { min, max, step } => UiNode::Input(UiInputNode {
-            id: id.clone(),
-            input_kind: "number".into(),
-            value: value.to_string(),
-            placeholder: Some(Label::data(label.clone())),
-            accessibility_label: None,
-            commit: Some("blur".into()),
-            min,
-            max,
-            step,
-            accept: None,
-            on_change,
-            on_submit: None,
-            on_abort: None,
-            on_repeat_last: None,
-            presence: UiPresence::default(),
-            menu: None,
-        }),
-        _ => UiNode::Input(UiInputNode {
-            id: id.clone(),
-            input_kind: "text".into(),
-            value: value.to_string(),
-            placeholder: Some(Label::data(label.clone())),
-            accessibility_label: None,
-            commit: Some("blur".into()),
-            min: None,
-            max: None,
-            step: None,
-            accept: None,
-            on_change,
-            on_submit: None,
-            on_abort: None,
-            on_repeat_last: None,
-            presence: UiPresence::default(),
-            menu: None,
-        }),
-    };
-    let control = match child {
-        UiNode::Select(node) => ui_wgpu::wgpu::component::ui::UiControlNode::Select(node),
-        UiNode::Toggle(node) => ui_wgpu::wgpu::component::ui::UiControlNode::Toggle(node),
-        UiNode::Slider(node) => ui_wgpu::wgpu::component::ui::UiControlNode::Slider(node),
-        UiNode::Input(node) => ui_wgpu::wgpu::component::ui::UiControlNode::Input(node),
-        other => return UiTreeItemNode { id: format!("action.{action_id}.arg.{}", arg.id), label: Label::data(format!("{label}: {}", panel_ui_node_tag(&other))), ..UiTreeItemNode::base(String::new(), Label::data(String::new())) },
-    };
-    UiTreeItemNode { id: format!("action.{action_id}.arg.{}", arg.id), label: Label::data(label), description: arg.description.clone(), control: Some(control), ..UiTreeItemNode::base(String::new(), Label::data(String::new())) }
+fn staged_action_arg_row(window_id: &str, action_id: &str, arg: &semio_framework::ActionArgDef, value: Option<&Value>, selection: &HashMap<String, semio_framework::DomainSelection>, terminology: Terminology, locale: Locale) -> UiTreeItemNode {
+    let stage = ActionDescriptor { controller_id: "framework".into(), action: "stageActionArg".into(), args: crate::action_args_json!({ "window": window_id.to_string(), "action": action_id.to_string(), "arg": arg.id.clone() }) };
+    staged_arg_row(format!("action.{action_id}.arg.{}", arg.id), &arg.id, arg, value, &stage, selection, terminology, locale)
 }
 
 impl ShellState {
@@ -21958,8 +22190,8 @@ impl ShellState {
                 if matches!(arg.presentation, Some(semio_framework::ArgPresentation::Hidden)) {
                     continue;
                 }
-                let value = self.effective_arg_value(window_id, &action.id, arg).map(|value| value.as_str().map(ToOwned::to_owned).unwrap_or_else(|| value.to_string())).unwrap_or_default();
-                items.push(staged_action_arg_row(window_id, &action.id, arg, &value, terminology, locale));
+                let value = self.effective_arg_value(window_id, &action.id, arg);
+                items.push(staged_action_arg_row(window_id, &action.id, arg, value.as_ref(), &self.interaction_selection, terminology, locale));
             }
             let category = action_category_id(action);
             children.push(UiNode::Tree(UiTreeNode {
@@ -22040,6 +22272,8 @@ impl ShellState {
             max: None,
             step: None,
             accept: None,
+            precision: None,
+            snaps: Vec::new(),
             on_change: input.on_change.clone().unwrap_or_else(|| ActionDescriptor { controller_id: "framework".into(), action: "setEngagementInput".into(), args: crate::action_args_json!({ "window": window_id.to_string() }) }),
             on_submit: input.on_submit.clone(),
             on_abort: input.on_abort.clone(),
@@ -22448,6 +22682,9 @@ pub(crate) fn keybinding_capture_key_token(action: &ui_wgpu::wgpu::KeyAction) ->
 /// `ui.dialog.*` rows carry no accelerator (`escape`/`enter`/arrows): they belong to whichever overlay
 /// has focus, and this target answers them in `handle_keyboard`'s tour/sync-card/palette arms ahead of
 /// this table, exactly as React answers them inside the dialog/introduction components.
+///
+/// ⏪️ The three `ui.timeTravel.*` rows are React's too: they dispatch the reserved `historyEdit*` verbs, only
+/// while the open session offers them, and none of them is Escape — Escape never discards a history edit.
 pub(crate) const SHELL_SHORTCUT_ROWS: &[(&str, &str)] = &[
     ("ui.search.toggle", "mod+p"),
     ("ui.find.toggle", "mod+f"),
@@ -22469,6 +22706,9 @@ pub(crate) const SHELL_SHORTCUT_ROWS: &[(&str, &str)] = &[
     ("ui.shell.mode.previous", "mod+alt+arrowleft"),
     ("playground.navbar.roles.editor", "mod+alt+e"),
     ("playground.navbar.roles.viewer", "mod+alt+v"),
+    ("ui.timeTravel.accept", "alt+enter"),
+    ("ui.timeTravel.discard", "alt+backspace"),
+    ("ui.timeTravel.exit", "alt+shift+backspace"),
 ];
 
 /// ⌨️ The verb one [`SHELL_SHORTCUT_ROWS`] row asks for.
@@ -22485,13 +22725,15 @@ pub(crate) enum ShellShortcut {
     NewWindow,
     ModeStep(i32),
     SurfaceRole(semio_framework::manifest::AppRole),
+    /// ⏪️ A reserved history-edit verb — answered only while `HistoryPatch.timeTravel` offers it (see `⏪️time-travel`).
+    TimeTravel(TimeTravelVerb),
 }
 
 impl ShellShortcut {
     /// ⌨️ Whether this verb needs the async dispatch funnel (a guest round-trip or an os command) —
     /// `false` means `handle_keyboard`'s synchronous chrome-state arms answer it.
     pub(crate) fn is_async(self) -> bool {
-        matches!(self, ShellShortcut::ModeStep(_) | ShellShortcut::SurfaceRole(_))
+        matches!(self, ShellShortcut::ModeStep(_) | ShellShortcut::SurfaceRole(_) | ShellShortcut::TimeTravel(_))
     }
 }
 
@@ -22518,7 +22760,7 @@ pub(crate) fn shell_shortcut_for_control_id(control_id: &str) -> Option<ShellSho
         "ui.shell.mode.previous" => ShellShortcut::ModeStep(-1),
         "playground.navbar.roles.editor" => ShellShortcut::SurfaceRole(semio_framework::manifest::AppRole::Editor),
         "playground.navbar.roles.viewer" => ShellShortcut::SurfaceRole(semio_framework::manifest::AppRole::Viewer),
-        _ => return None,
+        other => ShellShortcut::TimeTravel(TimeTravelVerb::from_shortcut_id(other)?),
     })
 }
 
@@ -23264,9 +23506,7 @@ impl ShellState {
             let effective = Value::from(&effective_dsl).as_object().cloned().unwrap_or_default();
             let mut rows = Vec::new();
             for arg in &expanded.definition.args {
-                let value = effective.get(&arg.id).map(Value::to_string).unwrap_or_default();
-                let value = value.trim_matches('"').to_string();
-                rows.push(staged_command_arg_row(&key, arg, &value, terminology, locale));
+                rows.push(staged_command_arg_row(&key, arg, effective.get(&arg.id), &self.interaction_selection, terminology, locale));
             }
             let element_key = key.replace(':', ".");
             let toolbar = UiStackNode {
@@ -23853,7 +24093,8 @@ const VIEWER_READ_ONLY_FAULT_CODE: &str = "viewer.read-only";
 const MUTATION_REJECTED_FAULT_CODE: &str = "mutation.rejected";
 
 /// 🧯️ Classifies one dispatch-fault string into the banner React would show for it: a read-only
-/// viewer is an `info` with its own frozen copy, a rejected mutation is an `error` carrying the
+/// viewer is an `info` with its own frozen copy, a hub history refusal an `error` with its localized
+/// copy (`time_travel::history_refusal_notice`), a rejected mutation is an `error` carrying the
 /// frozen code, anything else is the generic render-error `error`. Pure, so the mapping is testable
 /// without a live plugin bridge.
 fn classify_dispatch_fault_notice(error: &str, locale: Locale) -> (String, semio_framework::Severity, Option<&'static str>) {
@@ -23862,6 +24103,9 @@ fn classify_dispatch_fault_notice(error: &str, locale: Locale) -> (String, semio
     if error.contains(VIEWER_READ_ONLY_FAULT_CODE) {
         let text = LocalizedLabel::native("This is a read-only viewer — editing is disabled.", "Dies ist ein schreibgeschützter Betrachter – Bearbeiten ist deaktiviert.").resolve(terminology, locale).to_string();
         return (text, Severity::Info, Some(VIEWER_READ_ONLY_FAULT_CODE));
+    }
+    if let Some((code, text, severity)) = time_travel::history_refusal_notice(error, locale) {
+        return (text.to_string(), severity, Some(code));
     }
     if error.contains(MUTATION_REJECTED_FAULT_CODE) {
         let title = LocalizedLabel::native("Change rejected", "Änderung abgelehnt").resolve(terminology, locale).to_string();
@@ -24008,19 +24252,590 @@ impl ShellState {
 }
 //#endregion 🧯️TransientNoticeAndAgentOverlays
 
-/// 🗨️ A generic modal confirmation/message dialog request — the minimal generic mechanism
-/// `os-shell.tsx`'s `DialogDefinition`/`Effect::OpenDialog` calls for (title + body +
-/// submit/cancel), enough to gate a destructive chrome action behind a real confirmation. Staged-form
-/// `args` are out of scope for this pass (see the report's honest scope-down).
+//#region 🗨️ChromeDialog
+/// 🗨️ The wgpu twin of React's `UIDialog`: one declared `DialogDefinition` resolved to the active locale —
+/// title, body, its staged fields, its decision choices, the submit and Cancel. Every button dispatches
+/// through the generic chrome hit pipeline with the args effective in that frame (`effective_action_args`
+/// over the staged values and the `Effect::OpenDialog` seed), a choice adds its own id
+/// (`DialogChoice::dispatch_args`, gated on the args it requires), and every dismissal (Cancel, Escape, a veil click) sends the cancel
+/// action. Focus walks the fields (a reference field's chips right after it), Cancel, the choices and the
+/// submit in that order — the order `🛂️manifest/🧫️fixtures/🧫️dialog-choices` pins for every renderer.
+///
+/// 🎛️ Every `ActionArgControl` has its own staged field: text, a number (a stepper adds −/+ buttons), a
+/// slider or dial with its detents painted as ticks, a select, a segmented choice of pressed buttons, a
+/// toggle, one number field per vector axis sharing the vector's bounds, precision and detents, a colour
+/// (the `color_input` recipe: a swatch beside its hex text and, with alpha, an opacity slider), and a
+/// reference list of removable chips with a "use current selection" button reading the shell's live
+/// interaction selection.
 #[derive(Clone, Debug)]
 struct ChromeDialogRequest {
     id: String,
+    controller_id: String,
     title: String,
     body: String,
+    defs: Vec<semio_framework::ActionArgDef>,
+    fields: Vec<ChromeDialogField>,
+    choices: Vec<ChromeDialogChoice>,
     confirm_label: String,
-    confirm_action: ActionDescriptor,
+    confirm_action: String,
     cancel_label: String,
+    cancel_action: Option<String>,
+    seed: Option<DslValue>,
+    staged: Vec<(String, DslValue)>,
+    focus: usize,
+    labels: ChromeDialogLabels,
 }
+
+/// 🏷️ The dialog chrome's own copy, resolved once per opening from exhaustive `LocalizedLabel`s.
+#[derive(Clone, Debug)]
+struct ChromeDialogLabels {
+    on: String,
+    off: String,
+    choose: String,
+    use_selection: String,
+    remove: String,
+    empty: String,
+    decrease: String,
+    increase: String,
+}
+
+/// ✍️ One staged field: its arg id, resolved label, control and the draft text a text/number field edits.
+#[derive(Clone, Debug)]
+struct ChromeDialogField {
+    id: String,
+    label: String,
+    required: bool,
+    kind: ChromeDialogFieldKind,
+    draft: String,
+}
+
+/// 🎛️ The staged controls this renderer paints — one per `ActionArgControl`; a vector arg becomes one
+/// `Axis` field per component, so every component is its own labelled focus stop, and a colour with alpha
+/// a `Color` field plus a `Slider` over its fourth `component` (index, dims, the value when absent).
+#[derive(Clone, Debug)]
+enum ChromeDialogFieldKind {
+    Text,
+    Number { step: f64, precision: Option<u16>, min: Option<f64>, max: Option<f64>, stepper: bool },
+    Slider { min: f64, max: f64, step: f64, precision: Option<u16>, unit: Option<String>, snaps: Vec<f64>, component: Option<(usize, usize, f64)> },
+    Select { options: Vec<(String, String)> },
+    Segmented { options: Vec<(String, String)> },
+    Toggle,
+    Axis { axis: usize, dims: usize, step: f64, precision: Option<u16>, min: Option<f64>, max: Option<f64>, snaps: Vec<f64> },
+    Color { alpha: bool },
+    Reference { domain: Option<String>, granularity: Option<String>, many: bool },
+}
+
+/// 🔀️ One decision button with its resolved label and consequence text.
+#[derive(Clone, Debug)]
+struct ChromeDialogChoice {
+    choice: semio_framework::DialogChoice,
+    label: String,
+    description: Option<String>,
+}
+
+/// 🎯️ One focus stop of the dialog, in visiting order. `Chip(field, index)` is one removable reference of a
+/// reference field.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+enum ChromeDialogStop {
+    Field(usize),
+    Chip(usize, usize),
+    Cancel,
+    Choice(usize),
+    Confirm,
+}
+
+/// ♿️ What a reader hears beyond a control's name: its role, pressed state and value.
+#[derive(Clone, Debug, Default, PartialEq)]
+struct ChromeDialogSemantics {
+    role: Option<&'static str>,
+    pressed: Option<bool>,
+    value_text: Option<String>,
+    value_range: Option<[f64; 3]>,
+}
+
+/// 🖌️ One step of the dialog's flat paint program — the retained chrome step walks it by index, so a
+/// glyph run that needs another opportunity simply does not advance. `Segment` and `Nudge` are the pressable
+/// parts of a segmented and a stepper field.
+enum ChromeDialogPaintOp {
+    Scrim,
+    Modal(Rect),
+    Fill { rect: Rect, color: Rgba },
+    Text { value: String, x: f32, y: f32, max_w: f32, size: f32, color: Rgba },
+    Hit { rect: Rect, stop: ChromeDialogStop, control_id: String, label: String, description: Option<String>, kind: HitKind, event: Option<ActionDescriptor>, semantics: ChromeDialogSemantics, disabled: bool },
+    Segment { rect: Rect, field: usize, option: usize, control_id: String, label: String, selected: bool },
+    Nudge { rect: Rect, field: usize, sign: f64, control_id: String, label: String },
+    Clicks { dialog: Rect },
+}
+
+/// 👆️ What one click on the open dialog landed on.
+#[derive(Clone, Copy, Debug)]
+enum ChromeDialogPress {
+    Stop { stop: ChromeDialogStop, enabled: bool, rect: Rect },
+    Segment { field: usize, option: usize },
+    Nudge { field: usize, sign: f64 },
+}
+
+impl ChromeDialogRequest {
+    /// 🗨️ Resolves `dialog` against `terminology`/`locale`; `seed` is the `Effect::OpenDialog` args.
+    fn from_definition(controller_id: &str, dialog: &semio_framework::DialogDefinition, seed: Option<DslValue>, terminology: Terminology, locale: Locale) -> Self {
+        use semio_framework::ActionArgControl as Control;
+        let resolve = |label: &LocalizedLabel| label.resolve(terminology, locale).to_string();
+        let positive = |step: Option<f64>| step.filter(|step| step.is_finite() && *step > 0.0).unwrap_or(1.0);
+        let digits = |precision: Option<u32>| precision.map(|precision| u16::try_from(precision).unwrap_or(ui_contract::UI_NUMBER_PRECISION_MAX));
+        let initial = semio_framework::effective_action_args(&dialog.args, &DslValue::Object(Vec::new()), seed.as_ref());
+        let fields = dialog
+            .args
+            .iter()
+            .flat_map(|def| {
+                let label = resolve(&def.label);
+                let kinds: Vec<(String, ChromeDialogFieldKind)> = match def.control() {
+                    Control::Number { min, max, step, precision, .. } => vec![(label, ChromeDialogFieldKind::Number { step: positive(step), precision: digits(precision), min, max, stepper: false })],
+                    Control::Stepper { min, max, step, precision, .. } => vec![(label, ChromeDialogFieldKind::Number { step: positive(step), precision: digits(precision), min, max, stepper: true })],
+                    Control::Slider { min, max, step, precision, unit, snaps, .. } | Control::Dial { min, max, step, precision, unit, snaps, .. } => {
+                        let snaps = if ui_contract::snaps_are_valid(snaps.iter().copied(), min, max) { snaps } else { Vec::new() };
+                        vec![(label, ChromeDialogFieldKind::Slider { min, max: max.max(min), step: positive(step), precision: digits(precision), unit, snaps, component: None })]
+                    }
+                    Control::Select { options } => vec![(label, ChromeDialogFieldKind::Select { options: options.iter().map(|option| (option.value.clone(), resolve(&option.label))).collect() })],
+                    Control::Segmented { options } => vec![(label, ChromeDialogFieldKind::Segmented { options: options.iter().map(|option| (option.value.clone(), resolve(&option.label))).collect() })],
+                    Control::Toggle => vec![(label, ChromeDialogFieldKind::Toggle)],
+                    Control::Vector { dims, step, precision, min, max, snaps, .. } => {
+                        let dims = dims as usize;
+                        let precision = digits(precision);
+                        let step = step.filter(|step| step.is_finite() && *step > 0.0).or_else(|| precision.map(|precision| 10_f64.powi(-i32::from(precision)))).unwrap_or(1.0);
+                        let snaps = if ui_contract::snaps_are_valid(snaps.iter().copied(), min.unwrap_or(f64::NEG_INFINITY), max.unwrap_or(f64::INFINITY)) { snaps } else { Vec::new() };
+                        (0..dims).map(|axis| (format!("{label} {}", chrome_dialog_axis_name(axis)), ChromeDialogFieldKind::Axis { axis, dims, step, precision, min, max, snaps: snaps.clone() })).collect()
+                    }
+                    Control::Color { alpha } => {
+                        let opacity = LocalizedLabel::native("Opacity", "Deckkraft").resolve(terminology, locale).to_string();
+                        let mut kinds = vec![(label.clone(), ChromeDialogFieldKind::Color { alpha })];
+                        if alpha {
+                            kinds.push((format!("{label} {opacity}"), ChromeDialogFieldKind::Slider { min: 0.0, max: 1.0, step: 0.01, precision: Some(2), unit: None, snaps: Vec::new(), component: Some((3, 4, 1.0)) }));
+                        }
+                        kinds
+                    }
+                    Control::Reference { domain, granularity, many, .. } => vec![(label, ChromeDialogFieldKind::Reference { domain, granularity, many })],
+                    _ => vec![(label, ChromeDialogFieldKind::Text)],
+                };
+                let value = initial.get(&def.id).cloned();
+                kinds.into_iter().map(move |(label, kind)| {
+                    let draft = match (&kind, value.as_ref()) {
+                        (ChromeDialogFieldKind::Number { precision, .. }, Some(value)) => value.as_f64().map_or_else(String::new, |value| chrome_dialog_number_text(value, *precision)),
+                        (ChromeDialogFieldKind::Axis { axis, precision, .. }, Some(value)) => value.as_array().and_then(|tuple| tuple.get(*axis)).and_then(DslValue::as_f64).map_or_else(String::new, |value| chrome_dialog_number_text(value, *precision)),
+                        (ChromeDialogFieldKind::Color { alpha }, Some(value)) => ui_contract::ui_color_hex(&value.as_array().map(|components| components.iter().filter_map(DslValue::as_f64).collect::<Vec<_>>()).unwrap_or_default(), *alpha),
+                        (ChromeDialogFieldKind::Text, Some(value)) => value.as_str().unwrap_or_default().to_string(),
+                        _ => String::new(),
+                    };
+                    ChromeDialogField { id: def.id.clone(), label, required: def.required, kind, draft }
+                })
+            })
+            .collect();
+        let native = |en: &str, de: &str| LocalizedLabel::native(en, de).resolve(terminology, locale).to_string();
+        Self {
+            id: dialog.id.clone(),
+            controller_id: controller_id.to_string(),
+            title: resolve(&dialog.title),
+            body: dialog.body.as_ref().map(resolve).unwrap_or_default(),
+            defs: dialog.args.clone(),
+            fields,
+            choices: dialog.choices.iter().map(|choice| ChromeDialogChoice { choice: choice.clone(), label: resolve(&choice.label), description: choice.description.as_ref().map(resolve) }).collect(),
+            confirm_label: resolve(&dialog.submit_label),
+            confirm_action: dialog.submit_action.as_str().to_string(),
+            cancel_label: dialog.cancel_label.as_ref().map_or_else(|| native("Cancel", "Abbrechen"), resolve),
+            cancel_action: dialog.cancel_action.as_ref().map(|action| action.as_str().to_string()),
+            seed,
+            staged: Vec::new(),
+            focus: 0,
+            labels: ChromeDialogLabels {
+                on: native("On", "Ein"),
+                off: native("Off", "Aus"),
+                choose: native("Choose…", "Auswählen…"),
+                use_selection: LocalizedLabel::native("Use current selection", "Aktuelle Auswahl verwenden").resolve(terminology, locale).to_string(),
+                remove: LocalizedLabel::native("Remove {item}", "{item} entfernen").resolve(terminology, locale).to_string(),
+                empty: LocalizedLabel::native("Nothing selected", "Nichts ausgewählt").resolve(terminology, locale).to_string(),
+                decrease: LocalizedLabel::native("Decrease", "Verringern").resolve(terminology, locale).to_string(),
+                increase: LocalizedLabel::native("Increase", "Erhöhen").resolve(terminology, locale).to_string(),
+            },
+        }
+    }
+
+    /// 🧮️ The args every button dispatches this frame: staged values over the seed and the defaults, and a colour
+    /// field's edited hex (`ui_contract::parse_ui_color_hex`) over its colour — keeping the alpha when the text carries
+    /// none, so a hex passing through a short form while it is typed never loses the opacity. An unedited hex (the
+    /// one the colour prints as) changes nothing, so an untouched colour keeps its exact components.
+    fn effective(&self) -> DslValue {
+        let mut effective = semio_framework::effective_action_args(&self.defs, &DslValue::Object(self.staged.clone()), self.seed.as_ref());
+        for field in &self.fields {
+            let ChromeDialogFieldKind::Color { alpha } = field.kind else { continue };
+            let base: Vec<f64> = effective.get(&field.id).and_then(|value| value.as_array().map(|components| components.iter().filter_map(DslValue::as_f64).collect())).unwrap_or_default();
+            let Some(parsed) = ui_contract::parse_ui_color_hex(&field.draft).filter(|_| field.draft != ui_contract::ui_color_hex(&base, alpha)) else { continue };
+            let typed_alpha = matches!(field.draft.trim().trim_start_matches('#').len(), 4 | 8);
+            let rgba = [parsed[0], parsed[1], parsed[2], if typed_alpha { parsed[3] } else { base.get(3).copied().unwrap_or(1.0) }];
+            let value = DslValue::Array(rgba[..if alpha { 4 } else { 3 }].iter().map(|component| DslValue::float(*component)).collect());
+            if let DslValue::Object(entries) = &mut effective {
+                match entries.iter_mut().find(|(key, _)| *key == field.id) {
+                    Some(entry) => entry.1 = value,
+                    None => entries.push((field.id.clone(), value)),
+                }
+            }
+        }
+        effective
+    }
+
+    /// 🛑️ Whether a required field is still unset or a choice left its catalog — the submit gate.
+    fn resolved(&self) -> bool {
+        semio_framework::unresolved_action_args(&self.defs, &self.effective()).is_empty()
+    }
+
+    /// 🎯️ Every focus stop in visiting order: each field (a reference field followed by its chips), Cancel, the
+    /// choices, the submit.
+    fn stops(&self) -> Vec<ChromeDialogStop> {
+        let mut stops = Vec::new();
+        for (index, field) in self.fields.iter().enumerate() {
+            stops.push(ChromeDialogStop::Field(index));
+            if matches!(field.kind, ChromeDialogFieldKind::Reference { .. }) {
+                stops.extend((0..self.reference_ids(index).len()).map(|chip| ChromeDialogStop::Chip(index, chip)));
+            }
+        }
+        stops.push(ChromeDialogStop::Cancel);
+        stops.extend((0..self.choices.len()).map(ChromeDialogStop::Choice));
+        stops.push(ChromeDialogStop::Confirm);
+        stops
+    }
+
+    fn focused(&self) -> ChromeDialogStop {
+        let stops = self.stops();
+        stops[self.focus.min(stops.len() - 1)]
+    }
+
+    fn move_focus(&mut self, backwards: bool) {
+        let count = self.stops().len();
+        self.focus = if backwards { (self.focus + count - 1) % count } else { (self.focus + 1) % count };
+    }
+
+    fn focus_stop(&mut self, stop: ChromeDialogStop) {
+        if let Some(index) = self.stops().iter().position(|candidate| *candidate == stop) {
+            self.focus = index;
+        }
+    }
+
+    fn stage(&mut self, id: &str, value: DslValue) {
+        match self.staged.iter_mut().find(|(key, _)| key == id) {
+            Some(entry) => entry.1 = value,
+            None => self.staged.push((id.to_string(), value)),
+        }
+    }
+
+    fn field_value(&self, index: usize) -> Option<DslValue> {
+        self.effective().get(&self.fields.get(index)?.id).cloned()
+    }
+
+    /// ✍️ Replaces a text/number/axis/colour field's draft and stages the value it means (`Null` for an unreadable
+    /// number); an axis splices its component into the vector, clamped to the vector's bounds and rounded to its
+    /// precision, and a colour's draft is read by [`Self::effective`].
+    fn set_draft(&mut self, index: usize, draft: String) {
+        let Some(field) = self.fields.get(index) else { return };
+        let number = draft.trim().parse::<f64>().ok().filter(|value| value.is_finite());
+        let value = match field.kind {
+            ChromeDialogFieldKind::Number { precision, .. } => number.map_or(DslValue::Null, |value| DslValue::float(precision.map_or(value, |precision| ui_contract::round_ui_number(value, precision)))),
+            ChromeDialogFieldKind::Axis { axis, dims, precision, min, max, .. } => {
+                let mut tuple: Vec<DslValue> = self.field_value(index).and_then(|value| value.as_array().map(<[DslValue]>::to_vec)).unwrap_or_default();
+                tuple.resize(dims, DslValue::float(0.0));
+                tuple[axis] = number.map_or(DslValue::Null, |value| DslValue::float(precision.map_or(value, |precision| ui_contract::round_ui_number(value, precision)).max(min.unwrap_or(f64::NEG_INFINITY)).min(max.unwrap_or(f64::INFINITY))));
+                DslValue::Array(tuple)
+            }
+            ChromeDialogFieldKind::Color { .. } => {
+                self.fields[index].draft = draft;
+                return;
+            }
+            _ => DslValue::String(draft.clone()),
+        };
+        let id = field.id.clone();
+        self.fields[index].draft = draft;
+        self.stage(&id, value);
+    }
+
+    /// 🔀️ Flips a toggle field.
+    fn flip(&mut self, index: usize) {
+        let on = matches!(self.field_value(index), Some(DslValue::Bool(true)));
+        if let Some(id) = self.fields.get(index).filter(|field| matches!(field.kind, ChromeDialogFieldKind::Toggle)).map(|field| field.id.clone()) {
+            self.stage(&id, DslValue::Bool(!on));
+        }
+    }
+
+    /// 📋️ A select or segmented field's options.
+    fn options(&self, index: usize) -> &[(String, String)] {
+        match self.fields.get(index).map(|field| &field.kind) {
+            Some(ChromeDialogFieldKind::Select { options } | ChromeDialogFieldKind::Segmented { options }) => options,
+            _ => &[],
+        }
+    }
+
+    /// 🔽️ Moves a select or segmented field to its next (`forward`) or previous option, wrapping.
+    fn cycle(&mut self, index: usize, forward: bool) {
+        let options = self.options(index);
+        if options.is_empty() {
+            return;
+        }
+        let current = self.field_value(index).and_then(|value| value.as_str().map(str::to_string));
+        let position = current.and_then(|current| options.iter().position(|(value, _)| *value == current));
+        let next = match (position, forward) {
+            (None, true) => 0,
+            (None, false) => options.len() - 1,
+            (Some(position), true) => (position + 1) % options.len(),
+            (Some(position), false) => (position + options.len() - 1) % options.len(),
+        };
+        self.choose(index, next);
+    }
+
+    /// 🔘️ Picks one option of a select or segmented field.
+    fn choose(&mut self, index: usize, option: usize) {
+        let Some(value) = self.options(index).get(option).map(|(value, _)| value.clone()) else { return };
+        let id = self.fields[index].id.clone();
+        self.stage(&id, DslValue::String(value));
+    }
+
+    /// 🔢️ Steps a number or axis field through the shared keyboard law (`ui_contract::ui_number_key_value`): a
+    /// sign walks one rung of its step ladder, a page (`page`) jumps to the adjacent detent of an axis or walks ten
+    /// rungs, inside its bounds.
+    fn nudge_by(&mut self, index: usize, sign: f64, page: bool) {
+        let Some(field) = self.fields.get(index) else { return };
+        let (step, precision, min, max, snaps) = match &field.kind {
+            ChromeDialogFieldKind::Number { step, precision, min, max, .. } => (*step, *precision, *min, *max, Vec::new()),
+            ChromeDialogFieldKind::Axis { step, precision, min, max, snaps, .. } => (*step, *precision, *min, *max, snaps.clone()),
+            _ => return,
+        };
+        let current = field.draft.trim().parse::<f64>().ok().filter(|value| value.is_finite()).unwrap_or(0.0);
+        let key = match (page, sign > 0.0) {
+            (false, true) => ui_contract::SliderKey::Increment,
+            (false, false) => ui_contract::SliderKey::Decrement,
+            (true, true) => ui_contract::SliderKey::PageUp,
+            (true, false) => ui_contract::SliderKey::PageDown,
+        };
+        self.set_draft(index, chrome_dialog_number_text(ui_contract::ui_number_key_value(current, min, max, step, snaps, key, false), precision));
+    }
+
+    /// 🔢️ Steps a number or axis field one rung of its step ladder.
+    fn nudge(&mut self, index: usize, sign: f64) {
+        self.nudge_by(index, sign, false);
+    }
+
+    /// 🎚️ A slider field's current value, on its travel — a component slider's component of its vector.
+    fn slider_value(&self, index: usize) -> Option<f64> {
+        let ChromeDialogFieldKind::Slider { min, max, component, .. } = self.fields.get(index)?.kind else { return None };
+        let value = self.field_value(index);
+        let current = match component {
+            Some((at, _, absent)) => value.and_then(|value| value.as_array().and_then(|components| components.get(at)).and_then(DslValue::as_f64)).unwrap_or(absent),
+            None => value.and_then(|value| value.as_f64()).unwrap_or(min),
+        };
+        Some(current.clamp(min, max))
+    }
+
+    /// 🎚️ Sets a slider field, clamped to its travel and rounded to its precision — a component slider splices it
+    /// into its vector.
+    fn set_slider(&mut self, index: usize, value: f64) {
+        let Some(ChromeDialogFieldKind::Slider { min, max, precision, component, .. }) = self.fields.get(index).map(|field| field.kind.clone()) else { return };
+        let value = DslValue::float(precision.map_or(value.clamp(min, max), |precision| ui_contract::round_ui_number(value.clamp(min, max), precision)));
+        let staged = match component {
+            Some((at, dims, _)) => {
+                let mut tuple: Vec<DslValue> = self.field_value(index).and_then(|current| current.as_array().map(<[DslValue]>::to_vec)).unwrap_or_default();
+                tuple.resize(dims, DslValue::float(0.0));
+                tuple[at] = value;
+                DslValue::Array(tuple)
+            }
+            None => value,
+        };
+        let id = self.fields[index].id.clone();
+        let printed = component.and_then(|_| staged.as_array().map(|components| components.iter().filter_map(DslValue::as_f64).collect::<Vec<_>>()));
+        self.stage(&id, staged);
+        if let Some(components) = printed {
+            for field in self.fields.iter_mut().filter(|field| field.id == id) {
+                if let ChromeDialogFieldKind::Color { alpha } = field.kind {
+                    field.draft = ui_contract::ui_color_hex(&components, alpha);
+                }
+            }
+        }
+    }
+
+    /// ⌨️ One slider key through the shared keyboard law (`ui_contract::slider_key_value`, pinned by
+    /// `🧫️number-controls` for every renderer): arrows walk the step ladder and never snap (`large` — a `Shift`
+    /// chord — walks ten rungs), PageUp/PageDown jump to the adjacent detent (ten rungs without one), Home/End go
+    /// to the ends. `false` for a key a slider does not take.
+    fn slide(&mut self, index: usize, action: &ui_wgpu::wgpu::KeyAction, large: bool) -> bool {
+        use ui_contract::SliderKey;
+        use ui_wgpu::wgpu::KeyAction;
+        let (Some(ChromeDialogFieldKind::Slider { min, max, step, snaps, .. }), Some(value)) = (self.fields.get(index).map(|field| field.kind.clone()), self.slider_value(index)) else { return false };
+        let key = match action {
+            KeyAction::ArrowLeft | KeyAction::ArrowDown => SliderKey::Decrement,
+            KeyAction::ArrowRight | KeyAction::ArrowUp => SliderKey::Increment,
+            KeyAction::PageUp => SliderKey::PageUp,
+            KeyAction::PageDown => SliderKey::PageDown,
+            KeyAction::Home => SliderKey::Home,
+            KeyAction::End => SliderKey::End,
+            _ => return false,
+        };
+        self.set_slider(index, ui_contract::slider_key_value(value, min, max, step, snaps, key, large));
+        true
+    }
+
+    /// 👆️ A pointer at `share` of a slider's rail: the shared detent law of every renderer.
+    fn point_slider(&mut self, index: usize, share: f64) {
+        let Some(ChromeDialogFieldKind::Slider { min, max, step, snaps, .. }) = self.fields.get(index).map(|field| field.kind.clone()) else { return };
+        self.set_slider(index, ui_contract::slider_pointer_value(min + share.clamp(0.0, 1.0) * (max - min), min, max, step, snaps));
+    }
+
+    /// 🧷️ A reference field's referenced ids, in order.
+    fn reference_ids(&self, index: usize) -> Vec<String> {
+        match self.field_value(index) {
+            Some(DslValue::Array(ids)) => ids.iter().filter_map(|id| id.as_str().map(str::to_string)).collect(),
+            Some(DslValue::String(id)) if !id.is_empty() => vec![id],
+            _ => Vec::new(),
+        }
+    }
+
+    /// 🧷️ Stages `ids` into a reference field — a list when it takes many, else the first id.
+    fn stage_references(&mut self, index: usize, ids: Vec<String>) {
+        let Some(ChromeDialogFieldKind::Reference { many, .. }) = self.fields.get(index).map(|field| field.kind.clone()) else { return };
+        let value = if many { DslValue::Array(ids.into_iter().map(DslValue::String).collect()) } else { ids.into_iter().next().map_or(DslValue::Null, DslValue::String) };
+        let id = self.fields[index].id.clone();
+        self.stage(&id, value);
+    }
+
+    /// 🎯️ "Use current selection": the live selection of the field's domain replaces its references.
+    fn use_selection(&mut self, index: usize, selection: &HashMap<String, semio_framework::DomainSelection>) {
+        let Some(ChromeDialogFieldKind::Reference { domain, granularity, .. }) = self.fields.get(index).map(|field| field.kind.clone()) else { return };
+        self.stage_references(index, reference_selection_ids(selection, domain.as_deref(), granularity.as_deref()));
+    }
+
+    /// ✖️ Removes one reference; focus stays on the chip that takes its place, else returns to the field.
+    fn remove_chip(&mut self, index: usize, chip: usize) {
+        let mut ids = self.reference_ids(index);
+        if chip >= ids.len() {
+            return;
+        }
+        ids.remove(chip);
+        let left = ids.len();
+        self.stage_references(index, ids);
+        self.focus_stop(if left == 0 { ChromeDialogStop::Field(index) } else { ChromeDialogStop::Chip(index, chip.min(left - 1)) });
+    }
+
+    /// ▶️ The action a stop dispatches now: `None` for a field or chip, for a gated submit or choice, and for a
+    /// Cancel without a declared cancel action.
+    fn action(&self, stop: ChromeDialogStop) -> Option<ActionDescriptor> {
+        let descriptor = |action: &str, args: Option<DslValue>| ActionDescriptor { controller_id: self.controller_id.clone(), action: action.to_string(), args };
+        match stop {
+            ChromeDialogStop::Field(_) | ChromeDialogStop::Chip(..) => None,
+            ChromeDialogStop::Cancel => self.cancel_action.as_deref().map(|action| descriptor(action, None)),
+            ChromeDialogStop::Choice(index) => {
+                let choice = &self.choices.get(index)?.choice;
+                let effective = self.effective();
+                choice.unresolved_args(&self.defs, &effective).is_empty().then(|| descriptor(choice.action.as_str(), Some(choice.dispatch_args(&self.defs, &effective))))
+            }
+            ChromeDialogStop::Confirm => self.resolved().then(|| descriptor(&self.confirm_action, Some(self.effective()))),
+        }
+    }
+
+    /// 🔏️ The key of the dialog's own accessibility node; every control it paints registers under `{key}.…`.
+    fn accessibility_key(&self) -> String {
+        format!("shell.dialog.{}", self.id)
+    }
+
+    /// 🧿️ The painted control `key` names: a focus stop, or a segment (`Some(option)`) or stepper button (the sign)
+    /// of a field.
+    fn accessibility_target(&self, key: &str) -> Option<(ChromeDialogStop, Option<usize>, f64)> {
+        if let Some(stop) = self.stops().into_iter().find(|stop| self.control_id(*stop) == key) {
+            return Some((stop, None, 0.0));
+        }
+        (0..self.fields.len()).find_map(|index| {
+            let part = key.strip_prefix(&self.control_id(ChromeDialogStop::Field(index)))?;
+            match part {
+                ".decrement" => Some((ChromeDialogStop::Field(index), None, -1.0)),
+                ".increment" => Some((ChromeDialogStop::Field(index), None, 1.0)),
+                _ => part.strip_prefix(".option.").and_then(|value| self.options(index).iter().position(|(option, _)| option == value)).map(|option| (ChromeDialogStop::Field(index), Some(option), 0.0)),
+            }
+        })
+    }
+
+    /// 🏷️ The chrome control id a stop registers its hit and accessible name under.
+    fn control_id(&self, stop: ChromeDialogStop) -> String {
+        match stop {
+            ChromeDialogStop::Field(index) => match self.fields[index].kind {
+                ChromeDialogFieldKind::Axis { axis, .. } => format!("shell.dialog.{}.field.{}.{}", self.id, self.fields[index].id, chrome_dialog_axis_name(axis)),
+                ChromeDialogFieldKind::Slider { component: Some(_), .. } => format!("shell.dialog.{}.field.{}.alpha", self.id, self.fields[index].id),
+                _ => format!("shell.dialog.{}.field.{}", self.id, self.fields[index].id),
+            },
+            ChromeDialogStop::Chip(index, chip) => format!("shell.dialog.{}.field.{}.chip.{}", self.id, self.fields[index].id, self.reference_ids(index).get(chip).cloned().unwrap_or_default()),
+            ChromeDialogStop::Cancel => format!("shell.dialog.{}.cancel", self.id),
+            ChromeDialogStop::Choice(index) => format!("shell.dialog.{}.choice.{}", self.id, self.choices[index].choice.id),
+            ChromeDialogStop::Confirm => format!("shell.dialog.{}.confirm", self.id),
+        }
+    }
+
+    /// 📝️ What a field shows: its draft, the chosen option's label, the toggle state, the slider value or the
+    /// references — and whether that is placeholder text.
+    fn field_text(&self, index: usize) -> (String, bool) {
+        let field = &self.fields[index];
+        match &field.kind {
+            ChromeDialogFieldKind::Text | ChromeDialogFieldKind::Number { .. } | ChromeDialogFieldKind::Axis { .. } | ChromeDialogFieldKind::Color { .. } => (field.draft.clone(), false),
+            ChromeDialogFieldKind::Toggle => (if matches!(self.field_value(index), Some(DslValue::Bool(true))) { self.labels.on.clone() } else { self.labels.off.clone() }, false),
+            ChromeDialogFieldKind::Select { options } | ChromeDialogFieldKind::Segmented { options } => {
+                let current = self.field_value(index).and_then(|value| value.as_str().map(str::to_string));
+                match current.and_then(|current| options.iter().find(|(value, _)| *value == current)) {
+                    Some((_, label)) => (label.clone(), false),
+                    None => (self.labels.choose.clone(), true),
+                }
+            }
+            ChromeDialogFieldKind::Slider { precision, unit, .. } => {
+                let value = self.slider_value(index).map_or_else(String::new, |value| chrome_dialog_number_text(value, *precision));
+                (unit.as_deref().map_or_else(|| value.clone(), |unit| format!("{value} {unit}")), false)
+            }
+            ChromeDialogFieldKind::Reference { .. } => {
+                let ids = self.reference_ids(index);
+                if ids.is_empty() {
+                    (self.labels.empty.clone(), true)
+                } else {
+                    (ids.join(", "), false)
+                }
+            }
+        }
+    }
+
+    #[cfg(test)]
+    fn confirm(id: &str, title: &str, action: &str) -> Self {
+        let dialog = semio_framework::DialogDefinition::new(id, LocalizedLabel::native(title, title), semio_framework::ActionRef::new(action));
+        Self::from_definition("test", &dialog, None, Terminology::default(), Locale::En)
+    }
+}
+
+/// 🔢️ A number field's text: at its precision when it has one, else twelve significant digits.
+fn chrome_dialog_number_text(value: f64, precision: Option<u16>) -> String {
+    precision.map_or_else(|| ui_contract::format_ui_number(value), |precision| ui_contract::format_ui_number_fixed(value, precision))
+}
+
+/// 🧭️ A vector component's name — React's staged vector row names them `x y z w`, then by index.
+fn chrome_dialog_axis_name(axis: usize) -> String {
+    ["x", "y", "z", "w"].get(axis).map_or_else(|| axis.to_string(), |name| (*name).to_string())
+}
+
+/// 📒️ Records what a reader hears for one painted dialog control — its name, consequence text, role, pressed state,
+/// value and whether it is gated — in the registry the chrome accessibility projection reads. Both render paths go
+/// through here, so the published tree always describes the frame on screen.
+fn note_chrome_dialog_control(op: &ChromeDialogPaintOp) {
+    match op {
+        ChromeDialogPaintOp::Hit { control_id, label, description, semantics, disabled, .. } => {
+            note_chrome_control_name(control_id, Some(label));
+            note_chrome_control_description(control_id, description.as_deref());
+            note_chrome_control_semantics(control_id, semantics);
+            note_chrome_control_disabled(control_id, *disabled);
+        }
+        ChromeDialogPaintOp::Segment { control_id, label, selected, .. } => {
+            note_chrome_control_name(control_id, Some(label));
+            note_chrome_control_semantics(control_id, &ChromeDialogSemantics { role: Some("button"), pressed: Some(*selected), value_text: None, value_range: None });
+        }
+        ChromeDialogPaintOp::Nudge { control_id, label, .. } => note_chrome_control_name(control_id, Some(label)),
+        _ => {}
+    }
+}
+//#endregion 🗨️ChromeDialog
 
 /// 🎓️ Live playback state for `AppDefinition.introduction` — which step is showing. Steps themselves are
 /// re-read fresh from `session.app.introduction` every frame, never cached, so a plugin hot-reload
@@ -25528,6 +26343,9 @@ enum ShellChromeFramePhase {
     Navbar,
     TutorialBar,
     Footer,
+    /// ⏪️ The persistent time-travel band (`HistoryPatch.timeTravel`) above the footer — under every overlay, so an
+    /// open dialog's veil covers it exactly as it covers the rest of the workbench.
+    TimeTravelBand,
     Overlay,
     HubWorkspace,
     /// 🛂️ The Space Administration sheet (packet W15e) — React mounts it in the same absolutely
@@ -25629,6 +26447,7 @@ impl ShellChromeFramePhase {
             Self::Navbar => "Navbar",
             Self::TutorialBar => "TutorialBar",
             Self::Footer => "Footer",
+            Self::TimeTravelBand => "TimeTravelBand",
             Self::Overlay => "Overlay",
             Self::HubWorkspace => "HubWorkspace",
             Self::SpaceAdministration => "SpaceAdministration",
@@ -25891,6 +26710,12 @@ impl ShellState {
             }
             ShellChromeFramePhase::Footer => {
                 if !self.render_footer_step(&mut cursor.child, overlay, atlas, icons, input, theme, w, h) {
+                    return false;
+                }
+                cursor.advance(ShellChromeFramePhase::TimeTravelBand);
+            }
+            ShellChromeFramePhase::TimeTravelBand => {
+                if !self.render_time_travel_band_step(&mut cursor.child, overlay, atlas, input, theme) {
                     return false;
                 }
                 cursor.advance(ShellChromeFramePhase::Overlay);
@@ -26234,7 +27059,7 @@ impl ShellState {
         let (views, active_tool) = self.board_presence_views();
         let ephemeral = self.plugins.iter().find(|entry| entry.plugin_id == channel.plugin_id).and_then(|plugin| plugin.ephemeral_snapshot(channel.instance_id)).unwrap_or_default();
         let (presence_pack, interaction) = (ephemeral.presence, ephemeral.interaction);
-        let peer = PresencePeer { actor, label, presence_pack, connected_at_ms, user_id, role: None, drag_ghost_json: None, interaction, color: None, surface: None, views, ui: None, tool_run: None, principal_kind: None, active_tool };
+        let peer = PresencePeer { actor, label, presence_pack, connected_at_ms, user_id, role: None, drag_ghost_json: None, interaction, color: None, surface: None, views, ui: None, tool_run: None, principal_kind: None, active_tool, history_edit: ephemeral.history_edit };
         self.document_host.presence_heartbeat_key(&channel.document_key, chrome_now_ms() as u64, peer);
     }
 
@@ -29247,69 +30072,472 @@ impl ShellState {
         ops
     }
 
-    fn render_chrome_dialog_step(&mut self, cursor: &mut ShellChromeChildCursor, overlay: &mut DrawList, atlas: &mut FontAtlas, input: &mut InputState<ActionDescriptor>, theme: &Theme, width: f32, height: f32) -> bool {
-        if cursor.flag {
-            close_chrome_overlay_glass_content(cursor, overlay);
-            self.error = Some("Shell dialog text exceeded the retained glyph boundary".to_string());
-            cursor.flag = false;
-            return true;
+    /// 🗨️ This frame's flat paint program for `request` — rebuilt per opportunity (it is pure and small)
+    /// so the retained step only carries an index. Title, body, one labelled row per staged field (a
+    /// slider's rail with one tick per detent and its value, a segmented field's pressed segments, a
+    /// stepper's −/+ buttons, a reference field's removable chips and its "use current selection" button),
+    /// the choices' consequence lines, then Cancel on the start edge and the choices plus the submit on
+    /// the end edge (a row of their own when they do not fit beside Cancel). A gated submit or choice
+    /// paints dimmed and registers no event; a destructive choice paints in the error colour.
+    fn chrome_dialog_paint_ops(request: &ChromeDialogRequest, width: f32, height: f32, theme: &Theme) -> Vec<ChromeDialogPaintOp> {
+        let (pad, gap, small, body) = (theme.padding_standard, theme.gap_standard, theme.font_size_small, theme.font_size_body);
+        let (line_small, line_body, control_h) = (small * 1.6, body * 1.6, theme.control_height);
+        let dialog_w = (width - pad * 4.0).clamp(240.0, 420.0);
+        let inner_w = dialog_w - pad * 2.0;
+        let glyphs_w = |label: &str| label.chars().count() as f32 * small * 0.62;
+        let button_w = |label: &str| (glyphs_w(label) + gap * 4.0).clamp(72.0, inner_w);
+        let trailing: Vec<(ChromeDialogStop, &str)> = request.choices.iter().enumerate().map(|(index, choice)| (ChromeDialogStop::Choice(index), choice.label.as_str())).chain([(ChromeDialogStop::Confirm, request.confirm_label.as_str())]).collect();
+        let trailing_w = trailing.iter().map(|(_, label)| button_w(label) + gap).sum::<f32>() - gap;
+        let cancel_w = button_w(&request.cancel_label);
+        let split = cancel_w + gap + trailing_w > inner_w;
+        let descriptions: Vec<&str> = request.choices.iter().filter_map(|choice| choice.description.as_deref()).collect();
+        let body_h = if request.body.is_empty() { 0.0 } else { line_small };
+        let rows = if split { 2.0 } else { 1.0 };
+        let dialog_h = pad * 2.0 + line_body + body_h + request.fields.len() as f32 * (line_small + control_h + gap) + descriptions.len() as f32 * line_small + gap + control_h * rows + gap * (rows - 1.0);
+        let dialog = Rect::new((width - dialog_w) * 0.5, ((height - dialog_h) * 0.5).max(0.0), dialog_w, dialog_h);
+        let x = dialog.x + pad;
+        let focused = request.focused();
+        let text = |value: String, x: f32, y: f32, size: f32, color: Rgba| ChromeDialogPaintOp::Text { value, x, y, max_w: inner_w.max(1.0), size, color };
+        let clipped = |value: String, x: f32, y: f32, max_w: f32, color: Rgba| ChromeDialogPaintOp::Text { value, x, y, max_w: max_w.max(1.0), size: small, color };
+        let ring = |rect: Rect| ChromeDialogPaintOp::Fill { rect: Rect::new(rect.x - 1.5, rect.y - 1.5, rect.w + 3.0, rect.h + 3.0), color: theme.accent };
+        let mut ops = vec![ChromeDialogPaintOp::Scrim, ChromeDialogPaintOp::Modal(dialog)];
+        let mut y = dialog.y + pad;
+        ops.push(text(request.title.clone(), x, y + body, body, theme.text));
+        y += line_body;
+        if !request.body.is_empty() {
+            ops.push(text(request.body.clone(), x, y + small, small, theme.text_muted));
+            y += line_small;
         }
+        for (index, field) in request.fields.iter().enumerate() {
+            let label = field.label.clone();
+            ops.push(text(if field.required { format!("{label} *") } else { label.clone() }, x, y + small, small, theme.text_muted));
+            y += line_small;
+            let rect = Rect::new(x, y, inner_w, control_h);
+            let stop = ChromeDialogStop::Field(index);
+            let control_id = request.control_id(stop);
+            if focused == stop {
+                ops.push(ring(rect));
+            }
+            let (value, placeholder) = request.field_text(index);
+            let baseline = y + (control_h + small) * 0.5 - 1.0;
+            let hit = |rect: Rect, label: String, kind: HitKind, semantics: ChromeDialogSemantics| ChromeDialogPaintOp::Hit { rect, stop, control_id: control_id.clone(), label, description: None, kind, event: None, semantics, disabled: false };
+            match &field.kind {
+                ChromeDialogFieldKind::Toggle => {
+                    let on = matches!(request.field_value(index), Some(DslValue::Bool(true)));
+                    let square = Rect::new(x, y + (control_h - small * 1.2) * 0.5, small * 1.2, small * 1.2);
+                    ops.push(ChromeDialogPaintOp::Fill { rect: square, color: if on { theme.accent } else { theme.button } });
+                    ops.push(text(value, square.x + square.w + gap * 2.0, baseline, small, theme.text));
+                    ops.push(hit(rect, label, HitKind::Toggle, ChromeDialogSemantics::default()));
+                }
+                ChromeDialogFieldKind::Segmented { options } => {
+                    let current = request.field_value(index).and_then(|value| value.as_str().map(str::to_string));
+                    let segment_w = rect.w / options.len().max(1) as f32;
+                    for (option, (option_value, option_label)) in options.iter().enumerate() {
+                        let segment = Rect::new(rect.x + segment_w * option as f32, rect.y, (segment_w - 1.0).max(1.0), rect.h);
+                        let selected = current.as_deref() == Some(option_value.as_str());
+                        ops.push(ChromeDialogPaintOp::Fill { rect: segment, color: if selected { theme.accent } else { theme.button } });
+                        ops.push(clipped(option_label.clone(), segment.x + gap * 2.0, baseline, segment.w - gap * 4.0, if selected { theme.active_foreground } else { theme.text }));
+                        ops.push(ChromeDialogPaintOp::Segment { rect: segment, field: index, option, control_id: format!("{control_id}.option.{option_value}"), label: format!("{label}: {option_label}"), selected });
+                    }
+                }
+                ChromeDialogFieldKind::Slider { min, max, snaps, .. } => {
+                    let value_w = (glyphs_w(&value) + gap * 2.0).min(inner_w * 0.4);
+                    let rail = Rect::new(x + gap, y + control_h * 0.5 - 1.5, (inner_w - value_w - gap * 3.0).max(1.0), 3.0);
+                    let at = |value: f64| rail.x + rail.w * (((value - min) / (max - min).max(f64::EPSILON)) as f32).clamp(0.0, 1.0);
+                    ops.push(ChromeDialogPaintOp::Fill { rect: rail, color: theme.border_normal });
+                    for snap in snaps {
+                        ops.push(ChromeDialogPaintOp::Fill { rect: Rect::new(at(*snap) - 1.0, rail.y - 4.0, 2.0, rail.h + 8.0), color: theme.text_muted });
+                    }
+                    let current = request.slider_value(index).unwrap_or(*min);
+                    ops.push(ChromeDialogPaintOp::Fill { rect: Rect::new(at(current) - small * 0.5, y + (control_h - small) * 0.5, small, small), color: theme.accent });
+                    ops.push(clipped(value.clone(), rail.x + rail.w + gap * 2.0, baseline, value_w, theme.text));
+                    let semantics = ChromeDialogSemantics { role: Some("slider"), pressed: None, value_text: Some(value), value_range: Some([*min, *max, current]) };
+                    ops.push(hit(Rect::new(rail.x, y, rail.w, control_h), label, HitKind::Slider, semantics));
+                }
+                ChromeDialogFieldKind::Reference { .. } => {
+                    let ids = request.reference_ids(index);
+                    let use_w = button_w(&request.labels.use_selection).min(inner_w * 0.5);
+                    let use_rect = Rect::new(rect.x + rect.w - use_w, rect.y, use_w, rect.h);
+                    let mut chip_x = rect.x;
+                    if ids.is_empty() {
+                        ops.push(clipped(value, chip_x + gap * 2.0, baseline, use_rect.x - chip_x - gap * 4.0, theme.text_muted));
+                    }
+                    for (chip, id) in ids.iter().enumerate() {
+                        let caption = format!("{id} ×");
+                        let chip_rect = Rect::new(chip_x, rect.y, (glyphs_w(&caption) + gap * 4.0).min((use_rect.x - gap - chip_x).max(0.0)), rect.h);
+                        if chip_rect.w < gap * 4.0 {
+                            break;
+                        }
+                        let chip_stop = ChromeDialogStop::Chip(index, chip);
+                        if focused == chip_stop {
+                            ops.push(ring(chip_rect));
+                        }
+                        ops.push(ChromeDialogPaintOp::Fill { rect: chip_rect, color: theme.button });
+                        ops.push(clipped(caption, chip_rect.x + gap * 2.0, baseline, chip_rect.w - gap * 4.0, theme.text));
+                        ops.push(ChromeDialogPaintOp::Hit { rect: chip_rect, stop: chip_stop, control_id: request.control_id(chip_stop), label: request.labels.remove.replace("{item}", id), description: None, kind: HitKind::Button, event: None, semantics: ChromeDialogSemantics::default(), disabled: false });
+                        chip_x += chip_rect.w + gap;
+                    }
+                    ops.push(ChromeDialogPaintOp::Fill { rect: use_rect, color: theme.button });
+                    ops.push(clipped(request.labels.use_selection.clone(), use_rect.x + gap * 2.0, baseline, use_rect.w - gap * 4.0, theme.text));
+                    ops.push(hit(use_rect, format!("{label}: {}", request.labels.use_selection), HitKind::Button, ChromeDialogSemantics::default()));
+                }
+                field_kind => {
+                    let stepper = matches!(field_kind, ChromeDialogFieldKind::Number { stepper: true, .. });
+                    let input = if stepper { Rect::new(rect.x, rect.y, (rect.w - control_h * 2.0 - gap * 2.0).max(1.0), rect.h) } else { rect };
+                    ops.push(ChromeDialogPaintOp::Fill { rect: input, color: theme.input_bg });
+                    let select = matches!(field_kind, ChromeDialogFieldKind::Select { .. });
+                    let caret = if focused == stop && !select { "|" } else { "" };
+                    let swatch_w = if let ChromeDialogFieldKind::Color { .. } = field_kind {
+                        let components: Vec<f64> = request.field_value(index).and_then(|value| value.as_array().map(|components| components.iter().filter_map(DslValue::as_f64).collect())).unwrap_or_default();
+                        let channel = |at: usize| (components.get(at).copied().unwrap_or(if at == 3 { 1.0 } else { 0.0 }).clamp(0.0, 1.0) * 255.0).round() as u8;
+                        let side = (control_h - gap * 2.0).max(4.0);
+                        ops.push(ChromeDialogPaintOp::Fill { rect: Rect::new(x + gap, y + (control_h - side) * 0.5, side, side), color: Rgba::from_srgb8(channel(0), channel(1), channel(2), channel(3)) });
+                        side + gap
+                    } else {
+                        0.0
+                    };
+                    ops.push(text(format!("{value}{caret}"), x + gap * 2.0 + swatch_w, baseline, small, if placeholder { theme.text_muted } else { theme.text }));
+                    let (kind, semantics) = match field_kind {
+                        ChromeDialogFieldKind::Select { .. } => (HitKind::Select, ChromeDialogSemantics::default()),
+                        ChromeDialogFieldKind::Number { min, max, .. } => {
+                            let now = value.trim().parse::<f64>().ok();
+                            (HitKind::Input, ChromeDialogSemantics { role: Some("spinbutton"), pressed: None, value_text: Some(value.clone()), value_range: now.zip((*min).zip(*max)).map(|(now, (min, max))| [min, max, now]) })
+                        }
+                        ChromeDialogFieldKind::Axis { .. } => (HitKind::Input, ChromeDialogSemantics { role: Some("spinbutton"), pressed: None, value_text: Some(value.clone()), value_range: None }),
+                        _ => (HitKind::Input, ChromeDialogSemantics::default()),
+                    };
+                    ops.push(hit(input, label.clone(), kind, semantics));
+                    if stepper {
+                        for (offset, sign, glyph, name) in [(0.0, -1.0, "−", request.labels.decrease.as_str()), (1.0, 1.0, "+", request.labels.increase.as_str())] {
+                            let nudge = Rect::new(input.x + input.w + gap + offset * (control_h + gap), rect.y, control_h, rect.h);
+                            ops.push(ChromeDialogPaintOp::Fill { rect: nudge, color: theme.button });
+                            ops.push(clipped(glyph.to_string(), nudge.x + (control_h - small * 0.6) * 0.5, baseline, control_h, theme.text));
+                            ops.push(ChromeDialogPaintOp::Nudge { rect: nudge, field: index, sign, control_id: format!("{control_id}.{}", if sign < 0.0 { "decrement" } else { "increment" }), label: format!("{name} {label}") });
+                        }
+                    }
+                }
+            }
+            y += control_h + gap;
+        }
+        for description in &descriptions {
+            ops.push(text((*description).to_string(), x, y + small, small, theme.text_muted));
+            y += line_small;
+        }
+        y += gap;
+        let button = |stop: ChromeDialogStop, label: &str, rect: Rect, ops: &mut Vec<ChromeDialogPaintOp>| {
+            let event = request.action(stop);
+            let gated = event.is_none() && stop != ChromeDialogStop::Cancel;
+            let (fill, ink) = match stop {
+                ChromeDialogStop::Choice(index) if request.choices[index].choice.destructive || request.choices[index].choice.tone == ui_contract::Tone::Danger => (theme.error, theme.active_foreground),
+                ChromeDialogStop::Choice(index) if request.choices[index].choice.tone == ui_contract::Tone::Primary => (theme.accent, theme.active_foreground),
+                ChromeDialogStop::Confirm => (theme.accent, theme.active_foreground),
+                _ => (theme.button, theme.text),
+            };
+            let (fill, ink) = if gated { (fill.with_alpha(fill.a * 0.5), ink.with_alpha(ink.a * 0.5)) } else { (fill, ink) };
+            if focused == stop {
+                ops.push(ring(rect));
+            }
+            ops.push(ChromeDialogPaintOp::Fill { rect, color: fill });
+            ops.push(ChromeDialogPaintOp::Text { value: label.to_string(), x: rect.x + gap * 2.0, y: rect.y + (rect.h + small) * 0.5 - 1.0, max_w: (rect.w - gap * 4.0).max(1.0), size: small, color: ink });
+            let description = match stop {
+                ChromeDialogStop::Choice(index) => request.choices[index].description.clone(),
+                _ => None,
+            };
+            ops.push(ChromeDialogPaintOp::Hit { rect, stop, control_id: request.control_id(stop), label: label.to_string(), description, kind: HitKind::Button, event: if gated { None } else { event }, semantics: ChromeDialogSemantics::default(), disabled: gated });
+        };
+        let cancel_y = if split { y + control_h + gap } else { y };
+        button(ChromeDialogStop::Cancel, &request.cancel_label, Rect::new(x, cancel_y, cancel_w, control_h), &mut ops);
+        let mut right = dialog.x + dialog.w - pad;
+        let placed: Vec<(ChromeDialogStop, &str, Rect)> = trailing
+            .iter()
+            .rev()
+            .map(|(stop, label)| {
+                let w = button_w(label);
+                right -= w;
+                let rect = Rect::new(right, y, w, control_h);
+                right -= gap;
+                (*stop, *label, rect)
+            })
+            .collect();
+        for (stop, label, rect) in placed.into_iter().rev() {
+            button(stop, label, rect, &mut ops);
+        }
+        ops.push(ChromeDialogPaintOp::Clicks { dialog });
+        ops
+    }
+
+    fn render_chrome_dialog_step(&mut self, cursor: &mut ShellChromeChildCursor, overlay: &mut DrawList, atlas: &mut FontAtlas, input: &mut InputState<ActionDescriptor>, theme: &Theme, width: f32, height: f32) -> bool {
         let Some(request) = self.chrome_build.dialog_stack.last() else {
             close_chrome_overlay_glass_content(cursor, overlay);
             return true;
         };
-        let dialog = Rect::new((width - 360.0) * 0.5, (height - 168.0) * 0.5, 360.0, 168.0);
-        let pad = theme.padding_standard;
-        let confirm = Rect::new(dialog.x + dialog.w - pad - 110.0, dialog.y + dialog.h - pad - theme.control_height, 110.0, theme.control_height);
-        let cancel = Rect::new(dialog.x + pad, dialog.y + dialog.h - pad - theme.control_height, 90.0, theme.control_height);
-        let text = match cursor.scalar {
-            2 => Some((request.title.as_str(), dialog.x + pad, dialog.y + pad + theme.font_size_body, dialog.w - pad * 2.0, theme.font_size_body, theme.text)),
-            3 => Some((request.body.as_str(), dialog.x + pad, dialog.y + pad + theme.font_size_body + theme.gap_standard + theme.font_size_small, dialog.w - pad * 2.0, theme.font_size_small, theme.text_muted)),
-            5 => Some((request.cancel_label.as_str(), cancel.x + 10.0, cancel.y + (cancel.h + theme.font_size_small) * 0.5 - 1.0, cancel.w - 20.0, theme.font_size_small, theme.text)),
-            7 => Some((request.confirm_label.as_str(), confirm.x + 10.0, confirm.y + (confirm.h + theme.font_size_small) * 0.5 - 1.0, confirm.w - 20.0, theme.font_size_small, theme.active_foreground)),
-            _ => None,
+        let ops = Self::chrome_dialog_paint_ops(request, width, height, theme);
+        let Some(op) = ops.get(cursor.scalar) else {
+            close_chrome_overlay_glass_content(cursor, overlay);
+            return true;
         };
-        if let Some((value, x, y, text_width, size, color)) = text {
-            match chrome_text_complete_step(overlay, atlas, value, x, y, text_width, size, color, &mut cursor.glyph) {
+        match op {
+            ChromeDialogPaintOp::Scrim => {
+                overlay.push_glass([0.0, 0.0, width, height], 0.0, theme.veil_glass(Level::Dialog));
+            }
+            ChromeDialogPaintOp::Modal(rect) => open_chrome_overlay_glass_content(cursor, overlay, *rect, theme.border_radius, theme.glass(Level::Dialog)),
+            ChromeDialogPaintOp::Fill { rect, color } => overlay.push_rounded([rect.x, rect.y, rect.w, rect.h], *color, theme.border_radius),
+            ChromeDialogPaintOp::Text { value, x, y, max_w, size, color } => match chrome_text_complete_step(overlay, atlas, value, *x, *y, *max_w, *size, *color, &mut cursor.glyph) {
                 Ok(false) => return false,
                 Ok(true) => {}
                 Err(()) => {
+                    self.error = Some("Shell dialog text exceeded the retained glyph boundary".to_string());
                     cursor.glyph.reset();
-                    cursor.flag = true;
-                    return false;
                 }
+            },
+            ChromeDialogPaintOp::Hit { rect, control_id, event, kind, .. } => {
+                note_chrome_dialog_control(op);
+                input.register_hit(HitTarget { rect: *rect, event: event.clone(), control_id: Some(control_id.clone()), kind: *kind, drag_axis: None, drag_data: None });
             }
-            cursor.scalar += 1;
-            return false;
-        }
-        match cursor.scalar {
-            0 => {
-                overlay.push_glass([0.0, 0.0, width, height], 0.0, theme.veil_glass(Level::Dialog));
+            ChromeDialogPaintOp::Segment { rect, control_id, .. } | ChromeDialogPaintOp::Nudge { rect, control_id, .. } => {
+                note_chrome_dialog_control(op);
+                input.register_hit(HitTarget { rect: *rect, event: None, control_id: Some(control_id.clone()), kind: HitKind::Button, drag_axis: None, drag_data: None });
             }
-            1 => {
-                cursor.depth = overlay.push_glass([dialog.x, dialog.y, dialog.w, dialog.h], theme.border_radius, theme.glass(Level::Dialog)).saturating_add(1);
-                overlay.begin_glass_content(cursor.depth.saturating_sub(1));
-            }
-            4 => overlay.push_rounded([cancel.x, cancel.y, cancel.w, cancel.h], theme.button, theme.border_radius),
-            6 => overlay.push_rounded([confirm.x, confirm.y, confirm.w, confirm.h], theme.accent, theme.border_radius),
-            8 => input.register_hit(HitTarget { rect: cancel, event: None, control_id: Some(format!("shell.dialog.{}.cancel", request.id)), kind: HitKind::Button, drag_axis: None, drag_data: None }),
-            9 => input.register_hit(HitTarget { rect: confirm, event: Some(request.confirm_action.clone()), control_id: Some(format!("shell.dialog.{}.confirm", request.id)), kind: HitKind::Button, drag_axis: None, drag_data: None }),
-            10 => {
+            ChromeDialogPaintOp::Clicks { dialog } => {
                 if self.chrome_build.clicked_this_frame {
-                    let (x, y) = (input.pointer_x, input.pointer_y);
-                    if confirm.contains(x, y) || cancel.contains(x, y) || !dialog.contains(x, y) {
-                        self.chrome_build.close_topmost_dialog();
-                    }
+                    self.resolve_chrome_dialog_click(&ops, *dialog, input.pointer_x, input.pointer_y);
                 }
             }
-            11 => {
-                close_chrome_overlay_glass_content(cursor, overlay);
-                return true;
-            }
-            _ => return false,
         }
         cursor.scalar += 1;
         false
+    }
+
+    /// 👆️ Applies one click on the open dialog: a field takes focus (a toggle flips, a select advances, a
+    /// slider takes the pointer's value through the shared detent law, a reference field stages the live
+    /// selection), a segment picks its option, a stepper button steps, a chip removes its reference, an
+    /// enabled button closes the dialog while the hit pipeline dispatches its event, a gated one does
+    /// nothing, and a veil click cancels — sending the cancel action exactly as the Cancel button does.
+    fn resolve_chrome_dialog_click(&mut self, ops: &[ChromeDialogPaintOp], dialog: Rect, x: f32, y: f32) {
+        let press = ops.iter().find_map(|op| match op {
+            ChromeDialogPaintOp::Hit { rect, stop, event, .. } if rect.contains(x, y) => Some(ChromeDialogPress::Stop { stop: *stop, enabled: event.is_some(), rect: *rect }),
+            ChromeDialogPaintOp::Segment { rect, field, option, .. } if rect.contains(x, y) => Some(ChromeDialogPress::Segment { field: *field, option: *option }),
+            ChromeDialogPaintOp::Nudge { rect, field, sign, .. } if rect.contains(x, y) => Some(ChromeDialogPress::Nudge { field: *field, sign: *sign }),
+            _ => None,
+        });
+        let selection = self.interaction_selection.clone();
+        let Some(request) = self.chrome_build.dialog_stack.last_mut() else { return };
+        match press {
+            Some(ChromeDialogPress::Stop { stop: ChromeDialogStop::Field(index), rect, .. }) => {
+                request.focus_stop(ChromeDialogStop::Field(index));
+                match request.fields[index].kind {
+                    ChromeDialogFieldKind::Toggle => request.flip(index),
+                    ChromeDialogFieldKind::Select { .. } => request.cycle(index, true),
+                    ChromeDialogFieldKind::Slider { .. } => request.point_slider(index, f64::from((x - rect.x) / rect.w.max(1.0))),
+                    ChromeDialogFieldKind::Reference { .. } => request.use_selection(index, &selection),
+                    _ => {}
+                }
+            }
+            Some(ChromeDialogPress::Stop { stop: ChromeDialogStop::Chip(index, chip), .. }) => request.remove_chip(index, chip),
+            Some(ChromeDialogPress::Segment { field, option }) => {
+                request.focus_stop(ChromeDialogStop::Field(field));
+                request.choose(field, option);
+            }
+            Some(ChromeDialogPress::Nudge { field, sign }) => {
+                request.focus_stop(ChromeDialogStop::Field(field));
+                request.nudge(field, sign);
+            }
+            Some(ChromeDialogPress::Stop { stop: ChromeDialogStop::Cancel, .. } | ChromeDialogPress::Stop { enabled: true, .. }) => self.chrome_build.close_topmost_dialog(),
+            Some(ChromeDialogPress::Stop { .. }) => {}
+            None if !dialog.contains(x, y) => {
+                let cancel = request.action(ChromeDialogStop::Cancel);
+                self.chrome_build.close_topmost_dialog();
+                self.deferred_actions.extend(cancel);
+            }
+            None => {}
+        }
+    }
+
+    /// ⌨️ The open dialog owns the keyboard: Escape cancels, Tab walks fields → Cancel → choices →
+    /// submit, Enter (or Space) takes the focused button and submits from a field, Space flips a toggle,
+    /// arrows move a select or a segmented choice, step a number or axis, and move a slider (PageUp/PageDown
+    /// jump between its detents, Home/End to its ends), and typed text edits a text, number or axis field.
+    /// On a reference field Enter/Space stage the current selection and Backspace/Delete drop the last
+    /// reference; on a chip Enter/Space/Backspace/Delete remove it. Always consumes the key — a modal never
+    /// lets one fall through to the shell behind it.
+    fn handle_chrome_dialog_key(&mut self, action: &ui_wgpu::wgpu::KeyAction, modifiers: &PointerModifiers) -> bool {
+        use ui_wgpu::wgpu::KeyAction;
+        let selection = self.interaction_selection.clone();
+        let Some(request) = self.chrome_build.dialog_stack.last_mut() else { return false };
+        let stop = request.focused();
+        let field = match stop {
+            ChromeDialogStop::Field(index) => Some((index, request.fields[index].kind.clone(), request.fields[index].draft.clone())),
+            _ => None,
+        };
+        let take = |request: &ChromeDialogRequest, stop: ChromeDialogStop| match stop {
+            ChromeDialogStop::Cancel => Some(request.action(stop)),
+            ChromeDialogStop::Field(_) => request.action(ChromeDialogStop::Confirm).map(Some),
+            _ => request.action(stop).map(Some),
+        };
+        let taken = match (action, &field) {
+            (KeyAction::Escape, _) => Some(request.action(ChromeDialogStop::Cancel)),
+            (KeyAction::Tab, _) => {
+                request.move_focus(modifiers.shift);
+                None
+            }
+            (KeyAction::Enter | KeyAction::Space(_) | KeyAction::Backspace | KeyAction::Delete, None) if matches!(stop, ChromeDialogStop::Chip(..)) => {
+                if let ChromeDialogStop::Chip(index, chip) = stop {
+                    request.remove_chip(index, chip);
+                }
+                None
+            }
+            (KeyAction::Enter | KeyAction::Space(_), Some((index, ChromeDialogFieldKind::Reference { .. }, _))) => {
+                request.use_selection(*index, &selection);
+                None
+            }
+            (KeyAction::Backspace | KeyAction::Delete, Some((index, ChromeDialogFieldKind::Reference { .. }, _))) => {
+                let last = request.reference_ids(*index).len().checked_sub(1);
+                if let Some(last) = last {
+                    request.remove_chip(*index, last);
+                }
+                None
+            }
+            (KeyAction::Enter, _) => take(request, stop),
+            (KeyAction::Space(_), Some((index, ChromeDialogFieldKind::Toggle, _))) => {
+                request.flip(*index);
+                None
+            }
+            (KeyAction::Space(_), Some((index, ChromeDialogFieldKind::Select { .. } | ChromeDialogFieldKind::Segmented { .. }, _))) => {
+                request.cycle(*index, true);
+                None
+            }
+            (KeyAction::Space(_), Some((_, ChromeDialogFieldKind::Slider { .. }, _))) => None,
+            (KeyAction::Space(_), Some((index, _, draft))) => {
+                request.set_draft(*index, format!("{draft} "));
+                None
+            }
+            (KeyAction::Space(_), None) => take(request, stop),
+            (KeyAction::ArrowLeft | KeyAction::ArrowUp | KeyAction::ArrowRight | KeyAction::ArrowDown, Some((index, ChromeDialogFieldKind::Select { .. } | ChromeDialogFieldKind::Segmented { .. }, _))) => {
+                request.cycle(*index, matches!(action, KeyAction::ArrowRight | KeyAction::ArrowDown));
+                None
+            }
+            (_, Some((index, ChromeDialogFieldKind::Slider { .. }, _))) => {
+                request.slide(*index, action, modifiers.shift);
+                None
+            }
+            (KeyAction::PageUp | KeyAction::PageDown, Some((index, ChromeDialogFieldKind::Number { .. } | ChromeDialogFieldKind::Axis { .. }, _))) => {
+                request.nudge_by(*index, if matches!(action, KeyAction::PageUp) { 1.0 } else { -1.0 }, true);
+                None
+            }
+            (KeyAction::ArrowUp | KeyAction::ArrowDown, Some((index, ChromeDialogFieldKind::Number { .. } | ChromeDialogFieldKind::Axis { .. }, _))) => {
+                request.nudge(*index, if matches!(action, KeyAction::ArrowUp) { 1.0 } else { -1.0 });
+                None
+            }
+            (KeyAction::Char(text), Some((index, ChromeDialogFieldKind::Text | ChromeDialogFieldKind::Number { .. } | ChromeDialogFieldKind::Axis { .. } | ChromeDialogFieldKind::Color { .. }, draft))) => {
+                request.set_draft(*index, format!("{draft}{text}"));
+                None
+            }
+            (KeyAction::Backspace, Some((index, ChromeDialogFieldKind::Text | ChromeDialogFieldKind::Number { .. } | ChromeDialogFieldKind::Axis { .. } | ChromeDialogFieldKind::Color { .. }, draft))) => {
+                let mut draft = draft.clone();
+                draft.pop();
+                request.set_draft(*index, draft);
+                None
+            }
+            _ => None,
+        };
+        if let Some(dispatch) = taken {
+            self.chrome_build.close_topmost_dialog();
+            self.deferred_actions.extend(dispatch);
+        }
+        true
+    }
+
+    /// 🦮️ One accessibility event on the open dialog's tree, answered exactly as its keyboard and pointer are: focus
+    /// moves the dialog's focus stop, activation presses the control (a toggle flips, a select advances, a segment
+    /// picks its option, a stepper button steps, a reference field stages the live selection, a chip removes itself,
+    /// an enabled button dispatches and closes, a gated one does nothing) and a value edits a text, number or axis
+    /// field or sets a slider. `false` when `key` names nothing in the open dialog.
+    fn handle_chrome_dialog_accessibility_event(&mut self, key: &str, event: &ui_render::AccessibilityEvent) -> bool {
+        let selection = self.interaction_selection.clone();
+        let Some(request) = self.chrome_build.dialog_stack.last_mut() else { return false };
+        if key == request.accessibility_key() {
+            return true;
+        }
+        let Some((stop, option, sign)) = request.accessibility_target(key) else { return false };
+        let mut taken = None;
+        match (event, stop) {
+            (ui_render::AccessibilityEvent::Focus, _) => request.focus_stop(stop),
+            (ui_render::AccessibilityEvent::Activate, ChromeDialogStop::Field(index)) => {
+                request.focus_stop(stop);
+                match option {
+                    Some(option) => request.choose(index, option),
+                    None if sign != 0.0 => request.nudge(index, sign),
+                    None => match request.fields[index].kind {
+                        ChromeDialogFieldKind::Toggle => request.flip(index),
+                        ChromeDialogFieldKind::Select { .. } | ChromeDialogFieldKind::Segmented { .. } => request.cycle(index, true),
+                        ChromeDialogFieldKind::Reference { .. } => request.use_selection(index, &selection),
+                        _ => {}
+                    },
+                }
+            }
+            (ui_render::AccessibilityEvent::Activate, ChromeDialogStop::Chip(index, chip)) => request.remove_chip(index, chip),
+            (ui_render::AccessibilityEvent::Activate, _) => {
+                let action = request.action(stop);
+                if stop == ChromeDialogStop::Cancel || action.is_some() {
+                    taken = Some(action);
+                }
+            }
+            (ui_render::AccessibilityEvent::Value(value), ChromeDialogStop::Field(index)) => match request.fields[index].kind {
+                ChromeDialogFieldKind::Slider { .. } => {
+                    if let Some(value) = value.trim().parse::<f64>().ok().filter(|value| value.is_finite()) {
+                        request.set_slider(index, value);
+                    }
+                }
+                ChromeDialogFieldKind::Text | ChromeDialogFieldKind::Number { .. } | ChromeDialogFieldKind::Axis { .. } | ChromeDialogFieldKind::Color { .. } => request.set_draft(index, value.clone()),
+                _ => {}
+            },
+            _ => {}
+        }
+        if let Some(dispatch) = taken {
+            self.chrome_build.close_topmost_dialog();
+            self.deferred_actions.extend(dispatch);
+        }
+        true
+    }
+
+    /// 🗨️ Paints the topmost dialog in one go — the test harness's synchronous twin of
+    /// [`Self::render_chrome_dialog_step`], walking the same paint program.
+    ///
+    /// 🌫️ `Theme::veil` is the token-derived twin of React's `ui-veil` utility: the dialog level's
+    /// own surface fill at `levels::VEIL_ALPHA` (`--veil-alpha`), not a theme-agnostic black.
+    #[cfg(test)]
+    fn render_chrome_dialog(&mut self, overlay: &mut DrawList, atlas: &mut FontAtlas, input: &mut InputState<ActionDescriptor>, theme: &Theme, width: f32, height: f32) {
+        let Some(request) = self.chrome_build.dialog_stack.last() else {
+            return;
+        };
+        let ops = Self::chrome_dialog_paint_ops(request, width, height, theme);
+        for op in &ops {
+            match op {
+                ChromeDialogPaintOp::Scrim => {
+                    overlay.push_glass([0.0, 0.0, width, height], 0.0, theme.veil_glass(Level::Dialog));
+                }
+                ChromeDialogPaintOp::Modal(rect) => {
+                    let region = overlay.push_glass([rect.x, rect.y, rect.w, rect.h], theme.border_radius, theme.glass(Level::Dialog));
+                    overlay.begin_glass_content(region);
+                }
+                ChromeDialogPaintOp::Fill { rect, color } => overlay.push_rounded([rect.x, rect.y, rect.w, rect.h], *color, theme.border_radius),
+                ChromeDialogPaintOp::Text { value, x, y, size, color, .. } => chrome_text(overlay, atlas, input, theme, value, *x, *y, *size, *color),
+                ChromeDialogPaintOp::Hit { rect, control_id, event, kind, .. } => {
+                    note_chrome_dialog_control(op);
+                    input.register_hit(HitTarget { rect: *rect, event: event.clone(), control_id: Some(control_id.clone()), kind: *kind, drag_axis: None, drag_data: None });
+                }
+                ChromeDialogPaintOp::Segment { rect, control_id, .. } | ChromeDialogPaintOp::Nudge { rect, control_id, .. } => {
+                    note_chrome_dialog_control(op);
+                    input.register_hit(HitTarget { rect: *rect, event: None, control_id: Some(control_id.clone()), kind: HitKind::Button, drag_axis: None, drag_data: None });
+                }
+                ChromeDialogPaintOp::Clicks { dialog } => {
+                    overlay.end_glass_content();
+                    if self.chrome_build.clicked_this_frame {
+                        self.resolve_chrome_dialog_click(&ops, *dialog, input.pointer_x, input.pointer_y);
+                    }
+                }
+            }
+        }
     }
 
     /// 🎓️ Paints the armed introduction over the whole shell — the wgpu twin of `UIIntroduction`
@@ -29566,52 +30794,6 @@ impl ShellState {
         overlay.end_glass_content();
     }
 
-    /// 🗨️ Paints the topmost queued dialog (item 2) — full-screen scrim (click outside == cancel, per
-    /// `OverlayKind::Dialog`'s `outside_press_swallow` dismiss policy) plus a centered box
-    /// (`OverlayKind::Dialog::default_placement` == `Centered`) with Cancel/Confirm. Confirm's hit
-    /// target carries the staged `ActionDescriptor` so it dispatches through the existing generic
-    /// pipeline exactly like any other chrome button — only closing the dialog itself is handled here.
-    ///
-    /// 🌫️ `Theme::veil` is the token-derived twin of React's `ui-veil` utility: the dialog level's
-    /// own surface fill at `levels::VEIL_ALPHA` (`--veil-alpha`), not a theme-agnostic black.
-    #[cfg(test)]
-    fn render_chrome_dialog(&mut self, overlay: &mut DrawList, atlas: &mut FontAtlas, input: &mut InputState<ActionDescriptor>, theme: &Theme, width: f32, height: f32) {
-        let Some(request) = self.chrome_build.dialog_stack.last().cloned() else {
-            return;
-        };
-        overlay.push_glass([0.0, 0.0, width, height], 0.0, theme.veil_glass(Level::Dialog));
-        let dialog_w = 360.0_f32;
-        let dialog_h = 168.0_f32;
-        let scratch_tree = ui_wgpu::wgpu::UiTree::new();
-        let (x, y) =
-            ui_wgpu::wgpu::resolve_overlay_placement(&scratch_tree, ui_wgpu::wgpu::OverlayAnchor::Point { x: 0.0, y: 0.0 }, (dialog_w, dialog_h), (width, height), ui_wgpu::wgpu::OverlayKind::Dialog.default_placement(), ui_contract::FlowInline::Ltr);
-        let dialog_rect = Rect::new(x, y, dialog_w, dialog_h);
-        let region = overlay.push_glass([x, y, dialog_w, dialog_h], theme.border_radius, theme.glass(Level::Dialog));
-        overlay.begin_glass_content(region);
-        let pad = theme.padding_standard;
-        chrome_text(overlay, atlas, input, theme, &request.title, x + pad, y + pad + theme.font_size_body, theme.font_size_body, theme.text);
-        chrome_text(overlay, atlas, input, theme, &request.body, x + pad, y + pad + theme.font_size_body + theme.gap_standard + theme.font_size_small, theme.font_size_small, theme.text_muted);
-        let btn_h = theme.control_height;
-        let confirm_w = 110.0_f32;
-        let cancel_w = 90.0_f32;
-        let confirm_rect = Rect::new(x + dialog_w - pad - confirm_w, y + dialog_h - pad - btn_h, confirm_w, btn_h);
-        let cancel_rect = Rect::new(x + pad, y + dialog_h - pad - btn_h, cancel_w, btn_h);
-        overlay.push_rounded([cancel_rect.x, cancel_rect.y, cancel_rect.w, cancel_rect.h], theme.button, theme.border_radius);
-        chrome_text(overlay, atlas, input, theme, &request.cancel_label, cancel_rect.x + 10.0, cancel_rect.y + (cancel_rect.h + theme.font_size_small) * 0.5 - 1.0, theme.font_size_small, theme.text);
-        overlay.push_rounded([confirm_rect.x, confirm_rect.y, confirm_rect.w, confirm_rect.h], theme.accent, theme.border_radius);
-        chrome_text(overlay, atlas, input, theme, &request.confirm_label, confirm_rect.x + 10.0, confirm_rect.y + (confirm_rect.h + theme.font_size_small) * 0.5 - 1.0, theme.font_size_small, theme.active_foreground);
-        input.register_hit(HitTarget { rect: cancel_rect, event: None, control_id: Some(format!("shell.dialog.{}.cancel", request.id)), kind: HitKind::Button, drag_axis: None, drag_data: None });
-        input.register_hit(HitTarget { rect: confirm_rect, event: Some(request.confirm_action.clone()), control_id: Some(format!("shell.dialog.{}.confirm", request.id)), kind: HitKind::Button, drag_axis: None, drag_data: None });
-        overlay.end_glass_content();
-        if self.chrome_build.clicked_this_frame {
-            let (px, py) = (input.pointer_x, input.pointer_y);
-            if confirm_rect.contains(px, py) {
-                self.chrome_build.close_topmost_dialog();
-            } else if cancel_rect.contains(px, py) || !dialog_rect.contains(px, py) {
-                self.chrome_build.close_topmost_dialog();
-            }
-        }
-    }
 
     /// 🎓️ The currently active introduction step (if a tour is running and its index still resolves) —
     /// shared by every wgpu tour touchpoint beyond painting (reveal, advance-by-doing, keyboard) so they
@@ -32605,6 +33787,8 @@ fn theme_editor_input_item(id: &str, label: &str, value: &str, action: &str, arg
             max: None,
             step: None,
             accept: None,
+            precision: None,
+            snaps: Vec::new(),
             on_change: ActionDescriptor { controller_id: "framework".into(), action: action.into(), args },
             on_submit: None,
             on_abort: None,
@@ -33045,26 +34229,32 @@ const SHELL_CHROME_ACCESSIBLE_NAME_CAPACITY: usize = 512;
 /// ♿️ Semantic properties captured beside the chrome label during its paint walk.
 struct ChromeControlPresentation {
     label: String,
+    description: Option<String>,
     role: Option<&'static str>,
     pressed: Option<bool>,
     selected: Option<bool>,
     controls: Option<String>,
+    value_text: Option<String>,
+    value_range: Option<[f64; 3]>,
+    disabled: bool,
 }
 
-#[cfg(target_arch = "wasm32")]
+/// 🪡️ Per thread on wasm and in tests — each test owns its shell, so a concurrent test's frame setup can never
+/// clear the names another test is about to publish — and one worker-wide cell natively.
+#[cfg(any(target_arch = "wasm32", test))]
 thread_local! {
     static CHROME_CONTROL_NAMES: std::cell::RefCell<BTreeMap<String, ChromeControlPresentation>> = std::cell::RefCell::new(BTreeMap::new());
 }
 
-#[cfg(not(target_arch = "wasm32"))]
+#[cfg(not(any(target_arch = "wasm32", test)))]
 static CHROME_CONTROL_NAMES: crate::interpreter::WorkerCell<BTreeMap<String, ChromeControlPresentation>> = crate::interpreter::WorkerCell::new();
 
 fn with_chrome_control_names<R>(f: impl FnOnce(&mut BTreeMap<String, ChromeControlPresentation>) -> R) -> R {
-    #[cfg(target_arch = "wasm32")]
+    #[cfg(any(target_arch = "wasm32", test))]
     {
         CHROME_CONTROL_NAMES.with(|cell| f(&mut cell.borrow_mut()))
     }
-    #[cfg(not(target_arch = "wasm32"))]
+    #[cfg(not(any(target_arch = "wasm32", test)))]
     {
         f(&mut CHROME_CONTROL_NAMES.borrow_mut())
     }
@@ -33076,7 +34266,38 @@ fn note_chrome_control_name(control_id: &str, label: Option<&str>) {
     let (Some(label), false) = (label, control_id.is_empty()) else { return };
     with_chrome_control_names(|names| {
         if names.len() < SHELL_CHROME_ACCESSIBLE_NAME_CAPACITY || names.contains_key(control_id) {
-            names.insert(control_id.to_string(), ChromeControlPresentation { label: label.to_string(), role: None, pressed: None, selected: None, controls: None });
+            names.insert(control_id.to_string(), ChromeControlPresentation { label: label.to_string(), description: None, role: None, pressed: None, selected: None, controls: None, value_text: None, value_range: None, disabled: false });
+        }
+    });
+}
+
+/// ♿️ Records the consequence text a reader hears with one chrome control (`aria-describedby`).
+fn note_chrome_control_description(control_id: &str, description: Option<&str>) {
+    with_chrome_control_names(|names| {
+        if let Some(presentation) = names.get_mut(control_id) {
+            presentation.description = description.map(str::to_string);
+        }
+    });
+}
+
+/// 🎛️ Records a dialog control's role, pressed state and value (a slider's range and spoken value, a spin
+/// button's text) beside its painted name.
+fn note_chrome_control_semantics(control_id: &str, semantics: &ChromeDialogSemantics) {
+    with_chrome_control_names(|names| {
+        if let Some(presentation) = names.get_mut(control_id) {
+            presentation.role = semantics.role.or(presentation.role);
+            presentation.pressed = semantics.pressed.or(presentation.pressed);
+            presentation.value_text.clone_from(&semantics.value_text);
+            presentation.value_range = semantics.value_range;
+        }
+    });
+}
+
+/// 🚫️ Records that a painted chrome control is disabled (`aria-disabled`) — a band control a session refusal blocks.
+fn note_chrome_control_disabled(control_id: &str, disabled: bool) {
+    with_chrome_control_names(|names| {
+        if let Some(presentation) = names.get_mut(control_id) {
+            presentation.disabled = disabled;
         }
     });
 }
@@ -33248,13 +34469,67 @@ impl ShellState {
         Some(nodes)
     }
 
+    /// 🌴️ The open declared dialog as a modal accessibility tree — the twin of React's `UIDialog` (`role="dialog"`
+    /// named by its title and described by its body): the dialog node, then every control it painted this frame one
+    /// level below it in paint order, named, described, valued and pressed from the painted registry, a gated submit
+    /// or choice `disabled`, each focus stop tabbable, and the dialog's own keyboard focus as the focused node. While
+    /// it is open nothing behind the veil is published, as React's `aria-modal` makes the page inert.
+    fn dialog_accessibility_nodes(&self, hits: &[HitTarget<ActionDescriptor>]) -> Option<Vec<ui_contract::AccessibilityProjectionNode>> {
+        let request = self.chrome_build.dialog_stack.last()?;
+        let key = request.accessibility_key();
+        let prefix = format!("{key}.");
+        let stops: Vec<String> = request.stops().into_iter().map(|stop| request.control_id(stop)).collect();
+        let focused = request.control_id(request.focused());
+        let controls: Vec<(&str, &HitTarget<ActionDescriptor>)> = hits.iter().filter_map(|hit| hit.control_id.as_deref().filter(|id| id.starts_with(&prefix)).map(|id| (id, hit))).collect();
+        let bounds = controls.iter().map(|(_, hit)| hit.rect).reduce(|lhs, rhs| {
+            let (x, y) = (lhs.x.min(rhs.x), lhs.y.min(rhs.y));
+            Rect::new(x, y, (lhs.x + lhs.w).max(rhs.x + rhs.w) - x, (lhs.y + lhs.h).max(rhs.y + rhs.h) - y)
+        });
+        let node = |node_id: u64, key: &str, role: &str, depth: usize, label: String| {
+            let mut node = chrome_status_accessibility_node(node_id, key, label);
+            node.role = role.to_string();
+            node.depth = depth;
+            node.live = ui_contract::liveness_name(ui_contract::Liveness::Off).to_string();
+            node
+        };
+        let mut dialog = node(1, &key, "dialog", 0, request.title.clone());
+        dialog.description = (!request.body.is_empty()).then(|| request.body.clone());
+        dialog.rect = bounds.map(|rect| [rect.x, rect.y, rect.w, rect.h]);
+        let mut nodes = vec![dialog];
+        with_chrome_control_names(|names| {
+            for (id, hit) in controls.into_iter().take(SHELL_CHROME_ACCESSIBLE_NAME_CAPACITY) {
+                let presentation = names.get(id);
+                let pressed = presentation.and_then(|name| name.pressed);
+                let role = presentation.and_then(|name| name.role).unwrap_or_else(|| if pressed.is_some() { "button" } else { chrome_accessibility_role(&hit.kind) });
+                let disabled = presentation.is_some_and(|name| name.disabled);
+                let draft = (hit.kind == HitKind::Input).then(|| (0..request.fields.len()).find(|index| request.control_id(ChromeDialogStop::Field(*index)) == id).map(|index| request.fields[index].draft.clone())).flatten();
+                let mut control = node(nodes.len() as u64 + 1, id, role, 1, presentation.map_or_else(|| humanize_control_id(id), |name| name.label.clone()));
+                control.description = presentation.and_then(|name| name.description.clone());
+                control.disabled = disabled;
+                control.focusable = true;
+                control.tabbable = stops.iter().any(|stop| stop == id);
+                control.actionable = !disabled;
+                control.focused = focused == id;
+                control.pressed = pressed;
+                control.editable = matches!(role, "textbox" | "spinbutton");
+                control.rect = Some([hit.rect.x, hit.rect.y, hit.rect.w, hit.rect.h]);
+                control.value_min = presentation.and_then(|name| name.value_range).map(|range| range[0]);
+                control.value_max = presentation.and_then(|name| name.value_range).map(|range| range[1]);
+                control.value_now = presentation.and_then(|name| name.value_range).map(|range| range[2]);
+                control.value_text = presentation.and_then(|name| name.value_text.clone()).or(draft);
+                nodes.push(control);
+            }
+        });
+        Some(nodes)
+    }
+
     /// ♿️ This frame's chrome controls as accessibility projection nodes — the SAME wire shape the
     /// retained document publishes, so `🚀️browser-boot/🟦️.ts`'s mirror gives them elements with no
     /// new code: `aria-label` from the painted text, `aria-keyshortcuts` from this session's own
     /// remappable chord table (React's `aria-keyshortcuts` twin, audit W14 §B14), `aria-disabled`
     /// from the registry.
     fn chrome_accessibility_nodes(&self, hits: &[HitTarget<ActionDescriptor>]) -> Vec<ui_contract::AccessibilityProjectionNode> {
-        if let Some(nodes) = self.palette_accessibility_nodes(hits) {
+        if let Some(nodes) = self.dialog_accessibility_nodes(hits).or_else(|| self.palette_accessibility_nodes(hits)) {
             return nodes;
         }
         let shortcuts = self.shortcut_table();
@@ -33276,14 +34551,14 @@ impl ShellState {
                     let pressed = presentation.and_then(|name| name.pressed).or_else(|| self.chrome_accessibility_pressed(id, &hit.kind));
                     let role = presentation.and_then(|name| name.role).unwrap_or_else(|| if pressed.is_some() { "button" } else { chrome_accessibility_role(&hit.kind) });
                     let selected = names.get(id).and_then(|name| name.selected).or_else(|| self.chrome_accessibility_selected(id, &hit.kind));
-                    let focusable = role != "tabpanel";
+                    let focusable = !matches!(role, "tabpanel" | "note");
                     ui_contract::AccessibilityProjectionNode {
                         node_id: index as u64 + 1,
                         key: id.to_string(),
                         role: role.to_string(),
                         depth: 0,
                         label: Some(names.get(id).map(|name| name.label.clone()).unwrap_or_else(|| humanize_control_id(id))),
-                        description: ShellPaletteKind::from_input_id(id).map(|kind| {
+                        description: names.get(id).and_then(|name| name.description.clone()).or_else(|| ShellPaletteKind::from_input_id(id).map(|kind| {
                             shell_chrome_string(
                                 match kind {
                                     ShellPaletteKind::Search => "search.description",
@@ -33292,11 +34567,11 @@ impl ShellState {
                                 self.locale_id == "de",
                             )
                             .to_string()
-                        }),
+                        })),
                         live: ui_contract::liveness_name(ui_contract::Liveness::Off).to_string(),
                         shortcut: shell_control_hotkey_badge(&shortcuts, id),
                         hidden: false,
-                        disabled: false,
+                        disabled: presentation.is_some_and(|name| name.disabled),
                         focusable,
                         tabbable: focusable && (role != "tab" || selected == Some(true)),
                         actionable: names.get(id).is_none_or(|name| name.role != Some("tabpanel")),
@@ -33311,10 +34586,13 @@ impl ShellState {
                         active_descendant: None,
                         level: None,
                         rect: Some([hit.rect.x, hit.rect.y, hit.rect.w, hit.rect.h]),
-                        value_min: None,
-                        value_max: None,
-                        value_now: None,
-                        value_text: ShellPaletteKind::from_input_id(id).map(|kind| self.palette_query(kind).to_string()).or_else(|| self.widget_maps.input_metas.get(id).map(|meta| meta.value.clone())),
+                        value_min: presentation.and_then(|name| name.value_range).map(|range| range[0]),
+                        value_max: presentation.and_then(|name| name.value_range).map(|range| range[1]),
+                        value_now: presentation.and_then(|name| name.value_range).map(|range| range[2]),
+                        value_text: ShellPaletteKind::from_input_id(id)
+                            .map(|kind| self.palette_query(kind).to_string())
+                            .or_else(|| presentation.and_then(|name| name.value_text.clone()))
+                            .or_else(|| self.widget_maps.input_metas.get(id).map(|meta| meta.value.clone())),
                         busy: false,
                     }
                 })
@@ -33368,6 +34646,9 @@ impl ShellState {
                 status.value_now = Some(done as f64);
                 status.value_text = status.label.clone();
                 status.busy = export.running();
+                nodes.push(status);
+            }
+            if let Some(status) = self.time_travel_status_accessibility_node(nodes.len() as u64 + 1).filter(|_| nodes.len() < SHELL_CHROME_ACCESSIBLE_NAME_CAPACITY) {
                 nodes.push(status);
             }
             for (key, label) in self.footer_status_chips() {

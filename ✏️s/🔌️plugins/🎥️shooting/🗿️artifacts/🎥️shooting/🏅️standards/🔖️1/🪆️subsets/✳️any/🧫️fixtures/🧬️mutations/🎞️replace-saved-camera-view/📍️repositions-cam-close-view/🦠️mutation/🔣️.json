@@ -1,7 +1,7 @@
 {
   "mutation": "replaceSavedCameraView",
   "id": "cam-close",
-  "new_camera": {
+  "newCamera": {
     "position": [
       1.0,
       -1.0,

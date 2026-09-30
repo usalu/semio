@@ -89,6 +89,88 @@
         { "write": { "id": "x2", "actor": "bob", "observed": null, "writes": { "paths": ["x"] } }, "outcome": "refused", "codes": ["mutation.clamped"] },
         { "write": { "id": "x3", "actor": "bob", "observed": "x1", "writes": { "paths": ["x"] } }, "outcome": "accepted", "codes": [] }
       ]
+    },
+    {
+      "id": "a-supersession-of-another-authors-operation-is-admitted",
+      "policy": "vigilant",
+      "commits": [
+        { "write": { "id": "a1", "actor": "alice", "observed": null, "writes": { "target": ["text"] } }, "outcome": "accepted", "codes": [] },
+        { "write": { "id": "b-edit", "actor": "bob", "observed": "a1", "writes": { "supersede": { "inputs": [{ "target": "a1", "replacement": "input" }], "target": ["text"] } } }, "outcome": "accepted", "codes": [] }
+      ]
+    },
+    {
+      "id": "vigilant-refuses-a-supersession-authored-without-seeing-a-same-target-write",
+      "policy": "vigilant",
+      "commits": [
+        { "write": { "id": "a1", "actor": "alice", "observed": null, "writes": { "target": ["text"] } }, "outcome": "accepted", "codes": [] },
+        { "write": { "id": "b1", "actor": "bob", "observed": "a1", "writes": { "target": ["text"] } }, "outcome": "accepted", "codes": [] },
+        { "write": { "id": "a-edit", "actor": "alice", "observed": null, "writes": { "supersede": { "inputs": [{ "target": "a1", "replacement": "input" }], "target": ["text"] } } }, "outcome": "refused", "codes": ["mutation.clamped"] }
+      ]
+    },
+    {
+      "id": "normal-accepts-a-concurrent-supersession-and-reports-it",
+      "policy": "normal",
+      "commits": [
+        { "write": { "id": "a1", "actor": "alice", "observed": null, "writes": { "target": ["text"] } }, "outcome": "accepted", "codes": [] },
+        { "write": { "id": "b1", "actor": "bob", "observed": "a1", "writes": { "target": ["text"] } }, "outcome": "accepted", "codes": [] },
+        { "write": { "id": "a-edit", "actor": "alice", "observed": null, "writes": { "supersede": { "inputs": [{ "target": "a1", "replacement": "input" }], "target": ["text"] } } }, "outcome": "accepted", "codes": ["mutation.clamped"] }
+      ]
+    },
+    {
+      "id": "a-write-that-did-not-see-a-supersession-of-the-same-target-is-concurrent-with-it",
+      "policy": "vigilant",
+      "commits": [
+        { "write": { "id": "a1", "actor": "alice", "observed": null, "writes": { "target": ["text"] } }, "outcome": "accepted", "codes": [] },
+        { "write": { "id": "b-edit", "actor": "bob", "observed": "a1", "writes": { "supersede": { "inputs": [{ "target": "a1", "replacement": "input" }], "target": ["text"] } } }, "outcome": "accepted", "codes": [] },
+        { "write": { "id": "a2", "actor": "alice", "observed": null, "writes": { "target": ["text"] } }, "outcome": "refused", "codes": ["mutation.clamped"] },
+        { "write": { "id": "a3", "actor": "alice", "observed": "b-edit", "writes": { "target": ["text"] } }, "outcome": "accepted", "codes": [] }
+      ]
+    },
+    {
+      "id": "a-supersession-of-a-disjoint-target-is-no-conflict",
+      "policy": "vigilant",
+      "commits": [
+        { "write": { "id": "a1", "actor": "alice", "observed": null, "writes": { "target": ["text"] } }, "outcome": "accepted", "codes": [] },
+        { "write": { "id": "b1", "actor": "bob", "observed": "a1", "writes": { "target": ["name"] } }, "outcome": "accepted", "codes": [] },
+        { "write": { "id": "a-edit", "actor": "alice", "observed": null, "writes": { "supersede": { "inputs": [{ "target": "a1", "replacement": "input" }], "target": ["text"] } } }, "outcome": "accepted", "codes": [] }
+      ]
+    },
+    {
+      "id": "a-withdrawal-is-graded-by-the-withdrawn-operations-target",
+      "policy": "vigilant",
+      "commits": [
+        { "write": { "id": "a1", "actor": "alice", "observed": null, "writes": { "target": ["tiles", "t-hero"] } }, "outcome": "accepted", "codes": [] },
+        { "write": { "id": "b1", "actor": "bob", "observed": "a1", "writes": { "target": ["t-hero"] } }, "outcome": "accepted", "codes": [] },
+        { "write": { "id": "a-withdraw", "actor": "alice", "observed": null, "writes": { "supersede": { "inputs": [{ "target": "a1", "replacement": "withdrawn" }], "target": ["tiles", "t-hero"] } } }, "outcome": "refused", "codes": ["mutation.clamped"] }
+      ]
+    },
+    {
+      "id": "concurrent-supersessions-of-one-operation-conflict",
+      "policy": "vigilant",
+      "commits": [
+        { "write": { "id": "a1", "actor": "alice", "observed": null, "writes": { "target": ["text"] } }, "outcome": "accepted", "codes": [] },
+        { "write": { "id": "b-edit", "actor": "bob", "observed": "a1", "writes": { "supersede": { "inputs": [{ "target": "a1", "replacement": "input" }], "target": ["text"] } } }, "outcome": "accepted", "codes": [] },
+        { "write": { "id": "c-edit", "actor": "carol", "observed": "a1", "writes": { "supersede": { "inputs": [{ "target": "a1", "replacement": "input" }], "target": ["text"] } } }, "outcome": "refused", "codes": ["mutation.clamped"] },
+        { "write": { "id": "c-edit-2", "actor": "carol", "observed": "b-edit", "writes": { "supersede": { "inputs": [{ "target": "a1", "replacement": "input" }], "target": ["text"] } } }, "outcome": "accepted", "codes": [] }
+      ]
+    },
+    {
+      "id": "a-refused-write-is-not-in-the-log-and-cannot-be-superseded",
+      "policy": "vigilant",
+      "commits": [
+        { "write": { "id": "a1", "actor": "alice", "observed": null, "writes": { "target": ["text"] } }, "outcome": "accepted", "codes": [] },
+        { "write": { "id": "b1", "actor": "bob", "observed": null, "writes": { "target": ["text"] } }, "outcome": "refused", "codes": ["mutation.clamped"] },
+        { "write": { "id": "b-edit", "actor": "bob", "observed": "a1", "writes": { "supersede": { "inputs": [{ "target": "b1", "replacement": "input" }], "target": ["text"] } } }, "outcome": "refused", "codes": ["history.unknown-target"] }
+      ]
+    },
+    {
+      "id": "a-supersession-naming-an-unknown-operation-is-refused-whatever-the-policy",
+      "policy": "normal",
+      "commits": [
+        { "write": { "id": "a1", "actor": "alice", "observed": null, "writes": { "target": ["text"] } }, "outcome": "accepted", "codes": [] },
+        { "write": { "id": "b-edit", "actor": "bob", "observed": "a1", "writes": { "supersede": { "inputs": [{ "target": "a1", "replacement": "input" }, { "target": "ghost", "replacement": "withdrawn" }], "target": ["text"] } } }, "outcome": "refused", "codes": ["history.unknown-target"] },
+        { "write": { "id": "b-edit-2", "actor": "bob", "observed": "a1", "writes": { "supersede": { "inputs": [{ "target": "a1", "replacement": "input" }], "target": ["text"] } } }, "outcome": "accepted", "codes": [] }
+      ]
     }
   ]
 }

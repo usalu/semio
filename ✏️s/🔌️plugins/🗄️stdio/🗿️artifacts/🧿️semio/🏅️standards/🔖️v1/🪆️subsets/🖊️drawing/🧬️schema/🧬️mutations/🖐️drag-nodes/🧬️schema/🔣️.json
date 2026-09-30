@@ -13,6 +13,16 @@
       "type": "array",
       "items": {
         "$ref": "#/$defs/NodePath"
+      },
+      "x-semio-ui": {
+        "label": {
+          "en": "Target positions",
+          "de": "Zielpositionen"
+        },
+        "description": {
+          "en": "New anchor position per dragged node.",
+          "de": "Neue Ankerposition je gezogenem Knoten."
+        }
       }
     },
     "offset": {

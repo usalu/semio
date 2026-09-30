@@ -359,7 +359,7 @@ pub mod standards {
                             pub mod inverse;
                             pub use component::*;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/➖delete-generation/🧪️tests/🚫️removes-the-selected-generation-2-and-falls-back-to-generation-1/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/➖delete-generation/🧪️tests/🚫️removes-selected-generation-2-falls-back-generation-1/🦀️.rs"]
                             mod tests_removes_the_selected_generation_2_and_falls_back_to_generation_1;
                         }
                         #[path = "."]

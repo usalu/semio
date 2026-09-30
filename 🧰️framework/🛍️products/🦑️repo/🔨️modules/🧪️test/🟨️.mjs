@@ -8,7 +8,7 @@
 // domain are all TAXONOMY DATA (`🔣️taxonomy.json`). This plugin declares none of them, so marking
 // another area exempt or relocating the domain is a vocabulary edit, never a code edit here.
 
-import { existsSync, readFileSync, readdirSync, statSync } from "node:fs";
+import { existsSync, readFileSync, readdirSync } from "node:fs";
 import { basename, dirname, join, relative } from "node:path";
 import { createHash } from "node:crypto";
 const dependencyModule = new URL("./🕸️dependencies/🟨️.mjs", import.meta.url);
@@ -61,6 +61,12 @@ function locationPath(vocabulary, location) {
 
 /** 🚫️ The hard discovery exclusion — `compose/` first among them. */
 function isExcluded(vocabulary, relPath) {
+  const segments = nxPath(relPath).split("/");
+  if (segments.some((segment) => vocabulary.pathEmojiPolicy.reservedSubtreeDirectoryNames.includes(segment))) return true;
+  if (vocabulary.implementationLeafPolicy.ignoredPathPatterns.some((pattern) => {
+    const suffix = pattern.replace(/^\*\*\//u, "");
+    return relPath === suffix || relPath.startsWith(`${suffix}/`) || relPath.endsWith(`/${suffix}`) || relPath.includes(`/${suffix}/`);
+  })) return true;
   return Object.values(vocabulary.pathExclusions).some(({ path }) => {
     const prefix = path.replace(/\/$/, "");
     return relPath === prefix || relPath.startsWith(`${prefix}/`);
@@ -314,20 +320,15 @@ export function discoverCaseDirs(workspaceRoot) {
   const featureFilename = filenameForKind(vocabulary, vocabulary.testFeatureFileKindId);
   const found = [];
   const walk = (dir) => {
-    for (const entry of readdirSync(dir)) {
-      const abs = join(dir, entry);
-      let stats;
-      try {
-        stats = statSync(abs);
-      } catch {
-        continue;
-      }
-      if (stats.isSymbolicLink() || !stats.isDirectory()) continue;
+    for (const entry of readdirSync(dir, { withFileTypes: true })) {
+      if (entry.isSymbolicLink() || !entry.isDirectory()) continue;
+      const abs = join(dir, entry.name);
       const rel = nxPath(relative(workspaceRoot, abs));
-      if (isExcluded(vocabulary, rel) || entry === "node_modules" || entry === ".git") continue;
-      if (entry === vocabulary.testsDirName) {
-        for (const child of readdirSync(abs)) {
-          if (canonicalCase(vocabulary, nxPath(relative(workspaceRoot, dir)), child) && existsSync(join(abs, child, featureFilename))) found.push(nxPath(relative(workspaceRoot, join(abs, child))));
+      if (isExcluded(vocabulary, rel)) continue;
+      if (entry.name === vocabulary.testsDirName) {
+        for (const child of readdirSync(abs, { withFileTypes: true })) {
+          if (!child.isDirectory() || child.isSymbolicLink() || !canonicalCase(vocabulary, nxPath(relative(workspaceRoot, dir)), child.name)) continue;
+          if (readdirSync(join(abs, child.name), { withFileTypes: true }).some((file) => file.name === featureFilename && file.isFile() && !file.isSymbolicLink())) found.push(nxPath(relative(workspaceRoot, join(abs, child.name))));
         }
         continue;
       }

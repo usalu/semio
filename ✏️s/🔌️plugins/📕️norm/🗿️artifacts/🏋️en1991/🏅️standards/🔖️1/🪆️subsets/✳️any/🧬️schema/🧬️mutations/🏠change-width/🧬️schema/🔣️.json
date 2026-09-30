@@ -9,7 +9,21 @@
   ],
   "properties": {
     "newWidth": {
-      "type": "number"
+      "type": "number",
+      "minimum": 0,
+      "x-semio-ui": {
+        "widget": "stepper",
+        "role": "value",
+        "label": {
+          "en": "Building width b",
+          "de": "Gebäudebreite b"
+        },
+        "unit": "m",
+        "step": 0.1,
+        "precision": 2,
+        "group": "building",
+        "order": 10
+      }
     }
   }
 }

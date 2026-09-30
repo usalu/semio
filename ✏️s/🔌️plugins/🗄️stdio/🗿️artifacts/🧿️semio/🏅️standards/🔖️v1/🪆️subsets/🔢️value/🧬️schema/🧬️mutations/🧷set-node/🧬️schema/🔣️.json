@@ -5,19 +5,20 @@
   "type": "object",
   "additionalProperties": false,
   "required": [
+    "mutation",
     "id",
     "value"
   ],
   "properties": {
+    "mutation": {
+      "const": "setNode",
+      "description": "Aggregate discriminator spliced in by SemioValueMutation; absent when the payload stands alone."
+    },
     "id": {
       "$ref": "#/$defs/ValueId"
     },
     "value": {
       "$ref": "#/$defs/SemioValue"
-    },
-    "mutation": {
-      "const": "setNode",
-      "description": "Aggregate discriminator spliced in by SemioValueMutation; absent when the payload stands alone."
     }
   },
   "$defs": {

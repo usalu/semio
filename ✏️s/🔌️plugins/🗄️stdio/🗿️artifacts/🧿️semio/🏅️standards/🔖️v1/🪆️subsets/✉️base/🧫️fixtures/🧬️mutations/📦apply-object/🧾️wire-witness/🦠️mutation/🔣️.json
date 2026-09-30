@@ -1,0 +1,8 @@
+{
+  "mutation": "applyObject",
+  "payload": {
+    "mutation": {
+      "DeleteBrep": {}
+    }
+  }
+}

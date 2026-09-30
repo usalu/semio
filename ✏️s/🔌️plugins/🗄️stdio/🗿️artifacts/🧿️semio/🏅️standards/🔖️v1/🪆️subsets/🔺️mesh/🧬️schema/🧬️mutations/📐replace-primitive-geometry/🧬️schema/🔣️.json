@@ -24,24 +24,48 @@
       "type": "array",
       "items": {
         "$ref": "#/$defs/SemioPoint3"
+      },
+      "x-semio-ui": {
+        "label": {
+          "en": "Positions",
+          "de": "Positionen"
+        }
       }
     },
     "normals": {
       "type": "array",
       "items": {
         "$ref": "#/$defs/SemioPoint3"
+      },
+      "x-semio-ui": {
+        "label": {
+          "en": "Normals",
+          "de": "Normalen"
+        }
       }
     },
     "uvs": {
       "type": "array",
       "items": {
         "$ref": "#/$defs/SemioUv"
+      },
+      "x-semio-ui": {
+        "label": {
+          "en": "Texture coordinates",
+          "de": "Texturkoordinaten"
+        }
       }
     },
     "colors": {
       "type": "array",
       "items": {
         "$ref": "#/$defs/SemioRgba"
+      },
+      "x-semio-ui": {
+        "label": {
+          "en": "Vertex colors",
+          "de": "Eckpunktfarben"
+        }
       }
     },
     "indices": {

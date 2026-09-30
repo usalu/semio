@@ -346,13 +346,31 @@ pub struct MemberOpenAdmissionError {
 
 crate::artifact_retire_struct!(crate::os_spr::HistoryLog { doc_id, schema, edits, transitions, composition, conflicts });
 crate::artifact_retire_struct!(crate::os_spr::HistoryComposition { owner, dialect });
-crate::artifact_retire_struct!(crate::os_spr::HistoryTransitionRecord { id, actor, hlt, dependencies, payload });
+crate::artifact_retire_struct!(crate::os_spr::HistoryTransitionRecord { id, actor, hlt, dependencies, observed, payload });
 crate::artifact_retire_struct!(crate::os_spr::history::HistoryConflict { id, kind, status, actors, hlt, edit_ids, envelopes, messages });
 crate::artifact_retire_struct!(crate::os_spr::history::HistoryMessage { level, code, message, target, op_index });
 crate::artifact_retire_struct!(crate::os_spr::HistoryEdit { id, actor, started_at, finished_at, coalesce_key, description, ops, inverse, meta, lane });
 crate::artifact_retire_struct!(crate::os_spr::OpPayload { text, binary });
-crate::artifact_retire_struct!(crate::os_spr::HistoryOpMeta { op_id, dependencies, base_version, author_id, hlt, undo_policy, payload_hash, group_id, origin, messages });
-crate::artifact_retire_struct!(crate::os_spr::HistoryFold { applied, redo, refused, checkpoint, alternative, changes, checkpoints, alternatives });
+crate::artifact_retire_struct!(crate::os_spr::HistoryOpMeta { op_id, dependencies, base_version, author_id, hlt, undo_policy, payload_hash, group_id, origin, messages, transaction });
+crate::artifact_retire_struct!(crate::os_spr::TransactionRef { id, tool });
+crate::artifact_retire_struct!(crate::os_spr::HistoryFold { applied, redo, refused, checkpoint, alternative, changes, checkpoints, alternatives, supersessions });
+crate::artifact_retire_struct!(crate::os_spr::EffectiveSupersession { transition_id, actor, timestamp, scope, replacement });
+crate::artifact_retire_leaf!(crate::os_spr::HybridLogicalTimestamp);
+
+impl super::retirement::RetireOwned for crate::os_spr::MutationId {
+    fn retirement(self) -> Box<dyn super::retirement::RetirementCursor> {
+        super::retirement::RetireOwned::retirement(self.0)
+    }
+}
+
+impl super::retirement::RetireOwned for crate::os_spr::InputReplacement {
+    fn retirement(self) -> Box<dyn super::retirement::RetirementCursor> {
+        match self {
+            Self::Input { schema, payload } => crate::artifact_retirement_sequence![schema, payload],
+            Self::Withdrawn => super::retirement::sequence(Vec::new()),
+        }
+    }
+}
 crate::artifact_retire_struct!(crate::os_spr::FoldChange { id, edit_ids, description, saved_at });
 crate::artifact_retire_struct!(crate::os_spr::FoldCheckpoint { id, change_ids, parent_id, authors, message, timestamp, pins });
 crate::artifact_retire_struct!(crate::os_spr::FoldAlternative { id, name, checkpoint_ids });

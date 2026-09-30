@@ -5,15 +5,16 @@
   "type": "object",
   "additionalProperties": false,
   "required": [
+    "mutation",
     "layer"
   ],
   "properties": {
-    "layer": {
-      "$ref": "#/$defs/CadLayer"
-    },
     "mutation": {
       "const": "addLayer",
       "description": "Aggregate discriminator spliced in by SemioCadMutation; absent when the payload stands alone."
+    },
+    "layer": {
+      "$ref": "#/$defs/CadLayer"
     }
   },
   "$defs": {

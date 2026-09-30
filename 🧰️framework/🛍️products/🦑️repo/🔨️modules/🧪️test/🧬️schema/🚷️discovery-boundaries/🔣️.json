@@ -1,0 +1,50 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schemaVersion",
+    "features",
+    "links",
+    "expected"
+  ],
+  "properties": {
+    "schemaVersion": {
+      "const": 1
+    },
+    "features": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "expected": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "links": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "path",
+          "target"
+        ],
+        "properties": {
+          "path": {
+            "type": "string"
+          },
+          "target": {
+            "type": "string"
+          },
+          "file": {
+            "type": "boolean"
+          }
+        }
+      }
+    }
+  }
+}

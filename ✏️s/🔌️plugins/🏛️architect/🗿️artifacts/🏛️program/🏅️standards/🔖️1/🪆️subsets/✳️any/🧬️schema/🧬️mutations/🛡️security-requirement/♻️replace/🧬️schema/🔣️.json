@@ -5,9 +5,13 @@
   "type": "object",
   "additionalProperties": false,
   "required": [
+    "mutation",
     "securityRequirement"
   ],
   "properties": {
+    "mutation": {
+      "const": "replaceSecurityRequirement"
+    },
     "securityRequirement": {
       "title": "SecurityRequirement",
       "type": "object",
@@ -16,14 +20,15 @@
         "accessLevel",
         "assetIds",
         "auditRequirements",
+        "classifiedLevel",
         "controlKind",
         "cybersecurity",
+        "drillFrequency",
         "id",
         "intrusionDetection",
         "keyManagement",
         "liaisonContacts",
         "name",
-        "notes",
         "ownership",
         "perimeterControls",
         "priority",
@@ -34,7 +39,6 @@
         "standards",
         "status",
         "surveillance",
-        "tags",
         "threat",
         "timestamps",
         "visitorManagement",
@@ -42,10 +46,39 @@
       ],
       "properties": {
         "id": {
-          "type": "string"
+          "type": "string",
+          "x-semio-ui": {
+            "widget": "reference",
+            "role": "target",
+            "label": {
+              "en": "ID",
+              "de": "ID"
+            },
+            "description": {
+              "en": "The security requirement this record replaces.",
+              "de": "Eintrag vom Typ „Sicherungsanforderung“, den dieser Datensatz ersetzt."
+            },
+            "ref": {
+              "kind": "securityRequirement",
+              "domain": "program",
+              "granularity": "entity"
+            },
+            "group": "identity",
+            "order": 10
+          }
         },
         "name": {
-          "type": "string"
+          "type": "string",
+          "x-semio-ui": {
+            "widget": "text",
+            "role": "value",
+            "label": {
+              "en": "Name",
+              "de": "Bezeichnung"
+            },
+            "group": "identity",
+            "order": 20
+          }
         },
         "description": {
           "title": "TextField",
@@ -56,77 +89,328 @@
           ],
           "properties": {
             "text": {
-              "type": "string"
+              "type": "string",
+              "x-semio-ui": {
+                "widget": "multiline",
+                "role": "value",
+                "label": {
+                  "en": "Text",
+                  "de": "Text"
+                },
+                "group": "details",
+                "order": 10
+              }
             },
             "format": {
-              "type": "string"
+              "type": "string",
+              "x-semio-ui": {
+                "widget": "text",
+                "role": "value",
+                "label": {
+                  "en": "Format",
+                  "de": "Format"
+                },
+                "description": {
+                  "en": "Text format hint, e.g. plain or markdown.",
+                  "de": "Hinweis auf das Textformat, z. B. plain oder markdown."
+                },
+                "group": "details",
+                "order": 20
+              }
             }
+          },
+          "x-semio-ui": {
+            "role": "value",
+            "label": {
+              "en": "Description",
+              "de": "Beschreibung"
+            },
+            "group": "narrative",
+            "order": 30
           }
         },
         "status": {
           "type": "string",
           "enum": [
-            "Draft",
-            "Proposed",
-            "UnderReview",
-            "Validated",
-            "Approved",
-            "Rejected",
-            "Deferred",
-            "Superseded",
-            "Archived",
-            "Open",
-            "Closed",
-            "AtRisk",
-            "Blocked",
-            "InProgress",
-            "Complete"
-          ]
+            "draft",
+            "proposed",
+            "underReview",
+            "validated",
+            "approved",
+            "rejected",
+            "deferred",
+            "superseded",
+            "archived",
+            "open",
+            "closed",
+            "atRisk",
+            "blocked",
+            "inProgress",
+            "complete"
+          ],
+          "x-semio-ui": {
+            "widget": "select",
+            "role": "value",
+            "label": {
+              "en": "Status",
+              "de": "Status"
+            },
+            "options": {
+              "draft": {
+                "en": "Draft",
+                "de": "Entwurf"
+              },
+              "proposed": {
+                "en": "Proposed",
+                "de": "Vorgeschlagen"
+              },
+              "underReview": {
+                "en": "Under Review",
+                "de": "In Prüfung"
+              },
+              "validated": {
+                "en": "Validated",
+                "de": "Validiert"
+              },
+              "approved": {
+                "en": "Approved",
+                "de": "Freigegeben"
+              },
+              "rejected": {
+                "en": "Rejected",
+                "de": "Abgelehnt"
+              },
+              "deferred": {
+                "en": "Deferred",
+                "de": "Zurückgestellt"
+              },
+              "superseded": {
+                "en": "Superseded",
+                "de": "Ersetzt"
+              },
+              "archived": {
+                "en": "Archived",
+                "de": "Archiviert"
+              },
+              "open": {
+                "en": "Open",
+                "de": "Offen"
+              },
+              "closed": {
+                "en": "Closed",
+                "de": "Geschlossen"
+              },
+              "atRisk": {
+                "en": "At Risk",
+                "de": "Gefährdet"
+              },
+              "blocked": {
+                "en": "Blocked",
+                "de": "Blockiert"
+              },
+              "inProgress": {
+                "en": "In Progress",
+                "de": "In Bearbeitung"
+              },
+              "complete": {
+                "en": "Complete",
+                "de": "Abgeschlossen"
+              }
+            },
+            "group": "status",
+            "order": 40
+          }
         },
         "priority": {
           "type": "string",
           "enum": [
-            "Mandatory",
-            "Essential",
-            "Preferred",
-            "Optional",
-            "Deferred",
-            "Prohibited"
-          ]
+            "mandatory",
+            "essential",
+            "preferred",
+            "optional",
+            "deferred",
+            "prohibited"
+          ],
+          "x-semio-ui": {
+            "widget": "select",
+            "role": "value",
+            "label": {
+              "en": "Priority",
+              "de": "Priorität"
+            },
+            "options": {
+              "mandatory": {
+                "en": "Mandatory",
+                "de": "Zwingend"
+              },
+              "essential": {
+                "en": "Essential",
+                "de": "Wesentlich"
+              },
+              "preferred": {
+                "en": "Preferred",
+                "de": "Wünschenswert"
+              },
+              "optional": {
+                "en": "Optional",
+                "de": "Optional"
+              },
+              "deferred": {
+                "en": "Deferred",
+                "de": "Zurückgestellt"
+              },
+              "prohibited": {
+                "en": "Prohibited",
+                "de": "Unzulässig"
+              }
+            },
+            "group": "status",
+            "order": 50
+          }
         },
         "ownership": {
           "title": "Ownership",
           "type": "object",
           "additionalProperties": false,
           "required": [
+            "authorityId",
             "consultantIds",
+            "ownerId",
             "participantIds"
           ],
           "properties": {
             "ownerId": {
-              "type": "string"
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "x-semio-ui": {
+                "widget": "reference",
+                "role": "target",
+                "label": {
+                  "en": "Owner",
+                  "de": "Verantwortlich"
+                },
+                "description": {
+                  "en": "The stakeholder responsible for this entry.",
+                  "de": "Der Beteiligte, der für diesen Eintrag verantwortlich ist."
+                },
+                "ref": {
+                  "kind": "stakeholder",
+                  "domain": "program",
+                  "granularity": "entity"
+                },
+                "group": "links",
+                "order": 10
+              }
             },
             "authorityId": {
-              "type": "string"
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "x-semio-ui": {
+                "widget": "reference",
+                "role": "target",
+                "label": {
+                  "en": "Accountable",
+                  "de": "Entscheidungsbefugt"
+                },
+                "description": {
+                  "en": "The stakeholder accountable for this entry.",
+                  "de": "Der Beteiligte, der für diesen Eintrag entscheidungsbefugt ist."
+                },
+                "ref": {
+                  "kind": "stakeholder",
+                  "domain": "program",
+                  "granularity": "entity"
+                },
+                "group": "links",
+                "order": 20
+              }
             },
             "consultantIds": {
               "type": "array",
               "items": {
                 "type": "string"
+              },
+              "x-semio-ui": {
+                "widget": "reference",
+                "role": "target",
+                "label": {
+                  "en": "Consulted",
+                  "de": "Konsultiert"
+                },
+                "description": {
+                  "en": "Stakeholders consulted on this entry.",
+                  "de": "Beteiligte, die zu diesem Eintrag konsultiert werden."
+                },
+                "ref": {
+                  "kind": "stakeholder",
+                  "domain": "program",
+                  "granularity": "entity"
+                },
+                "group": "links",
+                "order": 30
               }
             },
             "participantIds": {
               "type": "array",
               "items": {
                 "type": "string"
+              },
+              "x-semio-ui": {
+                "widget": "reference",
+                "role": "target",
+                "label": {
+                  "en": "Participants",
+                  "de": "Mitwirkende"
+                },
+                "description": {
+                  "en": "Stakeholders taking part in this entry.",
+                  "de": "Beteiligte, die an diesem Eintrag mitwirken."
+                },
+                "ref": {
+                  "kind": "stakeholder",
+                  "domain": "program",
+                  "granularity": "entity"
+                },
+                "group": "links",
+                "order": 40
               }
             }
+          },
+          "x-semio-ui": {
+            "role": "value",
+            "label": {
+              "en": "Ownership",
+              "de": "Zuständigkeiten"
+            },
+            "group": "ownership",
+            "order": 60
           }
         },
         "tags": {
           "type": "array",
           "items": {
             "type": "string"
+          },
+          "x-semio-ui": {
+            "role": "value",
+            "label": {
+              "en": "Tags",
+              "de": "Schlagwörter"
+            },
+            "group": "audit",
+            "order": 70
           }
         },
         "notes": {
@@ -141,12 +425,41 @@
             ],
             "properties": {
               "tag": {
-                "type": "string"
+                "type": "string",
+                "x-semio-ui": {
+                  "widget": "text",
+                  "role": "value",
+                  "label": {
+                    "en": "Tag",
+                    "de": "Schlagwort"
+                  },
+                  "group": "details",
+                  "order": 10
+                }
               },
               "text": {
-                "type": "string"
+                "type": "string",
+                "x-semio-ui": {
+                  "widget": "multiline",
+                  "role": "value",
+                  "label": {
+                    "en": "Text",
+                    "de": "Text"
+                  },
+                  "group": "details",
+                  "order": 20
+                }
               }
             }
+          },
+          "x-semio-ui": {
+            "role": "value",
+            "label": {
+              "en": "Notes",
+              "de": "Notizen"
+            },
+            "group": "audit",
+            "order": 80
           }
         },
         "timestamps": {
@@ -159,148 +472,534 @@
           ],
           "properties": {
             "created": {
-              "type": "string"
+              "type": "string",
+              "x-semio-ui": {
+                "widget": "text",
+                "role": "value",
+                "label": {
+                  "en": "Created",
+                  "de": "Erstellt am"
+                },
+                "description": {
+                  "en": "Date or date-time per ISO 8601.",
+                  "de": "Datum oder Zeitpunkt nach ISO 8601."
+                },
+                "group": "audit",
+                "order": 10
+              }
             },
             "updated": {
-              "type": "string"
+              "type": "string",
+              "x-semio-ui": {
+                "widget": "text",
+                "role": "value",
+                "label": {
+                  "en": "Updated",
+                  "de": "Geändert am"
+                },
+                "description": {
+                  "en": "Date or date-time per ISO 8601.",
+                  "de": "Datum oder Zeitpunkt nach ISO 8601."
+                },
+                "group": "audit",
+                "order": 20
+              }
             },
             "createdBy": {
-              "type": "string"
+              "type": "string",
+              "x-semio-ui": {
+                "widget": "reference",
+                "role": "target",
+                "label": {
+                  "en": "Created By",
+                  "de": "Erstellt von"
+                },
+                "ref": {
+                  "kind": "stakeholder",
+                  "domain": "program",
+                  "granularity": "entity"
+                },
+                "group": "links",
+                "order": 30
+              }
             },
             "updatedBy": {
-              "type": "string"
+              "type": "string",
+              "x-semio-ui": {
+                "widget": "reference",
+                "role": "target",
+                "label": {
+                  "en": "Updated By",
+                  "de": "Geändert von"
+                },
+                "ref": {
+                  "kind": "stakeholder",
+                  "domain": "program",
+                  "granularity": "entity"
+                },
+                "group": "links",
+                "order": 40
+              }
             }
+          },
+          "x-semio-ui": {
+            "role": "value",
+            "label": {
+              "en": "Timestamps",
+              "de": "Zeitstempel"
+            },
+            "group": "audit",
+            "order": 90
           }
         },
         "controlKind": {
           "type": "string",
           "enum": [
-            "AccessControl",
-            "Surveillance",
-            "Perimeter",
-            "Cyber",
-            "Personnel",
-            "Information",
-            "Physical",
-            "Procedural",
-            "Screening",
-            "KeyManagement"
-          ]
+            "accessControl",
+            "surveillance",
+            "perimeter",
+            "cyber",
+            "personnel",
+            "information",
+            "physical",
+            "procedural",
+            "screening",
+            "keyManagement"
+          ],
+          "x-semio-ui": {
+            "widget": "select",
+            "role": "value",
+            "label": {
+              "en": "Control Kind",
+              "de": "Art der Sicherungsmaßnahme"
+            },
+            "options": {
+              "accessControl": {
+                "en": "Access Control",
+                "de": "Zutrittskontrolle"
+              },
+              "surveillance": {
+                "en": "Surveillance",
+                "de": "Überwachung"
+              },
+              "perimeter": {
+                "en": "Perimeter",
+                "de": "Perimeterschutz"
+              },
+              "cyber": {
+                "en": "Cyber",
+                "de": "IT-Sicherheit"
+              },
+              "personnel": {
+                "en": "Personnel",
+                "de": "Personelle Sicherung"
+              },
+              "information": {
+                "en": "Information",
+                "de": "Informationssicherheit"
+              },
+              "physical": {
+                "en": "Physical",
+                "de": "Mechanische Sicherung"
+              },
+              "procedural": {
+                "en": "Procedural",
+                "de": "Organisatorische Sicherung"
+              },
+              "screening": {
+                "en": "Screening",
+                "de": "Personen- und Gepäckkontrolle"
+              },
+              "keyManagement": {
+                "en": "Key Management",
+                "de": "Schlüsselverwaltung"
+              }
+            },
+            "group": "classification",
+            "order": 100
+          }
         },
         "threat": {
-          "type": "string"
+          "type": "string",
+          "x-semio-ui": {
+            "widget": "text",
+            "role": "value",
+            "label": {
+              "en": "Threat",
+              "de": "Bedrohung"
+            },
+            "group": "details",
+            "order": 110
+          }
         },
         "riskLevel": {
           "type": "string",
           "enum": [
-            "Negligible",
-            "Low",
-            "Medium",
-            "High",
-            "Critical"
-          ]
+            "negligible",
+            "low",
+            "medium",
+            "high",
+            "critical"
+          ],
+          "x-semio-ui": {
+            "widget": "select",
+            "role": "value",
+            "label": {
+              "en": "Risk Level",
+              "de": "Risikostufe"
+            },
+            "options": {
+              "negligible": {
+                "en": "Negligible",
+                "de": "Vernachlässigbar"
+              },
+              "low": {
+                "en": "Low",
+                "de": "Gering"
+              },
+              "medium": {
+                "en": "Medium",
+                "de": "Mittel"
+              },
+              "high": {
+                "en": "High",
+                "de": "Hoch"
+              },
+              "critical": {
+                "en": "Critical",
+                "de": "Kritisch"
+              }
+            },
+            "group": "status",
+            "order": 120
+          }
         },
         "assetIds": {
           "type": "array",
           "items": {
             "type": "string"
+          },
+          "x-semio-ui": {
+            "widget": "reference",
+            "role": "target",
+            "label": {
+              "en": "Protected Assets",
+              "de": "Schutzgüter"
+            },
+            "description": {
+              "en": "Entities this security requirement protects.",
+              "de": "Entitäten, die diese Sicherungsanforderung schützt."
+            },
+            "ref": {
+              "kind": "entity",
+              "domain": "program",
+              "granularity": "entity"
+            },
+            "group": "links",
+            "order": 130
           }
         },
         "zoneIds": {
           "type": "array",
           "items": {
             "type": "string"
+          },
+          "x-semio-ui": {
+            "widget": "reference",
+            "role": "target",
+            "label": {
+              "en": "Zones",
+              "de": "Zonen"
+            },
+            "ref": {
+              "kind": "programElement",
+              "domain": "program",
+              "granularity": "entity"
+            },
+            "group": "links",
+            "order": 140
           }
         },
         "accessLevel": {
           "type": "string",
           "enum": [
-            "Public",
-            "Restricted",
-            "Controlled",
-            "Private",
-            "Secure",
-            "EmergencyOnly"
-          ]
+            "public",
+            "restricted",
+            "controlled",
+            "private",
+            "secure",
+            "emergencyOnly"
+          ],
+          "x-semio-ui": {
+            "widget": "select",
+            "role": "value",
+            "label": {
+              "en": "Access Level",
+              "de": "Zugangsstufe"
+            },
+            "options": {
+              "public": {
+                "en": "Public",
+                "de": "Öffentlich"
+              },
+              "restricted": {
+                "en": "Restricted",
+                "de": "Eingeschränkt"
+              },
+              "controlled": {
+                "en": "Controlled",
+                "de": "Kontrolliert"
+              },
+              "private": {
+                "en": "Private",
+                "de": "Privat"
+              },
+              "secure": {
+                "en": "Secure",
+                "de": "Gesichert"
+              },
+              "emergencyOnly": {
+                "en": "Emergency Only",
+                "de": "Nur im Notfall"
+              }
+            },
+            "group": "classification",
+            "order": 150
+          }
         },
         "perimeterControls": {
           "type": "array",
           "items": {
             "type": "string"
+          },
+          "x-semio-ui": {
+            "role": "value",
+            "label": {
+              "en": "Perimeter Controls",
+              "de": "Perimetersicherung"
+            },
+            "group": "details",
+            "order": 160
           }
         },
         "surveillance": {
           "type": "array",
           "items": {
             "type": "string"
+          },
+          "x-semio-ui": {
+            "role": "value",
+            "label": {
+              "en": "Surveillance",
+              "de": "Überwachung"
+            },
+            "group": "details",
+            "order": 170
           }
         },
         "intrusionDetection": {
           "type": "array",
           "items": {
             "type": "string"
+          },
+          "x-semio-ui": {
+            "role": "value",
+            "label": {
+              "en": "Intrusion Detection",
+              "de": "Einbruchmeldetechnik"
+            },
+            "group": "details",
+            "order": 180
           }
         },
         "cybersecurity": {
           "type": "array",
           "items": {
             "type": "string"
+          },
+          "x-semio-ui": {
+            "role": "value",
+            "label": {
+              "en": "Cyber Security",
+              "de": "IT-Sicherheit"
+            },
+            "group": "details",
+            "order": 190
           }
         },
         "screening": {
           "type": "array",
           "items": {
             "type": "string"
+          },
+          "x-semio-ui": {
+            "role": "value",
+            "label": {
+              "en": "Screening",
+              "de": "Sicherheitskontrollen"
+            },
+            "group": "details",
+            "order": 200
           }
         },
         "visitorManagement": {
           "type": "array",
           "items": {
             "type": "string"
+          },
+          "x-semio-ui": {
+            "role": "value",
+            "label": {
+              "en": "Visitor Management",
+              "de": "Besuchermanagement"
+            },
+            "group": "details",
+            "order": 210
           }
         },
         "keyManagement": {
           "type": "array",
           "items": {
             "type": "string"
+          },
+          "x-semio-ui": {
+            "role": "value",
+            "label": {
+              "en": "Key Management",
+              "de": "Schlüsselverwaltung"
+            },
+            "group": "details",
+            "order": 220
           }
         },
         "standards": {
           "type": "array",
           "items": {
             "type": "string"
+          },
+          "x-semio-ui": {
+            "role": "value",
+            "label": {
+              "en": "Standards",
+              "de": "Normen"
+            },
+            "group": "details",
+            "order": 230
           }
         },
         "responseProcedures": {
           "type": "array",
           "items": {
             "type": "string"
+          },
+          "x-semio-ui": {
+            "role": "value",
+            "label": {
+              "en": "Response Procedures",
+              "de": "Reaktionsverfahren"
+            },
+            "group": "details",
+            "order": 240
           }
         },
         "drillFrequency": {
-          "type": "string"
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "x-semio-ui": {
+            "widget": "text",
+            "role": "value",
+            "label": {
+              "en": "Drill Frequency",
+              "de": "Übungshäufigkeit"
+            },
+            "group": "details",
+            "order": 250
+          }
         },
         "liaisonContacts": {
           "type": "array",
           "items": {
             "type": "string"
+          },
+          "x-semio-ui": {
+            "role": "value",
+            "label": {
+              "en": "Liaison Contacts",
+              "de": "Ansprechstellen"
+            },
+            "group": "details",
+            "order": 260
           }
         },
         "classifiedLevel": {
-          "type": "string"
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "x-semio-ui": {
+            "widget": "text",
+            "role": "value",
+            "label": {
+              "en": "Classification Level",
+              "de": "Geheimhaltungsgrad"
+            },
+            "group": "details",
+            "order": 270
+          }
         },
         "redundancy": {
           "type": "array",
           "items": {
             "type": "string"
+          },
+          "x-semio-ui": {
+            "role": "value",
+            "label": {
+              "en": "Redundancy",
+              "de": "Redundanz"
+            },
+            "group": "details",
+            "order": 280
           }
         },
         "auditRequirements": {
           "type": "array",
           "items": {
             "type": "string"
+          },
+          "x-semio-ui": {
+            "role": "value",
+            "label": {
+              "en": "Audit Requirements",
+              "de": "Protokollierungsanforderungen"
+            },
+            "group": "details",
+            "order": 290
           }
         }
+      },
+      "x-semio-ui": {
+        "role": "value",
+        "label": {
+          "en": "Security Requirement",
+          "de": "Sicherungsanforderung"
+        },
+        "description": {
+          "en": "The complete security requirement; it replaces the entry with the same ID.",
+          "de": "Vollständiger Eintrag vom Typ „Sicherungsanforderung“; ersetzt den Eintrag mit derselben ID."
+        },
+        "group": "record",
+        "order": 10
       }
     }
   }

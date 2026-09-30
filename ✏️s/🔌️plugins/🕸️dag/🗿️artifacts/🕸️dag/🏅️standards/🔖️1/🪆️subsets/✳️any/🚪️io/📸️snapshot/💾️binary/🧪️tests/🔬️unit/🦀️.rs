@@ -29,7 +29,7 @@ async fn command_envelope_round_trip_holds_for_an_applied_operation() {
     // `build_document_store_owners` does for a mounted store.
     let mut store = super::new_dag_store(create_document_envelope(DAG_DOCUMENT_SCHEMA, "dag-demo", document, None)).await.expect("valid artifact store fixture");
     let node = crate::schema::default_node_for_kind("note", "node-1", 0.0, 0.0);
-    store.dispatch(ArtifactCommand::Apply { mutations: vec![crate::mutations::create_node(node)], description: None }).await.expect("apply");
+    store.dispatch(ArtifactCommand::Apply { mutations: vec![crate::mutations::create_node(node)], description: None, transaction: None }).await.expect("apply");
     let edit: &Edit<DagMutation> = store.envelope().vcs.edits.last().expect("dispatch must have recorded an edit");
     store::os_store::test_support::assert_command_envelope_round_trip::<DagSnapshot, DagMutation>(edit, &ArtifactId(store.envelope().id.clone()), &SchemaId(store.envelope().schema.clone())).await;
 }

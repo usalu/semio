@@ -10,11 +10,42 @@
   ],
   "properties": {
     "objectId": {
-      "type": "string"
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Object",
+          "de": "Objekt"
+        },
+        "description": {
+          "en": "The object this mutation addresses.",
+          "de": "Das Objekt, das diese Mutation adressiert."
+        },
+        "ref": {
+          "kind": "object",
+          "domain": "mesh",
+          "granularity": "object"
+        }
+      }
     },
     "index": {
       "type": "integer",
-      "minimum": 0
+      "minimum": 0,
+      "x-semio-ui": {
+        "widget": "stepper",
+        "role": "value",
+        "label": {
+          "en": "Layer Index",
+          "de": "Ebenenindex"
+        },
+        "description": {
+          "en": "Position of the paint layer, counted from the bottom.",
+          "de": "Position der Malebene, von unten gezählt."
+        },
+        "step": 1,
+        "precision": 0
+      }
     }
   }
 }

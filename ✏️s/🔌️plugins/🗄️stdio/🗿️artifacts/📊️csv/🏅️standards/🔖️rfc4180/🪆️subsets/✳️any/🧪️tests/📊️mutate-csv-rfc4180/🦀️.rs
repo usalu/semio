@@ -30,13 +30,21 @@ fn mutable_input(ctx: &Context) -> Result<Vec<u8>, String> {
 /// 🪆️subsets/✳️any/🧬️schema/📸️snapshot/🦀️.rs`'s own doc comment) — `has_header` is metadata
 /// this case tracks alongside the bytes, not something a projection can recover from them alone.
 fn resulting_has_header(spec: &Json, baseline: bool) -> bool {
-    match spec.str("kind").as_str() {
-        "set-has-header" | "set-snapshot" => match spec.get("params").and_then(|params| params.get("hasHeader")) {
-            Some(Json::Bool(flag)) => *flag,
-            _ => baseline,
-        },
+    let params = spec.get("params").cloned().unwrap_or(Json::Null);
+    let carrier = match spec.str("kind").as_str() {
+        "set-has-header" => params,
+        "set-snapshot" => params.get("snapshot").cloned().unwrap_or(Json::Null),
+        _ => Json::Null,
+    };
+    match carrier.get("hasHeader") {
+        Some(Json::Bool(flag)) => *flag,
         _ => baseline,
     }
+}
+
+/// 📄️ A plain row as the `CsvRecord` wire (`{"fields": [{"value", "quoted": false}]}`); quoting is left to the writer.
+fn record_wire(values: &[String]) -> Json {
+    json_object(vec![("fields", Json::Array(values.iter().map(|value| json_object(vec![("value", Json::String(value.clone())), ("quoted", Json::Bool(false))])).collect()))])
 }
 
 fn json_object(pairs: Vec<(&str, Json)>) -> Json {
@@ -47,7 +55,7 @@ fn kind_spec(kind: &str, params: Json) -> Json {
     json_object(vec![("kind", Json::String(kind.to_string())), ("params", params)])
 }
 
-/// ↩️ The inverse mutation's OWN spec, computed by reading whatever pre-mutation state it needs
+/// ↩️ The inverse mutation's OWN spec (leaf wire payloads, like every row), computed by reading whatever pre-mutation state it needs
 /// straight out of `original` with the same independent reader the oracle mutates with — never by
 /// calling this repository's own `CsvMutation::inverse`, which would defeat the point of an
 /// independently-computed oracle. Mirrors that method's documented rule exactly (index-aware,
@@ -60,12 +68,10 @@ fn inverse_spec(original: &[u8], forward: &Json) -> Result<Json, String> {
         _ => None,
     };
     match forward.str("kind").as_str() {
-        "no-mutation" => Ok(kind_spec("no-mutation", json_object(vec![]))),
         "set-has-header" => Ok(kind_spec("set-has-header", json_object(vec![("hasHeader", Json::Bool(BASELINE_HAS_HEADER))]))),
         "set-snapshot" => {
-            let grid = read_grid(original)?;
-            let rows = Json::Array(grid.into_iter().map(|record| Json::Array(record.into_iter().map(Json::String).collect())).collect());
-            Ok(kind_spec("set-snapshot", json_object(vec![("hasHeader", Json::Bool(BASELINE_HAS_HEADER)), ("rows", rows)])))
+            let records = Json::Array(read_grid(original)?.iter().map(|record| record_wire(record)).collect());
+            Ok(kind_spec("set-snapshot", json_object(vec![("snapshot", json_object(vec![("schema", Json::String("stdio.csv".to_string())), ("hasHeader", Json::Bool(BASELINE_HAS_HEADER)), ("records", records)]))])))
         }
         "insert-record" => {
             let index = number("index").ok_or("insert-record inverse: missing `index`")?;
@@ -75,15 +81,14 @@ fn inverse_spec(original: &[u8], forward: &Json) -> Result<Json, String> {
             let index = number("index").ok_or("remove-record inverse: missing `index`")? as usize;
             let grid = read_grid(original)?;
             let record = grid.get(index).ok_or_else(|| format!("remove-record inverse: index {index} out of bounds ({} record(s))", grid.len()))?;
-            let fields = Json::Array(record.iter().cloned().map(Json::String).collect());
-            Ok(kind_spec("insert-record", json_object(vec![("index", Json::Number(index as f64)), ("fields", fields)])))
+            Ok(kind_spec("insert-record", json_object(vec![("index", Json::Number(index as f64)), ("record", record_wire(record))])))
         }
         "set-field" => {
             let record_index = number("recordIndex").ok_or("set-field inverse: missing `recordIndex`")? as usize;
             let field_index = number("fieldIndex").ok_or("set-field inverse: missing `fieldIndex`")? as usize;
             let grid = read_grid(original)?;
             let value = grid.get(record_index).and_then(|record| record.get(field_index)).cloned().unwrap_or_default();
-            Ok(kind_spec("set-field", json_object(vec![("recordIndex", Json::Number(record_index as f64)), ("fieldIndex", Json::Number(field_index as f64)), ("value", Json::String(value))])))
+            Ok(kind_spec("set-field", json_object(vec![("recordIndex", Json::Number(record_index as f64)), ("fieldIndex", Json::Number(field_index as f64)), ("value", Json::String(value)), ("quoted", Json::Bool(false))])))
         }
         other => Err(format!("no inverse rule for kind {other:?}")),
     }
@@ -135,65 +140,17 @@ fn round_trip_oracle(ctx: &Context) -> Result<Outcome, String> {
 //#region 🔖️Subject
 #[cfg(feature = "sut")]
 mod subject {
-    use super::{inverse_spec, mutable_input, BASELINE_HAS_HEADER};
+    use super::mutable_input;
     use semio_repo_test_host::{Context, Json, Outcome};
-    use semio_s_artifact_stdio_csv::standards::v_rfc4180::subsets::any::schema::mutations::apply_csv_mutation;
+    use semio_s_artifact_stdio_csv::standards::v_rfc4180::subsets::any::schema::mutations::{apply_csv_mutation, decode_csv_mutation_payload_json, inverse_csv_mutation};
     use semio_s_artifact_stdio_csv::standards::v_rfc4180::subsets::any::schema::snapshot::{decode_csv, encode_csv};
-    use semio_s_artifact_stdio_csv::{CsvField, CsvMutation, CsvRecord, CsvSnapshot, STDIO_CSV_DOCUMENT_SCHEMA};
+    use semio_s_artifact_stdio_csv::{CsvMutation, CsvSnapshot};
     use semio_s_plugin_stdio_test_oracle::artifacts::csv::standards::v_rfc4180::subsets::any::project_csv_grid;
 
-    /// 🔀️ The same JSON mutation spec the oracle reads, turned into this repository's own typed
-    /// `CsvMutation` — the only channel between the feature's parameters and the subject's codec.
-    fn mutation_from_spec(spec: &Json) -> Result<Vec<CsvMutation>, String> {
-        let params = spec.get("params").cloned().unwrap_or(Json::Null);
-        let number = |key: &str| match params.get(key) {
-            Some(Json::Number(value)) => Some(*value),
-            _ => None,
-        };
-        let boolean = |key: &str| match params.get(key) {
-            Some(Json::Bool(value)) => Some(*value),
-            _ => None,
-        };
-        let strings = |key: &str| -> Vec<String> {
-            params
-                .array(key)
-                .iter()
-                .map(|entry| match entry {
-                    Json::String(text) => text.clone(),
-                    _ => String::new(),
-                })
-                .collect()
-        };
-        Ok(vec![match spec.str("kind").as_str() {
-            "no-mutation" => return Ok(Vec::new()),
-            "set-has-header" => CsvMutation::SetHasHeader(semio_s_artifact_stdio_csv::schema::mutations::set_has_header::SetHasHeader { has_header: boolean("hasHeader").ok_or("set-has-header: missing `hasHeader`")? }),
-            "set-snapshot" => {
-                let records = params
-                    .array("rows")
-                    .iter()
-                    .map(|row| match row {
-                        Json::Array(cells) => CsvRecord {
-                            fields: cells
-                                .iter()
-                                .map(|cell| CsvField {
-                                    value: match cell {
-                                        Json::String(text) => text.clone(),
-                                        _ => String::new(),
-                                    },
-                                    quoted: false,
-                                })
-                                .collect(),
-                        },
-                        _ => CsvRecord::default(),
-                    })
-                    .collect();
-                CsvMutation::SetSnapshot(semio_s_artifact_stdio_csv::schema::mutations::set_snapshot::SetSnapshot { snapshot: CsvSnapshot { schema: STDIO_CSV_DOCUMENT_SCHEMA.into(), has_header: boolean("hasHeader").unwrap_or(BASELINE_HAS_HEADER), records } })
-            }
-            "insert-record" => CsvMutation::InsertRecord(semio_s_artifact_stdio_csv::schema::mutations::insert_record::InsertRecord { index: number("index").ok_or("insert-record: missing `index`")? as usize, record: CsvRecord { fields: strings("fields").into_iter().map(|value| CsvField { value, quoted: false }).collect() } }),
-            "remove-record" => CsvMutation::RemoveRecord(semio_s_artifact_stdio_csv::schema::mutations::remove_record::RemoveRecord { index: number("index").ok_or("remove-record: missing `index`")? as usize }),
-            "set-field" => CsvMutation::SetField(semio_s_artifact_stdio_csv::schema::mutations::set_field::SetField { record_index: number("recordIndex").ok_or("set-field: missing `recordIndex`")? as usize, field_index: number("fieldIndex").ok_or("set-field: missing `fieldIndex`")? as usize, value: params.str("value"), quoted: false }),
-            other => return Err(format!("no subject rule for kind {other:?}")),
-        }])
+    /// 🔀️ The scenario's `<id>`/`<params>` spec decoded as the leaf wire payload it is, through the aggregate's own
+    /// derive-generated payload constructor — the only channel between the feature's parameters and the subject's codec.
+    fn mutation_from_spec(spec: &Json) -> Result<CsvMutation, String> {
+        decode_csv_mutation_payload_json(&spec.str("kind"), &spec.get("params").cloned().unwrap_or(Json::Null).to_string())
     }
 
     fn decode(bytes: &[u8]) -> Result<CsvSnapshot, String> {
@@ -203,20 +160,21 @@ mod subject {
 
     pub fn mutate(ctx: &Context) -> Result<Outcome, String> {
         let mut snapshot = decode(&mutable_input(ctx)?)?;
-        for mutation in mutation_from_spec(&ctx.doc_json()?)? {
-            apply_csv_mutation(&mut snapshot, &mutation);
-        }
+        apply_csv_mutation(&mut snapshot, &mutation_from_spec(&ctx.doc_json()?)?);
         let output = encode_csv(&snapshot).into_bytes();
         let projection = project_csv_grid(&output, snapshot.has_header)?;
         Ok(Outcome::with_raw(output, projection))
     }
 
+    /// ↩️ The subset's OWN `Mutation::inverse` (`inverse_csv_mutation`) applied after the forward step — the
+    /// implementation's algebra, compared against the oracle's independently derived undo in the parity phase.
     pub fn inverse(ctx: &Context) -> Result<Outcome, String> {
-        let input = mutable_input(ctx)?;
-        let spec = ctx.doc_json()?;
-        let mut snapshot = decode(&input)?;
-        for mutation in mutation_from_spec(&spec)?.into_iter().chain(mutation_from_spec(&inverse_spec(&input, &spec)?)?) {
-            apply_csv_mutation(&mut snapshot, &mutation);
+        let mut snapshot = decode(&mutable_input(ctx)?)?;
+        let mutation = mutation_from_spec(&ctx.doc_json()?)?;
+        let undo = inverse_csv_mutation(&mutation, &snapshot);
+        apply_csv_mutation(&mut snapshot, &mutation);
+        for step in &undo {
+            apply_csv_mutation(&mut snapshot, step);
         }
         let output = encode_csv(&snapshot).into_bytes();
         let projection = project_csv_grid(&output, snapshot.has_header)?;
@@ -245,10 +203,10 @@ mod subject {
 /// 🧭️ Registration entry point the generated host calls.
 pub fn adapter() -> Adapter {
     let mut built = Adapter::new("rust");
-    built = built.oracle("mutate", mutate_oracle).oracle("no-mutation-baseline-mutate", mutate_oracle).oracle("inverse", inverse_oracle).oracle("no-mutation-baseline-inverse", inverse_oracle);
+    built = built.oracle("mutate", mutate_oracle).oracle("inverse", inverse_oracle);
     #[cfg(feature = "sut")]
     {
-        built = built.subject("mutate", subject::mutate).subject("no-mutation-baseline-mutate", subject::mutate).subject("inverse", subject::inverse).subject("no-mutation-baseline-inverse", subject::inverse);
+        built = built.subject("mutate", subject::mutate).subject("inverse", subject::inverse);
     }
     built = built.oracle("identity-round-trip", round_trip_oracle);
     #[cfg(feature = "sut")]

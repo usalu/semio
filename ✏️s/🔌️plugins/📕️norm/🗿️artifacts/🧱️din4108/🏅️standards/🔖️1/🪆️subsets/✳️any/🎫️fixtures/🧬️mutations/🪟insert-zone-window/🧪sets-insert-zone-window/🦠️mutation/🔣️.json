@@ -1,6 +1,6 @@
 {
   "InsertZoneWindow": {
-    "zone_id": "zone-living",
+    "zoneId": "zone-living",
     "index": 0,
     "window": {
       "id": "win-extra",

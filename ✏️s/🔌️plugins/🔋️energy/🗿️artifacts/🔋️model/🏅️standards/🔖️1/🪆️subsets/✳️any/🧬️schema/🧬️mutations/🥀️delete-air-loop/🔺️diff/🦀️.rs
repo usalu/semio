@@ -11,7 +11,7 @@ pub fn diff(payload: &super::DeleteAirLoop, base: &EnergyModelSnapshot) -> proto
     };
     let _ = existing;
     if base.model.outdoor_air_systems.iter().any(|system| system.air_loop_id == payload.id) {
-        return protocol::MutationOutcome::error("mutation.invariant", format!("Air loop {} still serves an outdoor air system.", payload.id.0), [payload.id.0.to_string()]);
+        return protocol::MutationOutcome::error("mutation.target-referenced", format!("Air loop {} still serves an outdoor air system.", payload.id.0), [payload.id.0.to_string()]);
     }
     let mut model = base.model.clone();
     model.air_loops.retain(|item| item.id != payload.id);

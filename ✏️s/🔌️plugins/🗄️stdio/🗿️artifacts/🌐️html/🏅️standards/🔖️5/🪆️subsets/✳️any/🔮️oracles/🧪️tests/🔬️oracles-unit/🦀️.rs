@@ -46,9 +46,9 @@ mod tests {
 
     //#region 🔖️SmallFixtureUnitLaws
     #[test]
-    fn no_mutation_is_a_true_semantic_identity() {
+    fn round_trip_is_a_true_semantic_identity() {
         let input = b"<!doctype html>\n<html><body>hi</body></html>\n";
-        let output = apply_mutation(input, "no-mutation", &Json::Object(vec![])).unwrap();
+        let output = round_trip(input).unwrap();
         assert_eq!(parse(input).unwrap(), parse(&output).unwrap());
     }
 
@@ -117,7 +117,8 @@ mod tests {
                 ])]),
             ),
         ]);
-        let round_tripped = apply_mutation_inverse(input, "set-snapshot", &obj(vec![("doctype", Json::String("DOCTYPE html".into())), ("root", root)])).unwrap();
+        let snapshot = obj(vec![("schema", Json::String("stdio.html".into())), ("doctype", Json::String("DOCTYPE html".into())), ("root", root)]);
+        let round_tripped = apply_mutation_inverse(input, "set-snapshot", &obj(vec![("snapshot", snapshot)])).unwrap();
         assert_eq!(parse(&round_tripped).unwrap(), parse(input).unwrap());
     }
 
@@ -166,10 +167,12 @@ mod tests {
     fn real_fixture_every_declared_kind_mutates_and_inverts_cleanly() {
         let base_projection = project(REAL_FIXTURE).unwrap();
         let cases: Vec<(&str, Json)> = vec![
-            ("no-mutation", obj(vec![])),
             (
                 "set-snapshot",
-                obj(vec![
+                obj(vec![(
+                    "snapshot",
+                    obj(vec![
+                    ("schema", Json::String("stdio.html".into())),
                     ("doctype", Json::String("DOCTYPE html".into())),
                     (
                         "root",
@@ -204,7 +207,8 @@ mod tests {
                             ),
                         ]),
                     ),
-                ]),
+                    ]),
+                )]),
             ),
             ("set-doctype", obj(vec![("doctype", Json::String("DOCTYPE htmlWave7".into()))])),
             (
@@ -234,9 +238,7 @@ mod tests {
         for (kind, params) in &cases {
             let mutated = apply_mutation(REAL_FIXTURE, kind, params).unwrap_or_else(|error| panic!("mutate {kind:?} failed: {error}"));
             let mutated_projection = project(&mutated).unwrap();
-            if *kind != "no-mutation" {
-                assert_ne!(&mutated_projection, &base_projection, "mutate {kind:?} produced no visible change in the real document");
-            }
+            assert_ne!(&mutated_projection, &base_projection, "mutate {kind:?} produced no visible change in the real document");
             let restored = apply_mutation_inverse(REAL_FIXTURE, kind, params).unwrap_or_else(|error| panic!("inverse {kind:?} failed: {error}"));
             let restored_projection = project(&restored).unwrap();
             assert_eq!(restored_projection, base_projection, "inverse {kind:?} did not restore the real document's projection");

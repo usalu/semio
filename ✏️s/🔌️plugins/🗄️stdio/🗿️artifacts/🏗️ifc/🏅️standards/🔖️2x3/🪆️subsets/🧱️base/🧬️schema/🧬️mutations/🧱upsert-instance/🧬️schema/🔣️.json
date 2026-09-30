@@ -5,15 +5,28 @@
   "type": "object",
   "additionalProperties": false,
   "required": [
+    "mutation",
     "instance"
   ],
   "properties": {
-    "instance": {
-      "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/ifc/2x3/base/artifact.json#/$defs/Part21Instance"
-    },
     "mutation": {
       "const": "upsertInstance",
       "description": "Aggregate discriminator spliced in by Ifc2x3Mutation; absent when the payload stands alone."
+    },
+    "instance": {
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/ifc/2x3/base/artifact.json#/$defs/Part21Instance",
+      "x-semio-ui": {
+        "label": {
+          "en": "Instance",
+          "de": "Instanz"
+        },
+        "description": {
+          "en": "Instance written under its id; an existing one is replaced.",
+          "de": "Instanz, die unter ihrer ID geschrieben wird; eine vorhandene wird ersetzt."
+        },
+        "group": "value",
+        "order": 10
+      }
     }
   }
 }

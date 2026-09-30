@@ -5,6 +5,10 @@ edition = "2021"
 rust-version.workspace = true
 description = "Draw plugin - statechart kernel, actor runtime and hosts (used by the drawing app's canvas gesture machine); kept as its own crate because its proc-macro sibling cannot be merged into the main plugin crate"
 
+[package.metadata.semio]
+role = "library"
+id = "draw-fsm"
+
 [lints]
 workspace = true
 

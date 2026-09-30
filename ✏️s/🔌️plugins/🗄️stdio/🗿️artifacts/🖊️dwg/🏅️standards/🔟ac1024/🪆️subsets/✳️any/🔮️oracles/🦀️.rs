@@ -206,16 +206,6 @@ fn preamble_from(params: &Json, current: &Preamble) -> Preamble {
     }
 }
 
-fn hex_encode(bytes: &[u8]) -> String {
-    bytes.iter().map(|byte| format!("{byte:02x}")).collect()
-}
-
-fn hex_decode(text: &str) -> Result<Vec<u8>, String> {
-    if text.len() % 2 != 0 {
-        return Err(format!("hex payload has an odd length ({})", text.len()));
-    }
-    (0..text.len() / 2).map(|index| u8::from_str_radix(&text[index * 2..index * 2 + 2], 16).map_err(|error| format!("hex payload is malformed at pair {index}: {error}"))).collect()
-}
 //#endregion 🔖️SpecReaders
 
 //#region 🔖️Projection
@@ -294,48 +284,51 @@ pub fn dwgread_agrees(work_dir: &std::path::Path, name: &str, bytes: &[u8], proj
 /// * `set-version-info` sets the three preamble fields IN PLACE, leaving the section map and every
 ///   byte of the body exactly where it was — which is what makes it applicable to a real 148 KB
 ///   R2010 container this repository can decode but nothing here can rebuild.
-/// * `set-snapshot` REPLACES the whole document: with `documentHex` when one is given (the form
-///   [`oracle_inverse_spec`] produces, since restoring a proprietary container is not expressible
-///   any other way), otherwise with a fresh preamble-only stub carrying the stated fields.
+/// * `set-snapshot` REPLACES the whole document with a fresh preamble-only stub carrying the fields its
+///   `snapshot` (the `DwgSnapshot` wire) states.
 pub fn oracle_apply_mutation(input: &[u8], spec: &Json) -> Result<Vec<u8>, String> {
     let params = params_of(spec);
     let current = read_preamble(input)?;
     match spec.str("kind").as_str() {
         "" => Err("mutation spec carries no `kind`".to_string()),
-        "no-mutation" => Ok(input.to_vec()),
         "set-version-info" => {
             let mut document = input.to_vec();
             write_preamble(&mut document, &preamble_from(&params, &current))?;
             Ok(document)
         }
-        "set-snapshot" => match params.get("documentHex") {
-            Some(Json::String(text)) => hex_decode(text),
-            _ => stub_document(&preamble_from(&params, &current)),
-        },
+        "set-snapshot" => {
+            let snapshot = params.get("snapshot").ok_or("set-snapshot: missing `snapshot`")?;
+            let version = match snapshot.get("version") {
+                Some(Json::String(found)) => found.clone(),
+                _ => return Err("set-snapshot: the `DwgSnapshot` wire requires `version`".to_string()),
+            };
+            stub_document(&Preamble { version, maintenance_version: number(snapshot, "maintenanceVersion").unwrap_or(0.0) as u8, codepage: number(snapshot, "codepage").unwrap_or(0.0) as u16, ..current })
+        }
         kind => Err(format!("mutation kind {kind:?} has no oracle implementation ({} input byte(s))", input.len())),
     }
 }
 //#endregion 🔖️Dispatch
 
 //#region 🔖️Inverse
-/// ↩️ The independently computed inverse of `spec` against the UNMUTATED `base`, matching
-/// `DwgMutation::inverse()`'s own base-relative semantics: `set-version-info` inverts to the three
-/// fields `base` already carried, and `set-snapshot` inverts to `base` itself — which for a
-/// proprietary container means its whole byte image, read out of `base` here and never authored by
-/// hand.
-pub fn oracle_inverse_spec(base: &[u8], spec: &Json) -> Result<Json, String> {
+/// ↩️ Undoes `spec` on `mutated` independently, against the UNMUTATED `base` — matching
+/// `DwgMutation::inverse()`'s own base-relative semantics: `set-version-info` re-sets the three
+/// fields `base` carried (a real `set-version-info` wire payload), and `set-snapshot` restores `base`
+/// itself — which for a proprietary container means its whole byte image, read out of `base` here
+/// and never authored by hand: nothing beyond the preamble is expressible as fields.
+pub fn oracle_restore(base: &[u8], mutated: &[u8], spec: &Json) -> Result<Vec<u8>, String> {
     let preamble = read_preamble(base)?;
-    let params = match spec.str("kind").as_str() {
-        "no-mutation" => Json::Object(vec![]),
-        "set-version-info" => Json::Object(vec![
-            ("version".to_string(), Json::String(preamble.version)),
-            ("maintenanceVersion".to_string(), Json::Number(f64::from(preamble.maintenance_version))),
-            ("codepage".to_string(), Json::Number(f64::from(preamble.codepage))),
-        ]),
-        "set-snapshot" => Json::Object(vec![("documentHex".to_string(), Json::String(hex_encode(base)))]),
-        kind => return Err(format!("mutation kind {kind:?} has no oracle inverse")),
-    };
-    Ok(Json::Object(vec![("kind".to_string(), Json::String(spec.str("kind"))), ("params".to_string(), params)]))
+    match spec.str("kind").as_str() {
+        "set-version-info" => {
+            let params = Json::Object(vec![
+                ("version".to_string(), Json::String(preamble.version)),
+                ("maintenanceVersion".to_string(), Json::Number(f64::from(preamble.maintenance_version))),
+                ("codepage".to_string(), Json::Number(f64::from(preamble.codepage))),
+            ]);
+            oracle_apply_mutation(mutated, &Json::Object(vec![("kind".to_string(), Json::String("set-version-info".to_string())), ("params".to_string(), params)]))
+        }
+        "set-snapshot" => Ok(base.to_vec()),
+        kind => Err(format!("mutation kind {kind:?} has no oracle inverse")),
+    }
 }
 //#endregion 🔖️Inverse
 

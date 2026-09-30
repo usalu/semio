@@ -5,16 +5,49 @@
   "type": "object",
   "additionalProperties": false,
   "required": [
+    "mutation",
     "index",
     "foundation"
   ],
   "properties": {
+    "mutation": {
+      "const": "insertFoundation"
+    },
     "index": {
       "type": "integer",
-      "minimum": 0
+      "minimum": 0,
+      "x-semio-ui": {
+        "widget": "stepper",
+        "role": "value",
+        "label": {
+          "en": "Position",
+          "de": "Position"
+        },
+        "description": {
+          "en": "Zero-based list position at which the record is inserted.",
+          "de": "Nullbasierte Listenposition, an der der Datensatz eingefügt wird."
+        },
+        "step": 1,
+        "precision": 0,
+        "group": "target",
+        "order": 10
+      }
     },
     "foundation": {
-      "type": "object"
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1998/snapshot.json#/$defs/En1998Foundation",
+      "x-semio-ui": {
+        "role": "value",
+        "label": {
+          "en": "Foundation",
+          "de": "Gründung"
+        },
+        "description": {
+          "en": "The complete foundation record (EN 1998-5) to insert.",
+          "de": "Der vollständige einzufügende Gründungsdatensatz (EN 1998-5)."
+        },
+        "group": "record",
+        "order": 20
+      }
     }
   }
 }

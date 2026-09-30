@@ -55,6 +55,15 @@
         "cwd": "🧰️framework/🔨️modules/🧊️3d/📦️packages/🦀️rust",
         "command": "bun ./📜️script.ts lint"
       }
+    },
+    "canonical-architecture": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "options": {
+        "cwd": "🧰️framework/🔨️modules/🧊️3d/📦️packages/🦀️rust",
+        "command": "bun ./📜️script.ts canonical-architecture",
+        "forwardAllArgs": true
+      }
     }
   }
 }

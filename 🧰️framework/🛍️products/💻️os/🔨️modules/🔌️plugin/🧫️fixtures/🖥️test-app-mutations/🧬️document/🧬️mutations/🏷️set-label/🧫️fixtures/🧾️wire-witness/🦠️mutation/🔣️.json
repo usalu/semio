@@ -1,0 +1,6 @@
+{
+  "operation": "setLabel",
+  "payload": {
+    "value": "renamed"
+  }
+}

@@ -5,11 +5,37 @@
   "type": "object",
   "additionalProperties": false,
   "required": [
+    "mutation",
     "newIntensity"
   ],
   "properties": {
+    "mutation": {
+      "const": "changeSceneAmbientIntensity"
+    },
     "newIntensity": {
-      "type": "number"
+      "type": "number",
+      "minimum": 0,
+      "x-semio-ui": {
+        "widget": "slider",
+        "role": "value",
+        "label": {
+          "en": "Ambient intensity",
+          "de": "Umgebungslichtstärke"
+        },
+        "step": 0.01,
+        "precision": 2,
+        "softMin": 0,
+        "softMax": 4,
+        "snaps": [
+          0,
+          0.5,
+          1,
+          2,
+          4
+        ],
+        "group": "lighting",
+        "order": 10
+      }
     }
   }
 }

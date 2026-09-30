@@ -6,9 +6,9 @@ fn spec(kind: &str, params: Json) -> Json {
 }
 
 #[test]
-fn no_mutation_is_a_true_byte_identity() {
+fn round_trip_is_a_true_byte_identity() {
     let input = b"a\tb\r\n1\t2\r\n";
-    let output = oracle_apply_mutation(input, &spec("no-mutation", Json::Object(vec![]))).unwrap();
+    let output = write_grid(&read_grid(input).unwrap()).unwrap();
     assert_eq!(output, input);
 }
 

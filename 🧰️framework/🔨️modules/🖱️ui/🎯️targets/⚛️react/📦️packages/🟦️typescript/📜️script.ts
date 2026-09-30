@@ -41,9 +41,17 @@ class LintScript extends BundleScript {
 }
 
 class TestScript extends BundleScript {
-  run(segments: string[]): void {
+  async run(segments: string[]): Promise<void> {
     const { rest } = resolveTestLevel(segments);
-    runVitest(this.root, rest, "../../🧪️tests/🎚️config/🟦️.ts");
+    await runVitest(this.root, rest, "../../🧪️tests/🎚️config/🟦️.ts");
+  }
+}
+
+/** 🌐️ Checks shared labels against both explicit locales and the independent schema/translation oracles. */
+class CanonicalArchitectureScript extends BundleScript {
+  async run(segments: string[]): Promise<void> {
+    if (segments.length) throw new Error("canonical-architecture accepts no arguments");
+    await runVitest(this.root, ["../../../../🧱️elements/📚️I18n/🧪️tests/🔬️translation-totality/🟦️.ts"], "../../🧪️tests/🎚️config/🟦️.ts");
   }
 }
 
@@ -385,6 +393,7 @@ const router = new ScriptRouter(import.meta.dir)
   .register("build", BuildScript)
   .register("lint", LintScript)
   .register("test", TestScript)
+  .register("canonical-architecture", CanonicalArchitectureScript)
   .register("typecheck", TypecheckScript)
   .register("check-ui-primitives", CheckUiPrimitivesScript)
   .register("check-chrome-i18n", CheckChromeI18nScript);

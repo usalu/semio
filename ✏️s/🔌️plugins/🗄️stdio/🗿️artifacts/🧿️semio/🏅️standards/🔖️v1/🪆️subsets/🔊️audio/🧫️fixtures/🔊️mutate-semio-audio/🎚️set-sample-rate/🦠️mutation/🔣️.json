@@ -1,6 +1,7 @@
 {
   "kind": "set-sample-rate",
-  "params": {
+  "mutation": {
+    "mutation": "setSampleRate",
     "sampleRate": 48000
   },
   "before": {

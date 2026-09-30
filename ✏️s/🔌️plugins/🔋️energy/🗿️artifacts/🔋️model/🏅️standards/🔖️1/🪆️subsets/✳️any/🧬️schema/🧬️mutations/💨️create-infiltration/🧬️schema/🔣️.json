@@ -5,6 +5,7 @@
   "type": "object",
   "additionalProperties": false,
   "required": [
+    "mutation",
     "index",
     "id",
     "zoneId",
@@ -21,17 +22,94 @@
     "velocitySquaredTermCoefficient"
   ],
   "properties": {
+    "mutation": {
+      "const": "createInfiltration"
+    },
     "index": {
-      "type": "integer"
+      "type": "integer",
+      "minimum": 0,
+      "x-semio-ui": {
+        "widget": "stepper",
+        "role": "value",
+        "label": {
+          "en": "Position",
+          "de": "Position"
+        },
+        "description": {
+          "en": "Insertion position in the model's list; 0 is first.",
+          "de": "Einfügeposition in der Modellliste; 0 ist die erste."
+        },
+        "step": 1,
+        "precision": 0,
+        "group": "order",
+        "order": 10
+      }
     },
     "id": {
-      "type": "integer"
+      "type": "integer",
+      "minimum": 0,
+      "x-semio-ui": {
+        "widget": "stepper",
+        "role": "value",
+        "label": {
+          "en": "ID",
+          "de": "ID"
+        },
+        "description": {
+          "en": "Id the new infiltration is created under; later mutations address it by this id.",
+          "de": "ID, unter der das neue Objekt angelegt wird; spätere Mutationen adressieren es darüber."
+        },
+        "step": 1,
+        "precision": 0,
+        "group": "identity",
+        "order": 20
+      }
     },
     "zoneId": {
-      "type": "integer"
+      "type": "integer",
+      "minimum": 0,
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Zone",
+          "de": "Zone"
+        },
+        "description": {
+          "en": "Assigned zone, by id.",
+          "de": "Zugeordnete Zone, per ID."
+        },
+        "ref": {
+          "kind": "zone",
+          "domain": "energyModel",
+          "granularity": "zone"
+        },
+        "group": "assignment",
+        "order": 30
+      }
     },
     "scheduleId": {
-      "type": "integer"
+      "type": "integer",
+      "minimum": 0,
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Schedule",
+          "de": "Zeitplan"
+        },
+        "description": {
+          "en": "Fraction schedule scaling the design value over time, by id.",
+          "de": "Anteilszeitplan, der den Bemessungswert zeitlich skaliert, per ID."
+        },
+        "ref": {
+          "kind": "schedule",
+          "domain": "energyModel",
+          "granularity": "schedule"
+        },
+        "group": "schedule",
+        "order": 40
+      }
     },
     "method": {
       "enum": [
@@ -39,34 +117,193 @@
         "PerExteriorArea",
         "EffectiveLeakageArea",
         "WindAndStack"
-      ]
+      ],
+      "x-semio-ui": {
+        "widget": "select",
+        "role": "value",
+        "label": {
+          "en": "Method",
+          "de": "Methode"
+        },
+        "description": {
+          "en": "Which of the parameters below drive the infiltration flow.",
+          "de": "Welche der folgenden Parameter den Infiltrationsvolumenstrom bestimmen."
+        },
+        "options": {
+          "ScheduledAch": {
+            "en": "Scheduled air change rate",
+            "de": "Luftwechsel nach Zeitplan"
+          },
+          "PerExteriorArea": {
+            "en": "Per exterior area",
+            "de": "Pro Außenfläche"
+          },
+          "EffectiveLeakageArea": {
+            "en": "Effective leakage area",
+            "de": "Effektive Leckagefläche"
+          },
+          "WindAndStack": {
+            "en": "Wind and stack",
+            "de": "Wind und thermischer Auftrieb"
+          }
+        },
+        "group": "infiltration",
+        "order": 50
+      }
     },
     "designFlowAch": {
-      "type": "number"
+      "type": "number",
+      "x-semio-ui": {
+        "widget": "stepper",
+        "role": "value",
+        "label": {
+          "en": "Design air change rate",
+          "de": "Bemessungsluftwechsel"
+        },
+        "unit": "1/h",
+        "step": 0.05,
+        "precision": 2,
+        "group": "infiltration",
+        "order": 60
+      }
     },
     "flowPerExteriorAreaM3SM2": {
-      "type": "number"
+      "type": "number",
+      "x-semio-ui": {
+        "widget": "stepper",
+        "role": "value",
+        "label": {
+          "en": "Flow per exterior area",
+          "de": "Volumenstrom pro Außenfläche"
+        },
+        "unit": "m³/(s·m²)",
+        "displayUnit": "m³/(h·m²)",
+        "displayFactor": 3600,
+        "step": 2.777777777777778e-05,
+        "precision": 2,
+        "group": "infiltration",
+        "order": 70
+      }
     },
     "effectiveLeakageAreaM2": {
-      "type": "number"
+      "type": "number",
+      "x-semio-ui": {
+        "widget": "stepper",
+        "role": "value",
+        "label": {
+          "en": "Effective leakage area",
+          "de": "Effektive Leckagefläche"
+        },
+        "unit": "m²",
+        "displayUnit": "cm²",
+        "displayFactor": 10000,
+        "step": 0.0001,
+        "precision": 0,
+        "group": "infiltration",
+        "order": 80
+      }
     },
     "dischargeCoefficient": {
-      "type": "number"
+      "type": "number",
+      "x-semio-ui": {
+        "widget": "stepper",
+        "role": "value",
+        "label": {
+          "en": "Discharge coefficient",
+          "de": "Durchflussbeiwert"
+        },
+        "description": {
+          "en": "Orifice discharge coefficient of the leakage path.",
+          "de": "Durchflussbeiwert der Leckageöffnung."
+        },
+        "step": 0.01,
+        "precision": 2,
+        "group": "infiltration",
+        "order": 90
+      }
     },
     "stackHeightM": {
-      "type": "number"
+      "type": "number",
+      "x-semio-ui": {
+        "widget": "stepper",
+        "role": "value",
+        "label": {
+          "en": "Stack height",
+          "de": "Kaminhöhe"
+        },
+        "description": {
+          "en": "Height difference that drives the stack effect.",
+          "de": "Höhenunterschied, der den thermischen Auftrieb bewirkt."
+        },
+        "unit": "m",
+        "step": 0.1,
+        "precision": 2,
+        "group": "infiltration",
+        "order": 100
+      }
     },
     "constantTermCoefficient": {
-      "type": "number"
+      "type": "number",
+      "x-semio-ui": {
+        "widget": "stepper",
+        "role": "value",
+        "label": {
+          "en": "Constant term coefficient A",
+          "de": "Konstanter Koeffizient A"
+        },
+        "step": 0.001,
+        "precision": 4,
+        "group": "infiltration",
+        "order": 110
+      }
     },
     "temperatureTermCoefficient": {
-      "type": "number"
+      "type": "number",
+      "x-semio-ui": {
+        "widget": "stepper",
+        "role": "value",
+        "label": {
+          "en": "Temperature term coefficient B",
+          "de": "Temperaturkoeffizient B"
+        },
+        "unit": "1/K",
+        "step": 0.001,
+        "precision": 4,
+        "group": "infiltration",
+        "order": 120
+      }
     },
     "velocityTermCoefficient": {
-      "type": "number"
+      "type": "number",
+      "x-semio-ui": {
+        "widget": "stepper",
+        "role": "value",
+        "label": {
+          "en": "Wind velocity term coefficient C",
+          "de": "Linearer Windkoeffizient C"
+        },
+        "unit": "s/m",
+        "step": 0.001,
+        "precision": 4,
+        "group": "infiltration",
+        "order": 130
+      }
     },
     "velocitySquaredTermCoefficient": {
-      "type": "number"
+      "type": "number",
+      "x-semio-ui": {
+        "widget": "stepper",
+        "role": "value",
+        "label": {
+          "en": "Wind velocity squared term coefficient D",
+          "de": "Quadratischer Windkoeffizient D"
+        },
+        "unit": "s²/m²",
+        "step": 0.001,
+        "precision": 4,
+        "group": "infiltration",
+        "order": 140
+      }
     }
   }
 }

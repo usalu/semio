@@ -11,11 +11,11 @@
 
 use crate::{Iso16757Diff, Iso16757Mutation, Iso16757Snapshot};
 
-const BEFORE: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🧮️replace-part-number-rule/🧮️swaps-the-literal-rule-for-a-height-driven-script/📸️snapshot/⬅️before/🔣️.json");
-const AFTER: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🧮️replace-part-number-rule/🧮️swaps-the-literal-rule-for-a-height-driven-script/📸️snapshot/➡️after/🔣️.json");
-const MUTATION: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🧮️replace-part-number-rule/🧮️swaps-the-literal-rule-for-a-height-driven-script/🦠️mutation/🔣️.json");
-const DIFF: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🧮️replace-part-number-rule/🧮️swaps-the-literal-rule-for-a-height-driven-script/🔺️diff/🔣️.json");
-const OUTCOME: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🧮️replace-part-number-rule/🧮️swaps-the-literal-rule-for-a-height-driven-script/🎯️outcome/🔣️.json");
+const BEFORE: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🧮️replace-part-number-rule/🧮️swaps-literal-rule-height-driven-script/📸️snapshot/⬅️before/🔣️.json");
+const AFTER: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🧮️replace-part-number-rule/🧮️swaps-literal-rule-height-driven-script/📸️snapshot/➡️after/🔣️.json");
+const MUTATION: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🧮️replace-part-number-rule/🧮️swaps-literal-rule-height-driven-script/🦠️mutation/🔣️.json");
+const DIFF: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🧮️replace-part-number-rule/🧮️swaps-literal-rule-height-driven-script/🔺️diff/🔣️.json");
+const OUTCOME: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🧮️replace-part-number-rule/🧮️swaps-literal-rule-height-driven-script/🎯️outcome/🔣️.json");
 
 fn before() -> Iso16757Snapshot {
     serde_json::from_str(BEFORE).expect("the committed before-snapshot decodes")
@@ -60,7 +60,7 @@ async fn restoring_the_literal_rule_restores_before() {
 }
 
 /// 🔣️ Both committed snapshots and the committed `replace-part-number-rule` payload are already canonical:
-/// decode → encode is a fixed point. The committed payload is spelled `{"ReplacePartNumberRule": {"new_rule":
+/// decode → encode is a fixed point. The committed payload is spelled `{"ReplacePartNumberRule": {"newRule":
 /// {"kind": "script", "function_id": …}}}` — `PartNumberRule` is internally tagged on `kind` with camelCase
 /// VARIANTS, but its struct-variant FIELDS keep snake_case.
 #[semio_framework_async_macros::async_test]

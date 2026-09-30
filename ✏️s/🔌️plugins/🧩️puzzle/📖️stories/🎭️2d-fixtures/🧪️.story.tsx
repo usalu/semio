@@ -121,21 +121,11 @@ function applyStoryBoardEvents(state: StoryPuzzle2dState, eventsJson: string): S
         if (Array.isArray(ids)) runtime = { ...runtime, selectedIds: ids.filter((id): id is string => typeof id === "string") };
         break;
       }
-      case "nodeMove": {
-        const { id, x, y } = payload as { id?: string; x?: number; y?: number };
-        fixture = { ...fixture, nodes: fixture.nodes.map((node) => (node.id === id ? { ...node, x, y } : node)) };
-        break;
-      }
-      case "nodeDragEnd": {
-        const moves = payload.moves;
-        if (Array.isArray(moves)) {
-          fixture = {
-            ...fixture,
-            nodes: fixture.nodes.map((node) => {
-              const move = (moves as { id?: string; x?: number; y?: number }[]).find((entry) => entry.id === node.id);
-              return move ? { ...node, x: move.x, y: move.y } : node;
-            }),
-          };
+      case "gesture": {
+        const { kind, targets, dx, dy } = payload as { kind?: string; targets?: unknown; dx?: number; dy?: number };
+        if (kind === "drag" && Array.isArray(targets) && typeof dx === "number" && typeof dy === "number") {
+          const moved = new Set(targets.filter((id): id is string => typeof id === "string"));
+          fixture = { ...fixture, nodes: fixture.nodes.map((node) => (moved.has(node.id) && typeof node.x === "number" && typeof node.y === "number" ? { ...node, x: node.x + dx, y: node.y + dy } : node)) };
         }
         break;
       }

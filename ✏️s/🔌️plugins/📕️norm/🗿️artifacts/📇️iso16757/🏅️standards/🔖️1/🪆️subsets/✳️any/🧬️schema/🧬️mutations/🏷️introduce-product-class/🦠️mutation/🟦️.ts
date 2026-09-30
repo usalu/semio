@@ -2,6 +2,6 @@
 import type { ProductClass } from "../../🟦️.ts";
 
 export interface IntroduceProductClass {
-  product_class: ProductClass;
+  productClass: ProductClass;
   index?: number;
 }

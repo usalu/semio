@@ -153,11 +153,11 @@ use serde_json::json;
 
 #[semio_framework_async_macros::async_test]
 async fn action_arg_def_builder_chain() {
-    let arg = ActionArgDef::slider("scale", LocalizedLabel::data("Scale"), 0.0, 4.0).required().default_value(&1.0).describe("scale factor");
+    let arg = ActionArgDef::slider("scale", LocalizedLabel::data("Scale"), 0.0, 4.0).required().default_value(&1.0).describe(LocalizedLabel::native("scale factor", "Skalierungsfaktor"));
     assert_eq!(arg.id, "scale");
     assert!(arg.required);
     assert_eq!(arg.default, Some(dsl::to_dsl_value(&1.0f64).unwrap()));
-    assert_eq!(arg.description.as_deref(), Some("scale factor"));
+    assert_eq!(arg.description.as_ref().map(|description| description.resolve(Terminology::Native, Locale::De)), Some("Skalierungsfaktor"));
     assert!(matches!(arg.control(), ActionArgControl::Slider { min, max, .. } if min == 0.0 && max == 4.0));
 }
 
@@ -168,12 +168,13 @@ async fn action_arg_def_builder_chain() {
 #[semio_framework_async_macros::async_test]
 async fn six_arg_builder_helpers_derive_the_pre_d6_control() {
     assert_eq!(ActionArgDef::text("t", LocalizedLabel::data("T")).control(), ActionArgControl::Text { placeholder: None });
-    assert_eq!(ActionArgDef::number("n", LocalizedLabel::data("N")).control(), ActionArgControl::Number { min: None, max: None, step: None });
-    assert_eq!(ActionArgDef::slider("s", LocalizedLabel::data("S"), 0.0, 4.0).control(), ActionArgControl::Slider { min: 0.0, max: 4.0, step: None, unit: None });
+    assert_eq!(ActionArgDef::number("n", LocalizedLabel::data("N")).control(), ActionArgControl::Number { min: None, max: None, step: None, unit: None, precision: None, display_unit: None, display_factor: None });
+    assert_eq!(ActionArgDef::slider("s", LocalizedLabel::data("S"), 0.0, 4.0).control(), ActionArgControl::Slider { min: 0.0, max: 4.0, step: None, unit: None, precision: None, display_unit: None, display_factor: None, snaps: Vec::new(), snap_source: None, scale: None });
     assert_eq!(ActionArgDef::toggle("b", LocalizedLabel::data("B")).control(), ActionArgControl::Toggle);
     let options = vec![ActionArgOption::new("x", LocalizedLabel::data("X"))];
     assert_eq!(ActionArgDef::select("o", LocalizedLabel::data("O"), options.clone()).control(), ActionArgControl::Select { options });
-    assert_eq!(ActionArgDef::vec3("v", LocalizedLabel::data("V")).control(), ActionArgControl::Vec3);
+    assert_eq!(ActionArgDef::vector("v", LocalizedLabel::data("V"), 3).control(), ActionArgControl::Vector { dims: 3, min: None, max: None, unit: None, step: None, snaps: Vec::new(), snap_source: None, precision: None, display_unit: None, display_factor: None });
+    assert_eq!(ActionArgDef::index("i", LocalizedLabel::data("I")).control(), ActionArgControl::Stepper { min: Some(0.0), max: Some(u32::MAX as f64), step: Some(1.0), unit: None, precision: None, display_unit: None, display_factor: None, snaps: Vec::new(), snap_source: None });
 }
 
 /// 🧪️ The two host-resolved builders (unused by any current call site, per the P3 reader
@@ -248,26 +249,26 @@ fn interactive_job_classification_is_explicit_and_release_validated() {
 /// leaves for the shapes P3-manifest-schema actually introduces.
 #[semio_framework_async_macros::async_test]
 async fn action_arg_def_json_schema_covers_the_core_shapes() {
-    let text = ActionArgDef::text("name", LocalizedLabel::data("Name")).describe("a name").json_schema();
+    let text = ActionArgDef::text("name", LocalizedLabel::data("Name")).describe(LocalizedLabel::native("a name", "ein Name")).json_schema(Terminology::Native, Locale::En);
     assert_eq!(text["type"], serde_json::json!("string"));
     assert_eq!(text["description"], serde_json::json!("a name"));
 
     let options = vec![ActionArgOption::new("obj", LocalizedLabel::data("Object")), ActionArgOption::new("stl", LocalizedLabel::data("STL"))];
-    let select = ActionArgDef::select("format", LocalizedLabel::data("Format"), options).json_schema();
+    let select = ActionArgDef::select("format", LocalizedLabel::data("Format"), options).json_schema(Terminology::Native, Locale::En);
     assert_eq!(select["type"], serde_json::json!("string"));
     assert_eq!(select["enum"], serde_json::json!(["obj", "stl"]));
 
-    let number = ActionArgDef::slider("scale", LocalizedLabel::data("Scale"), 0.0, 4.0).json_schema();
+    let number = ActionArgDef::slider("scale", LocalizedLabel::data("Scale"), 0.0, 4.0).json_schema(Terminology::Native, Locale::En);
     assert_eq!(number["type"], serde_json::json!("number"));
     assert_eq!(number["minimum"], serde_json::json!(0.0));
     assert_eq!(number["maximum"], serde_json::json!(4.0));
 
-    let vec3 = ActionArgDef::vec3("position", LocalizedLabel::data("Position")).json_schema();
+    let vec3 = ActionArgDef::vector("position", LocalizedLabel::data("Position"), 3).json_schema(Terminology::Native, Locale::En);
     assert_eq!(vec3["type"], serde_json::json!("array"));
     assert_eq!(vec3["minItems"], serde_json::json!(3));
     assert_eq!(vec3["maxItems"], serde_json::json!(3));
 
-    let toggle = ActionArgDef::toggle("flag", LocalizedLabel::data("Flag")).json_schema();
+    let toggle = ActionArgDef::toggle("flag", LocalizedLabel::data("Flag")).json_schema(Terminology::Native, Locale::En);
     assert_eq!(toggle["type"], serde_json::json!("boolean"));
 }
 
@@ -1500,7 +1501,7 @@ fn revision_arguments_are_optional_hidden_and_name_their_scope() {
     for (def, format) in [(ActionArgDef::document_revision("revision", LocalizedLabel::data("Revision")), "documentRevision"), (ActionArgDef::target_revision("revision", LocalizedLabel::data("Revision")), "targetRevision")] {
         assert!(!def.required);
         assert_eq!(def.presentation, Some(super::ArgPresentation::Hidden));
-        assert_eq!(def.json_schema().get("x-semio-format"), Some(&DslValue::String(format.to_string())));
+        assert_eq!(def.json_schema(Terminology::Native, Locale::En).get("x-semio-format"), Some(&DslValue::String(format.to_string())));
         assert!(super::missing_required_args(&[def.clone()], &DslValue::Object(Vec::new())).is_empty(), "an omitted revision is never a missing argument");
     }
 }

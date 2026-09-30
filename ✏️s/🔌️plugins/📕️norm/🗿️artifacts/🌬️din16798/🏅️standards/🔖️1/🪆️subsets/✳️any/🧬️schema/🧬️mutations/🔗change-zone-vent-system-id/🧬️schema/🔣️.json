@@ -10,10 +10,44 @@
   ],
   "properties": {
     "zoneId": {
-      "type": "string"
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Zone",
+          "de": "Zone"
+        },
+        "description": {
+          "en": "The ventilation zone this mutation addresses.",
+          "de": "Die Lüftungszone, die diese Mutation adressiert."
+        },
+        "ref": {
+          "kind": "zone"
+        },
+        "group": "target",
+        "order": 10
+      }
     },
     "newVentSystemId": {
-      "type": "string"
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "value",
+        "label": {
+          "en": "Serving ventilation system",
+          "de": "Versorgende Lüftungsanlage"
+        },
+        "description": {
+          "en": "The ventilation system that supplies the zone.",
+          "de": "Die Lüftungsanlage, die die Zone versorgt."
+        },
+        "ref": {
+          "kind": "ventSystem"
+        },
+        "group": "ventilation",
+        "order": 20
+      }
     }
   }
 }

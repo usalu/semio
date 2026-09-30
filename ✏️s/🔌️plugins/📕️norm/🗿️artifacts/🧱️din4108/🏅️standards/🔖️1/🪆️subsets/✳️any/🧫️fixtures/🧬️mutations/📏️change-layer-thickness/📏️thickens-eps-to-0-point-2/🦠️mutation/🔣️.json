@@ -1,1 +1,7 @@
-{"ChangeLayerThickness":{"element_id":"wall-north","index":2,"new_thickness_m":0.2}}
+{
+  "ChangeLayerThickness": {
+    "elementId": "wall-north",
+    "index": 2,
+    "newThicknessM": 0.2
+  }
+}

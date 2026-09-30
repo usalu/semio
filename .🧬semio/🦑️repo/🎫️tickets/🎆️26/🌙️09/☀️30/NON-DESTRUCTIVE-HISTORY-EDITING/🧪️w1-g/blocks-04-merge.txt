@@ -1,0 +1,205 @@
+<<<<<<< ANCHOR
+    async fn fold_current(&self) -> Result<P, VcsError> {
+        fold_history(&self.envelope, &self.applied_edit_ids).await
+    }
+
+    async fn fold_history(envelope: &ArtifactEnvelope<P, Mutation>, applied_edit_ids: &[String]) -> Result<P, VcsError> {
+        fold_history(envelope, applied_edit_ids).await
+    }
+=======
+    async fn fold_current(&self) -> Result<P, VcsError> {
+        fold_history(&self.envelope, &self.applied_edit_ids, &self.supersessions).await
+    }
+
+    async fn fold_history(envelope: &ArtifactEnvelope<P, Mutation>, applied_edit_ids: &[String], supersessions: &EffectiveSupersessions) -> Result<P, VcsError> {
+        fold_history(envelope, applied_edit_ids, supersessions).await
+    }
+>>>>>>> END
+<<<<<<< ANCHOR
+    /// `Undo` already relies on (id drops out of `applied_edit_ids`, the `Edit` record stays put).
+    #[allow(clippy::type_complexity)]
+    fn replay_suffix_partitioned(
+        base: &P,
+        order: &[String],
+        k: usize,
+        edits: &HashMap<String, Edit<Mutation>>,
+        policy: crate::os_spr::MergePolicy,
+    ) -> Result<(P, Vec<String>, Vec<String>, HashMap<String, Vec<Mutation>>, Vec<crate::os_spr::EditMessages>), VcsError> {
+        let mut state = base.clone();
+        let mut committed_ids = Vec::new();
+        let mut quarantined_ids = Vec::new();
+        let mut rebased_inverse = HashMap::new();
+        let mut replayed = Vec::new();
+        for edit_id in &order[k..] {
+            let Some(edit) = edits.get(edit_id) else {
+                retire_replayed_projection::<P, Mutation>(state);
+                return Err(VcsError::UnknownEdit(edit_id.clone()));
+            };
+            let mut edit_messages = Vec::new();
+            let mut inverse = Vec::new();
+            let mut candidate_state = state.clone();
+            for (op_index, op) in edit.forwards.iter().enumerate() {
+                let outcome = op.diff(&candidate_state).stamp_op_index(op_index as u32);
+                let (diff, op_messages) = outcome.into_parts();
+                edit_messages.extend(op_messages);
+                let mut back = op.inverse(&candidate_state);
+                back.reverse();
+                inverse.extend(back);
+                let applied = diff.apply(&candidate_state);
+                <Mutation::Diff as MutationDiff<P>>::retire_cold(diff);
+                match applied {
+                    Ok(next) => retire_replayed_projection::<P, Mutation>(std::mem::replace(&mut candidate_state, next)),
+                    Err(error) => {
+                        retire_replayed_projection::<P, Mutation>(candidate_state);
+                        retire_replayed_projection::<P, Mutation>(state);
+                        retire_scratch_operations::<P, Mutation>(inverse);
+                        for (_, rebased) in rebased_inverse {
+                            retire_scratch_operations::<P, Mutation>(rebased);
+                        }
+                        return Err(error.into());
+                    }
+                }
+            }
+            let edit_worst = crate::os_spr::worst_level(&edit_messages);
+            replayed.push(crate::os_spr::EditMessages { edit_id: edit_id.clone(), messages: edit_messages });
+            let rejects = match edit_worst {
+                Some(level) => policy.rejects(level),
+                None => false,
+            };
+            if rejects {
+                retire_replayed_projection::<P, Mutation>(candidate_state);
+                retire_scratch_operations::<P, Mutation>(inverse);
+                quarantined_ids.push(edit_id.clone());
+                continue;
+            }
+            retire_replayed_projection::<P, Mutation>(std::mem::replace(&mut state, candidate_state));
+            rebased_inverse.insert(edit_id.clone(), inverse);
+            committed_ids.push(edit_id.clone());
+        }
+        Ok((state, committed_ids, quarantined_ids, rebased_inverse, replayed))
+    }
+=======
+    /// `Undo` already relies on (id drops out of `applied_edit_ids`, the `Edit` record stays put).
+    /// The loop itself is the [`EditReplay`] stepper in `Merge(policy)` mode, driven to completion here; every operation
+    /// reads its effective input under `supersessions`.
+    fn replay_suffix_partitioned(base: Arc<P>, order: &[String], k: usize, edits: &impl ReplayEdits<Mutation>, supersessions: &EffectiveSupersessions, policy: crate::os_spr::MergePolicy) -> Result<EditReplayResult<P, Mutation>, VcsError> {
+        let mut replay = EditReplay::new(ReplayMode::Merge(policy), base, order.to_vec(), k, supersessions.clone(), edits)?;
+        replay.step(edits, &mut || false)?;
+        replay.finish()
+    }
+>>>>>>> END
+<<<<<<< ANCHOR
+        let base = if k == self.applied_edit_ids.len() {
+            self.current.as_ref().clone()
+        } else {
+            match Self::fold_history(&self.envelope, &order[..k]).await {
+                Ok(base) => base,
+                Err(error) => {
+                    retire_scratch_edits::<P, Mutation>(batch);
+                    return self.refuse_with_candidate_dag(candidate_dag, error);
+                }
+            }
+        };
+=======
+        let base = if k == self.applied_edit_ids.len() {
+            Arc::clone(&*self.current)
+        } else {
+            match Self::fold_history(&self.envelope, &order[..k], &self.supersessions).await {
+                Ok(base) => Arc::new(base),
+                Err(error) => {
+                    retire_scratch_edits::<P, Mutation>(batch);
+                    return self.refuse_with_candidate_dag(candidate_dag, error);
+                }
+            }
+        };
+>>>>>>> END
+<<<<<<< ANCHOR
+        let replay = Self::replay_suffix_partitioned(&base, &order, k, &edits_by_id, self.merge_policy);
+        retire_replayed_projection::<P, Mutation>(base);
+        let (state, committed_ids, quarantined_ids, rebased_inverse, replayed) = match replay {
+            Ok(replay) => replay,
+            Err(error) => {
+=======
+        let replay = Self::replay_suffix_partitioned(base, &order, k, &edits_by_id, &self.supersessions, self.merge_policy);
+        let (state, committed_ids, quarantined_ids, rebased_inverse, replayed) = match replay {
+            Ok(mut replay) => (replay.take_state().expect("a finished merge replay holds its projection"), replay.take_committed(), replay.take_quarantined(), replay.take_rebased_inverse(), replay.take_replayed()),
+            Err(error) => {
+>>>>>>> END
+<<<<<<< ANCHOR
+        if let Err(error) = self.ensure_open_conflict_capacity(usize::from(!quarantined_ids.is_empty()) + usize::from(!degraded_ids.is_empty())) {
+            retire_replayed_projection::<P, Mutation>(state);
+=======
+        if let Err(error) = self.ensure_open_conflict_capacity(usize::from(!quarantined_ids.is_empty()) + usize::from(!degraded_ids.is_empty())) {
+            retire_shared_projection::<P, Mutation>(state);
+>>>>>>> END
+<<<<<<< ANCHOR
+        self.edit_sequence = self.applied_edit_ids.len() as i32;
+        self.replace_tail_undo_cache_retained(None)?;
+        self.replace_current_retained(Arc::new(state))?;
+=======
+        self.edit_sequence = self.applied_edit_ids.len() as i32;
+        self.replace_tail_undo_cache_retained(None)?;
+        self.replace_current_retained(state)?;
+        self.revision_dirty_from = Some(self.revision_dirty_from.map_or(k, |dirty| dirty.min(k)));
+>>>>>>> END
+<<<<<<< ANCHOR
+        if !ready_transitions.is_empty() || !self.envelope.transitions.is_empty() {
+            self.admit_remote_transitions(ready_transitions).await?;
+        }
+        self.pending_report.edit_ids = Some(batch.iter().filter(|edit| committed_ids.contains(&edit.id)).map(|edit| edit.id.clone()).collect());
+        self.bump()?;
+        self.last_projection_cause = Some(ArtifactProjectionCause::RemoteIngest);
+=======
+        self.last_projection_cause = None;
+        if !ready_transitions.is_empty() || !self.envelope.transitions.is_empty() {
+            self.admit_remote_transitions(ready_transitions).await?;
+        }
+        self.pending_report.edit_ids = Some(batch.iter().filter(|edit| committed_ids.contains(&edit.id)).map(|edit| edit.id.clone()).collect());
+        self.bump()?;
+        self.last_projection_cause = Some(self.last_projection_cause.filter(|cause| *cause == ArtifactProjectionCause::Replay).unwrap_or(ArtifactProjectionCause::RemoteIngest));
+>>>>>>> END
+<<<<<<< ANCHOR
+            if let Err(error) = self.admit_remote_transitions(ready_transitions).await {
+                return self.refuse_with_candidate_dag(candidate_dag, error);
+            }
+            self.replace_causal_dag_retained(candidate_dag)?;
+            self.pending_report.edit_ids = Some(Vec::new());
+            self.bump()?;
+            self.last_projection_cause = Some(ArtifactProjectionCause::RemoteIngest);
+=======
+            self.last_projection_cause = None;
+            if let Err(error) = self.admit_remote_transitions(ready_transitions).await {
+                return self.refuse_with_candidate_dag(candidate_dag, error);
+            }
+            self.replace_causal_dag_retained(candidate_dag)?;
+            self.pending_report.edit_ids = Some(Vec::new());
+            self.bump()?;
+            self.last_projection_cause = Some(self.last_projection_cause.filter(|cause| *cause == ArtifactProjectionCause::Replay).unwrap_or(ArtifactProjectionCause::RemoteIngest));
+>>>>>>> END
+<<<<<<< ANCHOR
+        let edits_by_id: HashMap<String, Edit<Mutation>> = edits.iter().map(|edit| (edit.id.clone(), (*edit).clone())).collect();
+        let replay = Self::replay_suffix_partitioned(&self.envelope.vcs.initial_snapshot, &fold.applied, 0, &edits_by_id, crate::os_spr::MergePolicy::LaissezFaire);
+        retire_scratch_edits::<P, Mutation>(edits_by_id.into_values());
+        let (state, _, quarantined_ids, mut rebased_inverse, replayed) = match replay {
+            Ok(replay) => replay,
+            Err(error) => {
+                retire_scratch_edits::<P, Mutation>(admitted);
+                return Err(error);
+            }
+        };
+        retire_replayed_projection::<P, Mutation>(state);
+=======
+        let edits_by_id: HashMap<String, Edit<Mutation>> = edits.iter().map(|edit| (edit.id.clone(), (*edit).clone())).collect();
+        let replay = Self::replay_suffix_partitioned(Arc::new(self.envelope.vcs.initial_snapshot.clone()), &fold.applied, 0, &edits_by_id, &fold.supersessions, crate::os_spr::MergePolicy::LaissezFaire);
+        retire_scratch_edits::<P, Mutation>(edits_by_id.into_values());
+        let (state, quarantined_ids, mut rebased_inverse, replayed) = match replay {
+            Ok(mut replay) => (replay.take_state(), replay.take_quarantined(), replay.take_rebased_inverse().into_iter().collect::<HashMap<String, Vec<Mutation>>>(), replay.take_replayed()),
+            Err(error) => {
+                retire_scratch_edits::<P, Mutation>(admitted);
+                return Err(error);
+            }
+        };
+        if let Some(state) = state {
+            retire_shared_projection::<P, Mutation>(state);
+        }
+>>>>>>> END

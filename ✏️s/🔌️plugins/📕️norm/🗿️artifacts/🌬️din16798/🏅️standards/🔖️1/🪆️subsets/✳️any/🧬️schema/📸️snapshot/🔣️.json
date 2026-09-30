@@ -1,4 +1,6 @@
 {
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/norm/din16798/snapshot.json",
   "type": "object",
   "required": [
     "annex",
@@ -208,6 +210,554 @@
     },
     "nightSetbackK": {
       "type": "number"
+    }
+  },
+  "$defs": {
+    "ZoneDocument": {
+      "title": "ZoneDocument",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "name",
+        "usageType",
+        "floorAreaM2",
+        "occupants",
+        "comfortCategory",
+        "pollutionClass",
+        "comfortModel",
+        "tOpWinterC",
+        "tOpSummerC",
+        "airSpeedMS",
+        "clothingClo",
+        "metabolicRateMet",
+        "rhPercent",
+        "outdoorAirSuppliedM3H",
+        "co2Ppm",
+        "illuminanceLx",
+        "noiseDb",
+        "turbulenceIntensityPercent",
+        "ventMethod",
+        "ventSystemId"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "name": {
+          "type": "string"
+        },
+        "usageType": {
+          "type": "string",
+          "x-semio-ui": {
+            "widget": "text",
+            "label": {
+              "en": "Usage type",
+              "de": "Nutzungsart"
+            },
+            "description": {
+              "en": "office, residential, classroom, meeting or retail.",
+              "de": "office (Büro), residential (Wohnen), classroom (Unterrichtsraum), meeting (Besprechung) oder retail (Handel)."
+            }
+          }
+        },
+        "floorAreaM2": {
+          "type": "number",
+          "x-semio-ui": {
+            "widget": "stepper",
+            "label": {
+              "en": "Floor area A",
+              "de": "Grundfläche A"
+            },
+            "unit": "m²",
+            "step": 1,
+            "precision": 1
+          }
+        },
+        "occupants": {
+          "type": "integer",
+          "minimum": 0,
+          "x-semio-ui": {
+            "widget": "stepper",
+            "label": {
+              "en": "Number of occupants",
+              "de": "Personenanzahl"
+            },
+            "step": 1,
+            "precision": 0
+          }
+        },
+        "comfortCategory": {
+          "type": "string",
+          "x-semio-ui": {
+            "widget": "text",
+            "label": {
+              "en": "Indoor environment category",
+              "de": "Kategorie des Innenraumklimas"
+            },
+            "description": {
+              "en": "I (high), II (normal), III (moderate) or IV (low expectation), EN 16798-1.",
+              "de": "I (hohes), II (normales), III (mäßiges) oder IV (geringes Maß an Erwartungen) nach EN 16798-1."
+            }
+          }
+        },
+        "pollutionClass": {
+          "type": "string",
+          "x-semio-ui": {
+            "widget": "text",
+            "label": {
+              "en": "Building pollution class",
+              "de": "Emissionsklasse des Gebäudes"
+            },
+            "description": {
+              "en": "very_low, low or non_low (EN 16798-1 Annex B).",
+              "de": "very_low (sehr schadstoffarm), low (schadstoffarm) oder non_low (nicht schadstoffarm) nach EN 16798-1 Anhang B."
+            }
+          }
+        },
+        "comfortModel": {
+          "type": "string",
+          "x-semio-ui": {
+            "widget": "text",
+            "label": {
+              "en": "Thermal comfort model",
+              "de": "Behaglichkeitsmodell"
+            },
+            "description": {
+              "en": "fixed_hvac (PMV/PPD) or adaptive (EN 16798-1 Annex B.2).",
+              "de": "fixed_hvac (PMV/PPD) oder adaptive (adaptives Modell nach EN 16798-1 Anhang B.2)."
+            }
+          }
+        },
+        "tOpWinterC": {
+          "type": "number",
+          "x-semio-ui": {
+            "widget": "stepper",
+            "label": {
+              "en": "Operative temperature in winter θ_o",
+              "de": "Operative Temperatur im Winter θ_o"
+            },
+            "unit": "°C",
+            "step": 0.5,
+            "precision": 1
+          }
+        },
+        "tOpSummerC": {
+          "type": "number",
+          "x-semio-ui": {
+            "widget": "stepper",
+            "label": {
+              "en": "Operative temperature in summer θ_o",
+              "de": "Operative Temperatur im Sommer θ_o"
+            },
+            "unit": "°C",
+            "step": 0.5,
+            "precision": 1
+          }
+        },
+        "airSpeedMS": {
+          "type": "number",
+          "x-semio-ui": {
+            "widget": "stepper",
+            "label": {
+              "en": "Air speed v_a",
+              "de": "Luftgeschwindigkeit v_a"
+            },
+            "unit": "m/s",
+            "step": 0.05,
+            "precision": 2
+          }
+        },
+        "clothingClo": {
+          "type": "number",
+          "x-semio-ui": {
+            "widget": "stepper",
+            "label": {
+              "en": "Clothing insulation I_cl",
+              "de": "Wärmeisolation der Bekleidung I_cl"
+            },
+            "unit": "clo",
+            "step": 0.1,
+            "precision": 1
+          }
+        },
+        "metabolicRateMet": {
+          "type": "number",
+          "x-semio-ui": {
+            "widget": "stepper",
+            "label": {
+              "en": "Metabolic rate M",
+              "de": "Energieumsatz M"
+            },
+            "unit": "met",
+            "step": 0.1,
+            "precision": 1
+          }
+        },
+        "rhPercent": {
+          "type": "number",
+          "x-semio-ui": {
+            "widget": "slider",
+            "label": {
+              "en": "Relative humidity φ",
+              "de": "Relative Luftfeuchte φ"
+            },
+            "unit": "%",
+            "step": 1,
+            "precision": 0
+          }
+        },
+        "outdoorAirSuppliedM3H": {
+          "type": "number",
+          "x-semio-ui": {
+            "widget": "stepper",
+            "label": {
+              "en": "Supplied outdoor airflow",
+              "de": "Zugeführter Außenluftvolumenstrom"
+            },
+            "unit": "m³/h",
+            "step": 10,
+            "precision": 0
+          }
+        },
+        "co2Ppm": {
+          "type": "number",
+          "x-semio-ui": {
+            "widget": "stepper",
+            "label": {
+              "en": "Indoor CO₂ concentration",
+              "de": "CO₂-Konzentration der Raumluft"
+            },
+            "unit": "ppm",
+            "step": 10,
+            "precision": 0
+          }
+        },
+        "illuminanceLx": {
+          "type": "number",
+          "x-semio-ui": {
+            "widget": "stepper",
+            "label": {
+              "en": "Maintained illuminance Ē_m",
+              "de": "Wartungswert der Beleuchtungsstärke Ē_m"
+            },
+            "unit": "lx",
+            "step": 50,
+            "precision": 0
+          }
+        },
+        "noiseDb": {
+          "type": "number",
+          "x-semio-ui": {
+            "widget": "stepper",
+            "label": {
+              "en": "Sound pressure level L_p",
+              "de": "Schalldruckpegel L_p"
+            },
+            "unit": "dB",
+            "step": 1,
+            "precision": 0
+          }
+        },
+        "turbulenceIntensityPercent": {
+          "type": "number",
+          "x-semio-ui": {
+            "widget": "slider",
+            "label": {
+              "en": "Turbulence intensity Tu",
+              "de": "Turbulenzgrad Tu"
+            },
+            "unit": "%",
+            "step": 1,
+            "precision": 0
+          }
+        },
+        "ventMethod": {
+          "type": "string",
+          "x-semio-ui": {
+            "widget": "text",
+            "label": {
+              "en": "Ventilation design method",
+              "de": "Verfahren zur Lüftungsauslegung"
+            },
+            "description": {
+              "en": "method_1_perceived_air_quality, method_2_limit_concentration or method_3_predefined_rates (EN 16798-1 §6.3).",
+              "de": "method_1_perceived_air_quality (empfundene Luftqualität), method_2_limit_concentration (Grenzkonzentration) oder method_3_predefined_rates (vorgegebene Außenluftraten) nach EN 16798-1 §6.3."
+            }
+          }
+        },
+        "ventSystemId": {
+          "type": "string",
+          "x-semio-ui": {
+            "widget": "reference",
+            "label": {
+              "en": "Serving ventilation system",
+              "de": "Versorgende Lüftungsanlage"
+            },
+            "description": {
+              "en": "The ventilation system that supplies the zone.",
+              "de": "Die Lüftungsanlage, die die Zone versorgt."
+            },
+            "ref": {
+              "kind": "ventSystem"
+            },
+            "role": "value"
+          }
+        }
+      }
+    },
+    "VentSystemDocument": {
+      "title": "VentSystemDocument",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "name",
+        "systemType",
+        "sfpWM3S",
+        "sfpRequiredClass",
+        "heatRecoveryEta",
+        "odaClass",
+        "filterSupClass",
+        "yearsSinceInspection",
+        "humidificationRequiredKgH",
+        "humidificationProvidedKgH",
+        "fanQVM3S",
+        "fanTRunH",
+        "ductClass",
+        "ductTestPressurePa",
+        "ductLeakageM3SM2",
+        "designAirflowM3H"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "name": {
+          "type": "string"
+        },
+        "systemType": {
+          "type": "string",
+          "x-semio-ui": {
+            "widget": "text",
+            "label": {
+              "en": "Ventilation system type",
+              "de": "Art der Lüftungsanlage"
+            },
+            "description": {
+              "en": "central_mech (central mechanical), decentral_mech (decentral mechanical) or natural.",
+              "de": "central_mech (zentral mechanisch), decentral_mech (dezentral mechanisch) oder natural (freie Lüftung)."
+            }
+          }
+        },
+        "sfpWM3S": {
+          "type": "number",
+          "x-semio-ui": {
+            "widget": "stepper",
+            "label": {
+              "en": "Specific fan power SFP",
+              "de": "Spezifische Ventilatorleistung SFP"
+            },
+            "unit": "W/(m³/s)",
+            "step": 50,
+            "precision": 0
+          }
+        },
+        "sfpRequiredClass": {
+          "type": "integer",
+          "minimum": 0,
+          "x-semio-ui": {
+            "widget": "stepper",
+            "label": {
+              "en": "Required SFP class",
+              "de": "Geforderte SFP-Klasse"
+            },
+            "description": {
+              "en": "EN 16798-3 class SFP 0 (≤ 300 W/(m³/s)) to SFP 7 (≤ 6500 W/(m³/s)).",
+              "de": "Klasse nach EN 16798-3 von SFP 0 (≤ 300 W/(m³/s)) bis SFP 7 (≤ 6500 W/(m³/s))."
+            },
+            "step": 1,
+            "precision": 0
+          }
+        },
+        "heatRecoveryEta": {
+          "type": "number",
+          "x-semio-ui": {
+            "widget": "slider",
+            "label": {
+              "en": "Heat recovery temperature ratio η_t",
+              "de": "Temperaturänderungsgrad der Wärmerückgewinnung η_t"
+            },
+            "unit": "1",
+            "displayUnit": "%",
+            "displayFactor": 100,
+            "step": 0.01,
+            "precision": 0
+          }
+        },
+        "odaClass": {
+          "type": "string",
+          "x-semio-ui": {
+            "widget": "text",
+            "label": {
+              "en": "Outdoor air class ODA",
+              "de": "Außenluftklasse ODA"
+            },
+            "description": {
+              "en": "ODA1 (clean) to ODA4 (extremely high concentrations).",
+              "de": "ODA1 (rein) bis ODA4 (extrem hohe Konzentrationen)."
+            }
+          }
+        },
+        "filterSupClass": {
+          "type": "string",
+          "x-semio-ui": {
+            "widget": "text",
+            "label": {
+              "en": "Supply air filter class",
+              "de": "Filterklasse der Zuluft"
+            },
+            "description": {
+              "en": "ISO 16890 class, e.g. ePM1_80_G, ePM1_80, ePM1_55, ePM2_5_65, ePM10_50 or coarse.",
+              "de": "Klasse nach ISO 16890, z. B. ePM1_80_G, ePM1_80, ePM1_55, ePM2_5_65, ePM10_50 oder coarse (Grobstaub)."
+            }
+          }
+        },
+        "yearsSinceInspection": {
+          "type": "integer",
+          "minimum": 0,
+          "x-semio-ui": {
+            "widget": "stepper",
+            "label": {
+              "en": "Years since last inspection",
+              "de": "Jahre seit der letzten Inspektion"
+            },
+            "unit": "a",
+            "step": 1,
+            "precision": 0
+          }
+        },
+        "humidificationRequiredKgH": {
+          "type": "number",
+          "x-semio-ui": {
+            "label": {
+              "en": "Required humidification",
+              "de": "Erforderliche Befeuchtungsleistung"
+            },
+            "widget": "stepper",
+            "unit": "kg/h",
+            "precision": 2
+          }
+        },
+        "humidificationProvidedKgH": {
+          "type": "number",
+          "x-semio-ui": {
+            "label": {
+              "en": "Provided humidification",
+              "de": "Vorhandene Befeuchtungsleistung"
+            },
+            "widget": "stepper",
+            "unit": "kg/h",
+            "precision": 2
+          }
+        },
+        "fanQVM3S": {
+          "type": "number",
+          "x-semio-ui": {
+            "label": {
+              "en": "Fan volume flow q_v",
+              "de": "Ventilatorvolumenstrom q_v"
+            },
+            "widget": "stepper",
+            "unit": "m³/s",
+            "precision": 3
+          }
+        },
+        "fanTRunH": {
+          "type": "number",
+          "x-semio-ui": {
+            "label": {
+              "en": "Daily fan runtime t",
+              "de": "Tägliche Ventilatorlaufzeit t"
+            },
+            "widget": "stepper",
+            "unit": "h",
+            "precision": 1
+          }
+        },
+        "ductClass": {
+          "type": "string",
+          "x-semio-ui": {
+            "widget": "text",
+            "label": {
+              "en": "Duct airtightness class",
+              "de": "Luftdichtheitsklasse der Luftleitungen"
+            },
+            "description": {
+              "en": "A, B, C or D.",
+              "de": "A, B, C oder D."
+            }
+          }
+        },
+        "ductTestPressurePa": {
+          "type": "number",
+          "x-semio-ui": {
+            "label": {
+              "en": "Duct test pressure",
+              "de": "Prüfdruck der Luftleitung"
+            },
+            "widget": "stepper",
+            "unit": "Pa",
+            "precision": 0
+          }
+        },
+        "ductLeakageM3SM2": {
+          "type": "number",
+          "x-semio-ui": {
+            "widget": "stepper",
+            "label": {
+              "en": "Duct air leakage rate f",
+              "de": "Leckluftrate der Luftleitungen f"
+            },
+            "unit": "m³/(s·m²)",
+            "step": 0.0001,
+            "precision": 5
+          }
+        },
+        "designAirflowM3H": {
+          "type": "number",
+          "x-semio-ui": {
+            "widget": "stepper",
+            "label": {
+              "en": "Design outdoor airflow q_V",
+              "de": "Auslegungs-Außenluftvolumenstrom q_V"
+            },
+            "unit": "m³/h",
+            "step": 10,
+            "precision": 0
+          }
+        }
+      }
+    },
+    "AnnexChoice": {
+      "title": "AnnexChoice",
+      "type": "string",
+      "enum": [
+        "En",
+        "De"
+      ],
+      "x-semio-ui": {
+        "options": {
+          "En": {
+            "en": "Recommended CEN values (EN)",
+            "de": "Empfohlene CEN-Werte (EN)"
+          },
+          "De": {
+            "en": "German national annex (DIN EN)",
+            "de": "Deutscher Nationaler Anhang (DIN EN)"
+          }
+        }
+      }
     }
   }
 }

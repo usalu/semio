@@ -1,1 +1,65 @@
-{"$schema":"http://json-schema.org/draft-07/schema#","title":"ReorderFrame","type":"object"}
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/layout/layout/mutation/reorder-frame/schema.json",
+  "title": "ReorderFrame",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "pageId",
+    "frameId",
+    "forward"
+  ],
+  "properties": {
+    "pageId": {
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Page",
+          "de": "Seite"
+        },
+        "ref": {
+          "kind": "page"
+        },
+        "group": "target",
+        "order": 10
+      }
+    },
+    "frameId": {
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Frame",
+          "de": "Rahmen"
+        },
+        "ref": {
+          "kind": "frame",
+          "domain": "elements",
+          "granularity": "element"
+        },
+        "group": "target",
+        "order": 20
+      }
+    },
+    "forward": {
+      "type": "boolean",
+      "x-semio-ui": {
+        "widget": "toggle",
+        "role": "value",
+        "label": {
+          "en": "Bring forward",
+          "de": "Nach vorn holen"
+        },
+        "description": {
+          "en": "On moves the frame one step forward in the paint order, off one step backward.",
+          "de": "Ein holt den Rahmen in der Zeichenreihenfolge einen Schritt nach vorn, aus schiebt ihn einen Schritt zurück."
+        },
+        "group": "order",
+        "order": 30
+      }
+    }
+  }
+}

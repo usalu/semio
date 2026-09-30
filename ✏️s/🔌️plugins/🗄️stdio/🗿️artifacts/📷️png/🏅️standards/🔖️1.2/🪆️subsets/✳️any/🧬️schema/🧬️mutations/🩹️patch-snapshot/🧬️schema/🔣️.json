@@ -6,7 +6,6 @@
   "additionalProperties": false,
   "required": ["patch"],
   "properties": {
-    "patch": { "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/snapshot-patch/schema.json" },
-    "mutation": { "const": "patch-snapshot", "description": "Aggregate discriminator spliced in by PngMutation; absent when the payload stands alone." }
+    "patch": { "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/registry/schema.json#/$defs/SnapshotPatch" }
   }
 }

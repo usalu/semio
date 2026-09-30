@@ -18,7 +18,13 @@
       "minimum": 0
     },
     "port": {
-      "$ref": "#/$defs/SemioGraphPort"
+      "$ref": "#/$defs/SemioGraphPort",
+      "x-semio-ui": {
+        "label": {
+          "en": "Port",
+          "de": "Port"
+        }
+      }
     }
   },
   "$defs": {
@@ -46,7 +52,23 @@
           "type": "string"
         },
         "kind": {
-          "$ref": "#/$defs/SemioGraphPortKind"
+          "$ref": "#/$defs/SemioGraphPortKind",
+          "x-semio-ui": {
+            "options": {
+              "in": {
+                "en": "Input",
+                "de": "Eingang"
+              },
+              "out": {
+                "en": "Output",
+                "de": "Ausgang"
+              },
+              "inOut": {
+                "en": "Input and output",
+                "de": "Ein- und Ausgang"
+              }
+            }
+          }
         }
       }
     },

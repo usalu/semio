@@ -116,17 +116,13 @@ fn round_trip_oracle(ctx: &Context) -> Result<Outcome, String> {
 mod subject {
     use super::mutable_input;
     use semio_repo_test_host::{Context, Json, Outcome};
-    use semio_s_artifact_stdio_pdf::standards::v1_4::subsets::a::schema::mutations::{apply_a_conformance_mutation, inverse_a_conformance_mutation, ClearPageText, PdfA1Mutation, SetPageText};
+    use semio_s_artifact_stdio_pdf::standards::v1_4::subsets::a::schema::mutations::{apply_a_conformance_mutation, decode_a_conformance_mutation_payload, inverse_a_conformance_mutation, PdfA1Mutation};
     use semio_s_artifact_stdio_pdf::standards::v1_4::subsets::base::io::{decode_pdf, encode_pdf};
     use semio_s_plugin_stdio_test_oracle::artifacts::pdf::standards::v1_4::subsets::a::project_conformance;
 
+    /// 📨️ The scenario's `{kind, params}` row: `params` is the leaf wire payload, decoded generically.
     fn mutation_from_spec(spec: &Json) -> Result<PdfA1Mutation, String> {
-        let params = spec.get("params").ok_or("Missing mutation parameters")?;
-        Ok(match spec.str("kind").as_str() {
-            "set-page-text" => PdfA1Mutation::SetPageText(SetPageText { text: params.str("text") }),
-            "clear-page-text" => PdfA1Mutation::ClearPageText(ClearPageText {}),
-            other => return Err(format!("Unknown subject mutation {other:?}")),
-        })
+        decode_a_conformance_mutation_payload(&spec.str("kind"), &spec.get("params").cloned().unwrap_or(Json::Null).to_string())
     }
 
     pub fn mutate(ctx: &Context) -> Result<Outcome, String> {

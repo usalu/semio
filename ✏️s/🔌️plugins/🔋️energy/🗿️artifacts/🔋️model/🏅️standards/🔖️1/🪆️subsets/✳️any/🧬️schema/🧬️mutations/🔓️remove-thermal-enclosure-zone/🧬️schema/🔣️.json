@@ -5,15 +5,57 @@
   "type": "object",
   "additionalProperties": false,
   "required": [
+    "mutation",
     "id",
     "zoneId"
   ],
   "properties": {
+    "mutation": {
+      "const": "removeThermalEnclosureZone"
+    },
     "id": {
-      "type": "integer"
+      "type": "integer",
+      "minimum": 0,
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Thermal enclosure",
+          "de": "Zonenverbund"
+        },
+        "description": {
+          "en": "The thermal enclosure this mutation changes, by id.",
+          "de": "Zonenverbund, den diese Mutation ändert, per ID."
+        },
+        "ref": {
+          "kind": "thermalEnclosure"
+        },
+        "group": "target",
+        "order": 10
+      }
     },
     "zoneId": {
-      "type": "integer"
+      "type": "integer",
+      "minimum": 0,
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Zone",
+          "de": "Zone"
+        },
+        "description": {
+          "en": "Zone to remove, by id.",
+          "de": "Zu entfernende Zone, per ID."
+        },
+        "ref": {
+          "kind": "zone",
+          "domain": "energyModel",
+          "granularity": "zone"
+        },
+        "group": "member",
+        "order": 20
+      }
     }
   }
 }

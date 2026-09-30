@@ -14,7 +14,7 @@
 //! implementation.
 
 use semio_repo_test_host::{Adapter, Context, Json, Outcome};
-use semio_s_plugin_stdio_test_oracle::artifacts::html::standards::v5::subsets::any::{oracle_apply_mutation, oracle_apply_mutation_inverse, project_html_5};
+use semio_s_plugin_stdio_test_oracle::artifacts::html::standards::v5::subsets::any::{oracle_apply_mutation, oracle_apply_mutation_inverse, oracle_round_trip, project_html_5};
 
 
 //#region 🔖️Input
@@ -30,9 +30,9 @@ fn mutable_input(ctx: &Context) -> Result<Vec<u8>, String> {
 //#region 🔖️Oracle
 /// 🔮️ One handler shared by every `mutate-<kind>` scenario id -- the scenario's own `<id>`/`<params>`
 /// spec is carried in its doc string, not in the function it dispatches to.
-/// 👁️ The forward mutation, with the OBSERVABILITY law asserted in role: a kind other than
-/// `no-mutation` whose parameters leave the semantic projection exactly where it was has not been
-/// tested by this scenario at all -- it proves only that the reference library declined to error.
+/// 👁️ The forward mutation, with the OBSERVABILITY law asserted in role: a kind whose parameters
+/// leave the semantic projection exactly where it was has not been tested by this scenario at all
+/// -- it proves only that the reference library declined to error.
 /// Every `Examples` row is chosen against the real artifact's actual content for that reason, and
 /// this check is what keeps them so.
 fn mutate_oracle(ctx: &Context) -> Result<Outcome, String> {
@@ -41,7 +41,7 @@ fn mutate_oracle(ctx: &Context) -> Result<Outcome, String> {
     let kind = spec.str("kind");
     let bytes = oracle_apply_mutation(&input, &spec)?;
     let projection = project_html_5(&bytes)?;
-    if kind != "no-mutation" && projection_divergence(&projection, &project_html_5(&input)?).is_none() {
+    if projection_divergence(&projection, &project_html_5(&input)?).is_none() {
         return Err(format!("{kind:?} left the semantic projection exactly as it found it -- a mutation whose parameters make it a no-op against the real artifact is not a test of that kind"));
     }
     Ok(Outcome::with_raw(bytes, projection))
@@ -80,8 +80,8 @@ fn inverse_oracle(ctx: &Context) -> Result<Outcome, String> {
 }
 
 /// 🔒️ The ORACLE side of the no-byte-pass-through law, ASSERTED rather than narrated: `html5ever`
-/// fully parses the real document and re-serializes it from its own tree alone (the same
-/// "no-mutation" routing `oracle_apply_mutation` already gives every other kind), so BOTH halves of
+/// fully parses the real document and re-serializes it from its own tree alone
+/// (`oracle_round_trip`), so BOTH halves of
 /// the law are checkable here without a subject -- the re-encoded bytes must differ from the input
 /// (HTML 5 is not a byte-preserving carrier: the tree builder inserts implied elements and the
 /// serializer re-derives every tag and character reference from the tree, so bit-identity would
@@ -90,8 +90,7 @@ fn inverse_oracle(ctx: &Context) -> Result<Outcome, String> {
 /// here is real loss in `html5ever`'s own write/read cycle, not writer freedom.
 fn identity_round_trip_oracle(ctx: &Context) -> Result<Outcome, String> {
     let input = mutable_input(ctx)?;
-    let no_mutation = Json::Object(vec![("kind".to_string(), Json::String("no-mutation".to_string())), ("params".to_string(), Json::Object(vec![]))]);
-    let bytes = oracle_apply_mutation(&input, &no_mutation)?;
+    let bytes = oracle_round_trip(&input)?;
     if bytes == input {
         return Err("byte pass-through: the oracle's re-encoded bytes are bit-identical to the input, so nothing here proves the document was parsed rather than copied".to_string());
     }
@@ -109,132 +108,22 @@ fn identity_round_trip_oracle(ctx: &Context) -> Result<Outcome, String> {
 mod subject {
     use super::mutable_input;
     use semio_repo_test_host::{Context, Json, Outcome};
-    use semio_s_artifact_stdio_html::standards::v5::subsets::any::schema::mutations::{
-        apply_html_mutation, insert_node::InsertNode, remove_node::RemoveNode, set_attribute::SetAttribute, set_comment::SetComment, set_doctype::SetDoctype, set_element_name::SetElementName, set_raw_text::SetRawText, set_snapshot::SetSnapshot, set_text::SetText, HtmlMutation,
-    };
-    use semio_s_artifact_stdio_html::standards::v5::subsets::any::schema::snapshot::{element_attr, node_at, parse_html_document, write_html_document, HtmlAttr, HtmlNode, HtmlSnapshot, RawTextKind, STDIO_HTML_DOCUMENT_SCHEMA};
+    use semio_s_artifact_stdio_html::standards::v5::subsets::any::schema::mutations::{apply_html_mutation, decode_html_mutation_payload_json, inverse_html_mutation, HtmlMutation};
+    use semio_s_artifact_stdio_html::standards::v5::subsets::any::schema::snapshot::{parse_html_document, write_html_document};
     use semio_s_plugin_stdio_test_oracle::artifacts::html::standards::v5::subsets::any::project_html_5;
 
     //#region 🔖️SpecCodec
-    fn number_field(value: &Json, key: &str) -> f64 {
-        match value.get(key) {
-            Some(Json::Number(number)) => *number,
-            _ => 0.0,
-        }
-    }
-
-    fn usize_field(value: &Json, key: &str) -> usize {
-        number_field(value, key).max(0.0) as usize
-    }
-
-    fn usize_path(items: Vec<Json>) -> Vec<usize> {
-        items.iter().map(|item| match item { Json::Number(number) => number.max(0.0) as usize, _ => 0 }).collect()
-    }
-
-    fn optional_string(value: &Json, key: &str) -> Option<String> {
-        match value.get(key) {
-            Some(Json::String(text)) => Some(text.clone()),
-            _ => None,
-        }
-    }
-
-    /// 🏳️ Tri-state attribute value read from a mutation spec's `value` key -- mirrors the oracle's
-    /// own `tristate_value` exactly: the key ABSENT means "remove" (`None`), present and `Json::Null`
-    /// means "valueless" (`Some(None)`), present and a string means "set to that value" (`Some(Some(v))`).
-    fn tristate_value(params: &Json) -> Option<Option<String>> {
-        match params.get("value") {
-            None => None,
-            Some(Json::Null) => Some(None),
-            Some(Json::String(text)) => Some(Some(text.clone())),
-            Some(_) => Some(None),
-        }
-    }
-
-    /// 🔎️ The same owned node-spec JSON grammar the oracle side speaks (`{"kind":"element","name":
-    /// ...,"attributes":[{"name":...,"value":string|null}],"children":[...]}` |
-    /// `{"kind":"text"|"comment","text":...}` | `{"kind":"rawText","parentKind":"script"|"style",
-    /// "text":...}`), decoded into the PRODUCTION `HtmlNode` here instead of the oracle's own
-    /// independent tree type.
-    fn json_to_html_node(value: &Json) -> Result<HtmlNode, String> {
-        match value.str("kind").as_str() {
-            "element" => Ok(HtmlNode::Element {
-                name: value.str("name"),
-                attributes: value.array("attributes").iter().map(|attr| HtmlAttr { name: attr.str("name"), value: match attr.get("value") { Some(Json::String(text)) => Some(text.clone()), _ => None } }).collect(),
-                children: value.array("children").iter().map(json_to_html_node).collect::<Result<Vec<_>, _>>()?,
-            }),
-            "text" => Ok(HtmlNode::Text { text: value.str("text") }),
-            "comment" => Ok(HtmlNode::Comment { text: value.str("text") }),
-            "rawText" => Ok(HtmlNode::RawText { parent_kind: if value.str("parentKind") == "style" { RawTextKind::Style } else { RawTextKind::Script }, text: value.str("text") }),
-            other => Err(format!("unknown node kind {other:?}")),
-        }
-    }
-
-    /// 📄️ The scenario's `<id>`/`<params>` spec turned into the ONE typed `HtmlMutation` this subset
-    /// declares for it.
+    /// 📄️ The scenario's `<id>`/`<params>` spec decoded as the leaf wire payload it is, through the aggregate's own
+    /// derive-generated payload constructor — never re-declared field by field here.
     fn mutation_from_spec(spec: &Json) -> Result<HtmlMutation, String> {
-        let params = spec.get("params").cloned().unwrap_or(Json::Null);
-        match spec.str("kind").as_str() {
-            "set-snapshot" => Ok(HtmlMutation::SetSnapshot(SetSnapshot { snapshot: HtmlSnapshot { schema: STDIO_HTML_DOCUMENT_SCHEMA.into(), doctype: optional_string(&params, "doctype"), root: json_to_html_node(&params.get("root").cloned().unwrap_or(Json::Null))? } })),
-            "set-doctype" => Ok(HtmlMutation::SetDoctype(SetDoctype { doctype: optional_string(&params, "doctype") })),
-            "insert-node" => Ok(HtmlMutation::InsertNode(InsertNode { parent: usize_path(params.array("parent")), index: usize_field(&params, "index"), node: json_to_html_node(&params.get("node").cloned().unwrap_or(Json::Null))? })),
-            "remove-node" => Ok(HtmlMutation::RemoveNode(RemoveNode { parent: usize_path(params.array("parent")), index: usize_field(&params, "index") })),
-            "set-element-name" => Ok(HtmlMutation::SetElementName(SetElementName { path: usize_path(params.array("path")), name: params.str("name") })),
-            "set-attribute" => Ok(HtmlMutation::SetAttribute(SetAttribute { path: usize_path(params.array("path")), name: params.str("name"), value: tristate_value(&params) })),
-            "set-text" => Ok(HtmlMutation::SetText(SetText { path: usize_path(params.array("path")), text: params.str("text") })),
-            "set-comment" => Ok(HtmlMutation::SetComment(SetComment { path: usize_path(params.array("path")), text: params.str("text") })),
-            "set-raw-text" => Ok(HtmlMutation::SetRawText(SetRawText { path: usize_path(params.array("path")), text: params.str("text") })),
-            other => Err(format!("mutation kind {other:?} has no subject implementation")),
-        }
+        decode_html_mutation_payload_json(&spec.str("kind"), &spec.get("params").cloned().unwrap_or(Json::Null).to_string())
     }
     //#endregion 🔖️SpecCodec
-
-    //#region 🔖️Inverse
-    /// ↩️ `HtmlMutation::inverse` in closed form -- every variant's own `Mutation::inverse` arm
-    /// (`../../🏅️standards/🔖️5/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦀️.rs`), transplanted
-    /// rather than called through the trait, same precedent `💎️mutate-xml-1-0`'s own `inverse_of` gives:
-    /// written in closed form so this adapter needs no extra crate dependency beyond
-    /// `semio-s-plugin-stdio` itself, and reads `base`'s PRIOR state through the same `node_at`/
-    /// `element_attr` navigation helpers the production `inverse()` itself uses.
-    fn inverse_of(mutation: &HtmlMutation, base: &HtmlSnapshot) -> HtmlMutation {
-        match mutation {
-            HtmlMutation::SetSnapshot(_) => HtmlMutation::SetSnapshot(SetSnapshot { snapshot: base.clone() }),
-            HtmlMutation::SetDoctype(_) => HtmlMutation::SetDoctype(SetDoctype { doctype: base.doctype.clone() }),
-            HtmlMutation::InsertNode(InsertNode { parent, index, .. }) => HtmlMutation::RemoveNode(RemoveNode { parent: parent.clone(), index: *index }),
-            HtmlMutation::RemoveNode(RemoveNode { parent, index }) => match node_at(base, parent) {
-                Ok(HtmlNode::Element { children, .. }) => match children.get(*index) {
-                    Some(node) => HtmlMutation::InsertNode(InsertNode { parent: parent.clone(), index: *index, node: node.clone() }),
-                    None => HtmlMutation::SetSnapshot(SetSnapshot { snapshot: base.clone() }),
-                },
-                _ => HtmlMutation::SetSnapshot(SetSnapshot { snapshot: base.clone() }),
-            },
-            HtmlMutation::SetElementName(SetElementName { path, .. }) => match node_at(base, path) {
-                Ok(HtmlNode::Element { name, .. }) => HtmlMutation::SetElementName(SetElementName { path: path.clone(), name: name.clone() }),
-                _ => HtmlMutation::SetSnapshot(SetSnapshot { snapshot: base.clone() }),
-            },
-            HtmlMutation::SetAttribute(SetAttribute { path, name, .. }) => {
-                let prior = node_at(base, path).ok().and_then(|node| element_attr(node, name)).cloned();
-                HtmlMutation::SetAttribute(SetAttribute { path: path.clone(), name: name.clone(), value: prior })
-            }
-            HtmlMutation::SetText(SetText { path, .. }) => {
-                let prior = match node_at(base, path) { Ok(HtmlNode::Text { text }) => text.clone(), _ => String::new() };
-                HtmlMutation::SetText(SetText { path: path.clone(), text: prior })
-            }
-            HtmlMutation::SetComment(SetComment { path, .. }) => {
-                let prior = match node_at(base, path) { Ok(HtmlNode::Comment { text }) => text.clone(), _ => String::new() };
-                HtmlMutation::SetComment(SetComment { path: path.clone(), text: prior })
-            }
-            HtmlMutation::SetRawText(SetRawText { path, .. }) => {
-                let prior = match node_at(base, path) { Ok(HtmlNode::RawText { text, .. }) => text.clone(), _ => String::new() };
-                HtmlMutation::SetRawText(SetRawText { path: path.clone(), text: prior })
-            }
-        }
-    }
-    //#endregion 🔖️Inverse
 
     //#region 🔖️Handlers
     /// 👁️ The forward mutation, with the OBSERVABILITY law asserted IN ROLE -- the same law
     /// `super::mutate_oracle` asserts on its side, and the feature's own second `Then` step
-    /// ("the semantic projection moved, unless the kind is no-mutation"). Without it a mutation the
+    /// ("the semantic projection moved"). Without it a mutation the
     /// subset REFUSES (`apply_html_mutation` returns an error `MutationOutcome` and leaves the
     /// snapshot untouched) is indistinguishable here from one it performed, and the handler reports a
     /// green scenario carrying the UNMUTATED document -- which is exactly what this case did until
@@ -250,7 +139,7 @@ mod subject {
         let outcome = apply_html_mutation(&mut snapshot, &mutation);
         let bytes = write_html_document(&snapshot).into_bytes();
         let projection = project_html_5(&bytes)?;
-        if kind != "no-mutation" && super::projection_divergence(&projection, &before).is_none() {
+        if super::projection_divergence(&projection, &before).is_none() {
             return Err(format!("{kind:?} left the semantic projection exactly as it found it -- the subset either refused the mutation or addressed nothing; its own outcome messages were {:?}", outcome.messages()));
         }
         Ok(Outcome::with_raw(bytes, projection))
@@ -265,11 +154,11 @@ mod subject {
         let base = parse_html_document(&text).map_err(|error| format!("parse_html_document failed: {error}"))?;
         let spec = ctx.doc_json()?;
         let mutation = mutation_from_spec(&spec)?;
-        let undo = inverse_of(&mutation, &base);
+        let undo = inverse_html_mutation(&mutation, &base);
         let original = project_html_5(&write_html_document(&base).into_bytes())?;
         let mut snapshot = base;
         let forward = apply_html_mutation(&mut snapshot, &mutation);
-        let backward = apply_html_mutation(&mut snapshot, &undo);
+        let backward: Vec<_> = undo.iter().map(|step| apply_html_mutation(&mut snapshot, step).messages().to_vec()).collect();
         let bytes = write_html_document(&snapshot).into_bytes();
         let projection = project_html_5(&bytes)?;
         if let Some(divergence) = super::projection_divergence(&projection, &original) {
@@ -277,7 +166,7 @@ mod subject {
                 "inverse law violated: {:?} followed by its own inverse did not restore the original document's projection -- {divergence}; forward outcome messages {:?}, undo outcome messages {:?}",
                 spec.str("kind"),
                 forward.messages(),
-                backward.messages()
+                backward
             ));
         }
         Ok(Outcome::with_raw(bytes, projection))
@@ -313,11 +202,11 @@ mod subject {
 /// base ids, which the host resolves for every Examples row, and plain scenarios under their own ids.
 pub fn adapter() -> Adapter {
     let mut built = Adapter::new("rust");
-    built = built.oracle("mutate", mutate_oracle).oracle("no-mutation-baseline-mutate", mutate_oracle).oracle("inverse", inverse_oracle).oracle("no-mutation-baseline-inverse", inverse_oracle);
+    built = built.oracle("mutate", mutate_oracle).oracle("inverse", inverse_oracle);
     built = built.oracle("identity-round-trip", identity_round_trip_oracle);
     #[cfg(feature = "sut")]
     {
-        built = built.subject("mutate", subject::mutate).subject("no-mutation-baseline-mutate", subject::mutate).subject("inverse", subject::inverse).subject("no-mutation-baseline-inverse", subject::inverse);
+        built = built.subject("mutate", subject::mutate).subject("inverse", subject::inverse);
         built = built.subject("identity-round-trip", subject::identity_round_trip);
     }
     built

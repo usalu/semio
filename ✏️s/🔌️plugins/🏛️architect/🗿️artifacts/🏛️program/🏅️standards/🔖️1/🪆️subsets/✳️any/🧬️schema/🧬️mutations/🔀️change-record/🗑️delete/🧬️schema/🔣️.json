@@ -5,12 +5,34 @@
   "type": "object",
   "additionalProperties": false,
   "required": [
+    "mutation",
     "id"
   ],
   "properties": {
+    "mutation": {
+      "const": "deleteChangeRecord"
+    },
     "id": {
-      "type": "integer",
-      "minimum": 0
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Change Record",
+          "de": "Änderungseintrag"
+        },
+        "description": {
+          "en": "The change record to delete.",
+          "de": "Zu löschender Eintrag vom Typ „Änderungseintrag“."
+        },
+        "ref": {
+          "kind": "changeRecord",
+          "domain": "program",
+          "granularity": "entity"
+        },
+        "group": "target",
+        "order": 10
+      }
     }
   }
 }

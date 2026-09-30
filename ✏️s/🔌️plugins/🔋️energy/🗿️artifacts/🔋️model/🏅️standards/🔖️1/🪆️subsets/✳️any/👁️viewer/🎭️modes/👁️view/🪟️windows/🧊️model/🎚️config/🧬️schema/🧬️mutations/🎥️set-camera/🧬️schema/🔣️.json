@@ -4,17 +4,21 @@
   "title": "SetCamera",
   "type": "object",
   "additionalProperties": false,
-  "required": ["camera"],
+  "required": ["kind","camera"],
   "properties": {
+    "kind": {
+      "const": "set-camera"
+    },
     "camera": {
       "type": "object",
       "additionalProperties": false,
       "required": ["position", "target", "zoom"],
       "properties": {
-        "position": { "type": "array", "items": { "type": "number" }, "minItems": 3, "maxItems": 3 },
-        "target": { "type": "array", "items": { "type": "number" }, "minItems": 3, "maxItems": 3 },
-        "zoom": { "type": "number", "exclusiveMinimum": 0 }
-      }
+        "position": { "type": "array", "items": { "type": "number" }, "minItems": 3, "maxItems": 3, "x-semio-ui": { "widget": "vector", "role": "value", "label": { "en": "Position", "de": "Position" }, "description": { "en": "Eye point in model metres, z up.", "de": "Augpunkt in Modellmetern, z nach oben." }, "unit": "m", "step": 0.1, "group": "camera", "order": 10 } },
+        "target": { "type": "array", "items": { "type": "number" }, "minItems": 3, "maxItems": 3, "x-semio-ui": { "widget": "vector", "role": "value", "label": { "en": "Target", "de": "Zielpunkt" }, "description": { "en": "Point the camera orbits and looks at.", "de": "Punkt, um den die Kamera kreist und auf den sie blickt." }, "unit": "m", "step": 0.1, "group": "camera", "order": 20 } },
+        "zoom": { "type": "number", "exclusiveMinimum": 0, "x-semio-ui": { "widget": "stepper", "role": "value", "label": { "en": "Zoom", "de": "Zoom" }, "step": 0.1, "precision": 2, "group": "camera", "order": 30 } }
+      },
+      "x-semio-ui": { "role": "value", "label": { "en": "Camera", "de": "Kamera" }, "description": { "en": "Orbit pose of this 3d window.", "de": "Orbit-Pose dieses 3D-Fensters." }, "group": "camera", "order": 10 }
     }
   }
 }

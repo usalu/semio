@@ -14,10 +14,40 @@
       "type": "string"
     },
     "source": {
-      "type": "string"
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "value",
+        "label": {
+          "en": "Source Node",
+          "de": "Quellknoten"
+        },
+        "description": {
+          "en": "The node the connection starts at.",
+          "de": "Der Knoten, an dem die Verbindung beginnt."
+        },
+        "ref": {
+          "kind": "node"
+        }
+      }
     },
     "target": {
-      "type": "string"
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "value",
+        "label": {
+          "en": "Target Node",
+          "de": "Zielknoten"
+        },
+        "description": {
+          "en": "The node the connection ends at.",
+          "de": "Der Knoten, an dem die Verbindung endet."
+        },
+        "ref": {
+          "kind": "node"
+        }
+      }
     },
     "index": {
       "type": "integer",

@@ -8,59 +8,11 @@
       "type": "object",
       "additionalProperties": false,
       "required": [
-        "AddDesign"
+        "SetSnapshot"
       ],
       "properties": {
-        "AddDesign": {
-          "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/semio/v1/kit/mutation/add-design/schema.json"
-        }
-      }
-    },
-    {
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "AddType"
-      ],
-      "properties": {
-        "AddType": {
-          "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/semio/v1/kit/mutation/add-type/schema.json"
-        }
-      }
-    },
-    {
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "BindRepresentation"
-      ],
-      "properties": {
-        "BindRepresentation": {
-          "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/semio/v1/kit/mutation/bind-representation/schema.json"
-        }
-      }
-    },
-    {
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "ChangeRepresentationPin"
-      ],
-      "properties": {
-        "ChangeRepresentationPin": {
-          "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/semio/v1/kit/mutation/change-representation-pin/schema.json"
-        }
-      }
-    },
-    {
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "CreateModel"
-      ],
-      "properties": {
-        "CreateModel": {
-          "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/semio/v1/kit/mutation/create-model/schema.json"
+        "SetSnapshot": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/semio/v1/kit/mutation/set-snapshot/schema.json"
         }
       }
     },
@@ -80,11 +32,23 @@
       "type": "object",
       "additionalProperties": false,
       "required": [
-        "CreateProperties"
+        "DeleteObject"
       ],
       "properties": {
-        "CreateProperties": {
-          "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/semio/v1/kit/mutation/create-properties/schema.json"
+        "DeleteObject": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/semio/v1/kit/mutation/delete-object/schema.json"
+        }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "CreateModel"
+      ],
+      "properties": {
+        "CreateModel": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/semio/v1/kit/mutation/create-model/schema.json"
         }
       }
     },
@@ -104,11 +68,11 @@
       "type": "object",
       "additionalProperties": false,
       "required": [
-        "DeleteObject"
+        "CreateProperties"
       ],
       "properties": {
-        "DeleteObject": {
-          "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/semio/v1/kit/mutation/delete-object/schema.json"
+        "CreateProperties": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/semio/v1/kit/mutation/create-properties/schema.json"
         }
       }
     },
@@ -128,11 +92,11 @@
       "type": "object",
       "additionalProperties": false,
       "required": [
-        "EditDesign"
+        "BindRepresentation"
       ],
       "properties": {
-        "EditDesign": {
-          "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/semio/v1/kit/mutation/edit-design/schema.json"
+        "BindRepresentation": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/semio/v1/kit/mutation/bind-representation/schema.json"
         }
       }
     },
@@ -140,11 +104,35 @@
       "type": "object",
       "additionalProperties": false,
       "required": [
-        "RemoveDesign"
+        "UnbindRepresentation"
       ],
       "properties": {
-        "RemoveDesign": {
-          "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/semio/v1/kit/mutation/remove-design/schema.json"
+        "UnbindRepresentation": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/semio/v1/kit/mutation/unbind-representation/schema.json"
+        }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "ChangeRepresentationPin"
+      ],
+      "properties": {
+        "ChangeRepresentationPin": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/semio/v1/kit/mutation/change-representation-pin/schema.json"
+        }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "AddType"
+      ],
+      "properties": {
+        "AddType": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/semio/v1/kit/mutation/add-type/schema.json"
         }
       }
     },
@@ -176,11 +164,11 @@
       "type": "object",
       "additionalProperties": false,
       "required": [
-        "UnbindRepresentation"
+        "AddDesign"
       ],
       "properties": {
-        "UnbindRepresentation": {
-          "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/semio/v1/kit/mutation/unbind-representation/schema.json"
+        "AddDesign": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/semio/v1/kit/mutation/add-design/schema.json"
         }
       }
     },
@@ -188,11 +176,23 @@
       "type": "object",
       "additionalProperties": false,
       "required": [
-        "SetSnapshot"
+        "RemoveDesign"
       ],
       "properties": {
-        "SetSnapshot": {
-          "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/semio/v1/kit/mutation/set-snapshot/schema.json"
+        "RemoveDesign": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/semio/v1/kit/mutation/remove-design/schema.json"
+        }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "EditDesign"
+      ],
+      "properties": {
+        "EditDesign": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/semio/v1/kit/mutation/edit-design/schema.json"
         }
       }
     }

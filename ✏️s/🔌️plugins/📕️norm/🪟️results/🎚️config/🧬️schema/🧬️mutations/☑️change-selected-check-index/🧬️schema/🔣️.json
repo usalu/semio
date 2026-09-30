@@ -4,6 +4,7 @@
   "title": "ChangeSelectedCheckIndex",
   "type": "object",
   "additionalProperties": false,
+  "required": [],
   "properties": {
     "index": {
       "type": [
@@ -11,7 +12,23 @@
         "null"
       ],
       "minimum": 0,
-      "maximum": 4294967295
+      "maximum": 4294967295,
+      "x-semio-ui": {
+        "widget": "stepper",
+        "role": "value",
+        "label": {
+          "en": "Selected check",
+          "de": "Ausgewählter Nachweis"
+        },
+        "description": {
+          "en": "Zero-based index of the check shown in the inspection; empty selects the first check.",
+          "de": "Nullbasierter Index des in der Prüfansicht gezeigten Nachweises; leer wählt den ersten Nachweis."
+        },
+        "step": 1,
+        "precision": 0,
+        "group": "results",
+        "order": 10
+      }
     }
   }
 }

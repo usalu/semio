@@ -3,7 +3,7 @@
 use super::{conflict_from_history_conflict, mutation_meta_from_history_op_meta, ErasedSnapshotRetirement, MemberOpenDiagnostic, SnapshotRetirementStep};
 use crate::os_io::ArtifactRef;
 use crate::os_store::{
-    ArtifactEnvelope, ArtifactPack, ArtifactStore, ArtifactStoreInitializationRuntime, DocumentStoreOwners, OwnerRef,
+    ArtifactEnvelope, ArtifactPack, ArtifactStore, ArtifactStoreInitializationRuntime, DocumentStoreOwners, EditReplay, OwnerRef, ReplayStep,
 };
 use crate::{CompositionPin, Edit, FromValue, Mutation, OpBinary, OpText, ToValue};
 use semio_framework_job::{Generation, OperationId, StepContext};
@@ -56,8 +56,6 @@ enum Phase {
     HydrateAlternatives,
     HydrateConflicts,
     HydratePins,
-    ValidateReplay,
-    RetireValidation,
     ReplayCursor,
     SeedApplied,
     SeedRedo,
@@ -76,7 +74,6 @@ where
 {
     pack: ManuallyDrop<Option<Vec<u8>>>,
     initial: ManuallyDrop<Option<P>>,
-    validation: ManuallyDrop<Option<P>>,
     history: ManuallyDrop<Option<crate::os_spr::HistoryLog>>,
     fold: ManuallyDrop<Option<crate::os_spr::HistoryFold>>,
     expected: ManuallyDrop<Option<ArtifactRef>>,
@@ -84,6 +81,7 @@ where
     schema: ManuallyDrop<Option<String>>,
     envelope: ManuallyDrop<Option<ArtifactEnvelope<P, M>>>,
     runtime: ManuallyDrop<Option<ArtifactStoreInitializationRuntime<P>>>,
+    replay: ManuallyDrop<Option<EditReplay<P, M>>>,
     owners: ManuallyDrop<Option<DocumentStoreOwners<P, M>>>,
     pending_edit: ManuallyDrop<Option<Edit<M>>>,
     pending_messages: ManuallyDrop<Option<crate::os_spr::EditMessages>>,
@@ -155,7 +153,6 @@ where
         Self {
             pack: ManuallyDrop::new(pack),
             initial: ManuallyDrop::new(initial),
-            validation: ManuallyDrop::new(None),
             history: ManuallyDrop::new(Some(history)),
             fold: ManuallyDrop::new(None),
             expected: ManuallyDrop::new(Some(expected)),
@@ -163,6 +160,7 @@ where
             schema: ManuallyDrop::new(Some(schema)),
             envelope: ManuallyDrop::new(None),
             runtime: ManuallyDrop::new(None),
+            replay: ManuallyDrop::new(None),
             owners: ManuallyDrop::new(Some(owners)),
             pending_edit: ManuallyDrop::new(None),
             pending_messages: ManuallyDrop::new(None),
@@ -304,7 +302,6 @@ where
                     Err(_) => return self.reject(MemberOpenDiagnostic::Replay),
                 };
                 let initial = self.initial.take().expect("typed initial snapshot remains retained");
-                let validation = initial.clone();
                 let initial_digest = *semio_framework_hash::hash(&initial.encode_pack()).as_bytes();
                 let expected = self.expected.take().expect("document identity remains retained");
                 let schema = self.schema.take().expect("document schema remains retained");
@@ -314,16 +311,20 @@ where
                 envelope.owner = history_owner;
                 envelope.active_alternative_id = fold.alternative.clone();
                 envelope.cursor = Some(crate::os_store::ArtifactCursor::new(fold.applied.clone(), fold.redo.clone(), fold.checkpoint.clone()));
+                let supersessions = fold.supersessions.clone();
                 *self.fold = Some(fold);
                 if envelope.conflicts.try_reserve_exact(history.conflicts.len()).is_err() || envelope.transitions.try_reserve_exact(history.transitions.len()).is_err() {
-                    *self.validation = Some(validation);
                     *self.envelope = Some(envelope);
                     return self.reject(MemberOpenDiagnostic::Capacity);
                 }
                 let current = envelope.vcs.initial_snapshot.clone();
-                *self.validation = Some(validation);
-                *self.runtime = Some(ArtifactStoreInitializationRuntime::new(&envelope.id, &envelope.schema, current, initial_digest));
+                let mut runtime = ArtifactStoreInitializationRuntime::new(&envelope.id, &envelope.schema, current, initial_digest);
+                let installed = runtime.set_supersessions(supersessions);
+                *self.runtime = Some(runtime);
                 *self.envelope = Some(envelope);
+                if installed.is_err() {
+                    return self.reject(MemberOpenDiagnostic::Initialization);
+                }
                 self.phase = Phase::BeginEdit;
                 cx.consume_fuel(1);
                 PersistedDocumentHydrationStep::Pending(self.progress())
@@ -421,8 +422,10 @@ where
                 PersistedDocumentHydrationStep::Pending(self.progress())
             }
             Phase::FinishEdit => {
-                let edit = self.pending_edit.take().expect("completed typed edit remains retained");
-                if let Err(edit) = self.envelope.as_mut().expect("hydrated envelope remains retained").vcs.edits.try_push(edit) {
+                let mut edit = self.pending_edit.take().expect("completed typed edit remains retained");
+                let envelope = self.envelope.as_mut().expect("hydrated envelope remains retained");
+                super::stamp_edit_semantics::<P, M>(&mut edit, &envelope.schema);
+                if let Err(edit) = envelope.vcs.edits.try_push(edit) {
                     self.retire_edit(edit);
                     return self.reject(MemberOpenDiagnostic::Capacity);
                 }
@@ -530,7 +533,7 @@ where
                 let Some(source) = self.fold.as_ref().expect("history fold remains retained").checkpoints.get(self.pin_group_index) else {
                     self.record_index = 0;
                     self.operation_index = 0;
-                    self.phase = Phase::ValidateReplay;
+                    self.phase = Phase::ReplayCursor;
                     cx.consume_fuel(1);
                     return PersistedDocumentHydrationStep::Pending(self.progress());
                 };
@@ -558,60 +561,41 @@ where
                 cx.consume_fuel(1);
                 PersistedDocumentHydrationStep::Pending(self.progress())
             }
-            Phase::ValidateReplay => {
-                let envelope = self.envelope.as_ref().expect("hydrated envelope remains retained");
-                if let Some(edit) = envelope.vcs.edits.get(self.record_index) {
-                    if let Some(operation) = edit.forwards.get(self.operation_index) {
-                        let validation = self.validation.as_mut().expect("validation projection remains retained");
-                        let next = match crate::os_vcs::apply_mutation(validation, operation) {
-                            Ok((next, _)) => next,
-                            Err(_) => return self.reject(MemberOpenDiagnostic::Replay),
-                        };
-                        let displaced = std::mem::replace(validation, next);
-                        *self.active = Some(self.owners.as_ref().expect("hydration owners remain retained").initial_snapshot_retirement.retire_owned(displaced));
-                        self.operation_index += 1;
-                    } else {
-                        self.record_index += 1;
-                        self.operation_index = 0;
+            Phase::ReplayCursor => {
+                if self.replay.is_none() {
+                    let envelope = self.envelope.as_ref().expect("hydrated envelope remains retained");
+                    let applied = envelope.cursor.as_ref().map(|cursor| cursor.applied_edit_ids.clone()).unwrap_or_default();
+                    let supersessions = self.runtime.as_ref().expect("hydration runtime remains retained").supersessions().clone();
+                    match super::loaded_history_replay(envelope, &applied, supersessions) {
+                        Ok(replay) => *self.replay = Some(replay),
+                        Err(_) => return self.reject(MemberOpenDiagnostic::Replay),
                     }
-                } else {
-                    let validation = self.validation.take().expect("completed validation projection remains retained");
-                    *self.active = Some(self.owners.as_ref().expect("hydration owners remain retained").initial_snapshot_retirement.retire_owned(validation));
-                    self.phase = Phase::RetireValidation;
+                    cx.consume_fuel(1);
+                    return PersistedDocumentHydrationStep::Pending(self.progress());
                 }
-                cx.consume_fuel(1);
-                PersistedDocumentHydrationStep::Pending(self.progress())
-            }
-            Phase::RetireValidation => {
+                let envelope = self.envelope.as_ref().expect("hydrated envelope remains retained");
+                let replay = self.replay.as_mut().expect("hydration replay remains retained");
+                let stepped = replay.step(&envelope.vcs.edits, &mut || {
+                    cx.consume_fuel(1);
+                    cx.should_yield()
+                });
+                match stepped {
+                    Ok(ReplayStep::Pending(_)) => return PersistedDocumentHydrationStep::Pending(self.progress()),
+                    Ok(ReplayStep::Finished(_)) => {}
+                    Err(_) => return self.reject(MemberOpenDiagnostic::Replay),
+                }
+                let replay = self.replay.take().expect("finished hydration replay remains retained");
+                let adopted = replay.finish().and_then(|result| super::adopt_loaded_replay(self.envelope.as_mut().expect("hydrated envelope remains retained"), result));
+                let state = match adopted {
+                    Ok(state) => state,
+                    Err(_) => return self.reject(MemberOpenDiagnostic::Replay),
+                };
+                let current = self.runtime.as_mut().and_then(ArtifactStoreInitializationRuntime::current_mut).expect("hydrated current remains retained");
+                let displaced = std::mem::replace(current, state);
+                *self.active = Some(self.owners.as_ref().expect("hydration owners remain retained").initial_snapshot_retirement.retire_owned(displaced));
                 self.record_index = 0;
                 self.operation_index = 0;
-                self.phase = Phase::ReplayCursor;
-                cx.consume_fuel(1);
-                PersistedDocumentHydrationStep::Pending(self.progress())
-            }
-            Phase::ReplayCursor => {
-                let cursor = self.envelope.as_ref().and_then(|envelope| envelope.cursor.as_ref()).expect("persisted cursor remains retained");
-                if let Some(edit_id) = cursor.applied_edit_ids.get(self.record_index) {
-                    let envelope = self.envelope.as_ref().expect("hydrated envelope remains retained");
-                    let Some(edit) = envelope.vcs.edits.iter().find(|edit| edit.id == *edit_id) else { return self.reject(MemberOpenDiagnostic::Replay) };
-                    if let Some(operation) = edit.forwards.get(self.operation_index) {
-                        let current = self.runtime.as_mut().and_then(ArtifactStoreInitializationRuntime::current_mut).expect("hydrated current remains retained");
-                        let next = match crate::os_vcs::apply_mutation(current, operation) {
-                            Ok((next, _)) => next,
-                            Err(_) => return self.reject(MemberOpenDiagnostic::Replay),
-                        };
-                        let displaced = std::mem::replace(current, next);
-                        *self.active = Some(self.owners.as_ref().expect("hydration owners remain retained").initial_snapshot_retirement.retire_owned(displaced));
-                        self.operation_index += 1;
-                    } else {
-                        self.record_index += 1;
-                        self.operation_index = 0;
-                    }
-                } else {
-                    self.record_index = 0;
-                    self.operation_index = 0;
-                    self.phase = Phase::SeedApplied;
-                }
+                self.phase = Phase::SeedApplied;
                 cx.consume_fuel(1);
                 PersistedDocumentHydrationStep::Pending(self.progress())
             }
@@ -768,9 +752,9 @@ where
             *self.active = Some(Box::new(super::ArtifactStoreMessageLedgerRetirement::new(messages.edit_id, messages.messages)));
             return Ok(SnapshotRetirementStep::Pending { released_items: 0, released_bytes: 0 });
         }
-        if let Some(validation) = self.validation.take() {
-            *self.active = Some(owners.initial_snapshot_retirement.retire_owned(validation));
-            return Ok(SnapshotRetirementStep::Pending { released_items: 0, released_bytes: 0 });
+        if let Some(replay) = self.replay.take() {
+            replay.cancel();
+            return Ok(SnapshotRetirementStep::Pending { released_items: 1, released_bytes: 0 });
         }
         if let Some(envelope) = self.envelope.take() {
             *self.active = Some(owners.retire_decoded_envelope(envelope));
@@ -828,7 +812,7 @@ where
         self.terminal
             && self.pack.is_none()
             && self.initial.is_none()
-            && self.validation.is_none()
+            && self.replay.is_none()
             && self.history.is_none()
             && self.fold.is_none()
             && self.expected.is_none()
@@ -862,7 +846,7 @@ where
         self.terminal
             && self.pack.is_none()
             && self.initial.is_none()
-            && self.validation.is_none()
+            && self.replay.is_none()
             && self.history.is_none()
             && self.fold.is_none()
             && self.expected.is_none()

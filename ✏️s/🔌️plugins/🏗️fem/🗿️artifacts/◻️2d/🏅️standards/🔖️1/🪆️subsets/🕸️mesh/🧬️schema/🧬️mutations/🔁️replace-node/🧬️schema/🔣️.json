@@ -2,7 +2,7 @@
   "$schema": "http://json-schema.org/draft-07/schema#",
   "$id": "https://json.schemas.assets.semio-tech.com/s/fem/2d/1/mesh/mutation/replace-node/schema.json",
   "title": "ReplaceNode",
-  "description": "The `replace-node` mutation payload as it travels the wire: internally tagged with `\"mutation\": \"replaceNode\"`, camelCase throughout. Structural only — the plausibility and geometry bounds this kind enforces live in the SNAPSHOT schema, because they are properties of a valid document rather than of a well-formed payload; each is annotated there with the `mutations::guards` function that raises them.",
+  "description": "The `replace-node` mutation payload as it travels the wire: internally tagged with `\"mutation\": \"replaceNode\"`, camelCase throughout. Its hard bounds and `x-semio-invariant` entries state exactly the payload-intrinsic breaches `mutations::guards` refuses as `mutation.invariant`, so every such payload fails this schema; refusals that depend on the base (a missing, duplicate or still-referenced target) belong to the diff alone.",
   "type": "object",
   "additionalProperties": false,
   "required": [
@@ -13,10 +13,33 @@
   "properties": {
     "mutation": {
       "const": "replaceNode",
-      "description": "The internally tagged discriminator `#[value(tag = \"mutation\")]` puts on the wire."
+      "description": "The internally tagged discriminator `#[value(tag = \"mutation\")]` puts on the wire.",
+      "x-semio-ui": {
+        "widget": "hidden",
+        "role": "discriminator",
+        "label": {
+          "en": "Mutation",
+          "de": "Mutation"
+        }
+      }
     },
     "id": {
-      "type": "string"
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Node",
+          "de": "Knoten"
+        },
+        "ref": {
+          "kind": "node",
+          "domain": "fem2d",
+          "granularity": "node"
+        },
+        "group": "target",
+        "order": 20
+      }
     },
     "newNode": {
       "title": "FemNode",
@@ -29,16 +52,65 @@
       ],
       "properties": {
         "id": {
-          "type": "string"
+          "type": "string",
+          "x-semio-ui": {
+            "widget": "text",
+            "role": "value",
+            "label": {
+              "en": "ID",
+              "de": "ID"
+            },
+            "description": {
+              "en": "Unique id of the record.",
+              "de": "Eindeutige ID des Eintrags."
+            },
+            "group": "identity",
+            "order": 10
+          }
         },
         "x": {
           "type": "number",
-          "format": "double"
+          "format": "double",
+          "x-semio-ui": {
+            "widget": "stepper",
+            "role": "value",
+            "label": {
+              "en": "X",
+              "de": "X"
+            },
+            "unit": "m",
+            "step": 0.1,
+            "precision": 3,
+            "group": "position",
+            "order": 20
+          }
         },
         "y": {
           "type": "number",
-          "format": "double"
+          "format": "double",
+          "x-semio-ui": {
+            "widget": "stepper",
+            "role": "value",
+            "label": {
+              "en": "Y",
+              "de": "Y"
+            },
+            "unit": "m",
+            "step": 0.1,
+            "precision": 3,
+            "group": "position",
+            "order": 30
+          }
         }
+      },
+      "x-semio-ui": {
+        "role": "value",
+        "label": {
+          "en": "New node",
+          "de": "Neuer Knoten"
+        },
+        "group": "record",
+        "order": 30
       }
     }
   }

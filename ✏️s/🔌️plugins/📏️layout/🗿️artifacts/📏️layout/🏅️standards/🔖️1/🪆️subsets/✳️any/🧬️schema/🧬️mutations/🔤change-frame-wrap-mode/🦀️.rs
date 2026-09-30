@@ -9,7 +9,9 @@ use semio_framework_value_derive::{FromValue, ToValue};
 //#region 🔤ChangeFrameWrapMode
 #[derive(Clone, Debug, PartialEq, dsl::MutationLeaf, ToValue, FromValue)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
+#[cfg_attr(test, serde(rename_all = "camelCase"))]
 #[mutation_leaf(contract = ::protocol)]
+#[value(rename_all = "camelCase")]
 pub struct ChangeFrameWrapMode {
     pub page_id: String,
     pub frame_id: String,

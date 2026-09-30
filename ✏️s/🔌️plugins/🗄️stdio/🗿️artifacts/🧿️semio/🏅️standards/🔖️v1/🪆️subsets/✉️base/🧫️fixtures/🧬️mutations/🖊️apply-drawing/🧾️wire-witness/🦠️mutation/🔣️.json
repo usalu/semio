@@ -1,0 +1,10 @@
+{
+  "mutation": "applyDrawing",
+  "payload": {
+    "mutation": {
+      "DeleteLayer": {
+        "id": "l1"
+      }
+    }
+  }
+}

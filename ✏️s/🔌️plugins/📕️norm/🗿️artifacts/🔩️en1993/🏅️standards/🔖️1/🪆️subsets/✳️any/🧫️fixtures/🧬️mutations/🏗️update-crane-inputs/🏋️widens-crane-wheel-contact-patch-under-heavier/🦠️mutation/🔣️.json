@@ -1,0 +1,20 @@
+{
+  "UpdateCraneInputs": {
+    "craneRunway": {
+      "id": "crane-1",
+      "memberId": "member-b1",
+      "wheelContactLength": 0.15,
+      "dispersion": 0.05,
+      "webThickness": 0.01,
+      "fy": 355000000.0,
+      "phi": 1.1,
+      "actions": [
+        {
+          "id": "cr-1",
+          "loadCaseId": "q-imposed",
+          "force": 80000.0
+        }
+      ]
+    }
+  }
+}

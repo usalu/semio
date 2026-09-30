@@ -17,15 +17,15 @@ Feature: Apply every typed DXF R12 mutation to a real-world drawing
     Then the oracle and the subject agree on the semantic projection
     Examples:
       | id                 | params                                                                                                                                          |
-      | insert-layer       | {"index": 1, "name": "MARKERS", "color": 6, "linetype": "CONTINUOUS"}                                                                           |
+      | insert-layer       | {"index": 1, "layer": {"name": "MARKERS", "color": 6, "linetype": "CONTINUOUS", "flags": 0}} |
       | remove-layer       | {"name": "DIMS"}                                                                                                                                 |
-      | set-layer          | {"name": "DIMS", "color": 4, "linetype": "DASHED"}                                                                                              |
-      | insert-style       | {"index": 1, "name": "LABELS", "font": "arial.ttf"}                                                                                             |
+      | set-layer          | {"name": "DIMS", "layer": {"name": "DIMS", "color": 4, "linetype": "DASHED", "flags": 0}} |
+      | insert-style       | {"index": 1, "style": {"name": "LABELS", "flags": 0, "fontName": "arial.ttf"}} |
       | remove-style       | {"name": "NOTES"}                                                                                                                                |
-      | set-style          | {"name": "NOTES", "font": "romans.shx"}                                                                                                         |
-      | insert-linetype    | {"index": 1, "name": "CENTER", "description": "Center line"}                                                                                    |
+      | set-style          | {"name": "NOTES", "style": {"name": "NOTES", "flags": 0, "fontName": "romans.shx"}} |
+      | insert-linetype    | {"index": 1, "linetype": {"name": "CENTER", "flags": 0, "description": "Center line"}} |
       | remove-linetype    | {"name": "DASHED"}                                                                                                                               |
-      | set-linetype       | {"name": "DASHED", "description": "Dash pattern"}                                                                                               |
+      | set-linetype       | {"name": "DASHED", "linetype": {"name": "DASHED", "flags": 0, "description": "Dash pattern"}} |
 
   @id-inverse
   @level-exhaustive
@@ -39,12 +39,12 @@ Feature: Apply every typed DXF R12 mutation to a real-world drawing
     Then the oracle and the subject agree on the semantic projection
     Examples:
       | id                 | params                                                                                                                                          |
-      | insert-layer       | {"index": 1, "name": "MARKERS", "color": 6, "linetype": "CONTINUOUS"}                                                                           |
+      | insert-layer       | {"index": 1, "layer": {"name": "MARKERS", "color": 6, "linetype": "CONTINUOUS", "flags": 0}} |
       | remove-layer       | {"name": "DIMS"}                                                                                                                                 |
-      | set-layer          | {"name": "DIMS", "color": 4, "linetype": "DASHED"}                                                                                              |
-      | insert-style       | {"index": 1, "name": "LABELS", "font": "arial.ttf"}                                                                                             |
+      | set-layer          | {"name": "DIMS", "layer": {"name": "DIMS", "color": 4, "linetype": "DASHED", "flags": 0}} |
+      | insert-style       | {"index": 1, "style": {"name": "LABELS", "flags": 0, "fontName": "arial.ttf"}} |
       | remove-style       | {"name": "NOTES"}                                                                                                                                |
-      | set-style          | {"name": "NOTES", "font": "romans.shx"}                                                                                                         |
-      | insert-linetype    | {"index": 1, "name": "CENTER", "description": "Center line"}                                                                                    |
+      | set-style          | {"name": "NOTES", "style": {"name": "NOTES", "flags": 0, "fontName": "romans.shx"}} |
+      | insert-linetype    | {"index": 1, "linetype": {"name": "CENTER", "flags": 0, "description": "Center line"}} |
       | remove-linetype    | {"name": "DASHED"}                                                                                                                               |
-      | set-linetype       | {"name": "DASHED", "description": "Dash pattern"}                                                                                               |
+      | set-linetype       | {"name": "DASHED", "linetype": {"name": "DASHED", "flags": 0, "description": "Dash pattern"}} |

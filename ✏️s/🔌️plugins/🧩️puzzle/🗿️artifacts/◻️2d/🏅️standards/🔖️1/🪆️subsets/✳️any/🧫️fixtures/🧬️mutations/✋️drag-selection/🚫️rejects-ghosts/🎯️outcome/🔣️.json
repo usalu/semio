@@ -1,0 +1,8 @@
+{
+  "code": "mutation.target-missing",
+  "path": [
+    "node-ghost",
+    "region-ghost"
+  ],
+  "status": "rejected"
+}

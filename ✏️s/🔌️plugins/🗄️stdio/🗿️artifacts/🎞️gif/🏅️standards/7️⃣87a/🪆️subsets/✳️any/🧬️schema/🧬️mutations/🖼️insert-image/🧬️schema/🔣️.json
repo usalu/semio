@@ -5,20 +5,35 @@
   "type": "object",
   "additionalProperties": false,
   "required": [
+    "mutation",
     "index",
     "image"
   ],
   "properties": {
-    "index": {
-      "type": "integer",
-      "minimum": 0
-    },
-    "image": {
-      "$ref": "#/$defs/GifImage"
-    },
     "mutation": {
       "const": "insertImage",
       "description": "Aggregate discriminator spliced in by GifMutation; absent when the payload stands alone."
+    },
+    "index": {
+      "type": "integer",
+      "minimum": 0,
+      "x-semio-ui": {
+        "widget": "stepper",
+        "label": {
+          "en": "Insert position",
+          "de": "Einfügeposition"
+        },
+        "precision": 0,
+        "group": "target",
+        "order": 10
+      }
+    },
+    "image": {
+      "$ref": "#/$defs/GifImage",
+      "x-semio-ui": {
+        "group": "value",
+        "order": 20
+      }
     }
   },
   "$defs": {
@@ -35,22 +50,50 @@
         "left": {
           "type": "integer",
           "minimum": 0,
-          "maximum": 4294967295
+          "maximum": 4294967295,
+          "x-semio-ui": {
+            "label": {
+              "en": "Left offset",
+              "de": "Abstand links"
+            },
+            "unit": "px"
+          }
         },
         "top": {
           "type": "integer",
           "minimum": 0,
-          "maximum": 4294967295
+          "maximum": 4294967295,
+          "x-semio-ui": {
+            "label": {
+              "en": "Top offset",
+              "de": "Abstand oben"
+            },
+            "unit": "px"
+          }
         },
         "width": {
           "type": "integer",
           "minimum": 0,
-          "maximum": 4294967295
+          "maximum": 4294967295,
+          "x-semio-ui": {
+            "label": {
+              "en": "Width",
+              "de": "Breite"
+            },
+            "unit": "px"
+          }
         },
         "height": {
           "type": "integer",
           "minimum": 0,
-          "maximum": 4294967295
+          "maximum": 4294967295,
+          "x-semio-ui": {
+            "label": {
+              "en": "Height",
+              "de": "Höhe"
+            },
+            "unit": "px"
+          }
         },
         "interlace": {
           "type": "boolean"
@@ -63,7 +106,13 @@
             {
               "type": "null"
             }
-          ]
+          ],
+          "x-semio-ui": {
+            "label": {
+              "en": "Local color table",
+              "de": "Lokale Farbtabelle"
+            }
+          }
         },
         "indices": {
           "type": "array",
@@ -71,6 +120,16 @@
             "type": "integer",
             "minimum": 0,
             "maximum": 255
+          },
+          "x-semio-ui": {
+            "label": {
+              "en": "Pixel color indices",
+              "de": "Pixel-Farbindizes"
+            },
+            "description": {
+              "en": "One palette index per pixel, row by row.",
+              "de": "Ein Palettenindex je Pixel, zeilenweise."
+            }
           }
         }
       }
@@ -80,12 +139,24 @@
       "additionalProperties": false,
       "properties": {
         "sorted": {
-          "type": "boolean"
+          "type": "boolean",
+          "x-semio-ui": {
+            "label": {
+              "en": "Sorted by importance",
+              "de": "Nach Wichtigkeit sortiert"
+            }
+          }
         },
         "colors": {
           "type": "array",
           "items": {
             "$ref": "#/$defs/GifRgb"
+          },
+          "x-semio-ui": {
+            "label": {
+              "en": "Colors",
+              "de": "Farben"
+            }
           }
         }
       }
@@ -102,17 +173,35 @@
         "r": {
           "type": "integer",
           "minimum": 0,
-          "maximum": 255
+          "maximum": 255,
+          "x-semio-ui": {
+            "label": {
+              "en": "Red",
+              "de": "Rot"
+            }
+          }
         },
         "g": {
           "type": "integer",
           "minimum": 0,
-          "maximum": 255
+          "maximum": 255,
+          "x-semio-ui": {
+            "label": {
+              "en": "Green",
+              "de": "Grün"
+            }
+          }
         },
         "b": {
           "type": "integer",
           "minimum": 0,
-          "maximum": 255
+          "maximum": 255,
+          "x-semio-ui": {
+            "label": {
+              "en": "Blue",
+              "de": "Blau"
+            }
+          }
         }
       }
     }

@@ -1,6 +1,7 @@
 {
   "status": "rejected",
   "code": "mutation.invariant",
+  "invariant": "solid-outline-encloses-area",
   "path": [
     "slab_sliver"
   ],

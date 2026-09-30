@@ -8,7 +8,9 @@ use semio_s_artifact_stdio_semio::standards::v1::subsets::drawing::schema::snaps
 
 #[derive(Clone, Debug, PartialEq, dsl::MutationLeaf, ToValue, FromValue)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
+#[cfg_attr(test, serde(rename_all = "camelCase"))]
 #[mutation_leaf(contract = ::protocol)]
+#[value(rename_all = "camelCase")]
 pub struct SetDrawingText {
     pub index: u32,
     pub text: String,

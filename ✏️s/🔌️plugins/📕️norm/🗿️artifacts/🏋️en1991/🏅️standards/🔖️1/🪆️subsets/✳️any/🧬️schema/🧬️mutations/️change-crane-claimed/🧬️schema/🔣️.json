@@ -9,7 +9,21 @@
   ],
   "properties": {
     "newCraneClaimed": {
-      "type": "boolean"
+      "type": "boolean",
+      "x-semio-ui": {
+        "widget": "toggle",
+        "role": "value",
+        "label": {
+          "en": "Crane loads declared",
+          "de": "Kranlasten angesetzt"
+        },
+        "description": {
+          "en": "Whether the structure carries crane runway actions (EN 1991-3).",
+          "de": "Ob das Tragwerk Einwirkungen aus Kranbahnen erhält (EN 1991-3)."
+        },
+        "group": "crane",
+        "order": 10
+      }
     }
   }
 }

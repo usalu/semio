@@ -18,11 +18,11 @@ use crate::standards::v1::subsets::graph::schema::mutations::update_graph_algori
 use crate::{equation_graph, EquationDiff, EquationMutation, EquationSnapshot};
 use semio_framework_os_kernel::ToValue;
 
-const BEFORE: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🧮️update-graph-algorithm/🧪️restates-the-unset-algorithm-and-its-absent-seed/📸️snapshot/⬅️before/🔣️.json");
-const AFTER: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🧮️update-graph-algorithm/🧪️restates-the-unset-algorithm-and-its-absent-seed/📸️snapshot/➡️after/🔣️.json");
-const MUTATION: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🧮️update-graph-algorithm/🧪️restates-the-unset-algorithm-and-its-absent-seed/🦠️mutation/🔣️.json");
-const DIFF: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🧮️update-graph-algorithm/🧪️restates-the-unset-algorithm-and-its-absent-seed/🔺️diff/🔣️.json");
-const OUTCOME: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🧮️update-graph-algorithm/🧪️restates-the-unset-algorithm-and-its-absent-seed/🎯️outcome/🔣️.json");
+const BEFORE: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🧮️update-graph-algorithm/🧪️restates-unset-algorithm-absent/📸️snapshot/⬅️before/🔣️.json");
+const AFTER: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🧮️update-graph-algorithm/🧪️restates-unset-algorithm-absent/📸️snapshot/➡️after/🔣️.json");
+const MUTATION: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🧮️update-graph-algorithm/🧪️restates-unset-algorithm-absent/🦠️mutation/🔣️.json");
+const DIFF: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🧮️update-graph-algorithm/🧪️restates-unset-algorithm-absent/🔺️diff/🔣️.json");
+const OUTCOME: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🧮️update-graph-algorithm/🧪️restates-unset-algorithm-absent/🎯️outcome/🔣️.json");
 
 fn before() -> EquationSnapshot {
     pack::from_json_str(BEFORE).expect("before snapshot decodes")

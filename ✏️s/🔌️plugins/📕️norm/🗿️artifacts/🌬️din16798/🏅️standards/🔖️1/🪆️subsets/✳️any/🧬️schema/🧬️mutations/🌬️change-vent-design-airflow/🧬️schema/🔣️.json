@@ -10,10 +10,41 @@
   ],
   "properties": {
     "ventId": {
-      "type": "string"
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Ventilation system",
+          "de": "Lüftungsanlage"
+        },
+        "description": {
+          "en": "The ventilation system this mutation addresses.",
+          "de": "Die Lüftungsanlage, die diese Mutation adressiert."
+        },
+        "ref": {
+          "kind": "ventSystem"
+        },
+        "group": "target",
+        "order": 10
+      }
     },
     "newDesignAirflowM3H": {
-      "type": "number"
+      "type": "number",
+      "minimum": 0,
+      "x-semio-ui": {
+        "widget": "stepper",
+        "role": "value",
+        "label": {
+          "en": "Design outdoor airflow q_V",
+          "de": "Auslegungs-Außenluftvolumenstrom q_V"
+        },
+        "unit": "m³/h",
+        "step": 10,
+        "precision": 0,
+        "group": "ventilation",
+        "order": 20
+      }
     }
   }
 }

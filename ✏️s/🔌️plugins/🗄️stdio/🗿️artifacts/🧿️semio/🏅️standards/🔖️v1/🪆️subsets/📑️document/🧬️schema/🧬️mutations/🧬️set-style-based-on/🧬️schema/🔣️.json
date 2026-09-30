@@ -5,9 +5,14 @@
   "type": "object",
   "additionalProperties": false,
   "required": [
+    "mutation",
     "id"
   ],
   "properties": {
+    "mutation": {
+      "const": "setStyleBasedOn",
+      "description": "Aggregate discriminator spliced in by SemioDocumentMutation; absent when the payload stands alone."
+    },
     "id": {
       "type": "string"
     },
@@ -19,11 +24,18 @@
         {
           "type": "null"
         }
-      ]
-    },
-    "mutation": {
-      "const": "setStyleBasedOn",
-      "description": "Aggregate discriminator spliced in by SemioDocumentMutation; absent when the payload stands alone."
+      ],
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Based on style",
+          "de": "Basiert auf Formatvorlage"
+        },
+        "ref": {
+          "kind": "style"
+        }
+      }
     }
   }
 }

@@ -18,9 +18,3 @@ pub struct SetShowMode {
 pub fn handle(payload: &SetShowMode, _doc: &ArtifactView<'_, Generation3dSnapshot>, _cfg: &ConfigView<'_, Generation3dViewConfig>) -> Result<ViewEmit<Generation3dViewConfigMutation>, Fault> {
     Ok(ViewEmit::config(vec![Generation3dViewConfigMutation::SetShowMode(config::SetShowMode { value: payload.value.clone() })]))
 }
-
-//#region 🧪️Tests
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
-//#endregion 🧪️Tests

@@ -5,15 +5,48 @@
   "type": "object",
   "additionalProperties": false,
   "required": [
+    "mutation",
     "id",
     "newHidden"
   ],
   "properties": {
+    "mutation": {
+      "const": "changeReferenceHidden"
+    },
     "id": {
-      "type": "string"
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Reference",
+          "de": "Referenz"
+        },
+        "description": {
+          "en": "The reference image this mutation addresses.",
+          "de": "Das Referenzbild, das diese Mutation adressiert."
+        },
+        "ref": {
+          "kind": "reference",
+          "domain": "vortex",
+          "granularity": "reference"
+        },
+        "group": "target",
+        "order": 10
+      }
     },
     "newHidden": {
-      "type": "boolean"
+      "type": "boolean",
+      "x-semio-ui": {
+        "widget": "toggle",
+        "role": "value",
+        "label": {
+          "en": "Hidden",
+          "de": "Ausgeblendet"
+        },
+        "group": "state",
+        "order": 20
+      }
     }
   }
 }

@@ -311,6 +311,7 @@ impl store::ArtifactStoreOneItemPreparation<Block5dSnapshot, Block5dMutation> fo
                 label: None,
                 group_id: None,
                 origin: Default::default(),
+                transaction: None,
             }],
             description: self.description.take(),
             coalesce_key: None,

@@ -5,6 +5,10 @@ edition.workspace = true
 rust-version.workspace = true
 description = "Persisted workflow graph artifact"
 
+[package.metadata.semio]
+role = "artifact"
+id = "workflow-workflow"
+
 [lints]
 workspace = true
 

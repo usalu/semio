@@ -29,7 +29,7 @@ mod tests_rename_product_retitles_vlv_50_001_and_resyncs_its_index_tags;
 mod tests_change_curve_points_resamples_curve_kvs_onto_three_points;
 #[path = "../../🧮️change-geometry-parameters/🧪️tests/➗️rescales-geom-valve-50-to-half-and-adds-clearance/🦀️.rs"]
 mod tests_change_geometry_parameters_rescales_geom_valve_50_to_half_and_adds_clearance;
-#[path = "../../🎛️change-product-configuration/🧪️tests/📏️reparameterises-vlv-50-001-to-dn-80-and-resyncs-index-dn/🦀️.rs"]
+#[path = "../../🎛️change-product-configuration/🧪️tests/📏️reparameterises-vlv-50-001-dn-80-resyncs-index-dn/🦀️.rs"]
 mod tests_change_product_configuration_reparameterises_vlv_50_001_to_dn_80_and_resyncs_index_dn;
 #[path = "../../📐️resize-geometry/🧪️tests/📐️doubles-the-geom-valve-50-bounding-box/🦀️.rs"]
 mod tests_resize_geometry_doubles_the_geom_valve_50_bounding_box;

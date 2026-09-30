@@ -5,15 +5,16 @@
   "type": "object",
   "additionalProperties": false,
   "required": [
+    "mutation",
     "key"
   ],
   "properties": {
-    "key": {
-      "type": "string"
-    },
     "mutation": {
       "const": "removeTrailerEntry",
       "description": "Aggregate discriminator spliced in by PdfMutation; absent when the payload stands alone."
+    },
+    "key": {
+      "type": "string"
     }
   }
 }

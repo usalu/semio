@@ -2,7 +2,7 @@ use super::*;
 
 #[semio_framework_async_macros::async_test]
 async fn bundle_contributes_spatial_shape_for_cad_play() {
-    let manifest = bundle().manifest;
+    let manifest = bundle().into_manifest_cold().unwrap();
     assert_eq!(manifest.extends, "cad");
     assert_eq!(manifest.topic_contributions.len(), 1);
     let topic_contribution = &manifest.topic_contributions[0];

@@ -1,0 +1,9 @@
+{
+  "mutation": "createImage",
+  "payload": {
+    "phase": "apply",
+    "value": {
+      "position": 0
+    }
+  }
+}

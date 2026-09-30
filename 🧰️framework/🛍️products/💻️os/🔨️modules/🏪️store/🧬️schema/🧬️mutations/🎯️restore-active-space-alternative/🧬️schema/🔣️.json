@@ -13,7 +13,20 @@
         "string",
         "null"
       ],
-      "minLength": 1
+      "minLength": 1,
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Alternative",
+          "de": "Alternative"
+        },
+        "ref": {
+          "kind": "alternative"
+        },
+        "group": "target",
+        "order": 10
+      }
     }
   }
 }

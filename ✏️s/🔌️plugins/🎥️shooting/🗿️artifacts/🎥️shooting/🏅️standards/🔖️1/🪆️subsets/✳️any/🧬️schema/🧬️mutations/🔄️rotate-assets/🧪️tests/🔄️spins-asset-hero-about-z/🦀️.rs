@@ -79,7 +79,7 @@ async fn declared_outcome_holds_and_a_zero_length_axis_is_the_identity() {
     assert_eq!(outcome.get("status").and_then(serde_json::Value::as_str), Some("applied"), "rotate-assets/spins-asset-hero-about-z: this fixture declares `applied`");
     assert!(mutation().diff(&before()).messages().is_empty(), "rotate-assets/spins-asset-hero-about-z: a resolvable finite rotation must raise no diagnostic");
 
-    let degenerate: ShootingMutation = serde_json::from_str(r#"{"mutation":"rotateAssets","asset_ids":["asset-hero"],"ax":0.0,"ay":0.0,"az":0.0,"angle":1.5}"#).expect("probe mutation decodes");
+    let degenerate: ShootingMutation = serde_json::from_str(r#"{"mutation":"rotateAssets","assetIds":["asset-hero"],"ax":0.0,"ay":0.0,"az":0.0,"angle":1.5}"#).expect("probe mutation decodes");
     let identity = apply(&before(), &degenerate);
     assert_eq!(identity, before(), "rotate-assets/spins-asset-hero-about-z: a zero-length axis composes the identity quaternion, leaving the orientation as it was");
     assert!(degenerate.diff(&before()).messages().is_empty(), "rotate-assets/spins-asset-hero-about-z: the degenerate axis is a silent fallback, not a diagnostic");

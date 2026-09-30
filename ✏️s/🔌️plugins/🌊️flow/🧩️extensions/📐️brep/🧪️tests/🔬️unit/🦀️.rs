@@ -15,7 +15,7 @@ async fn vector(x: f64, y: f64, z: f64) -> Dictionary {
 /// 🔒️ Serialises the tests that share the process-wide brep kernel. Recovers from a poisoned
 /// lock so that one failing test reports its own assertion instead of cascading `PoisonError`s
 /// through every sibling.
-async fn test_serial() -> std::sync::MutexGuard<'static, ()> {
+pub(super) async fn test_serial() -> std::sync::MutexGuard<'static, ()> {
     static LOCK: OnceLock<Mutex<()>> = OnceLock::new();
     let lock = LOCK.get_or_init(|| Mutex::new(()));
     lock.lock().unwrap_or_else(|poisoned| poisoned.into_inner())
@@ -37,12 +37,7 @@ async fn channel_payload(out: &Dictionary, channel: &str) -> neural_engine::Cold
 }
 
 async fn reset_test_kernel() {
-    if let Ok(mut guard) = kernel().write() {
-        *guard = Box::new(Brep::new());
-    }
-    if let Ok(mut cache) = mesh_cache().lock() {
-        cache.clear();
-    }
+    geometry_session().retain_geometry_handles(&[]);
 }
 
 #[semio_framework_async_macros::async_test]
@@ -50,7 +45,7 @@ async fn box_emits_geometry_handle() {
     let _serial = test_serial().await;
     reset_test_kernel().await;
     let mut reg = Registry::new();
-    register(&mut reg).await;
+    register(&mut reg, geometry_session());
     let reg = neural_engine::ColdOwner::new(reg);
     let input = Dictionary::new().insert("width", Value::Dictionary(number_dictionary(2.0))).insert("depth", Value::Dictionary(number_dictionary(3.0))).insert("height", Value::Dictionary(number_dictionary(4.0)));
     let out = reg.dispatch_cold("brep.prim3d.box", input).unwrap();
@@ -65,7 +60,7 @@ async fn line_curve_emits_curve_handle() {
     let _serial = test_serial().await;
     reset_test_kernel().await;
     let mut reg = Registry::new();
-    register(&mut reg).await;
+    register(&mut reg, geometry_session());
     let reg = neural_engine::ColdOwner::new(reg);
     let out = reg.dispatch_cold("brep.curve.line", Dictionary::new().insert("start", Value::Dictionary(point(0.0, 0.0, 0.0).await)).insert("end", Value::Dictionary(point(1.0, 0.0, 0.0).await))).unwrap();
     let curve = channel_payload(&out, "curve").await;
@@ -79,7 +74,7 @@ async fn dwg_export_import_round_trips_a_box() {
     let _serial = test_serial().await;
     reset_test_kernel().await;
     let mut reg = Registry::new();
-    register(&mut reg).await;
+    register(&mut reg, geometry_session());
     let reg = neural_engine::ColdOwner::new(reg);
     let solid = channel_payload(
         &reg.dispatch_cold("brep.prim3d.box", Dictionary::new().insert("width", Value::Dictionary(number_dictionary(2.0))).insert("depth", Value::Dictionary(number_dictionary(3.0))).insert("height", Value::Dictionary(number_dictionary(4.0)))).unwrap(),
@@ -109,15 +104,15 @@ async fn step_export_import_round_trips_a_box() {
     let _serial = test_serial().await;
     reset_test_kernel().await;
     let mut reg = Registry::new();
-    register(&mut reg).await;
+    register(&mut reg, geometry_session());
     let reg = neural_engine::ColdOwner::new(reg);
     let handle = box_handle(&reg).await;
-    let exported = pack::json::parse(&export_solid_json(&[handle], "step", 0.1)).unwrap();
+    let exported = pack::json::parse(&geometry_session().export_solid_json(&[handle], "step", 0.1)).unwrap();
     assert!(exported.get("error").is_none(), "{exported:?}");
     assert_eq!(exported.get("binary").and_then(|value| value.as_bool()), Some(false));
     let data = exported.get("data").and_then(|value| value.as_str()).expect("step text").to_string();
     assert!(!data.is_empty());
-    let imported = pack::json::parse(&import_solid_json("step", &data, 0.1)).unwrap();
+    let imported = pack::json::parse(&geometry_session().import_solid_json("step", &data, 0.1)).unwrap();
     assert!(imported.get("error").is_none(), "{imported:?}");
     assert_eq!(imported.get("handles").and_then(|value| value.as_array()).map(|handles| handles.len()), Some(1));
 }
@@ -127,14 +122,14 @@ async fn obj_export_import_round_trips_a_box() {
     let _serial = test_serial().await;
     reset_test_kernel().await;
     let mut reg = Registry::new();
-    register(&mut reg).await;
+    register(&mut reg, geometry_session());
     let reg = neural_engine::ColdOwner::new(reg);
     let handle = box_handle(&reg).await;
-    let exported = pack::json::parse(&export_solid_json(&[handle], "obj", 0.1)).unwrap();
+    let exported = pack::json::parse(&geometry_session().export_solid_json(&[handle], "obj", 0.1)).unwrap();
     assert!(exported.get("error").is_none(), "{exported:?}");
     let data = exported.get("data").and_then(|value| value.as_str()).expect("obj text").to_string();
     assert!(data.contains('v'));
-    let imported = pack::json::parse(&import_solid_json("obj", &data, 0.1)).unwrap();
+    let imported = pack::json::parse(&geometry_session().import_solid_json("obj", &data, 0.1)).unwrap();
     assert!(imported.get("error").is_none(), "{imported:?}");
     assert_eq!(imported.get("handles").and_then(|value| value.as_array()).map(|handles| handles.len()), Some(1));
 }
@@ -144,15 +139,15 @@ async fn stl_export_import_round_trips_a_box() {
     let _serial = test_serial().await;
     reset_test_kernel().await;
     let mut reg = Registry::new();
-    register(&mut reg).await;
+    register(&mut reg, geometry_session());
     let reg = neural_engine::ColdOwner::new(reg);
     let handle = box_handle(&reg).await;
-    let exported = pack::json::parse(&export_solid_json(&[handle], "stl", 0.1)).unwrap();
+    let exported = pack::json::parse(&geometry_session().export_solid_json(&[handle], "stl", 0.1)).unwrap();
     assert!(exported.get("error").is_none(), "{exported:?}");
     assert_eq!(exported.get("binary").and_then(|value| value.as_bool()), Some(true));
     let data = exported.get("data").and_then(|value| value.as_str()).expect("stl base64").to_string();
     assert!(!data.is_empty());
-    let imported = pack::json::parse(&import_solid_json("stl", &data, 0.1)).unwrap();
+    let imported = pack::json::parse(&geometry_session().import_solid_json("stl", &data, 0.1)).unwrap();
     assert!(imported.get("error").is_none(), "{imported:?}");
     assert_eq!(imported.get("handles").and_then(|value| value.as_array()).map(|handles| handles.len()), Some(1));
 }
@@ -162,15 +157,15 @@ async fn glb_export_import_round_trips_a_box_through_the_mesh_bridge() {
     let _serial = test_serial().await;
     reset_test_kernel().await;
     let mut reg = Registry::new();
-    register(&mut reg).await;
+    register(&mut reg, geometry_session());
     let reg = neural_engine::ColdOwner::new(reg);
     let handle = box_handle(&reg).await;
-    let exported = pack::json::parse(&export_solid_json(&[handle], "glb", 0.1)).unwrap();
+    let exported = pack::json::parse(&geometry_session().export_solid_json(&[handle], "glb", 0.1)).unwrap();
     assert!(exported.get("error").is_none(), "{exported:?}");
     assert_eq!(exported.get("binary").and_then(|value| value.as_bool()), Some(true));
     let data = exported.get("data").and_then(|value| value.as_str()).expect("glb base64").to_string();
     assert!(!data.is_empty());
-    let imported = pack::json::parse(&import_solid_json("glb", &data, 0.1)).unwrap();
+    let imported = pack::json::parse(&geometry_session().import_solid_json("glb", &data, 0.1)).unwrap();
     assert!(imported.get("error").is_none(), "{imported:?}");
     assert_eq!(imported.get("handles").and_then(|value| value.as_array()).map(|handles| handles.len()), Some(1));
 }
@@ -180,10 +175,10 @@ async fn export_solid_json_rejects_unsupported_format() {
     let _serial = test_serial().await;
     reset_test_kernel().await;
     let mut reg = Registry::new();
-    register(&mut reg).await;
+    register(&mut reg, geometry_session());
     let reg = neural_engine::ColdOwner::new(reg);
     let handle = box_handle(&reg).await;
-    let exported = pack::json::parse(&export_solid_json(&[handle], "fbx", 0.1)).unwrap();
+    let exported = pack::json::parse(&geometry_session().export_solid_json(&[handle], "fbx", 0.1)).unwrap();
     assert!(exported.get("error").is_some());
 }
 
@@ -192,7 +187,7 @@ async fn extrude_and_area() {
     let _serial = test_serial().await;
     reset_test_kernel().await;
     let mut reg = Registry::new();
-    register(&mut reg).await;
+    register(&mut reg, geometry_session());
     let reg = neural_engine::ColdOwner::new(reg);
     let wire = channel_payload(&reg.dispatch_cold("brep.curve.rectangle", Dictionary::new().insert("width", Value::Dictionary(number_dictionary(2.0))).insert("height", Value::Dictionary(number_dictionary(2.0)))).unwrap(), "wire").await;
     let face = channel_payload(&reg.dispatch_cold("brep.surf.planarFaceWire", Dictionary::new().insert("wire", Value::Dictionary(wire.into_inner()))).unwrap(), "face").await;
@@ -209,7 +204,7 @@ async fn extrude_curve_wire_uses_vector_magnitude() {
     let _serial = test_serial().await;
     reset_test_kernel().await;
     let mut reg = Registry::new();
-    register(&mut reg).await;
+    register(&mut reg, geometry_session());
     let reg = neural_engine::ColdOwner::new(reg);
     let wire = channel_payload(&reg.dispatch_cold("brep.curve.rectangle", Dictionary::new().insert("width", Value::Dictionary(number_dictionary(2.0))).insert("height", Value::Dictionary(number_dictionary(2.0)))).unwrap(), "wire").await;
     let solid = channel_payload(&reg.dispatch_cold("brep.solid.extrude", Dictionary::new().insert("wire", Value::Dictionary(wire.into_inner())).insert("vector", Value::Dictionary(vector(0.0, 0.0, 4.0).await))).unwrap(), "solid").await;
@@ -224,7 +219,7 @@ async fn fillet_translate_chain() {
     let _serial = test_serial().await;
     reset_test_kernel().await;
     let mut reg = Registry::new();
-    register(&mut reg).await;
+    register(&mut reg, geometry_session());
     let reg = neural_engine::ColdOwner::new(reg);
     let box_out = channel_payload(
         &reg.dispatch_cold("brep.prim3d.box", Dictionary::new().insert("width", Value::Dictionary(number_dictionary(2.0))).insert("depth", Value::Dictionary(number_dictionary(2.0))).insert("height", Value::Dictionary(number_dictionary(2.0)))).unwrap(),
@@ -240,7 +235,7 @@ async fn fillet_translate_chain() {
 async fn manifest_lists_brep_operators() {
     let _serial = test_serial().await;
     reset_test_kernel().await;
-    let json = build_manifest_json("brep", "Brep", env!("CARGO_PKG_VERSION"), &neural_engine::ColdOwner::new(module_registry().await), vec!["onStartup".into()], vec![], vec![], vec![]);
+    let json = build_manifest_json("brep", "Brep", env!("CARGO_PKG_VERSION"), &neural_engine::ColdOwner::new(module_registry(geometry_session())), vec!["onStartup".into()], vec![], vec![], vec![]);
     assert!(json.contains("brep.prim3d.box"));
     assert!(json.contains("brep.curve.line"));
     assert!(json.contains("brep.solid.extrude"));
@@ -257,7 +252,7 @@ async fn manifest_lists_brep_operators() {
 async fn evaluate_json_box() {
     let _serial = test_serial().await;
     reset_test_kernel().await;
-    let reg = neural_engine::ColdOwner::new(module_registry().await);
+    let reg = neural_engine::ColdOwner::new(module_registry(geometry_session()));
     let json_number = |value: f64| pack::json::object([("$schema".to_string(), pack::json::Value::from("number")), ("value".to_string(), pack::json::Value::from(value))]);
     let input_json = pack::json::to_string(&pack::json::object([("width".to_string(), json_number(1.0)), ("depth".to_string(), json_number(1.0)), ("height".to_string(), json_number(1.0))]));
     let out_json = evaluate_json(&reg, "brep.prim3d.box", &input_json);
@@ -270,7 +265,7 @@ async fn retain_geometry_handles_sweeps_orphaned_shapes() {
     let _serial = test_serial().await;
     reset_test_kernel().await;
     let mut reg = Registry::new();
-    register(&mut reg).await;
+    register(&mut reg, geometry_session());
     let reg = neural_engine::ColdOwner::new(reg);
     let box_out = channel_payload(
         &reg.dispatch_cold("brep.prim3d.box", Dictionary::new().insert("width", Value::Dictionary(number_dictionary(1.0))).insert("depth", Value::Dictionary(number_dictionary(1.0))).insert("height", Value::Dictionary(number_dictionary(1.0)))).unwrap(),
@@ -284,10 +279,10 @@ async fn retain_geometry_handles_sweeps_orphaned_shapes() {
     .await;
     let live_handle = box_out.get("handle").and_then(|v| v.as_atom()).and_then(|a| a.as_str()).unwrap().to_string();
     let orphan_handle = orphan.get("handle").and_then(|v| v.as_atom()).and_then(|a| a.as_str()).unwrap().to_string();
-    retain_geometry_handles(std::slice::from_ref(&live_handle));
-    let live_mesh = tessellate_geometry(&live_handle, 0.1).expect("live tessellation");
+    geometry_session().retain_geometry_handles(std::slice::from_ref(&live_handle));
+    let live_mesh = geometry_session().tessellate_geometry(&live_handle, 0.1).expect("live tessellation");
     assert!(!live_mesh.positions.is_empty());
-    assert!(tessellate_geometry(&orphan_handle, 0.1).is_err());
+    assert!(geometry_session().tessellate_geometry(&orphan_handle, 0.1).is_err());
 }
 
 #[semio_framework_async_macros::async_test]
@@ -295,7 +290,7 @@ async fn tessellate_geometry_is_memoized() {
     let _serial = test_serial().await;
     reset_test_kernel().await;
     let mut reg = Registry::new();
-    register(&mut reg).await;
+    register(&mut reg, geometry_session());
     let reg = neural_engine::ColdOwner::new(reg);
     let box_out = channel_payload(
         &reg.dispatch_cold("brep.prim3d.box", Dictionary::new().insert("width", Value::Dictionary(number_dictionary(1.0))).insert("depth", Value::Dictionary(number_dictionary(1.0))).insert("height", Value::Dictionary(number_dictionary(1.0)))).unwrap(),
@@ -303,8 +298,8 @@ async fn tessellate_geometry_is_memoized() {
     )
     .await;
     let handle = box_out.get("handle").and_then(|v| v.as_atom()).and_then(|a| a.as_str()).unwrap();
-    let first = tessellate_geometry(handle, 0.1).expect("mesh");
-    let second = tessellate_geometry(handle, 0.1).expect("mesh");
+    let first = geometry_session().tessellate_geometry(handle, 0.1).expect("mesh");
+    let second = geometry_session().tessellate_geometry(handle, 0.1).expect("mesh");
     assert_eq!(first.positions, second.positions);
     assert!(!first.positions.is_empty());
 }
@@ -314,7 +309,7 @@ async fn brep_component_deconstructs_solid_topology() {
     let _serial = test_serial().await;
     reset_test_kernel().await;
     let mut reg = Registry::new();
-    register(&mut reg).await;
+    register(&mut reg, geometry_session());
     let reg = neural_engine::ColdOwner::new(reg);
     let solid = channel_payload(
         &reg.dispatch_cold("brep.prim3d.box", Dictionary::new().insert("width", Value::Dictionary(number_dictionary(1.0))).insert("depth", Value::Dictionary(number_dictionary(1.0))).insert("height", Value::Dictionary(number_dictionary(1.0)))).unwrap(),
@@ -333,7 +328,7 @@ async fn brep_component_deconstructs_solid_topology() {
 #[semio_framework_async_macros::async_test]
 async fn schema_component_deconstructs_geometry() {
     let mut reg = Registry::new();
-    register(&mut reg).await;
+    register(&mut reg, geometry_session());
     let reg = neural_engine::ColdOwner::new(reg);
     let geometry = neural_engine::ColdOwner::new(Dictionary::with_schema("geometry").insert("handle", Value::Atom(Atom::String("solid-1".into()))).insert("kind", Value::Atom(Atom::String("solid".into()))));
     let out = reg.dispatch_cold("brep.geometry", Dictionary::new().insert("geometry", Value::Dictionary(geometry.clone()))).unwrap();
@@ -350,13 +345,12 @@ async fn extension_bundle_extends_flow_and_evaluates_box() {
     let manifest_json = extension_manifest_json().await;
     let flow_topic = flow_extension_sdk::flow_extension_topic_contribution("flow-play", "brep", "Brep", "brep", &manifest_json);
     let procedural3d_topic = flow_extension_sdk::flow_extension_topic_contribution("procedural3d-play", "brep", "Brep", "brep", &manifest_json);
-    let evaluation_registry = neural_engine::ColdOwner::new(module_registry().await);
     let bundle = ExtensionBundle::new("flow-extension-brep", "Brep", env!("CARGO_PKG_VERSION"))
         .extends("flow")
         .contributes_topic(flow_topic.topic, flow_topic.payload)
         .contributes_topic(procedural3d_topic.topic, procedural3d_topic.payload)
-        .handler("evaluate", move |req| Ok(flow_extension_sdk::evaluate_invoke_json(&evaluation_registry, req).unwrap()));
-    install_extension_bundle(bundle).await;
+        .handler("evaluate", |req| Ok(flow_extension_sdk::evaluate_invoke_json(&neural_engine::ColdOwner::new(module_registry(geometry_session())), req).unwrap()));
+    assert!(install_extension_bundle(&mut Some(bundle)).await.unwrap());
     extension_activate().await.unwrap();
     assert_eq!(extension_manifest().await.extension_id, "flow-extension-brep");
     let json_number = |value: f64| pack::json::object([("$schema".to_string(), pack::json::Value::from("number")), ("value".to_string(), pack::json::Value::from(value))]);
@@ -370,6 +364,7 @@ async fn extension_bundle_extends_flow_and_evaluates_box() {
     assert_eq!(envelope.get("done").and_then(pack::json::Value::as_bool), Some(true));
     let out = pack::json::parse(envelope.get("outputJson").and_then(pack::json::Value::as_str).unwrap()).unwrap();
     assert_eq!(out.get("solid").and_then(|value| value.get("$schema")).and_then(pack::json::Value::as_str), Some("geometry"));
+    semio_framework_plugin::plugin_runtime::extension_dispose_cold().unwrap();
 }
 
 fn number_value(dict: &Dictionary) -> f64 {
@@ -392,7 +387,7 @@ async fn surface_family_plane_point_stays_in_plane_and_normal_matches() {
     let _serial = test_serial().await;
     reset_test_kernel().await;
     let mut reg = Registry::new();
-    register(&mut reg).await;
+    register(&mut reg, geometry_session());
     let reg = neural_engine::ColdOwner::new(reg);
     let surface = channel_payload(&reg.dispatch_cold("brep.surf.plane", Dictionary::new().insert("origin", Value::Dictionary(point(0.0, 0.0, 0.0).await)).insert("normal", Value::Dictionary(vector(0.0, 0.0, 1.0).await))).unwrap(), "surface").await;
     let evaluated = channel_payload(
@@ -419,7 +414,7 @@ async fn boolean_family_fuse_cut_intersect_report_plausible_volumes() {
     let _serial = test_serial().await;
     reset_test_kernel().await;
     let mut reg = Registry::new();
-    register(&mut reg).await;
+    register(&mut reg, geometry_session());
     let reg = neural_engine::ColdOwner::new(reg);
     let a = box_of(&reg, 2.0).await;
     let b_raw = box_of(&reg, 2.0).await;
@@ -446,7 +441,7 @@ async fn rotate_about_rotates_around_the_given_origin_not_the_world_origin() {
     let _serial = test_serial().await;
     reset_test_kernel().await;
     let mut reg = Registry::new();
-    register(&mut reg).await;
+    register(&mut reg, geometry_session());
     let reg = neural_engine::ColdOwner::new(reg);
     let solid = box_of(&reg, 1.0).await;
     let rotated = channel_payload(
@@ -474,7 +469,7 @@ async fn evaluation_family_closest_parameter_and_closest_uv_report_certified_dis
     let _serial = test_serial().await;
     reset_test_kernel().await;
     let mut reg = Registry::new();
-    register(&mut reg).await;
+    register(&mut reg, geometry_session());
     let reg = neural_engine::ColdOwner::new(reg);
     let curve = channel_payload(&reg.dispatch_cold("brep.curve.line", Dictionary::new().insert("start", Value::Dictionary(point(0.0, 0.0, 0.0).await)).insert("end", Value::Dictionary(point(10.0, 0.0, 0.0).await))).unwrap(), "curve").await;
     let out = reg.dispatch_cold("brep.eval.curveClosestParameter", Dictionary::new().insert("curve", Value::Dictionary(curve.into_inner())).insert("point", Value::Dictionary(point(4.0, 3.0, 0.0).await))).unwrap();
@@ -496,7 +491,7 @@ async fn topology_family_shells_compound_explode_and_label() {
     let _serial = test_serial().await;
     reset_test_kernel().await;
     let mut reg = Registry::new();
-    register(&mut reg).await;
+    register(&mut reg, geometry_session());
     let reg = neural_engine::ColdOwner::new(reg);
     let box_a = box_of(&reg, 1.0).await;
     let box_b = box_of(&reg, 2.0).await;
@@ -525,7 +520,7 @@ async fn topology_family_shells_compound_explode_and_label() {
 /// stays the single source of truth: nothing here hardcodes an `OpQuality` a second time.
 #[semio_framework_async_macros::async_test]
 async fn operation_quality_tags_match_the_kernel_contract() {
-    let reg = neural_engine::ColdOwner::new(module_registry().await);
+    let reg = neural_engine::ColdOwner::new(module_registry(geometry_session()));
     for (id, method) in NODE_KERNEL_METHOD.iter().copied() {
         let info = reg.operator_info(id).unwrap_or_else(|| panic!("node {id:?} is registered in NODE_KERNEL_METHOD but not in the live Registry"));
         let expected = format!("[quality:{:?}]", operation_quality(method));
@@ -564,7 +559,7 @@ mod evaluate_budget;
 
 #[semio_framework_async_macros::async_test]
 async fn every_brep_port_has_explicit_types_and_distinct_identifiers() {
-    let registry = neural_engine::ColdOwner::new(module_registry().await);
+    let registry = neural_engine::ColdOwner::new(module_registry(geometry_session()));
     for info in registry.operator_infos() {
         for (direction, channels) in [("inputs", &info.inputs), ("outputs", &info.outputs)] {
             let mut codes = std::collections::HashSet::new();
@@ -595,7 +590,7 @@ async fn packaged_widget_descriptor_matches_live_registration() {
 
 #[semio_framework_async_macros::async_test]
 async fn portable_channel_identity_fixtures_match_live_widgets() {
-    let registry = neural_engine::ColdOwner::new(module_registry().await);
+    let registry = neural_engine::ColdOwner::new(module_registry(geometry_session()));
     let fixtures = pack::json::parse(include_str!("../../🧫️fixtures/🪪️channels/🔣️.json")).unwrap();
     for fixture in fixtures.get("cases").unwrap().as_array().unwrap() {
         let info = registry.operator_info(fixture.get("operator").unwrap().as_str().unwrap()).unwrap();
@@ -608,4 +603,9 @@ async fn portable_channel_identity_fixtures_match_live_widgets() {
             assert_eq!(channel.value_types, types);
         }
     }
+}
+
+fn geometry_session() -> &'static Session {
+    static SESSION: std::sync::OnceLock<Session> = std::sync::OnceLock::new();
+    SESSION.get_or_init(Session::new)
 }

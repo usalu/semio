@@ -5,12 +5,34 @@
   "type": "object",
   "additionalProperties": false,
   "required": [
+    "mutation",
     "id"
   ],
   "properties": {
+    "mutation": {
+      "const": "deleteGrowthPlan"
+    },
     "id": {
-      "type": "integer",
-      "minimum": 0
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Growth Plan",
+          "de": "Wachstumsplan"
+        },
+        "description": {
+          "en": "The growth plan to delete.",
+          "de": "Zu löschender Eintrag vom Typ „Wachstumsplan“."
+        },
+        "ref": {
+          "kind": "growthPlan",
+          "domain": "program",
+          "granularity": "entity"
+        },
+        "group": "target",
+        "order": 10
+      }
     }
   }
 }

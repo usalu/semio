@@ -5,6 +5,7 @@
   "type": "object",
   "additionalProperties": false,
   "required": [
+    "mutation",
     "id",
     "name",
     "supplyNodeId",
@@ -13,26 +14,137 @@
     "terminalZoneIds"
   ],
   "properties": {
+    "mutation": {
+      "const": "createAirLoop"
+    },
     "id": {
-      "type": "integer"
+      "type": "integer",
+      "minimum": 0,
+      "x-semio-ui": {
+        "widget": "stepper",
+        "role": "value",
+        "label": {
+          "en": "ID",
+          "de": "ID"
+        },
+        "description": {
+          "en": "Id the new air loop is created under; later mutations address it by this id.",
+          "de": "ID, unter der das neue Objekt angelegt wird; spätere Mutationen adressieren es darüber."
+        },
+        "step": 1,
+        "precision": 0,
+        "group": "identity",
+        "order": 10
+      }
     },
     "name": {
-      "type": "string"
+      "type": "string",
+      "pattern": "[^\\t\\n\\u000B\\f\\r \\u0085\\u00A0\\u1680\\u2000-\\u200A\\u2028\\u2029\\u202F\\u205F\\u3000]",
+      "x-semio-ui": {
+        "widget": "text",
+        "role": "value",
+        "label": {
+          "en": "Name",
+          "de": "Name"
+        },
+        "group": "identity",
+        "order": 20
+      }
     },
     "supplyNodeId": {
-      "type": "integer"
+      "type": "integer",
+      "minimum": 1,
+      "x-semio-ui": {
+        "widget": "stepper",
+        "role": "value",
+        "label": {
+          "en": "Supply air node",
+          "de": "Zuluftknoten"
+        },
+        "description": {
+          "en": "Node number of the supply air outlet.",
+          "de": "Knotennummer des Zuluftaustritts."
+        },
+        "step": 1,
+        "precision": 0,
+        "group": "network",
+        "order": 30
+      }
     },
     "returnNodeId": {
-      "type": "integer"
+      "type": "integer",
+      "minimum": 1,
+      "x-semio-ui": {
+        "widget": "stepper",
+        "role": "value",
+        "label": {
+          "en": "Return air node",
+          "de": "Rückluftknoten"
+        },
+        "description": {
+          "en": "Node number of the return air inlet.",
+          "de": "Knotennummer des Rücklufteintritts."
+        },
+        "step": 1,
+        "precision": 0,
+        "group": "network",
+        "order": 40
+      }
     },
     "designSupplyAirFlowM3S": {
-      "type": "number"
+      "type": "number",
+      "exclusiveMinimum": 0,
+      "x-semio-ui": {
+        "widget": "stepper",
+        "role": "value",
+        "label": {
+          "en": "Design supply air flow",
+          "de": "Bemessungszuluftvolumenstrom"
+        },
+        "unit": "m³/s",
+        "displayUnit": "m³/h",
+        "displayFactor": 3600,
+        "step": 0.002777777777777778,
+        "precision": 0,
+        "group": "ventilation",
+        "order": 50
+      }
     },
     "terminalZoneIds": {
       "type": "array",
       "items": {
-        "type": "integer"
+        "type": "integer",
+        "minimum": 0
+      },
+      "uniqueItems": true,
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Served zones",
+          "de": "Versorgte Zonen"
+        },
+        "description": {
+          "en": "Zone ids in strictly ascending order.",
+          "de": "Zonen-IDs in streng aufsteigender Reihenfolge."
+        },
+        "ref": {
+          "kind": "zone",
+          "domain": "energyModel",
+          "granularity": "zone"
+        },
+        "group": "member",
+        "order": 60
       }
     }
-  }
+  },
+  "x-semio-invariant": [
+    {
+      "id": "terminal-zone-ids-ascending",
+      "description": {
+        "en": "Served zone ids are listed in strictly ascending order.",
+        "de": "Die IDs der versorgten Zonen sind streng aufsteigend sortiert."
+      }
+    }
+  ]
 }

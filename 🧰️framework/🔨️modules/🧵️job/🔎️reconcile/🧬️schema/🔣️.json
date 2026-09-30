@@ -1,0 +1,94 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/framework/job/reconcile/schema.json",
+  "$defs": {
+    "JobReconcileRequestIdV1": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{32}$",
+      "x-semio-formats": [
+        "🔣️jsonschema"
+      ]
+    },
+    "JobReconcileRequestV1": {
+      "x-semio-formats": [
+        "🔣️jsonschema",
+        "🟦️typescript"
+      ],
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schema",
+        "version",
+        "requestId"
+      ],
+      "properties": {
+        "schema": {
+          "const": "semio.framework.job-reconcile/v1"
+        },
+        "version": {
+          "const": 1
+        },
+        "requestId": {
+          "$ref": "#/$defs/JobReconcileRequestIdV1"
+        }
+      }
+    },
+    "JobReconcileResultV1": {
+      "x-semio-formats": [
+        "🔣️jsonschema",
+        "🟦️typescript"
+      ],
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schema",
+        "version",
+        "requestId",
+        "found",
+        "job"
+      ],
+      "properties": {
+        "schema": {
+          "const": "semio.framework.job-reconcile-result/v1"
+        },
+        "version": {
+          "const": 1
+        },
+        "requestId": {
+          "$ref": "#/$defs/JobReconcileRequestIdV1"
+        },
+        "found": {
+          "type": "boolean"
+        },
+        "job": {
+          "type": [
+            "object",
+            "null"
+          ]
+        }
+      },
+      "oneOf": [
+        {
+          "properties": {
+            "found": {
+              "const": false
+            },
+            "job": {
+              "type": "null"
+            }
+          }
+        },
+        {
+          "properties": {
+            "found": {
+              "const": true
+            },
+            "job": {
+              "type": "object"
+            }
+          }
+        }
+      ]
+    }
+  }
+}

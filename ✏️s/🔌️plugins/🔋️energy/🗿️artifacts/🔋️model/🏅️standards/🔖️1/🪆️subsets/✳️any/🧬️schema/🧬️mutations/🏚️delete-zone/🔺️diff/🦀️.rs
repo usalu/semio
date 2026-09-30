@@ -28,7 +28,7 @@ pub fn diff(payload: &super::DeleteZone, base: &EnergyModelSnapshot) -> protocol
         || base.model.air_loops.iter().any(|item| item.terminal_zone_ids.contains(&payload.id))
         || base.model.airflow_network.as_ref().is_some_and(|network| network.zone_node_ids.iter().any(|(zone, _)| *zone == payload.id))
     {
-        return protocol::MutationOutcome::error("mutation.invariant", format!("Zone {} is still referenced by another entity; delete or reassign those first.", payload.id.0), [payload.id.0.to_string()]);
+        return protocol::MutationOutcome::error("mutation.target-referenced", format!("Zone {} is still referenced by another entity; delete or reassign those first.", payload.id.0), [payload.id.0.to_string()]);
     }
     let mut model = base.model.clone();
     model.zones.retain(|item| item.id != payload.id);

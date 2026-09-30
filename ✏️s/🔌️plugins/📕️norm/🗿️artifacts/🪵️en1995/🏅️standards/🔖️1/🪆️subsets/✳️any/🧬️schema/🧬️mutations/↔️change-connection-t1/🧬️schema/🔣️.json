@@ -10,11 +10,43 @@
   ],
   "properties": {
     "connectionId": {
-      "type": "string"
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Connection",
+          "de": "Verbindung"
+        },
+        "description": {
+          "en": "The timber connection this mutation addresses.",
+          "de": "Die Holzverbindung, die diese Mutation adressiert."
+        },
+        "ref": {
+          "kind": "connection"
+        },
+        "group": "target",
+        "order": 10
+      }
     },
     "newValue": {
       "type": "number",
-      "format": "double"
+      "minimum": 0,
+      "x-semio-ui": {
+        "widget": "stepper",
+        "role": "value",
+        "label": {
+          "en": "Timber thickness t_1",
+          "de": "Holzdicke t_1"
+        },
+        "unit": "m",
+        "displayUnit": "mm",
+        "displayFactor": 1000,
+        "step": 0.001,
+        "precision": 0,
+        "group": "connection",
+        "order": 20
+      }
     }
   }
 }

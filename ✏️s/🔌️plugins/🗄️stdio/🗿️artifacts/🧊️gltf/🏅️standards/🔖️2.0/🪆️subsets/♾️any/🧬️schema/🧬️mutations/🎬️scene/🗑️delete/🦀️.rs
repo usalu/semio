@@ -3,8 +3,7 @@ use crate::schema::modules::mutation_support::top_level::rejection_outcome;
 use crate::schema::modules::mutation_support::top_level_collections::{reject, scenes_op, GltfTopLevelFamily, GltfTopLevelMutationRejection};
 use crate::GltfSnapshot;
 pub const ID: &str = "s.stdio.gltf.mutation.delete-scene.v1";
-#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::MutationLeaf)]
-#[mutation_leaf(contract = ::protocol)]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
 #[value(rename_all = "camelCase")]
 pub struct GltfDeleteScenePayload {
     pub index: usize,
@@ -29,7 +28,7 @@ pub fn apply(payload: &GltfDeleteScenePayload, base: &GltfSnapshot) -> Result<Gl
 
 //#region 🧬️DirectMutation
 #[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::MutationLeaf)]
-#[mutation_leaf(contract = ::protocol)]
+#[mutation_leaf(contract = ::protocol, payload = Apply)]
 #[value(tag = "phase", content = "value", rename_all = "camelCase")]
 pub enum DeleteSceneMutation {
     Apply(GltfDeleteScenePayload),
@@ -73,8 +72,8 @@ impl protocol::MutationKind<GltfSnapshot, super::GltfMutation> for DeleteSceneMu
 
 //#region 🧪️Tests
 #[cfg(test)]
-#[path = "🧪️tests/🔬️direct-leaf/🦀️.rs"]
-mod direct_leaf_tests;
+#[path = "🧪️tests/🚫️removes-the-af9666/🦀️.rs"]
+mod case_removes_the_af9666;
 //#endregion 🧪️Tests
 
 #[cfg(test)]

@@ -1,0 +1,6 @@
+{
+  "operation": "setSurfaceCount",
+  "payload": {
+    "value": 1
+  }
+}

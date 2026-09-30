@@ -24,24 +24,16 @@
           "kind": "permanent",
           "category": "self",
           "stage": "composite",
-          "qAreaPa": 0.0,
           "mKNm": 20000.0,
-          "vKN": 0.0,
-          "nKN": 1200000.0,
-          "deltaSigmaKPa": 0.0,
-          "deltaTauKPa": 0.0
+          "nKN": 1200000.0
         },
         {
           "id": "Q-col",
           "kind": "imposed",
           "category": "B",
           "stage": "composite",
-          "qAreaPa": 0.0,
           "mKNm": 15000.0,
-          "vKN": 0.0,
-          "nKN": 400000.0,
-          "deltaSigmaKPa": 0.0,
-          "deltaTauKPa": 0.0
+          "nKN": 400000.0
         }
       ]
     }
@@ -70,9 +62,7 @@
           "category": "self",
           "stage": "composite",
           "qAreaPa": 3500.0,
-          "mKNm": 0.0,
-          "vKN": 0.0,
-          "nKN": 0.0,
+          "fKN": 0.0,
           "deltaSigmaKPa": 0.0,
           "deltaTauKPa": 0.0
         },
@@ -82,9 +72,7 @@
           "category": "B",
           "stage": "composite",
           "qAreaPa": 2000.0,
-          "mKNm": 0.0,
-          "vKN": 0.0,
-          "nKN": 0.0,
+          "fKN": 0.0,
           "deltaSigmaKPa": 0.0,
           "deltaTauKPa": 0.0
         }

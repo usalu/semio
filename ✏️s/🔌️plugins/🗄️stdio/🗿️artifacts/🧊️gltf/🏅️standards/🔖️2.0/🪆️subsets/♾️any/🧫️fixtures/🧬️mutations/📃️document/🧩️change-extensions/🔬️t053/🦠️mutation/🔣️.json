@@ -1,0 +1,11 @@
+{
+  "mutation": "changeDocumentExtensionData",
+  "payload": {
+    "phase": "apply",
+    "value": {
+      "data": {
+        "KHR_lights_punctual": {}
+      }
+    }
+  }
+}

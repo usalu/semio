@@ -11,13 +11,62 @@
   ],
   "properties": {
     "memberId": {
-      "type": "string"
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Member",
+          "de": "Bauteil"
+        },
+        "description": {
+          "en": "The reinforced concrete member this mutation addresses.",
+          "de": "Das Stahlbetonbauteil, das diese Mutation adressiert."
+        },
+        "ref": {
+          "kind": "member"
+        },
+        "group": "target",
+        "order": 10
+      }
     },
     "actionId": {
-      "type": "string"
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Action",
+          "de": "Einwirkung"
+        },
+        "description": {
+          "en": "The characteristic action (load case) of the member.",
+          "de": "Die charakteristische Einwirkung (Lastfall) des Bauteils."
+        },
+        "ref": {
+          "kind": "action"
+        },
+        "group": "target",
+        "order": 20
+      }
     },
     "newValue": {
-      "type": "number"
+      "type": "number",
+      "x-semio-ui": {
+        "widget": "stepper",
+        "role": "value",
+        "label": {
+          "en": "Characteristic axial force N_k",
+          "de": "Charakteristische Normalkraft N_k"
+        },
+        "unit": "N",
+        "displayUnit": "kN",
+        "displayFactor": 0.001,
+        "step": 100,
+        "precision": 1,
+        "group": "actions",
+        "order": 30
+      }
     }
   }
 }

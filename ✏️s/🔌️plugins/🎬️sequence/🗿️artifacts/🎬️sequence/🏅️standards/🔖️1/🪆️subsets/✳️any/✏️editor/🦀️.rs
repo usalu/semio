@@ -55,7 +55,7 @@ pub const SEQUENCE_PLAY_APP_ID: &str = "s.sequence.sequence@1/*#editor";
 /// and nothing on this path ever mounts or retires it, so the envelope route traps the guest
 /// (`🧊️process3d` lost its whole editor to exactly this).
 pub fn reset_sequence_document_effect(document: &SequenceSnapshot) -> semio_framework_plugin::Effect {
-    let pack = <SequenceSnapshot as store::ArtifactPack>::encode_pack(document);
+    let pack = crate::standards::v1::subsets::any::io::snapshot_pack(document);
     let spr = semio_framework_plugin::resolve_ready(store::empty_document_spr(SEQUENCE_PLAY_APP_ID, SEQUENCE_DOCUMENT_SCHEMA));
     semio_framework_plugin::Effect::LoadDocument { pack, spr }
 }
@@ -453,24 +453,6 @@ fn slot_key(slot: Option<&SlotRef>) -> Option<(String, String)> {
     slot.map(|entry| (entry.owner.clone(), entry.name.clone()))
 }
 
-#[cfg(test)]
-fn ensure_imperative_modules_for_tests() {
-    use imperative_engine::{contributions_json_from_entries, register_native_imperative_module, sync_imperative_module_contributions};
-    use std::sync::Once;
-    static ONCE: Once = Once::new();
-    ONCE.call_once(|| {
-        register_native_imperative_module("imperative-extension-math", semio_s_plugin_imperative_math::register);
-        register_native_imperative_module("imperative-extension-text", semio_s_plugin_imperative_text::register);
-        register_native_imperative_module("imperative-extension-effect", semio_s_plugin_imperative_effect::register);
-        let json = contributions_json_from_entries(&[
-            semio_s_plugin_imperative_math::imperative_module_contribution(),
-            semio_s_plugin_imperative_text::imperative_module_contribution(),
-            semio_s_plugin_imperative_effect::imperative_module_contribution(),
-            semio_s_plugin_imperative_control::imperative_module_contribution(),
-        ]);
-        sync_imperative_module_contributions(&json);
-    });
-}
 
 pub struct SequenceHost {
     /// 🌊️ The plain pre-migration document shape (`{schema, steps, edges}`) — this plugin's own
@@ -519,8 +501,6 @@ impl SequenceHost {
     /// 🌊️ Builds a live host directly from a plain snapshot (the WASM bridge's `loadFixtureJson`/
     /// `SequenceHost::load_json` entry point).
     pub fn from_host_snapshot(host_snapshot: SequenceHostSnapshot) -> Self {
-        #[cfg(test)]
-        ensure_imperative_modules_for_tests();
         let next_serial = max_serial_in_snapshot(&host_snapshot).max(100);
         let mut host = Self {
             snapshot: host_snapshot,
@@ -1306,6 +1286,7 @@ fn sequence_artifact_store_edit(forward: SequenceMutation, inverse: Vec<Sequence
             label: None,
             group_id: None,
             origin: Default::default(),
+            transaction: None,
         }],
         description,
         coalesce_key: None,

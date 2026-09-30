@@ -1,15 +1,10 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/app/trinity/jack/results-window/transient/mutations.json",
   "title": "JackResultsWindowTransientMutation",
-  "oneOf": [{
-    "type": "object",
-    "additionalProperties": false,
-    "required": ["kind", "executionId", "result", "error"],
-    "properties": {
-      "kind": { "const": "replace-query-result" },
-      "executionId": { "type": ["string", "null"] },
-      "result": { "type": ["object", "null"] },
-      "error": { "type": ["string", "null"] }
+  "oneOf": [
+    {
+      "$ref": "https://json.schemas.assets.semio-tech.com/app/trinity/jack/results-window/transient/mutation/replace-query-result/schema.json"
     }
-  }]
+  ]
 }

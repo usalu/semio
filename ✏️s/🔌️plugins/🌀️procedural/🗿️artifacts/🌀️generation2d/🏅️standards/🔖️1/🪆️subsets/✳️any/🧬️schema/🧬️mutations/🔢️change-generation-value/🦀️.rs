@@ -7,6 +7,7 @@ use semio_framework_value_derive::{FromValue, ToValue};
 //#region 🔖️Mutation
 #[derive(Clone, Debug, PartialEq, ToValue, FromValue, dsl::MutationLeaf)]
 #[mutation_leaf(contract = ::protocol)]
+#[value(rename_all = "camelCase")]
 pub struct ChangeGenerationValue {
     pub id: String,
     pub question_id: String,

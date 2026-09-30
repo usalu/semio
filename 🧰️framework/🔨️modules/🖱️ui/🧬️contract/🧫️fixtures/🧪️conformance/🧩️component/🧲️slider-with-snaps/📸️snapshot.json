@@ -1,0 +1,45 @@
+{
+  "surface": "conformance.component.slider-with-snaps",
+  "revision": 0,
+  "root": 0,
+  "nodes": [
+    {
+      "id": 0,
+      "key": "#0",
+      "component": {
+        "type": "slider",
+        "value": 5.0,
+        "min": 0.0,
+        "max": 10.0,
+        "step": 0.5,
+        "unit": "mm",
+        "snaps": [
+          2.5,
+          5.0,
+          7.5
+        ]
+      },
+      "layout": {
+        "kind": "leaf",
+        "width": "hug",
+        "height": "hug"
+      },
+      "style": {},
+      "activity": "idle",
+      "accessibility": {
+        "label": "Offset"
+      },
+      "bindings": [
+        {
+          "trigger": "change",
+          "action": {
+            "scope": "app",
+            "name": "setOffset",
+            "version": 1
+          }
+        }
+      ]
+    }
+  ],
+  "layoutEpoch": 0
+}

@@ -10,11 +10,11 @@ use crate::standards::v1::subsets::kit::schema::mutations::SemioKitMutation;
 use crate::standards::v1::subsets::kit::schema::snapshot::SemioKitSnapshot;
 use protocol::{Mutation, MutationDiff};
 
-const BEFORE: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🪓delete-object/🪓️detaches-the-only-object-child-and-keeps-the-model-child/📸️snapshot/⬅️before/🔣️.json");
-const AFTER: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🪓delete-object/🪓️detaches-the-only-object-child-and-keeps-the-model-child/📸️snapshot/➡️after/🔣️.json");
-const MUTATION: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🪓delete-object/🪓️detaches-the-only-object-child-and-keeps-the-model-child/🦠️mutation/🔣️.json");
-const DIFF: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🪓delete-object/🪓️detaches-the-only-object-child-and-keeps-the-model-child/🔺️diff/🔣️.json");
-const OUTCOME: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🪓delete-object/🪓️detaches-the-only-object-child-and-keeps-the-model-child/🎯️outcome/🔣️.json");
+const BEFORE: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🪓delete-object/🪓️detaches-only-object-child-keeps-model-child/📸️snapshot/⬅️before/🔣️.json");
+const AFTER: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🪓delete-object/🪓️detaches-only-object-child-keeps-model-child/📸️snapshot/➡️after/🔣️.json");
+const MUTATION: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🪓delete-object/🪓️detaches-only-object-child-keeps-model-child/🦠️mutation/🔣️.json");
+const DIFF: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🪓delete-object/🪓️detaches-only-object-child-keeps-model-child/🔺️diff/🔣️.json");
+const OUTCOME: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🪓delete-object/🪓️detaches-only-object-child-keeps-model-child/🎯️outcome/🔣️.json");
 
 fn before() -> SemioKitSnapshot {
     dsl::json::from_json_str(BEFORE).expect("delete-object before snapshot decodes")

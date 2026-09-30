@@ -9,14 +9,43 @@
   ],
   "properties": {
     "newExchangeProcess": {
-      "type": "string",
-      "enum": [
-        "CreateFromDictionary",
-        "ProvideCatalogue",
-        "DetermineProduct",
-        "IntegrateIntoSystem",
-        "ExchangeSystemModel"
-      ]
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/iso16757/snapshot.json#/$defs/ExchangeProcess",
+      "x-semio-ui": {
+        "widget": "select",
+        "role": "value",
+        "label": {
+          "en": "Exchange process",
+          "de": "Austauschprozess"
+        },
+        "description": {
+          "en": "ISO 16757-1 exchange process the catalogue serves.",
+          "de": "Austauschprozess nach ISO 16757-1, dem der Katalog dient."
+        },
+        "options": {
+          "CreateFromDictionary": {
+            "en": "Create from dictionary",
+            "de": "Aus dem Wörterbuch erstellen"
+          },
+          "ProvideCatalogue": {
+            "en": "Provide catalogue",
+            "de": "Katalog bereitstellen"
+          },
+          "DetermineProduct": {
+            "en": "Determine product",
+            "de": "Produkt bestimmen"
+          },
+          "IntegrateIntoSystem": {
+            "en": "Integrate into system",
+            "de": "In das System integrieren"
+          },
+          "ExchangeSystemModel": {
+            "en": "Exchange system model",
+            "de": "Systemmodell austauschen"
+          }
+        },
+        "group": "catalogue",
+        "order": 10
+      }
     }
   }
 }

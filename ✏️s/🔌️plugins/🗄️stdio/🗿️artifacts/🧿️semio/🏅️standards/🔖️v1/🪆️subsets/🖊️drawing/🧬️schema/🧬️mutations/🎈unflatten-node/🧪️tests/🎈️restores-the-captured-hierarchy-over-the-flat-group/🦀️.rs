@@ -11,11 +11,11 @@ use crate::standards::v1::subsets::drawing::schema::mutations::SemioDrawingMutat
 use crate::standards::v1::subsets::drawing::schema::snapshot::{DrawNode, SemioDrawingSnapshot};
 use protocol::{Mutation, MutationDiff};
 
-const BEFORE: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🎈unflatten-node/🎈️restores-the-captured-hierarchy-over-the-flat-group/📸️snapshot/⬅️before/🔣️.json");
-const AFTER: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🎈unflatten-node/🎈️restores-the-captured-hierarchy-over-the-flat-group/📸️snapshot/➡️after/🔣️.json");
-const MUTATION: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🎈unflatten-node/🎈️restores-the-captured-hierarchy-over-the-flat-group/🦠️mutation/🔣️.json");
-const DIFF: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🎈unflatten-node/🎈️restores-the-captured-hierarchy-over-the-flat-group/🔺️diff/🔣️.json");
-const OUTCOME: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🎈unflatten-node/🎈️restores-the-captured-hierarchy-over-the-flat-group/🎯️outcome/🔣️.json");
+const BEFORE: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🎈unflatten-node/🎈️restores-captured-hierarchy-over-flat-group/📸️snapshot/⬅️before/🔣️.json");
+const AFTER: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🎈unflatten-node/🎈️restores-captured-hierarchy-over-flat-group/📸️snapshot/➡️after/🔣️.json");
+const MUTATION: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🎈unflatten-node/🎈️restores-captured-hierarchy-over-flat-group/🦠️mutation/🔣️.json");
+const DIFF: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🎈unflatten-node/🎈️restores-captured-hierarchy-over-flat-group/🔺️diff/🔣️.json");
+const OUTCOME: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🎈unflatten-node/🎈️restores-captured-hierarchy-over-flat-group/🎯️outcome/🔣️.json");
 
 fn before() -> SemioDrawingSnapshot {
     dsl::json::from_json_str(BEFORE).expect("unflatten before snapshot decodes")

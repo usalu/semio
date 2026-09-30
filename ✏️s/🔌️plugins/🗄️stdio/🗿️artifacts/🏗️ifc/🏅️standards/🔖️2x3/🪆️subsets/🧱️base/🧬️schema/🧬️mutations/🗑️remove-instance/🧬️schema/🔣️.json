@@ -5,16 +5,31 @@
   "type": "object",
   "additionalProperties": false,
   "required": [
+    "mutation",
     "id"
   ],
   "properties": {
-    "id": {
-      "type": "integer",
-      "minimum": 0
-    },
     "mutation": {
       "const": "removeInstance",
       "description": "Aggregate discriminator spliced in by Ifc2x3Mutation; absent when the payload stands alone."
+    },
+    "id": {
+      "type": "integer",
+      "minimum": 0,
+      "x-semio-ui": {
+        "widget": "stepper",
+        "label": {
+          "en": "Instance",
+          "de": "Instanz"
+        },
+        "description": {
+          "en": "STEP instance id (#n).",
+          "de": "STEP-Instanz-ID (#n)."
+        },
+        "precision": 0,
+        "group": "target",
+        "order": 10
+      }
     }
   }
 }

@@ -169,16 +169,6 @@ pub fn font_program(snapshot: &PdfSnapshot, id: ObjRef) -> Option<(String, ObjRe
     let value = object(snapshot, id)?;
     FONT_PROGRAM_KEYS.iter().find_map(|key| value.dict_get(key).and_then(|entry| entry.as_ref()).map(|program| ((*key).to_string(), program)))
 }
-
-/// 🔤️ Every distinct font-program object any descriptor currently references, sorted by object
-/// number — the ordinal space a donor program is named in.
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub fn font_programs(snapshot: &PdfSnapshot) -> Vec<ObjRef> {
-    let mut programs: Vec<ObjRef> = font_descriptors(snapshot).into_iter().filter_map(|descriptor| font_program(snapshot, descriptor).map(|(_, id)| id)).collect();
-    programs.sort();
-    programs.dedup();
-    programs
-}
 //#endregion 🔖️Fonts
 
 //#region 🔖️FileSpecs

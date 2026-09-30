@@ -28,10 +28,24 @@
       "type": "object",
       "properties": {
         "u": {
-          "type": "number"
+          "type": "number",
+          "x-semio-ui": {
+            "widget": "stepper",
+            "label": {
+              "en": "U",
+              "de": "U"
+            }
+          }
         },
         "v": {
-          "type": "number"
+          "type": "number",
+          "x-semio-ui": {
+            "widget": "stepper",
+            "label": {
+              "en": "V",
+              "de": "V"
+            }
+          }
         }
       },
       "required": [
@@ -43,16 +57,48 @@
       "type": "object",
       "properties": {
         "r": {
-          "type": "number"
+          "type": "number",
+          "x-semio-ui": {
+            "widget": "stepper",
+            "label": {
+              "en": "Red",
+              "de": "Rot"
+            }
+          }
         },
         "g": {
-          "type": "number"
+          "type": "number",
+          "x-semio-ui": {
+            "widget": "stepper",
+            "label": {
+              "en": "Green",
+              "de": "Grün"
+            }
+          }
         },
         "b": {
-          "type": "number"
+          "type": "number",
+          "x-semio-ui": {
+            "widget": "stepper",
+            "label": {
+              "en": "Blue",
+              "de": "Blau"
+            }
+          }
         },
         "a": {
-          "type": "number"
+          "type": "number",
+          "x-semio-ui": {
+            "widget": "stepper",
+            "label": {
+              "en": "Alpha",
+              "de": "Alpha"
+            },
+            "description": {
+              "en": "Opacity, 0 transparent to 1 opaque.",
+              "de": "Deckkraft, 0 transparent bis 1 deckend."
+            }
+          }
         }
       },
       "required": [
@@ -80,30 +126,87 @@
           "type": "string"
         },
         "topology": {
-          "$ref": "#/definitions/SemioTopology"
+          "$ref": "#/definitions/SemioTopology",
+          "x-semio-ui": {
+            "widget": "select",
+            "label": {
+              "en": "Primitive topology",
+              "de": "Primitivtopologie"
+            },
+            "options": {
+              "points": {
+                "en": "Points",
+                "de": "Punkte"
+              },
+              "lines": {
+                "en": "Lines",
+                "de": "Linien"
+              },
+              "lineStrip": {
+                "en": "Line strip",
+                "de": "Linienzug"
+              },
+              "triangles": {
+                "en": "Triangles",
+                "de": "Dreiecke"
+              },
+              "triangleStrip": {
+                "en": "Triangle strip",
+                "de": "Dreiecksstreifen"
+              },
+              "triangleFan": {
+                "en": "Triangle fan",
+                "de": "Dreiecksfächer"
+              }
+            }
+          }
         },
         "positions": {
           "type": "array",
           "items": {
             "$ref": "#/definitions/SemioPoint3"
+          },
+          "x-semio-ui": {
+            "label": {
+              "en": "Positions",
+              "de": "Positionen"
+            }
           }
         },
         "normals": {
           "type": "array",
           "items": {
             "$ref": "#/definitions/SemioPoint3"
+          },
+          "x-semio-ui": {
+            "label": {
+              "en": "Normals",
+              "de": "Normalen"
+            }
           }
         },
         "uvs": {
           "type": "array",
           "items": {
             "$ref": "#/definitions/SemioUv"
+          },
+          "x-semio-ui": {
+            "label": {
+              "en": "Texture coordinates",
+              "de": "Texturkoordinaten"
+            }
           }
         },
         "colors": {
           "type": "array",
           "items": {
             "$ref": "#/definitions/SemioRgba"
+          },
+          "x-semio-ui": {
+            "label": {
+              "en": "Vertex colors",
+              "de": "Eckpunktfarben"
+            }
           }
         },
         "indices": {
@@ -116,7 +219,18 @@
           "type": [
             "string",
             "null"
-          ]
+          ],
+          "x-semio-ui": {
+            "widget": "reference",
+            "role": "target",
+            "label": {
+              "en": "Material",
+              "de": "Material"
+            },
+            "ref": {
+              "kind": "material"
+            }
+          }
         }
       },
       "required": [
@@ -133,6 +247,12 @@
           "type": "array",
           "items": {
             "$ref": "#/definitions/SemioPrimitive"
+          },
+          "x-semio-ui": {
+            "label": {
+              "en": "Primitives",
+              "de": "Primitive"
+            }
           }
         }
       },
@@ -147,13 +267,41 @@
           "type": "string"
         },
         "baseColor": {
-          "$ref": "#/definitions/SemioRgba"
+          "$ref": "#/definitions/SemioRgba",
+          "x-semio-ui": {
+            "label": {
+              "en": "Base color",
+              "de": "Grundfarbe"
+            }
+          }
         },
         "metallic": {
-          "type": "number"
+          "type": "number",
+          "x-semio-ui": {
+            "widget": "stepper",
+            "label": {
+              "en": "Metallic",
+              "de": "Metallizität"
+            },
+            "description": {
+              "en": "PBR metalness, 0 dielectric to 1 metal.",
+              "de": "PBR-Metallizität, 0 Dielektrikum bis 1 Metall."
+            }
+          }
         },
         "roughness": {
-          "type": "number"
+          "type": "number",
+          "x-semio-ui": {
+            "widget": "stepper",
+            "label": {
+              "en": "Roughness",
+              "de": "Rauheit"
+            },
+            "description": {
+              "en": "PBR roughness, 0 smooth to 1 rough.",
+              "de": "PBR-Rauheit, 0 glatt bis 1 rau."
+            }
+          }
         }
       },
       "required": [
@@ -167,12 +315,25 @@
           "type": "string"
         },
         "mime": {
-          "type": "string"
+          "type": "string",
+          "x-semio-ui": {
+            "widget": "text",
+            "label": {
+              "en": "Media type",
+              "de": "Medientyp"
+            }
+          }
         },
         "bytes": {
           "type": "array",
           "items": {
             "type": "integer"
+          },
+          "x-semio-ui": {
+            "label": {
+              "en": "Bytes",
+              "de": "Bytes"
+            }
           }
         }
       },
@@ -184,13 +345,30 @@
   "properties": {
     "schema": {
       "type": "string",
-      "x-semio-state": "artifact"
+      "x-semio-state": "artifact",
+      "x-semio-ui": {
+        "widget": "text",
+        "label": {
+          "en": "Snapshot schema",
+          "de": "Snapshot-Schema"
+        },
+        "description": {
+          "en": "Identifier of the snapshot schema version.",
+          "de": "Kennung der Version des Snapshot-Schemas."
+        }
+      }
     },
     "meshes": {
       "type": "array",
       "x-semio-state": "artifact",
       "items": {
         "$ref": "#/definitions/SemioMesh"
+      },
+      "x-semio-ui": {
+        "label": {
+          "en": "Meshes",
+          "de": "Netze"
+        }
       }
     },
     "materials": {
@@ -198,6 +376,12 @@
       "x-semio-state": "artifact",
       "items": {
         "$ref": "#/definitions/SemioMaterial"
+      },
+      "x-semio-ui": {
+        "label": {
+          "en": "Materials",
+          "de": "Materialien"
+        }
       }
     },
     "textures": {
@@ -205,6 +389,12 @@
       "x-semio-state": "artifact",
       "items": {
         "$ref": "#/definitions/SemioTexture"
+      },
+      "x-semio-ui": {
+        "label": {
+          "en": "Textures",
+          "de": "Texturen"
+        }
       }
     }
   },

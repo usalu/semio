@@ -862,7 +862,7 @@ export interface WayfindingRequirement extends EntityHeader {
   brandIntegration: string[];
 }
 
-export type DeliveryPhase = "concept" | "schematic" | "designDevelopment" | "constructionArtifacts" | "procurement" | "construction" | "commissioning" | "occupancy";
+export type DeliveryPhase = "concept" | "schematic" | "designDevelopment" | "constructionDocuments" | "procurement" | "construction" | "commissioning" | "occupancy";
 
 export interface ScheduleRequirement extends EntityHeader {
   milestone: string;

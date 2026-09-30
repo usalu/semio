@@ -547,20 +547,22 @@ async function esbuildBrowserGraph(): Promise<{ readonly modules: readonly strin
   const externalizeBare: Plugin = {
     name: "browser-graph-alias",
     setup(builder) {
-      builder.onResolve({ filter: /.*/ }, ({ path: specifier, kind }) => {
+      builder.onResolve({ filter: /.*/ }, ({ path: specifier, kind, importer }) => {
         if (kind === "entry-point") return null;
+        if (/\?(?:.*&)?(?:worker|url)(?:&|$)/.test(specifier)) return { path: resolve(dirname(importer), specifier.split("?")[0]!), namespace: "browser-worker-url" };
         const bare = specifier.split("?")[0]!;
         if (bare.startsWith(".")) return null;
         const target = aliasTarget(bare);
         const resolved = target === null ? null : resolveBrowserCandidate(target);
         return resolved === null ? { path: bare, external: true } : { path: resolved };
       });
+      builder.onLoad({ filter: /.*/, namespace: "browser-worker-url" }, ({ path }) => ({ contents: `import ${JSON.stringify(path)}; export default "worker-url";`, loader: "js" }));
     },
   };
   const result = await build({ entryPoints: [join(repoRoot, browserContract.entry)], bundle: true, write: false, metafile: true, platform: "browser", format: "esm", logLevel: "silent", absWorkingDir: repoRoot, resolveExtensions: [...browserContract.resolveExtensions], loader: { ".css": "empty", ".wasm": "empty", ".node": "empty" }, plugins: [externalizeBare] });
   const packages = new Set<string>();
   for (const input of Object.values(result.metafile.inputs)) for (const imported of input.imports) if (imported.external) packages.add(imported.path);
-  return { modules: Object.keys(result.metafile.inputs).map(repoRelative).sort(), packages: [...packages].sort() };
+  return { modules: Object.keys(result.metafile.inputs).filter((path) => !path.startsWith("browser-worker-url:")).map(repoRelative).sort(), packages: [...packages].sort() };
 }
 
 const deniedPackageOf = (specifier: string): string | undefined => browserContract.denyPackages.find((denied) => specifier === denied || specifier.startsWith(`${denied}/`));

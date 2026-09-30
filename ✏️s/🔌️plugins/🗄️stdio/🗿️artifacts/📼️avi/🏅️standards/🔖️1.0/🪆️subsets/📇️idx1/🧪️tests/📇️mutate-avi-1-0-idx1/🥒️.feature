@@ -16,8 +16,8 @@ Feature: Apply every typed AVI 1.0 mutation to a real-world video container
       """
     Then the oracle and the subject agree on the semantic projection
     Examples:
-      | id                   | params                                                                                                                                                                                                                                                                                    |
-      | set-idx1-present     | {"idx1Present": false}                                                                                                                                                                                                                                                                    |
+      | id | params |
+      | set-idx1-present | {"idx1Present":false} |
 
   @id-inverse
   @level-exhaustive
@@ -30,5 +30,5 @@ Feature: Apply every typed AVI 1.0 mutation to a real-world video container
       """
     Then the oracle and the subject agree on the semantic projection
     Examples:
-      | id                   | params                                                                                                                                                                                                                                                                                    |
-      | set-idx1-present     | {"idx1Present": false}                                                                                                                                                                                                                                                                    |
+      | id | params |
+      | set-idx1-present | {"idx1Present":false} |

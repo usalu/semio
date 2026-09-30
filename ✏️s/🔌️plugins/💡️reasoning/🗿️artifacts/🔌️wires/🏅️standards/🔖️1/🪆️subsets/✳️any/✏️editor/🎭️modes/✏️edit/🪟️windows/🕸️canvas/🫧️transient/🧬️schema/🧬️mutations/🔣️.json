@@ -1,0 +1,19 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/app/reasoning/wires/canvas-window-transient/mutations.json",
+  "title": "WiresCanvasTransientMutation",
+  "oneOf": [
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "SetDrag"
+      ],
+      "properties": {
+        "SetDrag": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/app/reasoning/wires/canvas-window-transient/mutation/set-drag/schema.json"
+        }
+      }
+    }
+  ]
+}

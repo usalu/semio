@@ -5,15 +5,57 @@
   "type": "object",
   "additionalProperties": false,
   "required": [
+    "mutation",
     "id",
     "newOverhangOffsetM"
   ],
   "properties": {
+    "mutation": {
+      "const": "changeFenestrationOverhangOffset"
+    },
     "id": {
-      "type": "integer"
+      "type": "integer",
+      "minimum": 0,
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Window",
+          "de": "Fenster"
+        },
+        "description": {
+          "en": "The window this mutation changes, by id.",
+          "de": "Fenster, das diese Mutation ändert, per ID."
+        },
+        "ref": {
+          "kind": "fenestration",
+          "domain": "energyModel",
+          "granularity": "fenestration"
+        },
+        "group": "target",
+        "order": 10
+      }
     },
     "newOverhangOffsetM": {
-      "type": "number"
+      "type": "number",
+      "minimum": 0,
+      "x-semio-ui": {
+        "widget": "stepper",
+        "role": "value",
+        "label": {
+          "en": "Overhang offset",
+          "de": "Überstandsabstand"
+        },
+        "description": {
+          "en": "Height of the overhang above the window head.",
+          "de": "Höhe des Überstands über dem Fenstersturz."
+        },
+        "unit": "m",
+        "step": 0.01,
+        "precision": 2,
+        "group": "shading",
+        "order": 20
+      }
     }
   }
 }

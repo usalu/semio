@@ -9,7 +9,24 @@
   ],
   "properties": {
     "newAssumedDeltaT": {
-      "type": "number"
+      "type": "number",
+      "x-semio-ui": {
+        "widget": "stepper",
+        "role": "value",
+        "label": {
+          "en": "Assumed uniform temperature component ΔT_u",
+          "de": "Angesetzter konstanter Temperaturanteil ΔT_u"
+        },
+        "description": {
+          "en": "Value claimed by the design; the check compares it with the value derived from the standard.",
+          "de": "Vom Entwurf angesetzter Wert; der Nachweis vergleicht ihn mit dem nach der Norm ermittelten Wert."
+        },
+        "unit": "K",
+        "step": 1,
+        "precision": 1,
+        "group": "thermal",
+        "order": 10
+      }
     }
   }
 }

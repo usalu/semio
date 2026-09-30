@@ -13,7 +13,14 @@
       "$ref": "#/$defs/GraphNodeId"
     },
     "new_label": {
-      "type": "string"
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "text",
+        "label": {
+          "en": "Node label",
+          "de": "Knotenbeschriftung"
+        }
+      }
     }
   },
   "$defs": {

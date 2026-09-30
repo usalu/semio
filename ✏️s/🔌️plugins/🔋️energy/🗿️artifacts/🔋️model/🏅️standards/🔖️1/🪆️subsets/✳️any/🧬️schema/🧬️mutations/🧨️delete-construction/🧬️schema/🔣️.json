@@ -5,11 +5,35 @@
   "type": "object",
   "additionalProperties": false,
   "required": [
+    "mutation",
     "id"
   ],
   "properties": {
+    "mutation": {
+      "const": "deleteConstruction"
+    },
     "id": {
-      "type": "integer"
+      "type": "integer",
+      "minimum": 0,
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Construction",
+          "de": "Konstruktion"
+        },
+        "description": {
+          "en": "The construction to delete, by id.",
+          "de": "Konstruktion, die diese Mutation löscht, per ID."
+        },
+        "ref": {
+          "kind": "construction",
+          "domain": "energyModel",
+          "granularity": "construction"
+        },
+        "group": "target",
+        "order": 10
+      }
     }
   }
 }

@@ -54,9 +54,10 @@ export function testWiresDocumentContractOracle(): void {
     assert.deepEqual(declaration.members.map((member) => member.name!.getText(source)).sort(), Object.keys(payload.properties).sort());
   }
   const validateMutation = ajv.compile(mutationSchema);
-  const fixtures = readdirSync(mutations, { recursive: true }).map((path) => String(path).replaceAll("\\", "/")).filter((path) => path.endsWith("/🦠️mutation/🔣️.json"));
+  const fixtureRoot = join(import.meta.dir, "../../../🧫️fixtures/🧬️mutations");
+  const fixtures = readdirSync(fixtureRoot, { recursive: true }).map((path) => String(path).replaceAll("\\", "/")).filter((path) => path.endsWith("/🦠️mutation/🔣️.json"));
   for (const path of fixtures) {
-    const mutation = JSON.parse(readFileSync(join(mutations, path), "utf8"));
+    const mutation = JSON.parse(readFileSync(join(fixtureRoot, path), "utf8"));
     assert.equal(validateMutation(mutation), true, `${path}: ${JSON.stringify(validateMutation.errors)}`);
     assert.equal(validateMutation({ ...mutation, locale: "de" }), false);
   }

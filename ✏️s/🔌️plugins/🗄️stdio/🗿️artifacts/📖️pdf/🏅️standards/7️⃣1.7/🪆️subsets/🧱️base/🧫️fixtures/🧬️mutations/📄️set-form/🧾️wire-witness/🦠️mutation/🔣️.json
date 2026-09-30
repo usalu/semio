@@ -1,0 +1,25 @@
+{
+  "mutation": "setForm",
+  "form": {
+    "id": "id",
+    "bbox": [
+      0,
+      0,
+      0,
+      0
+    ],
+    "matrix": [
+      0,
+      0,
+      0,
+      0,
+      0,
+      0
+    ],
+    "content": [],
+    "group": {},
+    "optionalContent": "optionalContent",
+    "structParent": 0,
+    "extra": []
+  }
+}

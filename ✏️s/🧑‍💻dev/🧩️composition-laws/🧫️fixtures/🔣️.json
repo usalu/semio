@@ -1,0 +1,1032 @@
+{
+  "schema": "semio.test.s-composition-laws/v1",
+  "package": "semio-s-composition-laws",
+  "suites": [
+    {
+      "target": "generation2d-example-export",
+      "path": "🧪️tests/🖼️generation2d-example-export/🦀️.rs",
+      "previousPath": "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🌀️generation2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🧪️tests/🖼️bundled-example-export/🦀️.rs",
+      "sha256": "f4262f925d713ade7b13a36bf2f727d4eb135dbd955043b11b0a4668be2c9f7a",
+      "laws": [
+        "bundled_example_exports_its_evaluated_rectangle_to_every_page_format"
+      ],
+      "targetPath": "🧪️tests/🖼️generation2d-example-export/🦀️.rs"
+    },
+    {
+      "target": "sequence-runtime",
+      "path": "🧪️tests/🎬️sequence-runtime/🦀️.rs",
+      "previousPath": "✏️s/🔌️plugins/🎬️sequence/🗿️artifacts/🎬️sequence/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🧪️tests/🔬️unit/🦀️.rs",
+      "sha256": "ef59e61477e0d7bf58006da623d74ab63b3acf4f59c22434df2f01ac55797731",
+      "laws": [
+        "run_executes_default_snapshot_and_records_scope",
+        "function_steps_use_data_ports_without_visible_execution_pins",
+        "text_steps_use_data_ports_without_visible_execution_pins"
+      ],
+      "targetPath": "🧪️tests/🎬️sequence-runtime/🦀️.rs"
+    },
+    {
+      "target": "sequence-runtime",
+      "path": "🧪️tests/🎬️sequence-runtime/🏃️playback/🦀️.rs",
+      "previousPath": "✏️s/🔌️plugins/🎬️sequence/🗿️artifacts/🎬️sequence/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🏃️run/🧪️tests/🔬️unit/🦀️.rs",
+      "sha256": "e2ec82def0e059d61207e8962f4f6b2086ef549f88acdbc0f4962317e9f02632",
+      "laws": [
+        "playback::run_stores_result_and_renders_in_script",
+        "playback::stop_command_clears_last_run_result"
+      ],
+      "targetPath": "🧪️tests/🎬️sequence-runtime/🦀️.rs"
+    },
+    {
+      "target": "generation3d-example-geometry",
+      "path": "🧪️tests/🧩️generation3d-example-geometry/🦀️.rs",
+      "previousPath": "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🧪️tests/🧩️geometry/🦀️.rs",
+      "sha256": "598ebe489abfcb399d5ba5afe1152de3c9c4e8ceb15a2c52613b2c895e765407",
+      "laws": [
+        "the_budget_calibration_is_deterministic_and_never_narrows_a_ceiling",
+        "rectangle_wire_preview_evaluates_to_an_open_wire",
+        "rectangle_extrude_volume_evaluates_to_the_analytic_box",
+        "face_sweep_extrude_evaluates_to_a_closed_solid",
+        "hexagonal_mushroom_column_evaluates_to_the_analytic_prism",
+        "box_shell_preview_evaluates_to_a_hollow_solid",
+        "box_fillet_preview_evaluates_to_a_rounded_solid",
+        "sphere_box_fuse_evaluates_to_the_union_volume",
+        "sphere_cut_with_torus_evaluates_to_the_difference_volume",
+        "hexagonal_mushroom_column_preview_payload_matches_the_scene_bridge_fixture",
+        "delivery_rectangle_wire_preview",
+        "delivery_rectangle_extrude_volume",
+        "delivery_face_sweep_extrude",
+        "delivery_hexagonal_mushroom_column",
+        "delivery_box_shell_preview",
+        "delivery_box_fillet_preview",
+        "delivery_sphere_box_fuse",
+        "delivery_sphere_cut_with_torus"
+      ],
+      "targetPath": "🧪️tests/🧩️generation3d-example-geometry/🦀️.rs"
+    },
+    {
+      "target": "generation3d-incremental-eval",
+      "path": "🧪️tests/🔁️generation3d-incremental-eval/🦀️.rs",
+      "previousPath": "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧵️preview-eval/🧪️tests/🔁️incremental/🦀️.rs",
+      "sha256": "4d59a66a5656c27ac4e83feed4892eb39ba24e802e9ec2729c6063a34a08c942",
+      "laws": [
+        "an_edit_dirties_its_own_branch_and_leaves_every_other_node_to_free_ride",
+        "a_burst_of_values_costs_one_dirty_branch_per_value_and_never_a_growing_one",
+        "only_a_changed_handle_is_owed_a_tessellate_round_trip",
+        "an_unanswered_node_keeps_its_converged_answer_and_an_answered_one_never_does",
+        "a_superseded_solid_handle_keeps_the_converged_mesh_until_the_new_pack_lands",
+        "a_chain_hop_names_the_preview_and_names_the_graph_only_when_the_census_moved",
+        "the_chrome_digest_moves_on_a_fault_or_a_chrome_edge_and_never_on_a_reshuffle"
+      ],
+      "targetPath": "🧪️tests/🔁️generation3d-incremental-eval/🦀️.rs"
+    },
+    {
+      "target": "sequence-runtime",
+      "path": "🧪️tests/🎬️sequence-runtime/🪟️windows/🦀️.rs",
+      "previousPath": "✏️s/🔌️plugins/🎬️sequence/🗿️artifacts/🎬️sequence/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🪟️windows/📽️main/🎚️config/🧪️tests/🔬️window-ownership/🦀️.rs",
+      "sha256": "fa2168b5d6a0f80c15dadc6971add067bab54ff95525acf83a79faf1117260b0",
+      "laws": [
+        "windows::sequence_window_ownership_runtime_isolates_restores_and_resets_exact_windows"
+      ],
+      "targetPath": "🧪️tests/🎬️sequence-runtime/🦀️.rs"
+    },
+    {
+      "target": "generation3d-app-laws",
+      "path": "🧪️tests/🧊️generation3d-app-laws/🧪️tests/🔒️serial-lock-discipline/🦀️.rs",
+      "previousPath": "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🧪️tests/🔒️serial-lock-discipline/🦀️.rs",
+      "sha256": "eefa29534a0c5fd3d979428e205979c16ee2651697b1a42d025cd2febd8e1d98",
+      "laws": [
+        "serial_lock_discipline::a_panicking_law_releases_the_serial_lock",
+        "serial_lock_discipline::an_early_returned_law_releases_the_serial_lock",
+        "serial_lock_discipline::a_nested_acquisition_is_refused_instead_of_hanging",
+        "serial_lock_discipline::a_failing_law_does_not_abort_the_binary_through_the_registry_guard",
+        "serial_lock_discipline::every_surfaces_door_opens_the_same_lock"
+      ],
+      "targetPath": "🧪️tests/🧊️generation3d-app-laws/🦀️.rs"
+    },
+    {
+      "target": "generation3d-app-laws",
+      "path": "🧪️tests/🧊️generation3d-app-laws/🏅️standards/🔖️1/🪆️subsets/✳️any/🧵️preview-eval/🧪️tests/🔬️unit/🦀️.rs",
+      "previousPath": "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧵️preview-eval/🧪️tests/🔬️unit/🦀️.rs",
+      "sha256": "778f0a45f1bfdb059390463375592c5ac53ffecd1d2b52af7c504be4a1020e60",
+      "laws": [
+        "preview_eval_tests_laws::laws::a_hop_carries_the_window_id_and_kind_it_was_addressed_to",
+        "preview_eval_tests_laws::laws::only_declared_preview_kinds_are_evaluation_windows",
+        "preview_eval_tests_laws::laws::the_run_declaration_matches_its_source_of_record_and_the_job_vocabulary",
+        "preview_eval_tests_laws::laws::a_node_entity_is_fnv1a_of_its_id_under_the_fnv_crate_oracle",
+        "preview_eval_tests_laws::laws::every_observation_row_answers_its_verdicts_census_stage_and_progress",
+        "preview_eval_tests_laws::laws::every_scheduling_row_answers_dispatch_wait_or_settled",
+        "preview_eval_tests_laws::laws::the_kernel_release_reaches_both_extension_registries_or_nothing",
+        "preview_eval_tests_laws::laws::every_status_row_offers_the_run_abort_exactly_while_it_can_stop_work",
+        "preview_eval_tests_laws::laws::the_lod_deflection_ladder_is_shared_and_monotone",
+        "preview_eval_tests_laws::laws::a_live_evaluation_publishes_non_idle_frames_with_a_monotone_ratio_and_an_offered_abort",
+        "preview_eval_tests_laws::laws::an_abort_while_the_chain_is_live_settles_on_cancelled"
+      ],
+      "targetPath": "🧪️tests/🧊️generation3d-app-laws/🦀️.rs"
+    },
+    {
+      "target": "generation3d-app-laws",
+      "path": "🧪️tests/🧊️generation3d-app-laws/🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer/🧪️tests/🔬️eval-chain/🦀️.rs",
+      "previousPath": "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer/🧪️tests/🔬️eval-chain/🦀️.rs",
+      "sha256": "10539a2539e3841f24cc351f17813b2d20620d4ce0865445381379af1c3d0f38",
+      "laws": [
+        "viewer_generation3d_eval_chain_tests_laws::laws::every_run_hop_names_a_viewer_preview_window_that_is_actually_attached",
+        "viewer_generation3d_eval_chain_tests_laws::laws::destroying_a_converged_instance_retires_every_ordered_root",
+        "viewer_generation3d_eval_chain_tests_laws::laws::only_a_viewer_preview_addressed_tick_passes_the_retained_preflight",
+        "viewer_generation3d_eval_chain_tests_laws::laws::a_viewer_tick_emits_extension_work_or_re_arms_but_never_settles_silently",
+        "viewer_generation3d_eval_chain_tests_laws::laws::a_late_contributions_install_re_arms_the_viewer_evaluation_the_empty_registry_faulted"
+      ],
+      "targetPath": "🧪️tests/🧊️generation3d-app-laws/🦀️.rs"
+    },
+    {
+      "target": "generation3d-app-laws",
+      "path": "🧪️tests/🧊️generation3d-app-laws/🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer/🧪️tests/🔬️unit/🦀️.rs",
+      "previousPath": "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer/🧪️tests/🔬️unit/🦀️.rs",
+      "sha256": "a57e1b6ca6dbf8f9593ea2d3d4f48da5bc2d6949ebd51be12c5924e9cd9196b0",
+      "laws": [
+        "viewer_domain::viewer_laws::create_generation3d_viewer_builds_a_definition_for_the_viewer_role",
+        "viewer_domain::viewer_laws::viewer_dialect_matches_the_artifact_coordinate",
+        "viewer_domain::viewer_laws::the_viewer_offers_export_in_both_languages_and_never_offers_import",
+        "viewer_domain::viewer_laws::the_preview_window_is_bound_to_the_graph_interaction_domain",
+        "viewer_domain::viewer_laws::the_interaction_topology_declares_node_handle_and_edge_targets",
+        "viewer_domain::viewer_laws::the_viewer_renders_a_world3d_preview_for_the_default_document",
+        "viewer_domain::viewer_laws::every_viewer_action_dispatches_live_and_never_mutates_the_document",
+        "viewer_domain::viewer_laws::every_emitted_action_is_declared_on_the_preview_window_kind"
+      ],
+      "targetPath": "🧪️tests/🧊️generation3d-app-laws/🦀️.rs"
+    },
+    {
+      "target": "generation3d-app-laws",
+      "path": "🧪️tests/🧊️generation3d-app-laws/🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer/🧪️tests/🔬️status-contract/🦀️.rs",
+      "previousPath": "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer/🧪️tests/🔬️status-contract/🦀️.rs",
+      "sha256": "1632e926835954fd368d0a5077f5a26a35db35fcfa66498eba15c59a684a177f",
+      "laws": [
+        "viewer_generation3d_status_contract_tests_laws::laws::the_viewer_preview_status_obeys_the_shared_contract_in_every_state",
+        "viewer_generation3d_status_contract_tests_laws::laws::the_published_progress_ratio_is_monotone_and_advances_across_one_evaluation",
+        "viewer_generation3d_status_contract_tests_laws::laws::a_sessionless_viewer_preview_still_publishes_the_contract",
+        "viewer_generation3d_status_contract_tests_laws::laws::the_rendered_viewer_preview_scene_carries_the_status_contract",
+        "viewer_generation3d_status_contract_tests_laws::laws::a_viewer_kernel_release_dispatches_live_and_never_mutates_the_document",
+        "viewer_generation3d_status_contract_tests_laws::laws::the_viewer_preview_window_offers_the_cancel_verb_the_fixture_names",
+        "viewer_generation3d_status_contract_tests_laws::laws::a_settled_chain_publishes_no_spinner_and_no_abort_however_stale_the_run_view_is"
+      ],
+      "targetPath": "🧪️tests/🧊️generation3d-app-laws/🦀️.rs"
+    },
+    {
+      "target": "generation3d-app-laws",
+      "path": "🧪️tests/🧊️generation3d-app-laws/🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer/🎭️modes/👁️view/🪟️windows/👁️preview/🧪️tests/🔬️unit/🦀️.rs",
+      "previousPath": "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer/🎭️modes/👁️view/🪟️windows/👁️preview/🧪️tests/🔬️unit/🦀️.rs",
+      "sha256": "33be03baed443bd4d75751bdb96f68468838f042c4d79d99248a032acc4f45d3",
+      "laws": [
+        "viewer_generation3d_modes_view_windows_preview_tests_laws::laws::definition_declares_a_world3d_surface_so_picking_can_resolve",
+        "viewer_generation3d_modes_view_windows_preview_tests_laws::laws::render_emits_real_tessellated_geometry_for_the_default_fixture",
+        "viewer_generation3d_modes_view_windows_preview_tests_laws::laws::every_instance_carries_a_channel_qualified_interaction_id",
+        "viewer_generation3d_modes_view_windows_preview_tests_laws::laws::marks_paint_hover_and_selection_from_a_bare_widget_id",
+        "viewer_generation3d_modes_view_windows_preview_tests_laws::laws::show_mode_changes_the_emitted_mesh_channels_and_edge_flag",
+        "viewer_generation3d_modes_view_windows_preview_tests_laws::laws::the_selection_payload_never_arms_a_gumball",
+        "viewer_generation3d_modes_view_windows_preview_tests_laws::laws::render_uses_the_configured_preview_camera",
+        "viewer_generation3d_modes_view_windows_preview_tests_laws::laws::the_window_chrome_binds_show_mode_lod_and_sun_to_viewer_actions",
+        "viewer_generation3d_modes_view_windows_preview_tests_laws::laws::a_supplied_evaluation_is_used_instead_of_re_evaluating",
+        "viewer_generation3d_modes_view_windows_preview_tests_laws::laws::a_hover_only_re_render_tessellates_nothing",
+        "viewer_generation3d_modes_view_windows_preview_tests_laws::laws::render_without_a_published_evaluation_paints_the_empty_world",
+        "viewer_generation3d_modes_view_windows_preview_tests_laws::laws::every_published_mesh_declares_its_role"
+      ],
+      "targetPath": "🧪️tests/🧊️generation3d-app-laws/🦀️.rs"
+    },
+    {
+      "target": "generation3d-app-laws",
+      "path": "🧪️tests/🧊️generation3d-app-laws/🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer/🎮️commands/🧭️set-sun-azimuth/🧪️tests/🔬️unit/🦀️.rs",
+      "previousPath": "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer/🎮️commands/🧭️set-sun-azimuth/🧪️tests/🔬️unit/🦀️.rs",
+      "sha256": "e2e587f4451699c140fe96a7d26bb40d2c4cc4daf180b226abc6e444e7abbfcc",
+      "laws": [
+        "viewer_generation3d_commands_set_sun_azimuth_tests_laws::laws::set_sun_azimuth_dispatches_live_and_leaves_the_document_untouched"
+      ],
+      "targetPath": "🧪️tests/🧊️generation3d-app-laws/🦀️.rs"
+    },
+    {
+      "target": "generation3d-app-laws",
+      "path": "🧪️tests/🧊️generation3d-app-laws/🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer/🎮️commands/🌄️set-sun-elevation/🧪️tests/🔬️unit/🦀️.rs",
+      "previousPath": "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer/🎮️commands/🌄️set-sun-elevation/🧪️tests/🔬️unit/🦀️.rs",
+      "sha256": "5b7bf933ac4c3ffffecfb8ab2633cf960c789043d1d9aedf53385ca2fc0517d3",
+      "laws": [
+        "viewer_generation3d_commands_set_sun_elevation_tests_laws::laws::set_sun_elevation_dispatches_live_and_leaves_the_document_untouched"
+      ],
+      "targetPath": "🧪️tests/🧊️generation3d-app-laws/🦀️.rs"
+    },
+    {
+      "target": "generation3d-app-laws",
+      "path": "🧪️tests/🧊️generation3d-app-laws/🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer/🎮️commands/🔆️set-sun-intensity/🧪️tests/🔬️unit/🦀️.rs",
+      "previousPath": "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer/🎮️commands/🔆️set-sun-intensity/🧪️tests/🔬️unit/🦀️.rs",
+      "sha256": "006c1dd4090844d436552b0b648d67ca8edfbe3e26304058c151187f9349f34f",
+      "laws": [
+        "viewer_generation3d_commands_set_sun_intensity_tests_laws::laws::set_sun_intensity_dispatches_live_and_leaves_the_document_untouched"
+      ],
+      "targetPath": "🧪️tests/🧊️generation3d-app-laws/🦀️.rs"
+    },
+    {
+      "target": "generation3d-app-laws",
+      "path": "🧪️tests/🧊️generation3d-app-laws/🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer/🎮️commands/📷️set-camera/🧪️tests/🔬️unit/🦀️.rs",
+      "previousPath": "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer/🎮️commands/📷️set-camera/🧪️tests/🔬️unit/🦀️.rs",
+      "sha256": "ae44f3183e4d34fc93494562e9a4adda6b68312d59d25aa7d3aeaf380bb2d42d",
+      "laws": [
+        "viewer_generation3d_commands_set_camera_tests_laws::laws::set_camera_dispatches_live_and_leaves_the_document_untouched"
+      ],
+      "targetPath": "🧪️tests/🧊️generation3d-app-laws/🦀️.rs"
+    },
+    {
+      "target": "generation3d-app-laws",
+      "path": "🧪️tests/🧊️generation3d-app-laws/🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer/🎮️commands/🎨️set-active-example/🧪️tests/🔬️unit/🦀️.rs",
+      "previousPath": "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer/🎮️commands/🎨️set-active-example/🧪️tests/🔬️unit/🦀️.rs",
+      "sha256": "b42896154e076e4e81724d2088eeef350128426e1f9da8b19bc7ebd2caa096b4",
+      "laws": [
+        "viewer_generation3d_commands_set_active_example_tests_laws::laws::the_no_example_row_clears_the_viewed_document_and_never_picking_does_not",
+        "viewer_generation3d_commands_set_active_example_tests_laws::laws::every_bundled_example_switches_the_viewed_document",
+        "viewer_generation3d_commands_set_active_example_tests_laws::laws::every_bundled_example_dispatches_live_rearms_the_preview_and_never_mutates_the_document",
+        "viewer_generation3d_commands_set_active_example_tests_laws::laws::consecutive_switches_carry_one_start_each_and_settle_one_run",
+        "viewer_generation3d_commands_set_active_example_tests_laws::laws::an_unpublished_example_id_is_refused",
+        "viewer_generation3d_commands_set_active_example_tests_laws::laws::an_unattached_surface_starts_no_run"
+      ],
+      "targetPath": "🧪️tests/🧊️generation3d-app-laws/🦀️.rs"
+    },
+    {
+      "target": "generation3d-app-laws",
+      "path": "🧪️tests/🧊️generation3d-app-laws/🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer/🎮️commands/👁️set-show-mode/🧪️tests/🔬️unit/🦀️.rs",
+      "previousPath": "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer/🎮️commands/👁️set-show-mode/🧪️tests/🔬️unit/🦀️.rs",
+      "sha256": "5ac1f214ce848e924228d25658e2a031ff5a2dcd75504141e705ad7d9bb27b56",
+      "laws": [
+        "viewer_generation3d_commands_set_show_mode_tests_laws::laws::set_show_mode_dispatches_live_and_leaves_the_document_untouched"
+      ],
+      "targetPath": "🧪️tests/🧊️generation3d-app-laws/🦀️.rs"
+    },
+    {
+      "target": "generation3d-app-laws",
+      "path": "🧪️tests/🧊️generation3d-app-laws/🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer/🎮️commands/🔬️set-lod-mode/🧪️tests/🔬️unit/🦀️.rs",
+      "previousPath": "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer/🎮️commands/🔬️set-lod-mode/🧪️tests/🔬️unit/🦀️.rs",
+      "sha256": "c283180c987332c91415b97e8ae82c5b58f3c380fd431ea0f7d5db94a117abd1",
+      "laws": [
+        "viewer_generation3d_commands_set_lod_mode_tests_laws::laws::set_lod_mode_dispatches_live_and_leaves_the_document_untouched"
+      ],
+      "targetPath": "🧪️tests/🧊️generation3d-app-laws/🦀️.rs"
+    },
+    {
+      "target": "generation3d-app-laws",
+      "path": "🧪️tests/🧊️generation3d-app-laws/🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer/🎮️commands/🌞️toggle-sun/🧪️tests/🔬️unit/🦀️.rs",
+      "previousPath": "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer/🎮️commands/🌞️toggle-sun/🧪️tests/🔬️unit/🦀️.rs",
+      "sha256": "789a54c541a9b9c3e742a02194d690bdb0042a75bec650d7a72cb2e7c2ebf1f1",
+      "laws": [
+        "viewer_generation3d_commands_toggle_sun_tests_laws::laws::toggle_sun_dispatches_live_and_leaves_the_document_untouched"
+      ],
+      "targetPath": "🧪️tests/🧊️generation3d-app-laws/🦀️.rs"
+    },
+    {
+      "target": "generation3d-app-laws",
+      "path": "🧪️tests/🧊️generation3d-app-laws/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/📌️panels/🗿️artifact/🧪️tests/🔬️unit/🦀️.rs",
+      "previousPath": "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/📌️panels/🗿️artifact/🧪️tests/🔬️unit/🦀️.rs",
+      "sha256": "603b6dc14bb7f9087ac9674eeff3a1a80a0d0d6c955606ce8ac18b9e058860e5",
+      "laws": [
+        "editor_generation3d_panels_artifact_tests_laws::laws::document_lists_widgets"
+      ],
+      "targetPath": "🧪️tests/🧊️generation3d-app-laws/🦀️.rs"
+    },
+    {
+      "target": "generation3d-app-laws",
+      "path": "🧪️tests/🧊️generation3d-app-laws/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/📌️panels/🔍️inspection/🧪️tests/🔬️unit/🦀️.rs",
+      "previousPath": "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/📌️panels/🔍️inspection/🧪️tests/🔬️unit/🦀️.rs",
+      "sha256": "be3aeaec598912163f4a9e5401d88f0f4ff7f89450a7a895fbe80ac9c3a49637",
+      "laws": [
+        "editor_generation3d_panels_inspection_tests_laws::laws::inspector_shows_no_selection_by_default",
+        "editor_generation3d_panels_inspection_tests_laws::laws::inspector_slider_control_rides_on_a_tree_row",
+        "editor_generation3d_panels_inspection_tests_laws::laws::inspector_exposes_typed_operator_fields_and_connected_sources"
+      ],
+      "targetPath": "🧪️tests/🧊️generation3d-app-laws/🦀️.rs"
+    },
+    {
+      "target": "generation3d-app-laws",
+      "path": "🧪️tests/🧊️generation3d-app-laws/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/📌️panels/🛍️catalogue/🧪️tests/🔬️unit/🦀️.rs",
+      "previousPath": "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/📌️panels/🛍️catalogue/🧪️tests/🔬️unit/🦀️.rs",
+      "sha256": "ab2b9c482f601f7af44fcb9105c4aca039b0d70c1d022b3848cdfed056564099",
+      "laws": [
+        "editor_generation3d_panels_catalogue_tests_laws::laws::catalogue_component_rows_drag_as_flow_widgets",
+        "editor_generation3d_panels_catalogue_tests_laws::laws::generation3d_labels_resolve_native_english_by_default",
+        "editor_generation3d_panels_catalogue_tests_laws::laws::every_catalogue_group_stamps_the_total_its_window_slices",
+        "editor_generation3d_panels_catalogue_tests_laws::laws::a_closed_catalogue_group_stamps_its_total_with_no_children",
+        "editor_generation3d_panels_catalogue_tests_laws::laws::a_catalogue_window_request_materialises_exactly_its_slice",
+        "editor_generation3d_panels_catalogue_tests_laws::laws::the_catalogue_panel_never_renders_a_continuation_row",
+        "editor_generation3d_panels_catalogue_tests_laws::laws::every_windowed_container_carries_a_distinct_node_key",
+        "editor_generation3d_panels_catalogue_tests_laws::laws::the_spotlight_catalogue_offers_every_registered_operator",
+        "editor_generation3d_panels_catalogue_tests_laws::laws::catalogue_entry_names_resolve_both_declared_languages"
+      ],
+      "targetPath": "🧪️tests/🧊️generation3d-app-laws/🦀️.rs"
+    },
+    {
+      "target": "generation3d-app-laws",
+      "path": "🧪️tests/🧊️generation3d-app-laws/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🧪️tests/🔬️fold-contract/🦀️.rs",
+      "previousPath": "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🧪️tests/🔬️fold-contract/🦀️.rs",
+      "sha256": "f88e798563fcc9df52fc470eab33045f4ca436184c27a1106690959447767eae",
+      "laws": [
+        "editor_generation3d_fold_contract_laws::laws::both_durable_lanes_declare_through_the_one_shared_footprint_builder",
+        "editor_generation3d_fold_contract_laws::laws::interaction_select_publishes_through_the_retained_typed_path"
+      ],
+      "targetPath": "🧪️tests/🧊️generation3d-app-laws/🦀️.rs"
+    },
+    {
+      "target": "generation3d-app-laws",
+      "path": "🧪️tests/🧊️generation3d-app-laws/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🧪️tests/🕹️interaction-scope/🦀️.rs",
+      "previousPath": "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🧪️tests/🕹️interaction-scope/🦀️.rs",
+      "sha256": "f87e8966c1eb9db31506e0cb56b8d48fa7ee8fc2fb61a93c3d00da88e4ccd03c",
+      "laws": [
+        "editor_generation3d_interaction_scope_laws::laws::every_reserved_verb_repaints_exactly_the_declared_surfaces",
+        "editor_generation3d_interaction_scope_laws::laws::the_fixture_rosters_are_the_declared_surfaces",
+        "editor_generation3d_interaction_scope_laws::laws::no_verb_narrows_below_the_surfaces_that_publish_its_lane",
+        "editor_generation3d_interaction_scope_laws::laws::an_undeclared_domain_keeps_the_frameworks_widest_scope",
+        "editor_generation3d_interaction_scope_laws::laws::the_full_scope_this_replaces_wanted_every_body"
+      ],
+      "targetPath": "🧪️tests/🧊️generation3d-app-laws/🦀️.rs"
+    },
+    {
+      "target": "generation3d-app-laws",
+      "path": "🧪️tests/🧊️generation3d-app-laws/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🧪️tests/🔬️generate-interactions/🦀️.rs",
+      "previousPath": "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🧪️tests/🔬️generate-interactions/🦀️.rs",
+      "sha256": "fd9b3a513f7e3cb9e23ea67e35e749dfe1efb7ec8dca3a1a0fcc01e9233513ff",
+      "laws": [
+        "editor_generation3d_generate_interactions_laws::laws::every_window_declares_exactly_the_interaction_surface_the_table_names",
+        "editor_generation3d_generate_interactions_laws::laws::the_two_previews_share_object_transforms_and_scope_component_edits",
+        "editor_generation3d_generate_interactions_laws::laws::every_listed_command_keeps_its_declared_triggers",
+        "editor_generation3d_generate_interactions_laws::laws::every_node_graph_sub_operation_the_table_names_changes_the_fixture",
+        "editor_generation3d_generate_interactions_laws::laws::the_rename_bridge_reads_every_spelling_the_commit_can_arrive_under"
+      ],
+      "targetPath": "🧪️tests/🧊️generation3d-app-laws/🦀️.rs"
+    },
+    {
+      "target": "generation3d-app-laws",
+      "path": "🧪️tests/🧊️generation3d-app-laws/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🧪️tests/🔬️example-switch/🦀️.rs",
+      "previousPath": "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🧪️tests/🔬️example-switch/🦀️.rs",
+      "sha256": "e0a22f2fc8328602574e1a153a58a31b8968b9159e9c4ff607a78c11f34b6393",
+      "laws": [
+        "editor_generation3d_example_switch_laws::laws::set_active_example_republishes_the_flow_window_graph",
+        "editor_generation3d_example_switch_laws::laws::every_example_switch_publishes_its_own_graph_without_leaking_the_previous_one",
+        "editor_generation3d_example_switch_laws::laws::a_shell_dispatched_example_switch_republishes_both_windows_and_rearms_the_eval_chain",
+        "editor_generation3d_example_switch_laws::laws::set_active_example_starts_the_run_that_evaluates_every_attached_preview_window",
+        "editor_generation3d_example_switch_laws::laws::every_example_switch_row_of_the_fixture_holds"
+      ],
+      "targetPath": "🧪️tests/🧊️generation3d-app-laws/🦀️.rs"
+    },
+    {
+      "target": "generation3d-app-laws",
+      "path": "🧪️tests/🧊️generation3d-app-laws/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🧪️tests/🔬️unit/🦀️.rs",
+      "previousPath": "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🧪️tests/🔬️unit/🦀️.rs",
+      "sha256": "213435ea96f591c1b51649df2caa433e153d9a40d6ea78d59970bcc88e2d9038",
+      "laws": [
+        "editor_domain::editor_laws::preview_eval_exact_window_transient_isolates_and_resets_in_the_registered_app",
+        "editor_domain::editor_laws::generation_preview_is_one_evaluation_shared_by_two_generation_windows",
+        "editor_domain::editor_laws::every_command_round_trips_through_text_and_binary",
+        "editor_domain::editor_laws::every_printed_op_line_starts_with_the_rows_wire_keyword",
+        "editor_domain::editor_laws::the_editor_declares_every_io_action_and_chord_the_fixture_names",
+        "editor_domain::editor_laws::the_editor_binds_every_keyboard_verb_the_fixture_names",
+        "editor_domain::editor_laws::every_window_scoped_chord_names_its_owning_window_kind_and_the_modes_that_mount_it",
+        "editor_domain::editor_laws::the_example_picker_offers_the_flow_examples_and_never_the_command_session",
+        "editor_domain::editor_laws::the_export_action_offers_every_declared_format_in_both_languages",
+        "editor_domain::editor_laws::declared_actions_bridge_to_commands",
+        "editor_domain::editor_laws::node_graph_viewport_decodes_an_absent_viewport_as_identity_and_refuses_a_malformed_one",
+        "editor_domain::editor_laws::registry_backed_editor_installs_every_declared_bounded_command_proof",
+        "editor_domain::editor_laws::the_manifest_stitches_every_taxonomy_node",
+        "editor_domain::editor_laws::each_example_loads_distinct_fixture_and_preview_geometry",
+        "editor_domain::editor_laws::refresh_pending_effects_starts_the_preview_eval_run",
+        "editor_domain::editor_laws::a_replacing_preview_run_start_retires_the_previous_runs_last_snapshot_alias",
+        "editor_domain::editor_laws::undo_redo_round_trips_flow_graph_edits",
+        "editor_domain::editor_laws::two_instances_converge_disjoint_widget_moves",
+        "editor_domain::editor_laws::generation3d_labels_translate_catalogue_and_inspector_in_german",
+        "editor_domain::editor_laws::generation3d_interaction_selection_owns_its_persisted_history",
+        "editor_domain::editor_laws::context_menu_grouped_disclosure_stays_within_budget",
+        "editor_domain::editor_laws::context_menu_reads_the_framework_owned_graph_selection",
+        "editor_domain::editor_laws::graph_selection_splits_into_node_and_edge_domains",
+        "editor_domain::editor_laws::context_menu_groups_are_taxonomy_categories",
+        "editor_domain::editor_laws::window_measure_labels_are_localized",
+        "editor_domain::editor_laws::sun_measures_are_exposed_on_preview_windows",
+        "editor_domain::editor_laws::preview_payload_has_meshes_and_instances",
+        "editor_domain::editor_laws::document_from_mesh_rejects_empty_or_invalid_geometry",
+        "editor_domain::editor_laws::mesh_import_preserves_fixture_coordinates_in_an_editable_graph",
+        "editor_domain::editor_laws::generation3d_mesh_bridges_round_trip_through_obj_glb_stl_codecs",
+        "editor_domain::editor_laws::rectangle_wire_preview_emits_edge_only_mesh",
+        "editor_domain::editor_laws::all_bundled_examples_emit_preview_meshes",
+        "editor_domain::editor_laws::preview_tolerance_follows_lod_mode",
+        "editor_domain::editor_laws::wireframe_show_mode_strips_shaded_triangles",
+        "editor_domain::editor_laws::generation3d_io_declares_the_params_and_geometry_ports",
+        "editor_domain::editor_laws::mesh_preview_renders_without_a_brep_conversion_in_editor_and_viewer",
+        "editor_domain::editor_laws::preview_payload_channel_qualifies_ids_across_two_output_channels",
+        "editor_domain::editor_laws::preview_payload_flattens_a_list_channel_into_indexed_instances",
+        "editor_domain::editor_laws::preview_payload_emits_no_instance_for_a_pure_data_channel",
+        "editor_domain::editor_laws::preview_marks_resolve_node_channel_and_instance_ids",
+        "editor_domain::editor_laws::preview_payload_marks_every_channel_of_a_hovered_node",
+        "editor_domain::editor_laws::preview_payload_marks_only_the_hovered_channel",
+        "editor_domain::editor_laws::graph_marks_project_instance_hover_back_onto_its_node_and_port",
+        "editor_domain::editor_laws::interaction_topology_ports_match_the_node_graph_port_ids",
+        "editor_domain::editor_laws::widget_preview_eligibility_covers_neurons_output_previews_and_clusters",
+        "editor_domain::editor_laws::examples_match_set_active_example_select_options",
+        "editor_domain::editor_laws::every_window_and_panel_surface_fits_the_resident_surface_bound",
+        "editor_domain::editor_laws::the_first_turn_sequence_retires_every_flow_host_it_builds",
+        "editor_domain::editor_laws::hex_column_evaluates_end_to_end_through_the_extension_round_trip",
+        "editor_domain::editor_laws::host_pushed_contribution_pages_install_the_registry_the_served_chain_needs",
+        "editor_domain::editor_laws::the_shell_boot_surface_burst_renders_inside_one_turn",
+        "editor_domain::editor_laws::the_served_one_page_contributions_crossing_installs_inside_the_watchdog_budget",
+        "editor_domain::editor_laws::the_settled_evaluation_tick_cycle_retains_nothing_that_would_exhaust_the_guest",
+        "editor_domain::editor_laws::extension_invocations_address_the_contributing_plugin_and_a_missing_contribution_faults_the_preview",
+        "editor_domain::editor_laws::a_late_contributions_install_re_arms_the_evaluation_the_empty_registry_faulted",
+        "editor_domain::editor_laws::re_pushing_an_unchanged_closure_owes_the_settled_run_nothing",
+        "editor_domain::editor_laws::hex_column_boot_stays_inside_the_interactive_turn_budget",
+        "editor_domain::editor_laws::every_emitted_action_is_declared_on_its_window_kind",
+        "editor_domain::editor_laws::an_evaluate_fault_outranks_the_addressing_miss_and_a_contribution_install_clears_it",
+        "editor_domain::editor_laws::staged_argument_actions_declare_no_trailing_ellipsis",
+        "editor_domain::editor_laws::mesh_gumball_splices_typed_transforms_and_preserves_analysis_consumers",
+        "editor_domain::editor_laws::mesh_component_edits_insert_typed_widgets_and_update_downstream_analysis",
+        "editor_domain::editor_laws::mesh_component_gumball_pins_the_complete_component_set",
+        "editor_domain::editor_laws::mesh_component_gumball_reuses_only_the_same_selection_and_operation",
+        "editor_domain::editor_laws::mesh_component_gumball_projects_a_topology_pivot_and_live_dispatch",
+        "editor_domain::editor_laws::mesh_component_edit_undo_redo_restores_geometry_and_analysis_connections",
+        "editor_domain::editor_laws::mesh_component_commands_reject_stale_topology_before_publication",
+        "editor_domain::editor_laws::mesh_component_gumball_rejects_changed_selection_before_and_during_drag",
+        "editor_domain::editor_laws::mesh_component_gumball_retains_selection_coalesces_drags_and_round_trips_history",
+        "editor_domain::editor_laws::a_document_archive_loads_into_a_fresh_instance_through_the_import_door",
+        "editor_domain::editor_laws::a_hub_genesis_pair_is_produced_and_parses_back_without_trapping"
+      ],
+      "targetPath": "🧪️tests/🧊️generation3d-app-laws/🦀️.rs"
+    },
+    {
+      "target": "generation3d-app-laws",
+      "path": "🧪️tests/🧊️generation3d-app-laws/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🧪️tests/🔬️tick-addressing/🦀️.rs",
+      "previousPath": "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🧪️tests/🔬️tick-addressing/🦀️.rs",
+      "sha256": "c7bc9af9261eac292739d198fb70d2db16ea8e452b273b025f42536229e3dd3f",
+      "laws": [
+        "editor_generation3d_tick_addressing_laws::laws::every_run_hop_names_a_preview_window_that_is_actually_attached",
+        "editor_generation3d_tick_addressing_laws::laws::only_a_preview_addressed_tick_passes_the_retained_preflight",
+        "editor_generation3d_tick_addressing_laws::laws::set_active_example_drives_the_self_dispatched_tick_chain_to_a_rendered_mesh",
+        "editor_generation3d_tick_addressing_laws::laws::generate_preview_eval_is_the_run_addressed_at_the_generate_preview",
+        "editor_generation3d_tick_addressing_laws::laws::add_generation_from_the_generations_window_drives_the_generate_preview_to_a_rendered_mesh"
+      ],
+      "targetPath": "🧪️tests/🧊️generation3d-app-laws/🦀️.rs"
+    },
+    {
+      "target": "generation3d-app-laws",
+      "path": "🧪️tests/🧊️generation3d-app-laws/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🧪️tests/🔬️work-capacity/🦀️.rs",
+      "previousPath": "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🧪️tests/🔬️work-capacity/🦀️.rs",
+      "sha256": "bd7078392d922c2b5a6333bc89661288a3602f81c92436209d9a54f69514503b",
+      "laws": [
+        "editor_generation3d_work_capacity_laws::laws::set_active_example_passes_the_retained_preflight",
+        "editor_generation3d_work_capacity_laws::laws::interaction_select_passes_the_reserved_preflight",
+        "editor_generation3d_work_capacity_laws::laws::an_unaddressed_flow_eval_tick_is_refused_not_over_capacity"
+      ],
+      "targetPath": "🧪️tests/🧊️generation3d-app-laws/🦀️.rs"
+    },
+    {
+      "target": "generation3d-app-laws",
+      "path": "🧪️tests/🧊️generation3d-app-laws/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🧪️tests/🔬️mode-panels/🦀️.rs",
+      "previousPath": "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🧪️tests/🔬️mode-panels/🦀️.rs",
+      "sha256": "d421cd54abf00cca0da974c89b138e08b3ccee04de3376565d9c639ab9128cbc",
+      "laws": [
+        "editor_generation3d_mode_panels_laws::laws::every_panel_publishes_its_body_in_generate_mode_as_well_as_edit",
+        "editor_generation3d_mode_panels_laws::laws::a_panel_publishes_the_same_body_in_every_mode",
+        "editor_generation3d_mode_panels_laws::laws::the_app_declares_one_shared_panel_per_framework_tab_and_no_mode_declares_its_own"
+      ],
+      "targetPath": "🧪️tests/🧊️generation3d-app-laws/🦀️.rs"
+    },
+    {
+      "target": "generation3d-app-laws",
+      "path": "🧪️tests/🧊️generation3d-app-laws/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🧪️tests/🎚️slider-values/🦀️.rs",
+      "previousPath": "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🧪️tests/🎚️slider-values/🦀️.rs",
+      "sha256": "d9f5fdcf770cc4d2c64206d7249eeeb4691dff8f8ec9d68eb890232bbbde6beb",
+      "laws": [
+        "editor_generation3d_slider_values_laws::laws::every_moved_slider_converges_on_the_geometry_its_released_value_makes"
+      ],
+      "targetPath": "🧪️tests/🧊️generation3d-app-laws/🦀️.rs"
+    },
+    {
+      "target": "generation3d-app-laws",
+      "path": "🧪️tests/🧊️generation3d-app-laws/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/🧬️generate/🪟️windows/👁️preview/🧪️tests/🔬️unit/🦀️.rs",
+      "previousPath": "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/🧬️generate/🪟️windows/👁️preview/🧪️tests/🔬️unit/🦀️.rs",
+      "sha256": "279d77c0003860a46432fc39ae44c6236e4ad77155d34a803338abc0f0bffd31",
+      "laws": [
+        "editor_generation3d_modes_generate_windows_preview_tests_laws::laws::generate_preview_entry_state_is_an_idle_status_host_with_a_hint",
+        "editor_generation3d_modes_generate_windows_preview_tests_laws::laws::both_previews_offer_the_same_gumball_surface",
+        "editor_generation3d_modes_generate_windows_preview_tests_laws::laws::the_generate_preview_selection_payload_arms_the_gumball_under_a_transform_utility"
+      ],
+      "targetPath": "🧪️tests/🧊️generation3d-app-laws/🦀️.rs"
+    },
+    {
+      "target": "generation3d-app-laws",
+      "path": "🧪️tests/🧊️generation3d-app-laws/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/🧬️generate/🪟️windows/📝️form/🧪️tests/🔬️unit/🦀️.rs",
+      "previousPath": "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/🧬️generate/🪟️windows/📝️form/🧪️tests/🔬️unit/🦀️.rs",
+      "sha256": "02f1fac6d28b0e5e797f8025e9c60d95e2ba0b8d53cd5e4e5503545429b14e5c",
+      "laws": [
+        "editor_generation3d_modes_generate_windows_form_tests_laws::laws::generate_form_hints_without_a_selected_generation",
+        "editor_generation3d_modes_generate_windows_form_tests_laws::laws::a_selected_generation_turns_the_form_into_bound_controls",
+        "editor_generation3d_modes_generate_windows_form_tests_laws::laws::editing_a_form_value_repatches_the_generate_preview_fixture"
+      ],
+      "targetPath": "🧪️tests/🧊️generation3d-app-laws/🦀️.rs"
+    },
+    {
+      "target": "generation3d-app-laws",
+      "path": "🧪️tests/🧊️generation3d-app-laws/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/🧬️generate/🪟️windows/🗂️generations/🧪️tests/🔬️unit/🦀️.rs",
+      "previousPath": "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/🧬️generate/🪟️windows/🗂️generations/🧪️tests/🔬️unit/🦀️.rs",
+      "sha256": "73aff333755b2ef69d0a14038d3299b7d9742967489198f932100ed4e797c2eb",
+      "laws": [
+        "editor_generation3d_modes_generate_windows_generations_tests_laws::laws::generate_mode_renders_surfaces",
+        "editor_generation3d_modes_generate_windows_generations_tests_laws::laws::every_generation_row_verb_is_reachable_from_the_rendered_tree",
+        "editor_generation3d_modes_generate_windows_generations_tests_laws::laws::an_inline_rename_commit_carries_its_typed_text_as_value",
+        "editor_generation3d_modes_generate_windows_generations_tests_laws::laws::select_rename_and_remove_converge_on_the_roster_the_user_asked_for",
+        "editor_generation3d_modes_generate_windows_generations_tests_laws::laws::generation_row_affordances_are_localized_in_german",
+        "editor_generation3d_modes_generate_windows_generations_tests_laws::laws::add_generation_lands_a_row_under_every_renderer_argument_shape",
+        "editor_generation3d_modes_generate_windows_generations_tests_laws::laws::the_generations_container_stamps_the_whole_roster",
+        "editor_generation3d_modes_generate_windows_generations_tests_laws::laws::a_closed_generations_container_stamps_its_total_with_no_rows",
+        "editor_generation3d_modes_generate_windows_generations_tests_laws::laws::a_generations_window_request_materialises_exactly_its_slice"
+      ],
+      "targetPath": "🧪️tests/🧊️generation3d-app-laws/🦀️.rs"
+    },
+    {
+      "target": "generation3d-app-laws",
+      "path": "🧪️tests/🧊️generation3d-app-laws/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🪟️windows/👁️preview/🧪️tests/🔬️unit/🦀️.rs",
+      "previousPath": "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🪟️windows/👁️preview/🧪️tests/🔬️unit/🦀️.rs",
+      "sha256": "df7bc73fe4168e07c215eaea81568054e77328e48396d506e9014e09946d65b9",
+      "laws": [
+        "editor_generation3d_modes_edit_windows_preview_tests_laws::laws::renders_world_preview_scene",
+        "editor_generation3d_modes_edit_windows_preview_tests_laws::laws::switching_active_example_changes_preview_meshes",
+        "editor_generation3d_modes_edit_windows_preview_tests_laws::laws::the_demonstrator_boot_example_renders_a_non_empty_preview_scene",
+        "editor_generation3d_modes_edit_windows_preview_tests_laws::laws::the_preview_render_reads_the_retained_evaluation_instead_of_recomputing_it"
+      ],
+      "targetPath": "🧪️tests/🧊️generation3d-app-laws/🦀️.rs"
+    },
+    {
+      "target": "generation3d-app-laws",
+      "path": "🧪️tests/🧊️generation3d-app-laws/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🪟️windows/🕸️flow/🧪️tests/🔬️unit/🦀️.rs",
+      "previousPath": "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🪟️windows/🕸️flow/🧪️tests/🔬️unit/🦀️.rs",
+      "sha256": "91d282bd12609d2141d260e70b288038b74cf60c0a5eba830f38035bf6926c39",
+      "laws": [
+        "editor_generation3d_modes_edit_windows_flow_tests_laws::laws::renders_node_graph_scene",
+        "editor_generation3d_modes_edit_windows_flow_tests_laws::laws::main_graph_scene_exports_flow_backed_node_graph_fields",
+        "editor_generation3d_modes_edit_windows_flow_tests_laws::laws::the_app_catalogue_section_carries_the_registered_operators",
+        "editor_generation3d_modes_edit_windows_flow_tests_laws::laws::main_body_is_canvas_only_without_an_embedded_artifact_tree"
+      ],
+      "targetPath": "🧪️tests/🧊️generation3d-app-laws/🦀️.rs"
+    },
+    {
+      "target": "generation3d-app-laws",
+      "path": "🧪️tests/🧊️generation3d-app-laws/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/⏱️flow-eval-tick/🧪️tests/🔬️unit/🦀️.rs",
+      "previousPath": "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/⏱️flow-eval-tick/🧪️tests/🔬️unit/🦀️.rs",
+      "sha256": "d48ba3dcd8293c9b740db5dfca73603e5d6cb5fa4657c875696d5b6ad19cf05b",
+      "laws": [
+        "editor_generation3d_commands_flow_eval_tick_tests_laws::laws::flow_eval_tick_does_not_panic_with_nothing_pending",
+        "editor_generation3d_commands_flow_eval_tick_tests_laws::laws::an_uncontributed_graph_arms_no_tick_while_a_served_one_keeps_its_chain",
+        "editor_generation3d_commands_flow_eval_tick_tests_laws::laws::a_later_set_contributions_owes_the_settled_run_a_restart",
+        "editor_generation3d_commands_flow_eval_tick_tests_laws::laws::a_second_refresh_starts_no_second_run"
+      ],
+      "targetPath": "🧪️tests/🧊️generation3d-app-laws/🦀️.rs"
+    },
+    {
+      "target": "generation3d-app-laws",
+      "path": "🧪️tests/🧊️generation3d-app-laws/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/📏️scale-selection/🧪️tests/🔬️unit/🦀️.rs",
+      "previousPath": "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/📏️scale-selection/🧪️tests/🔬️unit/🦀️.rs",
+      "sha256": "0089f1adce11a7d4a72f839cb98a9bdc87a1b13e9ad5385ced72a06a27c7c5b2",
+      "laws": [
+        "editor_generation3d_commands_scale_selection_tests_laws::laws::scale_selection_multiplies_each_axis_in_one_transform_neuron",
+        "editor_generation3d_commands_scale_selection_tests_laws::laws::an_ids_less_scale_transforms_the_framework_owned_graph_selection",
+        "editor_generation3d_commands_scale_selection_tests_laws::laws::a_scale_with_no_target_leaves_the_graph_untouched"
+      ],
+      "targetPath": "🧪️tests/🧊️generation3d-app-laws/🦀️.rs"
+    },
+    {
+      "target": "generation3d-app-laws",
+      "path": "🧪️tests/🧊️generation3d-app-laws/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/✏️node-graph-edit/🧪️tests/🔬️unit/🦀️.rs",
+      "previousPath": "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/✏️node-graph-edit/🧪️tests/🔬️unit/🦀️.rs",
+      "sha256": "8088181602d5258c5055dfe7712ee4ad965918978c6e18ebfb4b69f41b71b8aa",
+      "laws": [
+        "editor_generation3d_commands_node_graph_edit_tests_laws::laws::disconnect_then_connect_round_trips_one_wire",
+        "editor_generation3d_commands_node_graph_edit_tests_laws::laws::move_relocates_the_widget_a_node_drag_names",
+        "editor_generation3d_commands_node_graph_edit_tests_laws::laws::a_press_spends_at_most_two_live_round_trips_and_one_commit"
+      ],
+      "targetPath": "🧪️tests/🧊️generation3d-app-laws/🦀️.rs"
+    },
+    {
+      "target": "generation3d-app-laws",
+      "path": "🧪️tests/🧊️generation3d-app-laws/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🎚️set-widget-input/🧪️tests/🔬️unit/🦀️.rs",
+      "previousPath": "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🎚️set-widget-input/🧪️tests/🔬️unit/🦀️.rs",
+      "sha256": "3aaf81d6e68df9b1f46356dfa1609e9545e71dcfeac916e9d58f5d62423541f9",
+      "laws": [
+        "editor_generation3d_commands_set_widget_input_tests_laws::laws::widget_input_publication_supports_scalar_events_and_undo_redo"
+      ],
+      "targetPath": "🧪️tests/🧊️generation3d-app-laws/🦀️.rs"
+    },
+    {
+      "target": "generation3d-app-laws",
+      "path": "🧪️tests/🧊️generation3d-app-laws/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🧯️flow-tessellate-cancel-resolve/🧪️tests/🔬️unit/🦀️.rs",
+      "previousPath": "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🧯️flow-tessellate-cancel-resolve/🧪️tests/🔬️unit/🦀️.rs",
+      "sha256": "ed397d76d64e7b40b166f0d85758bc559bc4fe862c904bcc0e4e74494f3c05ff",
+      "laws": [
+        "editor_generation3d_commands_flow_tessellate_cancel_resolve_tests_laws::laws::the_cancel_acknowledgement_arms_nothing"
+      ],
+      "targetPath": "🧪️tests/🧊️generation3d-app-laws/🦀️.rs"
+    },
+    {
+      "target": "generation3d-app-laws",
+      "path": "🧪️tests/🧊️generation3d-app-laws/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/✅️flow-eval-resolve/🧪️tests/🔬️unit/🦀️.rs",
+      "previousPath": "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/✅️flow-eval-resolve/🧪️tests/🔬️unit/🦀️.rs",
+      "sha256": "82e480fb398a411c0cde913125a4c46e4c08710b9012700e70eba6ee79e3a9c9",
+      "laws": [
+        "editor_generation3d_commands_flow_eval_resolve_tests_laws::laws::eval_result_seeds_the_node_cache_and_owes_the_run_one_hop"
+      ],
+      "targetPath": "🧪️tests/🧊️generation3d-app-laws/🦀️.rs"
+    },
+    {
+      "target": "generation3d-app-laws",
+      "path": "🧪️tests/🧊️generation3d-app-laws/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/✅️flow-eval-resolve/🧪️tests/🔬️budget/🦀️.rs",
+      "previousPath": "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/✅️flow-eval-resolve/🧪️tests/🔬️budget/🦀️.rs",
+      "sha256": "612cc576bca15b192a33556d32b310d59905846d438ab0f12bf3873e3e17a1de",
+      "laws": [
+        "editor_generation3d_commands_flow_eval_resolve_budget_laws::laws::the_evaluate_budget_envelope_obeys_its_fixture_end_to_end",
+        "editor_generation3d_commands_flow_eval_resolve_budget_laws::laws::every_declared_job_phase_tag_projects_to_its_declared_surface_phase",
+        "editor_generation3d_commands_flow_eval_resolve_budget_laws::laws::progress_is_monotone_across_the_round_trips_of_one_evaluation",
+        "editor_generation3d_commands_flow_eval_resolve_budget_laws::laws::the_kernel_release_reaches_the_evaluation_registry_too",
+        "editor_generation3d_commands_flow_eval_resolve_budget_laws::laws::every_example_chain_costs_one_dispatched_hop_once_the_folds_continue_it_inline",
+        "editor_generation3d_commands_flow_eval_resolve_budget_laws::laws::a_cancel_between_waves_and_a_spent_turn_each_hand_the_round_trip_back_to_the_host"
+      ],
+      "targetPath": "🧪️tests/🧊️generation3d-app-laws/🦀️.rs"
+    },
+    {
+      "target": "generation3d-app-laws",
+      "path": "🧪️tests/🧊️generation3d-app-laws/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🔁️cycle-lod-mode/🧪️tests/🔬️unit/🦀️.rs",
+      "previousPath": "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🔁️cycle-lod-mode/🧪️tests/🔬️unit/🦀️.rs",
+      "sha256": "a535869620e08e22bbe42f1c5e8885e9250ac22a0b4d3abe0729ae7e1bcfc67a",
+      "laws": [
+        "editor_generation3d_commands_cycle_lod_mode_tests_laws::laws::the_lod_mode_ladder_is_a_total_cycle",
+        "editor_generation3d_commands_cycle_lod_mode_tests_laws::laws::cycle_lod_mode_is_a_view_action_with_no_artifact_mutations"
+      ],
+      "targetPath": "🧪️tests/🧊️generation3d-app-laws/🦀️.rs"
+    },
+    {
+      "target": "generation3d-app-laws",
+      "path": "🧪️tests/🧊️generation3d-app-laws/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/❌️delete-selection/🧪️tests/🔬️unit/🦀️.rs",
+      "previousPath": "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/❌️delete-selection/🧪️tests/🔬️unit/🦀️.rs",
+      "sha256": "f437d981db483f5ce0ccece12c326b6d5fff6ea6520523351d14a7c3498a632f",
+      "laws": [
+        "editor_generation3d_commands_delete_selection_tests_laws::laws::delete_selection_removes_the_framework_owned_graph_selection_from_the_flow_graph",
+        "editor_generation3d_commands_delete_selection_tests_laws::laws::delete_selection_with_an_empty_graph_selection_removes_nothing"
+      ],
+      "targetPath": "🧪️tests/🧊️generation3d-app-laws/🦀️.rs"
+    },
+    {
+      "target": "generation3d-app-laws",
+      "path": "🧪️tests/🧊️generation3d-app-laws/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🔄️rotate-selection/🧪️tests/🔬️unit/🦀️.rs",
+      "previousPath": "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🔄️rotate-selection/🧪️tests/🔬️unit/🦀️.rs",
+      "sha256": "fa789c1865831d571a8cf21955cfb090f9315d4b1d30d2b0562f486085584ad1",
+      "laws": [
+        "editor_generation3d_commands_rotate_selection_tests_laws::laws::rotate_selection_composes_world_axes_and_preserves_the_result_selection",
+        "editor_generation3d_commands_rotate_selection_tests_laws::laws::rotate_selection_accumulates_one_transform_neuron_in_the_flow_graph",
+        "editor_generation3d_commands_rotate_selection_tests_laws::laws::an_ids_less_rotate_transforms_the_framework_owned_graph_selection",
+        "editor_generation3d_commands_rotate_selection_tests_laws::laws::a_rotate_with_no_target_leaves_the_graph_untouched"
+      ],
+      "targetPath": "🧪️tests/🧊️generation3d-app-laws/🦀️.rs"
+    },
+    {
+      "target": "generation3d-app-laws",
+      "path": "🧪️tests/🧊️generation3d-app-laws/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/➖️remove-widget/🧪️tests/🔬️unit/🦀️.rs",
+      "previousPath": "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/➖️remove-widget/🧪️tests/🔬️unit/🦀️.rs",
+      "sha256": "58461a2a6b98351832ad2d8e668447e5333197c6a00a43c8d0f59984e8b89881",
+      "laws": [
+        "editor_generation3d_commands_remove_widget_tests_laws::laws::add_widget_action_appends_widget",
+        "editor_generation3d_commands_remove_widget_tests_laws::laws::patch_flow_widgets_edits_slider_value",
+        "editor_generation3d_commands_remove_widget_tests_laws::laws::patch_flow_widgets_recomputes_preview_geometry",
+        "editor_generation3d_commands_remove_widget_tests_laws::laws::remove_widget_action_deletes_by_id"
+      ],
+      "targetPath": "🧪️tests/🧊️generation3d-app-laws/🦀️.rs"
+    },
+    {
+      "target": "generation3d-app-laws",
+      "path": "🧪️tests/🧊️generation3d-app-laws/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🧩️add-widget/🧪️tests/🔬️unit/🦀️.rs",
+      "previousPath": "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🧩️add-widget/🧪️tests/🔬️unit/🦀️.rs",
+      "sha256": "99c481f78cf6cf1895c67b78ad349a92de9413c350f0e9c20b7d44d1b50a8cc0",
+      "laws": [
+        "editor_generation3d_commands_add_widget_tests_laws::laws::catalogue_descriptors_survive_action_decode_and_retained_publication",
+        "editor_generation3d_commands_add_widget_tests_laws::laws::rejected_creation_returns_a_fault_and_leaves_the_document_unchanged",
+        "editor_generation3d_commands_add_widget_tests_laws::laws::repeated_automatic_additions_have_separated_rendered_rectangles",
+        "editor_generation3d_commands_add_widget_tests_laws::laws::automatic_addition_undo_redo_restores_both_content_and_position"
+      ],
+      "targetPath": "🧪️tests/🧊️generation3d-app-laws/🦀️.rs"
+    },
+    {
+      "target": "generation3d-app-laws",
+      "path": "🧪️tests/🧊️generation3d-app-laws/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🧩️set-contributions/🧪️tests/🔬️unit/🦀️.rs",
+      "previousPath": "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🧩️set-contributions/🧪️tests/🔬️unit/🦀️.rs",
+      "sha256": "dbce158764a4ee35aadb00d307e8ac1086c1d39f288057a3538c04422e27b7ee",
+      "laws": [
+        "editor_generation3d_commands_set_contributions_tests_laws::laws::a_paged_run_installs_the_contributed_registry",
+        "editor_generation3d_commands_set_contributions_tests_laws::laws::the_packaged_brep_manifest_parses_as_a_flow_extension_manifest",
+        "editor_generation3d_commands_set_contributions_tests_laws::laws::a_one_page_host_shaped_run_indexes_contributed_operators",
+        "editor_generation3d_commands_set_contributions_tests_laws::laws::an_out_of_order_run_is_refused_and_discarded",
+        "editor_generation3d_commands_set_contributions_tests_laws::laws::an_invalid_page_address_is_refused"
+      ],
+      "targetPath": "🧪️tests/🧊️generation3d-app-laws/🦀️.rs"
+    },
+    {
+      "target": "generation3d-app-laws",
+      "path": "🧪️tests/🧊️generation3d-app-laws/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🔺️flow-tessellate-resolve/🧪️tests/🔬️unit/🦀️.rs",
+      "previousPath": "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🔺️flow-tessellate-resolve/🧪️tests/🔬️unit/🦀️.rs",
+      "sha256": "5001490d1fb63254a58731ad9bc21f5bc6b267dae18f64fc269bf618e8e96f2c",
+      "laws": [
+        "editor_generation3d_commands_flow_tessellate_resolve_tests_laws::laws::tessellate_result_resolves_the_pending_handle",
+        "editor_generation3d_commands_flow_tessellate_resolve_tests_laws::laws::a_partial_step_owes_the_run_another_hop_with_progress",
+        "editor_generation3d_commands_flow_tessellate_resolve_tests_laws::laws::a_chunked_mesh_body_only_lands_on_its_last_chunk",
+        "editor_generation3d_commands_flow_tessellate_resolve_tests_laws::laws::the_liveness_sweep_preserves_a_half_transferred_mesh_body",
+        "editor_generation3d_commands_flow_tessellate_resolve_tests_laws::laws::the_liveness_sweep_drops_a_dead_handles_partial_body",
+        "editor_generation3d_commands_flow_tessellate_resolve_tests_laws::laws::an_invalid_solid_becomes_a_typed_diagnostic_not_a_mesh",
+        "editor_generation3d_commands_flow_tessellate_resolve_tests_laws::laws::unknown_node_hash_resolves_nothing"
+      ],
+      "targetPath": "🧪️tests/🧊️generation3d-app-laws/🦀️.rs"
+    },
+    {
+      "target": "generation3d-app-laws",
+      "path": "🧪️tests/🧊️generation3d-app-laws/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🗺️reorganize/🧪️tests/🔬️unit/🦀️.rs",
+      "previousPath": "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🗺️reorganize/🧪️tests/🔬️unit/🦀️.rs",
+      "sha256": "b612f735dde9376a3eb65b0b9bdb806aab97dc8a0701428db24bfed655fe7c4e",
+      "laws": [
+        "editor_generation3d_commands_reorganize_tests_laws::laws::reorganize_moves_at_least_one_widget_off_a_deliberately_overlapped_layout",
+        "editor_generation3d_commands_reorganize_tests_laws::laws::reorganize_leaves_no_two_widgets_sharing_one_position",
+        "editor_generation3d_commands_reorganize_tests_laws::laws::reorganize_is_reachable_by_menu_and_by_keyboard_in_both_languages",
+        "editor_generation3d_commands_reorganize_tests_laws::laws::reorganize_is_the_context_menus_top_level_layout_verb"
+      ],
+      "targetPath": "🧪️tests/🧊️generation3d-app-laws/🦀️.rs"
+    },
+    {
+      "target": "generation3d-app-laws",
+      "path": "🧪️tests/🧊️generation3d-app-laws/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🔓️flow-eval-release/🧪️tests/🔬️unit/🦀️.rs",
+      "previousPath": "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🔓️flow-eval-release/🧪️tests/🔬️unit/🦀️.rs",
+      "sha256": "57a7fdba14a78d66f966c0d1b407f029d93ac40c8e06c38ced2949828c96d1dc",
+      "laws": [
+        "editor_generation3d_commands_flow_eval_release_tests_laws::laws::the_release_hop_emits_the_declared_kernel_release_through_the_command_row"
+      ],
+      "targetPath": "🧪️tests/🧊️generation3d-app-laws/🦀️.rs"
+    },
+    {
+      "target": "generation3d-app-laws",
+      "path": "🧪️tests/🧊️generation3d-app-laws/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🎨️set-active-example/🧪️tests/🔬️unit/🦀️.rs",
+      "previousPath": "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🎨️set-active-example/🧪️tests/🔬️unit/🦀️.rs",
+      "sha256": "953abb8f02424fcd339bdca6992463ca95a601cf2c7049c5914d344fb7a0e0d6",
+      "laws": [
+        "editor_generation3d_commands_set_active_example_tests_laws::laws::set_active_example_via_string_action_loads_fixture",
+        "editor_generation3d_commands_set_active_example_tests_laws::laws::unknown_example_id_is_a_no_op"
+      ],
+      "targetPath": "🧪️tests/🧊️generation3d-app-laws/🦀️.rs"
+    },
+    {
+      "target": "generation3d-app-laws",
+      "path": "🧪️tests/🧊️generation3d-app-laws/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🩹️patch-flow-widgets/🧪️tests/🔬️unit/🦀️.rs",
+      "previousPath": "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🩹️patch-flow-widgets/🧪️tests/🔬️unit/🦀️.rs",
+      "sha256": "77d52b1775dab22a59b45b7a73557cdeeab529cd1e170ec6c28440408819e419",
+      "laws": [
+        "editor_generation3d_commands_patch_flow_widgets_tests_laws::laws::a_patch_that_names_its_press_folds_under_that_press_and_an_anonymous_one_does_not"
+      ],
+      "targetPath": "🧪️tests/🧊️generation3d-app-laws/🦀️.rs"
+    },
+    {
+      "target": "generation3d-app-laws",
+      "path": "🧪️tests/🧊️generation3d-app-laws/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/➕️add-generation/🧪️tests/🔬️unit/🦀️.rs",
+      "previousPath": "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/➕️add-generation/🧪️tests/🔬️unit/🦀️.rs",
+      "sha256": "a644a8ead550b325a4087a9f1fae33193a726b1f24b785fa6e7733c7617224bd",
+      "laws": [
+        "editor_generation3d_commands_add_generation_tests_laws::laws::add_generation_records_an_undoable_generation_operation",
+        "editor_generation3d_commands_add_generation_tests_laws::laws::generate_mode_renders_surfaces",
+        "editor_generation3d_commands_add_generation_tests_laws::laws::select_generation_does_not_mutate_the_document"
+      ],
+      "targetPath": "🧪️tests/🧊️generation3d-app-laws/🦀️.rs"
+    },
+    {
+      "target": "generation3d-app-laws",
+      "path": "🧪️tests/🧊️generation3d-app-laws/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🧭️navigate-graph/🧪️tests/🔬️unit/🦀️.rs",
+      "previousPath": "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🧭️navigate-graph/🧪️tests/🔬️unit/🦀️.rs",
+      "sha256": "7e33db7b052d36bb1ec8d0e0629f3770b6c223a138d21d6f7517a69be5878d78",
+      "laws": [
+        "editor_generation3d_commands_navigate_graph_tests_laws::laws::the_shared_fixture_restates_the_bundled_hex_column_graph",
+        "editor_generation3d_commands_navigate_graph_tests_laws::laws::the_keyboard_order_is_the_reading_order_the_fixture_declares",
+        "editor_generation3d_commands_navigate_graph_tests_laws::laws::every_step_the_fixture_names_is_a_declared_arg_free_verb",
+        "editor_generation3d_commands_navigate_graph_tests_laws::laws::an_arrow_verb_moves_the_framework_owned_graph_selection",
+        "editor_generation3d_commands_navigate_graph_tests_laws::laws::activate_opens_the_selected_nodes_ports_and_an_arrow_closes_them"
+      ],
+      "targetPath": "🧪️tests/🧊️generation3d-app-laws/🦀️.rs"
+    },
+    {
+      "target": "generation3d-app-laws",
+      "path": "🧪️tests/🧊️generation3d-app-laws/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🔬️set-lod-mode/🧪️tests/🔬️unit/🦀️.rs",
+      "previousPath": "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🔬️set-lod-mode/🧪️tests/🔬️unit/🦀️.rs",
+      "sha256": "95a4a00488aaf8c334006c14ffedfad81af90df68736dfc834cddc9a2137d39f",
+      "laws": [
+        "editor_generation3d_commands_set_lod_mode_tests_laws::laws::set_lod_mode_is_a_view_action_with_no_artifact_mutations"
+      ],
+      "targetPath": "🧪️tests/🧊️generation3d-app-laws/🦀️.rs"
+    },
+    {
+      "target": "generation3d-app-laws",
+      "path": "🧪️tests/🧊️generation3d-app-laws/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🔪️knife-mesh-selection/🧪️tests/🔬️unit/🦀️.rs",
+      "previousPath": "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🔪️knife-mesh-selection/🧪️tests/🔬️unit/🦀️.rs",
+      "sha256": "5be9d033bfc11dc9a0e583c86427f9d9ad065ca5541bc671e452066dbecb03f2",
+      "laws": [
+        "editor_generation3d_knife_mesh_selection_tests_laws::laws::knife_selection_parameters_match_shared_fixtures",
+        "editor_generation3d_knife_mesh_selection_tests_laws::laws::knife_selection_splices_a_typed_widget_and_preserves_analysis",
+        "editor_generation3d_knife_mesh_selection_tests_laws::laws::knife_selection_undo_redo_restores_the_graph_and_analysis_connection"
+      ],
+      "targetPath": "🧪️tests/🧊️generation3d-app-laws/🦀️.rs"
+    },
+    {
+      "target": "generation3d-app-laws",
+      "path": "🧪️tests/🧊️generation3d-app-laws/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🌞️toggle-sun/🧪️tests/🔬️unit/🦀️.rs",
+      "previousPath": "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🌞️toggle-sun/🧪️tests/🔬️unit/🦀️.rs",
+      "sha256": "0cbe273302d28df7bf484a9daea653cf42b20205f10a1c21413749656ae3a9cd",
+      "laws": [
+        "editor_generation3d_commands_toggle_sun_tests_laws::laws::toggle_sun_never_mutates_the_document"
+      ],
+      "targetPath": "🧪️tests/🧊️generation3d-app-laws/🦀️.rs"
+    },
+    {
+      "target": "generation3d-app-laws",
+      "path": "🧪️tests/🧊️generation3d-app-laws/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🔁️cycle-show-mode/🧪️tests/🔬️unit/🦀️.rs",
+      "previousPath": "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🔁️cycle-show-mode/🧪️tests/🔬️unit/🦀️.rs",
+      "sha256": "3eade24bd3487a4c6390139347639a6d50315e6b0c98379901dfcdf87c53d831",
+      "laws": [
+        "editor_generation3d_commands_cycle_show_mode_tests_laws::laws::the_show_mode_ladder_is_a_total_cycle",
+        "editor_generation3d_commands_cycle_show_mode_tests_laws::laws::cycle_show_mode_is_a_view_action_with_no_artifact_mutations"
+      ],
+      "targetPath": "🧪️tests/🧊️generation3d-app-laws/🦀️.rs"
+    },
+    {
+      "target": "generation3d-app-laws",
+      "path": "🧪️tests/🧊️generation3d-app-laws/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/↔️translate-selection/🧪️tests/🔬️unit/🦀️.rs",
+      "previousPath": "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/↔️translate-selection/🧪️tests/🔬️unit/🦀️.rs",
+      "sha256": "dc9f3fc647c0d98ac98b6b5c1eba08adafd90f0b3fcb8647833b9bbc0dd3a0e6",
+      "laws": [
+        "editor_generation3d_commands_translate_selection_tests_laws::laws::translate_selection_persists_transform_into_flow_graph"
+      ],
+      "targetPath": "🧪️tests/🧊️generation3d-app-laws/🦀️.rs"
+    },
+    {
+      "target": "generation3d-app-laws",
+      "path": "🧪️tests/🧊️generation3d-app-laws/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎯️selection/🧪️tests/🔬️unit/🦀️.rs",
+      "previousPath": "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎯️selection/🧪️tests/🔬️unit/🦀️.rs",
+      "sha256": "5e48c5352ce61732fbd2f9e404173b15f6d4ba92e8a150090df44b79c0693d87",
+      "laws": [
+        "editor_generation3d_selection_tests_laws::laws::mesh_component_vertices_match_evaluated_topology_fixtures",
+        "editor_generation3d_selection_tests_laws::laws::mesh_component_cached_validation_rejects_stale_indices_without_evaluation",
+        "editor_generation3d_selection_tests_laws::laws::mesh_component_pivot_uses_unique_topology_vertices",
+        "editor_generation3d_selection_tests_laws::laws::mesh_quick_actions_match_component_kind_and_locale",
+        "editor_generation3d_selection_tests_laws::laws::mesh_component_targets_match_shared_contract",
+        "editor_generation3d_selection_tests_laws::laws::mesh_component_projection_preserves_instance_and_filters_hidden_targets",
+        "editor_generation3d_selection_tests_laws::laws::mesh_component_edit_context_is_scoped_to_the_addressed_editor_preview"
+      ],
+      "targetPath": "🧪️tests/🧊️generation3d-app-laws/🦀️.rs"
+    }
+  ],
+  "retainedArtifactUnits": [
+    {
+      "path": "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer/🧪️tests/🔬️unit/🦀️.rs",
+      "sha256": "c8225579e52415e45dc1ae0a0aae390066f0dd82c01cf9c6256c204a57f8f415",
+      "laws": [
+        "viewer::generation3d::component::unit_tests::every_declared_viewer_action_is_migrated",
+        "viewer::generation3d::component::unit_tests::every_viewer_tool_id_is_declared_in_all_four_tables",
+        "viewer::generation3d::component::unit_tests::no_viewer_tool_publishes_on_the_artifact_lane",
+        "viewer::generation3d::component::unit_tests::the_viewer_exports_the_example_it_is_showing_not_the_opened_document",
+        "viewer::generation3d::component::unit_tests::view_tessellate_envelope_fits_the_declared_wire_bound"
+      ]
+    },
+    {
+      "path": "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer/🧪️tests/🔬️status-contract/🦀️.rs",
+      "sha256": "ed5dac31c69c769306426a6dfefd851f56d1a2378d0899c3a39006dd09fcac14",
+      "laws": [
+        "viewer::generation3d::component::status_contract_tests::the_viewer_publishes_the_framework_run_abort_it_earns_by_declaring_the_run"
+      ]
+    },
+    {
+      "path": "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/📌️panels/🔍️inspection/🧪️tests/🔬️unit/🦀️.rs",
+      "sha256": "ae5605a5a8f02c8124099c1bf5d439d9f477c8bf6e6ebfae587d3c0e73c382d2",
+      "laws": [
+        "editor::generation3d::panels::inspection::tests::inspector_boolean_controls_and_literal_text_have_distinct_accessible_controls"
+      ]
+    },
+    {
+      "path": "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/📌️panels/🛍️catalogue/🧪️tests/🔬️unit/🦀️.rs",
+      "sha256": "12e5ef50d8ff9a1a2882e929540b03f51d7c271bb67598a152b9206eeaf3704c",
+      "laws": [
+        "editor::generation3d::panels::catalogue::tests::every_catalogue_row_activates_the_exact_drag_descriptor"
+      ]
+    },
+    {
+      "path": "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🧪️tests/🔬️fold-contract/🦀️.rs",
+      "sha256": "36c2ca02d4f37ed963f25fc2b8c88df31a8e93f0449b5a56b23b7e49a4f4573d",
+      "laws": [
+        "editor::generation3d::component::fold_contract::a_one_work_item_declaration_cannot_carry_a_point_invertible_item",
+        "editor::generation3d::component::fold_contract::set_active_example_artifact_gesture_fits_its_declared_fold_envelope_for_every_example",
+        "editor::generation3d::component::fold_contract::set_active_example_config_gesture_fits_its_declared_fold_envelope"
+      ]
+    },
+    {
+      "path": "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🧪️tests/🔬️unit/🦀️.rs",
+      "sha256": "746ccadce28bf0c5355e4a010513067519b1cfd185e3b0bfc0f7e2b81ad76914",
+      "laws": [
+        "editor::generation3d::component::unit_tests::command_ids_are_unique_and_cover_every_row",
+        "editor::generation3d::component::unit_tests::contributions_route_declares_a_reachable_wire_ceiling",
+        "editor::generation3d::component::unit_tests::document_io_route_declares_a_reachable_wire_ceiling",
+        "editor::generation3d::component::unit_tests::mesh_component_action_is_scoped_and_publishes_history_and_selection",
+        "editor::generation3d::component::unit_tests::no_pointer_down_route_survives_the_framework_owned_selection_domain",
+        "editor::generation3d::component::unit_tests::retained_route_dispositions_are_exact_and_exhaustive",
+        "editor::generation3d::component::unit_tests::tessellate_transfer_unit_fits_the_declared_response_wire_bound",
+        "editor::generation3d::component::unit_tests::vcs_artifact_app_non_empty_retained_maintenance_swap_is_authoritative_and_fail_closed"
+      ]
+    },
+    {
+      "path": "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🧪️tests/🔬️work-capacity/🦀️.rs",
+      "sha256": "5a4d6786290464fc4abbb7750125a2c88d3d8430110bdd4b75ddcb2005bfda32",
+      "laws": [
+        "editor::generation3d::component::work_capacity::generation3d_declares_one_work_capacity_for_extent_footprint_and_preflight",
+        "editor::generation3d::component::work_capacity::every_bounded_retained_route_answers_an_admissible_extent"
+      ]
+    },
+    {
+      "path": "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🪟️windows/🕸️flow/🧪️tests/🔬️unit/🦀️.rs",
+      "sha256": "2e5c96964d500629af993e3a8483043de99cf89d26556d3bdf06467e1ac8887a",
+      "laws": [
+        "editor::generation3d::modes::edit::windows::flow::tests::flow_graph_node_status_is_localized",
+        "editor::generation3d::modes::edit::windows::flow::tests::the_node_graph_canvas_declares_the_activate_binding_the_keyboard_fixture_states",
+        "editor::generation3d::modes::edit::windows::flow::tests::flow_graph_outline_answers_its_language_agnostic_law",
+        "editor::generation3d::modes::edit::windows::flow::tests::flow_graph_rows_pick_through_the_tree_domain_and_hover_on_their_own"
+      ]
+    },
+    {
+      "path": "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/✏️node-graph-edit/🧪️tests/🔬️unit/🦀️.rs",
+      "sha256": "5e7d60b2341e6f7aa6400012166637e5be4dc9db1958a02a4689b6d4ee9fc06a",
+      "laws": [
+        "editor::generation3d::commands::node_graph_edit::tests::a_slider_tick_declares_the_narrow_scope_and_a_discrete_edit_keeps_full",
+        "editor::generation3d::commands::node_graph_edit::tests::every_slider_gesture_row_folds_one_press_into_one_edit_on_the_released_value"
+      ]
+    },
+    {
+      "path": "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🎚️set-widget-input/🧪️tests/🔬️unit/🦀️.rs",
+      "sha256": "e324c090ac7436d7f4e2d73195723f0dec1d10427f5cb8c866477b5fb2c1bdbe",
+      "laws": [
+        "editor::generation3d::commands::set_widget_input::tests::widget_input_edits_real_operator_params_and_rejects_connected_ports",
+        "editor::generation3d::commands::set_widget_input::tests::widget_input_language_neutral_cases"
+      ]
+    },
+    {
+      "path": "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🔄️rotate-selection/🧪️tests/🔬️unit/🦀️.rs",
+      "sha256": "8b1d2b1d3daea80a8996e6745712b66afda98f7c477cc378a286fc11eb8a3ec2",
+      "laws": [
+        "editor::generation3d::commands::rotate_selection::tests::rotate_selection_reports_invalid_parameters_and_targets_atomically"
+      ]
+    },
+    {
+      "path": "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🧩️add-widget/🧪️tests/🔬️unit/🦀️.rs",
+      "sha256": "6ce6f45036c10102429f6255742c8bb0438207d361d8ce72af7596b6a9a569ce",
+      "laws": [
+        "editor::generation3d::commands::add_widget::tests::automatic_positions_match_the_language_neutral_fixture",
+        "editor::generation3d::commands::add_widget::tests::descriptor_contract_matches_the_language_neutral_fixture",
+        "editor::generation3d::commands::add_widget::tests::non_finite_coordinates_are_rejected_before_host_mutation"
+      ]
+    },
+    {
+      "path": "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🩹️patch-flow-widgets/🧪️tests/🔬️unit/🦀️.rs",
+      "sha256": "e25791b2e3b768f22cdd080c54c494cdbe52d61ae4229128e9e81d6d4dc26cda",
+      "laws": [
+        "editor::generation3d::commands::patch_flow_widgets::tests::a_live_patch_declares_the_narrow_scope_and_an_anonymous_one_keeps_full"
+      ]
+    },
+    {
+      "path": "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🧭️navigate-graph/🧪️tests/🔬️unit/🦀️.rs",
+      "sha256": "7df30aadc5a3fe0bf892cefdf4ff0399fc82c23a8dfade17db322e1dd1d28f41",
+      "laws": [
+        "editor::generation3d::commands::navigate_graph::tests::a_keyboard_step_authors_no_document_and_no_config_operation",
+        "editor::generation3d::commands::navigate_graph::tests::every_anchor_rule_the_fixture_states_holds",
+        "editor::generation3d::commands::navigate_graph::tests::every_arrow_walk_lands_where_the_fixture_says"
+      ]
+    },
+    {
+      "path": "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧵️preview-eval/🧪️tests/🔬️unit/🦀️.rs",
+      "sha256": "d91e95b6fec51ca99ecc601332322afefb4187081ac6c623c2c79fae66f79c7a",
+      "laws": [
+        "preview_eval::tests::every_run_effects_row_starts_finalizes_or_leaves_the_run",
+        "preview_eval::tests::every_gesture_rearm_row_owes_one_tick_per_preview_and_at_most_one_start",
+        "preview_eval::tests::a_history_verb_owes_the_previews_the_evaluation_a_gesture_would_have",
+        "preview_eval::tests::every_job_supersession_row_lets_only_the_owning_job_quiesce_the_session"
+      ]
+    },
+    {
+      "path": "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/📌️panels/🗿️artifact/🧪️tests/🔬️unit/🦀️.rs",
+      "sha256": "f016a970dd6df74f95e70b89a5a8451665b9a6bc701a89146abd8bfbdb7cfe08",
+      "laws": [
+        "editor::generation3d::panels::artifact::tests::document_rows_are_domain_pick_targets_without_a_per_row_binding",
+        "editor::generation3d::panels::artifact::tests::an_oversized_document_stamps_every_containers_total",
+        "editor::generation3d::panels::artifact::tests::an_oversized_document_renders_no_continuation_row",
+        "editor::generation3d::panels::artifact::tests::a_closed_document_section_stamps_its_total_with_no_children",
+        "editor::generation3d::panels::artifact::tests::a_document_window_request_materialises_exactly_its_slice",
+        "editor::generation3d::panels::artifact::tests::every_windowed_container_carries_a_distinct_node_key"
+      ]
+    },
+    {
+      "path": "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🔪️knife-mesh-selection/🧪️tests/🔬️unit/🦀️.rs",
+      "sha256": "a15ef5cbbaeb076e181ae2aa5a2cea509d223c5b98179b22a77eabfb5f46dfd2",
+      "laws": [
+        "editor::generation3d::component::knife_selection_tests::knife_selection_action_declares_point_controls_and_the_editor_owner"
+      ]
+    }
+  ]
+}

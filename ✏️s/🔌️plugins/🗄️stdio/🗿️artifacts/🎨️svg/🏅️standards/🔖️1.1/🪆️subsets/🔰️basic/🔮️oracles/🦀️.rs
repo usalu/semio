@@ -98,17 +98,8 @@ mod live {
     /// silent no-op: a quietly skipped mutation reports as a passing test.
     pub fn apply(doc: &mut MarkupDoc, kind: &str, params: &Json) -> Result<(), String> {
         match kind {
-            "no-mutation" => Ok(()),
             "set-snapshot" => {
-                let root = doc.root.as_mut().ok_or("set-snapshot: document has no root element")?;
-                if let Some(id) = non_empty_str(params, "rootId") {
-                    set_attr(root, "id", Some(id));
-                }
-                if let Some(width) = params.get("viewBoxWidth").and_then(json_number) {
-                    let mut view_box = element_attr(root, "viewBox").map(parse_view_box).transpose()?.unwrap_or([0.0, 0.0, 0.0, 0.0]);
-                    view_box[2] = width;
-                    set_attr(root, "viewBox", Some(format_view_box(&view_box)));
-                }
+                *doc = doc_from_wire(&member(&member(params, "snapshot"), "doc"))?;
                 Ok(())
             }
             "stamp-base-profile" => {
@@ -118,7 +109,7 @@ mod live {
                 Ok(())
             }
             "insert-basic-element" => {
-                let node = json_to_node(&member(params, "node"));
+                let node = node_from_wire(&member(params, "node"))?;
                 gate_subtree(&node)?;
                 insert_child(doc, &json_to_path(&member(params, "parent")), usize_member(params, "index"), node)
             }
@@ -152,7 +143,7 @@ mod live {
             "insert-clip-path-shape" => {
                 let id = params.str("clipPathId");
                 let target = clip_path_target(doc, &id)?;
-                let node = json_to_node(&member(params, "node"));
+                let node = node_from_wire(&member(params, "node"))?;
                 if clips_to_text(&node) {
                     return Err("SVG Basic 1.1 does not support clipping to text — the inserted shape carries a text element".to_string());
                 }
@@ -167,25 +158,13 @@ mod live {
                 _ => Err("set-text: target is not a text node".into()),
             },
             "set-view-box" => {
-                let node = node_at_mut(doc, &json_to_path(&member(params, "path")))?;
-                match params.get("viewBox") {
-                    Some(Json::Array(items)) if items.len() == 4 => {
-                        let n: Vec<f64> = items.iter().map(|item| json_number(item).unwrap_or(0.0)).collect();
-                        set_attr(node, "viewBox", Some(format_view_box(&[n[0], n[1], n[2], n[3]])));
-                    }
-                    _ => set_attr(node, "viewBox", None),
-                }
+                let view_box = view_box_from_wire(&member(params, "viewBox")).map(|value| format_view_box(&value));
+                set_attr(node_at_mut(doc, &json_to_path(&member(params, "path")))?, "viewBox", view_box);
                 Ok(())
             }
             "set-transform" => {
-                let node = node_at_mut(doc, &json_to_path(&member(params, "path")))?;
-                match params.get("transform") {
-                    Some(Json::Array(items)) => {
-                        let ops: Vec<MarkupTransformOp> = items.iter().map(json_to_transform_op).collect::<Result<_, String>>()?;
-                        set_attr(node, "transform", Some(format_transform_list(&ops)));
-                    }
-                    _ => set_attr(node, "transform", None),
-                }
+                let transform = transform_from_wire(&member(params, "transform"))?;
+                set_attr(node_at_mut(doc, &json_to_path(&member(params, "path")))?, "transform", transform);
                 Ok(())
             }
             other => Err(format!("mutation kind {other:?} has no oracle implementation")),
@@ -200,7 +179,6 @@ mod live {
     /// property has two producers to disagree.
     pub fn invert(base: &MarkupDoc, mut mutated: MarkupDoc, kind: &str, params: &Json) -> Result<MarkupDoc, String> {
         match kind {
-            "no-mutation" => Ok(mutated),
             "set-snapshot" => Ok(base.clone()),
             "stamp-base-profile" => {
                 let prior_profile = node_at(base, &[]).ok().and_then(|node| element_attr(node, "baseProfile")).map(|s| s.to_string());

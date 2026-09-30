@@ -114,6 +114,18 @@ pub fn apply_docx_strict_mutation(snapshot: &mut DocxSnapshot, mutation: &DocxSt
         Err(error) => protocol::MutationOutcome::error(error.code, error.message, error.target).absorb_messages(outcome.messages().to_vec()),
     }
 }
+
+/// 🏅️ The one whole-package operation that moves `base` into (`strict`) or out of the strict conformance class: a
+/// `set-snapshot` of [`stamp_conformance_class`]'s stamp — what a class conversion records as one edit.
+pub fn stamp_conformance_class_mutation(base: &DocxSnapshot, strict: bool) -> DocxStrictMutation {
+    DocxStrictMutation::SetSnapshot(set_snapshot::SetSnapshot { snapshot: stamp_conformance_class(base.clone(), strict) })
+}
+
+/// 📨️ Builds the operation of semantic kind `kind` from its editable payload JSON — the leaf wire (`payload_value()`) a
+/// `🥒️.feature` row carries — through the derive's generic `from_payload_value`.
+pub fn decode_docx_strict_mutation_payload(kind: &str, payload: &str) -> Result<DocxStrictMutation, String> {
+    protocol::os_pack::from_json_str(payload).and_then(|value| <DocxStrictMutation as Mutation<DocxSnapshot>>::from_payload_value(kind, value)).map_err(|error| error.to_string())
+}
 //#endregion 🔖️Apply
 
 //#region 🔖️Helpers

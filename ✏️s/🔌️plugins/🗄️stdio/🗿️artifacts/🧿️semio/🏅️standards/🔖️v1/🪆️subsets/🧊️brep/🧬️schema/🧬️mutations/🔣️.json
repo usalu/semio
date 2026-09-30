@@ -8,47 +8,11 @@
       "type": "object",
       "additionalProperties": false,
       "required": [
-        "CreateEdge"
+        "SetSnapshot"
       ],
       "properties": {
-        "CreateEdge": {
-          "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/semio/v1/brep/mutation/create-edge/schema.json"
-        }
-      }
-    },
-    {
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "CreateFace"
-      ],
-      "properties": {
-        "CreateFace": {
-          "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/semio/v1/brep/mutation/create-face/schema.json"
-        }
-      }
-    },
-    {
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "CreateShell"
-      ],
-      "properties": {
-        "CreateShell": {
-          "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/semio/v1/brep/mutation/create-shell/schema.json"
-        }
-      }
-    },
-    {
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "CreateSolid"
-      ],
-      "properties": {
-        "CreateSolid": {
-          "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/semio/v1/brep/mutation/create-solid/schema.json"
+        "SetSnapshot": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/semio/v1/brep/mutation/set-snapshot/schema.json"
         }
       }
     },
@@ -68,11 +32,47 @@
       "type": "object",
       "additionalProperties": false,
       "required": [
+        "DeleteVertex"
+      ],
+      "properties": {
+        "DeleteVertex": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/semio/v1/brep/mutation/delete-vertex/schema.json"
+        }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "CreateEdge"
+      ],
+      "properties": {
+        "CreateEdge": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/semio/v1/brep/mutation/create-edge/schema.json"
+        }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
         "DeleteEdge"
       ],
       "properties": {
         "DeleteEdge": {
           "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/semio/v1/brep/mutation/delete-edge/schema.json"
+        }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "CreateFace"
+      ],
+      "properties": {
+        "CreateFace": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/semio/v1/brep/mutation/create-face/schema.json"
         }
       }
     },
@@ -92,6 +92,18 @@
       "type": "object",
       "additionalProperties": false,
       "required": [
+        "CreateShell"
+      ],
+      "properties": {
+        "CreateShell": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/semio/v1/brep/mutation/create-shell/schema.json"
+        }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
         "DeleteShell"
       ],
       "properties": {
@@ -104,35 +116,23 @@
       "type": "object",
       "additionalProperties": false,
       "required": [
+        "CreateSolid"
+      ],
+      "properties": {
+        "CreateSolid": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/semio/v1/brep/mutation/create-solid/schema.json"
+        }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
         "DeleteSolid"
       ],
       "properties": {
         "DeleteSolid": {
           "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/semio/v1/brep/mutation/delete-solid/schema.json"
-        }
-      }
-    },
-    {
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "DeleteVertex"
-      ],
-      "properties": {
-        "DeleteVertex": {
-          "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/semio/v1/brep/mutation/delete-vertex/schema.json"
-        }
-      }
-    },
-    {
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "MoveVertex"
-      ],
-      "properties": {
-        "MoveVertex": {
-          "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/semio/v1/brep/mutation/move-vertex/schema.json"
         }
       }
     },
@@ -164,11 +164,11 @@
       "type": "object",
       "additionalProperties": false,
       "required": [
-        "SetSnapshot"
+        "MoveVertex"
       ],
       "properties": {
-        "SetSnapshot": {
-          "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/semio/v1/brep/mutation/set-snapshot/schema.json"
+        "MoveVertex": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/semio/v1/brep/mutation/move-vertex/schema.json"
         }
       }
     }

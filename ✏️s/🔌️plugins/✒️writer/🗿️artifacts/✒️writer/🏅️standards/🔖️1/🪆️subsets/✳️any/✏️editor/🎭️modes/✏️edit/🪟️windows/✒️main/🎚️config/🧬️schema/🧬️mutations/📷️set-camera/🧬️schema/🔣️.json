@@ -4,6 +4,9 @@
   "title": "SetCamera",
   "type": "object",
   "properties": {
+    "kind": {
+      "const": "set-camera"
+    },
     "camera": {
       "type": "object",
       "properties": {
@@ -15,6 +18,6 @@
       "additionalProperties": false
     }
   },
-  "required": ["camera"],
+  "required": ["kind","camera"],
   "additionalProperties": false
 }

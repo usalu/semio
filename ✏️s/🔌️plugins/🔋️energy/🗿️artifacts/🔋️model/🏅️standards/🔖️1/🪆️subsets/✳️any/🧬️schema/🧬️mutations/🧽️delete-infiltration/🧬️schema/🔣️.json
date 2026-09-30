@@ -5,11 +5,35 @@
   "type": "object",
   "additionalProperties": false,
   "required": [
+    "mutation",
     "id"
   ],
   "properties": {
+    "mutation": {
+      "const": "deleteInfiltration"
+    },
     "id": {
-      "type": "integer"
+      "type": "integer",
+      "minimum": 0,
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Infiltration",
+          "de": "Infiltration"
+        },
+        "description": {
+          "en": "The infiltration to delete, by id.",
+          "de": "Infiltration, die diese Mutation löscht, per ID."
+        },
+        "ref": {
+          "kind": "infiltration",
+          "domain": "energyModel",
+          "granularity": "load"
+        },
+        "group": "target",
+        "order": 10
+      }
     }
   }
 }

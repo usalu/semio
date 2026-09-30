@@ -5,11 +5,26 @@
   "type": "object",
   "additionalProperties": false,
   "required": [
+    "mutation",
     "artifact"
   ],
   "properties": {
+    "mutation": {
+      "const": "createArtifact"
+    },
     "artifact": {
-      "$ref": "#/$defs/SpaceArtifactRow"
+      "$ref": "#/$defs/SpaceArtifactRow",
+      "x-semio-ui": {
+        "role": "value",
+        "label": {
+          "en": "Artifact",
+          "de": "Artefakt"
+        },
+        "description": {
+          "en": "Index row of the new artifact.",
+          "de": "Indexzeile des neuen Artefakts."
+        }
+      }
     }
   },
   "$defs": {
@@ -35,10 +50,34 @@
           "type": "string"
         },
         "kindId": {
-          "type": "string"
+          "type": "string",
+          "x-semio-ui": {
+            "widget": "text",
+            "role": "value",
+            "label": {
+              "en": "Artifact Kind",
+              "de": "Artefaktart"
+            },
+            "description": {
+              "en": "Kind id of the artifact, e.g. s.puzzle.puzzle2d.",
+              "de": "Art-ID des Artefakts, z. B. s.puzzle.puzzle2d."
+            }
+          }
         },
         "schema": {
-          "type": "string"
+          "type": "string",
+          "x-semio-ui": {
+            "widget": "text",
+            "role": "value",
+            "label": {
+              "en": "Schema",
+              "de": "Schema"
+            },
+            "description": {
+              "en": "Document schema of the artifact.",
+              "de": "Dokumentschema des Artefakts."
+            }
+          }
         },
         "dialect": {
           "type": "object",
@@ -50,29 +89,130 @@
           ],
           "properties": {
             "artifactKind": {
-              "type": "string"
+              "type": "string",
+              "x-semio-ui": {
+                "widget": "text",
+                "role": "value",
+                "label": {
+                  "en": "Artifact Kind",
+                  "de": "Artefaktart"
+                },
+                "description": {
+                  "en": "Kind id of the artifact, e.g. s.stdio.semio.",
+                  "de": "Art-ID des Artefakts, z. B. s.stdio.semio."
+                }
+              }
             },
             "standard": {
-              "type": "string"
+              "type": "string",
+              "x-semio-ui": {
+                "widget": "text",
+                "role": "value",
+                "label": {
+                  "en": "Standard",
+                  "de": "Standard"
+                },
+                "description": {
+                  "en": "Standard version of the artifact kind.",
+                  "de": "Standardversion der Artefaktart."
+                }
+              }
             },
             "subset": {
-              "type": "string"
+              "type": "string",
+              "x-semio-ui": {
+                "widget": "text",
+                "role": "value",
+                "label": {
+                  "en": "Subset",
+                  "de": "Teilmenge"
+                },
+                "description": {
+                  "en": "Subset of the standard the artifact uses.",
+                  "de": "Vom Artefakt verwendete Teilmenge des Standards."
+                }
+              }
+            }
+          },
+          "x-semio-ui": {
+            "role": "value",
+            "label": {
+              "en": "Dialect",
+              "de": "Dialekt"
+            },
+            "description": {
+              "en": "Artifact kind, standard and subset of the artifact.",
+              "de": "Artefaktart, Standard und Teilmenge des Artefakts."
             }
           }
         },
         "createdAtMs": {
           "type": "integer",
-          "minimum": 0
+          "minimum": 0,
+          "x-semio-ui": {
+            "widget": "stepper",
+            "role": "value",
+            "label": {
+              "en": "Created At",
+              "de": "Erstellt am"
+            },
+            "description": {
+              "en": "Creation time in milliseconds since the Unix epoch.",
+              "de": "Erstellungszeitpunkt in Millisekunden seit der Unix-Epoche."
+            },
+            "unit": "ms",
+            "step": 1,
+            "precision": 0
+          }
         },
         "createdBy": {
-          "type": "string"
+          "type": "string",
+          "x-semio-ui": {
+            "widget": "text",
+            "role": "value",
+            "label": {
+              "en": "Created By",
+              "de": "Erstellt von"
+            },
+            "description": {
+              "en": "Actor who created the artifact.",
+              "de": "Akteur, der das Artefakt erstellt hat."
+            }
+          }
         },
         "updatedAtMs": {
           "type": "integer",
-          "minimum": 0
+          "minimum": 0,
+          "x-semio-ui": {
+            "widget": "stepper",
+            "role": "value",
+            "label": {
+              "en": "Updated At",
+              "de": "Aktualisiert am"
+            },
+            "description": {
+              "en": "Last change time in milliseconds since the Unix epoch.",
+              "de": "Zeitpunkt der letzten Änderung in Millisekunden seit der Unix-Epoche."
+            },
+            "unit": "ms",
+            "step": 1,
+            "precision": 0
+          }
         },
         "updatedBy": {
-          "type": "string"
+          "type": "string",
+          "x-semio-ui": {
+            "widget": "text",
+            "role": "value",
+            "label": {
+              "en": "Updated By",
+              "de": "Aktualisiert von"
+            },
+            "description": {
+              "en": "Actor who changed the artifact last.",
+              "de": "Akteur, der das Artefakt zuletzt geändert hat."
+            }
+          }
         }
       }
     }

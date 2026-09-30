@@ -3,7 +3,10 @@
   "$schema": "../../../../../node_modules/nx/schemas/project-schema.json",
   "sourceRoot": "🧰️framework/🔨️modules/🧵️job/📦️packages/🦀️rust",
   "namedInputs": {
-    "default": ["{workspaceRoot}/🧰️framework/🔨️modules/🧵️job/**/*.rs", "{projectRoot}/**/*"]
+    "default": [
+      "{workspaceRoot}/🧰️framework/🔨️modules/🧵️job/**/*.rs",
+      "{projectRoot}/**/*"
+    ]
   },
   "targets": {
     "test": {
@@ -32,6 +35,14 @@
       "options": {
         "cwd": "🧰️framework/🔨️modules/🧵️job/📦️packages/🦀️rust",
         "command": "bun ./📜️script.ts test exhaustive"
+      }
+    },
+    "canonical-architecture": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "options": {
+        "cwd": "🧰️framework/🔨️modules/🧵️job/📦️packages/🦀️rust",
+        "command": "bun ./📜️script.ts canonical-architecture"
       }
     }
   }

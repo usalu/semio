@@ -10,7 +10,21 @@
   "properties": {
     "index": {
       "type": "integer",
-      "minimum": 0
+      "minimum": 0,
+      "x-semio-ui": {
+        "widget": "stepper",
+        "label": {
+          "en": "Palette entry",
+          "de": "Paletteneintrag"
+        },
+        "description": {
+          "en": "Index of the palette entry, counted from 0.",
+          "de": "Index des Paletteneintrags, ab 0 gezählt."
+        },
+        "precision": 0,
+        "group": "target",
+        "order": 10
+      }
     }
   }
 }

@@ -1,0 +1,117 @@
+{
+  "schema": "semio.geometry-session-retirement/v1",
+  "box": {
+    "width": 2,
+    "depth": 3,
+    "height": 4,
+    "volume": 24
+  },
+  "payloadBytes": 7,
+  "grants": [
+    [
+      0,
+      3
+    ],
+    [
+      1,
+      0
+    ],
+    [
+      1,
+      3
+    ],
+    [
+      1,
+      3
+    ],
+    [
+      1,
+      3
+    ],
+    [
+      1,
+      3
+    ]
+  ],
+  "receipts": [
+    {
+      "phase": "blocked",
+      "items": 0,
+      "bytes": 0
+    },
+    {
+      "phase": "blocked",
+      "items": 0,
+      "bytes": 0
+    },
+    {
+      "phase": "pending",
+      "items": 1,
+      "bytes": 3
+    },
+    {
+      "phase": "pending",
+      "items": 1,
+      "bytes": 3
+    },
+    {
+      "phase": "pending",
+      "items": 1,
+      "bytes": 1
+    },
+    {
+      "phase": "complete",
+      "items": 0,
+      "bytes": 0
+    }
+  ],
+  "closeGrant": {
+    "items": 1,
+    "bytes": 3
+  },
+  "maximumSteps": 100000,
+  "capture": {
+    "sharedRelease": {
+      "phase": "pending",
+      "items": 1,
+      "bytes": 0
+    },
+    "rootRemainsOpen": true,
+    "lastReaderRequiresTerminal": true,
+    "shellBoundary": {
+      "smallGrantDivisor": 2,
+      "adequateGrantMultiplier": 1,
+      "smallPhase": "blocked",
+      "adequatePhase": "pending",
+      "releasedItems": 1,
+      "releasedBytes": "actual-deallocated-layouts"
+    },
+    "terminalPeerRelease": {
+      "phase": "pending",
+      "items": 1,
+      "bytes": 0
+    }
+  },
+  "portBoundary": {
+    "zeroGrants": [
+      [
+        0,
+        3
+      ],
+      [
+        1,
+        0
+      ]
+    ],
+    "smallGrantDivisor": 2,
+    "adequateGrantMultiplier": 1,
+    "producerRemainsOpen": true,
+    "producerVolume": 24,
+    "boxReleaseItems": 1,
+    "boxReleaseBytes": "concrete-box-layout",
+    "sealedPortMustRetire": true,
+    "smallPhase": "blocked",
+    "adequatePhase": "pending",
+    "inlineBytes": 8192
+  }
+}

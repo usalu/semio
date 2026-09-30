@@ -5,12 +5,36 @@
   "type": "object",
   "additionalProperties": false,
   "required": [
+    "mutation",
     "id",
     "newMethod"
   ],
   "properties": {
+    "mutation": {
+      "const": "changeInfiltrationMethod"
+    },
     "id": {
-      "type": "integer"
+      "type": "integer",
+      "minimum": 0,
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Infiltration",
+          "de": "Infiltration"
+        },
+        "description": {
+          "en": "The infiltration this mutation changes, by id.",
+          "de": "Infiltration, die diese Mutation ändert, per ID."
+        },
+        "ref": {
+          "kind": "infiltration",
+          "domain": "energyModel",
+          "granularity": "load"
+        },
+        "group": "target",
+        "order": 10
+      }
     },
     "newMethod": {
       "enum": [
@@ -18,7 +42,39 @@
         "PerExteriorArea",
         "EffectiveLeakageArea",
         "WindAndStack"
-      ]
+      ],
+      "x-semio-ui": {
+        "widget": "select",
+        "role": "value",
+        "label": {
+          "en": "Method",
+          "de": "Methode"
+        },
+        "description": {
+          "en": "Which of the parameters below drive the infiltration flow.",
+          "de": "Welche der folgenden Parameter den Infiltrationsvolumenstrom bestimmen."
+        },
+        "options": {
+          "ScheduledAch": {
+            "en": "Scheduled air change rate",
+            "de": "Luftwechsel nach Zeitplan"
+          },
+          "PerExteriorArea": {
+            "en": "Per exterior area",
+            "de": "Pro Außenfläche"
+          },
+          "EffectiveLeakageArea": {
+            "en": "Effective leakage area",
+            "de": "Effektive Leckagefläche"
+          },
+          "WindAndStack": {
+            "en": "Wind and stack",
+            "de": "Wind und thermischer Auftrieb"
+          }
+        },
+        "group": "infiltration",
+        "order": 20
+      }
     }
   }
 }

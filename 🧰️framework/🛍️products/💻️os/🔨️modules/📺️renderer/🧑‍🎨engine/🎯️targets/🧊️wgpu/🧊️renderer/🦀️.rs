@@ -19128,6 +19128,7 @@ pub async fn run_socket_grant_probe() -> i32 {
         diff: ArtifactDiff { schema: SchemaId(PROBE_SCHEMA.into()), payload: vec![sequence] },
         inverse: InverseMutation { schema: SchemaId(PROBE_SCHEMA.into()), payload: Vec::new() },
         timestamp: HybridLogicalTimestamp::new(0, 0),
+        transaction: None,
     };
     if channels.cmd_tx.send(ArtifactActorMsg::LocalMutations { envelopes: vec![envelope(1)] }).is_err() {
         host.close_key(&channels.document_key);

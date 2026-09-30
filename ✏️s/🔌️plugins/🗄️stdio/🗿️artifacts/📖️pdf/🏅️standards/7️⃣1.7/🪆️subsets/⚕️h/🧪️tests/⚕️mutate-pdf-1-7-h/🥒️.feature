@@ -85,7 +85,7 @@ Feature: Apply every typed the PDF Healthcare Best Practices Guide (PDF/H) confo
       | remove-launch-action     | {"target": "render-plots.bat"}                                    |
       | insert-signature-field   | {"name": "AttendingPhysician"}                                    |
       | remove-signature-field   | {"name": "AttendingPhysician"}                                    |
-      | embed-font-file          | {"descriptorOrdinal": 0, "key": "FontFile2", "programOrdinal": 0} |
+      | embed-font-file          | {"descriptorOrdinal": 0, "key": "FontFile2", "program": {"num": 5, "gen": 0}} |
       | remove-font-file         | {"descriptorOrdinal": 0}                                          |
 
   @id-inverse
@@ -109,7 +109,7 @@ Feature: Apply every typed the PDF Healthcare Best Practices Guide (PDF/H) confo
       | remove-launch-action     | {"target": "render-plots.bat"}                                    |
       | insert-signature-field   | {"name": "AttendingPhysician"}                                    |
       | remove-signature-field   | {"name": "AttendingPhysician"}                                    |
-      | embed-font-file          | {"descriptorOrdinal": 0, "key": "FontFile2", "programOrdinal": 0} |
+      | embed-font-file          | {"descriptorOrdinal": 0, "key": "FontFile2", "program": {"num": 5, "gen": 0}} |
       | remove-font-file         | {"descriptorOrdinal": 0}                                          |
 
   @id-identity-round-trip

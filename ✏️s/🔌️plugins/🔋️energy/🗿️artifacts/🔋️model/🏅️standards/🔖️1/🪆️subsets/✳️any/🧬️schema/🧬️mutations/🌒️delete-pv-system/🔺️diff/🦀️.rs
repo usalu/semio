@@ -11,7 +11,7 @@ pub fn diff(payload: &super::DeletePvSystem, base: &EnergyModelSnapshot) -> prot
     };
     let _ = existing;
     if base.model.electrical_load_centers.iter().any(|centre| centre.pv_ids.contains(&payload.id)) {
-        return protocol::MutationOutcome::error("mutation.invariant", format!("PV system {} is still attached to an electrical load centre.", payload.id.0), [payload.id.0.to_string()]);
+        return protocol::MutationOutcome::error("mutation.target-referenced", format!("PV system {} is still attached to an electrical load centre.", payload.id.0), [payload.id.0.to_string()]);
     }
     let mut model = base.model.clone();
     model.pv_systems.retain(|item| item.id != payload.id);

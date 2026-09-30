@@ -5,15 +5,34 @@
   "type": "object",
   "additionalProperties": false,
   "required": [
+    "mutation",
     "path"
   ],
   "properties": {
-    "path": {
-      "type": "string"
-    },
     "mutation": {
       "const": "removePart",
       "description": "Aggregate discriminator spliced in by DocxMutation; absent when the payload stands alone."
+    },
+    "path": {
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Part",
+          "de": "Paketteil"
+        },
+        "description": {
+          "en": "OPC part name inside the package, e.g. word/document.xml.",
+          "de": "OPC-Teilname im Paket, z. B. word/document.xml."
+        },
+        "ref": {
+          "kind": "part",
+          "domain": "docx"
+        },
+        "group": "target",
+        "order": 10
+      }
     }
   }
 }

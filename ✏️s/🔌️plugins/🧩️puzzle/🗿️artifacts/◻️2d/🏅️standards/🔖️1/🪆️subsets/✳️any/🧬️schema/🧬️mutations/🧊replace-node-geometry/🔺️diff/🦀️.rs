@@ -1,9 +1,13 @@
 //! 🔺️ Sparse diff builder for `ReplaceNodeGeometry` — patches the one addressed node's shape/extent.
 use crate::standards::v1::subsets::any::schema::diff::{Puzzle2dDiff, Puzzle2dNodePatch, Puzzle2dNodePatchEntry, Puzzle2dNodesDelta};
 use crate::Puzzle2dSnapshot;
+use crate::standards::v1::subsets::any::schema::mutations::{puzzle2d_positive, puzzle2d_shape};
 
 //#region 🔖️Diff
 pub fn diff(payload: &super::ReplaceNodeGeometry, base: &Puzzle2dSnapshot) -> protocol::MutationOutcome<Puzzle2dDiff> {
+    if let Err(reason) = puzzle2d_shape("newShape", payload.new_shape.as_deref()).and_then(|()| puzzle2d_positive(&[("newRadius", payload.new_radius), ("newWidth", payload.new_width), ("newHeight", payload.new_height)])) {
+        return protocol::MutationOutcome::fatal("mutation.invariant", reason, vec![payload.id.clone()]);
+    }
     let Some(node) = base.nodes.iter().find(|entry| entry.id == payload.id) else {
         return protocol::MutationOutcome::error("mutation.target-missing", format!("{} \"{}\" not found", "node", payload.id), vec![payload.id.clone()]);
     };

@@ -98,8 +98,10 @@ Feature: Apply every typed semio IMAGE mutation to a real animated raster, again
   @mode-differential
   Scenario: Apply no-mutation to the real derived animation
     Given the real derived image artifact shared://🖼️mutate-semio-image/🗣️.dsl.semio
-    And the committed mutation payload shared://🖼️mutate-semio-image/⏸️no-mutation/🦠️mutation/🔣️.json
     When the no-mutation mutation is applied to the animation parsed from it
+      """
+      {"mutation": "noMutation"}
+      """
     Then the independent implementation and the subject agree on the resulting snapshot and on what Pillow says its planes are
 
   @id-inverse
@@ -130,8 +132,10 @@ Feature: Apply every typed semio IMAGE mutation to a real animated raster, again
   @mode-differential
   Scenario: Undoing no-mutation restores the real derived animation
     Given the real derived image artifact shared://🖼️mutate-semio-image/🗣️.dsl.semio
-    And the committed mutation payload shared://🖼️mutate-semio-image/⏸️no-mutation/🦠️mutation/🔣️.json
     When the no-mutation mutation is applied to the animation parsed from it and each side undoes it with its own computed inverse
+      """
+      {"mutation": "noMutation"}
+      """
     Then both sides restore the animation and agree on the mutated and the restored snapshot
 
   @id-spec-vector
@@ -145,7 +149,7 @@ Feature: Apply every typed semio IMAGE mutation to a real animated raster, again
     Then each reaches the committed after-snapshot and the two agree
     Examples:
       | id                    | dir                     | slug                                                        |
-      | set-snapshot          | 📸️set-snapshot          | ⚫️retargets-the-document-onto-a-grayscale-sixteen-bit-variant |
+      | set-snapshot          | 📸️set-snapshot          | ⚫️retargets-document-grayscale-sixteen-bit-variant |
       | set-dimensions        | 📐️set-dimensions        | ↔️widens-the-frameless-canvas-to-four-by-two                  |
       | set-colorspace        | 🌈️set-colorspace        | 🌈️records-the-source-colorspace-as-rgba                       |
       | set-bit-depth         | 🔢️set-bit-depth         | 🔢️raises-the-source-bit-depth-to-sixteen                      |
@@ -156,7 +160,7 @@ Feature: Apply every typed semio IMAGE mutation to a real animated raster, again
       | set-frame-delay       | ⏱️set-frame-delay       | ⏳️slows-the-second-frame-down                                 |
       | set-frame-pixels      | 🖌️set-frame-pixels      | ⬛️repaints-the-only-frame-black                               |
       | set-metadata-entry    | 🏷️set-metadata-entry    | ✍️rewrites-the-existing-author-entry                          |
-      | remove-metadata-entry | 🗑️remove-metadata-entry | 💬️removes-the-comment-entry-and-keeps-the-author-entry        |
+      | remove-metadata-entry | 🗑️remove-metadata-entry | 💬️removes-comment-entry-keeps-author-entry        |
 
   @id-spec-vector-no-mutation
   @level-exhaustive

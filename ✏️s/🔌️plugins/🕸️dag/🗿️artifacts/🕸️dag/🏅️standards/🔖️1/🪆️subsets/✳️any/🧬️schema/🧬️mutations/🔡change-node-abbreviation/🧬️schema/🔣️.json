@@ -5,15 +5,48 @@
   "type": "object",
   "additionalProperties": false,
   "required": [
+    "mutation",
     "id",
     "newAbbreviation"
   ],
   "properties": {
+    "mutation": {
+      "const": "changeNodeAbbreviation"
+    },
     "id": {
-      "type": "string"
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Node",
+          "de": "Knoten"
+        },
+        "description": {
+          "en": "The node to change.",
+          "de": "Der zu ändernde Knoten."
+        },
+        "ref": {
+          "kind": "node",
+          "domain": "graph",
+          "granularity": "node"
+        }
+      }
     },
     "newAbbreviation": {
-      "type": "string"
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "text",
+        "role": "value",
+        "label": {
+          "en": "New Abbreviation",
+          "de": "Neue Abkürzung"
+        },
+        "description": {
+          "en": "Short name shown on the node.",
+          "de": "Auf dem Knoten angezeigter Kurzname."
+        }
+      }
     }
   }
 }

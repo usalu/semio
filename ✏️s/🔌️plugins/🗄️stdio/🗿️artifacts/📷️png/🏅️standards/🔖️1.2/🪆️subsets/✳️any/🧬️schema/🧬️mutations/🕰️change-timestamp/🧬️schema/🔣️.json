@@ -13,7 +13,13 @@
         {
           "type": "null"
         }
-      ]
+      ],
+      "x-semio-ui": {
+        "label": {
+          "en": "Last modification (tIME)",
+          "de": "Letzte Änderung (tIME)"
+        }
+      }
     }
   },
   "$defs": {
@@ -37,27 +43,62 @@
         "month": {
           "type": "integer",
           "minimum": 0,
-          "maximum": 255
+          "maximum": 255,
+          "x-semio-ui": {
+            "widget": "stepper",
+            "label": {
+              "en": "Month",
+              "de": "Monat"
+            }
+          }
         },
         "day": {
           "type": "integer",
           "minimum": 0,
-          "maximum": 255
+          "maximum": 255,
+          "x-semio-ui": {
+            "widget": "stepper",
+            "label": {
+              "en": "Day",
+              "de": "Tag"
+            }
+          }
         },
         "hour": {
           "type": "integer",
           "minimum": 0,
-          "maximum": 255
+          "maximum": 255,
+          "x-semio-ui": {
+            "widget": "stepper",
+            "label": {
+              "en": "Hour",
+              "de": "Stunde"
+            }
+          }
         },
         "minute": {
           "type": "integer",
           "minimum": 0,
-          "maximum": 255
+          "maximum": 255,
+          "x-semio-ui": {
+            "widget": "stepper",
+            "label": {
+              "en": "Minute",
+              "de": "Minute"
+            }
+          }
         },
         "second": {
           "type": "integer",
           "minimum": 0,
-          "maximum": 255
+          "maximum": 255,
+          "x-semio-ui": {
+            "widget": "stepper",
+            "label": {
+              "en": "Second",
+              "de": "Sekunde"
+            }
+          }
         }
       }
     }

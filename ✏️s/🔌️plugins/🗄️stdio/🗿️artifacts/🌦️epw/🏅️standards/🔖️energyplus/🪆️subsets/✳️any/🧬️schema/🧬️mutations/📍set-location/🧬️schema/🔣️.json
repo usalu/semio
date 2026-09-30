@@ -5,15 +5,24 @@
   "type": "object",
   "additionalProperties": false,
   "required": [
+    "mutation",
     "location"
   ],
   "properties": {
-    "location": {
-      "$ref": "#/$defs/EpwLocation"
-    },
     "mutation": {
       "const": "setLocation",
       "description": "Aggregate discriminator spliced in by EpwMutation; absent when the payload stands alone."
+    },
+    "location": {
+      "$ref": "#/$defs/EpwLocation",
+      "x-semio-ui": {
+        "label": {
+          "en": "Location",
+          "de": "Standort"
+        },
+        "group": "value",
+        "order": 10
+      }
     }
   },
   "$defs": {
@@ -33,31 +42,101 @@
       ],
       "properties": {
         "city": {
-          "type": "string"
+          "type": "string",
+          "x-semio-ui": {
+            "label": {
+              "en": "City",
+              "de": "Ort"
+            }
+          }
         },
         "stateProvince": {
-          "type": "string"
+          "type": "string",
+          "x-semio-ui": {
+            "label": {
+              "en": "State or province",
+              "de": "Bundesland oder Provinz"
+            }
+          }
         },
         "country": {
-          "type": "string"
+          "type": "string",
+          "x-semio-ui": {
+            "label": {
+              "en": "Country",
+              "de": "Land"
+            }
+          }
         },
         "source": {
-          "type": "string"
+          "type": "string",
+          "x-semio-ui": {
+            "label": {
+              "en": "Data source",
+              "de": "Datenquelle"
+            }
+          }
         },
         "wmo": {
-          "type": "string"
+          "type": "string",
+          "x-semio-ui": {
+            "label": {
+              "en": "WMO station number",
+              "de": "WMO-Stationsnummer"
+            }
+          }
         },
         "latitude": {
-          "type": "string"
+          "type": "string",
+          "x-semio-ui": {
+            "label": {
+              "en": "Latitude",
+              "de": "Geographische Breite"
+            },
+            "description": {
+              "en": "Degrees, north positive.",
+              "de": "Grad, nördlich positiv."
+            }
+          }
         },
         "longitude": {
-          "type": "string"
+          "type": "string",
+          "x-semio-ui": {
+            "label": {
+              "en": "Longitude",
+              "de": "Geographische Länge"
+            },
+            "description": {
+              "en": "Degrees, east positive.",
+              "de": "Grad, östlich positiv."
+            }
+          }
         },
         "timeZone": {
-          "type": "string"
+          "type": "string",
+          "x-semio-ui": {
+            "label": {
+              "en": "Time zone",
+              "de": "Zeitzone"
+            },
+            "description": {
+              "en": "Offset from UTC in hours.",
+              "de": "Abweichung von UTC in Stunden."
+            }
+          }
         },
         "elevation": {
-          "type": "string"
+          "type": "string",
+          "x-semio-ui": {
+            "label": {
+              "en": "Elevation",
+              "de": "Höhe über Meeresspiegel"
+            },
+            "description": {
+              "en": "Metres above sea level.",
+              "de": "Meter über dem Meeresspiegel."
+            }
+          }
         }
       }
     }

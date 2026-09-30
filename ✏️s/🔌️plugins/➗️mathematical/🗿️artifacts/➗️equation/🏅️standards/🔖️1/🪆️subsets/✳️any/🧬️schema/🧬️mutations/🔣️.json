@@ -4,49 +4,184 @@
   "title": "EquationMutation",
   "oneOf": [
     {
-      "$ref": "https://json.schemas.assets.semio-tech.com/s/mathematical/equation/1/graph/mutation/change-graph-directed/schema.json"
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "ChangeGraphDirected"
+      ],
+      "properties": {
+        "ChangeGraphDirected": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/mathematical/equation/1/graph/mutation/change-graph-directed/schema.json"
+        }
+      }
     },
     {
-      "$ref": "https://json.schemas.assets.semio-tech.com/s/mathematical/equation/1/graph/mutation/update-graph-algorithm/schema.json"
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "UpdateGraphAlgorithm"
+      ],
+      "properties": {
+        "UpdateGraphAlgorithm": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/mathematical/equation/1/graph/mutation/update-graph-algorithm/schema.json"
+        }
+      }
     },
     {
-      "$ref": "https://json.schemas.assets.semio-tech.com/s/mathematical/equation/1/graph/mutation/replace-graph/schema.json"
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "ReplaceGraph"
+      ],
+      "properties": {
+        "ReplaceGraph": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/mathematical/equation/1/graph/mutation/replace-graph/schema.json"
+        }
+      }
     },
     {
-      "$ref": "https://json.schemas.assets.semio-tech.com/s/mathematical/equation/1/graph/mutation/create-node/schema.json"
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "CreateNode"
+      ],
+      "properties": {
+        "CreateNode": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/mathematical/equation/1/graph/mutation/create-node/schema.json"
+        }
+      }
     },
     {
-      "$ref": "https://json.schemas.assets.semio-tech.com/s/mathematical/equation/1/graph/mutation/delete-node/schema.json"
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "DeleteNode"
+      ],
+      "properties": {
+        "DeleteNode": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/mathematical/equation/1/graph/mutation/delete-node/schema.json"
+        }
+      }
     },
     {
-      "$ref": "https://json.schemas.assets.semio-tech.com/s/mathematical/equation/1/graph/mutation/delete-nodes/schema.json"
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "DeleteNodes"
+      ],
+      "properties": {
+        "DeleteNodes": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/mathematical/equation/1/graph/mutation/delete-nodes/schema.json"
+        }
+      }
     },
     {
-      "$ref": "https://json.schemas.assets.semio-tech.com/s/mathematical/equation/1/graph/mutation/change-node-label/schema.json"
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "ChangeNodeLabel"
+      ],
+      "properties": {
+        "ChangeNodeLabel": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/mathematical/equation/1/graph/mutation/change-node-label/schema.json"
+        }
+      }
     },
     {
-      "$ref": "https://json.schemas.assets.semio-tech.com/s/mathematical/equation/1/graph/mutation/move-node/schema.json"
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "MoveNode"
+      ],
+      "properties": {
+        "MoveNode": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/mathematical/equation/1/graph/mutation/move-node/schema.json"
+        }
+      }
     },
     {
-      "$ref": "https://json.schemas.assets.semio-tech.com/s/mathematical/equation/1/graph/mutation/connect-nodes/schema.json"
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "ConnectNodes"
+      ],
+      "properties": {
+        "ConnectNodes": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/mathematical/equation/1/graph/mutation/connect-nodes/schema.json"
+        }
+      }
     },
     {
-      "$ref": "https://json.schemas.assets.semio-tech.com/s/mathematical/equation/1/graph/mutation/disconnect-nodes/schema.json"
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "DisconnectNodes"
+      ],
+      "properties": {
+        "DisconnectNodes": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/mathematical/equation/1/graph/mutation/disconnect-nodes/schema.json"
+        }
+      }
     },
     {
-      "$ref": "https://json.schemas.assets.semio-tech.com/s/mathematical/equation/1/geometry/mutation/replace-points/schema.json"
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "ReplacePoints"
+      ],
+      "properties": {
+        "ReplacePoints": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/mathematical/equation/1/geometry/mutation/replace-points/schema.json"
+        }
+      }
     },
     {
-      "$ref": "https://json.schemas.assets.semio-tech.com/s/mathematical/equation/1/geometry/mutation/insert-point/schema.json"
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "InsertPoint"
+      ],
+      "properties": {
+        "InsertPoint": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/mathematical/equation/1/geometry/mutation/insert-point/schema.json"
+        }
+      }
     },
     {
-      "$ref": "https://json.schemas.assets.semio-tech.com/s/mathematical/equation/1/geometry/mutation/remove-point/schema.json"
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "RemovePoint"
+      ],
+      "properties": {
+        "RemovePoint": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/mathematical/equation/1/geometry/mutation/remove-point/schema.json"
+        }
+      }
     },
     {
-      "$ref": "https://json.schemas.assets.semio-tech.com/s/mathematical/equation/1/geometry/mutation/move-point/schema.json"
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "MovePoint"
+      ],
+      "properties": {
+        "MovePoint": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/mathematical/equation/1/geometry/mutation/move-point/schema.json"
+        }
+      }
     },
     {
-      "$ref": "https://json.schemas.assets.semio-tech.com/s/mathematical/equation/1/equation/mutation/change-coefficient/schema.json"
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "ChangeCoefficient"
+      ],
+      "properties": {
+        "ChangeCoefficient": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/mathematical/equation/1/equation/mutation/change-coefficient/schema.json"
+        }
+      }
     }
   ]
 }

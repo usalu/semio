@@ -22,10 +22,27 @@
       ],
       "properties": {
         "schema": {
-          "type": "string"
+          "type": "string",
+          "x-semio-ui": {
+            "widget": "text",
+            "label": {
+              "en": "Snapshot schema",
+              "de": "Snapshot-Schema"
+            },
+            "description": {
+              "en": "Identifier of the snapshot schema version.",
+              "de": "Kennung der Version des Snapshot-Schemas."
+            }
+          }
         },
         "subset": {
-          "$ref": "#/$defs/SemioSubsetSnapshot"
+          "$ref": "#/$defs/SemioSubsetSnapshot",
+          "x-semio-ui": {
+            "label": {
+              "en": "Subset",
+              "de": "Teilmenge"
+            }
+          }
         }
       }
     },
@@ -3785,8 +3802,8 @@
         "pcm16",
         "pcm24",
         "pcm32",
-        "float32",
-        "float64"
+        "f32",
+        "f64"
       ]
     },
     "SemioAudioChannel": {

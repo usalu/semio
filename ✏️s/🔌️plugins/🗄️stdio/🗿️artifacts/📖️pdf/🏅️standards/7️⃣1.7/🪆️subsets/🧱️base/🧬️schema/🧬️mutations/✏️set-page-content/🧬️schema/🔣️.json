@@ -5,10 +5,15 @@
   "type": "object",
   "additionalProperties": false,
   "required": [
+    "mutation",
     "index",
     "content"
   ],
   "properties": {
+    "mutation": {
+      "const": "setPageContent",
+      "description": "Aggregate discriminator spliced in by PdfMutation; absent when the payload stands alone."
+    },
     "index": {
       "type": "integer",
       "minimum": 0
@@ -18,10 +23,6 @@
       "items": {
         "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/pdf/1.7/base/snapshot.json#/$defs/PdfOp"
       }
-    },
-    "mutation": {
-      "const": "setPageContent",
-      "description": "Aggregate discriminator spliced in by PdfMutation; absent when the payload stands alone."
     }
   }
 }

@@ -5,11 +5,16 @@
   "type": "object",
   "additionalProperties": false,
   "required": [
+    "mutation",
     "timelineIndex",
     "channelIndex",
     "index"
   ],
   "properties": {
+    "mutation": {
+      "const": "removeKeyframe",
+      "description": "Aggregate discriminator spliced in by SemioAnimationMutation; absent when the payload stands alone."
+    },
     "timelineIndex": {
       "type": "integer",
       "minimum": 0
@@ -21,10 +26,6 @@
     "index": {
       "type": "integer",
       "minimum": 0
-    },
-    "mutation": {
-      "const": "removeKeyframe",
-      "description": "Aggregate discriminator spliced in by SemioAnimationMutation; absent when the payload stands alone."
     }
   }
 }

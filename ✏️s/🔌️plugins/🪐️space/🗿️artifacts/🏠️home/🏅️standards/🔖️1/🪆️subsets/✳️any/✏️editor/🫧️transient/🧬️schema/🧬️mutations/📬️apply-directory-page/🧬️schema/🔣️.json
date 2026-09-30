@@ -1,6 +1,6 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "$id": "https://json.schemas.assets.semio-tech.com/app/space/home/transient/mutation/ApplyDirectoryPage/schema.json",
+  "$id": "https://json.schemas.assets.semio-tech.com/app/space/home/transient/mutation/apply-directory-page/schema.json",
   "title": "ApplyDirectoryPage",
   "description": "📬️ One authenticated, receipt-sealed directory page (canonical `DirectoryEventPageV1` JSON, at most one hub page) folded into the Home transient directory projection.",
   "type": "object",
@@ -12,7 +12,19 @@
     "pageJson": {
       "type": "string",
       "minLength": 2,
-      "maxLength": 65536
+      "maxLength": 65536,
+      "x-semio-ui": {
+        "widget": "multiline",
+        "role": "value",
+        "label": {
+          "en": "Directory Page",
+          "de": "Verzeichnisseite"
+        },
+        "description": {
+          "en": "One receipt-sealed hub directory page as canonical DirectoryEventPageV1 JSON.",
+          "de": "Eine quittungsversiegelte Hub-Verzeichnisseite als kanonisches DirectoryEventPageV1-JSON."
+        }
+      }
     }
   }
 }

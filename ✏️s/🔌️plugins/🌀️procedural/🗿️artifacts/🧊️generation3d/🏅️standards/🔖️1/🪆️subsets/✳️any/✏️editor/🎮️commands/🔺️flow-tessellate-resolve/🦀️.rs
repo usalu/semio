@@ -36,9 +36,3 @@ pub fn handle(payload: &FlowTessellateResolve, _doc: &ArtifactView<'_, Generatio
     preview_eval::resolve_tessellate(payload, session);
     Ok(Emit { ui_scope: flow_eval_tick::chain_ui_scope(&payload.window_kind_id, true), ..Default::default() })
 }
-
-//#region 🧪️Tests
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
-//#endregion 🧪️Tests

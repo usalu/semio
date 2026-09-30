@@ -10,7 +10,7 @@
 //! see §5.3 of the fleet brief.
 
 use semio_repo_test_host::{Adapter, Context, Json, Outcome};
-use semio_s_plugin_stdio_test_oracle::artifacts::epw::standards::v_energyplus::subsets::any::{oracle_apply_mutation, project_epw, round_trip_epw};
+use semio_s_plugin_stdio_test_oracle::artifacts::epw::standards::v_energyplus::subsets::any::{epw_snapshot_wire, oracle_apply_mutation, project_epw, round_trip_epw, EPW_RECORD_COLUMNS};
 use semio_s_plugin_stdio_test_oracle::law::{carrier_is_exact, inverse_restores, mutation_is_observable, round_trip_preserves};
 
 
@@ -35,72 +35,44 @@ fn kind_spec(kind: &str, params: Json) -> Json {
 
 /// ↩️ The inverse mutation's OWN spec, computed by reading whatever pre-mutation state it needs
 /// straight out of `original` with the same independent reader the oracle mutates with
-/// (`project_epw`) — never by calling this repository's own `EpwMutation::inverse`, which would
+/// ([`epw_snapshot_wire`]) — never by calling this repository's own `EpwMutation::inverse`, which would
 /// defeat the point of an independently-computed oracle. Mirrors that method's documented rule
-/// exactly (index-aware, reading the pre-state it needs from the ORIGINAL document), just derived
-/// from real bytes instead of a typed snapshot.
+/// exactly (index-aware, reading the pre-state it needs from the ORIGINAL document), and every spec it
+/// returns carries the leaf wire payload, like the feature's own rows.
 fn inverse_spec(original: &[u8], forward: &Json) -> Result<Json, String> {
     let params = forward.get("params").cloned().unwrap_or(Json::Null);
     let number = |key: &str| match params.get(key) {
         Some(Json::Number(value)) => Some(*value),
         _ => None,
     };
+    let snapshot = epw_snapshot_wire(original)?;
+    let header = |kind: &str, key: &str, member: &str| Ok(kind_spec(kind, json_object(vec![(key, snapshot.get(member).cloned().unwrap_or(Json::Null))])));
     match forward.str("kind").as_str() {
-        "no-mutation" => Ok(forward.clone()),
-        "set-snapshot" => {
-            let projection = project_epw(original)?;
-            Ok(kind_spec("set-snapshot", json_object(vec![("snapshot", projection)])))
-        }
-        "set-location" => {
-            let projection = project_epw(original)?;
-            Ok(kind_spec("set-location", json_object(vec![("location", projection.get("location").cloned().unwrap_or(Json::Null))])))
-        }
-        "set-design-conditions" => {
-            let projection = project_epw(original)?;
-            Ok(kind_spec("set-design-conditions", json_object(vec![("value", projection.get("designConditions").cloned().unwrap_or(Json::String(String::new())))])))
-        }
-        "set-typical-extreme-periods" => {
-            let projection = project_epw(original)?;
-            Ok(kind_spec("set-typical-extreme-periods", json_object(vec![("value", projection.get("typicalExtremePeriods").cloned().unwrap_or(Json::String(String::new())))])))
-        }
-        "set-ground-temperatures" => {
-            let projection = project_epw(original)?;
-            Ok(kind_spec("set-ground-temperatures", json_object(vec![("value", projection.get("groundTemperatures").cloned().unwrap_or(Json::String(String::new())))])))
-        }
-        "set-holidays-dst" => {
-            let projection = project_epw(original)?;
-            Ok(kind_spec("set-holidays-dst", json_object(vec![("value", projection.get("holidaysDst").cloned().unwrap_or(Json::String(String::new())))])))
-        }
-        "set-comments1" => {
-            let projection = project_epw(original)?;
-            Ok(kind_spec("set-comments1", json_object(vec![("value", projection.get("comments1").cloned().unwrap_or(Json::String(String::new())))])))
-        }
-        "set-comments2" => {
-            let projection = project_epw(original)?;
-            Ok(kind_spec("set-comments2", json_object(vec![("value", projection.get("comments2").cloned().unwrap_or(Json::String(String::new())))])))
-        }
-        "set-data-periods" => {
-            let projection = project_epw(original)?;
-            Ok(kind_spec("set-data-periods", json_object(vec![("dataPeriods", projection.get("dataPeriods").cloned().unwrap_or(Json::Null))])))
-        }
+        "set-snapshot" => Ok(kind_spec("set-snapshot", json_object(vec![("snapshot", snapshot.clone())]))),
+        "set-location" => header("set-location", "location", "location"),
+        "set-design-conditions" => header("set-design-conditions", "value", "designConditions"),
+        "set-typical-extreme-periods" => header("set-typical-extreme-periods", "value", "typicalExtremePeriods"),
+        "set-ground-temperatures" => header("set-ground-temperatures", "value", "groundTemperatures"),
+        "set-holidays-dst" => header("set-holidays-dst", "value", "holidaysDst"),
+        "set-comments1" => header("set-comments1", "value", "comments1"),
+        "set-comments2" => header("set-comments2", "value", "comments2"),
+        "set-data-periods" => header("set-data-periods", "dataPeriods", "dataPeriods"),
         "insert-record" => {
             let index = number("index").ok_or("insert-record inverse: missing `index`")?;
             Ok(kind_spec("remove-record", json_object(vec![("index", Json::Number(index))])))
         }
         "remove-record" => {
             let index = number("index").ok_or("remove-record inverse: missing `index`")? as usize;
-            let projection = project_epw(original)?;
-            let records = projection.array("records");
+            let records = snapshot.array("records");
             let record = records.get(index).ok_or_else(|| format!("remove-record inverse: index {index} out of bounds ({} record(s))", records.len()))?;
-            Ok(kind_spec("insert-record", json_object(vec![("index", Json::Number(index as f64)), ("fields", record.clone())])))
+            Ok(kind_spec("insert-record", json_object(vec![("index", Json::Number(index as f64)), ("record", record.clone())])))
         }
         "set-record-field" => {
             let record_index = number("recordIndex").ok_or("set-record-field inverse: missing `recordIndex`")? as usize;
             let field_index = number("fieldIndex").ok_or("set-record-field inverse: missing `fieldIndex`")? as usize;
-            let projection = project_epw(original)?;
-            let records = projection.array("records");
-            let value = records.get(record_index).and_then(|row| if let Json::Array(cells) = row { cells.get(field_index).cloned() } else { None }).unwrap_or(Json::String(String::new()));
-            Ok(kind_spec("set-record-field", json_object(vec![("recordIndex", Json::Number(record_index as f64)), ("fieldIndex", Json::Number(field_index as f64)), ("value", value)])))
+            let column = EPW_RECORD_COLUMNS.get(field_index).ok_or_else(|| format!("set-record-field inverse: field index {field_index} names no EPW column"))?;
+            let value = snapshot.array("records").get(record_index).map(|record| record.str(column)).unwrap_or_default();
+            Ok(kind_spec("set-record-field", json_object(vec![("recordIndex", Json::Number(record_index as f64)), ("fieldIndex", Json::Number(field_index as f64)), ("value", Json::String(value))])))
         }
         other => Err(format!("no inverse rule for kind {other:?}")),
     }
@@ -158,97 +130,17 @@ fn round_trip_oracle(ctx: &Context) -> Result<Outcome, String> {
 //#region 🔖️Subject
 #[cfg(feature = "sut")]
 mod subject {
-    use super::{inverse_spec, mutable_input};
+    use super::mutable_input;
     use semio_repo_test_host::{Context, Json, Outcome};
     use semio_s_artifact_stdio_epw::standards::energyplus::subsets::any::io::{decode_epw, encode_epw};
-    use semio_s_artifact_stdio_epw::standards::energyplus::subsets::any::schema::mutations::apply_epw_mutation;
-    use semio_s_artifact_stdio_epw::standards::energyplus::subsets::any::schema::mutations::{
-        insert_record, remove_record, set_comments1, set_comments2, set_data_periods, set_design_conditions, set_ground_temperatures, set_holidays_dst, set_location, set_record_field, set_snapshot, set_typical_extreme_periods,
-    };
-    use semio_s_artifact_stdio_epw::standards::energyplus::subsets::any::schema::snapshot::{EpwDataPeriod, EpwDataPeriods, EpwLocation, EpwRecord, EPW_RECORD_FIELD_COUNT};
+    use semio_s_artifact_stdio_epw::standards::energyplus::subsets::any::schema::mutations::{apply_epw_mutation, decode_epw_mutation_payload, inverse_epw_mutation};
     use semio_s_artifact_stdio_epw::{EpwMutation, EpwSnapshot};
     use semio_s_plugin_stdio_test_oracle::artifacts::epw::standards::v_energyplus::subsets::any::project_epw;
 
-    fn strings(value: &Json, key: &str) -> Vec<String> {
-        value
-            .array(key)
-            .iter()
-            .map(|entry| match entry {
-                Json::String(text) => text.clone(),
-                _ => String::new(),
-            })
-            .collect()
-    }
-
-    fn location_from(value: &Json) -> EpwLocation {
-        EpwLocation {
-            city: value.str("city"),
-            state_province: value.str("stateProvince"),
-            country: value.str("country"),
-            source: value.str("source"),
-            wmo: value.str("wmo"),
-            latitude: value.str("latitude"),
-            longitude: value.str("longitude"),
-            time_zone: value.str("timeZone"),
-            elevation: value.str("elevation"),
-        }
-    }
-
-    fn data_periods_from(value: &Json) -> EpwDataPeriods {
-        let records_per_hour = match value.get("recordsPerHour") {
-            Some(Json::Number(n)) => *n as u32,
-            _ => 0,
-        };
-        let periods = value.array("periods").iter().map(|period| EpwDataPeriod { name: period.str("name"), start_day_of_week: period.str("startDayOfWeek"), start_date: period.str("startDate"), end_date: period.str("endDate") }).collect();
-        EpwDataPeriods { records_per_hour, periods }
-    }
-
-    fn record_from(fields: &[String]) -> EpwRecord {
-        let array: [String; EPW_RECORD_FIELD_COUNT] = std::array::from_fn(|i| fields.get(i).cloned().unwrap_or_default());
-        EpwRecord::from_fields(array)
-    }
-
-    /// 🔀️ The same JSON mutation spec the oracle reads, turned into this repository's own typed
-    /// `EpwMutation` — the only channel between the feature's parameters and the subject's codec.
-    fn mutation_from_spec(spec: &Json) -> Result<Vec<EpwMutation>, String> {
-        let params = spec.get("params").cloned().unwrap_or(Json::Null);
-        let number = |key: &str| match params.get(key) {
-            Some(Json::Number(value)) => Some(*value),
-            _ => None,
-        };
-        Ok(vec![match spec.str("kind").as_str() {
-            "no-mutation" => return Ok(Vec::new()),
-            "set-snapshot" => {
-                let snapshot = params.get("snapshot").cloned().unwrap_or(Json::Null);
-                let records = snapshot.array("records").iter().map(|row| if let Json::Array(cells) = row { record_from(&cells.iter().map(|c| if let Json::String(s) = c { s.clone() } else { String::new() }).collect::<Vec<_>>()) } else { EpwRecord::default() }).collect();
-                EpwMutation::SetSnapshot(set_snapshot::SetSnapshot {
-                    snapshot: EpwSnapshot {
-                        location: location_from(&snapshot.get("location").cloned().unwrap_or(Json::Null)),
-                        design_conditions: snapshot.str("designConditions"),
-                        typical_extreme_periods: snapshot.str("typicalExtremePeriods"),
-                        ground_temperatures: snapshot.str("groundTemperatures"),
-                        holidays_dst: snapshot.str("holidaysDst"),
-                        comments_1: snapshot.str("comments1"),
-                        comments_2: snapshot.str("comments2"),
-                        data_periods: data_periods_from(&snapshot.get("dataPeriods").cloned().unwrap_or(Json::Null)),
-                        records,
-                        ..EpwSnapshot::default()
-                    },
-                })
-            }
-            "set-location" => EpwMutation::SetLocation(set_location::SetLocation { location: location_from(&params.get("location").cloned().unwrap_or(Json::Null)) }),
-            "set-design-conditions" => EpwMutation::SetDesignConditions(set_design_conditions::SetDesignConditions { value: params.str("value") }),
-            "set-typical-extreme-periods" => EpwMutation::SetTypicalExtremePeriods(set_typical_extreme_periods::SetTypicalExtremePeriods { value: params.str("value") }),
-            "set-ground-temperatures" => EpwMutation::SetGroundTemperatures(set_ground_temperatures::SetGroundTemperatures { value: params.str("value") }),
-            "set-holidays-dst" => EpwMutation::SetHolidaysDst(set_holidays_dst::SetHolidaysDst { value: params.str("value") }),
-            "set-comments1" => EpwMutation::SetComments1(set_comments1::SetComments1 { value: params.str("value") }),
-            "set-comments2" => EpwMutation::SetComments2(set_comments2::SetComments2 { value: params.str("value") }),
-            "set-data-periods" => EpwMutation::SetDataPeriods(set_data_periods::SetDataPeriods { data_periods: data_periods_from(&params.get("dataPeriods").cloned().unwrap_or(Json::Null)) }),
-            "insert-record" => EpwMutation::InsertRecord(insert_record::InsertRecord { index: number("index").ok_or("insert-record: missing `index`")? as usize, record: Box::new(record_from(&strings(&params, "fields"))) }),
-            "remove-record" => EpwMutation::RemoveRecord(remove_record::RemoveRecord { index: number("index").ok_or("remove-record: missing `index`")? as usize }),
-            "set-record-field" => EpwMutation::SetRecordField(set_record_field::SetRecordField { record_index: number("recordIndex").ok_or("set-record-field: missing `recordIndex`")? as usize, field_index: number("fieldIndex").ok_or("set-record-field: missing `fieldIndex`")? as usize, value: params.str("value") }),
-            other => return Err(format!("no subject rule for kind {other:?}")),
-        }])
+    /// 🔀️ The spec's wire payload, decoded by the aggregate's own generic payload constructor — the only
+    /// channel between the feature's parameters and the subject's codec.
+    fn mutation_of(spec: &Json) -> Result<EpwMutation, String> {
+        decode_epw_mutation_payload(&spec.str("kind"), &spec.get("params").map_or_else(|| "null".to_string(), Json::to_string))
     }
 
     fn decode(bytes: &[u8]) -> Result<EpwSnapshot, String> {
@@ -256,26 +148,28 @@ mod subject {
         decode_epw(&text)
     }
 
-    pub fn mutate(ctx: &Context) -> Result<Outcome, String> {
-        let mut snapshot = decode(&mutable_input(ctx)?)?;
-        for mutation in mutation_from_spec(&ctx.doc_json()?)? {
-            apply_epw_mutation(&mut snapshot, &mutation);
-        }
-        let output = encode_epw(&snapshot).into_bytes();
+    fn outcome(snapshot: &EpwSnapshot) -> Result<Outcome, String> {
+        let output = encode_epw(snapshot).into_bytes();
         let projection = project_epw(&output)?;
         Ok(Outcome::with_raw(output, projection))
     }
 
+    pub fn mutate(ctx: &Context) -> Result<Outcome, String> {
+        let mut snapshot = decode(&mutable_input(ctx)?)?;
+        apply_epw_mutation(&mut snapshot, &mutation_of(&ctx.doc_json()?)?);
+        outcome(&snapshot)
+    }
+
+    /// ↩️ The forward op, then the production inverse computed against the pre-mutation snapshot.
     pub fn inverse(ctx: &Context) -> Result<Outcome, String> {
-        let input = mutable_input(ctx)?;
-        let spec = ctx.doc_json()?;
-        let mut snapshot = decode(&input)?;
-        for mutation in mutation_from_spec(&spec)?.into_iter().chain(mutation_from_spec(&inverse_spec(&input, &spec)?)?) {
-            apply_epw_mutation(&mut snapshot, &mutation);
+        let mut snapshot = decode(&mutable_input(ctx)?)?;
+        let forward = mutation_of(&ctx.doc_json()?)?;
+        let backward = inverse_epw_mutation(&snapshot, &forward);
+        apply_epw_mutation(&mut snapshot, &forward);
+        for mutation in &backward {
+            apply_epw_mutation(&mut snapshot, mutation);
         }
-        let output = encode_epw(&snapshot).into_bytes();
-        let projection = project_epw(&output)?;
-        Ok(Outcome::with_raw(output, projection))
+        outcome(&snapshot)
     }
 
     /// 🔁️ Full semantic parse, re-serialized from the model alone — copying, splicing or patching
@@ -286,11 +180,7 @@ mod subject {
     /// non-triviality rests on genuinely mutating nothing and still routing through the typed model
     /// — see that Feature's own scenario text for the exact assertion this performs.
     pub fn identity_round_trip(ctx: &Context) -> Result<Outcome, String> {
-        let input = mutable_input(ctx)?;
-        let snapshot = decode(&input)?;
-        let output = encode_epw(&snapshot).into_bytes();
-        let projection = project_epw(&output)?;
-        Ok(Outcome::with_raw(output, projection))
+        outcome(&decode(&mutable_input(ctx)?)?)
     }
 }
 //#endregion 🔖️Subject
@@ -299,10 +189,10 @@ mod subject {
 /// 🧭️ Registration entry point the generated host calls.
 pub fn adapter() -> Adapter {
     let mut built = Adapter::new("rust");
-    built = built.oracle("mutate", mutate_oracle).oracle("no-mutation-baseline-mutate", mutate_oracle).oracle("inverse", inverse_oracle).oracle("no-mutation-baseline-inverse", inverse_oracle);
+    built = built.oracle("mutate", mutate_oracle).oracle("inverse", inverse_oracle);
     #[cfg(feature = "sut")]
     {
-        built = built.subject("mutate", subject::mutate).subject("no-mutation-baseline-mutate", subject::mutate).subject("inverse", subject::inverse).subject("no-mutation-baseline-inverse", subject::inverse);
+        built = built.subject("mutate", subject::mutate).subject("inverse", subject::inverse);
     }
     built = built.oracle("identity-round-trip", round_trip_oracle);
     #[cfg(feature = "sut")]

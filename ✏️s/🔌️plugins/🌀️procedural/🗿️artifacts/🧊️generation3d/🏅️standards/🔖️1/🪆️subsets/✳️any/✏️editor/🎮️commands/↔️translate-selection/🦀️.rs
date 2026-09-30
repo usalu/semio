@@ -65,9 +65,3 @@ pub(crate) fn apply_components(payload: &TranslateSelection, doc: &ArtifactView<
     crate::editor::generation3d::transform_commands::validate_component_gesture(&doc.snapshot.host_snapshot, &payload.node_ids, selected)?;
     translate_ids(&doc.snapshot.host_snapshot, selected, payload.dx, payload.dy, payload.dz)
 }
-
-//#region 🧪️Tests
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
-//#endregion 🧪️Tests

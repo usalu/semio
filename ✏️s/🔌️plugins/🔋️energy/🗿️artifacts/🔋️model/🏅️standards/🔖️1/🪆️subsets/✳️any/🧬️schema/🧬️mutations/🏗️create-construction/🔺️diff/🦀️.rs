@@ -10,7 +10,7 @@ pub fn diff(payload: &super::CreateConstruction, base: &EnergyModelSnapshot) -> 
         return protocol::MutationOutcome::error("mutation.duplicate-id", format!("Construction {} already exists.", payload.id.0), [payload.id.0.to_string()]);
     }
     if payload.index as usize > base.model.constructions.len() {
-        return protocol::MutationOutcome::error("mutation.invariant", format!("Index {} is past the end of the model's {} constructions.", payload.index, base.model.constructions.len()), [payload.id.0.to_string()]);
+        return protocol::MutationOutcome::error("mutation.target-missing", format!("Index {} is past the end of the model's {} constructions.", payload.index, base.model.constructions.len()), [payload.id.0.to_string()]);
     }
     if let Some(missing) = payload.layer_material_ids.iter().find(|id| !base.model.materials.iter().any(|material| material.id == **id)) {
         return protocol::MutationOutcome::error("mutation.target-missing", format!("Material {} does not exist.", missing.0), [missing.0.to_string()]);

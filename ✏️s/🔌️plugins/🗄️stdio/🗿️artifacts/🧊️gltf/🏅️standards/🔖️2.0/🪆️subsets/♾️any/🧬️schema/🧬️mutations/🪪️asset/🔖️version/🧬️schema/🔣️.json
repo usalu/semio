@@ -9,17 +9,59 @@
   ],
   "properties": {
     "version": {
-      "type": "string"
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "text",
+        "label": {
+          "en": "glTF version",
+          "de": "glTF-Version"
+        },
+        "description": {
+          "en": "e.g. 2.0.",
+          "de": "z. B. 2.0."
+        },
+        "group": "value",
+        "order": 10
+      }
     }
   },
-  "x-semio": {
-    "id": "s.stdio.gltf.mutation.change-asset-version.v1",
-    "version": 1,
-    "phase": "mutation",
-    "touchedPaths": [
-      "document/asset/version"
-    ],
-    "referencePolicy": "none"
-  },
-  "x-semio-mutation": "change-asset-version"
+  "$defs": {
+    "ChangeAssetVersionMutation": {
+      "description": "The whole wire of ChangeAssetVersionMutation: the editable apply payload (this document's root) or the inert restore.",
+      "oneOf": [
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "phase",
+            "value"
+          ],
+          "properties": {
+            "phase": {
+              "const": "apply"
+            },
+            "value": {
+              "$ref": "#"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "phase",
+            "value"
+          ],
+          "properties": {
+            "phase": {
+              "const": "restore"
+            },
+            "value": {
+              "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/gltf/2.0/any/diff.json"
+            }
+          }
+        }
+      ]
+    }
+  }
 }

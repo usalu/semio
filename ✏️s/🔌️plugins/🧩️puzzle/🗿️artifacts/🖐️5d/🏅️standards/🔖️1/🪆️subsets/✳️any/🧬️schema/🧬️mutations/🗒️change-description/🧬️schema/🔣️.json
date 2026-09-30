@@ -5,11 +5,29 @@
   "type": "object",
   "additionalProperties": false,
   "required": [
+    "mutation",
     "newDescription"
   ],
   "properties": {
+    "mutation": {
+      "const": "changeDescription"
+    },
     "newDescription": {
-      "type": "string"
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "multiline",
+        "role": "value",
+        "label": {
+          "en": "Description",
+          "de": "Beschreibung"
+        },
+        "description": {
+          "en": "Free-text scene description.",
+          "de": "Freitext-Beschreibung der Szene."
+        },
+        "group": "metadata",
+        "order": 10
+      }
     }
   }
 }

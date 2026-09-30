@@ -1,0 +1,61 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/energy/model/mutation/change-humidistat-dehumidifying-setpoint-schedule/schema.json",
+  "title": "ChangeHumidistatDehumidifyingSetpointSchedule",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "mutation",
+    "id",
+    "newDehumidifyingSetpointScheduleId"
+  ],
+  "properties": {
+    "mutation": {
+      "const": "changeHumidistatDehumidifyingSetpointSchedule"
+    },
+    "id": {
+      "type": "integer",
+      "minimum": 0,
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Humidistat",
+          "de": "Feuchteregler"
+        },
+        "description": {
+          "en": "The humidistat this mutation changes, by id.",
+          "de": "Feuchteregler, den diese Mutation ändert, per ID."
+        },
+        "ref": {
+          "kind": "humidistat"
+        },
+        "group": "target",
+        "order": 10
+      }
+    },
+    "newDehumidifyingSetpointScheduleId": {
+      "type": "integer",
+      "minimum": 0,
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Dehumidifying setpoint schedule",
+          "de": "Entfeuchtungs-Sollwertzeitplan"
+        },
+        "description": {
+          "en": "Relative-humidity ceiling over time, by id.",
+          "de": "Obere Sollgrenze der relativen Feuchte im Zeitverlauf, per ID."
+        },
+        "ref": {
+          "kind": "schedule",
+          "domain": "energyModel",
+          "granularity": "schedule"
+        },
+        "group": "schedule",
+        "order": 20
+      }
+    }
+  }
+}

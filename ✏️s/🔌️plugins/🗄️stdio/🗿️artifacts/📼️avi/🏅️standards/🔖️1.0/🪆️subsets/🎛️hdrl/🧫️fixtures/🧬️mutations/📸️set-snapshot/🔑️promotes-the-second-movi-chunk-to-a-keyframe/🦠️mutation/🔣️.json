@@ -49,13 +49,13 @@
           "width": 2,
           "height": 2,
           "planes": 1,
-          "bit_count": 24,
+          "bitCount": 24,
           "compression": "DIB ",
-          "size_image": 16,
-          "x_pels_per_meter": 0,
-          "y_pels_per_meter": 0,
-          "colors_used": 0,
-          "colors_important": 0
+          "sizeImage": 16,
+          "xPelsPerMeter": 0,
+          "yPelsPerMeter": 0,
+          "colorsUsed": 0,
+          "colorsImportant": 0
         },
         "chunks": [
           {

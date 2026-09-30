@@ -5,14 +5,31 @@
   "type": "object",
   "additionalProperties": false,
   "required": [
+    "mutation",
     "fatigueDetails"
   ],
   "properties": {
-    "fatigueDetails": {}
-  },
-  "owner": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/🪶️en1999/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔄️change-fatigue-details",
-  "semanticKind": "change-fatigue-details",
-  "emoji": "🔄️",
-  "aggregateVariant": "ChangeFatigueDetails",
-  "displayName": "Change Fatigue Details"
+    "mutation": {
+      "const": "changeFatigueDetails"
+    },
+    "fatigueDetails": {
+      "type": "array",
+      "items": {
+        "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1999/snapshot.json#/$defs/FatigueDetail"
+      },
+      "x-semio-ui": {
+        "role": "value",
+        "label": {
+          "en": "Fatigue detail categories",
+          "de": "Kerbfälle"
+        },
+        "description": {
+          "en": "The complete list of fatigue details (EN 1999-1-3).",
+          "de": "Die vollständige Liste der Kerbfälle (EN 1999-1-3)."
+        },
+        "group": "record",
+        "order": 10
+      }
+    }
+  }
 }

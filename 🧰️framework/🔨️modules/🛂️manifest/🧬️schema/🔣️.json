@@ -545,10 +545,30 @@
       ],
       "properties": {
         "pluginId": {
-          "type": "string"
+          "type": "string",
+          "x-semio-ui": {
+            "widget": "text",
+            "role": "value",
+            "label": {
+              "en": "Plugin",
+              "de": "Plugin"
+            },
+            "group": "app",
+            "order": 10
+          }
         },
         "appId": {
-          "type": "string"
+          "type": "string",
+          "x-semio-ui": {
+            "widget": "text",
+            "role": "value",
+            "label": {
+              "en": "App",
+              "de": "App"
+            },
+            "group": "app",
+            "order": 20
+          }
         }
       }
     },
@@ -900,6 +920,241 @@
           }
         }
       }
+    },
+    "ShellFooterItemV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "placement",
+        "caption",
+        "logos"
+      ],
+      "properties": {
+        "id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "placement": {
+          "enum": [
+            "leading",
+            "trailing"
+          ]
+        },
+        "caption": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "en",
+            "de"
+          ],
+          "properties": {
+            "en": {
+              "type": "string"
+            },
+            "de": {
+              "type": "string"
+            }
+          }
+        },
+        "separator": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "en",
+            "de"
+          ],
+          "properties": {
+            "en": {
+              "type": "string"
+            },
+            "de": {
+              "type": "string"
+            }
+          }
+        },
+        "logos": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "href",
+              "src",
+              "alt"
+            ],
+            "properties": {
+              "href": {
+                "type": "string",
+                "pattern": "^https://"
+              },
+              "src": {
+                "type": "string",
+                "pattern": "^/"
+              },
+              "darkSrc": {
+                "type": "string",
+                "pattern": "^/"
+              },
+              "alt": {
+                "type": "string",
+                "minLength": 1
+              }
+            }
+          }
+        }
+      },
+      "x-semio-formats": [
+        "🔣️jsonschema"
+      ]
+    },
+    "InputLabel": {
+      "description": "🌐️ A localized input label or description: one text per locale ({en, de}), or the full LocalizedLabel matrix ({native: {en, de}, reuse: {en, de}}). Every locale is required and no text is empty — there is no default language.",
+      "oneOf": [
+        { "$ref": "#/$defs/InputLabelLocales" },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["native", "reuse"],
+          "properties": {
+            "native": { "$ref": "#/$defs/InputLabelLocales" },
+            "reuse": { "$ref": "#/$defs/InputLabelLocales" }
+          }
+        }
+      ],
+      "x-semio-formats": ["🔣️jsonschema", "🟦️typescript"]
+    },
+    "InputLabelLocales": {
+      "description": "🌐️ One non-empty text per shell locale.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["en", "de"],
+      "properties": {
+        "en": { "type": "string", "minLength": 1 },
+        "de": { "type": "string", "minLength": 1 }
+      },
+      "x-semio-formats": ["🔣️jsonschema", "🟦️typescript"]
+    },
+    "SchemaInvariant": {
+      "description": "🧷️ One payload-intrinsic invariant a schema states that JSON Schema draft-07 cannot express (a cross-field or ordering rule): a stable kebab-case id, which a refusal outcome (`🎯️outcome`, code mutation.invariant) names as `invariant`, and its description per locale.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "description"],
+      "properties": {
+        "id": { "type": "string", "pattern": "^[a-z0-9]+(?:-[a-z0-9]+)*$" },
+        "description": { "$ref": "#/$defs/InputLabelLocales" }
+      },
+      "x-semio-formats": ["🔣️jsonschema", "🟦️typescript"]
+    },
+    "SchemaInvariants": {
+      "description": "🧷️ The value of one x-semio-invariant annotation: the invariants the annotated schema node states, each id unique within the annotation (one id may annotate every node it governs). Read by parseSchemaInvariants (TypeScript) and the schema-mutation-payload-parity lint.",
+      "type": "array",
+      "minItems": 1,
+      "items": { "$ref": "#/$defs/SchemaInvariant" },
+      "x-semio-formats": ["🔣️jsonschema", "🟦️typescript"]
+    },
+    "InputUi": {
+      "description": "🎛️ The value of the x-semio-ui annotation on one mutation input (a leaf payload property or the $defs entry it references): UI facts only, never a validation constraint — hard bounds stay in the standard keywords. An outer annotation overrides the one on its $ref target key by key. Read by manifest::mutation_input_defs (Rust) and mutationInputDefs (TypeScript).",
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "widget": { "enum": ["slider", "stepper", "dial", "toggle", "select", "segmented", "text", "multiline", "vector", "color", "reference", "hidden"] },
+        "role": { "enum": ["value", "target", "discriminator"] },
+        "label": { "$ref": "#/$defs/InputLabel" },
+        "description": { "$ref": "#/$defs/InputLabel" },
+        "step": { "type": "number", "exclusiveMinimum": 0 },
+        "precision": { "type": "integer", "minimum": 0, "maximum": 15 },
+        "softMin": { "type": "number" },
+        "softMax": { "type": "number" },
+        "snaps": { "type": "array", "items": { "type": "number" } },
+        "snapSource": {
+          "oneOf": [
+            { "type": "object", "additionalProperties": false, "required": ["step"], "properties": { "step": { "const": true } } },
+            { "type": "object", "additionalProperties": false, "required": ["config"], "properties": { "config": { "type": "string", "minLength": 1 } } },
+            { "type": "object", "additionalProperties": false, "required": ["snapshot"], "properties": { "snapshot": { "type": "string", "pattern": "^(/.*)?$" } } }
+          ]
+        },
+        "unit": { "type": "string", "minLength": 1 },
+        "displayUnit": { "type": "string", "minLength": 1 },
+        "displayFactor": { "type": "number", "not": { "const": 0 } },
+        "scale": { "enum": ["linear", "log"] },
+        "group": { "type": "string", "minLength": 1 },
+        "order": { "type": "integer" },
+        "options": { "type": "object", "additionalProperties": { "$ref": "#/$defs/InputLabel" } },
+        "ref": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "kind": {
+              "oneOf": [
+                { "type": "string", "minLength": 1 },
+                { "type": "array", "minItems": 1, "items": { "type": "string", "minLength": 1 } }
+              ]
+            },
+            "domain": { "type": "string", "minLength": 1 },
+            "granularity": { "type": "string", "minLength": 1 }
+          }
+        }
+      },
+      "x-semio-formats": ["🔣️jsonschema", "🟦️typescript"]
+    },
+    "InputLabelGlossary": {
+      "description": "📚️ The framework input-label glossary (🛂️manifest/🔣️input-labels.json): a label in every locale for the most frequent mutation input names, the fallback when an input carries no x-semio-ui.label.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["schema", "labels"],
+      "properties": {
+        "schema": { "const": "semio.manifest.input-label-glossary/v1" },
+        "labels": { "type": "object", "minProperties": 200, "additionalProperties": { "$ref": "#/$defs/InputLabelLocales" } }
+      },
+      "x-semio-formats": ["🔣️jsonschema", "🟦️typescript"]
+    },
+    "MutationInputCorpus": {
+      "description": "🧫️ The language-agnostic mutation-input corpus (🧫️fixtures/🧫️mutation-inputs): leaf payload schemas, the schema documents their cross-document $refs resolve to, and per case either the canonical input descriptors (ActionArgDef JSON) every reader must produce or the error class and input pointer every reader must refuse with (and, when it differs from that single refusal, every finding the collecting read reports, in reading order); plus the reference id table every host converts a selected id text by (idType, text → the payload value, or null when refused; spelled = that value's text back).",
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["schema", "documents", "cases", "referenceIds"],
+      "properties": {
+        "schema": { "const": "semio.manifest.mutation-input-corpus/v1" },
+        "referenceIds": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["idType", "text", "value"],
+            "properties": { "idType": { "enum": ["string", "integer"] }, "text": { "type": "string" }, "value": { "type": ["string", "integer", "null"] }, "spelled": { "type": "string" } }
+          }
+        },
+        "documents": { "type": "object", "additionalProperties": { "type": "object", "required": ["$id"] } },
+        "cases": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["name", "leafSchema"],
+            "properties": {
+              "name": { "type": "string", "pattern": "^[a-z0-9]+(-[a-z0-9]+)*$" },
+              "leafSchema": { "type": "object" },
+              "expectedFindings": { "type": "array", "minItems": 1, "items": { "type": "object", "additionalProperties": false, "required": ["code", "pointer"], "properties": { "code": { "enum": ["malformed", "refUnresolved", "uiInvalid", "widgetIncompatible", "labelMissing", "optionLabelMissing", "localeMissing"] }, "pointer": { "type": "string" } } } },
+              "expectedInputs": { "type": "array", "items": { "type": "object", "required": ["id", "label", "schema", "required"] } },
+              "expectedError": {
+                "type": "object",
+                "additionalProperties": false,
+                "required": ["code", "pointer"],
+                "properties": {
+                  "code": { "enum": ["malformed", "refUnresolved", "uiInvalid", "widgetIncompatible", "labelMissing", "optionLabelMissing", "localeMissing"] },
+                  "pointer": { "type": "string" }
+                }
+              }
+            },
+            "oneOf": [{ "required": ["expectedInputs"] }, { "required": ["expectedError"] }]
+          }
+        }
+      },
+      "x-semio-formats": ["🔣️jsonschema"]
     }
   }
 }

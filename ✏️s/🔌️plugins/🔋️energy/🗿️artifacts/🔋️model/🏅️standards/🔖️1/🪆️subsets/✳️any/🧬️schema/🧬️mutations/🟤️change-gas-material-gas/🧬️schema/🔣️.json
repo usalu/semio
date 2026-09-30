@@ -5,12 +5,36 @@
   "type": "object",
   "additionalProperties": false,
   "required": [
+    "mutation",
     "id",
     "newGas"
   ],
   "properties": {
+    "mutation": {
+      "const": "changeGasMaterialGas"
+    },
     "id": {
-      "type": "integer"
+      "type": "integer",
+      "minimum": 0,
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Gas gap",
+          "de": "Gasfüllung"
+        },
+        "description": {
+          "en": "The gas gap this mutation changes, by id.",
+          "de": "Gasfüllung, die diese Mutation ändert, per ID."
+        },
+        "ref": {
+          "kind": "gasMaterial",
+          "domain": "energyModel",
+          "granularity": "gasMaterial"
+        },
+        "group": "target",
+        "order": 10
+      }
     },
     "newGas": {
       "enum": [
@@ -18,7 +42,35 @@
         "Argon",
         "Krypton",
         "Xenon"
-      ]
+      ],
+      "x-semio-ui": {
+        "widget": "select",
+        "role": "value",
+        "label": {
+          "en": "Fill gas",
+          "de": "Füllgas"
+        },
+        "options": {
+          "Air": {
+            "en": "Air",
+            "de": "Luft"
+          },
+          "Argon": {
+            "en": "Argon",
+            "de": "Argon"
+          },
+          "Krypton": {
+            "en": "Krypton",
+            "de": "Krypton"
+          },
+          "Xenon": {
+            "en": "Xenon",
+            "de": "Xenon"
+          }
+        },
+        "group": "thermal",
+        "order": 20
+      }
     }
   }
 }

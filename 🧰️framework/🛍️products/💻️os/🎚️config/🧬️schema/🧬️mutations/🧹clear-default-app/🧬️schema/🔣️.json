@@ -5,15 +5,48 @@
   "type": "object",
   "additionalProperties": false,
   "required": [
+    "mutation",
     "dialect",
     "role"
   ],
   "properties": {
+    "mutation": {
+      "const": "clearDefaultApp"
+    },
     "dialect": {
-      "$ref": "https://json.schemas.assets.semio-tech.com/framework/io/schema.json#/$defs/ArtifactDialect"
+      "$ref": "https://json.schemas.assets.semio-tech.com/framework/io/schema.json#/$defs/ArtifactDialect",
+      "x-semio-ui": {
+        "role": "value",
+        "label": {
+          "en": "Artifact dialect",
+          "de": "Artefaktdialekt"
+        },
+        "group": "record",
+        "order": 10
+      }
     },
     "role": {
-      "$ref": "https://json.schemas.assets.semio-tech.com/framework/manifest/schema.json#/$defs/AppRole"
+      "$ref": "https://json.schemas.assets.semio-tech.com/framework/manifest/schema.json#/$defs/AppRole",
+      "x-semio-ui": {
+        "widget": "segmented",
+        "role": "value",
+        "label": {
+          "en": "App role",
+          "de": "App-Rolle"
+        },
+        "options": {
+          "viewer": {
+            "en": "Viewer",
+            "de": "Betrachter"
+          },
+          "editor": {
+            "en": "Editor",
+            "de": "Editor"
+          }
+        },
+        "group": "app",
+        "order": 20
+      }
     }
   }
 }

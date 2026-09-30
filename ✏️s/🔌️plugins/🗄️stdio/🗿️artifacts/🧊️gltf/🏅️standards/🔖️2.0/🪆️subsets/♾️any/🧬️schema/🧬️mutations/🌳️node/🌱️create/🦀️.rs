@@ -28,7 +28,7 @@ pub fn apply(payload: &GltfCreateNodePayload, base: &GltfSnapshot) -> Result<Glt
 
 //#region 🧬️DirectMutation
 #[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::MutationLeaf)]
-#[mutation_leaf(contract = ::protocol)]
+#[mutation_leaf(contract = ::protocol, payload = Apply)]
 #[value(tag = "phase", content = "value", rename_all = "camelCase")]
 pub enum CreateNodeMutation {
     Apply(GltfCreateNodePayload),
@@ -72,6 +72,6 @@ impl protocol::MutationKind<GltfSnapshot, super::GltfMutation> for CreateNodeMut
 
 //#region 🧪️Tests
 #[cfg(test)]
-#[path = "🧪️tests/🔬️direct-leaf/🦀️.rs"]
-mod direct_leaf_tests;
+#[path = "🧪️tests/🌱️inserts-an-empty-e75eec/🦀️.rs"]
+mod case_inserts_an_empty_e75eec;
 //#endregion 🧪️Tests

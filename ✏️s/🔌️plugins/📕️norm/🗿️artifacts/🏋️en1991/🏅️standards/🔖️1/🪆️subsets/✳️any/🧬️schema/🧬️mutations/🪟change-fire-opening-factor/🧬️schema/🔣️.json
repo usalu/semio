@@ -1,13 +1,33 @@
 {
-  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/norm/en1991/mutation/change-fire-opening-factor/schema.json",
+  "title": "ChangeFireOpeningFactor",
   "type": "object",
   "additionalProperties": false,
   "required": [
-    "new_fire_opening_factor"
+    "newFireOpeningFactor"
   ],
   "properties": {
-    "new_fire_opening_factor": {
-      "type": "number"
+    "newFireOpeningFactor": {
+      "type": "number",
+      "minimum": 0,
+      "x-semio-ui": {
+        "widget": "stepper",
+        "role": "value",
+        "label": {
+          "en": "Opening factor O",
+          "de": "Öffnungsfaktor O"
+        },
+        "description": {
+          "en": "O = A_v·√h_eq / A_t (EN 1991-1-2 Annex A).",
+          "de": "O = A_v·√h_eq / A_t (EN 1991-1-2 Anhang A)."
+        },
+        "unit": "m^½",
+        "step": 0.01,
+        "precision": 3,
+        "group": "fire",
+        "order": 10
+      }
     }
   }
 }

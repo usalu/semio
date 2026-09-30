@@ -4,17 +4,83 @@
   "title": "Din18599Diff",
   "type": "object",
   "additionalProperties": false,
-  "required": [],
   "properties": {
+    "buildingCategory": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "x-semio-state": "artifact"
+    },
+    "attachment": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "x-semio-state": "artifact"
+    },
     "useClass": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "x-semio-state": "artifact"
+    },
+    "method": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "x-semio-state": "artifact"
+    },
+    "netFloorAreaM2": {
+      "type": [
+        "number",
+        "null"
+      ],
+      "x-semio-state": "artifact"
+    },
+    "heatedVolumeM3": {
+      "type": [
+        "number",
+        "null"
+      ],
+      "x-semio-state": "artifact"
+    },
+    "gegQpFactor": {
+      "type": [
+        "number",
+        "null"
+      ],
+      "x-semio-state": "artifact"
+    },
+    "deltaUWbWM2k": {
+      "type": [
+        "number",
+        "null"
+      ],
+      "x-semio-state": "artifact"
+    },
+    "automationClass": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "x-semio-state": "artifact"
+    },
+    "zones": {
       "anyOf": [
         {
-          "type": "string",
-          "enum": [
-            "Residential",
-            "Office",
-            "School"
-          ]
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "values"
+          ],
+          "properties": {
+            "values": {
+              "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/din18599/schema.json#/properties/zones"
+            }
+          }
         },
         {
           "type": "null"
@@ -22,10 +88,19 @@
       ],
       "x-semio-state": "artifact"
     },
-    "heatedAreaM2": {
+    "elements": {
       "anyOf": [
         {
-          "type": "number"
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "values"
+          ],
+          "properties": {
+            "values": {
+              "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/din18599/schema.json#/properties/elements"
+            }
+          }
         },
         {
           "type": "null"
@@ -33,12 +108,10 @@
       ],
       "x-semio-state": "artifact"
     },
-    "occupants": {
+    "heating": {
       "anyOf": [
         {
-          "type": "integer",
-          "minimum": 0,
-          "maximum": 4294967295
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/din18599/schema.json#/properties/heating"
         },
         {
           "type": "null"
@@ -46,10 +119,10 @@
       ],
       "x-semio-state": "artifact"
     },
-    "hT": {
+    "dhw": {
       "anyOf": [
         {
-          "type": "number"
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/din18599/schema.json#/properties/dhw"
         },
         {
           "type": "null"
@@ -57,10 +130,43 @@
       ],
       "x-semio-state": "artifact"
     },
-    "hV": {
+    "ventilation": {
       "anyOf": [
         {
-          "type": "number"
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/din18599/schema.json#/properties/ventilation"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "x-semio-state": "artifact"
+    },
+    "cooling": {
+      "anyOf": [
+        {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/din18599/schema.json#/properties/cooling"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "x-semio-state": "artifact"
+    },
+    "lighting": {
+      "anyOf": [
+        {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/din18599/schema.json#/properties/lighting"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "x-semio-state": "artifact"
+    },
+    "renewables": {
+      "anyOf": [
+        {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/din18599/schema.json#/properties/renewables"
         },
         {
           "type": "null"
@@ -71,7 +177,7 @@
     "climate": {
       "anyOf": [
         {
-          "$ref": "https://json.schemas.assets.semio-tech.com/os/store/child.json"
+          "$ref": "https://json.schemas.assets.semio-tech.com/os/store/child/schema.json"
         },
         {
           "type": "null"
@@ -79,83 +185,6 @@
       ],
       "x-semio-state": "artifact",
       "x-semio-child-kind": "s.stdio.semio"
-    },
-    "internalGainsWM2": {
-      "anyOf": [
-        {
-          "type": "number"
-        },
-        {
-          "type": "null"
-        }
-      ],
-      "x-semio-state": "artifact"
-    },
-    "solarGainsKwh": {
-      "anyOf": [
-        {
-          "type": "number"
-        },
-        {
-          "type": "null"
-        }
-      ],
-      "x-semio-state": "artifact"
-    },
-    "systemLossesKwh": {
-      "anyOf": [
-        {
-          "type": "number"
-        },
-        {
-          "type": "null"
-        }
-      ],
-      "x-semio-state": "artifact"
-    },
-    "renewableKwh": {
-      "anyOf": [
-        {
-          "type": "number"
-        },
-        {
-          "type": "null"
-        }
-      ],
-      "x-semio-state": "artifact"
-    },
-    "annualLimitKwh": {
-      "anyOf": [
-        {
-          "type": "number"
-        },
-        {
-          "type": "null"
-        }
-      ],
-      "x-semio-state": "artifact"
-    },
-    "energyCarrier": {
-      "anyOf": [
-        {
-          "type": "string"
-        },
-        {
-          "type": "null"
-        }
-      ],
-      "x-semio-state": "artifact"
-    },
-    "referenceQPKwh": {
-      "anyOf": [
-        {
-          "type": "number"
-        },
-        {
-          "type": "null"
-        }
-      ],
-      "x-semio-state": "artifact"
     }
   }
 }

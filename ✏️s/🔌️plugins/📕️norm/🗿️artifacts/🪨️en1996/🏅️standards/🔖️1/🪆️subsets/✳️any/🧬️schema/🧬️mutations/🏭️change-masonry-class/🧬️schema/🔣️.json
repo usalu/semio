@@ -9,7 +9,20 @@
   ],
   "properties": {
     "newMasonryClass": {
-      "type": "string"
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1996/snapshot.json#/$defs/MasonryClass",
+      "x-semio-ui": {
+        "role": "value",
+        "label": {
+          "en": "Masonry execution class",
+          "de": "Mauerwerksklasse"
+        },
+        "description": {
+          "en": "Class1 to Class5: category of manufacturing control and execution, sets γ_M (EN 1996-1-1 Table 2.3).",
+          "de": "Class1 bis Class5: Kategorie der Herstellungskontrolle und Ausführung, bestimmt γ_M (EN 1996-1-1 Tabelle 2.3)."
+        },
+        "group": "annex",
+        "order": 10
+      }
     }
   }
 }

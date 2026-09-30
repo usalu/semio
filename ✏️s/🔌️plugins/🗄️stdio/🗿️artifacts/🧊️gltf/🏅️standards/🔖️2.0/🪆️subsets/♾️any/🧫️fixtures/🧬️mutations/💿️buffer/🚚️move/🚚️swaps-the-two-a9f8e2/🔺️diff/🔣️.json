@@ -1,19 +1,53 @@
 {
-  "id": "s.stdio.gltf.mutation.move-buffer.v1",
-  "version": 1,
-  "touchedPaths": [
-    "document/buffers/0",
-    "document/buffers/1",
-    "buffers/0",
-    "buffers/1"
-  ],
-  "payload": {
-    "index": 0,
-    "position": 1
+  "bufferViews": {
+    "modified": [
+      {
+        "index": 0,
+        "diff": {
+          "buffer": 1,
+          "byteLength": 1
+        }
+      },
+      {
+        "index": 1,
+        "diff": {
+          "buffer": 0,
+          "byteLength": 2
+        }
+      }
+    ]
   },
-  "operation": {
-    "kind": "move",
-    "index": 0,
-    "position": 1
+  "buffers": {
+    "modified": [
+      {
+        "index": 0,
+        "diff": {
+          "byteLength": 2
+        }
+      },
+      {
+        "index": 1,
+        "diff": {
+          "byteLength": 1
+        }
+      }
+    ]
+  },
+  "bufferBytes": {
+    "modified": [
+      {
+        "index": 0,
+        "diff": [
+          2,
+          3
+        ]
+      },
+      {
+        "index": 1,
+        "diff": [
+          1
+        ]
+      }
+    ]
   }
 }

@@ -1,13 +1,33 @@
 {
-  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/norm/en1991/mutation/change-thermal-bridge-type/schema.json",
+  "title": "ChangeThermalBridgeType",
   "type": "object",
   "additionalProperties": false,
   "required": [
-    "new_thermal_bridge_type"
+    "newThermalBridgeType"
   ],
   "properties": {
-    "new_thermal_bridge_type": {
-      "type": "number"
+    "newThermalBridgeType": {
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 3,
+      "x-semio-ui": {
+        "widget": "stepper",
+        "role": "value",
+        "label": {
+          "en": "Bridge deck type",
+          "de": "Überbautyp"
+        },
+        "description": {
+          "en": "Type 1 steel, 2 composite or 3 concrete deck (EN 1991-1-5 §6.1.1).",
+          "de": "Typ 1 Stahl-, 2 Verbund- oder 3 Betonüberbau (EN 1991-1-5 §6.1.1)."
+        },
+        "step": 1,
+        "precision": 0,
+        "group": "thermal",
+        "order": 10
+      }
     }
   }
 }

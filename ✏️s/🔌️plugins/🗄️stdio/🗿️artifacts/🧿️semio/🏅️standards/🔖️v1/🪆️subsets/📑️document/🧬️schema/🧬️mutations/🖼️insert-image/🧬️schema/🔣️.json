@@ -5,15 +5,16 @@
   "type": "object",
   "additionalProperties": false,
   "required": [
+    "mutation",
     "image"
   ],
   "properties": {
-    "image": {
-      "$ref": "#/$defs/DocImage"
-    },
     "mutation": {
       "const": "insertImage",
       "description": "Aggregate discriminator spliced in by SemioDocumentMutation; absent when the payload stands alone."
+    },
+    "image": {
+      "$ref": "#/$defs/DocImage"
     }
   },
   "$defs": {
@@ -25,7 +26,14 @@
           "type": "string"
         },
         "mime": {
-          "type": "string"
+          "type": "string",
+          "x-semio-ui": {
+            "widget": "text",
+            "label": {
+              "en": "Media type",
+              "de": "Medientyp"
+            }
+          }
         },
         "bytes": {
           "type": "array",
@@ -33,6 +41,12 @@
             "type": "integer",
             "minimum": 0,
             "maximum": 255
+          },
+          "x-semio-ui": {
+            "label": {
+              "en": "Bytes",
+              "de": "Bytes"
+            }
           }
         }
       }

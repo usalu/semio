@@ -32,21 +32,21 @@
     "beams": {
       "type": "array",
       "items": {
-        "$ref": "#/definitions/CompositeBeam"
+        "$ref": "#/$defs/CompositeBeam"
       },
       "x-semio-state": "artifact"
     },
     "columns": {
       "type": "array",
       "items": {
-        "$ref": "#/definitions/CompositeColumn"
+        "$ref": "#/$defs/CompositeColumn"
       },
       "x-semio-state": "artifact"
     },
     "slabs": {
       "type": "array",
       "items": {
-        "$ref": "#/definitions/CompositeSlab"
+        "$ref": "#/$defs/CompositeSlab"
       },
       "x-semio-state": "artifact"
     },
@@ -64,8 +64,9 @@
       "x-semio-state": "artifact"
     }
   },
-  "definitions": {
+  "$defs": {
     "CharacteristicAction": {
+      "title": "CharacteristicAction",
       "type": "object",
       "additionalProperties": false,
       "required": [
@@ -86,30 +87,95 @@
           "type": "string"
         },
         "category": {
-          "type": "string"
+          "type": "string",
+          "x-semio-ui": {
+            "label": {
+              "en": "Action category",
+              "de": "Einwirkungskategorie"
+            },
+            "description": {
+              "en": "self_steel, wet_concrete, finishes, A–H, flm3 …",
+              "de": "self_steel, wet_concrete, finishes, A–H, flm3 …"
+            },
+            "widget": "text"
+          }
         },
         "stage": {
-          "type": "string"
+          "type": "string",
+          "x-semio-ui": {
+            "label": {
+              "en": "Construction stage",
+              "de": "Bauzustand"
+            },
+            "description": {
+              "en": "construction or composite.",
+              "de": "construction (Bauzustand) oder composite (Verbundzustand)."
+            },
+            "widget": "text"
+          }
         },
         "qAreaPa": {
           "type": "number",
-          "format": "double"
+          "x-semio-ui": {
+            "widget": "stepper",
+            "label": {
+              "en": "Action",
+              "de": "Einwirkung"
+            },
+            "description": {
+              "en": "Zero-based position of the characteristic action in the member's list.",
+              "de": "Nullbasierte Position der charakteristischen Einwirkung in der Liste des Bauteils."
+            },
+            "step": 1,
+            "precision": 0
+          }
         },
         "fKN": {
           "type": "number",
-          "format": "double"
+          "x-semio-ui": {
+            "label": {
+              "en": "Concentrated force F_k",
+              "de": "Einzellast F_k"
+            },
+            "widget": "stepper",
+            "unit": "N",
+            "displayUnit": "kN",
+            "displayFactor": 0.001,
+            "precision": 2
+          }
         },
         "deltaSigmaKPa": {
           "type": "number",
-          "format": "double"
+          "x-semio-ui": {
+            "label": {
+              "en": "Stress range Δσ_k",
+              "de": "Spannungsschwingbreite Δσ_k"
+            },
+            "widget": "stepper",
+            "unit": "Pa",
+            "displayUnit": "N/mm²",
+            "displayFactor": 1e-06,
+            "precision": 1
+          }
         },
         "deltaTauKPa": {
           "type": "number",
-          "format": "double"
+          "x-semio-ui": {
+            "label": {
+              "en": "Shear stress range Δτ_k",
+              "de": "Schubspannungsschwingbreite Δτ_k"
+            },
+            "widget": "stepper",
+            "unit": "Pa",
+            "displayUnit": "N/mm²",
+            "displayFactor": 1e-06,
+            "precision": 1
+          }
         }
       }
     },
     "SteelSection": {
+      "title": "SteelSection",
       "type": "object",
       "additionalProperties": false,
       "required": [
@@ -125,35 +191,131 @@
       ],
       "properties": {
         "designation": {
-          "type": "string"
+          "type": "string",
+          "x-semio-ui": {
+            "label": {
+              "en": "Section designation",
+              "de": "Profilbezeichnung"
+            },
+            "widget": "text"
+          }
         },
         "heightM": {
-          "type": "number"
+          "type": "number",
+          "x-semio-ui": {
+            "label": {
+              "en": "Section depth h",
+              "de": "Profilhöhe h"
+            },
+            "widget": "stepper",
+            "unit": "m",
+            "displayUnit": "mm",
+            "displayFactor": 1000,
+            "precision": 1
+          }
         },
         "widthM": {
-          "type": "number"
+          "type": "number",
+          "x-semio-ui": {
+            "label": {
+              "en": "Flange width b",
+              "de": "Flanschbreite b"
+            },
+            "widget": "stepper",
+            "unit": "m",
+            "displayUnit": "mm",
+            "displayFactor": 1000,
+            "precision": 1
+          }
         },
         "twM": {
-          "type": "number"
+          "type": "number",
+          "x-semio-ui": {
+            "label": {
+              "en": "Web thickness t_w",
+              "de": "Stegdicke t_w"
+            },
+            "widget": "stepper",
+            "unit": "m",
+            "displayUnit": "mm",
+            "displayFactor": 1000,
+            "precision": 1
+          }
         },
         "tfM": {
-          "type": "number"
+          "type": "number",
+          "x-semio-ui": {
+            "label": {
+              "en": "Flange thickness t_f",
+              "de": "Flanschdicke t_f"
+            },
+            "widget": "stepper",
+            "unit": "m",
+            "displayUnit": "mm",
+            "displayFactor": 1000,
+            "precision": 1
+          }
         },
         "aM2": {
-          "type": "number"
+          "type": "number",
+          "x-semio-ui": {
+            "label": {
+              "en": "Cross-sectional area A_a",
+              "de": "Querschnittsfläche A_a"
+            },
+            "widget": "stepper",
+            "unit": "m²",
+            "displayUnit": "cm²",
+            "displayFactor": 10000.0,
+            "precision": 2
+          }
         },
         "wPlYM3": {
-          "type": "number"
+          "type": "number",
+          "x-semio-ui": {
+            "label": {
+              "en": "Plastic section modulus W_pl,y",
+              "de": "Plastisches Widerstandsmoment W_pl,y"
+            },
+            "widget": "stepper",
+            "unit": "m³",
+            "displayUnit": "cm³",
+            "displayFactor": 1000000.0,
+            "precision": 0
+          }
         },
         "iYM4": {
-          "type": "number"
+          "type": "number",
+          "x-semio-ui": {
+            "label": {
+              "en": "Second moment of area I_y",
+              "de": "Flächenträgheitsmoment I_y"
+            },
+            "widget": "stepper",
+            "unit": "m⁴",
+            "displayUnit": "cm⁴",
+            "displayFactor": 100000000.0,
+            "precision": 0
+          }
         },
         "aVM2": {
-          "type": "number"
+          "type": "number",
+          "x-semio-ui": {
+            "label": {
+              "en": "Shear area A_v",
+              "de": "Schubfläche A_v"
+            },
+            "widget": "stepper",
+            "unit": "m²",
+            "displayUnit": "cm²",
+            "displayFactor": 10000.0,
+            "precision": 2
+          }
         }
       }
     },
     "ProfiledSheeting": {
+      "title": "ProfiledSheeting",
       "type": "object",
       "additionalProperties": false,
       "required": [
@@ -165,23 +327,75 @@
       ],
       "properties": {
         "profile": {
-          "type": "string"
+          "type": "string",
+          "x-semio-ui": {
+            "label": {
+              "en": "Profile type",
+              "de": "Profilform"
+            },
+            "description": {
+              "en": "trapezoidal or re-entrant.",
+              "de": "trapezförmig oder hinterschnitten."
+            },
+            "widget": "text"
+          }
         },
         "heightM": {
-          "type": "number"
+          "type": "number",
+          "x-semio-ui": {
+            "label": {
+              "en": "Profile height h_p",
+              "de": "Profilhöhe h_p"
+            },
+            "widget": "stepper",
+            "unit": "m",
+            "displayUnit": "mm",
+            "displayFactor": 1000,
+            "precision": 1
+          }
         },
         "ribWidthM": {
-          "type": "number"
+          "type": "number",
+          "x-semio-ui": {
+            "label": {
+              "en": "Rib width b₀",
+              "de": "Rippenbreite b₀"
+            },
+            "widget": "stepper",
+            "unit": "m",
+            "displayUnit": "mm",
+            "displayFactor": 1000,
+            "precision": 1
+          }
         },
         "thicknessM": {
-          "type": "number"
+          "type": "number",
+          "x-semio-ui": {
+            "label": {
+              "en": "Sheet thickness t",
+              "de": "Blechdicke t"
+            },
+            "widget": "stepper",
+            "unit": "m",
+            "displayUnit": "mm",
+            "displayFactor": 1000,
+            "precision": 1
+          }
         },
         "ribsParallelToBeam": {
-          "type": "boolean"
+          "type": "boolean",
+          "x-semio-ui": {
+            "label": {
+              "en": "Ribs parallel to the beam",
+              "de": "Rippen parallel zum Träger"
+            },
+            "widget": "toggle"
+          }
         }
       }
     },
     "HeadedStuds": {
+      "title": "HeadedStuds",
       "type": "object",
       "additionalProperties": false,
       "required": [
@@ -194,26 +408,94 @@
       ],
       "properties": {
         "diameterM": {
-          "type": "number"
+          "type": "number",
+          "x-semio-ui": {
+            "widget": "stepper",
+            "label": {
+              "en": "Shank diameter of the headed stud d",
+              "de": "Schaftdurchmesser des Kopfbolzendübels d"
+            },
+            "unit": "m",
+            "displayUnit": "mm",
+            "displayFactor": 1000,
+            "step": 0.001,
+            "precision": 0
+          }
         },
         "heightM": {
-          "type": "number"
+          "type": "number",
+          "x-semio-ui": {
+            "label": {
+              "en": "Stud height h_sc",
+              "de": "Dübelhöhe h_sc"
+            },
+            "widget": "stepper",
+            "unit": "m",
+            "displayUnit": "mm",
+            "displayFactor": 1000,
+            "precision": 1
+          }
         },
         "fUPa": {
-          "type": "number"
+          "type": "number",
+          "x-semio-ui": {
+            "widget": "stepper",
+            "label": {
+              "en": "Ultimate tensile strength of the stud f_u",
+              "de": "Zugfestigkeit des Kopfbolzendübels f_u"
+            },
+            "unit": "Pa",
+            "displayUnit": "N/mm²",
+            "displayFactor": 1e-06,
+            "step": 5000000.0,
+            "precision": 0
+          }
         },
         "countPerRib": {
-          "type": "integer"
+          "type": "integer",
+          "minimum": 0,
+          "x-semio-ui": {
+            "label": {
+              "en": "Studs per rib n_r",
+              "de": "Dübel je Rippe n_r"
+            },
+            "widget": "stepper",
+            "step": 1,
+            "precision": 0
+          }
         },
         "spacingM": {
-          "type": "number"
+          "type": "number",
+          "x-semio-ui": {
+            "widget": "stepper",
+            "label": {
+              "en": "Headed stud spacing e_L",
+              "de": "Dübelabstand in Längsrichtung e_L"
+            },
+            "unit": "m",
+            "displayUnit": "mm",
+            "displayFactor": 1000,
+            "step": 0.005,
+            "precision": 0
+          }
         },
         "totalCount": {
-          "type": "integer"
+          "type": "integer",
+          "minimum": 0,
+          "x-semio-ui": {
+            "widget": "stepper",
+            "label": {
+              "en": "Number of headed studs n",
+              "de": "Anzahl der Kopfbolzendübel n"
+            },
+            "step": 1,
+            "precision": 0
+          }
         }
       }
     },
     "CompositeBeam": {
+      "title": "CompositeBeam",
       "type": "object",
       "additionalProperties": false,
       "required": [
@@ -241,62 +523,227 @@
           "type": "string"
         },
         "spanM": {
-          "type": "number"
+          "type": "number",
+          "x-semio-ui": {
+            "widget": "stepper",
+            "label": {
+              "en": "Beam span L",
+              "de": "Stützweite des Trägers L"
+            },
+            "unit": "m",
+            "step": 0.05,
+            "precision": 2
+          }
         },
         "spacingM": {
-          "type": "number"
+          "type": "number",
+          "x-semio-ui": {
+            "widget": "stepper",
+            "label": {
+              "en": "Headed stud spacing e_L",
+              "de": "Dübelabstand in Längsrichtung e_L"
+            },
+            "unit": "m",
+            "displayUnit": "mm",
+            "displayFactor": 1000,
+            "step": 0.005,
+            "precision": 0
+          }
         },
         "support": {
-          "type": "string"
+          "type": "string",
+          "x-semio-ui": {
+            "label": {
+              "en": "Support conditions",
+              "de": "Lagerungsbedingungen"
+            },
+            "description": {
+              "en": "simply_supported or continuous_2_span.",
+              "de": "simply_supported (Einfeldträger) oder continuous_2_span (Zweifeldträger)."
+            },
+            "widget": "text"
+          }
         },
         "construction": {
-          "type": "string"
+          "type": "string",
+          "x-semio-ui": {
+            "widget": "text",
+            "label": {
+              "en": "Construction method",
+              "de": "Herstellungsart"
+            },
+            "description": {
+              "en": "propped or unpropped construction.",
+              "de": "propped (mit Montageunterstützung) oder unpropped (ohne Montageunterstützung)."
+            }
+          }
         },
         "steel": {
-          "$ref": "#/definitions/SteelSection"
+          "$ref": "#/$defs/SteelSection",
+          "x-semio-ui": {
+            "label": {
+              "en": "Steel section",
+              "de": "Stahlprofil"
+            }
+          }
         },
         "slabThicknessM": {
-          "type": "number"
+          "type": "number",
+          "x-semio-ui": {
+            "widget": "stepper",
+            "label": {
+              "en": "Concrete flange thickness h_c",
+              "de": "Dicke des Betongurts h_c"
+            },
+            "unit": "m",
+            "displayUnit": "mm",
+            "displayFactor": 1000,
+            "step": 0.005,
+            "precision": 0
+          }
         },
         "concreteFCkPa": {
-          "type": "number"
+          "type": "number",
+          "x-semio-ui": {
+            "label": {
+              "en": "Concrete strength f_ck",
+              "de": "Betondruckfestigkeit f_ck"
+            },
+            "widget": "stepper",
+            "unit": "Pa",
+            "displayUnit": "N/mm²",
+            "displayFactor": 1e-06,
+            "precision": 1
+          }
         },
         "concreteECmPa": {
-          "type": "number"
+          "type": "number",
+          "x-semio-ui": {
+            "label": {
+              "en": "Concrete modulus E_cm",
+              "de": "Elastizitätsmodul des Betons E_cm"
+            },
+            "widget": "stepper",
+            "unit": "Pa",
+            "displayUnit": "N/mm²",
+            "displayFactor": 1e-06,
+            "precision": 1
+          }
         },
         "sheeting": {
-          "$ref": "#/definitions/ProfiledSheeting"
+          "$ref": "#/$defs/ProfiledSheeting",
+          "x-semio-ui": {
+            "label": {
+              "en": "Profiled steel sheeting",
+              "de": "Profilblech"
+            }
+          }
         },
         "studs": {
-          "$ref": "#/definitions/HeadedStuds"
+          "$ref": "#/$defs/HeadedStuds",
+          "x-semio-ui": {
+            "label": {
+              "en": "Headed stud shear connectors",
+              "de": "Kopfbolzendübel"
+            }
+          }
         },
         "transverseAsM2PerM": {
-          "type": "number"
+          "type": "number",
+          "x-semio-ui": {
+            "widget": "stepper",
+            "label": {
+              "en": "Transverse reinforcement A_sf/s_f",
+              "de": "Querbewehrung A_sf/s_f"
+            },
+            "unit": "m²/m",
+            "displayUnit": "cm²/m",
+            "displayFactor": 10000,
+            "step": 1e-05,
+            "precision": 2
+          }
         },
         "ltbLengthM": {
-          "type": "number"
+          "type": "number",
+          "x-semio-ui": {
+            "label": {
+              "en": "Lateral-torsional buckling length L_LT",
+              "de": "Kipplänge L_LT"
+            },
+            "widget": "stepper",
+            "unit": "m",
+            "precision": 2
+          }
         },
         "asHoggingM2PerM": {
-          "type": "number"
+          "type": "number",
+          "x-semio-ui": {
+            "label": {
+              "en": "Hogging reinforcement A_s",
+              "de": "Stützbewehrung A_s"
+            },
+            "widget": "stepper",
+            "unit": "m²/m",
+            "displayUnit": "cm²/m",
+            "displayFactor": 10000.0,
+            "precision": 2
+          }
         },
         "barSpacingM": {
-          "type": "number"
+          "type": "number",
+          "x-semio-ui": {
+            "label": {
+              "en": "Bar spacing s",
+              "de": "Stababstand s"
+            },
+            "widget": "stepper",
+            "unit": "m",
+            "displayUnit": "mm",
+            "displayFactor": 1000,
+            "precision": 1
+          }
         },
         "wkLimitM": {
-          "type": "number"
+          "type": "number",
+          "x-semio-ui": {
+            "label": {
+              "en": "Crack width limit w_k",
+              "de": "Grenzwert der Rissbreite w_k"
+            },
+            "widget": "stepper",
+            "unit": "m",
+            "displayUnit": "mm",
+            "displayFactor": 1000,
+            "precision": 1
+          }
         },
         "nCycles": {
-          "type": "number"
+          "type": "number",
+          "x-semio-ui": {
+            "label": {
+              "en": "Number of stress cycles N",
+              "de": "Lastspielzahl N"
+            },
+            "widget": "stepper",
+            "precision": 0
+          }
         },
         "actions": {
           "type": "array",
           "items": {
-            "$ref": "#/definitions/CharacteristicAction"
+            "$ref": "#/$defs/CharacteristicAction"
+          },
+          "x-semio-ui": {
+            "label": {
+              "en": "Characteristic actions",
+              "de": "Charakteristische Einwirkungen"
+            }
           }
         }
       }
     },
     "CompositeColumn": {
+      "title": "CompositeColumn",
       "type": "object",
       "additionalProperties": false,
       "required": [
@@ -320,50 +767,188 @@
           "type": "string"
         },
         "kind": {
-          "type": "string"
+          "type": "string",
+          "x-semio-ui": {
+            "widget": "text",
+            "label": {
+              "en": "Column type",
+              "de": "Stützentyp"
+            },
+            "description": {
+              "en": "encased, concrete_filled or partially_encased (EN 1994-1-1 Figure 6.17).",
+              "de": "encased (vollständig einbetoniert), concrete_filled (ausbetoniertes Hohlprofil) oder partially_encased (teilweise einbetoniert) nach EN 1994-1-1 Bild 6.17."
+            }
+          }
         },
         "lengthM": {
-          "type": "number"
+          "type": "number",
+          "x-semio-ui": {
+            "label": {
+              "en": "Column length L",
+              "de": "Stützenlänge L"
+            },
+            "widget": "stepper",
+            "unit": "m",
+            "precision": 2
+          }
         },
         "outerSizeM": {
-          "type": "number"
+          "type": "number",
+          "x-semio-ui": {
+            "label": {
+              "en": "Outer diameter or side length",
+              "de": "Außendurchmesser oder Seitenlänge"
+            },
+            "widget": "stepper",
+            "unit": "m",
+            "displayUnit": "mm",
+            "displayFactor": 1000,
+            "precision": 1
+          }
         },
         "wallThicknessM": {
-          "type": "number"
+          "type": "number",
+          "x-semio-ui": {
+            "label": {
+              "en": "Wall thickness t",
+              "de": "Wanddicke t"
+            },
+            "widget": "stepper",
+            "unit": "m",
+            "displayUnit": "mm",
+            "displayFactor": 1000,
+            "precision": 1
+          }
         },
         "steelAM2": {
-          "type": "number"
+          "type": "number",
+          "x-semio-ui": {
+            "label": {
+              "en": "Steel area A_a",
+              "de": "Stahlfläche A_a"
+            },
+            "widget": "stepper",
+            "unit": "m²",
+            "displayUnit": "cm²",
+            "displayFactor": 10000.0,
+            "precision": 2
+          }
         },
         "steelFYPa": {
-          "type": "number"
+          "type": "number",
+          "x-semio-ui": {
+            "widget": "stepper",
+            "label": {
+              "en": "Yield strength of structural steel f_y",
+              "de": "Streckgrenze des Baustahls f_y"
+            },
+            "unit": "Pa",
+            "displayUnit": "N/mm²",
+            "displayFactor": 1e-06,
+            "step": 5000000.0,
+            "precision": 0
+          }
         },
         "concreteAM2": {
-          "type": "number"
+          "type": "number",
+          "x-semio-ui": {
+            "label": {
+              "en": "Concrete area A_c",
+              "de": "Betonfläche A_c"
+            },
+            "widget": "stepper",
+            "unit": "m²",
+            "displayUnit": "cm²",
+            "displayFactor": 10000.0,
+            "precision": 1
+          }
         },
         "concreteFCkPa": {
-          "type": "number"
+          "type": "number",
+          "x-semio-ui": {
+            "label": {
+              "en": "Concrete strength f_ck",
+              "de": "Betondruckfestigkeit f_ck"
+            },
+            "widget": "stepper",
+            "unit": "Pa",
+            "displayUnit": "N/mm²",
+            "displayFactor": 1e-06,
+            "precision": 1
+          }
         },
         "reinforcementAsM2": {
-          "type": "number"
+          "type": "number",
+          "x-semio-ui": {
+            "label": {
+              "en": "Reinforcement area A_s",
+              "de": "Bewehrungsfläche A_s"
+            },
+            "widget": "stepper",
+            "unit": "m²",
+            "displayUnit": "cm²",
+            "displayFactor": 10000.0,
+            "precision": 2
+          }
         },
         "reinforcementFYkPa": {
-          "type": "number"
+          "type": "number",
+          "x-semio-ui": {
+            "label": {
+              "en": "Reinforcement yield strength f_sk",
+              "de": "Streckgrenze der Bewehrung f_sk"
+            },
+            "widget": "stepper",
+            "unit": "Pa",
+            "displayUnit": "N/mm²",
+            "displayFactor": 1e-06,
+            "precision": 1
+          }
         },
         "iM4": {
-          "type": "number"
+          "type": "number",
+          "x-semio-ui": {
+            "label": {
+              "en": "Second moment of area I",
+              "de": "Flächenträgheitsmoment I"
+            },
+            "widget": "stepper",
+            "unit": "m⁴",
+            "displayUnit": "cm⁴",
+            "displayFactor": 100000000.0,
+            "precision": 0
+          }
         },
         "bucklingCurve": {
-          "type": "string"
+          "type": "string",
+          "x-semio-ui": {
+            "label": {
+              "en": "Buckling curve",
+              "de": "Knicklinie"
+            },
+            "description": {
+              "en": "a, b or c (EN 1994-1-1 Table 6.5).",
+              "de": "a, b oder c (EN 1994-1-1 Tabelle 6.5)."
+            },
+            "widget": "text"
+          }
         },
         "actions": {
           "type": "array",
           "items": {
-            "$ref": "#/definitions/ColumnAction"
+            "$ref": "#/$defs/ColumnAction"
+          },
+          "x-semio-ui": {
+            "label": {
+              "en": "Column actions",
+              "de": "Stützenbeanspruchungen"
+            }
           }
         }
       }
     },
     "CompositeSlab": {
+      "title": "CompositeSlab",
       "type": "object",
       "additionalProperties": false,
       "required": [
@@ -383,38 +968,121 @@
           "type": "string"
         },
         "spanM": {
-          "type": "number"
+          "type": "number",
+          "x-semio-ui": {
+            "label": {
+              "en": "Span L",
+              "de": "Stützweite L"
+            },
+            "widget": "stepper",
+            "unit": "m",
+            "precision": 2
+          }
         },
         "support": {
-          "type": "string"
+          "type": "string",
+          "x-semio-ui": {
+            "label": {
+              "en": "Support conditions",
+              "de": "Lagerungsbedingungen"
+            },
+            "description": {
+              "en": "simply_supported or continuous_2_span.",
+              "de": "simply_supported (Einfeldträger) oder continuous_2_span (Zweifeldträger)."
+            },
+            "widget": "text"
+          }
         },
         "sheeting": {
-          "$ref": "#/definitions/ProfiledSheeting"
+          "$ref": "#/$defs/ProfiledSheeting",
+          "x-semio-ui": {
+            "label": {
+              "en": "Profiled steel sheeting",
+              "de": "Profilblech"
+            }
+          }
         },
         "concreteThicknessM": {
-          "type": "number"
+          "type": "number",
+          "x-semio-ui": {
+            "widget": "stepper",
+            "label": {
+              "en": "Overall slab depth h",
+              "de": "Gesamtdicke der Verbunddecke h"
+            },
+            "unit": "m",
+            "displayUnit": "mm",
+            "displayFactor": 1000,
+            "step": 0.005,
+            "precision": 0
+          }
         },
         "fCkPa": {
-          "type": "number"
+          "type": "number",
+          "x-semio-ui": {
+            "label": {
+              "en": "Concrete strength f_ck",
+              "de": "Betondruckfestigkeit f_ck"
+            },
+            "widget": "stepper",
+            "unit": "Pa",
+            "displayUnit": "N/mm²",
+            "displayFactor": 1e-06,
+            "precision": 1
+          }
         },
         "mFactor": {
-          "type": "number"
+          "type": "number",
+          "x-semio-ui": {
+            "label": {
+              "en": "m-k factor m",
+              "de": "m-k-Beiwert m"
+            },
+            "widget": "stepper",
+            "precision": 2
+          }
         },
         "kFactor": {
-          "type": "number"
+          "type": "number",
+          "x-semio-ui": {
+            "label": {
+              "en": "m-k factor k",
+              "de": "m-k-Beiwert k"
+            },
+            "widget": "stepper",
+            "precision": 3
+          }
         },
         "asM2PerM": {
-          "type": "number"
+          "type": "number",
+          "x-semio-ui": {
+            "label": {
+              "en": "Reinforcement A_s",
+              "de": "Bewehrung A_s"
+            },
+            "widget": "stepper",
+            "unit": "m²/m",
+            "displayUnit": "cm²/m",
+            "displayFactor": 10000.0,
+            "precision": 2
+          }
         },
         "actions": {
           "type": "array",
           "items": {
-            "$ref": "#/definitions/CharacteristicAction"
+            "$ref": "#/$defs/CharacteristicAction"
+          },
+          "x-semio-ui": {
+            "label": {
+              "en": "Characteristic actions",
+              "de": "Charakteristische Einwirkungen"
+            }
           }
         }
       }
     },
     "ColumnAction": {
+      "title": "ColumnAction",
       "type": "object",
       "additionalProperties": false,
       "required": [
@@ -430,21 +1098,91 @@
           "type": "string"
         },
         "kind": {
-          "type": "string"
+          "type": "string",
+          "x-semio-ui": {
+            "widget": "text",
+            "label": {
+              "en": "Column type",
+              "de": "Stützentyp"
+            },
+            "description": {
+              "en": "encased, concrete_filled or partially_encased (EN 1994-1-1 Figure 6.17).",
+              "de": "encased (vollständig einbetoniert), concrete_filled (ausbetoniertes Hohlprofil) oder partially_encased (teilweise einbetoniert) nach EN 1994-1-1 Bild 6.17."
+            }
+          }
         },
         "category": {
-          "type": "string"
+          "type": "string",
+          "x-semio-ui": {
+            "label": {
+              "en": "Action category",
+              "de": "Einwirkungskategorie"
+            },
+            "widget": "text"
+          }
         },
         "stage": {
-          "type": "string"
+          "type": "string",
+          "x-semio-ui": {
+            "label": {
+              "en": "Construction stage",
+              "de": "Bauzustand"
+            },
+            "description": {
+              "en": "construction or composite.",
+              "de": "construction (Bauzustand) oder composite (Verbundzustand)."
+            },
+            "widget": "text"
+          }
         },
         "nKN": {
           "type": "number",
-          "format": "double"
+          "x-semio-ui": {
+            "widget": "stepper",
+            "label": {
+              "en": "Characteristic axial force N_k",
+              "de": "Charakteristische Normalkraft N_k"
+            },
+            "unit": "N",
+            "displayUnit": "kN",
+            "displayFactor": 0.001,
+            "step": 1000,
+            "precision": 0
+          }
         },
         "mKNm": {
           "type": "number",
-          "format": "double"
+          "x-semio-ui": {
+            "label": {
+              "en": "Characteristic bending moment M_k",
+              "de": "Charakteristisches Biegemoment M_k"
+            },
+            "widget": "stepper",
+            "unit": "N·m",
+            "displayUnit": "kN·m",
+            "displayFactor": 0.001,
+            "precision": 2
+          }
+        }
+      }
+    },
+    "AnnexChoice": {
+      "title": "AnnexChoice",
+      "type": "string",
+      "enum": [
+        "En",
+        "De"
+      ],
+      "x-semio-ui": {
+        "options": {
+          "En": {
+            "en": "Recommended CEN values (EN)",
+            "de": "Empfohlene CEN-Werte (EN)"
+          },
+          "De": {
+            "en": "German national annex (DIN EN)",
+            "de": "Deutscher Nationaler Anhang (DIN EN)"
+          }
         }
       }
     }

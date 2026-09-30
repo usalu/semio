@@ -5,11 +5,16 @@
   "type": "object",
   "additionalProperties": false,
   "required": [
+    "mutation",
     "index",
     "at",
     "annotation"
   ],
   "properties": {
+    "mutation": {
+      "const": "setAnnotation",
+      "description": "Aggregate discriminator spliced in by PdfMutation; absent when the payload stands alone."
+    },
     "index": {
       "type": "integer",
       "minimum": 0
@@ -19,11 +24,13 @@
       "minimum": 0
     },
     "annotation": {
-      "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/pdf/1.7/base/snapshot.json#/$defs/PdfAnnotation"
-    },
-    "mutation": {
-      "const": "setAnnotation",
-      "description": "Aggregate discriminator spliced in by PdfMutation; absent when the payload stands alone."
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/pdf/1.7/base/snapshot.json#/$defs/PdfAnnotation",
+      "x-semio-ui": {
+        "label": {
+          "en": "Annotation",
+          "de": "Anmerkung"
+        }
+      }
     }
   }
 }

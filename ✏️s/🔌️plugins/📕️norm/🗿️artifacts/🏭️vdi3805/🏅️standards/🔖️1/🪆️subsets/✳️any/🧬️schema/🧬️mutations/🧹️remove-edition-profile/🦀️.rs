@@ -8,6 +8,7 @@ use crate::{Vdi3805Mutation, Vdi3805Snapshot};
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 #[cfg_attr(test, serde(rename_all = "camelCase"))]
 #[mutation_leaf(contract = ::protocol)]
+#[value(rename_all = "camelCase")]
 pub struct RemoveEditionProfile {
     pub sheet: String,
 }

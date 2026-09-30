@@ -24,6 +24,7 @@ async fn document_text_round_trips_through_store() {
         .dispatch(store::ArtifactCommand::Apply {
             mutations: vec![sample_mutation()],
             description: None,
+            transaction: None,
         })
         .await
         .expect("apply");

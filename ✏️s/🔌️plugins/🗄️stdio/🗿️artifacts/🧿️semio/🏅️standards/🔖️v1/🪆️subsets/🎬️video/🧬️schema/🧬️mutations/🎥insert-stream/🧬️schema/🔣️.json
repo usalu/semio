@@ -5,20 +5,21 @@
   "type": "object",
   "additionalProperties": false,
   "required": [
+    "mutation",
     "index",
     "stream"
   ],
   "properties": {
+    "mutation": {
+      "const": "insertStream",
+      "description": "Aggregate discriminator spliced in by SemioVideoMutation; absent when the payload stands alone."
+    },
     "index": {
       "type": "integer",
       "minimum": 0
     },
     "stream": {
       "$ref": "#/$defs/SemioVideoStream"
-    },
-    "mutation": {
-      "const": "insertStream",
-      "description": "Aggregate discriminator spliced in by SemioVideoMutation; absent when the payload stands alone."
     }
   },
   "$defs": {

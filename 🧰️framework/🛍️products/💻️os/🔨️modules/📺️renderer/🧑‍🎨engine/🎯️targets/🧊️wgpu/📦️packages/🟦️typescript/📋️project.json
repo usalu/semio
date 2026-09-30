@@ -185,6 +185,22 @@
         "forwardAllArgs": true
       }
     },
+    "canonical-architecture": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "options": {
+        "command": "bun ./📜️script.ts canonical-architecture",
+        "cwd": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/📦️packages/🟦️typescript"
+      }
+    },
+    "test-media-slots": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "options": {
+        "command": "bun ./📜️script.ts test-media-slots",
+        "cwd": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/📦️packages/🟦️typescript"
+      }
+    },
     "directory-retained-home-bootstrap-source-check": {
       "executor": "nx:run-commands",
       "options": {
@@ -399,9 +415,18 @@
     "check-wasm": {
       "executor": "nx:run-commands",
       "cache": true,
-      "inputs": ["nativeSources", "^nativeSources"],
+      "inputs": [
+        "nativeSources",
+        "^nativeSources"
+      ],
       "outputs": [],
-      "dependsOn": ["workspace:deps-cargo", "@semio-tech/ui-rs:generate", "@semio-tech/framework-schema:generate", "@semio-tech/ui-styling-tokens:generate", "@semio-tech/framework-graph:generate"],
+      "dependsOn": [
+        "workspace:deps-cargo",
+        "@semio-tech/ui-rs:generate",
+        "@semio-tech/framework-schema:generate",
+        "@semio-tech/ui-styling-tokens:generate",
+        "@semio-tech/framework-graph:generate"
+      ],
       "options": {
         "command": "bun ./📜️script.ts check-wasm",
         "cwd": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/📦️packages/🟦️typescript",

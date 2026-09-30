@@ -8,6 +8,126 @@
       "type": "object",
       "additionalProperties": false,
       "required": [
+        "SetSnapshot"
+      ],
+      "properties": {
+        "SetSnapshot": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/semio/v1/mesh/mutation/set-snapshot/schema.json"
+        }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "CreateMesh"
+      ],
+      "properties": {
+        "CreateMesh": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/semio/v1/mesh/mutation/create-mesh/schema.json"
+        }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "DeleteMesh"
+      ],
+      "properties": {
+        "DeleteMesh": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/semio/v1/mesh/mutation/delete-mesh/schema.json"
+        }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "CreatePrimitive"
+      ],
+      "properties": {
+        "CreatePrimitive": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/semio/v1/mesh/mutation/create-primitive/schema.json"
+        }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "DeletePrimitive"
+      ],
+      "properties": {
+        "DeletePrimitive": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/semio/v1/mesh/mutation/delete-primitive/schema.json"
+        }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "SetPrimitiveTopology"
+      ],
+      "properties": {
+        "SetPrimitiveTopology": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/semio/v1/mesh/mutation/set-primitive-topology/schema.json"
+        }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "ReplacePrimitiveGeometry"
+      ],
+      "properties": {
+        "ReplacePrimitiveGeometry": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/semio/v1/mesh/mutation/replace-primitive-geometry/schema.json"
+        }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "SetPrimitiveMaterial"
+      ],
+      "properties": {
+        "SetPrimitiveMaterial": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/semio/v1/mesh/mutation/set-primitive-material/schema.json"
+        }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "CreateMaterial"
+      ],
+      "properties": {
+        "CreateMaterial": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/semio/v1/mesh/mutation/create-material/schema.json"
+        }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "DeleteMaterial"
+      ],
+      "properties": {
+        "DeleteMaterial": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/semio/v1/mesh/mutation/delete-material/schema.json"
+        }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
         "ChangeMaterialBaseColor"
       ],
       "properties": {
@@ -44,95 +164,11 @@
       "type": "object",
       "additionalProperties": false,
       "required": [
-        "ChangeTextureMime"
-      ],
-      "properties": {
-        "ChangeTextureMime": {
-          "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/semio/v1/mesh/mutation/change-texture-mime/schema.json"
-        }
-      }
-    },
-    {
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "CreateMaterial"
-      ],
-      "properties": {
-        "CreateMaterial": {
-          "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/semio/v1/mesh/mutation/create-material/schema.json"
-        }
-      }
-    },
-    {
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "CreateMesh"
-      ],
-      "properties": {
-        "CreateMesh": {
-          "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/semio/v1/mesh/mutation/create-mesh/schema.json"
-        }
-      }
-    },
-    {
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "CreatePrimitive"
-      ],
-      "properties": {
-        "CreatePrimitive": {
-          "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/semio/v1/mesh/mutation/create-primitive/schema.json"
-        }
-      }
-    },
-    {
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
         "CreateTexture"
       ],
       "properties": {
         "CreateTexture": {
           "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/semio/v1/mesh/mutation/create-texture/schema.json"
-        }
-      }
-    },
-    {
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "DeleteMaterial"
-      ],
-      "properties": {
-        "DeleteMaterial": {
-          "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/semio/v1/mesh/mutation/delete-material/schema.json"
-        }
-      }
-    },
-    {
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "DeleteMesh"
-      ],
-      "properties": {
-        "DeleteMesh": {
-          "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/semio/v1/mesh/mutation/delete-mesh/schema.json"
-        }
-      }
-    },
-    {
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "DeletePrimitive"
-      ],
-      "properties": {
-        "DeletePrimitive": {
-          "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/semio/v1/mesh/mutation/delete-primitive/schema.json"
         }
       }
     },
@@ -152,23 +188,11 @@
       "type": "object",
       "additionalProperties": false,
       "required": [
-        "MoveVertex"
+        "ChangeTextureMime"
       ],
       "properties": {
-        "MoveVertex": {
-          "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/semio/v1/mesh/mutation/move-vertex/schema.json"
-        }
-      }
-    },
-    {
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "ReplacePrimitiveGeometry"
-      ],
-      "properties": {
-        "ReplacePrimitiveGeometry": {
-          "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/semio/v1/mesh/mutation/replace-primitive-geometry/schema.json"
+        "ChangeTextureMime": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/semio/v1/mesh/mutation/change-texture-mime/schema.json"
         }
       }
     },
@@ -188,35 +212,11 @@
       "type": "object",
       "additionalProperties": false,
       "required": [
-        "SetPrimitiveMaterial"
+        "MoveVertex"
       ],
       "properties": {
-        "SetPrimitiveMaterial": {
-          "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/semio/v1/mesh/mutation/set-primitive-material/schema.json"
-        }
-      }
-    },
-    {
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "SetPrimitiveTopology"
-      ],
-      "properties": {
-        "SetPrimitiveTopology": {
-          "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/semio/v1/mesh/mutation/set-primitive-topology/schema.json"
-        }
-      }
-    },
-    {
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "SetSnapshot"
-      ],
-      "properties": {
-        "SetSnapshot": {
-          "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/semio/v1/mesh/mutation/set-snapshot/schema.json"
+        "MoveVertex": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/semio/v1/mesh/mutation/move-vertex/schema.json"
         }
       }
     }

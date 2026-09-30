@@ -4,18 +4,59 @@
   "title": "MoveNode",
   "type": "object",
   "properties": {
-    "node_id": {
-      "type": "string"
+    "operation": {
+      "const": "moveNode"
+    },
+    "nodeId": {
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Node",
+          "de": "Knoten"
+        },
+        "ref": {
+          "kind": "node"
+        },
+        "group": "target",
+        "order": 10
+      }
     },
     "x": {
-      "type": "number"
+      "type": "number",
+      "x-semio-ui": {
+        "widget": "stepper",
+        "role": "value",
+        "label": {
+          "en": "X",
+          "de": "X"
+        },
+        "step": 1,
+        "precision": 2,
+        "group": "position",
+        "order": 20
+      }
     },
     "y": {
-      "type": "number"
+      "type": "number",
+      "x-semio-ui": {
+        "widget": "stepper",
+        "role": "value",
+        "label": {
+          "en": "Y",
+          "de": "Y"
+        },
+        "step": 1,
+        "precision": 2,
+        "group": "position",
+        "order": 30
+      }
     }
   },
   "required": [
-    "node_id",
+    "operation",
+    "nodeId",
     "x",
     "y"
   ],

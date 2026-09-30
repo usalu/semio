@@ -4,16 +4,16 @@
   "title": "WriterMutation",
   "oneOf": [
     {
-      "$ref": "https://json.schemas.assets.semio-tech.com/s/writer/writer/mutation/change-language/schema.json"
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/writer/writer/mutation/rename-writer/schema.json"
     },
     {
       "$ref": "https://json.schemas.assets.semio-tech.com/s/writer/writer/mutation/change-uri/schema.json"
     },
     {
-      "$ref": "https://json.schemas.assets.semio-tech.com/s/writer/writer/mutation/edit-text/schema.json"
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/writer/writer/mutation/change-language/schema.json"
     },
     {
-      "$ref": "https://json.schemas.assets.semio-tech.com/s/writer/writer/mutation/rename-writer/schema.json"
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/writer/writer/mutation/edit-text/schema.json"
     },
     {
       "$ref": "https://json.schemas.assets.semio-tech.com/s/writer/writer/mutation/splice-text/schema.json"

@@ -5,19 +5,78 @@
   "type": "object",
   "additionalProperties": false,
   "required": [
+    "mutation",
     "id",
     "index",
     "spaceId"
   ],
   "properties": {
+    "mutation": {
+      "const": "addSpaceListMember"
+    },
     "id": {
-      "type": "integer"
+      "type": "integer",
+      "minimum": 0,
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Space list",
+          "de": "Raumliste"
+        },
+        "description": {
+          "en": "The space list this mutation changes, by id.",
+          "de": "Raumliste, die diese Mutation ändert, per ID."
+        },
+        "ref": {
+          "kind": "spaceList"
+        },
+        "group": "target",
+        "order": 10
+      }
     },
     "index": {
-      "type": "integer"
+      "type": "integer",
+      "minimum": 0,
+      "x-semio-ui": {
+        "widget": "stepper",
+        "role": "value",
+        "label": {
+          "en": "Position",
+          "de": "Position"
+        },
+        "description": {
+          "en": "Insertion position in the member list; 0 is first.",
+          "de": "Einfügeposition in der Mitgliederliste; 0 ist die erste."
+        },
+        "step": 1,
+        "precision": 0,
+        "group": "order",
+        "order": 20
+      }
     },
     "spaceId": {
-      "type": "integer"
+      "type": "integer",
+      "minimum": 0,
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Space",
+          "de": "Raum"
+        },
+        "description": {
+          "en": "Space to add, by id.",
+          "de": "Hinzuzufügender Raum, per ID."
+        },
+        "ref": {
+          "kind": "space",
+          "domain": "energyModel",
+          "granularity": "space"
+        },
+        "group": "member",
+        "order": 30
+      }
     }
   }
 }

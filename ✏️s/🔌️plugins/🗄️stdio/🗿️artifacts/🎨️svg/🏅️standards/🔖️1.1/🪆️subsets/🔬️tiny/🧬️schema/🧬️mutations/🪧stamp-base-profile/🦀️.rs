@@ -12,6 +12,7 @@ use super::*;
 //#region 🔖️Payload
 #[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::MutationLeaf)]
 #[mutation_leaf(contract = ::protocol)]
+#[value(rename_all = "camelCase")]
 pub struct StampBaseProfile {
     pub(crate) base_profile: Option<String>,
     pub(crate) version: Option<String>,

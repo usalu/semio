@@ -1,0 +1,217 @@
+use super::*;
+use semio_s_artifact_procedural_generation3d::editor::generation3d::commands::{add_generation, remove_generation, rename_generation, select_generation};
+use crate::editor_domain::editor_laws::context::{app, dispatch, render as render_body, snapshot, Generation3dApp};
+use semio_s_artifact_procedural_generation3d::editor::generation3d::Generation3dCommand;
+
+/// 🎯️ Reads the selection back the way a USER sees it — off the rendered tree, through the one
+/// affordance only the selected row carries (the inline rename editor). Deliberately NOT off the
+/// artifact snapshot: the generate-mode bodies render against the CONFIG's selection, and the whole
+/// point of `schema::generation_by_id` is that those two used to disagree.
+async fn rendered_selected_id(app: &mut Generation3dApp, roster: &[String]) -> Option<String> {
+    let body = render_body(app, GENERATION_3D_PLAY_BODY_GENERATIONS).await;
+    roster.iter().find(|id| body.contains(&format!("procedural3d-play-generate.generation.{id}.rename"))).cloned()
+}
+
+/// 🗂️ Seeds `count` generations through the SAME `addGeneration` the tree row dispatches, and returns
+/// their ids in roster order — never a hand-built `GenerationPlayState`, because the roster a user
+/// sees is the one the retained command actually published.
+async fn seed_generations(app: &mut Generation3dApp, count: usize) -> Vec<String> {
+    for _ in 0..count {
+        dispatch(app, Generation3dCommand::AddGeneration(add_generation::AddGeneration {})).await;
+    }
+    let ids: Vec<String> = snapshot(app).generation.generations.iter().map(|entry| entry.id.clone()).collect();
+    assert_eq!(ids.len(), count, "addGeneration must publish one roster entry per dispatch");
+    ids
+}
+
+#[semio_framework_async_macros::async_test]
+async fn generate_mode_renders_surfaces() {
+    let mut app = app().await;
+    let body = render_body(&mut app, GENERATION_3D_PLAY_BODY_GENERATIONS).await;
+    assert!(body.contains("addGeneration"), "the generate-mode generations window must offer the add action: {body}");
+}
+
+/// ⚖️ LAW: every one of the Generations window's four row verbs is REACHABLE from the rendered tree,
+/// not merely declared on the window kind. The row itself activates `selectGeneration`, the row
+/// carries a `removeGeneration` row-action button, and the SELECTED row carries the inline rename
+/// editor that dispatches `renameGeneration`.
+///
+/// 🐛️ Before this law `renameGeneration`/`removeGeneration` were `RowActionPlacement::Menu` —
+/// right-click-only — and rename dispatched a hardcoded `"{name} copy"`, so the only browser-proven
+/// verb in this window was `addGeneration` (`📓️audit-user-journey-gaps-2026-09-13.md` gap #7).
+#[semio_framework_async_macros::async_test]
+async fn every_generation_row_verb_is_reachable_from_the_rendered_tree() {
+    let mut app = app().await;
+    let ids = seed_generations(&mut app, 2).await;
+    dispatch(&mut app, Generation3dCommand::SelectGeneration(select_generation::SelectGeneration { id: ids[1].clone() })).await;
+    let body = render_body(&mut app, GENERATION_3D_PLAY_BODY_GENERATIONS).await;
+    for verb in ["selectGeneration", "renameGeneration", "removeGeneration", "addGeneration"] {
+        assert!(body.contains(verb), "the generations tree must emit {verb}: {body}");
+    }
+    assert!(!body.contains("\"placement\":\"menu\""), "row actions must paint ON the row, never only in its right-click menu: {body}");
+    assert!(body.contains(&format!("procedural3d-play-generate.generation.{}.rename", ids[1])), "the selected row must carry the inline rename editor: {body}");
+    assert!(!body.contains(&format!("procedural3d-play-generate.generation.{}.rename", ids[0])), "only the selected row carries the rename editor: {body}");
+}
+
+/// ⚖️ LAW: the inline rename editor's typed text reaches `renameGeneration`. A scalar `Trigger::Commit`
+/// payload is named `value` by the framework, never `name` (`uiIntentPayload`, `🛠️ShellHelpers/🟦️.tsx`),
+/// so the guest's action bridge has to read BOTH spellings or every inline rename silently renames to
+/// the empty string.
+#[test]
+fn an_inline_rename_commit_carries_its_typed_text_as_value() {
+    let args: dsl::DslValue = serde_json::json!({ "id": "generation-1", "value": "Balcony Study" }).into();
+    let command = <semio_s_artifact_procedural_generation3d::editor::generation3d::Generation3dPlayApp as semio_framework_plugin::ArtifactEditor>::command_from_action("renameGeneration", Some(&args)).expect("renameGeneration bridges");
+    let Generation3dCommand::RenameGeneration(payload) = command else { panic!("renameGeneration must bridge to its own command row") };
+    assert_eq!(payload, rename_generation::RenameGeneration { id: "generation-1".into(), name: "Balcony Study".into() });
+}
+
+/// ⚖️ LAW: the roster a user edits through the three row verbs converges — select the second
+/// generation, rename it, remove the first, and both the surviving name and the selection are exactly
+/// what the gestures asked for. The browser step in `🐍️generate-mode-probe.mjs` drives the same
+/// sequence through the real tree rows.
+#[semio_framework_async_macros::async_test]
+async fn select_rename_and_remove_converge_on_the_roster_the_user_asked_for() {
+    let mut app = app().await;
+    let ids = seed_generations(&mut app, 2).await;
+    dispatch(&mut app, Generation3dCommand::SelectGeneration(select_generation::SelectGeneration { id: ids[1].clone() })).await;
+    assert_eq!(rendered_selected_id(&mut app, &ids).await, Some(ids[1].clone()), "selectGeneration must move the selection the generate-mode windows render against");
+
+    dispatch(&mut app, Generation3dCommand::RenameGeneration(rename_generation::RenameGeneration { id: ids[1].clone(), name: "Balcony Study".into() })).await;
+    dispatch(&mut app, Generation3dCommand::RemoveGeneration(remove_generation::RemoveGeneration { id: ids[0].clone() })).await;
+
+    let names: Vec<String> = {
+        let after = snapshot(&app);
+        after.generation.generations.iter().map(|entry| entry.name.clone()).collect()
+    };
+    assert_eq!(names, vec!["Balcony Study".to_string()], "the removed generation must be gone and the renamed one must keep its new name");
+    assert_eq!(rendered_selected_id(&mut app, &ids).await, Some(ids[1].clone()), "removing another row must not steal the selection");
+
+    let body = render_body(&mut app, GENERATION_3D_PLAY_BODY_GENERATIONS).await;
+    assert!(body.contains("Balcony Study"), "the rendered roster must show the new name: {body}");
+    assert!(!body.contains(&format!("generation.{}\"", ids[0])), "the removed row must be gone from the rendered roster: {body}");
+}
+
+/// ⚖️ LAW: the Generations window speaks both declared languages with no default — the German locale
+/// must not fall back to an English row-action label or an English rename placeholder.
+#[semio_framework_async_macros::async_test]
+async fn generation_row_affordances_are_localized_in_german() {
+    let mut app = app().await;
+    let ids = seed_generations(&mut app, 1).await;
+    dispatch(&mut app, Generation3dCommand::SelectGeneration(select_generation::SelectGeneration { id: ids[0].clone() })).await;
+    let view_state = semio_framework_plugin::ViewModel { locale: semio_framework_plugin::Locale::De, ..Default::default() };
+    let body = crate::editor_domain::editor_laws::context::render_with_view(&mut app, GENERATION_3D_PLAY_BODY_GENERATIONS, &view_state).await;
+    for german in ["Entfernen", "Generierung umbenennen", "Generierungen", "Generierung hinzufügen"] {
+        assert!(body.contains(german), "the German generations tree must carry {german}: {body}");
+    }
+    assert!(!body.contains("Add Generation"), "no English fallback may survive in the German tree: {body}");
+}
+
+/// ⚖️ LAW: `addGeneration` is RENDERER-NEUTRAL. The Generations tree authors the row with no args at
+/// all, but each renderer wraps that binding its own way — React's `uiIntentPayload` drops an empty
+/// payload entirely, the wgpu `row_action`/`record_action` projection carries whatever
+/// `ui_value_to_dsl` produces, and a host may add its own `surfaceId`/`windowId` envelope. The command
+/// must land one generation under every one of those shapes, because a renderer-shaped argument is
+/// never part of a command's contract.
+///
+/// 🐛️ Written for the wgpu report's §7.4(a) finding — the retained `Add Generation` row on 6118
+/// settles `terminal=true` and creates NO generation while React's identical row creates one in 5 s
+/// (`📓️wgpu-retained-controls-wires-2026-09-13.md`). This law fixes the guest half of that question in
+/// place: if it passes, the divergence is NOT the args the row carries and the defect lives in the
+/// wgpu host's retained-publication settle, not in this command.
+#[semio_framework_async_macros::async_test]
+async fn add_generation_lands_a_row_under_every_renderer_argument_shape() {
+    let _serial = crate::editor_domain::editor_laws::serial_execution::lock();
+    let mut app = app().await;
+    let shapes: Vec<(&str, Option<dsl::DslValue>)> = vec![
+        ("react-none", None),
+        ("empty-object", Some(serde_json::json!({}).into())),
+        ("host-envelope", Some(serde_json::json!({ "surfaceId": "window:generation3d-generations", "windowId": "generation3d-generations" }).into())),
+    ];
+    let mut expected = 0usize;
+    for (label, args) in shapes {
+        let meta = semio_framework_plugin::artifact_app_laws::meta("local");
+        semio_framework_plugin::PluginApp::handle_action(&mut *app, "addGeneration", args.as_ref(), &meta).await.unwrap_or_else(|error| panic!("{label}: addGeneration must be admitted: {error:?}"));
+        crate::editor_domain::editor_laws::context::settle(&mut app).await;
+        expected += 1;
+        let landed = snapshot(&app).generation.generations.len();
+        assert_eq!(landed, expected, "{label}: addGeneration must land exactly one generation whatever envelope the renderer attaches");
+    }
+    let body = render_body(&mut app, GENERATION_3D_PLAY_BODY_GENERATIONS).await;
+    assert_eq!(body.matches("procedural3d-play-generate.generation.").count() >= 3, true, "all three rows must render: {body}");
+}
+
+//#region 🪟️WindowLaws
+/// 🔎️ `(total, offset, materialised row keys)` of the generations container, read off the rendered
+/// body exactly the way the host observer reads it.
+fn generations_window(json: &str) -> (u64, u64, Vec<String>) {
+    fn walk(node: &serde_json::Value, key: &str) -> Option<serde_json::Value> {
+        if node["key"].as_str() == Some(key) {
+            return Some(node.clone());
+        }
+        node["children"].as_array().and_then(|children| children.iter().find_map(|child| walk(child, key)))
+    }
+    let projection: serde_json::Value = serde_json::from_str(json).expect("generations projection json");
+    let node = walk(&projection, GENERATION_3D_PLAY_GENERATIONS_SECTION).unwrap_or_else(|| panic!("the generations container is not in the rendered body: {json}"));
+    let window = node["component"]["window"].as_object().unwrap_or_else(|| panic!("the generations container stamps no window: {json}"));
+    let rows: Vec<String> = node["children"].as_array().cloned().unwrap_or_default().iter().map(|row| row["key"].as_str().unwrap_or_default().to_string()).collect();
+    (window.get("total").and_then(serde_json::Value::as_u64).unwrap_or_default(), window.get("offset").and_then(serde_json::Value::as_u64).unwrap_or_default(), rows)
+}
+
+fn generations_view(open: Option<bool>, offset: u32, rows: u32) -> semio_framework_plugin::ViewModel {
+    semio_framework_plugin::ViewModel {
+        tree_windows: vec![semio_framework_plugin::TreeWindowRequest {
+            body_key: GENERATION_3D_PLAY_BODY_GENERATIONS.into(),
+            node_key: GENERATION_3D_PLAY_GENERATIONS_SECTION.into(),
+            open,
+            offset,
+            rows,
+        }],
+        ..Default::default()
+    }
+}
+
+/// ⚖️ LAW (a)/(d): the roster container states the document's FULL extent, materialises at most that
+/// slice, and never summarises a remainder as a `+n` continuation row. Every saved generation is
+/// accounted for by `total`, not by a row the reader cannot open.
+#[semio_framework_async_macros::async_test]
+async fn the_generations_container_stamps_the_whole_roster() {
+    let _serial = crate::editor_domain::editor_laws::serial_execution::lock();
+    let mut app = app().await;
+    let ids = seed_generations(&mut app, 4).await;
+    let body = render_body(&mut app, GENERATION_3D_PLAY_BODY_GENERATIONS).await;
+    let (total, offset, rows) = generations_window(&body);
+    assert_eq!(total as usize, ids.len(), "the container stamps the whole roster: {body}");
+    assert_eq!(offset, 0, "a first paint starts at zero: {body}");
+    assert!(rows.len() <= ids.len(), "the container materialises at most its slice: {body}");
+    assert!(!body.contains(".more\""), "a windowed roster has no continuation row: {body}");
+    assert!(!body.contains(r#""label":"+"#), "a windowed roster publishes no `+n` label: {body}");
+}
+
+/// ⚖️ LAW (b): a closed container still states its extent and materialises nothing.
+#[semio_framework_async_macros::async_test]
+async fn a_closed_generations_container_stamps_its_total_with_no_rows() {
+    let _serial = crate::editor_domain::editor_laws::serial_execution::lock();
+    let mut app = app().await;
+    let ids = seed_generations(&mut app, 3).await;
+    let view = generations_view(Some(false), 0, 0);
+    let body = crate::editor_domain::editor_laws::context::render_with_view(&mut app, GENERATION_3D_PLAY_BODY_GENERATIONS, &view).await;
+    let (total, _, rows) = generations_window(&body);
+    assert_eq!(total as usize, ids.len(), "a closed container still states its extent: {body}");
+    assert!(rows.is_empty(), "a closed container materialises nothing: {body}");
+}
+
+/// ⚖️ LAW (c): a host window request materialises exactly `[offset, offset + rows)` of the roster,
+/// keyed by the row id the window's own namespace gives each generation.
+#[semio_framework_async_macros::async_test]
+async fn a_generations_window_request_materialises_exactly_its_slice() {
+    let _serial = crate::editor_domain::editor_laws::serial_execution::lock();
+    let mut app = app().await;
+    let ids = seed_generations(&mut app, 4).await;
+    let view = generations_view(Some(true), 2, 1);
+    let body = crate::editor_domain::editor_laws::context::render_with_view(&mut app, GENERATION_3D_PLAY_BODY_GENERATIONS, &view).await;
+    let (total, offset, rows) = generations_window(&body);
+    assert_eq!(total as usize, ids.len(), "the total stays the whole roster: {body}");
+    assert_eq!(offset, 2, "the stamped offset is the requested one: {body}");
+    assert_eq!(rows, vec![format!("{GENERATION_3D_PLAY_GENERATE_PREFIX}.generation.{}", ids[2])], "exactly entry 2 is materialised: {body}");
+}
+//#endregion 🪟️WindowLaws

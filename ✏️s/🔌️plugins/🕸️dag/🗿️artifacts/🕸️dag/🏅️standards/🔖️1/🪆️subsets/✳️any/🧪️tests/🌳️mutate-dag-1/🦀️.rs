@@ -123,10 +123,10 @@ fn fixture_text(kind: &str) -> (&'static str, &'static str, &'static str, &'stat
             include_str!("../../🧫️fixtures/🧬️mutations/🔡change-node-abbreviation/🧪️rejects-reabbreviating-a-missing-node/🎯️outcome/🔣️.json"),
         ),
         "change-node-operator-kind" => (
-            include_str!("../../🧫️fixtures/🧬️mutations/🧮change-node-operator-kind/🧪️rejects-rebinding-the-operator-of-a-missing-node/📸️snapshot/⬅️before/🔣️.json"),
-            include_str!("../../🧫️fixtures/🧬️mutations/🧮change-node-operator-kind/🧪️rejects-rebinding-the-operator-of-a-missing-node/🦠️mutation/🔣️.json"),
-            include_str!("../../🧫️fixtures/🧬️mutations/🧮change-node-operator-kind/🧪️rejects-rebinding-the-operator-of-a-missing-node/📸️snapshot/➡️after/🔣️.json"),
-            include_str!("../../🧫️fixtures/🧬️mutations/🧮change-node-operator-kind/🧪️rejects-rebinding-the-operator-of-a-missing-node/🎯️outcome/🔣️.json"),
+            include_str!("../../🧫️fixtures/🧬️mutations/🧮change-node-operator-kind/🧪️rejects-rebinding-operator-missing-node/📸️snapshot/⬅️before/🔣️.json"),
+            include_str!("../../🧫️fixtures/🧬️mutations/🧮change-node-operator-kind/🧪️rejects-rebinding-operator-missing-node/🦠️mutation/🔣️.json"),
+            include_str!("../../🧫️fixtures/🧬️mutations/🧮change-node-operator-kind/🧪️rejects-rebinding-operator-missing-node/📸️snapshot/➡️after/🔣️.json"),
+            include_str!("../../🧫️fixtures/🧬️mutations/🧮change-node-operator-kind/🧪️rejects-rebinding-operator-missing-node/🎯️outcome/🔣️.json"),
         ),
         "replace-node-kind" => (
             include_str!("../../🧫️fixtures/🧬️mutations/🔁replace-node-kind/🧪️rejects-rekinding-a-missing-node/📸️snapshot/⬅️before/🔣️.json"),

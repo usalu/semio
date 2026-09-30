@@ -4,7 +4,14 @@
   "title": "SetDoctype",
   "type": "object",
   "additionalProperties": false,
+  "required": [
+    "mutation"
+  ],
   "properties": {
+    "mutation": {
+      "const": "setDoctype",
+      "description": "Aggregate discriminator spliced in by HtmlMutation; absent when the payload stands alone."
+    },
     "doctype": {
       "anyOf": [
         {
@@ -13,11 +20,20 @@
         {
           "type": "null"
         }
-      ]
-    },
-    "mutation": {
-      "const": "setDoctype",
-      "description": "Aggregate discriminator spliced in by HtmlMutation; absent when the payload stands alone."
+      ],
+      "x-semio-ui": {
+        "widget": "text",
+        "label": {
+          "en": "Document type",
+          "de": "Dokumenttyp"
+        },
+        "description": {
+          "en": "DOCTYPE declaration; empty removes it.",
+          "de": "DOCTYPE-Deklaration; leer entfernt sie."
+        },
+        "group": "value",
+        "order": 10
+      }
     }
   }
 }

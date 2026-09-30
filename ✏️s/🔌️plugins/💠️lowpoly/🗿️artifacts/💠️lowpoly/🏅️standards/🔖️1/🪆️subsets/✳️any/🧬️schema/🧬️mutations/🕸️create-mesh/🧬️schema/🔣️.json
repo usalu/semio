@@ -12,10 +12,39 @@
   ],
   "properties": {
     "id": {
-      "type": "string"
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Object",
+          "de": "Objekt"
+        },
+        "description": {
+          "en": "The object that receives the mesh child.",
+          "de": "Das Objekt, das das Netz-Kind erhält."
+        },
+        "ref": {
+          "kind": "object",
+          "domain": "mesh",
+          "granularity": "object"
+        }
+      }
     },
     "childId": {
-      "type": "string"
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "text",
+        "role": "value",
+        "label": {
+          "en": "Child ID",
+          "de": "Kind-ID"
+        },
+        "description": {
+          "en": "Id of the child slot in this document.",
+          "de": "ID des Kind-Slots in diesem Dokument."
+        }
+      }
     },
     "target": {
       "title": "ArtifactRef",
@@ -27,7 +56,19 @@
       ],
       "properties": {
         "artifactId": {
-          "type": "string"
+          "type": "string",
+          "x-semio-ui": {
+            "widget": "text",
+            "role": "value",
+            "label": {
+              "en": "Artifact ID",
+              "de": "Artefakt-ID"
+            },
+            "description": {
+              "en": "Document id of the child artifact.",
+              "de": "Dokument-ID des Kind-Artefakts."
+            }
+          }
         },
         "dialect": {
           "title": "ArtifactDialect",
@@ -40,20 +81,90 @@
           ],
           "properties": {
             "artifactKind": {
-              "type": "string"
+              "type": "string",
+              "x-semio-ui": {
+                "widget": "text",
+                "role": "value",
+                "label": {
+                  "en": "Artifact Kind",
+                  "de": "Artefaktart"
+                },
+                "description": {
+                  "en": "Kind id of the artifact, e.g. s.stdio.semio.",
+                  "de": "Art-ID des Artefakts, z. B. s.stdio.semio."
+                }
+              }
             },
             "standard": {
-              "type": "string"
+              "type": "string",
+              "x-semio-ui": {
+                "widget": "text",
+                "role": "value",
+                "label": {
+                  "en": "Standard",
+                  "de": "Standard"
+                },
+                "description": {
+                  "en": "Standard version of the artifact kind.",
+                  "de": "Standardversion der Artefaktart."
+                }
+              }
             },
             "subset": {
-              "type": "string"
+              "type": "string",
+              "x-semio-ui": {
+                "widget": "text",
+                "role": "value",
+                "label": {
+                  "en": "Subset",
+                  "de": "Teilmenge"
+                },
+                "description": {
+                  "en": "Subset of the standard the artifact uses.",
+                  "de": "Vom Artefakt verwendete Teilmenge des Standards."
+                }
+              }
+            }
+          },
+          "x-semio-ui": {
+            "role": "value",
+            "label": {
+              "en": "Dialect",
+              "de": "Dialekt"
+            },
+            "description": {
+              "en": "Artifact kind, standard and subset of the child.",
+              "de": "Artefaktart, Standard und Teilmenge des Kindes."
             }
           }
+        }
+      },
+      "x-semio-ui": {
+        "role": "value",
+        "label": {
+          "en": "Target",
+          "de": "Ziel"
+        },
+        "description": {
+          "en": "Artifact the new mesh child points at.",
+          "de": "Artefakt, auf das das neue Netz-Kind verweist."
         }
       }
     },
     "meshWorkspace": {
-      "type": "string"
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "multiline",
+        "role": "value",
+        "label": {
+          "en": "Mesh Workspace",
+          "de": "Netz-Arbeitsbereich"
+        },
+        "description": {
+          "en": "Initial mesh content as JSON text; the authoring session replays it.",
+          "de": "Anfänglicher Netzinhalt als JSON-Text; die erstellende Sitzung spielt ihn nach."
+        }
+      }
     }
   }
 }

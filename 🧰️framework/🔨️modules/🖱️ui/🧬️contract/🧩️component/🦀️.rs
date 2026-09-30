@@ -372,6 +372,22 @@ pub struct InputProps {
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[value(default, skip_serializing_if = "Option::is_none")]
     pub accept: Option<crate::UiText>,
+    /// 🔣️ Fraction digits a `InputKind::Number` field shows and commits — see [`round_ui_number`].
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[value(default, skip_serializing_if = "Option::is_none")]
+    pub precision: Option<u16>,
+    /// 📌️ Detents of a `InputKind::Number` field under the detent law of [`SliderProps::snaps`] against `min`/`max`
+    /// (unbounded when absent): its page keys jump between them ([`ui_number_key_value`]), typing never snaps.
+    #[serde(default, skip_serializing_if = "crate::UiFixedList::is_empty")]
+    #[value(default, skip_serializing_if = "crate::UiFixedList::is_empty")]
+    pub snaps: crate::UiFixedList<f64>,
+}
+
+impl InputProps {
+    /// 🧷️ Whether `snaps` satisfies the detent law against the optional bounds.
+    pub fn snaps_are_valid(&self) -> bool {
+        crate::snaps_are_valid(self.snaps.iter().copied(), self.min.unwrap_or(f64::NEG_INFINITY), self.max.unwrap_or(f64::INFINITY))
+    }
 }
 
 // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
@@ -432,7 +448,10 @@ pub struct KeyValueListProps {
     pub entries: crate::UiFixedList<KeyValueEntry>,
 }
 
-/// 🎚️ Props for `Component::Slider`. `on_change` moved to the record's `bindings`.
+/// 🎚️ Props for `Component::Slider`. `on_change` moved to the record's `bindings`. `snaps` are the
+/// slider's detents: strictly ascending, finite, inside `min..=max`, at most
+/// [`crate::UI_FIXED_LIST_ITEMS`] of them — every renderer paints one tick per snap and resolves a
+/// pointer value through [`slider_pointer_value`] and a key through [`slider_key_value`].
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValue, FromValue)]
 #[serde(rename_all = "camelCase")]
 #[value(crate = "::protocol::value", rename_all = "camelCase")]
@@ -444,10 +463,20 @@ pub struct SliderProps {
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[value(default, skip_serializing_if = "Option::is_none")]
     pub unit: Option<crate::UiText>,
+    #[serde(default, skip_serializing_if = "crate::UiFixedList::is_empty")]
+    #[value(default, skip_serializing_if = "crate::UiFixedList::is_empty")]
+    pub snaps: crate::UiFixedList<f64>,
+}
+
+impl SliderProps {
+    /// 🧲️ Whether `snaps` satisfies the detent law: finite, strictly ascending, inside the bounds.
+    pub fn snaps_are_valid(&self) -> bool {
+        crate::snaps_are_valid(self.snaps.iter().copied(), self.min, self.max)
+    }
 }
 
 /// 🔢️ Props for `Component::NumberStepper`. `on_absolute`/`on_delta` both moved to the record's
-/// `bindings`, distinguished by `Trigger`.
+/// `bindings`, distinguished by `Trigger`. `precision` is the fraction digits it shows and commits.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValue, FromValue)]
 #[serde(rename_all = "camelCase")]
 #[value(crate = "::protocol::value", rename_all = "camelCase")]
@@ -461,6 +490,132 @@ pub struct NumberStepperProps {
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[value(default, skip_serializing_if = "Option::is_none")]
     pub max: Option<f64>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[value(default, skip_serializing_if = "Option::is_none")]
+    pub precision: Option<u16>,
+}
+
+/// 🧿️ Share of a slider's span within which a pointer value is pulled onto a detent. Keyboard steps
+/// never snap (a stuck arrow key is worse than a missed detent); page keys jump between detents.
+pub const SLIDER_SNAP_RADIUS: f64 = 0.03;
+
+/// 🔬️ The largest [`InputProps::precision`]/[`NumberStepperProps::precision`] a renderer honours —
+/// the fraction digits an `f64` still carries meaningfully.
+pub const UI_NUMBER_PRECISION_MAX: u16 = 15;
+
+/// 👆️ Resolves a raw pointer value: clamped to the bounds, quantized onto the `step` ladder from
+/// `min`, then pulled onto the nearest snap when it lies within [`SLIDER_SNAP_RADIUS`] of the span.
+pub fn slider_pointer_value(value: f64, min: f64, max: f64, step: f64, snaps: impl IntoIterator<Item = f64>) -> f64 {
+    let clamped = value.clamp(min, max.max(min));
+    let stepped = if step > 0.0 { (min + ((clamped - min) / step).round() * step).clamp(min, max.max(min)) } else { clamped };
+    let radius = (max - min).abs() * SLIDER_SNAP_RADIUS;
+    snaps.into_iter().map(|snap| (snap, (snap - clamped).abs())).filter(|(_, distance)| *distance <= radius).min_by(|left, right| left.1.total_cmp(&right.1)).map_or(stepped, |(snap, _)| snap)
+}
+
+/// ⏭️ The next detent strictly above (`forward`) or below `current` — what a page key jumps to.
+pub fn slider_adjacent_snap(current: f64, snaps: impl IntoIterator<Item = f64>, forward: bool) -> Option<f64> {
+    let candidates = snaps.into_iter().filter(|snap| if forward { *snap > current } else { *snap < current });
+    if forward {
+        candidates.min_by(f64::total_cmp)
+    } else {
+        candidates.max_by(f64::total_cmp)
+    }
+}
+
+/// 📄️ How many ladder rungs a large arrow (`Shift`) or a page key with no detent ahead moves a slider.
+pub const SLIDER_PAGE_STEPS: f64 = 10.0;
+
+/// 🎹️ The keys a slider takes, once a renderer has mapped its physical key (direction, `dir`, inversion) onto
+/// the value axis.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum SliderKey {
+    Decrement,
+    Increment,
+    PageDown,
+    PageUp,
+    Home,
+    End,
+}
+
+/// 🪜️ The keyboard law every renderer shares for a bounded slider — [`ui_number_key_value`] with both bounds.
+pub fn slider_key_value(current: f64, min: f64, max: f64, step: f64, snaps: impl IntoIterator<Item = f64>, key: SliderKey, large: bool) -> f64 {
+    ui_number_key_value(current, Some(min), Some(max), step, snaps, key, large)
+}
+
+/// ⌨️ The keyboard law of every numeric control. Arrows walk the step ladder from `min` (from 0 without one;
+/// `large` walks [`SLIDER_PAGE_STEPS`] rungs) and never snap, so a detent never traps them; from an off-ladder
+/// value the first rung beyond it is one rung. Page keys jump to the adjacent detent, else walk
+/// [`SLIDER_PAGE_STEPS`] rungs. Home and End go to the bounds (and keep the value without one). An invalid step
+/// walks rungs of one. The result is clamped to the bounds and cleaned to the decimals of the ladder origin and
+/// `step`, so `0.2 + 0.1` lands on `0.3`.
+pub fn ui_number_key_value(current: f64, min: Option<f64>, max: Option<f64>, step: f64, snaps: impl IntoIterator<Item = f64>, key: SliderKey, large: bool) -> f64 {
+    let min = min.filter(|min| min.is_finite());
+    let max = max.filter(|max| max.is_finite()).map(|max| min.map_or(max, |min| max.max(min)));
+    let clamp = |value: f64| value.max(min.unwrap_or(f64::NEG_INFINITY)).min(max.unwrap_or(f64::INFINITY));
+    let origin = min.unwrap_or(0.0);
+    let step = if step.is_finite() && step > 0.0 { step } else { 1.0 };
+    let digits = decimal_digits(origin).max(decimal_digits(step)).min(12);
+    let walk = |rungs: f64, forward: bool| {
+        let position = (current - origin) / step;
+        let nearest = position.round();
+        let base = if (position - nearest).abs() <= 1e-9 * nearest.abs().max(1.0) {
+            nearest
+        } else if forward {
+            position.floor()
+        } else {
+            position.ceil()
+        };
+        clamp(crate::round_ui_number(origin + (if forward { base + rungs } else { base - rungs }) * step, digits))
+    };
+    let rungs = if large { SLIDER_PAGE_STEPS } else { 1.0 };
+    match key {
+        SliderKey::Increment => walk(rungs, true),
+        SliderKey::Decrement => walk(rungs, false),
+        SliderKey::PageUp => slider_adjacent_snap(current, snaps, true).unwrap_or_else(|| walk(SLIDER_PAGE_STEPS, true)),
+        SliderKey::PageDown => slider_adjacent_snap(current, snaps, false).unwrap_or_else(|| walk(SLIDER_PAGE_STEPS, false)),
+        SliderKey::Home => min.unwrap_or(current),
+        SliderKey::End => max.unwrap_or(current),
+    }
+}
+
+/// 🎨️ `rgba` — sRGB components in `0..=1` with straight alpha, a missing component 0 and a missing alpha 1, a
+/// non-finite one 0 — as a lowercase `#rrggbb`, or `#rrggbbaa` with `alpha`; each channel is `round(c × 255)`.
+pub fn ui_color_hex(rgba: &[f64], alpha: bool) -> String {
+    let channel = |index: usize| {
+        let component = rgba.get(index).copied().unwrap_or(if index == 3 { 1.0 } else { 0.0 });
+        ((if component.is_finite() { component.clamp(0.0, 1.0) } else { 0.0 }) * 255.0).round() as u8
+    };
+    std::iter::once("#".to_string()).chain((0..if alpha { 4 } else { 3 }).map(|index| format!("{:02x}", channel(index)))).collect()
+}
+
+/// 🧪️ Reads a hex colour a user typed — an optional `#`, then 3, 4, 6 or 8 hex digits in any case, surrounding
+/// space ignored, the short forms doubling each digit — as sRGB components in `0..=1` (`channel / 255`), alpha 1
+/// when absent. `None` for anything else.
+pub fn parse_ui_color_hex(text: &str) -> Option<[f64; 4]> {
+    let trimmed = text.trim();
+    let digits = trimmed.strip_prefix('#').unwrap_or(trimmed);
+    let width = match digits.len() {
+        3 | 4 => 1,
+        6 | 8 => 2,
+        _ => return None,
+    };
+    if !digits.bytes().all(|byte| byte.is_ascii_hexdigit()) {
+        return None;
+    }
+    let mut rgba = [0.0, 0.0, 0.0, 1.0];
+    for (index, slot) in rgba.iter_mut().enumerate().take(digits.len() / width) {
+        let channel = u8::from_str_radix(&digits[index * width..(index + 1) * width], 16).ok()?;
+        *slot = f64::from(if width == 1 { channel * 17 } else { channel }) / 255.0;
+    }
+    Some(rgba)
+}
+
+/// 🔟️ The fraction digits `value` prints with in the twelve-digit format (an `e-n` exponent adds `n`).
+fn decimal_digits(value: f64) -> u16 {
+    let text = crate::format_ui_number(value);
+    let (mantissa, exponent) = text.split_once('e').unwrap_or((text.as_str(), "0"));
+    let fraction = mantissa.split_once('.').map_or(0, |(_, fraction)| fraction.len() as i64);
+    u16::try_from((fraction - exponent.parse::<i64>().unwrap_or(0)).max(0)).unwrap_or(u16::MAX)
 }
 
 /// 💍️ Props for `Component::Ring`. `on_change` moved to the record's `bindings`.

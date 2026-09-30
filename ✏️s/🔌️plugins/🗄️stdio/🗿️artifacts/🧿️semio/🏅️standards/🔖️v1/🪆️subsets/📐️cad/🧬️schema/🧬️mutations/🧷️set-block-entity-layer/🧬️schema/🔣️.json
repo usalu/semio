@@ -5,11 +5,16 @@
   "type": "object",
   "additionalProperties": false,
   "required": [
+    "mutation",
     "blockName",
     "handle",
     "layer"
   ],
   "properties": {
+    "mutation": {
+      "const": "setBlockEntityLayer",
+      "description": "Aggregate discriminator spliced in by SemioCadMutation; absent when the payload stands alone."
+    },
     "blockName": {
       "type": "string"
     },
@@ -18,10 +23,6 @@
     },
     "layer": {
       "type": "string"
-    },
-    "mutation": {
-      "const": "setBlockEntityLayer",
-      "description": "Aggregate discriminator spliced in by SemioCadMutation; absent when the payload stands alone."
     }
   }
 }

@@ -231,6 +231,19 @@ pub fn carrier_is_exact(output: &[u8], input: &[u8]) -> Result<(), String> {
 }
 //#endregion 🔖️Laws
 
+//#region 🔖️Wire
+/// 🧾️ The wire-witness law (design §11): a `{kind, params}` row's `params` IS the leaf's wire payload, so the subject's own
+/// re-emission of the payload it decoded (`to_json_string(payload_value())`) must be exactly `params` — a hand-mapped shorthand,
+/// a misspelled member, or a member the decoder silently ignored fails here instead of passing as a witness.
+pub fn params_are_wire(kind: &str, params: &Json, emitted: &str) -> Result<(), String> {
+    let emitted = parse_json(emitted).map_err(|error| format!("{kind}: the subject's own payload wire does not parse: {error}"))?;
+    match divergence(&emitted, params) {
+        None => Ok(()),
+        Some(found) => Err(format!("{kind}: the witness params are not the leaf's wire payload — {found}")),
+    }
+}
+//#endregion 🔖️Wire
+
 //#region 🔖️Vector
 #[path = "🧬️vector/🦀️.rs"]
 pub mod vector;

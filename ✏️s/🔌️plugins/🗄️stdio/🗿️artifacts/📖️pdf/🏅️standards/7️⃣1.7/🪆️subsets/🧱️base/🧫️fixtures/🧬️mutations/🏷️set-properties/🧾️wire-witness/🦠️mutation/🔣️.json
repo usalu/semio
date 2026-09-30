@@ -1,0 +1,7 @@
+{
+  "mutation": "setProperties",
+  "properties": {
+    "name": "name",
+    "entries": []
+  }
+}

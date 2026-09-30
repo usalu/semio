@@ -5,7 +5,7 @@ mod tests_change_annex_switches_the_national_annex_from_de_to_en;
 mod tests_update_bolt_inputs_moves_the_connection_to_four_m24_grade_10_9_bolts;
 #[path = "../../🌉️update-bridge-inputs/🧪️tests/🌉️raises-the-bridge-damage-equivalence-and-dynamic-factors/🦀️.rs"]
 mod tests_update_bridge_inputs_raises_the_bridge_damage_equivalence_and_dynamic_factors;
-#[path = "../../🥶️update-cold-formed-inputs/🧪️tests/↪️thickens-the-cold-formed-flange-and-reverses-its-stress-gradient/🦀️.rs"]
+#[path = "../../🥶️update-cold-formed-inputs/🧪️tests/↪️thickens-cold-formed-flange-reverses-stress-gradient/🦀️.rs"]
 mod tests_update_cold_formed_inputs_thickens_the_cold_formed_flange_and_reverses_its_stress_gradient;
 #[path = "../../🏗️update-crane-inputs/🧪️tests/🏋️widens-the-crane-wheel-contact-patch-under-a-heavier-wheel/🦀️.rs"]
 mod tests_update_crane_inputs_widens_the_crane_wheel_contact_patch_under_a_heavier_wheel;
@@ -25,9 +25,9 @@ mod tests_update_plated_inputs_makes_the_plate_panel_more_slender_and_more_stres
 mod tests_update_silo_shell_inputs_deepens_the_silo_and_thickens_its_shell;
 #[path = "../../✨️update-stainless-inputs/🧪️tests/✨️upsizes-the-stainless-section-to-a-duplex-grade/🦀️.rs"]
 mod tests_update_stainless_inputs_upsizes_the_stainless_section_to_a_duplex_grade;
-#[path = "../../🪢️update-tension-component-inputs/🧪️tests/📉️derates-the-tension-rod-to-a-400-kn-characteristic-strength/🦀️.rs"]
+#[path = "../../🪢️update-tension-component-inputs/🧪️tests/📉️derates-tension-rod-400-kn-characteristic-strength/🦀️.rs"]
 mod tests_update_tension_component_inputs_derates_the_tension_rod_to_a_400_kn_characteristic_strength;
-#[path = "../../↕️update-through-thickness-inputs/🧪️tests/🥶️upgrades-the-subgrade-to-k2-for-a-thicker-plate-at-minus-20c/🦀️.rs"]
+#[path = "../../↕️update-through-thickness-inputs/🧪️tests/🥶️upgrades-subgrade-k2-thicker-plate-minus-20c/🦀️.rs"]
 mod tests_update_through_thickness_inputs_upgrades_the_subgrade_to_k2_for_a_thicker_plate_at_minus_20c;
 #[path = "../../🗼️update-tower-inputs/🧪️tests/🌬️raises-the-tower-wind-factor-and-leg-force/🦀️.rs"]
 mod tests_update_tower_inputs_raises_the_tower_wind_factor_and_leg_force;

@@ -10,10 +10,27 @@
   ],
   "properties": {
     "face_id": {
-      "type": "string"
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Face",
+          "de": "Fläche"
+        },
+        "ref": {
+          "kind": "face"
+        }
+      }
     },
     "new_surface": {
-      "$ref": "#/$defs/BrepSurface"
+      "$ref": "#/$defs/BrepSurface",
+      "x-semio-ui": {
+        "label": {
+          "en": "Surface",
+          "de": "Fläche (Geometrie)"
+        }
+      }
     }
   },
   "$defs": {

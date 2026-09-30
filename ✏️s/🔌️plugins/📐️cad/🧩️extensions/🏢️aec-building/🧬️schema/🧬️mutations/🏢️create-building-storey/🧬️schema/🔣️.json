@@ -5,15 +5,55 @@
   "type": "object",
   "properties": {
     "storeyId": {
-      "type": "string"
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "text",
+        "role": "value",
+        "label": {
+          "en": "Storey ID",
+          "de": "Geschoss-ID"
+        },
+        "description": {
+          "en": "Id of the new storey.",
+          "de": "ID des neuen Geschosses."
+        },
+        "group": "identity",
+        "order": 10
+      }
     },
     "levelIndex": {
       "type": "integer",
       "minimum": -2147483648,
-      "maximum": 2147483647
+      "maximum": 2147483647,
+      "x-semio-ui": {
+        "widget": "stepper",
+        "role": "value",
+        "label": {
+          "en": "Level",
+          "de": "Geschossebene"
+        },
+        "description": {
+          "en": "0 is the ground floor; negative levels lie below ground.",
+          "de": "0 ist das Erdgeschoss; negative Ebenen liegen unter Gelände."
+        },
+        "step": 1,
+        "precision": 0,
+        "group": "identity",
+        "order": 20
+      }
     },
     "storeyName": {
-      "type": "string"
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "text",
+        "role": "value",
+        "label": {
+          "en": "Storey name",
+          "de": "Geschossbezeichnung"
+        },
+        "group": "identity",
+        "order": 30
+      }
     }
   },
   "required": [

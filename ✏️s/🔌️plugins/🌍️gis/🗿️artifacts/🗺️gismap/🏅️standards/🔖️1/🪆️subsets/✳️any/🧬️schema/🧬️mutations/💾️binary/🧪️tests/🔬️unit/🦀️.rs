@@ -46,7 +46,7 @@ async fn gis_map_document_text_round_trips_through_store() {
     let envelope = store::create_document_envelope(GIS_MAP_SCHEMA, "gis2d-demo", initial, None);
     let mut store = store::ArtifactStore::new(envelope).await.expect("valid artifact store fixture");
     store.install_document_store_owners_exact(gis_map_document_store_owners());
-    store.dispatch(store::ArtifactCommand::Apply { mutations: vec![GisMapMutation::CreatePosition(create_position::CreatePosition { index: 0, item: sample_feature("p1") })], description: None }).await.expect("apply");
+    store.dispatch(store::ArtifactCommand::Apply { mutations: vec![GisMapMutation::CreatePosition(create_position::CreatePosition { index: 0, item: sample_feature("p1") })], description: None, transaction: None }).await.expect("apply");
     store::os_store::test_support::assert_document_text_round_trip(&store).await;
     store::os_store::test_support::assert_document_pack_round_trip(&store).await;
     close_gis_map_candidate(store);

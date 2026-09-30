@@ -1,0 +1,22 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/framework/os/store/fixtures/severity/mutations.json",
+  "title": "SeverityMutation",
+  "oneOf": [
+    {
+      "$ref": "https://json.schemas.assets.semio-tech.com/framework/os/store/fixtures/severity/mutation/set-n/schema.json"
+    },
+    {
+      "$ref": "https://json.schemas.assets.semio-tech.com/framework/os/store/fixtures/severity/mutation/set-warning-n/schema.json"
+    },
+    {
+      "$ref": "https://json.schemas.assets.semio-tech.com/framework/os/store/fixtures/severity/mutation/set-error-n/schema.json"
+    },
+    {
+      "$ref": "https://json.schemas.assets.semio-tech.com/framework/os/store/fixtures/severity/mutation/set-fatal-n/schema.json"
+    },
+    {
+      "$ref": "https://json.schemas.assets.semio-tech.com/framework/os/store/fixtures/severity/mutation/restore-n/schema.json"
+    }
+  ]
+}

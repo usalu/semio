@@ -1,9 +1,9 @@
 //! 🧪️ Hierarchical fixture triad `🌉️update-bridge-inputs` / `🌉️raises-the-bridge-damage-equivalence-and-dynamic-factors`.
 use crate::{En1993Diff, En1993Mutation, En1993Snapshot};
-const BEFORE: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🌉️update-bridge-inputs/🌉️raises-the-bridge-damage-equivalence-and-dynamic-factors/📸️snapshot/⬅️before/🔣️.json");
-const AFTER: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🌉️update-bridge-inputs/🌉️raises-the-bridge-damage-equivalence-and-dynamic-factors/📸️snapshot/➡️after/🔣️.json");
-const MUTATION: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🌉️update-bridge-inputs/🌉️raises-the-bridge-damage-equivalence-and-dynamic-factors/🦠️mutation/🔣️.json");
-const OUTCOME: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🌉️update-bridge-inputs/🌉️raises-the-bridge-damage-equivalence-and-dynamic-factors/🎯️outcome/🔣️.json");
+const BEFORE: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🌉️update-bridge-inputs/🌉️raises-bridge-damage-equivalence-dynamic/📸️snapshot/⬅️before/🔣️.json");
+const AFTER: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🌉️update-bridge-inputs/🌉️raises-bridge-damage-equivalence-dynamic/📸️snapshot/➡️after/🔣️.json");
+const MUTATION: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🌉️update-bridge-inputs/🌉️raises-bridge-damage-equivalence-dynamic/🦠️mutation/🔣️.json");
+const OUTCOME: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🌉️update-bridge-inputs/🌉️raises-bridge-damage-equivalence-dynamic/🎯️outcome/🔣️.json");
 fn before() -> En1993Snapshot { serde_json::from_str(BEFORE).expect("before") }
 fn expected_after() -> En1993Snapshot { serde_json::from_str(AFTER).expect("after") }
 fn mutation() -> En1993Mutation { serde_json::from_str(MUTATION).expect("mutation") }

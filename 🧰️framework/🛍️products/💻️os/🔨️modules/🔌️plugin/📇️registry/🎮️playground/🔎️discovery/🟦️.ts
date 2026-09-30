@@ -31,6 +31,7 @@ export type PlaygroundEntry = {
   readonly app?: string;
   /** 🏷️ Shell brand id (see `framework/os/dev/brand`) this variant ships as. */
   readonly brand?: string;
+  readonly devContribution?: string;
   /** 📦️ Repo-root-relative CDN output directory for `build-<variant>-react-release` instead of framework-os-dev `dist/build-…`. */
   readonly distDir?: string;
   readonly aliases: readonly string[];
@@ -61,6 +62,7 @@ export function parsePlaygroundBlock(block: string, pluginId: string, cratePath:
   if (!variant) return undefined;
   const app = block.match(/^app\s*=\s*"([^"]+)"/m)?.[1];
   const brand = block.match(/^brand\s*=\s*"([^"]+)"/m)?.[1];
+  const devContribution = block.match(/^devContribution\s*=\s*"([^"]+)"/m)?.[1];
   const distDir = block.match(/^distDir\s*=\s*"([^"]+)"/m)?.[1];
   const aliases = parseTomlStringArray(block, "aliases");
   const portsBlock = block.match(/^ports\s*=\s*\{([^}]*)\}/m)?.[1];
@@ -72,7 +74,7 @@ export function parsePlaygroundBlock(block: string, pluginId: string, cratePath:
   const userPortsWgpu = userPortsBlock ? parseTomlInlineNumberArray(userPortsBlock, "wgpu") : [];
   const userPorts = userPortsReact.length > 0 && userPortsWgpu.length > 0 ? { react: userPortsReact, wgpu: userPortsWgpu } : undefined;
   const engines = parseTomlStringArray(block, "engines");
-  return { variant, pluginId, cratePath, app, brand, distDir, aliases, ports: { react: Number(react), wgpu: Number(wgpu) }, ...(userPorts ? { userPorts } : {}), examples: [], engines, assets: [] };
+  return { variant, pluginId, cratePath, app, brand, devContribution, distDir, aliases, ports: { react: Number(react), wgpu: Number(wgpu) }, ...(userPorts ? { userPorts } : {}), examples: [], engines, assets: [] };
 }
 
 

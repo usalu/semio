@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
-import Ajv from "ajv";
+import { addSemioMutationLeafSchemasV1, semioSchemaAjvV1 } from "../../../../../../../../../../../../../../../../../🧰️framework/🛍️products/💻️os/🧪️tests/🧬️schema-oracle/🟦️.ts";
 import { applyPatch } from "fast-json-patch";
 import { applyEquationGraphWindowConfigMutation, type EquationGraphWindowConfigMutation } from "../../🧬️schema/🧬️mutations/🟦️";
 
@@ -9,9 +9,8 @@ export function testEquationGraphWindowConfigOracle(): void {
   const fixture = JSON.parse(readFileSync(new URL("./../../🧫️fixtures/🔬️window-config-ownership/🔣️.json", import.meta.url), "utf8"));
   const configSchema = JSON.parse(readFileSync(new URL("../../🧬️schema/🔣️.json", import.meta.url), "utf8"));
   const mutationSchema = JSON.parse(readFileSync(new URL("../../🧬️schema/🧬️mutations/🔣️.json", import.meta.url), "utf8"));
-  const ajv = new Ajv({ strict: true, allErrors: true });
-  ajv.addKeyword("x-semio-state");
-  ajv.addKeyword("x-semio-owner");
+  const ajv = semioSchemaAjvV1({ allErrors: true });
+  addSemioMutationLeafSchemasV1(ajv, new URL("../../🧬️schema/🧬️mutations/", import.meta.url));
   const validateConfig = ajv.compile(configSchema);
   const validateMutation = ajv.compile(mutationSchema);
   let windows = Object.fromEntries([fixture.leftWindowId, fixture.rightWindowId].map((id: string) => [id, structuredClone(fixture.base)]));

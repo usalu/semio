@@ -1,7 +1,13 @@
-/** 🦠️ reorder-scenes executable structural glTF command. */
-import type { GltfOrthographic, GltfPerspective, GltfSnapshot } from '../../📸️snapshot/🟦️.ts';
-import { clone, insert, order, position, reject, remove, relocate, reorder, repair, type GltfMutationRejection, type GltfStructuralResult } from './🟦️';
-export const GltfReorderScenesDescriptor = { id: 's.stdio.gltf.mutation.reorder-scenes.v1', version: 1, touchedPathPattern: 'document/scenes', referencePolicy: 'all typed scene references are remapped, repaired, or rejected' } as const;
-export interface GltfReorderScenesPayload { order: number[] }
-export const validateGltfReorderScenes = (payload: GltfReorderScenesPayload, base: GltfSnapshot): GltfMutationRejection | undefined => { const permutation = order(payload.order, base.document.scenes.length, 'document/scenes'); if (permutation) return permutation; if (payload.order.every((value, index) => value === index)) return reject('gltf.mutation.no-observable-change', 'document/scenes', 'order already matches');  return undefined; };
-export const applyGltfReorderScenes = (base: GltfSnapshot, payload: GltfReorderScenesPayload): GltfStructuralResult => { const rejection = validateGltfReorderScenes(payload, base); if (rejection) return { accepted: false, rejection }; try { const next = clone(base); reorder(next, 'scenes', payload.order); return { accepted: true, snapshot: clone(next) }; } catch (error) { return { accepted: false, rejection: typeof error === 'object' && error && 'code' in error ? error as GltfMutationRejection : reject('gltf.mutation.apply-failed', 'document/scenes', String(error)) }; } };
+/** 🔀️ `reorder-scenes` wire twin: the flat `Apply` payload `GltfReorderScenesPayload` and the phase wire `ReorderScenesMutation`, exactly as `./🦀️.rs` writes them.
+ * @see ./🧬️schema/🔣️.json */
+import { gltfWireArray, gltfWireIndex, gltfWireObject, gltfWireRequired } from "../../../📸️snapshot/🟦️.ts";
+import { type GltfDiff, type GltfPhase, gltfWirePhase, parseGltfDiff } from "../../../🔺️diff/🟦️.ts";
+
+export interface GltfReorderScenesPayload {
+  order: number[];
+}
+
+export type ReorderScenesMutation = GltfPhase<GltfReorderScenesPayload, GltfDiff>;
+
+export const parseGltfReorderScenesPayload = gltfWireObject<GltfReorderScenesPayload>({ order: gltfWireRequired(gltfWireArray(gltfWireIndex)) });
+export const parseReorderScenesMutation = gltfWirePhase(parseGltfReorderScenesPayload, parseGltfDiff);

@@ -1,7 +1,13 @@
-/** 🦠️ create-skin executable structural glTF command. */
-import type { GltfOrthographic, GltfPerspective, GltfSnapshot } from '../../📸️snapshot/🟦️.ts';
-import { clone, insert, order, position, reject, remove, relocate, reorder, repair, type GltfMutationRejection, type GltfStructuralResult } from './🟦️';
-export const GltfCreateSkinDescriptor = { id: 's.stdio.gltf.mutation.create-skin.v1', version: 1, touchedPathPattern: 'document/skins', referencePolicy: 'all typed skin references are remapped, repaired, or rejected' } as const;
-export interface GltfCreateSkinPayload { position: number }
-export const validateGltfCreateSkin = (payload: GltfCreateSkinPayload, base: GltfSnapshot): GltfMutationRejection | undefined => { const index = position(payload.position, base.document.skins.length, 'document/skins', true); if (index) return index;    return undefined; };
-export const applyGltfCreateSkin = (base: GltfSnapshot, payload: GltfCreateSkinPayload): GltfStructuralResult => { const rejection = validateGltfCreateSkin(payload, base); if (rejection) return { accepted: false, rejection }; try { const next = clone(base); insert(next, 'skins', payload.position, { joints: [] }); return { accepted: true, snapshot: clone(next) }; } catch (error) { return { accepted: false, rejection: typeof error === 'object' && error && 'code' in error ? error as GltfMutationRejection : reject('gltf.mutation.apply-failed', 'document/skins', String(error)) }; } };
+/** 🌱️ `create-skin` wire twin: the flat `Apply` payload `GltfCreateSkinPayload` and the phase wire `CreateSkinMutation`, exactly as `./🦀️.rs` writes them.
+ * @see ./🧬️schema/🔣️.json */
+import { gltfWireIndex, gltfWireObject, gltfWireRequired } from "../../../📸️snapshot/🟦️.ts";
+import { type GltfDiff, type GltfPhase, gltfWirePhase, parseGltfDiff } from "../../../🔺️diff/🟦️.ts";
+
+export interface GltfCreateSkinPayload {
+  position: number;
+}
+
+export type CreateSkinMutation = GltfPhase<GltfCreateSkinPayload, GltfDiff>;
+
+export const parseGltfCreateSkinPayload = gltfWireObject<GltfCreateSkinPayload>({ position: gltfWireRequired(gltfWireIndex) });
+export const parseCreateSkinMutation = gltfWirePhase(parseGltfCreateSkinPayload, parseGltfDiff);

@@ -1,6 +1,6 @@
 {
   "schema": "semio.s.writer.hub-tail-fixture/v1",
-  "description": "The hub's catch-up tail of one writer document as a hard-reloaded replica receives it (Welcome bootstrap = Tail, no pair): four edits of user1, a Check In (`semio.history.transition`, dependencies = the four operations), eleven edits of two authors typing at once (each `observed` = the other's latest), a second Check In. A replica folds every operation as its own remote edit named after its mutation id; printing that fold as a document pack and initializing the writer store from it must succeed (ticket 26/09/23 C12, collab-e2e STEP 8: `document-archive-replacement.initializer-failed … duplicate mutation id`). Captured read-only from hub 7800 by H13 (`wp-h13/generated/c12-step8-bootstrap-7800.json`), wire fields verbatim.",
+  "description": "The hub's catch-up tail of one writer document as a hard-reloaded replica receives it (Welcome bootstrap = Tail, no pair): four edits of user1, a Check In (`semio.history.transition`, dependencies = the four operations), eleven edits of two authors typing at once (each `observed` = the other's latest), a second Check In. A replica folds every operation as its own remote edit named after its mutation id; printing that fold as a document pack and initializing the writer store from it must succeed (ticket 26/09/23 C12, collab-e2e STEP 8: `document-archive-replacement.initializer-failed … duplicate mutation id`). Captured read-only from hub 7800 by H13 (`wp-h13/generated/c12-step8-bootstrap-7800.json`), wire fields verbatim, except the two Check In transition ids, re-derived (and their one dependency reference) under the actor-free content address `transition-{hex16(blake3(hlc | payload))}` (ticket 26/09/30 NON-DESTRUCTIVE-HISTORY-EDITING): the capture had hashed the authoring replica's actor string, which the hub rebinds.",
   "documentId": "artifact-6e93e2212c8aefbd8b48555f146b8572",
   "envelopes": [
     {
@@ -254,7 +254,7 @@
       }
     },
     {
-      "mutation_id": "transition-85babeb692ac4f86",
+      "mutation_id": "transition-294f894cc3debed5",
       "document_id": "artifact-6e93e2212c8aefbd8b48555f146b8572",
       "actor": "hub.v1.370722f0cfb78d4e3eaf44a8b576001a0afd3711c6d35e600e17b516da8ac1a0",
       "dependencies": [
@@ -1895,7 +1895,7 @@
       }
     },
     {
-      "mutation_id": "transition-3647be8a3f6b1aed",
+      "mutation_id": "transition-adfa89d36bdda627",
       "document_id": "artifact-6e93e2212c8aefbd8b48555f146b8572",
       "actor": "hub.v1.a699fce3c009980735a8177e0ee7d205b0880cd0552b4e9b8d803808106c5d6d",
       "dependencies": [
@@ -1910,7 +1910,7 @@
         "edit-2c69037da4bcef92#0",
         "edit-20eb2c556eb23457#0",
         "edit-5f7811497a7c0db5#0",
-        "transition-85babeb692ac4f86"
+        "transition-294f894cc3debed5"
       ],
       "observed": null,
       "target": [],

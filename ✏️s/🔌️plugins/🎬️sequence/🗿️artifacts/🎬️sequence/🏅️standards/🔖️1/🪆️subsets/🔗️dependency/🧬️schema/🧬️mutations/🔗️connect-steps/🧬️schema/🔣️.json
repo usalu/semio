@@ -2,50 +2,67 @@
   "$schema": "http://json-schema.org/draft-07/schema#",
   "$id": "https://json.schemas.assets.semio-tech.com/s/sequence/sequence/1/dependency/mutation/connect-steps/schema.json",
   "title": "ConnectSteps",
-  "$ref": "#/$defs/Payload",
-  "$defs": {
-    "Payload": {
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "id",
-        "from",
-        "to"
-      ],
-      "properties": {
-        "id": {
-          "type": "string"
+  "x-semio-invariant": [
+    {
+      "id": "no-self-loop",
+      "description": {
+        "en": "A sequence is acyclic: an edge connects two different steps, so from differs from to.",
+        "de": "Eine Sequenz ist azyklisch: Eine Kante verbindet zwei verschiedene Schritte, from unterscheidet sich also von to."
+      }
+    }
+  ],
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "mutation",
+    "id",
+    "from",
+    "to"
+  ],
+  "properties": {
+    "mutation": {
+      "const": "connectSteps"
+    },
+    "id": {
+      "type": "string"
+    },
+    "from": {
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "value",
+        "label": {
+          "en": "Source Step",
+          "de": "Quellschritt"
         },
-        "from": {
-          "type": "string"
+        "description": {
+          "en": "The step the connection starts at.",
+          "de": "Der Schritt, an dem die Verbindung beginnt."
         },
-        "to": {
-          "type": "string"
+        "ref": {
+          "kind": "step",
+          "domain": "steps",
+          "granularity": "step"
         }
       }
     },
-    "Wire": {
-      "title": "ConnectStepsMutation",
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "mutation",
-        "id",
-        "from",
-        "to"
-      ],
-      "properties": {
-        "mutation": {
-          "const": "connectSteps"
+    "to": {
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "value",
+        "label": {
+          "en": "Target Step",
+          "de": "Zielschritt"
         },
-        "id": {
-          "$ref": "#/$defs/Payload/properties/id"
+        "description": {
+          "en": "The step the connection ends at.",
+          "de": "Der Schritt, an dem die Verbindung endet."
         },
-        "from": {
-          "$ref": "#/$defs/Payload/properties/from"
-        },
-        "to": {
-          "$ref": "#/$defs/Payload/properties/to"
+        "ref": {
+          "kind": "step",
+          "domain": "steps",
+          "granularity": "step"
         }
       }
     }

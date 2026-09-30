@@ -9,7 +9,20 @@
   ],
   "properties": {
     "newSiloK": {
-      "type": "number"
+      "type": "number",
+      "minimum": 0,
+      "x-semio-ui": {
+        "widget": "stepper",
+        "role": "value",
+        "label": {
+          "en": "Lateral pressure ratio K",
+          "de": "Horizontallastverhältnis K"
+        },
+        "step": 0.01,
+        "precision": 2,
+        "group": "silo",
+        "order": 10
+      }
     }
   }
 }

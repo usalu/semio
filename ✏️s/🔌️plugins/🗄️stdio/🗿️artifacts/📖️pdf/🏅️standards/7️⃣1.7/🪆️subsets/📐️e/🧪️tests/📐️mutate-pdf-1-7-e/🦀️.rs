@@ -134,9 +134,8 @@ mod subject {
     use super::{arranged_input, mutable_input};
     use semio_repo_test_host::{Context, Json, Outcome};
     use semio_s_artifact_stdio_pdf::standards::v1_7::subsets::base::io::{decode_pdf, encode_pdf};
-    use semio_s_artifact_stdio_pdf::standards::v1_7::subsets::base::schema::conformance_support as support;
-    use semio_s_artifact_stdio_pdf::standards::v1_7::subsets::base::schema::snapshot::{ObjRef, PdfSnapshot};
-    use semio_s_artifact_stdio_pdf::standards::v1_7::subsets::e::schema::mutations::*;
+    use semio_s_artifact_stdio_pdf::standards::v1_7::subsets::base::schema::snapshot::PdfSnapshot;
+    use semio_s_artifact_stdio_pdf::standards::v1_7::subsets::e::schema::mutations::{apply_e_conformance_mutation, decode_e_conformance_mutation_payload, PdfEMutation};
     use semio_s_plugin_stdio_test_oracle::artifacts::pdf::standards::v1_7::subsets::e::{oracle_inverse_spec, project_conformance};
 
     fn decode(bytes: &[u8]) -> Result<PdfSnapshot, String> {
@@ -147,60 +146,16 @@ mod subject {
         encode_pdf(snapshot).map_err(|error| error.to_string())
     }
 
-    fn number(value: &Json) -> Option<f64> {
-        match value {
-            Json::Number(number) => Some(*number),
-            _ => None,
-        }
-    }
-
-    fn four_numbers(params: &Json, key: &str) -> Result<[f64; 4], String> {
-        let items = params.array(key);
-        if items.len() != 4 {
-            return Err(format!("`{key}` must be an array of four numbers"));
-        }
-        Ok([number(&items[0]).unwrap_or(0.0), number(&items[1]).unwrap_or(0.0), number(&items[2]).unwrap_or(0.0), number(&items[3]).unwrap_or(0.0)])
-    }
-
-    /// 🔤️ The donor font-program object an `embed-font-file` names — exactly (`program: {num, gen}`,
-    /// what an engine-computed inverse carries) or by ordinal into the document's own program list
-    /// (`programOrdinal`, what a feature row can actually author).
-    fn program_reference(base: &PdfSnapshot, params: &Json) -> Result<ObjRef, String> {
-        if let Some(reference) = params.get("program") {
-            let num = reference.get("num").and_then(number).ok_or("`program.num` must be a number")? as u32;
-            let gen = reference.get("gen").and_then(number).unwrap_or(0.0) as u16;
-            return Ok(ObjRef { num, gen });
-        }
-        let programs = support::font_programs(base);
-        let index = params.get("programOrdinal").and_then(number).unwrap_or(0.0) as usize;
-        programs.get(index).copied().ok_or_else(|| format!("program ordinal {index} is out of range ({} font programs)", programs.len()))
-    }
-
-    /// 🔀️ The same JSON mutation spec the oracle reads, turned into this repository's own typed
-    /// `PdfEMutation` — the only channel between the feature's parameters and the subject's codec.
-    fn mutation_from_spec(base: &PdfSnapshot, spec: &Json) -> Result<PdfEMutation, String> {
-        let params = spec.get("params").cloned().unwrap_or(Json::Null);
-        Ok(match spec.str("kind").as_str() {
-            "insert-encryption-dictionary" => PdfEMutation::InsertEncryptionDictionary(InsertEncryptionDictionary { version: params.get("version").and_then(number).unwrap_or(2.0) as i64, revision: params.get("revision").and_then(number).unwrap_or(3.0) as i64 }),
-            "remove-encryption-dictionary" => PdfEMutation::RemoveEncryptionDictionary(RemoveEncryptionDictionary { version: params.get("version").and_then(number).unwrap_or(2.0) as i64, revision: params.get("revision").and_then(number).unwrap_or(3.0) as i64 }),
-            "insert-javascript-action" => PdfEMutation::InsertJavascriptAction(InsertJavascriptAction { script: params.str("script") }),
-            "remove-javascript-action" => PdfEMutation::RemoveJavascriptAction(RemoveJavascriptAction { script: params.str("script") }),
-            "insert-launch-action" => PdfEMutation::InsertLaunchAction(InsertLaunchAction { target: params.str("target") }),
-            "remove-launch-action" => PdfEMutation::RemoveLaunchAction(RemoveLaunchAction { target: params.str("target") }),
-            "insert-media-annotation" => PdfEMutation::InsertMediaAnnotation(InsertMediaAnnotation { subtype: params.str("subtype"), title: params.str("title") }),
-            "remove-media-annotation" => PdfEMutation::RemoveMediaAnnotation(RemoveMediaAnnotation { subtype: params.str("subtype"), title: params.str("title") }),
-            "set-output-intent" => PdfEMutation::SetOutputIntent(SetOutputIntent { identifier: params.str("identifier") }),
-            "remove-output-intent" => PdfEMutation::RemoveOutputIntent(RemoveOutputIntent {}),
-            "embed-font-file" => PdfEMutation::EmbedFontFile(EmbedFontFile { descriptor_ordinal: params.get("descriptorOrdinal").and_then(number).unwrap_or(0.0) as usize, key: params.str("key"), program: program_reference(base, &params)? }),
-            "remove-font-file" => PdfEMutation::RemoveFontFile(RemoveFontFile { descriptor_ordinal: params.get("descriptorOrdinal").and_then(number).unwrap_or(0.0) as usize }),
-            other => return Err(format!("no subject rule for kind {other:?}")),
-        })
+    /// 📨️ The scenario's `{kind, params}` row — or the oracle's computed undo spec — decoded generically: `params` is the
+    /// leaf wire payload, the only channel between the feature and the subject's typed `PdfEMutation`.
+    fn mutation_from_spec(spec: &Json) -> Result<PdfEMutation, String> {
+        decode_e_conformance_mutation_payload(&spec.str("kind"), &spec.get("params").cloned().unwrap_or(Json::Null).to_string())
     }
 
     pub fn mutate(ctx: &Context) -> Result<Outcome, String> {
         let spec = ctx.doc_json()?;
         let mut snapshot = decode(&arranged_input(ctx, &spec)?)?;
-        let mutation = mutation_from_spec(&snapshot, &spec)?;
+        let mutation = mutation_from_spec(&spec)?;
         apply_e_conformance_mutation(&mut snapshot, &mutation);
         let output = encode(&snapshot)?;
         let projection = project_conformance(&output)?;
@@ -211,10 +166,10 @@ mod subject {
         let spec = ctx.doc_json()?;
         let base = arranged_input(ctx, &spec)?;
         let mut snapshot = decode(&base)?;
-        let forward = mutation_from_spec(&snapshot, &spec)?;
+        let forward = mutation_from_spec(&spec)?;
         apply_e_conformance_mutation(&mut snapshot, &forward);
         let undo = oracle_inverse_spec(&base, &spec)?;
-        let backward = mutation_from_spec(&snapshot, &undo)?;
+        let backward = mutation_from_spec(&undo)?;
         apply_e_conformance_mutation(&mut snapshot, &backward);
         let output = encode(&snapshot)?;
         let projection = project_conformance(&output)?;

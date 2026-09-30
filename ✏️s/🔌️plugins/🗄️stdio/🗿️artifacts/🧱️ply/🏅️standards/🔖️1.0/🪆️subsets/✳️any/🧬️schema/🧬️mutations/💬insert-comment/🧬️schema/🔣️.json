@@ -5,20 +5,21 @@
   "type": "object",
   "additionalProperties": false,
   "required": [
+    "mutation",
     "index",
     "comment"
   ],
   "properties": {
+    "mutation": {
+      "const": "insertComment",
+      "description": "Aggregate discriminator spliced in by PlyMutation; absent when the payload stands alone."
+    },
     "index": {
       "type": "integer",
       "minimum": 0
     },
     "comment": {
       "type": "string"
-    },
-    "mutation": {
-      "const": "insertComment",
-      "description": "Aggregate discriminator spliced in by PlyMutation; absent when the payload stands alone."
     }
   }
 }

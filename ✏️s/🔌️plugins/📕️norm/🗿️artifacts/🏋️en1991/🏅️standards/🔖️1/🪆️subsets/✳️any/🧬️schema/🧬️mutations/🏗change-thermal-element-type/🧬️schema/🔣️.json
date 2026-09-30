@@ -1,13 +1,29 @@
 {
-  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/norm/en1991/mutation/change-thermal-element-type/schema.json",
+  "title": "ChangeThermalElementType",
   "type": "object",
   "additionalProperties": false,
   "required": [
-    "new_thermal_element_type"
+    "newThermalElementType"
   ],
   "properties": {
-    "new_thermal_element_type": {
-      "type": "string"
+    "newThermalElementType": {
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "text",
+        "role": "value",
+        "label": {
+          "en": "Element type for thermal actions",
+          "de": "Bauteiltyp für Temperatureinwirkungen"
+        },
+        "description": {
+          "en": "building, bridge1, bridge2 or bridge3.",
+          "de": "building (Gebäudebauteil), bridge1, bridge2 oder bridge3 (Brückentyp 1 bis 3)."
+        },
+        "group": "thermal",
+        "order": 10
+      }
     }
   }
 }

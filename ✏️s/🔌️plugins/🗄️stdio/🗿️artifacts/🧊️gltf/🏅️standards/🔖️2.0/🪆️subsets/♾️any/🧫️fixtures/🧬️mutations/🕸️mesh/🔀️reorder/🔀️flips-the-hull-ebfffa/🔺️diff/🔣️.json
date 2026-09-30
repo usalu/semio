@@ -1,21 +1,34 @@
 {
-  "id": "s.stdio.gltf.mutation.reorder-meshs.v1",
-  "version": 1,
-  "touchedPaths": [
-    "document/meshes/1",
-    "document/meshes/0"
-  ],
-  "payload": {
-    "order": [
-      1,
-      0
+  "nodes": {
+    "modified": [
+      {
+        "index": 0,
+        "diff": {
+          "mesh": 1
+        }
+      },
+      {
+        "index": 1,
+        "diff": {
+          "mesh": 0
+        }
+      }
     ]
   },
-  "operation": {
-    "kind": "reorder",
-    "order": [
-      1,
-      0
+  "meshes": {
+    "modified": [
+      {
+        "index": 0,
+        "diff": {
+          "name": "deck"
+        }
+      },
+      {
+        "index": 1,
+        "diff": {
+          "name": "hull"
+        }
+      }
     ]
   }
 }

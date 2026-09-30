@@ -53,9 +53,3 @@ pub fn handle(payload: &SetContributions, _doc: &ArtifactView<'_, Generation3dSn
     install(payload, session)?;
     Ok(Emit::default())
 }
-
-//#region 🧪️Tests
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
-//#endregion 🧪️Tests

@@ -5,19 +5,77 @@
   "type": "object",
   "additionalProperties": false,
   "required": [
+    "mutation",
     "id",
     "from",
     "to"
   ],
   "properties": {
+    "mutation": {
+      "const": "reorderAnnualScheduleRules"
+    },
     "id": {
-      "type": "integer"
+      "type": "integer",
+      "minimum": 0,
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Annual schedule",
+          "de": "Jahreszeitplan"
+        },
+        "description": {
+          "en": "The annual schedule this mutation changes, by id.",
+          "de": "Jahreszeitplan, den diese Mutation ändert, per ID."
+        },
+        "ref": {
+          "kind": "annualSchedule",
+          "domain": "energyModel",
+          "granularity": "schedule"
+        },
+        "group": "target",
+        "order": 10
+      }
     },
     "from": {
-      "type": "integer"
+      "type": "integer",
+      "minimum": 0,
+      "x-semio-ui": {
+        "widget": "stepper",
+        "role": "value",
+        "label": {
+          "en": "From position",
+          "de": "Von Position"
+        },
+        "description": {
+          "en": "Current position of the rule; 0 is first.",
+          "de": "Aktuelle Position der Regel; 0 ist die erste."
+        },
+        "step": 1,
+        "precision": 0,
+        "group": "order",
+        "order": 20
+      }
     },
     "to": {
-      "type": "integer"
+      "type": "integer",
+      "minimum": 0,
+      "x-semio-ui": {
+        "widget": "stepper",
+        "role": "value",
+        "label": {
+          "en": "To position",
+          "de": "Nach Position"
+        },
+        "description": {
+          "en": "New position of the rule; 0 is first.",
+          "de": "Neue Position der Regel; 0 ist die erste."
+        },
+        "step": 1,
+        "precision": 0,
+        "group": "order",
+        "order": 30
+      }
     }
   }
 }

@@ -5,12 +5,36 @@
   "type": "object",
   "additionalProperties": false,
   "required": [
+    "mutation",
     "id",
     "newRoughness"
   ],
   "properties": {
+    "mutation": {
+      "const": "changeMaterialRoughness"
+    },
     "id": {
-      "type": "integer"
+      "type": "integer",
+      "minimum": 0,
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Material",
+          "de": "Material"
+        },
+        "description": {
+          "en": "The material this mutation changes, by id.",
+          "de": "Material, das diese Mutation ändert, per ID."
+        },
+        "ref": {
+          "kind": "material",
+          "domain": "energyModel",
+          "granularity": "material"
+        },
+        "group": "target",
+        "order": 10
+      }
     },
     "newRoughness": {
       "enum": [
@@ -20,7 +44,47 @@
         "MediumSmooth",
         "Smooth",
         "VerySmooth"
-      ]
+      ],
+      "x-semio-ui": {
+        "widget": "select",
+        "role": "value",
+        "label": {
+          "en": "Roughness",
+          "de": "Rauigkeit"
+        },
+        "description": {
+          "en": "Outside surface roughness; scales forced convection.",
+          "de": "Rauigkeit der Außenoberfläche; skaliert die erzwungene Konvektion."
+        },
+        "options": {
+          "VeryRough": {
+            "en": "Very rough",
+            "de": "Sehr rau"
+          },
+          "Rough": {
+            "en": "Rough",
+            "de": "Rau"
+          },
+          "MediumRough": {
+            "en": "Medium rough",
+            "de": "Mittelrau"
+          },
+          "MediumSmooth": {
+            "en": "Medium smooth",
+            "de": "Mittelglatt"
+          },
+          "Smooth": {
+            "en": "Smooth",
+            "de": "Glatt"
+          },
+          "VerySmooth": {
+            "en": "Very smooth",
+            "de": "Sehr glatt"
+          }
+        },
+        "group": "thermal",
+        "order": 20
+      }
     }
   }
 }

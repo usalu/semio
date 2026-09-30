@@ -9,7 +9,24 @@
   ],
   "properties": {
     "index": {
-      "type": "integer"
+      "type": "integer",
+      "minimum": 0,
+      "x-semio-ui": {
+        "widget": "stepper",
+        "role": "value",
+        "label": {
+          "en": "Steel material",
+          "de": "Stahlwerkstoff"
+        },
+        "description": {
+          "en": "Zero-based position of the steel material in its list.",
+          "de": "Nullbasierte Position des Stahlwerkstoffs in der Liste."
+        },
+        "step": 1,
+        "precision": 0,
+        "group": "target",
+        "order": 10
+      }
     }
   }
 }

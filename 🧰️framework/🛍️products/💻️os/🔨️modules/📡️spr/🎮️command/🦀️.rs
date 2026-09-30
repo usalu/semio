@@ -639,7 +639,7 @@ pub enum PlanError {
     Cycle(String),
     StepRejected(String),
     Apply(MutationApplyError),
-    Invalid(String),
+    Refused(MutationMessage),
 }
 
 impl std::fmt::Display for PlanError {
@@ -649,7 +649,7 @@ impl std::fmt::Display for PlanError {
             Self::Cycle(id) => write!(formatter, "plan cycle on {id}"),
             Self::StepRejected(detail) => write!(formatter, "step rejected: {detail}"),
             Self::Apply(error) => write!(formatter, "step diff could not be applied: {error}"),
-            Self::Invalid(detail) => formatter.write_str(detail),
+            Self::Refused(refusal) => formatter.write_str(&refusal.message),
         }
     }
 }
@@ -817,14 +817,18 @@ pub fn plan_of<P: Clone, Op: Mutation<P>, K: CompositeMutationKind<P, Op>>(kind:
 /// nothing** (§C4): if planning itself fails (`PlanError`) or any step's messages reach `Error` or
 /// worse, the returned diff is empty (`Default::default()`) — but every message collected along the
 /// way is still kept, so a caller sees exactly why. A `PlanError` additionally contributes one
-/// `Fatal` `"mutation.invariant"` message. Never panics, matching this fn's frozen non-`Result`
-/// signature.
+/// `Fatal` message: a [`PlanError::Refused`] composite precondition its own domain-coded refusal
+/// (`mutation.target-missing`, `mutation.duplicate-id`, …), any other planning failure
+/// `"mutation.invariant"`. Never panics, matching this fn's frozen non-`Result` signature.
 pub fn fold_plan_diff<P: Clone, Op: Mutation<P>, K: CompositeMutationKind<P, Op>>(kind: &K, base: &P) -> MutationOutcome<<Op as Mutation<P>>::Diff> {
     let mut planner = Planner::new(base);
     let plan_result = kind.plan(base, &mut planner);
     let (steps, mut messages) = planner.into_parts();
     if let Err(error) = &plan_result {
-        messages.push(MutationMessage::fatal("mutation.invariant", error.to_string()));
+        messages.push(match error {
+            PlanError::Refused(refusal) => refusal.clone(),
+            other => MutationMessage::fatal("mutation.invariant", other.to_string()),
+        });
     }
     let rejected = plan_result.is_err() || matches!(worst_level(&messages), Some(level) if level >= crate::os_dsl::Severity::Error);
     if rejected {
@@ -890,6 +894,76 @@ pub fn plan_foreign_steps<P: Clone, Op: Mutation<P>, K: CompositeMutationKind<P,
 }
 //#endregion 🔖️Composite
 
+//#region 🔖️PayloadLaw
+/// ⚖️ The editable-payload law of an aggregate: every operation whose `input_schema()` is `Some` rebuilds itself from its own
+/// `payload_value()` — `with_payload_value(payload_value()) == op` and `from_payload_value(semantic_kind, payload_value()) ==
+/// op`, compared by wire value, so an aggregate needs no `PartialEq`. Operations that are not editable (`input_schema() ==
+/// None`, e.g. an internal `Restore`) are exempt. Every operation, and every one it rebuilds, is retired through
+/// `Mutation::retire_cold`, never dropped, so an aggregate owning fail-closed roots (an `OrderedMap`) is safe. One line per
+/// breach; `#[derive(Mutations)]` runs it over the aggregate's committed fixtures and demo cases.
+pub fn mutation_payload_round_trip_failures<P, M: Mutation<P>>(ops: Vec<M>) -> Vec<String> {
+    let mut failures = Vec::new();
+    for (index, op) in ops.into_iter().enumerate() {
+        if op.input_schema().is_some() {
+            let payload = op.payload_value();
+            let kind = op.descriptor().semantic_kind;
+            let expected = crate::ToValue::to_value(&op);
+            let breaches: Vec<String> = [("with_payload_value", op.with_payload_value(payload.clone())), ("from_payload_value", M::from_payload_value(kind, payload.clone()))]
+                .into_iter()
+                .filter_map(|(law, rebuilt)| match rebuilt {
+                    Ok(rebuilt) => {
+                        let value = crate::ToValue::to_value(&rebuilt);
+                        Mutation::<P>::retire_cold(rebuilt);
+                        (value != expected).then(|| format!("op {index} ({kind}): {law} of {payload:?} gives {value:?}, not {expected:?}"))
+                    }
+                    Err(error) => Some(format!("op {index} ({kind}): {law} refuses its own payload {payload:?}: {}", error.0)),
+                })
+                .collect();
+            if !breaches.is_empty() {
+                failures.push(breaches.join("; "));
+            }
+        }
+        Mutation::<P>::retire_cold(op);
+    }
+    failures
+}
+
+/// 🧫️ Every committed mutation fixture under `root` that decodes as `M` — a `…/🦠️mutation/🔣️.json` document, or the
+/// `mutation` member of a `{mutation, before, after}` case record — and the number of fixture files read. A fixture of a
+/// sibling aggregate under the same root does not decode and is left out. Build output and hidden directories are skipped.
+pub fn mutation_fixture_ops<M: crate::FromValue>(root: &std::path::Path) -> (Vec<M>, usize) {
+    fn walk(directory: &std::path::Path, found: &mut Vec<std::path::PathBuf>) {
+        let Ok(entries) = std::fs::read_dir(directory) else { return };
+        for entry in entries.flatten() {
+            let path = entry.path();
+            let name = entry.file_name().to_string_lossy().into_owned();
+            if path.is_dir() {
+                if !name.starts_with('.') && !["target", "dist", "node_modules"].contains(&name.as_str()) {
+                    walk(&path, found);
+                }
+            } else if name == "🔣️.json" && path.parent().and_then(std::path::Path::file_name).is_some_and(|parent| parent == "🦠️mutation") {
+                found.push(path);
+            }
+        }
+    }
+    let mut files = Vec::new();
+    walk(root, &mut files);
+    files.sort();
+    let ops = files
+        .iter()
+        .filter_map(|path| std::fs::read_to_string(path).ok())
+        .filter_map(|text| crate::os_pack::json::parse(&text).ok())
+        .map(|json| crate::os_pack::json::to_dsl_value(&json))
+        .map(|value| match value.get("mutation") {
+            Some(mutation) if value.get("before").is_some() && value.get("after").is_some() && mutation.as_object().is_some() => mutation.clone(),
+            _ => value,
+        })
+        .filter_map(|value| M::from_value(value).ok())
+        .collect();
+    (ops, files.len())
+}
+//#endregion 🔖️PayloadLaw
+
 //#region 🧪️Tests
 #[cfg(test)]
 #[path = "🧪️tests/📔️registry/🦀️.rs"]
@@ -902,4 +976,8 @@ mod mutation_laws_fixture;
 #[cfg(test)]
 #[path = "🧪️tests/🔬️unit/🦀️.rs"]
 mod tests;
+
+#[cfg(test)]
+#[path = "🧪️tests/🧪️mutation-payload/🦀️.rs"]
+mod mutation_payload_tests;
 //#endregion 🧪️Tests

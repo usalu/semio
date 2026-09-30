@@ -5,15 +5,51 @@
   "type": "object",
   "additionalProperties": false,
   "required": [
+    "mutation",
     "id",
     "newPeakFlowLS"
   ],
   "properties": {
+    "mutation": {
+      "const": "changeWaterSystemPeakFlow"
+    },
     "id": {
-      "type": "integer"
+      "type": "integer",
+      "minimum": 0,
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Water system",
+          "de": "Wasseranlage"
+        },
+        "description": {
+          "en": "The water system this mutation changes, by id.",
+          "de": "Wasseranlage, die diese Mutation ändert, per ID."
+        },
+        "ref": {
+          "kind": "waterSystem"
+        },
+        "group": "target",
+        "order": 10
+      }
     },
     "newPeakFlowLS": {
-      "type": "number"
+      "type": "number",
+      "exclusiveMinimum": 0,
+      "x-semio-ui": {
+        "widget": "stepper",
+        "role": "value",
+        "label": {
+          "en": "Peak flow",
+          "de": "Spitzenvolumenstrom"
+        },
+        "unit": "L/s",
+        "step": 0.01,
+        "precision": 2,
+        "group": "capacity",
+        "order": 20
+      }
     }
   }
 }

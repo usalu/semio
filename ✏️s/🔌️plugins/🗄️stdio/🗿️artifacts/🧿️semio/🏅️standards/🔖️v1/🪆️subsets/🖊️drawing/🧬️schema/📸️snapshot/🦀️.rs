@@ -12,7 +12,7 @@ use framework_schema::ArtifactSchema;
 /// ✏️ A single SVG-style path command — the honest, complete production set for `Path.segments`
 /// (no `*OCTET`/size-eos catch-all: every field a real drawn quantity).
 #[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
-#[value(tag = "kind", rename_all = "camelCase")]
+#[value(tag = "kind", rename_all = "camelCase", rename_all_fields = "camelCase")]
 pub enum PathSegment {
     MoveTo {
         to: SemioPoint2,

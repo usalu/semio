@@ -13,6 +13,7 @@ use semio_framework_value_derive::{FromValue, ToValue};
 /// 📍 `move-widget` payload — the widget's new absolute canvas position.
 #[derive(Clone, Debug, PartialEq, ToValue, FromValue, dsl::MutationLeaf)]
 #[mutation_leaf(contract = ::protocol)]
+#[value(rename_all = "camelCase")]
 pub struct MoveWidget {
     pub id: String,
     pub layout: WidgetLayout,

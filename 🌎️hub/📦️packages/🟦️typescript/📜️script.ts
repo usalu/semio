@@ -7,7 +7,7 @@
  * reports the whole e2e suite as skipped in well under a second. */
 import { randomBytes } from "node:crypto";
 import { join } from "node:path";
-import { BundleScript, ScriptRouter, resolveTestLevel, runBunxStatus, runBundleScriptMain, runCargo, runVitest, type TestLevel } from "../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
+import { BundleScript, ScriptRouter, resolveTestLevel, runBunxStatus, runBundleScriptMain, runCargo, runVitest, runTestBudgeted, type TestLevel } from "../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
 import { HUB_BACKEND_ENGINE, HUB_BACKENDS, claimHubBackend, ensureHubBackend, freeLoopbackPort, hubBackendEngineVersion, hubBackendIdentity, hubBackendName, hubBackendStatus, hubDevBinaryPath, hubDevPostgresBinaryPath, stopHubBackend, type HubBackendName, type HubBackendProgress } from "../../🚀️local-bootstrap/🏃️execution/🟦️.ts";
 import { acceptanceCheckResult, publishAcceptanceCheckResult, withAcceptanceRecord } from "../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🎯️acceptance/📋️orchestration/🟦️.ts";
 
@@ -31,6 +31,11 @@ function buildHubBinary(repoRoot: string): void {
 
 class TestScript extends BundleScript {
   async run(segments: string[]): Promise<void> {
+    if (segments[0] === "build-freshness") {
+      if (segments.length !== 1) throw new Error("Expected test build-freshness");
+      await runTestBudgeted(process.execPath, ["test", join(this.repoRoot, "🌎️hub/🧪️tests/🏷️hub-freshness/🟦️.ts")], { cwd: this.repoRoot, budgetMs: 30_000 });
+      return;
+    }
     const { rest } = resolveTestLevel(segments);
     buildHubBinary(this.repoRoot);
     await runVitest(this.root, rest, "../../🧪️tests/🎚️config/🟦️.ts");

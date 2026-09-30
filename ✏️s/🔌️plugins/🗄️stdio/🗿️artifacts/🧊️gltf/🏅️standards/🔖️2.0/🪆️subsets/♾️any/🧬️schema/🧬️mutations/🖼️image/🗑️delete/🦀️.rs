@@ -26,7 +26,7 @@ pub fn apply(payload: &GltfDeleteImagePayload, base: &GltfSnapshot) -> Result<Gl
 
 //#region 🧬️DirectMutation
 #[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::MutationLeaf)]
-#[mutation_leaf(contract = ::protocol)]
+#[mutation_leaf(contract = ::protocol, payload = Apply)]
 #[value(tag = "phase", content = "value", rename_all = "camelCase")]
 pub enum DeleteImageMutation {
     Apply(GltfDeleteImagePayload),
@@ -70,6 +70,6 @@ impl protocol::MutationKind<GltfSnapshot, super::GltfMutation> for DeleteImageMu
 
 //#region 🧪️Tests
 #[cfg(test)]
-#[path = "🧪️tests/🔬️direct-leaf/🦀️.rs"]
-mod direct_leaf_tests;
+#[path = "🧪️tests/🖼️removes-the-6557fc/🦀️.rs"]
+mod case_removes_the_6557fc;
 //#endregion 🧪️Tests

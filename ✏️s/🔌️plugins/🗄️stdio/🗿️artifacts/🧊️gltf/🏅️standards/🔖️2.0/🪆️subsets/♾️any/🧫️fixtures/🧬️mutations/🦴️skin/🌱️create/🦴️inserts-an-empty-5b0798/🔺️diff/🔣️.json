@@ -1,15 +1,30 @@
 {
-  "id": "s.stdio.gltf.mutation.create-skin.v1",
-  "version": 1,
-  "touchedPaths": [
-    "document/skins/0"
-  ],
-  "payload": {
-    "position": 0
+  "nodes": {
+    "modified": [
+      {
+        "index": 0,
+        "diff": {
+          "skin": 1
+        }
+      }
+    ]
   },
-  "operation": {
-    "kind": "insert",
-    "position": 0,
-    "item": {}
+  "skins": {
+    "modified": [
+      {
+        "index": 0,
+        "diff": {}
+      }
+    ],
+    "added": [
+      {
+        "index": 1,
+        "item": {
+          "joints": [
+            0
+          ]
+        }
+      }
+    ]
   }
 }

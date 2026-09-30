@@ -5,9 +5,14 @@
   "type": "object",
   "additionalProperties": false,
   "required": [
+    "mutation",
     "id"
   ],
   "properties": {
+    "mutation": {
+      "const": "setElement",
+      "description": "Aggregate discriminator spliced in by SemioModelMutation; absent when the payload stands alone."
+    },
     "id": {
       "type": "string"
     },
@@ -19,7 +24,13 @@
         {
           "type": "null"
         }
-      ]
+      ],
+      "x-semio-ui": {
+        "label": {
+          "en": "Element class",
+          "de": "Elementklasse"
+        }
+      }
     },
     "placement": {
       "anyOf": [
@@ -39,7 +50,13 @@
         {
           "type": "null"
         }
-      ]
+      ],
+      "x-semio-ui": {
+        "label": {
+          "en": "Geometry",
+          "de": "Geometrie"
+        }
+      }
     },
     "spatialId": {
       "anyOf": [
@@ -56,7 +73,22 @@
         {
           "type": "null"
         }
-      ]
+      ],
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Spatial container",
+          "de": "Räumlicher Container"
+        },
+        "description": {
+          "en": "Spatial structure node that contains the element.",
+          "de": "Knoten der räumlichen Struktur, der das Element enthält."
+        },
+        "ref": {
+          "kind": "spatialNode"
+        }
+      }
     },
     "psets": {
       "anyOf": [
@@ -69,11 +101,13 @@
         {
           "type": "null"
         }
-      ]
-    },
-    "mutation": {
-      "const": "setElement",
-      "description": "Aggregate discriminator spliced in by SemioModelMutation; absent when the payload stands alone."
+      ],
+      "x-semio-ui": {
+        "label": {
+          "en": "Property sets",
+          "de": "Eigenschaftssätze"
+        }
+      }
     }
   },
   "$defs": {
@@ -90,7 +124,13 @@
       ],
       "properties": {
         "translation": {
-          "$ref": "#/$defs/SemioPoint3"
+          "$ref": "#/$defs/SemioPoint3",
+          "x-semio-ui": {
+            "label": {
+              "en": "Translation",
+              "de": "Verschiebung"
+            }
+          }
         },
         "rotation": {
           "$ref": "#/$defs/SemioQuaternion"
@@ -140,7 +180,18 @@
           "type": "number"
         },
         "w": {
-          "type": "number"
+          "type": "number",
+          "x-semio-ui": {
+            "widget": "stepper",
+            "label": {
+              "en": "W",
+              "de": "W"
+            },
+            "description": {
+              "en": "Scalar part of the rotation quaternion.",
+              "de": "Skalarteil des Rotationsquaternions."
+            }
+          }
         }
       }
     },

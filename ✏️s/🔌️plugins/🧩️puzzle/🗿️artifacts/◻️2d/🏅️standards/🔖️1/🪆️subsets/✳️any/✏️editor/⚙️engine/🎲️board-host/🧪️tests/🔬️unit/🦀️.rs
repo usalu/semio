@@ -369,8 +369,12 @@ fn board_host_defers_descriptor_sync_while_dragging_nodes() {
     assert!(ev.contains("nodeMove"));
     h.pointer_up_screen(start.x + 40.0, start.y, false, false, false);
     assert!(!h.defers_descriptor_sync_from_js());
-    let end = h.drain_events_json();
-    assert!(end.contains("nodeDragEnd"));
+    let end: Vec<serde_json::Value> = serde_json::from_str(&h.drain_events_json()).expect("release rows");
+    let record = end.iter().find(|row| row["name"] == "gesture").expect("the release publishes one gesture record");
+    let reached = h.screen_to_world(Point::new(start.x + 40.0, start.y));
+    let (dx, dy) = (record["payload"]["dx"].as_f64().expect("dx"), record["payload"]["dy"].as_f64().expect("dy"));
+    assert_eq!(record["payload"]["kind"], "drag");
+    assert!((dx - reached.x).abs() < 1e-6 && (dy - reached.y).abs() < 1e-6, "the record carries the grab-to-release offset: ({dx}, {dy}) vs {reached:?}");
 }
 
 #[test]
@@ -1233,9 +1237,10 @@ fn board_host_minimap_preselect_matches_selected_chrome() {
     let w_end = Point::new(265.0, 48.0);
     let s_down = h.world_to_screen(w_down);
     let s_end = h.world_to_screen(w_end);
+    h.set_transform_flags(true, false);
     h.pointer_down_screen(s_down.x, s_down.y, 0, false, false);
     h.pointer_move_screen(s_end.x, s_end.y, false, false, false);
-    assert!(h.is_dragging_area_select());
+    assert!(h.is_dragging_area_select(), "with the rotate ring off, a press beside the selection opens the marquee");
     assert!(h.preselect.contains("b"));
     h.set_selection_screen_preview(None);
     let preselect_hint = h.encoded_scene_hint();

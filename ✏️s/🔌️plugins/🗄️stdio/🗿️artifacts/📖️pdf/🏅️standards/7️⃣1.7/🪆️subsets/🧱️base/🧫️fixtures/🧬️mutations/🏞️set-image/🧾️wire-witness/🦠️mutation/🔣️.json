@@ -1,0 +1,30 @@
+{
+  "mutation": "setImage",
+  "image": {
+    "id": "id",
+    "width": 0,
+    "height": 0,
+    "colorSpace": {
+      "kind": "deviceRgb"
+    },
+    "bitsPerComponent": 0,
+    "imageMask": false,
+    "decode": [],
+    "interpolate": false,
+    "codec": {
+      "kind": "raw"
+    },
+    "data": [],
+    "softMask": "softMask",
+    "softMaskInData": 0,
+    "mask": {
+      "kind": "stencil",
+      "image": "image"
+    },
+    "matte": [],
+    "intent": "intent",
+    "optionalContent": "optionalContent",
+    "structParent": 0,
+    "extra": []
+  }
+}

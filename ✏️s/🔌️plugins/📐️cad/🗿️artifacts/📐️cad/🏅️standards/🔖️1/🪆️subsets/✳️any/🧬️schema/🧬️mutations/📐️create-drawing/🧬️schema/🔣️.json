@@ -5,15 +5,47 @@
   "type": "object",
   "additionalProperties": false,
   "required": [
+    "mutation",
     "childId",
     "target"
   ],
   "properties": {
+    "mutation": {
+      "const": "createDrawing"
+    },
     "childId": {
-      "type": "string"
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "text",
+        "role": "value",
+        "label": {
+          "en": "Child ID",
+          "de": "Kind-ID"
+        },
+        "description": {
+          "en": "Id of the child model document this slot holds.",
+          "de": "ID des Kind-Modelldokuments in diesem Platz."
+        },
+        "group": "identity",
+        "order": 10
+      }
     },
     "target": {
-      "type": "string"
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "text",
+        "role": "value",
+        "label": {
+          "en": "Artifact",
+          "de": "Artefakt"
+        },
+        "description": {
+          "en": "URI of the drawing artifact the new child refers to.",
+          "de": "URI des Zeichnungsartefakts, auf das das neue Kind verweist."
+        },
+        "group": "source",
+        "order": 20
+      }
     }
   }
 }

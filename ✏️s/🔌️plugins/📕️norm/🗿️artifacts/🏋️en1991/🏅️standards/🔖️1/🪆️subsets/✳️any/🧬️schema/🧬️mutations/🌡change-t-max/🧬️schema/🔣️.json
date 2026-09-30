@@ -1,13 +1,28 @@
 {
-  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/norm/en1991/mutation/change-t-max/schema.json",
+  "title": "ChangeTMax",
   "type": "object",
   "additionalProperties": false,
   "required": [
-    "new_t_max"
+    "newTMax"
   ],
   "properties": {
-    "new_t_max": {
-      "type": "number"
+    "newTMax": {
+      "type": "number",
+      "x-semio-ui": {
+        "widget": "stepper",
+        "role": "value",
+        "label": {
+          "en": "Maximum shade air temperature T_max",
+          "de": "Maximale Außenlufttemperatur im Schatten T_max"
+        },
+        "unit": "°C",
+        "step": 1,
+        "precision": 0,
+        "group": "thermal",
+        "order": 10
+      }
     }
   }
 }

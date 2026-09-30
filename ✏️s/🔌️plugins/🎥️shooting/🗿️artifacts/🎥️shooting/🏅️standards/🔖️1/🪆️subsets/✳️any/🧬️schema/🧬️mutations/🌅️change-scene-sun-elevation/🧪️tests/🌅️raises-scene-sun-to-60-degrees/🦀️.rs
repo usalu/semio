@@ -75,10 +75,10 @@ async fn declared_outcome_holds_and_leaving_the_band_is_fatal() {
     assert_eq!(outcome.get("status").and_then(serde_json::Value::as_str), Some("applied"), "change-scene-sun-elevation/raises-scene-sun-to-60-degrees: this fixture declares `applied`");
     assert!(mutation().diff(&before()).messages().is_empty(), "change-scene-sun-elevation/raises-scene-sun-to-60-degrees: a real raise must raise no diagnostic");
 
-    let at_the_zenith: ShootingMutation = serde_json::from_str(r#"{"mutation":"changeSceneSunElevation","new_elevation":90.0}"#).expect("probe mutation decodes");
+    let at_the_zenith: ShootingMutation = serde_json::from_str(r#"{"mutation":"changeSceneSunElevation","newElevation":90.0}"#).expect("probe mutation decodes");
     assert!(at_the_zenith.diff(&before()).messages().is_empty(), "change-scene-sun-elevation/raises-scene-sun-to-60-degrees: the band is CLOSED, so exactly 90 is legal");
 
-    let past_the_zenith: ShootingMutation = serde_json::from_str(r#"{"mutation":"changeSceneSunElevation","new_elevation":120.0}"#).expect("probe mutation decodes");
+    let past_the_zenith: ShootingMutation = serde_json::from_str(r#"{"mutation":"changeSceneSunElevation","newElevation":120.0}"#).expect("probe mutation decodes");
     let rejected = past_the_zenith.diff(&before());
     assert_eq!(rejected.worst_level(), Some(protocol::Severity::Fatal), "change-scene-sun-elevation/raises-scene-sun-to-60-degrees: leaving the ±90 band must be Fatal");
     assert_eq!(rejected.messages()[0].code.0, "mutation.invariant", "change-scene-sun-elevation/raises-scene-sun-to-60-degrees: the range guard's frozen code");

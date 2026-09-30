@@ -5,24 +5,101 @@
   "type": "object",
   "additionalProperties": false,
   "required": [
-    "block_id",
+    "mutation",
+    "blockId",
     "index",
-    "step_id",
-    "to_step_id"
+    "stepId",
+    "toStepId"
   ],
   "properties": {
-    "step_id": {
-      "type": "string"
+    "mutation": {
+      "const": "moveBlockToStep"
     },
-    "block_id": {
-      "type": "string"
+    "stepId": {
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Step",
+          "de": "Schritt"
+        },
+        "description": {
+          "en": "The form step this mutation addresses.",
+          "de": "Der Formularschritt, den diese Mutation adressiert."
+        },
+        "ref": {
+          "kind": "step",
+          "domain": "fields",
+          "granularity": "section"
+        },
+        "group": "target",
+        "order": 10
+      }
     },
-    "to_step_id": {
-      "type": "string"
+    "blockId": {
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Question",
+          "de": "Frage"
+        },
+        "description": {
+          "en": "The question this mutation addresses.",
+          "de": "Die Frage, die diese Mutation adressiert."
+        },
+        "ref": {
+          "kind": "question",
+          "domain": "fields",
+          "granularity": "field"
+        },
+        "group": "target",
+        "order": 20
+      }
+    },
+    "toStepId": {
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Target step",
+          "de": "Zielschritt"
+        },
+        "description": {
+          "en": "The step the question moves to.",
+          "de": "Der Schritt, in den die Frage verschoben wird."
+        },
+        "ref": {
+          "kind": "step",
+          "domain": "fields",
+          "granularity": "section"
+        },
+        "group": "placement",
+        "order": 30
+      }
     },
     "index": {
       "type": "integer",
-      "minimum": 0
+      "minimum": 0,
+      "x-semio-ui": {
+        "widget": "stepper",
+        "role": "value",
+        "label": {
+          "en": "Index",
+          "de": "Index"
+        },
+        "description": {
+          "en": "Position in the target step.",
+          "de": "Position im Zielschritt."
+        },
+        "step": 1,
+        "precision": 0,
+        "group": "placement",
+        "order": 40
+      }
     }
   }
 }

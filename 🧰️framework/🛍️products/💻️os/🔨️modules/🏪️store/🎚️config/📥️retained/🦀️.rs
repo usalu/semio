@@ -226,7 +226,7 @@ where
                     Ok(fold) => fold,
                     Err(_) => return self.reject(ConfigStoreHydrationDiagnostic::Replay),
                 };
-                if !fold.changes.is_empty() || !fold.checkpoints.is_empty() || !fold.alternatives.is_empty() || fold.alternative.is_some() {
+                if !fold.changes.is_empty() || !fold.checkpoints.is_empty() || !fold.alternatives.is_empty() || fold.alternative.is_some() || !fold.supersessions.is_empty() {
                     *self.active = Some(crate::os_store::retirement::owned_retirement(fold));
                     return self.reject(ConfigStoreHydrationDiagnostic::Identity);
                 }
@@ -374,11 +374,12 @@ where
                 ConfigStoreHydrationStep::Pending(self.progress())
             }
             Phase::FinishEdit => {
-                let edit = self.pending_edit.take().expect("completed config edit remains retained");
+                let mut edit = self.pending_edit.take().expect("completed config edit remains retained");
                 if edit.id.len() > self.maximum_value_bytes || maximum_bytes < edit.id.len() {
                     self.retire_edit(edit);
                     return self.reject(ConfigStoreHydrationDiagnostic::Capacity);
                 }
+                super::stamp_edit_semantics::<P, M>(&mut edit, &self.envelope.as_ref().expect("config envelope remains retained").schema);
                 let edit_id = edit.id.clone();
                 let edit_position = self.envelope.as_ref().expect("config envelope remains retained").vcs.edits.len();
                 if let Err(edit) = self.envelope.as_mut().expect("config envelope remains retained").vcs.edits.try_push(edit) {

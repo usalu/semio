@@ -4,7 +4,13 @@
   "title": "ChangeTitle",
   "type": "object",
   "additionalProperties": false,
+  "required": [
+    "mutation"
+  ],
   "properties": {
+    "mutation": {
+      "const": "changeTitle"
+    },
     "newTitle": {
       "type": "string"
     }

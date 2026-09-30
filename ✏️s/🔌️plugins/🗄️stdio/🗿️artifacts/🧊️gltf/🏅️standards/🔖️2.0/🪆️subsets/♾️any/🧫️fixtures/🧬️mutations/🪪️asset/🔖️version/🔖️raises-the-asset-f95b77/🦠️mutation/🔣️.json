@@ -1,0 +1,9 @@
+{
+  "mutation": "changeAssetVersion",
+  "payload": {
+    "phase": "apply",
+    "value": {
+      "version": "2.1"
+    }
+  }
+}

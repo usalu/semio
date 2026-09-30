@@ -12,32 +12,8 @@ import { fileURLToPath, pathToFileURL } from "node:url";
 import picomatch from "picomatch";
 import { URL as OracleURL } from "whatwg-url";
 import { describe, expect, it } from "vitest";
-import {
-  COMPONENT_SOURCE_SCAN_MAXIMUM_ENTRIES,
-  GENERATED_COMPONENT_OWNER_FILES,
-  UNWATCHED_COMPONENT_SOURCE_DIRECTORIES,
-  healthyPreparedComponents,
-  buildComponentSourceStatIndex,
-  componentSourceContentHash,
-  newestComponentSourceMtime,
-  preparedComponentReportLines,
-  preparedComponentVerdict,
-  pluginModulesRoot,
-  pluginModulesRootIn,
-  readStagedSourceContentHash,
-  readStagedSourceStatIndex,
-  resolveBootSourceContentHashes,
-  SOURCE_FRESHNESS_COMPONENT_CONCURRENCY,
-  SOURCE_FRESHNESS_FILE_CONCURRENCY,
-  mapBoundedV1,
-  stagedModuleMtime,
-  writeStagedSourceContentHash,
-  writeStagedSourceFreshness,
-  stagedModuleReportLines,
-  stagedModuleVerdict,
-  type StagedModuleFacts,
-  type StagedModuleVerdict,
-} from "../../♻️activation/🟦️.ts";
+import { COMPONENT_SOURCE_SCAN_MAXIMUM_ENTRIES, GENERATED_COMPONENT_OWNER_FILES, UNWATCHED_COMPONENT_SOURCE_DIRECTORIES, buildComponentSourceStatIndex, componentSourceContentHash, newestComponentSourceMtime, readStagedSourceContentHash, readStagedSourceStatIndex, resolveBootSourceContentHashes, SOURCE_FRESHNESS_COMPONENT_CONCURRENCY, SOURCE_FRESHNESS_FILE_CONCURRENCY, mapBoundedV1, stagedModuleMtime, writeStagedSourceContentHash, writeStagedSourceFreshness } from "../../../🔌️plugin/🏗️build/🔍️freshness/🟦️.ts";
+import { healthyPreparedComponents, preparedComponentReportLines, preparedComponentVerdict, pluginModulesRoot, pluginModulesRootIn, stagedModuleReportLines, stagedModuleVerdict, type StagedModuleFacts, type StagedModuleVerdict } from "../../♻️activation/🟦️.ts";
 
 const suiteDir = dirname(fileURLToPath(import.meta.url));
 const repoRoot = resolve(suiteDir, "../../../../../../..");

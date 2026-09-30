@@ -224,6 +224,14 @@ pub fn apply_svg_tiny_mutation(snapshot: &mut SvgSnapshot, mutation: &SvgTinyMut
 pub fn inverse_svg_tiny_mutation(mutation: &SvgTinyMutation, base: &SvgSnapshot) -> Vec<SvgTinyMutation> {
     Mutation::inverse(mutation, base)
 }
+
+/// 📥️ Decodes one leaf wire payload (a `🥒️.feature` row's `params`: the leaf's `payload_value()`, no aggregate tag) into
+/// the operation of semantic kind `kind` through the derive-generated `Mutation::from_payload_value`, so a caller that
+/// cannot name the trait reads the committed wire instead of re-declaring it field by field.
+pub fn decode_svg_tiny_mutation_payload_json(kind: &str, payload: &str) -> Result<SvgTinyMutation, String> {
+    let value = pack::parse_json(payload).map_err(|error| error.to_string())?;
+    <SvgTinyMutation as Mutation<SvgSnapshot>>::from_payload_value(kind, pack::json_to_dsl_value(&value)).map_err(|error| error.to_string())
+}
 //#endregion 🔖️Apply
 
 //#region 🔖️MutationTrait

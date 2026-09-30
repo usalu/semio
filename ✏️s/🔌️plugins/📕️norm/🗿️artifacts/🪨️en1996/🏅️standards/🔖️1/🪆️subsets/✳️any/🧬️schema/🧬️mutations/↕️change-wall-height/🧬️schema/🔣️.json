@@ -10,10 +10,41 @@
   ],
   "properties": {
     "index": {
-      "type": "integer"
+      "type": "integer",
+      "minimum": 0,
+      "x-semio-ui": {
+        "widget": "stepper",
+        "role": "value",
+        "label": {
+          "en": "Wall",
+          "de": "Wand"
+        },
+        "description": {
+          "en": "Zero-based position of the wall in its list.",
+          "de": "Nullbasierte Position der Wand in der Liste."
+        },
+        "step": 1,
+        "precision": 0,
+        "group": "target",
+        "order": 10
+      }
     },
     "newHeightM": {
-      "type": "number"
+      "type": "number",
+      "minimum": 0,
+      "x-semio-ui": {
+        "widget": "stepper",
+        "role": "value",
+        "label": {
+          "en": "Clear wall height h",
+          "de": "Lichte Wandhöhe h"
+        },
+        "unit": "m",
+        "step": 0.05,
+        "precision": 2,
+        "group": "geometry",
+        "order": 20
+      }
     }
   }
 }

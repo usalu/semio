@@ -2,5 +2,6 @@ import type { DslValue } from "../../../../../../../../../../../../../🧰️fra
 
 /** 🧬️ CreateNode payload owned by the create-node mutation. */
 export interface CreateNode {
+  mutation: "createNode";
   node: DslValue;
 }

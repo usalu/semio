@@ -4,8 +4,14 @@
   "title": "SetOpenAction",
   "type": "object",
   "additionalProperties": false,
-  "required": [],
+  "required": [
+    "mutation"
+  ],
   "properties": {
+    "mutation": {
+      "const": "setOpenAction",
+      "description": "Aggregate discriminator spliced in by PdfMutation; absent when the payload stands alone."
+    },
     "action": {
       "anyOf": [
         {
@@ -15,10 +21,6 @@
           "type": "null"
         }
       ]
-    },
-    "mutation": {
-      "const": "setOpenAction",
-      "description": "Aggregate discriminator spliced in by PdfMutation; absent when the payload stands alone."
     }
   }
 }

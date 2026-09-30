@@ -11,10 +11,22 @@ import {
   FRAMEWORK_PANEL_TAB_CATALOGUE_ID,
   type IntroductionDefinition,
   type ShellBrand,
+  type ShellFooterItem,
   type ShellLocale,
   type TutorialDefinition,
 } from "@semio-tech/framework";
 import type { IconName } from "@semio-tech/ui-react";
+
+/** 🏛️ Credits shared by the demonstrator's standalone shells. */
+export const DEMONSTRATOR_FOOTER_ITEMS: readonly ShellFooterItem[] = [
+  { id: "aProjectOfLuhUdk", placement: "leading", caption: { en: "A project of", de: "Ein Projekt von" }, separator: { en: "and", de: "und" }, logos: [
+    { href: "https://www.iek.uni-hannover.de/ngs/team", src: `/${DEMONSTRATOR_ASSETS_DIR}/🪧️logos/🎓️luh/☀️logo.png`, darkSrc: `/${DEMONSTRATOR_ASSETS_DIR}/🪧️logos/🎓️luh/🌙️logo-dark.png`, alt: "Leibniz Universität Hannover" },
+    { href: "https://www.udk-berlin.de/studium/architektur/fachgebiete/konstruktives-entwerfen-und-tragwerksplanung/team-2025-2026/", src: `/${DEMONSTRATOR_ASSETS_DIR}/🪧️logos/🎨️udk/☀️logo.png`, darkSrc: `/${DEMONSTRATOR_ASSETS_DIR}/🪧️logos/🎨️udk/🌙️logo-dark.png`, alt: "Universität der Künste Berlin" },
+  ] },
+  { id: "fundedByZukunftBau", placement: "trailing", caption: { en: "Funded by", de: "Gefördert durch" }, logos: [
+    { href: "https://www.zukunftbau.de/projekte/forschungsfoerderung/1008187-2506", src: `/${DEMONSTRATOR_ASSETS_DIR}/🪧️logos/🔮️zukunft-bau/☀️logo.png`, darkSrc: `/${DEMONSTRATOR_ASSETS_DIR}/🪧️logos/🔮️zukunft-bau/🌙️logo-dark.png`, alt: "Zukunft Bau" },
+  ] },
+];
 
 //#region 🏷️DemonstratorShared
 /** 🇩🇪️ The whole demonstrator is German-locked (every brand's `locks.locale` below) — the
@@ -348,6 +360,7 @@ export const ENTWERFEN_MIT_BESTAND_TUTORIAL: TutorialDefinition = {
 //#region 🏷️EntwerfenMitBestandAggregatorBrand
 /** 🏷️ Aggregator (puzzle3d): reuse terminology, app-specific introduction, recorded tutorial, Abbau Aufbau default example. */
 export const ENTWERFEN_MIT_BESTAND_AGGREGATOR_BRAND: ShellBrand = {
+  footerItems: DEMONSTRATOR_FOOTER_ITEMS,
   id: "entwerfen-mit-bestand-aggregator",
   windowTitle: "Entwerfen mit Bestand · Aggregator",
   logoSvg: ENTWERFEN_MIT_BESTAND_LOGO_SVG,
@@ -506,6 +519,7 @@ const CAD_SHAPE_WINDOW_ID = "cad-play-shape";
 //#region 🏷️EntwerfenMitBestandGeneratorBrand
 /** 🏷️ Generator (generation3d): parametric flow editor for reuse-oriented component generation. */
 export const ENTWERFEN_MIT_BESTAND_GENERATOR_BRAND: ShellBrand = {
+  footerItems: DEMONSTRATOR_FOOTER_ITEMS,
   id: "entwerfen-mit-bestand-generator",
   windowTitle: "Entwerfen mit Bestand · Generator",
   logoSvg: ENTWERFEN_MIT_BESTAND_LOGO_SVG,
@@ -555,6 +569,7 @@ export const ENTWERFEN_MIT_BESTAND_GENERATOR_BRAND: ShellBrand = {
 //#region 🏷️EntwerfenMitBestandKoordinatorBrand
 /** 🏷️ Koordinator (cad): multi-model coordination for shape, building, energy, and structure views. */
 export const ENTWERFEN_MIT_BESTAND_KOORDINATOR_BRAND: ShellBrand = {
+  footerItems: DEMONSTRATOR_FOOTER_ITEMS,
   id: "entwerfen-mit-bestand-koordinator",
   windowTitle: "Entwerfen mit Bestand · Koordinator",
   logoSvg: ENTWERFEN_MIT_BESTAND_LOGO_SVG,
@@ -608,6 +623,7 @@ const GIS2D_MAIN_WINDOW_ID = "gis2d-main";
 //#region 🏷️EntwerfenMitBestandAussuchenBrand
 /** 🏷️ Aussuchen (sourcing): curating reclaimed building components from available stock. */
 export const ENTWERFEN_MIT_BESTAND_AUSSUCHEN_BRAND: ShellBrand = {
+  footerItems: DEMONSTRATOR_FOOTER_ITEMS,
   id: "entwerfen-mit-bestand-aussuchen",
   windowTitle: "Entwerfen mit Bestand · Aussuchen",
   logoSvg: ENTWERFEN_MIT_BESTAND_LOGO_SVG,
@@ -651,6 +667,7 @@ export const ENTWERFEN_MIT_BESTAND_AUSSUCHEN_BRAND: ShellBrand = {
 //#region 🏷️EntwerfenMitBestandBearbeitenBrand
 /** 🏷️ Bearbeiten (process3d): machining steps that adapt a reclaimed component to its new use. */
 export const ENTWERFEN_MIT_BESTAND_BEARBEITEN_BRAND: ShellBrand = {
+  footerItems: DEMONSTRATOR_FOOTER_ITEMS,
   id: "entwerfen-mit-bestand-bearbeiten",
   windowTitle: "Entwerfen mit Bestand · Bearbeiten",
   logoSvg: ENTWERFEN_MIT_BESTAND_LOGO_SVG,
@@ -700,6 +717,7 @@ export const ENTWERFEN_MIT_BESTAND_BEARBEITEN_BRAND: ShellBrand = {
 //#region 🏷️EntwerfenMitBestandVerfolgenBrand
 /** 🏷️ Verfolgen (gis2d): tracking where reclaimed components come from and where they go. */
 export const ENTWERFEN_MIT_BESTAND_VERFOLGEN_BRAND: ShellBrand = {
+  footerItems: DEMONSTRATOR_FOOTER_ITEMS,
   id: "entwerfen-mit-bestand-verfolgen",
   windowTitle: "Entwerfen mit Bestand · Verfolgen",
   logoSvg: ENTWERFEN_MIT_BESTAND_LOGO_SVG,
@@ -766,6 +784,7 @@ const FEM3D_MODEL_WINDOW_ID = "fem3d-model";
 //#region 🏷️EntwerfenMitBestandEnergieBrand
 /** 🏷️ Energie (energy): thermal simulation of designs made from reused building components. */
 export const ENTWERFEN_MIT_BESTAND_ENERGIE_BRAND: ShellBrand = {
+  footerItems: DEMONSTRATOR_FOOTER_ITEMS,
   id: "entwerfen-mit-bestand-energie",
   windowTitle: "Entwerfen mit Bestand · Energie",
   logoSvg: ENTWERFEN_MIT_BESTAND_LOGO_SVG,
@@ -815,6 +834,7 @@ export const ENTWERFEN_MIT_BESTAND_ENERGIE_BRAND: ShellBrand = {
 //#region 🏷️EntwerfenMitBestandStatikBrand
 /** 🏷️ Statik (fem3d): structural analysis of the Tragwerk assembled from reused building components. */
 export const ENTWERFEN_MIT_BESTAND_STATIK_BRAND: ShellBrand = {
+  footerItems: DEMONSTRATOR_FOOTER_ITEMS,
   id: "entwerfen-mit-bestand-statik",
   windowTitle: "Entwerfen mit Bestand · Statik",
   logoSvg: ENTWERFEN_MIT_BESTAND_LOGO_SVG,
@@ -975,3 +995,6 @@ if (import.meta.vitest) {
   const { registerTests1 } = await import("./🧪️tests/🧪️demonstratorpanebootvariants/🟦️.ts");
   await registerTests1(import.meta.vitest, { demonstratorPaneBootVariants });
 }
+
+/** 🏷️ Complete owner catalog of the eight standalone shell identities. */
+export const DEMONSTRATOR_SHELL_BRANDS: readonly ShellBrand[] = DEMONSTRATOR_PANES.map((pane) => pane.brand);

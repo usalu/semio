@@ -5,11 +5,25 @@
   "type": "object",
   "additionalProperties": false,
   "required": [
+    "mutation",
     "newLabel"
   ],
   "properties": {
+    "mutation": {
+      "const": "changeObjectKindLabel"
+    },
     "newLabel": {
-      "type": "string"
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "text",
+        "role": "value",
+        "label": {
+          "en": "Label",
+          "de": "Bezeichnung"
+        },
+        "group": "value",
+        "order": 10
+      }
     }
   }
 }

@@ -5,16 +5,52 @@
   "type": "object",
   "additionalProperties": false,
   "required": [
+    "mutation",
     "id",
     "newName"
   ],
   "properties": {
+    "mutation": {
+      "const": "renameMeetingRecord"
+    },
     "id": {
-      "type": "integer",
-      "minimum": 0
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Meeting Record",
+          "de": "Besprechungsprotokoll"
+        },
+        "description": {
+          "en": "The meeting record to rename.",
+          "de": "Umzubenennender Eintrag vom Typ „Besprechungsprotokoll“."
+        },
+        "ref": {
+          "kind": "meetingRecord",
+          "domain": "program",
+          "granularity": "entity"
+        },
+        "group": "target",
+        "order": 10
+      }
     },
     "newName": {
-      "type": "string"
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "text",
+        "role": "value",
+        "label": {
+          "en": "New Name",
+          "de": "Neuer Name"
+        },
+        "description": {
+          "en": "New name of the meeting record.",
+          "de": "Neuer Name des Eintrags vom Typ „Besprechungsprotokoll“."
+        },
+        "group": "identity",
+        "order": 20
+      }
     }
   }
 }

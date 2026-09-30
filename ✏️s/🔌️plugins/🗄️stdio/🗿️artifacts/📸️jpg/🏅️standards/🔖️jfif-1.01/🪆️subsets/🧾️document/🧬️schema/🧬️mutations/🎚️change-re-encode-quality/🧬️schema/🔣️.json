@@ -15,7 +15,18 @@
         {
           "type": "null"
         }
-      ]
+      ],
+      "x-semio-ui": {
+        "widget": "stepper",
+        "label": {
+          "en": "Re-encode quality",
+          "de": "Qualität der Neukodierung"
+        },
+        "description": {
+          "en": "JPEG quality used when pixels are re-encoded.",
+          "de": "JPEG-Qualität beim Neukodieren der Pixel."
+        }
+      }
     }
   }
 }

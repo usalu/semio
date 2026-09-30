@@ -1,0 +1,15 @@
+{
+  "mutation": "rotateObjects",
+  "pane": "shape",
+  "placements": [
+    {
+      "objectId": "object-a",
+      "newOrientation": [
+        0.0,
+        0.0,
+        0.6,
+        0.8
+      ]
+    }
+  ]
+}

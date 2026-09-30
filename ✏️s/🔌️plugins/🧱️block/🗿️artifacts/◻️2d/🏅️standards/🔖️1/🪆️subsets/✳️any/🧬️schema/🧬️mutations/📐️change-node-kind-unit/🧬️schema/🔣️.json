@@ -4,9 +4,32 @@
   "title": "ChangeNodeKindUnit",
   "type": "object",
   "additionalProperties": false,
+  "required": [
+    "mutation"
+  ],
   "properties": {
+    "mutation": {
+      "const": "changeNodeKindUnit"
+    },
     "newUnit": {
-      "type": "string"
+      "type": [
+        "string",
+        "null"
+      ],
+      "x-semio-ui": {
+        "widget": "text",
+        "role": "value",
+        "label": {
+          "en": "Unit",
+          "de": "Einheit"
+        },
+        "description": {
+          "en": "Unit of measure the kind is modelled in; empty clears it.",
+          "de": "Maßeinheit, in der die Art modelliert ist; leer entfernt sie."
+        },
+        "group": "value",
+        "order": 10
+      }
     }
   }
 }

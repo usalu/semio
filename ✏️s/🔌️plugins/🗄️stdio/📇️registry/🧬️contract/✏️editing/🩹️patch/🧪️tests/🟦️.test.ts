@@ -3,6 +3,7 @@ import Ajv from "ajv";
 import { applyPatch, type Operation } from "fast-json-patch";
 import { type SnapshotEditEvent, type SnapshotValue } from "../../🟦️";
 import { prepareSnapshotPatch, applySnapshotPatch, inverseSnapshotPatch } from "../🟦️";
+import { semioSchemaAjvV1 } from "../../../../../../../../🧰️framework/🛍️products/💻️os/🧪️tests/🧬️schema-oracle/🟦️.ts";
 
 const fixture = await Bun.file(new URL("../🧫️fixtures/🔣️.json", import.meta.url)).json() as {
   base: SnapshotValue;
@@ -28,8 +29,9 @@ const fixture = await Bun.file(new URL("../🧫️fixtures/🔣️.json", import
     maximumPatchBytes: number;
   }>;
 };
-const schema = await Bun.file(new URL("../🧬️schema/🔣️.json", import.meta.url)).json();
-const validate = new Ajv({ strict: true }).compile(schema);
+const registry = await Bun.file(new URL("../../../../🧬️schema/🔣️.json", import.meta.url)).json();
+const patchRef = `${registry.$id}#/$defs/SnapshotPatch`;
+const validate = semioSchemaAjvV1({ strict: true }).addSchema(registry).getSchema(patchRef)!;
 
 describe("compact snapshot patches", () => {
   test("intrinsic object ordering preserves numeric keys and exact inverse values", () => {
@@ -59,13 +61,13 @@ describe("compact snapshot patches", () => {
     const leaf = await Bun.file(new URL("🩹️patch-snapshot/🧬️schema/🔣️.json", root)).json();
     const descriptor = await Bun.file(new URL("🩹️patch-snapshot/🔣️.json", root)).json();
     const protocol = await Bun.file(new URL("💾️binary/📡️.protocol.semio", root)).text();
-    const branch = aggregate.oneOf.find((entry: unknown) => JSON.stringify(entry).includes(JSON.stringify(row.discriminator)));
+    const branch = aggregate.oneOf.find((entry: { $ref?: string }) => entry.$ref === leaf.$id || JSON.stringify(entry).includes(JSON.stringify(row.discriminator)));
     expect(branch).toBeDefined();
-    expect(leaf.properties.patch.$ref).toBe(schema.$id);
+    expect(leaf.properties.patch.$ref).toBe(patchRef);
     expect(descriptor.textOpcode).toBe(row.textOpcode);
     expect(descriptor.binaryTag).toBe(row.binaryTag);
     expect(protocol).toContain(`record ${row.textOpcode} tag=${row.binaryTag}`);
-    const check = new Ajv({ strict: true }).addSchema(schema).addSchema(leaf).compile({ $id: aggregate.$id, ...branch });
+    const check = semioSchemaAjvV1({ strict: true }).addSchema(registry).addSchema(leaf).compile({ $id: aggregate.$id, ...branch });
     const mutation = row.tagging === "internal" ? { mutation: row.discriminator, patch } : { mutation: row.discriminator, payload: { patch } };
     expect(check(mutation), JSON.stringify(check.errors)).toBe(true);
   });

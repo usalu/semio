@@ -13,16 +13,81 @@
   ],
   "properties": {
     "mutation": {
-      "const": "moveNode"
+      "const": "moveNode",
+      "x-semio-ui": {
+        "widget": "hidden",
+        "role": "discriminator",
+        "label": {
+          "en": "Mutation",
+          "de": "Mutation"
+        }
+      }
     },
     "id": {
-      "type": "string"
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Node",
+          "de": "Knoten"
+        },
+        "description": {
+          "en": "The node this mutation addresses.",
+          "de": "Der Knoten, den diese Mutation adressiert."
+        },
+        "ref": {
+          "kind": "node",
+          "domain": "vortex",
+          "granularity": "node"
+        },
+        "group": "target",
+        "order": 10
+      }
     },
     "newX": {
-      "type": "number"
+      "type": "number",
+      "x-semio-ui": {
+        "widget": "stepper",
+        "role": "value",
+        "label": {
+          "en": "X",
+          "de": "X"
+        },
+        "description": {
+          "en": "Absolute final x position.",
+          "de": "Absolute x-Endposition."
+        },
+        "step": 1,
+        "precision": 2,
+        "snapSource": {
+          "config": "gridFactor"
+        },
+        "group": "position",
+        "order": 20
+      }
     },
     "newY": {
-      "type": "number"
+      "type": "number",
+      "x-semio-ui": {
+        "widget": "stepper",
+        "role": "value",
+        "label": {
+          "en": "Y",
+          "de": "Y"
+        },
+        "description": {
+          "en": "Absolute final y position.",
+          "de": "Absolute y-Endposition."
+        },
+        "step": 1,
+        "precision": 2,
+        "snapSource": {
+          "config": "gridFactor"
+        },
+        "group": "position",
+        "order": 30
+      }
     }
   }
 }

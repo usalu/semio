@@ -1,3 +1,5 @@
+import { DEFAULT_HOST_VARIANT, PLAYGROUND_BUILD_TARGETS } from "../../../🔌️plugin/📇️registry/🤖️generated/🎮️playgrounds/🟦️.ts";
+import { loadDevContribution, resolveDevContributionFile } from "../../🧩️contribution/📥️loading/🟦️.ts";
 /** 🧩️ Semantic distribution plan owner. */
 
 import { constants as fsConstants, createReadStream, createWriteStream, copyFileSync, cpSync, existsSync, lstatSync, mkdirSync, mkdtempSync, readFileSync, readdirSync, realpathSync, renameSync, rmSync, rmdirSync, statSync, unlinkSync, watch, writeFileSync } from "node:fs";
@@ -114,12 +116,16 @@ async function renderDistributionBundle(workspace: string, artifactRoot: string)
     },
   });
   const original = { SEMIO_PLUGIN: process.env.SEMIO_PLUGIN, SEMIO_RENDERER: process.env.SEMIO_RENDERER, SEMIO_BRAND: process.env.SEMIO_BRAND };
-  process.env.SEMIO_PLUGIN = "s";
+  process.env.SEMIO_PLUGIN = DEFAULT_HOST_VARIANT;
   process.env.SEMIO_RENDERER = "react";
   process.env.SEMIO_BRAND = "";
   let result: Awaited<ReturnType<typeof import("vite")["build"]>>;
   try {
-    const { build } = await import("vite"), { default: createConfig } = await import("../../🏗️builder/🌐️vite/🟦️.ts");
+    const target = PLAYGROUND_BUILD_TARGETS.find((row) => row.variant === DEFAULT_HOST_VARIANT);
+    if (!target) throw new Error("Missing default host build contribution");
+    const contribution = loadDevContribution(workspace, target);
+    const configPath = contribution ? resolveDevContributionFile(workspace, contribution.viteConfig, contribution.ownerRoot) : fileURLToPath(new URL("../../🏗️builder/🌐️vite/🟦️.ts", import.meta.url));
+    const { build } = await import("vite"), { default: createConfig } = await import(pathToFileURL(configPath).href);
     const config = buildToolConfig(await createConfig({ command: "build", mode: "production", isSsrBuild: false, isPreview: false }));
     distributionProgress("actual production configuration loaded");
     const workerPlugins = config.worker?.plugins;

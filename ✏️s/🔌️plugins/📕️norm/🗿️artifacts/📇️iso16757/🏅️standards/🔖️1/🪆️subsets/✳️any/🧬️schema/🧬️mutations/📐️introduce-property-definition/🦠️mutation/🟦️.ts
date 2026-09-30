@@ -2,6 +2,6 @@
 import type { PropertyDefinition } from "../../🟦️.ts";
 
 export interface IntroducePropertyDefinition {
-  property_definition: PropertyDefinition;
+  propertyDefinition: PropertyDefinition;
   index?: number;
 }

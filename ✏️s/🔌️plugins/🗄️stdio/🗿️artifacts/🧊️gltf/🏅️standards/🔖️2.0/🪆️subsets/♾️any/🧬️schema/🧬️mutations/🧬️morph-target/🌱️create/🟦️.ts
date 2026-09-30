@@ -1,8 +1,15 @@
-/** 🦠️ create-morph-target: cohesive atomic mesh mutation. */
-import type { GltfJson, GltfSnapshot, GltfPrimitive, GltfMorphTarget } from '../../📸️snapshot/🟦️.ts';
-import { run, reject, positionIn, itemIndex, permutation, moveItem, type GltfLeafResult, type GltfMutationRejection } from './🟦️';
-export const GltfCreateMorphTargetDescriptor = { id: 's.stdio.gltf.mutation.create-morph-target.v1', version: 1, kind: 'create', touchedPaths: ["document/meshes/*/primitives/*/targets"], referencePolicy: 'creates an empty target only where mesh target arity remains coherent' } as const;
-export interface GltfCreateMorphTargetPayload { mesh: number; primitive: number; position: number }
-export type GltfCreateMorphTargetResult = GltfLeafResult;
-export const validateGltfCreateMorphTarget = (payload: GltfCreateMorphTargetPayload, base: GltfSnapshot): GltfMutationRejection | undefined => { const mesh = itemIndex(payload.mesh, base.document.meshes.length, 'document/meshes'); if (mesh) return mesh; const primitive = itemIndex(payload.primitive, base.document.meshes[payload.mesh]!.primitives.length, `document/meshes/${payload.mesh}/primitives`); if (primitive) return primitive; const primitive = base.document.meshes[payload.mesh]!.primitives[payload.primitive]!; const position = positionIn(payload.position, primitive.targets.length, 'document/meshes/primitives/targets'); if (position) return position; if (base.document.meshes[payload.mesh]!.primitives.length !== 1) return reject('gltf.mutation.morph-target-arity', 'document/meshes/primitives/targets', 'create is rejected until every primitive can remain target-count coherent'); return undefined; };
-export const applyGltfCreateMorphTarget = (base: GltfSnapshot, payload: GltfCreateMorphTargetPayload): GltfCreateMorphTargetResult => run(base, payload, validateGltfCreateMorphTarget, (next, payload) => { next.document.meshes[payload.mesh]!.primitives[payload.primitive]!.targets.splice(payload.position, 0, {}); }, GltfCreateMorphTargetDescriptor.touchedPaths);
+/** 🌱️ `create-morph-target` wire twin: the flat `Apply` payload `GltfCreateMorphTargetPayload` and the phase wire `CreateMorphTargetMutation`, exactly as `./🦀️.rs` writes them.
+ * @see ./🧬️schema/🔣️.json */
+import { gltfWireIndex, gltfWireObject, gltfWireRequired } from "../../../📸️snapshot/🟦️.ts";
+import { type GltfDiff, type GltfPhase, gltfWirePhase, parseGltfDiff } from "../../../🔺️diff/🟦️.ts";
+
+export interface GltfCreateMorphTargetPayload {
+  mesh: number;
+  primitive: number;
+  position: number;
+}
+
+export type CreateMorphTargetMutation = GltfPhase<GltfCreateMorphTargetPayload, GltfDiff>;
+
+export const parseGltfCreateMorphTargetPayload = gltfWireObject<GltfCreateMorphTargetPayload>({ mesh: gltfWireRequired(gltfWireIndex), primitive: gltfWireRequired(gltfWireIndex), position: gltfWireRequired(gltfWireIndex) });
+export const parseCreateMorphTargetMutation = gltfWirePhase(parseGltfCreateMorphTargetPayload, parseGltfDiff);

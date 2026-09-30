@@ -10,7 +10,19 @@
   "properties": {
     "newImportedFeaturesJson": {
       "type": "string",
-      "contentMediaType": "application/json"
+      "contentMediaType": "application/json",
+      "x-semio-ui": {
+        "widget": "multiline",
+        "role": "value",
+        "label": {
+          "en": "New Imported Map Features",
+          "de": "Neue importierte Kartenobjekte"
+        },
+        "description": {
+          "en": "Last imported 2d.map descriptor as JSON text.",
+          "de": "Zuletzt importierter 2d.map-Deskriptor als JSON-Text."
+        }
+      }
     }
   }
 }

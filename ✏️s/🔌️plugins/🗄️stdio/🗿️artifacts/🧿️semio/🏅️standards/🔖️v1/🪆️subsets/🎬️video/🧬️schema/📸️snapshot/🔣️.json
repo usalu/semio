@@ -7,13 +7,30 @@
   "properties": {
     "schema": {
       "type": "string",
-      "x-semio-state": "artifact"
+      "x-semio-state": "artifact",
+      "x-semio-ui": {
+        "widget": "text",
+        "label": {
+          "en": "Snapshot schema",
+          "de": "Snapshot-Schema"
+        },
+        "description": {
+          "en": "Identifier of the snapshot schema version.",
+          "de": "Kennung der Version des Snapshot-Schemas."
+        }
+      }
     },
     "streams": {
       "type": "array",
       "x-semio-state": "artifact",
       "items": {
         "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/semio/v1/video/snapshot.json#/$defs/SemioVideoStream"
+      },
+      "x-semio-ui": {
+        "label": {
+          "en": "Streams",
+          "de": "Datenströme"
+        }
       }
     }
   },
@@ -31,10 +48,33 @@
             "video",
             "audio",
             "subtitle"
-          ]
+          ],
+          "x-semio-ui": {
+            "options": {
+              "video": {
+                "en": "Video",
+                "de": "Video"
+              },
+              "audio": {
+                "en": "Audio",
+                "de": "Audio"
+              },
+              "subtitle": {
+                "en": "Subtitles",
+                "de": "Untertitel"
+              }
+            }
+          }
         },
         "codec": {
-          "type": "string"
+          "type": "string",
+          "x-semio-ui": {
+            "widget": "text",
+            "label": {
+              "en": "Codec",
+              "de": "Codec"
+            }
+          }
         },
         "width": {
           "type": "integer",
@@ -49,16 +89,40 @@
           "type": "object",
           "properties": {
             "num": {
-              "type": "integer"
+              "type": "integer",
+              "x-semio-ui": {
+                "widget": "stepper",
+                "label": {
+                  "en": "Numerator",
+                  "de": "Zähler"
+                }
+              }
             },
             "den": {
-              "type": "integer"
+              "type": "integer",
+              "x-semio-ui": {
+                "widget": "stepper",
+                "label": {
+                  "en": "Denominator",
+                  "de": "Nenner"
+                }
+              }
             }
           },
           "required": [
             "num",
             "den"
-          ]
+          ],
+          "x-semio-ui": {
+            "label": {
+              "en": "Frame or sample rate",
+              "de": "Bild- bzw. Abtastrate"
+            },
+            "description": {
+              "en": "Frames (video) or samples (audio) per second as an exact fraction.",
+              "de": "Bilder (Video) bzw. Abtastwerte (Audio) pro Sekunde als exakter Bruch."
+            }
+          }
         },
         "samples": {
           "type": "array",
@@ -68,7 +132,14 @@
             "properties": {
               "pts": {
                 "type": "integer",
-                "minimum": 0
+                "minimum": 0,
+                "x-semio-ui": {
+                  "widget": "stepper",
+                  "label": {
+                    "en": "Presentation time stamp",
+                    "de": "Präsentationszeitstempel (PTS)"
+                  }
+                }
               },
               "key": {
                 "type": "boolean"
@@ -87,6 +158,12 @@
               "key",
               "data"
             ]
+          },
+          "x-semio-ui": {
+            "label": {
+              "en": "Samples",
+              "de": "Samples"
+            }
           }
         }
       },

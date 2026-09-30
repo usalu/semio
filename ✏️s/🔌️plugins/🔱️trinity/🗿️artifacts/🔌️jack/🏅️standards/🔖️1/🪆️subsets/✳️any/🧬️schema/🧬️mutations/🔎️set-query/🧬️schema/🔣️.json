@@ -5,9 +5,13 @@
   "type": "object",
   "additionalProperties": false,
   "required": [
+    "mutation",
     "value"
   ],
   "properties": {
+    "mutation": {
+      "const": "setQuery"
+    },
     "value": {
       "type": "string"
     }

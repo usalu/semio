@@ -4,10 +4,19 @@
   "title": "ReplaceKindCatalogs",
   "type": "object",
   "additionalProperties": false,
+  "required": [
+    "mutation"
+  ],
   "properties": {
+    "mutation": {
+      "const": "replaceKindCatalogs"
+    },
     "newCatalogs": {
       "title": "Puzzle3dKindCatalogs",
-      "type": "object",
+      "type": [
+        "object",
+        "null"
+      ],
       "additionalProperties": false,
       "required": [
         "attractions",
@@ -30,7 +39,7 @@
               "icon",
               "id",
               "image",
-              "isAbstract",
+              "abstract",
               "label",
               "name",
               "representations",
@@ -39,33 +48,134 @@
             ],
             "properties": {
               "id": {
-                "type": "string"
+                "type": "string",
+                "x-semio-ui": {
+                  "widget": "text",
+                  "role": "value",
+                  "label": {
+                    "en": "ID",
+                    "de": "ID"
+                  },
+                  "group": "identity",
+                  "order": 10
+                }
               },
               "name": {
-                "type": "string"
+                "type": "string",
+                "x-semio-ui": {
+                  "widget": "text",
+                  "role": "value",
+                  "label": {
+                    "en": "Name",
+                    "de": "Name"
+                  },
+                  "group": "identity",
+                  "order": 20
+                }
               },
               "label": {
-                "type": "string"
+                "type": "string",
+                "x-semio-ui": {
+                  "widget": "text",
+                  "role": "value",
+                  "label": {
+                    "en": "Label",
+                    "de": "Bezeichnung"
+                  },
+                  "group": "appearance",
+                  "order": 30
+                }
               },
               "description": {
-                "type": "string"
+                "type": "string",
+                "x-semio-ui": {
+                  "widget": "multiline",
+                  "role": "value",
+                  "label": {
+                    "en": "Description",
+                    "de": "Beschreibung"
+                  },
+                  "group": "appearance",
+                  "order": 40
+                }
               },
               "icon": {
-                "type": "string"
+                "type": "string",
+                "x-semio-ui": {
+                  "widget": "text",
+                  "role": "value",
+                  "label": {
+                    "en": "Icon",
+                    "de": "Symbol"
+                  },
+                  "group": "appearance",
+                  "order": 50
+                }
               },
               "image": {
-                "type": "string"
+                "type": "string",
+                "x-semio-ui": {
+                  "widget": "text",
+                  "role": "value",
+                  "label": {
+                    "en": "Image",
+                    "de": "Bild"
+                  },
+                  "description": {
+                    "en": "Address of the file, e.g. an https or data URL.",
+                    "de": "Adresse der Datei, z. B. eine https- oder data-URL."
+                  },
+                  "group": "appearance",
+                  "order": 60
+                }
               },
               "unit": {
-                "type": "string"
+                "type": "string",
+                "x-semio-ui": {
+                  "widget": "text",
+                  "role": "value",
+                  "label": {
+                    "en": "Unit",
+                    "de": "Einheit"
+                  },
+                  "description": {
+                    "en": "Length unit the kind's geometry is modelled in.",
+                    "de": "Längeneinheit, in der die Geometrie der Art modelliert ist."
+                  },
+                  "group": "geometry",
+                  "order": 70
+                }
               },
-              "isAbstract": {
-                "type": "boolean"
+              "abstract": {
+                "type": "boolean",
+                "x-semio-ui": {
+                  "widget": "toggle",
+                  "role": "value",
+                  "label": {
+                    "en": "Abstract",
+                    "de": "Abstrakt"
+                  },
+                  "description": {
+                    "en": "An abstract kind is only a base for other kinds and is never placed.",
+                    "de": "Eine abstrakte Art dient nur als Basis anderer Arten und wird nie platziert."
+                  },
+                  "group": "kind",
+                  "order": 80
+                }
               },
               "baseKinds": {
                 "type": "array",
                 "items": {
                   "type": "string"
+                },
+                "x-semio-ui": {
+                  "role": "value",
+                  "label": {
+                    "en": "Base kinds",
+                    "de": "Basisarten"
+                  },
+                  "group": "kind",
+                  "order": 90
                 }
               },
               "representations": {
@@ -84,30 +194,112 @@
                   ],
                   "properties": {
                     "id": {
-                      "type": "string"
+                      "type": "string",
+                      "x-semio-ui": {
+                        "widget": "text",
+                        "role": "value",
+                        "label": {
+                          "en": "ID",
+                          "de": "ID"
+                        },
+                        "group": "identity",
+                        "order": 10
+                      }
                     },
                     "name": {
-                      "type": "string"
+                      "type": "string",
+                      "x-semio-ui": {
+                        "widget": "text",
+                        "role": "value",
+                        "label": {
+                          "en": "Name",
+                          "de": "Name"
+                        },
+                        "group": "identity",
+                        "order": 20
+                      }
                     },
                     "url": {
-                      "type": "string"
+                      "type": "string",
+                      "x-semio-ui": {
+                        "widget": "text",
+                        "role": "value",
+                        "label": {
+                          "en": "URL",
+                          "de": "URL"
+                        },
+                        "description": {
+                          "en": "Address of the file, e.g. an https or data URL.",
+                          "de": "Adresse der Datei, z. B. eine https- oder data-URL."
+                        },
+                        "group": "source",
+                        "order": 30
+                      }
                     },
                     "mime": {
-                      "type": "string"
+                      "type": "string",
+                      "x-semio-ui": {
+                        "widget": "text",
+                        "role": "value",
+                        "label": {
+                          "en": "Media type",
+                          "de": "Medientyp"
+                        },
+                        "group": "source",
+                        "order": 40
+                      }
                     },
                     "tags": {
                       "type": "array",
                       "items": {
                         "type": "string"
+                      },
+                      "x-semio-ui": {
+                        "role": "value",
+                        "label": {
+                          "en": "Tags",
+                          "de": "Schlagwörter"
+                        },
+                        "group": "metadata",
+                        "order": 50
                       }
                     },
                     "lod": {
-                      "type": "string"
+                      "type": "string",
+                      "x-semio-ui": {
+                        "widget": "text",
+                        "role": "value",
+                        "label": {
+                          "en": "Level of detail",
+                          "de": "Detailstufe"
+                        },
+                        "group": "source",
+                        "order": 60
+                      }
                     },
                     "description": {
-                      "type": "string"
+                      "type": "string",
+                      "x-semio-ui": {
+                        "widget": "multiline",
+                        "role": "value",
+                        "label": {
+                          "en": "Description",
+                          "de": "Beschreibung"
+                        },
+                        "group": "metadata",
+                        "order": 70
+                      }
                     }
                   }
+                },
+                "x-semio-ui": {
+                  "role": "value",
+                  "label": {
+                    "en": "Representations",
+                    "de": "Darstellungen"
+                  },
+                  "group": "appearance",
+                  "order": 100
                 }
               },
               "vortices": {
@@ -127,22 +319,86 @@
                   ],
                   "properties": {
                     "id": {
-                      "type": "string"
+                      "type": "string",
+                      "x-semio-ui": {
+                        "widget": "text",
+                        "role": "value",
+                        "label": {
+                          "en": "ID",
+                          "de": "ID"
+                        },
+                        "group": "identity",
+                        "order": 10
+                      }
                     },
                     "name": {
-                      "type": "string"
+                      "type": "string",
+                      "x-semio-ui": {
+                        "widget": "text",
+                        "role": "value",
+                        "label": {
+                          "en": "Name",
+                          "de": "Name"
+                        },
+                        "group": "identity",
+                        "order": 20
+                      }
                     },
                     "label": {
-                      "type": "string"
+                      "type": "string",
+                      "x-semio-ui": {
+                        "widget": "text",
+                        "role": "value",
+                        "label": {
+                          "en": "Label",
+                          "de": "Bezeichnung"
+                        },
+                        "group": "appearance",
+                        "order": 30
+                      }
                     },
                     "description": {
-                      "type": "string"
+                      "type": "string",
+                      "x-semio-ui": {
+                        "widget": "multiline",
+                        "role": "value",
+                        "label": {
+                          "en": "Description",
+                          "de": "Beschreibung"
+                        },
+                        "group": "appearance",
+                        "order": 40
+                      }
                     },
                     "icon": {
-                      "type": "string"
+                      "type": "string",
+                      "x-semio-ui": {
+                        "widget": "text",
+                        "role": "value",
+                        "label": {
+                          "en": "Icon",
+                          "de": "Symbol"
+                        },
+                        "group": "appearance",
+                        "order": 50
+                      }
                     },
                     "vortexKind": {
-                      "type": "string"
+                      "type": "string",
+                      "x-semio-ui": {
+                        "widget": "text",
+                        "role": "value",
+                        "label": {
+                          "en": "Vortex kind",
+                          "de": "Vortex-Art"
+                        },
+                        "description": {
+                          "en": "Id of a kind from the kind catalog.",
+                          "de": "ID einer Art aus dem Artenkatalog."
+                        },
+                        "group": "kind",
+                        "order": 60
+                      }
                     },
                     "point": {
                       "type": "array",
@@ -150,7 +406,26 @@
                         "type": "number"
                       },
                       "minItems": 3,
-                      "maxItems": 3
+                      "maxItems": 3,
+                      "x-semio-ui": {
+                        "widget": "vector",
+                        "role": "value",
+                        "label": {
+                          "en": "Point",
+                          "de": "Punkt"
+                        },
+                        "description": {
+                          "en": "Where the port sits in the kind's local frame.",
+                          "de": "Lage des Anschlusses im lokalen System der Art."
+                        },
+                        "unit": "m",
+                        "step": 0.1,
+                        "group": "pose",
+                        "order": 70,
+                        "snapSource": {
+                          "config": "gridSpacing"
+                        }
+                      }
                     },
                     "direction": {
                       "type": "array",
@@ -158,18 +433,85 @@
                         "type": "number"
                       },
                       "minItems": 3,
-                      "maxItems": 3
+                      "maxItems": 3,
+                      "x-semio-ui": {
+                        "widget": "vector",
+                        "role": "value",
+                        "label": {
+                          "en": "Direction",
+                          "de": "Richtung"
+                        },
+                        "description": {
+                          "en": "Direction the port points in.",
+                          "de": "Richtung, in die der Anschluss zeigt."
+                        },
+                        "step": 0.1,
+                        "group": "geometry",
+                        "order": 80
+                      }
                     },
                     "t": {
-                      "type": "number"
+                      "type": "number",
+                      "minimum": 0,
+                      "maximum": 1,
+                      "x-semio-ui": {
+                        "widget": "slider",
+                        "role": "value",
+                        "label": {
+                          "en": "Rim parameter",
+                          "de": "Randparameter"
+                        },
+                        "description": {
+                          "en": "Position along the outline, 0 to 1.",
+                          "de": "Position entlang des Umrisses, 0 bis 1."
+                        },
+                        "step": 0.01,
+                        "precision": 2,
+                        "softMin": 0,
+                        "softMax": 1,
+                        "group": "geometry",
+                        "order": 90
+                      }
                     },
                     "mandatory": {
-                      "type": "boolean"
+                      "type": "boolean",
+                      "x-semio-ui": {
+                        "widget": "toggle",
+                        "role": "value",
+                        "label": {
+                          "en": "Mandatory",
+                          "de": "Pflicht"
+                        },
+                        "group": "kind",
+                        "order": 100
+                      }
                     },
                     "radius": {
-                      "type": "number"
+                      "type": "number",
+                      "x-semio-ui": {
+                        "widget": "stepper",
+                        "role": "value",
+                        "label": {
+                          "en": "Radius",
+                          "de": "Radius"
+                        },
+                        "unit": "m",
+                        "step": 0.01,
+                        "precision": 3,
+                        "group": "geometry",
+                        "order": 110
+                      }
                     }
                   }
+                },
+                "x-semio-ui": {
+                  "role": "value",
+                  "label": {
+                    "en": "Vortices",
+                    "de": "Vortices"
+                  },
+                  "group": "topology",
+                  "order": 110
                 }
               },
               "attributes": {
@@ -185,18 +527,67 @@
                   ],
                   "properties": {
                     "id": {
-                      "type": "string"
+                      "type": "string",
+                      "x-semio-ui": {
+                        "widget": "text",
+                        "role": "value",
+                        "label": {
+                          "en": "ID",
+                          "de": "ID"
+                        },
+                        "group": "identity",
+                        "order": 10
+                      }
                     },
                     "key": {
-                      "type": "string"
+                      "type": "string",
+                      "x-semio-ui": {
+                        "widget": "text",
+                        "role": "value",
+                        "label": {
+                          "en": "Key",
+                          "de": "Schlüssel"
+                        },
+                        "group": "metadata",
+                        "order": 20
+                      }
                     },
                     "value": {
-                      "type": "string"
+                      "type": "string",
+                      "x-semio-ui": {
+                        "widget": "text",
+                        "role": "value",
+                        "label": {
+                          "en": "Value",
+                          "de": "Wert"
+                        },
+                        "group": "metadata",
+                        "order": 30
+                      }
                     },
                     "definition": {
-                      "type": "string"
+                      "type": "string",
+                      "x-semio-ui": {
+                        "widget": "text",
+                        "role": "value",
+                        "label": {
+                          "en": "Definition",
+                          "de": "Definition"
+                        },
+                        "group": "metadata",
+                        "order": 40
+                      }
                     }
                   }
+                },
+                "x-semio-ui": {
+                  "role": "value",
+                  "label": {
+                    "en": "Attributes",
+                    "de": "Attribute"
+                  },
+                  "group": "metadata",
+                  "order": 120
                 }
               },
               "authors": {
@@ -212,24 +603,95 @@
                   ],
                   "properties": {
                     "id": {
-                      "type": "string"
+                      "type": "string",
+                      "x-semio-ui": {
+                        "widget": "text",
+                        "role": "value",
+                        "label": {
+                          "en": "ID",
+                          "de": "ID"
+                        },
+                        "group": "identity",
+                        "order": 10
+                      }
                     },
                     "name": {
-                      "type": "string"
+                      "type": "string",
+                      "x-semio-ui": {
+                        "widget": "text",
+                        "role": "value",
+                        "label": {
+                          "en": "Name",
+                          "de": "Name"
+                        },
+                        "group": "identity",
+                        "order": 20
+                      }
                     },
                     "email": {
-                      "type": "string"
+                      "type": "string",
+                      "x-semio-ui": {
+                        "widget": "text",
+                        "role": "value",
+                        "label": {
+                          "en": "Email",
+                          "de": "E-Mail"
+                        },
+                        "group": "identity",
+                        "order": 30
+                      }
                     },
                     "role": {
-                      "type": "string"
+                      "type": "string",
+                      "x-semio-ui": {
+                        "widget": "text",
+                        "role": "value",
+                        "label": {
+                          "en": "Role",
+                          "de": "Rolle"
+                        },
+                        "group": "metadata",
+                        "order": 40
+                      }
                     },
                     "rank": {
-                      "type": "integer"
+                      "type": "integer",
+                      "minimum": 0,
+                      "x-semio-ui": {
+                        "widget": "stepper",
+                        "role": "value",
+                        "label": {
+                          "en": "Rank",
+                          "de": "Rang"
+                        },
+                        "step": 1,
+                        "precision": 0,
+                        "group": "order",
+                        "order": 50
+                      }
                     }
                   }
+                },
+                "x-semio-ui": {
+                  "role": "value",
+                  "label": {
+                    "en": "Authors",
+                    "de": "Autoren"
+                  },
+                  "group": "metadata",
+                  "order": 130
                 }
               }
             }
+          },
+          "x-semio-ui": {
+            "role": "value",
+            "label": {
+              "en": "Object kinds",
+              "de": "Objektarten"
+            },
+            "group": "catalog",
+            "order": 10
           }
         },
         "vortices": {
@@ -248,36 +710,149 @@
             ],
             "properties": {
               "id": {
-                "type": "string"
+                "type": "string",
+                "x-semio-ui": {
+                  "widget": "text",
+                  "role": "value",
+                  "label": {
+                    "en": "ID",
+                    "de": "ID"
+                  },
+                  "group": "identity",
+                  "order": 10
+                }
               },
               "code": {
-                "type": "string"
+                "type": "string",
+                "x-semio-ui": {
+                  "widget": "text",
+                  "role": "value",
+                  "label": {
+                    "en": "Code",
+                    "de": "Code"
+                  },
+                  "group": "identity",
+                  "order": 20
+                }
               },
               "label": {
-                "type": "string"
+                "type": "string",
+                "x-semio-ui": {
+                  "widget": "text",
+                  "role": "value",
+                  "label": {
+                    "en": "Label",
+                    "de": "Bezeichnung"
+                  },
+                  "group": "appearance",
+                  "order": 30
+                }
               },
               "order": {
-                "type": "integer"
+                "type": "integer",
+                "minimum": 0,
+                "x-semio-ui": {
+                  "widget": "stepper",
+                  "role": "value",
+                  "label": {
+                    "en": "Order",
+                    "de": "Reihenfolge"
+                  },
+                  "step": 1,
+                  "precision": 0,
+                  "group": "order",
+                  "order": 40
+                }
               },
               "compatibleWith": {
                 "type": "array",
                 "items": {
                   "type": "string"
+                },
+                "x-semio-ui": {
+                  "role": "value",
+                  "label": {
+                    "en": "Compatible with",
+                    "de": "Kompatibel mit"
+                  },
+                  "description": {
+                    "en": "Kinds this kind may connect to.",
+                    "de": "Arten, mit denen diese Art verbunden werden darf."
+                  },
+                  "group": "kind",
+                  "order": 50
                 }
               },
               "description": {
-                "type": "string"
+                "type": "string",
+                "x-semio-ui": {
+                  "widget": "multiline",
+                  "role": "value",
+                  "label": {
+                    "en": "Description",
+                    "de": "Beschreibung"
+                  },
+                  "group": "appearance",
+                  "order": 60
+                }
               },
               "icon": {
-                "type": "string"
+                "type": "string",
+                "x-semio-ui": {
+                  "widget": "text",
+                  "role": "value",
+                  "label": {
+                    "en": "Icon",
+                    "de": "Symbol"
+                  },
+                  "group": "appearance",
+                  "order": 70
+                }
               },
               "color": {
-                "type": "string"
+                "type": "string",
+                "x-semio-ui": {
+                  "widget": "text",
+                  "role": "value",
+                  "label": {
+                    "en": "Color",
+                    "de": "Farbe"
+                  },
+                  "description": {
+                    "en": "CSS color, e.g. #3366ff.",
+                    "de": "CSS-Farbe, z. B. #3366ff."
+                  },
+                  "group": "appearance",
+                  "order": 80
+                }
               },
               "defaultCableKind": {
-                "type": "string"
+                "type": "string",
+                "x-semio-ui": {
+                  "widget": "text",
+                  "role": "value",
+                  "label": {
+                    "en": "Default cable kind",
+                    "de": "Standard-Kabelart"
+                  },
+                  "description": {
+                    "en": "Id of a kind from the kind catalog.",
+                    "de": "ID einer Art aus dem Artenkatalog."
+                  },
+                  "group": "kind",
+                  "order": 90
+                }
               }
             }
+          },
+          "x-semio-ui": {
+            "role": "value",
+            "label": {
+              "en": "Vortex kinds",
+              "de": "Vortex-Arten"
+            },
+            "group": "catalog",
+            "order": 20
           }
         },
         "cables": {
@@ -294,18 +869,71 @@
             ],
             "properties": {
               "id": {
-                "type": "string"
+                "type": "string",
+                "x-semio-ui": {
+                  "widget": "text",
+                  "role": "value",
+                  "label": {
+                    "en": "ID",
+                    "de": "ID"
+                  },
+                  "group": "identity",
+                  "order": 10
+                }
               },
               "label": {
-                "type": "string"
+                "type": "string",
+                "x-semio-ui": {
+                  "widget": "text",
+                  "role": "value",
+                  "label": {
+                    "en": "Label",
+                    "de": "Bezeichnung"
+                  },
+                  "group": "appearance",
+                  "order": 20
+                }
               },
               "name": {
-                "type": "string"
+                "type": "string",
+                "x-semio-ui": {
+                  "widget": "text",
+                  "role": "value",
+                  "label": {
+                    "en": "Name",
+                    "de": "Name"
+                  },
+                  "group": "identity",
+                  "order": 30
+                }
               },
               "defaultAttractionKind": {
-                "type": "string"
+                "type": "string",
+                "x-semio-ui": {
+                  "widget": "text",
+                  "role": "value",
+                  "label": {
+                    "en": "Default attraction kind",
+                    "de": "Standard-Anziehungsart"
+                  },
+                  "description": {
+                    "en": "Id of a kind from the kind catalog.",
+                    "de": "ID einer Art aus dem Artenkatalog."
+                  },
+                  "group": "kind",
+                  "order": 40
+                }
               }
             }
+          },
+          "x-semio-ui": {
+            "role": "value",
+            "label": {
+              "en": "Cable kinds",
+              "de": "Kabelarten"
+            },
+            "group": "catalog",
+            "order": 30
           }
         },
         "attractions": {
@@ -321,17 +949,69 @@
             ],
             "properties": {
               "id": {
-                "type": "string"
+                "type": "string",
+                "x-semio-ui": {
+                  "widget": "text",
+                  "role": "value",
+                  "label": {
+                    "en": "ID",
+                    "de": "ID"
+                  },
+                  "group": "identity",
+                  "order": 10
+                }
               },
               "label": {
-                "type": "string"
+                "type": "string",
+                "x-semio-ui": {
+                  "widget": "text",
+                  "role": "value",
+                  "label": {
+                    "en": "Label",
+                    "de": "Bezeichnung"
+                  },
+                  "group": "appearance",
+                  "order": 20
+                }
               },
               "name": {
-                "type": "string"
+                "type": "string",
+                "x-semio-ui": {
+                  "widget": "text",
+                  "role": "value",
+                  "label": {
+                    "en": "Name",
+                    "de": "Name"
+                  },
+                  "group": "identity",
+                  "order": 30
+                }
               }
             }
+          },
+          "x-semio-ui": {
+            "role": "value",
+            "label": {
+              "en": "Attraction kinds",
+              "de": "Anziehungsarten"
+            },
+            "group": "catalog",
+            "order": 40
           }
         }
+      },
+      "x-semio-ui": {
+        "role": "value",
+        "label": {
+          "en": "Kind catalogs",
+          "de": "Artenkataloge"
+        },
+        "description": {
+          "en": "Object, vortex, cable and attraction kind tables; empty removes them.",
+          "de": "Objekt-, Vortex-, Kabel- und Anziehungsartentabellen; leer entfernt sie."
+        },
+        "group": "record",
+        "order": 10
       }
     }
   }

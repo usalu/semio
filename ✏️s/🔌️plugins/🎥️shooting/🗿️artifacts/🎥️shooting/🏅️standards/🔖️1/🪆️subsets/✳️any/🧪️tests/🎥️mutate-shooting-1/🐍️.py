@@ -24,7 +24,7 @@ an arbitrary code choice:
     acted on. `delete-*`'s inverse therefore also always appends (this is why every committed
     `delete-*` vector removes the TRAILING member — an append-only re-creation can only land back on
     the original position when that position was last).
-  - `replace-shot-camera{shot_id, new_camera}` patches the SAVED CAMERA the named shot's `cameraId`
+  - `replace-shot-camera{shotId, newCamera}` patches the SAVED CAMERA the named shot's `cameraId`
     resolves to, not the shot itself — read off the one committed vector, where the diff lands on
     `savedCameras[0]` (`cam-wide`, `shot-wide`'s own `cameraId`) rather than on `shots[0]`, and
     confirmed by the schema: `ReplaceShotCamera` carries no camera-VALUE field on the shot at all,
@@ -102,7 +102,7 @@ VECTORS = {
     "change-scene-sun-intensity": ("💡️change-scene-sun-intensity", "💡️dims-scene-sun-to-half", "changeSceneSunIntensity"),
     "change-scene-ambient-intensity": ("🔅️change-scene-ambient-intensity", "🔅️dims-scene-ambient-to-quarter", "changeSceneAmbientIntensity"),
     "change-scene-shadow-enabled": ("🌑️change-scene-shadow-enabled", "🌑️switches-scene-shadows-off", "changeSceneShadowEnabled"),
-    "change-scene-material-roughness": ("🪨️change-scene-material-roughness", "✨️polishes-scene-material-to-quarter", "changeSceneMaterialRoughness"),
+    "change-scene-material-roughness": ("🪨️change-scene-material-roughness", "✨️polishes-scene-material-quarter", "changeSceneMaterialRoughness"),
 }
 
 WIRE_TAG_TO_KIND = {tag: kind for kind, (_dir, _fixture, tag) in VECTORS.items()}
@@ -179,14 +179,14 @@ def apply_delete_asset(doc, p):
 def apply_rename_asset(doc, p):
     after = copy.deepcopy(doc)
     _, a = _find(after["assets"], p["id"])
-    a["name"] = p["new_name"]
+    a["name"] = p["newName"]
     return after
 
 
 def apply_change_asset_url(doc, p):
     after = copy.deepcopy(doc)
     _, a = _find(after["assets"], p["id"])
-    a["url"] = p["new_url"]
+    a["url"] = p["newUrl"]
     return after
 
 
@@ -194,13 +194,13 @@ def apply_reorder_assets(doc, p):
     after = copy.deepcopy(doc)
     idx, item = _find(after["assets"], p["id"])
     after["assets"].pop(idx)
-    after["assets"].insert(min(p["to_index"], len(after["assets"])), item)
+    after["assets"].insert(min(p["toIndex"], len(after["assets"])), item)
     return after
 
 
 def apply_drag_assets(doc, p):
     after = copy.deepcopy(doc)
-    ids = set(p["asset_ids"])
+    ids = set(p["assetIds"])
     for a in after["assets"]:
         if a["id"] in ids:
             a["origin"] = [a["origin"][0] + p["dx"], a["origin"][1] + p["dy"], a["origin"][2] + p["dz"]]
@@ -209,7 +209,7 @@ def apply_drag_assets(doc, p):
 
 def apply_rotate_assets(doc, p):
     after = copy.deepcopy(doc)
-    ids = set(p["asset_ids"])
+    ids = set(p["assetIds"])
     delta = quat_from_axis_angle(p["ax"], p["ay"], p["az"], p["angle"])
     for a in after["assets"]:
         if a["id"] in ids:
@@ -220,7 +220,7 @@ def apply_rotate_assets(doc, p):
 
 def apply_scale_assets(doc, p):
     after = copy.deepcopy(doc)
-    ids = set(p["asset_ids"])
+    ids = set(p["assetIds"])
     for a in after["assets"]:
         if a["id"] in ids:
             current = a.get("scale") or [1.0, 1.0, 1.0]
@@ -244,35 +244,35 @@ def apply_delete_shot(doc, p):
 def apply_rename_shot(doc, p):
     after = copy.deepcopy(doc)
     _, s = _find(after["shots"], p["id"])
-    s["label"] = p["new_label"]
+    s["label"] = p["newLabel"]
     return after
 
 
 def apply_change_shot_width(doc, p):
     after = copy.deepcopy(doc)
     _, s = _find(after["shots"], p["id"])
-    s["width"] = p["new_width"]
+    s["width"] = p["newWidth"]
     return after
 
 
 def apply_change_shot_height(doc, p):
     after = copy.deepcopy(doc)
     _, s = _find(after["shots"], p["id"])
-    s["height"] = p["new_height"]
+    s["height"] = p["newHeight"]
     return after
 
 
 def apply_change_shot_format(doc, p):
     after = copy.deepcopy(doc)
     _, s = _find(after["shots"], p["id"])
-    s["format"] = p["new_format"]
+    s["format"] = p["newFormat"]
     return after
 
 
 def apply_change_shot_shape(doc, p):
     after = copy.deepcopy(doc)
     _, s = _find(after["shots"], p["id"])
-    s["shape"] = p["new_shape"]
+    s["shape"] = p["newShape"]
     return after
 
 
@@ -280,24 +280,24 @@ def apply_reorder_shots(doc, p):
     after = copy.deepcopy(doc)
     idx, item = _find(after["shots"], p["id"])
     after["shots"].pop(idx)
-    after["shots"].insert(min(p["to_index"], len(after["shots"])), item)
+    after["shots"].insert(min(p["toIndex"], len(after["shots"])), item)
     return after
 
 
 def apply_replace_shot_camera(doc, p):
     """📷 Patches the SAVED CAMERA the named shot's `cameraId` resolves to — not the shot."""
     after = copy.deepcopy(doc)
-    _, shot = _find(after["shots"], p["shot_id"])
+    _, shot = _find(after["shots"], p["shotId"])
     camera_id = shot.get("cameraId")
-    assert camera_id, f"shot {p['shot_id']!r} has no saved camera to replace"
+    assert camera_id, f"shot {p['shotId']!r} has no saved camera to replace"
     _, cam = _find(after["savedCameras"], camera_id)
-    cam["camera"] = copy.deepcopy(p["new_camera"])
+    cam["camera"] = copy.deepcopy(p["newCamera"])
     return after
 
 
 def apply_create_saved_camera(doc, p):
     after = copy.deepcopy(doc)
-    after["savedCameras"].append(copy.deepcopy(p["saved_camera"]))
+    after["savedCameras"].append(copy.deepcopy(p["savedCamera"]))
     return after
 
 
@@ -311,14 +311,14 @@ def apply_delete_saved_camera(doc, p):
 def apply_rename_saved_camera(doc, p):
     after = copy.deepcopy(doc)
     _, c = _find(after["savedCameras"], p["id"])
-    c["label"] = p["new_label"]
+    c["label"] = p["newLabel"]
     return after
 
 
 def apply_replace_saved_camera_view(doc, p):
     after = copy.deepcopy(doc)
     _, c = _find(after["savedCameras"], p["id"])
-    c["camera"] = copy.deepcopy(p["new_camera"])
+    c["camera"] = copy.deepcopy(p["newCamera"])
     return after
 
 
@@ -326,61 +326,61 @@ def apply_reorder_saved_cameras(doc, p):
     after = copy.deepcopy(doc)
     idx, item = _find(after["savedCameras"], p["id"])
     after["savedCameras"].pop(idx)
-    after["savedCameras"].insert(min(p["to_index"], len(after["savedCameras"])), item)
+    after["savedCameras"].insert(min(p["toIndex"], len(after["savedCameras"])), item)
     return after
 
 
 def apply_set_active_shot(doc, p):
     after = copy.deepcopy(doc)
-    after["activeShotId"] = p["shot_id"]
+    after["activeShotId"] = p["shotId"]
     return after
 
 
 def apply_set_active_asset(doc, p):
     after = copy.deepcopy(doc)
-    after["activeAssetId"] = p["asset_id"]
+    after["activeAssetId"] = p["assetId"]
     return after
 
 
 def apply_change_scene_sun_enabled(doc, p):
     after = copy.deepcopy(doc)
-    after["scene"]["sun"]["enabled"] = p["new_enabled"]
+    after["scene"]["sun"]["enabled"] = p["newEnabled"]
     return after
 
 
 def apply_change_scene_sun_azimuth(doc, p):
     after = copy.deepcopy(doc)
-    after["scene"]["sun"]["azimuth"] = p["new_azimuth"]
+    after["scene"]["sun"]["azimuth"] = p["newAzimuth"]
     return after
 
 
 def apply_change_scene_sun_elevation(doc, p):
     after = copy.deepcopy(doc)
-    after["scene"]["sun"]["elevation"] = p["new_elevation"]
+    after["scene"]["sun"]["elevation"] = p["newElevation"]
     return after
 
 
 def apply_change_scene_sun_intensity(doc, p):
     after = copy.deepcopy(doc)
-    after["scene"]["sun"]["intensity"] = p["new_intensity"]
+    after["scene"]["sun"]["intensity"] = p["newIntensity"]
     return after
 
 
 def apply_change_scene_ambient_intensity(doc, p):
     after = copy.deepcopy(doc)
-    after["scene"]["ambient"]["intensity"] = p["new_intensity"]
+    after["scene"]["ambient"]["intensity"] = p["newIntensity"]
     return after
 
 
 def apply_change_scene_shadow_enabled(doc, p):
     after = copy.deepcopy(doc)
-    after["scene"]["shadow"]["enabled"] = p["new_enabled"]
+    after["scene"]["shadow"]["enabled"] = p["newEnabled"]
     return after
 
 
 def apply_change_scene_material_roughness(doc, p):
     after = copy.deepcopy(doc)
-    after["scene"]["material"]["roughness"] = p["new_roughness"]
+    after["scene"]["material"]["roughness"] = p["newRoughness"]
     return after
 
 
@@ -431,19 +431,19 @@ def inverse_mutation(kind, base, payload):
         return "createAsset", {"asset": asset, "index": idx}
     if kind == "rename-asset":
         _, a = _find(base["assets"], payload["id"])
-        return "renameAsset", {"id": payload["id"], "new_name": a["name"]}
+        return "renameAsset", {"id": payload["id"], "newName": a["name"]}
     if kind == "change-asset-url":
         _, a = _find(base["assets"], payload["id"])
-        return "changeAssetUrl", {"id": payload["id"], "new_url": a["url"]}
+        return "changeAssetUrl", {"id": payload["id"], "newUrl": a["url"]}
     if kind == "reorder-assets":
         idx, _a = _find(base["assets"], payload["id"])
-        return "reorderAssets", {"id": payload["id"], "to_index": idx}
+        return "reorderAssets", {"id": payload["id"], "toIndex": idx}
     if kind == "drag-assets":
-        return "dragAssets", {"asset_ids": payload["asset_ids"], "dx": -payload["dx"], "dy": -payload["dy"], "dz": -payload["dz"]}
+        return "dragAssets", {"assetIds": payload["assetIds"], "dx": -payload["dx"], "dy": -payload["dy"], "dz": -payload["dz"]}
     if kind == "rotate-assets":
-        return "rotateAssets", {"asset_ids": payload["asset_ids"], "ax": payload["ax"], "ay": payload["ay"], "az": payload["az"], "angle": -payload["angle"]}
+        return "rotateAssets", {"assetIds": payload["assetIds"], "ax": payload["ax"], "ay": payload["ay"], "az": payload["az"], "angle": -payload["angle"]}
     if kind == "scale-assets":
-        return "scaleAssets", {"asset_ids": payload["asset_ids"], "sx": _reciprocal(payload["sx"]), "sy": _reciprocal(payload["sy"]), "sz": _reciprocal(payload["sz"])}
+        return "scaleAssets", {"assetIds": payload["assetIds"], "sx": _reciprocal(payload["sx"]), "sy": _reciprocal(payload["sy"]), "sz": _reciprocal(payload["sz"])}
     if kind == "create-shot":
         return "deleteShot", {"id": payload["shot"]["id"]}
     if kind == "delete-shot":
@@ -451,58 +451,58 @@ def inverse_mutation(kind, base, payload):
         return "createShot", {"shot": shot, "index": idx}
     if kind == "rename-shot":
         _, s = _find(base["shots"], payload["id"])
-        return "renameShot", {"id": payload["id"], "new_label": s["label"]}
+        return "renameShot", {"id": payload["id"], "newLabel": s["label"]}
     if kind == "change-shot-width":
         _, s = _find(base["shots"], payload["id"])
-        return "changeShotWidth", {"id": payload["id"], "new_width": s["width"]}
+        return "changeShotWidth", {"id": payload["id"], "newWidth": s["width"]}
     if kind == "change-shot-height":
         _, s = _find(base["shots"], payload["id"])
-        return "changeShotHeight", {"id": payload["id"], "new_height": s["height"]}
+        return "changeShotHeight", {"id": payload["id"], "newHeight": s["height"]}
     if kind == "change-shot-format":
         _, s = _find(base["shots"], payload["id"])
-        return "changeShotFormat", {"id": payload["id"], "new_format": s["format"]}
+        return "changeShotFormat", {"id": payload["id"], "newFormat": s["format"]}
     if kind == "change-shot-shape":
         _, s = _find(base["shots"], payload["id"])
-        return "changeShotShape", {"id": payload["id"], "new_shape": s["shape"]}
+        return "changeShotShape", {"id": payload["id"], "newShape": s["shape"]}
     if kind == "reorder-shots":
         idx, _s = _find(base["shots"], payload["id"])
-        return "reorderShots", {"id": payload["id"], "to_index": idx}
+        return "reorderShots", {"id": payload["id"], "toIndex": idx}
     if kind == "replace-shot-camera":
-        _, shot = _find(base["shots"], payload["shot_id"])
+        _, shot = _find(base["shots"], payload["shotId"])
         _, cam = _find(base["savedCameras"], shot["cameraId"])
-        return "replaceShotCamera", {"shot_id": payload["shot_id"], "new_camera": cam["camera"]}
+        return "replaceShotCamera", {"shotId": payload["shotId"], "newCamera": cam["camera"]}
     if kind == "create-saved-camera":
-        return "deleteSavedCamera", {"id": payload["saved_camera"]["id"]}
+        return "deleteSavedCamera", {"id": payload["savedCamera"]["id"]}
     if kind == "delete-saved-camera":
         idx, cam = _find(base["savedCameras"], payload["id"])
-        return "createSavedCamera", {"saved_camera": cam, "index": idx}
+        return "createSavedCamera", {"savedCamera": cam, "index": idx}
     if kind == "rename-saved-camera":
         _, c = _find(base["savedCameras"], payload["id"])
-        return "renameSavedCamera", {"id": payload["id"], "new_label": c["label"]}
+        return "renameSavedCamera", {"id": payload["id"], "newLabel": c["label"]}
     if kind == "replace-saved-camera-view":
         _, c = _find(base["savedCameras"], payload["id"])
-        return "replaceSavedCameraView", {"id": payload["id"], "new_camera": c["camera"]}
+        return "replaceSavedCameraView", {"id": payload["id"], "newCamera": c["camera"]}
     if kind == "reorder-saved-cameras":
         idx, _c = _find(base["savedCameras"], payload["id"])
-        return "reorderSavedCameras", {"id": payload["id"], "to_index": idx}
+        return "reorderSavedCameras", {"id": payload["id"], "toIndex": idx}
     if kind == "set-active-shot":
-        return "setActiveShot", {"shot_id": base["activeShotId"]}
+        return "setActiveShot", {"shotId": base["activeShotId"]}
     if kind == "set-active-asset":
-        return "setActiveAsset", {"asset_id": base["activeAssetId"]}
+        return "setActiveAsset", {"assetId": base["activeAssetId"]}
     if kind == "change-scene-sun-enabled":
-        return "changeSceneSunEnabled", {"new_enabled": base["scene"]["sun"]["enabled"]}
+        return "changeSceneSunEnabled", {"newEnabled": base["scene"]["sun"]["enabled"]}
     if kind == "change-scene-sun-azimuth":
-        return "changeSceneSunAzimuth", {"new_azimuth": base["scene"]["sun"]["azimuth"]}
+        return "changeSceneSunAzimuth", {"newAzimuth": base["scene"]["sun"]["azimuth"]}
     if kind == "change-scene-sun-elevation":
-        return "changeSceneSunElevation", {"new_elevation": base["scene"]["sun"]["elevation"]}
+        return "changeSceneSunElevation", {"newElevation": base["scene"]["sun"]["elevation"]}
     if kind == "change-scene-sun-intensity":
-        return "changeSceneSunIntensity", {"new_intensity": base["scene"]["sun"]["intensity"]}
+        return "changeSceneSunIntensity", {"newIntensity": base["scene"]["sun"]["intensity"]}
     if kind == "change-scene-ambient-intensity":
-        return "changeSceneAmbientIntensity", {"new_intensity": base["scene"]["ambient"]["intensity"]}
+        return "changeSceneAmbientIntensity", {"newIntensity": base["scene"]["ambient"]["intensity"]}
     if kind == "change-scene-shadow-enabled":
-        return "changeSceneShadowEnabled", {"new_enabled": base["scene"]["shadow"]["enabled"]}
+        return "changeSceneShadowEnabled", {"newEnabled": base["scene"]["shadow"]["enabled"]}
     if kind == "change-scene-material-roughness":
-        return "changeSceneMaterialRoughness", {"new_roughness": base["scene"]["material"]["roughness"]}
+        return "changeSceneMaterialRoughness", {"newRoughness": base["scene"]["material"]["roughness"]}
     raise AssertionError(f"no inverse rule for kind {kind!r}")
 # endregion 🔖️Vocabulary — inverse rule
 

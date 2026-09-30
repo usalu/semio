@@ -46,6 +46,14 @@ impl std::fmt::Debug for WindowTransientMutation {
     }
 }
 
+/// 🙅️ A window transient emission the registry refused, with its mutation handed back: a refusal is the caller's
+/// typed fault, never a mutation silently dropped.
+#[derive(Debug)]
+pub(crate) struct RejectedWindowTransientEmission {
+    pub mutation: WindowTransientMutation,
+    pub fault: Fault,
+}
+
 impl WindowTransientMutation {
     pub fn of<O: WindowTransientOwner>(window_id: impl Into<String>, mutation: O::Mutation) -> Self {
         Self { window_id: window_id.into(), window_kind_id: O::WINDOW_KIND_ID, mutation: Box::new(mutation) }
@@ -172,7 +180,7 @@ impl<O: WindowTransientOwner> WindowTransientPartition<O> {
 trait ErasedWindowTransientStoreOwner: Send {
     fn capture(&mut self, window_id: &str, document_generation: u64) -> Result<WindowTransientAuthority, Fault>;
     fn refresh(&mut self, authority: &mut WindowTransientAuthority) -> Result<(), Fault>;
-    fn begin(&mut self, operation: semio_framework_job::OperationId, expected_generation: u64, document_generation: u64, mutation: WindowTransientMutation) -> Result<Box<dyn ErasedWindowTransientPublication>, Fault>;
+    fn begin(&mut self, operation: semio_framework_job::OperationId, expected_generation: u64, document_generation: u64, mutation: WindowTransientMutation) -> Result<Box<dyn ErasedWindowTransientPublication>, RejectedWindowTransientEmission>;
     fn advance(&mut self, publication: &mut dyn ErasedWindowTransientPublication, grant: store::ArtifactStoreOneItemGrant) -> Result<store::ArtifactStoreOneItemAdvance, Fault>;
     fn maintenance_step(&mut self, maximum_items: usize, maximum_bytes: usize) -> Result<PluginCloseStep, Fault>;
     fn close_step(&mut self, maximum_items: usize, maximum_bytes: usize) -> Result<PluginCloseStep, Fault>;
@@ -214,15 +222,26 @@ impl<O: WindowTransientOwner> ErasedWindowTransientStoreOwner for TypedWindowTra
         Ok(())
     }
 
-    fn begin(&mut self, operation: semio_framework_job::OperationId, expected_generation: u64, document_generation: u64, mutation: WindowTransientMutation) -> Result<Box<dyn ErasedWindowTransientPublication>, Fault> {
-        let window_id = mutation.window_id;
-        let typed = mutation.mutation.downcast::<O::Mutation>().map_err(|_| Fault::new(FaultOrigin::Framework, FaultCode::new("window-transient.mutation-type"), "window transient mutation did not match its registered window owner"))?;
+    fn begin(&mut self, operation: semio_framework_job::OperationId, expected_generation: u64, document_generation: u64, mutation: WindowTransientMutation) -> Result<Box<dyn ErasedWindowTransientPublication>, RejectedWindowTransientEmission> {
+        let WindowTransientMutation { window_id, window_kind_id, mutation } = mutation;
+        let typed = match mutation.downcast::<O::Mutation>() {
+            Ok(typed) => typed,
+            Err(mutation) => {
+                let fault = Fault::new(FaultOrigin::Framework, FaultCode::new("window-transient.mutation-type"), "window transient mutation did not match its registered window owner");
+                return Err(RejectedWindowTransientEmission { mutation: WindowTransientMutation { window_id, window_kind_id, mutation }, fault });
+            }
+        };
         let preparation = self.owners.preparation.clone();
         let retirement = self.owners.state_retirement.clone();
         let partition = self.partition(&window_id);
-        let publication =
-            partition.store.begin_publish_one_leased(operation, expected_generation, *typed, preparation.as_ref(), retirement).map_err(|rejected| Fault::new(FaultOrigin::Framework, FaultCode::new("window-transient.admission"), rejected.reason))?;
-        Ok(Box::new(TypedWindowTransientPublication::<O> { window_id, document_generation, publication }))
+        match partition.store.begin_publish_one_leased(operation, expected_generation, *typed, preparation.as_ref(), retirement) {
+            Ok(publication) => Ok(Box::new(TypedWindowTransientPublication::<O> { window_id, document_generation, publication })),
+            Err(rejected) => {
+                let (reason, mutation) = rejected.into_owners();
+                let fault = Fault::new(FaultOrigin::Framework, FaultCode::new("window-transient.admission"), reason);
+                Err(RejectedWindowTransientEmission { mutation: WindowTransientMutation { window_id, window_kind_id, mutation: Box::new(mutation) }, fault })
+            }
+        }
     }
 
     fn advance(&mut self, publication: &mut dyn ErasedWindowTransientPublication, grant: store::ArtifactStoreOneItemGrant) -> Result<store::ArtifactStoreOneItemAdvance, Fault> {
@@ -340,19 +359,20 @@ impl WindowTransientOwnerRegistry {
         owner.capture(window_id, self.document_generation).map(Some)
     }
 
-    pub(crate) fn begin(&mut self, operation: semio_framework_job::OperationId, authority: &WindowTransientAuthority, mutation: WindowTransientMutation) -> Result<Box<dyn ErasedWindowTransientPublication>, Fault> {
+    /// 📬️ Begins publishing `mutation` under the operation's captured `authority`; a refusal hands the mutation back.
+    pub(crate) fn begin(&mut self, operation: semio_framework_job::OperationId, authority: &WindowTransientAuthority, mutation: WindowTransientMutation) -> Result<Box<dyn ErasedWindowTransientPublication>, RejectedWindowTransientEmission> {
+        let refuse = |mutation, code: &str, message: &str| Err(RejectedWindowTransientEmission { mutation, fault: Fault::new(FaultOrigin::Framework, FaultCode::new(code), message) });
         if authority.snapshot.document_generation != self.document_generation {
-            return Err(Fault::new(FaultOrigin::Framework, FaultCode::new("window-transient.document-generation"), "window transient emission belongs to a replaced document"));
+            return refuse(mutation, "window-transient.document-generation", "window transient emission belongs to a replaced document");
         }
         if mutation.window_id != authority.window_id || mutation.window_kind_id != authority.window_kind_id {
-            return Err(Fault::new(FaultOrigin::Framework, FaultCode::new("window-transient.address"), "window transient emission does not match the operation's exact captured window authority"));
+            return refuse(mutation, "window-transient.address", "window transient emission does not match the operation's exact captured window authority");
         }
-        self.owners.get_mut(authority.window_kind_id.as_str()).ok_or_else(|| Fault::new(FaultOrigin::Framework, FaultCode::new("window-transient.owner"), "window transient emission has no registered concrete window owner"))?.begin(
-            operation,
-            authority.generation,
-            self.document_generation,
-            mutation,
-        )
+        let document_generation = self.document_generation;
+        match self.owners.get_mut(authority.window_kind_id.as_str()) {
+            Some(owner) => owner.begin(operation, authority.generation, document_generation, mutation),
+            None => refuse(mutation, "window-transient.owner", "window transient emission has no registered concrete window owner"),
+        }
     }
 
     pub(crate) fn advance(&mut self, publication: &mut dyn ErasedWindowTransientPublication, grant: store::ArtifactStoreOneItemGrant) -> Result<store::ArtifactStoreOneItemAdvance, Fault> {

@@ -1,0 +1,9 @@
+{
+  "mutation": "applyVideo",
+  "payload": {
+    "mutation": {
+      "mutation": "removeStream",
+      "index": 1
+    }
+  }
+}

@@ -1,7 +1,13 @@
-/** 🦠️ change-asset-extra-data executable glTF command. */
-import type { GltfJson, GltfSnapshot } from '../../📸️snapshot/🟦️.ts';
-import { clone, reject, run, same, type GltfLeafResult, type GltfMutationRejection } from './🟦️';
-export const GltfChangeAssetExtraDataDescriptor = { id: 's.stdio.gltf.mutation.change-asset-extra-data.v1', version: 1, touchedPaths: ["document/asset/extras"], referencePolicy: 'none' } as const;
-export interface GltfChangeAssetExtraDataPayload { data: GltfJson | null }
-export const validateGltfChangeAssetExtraData = (payload: GltfChangeAssetExtraDataPayload, base: GltfSnapshot): GltfMutationRejection | undefined => { if (same(payload.data, base.document.asset.extras ?? null)) return reject('gltf.mutation.no-observable-change', 'document/asset/extras', 'value already has this value'); return undefined; };
-export const applyGltfChangeAssetExtraData = (base: GltfSnapshot, payload: GltfChangeAssetExtraDataPayload): GltfLeafResult => run(base, payload, validateGltfChangeAssetExtraData, (next, payload) => { next.document.asset.extras = payload.data ?? undefined; });
+/** 🧾️ `change-asset-extra-data` wire twin: the flat `Apply` payload `GltfChangeAssetExtraDataPayload` and the phase wire `ChangeAssetExtraDataMutation`, exactly as `./🦀️.rs` writes them.
+ * @see ./🧬️schema/🔣️.json */
+import { type GltfJson, gltfWireObject, gltfWireRequired, parseGltfJson } from "../../../📸️snapshot/🟦️.ts";
+import { type GltfDiff, type GltfPhase, gltfWirePhase, parseGltfDiff } from "../../../🔺️diff/🟦️.ts";
+
+export interface GltfChangeAssetExtraDataPayload {
+  data: GltfJson;
+}
+
+export type ChangeAssetExtraDataMutation = GltfPhase<GltfChangeAssetExtraDataPayload, GltfDiff>;
+
+export const parseGltfChangeAssetExtraDataPayload = gltfWireObject<GltfChangeAssetExtraDataPayload>({ data: gltfWireRequired(parseGltfJson) });
+export const parseChangeAssetExtraDataMutation = gltfWirePhase(parseGltfChangeAssetExtraDataPayload, parseGltfDiff);

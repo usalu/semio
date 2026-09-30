@@ -1,0 +1,10 @@
+{
+  "angle": 1.5707963267948966,
+  "mutation": "rotateSelection",
+  "pivotX": 20.0,
+  "pivotY": 10.0,
+  "targets": [
+    "node-a",
+    "node-b"
+  ]
+}

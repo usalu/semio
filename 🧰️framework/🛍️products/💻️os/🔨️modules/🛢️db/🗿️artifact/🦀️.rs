@@ -245,6 +245,7 @@ where
         diff: protocol::ArtifactDiff { schema: schema.clone(), payload: encode_pathmap(&forward).await },
         inverse: protocol::InverseMutation { schema, payload: encode_pathmap(&backward).await },
         timestamp: op.timestamp().unwrap_or(default_timestamp),
+        transaction: None,
     })
 }
 //#endregion 🔖️Bridge
@@ -273,8 +274,16 @@ pub struct ConflictRecord {
 /// identity, kind, timestamp, and the regions it touched.
 // 🚫️async: E1 pure accessor consumed by a sync Iterator::map closure — see R9
 fn command_touch(envelope: &protocol::MutationEnvelope, touched: &db_state::TouchedSet) -> db_conflict::CommandTouch {
-    let touch = db_conflict::CommandTouch::new(envelope.mutation_id.clone(), envelope.actor.clone(), db_conflict::CommandKind::from(envelope.diff.schema.0.as_str()), envelope.timestamp);
+    let kind = if supersedes_inputs(envelope) { SUPERSEDE_TOUCH_KIND } else { envelope.diff.schema.0.as_str() };
+    let touch = db_conflict::CommandTouch::new(envelope.mutation_id.clone(), envelope.actor.clone(), db_conflict::CommandKind::from(kind), envelope.timestamp);
     touched.regions.iter().fold(touch, |touch, region| touch.touch(region.clone()))
+}
+
+/// ✏️ Whether `envelope` is a `Supersede` — the one history transition that writes document fields: it replaces the
+/// effective input of committed operations, so it is graded by its declared `target` like any other write
+/// (📋️ `.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/NON-DESTRUCTIVE-HISTORY-EDITING/📋️design.md` §2, §9.1).
+fn supersedes_inputs(envelope: &protocol::MutationEnvelope) -> bool {
+    matches!(protocol::history_transition_from_envelope(envelope), Ok(Some(protocol::HistoryTransition::Supersede(_))))
 }
 
 /// ⚖️ Grades one `db_conflict::ConflictRecord` into the `protocol::MutationMessage` the
@@ -300,12 +309,30 @@ async fn grade_conflict_record(record: &db_conflict::ConflictRecord) -> protocol
 /// the decision's edit so a later write can say it observed it, and it is never itself graded.
 const DURABLE_GROUP_TOUCH_KIND: &str = "db.durable-group";
 
+/// 🏷️ `CommandTouch` kind of a committed `Supersede` ([`supersedes_inputs`]): unlike every other history transition it
+/// writes the fields its declared target names, so later writes are graded against it and it against them.
+const SUPERSEDE_TOUCH_KIND: &str = "db.supersede";
+
 /// 🪪️ The code of the refusal the event log answers a `Revert`/`Reinstate` naming an operation another actor authored
 /// (`ArtifactEngine::submit`); a client localizes the refusal by this code, never by the message prose.
 pub const FOREIGN_HISTORY_TRANSITION_CODE: &str = "history.foreign-transition";
 
 /// 🗣️ The message of that refusal (developer detail; the UI text is the localized label of its code).
 pub const FOREIGN_HISTORY_TRANSITION_MESSAGE: &str = "an undo or redo may only name operations its own author wrote";
+
+/// 🧩️ The code of the refusal a history transition gets when its payload does not decode, or when a `Supersede` does
+/// not declare exactly its targets as its dependencies: every replica would refuse it, so the log never holds it.
+pub const MALFORMED_HISTORY_TRANSITION_CODE: &str = "history.malformed-transition";
+
+/// 🗣️ The message of that refusal.
+pub const MALFORMED_HISTORY_TRANSITION_MESSAGE: &str = "a history transition must decode and a supersession must depend on exactly its targets";
+
+/// 👻️ The code of the refusal a `Supersede` gets when it names an operation neither committed, nor earlier in its batch,
+/// nor folded by a durable group decision — the event log's twin of the fold's unknown-target error.
+pub const UNKNOWN_SUPERSEDE_TARGET_CODE: &str = "history.unknown-target";
+
+/// 🗣️ The message of that refusal.
+pub const UNKNOWN_SUPERSEDE_TARGET_MESSAGE: &str = "a supersession may only name operations the document's log holds";
 
 /// 🧷️ The recent-window marker of one committed durable group decision (see [`DURABLE_GROUP_TOUCH_KIND`]).
 fn durable_group_touch(edit_id: &str) -> db_conflict::CommandTouch {
@@ -326,19 +353,20 @@ fn touch_is_named(touch: &db_conflict::CommandTouch, observed: &str) -> bool {
     observed == touch.command_id.0 || (touch.kind.0 == DURABLE_GROUP_TOUCH_KIND && observed.strip_prefix(touch.command_id.0.as_str()).is_some_and(|position| position.starts_with('#')))
 }
 
-/// ✍️ Whether `touch` wrote document fields: history transitions (undo, redo, checkpoints) and durable
-/// group markers never did.
+/// ✍️ Whether `touch` wrote document fields: every operation and every `Supersede` did; the other history
+/// transitions (undo, redo, checkpoints) and durable group markers never did.
 fn touch_writes_fields(touch: &db_conflict::CommandTouch) -> bool {
     touch.kind.0 != DURABLE_GROUP_TOUCH_KIND && touch.kind.0 != protocol::HISTORY_TRANSITION_SCHEMA
 }
 
-/// 🕰️ The writes `envelope` was authored without seeing: in commit order (the recent commit window, then the
-/// batch's earlier envelopes), every write after the one it names as `observed` — all of them when it observed
-/// nothing in the window — by another actor. A replica stamps each operation it authors with the newest foreign
-/// operation it had applied, and replicas receive commits in commit order, so everything up to that one was seen;
-/// the author's own writes are its own history. A history transition is never graded.
-fn unseen_concurrent_writes<'a>(recent: &'a VecDeque<db_conflict::CommandTouch>, batch: &'a [db_conflict::CommandTouch], envelope: &protocol::MutationEnvelope) -> Vec<&'a db_conflict::CommandTouch> {
-    if protocol::is_history_transition(envelope) {
+/// 🕰️ The writes `envelope` (whose own touch is `written`) was authored without seeing: in commit order (the recent
+/// commit window, then the batch's earlier envelopes), every write after the one it names as `observed` — all of them
+/// when it observed nothing in the window — by another actor. A replica stamps each operation it authors with the
+/// newest foreign operation it had applied, and replicas receive commits in commit order, so everything up to that one
+/// was seen; the author's own writes are its own history. Only a field write is graded: a `Supersede` is, the other
+/// history transitions never are.
+fn unseen_concurrent_writes<'a>(recent: &'a VecDeque<db_conflict::CommandTouch>, batch: &'a [db_conflict::CommandTouch], written: &db_conflict::CommandTouch, envelope: &protocol::MutationEnvelope) -> Vec<&'a db_conflict::CommandTouch> {
+    if !touch_writes_fields(written) {
         return Vec::new();
     }
     let window: Vec<&db_conflict::CommandTouch> = recent.iter().chain(batch.iter()).collect();
@@ -1996,17 +2024,40 @@ impl ArtifactEngine {
         Ok(())
     }
 
-    /// 🪪️ An undo belongs to its author — the event log's twin of `protocol::fold_history`'s rule, so the log never holds an
-    /// operation every replica refuses: a `Revert` or `Reinstate` naming an operation this document's log (or an earlier
-    /// envelope of the same batch) records under another actor is refused before the WAL, whatever the merge policy, with the
-    /// one [`FOREIGN_HISTORY_TRANSITION_CODE`] message. An operation the log does not know belongs to anyone (the replicas'
-    /// fold says the same), and a transition that does not decode is left to the replicas' own decoder.
-    fn foreign_history_transition_refusal(&self, envelope: &protocol::MutationEnvelope, batch: &[protocol::MutationEnvelope]) -> Option<protocol::MutationMessage> {
-        let (protocol::HistoryTransition::Revert { mutation_ids } | protocol::HistoryTransition::Reinstate { mutation_ids }) = protocol::history_transition_from_envelope(envelope).ok()?? else {
-            return None;
+    /// 🪪️ The event log's twin of `protocol::fold_history`'s admission, so the log never holds a history transition every
+    /// replica refuses: refused before the WAL, whatever the merge policy, with one typed message.
+    /// - A payload that does not decode: [`MALFORMED_HISTORY_TRANSITION_CODE`].
+    /// - An undo belongs to its author: a `Revert` or `Reinstate` naming an operation this document's log (or an envelope of
+    ///   the same batch) records under another actor: [`FOREIGN_HISTORY_TRANSITION_CODE`]. An operation the log does not
+    ///   know belongs to anyone (the replicas' fold says the same).
+    /// - A `Supersede` has no ownership rule: editing history is non-destructive and reversible, and write permission is the
+    ///   security gate's. It must depend on exactly its targets ([`MALFORMED_HISTORY_TRANSITION_CODE`]), and every target
+    ///   must be committed, `earlier` in its batch, or folded by a durable group decision ([`UNKNOWN_SUPERSEDE_TARGET_CODE`]).
+    ///
+    /// 📋️ `.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/NON-DESTRUCTIVE-HISTORY-EDITING/📋️design.md` §2, §9.1.
+    fn history_transition_refusal(&self, envelope: &protocol::MutationEnvelope, batch: &[protocol::MutationEnvelope], earlier: &HashSet<String>) -> Option<protocol::MutationMessage> {
+        let transition = match protocol::history_transition_from_envelope(envelope) {
+            Ok(Some(transition)) => transition,
+            Ok(None) => return None,
+            Err(_) => return Some(protocol::MutationMessage::error(MALFORMED_HISTORY_TRANSITION_CODE, MALFORMED_HISTORY_TRANSITION_MESSAGE)),
         };
-        let author = |id: &protocol::MutationId| self.applied.get(&id.0).map(|applied| &applied.actor).or_else(|| batch.iter().find(|earlier| &earlier.mutation_id == id).map(|earlier| &earlier.actor));
-        mutation_ids.iter().any(|id| author(id).is_some_and(|actor| actor != &envelope.actor)).then(|| protocol::MutationMessage::error(FOREIGN_HISTORY_TRANSITION_CODE, FOREIGN_HISTORY_TRANSITION_MESSAGE))
+        match transition {
+            protocol::HistoryTransition::Revert { mutation_ids } | protocol::HistoryTransition::Reinstate { mutation_ids } => {
+                let author = |id: &protocol::MutationId| self.applied.get(&id.0).map(|applied| &applied.actor).or_else(|| batch.iter().find(|earlier| &earlier.mutation_id == id).map(|earlier| &earlier.actor));
+                mutation_ids.iter().any(|id| author(id).is_some_and(|actor| actor != &envelope.actor)).then(|| protocol::MutationMessage::error(FOREIGN_HISTORY_TRANSITION_CODE, FOREIGN_HISTORY_TRANSITION_MESSAGE))
+            }
+            protocol::HistoryTransition::Supersede(supersede) => {
+                let targets = supersede.targets();
+                if envelope.dependencies != targets {
+                    return Some(protocol::MutationMessage::error(MALFORMED_HISTORY_TRANSITION_CODE, MALFORMED_HISTORY_TRANSITION_MESSAGE));
+                }
+                targets
+                    .into_iter()
+                    .find(|target| !self.applied.contains_key(&target.0) && !earlier.contains(&target.0) && !self.names_durable_group_operation(&target.0))
+                    .map(|target| protocol::MutationMessage::error(UNKNOWN_SUPERSEDE_TARGET_CODE, UNKNOWN_SUPERSEDE_TARGET_MESSAGE).at([target.0]))
+            }
+            protocol::HistoryTransition::Commit(_) | protocol::HistoryTransition::Branch { .. } | protocol::HistoryTransition::Checkout { .. } | protocol::HistoryTransition::Repin { .. } => None,
+        }
     }
 
     /// 👁️ Whether `dependency` names an operation a committed durable group decision folded: the
@@ -2083,7 +2134,7 @@ impl ArtifactEngine {
             // envelope (content-checked above) skipped it: it is an idempotent resend.
             let principal = db_security::Principal::new(envelope.actor.clone(), db_security::TenantId::from("default"), vec!["member".to_string()]);
             self.config.security.admit_commands(&principal, &db_security::TenantId::from("default"), &envelope.document_id, &envelope.diff.schema.0, &[(&envelope.actor, &envelope.mutation_id)], now_ms).await?;
-            if let Some(refusal) = self.foreign_history_transition_refusal(envelope, &batch.envelopes) {
+            if let Some(refusal) = self.history_transition_refusal(envelope, &batch.envelopes, &batch_ids) {
                 return Err(DbError::Rejected { policy: options.policy, worst: protocol::Severity::Error, messages: vec![refusal] });
             }
 
@@ -2119,7 +2170,7 @@ impl ArtifactEngine {
         let batch_touches: Vec<db_conflict::CommandTouch> = planned.iter().map(|(envelope, plan)| command_touch(envelope, &plan.touched)).collect();
         let mut messages: Vec<protocol::MutationMessage> = Vec::new();
         for (index, (envelope, _)) in planned.iter().enumerate() {
-            for unseen in unseen_concurrent_writes(&self.recent_touches, &batch_touches[..index], envelope) {
+            for unseen in unseen_concurrent_writes(&self.recent_touches, &batch_touches[..index], &batch_touches[index], envelope) {
                 let unseen_target = self.recent_targets.get(&unseen.command_id.0).map(Vec::as_slice).or_else(|| planned[..index].iter().find(|(earlier, _)| earlier.mutation_id == unseen.command_id).map(|(earlier, _)| earlier.target.as_slice())).unwrap_or(&[]);
                 messages.extend(grade_concurrent_write(&batch_touches[index], &envelope.target, unseen, unseen_target).await);
             }
@@ -2254,6 +2305,7 @@ impl ArtifactEngine {
             diff: protocol::ArtifactDiff { schema: original.inverse.schema.clone(), payload: encode_pathmap(&entries_to_value(&undo_diff_entries)).await },
             inverse: protocol::InverseMutation { schema: original.diff.schema, payload: encode_pathmap(&entries_to_value(&redo_inverse_entries)).await },
             timestamp: protocol::HybridLogicalTimestamp::new(0, now_ms),
+            transaction: None,
         };
         self.submit(CommandBatch::new(vec![compensating]).await?, SubmitOptions::default(), now_ms).await
     }
@@ -2523,6 +2575,7 @@ impl ArtifactEngine {
             diff: protocol::ArtifactDiff { schema: protocol::SchemaId(DB_PATHMAP_SCHEMA.to_string()), payload: encode_pathmap(&entries_to_value(&dsl_entries)).await },
             inverse: protocol::InverseMutation { schema: protocol::SchemaId(DB_PATHMAP_SCHEMA.to_string()), payload: encode_pathmap(&DslValue::Object(vec![])).await },
             timestamp: protocol::HybridLogicalTimestamp::new(0, now_ms),
+            transaction: None,
         };
         self.previews.publish(db_preview::PublishPreviewRequest { document: self.document.clone(), actor: ActorId("preview".to_string()), key: format!("preview-{now_ms}"), base: self.frontier.clone(), envelope, touched, ttl_ms: None, now_ms })
     }
@@ -3801,6 +3854,9 @@ enum HistoryEnvelopeField {
     ClockActor,
     ClockPhysical,
     ClockLogical,
+    TransactionFlag,
+    TransactionId,
+    TransactionTool,
     Done,
 }
 
@@ -3820,6 +3876,13 @@ impl HistoryEnvelopeCursor {
             return Err(DbError::Corrupt("history command range exceeds retained pages".to_string()));
         }
         Ok(Self { pos: offset, end, field: HistoryEnvelopeField::MutationId, dependencies: 0, target_segments: 0, mutation_id: None })
+    }
+
+    fn finish(&self) -> Result<HistoryEnvelopeField, DbError> {
+        if self.pos != self.end {
+            return Err(DbError::Corrupt("history envelope has trailing bytes".to_string()));
+        }
+        Ok(HistoryEnvelopeField::Done)
     }
 
     fn skip_text(&mut self, pages: &HistoryPageSet, scratch: &mut [u8]) -> Result<(), DbError> {
@@ -3914,10 +3977,22 @@ impl HistoryEnvelopeCursor {
             }
             HistoryEnvelopeField::ClockLogical => {
                 pages.read_varint(&mut self.pos, self.end)?;
-                if self.pos != self.end {
-                    return Err(DbError::Corrupt("history envelope has trailing bytes".to_string()));
-                }
-                self.field = HistoryEnvelopeField::Done;
+                self.field = HistoryEnvelopeField::TransactionFlag;
+            }
+            HistoryEnvelopeField::TransactionFlag => {
+                self.field = match pages.read_varint(&mut self.pos, self.end)? {
+                    0 => self.finish()?,
+                    1 => HistoryEnvelopeField::TransactionId,
+                    _ => return Err(DbError::Corrupt("history envelope transaction flag is invalid".to_string())),
+                };
+            }
+            HistoryEnvelopeField::TransactionId => {
+                self.skip_text(pages, scratch)?;
+                self.field = HistoryEnvelopeField::TransactionTool;
+            }
+            HistoryEnvelopeField::TransactionTool => {
+                self.skip_text(pages, scratch)?;
+                self.field = self.finish()?;
             }
             HistoryEnvelopeField::Done => return Ok(self.mutation_id.take()),
         }

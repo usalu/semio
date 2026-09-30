@@ -5,16 +5,52 @@
   "type": "object",
   "additionalProperties": false,
   "required": [
+    "mutation",
     "id",
     "newName"
   ],
   "properties": {
+    "mutation": {
+      "const": "renamePrivacyRequirement"
+    },
     "id": {
-      "type": "integer",
-      "minimum": 0
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Privacy Requirement",
+          "de": "Privatsphäreanforderung"
+        },
+        "description": {
+          "en": "The privacy requirement to rename.",
+          "de": "Umzubenennender Eintrag vom Typ „Privatsphäreanforderung“."
+        },
+        "ref": {
+          "kind": "privacyRequirement",
+          "domain": "program",
+          "granularity": "entity"
+        },
+        "group": "target",
+        "order": 10
+      }
     },
     "newName": {
-      "type": "string"
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "text",
+        "role": "value",
+        "label": {
+          "en": "New Name",
+          "de": "Neuer Name"
+        },
+        "description": {
+          "en": "New name of the privacy requirement.",
+          "de": "Neuer Name des Eintrags vom Typ „Privatsphäreanforderung“."
+        },
+        "group": "identity",
+        "order": 20
+      }
     }
   }
 }

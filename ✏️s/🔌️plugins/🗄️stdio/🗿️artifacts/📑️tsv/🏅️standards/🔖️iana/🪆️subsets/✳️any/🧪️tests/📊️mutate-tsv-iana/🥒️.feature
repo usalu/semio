@@ -54,23 +54,12 @@ Feature: Apply every typed IANA TSV mutation to a real-world table
     Then the oracle and the subject agree on the semantic projection
     Examples:
       | id                   | params |
-      | set-snapshot         | {"records": [["Name", "Wert"], ["Testfeld", "Ünïcödé ohne Tab"]], "trailingNewline": true, "lineEnding": "lf"} |
+      | set-snapshot         | {"snapshot": {"schema": "stdio.tsv", "records": [["Name", "Wert"], ["Testfeld", "Ünïcödé ohne Tab"]], "trailingNewline": true, "lineEnding": "lf"}} |
       | set-trailing-newline | {"trailingNewline": false} |
       | set-line-ending      | {"lineEnding": "crlf"} |
       | insert-row           | {"index": 5, "row": ["BB-99", "Marktplätze", "Baustoffbörse Hannover", "Deutschland", "Angebotsübersicht, Detailseite", "öffentlich", "Website", "—", "Beschreibung, Bilder, Preis, Menge, Materialstandort", "Kategorien, Suche, Filter", "Anfrage, Reservierung", "Abholung, Lieferung"]} |
       | remove-row           | {"index": 25} |
       | set-cell             | {"rowIndex": 1, "fieldIndex": 8, "value": "Beschreibung, Bilder, Preis"} |
-
-  @id-no-mutation-baseline-mutate
-  @level-exhaustive
-  @mode-differential
-  Scenario: Apply no-mutation to the real table
-    Given the real input table shared://♻️reuse-marketplaces.tsv
-    When the no-mutation mutation is applied with its parameters
-      """
-      {"kind": "no-mutation", "params": {}}
-      """
-    Then the oracle and the subject agree on the semantic projection
 
   @id-inverse
   @level-exhaustive
@@ -85,24 +74,12 @@ Feature: Apply every typed IANA TSV mutation to a real-world table
     Then the oracle and the subject agree on the semantic projection of the original table
     Examples:
       | id                   | params |
-      | set-snapshot         | {"records": [["Name", "Wert"], ["Testfeld", "Ünïcödé ohne Tab"]], "trailingNewline": true, "lineEnding": "lf"} |
+      | set-snapshot         | {"snapshot": {"schema": "stdio.tsv", "records": [["Name", "Wert"], ["Testfeld", "Ünïcödé ohne Tab"]], "trailingNewline": true, "lineEnding": "lf"}} |
       | set-trailing-newline | {"trailingNewline": false} |
       | set-line-ending      | {"lineEnding": "crlf"} |
       | insert-row           | {"index": 5, "row": ["BB-99", "Marktplätze", "Baustoffbörse Hannover", "Deutschland", "Angebotsübersicht, Detailseite", "öffentlich", "Website", "—", "Beschreibung, Bilder, Preis, Menge, Materialstandort", "Kategorien, Suche, Filter", "Anfrage, Reservierung", "Abholung, Lieferung"]} |
       | remove-row           | {"index": 25} |
       | set-cell             | {"rowIndex": 1, "fieldIndex": 8, "value": "Beschreibung, Bilder, Preis"} |
-
-  @id-no-mutation-baseline-inverse
-  @level-exhaustive
-  @mode-differential
-  Scenario: Undoing no-mutation restores the real table
-    Given the real input table shared://♻️reuse-marketplaces.tsv
-    When the no-mutation mutation is applied with its parameters
-      """
-      {"kind": "no-mutation", "params": {}}
-      """
-    And the inverse mutation is applied to that result
-    Then the oracle and the subject agree on the semantic projection of the original table
 
   @id-identity-round-trip
   @level-long

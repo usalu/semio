@@ -11,13 +11,66 @@
   ],
   "properties": {
     "zoneId": {
-      "type": "string"
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Zone",
+          "de": "Zone"
+        },
+        "description": {
+          "en": "The thermal zone this mutation addresses.",
+          "de": "Die thermische Zone, die diese Mutation adressiert."
+        },
+        "ref": {
+          "kind": "zone"
+        },
+        "group": "target",
+        "order": 10
+      }
     },
     "windowId": {
-      "type": "string"
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Window",
+          "de": "Fenster"
+        },
+        "description": {
+          "en": "The window of the zone this mutation addresses.",
+          "de": "Das Fenster der Zone, das diese Mutation adressiert."
+        },
+        "ref": {
+          "kind": "window"
+        },
+        "group": "target",
+        "order": 20
+      }
     },
     "newInclinationDeg": {
-      "type": "number"
+      "type": "number",
+      "minimum": 0,
+      "maximum": 180,
+      "x-semio-ui": {
+        "widget": "dial",
+        "role": "value",
+        "label": {
+          "en": "Window inclination",
+          "de": "Fensterneigung"
+        },
+        "description": {
+          "en": "Angle to the horizontal: 90° is a vertical window.",
+          "de": "Winkel zur Horizontalen: 90° ist ein senkrechtes Fenster."
+        },
+        "unit": "°",
+        "step": 1,
+        "precision": 0,
+        "group": "summer",
+        "order": 30
+      }
     }
   }
 }

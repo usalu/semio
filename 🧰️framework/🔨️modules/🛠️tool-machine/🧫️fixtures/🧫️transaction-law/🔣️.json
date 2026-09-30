@@ -1,0 +1,2260 @@
+{
+  "schema": "semio.framework.tool-machine.transaction-law.v1",
+  "states": [
+    "open",
+    "committed",
+    "aborted"
+  ],
+  "yieldKinds": [
+    "upsert",
+    "retract",
+    "commit",
+    "abort"
+  ],
+  "refusals": [
+    "toolTransaction.closed",
+    "toolTransaction.unclosed"
+  ],
+  "abortReasons": [
+    "tool",
+    "blur",
+    "captureLost",
+    "baseMoved",
+    "frozen",
+    "retired"
+  ],
+  "matrix": [
+    {
+      "from": "open",
+      "yield": "upsert",
+      "to": "open"
+    },
+    {
+      "from": "open",
+      "yield": "retract",
+      "to": "open"
+    },
+    {
+      "from": "open",
+      "yield": "commit",
+      "to": "committed"
+    },
+    {
+      "from": "open",
+      "yield": "abort",
+      "to": "aborted"
+    },
+    {
+      "from": "committed",
+      "yield": "upsert",
+      "refusal": "toolTransaction.closed"
+    },
+    {
+      "from": "committed",
+      "yield": "retract",
+      "refusal": "toolTransaction.closed"
+    },
+    {
+      "from": "committed",
+      "yield": "commit",
+      "refusal": "toolTransaction.closed"
+    },
+    {
+      "from": "committed",
+      "yield": "abort",
+      "refusal": "toolTransaction.closed"
+    },
+    {
+      "from": "aborted",
+      "yield": "upsert",
+      "refusal": "toolTransaction.closed"
+    },
+    {
+      "from": "aborted",
+      "yield": "retract",
+      "refusal": "toolTransaction.closed"
+    },
+    {
+      "from": "aborted",
+      "yield": "commit",
+      "refusal": "toolTransaction.closed"
+    },
+    {
+      "from": "aborted",
+      "yield": "abort",
+      "refusal": "toolTransaction.closed"
+    }
+  ],
+  "cases": [
+    {
+      "name": "upsert appends new keys in order",
+      "transaction": {
+        "id": "tx-e4f8055f280d5342",
+        "tool": "demo#drag"
+      },
+      "yields": [
+        {
+          "kind": "upsert",
+          "key": "a",
+          "mutation": {
+            "n": 1
+          }
+        },
+        {
+          "kind": "upsert",
+          "key": "b",
+          "mutation": {
+            "n": 2
+          }
+        }
+      ],
+      "expect": {
+        "state": "open",
+        "entries": [
+          {
+            "key": "a",
+            "mutation": {
+              "n": 1
+            }
+          },
+          {
+            "key": "b",
+            "mutation": {
+              "n": 2
+            }
+          }
+        ],
+        "refused": []
+      }
+    },
+    {
+      "name": "upsert replaces by key keeping the first-insertion slot",
+      "transaction": {
+        "id": "tx-e4f8055f280d5342",
+        "tool": "demo#drag"
+      },
+      "yields": [
+        {
+          "kind": "upsert",
+          "key": "a",
+          "mutation": {
+            "n": 1
+          }
+        },
+        {
+          "kind": "upsert",
+          "key": "b",
+          "mutation": {
+            "n": 2
+          }
+        },
+        {
+          "kind": "upsert",
+          "key": "a",
+          "mutation": {
+            "n": 3
+          }
+        }
+      ],
+      "expect": {
+        "state": "open",
+        "entries": [
+          {
+            "key": "a",
+            "mutation": {
+              "n": 3
+            }
+          },
+          {
+            "key": "b",
+            "mutation": {
+              "n": 2
+            }
+          }
+        ],
+        "refused": []
+      }
+    },
+    {
+      "name": "retract removes the key",
+      "transaction": {
+        "id": "tx-e4f8055f280d5342",
+        "tool": "demo#drag"
+      },
+      "yields": [
+        {
+          "kind": "upsert",
+          "key": "a",
+          "mutation": {
+            "n": 1
+          }
+        },
+        {
+          "kind": "upsert",
+          "key": "b",
+          "mutation": {
+            "n": 2
+          }
+        },
+        {
+          "kind": "retract",
+          "key": "a"
+        }
+      ],
+      "expect": {
+        "state": "open",
+        "entries": [
+          {
+            "key": "b",
+            "mutation": {
+              "n": 2
+            }
+          }
+        ],
+        "refused": []
+      }
+    },
+    {
+      "name": "retract of an unknown key changes nothing",
+      "transaction": {
+        "id": "tx-e4f8055f280d5342",
+        "tool": "demo#drag"
+      },
+      "yields": [
+        {
+          "kind": "upsert",
+          "key": "a",
+          "mutation": {
+            "n": 1
+          }
+        },
+        {
+          "kind": "retract",
+          "key": "z"
+        }
+      ],
+      "expect": {
+        "state": "open",
+        "entries": [
+          {
+            "key": "a",
+            "mutation": {
+              "n": 1
+            }
+          }
+        ],
+        "refused": []
+      }
+    },
+    {
+      "name": "retract then upsert re-inserts at the end",
+      "transaction": {
+        "id": "tx-e4f8055f280d5342",
+        "tool": "demo#drag"
+      },
+      "yields": [
+        {
+          "kind": "upsert",
+          "key": "a",
+          "mutation": {
+            "n": 1
+          }
+        },
+        {
+          "kind": "upsert",
+          "key": "b",
+          "mutation": {
+            "n": 2
+          }
+        },
+        {
+          "kind": "retract",
+          "key": "a"
+        },
+        {
+          "kind": "upsert",
+          "key": "a",
+          "mutation": {
+            "n": 3
+          }
+        }
+      ],
+      "expect": {
+        "state": "open",
+        "entries": [
+          {
+            "key": "b",
+            "mutation": {
+              "n": 2
+            }
+          },
+          {
+            "key": "a",
+            "mutation": {
+              "n": 3
+            }
+          }
+        ],
+        "refused": []
+      }
+    },
+    {
+      "name": "commit keeps the entries in first-insertion order",
+      "transaction": {
+        "id": "tx-e4f8055f280d5342",
+        "tool": "demo#drag"
+      },
+      "yields": [
+        {
+          "kind": "upsert",
+          "key": "a",
+          "mutation": {
+            "n": 1
+          }
+        },
+        {
+          "kind": "upsert",
+          "key": "b",
+          "mutation": {
+            "n": 2
+          }
+        },
+        {
+          "kind": "upsert",
+          "key": "a",
+          "mutation": {
+            "n": 3
+          }
+        },
+        {
+          "kind": "commit"
+        }
+      ],
+      "expect": {
+        "state": "committed",
+        "entries": [
+          {
+            "key": "a",
+            "mutation": {
+              "n": 3
+            }
+          },
+          {
+            "key": "b",
+            "mutation": {
+              "n": 2
+            }
+          }
+        ],
+        "refused": []
+      }
+    },
+    {
+      "name": "commit of an emptied transaction is no edit",
+      "transaction": {
+        "id": "tx-e4f8055f280d5342",
+        "tool": "demo#drag"
+      },
+      "yields": [
+        {
+          "kind": "upsert",
+          "key": "a",
+          "mutation": {
+            "n": 1
+          }
+        },
+        {
+          "kind": "retract",
+          "key": "a"
+        },
+        {
+          "kind": "commit"
+        }
+      ],
+      "expect": {
+        "state": "committed",
+        "entries": [],
+        "refused": []
+      }
+    },
+    {
+      "name": "commit without yields is no edit",
+      "transaction": {
+        "id": "tx-e4f8055f280d5342",
+        "tool": "demo#drag"
+      },
+      "yields": [
+        {
+          "kind": "commit"
+        }
+      ],
+      "expect": {
+        "state": "committed",
+        "entries": [],
+        "refused": []
+      }
+    },
+    {
+      "name": "abort leaves zero trace",
+      "transaction": {
+        "id": "tx-e4f8055f280d5342",
+        "tool": "demo#drag"
+      },
+      "yields": [
+        {
+          "kind": "upsert",
+          "key": "a",
+          "mutation": {
+            "n": 1
+          }
+        },
+        {
+          "kind": "upsert",
+          "key": "b",
+          "mutation": {
+            "n": 2
+          }
+        },
+        {
+          "kind": "abort"
+        }
+      ],
+      "expect": {
+        "state": "aborted",
+        "entries": [],
+        "refused": []
+      }
+    },
+    {
+      "name": "every yield after commit is refused",
+      "transaction": {
+        "id": "tx-e4f8055f280d5342",
+        "tool": "demo#drag"
+      },
+      "yields": [
+        {
+          "kind": "upsert",
+          "key": "a",
+          "mutation": {
+            "n": 1
+          }
+        },
+        {
+          "kind": "commit"
+        },
+        {
+          "kind": "upsert",
+          "key": "b",
+          "mutation": {
+            "n": 2
+          }
+        },
+        {
+          "kind": "abort"
+        },
+        {
+          "kind": "retract",
+          "key": "a"
+        },
+        {
+          "kind": "commit"
+        }
+      ],
+      "expect": {
+        "state": "committed",
+        "entries": [
+          {
+            "key": "a",
+            "mutation": {
+              "n": 1
+            }
+          }
+        ],
+        "refused": [
+          2,
+          3,
+          4,
+          5
+        ]
+      }
+    },
+    {
+      "name": "every yield after abort is refused",
+      "transaction": {
+        "id": "tx-e4f8055f280d5342",
+        "tool": "demo#drag"
+      },
+      "yields": [
+        {
+          "kind": "upsert",
+          "key": "a",
+          "mutation": {
+            "n": 1
+          }
+        },
+        {
+          "kind": "abort"
+        },
+        {
+          "kind": "upsert",
+          "key": "b",
+          "mutation": {
+            "n": 2
+          }
+        },
+        {
+          "kind": "commit"
+        }
+      ],
+      "expect": {
+        "state": "aborted",
+        "entries": [],
+        "refused": [
+          2,
+          3
+        ]
+      }
+    }
+  ],
+  "ids": [
+    {
+      "actor": "actor-1",
+      "clock": {
+        "actor": 7,
+        "physical_ms": 1002,
+        "logical": 0
+      },
+      "tool": "demo#drag",
+      "id": "tx-e4f8055f280d5342"
+    },
+    {
+      "actor": "actor-1",
+      "clock": {
+        "actor": 7,
+        "physical_ms": 1002,
+        "logical": 1
+      },
+      "tool": "demo#drag",
+      "id": "tx-3b8b87e4510bb276"
+    },
+    {
+      "actor": "actor-2",
+      "clock": {
+        "actor": 7,
+        "physical_ms": 1002,
+        "logical": 0
+      },
+      "tool": "demo#drag",
+      "id": "tx-81e2b57ff0fcbca8"
+    },
+    {
+      "actor": "actor-1",
+      "clock": {
+        "actor": 7,
+        "physical_ms": 1002,
+        "logical": 0
+      },
+      "tool": "demo#rotate",
+      "id": "tx-98a63614841d6298"
+    },
+    {
+      "actor": "Zoë 🧑‍🎨",
+      "clock": {
+        "actor": 9007199254740991,
+        "physical_ms": 1727654400000,
+        "logical": 300
+      },
+      "tool": "puzzle#select",
+      "id": "tx-7c2c97f27424df7b"
+    },
+    {
+      "actor": "",
+      "clock": {
+        "actor": 0,
+        "physical_ms": 0,
+        "logical": 0
+      },
+      "tool": "t",
+      "id": "tx-99035ba8a66c4e1e"
+    },
+    {
+      "actor": "actor-1",
+      "clock": {
+        "actor": 7,
+        "physical_ms": 1005,
+        "logical": 0
+      },
+      "tool": "demo#drag",
+      "id": "tx-8d464e628edab68b"
+    },
+    {
+      "actor": "actor-1",
+      "clock": {
+        "actor": 7,
+        "physical_ms": 1007,
+        "logical": 0
+      },
+      "tool": "demo#drag",
+      "id": "tx-82d57c9700d82af7"
+    }
+  ],
+  "gesture": {
+    "tool": "demo#drag",
+    "actor": "actor-1",
+    "input": {
+      "magnet": {
+        "x": 100,
+        "y": 0
+      },
+      "radius": 10
+    },
+    "resume": [
+      {
+        "state": "idle",
+        "transaction": "none",
+        "expect": "ok"
+      },
+      {
+        "state": "idle",
+        "transaction": "open",
+        "expect": "toolTransaction.unclosed"
+      },
+      {
+        "state": "idle",
+        "transaction": "committed",
+        "expect": "toolTransaction.closed"
+      },
+      {
+        "state": "idle",
+        "transaction": "aborted",
+        "expect": "toolTransaction.closed"
+      },
+      {
+        "state": "pressed",
+        "transaction": "none",
+        "expect": "ok"
+      },
+      {
+        "state": "pressed",
+        "transaction": "open",
+        "expect": "ok"
+      },
+      {
+        "state": "dragging",
+        "transaction": "none",
+        "expect": "ok"
+      },
+      {
+        "state": "dragging",
+        "transaction": "open",
+        "expect": "ok"
+      },
+      {
+        "state": "dragging",
+        "transaction": "committed",
+        "expect": "toolTransaction.closed"
+      },
+      {
+        "state": "dragging",
+        "transaction": "aborted",
+        "expect": "toolTransaction.closed"
+      }
+    ],
+    "variants": [
+      {
+        "chart": {
+          "id": "drag_gesture",
+          "initial": "idle",
+          "states": [
+            "idle",
+            "pressed",
+            "dragging"
+          ],
+          "transitions": [
+            {
+              "from": "idle",
+              "event": "pointerDown",
+              "to": "pressed",
+              "action": "press"
+            },
+            {
+              "from": "pressed",
+              "event": "pointerMove",
+              "to": "dragging",
+              "action": "drag"
+            },
+            {
+              "from": "pressed",
+              "event": "pointerUp",
+              "to": "idle",
+              "action": null
+            },
+            {
+              "from": "pressed",
+              "event": "escape",
+              "to": "idle",
+              "action": null
+            },
+            {
+              "from": "dragging",
+              "event": "pointerMove",
+              "to": "dragging",
+              "action": "drag"
+            },
+            {
+              "from": "dragging",
+              "event": "pointerUp",
+              "to": "idle",
+              "action": "release"
+            },
+            {
+              "from": "dragging",
+              "event": "escape",
+              "to": "idle",
+              "action": "cancel"
+            }
+          ]
+        },
+        "scenarios": [
+          {
+            "name": "press, drag and release commit one transaction",
+            "steps": [
+              {
+                "event": {
+                  "type": "pointerDown",
+                  "x": 0,
+                  "y": 0
+                },
+                "clock": {
+                  "actor": 7,
+                  "physical_ms": 1001,
+                  "logical": 0
+                },
+                "state": "pressed",
+                "step": {
+                  "kind": "idle"
+                }
+              },
+              {
+                "event": {
+                  "type": "pointerMove",
+                  "x": 5,
+                  "y": 0
+                },
+                "clock": {
+                  "actor": 7,
+                  "physical_ms": 1002,
+                  "logical": 0
+                },
+                "state": "dragging",
+                "step": {
+                  "kind": "open",
+                  "transaction": {
+                    "id": "tx-e4f8055f280d5342",
+                    "tool": "demo#drag"
+                  },
+                  "entries": [
+                    {
+                      "key": "translate",
+                      "mutation": {
+                        "kind": "translate",
+                        "dx": 5,
+                        "dy": 0
+                      }
+                    }
+                  ]
+                }
+              },
+              {
+                "event": {
+                  "type": "pointerMove",
+                  "x": 10,
+                  "y": 4
+                },
+                "clock": {
+                  "actor": 7,
+                  "physical_ms": 1003,
+                  "logical": 0
+                },
+                "state": "dragging",
+                "step": {
+                  "kind": "open",
+                  "transaction": {
+                    "id": "tx-e4f8055f280d5342",
+                    "tool": "demo#drag"
+                  },
+                  "entries": [
+                    {
+                      "key": "translate",
+                      "mutation": {
+                        "kind": "translate",
+                        "dx": 10,
+                        "dy": 4
+                      }
+                    }
+                  ]
+                }
+              },
+              {
+                "event": {
+                  "type": "pointerUp"
+                },
+                "clock": {
+                  "actor": 7,
+                  "physical_ms": 1004,
+                  "logical": 0
+                },
+                "state": "idle",
+                "step": {
+                  "kind": "committed",
+                  "transaction": {
+                    "id": "tx-e4f8055f280d5342",
+                    "tool": "demo#drag"
+                  },
+                  "mutations": [
+                    {
+                      "kind": "translate",
+                      "dx": 10,
+                      "dy": 4
+                    }
+                  ]
+                }
+              }
+            ]
+          },
+          {
+            "name": "escape aborts with zero trace",
+            "steps": [
+              {
+                "event": {
+                  "type": "pointerDown",
+                  "x": 0,
+                  "y": 0
+                },
+                "clock": {
+                  "actor": 7,
+                  "physical_ms": 1001,
+                  "logical": 0
+                },
+                "state": "pressed",
+                "step": {
+                  "kind": "idle"
+                }
+              },
+              {
+                "event": {
+                  "type": "pointerMove",
+                  "x": 3,
+                  "y": 4
+                },
+                "clock": {
+                  "actor": 7,
+                  "physical_ms": 1002,
+                  "logical": 0
+                },
+                "state": "dragging",
+                "step": {
+                  "kind": "open",
+                  "transaction": {
+                    "id": "tx-e4f8055f280d5342",
+                    "tool": "demo#drag"
+                  },
+                  "entries": [
+                    {
+                      "key": "translate",
+                      "mutation": {
+                        "kind": "translate",
+                        "dx": 3,
+                        "dy": 4
+                      }
+                    }
+                  ]
+                }
+              },
+              {
+                "event": {
+                  "type": "escape"
+                },
+                "clock": {
+                  "actor": 7,
+                  "physical_ms": 1003,
+                  "logical": 0
+                },
+                "state": "idle",
+                "step": {
+                  "kind": "aborted",
+                  "transaction": {
+                    "id": "tx-e4f8055f280d5342",
+                    "tool": "demo#drag"
+                  },
+                  "reason": "tool"
+                }
+              }
+            ]
+          },
+          {
+            "name": "a second gesture is a second transaction",
+            "steps": [
+              {
+                "event": {
+                  "type": "pointerDown",
+                  "x": 0,
+                  "y": 0
+                },
+                "clock": {
+                  "actor": 7,
+                  "physical_ms": 1001,
+                  "logical": 0
+                },
+                "state": "pressed",
+                "step": {
+                  "kind": "idle"
+                }
+              },
+              {
+                "event": {
+                  "type": "pointerMove",
+                  "x": 2,
+                  "y": 0
+                },
+                "clock": {
+                  "actor": 7,
+                  "physical_ms": 1002,
+                  "logical": 0
+                },
+                "state": "dragging",
+                "step": {
+                  "kind": "open",
+                  "transaction": {
+                    "id": "tx-e4f8055f280d5342",
+                    "tool": "demo#drag"
+                  },
+                  "entries": [
+                    {
+                      "key": "translate",
+                      "mutation": {
+                        "kind": "translate",
+                        "dx": 2,
+                        "dy": 0
+                      }
+                    }
+                  ]
+                }
+              },
+              {
+                "event": {
+                  "type": "pointerUp"
+                },
+                "clock": {
+                  "actor": 7,
+                  "physical_ms": 1003,
+                  "logical": 0
+                },
+                "state": "idle",
+                "step": {
+                  "kind": "committed",
+                  "transaction": {
+                    "id": "tx-e4f8055f280d5342",
+                    "tool": "demo#drag"
+                  },
+                  "mutations": [
+                    {
+                      "kind": "translate",
+                      "dx": 2,
+                      "dy": 0
+                    }
+                  ]
+                }
+              },
+              {
+                "event": {
+                  "type": "pointerDown",
+                  "x": 10,
+                  "y": 10
+                },
+                "clock": {
+                  "actor": 7,
+                  "physical_ms": 1004,
+                  "logical": 0
+                },
+                "state": "pressed",
+                "step": {
+                  "kind": "idle"
+                }
+              },
+              {
+                "event": {
+                  "type": "pointerMove",
+                  "x": 10,
+                  "y": 13
+                },
+                "clock": {
+                  "actor": 7,
+                  "physical_ms": 1005,
+                  "logical": 0
+                },
+                "state": "dragging",
+                "step": {
+                  "kind": "open",
+                  "transaction": {
+                    "id": "tx-8d464e628edab68b",
+                    "tool": "demo#drag"
+                  },
+                  "entries": [
+                    {
+                      "key": "translate",
+                      "mutation": {
+                        "kind": "translate",
+                        "dx": 0,
+                        "dy": 3
+                      }
+                    }
+                  ]
+                }
+              },
+              {
+                "event": {
+                  "type": "pointerUp"
+                },
+                "clock": {
+                  "actor": 7,
+                  "physical_ms": 1006,
+                  "logical": 0
+                },
+                "state": "idle",
+                "step": {
+                  "kind": "committed",
+                  "transaction": {
+                    "id": "tx-8d464e628edab68b",
+                    "tool": "demo#drag"
+                  },
+                  "mutations": [
+                    {
+                      "kind": "translate",
+                      "dx": 0,
+                      "dy": 3
+                    }
+                  ]
+                }
+              }
+            ]
+          },
+          {
+            "name": "a click without a drag publishes nothing",
+            "steps": [
+              {
+                "event": {
+                  "type": "pointerDown",
+                  "x": 1,
+                  "y": 1
+                },
+                "clock": {
+                  "actor": 7,
+                  "physical_ms": 1001,
+                  "logical": 0
+                },
+                "state": "pressed",
+                "step": {
+                  "kind": "idle"
+                }
+              },
+              {
+                "event": {
+                  "type": "pointerUp"
+                },
+                "clock": {
+                  "actor": 7,
+                  "physical_ms": 1002,
+                  "logical": 0
+                },
+                "state": "idle",
+                "step": {
+                  "kind": "idle"
+                }
+              }
+            ]
+          },
+          {
+            "name": "dragging back to the origin commits no edit",
+            "steps": [
+              {
+                "event": {
+                  "type": "pointerDown",
+                  "x": 0,
+                  "y": 0
+                },
+                "clock": {
+                  "actor": 7,
+                  "physical_ms": 1001,
+                  "logical": 0
+                },
+                "state": "pressed",
+                "step": {
+                  "kind": "idle"
+                }
+              },
+              {
+                "event": {
+                  "type": "pointerMove",
+                  "x": 3,
+                  "y": 3
+                },
+                "clock": {
+                  "actor": 7,
+                  "physical_ms": 1002,
+                  "logical": 0
+                },
+                "state": "dragging",
+                "step": {
+                  "kind": "open",
+                  "transaction": {
+                    "id": "tx-e4f8055f280d5342",
+                    "tool": "demo#drag"
+                  },
+                  "entries": [
+                    {
+                      "key": "translate",
+                      "mutation": {
+                        "kind": "translate",
+                        "dx": 3,
+                        "dy": 3
+                      }
+                    }
+                  ]
+                }
+              },
+              {
+                "event": {
+                  "type": "pointerMove",
+                  "x": 0,
+                  "y": 0
+                },
+                "clock": {
+                  "actor": 7,
+                  "physical_ms": 1003,
+                  "logical": 0
+                },
+                "state": "dragging",
+                "step": {
+                  "kind": "open",
+                  "transaction": {
+                    "id": "tx-e4f8055f280d5342",
+                    "tool": "demo#drag"
+                  },
+                  "entries": []
+                }
+              },
+              {
+                "event": {
+                  "type": "pointerUp"
+                },
+                "clock": {
+                  "actor": 7,
+                  "physical_ms": 1004,
+                  "logical": 0
+                },
+                "state": "idle",
+                "step": {
+                  "kind": "empty",
+                  "transaction": {
+                    "id": "tx-e4f8055f280d5342",
+                    "tool": "demo#drag"
+                  }
+                }
+              }
+            ]
+          },
+          {
+            "name": "magnet proximity upserts and retracts the connection",
+            "steps": [
+              {
+                "event": {
+                  "type": "pointerDown",
+                  "x": 80,
+                  "y": 0
+                },
+                "clock": {
+                  "actor": 7,
+                  "physical_ms": 1001,
+                  "logical": 0
+                },
+                "state": "pressed",
+                "step": {
+                  "kind": "idle"
+                }
+              },
+              {
+                "event": {
+                  "type": "pointerMove",
+                  "x": 95,
+                  "y": 0
+                },
+                "clock": {
+                  "actor": 7,
+                  "physical_ms": 1002,
+                  "logical": 0
+                },
+                "state": "dragging",
+                "step": {
+                  "kind": "open",
+                  "transaction": {
+                    "id": "tx-e4f8055f280d5342",
+                    "tool": "demo#drag"
+                  },
+                  "entries": [
+                    {
+                      "key": "translate",
+                      "mutation": {
+                        "kind": "translate",
+                        "dx": 15,
+                        "dy": 0
+                      }
+                    },
+                    {
+                      "key": "connect",
+                      "mutation": {
+                        "kind": "connect",
+                        "x": 100,
+                        "y": 0
+                      }
+                    }
+                  ]
+                }
+              },
+              {
+                "event": {
+                  "type": "pointerMove",
+                  "x": 70,
+                  "y": 0
+                },
+                "clock": {
+                  "actor": 7,
+                  "physical_ms": 1003,
+                  "logical": 0
+                },
+                "state": "dragging",
+                "step": {
+                  "kind": "open",
+                  "transaction": {
+                    "id": "tx-e4f8055f280d5342",
+                    "tool": "demo#drag"
+                  },
+                  "entries": [
+                    {
+                      "key": "translate",
+                      "mutation": {
+                        "kind": "translate",
+                        "dx": -10,
+                        "dy": 0
+                      }
+                    }
+                  ]
+                }
+              },
+              {
+                "event": {
+                  "type": "pointerMove",
+                  "x": 92,
+                  "y": 1
+                },
+                "clock": {
+                  "actor": 7,
+                  "physical_ms": 1004,
+                  "logical": 0
+                },
+                "state": "dragging",
+                "step": {
+                  "kind": "open",
+                  "transaction": {
+                    "id": "tx-e4f8055f280d5342",
+                    "tool": "demo#drag"
+                  },
+                  "entries": [
+                    {
+                      "key": "translate",
+                      "mutation": {
+                        "kind": "translate",
+                        "dx": 12,
+                        "dy": 1
+                      }
+                    },
+                    {
+                      "key": "connect",
+                      "mutation": {
+                        "kind": "connect",
+                        "x": 100,
+                        "y": 0
+                      }
+                    }
+                  ]
+                }
+              },
+              {
+                "event": {
+                  "type": "pointerUp"
+                },
+                "clock": {
+                  "actor": 7,
+                  "physical_ms": 1005,
+                  "logical": 0
+                },
+                "state": "idle",
+                "step": {
+                  "kind": "committed",
+                  "transaction": {
+                    "id": "tx-e4f8055f280d5342",
+                    "tool": "demo#drag"
+                  },
+                  "mutations": [
+                    {
+                      "kind": "translate",
+                      "dx": 12,
+                      "dy": 1
+                    },
+                    {
+                      "kind": "connect",
+                      "x": 100,
+                      "y": 0
+                    }
+                  ]
+                }
+              }
+            ]
+          },
+          {
+            "name": "a drag starting on the magnet keeps the connection first",
+            "steps": [
+              {
+                "event": {
+                  "type": "pointerDown",
+                  "x": 100,
+                  "y": 0
+                },
+                "clock": {
+                  "actor": 7,
+                  "physical_ms": 1001,
+                  "logical": 0
+                },
+                "state": "pressed",
+                "step": {
+                  "kind": "idle"
+                }
+              },
+              {
+                "event": {
+                  "type": "pointerMove",
+                  "x": 100,
+                  "y": 0
+                },
+                "clock": {
+                  "actor": 7,
+                  "physical_ms": 1002,
+                  "logical": 0
+                },
+                "state": "dragging",
+                "step": {
+                  "kind": "open",
+                  "transaction": {
+                    "id": "tx-e4f8055f280d5342",
+                    "tool": "demo#drag"
+                  },
+                  "entries": [
+                    {
+                      "key": "connect",
+                      "mutation": {
+                        "kind": "connect",
+                        "x": 100,
+                        "y": 0
+                      }
+                    }
+                  ]
+                }
+              },
+              {
+                "event": {
+                  "type": "pointerMove",
+                  "x": 104,
+                  "y": 3
+                },
+                "clock": {
+                  "actor": 7,
+                  "physical_ms": 1003,
+                  "logical": 0
+                },
+                "state": "dragging",
+                "step": {
+                  "kind": "open",
+                  "transaction": {
+                    "id": "tx-e4f8055f280d5342",
+                    "tool": "demo#drag"
+                  },
+                  "entries": [
+                    {
+                      "key": "connect",
+                      "mutation": {
+                        "kind": "connect",
+                        "x": 100,
+                        "y": 0
+                      }
+                    },
+                    {
+                      "key": "translate",
+                      "mutation": {
+                        "kind": "translate",
+                        "dx": 4,
+                        "dy": 3
+                      }
+                    }
+                  ]
+                }
+              },
+              {
+                "event": {
+                  "type": "pointerUp"
+                },
+                "clock": {
+                  "actor": 7,
+                  "physical_ms": 1004,
+                  "logical": 0
+                },
+                "state": "idle",
+                "step": {
+                  "kind": "committed",
+                  "transaction": {
+                    "id": "tx-e4f8055f280d5342",
+                    "tool": "demo#drag"
+                  },
+                  "mutations": [
+                    {
+                      "kind": "connect",
+                      "x": 100,
+                      "y": 0
+                    },
+                    {
+                      "kind": "translate",
+                      "dx": 4,
+                      "dy": 3
+                    }
+                  ]
+                }
+              }
+            ]
+          },
+          {
+            "name": "escape while pressed changes nothing",
+            "steps": [
+              {
+                "event": {
+                  "type": "pointerDown",
+                  "x": 0,
+                  "y": 0
+                },
+                "clock": {
+                  "actor": 7,
+                  "physical_ms": 1001,
+                  "logical": 0
+                },
+                "state": "pressed",
+                "step": {
+                  "kind": "idle"
+                }
+              },
+              {
+                "event": {
+                  "type": "escape"
+                },
+                "clock": {
+                  "actor": 7,
+                  "physical_ms": 1002,
+                  "logical": 0
+                },
+                "state": "idle",
+                "step": {
+                  "kind": "idle"
+                }
+              }
+            ]
+          },
+          {
+            "name": "pointer events before a press are ignored",
+            "steps": [
+              {
+                "event": {
+                  "type": "pointerMove",
+                  "x": 5,
+                  "y": 5
+                },
+                "clock": {
+                  "actor": 7,
+                  "physical_ms": 1001,
+                  "logical": 0
+                },
+                "state": "idle",
+                "step": {
+                  "kind": "idle"
+                }
+              },
+              {
+                "event": {
+                  "type": "pointerUp"
+                },
+                "clock": {
+                  "actor": 7,
+                  "physical_ms": 1002,
+                  "logical": 0
+                },
+                "state": "idle",
+                "step": {
+                  "kind": "idle"
+                }
+              },
+              {
+                "event": {
+                  "type": "escape"
+                },
+                "clock": {
+                  "actor": 7,
+                  "physical_ms": 1003,
+                  "logical": 0
+                },
+                "state": "idle",
+                "step": {
+                  "kind": "idle"
+                }
+              }
+            ]
+          },
+          {
+            "name": "a host abort while dragging drops the transaction and rests the tool",
+            "steps": [
+              {
+                "event": {
+                  "type": "pointerDown",
+                  "x": 0,
+                  "y": 0
+                },
+                "clock": {
+                  "actor": 7,
+                  "physical_ms": 1001,
+                  "logical": 0
+                },
+                "state": "pressed",
+                "step": {
+                  "kind": "idle"
+                }
+              },
+              {
+                "event": {
+                  "type": "pointerMove",
+                  "x": 5,
+                  "y": 5
+                },
+                "clock": {
+                  "actor": 7,
+                  "physical_ms": 1002,
+                  "logical": 0
+                },
+                "state": "dragging",
+                "step": {
+                  "kind": "open",
+                  "transaction": {
+                    "id": "tx-e4f8055f280d5342",
+                    "tool": "demo#drag"
+                  },
+                  "entries": [
+                    {
+                      "key": "translate",
+                      "mutation": {
+                        "kind": "translate",
+                        "dx": 5,
+                        "dy": 5
+                      }
+                    }
+                  ]
+                }
+              },
+              {
+                "host": "abort",
+                "reason": "blur",
+                "state": "idle",
+                "step": {
+                  "kind": "aborted",
+                  "transaction": {
+                    "id": "tx-e4f8055f280d5342",
+                    "tool": "demo#drag"
+                  },
+                  "reason": "blur"
+                }
+              },
+              {
+                "event": {
+                  "type": "pointerMove",
+                  "x": 9,
+                  "y": 9
+                },
+                "clock": {
+                  "actor": 7,
+                  "physical_ms": 1004,
+                  "logical": 0
+                },
+                "state": "idle",
+                "step": {
+                  "kind": "idle"
+                }
+              },
+              {
+                "event": {
+                  "type": "pointerUp"
+                },
+                "clock": {
+                  "actor": 7,
+                  "physical_ms": 1005,
+                  "logical": 0
+                },
+                "state": "idle",
+                "step": {
+                  "kind": "idle"
+                }
+              },
+              {
+                "event": {
+                  "type": "pointerDown",
+                  "x": 0,
+                  "y": 0
+                },
+                "clock": {
+                  "actor": 7,
+                  "physical_ms": 1006,
+                  "logical": 0
+                },
+                "state": "pressed",
+                "step": {
+                  "kind": "idle"
+                }
+              },
+              {
+                "event": {
+                  "type": "pointerMove",
+                  "x": 1,
+                  "y": 0
+                },
+                "clock": {
+                  "actor": 7,
+                  "physical_ms": 1007,
+                  "logical": 0
+                },
+                "state": "dragging",
+                "step": {
+                  "kind": "open",
+                  "transaction": {
+                    "id": "tx-82d57c9700d82af7",
+                    "tool": "demo#drag"
+                  },
+                  "entries": [
+                    {
+                      "key": "translate",
+                      "mutation": {
+                        "kind": "translate",
+                        "dx": 1,
+                        "dy": 0
+                      }
+                    }
+                  ]
+                }
+              },
+              {
+                "event": {
+                  "type": "pointerUp"
+                },
+                "clock": {
+                  "actor": 7,
+                  "physical_ms": 1008,
+                  "logical": 0
+                },
+                "state": "idle",
+                "step": {
+                  "kind": "committed",
+                  "transaction": {
+                    "id": "tx-82d57c9700d82af7",
+                    "tool": "demo#drag"
+                  },
+                  "mutations": [
+                    {
+                      "kind": "translate",
+                      "dx": 1,
+                      "dy": 0
+                    }
+                  ]
+                }
+              }
+            ]
+          },
+          {
+            "name": "a host abort without an open transaction reports idle",
+            "steps": [
+              {
+                "event": {
+                  "type": "pointerDown",
+                  "x": 0,
+                  "y": 0
+                },
+                "clock": {
+                  "actor": 7,
+                  "physical_ms": 1001,
+                  "logical": 0
+                },
+                "state": "pressed",
+                "step": {
+                  "kind": "idle"
+                }
+              },
+              {
+                "host": "abort",
+                "reason": "captureLost",
+                "state": "idle",
+                "step": {
+                  "kind": "idle"
+                }
+              },
+              {
+                "host": "abort",
+                "reason": "frozen",
+                "state": "idle",
+                "step": {
+                  "kind": "idle"
+                }
+              },
+              {
+                "event": {
+                  "type": "pointerUp"
+                },
+                "clock": {
+                  "actor": 7,
+                  "physical_ms": 1004,
+                  "logical": 0
+                },
+                "state": "idle",
+                "step": {
+                  "kind": "idle"
+                }
+              }
+            ]
+          },
+          {
+            "name": "a gesture persisted and resumed between events is still one transaction",
+            "steps": [
+              {
+                "event": {
+                  "type": "pointerDown",
+                  "x": 0,
+                  "y": 0
+                },
+                "clock": {
+                  "actor": 7,
+                  "physical_ms": 1001,
+                  "logical": 0
+                },
+                "state": "pressed",
+                "step": {
+                  "kind": "idle"
+                }
+              },
+              {
+                "event": {
+                  "type": "pointerMove",
+                  "x": 5,
+                  "y": 0
+                },
+                "clock": {
+                  "actor": 7,
+                  "physical_ms": 1002,
+                  "logical": 0
+                },
+                "state": "dragging",
+                "step": {
+                  "kind": "open",
+                  "transaction": {
+                    "id": "tx-e4f8055f280d5342",
+                    "tool": "demo#drag"
+                  },
+                  "entries": [
+                    {
+                      "key": "translate",
+                      "mutation": {
+                        "kind": "translate",
+                        "dx": 5,
+                        "dy": 0
+                      }
+                    }
+                  ]
+                }
+              },
+              {
+                "host": "resume",
+                "state": "dragging"
+              },
+              {
+                "event": {
+                  "type": "pointerMove",
+                  "x": 10,
+                  "y": 4
+                },
+                "clock": {
+                  "actor": 7,
+                  "physical_ms": 1004,
+                  "logical": 0
+                },
+                "state": "dragging",
+                "step": {
+                  "kind": "open",
+                  "transaction": {
+                    "id": "tx-e4f8055f280d5342",
+                    "tool": "demo#drag"
+                  },
+                  "entries": [
+                    {
+                      "key": "translate",
+                      "mutation": {
+                        "kind": "translate",
+                        "dx": 10,
+                        "dy": 4
+                      }
+                    }
+                  ]
+                }
+              },
+              {
+                "host": "resume",
+                "state": "dragging"
+              },
+              {
+                "event": {
+                  "type": "pointerUp"
+                },
+                "clock": {
+                  "actor": 7,
+                  "physical_ms": 1006,
+                  "logical": 0
+                },
+                "state": "idle",
+                "step": {
+                  "kind": "committed",
+                  "transaction": {
+                    "id": "tx-e4f8055f280d5342",
+                    "tool": "demo#drag"
+                  },
+                  "mutations": [
+                    {
+                      "kind": "translate",
+                      "dx": 10,
+                      "dy": 4
+                    }
+                  ]
+                }
+              },
+              {
+                "host": "resume",
+                "state": "idle"
+              }
+            ]
+          },
+          {
+            "name": "a host reset drops the transaction silently",
+            "steps": [
+              {
+                "event": {
+                  "type": "pointerDown",
+                  "x": 0,
+                  "y": 0
+                },
+                "clock": {
+                  "actor": 7,
+                  "physical_ms": 1001,
+                  "logical": 0
+                },
+                "state": "pressed",
+                "step": {
+                  "kind": "idle"
+                }
+              },
+              {
+                "event": {
+                  "type": "pointerMove",
+                  "x": 2,
+                  "y": 2
+                },
+                "clock": {
+                  "actor": 7,
+                  "physical_ms": 1002,
+                  "logical": 0
+                },
+                "state": "dragging",
+                "step": {
+                  "kind": "open",
+                  "transaction": {
+                    "id": "tx-e4f8055f280d5342",
+                    "tool": "demo#drag"
+                  },
+                  "entries": [
+                    {
+                      "key": "translate",
+                      "mutation": {
+                        "kind": "translate",
+                        "dx": 2,
+                        "dy": 2
+                      }
+                    }
+                  ]
+                }
+              },
+              {
+                "host": "reset",
+                "state": "idle",
+                "dropped": {
+                  "id": "tx-e4f8055f280d5342",
+                  "tool": "demo#drag"
+                }
+              },
+              {
+                "event": {
+                  "type": "pointerUp"
+                },
+                "clock": {
+                  "actor": 7,
+                  "physical_ms": 1004,
+                  "logical": 0
+                },
+                "state": "idle",
+                "step": {
+                  "kind": "idle"
+                }
+              },
+              {
+                "host": "reset",
+                "state": "idle",
+                "dropped": null
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "chart": {
+          "id": "leaky_gesture",
+          "initial": "idle",
+          "states": [
+            "idle",
+            "pressed",
+            "dragging"
+          ],
+          "transitions": [
+            {
+              "from": "idle",
+              "event": "pointerDown",
+              "to": "pressed",
+              "action": "press"
+            },
+            {
+              "from": "pressed",
+              "event": "pointerMove",
+              "to": "dragging",
+              "action": "drag"
+            },
+            {
+              "from": "pressed",
+              "event": "pointerUp",
+              "to": "idle",
+              "action": null
+            },
+            {
+              "from": "pressed",
+              "event": "escape",
+              "to": "idle",
+              "action": null
+            },
+            {
+              "from": "dragging",
+              "event": "pointerMove",
+              "to": "dragging",
+              "action": "drag"
+            },
+            {
+              "from": "dragging",
+              "event": "pointerUp",
+              "to": "idle",
+              "action": null
+            },
+            {
+              "from": "dragging",
+              "event": "escape",
+              "to": "idle",
+              "action": "cancel"
+            }
+          ]
+        },
+        "scenarios": [
+          {
+            "name": "a release that forgets to commit is refused and the next gesture opens a new transaction",
+            "steps": [
+              {
+                "event": {
+                  "type": "pointerDown",
+                  "x": 0,
+                  "y": 0
+                },
+                "clock": {
+                  "actor": 7,
+                  "physical_ms": 1001,
+                  "logical": 0
+                },
+                "state": "pressed",
+                "step": {
+                  "kind": "idle"
+                }
+              },
+              {
+                "event": {
+                  "type": "pointerMove",
+                  "x": 4,
+                  "y": 0
+                },
+                "clock": {
+                  "actor": 7,
+                  "physical_ms": 1002,
+                  "logical": 0
+                },
+                "state": "dragging",
+                "step": {
+                  "kind": "open",
+                  "transaction": {
+                    "id": "tx-e4f8055f280d5342",
+                    "tool": "demo#drag"
+                  },
+                  "entries": [
+                    {
+                      "key": "translate",
+                      "mutation": {
+                        "kind": "translate",
+                        "dx": 4,
+                        "dy": 0
+                      }
+                    }
+                  ]
+                }
+              },
+              {
+                "event": {
+                  "type": "pointerUp"
+                },
+                "clock": {
+                  "actor": 7,
+                  "physical_ms": 1003,
+                  "logical": 0
+                },
+                "state": "idle",
+                "refusal": "toolTransaction.unclosed"
+              },
+              {
+                "event": {
+                  "type": "pointerDown",
+                  "x": 0,
+                  "y": 0
+                },
+                "clock": {
+                  "actor": 7,
+                  "physical_ms": 1004,
+                  "logical": 0
+                },
+                "state": "pressed",
+                "step": {
+                  "kind": "idle"
+                }
+              },
+              {
+                "event": {
+                  "type": "pointerMove",
+                  "x": 0,
+                  "y": 6
+                },
+                "clock": {
+                  "actor": 7,
+                  "physical_ms": 1005,
+                  "logical": 0
+                },
+                "state": "dragging",
+                "step": {
+                  "kind": "open",
+                  "transaction": {
+                    "id": "tx-8d464e628edab68b",
+                    "tool": "demo#drag"
+                  },
+                  "entries": [
+                    {
+                      "key": "translate",
+                      "mutation": {
+                        "kind": "translate",
+                        "dx": 0,
+                        "dy": 6
+                      }
+                    }
+                  ]
+                }
+              },
+              {
+                "event": {
+                  "type": "escape"
+                },
+                "clock": {
+                  "actor": 7,
+                  "physical_ms": 1006,
+                  "logical": 0
+                },
+                "state": "idle",
+                "step": {
+                  "kind": "aborted",
+                  "transaction": {
+                    "id": "tx-8d464e628edab68b",
+                    "tool": "demo#drag"
+                  },
+                  "reason": "tool"
+                }
+              }
+            ]
+          },
+          {
+            "name": "an escape still aborts the leaky tool",
+            "steps": [
+              {
+                "event": {
+                  "type": "pointerDown",
+                  "x": 0,
+                  "y": 0
+                },
+                "clock": {
+                  "actor": 7,
+                  "physical_ms": 1001,
+                  "logical": 0
+                },
+                "state": "pressed",
+                "step": {
+                  "kind": "idle"
+                }
+              },
+              {
+                "event": {
+                  "type": "pointerMove",
+                  "x": 3,
+                  "y": 0
+                },
+                "clock": {
+                  "actor": 7,
+                  "physical_ms": 1002,
+                  "logical": 0
+                },
+                "state": "dragging",
+                "step": {
+                  "kind": "open",
+                  "transaction": {
+                    "id": "tx-e4f8055f280d5342",
+                    "tool": "demo#drag"
+                  },
+                  "entries": [
+                    {
+                      "key": "translate",
+                      "mutation": {
+                        "kind": "translate",
+                        "dx": 3,
+                        "dy": 0
+                      }
+                    }
+                  ]
+                }
+              },
+              {
+                "event": {
+                  "type": "escape"
+                },
+                "clock": {
+                  "actor": 7,
+                  "physical_ms": 1003,
+                  "logical": 0
+                },
+                "state": "idle",
+                "step": {
+                  "kind": "aborted",
+                  "transaction": {
+                    "id": "tx-e4f8055f280d5342",
+                    "tool": "demo#drag"
+                  },
+                  "reason": "tool"
+                }
+              },
+              {
+                "host": "abort",
+                "reason": "retired",
+                "state": "idle",
+                "step": {
+                  "kind": "idle"
+                }
+              }
+            ]
+          }
+        ]
+      }
+    ]
+  },
+  "invariants": [
+    {
+      "id": "upsertReplacesInPlace",
+      "statement": "an upsert of a present key replaces its mutation in its first-insertion slot; a new key is appended"
+    },
+    {
+      "id": "retractRemoves",
+      "statement": "a retract removes its key; a retract of an absent key changes nothing; a later upsert of that key appends it"
+    },
+    {
+      "id": "emptyCommitIsNoEdit",
+      "statement": "a transaction that commits with no entries publishes no edit"
+    },
+    {
+      "id": "abortLeavesZeroTrace",
+      "statement": "an aborted transaction keeps no entries and publishes nothing"
+    },
+    {
+      "id": "closedRefusesEveryYield",
+      "statement": "a committed or aborted transaction refuses every yield with toolTransaction.closed and stays unchanged"
+    },
+    {
+      "id": "oneTransactionOneEdit",
+      "statement": "one committed transaction is one edit, one undo step and one history row; every op carries its TransactionRef"
+    },
+    {
+      "id": "opensOnFirstUpsert",
+      "statement": "a runner opens a transaction at the first upsert while none is open; retract, commit and abort without an open transaction change nothing"
+    },
+    {
+      "id": "idFromOpeningEvent",
+      "statement": "the transaction id is minted from the actor, the clock of the opening event and the tool"
+    },
+    {
+      "id": "oneClosePerEvent",
+      "statement": "one event closes at most one transaction; a yield after the close within the same event is refused (toolTransaction.closed) and the event publishes nothing"
+    },
+    {
+      "id": "restClosesTransaction",
+      "statement": "an event that leaves the tool at rest (the root's initial state active) with its transaction open is refused (toolTransaction.unclosed); the transaction is dropped, so the next gesture opens a new one"
+    },
+    {
+      "id": "resumeContinuesTheGesture",
+      "statement": "persisting a runner (snapshot and open transaction) and resuming it between any two events yields the same steps and ids as the uninterrupted runner; resume refuses a closed transaction (toolTransaction.closed) and a resting snapshot holding an open transaction (toolTransaction.unclosed)"
+    },
+    {
+      "id": "hostCancelLeavesZeroTrace",
+      "statement": "a host abort or reset drops the open transaction without an edit, cancels the timers and invokes of the configuration it leaves and returns the statechart to its initial configuration; abort reports aborted with its reason, or idle when nothing was open"
+    },
+    {
+      "id": "toolStateIsNotHistory",
+      "statement": "the statechart configuration and context are ephemeral tool state; only committed mutations and their TransactionRef are durable"
+    }
+  ]
+}

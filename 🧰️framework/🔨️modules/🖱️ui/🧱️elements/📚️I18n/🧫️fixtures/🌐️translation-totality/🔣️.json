@@ -1,0 +1,50 @@
+{
+  "cases": [
+    {
+      "locale": "en",
+      "key": "ui.mutation.history.foreignTransition",
+      "options": {},
+      "normal": "Change belongs to another author",
+      "beginner": "You can only undo or redo your own changes."
+    },
+    {
+      "locale": "de",
+      "key": "ui.mutation.history.foreignTransition",
+      "options": {},
+      "normal": "Änderung einer anderen Person",
+      "beginner": "Du kannst nur eigene Änderungen rückgängig machen oder wiederherstellen."
+    },
+    {
+      "locale": "en",
+      "key": "ui.host.documentPlaceholder",
+      "options": {},
+      "normal": "Artifact",
+      "beginner": "Artifact"
+    },
+    {
+      "locale": "en",
+      "key": "ui.host.languageDocument",
+      "options": {
+        "language": "Python"
+      },
+      "normal": "Python document",
+      "beginner": "Python document"
+    },
+    {
+      "locale": "de",
+      "key": "ui.host.documentPlaceholder",
+      "options": {},
+      "normal": "Dokument",
+      "beginner": "Dokument"
+    },
+    {
+      "locale": "de",
+      "key": "ui.host.languageDocument",
+      "options": {
+        "language": "Python"
+      },
+      "normal": "Python-Dokument",
+      "beginner": "Python-Dokument"
+    }
+  ]
+}

@@ -1,0 +1,35 @@
+{
+  "mutation": "insertAnnotation",
+  "index": 0,
+  "at": 0,
+  "annotation": {
+    "rect": [
+      0,
+      0,
+      0,
+      0
+    ],
+    "kind": {
+      "kind": "stamp"
+    },
+    "contents": "contents",
+    "name": "name",
+    "modified": "modified",
+    "flags": 0,
+    "border": {
+      "width": 0
+    },
+    "color": [],
+    "appearance": {
+      "normal": {
+        "kind": "single",
+        "form": "form"
+      }
+    },
+    "appearanceState": "appearanceState",
+    "markup": {},
+    "optionalContent": "optionalContent",
+    "structParent": 0,
+    "extra": []
+  }
+}

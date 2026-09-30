@@ -11,8 +11,35 @@
       "additionalProperties": false,
       "required": ["start", "end"],
       "properties": {
-        "start": { "type": "integer", "minimum": 0 },
-        "end": { "type": "integer", "minimum": 0 }
+        "start": {
+          "type": "integer",
+          "minimum": 0,
+          "x-semio-ui": {
+            "widget": "stepper",
+            "role": "value",
+            "label": { "en": "Start", "de": "Anfang" },
+            "description": { "en": "Anchor offset of the selection.", "de": "Ankerposition der Auswahl." },
+            "step": 1,
+            "precision": 0
+          }
+        },
+        "end": {
+          "type": "integer",
+          "minimum": 0,
+          "x-semio-ui": {
+            "widget": "stepper",
+            "role": "value",
+            "label": { "en": "End", "de": "Ende" },
+            "description": { "en": "Caret offset of the selection.", "de": "Position der Einfügemarke der Auswahl." },
+            "step": 1,
+            "precision": 0
+          }
+        }
+      },
+      "x-semio-ui": {
+        "role": "value",
+        "label": { "en": "Selection", "de": "Auswahl" },
+        "description": { "en": "Text selection of the query editor; empty clears it.", "de": "Textauswahl des Abfrageeditors; leer hebt sie auf." }
       }
     }
   }

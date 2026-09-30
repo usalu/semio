@@ -1,6 +1,0 @@
-/** 🧪️ Mutation-law probe for reorder-node-children. */
-import type { GltfSnapshot } from '../../../📸️snapshot/🟦️.ts';
-import { applyGltfReorderNodeChildren, type GltfReorderNodeChildrenPayload } from './🟦️';
-import { deriveGltfReorderNodeChildrenDiff } from './🟦️';
-import { deriveGltfReorderNodeChildrenInverse } from './🟦️';
-export const assertGltfReorderNodeChildrenLaws = (base: GltfSnapshot, payload: GltfReorderNodeChildrenPayload) => { const first = applyGltfReorderNodeChildren(base, payload); if (!first.accepted) return first; const replay = applyGltfReorderNodeChildren(base, payload); if (!replay.accepted || JSON.stringify(first.snapshot) !== JSON.stringify(replay.snapshot) || JSON.stringify(first.diff) !== JSON.stringify(replay.diff)) throw new Error('reorder-node-children replay is non-deterministic'); const direct = deriveGltfReorderNodeChildrenDiff(base, payload); const inverse = deriveGltfReorderNodeChildrenInverse(base, payload); if (!direct.accepted || !inverse.accepted || JSON.stringify(direct.touchedPaths) !== JSON.stringify(first.touchedPaths) || JSON.stringify(inverse.touchedPaths) !== JSON.stringify(first.touchedPaths)) throw new Error('reorder-node-children diff or inverse law failed'); return { first, direct, inverse }; };

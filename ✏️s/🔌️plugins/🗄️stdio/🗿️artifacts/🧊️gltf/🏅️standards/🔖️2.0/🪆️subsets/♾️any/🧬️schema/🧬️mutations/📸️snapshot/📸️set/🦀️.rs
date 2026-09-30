@@ -22,3 +22,9 @@ impl protocol::MutationKind<GltfSnapshot, GltfMutation> for SetSnapshot {
     fn label(&self) -> protocol::LocalizedLabel { protocol::LocalizedLabel::native("Set snapshot", "Momentaufnahme setzen") }
     fn target(&self) -> Vec<String> { Vec::new() }
 }
+
+//#region 🧪️Tests
+#[cfg(test)]
+#[path = "🧪️tests/📸️replaces-all/🦀️.rs"]
+mod case_replaces_all;
+//#endregion 🧪️Tests

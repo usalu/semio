@@ -5,19 +5,20 @@
   "type": "object",
   "additionalProperties": false,
   "required": [
+    "mutation",
     "blockName",
     "handle"
   ],
   "properties": {
+    "mutation": {
+      "const": "removeBlockEntity",
+      "description": "Aggregate discriminator spliced in by SemioCadMutation; absent when the payload stands alone."
+    },
     "blockName": {
       "type": "string"
     },
     "handle": {
       "type": "string"
-    },
-    "mutation": {
-      "const": "removeBlockEntity",
-      "description": "Aggregate discriminator spliced in by SemioCadMutation; absent when the payload stands alone."
     }
   }
 }

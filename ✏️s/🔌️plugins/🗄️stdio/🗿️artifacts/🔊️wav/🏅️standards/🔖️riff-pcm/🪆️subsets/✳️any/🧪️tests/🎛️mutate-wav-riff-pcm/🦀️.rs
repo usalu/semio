@@ -24,11 +24,10 @@ fn mutable_input(ctx: &Context) -> Result<Vec<u8>, String> {
 //#endregion 🔖️Input
 
 //#region 🔖️Oracle
-/// 🔮️ Applies the declared mutation with the owned oracle and projects the result independently.
 /// 👁️ `@id-mutate`: applies the row's kind with the registered reference implementation and ASSERTS
 /// the result is distinguishable from the untouched fixture. The exemption list is empty — every
 /// kind this vocabulary declares reaches the compared projection — so a kind that stops moving it
-/// fails here rather than reporting a green identical to `no-mutation`'s.
+/// fails here rather than reporting a green identical to an unchanged recording's.
 fn mutate_oracle(ctx: &Context) -> Result<Outcome, String> {
     let spec = ctx.doc_json()?;
     let input = mutable_input(ctx)?;
@@ -85,89 +84,15 @@ mod subject {
     use super::mutable_input;
     use semio_repo_test_host::{Context, Json, Outcome};
     use semio_s_artifact_stdio_wav::standards::riff_pcm::subsets::any::io::{decode_wav, encode_wav};
-    use semio_s_artifact_stdio_wav::standards::riff_pcm::subsets::any::schema::mutations;
-    use semio_s_artifact_stdio_wav::standards::riff_pcm::subsets::any::schema::mutations::{apply_wav_mutation, WavMutation};
-    use semio_s_artifact_stdio_wav::standards::riff_pcm::subsets::any::schema::snapshot::{RiffChunk, WavData, WavFmt, WavSnapshot};
+    use semio_s_artifact_stdio_wav::standards::riff_pcm::subsets::any::schema::mutations::{apply_wav_mutation, decode_wav_mutation_payload, inverse_wav_mutation, WavMutation};
     use semio_s_plugin_stdio_test_oracle::artifacts::wav::standards::v_riff_pcm::subsets::any::project_wav_mutation;
     use semio_s_plugin_stdio_test_oracle::law;
 
     //#region 🔖️SpecReading
-    /// 🔎️ A second, independently written reading of the SAME `params` JSON schema the oracle reads
-    /// in `../../../🏅️standards/🔖️riff-pcm/🪆️subsets/✳️any/🦀️oracle.rs` — deliberately not
-    /// shared code, so a bug in one reading has nothing to hide behind in the other.
-    fn number(value: &Json, key: &str, fallback: f64) -> f64 {
-        match value.get(key) {
-            Some(Json::Number(found)) => *found,
-            _ => fallback,
-        }
-    }
-
-    fn wav_fmt_from_json(value: &Json) -> WavFmt {
-        let channels = number(value, "channels", 1.0) as u16;
-        let sample_rate = number(value, "sampleRate", 44_100.0) as u32;
-        let bits_per_sample = number(value, "bitsPerSample", 16.0) as u16;
-        let audio_format = number(value, "audioFormat", 1.0) as u16;
-        let block_align = channels * (bits_per_sample / 8);
-        let byte_rate = sample_rate * block_align as u32;
-        WavFmt { audio_format, channels, sample_rate, byte_rate, block_align, bits_per_sample, ext: None }
-    }
-
-    fn wav_data_from_json(value: &Json) -> WavData {
-        let samples = match value.get("samples") {
-            Some(Json::Array(items)) => items.iter().filter_map(|item| if let Json::Number(n) = item { Some(*n as i16) } else { None }).collect(),
-            _ => Vec::new(),
-        };
-        WavData::Pcm16(samples)
-    }
-
-    fn riff_chunks_from_json(value: &Json, key: &str) -> Vec<RiffChunk> {
-        value
-            .array(key)
-            .into_iter()
-            .map(|entry| {
-                let data = match entry.get("data") {
-                    Some(Json::Array(items)) => items.iter().filter_map(|item| if let Json::Number(n) = item { Some(*n as u8) } else { None }).collect(),
-                    _ => Vec::new(),
-                };
-                RiffChunk { fourcc: entry.str("fourcc"), data, pad_byte: number(entry, "padByte", 0.0) as u8 }
-            })
-            .collect()
-    }
-
-    /// 🦠️ Builds the real `WavMutation` this scenario's `{"kind", "params"}` doc string describes.
-    fn mutation_from_spec(spec: &Json, original: &WavSnapshot) -> Result<WavMutation, String> {
-        let params = spec.get("params").cloned().unwrap_or(Json::Object(Vec::new()));
-        match spec.str("kind").as_str() {
-            "set-fmt" => Ok(WavMutation::SetFmt(mutations::set_fmt::SetFmt { fmt: wav_fmt_from_json(&params.get("fmt").cloned().unwrap_or(Json::Object(Vec::new()))) })),
-            "set-data" => Ok(WavMutation::SetData(mutations::set_data::SetData { data: wav_data_from_json(&params.get("data").cloned().unwrap_or(Json::Object(Vec::new()))) })),
-            "set-other-chunks" => Ok(WavMutation::SetOtherChunks(mutations::set_other_chunks::SetOtherChunks { chunks: riff_chunks_from_json(&params, "chunks") })),
-            "set-snapshot" => Ok(WavMutation::SetSnapshot(mutations::set_snapshot::SetSnapshot {
-                snapshot: WavSnapshot {
-                    schema: original.schema.clone(),
-                    fmt: wav_fmt_from_json(&params.get("fmt").cloned().unwrap_or(Json::Object(Vec::new()))),
-                    data: wav_data_from_json(&params.get("data").cloned().unwrap_or(Json::Object(Vec::new()))),
-                    fmt_pad_byte: 0,
-                    data_pad_byte: 0,
-                    other_chunks: riff_chunks_from_json(&params, "otherChunks"),
-                    chunk_order: vec![semio_s_artifact_stdio_wav::standards::riff_pcm::subsets::any::schema::snapshot::WavChunkRef::Format, semio_s_artifact_stdio_wav::standards::riff_pcm::subsets::any::schema::snapshot::WavChunkRef::Samples],
-                },
-            })),
-            other => Err(format!("test case does not know mutation kind {other:?}")),
-        }
-    }
-
-    /// ↩️ The inverse of one applied mutation, restoring `original`'s own field — mirrors
-    /// `WavMutation::inverse`'s own per-variant mapping (see the mutation vocabulary's own
-    /// `inverse_law_mutation_and_diff_level` unit test for that law at the type level; this is the
-    /// same law exercised against a real decoded recording instead of a synthetic snapshot).
-    fn restore_mutation(applied: &WavMutation, original: &WavSnapshot) -> WavMutation {
-        match applied {
-            WavMutation::SetSnapshot(_) => WavMutation::SetSnapshot(mutations::set_snapshot::SetSnapshot { snapshot: original.clone() }),
-            WavMutation::PatchSnapshot(_) => WavMutation::SetSnapshot(mutations::set_snapshot::SetSnapshot { snapshot: original.clone() }),
-            WavMutation::SetFmt(_) => WavMutation::SetFmt(mutations::set_fmt::SetFmt { fmt: original.fmt.clone() }),
-            WavMutation::SetData(_) => WavMutation::SetData(mutations::set_data::SetData { data: original.data.clone() }),
-            WavMutation::SetOtherChunks(_) => WavMutation::SetSnapshot(mutations::set_snapshot::SetSnapshot { snapshot: original.clone() }),
-        }
+    /// 🦠️ Decodes the scenario's `{"kind", "params"}` doc string: `params` is the leaf's own wire payload, read
+    /// through the vocabulary's derive-generated decoder rather than a params grammar written beside it.
+    fn mutation_from_spec(spec: &Json) -> Result<WavMutation, String> {
+        decode_wav_mutation_payload(&spec.str("kind"), &spec.get("params").cloned().unwrap_or(Json::Null).to_string())
     }
     //#endregion 🔖️SpecReading
 
@@ -177,22 +102,25 @@ mod subject {
     pub fn mutate(ctx: &Context) -> Result<Outcome, String> {
         let input = mutable_input(ctx)?;
         let mut snapshot = decode_wav(&input).map_err(|error| format!("decode_wav failed: {error}"))?;
-        let mutation = mutation_from_spec(&ctx.doc_json()?, &snapshot)?;
+        let mutation = mutation_from_spec(&ctx.doc_json()?)?;
         apply_wav_mutation(&mut snapshot, &mutation);
         let bytes = encode_wav(&snapshot);
         let projection = project_wav_mutation(&bytes)?;
         Ok(Outcome::with_raw(bytes, projection))
     }
 
-    /// 🎯️ Decode → apply the declared mutation → apply its inverse → re-encode. The result must
-    /// project back onto the pristine original — the inverse oracle's own reference claim.
+    /// 🎯️ Decode → apply the declared mutation → apply every mutation the vocabulary's own inverse returns
+    /// against the pre-mutation snapshot → re-encode. The result must project back onto the pristine original —
+    /// the inverse oracle's own reference claim.
     pub fn inverse(ctx: &Context) -> Result<Outcome, String> {
         let input = mutable_input(ctx)?;
         let original = decode_wav(&input).map_err(|error| format!("decode_wav failed: {error}"))?;
-        let mutation = mutation_from_spec(&ctx.doc_json()?, &original)?;
+        let mutation = mutation_from_spec(&ctx.doc_json()?)?;
         let mut snapshot = original.clone();
         apply_wav_mutation(&mut snapshot, &mutation);
-        apply_wav_mutation(&mut snapshot, &restore_mutation(&mutation, &original));
+        for undo in inverse_wav_mutation(&mutation, &original) {
+            apply_wav_mutation(&mut snapshot, &undo);
+        }
         let bytes = encode_wav(&snapshot);
         let projection = project_wav_mutation(&bytes)?;
         Ok(Outcome::with_raw(bytes, projection))
@@ -229,10 +157,10 @@ mod subject {
 /// base ids, which the host resolves for every Examples row, and plain scenarios under their own ids.
 pub fn adapter() -> Adapter {
     let mut built = Adapter::new("rust");
-    built = built.oracle("mutate", mutate_oracle).oracle("no-mutation-baseline-mutate", mutate_oracle).oracle("inverse", inverse_oracle).oracle("no-mutation-baseline-inverse", inverse_oracle);
+    built = built.oracle("mutate", mutate_oracle).oracle("inverse", inverse_oracle);
     #[cfg(feature = "sut")]
     {
-        built = built.subject("mutate", subject::mutate).subject("no-mutation-baseline-mutate", subject::mutate).subject("inverse", subject::inverse).subject("no-mutation-baseline-inverse", subject::inverse);
+        built = built.subject("mutate", subject::mutate).subject("inverse", subject::inverse);
     }
     built = built.oracle("identity-round-trip", round_trip_oracle);
     #[cfg(feature = "sut")]

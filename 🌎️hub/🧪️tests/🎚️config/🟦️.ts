@@ -21,7 +21,7 @@ export default defineConfig({
     root: testRoot,
     name: "os-hub-ts",
     environment: "node",
-    include: [resolve(dir, "../../🧪️tests/⛓️linked-codec-ownership/🟦️.ts"), resolve(dir, "../../🧪️tests/🛫️catalog-selection-preflight/🟦️.ts"), resolve(dir, "../../🧪️tests/🤝️integration/🟦️.ts"), resolve(dir, "../../🧪️tests/🤝️two-client-document/🟦️.ts"), resolve(dir, "../../🧪️tests/📈️document-growth/🟦️.ts"), resolve(dir, "../../🧪️tests/📝️trace-record/🟦️.ts"), resolve(dir, "../../🧪️tests/📌️document-check-in/🟦️.ts"), resolve(dir, "../../🧪️tests/🛡️access-policy/🟦️.ts"), resolve(dir, "../../🧪️tests/🚧️hostile-input/🟦️.ts"), resolve(dir, "../../🧪️tests/📊️observability/🟦️.ts"), resolve(dir, "../../🧪️tests/🌱️creation-progress/🟦️.ts"), resolve(dir, "../../🧪️tests/🪞️pair-content/🟦️.ts"), resolve(dir, "../../🧪️tests/🔀️forwarding-proxy/🟦️.ts")],
+    include: [resolve(dir, "../../🧪️tests/⛓️linked-codec-ownership/🟦️.ts"), resolve(dir, "../../🧪️tests/🛫️catalog-selection-preflight/🟦️.ts"), resolve(dir, "../../🧪️tests/🤝️integration/🟦️.ts"), resolve(dir, "../../🧪️tests/🤝️two-client-document/🟦️.ts"), resolve(dir, "../../🧪️tests/📈️document-growth/🟦️.ts"), resolve(dir, "../../🧪️tests/📝️trace-record/🟦️.ts"), resolve(dir, "../../🧪️tests/📌️document-check-in/🟦️.ts"), resolve(dir, "../../🧪️tests/🚧️hostile-input/🟦️.ts"), resolve(dir, "../../🧪️tests/📊️observability/🟦️.ts"), resolve(dir, "../../🧪️tests/🌱️creation-progress/🟦️.ts"), resolve(dir, "../../🧪️tests/🪞️pair-content/🟦️.ts"), resolve(dir, "../../🧪️tests/🔀️forwarding-proxy/🟦️.ts")],
     passWithNoTests: false,
   },
 });

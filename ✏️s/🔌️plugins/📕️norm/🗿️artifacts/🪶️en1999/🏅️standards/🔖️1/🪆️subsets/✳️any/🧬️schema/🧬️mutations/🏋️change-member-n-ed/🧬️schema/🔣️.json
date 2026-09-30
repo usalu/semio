@@ -5,19 +5,51 @@
   "type": "object",
   "additionalProperties": false,
   "required": [
+    "mutation",
     "memberId",
-    "loadCaseId",
-    "newNEd"
+    "actionId",
+    "newNK"
   ],
   "properties": {
+    "mutation": {
+      "const": "changeMemberNEd"
+    },
     "memberId": {
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Member",
+          "de": "Bauteil"
+        },
+        "description": {
+          "en": "The aluminium member this mutation addresses.",
+          "de": "Das Aluminiumbauteil, das diese Mutation adressiert."
+        },
+        "ref": {
+          "kind": "member"
+        },
+        "group": "target",
+        "order": 10
+      }
+    },
+    "actionId": {
       "type": "string"
     },
-    "loadCaseId": {
-      "type": "string"
-    },
-    "newNEd": {
-      "type": "number"
+    "newNK": {
+      "type": "number",
+      "x-semio-ui": {
+        "label": {
+          "en": "Characteristic axial force N_k",
+          "de": "Charakteristische Normalkraft N_k"
+        },
+        "widget": "stepper",
+        "unit": "N",
+        "displayUnit": "kN",
+        "displayFactor": 0.001,
+        "precision": 2
+      }
     }
   }
 }

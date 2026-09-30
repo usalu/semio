@@ -5,35 +5,62 @@
   "type": "object",
   "additionalProperties": false,
   "required": [
+    "mutation",
     "newSolid"
   ],
   "properties": {
+    "mutation": {
+      "const": "replaceStockSolid"
+    },
     "newSolid": {
       "type": "object",
       "properties": {
         "childId": {
-          "type": "string"
+          "type": "string",
+          "x-semio-ui": {
+            "widget": "text",
+            "role": "value",
+            "label": {
+              "en": "Child ID",
+              "de": "Kind-ID"
+            },
+            "description": {
+              "en": "Id of the child slot in this document.",
+              "de": "ID des Kind-Slots in diesem Dokument."
+            }
+          }
         },
         "target": {
-          "type": "object",
-          "properties": {
-            "artifactId": {
-              "type": "string"
+          "$ref": "https://json.schemas.assets.semio-tech.com/framework/io/schema.json#/$defs/ArtifactRef",
+          "x-semio-ui": {
+            "role": "value",
+            "label": {
+              "en": "Target",
+              "de": "Ziel"
             },
-            "dialect": {
-              "type": "string"
+            "description": {
+              "en": "Artifact the solid child points at.",
+              "de": "Artefakt, auf das das Körper-Kind verweist."
             }
-          },
-          "required": [
-            "artifactId",
-            "dialect"
-          ]
+          }
         }
       },
       "required": [
         "childId",
         "target"
-      ]
+      ],
+      "x-semio-ui": {
+        "role": "value",
+        "label": {
+          "en": "New Stock Solid",
+          "de": "Neuer Rohteilkörper"
+        },
+        "description": {
+          "en": "Child handle of the stock's solid body.",
+          "de": "Kind-Verweis auf den Volumenkörper des Rohteils."
+        }
+      },
+      "additionalProperties": false
     }
   }
 }

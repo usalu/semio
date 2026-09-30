@@ -5,12 +5,35 @@
   "type": "object",
   "additionalProperties": false,
   "required": [
+    "mutation",
     "id",
     "newOrigin"
   ],
   "properties": {
+    "mutation": {
+      "const": "moveTargetVolume"
+    },
     "id": {
-      "type": "string"
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Target volume",
+          "de": "Zielvolumen"
+        },
+        "description": {
+          "en": "The target volume this mutation addresses.",
+          "de": "Das Zielvolumen, das diese Mutation adressiert."
+        },
+        "ref": {
+          "kind": "targetVolume",
+          "domain": "vortex",
+          "granularity": "targetVolume"
+        },
+        "group": "target",
+        "order": 10
+      }
     },
     "newOrigin": {
       "type": "array",
@@ -18,7 +41,26 @@
         "type": "number"
       },
       "minItems": 3,
-      "maxItems": 3
+      "maxItems": 3,
+      "x-semio-ui": {
+        "widget": "vector",
+        "role": "value",
+        "label": {
+          "en": "Origin",
+          "de": "Ursprung"
+        },
+        "description": {
+          "en": "Absolute final origin in the world.",
+          "de": "Absoluter Endursprung in der Welt."
+        },
+        "unit": "m",
+        "step": 0.1,
+        "group": "pose",
+        "order": 20,
+        "snapSource": {
+          "config": "gridSpacing"
+        }
+      }
     }
   }
 }

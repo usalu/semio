@@ -12,6 +12,11 @@ fn spec(kind: &str, params: Json) -> Json {
     Json::Object(vec![("kind".to_string(), Json::String(kind.to_string())), ("params".to_string(), params)])
 }
 
+/// 📸️ `set-snapshot`'s params: the `DwgSnapshot` wire under `snapshot`.
+fn snapshot(entries: Vec<(&str, Json)>) -> Json {
+    object(vec![("snapshot", object(entries))])
+}
+
 fn object(entries: Vec<(&str, Json)>) -> Json {
     Json::Object(entries.into_iter().map(|(key, value)| (key.to_string(), value)).collect())
 }
@@ -48,7 +53,7 @@ fn the_whole_published_header_prefix_reads_the_values_the_fixture_carries() {
 #[test]
 fn the_whole_document_replacement_matches_the_committed_preamble_only_example() {
     let demo = include_bytes!("../../../../../../4️⃣ac1018/🪆️subsets/✳️any/📚️examples/🎬️demo/🖼️assets/🧪️example/🖊️.dwg").to_vec();
-    let built = oracle_apply_mutation(&fixture(), &spec("set-snapshot", object(vec![("maintenanceVersion", Json::Number(0.0)), ("codepage", Json::Number(0.0))]))).unwrap();
+    let built = oracle_apply_mutation(&fixture(), &spec("set-snapshot", snapshot(vec![("schema", Json::String("stdio.dwg".to_string())), ("version", Json::String("AC1024".to_string())), ("maintenanceVersion", Json::Number(0.0)), ("codepage", Json::Number(0.0))]))).unwrap();
     assert_eq!(built, demo, "the stub must reproduce the committed preamble-only example, including the fields no mutation kind addresses");
 }
 
@@ -84,29 +89,19 @@ fn a_document_that_is_not_a_dwg_is_refused_rather_than_projected() {
 }
 
 #[test]
-fn no_mutation_is_a_true_byte_identity() {
-    let input = fixture();
-    assert_eq!(oracle_apply_mutation(&input, &spec("no-mutation", Json::Object(vec![]))).unwrap(), input);
-}
-
-#[test]
 fn every_kind_is_observable_and_its_own_inverse_restores_the_projection() {
     let input = fixture();
     let original = project_dwg(&input).unwrap();
     let cases = vec![
-        spec("no-mutation", Json::Object(vec![])),
         spec("set-version-info", object(vec![("version", Json::String("AC1032".to_string())), ("maintenanceVersion", Json::Number(7.0)), ("codepage", Json::Number(29.0))])),
-        spec("set-snapshot", object(vec![("version", Json::String("AC1018".to_string())), ("maintenanceVersion", Json::Number(0.0)), ("codepage", Json::Number(0.0))])),
+        spec("set-snapshot", snapshot(vec![("schema", Json::String("stdio.dwg".to_string())), ("version", Json::String("AC1018".to_string())), ("maintenanceVersion", Json::Number(0.0)), ("codepage", Json::Number(0.0))])),
     ];
     for case in cases {
         let kind = case.str("kind");
         let mutated = oracle_apply_mutation(&input, &case).unwrap_or_else(|error| panic!("{kind} failed: {error}"));
         let after = project_dwg(&mutated).unwrap();
-        if kind != "no-mutation" {
-            assert_ne!(after, original, "{kind} left the projection unchanged — a mutation that is not observable proves nothing");
-        }
-        let inverse = oracle_inverse_spec(&input, &case).unwrap();
-        let restored = oracle_apply_mutation(&mutated, &inverse).unwrap_or_else(|error| panic!("{kind} inverse failed: {error}"));
+        assert_ne!(after, original, "{kind} left the projection unchanged — a mutation that is not observable proves nothing");
+        let restored = oracle_restore(&input, &mutated, &case).unwrap_or_else(|error| panic!("{kind} inverse failed: {error}"));
         assert_eq!(project_dwg(&restored).unwrap(), original, "applying {kind} and then its own inverse must restore the original projection");
     }
 }
@@ -114,12 +109,11 @@ fn every_kind_is_observable_and_its_own_inverse_restores_the_projection() {
 #[test]
 fn set_snapshot_is_a_whole_document_replacement_and_set_version_info_is_not() {
     let input = fixture();
-    let fields = object(vec![("version", Json::String("AC1018".to_string()))]);
-    let snapshot = oracle_apply_mutation(&input, &spec("set-snapshot", fields.clone())).unwrap();
-    let version_info = oracle_apply_mutation(&input, &spec("set-version-info", fields)).unwrap();
-    assert_eq!(snapshot.len(), 22, "set-snapshot replaces the container outright");
+    let replaced = oracle_apply_mutation(&input, &spec("set-snapshot", snapshot(vec![("schema", Json::String("stdio.dwg".to_string())), ("version", Json::String("AC1018".to_string()))]))).unwrap();
+    let version_info = oracle_apply_mutation(&input, &spec("set-version-info", object(vec![("version", Json::String("AC1018".to_string()))]))).unwrap();
+    assert_eq!(replaced.len(), 22, "set-snapshot replaces the container outright");
     assert_eq!(version_info.len(), input.len(), "set-version-info leaves the section map exactly where it was");
-    assert_ne!(project_dwg(&snapshot).unwrap(), project_dwg(&version_info).unwrap(), "the two verbs must be distinguishable in the projection, not two names for one edit");
+    assert_ne!(project_dwg(&replaced).unwrap(), project_dwg(&version_info).unwrap(), "the two verbs must be distinguishable in the projection, not two names for one edit");
 }
 
 #[test]

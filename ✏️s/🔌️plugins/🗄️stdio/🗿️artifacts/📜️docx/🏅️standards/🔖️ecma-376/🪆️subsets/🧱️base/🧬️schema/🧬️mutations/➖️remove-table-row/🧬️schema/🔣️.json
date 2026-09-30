@@ -5,20 +5,47 @@
   "type": "object",
   "additionalProperties": false,
   "required": [
+    "mutation",
     "address",
     "index"
   ],
   "properties": {
+    "mutation": {
+      "const": "removeTableRow"
+    },
     "address": {
-      "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/docx/ecma-376/base/xml-address.json"
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/docx/ecma-376/base/xml-address.json",
+      "x-semio-ui": {
+        "label": {
+          "en": "Node address",
+          "de": "Knotenadresse"
+        },
+        "description": {
+          "en": "XML part, child path, expected element name and revision stamp of the addressed node.",
+          "de": "XML-Teil, Kindpfad, erwarteter Elementname und Revisionsstempel des adressierten Knotens."
+        },
+        "group": "target",
+        "order": 10
+      }
     },
     "index": {
       "type": "integer",
       "minimum": 0,
-      "maximum": 9007199254740991
-    },
-    "mutation": {
-      "const": "removeTableRow"
+      "maximum": 9007199254740991,
+      "x-semio-ui": {
+        "widget": "stepper",
+        "label": {
+          "en": "Row",
+          "de": "Zeile"
+        },
+        "description": {
+          "en": "Index of the table row, counted from 0.",
+          "de": "Index der Tabellenzeile, ab 0 gezählt."
+        },
+        "precision": 0,
+        "group": "target",
+        "order": 20
+      }
     }
   }
 }

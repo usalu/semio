@@ -76,7 +76,7 @@
       },
       "geometry": {
         "kind": "mesh",
-        "mesh_id": "m-1"
+        "meshId": "m-1"
       },
       "spatialId": "b-1",
       "psets": [

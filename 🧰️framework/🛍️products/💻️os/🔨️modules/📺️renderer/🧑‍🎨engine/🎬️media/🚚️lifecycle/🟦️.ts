@@ -9,7 +9,7 @@ export type MediaExportChunk = {
 };
 
 export type MediaTransportPort = {
-  readonly submitMediaExport: (instanceId: number, port: typeof MEDIA_PLAYBACK_OUTPUT_PORT, parentDocumentId: string, revision: bigint) => Promise<MediaExportHandle>;
+  readonly submitMediaExport: (instanceId: number, port: string, parentDocumentId: string, revision: bigint) => Promise<MediaExportHandle>;
   readonly pollMediaExport: (instanceId: number, handle: MediaExportHandle) => Promise<MediaExportStatus>;
   readonly cancelMediaExport: (instanceId: number, handle: MediaExportHandle) => Promise<void>;
   readonly takeMediaExportChunk: (instanceId: number, handle: MediaExportHandle) => Promise<MediaExportChunk>;

@@ -1,8 +1,14 @@
-/** 🦠️ change-mesh-name: cohesive atomic mesh mutation. */
-import type { GltfJson, GltfSnapshot, GltfPrimitive, GltfMorphTarget } from '../../📸️snapshot/🟦️.ts';
-import { run, reject, positionIn, itemIndex, permutation, moveItem, type GltfLeafResult, type GltfMutationRejection } from './🟦️';
-export const GltfChangeMeshNameDescriptor = { id: 's.stdio.gltf.mutation.change-mesh-name.v1', version: 1, kind: 'change', touchedPaths: ["document/meshes/*/name"], referencePolicy: 'none' } as const;
-export interface GltfChangeMeshNamePayload { mesh: number; value: string | null }
-export type GltfChangeMeshNameResult = GltfLeafResult;
-export const validateGltfChangeMeshName = (payload: GltfChangeMeshNamePayload, base: GltfSnapshot): GltfMutationRejection | undefined => { const mesh = itemIndex(payload.mesh, base.document.meshes.length, 'document/meshes'); if (mesh) return mesh; return undefined; };
-export const applyGltfChangeMeshName = (base: GltfSnapshot, payload: GltfChangeMeshNamePayload): GltfChangeMeshNameResult => run(base, payload, validateGltfChangeMeshName, (next, payload) => { next.document.meshes[payload.mesh]!.name = payload.value ?? undefined; }, GltfChangeMeshNameDescriptor.touchedPaths);
+/** 🏷️ `change-mesh-name` wire twin: the flat `Apply` payload `GltfChangeMeshNamePayload` and the phase wire `ChangeMeshNameMutation`, exactly as `./🦀️.rs` writes them.
+ * @see ./🧬️schema/🔣️.json */
+import { gltfWireIndex, gltfWireNullable, gltfWireObject, gltfWireRequired, gltfWireString } from "../../../📸️snapshot/🟦️.ts";
+import { type GltfDiff, type GltfPhase, gltfWirePhase, parseGltfDiff } from "../../../🔺️diff/🟦️.ts";
+
+export interface GltfChangeMeshNamePayload {
+  mesh: number;
+  value: string | null;
+}
+
+export type ChangeMeshNameMutation = GltfPhase<GltfChangeMeshNamePayload, GltfDiff>;
+
+export const parseGltfChangeMeshNamePayload = gltfWireObject<GltfChangeMeshNamePayload>({ mesh: gltfWireRequired(gltfWireIndex), value: gltfWireRequired(gltfWireNullable(gltfWireString)) });
+export const parseChangeMeshNameMutation = gltfWirePhase(parseGltfChangeMeshNamePayload, parseGltfDiff);

@@ -11,7 +11,7 @@
 //! `semantic-zip-iso21320-v1` profile compares them. The subject half is gated behind the generated
 //! host's `sut` feature so the oracle-only run never links `semio-s-plugin-stdio`.
 
-use semio_repo_test_host::{Adapter, Context, Json, Outcome};
+use semio_repo_test_host::{Adapter, Context, Outcome};
 use semio_s_plugin_stdio_test_oracle::artifacts::zip::standards::v2_0::subsets::iso21320::{oracle_apply_inverse, oracle_apply_mutation, oracle_round_trip, project_zip_iso21320};
 use semio_s_plugin_stdio_test_oracle::law::{carrier_is_exact, inverse_restores, mutation_is_observable, round_trip_preserves, unordered};
 
@@ -84,51 +84,22 @@ mod subject {
     use super::mutable_input;
     use semio_repo_test_host::{Context, Json, Outcome};
     use semio_s_artifact_stdio_zip::standards::v2_0::subsets::base::io::{decode_zip, encode_zip};
-    use semio_s_artifact_stdio_zip::standards::v2_0::subsets::base::schema::snapshot::{ZipEntry, ZipEntryMetadata};
-    use semio_s_artifact_stdio_zip::standards::v2_0::subsets::iso21320::schema::mutations::add_deflated_entry::AddDeflatedEntry;
-    use semio_s_artifact_stdio_zip::standards::v2_0::subsets::iso21320::schema::mutations::add_stored_entry::AddStoredEntry;
-    use semio_s_artifact_stdio_zip::standards::v2_0::subsets::iso21320::schema::mutations::remove_entry::RemoveEntry;
-    use semio_s_artifact_stdio_zip::standards::v2_0::subsets::iso21320::schema::mutations::rename_entry::RenameEntry;
-    use semio_s_artifact_stdio_zip::standards::v2_0::subsets::iso21320::schema::mutations::set_archive_comment::SetArchiveComment;
-    use semio_s_artifact_stdio_zip::standards::v2_0::subsets::iso21320::schema::mutations::set_entry_data::SetEntryData;
-    use semio_s_artifact_stdio_zip::standards::v2_0::subsets::iso21320::schema::mutations::set_snapshot::SetSnapshot;
-    use semio_s_artifact_stdio_zip::standards::v2_0::subsets::iso21320::schema::mutations::{apply_zip_iso21320_mutation, inverse_zip_iso21320_mutation, ZipIso21320Mutation};
-    use semio_s_artifact_stdio_zip::{ZipSnapshot, STDIO_ZIP_DOCUMENT_SCHEMA};
+    use semio_s_artifact_stdio_zip::standards::v2_0::subsets::iso21320::schema::mutations::{apply_zip_iso21320_mutation, ZipIso21320Mutation};
+    use semio_s_artifact_stdio_zip::{from_json_str, to_json_string, DslValue, Mutation, ZipSnapshot};
     use semio_s_plugin_stdio_test_oracle::artifacts::zip::standards::v2_0::subsets::iso21320::project_zip_iso21320;
+    use semio_s_plugin_stdio_test_oracle::law::params_are_wire;
 
     //#region 🔖️Spec
-    /// 🦠️ Builds the real typed `ZipIso21320Mutation` this scenario's `{"kind", "params"}` spec
-    /// describes — the same 7 kinds the mutations file's own `KINDS` declares. An undeclared kind is
-    /// an error, never a silent no-op.
-    fn mutation_from_spec(value: &Json) -> Result<ZipIso21320Mutation, String> {
-        let params = value.get("params").cloned().unwrap_or(Json::Object(Vec::new()));
-        Ok(match value.str("kind").as_str() {
-            "set-snapshot" => ZipIso21320Mutation::SetSnapshot(SetSnapshot {
-                snapshot: ZipSnapshot {
-                    schema: STDIO_ZIP_DOCUMENT_SCHEMA.to_string(),
-                    entries: params.array("entries").iter().map(|entry| ZipEntry { name: entry.str("name"), data: entry.str("content").into_bytes(), ..Default::default() }).collect(),
-                    comment: params.str("comment"),
-                    ..Default::default()
-                },
-            }),
-            "set-archive-comment" => ZipIso21320Mutation::SetArchiveComment(SetArchiveComment { comment: params.str("comment"), comment_utf8: true }),
-            "add-stored-entry" => ZipIso21320Mutation::AddStoredEntry(AddStoredEntry {
-                entry: ZipEntry {
-                    name: params.str("name"),
-                    data: params.str("content").into_bytes(),
-                    metadata: ZipEntryMetadata { compression_method: 0, ..Default::default() },
-                },
-                before: params.get("before").map(|_| params.str("before")),
-            }),
-            "add-deflated-entry" => ZipIso21320Mutation::AddDeflatedEntry(AddDeflatedEntry {
-                entry: ZipEntry { name: params.str("name"), data: params.str("content").into_bytes(), ..Default::default() },
-                before: params.get("before").map(|_| params.str("before")),
-            }),
-            "remove-entry" => ZipIso21320Mutation::RemoveEntry(RemoveEntry { name: params.str("name") }),
-            "rename-entry" => ZipIso21320Mutation::RenameEntry(RenameEntry { name: params.str("name"), new_name: params.str("newName") }),
-            "set-entry-data" => ZipIso21320Mutation::SetEntryData(SetEntryData { name: params.str("name"), data: params.str("content").into_bytes() }),
-            other => return Err(format!("mutation kind {other:?} has no subject implementation")),
-        })
+    /// 🦠️ The scenario's `{kind, params}` witness decoded generically: `params` IS the leaf's wire
+    /// payload, so the derive-generated `from_payload_value` is the only decoder, and re-emitting the
+    /// decoded payload must give back exactly `params`.
+    fn mutation_from_spec(spec: &Json) -> Result<ZipIso21320Mutation, String> {
+        let kind = spec.str("kind");
+        let params = spec.get("params").cloned().unwrap_or(Json::Null);
+        let payload: DslValue = from_json_str(&params.to_string()).map_err(|error| error.to_string())?;
+        let mutation = <ZipIso21320Mutation as Mutation<ZipSnapshot>>::from_payload_value(&kind, payload).map_err(|error| error.to_string())?;
+        params_are_wire(&kind, &params, &to_json_string(&<ZipIso21320Mutation as Mutation<ZipSnapshot>>::payload_value(&mutation)))?;
+        Ok(mutation)
     }
     //#endregion 🔖️Spec
 
@@ -150,13 +121,13 @@ mod subject {
         outcome_of(&snapshot)
     }
 
-    /// ↩️ The subset's OWN inverse algebra, reached through its typed vocabulary rather than
-    /// re-derived here, so the property under test is the implementation's algebra and not a
-    /// transcription of it.
+    /// ↩️ The subset's OWN inverse algebra (`Mutation::inverse`), reached through its typed
+    /// vocabulary rather than re-derived here, so the property under test is the implementation's
+    /// algebra and not a transcription of it.
     pub fn inverse(ctx: &Context) -> Result<Outcome, String> {
         let base = base_snapshot(ctx)?;
         let mutation = mutation_from_spec(&ctx.doc_json()?)?;
-        let undo = inverse_zip_iso21320_mutation(&mutation, &base);
+        let undo = <ZipIso21320Mutation as Mutation<ZipSnapshot>>::inverse(&mutation, &base);
         let mut snapshot = base;
         apply_zip_iso21320_mutation(&mut snapshot, &mutation);
         for step in &undo {
@@ -186,15 +157,10 @@ mod subject {
 /// base ids, which the host resolves for every Examples row, and plain scenarios under their own ids.
 pub fn adapter() -> Adapter {
     let mut built = Adapter::new("rust");
-    built = built.oracle("mutate", mutate_oracle).oracle("no-mutation-baseline-mutate", mutate_oracle).oracle("inverse", inverse_oracle).oracle("no-mutation-baseline-inverse", inverse_oracle);
+    built = built.oracle("mutate", mutate_oracle).oracle("inverse", inverse_oracle).oracle("identity-round-trip", round_trip_oracle);
     #[cfg(feature = "sut")]
     {
-        built = built.subject("mutate", subject::mutate).subject("no-mutation-baseline-mutate", subject::mutate).subject("inverse", subject::inverse).subject("no-mutation-baseline-inverse", subject::inverse);
-    }
-    built = built.oracle("identity-round-trip", round_trip_oracle);
-    #[cfg(feature = "sut")]
-    {
-        built = built.subject("identity-round-trip", subject::round_trip);
+        built = built.subject("mutate", subject::mutate).subject("inverse", subject::inverse).subject("identity-round-trip", subject::round_trip);
     }
     built
 }

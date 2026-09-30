@@ -292,35 +292,35 @@
     "floors": {
       "type": "array",
       "items": {
-        "$ref": "#/definitions/FloorArea"
+        "$ref": "#/$defs/FloorArea"
       },
       "x-semio-state": "artifact"
     },
     "selfWeightElements": {
       "type": "array",
       "items": {
-        "$ref": "#/definitions/SelfWeightElement"
+        "$ref": "#/$defs/SelfWeightElement"
       },
       "x-semio-state": "artifact"
     },
     "roofs": {
       "type": "array",
       "items": {
-        "$ref": "#/definitions/RoofArea"
+        "$ref": "#/$defs/RoofArea"
       },
       "x-semio-state": "artifact"
     },
     "windFaces": {
       "type": "array",
       "items": {
-        "$ref": "#/definitions/WindFace"
+        "$ref": "#/$defs/WindFace"
       },
       "x-semio-state": "artifact"
     },
     "accidentalCases": {
       "type": "array",
       "items": {
-        "$ref": "#/definitions/AccidentalCase"
+        "$ref": "#/$defs/AccidentalCase"
       },
       "x-semio-state": "artifact"
     },
@@ -397,8 +397,9 @@
       "type": "string"
     }
   },
-  "definitions": {
+  "$defs": {
     "FloorArea": {
+      "title": "FloorArea",
       "type": "object",
       "additionalProperties": false,
       "required": [
@@ -414,27 +415,82 @@
           "type": "string"
         },
         "category": {
-          "type": "string"
+          "type": "string",
+          "x-semio-ui": {
+            "label": {
+              "en": "Category of use",
+              "de": "Nutzungskategorie"
+            },
+            "description": {
+              "en": "EN 1991-1-1 Table 6.1 category (A to H).",
+              "de": "Kategorie nach EN 1991-1-1 Tabelle 6.1 (A bis H)."
+            },
+            "widget": "text"
+          }
         },
         "area": {
           "type": "number",
-          "format": "double"
+          "x-semio-ui": {
+            "label": {
+              "en": "Loaded area A",
+              "de": "Belastete Fläche A"
+            },
+            "widget": "stepper",
+            "unit": "m²",
+            "precision": 2
+          }
         },
         "assumedQk": {
           "type": "number",
-          "format": "double"
+          "x-semio-ui": {
+            "widget": "stepper",
+            "label": {
+              "en": "Assumed imposed load q_k",
+              "de": "Angesetzte Nutzlast q_k"
+            },
+            "description": {
+              "en": "Value claimed by the design; the check compares it with the value derived from the standard.",
+              "de": "Vom Entwurf angesetzter Wert; der Nachweis vergleicht ihn mit dem nach der Norm ermittelten Wert."
+            },
+            "unit": "Pa",
+            "displayUnit": "kN/m²",
+            "displayFactor": 0.001,
+            "step": 50,
+            "precision": 2
+          }
         },
         "assumedQkConcentrated": {
           "type": "number",
-          "format": "double"
+          "x-semio-ui": {
+            "label": {
+              "en": "Assumed concentrated load Q_k",
+              "de": "Angesetzte Einzellast Q_k"
+            },
+            "widget": "stepper",
+            "unit": "N",
+            "displayUnit": "kN",
+            "displayFactor": 0.001,
+            "precision": 2
+          }
         },
         "assumedPartitions": {
           "type": "number",
-          "format": "double"
+          "x-semio-ui": {
+            "label": {
+              "en": "Assumed partition allowance",
+              "de": "Angesetzter Trennwandzuschlag"
+            },
+            "widget": "stepper",
+            "unit": "Pa",
+            "displayUnit": "kN/m²",
+            "displayFactor": 0.001,
+            "precision": 2
+          }
         }
       }
     },
     "SelfWeightElement": {
+      "title": "SelfWeightElement",
       "type": "object",
       "additionalProperties": false,
       "required": [
@@ -452,15 +508,41 @@
         },
         "thickness": {
           "type": "number",
-          "format": "double"
+          "x-semio-ui": {
+            "label": {
+              "en": "Thickness",
+              "de": "Dicke"
+            },
+            "widget": "stepper",
+            "unit": "m",
+            "displayUnit": "mm",
+            "displayFactor": 1000,
+            "precision": 1
+          }
         },
         "assumedGk": {
           "type": "number",
-          "format": "double"
+          "x-semio-ui": {
+            "widget": "stepper",
+            "label": {
+              "en": "Assumed self-weight g_k",
+              "de": "Angesetzte Eigenlast g_k"
+            },
+            "description": {
+              "en": "Value claimed by the design; the check compares it with the value derived from the standard.",
+              "de": "Vom Entwurf angesetzter Wert; der Nachweis vergleicht ihn mit dem nach der Norm ermittelten Wert."
+            },
+            "unit": "Pa",
+            "displayUnit": "kN/m²",
+            "displayFactor": 0.001,
+            "step": 50,
+            "precision": 2
+          }
         }
       }
     },
     "RoofArea": {
+      "title": "RoofArea",
       "type": "object",
       "additionalProperties": false,
       "required": [
@@ -480,35 +562,120 @@
           "type": "string"
         },
         "roofType": {
-          "type": "string"
+          "type": "string",
+          "x-semio-ui": {
+            "label": {
+              "en": "Roof type",
+              "de": "Dachform"
+            },
+            "description": {
+              "en": "monopitch, duopitch, flat …",
+              "de": "Pultdach, Satteldach, Flachdach …"
+            },
+            "widget": "text"
+          }
         },
         "pitchDeg": {
-          "type": "number"
+          "type": "number",
+          "x-semio-ui": {
+            "label": {
+              "en": "Roof pitch α",
+              "de": "Dachneigung α"
+            },
+            "widget": "stepper",
+            "unit": "°",
+            "precision": 0
+          }
         },
         "cE": {
-          "type": "number"
+          "type": "number",
+          "x-semio-ui": {
+            "label": {
+              "en": "Exposure coefficient C_e",
+              "de": "Umgebungskoeffizient C_e"
+            },
+            "widget": "stepper",
+            "precision": 2
+          }
         },
         "cT": {
-          "type": "number"
+          "type": "number",
+          "x-semio-ui": {
+            "label": {
+              "en": "Thermal coefficient C_t",
+              "de": "Temperaturkoeffizient C_t"
+            },
+            "widget": "stepper",
+            "precision": 2
+          }
         },
         "hasParapet": {
-          "type": "boolean"
+          "type": "boolean",
+          "x-semio-ui": {
+            "label": {
+              "en": "Parapet present",
+              "de": "Attika vorhanden"
+            },
+            "widget": "toggle"
+          }
         },
         "parapetHeight": {
-          "type": "number"
+          "type": "number",
+          "x-semio-ui": {
+            "label": {
+              "en": "Parapet height",
+              "de": "Attikahöhe"
+            },
+            "widget": "stepper",
+            "unit": "m",
+            "precision": 2
+          }
         },
         "driftObstructionHeight": {
-          "type": "number"
+          "type": "number",
+          "x-semio-ui": {
+            "label": {
+              "en": "Height of the drift obstruction",
+              "de": "Höhe des Verwehungshindernisses"
+            },
+            "widget": "stepper",
+            "unit": "m",
+            "precision": 2
+          }
         },
         "multiSpan": {
-          "type": "boolean"
+          "type": "boolean",
+          "x-semio-ui": {
+            "label": {
+              "en": "Multi-span roof",
+              "de": "Mehrfeldriges Dach"
+            },
+            "widget": "toggle"
+          }
         },
         "assumedSk": {
-          "type": "number"
+          "type": "number",
+          "x-semio-ui": {
+            "widget": "stepper",
+            "label": {
+              "en": "Assumed roof snow load s",
+              "de": "Angesetzte Schneelast auf dem Dach s"
+            },
+            "description": {
+              "en": "Value claimed by the design; the check compares it with the value derived from the standard.",
+              "de": "Vom Entwurf angesetzter Wert; der Nachweis vergleicht ihn mit dem nach der Norm ermittelten Wert."
+            },
+            "unit": "Pa",
+            "displayUnit": "kN/m²",
+            "displayFactor": 0.001,
+            "step": 50,
+            "precision": 2
+          }
         }
       }
     },
     "WindFace": {
+      "title": "WindFace",
       "type": "object",
       "additionalProperties": false,
       "required": [
@@ -520,8 +687,8 @@
         "cPi",
         "cS",
         "cD",
-        "assumedWp",
-        "loadedArea"
+        "loadedArea",
+        "assumedWp"
       ],
       "properties": {
         "id": {
@@ -534,30 +701,97 @@
           "type": "number"
         },
         "cPe10": {
-          "type": "number"
+          "type": "number",
+          "x-semio-ui": {
+            "label": {
+              "en": "External pressure coefficient c_pe,10",
+              "de": "Außendruckbeiwert c_pe,10"
+            },
+            "widget": "stepper",
+            "precision": 2
+          }
         },
         "cPe1": {
-          "type": "number"
+          "type": "number",
+          "x-semio-ui": {
+            "label": {
+              "en": "External pressure coefficient c_pe,1",
+              "de": "Außendruckbeiwert c_pe,1"
+            },
+            "widget": "stepper",
+            "precision": 2
+          }
         },
         "cPi": {
-          "type": "number"
+          "type": "number",
+          "x-semio-ui": {
+            "label": {
+              "en": "Internal pressure coefficient c_pi",
+              "de": "Innendruckbeiwert c_pi"
+            },
+            "widget": "stepper",
+            "precision": 2
+          }
         },
         "cS": {
-          "type": "number"
+          "type": "number",
+          "x-semio-ui": {
+            "label": {
+              "en": "Size factor c_s",
+              "de": "Größenbeiwert c_s"
+            },
+            "widget": "stepper",
+            "precision": 2
+          }
         },
         "cD": {
-          "type": "number"
-        },
-        "assumedWp": {
-          "type": "number"
+          "type": "number",
+          "x-semio-ui": {
+            "label": {
+              "en": "Dynamic factor c_d",
+              "de": "Dynamischer Beiwert c_d"
+            },
+            "widget": "stepper",
+            "precision": 2
+          }
         },
         "loadedArea": {
-          "type": "number"
+          "type": "number",
+          "x-semio-ui": {
+            "label": {
+              "en": "Loaded area",
+              "de": "Lasteinzugsfläche"
+            },
+            "widget": "stepper",
+            "unit": "m²",
+            "precision": 2
+          }
+        },
+        "assumedWp": {
+          "type": "number",
+          "x-semio-ui": {
+            "widget": "stepper",
+            "label": {
+              "en": "Assumed wind pressure w_e",
+              "de": "Angesetzter Winddruck w_e"
+            },
+            "description": {
+              "en": "Value claimed by the design; the check compares it with the value derived from the standard.",
+              "de": "Vom Entwurf angesetzter Wert; der Nachweis vergleicht ihn mit dem nach der Norm ermittelten Wert."
+            },
+            "unit": "Pa",
+            "displayUnit": "kN/m²",
+            "displayFactor": 0.001,
+            "step": 50,
+            "precision": 2
+          }
         }
       }
     },
     "AccidentalCase": {
+      "title": "AccidentalCase",
       "type": "object",
+      "additionalProperties": false,
       "required": [
         "id",
         "impact",
@@ -570,20 +804,33 @@
         "impact": {
           "type": "array",
           "items": {
-            "$ref": "#/definitions/AccidentalImpact"
+            "$ref": "#/$defs/AccidentalImpact"
+          },
+          "x-semio-ui": {
+            "label": {
+              "en": "Impact",
+              "de": "Anprall"
+            }
           }
         },
         "explosion": {
           "type": "array",
           "items": {
-            "$ref": "#/definitions/AccidentalExplosion"
+            "$ref": "#/$defs/AccidentalExplosion"
+          },
+          "x-semio-ui": {
+            "label": {
+              "en": "Explosion",
+              "de": "Explosion"
+            }
           }
         }
-      },
-      "additionalProperties": false
+      }
     },
     "AccidentalImpact": {
+      "title": "AccidentalImpact",
       "type": "object",
+      "additionalProperties": false,
       "required": [
         "vehicleMass",
         "vehicleSpeed",
@@ -591,19 +838,54 @@
       ],
       "properties": {
         "vehicleMass": {
-          "type": "number"
+          "type": "number",
+          "x-semio-ui": {
+            "label": {
+              "en": "Vehicle mass m",
+              "de": "Fahrzeugmasse m"
+            },
+            "widget": "stepper",
+            "unit": "kg",
+            "precision": 0
+          }
         },
         "vehicleSpeed": {
-          "type": "number"
+          "type": "number",
+          "x-semio-ui": {
+            "label": {
+              "en": "Vehicle speed v",
+              "de": "Fahrzeuggeschwindigkeit v"
+            },
+            "widget": "stepper",
+            "unit": "m/s",
+            "precision": 1
+          }
         },
         "assumedForce": {
-          "type": "number"
+          "type": "number",
+          "x-semio-ui": {
+            "widget": "stepper",
+            "label": {
+              "en": "Assumed impact force F_d",
+              "de": "Angesetzte Anprallkraft F_d"
+            },
+            "description": {
+              "en": "Value claimed by the design; the check compares it with the value derived from the standard.",
+              "de": "Vom Entwurf angesetzter Wert; der Nachweis vergleicht ihn mit dem nach der Norm ermittelten Wert."
+            },
+            "unit": "N",
+            "displayUnit": "kN",
+            "displayFactor": 0.001,
+            "step": 1000,
+            "precision": 0
+          }
         }
-      },
-      "additionalProperties": false
+      }
     },
     "AccidentalExplosion": {
+      "title": "AccidentalExplosion",
       "type": "object",
+      "additionalProperties": false,
       "required": [
         "explosionMass",
         "standoff",
@@ -611,16 +893,139 @@
       ],
       "properties": {
         "explosionMass": {
-          "type": "number"
+          "type": "number",
+          "x-semio-ui": {
+            "label": {
+              "en": "Explosive charge mass",
+              "de": "Masse der Sprengladung"
+            },
+            "widget": "stepper",
+            "unit": "kg",
+            "precision": 1
+          }
         },
         "standoff": {
-          "type": "number"
+          "type": "number",
+          "x-semio-ui": {
+            "label": {
+              "en": "Stand-off distance",
+              "de": "Abstand zur Explosionsquelle"
+            },
+            "widget": "stepper",
+            "unit": "m",
+            "precision": 1
+          }
         },
         "assumedPressure": {
-          "type": "number"
+          "type": "number",
+          "x-semio-ui": {
+            "label": {
+              "en": "Assumed peak overpressure",
+              "de": "Angesetzter Spitzenüberdruck"
+            },
+            "widget": "stepper",
+            "unit": "Pa",
+            "displayUnit": "kN/m²",
+            "displayFactor": 0.001,
+            "precision": 2
+          }
         }
-      },
-      "additionalProperties": false
+      }
+    },
+    "StructureKind": {
+      "title": "StructureKind",
+      "type": "string",
+      "enum": [
+        "building",
+        "bridge"
+      ],
+      "x-semio-ui": {
+        "options": {
+          "building": {
+            "en": "Building",
+            "de": "Hochbau"
+          },
+          "bridge": {
+            "en": "Bridge",
+            "de": "Brücke"
+          }
+        }
+      }
+    },
+    "AnnexChoice": {
+      "title": "AnnexChoice",
+      "type": "string",
+      "enum": [
+        "En",
+        "De"
+      ],
+      "x-semio-ui": {
+        "options": {
+          "En": {
+            "en": "Recommended CEN values (EN)",
+            "de": "Empfohlene CEN-Werte (EN)"
+          },
+          "De": {
+            "en": "German national annex (DIN EN)",
+            "de": "Deutscher Nationaler Anhang (DIN EN)"
+          }
+        }
+      }
+    },
+    "FireCurve": {
+      "title": "FireCurve",
+      "type": "string",
+      "enum": [
+        "standard",
+        "external",
+        "hydrocarbon",
+        "parametric"
+      ],
+      "x-semio-ui": {
+        "options": {
+          "standard": {
+            "en": "Standard temperature-time curve",
+            "de": "Einheits-Temperaturzeitkurve"
+          },
+          "external": {
+            "en": "External fire curve",
+            "de": "Außenbrandkurve"
+          },
+          "hydrocarbon": {
+            "en": "Hydrocarbon curve",
+            "de": "Hydrokarbon-Brandkurve"
+          },
+          "parametric": {
+            "en": "Parametric fire curve",
+            "de": "Parametrische Brandkurve"
+          }
+        }
+      }
+    },
+    "FireMode": {
+      "title": "FireMode",
+      "type": "string",
+      "enum": [
+        "none",
+        "nominal",
+        "parametric"
+      ],
+      "x-semio-ui": {
+        "options": {
+          "none": {
+            "en": "No fire design",
+            "de": "Keine Brandbemessung"
+          },
+          "nominal": {
+            "en": "Nominal fire curve",
+            "de": "Nominelle Temperaturzeitkurve"
+          },
+          "parametric": {
+            "en": "Parametric fire",
+            "de": "Parametrischer Brand"
+          }
+        }
+      }
     }
   }
 }

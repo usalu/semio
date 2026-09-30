@@ -12,13 +12,37 @@
   "properties": {
     "row_index": {
       "type": "integer",
-      "minimum": 0
+      "minimum": 0,
+      "x-semio-ui": {
+        "widget": "stepper",
+        "label": {
+          "en": "Row",
+          "de": "Zeile"
+        },
+        "description": {
+          "en": "Zero-based row index.",
+          "de": "Nullbasierter Zeilenindex."
+        }
+      }
     },
     "column_name": {
-      "type": "string"
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "text",
+        "label": {
+          "en": "Column",
+          "de": "Spalte"
+        }
+      }
     },
     "new_value": {
-      "$ref": "#/$defs/SemioValue"
+      "$ref": "#/$defs/SemioValue",
+      "x-semio-ui": {
+        "label": {
+          "en": "Cell value",
+          "de": "Zellwert"
+        }
+      }
     }
   },
   "$defs": {

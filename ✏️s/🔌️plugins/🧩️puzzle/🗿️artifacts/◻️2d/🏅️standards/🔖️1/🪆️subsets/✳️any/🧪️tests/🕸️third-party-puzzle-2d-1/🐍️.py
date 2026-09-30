@@ -92,6 +92,11 @@ GEOMETRY_KINDS = ("move-node", "scale-node", "change-node-anchor", "replace-node
 """📐 The four node-geometry kinds. `replace-edge-geometry` and `connect-handles` carry an edge x/y
 too and are handled beside them."""
 
+SELECTION_KINDS = ("drag-selection", "rotate-selection", "scale-selection")
+"""✋️ The three parametric selection transforms: one TARGET SET moved, orbited or spread about a pivot
+by shapely's own `translate`, `rotate` and `scale` — node footprints keep their size and stay axis
+aligned (only their position moves), a target region scales with the gesture but never rotates."""
+
 COMPATIBILITY_ATTRS = ("bidirectional", "important", "specificity")
 """🤝 The three attributes a compatibility record carries beyond its two endpoints."""
 
@@ -182,6 +187,11 @@ def declares_no_op(vector):
     """🚦️ Whether the committed outcome itself records that the mutation had nothing to do."""
     outcome = vector["outcome"] or {}
     return any(message.get("code") == "mutation.no-op" for message in outcome.get("messages", []))
+
+
+def declares_invariant(vector):
+    """🧱️ Whether the committed outcome refuses the payload for breaking a hard bound of its own schema."""
+    return (vector["outcome"] or {}).get("code") == "mutation.invariant"
 
 
 def moves_document(vector):
@@ -418,6 +428,54 @@ def edge_by_id(document, identity):
     return None
 
 
+def selection_centre(kind, payload, x, y):
+    """🎯️ Where shapely's own affine algebra puts one survivor's position."""
+    point = Point(x, y)
+    if kind == "drag-selection":
+        moved = affinity.translate(point, xoff=payload["dx"], yoff=payload["dy"])
+    elif kind == "rotate-selection":
+        moved = affinity.rotate(point, payload["angle"], origin=(payload["pivotX"], payload["pivotY"]), use_radians=True)
+    else:
+        moved = affinity.scale(point, xfact=payload["factor"], yfact=payload["factor"], origin=(payload["pivotX"], payload["pivotY"]))
+    return moved.x, moved.y
+
+
+def selection_geometry(vector, kind, payload, failures):
+    """✋️ A selection transform moves exactly its unlocked survivors: a node footprint is TRANSLATED to
+    the position shapely's translate/rotate/scale gives its centre (its own size and axis alignment
+    stay, so its area is unchanged), a region is translated or scaled about the pivot as a whole
+    rectangle, and every other footprint and rectangle stays exactly where it was."""
+    checks = 0
+    targets = set(payload["targets"])
+    for node in vector["before"]["nodes"]:
+        before_shape = footprint(node)
+        after_node = node_by_id(vector["after"], node["id"])
+        if before_shape is None or after_node is None:
+            failures.append("%s: node %r has no footprint on both sides" % (vector["id"], node["id"]))
+            continue
+        checks += 1
+        expected = before_shape
+        if node["id"] in targets and not node.get("locked", False):
+            x, y = selection_centre(kind, payload, node["x"], node["y"])
+            expected = affinity.translate(before_shape, xoff=x - node["x"], yoff=y - node["y"])
+        if not expected.normalize().equals_exact(footprint(after_node).normalize(), TOLERANCE):
+            failures.append("%s: shapely puts node %r's footprint at %r, the after-snapshot carries %r" % (vector["id"], node["id"], expected.bounds, footprint(after_node).bounds))
+        if abs(expected.area - before_shape.area) > TOLERANCE:
+            failures.append("%s: a selection transform resized node %r's footprint" % (vector["id"], node["id"]))
+    after_regions = regions_of(vector["after"])
+    for identity, region in regions_of(vector["before"]).items():
+        checks += 1
+        expected = region_box(region)
+        if identity in targets and not region["locked"] and kind != "rotate-selection":
+            if kind == "drag-selection":
+                expected = affinity.translate(expected, xoff=payload["dx"], yoff=payload["dy"])
+            else:
+                expected = affinity.scale(expected, xfact=payload["factor"], yfact=payload["factor"], origin=(payload["pivotX"], payload["pivotY"]))
+        if identity not in after_regions or not expected.normalize().equals_exact(region_box(after_regions[identity]).normalize(), TOLERANCE):
+            failures.append("%s: shapely puts region %r at %r, the after-snapshot does not" % (vector["id"], identity, expected.bounds))
+    return checks
+
+
 def geometry_transforms(ctx):
     """📐 shapely answers position, scale, anchor invariance and the null-dropping extent rebuild."""
     rows = []
@@ -468,6 +526,8 @@ def geometry_transforms(ctx):
                     if payload.get(argument) is None and member in after_node:
                         failures.append("%s: argument %s is null yet the after-snapshot still carries %s" % (vector["id"], argument, member))
                 checks += 1
+        elif kind in SELECTION_KINDS:
+            checks += selection_geometry(vector, kind, payload, failures)
         elif kind in ("replace-edge-geometry", "connect-handles"):
             identity = payload["id"]
             after_edge = edge_by_id(vector["after"], identity)
@@ -520,8 +580,14 @@ def payload_schemas(ctx):
         validator = validator_class(schema)
         checks += 1
         errors = sorted(validator.iter_errors(vector["mutation"]), key=lambda error: list(error.absolute_path))
-        for error in errors:
-            failures.append("%s: %s rejects the committed payload at /%s — %s" % (vector["id"], validator_class.__name__, "/".join(str(part) for part in error.absolute_path), error.message))
+        # 🧱️Schema-first: the committed payloads the subject refuses as a Fatal `mutation.invariant` are
+        # exactly the ones their own leaf schema forbids, so the validator must reject those and only those.
+        if declares_invariant(vector):
+            if not errors:
+                failures.append("%s: the committed outcome is a mutation.invariant refusal, yet %s accepts the payload — the schema does not forbid what the subject refuses" % (vector["id"], validator_class.__name__))
+        else:
+            for error in errors:
+                failures.append("%s: %s rejects the committed payload at /%s — %s" % (vector["id"], validator_class.__name__, "/".join(str(part) for part in error.absolute_path), error.message))
         # 🧪️A validator that accepts everything would accept the payload too. The probe proves the
         # opposite by handing it a member the schema does not declare.
         if schema.get("additionalProperties") is False:
@@ -542,8 +608,8 @@ def touched_members(patch):
 
 
 def collection_ids(document, member):
-    """🆔 The ids a snapshot collection carries, in board order."""
-    return [record["id"] for record in document[member]]
+    """🆔 The ids a snapshot collection carries, in board order; an omitted collection is empty."""
+    return [record["id"] for record in document.get(member, [])]
 
 
 def patched_ids(before, after, member):
@@ -555,9 +621,9 @@ def patched_ids(before, after, member):
     `make_patch` for each surviving record's own patch is immune to that and is a stronger statement
     — a record is patched exactly when RFC 6902 needs at least one operation to turn its
     before-shape into its after-shape."""
-    survivors = {record["id"]: record for record in after[member]}
+    survivors = {record["id"]: record for record in after.get(member, [])}
     reached = set()
-    for record in before[member]:
+    for record in before.get(member, []):
         twin = survivors.get(record["id"])
         if twin is not None and list(jsonpatch.make_patch(record, twin)):
             reached.add(record["id"])
@@ -593,7 +659,7 @@ def diff_reproduction(ctx):
         checks += 1
         if declared != touched_members(operations):
             failures.append("%s: the typed diff declares %r, the RFC 6902 patch touches %r" % (vector["id"], sorted(declared), sorted(touched_members(operations))))
-        for member in ("nodes", "edges"):
+        for member in ("nodes", "edges", "targetRegions"):
             delta = vector["diff"].get(member)
             if delta is None:
                 continue
@@ -613,7 +679,7 @@ def diff_reproduction(ctx):
                 if replacement is None:
                     continue
                 checks += 1
-                if replacement != next((record for record in vector["after"][member] if record["id"] == entry["id"]), None):
+                if replacement != next((record for record in vector["after"].get(member, []) if record["id"] == entry["id"]), None):
                     failures.append("%s: the typed diff's replacement for %s %r does not equal the committed after-snapshot's record" % (vector["id"], member, entry["id"]))
         rows.append({"id": vector["id"], "kind": vector["kind"], "checks": checks, "ops": len(operations), "members": sorted(declared)})
     return report("diff-reproduction", rows, failures)

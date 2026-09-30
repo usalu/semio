@@ -1,0 +1,10 @@
+{
+  "mutation": "applyMesh",
+  "payload": {
+    "mutation": {
+      "DeleteMesh": {
+        "id": "mesh-a"
+      }
+    }
+  }
+}

@@ -14,7 +14,14 @@
       "minimum": 0
     },
     "new_content": {
-      "type": "string"
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "multiline",
+        "label": {
+          "en": "Text",
+          "de": "Text"
+        }
+      }
     }
   }
 }

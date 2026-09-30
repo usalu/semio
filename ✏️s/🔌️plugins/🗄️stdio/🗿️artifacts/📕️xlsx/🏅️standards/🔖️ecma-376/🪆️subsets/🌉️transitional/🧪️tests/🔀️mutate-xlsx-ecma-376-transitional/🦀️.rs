@@ -21,7 +21,7 @@
 //! reason this subset declares two kinds fewer than its 🔒️strict sibling.
 
 use semio_repo_test_host::{Adapter, Context, Json, Outcome};
-use semio_s_plugin_stdio_test_oracle::artifacts::xlsx::standards::v_ecma_376::subsets::transitional::{oracle_apply_mutation, oracle_arrange, oracle_inverse_spec, oracle_round_trip, project_package};
+use semio_s_plugin_stdio_test_oracle::artifacts::xlsx::standards::v_ecma_376::subsets::transitional::{oracle_apply_mutation, oracle_arrange, oracle_inverse_spec, oracle_round_trip, oracle_stamp, project_package};
 use semio_s_plugin_stdio_test_oracle::law::{inverse_restores, mutation_is_observable, reparsed_not_copied, round_trip_preserves};
 
 //#region 🔖️Input
@@ -82,6 +82,24 @@ fn round_trip_oracle(ctx: &Context) -> Result<Outcome, String> {
     round_trip_preserves(&projection, &project_package(&input)?)?;
     Ok(Outcome::with_raw(output, projection))
 }
+/// 🏅️ The reference half of the whole-package class stamp (`set-snapshot` of the package's own strict stamp): the
+/// independent engine stamps the real package strict, and the conformance-class projection has to move.
+fn stamp_oracle(ctx: &Context) -> Result<Outcome, String> {
+    let input = mutable_input(ctx)?;
+    let output = oracle_stamp(&input, true)?;
+    let projection = project_package(&output)?;
+    mutation_is_observable("set-snapshot", &projection, &project_package(&input)?, &[])?;
+    Ok(Outcome::with_raw(output, projection))
+}
+
+/// ↩️ The class stamp undone by the reference's own stamp back, which must restore the real package's projection exactly.
+fn stamp_inverse_oracle(ctx: &Context) -> Result<Outcome, String> {
+    let input = mutable_input(ctx)?;
+    let restored = oracle_stamp(&oracle_stamp(&input, true)?, false)?;
+    let projection = project_package(&restored)?;
+    inverse_restores("set-snapshot", &projection, &project_package(&input)?)?;
+    Ok(Outcome::with_raw(restored, projection))
+}
 //#endregion 🔖️Oracle
 
 //#region 🔖️Subject
@@ -91,9 +109,10 @@ mod subject {
     use semio_repo_test_host::{Context, Json, Outcome};
     use semio_s_artifact_stdio_xlsx::standards::v_ecma_376::subsets::base::io::export::serializers::encode_xlsx;
     use semio_s_artifact_stdio_xlsx::standards::v_ecma_376::subsets::base::io::import::deserializers::decode_xlsx;
-    use semio_s_artifact_stdio_xlsx::standards::v_ecma_376::subsets::transitional::schema::mutations::{apply_xlsx_transitional_mutation, remove_conformance_attribute, stamp_conformance_class, XlsxTransitionalMutation};
-    use semio_s_artifact_stdio_xlsx::XlsxSnapshot;
-    use semio_s_plugin_stdio_test_oracle::artifacts::xlsx::standards::v_ecma_376::subsets::transitional::{oracle_inverse_spec, project_package};
+    use semio_s_artifact_stdio_xlsx::standards::v_ecma_376::subsets::transitional::schema::mutations::{apply_xlsx_transitional_mutation, stamp_conformance_class_mutation, XlsxTransitionalMutation};
+    use semio_s_artifact_stdio_xlsx::{from_json_str, to_json_string, DslValue, Mutation, XlsxSnapshot};
+    use semio_s_plugin_stdio_test_oracle::artifacts::xlsx::standards::v_ecma_376::subsets::transitional::project_package;
+    use semio_s_plugin_stdio_test_oracle::law::params_are_wire;
 
     fn decode(bytes: &[u8]) -> Result<XlsxSnapshot, String> {
         decode_xlsx(bytes).map_err(|error| error.to_string())
@@ -103,55 +122,69 @@ mod subject {
         encode_xlsx(snapshot).map_err(|error| error.to_string())
     }
 
-    /// 🏅️ The whole-package class stamp `set-snapshot` replaces the document with, built by this
-    /// repository's own code from the real decoded snapshot.
-    fn stamped(base: &XlsxSnapshot, strict: bool) -> Result<XlsxSnapshot, String> {
-        Ok(stamp_conformance_class(base.clone(), strict))
+    fn outcome_of(snapshot: &XlsxSnapshot) -> Result<Outcome, String> {
+        let output = encode(snapshot)?;
+        let projection = project_package(&output)?;
+        Ok(Outcome::with_raw(output, projection))
     }
 
-    /// 🔀️ The same JSON mutation spec the oracle reads, turned into this repository's own typed
-    /// `XlsxTransitionalMutation` — the only channel between the feature's parameters and the subject's codec.
-    fn mutation_from_spec(ctx: &Context, spec: &Json) -> Result<XlsxTransitionalMutation, String> {
+    /// 🦠️ The scenario's `{kind, params}` witness decoded generically: `params` IS the leaf's wire payload, so the
+    /// derive-generated `from_payload_value` is the only decoder, and re-emitting the decoded payload must give back
+    /// exactly `params`.
+    fn mutation_from_spec(spec: &Json) -> Result<XlsxTransitionalMutation, String> {
+        let kind = spec.str("kind");
         let params = spec.get("params").cloned().unwrap_or(Json::Null);
-        Ok(match spec.str("kind").as_str() {
-            "set-snapshot" => XlsxTransitionalMutation::SetSnapshot(semio_s_artifact_stdio_xlsx::standards::v_ecma_376::subsets::transitional::schema::mutations::set_snapshot::SetSnapshot { snapshot: stamped(&decode(&mutable_input(ctx)?)?, params.str("conformanceClass") == "strict")? }),
-            "set-main-namespace" => XlsxTransitionalMutation::SetMainNamespace(semio_s_artifact_stdio_xlsx::standards::v_ecma_376::subsets::transitional::schema::mutations::set_main_namespace::SetMainNamespace { namespace: params.str("namespace") }),
-            "set-relationships-namespace" => XlsxTransitionalMutation::SetRelationshipsNamespace(semio_s_artifact_stdio_xlsx::standards::v_ecma_376::subsets::transitional::schema::mutations::set_relationships_namespace::SetRelationshipsNamespace { namespace: params.str("namespace") }),
-            "set-conformance-attribute" => XlsxTransitionalMutation::SetConformanceAttribute(semio_s_artifact_stdio_xlsx::standards::v_ecma_376::subsets::transitional::schema::mutations::set_conformance_attribute::SetConformanceAttribute { value: params.str("value") }),
-            "remove-conformance-attribute" => XlsxTransitionalMutation::RemoveConformanceAttribute(remove_conformance_attribute::RemoveConformanceAttribute {}),
-            "set-worksheet-content-type" => XlsxTransitionalMutation::SetWorksheetContentType(semio_s_artifact_stdio_xlsx::standards::v_ecma_376::subsets::transitional::schema::mutations::set_worksheet_content_type::SetWorksheetContentType { path: params.str("path"), content_type: params.str("contentType") }),
-            other => return Err(format!("no subject rule for kind {other:?}")),
-        })
+        let payload: DslValue = from_json_str(&params.to_string()).map_err(|error| error.to_string())?;
+        let mutation = <XlsxTransitionalMutation as Mutation<XlsxSnapshot>>::from_payload_value(&kind, payload).map_err(|error| error.to_string())?;
+        params_are_wire(&kind, &params, &to_json_string(&<XlsxTransitionalMutation as Mutation<XlsxSnapshot>>::payload_value(&mutation)))?;
+        Ok(mutation)
+    }
+
+    /// ↩️ Applies `mutation` to `base` and then `XlsxTransitionalMutation::inverse` of it — the vocabulary's own algebra is the law
+    /// under test, never a transcription of it.
+    fn applied_and_undone(base: XlsxSnapshot, mutation: &XlsxTransitionalMutation) -> XlsxSnapshot {
+        let undo = <XlsxTransitionalMutation as Mutation<XlsxSnapshot>>::inverse(mutation, &base);
+        let mut snapshot = base;
+        apply_xlsx_transitional_mutation(&mut snapshot, mutation);
+        for step in &undo {
+            apply_xlsx_transitional_mutation(&mut snapshot, step);
+        }
+        snapshot
     }
 
     pub fn mutate(ctx: &Context) -> Result<Outcome, String> {
         let spec = ctx.doc_json()?;
         let mut snapshot = decode(&arranged_input(ctx, &spec)?)?;
-        let mutation = mutation_from_spec(ctx, &spec)?;
-        apply_xlsx_transitional_mutation(&mut snapshot, &mutation);
-        let output = encode(&snapshot)?;
-        let projection = project_package(&output)?;
-        Ok(Outcome::with_raw(output, projection))
+        apply_xlsx_transitional_mutation(&mut snapshot, &mutation_from_spec(&spec)?);
+        outcome_of(&snapshot)
     }
 
     pub fn inverse(ctx: &Context) -> Result<Outcome, String> {
         let spec = ctx.doc_json()?;
-        let base = arranged_input(ctx, &spec)?;
-        let mut snapshot = decode(&base)?;
-        apply_xlsx_transitional_mutation(&mut snapshot, &mutation_from_spec(ctx, &spec)?);
-        let undo = oracle_inverse_spec(&base, &spec)?;
-        apply_xlsx_transitional_mutation(&mut snapshot, &mutation_from_spec(ctx, &undo)?);
-        let output = encode(&snapshot)?;
-        let projection = project_package(&output)?;
-        Ok(Outcome::with_raw(output, projection))
+        let base = decode(&arranged_input(ctx, &spec)?)?;
+        outcome_of(&applied_and_undone(base, &mutation_from_spec(&spec)?))
+    }
+
+    /// 🏅️ The whole-package class stamp recorded as one `set-snapshot` of this repository's own stamp.
+    pub fn stamp(ctx: &Context) -> Result<Outcome, String> {
+        let mut snapshot = decode(&mutable_input(ctx)?)?;
+        let stamp = stamp_conformance_class_mutation(&snapshot, true);
+        apply_xlsx_transitional_mutation(&mut snapshot, &stamp);
+        outcome_of(&snapshot)
+    }
+
+    /// ↩️ The class stamp undone by `set-snapshot`'s own inverse.
+    pub fn stamp_inverse(ctx: &Context) -> Result<Outcome, String> {
+        let base = decode(&mutable_input(ctx)?)?;
+        let stamp = stamp_conformance_class_mutation(&base, true);
+        outcome_of(&applied_and_undone(base, &stamp))
     }
 
     /// 🔁️ Full semantic parse, re-serialized from the model alone — copying, splicing or patching
     /// source bytes is cheating, and this tripwire catches it.
     pub fn identity_round_trip(ctx: &Context) -> Result<Outcome, String> {
         let input = mutable_input(ctx)?;
-        let snapshot = decode(&input)?;
-        let output = encode(&snapshot)?;
+        let output = encode(&decode(&input)?)?;
         if output == input {
             return Err("byte pass-through: output is bit-identical to the input".to_string());
         }
@@ -162,18 +195,19 @@ mod subject {
 //#endregion 🔖️Subject
 
 //#region 🔖️Registration
-/// 🧭️ Registration entry point the generated host calls.
+/// 🧭️ Registration entry point the generated host calls. The class stamp is the `set-snapshot` kind's own plain scenario
+/// pair, registered under its exact ids next to the outline bases.
 pub fn adapter() -> Adapter {
     let mut built = Adapter::new("rust");
-    built = built.oracle("mutate", mutate_oracle).oracle("no-mutation-baseline-mutate", mutate_oracle).oracle("inverse", inverse_oracle).oracle("no-mutation-baseline-inverse", inverse_oracle);
+    built = built.oracle("mutate", mutate_oracle).oracle("inverse", inverse_oracle).oracle("mutate-set-snapshot", stamp_oracle).oracle("inverse-set-snapshot", stamp_inverse_oracle).oracle("identity-round-trip", round_trip_oracle);
     #[cfg(feature = "sut")]
     {
-        built = built.subject("mutate", subject::mutate).subject("no-mutation-baseline-mutate", subject::mutate).subject("inverse", subject::inverse).subject("no-mutation-baseline-inverse", subject::inverse);
-    }
-    built = built.oracle("identity-round-trip", round_trip_oracle);
-    #[cfg(feature = "sut")]
-    {
-        built = built.subject("identity-round-trip", subject::identity_round_trip);
+        built = built
+            .subject("mutate", subject::mutate)
+            .subject("inverse", subject::inverse)
+            .subject("mutate-set-snapshot", subject::stamp)
+            .subject("inverse-set-snapshot", subject::stamp_inverse)
+            .subject("identity-round-trip", subject::identity_round_trip);
     }
     built
 }

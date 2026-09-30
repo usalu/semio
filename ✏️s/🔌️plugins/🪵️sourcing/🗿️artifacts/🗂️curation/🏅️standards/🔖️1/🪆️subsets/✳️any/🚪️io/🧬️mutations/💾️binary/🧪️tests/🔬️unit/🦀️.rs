@@ -18,7 +18,7 @@ async fn curation_document_text_round_trips_through_a_vcs_store() {
     doc_store.install_document_store_owners_exact(semio_framework_plugin::bounded_document_store_owners::<CurationSnapshot, SourcingMutation>());
     let object_id = crate::stock_of(&doc_store.snapshot().expect("snapshot"))[0].id.clone();
     let mutation = crate::schema::mutations::create_curated_item(crate::CuratedItem { object_id, count: 3 });
-    doc_store.dispatch(store::ArtifactCommand::Apply { mutations: vec![mutation], description: None }).await.expect("apply");
+    doc_store.dispatch(store::ArtifactCommand::Apply { mutations: vec![mutation], description: None, transaction: None }).await.expect("apply");
     store::os_store::test_support::assert_document_text_round_trip(&doc_store).await;
     store::os_store::test_support::assert_document_pack_round_trip(&doc_store).await;
     for _ in 0..500_000 {

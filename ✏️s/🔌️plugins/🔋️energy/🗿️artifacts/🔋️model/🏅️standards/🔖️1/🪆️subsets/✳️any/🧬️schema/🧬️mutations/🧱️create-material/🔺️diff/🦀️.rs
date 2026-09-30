@@ -10,7 +10,7 @@ pub fn diff(payload: &super::CreateMaterial, base: &EnergyModelSnapshot) -> prot
         return protocol::MutationOutcome::error("mutation.duplicate-id", format!("Material {} already exists.", payload.id.0), [payload.id.0.to_string()]);
     }
     if payload.index as usize > base.model.materials.len() {
-        return protocol::MutationOutcome::error("mutation.invariant", format!("Index {} is past the end of the model's {} materials.", payload.index, base.model.materials.len()), [payload.id.0.to_string()]);
+        return protocol::MutationOutcome::error("mutation.target-missing", format!("Index {} is past the end of the model's {} materials.", payload.index, base.model.materials.len()), [payload.id.0.to_string()]);
     }
     let mut model = base.model.clone();
     model.materials.insert(

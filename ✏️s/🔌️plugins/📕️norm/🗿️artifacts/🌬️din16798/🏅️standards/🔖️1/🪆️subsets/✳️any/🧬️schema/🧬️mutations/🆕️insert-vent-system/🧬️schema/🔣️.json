@@ -11,10 +11,39 @@
   "properties": {
     "index": {
       "type": "integer",
-      "minimum": 0
+      "minimum": 0,
+      "x-semio-ui": {
+        "widget": "stepper",
+        "role": "value",
+        "label": {
+          "en": "Position",
+          "de": "Position"
+        },
+        "description": {
+          "en": "Zero-based list position at which the record is inserted.",
+          "de": "Nullbasierte Listenposition, an der der Datensatz eingefügt wird."
+        },
+        "step": 1,
+        "precision": 0,
+        "group": "target",
+        "order": 10
+      }
     },
     "vent": {
-      "type": "object"
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/din16798/snapshot.json#/$defs/VentSystemDocument",
+      "x-semio-ui": {
+        "role": "value",
+        "label": {
+          "en": "Ventilation system",
+          "de": "Lüftungsanlage"
+        },
+        "description": {
+          "en": "The complete ventilation system record to insert.",
+          "de": "Der vollständige einzufügende Datensatz der Lüftungsanlage."
+        },
+        "group": "record",
+        "order": 20
+      }
     }
   }
 }

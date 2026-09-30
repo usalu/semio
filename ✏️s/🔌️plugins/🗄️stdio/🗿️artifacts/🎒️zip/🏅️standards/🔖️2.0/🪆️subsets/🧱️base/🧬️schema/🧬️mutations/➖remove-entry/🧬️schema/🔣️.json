@@ -5,15 +5,16 @@
   "type": "object",
   "additionalProperties": false,
   "required": [
+    "mutation",
     "name"
   ],
   "properties": {
-    "name": {
-      "type": "string"
-    },
     "mutation": {
       "const": "removeEntry",
       "description": "Aggregate discriminator spliced in by ZipMutation; absent when the payload stands alone."
+    },
+    "name": {
+      "type": "string"
     }
   }
 }

@@ -1,77 +1,118 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
   "$id": "https://json.schemas.assets.semio-tech.com/s/stdio/gltf/2.0/any/mutation/change-node-name/schema.json",
-  "title": "ChangeNodeNameMutation",
-  "oneOf": [
-    {
-      "type": "object",
-      "additionalProperties": false,
-      "properties": {
-        "phase": {
-          "const": "apply"
-        },
-        "value": {
-          "$ref": "#/$defs/GltfChangeNodeNamePayload"
-        }
-      },
-      "required": [
-        "phase",
-        "value"
-      ]
-    },
-    {
-      "type": "object",
-      "additionalProperties": false,
-      "properties": {
-        "phase": {
-          "const": "restore"
-        },
-        "value": {
-          "$ref": "#/$defs/GltfChangeNodeNameRestore"
-        }
-      },
-      "required": [
-        "phase",
-        "value"
-      ]
-    }
+  "title": "GltfChangeNodeNamePayload",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "node",
+    "value"
   ],
-  "$defs": {
-    "GltfChangeNodeNamePayload": {
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "node"
-      ],
-      "properties": {
-        "node": {
-          "type": "integer",
-          "minimum": 0,
-          "maximum": 4294967295
+  "properties": {
+    "node": {
+      "type": "integer",
+      "minimum": 0,
+      "maximum": 4294967295,
+      "x-semio-ui": {
+        "widget": "stepper",
+        "label": {
+          "en": "Node",
+          "de": "Knoten"
         },
-        "value": {
-          "anyOf": [
-            {
-              "type": "string"
-            },
-            {
-              "type": "null"
-            }
-          ]
-        }
+        "description": {
+          "en": "Index of the node, counted from 0.",
+          "de": "Index des Knotens, ab 0 gezählt."
+        },
+        "precision": 0,
+        "group": "target",
+        "order": 10
       }
+    },
+    "value": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "x-semio-ui": {
+        "widget": "text",
+        "label": {
+          "en": "Name",
+          "de": "Name"
+        },
+        "description": {
+          "en": "Empty removes the name.",
+          "de": "Leer entfernt den Namen."
+        },
+        "group": "value",
+        "order": 20
+      }
+    }
+  },
+  "$defs": {
+    "ChangeNodeNameMutation": {
+      "description": "The whole wire of ChangeNodeNameMutation: the editable apply payload (this document's root) or the inert restore.",
+      "oneOf": [
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "phase",
+            "value"
+          ],
+          "properties": {
+            "phase": {
+              "const": "apply"
+            },
+            "value": {
+              "$ref": "#"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "phase",
+            "value"
+          ],
+          "properties": {
+            "phase": {
+              "const": "restore"
+            },
+            "value": {
+              "$ref": "#/$defs/GltfChangeNodeNameRestore"
+            }
+          }
+        }
+      ]
     },
     "GltfChangeNodeNameRestore": {
       "type": "object",
       "additionalProperties": false,
       "required": [
-        "node"
+        "node",
+        "before",
+        "after"
       ],
       "properties": {
         "node": {
           "type": "integer",
           "minimum": 0,
-          "maximum": 4294967295
+          "maximum": 4294967295,
+          "x-semio-ui": {
+            "label": {
+              "en": "Node",
+              "de": "Knoten"
+            },
+            "description": {
+              "en": "Index of the node, counted from 0.",
+              "de": "Index des Knotens, ab 0 gezählt."
+            }
+          }
         },
         "before": {
           "anyOf": [
@@ -81,7 +122,13 @@
             {
               "type": "null"
             }
-          ]
+          ],
+          "x-semio-ui": {
+            "label": {
+              "en": "Name before",
+              "de": "Name vorher"
+            }
+          }
         },
         "after": {
           "anyOf": [
@@ -91,20 +138,15 @@
             {
               "type": "null"
             }
-          ]
+          ],
+          "x-semio-ui": {
+            "label": {
+              "en": "Name after",
+              "de": "Name nachher"
+            }
+          }
         }
       }
     }
-  },
-  "x-semio": {
-    "id": "s.stdio.gltf.mutation.change-node-name.v1",
-    "version": 1,
-    "phase": "mutation",
-    "kind": "change",
-    "touchedPaths": [
-      "document/nodes/*/name"
-    ],
-    "referencePolicy": "none"
-  },
-  "x-semio-mutation": "change-node-name"
+  }
 }

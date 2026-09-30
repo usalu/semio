@@ -144,6 +144,7 @@ async fn command_envelope_round_trip_holds_for_an_applied_operation() {
                 }),
             })],
             description: None,
+            transaction: None,
         })
         .await
         .expect("apply");

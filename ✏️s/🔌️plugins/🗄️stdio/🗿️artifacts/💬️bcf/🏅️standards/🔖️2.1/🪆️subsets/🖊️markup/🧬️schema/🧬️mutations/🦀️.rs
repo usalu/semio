@@ -28,6 +28,16 @@ use crate::schema::snapshot::{BcfCamera, BcfComment, BcfComponents, BcfTopic, Bc
 use crate::BcfSnapshot;
 use protocol::Mutation;
 
+//#region 🔖️DoubleOption
+/// 🪆️ Decodes a present key of an `Option<Option<T>>` field as `Some(inner)`, so a present `null` is `Some(None)` ("clear")
+/// and only an absent key (the field's `default`) is `None` ("untouched") — the blanket `Option<T>` impl would collapse both
+/// to `None`. Paired with `skip_serializing_if = "Option::is_none"`, `payload_value()` and `with_payload_value()` round-trip.
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn deserialize_double_option<T: dsl::FromValue>(value: dsl::DslValue) -> Result<Option<Option<T>>, dsl::ValueError> {
+    <Option<T> as dsl::FromValue>::from_value(value).map(Some)
+}
+//#endregion 🔖️DoubleOption
+
 //#region 🔖️Mutations
 #[path = "🗨️insert-comment/🦀️.rs"]
 pub mod insert_comment;
@@ -129,6 +139,23 @@ pub fn apply_bcf_mutation(snapshot: &mut BcfSnapshot, mutation: &BcfMutation) ->
     }
 }
 //#endregion 🔖️Apply
+
+//#region 🚪️Reachability
+/// 🪪️ The [`BcfMutation`] of semantic kind `kind` built from its leaf wire payload (`payload_value()`) in JSON text by the
+/// derive-generated `from_payload_value` — how a `{"kind", "params"}` feature row reaches the aggregate without naming the
+/// private `protocol` alias and without any hand mapping.
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn decode_bcf_mutation_payload(kind: &str, text: &str) -> Result<BcfMutation, String> {
+    protocol::os_pack::json::from_json_str(text).and_then(|payload| <BcfMutation as Mutation<BcfSnapshot>>::from_payload_value(kind, payload)).map_err(|error| error.to_string())
+}
+
+/// ↩️ `Mutation::inverse` for [`BcfMutation`] against the pre-mutation `base` — the production inverse itself, reachable
+/// without naming the `protocol` alias.
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn inverse_bcf_mutation(base: &BcfSnapshot, mutation: &BcfMutation) -> Vec<BcfMutation> {
+    <BcfMutation as Mutation<BcfSnapshot>>::inverse(mutation, base)
+}
+//#endregion 🚪️Reachability
 
 //#region 🔖️MutationTrait
 // 🚫️async: E1 pure codec/computation helper — lifted verbatim from the former `impl Mutation`.

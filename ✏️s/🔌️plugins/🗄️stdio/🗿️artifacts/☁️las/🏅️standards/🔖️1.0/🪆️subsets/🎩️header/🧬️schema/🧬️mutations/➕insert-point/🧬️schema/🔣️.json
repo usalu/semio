@@ -5,20 +5,21 @@
   "type": "object",
   "additionalProperties": false,
   "required": [
+    "mutation",
     "index",
     "point"
   ],
   "properties": {
+    "mutation": {
+      "const": "insertPoint",
+      "description": "Aggregate discriminator spliced in by LasMutation; absent when the payload stands alone."
+    },
     "index": {
       "type": "integer",
       "minimum": 0
     },
     "point": {
       "$ref": "#/$defs/LasPoint"
-    },
-    "mutation": {
-      "const": "insertPoint",
-      "description": "Aggregate discriminator spliced in by LasMutation; absent when the payload stands alone."
     }
   },
   "$defs": {
@@ -52,43 +53,131 @@
         "intensity": {
           "type": "integer",
           "minimum": 0,
-          "maximum": 65535
+          "maximum": 65535,
+          "x-semio-ui": {
+            "widget": "stepper",
+            "label": {
+              "en": "Intensity",
+              "de": "Intensität"
+            }
+          }
         },
         "returnNumber": {
           "type": "integer",
           "minimum": 0,
-          "maximum": 255
+          "maximum": 255,
+          "x-semio-ui": {
+            "widget": "stepper",
+            "label": {
+              "en": "Return number",
+              "de": "Echonummer"
+            }
+          }
         },
         "numberOfReturns": {
           "type": "integer",
           "minimum": 0,
-          "maximum": 255
+          "maximum": 255,
+          "x-semio-ui": {
+            "widget": "stepper",
+            "label": {
+              "en": "Number of returns",
+              "de": "Anzahl der Echos"
+            },
+            "description": {
+              "en": "Returns of the pulse this point belongs to.",
+              "de": "Echos des Impulses, zu dem dieser Punkt gehört."
+            }
+          }
         },
         "scanDirectionFlag": {
-          "type": "boolean"
+          "type": "boolean",
+          "x-semio-ui": {
+            "widget": "toggle",
+            "label": {
+              "en": "Scan direction",
+              "de": "Scanrichtung"
+            },
+            "description": {
+              "en": "On: the mirror moved in positive scan direction.",
+              "de": "An: Der Spiegel bewegte sich in positiver Scanrichtung."
+            }
+          }
         },
         "edgeOfFlightLine": {
-          "type": "boolean"
+          "type": "boolean",
+          "x-semio-ui": {
+            "widget": "toggle",
+            "label": {
+              "en": "Edge of flight line",
+              "de": "Flugstreifenrand"
+            },
+            "description": {
+              "en": "Point lies at the end of a scan line before the direction changes.",
+              "de": "Punkt liegt am Ende einer Scanlinie vor dem Richtungswechsel."
+            }
+          }
         },
         "classification": {
           "type": "integer",
           "minimum": 0,
-          "maximum": 255
+          "maximum": 255,
+          "x-semio-ui": {
+            "widget": "stepper",
+            "label": {
+              "en": "Classification",
+              "de": "Klassifizierung"
+            },
+            "description": {
+              "en": "ASPRS class code, e.g. 2 = ground, 6 = building.",
+              "de": "ASPRS-Klassencode, z. B. 2 = Boden, 6 = Gebäude."
+            }
+          }
         },
         "scanAngleRank": {
           "type": "integer",
           "minimum": -128,
-          "maximum": 127
+          "maximum": 127,
+          "x-semio-ui": {
+            "widget": "stepper",
+            "label": {
+              "en": "Scan angle rank",
+              "de": "Scanwinkel"
+            },
+            "description": {
+              "en": "Rounded scan angle, -90 to 90 degrees, 0 at nadir.",
+              "de": "Gerundeter Scanwinkel, -90 bis 90 Grad, 0 im Nadir."
+            },
+            "unit": "deg"
+          }
         },
         "userData": {
           "type": "integer",
           "minimum": 0,
-          "maximum": 255
+          "maximum": 255,
+          "x-semio-ui": {
+            "widget": "stepper",
+            "label": {
+              "en": "User data",
+              "de": "Benutzerdaten"
+            }
+          }
         },
         "pointSourceId": {
           "type": "integer",
           "minimum": 0,
-          "maximum": 65535
+          "maximum": 65535,
+          "x-semio-ui": {
+            "widget": "stepper",
+            "label": {
+              "en": "Point source ID",
+              "de": "Punktquellen-ID"
+            },
+            "description": {
+              "en": "Flight line or source the point originates from.",
+              "de": "Flugstreifen oder Quelle, aus der der Punkt stammt."
+            }
+          }
         },
         "gpsTime": {
           "anyOf": [
@@ -98,7 +187,15 @@
             {
               "type": "null"
             }
-          ]
+          ],
+          "x-semio-ui": {
+            "widget": "stepper",
+            "label": {
+              "en": "GPS time",
+              "de": "GPS-Zeit"
+            },
+            "unit": "s"
+          }
         },
         "rgb": {
           "anyOf": [
@@ -128,7 +225,13 @@
             {
               "type": "null"
             }
-          ]
+          ],
+          "x-semio-ui": {
+            "label": {
+              "en": "RGB color",
+              "de": "RGB-Farbe"
+            }
+          }
         }
       }
     }

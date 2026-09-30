@@ -9,7 +9,19 @@
   ],
   "properties": {
     "newDirected": {
-      "type": "boolean"
+      "type": "boolean",
+      "x-semio-ui": {
+        "widget": "toggle",
+        "role": "value",
+        "label": {
+          "en": "Directed",
+          "de": "Gerichtet"
+        },
+        "description": {
+          "en": "Edges point from source to target.",
+          "de": "Kanten zeigen von der Quelle zum Ziel."
+        }
+      }
     }
   }
 }

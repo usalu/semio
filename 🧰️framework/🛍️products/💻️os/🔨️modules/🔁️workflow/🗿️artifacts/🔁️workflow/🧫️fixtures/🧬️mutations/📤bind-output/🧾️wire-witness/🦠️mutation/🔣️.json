@@ -1,0 +1,8 @@
+{
+  "operation": "bindOutput",
+  "binding": {
+    "nodeId": "n1",
+    "portId": "n1:out:out",
+    "pathTemplate": "out/{node}"
+  }
+}

@@ -10,10 +10,45 @@
   ],
   "properties": {
     "index": {
-      "type": "integer"
+      "type": "integer",
+      "minimum": 0,
+      "x-semio-ui": {
+        "widget": "stepper",
+        "role": "value",
+        "label": {
+          "en": "Wall",
+          "de": "Wand"
+        },
+        "description": {
+          "en": "Zero-based position of the wall in its list.",
+          "de": "Nullbasierte Position der Wand in der Liste."
+        },
+        "step": 1,
+        "precision": 0,
+        "group": "target",
+        "order": 10
+      }
     },
     "newSupportSides": {
-      "type": "integer"
+      "type": "integer",
+      "minimum": 2,
+      "maximum": 4,
+      "x-semio-ui": {
+        "widget": "stepper",
+        "role": "value",
+        "label": {
+          "en": "Number of supported edges",
+          "de": "Anzahl der gehaltenen Ränder"
+        },
+        "description": {
+          "en": "Two-, three- or four-sided support (EN 1996-1-1 §5.5.1.2).",
+          "de": "Zwei-, drei- oder vierseitig gehalten (EN 1996-1-1 §5.5.1.2)."
+        },
+        "step": 1,
+        "precision": 0,
+        "group": "geometry",
+        "order": 20
+      }
     }
   }
 }

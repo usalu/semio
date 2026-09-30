@@ -3,6 +3,8 @@ use crate::{SteelJoint, En1993Mutation, En1993Snapshot};
 #[derive(Clone, Debug, PartialEq, dsl::MutationLeaf, value_derive::ToValue, value_derive::FromValue)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 #[mutation_leaf(contract = ::protocol)]
+#[cfg_attr(test, serde(rename_all = "camelCase"))]
+#[value(rename_all = "camelCase")]
 pub struct InsertJoint { pub index: usize, pub joint: SteelJoint }
 impl protocol::MutationKind<En1993Snapshot, En1993Mutation> for InsertJoint {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "insert", entity: "joint", kind: "insert-joint", record: "InsertedJoint" };

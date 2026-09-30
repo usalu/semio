@@ -1,0 +1,13 @@
+# Final Canonical Launch Integration Review
+
+Read-only integration audit. Ran bounded manifest/launcher JSON reads with Bun; no tests, builds or production edits.
+
+Exactly 24 declared project manifests contribute canonical-architecture. The generated `.vscode/launch.json` input `projectTarget.canonical-architecture` has exactly the same 24 project names: missing=[], extra=[]. Its family row executes `bun nx run ${input:projectTarget.canonical-architecture}:canonical-architecture`. Root launcher line 5090 executes workspace:verify-canonical-architecture; root script lines 8956–8959 discover all owners with Nx run-many, excluding workspace. Discovery has no custom fixed contribution seed. Launcher generator `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/🚀️launch/🟦️.ts:227–246,280–304` reads declared project targets and creates the family picker. The new Session, Flow composition, Playbook procedural, BREP extension, framework plugin, 3D modeling, renderer and React owners are included.
+
+GeometryPort at `🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🌐️geometry/🦀️.rs:11–19` has required begin_close/close_step/terminal/demand methods. It has no default legacy close forwarding. Scoped scans of neutral Flow geometry/host production source found no concrete S or Hub imports. A host docstring links a BREP source example; it is not a runtime dependency. Domain-specific Playbook/BREP imports remain in S-owned files.
+
+Source freshness has one explicit metadata set: `.source-content-sha256` and `.source-stat-index.json` (`🔌️plugin/🏗️build/🔍️freshness/🟦️.ts:102–108`). Output admission at `🔌️plugin/🏗️build/🛂️descriptor/🟦️.ts:72–74` includes that exact set alongside canonical component outputs, rather than admitting arbitrary dotfiles. The source-freshness oracle validates equality with its fixture, hashes through WebCrypto independently, verifies both files survive admission, checks warm reuse, preserves/rejects unexpected input, and exercises cancellation (`🔌️plugin/🧪️tests/🔬️source-freshness/🟦️.ts:17–56`). The framework-plugin canonical script invokes this oracle at line 247 before exact native laws. These oracle routes were inspected, not executed.
+
+Scoped temporary-log scan found no `[DEBUG]` marker in production Session, BREP extension, Playbook procedural, neutral Flow geometry/host, neutral extension retirement, plugin runtime, or reactor turn files. Native fixture DEBUG instrumentation is outside this production scan and remains the execution owner's responsibility to remove before final clean validation.
+
+No actionable integration omission was found. Strict dependency and full runtime conclusions belong to the separately running final executors.

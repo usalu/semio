@@ -5,15 +5,53 @@
   "type": "object",
   "additionalProperties": false,
   "required": [
+    "mutation",
     "id",
     "newDesignFlowAch"
   ],
   "properties": {
+    "mutation": {
+      "const": "changeInfiltrationDesignFlowAch"
+    },
     "id": {
-      "type": "integer"
+      "type": "integer",
+      "minimum": 0,
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Infiltration",
+          "de": "Infiltration"
+        },
+        "description": {
+          "en": "The infiltration this mutation changes, by id.",
+          "de": "Infiltration, die diese Mutation ändert, per ID."
+        },
+        "ref": {
+          "kind": "infiltration",
+          "domain": "energyModel",
+          "granularity": "load"
+        },
+        "group": "target",
+        "order": 10
+      }
     },
     "newDesignFlowAch": {
-      "type": "number"
+      "type": "number",
+      "minimum": 0,
+      "x-semio-ui": {
+        "widget": "stepper",
+        "role": "value",
+        "label": {
+          "en": "Design air change rate",
+          "de": "Bemessungsluftwechsel"
+        },
+        "unit": "1/h",
+        "step": 0.05,
+        "precision": 2,
+        "group": "infiltration",
+        "order": 20
+      }
     }
   }
 }

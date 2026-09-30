@@ -2,6 +2,6 @@
 import type { ProductIndex } from "../../🟦️.ts";
 
 export interface IntroduceProductIndex {
-  product_index: ProductIndex;
+  productIndex: ProductIndex;
   index?: number;
 }

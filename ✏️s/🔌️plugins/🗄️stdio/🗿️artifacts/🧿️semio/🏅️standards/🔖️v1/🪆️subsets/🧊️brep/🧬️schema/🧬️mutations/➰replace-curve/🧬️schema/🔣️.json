@@ -10,10 +10,27 @@
   ],
   "properties": {
     "edge_id": {
-      "type": "string"
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Edge",
+          "de": "Kante"
+        },
+        "ref": {
+          "kind": "edge"
+        }
+      }
     },
     "new_curve": {
-      "$ref": "#/$defs/BrepCurve"
+      "$ref": "#/$defs/BrepCurve",
+      "x-semio-ui": {
+        "label": {
+          "en": "Curve",
+          "de": "Kurve"
+        }
+      }
     }
   },
   "$defs": {

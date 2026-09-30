@@ -1,13 +1,34 @@
 {
-  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/norm/en1991/mutation/change-assumed-h-net/schema.json",
+  "title": "ChangeAssumedHNet",
   "type": "object",
   "additionalProperties": false,
   "required": [
-    "new_assumed_h_net"
+    "newAssumedHNet"
   ],
   "properties": {
-    "new_assumed_h_net": {
-      "type": "number"
+    "newAssumedHNet": {
+      "type": "number",
+      "x-semio-ui": {
+        "widget": "stepper",
+        "role": "value",
+        "label": {
+          "en": "Assumed net heat flux ḣ_net",
+          "de": "Angesetzter Nettowärmestrom ḣ_net"
+        },
+        "description": {
+          "en": "Value claimed by the design; the check compares it with the value derived from the standard.",
+          "de": "Vom Entwurf angesetzter Wert; der Nachweis vergleicht ihn mit dem nach der Norm ermittelten Wert."
+        },
+        "unit": "W/m²",
+        "displayUnit": "kW/m²",
+        "displayFactor": 0.001,
+        "step": 100,
+        "precision": 1,
+        "group": "fire",
+        "order": 10
+      }
     }
   }
 }

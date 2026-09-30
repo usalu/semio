@@ -1,9 +1,13 @@
 //! 🔺️ Sparse diff builder for `ReplaceKindCatalogs` — patches `meta.kindCatalogs`.
 use crate::standards::v1::subsets::any::schema::diff::Puzzle2dDiff;
 use crate::Puzzle2dSnapshot;
+use crate::standards::v1::subsets::any::schema::mutations::puzzle2d_catalogs_invariant;
 
 //#region 🔖️Diff
 pub fn diff(payload: &super::ReplaceKindCatalogs, base: &Puzzle2dSnapshot) -> protocol::MutationOutcome<Puzzle2dDiff> {
+    if let Err(reason) = payload.new_catalogs.as_ref().map_or(Ok(()), puzzle2d_catalogs_invariant) {
+        return protocol::MutationOutcome::fatal("mutation.invariant", reason, Vec::<String>::new());
+    }
     // 🗂️ `meta.kindCatalogs` lives on the document-root singleton `meta` (not a catalog member
     // addressed by id), so there is no missing-target case — only the no-op check applies.
     if payload.new_catalogs == base.meta.kind_catalogs {

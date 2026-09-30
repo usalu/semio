@@ -22,7 +22,7 @@ fn params_for(kind: &str) -> Json {
         "remove-launch-action" => json_object(vec![("target", Json::String("render-plots.bat".to_string()))]),
         "insert-signature-field" => json_object(vec![("name", Json::String("AttendingPhysician".to_string()))]),
         "remove-signature-field" => json_object(vec![("name", Json::String("AttendingPhysician".to_string()))]),
-        "embed-font-file" => json_object(vec![("descriptorOrdinal", Json::Number(4.0)), ("key", Json::String("FontFile2".to_string())), ("programOrdinal", Json::Number(0.0))]),
+        "embed-font-file" => json_object(vec![("descriptorOrdinal", Json::Number(4.0)), ("key", Json::String("FontFile2".to_string())), ("program", json_object(vec![("num", Json::Number(803.0)), ("gen", Json::Number(0.0))]))]),
         "remove-font-file" => json_object(vec![("descriptorOrdinal", Json::Number(4.0))]),
         other => panic!("no test parameters for kind {other:?}"),
     }

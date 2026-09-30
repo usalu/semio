@@ -15,7 +15,7 @@ pub fn diff(payload: &super::CreateAnnualSchedule, base: &EnergyModelSnapshot) -
         return protocol::MutationOutcome::error("mutation.duplicate-id", format!("Schedule {} is already defined.", payload.id.0), [payload.id.0.to_string()]);
     }
     if payload.index as usize > base.model.schedules.annual.len() {
-        return protocol::MutationOutcome::error("mutation.invariant", format!("Index {} is past the end of the model's {} annual schedules.", payload.index, base.model.schedules.annual.len()), [payload.id.0.to_string()]);
+        return protocol::MutationOutcome::error("mutation.target-missing", format!("Index {} is past the end of the model's {} annual schedules.", payload.index, base.model.schedules.annual.len()), [payload.id.0.to_string()]);
     }
     if !base.model.schedules.daily.iter().any(|row| row.id == payload.default_daily_schedule_id) {
         return protocol::MutationOutcome::error("mutation.target-missing", format!("Daily schedule {} does not exist.", payload.default_daily_schedule_id.0), [payload.default_daily_schedule_id.0.to_string()]);

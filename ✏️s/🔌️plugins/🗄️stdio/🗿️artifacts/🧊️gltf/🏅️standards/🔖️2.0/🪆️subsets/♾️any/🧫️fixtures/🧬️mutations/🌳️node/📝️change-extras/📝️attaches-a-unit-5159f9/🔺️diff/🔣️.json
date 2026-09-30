@@ -1,15 +1,17 @@
 {
-  "node": 0,
-  "before": {
-    "state": "absent"
-  },
-  "after": {
-    "state": "present",
-    "value": {
-      "unit": "metre"
-    }
-  },
-  "touchedPaths": [
-    "document/nodes/0/extras"
-  ]
+  "nodes": {
+    "modified": [
+      {
+        "index": 0,
+        "diff": {
+          "extras": {
+            "state": "present",
+            "value": {
+              "unit": "metre"
+            }
+          }
+        }
+      }
+    ]
+  }
 }

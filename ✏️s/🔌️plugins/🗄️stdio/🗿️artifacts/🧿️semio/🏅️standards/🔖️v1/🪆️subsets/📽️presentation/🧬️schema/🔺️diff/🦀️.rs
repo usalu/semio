@@ -5,8 +5,9 @@
 //! Collection key kinds (per the recipe's "Key kinds per collection" rule): `masters`/`layouts`
 //! are id-keyed (`NamedTripleDiff`, referenced BY id from `layouts.master_id`/`slides.layout_id`,
 //! like docx's name-keyed `styles`); `slides` is INDEX-keyed (`IndexedTripleDiff`, presentation
-//! order is significant, like pdf page order) even though each `Slide` also carries its own `id`
-//! identity field. `shapes` (owned by masters/layouts/slides alike), `notes`, and `TextBox`/table
+//! order is significant, like pdf page order), and a slot whose slide changes identity carries the
+//! new `id` in `SlideDiff::id` — so a reorder or a whole-deck replacement lands every slide's own
+//! identity at its new index instead of leaving the old identifiers behind the new content. `shapes` (owned by masters/layouts/slides alike), `notes`, and `TextBox`/table
 //! `blocks` are all index-keyed too.
 //!
 //! `document::DocBlock` is reused verbatim for text content (`TextBox.blocks`, table cell
@@ -134,6 +135,11 @@ pub struct SlideLayoutDiff {
 #[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue)]
 #[value(rename_all = "camelCase")]
 pub struct SlideDiff {
+    /// 🪪️ The slide's own identity at this index, when it changes: an index-keyed slot whose slide is
+    /// replaced by a different one (a reorder, a whole-deck `set-snapshot`) takes the new slide's `id`
+    /// with its content, so applying `between(base, next)` to `base` yields exactly `next`.
+    #[value(default, skip_serializing_if = "Option::is_none")]
+    pub id: Option<String>,
     /// 🏳️ Tri-state: `None` = unchanged, `Some(None)` = layout cleared, `Some(Some(id))` = set.
     #[value(default, skip_serializing_if = "Option::is_none")]
     pub layout_id: Option<Option<String>>,
@@ -786,13 +792,14 @@ fn diff_layout(old: &SlideLayout, new: &SlideLayout) -> Option<SlideLayoutDiff> 
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn diff_slide(old: &Slide, new: &Slide) -> Option<SlideDiff> {
+    let id = (old.id != new.id).then(|| new.id.clone());
     let layout_id = (old.layout_id != new.layout_id).then(|| new.layout_id.clone());
     let shapes = between_indexed(&old.shapes, &new.shapes, diff_shape);
     let notes = between_indexed(&old.notes, &new.notes, diff_doc_block);
-    if layout_id.is_none() && shapes.is_none() && notes.is_none() {
+    if id.is_none() && layout_id.is_none() && shapes.is_none() && notes.is_none() {
         None
     } else {
-        Some(SlideDiff { layout_id, shapes, notes })
+        Some(SlideDiff { id, layout_id, shapes, notes })
     }
 }
 
@@ -813,6 +820,9 @@ fn apply_layout(layout: &mut SlideLayout, diff: &SlideLayoutDiff) {
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn apply_slide(slide: &mut Slide, diff: &SlideDiff) {
+    if let Some(id) = &diff.id {
+        slide.id = id.clone();
+    }
     if let Some(v) = &diff.layout_id {
         slide.layout_id = v.clone();
     }
@@ -841,6 +851,7 @@ fn inverse_layout(base: &SlideLayout, diff: &SlideLayoutDiff) -> SlideLayoutDiff
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn inverse_slide(base: &Slide, diff: &SlideDiff) -> SlideDiff {
     SlideDiff {
+        id: diff.id.as_ref().map(|_| base.id.clone()),
         layout_id: diff.layout_id.as_ref().map(|_| base.layout_id.clone()),
         shapes: diff.shapes.as_ref().map(|sd| inverse_indexed(&base.shapes, sd, inverse_shape)),
         notes: diff.notes.as_ref().map(|nd| inverse_indexed(&base.notes, nd, inverse_doc_block)),
@@ -862,6 +873,9 @@ fn absorb_layout_diff(mut a: SlideLayoutDiff, b: SlideLayoutDiff) -> SlideLayout
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn absorb_slide_diff(mut a: SlideDiff, b: SlideDiff) -> SlideDiff {
+    if b.id.is_some() {
+        a.id = b.id;
+    }
     if b.layout_id.is_some() {
         a.layout_id = b.layout_id;
     }
@@ -942,7 +956,7 @@ fn wrap_slide_diff(index: usize, sd: SlideDiff) -> SemioPresentationDiff {
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn wrap_shape_diff(slide_index: usize, shape_index: usize, shape_diff: SlideShapeDiff) -> SemioPresentationDiff {
     let shapes_diff = SlideShapesDiff { modified: vec![IndexModified { index: shape_index, diff: shape_diff }], ..Default::default() };
-    wrap_slide_diff(slide_index, SlideDiff { layout_id: None, shapes: Some(shapes_diff), notes: None })
+    wrap_slide_diff(slide_index, SlideDiff { id: None, layout_id: None, shapes: Some(shapes_diff), notes: None })
 }
 
 /// 🧩 Diff for inserting `🎞️slide` at `index` (FINAL-state index).
@@ -962,26 +976,26 @@ pub fn diff_set_slide_layout(base: &SemioPresentationSnapshot, index: usize, lay
     if slide.layout_id == layout_id {
         return SemioPresentationDiff::default();
     }
-    wrap_slide_diff(index, SlideDiff { layout_id: Some(layout_id), shapes: None, notes: None })
+    wrap_slide_diff(index, SlideDiff { id: None, layout_id: Some(layout_id), shapes: None, notes: None })
 }
 /// 🧩 Diff for replacing slide `index`'s `notes`, via a real structural comparison.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn diff_set_slide_notes(base: &SemioPresentationSnapshot, index: usize, notes: &[DocBlock]) -> SemioPresentationDiff {
     let Some(slide) = base.slides.get(index) else { return SemioPresentationDiff::default() };
     let Some(notes_diff) = between_indexed(&slide.notes, notes, diff_doc_block) else { return SemioPresentationDiff::default() };
-    wrap_slide_diff(index, SlideDiff { layout_id: None, shapes: None, notes: Some(notes_diff) })
+    wrap_slide_diff(index, SlideDiff { id: None, layout_id: None, shapes: None, notes: Some(notes_diff) })
 }
 /// 🧩 Diff for inserting `shape` at `shape_index` on slide `slide_index`.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn diff_insert_shape(slide_index: usize, shape_index: usize, shape: SlideShape) -> SemioPresentationDiff {
     let shapes_diff = SlideShapesDiff { added: vec![IndexAdded { index: shape_index, item: shape }], ..Default::default() };
-    wrap_slide_diff(slide_index, SlideDiff { layout_id: None, shapes: Some(shapes_diff), notes: None })
+    wrap_slide_diff(slide_index, SlideDiff { id: None, layout_id: None, shapes: Some(shapes_diff), notes: None })
 }
 /// 🧩 Diff for removing the shape at `shape_index` on slide `slide_index`.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn diff_remove_shape(slide_index: usize, shape_index: usize) -> SemioPresentationDiff {
     let shapes_diff = SlideShapesDiff { removed: vec![shape_index], ..Default::default() };
-    wrap_slide_diff(slide_index, SlideDiff { layout_id: None, shapes: Some(shapes_diff), notes: None })
+    wrap_slide_diff(slide_index, SlideDiff { id: None, layout_id: None, shapes: Some(shapes_diff), notes: None })
 }
 /// 🧩 Diff for setting shape `shape_index`'s frame on slide `slide_index`, via a real structural
 /// comparison against the shape's current frame.
@@ -1466,14 +1480,14 @@ fn dec_layout_diff(s: &str) -> Result<SlideLayoutDiff, String> {
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn enc_slide_diff(d: &SlideDiff) -> String {
-    format!("[{},{},{}]", encode_option(&d.layout_id, |inner: &Option<String>| encode_option(inner, |v| enc_str(v))), encode_option(&d.shapes, enc_shapes_diff), encode_option(&d.notes, enc_doc_blocks_diff))
+    format!("[{},{},{},{}]", encode_option(&d.id, |v| enc_str(v)), encode_option(&d.layout_id, |inner: &Option<String>| encode_option(inner, |v| enc_str(v))), encode_option(&d.shapes, enc_shapes_diff), encode_option(&d.notes, enc_doc_blocks_diff))
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn dec_slide_diff(s: &str) -> Result<SlideDiff, String> {
     let inner = strip_brackets(s)?;
     let parts = split_top_level(inner, ',');
-    let [layout_id, shapes, notes] = parts.as_slice() else { return Err(format!("slide diff: expected 3 fields, got {}", parts.len())) };
-    Ok(SlideDiff { layout_id: decode_option(layout_id, |s| decode_option(s, dec_str))?, shapes: decode_option(shapes, dec_shapes_diff)?, notes: decode_option(notes, dec_doc_blocks_diff)? })
+    let [id, layout_id, shapes, notes] = parts.as_slice() else { return Err(format!("slide diff: expected 4 fields, got {}", parts.len())) };
+    Ok(SlideDiff { id: decode_option(id, dec_str)?, layout_id: decode_option(layout_id, |s| decode_option(s, dec_str))?, shapes: decode_option(shapes, dec_shapes_diff)?, notes: decode_option(notes, dec_doc_blocks_diff)? })
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn enc_masters_diff(d: &SlideMastersDiff) -> String {

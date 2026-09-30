@@ -11,13 +11,55 @@
   ],
   "properties": {
     "periodicX": {
-      "type": "boolean"
+      "type": "boolean",
+      "x-semio-ui": {
+        "widget": "toggle",
+        "role": "value",
+        "label": {
+          "en": "Periodic in X",
+          "de": "Periodisch in X"
+        },
+        "description": {
+          "en": "Neighbourhoods wrap around the grid edge in X.",
+          "de": "Nachbarschaften laufen in X über den Rasterrand um."
+        },
+        "group": "grid",
+        "order": 10
+      }
     },
     "periodicY": {
-      "type": "boolean"
+      "type": "boolean",
+      "x-semio-ui": {
+        "widget": "toggle",
+        "role": "value",
+        "label": {
+          "en": "Periodic in Y",
+          "de": "Periodisch in Y"
+        },
+        "description": {
+          "en": "Neighbourhoods wrap around the grid edge in Y.",
+          "de": "Nachbarschaften laufen in Y über den Rasterrand um."
+        },
+        "group": "grid",
+        "order": 20
+      }
     },
     "periodicZ": {
-      "type": "boolean"
+      "type": "boolean",
+      "x-semio-ui": {
+        "widget": "toggle",
+        "role": "value",
+        "label": {
+          "en": "Periodic in Z",
+          "de": "Periodisch in Z"
+        },
+        "description": {
+          "en": "Neighbourhoods wrap around the grid edge in Z.",
+          "de": "Nachbarschaften laufen in Z über den Rasterrand um."
+        },
+        "group": "grid",
+        "order": 30
+      }
     }
   }
 }

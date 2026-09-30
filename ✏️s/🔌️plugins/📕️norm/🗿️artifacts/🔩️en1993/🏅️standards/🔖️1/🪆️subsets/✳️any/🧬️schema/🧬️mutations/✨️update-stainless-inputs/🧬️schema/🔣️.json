@@ -5,19 +5,17 @@
   "type": "object",
   "additionalProperties": false,
   "required": [
-    "newStainlessFYMpa",
-    "newStainlessMEdKnm",
-    "newStainlessWPlMm3"
+    "material"
   ],
   "properties": {
-    "newStainlessMEdKnm": {
-      "type": "number"
-    },
-    "newStainlessWPlMm3": {
-      "type": "number"
-    },
-    "newStainlessFYMpa": {
-      "type": "number"
+    "material": {
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1993/snapshot.json#/$defs/SteelMaterial",
+      "x-semio-ui": {
+        "label": {
+          "en": "Stainless steel material",
+          "de": "Nichtrostender Stahlwerkstoff"
+        }
+      }
     }
   }
 }

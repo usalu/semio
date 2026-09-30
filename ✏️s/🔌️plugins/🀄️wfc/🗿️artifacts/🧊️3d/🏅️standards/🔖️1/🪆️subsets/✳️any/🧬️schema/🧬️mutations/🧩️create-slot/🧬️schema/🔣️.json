@@ -11,7 +11,23 @@
   "properties": {
     "index": {
       "type": "integer",
-      "minimum": 0
+      "minimum": 0,
+      "x-semio-ui": {
+        "widget": "stepper",
+        "role": "value",
+        "label": {
+          "en": "Index",
+          "de": "Index"
+        },
+        "description": {
+          "en": "Position in the list; empty appends at the end.",
+          "de": "Position in der Liste; leer hängt am Ende an."
+        },
+        "step": 1,
+        "precision": 0,
+        "group": "order",
+        "order": 10
+      }
     },
     "slot": {
       "title": "Slot3d",
@@ -28,32 +44,140 @@
       ],
       "properties": {
         "id": {
-          "type": "string"
+          "type": "string",
+          "x-semio-ui": {
+            "widget": "text",
+            "role": "value",
+            "label": {
+              "en": "ID",
+              "de": "ID"
+            },
+            "description": {
+              "en": "Unique id of the record.",
+              "de": "Eindeutige ID des Eintrags."
+            },
+            "group": "identity",
+            "order": 10
+          }
         },
         "x": {
-          "type": "number"
+          "type": "number",
+          "x-semio-ui": {
+            "widget": "stepper",
+            "role": "value",
+            "label": {
+              "en": "X",
+              "de": "X"
+            },
+            "step": 1,
+            "precision": 2,
+            "group": "position",
+            "order": 20
+          }
         },
         "y": {
-          "type": "number"
+          "type": "number",
+          "x-semio-ui": {
+            "widget": "stepper",
+            "role": "value",
+            "label": {
+              "en": "Y",
+              "de": "Y"
+            },
+            "step": 1,
+            "precision": 2,
+            "group": "position",
+            "order": 30
+          }
         },
         "z": {
-          "type": "number"
+          "type": "number",
+          "x-semio-ui": {
+            "widget": "stepper",
+            "role": "value",
+            "label": {
+              "en": "Z",
+              "de": "Z"
+            },
+            "step": 1,
+            "precision": 2,
+            "group": "position",
+            "order": 40
+          }
         },
         "width": {
           "type": "number",
-          "exclusiveMinimum": 0
+          "exclusiveMinimum": 0,
+          "x-semio-ui": {
+            "widget": "stepper",
+            "role": "value",
+            "label": {
+              "en": "Width",
+              "de": "Breite"
+            },
+            "step": 1,
+            "precision": 2,
+            "group": "geometry",
+            "order": 50
+          }
         },
         "height": {
           "type": "number",
-          "exclusiveMinimum": 0
+          "exclusiveMinimum": 0,
+          "x-semio-ui": {
+            "widget": "stepper",
+            "role": "value",
+            "label": {
+              "en": "Height",
+              "de": "Höhe"
+            },
+            "step": 1,
+            "precision": 2,
+            "group": "geometry",
+            "order": 60
+          }
         },
         "depth": {
           "type": "number",
-          "exclusiveMinimum": 0
+          "exclusiveMinimum": 0,
+          "x-semio-ui": {
+            "widget": "stepper",
+            "role": "value",
+            "label": {
+              "en": "Depth",
+              "de": "Tiefe"
+            },
+            "step": 1,
+            "precision": 2,
+            "group": "geometry",
+            "order": 70
+          }
         },
         "pinnedTileId": {
-          "type": "string"
+          "type": "string",
+          "x-semio-ui": {
+            "widget": "reference",
+            "role": "target",
+            "label": {
+              "en": "Pinned tile",
+              "de": "Fixierte Kachel"
+            },
+            "ref": {
+              "kind": "tile"
+            },
+            "group": "target",
+            "order": 80
+          }
         }
+      },
+      "x-semio-ui": {
+        "role": "value",
+        "label": {
+          "en": "Slot",
+          "de": "Slot"
+        },
+        "group": "record",
+        "order": 20
       }
     }
   }

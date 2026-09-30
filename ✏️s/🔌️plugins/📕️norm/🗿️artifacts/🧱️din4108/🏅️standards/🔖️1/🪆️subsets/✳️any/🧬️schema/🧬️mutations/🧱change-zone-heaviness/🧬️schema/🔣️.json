@@ -10,10 +10,41 @@
   ],
   "properties": {
     "zoneId": {
-      "type": "string"
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Zone",
+          "de": "Zone"
+        },
+        "description": {
+          "en": "The thermal zone this mutation addresses.",
+          "de": "Die thermische Zone, die diese Mutation adressiert."
+        },
+        "ref": {
+          "kind": "zone"
+        },
+        "group": "target",
+        "order": 10
+      }
     },
     "newHeaviness": {
-      "type": "string"
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "text",
+        "role": "value",
+        "label": {
+          "en": "Construction type",
+          "de": "Bauart"
+        },
+        "description": {
+          "en": "light, medium or heavy (DIN 4108-2).",
+          "de": "light (leicht), medium (mittel) oder heavy (schwer) nach DIN 4108-2."
+        },
+        "group": "summer",
+        "order": 20
+      }
     }
   }
 }

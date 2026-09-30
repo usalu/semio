@@ -4,8 +4,7 @@ use crate::schema::modules::mutation_support::top_level::rejection_outcome;
 use crate::schema::modules::mutation_support::top_level::{reject, GltfTopLevelMutationRejection};
 use crate::GltfSnapshot;
 pub const ID: &str = "s.stdio.gltf.mutation.reorder-node-children.v1";
-#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::MutationLeaf)]
-#[mutation_leaf(contract = ::protocol)]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
 #[value(rename_all = "camelCase")]
 pub struct GltfReorderNodeChildrenPayload {
     pub parent: usize,
@@ -38,7 +37,7 @@ pub fn apply(payload: &GltfReorderNodeChildrenPayload, base: &GltfSnapshot) -> R
 
 //#region 🧬️DirectMutation
 #[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::MutationLeaf)]
-#[mutation_leaf(contract = ::protocol)]
+#[mutation_leaf(contract = ::protocol, payload = Apply)]
 #[value(tag = "phase", content = "value", rename_all = "camelCase")]
 pub enum ReorderNodeChildrenMutation {
     Apply(GltfReorderNodeChildrenPayload),
@@ -82,6 +81,6 @@ impl protocol::MutationKind<GltfSnapshot, super::GltfMutation> for ReorderNodeCh
 
 //#region 🧪️Tests
 #[cfg(test)]
-#[path = "🧪️tests/🔬️direct-leaf/🦀️.rs"]
-mod direct_leaf_tests;
+#[path = "🧪️tests/🚫️refuses-an-order-dd1195/🦀️.rs"]
+mod case_refuses_an_order_dd1195;
 //#endregion 🧪️Tests

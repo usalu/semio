@@ -1,0 +1,123 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/puzzle/puzzle2d/mutation/rotate-selection/schema.json",
+  "title": "RotateSelection",
+  "description": "The `rotate-selection` mutation record — internally tagged `\"mutation\": \"rotateSelection\"`, the one branch the aggregate `../🔣️.json` union carries for this kind.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "mutation",
+    "targets",
+    "pivotX",
+    "pivotY",
+    "angle"
+  ],
+  "properties": {
+    "mutation": {
+      "const": "rotateSelection",
+      "x-semio-ui": {
+        "widget": "hidden",
+        "role": "discriminator",
+        "label": {
+          "en": "Mutation",
+          "de": "Mutation"
+        }
+      }
+    },
+    "targets": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "minItems": 1,
+      "uniqueItems": true,
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Nodes",
+          "de": "Knoten"
+        },
+        "description": {
+          "en": "Nodes to rotate; locked or missing ones are skipped.",
+          "de": "Zu drehende Knoten; gesperrte oder fehlende werden übersprungen."
+        },
+        "ref": {
+          "kind": [
+            "node"
+          ],
+          "domain": "vortex",
+          "granularity": "node"
+        },
+        "group": "target",
+        "order": 10
+      }
+    },
+    "pivotX": {
+      "type": "number",
+      "x-semio-ui": {
+        "widget": "stepper",
+        "role": "value",
+        "label": {
+          "en": "Pivot X",
+          "de": "Drehpunkt X"
+        },
+        "step": 1,
+        "precision": 2,
+        "snapSource": {
+          "config": "gridFactor"
+        },
+        "group": "pivot",
+        "order": 20
+      }
+    },
+    "pivotY": {
+      "type": "number",
+      "x-semio-ui": {
+        "widget": "stepper",
+        "role": "value",
+        "label": {
+          "en": "Pivot Y",
+          "de": "Drehpunkt Y"
+        },
+        "step": 1,
+        "precision": 2,
+        "snapSource": {
+          "config": "gridFactor"
+        },
+        "group": "pivot",
+        "order": 30
+      }
+    },
+    "angle": {
+      "type": "number",
+      "x-semio-ui": {
+        "widget": "dial",
+        "role": "value",
+        "label": {
+          "en": "Angle",
+          "de": "Winkel"
+        },
+        "description": {
+          "en": "Counter-clockwise rotation about the pivot.",
+          "de": "Drehung gegen den Uhrzeigersinn um den Drehpunkt."
+        },
+        "unit": "rad",
+        "displayUnit": "deg",
+        "displayFactor": 57.29577951308232,
+        "step": 0.017453292519943295,
+        "softMin": -3.141592653589793,
+        "softMax": 3.141592653589793,
+        "snaps": [
+          -3.141592653589793,
+          -1.5707963267948966,
+          0,
+          1.5707963267948966,
+          3.141592653589793
+        ],
+        "group": "rotation",
+        "order": 40
+      }
+    }
+  }
+}

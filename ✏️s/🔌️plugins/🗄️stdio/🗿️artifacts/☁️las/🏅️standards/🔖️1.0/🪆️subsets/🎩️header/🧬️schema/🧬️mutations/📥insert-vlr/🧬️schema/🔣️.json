@@ -5,20 +5,27 @@
   "type": "object",
   "additionalProperties": false,
   "required": [
+    "mutation",
     "index",
     "vlr"
   ],
   "properties": {
+    "mutation": {
+      "const": "insertVlr",
+      "description": "Aggregate discriminator spliced in by LasMutation; absent when the payload stands alone."
+    },
     "index": {
       "type": "integer",
       "minimum": 0
     },
     "vlr": {
-      "$ref": "#/$defs/LasVlr"
-    },
-    "mutation": {
-      "const": "insertVlr",
-      "description": "Aggregate discriminator spliced in by LasMutation; absent when the payload stands alone."
+      "$ref": "#/$defs/LasVlr",
+      "x-semio-ui": {
+        "label": {
+          "en": "Variable length record",
+          "de": "Datensatz variabler Länge (VLR)"
+        }
+      }
     }
   },
   "$defs": {
@@ -33,12 +40,30 @@
       ],
       "properties": {
         "userId": {
-          "type": "string"
+          "type": "string",
+          "x-semio-ui": {
+            "widget": "text",
+            "label": {
+              "en": "User ID",
+              "de": "Benutzerkennung"
+            },
+            "description": {
+              "en": "Registered VLR owner, e.g. LASF_Projection.",
+              "de": "Registrierter VLR-Eigentümer, z. B. LASF_Projection."
+            }
+          }
         },
         "recordId": {
           "type": "integer",
           "minimum": 0,
-          "maximum": 65535
+          "maximum": 65535,
+          "x-semio-ui": {
+            "widget": "stepper",
+            "label": {
+              "en": "Record ID",
+              "de": "Datensatz-ID"
+            }
+          }
         },
         "description": {
           "type": "string"

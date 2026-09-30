@@ -297,8 +297,20 @@ async fn create_family_fatal_never_applies() {
     let outcome = FormMutation::CreateStep(create_step::mutation::CreateStep { step: sample_step("s1"), index: None }).diff(&base);
     assert_eq!(outcome.worst_level(), Some(protocol::Severity::Fatal));
     assert_fatal_never_applies(&outcome).await;
-    let outcome = FormMutation::CreateBlock(create_block::mutation::CreateBlock { step_id: "missing".into(), block: sample_block("b1"), index: None }).diff(&base);
-    assert_eq!(outcome.worst_level(), Some(protocol::Severity::Fatal));
-    assert_fatal_never_applies(&outcome).await;
+}
+
+#[semio_framework_async_macros::async_test]
+async fn create_family_missing_target_is_error() {
+    let base = base_snapshot();
+    assert_missing_target_is_error(&base, &FormMutation::CreateBlock(create_block::mutation::CreateBlock { step_id: "missing".into(), block: sample_block("b1"), index: None })).await;
 }
 //#endregion 🔖️OutcomeLaws
+
+//#region 🧾️WireWitnesses
+/// 🧾️ The committed payload-only wire witness of `create-block` (its only quintet is a refusal) decodes through `FormMutation`'s
+/// `FromValue` and re-encodes to exactly the committed JSON.
+#[test]
+fn committed_wire_witnesses_are_the_canonical_wire() {
+    store::os_store::test_support::assert_wire_witness::<FormMutation>(include_str!("../../../../🧫️fixtures/🧬️mutations/➕create-block/🧾️wire-witness/🦠️mutation/🔣️.json"));
+}
+//#endregion 🧾️WireWitnesses

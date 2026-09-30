@@ -5,15 +5,27 @@
   "type": "object",
   "additionalProperties": false,
   "required": [
+    "mutation",
     "lang"
   ],
   "properties": {
-    "lang": {
-      "type": "string"
-    },
     "mutation": {
       "const": "setLang",
       "description": "Aggregate discriminator spliced in by PdfUaMutation; absent when the payload stands alone."
+    },
+    "lang": {
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "text",
+        "label": {
+          "en": "Document language",
+          "de": "Dokumentsprache"
+        },
+        "description": {
+          "en": "BCP 47 tag of the natural language (PDF/UA), e.g. de-DE.",
+          "de": "BCP-47-Kennung der natürlichen Sprache (PDF/UA), z. B. de-DE."
+        }
+      }
     }
   }
 }

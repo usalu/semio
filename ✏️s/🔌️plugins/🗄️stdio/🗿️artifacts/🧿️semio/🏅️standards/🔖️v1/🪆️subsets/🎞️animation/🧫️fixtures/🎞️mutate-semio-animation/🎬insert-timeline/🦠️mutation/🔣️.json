@@ -1,6 +1,7 @@
 {
   "kind": "insert-timeline",
-  "params": {
+  "mutation": {
+    "mutation": "insertTimeline",
     "index": 1,
     "timeline": {
       "name": "wave",

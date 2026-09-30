@@ -5,26 +5,104 @@
   "type": "object",
   "additionalProperties": false,
   "required": [
+    "mutation",
     "index",
     "id",
     "defaultDailyScheduleId",
     "holidayDailyScheduleId"
   ],
   "properties": {
+    "mutation": {
+      "const": "createAnnualSchedule"
+    },
     "index": {
-      "type": "integer"
+      "type": "integer",
+      "minimum": 0,
+      "x-semio-ui": {
+        "widget": "stepper",
+        "role": "value",
+        "label": {
+          "en": "Position",
+          "de": "Position"
+        },
+        "description": {
+          "en": "Insertion position in the model's list; 0 is first.",
+          "de": "Einfügeposition in der Modellliste; 0 ist die erste."
+        },
+        "step": 1,
+        "precision": 0,
+        "group": "order",
+        "order": 10
+      }
     },
     "id": {
-      "type": "integer"
+      "type": "integer",
+      "minimum": 0,
+      "x-semio-ui": {
+        "widget": "stepper",
+        "role": "value",
+        "label": {
+          "en": "ID",
+          "de": "ID"
+        },
+        "description": {
+          "en": "Id the new annual schedule is created under; later mutations address it by this id.",
+          "de": "ID, unter der das neue Objekt angelegt wird; spätere Mutationen adressieren es darüber."
+        },
+        "step": 1,
+        "precision": 0,
+        "group": "identity",
+        "order": 20
+      }
     },
     "defaultDailyScheduleId": {
-      "type": "integer"
+      "type": "integer",
+      "minimum": 0,
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Default daily schedule",
+          "de": "Standard-Tageszeitplan"
+        },
+        "description": {
+          "en": "Daily profile of every day no rule covers, by id.",
+          "de": "Tagesprofil für jeden Tag ohne Regel, per ID."
+        },
+        "ref": {
+          "kind": "schedule",
+          "domain": "energyModel",
+          "granularity": "schedule"
+        },
+        "group": "schedule",
+        "order": 30
+      }
     },
     "holidayDailyScheduleId": {
       "type": [
         "integer",
         "null"
-      ]
+      ],
+      "minimum": 0,
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Holiday daily schedule",
+          "de": "Feiertags-Tageszeitplan"
+        },
+        "description": {
+          "en": "Daily profile of the holidays, by id; empty means none.",
+          "de": "Tagesprofil der Feiertage, per ID; leer bedeutet keiner."
+        },
+        "ref": {
+          "kind": "schedule",
+          "domain": "energyModel",
+          "granularity": "schedule"
+        },
+        "group": "schedule",
+        "order": 40
+      }
     }
   }
 }

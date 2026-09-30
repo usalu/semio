@@ -5,15 +5,17 @@
   "type": "object",
   "additionalProperties": false,
   "required": [
-    "newPlatedLambdaP",
-    "newPlatedSigmaEdMpa"
+    "platedPanel"
   ],
   "properties": {
-    "newPlatedLambdaP": {
-      "type": "number"
-    },
-    "newPlatedSigmaEdMpa": {
-      "type": "number"
+    "platedPanel": {
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1993/snapshot.json#/$defs/PlatedPanel",
+      "x-semio-ui": {
+        "label": {
+          "en": "Plated panel",
+          "de": "Beulfeld"
+        }
+      }
     }
   }
 }

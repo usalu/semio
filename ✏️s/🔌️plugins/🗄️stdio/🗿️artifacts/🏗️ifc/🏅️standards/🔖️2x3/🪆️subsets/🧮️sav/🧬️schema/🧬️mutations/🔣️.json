@@ -8,11 +8,11 @@
       "type": "object",
       "additionalProperties": false,
       "required": [
-        "SetAnalysisModel"
+        "SetSnapshot"
       ],
       "properties": {
-        "SetAnalysisModel": {
-          "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/ifc/2x3/sav/mutation/set-analysis-model/schema.json"
+        "SetSnapshot": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/ifc/2x3/sav/mutation/set-snapshot/schema.json"
         }
       }
     },
@@ -20,11 +20,23 @@
       "type": "object",
       "additionalProperties": false,
       "required": [
-        "SetGroupAssignment"
+        "SetViewDefinition"
       ],
       "properties": {
-        "SetGroupAssignment": {
-          "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/ifc/2x3/sav/mutation/set-group-assignment/schema.json"
+        "SetViewDefinition": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/ifc/2x3/sav/mutation/set-view-definition/schema.json"
+        }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "SetAnalysisModel"
+      ],
+      "properties": {
+        "SetAnalysisModel": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/ifc/2x3/sav/mutation/set-analysis-model/schema.json"
         }
       }
     },
@@ -44,23 +56,11 @@
       "type": "object",
       "additionalProperties": false,
       "required": [
-        "SetSnapshot"
+        "SetGroupAssignment"
       ],
       "properties": {
-        "SetSnapshot": {
-          "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/ifc/2x3/sav/mutation/set-snapshot/schema.json"
-        }
-      }
-    },
-    {
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "SetViewDefinition"
-      ],
-      "properties": {
-        "SetViewDefinition": {
-          "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/ifc/2x3/sav/mutation/set-view-definition/schema.json"
+        "SetGroupAssignment": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/ifc/2x3/sav/mutation/set-group-assignment/schema.json"
         }
       }
     }

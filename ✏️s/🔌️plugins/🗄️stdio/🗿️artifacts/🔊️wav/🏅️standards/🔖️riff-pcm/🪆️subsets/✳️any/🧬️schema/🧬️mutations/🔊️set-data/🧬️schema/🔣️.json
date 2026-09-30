@@ -5,15 +5,16 @@
   "type": "object",
   "additionalProperties": false,
   "required": [
+    "mutation",
     "data"
   ],
   "properties": {
-    "data": {
-      "$ref": "#/$defs/WavData"
-    },
     "mutation": {
       "const": "setData",
       "description": "Aggregate discriminator spliced in by WavMutation; absent when the payload stands alone."
+    },
+    "data": {
+      "$ref": "#/$defs/WavData"
     }
   },
   "$defs": {

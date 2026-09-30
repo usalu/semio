@@ -1,0 +1,9 @@
+{
+  "angle": 1.5707963267948966,
+  "mutation": "rotateSelection",
+  "pivotX": 0.0,
+  "pivotY": 0.0,
+  "targets": [
+    "node-ghost"
+  ]
+}

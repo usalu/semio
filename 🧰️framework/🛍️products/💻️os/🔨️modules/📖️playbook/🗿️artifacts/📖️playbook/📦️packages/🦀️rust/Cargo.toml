@@ -5,6 +5,10 @@ edition.workspace = true
 rust-version.workspace = true
 description = "Shared playbook document artifact and generation model"
 
+[package.metadata.semio]
+role = "artifact"
+id = "playbook-playbook"
+
 [lints]
 workspace = true
 

@@ -5,6 +5,7 @@
   "type": "object",
   "additionalProperties": false,
   "required": [
+    "mutation",
     "chunks",
     "contentId",
     "first",
@@ -13,8 +14,28 @@
     "width"
   ],
   "properties": {
+    "mutation": {
+      "const": "appendContent"
+    },
     "contentId": {
-      "type": "string"
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Content",
+          "de": "Inhalt"
+        },
+        "description": {
+          "en": "Durable content the chunks are appended to.",
+          "de": "Dauerhafter Inhalt, an den die Blöcke angehängt werden."
+        },
+        "ref": {
+          "kind": "content"
+        },
+        "group": "target",
+        "order": 10
+      }
     },
     "kind": {
       "type": "string",
@@ -22,28 +43,108 @@
         "sparse",
         "mesh",
         "image"
-      ]
+      ],
+      "x-semio-ui": {
+        "widget": "segmented",
+        "role": "value",
+        "label": {
+          "en": "Content Kind",
+          "de": "Inhaltsart"
+        },
+        "options": {
+          "sparse": {
+            "en": "Sparse Cloud",
+            "de": "Dünne Punktwolke"
+          },
+          "mesh": {
+            "en": "Mesh",
+            "de": "Mesh"
+          },
+          "image": {
+            "en": "Image",
+            "de": "Bild"
+          }
+        },
+        "group": "media",
+        "order": 20
+      }
     },
     "mime": {
       "type": [
         "string",
         "null"
-      ]
+      ],
+      "x-semio-ui": {
+        "widget": "text",
+        "role": "value",
+        "label": {
+          "en": "Media Type",
+          "de": "Medientyp"
+        },
+        "description": {
+          "en": "e.g. image/jpeg; empty for non-image content.",
+          "de": "z. B. image/jpeg; leer bei Inhalten, die keine Bilder sind."
+        },
+        "group": "media",
+        "order": 30
+      }
     },
     "width": {
       "type": "integer",
       "format": "uint32",
-      "minimum": 0
+      "minimum": 0,
+      "x-semio-ui": {
+        "widget": "stepper",
+        "role": "value",
+        "label": {
+          "en": "Width (px)",
+          "de": "Breite (px)"
+        },
+        "unit": "px",
+        "step": 1,
+        "precision": 0,
+        "group": "media",
+        "order": 40
+      }
     },
     "height": {
       "type": "integer",
       "format": "uint32",
-      "minimum": 0
+      "minimum": 0,
+      "x-semio-ui": {
+        "widget": "stepper",
+        "role": "value",
+        "label": {
+          "en": "Height (px)",
+          "de": "Höhe (px)"
+        },
+        "unit": "px",
+        "step": 1,
+        "precision": 0,
+        "group": "media",
+        "order": 50
+      }
     },
     "first": {
       "type": "integer",
       "format": "uint64",
-      "minimum": 0
+      "minimum": 0,
+      "x-semio-ui": {
+        "widget": "stepper",
+        "role": "value",
+        "label": {
+          "en": "First Leaf Index",
+          "de": "Erster Blockindex"
+        },
+        "description": {
+          "en": "Leaf index where the first chunk is placed.",
+          "de": "Blockindex, an dem der erste Block abgelegt wird."
+        },
+        "step": 1,
+        "precision": 0,
+        "group": "media",
+        "order": 60
+      }
     },
     "chunks": {
       "type": "array",
@@ -52,6 +153,20 @@
         "type": "string",
         "contentEncoding": "base64",
         "maxLength": 5464
+      },
+      "x-semio-ui": {
+        "widget": "hidden",
+        "role": "value",
+        "label": {
+          "en": "Chunks",
+          "de": "Blöcke"
+        },
+        "description": {
+          "en": "Base64-encoded raw leaves.",
+          "de": "Base64-kodierte Rohblöcke."
+        },
+        "group": "media",
+        "order": 70
       }
     }
   }

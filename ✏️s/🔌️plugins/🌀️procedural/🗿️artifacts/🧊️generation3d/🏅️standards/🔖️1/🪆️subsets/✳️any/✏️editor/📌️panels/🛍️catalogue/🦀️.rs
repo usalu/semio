@@ -93,8 +93,7 @@ pub fn render(labels: &Generation3dLabels, windows: &TreeWindows<'_>) -> semio_f
 }
 //#endregion 🔖️Render
 
-//#region 🧪️Tests
+
 #[cfg(test)]
 #[path = "🧪️tests/🔬️unit/🦀️.rs"]
 mod tests;
-//#endregion 🧪️Tests

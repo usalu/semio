@@ -5,13 +5,34 @@
   "type": "object",
   "additionalProperties": false,
   "required": [
+    "mutation",
     "frame",
     "id",
     "kind"
   ],
   "properties": {
+    "mutation": {
+      "const": "addStreamFrame"
+    },
     "id": {
-      "type": "string"
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Stream",
+          "de": "Stream"
+        },
+        "description": {
+          "en": "The stream that receives the frame.",
+          "de": "Stream, der das Bild erhält."
+        },
+        "ref": {
+          "kind": "stream"
+        },
+        "group": "target",
+        "order": 10
+      }
     },
     "frame": {
       "type": "object",
@@ -26,15 +47,76 @@
         "index": {
           "type": "integer",
           "format": "uint32",
-          "minimum": 0
+          "minimum": 0,
+          "x-semio-ui": {
+            "widget": "stepper",
+            "role": "value",
+            "label": {
+              "en": "Frame Index",
+              "de": "Bildindex"
+            },
+            "step": 1,
+            "precision": 0,
+            "group": "media",
+            "order": 10
+          }
         },
         "timestampMs": {
           "type": "number",
-          "format": "double"
+          "format": "double",
+          "x-semio-ui": {
+            "widget": "stepper",
+            "role": "value",
+            "label": {
+              "en": "Timestamp (ms)",
+              "de": "Zeitstempel (ms)"
+            },
+            "description": {
+              "en": "Media time of the frame.",
+              "de": "Medienzeit des Bildes."
+            },
+            "unit": "ms",
+            "step": 1,
+            "precision": 1,
+            "group": "timing",
+            "order": 20
+          }
         },
         "assetId": {
-          "type": "string"
+          "type": "string",
+          "x-semio-ui": {
+            "widget": "reference",
+            "role": "target",
+            "label": {
+              "en": "Image Asset",
+              "de": "Bild-Asset"
+            },
+            "description": {
+              "en": "The embedded image of this frame.",
+              "de": "Das eingebettete Bild dieses Bildes."
+            },
+            "ref": {
+              "kind": "asset",
+              "domain": "assets",
+              "granularity": "asset"
+            },
+            "group": "media",
+            "order": 30
+          }
         }
+      },
+      "x-semio-ui": {
+        "role": "value",
+        "label": {
+          "en": "Frame",
+          "de": "Bild"
+        },
+        "description": {
+          "en": "The frame appended to the stream.",
+          "de": "Das an den Stream angehängte Bild."
+        },
+        "group": "record",
+        "order": 20
       }
     },
     "kind": {
@@ -43,7 +125,31 @@
       "enum": [
         "image-sequence",
         "video"
-      ]
+      ],
+      "x-semio-ui": {
+        "widget": "segmented",
+        "role": "value",
+        "label": {
+          "en": "Stream Kind",
+          "de": "Streamart"
+        },
+        "description": {
+          "en": "Capture form of the stream the frame belongs to.",
+          "de": "Erfassungsform des Streams, zu dem das Bild gehört."
+        },
+        "options": {
+          "image-sequence": {
+            "en": "Image Sequence",
+            "de": "Bildsequenz"
+          },
+          "video": {
+            "en": "Video",
+            "de": "Video"
+          }
+        },
+        "group": "media",
+        "order": 30
+      }
     }
   }
 }

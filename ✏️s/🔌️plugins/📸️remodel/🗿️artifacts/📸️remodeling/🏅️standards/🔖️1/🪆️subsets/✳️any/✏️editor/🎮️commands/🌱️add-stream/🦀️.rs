@@ -17,9 +17,9 @@ pub struct AddStream {
 }
 
 /// 🌱️ An empty `camera_id` is an uncalibrated stream; a non-empty one must name a calibrated camera
-/// of the open document, because `CreateStream::diff` answers a FATAL `mutation.invariant` for an
-/// unknown camera — and a fatal outcome never reaches the ledger, so it is refused here, where the
-/// shell shows the refusal, instead of inside the bounded publication.
+/// of the open document, because `CreateStream::diff` refuses an unknown camera as
+/// `mutation.target-missing` with an empty diff — a refusal is no edit, so it is refused here, where
+/// the shell shows it, instead of inside the bounded publication.
 pub fn handle(payload: &AddStream, doc: &ArtifactView<'_, RemodelingSnapshot>, _cfg: &ConfigView<'_, NoConfig>) -> Result<Emit<RemodelingMutation, NoConfigMutation>, Fault> {
     let kind = if payload.kind == "video" { MediaKind::Video } else { MediaKind::ImageSequence };
     let camera_id = match payload.camera_id.trim() {

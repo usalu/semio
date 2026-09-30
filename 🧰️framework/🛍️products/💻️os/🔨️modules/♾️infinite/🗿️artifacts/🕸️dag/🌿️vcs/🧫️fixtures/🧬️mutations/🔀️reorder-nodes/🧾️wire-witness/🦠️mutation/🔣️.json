@@ -1,0 +1,8 @@
+{
+  "operation": "reorderNodes",
+  "order": [
+    "c",
+    "a",
+    "b"
+  ]
+}

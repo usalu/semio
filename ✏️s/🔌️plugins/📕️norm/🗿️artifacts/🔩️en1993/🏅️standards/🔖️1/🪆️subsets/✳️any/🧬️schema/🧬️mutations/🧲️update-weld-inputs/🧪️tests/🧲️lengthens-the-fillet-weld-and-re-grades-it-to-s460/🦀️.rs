@@ -1,9 +1,9 @@
 //! 🧪️ Hierarchical fixture triad `🧲️update-weld-inputs` / `🧲️lengthens-the-fillet-weld-and-re-grades-it-to-s460`.
 use crate::{En1993Diff, En1993Mutation, En1993Snapshot};
-const BEFORE: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🧲️update-weld-inputs/🧲️lengthens-the-fillet-weld-and-re-grades-it-to-s460/📸️snapshot/⬅️before/🔣️.json");
-const AFTER: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🧲️update-weld-inputs/🧲️lengthens-the-fillet-weld-and-re-grades-it-to-s460/📸️snapshot/➡️after/🔣️.json");
-const MUTATION: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🧲️update-weld-inputs/🧲️lengthens-the-fillet-weld-and-re-grades-it-to-s460/🦠️mutation/🔣️.json");
-const OUTCOME: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🧲️update-weld-inputs/🧲️lengthens-the-fillet-weld-and-re-grades-it-to-s460/🎯️outcome/🔣️.json");
+const BEFORE: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🧲️update-weld-inputs/🧲️lengthens-fillet-weld-re-grades-it-s460/📸️snapshot/⬅️before/🔣️.json");
+const AFTER: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🧲️update-weld-inputs/🧲️lengthens-fillet-weld-re-grades-it-s460/📸️snapshot/➡️after/🔣️.json");
+const MUTATION: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🧲️update-weld-inputs/🧲️lengthens-fillet-weld-re-grades-it-s460/🦠️mutation/🔣️.json");
+const OUTCOME: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🧲️update-weld-inputs/🧲️lengthens-fillet-weld-re-grades-it-s460/🎯️outcome/🔣️.json");
 fn before() -> En1993Snapshot { serde_json::from_str(BEFORE).expect("before") }
 fn expected_after() -> En1993Snapshot { serde_json::from_str(AFTER).expect("after") }
 fn mutation() -> En1993Mutation { serde_json::from_str(MUTATION).expect("mutation") }

@@ -1,6 +1,7 @@
 {
   "kind": "set-snapshot",
-  "params": {
+  "mutation": {
+    "mutation": "setSnapshot",
     "snapshot": {
       "schema": "s.stdio.semio.animation",
       "timelines": [

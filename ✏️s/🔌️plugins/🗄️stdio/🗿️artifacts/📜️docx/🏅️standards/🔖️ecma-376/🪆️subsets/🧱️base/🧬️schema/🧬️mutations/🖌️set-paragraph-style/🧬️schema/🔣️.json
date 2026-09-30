@@ -5,22 +5,53 @@
   "type": "object",
   "additionalProperties": false,
   "required": [
+    "mutation",
     "address",
     "styleId"
   ],
   "properties": {
+    "mutation": {
+      "const": "setParagraphStyle"
+    },
     "address": {
-      "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/docx/ecma-376/base/xml-address.json"
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/docx/ecma-376/base/xml-address.json",
+      "x-semio-ui": {
+        "label": {
+          "en": "Node address",
+          "de": "Knotenadresse"
+        },
+        "description": {
+          "en": "XML part, child path, expected element name and revision stamp of the addressed node.",
+          "de": "XML-Teil, Kindpfad, erwarteter Elementname und Revisionsstempel des adressierten Knotens."
+        },
+        "group": "target",
+        "order": 10
+      }
     },
     "styleId": {
       "type": [
         "string",
         "null"
       ],
-      "minLength": 1
-    },
-    "mutation": {
-      "const": "setParagraphStyle"
+      "minLength": 1,
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Paragraph style",
+          "de": "Absatzformatvorlage"
+        },
+        "description": {
+          "en": "Style id; empty removes the paragraph style.",
+          "de": "Formatvorlagen-ID; leer entfernt die Absatzformatvorlage."
+        },
+        "ref": {
+          "kind": "style",
+          "domain": "docx"
+        },
+        "group": "target",
+        "order": 20
+      }
     }
   }
 }

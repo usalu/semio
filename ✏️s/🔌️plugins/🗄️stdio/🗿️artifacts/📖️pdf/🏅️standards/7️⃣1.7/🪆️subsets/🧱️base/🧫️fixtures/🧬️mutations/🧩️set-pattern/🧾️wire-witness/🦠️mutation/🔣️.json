@@ -1,0 +1,19 @@
+{
+  "mutation": "setPattern",
+  "pattern": {
+    "id": "id",
+    "matrix": [
+      0,
+      0,
+      0,
+      0,
+      0,
+      0
+    ],
+    "kind": {
+      "kind": "shading",
+      "shading": "shading"
+    },
+    "extra": []
+  }
+}

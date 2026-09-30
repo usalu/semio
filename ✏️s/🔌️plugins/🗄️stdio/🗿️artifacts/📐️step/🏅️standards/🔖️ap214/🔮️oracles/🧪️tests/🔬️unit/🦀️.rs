@@ -111,7 +111,7 @@ fn clearing_the_product_identity_is_what_turns_the_soft_diagnostic_on() {
 }
 
 /// 🧬️ The identical-catalog argument this module's own header makes, as an assertion. Four of
-/// the six conformance classes declare the same six kinds, and that is a CONSEQUENCE of where
+/// the six conformance classes declare the same five kinds, and that is a CONSEQUENCE of where
 /// their ceilings sit on the ISO 10303-214 §4.3 ladder rather than a copied list — so it is
 /// checked here rather than asserted in prose four times.
 #[test]

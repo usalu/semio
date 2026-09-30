@@ -5,15 +5,52 @@
   "type": "object",
   "additionalProperties": false,
   "required": [
+    "mutation",
     "layerId",
     "newBlendMode"
   ],
   "properties": {
+    "mutation": {
+      "const": "changeLayerBlendMode"
+    },
     "layerId": {
-      "type": "string"
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Layer",
+          "de": "Ebene"
+        },
+        "description": {
+          "en": "The layer this mutation addresses.",
+          "de": "Die Ebene, die diese Mutation adressiert."
+        },
+        "ref": {
+          "kind": "layer",
+          "domain": "layers",
+          "granularity": "layer"
+        },
+        "group": "target",
+        "order": 10
+      }
     },
     "newBlendMode": {
-      "type": "string"
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "text",
+        "role": "value",
+        "label": {
+          "en": "Blend mode",
+          "de": "Füllmethode"
+        },
+        "description": {
+          "en": "For example normal or multiply.",
+          "de": "Zum Beispiel normal (Normal) oder multiply (Multiplizieren)."
+        },
+        "group": "appearance",
+        "order": 20
+      }
     }
   }
 }

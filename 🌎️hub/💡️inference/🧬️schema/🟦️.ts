@@ -1,3 +1,5 @@
+import { parseJobReconcileResultV1, type JobReconcileResultV1 } from "../../../🧰️framework/🔨️modules/🧵️job/🔎️reconcile/🧬️schema/🟦️.ts";
+
 /** 💡️ Scope `hub.inference` — the closed GIS inference wire contracts hub decodes and enforces.
  *
  * Schema authority: `./🔣️.json` (`https://json.schemas.assets.semio-tech.com/hub/inference/schema.json`).
@@ -77,15 +79,6 @@ export function parseInferenceRequestV1(value: unknown): InferenceRequestV1 {
   if (row.schema !== "semio.hub.inference-request/v1" || row.version !== 1 || !hex(row.requestId, 32) || row.serviceId !== "s.gis.gismap.inference" || row.policyVersion !== 1
     || !uint(row.lifetimeMs) || (row.lifetimeMs as number) < 1 || (row.lifetimeMs as number) > 120000) return fail("hub.inference/InferenceRequestV1");
   return { schema: "semio.hub.inference-request/v1", version: 1, requestId: row.requestId as string, serviceId: "s.gis.gismap.inference", policyVersion: 1, lifetimeMs: row.lifetimeMs as number };
-}
-
-export const INFERENCE_RECONCILE_REQUEST_MAX_BYTES = 256;
-export type InferenceJobReconcileRequestV1 = { readonly schema: "semio.hub.inference-job-reconcile/v1"; readonly version: 1; readonly requestId: string };
-export function parseInferenceJobReconcileRequestV1(value: unknown): InferenceJobReconcileRequestV1 {
-  const name = "hub.inference/InferenceJobReconcileRequestV1";
-  const row = rows(value, ["schema", "version", "requestId"], name);
-  if (row.schema !== "semio.hub.inference-job-reconcile/v1" || row.version !== 1 || !hex(row.requestId, 32)) return fail(name);
-  return { schema: "semio.hub.inference-job-reconcile/v1", version: 1, requestId: row.requestId as string };
 }
 
 /** 🧬️ The exact retained parent dialect the frozen Map binding admitted; never a client label. */
@@ -424,23 +417,9 @@ export function parseInferenceJobReconcileJobV1(value: unknown): InferenceJobRec
   return { receipt, page, approval };
 }
 
-export type InferenceJobReconcileResultV1 = {
-  readonly schema: "semio.hub.inference-job-reconcile-result/v1";
-  readonly version: 1;
-  readonly requestId: string;
-  readonly found: boolean;
-  readonly job: InferenceJobReconcileJobV1 | null;
-};
+export type InferenceJobReconcileResultV1 = JobReconcileResultV1<InferenceJobReconcileJobV1>;
 export function parseInferenceJobReconcileResultV1(value: unknown): InferenceJobReconcileResultV1 {
-  const name = "hub.inference/InferenceJobReconcileResultV1";
-  const row = rows(value, ["schema", "version", "requestId", "found", "job"], name);
-  if (row.schema !== "semio.hub.inference-job-reconcile-result/v1" || row.version !== 1 || !hex(row.requestId, 32) || typeof row.found !== "boolean") return fail(name);
-  if (!row.found) {
-    if (row.job !== null) return fail(name);
-    return { schema: "semio.hub.inference-job-reconcile-result/v1", version: 1, requestId: row.requestId as string, found: false, job: null };
-  }
-  if (row.job === null) return fail(name);
-  return { schema: "semio.hub.inference-job-reconcile-result/v1", version: 1, requestId: row.requestId as string, found: true, job: parseInferenceJobReconcileJobV1(row.job) };
+  return parseJobReconcileResultV1(value, parseInferenceJobReconcileJobV1);
 }
 
 /** 📃️ The owner-private bounded page a single `events` read returns. */

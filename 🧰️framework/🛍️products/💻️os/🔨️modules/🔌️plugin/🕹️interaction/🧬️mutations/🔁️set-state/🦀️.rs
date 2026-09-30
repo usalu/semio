@@ -1,6 +1,6 @@
 //! 🔁️ Direct interaction-state replacement payload, semantics and source-owned metadata.
 
-use crate::app::InteractionConfigMutation;
+use super::InteractionConfigMutation;
 use protocol::InteractionState;
 
 //#region 🔖️Payload
@@ -32,11 +32,18 @@ impl SetInteractionState {
     pub fn apply(&self) -> protocol::MutationApplyResult<InteractionState> {
         Ok(self.state.clone())
     }
-    pub fn diff(&self) -> protocol::MutationOutcome<InteractionConfigMutation> {
-        protocol::MutationOutcome::new(InteractionConfigMutation::SetState(self.clone()))
+}
+
+impl protocol::MutationKind<InteractionState, InteractionConfigMutation> for SetInteractionState {
+    const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "set", entity: "interaction-state", kind: "set-interaction-state", record: "SetInteractionState" };
+    fn diff(&self, _base: &InteractionState) -> protocol::MutationOutcome<InteractionConfigMutation> {
+        protocol::MutationOutcome::new(InteractionConfigMutation::SetInteractionState(self.clone()))
     }
-    pub fn inverse(&self, base: &InteractionState) -> Vec<InteractionConfigMutation> {
+    fn inverse(&self, base: &InteractionState) -> Vec<InteractionConfigMutation> {
         vec![InteractionConfigMutation::set_state(base.clone())]
+    }
+    fn label(&self) -> protocol::LocalizedLabel {
+        protocol::LocalizedLabel::native("Set interaction state", "Interaktionszustand setzen")
     }
 }
 //#endregion ⚙️ColdSemantics

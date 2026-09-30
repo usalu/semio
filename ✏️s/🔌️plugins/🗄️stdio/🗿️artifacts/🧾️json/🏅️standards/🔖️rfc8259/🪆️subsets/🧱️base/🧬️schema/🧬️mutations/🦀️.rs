@@ -32,6 +32,14 @@ pub fn apply_json_mutation(snapshot: &mut JsonSnapshot, mutation: &JsonMutation)
     outcome
 }
 
+/// 📥️ Decodes one leaf wire payload (a `🥒️.feature` row's `params`: the leaf's `payload_value()`, no aggregate tag) into
+/// the operation of semantic kind `kind` through the derive-generated `Mutation::from_payload_value`, so a caller that
+/// cannot name the trait reads the committed wire instead of re-declaring it field by field.
+pub fn decode_json_mutation_payload_json(kind: &str, payload: &str) -> Result<JsonMutation, String> {
+    let value = pack::parse_json(payload).map_err(|error| error.to_string())?;
+    <JsonMutation as protocol::Mutation<JsonSnapshot>>::from_payload_value(kind, pack::json_to_dsl_value(&value)).map_err(|error| error.to_string())
+}
+
 #[cfg(test)]
 pub(crate) fn demo_mutation_cases() -> Vec<JsonMutation> {
     use crate::schema::snapshot::JsonValue;

@@ -5,15 +5,51 @@
   "type": "object",
   "additionalProperties": false,
   "required": [
+    "mutation",
     "id",
     "newCapacityKwh"
   ],
   "properties": {
+    "mutation": {
+      "const": "changeBatteryCapacity"
+    },
     "id": {
-      "type": "integer"
+      "type": "integer",
+      "minimum": 0,
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Battery",
+          "de": "Batterie"
+        },
+        "description": {
+          "en": "The battery this mutation changes, by id.",
+          "de": "Batterie, die diese Mutation ändert, per ID."
+        },
+        "ref": {
+          "kind": "battery"
+        },
+        "group": "target",
+        "order": 10
+      }
     },
     "newCapacityKwh": {
-      "type": "number"
+      "type": "number",
+      "exclusiveMinimum": 0,
+      "x-semio-ui": {
+        "widget": "stepper",
+        "role": "value",
+        "label": {
+          "en": "Storage capacity",
+          "de": "Speicherkapazität"
+        },
+        "unit": "kWh",
+        "step": 0.5,
+        "precision": 1,
+        "group": "capacity",
+        "order": 20
+      }
     }
   }
 }

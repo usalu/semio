@@ -1,7 +1,14 @@
-/** 🦠️ move-buffer-view executable structural glTF command. */
-import type { GltfOrthographic, GltfPerspective, GltfSnapshot } from '../../📸️snapshot/🟦️.ts';
-import { clone, insert, order, position, reject, remove, relocate, reorder, repair, type GltfMutationRejection, type GltfStructuralResult } from './🟦️';
-export const GltfMoveBufferViewDescriptor = { id: 's.stdio.gltf.mutation.move-buffer-view.v1', version: 1, touchedPathPattern: 'document/bufferViews', referencePolicy: 'all typed buffer-view references are remapped, repaired, or rejected' } as const;
-export interface GltfMoveBufferViewPayload { index: number; position: number }
-export const validateGltfMoveBufferView = (payload: GltfMoveBufferViewPayload, base: GltfSnapshot): GltfMutationRejection | undefined => { const index = position(payload.index, base.document.bufferViews.length, 'document/bufferViews'); if (index) return index; const destination = position(payload.position, base.document.bufferViews.length, 'document/bufferViews'); if (destination) return destination; if (payload.index === payload.position) return reject('gltf.mutation.no-observable-change', 'document/bufferViews', 'destination equals source');  return undefined; };
-export const applyGltfMoveBufferView = (base: GltfSnapshot, payload: GltfMoveBufferViewPayload): GltfStructuralResult => { const rejection = validateGltfMoveBufferView(payload, base); if (rejection) return { accepted: false, rejection }; try { const next = clone(base); relocate(next, 'bufferViews', payload.index, payload.position); return { accepted: true, snapshot: clone(next) }; } catch (error) { return { accepted: false, rejection: typeof error === 'object' && error && 'code' in error ? error as GltfMutationRejection : reject('gltf.mutation.apply-failed', 'document/bufferViews', String(error)) }; } };
+/** 🚚️ `move-buffer-view` wire twin: the flat `Apply` payload `GltfMoveBufferViewPayload` and the phase wire `MoveBufferViewMutation`, exactly as `./🦀️.rs` writes them.
+ * @see ./🧬️schema/🔣️.json */
+import { gltfWireIndex, gltfWireObject, gltfWireRequired } from "../../../📸️snapshot/🟦️.ts";
+import { type GltfDiff, type GltfPhase, gltfWirePhase, parseGltfDiff } from "../../../🔺️diff/🟦️.ts";
+
+export interface GltfMoveBufferViewPayload {
+  index: number;
+  position: number;
+}
+
+export type MoveBufferViewMutation = GltfPhase<GltfMoveBufferViewPayload, GltfDiff>;
+
+export const parseGltfMoveBufferViewPayload = gltfWireObject<GltfMoveBufferViewPayload>({ index: gltfWireRequired(gltfWireIndex), position: gltfWireRequired(gltfWireIndex) });
+export const parseMoveBufferViewMutation = gltfWirePhase(parseGltfMoveBufferViewPayload, parseGltfDiff);

@@ -6,6 +6,10 @@ rust-version.workspace = true
 autotests = false
 description = "#[dyn_enum] / dyn_enum! — enum-dispatch codegen replacing dyn Trait objects (O1: drop dyn dispatch) so AFIT traits stay object-usable without Box<dyn Future>"
 
+[package.metadata.semio]
+role = "framework"
+id = "dispatch-macros"
+
 [lints]
 workspace = true
 

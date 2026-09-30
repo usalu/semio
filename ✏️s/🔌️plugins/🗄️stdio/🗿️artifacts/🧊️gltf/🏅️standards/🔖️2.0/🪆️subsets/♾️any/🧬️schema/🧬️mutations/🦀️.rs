@@ -337,4 +337,8 @@ pub fn gltf_inverse_restored_document(document: &[u8], kind: &str, params_json: 
 #[cfg(test)]
 #[path = "🧪️tests/🔬️unit/🦀️.rs"]
 mod tests;
+
+#[cfg(test)]
+#[path = "🧪️tests/🧪️fixture-corpus/🦀️.rs"]
+pub(super) mod fixture_corpus_tests;
 //#endregion 🧪️StructuralTests

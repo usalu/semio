@@ -5,21 +5,50 @@
   "type": "object",
   "additionalProperties": false,
   "required": [
+    "mutation",
     "id",
     "index"
   ],
   "properties": {
-    "id": {
-      "type": "integer",
-      "minimum": 0
-    },
-    "index": {
-      "type": "integer",
-      "minimum": 0
-    },
     "mutation": {
       "const": "removeEntityArg",
       "description": "Aggregate discriminator spliced in by IfcMutation; absent when the payload stands alone."
+    },
+    "id": {
+      "type": "integer",
+      "minimum": 0,
+      "x-semio-ui": {
+        "widget": "stepper",
+        "label": {
+          "en": "Entity",
+          "de": "Entität"
+        },
+        "description": {
+          "en": "STEP instance id (#n) of the entity.",
+          "de": "STEP-Instanz-ID (#n) der Entität."
+        },
+        "precision": 0,
+        "group": "target",
+        "order": 10
+      }
+    },
+    "index": {
+      "type": "integer",
+      "minimum": 0,
+      "x-semio-ui": {
+        "widget": "stepper",
+        "label": {
+          "en": "Attribute position",
+          "de": "Attributposition"
+        },
+        "description": {
+          "en": "Position of the attribute in schema order, counted from 0.",
+          "de": "Position des Attributs in Schemareihenfolge, ab 0 gezählt."
+        },
+        "precision": 0,
+        "group": "target",
+        "order": 20
+      }
     }
   }
 }

@@ -1,0 +1,9 @@
+{
+  "mutation": "removeUsedExtension",
+  "payload": {
+    "phase": "apply",
+    "value": {
+      "extension": "KHR_materials_unlit"
+    }
+  }
+}

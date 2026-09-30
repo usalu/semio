@@ -10,10 +10,54 @@
   ],
   "properties": {
     "gradeId": {
-      "type": "string"
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Concrete strength class",
+          "de": "Betonfestigkeitsklasse"
+        },
+        "description": {
+          "en": "The concrete grade this mutation addresses.",
+          "de": "Die Betonfestigkeitsklasse, die diese Mutation adressiert."
+        },
+        "ref": {
+          "kind": "concreteGrade"
+        },
+        "group": "target",
+        "order": 10
+      }
     },
     "newFCk": {
-      "type": "number"
+      "type": "number",
+      "exclusiveMinimum": 0,
+      "x-semio-ui": {
+        "widget": "stepper",
+        "role": "value",
+        "label": {
+          "en": "Characteristic compressive cylinder strength f_ck",
+          "de": "Charakteristische Zylinderdruckfestigkeit f_ck"
+        },
+        "unit": "Pa",
+        "displayUnit": "N/mm²",
+        "displayFactor": 1e-06,
+        "step": 1000000.0,
+        "precision": 0,
+        "snaps": [
+          12000000.0,
+          16000000.0,
+          20000000.0,
+          25000000.0,
+          30000000.0,
+          35000000.0,
+          40000000.0,
+          45000000.0,
+          50000000.0
+        ],
+        "group": "material",
+        "order": 20
+      }
     }
   }
 }

@@ -52,21 +52,17 @@ Feature: Apply every typed semio PRESENTATION mutation to a real conference deck
   That was checked rather than assumed: against this same real deck, removing `slideLayout1` really
   does fail the inverse law and removing the trailing layout really does restore it.
 
-  🔴 **`mutate-set-snapshot` and `inverse-set-snapshot` are RED, and they are left red.** The
-  `set-snapshot` payload replaces the deck with one whose slides are the same seven in REVERSE order.
-  The independent implementation returns the reversed deck. The subject returns the reversed layouts,
-  shapes and notes but the ORIGINAL seven slide ids, still at their original indices — so slide 0 ends
-  up carrying slide 23's content under slide 1's identifier. The cause is in the production diff
-  facet, not in either adapter: `SlideDiff`
-  (`../../🏅️standards/🔖️v1/🪆️subsets/📽️presentation/🧬️schema/🔺️diff/🦀️.rs`) declares
-  `layout_id`, `shapes` and `notes` and NO `id`, and `set-snapshot`'s semantics are
-  `SemioPresentationDiff::between`, so an index-keyed slide diff has no slot in which to carry a new
-  identifier. The committed specification vector cannot see this — its replacement snapshot reuses
-  the same single slide id — which is exactly why the real seven-slide deck was worth deriving. The
-  scenario is NOT tuned away: no `ignoreKeys`, no relaxed profile and no substituted payload, because
-  a whole-document replacement that keeps the old identity strings while taking the new content is a
-  defect and not a convention. `spec-vector-set-snapshot` stays green, which localises the failure to
-  the reordering case.
+  `set-snapshot` replaces the deck with one whose slides are the same seven in REVERSE order, and
+  "the document becomes this snapshot" is its whole contract: every slide's identity has to land at
+  its new index together with its content. The slide collection is index-keyed, so the production
+  diff facet (`../../🏅️standards/🔖️v1/🪆️subsets/📽️presentation/🧬️schema/🔺️diff/🦀️.rs`) carries a
+  changed identity in `SlideDiff::id` beside the layout, shapes and notes that moved with it — before
+  that slot existed the subject kept the ORIGINAL seven ids at their original indices, so slide 0
+  carried slide 23's content under slide 1's identifier, and this pair of scenarios was red against
+  the independent implementation. The committed specification vector could not see it, because its
+  replacement reuses the same single slide id; the subset's own fixture
+  `🧫️fixtures/🧬️mutations/📸️set-snapshot/🔃️reverses-slide-order` now pins the reorder in the
+  production crate as well.
 
   `spec-vector-` keeps the evidence this case rested on before the oracle existed: the committed
   `(before, mutation, after)` vector for each of the fifteen kinds, whose before-state is the
@@ -111,8 +107,10 @@ Feature: Apply every typed semio PRESENTATION mutation to a real conference deck
   @mode-differential
   Scenario: Apply no-mutation to the real derived talk deck
     Given the real derived presentation artifact shared://📽️mutate-semio-presentation/🎙️talk/🗣️.dsl.semio
-    And the committed mutation payload shared://📽️mutate-semio-presentation/🪞️no-mutation/🦠️mutation/🔣️.json
     When the no-mutation mutation is applied to the deck parsed from it
+      """
+      {"mutation": "noMutation"}
+      """
     Then the independent implementation and the subject agree on the resulting deck
 
   @id-inverse
@@ -145,8 +143,10 @@ Feature: Apply every typed semio PRESENTATION mutation to a real conference deck
   @mode-differential
   Scenario: Undoing no-mutation restores the real derived talk deck
     Given the real derived presentation artifact shared://📽️mutate-semio-presentation/🎙️talk/🗣️.dsl.semio
-    And the committed mutation payload shared://📽️mutate-semio-presentation/🪞️no-mutation/🦠️mutation/🔣️.json
     When the no-mutation mutation is applied to the deck parsed from it and each side undoes it with its own computed inverse
+      """
+      {"mutation": "noMutation"}
+      """
     Then both sides restore the deck and agree on the mutated and the restored snapshot, slide and shape order included
 
   @id-spec-vector

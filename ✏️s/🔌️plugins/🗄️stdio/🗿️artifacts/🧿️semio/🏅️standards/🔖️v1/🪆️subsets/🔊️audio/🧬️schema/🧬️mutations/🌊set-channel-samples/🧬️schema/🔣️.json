@@ -5,10 +5,15 @@
   "type": "object",
   "additionalProperties": false,
   "required": [
+    "mutation",
     "index",
     "samples"
   ],
   "properties": {
+    "mutation": {
+      "const": "setChannelSamples",
+      "description": "Aggregate discriminator spliced in by SemioAudioMutation; absent when the payload stands alone."
+    },
     "index": {
       "type": "integer",
       "minimum": 0
@@ -17,11 +22,13 @@
       "type": "array",
       "items": {
         "type": "number"
+      },
+      "x-semio-ui": {
+        "label": {
+          "en": "Samples",
+          "de": "Samples"
+        }
       }
-    },
-    "mutation": {
-      "const": "setChannelSamples",
-      "description": "Aggregate discriminator spliced in by SemioAudioMutation; absent when the payload stands alone."
     }
   }
 }

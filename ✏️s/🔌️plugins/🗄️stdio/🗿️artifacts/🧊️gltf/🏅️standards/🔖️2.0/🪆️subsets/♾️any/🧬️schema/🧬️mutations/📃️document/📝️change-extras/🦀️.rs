@@ -5,8 +5,7 @@ use crate::schema::snapshot::GltfJson;
 use crate::GltfSnapshot;
 pub const ID: &str = "s.stdio.gltf.mutation.change-document-extra-data.v1";
 pub const TOUCHED_PATHS: &[&str] = &["document/extras"];
-#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::MutationLeaf)]
-#[mutation_leaf(contract = ::protocol)]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
 #[value(rename_all = "camelCase")]
 pub struct GltfChangeDocumentExtraDataPayload {
     pub data: Option<GltfJson>,
@@ -28,7 +27,7 @@ pub fn apply(payload: &GltfChangeDocumentExtraDataPayload, base: &GltfSnapshot) 
 
 //#region 🧬️DirectMutation
 #[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::MutationLeaf)]
-#[mutation_leaf(contract = ::protocol)]
+#[mutation_leaf(contract = ::protocol, payload = Apply)]
 #[value(tag = "phase", content = "value", rename_all = "camelCase")]
 pub enum ChangeDocumentExtraDataMutation {
     Apply(GltfChangeDocumentExtraDataPayload),
@@ -72,6 +71,6 @@ impl protocol::MutationKind<GltfSnapshot, super::GltfMutation> for ChangeDocumen
 
 //#region 🧪️Tests
 #[cfg(test)]
-#[path = "🧪️tests/🔬️direct-leaf/🦀️.rs"]
-mod direct_leaf_tests;
+#[path = "🧪️tests/🔬️t052/🦀️.rs"]
+mod case_t052;
 //#endregion 🧪️Tests

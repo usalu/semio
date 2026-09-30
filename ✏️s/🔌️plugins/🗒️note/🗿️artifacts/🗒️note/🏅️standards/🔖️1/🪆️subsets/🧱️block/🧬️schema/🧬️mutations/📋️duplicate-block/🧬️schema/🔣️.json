@@ -5,15 +5,51 @@
   "type": "object",
   "additionalProperties": false,
   "required": [
+    "mutation",
     "sourceId",
     "block"
   ],
   "properties": {
+    "mutation": {
+      "const": "duplicateBlock"
+    },
     "sourceId": {
-      "type": "string"
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Source block",
+          "de": "Quellblock"
+        },
+        "description": {
+          "en": "The block to copy.",
+          "de": "Der zu kopierende Block."
+        },
+        "ref": {
+          "kind": "block",
+          "domain": "blocks",
+          "granularity": "block"
+        },
+        "group": "target",
+        "order": 10
+      }
     },
     "block": {
-      "$ref": "#/$defs/NoteBlockNode"
+      "$ref": "#/$defs/NoteBlockNode",
+      "x-semio-ui": {
+        "role": "value",
+        "label": {
+          "en": "Block",
+          "de": "Block"
+        },
+        "description": {
+          "en": "The copy with its new id.",
+          "de": "Die Kopie mit ihrer neuen ID."
+        },
+        "group": "record",
+        "order": 20
+      }
     }
   },
   "$defs": {
@@ -26,7 +62,21 @@
       ],
       "properties": {
         "kind": {
-          "type": "string"
+          "type": "string",
+          "x-semio-ui": {
+            "widget": "text",
+            "role": "value",
+            "label": {
+              "en": "Kind",
+              "de": "Art"
+            },
+            "description": {
+              "en": "text, image, table, math, stroke or group.",
+              "de": "text (Text), image (Bild), table (Tabelle), math (Formel), stroke (Strich) oder group (Gruppe)."
+            },
+            "group": "kind",
+            "order": 10
+          }
         }
       }
     }

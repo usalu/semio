@@ -6,6 +6,7 @@
   "description": "ui · Tailwind/CSS surface; canonical tokens + codegen live in framework/ui/styling (@semio-tech/ui-styling-tokens)",
   "type": "module",
   "semio": {
+    "dependencyRole": "ui",
     "role": "framework",
     "id": "ui-styling-ts",
     "storybook": {

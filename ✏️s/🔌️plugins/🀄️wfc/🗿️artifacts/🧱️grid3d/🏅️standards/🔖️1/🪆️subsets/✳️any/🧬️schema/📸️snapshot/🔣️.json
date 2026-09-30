@@ -95,141 +95,7 @@
             "exclusiveMinimum": 0
           },
           "media": {
-            "title": "Grid3dTileMedia",
-            "description": "Tagged by `kind`: inline `mesh` geometry, or a `meshChild` handle into s.stdio.semio@v1/mesh.",
-            "oneOf": [
-              {
-                "type": "object",
-                "additionalProperties": false,
-                "required": [
-                  "kind",
-                  "mesh"
-                ],
-                "properties": {
-                  "kind": {
-                    "const": "mesh"
-                  },
-                  "mesh": {
-                    "title": "Grid3dMesh",
-                    "type": "object",
-                    "additionalProperties": false,
-                    "required": [
-                      "positions",
-                      "indices"
-                    ],
-                    "properties": {
-                      "positions": {
-                        "type": "array",
-                        "items": {
-                          "type": "number"
-                        },
-                        "description": "xyz triples in the tile-space unit box 0..1"
-                      },
-                      "indices": {
-                        "type": "array",
-                        "items": {
-                          "type": "integer",
-                          "minimum": 0
-                        }
-                      },
-                      "color": {
-                        "title": "Grid3dColor",
-                        "type": "object",
-                        "additionalProperties": false,
-                        "required": [
-                          "r",
-                          "g",
-                          "b",
-                          "a"
-                        ],
-                        "properties": {
-                          "r": {
-                            "type": "integer",
-                            "minimum": 0,
-                            "maximum": 255
-                          },
-                          "g": {
-                            "type": "integer",
-                            "minimum": 0,
-                            "maximum": 255
-                          },
-                          "b": {
-                            "type": "integer",
-                            "minimum": 0,
-                            "maximum": 255
-                          },
-                          "a": {
-                            "type": "integer",
-                            "minimum": 0,
-                            "maximum": 255
-                          }
-                        }
-                      }
-                    }
-                  }
-                }
-              },
-              {
-                "type": "object",
-                "additionalProperties": false,
-                "required": [
-                  "kind",
-                  "child"
-                ],
-                "properties": {
-                  "kind": {
-                    "const": "meshChild"
-                  },
-                  "child": {
-                    "title": "ArtifactChildHandle",
-                    "type": "object",
-                    "additionalProperties": false,
-                    "required": [
-                      "childId",
-                      "target"
-                    ],
-                    "properties": {
-                      "childId": {
-                        "type": "string"
-                      },
-                      "target": {
-                        "type": "object",
-                        "additionalProperties": false,
-                        "required": [
-                          "artifactId",
-                          "dialect"
-                        ],
-                        "properties": {
-                          "artifactId": {
-                            "type": "string"
-                          },
-                          "dialect": {
-                            "type": "object",
-                            "additionalProperties": false,
-                            "required": [
-                              "artifactKind",
-                              "standard",
-                              "subset"
-                            ],
-                            "properties": {
-                              "artifactKind": {
-                                "type": "string"
-                              },
-                              "standard": {
-                                "type": "string"
-                              },
-                              "subset": {
-                                "type": "string"
-                              }
-                            }
-                          }
-                        }
-                      }
-                    }
-                  }
-                }
-              }
-            ]
+            "$ref": "#/$defs/Grid3dTileMedia"
           }
         }
       }
@@ -331,6 +197,200 @@
           }
         }
       }
+    }
+  },
+  "$defs": {
+    "Grid3dTileMedia": {
+      "title": "Grid3dTileMedia",
+      "description": "Tagged by `kind`: inline `mesh` geometry, or a `meshChild` handle into s.stdio.semio@v1/mesh.",
+      "oneOf": [
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "mesh"
+          ],
+          "properties": {
+            "kind": {
+              "const": "mesh",
+              "x-semio-ui": {
+                "widget": "hidden",
+                "role": "discriminator",
+                "label": {
+                  "en": "Media Kind",
+                  "de": "Medienart"
+                }
+              }
+            },
+            "mesh": {
+              "title": "Grid3dMesh",
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "positions",
+                "indices"
+              ],
+              "properties": {
+                "positions": {
+                  "type": "array",
+                  "items": {
+                    "type": "number"
+                  },
+                  "description": "xyz triples in the tile-space unit box 0..1",
+                  "x-semio-ui": {
+                    "widget": "hidden",
+                    "role": "value",
+                    "label": {
+                      "en": "Positions",
+                      "de": "Positionen"
+                    },
+                    "description": {
+                      "en": "xyz triples in the tile-space unit box 0..1.",
+                      "de": "xyz-Tripel in der Einheitsbox 0..1 des Kachelraums."
+                    }
+                  }
+                },
+                "indices": {
+                  "type": "array",
+                  "items": {
+                    "type": "integer",
+                    "minimum": 0
+                  },
+                  "x-semio-ui": {
+                    "widget": "hidden",
+                    "role": "value",
+                    "label": {
+                      "en": "Triangle Indices",
+                      "de": "Dreiecksindizes"
+                    },
+                    "description": {
+                      "en": "Vertex indices, three per triangle.",
+                      "de": "Eckpunktindizes, drei je Dreieck."
+                    }
+                  }
+                },
+                "color": {
+                  "title": "Grid3dColor",
+                  "type": "object",
+                  "additionalProperties": false,
+                  "required": [
+                    "r",
+                    "g",
+                    "b",
+                    "a"
+                  ],
+                  "properties": {
+                    "r": {
+                      "type": "integer",
+                      "minimum": 0,
+                      "maximum": 255,
+                      "x-semio-ui": {
+                        "widget": "slider",
+                        "role": "value",
+                        "label": {
+                          "en": "Red",
+                          "de": "Rot"
+                        },
+                        "step": 1,
+                        "precision": 0
+                      }
+                    },
+                    "g": {
+                      "type": "integer",
+                      "minimum": 0,
+                      "maximum": 255,
+                      "x-semio-ui": {
+                        "widget": "slider",
+                        "role": "value",
+                        "label": {
+                          "en": "Green",
+                          "de": "Grün"
+                        },
+                        "step": 1,
+                        "precision": 0
+                      }
+                    },
+                    "b": {
+                      "type": "integer",
+                      "minimum": 0,
+                      "maximum": 255,
+                      "x-semio-ui": {
+                        "widget": "slider",
+                        "role": "value",
+                        "label": {
+                          "en": "Blue",
+                          "de": "Blau"
+                        },
+                        "step": 1,
+                        "precision": 0
+                      }
+                    },
+                    "a": {
+                      "type": "integer",
+                      "minimum": 0,
+                      "maximum": 255,
+                      "x-semio-ui": {
+                        "widget": "slider",
+                        "role": "value",
+                        "label": {
+                          "en": "Alpha",
+                          "de": "Deckkraft"
+                        },
+                        "step": 1,
+                        "precision": 0
+                      }
+                    }
+                  },
+                  "x-semio-ui": {
+                    "role": "value",
+                    "label": {
+                      "en": "Color",
+                      "de": "Farbe"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "child"
+          ],
+          "properties": {
+            "kind": {
+              "const": "meshChild",
+              "x-semio-ui": {
+                "widget": "hidden",
+                "role": "discriminator",
+                "label": {
+                  "en": "Media Kind",
+                  "de": "Medienart"
+                }
+              }
+            },
+            "child": {
+              "$ref": "https://json.schemas.assets.semio-tech.com/os/store/child/schema.json",
+              "x-semio-ui": {
+                "widget": "hidden",
+                "role": "value",
+                "label": {
+                  "en": "Mesh Child",
+                  "de": "Netz-Kindartefakt"
+                },
+                "description": {
+                  "en": "Handle of the s.stdio.semio mesh child the tile renders.",
+                  "de": "Verweis auf das s.stdio.semio-Netz, das die Kachel darstellt."
+                }
+              }
+            }
+          }
+        }
+      ]
     }
   }
 }

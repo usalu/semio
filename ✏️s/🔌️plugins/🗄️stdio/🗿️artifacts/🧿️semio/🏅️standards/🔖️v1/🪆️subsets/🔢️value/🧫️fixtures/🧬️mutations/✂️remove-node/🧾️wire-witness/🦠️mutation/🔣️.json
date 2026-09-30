@@ -1,0 +1,6 @@
+{
+  "mutation": "removeNode",
+  "id": {
+    "value": "aec.building.structure.classic#objects"
+  }
+}

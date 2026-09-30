@@ -5,15 +5,16 @@
   "type": "object",
   "additionalProperties": false,
   "required": [
+    "mutation",
     "target"
   ],
   "properties": {
-    "target": {
-      "type": "string"
-    },
     "mutation": {
       "const": "insertLaunchAction",
       "description": "Aggregate discriminator spliced in by PdfEMutation; absent when the payload stands alone."
+    },
+    "target": {
+      "type": "string"
     }
   }
 }

@@ -8,13 +8,16 @@
 //! exists yet (unlike `document`/`raster`/`archive`/`tabular`/`audio`/`mesh`) and this module does
 //! not create one: the sibling 📰️xml 1.0 oracle is still an unfilled stub as of this wave, so there
 //! is no second subset to genuinely share an implementation with yet. Every helper below (the
-//! quick-xml-backed tree model, the hand-written `viewBox`/`transform` grammars, the JSON mutation
-//! spec codec) is owned by THIS module alone and must not be copied into or imported from the xml
-//! subset.
+//! quick-xml-backed tree model, the hand-written `viewBox`/`transform` grammars, the reader of each
+//! leaf's wire payload) is owned by THIS module alone and must not be copied into or imported from
+//! the xml subset.
 //!
-//! Two entry points: [`oracle_apply_mutation`] performs the FORWARD mutation (the `mutate-<kind>`
-//! scenarios), [`oracle_apply_mutation_inverse`] performs the forward mutation and then its computed
-//! inverse in sequence (the `inverse-<kind>` scenarios). [`project_svg_1_1`] is the independent
+//! A spec's `params` is the leaf wire payload (the leaf payload schema is the contract), read here
+//! from the schema's own shapes rather than from the subject's decoder. Three entry points:
+//! [`oracle_apply_mutation`] performs the FORWARD mutation (the `mutate-<kind>` scenarios),
+//! [`oracle_apply_mutation_inverse`] performs the forward mutation and then restores what it
+//! discarded (the `inverse-<kind>` scenarios), [`oracle_round_trip`] decodes and re-encodes (the
+//! identity scenario). [`project_svg_1_1`] is the independent
 //! reader both the oracle's and the subject's re-serialized bytes are read back through before
 //! comparison.
 //!
@@ -197,11 +200,8 @@ mod oracles {
         }
     }
 
-    fn non_empty_str(value: &Json, key: &str) -> Option<String> {
-        match value.get(key) {
-            Some(Json::String(s)) if !s.is_empty() => Some(s.clone()),
-            _ => None,
-        }
+    fn member(value: &Json, key: &str) -> Json {
+        value.get(key).cloned().unwrap_or(Json::Null)
     }
 
     fn json_to_path(value: &Json) -> Vec<usize> {
@@ -211,55 +211,103 @@ mod oracles {
         }
     }
 
-    fn path_to_json(path: &[usize]) -> Json {
-        Json::Array(path.iter().map(|&index| Json::Number(index as f64)).collect())
+    fn json_index(value: &Json, key: &str) -> usize {
+        json_number(&member(value, key)).unwrap_or(0.0).max(0.0) as usize
     }
 
-    /// 🔎️ `{"kind":"element"|"text"|"cdata"|"comment"|"pi", ...}` — the JSON grammar `insert-element`
-    /// params speak, and `qnode_to_json` (below) its exact reverse, used to carry the captured node
-    /// a `remove-element` inverse must reinsert.
-    fn json_to_qnode(value: &Json) -> QNode {
+    /// 🔎️ One `XmlNode` wire value (`{"kind":"element"|"text"|"cData"|"comment"|"processingInstruction", ...}`, the
+    /// leaf payload schema's own node union) read into this module's tree — written from the schema, not from the
+    /// subject's decoder.
+    fn qnode_from_wire(value: &Json) -> Result<QNode, String> {
         match value.str("kind").as_str() {
-            "text" => QNode::Text(value.str("text")),
-            "cdata" => QNode::CData(value.str("text")),
-            "comment" => QNode::Comment(value.str("text")),
-            "pi" => QNode::Pi { target: value.str("target"), data: value.str("data") },
-            _ => QNode::Element { name: value.str("name"), attrs: value.array("attrs").iter().map(|a| (a.str("name"), a.str("value"))).collect(), children: value.array("children").iter().map(json_to_qnode).collect() },
+            "element" => Ok(QNode::Element {
+                name: value.str("name"),
+                attrs: value.array("attrs").iter().map(|a| (a.str("name"), a.str("value"))).collect(),
+                children: value.array("children").iter().map(qnode_from_wire).collect::<Result<_, _>>()?,
+            }),
+            "text" => Ok(QNode::Text(value.str("text"))),
+            "cData" => Ok(QNode::CData(value.str("text"))),
+            "comment" => Ok(QNode::Comment(value.str("text"))),
+            "processingInstruction" => Ok(QNode::Pi { target: value.str("target"), data: value.str("data") }),
+            other => Err(format!("node wire: unrecognised kind {other:?}")),
         }
     }
 
-    fn qnode_to_json(node: &QNode) -> Json {
-        match node {
-            QNode::Text(text) => obj(vec![("kind", Json::String("text".into())), ("text", Json::String(text.clone()))]),
-            QNode::CData(text) => obj(vec![("kind", Json::String("cdata".into())), ("text", Json::String(text.clone()))]),
-            QNode::Comment(text) => obj(vec![("kind", Json::String("comment".into())), ("text", Json::String(text.clone()))]),
-            QNode::Pi { target, data } => obj(vec![("kind", Json::String("pi".into())), ("target", Json::String(target.clone())), ("data", Json::String(data.clone()))]),
-            QNode::Element { name, attrs, children } => obj(vec![
-                ("kind", Json::String("element".into())),
-                ("name", Json::String(name.clone())),
-                ("attrs", Json::Array(attrs.iter().map(|(key, value)| obj(vec![("name", Json::String(key.clone())), ("value", Json::String(value.clone()))])).collect())),
-                ("children", Json::Array(children.iter().map(qnode_to_json).collect())),
-            ]),
+    /// 🏳️ An `XmlDeclaration` wire value (`null` = no declaration). The delimiter facet `quote` is writer freedom this
+    /// module's quick-xml writer does not model, and the projection never compares it.
+    fn decl_from_wire(value: &Json) -> Option<QDecl> {
+        match value {
+            Json::Object(_) => Some(QDecl {
+                version: value.str("version"),
+                encoding: match value.get("encoding") {
+                    Some(Json::String(text)) => Some(text.clone()),
+                    _ => None,
+                },
+                standalone: match value.get("standalone") {
+                    Some(Json::Bool(flag)) => Some(*flag),
+                    _ => None,
+                },
+            }),
+            _ => None,
         }
     }
 
-    fn json_to_transform_op(value: &Json) -> Result<QTransformOp, String> {
-        let num = |key: &str| json_number(value.get(key).unwrap_or(&Json::Null)).unwrap_or(0.0);
+    /// 📜️ An `XmlDoctype` wire value (`null` = no doctype) composed into the raw declaration body quick-xml reads and
+    /// writes, following XML 1.0 §2.8 (`doctypedecl`) and §4.2 (`EntityDecl`), plus its prolog position.
+    fn doctype_from_wire(value: &Json) -> Result<Option<(String, usize)>, String> {
+        if !matches!(value, Json::Object(_)) {
+            return Ok(None);
+        }
+        let mut raw = value.str("name");
+        match value.get("externalId") {
+            Some(id @ Json::Object(_)) => match id.str("kind").as_str() {
+                "system" => raw.push_str(&format!(" SYSTEM \"{}\"", id.str("systemId"))),
+                "public" => raw.push_str(&format!(" PUBLIC \"{}\" \"{}\"", id.str("publicId"), id.str("systemId"))),
+                other => return Err(format!("doctype wire: unrecognised external identifier kind {other:?}")),
+            },
+            _ => {}
+        }
+        let declarations = value.array("declarations");
+        if !declarations.is_empty() {
+            raw.push_str(" [");
+            for declaration in &declarations {
+                if declaration.str("kind") != "entity" {
+                    return Err(format!("doctype wire: unrecognised declaration kind {:?}", declaration.str("kind")));
+                }
+                let parameter = if matches!(declaration.get("parameter"), Some(Json::Bool(true))) { "% " } else { "" };
+                raw.push_str(&format!("<!ENTITY {parameter}{} \"{}\">", declaration.str("name"), declaration.str("value")));
+            }
+            raw.push(']');
+        }
+        Ok(Some((raw, json_index(value, "prologPosition"))))
+    }
+
+    /// 🖼️ A `ViewBox` wire value (`{"minX","minY","width","height"}`, `null` = remove the attribute).
+    fn view_box_from_wire(value: &Json) -> Option<[f64; 4]> {
+        match value {
+            Json::Object(_) => Some(["minX", "minY", "width", "height"].map(|key| json_number(&member(value, key)).unwrap_or(0.0))),
+            _ => None,
+        }
+    }
+
+    /// 🔄 One `TransformOp` wire value (tag `op`; `rotate`'s optional `center` is the `[cx, cy]` pair).
+    fn transform_op_from_wire(value: &Json) -> Result<QTransformOp, String> {
+        let num = |key: &str| json_number(&member(value, key)).unwrap_or(0.0);
         let opt_num = |key: &str| value.get(key).and_then(json_number);
-        match value.str("kind").as_str() {
+        match value.str("op").as_str() {
             "matrix" => Ok(QTransformOp::Matrix { a: num("a"), b: num("b"), c: num("c"), d: num("d"), e: num("e"), f: num("f") }),
             "translate" => Ok(QTransformOp::Translate { x: num("x"), y: opt_num("y") }),
             "scale" => Ok(QTransformOp::Scale { x: num("x"), y: opt_num("y") }),
             "rotate" => Ok(QTransformOp::Rotate {
                 angle: num("angle"),
-                center: match (opt_num("cx"), opt_num("cy")) {
-                    (Some(cx), Some(cy)) => Some((cx, cy)),
+                center: match value.get("center") {
+                    Some(Json::Array(pair)) if pair.len() == 2 => Some((json_number(&pair[0]).unwrap_or(0.0), json_number(&pair[1]).unwrap_or(0.0))),
                     _ => None,
                 },
             }),
             "skewX" => Ok(QTransformOp::SkewX { angle: num("angle") }),
             "skewY" => Ok(QTransformOp::SkewY { angle: num("angle") }),
-            other => Err(format!("transform op: unrecognised kind {other:?}")),
+            other => Err(format!("transform wire: unrecognised op {other:?}")),
         }
     }
 
@@ -449,43 +497,24 @@ mod oracles {
     //#endregion 🔖️Write
 
     //#region 🔖️Apply
-    /// 🦠️ Mutates `doc` in place for one declared kind. An unrecognised kind is an error, never a
-    /// silent no-op.
+    /// 🦠️ Mutates `doc` in place for one declared kind, reading `params` as that leaf's wire payload. An unrecognised
+    /// kind is an error, never a silent no-op.
     fn apply_kind(doc: &mut QDoc, kind: &str, params: &Json) -> Result<(), String> {
         match kind {
-            "no-mutation" => Ok(()),
-            "set-snapshot" => {
-                let root = doc.root.as_mut().ok_or("set-snapshot: document has no root element")?;
-                if let Some(id) = non_empty_str(params, "rootId") {
-                    q_set_attr(root, "id", Some(id));
-                }
-                if let Some(width) = params.get("viewBoxWidth").and_then(json_number) {
-                    let mut vb = q_element_attr(root, "viewBox").map(parse_view_box).transpose()?.unwrap_or([0.0, 0.0, 0.0, 0.0]);
-                    vb[2] = width;
-                    q_set_attr(root, "viewBox", Some(format_view_box(&vb)));
-                }
-                Ok(())
-            }
             "set-declaration" => {
-                doc.declaration = non_empty_str(params, "version").map(|version| QDecl {
-                    version,
-                    encoding: non_empty_str(params, "encoding"),
-                    standalone: params.get("standalone").and_then(|v| match v {
-                        Json::Bool(b) => Some(*b),
-                        _ => None,
-                    }),
-                });
+                doc.declaration = decl_from_wire(&member(params, "declaration"));
                 Ok(())
             }
             "set-doctype" => {
-                doc.doctype = non_empty_str(params, "doctype");
-                doc.doctype_prolog_position = params.get("prologPosition").and_then(json_number).unwrap_or(0.0).max(0.0) as usize;
+                let (raw, position) = doctype_from_wire(&member(params, "doctype"))?.map_or((None, 0), |(raw, position)| (Some(raw), position));
+                doc.doctype = raw;
+                doc.doctype_prolog_position = position;
                 Ok(())
             }
             "insert-element" => {
-                let parent = json_to_path(params.get("parent").unwrap_or(&Json::Null));
-                let index = json_number(params.get("index").unwrap_or(&Json::Null)).unwrap_or(0.0).max(0.0) as usize;
-                let node = json_to_qnode(params.get("node").unwrap_or(&Json::Null));
+                let parent = json_to_path(&member(params, "parent"));
+                let index = json_index(params, "index");
+                let node = qnode_from_wire(&member(params, "node"))?;
                 match q_node_at_mut(doc, &parent)? {
                     QNode::Element { children, .. } => {
                         let clamped = index.min(children.len());
@@ -496,8 +525,8 @@ mod oracles {
                 }
             }
             "remove-element" => {
-                let parent = json_to_path(params.get("parent").unwrap_or(&Json::Null));
-                let index = json_number(params.get("index").unwrap_or(&Json::Null)).unwrap_or(0.0).max(0.0) as usize;
+                let parent = json_to_path(&member(params, "parent"));
+                let index = json_index(params, "index");
                 match q_node_at_mut(doc, &parent)? {
                     QNode::Element { children, .. } if index < children.len() => {
                         children.remove(index);
@@ -507,58 +536,39 @@ mod oracles {
                     _ => Err("remove-element: parent is not an element".into()),
                 }
             }
-            "set-element-name" => {
-                let path = json_to_path(params.get("path").unwrap_or(&Json::Null));
-                match q_node_at_mut(doc, &path)? {
-                    QNode::Element { name, .. } => {
-                        *name = params.str("name");
-                        Ok(())
-                    }
-                    _ => Err("set-element-name: target is not an element".into()),
+            "set-element-name" => match q_node_at_mut(doc, &json_to_path(&member(params, "path")))? {
+                QNode::Element { name, .. } => {
+                    *name = params.str("name");
+                    Ok(())
                 }
-            }
+                _ => Err("set-element-name: target is not an element".into()),
+            },
             "set-attribute" => {
-                let path = json_to_path(params.get("path").unwrap_or(&Json::Null));
-                let name = params.str("name");
                 let value = match params.get("value") {
                     Some(Json::String(v)) => Some(v.clone()),
                     _ => None,
                 };
-                q_set_attr(q_node_at_mut(doc, &path)?, &name, value);
+                q_set_attr(q_node_at_mut(doc, &json_to_path(&member(params, "path")))?, &params.str("name"), value);
                 Ok(())
             }
-            "set-text" => {
-                let path = json_to_path(params.get("path").unwrap_or(&Json::Null));
-                match q_node_at_mut(doc, &path)? {
-                    QNode::Text(text) => {
-                        *text = params.str("text");
-                        Ok(())
-                    }
-                    _ => Err("set-text: target is not a text node".into()),
+            "set-text" => match q_node_at_mut(doc, &json_to_path(&member(params, "path")))? {
+                QNode::Text(text) => {
+                    *text = params.str("text");
+                    Ok(())
                 }
-            }
+                _ => Err("set-text: target is not a text node".into()),
+            },
             "set-view-box" => {
-                let path = json_to_path(params.get("path").unwrap_or(&Json::Null));
-                let node = q_node_at_mut(doc, &path)?;
-                match params.get("viewBox") {
-                    Some(Json::Array(items)) if items.len() == 4 => {
-                        let nums: Vec<f64> = items.iter().map(|item| json_number(item).unwrap_or(0.0)).collect();
-                        q_set_attr(node, "viewBox", Some(format_view_box(&[nums[0], nums[1], nums[2], nums[3]])));
-                    }
-                    _ => q_set_attr(node, "viewBox", None),
-                }
+                let view_box = view_box_from_wire(&member(params, "viewBox")).map(|value| format_view_box(&value));
+                q_set_attr(q_node_at_mut(doc, &json_to_path(&member(params, "path")))?, "viewBox", view_box);
                 Ok(())
             }
             "set-transform" => {
-                let path = json_to_path(params.get("path").unwrap_or(&Json::Null));
-                let node = q_node_at_mut(doc, &path)?;
-                match params.get("transform") {
-                    Some(Json::Array(items)) => {
-                        let ops: Vec<QTransformOp> = items.iter().map(json_to_transform_op).collect::<Result<_, String>>()?;
-                        q_set_attr(node, "transform", Some(format_transform_list(&ops)));
-                    }
-                    _ => q_set_attr(node, "transform", None),
-                }
+                let transform = match member(params, "transform") {
+                    Json::Array(items) => Some(format_transform_list(&items.iter().map(transform_op_from_wire).collect::<Result<Vec<_>, String>>()?)),
+                    _ => None,
+                };
+                q_set_attr(q_node_at_mut(doc, &json_to_path(&member(params, "path")))?, "transform", transform);
                 Ok(())
             }
             other => Err(format!("mutation kind {other:?} has no oracle implementation")),
@@ -567,75 +577,69 @@ mod oracles {
     //#endregion 🔖️Apply
 
     //#region 🔖️Inverse
-    /// ↩️ Reads `doc` (the CURRENT, pre-mutation state) to compute the `{kind, params}` spec that
-    /// undoes `{kind, params}` — same shape as `apply_kind`'s own dispatch, one arm per kind.
-    fn inverse_spec(doc: &QDoc, kind: &str, params: &Json) -> Json {
-        let spec = |k: &str, p: Json| obj(vec![("kind", Json::String(k.to_string())), ("params", p)]);
+    /// ↩️ Undoes `{kind, params}` on `doc` (the tree the forward step left behind) by restoring exactly what the forward
+    /// step discarded from `base` (the tree before it) — this module's own algebra, one arm per kind, never the
+    /// subject's `Mutation::inverse`.
+    fn invert(base: &QDoc, doc: &mut QDoc, kind: &str, params: &Json) -> Result<(), String> {
+        let prior_attr = |path: &[usize], name: &str| q_node_at(base, path).ok().and_then(|node| q_element_attr(node, name)).map(str::to_string);
         match kind {
-            "set-snapshot" => {
-                let root = doc.root.as_ref();
-                let root_id = root.and_then(|r| q_element_attr(r, "id")).map(|s| Json::String(s.to_string())).unwrap_or(Json::Null);
-                let width = root.and_then(|r| q_element_attr(r, "viewBox")).and_then(|s| parse_view_box(s).ok()).map(|v| Json::Number(v[2])).unwrap_or(Json::Null);
-                spec("set-snapshot", obj(vec![("rootId", root_id), ("viewBoxWidth", width)]))
+            "set-declaration" => doc.declaration = base.declaration.clone(),
+            "set-doctype" => {
+                doc.doctype = base.doctype.clone();
+                doc.doctype_prolog_position = base.doctype_prolog_position;
             }
-            "set-declaration" => match &doc.declaration {
-                Some(decl) => spec(
-                    "set-declaration",
-                    obj(vec![("version", Json::String(decl.version.clone())), ("encoding", decl.encoding.clone().map(Json::String).unwrap_or(Json::Null)), ("standalone", decl.standalone.map(Json::Bool).unwrap_or(Json::Null))]),
-                ),
-                None => spec("set-declaration", obj(vec![])),
+            "insert-element" => match q_node_at_mut(doc, &json_to_path(&member(params, "parent")))? {
+                QNode::Element { children, .. } => {
+                    let index = json_index(params, "index").min(children.len().saturating_sub(1));
+                    children.remove(index);
+                }
+                _ => return Err("inverse insert-element: parent is not an element".into()),
             },
-            "set-doctype" => spec("set-doctype", obj(vec![("doctype", doc.doctype.clone().map(Json::String).unwrap_or(Json::Null)), ("prologPosition", Json::Number(doc.doctype_prolog_position as f64))])),
-            "insert-element" => {
-                let parent = json_to_path(params.get("parent").unwrap_or(&Json::Null));
-                let index = json_number(params.get("index").unwrap_or(&Json::Null)).unwrap_or(0.0);
-                spec("remove-element", obj(vec![("parent", path_to_json(&parent)), ("index", Json::Number(index))]))
-            }
             "remove-element" => {
-                let parent = json_to_path(params.get("parent").unwrap_or(&Json::Null));
-                let index = json_number(params.get("index").unwrap_or(&Json::Null)).unwrap_or(0.0).max(0.0) as usize;
-                let captured = q_node_at(doc, &parent).ok().and_then(|node| match node {
-                    QNode::Element { children, .. } => children.get(index),
-                    _ => None,
-                });
-                match captured {
-                    Some(node) => spec("insert-element", obj(vec![("parent", path_to_json(&parent)), ("index", Json::Number(index as f64)), ("node", qnode_to_json(node))])),
-                    None => spec("no-mutation", obj(vec![])),
+                let parent = json_to_path(&member(params, "parent"));
+                let index = json_index(params, "index");
+                let captured = match q_node_at(base, &parent)? {
+                    QNode::Element { children, .. } => children.get(index).cloned().ok_or_else(|| format!("inverse remove-element: the original document has no child {index} under {parent:?}"))?,
+                    _ => return Err("inverse remove-element: parent is not an element".into()),
+                };
+                match q_node_at_mut(doc, &parent)? {
+                    QNode::Element { children, .. } => children.insert(index.min(children.len()), captured),
+                    _ => return Err("inverse remove-element: parent is not an element".into()),
                 }
             }
             "set-element-name" => {
-                let path = json_to_path(params.get("path").unwrap_or(&Json::Null));
-                match q_node_at(doc, &path) {
-                    Ok(QNode::Element { name, .. }) => spec("set-element-name", obj(vec![("path", path_to_json(&path)), ("name", Json::String(name.clone()))])),
-                    _ => spec("no-mutation", obj(vec![])),
+                let path = json_to_path(&member(params, "path"));
+                let prior = match q_node_at(base, &path)? {
+                    QNode::Element { name, .. } => name.clone(),
+                    _ => return Err("inverse set-element-name: the original target is not an element".into()),
+                };
+                if let QNode::Element { name, .. } = q_node_at_mut(doc, &path)? {
+                    *name = prior;
                 }
             }
             "set-attribute" => {
-                let path = json_to_path(params.get("path").unwrap_or(&Json::Null));
+                let path = json_to_path(&member(params, "path"));
                 let name = params.str("name");
-                let prior = q_node_at(doc, &path).ok().and_then(|node| q_element_attr(node, &name)).map(|s| Json::String(s.to_string())).unwrap_or(Json::Null);
-                spec("set-attribute", obj(vec![("path", path_to_json(&path)), ("name", Json::String(name)), ("value", prior)]))
+                q_set_attr(q_node_at_mut(doc, &path)?, &name, prior_attr(&path, &name));
             }
             "set-text" => {
-                let path = json_to_path(params.get("path").unwrap_or(&Json::Null));
-                let prior = match q_node_at(doc, &path) {
-                    Ok(QNode::Text(text)) => text.clone(),
-                    _ => String::new(),
+                let path = json_to_path(&member(params, "path"));
+                let prior = match q_node_at(base, &path)? {
+                    QNode::Text(text) => text.clone(),
+                    _ => return Err("inverse set-text: the original target is not a text node".into()),
                 };
-                spec("set-text", obj(vec![("path", path_to_json(&path)), ("text", Json::String(prior))]))
+                if let QNode::Text(text) = q_node_at_mut(doc, &path)? {
+                    *text = prior;
+                }
             }
-            "set-view-box" => {
-                let path = json_to_path(params.get("path").unwrap_or(&Json::Null));
-                let prior = q_node_at(doc, &path).ok().and_then(|node| q_element_attr(node, "viewBox")).and_then(|s| parse_view_box(s).ok());
-                spec("set-view-box", obj(vec![("path", path_to_json(&path)), ("viewBox", prior.map(|v| Json::Array(v.iter().map(|x| Json::Number(*x)).collect())).unwrap_or(Json::Null))]))
+            "set-view-box" | "set-transform" => {
+                let path = json_to_path(&member(params, "path"));
+                let name = if kind == "set-view-box" { "viewBox" } else { "transform" };
+                q_set_attr(q_node_at_mut(doc, &path)?, name, prior_attr(&path, name));
             }
-            "set-transform" => {
-                let path = json_to_path(params.get("path").unwrap_or(&Json::Null));
-                let prior = q_node_at(doc, &path).ok().and_then(|node| q_element_attr(node, "transform")).and_then(|s| parse_transform_list(s).ok());
-                spec("set-transform", obj(vec![("path", path_to_json(&path)), ("transform", prior.map(|ops| Json::Array(ops.iter().map(transform_op_to_json).collect())).unwrap_or(Json::Null))]))
-            }
-            other => spec(other, params.clone()),
+            other => return Err(format!("mutation kind {other:?} has no oracle inverse implementation")),
         }
+        Ok(())
     }
     //#endregion 🔖️Inverse
 
@@ -668,11 +672,15 @@ mod oracles {
             return Err("mutation spec carries no `kind`".to_string());
         }
         let base = parse_svg(input)?;
-        let inverse = inverse_spec(&base, kind, params);
-        let mut doc = base;
+        let mut doc = base.clone();
         apply_kind(&mut doc, kind, params)?;
-        apply_kind(&mut doc, &inverse.str("kind"), inverse.get("params").unwrap_or(&Json::Null))?;
+        invert(&base, &mut doc, kind, params)?;
         write_svg(&doc)
+    }
+
+    /// 🔁️ Decode then re-encode through this module's own tree alone — the oracle half of the identity law.
+    pub fn round_trip(input: &[u8]) -> Result<Vec<u8>, String> {
+        write_svg(&parse_svg(input)?)
     }
 
     /// 👁️ This subset's own semantic projection — declaration/doctype presence and fields, the
@@ -752,6 +760,12 @@ pub fn oracle_apply_mutation_inverse(input: &[u8], spec: &Json) -> Result<Vec<u8
     oracles::apply_mutation_inverse(input, &kind, &params)
 }
 
+/// 🔁️ Decodes and re-encodes one real artifact through the reference implementation alone.
+#[cfg(feature = "oracles")]
+pub fn oracle_round_trip(input: &[u8]) -> Result<Vec<u8>, String> {
+    oracles::round_trip(input)
+}
+
 /// 👁️ This subset's own semantic projection. @see [`oracles::project_svg_1_1`].
 #[cfg(feature = "oracles")]
 pub fn project_svg_1_1(bytes: &[u8]) -> Result<Json, String> {
@@ -766,6 +780,11 @@ pub fn oracle_apply_mutation(_input: &[u8], _spec: &Json) -> Result<Vec<u8>, Str
 
 #[cfg(not(feature = "oracles"))]
 pub fn oracle_apply_mutation_inverse(_input: &[u8], _spec: &Json) -> Result<Vec<u8>, String> {
+    Err("the `oracles` feature is disabled — this host was not built with the registered reference implementations".to_string())
+}
+
+#[cfg(not(feature = "oracles"))]
+pub fn oracle_round_trip(_input: &[u8]) -> Result<Vec<u8>, String> {
     Err("the `oracles` feature is disabled — this host was not built with the registered reference implementations".to_string())
 }
 

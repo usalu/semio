@@ -1232,6 +1232,7 @@ async fn sample_envelope(id: &str, document: &WireArtifactId) -> MutationEnvelop
         diff: protocol::ArtifactDiff { schema: protocol::SchemaId(db::document::DB_PATHMAP_SCHEMA.to_string()), payload: db::document::encode_pathmap_json(&serde_json::json!({ "value": id })).await.unwrap() },
         inverse: protocol::InverseMutation { schema: protocol::SchemaId(db::document::DB_PATHMAP_SCHEMA.to_string()), payload: db::document::encode_pathmap_json(&serde_json::json!({})).await.unwrap() },
         timestamp: protocol::HybridLogicalTimestamp::new(0, 0),
+        transaction: None,
     }
 }
 
@@ -1307,7 +1308,7 @@ async fn check_in_map_edits(fixture: &CheckInFixture, ids: &[&str]) -> Vec<Mutat
     for (index, id) in ids.iter().enumerate() {
         let point = directory::DslValue::object([("lon".into(), directory::DslValue::float(7.0 + index as f64)), ("lat".into(), directory::DslValue::float(47.0))]);
         let mutation = GisMapMutation::CreatePosition(CreatePosition { index, item: MapFeature { id: format!("check-in-{id}"), data: point } });
-        if let Err(error) = store.dispatch(ArtifactCommand::Apply { mutations: vec![mutation], description: None }).await {
+        if let Err(error) = store.dispatch(ArtifactCommand::Apply { mutations: vec![mutation], description: None, transaction: None }).await {
             applied = Err(error);
             break;
         }
@@ -1492,6 +1493,7 @@ async fn check_in_fixture_gis_ledger_edit(schema: &str) -> Vec<MutationEnvelope>
         .dispatch(ArtifactCommand::Apply {
             mutations: vec![GisMapMutation::CreatePosition(CreatePosition { index: 0, item: target.positions[0].clone() }), GisMapMutation::CreateRoute(CreateRoute { index: 0, item: target.routes[0].clone() })],
             description: None,
+            transaction: None,
         })
         .await;
     let events = store.event_log();
@@ -2398,12 +2400,12 @@ async fn inference_reconciliation_route_is_existing_only_reader_bound_and_body_b
     assert_eq!(accepted.status, 200, "the fixture Author reaches actual acceptance");
     let receipt: serde_json::Value = serde_json::from_slice(&accepted.body).expect("closed job receipt");
     tokio::time::timeout(std::time::Duration::from_secs(5), checkpoint.entered()).await.expect("actual codec pauses after acceptance");
-    let reconcile = |request_id: &str| serde_json::json!({ "schema": "semio.hub.inference-job-reconcile/v1", "version": 1, "requestId": request_id }).to_string();
+    let reconcile = |request_id: &str| serde_json::json!({ "schema": "semio.framework.job-reconcile/v1", "version": 1, "requestId": request_id }).to_string();
 
     let found = raw_http_request(addr, "POST", &inference_route(&space_id, &document_id, "/reconcile"), &headers, reconcile(request_id).as_bytes()).await;
     assert_eq!(found.status, 200, "the original live reader may reconcile");
     let found: serde_json::Value = serde_json::from_slice(&found.body).expect("closed reconciliation result");
-    assert_eq!(found["schema"], "semio.hub.inference-job-reconcile-result/v1");
+    assert_eq!(found["schema"], "semio.framework.job-reconcile-result/v1");
     assert_eq!(found["requestId"], request_id);
     assert_eq!(found["found"], true);
     assert_eq!(found["job"]["receipt"]["jobId"], receipt["jobId"]);
@@ -2414,7 +2416,7 @@ async fn inference_reconciliation_route_is_existing_only_reader_bound_and_body_b
     assert_eq!(missing.status, 200, "an absent exact request is observable without creating work");
     assert_eq!(
         serde_json::from_slice::<serde_json::Value>(&missing.body).expect("missing result"),
-        serde_json::json!({ "schema": "semio.hub.inference-job-reconcile-result/v1", "version": 1, "requestId": "16".repeat(16), "found": false, "job": null })
+        serde_json::json!({ "schema": "semio.framework.job-reconcile-result/v1", "version": 1, "requestId": "16".repeat(16), "found": false, "job": null })
     );
     let spectator_bearer = format!("Bearer {}", spectator.token);
     let spectator_headers = [("Authorization", spectator_bearer.as_str()), ("Content-Type", "application/json")];
@@ -2422,9 +2424,9 @@ async fn inference_reconciliation_route_is_existing_only_reader_bound_and_body_b
     assert_eq!(denied.status, 403, "a Spectator cannot reconcile even an absent private prefix");
     let anonymous = raw_http_request(addr, "POST", &inference_route(&space_id, &document_id, "/reconcile"), &[("Content-Type", "application/json")], reconcile(request_id).as_bytes()).await;
     assert_eq!(anonymous.status, 403, "anonymous reconciliation is denied");
-    let malformed = raw_http_request(addr, "POST", &inference_route(&space_id, &document_id, "/reconcile"), &headers, br#"{"schema":"semio.hub.inference-job-reconcile/v1"}"#).await;
+    let malformed = raw_http_request(addr, "POST", &inference_route(&space_id, &document_id, "/reconcile"), &headers, br#"{"schema":"semio.framework.job-reconcile/v1"}"#).await;
     assert_eq!(malformed.status, 400, "a noncanonical request is rejected");
-    let oversized = vec![b' '; semio_hub::inference::schema::RECONCILE_REQUEST_MAX_BYTES + 1];
+    let oversized = vec![b' '; semio_framework_job::reconcile::JOB_RECONCILE_REQUEST_MAX_BYTES + 1];
     let oversized = raw_http_request(addr, "POST", &inference_route(&space_id, &document_id, "/reconcile"), &headers, &oversized).await;
     assert_eq!(oversized.status, 413, "the route enforces the schema-owned byte bound before decoding");
     let other_space = create_space_for_test(&bound.state, &author.user_id, "Other Reconciliation Space", os_directory::DirectorySpaceKind::Studio, DirectorySpaceVisibility::Private).await;
@@ -2709,8 +2711,8 @@ fn canonical_pair_route_rejects_non_path_and_ambiguous_headers_before_work() {
     headers.insert(axum::http::header::AUTHORIZATION, format!("Bearer {session}").parse().expect("authorization"));
     headers.append(axum::http::header::AUTHORIZATION, "Bearer duplicate".parse().expect("duplicate"));
     assert_eq!(canonical_pair_request_admission(&"/spaces/s/documents/d/active-checkpoint/pair".parse().expect("URI"), &headers), Err(StatusCode::UNAUTHORIZED));
-    assert!(!hub_access_permits(&AuthOutcome::Denied.access_roles(), HubAccessActionV1::DocumentRead, Some("studio")));
-    assert!(hub_access_permits(&AuthOutcome::ShareToken.access_roles(), HubAccessActionV1::DocumentRead, Some("studio")));
+    assert!(!directory_access_permits(&AuthOutcome::Denied.access_roles(), DirectoryAccessActionV1::DocumentRead, Some("studio")));
+    assert!(directory_access_permits(&AuthOutcome::ShareToken.access_roles(), DirectoryAccessActionV1::DocumentRead, Some("studio")));
 }
 
 #[tokio::test]
@@ -4245,6 +4247,87 @@ fn a_foreign_history_transition_is_refused_at_the_socket_and_never_relayed() {
     });
 }
 
+/// ✏️ LAW (ticket 26/09/30 NON-DESTRUCTIVE-HISTORY-EDITING, `📋️design.md` §9.1): a `Supersede` has no ownership rule at the
+/// socket — B's supersession of A's operation commits and is relayed to A — and a supersession the hub refuses for good (it
+/// names an operation the log does not hold) has no inverse its author could roll back: the refusal is the typed
+/// `history.unknown-target`, commits nothing, and the hub makes its author rebuild from the document's canonical checkpoint
+/// (`RebootstrapRequired` naming the active checkpoint, then `1013 rebootstrap-required`).
+#[test]
+fn a_supersession_is_admitted_whatever_its_author_and_its_refusal_rebootstraps_the_author() {
+    run_socket_test(|| async {
+        let state = test_state().await;
+        let author_a = issue_test_session(&state, "supersede-a@example.com").await;
+        let author_b = issue_test_session(&state, "supersede-b@example.com").await;
+        upsert_member_for_test(&state, STUDIO, "supersede-a@example.com", DirectorySpaceRole::Author).await;
+        upsert_member_for_test(&state, STUDIO, "supersede-b@example.com", DirectorySpaceRole::Author).await;
+        let document_id = artifact_document_id_for_test("supersede-document");
+        let genesis = seed_genesis_for_document_for_test(&state, &author_a.token, STUDIO, &document_id, "supersede-document").await;
+        let document = WireArtifactId(document_id.clone());
+        let url = {
+            let addr = spawn_server(state.clone()).await;
+            format!("ws://{addr}/scopes/{STUDIO}%2F{document_id}/document/ws")
+        };
+        let open = |token: String| {
+            let (url, state, document_id) = (url.clone(), state.clone(), document_id.clone());
+            async move {
+                let receipt = issue_document_socket_grant_fixture(Path((STUDIO.to_string(), document_id)), bearer_headers(&token), State(state)).await.expect("document socket grant").0;
+                let (mut socket, _) = connect_async(document_socket_request(&url, &token)).await.expect("document socket");
+                socket.send(client_binary(&socket_hello(), Lane::Command).await).await.expect("hello");
+                while !matches!(next_command_frame(&mut socket, "until session").await, ServerFrame::Session { .. }) {}
+                (receipt.actor_id, socket)
+            }
+        };
+        let applied = |frame: &ServerFrame, batch: u64| match frame {
+            ServerFrame::Ack { batch_id, stages, .. } if *batch_id == batch => match stages.last() {
+                Some(AckStage::Applied { outcome }) => Some(outcome.as_ref().clone()),
+                _ => None,
+            },
+            _ => None,
+        };
+        let (actor_a, mut a) = open(author_a.token.clone()).await;
+        let mut edit = sample_envelope("supersede-a-edit", &document).await;
+        edit.actor = ActorId(actor_a.clone());
+        a.send(client_binary(&ClientFrame::Commands { batch_id: 1, envelopes: vec![edit.clone()] }, Lane::Command).await).await.expect("a edits");
+        assert!(matches!(applied(&next_command_frame(&mut a, "a edit ack").await, 1), Some(ApplyOutcome::Accepted)));
+        assert!(matches!(next_command_frame(&mut a, "a edit relay").await, ServerFrame::Commands { .. }));
+        let (actor_b, mut b) = open(author_b.token.clone()).await;
+        assert_ne!(actor_a, actor_b, "two sessions are two actors");
+        let supersede = |targets: &[&protocol::MutationId], at: u64| {
+            let transition = protocol::TransitionSupersede { scope: None, inputs: targets.iter().map(|target| protocol::SupersededInput { target: (*target).clone(), replacement: protocol::InputReplacement::Withdrawn }).collect() };
+            let dependencies = transition.targets();
+            let mut envelope = protocol::history_transition_envelope(&protocol::HistoryTransition::Supersede(transition), &document, &ActorId(actor_b.clone()), dependencies, protocol::HybridLogicalTimestamp::new(at, 0));
+            envelope.observed = Some(edit.mutation_id.clone());
+            envelope.target = vec!["value".into()];
+            envelope
+        };
+        let frontier = || async { state.db.document(&db_artifact_id(&DocumentScope::new(STUDIO, document_id.as_str()))).await.expect("document handle").frontier().await.expect("frontier") };
+
+        let foreign = supersede(&[&edit.mutation_id], 2);
+        b.send(client_binary(&ClientFrame::Commands { batch_id: 2, envelopes: vec![foreign.clone()] }, Lane::Command).await).await.expect("b supersedes a's edit");
+        assert!(matches!(applied(&next_command_frame(&mut b, "foreign supersede ack").await, 2), Some(ApplyOutcome::Accepted)), "a supersession of another author's operation is admitted");
+        assert!(matches!(next_command_frame(&mut b, "foreign supersede own relay").await, ServerFrame::Commands { .. }));
+        assert!(matches!(next_command_frame(&mut a, "foreign supersede relay").await, ServerFrame::Commands { envelopes, .. } if envelopes[0].mutation_id == foreign.mutation_id), "and relayed to the superseded operation's author");
+
+        let before = frontier().await;
+        let ghost = protocol::MutationId("supersede-ghost".into());
+        b.send(client_binary(&ClientFrame::Commands { batch_id: 3, envelopes: vec![supersede(&[&ghost], 3)] }, Lane::Command).await).await.expect("b supersedes a ghost");
+        match applied(&next_command_frame(&mut b, "ghost supersede ack").await, 3) {
+            Some(ApplyOutcome::Rejected { messages, .. }) => {
+                let messages: serde_json::Value = serde_json::from_slice(&messages).expect("rejection messages are one JSON MutationMessage array");
+                assert!(messages.as_array().expect("message array").iter().any(|message| message["code"] == "history.unknown-target"), "{messages}");
+            }
+            other => panic!("a supersession of an operation the log does not hold is refused: {other:?}"),
+        }
+        match next_command_frame(&mut b, "irreversible refusal rebootstrap").await {
+            ServerFrame::RebootstrapRequired { control } => assert_eq!((control.document_id.as_str(), control.checkpoint_id), (document_id.as_str(), genesis.checkpoint_id.0), "the author rebuilds from the active checkpoint"),
+            other => panic!("an irreversible refusal is followed by the rebootstrap control: {other:?}"),
+        }
+        assert_eq!(next_close_code(&mut b, false).await, 1013, "then the socket closes rebootstrap-required");
+        assert_eq!(frontier().await.commit_seq, before.commit_seq, "a refused supersession commits nothing");
+        a.close(None).await.expect("close a");
+    });
+}
+
 #[test]
 fn socket_grant_document_route_is_exact_replay_safe_actor_bound_and_revoke_live() {
     run_socket_test(|| async {
@@ -5103,7 +5186,7 @@ fn directory_global_message_bindings_decode_wire_without_indexing_unrelated_memb
 /// removal — and each frame borrows no space authority (it is addressed to its reader alone).
 #[test]
 fn a_membership_event_naming_the_reader_owes_it_exactly_the_fixture_access_change() {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🔑️directory-access-changed-v1/🔣️.json")).expect("access-changed fixture");
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../🧰️framework/🛍️products/💻️os/🔨️modules/📇️directory/🧫️fixtures/🔑️access-changed-v1/🔣️.json")).expect("access-changed fixture");
     let reader = fixture["readerUserId"].as_str().expect("fixture reader");
     for row in fixture["cases"].as_array().expect("fixture cases") {
         let message: DirectoryStreamMessage = directory::os_pack::json::from_json_str(&row["message"].to_string()).unwrap_or_else(|error| panic!("fixture message {}: {error:?}", row["id"]));
@@ -7948,6 +8031,7 @@ fn a_vigilant_hub_refuses_a_same_target_write_authored_without_observing_the_oth
                 diff: protocol::ArtifactDiff { schema: protocol::SchemaId("test.v1".into()), payload: id.as_bytes().to_vec() },
                 inverse: protocol::InverseMutation { schema: protocol::SchemaId("test.v1".into()), payload: Vec::new() },
                 timestamp: protocol::HybridLogicalTimestamp::new(0, 0),
+                transaction: None,
             };
             let mut outcomes = Vec::new();
             for (author, batch, envelope) in [(0usize, 1u64, write("base", &alice_actor, None)), (1, 1, write("first", &bob_actor, Some("base"))), (0, 2, write("second", &alice_actor, row["secondObserves"].as_str()))] {

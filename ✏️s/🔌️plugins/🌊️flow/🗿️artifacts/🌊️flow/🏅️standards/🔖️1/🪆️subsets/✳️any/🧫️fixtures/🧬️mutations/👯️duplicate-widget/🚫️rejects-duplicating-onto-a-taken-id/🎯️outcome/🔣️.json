@@ -1,5 +1,7 @@
 {
   "status": "rejected",
-  "code": "mutation.invariant",
-  "path": []
+  "code": "mutation.duplicate-id",
+  "path": [
+    "note-beta"
+  ]
 }

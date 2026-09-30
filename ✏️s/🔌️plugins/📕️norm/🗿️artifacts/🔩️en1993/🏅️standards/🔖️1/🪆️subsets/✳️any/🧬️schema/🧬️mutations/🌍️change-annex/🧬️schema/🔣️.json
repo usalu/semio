@@ -9,11 +9,27 @@
   ],
   "properties": {
     "newAnnex": {
-      "type": "string",
-      "enum": [
-        "En",
-        "De"
-      ]
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1993/snapshot.json#/$defs/AnnexChoice",
+      "x-semio-ui": {
+        "widget": "segmented",
+        "role": "value",
+        "label": {
+          "en": "National annex",
+          "de": "Nationaler Anhang"
+        },
+        "options": {
+          "En": {
+            "en": "Recommended CEN values (EN)",
+            "de": "Empfohlene CEN-Werte (EN)"
+          },
+          "De": {
+            "en": "German national annex (DIN EN)",
+            "de": "Deutscher Nationaler Anhang (DIN EN)"
+          }
+        },
+        "group": "annex",
+        "order": 10
+      }
     }
   }
 }

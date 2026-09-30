@@ -2740,7 +2740,7 @@ export type AppFrameValue =
   | { readonly Emit: { readonly in_reply_to: number; readonly document_ops: readonly number[]; readonly config_ops: readonly number[]; readonly draft_ops: readonly number[]; readonly output: readonly number[]; readonly diagnostics: readonly number[]; readonly child_ops: readonly number[] } }
   | { readonly Draft: { readonly in_reply_to: number; readonly pack: readonly number[]; readonly spr: readonly number[]; readonly ops: string } }
   | { readonly Children: { readonly in_reply_to: number; readonly entries: readonly ChildPackEntry[] } }
-  | { readonly Ephemeral: { readonly presence: readonly number[]; readonly presence_generation: number; readonly transient_generation: number; readonly interaction: readonly number[]; readonly tool_run: readonly number[] } }
+  | { readonly Ephemeral: { readonly presence: readonly number[]; readonly presence_generation: number; readonly transient_generation: number; readonly interaction: readonly number[]; readonly tool_run: readonly number[]; readonly history_edit: readonly number[] } }
   | { readonly HistorySnapshot: { readonly in_reply_to: number; readonly history_patch: readonly number[] } }
   | {
       readonly transactionProposal: {
@@ -3446,6 +3446,7 @@ export function encodeAppFrame(frame: AppFrameValue): Uint8Array {
     writeVarintU64(out, frame.Ephemeral.transient_generation);
     writeBytes(out, frame.Ephemeral.interaction);
     writeBytes(out, frame.Ephemeral.tool_run);
+    writeBytes(out, frame.Ephemeral.history_edit);
   } else if ("HistorySnapshot" in frame) {
     out.push(APP_FRAME_TAGS.HistorySnapshot);
     writeVarintU64(out, frame.HistorySnapshot.in_reply_to);
@@ -3617,7 +3618,7 @@ export function decodeAppFrame(bytes: Uint8Array): AppFrameValue {
       return { Children: { in_reply_to: readVarintU64(bytes, pos), entries: readVecChildPackEntry(bytes, pos) } };
     case APP_FRAME_TAGS.Ephemeral:
       return {
-        Ephemeral: { presence: readBytes(bytes, pos), presence_generation: readVarintU64(bytes, pos), transient_generation: readVarintU64(bytes, pos), interaction: readBytes(bytes, pos), tool_run: readBytes(bytes, pos) },
+        Ephemeral: { presence: readBytes(bytes, pos), presence_generation: readVarintU64(bytes, pos), transient_generation: readVarintU64(bytes, pos), interaction: readBytes(bytes, pos), tool_run: readBytes(bytes, pos), history_edit: readBytes(bytes, pos) },
       };
     case APP_FRAME_TAGS.HistorySnapshot:
       return { HistorySnapshot: { in_reply_to: readVarintU64(bytes, pos), history_patch: readBytes(bytes, pos) } };
@@ -3839,6 +3840,10 @@ function nextArchivePollTurnV1(): Promise<void> {
   return new Promise((resolve) => setTimeout(resolve, 0));
 }
 
+/** 🎞️ One unsolicited mid-operation `Invocation` frame as {@link AppChannelClient.onOperationProgress} hands it on: the
+ * decoded `UiDirtyScope` and `HistoryPatch` it carries, each absent when the frame carried none. */
+export type AppChannelOperationProgressV1 = { readonly uiScope?: unknown; readonly historyPatch?: unknown };
+
 /**
  * 📡️ Typed facade over one plugin instance's app channel — encodes an {@link AppCommandValue}, queues
  * it via {@link PluginWasmHandle.enqueue}, and decodes every {@link AppFrameValue} the matching
@@ -3866,7 +3871,7 @@ function nextArchivePollTurnV1(): Promise<void> {
 export class AppChannelClient {
   private localQuery: LocalInteractionClientQuery | null = null;
   private readonly completionListeners = new Set<(completion: OperationCompletionV1) => void>();
-  private readonly progressListeners = new Set<(uiScope: unknown) => void>();
+  private readonly progressListeners = new Set<(progress: AppChannelOperationProgressV1) => void>();
   private disposed = false;
   private retired = false;
   private readonly handle: AppChannelHandle;
@@ -3938,7 +3943,7 @@ export class AppChannelClient {
         if ("Ephemeral" in frame) this.lastEphemeral = frame.Ephemeral;
         if ("LocalInteractionQuery" in frame) this.receiveLocalInteractionQuery(frame.LocalInteractionQuery.reply);
         else if ("OperationCompleted" in frame) this.publishOperationCompletion(frame.OperationCompleted);
-        else if ("Invocation" in frame && frame.Invocation.in_reply_to === 0 && frame.Invocation.ui_scope.length > 0) this.publishOperationProgress(frame.Invocation.ui_scope);
+        else if ("Invocation" in frame && frame.Invocation.in_reply_to === 0 && (frame.Invocation.ui_scope.length > 0 || frame.Invocation.history_patch.length > 0)) this.publishOperationProgress(frame.Invocation);
         else ordinary.push(frame);
       }
       const correlated = new Set(ordinary.flatMap((frame) => { const sequence = appChannelReplySequence(frame); return sequence === null ? [] : [sequence]; }));
@@ -3954,10 +3959,11 @@ export class AppChannelClient {
     }
   }
 
-  /** 👥️ This instance's last published presence pack and interaction slice (`null` until the guest published one). */
-  ephemeral(): { readonly presence: readonly number[]; readonly presenceGeneration: number; readonly transientGeneration: number; readonly interaction: readonly number[] } | null {
+  /** 👥️ This instance's last published presence pack, interaction slice and tool-run and history-edit summaries (each
+   * summary empty while none is open), `null` until the guest published one. */
+  ephemeral(): { readonly presence: readonly number[]; readonly presenceGeneration: number; readonly transientGeneration: number; readonly interaction: readonly number[]; readonly toolRun: readonly number[]; readonly historyEdit: readonly number[] } | null {
     const frame = this.lastEphemeral;
-    return frame === null ? null : { presence: frame.presence, presenceGeneration: frame.presence_generation, transientGeneration: frame.transient_generation, interaction: frame.interaction };
+    return frame === null ? null : { presence: frame.presence, presenceGeneration: frame.presence_generation, transientGeneration: frame.transient_generation, interaction: frame.interaction, toolRun: frame.tool_run, historyEdit: frame.history_edit };
   }
 
   /** 🏁️ Subscribes to this instance's unsolicited typed-operation completions. A mounted operation
@@ -3969,20 +3975,24 @@ export class AppChannelClient {
     return () => this.completionListeners.delete(listener);
   }
 
-  /** 🎞️ Subscribes to this instance's unsolicited progress refreshes: the `UiDirtyScope` a running operation (a tool run's
-   * trace, provisional pieces and progress) hands the shell mid-operation as an `Invocation` frame answering no command.
-   * It is best effort — the shell refreshes as often as it keeps up with — and the ONLY delivery path for that scope once
-   * the operation runs on the background drain. Returns the unsubscribe. */
-  onOperationProgress(listener: (uiScope: unknown) => void): () => void {
+  /** 🎞️ Subscribes to this instance's unsolicited progress: the `UiDirtyScope` a running operation (a tool run's trace,
+   * provisional pieces and progress) and the `HistoryPatch` a running history replay (its stage and `done/total`) hand
+   * the shell mid-operation as an `Invocation` frame answering no command. It is best effort — the shell refreshes as
+   * often as it keeps up with — and the ONLY delivery path for either once the operation runs on the background drain.
+   * Returns the unsubscribe. */
+  onOperationProgress(listener: (progress: AppChannelOperationProgressV1) => void): () => void {
     this.progressListeners.add(listener);
     return () => this.progressListeners.delete(listener);
   }
 
-  private publishOperationProgress(uiScope: readonly number[]): void {
+  private publishOperationProgress(frame: { readonly ui_scope: readonly number[]; readonly history_patch: readonly number[] }): void {
     if (this.disposed || this.progressListeners.size === 0) return;
-    const scope = decodePackWire(new Uint8Array(uiScope), "$.uiScope");
+    const progress: AppChannelOperationProgressV1 = {
+      ...(frame.ui_scope.length > 0 ? { uiScope: decodePackWire(new Uint8Array(frame.ui_scope), "$.uiScope") } : {}),
+      ...(frame.history_patch.length > 0 ? { historyPatch: decodePackWire(new Uint8Array(frame.history_patch), "$.historyPatch") } : {}),
+    };
     for (const listener of [...this.progressListeners]) {
-      try { listener(scope); }
+      try { listener(progress); }
       catch (error) { console.error("[TRACE] operation progress subscriber failed", error); }
     }
   }
@@ -4732,7 +4742,7 @@ if (import.meta.vitest) {
 /** ⏳️ The `code` of the one `MutationMessage` a hub answers in `ApplyOutcome::Rejected.messages` when it refused a document batch for a
  * TRANSIENT reason (the db could not admit it now, the sender's command rate is paced out): nothing was applied, so the client keeps the
  * batch and resends it — the TS twin of the hub's `HUB_TRANSIENT_APPLY_REFUSAL_CODE` (`🌎️hub/🚧️refusal`).
- * @see ../../../🌎️hub/🚧️refusal/🧬️schema/🔣️.json */
+ * @see ../../🔨️modules/📡️replication/🚧️apply-refusal/🧬️schema/🔣️.json */
 export const HUB_TRANSIENT_APPLY_REFUSAL_CODE = "hub.unavailable";
 
 /** ⏳️ Whether a refusal's `messages` are exactly the hub's transient refusal (`HubTransientApplyRefusalMessageV1`): one message, level

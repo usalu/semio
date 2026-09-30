@@ -17,6 +17,17 @@ use crate::standards::v5::subsets::any::schema::snapshot::{element_attr, node_at
 use protocol::OpBinary;
 use protocol::{Mutation, OpText};
 
+//#region 🔖️DoubleOption
+/// 🪆️ Decodes a present key of an `Option<Option<T>>` field as `Some(inner)`, so a present `null` is `Some(None)` (a
+/// valueless attribute) and only an absent key (the field's `default`) is `None` (remove the attribute) — the blanket
+/// `Option<T>` impl would collapse both to `None`. Paired with `skip_serializing_if = "Option::is_none"`,
+/// `payload_value()` and `with_payload_value()` round-trip.
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn deserialize_double_option<T: dsl::FromValue>(value: dsl::DslValue) -> Result<Option<Option<T>>, dsl::ValueError> {
+    <Option<T> as dsl::FromValue>::from_value(value).map(Some)
+}
+//#endregion 🔖️DoubleOption
+
 //#region 🔖️Mutations
 #[path = "➕insert-node/🦀️.rs"]
 pub mod insert_node;
@@ -91,6 +102,19 @@ pub fn apply_html_mutation(snapshot: &mut HtmlSnapshot, mutation: &HtmlMutation)
         }
         Err(error) => protocol::MutationOutcome::error(error.code, error.message, error.target).absorb_messages(outcome.messages().to_vec()),
     }
+}
+
+/// ↩️ The aggregate's own `Mutation::inverse`, reachable for a caller that cannot name the trait.
+pub fn inverse_html_mutation(mutation: &HtmlMutation, base: &HtmlSnapshot) -> Vec<HtmlMutation> {
+    Mutation::inverse(mutation, base)
+}
+
+/// 📥️ Decodes one leaf wire payload (a `🥒️.feature` row's `params`: the leaf's `payload_value()`, no aggregate tag) into
+/// the operation of semantic kind `kind` through the derive-generated `Mutation::from_payload_value`, so a caller that
+/// cannot name the trait reads the committed wire instead of re-declaring it field by field.
+pub fn decode_html_mutation_payload_json(kind: &str, payload: &str) -> Result<HtmlMutation, String> {
+    let value = pack::parse_json(payload).map_err(|error| error.to_string())?;
+    <HtmlMutation as Mutation<HtmlSnapshot>>::from_payload_value(kind, pack::json_to_dsl_value(&value)).map_err(|error| error.to_string())
 }
 //#endregion 🔖️Apply
 

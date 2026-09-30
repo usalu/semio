@@ -25,7 +25,7 @@
       "value": "-3",
       "expected": {
         "$schema": "number",
-        "value": -3
+        "value": -3.0
       }
     },
     {
@@ -79,7 +79,7 @@
       "value": "-2",
       "expected": {
         "$schema": "vector",
-        "x": -2,
+        "x": -2.0,
         "y": 0,
         "z": 1
       }
@@ -178,4 +178,3 @@
     }
   ]
 }
-

@@ -5,12 +5,34 @@
   "type": "object",
   "additionalProperties": false,
   "required": [
+    "mutation",
     "id",
     "newEquipmentType"
   ],
   "properties": {
+    "mutation": {
+      "const": "changeZoneEquipmentType"
+    },
     "id": {
-      "type": "integer"
+      "type": "integer",
+      "minimum": 0,
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Zone equipment",
+          "de": "Zonengerät"
+        },
+        "description": {
+          "en": "The zone equipment this mutation changes, by id.",
+          "de": "Zonengerät, das diese Mutation ändert, per ID."
+        },
+        "ref": {
+          "kind": "zoneEquipment"
+        },
+        "group": "target",
+        "order": 10
+      }
     },
     "newEquipmentType": {
       "enum": [
@@ -22,7 +44,51 @@
         "Erv",
         "UnitHeater",
         "WaterToAirHp"
-      ]
+      ],
+      "x-semio-ui": {
+        "widget": "select",
+        "role": "value",
+        "label": {
+          "en": "Equipment type",
+          "de": "Gerätetyp"
+        },
+        "options": {
+          "Baseboard": {
+            "en": "Baseboard heater",
+            "de": "Sockelleistenheizung"
+          },
+          "Radiant": {
+            "en": "Radiant system",
+            "de": "Flächenheizung/-kühlung"
+          },
+          "FanCoil": {
+            "en": "Fan coil unit",
+            "de": "Gebläsekonvektor"
+          },
+          "Ptac": {
+            "en": "Packaged terminal air conditioner",
+            "de": "Kompaktklimagerät"
+          },
+          "VrfTerminal": {
+            "en": "VRF terminal unit",
+            "de": "VRF-Inneneinheit"
+          },
+          "Erv": {
+            "en": "Energy recovery ventilator",
+            "de": "Lüftungsgerät mit Wärmerückgewinnung"
+          },
+          "UnitHeater": {
+            "en": "Unit heater",
+            "de": "Lufterhitzer"
+          },
+          "WaterToAirHp": {
+            "en": "Water-to-air heat pump",
+            "de": "Wasser-Luft-Wärmepumpe"
+          }
+        },
+        "group": "equipment",
+        "order": 20
+      }
     }
   }
 }

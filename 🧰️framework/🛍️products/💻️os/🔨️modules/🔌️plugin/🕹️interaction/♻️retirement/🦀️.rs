@@ -143,7 +143,7 @@ impl ArtifactOwnedValueRetirementFactory<InteractionState> for InteractionRetire
 
 impl ArtifactOwnedValueRetirementFactory<InteractionConfigMutation> for InteractionRetirementFactory {
     fn retire_owned(&self, mutation: InteractionConfigMutation) -> Box<dyn ErasedSnapshotRetirement> {
-        let InteractionConfigMutation::SetState(state) = mutation;
+        let InteractionConfigMutation::SetInteractionState(state) = mutation;
         Box::new(InteractionRetirement::owned(state.state))
     }
 }

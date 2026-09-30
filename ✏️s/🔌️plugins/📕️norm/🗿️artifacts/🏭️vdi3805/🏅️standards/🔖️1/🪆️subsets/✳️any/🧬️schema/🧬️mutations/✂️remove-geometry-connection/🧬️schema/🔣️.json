@@ -5,15 +5,49 @@
   "type": "object",
   "additionalProperties": false,
   "required": [
-    "connectionId",
-    "id"
+    "id",
+    "connectionId"
   ],
   "properties": {
     "id": {
-      "type": "string"
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Geometry",
+          "de": "Geometrie"
+        },
+        "description": {
+          "en": "The parametric geometry this mutation addresses.",
+          "de": "Die parametrische Geometrie, die diese Mutation adressiert."
+        },
+        "ref": {
+          "kind": "geometry"
+        },
+        "group": "target",
+        "order": 10
+      }
     },
     "connectionId": {
-      "type": "string"
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Connection point",
+          "de": "Anschlusspunkt"
+        },
+        "description": {
+          "en": "The connection point of the geometry.",
+          "de": "Der Anschlusspunkt der Geometrie."
+        },
+        "ref": {
+          "kind": "connection"
+        },
+        "group": "target",
+        "order": 20
+      }
     }
   }
 }

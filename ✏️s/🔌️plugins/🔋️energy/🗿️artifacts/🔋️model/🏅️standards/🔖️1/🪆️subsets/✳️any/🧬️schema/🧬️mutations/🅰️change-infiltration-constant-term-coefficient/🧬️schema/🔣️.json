@@ -5,15 +5,52 @@
   "type": "object",
   "additionalProperties": false,
   "required": [
+    "mutation",
     "id",
     "newConstantTermCoefficient"
   ],
   "properties": {
+    "mutation": {
+      "const": "changeInfiltrationConstantTermCoefficient"
+    },
     "id": {
-      "type": "integer"
+      "type": "integer",
+      "minimum": 0,
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Infiltration",
+          "de": "Infiltration"
+        },
+        "description": {
+          "en": "The infiltration this mutation changes, by id.",
+          "de": "Infiltration, die diese Mutation ändert, per ID."
+        },
+        "ref": {
+          "kind": "infiltration",
+          "domain": "energyModel",
+          "granularity": "load"
+        },
+        "group": "target",
+        "order": 10
+      }
     },
     "newConstantTermCoefficient": {
-      "type": "number"
+      "type": "number",
+      "minimum": 0,
+      "x-semio-ui": {
+        "widget": "stepper",
+        "role": "value",
+        "label": {
+          "en": "Constant term coefficient A",
+          "de": "Konstanter Koeffizient A"
+        },
+        "step": 0.001,
+        "precision": 4,
+        "group": "infiltration",
+        "order": 20
+      }
     }
   }
 }

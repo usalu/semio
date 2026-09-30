@@ -5,19 +5,17 @@
   "type": "object",
   "additionalProperties": false,
   "required": [
-    "newBridgeDeltaSigmaPMpa",
-    "newBridgeLambda",
-    "newBridgePhi2"
+    "bridgeFatigueItem"
   ],
   "properties": {
-    "newBridgeLambda": {
-      "type": "number"
-    },
-    "newBridgePhi2": {
-      "type": "number"
-    },
-    "newBridgeDeltaSigmaPMpa": {
-      "type": "number"
+    "bridgeFatigueItem": {
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1993/snapshot.json#/$defs/BridgeFatigue",
+      "x-semio-ui": {
+        "label": {
+          "en": "Bridge fatigue data",
+          "de": "Ermüdungsangaben der Brücke"
+        }
+      }
     }
   }
 }

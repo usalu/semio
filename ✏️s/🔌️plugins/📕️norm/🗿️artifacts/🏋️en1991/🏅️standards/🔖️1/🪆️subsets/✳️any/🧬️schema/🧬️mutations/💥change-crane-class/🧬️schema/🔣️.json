@@ -9,7 +9,21 @@
   ],
   "properties": {
     "newCraneClass": {
-      "type": "string"
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "text",
+        "role": "value",
+        "label": {
+          "en": "Crane class",
+          "de": "Kranklasse"
+        },
+        "description": {
+          "en": "Hoisting class HC1 to HC4 of the crane.",
+          "de": "Hubklasse HC1 bis HC4 des Krans."
+        },
+        "group": "crane",
+        "order": 10
+      }
     }
   }
 }

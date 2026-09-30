@@ -4,7 +4,16 @@
   "title": "NormResultsWindowConfigMutation",
   "oneOf": [
     {
-      "$ref": "https://json.schemas.assets.semio-tech.com/app/norm/results/window-config/mutation/change-selected-check-index/schema.json"
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "ChangeSelectedCheckIndex"
+      ],
+      "properties": {
+        "ChangeSelectedCheckIndex": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/app/norm/results/window-config/mutation/change-selected-check-index/schema.json"
+        }
+      }
     }
   ]
 }

@@ -5,11 +5,33 @@
   "type": "object",
   "additionalProperties": false,
   "required": [
+    "mutation",
     "id"
   ],
   "properties": {
+    "mutation": {
+      "const": "deleteDaylightZone"
+    },
     "id": {
-      "type": "integer"
+      "type": "integer",
+      "minimum": 0,
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Daylight zone",
+          "de": "Tageslichtzone"
+        },
+        "description": {
+          "en": "The daylight zone to delete, by id.",
+          "de": "Tageslichtzone, die diese Mutation löscht, per ID."
+        },
+        "ref": {
+          "kind": "daylightZone"
+        },
+        "group": "target",
+        "order": 10
+      }
     }
   }
 }

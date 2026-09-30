@@ -13,17 +13,40 @@
   "properties": {
     "schema": {
       "type": "string",
-      "x-semio-state": "artifact"
+      "x-semio-state": "artifact",
+      "x-semio-ui": {
+        "widget": "text",
+        "label": {
+          "en": "Snapshot schema",
+          "de": "Snapshot-Schema"
+        },
+        "description": {
+          "en": "Identifier of the snapshot schema version.",
+          "de": "Kennung der Version des Snapshot-Schemas."
+        }
+      }
     },
     "canvas": {
       "$ref": "#/$defs/DrawCanvas",
-      "x-semio-state": "artifact"
+      "x-semio-state": "artifact",
+      "x-semio-ui": {
+        "label": {
+          "en": "Canvas",
+          "de": "Zeichenfläche"
+        }
+      }
     },
     "styles": {
       "type": "array",
       "x-semio-state": "artifact",
       "items": {
         "$ref": "#/$defs/DrawStyle"
+      },
+      "x-semio-ui": {
+        "label": {
+          "en": "Styles",
+          "de": "Stile"
+        }
       }
     },
     "layers": {
@@ -31,6 +54,12 @@
       "x-semio-state": "artifact",
       "items": {
         "$ref": "#/$defs/DrawLayer"
+      },
+      "x-semio-ui": {
+        "label": {
+          "en": "Layers",
+          "de": "Layer"
+        }
       }
     }
   },
@@ -60,16 +89,48 @@
       ],
       "properties": {
         "r": {
-          "type": "number"
+          "type": "number",
+          "x-semio-ui": {
+            "widget": "stepper",
+            "label": {
+              "en": "Red",
+              "de": "Rot"
+            }
+          }
         },
         "g": {
-          "type": "number"
+          "type": "number",
+          "x-semio-ui": {
+            "widget": "stepper",
+            "label": {
+              "en": "Green",
+              "de": "Grün"
+            }
+          }
         },
         "b": {
-          "type": "number"
+          "type": "number",
+          "x-semio-ui": {
+            "widget": "stepper",
+            "label": {
+              "en": "Blue",
+              "de": "Blau"
+            }
+          }
         },
         "a": {
-          "type": "number"
+          "type": "number",
+          "x-semio-ui": {
+            "widget": "stepper",
+            "label": {
+              "en": "Alpha",
+              "de": "Alpha"
+            },
+            "description": {
+              "en": "Opacity, 0 transparent to 1 opaque.",
+              "de": "Deckkraft, 0 transparent bis 1 deckend."
+            }
+          }
         }
       }
     },
@@ -111,7 +172,18 @@
           "type": "number"
         },
         "w": {
-          "type": "number"
+          "type": "number",
+          "x-semio-ui": {
+            "widget": "stepper",
+            "label": {
+              "en": "W",
+              "de": "W"
+            },
+            "description": {
+              "en": "Scalar part of the rotation quaternion.",
+              "de": "Skalarteil des Rotationsquaternions."
+            }
+          }
         }
       }
     },
@@ -124,7 +196,13 @@
       ],
       "properties": {
         "translation": {
-          "$ref": "#/$defs/Point3"
+          "$ref": "#/$defs/Point3",
+          "x-semio-ui": {
+            "label": {
+              "en": "Translation",
+              "de": "Verschiebung"
+            }
+          }
         },
         "rotation": {
           "$ref": "#/$defs/Quaternion"
@@ -148,34 +226,124 @@
             "quadTo",
             "arcTo",
             "close"
-          ]
+          ],
+          "x-semio-ui": {
+            "options": {
+              "moveTo": {
+                "en": "Move to",
+                "de": "Bewegen zu"
+              },
+              "lineTo": {
+                "en": "Line to",
+                "de": "Linie zu"
+              },
+              "cubicTo": {
+                "en": "Cubic Bézier to",
+                "de": "Kubische Bézierkurve zu"
+              },
+              "quadTo": {
+                "en": "Quadratic Bézier to",
+                "de": "Quadratische Bézierkurve zu"
+              },
+              "arcTo": {
+                "en": "Arc to",
+                "de": "Bogen zu"
+              },
+              "close": {
+                "en": "Close path",
+                "de": "Pfad schließen"
+              }
+            }
+          }
         },
         "to": {
           "$ref": "#/$defs/SemioPoint2"
         },
         "c1": {
-          "$ref": "#/$defs/SemioPoint2"
+          "$ref": "#/$defs/SemioPoint2",
+          "x-semio-ui": {
+            "label": {
+              "en": "First control point",
+              "de": "Erster Kontrollpunkt"
+            }
+          }
         },
         "c2": {
-          "$ref": "#/$defs/SemioPoint2"
+          "$ref": "#/$defs/SemioPoint2",
+          "x-semio-ui": {
+            "label": {
+              "en": "Second control point",
+              "de": "Zweiter Kontrollpunkt"
+            }
+          }
         },
         "c": {
-          "$ref": "#/$defs/SemioPoint2"
+          "$ref": "#/$defs/SemioPoint2",
+          "x-semio-ui": {
+            "label": {
+              "en": "Control point",
+              "de": "Kontrollpunkt"
+            }
+          }
         },
         "rx": {
-          "type": "number"
+          "type": "number",
+          "x-semio-ui": {
+            "widget": "stepper",
+            "label": {
+              "en": "Radius X",
+              "de": "Radius X"
+            }
+          }
         },
         "ry": {
-          "type": "number"
+          "type": "number",
+          "x-semio-ui": {
+            "widget": "stepper",
+            "label": {
+              "en": "Radius Y",
+              "de": "Radius Y"
+            }
+          }
         },
         "xRotation": {
-          "type": "number"
+          "type": "number",
+          "x-semio-ui": {
+            "widget": "stepper",
+            "label": {
+              "en": "X-axis rotation",
+              "de": "Drehung der X-Achse"
+            },
+            "unit": "deg"
+          }
         },
         "largeArc": {
-          "type": "boolean"
+          "type": "boolean",
+          "x-semio-ui": {
+            "widget": "toggle",
+            "label": {
+              "en": "Large arc",
+              "de": "Großer Bogen"
+            },
+            "description": {
+              "en": "Takes the arc spanning more than 180° (SVG large-arc-flag).",
+              "de": "Wählt den Bogen über 180° (SVG large-arc-flag)."
+            }
+          }
         },
         "sweep": {
-          "type": "boolean"
+          "type": "boolean",
+          "x-semio-ui": {
+            "widget": "toggle",
+            "label": {
+              "en": "Positive sweep",
+              "de": "Positive Bogenrichtung"
+            },
+            "description": {
+              "en": "Draws the arc in the positive-angle direction (SVG sweep-flag).",
+              "de": "Zeichnet den Bogen in positiver Winkelrichtung (SVG sweep-flag)."
+            }
+          }
         }
       }
     },
@@ -191,12 +359,26 @@
             "text",
             "group",
             "image"
-          ]
+          ],
+          "x-semio-ui": {
+            "options": {
+              "group": {
+                "en": "Group",
+                "de": "Gruppe"
+              }
+            }
+          }
         },
         "segments": {
           "type": "array",
           "items": {
             "$ref": "#/$defs/PathSegment"
+          },
+          "x-semio-ui": {
+            "label": {
+              "en": "Path segments",
+              "de": "Pfadsegmente"
+            }
           }
         },
         "style": {
@@ -215,6 +397,12 @@
           "type": "array",
           "items": {
             "$ref": "#/$defs/DrawNode"
+          },
+          "x-semio-ui": {
+            "label": {
+              "en": "Child nodes",
+              "de": "Untergeordnete Knoten"
+            }
           }
         },
         "width": {
@@ -224,11 +412,25 @@
           "type": "number"
         },
         "mime": {
-          "type": "string"
+          "type": "string",
+          "x-semio-ui": {
+            "widget": "text",
+            "label": {
+              "en": "Media type",
+              "de": "Medientyp"
+            }
+          }
         },
         "bytes": {
           "type": "string",
-          "contentEncoding": "base64"
+          "contentEncoding": "base64",
+          "x-semio-ui": {
+            "widget": "text",
+            "label": {
+              "en": "Image data (Base64)",
+              "de": "Bilddaten (Base64)"
+            }
+          }
         }
       }
     },
@@ -242,13 +444,32 @@
           "type": "string"
         },
         "fill": {
-          "$ref": "#/$defs/Rgba"
+          "$ref": "#/$defs/Rgba",
+          "x-semio-ui": {
+            "label": {
+              "en": "Fill color",
+              "de": "Füllfarbe"
+            }
+          }
         },
         "stroke": {
-          "$ref": "#/$defs/Rgba"
+          "$ref": "#/$defs/Rgba",
+          "x-semio-ui": {
+            "label": {
+              "en": "Stroke color",
+              "de": "Konturfarbe"
+            }
+          }
         },
         "strokeWidth": {
-          "type": "number"
+          "type": "number",
+          "x-semio-ui": {
+            "widget": "stepper",
+            "label": {
+              "en": "Stroke width",
+              "de": "Konturstärke"
+            }
+          }
         },
         "opacity": {
           "type": "number"
@@ -274,7 +495,13 @@
           "type": "boolean"
         },
         "root": {
-          "$ref": "#/$defs/DrawNode"
+          "$ref": "#/$defs/DrawNode",
+          "x-semio-ui": {
+            "label": {
+              "en": "Root node",
+              "de": "Wurzelknoten"
+            }
+          }
         }
       }
     },
@@ -292,7 +519,13 @@
           "type": "number"
         },
         "background": {
-          "$ref": "#/$defs/Rgba"
+          "$ref": "#/$defs/Rgba",
+          "x-semio-ui": {
+            "label": {
+              "en": "Background color",
+              "de": "Hintergrundfarbe"
+            }
+          }
         }
       }
     }

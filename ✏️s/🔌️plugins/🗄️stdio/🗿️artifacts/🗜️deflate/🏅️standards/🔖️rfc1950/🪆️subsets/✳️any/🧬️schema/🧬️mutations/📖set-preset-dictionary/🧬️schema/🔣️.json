@@ -4,7 +4,14 @@
   "title": "SetPresetDictionary",
   "type": "object",
   "additionalProperties": false,
+  "required": [
+    "mutation"
+  ],
   "properties": {
+    "mutation": {
+      "const": "setPresetDictionary",
+      "description": "Aggregate discriminator spliced in by DeflateMutation; absent when the payload stands alone."
+    },
     "dict_id": {
       "anyOf": [
         {
@@ -15,11 +22,21 @@
         {
           "type": "null"
         }
-      ]
-    },
-    "mutation": {
-      "const": "setPresetDictionary",
-      "description": "Aggregate discriminator spliced in by DeflateMutation; absent when the payload stands alone."
+      ],
+      "x-semio-ui": {
+        "widget": "stepper",
+        "label": {
+          "en": "Preset dictionary (DICTID)",
+          "de": "Vorgabewörterbuch (DICTID)"
+        },
+        "description": {
+          "en": "Adler-32 of the preset dictionary; empty clears FDICT.",
+          "de": "Adler-32 des Vorgabewörterbuchs; leer löscht FDICT."
+        },
+        "precision": 0,
+        "group": "value",
+        "order": 10
+      }
     }
   }
 }

@@ -5,15 +5,42 @@
   "type": "object",
   "additionalProperties": false,
   "required": [
+    "mutation",
     "id",
     "tag"
   ],
   "properties": {
+    "mutation": {
+      "const": "removeRepresentationTag"
+    },
     "id": {
-      "type": "string"
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Representation",
+          "de": "Darstellung"
+        },
+        "ref": {
+          "kind": "representation"
+        },
+        "group": "target",
+        "order": 10
+      }
     },
     "tag": {
-      "type": "string"
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "text",
+        "role": "value",
+        "label": {
+          "en": "Tag",
+          "de": "Schlagwort"
+        },
+        "group": "metadata",
+        "order": 20
+      }
     }
   }
 }

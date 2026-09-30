@@ -5,15 +5,56 @@
   "type": "object",
   "additionalProperties": false,
   "required": [
+    "mutation",
     "id",
     "index"
   ],
   "properties": {
+    "mutation": {
+      "const": "removeAnnualScheduleRule"
+    },
     "id": {
-      "type": "integer"
+      "type": "integer",
+      "minimum": 0,
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Annual schedule",
+          "de": "Jahreszeitplan"
+        },
+        "description": {
+          "en": "The annual schedule this mutation changes, by id.",
+          "de": "Jahreszeitplan, den diese Mutation ändert, per ID."
+        },
+        "ref": {
+          "kind": "annualSchedule",
+          "domain": "energyModel",
+          "granularity": "schedule"
+        },
+        "group": "target",
+        "order": 10
+      }
     },
     "index": {
-      "type": "integer"
+      "type": "integer",
+      "minimum": 0,
+      "x-semio-ui": {
+        "widget": "stepper",
+        "role": "value",
+        "label": {
+          "en": "Rule position",
+          "de": "Regelposition"
+        },
+        "description": {
+          "en": "Position of the rule to remove; 0 is first.",
+          "de": "Position der zu entfernenden Regel; 0 ist die erste."
+        },
+        "step": 1,
+        "precision": 0,
+        "group": "order",
+        "order": 20
+      }
     }
   }
 }

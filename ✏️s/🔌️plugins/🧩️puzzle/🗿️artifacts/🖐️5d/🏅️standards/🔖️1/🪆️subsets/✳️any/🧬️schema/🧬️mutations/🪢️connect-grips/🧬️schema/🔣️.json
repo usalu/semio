@@ -5,6 +5,7 @@
   "type": "object",
   "additionalProperties": false,
   "required": [
+    "mutation",
     "gap",
     "id",
     "rise",
@@ -18,41 +19,250 @@
     "y"
   ],
   "properties": {
+    "mutation": {
+      "const": "connectGrips"
+    },
     "id": {
-      "type": "string"
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "text",
+        "role": "value",
+        "label": {
+          "en": "ID",
+          "de": "ID"
+        },
+        "description": {
+          "en": "Unique id of the new fastener.",
+          "de": "Eindeutige ID des neuen Verbinders."
+        },
+        "group": "identity",
+        "order": 10
+      }
     },
     "source": {
-      "type": "string"
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Source grip",
+          "de": "Quellgriff"
+        },
+        "description": {
+          "en": "Full id (part:grip) of the grip the fastener starts at.",
+          "de": "Vollständige ID (Teil:Griff) des Griffs, an dem der Verbinder beginnt."
+        },
+        "ref": {
+          "kind": "grip",
+          "domain": "vortex",
+          "granularity": "grip"
+        },
+        "group": "target",
+        "order": 20
+      }
     },
     "target": {
-      "type": "string"
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Target grip",
+          "de": "Zielgriff"
+        },
+        "description": {
+          "en": "Full id (part:grip) of the grip the fastener ends at.",
+          "de": "Vollständige ID (Teil:Griff) des Griffs, an dem der Verbinder endet."
+        },
+        "ref": {
+          "kind": "grip",
+          "domain": "vortex",
+          "granularity": "grip"
+        },
+        "group": "target",
+        "order": 30
+      }
     },
     "fastenerKind": {
-      "type": "string"
+      "type": [
+        "string",
+        "null"
+      ],
+      "x-semio-ui": {
+        "widget": "text",
+        "role": "value",
+        "label": {
+          "en": "Fastener kind",
+          "de": "Verbinderart"
+        },
+        "description": {
+          "en": "Id of a kind from the kind catalog.",
+          "de": "ID einer Art aus dem Artenkatalog."
+        },
+        "group": "kind",
+        "order": 40
+      }
     },
     "gap": {
-      "type": "number"
+      "type": "number",
+      "x-semio-ui": {
+        "widget": "stepper",
+        "role": "value",
+        "label": {
+          "en": "Gap",
+          "de": "Spalt"
+        },
+        "unit": "m",
+        "step": 0.01,
+        "precision": 3,
+        "group": "offset",
+        "order": 50
+      }
     },
     "shift": {
-      "type": "number"
+      "type": "number",
+      "x-semio-ui": {
+        "widget": "stepper",
+        "role": "value",
+        "label": {
+          "en": "Shift",
+          "de": "Verschiebung"
+        },
+        "unit": "m",
+        "step": 0.01,
+        "precision": 3,
+        "group": "offset",
+        "order": 60
+      }
     },
     "rise": {
-      "type": "number"
+      "type": "number",
+      "x-semio-ui": {
+        "widget": "stepper",
+        "role": "value",
+        "label": {
+          "en": "Rise",
+          "de": "Anstieg"
+        },
+        "unit": "m",
+        "step": 0.01,
+        "precision": 3,
+        "group": "offset",
+        "order": 70
+      }
     },
     "rotation": {
-      "type": "number"
+      "type": "number",
+      "x-semio-ui": {
+        "widget": "dial",
+        "role": "value",
+        "label": {
+          "en": "Rotation",
+          "de": "Drehung"
+        },
+        "unit": "deg",
+        "step": 1,
+        "precision": 1,
+        "softMin": -180,
+        "softMax": 180,
+        "snaps": [
+          -180,
+          -90,
+          0,
+          90,
+          180
+        ],
+        "group": "rotation",
+        "order": 80
+      }
     },
     "turn": {
-      "type": "number"
+      "type": "number",
+      "x-semio-ui": {
+        "widget": "dial",
+        "role": "value",
+        "label": {
+          "en": "Turn",
+          "de": "Drehung um Achse"
+        },
+        "unit": "deg",
+        "step": 1,
+        "precision": 1,
+        "softMin": -180,
+        "softMax": 180,
+        "snaps": [
+          -180,
+          -90,
+          0,
+          90,
+          180
+        ],
+        "group": "rotation",
+        "order": 90
+      }
     },
     "tilt": {
-      "type": "number"
+      "type": "number",
+      "x-semio-ui": {
+        "widget": "dial",
+        "role": "value",
+        "label": {
+          "en": "Tilt",
+          "de": "Neigung"
+        },
+        "unit": "deg",
+        "step": 1,
+        "precision": 1,
+        "softMin": -180,
+        "softMax": 180,
+        "snaps": [
+          -180,
+          -90,
+          0,
+          90,
+          180
+        ],
+        "group": "rotation",
+        "order": 100
+      }
     },
     "x": {
-      "type": "number"
+      "type": "number",
+      "x-semio-ui": {
+        "widget": "stepper",
+        "role": "value",
+        "label": {
+          "en": "Diagram X",
+          "de": "Diagramm-X"
+        },
+        "description": {
+          "en": "Horizontal offset in the connection diagram.",
+          "de": "Horizontaler Versatz im Verbindungsdiagramm."
+        },
+        "step": 1,
+        "precision": 2,
+        "group": "diagram",
+        "order": 110
+      }
     },
     "y": {
-      "type": "number"
+      "type": "number",
+      "x-semio-ui": {
+        "widget": "stepper",
+        "role": "value",
+        "label": {
+          "en": "Diagram Y",
+          "de": "Diagramm-Y"
+        },
+        "description": {
+          "en": "Vertical offset in the connection diagram.",
+          "de": "Vertikaler Versatz im Verbindungsdiagramm."
+        },
+        "step": 1,
+        "precision": 2,
+        "group": "diagram",
+        "order": 120
+      }
     }
   }
 }

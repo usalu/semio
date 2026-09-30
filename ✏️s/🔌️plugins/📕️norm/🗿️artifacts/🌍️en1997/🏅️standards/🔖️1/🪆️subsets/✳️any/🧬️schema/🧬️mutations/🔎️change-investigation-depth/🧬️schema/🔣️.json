@@ -5,11 +5,29 @@
   "type": "object",
   "additionalProperties": false,
   "required": [
+    "mutation",
     "newInvestigationDepth"
   ],
   "properties": {
+    "mutation": {
+      "const": "changeInvestigationDepth"
+    },
     "newInvestigationDepth": {
-      "type": "number"
+      "type": "number",
+      "minimum": 0,
+      "x-semio-ui": {
+        "widget": "stepper",
+        "role": "value",
+        "label": {
+          "en": "Ground investigation depth z_a",
+          "de": "Erkundungstiefe z_a"
+        },
+        "unit": "m",
+        "step": 0.5,
+        "precision": 1,
+        "group": "site",
+        "order": 10
+      }
     }
   }
 }

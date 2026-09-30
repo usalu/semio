@@ -9,32 +9,19 @@
   ],
   "properties": {
     "newLimits": {
-      "title": "SecurityLimits",
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "maxFieldLength",
-        "maxFileBytes",
-        "maxNestingDepth",
-        "maxRecords"
-      ],
-      "properties": {
-        "maxFileBytes": {
-          "type": "integer",
-          "minimum": 0
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/vdi3805/snapshot.json#/$defs/SecurityLimits",
+      "x-semio-ui": {
+        "role": "value",
+        "label": {
+          "en": "Security limits",
+          "de": "Sicherheitsgrenzen"
         },
-        "maxRecords": {
-          "type": "integer",
-          "minimum": 0
+        "description": {
+          "en": "Maximum file size, record count, field length and nesting depth when reading.",
+          "de": "Maximale Dateigröße, Satzanzahl, Feldlänge und Verschachtelungstiefe beim Einlesen."
         },
-        "maxFieldLength": {
-          "type": "integer",
-          "minimum": 0
-        },
-        "maxNestingDepth": {
-          "type": "integer",
-          "minimum": 0
-        }
+        "group": "limits",
+        "order": 10
       }
     }
   }

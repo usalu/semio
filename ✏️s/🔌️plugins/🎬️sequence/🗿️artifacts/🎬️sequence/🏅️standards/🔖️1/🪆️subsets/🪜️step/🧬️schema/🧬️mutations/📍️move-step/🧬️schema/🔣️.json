@@ -2,52 +2,43 @@
   "$schema": "http://json-schema.org/draft-07/schema#",
   "$id": "https://json.schemas.assets.semio-tech.com/s/sequence/sequence/1/step/mutation/move-step/schema.json",
   "title": "MoveStep",
-  "$ref": "#/$defs/Payload",
-  "$defs": {
-    "Payload": {
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "id",
-        "x",
-        "y"
-      ],
-      "properties": {
-        "id": {
-          "type": "string"
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "mutation",
+    "id",
+    "x",
+    "y"
+  ],
+  "properties": {
+    "mutation": {
+      "const": "moveStep"
+    },
+    "id": {
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Step",
+          "de": "Schritt"
         },
-        "x": {
-          "type": "number"
+        "description": {
+          "en": "The step this mutation addresses.",
+          "de": "Der Schritt, den diese Mutation adressiert."
         },
-        "y": {
-          "type": "number"
+        "ref": {
+          "kind": "step",
+          "domain": "steps",
+          "granularity": "step"
         }
       }
     },
-    "Wire": {
-      "title": "MoveStepMutation",
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "mutation",
-        "id",
-        "x",
-        "y"
-      ],
-      "properties": {
-        "mutation": {
-          "const": "moveStep"
-        },
-        "id": {
-          "$ref": "#/$defs/Payload/properties/id"
-        },
-        "x": {
-          "$ref": "#/$defs/Payload/properties/x"
-        },
-        "y": {
-          "$ref": "#/$defs/Payload/properties/y"
-        }
-      }
+    "x": {
+      "type": "number"
+    },
+    "y": {
+      "type": "number"
     }
   }
 }

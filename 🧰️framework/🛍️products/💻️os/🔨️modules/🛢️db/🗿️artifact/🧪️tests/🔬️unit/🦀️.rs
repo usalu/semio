@@ -873,6 +873,7 @@ async fn envelope(id: &str, deps: &[&str], actor: &str, entries: &[(&str, serde_
         diff: protocol::ArtifactDiff { schema: protocol::SchemaId(DB_PATHMAP_SCHEMA.to_string()), payload: encode_pathmap(&DslValue::Object(object)).await },
         inverse: protocol::InverseMutation { schema: protocol::SchemaId(DB_PATHMAP_SCHEMA.to_string()), payload: encode_pathmap(&DslValue::Object(vec![])).await },
         timestamp: protocol::HybridLogicalTimestamp::new(0, 0),
+        transaction: None,
     }
 }
 
@@ -1276,6 +1277,7 @@ async fn undo_applies_the_recorded_inverse_and_produces_a_fresh_commit() {
         diff: protocol::ArtifactDiff { schema: protocol::SchemaId(DB_PATHMAP_SCHEMA.to_string()), payload: encode_pathmap(&DslValue::from(&serde_json::json!({ "x": 1 }))).await },
         inverse: protocol::InverseMutation { schema: protocol::SchemaId(DB_PATHMAP_SCHEMA.to_string()), payload: encode_pathmap(&DslValue::from(&serde_json::json!({ "x": null }))).await },
         timestamp: protocol::HybridLogicalTimestamp::new(0, 0),
+        transaction: None,
     };
     engine.submit(CommandBatch::new(vec![original]).await.unwrap(), SubmitOptions::default(), 0).await.unwrap();
     assert!(engine.get("x").await.unwrap().is_some());
@@ -2545,6 +2547,7 @@ async fn a_history_transition_naming_another_actors_operation_is_refused_before_
         diff: protocol::ArtifactDiff { schema: protocol::SchemaId("fixture.opaque.v1".into()), payload: id.as_bytes().to_vec() },
         inverse: protocol::InverseMutation { schema: protocol::SchemaId("fixture.opaque.v1".into()), payload: Vec::new() },
         timestamp: protocol::HybridLogicalTimestamp::new(at, 0),
+        transaction: None,
     };
     let transition = |revert: bool, names: &[&str], actor: &str, at: u64| {
         let mutation_ids = names.iter().map(|name| protocol::MutationId((*name).to_string())).collect();

@@ -5,9 +5,13 @@
   "type": "object",
   "additionalProperties": false,
   "required": [
+    "mutation",
     "trace"
   ],
   "properties": {
+    "mutation": {
+      "const": "connectTrace"
+    },
     "trace": {
       "title": "TraceLink",
       "type": "object",
@@ -20,42 +24,201 @@
       ],
       "properties": {
         "id": {
-          "type": "string"
+          "type": "string",
+          "x-semio-ui": {
+            "widget": "text",
+            "role": "value",
+            "label": {
+              "en": "ID",
+              "de": "ID"
+            },
+            "description": {
+              "en": "Unique ID of the new entry.",
+              "de": "Eindeutige ID des neuen Eintrags."
+            },
+            "group": "identity",
+            "order": 10
+          }
         },
         "fromId": {
-          "type": "string"
+          "type": "string",
+          "x-semio-ui": {
+            "widget": "reference",
+            "role": "target",
+            "label": {
+              "en": "From",
+              "de": "Von"
+            },
+            "ref": {
+              "kind": "entity",
+              "domain": "program",
+              "granularity": "entity"
+            },
+            "group": "links",
+            "order": 20
+          }
         },
         "toId": {
-          "type": "string"
+          "type": "string",
+          "x-semio-ui": {
+            "widget": "reference",
+            "role": "target",
+            "label": {
+              "en": "To",
+              "de": "Nach"
+            },
+            "ref": {
+              "kind": "entity",
+              "domain": "program",
+              "granularity": "entity"
+            },
+            "group": "links",
+            "order": 30
+          }
         },
         "kind": {
           "type": "string",
           "enum": [
-            "ObjectiveToRequirement",
-            "StakeholderToRequirement",
-            "UserToActivity",
-            "ActivityToFunction",
-            "FunctionToProgramElement",
-            "RequirementToDecision",
-            "RequirementToRisk",
-            "RequirementToStandard",
-            "RequirementToValidation",
-            "RequirementToApproval",
-            "RequirementToChange",
-            "EquipmentToActivity",
-            "ProcessToResource",
-            "ConstraintToImpact",
-            "ScenarioToDecision",
-            "IssueToAction",
-            "ActionToOwner",
-            "DecisionToOutcome",
-            "VersionToChange",
-            "FullAuditTrail"
-          ]
+            "objectiveToRequirement",
+            "stakeholderToRequirement",
+            "userToActivity",
+            "activityToFunction",
+            "functionToProgramElement",
+            "requirementToDecision",
+            "requirementToRisk",
+            "requirementToStandard",
+            "requirementToValidation",
+            "requirementToApproval",
+            "requirementToChange",
+            "equipmentToActivity",
+            "processToResource",
+            "constraintToImpact",
+            "scenarioToDecision",
+            "issueToAction",
+            "actionToOwner",
+            "decisionToOutcome",
+            "versionToChange",
+            "fullAuditTrail"
+          ],
+          "x-semio-ui": {
+            "widget": "select",
+            "role": "value",
+            "label": {
+              "en": "Trace Kind",
+              "de": "Art der Nachverfolgungsbeziehung"
+            },
+            "options": {
+              "objectiveToRequirement": {
+                "en": "Objective → Requirement",
+                "de": "Ziel → Anforderung"
+              },
+              "stakeholderToRequirement": {
+                "en": "Stakeholder → Requirement",
+                "de": "Beteiligter → Anforderung"
+              },
+              "userToActivity": {
+                "en": "User → Activity",
+                "de": "Nutzer → Aktivität"
+              },
+              "activityToFunction": {
+                "en": "Activity → Function",
+                "de": "Aktivität → Funktion"
+              },
+              "functionToProgramElement": {
+                "en": "Function → Program Element",
+                "de": "Funktion → Programmelement"
+              },
+              "requirementToDecision": {
+                "en": "Requirement → Decision",
+                "de": "Anforderung → Entscheidung"
+              },
+              "requirementToRisk": {
+                "en": "Requirement → Risk",
+                "de": "Anforderung → Risiko"
+              },
+              "requirementToStandard": {
+                "en": "Requirement → Standard",
+                "de": "Anforderung → Norm"
+              },
+              "requirementToValidation": {
+                "en": "Requirement → Validation",
+                "de": "Anforderung → Validierung"
+              },
+              "requirementToApproval": {
+                "en": "Requirement → Approval",
+                "de": "Anforderung → Freigabe"
+              },
+              "requirementToChange": {
+                "en": "Requirement → Change",
+                "de": "Anforderung → Änderung"
+              },
+              "equipmentToActivity": {
+                "en": "Equipment → Activity",
+                "de": "Ausstattung → Aktivität"
+              },
+              "processToResource": {
+                "en": "Process → Resource",
+                "de": "Prozess → Ressource"
+              },
+              "constraintToImpact": {
+                "en": "Constraint → Impact",
+                "de": "Randbedingung → Auswirkung"
+              },
+              "scenarioToDecision": {
+                "en": "Scenario → Decision",
+                "de": "Szenario → Entscheidung"
+              },
+              "issueToAction": {
+                "en": "Issue → Action",
+                "de": "Offener Punkt → Maßnahme"
+              },
+              "actionToOwner": {
+                "en": "Action → Owner",
+                "de": "Maßnahme → Verantwortliche"
+              },
+              "decisionToOutcome": {
+                "en": "Decision → Outcome",
+                "de": "Entscheidung → Ergebnis"
+              },
+              "versionToChange": {
+                "en": "Version → Change",
+                "de": "Version → Änderung"
+              },
+              "fullAuditTrail": {
+                "en": "Full Audit Trail",
+                "de": "Vollständiger Prüfpfad"
+              }
+            },
+            "group": "classification",
+            "order": 40
+          }
         },
         "label": {
-          "type": "string"
+          "type": "string",
+          "x-semio-ui": {
+            "widget": "text",
+            "role": "value",
+            "label": {
+              "en": "Label",
+              "de": "Beschriftung"
+            },
+            "group": "identity",
+            "order": 50
+          }
         }
+      },
+      "x-semio-ui": {
+        "role": "value",
+        "label": {
+          "en": "Trace Link",
+          "de": "Nachverfolgungsbeziehung"
+        },
+        "description": {
+          "en": "The new trace link with all of its fields.",
+          "de": "Neuer Eintrag vom Typ „Nachverfolgungsbeziehung“ mit allen Feldern."
+        },
+        "group": "record",
+        "order": 10
       }
     }
   }

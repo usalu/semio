@@ -1,9 +1,0 @@
-{
-  "ChangePartNumberInput": {
-    "key": "height",
-    "new_value": {
-      "kind": "decimal",
-      "value": 750.0
-    }
-  }
-}

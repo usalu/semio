@@ -4,9 +4,28 @@
   "title": "RenameNote",
   "type": "object",
   "additionalProperties": false,
+  "required": [
+    "mutation"
+  ],
   "properties": {
+    "mutation": {
+      "const": "renameNote"
+    },
     "newTitle": {
-      "type": "string"
+      "type": [
+        "string",
+        "null"
+      ],
+      "x-semio-ui": {
+        "widget": "text",
+        "role": "value",
+        "label": {
+          "en": "Title",
+          "de": "Titel"
+        },
+        "group": "identity",
+        "order": 10
+      }
     }
   }
 }

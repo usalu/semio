@@ -76,12 +76,12 @@ async fn declared_outcome_holds_and_a_null_shot_id_clears_the_cursor() {
     assert_eq!(outcome.get("status").and_then(serde_json::Value::as_str), Some("applied"), "set-active-shot/activates-shot-close: this fixture declares `applied`");
     assert!(mutation().diff(&before()).messages().is_empty(), "set-active-shot/activates-shot-close: activating a real shot must raise no diagnostic");
 
-    let ghost: ShootingMutation = serde_json::from_str(r#"{"mutation":"setActiveShot","shot_id":"shot-ghost"}"#).expect("probe mutation decodes");
+    let ghost: ShootingMutation = serde_json::from_str(r#"{"mutation":"setActiveShot","shotId":"shot-ghost"}"#).expect("probe mutation decodes");
     let rejected = ghost.diff(&before());
     assert_eq!(rejected.worst_level(), Some(protocol::Severity::Error), "set-active-shot/activates-shot-close: activating an unknown shot is an Error");
     assert_eq!(rejected.messages()[0].code.0, "mutation.target-missing", "set-active-shot/activates-shot-close: the existence guard's frozen code");
 
-    let cleared: ShootingMutation = serde_json::from_str(r#"{"mutation":"setActiveShot","shot_id":null}"#).expect("probe mutation decodes");
+    let cleared: ShootingMutation = serde_json::from_str(r#"{"mutation":"setActiveShot","shotId":null}"#).expect("probe mutation decodes");
     let empty = apply(&before(), &cleared);
     assert_eq!(empty.active_shot_id, "", "set-active-shot/activates-shot-close: a null `shot_id` is the legal \"no active shot\" state, stored as the empty string");
     assert!(cleared.diff(&before()).messages().is_empty(), "set-active-shot/activates-shot-close: clearing a set cursor is a real change, not a no-op");

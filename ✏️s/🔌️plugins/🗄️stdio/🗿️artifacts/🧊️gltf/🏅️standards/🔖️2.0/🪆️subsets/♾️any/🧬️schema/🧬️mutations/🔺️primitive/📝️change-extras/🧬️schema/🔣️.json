@@ -12,17 +12,94 @@
   "properties": {
     "mesh": {
       "type": "integer",
-      "minimum": 0
+      "minimum": 0,
+      "x-semio-ui": {
+        "widget": "stepper",
+        "label": {
+          "en": "Mesh",
+          "de": "Netz"
+        },
+        "description": {
+          "en": "Index of the mesh, counted from 0.",
+          "de": "Index des Netzes, ab 0 gezählt."
+        },
+        "precision": 0,
+        "group": "target",
+        "order": 10
+      }
     },
     "primitive": {
       "type": "integer",
-      "minimum": 0
+      "minimum": 0,
+      "x-semio-ui": {
+        "widget": "stepper",
+        "label": {
+          "en": "Primitive",
+          "de": "Primitiv"
+        },
+        "description": {
+          "en": "Index of the primitive within the mesh, counted from 0.",
+          "de": "Index des Primitivs im Netz, ab 0 gezählt."
+        },
+        "precision": 0,
+        "group": "target",
+        "order": 20
+      }
     },
     "data": {
-      "$ref": "#/$defs/GltfDataPresence"
+      "$ref": "#/$defs/GltfDataPresence",
+      "x-semio-ui": {
+        "label": {
+          "en": "Extras",
+          "de": "Zusatzdaten (extras)"
+        },
+        "description": {
+          "en": "Application-specific JSON; empty removes it.",
+          "de": "Anwendungsspezifisches JSON; leer entfernt es."
+        },
+        "group": "value",
+        "order": 30
+      }
     }
   },
   "$defs": {
+    "ChangePrimitiveExtraDataMutation": {
+      "description": "The whole wire of ChangePrimitiveExtraDataMutation: the editable apply payload (this document's root) or the inert restore.",
+      "oneOf": [
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "phase",
+            "value"
+          ],
+          "properties": {
+            "phase": {
+              "const": "apply"
+            },
+            "value": {
+              "$ref": "#"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "phase",
+            "value"
+          ],
+          "properties": {
+            "phase": {
+              "const": "restore"
+            },
+            "value": {
+              "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/gltf/2.0/any/diff.json"
+            }
+          }
+        }
+      ]
+    },
     "GltfDataPresence": {
       "oneOf": [
         {
@@ -33,7 +110,13 @@
           ],
           "properties": {
             "state": {
-              "const": "absent"
+              "const": "absent",
+              "x-semio-ui": {
+                "label": {
+                  "en": "Presence",
+                  "de": "Vorhandensein"
+                }
+              }
             }
           }
         },
@@ -46,110 +129,26 @@
           ],
           "properties": {
             "state": {
-              "const": "present"
+              "const": "present",
+              "x-semio-ui": {
+                "label": {
+                  "en": "Presence",
+                  "de": "Vorhandensein"
+                }
+              }
             },
             "value": {
-              "$ref": "#/$defs/GltfJson"
-            }
-          }
-        }
-      ]
-    },
-    "GltfJson": {
-      "oneOf": [
-        {
-          "type": "string",
-          "const": "Null"
-        },
-        {
-          "type": "object",
-          "additionalProperties": false,
-          "required": [
-            "Bool"
-          ],
-          "properties": {
-            "Bool": {
-              "type": "boolean"
-            }
-          }
-        },
-        {
-          "type": "object",
-          "additionalProperties": false,
-          "required": [
-            "Number"
-          ],
-          "properties": {
-            "Number": {
-              "type": "number"
-            }
-          }
-        },
-        {
-          "type": "object",
-          "additionalProperties": false,
-          "required": [
-            "String"
-          ],
-          "properties": {
-            "String": {
-              "type": "string"
-            }
-          }
-        },
-        {
-          "type": "object",
-          "additionalProperties": false,
-          "required": [
-            "Array"
-          ],
-          "properties": {
-            "Array": {
-              "type": "array",
-              "items": {
-                "$ref": "#/$defs/GltfJson"
-              }
-            }
-          }
-        },
-        {
-          "type": "object",
-          "additionalProperties": false,
-          "required": [
-            "Object"
-          ],
-          "properties": {
-            "Object": {
-              "type": "array",
-              "items": {
-                "type": "array",
-                "items": [
-                  {
-                    "type": "string"
-                  },
-                  {
-                    "$ref": "#/$defs/GltfJson"
-                  }
-                ],
-                "additionalItems": false,
-                "minItems": 2,
-                "maxItems": 2
+              "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/gltf/2.0/any/snapshot.json#/$defs/GltfJson",
+              "x-semio-ui": {
+                "label": {
+                  "en": "JSON value",
+                  "de": "JSON-Wert"
+                }
               }
             }
           }
         }
       ]
     }
-  },
-  "x-semio": {
-    "id": "s.stdio.gltf.mutation.change-primitive-extra-data.v1",
-    "version": 1,
-    "phase": "mutation",
-    "kind": "change",
-    "touchedPaths": [
-      "document/meshes/*/primitives/*/extras"
-    ],
-    "referencePolicy": "none"
-  },
-  "x-semio-mutation": "change-primitive-extra-data"
+  }
 }

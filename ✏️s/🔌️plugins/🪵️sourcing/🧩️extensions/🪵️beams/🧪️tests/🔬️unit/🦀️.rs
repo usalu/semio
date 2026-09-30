@@ -3,7 +3,7 @@ use super::*;
 
 #[semio_framework_async_macros::async_test]
 async fn bundle_contributes_module_for_sourcing_curation() {
-    let manifest = bundle().manifest;
+    let manifest = bundle().into_manifest_cold().unwrap();
     assert_eq!(manifest.extension_id, EXTENSION_ID);
     assert_eq!(manifest.extends, "sourcing");
     assert_eq!(manifest.capabilities.len(), 0);

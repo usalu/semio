@@ -1,8 +1,14 @@
-/** 🦠️ change-mesh-morph-weights: cohesive atomic mesh mutation. */
-import type { GltfJson, GltfSnapshot, GltfPrimitive, GltfMorphTarget } from '../../📸️snapshot/🟦️.ts';
-import { run, reject, positionIn, itemIndex, permutation, moveItem, type GltfLeafResult, type GltfMutationRejection } from './🟦️';
-export const GltfChangeMeshMorphWeightsDescriptor = { id: 's.stdio.gltf.mutation.change-mesh-morph-weights.v1', version: 1, kind: 'change', touchedPaths: ["document/meshes/*/weights"], referencePolicy: 'requires finite weights whose arity matches every primitive target list' } as const;
-export interface GltfChangeMeshMorphWeightsPayload { mesh: number; weights: number[] }
-export type GltfChangeMeshMorphWeightsResult = GltfLeafResult;
-export const validateGltfChangeMeshMorphWeights = (payload: GltfChangeMeshMorphWeightsPayload, base: GltfSnapshot): GltfMutationRejection | undefined => { const mesh = itemIndex(payload.mesh, base.document.meshes.length, 'document/meshes'); if (mesh) return mesh; if (!payload.weights.every(Number.isFinite)) return reject('gltf.mutation.invalid-morph-weights', `document/meshes/${payload.mesh}/weights`, 'weights must be finite'); if (base.document.meshes[payload.mesh]!.primitives.some(primitive => primitive.targets.length !== payload.weights.length)) return reject('gltf.mutation.morph-weight-arity', `document/meshes/${payload.mesh}/weights`, 'weights must match every primitive target count'); return undefined; };
-export const applyGltfChangeMeshMorphWeights = (base: GltfSnapshot, payload: GltfChangeMeshMorphWeightsPayload): GltfChangeMeshMorphWeightsResult => run(base, payload, validateGltfChangeMeshMorphWeights, (next, payload) => { next.document.meshes[payload.mesh]!.weights = [...payload.weights]; }, GltfChangeMeshMorphWeightsDescriptor.touchedPaths);
+/** ⚖️ `change-mesh-morph-weights` wire twin: the flat `Apply` payload `GltfChangeMeshMorphWeightsPayload` and the phase wire `ChangeMeshMorphWeightsMutation`, exactly as `./🦀️.rs` writes them.
+ * @see ./🧬️schema/🔣️.json */
+import { gltfWireArray, gltfWireIndex, gltfWireNumber, gltfWireObject, gltfWireRequired } from "../../../📸️snapshot/🟦️.ts";
+import { type GltfDiff, type GltfPhase, gltfWirePhase, parseGltfDiff } from "../../../🔺️diff/🟦️.ts";
+
+export interface GltfChangeMeshMorphWeightsPayload {
+  mesh: number;
+  weights: number[];
+}
+
+export type ChangeMeshMorphWeightsMutation = GltfPhase<GltfChangeMeshMorphWeightsPayload, GltfDiff>;
+
+export const parseGltfChangeMeshMorphWeightsPayload = gltfWireObject<GltfChangeMeshMorphWeightsPayload>({ mesh: gltfWireRequired(gltfWireIndex), weights: gltfWireRequired(gltfWireArray(gltfWireNumber)) });
+export const parseChangeMeshMorphWeightsMutation = gltfWirePhase(parseGltfChangeMeshMorphWeightsPayload, parseGltfDiff);

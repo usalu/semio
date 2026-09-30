@@ -27,6 +27,8 @@
     ],
     "ignoredPathPatterns": [
       "**/.git",
+      "**/.next",
+      "**/.nx",
       "**/.pytest_cache",
       "**/.venv",
       "**/.🧬semio",
@@ -9285,8 +9287,8 @@
         "🧱️ExternalWall",
         "🪨️BasePlate",
         "🪟️Windows",
-        "🚧️ReinforcedConcreteInternalWall",
-        "🛡️ReinforcedConcreteExternalWall",
+        "🚧️ReinforcedConcreteInternal",
+        "🛡️ReinforcedConcreteExternal",
         "🧱️OneWayReinforcedConcreteSlab",
         "🏛️ReinforcedConcreteColumn"
       ],
@@ -12145,6 +12147,8 @@
         "🧮️vector-operations",
         "🧵️job",
         "⏯️tool-run",
+        "⏪️time-travel",
+        "🛠️tool-machine",
         "🧾️measurement-contracts",
         "🪐️space",
         "🪪️identity",
@@ -15162,7 +15166,7 @@
         "👥️raises-the-design-occupancy-to-16-people",
         "🏠️loosens-the-blower-door-result-to-2-point-5-per-hour",
         "🔊️raises-the-equivalent-sound-level-to-30-db",
-        "🚪️raises-the-infiltration-allowance-to-52-point-5-m3-per-hour",
+        "🚪️raises-the-infiltration-allowance-52-point-5-m3-per-hour",
         "🫁️relaxes-the-indoor-air-class-to-ida-3",
         "❄️raises-the-annual-cooling-demand-to-1250-kwh",
         "🌍️switches-the-check-to-the-en-annex",
@@ -15171,9 +15175,9 @@
         "🏷️tightens-the-required-sfp-class-to-3",
         "🌀️improves-the-specific-fan-power-to-1250-w-per-m3-s",
         "📉️tightens-the-storage-loss-allowance-to-4-point-5-kwh",
-        "☁️raises-the-required-humidification-to-3-point-5-kg-per-hour",
+        "☁️raises-the-required-humidification-3-point-5-kg-per-hour",
         "⏳️extends-the-heat-recovery-operating-hours-to-14",
-        "💦️drops-the-provided-humidification-to-1-point-25-kg-per-hour",
+        "💦️drops-the-provided-humidification-1-point-25-kg-per-hour",
         "🌙️deepens-the-night-setback-to-5-kelvin",
         "🏢️reclassifies-the-space-as-office",
         "👪️raises-the-household-to-five-occupants",
@@ -16144,6 +16148,38 @@
       ],
       "source": "registry"
     },
+    "dependency-direction": {
+      "ownerKindIds": [
+        "fixtures",
+        "schema",
+        "tests"
+      ],
+      "memberNames": [
+        "🧱️dependency-direction",
+        "🧭️direction"
+      ],
+      "source": "registry"
+    },
+    "discovery-boundaries": {
+      "ownerKindIds": [
+        "fixtures",
+        "schema",
+        "tests"
+      ],
+      "memberNames": [
+        "🚷️discovery-boundaries"
+      ],
+      "source": "registry"
+    },
+    "toolchain-authority": {
+      "ownerKindIds": [
+        "tests"
+      ],
+      "memberNames": [
+        "🛠️toolchain-authority"
+      ],
+      "source": "registry"
+    },
     "app-verification-source-ownership": {
       "ownerKindIds": [
         "fixtures",
@@ -16653,15 +16689,6 @@
       ],
       "source": "registry"
     },
-    "os-dev-layering-policy-tests": {
-      "ownerKindIds": [
-        "tests"
-      ],
-      "memberNames": [
-        "🧹️layering-policy"
-      ],
-      "source": "registry"
-    },
     "os-dev-export-path-policy-tests": {
       "ownerKindIds": [
         "tests"
@@ -16704,15 +16731,6 @@
       ],
       "memberNames": [
         "🔬️catalog-smoke"
-      ],
-      "source": "registry"
-    },
-    "os-dev-collaboration-tests": {
-      "ownerKindIds": [
-        "tests"
-      ],
-      "memberNames": [
-        "🤝️collaboration"
       ],
       "source": "registry"
     },
@@ -16931,6 +16949,41 @@
       ],
       "memberNames": [
         "🧑‍💻os-dev-composition-ownership"
+      ],
+      "source": "registry"
+    },
+    "renderer-contract-tests": {
+      "ownerKindIds": [
+        "tests"
+      ],
+      "memberNames": [
+        "🪪️session-factory",
+        "🥽️brush-mesh-upload",
+        "🎯️pixel-selection",
+        "🎭️mask-selection-oracle",
+        "💥️extension-evaluate-fault",
+        "🎚️renderer-contract"
+      ],
+      "source": "registry"
+    },
+    "renderer-test-oracles": {
+      "ownerKindIds": [
+        "oracles"
+      ],
+      "memberNames": [
+        "🪪️session-double",
+        "🖱️mounted-input"
+      ],
+      "source": "registry"
+    },
+    "cargo-dependency-direction": {
+      "ownerKindIds": [
+        "fixtures",
+        "schema",
+        "tests"
+      ],
+      "memberNames": [
+        "🧱️cargo-dependency-direction"
       ],
       "source": "registry"
     }
@@ -28539,6 +28592,7 @@
             "🧰️framework/🔨️modules/🚪️io/🌐️fetch-timeout/🟦️.ts",
             "🧰️framework/🔨️modules/🚪️io/🔤️base64/🟦️.ts",
             "🧰️framework/🔨️modules/🚪️io/🧬️schema/🟦️.ts",
+            "🧰️framework/🔨️modules/🛂️manifest/🔣️input-labels.json",
             "🧰️framework/🔨️modules/🛂️manifest/🟦️.ts",
             "🧰️framework/🔨️modules/🛂️manifest/🤖️generated/🎚️ui-axes/🟦️.ts",
             "🧰️framework/🔨️modules/🛂️manifest/🧬️schema/🟦️.ts",
@@ -28680,6 +28734,7 @@
         "🧰️framework/🔨️modules/🖼️assets/🥽️mesh/🟦️.ts",
         "🧰️framework/🔨️modules/🚪️io/🌐️fetch-timeout/🟦️.ts",
         "🧰️framework/🔨️modules/🚪️io/🧬️schema/🟦️.ts",
+        "🧰️framework/🔨️modules/🛂️manifest/🔣️input-labels.json",
         "🧰️framework/🔨️modules/🛂️manifest/🟦️.ts",
         "🧰️framework/🔨️modules/🛂️manifest/🤖️generated/🎚️ui-axes/🟦️.ts",
         "🧰️framework/🔨️modules/🛂️manifest/🧬️schema/🟦️.ts",
@@ -29251,6 +29306,16 @@
           "🧰️framework/🔨️modules/**"
         ],
         "reason": "A domain-neutral framework module owns the contracts its two independent consumers share."
+      },
+      "implementation-module-engine-session": {
+        "pathPatterns": ["✏️s/🔨️modules/*/⚙️engine/*/🌊️session"],
+        "reason": "An implementation domain engine session owns its explicit runtime authority and invocation contracts."
+      },
+      "implementation-dev-module": {
+        "pathPatterns": [
+          "✏️s/🧑‍💻dev/*"
+        ],
+        "reason": "An implementation dev module owns the preservation and verification contracts of its concrete integration composition."
       },
       "product-root": {
         "pathPatterns": [
@@ -30014,7 +30079,46 @@
     "🧰️framework/🛍️products/🦑️repo": "clean",
     ".🧬semio/🦑️repo/🎫️tickets": "exempt"
   },
-  "_areaLayerComment": "🏛️ Dependency direction. `repo-wide` code (the root router, root manifests) and `framework` code may be depended UPON by an implementation, never the reverse: deleting an `implementation` area must leave every `repo-wide` and `framework` file correct and up to date. An implementation-specific rule therefore belongs in that implementation's own 📜️script.ts, which the policy plugin already discovers, not in the root router. Enforced by `bun ./📜️script.ts verify layering` against the shrink-only baseline 🧅️layering.json.",
+  "_areaLayerComment": "🏛️ Dependency direction. `repo-wide` code (the root router, root manifests) and `framework` code may be depended UPON by an implementation, never the reverse: deleting an `implementation` area must leave every `repo-wide` and `framework` file correct and up to date. An implementation-specific rule therefore belongs in that implementation's own 📜️script.ts, which the policy plugin already discovers, not in the root router. Enforced by the parser-backed canonical-architecture graph gate without reference-count baselines or generated-banner exemptions.",
+  "dependencyDirections": {
+    "roles": {
+      "io": {
+        "ownerPaths": [
+          "🧰️framework/🔨️modules/🚪️io"
+        ],
+        "externalPackages": []
+      },
+      "ui": {
+        "ownerPaths": [
+          "🧰️framework/🔨️modules/🖱️ui"
+        ],
+        "externalPackages": [
+          "react",
+          "react-dom",
+          "three",
+          "@react-three/fiber",
+          "@react-three/drei"
+        ]
+      },
+      "renderer": {
+        "ownerPaths": [
+          "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer"
+        ],
+        "externalPackages": []
+      }
+    },
+    "rules": {
+      "io-renderer-independent": {
+        "fromRoles": [
+          "io"
+        ],
+        "toRoles": [
+          "ui",
+          "renderer"
+        ]
+      }
+    }
+  },
   "areaLayers": {
     "🧰️framework": "framework",
     "✏️s": "implementation",
@@ -30757,12 +30861,48 @@
   "_stateLaneComment": "🫧️ Ticket 26/08/13/UNIFIED-STATE-ARCHITECTURE-AND-DEMONSTRATOR-RESTORATION wave A0: exactly four state mechanisms exist, enforced by API and policy — 🗿️artifacts = persisted shared, 🎚️config = persisted local-only, 👥️presence = ephemeral shared, 🫧️transient = ephemeral local-only UI state. Every state-owning scope (app, mode, window) carries the same three non-artifact lanes as sibling facet dirs, each shaped by configChildDirs/presenceChildDirs/transientChildDirs. modeChildDirs did not exist before this wave: modes had no declared children at all, so a mode-scoped config/presence/transient facet had nowhere legal to live. Draftness is a LANE property (which store a record lives in), never a field annotation, so `preview` folded into the artifact lane; `effect` was deleted (effects are Emit.effects, not state); and `inferred` left the state axis entirely for the orthogonal `#[derived]` / `x-semio-derived` marker.",
   "_stdioFacetComment": "Stdio IO: io/{import/🧩️deserializers,export/🧵️serializers}/artifacts/<stdio>/.",
   "_testComparisonProfilesComment": "⚖️ The DOMAIN-NEUTRAL profiles the framework itself owns. A profile that knows a file format (semantic-pdf-v1, semantic-raster-v1, …) belongs to the owner of that format and is contributed through its `testOraclesDirName` manifest — the framework supplies the comparison MECHANISM, never the per-format policy.",
-  "_layeringGeneratedContractsComment": "🏛️ Generated layering inputs may use only exact contract IDs; generated banners remain content evidence.",
-  "layeringGeneratedContractIds": [],
-  "layeringGeneratedBanners": [
-    "var __defProp = Object.defineProperty;",
-    "// @generated",
-    "/* eslint-disable */\n// @generated",
-    "<auto-generated"
-  ]
+  "cargoDependencyDirections": {
+    "roles": [
+      "framework",
+      "product",
+      "hub",
+      "s-module",
+      "plugin",
+      "extension",
+      "tool",
+      "library",
+      "artifact",
+      "test"
+    ],
+    "rules": {
+      "cargo-framework-no-implementation-role": {
+        "fromRoles": [
+          "framework"
+        ],
+        "toRoles": [
+          "s-module",
+          "plugin",
+          "extension",
+          "hub"
+        ]
+      },
+      "cargo-modules-no-plugins": {
+        "fromRoles": [
+          "s-module"
+        ],
+        "toRoles": [
+          "plugin",
+          "extension"
+        ]
+      },
+      "cargo-plugins-no-extensions": {
+        "fromRoles": [
+          "plugin"
+        ],
+        "toRoles": [
+          "extension"
+        ]
+      }
+    }
+  }
 }

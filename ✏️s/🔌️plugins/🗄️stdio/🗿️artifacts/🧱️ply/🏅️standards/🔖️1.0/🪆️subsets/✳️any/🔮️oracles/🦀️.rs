@@ -87,9 +87,10 @@ mod oracles {
     //#endregion 🔖️Encoding
 
     //#region 🔖️JsonValue
-    /// 🔎️ Owned mutation-params grammar this module speaks: a property's TYPE always comes from its
-    /// owning element's own declaration (looked up at apply time), so a scalar value is a bare JSON
-    /// number and a list value is a bare JSON number array — no self-describing tag needed.
+    /// 🔎️ Mutation params carry the leaf wire payload (design §11): every cell is the `PlyValue` wire — adjacently
+    /// tagged `{"kind": <scalar type>, "value": <number>}`, a list `{"kind": "list", "value": [<scalar wire>…]}`. The
+    /// declared property type of the owning element is still what the cell is written as, and a cell whose tag
+    /// disagrees with that declaration is an error, never coerced.
     fn usize_field(value: &Json, key: &str) -> usize {
         match value.get(key) {
             Some(Json::Number(number)) => number.max(0.0) as usize,
@@ -97,10 +98,14 @@ mod oracles {
         }
     }
 
-    fn number_of(value: &Json) -> Result<f64, String> {
-        match value {
-            Json::Number(number) => Ok(*number),
-            other => Err(format!("expected a number, found {other:?}")),
+    fn scalar_of(value: &Json, scalar_type: &ScalarType) -> Result<f64, String> {
+        let declared = scalar_type_name(scalar_type);
+        if value.str("kind") != declared {
+            return Err(format!("expected a {declared:?} cell, found {value:?}"));
+        }
+        match value.get("value") {
+            Some(Json::Number(number)) => Ok(*number),
+            other => Err(format!("expected a number in the {declared:?} cell, found {other:?}")),
         }
     }
 
@@ -108,7 +113,7 @@ mod oracles {
         use ply_rs::ply::Property;
         match data_type {
             PropertyType::Scalar(scalar_type) => {
-                let n = number_of(value)?;
+                let n = scalar_of(value, scalar_type)?;
                 Ok(match scalar_type {
                     ScalarType::Char => Property::Char(n as i8),
                     ScalarType::UChar => Property::UChar(n as u8),
@@ -121,8 +126,10 @@ mod oracles {
                 })
             }
             PropertyType::List(_, item_type) => {
-                let Json::Array(items) = value else { return Err(format!("expected an array for a list property, found {value:?}")) };
-                let numbers = items.iter().map(number_of).collect::<Result<Vec<f64>, String>>()?;
+                if value.str("kind") != "list" {
+                    return Err(format!("expected a \"list\" cell, found {value:?}"));
+                }
+                let numbers = value.array("value").iter().map(|item| scalar_of(item, item_type)).collect::<Result<Vec<f64>, String>>()?;
                 Ok(match item_type {
                     ScalarType::Char => Property::ListChar(numbers.iter().map(|n| *n as i8).collect()),
                     ScalarType::UChar => Property::ListUChar(numbers.iter().map(|n| *n as u8).collect()),
@@ -134,6 +141,37 @@ mod oracles {
                     ScalarType::Double => Property::ListDouble(numbers.iter().map(|n| *n as f64).collect()),
                 })
             }
+        }
+    }
+
+    fn scalar_wire(scalar_type: &ScalarType, number: f64) -> Json {
+        Json::Object(vec![("kind".to_string(), Json::String(scalar_type_name(scalar_type).to_string())), ("value".to_string(), Json::Number(number))])
+    }
+
+    fn list_wire(scalar_type: ScalarType, numbers: Vec<f64>) -> Json {
+        Json::Object(vec![("kind".to_string(), Json::String("list".to_string())), ("value".to_string(), Json::Array(numbers.into_iter().map(|number| scalar_wire(&scalar_type, number)).collect()))])
+    }
+
+    /// 🧾️ One cell as the `PlyValue` wire.
+    fn property_to_wire(value: &ply_rs::ply::Property) -> Json {
+        use ply_rs::ply::Property;
+        match value {
+            Property::Char(v) => scalar_wire(&ScalarType::Char, *v as f64),
+            Property::UChar(v) => scalar_wire(&ScalarType::UChar, *v as f64),
+            Property::Short(v) => scalar_wire(&ScalarType::Short, *v as f64),
+            Property::UShort(v) => scalar_wire(&ScalarType::UShort, *v as f64),
+            Property::Int(v) => scalar_wire(&ScalarType::Int, *v as f64),
+            Property::UInt(v) => scalar_wire(&ScalarType::UInt, *v as f64),
+            Property::Float(v) => scalar_wire(&ScalarType::Float, *v as f64),
+            Property::Double(v) => scalar_wire(&ScalarType::Double, *v),
+            Property::ListChar(v) => list_wire(ScalarType::Char, v.iter().map(|x| *x as f64).collect()),
+            Property::ListUChar(v) => list_wire(ScalarType::UChar, v.iter().map(|x| *x as f64).collect()),
+            Property::ListShort(v) => list_wire(ScalarType::Short, v.iter().map(|x| *x as f64).collect()),
+            Property::ListUShort(v) => list_wire(ScalarType::UShort, v.iter().map(|x| *x as f64).collect()),
+            Property::ListInt(v) => list_wire(ScalarType::Int, v.iter().map(|x| *x as f64).collect()),
+            Property::ListUInt(v) => list_wire(ScalarType::UInt, v.iter().map(|x| *x as f64).collect()),
+            Property::ListFloat(v) => list_wire(ScalarType::Float, v.iter().map(|x| *x as f64).collect()),
+            Property::ListDouble(v) => list_wire(ScalarType::Double, v.clone()),
         }
     }
 
@@ -197,8 +235,8 @@ mod oracles {
         Ok(row)
     }
 
-    fn row_to_json(row: &DefaultElement, element_def: &ElementDef) -> Json {
-        Json::Object(vec![("values".to_string(), Json::Array(element_def.properties.iter().map(|(property_name, _)| row.get(property_name).map(property_to_json).unwrap_or(Json::Null)).collect()))])
+    fn row_to_json(row: &DefaultElement, element_def: &ElementDef, cell: fn(&ply_rs::ply::Property) -> Json) -> Json {
+        Json::Object(vec![("values".to_string(), Json::Array(element_def.properties.iter().map(|(property_name, _)| row.get(property_name).map(cell).unwrap_or(Json::Null)).collect()))])
     }
 
     fn element_from_json(value: &Json) -> Result<(ElementDef, Vec<DefaultElement>), String> {
@@ -215,12 +253,14 @@ mod oracles {
         Ok((def, rows))
     }
 
-    fn element_to_json(name: &str, element_def: &ElementDef, rows: &[DefaultElement]) -> Json {
+    /// 🧩️ One element as `{name, count, properties, rows}` — `cell` spells each row value: [`property_to_json`] (bare numbers)
+    /// for the projection, [`property_to_wire`] for the `PlyElement` wire.
+    fn element_to_json(name: &str, element_def: &ElementDef, rows: &[DefaultElement], cell: fn(&ply_rs::ply::Property) -> Json) -> Json {
         Json::Object(vec![
             ("name".to_string(), Json::String(name.to_string())),
             ("count".to_string(), Json::Number(rows.len() as f64)),
             ("properties".to_string(), Json::Array(element_def.properties.iter().map(|(_, property_def)| property_def_to_json(property_def)).collect())),
-            ("rows".to_string(), Json::Array(rows.iter().map(|row| row_to_json(row, element_def)).collect())),
+            ("rows".to_string(), Json::Array(rows.iter().map(|row| row_to_json(row, element_def, cell)).collect())),
         ])
     }
 
@@ -382,7 +422,6 @@ mod oracles {
         let mut ply = parser.read_ply(&mut cursor).map_err(|error| format!("ply-rs could not parse the input: {error}"))?;
         match kind {
             "" => return Err("mutation spec carries no `kind`".to_string()),
-            "no-mutation" => {}
             "set-snapshot" => {
                 ply = ply_from_json(params.get("snapshot").ok_or("set-snapshot requires a snapshot field")?)?;
             }
@@ -453,15 +492,35 @@ mod oracles {
     /// 👁️ The independent projection both producers' results are compared through: wire format,
     /// in-order comments, and each name-keyed element's own ordered property declarations and rows.
     pub fn project(bytes: &[u8]) -> Result<Json, String> {
+        document(bytes, property_to_json, Vec::new())
+    }
+
+    /// 📸️ The `PlySnapshot` wire of `bytes` — `set-snapshot`'s payload and its inverse: `schema` (`stdio.ply`), then the
+    /// same document [`project`] reads with every cell as [`property_to_wire`].
+    pub fn snapshot_wire(bytes: &[u8]) -> Result<Json, String> {
+        document(bytes, property_to_wire, vec![("schema".to_string(), Json::String("stdio.ply".to_string()))])
+    }
+
+    /// 🔁️ The identity round trip's own producer: `ply-rs` parses the document and re-serializes it from its model alone.
+    pub fn round_trip(bytes: &[u8]) -> Result<Vec<u8>, String> {
+        let mut ply = Parser::<DefaultElement>::new().read_ply(&mut Cursor::new(bytes)).map_err(|error| format!("ply-rs could not parse the input: {error}"))?;
+        serialize(&mut ply)
+    }
+
+    fn document(bytes: &[u8], cell: fn(&ply_rs::ply::Property) -> Json, lead: Vec<(String, Json)>) -> Result<Json, String> {
         let parser = Parser::<DefaultElement>::new();
         let mut cursor = Cursor::new(bytes);
         let ply = parser.read_ply(&mut cursor).map_err(|error| format!("independent reader could not parse the document: {error}"))?;
-        let elements = ply.header.elements.iter().map(|(name, def)| element_to_json(name, def, ply.payload.get(name).map(|rows| rows.as_slice()).unwrap_or(&[]))).collect();
-        Ok(Json::Object(vec![
-            ("format".to_string(), Json::String(encoding_name(&ply.header.encoding).to_string())),
-            ("comments".to_string(), Json::Array(ply.header.comments.iter().map(|comment| Json::String(comment.clone())).collect())),
-            ("elements".to_string(), Json::Array(elements)),
-        ]))
+        let elements = ply.header.elements.iter().map(|(name, def)| element_to_json(name, def, ply.payload.get(name).map(|rows| rows.as_slice()).unwrap_or(&[]), cell)).collect();
+        Ok(Json::Object(
+            lead.into_iter()
+                .chain([
+                    ("format".to_string(), Json::String(encoding_name(&ply.header.encoding).to_string())),
+                    ("comments".to_string(), Json::Array(ply.header.comments.iter().map(|comment| Json::String(comment.clone())).collect())),
+                    ("elements".to_string(), Json::Array(elements)),
+                ])
+                .collect(),
+        ))
     }
     //#endregion 🔖️Projection
 }
@@ -484,6 +543,28 @@ pub fn oracle_apply_mutation(input: &[u8], spec: &Json) -> Result<Vec<u8>, Strin
 #[cfg(feature = "oracles")]
 pub fn project_ply(bytes: &[u8]) -> Result<Json, String> {
     oracles::project(bytes)
+}
+
+/// 📸️ The `PlySnapshot` wire of `bytes`, read independently through `ply-rs`. @see [`oracles::snapshot_wire`].
+#[cfg(feature = "oracles")]
+pub fn ply_snapshot_wire(bytes: &[u8]) -> Result<Json, String> {
+    oracles::snapshot_wire(bytes)
+}
+
+/// 🔁️ @see [`oracles::round_trip`].
+#[cfg(feature = "oracles")]
+pub fn oracle_round_trip(bytes: &[u8]) -> Result<Vec<u8>, String> {
+    oracles::round_trip(bytes)
+}
+
+#[cfg(not(feature = "oracles"))]
+pub fn ply_snapshot_wire(_bytes: &[u8]) -> Result<Json, String> {
+    Err("the `oracles` feature is disabled — this host was not built with the registered reference implementations".to_string())
+}
+
+#[cfg(not(feature = "oracles"))]
+pub fn oracle_round_trip(_bytes: &[u8]) -> Result<Vec<u8>, String> {
+    Err("the `oracles` feature is disabled — this host was not built with the registered reference implementations".to_string())
 }
 
 /// 🚫️ Without the `oracles` feature the reference implementation is not linked at all.

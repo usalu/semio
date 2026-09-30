@@ -5,11 +5,29 @@
   "type": "object",
   "additionalProperties": false,
   "required": [
+    "mutation",
     "newCode"
   ],
   "properties": {
+    "mutation": {
+      "const": "renameProject"
+    },
     "newCode": {
-      "type": "string"
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "text",
+        "role": "value",
+        "label": {
+          "en": "New Project Code",
+          "de": "Neue Projektkennung"
+        },
+        "description": {
+          "en": "New code of the project.",
+          "de": "Neue Kennung des Projekts."
+        },
+        "group": "identity",
+        "order": 10
+      }
     }
   }
 }

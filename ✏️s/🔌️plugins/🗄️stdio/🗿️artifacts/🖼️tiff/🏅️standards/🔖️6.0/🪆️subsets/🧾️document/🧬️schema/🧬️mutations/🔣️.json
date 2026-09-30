@@ -7,10 +7,33 @@
     {
       "type": "object",
       "additionalProperties": false,
-      "required": ["mutation", "payload"],
+      "required": [
+        "mutation",
+        "payload"
+      ],
       "properties": {
-        "mutation": { "const": "patch-snapshot" },
-        "payload": { "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/tiff/6.0/document/mutation/patch-snapshot/schema.json" }
+        "mutation": {
+          "const": "set-snapshot"
+        },
+        "payload": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/tiff/6.0/document/mutation/set-snapshot/schema.json"
+        }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "mutation",
+        "payload"
+      ],
+      "properties": {
+        "mutation": {
+          "const": "patch-snapshot"
+        },
+        "payload": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/tiff/6.0/document/mutation/patch-snapshot/schema.json"
+        }
       }
     },
     {
@@ -70,6 +93,22 @@
       ],
       "properties": {
         "mutation": {
+          "const": "replace-tag"
+        },
+        "payload": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/tiff/6.0/document/mutation/replace-tag/schema.json"
+        }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "mutation",
+        "payload"
+      ],
+      "properties": {
+        "mutation": {
           "const": "remove-tag"
         },
         "payload": {
@@ -90,38 +129,6 @@
         },
         "payload": {
           "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/tiff/6.0/document/mutation/replace-pixels/schema.json"
-        }
-      }
-    },
-    {
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "mutation",
-        "payload"
-      ],
-      "properties": {
-        "mutation": {
-          "const": "replace-tag"
-        },
-        "payload": {
-          "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/tiff/6.0/document/mutation/replace-tag/schema.json"
-        }
-      }
-    },
-    {
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "mutation",
-        "payload"
-      ],
-      "properties": {
-        "mutation": {
-          "const": "set-snapshot"
-        },
-        "payload": {
-          "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/tiff/6.0/document/mutation/set-snapshot/schema.json"
         }
       }
     }

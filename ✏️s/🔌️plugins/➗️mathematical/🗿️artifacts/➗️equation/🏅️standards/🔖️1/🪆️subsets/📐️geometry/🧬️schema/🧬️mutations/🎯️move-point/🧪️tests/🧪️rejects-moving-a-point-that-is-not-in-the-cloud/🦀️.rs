@@ -17,10 +17,10 @@ use crate::standards::v1::subsets::geometry::schema::mutations::move_point::Move
 use crate::{equation_geometry, EquationDiff, EquationMutation, EquationSnapshot};
 use semio_framework_os_kernel::ToValue;
 
-const BEFORE: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🎯️move-point/🧪️rejects-moving-a-point-that-is-not-in-the-cloud/📸️snapshot/⬅️before/🔣️.json");
-const AFTER: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🎯️move-point/🧪️rejects-moving-a-point-that-is-not-in-the-cloud/📸️snapshot/➡️after/🔣️.json");
-const MUTATION: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🎯️move-point/🧪️rejects-moving-a-point-that-is-not-in-the-cloud/🦠️mutation/🔣️.json");
-const OUTCOME: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🎯️move-point/🧪️rejects-moving-a-point-that-is-not-in-the-cloud/🎯️outcome/🔣️.json");
+const BEFORE: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🎯️move-point/🧪️rejects-moving-point-is-not-cloud/📸️snapshot/⬅️before/🔣️.json");
+const AFTER: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🎯️move-point/🧪️rejects-moving-point-is-not-cloud/📸️snapshot/➡️after/🔣️.json");
+const MUTATION: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🎯️move-point/🧪️rejects-moving-point-is-not-cloud/🦠️mutation/🔣️.json");
+const OUTCOME: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🎯️move-point/🧪️rejects-moving-point-is-not-cloud/🎯️outcome/🔣️.json");
 
 fn before() -> EquationSnapshot {
     pack::from_json_str(BEFORE).expect("before snapshot decodes")

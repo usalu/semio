@@ -63,9 +63,10 @@ pub mod wasm_session;
 pub mod vcs;
 pub use vcs::*;
 
-#[path = "../../📐️brep-geometry/🦀️.rs"]
-pub mod brep_geometry;
-pub use brep_geometry::{dispose_geometry, export_solid_json, import_solid_json, retain_geometry_handles, tessellate_geometry};
+#[path = "../../🎒️mesh/🦀️.rs"]
+pub mod mesh;
+#[path = "../../🌐️geometry/🦀️.rs"]
+pub mod geometry;
 
 #[path = "."]
 pub mod extensions {

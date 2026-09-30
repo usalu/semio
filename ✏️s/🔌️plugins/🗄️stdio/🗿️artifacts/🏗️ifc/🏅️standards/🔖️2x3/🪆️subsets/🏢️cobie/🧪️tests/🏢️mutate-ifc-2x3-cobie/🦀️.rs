@@ -1,6 +1,7 @@
 //! 🦀️ IFC2X3 / 🏢️cobie mutation case — Rust adapter. Exhaustive: every declared
-//! `Ifc2x3CobieMutation` kind (`ifc-2x3-cobie`, 7 kinds) gets a `mutate-<kind>` and an
-//! `inverse-<kind>` scenario, plus one identity round trip. `ruststep` 0.4 can only READ Part-21
+//! `Ifc2x3CobieMutation` kind (`ifc-2x3-cobie`, 6 kinds) gets a `mutate-<kind>` and an
+//! `inverse-<kind>` scenario, plus one identity round trip. Every row's `params` IS the leaf wire payload,
+//! which the subject decodes through the derive-generated `from_payload_value`. `ruststep` 0.4 can only READ Part-21
 //! text, so the oracle dispatcher
 //! (`../../🏅️standards/🔖️2x3/🪆️subsets/🏢️cobie/🦀️oracle.rs`) performs every kind against a
 //! `ruststep`-parsed document and re-serializes through the standard-level from-scratch writer,
@@ -10,7 +11,7 @@
 //! compares them — real third-party evidence about structure, never a byte-level differential claim.
 
 use semio_repo_test_host::{Adapter, Context, Json, Outcome};
-use semio_s_plugin_stdio_test_oracle::artifacts::ifc::standards::v2x3::subsets::cobie::{oracle_apply_mutation, project_ifc_2x3_cobie};
+use semio_s_plugin_stdio_test_oracle::artifacts::ifc::standards::v2x3::subsets::cobie::{oracle_apply_mutation, oracle_round_trip, oracle_snapshot_payload, project_ifc_2x3_cobie};
 
 
 //#region 🔖️Input
@@ -33,9 +34,6 @@ fn json_num(value: f64) -> Json {
 }
 fn json_str(value: &str) -> Json {
     Json::String(value.to_string())
-}
-fn json_str_array(values: &[&str]) -> Json {
-    Json::Array(values.iter().map(|value| json_str(value)).collect())
 }
 fn json_spec(kind: &str, params: Json) -> Json {
     json_obj(vec![("kind", json_str(kind)), ("params", params)])
@@ -61,16 +59,16 @@ fn real_type_assignment() -> Json {
 /// pristine fixture's own real values: the real `IFCBUILDING` `#130`'s genuinely blank `Name`, the
 /// real `IFCBUILDINGSTOREY` `#139`'s real elevation `0.`, and the real `IFCRELDEFINESBYTYPE`
 /// `#712708` the forward direction deletes.
-fn inverse_spec(kind: &str) -> Json {
-    match kind {
-        "set-snapshot" => json_spec("set-snapshot", json_obj(vec![("fileSchema", json_str_array(&["IFC2X3"]))])),
+fn inverse_spec(kind: &str, input: &[u8]) -> Result<Json, String> {
+    Ok(match kind {
+        "set-snapshot" => json_spec("set-snapshot", oracle_snapshot_payload(input)?),
         "set-view-definition" => json_spec("set-view-definition", json_obj(vec![("view", json_str("CoordinationView_V2.0"))])),
         "set-facility-name" => json_spec("set-facility-name", json_obj(vec![("building", json_num(130.0)), ("name", json_str(""))])),
         "set-floor-elevation" => json_spec("set-floor-elevation", json_obj(vec![("storey", json_num(139.0)), ("elevation", json_num(0.0))])),
         "set-space" => json_spec("set-space", json_obj(vec![("id", json_num(9_100_001.0)), ("space", Json::Null)])),
         "set-type-assignment" => json_spec("set-type-assignment", json_obj(vec![("id", json_num(712708.0)), ("assignment", real_type_assignment())])),
-        other => json_spec(other, json_obj(vec![])),
-    }
+        other => return Err(format!("{other:?} is no declared ifc-2x3-cobie kind")),
+    })
 }
 //#endregion 🔖️Inverse
 
@@ -115,28 +113,19 @@ fn assert_same_projection(law: &str, expected: &Json, actual: &Json) -> Result<(
 //#endregion 🔖️Laws
 
 //#region 🔖️Oracle
-/// 🧾️ The `no-mutation` spec, spelled once. Every kind this dispatcher performs is one full
-/// `ruststep` parse plus one from-scratch Part-21 write, so a law's baseline must go through exactly
-/// as many of those cycles as the document it judges -- otherwise a divergence would name the
-/// writer's own normal form instead of the mutation pair.
-fn no_mutation() -> Json {
-    json_spec("no-mutation", json_obj(vec![]))
-}
-
 /// 🔮️ One handler shared by every `mutate-<kind>` scenario id. It asserts ONE thing in role, before
-/// any parity comparison exists: every kind other than `no-mutation` must MOVE the semantic
-/// projection. A row whose parameters make the mutation a no-op is not a test -- it passes whenever
-/// the reference library declined to error, which is exactly the failure this platform exists to
-/// prevent. The baseline runs one `no-mutation` cycle so the comparison isolates the mutation
-/// rather than the writer's own normal form.
+/// any parity comparison exists: every kind must MOVE the semantic projection. A row whose parameters
+/// make the mutation a no-op is not a test -- it passes whenever the reference library declined to
+/// error, which is exactly the failure this platform exists to prevent. The baseline runs one identity
+/// rewrite so the comparison isolates the mutation rather than the writer's own normal form.
 fn mutate_oracle(ctx: &Context) -> Result<Outcome, String> {
     let input = mutable_input(ctx)?;
     let spec = ctx.doc_json()?;
     let kind = spec.str("kind");
-    let baseline = project_ifc_2x3_cobie(&oracle_apply_mutation(&input, &no_mutation())?)?;
+    let baseline = project_ifc_2x3_cobie(&oracle_round_trip(&input)?)?;
     let bytes = oracle_apply_mutation(&input, &spec)?;
     let projection = project_ifc_2x3_cobie(&bytes)?;
-    if kind != "no-mutation" && projection == baseline {
+    if projection == baseline {
         return Err(format!("{kind:?} left the semantic projection of the Basic FM Handover model view unchanged -- a mutation that is not observable proves nothing, so this row's parameters do not exercise the kind they name"));
     }
     Ok(Outcome::with_raw(bytes, projection))
@@ -145,17 +134,15 @@ fn mutate_oracle(ctx: &Context) -> Result<Outcome, String> {
 /// ↩️ One handler shared by every `inverse-<kind>` scenario id, and the ORACLE side of the inverse
 /// law -- a law that is checkable in-role, without a subject: the reference dispatcher applies the
 /// forward mutation and then the independently computed `inverse_spec`, and the restored model
-/// MUST project exactly as the untouched one does. `no-mutation` is NOT short-circuited: it runs the same
-/// two cycles as every other kind, so the trivial case is evidence rather than an exemption. The
-/// baseline runs two `no-mutation` cycles for the same reason -- both sides then carry identical
-/// serializer normalisation and the comparison isolates the mutation pair itself.
+/// MUST project exactly as the untouched one does. The baseline runs two identity rewrites so both
+/// sides carry identical serializer normalisation and the comparison isolates the mutation pair.
 fn inverse_oracle(ctx: &Context) -> Result<Outcome, String> {
     let input = mutable_input(ctx)?;
     let spec = ctx.doc_json()?;
     let kind = spec.str("kind");
-    let baseline = project_ifc_2x3_cobie(&oracle_apply_mutation(&oracle_apply_mutation(&input, &no_mutation())?, &no_mutation())?)?;
+    let baseline = project_ifc_2x3_cobie(&oracle_round_trip(&oracle_round_trip(&input)?)?)?;
     let mutated = oracle_apply_mutation(&input, &spec)?;
-    let restored = oracle_apply_mutation(&mutated, &inverse_spec(&kind))?;
+    let restored = oracle_apply_mutation(&mutated, &inverse_spec(&kind, &input)?)?;
     let projection = project_ifc_2x3_cobie(&restored)?;
     assert_same_projection(&format!("inverse law violated for {kind:?} -- undoing it did not restore the model"), &baseline, &projection)?;
     Ok(Outcome::with_raw(restored, projection))
@@ -170,7 +157,7 @@ fn inverse_oracle(ctx: &Context) -> Result<Outcome, String> {
 fn round_trip_oracle(ctx: &Context) -> Result<Outcome, String> {
     let input = mutable_input(ctx)?;
     let before = project_ifc_2x3_cobie(&input)?;
-    let bytes = oracle_apply_mutation(&input, &no_mutation())?;
+    let bytes = oracle_round_trip(&input)?;
     if bytes == input {
         return Err("byte pass-through: the re-encoded output is bit-identical to the input, so nothing here proves the document was parsed".to_string());
     }
@@ -183,165 +170,61 @@ fn round_trip_oracle(ctx: &Context) -> Result<Outcome, String> {
 //#region 🔖️Subject
 #[cfg(feature = "sut")]
 mod subject {
-    use super::{inverse_spec, json_obj, json_spec, mutable_input};
+    use super::mutable_input;
     use semio_repo_test_host::{Context, Json, Outcome};
     use semio_s_artifact_stdio_ifc::standards::v2x3::subsets::base::io::{decode_ifc2x3, encode_ifc2x3};
     use semio_s_artifact_stdio_ifc::standards::v2x3::subsets::base::schema::snapshot::Ifc2x3Snapshot;
-    use semio_s_artifact_stdio_ifc::standards::v2x3::subsets::cobie::schema::mutations::{apply_ifc2x3_cobie_mutation, CobieSpaceRow, CobieTypeAssignment, Ifc2x3CobieMutation};
-    use semio_s_artifact_stdio_contract::part21::Part21Value;
+    use semio_s_artifact_stdio_ifc::standards::v2x3::subsets::cobie::schema::mutations::Ifc2x3CobieMutation;
+    use semio_s_artifact_stdio_ifc::{apply_mutation_checked, mutation_from_payload_json, mutation_inverse};
     use semio_s_plugin_stdio_test_oracle::artifacts::ifc::standards::v2x3::subsets::cobie::project_ifc_2x3_cobie;
 
-    //#region 🔖️SpecReading
-    fn num_field(value: &Json, key: &str) -> Result<f64, String> {
-        match value.get(key) {
-            Some(Json::Number(number)) => Ok(*number),
-            _ => Err(format!("expected numeric field {key:?}")),
-        }
+    /// 🦠️ The row's `params` IS the leaf wire payload, decoded by the derive-generated constructor.
+    fn operation_of(spec: &Json) -> Result<Ifc2x3CobieMutation, String> {
+        mutation_from_payload_json::<Ifc2x3Snapshot, Ifc2x3CobieMutation>(&spec.str("kind"), &spec.get("params").cloned().unwrap_or(Json::Null).to_string())
     }
-    fn u64_field(value: &Json, key: &str) -> Result<u64, String> {
-        num_field(value, key).map(|number| number as u64)
-    }
-    fn str_field(value: &Json, key: &str) -> Result<String, String> {
-        match value.get(key) {
-            Some(Json::String(text)) => Ok(text.clone()),
-            _ => Err(format!("expected string field {key:?}")),
-        }
-    }
-    fn opt_u64_field(value: &Json, key: &str) -> Option<u64> {
-        match value.get(key) {
-            Some(Json::Number(number)) => Some(*number as u64),
-            _ => None,
-        }
-    }
-    fn opt_str_field(value: &Json, key: &str) -> Option<String> {
-        match value.get(key) {
-            Some(Json::String(text)) => Some(text.clone()),
-            _ => None,
-        }
-    }
-    fn opt_num_field(value: &Json, key: &str) -> Option<f64> {
-        match value.get(key) {
-            Some(Json::Number(number)) => Some(*number),
-            _ => None,
-        }
-    }
-    fn u64_array(value: &Json, key: &str) -> Vec<u64> {
-        value
-            .array(key)
-            .iter()
-            .filter_map(|entry| match entry {
-                Json::Number(number) => Some(*number as u64),
-                _ => None,
-            })
-            .collect()
-    }
-    fn str_array(value: &Json, key: &str) -> Vec<String> {
-        value
-            .array(key)
-            .iter()
-            .filter_map(|entry| match entry {
-                Json::String(text) => Some(text.clone()),
-                _ => None,
-            })
-            .collect()
-    }
-    //#endregion 🔖️SpecReading
 
-    //#region 🔖️MutationFromSpec
-    /// 🦠️ The same `(kind, params)` wire shape the oracle dispatcher reads, translated into a real
-    /// `Ifc2x3CobieMutation`. `set-snapshot` only overrides `FILE_SCHEMA` on the already-decoded
-    /// document — the same precedent `🧱️mutate-ifc-2x3` uses, needed because a full 3464-entity
-    /// snapshot literal has no place in a readable Gherkin cell.
-    fn mutation_from_spec(spec: &Json, base: &Ifc2x3Snapshot) -> Result<Ifc2x3CobieMutation, String> {
-        let kind = spec.str("kind");
-        let empty = Json::Object(Vec::new());
-        let params = spec.get("params").unwrap_or(&empty);
-        Ok(match kind.as_str() {
-            // 🧭️ The identity baseline: a `SetSnapshot` back onto the identical base is a real no-op
-            // mutation, the same spelling `🧱️mutate-ifc-2x3` uses for its own round trip.
-            "no-mutation" => Ifc2x3CobieMutation::SetSnapshot(semio_s_artifact_stdio_ifc::standards::v2x3::subsets::cobie::schema::mutations::set_snapshot::SetSnapshot { snapshot: base.clone() }),
-            "set-snapshot" => {
-                let schemas = str_array(params, "fileSchema");
-                if schemas.is_empty() {
-                    return Err("set-snapshot requires a non-empty fileSchema field".to_string());
-                }
-                let mut snapshot = base.clone();
-                snapshot.document.header.file_schema = vec![Part21Value::List(schemas.into_iter().map(Part21Value::Str).collect())];
-                Ifc2x3CobieMutation::SetSnapshot(semio_s_artifact_stdio_ifc::standards::v2x3::subsets::cobie::schema::mutations::set_snapshot::SetSnapshot { snapshot })
-            }
-            "set-view-definition" => Ifc2x3CobieMutation::SetViewDefinition(semio_s_artifact_stdio_ifc::standards::v2x3::subsets::cobie::schema::mutations::set_view_definition::SetViewDefinition { view: str_field(params, "view")? }),
-            "set-facility-name" => Ifc2x3CobieMutation::SetFacilityName(semio_s_artifact_stdio_ifc::standards::v2x3::subsets::cobie::schema::mutations::set_facility_name::SetFacilityName { building: u64_field(params, "building")?, name: opt_str_field(params, "name") }),
-            "set-floor-elevation" => Ifc2x3CobieMutation::SetFloorElevation(semio_s_artifact_stdio_ifc::standards::v2x3::subsets::cobie::schema::mutations::set_floor_elevation::SetFloorElevation { storey: u64_field(params, "storey")?, elevation: opt_num_field(params, "elevation") }),
-            "set-space" => {
-                let space = match params.get("space") {
-                    Some(value @ Json::Object(_)) => Some(CobieSpaceRow { global_id: str_field(value, "globalId")?, name: str_field(value, "name")?, placement: u64_field(value, "placement")? }),
-                    _ => None,
-                };
-                Ifc2x3CobieMutation::SetSpace(semio_s_artifact_stdio_ifc::standards::v2x3::subsets::cobie::schema::mutations::set_space::SetSpace { id: u64_field(params, "id")?, space })
-            }
-            "set-type-assignment" => {
-                let assignment = match params.get("assignment") {
-                    Some(value @ Json::Object(_)) => Some(CobieTypeAssignment {
-                        global_id: str_field(value, "globalId")?,
-                        owner_history: opt_u64_field(value, "ownerHistory"),
-                        related_objects: u64_array(value, "relatedObjects"),
-                        relating_type: u64_field(value, "relatingType")?,
-                    }),
-                    _ => None,
-                };
-                Ifc2x3CobieMutation::SetTypeAssignment(semio_s_artifact_stdio_ifc::standards::v2x3::subsets::cobie::schema::mutations::set_type_assignment::SetTypeAssignment { id: u64_field(params, "id")?, assignment })
-            }
-            other => return Err(format!("unrecognised mutation kind {other:?}")),
-        })
+    /// ▶️ Applies `operations` in order through the production diff, refusing the first rejection.
+    fn applied(mut snapshot: Ifc2x3Snapshot, operations: &[Ifc2x3CobieMutation]) -> Result<Ifc2x3Snapshot, String> {
+        for operation in operations {
+            apply_mutation_checked(&mut snapshot, operation)?;
+        }
+        Ok(snapshot)
     }
-    //#endregion 🔖️MutationFromSpec
 
-    //#region 🔖️Codec
-    /// 📐️ Full parse → typed mutation → re-serialize from the model alone — the no-byte-pass-
-    /// through rule this wave exists to enforce.
-    fn apply_and_encode(input: &[u8], spec: &Json) -> Result<Vec<u8>, String> {
-        let snapshot = decode_ifc2x3(input)?;
-        let mutation = mutation_from_spec(spec, &snapshot)?;
-        let mut next = snapshot;
-        apply_ifc2x3_cobie_mutation(&mut next, &mutation);
-        let bytes = encode_ifc2x3(&next)?;
+    /// 📐️ Re-serializes from the model alone and refuses a byte pass-through of the committed input.
+    fn encoded(input: &[u8], snapshot: &Ifc2x3Snapshot) -> Result<Vec<u8>, String> {
+        let bytes = encode_ifc2x3(snapshot)?;
         if bytes == input {
             return Err("byte pass-through: output is bit-identical to the input".to_string());
         }
         Ok(bytes)
     }
-    //#endregion 🔖️Codec
 
-    //#region 🔖️Handlers
-    pub fn mutate(ctx: &Context) -> Result<Outcome, String> {
-        let input = mutable_input(ctx)?;
-        let spec = ctx.doc_json()?;
-        let bytes = apply_and_encode(&input, &spec)?;
+    fn outcome(bytes: Vec<u8>) -> Result<Outcome, String> {
         let projection = project_ifc_2x3_cobie(&bytes)?;
         Ok(Outcome::with_raw(bytes, projection))
     }
 
+    pub fn mutate(ctx: &Context) -> Result<Outcome, String> {
+        let input = mutable_input(ctx)?;
+        let operation = operation_of(&ctx.doc_json()?)?;
+        outcome(encoded(&input, &applied(decode_ifc2x3(&input)?, &[operation])?)?)
+    }
+
+    /// ↩️ The mutation's OWN inverse (`Mutation::inverse` against the untouched model), applied to the
+    /// re-decoded result of the forward cycle.
     pub fn inverse(ctx: &Context) -> Result<Outcome, String> {
         let input = mutable_input(ctx)?;
-        let spec = ctx.doc_json()?;
-        let kind = spec.str("kind");
-        let restored = if kind == "no-mutation" {
-            input.clone()
-        } else {
-            let mutated = apply_and_encode(&input, &spec)?;
-            apply_and_encode(&mutated, &inverse_spec(&kind))?
-        };
-        let projection = project_ifc_2x3_cobie(&restored)?;
-        Ok(Outcome::with_raw(restored, projection))
+        let operation = operation_of(&ctx.doc_json()?)?;
+        let base = decode_ifc2x3(&input)?;
+        let mutated = encoded(&input, &applied(base.clone(), std::slice::from_ref(&operation))?)?;
+        outcome(encode_ifc2x3(&applied(decode_ifc2x3(&mutated)?, &mutation_inverse(&operation, &base))?)?)
     }
 
     pub fn round_trip(ctx: &Context) -> Result<Outcome, String> {
         let input = mutable_input(ctx)?;
-        let bytes = apply_and_encode(&input, &json_spec("no-mutation", json_obj(vec![])))?;
-        let projection = project_ifc_2x3_cobie(&bytes)?;
-        Ok(Outcome::with_raw(bytes, projection))
+        outcome(encoded(&input, &decode_ifc2x3(&input)?)?)
     }
-    //#endregion 🔖️Handlers
 }
 //#endregion 🔖️Subject
 
@@ -349,15 +232,10 @@ mod subject {
 /// 🧭️ Registration entry point the generated host calls.
 pub fn adapter() -> Adapter {
     let mut built = Adapter::new("rust");
-    built = built.oracle("mutate", mutate_oracle).oracle("no-mutation-baseline-mutate", mutate_oracle).oracle("inverse", inverse_oracle).oracle("no-mutation-baseline-inverse", inverse_oracle);
+    built = built.oracle("mutate", mutate_oracle).oracle("inverse", inverse_oracle).oracle("identity-round-trip", round_trip_oracle);
     #[cfg(feature = "sut")]
     {
-        built = built.subject("mutate", subject::mutate).subject("no-mutation-baseline-mutate", subject::mutate).subject("inverse", subject::inverse).subject("no-mutation-baseline-inverse", subject::inverse);
-    }
-    built = built.oracle("identity-round-trip", round_trip_oracle);
-    #[cfg(feature = "sut")]
-    {
-        built = built.subject("identity-round-trip", subject::round_trip);
+        built = built.subject("mutate", subject::mutate).subject("inverse", subject::inverse).subject("identity-round-trip", subject::round_trip);
     }
     built
 }

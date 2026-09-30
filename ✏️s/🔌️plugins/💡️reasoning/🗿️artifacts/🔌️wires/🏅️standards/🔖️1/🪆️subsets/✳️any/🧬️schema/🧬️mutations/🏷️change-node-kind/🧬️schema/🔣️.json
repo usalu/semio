@@ -5,15 +5,48 @@
   "type": "object",
   "additionalProperties": false,
   "required": [
+    "mutation",
     "newNodeKind",
     "nodeId"
   ],
   "properties": {
+    "mutation": {
+      "const": "changeNodeKind"
+    },
     "nodeId": {
-      "type": "string"
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Node",
+          "de": "Knoten"
+        },
+        "description": {
+          "en": "The node to change.",
+          "de": "Der zu ändernde Knoten."
+        },
+        "ref": {
+          "kind": "node",
+          "domain": "graph",
+          "granularity": "node"
+        }
+      }
     },
     "newNodeKind": {
-      "type": "string"
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "text",
+        "role": "value",
+        "label": {
+          "en": "New Node Kind",
+          "de": "Neue Knotenart"
+        },
+        "description": {
+          "en": "Reasoning role of the node, e.g. claim or evidence.",
+          "de": "Argumentationsrolle des Knotens, z. B. Behauptung oder Beleg."
+        }
+      }
     }
   }
 }

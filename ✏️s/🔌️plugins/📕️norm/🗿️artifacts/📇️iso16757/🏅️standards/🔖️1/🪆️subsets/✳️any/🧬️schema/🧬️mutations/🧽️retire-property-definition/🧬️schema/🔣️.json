@@ -9,7 +9,24 @@
   ],
   "properties": {
     "id": {
-      "type": "string"
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Property definition",
+          "de": "Merkmalsdefinition"
+        },
+        "description": {
+          "en": "The property definition this mutation addresses.",
+          "de": "Das Katalogelement (Merkmalsdefinition), das diese Mutation adressiert."
+        },
+        "ref": {
+          "kind": "propertyDefinition"
+        },
+        "group": "target",
+        "order": 10
+      }
     }
   }
 }

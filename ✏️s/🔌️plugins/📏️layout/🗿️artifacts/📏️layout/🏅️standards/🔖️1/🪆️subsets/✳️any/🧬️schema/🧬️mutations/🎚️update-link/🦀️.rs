@@ -12,7 +12,9 @@ const MAX_LINK_DPI: u32 = 9_600;
 
 #[derive(Clone, Debug, PartialEq, dsl::MutationLeaf, ToValue, FromValue)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
+#[cfg_attr(test, serde(rename_all = "camelCase"))]
 #[mutation_leaf(contract = ::protocol)]
+#[value(rename_all = "camelCase")]
 pub struct UpdateLink {
     pub id: String,
     pub width: u32,

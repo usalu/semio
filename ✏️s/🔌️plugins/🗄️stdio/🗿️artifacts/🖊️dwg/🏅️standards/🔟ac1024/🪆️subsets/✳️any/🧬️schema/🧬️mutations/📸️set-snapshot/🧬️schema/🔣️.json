@@ -5,15 +5,24 @@
   "type": "object",
   "additionalProperties": false,
   "required": [
+    "mutation",
     "snapshot"
   ],
   "properties": {
-    "snapshot": {
-      "$ref": "#/$defs/DwgSnapshot"
-    },
     "mutation": {
       "const": "setSnapshot",
       "description": "Aggregate discriminator spliced in by DwgMutation; absent when the payload stands alone."
+    },
+    "snapshot": {
+      "$ref": "#/$defs/DwgSnapshot",
+      "x-semio-ui": {
+        "label": {
+          "en": "DWG drawing",
+          "de": "DWG-Zeichnung"
+        },
+        "group": "value",
+        "order": 10
+      }
     }
   },
   "$defs": {
@@ -26,59 +35,157 @@
       ],
       "properties": {
         "schema": {
-          "type": "string"
+          "type": "string",
+          "x-semio-ui": {
+            "label": {
+              "en": "Schema",
+              "de": "Schema"
+            },
+            "description": {
+              "en": "Identifier of the snapshot schema this document follows.",
+              "de": "Kennung des Snapshot-Schemas, dem dieses Dokument folgt."
+            }
+          }
         },
         "version": {
-          "type": "string"
+          "type": "string",
+          "x-semio-ui": {
+            "label": {
+              "en": "DWG version",
+              "de": "DWG-Version"
+            }
+          }
         },
         "maintenanceVersion": {
           "type": "integer",
           "minimum": 0,
-          "maximum": 255
+          "maximum": 255,
+          "x-semio-ui": {
+            "label": {
+              "en": "Maintenance version",
+              "de": "Wartungsversion"
+            }
+          }
         },
         "codepage": {
           "type": "integer",
           "minimum": 0,
-          "maximum": 65535
+          "maximum": 65535,
+          "x-semio-ui": {
+            "label": {
+              "en": "Code page",
+              "de": "Codepage"
+            },
+            "description": {
+              "en": "Windows code page number of the drawing text.",
+              "de": "Windows-Codepage des Zeichnungstexts."
+            }
+          }
         },
         "drawing": {
-          "$ref": "#/$defs/DwgLogicalDrawing"
+          "$ref": "#/$defs/DwgLogicalDrawing",
+          "x-semio-ui": {
+            "label": {
+              "en": "Drawing",
+              "de": "Zeichnung"
+            }
+          }
         },
         "header": {
-          "$ref": "#/$defs/DwgHeaderVariables"
+          "$ref": "#/$defs/DwgHeaderVariables",
+          "x-semio-ui": {
+            "label": {
+              "en": "Header variables",
+              "de": "Systemvariablen der Zeichnung"
+            }
+          }
         },
         "classes": {
           "type": "array",
           "items": {
             "$ref": "#/$defs/DwgClass"
+          },
+          "x-semio-ui": {
+            "label": {
+              "en": "Classes",
+              "de": "Klassen"
+            }
           }
         },
         "dependencies": {
           "type": "array",
           "items": {
             "$ref": "#/$defs/DwgDependency"
+          },
+          "x-semio-ui": {
+            "label": {
+              "en": "File dependencies",
+              "de": "Dateiabhängigkeiten"
+            }
           }
         },
         "summary": {
-          "$ref": "#/$defs/DwgSummaryInfo"
+          "$ref": "#/$defs/DwgSummaryInfo",
+          "x-semio-ui": {
+            "label": {
+              "en": "Drawing properties",
+              "de": "Zeichnungseigenschaften"
+            }
+          }
         },
         "application": {
-          "$ref": "#/$defs/DwgApplicationInfo"
+          "$ref": "#/$defs/DwgApplicationInfo",
+          "x-semio-ui": {
+            "label": {
+              "en": "Application information",
+              "de": "Anwendungsinformationen"
+            }
+          }
         },
         "template": {
-          "$ref": "#/$defs/DwgTemplate"
+          "$ref": "#/$defs/DwgTemplate",
+          "x-semio-ui": {
+            "label": {
+              "en": "Template",
+              "de": "Vorlage"
+            }
+          }
         },
         "auxiliaryHeader": {
-          "$ref": "#/$defs/DwgAuxiliaryHeader"
+          "$ref": "#/$defs/DwgAuxiliaryHeader",
+          "x-semio-ui": {
+            "label": {
+              "en": "Auxiliary header",
+              "de": "Zusatz-Header"
+            }
+          }
         },
         "revisionHistory": {
-          "$ref": "#/$defs/DwgRevisionHistory"
+          "$ref": "#/$defs/DwgRevisionHistory",
+          "x-semio-ui": {
+            "label": {
+              "en": "Revision history",
+              "de": "Revisionsverlauf"
+            }
+          }
         },
         "preview": {
-          "$ref": "#/$defs/DwgIndexedPreview"
+          "$ref": "#/$defs/DwgIndexedPreview",
+          "x-semio-ui": {
+            "label": {
+              "en": "Preview image",
+              "de": "Vorschaubild"
+            }
+          }
         },
         "applicationHistory": {
-          "$ref": "#/$defs/DwgApplicationHistory"
+          "$ref": "#/$defs/DwgApplicationHistory",
+          "x-semio-ui": {
+            "label": {
+              "en": "Application history",
+              "de": "Anwendungsverlauf"
+            }
+          }
         }
       }
     },
@@ -90,24 +197,56 @@
           "type": "array",
           "items": {
             "$ref": "#/$defs/DwgLogicalLayer"
+          },
+          "x-semio-ui": {
+            "label": {
+              "en": "Layers",
+              "de": "Layer"
+            }
           }
         },
         "objects": {
           "type": "array",
           "items": {
             "$ref": "#/$defs/DwgLogicalObject"
+          },
+          "x-semio-ui": {
+            "label": {
+              "en": "Objects",
+              "de": "Objekte"
+            }
           }
         },
         "extmin": {
           "type": "array",
           "items": {
             "type": "number"
+          },
+          "x-semio-ui": {
+            "label": {
+              "en": "Extents minimum",
+              "de": "Ausdehnung Minimum"
+            },
+            "description": {
+              "en": "System variable EXTMIN.",
+              "de": "Systemvariable EXTMIN."
+            }
           }
         },
         "extmax": {
           "type": "array",
           "items": {
             "type": "number"
+          },
+          "x-semio-ui": {
+            "label": {
+              "en": "Extents maximum",
+              "de": "Ausdehnung Maximum"
+            },
+            "description": {
+              "en": "System variable EXTMAX.",
+              "de": "Systemvariable EXTMAX."
+            }
           }
         }
       }
@@ -126,7 +265,13 @@
         "color": {
           "type": "integer",
           "minimum": 0,
-          "maximum": 255
+          "maximum": 255,
+          "x-semio-ui": {
+            "label": {
+              "en": "Color number (ACI)",
+              "de": "Farbnummer (ACI)"
+            }
+          }
         }
       }
     },
@@ -142,18 +287,46 @@
       "properties": {
         "handle": {
           "type": "integer",
-          "minimum": 0
+          "minimum": 0,
+          "x-semio-ui": {
+            "label": {
+              "en": "Handle",
+              "de": "Referenz (Handle)"
+            },
+            "description": {
+              "en": "Object handle (hexadecimal in AutoCAD, stored as integer).",
+              "de": "Objektreferenz (in AutoCAD hexadezimal, als Ganzzahl gespeichert)."
+            }
+          }
         },
         "typeCode": {
           "type": "integer",
           "minimum": 0,
-          "maximum": 65535
+          "maximum": 65535,
+          "x-semio-ui": {
+            "label": {
+              "en": "Object type code",
+              "de": "Objekttypcode"
+            }
+          }
         },
         "className": {
-          "type": "string"
+          "type": "string",
+          "x-semio-ui": {
+            "label": {
+              "en": "Class name",
+              "de": "Klassenname"
+            }
+          }
         },
         "category": {
-          "$ref": "#/$defs/DwgObjectCategory"
+          "$ref": "#/$defs/DwgObjectCategory",
+          "x-semio-ui": {
+            "label": {
+              "en": "Category",
+              "de": "Kategorie"
+            }
+          }
         },
         "ownerHandle": {
           "anyOf": [
@@ -164,13 +337,25 @@
             {
               "type": "null"
             }
-          ]
+          ],
+          "x-semio-ui": {
+            "label": {
+              "en": "Owner handle",
+              "de": "Eigentümerreferenz"
+            }
+          }
         },
         "reactorHandles": {
           "type": "array",
           "items": {
             "type": "integer",
             "minimum": 0
+          },
+          "x-semio-ui": {
+            "label": {
+              "en": "Reactor handles",
+              "de": "Reaktorreferenzen"
+            }
           }
         },
         "extensionDictionaryHandle": {
@@ -182,19 +367,41 @@
             {
               "type": "null"
             }
-          ]
+          ],
+          "x-semio-ui": {
+            "label": {
+              "en": "Extension dictionary",
+              "de": "Erweiterungswörterbuch"
+            },
+            "description": {
+              "en": "Object handle (hexadecimal in AutoCAD, stored as integer).",
+              "de": "Objektreferenz (in AutoCAD hexadezimal, als Ganzzahl gespeichert)."
+            }
+          }
         },
         "referencedHandles": {
           "type": "array",
           "items": {
             "type": "integer",
             "minimum": 0
+          },
+          "x-semio-ui": {
+            "label": {
+              "en": "Referenced objects",
+              "de": "Referenzierte Objekte"
+            }
           }
         },
         "extendedData": {
           "type": "array",
           "items": {
             "$ref": "#/$defs/DwgExtendedEntityData"
+          },
+          "x-semio-ui": {
+            "label": {
+              "en": "Extended entity data (XDATA)",
+              "de": "Erweiterte Objektdaten (XDATA)"
+            }
           }
         },
         "body": {
@@ -205,7 +412,13 @@
             {
               "type": "null"
             }
-          ]
+          ],
+          "x-semio-ui": {
+            "label": {
+              "en": "Object data",
+              "de": "Objektdaten"
+            }
+          }
         }
       }
     },
@@ -218,7 +431,35 @@
         "dictionary",
         "object",
         "custom"
-      ]
+      ],
+      "x-semio-ui": {
+        "options": {
+          "entity": {
+            "en": "Entity",
+            "de": "Grafisches Objekt"
+          },
+          "tableControl": {
+            "en": "Table control",
+            "de": "Tabellensteuerobjekt"
+          },
+          "tableRecord": {
+            "en": "Table record",
+            "de": "Tabelleneintrag"
+          },
+          "dictionary": {
+            "en": "Dictionary",
+            "de": "Wörterbuch"
+          },
+          "object": {
+            "en": "Non-graphical object",
+            "de": "Nichtgrafisches Objekt"
+          },
+          "custom": {
+            "en": "Custom class",
+            "de": "Benutzerdefinierte Klasse"
+          }
+        }
+      }
     },
     "DwgExtendedEntityData": {
       "type": "object",
@@ -229,12 +470,28 @@
       "properties": {
         "applicationHandle": {
           "type": "integer",
-          "minimum": 0
+          "minimum": 0,
+          "x-semio-ui": {
+            "label": {
+              "en": "Registered application",
+              "de": "Registrierte Anwendung"
+            },
+            "description": {
+              "en": "Object handle (hexadecimal in AutoCAD, stored as integer).",
+              "de": "Objektreferenz (in AutoCAD hexadezimal, als Ganzzahl gespeichert)."
+            }
+          }
         },
         "values": {
           "type": "array",
           "items": {
             "$ref": "#/$defs/DwgXRecordValue"
+          },
+          "x-semio-ui": {
+            "label": {
+              "en": "Values",
+              "de": "Werte"
+            }
           }
         }
       }
@@ -8845,37 +9102,103 @@
       ],
       "properties": {
         "units": {
-          "$ref": "#/$defs/DwgHeaderUnits"
+          "$ref": "#/$defs/DwgHeaderUnits",
+          "x-semio-ui": {
+            "label": {
+              "en": "Legacy units",
+              "de": "Alte Einheiten"
+            }
+          }
         },
         "modes": {
-          "$ref": "#/$defs/DwgHeaderModes"
+          "$ref": "#/$defs/DwgHeaderModes",
+          "x-semio-ui": {
+            "label": {
+              "en": "Modes",
+              "de": "Modi"
+            }
+          }
         },
         "integers": {
-          "$ref": "#/$defs/DwgHeaderIntegerSettings"
+          "$ref": "#/$defs/DwgHeaderIntegerSettings",
+          "x-semio-ui": {
+            "label": {
+              "en": "Integer settings",
+              "de": "Ganzzahlige Einstellungen"
+            }
+          }
         },
         "scalars": {
-          "$ref": "#/$defs/DwgHeaderScalars"
+          "$ref": "#/$defs/DwgHeaderScalars",
+          "x-semio-ui": {
+            "label": {
+              "en": "Numeric settings",
+              "de": "Numerische Einstellungen"
+            }
+          }
         },
         "time": {
-          "$ref": "#/$defs/DwgHeaderTimeState"
+          "$ref": "#/$defs/DwgHeaderTimeState",
+          "x-semio-ui": {
+            "label": {
+              "en": "Time stamps",
+              "de": "Zeitstempel"
+            }
+          }
         },
         "paperSpace": {
-          "$ref": "#/$defs/DwgHeaderSpaceGeometry"
+          "$ref": "#/$defs/DwgHeaderSpaceGeometry",
+          "x-semio-ui": {
+            "label": {
+              "en": "Paper space",
+              "de": "Papierbereich"
+            }
+          }
         },
         "modelSpace": {
-          "$ref": "#/$defs/DwgHeaderSpaceGeometry"
+          "$ref": "#/$defs/DwgHeaderSpaceGeometry",
+          "x-semio-ui": {
+            "label": {
+              "en": "Model space",
+              "de": "Modellbereich"
+            }
+          }
         },
         "dimensions": {
-          "$ref": "#/$defs/DwgDimensionSettings"
+          "$ref": "#/$defs/DwgDimensionSettings",
+          "x-semio-ui": {
+            "label": {
+              "en": "Dimension settings",
+              "de": "Bemaßungseinstellungen"
+            }
+          }
         },
         "policy": {
-          "$ref": "#/$defs/DwgDrawingPolicy"
+          "$ref": "#/$defs/DwgDrawingPolicy",
+          "x-semio-ui": {
+            "label": {
+              "en": "Drawing settings",
+              "de": "Zeichnungseinstellungen"
+            }
+          }
         },
         "strings": {
-          "$ref": "#/$defs/DwgHeaderStrings"
+          "$ref": "#/$defs/DwgHeaderStrings",
+          "x-semio-ui": {
+            "label": {
+              "en": "Text variables",
+              "de": "Textvariablen"
+            }
+          }
         },
         "relations": {
-          "$ref": "#/$defs/DwgHeaderRelations"
+          "$ref": "#/$defs/DwgHeaderRelations",
+          "x-semio-ui": {
+            "label": {
+              "en": "Object references",
+              "de": "Objektreferenzen"
+            }
+          }
         }
       }
     },
@@ -8894,28 +9217,76 @@
       ],
       "properties": {
         "unit1Conversion": {
-          "type": "number"
+          "type": "number",
+          "x-semio-ui": {
+            "label": {
+              "en": "Unit 1 conversion factor",
+              "de": "Umrechnungsfaktor Einheit 1"
+            }
+          }
         },
         "unit2Conversion": {
-          "type": "number"
+          "type": "number",
+          "x-semio-ui": {
+            "label": {
+              "en": "Unit 2 conversion factor",
+              "de": "Umrechnungsfaktor Einheit 2"
+            }
+          }
         },
         "unit3Conversion": {
-          "type": "number"
+          "type": "number",
+          "x-semio-ui": {
+            "label": {
+              "en": "Unit 3 conversion factor",
+              "de": "Umrechnungsfaktor Einheit 3"
+            }
+          }
         },
         "unit4Conversion": {
-          "type": "number"
+          "type": "number",
+          "x-semio-ui": {
+            "label": {
+              "en": "Unit 4 conversion factor",
+              "de": "Umrechnungsfaktor Einheit 4"
+            }
+          }
         },
         "unit1Name": {
-          "type": "string"
+          "type": "string",
+          "x-semio-ui": {
+            "label": {
+              "en": "Unit 1 name",
+              "de": "Name Einheit 1"
+            }
+          }
         },
         "unit2Name": {
-          "type": "string"
+          "type": "string",
+          "x-semio-ui": {
+            "label": {
+              "en": "Unit 2 name",
+              "de": "Name Einheit 2"
+            }
+          }
         },
         "unit3Name": {
-          "type": "string"
+          "type": "string",
+          "x-semio-ui": {
+            "label": {
+              "en": "Unit 3 name",
+              "de": "Name Einheit 3"
+            }
+          }
         },
         "unit4Name": {
-          "type": "string"
+          "type": "string",
+          "x-semio-ui": {
+            "label": {
+              "en": "Unit 4 name",
+              "de": "Name Einheit 4"
+            }
+          }
         }
       }
     },
@@ -8946,64 +9317,184 @@
       ],
       "properties": {
         "dimensionAssociative": {
-          "type": "boolean"
+          "type": "boolean",
+          "x-semio-ui": {
+            "label": {
+              "en": "Associative dimensioning (DIMASO)",
+              "de": "Assoziative Bemaßung (DIMASO)"
+            }
+          }
         },
         "dimensionShow": {
-          "type": "boolean"
+          "type": "boolean",
+          "x-semio-ui": {
+            "label": {
+              "en": "Update dimensions while dragging (DIMSHO)",
+              "de": "Bemaßung beim Ziehen aktualisieren (DIMSHO)"
+            }
+          }
         },
         "polylineGeneration": {
-          "type": "boolean"
+          "type": "boolean",
+          "x-semio-ui": {
+            "label": {
+              "en": "Polyline linetype generation (PLINEGEN)",
+              "de": "Linientypgenerierung für Polylinien (PLINEGEN)"
+            }
+          }
         },
         "orthographicMode": {
-          "type": "boolean"
+          "type": "boolean",
+          "x-semio-ui": {
+            "label": {
+              "en": "Ortho mode (ORTHOMODE)",
+              "de": "Ortho-Modus (ORTHOMODE)"
+            }
+          }
         },
         "regenerationMode": {
-          "type": "boolean"
+          "type": "boolean",
+          "x-semio-ui": {
+            "label": {
+              "en": "Automatic regeneration (REGENMODE)",
+              "de": "Automatische Regenerierung (REGENMODE)"
+            }
+          }
         },
         "fillMode": {
-          "type": "boolean"
+          "type": "boolean",
+          "x-semio-ui": {
+            "label": {
+              "en": "Fill mode (FILLMODE)",
+              "de": "Füllmodus (FILLMODE)"
+            }
+          }
         },
         "quickTextMode": {
-          "type": "boolean"
+          "type": "boolean",
+          "x-semio-ui": {
+            "label": {
+              "en": "Quick text (QTEXTMODE)",
+              "de": "Schnelltext (QTEXTMODE)"
+            }
+          }
         },
         "paperSpaceLinetypeScale": {
-          "type": "boolean"
+          "type": "boolean",
+          "x-semio-ui": {
+            "label": {
+              "en": "Paper space linetype scaling (PSLTSCALE)",
+              "de": "Linientypskalierung im Papierbereich (PSLTSCALE)"
+            }
+          }
         },
         "limitsCheck": {
-          "type": "boolean"
+          "type": "boolean",
+          "x-semio-ui": {
+            "label": {
+              "en": "Limits checking (LIMCHECK)",
+              "de": "Limitenkontrolle (LIMCHECK)"
+            }
+          }
         },
         "userTimer": {
-          "type": "boolean"
+          "type": "boolean",
+          "x-semio-ui": {
+            "label": {
+              "en": "User timer (USRTIMER)",
+              "de": "Benutzer-Zeitgeber (USRTIMER)"
+            }
+          }
         },
         "sketchPolyline": {
-          "type": "boolean"
+          "type": "boolean",
+          "x-semio-ui": {
+            "label": {
+              "en": "Sketch as polylines (SKPOLY)",
+              "de": "Skizze als Polylinien (SKPOLY)"
+            }
+          }
         },
         "angleDirection": {
-          "type": "boolean"
+          "type": "boolean",
+          "x-semio-ui": {
+            "label": {
+              "en": "Clockwise angles (ANGDIR)",
+              "de": "Winkel im Uhrzeigersinn (ANGDIR)"
+            }
+          }
         },
         "splineFrame": {
-          "type": "boolean"
+          "type": "boolean",
+          "x-semio-ui": {
+            "label": {
+              "en": "Show spline frame (SPLFRAME)",
+              "de": "Spline-Rahmen anzeigen (SPLFRAME)"
+            }
+          }
         },
         "mirrorText": {
-          "type": "boolean"
+          "type": "boolean",
+          "x-semio-ui": {
+            "label": {
+              "en": "Mirror text (MIRRTEXT)",
+              "de": "Text spiegeln (MIRRTEXT)"
+            }
+          }
         },
         "worldView": {
-          "type": "boolean"
+          "type": "boolean",
+          "x-semio-ui": {
+            "label": {
+              "en": "View relative to WCS (WORLDVIEW)",
+              "de": "Ansicht relativ zum WKS (WORLDVIEW)"
+            }
+          }
         },
         "tileMode": {
-          "type": "boolean"
+          "type": "boolean",
+          "x-semio-ui": {
+            "label": {
+              "en": "Model tab active (TILEMODE)",
+              "de": "Modellbereich aktiv (TILEMODE)"
+            }
+          }
         },
         "paperLimitsCheck": {
-          "type": "boolean"
+          "type": "boolean",
+          "x-semio-ui": {
+            "label": {
+              "en": "Paper space limits checking (PLIMCHECK)",
+              "de": "Limitenkontrolle im Papierbereich (PLIMCHECK)"
+            }
+          }
         },
         "visualRetain": {
-          "type": "boolean"
+          "type": "boolean",
+          "x-semio-ui": {
+            "label": {
+              "en": "Retain xref layer settings (VISRETAIN)",
+              "de": "Xref-Layereinstellungen beibehalten (VISRETAIN)"
+            }
+          }
         },
         "displaySilhouette": {
-          "type": "boolean"
+          "type": "boolean",
+          "x-semio-ui": {
+            "label": {
+              "en": "Display silhouettes (DISPSILH)",
+              "de": "Silhouettenkanten anzeigen (DISPSILH)"
+            }
+          }
         },
         "polylineEllipse": {
-          "type": "boolean"
+          "type": "boolean",
+          "x-semio-ui": {
+            "label": {
+              "en": "Ellipses as polylines (PELLIPSE)",
+              "de": "Ellipsen als Polylinien (PELLIPSE)"
+            }
+          }
         }
       }
     },
@@ -9043,137 +9534,299 @@
         "proxyGraphics": {
           "type": "integer",
           "minimum": 0,
-          "maximum": 65535
+          "maximum": 65535,
+          "x-semio-ui": {
+            "label": {
+              "en": "Save proxy graphics (PROXYGRAPHICS)",
+              "de": "Proxy-Grafiken speichern (PROXYGRAPHICS)"
+            }
+          }
         },
         "treeDepth": {
           "type": "integer",
           "minimum": -32768,
-          "maximum": 32767
+          "maximum": 32767,
+          "x-semio-ui": {
+            "label": {
+              "en": "Spatial index depth (TREEDEPTH)",
+              "de": "Tiefe des räumlichen Index (TREEDEPTH)"
+            }
+          }
         },
         "linearUnits": {
           "type": "integer",
           "minimum": 0,
-          "maximum": 65535
+          "maximum": 65535,
+          "x-semio-ui": {
+            "label": {
+              "en": "Linear unit format (LUNITS)",
+              "de": "Längeneinheitenformat (LUNITS)"
+            }
+          }
         },
         "linearPrecision": {
           "type": "integer",
           "minimum": 0,
-          "maximum": 65535
+          "maximum": 65535,
+          "x-semio-ui": {
+            "label": {
+              "en": "Linear precision (LUPREC)",
+              "de": "Längengenauigkeit (LUPREC)"
+            }
+          }
         },
         "angularUnits": {
           "type": "integer",
           "minimum": 0,
-          "maximum": 65535
+          "maximum": 65535,
+          "x-semio-ui": {
+            "label": {
+              "en": "Angular unit format (AUNITS)",
+              "de": "Winkeleinheitenformat (AUNITS)"
+            }
+          }
         },
         "angularPrecision": {
           "type": "integer",
           "minimum": 0,
-          "maximum": 65535
+          "maximum": 65535,
+          "x-semio-ui": {
+            "label": {
+              "en": "Angular precision (AUPREC)",
+              "de": "Winkelgenauigkeit (AUPREC)"
+            }
+          }
         },
         "attributeMode": {
           "type": "integer",
           "minimum": 0,
-          "maximum": 65535
+          "maximum": 65535,
+          "x-semio-ui": {
+            "label": {
+              "en": "Attribute display (ATTMODE)",
+              "de": "Attributanzeige (ATTMODE)"
+            }
+          }
         },
         "pointDisplayMode": {
           "type": "integer",
           "minimum": 0,
-          "maximum": 65535
+          "maximum": 65535,
+          "x-semio-ui": {
+            "label": {
+              "en": "Point style (PDMODE)",
+              "de": "Punktstil (PDMODE)"
+            }
+          }
         },
         "userInteger1": {
           "type": "integer",
           "minimum": -32768,
-          "maximum": 32767
+          "maximum": 32767,
+          "x-semio-ui": {
+            "label": {
+              "en": "User integer 1 (USERI1)",
+              "de": "Benutzer-Ganzzahl 1 (USERI1)"
+            }
+          }
         },
         "userInteger2": {
           "type": "integer",
           "minimum": -32768,
-          "maximum": 32767
+          "maximum": 32767,
+          "x-semio-ui": {
+            "label": {
+              "en": "User integer 2 (USERI2)",
+              "de": "Benutzer-Ganzzahl 2 (USERI2)"
+            }
+          }
         },
         "userInteger3": {
           "type": "integer",
           "minimum": -32768,
-          "maximum": 32767
+          "maximum": 32767,
+          "x-semio-ui": {
+            "label": {
+              "en": "User integer 3 (USERI3)",
+              "de": "Benutzer-Ganzzahl 3 (USERI3)"
+            }
+          }
         },
         "userInteger4": {
           "type": "integer",
           "minimum": -32768,
-          "maximum": 32767
+          "maximum": 32767,
+          "x-semio-ui": {
+            "label": {
+              "en": "User integer 4 (USERI4)",
+              "de": "Benutzer-Ganzzahl 4 (USERI4)"
+            }
+          }
         },
         "userInteger5": {
           "type": "integer",
           "minimum": -32768,
-          "maximum": 32767
+          "maximum": 32767,
+          "x-semio-ui": {
+            "label": {
+              "en": "User integer 5 (USERI5)",
+              "de": "Benutzer-Ganzzahl 5 (USERI5)"
+            }
+          }
         },
         "splineSegments": {
           "type": "integer",
           "minimum": 0,
-          "maximum": 65535
+          "maximum": 65535,
+          "x-semio-ui": {
+            "label": {
+              "en": "Spline segments (SPLINESEGS)",
+              "de": "Spline-Segmente (SPLINESEGS)"
+            }
+          }
         },
         "surfaceU": {
           "type": "integer",
           "minimum": 0,
-          "maximum": 65535
+          "maximum": 65535,
+          "x-semio-ui": {
+            "label": {
+              "en": "Surface density U (SURFU)",
+              "de": "Flächendichte U (SURFU)"
+            }
+          }
         },
         "surfaceV": {
           "type": "integer",
           "minimum": 0,
-          "maximum": 65535
+          "maximum": 65535,
+          "x-semio-ui": {
+            "label": {
+              "en": "Surface density V (SURFV)",
+              "de": "Flächendichte V (SURFV)"
+            }
+          }
         },
         "surfaceType": {
           "type": "integer",
           "minimum": 0,
-          "maximum": 65535
+          "maximum": 65535,
+          "x-semio-ui": {
+            "label": {
+              "en": "Surface fit type (SURFTYPE)",
+              "de": "Flächenglättungstyp (SURFTYPE)"
+            }
+          }
         },
         "surfaceTab1": {
           "type": "integer",
           "minimum": 0,
-          "maximum": 65535
+          "maximum": 65535,
+          "x-semio-ui": {
+            "label": {
+              "en": "Mesh density 1 (SURFTAB1)",
+              "de": "Netzdichte 1 (SURFTAB1)"
+            }
+          }
         },
         "surfaceTab2": {
           "type": "integer",
           "minimum": 0,
-          "maximum": 65535
+          "maximum": 65535,
+          "x-semio-ui": {
+            "label": {
+              "en": "Mesh density 2 (SURFTAB2)",
+              "de": "Netzdichte 2 (SURFTAB2)"
+            }
+          }
         },
         "splineType": {
           "type": "integer",
           "minimum": 0,
-          "maximum": 65535
+          "maximum": 65535,
+          "x-semio-ui": {
+            "label": {
+              "en": "Spline curve type (SPLINETYPE)",
+              "de": "Spline-Kurventyp (SPLINETYPE)"
+            }
+          }
         },
         "shadeEdge": {
           "type": "integer",
           "minimum": 0,
-          "maximum": 65535
+          "maximum": 65535,
+          "x-semio-ui": {
+            "label": {
+              "en": "Shaded edge mode (SHADEDGE)",
+              "de": "Kantenschattierung (SHADEDGE)"
+            }
+          }
         },
         "shadeDifference": {
           "type": "integer",
           "minimum": 0,
-          "maximum": 65535
+          "maximum": 65535,
+          "x-semio-ui": {
+            "label": {
+              "en": "Diffuse to ambient ratio (SHADEDIF)",
+              "de": "Verhältnis diffuses Licht zu Umgebungslicht (SHADEDIF)"
+            }
+          }
         },
         "unitMode": {
           "type": "integer",
           "minimum": 0,
-          "maximum": 65535
+          "maximum": 65535,
+          "x-semio-ui": {
+            "label": {
+              "en": "Unit display mode (UNITMODE)",
+              "de": "Einheitenanzeigemodus (UNITMODE)"
+            }
+          }
         },
         "maximumActiveViewports": {
           "type": "integer",
           "minimum": 0,
-          "maximum": 65535
+          "maximum": 65535,
+          "x-semio-ui": {
+            "label": {
+              "en": "Maximum active viewports (MAXACTVP)",
+              "de": "Maximal aktive Ansichtsfenster (MAXACTVP)"
+            }
+          }
         },
         "isolines": {
           "type": "integer",
           "minimum": 0,
-          "maximum": 65535
+          "maximum": 65535,
+          "x-semio-ui": {
+            "label": {
+              "en": "Isolines (ISOLINES)",
+              "de": "Isolinien (ISOLINES)"
+            }
+          }
         },
         "multilineJustification": {
           "type": "integer",
           "minimum": 0,
-          "maximum": 65535
+          "maximum": 65535,
+          "x-semio-ui": {
+            "label": {
+              "en": "Multiline justification (CMLJUST)",
+              "de": "Multilinien-Ausrichtung (CMLJUST)"
+            }
+          }
         },
         "textQuality": {
           "type": "integer",
           "minimum": 0,
-          "maximum": 65535
+          "maximum": 65535,
+          "x-semio-ui": {
+            "label": {
+              "en": "Text quality (TEXTQLTY)",
+              "de": "Textqualität (TEXTQLTY)"
+            }
+          }
         }
       }
     },
@@ -9207,75 +9860,213 @@
       ],
       "properties": {
         "linetypeScale": {
-          "type": "number"
+          "type": "number",
+          "x-semio-ui": {
+            "label": {
+              "en": "Global linetype scale (LTSCALE)",
+              "de": "Globaler Linientypfaktor (LTSCALE)"
+            }
+          }
         },
         "textSize": {
-          "type": "number"
+          "type": "number",
+          "x-semio-ui": {
+            "label": {
+              "en": "Default text height (TEXTSIZE)",
+              "de": "Standard-Texthöhe (TEXTSIZE)"
+            }
+          }
         },
         "traceWidth": {
-          "type": "number"
+          "type": "number",
+          "x-semio-ui": {
+            "label": {
+              "en": "Trace width (TRACEWID)",
+              "de": "Bandbreite (TRACEWID)"
+            }
+          }
         },
         "sketchIncrement": {
-          "type": "number"
+          "type": "number",
+          "x-semio-ui": {
+            "label": {
+              "en": "Sketch increment (SKETCHINC)",
+              "de": "Skizzierinkrement (SKETCHINC)"
+            }
+          }
         },
         "filletRadius": {
-          "type": "number"
+          "type": "number",
+          "x-semio-ui": {
+            "label": {
+              "en": "Fillet radius (FILLETRAD)",
+              "de": "Abrundungsradius (FILLETRAD)"
+            }
+          }
         },
         "thickness": {
-          "type": "number"
+          "type": "number",
+          "x-semio-ui": {
+            "label": {
+              "en": "Thickness (THICKNESS)",
+              "de": "Objekthöhe (THICKNESS)"
+            }
+          }
         },
         "angleBase": {
-          "type": "number"
+          "type": "number",
+          "x-semio-ui": {
+            "label": {
+              "en": "Angle base (ANGBASE)",
+              "de": "Winkelbasis (ANGBASE)"
+            }
+          }
         },
         "pointDisplaySize": {
-          "type": "number"
+          "type": "number",
+          "x-semio-ui": {
+            "label": {
+              "en": "Point size (PDSIZE)",
+              "de": "Punktgröße (PDSIZE)"
+            }
+          }
         },
         "polylineWidth": {
-          "type": "number"
+          "type": "number",
+          "x-semio-ui": {
+            "label": {
+              "en": "Polyline width (PLINEWID)",
+              "de": "Polylinienbreite (PLINEWID)"
+            }
+          }
         },
         "userReal1": {
-          "type": "number"
+          "type": "number",
+          "x-semio-ui": {
+            "label": {
+              "en": "User real 1 (USERR1)",
+              "de": "Benutzer-Realzahl 1 (USERR1)"
+            }
+          }
         },
         "userReal2": {
-          "type": "number"
+          "type": "number",
+          "x-semio-ui": {
+            "label": {
+              "en": "User real 2 (USERR2)",
+              "de": "Benutzer-Realzahl 2 (USERR2)"
+            }
+          }
         },
         "userReal3": {
-          "type": "number"
+          "type": "number",
+          "x-semio-ui": {
+            "label": {
+              "en": "User real 3 (USERR3)",
+              "de": "Benutzer-Realzahl 3 (USERR3)"
+            }
+          }
         },
         "userReal4": {
-          "type": "number"
+          "type": "number",
+          "x-semio-ui": {
+            "label": {
+              "en": "User real 4 (USERR4)",
+              "de": "Benutzer-Realzahl 4 (USERR4)"
+            }
+          }
         },
         "userReal5": {
-          "type": "number"
+          "type": "number",
+          "x-semio-ui": {
+            "label": {
+              "en": "User real 5 (USERR5)",
+              "de": "Benutzer-Realzahl 5 (USERR5)"
+            }
+          }
         },
         "chamferA": {
-          "type": "number"
+          "type": "number",
+          "x-semio-ui": {
+            "label": {
+              "en": "First chamfer distance (CHAMFERA)",
+              "de": "Erster Fasenabstand (CHAMFERA)"
+            }
+          }
         },
         "chamferB": {
-          "type": "number"
+          "type": "number",
+          "x-semio-ui": {
+            "label": {
+              "en": "Second chamfer distance (CHAMFERB)",
+              "de": "Zweiter Fasenabstand (CHAMFERB)"
+            }
+          }
         },
         "chamferC": {
-          "type": "number"
+          "type": "number",
+          "x-semio-ui": {
+            "label": {
+              "en": "Chamfer length (CHAMFERC)",
+              "de": "Fasenlänge (CHAMFERC)"
+            }
+          }
         },
         "chamferD": {
-          "type": "number"
+          "type": "number",
+          "x-semio-ui": {
+            "label": {
+              "en": "Chamfer angle (CHAMFERD)",
+              "de": "Fasenwinkel (CHAMFERD)"
+            }
+          }
         },
         "facetResolution": {
-          "type": "number"
+          "type": "number",
+          "x-semio-ui": {
+            "label": {
+              "en": "Facet resolution (FACETRES)",
+              "de": "Facettenauflösung (FACETRES)"
+            }
+          }
         },
         "multilineScale": {
-          "type": "number"
+          "type": "number",
+          "x-semio-ui": {
+            "label": {
+              "en": "Multiline scale (CMLSCALE)",
+              "de": "Multilinienmaßstab (CMLSCALE)"
+            }
+          }
         },
         "currentEntityLinetypeScale": {
-          "type": "number"
+          "type": "number",
+          "x-semio-ui": {
+            "label": {
+              "en": "Current object linetype scale (CELTSCALE)",
+              "de": "Aktueller Objekt-Linientypfaktor (CELTSCALE)"
+            }
+          }
         },
         "currentEntityColorIndex": {
           "type": "integer",
           "minimum": 0,
-          "maximum": 65535
+          "maximum": 65535,
+          "x-semio-ui": {
+            "label": {
+              "en": "Current object color (CECOLOR)",
+              "de": "Aktuelle Objektfarbe (CECOLOR)"
+            }
+          }
         },
         "paperSpaceViewportScale": {
-          "type": "number"
+          "type": "number",
+          "x-semio-ui": {
+            "label": {
+              "en": "Viewport scale (PSVPSCALE)",
+              "de": "Ansichtsfenster-Maßstab (PSVPSCALE)"
+            }
+          }
         }
       }
     },
@@ -9290,16 +10081,40 @@
       ],
       "properties": {
         "createdAt": {
-          "$ref": "#/$defs/DwgJulianDate"
+          "$ref": "#/$defs/DwgJulianDate",
+          "x-semio-ui": {
+            "label": {
+              "en": "Created (TDCREATE)",
+              "de": "Erstellt (TDCREATE)"
+            }
+          }
         },
         "updatedAt": {
-          "$ref": "#/$defs/DwgJulianDate"
+          "$ref": "#/$defs/DwgJulianDate",
+          "x-semio-ui": {
+            "label": {
+              "en": "Last updated (TDUPDATE)",
+              "de": "Zuletzt aktualisiert (TDUPDATE)"
+            }
+          }
         },
         "editingDuration": {
-          "$ref": "#/$defs/DwgJulianDate"
+          "$ref": "#/$defs/DwgJulianDate",
+          "x-semio-ui": {
+            "label": {
+              "en": "Total editing time (TDINDWG)",
+              "de": "Gesamtbearbeitungszeit (TDINDWG)"
+            }
+          }
         },
         "userTimerDuration": {
-          "$ref": "#/$defs/DwgJulianDate"
+          "$ref": "#/$defs/DwgJulianDate",
+          "x-semio-ui": {
+            "label": {
+              "en": "User timer (TDUSRTIMER)",
+              "de": "Benutzer-Zeitgeber (TDUSRTIMER)"
+            }
+          }
         }
       }
     },
@@ -9314,12 +10129,24 @@
         "days": {
           "type": "integer",
           "minimum": 0,
-          "maximum": 4294967295
+          "maximum": 4294967295,
+          "x-semio-ui": {
+            "label": {
+              "en": "Julian day",
+              "de": "Julianischer Tag"
+            }
+          }
         },
         "milliseconds": {
           "type": "integer",
           "minimum": 0,
-          "maximum": 4294967295
+          "maximum": 4294967295,
+          "x-semio-ui": {
+            "label": {
+              "en": "Milliseconds into the day",
+              "de": "Millisekunden des Tages"
+            }
+          }
         }
       }
     },
@@ -9349,92 +10176,188 @@
           "type": "array",
           "items": {
             "type": "number"
+          },
+          "x-semio-ui": {
+            "label": {
+              "en": "Insertion base point (INSBASE)",
+              "de": "Einfügebasispunkt (INSBASE)"
+            }
           }
         },
         "extentsMinimum": {
           "type": "array",
           "items": {
             "type": "number"
+          },
+          "x-semio-ui": {
+            "label": {
+              "en": "Extents minimum (EXTMIN)",
+              "de": "Ausdehnung Minimum (EXTMIN)"
+            }
           }
         },
         "extentsMaximum": {
           "type": "array",
           "items": {
             "type": "number"
+          },
+          "x-semio-ui": {
+            "label": {
+              "en": "Extents maximum (EXTMAX)",
+              "de": "Ausdehnung Maximum (EXTMAX)"
+            }
           }
         },
         "limitsMinimum": {
           "type": "array",
           "items": {
             "type": "number"
+          },
+          "x-semio-ui": {
+            "label": {
+              "en": "Limits minimum (LIMMIN)",
+              "de": "Limiten Minimum (LIMMIN)"
+            }
           }
         },
         "limitsMaximum": {
           "type": "array",
           "items": {
             "type": "number"
+          },
+          "x-semio-ui": {
+            "label": {
+              "en": "Limits maximum (LIMMAX)",
+              "de": "Limiten Maximum (LIMMAX)"
+            }
           }
         },
         "elevation": {
-          "type": "number"
+          "type": "number",
+          "x-semio-ui": {
+            "label": {
+              "en": "Elevation (ELEVATION)",
+              "de": "Erhebung (ELEVATION)"
+            }
+          }
         },
         "ucsOrigin": {
           "type": "array",
           "items": {
             "type": "number"
+          },
+          "x-semio-ui": {
+            "label": {
+              "en": "UCS origin (UCSORG)",
+              "de": "BKS-Ursprung (UCSORG)"
+            }
           }
         },
         "ucsXAxis": {
           "type": "array",
           "items": {
             "type": "number"
+          },
+          "x-semio-ui": {
+            "label": {
+              "en": "UCS X axis (UCSXDIR)",
+              "de": "BKS-X-Achse (UCSXDIR)"
+            }
           }
         },
         "ucsYAxis": {
           "type": "array",
           "items": {
             "type": "number"
+          },
+          "x-semio-ui": {
+            "label": {
+              "en": "UCS Y axis (UCSYDIR)",
+              "de": "BKS-Y-Achse (UCSYDIR)"
+            }
           }
         },
         "ucsOrthographicView": {
           "type": "integer",
           "minimum": 0,
-          "maximum": 65535
+          "maximum": 65535,
+          "x-semio-ui": {
+            "label": {
+              "en": "Orthographic UCS type (UCSORTHOVIEW)",
+              "de": "Orthogonaler BKS-Typ (UCSORTHOVIEW)"
+            }
+          }
         },
         "ucsOriginTop": {
           "type": "array",
           "items": {
             "type": "number"
+          },
+          "x-semio-ui": {
+            "label": {
+              "en": "UCS origin, top",
+              "de": "BKS-Ursprung oben"
+            }
           }
         },
         "ucsOriginBottom": {
           "type": "array",
           "items": {
             "type": "number"
+          },
+          "x-semio-ui": {
+            "label": {
+              "en": "UCS origin, bottom",
+              "de": "BKS-Ursprung unten"
+            }
           }
         },
         "ucsOriginLeft": {
           "type": "array",
           "items": {
             "type": "number"
+          },
+          "x-semio-ui": {
+            "label": {
+              "en": "UCS origin, left",
+              "de": "BKS-Ursprung links"
+            }
           }
         },
         "ucsOriginRight": {
           "type": "array",
           "items": {
             "type": "number"
+          },
+          "x-semio-ui": {
+            "label": {
+              "en": "UCS origin, right",
+              "de": "BKS-Ursprung rechts"
+            }
           }
         },
         "ucsOriginFront": {
           "type": "array",
           "items": {
             "type": "number"
+          },
+          "x-semio-ui": {
+            "label": {
+              "en": "UCS origin, front",
+              "de": "BKS-Ursprung vorne"
+            }
           }
         },
         "ucsOriginBack": {
           "type": "array",
           "items": {
             "type": "number"
+          },
+          "x-semio-ui": {
+            "label": {
+              "en": "UCS origin, back",
+              "de": "BKS-Ursprung hinten"
+            }
           }
         }
       }
@@ -9512,258 +10435,654 @@
       ],
       "properties": {
         "scale": {
-          "type": "number"
+          "type": "number",
+          "x-semio-ui": {
+            "label": {
+              "en": "Overall dimension scale (DIMSCALE)",
+              "de": "Globaler Bemaßungsfaktor (DIMSCALE)"
+            }
+          }
         },
         "arrowSize": {
-          "type": "number"
+          "type": "number",
+          "x-semio-ui": {
+            "label": {
+              "en": "Arrow size (DIMASZ)",
+              "de": "Pfeilgröße (DIMASZ)"
+            }
+          }
         },
         "extensionOffset": {
-          "type": "number"
+          "type": "number",
+          "x-semio-ui": {
+            "label": {
+              "en": "Extension line offset (DIMEXO)",
+              "de": "Abstand der Maßhilfslinie (DIMEXO)"
+            }
+          }
         },
         "lineIncrement": {
-          "type": "number"
+          "type": "number",
+          "x-semio-ui": {
+            "label": {
+              "en": "Baseline spacing (DIMDLI)",
+              "de": "Abstand der Basislinienbemaßung (DIMDLI)"
+            }
+          }
         },
         "extension": {
-          "type": "number"
+          "type": "number",
+          "x-semio-ui": {
+            "label": {
+              "en": "Extension line extension (DIMEXE)",
+              "de": "Überstand der Maßhilfslinie (DIMEXE)"
+            }
+          }
         },
         "rounding": {
-          "type": "number"
+          "type": "number",
+          "x-semio-ui": {
+            "label": {
+              "en": "Rounding (DIMRND)",
+              "de": "Rundung (DIMRND)"
+            }
+          }
         },
         "lineExtension": {
-          "type": "number"
+          "type": "number",
+          "x-semio-ui": {
+            "label": {
+              "en": "Dimension line extension (DIMDLE)",
+              "de": "Maßlinienüberstand (DIMDLE)"
+            }
+          }
         },
         "tolerancePlus": {
-          "type": "number"
+          "type": "number",
+          "x-semio-ui": {
+            "label": {
+              "en": "Upper tolerance (DIMTP)",
+              "de": "Obere Toleranz (DIMTP)"
+            }
+          }
         },
         "toleranceMinus": {
-          "type": "number"
+          "type": "number",
+          "x-semio-ui": {
+            "label": {
+              "en": "Lower tolerance (DIMTM)",
+              "de": "Untere Toleranz (DIMTM)"
+            }
+          }
         },
         "fixedExtensionLength": {
-          "type": "number"
+          "type": "number",
+          "x-semio-ui": {
+            "label": {
+              "en": "Fixed extension line length (DIMFXL)",
+              "de": "Feste Länge der Maßhilfslinie (DIMFXL)"
+            }
+          }
         },
         "jogAngle": {
-          "type": "number"
+          "type": "number",
+          "x-semio-ui": {
+            "label": {
+              "en": "Jog angle (DIMJOGANG)",
+              "de": "Knickwinkel (DIMJOGANG)"
+            }
+          }
         },
         "textFill": {
           "type": "integer",
           "minimum": 0,
-          "maximum": 65535
+          "maximum": 65535,
+          "x-semio-ui": {
+            "label": {
+              "en": "Text background fill (DIMTFILL)",
+              "de": "Texthintergrundfüllung (DIMTFILL)"
+            }
+          }
         },
         "textFillColorIndex": {
           "type": "integer",
           "minimum": 0,
-          "maximum": 65535
+          "maximum": 65535,
+          "x-semio-ui": {
+            "label": {
+              "en": "Text background color (DIMTFILLCLR)",
+              "de": "Texthintergrundfarbe (DIMTFILLCLR)"
+            }
+          }
         },
         "tolerance": {
-          "type": "boolean"
+          "type": "boolean",
+          "x-semio-ui": {
+            "label": {
+              "en": "Generate tolerances (DIMTOL)",
+              "de": "Toleranzen erzeugen (DIMTOL)"
+            }
+          }
         },
         "limits": {
-          "type": "boolean"
+          "type": "boolean",
+          "x-semio-ui": {
+            "label": {
+              "en": "Generate limits (DIMLIM)",
+              "de": "Grenzmaße erzeugen (DIMLIM)"
+            }
+          }
         },
         "textInsideHorizontal": {
-          "type": "boolean"
+          "type": "boolean",
+          "x-semio-ui": {
+            "label": {
+              "en": "Text inside horizontal (DIMTIH)",
+              "de": "Text innen horizontal (DIMTIH)"
+            }
+          }
         },
         "textOutsideHorizontal": {
-          "type": "boolean"
+          "type": "boolean",
+          "x-semio-ui": {
+            "label": {
+              "en": "Text outside horizontal (DIMTOH)",
+              "de": "Text außen horizontal (DIMTOH)"
+            }
+          }
         },
         "suppressExtension1": {
-          "type": "boolean"
+          "type": "boolean",
+          "x-semio-ui": {
+            "label": {
+              "en": "Suppress first extension line (DIMSE1)",
+              "de": "Erste Maßhilfslinie unterdrücken (DIMSE1)"
+            }
+          }
         },
         "suppressExtension2": {
-          "type": "boolean"
+          "type": "boolean",
+          "x-semio-ui": {
+            "label": {
+              "en": "Suppress second extension line (DIMSE2)",
+              "de": "Zweite Maßhilfslinie unterdrücken (DIMSE2)"
+            }
+          }
         },
         "textAbove": {
           "type": "integer",
           "minimum": 0,
-          "maximum": 65535
+          "maximum": 65535,
+          "x-semio-ui": {
+            "label": {
+              "en": "Vertical text position (DIMTAD)",
+              "de": "Vertikale Textposition (DIMTAD)"
+            }
+          }
         },
         "zeroSuppression": {
           "type": "integer",
           "minimum": 0,
-          "maximum": 65535
+          "maximum": 65535,
+          "x-semio-ui": {
+            "label": {
+              "en": "Zero suppression (DIMZIN)",
+              "de": "Nullenunterdrückung (DIMZIN)"
+            }
+          }
         },
         "angularZeroSuppression": {
           "type": "integer",
           "minimum": 0,
-          "maximum": 65535
+          "maximum": 65535,
+          "x-semio-ui": {
+            "label": {
+              "en": "Angular zero suppression (DIMAZIN)",
+              "de": "Nullenunterdrückung bei Winkeln (DIMAZIN)"
+            }
+          }
         },
         "arcSymbol": {
           "type": "integer",
           "minimum": 0,
-          "maximum": 65535
+          "maximum": 65535,
+          "x-semio-ui": {
+            "label": {
+              "en": "Arc length symbol (DIMARCSYM)",
+              "de": "Bogenlängensymbol (DIMARCSYM)"
+            }
+          }
         },
         "textHeight": {
-          "type": "number"
+          "type": "number",
+          "x-semio-ui": {
+            "label": {
+              "en": "Text height (DIMTXT)",
+              "de": "Texthöhe (DIMTXT)"
+            }
+          }
         },
         "centerMark": {
-          "type": "number"
+          "type": "number",
+          "x-semio-ui": {
+            "label": {
+              "en": "Center mark size (DIMCEN)",
+              "de": "Größe der Mittelpunktmarkierung (DIMCEN)"
+            }
+          }
         },
         "tickSize": {
-          "type": "number"
+          "type": "number",
+          "x-semio-ui": {
+            "label": {
+              "en": "Tick size (DIMTSZ)",
+              "de": "Schrägstrichgröße (DIMTSZ)"
+            }
+          }
         },
         "alternateScale": {
-          "type": "number"
+          "type": "number",
+          "x-semio-ui": {
+            "label": {
+              "en": "Alternate unit scale factor (DIMALTF)",
+              "de": "Faktor der Alternativeinheiten (DIMALTF)"
+            }
+          }
         },
         "linearFactor": {
-          "type": "number"
+          "type": "number",
+          "x-semio-ui": {
+            "label": {
+              "en": "Linear scale factor (DIMLFAC)",
+              "de": "Längenmaßstabsfaktor (DIMLFAC)"
+            }
+          }
         },
         "textVerticalPosition": {
-          "type": "number"
+          "type": "number",
+          "x-semio-ui": {
+            "label": {
+              "en": "Text vertical position (DIMTVP)",
+              "de": "Vertikale Textverschiebung (DIMTVP)"
+            }
+          }
         },
         "textFactor": {
-          "type": "number"
+          "type": "number",
+          "x-semio-ui": {
+            "label": {
+              "en": "Tolerance text height factor (DIMTFAC)",
+              "de": "Skalierfaktor der Toleranztexthöhe (DIMTFAC)"
+            }
+          }
         },
         "gap": {
-          "type": "number"
+          "type": "number",
+          "x-semio-ui": {
+            "label": {
+              "en": "Dimension line gap (DIMGAP)",
+              "de": "Abstand Text zu Maßlinie (DIMGAP)"
+            }
+          }
         },
         "alternateRounding": {
-          "type": "number"
+          "type": "number",
+          "x-semio-ui": {
+            "label": {
+              "en": "Alternate unit rounding (DIMALTRND)",
+              "de": "Rundung der Alternativeinheiten (DIMALTRND)"
+            }
+          }
         },
         "alternateUnits": {
-          "type": "boolean"
+          "type": "boolean",
+          "x-semio-ui": {
+            "label": {
+              "en": "Alternate units (DIMALT)",
+              "de": "Alternativeinheiten (DIMALT)"
+            }
+          }
         },
         "alternateDecimalPlaces": {
           "type": "integer",
           "minimum": 0,
-          "maximum": 65535
+          "maximum": 65535,
+          "x-semio-ui": {
+            "label": {
+              "en": "Alternate unit decimal places (DIMALTD)",
+              "de": "Nachkommastellen der Alternativeinheiten (DIMALTD)"
+            }
+          }
         },
         "textOutsideForceLine": {
-          "type": "boolean"
+          "type": "boolean",
+          "x-semio-ui": {
+            "label": {
+              "en": "Force dimension line inside (DIMTOFL)",
+              "de": "Maßlinie zwischen Hilfslinien erzwingen (DIMTOFL)"
+            }
+          }
         },
         "separateArrows": {
-          "type": "boolean"
+          "type": "boolean",
+          "x-semio-ui": {
+            "label": {
+              "en": "Separate arrow blocks (DIMSAH)",
+              "de": "Separate Pfeilblöcke (DIMSAH)"
+            }
+          }
         },
         "textInside": {
-          "type": "boolean"
+          "type": "boolean",
+          "x-semio-ui": {
+            "label": {
+              "en": "Force text inside (DIMTIX)",
+              "de": "Text innerhalb erzwingen (DIMTIX)"
+            }
+          }
         },
         "suppressOutside": {
-          "type": "boolean"
+          "type": "boolean",
+          "x-semio-ui": {
+            "label": {
+              "en": "Suppress outside dimension lines (DIMSOXD)",
+              "de": "Äußere Maßlinien unterdrücken (DIMSOXD)"
+            }
+          }
         },
         "lineColorIndex": {
           "type": "integer",
           "minimum": 0,
-          "maximum": 65535
+          "maximum": 65535,
+          "x-semio-ui": {
+            "label": {
+              "en": "Dimension line color (DIMCLRD)",
+              "de": "Maßlinienfarbe (DIMCLRD)"
+            }
+          }
         },
         "extensionColorIndex": {
           "type": "integer",
           "minimum": 0,
-          "maximum": 65535
+          "maximum": 65535,
+          "x-semio-ui": {
+            "label": {
+              "en": "Extension line color (DIMCLRE)",
+              "de": "Maßhilfslinienfarbe (DIMCLRE)"
+            }
+          }
         },
         "textColorIndex": {
           "type": "integer",
           "minimum": 0,
-          "maximum": 65535
+          "maximum": 65535,
+          "x-semio-ui": {
+            "label": {
+              "en": "Dimension text color (DIMCLRT)",
+              "de": "Maßtextfarbe (DIMCLRT)"
+            }
+          }
         },
         "angularDecimalPlaces": {
           "type": "integer",
           "minimum": 0,
-          "maximum": 65535
+          "maximum": 65535,
+          "x-semio-ui": {
+            "label": {
+              "en": "Angular decimal places (DIMADEC)",
+              "de": "Nachkommastellen bei Winkeln (DIMADEC)"
+            }
+          }
         },
         "decimalPlaces": {
           "type": "integer",
           "minimum": 0,
-          "maximum": 65535
+          "maximum": 65535,
+          "x-semio-ui": {
+            "label": {
+              "en": "Decimal places (DIMDEC)",
+              "de": "Nachkommastellen (DIMDEC)"
+            }
+          }
         },
         "toleranceDecimalPlaces": {
           "type": "integer",
           "minimum": 0,
-          "maximum": 65535
+          "maximum": 65535,
+          "x-semio-ui": {
+            "label": {
+              "en": "Tolerance decimal places (DIMTDEC)",
+              "de": "Nachkommastellen der Toleranz (DIMTDEC)"
+            }
+          }
         },
         "alternateUnitsFormat": {
           "type": "integer",
           "minimum": 0,
-          "maximum": 65535
+          "maximum": 65535,
+          "x-semio-ui": {
+            "label": {
+              "en": "Alternate unit format (DIMALTU)",
+              "de": "Format der Alternativeinheiten (DIMALTU)"
+            }
+          }
         },
         "alternateToleranceDecimalPlaces": {
           "type": "integer",
           "minimum": 0,
-          "maximum": 65535
+          "maximum": 65535,
+          "x-semio-ui": {
+            "label": {
+              "en": "Alternate tolerance decimal places (DIMALTTD)",
+              "de": "Nachkommastellen der alternativen Toleranz (DIMALTTD)"
+            }
+          }
         },
         "angularUnitFormat": {
           "type": "integer",
           "minimum": 0,
-          "maximum": 65535
+          "maximum": 65535,
+          "x-semio-ui": {
+            "label": {
+              "en": "Angular unit format (DIMAUNIT)",
+              "de": "Winkeleinheitenformat (DIMAUNIT)"
+            }
+          }
         },
         "fractionalFormat": {
           "type": "integer",
           "minimum": 0,
-          "maximum": 65535
+          "maximum": 65535,
+          "x-semio-ui": {
+            "label": {
+              "en": "Fraction format (DIMFRAC)",
+              "de": "Bruchformat (DIMFRAC)"
+            }
+          }
         },
         "linearUnitFormat": {
           "type": "integer",
           "minimum": 0,
-          "maximum": 65535
+          "maximum": 65535,
+          "x-semio-ui": {
+            "label": {
+              "en": "Linear unit format (DIMLUNIT)",
+              "de": "Längeneinheitenformat (DIMLUNIT)"
+            }
+          }
         },
         "decimalSeparator": {
           "type": "integer",
           "minimum": 0,
-          "maximum": 65535
+          "maximum": 65535,
+          "x-semio-ui": {
+            "label": {
+              "en": "Decimal separator (DIMDSEP)",
+              "de": "Dezimaltrennzeichen (DIMDSEP)"
+            }
+          }
         },
         "textMovement": {
           "type": "integer",
           "minimum": 0,
-          "maximum": 65535
+          "maximum": 65535,
+          "x-semio-ui": {
+            "label": {
+              "en": "Text movement (DIMTMOVE)",
+              "de": "Textverschiebung (DIMTMOVE)"
+            }
+          }
         },
         "justification": {
           "type": "integer",
           "minimum": 0,
-          "maximum": 65535
+          "maximum": 65535,
+          "x-semio-ui": {
+            "label": {
+              "en": "Horizontal text justification (DIMJUST)",
+              "de": "Horizontale Textausrichtung (DIMJUST)"
+            }
+          }
         },
         "suppressDimension1": {
-          "type": "boolean"
+          "type": "boolean",
+          "x-semio-ui": {
+            "label": {
+              "en": "Suppress first dimension line (DIMSD1)",
+              "de": "Erste Maßlinie unterdrücken (DIMSD1)"
+            }
+          }
         },
         "suppressDimension2": {
-          "type": "boolean"
+          "type": "boolean",
+          "x-semio-ui": {
+            "label": {
+              "en": "Suppress second dimension line (DIMSD2)",
+              "de": "Zweite Maßlinie unterdrücken (DIMSD2)"
+            }
+          }
         },
         "toleranceJustification": {
           "type": "integer",
           "minimum": 0,
-          "maximum": 65535
+          "maximum": 65535,
+          "x-semio-ui": {
+            "label": {
+              "en": "Tolerance vertical justification (DIMTOLJ)",
+              "de": "Vertikale Toleranzausrichtung (DIMTOLJ)"
+            }
+          }
         },
         "toleranceZeroSuppression": {
           "type": "integer",
           "minimum": 0,
-          "maximum": 65535
+          "maximum": 65535,
+          "x-semio-ui": {
+            "label": {
+              "en": "Tolerance zero suppression (DIMTZIN)",
+              "de": "Nullenunterdrückung bei Toleranzen (DIMTZIN)"
+            }
+          }
         },
         "alternateZeroSuppression": {
           "type": "integer",
           "minimum": 0,
-          "maximum": 65535
+          "maximum": 65535,
+          "x-semio-ui": {
+            "label": {
+              "en": "Alternate unit zero suppression (DIMALTZ)",
+              "de": "Nullenunterdrückung der Alternativeinheiten (DIMALTZ)"
+            }
+          }
         },
         "alternateToleranceZeroSuppression": {
           "type": "integer",
           "minimum": 0,
-          "maximum": 65535
+          "maximum": 65535,
+          "x-semio-ui": {
+            "label": {
+              "en": "Alternate tolerance zero suppression (DIMALTTZ)",
+              "de": "Nullenunterdrückung der alternativen Toleranz (DIMALTTZ)"
+            }
+          }
         },
         "userPositionedText": {
-          "type": "boolean"
+          "type": "boolean",
+          "x-semio-ui": {
+            "label": {
+              "en": "User-positioned text (DIMUPT)",
+              "de": "Benutzerpositionierter Text (DIMUPT)"
+            }
+          }
         },
         "fit": {
           "type": "integer",
           "minimum": 0,
-          "maximum": 65535
+          "maximum": 65535,
+          "x-semio-ui": {
+            "label": {
+              "en": "Text and arrow fit (DIMATFIT)",
+              "de": "Anpassung von Text und Pfeilen (DIMATFIT)"
+            }
+          }
         },
         "fixedExtensionEnabled": {
-          "type": "boolean"
+          "type": "boolean",
+          "x-semio-ui": {
+            "label": {
+              "en": "Fixed-length extension lines (DIMFXLON)",
+              "de": "Maßhilfslinien mit fester Länge (DIMFXLON)"
+            }
+          }
         },
         "textDirection": {
-          "type": "boolean"
+          "type": "boolean",
+          "x-semio-ui": {
+            "label": {
+              "en": "Text direction (DIMTXTDIRECTION)",
+              "de": "Textrichtung (DIMTXTDIRECTION)"
+            }
+          }
         },
         "alternateMeasurementScale": {
-          "type": "number"
+          "type": "number",
+          "x-semio-ui": {
+            "label": {
+              "en": "Alternate sub-unit factor (DIMALTMZF)",
+              "de": "Faktor der alternativen Untereinheit (DIMALTMZF)"
+            }
+          }
         },
         "measurementScale": {
-          "type": "number"
+          "type": "number",
+          "x-semio-ui": {
+            "label": {
+              "en": "Sub-unit factor (DIMMZF)",
+              "de": "Untereinheitenfaktor (DIMMZF)"
+            }
+          }
         },
         "dimensionLineWeight": {
           "type": "integer",
           "minimum": -32768,
-          "maximum": 32767
+          "maximum": 32767,
+          "x-semio-ui": {
+            "label": {
+              "en": "Dimension line weight (DIMLWD)",
+              "de": "Maßlinienstärke (DIMLWD)"
+            }
+          }
         },
         "extensionLineWeight": {
           "type": "integer",
           "minimum": -32768,
-          "maximum": 32767
+          "maximum": 32767,
+          "x-semio-ui": {
+            "label": {
+              "en": "Extension line weight (DIMLWE)",
+              "de": "Maßhilfslinienstärke (DIMLWE)"
+            }
+          }
         }
       }
     },
@@ -9826,208 +11145,508 @@
         "textStackAlignment": {
           "type": "integer",
           "minimum": 0,
-          "maximum": 65535
+          "maximum": 65535,
+          "x-semio-ui": {
+            "label": {
+              "en": "Stacked text alignment (TSTACKALIGN)",
+              "de": "Ausrichtung gestapelter Texte (TSTACKALIGN)"
+            }
+          }
         },
         "textStackSize": {
           "type": "integer",
           "minimum": 0,
-          "maximum": 65535
+          "maximum": 65535,
+          "x-semio-ui": {
+            "label": {
+              "en": "Stacked text size (TSTACKSIZE)",
+              "de": "Größe gestapelter Texte (TSTACKSIZE)"
+            }
+          }
         },
         "currentEntityLineweight": {
           "type": "integer",
           "minimum": -32768,
-          "maximum": 32767
+          "maximum": 32767,
+          "x-semio-ui": {
+            "label": {
+              "en": "Current lineweight (CELWEIGHT)",
+              "de": "Aktuelle Linienstärke (CELWEIGHT)"
+            }
+          }
         },
         "endCaps": {
           "type": "integer",
           "minimum": 0,
-          "maximum": 255
+          "maximum": 255,
+          "x-semio-ui": {
+            "label": {
+              "en": "Lineweight end caps (ENDCAPS)",
+              "de": "Linienenden (ENDCAPS)"
+            }
+          }
         },
         "joinStyle": {
           "type": "integer",
           "minimum": 0,
-          "maximum": 255
+          "maximum": 255,
+          "x-semio-ui": {
+            "label": {
+              "en": "Lineweight joint style (JOINSTYLE)",
+              "de": "Linienverbindungsstil (JOINSTYLE)"
+            }
+          }
         },
         "lineweightDisplay": {
-          "type": "boolean"
+          "type": "boolean",
+          "x-semio-ui": {
+            "label": {
+              "en": "Display lineweights (LWDISPLAY)",
+              "de": "Linienstärken anzeigen (LWDISPLAY)"
+            }
+          }
         },
         "externalReferenceEditing": {
-          "type": "boolean"
+          "type": "boolean",
+          "x-semio-ui": {
+            "label": {
+              "en": "In-place xref editing (XEDIT)",
+              "de": "Xref-Bearbeitung vor Ort (XEDIT)"
+            }
+          }
         },
         "extendedNames": {
-          "type": "boolean"
+          "type": "boolean",
+          "x-semio-ui": {
+            "label": {
+              "en": "Extended symbol names (EXTNAMES)",
+              "de": "Erweiterte Symbolnamen (EXTNAMES)"
+            }
+          }
         },
         "plotStyleMode": {
-          "type": "boolean"
+          "type": "boolean",
+          "x-semio-ui": {
+            "label": {
+              "en": "Color-dependent plot styles (PSTYLEMODE)",
+              "de": "Farbabhängige Plotstile (PSTYLEMODE)"
+            }
+          }
         },
         "oleStartup": {
-          "type": "boolean"
+          "type": "boolean",
+          "x-semio-ui": {
+            "label": {
+              "en": "Load OLE source application (OLESTARTUP)",
+              "de": "OLE-Quellanwendung laden (OLESTARTUP)"
+            }
+          }
         },
         "insertionUnits": {
           "type": "integer",
           "minimum": 0,
-          "maximum": 65535
+          "maximum": 65535,
+          "x-semio-ui": {
+            "label": {
+              "en": "Insertion units (INSUNITS)",
+              "de": "Einfügeeinheiten (INSUNITS)"
+            }
+          }
         },
         "currentPlotStyleType": {
           "type": "integer",
           "minimum": 0,
-          "maximum": 65535
+          "maximum": 65535,
+          "x-semio-ui": {
+            "label": {
+              "en": "Current plot style type (CEPSNTYPE)",
+              "de": "Aktueller Plotstiltyp (CEPSNTYPE)"
+            }
+          }
         },
         "sortEntities": {
           "type": "integer",
           "minimum": 0,
-          "maximum": 255
+          "maximum": 255,
+          "x-semio-ui": {
+            "label": {
+              "en": "Object sorting (SORTENTS)",
+              "de": "Objektsortierung (SORTENTS)"
+            }
+          }
         },
         "indexControl": {
           "type": "integer",
           "minimum": 0,
-          "maximum": 255
+          "maximum": 255,
+          "x-semio-ui": {
+            "label": {
+              "en": "Layer and spatial index (INDEXCTL)",
+              "de": "Layer- und räumlicher Index (INDEXCTL)"
+            }
+          }
         },
         "hideText": {
           "type": "integer",
           "minimum": 0,
-          "maximum": 255
+          "maximum": 255,
+          "x-semio-ui": {
+            "label": {
+              "en": "Hide text (HIDETEXT)",
+              "de": "Text verdecken (HIDETEXT)"
+            }
+          }
         },
         "xclipFrame": {
           "type": "integer",
           "minimum": 0,
-          "maximum": 255
+          "maximum": 255,
+          "x-semio-ui": {
+            "label": {
+              "en": "Xref clip frame (XCLIPFRAME)",
+              "de": "Xref-Zuschneiderahmen (XCLIPFRAME)"
+            }
+          }
         },
         "dimensionAssociation": {
           "type": "integer",
           "minimum": 0,
-          "maximum": 255
+          "maximum": 255,
+          "x-semio-ui": {
+            "label": {
+              "en": "Dimension associativity (DIMASSOC)",
+              "de": "Bemaßungsassoziativität (DIMASSOC)"
+            }
+          }
         },
         "haloGap": {
           "type": "integer",
           "minimum": 0,
-          "maximum": 255
+          "maximum": 255,
+          "x-semio-ui": {
+            "label": {
+              "en": "Halo gap (HALOGAP)",
+              "de": "Halo-Abstand (HALOGAP)"
+            }
+          }
         },
         "obscuredColor": {
           "type": "integer",
           "minimum": 0,
-          "maximum": 65535
+          "maximum": 65535,
+          "x-semio-ui": {
+            "label": {
+              "en": "Obscured line color (OBSCUREDCOLOR)",
+              "de": "Farbe verdeckter Linien (OBSCUREDCOLOR)"
+            }
+          }
         },
         "intersectionColor": {
           "type": "integer",
           "minimum": 0,
-          "maximum": 65535
+          "maximum": 65535,
+          "x-semio-ui": {
+            "label": {
+              "en": "Intersection polyline color (INTERSECTIONCOLOR)",
+              "de": "Farbe der Schnittlinien (INTERSECTIONCOLOR)"
+            }
+          }
         },
         "obscuredLinetype": {
           "type": "integer",
           "minimum": 0,
-          "maximum": 255
+          "maximum": 255,
+          "x-semio-ui": {
+            "label": {
+              "en": "Obscured linetype (OBSCUREDLTYPE)",
+              "de": "Linientyp verdeckter Linien (OBSCUREDLTYPE)"
+            }
+          }
         },
         "intersectionDisplay": {
           "type": "integer",
           "minimum": 0,
-          "maximum": 255
+          "maximum": 255,
+          "x-semio-ui": {
+            "label": {
+              "en": "Display intersection polylines (INTERSECTIONDISPLAY)",
+              "de": "Schnittlinien anzeigen (INTERSECTIONDISPLAY)"
+            }
+          }
         },
         "cameraDisplay": {
-          "type": "boolean"
+          "type": "boolean",
+          "x-semio-ui": {
+            "label": {
+              "en": "Display cameras (CAMERADISPLAY)",
+              "de": "Kameras anzeigen (CAMERADISPLAY)"
+            }
+          }
         },
         "stepsPerSecond": {
-          "type": "number"
+          "type": "number",
+          "x-semio-ui": {
+            "label": {
+              "en": "Walk steps per second (STEPSPERSEC)",
+              "de": "Schritte pro Sekunde (STEPSPERSEC)"
+            }
+          }
         },
         "stepSize": {
-          "type": "number"
+          "type": "number",
+          "x-semio-ui": {
+            "label": {
+              "en": "Walk step size (STEPSIZE)",
+              "de": "Schrittweite (STEPSIZE)"
+            }
+          }
         },
         "dwf3dPrecision": {
-          "type": "number"
+          "type": "number",
+          "x-semio-ui": {
+            "label": {
+              "en": "3D DWF precision (3DDWFPREC)",
+              "de": "3D-DWF-Genauigkeit (3DDWFPREC)"
+            }
+          }
         },
         "lensLength": {
-          "type": "number"
+          "type": "number",
+          "x-semio-ui": {
+            "label": {
+              "en": "Lens length (LENSLENGTH)",
+              "de": "Brennweite (LENSLENGTH)"
+            }
+          }
         },
         "cameraHeight": {
-          "type": "number"
+          "type": "number",
+          "x-semio-ui": {
+            "label": {
+              "en": "Camera height (CAMERAHEIGHT)",
+              "de": "Kamerahöhe (CAMERAHEIGHT)"
+            }
+          }
         },
         "solidHistory": {
           "type": "integer",
           "minimum": 0,
-          "maximum": 255
+          "maximum": 255,
+          "x-semio-ui": {
+            "label": {
+              "en": "Solid history (SOLIDHIST)",
+              "de": "Volumenkörperprotokoll (SOLIDHIST)"
+            }
+          }
         },
         "showHistory": {
           "type": "integer",
           "minimum": 0,
-          "maximum": 255
+          "maximum": 255,
+          "x-semio-ui": {
+            "label": {
+              "en": "Show history (SHOWHIST)",
+              "de": "Protokoll anzeigen (SHOWHIST)"
+            }
+          }
         },
         "polysolidWidth": {
-          "type": "number"
+          "type": "number",
+          "x-semio-ui": {
+            "label": {
+              "en": "Polysolid width (PSOLWIDTH)",
+              "de": "Polykörperbreite (PSOLWIDTH)"
+            }
+          }
         },
         "polysolidHeight": {
-          "type": "number"
+          "type": "number",
+          "x-semio-ui": {
+            "label": {
+              "en": "Polysolid height (PSOLHEIGHT)",
+              "de": "Polykörperhöhe (PSOLHEIGHT)"
+            }
+          }
         },
         "loftAngle1": {
-          "type": "number"
+          "type": "number",
+          "x-semio-ui": {
+            "label": {
+              "en": "Loft start angle (LOFTANG1)",
+              "de": "Anfangswinkel der Erhebung (LOFTANG1)"
+            }
+          }
         },
         "loftAngle2": {
-          "type": "number"
+          "type": "number",
+          "x-semio-ui": {
+            "label": {
+              "en": "Loft end angle (LOFTANG2)",
+              "de": "Endwinkel der Erhebung (LOFTANG2)"
+            }
+          }
         },
         "loftMagnitude1": {
-          "type": "number"
+          "type": "number",
+          "x-semio-ui": {
+            "label": {
+              "en": "Loft start magnitude (LOFTMAG1)",
+              "de": "Anfangsbetrag der Erhebung (LOFTMAG1)"
+            }
+          }
         },
         "loftMagnitude2": {
-          "type": "number"
+          "type": "number",
+          "x-semio-ui": {
+            "label": {
+              "en": "Loft end magnitude (LOFTMAG2)",
+              "de": "Endbetrag der Erhebung (LOFTMAG2)"
+            }
+          }
         },
         "loftParameter": {
           "type": "integer",
           "minimum": 0,
-          "maximum": 65535
+          "maximum": 65535,
+          "x-semio-ui": {
+            "label": {
+              "en": "Loft options (LOFTPARAM)",
+              "de": "Erhebungsoptionen (LOFTPARAM)"
+            }
+          }
         },
         "loftNormals": {
           "type": "integer",
           "minimum": 0,
-          "maximum": 255
+          "maximum": 255,
+          "x-semio-ui": {
+            "label": {
+              "en": "Loft normals (LOFTNORMALS)",
+              "de": "Erhebungsnormalen (LOFTNORMALS)"
+            }
+          }
         },
         "latitude": {
-          "type": "number"
+          "type": "number",
+          "x-semio-ui": {
+            "label": {
+              "en": "Latitude (LATITUDE)",
+              "de": "Geographische Breite (LATITUDE)"
+            }
+          }
         },
         "longitude": {
-          "type": "number"
+          "type": "number",
+          "x-semio-ui": {
+            "label": {
+              "en": "Longitude (LONGITUDE)",
+              "de": "Geographische Länge (LONGITUDE)"
+            }
+          }
         },
         "northDirection": {
-          "type": "number"
+          "type": "number",
+          "x-semio-ui": {
+            "label": {
+              "en": "North direction (NORTHDIRECTION)",
+              "de": "Nordrichtung (NORTHDIRECTION)"
+            }
+          }
         },
         "timezone": {
           "type": "integer",
           "minimum": -2147483648,
-          "maximum": 2147483647
+          "maximum": 2147483647,
+          "x-semio-ui": {
+            "label": {
+              "en": "Time zone (TIMEZONE)",
+              "de": "Zeitzone (TIMEZONE)"
+            }
+          }
         },
         "lightGlyphDisplay": {
           "type": "integer",
           "minimum": 0,
-          "maximum": 255
+          "maximum": 255,
+          "x-semio-ui": {
+            "label": {
+              "en": "Display light glyphs (LIGHTGLYPHDISPLAY)",
+              "de": "Lichtsymbole anzeigen (LIGHTGLYPHDISPLAY)"
+            }
+          }
         },
         "tileModeLightSync": {
           "type": "integer",
           "minimum": 0,
-          "maximum": 255
+          "maximum": 255,
+          "x-semio-ui": {
+            "label": {
+              "en": "Synchronize model lighting (TILEMODELIGHTSYNCH)",
+              "de": "Beleuchtung im Modell synchronisieren (TILEMODELIGHTSYNCH)"
+            }
+          }
         },
         "dwfFrame": {
           "type": "integer",
           "minimum": 0,
-          "maximum": 255
+          "maximum": 255,
+          "x-semio-ui": {
+            "label": {
+              "en": "DWF underlay frame (DWFFRAME)",
+              "de": "DWF-Unterlagenrahmen (DWFFRAME)"
+            }
+          }
         },
         "dgnFrame": {
           "type": "integer",
           "minimum": 0,
-          "maximum": 255
+          "maximum": 255,
+          "x-semio-ui": {
+            "label": {
+              "en": "DGN underlay frame (DGNFRAME)",
+              "de": "DGN-Unterlagenrahmen (DGNFRAME)"
+            }
+          }
         },
         "realWorldScale": {
-          "type": "boolean"
+          "type": "boolean",
+          "x-semio-ui": {
+            "label": {
+              "en": "Real-world scale (REALWORLDSCALE)",
+              "de": "Realer Maßstab (REALWORLDSCALE)"
+            }
+          }
         },
         "interfereColorIndex": {
           "type": "integer",
           "minimum": 0,
-          "maximum": 65535
+          "maximum": 65535,
+          "x-semio-ui": {
+            "label": {
+              "en": "Interference color (INTERFERECOLOR)",
+              "de": "Kollisionsfarbe (INTERFERECOLOR)"
+            }
+          }
         },
         "shadowMode": {
           "type": "integer",
           "minimum": 0,
-          "maximum": 255
+          "maximum": 255,
+          "x-semio-ui": {
+            "label": {
+              "en": "Shadow display (CSHADOW)",
+              "de": "Schattenanzeige (CSHADOW)"
+            }
+          }
         },
         "shadowPlaneLocation": {
-          "type": "number"
+          "type": "number",
+          "x-semio-ui": {
+            "label": {
+              "en": "Ground shadow plane (SHADOWPLANELOCATION)",
+              "de": "Höhe der Bodenschattenebene (SHADOWPLANELOCATION)"
+            }
+          }
         }
       }
     },
@@ -10048,34 +11667,94 @@
       ],
       "properties": {
         "menu": {
-          "type": "string"
+          "type": "string",
+          "x-semio-ui": {
+            "label": {
+              "en": "Menu file (MENU)",
+              "de": "Menüdatei (MENU)"
+            }
+          }
         },
         "dimensionPostfix": {
-          "type": "string"
+          "type": "string",
+          "x-semio-ui": {
+            "label": {
+              "en": "Dimension text suffix (DIMPOST)",
+              "de": "Maßtext-Suffix (DIMPOST)"
+            }
+          }
         },
         "dimensionAlternatePostfix": {
-          "type": "string"
+          "type": "string",
+          "x-semio-ui": {
+            "label": {
+              "en": "Alternate dimension suffix (DIMAPOST)",
+              "de": "Suffix der Alternativeinheiten (DIMAPOST)"
+            }
+          }
         },
         "dimensionAlternateMeasurementZeroSuffix": {
-          "type": "string"
+          "type": "string",
+          "x-semio-ui": {
+            "label": {
+              "en": "Alternate sub-unit suffix (DIMALTMZS)",
+              "de": "Suffix der alternativen Untereinheit (DIMALTMZS)"
+            }
+          }
         },
         "dimensionMeasurementZeroSuffix": {
-          "type": "string"
+          "type": "string",
+          "x-semio-ui": {
+            "label": {
+              "en": "Sub-unit suffix (DIMMZS)",
+              "de": "Untereinheitensuffix (DIMMZS)"
+            }
+          }
         },
         "hyperlinkBase": {
-          "type": "string"
+          "type": "string",
+          "x-semio-ui": {
+            "label": {
+              "en": "Hyperlink base (HYPERLINKBASE)",
+              "de": "Hyperlinkbasis (HYPERLINKBASE)"
+            }
+          }
         },
         "stylesheet": {
-          "type": "string"
+          "type": "string",
+          "x-semio-ui": {
+            "label": {
+              "en": "Plot style table (STYLESHEET)",
+              "de": "Plotstiltabelle (STYLESHEET)"
+            }
+          }
         },
         "fingerprintGuid": {
-          "type": "string"
+          "type": "string",
+          "x-semio-ui": {
+            "label": {
+              "en": "Fingerprint GUID (FINGERPRINTGUID)",
+              "de": "Fingerabdruck-GUID (FINGERPRINTGUID)"
+            }
+          }
         },
         "versionGuid": {
-          "type": "string"
+          "type": "string",
+          "x-semio-ui": {
+            "label": {
+              "en": "Version GUID (VERSIONGUID)",
+              "de": "Versions-GUID (VERSIONGUID)"
+            }
+          }
         },
         "projectName": {
-          "type": "string"
+          "type": "string",
+          "x-semio-ui": {
+            "label": {
+              "en": "Project name (PROJECTNAME)",
+              "de": "Projektname (PROJECTNAME)"
+            }
+          }
         }
       }
     },
@@ -10118,31 +11797,73 @@
       "properties": {
         "handleSeed": {
           "type": "integer",
-          "minimum": 0
+          "minimum": 0,
+          "x-semio-ui": {
+            "label": {
+              "en": "Next handle (HANDSEED)",
+              "de": "Nächste Referenz (HANDSEED)"
+            }
+          }
         },
         "currentLayer": {
           "type": "integer",
-          "minimum": 0
+          "minimum": 0,
+          "x-semio-ui": {
+            "label": {
+              "en": "Current layer (CLAYER)",
+              "de": "Aktueller Layer (CLAYER)"
+            }
+          }
         },
         "textStyle": {
           "type": "integer",
-          "minimum": 0
+          "minimum": 0,
+          "x-semio-ui": {
+            "label": {
+              "en": "Current text style (TEXTSTYLE)",
+              "de": "Aktueller Textstil (TEXTSTYLE)"
+            }
+          }
         },
         "currentLinetype": {
           "type": "integer",
-          "minimum": 0
+          "minimum": 0,
+          "x-semio-ui": {
+            "label": {
+              "en": "Current linetype (CELTYPE)",
+              "de": "Aktueller Linientyp (CELTYPE)"
+            }
+          }
         },
         "currentMaterial": {
           "type": "integer",
-          "minimum": 0
+          "minimum": 0,
+          "x-semio-ui": {
+            "label": {
+              "en": "Current material (CMATERIAL)",
+              "de": "Aktuelles Material (CMATERIAL)"
+            }
+          }
         },
         "dimensionStyle": {
           "type": "integer",
-          "minimum": 0
+          "minimum": 0,
+          "x-semio-ui": {
+            "label": {
+              "en": "Current dimension style (DIMSTYLE)",
+              "de": "Aktueller Bemaßungsstil (DIMSTYLE)"
+            }
+          }
         },
         "multilineStyle": {
           "type": "integer",
-          "minimum": 0
+          "minimum": 0,
+          "x-semio-ui": {
+            "label": {
+              "en": "Current multiline style (CMLSTYLE)",
+              "de": "Aktueller Multilinienstil (CMLSTYLE)"
+            }
+          }
         },
         "paperUcsName": {
           "anyOf": [
@@ -10153,7 +11874,13 @@
             {
               "type": "null"
             }
-          ]
+          ],
+          "x-semio-ui": {
+            "label": {
+              "en": "Paper space UCS (PUCSNAME)",
+              "de": "BKS im Papierbereich (PUCSNAME)"
+            }
+          }
         },
         "paperUcsOrthographicReference": {
           "anyOf": [
@@ -10164,7 +11891,13 @@
             {
               "type": "null"
             }
-          ]
+          ],
+          "x-semio-ui": {
+            "label": {
+              "en": "Paper space orthographic UCS reference (PUCSORTHOREF)",
+              "de": "Orthogonale BKS-Referenz im Papierbereich (PUCSORTHOREF)"
+            }
+          }
         },
         "paperUcsBase": {
           "anyOf": [
@@ -10175,7 +11908,13 @@
             {
               "type": "null"
             }
-          ]
+          ],
+          "x-semio-ui": {
+            "label": {
+              "en": "Paper space UCS base (PUCSBASE)",
+              "de": "BKS-Basis im Papierbereich (PUCSBASE)"
+            }
+          }
         },
         "modelUcsName": {
           "anyOf": [
@@ -10186,7 +11925,13 @@
             {
               "type": "null"
             }
-          ]
+          ],
+          "x-semio-ui": {
+            "label": {
+              "en": "Model space UCS (UCSNAME)",
+              "de": "BKS im Modellbereich (UCSNAME)"
+            }
+          }
         },
         "modelUcsOrthographicReference": {
           "anyOf": [
@@ -10197,7 +11942,13 @@
             {
               "type": "null"
             }
-          ]
+          ],
+          "x-semio-ui": {
+            "label": {
+              "en": "Model space orthographic UCS reference (UCSORTHOREF)",
+              "de": "Orthogonale BKS-Referenz im Modellbereich (UCSORTHOREF)"
+            }
+          }
         },
         "modelUcsBase": {
           "anyOf": [
@@ -10208,11 +11959,23 @@
             {
               "type": "null"
             }
-          ]
+          ],
+          "x-semio-ui": {
+            "label": {
+              "en": "Model space UCS base (UCSBASE)",
+              "de": "BKS-Basis im Modellbereich (UCSBASE)"
+            }
+          }
         },
         "dimensionTextStyle": {
           "type": "integer",
-          "minimum": 0
+          "minimum": 0,
+          "x-semio-ui": {
+            "label": {
+              "en": "Dimension text style (DIMTXSTY)",
+              "de": "Bemaßungstextstil (DIMTXSTY)"
+            }
+          }
         },
         "dimensionLeaderBlock": {
           "anyOf": [
@@ -10223,7 +11986,13 @@
             {
               "type": "null"
             }
-          ]
+          ],
+          "x-semio-ui": {
+            "label": {
+              "en": "Leader arrow block (DIMLDRBLK)",
+              "de": "Führungspfeilblock (DIMLDRBLK)"
+            }
+          }
         },
         "dimensionBlock": {
           "anyOf": [
@@ -10234,7 +12003,13 @@
             {
               "type": "null"
             }
-          ]
+          ],
+          "x-semio-ui": {
+            "label": {
+              "en": "Arrow block (DIMBLK)",
+              "de": "Pfeilblock (DIMBLK)"
+            }
+          }
         },
         "dimensionBlock1": {
           "anyOf": [
@@ -10245,7 +12020,13 @@
             {
               "type": "null"
             }
-          ]
+          ],
+          "x-semio-ui": {
+            "label": {
+              "en": "First arrow block (DIMBLK1)",
+              "de": "Erster Pfeilblock (DIMBLK1)"
+            }
+          }
         },
         "dimensionBlock2": {
           "anyOf": [
@@ -10256,7 +12037,13 @@
             {
               "type": "null"
             }
-          ]
+          ],
+          "x-semio-ui": {
+            "label": {
+              "en": "Second arrow block (DIMBLK2)",
+              "de": "Zweiter Pfeilblock (DIMBLK2)"
+            }
+          }
         },
         "dimensionLinetype": {
           "anyOf": [
@@ -10267,7 +12054,13 @@
             {
               "type": "null"
             }
-          ]
+          ],
+          "x-semio-ui": {
+            "label": {
+              "en": "Dimension line linetype (DIMLTYPE)",
+              "de": "Linientyp der Maßlinie (DIMLTYPE)"
+            }
+          }
         },
         "dimensionExtensionLinetype1": {
           "anyOf": [
@@ -10278,7 +12071,13 @@
             {
               "type": "null"
             }
-          ]
+          ],
+          "x-semio-ui": {
+            "label": {
+              "en": "First extension line linetype (DIMLTEX1)",
+              "de": "Linientyp der ersten Maßhilfslinie (DIMLTEX1)"
+            }
+          }
         },
         "dimensionExtensionLinetype2": {
           "anyOf": [
@@ -10289,99 +12088,243 @@
             {
               "type": "null"
             }
-          ]
+          ],
+          "x-semio-ui": {
+            "label": {
+              "en": "Second extension line linetype (DIMLTEX2)",
+              "de": "Linientyp der zweiten Maßhilfslinie (DIMLTEX2)"
+            }
+          }
         },
         "blockControl": {
           "type": "integer",
-          "minimum": 0
+          "minimum": 0,
+          "x-semio-ui": {
+            "label": {
+              "en": "Block table",
+              "de": "Blocktabelle"
+            }
+          }
         },
         "layerControl": {
           "type": "integer",
-          "minimum": 0
+          "minimum": 0,
+          "x-semio-ui": {
+            "label": {
+              "en": "Layer table",
+              "de": "Layertabelle"
+            }
+          }
         },
         "styleControl": {
           "type": "integer",
-          "minimum": 0
+          "minimum": 0,
+          "x-semio-ui": {
+            "label": {
+              "en": "Text style table",
+              "de": "Textstiltabelle"
+            }
+          }
         },
         "linetypeControl": {
           "type": "integer",
-          "minimum": 0
+          "minimum": 0,
+          "x-semio-ui": {
+            "label": {
+              "en": "Linetype table",
+              "de": "Linientyptabelle"
+            }
+          }
         },
         "viewControl": {
           "type": "integer",
-          "minimum": 0
+          "minimum": 0,
+          "x-semio-ui": {
+            "label": {
+              "en": "View table",
+              "de": "Ansichtstabelle"
+            }
+          }
         },
         "ucsControl": {
           "type": "integer",
-          "minimum": 0
+          "minimum": 0,
+          "x-semio-ui": {
+            "label": {
+              "en": "UCS table",
+              "de": "BKS-Tabelle"
+            }
+          }
         },
         "viewportControl": {
           "type": "integer",
-          "minimum": 0
+          "minimum": 0,
+          "x-semio-ui": {
+            "label": {
+              "en": "Viewport table",
+              "de": "Ansichtsfenstertabelle"
+            }
+          }
         },
         "appidControl": {
           "type": "integer",
-          "minimum": 0
+          "minimum": 0,
+          "x-semio-ui": {
+            "label": {
+              "en": "Registered application table",
+              "de": "Tabelle registrierter Anwendungen"
+            }
+          }
         },
         "dimensionStyleControl": {
           "type": "integer",
-          "minimum": 0
+          "minimum": 0,
+          "x-semio-ui": {
+            "label": {
+              "en": "Dimension style table",
+              "de": "Bemaßungsstiltabelle"
+            }
+          }
         },
         "groupDictionary": {
           "type": "integer",
-          "minimum": 0
+          "minimum": 0,
+          "x-semio-ui": {
+            "label": {
+              "en": "Group dictionary",
+              "de": "Gruppenwörterbuch"
+            }
+          }
         },
         "multilineStyleDictionary": {
           "type": "integer",
-          "minimum": 0
+          "minimum": 0,
+          "x-semio-ui": {
+            "label": {
+              "en": "Multiline style dictionary",
+              "de": "Multilinienstil-Wörterbuch"
+            }
+          }
         },
         "namedObjectsDictionary": {
           "type": "integer",
-          "minimum": 0
+          "minimum": 0,
+          "x-semio-ui": {
+            "label": {
+              "en": "Named object dictionary",
+              "de": "Wörterbuch benannter Objekte"
+            }
+          }
         },
         "layoutDictionary": {
           "type": "integer",
-          "minimum": 0
+          "minimum": 0,
+          "x-semio-ui": {
+            "label": {
+              "en": "Layout dictionary",
+              "de": "Layout-Wörterbuch"
+            }
+          }
         },
         "plotSettingsDictionary": {
           "type": "integer",
-          "minimum": 0
+          "minimum": 0,
+          "x-semio-ui": {
+            "label": {
+              "en": "Plot settings dictionary",
+              "de": "Ploteinstellungs-Wörterbuch"
+            }
+          }
         },
         "plotStyleNameDictionary": {
           "type": "integer",
-          "minimum": 0
+          "minimum": 0,
+          "x-semio-ui": {
+            "label": {
+              "en": "Plot style name dictionary",
+              "de": "Plotstilnamen-Wörterbuch"
+            }
+          }
         },
         "materialDictionary": {
           "type": "integer",
-          "minimum": 0
+          "minimum": 0,
+          "x-semio-ui": {
+            "label": {
+              "en": "Material dictionary",
+              "de": "Materialwörterbuch"
+            }
+          }
         },
         "colorDictionary": {
           "type": "integer",
-          "minimum": 0
+          "minimum": 0,
+          "x-semio-ui": {
+            "label": {
+              "en": "Color dictionary",
+              "de": "Farbwörterbuch"
+            }
+          }
         },
         "visualStyleDictionary": {
           "type": "integer",
-          "minimum": 0
+          "minimum": 0,
+          "x-semio-ui": {
+            "label": {
+              "en": "Visual style dictionary",
+              "de": "Wörterbuch der visuellen Stile"
+            }
+          }
         },
         "paperSpaceBlockRecord": {
           "type": "integer",
-          "minimum": 0
+          "minimum": 0,
+          "x-semio-ui": {
+            "label": {
+              "en": "Paper space block record",
+              "de": "Blockeintrag Papierbereich"
+            }
+          }
         },
         "modelSpaceBlockRecord": {
           "type": "integer",
-          "minimum": 0
+          "minimum": 0,
+          "x-semio-ui": {
+            "label": {
+              "en": "Model space block record",
+              "de": "Blockeintrag Modellbereich"
+            }
+          }
         },
         "byLayerLinetype": {
           "type": "integer",
-          "minimum": 0
+          "minimum": 0,
+          "x-semio-ui": {
+            "label": {
+              "en": "ByLayer linetype",
+              "de": "Linientyp VonLayer"
+            }
+          }
         },
         "byBlockLinetype": {
           "type": "integer",
-          "minimum": 0
+          "minimum": 0,
+          "x-semio-ui": {
+            "label": {
+              "en": "ByBlock linetype",
+              "de": "Linientyp VonBlock"
+            }
+          }
         },
         "continuousLinetype": {
           "type": "integer",
-          "minimum": 0
+          "minimum": 0,
+          "x-semio-ui": {
+            "label": {
+              "en": "Continuous linetype",
+              "de": "Linientyp Continuous"
+            }
+          }
         },
         "interfereObjectVisualStyle": {
           "anyOf": [
@@ -10392,7 +12335,13 @@
             {
               "type": "null"
             }
-          ]
+          ],
+          "x-semio-ui": {
+            "label": {
+              "en": "Interference object visual style (INTERFEREOBJVS)",
+              "de": "Visueller Stil der Kollisionsobjekte (INTERFEREOBJVS)"
+            }
+          }
         },
         "interfereViewportVisualStyle": {
           "anyOf": [
@@ -10403,7 +12352,13 @@
             {
               "type": "null"
             }
-          ]
+          ],
+          "x-semio-ui": {
+            "label": {
+              "en": "Interference viewport visual style (INTERFEREVPVS)",
+              "de": "Visueller Stil des Kollisions-Ansichtsfensters (INTERFEREVPVS)"
+            }
+          }
         },
         "dragVisualStyle": {
           "anyOf": [
@@ -10414,7 +12369,13 @@
             {
               "type": "null"
             }
-          ]
+          ],
+          "x-semio-ui": {
+            "label": {
+              "en": "Drag visual style (DRAGVS)",
+              "de": "Visueller Stil beim Ziehen (DRAGVS)"
+            }
+          }
         }
       }
     },
@@ -10432,44 +12393,108 @@
         "number": {
           "type": "integer",
           "minimum": 0,
-          "maximum": 65535
+          "maximum": 65535,
+          "x-semio-ui": {
+            "label": {
+              "en": "Class number",
+              "de": "Klassennummer"
+            }
+          }
         },
         "proxyFlags": {
           "type": "integer",
           "minimum": 0,
-          "maximum": 4294967295
+          "maximum": 4294967295,
+          "x-semio-ui": {
+            "label": {
+              "en": "Proxy capability flags",
+              "de": "Proxy-Fähigkeitsflags"
+            }
+          }
         },
         "applicationName": {
-          "type": "string"
+          "type": "string",
+          "x-semio-ui": {
+            "label": {
+              "en": "Application name",
+              "de": "Anwendungsname"
+            }
+          }
         },
         "cppClassName": {
-          "type": "string"
+          "type": "string",
+          "x-semio-ui": {
+            "label": {
+              "en": "C++ class name",
+              "de": "C++-Klassenname"
+            }
+          }
         },
         "dxfName": {
-          "type": "string"
+          "type": "string",
+          "x-semio-ui": {
+            "label": {
+              "en": "DXF name",
+              "de": "DXF-Name"
+            }
+          }
         },
         "wasZombie": {
-          "type": "boolean"
+          "type": "boolean",
+          "x-semio-ui": {
+            "label": {
+              "en": "Was a proxy",
+              "de": "War ein Proxy"
+            }
+          }
         },
         "itemClassId": {
           "type": "integer",
           "minimum": 0,
-          "maximum": 65535
+          "maximum": 65535,
+          "x-semio-ui": {
+            "label": {
+              "en": "Item class id",
+              "de": "Elementklassen-ID"
+            },
+            "description": {
+              "en": "0x1F2 for entities, 0x1F3 for objects.",
+              "de": "0x1F2 für grafische Objekte, 0x1F3 für nichtgrafische Objekte."
+            }
+          }
         },
         "objectCount": {
           "type": "integer",
           "minimum": 0,
-          "maximum": 4294967295
+          "maximum": 4294967295,
+          "x-semio-ui": {
+            "label": {
+              "en": "Object count",
+              "de": "Objektanzahl"
+            }
+          }
         },
         "dwgVersion": {
           "type": "integer",
           "minimum": 0,
-          "maximum": 4294967295
+          "maximum": 4294967295,
+          "x-semio-ui": {
+            "label": {
+              "en": "DWG version",
+              "de": "DWG-Version"
+            }
+          }
         },
         "maintenanceVersion": {
           "type": "integer",
           "minimum": 0,
-          "maximum": 4294967295
+          "maximum": 4294967295,
+          "x-semio-ui": {
+            "label": {
+              "en": "Maintenance version",
+              "de": "Wartungsversion"
+            }
+          }
         },
         "reservedValues": {
           "type": "array",
@@ -10477,6 +12502,12 @@
             "type": "integer",
             "minimum": 0,
             "maximum": 4294967295
+          },
+          "x-semio-ui": {
+            "label": {
+              "en": "Reserved values",
+              "de": "Reservierte Werte"
+            }
           }
         }
       }
@@ -10493,37 +12524,96 @@
       ],
       "properties": {
         "feature": {
-          "type": "string"
+          "type": "string",
+          "x-semio-ui": {
+            "label": {
+              "en": "Feature",
+              "de": "Funktion"
+            },
+            "description": {
+              "en": "e.g. Acad:XRef or Acad:Text.",
+              "de": "z. B. Acad:XRef oder Acad:Text."
+            }
+          }
         },
         "fullPath": {
-          "type": "string"
+          "type": "string",
+          "x-semio-ui": {
+            "label": {
+              "en": "Full path",
+              "de": "Vollständiger Pfad"
+            }
+          }
         },
         "relativePath": {
-          "type": "string"
+          "type": "string",
+          "x-semio-ui": {
+            "label": {
+              "en": "Found path",
+              "de": "Gefundener Pfad"
+            }
+          }
         },
         "fingerprint": {
-          "type": "string"
+          "type": "string",
+          "x-semio-ui": {
+            "label": {
+              "en": "Fingerprint GUID",
+              "de": "Fingerabdruck-GUID"
+            }
+          }
         },
         "version": {
-          "type": "string"
+          "type": "string",
+          "x-semio-ui": {
+            "label": {
+              "en": "Version GUID",
+              "de": "Versions-GUID"
+            }
+          }
         },
         "timestamp": {
           "type": "integer",
           "minimum": 0,
-          "maximum": 4294967295
+          "maximum": 4294967295,
+          "x-semio-ui": {
+            "label": {
+              "en": "Timestamp",
+              "de": "Zeitstempel"
+            }
+          }
         },
         "fileSize": {
           "type": "integer",
           "minimum": 0,
-          "maximum": 4294967295
+          "maximum": 4294967295,
+          "x-semio-ui": {
+            "label": {
+              "en": "File size",
+              "de": "Dateigröße"
+            },
+            "unit": "B"
+          }
         },
         "affectsGraphics": {
-          "type": "boolean"
+          "type": "boolean",
+          "x-semio-ui": {
+            "label": {
+              "en": "Affects graphics",
+              "de": "Beeinflusst die Grafik"
+            }
+          }
         },
         "referenceCount": {
           "type": "integer",
           "minimum": 0,
-          "maximum": 4294967295
+          "maximum": 4294967295,
+          "x-semio-ui": {
+            "label": {
+              "en": "Reference count",
+              "de": "Referenzanzahl"
+            }
+          }
         }
       }
     },
@@ -10545,40 +12635,100 @@
           "type": "string"
         },
         "subject": {
-          "type": "string"
+          "type": "string",
+          "x-semio-ui": {
+            "label": {
+              "en": "Subject",
+              "de": "Betreff"
+            }
+          }
         },
         "author": {
           "type": "string"
         },
         "keywords": {
-          "type": "string"
+          "type": "string",
+          "x-semio-ui": {
+            "label": {
+              "en": "Keywords",
+              "de": "Stichwörter"
+            }
+          }
         },
         "comments": {
-          "type": "string"
+          "type": "string",
+          "x-semio-ui": {
+            "label": {
+              "en": "Comments",
+              "de": "Kommentare"
+            }
+          }
         },
         "lastSavedBy": {
-          "type": "string"
+          "type": "string",
+          "x-semio-ui": {
+            "label": {
+              "en": "Last saved by",
+              "de": "Zuletzt gespeichert von"
+            }
+          }
         },
         "revisionNumber": {
-          "type": "string"
+          "type": "string",
+          "x-semio-ui": {
+            "label": {
+              "en": "Revision number",
+              "de": "Revisionsnummer"
+            }
+          }
         },
         "hyperlinkBase": {
-          "type": "string"
+          "type": "string",
+          "x-semio-ui": {
+            "label": {
+              "en": "Hyperlink base (HYPERLINKBASE)",
+              "de": "Hyperlinkbasis (HYPERLINKBASE)"
+            }
+          }
         },
         "totalEditingTime": {
           "type": "integer",
-          "minimum": 0
+          "minimum": 0,
+          "x-semio-ui": {
+            "label": {
+              "en": "Total editing time",
+              "de": "Gesamtbearbeitungszeit"
+            }
+          }
         },
         "createdAt": {
-          "$ref": "#/$defs/DwgJulianDate"
+          "$ref": "#/$defs/DwgJulianDate",
+          "x-semio-ui": {
+            "label": {
+              "en": "Created",
+              "de": "Erstellt"
+            }
+          }
         },
         "modifiedAt": {
-          "$ref": "#/$defs/DwgJulianDate"
+          "$ref": "#/$defs/DwgJulianDate",
+          "x-semio-ui": {
+            "label": {
+              "en": "Modified",
+              "de": "Geändert"
+            }
+          }
         },
         "customProperties": {
           "type": "array",
           "items": {
             "$ref": "#/$defs/DwgCustomProperty"
+          },
+          "x-semio-ui": {
+            "label": {
+              "en": "Custom properties",
+              "de": "Benutzerdefinierte Eigenschaften"
+            }
           }
         }
       }
@@ -10617,25 +12767,49 @@
           "type": "string"
         },
         "versionChecksum": {
-          "type": "string"
+          "type": "string",
+          "x-semio-ui": {
+            "label": {
+              "en": "Version checksum",
+              "de": "Versionsprüfsumme"
+            }
+          }
         },
         "version": {
           "type": "string"
         },
         "commentChecksum": {
-          "type": "string"
+          "type": "string",
+          "x-semio-ui": {
+            "label": {
+              "en": "Comment checksum",
+              "de": "Kommentarprüfsumme"
+            }
+          }
         },
         "comment": {
           "type": "string"
         },
         "productChecksum": {
-          "type": "string"
+          "type": "string",
+          "x-semio-ui": {
+            "label": {
+              "en": "Product checksum",
+              "de": "Produktprüfsumme"
+            }
+          }
         },
         "product": {
           "type": "string"
         },
         "applicationVersion": {
-          "type": "string"
+          "type": "string",
+          "x-semio-ui": {
+            "label": {
+              "en": "Application version",
+              "de": "Anwendungsversion"
+            }
+          }
         }
       }
     },
@@ -10651,7 +12825,13 @@
           "type": "string"
         },
         "measurement": {
-          "$ref": "#/$defs/DwgMeasurement"
+          "$ref": "#/$defs/DwgMeasurement",
+          "x-semio-ui": {
+            "label": {
+              "en": "Measurement system (MEASUREMENT)",
+              "de": "Maßsystem (MEASUREMENT)"
+            }
+          }
         }
       }
     },
@@ -10660,7 +12840,19 @@
       "enum": [
         "english",
         "metric"
-      ]
+      ],
+      "x-semio-ui": {
+        "options": {
+          "english": {
+            "en": "Imperial",
+            "de": "Britisch (Zoll)"
+          },
+          "metric": {
+            "en": "Metric",
+            "de": "Metrisch"
+          }
+        }
+      }
     },
     "DwgAuxiliaryHeader": {
       "type": "object",
@@ -10682,46 +12874,112 @@
         "totalSaves": {
           "type": "integer",
           "minimum": 0,
-          "maximum": 4294967295
+          "maximum": 4294967295,
+          "x-semio-ui": {
+            "label": {
+              "en": "Save count",
+              "de": "Anzahl der Speichervorgänge"
+            }
+          }
         },
         "savePartitionOne": {
           "type": "integer",
           "minimum": 0,
-          "maximum": 65535
+          "maximum": 65535,
+          "x-semio-ui": {
+            "label": {
+              "en": "Save counter, low word",
+              "de": "Speicherzähler, niederwertiges Wort"
+            }
+          }
         },
         "savePartitionTwo": {
           "type": "integer",
           "minimum": 0,
-          "maximum": 65535
+          "maximum": 65535,
+          "x-semio-ui": {
+            "label": {
+              "en": "Save counter, high word",
+              "de": "Speicherzähler, höherwertiges Wort"
+            }
+          }
         },
         "saveGeneration": {
           "type": "integer",
           "minimum": 0,
-          "maximum": 4294967295
+          "maximum": 4294967295,
+          "x-semio-ui": {
+            "label": {
+              "en": "Save generation",
+              "de": "Speichergeneration"
+            }
+          }
         },
         "legacyStampOne": {
-          "$ref": "#/$defs/DwgVersionStamp"
+          "$ref": "#/$defs/DwgVersionStamp",
+          "x-semio-ui": {
+            "label": {
+              "en": "Legacy version stamp 1",
+              "de": "Alter Versionsstempel 1"
+            }
+          }
         },
         "legacyStampTwo": {
-          "$ref": "#/$defs/DwgVersionStamp"
+          "$ref": "#/$defs/DwgVersionStamp",
+          "x-semio-ui": {
+            "label": {
+              "en": "Legacy version stamp 2",
+              "de": "Alter Versionsstempel 2"
+            }
+          }
         },
         "compatibilityProfile": {
-          "$ref": "#/$defs/DwgCompatibilityProfile"
+          "$ref": "#/$defs/DwgCompatibilityProfile",
+          "x-semio-ui": {
+            "label": {
+              "en": "Compatibility profile",
+              "de": "Kompatibilitätsprofil"
+            }
+          }
         },
         "createdAt": {
-          "$ref": "#/$defs/DwgJulianDate"
+          "$ref": "#/$defs/DwgJulianDate",
+          "x-semio-ui": {
+            "label": {
+              "en": "Created",
+              "de": "Erstellt"
+            }
+          }
         },
         "updatedAt": {
-          "$ref": "#/$defs/DwgJulianDate"
+          "$ref": "#/$defs/DwgJulianDate",
+          "x-semio-ui": {
+            "label": {
+              "en": "Last updated",
+              "de": "Zuletzt aktualisiert"
+            }
+          }
         },
         "handleSeed": {
           "type": "integer",
-          "minimum": 0
+          "minimum": 0,
+          "x-semio-ui": {
+            "label": {
+              "en": "Next handle (HANDSEED)",
+              "de": "Nächste Referenz (HANDSEED)"
+            }
+          }
         },
         "terminalSaveGeneration": {
           "type": "integer",
           "minimum": 0,
-          "maximum": 65535
+          "maximum": 65535,
+          "x-semio-ui": {
+            "label": {
+              "en": "Final save generation",
+              "de": "Letzte Speichergeneration"
+            }
+          }
         }
       }
     },
@@ -10736,12 +12994,24 @@
         "version": {
           "type": "integer",
           "minimum": 0,
-          "maximum": 65535
+          "maximum": 65535,
+          "x-semio-ui": {
+            "label": {
+              "en": "Version",
+              "de": "Version"
+            }
+          }
         },
         "maintenance": {
           "type": "integer",
           "minimum": 0,
-          "maximum": 65535
+          "maximum": 65535,
+          "x-semio-ui": {
+            "label": {
+              "en": "Maintenance release",
+              "de": "Wartungsversion"
+            }
+          }
         }
       }
     },
@@ -10749,7 +13019,15 @@
       "type": "string",
       "enum": [
         "autocad2009"
-      ]
+      ],
+      "x-semio-ui": {
+        "options": {
+          "autocad2009": {
+            "en": "AutoCAD 2009",
+            "de": "AutoCAD 2009"
+          }
+        }
+      }
     },
     "DwgRevisionHistory": {
       "type": "object",
@@ -10762,12 +13040,24 @@
         "formatMajor": {
           "type": "integer",
           "minimum": 0,
-          "maximum": 4294967295
+          "maximum": 4294967295,
+          "x-semio-ui": {
+            "label": {
+              "en": "Format major version",
+              "de": "Hauptversion des Formats"
+            }
+          }
         },
         "formatMinor": {
           "type": "integer",
           "minimum": 0,
-          "maximum": 4294967295
+          "maximum": 4294967295,
+          "x-semio-ui": {
+            "label": {
+              "en": "Format minor version",
+              "de": "Nebenversion des Formats"
+            }
+          }
         },
         "revisions": {
           "type": "array",
@@ -10775,6 +13065,12 @@
             "type": "integer",
             "minimum": 0,
             "maximum": 4294967295
+          },
+          "x-semio-ui": {
+            "label": {
+              "en": "Revisions",
+              "de": "Revisionen"
+            }
           }
         }
       }
@@ -10792,20 +13088,46 @@
         "width": {
           "type": "integer",
           "minimum": 0,
-          "maximum": 4294967295
+          "maximum": 4294967295,
+          "x-semio-ui": {
+            "label": {
+              "en": "Width",
+              "de": "Breite"
+            },
+            "unit": "px"
+          }
         },
         "height": {
           "type": "integer",
           "minimum": 0,
-          "maximum": 4294967295
+          "maximum": 4294967295,
+          "x-semio-ui": {
+            "label": {
+              "en": "Height",
+              "de": "Höhe"
+            },
+            "unit": "px"
+          }
         },
         "origin": {
-          "$ref": "#/$defs/DwgPreviewOrigin"
+          "$ref": "#/$defs/DwgPreviewOrigin",
+          "x-semio-ui": {
+            "label": {
+              "en": "Row origin",
+              "de": "Zeilenursprung"
+            }
+          }
         },
         "palette": {
           "type": "array",
           "items": {
             "$ref": "#/$defs/DwgRgba"
+          },
+          "x-semio-ui": {
+            "label": {
+              "en": "Palette",
+              "de": "Palette"
+            }
           }
         },
         "pixelIndices": {
@@ -10814,12 +13136,24 @@
             "type": "integer",
             "minimum": 0,
             "maximum": 255
+          },
+          "x-semio-ui": {
+            "label": {
+              "en": "Pixel palette indices",
+              "de": "Pixel-Palettenindizes"
+            }
           }
         },
         "backgroundPaletteIndex": {
           "type": "integer",
           "minimum": 0,
-          "maximum": 255
+          "maximum": 255,
+          "x-semio-ui": {
+            "label": {
+              "en": "Background palette index",
+              "de": "Hintergrund-Palettenindex"
+            }
+          }
         }
       }
     },
@@ -10827,7 +13161,15 @@
       "type": "string",
       "enum": [
         "bottomUp"
-      ]
+      ],
+      "x-semio-ui": {
+        "options": {
+          "bottomUp": {
+            "en": "Bottom-up",
+            "de": "Von unten nach oben"
+          }
+        }
+      }
     },
     "DwgRgba": {
       "type": "object",
@@ -10842,22 +13184,46 @@
         "red": {
           "type": "integer",
           "minimum": 0,
-          "maximum": 255
+          "maximum": 255,
+          "x-semio-ui": {
+            "label": {
+              "en": "Red",
+              "de": "Rot"
+            }
+          }
         },
         "green": {
           "type": "integer",
           "minimum": 0,
-          "maximum": 255
+          "maximum": 255,
+          "x-semio-ui": {
+            "label": {
+              "en": "Green",
+              "de": "Grün"
+            }
+          }
         },
         "blue": {
           "type": "integer",
           "minimum": 0,
-          "maximum": 255
+          "maximum": 255,
+          "x-semio-ui": {
+            "label": {
+              "en": "Blue",
+              "de": "Blau"
+            }
+          }
         },
         "alpha": {
           "type": "integer",
           "minimum": 0,
-          "maximum": 255
+          "maximum": 255,
+          "x-semio-ui": {
+            "label": {
+              "en": "Alpha",
+              "de": "Alpha"
+            }
+          }
         }
       }
     },
@@ -10879,33 +13245,87 @@
       ],
       "properties": {
         "historyIdentifierOne": {
-          "type": "string"
+          "type": "string",
+          "x-semio-ui": {
+            "label": {
+              "en": "History identifier 1",
+              "de": "Verlaufskennung 1"
+            }
+          }
         },
         "historyIdentifierTwo": {
-          "type": "string"
+          "type": "string",
+          "x-semio-ui": {
+            "label": {
+              "en": "History identifier 2",
+              "de": "Verlaufskennung 2"
+            }
+          }
         },
         "classVersion": {
           "type": "integer",
           "minimum": 0,
-          "maximum": 4294967295
+          "maximum": 4294967295,
+          "x-semio-ui": {
+            "label": {
+              "en": "Class version",
+              "de": "Klassenversion"
+            }
+          }
         },
         "applicationVersionDigest": {
-          "type": "string"
+          "type": "string",
+          "x-semio-ui": {
+            "label": {
+              "en": "Application version digest",
+              "de": "Prüfsumme der Anwendungsversion"
+            }
+          }
         },
         "applicationVersion": {
-          "type": "string"
+          "type": "string",
+          "x-semio-ui": {
+            "label": {
+              "en": "Application version",
+              "de": "Anwendungsversion"
+            }
+          }
         },
         "trustCommentDigest": {
-          "type": "string"
+          "type": "string",
+          "x-semio-ui": {
+            "label": {
+              "en": "Trust comment digest",
+              "de": "Prüfsumme des Vertrauenskommentars"
+            }
+          }
         },
         "trustComment": {
-          "type": "string"
+          "type": "string",
+          "x-semio-ui": {
+            "label": {
+              "en": "Trust comment",
+              "de": "Vertrauenskommentar"
+            }
+          }
         },
         "propertySetDigest": {
-          "type": "string"
+          "type": "string",
+          "x-semio-ui": {
+            "label": {
+              "en": "Property set digest",
+              "de": "Prüfsumme des Eigenschaftssatzes"
+            }
+          }
         },
         "propertyFormatIdentifier": {
-          "type": "string"
+          "type": "string",
+          "x-semio-ui": {
+            "label": {
+              "en": "Property format identifier",
+              "de": "Kennung des Eigenschaftsformats"
+            }
+          }
         },
         "properties": {
           "type": "array",
@@ -10914,7 +13334,13 @@
           }
         },
         "productDigest": {
-          "type": "string"
+          "type": "string",
+          "x-semio-ui": {
+            "label": {
+              "en": "Product digest",
+              "de": "Produktprüfsumme"
+            }
+          }
         },
         "product": {
           "$ref": "#/$defs/DwgProductInformation"
@@ -10948,7 +13374,19 @@
       "enum": [
         "string",
         "dateTime"
-      ]
+      ],
+      "x-semio-ui": {
+        "options": {
+          "string": {
+            "en": "Text",
+            "de": "Text"
+          },
+          "dateTime": {
+            "en": "Date and time",
+            "de": "Datum und Uhrzeit"
+          }
+        }
+      }
     },
     "DwgProductInformation": {
       "type": "object",
@@ -10965,16 +13403,42 @@
           "type": "string"
         },
         "buildVersion": {
-          "type": "string"
+          "type": "string",
+          "x-semio-ui": {
+            "label": {
+              "en": "Build version",
+              "de": "Build-Version"
+            }
+          }
         },
         "registryVersion": {
-          "type": "string"
+          "type": "string",
+          "x-semio-ui": {
+            "label": {
+              "en": "Registry version",
+              "de": "Registrierungsversion"
+            }
+          }
         },
         "installId": {
-          "type": "string"
+          "type": "string",
+          "x-semio-ui": {
+            "widget": "text",
+            "label": {
+              "en": "Installation id",
+              "de": "Installations-ID"
+            }
+          }
         },
         "localeId": {
-          "type": "string"
+          "type": "string",
+          "x-semio-ui": {
+            "widget": "text",
+            "label": {
+              "en": "Locale id",
+              "de": "Gebietsschema-ID"
+            }
+          }
         }
       }
     }

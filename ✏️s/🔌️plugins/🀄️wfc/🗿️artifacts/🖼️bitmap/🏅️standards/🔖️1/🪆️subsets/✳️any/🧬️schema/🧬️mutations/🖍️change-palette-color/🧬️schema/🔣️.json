@@ -9,18 +9,19 @@
     "color"
   ],
   "properties": {
-    "index": { "type": "integer", "minimum": 0, "maximum": 255 },
+    "index": { "type": "integer", "minimum": 0, "maximum": 255, "x-semio-ui": { "widget": "stepper", "role": "value", "label": { "en": "Palette index", "de": "Palettenindex" }, "step": 1, "precision": 0, "group": "palette", "order": 10 } },
     "color": {
       "title": "BitmapColor",
       "type": "object",
       "additionalProperties": false,
       "required": ["r", "g", "b", "a"],
       "properties": {
-        "r": { "type": "integer", "minimum": 0, "maximum": 255 },
-        "g": { "type": "integer", "minimum": 0, "maximum": 255 },
-        "b": { "type": "integer", "minimum": 0, "maximum": 255 },
-        "a": { "type": "integer", "minimum": 0, "maximum": 255 }
-      }
+        "r": { "type": "integer", "minimum": 0, "maximum": 255, "x-semio-ui": { "widget": "slider", "role": "value", "label": { "en": "Red", "de": "Rot" }, "step": 1, "precision": 0, "group": "color", "order": 10 } },
+        "g": { "type": "integer", "minimum": 0, "maximum": 255, "x-semio-ui": { "widget": "slider", "role": "value", "label": { "en": "Green", "de": "Grün" }, "step": 1, "precision": 0, "group": "color", "order": 20 } },
+        "b": { "type": "integer", "minimum": 0, "maximum": 255, "x-semio-ui": { "widget": "slider", "role": "value", "label": { "en": "Blue", "de": "Blau" }, "step": 1, "precision": 0, "group": "color", "order": 30 } },
+        "a": { "type": "integer", "minimum": 0, "maximum": 255, "x-semio-ui": { "widget": "slider", "role": "value", "label": { "en": "Alpha", "de": "Alpha" }, "step": 1, "precision": 0, "group": "color", "order": 40 } }
+      },
+      "x-semio-ui": { "role": "value", "label": { "en": "Color", "de": "Farbe" }, "group": "record", "order": 20 }
     }
   }
 }

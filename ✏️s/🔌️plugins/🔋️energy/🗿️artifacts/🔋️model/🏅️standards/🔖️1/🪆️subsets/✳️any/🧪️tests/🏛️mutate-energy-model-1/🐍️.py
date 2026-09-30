@@ -292,22 +292,22 @@ VECTOR_ROOTS = {
     "change-humidistat-zone-refuses-an-absent-zone": "shared://🧬️mutations/🏙️change-humidistat-zone/⛔️refuses-an-absent-zone",
     "change-humidistat-humidifying-setpoint-schedule-repoints-humidifying": "shared://🧬️mutations/☔️change-humidistat-humidifying-setpoint-schedule/✅️repoints-humidifying",
     "change-humidistat-humidifying-setpoint-schedule-refuses-an-absent-one": "shared://🧬️mutations/☔️change-humidistat-humidifying-setpoint-schedule/⛔️refuses-an-absent-one",
-    "change-humidistat-dehumidifying-setpoint-schedule-repoints-drying": "shared://🧬️mutations/🏝️change-humidistat-dehumidifying-setpoint-schedule/✅️repoints-drying",
-    "change-humidistat-dehumidifying-setpoint-schedule-refuses-an-absent-one": "shared://🧬️mutations/🏝️change-humidistat-dehumidifying-setpoint-schedule/⛔️refuses-an-absent-one",
+    "change-humidistat-dehumidifying-setpoint-schedule-repoints-drying": "shared://🧬️mutations/🏝️change-humidistat-dehumidifying-setpoint/✅️repoints-drying",
+    "change-humidistat-dehumidifying-setpoint-schedule-refuses-an-absent-one": "shared://🧬️mutations/🏝️change-humidistat-dehumidifying-setpoint/⛔️refuses-an-absent-one",
     "change-humidistat-humidifying-throttle-range-widens-the-band": "shared://🧬️mutations/🌧️change-humidistat-humidifying-throttle-range/✅️widens-the-band",
     "change-humidistat-humidifying-throttle-range-refuses-a-zero-band": "shared://🧬️mutations/🌧️change-humidistat-humidifying-throttle-range/⛔️refuses-a-zero-band",
-    "change-humidistat-dehumidifying-throttle-range-widens-the-band": "shared://🧬️mutations/🧻️change-humidistat-dehumidifying-throttle-range/✅️widens-the-band",
-    "change-humidistat-dehumidifying-throttle-range-refuses-a-negative-band": "shared://🧬️mutations/🧻️change-humidistat-dehumidifying-throttle-range/⛔️refuses-a-negative-band",
+    "change-humidistat-dehumidifying-throttle-range-widens-the-band": "shared://🧬️mutations/🧻️change-humidistat-dehumidifying-throttle/✅️widens-the-band",
+    "change-humidistat-dehumidifying-throttle-range-refuses-a-negative-band": "shared://🧬️mutations/🧻️change-humidistat-dehumidifying-throttle/⛔️refuses-a-negative-band",
     "create-ideal-loads-system-serves-zone-one": "shared://🧬️mutations/🫁️create-ideal-loads-system/✅️serves-zone-one",
     "create-ideal-loads-system-refuses-an-absent-zone": "shared://🧬️mutations/🫁️create-ideal-loads-system/⛔️refuses-an-absent-zone",
     "delete-ideal-loads-system-drops-the-system": "shared://🧬️mutations/🫥️delete-ideal-loads-system/✅️drops-the-system",
     "delete-ideal-loads-system-refuses-an-absent-one": "shared://🧬️mutations/🫥️delete-ideal-loads-system/⛔️refuses-an-absent-one",
     "change-ideal-loads-system-zone-moves-to-zone-two": "shared://🧬️mutations/🏢️change-ideal-loads-system-zone/✅️moves-to-zone-two",
     "change-ideal-loads-system-zone-refuses-an-absent-zone": "shared://🧬️mutations/🏢️change-ideal-loads-system-zone/⛔️refuses-an-absent-zone",
-    "change-ideal-loads-system-max-heating-supply-air-temp-cools-the-supply": "shared://🧬️mutations/🔴️change-ideal-loads-system-max-heating-supply-air-temp/✅️cools-the-supply",
-    "change-ideal-loads-system-max-heating-supply-air-temp-refuses-a-hot-supply": "shared://🧬️mutations/🔴️change-ideal-loads-system-max-heating-supply-air-temp/⛔️refuses-a-hot-supply",
-    "change-ideal-loads-system-min-cooling-supply-air-temp-lowers-the-supply": "shared://🧬️mutations/🔵️change-ideal-loads-system-min-cooling-supply-air-temp/✅️lowers-the-supply",
-    "change-ideal-loads-system-min-cooling-supply-air-temp-refuses-a-cold-supply": "shared://🧬️mutations/🔵️change-ideal-loads-system-min-cooling-supply-air-temp/⛔️refuses-a-cold-supply",
+    "change-ideal-loads-system-max-heating-supply-air-temp-cools-the-supply": "shared://🧬️mutations/🔴️change-ideal-loads-system-max-heating-supply/✅️cools-the-supply",
+    "change-ideal-loads-system-max-heating-supply-air-temp-refuses-a-hot-supply": "shared://🧬️mutations/🔴️change-ideal-loads-system-max-heating-supply/⛔️refuses-a-hot-supply",
+    "change-ideal-loads-system-min-cooling-supply-air-temp-lowers-the-supply": "shared://🧬️mutations/🔵️change-ideal-loads-system-min-cooling-supply/✅️lowers-the-supply",
+    "change-ideal-loads-system-min-cooling-supply-air-temp-refuses-a-cold-supply": "shared://🧬️mutations/🔵️change-ideal-loads-system-min-cooling-supply/⛔️refuses-a-cold-supply",
     "change-ideal-loads-system-max-heating-capacity-caps-the-heating": "shared://🧬️mutations/⛽️change-ideal-loads-system-max-heating-capacity/✅️caps-the-heating",
     "change-ideal-loads-system-max-heating-capacity-refuses-a-stray-value": "shared://🧬️mutations/⛽️change-ideal-loads-system-max-heating-capacity/⛔️refuses-a-stray-value",
     "change-ideal-loads-system-max-cooling-capacity-caps-the-cooling": "shared://🧬️mutations/🟧️change-ideal-loads-system-max-cooling-capacity/✅️caps-the-cooling",
@@ -649,9 +649,10 @@ def no_op():
     return {"status": "no-op", "messages": [{"level": "warning", "code": "mutation.no-op"}]}
 
 
-def rejected(code, path):
-    """⛔️ A refusal: one fault code and the offending address."""
-    return {"status": "rejected", "code": code, "path": list(path)}
+def rejected(code, path, invariant=None):
+    """⛔️ A refusal: one fault code, the offending address, and — for a payload-intrinsic rule the leaf schema declares in
+    `x-semio-invariant` — the id of that rule."""
+    return {"status": "rejected", "code": code, "path": list(path), **({"invariant": invariant} if invariant is not None else {})}
 
 
 def unchanged(before):
@@ -766,7 +767,7 @@ def replace_airflow_network(before, payload):
     node_ids = payload["nodeIds"]
     link_ids = payload["linkIds"]
     if len(zone_ids) != len(node_ids):
-        return unchanged(before), rejected("mutation.invariant", [])
+        return unchanged(before), rejected("mutation.invariant", [], invariant="zone-node-pairs")
     if not payload["present"] and (zone_ids or link_ids):
         return unchanged(before), rejected("mutation.invariant", [])
     network = None
@@ -953,13 +954,13 @@ def _invert_create_zone(before, payload):
 
 
 def delete_zone(before, payload):
-    """🏚️ `delete-zone{id}` — Removes one thermal zone. It RESTRICTS rather than cascades: while any space, surface, gain, HVAC object, grouping or airflow node still names the zone it is refused with `mutation.invariant`, because a cascade here would have to delete surfaces, which cascade again to fenestrations and adjacency pairs."""
+    """🏚️ `delete-zone{id}` — Removes one thermal zone. It RESTRICTS rather than cascades: while any space, surface, gain, HVAC object, grouping or airflow node still names the zone it is refused with `mutation.target-referenced`, because a cascade here would have to delete surfaces, which cascade again to fenestrations and adjacency pairs."""
     entity_id = payload["id"]
     item = next((row for row in before["model"]["zones"] if row["id"] == entity_id), None)
     if item is None:
         return unchanged(before), rejected("mutation.target-missing", [str(entity_id)])
     if any(row["zone_id"] == entity_id for name in ("spaces", "surfaces", "people", "lighting", "equipment", "thermostats", "humidistats", "ideal_loads", "zone_equipment", "infiltrations", "mechanical_ventilations", "sizing_objects", "daylight_zones", "room_air_models") for row in before["model"][name]) or any(entity_id in row["zone_ids"] for row in before["model"]["thermal_enclosures"]) or any(entity_id in row["terminal_zone_ids"] for row in before["model"]["air_loops"]) or (before["model"]["airflow_network"] is not None and any(pair[0] == entity_id for pair in before["model"]["airflow_network"]["zone_node_ids"])):
-        return unchanged(before), rejected("mutation.invariant", [str(entity_id)])
+        return unchanged(before), rejected("mutation.target-referenced", [str(entity_id)])
     after = copy.deepcopy(before)
     after["model"]["zones"] = [row for row in after["model"]["zones"] if row["id"] != entity_id]
     return after, applied()
@@ -1000,7 +1001,7 @@ def delete_space(before, payload):
     if item is None:
         return unchanged(before), rejected("mutation.target-missing", [str(entity_id)])
     if any(payload["id"] in row["space_ids"] for row in before["model"]["space_lists"]):
-        return unchanged(before), rejected("mutation.invariant", [str(entity_id)])
+        return unchanged(before), rejected("mutation.target-referenced", [str(entity_id)])
     after = copy.deepcopy(before)
     after["model"]["spaces"] = [row for row in after["model"]["spaces"] if row["id"] != entity_id]
     return after, applied()
@@ -1119,7 +1120,7 @@ def delete_surface(before, payload):
     if item is None:
         return unchanged(before), rejected("mutation.target-missing", [str(entity_id)])
     if any(row["outside_boundary_condition"] == {"Interzone": entity_id} for row in before["model"]["surfaces"]):
-        return unchanged(before), rejected("mutation.invariant", [str(entity_id)])
+        return unchanged(before), rejected("mutation.target-referenced", [str(entity_id)])
     windows = [row for row in before["model"]["fenestrations"] if row["surface_id"] == entity_id]
     pairs = [row for row in before["model"]["adjacency_pairs"] if entity_id in (row["surface_a_id"], row["surface_b_id"])]
     after = copy.deepcopy(before)
@@ -1690,7 +1691,7 @@ def connect_surfaces(before, payload):
     first, second = payload["surfaceAId"], payload["surfaceBId"]
     address = [str(first), str(second)]
     if first == second:
-        return unchanged(before), rejected("mutation.invariant", address)
+        return unchanged(before), rejected("mutation.invariant", address, invariant="distinct-surfaces")
     known = [row["id"] for row in before["model"]["surfaces"]]
     if first not in known or second not in known:
         return unchanged(before), rejected("mutation.target-missing", address)
@@ -1904,7 +1905,7 @@ def create_material(before, payload):
     if any(row["id"] == payload["id"] for row in rows):
         return unchanged(before), rejected("mutation.duplicate-id", [str(payload["id"])])
     if payload["index"] > len(rows):
-        return unchanged(before), rejected("mutation.invariant", [str(payload["id"])])
+        return unchanged(before), rejected("mutation.target-missing", [str(payload["id"])])
     after = copy.deepcopy(before)
     after["model"]["materials"].insert(payload["index"], {"id": payload["id"], "name": payload["name"], "roughness": payload["roughness"], "thickness_m": payload["thicknessM"], "conductivity_w_m_k": payload["conductivityWMK"], "density_kg_m3": payload["densityKgM3"], "specific_heat_j_kg_k": payload["specificHeatJKgK"], "thermal_absorptance": payload["thermalAbsorptance"], "solar_absorptance": payload["solarAbsorptance"], "visible_absorptance": payload["visibleAbsorptance"]})
     return after, applied()
@@ -1921,7 +1922,7 @@ def delete_material(before, payload):
     if item is None:
         return unchanged(before), rejected("mutation.target-missing", [str(payload["id"])])
     if any(payload["id"] in row["layer_material_ids"] for row in before["model"]["constructions"]):
-        return unchanged(before), rejected("mutation.invariant", [str(payload["id"])])
+        return unchanged(before), rejected("mutation.target-referenced", [str(payload["id"])])
     after = copy.deepcopy(before)
     after["model"]["materials"] = [row for row in after["model"]["materials"] if row["id"] != payload["id"]]
     return after, applied()
@@ -2127,7 +2128,7 @@ def create_construction(before, payload):
     if any(row["id"] == payload["id"] for row in rows):
         return unchanged(before), rejected("mutation.duplicate-id", [str(payload["id"])])
     if payload["index"] > len(rows):
-        return unchanged(before), rejected("mutation.invariant", [str(payload["id"])])
+        return unchanged(before), rejected("mutation.target-missing", [str(payload["id"])])
     missing = next((identifier for identifier in payload["layerMaterialIds"] if not any(row["id"] == identifier for row in before["model"]["materials"])), None)
     if missing is not None:
         return unchanged(before), rejected("mutation.target-missing", [str(missing)])
@@ -2147,7 +2148,7 @@ def delete_construction(before, payload):
     if item is None:
         return unchanged(before), rejected("mutation.target-missing", [str(payload["id"])])
     if any(row["construction_id"] == payload["id"] for row in before["model"]["surfaces"]):
-        return unchanged(before), rejected("mutation.invariant", [str(payload["id"])])
+        return unchanged(before), rejected("mutation.target-referenced", [str(payload["id"])])
     after = copy.deepcopy(before)
     after["model"]["constructions"] = [row for row in after["model"]["constructions"] if row["id"] != payload["id"]]
     return after, applied()
@@ -2195,7 +2196,7 @@ def add_construction_layer(before, payload):
     if not any(row["id"] == payload["materialId"] for row in before["model"]["materials"]):
         return unchanged(before), rejected("mutation.target-missing", [str(payload["materialId"])])
     if payload["index"] > len(construction["layer_material_ids"]):
-        return unchanged(before), rejected("mutation.invariant", [str(payload["id"])])
+        return unchanged(before), rejected("mutation.target-missing", [str(payload["id"])])
     after = copy.deepcopy(before)
     for row in after["model"]["constructions"]:
         if row["id"] == payload["id"]:
@@ -2215,7 +2216,7 @@ def remove_construction_layer(before, payload):
     if construction is None:
         return unchanged(before), rejected("mutation.target-missing", [str(payload["id"])])
     if payload["index"] >= len(construction["layer_material_ids"]):
-        return unchanged(before), rejected("mutation.invariant", [str(payload["id"])])
+        return unchanged(before), rejected("mutation.target-missing", [str(payload["id"])])
     after = copy.deepcopy(before)
     for row in after["model"]["constructions"]:
         if row["id"] == payload["id"]:
@@ -2237,7 +2238,7 @@ def reorder_construction_layers(before, payload):
         return unchanged(before), rejected("mutation.target-missing", [str(payload["id"])])
     wanted = payload["newLayerMaterialIds"]
     if sorted(wanted) != sorted(construction["layer_material_ids"]):
-        return unchanged(before), rejected("mutation.invariant", [str(payload["id"])])
+        return unchanged(before), rejected("mutation.id-mismatch", [str(payload["id"])])
     if construction["layer_material_ids"] == wanted:
         return unchanged(before), no_op()
     after = copy.deepcopy(before)
@@ -2259,7 +2260,7 @@ def create_people_gain(before, payload):
     if any(row["id"] == payload["id"] for row in rows):
         return unchanged(before), rejected("mutation.duplicate-id", [str(payload["id"])])
     if payload["index"] > len(rows):
-        return unchanged(before), rejected("mutation.invariant", [str(payload["id"])])
+        return unchanged(before), rejected("mutation.target-missing", [str(payload["id"])])
     if not any(row["id"] == payload["zoneId"] for row in before["model"]["zones"]):
         return unchanged(before), rejected("mutation.target-missing", [str(payload["zoneId"])])
     if not any(row["id"] == payload["scheduleId"] for group in ("constants", "daily", "weekly", "annual", "time_series") for row in before["model"]["schedules"][group]):
@@ -2461,7 +2462,7 @@ def create_lighting_gain(before, payload):
     if any(row["id"] == payload["id"] for row in rows):
         return unchanged(before), rejected("mutation.duplicate-id", [str(payload["id"])])
     if payload["index"] > len(rows):
-        return unchanged(before), rejected("mutation.invariant", [str(payload["id"])])
+        return unchanged(before), rejected("mutation.target-missing", [str(payload["id"])])
     if not any(row["id"] == payload["zoneId"] for row in before["model"]["zones"]):
         return unchanged(before), rejected("mutation.target-missing", [str(payload["zoneId"])])
     if not any(row["id"] == payload["scheduleId"] for group in ("constants", "daily", "weekly", "annual", "time_series") for row in before["model"]["schedules"][group]):
@@ -2638,7 +2639,7 @@ def create_equipment_gain(before, payload):
     if any(row["id"] == payload["id"] for row in rows):
         return unchanged(before), rejected("mutation.duplicate-id", [str(payload["id"])])
     if payload["index"] > len(rows):
-        return unchanged(before), rejected("mutation.invariant", [str(payload["id"])])
+        return unchanged(before), rejected("mutation.target-missing", [str(payload["id"])])
     if not any(row["id"] == payload["zoneId"] for row in before["model"]["zones"]):
         return unchanged(before), rejected("mutation.target-missing", [str(payload["zoneId"])])
     if not any(row["id"] == payload["scheduleId"] for group in ("constants", "daily", "weekly", "annual", "time_series") for row in before["model"]["schedules"][group]):
@@ -2792,7 +2793,7 @@ def create_infiltration(before, payload):
     if any(row["id"] == payload["id"] for row in rows):
         return unchanged(before), rejected("mutation.duplicate-id", [str(payload["id"])])
     if payload["index"] > len(rows):
-        return unchanged(before), rejected("mutation.invariant", [str(payload["id"])])
+        return unchanged(before), rejected("mutation.target-missing", [str(payload["id"])])
     if not any(row["id"] == payload["zoneId"] for row in before["model"]["zones"]):
         return unchanged(before), rejected("mutation.target-missing", [str(payload["zoneId"])])
     if not any(row["id"] == payload["scheduleId"] for group in ("constants", "daily", "weekly", "annual", "time_series") for row in before["model"]["schedules"][group]):
@@ -2992,7 +2993,7 @@ def create_mechanical_ventilation(before, payload):
     if any(row["id"] == payload["id"] for row in rows):
         return unchanged(before), rejected("mutation.duplicate-id", [str(payload["id"])])
     if payload["index"] > len(rows):
-        return unchanged(before), rejected("mutation.invariant", [str(payload["id"])])
+        return unchanged(before), rejected("mutation.target-missing", [str(payload["id"])])
     if not any(row["id"] == payload["zoneId"] for row in before["model"]["zones"]):
         return unchanged(before), rejected("mutation.target-missing", [str(payload["zoneId"])])
     if not any(row["id"] == payload["scheduleId"] for group in ("constants", "daily", "weekly", "annual", "time_series") for row in before["model"]["schedules"][group]):
@@ -4207,7 +4208,7 @@ def create_setpoint_manager(before, payload):
     if payload["kind"] != "OutdoorAirReset" and not (payload["lowOutdoorC"] == 0.0 and payload["highOutdoorC"] == 0.0 and payload["lowSetpointC"] == 0.0 and payload["highSetpointC"] == 0.0):
         return unchanged(before), rejected("mutation.invariant", [str(payload["id"])])
     if payload["kind"] == "OutdoorAirReset" and payload["highOutdoorC"] <= payload["lowOutdoorC"]:
-        return unchanged(before), rejected("mutation.invariant", [str(payload["id"])])
+        return unchanged(before), rejected("mutation.invariant", [str(payload["id"])], invariant="outdoor-reset-range")
     if not payload["schedulePresent"] and payload["scheduleId"] != 0:
         return unchanged(before), rejected("mutation.invariant", [str(payload["id"])])
     if payload["schedulePresent"] and (not any(entry["id"] == payload["scheduleId"] for family in ("constants", "daily", "weekly", "annual", "time_series",) for entry in before["model"]["schedules"][family])):
@@ -4273,7 +4274,7 @@ def replace_setpoint_manager_kind(before, payload):
     if payload["newKind"] != "OutdoorAirReset" and not (payload["newLowOutdoorC"] == 0.0 and payload["newHighOutdoorC"] == 0.0 and payload["newLowSetpointC"] == 0.0 and payload["newHighSetpointC"] == 0.0):
         return unchanged(before), rejected("mutation.invariant", [str(payload["id"])])
     if payload["newKind"] == "OutdoorAirReset" and payload["newHighOutdoorC"] <= payload["newLowOutdoorC"]:
-        return unchanged(before), rejected("mutation.invariant", [str(payload["id"])])
+        return unchanged(before), rejected("mutation.invariant", [str(payload["id"])], invariant="outdoor-reset-range")
     kind = ({"OutdoorAirReset": {"low_outdoor_c": payload["newLowOutdoorC"], "high_outdoor_c": payload["newHighOutdoorC"], "low_setpoint_c": payload["newLowSetpointC"], "high_setpoint_c": payload["newHighSetpointC"]}} if payload["newKind"] == "OutdoorAirReset" else payload["newKind"])
     if item["kind"] == kind:
         return unchanged(before), no_op()
@@ -4333,7 +4334,7 @@ def create_air_loop(before, payload):
     if payload["designSupplyAirFlowM3S"] != payload["designSupplyAirFlowM3S"] or payload["designSupplyAirFlowM3S"] in (float("inf"), float("-inf")) or payload["designSupplyAirFlowM3S"] <= 0.0:
         return unchanged(before), rejected("mutation.invariant", [str(payload["id"])])
     if any(payload["terminalZoneIds"][index] >= payload["terminalZoneIds"][index + 1] for index in range(len(payload["terminalZoneIds"]) - 1)):
-        return unchanged(before), rejected("mutation.invariant", [str(payload["id"])])
+        return unchanged(before), rejected("mutation.invariant", [str(payload["id"])], invariant="terminal-zone-ids-ascending")
     if any(not any(zone["id"] == value for zone in before["model"]["zones"]) for value in payload["terminalZoneIds"]):
         return unchanged(before), rejected("mutation.target-missing", [str(payload["id"])])
     after = copy.deepcopy(before)
@@ -4352,7 +4353,7 @@ def delete_air_loop(before, payload):
     if item is None:
         return unchanged(before), rejected("mutation.target-missing", [str(payload["id"])])
     if any(system["air_loop_id"] == payload["id"] for system in before["model"]["outdoor_air_systems"]):
-        return unchanged(before), rejected("mutation.invariant", [str(payload["id"])])
+        return unchanged(before), rejected("mutation.target-referenced", [str(payload["id"])])
     after = copy.deepcopy(before)
     after["model"]["air_loops"] = [entry for entry in after["model"]["air_loops"] if entry["id"] != payload["id"]]
     return after, applied()
@@ -4511,7 +4512,7 @@ def create_plant_loop(before, payload):
     if payload["designFlowKgS"] != payload["designFlowKgS"] or payload["designFlowKgS"] in (float("inf"), float("-inf")) or payload["designFlowKgS"] <= 0.0:
         return unchanged(before), rejected("mutation.invariant", [str(payload["id"])])
     if any(payload["equipmentIds"][index] >= payload["equipmentIds"][index + 1] for index in range(len(payload["equipmentIds"]) - 1)):
-        return unchanged(before), rejected("mutation.invariant", [str(payload["id"])])
+        return unchanged(before), rejected("mutation.invariant", [str(payload["id"])], invariant="equipment-ids-ascending")
     if any(value == 0 for value in payload["equipmentIds"]):
         return unchanged(before), rejected("mutation.invariant", [str(payload["id"])])
     after = copy.deepcopy(before)
@@ -4800,7 +4801,7 @@ def create_electrical_load_center(before, payload):
     if any(row["id"] == payload["id"] for row in rows):
         return unchanged(before), rejected("mutation.duplicate-id", [str(payload["id"])])
     if payload["index"] > len(rows):
-        return unchanged(before), rejected("mutation.invariant", [str(payload["id"])])
+        return unchanged(before), rejected("mutation.target-missing", [str(payload["id"])])
     missing = next((candidate for candidate in payload["pvIds"] if not any(row["id"] == candidate for row in before["model"]["pv_systems"])), None)
     if missing is not None:
         return unchanged(before), rejected("mutation.target-missing", [str(missing)])
@@ -4868,7 +4869,7 @@ def add_electrical_load_center_pv(before, payload):
     if not any(row["id"] == payload["pvId"] for row in before["model"]["pv_systems"]):
         return unchanged(before), rejected("mutation.target-missing", [str(payload["pvId"])])
     if payload["index"] > len(item["pv_ids"]):
-        return unchanged(before), rejected("mutation.invariant", [str(payload["id"])])
+        return unchanged(before), rejected("mutation.target-missing", [str(payload["id"])])
     if payload["pvId"] in item["pv_ids"]:
         return unchanged(before), no_op()
     after = copy.deepcopy(before)
@@ -4911,7 +4912,7 @@ def add_electrical_load_center_battery(before, payload):
     if not any(row["id"] == payload["batteryId"] for row in before["model"]["battery_storage"]):
         return unchanged(before), rejected("mutation.target-missing", [str(payload["batteryId"])])
     if payload["index"] > len(item["battery_ids"]):
-        return unchanged(before), rejected("mutation.invariant", [str(payload["id"])])
+        return unchanged(before), rejected("mutation.target-missing", [str(payload["id"])])
     if payload["batteryId"] in item["battery_ids"]:
         return unchanged(before), no_op()
     after = copy.deepcopy(before)
@@ -4952,7 +4953,7 @@ def create_pv_system(before, payload):
     if any(row["id"] == payload["id"] for row in rows):
         return unchanged(before), rejected("mutation.duplicate-id", [str(payload["id"])])
     if payload["index"] > len(rows):
-        return unchanged(before), rejected("mutation.invariant", [str(payload["id"])])
+        return unchanged(before), rejected("mutation.target-missing", [str(payload["id"])])
     after = copy.deepcopy(before)
     after["model"]["pv_systems"].insert(payload["index"], {"id": payload["id"], "dc_capacity_w": payload["dcCapacityW"], "area_m2": payload["areaM2"], "tilt_deg": payload["tiltDeg"], "azimuth_deg": payload["azimuthDeg"], "module_efficiency": payload["moduleEfficiency"], "inverter_efficiency": payload["inverterEfficiency"]})
     return after, applied()
@@ -4969,7 +4970,7 @@ def delete_pv_system(before, payload):
     if item is None:
         return unchanged(before), rejected("mutation.target-missing", [str(payload["id"])])
     if any(payload["id"] in row["pv_ids"] for row in before["model"]["electrical_load_centers"]):
-        return unchanged(before), rejected("mutation.invariant", [str(payload["id"])])
+        return unchanged(before), rejected("mutation.target-referenced", [str(payload["id"])])
     after = copy.deepcopy(before)
     after["model"]["pv_systems"] = [row for row in after["model"]["pv_systems"] if row["id"] != payload["id"]]
     return after, applied()
@@ -5127,7 +5128,7 @@ def create_battery(before, payload):
     if any(row["id"] == payload["id"] for row in rows):
         return unchanged(before), rejected("mutation.duplicate-id", [str(payload["id"])])
     if payload["index"] > len(rows):
-        return unchanged(before), rejected("mutation.invariant", [str(payload["id"])])
+        return unchanged(before), rejected("mutation.target-missing", [str(payload["id"])])
     after = copy.deepcopy(before)
     after["model"]["battery_storage"].insert(payload["index"], {"id": payload["id"], "capacity_kwh": payload["capacityKwh"], "max_charge_w": payload["maxChargeW"], "max_discharge_w": payload["maxDischargeW"], "round_trip_efficiency": payload["roundTripEfficiency"]})
     return after, applied()
@@ -5144,7 +5145,7 @@ def delete_battery(before, payload):
     if item is None:
         return unchanged(before), rejected("mutation.target-missing", [str(payload["id"])])
     if any(payload["id"] in row["battery_ids"] for row in before["model"]["electrical_load_centers"]):
-        return unchanged(before), rejected("mutation.invariant", [str(payload["id"])])
+        return unchanged(before), rejected("mutation.target-referenced", [str(payload["id"])])
     after = copy.deepcopy(before)
     after["model"]["battery_storage"] = [row for row in after["model"]["battery_storage"] if row["id"] != payload["id"]]
     return after, applied()
@@ -5256,7 +5257,7 @@ def create_shw_system(before, payload):
     if any(row["id"] == payload["id"] for row in rows):
         return unchanged(before), rejected("mutation.duplicate-id", [str(payload["id"])])
     if payload["index"] > len(rows):
-        return unchanged(before), rejected("mutation.invariant", [str(payload["id"])])
+        return unchanged(before), rejected("mutation.target-missing", [str(payload["id"])])
     if not any(row["id"] == payload["scheduleId"] for group in ("constants", "daily", "weekly", "annual", "time_series") for row in before["model"]["schedules"][group]):
         return unchanged(before), rejected("mutation.target-missing", [str(payload["scheduleId"])])
     after = copy.deepcopy(before)
@@ -5385,7 +5386,7 @@ def create_solar_thermal_system(before, payload):
     if any(row["id"] == payload["id"] for row in rows):
         return unchanged(before), rejected("mutation.duplicate-id", [str(payload["id"])])
     if payload["index"] > len(rows):
-        return unchanged(before), rejected("mutation.invariant", [str(payload["id"])])
+        return unchanged(before), rejected("mutation.target-missing", [str(payload["id"])])
     after = copy.deepcopy(before)
     after["model"]["solar_thermal_systems"].insert(payload["index"], {"id": payload["id"], "collector_area_m2": payload["collectorAreaM2"], "efficiency": payload["efficiency"], "storage_volume_m3": payload["storageVolumeM3"], "tilt_deg": payload["tiltDeg"], "azimuth_deg": payload["azimuthDeg"]})
     return after, applied()
@@ -5535,7 +5536,7 @@ def create_refrigeration_system(before, payload):
     if any(row["id"] == payload["id"] for row in rows):
         return unchanged(before), rejected("mutation.duplicate-id", [str(payload["id"])])
     if payload["index"] > len(rows):
-        return unchanged(before), rejected("mutation.invariant", [str(payload["id"])])
+        return unchanged(before), rejected("mutation.target-missing", [str(payload["id"])])
     if not any(row["id"] == payload["defrostScheduleId"] for group in ("constants", "daily", "weekly", "annual", "time_series") for row in before["model"]["schedules"][group]):
         return unchanged(before), rejected("mutation.target-missing", [str(payload["defrostScheduleId"])])
     after = copy.deepcopy(before)
@@ -5641,7 +5642,7 @@ def create_water_system(before, payload):
     if any(row["id"] == payload["id"] for row in rows):
         return unchanged(before), rejected("mutation.duplicate-id", [str(payload["id"])])
     if payload["index"] > len(rows):
-        return unchanged(before), rejected("mutation.invariant", [str(payload["id"])])
+        return unchanged(before), rejected("mutation.target-missing", [str(payload["id"])])
     if not any(row["id"] == payload["scheduleId"] for group in ("constants", "daily", "weekly", "annual", "time_series") for row in before["model"]["schedules"][group]):
         return unchanged(before), rejected("mutation.target-missing", [str(payload["scheduleId"])])
     after = copy.deepcopy(before)
@@ -5747,7 +5748,7 @@ def create_fault(before, payload):
     if any(row["id"] == payload["id"] for row in rows):
         return unchanged(before), rejected("mutation.duplicate-id", [str(payload["id"])])
     if payload["index"] > len(rows):
-        return unchanged(before), rejected("mutation.invariant", [str(payload["id"])])
+        return unchanged(before), rejected("mutation.target-missing", [str(payload["id"])])
     if not any(row["id"] == payload["targetEquipmentId"] for row in before["model"]["ideal_loads"]):
         return unchanged(before), rejected("mutation.target-missing", [str(payload["targetEquipmentId"])])
     if not any(row["id"] == payload["startScheduleId"] for group in ("constants", "daily", "weekly", "annual", "time_series") for row in before["model"]["schedules"][group]):
@@ -5876,7 +5877,7 @@ def create_space_list(before, payload):
     if any(row["id"] == payload["id"] for row in rows):
         return unchanged(before), rejected("mutation.duplicate-id", [str(payload["id"])])
     if payload["index"] > len(rows):
-        return unchanged(before), rejected("mutation.invariant", [str(payload["id"])])
+        return unchanged(before), rejected("mutation.target-missing", [str(payload["id"])])
     missing = next((candidate for candidate in payload["spaceIds"] if not any(row["id"] == candidate for row in before["model"]["spaces"])), None)
     if missing is not None:
         return unchanged(before), rejected("mutation.target-missing", [str(missing)])
@@ -5941,7 +5942,7 @@ def add_space_list_member(before, payload):
     if not any(row["id"] == payload["spaceId"] for row in before["model"]["spaces"]):
         return unchanged(before), rejected("mutation.target-missing", [str(payload["spaceId"])])
     if payload["index"] > len(item["space_ids"]):
-        return unchanged(before), rejected("mutation.invariant", [str(payload["id"])])
+        return unchanged(before), rejected("mutation.target-missing", [str(payload["id"])])
     if payload["spaceId"] in item["space_ids"]:
         return unchanged(before), no_op()
     after = copy.deepcopy(before)
@@ -5982,7 +5983,7 @@ def create_thermal_enclosure(before, payload):
     if any(row["id"] == payload["id"] for row in rows):
         return unchanged(before), rejected("mutation.duplicate-id", [str(payload["id"])])
     if payload["index"] > len(rows):
-        return unchanged(before), rejected("mutation.invariant", [str(payload["id"])])
+        return unchanged(before), rejected("mutation.target-missing", [str(payload["id"])])
     missing = next((candidate for candidate in payload["zoneIds"] if not any(row["id"] == candidate for row in before["model"]["zones"])), None)
     if missing is not None:
         return unchanged(before), rejected("mutation.target-missing", [str(missing)])
@@ -6047,7 +6048,7 @@ def add_thermal_enclosure_zone(before, payload):
     if not any(row["id"] == payload["zoneId"] for row in before["model"]["zones"]):
         return unchanged(before), rejected("mutation.target-missing", [str(payload["zoneId"])])
     if payload["index"] > len(item["zone_ids"]):
-        return unchanged(before), rejected("mutation.invariant", [str(payload["id"])])
+        return unchanged(before), rejected("mutation.target-missing", [str(payload["id"])])
     if payload["zoneId"] in item["zone_ids"]:
         return unchanged(before), no_op()
     after = copy.deepcopy(before)
@@ -6088,7 +6089,7 @@ def create_constant_schedule(before, payload):
     if any(row["id"] == payload["id"] for group in ("constants", "daily", "weekly", "annual", "time_series") for row in before["model"]["schedules"][group]):
         return unchanged(before), rejected("mutation.duplicate-id", [str(payload["id"])])
     if payload["index"] > len(rows):
-        return unchanged(before), rejected("mutation.invariant", [str(payload["id"])])
+        return unchanged(before), rejected("mutation.target-missing", [str(payload["id"])])
     if payload["value"] != payload["value"] or payload["value"] in (float("inf"), float("-inf")):
         return unchanged(before), rejected("mutation.invariant", [str(payload["id"])])
     after = copy.deepcopy(before)
@@ -6111,7 +6112,7 @@ def delete_constant_schedule(before, payload):
     in_use = in_use or any(payload["id"] in row["daily_schedule_ids"] for row in before["model"]["schedules"]["weekly"])
     in_use = in_use or any(row["default_daily_schedule_id"] == payload["id"] or row["holiday_daily_schedule_id"] == payload["id"] or any(rule["daily_schedule_id"] == payload["id"] for rule in row["rules"]) for row in before["model"]["schedules"]["annual"])
     if in_use:
-        return unchanged(before), rejected("mutation.invariant", [str(payload["id"])])
+        return unchanged(before), rejected("mutation.target-referenced", [str(payload["id"])])
     after = copy.deepcopy(before)
     after["model"]["schedules"]["constants"] = [row for row in after["model"]["schedules"]["constants"] if row["id"] != payload["id"]]
     return after, applied()
@@ -6154,7 +6155,7 @@ def create_daily_schedule(before, payload):
     if any(row["id"] == payload["id"] for group in ("constants", "daily", "weekly", "annual", "time_series") for row in before["model"]["schedules"][group]):
         return unchanged(before), rejected("mutation.duplicate-id", [str(payload["id"])])
     if payload["index"] > len(rows):
-        return unchanged(before), rejected("mutation.invariant", [str(payload["id"])])
+        return unchanged(before), rejected("mutation.target-missing", [str(payload["id"])])
     if len(payload["hourlyValues"]) != 24:
         return unchanged(before), rejected("mutation.invariant", [str(payload["id"])])
     if any(entry != entry or entry in (float("inf"), float("-inf")) for entry in payload["hourlyValues"]):
@@ -6162,7 +6163,7 @@ def create_daily_schedule(before, payload):
     if (payload["limitsMin"] is None) != (payload["limitsMax"] is None):
         return unchanged(before), rejected("mutation.invariant", [str(payload["id"])])
     if payload["limitsMin"] is not None and payload["limitsMin"] > payload["limitsMax"]:
-        return unchanged(before), rejected("mutation.invariant", [str(payload["id"])])
+        return unchanged(before), rejected("mutation.invariant", [str(payload["id"])], invariant="limits-ordered")
     after = copy.deepcopy(before)
     after["model"]["schedules"]["daily"].insert(payload["index"], {"id": payload["id"], "hourly_values": list(payload["hourlyValues"]), "interpolation": payload["interpolation"], "limits": ({"min": payload["limitsMin"], "max": payload["limitsMax"]} if payload["limitsMin"] is not None else None)})
     return after, applied()
@@ -6183,7 +6184,7 @@ def delete_daily_schedule(before, payload):
     in_use = in_use or any(payload["id"] in row["daily_schedule_ids"] for row in before["model"]["schedules"]["weekly"])
     in_use = in_use or any(row["default_daily_schedule_id"] == payload["id"] or row["holiday_daily_schedule_id"] == payload["id"] or any(rule["daily_schedule_id"] == payload["id"] for rule in row["rules"]) for row in before["model"]["schedules"]["annual"])
     if in_use:
-        return unchanged(before), rejected("mutation.invariant", [str(payload["id"])])
+        return unchanged(before), rejected("mutation.target-referenced", [str(payload["id"])])
     after = copy.deepcopy(before)
     after["model"]["schedules"]["daily"] = [row for row in after["model"]["schedules"]["daily"] if row["id"] != payload["id"]]
     return after, applied()
@@ -6251,7 +6252,7 @@ def change_daily_schedule_limits(before, payload):
     if (payload["newLimitsMin"] is None) != (payload["newLimitsMax"] is None):
         return unchanged(before), rejected("mutation.invariant", [str(payload["id"])])
     if payload["newLimitsMin"] is not None and payload["newLimitsMin"] > payload["newLimitsMax"]:
-        return unchanged(before), rejected("mutation.invariant", [str(payload["id"])])
+        return unchanged(before), rejected("mutation.invariant", [str(payload["id"])], invariant="limits-ordered")
     limits = {"min": payload["newLimitsMin"], "max": payload["newLimitsMax"]} if payload["newLimitsMin"] is not None else None
     if item["limits"] == limits:
         return unchanged(before), no_op()
@@ -6275,7 +6276,7 @@ def create_weekly_schedule(before, payload):
     if any(row["id"] == payload["id"] for group in ("constants", "daily", "weekly", "annual", "time_series") for row in before["model"]["schedules"][group]):
         return unchanged(before), rejected("mutation.duplicate-id", [str(payload["id"])])
     if payload["index"] > len(rows):
-        return unchanged(before), rejected("mutation.invariant", [str(payload["id"])])
+        return unchanged(before), rejected("mutation.target-missing", [str(payload["id"])])
     if len(payload["dailyScheduleIds"]) != 7:
         return unchanged(before), rejected("mutation.invariant", [str(payload["id"])])
     missing = next((candidate for candidate in payload["dailyScheduleIds"] if not any(row["id"] == candidate for row in before["model"]["schedules"]["daily"])), None)
@@ -6301,7 +6302,7 @@ def delete_weekly_schedule(before, payload):
     in_use = in_use or any(payload["id"] in row["daily_schedule_ids"] for row in before["model"]["schedules"]["weekly"])
     in_use = in_use or any(row["default_daily_schedule_id"] == payload["id"] or row["holiday_daily_schedule_id"] == payload["id"] or any(rule["daily_schedule_id"] == payload["id"] for rule in row["rules"]) for row in before["model"]["schedules"]["annual"])
     if in_use:
-        return unchanged(before), rejected("mutation.invariant", [str(payload["id"])])
+        return unchanged(before), rejected("mutation.target-referenced", [str(payload["id"])])
     after = copy.deepcopy(before)
     after["model"]["schedules"]["weekly"] = [row for row in after["model"]["schedules"]["weekly"] if row["id"] != payload["id"]]
     return after, applied()
@@ -6345,7 +6346,7 @@ def create_annual_schedule(before, payload):
     if any(row["id"] == payload["id"] for group in ("constants", "daily", "weekly", "annual", "time_series") for row in before["model"]["schedules"][group]):
         return unchanged(before), rejected("mutation.duplicate-id", [str(payload["id"])])
     if payload["index"] > len(rows):
-        return unchanged(before), rejected("mutation.invariant", [str(payload["id"])])
+        return unchanged(before), rejected("mutation.target-missing", [str(payload["id"])])
     if not any(row["id"] == payload["defaultDailyScheduleId"] for row in before["model"]["schedules"]["daily"]):
         return unchanged(before), rejected("mutation.target-missing", [str(payload["defaultDailyScheduleId"])])
     if payload["holidayDailyScheduleId"] is not None and not any(row["id"] == payload["holidayDailyScheduleId"] for row in before["model"]["schedules"]["daily"]):
@@ -6370,7 +6371,7 @@ def delete_annual_schedule(before, payload):
     in_use = in_use or any(payload["id"] in row["daily_schedule_ids"] for row in before["model"]["schedules"]["weekly"])
     in_use = in_use or any(row["default_daily_schedule_id"] == payload["id"] or row["holiday_daily_schedule_id"] == payload["id"] or any(rule["daily_schedule_id"] == payload["id"] for rule in row["rules"]) for row in before["model"]["schedules"]["annual"])
     if in_use:
-        return unchanged(before), rejected("mutation.invariant", [str(payload["id"])])
+        return unchanged(before), rejected("mutation.target-referenced", [str(payload["id"])])
     after = copy.deepcopy(before)
     after["model"]["schedules"]["annual"] = [row for row in after["model"]["schedules"]["annual"] if row["id"] != payload["id"]]
     return after, applied()
@@ -6395,7 +6396,7 @@ def insert_annual_schedule_rule(before, payload):
     if item is None:
         return unchanged(before), rejected("mutation.target-missing", [str(payload["id"])])
     if payload["index"] > len(item["rules"]):
-        return unchanged(before), rejected("mutation.invariant", [str(payload["id"])])
+        return unchanged(before), rejected("mutation.target-missing", [str(payload["id"])])
     if not (1 <= payload["startMonth"] <= 12 and 1 <= payload["endMonth"] <= 12 and 1 <= payload["startDay"] <= 31 and 1 <= payload["endDay"] <= 31):
         return unchanged(before), rejected("mutation.invariant", [str(payload["id"])])
     if not any(row["id"] == payload["dailyScheduleId"] for row in before["model"]["schedules"]["daily"]):
@@ -6439,7 +6440,7 @@ def reorder_annual_schedule_rules(before, payload):
     if item is None:
         return unchanged(before), rejected("mutation.target-missing", [str(payload["id"])])
     if payload["from"] >= len(item["rules"]) or payload["to"] >= len(item["rules"]):
-        return unchanged(before), rejected("mutation.invariant", [str(payload["id"])])
+        return unchanged(before), rejected("mutation.target-missing", [str(payload["id"])])
     if payload["from"] == payload["to"]:
         return unchanged(before), no_op()
     after = copy.deepcopy(before)
@@ -6509,7 +6510,7 @@ def add_annual_schedule_holiday(before, payload):
     if not (1 <= payload["month"] <= 12 and 1 <= payload["day"] <= 31):
         return unchanged(before), rejected("mutation.invariant", [str(payload["id"])])
     if payload["index"] > len(item["holiday_dates"]):
-        return unchanged(before), rejected("mutation.invariant", [str(payload["id"])])
+        return unchanged(before), rejected("mutation.target-missing", [str(payload["id"])])
     date = [payload["year"], payload["month"], payload["day"]]
     if date in item["holiday_dates"]:
         return unchanged(before), no_op()
@@ -6553,7 +6554,7 @@ def create_time_series_schedule(before, payload):
     if any(row["id"] == payload["id"] for group in ("constants", "daily", "weekly", "annual", "time_series") for row in before["model"]["schedules"][group]):
         return unchanged(before), rejected("mutation.duplicate-id", [str(payload["id"])])
     if payload["index"] > len(rows):
-        return unchanged(before), rejected("mutation.invariant", [str(payload["id"])])
+        return unchanged(before), rejected("mutation.target-missing", [str(payload["id"])])
     if not payload["values"]:
         return unchanged(before), rejected("mutation.invariant", [str(payload["id"])])
     if any(entry != entry or entry in (float("inf"), float("-inf")) for entry in payload["values"]):
@@ -6580,7 +6581,7 @@ def delete_time_series_schedule(before, payload):
     in_use = in_use or any(payload["id"] in row["daily_schedule_ids"] for row in before["model"]["schedules"]["weekly"])
     in_use = in_use or any(row["default_daily_schedule_id"] == payload["id"] or row["holiday_daily_schedule_id"] == payload["id"] or any(rule["daily_schedule_id"] == payload["id"] for rule in row["rules"]) for row in before["model"]["schedules"]["annual"])
     if in_use:
-        return unchanged(before), rejected("mutation.invariant", [str(payload["id"])])
+        return unchanged(before), rejected("mutation.target-referenced", [str(payload["id"])])
     after = copy.deepcopy(before)
     after["model"]["schedules"]["time_series"] = [row for row in after["model"]["schedules"]["time_series"] if row["id"] != payload["id"]]
     return after, applied()
@@ -6656,7 +6657,7 @@ def replace_fenestration_vertices(before, payload):
         return unchanged(before), rejected("mutation.invariant", [str(entity_id)])
     host = next((row for row in before["model"]["surfaces"] if row["id"] == item["surface_id"]), None)
     if host is not None and not _on_plane(value, host["vertices_m"]):
-        return unchanged(before), rejected("mutation.invariant", [str(entity_id)])
+        return unchanged(before), rejected("mutation.target-mismatch", [str(entity_id)])
     if item["vertices_m"] == value:
         return unchanged(before), no_op()
     after = copy.deepcopy(before)

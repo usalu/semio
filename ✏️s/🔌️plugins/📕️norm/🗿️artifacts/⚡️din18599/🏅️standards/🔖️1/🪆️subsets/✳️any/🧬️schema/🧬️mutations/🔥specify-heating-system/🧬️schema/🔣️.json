@@ -1,12 +1,32 @@
 {
-  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/norm/din18599/mutation/specify-heating-system/schema.json",
   "title": "SpecifyHeatingSystem",
   "type": "object",
-  "properties": {
-    "newHeating": {
-      "type": "object"
-    }
-  },
   "additionalProperties": false,
-  "$id": "https://json.schemas.assets.semio-tech.com/s/norm/din18599/mutation/specify-heating-system/schema.json"
+  "required": [
+    "mutation",
+    "newHeating"
+  ],
+  "properties": {
+    "mutation": {
+      "const": "specifyHeatingSystem"
+    },
+    "newHeating": {
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/din18599/snapshot/schema.json#/$defs/HeatingSystem",
+      "x-semio-ui": {
+        "role": "value",
+        "label": {
+          "en": "Heating system",
+          "de": "Heizungsanlage"
+        },
+        "description": {
+          "en": "Generation, distribution, storage and transfer efficiencies and the energy carrier.",
+          "de": "Erzeuger-, Verteil-, Speicher- und Übergabewirkungsgrad sowie der Energieträger."
+        },
+        "group": "systems",
+        "order": 10
+      }
+    }
+  }
 }

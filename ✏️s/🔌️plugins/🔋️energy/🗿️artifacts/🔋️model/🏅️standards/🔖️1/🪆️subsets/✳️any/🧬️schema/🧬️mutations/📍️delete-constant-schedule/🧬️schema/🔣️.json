@@ -5,11 +5,35 @@
   "type": "object",
   "additionalProperties": false,
   "required": [
+    "mutation",
     "id"
   ],
   "properties": {
+    "mutation": {
+      "const": "deleteConstantSchedule"
+    },
     "id": {
-      "type": "integer"
+      "type": "integer",
+      "minimum": 0,
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Constant schedule",
+          "de": "Konstanter Zeitplan"
+        },
+        "description": {
+          "en": "The constant schedule to delete, by id.",
+          "de": "Konstanter Zeitplan, den diese Mutation löscht, per ID."
+        },
+        "ref": {
+          "kind": "constantSchedule",
+          "domain": "energyModel",
+          "granularity": "schedule"
+        },
+        "group": "target",
+        "order": 10
+      }
     }
   }
 }

@@ -11,11 +11,11 @@
 
 use crate::{Iso16757Diff, Iso16757Mutation, Iso16757Snapshot};
 
-const BEFORE: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🎯️change-selection-class/🎯️retargets-the-selection-at-the-towel-radiator-class/📸️snapshot/⬅️before/🔣️.json");
-const AFTER: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🎯️change-selection-class/🎯️retargets-the-selection-at-the-towel-radiator-class/📸️snapshot/➡️after/🔣️.json");
-const MUTATION: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🎯️change-selection-class/🎯️retargets-the-selection-at-the-towel-radiator-class/🦠️mutation/🔣️.json");
-const DIFF: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🎯️change-selection-class/🎯️retargets-the-selection-at-the-towel-radiator-class/🔺️diff/🔣️.json");
-const OUTCOME: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🎯️change-selection-class/🎯️retargets-the-selection-at-the-towel-radiator-class/🎯️outcome/🔣️.json");
+const BEFORE: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🎯️change-selection-class/🎯️retargets-selection-towel-radiator-class/📸️snapshot/⬅️before/🔣️.json");
+const AFTER: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🎯️change-selection-class/🎯️retargets-selection-towel-radiator-class/📸️snapshot/➡️after/🔣️.json");
+const MUTATION: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🎯️change-selection-class/🎯️retargets-selection-towel-radiator-class/🦠️mutation/🔣️.json");
+const DIFF: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🎯️change-selection-class/🎯️retargets-selection-towel-radiator-class/🔺️diff/🔣️.json");
+const OUTCOME: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🎯️change-selection-class/🎯️retargets-selection-towel-radiator-class/🎯️outcome/🔣️.json");
 
 fn before() -> Iso16757Snapshot {
     serde_json::from_str(BEFORE).expect("the committed before-snapshot decodes")
@@ -59,8 +59,8 @@ async fn retargeting_at_the_panel_radiator_class_restores_before() {
 }
 
 /// 🔣️ Both committed snapshots and the committed `change-selection-class` payload are already canonical: decode
-/// → encode is a fixed point. The committed payload is spelled `{"ChangeSelectionClass": {"new_class_id":
-/// …}}` — externally tagged, snake_case payload key.
+/// → encode is a fixed point. The committed payload is spelled `{"ChangeSelectionClass": {"newClassId":
+/// …}}` — externally tagged, camelCase payload key.
 #[semio_framework_async_macros::async_test]
 async fn committed_json_is_canonical() {
     for (side, text) in [("before", BEFORE), ("after", AFTER)] {

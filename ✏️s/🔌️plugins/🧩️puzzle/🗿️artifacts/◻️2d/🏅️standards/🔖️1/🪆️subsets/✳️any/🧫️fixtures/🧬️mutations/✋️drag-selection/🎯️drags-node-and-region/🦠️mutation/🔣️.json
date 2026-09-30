@@ -1,0 +1,9 @@
+{
+  "dx": 10.0,
+  "dy": 4.0,
+  "mutation": "dragSelection",
+  "targets": [
+    "node-a",
+    "region-1"
+  ]
+}

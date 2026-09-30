@@ -4,13 +4,7 @@
   "title": "EquationGraphWindowConfigMutation",
   "oneOf": [
     {
-      "type": "object",
-      "additionalProperties": false,
-      "required": ["kind", "camera"],
-      "properties": {
-        "kind": { "const": "set-camera" },
-        "camera": { "$ref": "schema.json#/properties/camera" }
-      }
+      "$ref": "https://json.schemas.assets.semio-tech.com/app/mathematical/equation/graph-window/config/mutation/set-camera/schema.json"
     }
   ]
 }

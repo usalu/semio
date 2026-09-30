@@ -5,15 +5,59 @@
   "type": "object",
   "additionalProperties": false,
   "required": [
+    "mutation",
     "id",
     "newShgc"
   ],
   "properties": {
+    "mutation": {
+      "const": "changeFenestrationShgc"
+    },
     "id": {
-      "type": "integer"
+      "type": "integer",
+      "minimum": 0,
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Window",
+          "de": "Fenster"
+        },
+        "description": {
+          "en": "The window this mutation changes, by id.",
+          "de": "Fenster, das diese Mutation ändert, per ID."
+        },
+        "ref": {
+          "kind": "fenestration",
+          "domain": "energyModel",
+          "granularity": "fenestration"
+        },
+        "group": "target",
+        "order": 10
+      }
     },
     "newShgc": {
-      "type": "number"
+      "type": "number",
+      "minimum": 0,
+      "maximum": 1,
+      "x-semio-ui": {
+        "widget": "slider",
+        "role": "value",
+        "label": {
+          "en": "Solar heat gain coefficient",
+          "de": "Gesamtenergiedurchlassgrad"
+        },
+        "description": {
+          "en": "SHGC (g-value): share of incident solar energy that enters the room.",
+          "de": "g-Wert: Anteil der einfallenden Sonnenenergie, der in den Raum gelangt."
+        },
+        "step": 0.01,
+        "precision": 2,
+        "softMin": 0,
+        "softMax": 1,
+        "group": "optics",
+        "order": 20
+      }
     }
   }
 }

@@ -19,10 +19,34 @@
       ],
       "properties": {
         "src": {
-          "type": "string"
+          "type": "string",
+          "x-semio-ui": {
+            "widget": "text",
+            "role": "value",
+            "label": {
+              "en": "Source URL",
+              "de": "Quell-URL"
+            },
+            "description": {
+              "en": "Location of the media, or a data URL.",
+              "de": "Ort des Mediums oder eine Daten-URL."
+            }
+          }
         },
         "kind": {
-          "type": "string"
+          "type": "string",
+          "x-semio-ui": {
+            "widget": "text",
+            "role": "value",
+            "label": {
+              "en": "Media Kind",
+              "de": "Medienart"
+            },
+            "description": {
+              "en": "Kind of media, e.g. figure, image or pdf.",
+              "de": "Art des Mediums, z. B. figure, image oder pdf."
+            }
+          }
         },
         "frame": {
           "title": "FigureTileFrame",
@@ -47,14 +71,64 @@
             "height": {
               "type": "number"
             }
+          },
+          "x-semio-ui": {
+            "role": "value",
+            "label": {
+              "en": "Frame",
+              "de": "Rahmen"
+            },
+            "description": {
+              "en": "Visible region of the source, as fractions of its size.",
+              "de": "Sichtbarer Bereich der Quelle als Anteile ihrer Größe."
+            }
           }
         },
         "sourceAspect": {
-          "type": "number"
+          "type": "number",
+          "x-semio-ui": {
+            "widget": "stepper",
+            "role": "value",
+            "label": {
+              "en": "Source Aspect Ratio",
+              "de": "Seitenverhältnis der Quelle"
+            },
+            "description": {
+              "en": "Width divided by height of the media.",
+              "de": "Breite geteilt durch Höhe des Mediums."
+            },
+            "step": 0.01,
+            "precision": 3
+          }
         },
         "pdfPage": {
           "type": "integer",
-          "minimum": 0
+          "minimum": 0,
+          "x-semio-ui": {
+            "widget": "stepper",
+            "role": "value",
+            "label": {
+              "en": "PDF Page",
+              "de": "PDF-Seite"
+            },
+            "description": {
+              "en": "Page shown from a pdf source.",
+              "de": "Angezeigte Seite einer PDF-Quelle."
+            },
+            "step": 1,
+            "precision": 0
+          }
+        }
+      },
+      "x-semio-ui": {
+        "role": "value",
+        "label": {
+          "en": "New Source",
+          "de": "Neue Quelle"
+        },
+        "description": {
+          "en": "The media the tiles are cut from.",
+          "de": "Das Medium, aus dem die Kacheln geschnitten werden."
         }
       }
     }

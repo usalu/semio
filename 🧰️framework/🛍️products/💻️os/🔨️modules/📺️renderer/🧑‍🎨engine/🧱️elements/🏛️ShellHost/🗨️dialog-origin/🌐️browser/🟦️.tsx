@@ -1,5 +1,5 @@
 import React from "react";
-import type { ActionArgDef } from "@semio-tech/framework";
+import { type ActionArgDef } from "@semio-tech/framework";
 import { UIDialog, type UIDialogProps } from "@semio-tech/ui-react";
 import { type ShellDialogV1, type ShellDialogOriginV1 } from "../🟦️.ts";
 
@@ -14,7 +14,9 @@ export type OwnedShellDialogProps<Arg extends ActionArgDef = ActionArgDef> = Rea
   dispatch: (actionId: string, origin: ShellDialogOriginV1, args?: Record<string, unknown>) => void;
 }>;
 
-/** 📨️ A new opening remounts staged fields; late callbacks can only consume their exact opening. */
+/** 📨️ A new opening remounts staged fields; late callbacks can only consume their exact opening. A choice
+ * dispatches its own action with its dispatch args (`dialogChoiceArgs`: the seed context, the args it requires
+ * and its id), the submit its action with the merged args, and any dismissal the cancel action. */
 export function OwnedShellDialog<Arg extends ActionArgDef>({ owner, dialog, renderField, notice, choiceRevisions, isCurrent, close, dispatch }: OwnedShellDialogProps<Arg>): React.ReactElement | null {
   if (!isCurrent(owner.origin)) return null;
   const settle = (actionId: string | undefined, args?: Record<string, unknown>): void => {
@@ -23,5 +25,5 @@ export function OwnedShellDialog<Arg extends ActionArgDef>({ owner, dialog, rend
     dispatch(actionId, owner.origin, args);
   };
   return <UIDialog<Arg> key={owner.openingId} dialog={dialog} seedArgs={owner.seedArgs} renderField={renderField} notice={notice} choiceRevisions={choiceRevisions}
-    onSubmit={(args) => settle(dialog.submitAction, args)} onCancel={() => settle(dialog.cancelAction)} />;
+    onSubmit={(args) => settle(dialog.submitAction, args)} onChoose={(choice, args) => settle(choice.action, args)} onCancel={() => settle(dialog.cancelAction)} />;
 }

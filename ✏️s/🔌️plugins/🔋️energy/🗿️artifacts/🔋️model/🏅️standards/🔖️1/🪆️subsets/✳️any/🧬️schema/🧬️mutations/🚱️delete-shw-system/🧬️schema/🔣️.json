@@ -5,11 +5,33 @@
   "type": "object",
   "additionalProperties": false,
   "required": [
+    "mutation",
     "id"
   ],
   "properties": {
+    "mutation": {
+      "const": "deleteShwSystem"
+    },
     "id": {
-      "type": "integer"
+      "type": "integer",
+      "minimum": 0,
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Service hot water system",
+          "de": "Trinkwarmwasseranlage"
+        },
+        "description": {
+          "en": "The service hot water system to delete, by id.",
+          "de": "Trinkwarmwasseranlage, die diese Mutation löscht, per ID."
+        },
+        "ref": {
+          "kind": "serviceHotWaterSystem"
+        },
+        "group": "target",
+        "order": 10
+      }
     }
   }
 }

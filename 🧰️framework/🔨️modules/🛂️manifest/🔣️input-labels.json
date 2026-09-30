@@ -1,0 +1,1049 @@
+{
+  "schema": "semio.manifest.input-label-glossary/v1",
+  "labels": {
+    "accessor": {
+      "en": "Accessor",
+      "de": "Datenzugriff"
+    },
+    "action": {
+      "en": "Action",
+      "de": "Aktion"
+    },
+    "actionId": {
+      "en": "Action ID",
+      "de": "Aktions-ID"
+    },
+    "actionIndex": {
+      "en": "Action Index",
+      "de": "Aktionsindex"
+    },
+    "address": {
+      "en": "Address",
+      "de": "Adresse"
+    },
+    "anchorId": {
+      "en": "Anchor ID",
+      "de": "Anker-ID"
+    },
+    "angle": {
+      "en": "Angle",
+      "de": "Winkel"
+    },
+    "apply": {
+      "en": "Apply",
+      "de": "Anwenden"
+    },
+    "arg_index": {
+      "en": "Argument Index",
+      "de": "Argumentindex"
+    },
+    "asset": {
+      "en": "Asset",
+      "de": "Asset"
+    },
+    "assetId": {
+      "en": "Asset ID",
+      "de": "Asset-ID"
+    },
+    "assetIds": {
+      "en": "Asset IDs",
+      "de": "Asset-IDs"
+    },
+    "at": {
+      "en": "Insert At",
+      "de": "Einfügestelle"
+    },
+    "attribute": {
+      "en": "Attribute",
+      "de": "Attribut"
+    },
+    "author": {
+      "en": "Author",
+      "de": "Autor"
+    },
+    "base": {
+      "en": "Base",
+      "de": "Basis"
+    },
+    "before": {
+      "en": "Insert Before",
+      "de": "Einfügen vor"
+    },
+    "bidirectional": {
+      "en": "Bidirectional",
+      "de": "Bidirektional"
+    },
+    "block": {
+      "en": "Block",
+      "de": "Block"
+    },
+    "blockName": {
+      "en": "Block Name",
+      "de": "Blockname"
+    },
+    "bridgeId": {
+      "en": "Bridge ID",
+      "de": "Brücken-ID"
+    },
+    "buildingIndex": {
+      "en": "Building Index",
+      "de": "Gebäudeindex"
+    },
+    "camera": {
+      "en": "Camera",
+      "de": "Kamera"
+    },
+    "caseId": {
+      "en": "Case ID",
+      "de": "Fall-ID"
+    },
+    "channelIndex": {
+      "en": "Channel Index",
+      "de": "Kanalindex"
+    },
+    "child": {
+      "en": "Child",
+      "de": "Kindelement"
+    },
+    "childId": {
+      "en": "Child ID",
+      "de": "Kindelement-ID"
+    },
+    "child_id": {
+      "en": "Child ID",
+      "de": "Kindelement-ID"
+    },
+    "chunk": {
+      "en": "Chunk",
+      "de": "Datenblock"
+    },
+    "color": {
+      "en": "Color",
+      "de": "Farbe"
+    },
+    "comment": {
+      "en": "Comment",
+      "de": "Kommentar"
+    },
+    "config": {
+      "en": "Configuration",
+      "de": "Konfiguration"
+    },
+    "connectionId": {
+      "en": "Connection ID",
+      "de": "Verbindungs-ID"
+    },
+    "content": {
+      "en": "Content",
+      "de": "Inhalt"
+    },
+    "content_type": {
+      "en": "Content Type",
+      "de": "Inhaltstyp"
+    },
+    "count": {
+      "en": "Count",
+      "de": "Anzahl"
+    },
+    "data": {
+      "en": "Data",
+      "de": "Daten"
+    },
+    "description": {
+      "en": "Description",
+      "de": "Beschreibung"
+    },
+    "descriptorOrdinal": {
+      "en": "Descriptor Number",
+      "de": "Deskriptornummer"
+    },
+    "doctype": {
+      "en": "Document Type",
+      "de": "Dokumenttyp"
+    },
+    "dx": {
+      "en": "Offset X",
+      "de": "Versatz X"
+    },
+    "dy": {
+      "en": "Offset Y",
+      "de": "Versatz Y"
+    },
+    "dz": {
+      "en": "Offset Z",
+      "de": "Versatz Z"
+    },
+    "edge": {
+      "en": "Edge",
+      "de": "Kante"
+    },
+    "element": {
+      "en": "Element",
+      "de": "Element"
+    },
+    "elementId": {
+      "en": "Element ID",
+      "de": "Element-ID"
+    },
+    "element_name": {
+      "en": "Element Name",
+      "de": "Elementname"
+    },
+    "enabled": {
+      "en": "Enabled",
+      "de": "Aktiviert"
+    },
+    "entity": {
+      "en": "Entity",
+      "de": "Entität"
+    },
+    "entry": {
+      "en": "Entry",
+      "de": "Eintrag"
+    },
+    "expected": {
+      "en": "Expected Value",
+      "de": "Erwarteter Wert"
+    },
+    "extension": {
+      "en": "Extension",
+      "de": "Erweiterung"
+    },
+    "faces": {
+      "en": "Faces",
+      "de": "Flächen"
+    },
+    "factor": {
+      "en": "Factor",
+      "de": "Faktor"
+    },
+    "fileName": {
+      "en": "File Name",
+      "de": "Dateiname"
+    },
+    "frame": {
+      "en": "Frame",
+      "de": "Rahmen"
+    },
+    "frameId": {
+      "en": "Frame ID",
+      "de": "Rahmen-ID"
+    },
+    "from": {
+      "en": "From",
+      "de": "Von"
+    },
+    "fromPort": {
+      "en": "Source Port",
+      "de": "Quellanschluss"
+    },
+    "gap": {
+      "en": "Gap",
+      "de": "Lücke"
+    },
+    "guid": {
+      "en": "GUID",
+      "de": "GUID"
+    },
+    "handle": {
+      "en": "Handle",
+      "de": "Anschluss"
+    },
+    "height": {
+      "en": "Height",
+      "de": "Höhe"
+    },
+    "hidden": {
+      "en": "Hidden",
+      "de": "Ausgeblendet"
+    },
+    "id": {
+      "en": "ID",
+      "de": "ID"
+    },
+    "identifier": {
+      "en": "Identifier",
+      "de": "Kennung"
+    },
+    "identity": {
+      "en": "Identity",
+      "de": "Identität"
+    },
+    "ids": {
+      "en": "IDs",
+      "de": "IDs"
+    },
+    "image": {
+      "en": "Image",
+      "de": "Bild"
+    },
+    "important": {
+      "en": "Important",
+      "de": "Wichtig"
+    },
+    "index": {
+      "en": "Index",
+      "de": "Index"
+    },
+    "indices": {
+      "en": "Indices",
+      "de": "Indizes"
+    },
+    "interlace": {
+      "en": "Interlaced",
+      "de": "Zeilensprung"
+    },
+    "item": {
+      "en": "Item",
+      "de": "Listeneintrag"
+    },
+    "json": {
+      "en": "JSON",
+      "de": "JSON"
+    },
+    "key": {
+      "en": "Key",
+      "de": "Schlüssel"
+    },
+    "kind": {
+      "en": "Kind",
+      "de": "Art"
+    },
+    "label": {
+      "en": "Label",
+      "de": "Beschriftung"
+    },
+    "layer": {
+      "en": "Layer",
+      "de": "Ebene"
+    },
+    "layerId": {
+      "en": "Layer ID",
+      "de": "Ebenen-ID"
+    },
+    "layout": {
+      "en": "Layout",
+      "de": "Layout"
+    },
+    "left": {
+      "en": "Left",
+      "de": "Links"
+    },
+    "load": {
+      "en": "Load",
+      "de": "Last"
+    },
+    "loadCase": {
+      "en": "Load Case",
+      "de": "Lastfall"
+    },
+    "loadCaseIndex": {
+      "en": "Load Case Index",
+      "de": "Lastfallindex"
+    },
+    "loadId": {
+      "en": "Load ID",
+      "de": "Last-ID"
+    },
+    "locked": {
+      "en": "Locked",
+      "de": "Gesperrt"
+    },
+    "markup": {
+      "en": "Markup",
+      "de": "Auszeichnung"
+    },
+    "material": {
+      "en": "Material",
+      "de": "Material"
+    },
+    "media": {
+      "en": "Media",
+      "de": "Medien"
+    },
+    "member": {
+      "en": "Member",
+      "de": "Bauteil"
+    },
+    "memberId": {
+      "en": "Member ID",
+      "de": "Bauteil-ID"
+    },
+    "mesh": {
+      "en": "Mesh",
+      "de": "Netz"
+    },
+    "mesh_id": {
+      "en": "Mesh ID",
+      "de": "Netz-ID"
+    },
+    "modelDefinitionId": {
+      "en": "Model Definition ID",
+      "de": "Modelldefinitions-ID"
+    },
+    "mutation": {
+      "en": "Mutation",
+      "de": "Mutation"
+    },
+    "name": {
+      "en": "Name",
+      "de": "Name"
+    },
+    "namespace": {
+      "en": "Namespace",
+      "de": "Namensraum"
+    },
+    "newAnchor": {
+      "en": "New Anchor",
+      "de": "Neuer Anker"
+    },
+    "newAnnex": {
+      "en": "New Annex",
+      "de": "Neuer Anhang"
+    },
+    "newAreaM2": {
+      "en": "New Area (m²)",
+      "de": "Neue Fläche (m²)"
+    },
+    "newCatalogs": {
+      "en": "New Catalogs",
+      "de": "Neue Kataloge"
+    },
+    "newColor": {
+      "en": "New Color",
+      "de": "Neue Farbe"
+    },
+    "newCount": {
+      "en": "New Count",
+      "de": "Neue Anzahl"
+    },
+    "newData": {
+      "en": "New Data",
+      "de": "Neue Daten"
+    },
+    "newDescription": {
+      "en": "New Description",
+      "de": "Neue Beschreibung"
+    },
+    "newDesignSituation": {
+      "en": "New Design Situation",
+      "de": "Neue Bemessungssituation"
+    },
+    "newEnabled": {
+      "en": "Enabled",
+      "de": "Aktiviert"
+    },
+    "newFloorAreaM2": {
+      "en": "New Floor Area (m²)",
+      "de": "Neue Grundfläche (m²)"
+    },
+    "newGap": {
+      "en": "New Gap",
+      "de": "Neue Lücke"
+    },
+    "newHeight": {
+      "en": "New Height",
+      "de": "Neue Höhe"
+    },
+    "newHeightM": {
+      "en": "New Height (m)",
+      "de": "Neue Höhe (m)"
+    },
+    "newHidden": {
+      "en": "Hidden",
+      "de": "Ausgeblendet"
+    },
+    "newIcon": {
+      "en": "New Icon",
+      "de": "Neues Symbol"
+    },
+    "newIconKind": {
+      "en": "New Icon Kind",
+      "de": "Neue Symbolart"
+    },
+    "newId": {
+      "en": "New ID",
+      "de": "Neue ID"
+    },
+    "newKind": {
+      "en": "New Kind",
+      "de": "Neue Art"
+    },
+    "newLabel": {
+      "en": "New Label",
+      "de": "Neue Beschriftung"
+    },
+    "newLocked": {
+      "en": "Locked",
+      "de": "Gesperrt"
+    },
+    "newMeshUrl": {
+      "en": "New Mesh URL",
+      "de": "Neue Netz-URL"
+    },
+    "newName": {
+      "en": "New Name",
+      "de": "Neuer Name"
+    },
+    "newOpacity": {
+      "en": "New Opacity",
+      "de": "Neue Deckkraft"
+    },
+    "newOrientation": {
+      "en": "New Orientation",
+      "de": "Neue Ausrichtung"
+    },
+    "newOrigin": {
+      "en": "New Origin",
+      "de": "Neuer Ursprung"
+    },
+    "newPosition": {
+      "en": "New Position",
+      "de": "Neue Position"
+    },
+    "newRadiantFraction": {
+      "en": "New Radiant Fraction",
+      "de": "Neuer Strahlungsanteil"
+    },
+    "newRadius": {
+      "en": "New Radius",
+      "de": "Neuer Radius"
+    },
+    "newRise": {
+      "en": "New Rise",
+      "de": "Neue Anhebung"
+    },
+    "newRotation": {
+      "en": "New Rotation",
+      "de": "Neue Drehung"
+    },
+    "newScale": {
+      "en": "New Scale",
+      "de": "Neue Skalierung"
+    },
+    "newScheduleId": {
+      "en": "New Schedule ID",
+      "de": "Neue Zeitplan-ID"
+    },
+    "newShape": {
+      "en": "New Shape",
+      "de": "Neue Form"
+    },
+    "newShift": {
+      "en": "New Shift",
+      "de": "Neue Verschiebung"
+    },
+    "newSpacing": {
+      "en": "New Spacing",
+      "de": "Neuer Abstand"
+    },
+    "newText": {
+      "en": "New Text",
+      "de": "Neuer Text"
+    },
+    "newThicknessM": {
+      "en": "New Thickness (m)",
+      "de": "Neue Dicke (m)"
+    },
+    "newTilt": {
+      "en": "New Tilt",
+      "de": "Neue Neigung"
+    },
+    "newTitle": {
+      "en": "New Title",
+      "de": "Neuer Titel"
+    },
+    "newTurn": {
+      "en": "New Turn",
+      "de": "Neue Wendung"
+    },
+    "newUnit": {
+      "en": "New Unit",
+      "de": "Neue Einheit"
+    },
+    "newValue": {
+      "en": "New Value",
+      "de": "Neuer Wert"
+    },
+    "newVariant": {
+      "en": "New Variant",
+      "de": "Neue Variante"
+    },
+    "newVerticesM": {
+      "en": "New Vertices (m)",
+      "de": "Neue Eckpunkte (m)"
+    },
+    "newVisible": {
+      "en": "Visible",
+      "de": "Sichtbar"
+    },
+    "newWidth": {
+      "en": "New Width",
+      "de": "Neue Breite"
+    },
+    "newX": {
+      "en": "New X",
+      "de": "Neue X-Position"
+    },
+    "newY": {
+      "en": "New Y",
+      "de": "Neue Y-Position"
+    },
+    "newZoneId": {
+      "en": "New Zone ID",
+      "de": "Neue Zonen-ID"
+    },
+    "newZoom": {
+      "en": "New Zoom",
+      "de": "Neuer Zoom"
+    },
+    "new_name": {
+      "en": "New Name",
+      "de": "Neuer Name"
+    },
+    "node": {
+      "en": "Node",
+      "de": "Knoten"
+    },
+    "nodeId": {
+      "en": "Node ID",
+      "de": "Knoten-ID"
+    },
+    "node_id": {
+      "en": "Node ID",
+      "de": "Knoten-ID"
+    },
+    "normal": {
+      "en": "Normal",
+      "de": "Normale"
+    },
+    "object": {
+      "en": "Object",
+      "de": "Objekt"
+    },
+    "objectId": {
+      "en": "Object ID",
+      "de": "Objekt-ID"
+    },
+    "offset": {
+      "en": "Offset",
+      "de": "Versatz"
+    },
+    "opacity": {
+      "en": "Opacity",
+      "de": "Deckkraft"
+    },
+    "order": {
+      "en": "Order",
+      "de": "Reihenfolge"
+    },
+    "page": {
+      "en": "Page",
+      "de": "Seite"
+    },
+    "pageId": {
+      "en": "Page ID",
+      "de": "Seiten-ID"
+    },
+    "pageIndex": {
+      "en": "Page Index",
+      "de": "Seitenindex"
+    },
+    "pane": {
+      "en": "Pane",
+      "de": "Bereich"
+    },
+    "params": {
+      "en": "Parameters",
+      "de": "Parameter"
+    },
+    "parent": {
+      "en": "Parent",
+      "de": "Übergeordnetes Element"
+    },
+    "parentId": {
+      "en": "Parent ID",
+      "de": "ID des übergeordneten Elements"
+    },
+    "partId": {
+      "en": "Part ID",
+      "de": "Teil-ID"
+    },
+    "patch": {
+      "en": "Patch",
+      "de": "Patch"
+    },
+    "path": {
+      "en": "Path",
+      "de": "Pfad"
+    },
+    "pathRef": {
+      "en": "Path Reference",
+      "de": "Pfadreferenz"
+    },
+    "phase": {
+      "en": "Phase",
+      "de": "Phase"
+    },
+    "pivotX": {
+      "en": "Pivot X",
+      "de": "Drehpunkt X"
+    },
+    "pivotY": {
+      "en": "Pivot Y",
+      "de": "Drehpunkt Y"
+    },
+    "pixels": {
+      "en": "Pixels",
+      "de": "Pixel"
+    },
+    "placement": {
+      "en": "Placement",
+      "de": "Platzierung"
+    },
+    "placements": {
+      "en": "Placements",
+      "de": "Platzierungen"
+    },
+    "point": {
+      "en": "Point",
+      "de": "Punkt"
+    },
+    "position": {
+      "en": "Position",
+      "de": "Position"
+    },
+    "presence": {
+      "en": "Presence",
+      "de": "Präsenz"
+    },
+    "primitive": {
+      "en": "Primitive",
+      "de": "Grundelement"
+    },
+    "primitive_id": {
+      "en": "Primitive ID",
+      "de": "Primitiv-ID"
+    },
+    "product": {
+      "en": "Product",
+      "de": "Produkt"
+    },
+    "program": {
+      "en": "Program",
+      "de": "Programm"
+    },
+    "properties": {
+      "en": "Properties",
+      "de": "Eigenschaften"
+    },
+    "radiantFraction": {
+      "en": "Radiant Fraction",
+      "de": "Strahlungsanteil"
+    },
+    "radius": {
+      "en": "Radius",
+      "de": "Radius"
+    },
+    "referenceId": {
+      "en": "Reference ID",
+      "de": "Referenz-ID"
+    },
+    "relationship": {
+      "en": "Relationship",
+      "de": "Beziehung"
+    },
+    "representation": {
+      "en": "Representation",
+      "de": "Darstellung"
+    },
+    "restore": {
+      "en": "Restore",
+      "de": "Wiederherstellen"
+    },
+    "revision": {
+      "en": "Revision",
+      "de": "Revision"
+    },
+    "rise": {
+      "en": "Rise",
+      "de": "Anhebung"
+    },
+    "role": {
+      "en": "Role",
+      "de": "Rolle"
+    },
+    "rotation": {
+      "en": "Rotation",
+      "de": "Drehung"
+    },
+    "row": {
+      "en": "Row",
+      "de": "Zeile"
+    },
+    "rule": {
+      "en": "Rule",
+      "de": "Regel"
+    },
+    "run_index": {
+      "en": "Run Index",
+      "de": "Abschnittsindex"
+    },
+    "scale": {
+      "en": "Scale",
+      "de": "Skalierung"
+    },
+    "scene": {
+      "en": "Scene",
+      "de": "Szene"
+    },
+    "scheduleId": {
+      "en": "Schedule ID",
+      "de": "Zeitplan-ID"
+    },
+    "schemas": {
+      "en": "Schemas",
+      "de": "Schemata"
+    },
+    "script": {
+      "en": "Script",
+      "de": "Skript"
+    },
+    "section": {
+      "en": "Section",
+      "de": "Abschnitt"
+    },
+    "seed": {
+      "en": "Seed",
+      "de": "Startwert"
+    },
+    "semantic": {
+      "en": "Semantic",
+      "de": "Semantik"
+    },
+    "settings": {
+      "en": "Settings",
+      "de": "Einstellungen"
+    },
+    "shape_index": {
+      "en": "Shape Index",
+      "de": "Formindex"
+    },
+    "sheet": {
+      "en": "Sheet",
+      "de": "Blatt"
+    },
+    "shift": {
+      "en": "Shift",
+      "de": "Verschiebung"
+    },
+    "slide_index": {
+      "en": "Slide Index",
+      "de": "Folienindex"
+    },
+    "snapshot": {
+      "en": "Snapshot",
+      "de": "Snapshot"
+    },
+    "source": {
+      "en": "Source",
+      "de": "Quelle"
+    },
+    "specificity": {
+      "en": "Specificity",
+      "de": "Spezifität"
+    },
+    "step": {
+      "en": "Step",
+      "de": "Schritt"
+    },
+    "stepId": {
+      "en": "Step ID",
+      "de": "Schritt-ID"
+    },
+    "step_id": {
+      "en": "Step ID",
+      "de": "Schritt-ID"
+    },
+    "storeyIndex": {
+      "en": "Storey Index",
+      "de": "Geschossindex"
+    },
+    "stream": {
+      "en": "Stream",
+      "de": "Datenstrom"
+    },
+    "streamIndex": {
+      "en": "Stream Index",
+      "de": "Datenstromindex"
+    },
+    "stream_index": {
+      "en": "Stream Index",
+      "de": "Datenstromindex"
+    },
+    "style": {
+      "en": "Style",
+      "de": "Stil"
+    },
+    "style_name": {
+      "en": "Style Name",
+      "de": "Stilname"
+    },
+    "subtype": {
+      "en": "Subtype",
+      "de": "Untertyp"
+    },
+    "synapse": {
+      "en": "Synapse",
+      "de": "Synapse"
+    },
+    "table": {
+      "en": "Table",
+      "de": "Tabelle"
+    },
+    "tag": {
+      "en": "Tag",
+      "de": "Schlagwort"
+    },
+    "target": {
+      "en": "Target",
+      "de": "Ziel"
+    },
+    "targets": {
+      "en": "Targets",
+      "de": "Ziele"
+    },
+    "text": {
+      "en": "Text",
+      "de": "Text"
+    },
+    "tile": {
+      "en": "Tile",
+      "de": "Kachel"
+    },
+    "tileId": {
+      "en": "Tile ID",
+      "de": "Kachel-ID"
+    },
+    "tilt": {
+      "en": "Tilt",
+      "de": "Neigung"
+    },
+    "timelineIndex": {
+      "en": "Timeline Index",
+      "de": "Zeitleistenindex"
+    },
+    "title": {
+      "en": "Title",
+      "de": "Titel"
+    },
+    "to": {
+      "en": "To",
+      "de": "Nach"
+    },
+    "toIndex": {
+      "en": "Target Index",
+      "de": "Zielindex"
+    },
+    "toPort": {
+      "en": "Target Port",
+      "de": "Zielanschluss"
+    },
+    "tol": {
+      "en": "Tolerance",
+      "de": "Toleranz"
+    },
+    "top": {
+      "en": "Top",
+      "de": "Oben"
+    },
+    "topic_guid": {
+      "en": "Topic GUID",
+      "de": "Themen-GUID"
+    },
+    "track_index": {
+      "en": "Track Index",
+      "de": "Spurindex"
+    },
+    "transform": {
+      "en": "Transform",
+      "de": "Transformation"
+    },
+    "turn": {
+      "en": "Turn",
+      "de": "Wendung"
+    },
+    "value": {
+      "en": "Value",
+      "de": "Wert"
+    },
+    "values": {
+      "en": "Values",
+      "de": "Werte"
+    },
+    "ventId": {
+      "en": "Vent ID",
+      "de": "Lüftungs-ID"
+    },
+    "version": {
+      "en": "Version",
+      "de": "Version"
+    },
+    "view": {
+      "en": "View",
+      "de": "Ansicht"
+    },
+    "visible": {
+      "en": "Visible",
+      "de": "Sichtbar"
+    },
+    "wallIndex": {
+      "en": "Wall Index",
+      "de": "Wandindex"
+    },
+    "weight": {
+      "en": "Weight",
+      "de": "Gewichtung"
+    },
+    "widget": {
+      "en": "Widget",
+      "de": "Widget"
+    },
+    "width": {
+      "en": "Width",
+      "de": "Breite"
+    },
+    "windowId": {
+      "en": "Window ID",
+      "de": "Fenster-ID"
+    },
+    "x": {
+      "en": "X",
+      "de": "X"
+    },
+    "y": {
+      "en": "Y",
+      "de": "Y"
+    },
+    "year": {
+      "en": "Year",
+      "de": "Jahr"
+    },
+    "z": {
+      "en": "Z",
+      "de": "Z"
+    },
+    "zone": {
+      "en": "Zone",
+      "de": "Zone"
+    },
+    "zoneId": {
+      "en": "Zone ID",
+      "de": "Zonen-ID"
+    },
+    "zoom": {
+      "en": "Zoom",
+      "de": "Zoom"
+    }
+  }
+}

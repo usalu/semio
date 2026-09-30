@@ -12,8 +12,6 @@ fn json_object(pairs: Vec<(&str, Json)>) -> Json {
 /// carries, so a failure here and a failure there have the same cause.
 fn params_for(kind: &str) -> Json {
     match kind {
-        "no-mutation" => json_object(vec![]),
-        "set-snapshot" => json_object(vec![("conformanceClass", Json::String("strict".to_string()))]),
         "set-main-namespace" => json_object(vec![("namespace", Json::String("http://purl.oclc.org/ooxml/presentationml/main".to_string()))]),
         "set-drawing-namespace" => json_object(vec![("namespace", Json::String("http://purl.oclc.org/ooxml/drawingml/main".to_string()))]),
         "set-relationship-base" => json_object(vec![("base", Json::String("http://purl.oclc.org/ooxml/officeDocument/relationships".to_string()))]),
@@ -36,9 +34,7 @@ fn every_declared_kind_is_observable_and_its_inverse_restores_the_package() {
         let base_projection = project_package(&base).unwrap_or_else(|error| panic!("{kind}: projecting the base failed: {error}"));
         let mutated = oracle_apply_mutation(&base, &forward).unwrap_or_else(|error| panic!("{kind}: {error}"));
         let mutated_projection = project_package(&mutated).unwrap_or_else(|error| panic!("{kind}: projecting the result failed: {error}"));
-        if *kind != "no-mutation" {
-            assert_ne!(mutated_projection, base_projection, "{kind} must be observable in the conformance-class projection");
-        }
+        assert_ne!(mutated_projection, base_projection, "{kind} must be observable in the conformance-class projection");
         let undo = oracle_inverse_spec(&base, &forward).unwrap_or_else(|error| panic!("{kind}: inverse spec: {error}"));
         let restored = oracle_apply_mutation(&mutated, &undo).unwrap_or_else(|error| panic!("{kind}: inverse: {error}"));
         let restored_projection = project_package(&restored).unwrap_or_else(|error| panic!("{kind}: projecting the restored package failed: {error}"));
@@ -46,9 +42,13 @@ fn every_declared_kind_is_observable_and_its_inverse_restores_the_package() {
     }
 }
 
+/// 🏅️ The whole-package class stamp moves the conformance-class projection, and stamping back restores it exactly.
 #[test]
-fn no_mutation_is_a_true_byte_identity() {
-    assert_eq!(oracle_apply_mutation(FIXTURE, &spec("no-mutation")).unwrap(), FIXTURE.to_vec());
+fn the_class_stamp_is_observable_and_stamping_back_restores_the_package() {
+    let base = project_package(FIXTURE).unwrap();
+    let stamped = oracle_stamp(FIXTURE, true).unwrap();
+    assert_ne!(project_package(&stamped).unwrap(), base, "the strict stamp must be observable");
+    assert_eq!(project_package(&oracle_stamp(&stamped, false).unwrap()).unwrap(), base, "stamping back must restore the package");
 }
 
 #[test]

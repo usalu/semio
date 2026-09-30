@@ -17,19 +17,19 @@ transliterates none of it.
 
 🪆️ A layout document is FOUR pools at TWO nesting depths: three root scalars (`name`, `printTarget`,
 `dataFieldsJson`), three id-keyed root collections (`pages`, `stories`, `links`), and two collections
-that live ONE LEVEL INSIDE a page (`frames`, `layers`) — a frame is addressed by `(page_id, frame_id)`,
+that live ONE LEVEL INSIDE a page (`frames`, `layers`) — a frame is addressed by `(pageId, frameId)`,
 never by id alone. `create-frame`'s forward effect touches TWO places at once — `page.frames` (by the
 declared `index`) and the named layer's `objectIds` (by APPENDING, never inserting positionally: the
 committed vector's `frame-badge` lands at `frames[1]` but `layer.objectIds[2]`, i.e. last, which is the
 only order this single vector can pin — stated as an inferred convention, not a proven general rule);
 `delete-frame`'s inverse therefore has to recreate both — the frame's own captured `layerId` supplies
-the `layer_id` argument `create-frame` needs, it is never re-derived by searching every layer's
+the `layerId` argument `create-frame` needs, it is never re-derived by searching every layer's
 `objectIds`.
 
 ↩️ Every inverse is computed from BASE (the committed before-document), never from the payload or a
 diff: `delete-page`/`delete-story`/`delete-link`/`delete-frame`'s inverses are `create-*` with the
 FULL captured member and its BASE-state list position; `reorder-pages`'s inverse is
-`reorder-pages{id, to_index: <captured BASE index>}`, matching `taxonomy.md`'s addressing-convention
+`reorder-pages{id, toIndex: <captured BASE index>}`, matching `taxonomy.md`'s addressing-convention
 rule 3 read for an id-keyed reorder rather than an index-keyed one.
 
 🐛 A first standalone run against the committed vectors caught a real bug: `inverse-change-data-fields`
@@ -134,13 +134,13 @@ def _frame(page, frame_id):
 # region 🔖️Vocabulary — forward appliers
 def apply_rename_layout(doc, p):
     after = copy.deepcopy(doc)
-    after["name"] = p["new_name"]
+    after["name"] = p["newName"]
     return after
 
 
 def apply_change_print_target(doc, p):
     after = copy.deepcopy(doc)
-    after["printTarget"] = p.get("new_print_target")
+    after["printTarget"] = p.get("newPrintTarget")
     return after
 
 
@@ -151,7 +151,7 @@ def apply_change_data_fields(doc, p):
     `null`; a first standalone run against the committed vector caught exactly this (an inverse that
     wrote `null` instead of omitting the key failed the before-document comparison)."""
     after = copy.deepcopy(doc)
-    value = p.get("new_json")
+    value = p.get("newJson")
     if value is None:
         after.pop("dataFieldsJson", None)
     else:
@@ -175,21 +175,21 @@ def apply_delete_page(doc, p):
 def apply_rename_page(doc, p):
     after = copy.deepcopy(doc)
     _, page = _page(after, p["id"])
-    page["name"] = p["new_name"]
+    page["name"] = p["newName"]
     return after
 
 
 def apply_change_page_width(doc, p):
     after = copy.deepcopy(doc)
     _, page = _page(after, p["id"])
-    page["width"] = p["new_width"]
+    page["width"] = p["newWidth"]
     return after
 
 
 def apply_change_page_height(doc, p):
     after = copy.deepcopy(doc)
     _, page = _page(after, p["id"])
-    page["height"] = p["new_height"]
+    page["height"] = p["newHeight"]
     return after
 
 
@@ -208,13 +208,13 @@ def apply_update_page_columns(doc, p):
 
 
 def apply_reorder_pages(doc, p):
-    """🔀 Id-keyed reorder: pop the whole subtree at its current index, reinsert at `to_index`,
+    """🔀 Id-keyed reorder: pop the whole subtree at its current index, reinsert at `toIndex`,
     clamped to the post-removal length — moving the page moves everything nested under it (frames,
     layers) as one unit, never rebuilt member-by-member."""
     after = copy.deepcopy(doc)
     idx, page = _page(after, p["id"])
     after["pages"].pop(idx)
-    target = min(p["to_index"], len(after["pages"]))
+    target = min(p["toIndex"], len(after["pages"]))
     after["pages"].insert(target, page)
     return after
 
@@ -235,7 +235,7 @@ def apply_delete_story(doc, p):
 def apply_edit_story(doc, p):
     after = copy.deepcopy(doc)
     _, story = _find(after["stories"], p["id"])
-    story["content"] = p["new_content"]
+    story["content"] = p["newContent"]
     return after
 
 
@@ -255,7 +255,7 @@ def apply_delete_link(doc, p):
 def apply_change_link_path(doc, p):
     after = copy.deepcopy(doc)
     _, link = _find(after["links"], p["id"])
-    link["path"] = p["new_path"]
+    link["path"] = p["newPath"]
     return after
 
 
@@ -263,9 +263,9 @@ def apply_create_frame(doc, p):
     """➕ Inserts into `page.frames` at the declared index AND appends the new frame's id to the
     named layer's `objectIds` — the two places one frame lives, touched together."""
     after = copy.deepcopy(doc)
-    _, page = _page(after, p["page_id"])
+    _, page = _page(after, p["pageId"])
     page["frames"].insert(p["index"], copy.deepcopy(p["frame"]))
-    _, layer = _find(page["layers"], p["layer_id"])
+    _, layer = _find(page["layers"], p["layerId"])
     layer["objectIds"].append(p["frame"]["id"])
     return after
 
@@ -274,70 +274,70 @@ def apply_delete_frame(doc, p):
     """➖ Removes the frame from `page.frames` AND detaches its id from whichever layer's
     `objectIds` names it — the cascade `➖delete-frame`'s own committed vector exists to pin."""
     after = copy.deepcopy(doc)
-    _, page = _page(after, p["page_id"])
-    idx, _frame_obj = _frame(page, p["frame_id"])
+    _, page = _page(after, p["pageId"])
+    idx, _frame_obj = _frame(page, p["frameId"])
     page["frames"].pop(idx)
     for layer in page["layers"]:
-        if p["frame_id"] in layer["objectIds"]:
-            layer["objectIds"].remove(p["frame_id"])
+        if p["frameId"] in layer["objectIds"]:
+            layer["objectIds"].remove(p["frameId"])
     return after
 
 
 def apply_move_frame(doc, p):
     after = copy.deepcopy(doc)
-    _, page = _page(after, p["page_id"])
-    _, frame = _frame(page, p["frame_id"])
-    frame["bounds"]["x"] = p["new_x"]
-    frame["bounds"]["y"] = p["new_y"]
+    _, page = _page(after, p["pageId"])
+    _, frame = _frame(page, p["frameId"])
+    frame["bounds"]["x"] = p["newX"]
+    frame["bounds"]["y"] = p["newY"]
     return after
 
 
 def apply_rotate_frame(doc, p):
     after = copy.deepcopy(doc)
-    _, page = _page(after, p["page_id"])
-    _, frame = _frame(page, p["frame_id"])
-    frame["bounds"]["rotation"] = p["new_rotation"]
+    _, page = _page(after, p["pageId"])
+    _, frame = _frame(page, p["frameId"])
+    frame["bounds"]["rotation"] = p["newRotation"]
     return after
 
 
 def apply_resize_frame(doc, p):
     after = copy.deepcopy(doc)
-    _, page = _page(after, p["page_id"])
-    _, frame = _frame(page, p["frame_id"])
-    frame["bounds"]["w"] = p["new_width"]
-    frame["bounds"]["h"] = p["new_height"]
+    _, page = _page(after, p["pageId"])
+    _, frame = _frame(page, p["frameId"])
+    frame["bounds"]["w"] = p["newWidth"]
+    frame["bounds"]["h"] = p["newHeight"]
     return after
 
 
 def apply_change_frame_fill(doc, p):
     after = copy.deepcopy(doc)
-    _, page = _page(after, p["page_id"])
-    _, frame = _frame(page, p["frame_id"])
-    frame["fill"] = list(p["new_fill"]) if p.get("new_fill") is not None else None
+    _, page = _page(after, p["pageId"])
+    _, frame = _frame(page, p["frameId"])
+    frame["fill"] = list(p["newFill"]) if p.get("newFill") is not None else None
     return after
 
 
 def apply_change_frame_stroke(doc, p):
     after = copy.deepcopy(doc)
-    _, page = _page(after, p["page_id"])
-    _, frame = _frame(page, p["frame_id"])
-    frame["stroke"] = list(p["new_stroke"]) if p.get("new_stroke") is not None else None
+    _, page = _page(after, p["pageId"])
+    _, frame = _frame(page, p["frameId"])
+    frame["stroke"] = list(p["newStroke"]) if p.get("newStroke") is not None else None
     return after
 
 
 def apply_change_frame_wrap_mode(doc, p):
     after = copy.deepcopy(doc)
-    _, page = _page(after, p["page_id"])
-    _, frame = _frame(page, p["frame_id"])
-    frame["wrapMode"] = p["new_wrap_mode"]
+    _, page = _page(after, p["pageId"])
+    _, frame = _frame(page, p["frameId"])
+    frame["wrapMode"] = p["newWrapMode"]
     return after
 
 
 def apply_change_frame_columns(doc, p):
     after = copy.deepcopy(doc)
-    _, page = _page(after, p["page_id"])
-    _, frame = _frame(page, p["frame_id"])
-    frame["columns"] = p["new_columns"]
+    _, page = _page(after, p["pageId"])
+    _, frame = _frame(page, p["frameId"])
+    frame["columns"] = p["newColumns"]
     return after
 
 
@@ -377,11 +377,11 @@ def inverse_mutation(kind, before, payload):
     """↩️ Every inverse is computed from BASE — the committed before-document — never from the
     payload or a diff, per `taxonomy.md` rule 5. Returns `(wire_tag, inverse_payload)`."""
     if kind == "rename-layout":
-        return "RenameLayout", {"new_name": before["name"]}
+        return "RenameLayout", {"newName": before["name"]}
     if kind == "change-print-target":
-        return "ChangePrintTarget", {"new_print_target": before.get("printTarget")}
+        return "ChangePrintTarget", {"newPrintTarget": before.get("printTarget")}
     if kind == "change-data-fields":
-        return "ChangeDataFields", {"new_json": before.get("dataFieldsJson")}
+        return "ChangeDataFields", {"newJson": before.get("dataFieldsJson")}
     if kind == "create-page":
         return "DeletePage", {"id": payload["page"]["id"]}
     if kind == "delete-page":
@@ -389,13 +389,13 @@ def inverse_mutation(kind, before, payload):
         return "CreatePage", {"page": page, "index": idx}
     if kind == "rename-page":
         _, page = _page(before, payload["id"])
-        return "RenamePage", {"id": payload["id"], "new_name": page["name"]}
+        return "RenamePage", {"id": payload["id"], "newName": page["name"]}
     if kind == "change-page-width":
         _, page = _page(before, payload["id"])
-        return "ChangePageWidth", {"id": payload["id"], "new_width": page["width"]}
+        return "ChangePageWidth", {"id": payload["id"], "newWidth": page["width"]}
     if kind == "change-page-height":
         _, page = _page(before, payload["id"])
-        return "ChangePageHeight", {"id": payload["id"], "new_height": page["height"]}
+        return "ChangePageHeight", {"id": payload["id"], "newHeight": page["height"]}
     if kind == "update-page-margins":
         _, page = _page(before, payload["id"])
         m = page["margins"]
@@ -406,7 +406,7 @@ def inverse_mutation(kind, before, payload):
         return "UpdatePageColumns", {"id": payload["id"], "count": c["count"], "gutter": c["gutter"]}
     if kind == "reorder-pages":
         idx, _page_obj = _page(before, payload["id"])
-        return "ReorderPages", {"id": payload["id"], "to_index": idx}
+        return "ReorderPages", {"id": payload["id"], "toIndex": idx}
     if kind == "create-story":
         return "DeleteStory", {"id": payload["story"]["id"]}
     if kind == "delete-story":
@@ -414,7 +414,7 @@ def inverse_mutation(kind, before, payload):
         return "CreateStory", {"story": story, "index": idx}
     if kind == "edit-story":
         _, story = _find(before["stories"], payload["id"])
-        return "EditStory", {"id": payload["id"], "new_content": story["content"]}
+        return "EditStory", {"id": payload["id"], "newContent": story["content"]}
     if kind == "create-link":
         return "DeleteLink", {"id": payload["link"]["id"]}
     if kind == "delete-link":
@@ -422,41 +422,41 @@ def inverse_mutation(kind, before, payload):
         return "CreateLink", {"link": link, "index": idx}
     if kind == "change-link-path":
         _, link = _find(before["links"], payload["id"])
-        return "ChangeLinkPath", {"id": payload["id"], "new_path": link["path"]}
+        return "ChangeLinkPath", {"id": payload["id"], "newPath": link["path"]}
     if kind == "create-frame":
-        return "DeleteFrame", {"page_id": payload["page_id"], "frame_id": payload["frame"]["id"]}
+        return "DeleteFrame", {"pageId": payload["pageId"], "frameId": payload["frame"]["id"]}
     if kind == "delete-frame":
-        _, page = _page(before, payload["page_id"])
-        idx, frame = _frame(page, payload["frame_id"])
-        return "CreateFrame", {"page_id": payload["page_id"], "frame": frame, "index": idx, "layer_id": frame["layerId"]}
+        _, page = _page(before, payload["pageId"])
+        idx, frame = _frame(page, payload["frameId"])
+        return "CreateFrame", {"pageId": payload["pageId"], "frame": frame, "index": idx, "layerId": frame["layerId"]}
     if kind == "move-frame":
-        _, page = _page(before, payload["page_id"])
-        _, frame = _frame(page, payload["frame_id"])
-        return "MoveFrame", {"page_id": payload["page_id"], "frame_id": payload["frame_id"], "new_x": frame["bounds"]["x"], "new_y": frame["bounds"]["y"]}
+        _, page = _page(before, payload["pageId"])
+        _, frame = _frame(page, payload["frameId"])
+        return "MoveFrame", {"pageId": payload["pageId"], "frameId": payload["frameId"], "newX": frame["bounds"]["x"], "newY": frame["bounds"]["y"]}
     if kind == "rotate-frame":
-        _, page = _page(before, payload["page_id"])
-        _, frame = _frame(page, payload["frame_id"])
-        return "RotateFrame", {"page_id": payload["page_id"], "frame_id": payload["frame_id"], "new_rotation": frame["bounds"]["rotation"]}
+        _, page = _page(before, payload["pageId"])
+        _, frame = _frame(page, payload["frameId"])
+        return "RotateFrame", {"pageId": payload["pageId"], "frameId": payload["frameId"], "newRotation": frame["bounds"]["rotation"]}
     if kind == "resize-frame":
-        _, page = _page(before, payload["page_id"])
-        _, frame = _frame(page, payload["frame_id"])
-        return "ResizeFrame", {"page_id": payload["page_id"], "frame_id": payload["frame_id"], "new_width": frame["bounds"]["w"], "new_height": frame["bounds"]["h"]}
+        _, page = _page(before, payload["pageId"])
+        _, frame = _frame(page, payload["frameId"])
+        return "ResizeFrame", {"pageId": payload["pageId"], "frameId": payload["frameId"], "newWidth": frame["bounds"]["w"], "newHeight": frame["bounds"]["h"]}
     if kind == "change-frame-fill":
-        _, page = _page(before, payload["page_id"])
-        _, frame = _frame(page, payload["frame_id"])
-        return "ChangeFrameFill", {"page_id": payload["page_id"], "frame_id": payload["frame_id"], "new_fill": frame.get("fill")}
+        _, page = _page(before, payload["pageId"])
+        _, frame = _frame(page, payload["frameId"])
+        return "ChangeFrameFill", {"pageId": payload["pageId"], "frameId": payload["frameId"], "newFill": frame.get("fill")}
     if kind == "change-frame-stroke":
-        _, page = _page(before, payload["page_id"])
-        _, frame = _frame(page, payload["frame_id"])
-        return "ChangeFrameStroke", {"page_id": payload["page_id"], "frame_id": payload["frame_id"], "new_stroke": frame.get("stroke")}
+        _, page = _page(before, payload["pageId"])
+        _, frame = _frame(page, payload["frameId"])
+        return "ChangeFrameStroke", {"pageId": payload["pageId"], "frameId": payload["frameId"], "newStroke": frame.get("stroke")}
     if kind == "change-frame-wrap-mode":
-        _, page = _page(before, payload["page_id"])
-        _, frame = _frame(page, payload["frame_id"])
-        return "ChangeFrameWrapMode", {"page_id": payload["page_id"], "frame_id": payload["frame_id"], "new_wrap_mode": frame["wrapMode"]}
+        _, page = _page(before, payload["pageId"])
+        _, frame = _frame(page, payload["frameId"])
+        return "ChangeFrameWrapMode", {"pageId": payload["pageId"], "frameId": payload["frameId"], "newWrapMode": frame["wrapMode"]}
     if kind == "change-frame-columns":
-        _, page = _page(before, payload["page_id"])
-        _, frame = _frame(page, payload["frame_id"])
-        return "ChangeFrameColumns", {"page_id": payload["page_id"], "frame_id": payload["frame_id"], "new_columns": frame["columns"]}
+        _, page = _page(before, payload["pageId"])
+        _, frame = _frame(page, payload["frameId"])
+        return "ChangeFrameColumns", {"pageId": payload["pageId"], "frameId": payload["frameId"], "newColumns": frame["columns"]}
     raise AssertionError(f"no inverse rule for kind {kind!r}")
 # endregion 🔖️Vocabulary — inverse rule
 

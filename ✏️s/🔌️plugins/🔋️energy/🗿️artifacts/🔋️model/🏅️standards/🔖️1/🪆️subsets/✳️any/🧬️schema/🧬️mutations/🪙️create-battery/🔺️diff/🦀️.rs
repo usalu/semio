@@ -10,7 +10,7 @@ pub fn diff(payload: &super::CreateBattery, base: &EnergyModelSnapshot) -> proto
         return protocol::MutationOutcome::error("mutation.duplicate-id", format!("Battery {} already exists.", payload.id.0), [payload.id.0.to_string()]);
     }
     if payload.index as usize > base.model.battery_storage.len() {
-        return protocol::MutationOutcome::error("mutation.invariant", format!("Index {} is past the end of the model's {} battery_storage.", payload.index, base.model.battery_storage.len()), [payload.id.0.to_string()]);
+        return protocol::MutationOutcome::error("mutation.target-missing", format!("Index {} is past the end of the model's {} battery_storage.", payload.index, base.model.battery_storage.len()), [payload.id.0.to_string()]);
     }
     let mut model = base.model.clone();
     model.battery_storage.insert(

@@ -5,11 +5,24 @@
   "type": "object",
   "additionalProperties": false,
   "required": [
-    "has_header"
+    "mutation",
+    "hasHeader"
   ],
   "properties": {
-    "has_header": {
-      "type": "boolean"
+    "mutation": {
+      "const": "setHasHeader"
+    },
+    "hasHeader": {
+      "type": "boolean",
+      "x-semio-ui": {
+        "widget": "toggle",
+        "label": {
+          "en": "First record is a header",
+          "de": "Erster Datensatz ist Kopfzeile"
+        },
+        "group": "value",
+        "order": 10
+      }
     }
   }
 }

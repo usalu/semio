@@ -411,9 +411,9 @@ async fn every_publication_lane_retires_a_rejected_authority_without_faulting_ea
             "artifact" => {
                 let publication = app
                     .store
-                    .begin_apply_batch(operation, app.store.generation_now(), app.store.content_revision_now(), "fixture".into(), vec![document_mutation(1)], None, store::HistoryLane::Document, app.artifact_one_item_factory.as_ref())
+                    .begin_apply_batch(operation, app.store.generation_now(), app.store.content_revision_now(), "fixture".into(), vec![document_mutation(1)], None, store::HistoryLane::Document, app.artifact_one_item_factory.as_ref(), None)
                     .unwrap_or_else(|rejected| panic!("artifact publication admitted: {}", rejected.into_owners().0));
-                app.store.dispatch(store::ArtifactCommand::Apply { mutations: vec![document_mutation(9)], description: None }).await.expect("superseding document write");
+                app.store.dispatch(store::ArtifactCommand::Apply { mutations: vec![document_mutation(9)], description: None, transaction: None }).await.expect("superseding document write");
                 let mut publication = publication;
                 assert!(app.store.advance_apply_batch(&mut publication, grant).is_err(), "the superseded document publication is rejected");
                 PendingArtifactStorePublication::Artifact(publication)
@@ -421,9 +421,9 @@ async fn every_publication_lane_retires_a_rejected_authority_without_faulting_ea
             "config" => {
                 let publication = app
                     .config_store
-                    .begin_apply_batch(operation, app.config_store.generation_now(), app.config_store.content_revision_now(), "fixture".into(), vec![config_mutation("first")], None, store::HistoryLane::Document, app.config_one_item_factory.as_ref())
+                    .begin_apply_batch(operation, app.config_store.generation_now(), app.config_store.content_revision_now(), "fixture".into(), vec![config_mutation("first")], None, store::HistoryLane::Document, app.config_one_item_factory.as_ref(), None)
                     .unwrap_or_else(|rejected| panic!("config publication admitted: {}", rejected.into_owners().0));
-                app.config_store.dispatch(store::ArtifactCommand::Apply { mutations: vec![config_mutation("superseding")], description: None }).await.expect("superseding config write");
+                app.config_store.dispatch(store::ArtifactCommand::Apply { mutations: vec![config_mutation("superseding")], description: None, transaction: None }).await.expect("superseding config write");
                 let mut publication = publication;
                 assert!(app.config_store.advance_apply_batch(&mut publication, grant).is_err(), "the superseded config publication is rejected");
                 PendingArtifactStorePublication::Config(publication)
@@ -431,9 +431,9 @@ async fn every_publication_lane_retires_a_rejected_authority_without_faulting_ea
             "draft" => {
                 let publication = app
                     .draft_store
-                    .begin_apply_batch(operation, app.draft_store.generation_now(), app.draft_store.content_revision_now(), "fixture".into(), vec![config_mutation("first")], None, store::HistoryLane::Document, app.draft_one_item_factory.as_ref())
+                    .begin_apply_batch(operation, app.draft_store.generation_now(), app.draft_store.content_revision_now(), "fixture".into(), vec![config_mutation("first")], None, store::HistoryLane::Document, app.draft_one_item_factory.as_ref(), None)
                     .unwrap_or_else(|rejected| panic!("draft publication admitted: {}", rejected.into_owners().0));
-                app.draft_store.dispatch(store::ArtifactCommand::Apply { mutations: vec![config_mutation("superseding")], description: None }).await.expect("superseding draft write");
+                app.draft_store.dispatch(store::ArtifactCommand::Apply { mutations: vec![config_mutation("superseding")], description: None, transaction: None }).await.expect("superseding draft write");
                 let mut publication = publication;
                 assert!(app.draft_store.advance_apply_batch(&mut publication, grant).is_err(), "the superseded draft publication is rejected");
                 PendingArtifactStorePublication::Draft(publication)

@@ -5,9 +5,13 @@
   "type": "object",
   "additionalProperties": false,
   "required": [
+    "mutation",
     "params"
   ],
   "properties": {
+    "mutation": {
+      "const": "updateFeatureParams"
+    },
     "params": {
       "type": "object",
       "title": "FeatureParams",
@@ -26,22 +30,98 @@
             "orb",
             "akaze",
             "harris"
-          ]
+          ],
+          "x-semio-ui": {
+            "widget": "segmented",
+            "role": "value",
+            "label": {
+              "en": "Detector",
+              "de": "Detektor"
+            },
+            "options": {
+              "orb": {
+                "en": "ORB",
+                "de": "ORB"
+              },
+              "akaze": {
+                "en": "AKAZE",
+                "de": "AKAZE"
+              },
+              "harris": {
+                "en": "Harris",
+                "de": "Harris"
+              }
+            },
+            "group": "parameters",
+            "order": 10
+          }
         },
         "targetCount": {
           "type": "integer",
           "format": "uint32",
-          "minimum": 0
+          "minimum": 1,
+          "x-semio-ui": {
+            "widget": "stepper",
+            "role": "value",
+            "label": {
+              "en": "Target Feature Count",
+              "de": "Angestrebte Merkmalsanzahl"
+            },
+            "step": 100,
+            "precision": 0,
+            "group": "parameters",
+            "order": 20
+          }
         },
         "octaves": {
           "type": "integer",
           "format": "uint32",
-          "minimum": 0
+          "minimum": 0,
+          "x-semio-ui": {
+            "widget": "stepper",
+            "role": "value",
+            "label": {
+              "en": "Octaves",
+              "de": "Oktaven"
+            },
+            "description": {
+              "en": "Scale-space octaves searched for features.",
+              "de": "Durchsuchte Oktaven des Skalenraums."
+            },
+            "step": 1,
+            "precision": 0,
+            "group": "parameters",
+            "order": 30
+          }
         },
         "edgeThreshold": {
           "type": "number",
-          "format": "float"
+          "format": "float",
+          "minimum": 0,
+          "x-semio-ui": {
+            "widget": "slider",
+            "role": "value",
+            "label": {
+              "en": "Edge Threshold",
+              "de": "Kantenschwelle"
+            },
+            "step": 0.5,
+            "precision": 1,
+            "softMin": 1,
+            "softMax": 50,
+            "group": "parameters",
+            "order": 40
+          }
         }
+      },
+      "x-semio-ui": {
+        "role": "value",
+        "label": {
+          "en": "Feature Detection Parameters",
+          "de": "Parameter der Merkmalsdetektion"
+        },
+        "group": "parameters",
+        "order": 10
       }
     }
   }

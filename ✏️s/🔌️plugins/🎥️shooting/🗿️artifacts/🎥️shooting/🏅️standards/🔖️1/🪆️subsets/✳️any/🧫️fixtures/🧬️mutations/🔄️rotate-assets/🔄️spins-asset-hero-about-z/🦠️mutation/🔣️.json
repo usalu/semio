@@ -1,6 +1,6 @@
 {
   "mutation": "rotateAssets",
-  "asset_ids": [
+  "assetIds": [
     "asset-hero"
   ],
   "ax": 0.0,

@@ -228,7 +228,7 @@ async fn persist_run(bundle: &SpaceBundle, sink: &RunSink) -> Result<(), Box<dyn
     let envelope = protocol::create_document_envelope::<semio_framework_artifact_workflow_run::RunArtifact, semio_framework_artifact_workflow_run::RunMutation>(semio_framework_artifact_workflow_run::S_RUN_SCHEMA, RUN_ID, semio_framework_artifact_workflow_run::empty_run_document().await, None);
     let mut document_store = protocol::ArtifactStore::new(envelope).await.map_err(|error| error.to_string())?;
     if !sink.mutations.is_empty() {
-        document_store.dispatch(protocol::ArtifactCommand::Apply { mutations: sink.mutations.clone(), description: None }).await.map_err(|error| error.to_string())?;
+        document_store.dispatch(protocol::ArtifactCommand::Apply { mutations: sink.mutations.clone(), description: None, transaction: None }).await.map_err(|error| error.to_string())?;
     }
     let snapshot = document_store.snapshot_pack().await.map_err(|error| error.to_string())?;
     bundle.write_run_document(RUN_ID, &snapshot.pack, &snapshot.spr)?;

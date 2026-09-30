@@ -10,7 +10,21 @@
   "properties": {
     "id": {
       "type": "integer",
-      "minimum": 0
+      "minimum": 0,
+      "x-semio-ui": {
+        "widget": "stepper",
+        "label": {
+          "en": "Space",
+          "de": "Raum"
+        },
+        "description": {
+          "en": "STEP instance id of the IfcSpace.",
+          "de": "STEP-Instanz-ID des IfcSpace."
+        },
+        "precision": 0,
+        "group": "target",
+        "order": 10
+      }
     },
     "space": {
       "anyOf": [
@@ -20,7 +34,19 @@
         {
           "type": "null"
         }
-      ]
+      ],
+      "x-semio-ui": {
+        "label": {
+          "en": "Space row",
+          "de": "Raumzeile"
+        },
+        "description": {
+          "en": "COBie Space row; empty removes the space.",
+          "de": "COBie-Raumzeile; leer entfernt den Raum."
+        },
+        "group": "value",
+        "order": 20
+      }
     }
   },
   "$defs": {
@@ -34,14 +60,35 @@
       ],
       "properties": {
         "globalId": {
-          "type": "string"
+          "type": "string",
+          "x-semio-ui": {
+            "widget": "text",
+            "label": {
+              "en": "GlobalId",
+              "de": "GlobalId"
+            },
+            "description": {
+              "en": "22-character IFC GUID of the object.",
+              "de": "22-stellige IFC-GUID des Objekts."
+            }
+          }
         },
         "name": {
           "type": "string"
         },
         "placement": {
           "type": "integer",
-          "minimum": 0
+          "minimum": 0,
+          "x-semio-ui": {
+            "label": {
+              "en": "Placement",
+              "de": "Platzierung"
+            },
+            "description": {
+              "en": "STEP instance id of the IfcLocalPlacement.",
+              "de": "STEP-Instanz-ID der IfcLocalPlacement."
+            }
+          }
         }
       }
     }

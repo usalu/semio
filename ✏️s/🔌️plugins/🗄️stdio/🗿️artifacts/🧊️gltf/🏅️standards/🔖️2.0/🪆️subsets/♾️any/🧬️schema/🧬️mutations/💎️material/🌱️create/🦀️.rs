@@ -28,7 +28,7 @@ pub fn apply(payload: &GltfCreateMaterialPayload, base: &GltfSnapshot) -> Result
 
 //#region 🧬️DirectMutation
 #[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::MutationLeaf)]
-#[mutation_leaf(contract = ::protocol)]
+#[mutation_leaf(contract = ::protocol, payload = Apply)]
 #[value(tag = "phase", content = "value", rename_all = "camelCase")]
 pub enum CreateMaterialMutation {
     Apply(GltfCreateMaterialPayload),
@@ -72,6 +72,6 @@ impl protocol::MutationKind<GltfSnapshot, super::GltfMutation> for CreateMateria
 
 //#region 🧪️Tests
 #[cfg(test)]
-#[path = "🧪️tests/🔬️direct-leaf/🦀️.rs"]
-mod direct_leaf_tests;
+#[path = "🧪️tests/💎️inserts-a-5ae67c/🦀️.rs"]
+mod case_inserts_a_5ae67c;
 //#endregion 🧪️Tests

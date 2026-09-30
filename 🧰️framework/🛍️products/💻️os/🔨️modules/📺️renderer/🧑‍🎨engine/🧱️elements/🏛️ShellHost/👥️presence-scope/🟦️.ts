@@ -1,5 +1,5 @@
 import type { BackboneWorkerResponse, DocumentScope } from "@semio-tech/framework-os";
-import type { ArtifactPresencePeer } from "@semio-tech/framework-replication";
+import type { ArtifactPresenceHistoryEdit, ArtifactPresencePeer } from "@semio-tech/framework-replication";
 import type { PresencePeer } from "@semio-tech/ui-react";
 
 function presenceRole(role: ArtifactPresencePeer["role"]): PresencePeer["role"] {
@@ -7,6 +7,10 @@ function presenceRole(role: ArtifactPresencePeer["role"]): PresencePeer["role"] 
   if (role === "spectator" || role === "viewer") return "spectator";
   return undefined;
 }
+
+/** 👥️ One roster row as host chrome holds it: the chip's own fields plus the peer's open history edit, which the shell
+ * labels from its own history rows (no locale text travels on the wire). */
+export type ScopedPresencePeerV1 = PresencePeer & { readonly historyEdit?: ArtifactPresenceHistoryEdit };
 
 /** 👥️ Projects a worker-verified roster into host chrome: the message must name the session's exact scope and the surface
  * the session was admitted on (`ScopedPresenceRejectionV1`), and then every peer of the document is projected whatever
@@ -17,7 +21,7 @@ export function scopedPresencePeersV1(
   message: Extract<BackboneWorkerResponse, { readonly kind: "event" }>,
   expectedScope: DocumentScope,
   expectedSurfaceId: string | null,
-): readonly PresencePeer[] {
+): readonly ScopedPresencePeerV1[] {
   if (message.event.kind !== "presence" || message.scope?.spaceId !== expectedScope.spaceId || message.scope.documentId !== expectedScope.documentId || message.documentId !== expectedScope.documentId || message.verifiedSurfaceId === undefined || message.verifiedSurfaceId !== expectedSurfaceId) return [];
   return message.event.peers
     .map((peer) => ({
@@ -30,5 +34,6 @@ export function scopedPresencePeersV1(
       // 🤖️ `principalKind` is admitted by the Hub from the session it authenticated, exactly like
       // `color` and `surface`; an absent value is the pre-agent wire shape and means a person.
       ...(peer.principalKind === "agent" ? { isAgent: true } : {}),
+      ...(peer.historyEdit === undefined ? {} : { historyEdit: peer.historyEdit }),
     }));
 }

@@ -873,7 +873,7 @@ async fn an_agent_names_the_nodes_patch_nodes_renames_and_is_refused_by_name_wit
     let patch = definition.actions.iter().chain(definition.window_kinds.iter().flat_map(|window| window.actions.iter())).find(|action| action.id == "patchNodes").expect("declared");
     let node_ids = patch.args.iter().find(|arg| arg.id == "nodeIds").expect("nodeIds");
     assert!(!node_ids.required, "the rail may leave nodeIds empty to act on the selection");
-    let schema = node_ids.json_schema();
+    let schema = node_ids.json_schema(semio_framework_plugin::Terminology::Native, semio_framework_plugin::Locale::En);
     let items = schema.get("items").expect("nodeIds is a list");
     assert_eq!(
         (schema.get("type").and_then(semio_framework_plugin::DslValue::as_str), items.get("x-semio-format").and_then(semio_framework_plugin::DslValue::as_str), items.get("x-semio-entity-kind").and_then(semio_framework_plugin::DslValue::as_str)),

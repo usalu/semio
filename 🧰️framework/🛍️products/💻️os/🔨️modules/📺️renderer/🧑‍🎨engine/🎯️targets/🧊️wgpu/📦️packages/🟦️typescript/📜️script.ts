@@ -9,6 +9,7 @@ import Ajv from "ajv";
 import {
   BundleScript,
   ScriptRouter,
+  buildBudgetMs,
   getWorkspaceRoot,
   packageTestBudgetMs,
   resolveTestLevel,
@@ -105,6 +106,34 @@ class WgpuUnitTestScript extends BundleScript {
   async run(segments: string[]): Promise<void> {
     const { rest } = resolveTestLevel(segments, "long");
     await runCargoTestBudgeted([crateName], this.repoRoot, ["--lib", ...rest]);
+  }
+}
+
+/** 🎬️ Executes neutral media-slot vectors through Ajv and seven exact native retained-tree laws. */
+class MediaSlotContractTestScript extends BundleScript {
+  async run(segments: string[]): Promise<void> {
+    if (segments.length) throw new Error("media-slot contract accepts no arguments");
+    await runVitest(this.root, ["🧪️tests/🎬️presented-media-slots/🟦️.ts"], "../../🧪️tests/🎚️config/🟦️.ts");
+    const laws = [
+      "media_slot_fixture_composes_body_clip_and_exact_owner",
+      "media_slot_caps_refuse_the_entire_overflow_publication",
+      "media_slot_descriptor_byte_budget_refuses_oversized_publication",
+      "media_slot_occlusion_vectors_include_foreground_window_chrome",
+      "media_slot_concealment_preserves_the_accepted_transport_identity",
+      "media_slot_identity_registry_requeries_none_and_rejects_retired_or_foreign_replies",
+      "media_slot_tokens_survive_ui_generation_but_change_with_document_and_resource_authority",
+    ].map((law) => `media_slots::tests::${law}`);
+    const receipts = await runExactCargoLaws({
+      cwd: this.repoRoot,
+      env: { ...process.env, RUST_MIN_STACK: "33554432" },
+      nativeEnv: { RUST_MIN_STACK: "134217728" },
+      buildBudgetMs: buildBudgetMs(),
+      listBudgetMs: 60_000,
+      lawBudgetMs: 120_000,
+      groups: [{ package: crateName, target: { kind: "lib" }, laws }],
+      progress(event) { console.log(`media-slot-contract ${event.stage}: ${event.law ?? ""} artifacts=${event.artifactDir}`); },
+    });
+    console.log(`media-slot-contract: ${receipts.reduce((count, receipt) => count + receipt.laws.length, 0)} exact native laws passed`);
   }
 }
 
@@ -564,6 +593,8 @@ const router = new ScriptRouter(import.meta.dir)
   .register("test", TestScript)
   .register("test-native", NativeTestScript)
   .register("test-wgpu-unit", WgpuUnitTestScript)
+  .register("test-media-slots", MediaSlotContractTestScript)
+  .register("canonical-architecture", MediaSlotContractTestScript)
   .register("check-wasm", WasmCheckScript)
   .register("directory-retained-home-bootstrap-source-check", DirectoryRetainedHomeBootstrapSourceCheckScript)
   .register("directory-retained-home-bootstrap-native-check", DirectoryRetainedHomeBootstrapNativeCheckScript)

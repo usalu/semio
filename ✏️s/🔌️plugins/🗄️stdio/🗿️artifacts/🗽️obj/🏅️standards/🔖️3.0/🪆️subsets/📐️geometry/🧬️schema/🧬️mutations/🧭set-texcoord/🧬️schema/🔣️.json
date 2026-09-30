@@ -5,20 +5,27 @@
   "type": "object",
   "additionalProperties": false,
   "required": [
+    "mutation",
     "index",
     "texcoord"
   ],
   "properties": {
+    "mutation": {
+      "const": "setTexcoord",
+      "description": "Aggregate discriminator spliced in by ObjMutation; absent when the payload stands alone."
+    },
     "index": {
       "type": "integer",
       "minimum": 0
     },
     "texcoord": {
-      "$ref": "#/$defs/ObjTexCoord"
-    },
-    "mutation": {
-      "const": "setTexcoord",
-      "description": "Aggregate discriminator spliced in by ObjMutation; absent when the payload stands alone."
+      "$ref": "#/$defs/ObjTexCoord",
+      "x-semio-ui": {
+        "label": {
+          "en": "Texture coordinate",
+          "de": "Texturkoordinate"
+        }
+      }
     }
   },
   "$defs": {
@@ -31,10 +38,24 @@
       ],
       "properties": {
         "u": {
-          "type": "number"
+          "type": "number",
+          "x-semio-ui": {
+            "widget": "stepper",
+            "label": {
+              "en": "U",
+              "de": "U"
+            }
+          }
         },
         "v": {
-          "type": "number"
+          "type": "number",
+          "x-semio-ui": {
+            "widget": "stepper",
+            "label": {
+              "en": "V",
+              "de": "V"
+            }
+          }
         },
         "w": {
           "anyOf": [
@@ -44,7 +65,18 @@
             {
               "type": "null"
             }
-          ]
+          ],
+          "x-semio-ui": {
+            "widget": "stepper",
+            "label": {
+              "en": "Depth (w)",
+              "de": "Tiefe (w)"
+            },
+            "description": {
+              "en": "Optional third texture coordinate; defaults to 0.",
+              "de": "Optionale dritte Texturkoordinate; Standard 0."
+            }
+          }
         }
       }
     }

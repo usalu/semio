@@ -65,7 +65,7 @@ async fn recreating_the_radiator_subject_restores_before() {
 
 /// 🔣️ Both committed snapshots and the committed `retire-subject` payload are already canonical: decode → encode
 /// is a fixed point. The committed payload is spelled `{"RetireSubject": {"id": "subject.radiator"}}` —
-/// externally tagged, snake_case payload key.
+/// externally tagged, camelCase payload key.
 #[semio_framework_async_macros::async_test]
 async fn committed_json_is_canonical() {
     for (side, text) in [("before", BEFORE), ("after", AFTER)] {

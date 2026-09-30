@@ -1,6 +1,7 @@
 {
   "kind": "remove-tag",
-  "params": {
+  "mutation": {
+    "mutation": "removeTag",
     "index": 0
   },
   "before": {

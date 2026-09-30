@@ -1,0 +1,34 @@
+{
+  "schema": "semio.geometry-session-ownership/v1",
+  "package": "semio-s-spatial-kernel-semio-session",
+  "groups": [
+    {
+      "target": "brep_invoke",
+      "directory": "\ud83d\udcd0\ufe0fbrep-invoke",
+      "laws": [
+        "the_verb_catalog_is_the_dispatcher_arm_for_arm",
+        "every_declared_verb_dispatches_and_refuses_a_missing_argument",
+        "every_affine_transform_vector_answers_over_the_wire"
+      ]
+    },
+    {
+      "target": "mesh_session",
+      "directory": "\ud83c\udf92\ufe0fmesh-session",
+      "laws": [
+        "a_real_tessellated_sphere_halves_the_wire_at_every_lod",
+        "a_finer_cached_mesh_answers_a_coarser_lod_request"
+      ]
+    },
+    {
+      "target": "session_lifetime",
+      "directory": "\ud83c\udff7\ufe0fsession-lifetime",
+      "laws": [
+        "independent_geometry_instances_keep_their_own_kernel_and_match_parry_volume",
+        "cancelling_one_authority_preserves_another_job_for_the_same_handle",
+        "closing_one_authority_preserves_other_live_claim_and_refuses_foreign_disposal",
+        "a_neutral_flow_session_closes_its_explicitly_supplied_geometry_authority",
+        "bounded_family_retirement_preserves_siblings_waits_readers_and_can_pause"
+      ]
+    }
+  ]
+}

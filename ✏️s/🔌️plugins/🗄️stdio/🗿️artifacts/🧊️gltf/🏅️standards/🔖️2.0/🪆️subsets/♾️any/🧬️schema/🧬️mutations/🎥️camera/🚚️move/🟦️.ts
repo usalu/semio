@@ -1,7 +1,14 @@
-/** 🦠️ move-camera executable structural glTF command. */
-import type { GltfOrthographic, GltfPerspective, GltfSnapshot } from '../../📸️snapshot/🟦️.ts';
-import { clone, insert, order, position, reject, remove, relocate, reorder, repair, type GltfMutationRejection, type GltfStructuralResult } from './🟦️';
-export const GltfMoveCameraDescriptor = { id: 's.stdio.gltf.mutation.move-camera.v1', version: 1, touchedPathPattern: 'document/cameras', referencePolicy: 'all typed camera references are remapped, repaired, or rejected' } as const;
-export interface GltfMoveCameraPayload { index: number; position: number }
-export const validateGltfMoveCamera = (payload: GltfMoveCameraPayload, base: GltfSnapshot): GltfMutationRejection | undefined => { const index = position(payload.index, base.document.cameras.length, 'document/cameras'); if (index) return index; const destination = position(payload.position, base.document.cameras.length, 'document/cameras'); if (destination) return destination; if (payload.index === payload.position) return reject('gltf.mutation.no-observable-change', 'document/cameras', 'destination equals source');  return undefined; };
-export const applyGltfMoveCamera = (base: GltfSnapshot, payload: GltfMoveCameraPayload): GltfStructuralResult => { const rejection = validateGltfMoveCamera(payload, base); if (rejection) return { accepted: false, rejection }; try { const next = clone(base); relocate(next, 'cameras', payload.index, payload.position); return { accepted: true, snapshot: clone(next) }; } catch (error) { return { accepted: false, rejection: typeof error === 'object' && error && 'code' in error ? error as GltfMutationRejection : reject('gltf.mutation.apply-failed', 'document/cameras', String(error)) }; } };
+/** 🚚️ `move-camera` wire twin: the flat `Apply` payload `GltfMoveCameraPayload` and the phase wire `MoveCameraMutation`, exactly as `./🦀️.rs` writes them.
+ * @see ./🧬️schema/🔣️.json */
+import { gltfWireIndex, gltfWireObject, gltfWireRequired } from "../../../📸️snapshot/🟦️.ts";
+import { type GltfDiff, type GltfPhase, gltfWirePhase, parseGltfDiff } from "../../../🔺️diff/🟦️.ts";
+
+export interface GltfMoveCameraPayload {
+  index: number;
+  position: number;
+}
+
+export type MoveCameraMutation = GltfPhase<GltfMoveCameraPayload, GltfDiff>;
+
+export const parseGltfMoveCameraPayload = gltfWireObject<GltfMoveCameraPayload>({ index: gltfWireRequired(gltfWireIndex), position: gltfWireRequired(gltfWireIndex) });
+export const parseMoveCameraMutation = gltfWirePhase(parseGltfMoveCameraPayload, parseGltfDiff);

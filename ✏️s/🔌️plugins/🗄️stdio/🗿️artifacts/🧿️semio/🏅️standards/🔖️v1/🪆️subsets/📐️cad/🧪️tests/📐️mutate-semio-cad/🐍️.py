@@ -20,7 +20,7 @@ second IMPLEMENTATION, written in another language from the format's own committ
 Two leaves the grammar states by reference rather than in full, and how each was settled:
 
 * `hex` is declared to be the framework's built-in `hex` MACRO, so every `handle`, `name`,
-  `content`, `text`, `block_name` and `schema` leaf is the lowercase hex of that string's UTF-8
+  `content`, `text`, `blockName` and `schema` leaf is the lowercase hex of that string's UTF-8
   bytes. Reading the committed artifact confirms it — `434f4e54494e554f5553` is `CONTINUOUS`.
 * `number = INT | FLOAT` and the grammar records that every `f64` prints through plain Rust `{v}`
   Display, which drops the fractional part of an integral value. `print_number` below reproduces
@@ -87,14 +87,14 @@ KIND_OF_TAG = {tag: kind for kind, tag in TAG_OF_KIND.items()}
 #: — the grammar's single-letter tags and the field lists it declares for each.
 ENTITY_FIELDS = {
     "L": ("line", (("a", "point2"), ("b", "point2"))),
-    "A": ("arc", (("center", "point2"), ("radius", "number"), ("start_angle", "number"), ("end_angle", "number"))),
+    "A": ("arc", (("center", "point2"), ("radius", "number"), ("startAngle", "number"), ("endAngle", "number"))),
     "C": ("circle", (("center", "point2"), ("radius", "number"))),
-    "E": ("ellipse", (("center", "point2"), ("major_axis_end", "point2"), ("ratio", "number"), ("start_param", "number"), ("end_param", "number"))),
+    "E": ("ellipse", (("center", "point2"), ("majorAxisEnd", "point2"), ("ratio", "number"), ("startParam", "number"), ("endParam", "number"))),
     "P": ("polyline", (("vertices", "point2-list"), ("closed", "bool"))),
     "T": ("text", (("position", "point2"), ("height", "number"), ("rotation", "number"), ("content", "hex"))),
-    "I": ("insert", (("block_name", "hex"), ("insertion_point", "point2"), ("scale", "point2"), ("rotation", "number"))),
+    "I": ("insert", (("blockName", "hex"), ("insertionPoint", "point2"), ("scale", "point2"), ("rotation", "number"))),
     "S": ("solid", (("p1", "point2"), ("p2", "point2"), ("p3", "point2"), ("p4", "point2"))),
-    "D": ("dimension", (("def_point", "point2"), ("text_position", "point2"), ("measurement", "number"), ("text", "hex"))),
+    "D": ("dimension", (("defPoint", "point2"), ("textPosition", "point2"), ("measurement", "number"), ("text", "hex"))),
 }
 TAG_OF_ENTITY = {name: tag for tag, (name, _) in ENTITY_FIELDS.items()}
 
@@ -395,20 +395,20 @@ def take_entity(cursor: Cursor) -> dict:
     if kind == "line":
         return {"kind": kind, "a": take_point2(cursor), "b": take_point2(cursor)}
     if kind == "arc":
-        return {"kind": kind, "center": take_point2(cursor), "radius": cursor.real(), "start_angle": cursor.real(), "end_angle": cursor.real()}
+        return {"kind": kind, "center": take_point2(cursor), "radius": cursor.real(), "startAngle": cursor.real(), "endAngle": cursor.real()}
     if kind == "circle":
         return {"kind": kind, "center": take_point2(cursor), "radius": cursor.real()}
     if kind == "ellipse":
-        return {"kind": kind, "center": take_point2(cursor), "major_axis_end": take_point2(cursor), "ratio": cursor.real(), "start_param": cursor.real(), "end_param": cursor.real()}
+        return {"kind": kind, "center": take_point2(cursor), "majorAxisEnd": take_point2(cursor), "ratio": cursor.real(), "startParam": cursor.real(), "endParam": cursor.real()}
     if kind == "polyline":
         return {"kind": kind, "vertices": [take_point2(cursor) for _ in range(cursor.varint())], "closed": cursor.byte() == 1}
     if kind == "text":
         return {"kind": kind, "position": take_point2(cursor), "height": cursor.real(), "rotation": cursor.real(), "content": cursor.string()}
     if kind == "insert":
-        return {"kind": kind, "block_name": cursor.string(), "insertion_point": take_point2(cursor), "scale": take_point2(cursor), "rotation": cursor.real()}
+        return {"kind": kind, "blockName": cursor.string(), "insertionPoint": take_point2(cursor), "scale": take_point2(cursor), "rotation": cursor.real()}
     if kind == "solid":
         return {"kind": kind, "p1": take_point2(cursor), "p2": take_point2(cursor), "p3": take_point2(cursor), "p4": take_point2(cursor)}
-    return {"kind": kind, "def_point": take_point2(cursor), "text_position": take_point2(cursor), "measurement": cursor.real(), "text": cursor.string()}
+    return {"kind": kind, "defPoint": take_point2(cursor), "textPosition": take_point2(cursor), "measurement": cursor.real(), "text": cursor.string()}
 
 
 def put_entity(entity: dict) -> bytes:
@@ -419,20 +419,20 @@ def put_entity(entity: dict) -> bytes:
     if kind == "line":
         return out + put_point2(entity["a"]) + put_point2(entity["b"])
     if kind == "arc":
-        return out + put_point2(entity["center"]) + put_real(entity["radius"]) + put_real(entity["start_angle"]) + put_real(entity["end_angle"])
+        return out + put_point2(entity["center"]) + put_real(entity["radius"]) + put_real(entity["startAngle"]) + put_real(entity["endAngle"])
     if kind == "circle":
         return out + put_point2(entity["center"]) + put_real(entity["radius"])
     if kind == "ellipse":
-        return out + put_point2(entity["center"]) + put_point2(entity["major_axis_end"]) + put_real(entity["ratio"]) + put_real(entity["start_param"]) + put_real(entity["end_param"])
+        return out + put_point2(entity["center"]) + put_point2(entity["majorAxisEnd"]) + put_real(entity["ratio"]) + put_real(entity["startParam"]) + put_real(entity["endParam"])
     if kind == "polyline":
         return out + put_varint(len(entity["vertices"])) + b"".join(put_point2(one) for one in entity["vertices"]) + bytes([1 if entity["closed"] else 0])
     if kind == "text":
         return out + put_point2(entity["position"]) + put_real(entity["height"]) + put_real(entity["rotation"]) + put_string(entity["content"])
     if kind == "insert":
-        return out + put_string(entity["block_name"]) + put_point2(entity["insertion_point"]) + put_point2(entity["scale"]) + put_real(entity["rotation"])
+        return out + put_string(entity["blockName"]) + put_point2(entity["insertionPoint"]) + put_point2(entity["scale"]) + put_real(entity["rotation"])
     if kind == "solid":
         return out + put_point2(entity["p1"]) + put_point2(entity["p2"]) + put_point2(entity["p3"]) + put_point2(entity["p4"])
-    return out + put_point2(entity["def_point"]) + put_point2(entity["text_position"]) + put_real(entity["measurement"]) + put_string(entity["text"])
+    return out + put_point2(entity["defPoint"]) + put_point2(entity["textPosition"]) + put_real(entity["measurement"]) + put_string(entity["text"])
 
 
 def take_record(cursor: Cursor) -> dict:
@@ -522,7 +522,7 @@ def named(items: list, key: str, value: str, verb: str) -> int:
 
 
 def block_named(snapshot: dict, args: dict, verb: str) -> dict:
-    return snapshot["blocks"][named(snapshot["blocks"], "name", args["block_name"], verb)]
+    return snapshot["blocks"][named(snapshot["blocks"], "name", args["blockName"], verb)]
 
 
 def apply_mutation(snapshot: dict, mutation: dict) -> dict:
@@ -542,9 +542,9 @@ def apply_mutation(snapshot: dict, mutation: dict) -> dict:
         return result
     if kind == "set-layer":
         layer = result["layers"][named(result["layers"], "name", args["name"], kind)]
-        for key, member in (("color_index", "colorIndex"), ("line_type", "lineType"), ("visible", "visible")):
+        for key in ("colorIndex", "lineType", "visible"):
             if args.get(key) is not None:
-                layer[member] = args[key]
+                layer[key] = args[key]
         return result
     if kind == "add-block":
         result["blocks"].append(clone(args["block"]))
@@ -553,7 +553,7 @@ def apply_mutation(snapshot: dict, mutation: dict) -> dict:
         del result["blocks"][named(result["blocks"], "name", args["name"], kind)]
         return result
     if kind == "set-block-base-point":
-        result["blocks"][named(result["blocks"], "name", args["name"], kind)]["basePoint"] = clone(args["base_point"])
+        result["blocks"][named(result["blocks"], "name", args["name"], kind)]["basePoint"] = clone(args["basePoint"])
         return result
     if kind == "add-entity":
         result["entities"].append(clone(args["entity"]))
@@ -599,9 +599,9 @@ def inverse_mutation(snapshot: dict, mutation: dict) -> dict:
     if kind == "set-layer":
         was = snapshot["layers"][named(snapshot["layers"], "name", args["name"], kind)]
         undo = {"mutation": TAG_OF_KIND[kind], "name": args["name"]}
-        for key, member in (("color_index", "colorIndex"), ("line_type", "lineType"), ("visible", "visible")):
+        for key in ("colorIndex", "lineType", "visible"):
             if args.get(key) is not None:
-                undo[key] = was[member]
+                undo[key] = was[key]
         return undo
     if kind == "add-block":
         return {"mutation": TAG_OF_KIND["remove-block"], "name": args["block"]["name"]}
@@ -609,7 +609,7 @@ def inverse_mutation(snapshot: dict, mutation: dict) -> dict:
         return {"mutation": TAG_OF_KIND["add-block"], "block": clone(snapshot["blocks"][named(snapshot["blocks"], "name", args["name"], kind)])}
     if kind == "set-block-base-point":
         was = snapshot["blocks"][named(snapshot["blocks"], "name", args["name"], kind)]
-        return {"mutation": TAG_OF_KIND[kind], "name": args["name"], "base_point": clone(was["basePoint"])}
+        return {"mutation": TAG_OF_KIND[kind], "name": args["name"], "basePoint": clone(was["basePoint"])}
     if kind == "add-entity":
         return {"mutation": TAG_OF_KIND["remove-entity"], "handle": args["entity"]["handle"]}
     if kind == "remove-entity":
@@ -621,13 +621,13 @@ def inverse_mutation(snapshot: dict, mutation: dict) -> dict:
         return {"mutation": TAG_OF_KIND[kind], "handle": args["handle"], "entity": clone(was["entity"])}
     block = block_named(snapshot, args, kind)
     if kind == "add-block-entity":
-        return {"mutation": TAG_OF_KIND["remove-block-entity"], "block_name": args["block_name"], "handle": args["entity"]["handle"]}
+        return {"mutation": TAG_OF_KIND["remove-block-entity"], "blockName": args["blockName"], "handle": args["entity"]["handle"]}
     was = block["entities"][named(block["entities"], "handle", args["handle"], kind)]
     if kind == "remove-block-entity":
-        return {"mutation": TAG_OF_KIND["add-block-entity"], "block_name": args["block_name"], "entity": clone(was)}
+        return {"mutation": TAG_OF_KIND["add-block-entity"], "blockName": args["blockName"], "entity": clone(was)}
     if kind == "set-block-entity-layer":
-        return {"mutation": TAG_OF_KIND[kind], "block_name": args["block_name"], "handle": args["handle"], "layer": was["layer"]}
-    return {"mutation": TAG_OF_KIND[kind], "block_name": args["block_name"], "handle": args["handle"], "entity": clone(was["entity"])}
+        return {"mutation": TAG_OF_KIND[kind], "blockName": args["blockName"], "handle": args["handle"], "layer": was["layer"]}
+    return {"mutation": TAG_OF_KIND[kind], "blockName": args["blockName"], "handle": args["handle"], "entity": clone(was["entity"])}
 
 
 # endregion 🔖️Mutations

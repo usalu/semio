@@ -1,12 +1,32 @@
 {
-  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/norm/din18599/mutation/update-cooling/schema.json",
   "title": "UpdateCooling",
   "type": "object",
-  "properties": {
-    "newCooling": {
-      "type": "object"
-    }
-  },
   "additionalProperties": false,
-  "$id": "https://json.schemas.assets.semio-tech.com/s/norm/din18599/mutation/update-cooling/schema.json"
+  "required": [
+    "mutation",
+    "newCooling"
+  ],
+  "properties": {
+    "mutation": {
+      "const": "updateCooling"
+    },
+    "newCooling": {
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/din18599/snapshot/schema.json#/$defs/CoolingSystem",
+      "x-semio-ui": {
+        "role": "value",
+        "label": {
+          "en": "Cooling system",
+          "de": "Kühlsystem"
+        },
+        "description": {
+          "en": "Cooling plant with EER and energy carrier.",
+          "de": "Kälteerzeugung mit EER und Energieträger."
+        },
+        "group": "systems",
+        "order": 10
+      }
+    }
+  }
 }

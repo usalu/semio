@@ -1,19 +1,14 @@
-/** 🧬 Transparent TypeScript aggregate for the buffer slice of the glTF 2.0 mutation vocabulary. */
-import type { GltfCreateBufferPayload } from '../../../♾️any/🧬️schema/🧬️mutations/💿️buffer/🌱️create/🟦️.ts';
-import type { GltfCreateBufferViewPayload } from '../../../♾️any/🧬️schema/🧬️mutations/🪟️buffer-view/🌱️create/🟦️.ts';
-import type { GltfDeleteBufferPayload } from '../../../♾️any/🧬️schema/🧬️mutations/💿️buffer/🗑️delete/🟦️.ts';
-import type { GltfDeleteBufferViewPayload } from '../../../♾️any/🧬️schema/🧬️mutations/🪟️buffer-view/🗑️delete/🟦️.ts';
-import type { GltfMoveBufferPayload } from '../../../♾️any/🧬️schema/🧬️mutations/💿️buffer/🚚️move/🟦️.ts';
-import type { GltfMoveBufferViewPayload } from '../../../♾️any/🧬️schema/🧬️mutations/🪟️buffer-view/🚚️move/🟦️.ts';
-import type { GltfReorderBufferViewsPayload } from '../../../♾️any/🧬️schema/🧬️mutations/🪟️buffer-view/🔀️reorder/🟦️.ts';
-import type { GltfReorderBuffersPayload } from '../../../♾️any/🧬️schema/🧬️mutations/💿️buffer/🔀️reorder/🟦️.ts';
+/** 💿️ `GltfBufferMutation` twin: the buffer slice of the glTF 2.0 mutation vocabulary, a view over the any subset's `GltfMutation`
+ * that selects branches and never restates a payload.
+ * @see ./🔣️.json */
+import { gltfWireRefuse, type GltfWireReader } from "../../../♾️any/🧬️schema/📸️snapshot/🟦️.ts";
+import { parseGltfMutation, type GltfMutation } from "../../../♾️any/🧬️schema/🧬️mutations/🟦️.ts";
 
-export type GltfBufferMutation =
-  | { readonly mutation: 'createBufferView'; readonly payload: GltfCreateBufferViewPayload }
-  | { readonly mutation: 'createBuffer'; readonly payload: GltfCreateBufferPayload }
-  | { readonly mutation: 'reorderBufferViews'; readonly payload: GltfReorderBufferViewsPayload }
-  | { readonly mutation: 'reorderBuffers'; readonly payload: GltfReorderBuffersPayload }
-  | { readonly mutation: 'deleteBufferView'; readonly payload: GltfDeleteBufferViewPayload }
-  | { readonly mutation: 'deleteBuffer'; readonly payload: GltfDeleteBufferPayload }
-  | { readonly mutation: 'moveBufferView'; readonly payload: GltfMoveBufferViewPayload }
-  | { readonly mutation: 'moveBuffer'; readonly payload: GltfMoveBufferPayload };
+export type GltfBufferMutation = Extract<GltfMutation, { readonly mutation: "createBuffer" | "createBufferView" | "deleteBuffer" | "deleteBufferView" | "moveBuffer" | "moveBufferView" | "reorderBufferViews" | "reorderBuffers" }>;
+
+const members: readonly GltfMutation["mutation"][] = ["createBuffer", "createBufferView", "deleteBuffer", "deleteBufferView", "moveBuffer", "moveBufferView", "reorderBufferViews", "reorderBuffers"];
+
+export const parseGltfBufferMutation: GltfWireReader<GltfBufferMutation> = (value, at = "$") => {
+  const mutation = parseGltfMutation(value, at);
+  return members.includes(mutation.mutation) ? (mutation as GltfBufferMutation) : gltfWireRefuse(`${at}.mutation`, `value is not one of ${members.join(", ")}`);
+};

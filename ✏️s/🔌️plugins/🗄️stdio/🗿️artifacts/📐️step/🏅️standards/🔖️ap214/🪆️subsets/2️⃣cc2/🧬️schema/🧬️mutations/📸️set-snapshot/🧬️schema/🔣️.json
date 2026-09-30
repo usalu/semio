@@ -21,15 +21,42 @@
       ],
       "properties": {
         "schema": {
-          "type": "string"
+          "type": "string",
+          "x-semio-ui": {
+            "widget": "text",
+            "label": {
+              "en": "Snapshot schema",
+              "de": "Snapshot-Schema"
+            },
+            "description": {
+              "en": "Identifier of the snapshot schema version.",
+              "de": "Kennung der Version des Snapshot-Schemas."
+            }
+          }
         },
         "header": {
-          "$ref": "#/$defs/StepHeader"
+          "$ref": "#/$defs/StepHeader",
+          "x-semio-ui": {
+            "label": {
+              "en": "Header section",
+              "de": "Header-Abschnitt"
+            }
+          }
         },
         "entities": {
           "type": "array",
           "items": {
             "$ref": "#/$defs/StepEntity"
+          },
+          "x-semio-ui": {
+            "label": {
+              "en": "Entity instances",
+              "de": "Entitätsinstanzen"
+            },
+            "description": {
+              "en": "DATA section instances (#n = …).",
+              "de": "Instanzen des DATA-Abschnitts (#n = …)."
+            }
           }
         }
       }
@@ -39,13 +66,29 @@
       "additionalProperties": false,
       "properties": {
         "fileDescription": {
-          "$ref": "#/$defs/StepFileDescription"
+          "$ref": "#/$defs/StepFileDescription",
+          "x-semio-ui": {
+            "label": {
+              "en": "File description (FILE_DESCRIPTION)",
+              "de": "Dateibeschreibung (FILE_DESCRIPTION)"
+            }
+          }
         },
         "fileName": {
           "$ref": "#/$defs/StepFileName"
         },
         "fileSchema": {
-          "$ref": "#/$defs/StepFileSchema"
+          "$ref": "#/$defs/StepFileSchema",
+          "x-semio-ui": {
+            "label": {
+              "en": "File schema (FILE_SCHEMA)",
+              "de": "Dateischema (FILE_SCHEMA)"
+            },
+            "description": {
+              "en": "EXPRESS schemas the data section conforms to, e.g. AP214 or AP242.",
+              "de": "EXPRESS-Schemata, denen der Datenabschnitt entspricht, z. B. AP214 oder AP242."
+            }
+          }
         }
       }
     },
@@ -60,7 +103,18 @@
           }
         },
         "implementationLevel": {
-          "type": "string"
+          "type": "string",
+          "x-semio-ui": {
+            "widget": "text",
+            "label": {
+              "en": "Implementation level",
+              "de": "Implementierungsebene"
+            },
+            "description": {
+              "en": "Conformance level of the exchange structure, e.g. 2;1.",
+              "de": "Konformitätsstufe der Austauschstruktur, z. B. 2;1."
+            }
+          }
         }
       }
     },
@@ -72,7 +126,18 @@
           "type": "string"
         },
         "timestamp": {
-          "type": "string"
+          "type": "string",
+          "x-semio-ui": {
+            "widget": "text",
+            "label": {
+              "en": "Time stamp",
+              "de": "Zeitstempel"
+            },
+            "description": {
+              "en": "ISO 8601 creation time of the file.",
+              "de": "Erstellungszeitpunkt der Datei nach ISO 8601."
+            }
+          }
         },
         "author": {
           "type": "array",
@@ -84,16 +149,55 @@
           "type": "array",
           "items": {
             "type": "string"
+          },
+          "x-semio-ui": {
+            "label": {
+              "en": "Organization",
+              "de": "Organisation"
+            }
           }
         },
         "preprocessorVersion": {
-          "type": "string"
+          "type": "string",
+          "x-semio-ui": {
+            "widget": "text",
+            "label": {
+              "en": "Preprocessor version",
+              "de": "Präprozessorversion"
+            },
+            "description": {
+              "en": "STEP translator that wrote the file.",
+              "de": "STEP-Übersetzer, der die Datei geschrieben hat."
+            }
+          }
         },
         "originatingSystem": {
-          "type": "string"
+          "type": "string",
+          "x-semio-ui": {
+            "widget": "text",
+            "label": {
+              "en": "Originating system",
+              "de": "Ursprungssystem"
+            },
+            "description": {
+              "en": "CAD system that created the data.",
+              "de": "CAD-System, das die Daten erzeugt hat."
+            }
+          }
         },
         "authorization": {
-          "type": "string"
+          "type": "string",
+          "x-semio-ui": {
+            "widget": "text",
+            "label": {
+              "en": "Authorization",
+              "de": "Freigabe"
+            },
+            "description": {
+              "en": "Person who authorized sending the file.",
+              "de": "Person, die den Versand der Datei freigegeben hat."
+            }
+          }
         }
       }
     },
@@ -128,12 +232,32 @@
           "type": "array",
           "items": {
             "$ref": "#/$defs/StepValue"
+          },
+          "x-semio-ui": {
+            "label": {
+              "en": "Parameters",
+              "de": "Parameter"
+            },
+            "description": {
+              "en": "Attribute values of the entity instance in declaration order.",
+              "de": "Attributwerte der Entitätsinstanz in Deklarationsreihenfolge."
+            }
           }
         },
         "complex": {
           "type": "array",
           "items": {
             "$ref": "#/$defs/StepComplexType"
+          },
+          "x-semio-ui": {
+            "label": {
+              "en": "Partial entity instances",
+              "de": "Teilentitätsinstanzen"
+            },
+            "description": {
+              "en": "Subtype records of a complex (multi-leaf) entity instance.",
+              "de": "Untertyp-Datensätze einer komplexen Entitätsinstanz."
+            }
           }
         }
       }
@@ -265,6 +389,16 @@
           "type": "array",
           "items": {
             "$ref": "#/$defs/StepValue"
+          },
+          "x-semio-ui": {
+            "label": {
+              "en": "Parameters",
+              "de": "Parameter"
+            },
+            "description": {
+              "en": "Attribute values of the entity instance in declaration order.",
+              "de": "Attributwerte der Entitätsinstanz in Deklarationsreihenfolge."
+            }
           }
         }
       }

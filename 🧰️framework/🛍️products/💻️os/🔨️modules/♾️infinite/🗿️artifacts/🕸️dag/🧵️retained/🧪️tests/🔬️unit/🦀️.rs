@@ -25,10 +25,8 @@ fn neutral_fixture_retires_exact_mutation_shared_snapshot_and_final_snapshot_own
     let fixture = crate::os_pack::json::parse(source).expect("first-party fixture parser");
     let first_party_oracle: serde_json::Value = serde_json::from_str(&crate::os_pack::json::to_json_string(&fixture)).expect("first-party fixture as serde oracle");
     assert_eq!(first_party_oracle, oracle);
-    let row = &fixture["valid"].as_array().expect("valid cases")[0];
-    let mut value = row["payload"].clone();
-    value.as_object_mut().expect("mutation payload").insert("operation".to_string(), row["operation"].clone());
-    let mutation = DagMutation::from_value(crate::os_pack::json::to_dsl_value(&value)).expect("fixture mutation");
+    let witness = crate::os_pack::json::parse(include_str!("../../../🌿️vcs/🧫️fixtures/🧬️mutations/➕️create-node/🧾️wire-witness/🦠️mutation/🔣️.json")).expect("committed create-node wire witness");
+    let mutation = DagMutation::from_value(crate::os_pack::json::to_dsl_value(&witness)).expect("fixture mutation");
     let mut mutation_retirement = DagMutationRetirementFactory.retire_owned(mutation);
     assert_eq!(mutation_retirement.close_step(0, 7).unwrap(), SnapshotRetirementStep::Blocked);
     assert_eq!(mutation_retirement.close_step(1, 0).unwrap(), SnapshotRetirementStep::Blocked);

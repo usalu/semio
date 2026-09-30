@@ -25,6 +25,7 @@ default = ["component-guest"]
 component-guest = ["dep:semio-framework-plugin", "dep:semio-framework"]
 
 [dependencies]
+semio-s-spatial-kernel-semio-session.workspace = true
 semio-framework-mesh-engine.workspace = true
 semio-framework-3d = { path = "../../../../../../../🧰️framework/🔨️modules/🧊️3d/📦️packages/🦀️rust" }
 semio-s-artifact-stdio-semio = { workspace = true, features = ["conversion-brep"] }

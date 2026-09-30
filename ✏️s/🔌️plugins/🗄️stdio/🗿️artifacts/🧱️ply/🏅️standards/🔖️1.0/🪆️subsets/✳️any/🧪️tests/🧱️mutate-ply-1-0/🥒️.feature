@@ -60,26 +60,15 @@ Feature: Apply every typed PLY 1.0 mutation to a real-world document
     Then the oracle and the subject agree on the semantic projection
     Examples:
       | id                | params                                                                                                                                                                                                                                                                                              |
-      | set-snapshot       | {"snapshot":{"format":"ascii","comments":["synthetic replacement snapshot"],"elements":[{"name":"vertex","count":3,"properties":[{"name":"x","form":"scalar","kind":"float"},{"name":"y","form":"scalar","kind":"float"},{"name":"z","form":"scalar","kind":"float"}],"rows":[{"values":[0,0,0]},{"values":[1,0,0]},{"values":[0,1,0]}]},{"name":"face","count":1,"properties":[{"name":"vertex_indices","form":"list","countKind":"uChar","valueKind":"int"}],"rows":[{"values":[[0,1,2]]}]}]}} |
+      | set-snapshot       | {"snapshot": {"schema": "stdio.ply", "format": "ascii", "comments": ["synthetic replacement snapshot"], "elements": [{"name": "vertex", "count": 3, "properties": [{"name": "x", "form": "scalar", "kind": "float"}, {"name": "y", "form": "scalar", "kind": "float"}, {"name": "z", "form": "scalar", "kind": "float"}], "rows": [{"values": [{"kind": "float", "value": 0}, {"kind": "float", "value": 0}, {"kind": "float", "value": 0}]}, {"values": [{"kind": "float", "value": 1}, {"kind": "float", "value": 0}, {"kind": "float", "value": 0}]}, {"values": [{"kind": "float", "value": 0}, {"kind": "float", "value": 1}, {"kind": "float", "value": 0}]}]}, {"name": "face", "count": 1, "properties": [{"name": "vertex_indices", "form": "list", "countKind": "uChar", "valueKind": "int"}], "rows": [{"values": [{"kind": "list", "value": [{"kind": "int", "value": 0}, {"kind": "int", "value": 1}, {"kind": "int", "value": 2}]}]}]}]}} |
       | set-format         | {"format":"binaryLittleEndian"}                                                                                                                                                                                                                                                                    |
       | insert-comment     | {"index":0,"comment":"mutation-inserted comment"}                                                                                                                                                                                                                                                  |
       | remove-comment     | {"index":0}                                                                                                                                                                                                                                                                                         |
-      | add-element        | {"index":3,"element":{"name":"material","count":1,"properties":[{"name":"diffuse_red","form":"scalar","kind":"uChar"}],"rows":[{"values":[200]}]}}                                                                                                                                               |
+      | add-element        | {"index": 3, "element": {"name": "material", "count": 1, "properties": [{"name": "diffuse_red", "form": "scalar", "kind": "uChar"}], "rows": [{"values": [{"kind": "uChar", "value": 200}]}]}} |
       | remove-element     | {"name":"edge"}                                                                                                                                                                                                                                                                                     |
-      | insert-row         | {"elementName":"vertex","index":8449,"row":{"values":[0.5,0.5,0.5,0,0,1,0.5,0.5]}}                                                                                                                                                                                                                |
-      | remove-row         | {"elementName":"vertex","index":8448}                                                                                                                                                                                                                                                              |
-      | set-row-property   | {"elementName":"vertex","rowIndex":0,"propertyName":"x","value":42}                                                                                                                                                                                                                                |
-
-  @id-no-mutation-baseline-mutate
-  @level-exhaustive
-  @mode-differential
-  Scenario: Apply no-mutation to the real document
-    Given the real input document shared://🌐️pattern-sphere/🧊️.ply
-    When the no-mutation mutation is applied with its parameters
-      """
-      {"kind": "no-mutation", "params": {}}
-      """
-    Then the oracle and the subject agree on the semantic projection
+      | insert-row         | {"elementName": "vertex", "index": 8449, "row": {"values": [{"kind": "float", "value": 0.5}, {"kind": "float", "value": 0.5}, {"kind": "float", "value": 0.5}, {"kind": "float", "value": 0}, {"kind": "float", "value": 0}, {"kind": "float", "value": 1}, {"kind": "float", "value": 0.5}, {"kind": "float", "value": 0.5}]}} |
+      | remove-row         | {"elementName": "vertex", "index": 8448} |
+      | set-row-property   | {"elementName": "vertex", "rowIndex": 0, "propertyName": "x", "value": {"kind": "float", "value": 42}} |
 
   @id-inverse
   @level-exhaustive
@@ -94,27 +83,15 @@ Feature: Apply every typed PLY 1.0 mutation to a real-world document
     Then the document matches its pre-mutation semantic projection
     Examples:
       | id                | params                                                                                                                                                                                                                                                                                              |
-      | set-snapshot       | {"snapshot":{"format":"ascii","comments":["synthetic replacement snapshot"],"elements":[{"name":"vertex","count":3,"properties":[{"name":"x","form":"scalar","kind":"float"},{"name":"y","form":"scalar","kind":"float"},{"name":"z","form":"scalar","kind":"float"}],"rows":[{"values":[0,0,0]},{"values":[1,0,0]},{"values":[0,1,0]}]},{"name":"face","count":1,"properties":[{"name":"vertex_indices","form":"list","countKind":"uChar","valueKind":"int"}],"rows":[{"values":[[0,1,2]]}]}]}} |
+      | set-snapshot       | {"snapshot": {"schema": "stdio.ply", "format": "ascii", "comments": ["synthetic replacement snapshot"], "elements": [{"name": "vertex", "count": 3, "properties": [{"name": "x", "form": "scalar", "kind": "float"}, {"name": "y", "form": "scalar", "kind": "float"}, {"name": "z", "form": "scalar", "kind": "float"}], "rows": [{"values": [{"kind": "float", "value": 0}, {"kind": "float", "value": 0}, {"kind": "float", "value": 0}]}, {"values": [{"kind": "float", "value": 1}, {"kind": "float", "value": 0}, {"kind": "float", "value": 0}]}, {"values": [{"kind": "float", "value": 0}, {"kind": "float", "value": 1}, {"kind": "float", "value": 0}]}]}, {"name": "face", "count": 1, "properties": [{"name": "vertex_indices", "form": "list", "countKind": "uChar", "valueKind": "int"}], "rows": [{"values": [{"kind": "list", "value": [{"kind": "int", "value": 0}, {"kind": "int", "value": 1}, {"kind": "int", "value": 2}]}]}]}]}} |
       | set-format         | {"format":"binaryLittleEndian"}                                                                                                                                                                                                                                                                    |
       | insert-comment     | {"index":0,"comment":"mutation-inserted comment"}                                                                                                                                                                                                                                                  |
       | remove-comment     | {"index":0}                                                                                                                                                                                                                                                                                         |
-      | add-element        | {"index":3,"element":{"name":"material","count":1,"properties":[{"name":"diffuse_red","form":"scalar","kind":"uChar"}],"rows":[{"values":[200]}]}}                                                                                                                                               |
+      | add-element        | {"index": 3, "element": {"name": "material", "count": 1, "properties": [{"name": "diffuse_red", "form": "scalar", "kind": "uChar"}], "rows": [{"values": [{"kind": "uChar", "value": 200}]}]}} |
       | remove-element     | {"name":"edge"}                                                                                                                                                                                                                                                                                     |
-      | insert-row         | {"elementName":"vertex","index":8449,"row":{"values":[0.5,0.5,0.5,0,0,1,0.5,0.5]}}                                                                                                                                                                                                                |
-      | remove-row         | {"elementName":"vertex","index":8448}                                                                                                                                                                                                                                                              |
-      | set-row-property   | {"elementName":"vertex","rowIndex":0,"propertyName":"x","value":42}                                                                                                                                                                                                                                |
-
-  @id-no-mutation-baseline-inverse
-  @level-exhaustive
-  @mode-property
-  Scenario: Undoing no-mutation restores the real document
-    Given the real input document shared://🌐️pattern-sphere/🧊️.ply
-    When the no-mutation mutation is applied with its parameters
-      """
-      {"kind": "no-mutation", "params": {}}
-      """
-    And the mutation's own inverse is applied to the result
-    Then the document matches its pre-mutation semantic projection
+      | insert-row         | {"elementName": "vertex", "index": 8449, "row": {"values": [{"kind": "float", "value": 0.5}, {"kind": "float", "value": 0.5}, {"kind": "float", "value": 0.5}, {"kind": "float", "value": 0}, {"kind": "float", "value": 0}, {"kind": "float", "value": 1}, {"kind": "float", "value": 0.5}, {"kind": "float", "value": 0.5}]}} |
+      | remove-row         | {"elementName": "vertex", "index": 8448} |
+      | set-row-property   | {"elementName": "vertex", "rowIndex": 0, "propertyName": "x", "value": {"kind": "float", "value": 42}} |
 
   @id-identity-round-trip
   @level-long

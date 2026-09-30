@@ -5,20 +5,27 @@
   "type": "object",
   "additionalProperties": false,
   "required": [
+    "mutation",
     "index",
     "slide"
   ],
   "properties": {
+    "mutation": {
+      "const": "insertSlide",
+      "description": "Aggregate discriminator spliced in by SemioPresentationMutation; absent when the payload stands alone."
+    },
     "index": {
       "type": "integer",
       "minimum": 0
     },
     "slide": {
-      "$ref": "#/$defs/Slide"
-    },
-    "mutation": {
-      "const": "insertSlide",
-      "description": "Aggregate discriminator spliced in by SemioPresentationMutation; absent when the payload stands alone."
+      "$ref": "#/$defs/Slide",
+      "x-semio-ui": {
+        "label": {
+          "en": "Slide",
+          "de": "Folie"
+        }
+      }
     }
   },
   "$defs": {

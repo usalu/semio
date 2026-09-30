@@ -4,9 +4,35 @@
   "title": "SetActiveShot",
   "type": "object",
   "additionalProperties": false,
+  "required": [
+    "mutation"
+  ],
   "properties": {
+    "mutation": {
+      "const": "setActiveShot"
+    },
     "shotId": {
-      "type": "string"
+      "type": [
+        "string",
+        "null"
+      ],
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Active shot",
+          "de": "Aktive Aufnahme"
+        },
+        "description": {
+          "en": "The shot being framed.",
+          "de": "Die Aufnahme, die gerade eingerichtet wird."
+        },
+        "ref": {
+          "kind": "shot"
+        },
+        "group": "target",
+        "order": 10
+      }
     }
   }
 }

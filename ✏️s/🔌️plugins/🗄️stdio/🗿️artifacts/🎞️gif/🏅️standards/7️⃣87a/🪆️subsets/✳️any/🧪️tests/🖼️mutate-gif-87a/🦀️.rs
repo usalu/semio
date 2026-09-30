@@ -14,7 +14,7 @@
 //! not move it at all.
 
 use semio_repo_test_host::{Adapter, Context, Json, Outcome};
-use semio_s_plugin_stdio_test_oracle::artifacts::gif::standards::v87a::subsets::any::{oracle_apply_mutation, oracle_inverse_spec, project_gif_87a};
+use semio_s_plugin_stdio_test_oracle::artifacts::gif::standards::v87a::subsets::any::{oracle_apply_mutation, oracle_apply_mutation_inverse, oracle_identity_round_trip, project_gif_87a};
 use semio_s_plugin_stdio_test_oracle::law;
 
 //#region 🔖️Input
@@ -27,11 +27,6 @@ const INPUT: &str = "shared://🐘️dancing-87a-large/🖼️.gif";
 /// is the smallest genuine GIF87a committed here and the one whose whole index buffer a scenario can
 /// still name literally, so nothing it proved is given up.
 const SMALL_INPUT: &str = "shared://💃️dancing-87a/🖼️.gif";
-
-
-fn empty_params() -> Json {
-    Json::Object(Vec::new())
-}
 
 /// 🧾️ `{"kind": <id>, "params": <params>}` from the scenario's own doc string.
 fn spec(ctx: &Context) -> Result<Json, String> {
@@ -63,13 +58,10 @@ fn inverse_oracle(ctx: &Context) -> Result<Outcome, String> {
     let input = ctx.fixture_bytes(INPUT)?;
     let before = project_gif_87a(&input)?;
     let forward = spec(ctx)?;
-    let kind = forward.str("kind");
-    let params = forward.get("params").cloned().unwrap_or_else(empty_params);
     let mutated = oracle_apply_mutation(&input, &forward)?;
-    let inverse = oracle_inverse_spec(&input, &kind, &params)?;
-    let restored = oracle_apply_mutation(&mutated, &inverse)?;
+    let restored = oracle_apply_mutation_inverse(&input, &forward, &mutated)?;
     let projection = project_gif_87a(&restored)?;
-    law::inverse_restores(&kind, &projection, &before)?;
+    law::inverse_restores(&forward.str("kind"), &projection, &before)?;
     Ok(Outcome::with_raw(restored, projection))
 }
 
@@ -85,8 +77,7 @@ fn round_trip_oracle(ctx: &Context) -> Result<Outcome, String> {
 
 /// 🔁️ The probe itself, over one GIF87a document.
 fn round_trip_oracle_once(input: &[u8]) -> Result<(Vec<u8>, Json), String> {
-    let no_mutation = Json::Object(vec![("kind".to_string(), Json::String("no-mutation".to_string())), ("params".to_string(), empty_params())]);
-    let output = oracle_apply_mutation(input, &no_mutation)?;
+    let output = oracle_identity_round_trip(input)?;
     law::reparsed_not_copied(&output, input)?;
     let before = project_gif_87a(input)?;
     let after = project_gif_87a(&output)?;
@@ -98,146 +89,20 @@ fn round_trip_oracle_once(input: &[u8]) -> Result<(Vec<u8>, Json), String> {
 //#region 🔖️Subject
 #[cfg(feature = "sut")]
 mod subject {
-    use super::{empty_params, spec, INPUT, SMALL_INPUT};
+    use super::{spec, INPUT, SMALL_INPUT};
     use semio_repo_test_host::{Context, Json, Outcome};
     use semio_s_plugin_stdio_test_oracle::artifacts::gif::standards::v87a::subsets::any::project_gif_87a;
     use semio_s_artifact_stdio_gif::standards::v87a::subsets::any::io::{decode_gif, encode_gif};
-    use semio_s_artifact_stdio_gif::standards::v87a::subsets::any::schema::mutations::{
-        apply_gif_mutation, insert_image, move_image, remove_image, set_background_color_index, set_global_color_table, set_image_geometry, set_image_interlace, set_image_pixels, set_pixel_aspect_ratio, set_screen_size, set_snapshot, GifMutation,
-    };
-    use semio_s_artifact_stdio_gif::standards::v87a::subsets::any::schema::snapshot::{GifColorTable, GifImage, GifRgb, GifSnapshot};
-    use semio_s_artifact_stdio_gif::STDIO_GIF_DOCUMENT_SCHEMA;
+    use semio_s_artifact_stdio_gif::standards::v87a::subsets::any::schema::mutations::{apply_gif_mutation, decode_gif_mutation_payload, inverse_gif_mutation, GifMutation};
+    use semio_s_artifact_stdio_gif::standards::v87a::subsets::any::schema::snapshot::GifSnapshot;
 
-    //#region 🔖️JsonBridge
-    /// 🌉️ Mirrors the oracle's own JSON bridge (`../../🏅️standards/7️⃣87a/🪆️subsets/✳️any/🔮️oracles/
-    /// 🦀️.rs`) but builds the REAL `GifMutation`/`GifSnapshot` this repository's own codec
-    /// consumes, independently of that mirror — the two are never allowed to call into each other.
-    fn num(json: &Json, key: &str) -> Option<f64> {
-        match json.get(key) {
-            Some(Json::Number(value)) => Some(*value),
-            _ => None,
-        }
+    //#region 🔖️MutationFromSpec
+    /// 🦠️ Decodes the scenario's `{"kind", "params"}` doc string: `params` is the leaf's own wire payload, read
+    /// through the vocabulary's derive-generated decoder rather than a params grammar written beside it.
+    fn mutation_from_spec(spec: &Json) -> Result<GifMutation, String> {
+        decode_gif_mutation_payload(&spec.str("kind"), &spec.get("params").cloned().unwrap_or(Json::Null).to_string())
     }
-
-    fn bool_field(json: &Json, key: &str) -> Option<bool> {
-        match json.get(key) {
-            Some(Json::Bool(value)) => Some(*value),
-            _ => None,
-        }
-    }
-
-    fn color_table_from_json(json: &Json) -> Result<GifColorTable, String> {
-        let mut colors = Vec::new();
-        for color in json.array("colors") {
-            colors.push(GifRgb { r: num(&color, "r").ok_or("color table entry missing r")? as u8, g: num(&color, "g").ok_or("color table entry missing g")? as u8, b: num(&color, "b").ok_or("color table entry missing b")? as u8 });
-        }
-        Ok(GifColorTable { sorted: bool_field(json, "sorted").unwrap_or(false), colors })
-    }
-
-    fn image_from_json(json: &Json) -> Result<GifImage, String> {
-        let lct = match json.get("lct") {
-            Some(Json::Null) | None => None,
-            Some(value) => Some(color_table_from_json(value)?),
-        };
-        let indices = json.array("indices").iter().map(|v| match v { Json::Number(n) => *n as u8, _ => 0 }).collect();
-        Ok(GifImage {
-            left: num(json, "left").unwrap_or(0.0) as u32,
-            top: num(json, "top").unwrap_or(0.0) as u32,
-            width: num(json, "width").ok_or("image missing width")? as u32,
-            height: num(json, "height").ok_or("image missing height")? as u32,
-            interlace: bool_field(json, "interlace").unwrap_or(false),
-            lct,
-            indices,
-        })
-    }
-
-    fn snapshot_from_json(json: &Json) -> Result<GifSnapshot, String> {
-        let gct = match json.get("gct") {
-            Some(Json::Null) | None => None,
-            Some(value) => Some(color_table_from_json(value)?),
-        };
-        let images = json.array("images").iter().map(image_from_json).collect::<Result<Vec<_>, _>>()?;
-        Ok(GifSnapshot {
-            schema: STDIO_GIF_DOCUMENT_SCHEMA.to_string(),
-            width: num(json, "width").ok_or("snapshot missing width")? as u32,
-            height: num(json, "height").ok_or("snapshot missing height")? as u32,
-            gct,
-            background_color_index: num(json, "backgroundColorIndex").unwrap_or(0.0) as u8,
-            pixel_aspect_ratio: num(json, "pixelAspectRatio").unwrap_or(0.0) as u8,
-            images,
-        })
-    }
-
-    fn mutation_from_spec(base: &GifSnapshot, spec: &Json) -> Result<GifMutation, String> {
-        let kind = spec.str("kind");
-        let empty = empty_params();
-        let params = spec.get("params").unwrap_or(&empty);
-        Ok(match kind.as_str() {
-            "no-mutation" => GifMutation::SetSnapshot(set_snapshot::SetSnapshot { snapshot: base.clone() }),
-            "set-snapshot" => GifMutation::SetSnapshot(set_snapshot::SetSnapshot { snapshot: snapshot_from_json(params.get("snapshot").ok_or("set-snapshot: missing snapshot")?)? }),
-            "set-screen-size" => GifMutation::SetScreenSize(set_screen_size::SetScreenSize { width: num(params, "width").ok_or("set-screen-size: missing width")? as u32, height: num(params, "height").ok_or("set-screen-size: missing height")? as u32 }),
-            "set-global-color-table" => GifMutation::SetGlobalColorTable(set_global_color_table::SetGlobalColorTable {
-                gct: match params.get("gct") {
-                    Some(Json::Null) | None => None,
-                    Some(value) => Some(color_table_from_json(value)?),
-                },
-            }),
-            "set-background-color-index" => GifMutation::SetBackgroundColorIndex(set_background_color_index::SetBackgroundColorIndex { index: num(params, "index").ok_or("set-background-color-index: missing index")? as u8 }),
-            "set-pixel-aspect-ratio" => GifMutation::SetPixelAspectRatio(set_pixel_aspect_ratio::SetPixelAspectRatio { ratio: num(params, "ratio").ok_or("set-pixel-aspect-ratio: missing ratio")? as u8 }),
-            "insert-image" => GifMutation::InsertImage(insert_image::InsertImage { index: num(params, "index").ok_or("insert-image: missing index")? as usize, image: image_from_json(params.get("image").ok_or("insert-image: missing image")?)? }),
-            "remove-image" => GifMutation::RemoveImage(remove_image::RemoveImage { index: num(params, "index").ok_or("remove-image: missing index")? as usize }),
-            "move-image" => GifMutation::MoveImage(move_image::MoveImage { from: num(params, "from").ok_or("move-image: missing from")? as usize, to: num(params, "to").ok_or("move-image: missing to")? as usize }),
-            "set-image-geometry" => GifMutation::SetImageGeometry(set_image_geometry::SetImageGeometry { index: num(params, "index").ok_or("set-image-geometry: missing index")? as usize, left: num(params, "left").ok_or("set-image-geometry: missing left")? as u32, top: num(params, "top").ok_or("set-image-geometry: missing top")? as u32, width: num(params, "width").ok_or("set-image-geometry: missing width")? as u32, height: num(params, "height").ok_or("set-image-geometry: missing height")? as u32 }),
-            "set-image-pixels" => GifMutation::SetImagePixels(set_image_pixels::SetImagePixels { index: num(params, "index").ok_or("set-image-pixels: missing index")? as usize, indices: params.array("indices").iter().map(|v| match v { Json::Number(n) => *n as u8, _ => 0 }).collect() }),
-            "set-image-interlace" => GifMutation::SetImageInterlace(set_image_interlace::SetImageInterlace { index: num(params, "index").ok_or("set-image-interlace: missing index")? as usize, interlace: bool_field(params, "interlace").ok_or("set-image-interlace: missing interlace")? }),
-            other => return Err(format!("mutation kind {:?} is not recognised", other)),
-        })
-    }
-
-    /// ↩️ The real inverse of `mutation`, relative to `original` (the PRE-mutation snapshot) —
-    /// transcribed from `GifMutation::inverse` (`../../🏅️standards/7️⃣87a/🪆️subsets/✳️any/🧬️schema/
-    /// 🧬️mutations/🦀️.rs`) rather than calling it, so this adapter needs no dependency on
-    /// the `protocol::Mutation` trait beyond what the plugin crate already re-exports through
-    /// `apply_gif_mutation`.
-    fn inverse_mutation(original: &GifSnapshot, mutation: &GifMutation) -> GifMutation {
-        match mutation {
-            GifMutation::SetSnapshot(_) => GifMutation::SetSnapshot(set_snapshot::SetSnapshot { snapshot: original.clone() }),
-            GifMutation::SetScreenSize(_) => GifMutation::SetScreenSize(set_screen_size::SetScreenSize { width: original.width, height: original.height }),
-            GifMutation::SetGlobalColorTable(_) => GifMutation::SetGlobalColorTable(set_global_color_table::SetGlobalColorTable { gct: original.gct.clone() }),
-            GifMutation::SetBackgroundColorIndex(_) => GifMutation::SetBackgroundColorIndex(set_background_color_index::SetBackgroundColorIndex { index: original.background_color_index }),
-            GifMutation::SetPixelAspectRatio(_) => GifMutation::SetPixelAspectRatio(set_pixel_aspect_ratio::SetPixelAspectRatio { ratio: original.pixel_aspect_ratio }),
-            GifMutation::InsertImage(insert_image::InsertImage { index, .. }) => GifMutation::RemoveImage(remove_image::RemoveImage { index: (*index).min(original.images.len()) }),
-            GifMutation::RemoveImage(remove_image::RemoveImage { index }) => match original.images.get(*index) {
-                Some(image) => GifMutation::InsertImage(insert_image::InsertImage { index: *index, image: image.clone() }),
-                None => GifMutation::SetSnapshot(set_snapshot::SetSnapshot { snapshot: original.clone() }),
-            },
-            GifMutation::MoveImage(move_image::MoveImage { from, to }) => {
-                let mut images = original.images.clone();
-                let landed_at = if *from < images.len() {
-                    let item = images.remove(*from);
-                    let at = (*to).min(images.len());
-                    images.insert(at, item);
-                    at
-                } else {
-                    *from
-                };
-                GifMutation::MoveImage(move_image::MoveImage { from: landed_at, to: *from })
-            }
-            GifMutation::SetImageGeometry(set_image_geometry::SetImageGeometry { index, .. }) => match original.images.get(*index) {
-                Some(image) => GifMutation::SetImageGeometry(set_image_geometry::SetImageGeometry { index: *index, left: image.left, top: image.top, width: image.width, height: image.height }),
-                None => GifMutation::SetSnapshot(set_snapshot::SetSnapshot { snapshot: original.clone() }),
-            },
-            GifMutation::SetImagePixels(set_image_pixels::SetImagePixels { index, .. }) => match original.images.get(*index) {
-                Some(image) => GifMutation::SetImagePixels(set_image_pixels::SetImagePixels { index: *index, indices: image.indices.clone() }),
-                None => GifMutation::SetSnapshot(set_snapshot::SetSnapshot { snapshot: original.clone() }),
-            },
-            GifMutation::SetImageInterlace(set_image_interlace::SetImageInterlace { index, .. }) => match original.images.get(*index) {
-                Some(image) => GifMutation::SetImageInterlace(set_image_interlace::SetImageInterlace { index: *index, interlace: image.interlace }),
-                None => GifMutation::SetSnapshot(set_snapshot::SetSnapshot { snapshot: original.clone() }),
-            },
-        }
-    }
-    //#endregion 🔖️JsonBridge
+    //#endregion 🔖️MutationFromSpec
 
     /// 🧫️ Copies the immutable fixture into the work directory and decodes the mutable copy through
     /// the repository's own, complete GIF87a parser.
@@ -249,8 +114,7 @@ mod subject {
 
     pub fn mutate(ctx: &Context) -> Result<Outcome, String> {
         let mut snapshot = original_snapshot(ctx)?;
-        let mutation = mutation_from_spec(&snapshot, &spec(ctx)?)?;
-        apply_gif_mutation(&mut snapshot, &mutation);
+        apply_gif_mutation(&mut snapshot, &mutation_from_spec(&spec(ctx)?)?);
         let bytes = encode_gif(&snapshot)?;
         let projection = project_gif_87a(&bytes)?;
         Ok(Outcome::with_raw(bytes, projection))
@@ -258,11 +122,12 @@ mod subject {
 
     pub fn inverse(ctx: &Context) -> Result<Outcome, String> {
         let original = original_snapshot(ctx)?;
-        let mutation = mutation_from_spec(&original, &spec(ctx)?)?;
+        let mutation = mutation_from_spec(&spec(ctx)?)?;
         let mut restored = original.clone();
         apply_gif_mutation(&mut restored, &mutation);
-        let undo = inverse_mutation(&original, &mutation);
-        apply_gif_mutation(&mut restored, &undo);
+        for undo in inverse_gif_mutation(&mutation, &original) {
+            apply_gif_mutation(&mut restored, &undo);
+        }
         let bytes = encode_gif(&restored)?;
         let projection = project_gif_87a(&bytes)?;
         Ok(Outcome::with_raw(bytes, projection))
@@ -294,10 +159,10 @@ mod subject {
 /// base ids, which the host resolves for every Examples row, and plain scenarios under their own ids.
 pub fn adapter() -> Adapter {
     let mut built = Adapter::new("rust");
-    built = built.oracle("mutate", mutate_oracle).oracle("no-mutation-baseline-mutate", mutate_oracle).oracle("inverse", inverse_oracle).oracle("no-mutation-baseline-inverse", inverse_oracle);
+    built = built.oracle("mutate", mutate_oracle).oracle("inverse", inverse_oracle);
     #[cfg(feature = "sut")]
     {
-        built = built.subject("mutate", subject::mutate).subject("no-mutation-baseline-mutate", subject::mutate).subject("inverse", subject::inverse).subject("no-mutation-baseline-inverse", subject::inverse);
+        built = built.subject("mutate", subject::mutate).subject("inverse", subject::inverse);
     }
     built = built.oracle("identity-round-trip", round_trip_oracle);
     #[cfg(feature = "sut")]

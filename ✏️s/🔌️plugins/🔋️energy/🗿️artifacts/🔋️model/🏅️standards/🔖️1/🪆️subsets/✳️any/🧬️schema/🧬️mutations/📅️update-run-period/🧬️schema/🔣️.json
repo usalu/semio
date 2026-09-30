@@ -5,6 +5,7 @@
   "type": "object",
   "additionalProperties": false,
   "required": [
+    "mutation",
     "startMonth",
     "startDay",
     "endMonth",
@@ -12,20 +13,105 @@
     "year"
   ],
   "properties": {
+    "mutation": {
+      "const": "updateRunPeriod"
+    },
     "startMonth": {
-      "type": "integer"
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 12,
+      "x-semio-ui": {
+        "widget": "stepper",
+        "role": "value",
+        "label": {
+          "en": "Start month",
+          "de": "Startmonat"
+        },
+        "step": 1,
+        "precision": 0,
+        "softMin": 1,
+        "softMax": 12,
+        "group": "calendar",
+        "order": 10
+      }
     },
     "startDay": {
-      "type": "integer"
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 31,
+      "x-semio-ui": {
+        "widget": "stepper",
+        "role": "value",
+        "label": {
+          "en": "Start day",
+          "de": "Starttag"
+        },
+        "step": 1,
+        "precision": 0,
+        "softMin": 1,
+        "softMax": 31,
+        "group": "calendar",
+        "order": 20
+      }
     },
     "endMonth": {
-      "type": "integer"
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 12,
+      "x-semio-ui": {
+        "widget": "stepper",
+        "role": "value",
+        "label": {
+          "en": "End month",
+          "de": "Endmonat"
+        },
+        "step": 1,
+        "precision": 0,
+        "softMin": 1,
+        "softMax": 12,
+        "group": "calendar",
+        "order": 30
+      }
     },
     "endDay": {
-      "type": "integer"
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 31,
+      "x-semio-ui": {
+        "widget": "stepper",
+        "role": "value",
+        "label": {
+          "en": "End day",
+          "de": "Endtag"
+        },
+        "step": 1,
+        "precision": 0,
+        "softMin": 1,
+        "softMax": 31,
+        "group": "calendar",
+        "order": 40
+      }
     },
     "year": {
-      "type": "integer"
+      "type": "integer",
+      "minimum": 0,
+      "maximum": 65535,
+      "x-semio-ui": {
+        "widget": "stepper",
+        "role": "value",
+        "label": {
+          "en": "Year",
+          "de": "Jahr"
+        },
+        "description": {
+          "en": "Calendar year that fixes the weekdays.",
+          "de": "Kalenderjahr, das die Wochentage festlegt."
+        },
+        "step": 1,
+        "precision": 0,
+        "group": "calendar",
+        "order": 50
+      }
     }
   }
 }

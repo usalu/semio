@@ -5,15 +5,43 @@
   "type": "object",
   "additionalProperties": false,
   "required": [
+    "mutation",
     "newX",
     "newY"
   ],
   "properties": {
+    "mutation": {
+      "const": "moveCamera2d"
+    },
     "newX": {
-      "type": "number"
+      "type": "number",
+      "x-semio-ui": {
+        "widget": "stepper",
+        "role": "value",
+        "label": {
+          "en": "Camera X",
+          "de": "Kamera X"
+        },
+        "step": 1,
+        "precision": 2,
+        "group": "camera",
+        "order": 10
+      }
     },
     "newY": {
-      "type": "number"
+      "type": "number",
+      "x-semio-ui": {
+        "widget": "stepper",
+        "role": "value",
+        "label": {
+          "en": "Camera Y",
+          "de": "Kamera Y"
+        },
+        "step": 1,
+        "precision": 2,
+        "group": "camera",
+        "order": 20
+      }
     }
   }
 }

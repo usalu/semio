@@ -11,14 +11,61 @@
   ],
   "properties": {
     "elementId": {
-      "type": "string"
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Envelope element",
+          "de": "Bauteil der Gebäudehülle"
+        },
+        "description": {
+          "en": "The envelope element this mutation addresses.",
+          "de": "Das Bauteil der Gebäudehülle, das diese Mutation adressiert."
+        },
+        "ref": {
+          "kind": "element"
+        },
+        "group": "target",
+        "order": 10
+      }
     },
     "index": {
       "type": "integer",
-      "minimum": 0
+      "minimum": 0,
+      "x-semio-ui": {
+        "widget": "stepper",
+        "role": "value",
+        "label": {
+          "en": "Layer",
+          "de": "Schicht"
+        },
+        "description": {
+          "en": "Zero-based position of the layer, counted from the interior in its list.",
+          "de": "Nullbasierte Position der Schicht, von innen gezählt, in der Liste."
+        },
+        "step": 1,
+        "precision": 0,
+        "group": "target",
+        "order": 20
+      }
     },
     "newCompressiveClass": {
-      "type": "string"
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "text",
+        "role": "value",
+        "label": {
+          "en": "Compressive load class",
+          "de": "Druckbelastbarkeit"
+        },
+        "description": {
+          "en": "DIN 4108-10 class dh, ds, dm, dk or dx.",
+          "de": "Kurzzeichen nach DIN 4108-10: dh, ds, dm, dk oder dx."
+        },
+        "group": "layer",
+        "order": 30
+      }
     }
   }
 }

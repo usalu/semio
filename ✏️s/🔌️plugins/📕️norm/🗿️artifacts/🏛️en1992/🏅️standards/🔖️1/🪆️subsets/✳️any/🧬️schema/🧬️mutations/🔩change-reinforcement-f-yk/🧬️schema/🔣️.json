@@ -10,10 +10,43 @@
   ],
   "properties": {
     "gradeId": {
-      "type": "string"
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Reinforcing steel grade",
+          "de": "Betonstahlsorte"
+        },
+        "description": {
+          "en": "The reinforcing steel grade this mutation addresses.",
+          "de": "Die Betonstahlsorte, die diese Mutation adressiert."
+        },
+        "ref": {
+          "kind": "reinforcementGrade"
+        },
+        "group": "target",
+        "order": 10
+      }
     },
     "newFYk": {
-      "type": "number"
+      "type": "number",
+      "exclusiveMinimum": 0,
+      "x-semio-ui": {
+        "widget": "stepper",
+        "role": "value",
+        "label": {
+          "en": "Characteristic yield strength f_yk",
+          "de": "Charakteristische Streckgrenze f_yk"
+        },
+        "unit": "Pa",
+        "displayUnit": "N/mm²",
+        "displayFactor": 1e-06,
+        "step": 5000000.0,
+        "precision": 0,
+        "group": "material",
+        "order": 20
+      }
     }
   }
 }

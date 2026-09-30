@@ -84,7 +84,7 @@ async fn declared_outcome_holds_and_a_missing_id_only_degrades_to_partial() {
     assert_eq!(partial.messages()[0].code.0, "mutation.partial", "drag-assets/offsets-both-assets-and-skips-a-ghost: the skip guard's frozen code");
     assert_eq!(partial.messages()[0].target, vec!["asset-ghost".to_string()], "drag-assets/offsets-both-assets-and-skips-a-ghost: only the skipped id is named");
 
-    let nothing_resolves: ShootingMutation = serde_json::from_str(r#"{"mutation":"dragAssets","asset_ids":["asset-ghost"],"dx":4.0,"dy":-1.0,"dz":0.5}"#).expect("probe mutation decodes");
+    let nothing_resolves: ShootingMutation = serde_json::from_str(r#"{"mutation":"dragAssets","assetIds":["asset-ghost"],"dx":4.0,"dy":-1.0,"dz":0.5}"#).expect("probe mutation decodes");
     let rejected = nothing_resolves.diff(&before());
     assert_eq!(rejected.worst_level(), Some(protocol::Severity::Error), "drag-assets/offsets-both-assets-and-skips-a-ghost: a drag that resolves nothing is an Error");
     assert_eq!(rejected.messages()[0].code.0, "mutation.target-missing", "drag-assets/offsets-both-assets-and-skips-a-ghost: the empty-selection guard's frozen code");

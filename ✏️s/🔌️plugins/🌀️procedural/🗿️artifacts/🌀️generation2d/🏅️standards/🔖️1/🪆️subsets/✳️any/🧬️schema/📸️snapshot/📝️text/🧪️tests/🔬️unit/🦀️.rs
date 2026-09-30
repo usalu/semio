@@ -69,7 +69,7 @@ async fn command_envelope_round_trip_holds_for_an_applied_operation() {
     let document = crate::standards::v1::subsets::any::schema::snapshot::Generation2dSnapshotRead::new(Generation2dSnapshot::default());
     let replaced_id = crate::widget_id(document.host_snapshot.widgets.last().expect("the 2d default document is a non-empty starter graph")).to_string();
     let mut store = crate::store_fixture::document_store(Generation2dSnapshot::default()).await;
-    store.dispatch(ArtifactCommand::Apply { mutations: vec![crate::standards::v1::subsets::any::schema::mutations::text::replace_widget(Widget::InputNote { id: replaced_id, text: String::new() })], description: None }).await.expect("apply");
+    store.dispatch(ArtifactCommand::Apply { mutations: vec![crate::standards::v1::subsets::any::schema::mutations::text::replace_widget(Widget::InputNote { id: replaced_id, text: String::new() })], description: None, transaction: None }).await.expect("apply");
     let edit: &Edit<Generation2dMutation> = store.envelope().vcs.edits.last().expect("dispatch must have recorded an edit");
     test_support::assert_command_envelope_round_trip::<Generation2dSnapshot, Generation2dMutation>(edit, &ArtifactId(store.envelope().id.clone()), &SchemaId(store.envelope().schema.clone())).await;
     crate::store_fixture::close(store);

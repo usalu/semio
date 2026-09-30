@@ -4,10 +4,13 @@
   "title":"Change Layer Mask",
   "type":"object",
   "additionalProperties":false,
-  "required":["layerId","expected","mask"],
+  "required":["mutation","layerId","expected","mask"],
   "properties":{
-    "layerId":{"type":"string","minLength":1},
-    "expected":{"anyOf":[{"type":"null"},{"$ref":"https://json.schemas.assets.semio-tech.com/s/raster/raster/artifact.json#/$defs/RasterLayerMask"}]},
-    "mask":{"anyOf":[{"type":"null"},{"$ref":"https://json.schemas.assets.semio-tech.com/s/raster/raster/artifact.json#/$defs/RasterLayerMask"}]}
+    "mutation": {
+      "const": "changeLayerMask"
+    },
+    "layerId":{"type":"string","minLength":1,"x-semio-ui":{"widget":"reference","role":"target","label":{"en":"Layer","de":"Ebene"},"description":{"en":"The layer this mutation addresses.","de":"Die Ebene, die diese Mutation adressiert."},"ref":{"kind":"layer","domain":"layers","granularity":"layer"},"group":"target","order":10}},
+    "expected":{"anyOf":[{"type":"null"},{"$ref":"https://json.schemas.assets.semio-tech.com/s/raster/raster/artifact.json#/$defs/RasterLayerMask"}],"x-semio-ui":{"role":"value","label":{"en":"Expected mask","de":"Erwartete Maske"},"description":{"en":"Value the layer must hold now; the edit is refused on a mismatch.","de":"Wert, den die Ebene jetzt haben muss; sonst wird die Bearbeitung abgelehnt."},"group":"mask","order":20}},
+    "mask":{"anyOf":[{"type":"null"},{"$ref":"https://json.schemas.assets.semio-tech.com/s/raster/raster/artifact.json#/$defs/RasterLayerMask"}],"x-semio-ui":{"role":"value","label":{"en":"Mask","de":"Maske"},"description":{"en":"The new mask; empty removes it.","de":"Die neue Maske; leer entfernt sie."},"group":"mask","order":30}}
   }
 }

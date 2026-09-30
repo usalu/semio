@@ -2,6 +2,9 @@
 pub mod mutations;
 pub(crate) use mutations::{SetSurfaceCount, SurfaceMutation};
 
+#[path = "../🎞️media-owner-context/🦀️.rs"]
+mod media_owner_context;
+
 // 🧪️ Proves the viewer helpers against a minimal editor/viewer pair sharing one dialect.
 use crate::app::artifact_app_laws::new_registered_app;
 use crate::app::artifact_app_laws::{assert_editor_and_viewer_share_dialect, assert_viewer_never_mutates, close_registered_fixture_app, meta, new_app, new_viewer};
@@ -293,6 +296,12 @@ impl ArtifactEditor for SurfaceEditorFixture {
     type TransientMutation = crate::app::NoTransientMutation;
     type Command = SurfaceEditorCommand;
 
+    fn build_instance_operation_owner() -> Box<dyn crate::app::ArtifactInstanceOperationOwner> { media_owner_context::owner("editor-instance") }
+
+    fn export_media_with_request_context(owner: &crate::app::ArtifactInstanceOperationOwnerHandle, port: &str, doc: &ArtifactView<'_, Self::Snapshot>, _transient: &crate::app::TransientView<'_, Self::Transient>) -> Result<Media, crate::app::MediaError> {
+        if port == "retained:out" { media_owner_context::export(owner, port, doc) } else { Self::export_media(port, doc) }
+    }
+
     crate::bounded_first_step_tool_proofs! {
         owner: EditorApp<SurfaceEditorFixture>, owner_file: "plugin/🧪️tests/🧬️mutation-fixtures-surface/🦀️.rs", controller: "testkit.surface@1/*#editor", artifact_schema: "semio.testkit-surface/v1",
         factory: "SurfaceFixtureFactory", factory_type: SurfaceFixtureFactory,
@@ -389,6 +398,12 @@ impl ArtifactViewer for SurfaceViewerFixture {
     type Transient = crate::app::NoTransient;
     type TransientMutation = crate::app::NoTransientMutation;
     type Command = SurfaceViewerCommand;
+
+    fn build_instance_operation_owner() -> Box<dyn crate::app::ArtifactInstanceOperationOwner> { media_owner_context::owner("viewer-instance") }
+
+    fn export_media_with_request_context(owner: &crate::app::ArtifactInstanceOperationOwnerHandle, port: &str, doc: &ArtifactView<'_, Self::Snapshot>, _transient: &crate::app::TransientView<'_, Self::Transient>) -> Result<Media, crate::app::MediaError> {
+        if port == "retained:out" { media_owner_context::export(owner, port, doc) } else { Self::export_media(port, doc) }
+    }
 
     fn mounted_job_maintenance_step(instance_id: u32, maximum_items: usize, maximum_bytes: usize) -> Result<PluginCloseStep, Fault> {
         if instance_id == u32::MAX {

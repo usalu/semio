@@ -5,17 +5,55 @@
   "type": "object",
   "additionalProperties": false,
   "required": [
+    "mutation",
     "id",
     "newValues"
   ],
   "properties": {
+    "mutation": {
+      "const": "replaceTimeSeriesScheduleValues"
+    },
     "id": {
-      "type": "integer"
+      "type": "integer",
+      "minimum": 0,
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Time series schedule",
+          "de": "Zeitreihenzeitplan"
+        },
+        "description": {
+          "en": "The time series schedule this mutation changes, by id.",
+          "de": "Zeitreihenzeitplan, den diese Mutation ändert, per ID."
+        },
+        "ref": {
+          "kind": "timeSeriesSchedule",
+          "domain": "energyModel",
+          "granularity": "schedule"
+        },
+        "group": "target",
+        "order": 10
+      }
     },
     "newValues": {
       "type": "array",
       "items": {
         "type": "number"
+      },
+      "minItems": 1,
+      "x-semio-ui": {
+        "role": "value",
+        "label": {
+          "en": "Values",
+          "de": "Werte"
+        },
+        "description": {
+          "en": "One value per timestep.",
+          "de": "Ein Wert je Zeitschritt."
+        },
+        "group": "values",
+        "order": 20
       }
     }
   }

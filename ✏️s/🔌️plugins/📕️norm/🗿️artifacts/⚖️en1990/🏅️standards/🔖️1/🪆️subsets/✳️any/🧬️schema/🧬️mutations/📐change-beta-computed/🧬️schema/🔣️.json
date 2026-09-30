@@ -1,4 +1,27 @@
 {
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/norm/en1990/mutation/change-beta-computed/schema.json",
   "title": "ChangeBetaComputed",
-  "type": "object"
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "mutation",
+    "newBetaComputed"
+  ],
+  "properties": {
+    "mutation": {
+      "const": "changeBetaComputed"
+    },
+    "newBetaComputed": {
+      "type": "number",
+      "x-semio-ui": {
+        "label": {
+          "en": "Computed reliability index β",
+          "de": "Berechneter Zuverlässigkeitsindex β"
+        },
+        "widget": "stepper",
+        "precision": 2
+      }
+    }
+  }
 }

@@ -185,7 +185,7 @@ fn tutorial_dialog_restoration_uses_declared_dialog_construction() {
     tutorial_apply_ui_snapshot(&mut shell, &snapshot);
     let restored = shell.chrome_build.dialog_stack.last().expect("known dialog is restored");
     assert_eq!(restored.id, "confirm.reset");
-    assert_eq!(restored.confirm_action.action, "resetTheme");
+    assert_eq!(restored.confirm_action, "resetTheme");
     tutorial_apply_ui_snapshot(&mut shell, &semio_framework::TutorialUiSnapshot::default());
     assert!(shell.chrome_build.dialog_stack.is_empty(), "an absent dialog closes the restored request");
     shell.queue_host_effects("tour-controller", vec![semio_framework::kernel::Effect::OpenDialog { req: semio_framework::kernel::RequestId(1), dialog_id: "confirm.reset".into(), args: None }]);

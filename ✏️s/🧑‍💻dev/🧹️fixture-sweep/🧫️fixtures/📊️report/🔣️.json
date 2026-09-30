@@ -1,0 +1,59 @@
+{
+  "schemaVersion": 1,
+  "valid": {
+    "id": "valid-report",
+    "assertions": 2,
+    "output": "[dsl-fixture-sweep] 4 example dir(s), 9 .semio fixture file(s) found, 9 law-check(s) run across 54 registered app kind(s), 0 unmapped fixture(s)\n[dsl-fixture-sweep] example asset coverage: 4 slug(s) on new 🖼️assets layout, 0 soft-skipped mid-migration",
+    "expected": {
+      "directories": 4,
+      "fixtures": 9,
+      "checks": 9,
+      "registered": 54,
+      "unmapped": 0,
+      "covered": 4,
+      "skipped": 0
+    }
+  },
+  "hostile": [
+    {
+      "id": "missing-sweep",
+      "output": "[dsl-fixture-sweep] example asset coverage: 4 slug(s) on new 🖼️assets layout, 0 soft-skipped mid-migration",
+      "assertions": 2
+    },
+    {
+      "id": "missing-coverage",
+      "output": "[dsl-fixture-sweep] 4 example dir(s), 9 .semio fixture file(s) found, 9 law-check(s) run across 54 registered app kind(s), 0 unmapped fixture(s)",
+      "assertions": 2
+    },
+    {
+      "id": "duplicate-sweep",
+      "output": "[dsl-fixture-sweep] 4 example dir(s), 9 .semio fixture file(s) found, 9 law-check(s) run across 54 registered app kind(s), 0 unmapped fixture(s)\n[dsl-fixture-sweep] example asset coverage: 4 slug(s) on new 🖼️assets layout, 0 soft-skipped mid-migration\n[dsl-fixture-sweep] 4 example dir(s), 9 .semio fixture file(s) found, 9 law-check(s) run across 54 registered app kind(s), 0 unmapped fixture(s)",
+      "assertions": 2
+    },
+    {
+      "id": "empty-directories",
+      "output": "[dsl-fixture-sweep] 0 example dir(s), 9 .semio fixture file(s) found, 9 law-check(s) run across 54 registered app kind(s), 0 unmapped fixture(s)\n[dsl-fixture-sweep] example asset coverage: 4 slug(s) on new 🖼️assets layout, 0 soft-skipped mid-migration",
+      "assertions": 2
+    },
+    {
+      "id": "empty-fixtures",
+      "output": "[dsl-fixture-sweep] 4 example dir(s), 0 .semio fixture file(s) found, 9 law-check(s) run across 54 registered app kind(s), 0 unmapped fixture(s)\n[dsl-fixture-sweep] example asset coverage: 4 slug(s) on new 🖼️assets layout, 0 soft-skipped mid-migration",
+      "assertions": 2
+    },
+    {
+      "id": "empty-checks",
+      "output": "[dsl-fixture-sweep] 4 example dir(s), 9 .semio fixture file(s) found, 0 law-check(s) run across 54 registered app kind(s), 0 unmapped fixture(s)\n[dsl-fixture-sweep] example asset coverage: 4 slug(s) on new 🖼️assets layout, 0 soft-skipped mid-migration",
+      "assertions": 2
+    },
+    {
+      "id": "empty-registry",
+      "output": "[dsl-fixture-sweep] 4 example dir(s), 9 .semio fixture file(s) found, 9 law-check(s) run across 0 registered app kind(s), 0 unmapped fixture(s)\n[dsl-fixture-sweep] example asset coverage: 4 slug(s) on new 🖼️assets layout, 0 soft-skipped mid-migration",
+      "assertions": 2
+    },
+    {
+      "id": "wrong-law-count",
+      "output": "[dsl-fixture-sweep] 4 example dir(s), 9 .semio fixture file(s) found, 9 law-check(s) run across 54 registered app kind(s), 0 unmapped fixture(s)\n[dsl-fixture-sweep] example asset coverage: 4 slug(s) on new 🖼️assets layout, 0 soft-skipped mid-migration",
+      "assertions": 1
+    }
+  ]
+}

@@ -27,5 +27,5 @@ export function createQuestionEvent(definition: FormsDefinition, question: FormQ
   try { parseFormsDefinition({ steps: [candidate] }); } catch { throw new Error("invalid-question"); }
   const target = stepId === null ? definition.steps[0] : definition.steps.find(step => step.id === stepId);
   if (stepId !== null && !target) throw new Error("missing-step");
-  return target ? { mutation: "createBlock", step_id: target.id, block: structuredClone(question), index: null } : { mutation: "createStep", step: candidate, index: null };
+  return target ? { mutation: "createBlock", stepId: target.id, block: structuredClone(question), index: null } : { mutation: "createStep", step: candidate, index: null };
 }

@@ -5,25 +5,48 @@
   "type": "object",
   "additionalProperties": false,
   "required": [
+    "mutation",
     "rowIndex",
     "fieldIndex",
     "value"
   ],
   "properties": {
-    "rowIndex": {
-      "type": "integer",
-      "minimum": 0
-    },
-    "fieldIndex": {
-      "type": "integer",
-      "minimum": 0
-    },
-    "value": {
-      "type": "string"
-    },
     "mutation": {
       "const": "setCell",
       "description": "Aggregate discriminator spliced in by TsvMutation; absent when the payload stands alone."
+    },
+    "rowIndex": {
+      "type": "integer",
+      "minimum": 0,
+      "x-semio-ui": {
+        "widget": "stepper",
+        "label": {
+          "en": "Record index",
+          "de": "Datensatzindex"
+        },
+        "description": {
+          "en": "Zero-based record (line) of the cell.",
+          "de": "Nullbasierter Datensatz (Zeile) der Zelle."
+        }
+      }
+    },
+    "fieldIndex": {
+      "type": "integer",
+      "minimum": 0,
+      "x-semio-ui": {
+        "widget": "stepper",
+        "label": {
+          "en": "Field index",
+          "de": "Feldindex"
+        },
+        "description": {
+          "en": "Zero-based column of the cell.",
+          "de": "Nullbasierte Spalte der Zelle."
+        }
+      }
+    },
+    "value": {
+      "type": "string"
     }
   }
 }

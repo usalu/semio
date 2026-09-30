@@ -12,11 +12,11 @@ use crate::standards::v1::subsets::any::schema::mutations::{apply_generation3d_m
 use crate::standards::v1::subsets::any::schema::snapshot::Generation3dSnapshotRead;
 use crate::Generation3dSnapshot;
 
-const BEFORE: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🗑️delete-generation/🚫️removes-the-selected-generation-2-and-falls-back/📸️snapshot/⬅️before/🔣️.json");
-const AFTER: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🗑️delete-generation/🚫️removes-the-selected-generation-2-and-falls-back/📸️snapshot/➡️after/🔣️.json");
-const MUTATION: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🗑️delete-generation/🚫️removes-the-selected-generation-2-and-falls-back/🦠️mutation/🔣️.json");
-const DIFF: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🗑️delete-generation/🚫️removes-the-selected-generation-2-and-falls-back/🔺️diff/🔣️.json");
-const OUTCOME: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🗑️delete-generation/🚫️removes-the-selected-generation-2-and-falls-back/🎯️outcome/🔣️.json");
+const BEFORE: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🗑️delete-generation/🚫️removes-selected-generation-2-falls/📸️snapshot/⬅️before/🔣️.json");
+const AFTER: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🗑️delete-generation/🚫️removes-selected-generation-2-falls/📸️snapshot/➡️after/🔣️.json");
+const MUTATION: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🗑️delete-generation/🚫️removes-selected-generation-2-falls/🦠️mutation/🔣️.json");
+const DIFF: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🗑️delete-generation/🚫️removes-selected-generation-2-falls/🔺️diff/🔣️.json");
+const OUTCOME: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🗑️delete-generation/🚫️removes-selected-generation-2-falls/🎯️outcome/🔣️.json");
 
 fn before() -> Generation3dSnapshotRead {
     Generation3dSnapshotRead::new(dsl::json::from_json_str(BEFORE).expect("before snapshot decodes"))

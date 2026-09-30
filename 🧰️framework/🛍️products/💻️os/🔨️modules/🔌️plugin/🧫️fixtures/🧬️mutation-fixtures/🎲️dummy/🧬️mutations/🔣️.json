@@ -1,0 +1,23 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/framework/os/plugin/tests/mutation-fixtures/dummy/mutations.json",
+  "title": "DummyMutation",
+  "oneOf": [
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "operation",
+        "payload"
+      ],
+      "properties": {
+        "operation": {
+          "const": "setDummyCount"
+        },
+        "payload": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/framework/os/plugin/tests/mutation-fixtures/dummy/mutation/set-dummy-count/schema.json"
+        }
+      }
+    }
+  ]
+}

@@ -5,17 +5,49 @@
   "type": "object",
   "additionalProperties": false,
   "required": [
+    "mutation",
     "id",
     "name",
     "verticesM",
     "transmittanceScheduleId"
   ],
   "properties": {
+    "mutation": {
+      "const": "createShadingSurface"
+    },
     "id": {
-      "type": "integer"
+      "type": "integer",
+      "minimum": 0,
+      "x-semio-ui": {
+        "widget": "stepper",
+        "role": "value",
+        "label": {
+          "en": "ID",
+          "de": "ID"
+        },
+        "description": {
+          "en": "Id the new shading surface is created under; later mutations address it by this id.",
+          "de": "ID, unter der das neue Objekt angelegt wird; spätere Mutationen adressieren es darüber."
+        },
+        "step": 1,
+        "precision": 0,
+        "group": "identity",
+        "order": 10
+      }
     },
     "name": {
-      "type": "string"
+      "type": "string",
+      "pattern": "[^\\t\\n\\u000B\\f\\r \\u0085\\u00A0\\u1680\\u2000-\\u200A\\u2028\\u2029\\u202F\\u205F\\u3000]",
+      "x-semio-ui": {
+        "widget": "text",
+        "role": "value",
+        "label": {
+          "en": "Name",
+          "de": "Name"
+        },
+        "group": "identity",
+        "order": 20
+      }
     },
     "verticesM": {
       "type": "array",
@@ -26,13 +58,48 @@
         },
         "minItems": 3,
         "maxItems": 3
+      },
+      "minItems": 3,
+      "x-semio-ui": {
+        "role": "value",
+        "label": {
+          "en": "Vertices",
+          "de": "Eckpunkte"
+        },
+        "description": {
+          "en": "Polygon corners in world coordinates, at least three.",
+          "de": "Polygonecken in Weltkoordinaten, mindestens drei."
+        },
+        "unit": "m",
+        "group": "geometry",
+        "order": 30
       }
     },
     "transmittanceScheduleId": {
       "type": [
         "integer",
         "null"
-      ]
+      ],
+      "minimum": 0,
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Transmittance schedule",
+          "de": "Transmissionszeitplan"
+        },
+        "description": {
+          "en": "Solar transmittance of the shade over time, by id; empty means none.",
+          "de": "Solarer Transmissionsgrad der Verschattung im Zeitverlauf, per ID; leer bedeutet keiner."
+        },
+        "ref": {
+          "kind": "schedule",
+          "domain": "energyModel",
+          "granularity": "schedule"
+        },
+        "group": "schedule",
+        "order": 40
+      }
     }
   }
 }

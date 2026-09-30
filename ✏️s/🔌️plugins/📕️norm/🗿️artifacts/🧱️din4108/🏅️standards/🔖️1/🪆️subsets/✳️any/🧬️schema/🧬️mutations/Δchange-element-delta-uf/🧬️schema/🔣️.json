@@ -10,10 +10,45 @@
   ],
   "properties": {
     "elementId": {
-      "type": "string"
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Envelope element",
+          "de": "Bauteil der Gebäudehülle"
+        },
+        "description": {
+          "en": "The envelope element this mutation addresses.",
+          "de": "Das Bauteil der Gebäudehülle, das diese Mutation adressiert."
+        },
+        "ref": {
+          "kind": "element"
+        },
+        "group": "target",
+        "order": 10
+      }
     },
     "newDeltaUF": {
-      "type": "number"
+      "type": "number",
+      "minimum": 0,
+      "x-semio-ui": {
+        "widget": "stepper",
+        "role": "value",
+        "label": {
+          "en": "Correction for mechanical fasteners ΔU_f",
+          "de": "Korrekturwert für mechanische Befestigungsteile ΔU_f"
+        },
+        "description": {
+          "en": "Correction to the thermal transmittance per DIN EN ISO 6946 Annex F.",
+          "de": "Korrektur des Wärmedurchgangskoeffizienten nach DIN EN ISO 6946 Anhang F."
+        },
+        "unit": "W/(m²·K)",
+        "step": 0.001,
+        "precision": 3,
+        "group": "envelope",
+        "order": 20
+      }
     }
   }
 }

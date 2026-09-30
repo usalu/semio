@@ -49,33 +49,11 @@ fn number(value: &Json, key: &str) -> Option<f64> {
         _ => None,
     }
 }
+/// 📄️ One `CsvRecord` wire value (`{"fields": [{"value", "quoted"}]}`) as a plain row. `quoted` is writer freedom here:
+/// the reference writer decides its own minimal quoting, and the projection compares values only.
 #[cfg(feature = "oracles")]
-fn strings(value: &Json, key: &str) -> Vec<String> {
-    value
-        .array(key)
-        .iter()
-        .map(|entry| match entry {
-            Json::String(text) => text.clone(),
-            _ => String::new(),
-        })
-        .collect()
-}
-#[cfg(feature = "oracles")]
-fn rows(value: &Json, key: &str) -> Vec<Vec<String>> {
-    value
-        .array(key)
-        .iter()
-        .map(|row| match row {
-            Json::Array(cells) => cells
-                .iter()
-                .map(|cell| match cell {
-                    Json::String(text) => text.clone(),
-                    _ => String::new(),
-                })
-                .collect(),
-            _ => Vec::new(),
-        })
-        .collect()
+fn record_from_wire(record: &Json) -> Vec<String> {
+    record.array("fields").iter().map(|field| field.str("value")).collect()
 }
 //#endregion 🔖️SpecReaders
 
@@ -90,13 +68,12 @@ pub fn oracle_apply_mutation(input: &[u8], spec: &Json) -> Result<Vec<u8>, Strin
     let params = mutation_params(spec);
     match spec.str("kind").as_str() {
         "" => Err("mutation spec carries no `kind`".to_string()),
-        "no-mutation" => Ok(input.to_vec()),
         "set-has-header" => Ok(input.to_vec()),
-        "set-snapshot" => write_grid(&rows(&params, "rows")),
+        "set-snapshot" => write_grid(&params.get("snapshot").map(|snapshot| snapshot.array("records").iter().map(record_from_wire).collect::<Vec<_>>()).unwrap_or_default()),
         "insert-record" => {
             let mut grid = read_grid(input)?;
             let index = number(&params, "index").ok_or("insert-record: missing `index`")? as usize;
-            let record = strings(&params, "fields");
+            let record = record_from_wire(params.get("record").unwrap_or(&Json::Null));
             grid.insert(index.min(grid.len()), record);
             write_grid(&grid)
         }

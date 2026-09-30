@@ -38,7 +38,59 @@
       ],
       "properties": {
         "kind": {
-          "$ref": "#/$defs/TiffFieldType"
+          "$ref": "#/$defs/TiffFieldType",
+          "x-semio-ui": {
+            "options": {
+              "byte": {
+                "en": "BYTE (8-bit unsigned)",
+                "de": "BYTE (8 Bit, vorzeichenlos)"
+              },
+              "ascii": {
+                "en": "ASCII (7-bit text)",
+                "de": "ASCII (7-Bit-Text)"
+              },
+              "short": {
+                "en": "SHORT (16-bit unsigned)",
+                "de": "SHORT (16 Bit, vorzeichenlos)"
+              },
+              "long": {
+                "en": "LONG (32-bit unsigned)",
+                "de": "LONG (32 Bit, vorzeichenlos)"
+              },
+              "rational": {
+                "en": "RATIONAL (unsigned fraction)",
+                "de": "RATIONAL (vorzeichenloser Bruch)"
+              },
+              "sByte": {
+                "en": "SBYTE (8-bit signed)",
+                "de": "SBYTE (8 Bit, vorzeichenbehaftet)"
+              },
+              "undefined": {
+                "en": "UNDEFINED (raw bytes)",
+                "de": "UNDEFINED (Rohbytes)"
+              },
+              "sShort": {
+                "en": "SSHORT (16-bit signed)",
+                "de": "SSHORT (16 Bit, vorzeichenbehaftet)"
+              },
+              "sLong": {
+                "en": "SLONG (32-bit signed)",
+                "de": "SLONG (32 Bit, vorzeichenbehaftet)"
+              },
+              "sRational": {
+                "en": "SRATIONAL (signed fraction)",
+                "de": "SRATIONAL (vorzeichenbehafteter Bruch)"
+              },
+              "float": {
+                "en": "FLOAT (32-bit IEEE)",
+                "de": "FLOAT (32 Bit, IEEE)"
+              },
+              "double": {
+                "en": "DOUBLE (64-bit IEEE)",
+                "de": "DOUBLE (64 Bit, IEEE)"
+              }
+            }
+          }
         },
         "value": {}
       }
@@ -58,7 +110,59 @@
           "maximum": 65535
         },
         "kind": {
-          "$ref": "#/$defs/TiffFieldType"
+          "$ref": "#/$defs/TiffFieldType",
+          "x-semio-ui": {
+            "options": {
+              "byte": {
+                "en": "BYTE (8-bit unsigned)",
+                "de": "BYTE (8 Bit, vorzeichenlos)"
+              },
+              "ascii": {
+                "en": "ASCII (7-bit text)",
+                "de": "ASCII (7-Bit-Text)"
+              },
+              "short": {
+                "en": "SHORT (16-bit unsigned)",
+                "de": "SHORT (16 Bit, vorzeichenlos)"
+              },
+              "long": {
+                "en": "LONG (32-bit unsigned)",
+                "de": "LONG (32 Bit, vorzeichenlos)"
+              },
+              "rational": {
+                "en": "RATIONAL (unsigned fraction)",
+                "de": "RATIONAL (vorzeichenloser Bruch)"
+              },
+              "sByte": {
+                "en": "SBYTE (8-bit signed)",
+                "de": "SBYTE (8 Bit, vorzeichenbehaftet)"
+              },
+              "undefined": {
+                "en": "UNDEFINED (raw bytes)",
+                "de": "UNDEFINED (Rohbytes)"
+              },
+              "sShort": {
+                "en": "SSHORT (16-bit signed)",
+                "de": "SSHORT (16 Bit, vorzeichenbehaftet)"
+              },
+              "sLong": {
+                "en": "SLONG (32-bit signed)",
+                "de": "SLONG (32 Bit, vorzeichenbehaftet)"
+              },
+              "sRational": {
+                "en": "SRATIONAL (signed fraction)",
+                "de": "SRATIONAL (vorzeichenbehafteter Bruch)"
+              },
+              "float": {
+                "en": "FLOAT (32-bit IEEE)",
+                "de": "FLOAT (32 Bit, IEEE)"
+              },
+              "double": {
+                "en": "DOUBLE (64-bit IEEE)",
+                "de": "DOUBLE (64 Bit, IEEE)"
+              }
+            }
+          }
         },
         "values": {
           "$ref": "#/$defs/TiffValues"
@@ -77,6 +181,12 @@
           "type": "array",
           "items": {
             "$ref": "#/$defs/TiffTag"
+          },
+          "x-semio-ui": {
+            "label": {
+              "en": "Directory entries",
+              "de": "Verzeichniseinträge"
+            }
           }
         },
         "pixels": {
@@ -99,18 +209,52 @@
   "properties": {
     "schema": {
       "type": "string",
-      "x-semio-state": "artifact"
+      "x-semio-state": "artifact",
+      "x-semio-ui": {
+        "widget": "text",
+        "label": {
+          "en": "Snapshot schema",
+          "de": "Snapshot-Schema"
+        },
+        "description": {
+          "en": "Identifier of the snapshot schema version.",
+          "de": "Kennung der Version des Snapshot-Schemas."
+        }
+      }
     },
     "byteOrder": {
       "$ref": "#/$defs/TiffByteOrder",
-      "x-semio-state": "artifact"
+      "x-semio-state": "artifact",
+      "x-semio-ui": {
+        "widget": "segmented",
+        "label": {
+          "en": "Byte order",
+          "de": "Byte-Reihenfolge"
+        },
+        "options": {
+          "littleEndian": {
+            "en": "Little-endian (II)",
+            "de": "Little-Endian (II)"
+          },
+          "bigEndian": {
+            "en": "Big-endian (MM)",
+            "de": "Big-Endian (MM)"
+          }
+        }
+      }
     },
     "ifds": {
       "type": "array",
       "items": {
         "$ref": "#/$defs/TiffIfd"
       },
-      "x-semio-state": "artifact"
+      "x-semio-state": "artifact",
+      "x-semio-ui": {
+        "label": {
+          "en": "Image file directories",
+          "de": "Bilddateiverzeichnisse (IFDs)"
+        }
+      }
     },
     "pixels": {
       "type": "array",

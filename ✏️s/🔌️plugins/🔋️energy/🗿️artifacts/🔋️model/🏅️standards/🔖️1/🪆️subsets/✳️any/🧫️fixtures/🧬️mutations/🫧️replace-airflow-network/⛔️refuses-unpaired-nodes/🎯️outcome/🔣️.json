@@ -1,5 +1,6 @@
 {
   "status": "rejected",
   "code": "mutation.invariant",
-  "path": []
+  "path": [],
+  "invariant": "zone-node-pairs"
 }

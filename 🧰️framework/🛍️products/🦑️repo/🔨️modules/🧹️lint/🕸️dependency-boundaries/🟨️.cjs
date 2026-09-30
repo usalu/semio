@@ -94,44 +94,47 @@ function assertFocusedBoundarySemantics() {
 
 assertFocusedBoundarySemantics();
 
-/** 📦️ Recursively scans a directory for `package.json` files, skipping the same build-artifact/vendor
- * directories `options.doNotFollow` below already excludes (plus `pkg/`, a wasm-pack output dir that
- * duplicates its owning Rust package's name — see `noCorePathRule`'s `pathNot` for the same exclusion).
- * Self-deriving, like `PLUGINS` above, so the name-based layering rules below never hardcode a package
- * list that can drift from the real tree. Returns `{ dir, name }` pairs where `dir` is the package.json's
- * containing directory as a repo-relative POSIX path. */
-function scanPackageJsonFiles(rootAbsDir) {
-  const SKIP_DIRS = new Set(["node_modules", "dist", "target", "pkg", "storybook-static", ".git", ".nx", "🦑️repo", "repo"]);
-  const results = [];
-  if (!fs.existsSync(rootAbsDir)) return results;
-  const stack = [rootAbsDir];
-  while (stack.length) {
-    const dir = stack.pop();
-    for (const entry of fs.readdirSync(dir, { withFileTypes: true })) {
-      if (entry.isDirectory()) {
-        if (SKIP_DIRS.has(entry.name)) continue;
-        stack.push(path.join(dir, entry.name));
-        continue;
-      }
-      if (entry.name !== "package.json") continue;
-      const pkg = JSON.parse(fs.readFileSync(path.join(dir, entry.name), "utf8"));
-      if (!pkg.name) continue;
-      results.push({ dir: path.relative(REPO_ROOT, dir).split(path.sep).join("/"), name: pkg.name });
-    }
+/** 🗺️ Classifies package ownership from the taxonomy and authored workspace manifests without reading opaque areas. */
+const AREA_LAYERS = Object.entries(TAXONOMY.areaLayers);
+const OPAQUE_PATHS = Object.values(TAXONOMY.pathExclusions).map(({ path: prefix }) => prefix.replace(/\/$/u, ""));
+const WORKSPACE_PACKAGES = JSON.parse(fs.readFileSync(path.join(REPO_ROOT, "package.json"), "utf8")).workspaces
+  .filter((dir) => !OPAQUE_PATHS.some((prefix) => dir === prefix || dir.startsWith(`${prefix}/`)))
+  .map((dir) => { const manifest = JSON.parse(fs.readFileSync(path.join(REPO_ROOT, dir, "package.json"), "utf8")); return { dir, name: manifest.name, dependencyRole: manifest.semio?.dependencyRole }; })
+  .filter(({ name }) => typeof name === "string");
+const S_PACKAGES = WORKSPACE_PACKAGES.filter(({ dir }) => dir.startsWith("✏️s/"));
+const FRAMEWORK_PACKAGES = WORKSPACE_PACKAGES.filter(({ dir }) => dir.startsWith("🧰️framework/"));
+const IGNORED_GRAPH_PATHS = TAXONOMY.implementationLeafPolicy.ignoredPathPatterns.filter((pattern) => pattern !== "**/node_modules").map((pattern) => `(^|/)${escapeRegex(pattern.replace(/^\*\*\//u, ""))}(/|$)`)
+  .concat(OPAQUE_PATHS.map((prefix) => `^${escapeRegex(prefix)}(/|$)`));
+
+/** 🧱️ Matches framework and implementation owners identically through resolved paths and public package names. */
+function frameworkNoImplementationRule() {
+  const frameworkAreas = AREA_LAYERS.filter(([, layer]) => layer === "framework").map(([area]) => area);
+  const implementationAreas = AREA_LAYERS.filter(([, layer]) => layer === "implementation").map(([area]) => area);
+  const targets = implementationAreas.map((area) => `^${escapeRegex(area)}/`);
+  for (const pkg of WORKSPACE_PACKAGES) {
+    if (implementationAreas.some((area) => pkg.dir === area || pkg.dir.startsWith(`${area}/`))) targets.push(`(?:^(?:node_modules/)?|/node_modules/)${escapeRegex(pkg.name)}(?:$|/)`);
   }
-  return results;
+  return {
+    name: "framework-no-implementation",
+    severity: "error",
+    comment: "Taxonomy framework areas must remain independent of implementation areas, including type imports, dynamic imports, tests, tooling and package subpaths",
+    from: { path: frameworkAreas.map((area) => `^${escapeRegex(area)}/`) },
+    to: { path: targets },
+  };
 }
 
-/** ✏️ Every `package.json` found anywhere under `✏️s`, used to derive the `@semio-tech/*` package-name
- * equivalents for the path-based layering rules below (`framework-no-s`, `s-modules-no-plugins`,
- * `no-plugin-to-extension`) — a relative import and an npm-name import of the same code must both trip
- * the rule, so each rule's `to` combines a path pattern with these derived name patterns. */
-const S_PACKAGES = scanPackageJsonFiles(path.join(REPO_ROOT, "✏️s"));
-
-/** 🧰️ Every `package.json` found anywhere under `🧰️framework`, used the same way `S_PACKAGES` is above —
- * package-name equivalents for `pluginsFrameworkSdkOnlyRule`'s `to`, so a bare `@semio-tech/framework-os`
- * (etc.) import trips the rule even where dependency-cruiser doesn't resolve it down to the real file path. */
-const FRAMEWORK_PACKAGES = scanPackageJsonFiles(path.join(REPO_ROOT, "🧰️framework"));
+/** 🧬️ Builds declared semantic role rules from taxonomy owners and workspace package contributions. */
+function declaredDependencyDirectionRules() {
+  const { roles, rules } = TAXONOMY.dependencyDirections;
+  for (const pkg of WORKSPACE_PACKAGES) if (pkg.dependencyRole && !roles[pkg.dependencyRole]) throw new Error(`Unknown dependency role ${pkg.dependencyRole} in ${pkg.dir}`);
+  const patterns = (roleIds) => roleIds.flatMap((id) => {
+    const role = roles[id];
+    if (!role) throw new Error(`Unknown dependency direction role ${id}`);
+    const packages = WORKSPACE_PACKAGES.filter((pkg) => pkg.dependencyRole === id || role.ownerPaths.some((owner) => pkg.dir === owner || pkg.dir.startsWith(`${owner}/`)));
+    return role.ownerPaths.concat(packages.map((pkg) => pkg.dir)).map((owner) => `^${escapeRegex(owner)}/`).concat(packages.map((pkg) => `(?:^(?:node_modules/)?|/node_modules/)${escapeRegex(pkg.name)}(?:$|/)`), role.externalPackages.map((name) => `(?:^(?:node_modules/)?|/node_modules/)${escapeRegex(name)}(?:$|/)`));
+  });
+  return Object.entries(rules).map(([name, rule]) => ({ name, severity: "error", comment: "Semantic owners must follow their declared dependency direction through resolved paths, package aliases and subpaths", from: { path: patterns(rule.fromRoles) }, to: { path: patterns(rule.toRoles) } }));
+}
 
 /** 🥾️ Keeps product-runtime technology edges forbidden while exempting only executable bootstrap and Vite/Vitest configuration entry points. */
 function crossTechnologyRules() {
@@ -448,13 +451,16 @@ module.exports = {
     noCorePathRule(),
     crossPackageRelativeRule(),
     frameworkNoSRule(),
+    frameworkNoImplementationRule(),
+    ...declaredDependencyDirectionRules(),
     sModulesNoPluginsRule(),
     ...noPluginToExtensionRules(),
     pluginsFrameworkSdkOnlyRule(),
   ],
   options: {
+    exclude: { path: IGNORED_GRAPH_PATHS },
     doNotFollow: {
-      path: "node_modules|dist|target|storybook-static|\\.git|\\.nx|\\.🧬semio|\\.repo",
+      path: IGNORED_GRAPH_PATHS.concat("(^|/)node_modules(/|$)").join("|"),
     },
     tsPreCompilationDeps: true,
     combinedDependencies: true,

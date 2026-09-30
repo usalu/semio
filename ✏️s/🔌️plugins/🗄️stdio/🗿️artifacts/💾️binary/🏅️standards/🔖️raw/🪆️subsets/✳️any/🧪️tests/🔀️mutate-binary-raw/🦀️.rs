@@ -1,23 +1,20 @@
-//! 🦀️ Raw-binary exhaustive mutation case — Rust adapter. Ticket 26/08/23/END-TO-END-TESTING-
-//! REFACTOR wave 7. Recorded no-oracle decision `raw-buffer-no-format` (`../../🏅️standards/🔖️raw/
-//! 🪆️subsets/✳️any/🔣️oracle.json`): a raw byte buffer has no format, so `oracle` here
-//! drives this subset's own independently written specification-vector implementation
-//! (`../../🏅️standards/🔖️raw/🪆️subsets/✳️any/🦀️oracle.rs`'s `oracle_apply_mutation`,
-//! which never touches the subject's own `BinaryDiff`/`apply_binary_mutation`); `subject` drives
-//! this repository's own `apply_binary_mutation` over the full 5-kind `BinaryMutation` vocabulary,
-//! then cross-checks its own result against that SAME independent reference before returning —
-//! deliberate, because the test framework's `oracleDecision` never invokes the `oracle` role at all
-//! for a `@no-oracle-` feature (see the `subject::apply_and_encode` doc comment below), so `subject`
-//! is the only role that ever actually discharges this decision's specification-vector evidence.
-//! Both sides project to the exact output byte array and `exact-bytes-v1` compares them literally —
-//! there is no independent reader to project through, because there is no format to read. The
-//! subject half is gated behind the generated host's `sut` feature so the oracle-only run never
-//! compiles the local implementation.
+//! 🦀️ Raw-binary exhaustive mutation case — Rust adapter. Recorded no-oracle decision
+//! `raw-buffer-no-format` (`../../🔮️oracles/🔣️.json`): a raw byte buffer has no format, so `oracle`
+//! here drives this subset's own independently written specification-vector implementation
+//! (`../../🔮️oracles/🦀️.rs`'s `oracle_apply_mutation`, which never touches the subject's own
+//! `BinaryDiff`/`apply_binary_mutation`); `subject` decodes every scenario's `{kind, params}` witness
+//! generically through `Mutation::from_payload_value` — `params` IS the leaf's wire payload — applies
+//! it with this repository's own `apply_binary_mutation`, undoes it with the vocabulary's own
+//! `Mutation::inverse`, and cross-checks each result against that SAME independent reference before
+//! returning. That cross-check is deliberate: the test framework's `oracleDecision` never invokes the
+//! `oracle` role for a `@no-oracle-` feature, so `subject` is the only role that ever discharges this
+//! decision's specification-vector evidence. Both sides project to the exact output byte array and
+//! `exact-bytes-v1` compares them literally. The subject half is gated behind the generated host's
+//! `sut` feature so the oracle-only run never compiles the local implementation.
 
 use semio_repo_test_host::{Adapter, Context, Json, Outcome};
-use semio_s_plugin_stdio_test_oracle::artifacts::binary::standards::v_raw::subsets::any::oracle_apply_mutation;
+use semio_s_plugin_stdio_test_oracle::artifacts::binary::standards::v_raw::subsets::any::{oracle_apply_mutation, oracle_round_trip};
 use semio_s_plugin_stdio_test_oracle::law::{carrier_is_exact, inverse_restores};
-
 
 //#region 🔖️Input
 const INPUT: &str = "shared://🏘️abbau-aufbau-masterarbeit-grundriss/🖼️.jpg";
@@ -40,9 +37,7 @@ fn json_spec(kind: &str, params: Json) -> Json {
 fn bytes_json(bytes: &[u8]) -> Json {
     Json::Array(bytes.iter().map(|byte| Json::Number(*byte as f64)).collect())
 }
-/// 🔎️ A byte payload as the wire protocol carries it: a plain JSON array of 0-255 numbers (the
-/// protocol's `Json` has no base64 accessor — see `../../../🎥️mp4/🧪️tests/🐙️mutate-mp4-isobmff/
-/// 🦀️.rs`'s own local `bytes` helper, which this mirrors).
+/// 🔎️ A byte payload as the wire carries it: a plain JSON array of 0-255 numbers.
 fn bytes_field(value: &Json, key: &str) -> Vec<u8> {
     match value.get(key) {
         Some(Json::Array(items)) => items.iter().filter_map(|item| if let Json::Number(number) = item { Some(*number as u8) } else { None }).collect(),
@@ -56,48 +51,40 @@ fn usize_field(value: &Json, key: &str) -> Result<usize, String> {
     }
 }
 /// 🎯️ The projection every scenario compares under `exact-bytes-v1`: the complete output byte
-/// array, literally. There is no semantic summary to fall back on — for a raw buffer the bytes ARE
-/// the whole content, so anything less than the full array would silently under-compare.
+/// array, literally — for a raw buffer the bytes ARE the whole content.
 fn projection_of(bytes: &[u8]) -> Json {
     bytes_json(bytes)
 }
 //#endregion 🔖️JsonBuild
 
 //#region 🔖️Inverse
-/// ↩️ The semantically correct inverse spec for one forward `(kind, params)` pair, computed
-/// directly from the REAL pristine `input` bytes at run time rather than a hardcoded literal — the
-/// `truncate-at` example alone removes a 283 KB real tail no literal could carry legibly.
-/// `set-snapshot` inverts through a REAL `set-snapshot` carrying the pristine buffer as its own
-/// payload — mirroring `BinaryMutation::inverse`'s own `SetSnapshot` arm (`../../🏅️standards/
-/// 🔖️raw/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦀️.rs`) — rather than the caller handing
-/// the untouched input straight back, which would let the scenario pass without the independent
-/// implementation performing the undo at all.
-fn inverse_spec(kind: &str, input: &[u8], params: &Json) -> Json {
+/// ↩️ The independent reference's own undo of one forward `(kind, params)` witness, in the same wire
+/// vocabulary and computed from the REAL pristine `input` bytes at run time — the `truncate-at`
+/// example alone removes a 283 KB real tail no literal could carry legibly. `set-snapshot` inverts
+/// through a REAL `set-snapshot` carrying the pristine buffer, never a hand-back of the input.
+fn inverse_spec(kind: &str, input: &[u8], params: &Json) -> Result<Json, String> {
     match kind {
-        "set-snapshot" => json_spec("set-snapshot", json_obj(vec![("snapshot", json_obj(vec![("bytes", bytes_json(input))]))])),
+        "set-snapshot" => Ok(json_spec("set-snapshot", json_obj(vec![("snapshot", json_obj(vec![("schema", Json::String("stdio.binary".to_string())), ("bytes", bytes_json(input))]))]))),
         "replace-byte-range" => {
-            let offset = usize_field(params, "offset").unwrap_or(0).min(input.len());
-            let remove_len = usize_field(params, "removeLen").unwrap_or(0);
+            let offset = usize_field(params, "offset")?.min(input.len());
+            let remove_len = usize_field(params, "remove_len")?;
             let insert = bytes_field(params, "insert");
-            let end = (offset + remove_len).min(input.len());
-            let removed = input[offset..end].to_vec();
-            json_spec("replace-byte-range", json_obj(vec![("offset", Json::Number(offset as f64)), ("removeLen", Json::Number(insert.len() as f64)), ("insert", bytes_json(&removed))]))
+            let removed = input[offset..(offset + remove_len).min(input.len())].to_vec();
+            Ok(json_spec("replace-byte-range", json_obj(vec![("offset", Json::Number(offset as f64)), ("remove_len", Json::Number(insert.len() as f64)), ("insert", bytes_json(&removed))])))
         }
-        "append-bytes" => json_spec("truncate-at", json_obj(vec![("offset", Json::Number(input.len() as f64))])),
+        "append-bytes" => Ok(json_spec("truncate-at", json_obj(vec![("offset", Json::Number(input.len() as f64))]))),
         "truncate-at" => {
-            let offset = usize_field(params, "offset").unwrap_or(input.len()).min(input.len());
-            let tail = input[offset..].to_vec();
-            json_spec("replace-byte-range", json_obj(vec![("offset", Json::Number(offset as f64)), ("removeLen", Json::Number(0.0)), ("insert", bytes_json(&tail))]))
+            let offset = usize_field(params, "offset")?.min(input.len());
+            Ok(json_spec("replace-byte-range", json_obj(vec![("offset", Json::Number(offset as f64)), ("remove_len", Json::Number(0.0)), ("insert", bytes_json(&input[offset..]))])))
         }
-        other => json_spec(other, json_obj(vec![])),
+        other => Err(format!("mutation kind {other:?} has no inverse rule")),
     }
 }
 //#endregion 🔖️Inverse
 
 //#region 🔖️Oracle
 /// 🔮️ Applies the declared mutation with this subset's own independent specification
-/// implementation and projects the resulting bytes directly (there is no reader to project
-/// through — the projection IS the output).
+/// implementation and projects the resulting bytes directly.
 fn apply_and_project(input: &[u8], spec: &Json) -> Result<Outcome, String> {
     let bytes = oracle_apply_mutation(input, spec)?;
     let projection = projection_of(&bytes);
@@ -106,64 +93,49 @@ fn apply_and_project(input: &[u8], spec: &Json) -> Result<Outcome, String> {
 
 fn mutate_oracle(ctx: &Context) -> Result<Outcome, String> {
     let input = mutable_input(ctx)?;
-    let spec = ctx.doc_json()?;
-    apply_and_project(&input, &spec)
+    apply_and_project(&input, &ctx.doc_json()?)
 }
 
 /// ↩️ The inverse law, asserted HERE by the independent specification implementation against the
-/// pristine buffer rather than deferred to a comparison: every kind — INCLUDING `set-snapshot`,
-/// which now inverts through a real `set-snapshot` of the original bytes instead of a hand-back —
-/// is applied forward and then undone, and the restored buffer must be the original buffer. For a
-/// raw carrier the projection IS the byte array, so this is a literal exact-bytes claim. This
-/// subset carries a recorded no-oracle decision, so nothing else will ever check it.
+/// pristine buffer: every kind is applied forward and then undone, and the restored buffer must be
+/// the original buffer, literally.
 fn inverse_oracle(ctx: &Context) -> Result<Outcome, String> {
     let input = mutable_input(ctx)?;
     let spec = ctx.doc_json()?;
     let kind = spec.str("kind");
-    let empty = Json::Object(Vec::new());
-    let params = spec.get("params").unwrap_or(&empty).clone();
+    let params = spec.get("params").cloned().unwrap_or(Json::Null);
     let mutated = oracle_apply_mutation(&input, &spec)?;
-    let restored = oracle_apply_mutation(&mutated, &inverse_spec(&kind, &input, &params))?;
+    let restored = oracle_apply_mutation(&mutated, &inverse_spec(&kind, &input, &params)?)?;
     let projection = projection_of(&restored);
     inverse_restores(&kind, &projection, &projection_of(&input))?;
     Ok(Outcome::with_raw(restored, projection))
 }
 
 /// 🔮️ For a raw buffer `decode`/`encode` really is the identity (`carrier_native_is_raw`,
-/// `../../🏅️standards/🔖️raw/🪆️subsets/✳️any/🚪️io/🦀️.rs`), so the trusted reference result
-/// is simply the pristine original bytes — byte equality IS correct here, honestly, not a
-/// contrived pass. The no-byte-pass-through tripwire every parsed format in this wave asserts is
-/// therefore genuinely inapplicable, and inverting it would be a fabricated law; the reference
-/// states the carrier law it can honestly satisfy instead, by running the declared `no-mutation`
-/// kind through the independent implementation and requiring the result to be the input exactly.
-/// That is a real check, not a tautology: `apply` reaching the wrong arm, or clamping, or dropping
-/// a byte, all fail it.
+/// `../../🚪️io/🦀️.rs`), so the reference's own round trip must return the input exactly — byte
+/// equality IS the correct answer here, and dropping or clamping a byte fails it.
 fn round_trip_oracle(ctx: &Context) -> Result<Outcome, String> {
     let input = mutable_input(ctx)?;
-    let output = oracle_apply_mutation(&input, &json_spec("no-mutation", json_obj(vec![])))?;
+    let output = oracle_round_trip(&input)?;
     carrier_is_exact(&output, &input)?;
     Ok(Outcome::with_raw(output.clone(), projection_of(&output)))
 }
 
 /// 🔮️ The specification-vector scenarios share the SAME forward-apply shape as `mutate_oracle`,
-/// just against whichever `kind` the vector names (not necessarily `<id>`).
+/// just against whichever `kind` the vector names.
 fn vector_oracle(ctx: &Context) -> Result<Outcome, String> {
     mutate_oracle(ctx)
 }
 
 fn append_to_empty_buffer_oracle(ctx: &Context) -> Result<Outcome, String> {
-    let spec = ctx.doc_json()?;
-    apply_and_project(&[], &spec)
+    apply_and_project(&[], &ctx.doc_json()?)
 }
 
-/// 🔮️ An invalid byte-range replacement must be REJECTED, never silently applied. Rejection is itself the passing
-/// outcome — a handler that returns `Err` here would mean the framework SILENTLY skipped a scenario
-/// registration, not "the mutation was invalid"; that failure mode is caught by returning `Err`
-/// only when the reference did NOT reject the invalid input.
+/// 🔮️ An invalid byte-range replacement must be REJECTED, never silently applied: rejection is the
+/// passing outcome, and a reference that does NOT reject is the failure.
 fn invalid_replacement_oracle(ctx: &Context) -> Result<Outcome, String> {
     let input = mutable_input(ctx)?;
-    let spec = ctx.doc_json()?;
-    match oracle_apply_mutation(&input, &spec) {
+    match oracle_apply_mutation(&input, &ctx.doc_json()?) {
         Err(_) => Ok(Outcome::with_raw(input, json_obj(vec![("rejected", Json::Bool(true))]))),
         Ok(bytes) => Err(format!("expected the invalid byte-range replacement to be rejected, but it produced {} byte(s) without erroring", bytes.len())),
     }
@@ -173,103 +145,91 @@ fn invalid_replacement_oracle(ctx: &Context) -> Result<Outcome, String> {
 //#region 🔖️Subject
 #[cfg(feature = "sut")]
 mod subject {
-    use super::{bytes_field, inverse_spec, json_obj, mutable_input, projection_of, usize_field};
+    use super::{inverse_spec, json_obj, mutable_input, projection_of};
     use semio_repo_test_host::{Context, Json, Outcome};
-    use semio_s_artifact_stdio_binary::standards::v_raw::subsets::any::schema::mutations::{append_bytes, apply_binary_mutation, replace_byte_range, set_snapshot, truncate_at, BinaryMutation};
-    use semio_s_artifact_stdio_binary::standards::v_raw::subsets::any::schema::snapshot::BinarySnapshot;
+    use semio_s_artifact_stdio_binary::standards::v_raw::subsets::any::schema::mutations::apply_binary_mutation;
+    use semio_s_artifact_stdio_binary::{from_json_str, to_json_string, BinaryMutation, BinarySnapshot, DslValue, Mutation};
     use semio_s_plugin_stdio_test_oracle::artifacts::binary::standards::v_raw::subsets::any::oracle_apply_mutation;
-use semio_s_plugin_stdio_test_oracle::law::{carrier_is_exact, inverse_restores};
+    use semio_s_plugin_stdio_test_oracle::law::{inverse_restores, params_are_wire};
 
     //#region 🔖️MutationFromSpec
-    /// 🦠️ The same `(kind, params)` wire shape the oracle dispatcher reads, translated into a real
-    /// `BinaryMutation` value for this subset's own `apply_binary_mutation`.
+    /// 🦠️ The scenario's `{kind, params}` witness decoded generically: `params` IS the leaf's wire
+    /// payload, so the derive-generated `from_payload_value` is the only decoder, and re-emitting
+    /// the decoded payload must give back exactly `params`.
     fn mutation_from_spec(spec: &Json) -> Result<BinaryMutation, String> {
         let kind = spec.str("kind");
-        let empty = Json::Object(Vec::new());
-        let params = spec.get("params").unwrap_or(&empty);
-        Ok(match kind.as_str() {
-            "set-snapshot" => {
-                let snapshot_json = params.get("snapshot").ok_or("set-snapshot requires a snapshot field")?;
-                BinaryMutation::SetSnapshot(set_snapshot::SetSnapshot { snapshot: BinarySnapshot { bytes: bytes_field(snapshot_json, "bytes"), ..Default::default() } })
-            }
-            "replace-byte-range" => BinaryMutation::ReplaceByteRange(replace_byte_range::ReplaceByteRange { offset: usize_field(params, "offset")?, remove_len: usize_field(params, "removeLen")?, insert: bytes_field(params, "insert") }),
-            "append-bytes" => BinaryMutation::AppendBytes(append_bytes::AppendBytes { data: bytes_field(params, "data") }),
-            "truncate-at" => BinaryMutation::TruncateAt(truncate_at::TruncateAt { offset: usize_field(params, "offset")? }),
-            other => return Err(format!("unrecognised mutation kind {other:?}")),
-        })
+        let params = spec.get("params").cloned().unwrap_or(Json::Null);
+        let payload: DslValue = from_json_str(&params.to_string()).map_err(|error| error.to_string())?;
+        let mutation = <BinaryMutation as Mutation<BinarySnapshot>>::from_payload_value(&kind, payload).map_err(|error| error.to_string())?;
+        params_are_wire(&kind, &params, &to_json_string(&<BinaryMutation as Mutation<BinarySnapshot>>::payload_value(&mutation)))?;
+        Ok(mutation)
     }
     //#endregion 🔖️MutationFromSpec
 
     //#region 🔖️Codec
-    /// 📐️ "Decode" is `BinarySnapshot { bytes: input.to_vec(), .. }` directly — not routed through
-    /// `store::ArtifactPack::decode_pack` (that trait alias is PRIVATE to this subset's own crate,
-    /// established by its own `extern crate semio_framework_os_kernel as store;`, and not reachable
-    /// from an external test-host crate). `BinarySnapshot::decode_pack`/`encode_pack` are proven
-    /// to be exactly this identity by `carrier_native_is_raw` (`../../🏅️standards/🔖️raw/🪆️subsets/
-    /// ✳️any/🚪️io/🦀️.rs`), so constructing/reading the public `bytes` field directly here
-    /// is the same operation, not a shortcut around it.
+    /// 📐️ "Decode" is `BinarySnapshot { bytes: input.to_vec(), .. }` directly: `decode_pack`/
+    /// `encode_pack` are proven to be exactly this identity by `carrier_native_is_raw`
+    /// (`../../🚪️io/🦀️.rs`), so constructing the public `bytes` field is the same operation.
     fn decode(input: &[u8]) -> BinarySnapshot {
         BinarySnapshot { bytes: input.to_vec(), ..Default::default() }
     }
 
-    /// 📐️ Full parse → typed mutation → re-serialize from the model alone. A successful mutation is
-    /// free to be byte-identical to the input here (e.g. `no-mutation`) — unlike every sibling
-    /// subset in this wave, this one's decode/encode really is the carrier-law identity, so the
-    /// no-byte-pass-through tripwire cannot apply; only an outright REJECTED mutation (offset/
-    /// remove_len outside the buffer) is an error.
-    ///
-    /// Cross-checked here, INSIDE `subject`, against `oracle_apply_mutation` — this subset's own
-    /// independently written specification reference (`../../🏅️standards/🔖️raw/🪆️subsets/✳️any/
-    /// 🦀️oracle.rs`). That is deliberate, not redundant with the top-level `oracle`
-    /// registrations above: the test framework's `oracleDecision` (`🧰️framework/🛍️products/🦑️repo/
-    /// 🔨️modules/🧪️tests/📜️cript.ts`) never invokes the `oracle` role at all for a feature carrying
-    /// `@no-oracle-` instead of `@oracle-` — its whole `oracle`/parity machinery exists for a
-    /// registered THIRD-PARTY reference, which this subset by definition has none of. `subject` is
-    /// therefore the only role the runner ever actually executes for this case, so the
-    /// specification-vector substitute this no-oracle decision rests on has to be discharged here,
-    /// self-contained, exactly like the repository's other no-oracle precedents (`🧰️framework/
-    /// 🔨️modules/🎠️kernel/🧪️tests/🚫️reject-malformed-version-input`, `🧰️framework/🔨️modules/🖱️ui/
-    /// 🔨️modules/🏷️class-name-composition/🧪️tests/🔀️merge-conflicting-utilities`).
-    fn apply_and_encode(input: &[u8], spec: &Json) -> Result<Vec<u8>, String> {
-        let mut snapshot = decode(input);
-        let mutation = mutation_from_spec(spec)?;
-        let outcome = apply_binary_mutation(&mut snapshot, &mutation);
-        if !outcome.messages().is_empty() {
-            return Err(format!("mutation rejected: {:?}", outcome.messages()));
+    /// ▶️ Applies one operation; any message is a rejection (offset/remove_len outside the buffer).
+    fn apply(snapshot: &mut BinarySnapshot, mutation: &BinaryMutation) -> Result<(), String> {
+        let outcome = apply_binary_mutation(snapshot, mutation);
+        if outcome.messages().is_empty() {
+            Ok(())
+        } else {
+            Err(format!("mutation rejected: {:?}", outcome.messages()))
         }
-        let bytes = snapshot.bytes;
-        match oracle_apply_mutation(input, spec) {
+    }
+
+    /// ⚖️ The subject's bytes must be exactly what the independent specification implementation
+    /// produced for the same witness — the only evidence a `@no-oracle-` feature ever discharges.
+    fn agree(bytes: Vec<u8>, reference: Result<Vec<u8>, String>) -> Result<Vec<u8>, String> {
+        match reference {
             Ok(reference) if reference == bytes => Ok(bytes),
             Ok(reference) => Err(format!("subject/reference mismatch: subject produced {} byte(s), independent reference produced {} byte(s)", bytes.len(), reference.len())),
             Err(error) => Err(format!("independent reference rejected a mutation the subject accepted: {error}")),
         }
     }
+
+    /// 📐️ Decode → typed mutation → the model's own bytes, cross-checked against the reference.
+    fn apply_and_encode(input: &[u8], spec: &Json) -> Result<Vec<u8>, String> {
+        let mut snapshot = decode(input);
+        apply(&mut snapshot, &mutation_from_spec(spec)?)?;
+        agree(snapshot.bytes, oracle_apply_mutation(input, spec))
+    }
     //#endregion 🔖️Codec
 
     //#region 🔖️Handlers
     pub fn mutate(ctx: &Context) -> Result<Outcome, String> {
-        let input = mutable_input(ctx)?;
-        let spec = ctx.doc_json()?;
-        let bytes = apply_and_encode(&input, &spec)?;
+        let bytes = apply_and_encode(&mutable_input(ctx)?, &ctx.doc_json()?)?;
         Ok(Outcome::with_raw(bytes.clone(), projection_of(&bytes)))
     }
 
-    /// ↩️ Every kind, INCLUDING `set-snapshot`, is genuinely applied forward and then undone through
-    /// this repository's own `BinaryMutation` pipeline — `set-snapshot` inverts through a real
-    /// `set-snapshot` carrying the pristine buffer, never through a hand-back of the input bytes.
+    /// ↩️ The forward witness is undone by `BinaryMutation::inverse` itself — the law under test —
+    /// and the restored buffer must be both the pristine input and exactly what the independent
+    /// reference's own undo produced.
     pub fn inverse(ctx: &Context) -> Result<Outcome, String> {
         let input = mutable_input(ctx)?;
         let spec = ctx.doc_json()?;
         let kind = spec.str("kind");
-        let empty = Json::Object(Vec::new());
-        let params = spec.get("params").unwrap_or(&empty).clone();
-        let mutated = apply_and_encode(&input, &spec)?;
-        let restored = apply_and_encode(&mutated, &inverse_spec(&kind, &input, &params))?;
+        let base = decode(&input);
+        let mutation = mutation_from_spec(&spec)?;
+        let mut snapshot = base.clone();
+        apply(&mut snapshot, &mutation)?;
+        for step in <BinaryMutation as Mutation<BinarySnapshot>>::inverse(&mutation, &base) {
+            apply(&mut snapshot, &step)?;
+        }
+        let params = spec.get("params").cloned().unwrap_or(Json::Null);
+        let reference = oracle_apply_mutation(&input, &spec).and_then(|mutated| oracle_apply_mutation(&mutated, &inverse_spec(&kind, &input, &params)?));
+        let restored = agree(snapshot.bytes, reference)?;
+        inverse_restores(&kind, &projection_of(&restored), &projection_of(&input))?;
         Ok(Outcome::with_raw(restored.clone(), projection_of(&restored)))
     }
 
-    /// 📐️ Honest identity: for this subset `decode`/`encode` really is the identity on `bytes`, so
-    /// the no-byte-pass-through tripwire every sibling subset enforces cannot apply.
+    /// 📐️ Honest identity: for this subset `decode`/`encode` really is the identity on `bytes`.
     pub fn round_trip(ctx: &Context) -> Result<Outcome, String> {
         let input = mutable_input(ctx)?;
         let bytes = decode(&input).bytes;
@@ -284,15 +244,13 @@ use semio_s_plugin_stdio_test_oracle::law::{carrier_is_exact, inverse_restores};
     }
 
     pub fn append_to_empty_buffer(ctx: &Context) -> Result<Outcome, String> {
-        let spec = ctx.doc_json()?;
-        let bytes = apply_and_encode(&[], &spec)?;
+        let bytes = apply_and_encode(&[], &ctx.doc_json()?)?;
         Ok(Outcome::with_raw(bytes.clone(), projection_of(&bytes)))
     }
 
     pub fn invalid_replacement(ctx: &Context) -> Result<Outcome, String> {
         let input = mutable_input(ctx)?;
-        let spec = ctx.doc_json()?;
-        match apply_and_encode(&input, &spec) {
+        match apply_and_encode(&input, &ctx.doc_json()?) {
             Err(_) => Ok(Outcome::with_raw(input, json_obj(vec![("rejected", Json::Bool(true))]))),
             Ok(bytes) => Err(format!("expected the invalid byte-range replacement to be rejected, but it produced {} byte(s) without erroring", bytes.len())),
         }
@@ -305,35 +263,17 @@ use semio_s_plugin_stdio_test_oracle::law::{carrier_is_exact, inverse_restores};
 /// 🧭️ Registration entry point the generated host calls.
 pub fn adapter() -> Adapter {
     let mut built = Adapter::new("rust");
-    built = built.oracle("mutate", mutate_oracle).oracle("no-mutation-baseline-mutate", mutate_oracle).oracle("inverse", inverse_oracle).oracle("no-mutation-baseline-inverse", inverse_oracle);
+    built = built.oracle("mutate", mutate_oracle).oracle("inverse", inverse_oracle).oracle("identity-round-trip", round_trip_oracle).oracle("vector", vector_oracle).oracle("append-to-empty-buffer", append_to_empty_buffer_oracle).oracle("invalid-replace-byte-range", invalid_replacement_oracle);
     #[cfg(feature = "sut")]
     {
-        built = built.subject("mutate", subject::mutate).subject("no-mutation-baseline-mutate", subject::mutate).subject("inverse", subject::inverse).subject("no-mutation-baseline-inverse", subject::inverse);
+        built = built
+            .subject("mutate", subject::mutate)
+            .subject("inverse", subject::inverse)
+            .subject("identity-round-trip", subject::round_trip)
+            .subject("vector", subject::vector)
+            .subject("append-to-empty-buffer", subject::append_to_empty_buffer)
+            .subject("invalid-replace-byte-range", subject::invalid_replacement);
     }
-    built = built.oracle("identity-round-trip", round_trip_oracle);
-    #[cfg(feature = "sut")]
-    {
-        built = built.subject("identity-round-trip", subject::round_trip);
-    }
-
-    built = built.oracle("vector", vector_oracle);
-    #[cfg(feature = "sut")]
-    {
-        built = built.subject("vector", subject::vector);
-    }
-
-    built = built.oracle("append-to-empty-buffer", append_to_empty_buffer_oracle);
-    #[cfg(feature = "sut")]
-    {
-        built = built.subject("append-to-empty-buffer", subject::append_to_empty_buffer);
-    }
-
-    built = built.oracle("invalid-replace-byte-range", invalid_replacement_oracle);
-    #[cfg(feature = "sut")]
-    {
-        built = built.subject("invalid-replace-byte-range", subject::invalid_replacement);
-    }
-
     built
 }
 //#endregion 🔖️Registration

@@ -56,6 +56,7 @@ ports = { react = 6107, wgpu = 6207 }
 variant = "generator"
 app = "s.procedural.generation3d@1/*#editor"
 brand = "entwerfen-mit-bestand-generator"
+devContribution = "♻️mit-bestand/🧺️demonstrator/🐚️shell/🧬️schema/🔣️.json"
 aliases = ["entwerfen-mit-bestand-generator"]
 ports = { react = 6027, wgpu = 6127 }
 
@@ -63,6 +64,7 @@ ports = { react = 6027, wgpu = 6127 }
 variant = "koordinator"
 app = "s.cad.cad@1/*#editor"
 brand = "entwerfen-mit-bestand-koordinator"
+devContribution = "♻️mit-bestand/🧺️demonstrator/🐚️shell/🧬️schema/🔣️.json"
 aliases = ["entwerfen-mit-bestand-koordinator"]
 ports = { react = 6028, wgpu = 6128 }
 
@@ -70,6 +72,7 @@ ports = { react = 6028, wgpu = 6128 }
 variant = "aggregator"
 app = "s.puzzle.puzzle3d@1/*#editor"
 brand = "entwerfen-mit-bestand-aggregator"
+devContribution = "♻️mit-bestand/🧺️demonstrator/🐚️shell/🧬️schema/🔣️.json"
 aliases = ["mit-bestand", "entwerfen-mit-bestand"]
 ports = { react = 6023, wgpu = 6123 }
 
@@ -77,6 +80,7 @@ ports = { react = 6023, wgpu = 6123 }
 variant = "aussuchen"
 app = "s.sourcing.curation@1/*#editor"
 brand = "entwerfen-mit-bestand-aussuchen"
+devContribution = "♻️mit-bestand/🧺️demonstrator/🐚️shell/🧬️schema/🔣️.json"
 aliases = ["entwerfen-mit-bestand-aussuchen"]
 ports = { react = 6030, wgpu = 6130 }
 
@@ -84,6 +88,7 @@ ports = { react = 6030, wgpu = 6130 }
 variant = "bearbeiten"
 app = "s.process.process3d@1/*#editor"
 brand = "entwerfen-mit-bestand-bearbeiten"
+devContribution = "♻️mit-bestand/🧺️demonstrator/🐚️shell/🧬️schema/🔣️.json"
 aliases = ["entwerfen-mit-bestand-bearbeiten"]
 ports = { react = 6031, wgpu = 6131 }
 
@@ -91,6 +96,7 @@ ports = { react = 6031, wgpu = 6131 }
 variant = "verfolgen"
 app = "s.gis.gismap@1/*#editor"
 brand = "entwerfen-mit-bestand-verfolgen"
+devContribution = "♻️mit-bestand/🧺️demonstrator/🐚️shell/🧬️schema/🔣️.json"
 aliases = ["entwerfen-mit-bestand-verfolgen"]
 ports = { react = 6032, wgpu = 6132 }
 engines = ["./🧰️framework/🔨️modules/🗺️surface/📦️packages/🦀️rust"]

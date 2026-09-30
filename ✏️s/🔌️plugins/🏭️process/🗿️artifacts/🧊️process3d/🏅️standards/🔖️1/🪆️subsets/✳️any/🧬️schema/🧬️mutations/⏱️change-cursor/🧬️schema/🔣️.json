@@ -4,10 +4,33 @@
   "title": "ChangeCursor",
   "type": "object",
   "additionalProperties": false,
+  "required": [
+    "mutation"
+  ],
   "properties": {
+    "mutation": {
+      "const": "changeCursor"
+    },
     "newResolvedUpTo": {
-      "type": "integer",
-      "minimum": 0
+      "type": [
+        "integer",
+        "null"
+      ],
+      "minimum": 0,
+      "x-semio-ui": {
+        "widget": "stepper",
+        "role": "value",
+        "label": {
+          "en": "Playback Cursor",
+          "de": "Wiedergabe-Cursor"
+        },
+        "description": {
+          "en": "Number of timeline steps applied to the stock; empty applies all.",
+          "de": "Anzahl der auf das Rohteil angewendeten Zeitleistenschritte; leer wendet alle an."
+        },
+        "step": 1,
+        "precision": 0
+      }
     }
   }
 }

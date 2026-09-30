@@ -2,6 +2,7 @@ import type { DslValue } from "../../../../../../../../../../../../../🧰️fra
 
 /** 🧬️ ConnectNodes payload owned by the connect-nodes mutation. */
 export interface ConnectNodes {
+  mutation: "connectNodes";
   edge: DslValue;
   relationship: DslValue;
 }

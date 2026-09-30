@@ -1,1 +1,5 @@
-{"ChangeRhInt":{"new_rh_int":0.55}}
+{
+  "ChangeRhInt": {
+    "newRhInt": 0.55
+  }
+}

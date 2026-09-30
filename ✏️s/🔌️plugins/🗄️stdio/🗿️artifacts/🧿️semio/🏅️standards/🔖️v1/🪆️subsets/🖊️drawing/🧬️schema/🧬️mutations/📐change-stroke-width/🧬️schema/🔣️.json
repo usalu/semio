@@ -19,7 +19,14 @@
         {
           "type": "null"
         }
-      ]
+      ],
+      "x-semio-ui": {
+        "widget": "stepper",
+        "label": {
+          "en": "Stroke width",
+          "de": "Konturstärke"
+        }
+      }
     }
   }
 }

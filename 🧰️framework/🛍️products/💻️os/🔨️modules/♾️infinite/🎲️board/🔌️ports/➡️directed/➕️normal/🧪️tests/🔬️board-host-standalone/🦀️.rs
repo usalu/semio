@@ -149,7 +149,7 @@
     fn pointer_plan_rejects_drag_item_overflow_and_retires_one_delta_per_step() {
         let mut host = BoardHost::default();
         let start_positions = (0..=BOARD_POINTER_ITEM_CAPACITY).map(|index| (format!("node-{index}"), (index as f64, 0.0))).collect();
-        host.interaction = Interaction::DragNodes { primary_id: "node-0".into(), offset: Vec2::ZERO, start_positions, proximity_pair: None };
+        host.interaction = Interaction::DragNodes { primary_id: "node-0".into(), offset: Vec2::ZERO, start_positions, proximity_pair: None, gesture: GestureStage::default(), delta: Vec2::ZERO };
         assert_eq!(host.plan_pointer(BoardPointerIntent { phase: BoardPointerPhase::Move, x: 1.0, y: 1.0, shift: false, ctrl_or_meta: false, alt: false }).unwrap_err(), BoardPointerPlanFault::ItemCredits);
 
         let mut plan = BoardPointerPlan::empty(0, BoardPointerPlanKind::DragMove);
@@ -161,16 +161,18 @@
         assert!(retirement.close_step());
         assert!(retirement.terminal_is_empty());
 
-        let mut escaped = BoardPointerPlan::empty(0, BoardPointerPlanKind::FinishDrag);
-        escaped.push_delta("a\"\\\n", 1.0, 2.0).unwrap();
-        let mut json = String::new();
-        escaped.write_events_json(&mut json).unwrap();
-        let value: serde_json::Value = serde_json::from_str(&json).unwrap();
-        assert_eq!(value[0]["payload"]["moves"][0]["id"], "a\"\\\n");
-
-        let mut oversized = BoardPointerPlan::empty(0, BoardPointerPlanKind::FinishDrag);
-        oversized.push_delta(&"\n".repeat(BOARD_POINTER_BYTE_CAPACITY / 2), 1.0, 2.0).unwrap();
-        assert_eq!(oversized.write_events_json(&mut json), Err(BoardPointerPlanFault::ByteCredits));
+        let release = |id: &str| {
+            let mut host = BoardHost::default();
+            host.interaction = Interaction::DragNodes { primary_id: id.into(), offset: Vec2::ZERO, start_positions: [(id.to_string(), (0.0, 0.0))].into_iter().collect(), proximity_pair: None, gesture: GestureStage { id: "gesture-9".into(), select: None, restore: None }, delta: Vec2::ZERO };
+            (host.screen_to_world(Point::new(1.0, 2.0)), host.plan_pointer(BoardPointerIntent { phase: BoardPointerPhase::Up, x: 1.0, y: 2.0, shift: false, ctrl_or_meta: false, alt: false }))
+        };
+        let (world, escaped) = release("a\"\\\n");
+        let value: serde_json::Value = serde_json::from_str(escaped.expect("escaped release plan").events_json()).unwrap();
+        assert_eq!(value[0]["name"], "gesture");
+        assert_eq!(value[0]["payload"]["gestureId"], "gesture-9");
+        assert_eq!(value[0]["payload"]["targets"][0], "a\"\\\n");
+        assert_eq!((value[0]["payload"]["dx"].as_f64(), value[0]["payload"]["dy"].as_f64()), (Some(world.x), Some(world.y)), "the record's offset is the release point's world offset");
+        assert_eq!(release(&"\n".repeat(BOARD_POINTER_BYTE_CAPACITY / 2)).1.unwrap_err(), BoardPointerPlanFault::ByteCredits);
     }
 
 /// 🪜️ The tail is cooperative and bounded, never a fixed ladder length: every commit phase a
@@ -180,7 +182,7 @@
     #[test]
     fn drag_commit_obeys_zero_budget_one_delta_turn_cancel_and_publication_witness() {
         let mut host = deletion_fixture("node-a");
-        host.interaction = Interaction::DragNodes { primary_id: "node-a".into(), offset: Vec2::ZERO, start_positions: [("node-a".to_string(), (0.0, 0.0)), ("node-b".to_string(), (20.0, 0.0))].into_iter().collect(), proximity_pair: None };
+        host.interaction = Interaction::DragNodes { primary_id: "node-a".into(), offset: Vec2::ZERO, start_positions: [("node-a".to_string(), (0.0, 0.0)), ("node-b".to_string(), (20.0, 0.0))].into_iter().collect(), proximity_pair: None, gesture: GestureStage::default(), delta: Vec2::ZERO };
         let plan = host.plan_pointer(BoardPointerIntent { phase: BoardPointerPhase::Up, x: 10.0, y: 5.0, shift: false, ctrl_or_meta: false, alt: false }).expect("finish drag plan");
         host.begin_pointer_commit(plan).expect("retained drag commit");
         let before = host.nodes.get("node-a").map(|node| (node.x, node.y));
@@ -203,11 +205,15 @@
         }
         assert!(turns > 2, "the commit must yield at least once before completing");
         let publication = host.take_pointer_publication().expect("complete drag publication");
-        assert!(publication.events_json().contains("nodeDragEnd"));
+        let rows: serde_json::Value = serde_json::from_str(publication.events_json()).expect("publication rows");
+        let world = host.screen_to_world(Point::new(10.0, 5.0));
+        assert_eq!(rows.as_array().map(Vec::len), Some(1), "a release that staged no selection publishes the gesture record alone: {rows}");
+        assert_eq!((rows[0]["name"].as_str(), rows[0]["payload"]["kind"].as_str(), rows[0]["payload"]["dx"].as_f64(), rows[0]["payload"]["dy"].as_f64()), (Some("gesture"), Some("drag"), Some(world.x), Some(world.y)));
+        assert_eq!(rows[0]["payload"]["targets"], serde_json::json!(["node-a", "node-b"]));
         assert!(host.pointer_authority_terminal_is_empty());
 
         let mut cancelled = deletion_fixture("node-a");
-        cancelled.interaction = Interaction::DragNodes { primary_id: "node-a".into(), offset: Vec2::ZERO, start_positions: [("node-a".to_string(), (0.0, 0.0))].into_iter().collect(), proximity_pair: None };
+        cancelled.interaction = Interaction::DragNodes { primary_id: "node-a".into(), offset: Vec2::ZERO, start_positions: [("node-a".to_string(), (0.0, 0.0))].into_iter().collect(), proximity_pair: None, gesture: GestureStage::default(), delta: Vec2::ZERO };
         let plan = cancelled.plan_pointer(BoardPointerIntent { phase: BoardPointerPhase::Move, x: 8.0, y: 3.0, shift: false, ctrl_or_meta: false, alt: false }).expect("cancelled drag plan");
         cancelled.begin_pointer_commit(plan).expect("cancelled retained commit");
         let cancel = semio_framework_job::root_cancel_token();
@@ -793,7 +799,7 @@
         let mut host = BoardHost::default();
         host.set_size(800, 600, 1.0);
         assert!(host.parse_fixture_json(&board(4)), "the opening parse must be admitted");
-        host.interaction = Interaction::DragNodes { primary_id: "node-0".into(), offset: Vec2::ZERO, start_positions: [("node-0".to_string(), (0.0, 0.0))].into_iter().collect(), proximity_pair: None };
+        host.interaction = Interaction::DragNodes { primary_id: "node-0".into(), offset: Vec2::ZERO, start_positions: [("node-0".to_string(), (0.0, 0.0))].into_iter().collect(), proximity_pair: None, gesture: GestureStage::default(), delta: Vec2::ZERO };
         let plan = host.plan_pointer(BoardPointerIntent { phase: BoardPointerPhase::Up, x: 10.0, y: 5.0, shift: false, ctrl_or_meta: false, alt: false }).expect("finish drag plan");
         host.begin_pointer_commit(plan).expect("retained drag commit");
         drive_pointer_commit(&mut host);
@@ -935,12 +941,12 @@ fn board_event_names(json: &str) -> Vec<String> {
 }
 
 #[cfg(test)]
-/// 🔄️ The whole rotate gesture is ONE document edit: the drag streams only TRANSIENT `transformPreview`
+/// 🔄️ The whole rotate gesture is ONE gesture record: the drag streams only TRANSIENT `transformPreview`
 /// frames (the peer-pane mirror's food, dropped before dispatch) and the release publishes exactly one
-/// `nodeRotate` carrying the absolute delta, the ids and the pivot. Streaming `nodeMove` rows here would
-/// spend one of the store's 64 applied edits per frame.
+/// `gesture` row of kind `rotate` carrying the turned ids, the pivot and the angle. Streaming `nodeMove`
+/// rows here would spend one of the store's 64 applied edits per frame.
 #[test]
-fn a_rotate_ring_drag_commits_exactly_one_node_rotate_event() {
+fn a_rotate_ring_drag_commits_exactly_one_rotate_gesture_record() {
     let mut host = transform_gumball_host();
     host.set_selection_ids_silent(&["node-a".into(), "node-b".into()]);
     let _ = host.drain_events_json();
@@ -954,15 +960,38 @@ fn a_rotate_ring_drag_commits_exactly_one_node_rotate_event() {
     host.pointer_up_screen(quarter.x, quarter.y, false, false, false);
     assert!(host.transform_drag.is_none(), "the release must end the gesture");
     let released = host.drain_events_json();
-    assert_eq!(board_event_names(&released), vec!["nodeRotate".to_string()], "the release is one row: {released}");
+    assert_eq!(board_event_names(&released), vec!["gesture".to_string()], "the release is one row: {released}");
     let row: Vec<serde_json::Value> = serde_json::from_str(&released).expect("events parse");
     let payload = row[0].get("payload").expect("payload");
-    let radians = payload.get("radians").and_then(serde_json::Value::as_f64).expect("radians");
-    assert!((radians - std::f64::consts::FRAC_PI_2).abs() < 1e-6, "the commit carries the absolute quarter turn, got {radians}");
-    let ids: Vec<&str> = payload.get("ids").and_then(serde_json::Value::as_array).expect("ids").iter().filter_map(serde_json::Value::as_str).collect();
-    assert_eq!(ids, vec!["node-a", "node-b"], "the commit names exactly the rotated members");
-    let pivot = payload.get("pivot").expect("pivot");
-    assert!(pivot.get("x").and_then(serde_json::Value::as_f64).expect("pivot x").abs() < 1e-9 && pivot.get("y").and_then(serde_json::Value::as_f64).expect("pivot y").abs() < 1e-9, "the pivot is the selection centroid");
+    assert_eq!(payload["kind"], "rotate");
+    assert!(payload["gestureId"].as_str().is_some_and(|id| id.starts_with("gesture-")), "the record names its gesture: {payload}");
+    let angle = payload["angle"].as_f64().expect("angle");
+    assert!((angle - std::f64::consts::FRAC_PI_2).abs() < 1e-6, "the record carries the absolute quarter turn, got {angle}");
+    assert_eq!(payload["targets"], serde_json::json!(["node-a", "node-b"]), "the record names exactly the rotated members");
+    assert!(payload["pivotX"].as_f64().expect("pivot x").abs() < 1e-9 && payload["pivotY"].as_f64().expect("pivot y").abs() < 1e-9, "the pivot is the selection centroid");
+    assert_eq!(payload["proximity"], serde_json::json!([]));
+}
+
+#[cfg(test)]
+/// 🎞️ However many frames a rotate paints — sixty-four here — the release is ONE record, so the guest yields ONE
+/// transaction for the whole ring drag.
+#[test]
+fn a_streamed_rotate_is_one_record_however_many_frames_it_painted() {
+    let mut host = transform_gumball_host();
+    host.set_selection_ids_silent(&["node-a".into(), "node-b".into()]);
+    let _ = host.drain_events_json();
+    let grab = transform_ring_screen_at(&host, 0.0);
+    host.pointer_down_screen(grab.x, grab.y, 0, false, false);
+    let mut frames = 0usize;
+    for step in 1..=64 {
+        let point = transform_ring_screen_at(&host, f64::from(step));
+        host.pointer_move_screen(point.x, point.y, false, false, false);
+        frames += board_event_names(&host.drain_events_json()).len();
+    }
+    let last = transform_ring_screen_at(&host, 64.0);
+    host.pointer_up_screen(last.x, last.y, false, false, false);
+    assert_eq!(frames, 64, "every frame previews once");
+    assert_eq!(board_event_names(&host.drain_events_json()), vec!["gesture".to_string()], "and the whole gesture commits once");
 }
 
 #[cfg(test)]
@@ -1006,7 +1035,7 @@ fn the_rotate_ring_snaps_under_the_grid_snap_modifier() {
     host.pointer_up_screen(nudged.x, nudged.y, false, false, false);
     let released = host.drain_events_json();
     let rows: Vec<serde_json::Value> = serde_json::from_str(&released).expect("events parse");
-    let radians = rows.iter().find(|row| row.get("name").and_then(serde_json::Value::as_str) == Some("nodeRotate")).and_then(|row| row.get("payload")).and_then(|payload| payload.get("radians")).and_then(serde_json::Value::as_f64).expect("nodeRotate radians");
+    let radians = rows.iter().find(|row| row.get("name").and_then(serde_json::Value::as_str) == Some("gesture")).and_then(|row| row.get("payload")).and_then(|payload| payload.get("angle")).and_then(serde_json::Value::as_f64).expect("rotate record angle");
     assert!((radians - 15.0_f64.to_radians()).abs() < 1e-6, "the commit carries the snapped delta, got {}", radians.to_degrees());
 }
 
@@ -1028,10 +1057,9 @@ fn locked_members_hold_the_pivot_but_never_turn() {
     host.pointer_up_screen(quarter.x, quarter.y, false, false, false);
     let released = host.drain_events_json();
     let rows: Vec<serde_json::Value> = serde_json::from_str(&released).expect("events parse");
-    let payload = rows.iter().find(|row| row.get("name").and_then(serde_json::Value::as_str) == Some("nodeRotate")).and_then(|row| row.get("payload")).expect("nodeRotate payload");
-    let ids: Vec<&str> = payload.get("ids").and_then(serde_json::Value::as_array).expect("ids").iter().filter_map(serde_json::Value::as_str).collect();
-    assert_eq!(ids, vec!["node-a", "node-b"], "the locked member stays out of the commit");
-    let pivot_y = payload.get("pivot").and_then(|pivot| pivot.get("y")).and_then(serde_json::Value::as_f64).expect("pivot y");
+    let payload = rows.iter().find(|row| row.get("name").and_then(serde_json::Value::as_str) == Some("gesture")).and_then(|row| row.get("payload")).expect("rotate record payload");
+    assert_eq!(payload["targets"], serde_json::json!(["node-a", "node-b"]), "the locked member stays out of the record");
+    let pivot_y = payload["pivotY"].as_f64().expect("pivot y");
     assert!(pivot_y.abs() < 1e-9, "all three centres average to y=0, so the locked member still holds the pivot, got {pivot_y}");
 }
 
@@ -1106,7 +1134,7 @@ fn escape_cancels_the_rotate_ring_and_restores_the_geometry() {
     let after = (host.nodes.get("node-a").expect("node-a").x, host.nodes.get("node-a").expect("node-a").y, host.handles.get("node-a:v0").expect("handle").angle);
     assert_eq!(before, after, "a cancel restores position AND handle angle");
     let names = board_event_names(&host.drain_events_json());
-    assert!(!names.iter().any(|name| name == "nodeRotate"), "a cancelled gesture commits nothing: {names:?}");
+    assert!(!names.iter().any(|name| name == "gesture"), "a cancelled gesture commits nothing: {names:?}");
 }
 
 #[cfg(test)]
@@ -1278,33 +1306,36 @@ fn an_area_brush_click_paints_the_configured_extent_and_a_collapsed_one_paints_n
 }
 
 #[cfg(test)]
-/// 🚚️ A body drag is ONE `regionMove` carrying the new minimum corner; a grip drag is ONE
-/// `regionResize` carrying corner AND extent, because a west/north grip moves both.
+/// 🚚️ A body drag is ONE `drag` gesture record by the snapped offset, riding one batch with the `select` its
+/// press staged; a grip drag is ONE `regionResize` carrying corner AND extent, because a west/north grip moves
+/// both. A release that moved nothing publishes only the selection.
 #[test]
 fn region_body_and_grip_drags_commit_exactly_one_event_each() {
     let mut host = region_host();
     let _ = host.drain_events_json();
     region_press(&mut host, -50.0, 0.0);
-    let _ = host.drain_events_json();
+    assert_eq!(board_event_names(&host.drain_events_json()), Vec::<String>::new(), "the press stages its selection and publishes nothing yet");
     region_move_to(&mut host, -30.0, 10.0);
     assert_eq!(board_event_names(&host.drain_events_json()), Vec::<String>::new(), "a region drag frame announces nothing");
     region_release_at(&mut host, -30.0, 10.0);
     let moved = host.drain_events_json();
-    assert_eq!(board_event_names(&moved), vec!["regionMove".to_string()], "one row: {moved}");
-    let payload = region_event_payloads(&moved, "regionMove").remove(0);
-    assert_eq!(payload.get("x").and_then(serde_json::Value::as_f64), Some(-40.0), "the body drag translated by (+20,+10): {payload}");
-    assert_eq!(payload.get("y").and_then(serde_json::Value::as_f64), Some(-50.0));
-    assert!(payload.get("width").is_none(), "a move never re-states an extent it did not touch: {payload}");
+    assert_eq!(board_event_names(&moved), vec!["select".to_string(), "gesture".to_string()], "one batch: {moved}");
+    let select = region_event_payloads(&moved, "select").remove(0);
+    let payload = region_event_payloads(&moved, "gesture").remove(0);
+    assert_eq!(select["ids"], serde_json::json!(["region-a"]));
+    assert_eq!(select["gestureId"], payload["gestureId"], "the select is tagged with its gesture: {moved}");
+    assert_eq!((payload["kind"].as_str(), payload["dx"].as_f64(), payload["dy"].as_f64()), (Some("drag"), Some(20.0), Some(10.0)), "the body drag translated by (+20,+10): {payload}");
+    assert_eq!(payload["targets"], serde_json::json!(["region-a"]));
 
     let mut host = region_host();
     let _ = host.drain_events_json();
     region_press(&mut host, 60.0, 60.0);
     assert!(host.region_drag.as_ref().is_some_and(|drag| drag.grip == RegionGrip::SouthEast), "the bottom-right corner is a resize grip");
-    let _ = host.drain_events_json();
     region_move_to(&mut host, 80.0, 80.0);
     region_release_at(&mut host, 80.0, 80.0);
     let resized = host.drain_events_json();
-    assert_eq!(board_event_names(&resized), vec!["regionResize".to_string()], "one row: {resized}");
+    assert_eq!(board_event_names(&resized), vec!["select".to_string(), "regionResize".to_string()], "one batch: {resized}");
+    assert!(region_event_payloads(&resized, "select").remove(0).get("gestureId").is_none(), "a resize carries no gesture record, so its select is untagged");
     let payload = region_event_payloads(&resized, "regionResize").remove(0);
     assert_eq!(payload.get("x").and_then(serde_json::Value::as_f64), Some(-60.0), "the far corner never moved: {payload}");
     assert_eq!(payload.get("width").and_then(serde_json::Value::as_f64), Some(140.0), "and the extent grew by the drag: {payload}");
@@ -1313,9 +1344,17 @@ fn region_body_and_grip_drags_commit_exactly_one_event_each() {
     let mut host = region_host();
     let _ = host.drain_events_json();
     region_press(&mut host, -50.0, 0.0);
-    let _ = host.drain_events_json();
     region_release_at(&mut host, -50.0, 0.0);
-    assert_eq!(board_event_names(&host.drain_events_json()), Vec::<String>::new(), "a release that moved nothing commits nothing");
+    assert_eq!(board_event_names(&host.drain_events_json()), vec!["select".to_string()], "a release that moved nothing publishes only the selection");
+
+    let mut host = region_host();
+    host.set_selection_ids_silent(&["region-locked".to_string()]);
+    let _ = host.drain_events_json();
+    region_press(&mut host, -50.0, 0.0);
+    region_move_to(&mut host, -30.0, 10.0);
+    assert!(host.cancel_area_select(), "escape claims the live region drag");
+    assert_eq!(host.selection.iter().cloned().collect::<Vec<_>>(), vec!["region-locked".to_string()], "a cancel restores the selection the press replaced");
+    assert_eq!(board_event_names(&host.drain_events_json()), Vec::<String>::new(), "and publishes nothing");
 }
 
 #[cfg(test)]
@@ -1347,8 +1386,8 @@ fn region_gestures_snap_only_under_the_grid_snap_modifier() {
 }
 
 #[cfg(test)]
-/// 🔏️ A locked region still paints and still selects — it simply refuses every drag, so neither a
-/// `regionMove` nor a `regionResize` can ever name it.
+/// 🔏️ A locked region still paints and still selects — it simply refuses every drag, so neither a `drag`
+/// gesture record nor a `regionResize` can ever name it.
 #[test]
 fn a_locked_region_refuses_every_drag() {
     let mut host = region_host();
@@ -1494,3 +1533,114 @@ fn puzzle2d_edge_starts_at_the_handle_cap() {
     assert!((start.x - 23.0).abs() < 1e-6 && start.y.abs() < 1e-6, "the edge leaves the east cap, outside the node circle: {start:?}");
     assert!((end.x - 177.0).abs() < 1e-6 && end.y.abs() < 1e-6, "the edge arrives at the west cap, outside the node circle: {end:?}");
 }
+
+//#region 🎬️Gestures
+#[cfg(test)]
+/// 🎬️ Two free nodes and one locked node, rotate ring disarmed, so a press on a node centre is always a node drag.
+fn gesture_host() -> BoardHost {
+    let node = |id: &str, x: f64, locked: bool| serde_json::json!({ "id": id, "x": x, "y": 0.0, "shape": "circle", "radius": 10.0, "locked": locked, "handles": [] });
+    let fixture = serde_json::json!({ "schema": "puzzle.2d.fixture", "camera": { "x": 0.0, "y": 0.0, "zoom": 1.0 }, "nodes": [node("node-a", -40.0, false), node("node-b", 40.0, false), node("node-locked", 120.0, true)], "edges": [] }).to_string();
+    let mut host = BoardHost::default();
+    host.set_size(800, 600, 1.0);
+    host.set_camera_silent(0.0, 0.0, 1.0);
+    host.set_transform_flags(true, false);
+    assert!(host.parse_fixture_json(&fixture), "the gesture fixture must parse");
+    let _ = host.drain_events_json();
+    host
+}
+
+#[cfg(test)]
+/// 🐁️ Every drained row except `hover`, which travels on the framework's own hover lane.
+fn gesture_rows(host: &mut BoardHost) -> Vec<serde_json::Value> {
+    serde_json::from_str::<Vec<serde_json::Value>>(&host.drain_events_json()).expect("events parse").into_iter().filter(|row| row["name"] != "hover").collect()
+}
+
+#[cfg(test)]
+/// 🎬️ One drag of an unselected node: the press stages its selection and publishes nothing, the frames are
+/// transient `nodeMove` previews only, and the release is ONE batch — the `select` and the `drag` record,
+/// tagged with the same gesture id, carrying the dragged ids and the one offset.
+#[test]
+fn a_node_drag_is_its_select_and_one_gesture_record_on_release() {
+    let mut host = gesture_host();
+    region_press(&mut host, -40.0, 0.0);
+    assert_eq!(host.selection.iter().cloned().collect::<Vec<_>>(), vec!["node-a".to_string()], "the engine selects at once");
+    assert!(gesture_rows(&mut host).is_empty(), "but the press publishes nothing yet");
+    region_move_to(&mut host, 0.0, 20.0);
+    region_move_to(&mut host, 40.0, 40.0);
+    let frames = gesture_rows(&mut host);
+    assert!(frames.iter().all(|row| row["name"] == "nodeMove"), "a drag frame is a transient preview only: {frames:?}");
+    region_release_at(&mut host, 40.0, 40.0);
+    let released = gesture_rows(&mut host);
+    assert_eq!(released.iter().map(|row| row["name"].as_str().unwrap_or_default()).collect::<Vec<_>>(), vec!["select", "gesture"], "one batch: {released:?}");
+    let (select, record) = (&released[0]["payload"], &released[1]["payload"]);
+    assert_eq!(select["ids"], serde_json::json!(["node-a"]));
+    assert!(record["gestureId"].as_str().is_some_and(|id| id.starts_with("gesture-")) && select["gestureId"] == record["gestureId"], "both rows carry the same gesture id: {released:?}");
+    assert_eq!((record["kind"].as_str(), record["dx"].as_f64(), record["dy"].as_f64()), (Some("drag"), Some(80.0), Some(40.0)));
+    assert_eq!(record["targets"], serde_json::json!(["node-a"]));
+    assert_eq!(record["proximity"], serde_json::json!([]));
+    let node = host.nodes.get("node-a").expect("node-a");
+    assert_eq!((node.x, node.y), (40.0, 40.0), "the engine keeps the previewed position until the guest's commit re-syncs it");
+}
+
+#[cfg(test)]
+/// 🖱️ A click on a node is a selection, not a gesture: the release publishes the untagged `select` alone.
+#[test]
+fn a_click_without_motion_publishes_only_its_selection() {
+    let mut host = gesture_host();
+    region_press(&mut host, 40.0, 0.0);
+    region_release_at(&mut host, 40.0, 0.0);
+    let released = gesture_rows(&mut host);
+    assert_eq!(released.len(), 1, "one row: {released:?}");
+    assert_eq!((released[0]["name"].as_str(), &released[0]["payload"]["ids"]), (Some("select"), &serde_json::json!(["node-b"])));
+    assert!(released[0]["payload"].get("gestureId").is_none(), "no record follows, so the select is untagged");
+    region_press(&mut host, 40.0, 0.0);
+    region_release_at(&mut host, 40.0, 0.0);
+    assert!(gesture_rows(&mut host).is_empty(), "re-clicking the selected node changes nothing and publishes nothing");
+}
+
+#[cfg(test)]
+/// 👥️ A group drag moves every UNLOCKED selected member by one offset; the locked member neither previews nor
+/// appears in the record, and a press on an already-selected member stages no selection change.
+#[test]
+fn a_group_drag_records_every_unlocked_member_and_one_offset() {
+    let mut host = gesture_host();
+    host.set_selection_ids_silent(&["node-a".to_string(), "node-b".to_string(), "node-locked".to_string()]);
+    region_press(&mut host, -40.0, 0.0);
+    region_move_to(&mut host, -30.0, 5.0);
+    region_release_at(&mut host, -30.0, 5.0);
+    let released = gesture_rows(&mut host);
+    let record = &released.iter().find(|row| row["name"] == "gesture").expect("gesture record")["payload"];
+    assert!(!released.iter().any(|row| row["name"] == "select"), "the press kept the group, so no select rides the batch: {released:?}");
+    assert_eq!(record["targets"], serde_json::json!(["node-a", "node-b"]), "the locked member stays out");
+    assert_eq!((record["dx"].as_f64(), record["dy"].as_f64()), (Some(10.0), Some(5.0)));
+    assert_eq!(host.nodes.get("node-locked").map(|node| (node.x, node.y)), Some((120.0, 0.0)), "the locked member never previews a move");
+    assert_eq!(host.nodes.get("node-b").map(|node| (node.x, node.y)), Some((50.0, 5.0)), "every member previews the one offset");
+}
+
+#[cfg(test)]
+/// ↩️ A cancelled drag leaves zero trace: positions AND the press's selection return, nothing dispatchable is
+/// published (only transient restore frames for the sibling panes), and the next drag opens a fresh gesture.
+#[test]
+fn a_cancelled_node_drag_leaves_zero_trace() {
+    for cancel in [BoardHost::pointer_cancel_screen as fn(&mut BoardHost) -> bool, BoardHost::cancel_area_select] {
+        let mut host = gesture_host();
+        host.set_selection_ids_silent(&["node-b".to_string()]);
+        region_press(&mut host, -40.0, 0.0);
+        region_move_to(&mut host, 0.0, 30.0);
+        let _ = gesture_rows(&mut host);
+        assert!(cancel(&mut host), "the cancel claims the live drag");
+        assert!(matches!(host.interaction, Interaction::None));
+        assert_eq!(host.nodes.get("node-a").map(|node| (node.x, node.y)), Some((-40.0, 0.0)), "the node returns");
+        assert_eq!(host.selection.iter().cloned().collect::<Vec<_>>(), vec!["node-b".to_string()], "the press's selection change is undone");
+        let rows = gesture_rows(&mut host);
+        assert!(rows.iter().all(|row| row["name"] == "nodeMove"), "only transient restore frames: {rows:?}");
+        assert_eq!(rows.first().map(|row| (&row["payload"]["x"], &row["payload"]["y"])), Some((&serde_json::json!(-40), &serde_json::json!(0))), "the restore frame carries the grab-time position");
+        region_press(&mut host, -40.0, 0.0);
+        region_move_to(&mut host, -20.0, 0.0);
+        region_release_at(&mut host, -20.0, 0.0);
+        let next = gesture_rows(&mut host);
+        let record = next.iter().find(|row| row["name"] == "gesture").expect("the next drag records");
+        assert_eq!(record["payload"]["dx"].as_f64(), Some(20.0), "the next drag starts from the restored geometry");
+    }
+}
+//#endregion 🎬️Gestures

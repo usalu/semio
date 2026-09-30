@@ -1,8 +1,12 @@
 {
-  "material": 0,
-  "expectedDoubleSided": false,
-  "doubleSided": true,
-  "touchedPaths": [
-    "document/materials/0/doubleSided"
-  ]
+  "materials": {
+    "modified": [
+      {
+        "index": 0,
+        "diff": {
+          "doubleSided": true
+        }
+      }
+    ]
+  }
 }

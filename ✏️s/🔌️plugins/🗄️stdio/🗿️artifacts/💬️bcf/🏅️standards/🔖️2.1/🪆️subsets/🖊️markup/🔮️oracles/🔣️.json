@@ -607,55 +607,6 @@
   "fixtureManifests": [
     {
       "schema": "semio.repository-test.fixture/v2",
-      "id": "no-mutation-applied",
-      "class": "third-party-generated",
-      "target": {
-        "artifact": "s.stdio.bcf",
-        "standard": "2.1",
-        "subset": "markup"
-      },
-      "units": {
-        "length": "unitless",
-        "angle": "degree"
-      },
-      "files": [
-        {
-          "role": "expected-before-bcf",
-          "path": "../🧫️fixtures/⏸️no-mutation-applied/⬅️before.bcf",
-          "mediaType": "application/octet-stream",
-          "sha256": "sha256:c6a5e0efbc206065523469bcbd2c95051022590cc2020725ae2970babaad4d02",
-          "bytes": 1555
-        },
-        {
-          "role": "expected-after-bcf",
-          "path": "../🧫️fixtures/⏸️no-mutation-applied/➡️after.bcf",
-          "mediaType": "application/octet-stream",
-          "sha256": "sha256:c6a5e0efbc206065523469bcbd2c95051022590cc2020725ae2970babaad4d02",
-          "bytes": 1555
-        }
-      ],
-      "generator": {
-        "oracle": "jszip-bcf-2-1-mutate-reader",
-        "packageVersion": "jszip@3.10.1 + fast-xml-parser@5.11.1",
-        "engineFamily": "zip-xml",
-        "engineVersion": "jszip@3.10.1 + fast-xml-parser@5.11.1",
-        "command": "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/💬️bcf/🏅️standards/🔖️2.1/🪆️subsets/🖊️markup/🏭️generator/📜️script.ts generate --only no-mutation-applied",
-        "platform": "darwin-arm64"
-      },
-      "provenance": {
-        "source": "generated",
-        "license": "MIT (jszip dual MIT/GPL-3.0-or-later, used under MIT) + MIT (fast-xml-parser)",
-        "attribution": "Generated with jszip (MIT) and fast-xml-parser (MIT)",
-        "security": "scanned-clean",
-        "privacy": "no-personal-data"
-      },
-      "comparisonProfile": "semantic-bcf-jszip-v1",
-      "reproducible": true,
-      "family": "structural",
-      "notes": ""
-    },
-    {
-      "schema": "semio.repository-test.fixture/v2",
       "id": "set-version-applied",
       "class": "third-party-generated",
       "target": {

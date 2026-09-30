@@ -9,7 +9,24 @@
   ],
   "properties": {
     "newBridgeLane": {
-      "type": "integer"
+      "type": "integer",
+      "minimum": 1,
+      "x-semio-ui": {
+        "widget": "stepper",
+        "role": "value",
+        "label": {
+          "en": "Notional lane number",
+          "de": "Nummer des rechnerischen Fahrstreifens"
+        },
+        "description": {
+          "en": "Notional lane i of load model 1 (EN 1991-2 §4.2.4).",
+          "de": "Rechnerischer Fahrstreifen i des Lastmodells 1 (EN 1991-2 §4.2.4)."
+        },
+        "step": 1,
+        "precision": 0,
+        "group": "bridge",
+        "order": 10
+      }
     }
   }
 }

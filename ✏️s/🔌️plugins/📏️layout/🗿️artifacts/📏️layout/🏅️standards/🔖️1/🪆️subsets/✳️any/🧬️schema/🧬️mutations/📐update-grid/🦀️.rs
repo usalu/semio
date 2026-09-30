@@ -7,7 +7,9 @@ use semio_framework_value_derive::{FromValue, ToValue};
 
 #[derive(Clone, Debug, PartialEq, dsl::MutationLeaf, ToValue, FromValue)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
+#[cfg_attr(test, serde(rename_all = "camelCase"))]
 #[mutation_leaf(contract = ::protocol)]
+#[value(rename_all = "camelCase")]
 pub struct UpdateGrid {
     pub baseline_grid: f64,
     pub baseline_offset: f64,

@@ -1,0 +1,12 @@
+{
+  "operation": "addParameter",
+  "parameter": {
+    "type": "numeric",
+    "id": "p1",
+    "name": "Zoom",
+    "value": 10.0,
+    "min": null,
+    "max": null,
+    "step": null
+  }
+}

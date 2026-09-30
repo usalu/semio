@@ -62,7 +62,7 @@
     "document": {
       "anyOf": [
         {
-          "$ref": "https://json.schemas.assets.semio-tech.com/os/store/child.json",
+          "$ref": "https://json.schemas.assets.semio-tech.com/os/store/child/schema.json",
           "x-semio-state": "artifact",
           "x-semio-child-kind": "s.stdio.semio"
         },
@@ -75,7 +75,7 @@
     "flow": {
       "anyOf": [
         {
-          "$ref": "https://json.schemas.assets.semio-tech.com/os/store/child.json",
+          "$ref": "https://json.schemas.assets.semio-tech.com/os/store/child/schema.json",
           "x-semio-state": "artifact",
           "x-semio-child-kind": "s.stdio.semio"
         },

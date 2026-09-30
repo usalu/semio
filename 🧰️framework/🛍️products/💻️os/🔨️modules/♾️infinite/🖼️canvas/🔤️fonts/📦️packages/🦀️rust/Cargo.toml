@@ -5,6 +5,10 @@ edition = "2021"
 rust-version.workspace = true
 description = "Packed font assets for OS hosts"
 
+[package.metadata.semio]
+role = "tool"
+id = "font-assets"
+
 [lints]
 workspace = true
 

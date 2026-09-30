@@ -46,3 +46,11 @@ fn mask_mutations_reject_conflicts_and_invalid_assets() {
     }
     crate::standards::v1::subsets::any::schema::snapshot::retire_raster_snapshot(base);
 }
+/// 🧾️ The committed wire witness is the canonical Rust wire of the fixture's "Add Reveal Mask" case.
+#[test]
+fn committed_wire_witness_is_the_canonical_rust_wire() {
+    let fixture=fixture();
+    let witnessed:RasterMutation=store::os_store::test_support::assert_wire_witness(include_str!("../../../../🧫️fixtures/🧬️mutations/🎭️change-layer-mask/🧾️wire-witness/🦠️mutation/🔣️.json"));
+    let expected:RasterMutation=dsl::json::from_json_str(&serde_json::json!({"mutation":"changeLayerMask","layerId":"paint","expected":null,"mask":fixture["reveal"]}).to_string()).unwrap();
+    assert_eq!(witnessed,expected);
+}

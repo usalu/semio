@@ -5,11 +5,26 @@
   "type": "object",
   "additionalProperties": false,
   "required": [
+    "mutation",
     "node"
   ],
   "properties": {
+    "mutation": {
+      "const": "createNode"
+    },
     "node": {
-      "$ref": "https://json.schemas.assets.semio-tech.com/framework/value/schema.json#/$defs/DslValue"
+      "$ref": "https://json.schemas.assets.semio-tech.com/framework/value/schema.json#/$defs/DslValue",
+      "x-semio-ui": {
+        "role": "value",
+        "label": {
+          "en": "Node",
+          "de": "Knoten"
+        },
+        "description": {
+          "en": "The complete node record to add.",
+          "de": "Der vollständige hinzuzufügende Knoten."
+        }
+      }
     }
   }
 }

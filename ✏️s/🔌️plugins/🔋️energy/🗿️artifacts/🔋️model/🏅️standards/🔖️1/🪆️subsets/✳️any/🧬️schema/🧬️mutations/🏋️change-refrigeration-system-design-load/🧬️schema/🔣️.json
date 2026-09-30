@@ -5,15 +5,53 @@
   "type": "object",
   "additionalProperties": false,
   "required": [
+    "mutation",
     "id",
     "newDesignLoadW"
   ],
   "properties": {
+    "mutation": {
+      "const": "changeRefrigerationSystemDesignLoad"
+    },
     "id": {
-      "type": "integer"
+      "type": "integer",
+      "minimum": 0,
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Refrigeration system",
+          "de": "Kälteanlage"
+        },
+        "description": {
+          "en": "The refrigeration system this mutation changes, by id.",
+          "de": "Kälteanlage, die diese Mutation ändert, per ID."
+        },
+        "ref": {
+          "kind": "refrigerationSystem"
+        },
+        "group": "target",
+        "order": 10
+      }
     },
     "newDesignLoadW": {
-      "type": "number"
+      "type": "number",
+      "exclusiveMinimum": 0,
+      "x-semio-ui": {
+        "widget": "stepper",
+        "role": "value",
+        "label": {
+          "en": "Design load",
+          "de": "Auslegungslast"
+        },
+        "unit": "W",
+        "displayUnit": "kW",
+        "displayFactor": 0.001,
+        "step": 100,
+        "precision": 2,
+        "group": "capacity",
+        "order": 20
+      }
     }
   }
 }

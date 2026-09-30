@@ -5,15 +5,22 @@
   "type": "object",
   "additionalProperties": false,
   "required": [
-    "file_description"
+    "mutation",
+    "fileDescription"
   ],
   "properties": {
-    "file_description": {
-      "$ref": "#/$defs/StepFileDescription"
-    },
     "mutation": {
       "const": "setFileDescription",
       "description": "Aggregate discriminator spliced in by StepMutation; absent when the payload stands alone."
+    },
+    "fileDescription": {
+      "$ref": "#/$defs/StepFileDescription",
+      "x-semio-ui": {
+        "label": {
+          "en": "File description (FILE_DESCRIPTION)",
+          "de": "Dateibeschreibung (FILE_DESCRIPTION)"
+        }
+      }
     }
   },
   "$defs": {
@@ -28,7 +35,18 @@
           }
         },
         "implementationLevel": {
-          "type": "string"
+          "type": "string",
+          "x-semio-ui": {
+            "widget": "text",
+            "label": {
+              "en": "Implementation level",
+              "de": "Implementierungsebene"
+            },
+            "description": {
+              "en": "Conformance level of the exchange structure, e.g. 2;1.",
+              "de": "Konformitätsstufe der Austauschstruktur, z. B. 2;1."
+            }
+          }
         }
       }
     }

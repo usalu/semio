@@ -231,3 +231,59 @@ async fn a_refused_whole_document_archive_names_the_leg_that_refused_it() {
     PluginApp::acknowledge_document_archive_load(&mut app, 92).expect("foreign-schema archive acknowledgement");
     close_member_admission_app(&mut app);
 }
+
+/// 🧹️ Closes a source store built beside the app under its bounded owners.
+fn close_bounded_source_store(source: &mut store::ArtifactStore<TestSnapshot, TestMutation>) {
+    for _ in 0..65_536 {
+        match source.close_owned_step(1, 4096).expect("the source store closes under its exact grant") {
+            store::SnapshotRetirementStep::Pending { released_items, released_bytes } => assert!(released_items <= 1 && released_bytes <= 4096),
+            store::SnapshotRetirementStep::Blocked => panic!("the source store has no external owner"),
+            store::SnapshotRetirementStep::Complete => {
+                assert!(source.close_owned_terminal_is_empty());
+                return;
+            }
+        }
+    }
+    panic!("the source store did not close");
+}
+
+/// ✏️ A whole-document archive whose history supersedes inputs — a replacement, a withdrawal and a garbage replacement a
+/// remote replica authored — loads through parent hydration and the bounded retained initializer to exactly the state
+/// the source store folds: the garbage input folds as a no-op with its `Fatal` outcome instead of refusing the load
+/// (ticket 26/09/30/NON-DESTRUCTIVE-HISTORY-EDITING, audit F-C1 and F-M1).
+#[semio_framework_async_macros::async_test]
+async fn a_whole_document_archive_with_supersessions_loads_its_superseded_state() {
+    use crate::test_app_mutation_fixture::{SetCount, SetLabel};
+    let mut app = Box::pin(VcsArtifactApp::<SingleDocumentApp, TestMembers>::new(SingleDocumentApp)).await;
+    let live_id = app.store.envelope().id.clone();
+    let genesis = store::create_document_envelope::<TestSnapshot, TestMutation>(SingleDocumentApp::DOCUMENT_SCHEMA, &live_id, TestSnapshot { count: 0, label: "initial".into(), slot: Vec::new() }, None);
+    let mut source = Box::pin(store::ArtifactStore::new(genesis)).await.expect("source store");
+    source.install_document_store_owners_exact(bounded_document_store_owners::<TestSnapshot, TestMutation>());
+    for operation in [TestMutation::SetCount(SetCount { value: 1 }), TestMutation::SetLabel(SetLabel { value: "edited".into() }), TestMutation::SetCount(SetCount { value: 2 })] {
+        Box::pin(source.dispatch(store::ArtifactCommand::Apply { mutations: vec![operation], description: None, transaction: None })).await.expect("source edit");
+    }
+    let ids: Vec<protocol::MutationId> = source.mutation_ops().expect("source operations").into_iter().map(|operation| operation.mutation_id).collect();
+    let inputs = vec![store::SupersedeInput { target: ids[0].clone(), replacement: Some(TestMutation::SetCount(SetCount { value: 5 })) }, store::SupersedeInput { target: ids[1].clone(), replacement: None }];
+    Box::pin(source.dispatch(store::ArtifactCommand::Supersede { scope: None, inputs })).await.expect("a clean supersession");
+    let garbage = protocol::HistoryTransition::Supersede(protocol::TransitionSupersede {
+        scope: None,
+        inputs: vec![protocol::SupersededInput { target: ids[2].clone(), replacement: protocol::InputReplacement::Input { schema: SingleDocumentApp::DOCUMENT_SCHEMA.into(), payload: vec![0xff, 0x13, 0x37] } }],
+    });
+    let remote = protocol::history_transition_envelope(&garbage, &protocol::ArtifactId(live_id.clone()), &protocol::ActorId("remote-editor".into()), vec![ids[2].clone()], protocol::HybridLogicalTimestamp { actor: 9, physical_ms: u64::MAX / 2, logical: 0 });
+    assert!(Box::pin(source.ingest_remote(remote)).await.expect("the garbage supersession ingests").accepted);
+    let expected = source.snapshot().expect("source projection");
+    assert_eq!((expected.count, expected.label.as_str()), (5, "initial"));
+    let files = Box::pin(store::print_document_pack(source.envelope())).await.expect("source pair prints");
+    let dialect: ArtifactDialect = SingleDocumentApp::DIALECT.into();
+    let parent_spr = Box::pin(store::stamp_document_spr_identity(&files.spr, &live_id, SingleDocumentApp::DOCUMENT_SCHEMA, &dialect, app.store.envelope().owner.as_ref())).await.expect("load-document identity stamp");
+    PluginApp::begin_document_archive_load(&mut app, 95, protocol::DocumentArchivePack { parent_pack: files.pack, parent_spr, members: Vec::new() }).expect("superseded archive admission");
+    let status = Box::pin(drive_single_document_archive(&mut app, 95)).await;
+    assert_eq!(status.state, protocol::DocumentArchiveLoadState::Ready, "a superseded archive failed to load: {}", archive_fault_text(&status));
+    PluginApp::acknowledge_document_archive_load(&mut app, 95).expect("superseded archive acknowledgement");
+    assert_eq!(app.snapshot().expect("replaced projection"), expected);
+    assert_eq!(app.store.supersessions(), source.supersessions());
+    let fatal = app.store.mutation_outcomes().expect("loaded outcomes").into_iter().find(|outcome| outcome.mutation_id == ids[2]).expect("the garbage-superseded operation");
+    assert_eq!((fatal.worst, fatal.superseded, fatal.withdrawn), (Some(protocol::Severity::Fatal), true, false));
+    close_bounded_source_store(&mut source);
+    close_member_admission_app(&mut app);
+}

@@ -3,22 +3,27 @@
   "$id": "https://json.schemas.assets.semio-tech.com/window/gis/map/config/mutation/set-vector-style/schema.json",
   "title": "SetVectorStyle",
   "type": "object",
-  "$defs": {
-    "Payload": {
-      "type": "object",
-      "required": [
-        "value"
-      ],
-      "properties": {
-        "value": {
-          "type": "string"
-        }
+  "additionalProperties": false,
+  "required": [
+    "operation",
+    "value"
+  ],
+  "properties": {
+    "operation": {
+      "const": "setVectorStyle"
+    },
+    "value": {
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "text",
+        "role": "value",
+        "label": {
+          "en": "Vector style",
+          "de": "Vektorstil"
+        },
+        "group": "style",
+        "order": 10
       }
     }
-  },
-  "allOf": [
-    {
-      "$ref": "#/$defs/Payload"
-    }
-  ]
+  }
 }

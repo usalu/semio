@@ -15,22 +15,106 @@
   ],
   "properties": {
     "mutation": {
-      "const": "connectKindCompatibility"
+      "const": "connectKindCompatibility",
+      "x-semio-ui": {
+        "widget": "hidden",
+        "role": "discriminator",
+        "label": {
+          "en": "Mutation",
+          "de": "Mutation"
+        }
+      }
     },
     "source": {
-      "type": "string"
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "text",
+        "role": "value",
+        "label": {
+          "en": "Source kind",
+          "de": "Quellart"
+        },
+        "group": "kind",
+        "order": 10
+      }
     },
     "target": {
-      "type": "string"
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "text",
+        "role": "value",
+        "label": {
+          "en": "Target kind",
+          "de": "Zielart"
+        },
+        "group": "kind",
+        "order": 20
+      }
     },
     "bidirectional": {
-      "type": "boolean"
+      "type": "boolean",
+      "x-semio-ui": {
+        "widget": "toggle",
+        "role": "value",
+        "label": {
+          "en": "Bidirectional",
+          "de": "Beidseitig"
+        },
+        "group": "kind",
+        "order": 30
+      }
     },
     "important": {
-      "type": "boolean"
+      "type": "boolean",
+      "x-semio-ui": {
+        "widget": "toggle",
+        "role": "value",
+        "label": {
+          "en": "Important",
+          "de": "Wichtig"
+        },
+        "group": "kind",
+        "order": 40
+      }
     },
     "specificity": {
-      "$ref": "#/$defs/Puzzle2dCompatSpecificity"
+      "$ref": "#/$defs/Puzzle2dCompatSpecificity",
+      "x-semio-ui": {
+        "widget": "select",
+        "role": "value",
+        "label": {
+          "en": "Specificity",
+          "de": "Spezifität"
+        },
+        "options": {
+          "general": {
+            "en": "General",
+            "de": "Allgemein"
+          },
+          "node": {
+            "en": "Node",
+            "de": "Knoten"
+          },
+          "edge": {
+            "en": "Edge",
+            "de": "Kante"
+          },
+          "handle": {
+            "en": "Handle",
+            "de": "Anschluss"
+          },
+          "wire": {
+            "en": "Wire",
+            "de": "Leitung"
+          },
+          "vortex": {
+            "en": "Vortex",
+            "de": "Vortex"
+          }
+        },
+        "group": "kind",
+        "order": 50
+      }
     }
   },
   "$defs": {

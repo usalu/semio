@@ -1,26 +1,9 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
   "$id": "https://json.schemas.assets.semio-tech.com/framework/os/plugin/tests/contributed-mutation-wire/mutations.json",
-  "type": "object",
-  "allOf": [
+  "oneOf": [
     {
-      "$ref": "https://json.schemas.assets.semio-tech.com/framework/os/plugin/tests/contributed-mutation-wire/mutation/add-value/schema.json#/$defs/Payload"
-    },
-    {
-      "properties": {
-        "operation": {
-          "const": "addValue"
-        }
-      },
-      "required": [
-        "operation"
-      ]
+      "$ref": "https://json.schemas.assets.semio-tech.com/framework/os/plugin/tests/contributed-mutation-wire/mutation/add-value/schema.json"
     }
-  ],
-  "propertyNames": {
-    "enum": [
-      "delta",
-      "operation"
-    ]
-  }
+  ]
 }

@@ -1,6 +1,6 @@
 {
   "mutation": "dragAssets",
-  "asset_ids": [
+  "assetIds": [
     "asset-hero",
     "asset-prop",
     "asset-ghost"

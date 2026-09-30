@@ -1,13 +1,35 @@
 {
-  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/norm/en1991/mutation/change-fire-duration/schema.json",
+  "title": "ChangeFireDuration",
   "type": "object",
   "additionalProperties": false,
   "required": [
-    "new_fire_duration"
+    "newFireDuration"
   ],
   "properties": {
-    "new_fire_duration": {
-      "type": "number"
+    "newFireDuration": {
+      "type": "number",
+      "minimum": 0,
+      "x-semio-ui": {
+        "widget": "stepper",
+        "role": "value",
+        "label": {
+          "en": "Fire duration t",
+          "de": "Branddauer t"
+        },
+        "description": {
+          "en": "Required fire exposure time, e.g. 30, 60 or 90 min.",
+          "de": "Erforderliche Branddauer, z. B. 30, 60 oder 90 min."
+        },
+        "unit": "s",
+        "displayUnit": "min",
+        "displayFactor": 0.016666666666666666,
+        "step": 60,
+        "precision": 0,
+        "group": "fire",
+        "order": 10
+      }
     }
   }
 }

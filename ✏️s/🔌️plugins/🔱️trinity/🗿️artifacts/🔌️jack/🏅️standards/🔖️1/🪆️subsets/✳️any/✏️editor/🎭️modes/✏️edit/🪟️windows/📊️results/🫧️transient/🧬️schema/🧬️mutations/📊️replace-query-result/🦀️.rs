@@ -4,6 +4,7 @@ use super::{JackResultsWindowTransient, JackResultsWindowTransientMutation};
 use crate::ast::QueryResult;
 
 #[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::DslRecord, dsl::MutationLeaf)]
+#[value(rename_all = "camelCase")]
 #[dsl(keyword = "replace-query-result")]
 #[mutation_leaf(contract = ::protocol)]
 pub struct ReplaceQueryResult {

@@ -594,6 +594,24 @@ impl<T> ArtifactHistoryLedger<T> {
         self.visible_bounds().2
     }
 
+    /// 🪑️ How many more entries the ledger admits one reservation at a time — the preflight of an atomic batch of inserts.
+    pub fn vacancies(&self) -> usize {
+        if self.group.is_some() || self.reservation.is_some() {
+            return 0;
+        }
+        let mut vacancies = 0;
+        let mut free = self.free_head;
+        while let Some(index) = free {
+            let slot = self.slot(index);
+            if slot.generation == u32::MAX {
+                return vacancies;
+            }
+            vacancies += 1;
+            free = slot.free_next;
+        }
+        vacancies + ARTIFACT_HISTORY_LEDGER_CAPACITY.saturating_sub(self.slots.len())
+    }
+
     pub fn has_capacity(&self) -> bool {
         self.group.is_none() && self.reservation.is_none() && (self.free_head.is_some_and(|index| self.slot(index).generation != u32::MAX) || self.slots.len() < ARTIFACT_HISTORY_LEDGER_CAPACITY)
     }
@@ -937,6 +955,9 @@ pub enum VcsError {
     /// ❓️ `store::ArtifactStore::resolve_conflict` was called with an id that names no
     /// currently-`Open` conflict on this store.
     UnknownConflict(String),
+    /// ⌛️ A result computed against store generation `expected_generation` (a finished history replay) was offered
+    /// after the store moved on to `generation`; the caller computes it again against the live state.
+    Stale { expected_generation: u64, generation: u64 },
 }
 
 impl std::fmt::Display for VcsError {
@@ -963,6 +984,7 @@ impl std::fmt::Display for VcsError {
             Self::CompensationFailed(message) => write!(formatter, "group dispatch failed and rollback also failed: {message}"),
             Self::Rejected { policy, .. } => write!(formatter, "rejected by merge policy {policy:?}"),
             Self::UnknownConflict(id) => write!(formatter, "unknown conflict id: {id}"),
+            Self::Stale { expected_generation, generation } => write!(formatter, "stale result: computed at generation {expected_generation}, store is at {generation}"),
         }
     }
 }

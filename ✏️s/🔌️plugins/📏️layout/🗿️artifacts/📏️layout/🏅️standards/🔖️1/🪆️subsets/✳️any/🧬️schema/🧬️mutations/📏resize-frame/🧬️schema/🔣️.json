@@ -12,16 +12,70 @@
   ],
   "properties": {
     "pageId": {
-      "type": "string"
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Page",
+          "de": "Seite"
+        },
+        "ref": {
+          "kind": "page"
+        },
+        "group": "target",
+        "order": 10
+      }
     },
     "frameId": {
-      "type": "string"
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Frame",
+          "de": "Rahmen"
+        },
+        "ref": {
+          "kind": "frame",
+          "domain": "elements",
+          "granularity": "element"
+        },
+        "group": "target",
+        "order": 20
+      }
     },
     "newWidth": {
-      "type": "number"
+      "type": "number",
+      "x-semio-ui": {
+        "widget": "stepper",
+        "role": "value",
+        "label": {
+          "en": "Width",
+          "de": "Breite"
+        },
+        "unit": "mm",
+        "step": 1,
+        "precision": 1,
+        "group": "geometry",
+        "order": 30
+      }
     },
     "newHeight": {
-      "type": "number"
+      "type": "number",
+      "x-semio-ui": {
+        "widget": "stepper",
+        "role": "value",
+        "label": {
+          "en": "Height",
+          "de": "Höhe"
+        },
+        "unit": "mm",
+        "step": 1,
+        "precision": 1,
+        "group": "geometry",
+        "order": 40
+      }
     }
   }
 }

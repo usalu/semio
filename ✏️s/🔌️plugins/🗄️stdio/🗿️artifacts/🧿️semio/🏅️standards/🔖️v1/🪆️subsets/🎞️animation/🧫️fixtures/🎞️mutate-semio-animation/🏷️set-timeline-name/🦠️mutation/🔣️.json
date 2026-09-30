@@ -1,6 +1,7 @@
 {
   "kind": "set-timeline-name",
-  "params": {
+  "mutation": {
+    "mutation": "setTimelineName",
     "index": 0,
     "name": null
   },

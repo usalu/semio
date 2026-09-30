@@ -8,11 +8,11 @@
       "type": "object",
       "additionalProperties": false,
       "required": [
-        "AddNodePort"
+        "SetSnapshot"
       ],
       "properties": {
-        "AddNodePort": {
-          "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/semio/v1/graph/mutation/add-node-port/schema.json"
+        "SetSnapshot": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/semio/v1/graph/mutation/set-snapshot/schema.json"
         }
       }
     },
@@ -20,11 +20,23 @@
       "type": "object",
       "additionalProperties": false,
       "required": [
-        "AddNodeProperty"
+        "CreateNode"
       ],
       "properties": {
-        "AddNodeProperty": {
-          "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/semio/v1/graph/mutation/add-node-property/schema.json"
+        "CreateNode": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/semio/v1/graph/mutation/create-node/schema.json"
+        }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "DeleteNode"
+      ],
+      "properties": {
+        "DeleteNode": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/semio/v1/graph/mutation/delete-node/schema.json"
         }
       }
     },
@@ -56,59 +68,23 @@
       "type": "object",
       "additionalProperties": false,
       "required": [
-        "CreateEdge"
-      ],
-      "properties": {
-        "CreateEdge": {
-          "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/semio/v1/graph/mutation/create-edge/schema.json"
-        }
-      }
-    },
-    {
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "CreateNode"
-      ],
-      "properties": {
-        "CreateNode": {
-          "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/semio/v1/graph/mutation/create-node/schema.json"
-        }
-      }
-    },
-    {
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "DeleteEdge"
-      ],
-      "properties": {
-        "DeleteEdge": {
-          "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/semio/v1/graph/mutation/delete-edge/schema.json"
-        }
-      }
-    },
-    {
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "DeleteNode"
-      ],
-      "properties": {
-        "DeleteNode": {
-          "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/semio/v1/graph/mutation/delete-node/schema.json"
-        }
-      }
-    },
-    {
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
         "MoveNode"
       ],
       "properties": {
         "MoveNode": {
           "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/semio/v1/graph/mutation/move-node/schema.json"
+        }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "AddNodePort"
+      ],
+      "properties": {
+        "AddNodePort": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/semio/v1/graph/mutation/add-node-port/schema.json"
         }
       }
     },
@@ -128,6 +104,18 @@
       "type": "object",
       "additionalProperties": false,
       "required": [
+        "AddNodeProperty"
+      ],
+      "properties": {
+        "AddNodeProperty": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/semio/v1/graph/mutation/add-node-property/schema.json"
+        }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
         "RemoveNodeProperty"
       ],
       "properties": {
@@ -140,11 +128,23 @@
       "type": "object",
       "additionalProperties": false,
       "required": [
-        "SetSnapshot"
+        "CreateEdge"
       ],
       "properties": {
-        "SetSnapshot": {
-          "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/semio/v1/graph/mutation/set-snapshot/schema.json"
+        "CreateEdge": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/semio/v1/graph/mutation/create-edge/schema.json"
+        }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "DeleteEdge"
+      ],
+      "properties": {
+        "DeleteEdge": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/semio/v1/graph/mutation/delete-edge/schema.json"
         }
       }
     }

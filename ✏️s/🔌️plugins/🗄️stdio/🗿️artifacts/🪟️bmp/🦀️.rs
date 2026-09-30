@@ -15,6 +15,8 @@ pub use schema::diff::BmpDiff;
 pub use schema::mutations::BmpMutation;
 pub use schema::snapshot::BmpSnapshot;
 pub use schema::BmpArtifact;
+/// 🧾️ The DSL contract `BmpSnapshot` implements, re-exported for clients that print or parse it.
+pub use semio_framework_os_kernel::ArtifactDsl;
 
 /// 🏷️ Document schema / DSL envelope id.
 pub const STDIO_BMP_DOCUMENT_SCHEMA: &str = "stdio.bmp";

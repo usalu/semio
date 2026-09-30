@@ -13,10 +13,10 @@
       ],
       "properties": {
         "mutation": {
-          "const": "collapse-page-size"
+          "const": "set-page-size"
         },
         "payload": {
-          "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/pdf/1.4/x/mutation/collapse-page-size/schema.json"
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/pdf/1.4/x/mutation/set-page-size/schema.json"
         }
       }
     },
@@ -29,10 +29,10 @@
       ],
       "properties": {
         "mutation": {
-          "const": "set-page-size"
+          "const": "collapse-page-size"
         },
         "payload": {
-          "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/pdf/1.4/x/mutation/set-page-size/schema.json"
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/pdf/1.4/x/mutation/collapse-page-size/schema.json"
         }
       }
     }

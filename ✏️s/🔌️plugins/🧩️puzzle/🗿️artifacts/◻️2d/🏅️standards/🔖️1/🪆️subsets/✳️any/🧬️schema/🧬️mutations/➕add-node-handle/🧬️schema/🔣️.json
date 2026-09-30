@@ -12,20 +12,76 @@
   ],
   "properties": {
     "mutation": {
-      "const": "addNodeHandle"
+      "const": "addNodeHandle",
+      "x-semio-ui": {
+        "widget": "hidden",
+        "role": "discriminator",
+        "label": {
+          "en": "Mutation",
+          "de": "Mutation"
+        }
+      }
     },
     "nodeId": {
-      "type": "string"
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Node",
+          "de": "Knoten"
+        },
+        "description": {
+          "en": "The node that owns the handle.",
+          "de": "Der Knoten, dem der Anschluss gehört."
+        },
+        "ref": {
+          "kind": "node",
+          "domain": "vortex",
+          "granularity": "node"
+        },
+        "group": "target",
+        "order": 10
+      }
     },
     "handle": {
-      "$ref": "#/$defs/Puzzle2dHandle"
+      "$ref": "#/$defs/Puzzle2dHandle",
+      "x-semio-ui": {
+        "role": "value",
+        "label": {
+          "en": "Handle",
+          "de": "Anschluss"
+        },
+        "description": {
+          "en": "The complete handle record to add.",
+          "de": "Der vollständige hinzuzufügende Anschluss."
+        },
+        "group": "record",
+        "order": 20
+      }
     },
     "index": {
       "type": [
         "integer",
         "null"
       ],
-      "minimum": 0
+      "minimum": 0,
+      "x-semio-ui": {
+        "widget": "stepper",
+        "role": "value",
+        "label": {
+          "en": "Index",
+          "de": "Index"
+        },
+        "description": {
+          "en": "Position in the list; empty appends at the end.",
+          "de": "Position in der Liste; leer hängt am Ende an."
+        },
+        "step": 1,
+        "precision": 0,
+        "group": "order",
+        "order": 30
+      }
     }
   },
   "$defs": {
@@ -39,31 +95,158 @@
       ],
       "properties": {
         "id": {
-          "type": "string"
+          "type": "string",
+          "x-semio-ui": {
+            "widget": "text",
+            "role": "value",
+            "label": {
+              "en": "ID",
+              "de": "ID"
+            },
+            "description": {
+              "en": "Unique handle id on this board.",
+              "de": "Eindeutige Anschluss-ID auf diesem Brett."
+            },
+            "group": "identity",
+            "order": 10
+          }
         },
         "handleKind": {
-          "type": "string"
+          "type": "string",
+          "x-semio-ui": {
+            "widget": "text",
+            "role": "value",
+            "label": {
+              "en": "Handle kind",
+              "de": "Anschlussart"
+            },
+            "group": "kind",
+            "order": 20
+          }
         },
         "angle": {
-          "type": "number"
+          "type": "number",
+          "x-semio-ui": {
+            "widget": "dial",
+            "role": "value",
+            "label": {
+              "en": "Angle",
+              "de": "Winkel"
+            },
+            "description": {
+              "en": "Position on the node rim, counter-clockwise.",
+              "de": "Position auf dem Knotenrand, gegen den Uhrzeigersinn."
+            },
+            "unit": "rad",
+            "displayUnit": "deg",
+            "displayFactor": 57.29577951308232,
+            "step": 0.017453292519943295,
+            "softMin": -3.141592653589793,
+            "softMax": 3.141592653589793,
+            "snaps": [
+              -3.141592653589793,
+              -1.5707963267948966,
+              0,
+              1.5707963267948966,
+              3.141592653589793
+            ],
+            "group": "geometry",
+            "order": 30
+          }
         },
         "radius": {
-          "type": "number"
+          "type": "number",
+          "exclusiveMinimum": 0,
+          "x-semio-ui": {
+            "widget": "stepper",
+            "role": "value",
+            "label": {
+              "en": "Radius",
+              "de": "Radius"
+            },
+            "step": 0.1,
+            "precision": 2,
+            "group": "geometry",
+            "order": 40
+          }
         },
         "color": {
-          "type": "string"
+          "type": "string",
+          "x-semio-ui": {
+            "widget": "text",
+            "role": "value",
+            "label": {
+              "en": "Color",
+              "de": "Farbe"
+            },
+            "group": "appearance",
+            "order": 50
+          }
         },
         "iconKind": {
-          "type": "string"
+          "type": "string",
+          "x-semio-ui": {
+            "widget": "text",
+            "role": "value",
+            "label": {
+              "en": "Icon",
+              "de": "Symbol"
+            },
+            "group": "appearance",
+            "order": 60
+          }
         },
         "scale": {
-          "type": "number"
+          "type": "number",
+          "exclusiveMinimum": 0,
+          "x-semio-ui": {
+            "widget": "slider",
+            "role": "value",
+            "label": {
+              "en": "Scale",
+              "de": "Skalierung"
+            },
+            "step": 0.01,
+            "precision": 2,
+            "softMin": 0.1,
+            "softMax": 10,
+            "scale": "log",
+            "snaps": [
+              0.25,
+              0.5,
+              1,
+              2,
+              4
+            ],
+            "group": "appearance",
+            "order": 70
+          }
         },
         "visible": {
-          "type": "boolean"
+          "type": "boolean",
+          "x-semio-ui": {
+            "widget": "toggle",
+            "role": "value",
+            "label": {
+              "en": "Visible",
+              "de": "Sichtbar"
+            },
+            "group": "state",
+            "order": 80
+          }
         },
         "locked": {
-          "type": "boolean"
+          "type": "boolean",
+          "x-semio-ui": {
+            "widget": "toggle",
+            "role": "value",
+            "label": {
+              "en": "Locked",
+              "de": "Gesperrt"
+            },
+            "group": "state",
+            "order": 90
+          }
         }
       }
     }

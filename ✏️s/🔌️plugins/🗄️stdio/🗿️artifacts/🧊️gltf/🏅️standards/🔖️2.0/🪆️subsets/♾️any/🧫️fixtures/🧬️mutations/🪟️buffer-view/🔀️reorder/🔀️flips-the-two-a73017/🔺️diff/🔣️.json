@@ -1,21 +1,37 @@
 {
-  "id": "s.stdio.gltf.mutation.reorder-buffer-views.v1",
-  "version": 1,
-  "touchedPaths": [
-    "document/bufferViews/1",
-    "document/bufferViews/0"
-  ],
-  "payload": {
-    "order": [
-      1,
-      0
+  "accessors": {
+    "modified": [
+      {
+        "index": 0,
+        "diff": {
+          "bufferView": 1
+        }
+      },
+      {
+        "index": 1,
+        "diff": {
+          "bufferView": 0
+        }
+      }
     ]
   },
-  "operation": {
-    "kind": "reorder",
-    "order": [
-      1,
-      0
+  "bufferViews": {
+    "modified": [
+      {
+        "index": 0,
+        "diff": {
+          "buffer": 0,
+          "byteOffset": 4,
+          "byteLength": 4
+        }
+      },
+      {
+        "index": 1,
+        "diff": {
+          "buffer": 0,
+          "byteLength": 4
+        }
+      }
     ]
   }
 }

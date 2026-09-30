@@ -12,6 +12,7 @@ use semio_framework_value_derive::{FromValue, ToValue};
 /// 🧹 `clear-widget-layout` payload — removes the layout entry for widget `id`.
 #[derive(Clone, Debug, PartialEq, ToValue, FromValue, dsl::MutationLeaf)]
 #[mutation_leaf(contract = ::protocol)]
+#[value(rename_all = "camelCase")]
 pub struct ClearWidgetLayout {
     pub id: String,
 }

@@ -48,6 +48,65 @@ pub struct TransitionPin {
     pub checkpoint_id: String,
 }
 
+/// ♻️ The effective input a [`HistoryTransition::Supersede`] installs for one operation: the
+/// artifact aggregate op re-encoded canonically (`schema` names the artifact schema, `payload` holds
+/// its `OpBinary` bytes), or a withdrawal that folds the operation as a no-op. The superseded
+/// operation itself is never rewritten.
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub enum InputReplacement {
+    Input { schema: String, payload: Vec<u8> },
+    Withdrawn,
+}
+
+/// 🎯️ One operation whose effective input a supersession replaces.
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub struct SupersededInput {
+    pub target: MutationId,
+    pub replacement: InputReplacement,
+}
+
+/// ✏️ An atomic batch of input replacements, effective in every alternative (`scope: None`) or only
+/// while the alternative named `scope` is the fold's final alternative.
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub struct TransitionSupersede {
+    pub scope: Option<String>,
+    pub inputs: Vec<SupersededInput>,
+}
+
+/// 📏️ Codec ceiling of [`TransitionSupersede::scope`] in UTF-8 bytes.
+pub const SUPERSEDE_SCOPE_MAX_BYTES: usize = 256;
+/// 📏️ Codec ceiling of one [`InputReplacement::Input`] payload in bytes.
+pub const SUPERSEDE_PAYLOAD_MAX_BYTES: usize = 262_144;
+
+impl TransitionSupersede {
+    /// 🔗️ The superseded operations in declaration order: the transition envelope's `dependencies`.
+    pub fn targets(&self) -> Vec<MutationId> {
+        self.inputs.iter().map(|input| input.target.clone()).collect()
+    }
+
+    /// 🛂️ The codec law every encoded supersession satisfies: at least one input, unique targets,
+    /// `scope` at most [`SUPERSEDE_SCOPE_MAX_BYTES`], every payload at most [`SUPERSEDE_PAYLOAD_MAX_BYTES`].
+    pub fn validate(&self) -> Result<(), crate::ProtocolError> {
+        if self.scope.as_ref().is_some_and(|scope| scope.len() > SUPERSEDE_SCOPE_MAX_BYTES) {
+            return Err(malformed(0, format!("supersede scope exceeds {SUPERSEDE_SCOPE_MAX_BYTES} bytes")));
+        }
+        if self.inputs.is_empty() {
+            return Err(malformed(0, "supersede names no input"));
+        }
+        for (index, input) in self.inputs.iter().enumerate() {
+            if self.inputs[..index].iter().any(|earlier| earlier.target == input.target) {
+                return Err(malformed(0, format!("supersede repeats target {}", input.target.0)));
+            }
+            if let InputReplacement::Input { payload, .. } = &input.replacement {
+                if payload.len() > SUPERSEDE_PAYLOAD_MAX_BYTES {
+                    return Err(malformed(0, format!("supersede payload exceeds {SUPERSEDE_PAYLOAD_MAX_BYTES} bytes")));
+                }
+            }
+        }
+        Ok(())
+    }
+}
+
 /// 🔀️ One structural history step. Every variant is a pure function of the fold state it
 /// lands on, so replicas holding the same event set converge regardless of arrival order.
 #[derive(Clone, Debug, PartialEq, Eq)]
@@ -64,6 +123,101 @@ pub enum HistoryTransition {
     Checkout { checkpoint_id: String, alternative_id: Option<String> },
     /// 🧩️ Re-identifies `checkpoint_id` as `pinned_checkpoint_id` once its composed children's pins are known.
     Repin { checkpoint_id: String, pinned_checkpoint_id: String, pins: Vec<TransitionPin> },
+    /// ✏️ Replaces the effective input of existing operations, non-destructively (history editing).
+    Supersede(TransitionSupersede),
+}
+
+/// 🧭️ The supersession a fold resolved for one operation: which transition installed it, who
+/// authored it and when, its scope, and the effective input.
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub struct EffectiveSupersession {
+    pub transition_id: String,
+    pub actor: String,
+    pub timestamp: HybridLogicalTimestamp,
+    pub scope: Option<String>,
+    pub replacement: InputReplacement,
+}
+
+/// 🌉️ Internally tagged on `"kind"` (`input` carries `schema` and `payload` bytes, `withdrawn` nothing).
+impl crate::value::ToValue for InputReplacement {
+    fn to_value(&self) -> crate::value::DslValue {
+        match self {
+            InputReplacement::Input { schema, payload } => crate::value::DslValue::object(vec![
+                ("kind".to_string(), crate::value::DslValue::String("input".to_string())),
+                ("schema".to_string(), crate::value::ToValue::to_value(schema)),
+                ("payload".to_string(), crate::value::ToValue::to_value(payload)),
+            ]),
+            InputReplacement::Withdrawn => crate::value::DslValue::object(vec![("kind".to_string(), crate::value::DslValue::String("withdrawn".to_string()))]),
+        }
+    }
+}
+impl crate::value::FromValue for InputReplacement {
+    fn from_value(value: crate::value::DslValue) -> Result<Self, crate::value::ValueError> {
+        let crate::value::DslValue::Object(fields) = value else {
+            return Err(crate::value::ValueError::new(format!("expected an object for InputReplacement, found {value:?}")));
+        };
+        let mut kind = None;
+        let mut schema = None;
+        let mut payload = None;
+        for (key, entry) in fields {
+            match key.as_str() {
+                "kind" => kind = Some(<String as crate::value::FromValue>::from_value(entry).map_err(|e| e.under("kind"))?),
+                "schema" => schema = Some(<String as crate::value::FromValue>::from_value(entry).map_err(|e| e.under("schema"))?),
+                "payload" => payload = Some(<Vec<u8> as crate::value::FromValue>::from_value(entry).map_err(|e| e.under("payload"))?),
+                _ => {}
+            }
+        }
+        match kind.as_deref() {
+            Some("input") => Ok(InputReplacement::Input {
+                schema: schema.ok_or_else(|| crate::value::ValueError::new("InputReplacement::Input missing schema"))?,
+                payload: payload.ok_or_else(|| crate::value::ValueError::new("InputReplacement::Input missing payload"))?,
+            }),
+            Some("withdrawn") => Ok(InputReplacement::Withdrawn),
+            Some(other) => Err(crate::value::ValueError::new(format!("unknown InputReplacement kind `{other}`"))),
+            None => Err(crate::value::ValueError::new("InputReplacement missing kind")),
+        }
+    }
+}
+
+impl crate::value::ToValue for EffectiveSupersession {
+    fn to_value(&self) -> crate::value::DslValue {
+        crate::value::DslValue::object(vec![
+            ("transitionId".to_string(), crate::value::ToValue::to_value(&self.transition_id)),
+            ("actor".to_string(), crate::value::ToValue::to_value(&self.actor)),
+            ("timestamp".to_string(), crate::value::ToValue::to_value(&self.timestamp)),
+            ("scope".to_string(), crate::value::ToValue::to_value(&self.scope)),
+            ("replacement".to_string(), crate::value::ToValue::to_value(&self.replacement)),
+        ])
+    }
+}
+impl crate::value::FromValue for EffectiveSupersession {
+    fn from_value(value: crate::value::DslValue) -> Result<Self, crate::value::ValueError> {
+        let crate::value::DslValue::Object(fields) = value else {
+            return Err(crate::value::ValueError::new(format!("expected an object for EffectiveSupersession, found {value:?}")));
+        };
+        let mut transition_id = None;
+        let mut actor = None;
+        let mut timestamp = None;
+        let mut scope = None;
+        let mut replacement = None;
+        for (key, entry) in fields {
+            match key.as_str() {
+                "transitionId" => transition_id = Some(<String as crate::value::FromValue>::from_value(entry).map_err(|e| e.under("transitionId"))?),
+                "actor" => actor = Some(<String as crate::value::FromValue>::from_value(entry).map_err(|e| e.under("actor"))?),
+                "timestamp" => timestamp = Some(<HybridLogicalTimestamp as crate::value::FromValue>::from_value(entry).map_err(|e| e.under("timestamp"))?),
+                "scope" => scope = <Option<String> as crate::value::FromValue>::from_value(entry).map_err(|e| e.under("scope"))?,
+                "replacement" => replacement = Some(<InputReplacement as crate::value::FromValue>::from_value(entry).map_err(|e| e.under("replacement"))?),
+                _ => {}
+            }
+        }
+        Ok(EffectiveSupersession {
+            transition_id: transition_id.ok_or_else(|| crate::value::ValueError::new("EffectiveSupersession missing transitionId"))?,
+            actor: actor.ok_or_else(|| crate::value::ValueError::new("EffectiveSupersession missing actor"))?,
+            timestamp: timestamp.ok_or_else(|| crate::value::ValueError::new("EffectiveSupersession missing timestamp"))?,
+            scope,
+            replacement: replacement.ok_or_else(|| crate::value::ValueError::new("EffectiveSupersession missing replacement"))?,
+        })
+    }
 }
 //#endregion 🔖️Vocabulary
 
@@ -115,7 +269,10 @@ fn read_ids(bytes: &[u8], pos: &mut usize) -> Result<Vec<MutationId>, crate::Pro
     Ok(ids)
 }
 
-/// 🎯️ `tag varint | variant fields in declaration order` — the transition payload bytes.
+/// 🎯️ `tag varint | variant fields in declaration order` — the transition payload bytes. A
+/// `Supersede` (tag 6) writes `scope option | input count varint | (target str | replacement u8
+/// (0 = input: schema str, payload bytes; 1 = withdrawn))*` and must satisfy
+/// [`TransitionSupersede::validate`], which [`decode_history_transition`] enforces.
 pub fn encode_history_transition(transition: &HistoryTransition) -> Vec<u8> {
     let mut out = Vec::new();
     match transition {
@@ -165,8 +322,54 @@ pub fn encode_history_transition(transition: &HistoryTransition) -> Vec<u8> {
                 crate::write_str(&mut out, &pin.checkpoint_id);
             }
         }
+        HistoryTransition::Supersede(supersede) => {
+            crate::wire::write_varint_u64(&mut out, 6);
+            write_optional_str(&mut out, &supersede.scope);
+            crate::wire::write_varint_u64(&mut out, supersede.inputs.len() as u64);
+            for input in &supersede.inputs {
+                crate::write_str(&mut out, &input.target.0);
+                match &input.replacement {
+                    InputReplacement::Input { schema, payload } => {
+                        out.push(0);
+                        crate::write_str(&mut out, schema);
+                        crate::write_bytes(&mut out, payload);
+                    }
+                    InputReplacement::Withdrawn => out.push(1),
+                }
+            }
+        }
     }
     out
+}
+
+fn read_supersede(bytes: &[u8], pos: &mut usize) -> Result<TransitionSupersede, crate::ProtocolError> {
+    let scope = read_optional_str(bytes, pos)?;
+    let input_count = crate::wire::read_varint_u64(bytes, pos)?;
+    if input_count > (bytes.len() - (*pos).min(bytes.len())) as u64 {
+        return Err(malformed(*pos, "input count exceeds payload"));
+    }
+    let mut inputs = Vec::with_capacity(input_count as usize);
+    for _ in 0..input_count {
+        let target = MutationId(crate::read_str(bytes, pos)?);
+        let replacement = match read_u8(bytes, pos)? {
+            0 => {
+                let schema = crate::read_str(bytes, pos)?;
+                let length_at = *pos;
+                let length = crate::wire::read_varint_u64(bytes, pos)?;
+                if length > SUPERSEDE_PAYLOAD_MAX_BYTES as u64 {
+                    return Err(malformed(length_at, format!("supersede payload exceeds {SUPERSEDE_PAYLOAD_MAX_BYTES} bytes")));
+                }
+                *pos = length_at;
+                InputReplacement::Input { schema, payload: crate::read_bytes(bytes, pos)? }
+            }
+            1 => InputReplacement::Withdrawn,
+            other => return Err(malformed(*pos - 1, format!("invalid replacement tag {other}"))),
+        };
+        inputs.push(SupersededInput { target, replacement });
+    }
+    let supersede = TransitionSupersede { scope, inputs };
+    supersede.validate()?;
+    Ok(supersede)
 }
 
 /// 🎯️ Inverse of [`encode_history_transition`]; refuses trailing bytes.
@@ -209,6 +412,7 @@ pub fn decode_history_transition(bytes: &[u8]) -> Result<HistoryTransition, crat
             }
             HistoryTransition::Repin { checkpoint_id, pinned_checkpoint_id, pins }
         }
+        6 => HistoryTransition::Supersede(read_supersede(bytes, &mut pos)?),
         other => return Err(malformed(0, format!("unknown transition tag {other}"))),
     };
     if pos != bytes.len() {
@@ -219,10 +423,12 @@ pub fn decode_history_transition(bytes: &[u8]) -> Result<HistoryTransition, crat
 //#endregion 🔖️Codec
 
 //#region 🔖️Envelope
-/// 🪪️ Content-addressed transition id: `transition-{hex16(blake3(actor | hlc | payload))}`.
-pub fn history_transition_id(actor: &ActorId, timestamp: &HybridLogicalTimestamp, payload: &[u8]) -> MutationId {
-    let mut material = Vec::with_capacity(payload.len() + actor.0.len() + 32);
-    crate::write_str(&mut material, &actor.0);
+/// 🪪️ Content-addressed transition id: `transition-{hex16(blake3(hlc.actor varint | hlc.physical_ms varint |
+/// hlc.logical varint | payload bytes))}`. The HLC already carries the author's numeric replica actor; the
+/// envelope's free-form actor string is authentication metadata the hub rebinds to the socket subject, so it
+/// never enters the address and every replica re-derives the same id from the authored `(hlc, payload)`.
+pub fn history_transition_id(timestamp: &HybridLogicalTimestamp, payload: &[u8]) -> MutationId {
+    let mut material = Vec::with_capacity(payload.len() + 32);
     crate::wire::write_varint_u64(&mut material, timestamp.actor);
     crate::wire::write_varint_u64(&mut material, timestamp.physical_ms);
     crate::wire::write_varint_u64(&mut material, timestamp.logical);
@@ -237,10 +443,12 @@ pub fn history_transition_id(actor: &ActorId, timestamp: &HybridLogicalTimestamp
 }
 
 /// ✉️ Wraps `transition` as a causal envelope: schema-tagged payload, empty inverse (a
-/// transition is undone by a later transition, never by an inverse payload).
+/// transition is undone by a later transition, never by an inverse payload), no target and no
+/// transaction. A `Supersede` envelope's `dependencies` are its [`TransitionSupersede::targets`];
+/// the conflict target is filled from the replacement op by the store, never at this level.
 pub fn history_transition_envelope(transition: &HistoryTransition, document_id: &ArtifactId, actor: &ActorId, dependencies: Vec<MutationId>, timestamp: HybridLogicalTimestamp) -> super::MutationEnvelope {
     let payload = encode_history_transition(transition);
-    let mutation_id = history_transition_id(actor, &timestamp, &payload);
+    let mutation_id = history_transition_id(&timestamp, &payload);
     let schema = SchemaId(HISTORY_TRANSITION_SCHEMA.to_string());
     super::MutationEnvelope {
         mutation_id,
@@ -252,6 +460,7 @@ pub fn history_transition_envelope(transition: &HistoryTransition, document_id: 
         diff: super::ArtifactDiff { schema: schema.clone(), payload },
         inverse: super::InverseMutation { schema, payload: Vec::new() },
         timestamp,
+        transaction: None,
     }
 }
 
@@ -311,8 +520,9 @@ pub struct FoldAlternative {
 
 /// 🧮️ Everything a document's history projects to: the active edits in HLC order, the redo
 /// stack, the undo/redo transitions refused because they name an operation another actor authored
-/// (`refused`, transition ids in fold order), the current checkpoint and alternative, and every
-/// change/checkpoint/alternative fact.
+/// (`refused`, transition ids in fold order), the current checkpoint and alternative, every
+/// change/checkpoint/alternative fact, and the effective supersession of every superseded operation
+/// (every fold site folds an operation's effective input, never its original, once it is listed here).
 #[derive(Clone, Debug, Default, PartialEq, Eq)]
 pub struct HistoryFold {
     pub applied: Vec<String>,
@@ -323,11 +533,12 @@ pub struct HistoryFold {
     pub changes: Vec<FoldChange>,
     pub checkpoints: Vec<FoldCheckpoint>,
     pub alternatives: Vec<FoldAlternative>,
+    pub supersessions: std::collections::BTreeMap<MutationId, EffectiveSupersession>,
 }
 
 enum FoldEvent<'a> {
     Edit(&'a FoldEdit),
-    Transition { id: &'a str, actor: &'a str, transition: HistoryTransition },
+    Transition { id: &'a str, actor: &'a str, timestamp: HybridLogicalTimestamp, transition: HistoryTransition },
 }
 
 fn fold_error(detail: impl Into<String>) -> crate::ProtocolError {
@@ -340,6 +551,9 @@ fn fold_error(detail: impl Into<String>) -> crate::ProtocolError {
 /// withheld by a merge policy (quarantined); they never become active. An undo belongs to its author: a
 /// `Revert` or `Reinstate` naming any operation another actor authored withdraws or restores nothing
 /// and is listed in `refused` (an edit whose author is unknown — a local-only one — belongs to anyone).
+/// A `Supersede` has no ownership rule: an operation's effective supersession is the last one (by
+/// `(hlc, id)`) naming it whose scope is `None` or the final alternative; it keeps the operation's
+/// slot, id, HLC and edit, so `Revert`/`Reinstate`/`Commit` compose with it independently.
 pub fn fold_history(edits: &[FoldEdit], transitions: &[super::MutationEnvelope], excluded: &std::collections::HashSet<String>) -> Result<HistoryFold, crate::ProtocolError> {
     let mut owners: std::collections::HashMap<&str, &str> = std::collections::HashMap::new();
     let mut authors: std::collections::HashMap<&str, Option<&str>> = std::collections::HashMap::new();
@@ -362,7 +576,7 @@ pub fn fold_history(edits: &[FoldEdit], transitions: &[super::MutationEnvelope],
             return Err(fold_error(format!("history repeats transition {}", envelope.mutation_id.0)));
         }
         let transition = history_transition_from_envelope(envelope)?.ok_or_else(|| fold_error(format!("{} is not a history transition", envelope.mutation_id.0)))?;
-        events.push((envelope.timestamp.cmp_key(), envelope.mutation_id.0.as_str(), FoldEvent::Transition { id: envelope.mutation_id.0.as_str(), actor: envelope.actor.0.as_str(), transition }));
+        events.push((envelope.timestamp.cmp_key(), envelope.mutation_id.0.as_str(), FoldEvent::Transition { id: envelope.mutation_id.0.as_str(), actor: envelope.actor.0.as_str(), timestamp: envelope.timestamp, transition }));
     }
     events.sort_by(|left, right| (left.0, left.1).cmp(&(right.0, right.1)));
     let owned = |mutation_ids: &[MutationId]| -> Result<Vec<String>, crate::ProtocolError> {
@@ -378,6 +592,7 @@ pub fn fold_history(edits: &[FoldEdit], transitions: &[super::MutationEnvelope],
     let foreign = |edit_ids: &[String], actor: &str| edit_ids.iter().any(|edit_id| authors.get(edit_id.as_str()).copied().flatten().is_some_and(|author| author != actor));
     let mut fold = HistoryFold::default();
     let mut active: std::collections::HashSet<String> = std::collections::HashSet::new();
+    let mut superseding: Vec<(MutationId, EffectiveSupersession)> = Vec::new();
     for (_, _, event) in events {
         match event {
             FoldEvent::Edit(edit) => {
@@ -387,7 +602,7 @@ pub fn fold_history(edits: &[FoldEdit], transitions: &[super::MutationEnvelope],
                 active.insert(edit.id.clone());
                 fold.redo.retain(|redo| authors.get(redo.as_str()).copied().flatten() != edit.actor.as_deref());
             }
-            FoldEvent::Transition { id, actor, transition: HistoryTransition::Revert { mutation_ids } } => {
+            FoldEvent::Transition { id, actor, transition: HistoryTransition::Revert { mutation_ids }, .. } => {
                 let edit_ids = owned(&mutation_ids)?;
                 if foreign(&edit_ids, actor) {
                     fold.refused.push(id.to_string());
@@ -399,7 +614,7 @@ pub fn fold_history(edits: &[FoldEdit], transitions: &[super::MutationEnvelope],
                     }
                 }
             }
-            FoldEvent::Transition { id, actor, transition: HistoryTransition::Reinstate { mutation_ids } } => {
+            FoldEvent::Transition { id, actor, transition: HistoryTransition::Reinstate { mutation_ids }, .. } => {
                 let edit_ids = owned(&mutation_ids)?;
                 if foreign(&edit_ids, actor) {
                     fold.refused.push(id.to_string());
@@ -451,6 +666,17 @@ pub fn fold_history(edits: &[FoldEdit], transitions: &[super::MutationEnvelope],
                     fold.checkpoint = Some(pinned_checkpoint_id);
                 }
             }
+            FoldEvent::Transition { id, actor, timestamp, transition: HistoryTransition::Supersede(supersede) } => {
+                owned(&supersede.targets())?;
+                for input in supersede.inputs {
+                    superseding.push((input.target, EffectiveSupersession { transition_id: id.to_string(), actor: actor.to_string(), timestamp, scope: supersede.scope.clone(), replacement: input.replacement }));
+                }
+            }
+        }
+    }
+    for (target, supersession) in superseding {
+        if supersession.scope.is_none() || supersession.scope == fold.alternative {
+            fold.supersessions.insert(target, supersession);
         }
     }
     let mut ordered: Vec<&FoldEdit> = edits.iter().filter(|edit| active.contains(&edit.id)).collect();

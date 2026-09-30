@@ -1,7 +1,7 @@
 use super::*;
 
 async fn owner_entry(mutation_id: &str) -> HostMutationRosterEntry {
-    HostMutationRosterEntry { mutation_id: mutation_id.to_string(), verb: "set".into(), entity: "widget".into(), kind: "set-color".into(), record: "widget.doc".into(), contributor: None, artifact_kind: None }
+    HostMutationRosterEntry { mutation_id: mutation_id.to_string(), verb: "set".into(), entity: "widget".into(), kind: "set-color".into(), record: "widget.doc".into(), contributor: None, artifact_kind: None, inputs: HostMutationInputs::Opaque }
 }
 
 async fn contributed_entry(mutation_id: &str, contributor: &str, artifact_kind: &str) -> HostMutationRosterEntry {
@@ -13,6 +13,7 @@ async fn contributed_entry(mutation_id: &str, contributor: &str, artifact_kind: 
         record: "widget.doc".into(),
         contributor: Some(contributor.to_string()),
         artifact_kind: Some(artifact_kind.to_string()),
+        inputs: HostMutationInputs::Opaque,
     }
 }
 
@@ -101,4 +102,16 @@ async fn plan_fails_with_a_named_error_when_the_owner_is_not_loaded() {
     let request_bytes = encode_wire_dsl(&request).await.expect("encode request");
     let error = router.plan(&request_bytes).await.expect_err("resolve succeeds but no handle was ever registered, so plan must still fail");
     assert!(matches!(error, PluginHostError::Plugin(message) if message.contains("not loaded")), "unexpected error");
+}
+
+#[semio_framework_async_macros::async_test]
+async fn a_roster_row_carries_its_input_descriptors_across_the_guest_wire() {
+    use semio_framework_os_kernel::{FromValue, ToValue};
+    let inputs = vec![semio_framework::ActionArgDef::number("dx", semio_framework::LocalizedLabel::native("Move X", "Verschiebung X"))];
+    let row = HostMutationRosterEntry { inputs: HostMutationInputs::Declared { inputs: inputs.clone() }, ..owner_entry("widget.doc#move").await };
+    let wire = row.to_value();
+    assert_eq!(wire.get("inputs").and_then(|inputs| inputs.get("status")).and_then(semio_framework::DslValue::as_str), Some("declared"));
+    assert_eq!(HostMutationRosterEntry::from_value(wire).expect("the guest wire decodes"), row);
+    let opaque = owner_entry("widget.doc#set-color").await.to_value();
+    assert_eq!(opaque.get("inputs").and_then(|inputs| inputs.get("status")).and_then(semio_framework::DslValue::as_str), Some("opaque"));
 }

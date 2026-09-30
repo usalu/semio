@@ -9,7 +9,20 @@
   ],
   "properties": {
     "newAltitude": {
-      "type": "number"
+      "type": "number",
+      "x-semio-ui": {
+        "widget": "stepper",
+        "role": "value",
+        "label": {
+          "en": "Site altitude A",
+          "de": "Geländehöhe über NN A"
+        },
+        "unit": "m",
+        "step": 1,
+        "precision": 0,
+        "group": "site",
+        "order": 10
+      }
     }
   }
 }

@@ -1,5 +1,5 @@
 /** 🔑️ LAW (a reader whose own access to a space moves re-reads its directory from the origin): the shared hub fixture
- * `🌎️hub/🧫️fixtures/🔑️directory-access-changed-v1` — walked by the hub law over `directory_access_change_for_reader` — is
+ * `os directory access-change contract` — walked by the hub law over `directory_access_change_for_reader` — is
  * admitted by the directory stream schema through Ajv (third-party), an independent reference of the hub rule derives every
  * case's owed frame (a grant or redemption naming the reader for a space its socket never delivered the creation of, every
  * removal naming it), and the worker's projection wake answers every `wakes` row (ticket 26/09/23 C11: a human added to a
@@ -9,7 +9,7 @@ import type { DirectoryStreamMessage } from "../../🔨️modules/📇️directo
 
 export async function registerDirectoryAccessChangedTests(vitest: NonNullable<ImportMeta["vitest"]>): Promise<void> {
   const { describe, it, expect } = vitest;
-  const { default: fixture } = await import("../../../../../🌎️hub/🧫️fixtures/🔑️directory-access-changed-v1/🔣️.json");
+  const { default: fixture } = await import("../../🔨️modules/📇️directory/🧫️fixtures/🔑️access-changed-v1/🔣️.json");
   const { default: schema } = await import("../../🔨️modules/📇️directory/🧬️schema/🔣️.json");
   type Case = { id: string; createdOnSocket: string[]; message: DirectoryStreamMessage; frame: DirectoryStreamMessage | null };
   const cases = fixture.cases as unknown as Case[];

@@ -1015,10 +1015,13 @@ async fn poll_kernel_turn<PA: crate::app::PluginApp, T, Prepared>(
                 };
                 inbound_request_effects.push(Effect::Respond { req, result });
             }
-            Event::Activate { .. } | Event::SuspendRequest | Event::CapabilityChanged { .. } | Event::QuotaChanged { .. } => {}
+            Event::SuspendRequest => crate::plugin_runtime::extension_deactivate().await,
+            Event::Activate { .. } | Event::CapabilityChanged { .. } | Event::QuotaChanged { .. } => {}
         }
     }
 
+    let extension_retirement_work = crate::plugin_runtime::extension_retirement_turn(usize::from(budget.fuel > 0), if budget.fuel > 0 { budget.max_patch_bytes as usize } else { 0 })?;
+    let close_cleanup_work = close_cleanup_work || extension_retirement_work;
     let mut effects: Vec<Effect> = document_backbone_effects;
     effects.extend(inbound_request_effects);
     let mut cold_pair_ingress = semio_framework::kernel::ColdPairIngressStatus::Idle;

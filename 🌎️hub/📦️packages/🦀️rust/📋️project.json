@@ -167,7 +167,14 @@
     },
     "test-all-features": {
       "executor": "nx:run-commands",
-      "dependsOn": [{ "projects": ["@semio-tech/gis-plugin"], "target": "component-release" }],
+      "dependsOn": [
+        {
+          "projects": [
+            "@semio-tech/gis-plugin"
+          ],
+          "target": "component-release"
+        }
+      ],
       "options": {
         "cwd": "🌎️hub/📦️packages/🦀️rust",
         "command": "bun ./📜️script.ts test all-features",
@@ -576,7 +583,9 @@
     "live-sign-in-check": {
       "executor": "nx:run-commands",
       "cache": false,
-      "dependsOn": ["build-dev"],
+      "dependsOn": [
+        "build-dev"
+      ],
       "options": {
         "cwd": "🌎️hub/📦️packages/🦀️rust",
         "command": "bun ./📜️script.ts live-sign-in-check"
@@ -1183,6 +1192,34 @@
       "options": {
         "cwd": "🌎️hub/📦️packages/🦀️rust",
         "command": "bun ./📜️script.ts hostile-input-check",
+        "forwardAllArgs": true
+      }
+    },
+    "canonical-architecture": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "options": {
+        "cwd": "🌎️hub/📦️packages/🦀️rust",
+        "command": "bun ./📜️script.ts canonical-architecture"
+      }
+    },
+    "local-hub-owner": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "continuous": true,
+      "outputs": [],
+      "options": {
+        "cwd": "🌎️hub/📦️packages/🦀️rust",
+        "command": "bun ./📜️script.ts local-hub-owner",
+        "forwardAllArgs": true
+      }
+    },
+    "dev-collaboration": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "options": {
+        "cwd": "🌎️hub/📦️packages/🦀️rust",
+        "command": "bun ./📜️script.ts dev-collaboration",
         "forwardAllArgs": true
       }
     }

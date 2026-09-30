@@ -5,11 +5,30 @@
   "type": "object",
   "additionalProperties": false,
   "required": [
+    "mutation",
     "newVersion"
   ],
   "properties": {
+    "mutation": {
+      "const": "changeModelVersion"
+    },
     "newVersion": {
-      "type": "string"
+      "type": "string",
+      "pattern": "[^\\t\\n\\u000B\\f\\r \\u0085\\u00A0\\u1680\\u2000-\\u200A\\u2028\\u2029\\u202F\\u205F\\u3000]",
+      "x-semio-ui": {
+        "widget": "text",
+        "role": "value",
+        "label": {
+          "en": "Version",
+          "de": "Version"
+        },
+        "description": {
+          "en": "Model version label.",
+          "de": "Versionsbezeichnung des Modells."
+        },
+        "group": "identity",
+        "order": 10
+      }
     }
   }
 }

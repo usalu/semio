@@ -1,5 +1,6 @@
 //! 📰 Shared markup reference helpers — the `quick-xml`-backed element tree, the SVG 1.1
-//! `viewBox`/`transform` grammars, the JSON spec codec and the semantic projection that the
+//! `viewBox`/`transform` grammars, the reader of the leaf wire payloads (written from the leaf
+//! payload schemas, never from the subject's decoder) and the semantic projection that the
 //! `🎨️svg` 1.1 `✳️tiny` and `✳️basic` subset oracles both drive.
 //!
 //! This is a family module, the same shape as `📃️document`/`🖼️raster`/`🎒️archive`/`🔊️audio`/
@@ -289,54 +290,122 @@ pub mod live {
         }
     }
 
-    pub fn path_to_json(path: &[usize]) -> Json {
-        Json::Array(path.iter().map(|&index| Json::Number(index as f64)).collect())
-    }
-
-    /// 🔎️ `{"kind":"element"|"text"|"cdata"|"comment"|"pi", ...}` — the node grammar every
-    /// insert-shaped mutation spec speaks, and [`node_to_json`] its exact reverse.
-    pub fn json_to_node(value: &Json) -> MarkupNode {
+    /// 🔎️ One `XmlNode` wire value (`{"kind":"element"|"text"|"cData"|"comment"|"processingInstruction", ...}`), the
+    /// node union every insert-shaped leaf payload schema declares, read into this module's own tree.
+    pub fn node_from_wire(value: &Json) -> Result<MarkupNode, String> {
         match value.str("kind").as_str() {
-            "text" => MarkupNode::Text(value.str("text")),
-            "cdata" => MarkupNode::CData(value.str("text")),
-            "comment" => MarkupNode::Comment(value.str("text")),
-            "pi" => MarkupNode::Pi { target: value.str("target"), data: value.str("data") },
-            _ => MarkupNode::Element { name: value.str("name"), attrs: value.array("attrs").iter().map(|a| (a.str("name"), a.str("value"))).collect(), children: value.array("children").iter().map(json_to_node).collect() },
+            "element" => Ok(MarkupNode::Element {
+                name: value.str("name"),
+                attrs: value.array("attrs").iter().map(|a| (a.str("name"), a.str("value"))).collect(),
+                children: value.array("children").iter().map(node_from_wire).collect::<Result<_, _>>()?,
+            }),
+            "text" => Ok(MarkupNode::Text(value.str("text"))),
+            "cData" => Ok(MarkupNode::CData(value.str("text"))),
+            "comment" => Ok(MarkupNode::Comment(value.str("text"))),
+            "processingInstruction" => Ok(MarkupNode::Pi { target: value.str("target"), data: value.str("data") }),
+            other => Err(format!("node wire: unrecognised kind {other:?}")),
         }
     }
 
-    pub fn node_to_json(node: &MarkupNode) -> Json {
-        match node {
-            MarkupNode::Text(text) => obj(vec![("kind", Json::String("text".into())), ("text", Json::String(text.clone()))]),
-            MarkupNode::CData(text) => obj(vec![("kind", Json::String("cdata".into())), ("text", Json::String(text.clone()))]),
-            MarkupNode::Comment(text) => obj(vec![("kind", Json::String("comment".into())), ("text", Json::String(text.clone()))]),
-            MarkupNode::Pi { target, data } => obj(vec![("kind", Json::String("pi".into())), ("target", Json::String(target.clone())), ("data", Json::String(data.clone()))]),
-            MarkupNode::Element { name, attrs, children } => obj(vec![
-                ("kind", Json::String("element".into())),
-                ("name", Json::String(name.clone())),
-                ("attrs", Json::Array(attrs.iter().map(|(key, value)| obj(vec![("name", Json::String(key.clone())), ("value", Json::String(value.clone()))])).collect())),
-                ("children", Json::Array(children.iter().map(node_to_json).collect())),
-            ]),
+    /// 🏳️ An `XmlDeclaration` wire value (`null` = no declaration). Its `quote` facet is writer freedom the quick-xml
+    /// writer does not model and no projection compares.
+    pub fn decl_from_wire(value: &Json) -> Option<MarkupDecl> {
+        match value {
+            Json::Object(_) => Some(MarkupDecl {
+                version: value.str("version"),
+                encoding: match value.get("encoding") {
+                    Some(Json::String(text)) => Some(text.clone()),
+                    _ => None,
+                },
+                standalone: match value.get("standalone") {
+                    Some(Json::Bool(flag)) => Some(*flag),
+                    _ => None,
+                },
+            }),
+            _ => None,
         }
     }
 
-    pub fn json_to_transform_op(value: &Json) -> Result<MarkupTransformOp, String> {
+    /// 📜️ An `XmlDoctype` wire value (`null` = no doctype) composed into the raw body quick-xml keeps between
+    /// `<!DOCTYPE` and `>`, per XML 1.0 §2.8 (`doctypedecl`) and §4.2 (`EntityDecl`).
+    pub fn doctype_from_wire(value: &Json) -> Result<Option<String>, String> {
+        if !matches!(value, Json::Object(_)) {
+            return Ok(None);
+        }
+        let mut raw = value.str("name");
+        if let Some(id @ Json::Object(_)) = value.get("externalId") {
+            match id.str("kind").as_str() {
+                "system" => raw.push_str(&format!(" SYSTEM \"{}\"", id.str("systemId"))),
+                "public" => raw.push_str(&format!(" PUBLIC \"{}\" \"{}\"", id.str("publicId"), id.str("systemId"))),
+                other => return Err(format!("doctype wire: unrecognised external identifier kind {other:?}")),
+            }
+        }
+        let declarations = value.array("declarations");
+        if !declarations.is_empty() {
+            raw.push_str(" [");
+            for declaration in &declarations {
+                if declaration.str("kind") != "entity" {
+                    return Err(format!("doctype wire: unrecognised declaration kind {:?}", declaration.str("kind")));
+                }
+                let parameter = if matches!(declaration.get("parameter"), Some(Json::Bool(true))) { "% " } else { "" };
+                raw.push_str(&format!("<!ENTITY {parameter}{} \"{}\">", declaration.str("name"), declaration.str("value")));
+            }
+            raw.push(']');
+        }
+        Ok(Some(raw))
+    }
+
+    /// 📄️ An `XmlDocument` wire value read into a whole [`MarkupDoc`]. This tree has no epilog, so a document that
+    /// carries one is refused rather than silently truncated.
+    pub fn doc_from_wire(value: &Json) -> Result<MarkupDoc, String> {
+        if !value.array("epilog").is_empty() {
+            return Err("document wire: this reference tree does not model an epilog".to_string());
+        }
+        Ok(MarkupDoc {
+            declaration: decl_from_wire(&member(value, "declaration")),
+            doctype: doctype_from_wire(&member(value, "doctype"))?,
+            prolog: value.array("prolog").iter().map(node_from_wire).collect::<Result<_, _>>()?,
+            root: match member(value, "root") {
+                Json::Null => None,
+                root => Some(node_from_wire(&root)?),
+            },
+        })
+    }
+
+    /// 🖼️ A `ViewBox` wire value (`{"minX","minY","width","height"}`, `null` = no attribute).
+    pub fn view_box_from_wire(value: &Json) -> Option<[f64; 4]> {
+        match value {
+            Json::Object(_) => Some(["minX", "minY", "width", "height"].map(|key| json_number(&member(value, key)).unwrap_or(0.0))),
+            _ => None,
+        }
+    }
+
+    /// 🔄 One `TransformOp` wire value (tag `op`; `rotate`'s optional `center` is the `[cx, cy]` pair).
+    pub fn transform_op_from_wire(value: &Json) -> Result<MarkupTransformOp, String> {
         let num = |key: &str| json_number(&member(value, key)).unwrap_or(0.0);
         let opt_num = |key: &str| value.get(key).and_then(json_number);
-        match value.str("kind").as_str() {
+        match value.str("op").as_str() {
             "matrix" => Ok(MarkupTransformOp::Matrix { a: num("a"), b: num("b"), c: num("c"), d: num("d"), e: num("e"), f: num("f") }),
             "translate" => Ok(MarkupTransformOp::Translate { x: num("x"), y: opt_num("y") }),
             "scale" => Ok(MarkupTransformOp::Scale { x: num("x"), y: opt_num("y") }),
             "rotate" => Ok(MarkupTransformOp::Rotate {
                 angle: num("angle"),
-                center: match (opt_num("cx"), opt_num("cy")) {
-                    (Some(cx), Some(cy)) => Some((cx, cy)),
+                center: match value.get("center") {
+                    Some(Json::Array(pair)) if pair.len() == 2 => Some((json_number(&pair[0]).unwrap_or(0.0), json_number(&pair[1]).unwrap_or(0.0))),
                     _ => None,
                 },
             }),
             "skewX" => Ok(MarkupTransformOp::SkewX { angle: num("angle") }),
             "skewY" => Ok(MarkupTransformOp::SkewY { angle: num("angle") }),
-            other => Err(format!("transform op: unrecognised kind {other:?}")),
+            other => Err(format!("transform wire: unrecognised op {other:?}")),
+        }
+    }
+
+    /// 🔀️ A `transform` wire value (`null` = no attribute) formatted as the attribute string.
+    pub fn transform_from_wire(value: &Json) -> Result<Option<String>, String> {
+        match value {
+            Json::Array(items) => Ok(Some(format_transform_list(&items.iter().map(transform_op_from_wire).collect::<Result<Vec<_>, String>>()?))),
+            _ => Ok(None),
         }
     }
 

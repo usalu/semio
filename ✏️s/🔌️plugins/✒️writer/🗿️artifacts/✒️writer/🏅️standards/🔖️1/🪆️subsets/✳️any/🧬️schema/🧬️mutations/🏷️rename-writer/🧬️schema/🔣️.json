@@ -5,9 +5,13 @@
   "type": "object",
   "additionalProperties": false,
   "required": [
+    "mutation",
     "newId"
   ],
   "properties": {
+    "mutation": {
+      "const": "renameWriter"
+    },
     "newId": {
       "type": "string"
     }

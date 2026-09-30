@@ -5,28 +5,40 @@
   "type": "object",
   "additionalProperties": false,
   "required": [
+    "mutation",
     "index",
     "parameter",
     "name",
     "value"
   ],
   "properties": {
+    "mutation": {
+      "const": "declareEntity",
+      "description": "Aggregate discriminator spliced in by XmlValidMutation; absent when the payload stands alone."
+    },
     "index": {
       "type": "integer",
       "minimum": 0
     },
     "parameter": {
-      "type": "boolean"
+      "type": "boolean",
+      "x-semio-ui": {
+        "widget": "toggle",
+        "label": {
+          "en": "Parameter entity",
+          "de": "Parameter-Entity"
+        },
+        "description": {
+          "en": "Declares a parameter entity (%name;) instead of a general entity.",
+          "de": "Deklariert eine Parameter-Entity (%name;) statt einer allgemeinen Entity."
+        }
+      }
     },
     "name": {
       "type": "string"
     },
     "value": {
       "type": "string"
-    },
-    "mutation": {
-      "const": "declareEntity",
-      "description": "Aggregate discriminator spliced in by XmlValidMutation; absent when the payload stands alone."
     }
   }
 }

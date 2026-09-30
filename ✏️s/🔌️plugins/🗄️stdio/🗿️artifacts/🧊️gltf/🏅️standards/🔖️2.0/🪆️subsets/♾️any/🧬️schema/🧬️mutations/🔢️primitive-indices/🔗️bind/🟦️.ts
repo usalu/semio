@@ -1,8 +1,15 @@
-/** 🦠️ bind-primitive-indices: cohesive atomic mesh mutation. */
-import type { GltfJson, GltfSnapshot, GltfPrimitive, GltfMorphTarget } from '../../📸️snapshot/🟦️.ts';
-import { run, reject, positionIn, itemIndex, permutation, moveItem, type GltfLeafResult, type GltfMutationRejection } from './🟦️';
-export const GltfBindPrimitiveIndicesDescriptor = { id: 's.stdio.gltf.mutation.bind-primitive-indices.v1', version: 1, kind: 'bind', touchedPaths: ["document/meshes/*/primitives/*/indices"], referencePolicy: 'requires a scalar, non-floating accessor index stream' } as const;
-export interface GltfBindPrimitiveIndicesPayload { mesh: number; primitive: number; accessor: number }
-export type GltfBindPrimitiveIndicesResult = GltfLeafResult;
-export const validateGltfBindPrimitiveIndices = (payload: GltfBindPrimitiveIndicesPayload, base: GltfSnapshot): GltfMutationRejection | undefined => { const mesh = itemIndex(payload.mesh, base.document.meshes.length, 'document/meshes'); if (mesh) return mesh; const primitive = itemIndex(payload.primitive, base.document.meshes[payload.mesh]!.primitives.length, `document/meshes/${payload.mesh}/primitives`); if (primitive) return primitive; const accessor = itemIndex(payload.accessor, base.document.accessors.length, 'document/accessors'); if (accessor) return accessor; const layout = base.document.accessors[payload.accessor]!; if (layout.type !== 'SCALAR' || layout.componentType === 5126) return reject('gltf.mutation.invalid-index-accessor', 'document/accessors', 'indices require a scalar integer accessor'); return undefined; };
-export const applyGltfBindPrimitiveIndices = (base: GltfSnapshot, payload: GltfBindPrimitiveIndicesPayload): GltfBindPrimitiveIndicesResult => run(base, payload, validateGltfBindPrimitiveIndices, (next, payload) => { next.document.meshes[payload.mesh]!.primitives[payload.primitive]!.indices = payload.accessor; }, GltfBindPrimitiveIndicesDescriptor.touchedPaths);
+/** 🔗️ `bind-primitive-indices` wire twin: the flat `Apply` payload `GltfBindPrimitiveIndicesPayload` and the phase wire `BindPrimitiveIndicesMutation`, exactly as `./🦀️.rs` writes them.
+ * @see ./🧬️schema/🔣️.json */
+import { gltfWireIndex, gltfWireObject, gltfWireRequired } from "../../../📸️snapshot/🟦️.ts";
+import { type GltfDiff, type GltfPhase, gltfWirePhase, parseGltfDiff } from "../../../🔺️diff/🟦️.ts";
+
+export interface GltfBindPrimitiveIndicesPayload {
+  mesh: number;
+  primitive: number;
+  accessor: number;
+}
+
+export type BindPrimitiveIndicesMutation = GltfPhase<GltfBindPrimitiveIndicesPayload, GltfDiff>;
+
+export const parseGltfBindPrimitiveIndicesPayload = gltfWireObject<GltfBindPrimitiveIndicesPayload>({ mesh: gltfWireRequired(gltfWireIndex), primitive: gltfWireRequired(gltfWireIndex), accessor: gltfWireRequired(gltfWireIndex) });
+export const parseBindPrimitiveIndicesMutation = gltfWirePhase(parseGltfBindPrimitiveIndicesPayload, parseGltfDiff);

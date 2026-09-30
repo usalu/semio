@@ -45,7 +45,7 @@ pub enum PlyScalarType {
 /// `form` (the serde tag) distinguishes the two shapes; it is a separate key from `kind`
 /// (the scalar type of a `Scalar` property) to avoid a tag/field name collision.
 #[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
-#[value(tag = "form", rename_all = "camelCase")]
+#[value(tag = "form", rename_all = "camelCase", rename_all_fields = "camelCase")]
 pub enum PlyProperty {
     Scalar { name: String, kind: PlyScalarType },
     List { name: String, count_kind: PlyScalarType, value_kind: PlyScalarType },

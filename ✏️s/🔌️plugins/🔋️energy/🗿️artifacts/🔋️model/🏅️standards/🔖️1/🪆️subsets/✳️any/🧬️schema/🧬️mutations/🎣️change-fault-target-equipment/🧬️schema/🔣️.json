@@ -5,15 +5,57 @@
   "type": "object",
   "additionalProperties": false,
   "required": [
+    "mutation",
     "id",
     "newTargetEquipmentId"
   ],
   "properties": {
+    "mutation": {
+      "const": "changeFaultTargetEquipment"
+    },
     "id": {
-      "type": "integer"
+      "type": "integer",
+      "minimum": 0,
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Fault",
+          "de": "Fehler"
+        },
+        "description": {
+          "en": "The fault this mutation changes, by id.",
+          "de": "Fehler, den diese Mutation ändert, per ID."
+        },
+        "ref": {
+          "kind": "fault"
+        },
+        "group": "target",
+        "order": 10
+      }
     },
     "newTargetEquipmentId": {
-      "type": "integer"
+      "type": "integer",
+      "minimum": 0,
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Affected system",
+          "de": "Betroffene Anlage"
+        },
+        "description": {
+          "en": "Ideal loads system the fault acts on, by id.",
+          "de": "Ideallastsystem, auf das der Fehler wirkt, per ID."
+        },
+        "ref": {
+          "kind": "idealLoadsSystem",
+          "domain": "energyModel",
+          "granularity": "hvac"
+        },
+        "group": "assignment",
+        "order": 20
+      }
     }
   }
 }

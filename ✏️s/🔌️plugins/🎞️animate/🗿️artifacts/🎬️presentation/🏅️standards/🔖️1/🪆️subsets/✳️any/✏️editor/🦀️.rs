@@ -471,6 +471,7 @@ fn animate_presentation_config_edit(forward: PresentationConfigMutation, inverse
             label: None,
             group_id: None,
             origin: Default::default(),
+            transaction: None,
         }],
         description,
         coalesce_key: None,

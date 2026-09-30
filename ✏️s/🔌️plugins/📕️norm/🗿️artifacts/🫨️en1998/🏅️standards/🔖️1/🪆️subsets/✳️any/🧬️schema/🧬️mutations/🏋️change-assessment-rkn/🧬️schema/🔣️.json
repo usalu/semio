@@ -1,20 +1,56 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "$id": "https://json.schemas.assets.semio-tech.com/s/norm/en1998/mutation/change-assessment-r-k-n/schema.json",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/norm/en1998/mutation/change-assessment-rkn/schema.json",
   "title": "ChangeAssessmentRKN",
   "type": "object",
   "additionalProperties": false,
   "required": [
+    "mutation",
     "index",
     "newRKN"
   ],
   "properties": {
+    "mutation": {
+      "const": "changeAssessmentRKN"
+    },
     "index": {
       "type": "integer",
-      "minimum": 0
+      "minimum": 0,
+      "x-semio-ui": {
+        "widget": "stepper",
+        "role": "value",
+        "label": {
+          "en": "Assessed element",
+          "de": "Bewertetes Bauteil"
+        },
+        "description": {
+          "en": "Zero-based position of the assessed element in its list.",
+          "de": "Nullbasierte Position des bewerteten Bauteils in der Liste."
+        },
+        "step": 1,
+        "precision": 0,
+        "group": "target",
+        "order": 10
+      }
     },
     "newRKN": {
-      "type": "number"
+      "type": "number",
+      "minimum": 0,
+      "x-semio-ui": {
+        "widget": "stepper",
+        "role": "value",
+        "label": {
+          "en": "Characteristic resistance R_k",
+          "de": "Charakteristischer Widerstand R_k"
+        },
+        "unit": "N",
+        "displayUnit": "kN",
+        "displayFactor": 0.001,
+        "step": 1000,
+        "precision": 0,
+        "group": "resistance",
+        "order": 20
+      }
     }
   }
 }

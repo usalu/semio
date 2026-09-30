@@ -5,11 +5,35 @@
   "type": "object",
   "additionalProperties": false,
   "required": [
+    "mutation",
     "id"
   ],
   "properties": {
+    "mutation": {
+      "const": "deleteWeeklySchedule"
+    },
     "id": {
-      "type": "integer"
+      "type": "integer",
+      "minimum": 0,
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Weekly schedule",
+          "de": "Wochenzeitplan"
+        },
+        "description": {
+          "en": "The weekly schedule to delete, by id.",
+          "de": "Wochenzeitplan, den diese Mutation löscht, per ID."
+        },
+        "ref": {
+          "kind": "weeklySchedule",
+          "domain": "energyModel",
+          "granularity": "schedule"
+        },
+        "group": "target",
+        "order": 10
+      }
     }
   }
 }

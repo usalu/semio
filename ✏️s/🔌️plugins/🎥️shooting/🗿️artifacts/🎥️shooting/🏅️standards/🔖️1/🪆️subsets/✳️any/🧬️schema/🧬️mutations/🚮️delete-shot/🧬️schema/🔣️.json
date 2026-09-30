@@ -5,11 +5,32 @@
   "type": "object",
   "additionalProperties": false,
   "required": [
+    "mutation",
     "id"
   ],
   "properties": {
+    "mutation": {
+      "const": "deleteShot"
+    },
     "id": {
-      "type": "string"
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Shot",
+          "de": "Aufnahme"
+        },
+        "description": {
+          "en": "The shot this mutation addresses.",
+          "de": "Die Aufnahme, die diese Mutation adressiert."
+        },
+        "ref": {
+          "kind": "shot"
+        },
+        "group": "target",
+        "order": 10
+      }
     }
   }
 }

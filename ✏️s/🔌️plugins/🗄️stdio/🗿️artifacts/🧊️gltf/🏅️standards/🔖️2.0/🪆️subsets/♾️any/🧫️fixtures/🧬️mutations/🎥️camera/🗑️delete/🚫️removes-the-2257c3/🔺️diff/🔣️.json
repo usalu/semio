@@ -1,21 +1,31 @@
 {
-  "id": "s.stdio.gltf.mutation.delete-camera.v1",
-  "version": 1,
-  "touchedPaths": [
-    "document/cameras/0"
-  ],
-  "payload": {
-    "index": 0
-  },
-  "operation": {
-    "kind": "delete",
-    "index": 0,
-    "removed": {
-      "type": "perspective",
-      "perspective": {
-        "yfov": 0.5,
-        "znear": 0.5
+  "nodes": {
+    "modified": [
+      {
+        "index": 0,
+        "diff": {
+          "camera": 0
+        }
       }
-    }
+    ]
+  },
+  "cameras": {
+    "removed": [
+      1
+    ],
+    "modified": [
+      {
+        "index": 0,
+        "diff": {
+          "type": "orthographic",
+          "orthographic": {
+            "xmag": 1,
+            "ymag": 1,
+            "zfar": 2,
+            "znear": 0.5
+          }
+        }
+      }
+    ]
   }
 }

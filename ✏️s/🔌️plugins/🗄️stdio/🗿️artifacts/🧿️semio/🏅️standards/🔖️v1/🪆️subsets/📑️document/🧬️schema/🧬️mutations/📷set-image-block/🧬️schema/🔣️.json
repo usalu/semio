@@ -5,19 +5,42 @@
   "type": "object",
   "additionalProperties": false,
   "required": [
+    "mutation",
     "path",
     "image_id",
     "alt"
   ],
   "properties": {
+    "mutation": {
+      "const": "setImageBlock",
+      "description": "Aggregate discriminator spliced in by SemioDocumentMutation; absent when the payload stands alone."
+    },
     "path": {
       "$ref": "#/$defs/DocBlockPath"
     },
     "image_id": {
-      "type": "string"
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Image",
+          "de": "Bild"
+        },
+        "ref": {
+          "kind": "image"
+        }
+      }
     },
     "alt": {
-      "type": "string"
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "text",
+        "label": {
+          "en": "Alternative text",
+          "de": "Alternativtext"
+        }
+      }
     },
     "width": {
       "anyOf": [
@@ -38,10 +61,6 @@
           "type": "null"
         }
       ]
-    },
-    "mutation": {
-      "const": "setImageBlock",
-      "description": "Aggregate discriminator spliced in by SemioDocumentMutation; absent when the payload stands alone."
     }
   },
   "$defs": {
@@ -56,6 +75,16 @@
           "type": "array",
           "items": {
             "$ref": "#/$defs/DocPathSegment"
+          },
+          "x-semio-ui": {
+            "label": {
+              "en": "Block path",
+              "de": "Blockpfad"
+            },
+            "description": {
+              "en": "Child indices from the document root to the block.",
+              "de": "Kindindizes vom Dokumentstamm bis zum Block."
+            }
           }
         },
         "index": {

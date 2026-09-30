@@ -1,8 +1,8 @@
 {
   "ChangeFrameStroke": {
-    "page_id": "page-1",
-    "frame_id": "frame-rect",
-    "new_stroke": [
+    "pageId": "page-1",
+    "frameId": "frame-rect",
+    "newStroke": [
       0.0,
       0.0,
       0.0,

@@ -1,0 +1,481 @@
+{
+  "schema": "semio.history.supersede-fold",
+  "documentId": "doc-supersede-fold",
+  "edits": [
+    {
+      "id": "e-a1",
+      "actor": "alice",
+      "logicalMs": 1,
+      "mutationIds": [
+        "op-a-1"
+      ]
+    },
+    {
+      "id": "e-b1",
+      "actor": "bob",
+      "logicalMs": 2,
+      "mutationIds": [
+        "op-b-1"
+      ]
+    },
+    {
+      "id": "e-a2",
+      "actor": "alice",
+      "logicalMs": 3,
+      "mutationIds": [
+        "op-a-2",
+        "op-a-3"
+      ]
+    }
+  ],
+  "steps": [
+    {
+      "kind": "expect",
+      "label": "no supersession yet",
+      "expect": {
+        "alternative": null,
+        "supersessions": []
+      }
+    },
+    {
+      "kind": "transition",
+      "id": "s-1",
+      "actor": "bob",
+      "logicalMs": 10,
+      "transition": {
+        "kind": "supersede",
+        "scope": null,
+        "inputs": [
+          {
+            "target": "op-a-1",
+            "replacement": {
+              "kind": "input",
+              "schema": "demo/v1",
+              "payloadHex": "05"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "kind": "expect",
+      "label": "a foreign actor supersedes an operation: no ownership rule",
+      "expect": {
+        "alternative": null,
+        "supersessions": [
+          {
+            "target": "op-a-1",
+            "transitionId": "s-1",
+            "actor": "bob",
+            "logicalMs": 10,
+            "scope": null,
+            "replacement": {
+              "kind": "input",
+              "schema": "demo/v1",
+              "payloadHex": "05"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "kind": "transition",
+      "id": "s-2",
+      "actor": "alice",
+      "logicalMs": 11,
+      "transition": {
+        "kind": "supersede",
+        "scope": null,
+        "inputs": [
+          {
+            "target": "op-a-1",
+            "replacement": {
+              "kind": "input",
+              "schema": "demo/v1",
+              "payloadHex": "07"
+            }
+          },
+          {
+            "target": "op-a-3",
+            "replacement": {
+              "kind": "withdrawn"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "kind": "expect",
+      "label": "the later supersession wins and withdraws inside a multi-operation edit",
+      "expect": {
+        "alternative": null,
+        "supersessions": [
+          {
+            "target": "op-a-1",
+            "transitionId": "s-2",
+            "actor": "alice",
+            "logicalMs": 11,
+            "scope": null,
+            "replacement": {
+              "kind": "input",
+              "schema": "demo/v1",
+              "payloadHex": "07"
+            }
+          },
+          {
+            "target": "op-a-3",
+            "transitionId": "s-2",
+            "actor": "alice",
+            "logicalMs": 11,
+            "scope": null,
+            "replacement": {
+              "kind": "withdrawn"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "kind": "transition",
+      "id": "s-late",
+      "actor": "carol",
+      "logicalMs": 9,
+      "transition": {
+        "kind": "supersede",
+        "scope": null,
+        "inputs": [
+          {
+            "target": "op-a-1",
+            "replacement": {
+              "kind": "input",
+              "schema": "demo/v1",
+              "payloadHex": "09"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "kind": "expect",
+      "label": "an older supersession delivered late loses by hlc, not by arrival",
+      "expect": {
+        "alternative": null,
+        "supersessions": [
+          {
+            "target": "op-a-1",
+            "transitionId": "s-2",
+            "actor": "alice",
+            "logicalMs": 11,
+            "scope": null,
+            "replacement": {
+              "kind": "input",
+              "schema": "demo/v1",
+              "payloadHex": "07"
+            }
+          },
+          {
+            "target": "op-a-3",
+            "transitionId": "s-2",
+            "actor": "alice",
+            "logicalMs": 11,
+            "scope": null,
+            "replacement": {
+              "kind": "withdrawn"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "kind": "transition",
+      "id": "r-1",
+      "actor": "alice",
+      "logicalMs": 12,
+      "transition": {
+        "kind": "revert",
+        "mutationIds": [
+          "op-a-2"
+        ]
+      }
+    },
+    {
+      "kind": "expect",
+      "label": "revert composes independently: the superseded slot stays superseded",
+      "expect": {
+        "alternative": null,
+        "supersessions": [
+          {
+            "target": "op-a-1",
+            "transitionId": "s-2",
+            "actor": "alice",
+            "logicalMs": 11,
+            "scope": null,
+            "replacement": {
+              "kind": "input",
+              "schema": "demo/v1",
+              "payloadHex": "07"
+            }
+          },
+          {
+            "target": "op-a-3",
+            "transitionId": "s-2",
+            "actor": "alice",
+            "logicalMs": 11,
+            "scope": null,
+            "replacement": {
+              "kind": "withdrawn"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "kind": "transition",
+      "id": "c-1",
+      "actor": "alice",
+      "logicalMs": 13,
+      "transition": {
+        "kind": "commit",
+        "checkpointId": "ck-1",
+        "parentId": null,
+        "changeId": "change-1",
+        "mutationIds": [
+          "op-a-1",
+          "op-b-1"
+        ],
+        "description": null,
+        "savedAt": "t",
+        "authors": [],
+        "message": null,
+        "timestamp": "t"
+      }
+    },
+    {
+      "kind": "transition",
+      "id": "br-1",
+      "actor": "alice",
+      "logicalMs": 14,
+      "transition": {
+        "kind": "branch",
+        "alternativeId": "alt-1",
+        "name": "Variant",
+        "checkpointId": "ck-1"
+      }
+    },
+    {
+      "kind": "transition",
+      "id": "ss-1",
+      "actor": "bob",
+      "logicalMs": 15,
+      "transition": {
+        "kind": "supersede",
+        "scope": "alt-1",
+        "inputs": [
+          {
+            "target": "op-b-1",
+            "replacement": {
+              "kind": "input",
+              "schema": "demo/v1",
+              "payloadHex": "0b"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "kind": "expect",
+      "label": "a supersession scoped to the active alternative applies",
+      "expect": {
+        "alternative": "alt-1",
+        "supersessions": [
+          {
+            "target": "op-a-1",
+            "transitionId": "s-2",
+            "actor": "alice",
+            "logicalMs": 11,
+            "scope": null,
+            "replacement": {
+              "kind": "input",
+              "schema": "demo/v1",
+              "payloadHex": "07"
+            }
+          },
+          {
+            "target": "op-a-3",
+            "transitionId": "s-2",
+            "actor": "alice",
+            "logicalMs": 11,
+            "scope": null,
+            "replacement": {
+              "kind": "withdrawn"
+            }
+          },
+          {
+            "target": "op-b-1",
+            "transitionId": "ss-1",
+            "actor": "bob",
+            "logicalMs": 15,
+            "scope": "alt-1",
+            "replacement": {
+              "kind": "input",
+              "schema": "demo/v1",
+              "payloadHex": "0b"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "kind": "transition",
+      "id": "co-1",
+      "actor": "alice",
+      "logicalMs": 16,
+      "transition": {
+        "kind": "checkout",
+        "checkpointId": "ck-1",
+        "alternativeId": null
+      }
+    },
+    {
+      "kind": "expect",
+      "label": "leaving the alternative drops its scoped supersession, unscoped ones stay",
+      "expect": {
+        "alternative": null,
+        "supersessions": [
+          {
+            "target": "op-a-1",
+            "transitionId": "s-2",
+            "actor": "alice",
+            "logicalMs": 11,
+            "scope": null,
+            "replacement": {
+              "kind": "input",
+              "schema": "demo/v1",
+              "payloadHex": "07"
+            }
+          },
+          {
+            "target": "op-a-3",
+            "transitionId": "s-2",
+            "actor": "alice",
+            "logicalMs": 11,
+            "scope": null,
+            "replacement": {
+              "kind": "withdrawn"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "kind": "transition",
+      "id": "s-tie-b",
+      "actor": "bob",
+      "logicalMs": 17,
+      "transition": {
+        "kind": "supersede",
+        "scope": null,
+        "inputs": [
+          {
+            "target": "op-b-1",
+            "replacement": {
+              "kind": "input",
+              "schema": "demo/v1",
+              "payloadHex": "1b"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "kind": "transition",
+      "id": "s-tie-a",
+      "actor": "alice",
+      "logicalMs": 17,
+      "transition": {
+        "kind": "supersede",
+        "scope": null,
+        "inputs": [
+          {
+            "target": "op-b-1",
+            "replacement": {
+              "kind": "input",
+              "schema": "demo/v1",
+              "payloadHex": "1a"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "kind": "expect",
+      "label": "equal hlc ties break by transition id",
+      "expect": {
+        "alternative": null,
+        "supersessions": [
+          {
+            "target": "op-a-1",
+            "transitionId": "s-2",
+            "actor": "alice",
+            "logicalMs": 11,
+            "scope": null,
+            "replacement": {
+              "kind": "input",
+              "schema": "demo/v1",
+              "payloadHex": "07"
+            }
+          },
+          {
+            "target": "op-a-3",
+            "transitionId": "s-2",
+            "actor": "alice",
+            "logicalMs": 11,
+            "scope": null,
+            "replacement": {
+              "kind": "withdrawn"
+            }
+          },
+          {
+            "target": "op-b-1",
+            "transitionId": "s-tie-b",
+            "actor": "bob",
+            "logicalMs": 17,
+            "scope": null,
+            "replacement": {
+              "kind": "input",
+              "schema": "demo/v1",
+              "payloadHex": "1b"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "kind": "reload",
+      "label": "a reload re-folds the same event set to the same supersessions"
+    },
+    {
+      "kind": "refuse",
+      "label": "a supersession naming an unknown operation is a fold error",
+      "transition": {
+        "kind": "transition",
+        "id": "s-ghost",
+        "actor": "alice",
+        "logicalMs": 18,
+        "transition": {
+          "kind": "supersede",
+          "scope": null,
+          "inputs": [
+            {
+              "target": "op-ghost",
+              "replacement": {
+                "kind": "withdrawn"
+              }
+            }
+          ]
+        }
+      },
+      "detail": "unknown operation op-ghost"
+    }
+  ]
+}

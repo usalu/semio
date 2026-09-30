@@ -52,14 +52,7 @@ const repoRoot = getWorkspaceRoot();
  * 517/567 relative specifiers dead across 33 plugins (worst: `📕️norm` 180/180, `🧱️block` 36/36,
  * `🧩️puzzle` 36/36).
  *
- * **Deliberately report-only, never wired into `verify`/`plugin lint`.** Unlike
- * `KNOWN_CAPABILITY_VIOLATIONS`/`KNOWN_LAYERING_VIOLATIONS` above (a *hard* gate with a hand-picked,
- * evidence-backed allowlist of pre-existing exceptions), 517 dead specifiers have no sane per-entry
- * grandfather list, and the actual fix — repointing every path at the migrated
- * `🏅️standards/🔖️<v>/🪆️subsets/✳️<s>/` shape — is explicitly out of this ticket's boundary (it would
- * mean editing `🟦️.ts`, forbidden here) and remains unowned. So `run()` below never throws: it
- * is only reachable via its own standalone `index-lint` router command / nx target, not folded into
- * any gate the way `layer-lint` was. */
+ * Its standalone `index-lint` route reports unresolved authored export paths. */
 const PLUGIN_BARREL_RELATIVE_EXPORT_PATTERN = /from\s+"(\.[^"]+)"/g;
 
 /** 🧭️ Resolution order this lint checks a barrel's relative specifier against — literal path, then

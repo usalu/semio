@@ -4,8 +4,7 @@ use crate::schema::modules::mutation_support::top_level::rejection_outcome;
 use crate::schema::modules::mutation_support::top_level::{reject, GltfTopLevelMutationRejection};
 use crate::GltfSnapshot;
 pub const ID: &str = "s.stdio.gltf.mutation.reorder-morph-targets.v1";
-#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::MutationLeaf)]
-#[mutation_leaf(contract = ::protocol)]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
 #[value(rename_all = "camelCase")]
 pub struct GltfReorderMorphTargetsPayload {
     pub mesh: usize,
@@ -38,7 +37,7 @@ pub fn apply(payload: &GltfReorderMorphTargetsPayload, base: &GltfSnapshot) -> R
 
 //#region 🧬️DirectMutation
 #[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::MutationLeaf)]
-#[mutation_leaf(contract = ::protocol)]
+#[mutation_leaf(contract = ::protocol, payload = Apply)]
 #[value(tag = "phase", content = "value", rename_all = "camelCase")]
 pub enum ReorderMorphTargetsMutation {
     Apply(GltfReorderMorphTargetsPayload),
@@ -82,6 +81,6 @@ impl protocol::MutationKind<GltfSnapshot, super::GltfMutation> for ReorderMorphT
 
 //#region 🧪️Tests
 #[cfg(test)]
-#[path = "🧪️tests/🔬️direct-leaf/🦀️.rs"]
-mod direct_leaf_tests;
+#[path = "🧪️tests/🔀️flips-the-two-14d32f/🦀️.rs"]
+mod case_flips_the_two_14d32f;
 //#endregion 🧪️Tests

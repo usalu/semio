@@ -942,7 +942,7 @@
       "id": "boardEventOrder",
       "toolId": "applyBoardEvents",
       "input": {
-        "eventsJson": "[{\"name\":\"nodeMove\",\"payload\":{\"id\":\"teil-ä\",\"x\":3,\"y\":5}},{\"name\":\"edgeDelete\",\"payload\":{\"id\":\"kante-ß\"}}]"
+        "eventsJson": "[{\"name\":\"gesture\",\"payload\":{\"gestureId\":\"gesture-1\",\"kind\":\"drag\",\"targets\":[\"teil-ä\"],\"dx\":3,\"dy\":5,\"proximity\":[]}},{\"name\":\"edgeDelete\",\"payload\":{\"id\":\"kante-ß\"}}]"
       },
       "expectedMutations": [
         "movePart2d:teil-ä:3:5",
@@ -2087,7 +2087,7 @@
       "id": "boardNodeMoveLockedRefused",
       "toolId": "applyBoardEvents",
       "input": {
-        "eventsJson": "[{\"name\":\"nodeMove\",\"payload\":{\"id\":\"teil-ä\",\"x\":3,\"y\":5}}]"
+        "eventsJson": "[{\"name\":\"gesture\",\"payload\":{\"gestureId\":\"gesture-1\",\"kind\":\"drag\",\"targets\":[\"teil-ä\"],\"dx\":2,\"dy\":4,\"proximity\":[]}}]"
       },
       "parts": [
         {

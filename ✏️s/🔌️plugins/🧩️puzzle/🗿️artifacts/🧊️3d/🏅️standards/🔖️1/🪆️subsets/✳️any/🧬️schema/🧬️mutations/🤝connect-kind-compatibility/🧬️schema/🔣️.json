@@ -5,6 +5,7 @@
   "type": "object",
   "additionalProperties": false,
   "required": [
+    "mutation",
     "bidirectional",
     "important",
     "source",
@@ -12,17 +13,60 @@
     "target"
   ],
   "properties": {
+    "mutation": {
+      "const": "connectKindCompatibility"
+    },
     "source": {
-      "type": "string"
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "text",
+        "role": "value",
+        "label": {
+          "en": "Source kind",
+          "de": "Quellart"
+        },
+        "group": "kind",
+        "order": 10
+      }
     },
     "target": {
-      "type": "string"
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "text",
+        "role": "value",
+        "label": {
+          "en": "Target kind",
+          "de": "Zielart"
+        },
+        "group": "kind",
+        "order": 20
+      }
     },
     "bidirectional": {
-      "type": "boolean"
+      "type": "boolean",
+      "x-semio-ui": {
+        "widget": "toggle",
+        "role": "value",
+        "label": {
+          "en": "Bidirectional",
+          "de": "Beidseitig"
+        },
+        "group": "kind",
+        "order": 30
+      }
     },
     "important": {
-      "type": "boolean"
+      "type": "boolean",
+      "x-semio-ui": {
+        "widget": "toggle",
+        "role": "value",
+        "label": {
+          "en": "Important",
+          "de": "Wichtig"
+        },
+        "group": "kind",
+        "order": 40
+      }
     },
     "specificity": {
       "type": "string",
@@ -32,7 +76,43 @@
         "attraction",
         "cable",
         "vortex"
-      ]
+      ],
+      "x-semio-ui": {
+        "widget": "select",
+        "role": "value",
+        "label": {
+          "en": "Specificity",
+          "de": "Spezifität"
+        },
+        "description": {
+          "en": "Which level of the kind hierarchy this pair applies to.",
+          "de": "Auf welcher Ebene der Artenhierarchie dieses Paar gilt."
+        },
+        "options": {
+          "general": {
+            "en": "General",
+            "de": "Allgemein"
+          },
+          "object": {
+            "en": "Object",
+            "de": "Objekt"
+          },
+          "attraction": {
+            "en": "Attraction",
+            "de": "Anziehung"
+          },
+          "cable": {
+            "en": "Cable",
+            "de": "Kabel"
+          },
+          "vortex": {
+            "en": "Vortex",
+            "de": "Vortex"
+          }
+        },
+        "group": "kind",
+        "order": 50
+      }
     }
   }
 }

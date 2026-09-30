@@ -37,7 +37,7 @@ async fn document_text_round_trip_with_applied_operation() {
     doc_store.install_document_store_owners_exact(semio_framework_plugin::bounded_document_store_owners::<ProcedureSnapshot, ProcedureMutation>());
     let step = Step { id: "step-x".into(), kind: "log.print".into(), params: Dictionary::new(), bodies: BTreeMap::new() };
     let operation = create_step(PathRef::default(), step);
-    doc_store.dispatch(store::ArtifactCommand::Apply { mutations: vec![operation], description: None }).await.expect("apply");
+    doc_store.dispatch(store::ArtifactCommand::Apply { mutations: vec![operation], description: None, transaction: None }).await.expect("apply");
     store::os_store::test_support::assert_document_text_round_trip(&doc_store).await;
     store::os_store::test_support::assert_document_pack_round_trip(&doc_store).await;
     while !doc_store.close_owned_terminal_is_empty() {

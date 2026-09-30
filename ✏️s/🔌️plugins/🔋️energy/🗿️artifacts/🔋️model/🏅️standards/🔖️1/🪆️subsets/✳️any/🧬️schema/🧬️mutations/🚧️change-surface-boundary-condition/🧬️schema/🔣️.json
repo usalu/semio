@@ -5,13 +5,37 @@
   "type": "object",
   "additionalProperties": false,
   "required": [
+    "mutation",
     "id",
     "newBoundary",
     "newInterzoneSurfaceId"
   ],
   "properties": {
+    "mutation": {
+      "const": "changeSurfaceBoundaryCondition"
+    },
     "id": {
-      "type": "integer"
+      "type": "integer",
+      "minimum": 0,
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Surface",
+          "de": "Oberfläche"
+        },
+        "description": {
+          "en": "The surface this mutation changes, by id.",
+          "de": "Oberfläche, die diese Mutation ändert, per ID."
+        },
+        "ref": {
+          "kind": "surface",
+          "domain": "energyModel",
+          "granularity": "surface"
+        },
+        "group": "target",
+        "order": 10
+      }
     },
     "newBoundary": {
       "enum": [
@@ -20,13 +44,93 @@
         "OtherSideTemperature",
         "Adiabatic",
         "Interzone"
-      ]
+      ],
+      "x-semio-ui": {
+        "widget": "select",
+        "role": "value",
+        "label": {
+          "en": "Outside boundary condition",
+          "de": "Außenrandbedingung"
+        },
+        "options": {
+          "OutdoorAir": {
+            "en": "Outdoor air",
+            "de": "Außenluft"
+          },
+          "Ground": {
+            "en": "Ground",
+            "de": "Erdreich"
+          },
+          "OtherSideTemperature": {
+            "en": "Other-side temperature",
+            "de": "Temperatur der Gegenseite"
+          },
+          "Adiabatic": {
+            "en": "Adiabatic",
+            "de": "Adiabat"
+          },
+          "Interzone": {
+            "en": "Adjacent zone",
+            "de": "Nachbarzone"
+          }
+        },
+        "group": "boundary",
+        "order": 20
+      }
     },
     "newInterzoneSurfaceId": {
       "type": [
         "integer",
         "null"
-      ]
+      ],
+      "minimum": 0,
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Interzone partner surface",
+          "de": "Partnerfläche der Nachbarzone"
+        },
+        "description": {
+          "en": "Required for the adjacent-zone boundary, empty for every other one.",
+          "de": "Erforderlich bei der Randbedingung Nachbarzone, sonst leer."
+        },
+        "ref": {
+          "kind": "surface",
+          "domain": "energyModel",
+          "granularity": "surface"
+        },
+        "group": "boundary",
+        "order": 30
+      }
     }
-  }
+  },
+  "allOf": [
+    {
+      "if": {
+        "type": "object",
+        "properties": {
+          "newBoundary": {
+            "const": "Interzone"
+          }
+        }
+      },
+      "then": {
+        "type": "object",
+        "properties": {
+          "newInterzoneSurfaceId": {
+            "type": "integer"
+          }
+        }
+      },
+      "else": {
+        "type": "object",
+        "properties": {
+          "newInterzoneSurfaceId": {
+            "type": "null"
+          }
+        }
+      }
+    }
+  ]
 }

@@ -5,15 +5,59 @@
   "type": "object",
   "additionalProperties": false,
   "required": [
+    "mutation",
     "id",
     "newActivityScheduleId"
   ],
   "properties": {
+    "mutation": {
+      "const": "changePeopleGainActivitySchedule"
+    },
     "id": {
-      "type": "integer"
+      "type": "integer",
+      "minimum": 0,
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "People gain",
+          "de": "Personenwärmegewinn"
+        },
+        "description": {
+          "en": "The people gain this mutation changes, by id.",
+          "de": "Personenwärmegewinn, den diese Mutation ändert, per ID."
+        },
+        "ref": {
+          "kind": "peopleGain",
+          "domain": "energyModel",
+          "granularity": "load"
+        },
+        "group": "target",
+        "order": 10
+      }
     },
     "newActivityScheduleId": {
-      "type": "integer"
+      "type": "integer",
+      "minimum": 0,
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Activity schedule",
+          "de": "Aktivitätszeitplan"
+        },
+        "description": {
+          "en": "Metabolic heat per person over time, by id.",
+          "de": "Wärmeabgabe je Person im Zeitverlauf, per ID."
+        },
+        "ref": {
+          "kind": "schedule",
+          "domain": "energyModel",
+          "granularity": "schedule"
+        },
+        "group": "schedule",
+        "order": 20
+      }
     }
   }
 }

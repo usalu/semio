@@ -20,19 +20,13 @@ use semio_repo_test_host::Json;
 
 //#region 🔖️Dispatch
 /// 🦠️ Applies one declared mutation kind to a real artifact and returns the re-serialized bytes.
-/// An unrecognised kind is an error, never a silent no-op: a mutation that is quietly skipped
-/// reports as a passing test.
-///
-/// `no-mutation` returns the input verbatim, and that is the reference's CORRECT answer for "apply
-/// nothing" rather than a pass-through cheat: the comparison it feeds holds the subject's own
-/// re-serialization against the committed bytes' projection, which is a stricter claim than holding
-/// it against a second muxer's re-mux would be. The decode/re-mux claim is made separately and
-/// asserted separately, by `oracle_identity_round_trip` and the `@id-identity-round-trip` scenario.
+/// `params` is the leaf's wire payload (`payload_value()`), read by the same field names the schema
+/// declares. An unrecognised kind is an error, never a silent no-op: a mutation that is quietly
+/// skipped reports as a passing test.
 #[cfg(feature = "oracles")]
 pub fn oracle_apply_mutation(input: &[u8], spec: &Json) -> Result<Vec<u8>, String> {
     let params = spec.get("params").cloned().unwrap_or(Json::Object(Vec::new()));
     match spec.str("kind").as_str() {
-        "no-mutation" => Ok(input.to_vec()),
         "set-snapshot" => reference::mutate_set_snapshot(input, &params),
         "set-ftyp" => reference::mutate_set_ftyp(input, &params),
         "insert-track" => reference::mutate_insert_track(input, &params),
@@ -73,9 +67,7 @@ pub fn oracle_apply_mutation_inverse(original_input: &[u8], spec: &Json, mutated
 }
 
 /// 🔁️ The `@id-identity-round-trip` scenario's own independent computation: parse the real movie
-/// with `Mp4Reader` and re-mux it with `Mp4Writer` from the decoded model ALONE. Deliberately NOT
-/// `oracle_apply_mutation`'s `no-mutation` arm, which is a verbatim echo of the input bytes (the
-/// correct reference answer for "apply nothing", and useless as evidence that a parse happened).
+/// with `Mp4Reader` and re-mux it with `Mp4Writer` from the decoded model ALONE.
 #[cfg(feature = "oracles")]
 pub fn oracle_identity_round_trip(input: &[u8]) -> Result<Vec<u8>, String> {
     reference::remux(input)
@@ -131,11 +123,24 @@ mod reference {
         }
     }
 
-    /// 🔎️ Every byte of a JSON number array — the raw payload a `sample`/`sps`/`pps` param carries.
+    /// 🔎️ Every byte of a JSON number array — the raw payload a `sample`'s `data` carries.
     fn bytes(value: &Json, key: &str) -> Vec<u8> {
-        match value.get(key) {
-            Some(Json::Array(items)) => items.iter().filter_map(|item| if let Json::Number(n) = item { Some(*n as u8) } else { None }).collect(),
+        byte_array(value.get(key).unwrap_or(&Json::Null))
+    }
+
+    fn byte_array(value: &Json) -> Vec<u8> {
+        match value {
+            Json::Array(items) => items.iter().filter_map(|item| if let Json::Number(n) = item { Some(*n as u8) } else { None }).collect(),
             _ => Vec::new(),
+        }
+    }
+
+    /// 🔎️ The single parameter set of an `sps`/`pps` wire list — `mp4` 0.14's `AvcConfig` carries exactly one of
+    /// each, so any other count is refused rather than truncated.
+    fn single_parameter_set(codec: &Json, key: &str) -> Result<Vec<u8>, String> {
+        match codec.array(key).as_slice() {
+            [set] => Ok(byte_array(set)),
+            sets => Err(format!("mp4 0.14 writes exactly one {key}, not {}", sets.len())),
         }
     }
     //#endregion 🔖️JsonReading
@@ -230,9 +235,36 @@ mod reference {
         ::mp4::Mp4Sample { start_time: sample.start_time, duration: sample.duration, rendering_offset: sample.rendering_offset, is_sync: sample.is_sync, bytes: sample.bytes.clone() }
     }
 
-    fn owned_sample(value: &Json, key: &str) -> ::mp4::Mp4Sample {
-        let entry = value.get(key).cloned().unwrap_or(Json::Object(Vec::new()));
-        ::mp4::Mp4Sample { start_time: 0, duration: number(&entry, "duration", 0.0) as u32, rendering_offset: number(&entry, "ctsOffset", 0.0) as i32, is_sync: boolean(&entry, "sync", true), bytes: ::mp4::Bytes::from(bytes(&entry, "data")) }
+    /// 🎞️ An `Mp4Sample` wire value as `mp4`'s own sample.
+    fn wire_sample(entry: &Json) -> ::mp4::Mp4Sample {
+        ::mp4::Mp4Sample { start_time: 0, duration: number(entry, "duration", 0.0) as u32, rendering_offset: number(entry, "ctsOffset", 0.0) as i32, is_sync: boolean(entry, "sync", true), bytes: ::mp4::Bytes::from(bytes(entry, "data")) }
+    }
+
+    /// 🎥️ An `Mp4Codec` wire value as the one `avcC` configuration `mp4` 0.14 can write: an AVC sample entry,
+    /// a 4-byte NAL length, exactly one SPS and one PPS and no profile extension. Anything else is refused.
+    fn wire_codec(codec: &Json) -> Result<(Vec<u8>, Vec<u8>), String> {
+        if codec.get("format").is_some() && !matches!(codec.str("format").as_str(), "avc1" | "avc3") {
+            return Err(format!("mp4 0.14 writes only AVC sample entries, not {:?}", codec.get("format").map(Json::to_string)));
+        }
+        if number(codec, "nalLengthSize", 0.0) != 4.0 || !matches!(codec.get("extension"), None | Some(Json::Null)) || codec.get("hevc").is_some() {
+            return Err("mp4 0.14 writes a 4-byte NAL length and no avcC extension or hvcC record".to_string());
+        }
+        Ok((single_parameter_set(codec, "sps")?, single_parameter_set(codec, "pps")?))
+    }
+
+    /// 🎬️ An `Mp4Track` wire value as this module's own track: geometry, timescale, codec and samples — the
+    /// facets `mp4::Mp4Writer` writes. The typed `tkhd`/`mdhd`/sample-entry metadata is that writer's own.
+    fn wire_track(track: &Json) -> Result<DecodedTrack, String> {
+        let dimension = |key: &str| u16::try_from(number(track, key, 0.0) as u32).map_err(|_| format!("mp4 0.14 writes a 16-bit {key}"));
+        let (sps, pps) = wire_codec(track.get("codec").unwrap_or(&Json::Null))?;
+        Ok(DecodedTrack { width: dimension("width")?, height: dimension("height")?, timescale: number(track, "timescale", 0.0) as u32, sps, pps, samples: track.array("samples").iter().map(wire_sample).collect() })
+    }
+
+    /// 🏷️ An `Mp4Ftyp` wire value applied onto `movie`.
+    fn apply_wire_ftyp(movie: &mut DecodedMovie, ftyp: &Json) {
+        movie.major_brand = ftyp.str("majorBrand");
+        movie.minor_version = number(ftyp, "minorVersion", 0.0) as u32;
+        movie.compatible_brands = strings(ftyp, "compatibleBrands");
     }
     //#endregion 🔖️Model
 
@@ -240,24 +272,19 @@ mod reference {
     /// 🏷️ `SetFtyp` — replaces `major_brand`/`minor_version`/`compatible_brands`; tracks untouched.
     pub fn mutate_set_ftyp(input: &[u8], params: &Json) -> Result<Vec<u8>, String> {
         let mut movie = read_movie(input)?;
-        movie.major_brand = params.str("majorBrand");
-        movie.minor_version = number(params, "minorVersion", movie.minor_version as f64) as u32;
-        let brands = strings(params, "compatibleBrands");
-        if !brands.is_empty() {
-            movie.compatible_brands = brands;
-        }
+        apply_wire_ftyp(&mut movie, params.get("ftyp").ok_or("mp4: set-ftyp carries no ftyp")?);
         write_movie(&movie)
     }
 
-    /// ➕️ `InsertTrack` — a real second video track, duplicated from track 0 (the real fixture's
-    /// only track: it carries no audio, so a genuinely distinct real second track does not exist —
-    /// see this artifact's mutation case feature file's own note on that bound).
+    /// ➕️ `InsertTrack` — inserts the wire track at `index`; the real track is untouched.
     pub fn mutate_insert_track(input: &[u8], params: &Json) -> Result<Vec<u8>, String> {
         let mut movie = read_movie(input)?;
-        let source = movie.tracks.first().ok_or("mp4: no track to duplicate for insert-track")?;
-        let clone = DecodedTrack { width: source.width, height: source.height, timescale: source.timescale, sps: source.sps.clone(), pps: source.pps.clone(), samples: source.samples.iter().map(clone_sample).collect() };
-        let index = (number(params, "index", movie.tracks.len() as f64) as usize).min(movie.tracks.len());
-        movie.tracks.insert(index, clone);
+        let track = wire_track(params.get("track").ok_or("mp4: insert-track carries no track")?)?;
+        let index = number(params, "index", movie.tracks.len() as f64) as usize;
+        if index > movie.tracks.len() {
+            return Err(format!("mp4: insert-track index {index} out of range ({} track(s))", movie.tracks.len()));
+        }
+        movie.tracks.insert(index, track);
         write_movie(&movie)
     }
 
@@ -290,14 +317,7 @@ mod reference {
         let mut movie = read_movie(input)?;
         let index = number(params, "trackIndex", 0.0) as usize;
         let track = movie.tracks.get_mut(index).ok_or_else(|| format!("mp4: set-track-codec track {index} out of range"))?;
-        let sps = bytes(params, "sps");
-        let pps = bytes(params, "pps");
-        if !sps.is_empty() {
-            track.sps = sps;
-        }
-        if !pps.is_empty() {
-            track.pps = pps;
-        }
+        (track.sps, track.pps) = wire_codec(params.get("codec").ok_or("mp4: set-track-codec carries no codec")?)?;
         write_movie(&movie)
     }
 
@@ -307,7 +327,7 @@ mod reference {
         let track_index = number(params, "trackIndex", 0.0) as usize;
         let track = movie.tracks.get_mut(track_index).ok_or_else(|| format!("mp4: insert-sample track {track_index} out of range"))?;
         let index = (number(params, "index", track.samples.len() as f64) as usize).min(track.samples.len());
-        track.samples.insert(index, owned_sample(params, "sample"));
+        track.samples.insert(index, wire_sample(params.get("sample").ok_or("mp4: insert-sample carries no sample")?));
         write_movie(&movie)
     }
 
@@ -335,21 +355,13 @@ mod reference {
         write_movie(&movie)
     }
 
-    /// 🔁️ `SetSnapshot` — a real whole-document replace touches more than one facet at once: this
-    /// oracle's own reading is "replace `ftyp` AND drop the last sample of the first track", proving
-    /// a real multi-facet rebuild rather than degrading to a single-field alias of `SetFtyp`.
-    pub fn mutate_set_snapshot(input: &[u8], params: &Json) -> Result<Vec<u8>, String> {
-        let mut movie = read_movie(input)?;
-        let ftyp = params.get("ftyp").cloned().unwrap_or(Json::Object(Vec::new()));
-        movie.major_brand = ftyp.str("majorBrand");
-        movie.minor_version = number(&ftyp, "minorVersion", movie.minor_version as f64) as u32;
-        let brands = strings(&ftyp, "compatibleBrands");
-        if !brands.is_empty() {
-            movie.compatible_brands = brands;
-        }
-        if let Some(track) = movie.tracks.first_mut() {
-            track.samples.pop();
-        }
+    /// 🔁️ `SetSnapshot` — a real whole-document replace: `ftyp`, the movie timescale and every track all come
+    /// from the wire `snapshot`, and nothing of the input survives.
+    pub fn mutate_set_snapshot(_input: &[u8], params: &Json) -> Result<Vec<u8>, String> {
+        let snapshot = params.get("snapshot").ok_or("mp4: set-snapshot carries no snapshot")?;
+        let timescale = number(snapshot.get("movie").ok_or("mp4: set-snapshot carries no movie header")?, "timescale", 0.0) as u32;
+        let mut movie = DecodedMovie { major_brand: String::new(), minor_version: 0, compatible_brands: Vec::new(), timescale, tracks: snapshot.array("tracks").iter().map(wire_track).collect::<Result<_, _>>()? };
+        apply_wire_ftyp(&mut movie, snapshot.get("ftyp").ok_or("mp4: set-snapshot carries no ftyp")?);
         write_movie(&movie)
     }
     //#endregion 🔖️Mutate
@@ -380,7 +392,6 @@ mod reference {
         }
         let mut movie = read_movie(mutated)?;
         match kind {
-            "no-mutation" => {}
             "set-ftyp" => {
                 movie.major_brand = original.major_brand.clone();
                 movie.minor_version = original.minor_version;

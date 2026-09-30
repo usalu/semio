@@ -4,18 +4,68 @@
   "title": "SetEditorSettings",
   "type": "object",
   "properties": {
+    "kind": {
+      "const": "set-editor-settings"
+    },
     "settings": {
       "type": "object",
       "properties": {
-        "showLineNumbers": { "type": "boolean" },
-        "fontPx": { "type": "integer", "minimum": 0, "maximum": 4294967295 },
-        "lineHeight": { "type": "integer", "minimum": 0, "maximum": 4294967295 },
-        "tabSize": { "type": "integer", "minimum": 0, "maximum": 4294967295 }
+        "showLineNumbers": {
+          "type": "boolean",
+          "x-semio-ui": {
+            "widget": "toggle",
+            "role": "value",
+            "label": { "en": "Line Numbers", "de": "Zeilennummern" }
+          }
+        },
+        "fontPx": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 4294967295,
+          "x-semio-ui": {
+            "widget": "stepper",
+            "role": "value",
+            "label": { "en": "Font Size", "de": "Schriftgröße" },
+            "unit": "px",
+            "step": 1,
+            "precision": 0
+          }
+        },
+        "lineHeight": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 4294967295,
+          "x-semio-ui": {
+            "widget": "stepper",
+            "role": "value",
+            "label": { "en": "Line Height", "de": "Zeilenhöhe" },
+            "unit": "px",
+            "step": 1,
+            "precision": 0
+          }
+        },
+        "tabSize": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 4294967295,
+          "x-semio-ui": {
+            "widget": "stepper",
+            "role": "value",
+            "label": { "en": "Tab Size", "de": "Tabulatorgröße" },
+            "description": { "en": "Columns per indentation level.", "de": "Spalten je Einrückungsebene." },
+            "step": 1,
+            "precision": 0
+          }
+        }
       },
       "required": ["showLineNumbers", "fontPx", "lineHeight", "tabSize"],
-      "additionalProperties": false
+      "additionalProperties": false,
+      "x-semio-ui": {
+        "role": "value",
+        "label": { "en": "Editor Settings", "de": "Editoreinstellungen" }
+      }
     }
   },
-  "required": ["settings"],
+  "required": ["kind","settings"],
   "additionalProperties": false
 }

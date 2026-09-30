@@ -16,12 +16,12 @@ Feature: Apply every typed AVI 1.0 mutation to a real-world video container
       """
     Then the oracle and the subject agree on the semantic projection
     Examples:
-      | id                   | params                                                                                                                                                                                                                                                                                    |
-      | insert-chunk         | {"streamIndex": 0, "index": 1, "chunk": {"fourcc": "00dc", "data": "ffd8ffe0", "keyframe": false}}                                                                                                                                                                                       |
-      | remove-chunk         | {"streamIndex": 0, "index": 0}                                                                                                                                                                                                                                                            |
-      | set-chunk-keyframe   | {"streamIndex": 0, "index": 0, "keyframe": false}                                                                                                                                                                                                                                         |
-      | add-unknown-chunk    | {"index": 2, "item": {"fourcc": "XTRA", "data": "cafef00d"}}                                                                                                                                                                                                                              |
-      | remove-unknown-chunk | {"index": 1}                                                                                                                                                                                                                                                                              |
+      | id | params |
+      | insert-chunk | {"streamIndex":0,"index":1,"chunk":{"fourcc":"00dc","data":[255,216,255,224],"keyframe":false}} |
+      | remove-chunk | {"streamIndex":0,"index":0} |
+      | set-chunk-keyframe | {"streamIndex":0,"index":0,"keyframe":false} |
+      | add-unknown-chunk | {"index":2,"item":{"fourcc":"XTRA","data":[202,254,240,13]}} |
+      | remove-unknown-chunk | {"index":1} |
 
   @id-inverse
   @level-exhaustive
@@ -34,9 +34,9 @@ Feature: Apply every typed AVI 1.0 mutation to a real-world video container
       """
     Then the oracle and the subject agree on the semantic projection
     Examples:
-      | id                   | params                                                                                                                                                                                                                                                                                    |
-      | insert-chunk         | {"streamIndex": 0, "index": 1, "chunk": {"fourcc": "00dc", "data": "ffd8ffe0", "keyframe": false}}                                                                                                                                                                                       |
-      | remove-chunk         | {"streamIndex": 0, "index": 0}                                                                                                                                                                                                                                                            |
-      | set-chunk-keyframe   | {"streamIndex": 0, "index": 0, "keyframe": false}                                                                                                                                                                                                                                         |
-      | add-unknown-chunk    | {"index": 2, "item": {"fourcc": "XTRA", "data": "cafef00d"}}                                                                                                                                                                                                                              |
-      | remove-unknown-chunk | {"index": 1}                                                                                                                                                                                                                                                                              |
+      | id | params |
+      | insert-chunk | {"streamIndex":0,"index":1,"chunk":{"fourcc":"00dc","data":[255,216,255,224],"keyframe":false}} |
+      | remove-chunk | {"streamIndex":0,"index":0} |
+      | set-chunk-keyframe | {"streamIndex":0,"index":0,"keyframe":false} |
+      | add-unknown-chunk | {"index":2,"item":{"fourcc":"XTRA","data":[202,254,240,13]}} |
+      | remove-unknown-chunk | {"index":1} |

@@ -76,7 +76,7 @@ async fn declared_outcome_holds_and_an_unchanged_bearing_is_a_no_op() {
     assert_eq!(outcome.get("status").and_then(serde_json::Value::as_str), Some("applied"), "change-scene-sun-azimuth/turns-scene-sun-to-315-degrees: this fixture declares `applied`");
     assert!(mutation().diff(&before()).messages().is_empty(), "change-scene-sun-azimuth/turns-scene-sun-to-315-degrees: a real turn must raise no diagnostic");
 
-    let beyond_a_full_turn: ShootingMutation = serde_json::from_str(r#"{"mutation":"changeSceneSunAzimuth","new_azimuth":720.0}"#).expect("probe mutation decodes");
+    let beyond_a_full_turn: ShootingMutation = serde_json::from_str(r#"{"mutation":"changeSceneSunAzimuth","newAzimuth":720.0}"#).expect("probe mutation decodes");
     assert!(beyond_a_full_turn.diff(&before()).messages().is_empty(), "change-scene-sun-azimuth/turns-scene-sun-to-315-degrees: azimuth is unbounded — 720 degrees is accepted, unlike elevation's ±90 clamp");
 
     let again = mutation().diff(&expected_after());

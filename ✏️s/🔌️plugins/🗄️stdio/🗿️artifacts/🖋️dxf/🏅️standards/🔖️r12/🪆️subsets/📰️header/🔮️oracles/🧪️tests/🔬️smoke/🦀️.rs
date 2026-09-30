@@ -1,34 +1,33 @@
 
-use super::{oracle_apply_mutation, oracle_apply_mutation_inverse, project_dxf_r12};
+use super::{oracle_apply_mutation, oracle_apply_mutation_inverse, oracle_round_trip, project_dxf_r12};
 use semio_repo_test_host::parse_json;
 
 const FIXTURE: &[u8] = include_bytes!("../../../📚️examples/🚏️bus-shelter/🖼️assets/🧪️bus-shelter-r12/🖊️.dxf");
 
 const ROWS: &[(&str, &str)] = &[
-    ("no-mutation", "{}"),
-    ("set-snapshot", r#"{"insertionBase": [5, 5, 0], "layers": [{"name": "0", "color": 7, "linetype": "CONTINUOUS"}], "entities": [{"entityKind": "circle", "layer": "0", "center": [0, 0, 0], "radius": 42}]}"#),
-    ("set-header-var", r#"{"name": "$INSBASE", "value": [15, 25, 0]}"#),
+    ("set-snapshot", r#"{"snapshot": {"schema": "stdio.dxf", "headerVars": [{"name": "$ACADVER", "groupCode": 1, "value": {"kind": "str", "value": "AC1009"}}, {"name": "$INSBASE", "groupCode": 10, "value": {"kind": "point", "value": [5, 5, 0]}}], "tables": {"layers": [{"name": "0", "color": 7, "linetype": "CONTINUOUS", "flags": 0}]}, "otherTables": [], "blocks": [], "entities": [{"circle": {"center": [0, 0, 0], "radius": 42, "layer": "0"}}]}}"#),
+    ("set-header-var", r#"{"name": "$INSBASE", "headerVar": {"name": "$INSBASE", "groupCode": 10, "value": {"kind": "point", "value": [15, 25, 0]}}}"#),
     ("remove-header-var", r#"{"name": "$INSBASE"}"#),
-    ("insert-layer", r#"{"index": 1, "name": "MARKERS", "color": 6, "linetype": "CONTINUOUS"}"#),
+    ("insert-layer", r#"{"index": 1, "layer": {"name": "MARKERS", "color": 6, "linetype": "CONTINUOUS", "flags": 0}}"#),
     ("remove-layer", r#"{"name": "DIMS"}"#),
-    ("set-layer", r#"{"name": "DIMS", "color": 4, "linetype": "DASHED"}"#),
-    ("insert-style", r#"{"index": 1, "name": "LABELS", "font": "arial.ttf"}"#),
+    ("set-layer", r#"{"name": "DIMS", "layer": {"name": "DIMS", "color": 4, "linetype": "DASHED", "flags": 0}}"#),
+    ("insert-style", r#"{"index": 1, "style": {"name": "LABELS", "flags": 0, "fontName": "arial.ttf"}}"#),
     ("remove-style", r#"{"name": "NOTES"}"#),
-    ("set-style", r#"{"name": "NOTES", "font": "romans.shx"}"#),
-    ("insert-linetype", r#"{"index": 1, "name": "CENTER", "description": "Center line"}"#),
+    ("set-style", r#"{"name": "NOTES", "style": {"name": "NOTES", "flags": 0, "fontName": "romans.shx"}}"#),
+    ("insert-linetype", r#"{"index": 1, "linetype": {"name": "CENTER", "flags": 0, "description": "Center line"}}"#),
     ("remove-linetype", r#"{"name": "DASHED"}"#),
-    ("set-linetype", r#"{"name": "DASHED", "description": "Dash pattern"}"#),
-    ("insert-entity", r#"{"index": 2, "entityKind": "circle", "layer": "0", "center": [1200, 100, 0], "radius": 30}"#),
+    ("set-linetype", r#"{"name": "DASHED", "linetype": {"name": "DASHED", "flags": 0, "description": "Dash pattern"}}"#),
+    ("insert-entity", r#"{"index": 2, "entity": {"circle": {"center": [1200, 100, 0], "radius": 30, "layer": "0"}}}"#),
     ("remove-entity", r#"{"index": 3}"#),
-    ("set-entity", r#"{"index": 5, "entityKind": "text", "layer": "DIMS", "position": [200, 260, 0], "height": 80, "value": "WAVE 7 SHELTER"}"#),
-    ("insert-block", r#"{"index": 1, "name": "BENCH_MARK", "basePoint": [0, 0, 0], "entities": [{"entityKind": "line", "layer": "0", "start": [0, 0, 0], "end": [100, 0, 0]}]}"#),
+    ("set-entity", r#"{"index": 5, "entity": {"text": {"position": [200, 260, 0], "height": 80, "value": "WAVE 7 SHELTER", "layer": "DIMS"}}}"#),
+    ("insert-block", r#"{"index": 1, "block": {"name": "BENCH_MARK", "basePoint": [0, 0, 0], "entities": [{"line": {"start": [0, 0, 0], "end": [100, 0, 0], "layer": "0"}}]}}"#),
     ("remove-block", r#"{"index": 1}"#),
-    ("set-block", r#"{"index": 0, "name": "SHELTER_POST", "basePoint": [0, 0, 0], "entities": [{"entityKind": "circle", "layer": "0", "center": [0, 0, 0], "radius": 20}]}"#),
+    ("set-block", r#"{"index": 0, "block": {"name": "SHELTER_POST", "basePoint": [0, 0, 0], "entities": [{"circle": {"center": [0, 0, 0], "radius": 20, "layer": "0"}}]}}"#),
 ];
 
 #[test]
 fn all_kinds_mutate_and_invert_cleanly() {
-    assert_eq!(ROWS.len(), 19, "must exercise all 19 declared kinds");
+    assert_eq!(ROWS.len(), 18, "must exercise all 18 declared kinds");
     let input = FIXTURE.to_vec();
     let base_projection = project_dxf_r12(&input).expect("project base fixture");
 
@@ -39,9 +38,7 @@ fn all_kinds_mutate_and_invert_cleanly() {
         let mutated = oracle_apply_mutation(&input, &spec).unwrap_or_else(|e| panic!("mutate {kind} failed: {e}"));
         assert!(!mutated.is_empty(), "mutate {kind} produced empty bytes");
         let mutated_projection = project_dxf_r12(&mutated).unwrap_or_else(|e| panic!("project mutate {kind} output failed: {e}"));
-        if *kind != "no-mutation" {
-            assert_ne!(mutated_projection, base_projection, "mutate {kind} produced no semantic change");
-        }
+        assert_ne!(mutated_projection, base_projection, "mutate {kind} produced no semantic change");
 
         let inverted = oracle_apply_mutation_inverse(&input, &spec).unwrap_or_else(|e| panic!("inverse {kind} failed: {e}"));
         let inverted_projection = project_dxf_r12(&inverted).unwrap_or_else(|e| panic!("project inverse {kind} output failed: {e}"));
@@ -52,10 +49,9 @@ fn all_kinds_mutate_and_invert_cleanly() {
 #[test]
 fn identity_round_trip_is_not_byte_identical() {
     let input = FIXTURE.to_vec();
-    let spec = parse_json(r#"{"kind": "no-mutation", "params": {}}"#).expect("valid spec");
-    let output = oracle_apply_mutation(&input, &spec).expect("no-mutation re-encode");
+    let output = oracle_round_trip(&input).expect("round-trip re-encode");
     assert_ne!(output, input, "byte pass-through: dxf-crate re-encode is bit-identical to the input");
     let base_projection = project_dxf_r12(&input).expect("project input");
     let output_projection = project_dxf_r12(&output).expect("project output");
-    assert_eq!(base_projection, output_projection, "no-mutation re-encode changed the semantic projection");
+    assert_eq!(base_projection, output_projection, "the round-trip re-encode changed the semantic projection");
 }

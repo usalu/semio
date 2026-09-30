@@ -344,13 +344,14 @@ message CreateMaterial {
   uint32 index = 1;
   uint32 id = 2;
   string name = 3;
-  double thickness_m = 4;
-  double conductivity_w_m_k = 5;
-  double density_kg_m3 = 6;
-  double specific_heat_j_kg_k = 7;
-  double thermal_absorptance = 8;
-  double solar_absorptance = 9;
-  double visible_absorptance = 10;
+  string roughness = 4;
+  double thickness_m = 5;
+  double conductivity_w_m_k = 6;
+  double density_kg_m3 = 7;
+  double specific_heat_j_kg_k = 8;
+  double thermal_absorptance = 9;
+  double solar_absorptance = 10;
+  double visible_absorptance = 11;
 }
 
 message DeleteMaterial {

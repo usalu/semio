@@ -1,4 +1,4 @@
-import { dialectCoordinate, parseDialectCoordinate, type ArtifactDialect } from "../🚪️io/🧬️schema/🟦️.ts";
+import { dialectCoordinate, parseDialectCoordinate, type ArtifactDialect, type IoFidelity, type IoEntryDescriptor, type IoRoute } from "../🚪️io/🧬️schema/🟦️.ts";
 import { base64StandardDecode } from "../🚪️io/🔤️base64/🟦️.ts";
 import { GUEST_CONTIGUOUS_REQUEST_CEILING_BYTES } from "../⏱️trace/🧮️memory/🟦️.ts";
 import { surfaceAppId, parseSurfaceAppId, type AppRole, type AppRef } from "../🛂️manifest/🧬️schema/🟦️.ts";
@@ -709,11 +709,6 @@ if (import.meta.vitest) {
 //#endregion 🔖️AppRouter
 
 //#region 🔖️IoRouter
-/** ⚖️ Mirrors Rust `io_schema::IoFidelity` (`🔨️modules/🚪️io/🧬️schema/🦀️component.rs`) — declared
- * strongest io fidelity one hop achieves. No `#[serde(rename_all)]` on the Rust enum, so the wire
- * form is the bare Rust variant name. */
-export type IoFidelity = "Exact" | "Canonical" | "Semantic" | "Lossy";
-
 function ioFidelityRank(fidelity: IoFidelity): number {
   switch (fidelity) {
     case "Exact":
@@ -764,21 +759,6 @@ export function ioConfidenceFromRank(rank: number): IoConfidence {
  * two exceptions, whose native encoding IS the raw external file content. */
 export const CARRIER_BINARY_DIALECT: ArtifactDialect = { artifactKind: "s.stdio.binary", standard: "raw", subset: "*" };
 export const CARRIER_TEXT_DIALECT: ArtifactDialect = { artifactKind: "s.stdio.txt", standard: "utf-8", subset: "*" };
-
-/** 📇️ Mirrors Rust `io_schema::IoEntryDescriptor` — one registered io hop, erased to wire data
- * (`#[serde(rename_all = "camelCase")]` on the Rust side). */
-export type IoEntryDescriptor = {
-  readonly from: ArtifactDialect;
-  readonly into: ArtifactDialect;
-  readonly fidelity: IoFidelity;
-  readonly sniffs: boolean;
-};
-
-/** 🗺️ Mirrors Rust `io_schema::IoRoute` — a resolved hop sequence, `camelCase` wire form. */
-export type IoRoute = {
-  readonly hops: readonly IoEntryDescriptor[];
-  readonly fidelity: IoFidelity;
-};
 
 /** 🗂️ One plugin's `list-io-entries` roster, as `IoEntryGraph.build` consumes it. */
 export type IoEntryGraphPlugin = {
@@ -1952,9 +1932,78 @@ export function mergeUiDirtyScopes(first: UiDirtyScope, second: UiDirtyScope): U
   };
 }
 
-/** 🧾️ One host-projectable command-history row, mirrored from Rust `HistoryEntry`. */
+/** 🛠️ The committed tool transaction a history row's edit carries, mirrored from Rust `HistoryTransaction`. */
+export type HistoryTransaction = {
+  readonly id: string;
+  readonly tool: string;
+};
+
+/** 📨️ One outcome message of a history mutation row, mirrored from Rust `HistoryMutationMessage`. */
+export type HistoryMutationMessage = {
+  readonly level: Severity;
+  readonly code: string;
+  readonly message: string;
+  readonly target?: readonly string[];
+  readonly opIndex?: number;
+};
+
+/** ✏️ One applied mutation of a history row, mirrored from Rust `HistoryMutationEntry`: `pending` = downstream of
+ * the mutation being edited and not applied in the preview, `edited` = the session holds a draft for it. */
+export type HistoryMutationEntry = {
+  readonly mutationId: string;
+  readonly position: number;
+  readonly opIndex: number;
+  readonly label: LocalizedLabel;
+  readonly worst?: Severity;
+  readonly messages?: readonly HistoryMutationMessage[];
+  readonly superseded?: boolean;
+  readonly withdrawn?: boolean;
+  readonly editable?: boolean;
+  readonly pending?: boolean;
+  readonly edited?: boolean;
+};
+
+/** 🚦️ Stage of a live history-edit session, mirrored from Rust `HistoryTimeTravelStage`. */
+export type HistoryTimeTravelStage = "editing" | "replaying" | "reviewing" | "choosing" | "finalizing";
+
+/** 🧭️ What a reviewing session shows, mirrored from Rust `HistoryTimeTravelReview`. */
+export type HistoryTimeTravelReview = "noChanges" | "needsReplay" | "blocked" | "ready";
+
+/** ⏪️ The live history-edit session of one instance, mirrored from Rust `HistoryTimeTravel`; absent while none is open. */
+export type HistoryTimeTravel = {
+  readonly sessionId: string;
+  readonly generation: number;
+  readonly stage: HistoryTimeTravelStage;
+  readonly target?: string;
+  readonly targetLabel?: LocalizedLabel;
+  readonly done?: number;
+  readonly total?: number;
+  readonly worst?: Severity;
+  readonly blocking?: boolean;
+  readonly fault?: string;
+  readonly acceptedCount?: number;
+  /** 🧭️ While reviewing: what the review shows. */
+  readonly review?: HistoryTimeTravelReview;
+  /** 🔁️ Whether `historyEditRerun` would start a replay now. */
+  readonly rerunnable?: boolean;
+};
+
+/** 🔑️ The key a host folds a history row under: its edit id, else its history transition id, else its session sequence. */
+export function historyEntryKey(entry: Pick<HistoryEntry, "seq" | "editId" | "transitionId">): string {
+  if (entry.editId !== undefined) return `edit:${entry.editId}`;
+  return entry.transitionId === undefined ? `seq:${entry.seq}` : `transition:${entry.transitionId}`;
+}
+
+/** 🧾️ One host-projectable command-history row, mirrored from Rust `HistoryEntry`: one row per committed tool
+ * transaction (else per edit), keyed by {@link historyEntryKey}. */
 export type HistoryEntry = {
   readonly seq: number;
+  readonly editId?: string;
+  readonly transaction?: HistoryTransaction;
+  /** ✏️ The `Supersede` history transition this row is — a history edit, or the undo or redo of one. */
+  readonly transitionId?: string;
+  /** 🖋️ The actor who authored this row's edit or history transition. */
+  readonly author?: string;
   readonly actionId: string;
   /** 🏷️ Every locale's text for this row, mirrored from Rust `LocalizedLabel` — the renderer
    * resolves it with {@link historyEntryLabelText} against the locale it is showing right now, so a
@@ -1969,6 +2018,8 @@ export type HistoryEntry = {
   readonly applied?: boolean;
   readonly revertible?: boolean;
   readonly count?: number;
+  readonly worst?: Severity;
+  readonly mutations?: readonly HistoryMutationEntry[];
 };
 
 /** 🏷️ The one text a history row shows on the requested axes. There is deliberately NO
@@ -2005,6 +2056,8 @@ export type HistoryPatch = {
   readonly activeAlternativeId?: string;
   readonly currentCheckpointId?: string;
   readonly commandFilter?: string;
+  /** ⏪️ The live history-edit session in full; absent while none is open. */
+  readonly timeTravel?: HistoryTimeTravel;
 };
 
 /**

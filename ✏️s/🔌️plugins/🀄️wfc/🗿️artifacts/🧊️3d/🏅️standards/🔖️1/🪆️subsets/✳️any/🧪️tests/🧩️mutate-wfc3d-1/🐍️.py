@@ -167,12 +167,12 @@ def diff_pin_slot(document, payload):
     index, slot = find(document["slots"], payload["id"])
     if index is None:
         return empty_diff(), [("error", "wfc3d.slot.missing")]
-    if find(document["tiles"], payload["tile_id"])[1] is None:
+    if find(document["tiles"], payload["tileId"])[1] is None:
         return empty_diff(), [("error", "wfc3d.tile.missing")]
-    if slot.get("pinnedTileId") == payload["tile_id"]:
+    if slot.get("pinnedTileId") == payload["tileId"]:
         return empty_diff(), [("warning", "wfc3d.slot.pin-unchanged")]
     pinned = dict(slot)
-    pinned["pinnedTileId"] = payload["tile_id"]
+    pinned["pinnedTileId"] = payload["tileId"]
     delta = empty_diff()
     delta["slotsUpserted"] = [[index, pinned]]
     return delta, []
@@ -348,7 +348,7 @@ def inverse(document, variant, payload):
             return []
         previous = slot.get("pinnedTileId")
         if previous is not None:
-            return [{"PinSlot": {"id": slot["id"], "tile_id": previous}}]
+            return [{"PinSlot": {"id": slot["id"], "tileId": previous}}]
         return [{"UnpinSlot": {"id": slot["id"]}}] if variant == "PinSlot" else []
     if variant == "CreateTile":
         return [{"DeleteTile": {"id": payload["tile"]["id"]}}]
@@ -362,7 +362,7 @@ def inverse(document, variant, payload):
                 steps.append({"CreateRule": {"index": rule_index, "rule": rule}})
         for slot in document["slots"]:
             if slot.get("pinnedTileId") == payload["id"]:
-                steps.append({"PinSlot": {"id": slot["id"], "tile_id": payload["id"]}})
+                steps.append({"PinSlot": {"id": slot["id"], "tileId": payload["id"]}})
         return steps
     if variant == "ChangeTileWeight":
         _, tile = find(document["tiles"], payload["id"])

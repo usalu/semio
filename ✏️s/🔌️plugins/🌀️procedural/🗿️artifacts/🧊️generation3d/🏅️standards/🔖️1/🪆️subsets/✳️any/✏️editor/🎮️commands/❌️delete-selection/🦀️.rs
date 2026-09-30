@@ -50,9 +50,3 @@ pub fn apply(
 pub(crate) fn apply_selected(doc: &ArtifactView<'_, Generation3dSnapshot>, selected: &[String]) -> Emit<Generation3dMutation, Generation3dConfigMutation> {
     delete_selected(&doc.snapshot.host_snapshot, selected)
 }
-
-//#region 🧪️Tests
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
-//#endregion 🧪️Tests

@@ -565,7 +565,7 @@ pub fn render_widget<E: Clone>(node: &WidgetNode<E>, bounds: Rect, ctx: &mut Wid
         }
         WidgetNode::KeyValue { entries } => render_key_value(entries, bounds, ctx),
         WidgetNode::Slider { id, value, min, max, step, ready, disabled, on_change } => {
-            render_slider(id, *value, *min, *max, *step, *ready, *disabled, on_change.clone(), bounds, ctx);
+            render_slider(id, *value, *min, *max, *step, &[], *ready, *disabled, on_change.clone(), bounds, ctx);
         }
         WidgetNode::NumberStepper { id, value, step, uniform, on_absolute, on_delta } => {
             render_number_stepper(id, *value, *step, *uniform, on_absolute.clone(), on_delta.clone(), bounds, ctx);
@@ -716,7 +716,7 @@ fn render_control<E: Clone>(control: &ControlNode<E>, bounds: Rect, ctx: &mut Wi
         }
         ControlNode::KeyValue { entries } => render_key_value(entries, bounds, ctx),
         ControlNode::Slider { id, value, min, max, step, ready, disabled, on_change } => {
-            render_slider(id, *value, *min, *max, *step, *ready, *disabled, on_change.clone(), bounds, ctx);
+            render_slider(id, *value, *min, *max, *step, &[], *ready, *disabled, on_change.clone(), bounds, ctx);
         }
         ControlNode::NumberStepper { id, value, step, uniform, on_absolute, on_delta } => {
             render_number_stepper(id, *value, *step, *uniform, on_absolute.clone(), on_delta.clone(), bounds, ctx);

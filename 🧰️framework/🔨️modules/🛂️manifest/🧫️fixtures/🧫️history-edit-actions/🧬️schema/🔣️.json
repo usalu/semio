@@ -1,0 +1,77 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://json.schemas.assets.semio-tech.com/framework/manifest/history-edit-actions.fixture.json",
+  "title": "HistoryEditActionsFixture",
+  "description": "The reserved history-edit verbs every non-viewer app declares (ids in lifecycle order, icons, EN/DE labels, arguments, destructiveness, no chords, never in the palette), the argument and choice vocabulary, and the framework-injected finalize dialog they open.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["$schema", "note", "kind", "actions", "constants", "finalizeDialog"],
+  "$defs": {
+    "text": { "type": "object", "additionalProperties": false, "required": ["en", "de"], "properties": { "en": { "type": "string", "minLength": 1 }, "de": { "type": "string", "minLength": 1 } } },
+    "verb": { "type": "string", "pattern": "^historyEdit[A-Z][A-Za-z]+$" },
+    "arg": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "schema", "required", "hidden"],
+      "properties": {
+        "id": { "type": "string", "minLength": 1 },
+        "schema": { "enum": ["text", "integer", "any", "select"] },
+        "required": { "type": "boolean" },
+        "hidden": { "type": "boolean" }
+      }
+    },
+    "action": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "iconId", "label", "destructive", "args"],
+      "properties": {
+        "id": { "$ref": "#/$defs/verb" },
+        "iconId": { "type": "string", "minLength": 1 },
+        "label": { "$ref": "#/$defs/text" },
+        "destructive": { "type": "boolean" },
+        "args": { "type": "array", "items": { "$ref": "#/$defs/arg" } }
+      }
+    }
+  },
+  "properties": {
+    "$schema": { "type": "string" },
+    "note": { "type": "string", "minLength": 1 },
+    "kind": { "const": "history" },
+    "actions": { "type": "array", "minItems": 12, "maxItems": 12, "items": { "$ref": "#/$defs/action" } },
+    "constants": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["mutationId", "path", "value", "generation", "name", "choice", "overwrite", "dialogId"],
+      "properties": {
+        "mutationId": { "const": "mutationId" },
+        "path": { "const": "path" },
+        "value": { "const": "value" },
+        "generation": { "const": "generation" },
+        "name": { "const": "name" },
+        "choice": { "const": "choice" },
+        "overwrite": { "const": "overwrite" },
+        "dialogId": { "type": "string", "minLength": 1 }
+      }
+    },
+    "finalizeDialog": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "submitAction", "cancelAction", "args", "choices"],
+      "properties": {
+        "id": { "type": "string", "minLength": 1 },
+        "submitAction": { "$ref": "#/$defs/verb" },
+        "cancelAction": { "$ref": "#/$defs/verb" },
+        "args": { "type": "array", "items": { "type": "string" } },
+        "choices": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["id", "action", "tone", "destructive"],
+            "properties": { "id": { "type": "string" }, "action": { "$ref": "#/$defs/verb" }, "tone": { "type": "string" }, "destructive": { "type": "boolean" } }
+          }
+        }
+      }
+    }
+  }
+}

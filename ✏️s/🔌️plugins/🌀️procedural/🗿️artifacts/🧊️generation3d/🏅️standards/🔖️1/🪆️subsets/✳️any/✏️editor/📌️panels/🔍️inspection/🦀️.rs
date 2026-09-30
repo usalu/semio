@@ -164,9 +164,6 @@ fn editable_input(key: &str, label: &str, widget: &str, channel: &str, component
     semio_framework_ui_contract::tree_item(crate::ui_label(label)?).try_id(key).map_err(|_| semio_framework_plugin::PluginAssemblyError::new("ui.inspection.field-id", "fixed UI field admission failed"))?.try_children([control]).map_err(|_| semio_framework_plugin::PluginAssemblyError::new("ui.inspection.field", "fixed UI field admission failed"))?.try_build().map_err(|_| semio_framework_plugin::PluginAssemblyError::new("ui.inspection.field", "fixed UI field admission failed"))
 }
 
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
 //#endregion 🧪️Tests
 
 fn ui_value_list(values: impl IntoIterator<Item = UiValue>) -> UiAssemblyResult<UiValue> {
@@ -176,3 +173,7 @@ fn ui_value_list(values: impl IntoIterator<Item = UiValue>) -> UiAssemblyResult<
     }
     Ok(UiValue::List(builder.finish()))
 }
+
+#[cfg(test)]
+#[path = "🧪️tests/🔬️unit/🦀️.rs"]
+mod tests;

@@ -5,15 +5,23 @@
   "type": "object",
   "additionalProperties": false,
   "required": [
+    "mutation",
     "generatingSoftware"
   ],
   "properties": {
-    "generatingSoftware": {
-      "type": "string"
-    },
     "mutation": {
       "const": "setSoftwareInfo",
       "description": "Aggregate discriminator spliced in by LasMutation; absent when the payload stands alone."
+    },
+    "generatingSoftware": {
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "text",
+        "label": {
+          "en": "Generating software",
+          "de": "Erzeugende Software"
+        }
+      }
     }
   }
 }

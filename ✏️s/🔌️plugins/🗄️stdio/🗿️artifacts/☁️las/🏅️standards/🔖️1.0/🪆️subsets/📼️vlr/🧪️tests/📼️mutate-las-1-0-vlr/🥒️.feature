@@ -17,9 +17,9 @@ Feature: Apply every typed LAS 1.0 mutation to a real-world point cloud
     Then the oracle and the subject agree on the semantic projection
     Examples:
       | id                    | params |
-      | insert-vlr             | {"index": 1, "vlr": {"userId": "semio-test", "recordId": 9, "description": "inserted vlr", "data": "hello-vlr"}} |
+      | insert-vlr             | {"index": 1, "vlr": {"userId": "semio-test", "recordId": 9, "description": "inserted vlr", "data": [104, 101, 108, 108, 111, 45, 118, 108, 114]}} |
       | remove-vlr             | {"index": 0} |
-      | set-vlr-data           | {"index": 1, "data": "patched-provenance"} |
+      | set-vlr-data           | {"index": 1, "data": [112, 97, 116, 99, 104, 101, 100, 45, 112, 114, 111, 118, 101, 110, 97, 110, 99, 101]} |
 
   @id-inverse
   @level-exhaustive
@@ -34,6 +34,6 @@ Feature: Apply every typed LAS 1.0 mutation to a real-world point cloud
     Then the oracle and the subject agree on the semantic projection of the original point cloud
     Examples:
       | id                    | params |
-      | insert-vlr             | {"index": 1, "vlr": {"userId": "semio-test", "recordId": 9, "description": "inserted vlr", "data": "hello-vlr"}} |
+      | insert-vlr             | {"index": 1, "vlr": {"userId": "semio-test", "recordId": 9, "description": "inserted vlr", "data": [104, 101, 108, 108, 111, 45, 118, 108, 114]}} |
       | remove-vlr             | {"index": 0} |
-      | set-vlr-data           | {"index": 1, "data": "patched-provenance"} |
+      | set-vlr-data           | {"index": 1, "data": [112, 97, 116, 99, 104, 101, 100, 45, 112, 114, 111, 118, 101, 110, 97, 110, 99, 101]} |

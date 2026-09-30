@@ -112,13 +112,13 @@ mod layers {
         Ok(Some((tag.version(), frames)))
     }
 
-    /// 🏷️ Writes an ID3v2.3 region with the reference's own encoder. An empty frame list means "no
+    /// 🏷️ Writes an ID3v2 region of `version` with the reference's own encoder. An empty frame list means "no
     /// tag at all", which is a real state of the format, not an empty tag.
-    pub(super) fn write_v2(frames: &[TextFrame]) -> Result<Vec<u8>, String> {
+    pub(super) fn write_v2(version: id3::Version, frames: &[TextFrame]) -> Result<Vec<u8>, String> {
         if frames.is_empty() {
             return Ok(Vec::new());
         }
-        let mut tag = id3::Tag::with_version(id3::Version::Id3v23);
+        let mut tag = id3::Tag::with_version(version);
         for frame in frames {
             if frame.id.len() != 4 {
                 return Err(format!("ID3v2.3 frame id {:?} is not four characters", frame.id));
@@ -126,7 +126,7 @@ mod layers {
             tag.add_frame(id3::Frame::text(&frame.id, frame.text.clone()));
         }
         let mut out = Vec::new();
-        tag.write_to(&mut out, id3::Version::Id3v23).map_err(|error| format!("id3::Tag::write_to failed: {error}"))?;
+        tag.write_to(&mut out, version).map_err(|error| format!("id3::Tag::write_to failed: {error}"))?;
         Ok(out)
     }
     //#endregion 🔖️Id3v2
@@ -236,6 +236,35 @@ mod layers {
         }
     }
 
+    /// 🧾️ The twelve fields of one MPEG audio frame header, as ISO/IEC 11172-3 §2.4.1.3 lays them out after the
+    /// sync word.
+    pub(super) struct HeaderFields {
+        pub mpeg_version_id: u8,
+        pub layer: u8,
+        pub protection_bit: bool,
+        pub bitrate_index: u8,
+        pub sample_rate_index: u8,
+        pub padding: bool,
+        pub private_bit: bool,
+        pub channel_mode: u8,
+        pub mode_extension: u8,
+        pub copyright: bool,
+        pub original: bool,
+        pub emphasis: u8,
+    }
+
+    /// 📦️ Packs one header into its four bytes: the 11-bit sync word, then every field at its specified bit
+    /// position. A field wider than its slot is refused — truncating it would forge a different header.
+    pub(super) fn pack_header(fields: &HeaderFields) -> Result<[u8; 4], String> {
+        let slot = |name: &str, value: u8, bits: u32| if u32::from(value) < (1 << bits) { Ok(value) } else { Err(format!("header field {name} is {value}, wider than its {bits}-bit slot")) };
+        Ok([
+            0xFF,
+            0xE0 | slot("mpegVersionId", fields.mpeg_version_id, 2)? << 3 | slot("layer", fields.layer, 2)? << 1 | u8::from(fields.protection_bit),
+            slot("bitrateIndex", fields.bitrate_index, 4)? << 4 | slot("sampleRateIndex", fields.sample_rate_index, 2)? << 2 | u8::from(fields.padding) << 1 | u8::from(fields.private_bit),
+            slot("channelMode", fields.channel_mode, 2)? << 6 | slot("modeExtension", fields.mode_extension, 2)? << 4 | u8::from(fields.copyright) << 3 | u8::from(fields.original) << 2 | slot("emphasis", fields.emphasis, 2)?,
+        ])
+    }
+
     /// 🚶 Walks the audio region into real frames. A byte that is not part of a decodable frame
     /// ends the walk, and any trailing remainder is reported — a silently ignored tail is how a
     /// truncated stream passes for a whole one.
@@ -326,29 +355,57 @@ mod layers {
 }
 //#endregion 🔖️Layers
 
-//#region 🔖️SpecReaders
-/// 🔎️ A spec's `params` object, or `Null`.
-fn params_of(spec: &Json) -> Json {
-    spec.get("params").cloned().unwrap_or(Json::Null)
-}
-
-/// 🔎️ `true` when the params carry `key` explicitly, even as `null` — the difference between
-/// "clear the tag" and "leave the tag alone".
-fn has(params: &Json, key: &str) -> bool {
-    params.get(key).is_some()
-}
-
-fn hex_encode(bytes: &[u8]) -> String {
-    bytes.iter().map(|byte| format!("{byte:02x}")).collect()
-}
-
-fn hex_decode(text: &str) -> Result<Vec<u8>, String> {
-    if text.len() % 2 != 0 {
-        return Err(format!("hex payload has an odd length ({})", text.len()));
+//#region 🔖️WireReaders
+/// 🔎️ A byte array member of a wire value. An absent member is the empty default the vocabulary declares.
+#[cfg(feature = "oracles")]
+fn wire_bytes(value: &Json, key: &str) -> Result<Vec<u8>, String> {
+    match value.get(key) {
+        None => Ok(Vec::new()),
+        Some(Json::Array(items)) => items.iter().map(|item| match item { Json::Number(n) if (0.0..=255.0).contains(n) && n.fract() == 0.0 => Ok(*n as u8), other => Err(format!("`{key}` carries {} where a byte belongs", other.to_string())) }).collect(),
+        Some(other) => Err(format!("`{key}` must be a byte array, not {}", other.to_string())),
     }
-    (0..text.len() / 2).map(|index| u8::from_str_radix(&text[index * 2..index * 2 + 2], 16).map_err(|error| format!("hex payload is malformed at pair {index}: {error}"))).collect()
 }
-//#endregion 🔖️SpecReaders
+
+/// 🔎️ A small unsigned integer member of a wire value.
+#[cfg(feature = "oracles")]
+fn wire_u8(value: &Json, key: &str) -> Result<u8, String> {
+    match value.get(key) {
+        Some(Json::Number(n)) if (0.0..=255.0).contains(n) && n.fract() == 0.0 => Ok(*n as u8),
+        other => Err(format!("`{key}` must be an integer 0..=255, not {}", other.map(Json::to_string).unwrap_or_else(|| "nothing".to_string()))),
+    }
+}
+
+/// 🔎️ A boolean member of a wire value.
+#[cfg(feature = "oracles")]
+fn wire_bool(value: &Json, key: &str) -> Result<bool, String> {
+    match value.get(key) {
+        Some(Json::Bool(flag)) => Ok(*flag),
+        other => Err(format!("`{key}` must be a boolean, not {}", other.map(Json::to_string).unwrap_or_else(|| "nothing".to_string()))),
+    }
+}
+
+/// 🏷️ The text of one ID3v2.3 text-frame body (§4.2): an encoding byte, then ISO-8859-1 (`0`) or byte-order-marked
+/// UTF-16 (`1`), up to the first terminator. Any other frame or encoding is refused rather than dropped.
+#[cfg(feature = "oracles")]
+fn text_of_frame(id: &str, data: &[u8]) -> Result<String, String> {
+    if !id.starts_with('T') || id == "TXXX" {
+        return Err(format!("ID3v2 frame {id:?} is not a plain text frame, which this oracle does not express"));
+    }
+    let Some((&encoding, body)) = data.split_first() else { return Err(format!("ID3v2 text frame {id:?} carries no encoding byte")) };
+    match encoding {
+        0 => Ok(body.iter().take_while(|byte| **byte != 0).map(|byte| char::from(*byte)).collect()),
+        1 => {
+            let units: Vec<u16> = match body {
+                [0xFF, 0xFE, rest @ ..] => rest.chunks_exact(2).map(|pair| u16::from_le_bytes([pair[0], pair[1]])).collect(),
+                [0xFE, 0xFF, rest @ ..] => rest.chunks_exact(2).map(|pair| u16::from_be_bytes([pair[0], pair[1]])).collect(),
+                _ => return Err(format!("ID3v2 text frame {id:?} declares UTF-16 without a byte-order mark")),
+            };
+            String::from_utf16(&units.into_iter().take_while(|unit| *unit != 0).collect::<Vec<u16>>()).map_err(|error| format!("ID3v2 text frame {id:?} is not UTF-16: {error}"))
+        }
+        other => Err(format!("ID3v2 text frame {id:?} declares encoding {other}, which ID3v2.3 does not define")),
+    }
+}
+//#endregion 🔖️WireReaders
 
 //#region 🔖️Projection
 /// 🎯️ Reads a real `.mp3` stream into the semantic projection both roles are compared through.
@@ -365,78 +422,81 @@ pub fn project_mp3(_bytes: &[u8]) -> Result<Json, String> {
 //#endregion 🔖️Projection
 
 //#region 🔖️Dispatch
-/// 🦠️ Applies one declared mutation kind to a real artifact and returns the re-serialized bytes.
-/// An unrecognised kind is an error, never a silent no-op: a mutation that is quietly skipped
-/// reports as a passing test.
-///
-/// The three layers are addressed independently, exactly as `Mp3Mutation` addresses
-/// `id3v2`/`frames`/`id3v1`:
-/// * `text` — an array of `{id, text}` ID3v2.3 text frames, or `null` to remove the tag entirely.
-/// * `take` — keep the first N MPEG frames (a real truncation of the frame sequence).
-/// * `framesHex` — an explicit audio region, hex-encoded. Only ever produced by
-///   [`oracle_inverse_spec`], never hand-written in a feature file: restoring a frame sequence is
-///   not expressible as a slice of the document it is being applied to.
-/// * `v1` — an object of ID3v1 fields, or `null` to remove the trailer.
+/// 🏷️ The leading ID3v2 region an `Id3v2Tag` wire value (or `null`, no tag at all) describes, written by `id3`.
+#[cfg(feature = "oracles")]
+fn id3v2_region(tag: Option<&Json>) -> Result<Vec<u8>, String> {
+    let Some(tag @ Json::Object(_)) = tag else { return Ok(Vec::new()) };
+    let version = match wire_u8(tag, "majorVersion")? {
+        3 => id3::Version::Id3v23,
+        4 => id3::Version::Id3v24,
+        other => return Err(format!("ID3v2.{other} is not a version this oracle writes")),
+    };
+    let frames = tag.array("frames").iter().map(|frame| Ok(layers::TextFrame { id: frame.str("id"), text: text_of_frame(&frame.str("id"), &wire_bytes(frame, "data")?)? })).collect::<Result<Vec<layers::TextFrame>, String>>()?;
+    layers::write_v2(version, &frames)
+}
+
+/// 🎼️ The audio region an `Mp3Frame` wire list describes: each frame's four header bytes packed from its typed
+/// fields per ISO/IEC 11172-3 §2.4.1.3, followed by its payload. The walk then re-derives every frame size.
+#[cfg(feature = "oracles")]
+fn audio_region(frames: Option<&Json>) -> Result<Vec<u8>, String> {
+    let frames = match frames {
+        None => Vec::new(),
+        Some(Json::Array(items)) => items.clone(),
+        Some(other) => return Err(format!("`frames` must be an array, not {}", other.to_string())),
+    };
+    let mut audio = Vec::new();
+    for frame in &frames {
+        let header = frame.get("header").ok_or_else(|| "an MPEG frame carries no header".to_string())?;
+        audio.extend_from_slice(&layers::pack_header(&layers::HeaderFields {
+            mpeg_version_id: wire_u8(header, "mpegVersionId")?,
+            layer: wire_u8(header, "layer")?,
+            protection_bit: wire_bool(header, "protectionBit")?,
+            bitrate_index: wire_u8(header, "bitrateIndex")?,
+            sample_rate_index: wire_u8(header, "sampleRateIndex")?,
+            padding: wire_bool(header, "padding")?,
+            private_bit: wire_bool(header, "privateBit")?,
+            channel_mode: wire_u8(header, "channelMode")?,
+            mode_extension: wire_u8(header, "modeExtension")?,
+            copyright: wire_bool(header, "copyright")?,
+            original: wire_bool(header, "original")?,
+            emphasis: wire_u8(header, "emphasis")?,
+        })?);
+        audio.extend_from_slice(&wire_bytes(frame, "payload")?);
+    }
+    layers::walk(&audio)?;
+    Ok(audio)
+}
+
+/// 🏷️ The trailing ID3v1 region an `Id3v1Tag` wire value (or `null`, no trailer) describes: its 128 raw bytes,
+/// checked against the only framing the layer has — the length and the `TAG` magic.
+#[cfg(feature = "oracles")]
+fn id3v1_region(tag: Option<&Json>) -> Result<Vec<u8>, String> {
+    let Some(tag @ Json::Object(_)) = tag else { return Ok(Vec::new()) };
+    let raw = wire_bytes(tag, "raw")?;
+    if raw.len() != 128 || !raw.starts_with(b"TAG") {
+        return Err(format!("an ID3v1 trailer is 128 bytes led by `TAG`, not {} byte(s)", raw.len()));
+    }
+    Ok(raw)
+}
+
+/// 🦠️ Applies one declared mutation kind to a real artifact and returns the re-serialized bytes. `params` is the
+/// leaf's wire payload (`payload_value()`), and the three layers are addressed independently, exactly as
+/// `Mp3Mutation` addresses `id3v2`/`frames`/`id3v1`; an absent or `null` tag removes that layer. An unrecognised
+/// kind is an error, never a silent no-op: a mutation that is quietly skipped reports as a passing test.
 #[cfg(feature = "oracles")]
 pub fn oracle_apply_mutation(input: &[u8], spec: &Json) -> Result<Vec<u8>, String> {
-    let params = params_of(spec);
+    let params = spec.get("params").cloned().unwrap_or(Json::Null);
     let mut regions = layers::split(input)?;
-    let kind = spec.str("kind");
-    let touches_v2 = matches!(kind.as_str(), "set-id3v2" | "set-snapshot");
-    let touches_frames = matches!(kind.as_str(), "set-frames" | "set-snapshot");
-    let touches_v1 = matches!(kind.as_str(), "set-id3v1" | "set-snapshot");
-    match kind.as_str() {
+    match spec.str("kind").as_str() {
+        "set-id3v2" => regions.v2 = id3v2_region(params.get("id3v2"))?,
+        "set-frames" => regions.audio = audio_region(params.get("frames"))?,
+        "set-id3v1" => regions.v1 = id3v1_region(params.get("id3v1"))?,
+        "set-snapshot" => {
+            let snapshot = params.get("snapshot").ok_or_else(|| "set-snapshot carries no snapshot".to_string())?;
+            regions = layers::Regions { v2: id3v2_region(snapshot.get("id3v2"))?, audio: audio_region(snapshot.get("frames"))?, v1: id3v1_region(snapshot.get("id3v1"))? };
+        }
         "" => return Err("mutation spec carries no `kind`".to_string()),
-        "no-mutation" => return Ok(input.to_vec()),
-        "set-snapshot" | "set-id3v2" | "set-frames" | "set-id3v1" => {}
         other => return Err(format!("mutation kind {other:?} has no oracle implementation ({} input byte(s))", input.len())),
-    }
-    if touches_v2 {
-        if !has(&params, "text") {
-            return Err(format!("{kind}: params carry no `text` — an ID3v2 mutation must state the frames it lands on, `null` to remove the tag"));
-        }
-        regions.v2 = match params.get("text") {
-            Some(Json::Null) | None => Vec::new(),
-            Some(Json::Array(items)) => {
-                let frames: Vec<layers::TextFrame> = items.iter().map(|item| layers::TextFrame { id: item.str("id"), text: item.str("text") }).collect();
-                layers::write_v2(&frames)?
-            }
-            Some(other) => return Err(format!("{kind}: `text` must be an array of {{id, text}} or null, not {}", other.to_string())),
-        };
-    }
-    if touches_frames {
-        regions.audio = match (params.get("framesHex"), params.get("take")) {
-            (Some(Json::String(text)), _) => hex_decode(text)?,
-            (_, Some(Json::Number(count))) => {
-                let frames = layers::walk(&regions.audio)?;
-                let keep = *count as usize;
-                if keep > frames.len() {
-                    return Err(format!("{kind}: `take` is {keep} but the document carries only {} MPEG frame(s)", frames.len()));
-                }
-                let end = frames.get(keep).map(|frame| frame.offset).unwrap_or(regions.audio.len());
-                regions.audio[..end].to_vec()
-            }
-            _ => return Err(format!("{kind}: params carry neither `take` nor `framesHex` — a frame mutation must state the sequence it lands on")),
-        };
-    }
-    if touches_v1 {
-        if !has(&params, "v1") {
-            return Err(format!("{kind}: params carry no `v1` — an ID3v1 mutation must state the trailer it lands on, `null` to remove it"));
-        }
-        regions.v1 = match params.get("v1") {
-            Some(Json::Null) | None => Vec::new(),
-            Some(fields) => layers::write_v1(&layers::V1Fields {
-                title: fields.str("title"),
-                artist: fields.str("artist"),
-                album: fields.str("album"),
-                year: fields.str("year"),
-                comment: fields.str("comment"),
-                genre_id: match fields.get("genreId") {
-                    Some(Json::Number(value)) => *value as u8,
-                    _ => 0,
-                },
-            })?,
-        };
     }
     Ok(layers::join(&regions))
 }
@@ -449,44 +509,26 @@ pub fn oracle_apply_mutation(_input: &[u8], _spec: &Json) -> Result<Vec<u8>, Str
 //#endregion 🔖️Dispatch
 
 //#region 🔖️Inverse
-/// ↩️ The independently computed inverse of `spec` against the UNMUTATED `base`, matching
-/// `Mp3Mutation::inverse()`'s own base-relative semantics: every variant of this vocabulary is a
-/// whole-layer replace, so its inverse is the same verb carrying the layer `base` already had.
-/// A restored frame sequence cannot be expressed as a slice of the mutated document, so it travels
-/// as `framesHex` — bytes read out of `base` here, never authored by hand.
+/// ↩️ The independently computed inverse of `spec`, applied on top of `mutated`: every variant of this vocabulary
+/// is a whole-layer replace, so its inverse restores exactly the layer(s) it replaced from the UNMUTATED `base` —
+/// `Mp3Mutation::inverse()`'s own base-relative semantics — and leaves the others as the forward mutation left them.
 #[cfg(feature = "oracles")]
-pub fn oracle_inverse_spec(base: &[u8], spec: &Json) -> Result<Json, String> {
-    let regions = layers::split(base)?;
-    let text = match layers::read_v2(&regions.v2)? {
-        None => Json::Null,
-        Some((_, frames)) => Json::Array(frames.iter().map(|frame| Json::Object(vec![("id".to_string(), Json::String(frame.id.clone())), ("text".to_string(), Json::String(frame.text.clone()))])).collect()),
-    };
-    let v1 = match layers::read_v1(base, &regions.v1)? {
-        None => Json::Null,
-        Some(fields) => Json::Object(vec![
-            ("title".to_string(), Json::String(fields.title)),
-            ("artist".to_string(), Json::String(fields.artist)),
-            ("album".to_string(), Json::String(fields.album)),
-            ("year".to_string(), Json::String(fields.year)),
-            ("comment".to_string(), Json::String(fields.comment)),
-            ("genreId".to_string(), Json::Number(f64::from(fields.genre_id))),
-        ]),
-    };
-    let frames_hex = Json::String(hex_encode(&regions.audio));
-    let params = match spec.str("kind").as_str() {
-        "no-mutation" => Json::Object(vec![]),
-        "set-id3v2" => Json::Object(vec![("text".to_string(), text)]),
-        "set-frames" => Json::Object(vec![("framesHex".to_string(), frames_hex)]),
-        "set-id3v1" => Json::Object(vec![("v1".to_string(), v1)]),
-        "set-snapshot" => Json::Object(vec![("text".to_string(), text), ("framesHex".to_string(), frames_hex), ("v1".to_string(), v1)]),
+pub fn oracle_apply_mutation_inverse(base: &[u8], spec: &Json, mutated: &[u8]) -> Result<Vec<u8>, String> {
+    let original = layers::split(base)?;
+    let mut restored = layers::split(mutated)?;
+    match spec.str("kind").as_str() {
+        "set-id3v2" => restored.v2 = original.v2,
+        "set-frames" => restored.audio = original.audio,
+        "set-id3v1" => restored.v1 = original.v1,
+        "set-snapshot" => restored = original,
         other => return Err(format!("mutation kind {other:?} has no oracle inverse")),
-    };
-    Ok(Json::Object(vec![("kind".to_string(), Json::String(spec.str("kind"))), ("params".to_string(), params)]))
+    }
+    Ok(layers::join(&restored))
 }
 
 /// 🚫️ Without the `oracles` feature the reference implementations are not linked at all.
 #[cfg(not(feature = "oracles"))]
-pub fn oracle_inverse_spec(_base: &[u8], _spec: &Json) -> Result<Json, String> {
+pub fn oracle_apply_mutation_inverse(_base: &[u8], _spec: &Json, _mutated: &[u8]) -> Result<Vec<u8>, String> {
     Err("the `oracles` feature is disabled — this host was not built with the registered reference implementations".to_string())
 }
 //#endregion 🔖️Inverse
@@ -503,7 +545,7 @@ pub fn oracle_round_trip(input: &[u8]) -> Result<Vec<u8>, String> {
     let regions = layers::split(input)?;
     let v2 = match layers::read_v2(&regions.v2)? {
         None => Vec::new(),
-        Some((_, frames)) => layers::write_v2(&frames)?,
+        Some((version, frames)) => layers::write_v2(version, &frames)?,
     };
     let mut audio = Vec::with_capacity(regions.audio.len());
     for frame in layers::walk(&regions.audio)? {

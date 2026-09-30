@@ -10,7 +10,26 @@
   ],
   "properties": {
     "id": {
-      "type": "string"
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Widget",
+          "de": "Baustein"
+        },
+        "description": {
+          "en": "The graph widget this mutation addresses.",
+          "de": "Der Graph-Baustein, den diese Mutation adressiert."
+        },
+        "ref": {
+          "kind": "widget",
+          "domain": "graph",
+          "granularity": "node"
+        },
+        "group": "target",
+        "order": 10
+      }
     },
     "layout": {
       "title": "WidgetLayout",
@@ -22,11 +41,48 @@
       ],
       "properties": {
         "x": {
-          "type": "number"
+          "type": "number",
+          "x-semio-ui": {
+            "widget": "stepper",
+            "role": "value",
+            "label": {
+              "en": "X",
+              "de": "X"
+            },
+            "step": 1,
+            "precision": 1,
+            "group": "layout",
+            "order": 10
+          }
         },
         "y": {
-          "type": "number"
+          "type": "number",
+          "x-semio-ui": {
+            "widget": "stepper",
+            "role": "value",
+            "label": {
+              "en": "Y",
+              "de": "Y"
+            },
+            "step": 1,
+            "precision": 1,
+            "group": "layout",
+            "order": 20
+          }
         }
+      },
+      "x-semio-ui": {
+        "role": "value",
+        "label": {
+          "en": "Position",
+          "de": "Position"
+        },
+        "description": {
+          "en": "Where the widget sits on the graph canvas.",
+          "de": "Lage des Bausteins auf der Graphfläche."
+        },
+        "group": "layout",
+        "order": 20
       }
     }
   }

@@ -180,3 +180,11 @@ fn strict_profile_is_an_io_rule_not_a_mutation_constraint() {
         assert_eq!(mutation.diff(&snapshot).diff().apply(&snapshot).expect("negative mutation stays valid"), snapshot);
     }
 }
+
+/// 🧾️ The committed wire witnesses decode through the aggregate's `FromValue` and re-encode to exactly the committed JSON.
+#[test]
+fn committed_wire_witnesses_are_the_canonical_wire() {
+    ::store::os_store::test_support::assert_wire_witness::<super::std1_any::Std1AnyMutation>(include_str!("../../🧫️fixtures/🛰️declaration-channels/1️⃣standard-1/🌐️any/🧬️mutations/📝️set-value/🧫️fixtures/🧾️wire-witness/🦠️mutation/🔣️.json"));
+    ::store::os_store::test_support::assert_wire_witness::<super::std1_strict::Std1StrictMutation>(include_str!("../../🧫️fixtures/🛰️declaration-channels/1️⃣standard-1/🔒️strict/🧬️mutations/📝️set-value/🧫️fixtures/🧾️wire-witness/🦠️mutation/🔣️.json"));
+    ::store::os_store::test_support::assert_wire_witness::<super::std2_any::Std2AnyMutation>(include_str!("../../🧫️fixtures/🛰️declaration-channels/2️⃣standard-2/🌐️any/🧬️mutations/📝️set-value/🧫️fixtures/🧾️wire-witness/🦠️mutation/🔣️.json"));
+}

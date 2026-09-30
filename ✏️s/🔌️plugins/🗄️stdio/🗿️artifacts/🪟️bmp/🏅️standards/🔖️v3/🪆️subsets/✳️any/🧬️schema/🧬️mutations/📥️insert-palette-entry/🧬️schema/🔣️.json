@@ -11,10 +11,28 @@
   "properties": {
     "index": {
       "type": "integer",
-      "minimum": 0
+      "minimum": 0,
+      "x-semio-ui": {
+        "widget": "stepper",
+        "label": {
+          "en": "Insert position",
+          "de": "Einfügeposition"
+        },
+        "precision": 0,
+        "group": "target",
+        "order": 10
+      }
     },
     "entry": {
-      "$ref": "#/$defs/BmpPaletteEntry"
+      "$ref": "#/$defs/BmpPaletteEntry",
+      "x-semio-ui": {
+        "label": {
+          "en": "Palette entry",
+          "de": "Paletteneintrag"
+        },
+        "group": "value",
+        "order": 20
+      }
     }
   },
   "$defs": {
@@ -31,22 +49,46 @@
         "b": {
           "type": "integer",
           "minimum": 0,
-          "maximum": 255
+          "maximum": 255,
+          "x-semio-ui": {
+            "label": {
+              "en": "Blue",
+              "de": "Blau"
+            }
+          }
         },
         "g": {
           "type": "integer",
           "minimum": 0,
-          "maximum": 255
+          "maximum": 255,
+          "x-semio-ui": {
+            "label": {
+              "en": "Green",
+              "de": "Grün"
+            }
+          }
         },
         "r": {
           "type": "integer",
           "minimum": 0,
-          "maximum": 255
+          "maximum": 255,
+          "x-semio-ui": {
+            "label": {
+              "en": "Red",
+              "de": "Rot"
+            }
+          }
         },
         "reserved": {
           "type": "integer",
           "minimum": 0,
-          "maximum": 255
+          "maximum": 255,
+          "x-semio-ui": {
+            "label": {
+              "en": "Reserved",
+              "de": "Reserviert"
+            }
+          }
         }
       }
     }

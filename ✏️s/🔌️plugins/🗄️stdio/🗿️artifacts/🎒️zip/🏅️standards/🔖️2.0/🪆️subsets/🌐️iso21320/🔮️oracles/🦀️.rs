@@ -142,37 +142,50 @@ mod live {
     }
     //#endregion 🔖️Codec
 
+    //#region 🔖️Wire
+    /// 🔎️ A byte payload as the wire carries it: a plain JSON array of 0-255 numbers.
+    fn bytes_of(value: &Json, key: &str) -> Vec<u8> {
+        value.array(key).iter().filter_map(|item| if let Json::Number(number) = item { Some(*number as u8) } else { None }).collect()
+    }
+
+    /// 🎒️ One wire `ZipEntry` (`{name, data, metadata}`) as the member the reference writer stores
+    /// with `method`. A method outside §4.4 is refused, never normalized.
+    fn entry_of(entry: &Json, method: Option<IsoMethod>) -> Result<IsoEntry, String> {
+        let method = match method {
+            Some(method) => method,
+            None => match entry.get("metadata").and_then(|metadata| metadata.get("compressionMethod")) {
+                Some(Json::Number(code)) if *code == 0.0 => IsoMethod::Stored,
+                Some(Json::Number(code)) if *code == 8.0 => IsoMethod::Deflate,
+                other => return Err(format!("ISO/IEC 21320-1 §4.4 admits only Stored (0) and Deflate (8); member {:?} declares {other:?}", entry.str("name"))),
+            },
+        };
+        Ok(IsoEntry { name: entry.str("name"), data: bytes_of(entry, "data"), method, encrypted: false })
+    }
+    //#endregion 🔖️Wire
+
     //#region 🔖️Forward
-    /// 🦠️ Applies one declared mutation kind, described by `spec` (`{"kind": ..., "params": {...}}`),
+    /// 🦠️ Applies one declared mutation kind, described by `spec` (`{"kind": ..., "params": <leaf wire payload>}`),
     /// to an already-decoded archive. An unrecognised kind, or a named entry that does not exist, is
     /// an error — never a silent no-op.
     pub fn apply(mut archive: IsoArchive, spec: &Json) -> Result<IsoArchive, String> {
         let params = spec.get("params").cloned().unwrap_or(Json::Object(Vec::new()));
         let add = |archive: &mut IsoArchive, method: IsoMethod| -> Result<(), String> {
-            let name = params.str("name");
-            if archive.entries.iter().any(|entry| entry.name == name) {
-                return Err(format!("add entry: a member named {name:?} already exists"));
+            let entry = entry_of(params.get("entry").ok_or("add entry: requires an `entry` field")?, Some(method))?;
+            if archive.entries.iter().any(|existing| existing.name == entry.name) {
+                return Err(format!("add entry: a member named {:?} already exists", entry.name));
             }
-            let index = if params.get("before").is_some() {
-                archive.entries.iter().position(|entry| entry.name == params.str("before")).ok_or_else(|| "add entry: insertion anchor does not exist".to_string())?
-            } else { archive.entries.len() };
-            archive.entries.insert(index, IsoEntry { name, data: params.str("content").into_bytes(), method, encrypted: false });
+            let index = match params.get("before") {
+                Some(Json::String(before)) => archive.entries.iter().position(|existing| &existing.name == before).ok_or_else(|| "add entry: insertion anchor does not exist".to_string())?,
+                _ => archive.entries.len(),
+            };
+            archive.entries.insert(index, entry);
             Ok(())
         };
         match spec.str("kind").as_str() {
-            "no-mutation" => Ok(archive),
             "set-snapshot" => {
-                archive.entries = params
-                    .array("entries")
-                    .iter()
-                    .map(|entry| IsoEntry {
-                        name: entry.str("name"),
-                        data: entry.str("content").into_bytes(),
-                        method: if entry.str("method") == "stored" { IsoMethod::Stored } else { IsoMethod::Deflate },
-                        encrypted: false,
-                    })
-                    .collect();
-                archive.comment = params.str("comment");
+                let snapshot = params.get("snapshot").ok_or("set-snapshot requires a `snapshot` field")?;
+                archive.entries = snapshot.array("entries").iter().map(|entry| entry_of(entry, None)).collect::<Result<_, _>>()?;
+                archive.comment = snapshot.str("comment");
                 Ok(archive)
             }
             "set-archive-comment" => {
@@ -198,7 +211,7 @@ mod live {
             }
             "rename-entry" => {
                 let name = params.str("name");
-                let new_name = params.str("newName");
+                let new_name = params.str("new_name");
                 if archive.entries.iter().any(|entry| entry.name == new_name) {
                     return Err(format!("rename-entry: a member named {new_name:?} already exists"));
                 }
@@ -212,10 +225,10 @@ mod live {
             }
             "set-entry-data" => {
                 let name = params.str("name");
-                let content = params.str("content").into_bytes();
+                let data = bytes_of(&params, "data");
                 match archive.entries.iter_mut().find(|entry| entry.name == name) {
                     Some(entry) => {
-                        entry.data = content;
+                        entry.data = data;
                         Ok(archive)
                     }
                     None => Err(format!("set-entry-data: no member named {name:?}")),
@@ -233,11 +246,10 @@ mod live {
     pub fn invert(original: &IsoArchive, mutated: IsoArchive, spec: &Json) -> Result<IsoArchive, String> {
         let params = spec.get("params").cloned().unwrap_or(Json::Object(Vec::new()));
         match spec.str("kind").as_str() {
-            "no-mutation" => Ok(mutated),
             "set-snapshot" => Ok(original.clone()),
             "set-archive-comment" => Ok(IsoArchive { comment: original.comment.clone(), ..mutated }),
             "add-stored-entry" | "add-deflated-entry" => {
-                let name = params.str("name");
+                let name = params.get("entry").map(|entry| entry.str("name")).unwrap_or_default();
                 let mut restored = mutated;
                 let before = restored.entries.len();
                 restored.entries.retain(|entry| entry.name != name);
@@ -248,15 +260,14 @@ mod live {
             }
             "remove-entry" => {
                 let name = params.str("name");
-                let removed = original.entries.iter().find(|entry| entry.name == name).cloned().ok_or_else(|| format!("inverse remove-entry: the original archive has no member named {name:?}"))?;
+                let index = original.entries.iter().position(|entry| entry.name == name).ok_or_else(|| format!("inverse remove-entry: the original archive has no member named {name:?}"))?;
                 let mut restored = mutated;
-                let index = original.entries.iter().position(|entry| entry.name == name).unwrap();
-                restored.entries.insert(index, removed);
+                restored.entries.insert(index, original.entries[index].clone());
                 Ok(restored)
             }
             "rename-entry" => {
                 let name = params.str("name");
-                let new_name = params.str("newName");
+                let new_name = params.str("new_name");
                 let mut restored = mutated;
                 match restored.entries.iter_mut().find(|entry| entry.name == new_name) {
                     Some(entry) => {

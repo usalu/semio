@@ -12,8 +12,9 @@
 //! rejected, never silently clamped or corrupted; `TruncateAt` past the current length is the
 //! vocabulary's own defined no-op, not an error) but is reimplemented here from scratch.
 //!
-//! The vocabulary is per SUBSET, not per artifact. This one has exactly 5 kinds: `no-mutation`,
-//! `set-snapshot`, `replace-byte-range`, `append-bytes`, `truncate-at`.
+//! The vocabulary is per SUBSET, not per artifact. This one has exactly 4 kinds: `set-snapshot`,
+//! `replace-byte-range`, `append-bytes`, `truncate-at`. Every spec's `params` is the leaf's own wire
+//! payload (`BinaryMutation`'s `payload_value()`), read by field name — the schema is the contract.
 //!
 //! @see ../🔣️oracle.json — the mutation catalog and the recorded no-oracle decision.
 //! @see ../🧬️schema/🧬️mutations/🦀️.rs — the mutation vocabulary itself (`BinaryMutation::KINDS`).
@@ -61,22 +62,20 @@ fn replace_range(buffer: &mut Vec<u8>, offset: usize, remove_len: usize, insert:
 //#endregion 🔖️ReplaceByteRange
 
 //#region 🔖️Apply
-/// 🦠️ Every declared kind, dispatched by its kebab-case name. `set-snapshot` reads the same
-/// `{"snapshot":{"bytes":[...]}}` shape the subject's own `BinarySnapshot` carries; every other kind
-/// reads the params `BinaryMutation`'s own variant fields name (camelCase, matching the enum's
-/// `#[serde(rename_all = "camelCase")]`).
+/// 🦠️ Every declared kind, dispatched by its kebab-case name over the leaf's own wire payload:
+/// `set-snapshot` reads `{"snapshot":{"schema","bytes":[...]}}`, `replace-byte-range` reads
+/// `{offset, remove_len, insert}`, `append-bytes` reads `{data}`, `truncate-at` reads `{offset}`.
 #[cfg(feature = "oracles")]
 fn apply(buffer: &[u8], kind: &str, params: &Json) -> Result<Vec<u8>, String> {
     let mut out = buffer.to_vec();
     match kind {
-        "no-mutation" => Ok(out),
         "set-snapshot" => {
             let snapshot = params.get("snapshot").ok_or("set-snapshot requires a `snapshot` field")?;
             Ok(bytes_field(snapshot, "bytes"))
         }
         "replace-byte-range" => {
             let offset = usize_field(params, "offset")?;
-            let remove_len = usize_field(params, "removeLen")?;
+            let remove_len = usize_field(params, "remove_len")?;
             let insert = bytes_field(params, "insert");
             replace_range(&mut out, offset, remove_len, &insert)?;
             Ok(out)
@@ -92,8 +91,6 @@ fn apply(buffer: &[u8], kind: &str, params: &Json) -> Result<Vec<u8>, String> {
             if offset < out.len() {
                 out.truncate(offset);
             }
-            // 🌱 `offset >= len` is the vocabulary's own defined no-op (see `BinaryMutation::diff`'s
-            // `TruncateAt` arm), not an error — the buffer is returned unchanged.
             Ok(out)
         }
         other => Err(format!("mutation kind {other:?} has no oracle implementation")),
@@ -116,9 +113,22 @@ pub fn oracle_apply_mutation(input: &[u8], spec: &Json) -> Result<Vec<u8>, Strin
     apply(input, &kind, params)
 }
 
+/// 🔁️ The specification's own decode/re-encode of a raw buffer: a buffer with no format has no
+/// structure to parse, so reading it and writing it back is the identity on its bytes.
+#[cfg(feature = "oracles")]
+pub fn oracle_round_trip(input: &[u8]) -> Result<Vec<u8>, String> {
+    Ok(input.to_vec())
+}
+
 /// 🚫️ Without the `oracles` feature the reference implementation is not linked at all.
 #[cfg(not(feature = "oracles"))]
 pub fn oracle_apply_mutation(_input: &[u8], _spec: &Json) -> Result<Vec<u8>, String> {
+    Err("the `oracles` feature is disabled — this host was not built with the registered reference implementations".to_string())
+}
+
+/// 🚫️ Without the `oracles` feature the reference implementation is not linked at all.
+#[cfg(not(feature = "oracles"))]
+pub fn oracle_round_trip(_input: &[u8]) -> Result<Vec<u8>, String> {
     Err("the `oracles` feature is disabled — this host was not built with the registered reference implementations".to_string())
 }
 //#endregion 🔖️Dispatch

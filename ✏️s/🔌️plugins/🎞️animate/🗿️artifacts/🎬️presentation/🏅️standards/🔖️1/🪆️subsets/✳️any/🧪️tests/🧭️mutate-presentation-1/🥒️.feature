@@ -37,9 +37,8 @@ Feature: Apply every typed animate PRESENTATION mutation to the real committed f
   id-keyed ORDERED collection — gets the per-collection recipe `create`/`delete`/`delete-tiles`/`rename`/
   `resize-tile-crop`/`reorder`/`replace-tiles`. There is no `no-mutation` and no `set-snapshot`: whole-
   document replacement is not expressible as an in-history mutation in this generation of the taxonomy and
-  goes through `ArtifactStore::reset` instead. Every `params` cell below is the mutation's own
-  externally-tagged JSON (`PresentationMutation` declares no `#[serde(tag)]`, unlike its `flow`/`shooting`
-  siblings) and is chosen to MOVE the projection against that base — an inverse that trivially holds
+  goes through `ArtifactStore::reset` instead. Every `params` cell below is the leaf's own wire
+  payload (`payload_value()`, exactly what the leaf schema describes; the aggregate's external variant tag is not part of it) and is chosen to MOVE the projection against that base — an inverse that trivially holds
   because nothing happened is the failure this wave exists to stop.
 
   ⚖️ The projection is `(schema, source, tiles)` read back through `presentation_working_scene`. The two child
@@ -59,16 +58,16 @@ Feature: Apply every typed animate PRESENTATION mutation to the real committed f
       """
     Then the resulting projection differs from the base projection in both implementations
     Examples:
-      | id                  | params                                                                                                                                                           |
-      | resize-source-frame | {"ResizeSourceFrame":{"newFrame":{"x":0.0,"y":0.0,"width":1.0,"height":1.0}}}                                                                                    |
-      | replace-source      | {"ReplaceSource":{"newSource":{"src":"/fixture-deck.png","kind":"figure","frame":{"x":0.0,"y":0.0,"width":1.0,"height":1.0},"sourceAspect":1.5,"pdfPage":null}}} |
-      | create-tile         | {"CreateTile":{"index":1,"tile":{"id":"t-macro","name":"Macro","crop":{"x":0.4,"y":0.4,"width":0.2,"height":0.2}}}}                                              |
-      | delete-tile         | {"DeleteTile":{"id":"t-hero"}}                                                                                                                                   |
-      | delete-tiles        | {"DeleteTiles":{"ids":["t-alpha","t-omega"]}}                                                                                                                    |
-      | rename-tile         | {"RenameTile":{"id":"t-hero","newName":"Lead"}}                                                                                                                  |
-      | resize-tile-crop    | {"ResizeTileCrop":{"id":"t-hero","newCrop":{"x":0.3,"y":0.3,"width":0.4,"height":0.4}}}                                                                          |
-      | reorder-tiles       | {"ReorderTiles":{"id":"t-hero","toIndex":2}}                                                                                                                     |
-      | replace-tiles       | {"ReplaceTiles":{"newTiles":[]}}                                                                                                                                 |
+      | id                  | params                                                                                                                          |
+      | resize-source-frame | {"newFrame":{"x":0.0,"y":0.0,"width":1.0,"height":1.0}}                                                                         |
+      | replace-source      | {"newSource":{"src":"/fixture-deck.png","kind":"figure","frame":{"x":0.0,"y":0.0,"width":1.0,"height":1.0},"sourceAspect":1.5}} |
+      | create-tile         | {"index":1,"tile":{"id":"t-macro","name":"Macro","crop":{"x":0.4,"y":0.4,"width":0.2,"height":0.2}}}                            |
+      | delete-tile         | {"id":"t-hero"}                                                                                                                 |
+      | delete-tiles        | {"ids":["t-alpha","t-omega"]}                                                                                                   |
+      | rename-tile         | {"id":"t-hero","newName":"Lead"}                                                                                                |
+      | resize-tile-crop    | {"id":"t-hero","newCrop":{"x":0.3,"y":0.3,"width":0.4,"height":0.4}}                                                            |
+      | reorder-tiles       | {"id":"t-hero","toIndex":2}                                                                                                     |
+      | replace-tiles       | {"newTiles":[]}                                                                                                                 |
 
   @id-inverse
   @level-exhaustive
@@ -83,16 +82,16 @@ Feature: Apply every typed animate PRESENTATION mutation to the real committed f
     And every step of its own computed inverse is applied through apply_presentation_mutation, and separately by the Python reference
     Then the projection equals the base projection again in both implementations
     Examples:
-      | id                  | params                                                                                                                                                           |
-      | resize-source-frame | {"ResizeSourceFrame":{"newFrame":{"x":0.0,"y":0.0,"width":1.0,"height":1.0}}}                                                                                    |
-      | replace-source      | {"ReplaceSource":{"newSource":{"src":"/fixture-deck.png","kind":"figure","frame":{"x":0.0,"y":0.0,"width":1.0,"height":1.0},"sourceAspect":1.5,"pdfPage":null}}} |
-      | create-tile         | {"CreateTile":{"index":1,"tile":{"id":"t-macro","name":"Macro","crop":{"x":0.4,"y":0.4,"width":0.2,"height":0.2}}}}                                              |
-      | delete-tile         | {"DeleteTile":{"id":"t-hero"}}                                                                                                                                   |
-      | delete-tiles        | {"DeleteTiles":{"ids":["t-alpha","t-omega"]}}                                                                                                                    |
-      | rename-tile         | {"RenameTile":{"id":"t-hero","newName":"Lead"}}                                                                                                                  |
-      | resize-tile-crop    | {"ResizeTileCrop":{"id":"t-hero","newCrop":{"x":0.3,"y":0.3,"width":0.4,"height":0.4}}}                                                                          |
-      | reorder-tiles       | {"ReorderTiles":{"id":"t-hero","toIndex":2}}                                                                                                                     |
-      | replace-tiles       | {"ReplaceTiles":{"newTiles":[]}}                                                                                                                                 |
+      | id                  | params                                                                                                                          |
+      | resize-source-frame | {"newFrame":{"x":0.0,"y":0.0,"width":1.0,"height":1.0}}                                                                         |
+      | replace-source      | {"newSource":{"src":"/fixture-deck.png","kind":"figure","frame":{"x":0.0,"y":0.0,"width":1.0,"height":1.0},"sourceAspect":1.5}} |
+      | create-tile         | {"index":1,"tile":{"id":"t-macro","name":"Macro","crop":{"x":0.4,"y":0.4,"width":0.2,"height":0.2}}}                            |
+      | delete-tile         | {"id":"t-hero"}                                                                                                                 |
+      | delete-tiles        | {"ids":["t-alpha","t-omega"]}                                                                                                   |
+      | rename-tile         | {"id":"t-hero","newName":"Lead"}                                                                                                |
+      | resize-tile-crop    | {"id":"t-hero","newCrop":{"x":0.3,"y":0.3,"width":0.4,"height":0.4}}                                                            |
+      | reorder-tiles       | {"id":"t-hero","toIndex":2}                                                                                                     |
+      | replace-tiles       | {"newTiles":[]}                                                                                                                 |
 
   @id-identity-round-trip
   @level-long

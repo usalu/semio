@@ -5,11 +5,23 @@
   "type": "object",
   "additionalProperties": false,
   "required": [
+    "mutation",
     "topic"
   ],
   "properties": {
+    "mutation": {
+      "const": "insertTopic"
+    },
     "topic": {
-      "$ref": "#/$defs/BcfTopic"
+      "$ref": "#/$defs/BcfTopic",
+      "x-semio-ui": {
+        "label": {
+          "en": "Topic",
+          "de": "Thema"
+        },
+        "group": "value",
+        "order": 10
+      }
     }
   },
   "$defs": {
@@ -32,33 +44,79 @@
           "type": "string"
         },
         "status": {
-          "type": "string"
+          "type": "string",
+          "x-semio-ui": {
+            "label": {
+              "en": "Status",
+              "de": "Status"
+            },
+            "description": {
+              "en": "Topic status, e.g. Open or Closed.",
+              "de": "Themenstatus, z. B. Open oder Closed."
+            }
+          }
         },
         "priority": {
-          "type": "string"
+          "type": "string",
+          "x-semio-ui": {
+            "label": {
+              "en": "Priority",
+              "de": "Priorität"
+            }
+          }
         },
         "labels": {
           "type": "array",
           "items": {
             "type": "string"
+          },
+          "x-semio-ui": {
+            "label": {
+              "en": "Labels",
+              "de": "Schlagwörter"
+            }
           }
         },
         "creationDate": {
-          "type": "string"
+          "type": "string",
+          "x-semio-ui": {
+            "label": {
+              "en": "Creation date",
+              "de": "Erstellungsdatum"
+            }
+          }
         },
         "creationAuthor": {
-          "type": "string"
+          "type": "string",
+          "x-semio-ui": {
+            "label": {
+              "en": "Created by",
+              "de": "Erstellt von"
+            }
+          }
         },
         "comments": {
           "type": "array",
           "items": {
             "$ref": "#/$defs/BcfComment"
+          },
+          "x-semio-ui": {
+            "label": {
+              "en": "Comments",
+              "de": "Kommentare"
+            }
           }
         },
         "viewpoints": {
           "type": "array",
           "items": {
             "$ref": "#/$defs/BcfViewpoint"
+          },
+          "x-semio-ui": {
+            "label": {
+              "en": "Viewpoints",
+              "de": "Ansichtspunkte"
+            }
           }
         }
       }
@@ -77,7 +135,17 @@
           "type": "string"
         },
         "date": {
-          "type": "string"
+          "type": "string",
+          "x-semio-ui": {
+            "label": {
+              "en": "Date",
+              "de": "Datum"
+            },
+            "description": {
+              "en": "ISO 8601 date and time.",
+              "de": "Datum und Uhrzeit nach ISO 8601."
+            }
+          }
         },
         "author": {
           "type": "string"
@@ -93,7 +161,17 @@
             {
               "type": "null"
             }
-          ]
+          ],
+          "x-semio-ui": {
+            "label": {
+              "en": "Viewpoint",
+              "de": "Ansichtspunkt"
+            },
+            "description": {
+              "en": "GUID of the viewpoint the comment refers to.",
+              "de": "GUID des Ansichtspunkts, auf den sich der Kommentar bezieht."
+            }
+          }
         }
       }
     },
@@ -125,7 +203,13 @@
             {
               "type": "null"
             }
-          ]
+          ],
+          "x-semio-ui": {
+            "label": {
+              "en": "Components",
+              "de": "Bauteile"
+            }
+          }
         },
         "snapshot": {
           "anyOf": [
@@ -140,7 +224,17 @@
             {
               "type": "null"
             }
-          ]
+          ],
+          "x-semio-ui": {
+            "label": {
+              "en": "Snapshot image",
+              "de": "Snapshot-Bild"
+            },
+            "description": {
+              "en": "PNG bytes of the viewpoint snapshot; empty removes it.",
+              "de": "PNG-Bytes des Ansichtspunkt-Snapshots; leer entfernt ihn."
+            }
+          }
         }
       }
     },
@@ -232,15 +326,37 @@
           "type": "array",
           "items": {
             "type": "string"
+          },
+          "x-semio-ui": {
+            "label": {
+              "en": "Selected components",
+              "de": "Ausgewählte Bauteile"
+            },
+            "description": {
+              "en": "IFC GUIDs of the selected components.",
+              "de": "IFC-GUIDs der ausgewählten Bauteile."
+            }
           }
         },
         "visibility": {
-          "$ref": "#/$defs/BcfVisibility"
+          "$ref": "#/$defs/BcfVisibility",
+          "x-semio-ui": {
+            "label": {
+              "en": "Visibility",
+              "de": "Sichtbarkeit"
+            }
+          }
         },
         "coloring": {
           "type": "array",
           "items": {
             "$ref": "#/$defs/BcfColoring"
+          },
+          "x-semio-ui": {
+            "label": {
+              "en": "Coloring",
+              "de": "Einfärbung"
+            }
           }
         }
       }
@@ -253,12 +369,28 @@
       ],
       "properties": {
         "defaultVisibility": {
-          "type": "boolean"
+          "type": "boolean",
+          "x-semio-ui": {
+            "label": {
+              "en": "Visible by default",
+              "de": "Standardmäßig sichtbar"
+            }
+          }
         },
         "exceptions": {
           "type": "array",
           "items": {
             "type": "string"
+          },
+          "x-semio-ui": {
+            "label": {
+              "en": "Exceptions",
+              "de": "Ausnahmen"
+            },
+            "description": {
+              "en": "IFC GUIDs of components that deviate from the default visibility.",
+              "de": "IFC-GUIDs der Bauteile, die von der Standardsichtbarkeit abweichen."
+            }
           }
         }
       }
@@ -271,12 +403,32 @@
       ],
       "properties": {
         "color": {
-          "type": "string"
+          "type": "string",
+          "x-semio-ui": {
+            "label": {
+              "en": "Color",
+              "de": "Farbe"
+            },
+            "description": {
+              "en": "ARGB or RGB hex color.",
+              "de": "ARGB- oder RGB-Hexfarbe."
+            }
+          }
         },
         "components": {
           "type": "array",
           "items": {
             "type": "string"
+          },
+          "x-semio-ui": {
+            "label": {
+              "en": "Components",
+              "de": "Bauteile"
+            },
+            "description": {
+              "en": "IFC GUIDs of the colored components.",
+              "de": "IFC-GUIDs der eingefärbten Bauteile."
+            }
           }
         }
       }

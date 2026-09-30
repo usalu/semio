@@ -3,7 +3,7 @@
 Ticket 26/08/23/END-TO-END-TESTING-REFACTOR. The sibling case `../🧱️mutate-ifc-2x3` registers
 `ruststep` 0.4, which parses the ISO 10303-21 grammar and has no writer at all, so every scenario
 there is honestly typed `@mode-property`/`@mode-round-trip` — a second READER, never a second
-producer. This case closes that gap for the four mutation kinds a schema-bound implementation can
+producer. This case closes that gap for the three mutation kinds a schema-bound implementation can
 genuinely perform: **IfcOpenShell 0.8.4.post1 applies each mutation to the real 193 915-byte,
 3 464-entity IFC2X3 building model and re-serializes the whole exchange structure itself**
 (`ifcopenshell.file.to_string`, its own C++ Part-21 writer), and the result is read back by the
@@ -42,7 +42,7 @@ instances in this fixture (`get_total_inverses`), so the two verbs would visibly
 two different verbs is not a differential, so it is not claimed as one; `remove-instance` keeps its
 `ruststep`-backed scenarios in `../🧱️mutate-ifc-2x3`, unchanged.
 
-@see ../🧱️mutate-ifc-2x3/component.feature — the exhaustive five-kind case this one does not replace.
+@see ../🧱️mutate-ifc-2x3/component.feature — the exhaustive four-kind case this one does not replace.
 @see ../../🏅️standards/🔖️2x3/🪆️subsets/🧱️base/🔣️oracle.json — this oracle's registration.
 """
 
@@ -63,55 +63,53 @@ from semio_repo_test import Adapter, Context, Outcome
 # region 🔖️Input
 INPUT = "shared://🏥️wellness-center-sama-street-level/🏥️wellness-center-sama-street-level.ifc"
 
-#: 🧬️ The four kinds IfcOpenShell can genuinely PRODUCE, in this subset's own catalog order.
-KINDS = ["no-mutation", "set-snapshot", "upsert-instance", "set-header"]
+#: 🧬️ The three kinds IfcOpenShell can genuinely PRODUCE, in this subset's own catalog order.
+KINDS = ["set-snapshot", "upsert-instance", "set-header"]
 
-#: ↩️ The kinds whose INVERSE IfcOpenShell can also produce. `set-snapshot` is absent, and the
-#: reason is a measurement: this row's forward parameters put `IFC2X3-WAVE8-SNAPSHOT-MARKER` in the
-#: `FILE_SCHEMA` list — legal under ISO 10303-21 §8.2.4, and IfcOpenShell WRITES it correctly — but
-#: IfcOpenShell cannot then read its own output back (see `open_model`'s guard), so it cannot be the
-#: producer of the second half of the chain. `inverse-set-snapshot` keeps its ruststep-backed
-#: scenario in `../🧱️mutate-ifc-2x3`; nothing is lost, and nothing false is claimed here.
-INVERSE_KINDS = ["no-mutation", "upsert-instance", "set-header"]
+#: ↩️ The kinds whose INVERSE IfcOpenShell can also produce. `set-snapshot` is absent: its inverse restores
+#: the whole 3 464-instance model, which IfcOpenShell can only rebuild through `add`, and `add` deep-copies
+#: every instance an argument references, so it cannot re-create the graph instance for instance.
+#: `inverse-set-snapshot` keeps its ruststep-backed scenario in `../🧱️mutate-ifc-2x3`; nothing is lost.
+INVERSE_KINDS = ["upsert-instance", "set-header"]
 
-#: 📇️ This fixture's own committed header records, read from the file itself — the inverse of
-#: `set-header` and the no-op control the observability law is proved against.
+#: 📇️ This fixture's own committed header records in the `Part21Header` leaf wire, read from the file
+#: itself — the inverse of `set-header`.
 ORIGINAL_HEADER = {
     "header": {
         "fileDescription": [
-            {"t": "aggregate", "v": [{"t": "string", "v": "ViewDefinition [CoordinationView_V2.0]"}]},
-            {"t": "string", "v": "2;1"},
+            {"kind": "list", "values": [{"kind": "str", "value": "ViewDefinition [CoordinationView_V2.0]"}]},
+            {"kind": "str", "value": "2;1"},
         ],
         "fileName": [
-            {"t": "string", "v": "0001"},
-            {"t": "string", "v": "2021-11-21T06:45:25"},
-            {"t": "aggregate", "v": [{"t": "string", "v": ""}]},
-            {"t": "aggregate", "v": [{"t": "string", "v": ""}]},
-            {"t": "string", "v": "The EXPRESS Data Manager Version 5.02.0100.07 : 28 Aug 2013"},
-            {"t": "string", "v": "21.0.0.383 - Exporter 21.0.0.383 - Alternate UI 21.0.0.383"},
-            {"t": "string", "v": ""},
+            {"kind": "str", "value": "0001"},
+            {"kind": "str", "value": "2021-11-21T06:45:25"},
+            {"kind": "list", "values": [{"kind": "str", "value": ""}]},
+            {"kind": "list", "values": [{"kind": "str", "value": ""}]},
+            {"kind": "str", "value": "The EXPRESS Data Manager Version 5.02.0100.07 : 28 Aug 2013"},
+            {"kind": "str", "value": "21.0.0.383 - Exporter 21.0.0.383 - Alternate UI 21.0.0.383"},
+            {"kind": "str", "value": ""},
         ],
-        "fileSchema": [{"t": "aggregate", "v": [{"t": "string", "v": "IFC2X3"}]}],
+        "fileSchema": [{"kind": "list", "values": [{"kind": "str", "value": "IFC2X3"}]}],
     }
 }
 
-#: 📇️ The real committed `#619887` instance, as the fixture itself carries it — the inverse of the
-#: `upsert-instance` row, which changes exactly its `Name` attribute.
+#: 📇️ The real committed `#619887` instance in the `Part21Instance` leaf wire, as the fixture itself
+#: carries it — the inverse of the `upsert-instance` row, which changes exactly its `Name` attribute.
 ORIGINAL_COLUMN = {
     "instance": {
         "id": 619887,
         "entities": [
             {
-                "name": "IFCCOLUMN",
-                "args": [
-                    {"t": "string", "v": "0PfeWE7Aj7GBHCsLa67379"},
-                    {"t": "reference", "v": 41},
-                    {"t": "string", "v": "UC-Universal Columns-Column:UC305x305x97:552739"},
-                    {"t": "unset"},
-                    {"t": "string", "v": "UC-Universal Columns-Column:UC305x305x97"},
-                    {"t": "reference", "v": 619886},
-                    {"t": "reference", "v": 619879},
-                    {"t": "string", "v": "552739"},
+                "typeName": "IFCCOLUMN",
+                "arguments": [
+                    {"kind": "str", "value": "0PfeWE7Aj7GBHCsLa67379"},
+                    {"kind": "ref", "value": 41},
+                    {"kind": "str", "value": "UC-Universal Columns-Column:UC305x305x97:552739"},
+                    {"kind": "unset"},
+                    {"kind": "str", "value": "UC-Universal Columns-Column:UC305x305x97"},
+                    {"kind": "ref", "value": 619886},
+                    {"kind": "ref", "value": 619879},
+                    {"kind": "str", "value": "552739"},
                 ],
             }
         ],
@@ -424,35 +422,47 @@ def project(text: str) -> dict:
 
 
 # region 🔖️ValueGrammar
+def real_of(decimal: dict) -> float:
+    """🔢️ One `Part21Decimal` wire record (`{negative, coefficient, scale, exponent?}`) as the real it denotes."""
+    digits = decimal["coefficient"].rjust(decimal["scale"] + 1, "0")
+    split = len(digits) - decimal["scale"]
+    return float("%s%s.%s0e%d" % ("-" if decimal["negative"] else "", digits[:split], digits[split:], decimal.get("exponent") or 0))
+
+
 def to_ifcopenshell(model, value: dict):
-    """🔤️ One `{"t": …, "v": …}` wire value turned into what IfcOpenShell's own API accepts."""
-    kind = value["t"]
+    """🔤️ One `Part21Value` leaf-wire value (`{kind, value|values|typeName}`) turned into what IfcOpenShell's own API
+    accepts. The row IS the wire payload; nothing here is a second grammar."""
+    kind = value["kind"]
     if kind == "unset":
         return None
-    if kind in ("integer", "real", "string", "enum"):
-        return value["v"]
-    if kind == "reference":
-        return model.by_id(int(value["v"]))
-    if kind == "aggregate":
-        return tuple(to_ifcopenshell(model, item) for item in value["v"])
-    if kind == "typed":
-        return model.create_entity(value["name"], to_ifcopenshell(model, value["v"]))
-    raise ValueError("IfcOpenShell has no representation for the wire value type %r" % kind)
+    if kind in ("int", "str", "enum"):
+        return value["value"]
+    if kind == "real":
+        return real_of(value["value"])
+    if kind == "ref":
+        return model.by_id(int(value["value"]))
+    if kind == "list":
+        return tuple(to_ifcopenshell(model, item) for item in value["values"])
+    if kind == "typed" and len(value["values"]) == 1:
+        return model.create_entity(value["typeName"], to_ifcopenshell(model, value["values"][0]))
+    raise ValueError("IfcOpenShell has no representation for the Part-21 wire value %r" % value)
 
 
 def literal(value: dict):
     """🔤️ The same grammar restricted to values that carry no entity reference — what an instance
     created in a scratch file may hold before it is added at a chosen id."""
-    kind = value["t"]
-    if kind == "reference":
-        raise ValueError("upsert-instance cannot introduce a NEW id whose arguments reference the model: IfcOpenShell's `add` deep-copies what a new instance points at, which would insert instances the mutation does not name")
+    kind = value["kind"]
+    if kind == "ref":
+        raise ValueError("a NEW instance cannot carry an argument that references the model: IfcOpenShell's `add` deep-copies what a new instance points at, which would insert instances the mutation does not name")
     if kind == "unset":
         return None
-    if kind == "aggregate":
-        return tuple(literal(item) for item in value["v"])
-    if kind in ("integer", "real", "string", "enum"):
-        return value["v"]
-    raise ValueError("IfcOpenShell has no reference-free representation for the wire value type %r" % kind)
+    if kind == "list":
+        return tuple(literal(item) for item in value["values"])
+    if kind in ("int", "str", "enum"):
+        return value["value"]
+    if kind == "real":
+        return real_of(value["value"])
+    raise ValueError("IfcOpenShell has no reference-free representation for the Part-21 wire value %r" % value)
 
 
 # endregion 🔖️ValueGrammar
@@ -512,26 +522,47 @@ def set_header_records(model, header: dict) -> None:
         converted = to_ifcopenshell(model, file_name[index])
         setattr(target, attribute, list(converted) if isinstance(converted, tuple) else converted)
     file_schema = header["fileSchema"]
-    if file_schema and file_schema[0]["t"] == "aggregate":
-        model.header.file_schema.schema_identifiers = [item["v"] for item in file_schema[0]["v"]]
+    if file_schema and file_schema[0]["kind"] == "list":
+        model.header.file_schema.schema_identifiers = [item["value"] for item in file_schema[0]["values"]]
+
+
+def add_instance(model, instance: dict) -> None:
+    """➕ One `Part21Instance` wire record added at its own id through IfcOpenShell's typed API."""
+    records = instance["entities"]
+    if len(records) != 1:
+        raise ValueError("IfcOpenShell's typed API cannot construct a complex (multi-type) instance; #%s asks for %d records" % (instance["id"], len(records)))
+    scratch = ifcopenshell.file(schema=model.schema)
+    model.add(scratch.create_entity(records[0]["typeName"], *[literal(argument) for argument in records[0]["arguments"]]), int(instance["id"]))
+
+
+def snapshot_model(snapshot: dict):
+    """📸️ A whole new IfcOpenShell model from an `Ifc2x3Snapshot` wire record: its declared schema, its header, and
+    every instance at its own id."""
+    document = snapshot["document"]
+    schemas = [item["value"] for outer in document["header"]["fileSchema"] if outer["kind"] == "list" for item in outer["values"]]
+    model = ifcopenshell.file(schema=schemas[0])
+    set_header_records(model, document["header"])
+    for instance in document["instances"]:
+        add_instance(model, instance)
+    return model
+
+
+def rewrite(path: str) -> bytes:
+    """🔁️ IfcOpenShell's identity cycle: read the whole model, write it back from the model alone."""
+    return open_model(path).to_string().encode("utf-8")
 
 
 def apply_mutation(path: str, spec: dict) -> bytes:
     """🦠️ IfcOpenShell reads the real building model, applies one declared mutation through its own
-    API, and re-serializes the whole exchange structure with its own writer. An unrecognised kind is
-    an error, never a silent no-op: a mutation quietly skipped reports as a passing test."""
-    model = open_model(path)
+    API from the row's leaf wire payload, and re-serializes the whole exchange structure with its own
+    writer. An unrecognised kind is an error, never a silent no-op: a mutation quietly skipped reports
+    as a passing test."""
     kind = spec["kind"]
-    params = spec.get("params") or {}
-
-    if kind == "no-mutation":
-        pass
-    elif kind == "set-snapshot":
-        names = params["fileSchema"]
-        if not names:
-            raise ValueError("set-snapshot requires a non-empty fileSchema field")
-        model.header.file_schema.schema_identifiers = list(names)
-    elif kind == "set-header":
+    params = spec["params"]
+    if kind == "set-snapshot":
+        return snapshot_model(params["snapshot"]).to_string().encode("utf-8")
+    model = open_model(path)
+    if kind == "set-header":
         set_header_records(model, params["header"])
     elif kind == "upsert-instance":
         instance = params["instance"]
@@ -540,24 +571,21 @@ def apply_mutation(path: str, spec: dict) -> bytes:
         if len(records) != 1:
             raise ValueError("IfcOpenShell's typed API cannot construct a complex (multi-type) instance; this row asks for %d records" % len(records))
         record = records[0]
-        existing = None
         try:
             existing = model.by_id(identifier)
         except RuntimeError:
             existing = None
-        if existing is not None and existing.is_a().upper() == record["name"].upper():
-            for index, argument in enumerate(record["args"]):
+        if existing is not None and existing.is_a().upper() == record["typeName"].upper():
+            for index, argument in enumerate(record["arguments"]):
                 existing[index] = to_ifcopenshell(model, argument)
         elif existing is not None:
             inverses = model.get_total_inverses(existing)
             if inverses != 0:
                 raise AssertionError("upsert-instance would have to RETYPE #%d, which IfcOpenShell can only do by removing and re-adding it — and `ifcopenshell.file.remove` repairs the %d reference(s) that point at it, while Ifc2x3Mutation::UpsertInstance replaces the record in place. This oracle refuses rather than silently performing a different verb." % (identifier, inverses))
             model.remove(existing)
-            scratch = ifcopenshell.file(schema=model.schema)
-            model.add(scratch.create_entity(record["name"], *[literal(argument) for argument in record["args"]]), identifier)
+            add_instance(model, instance)
         else:
-            scratch = ifcopenshell.file(schema=model.schema)
-            model.add(scratch.create_entity(record["name"], *[literal(argument) for argument in record["args"]]), identifier)
+            add_instance(model, instance)
     elif kind == "remove-instance":
         target = model.by_id(int(params["id"]))
         inverses = model.get_total_inverses(target)
@@ -566,7 +594,6 @@ def apply_mutation(path: str, spec: dict) -> bytes:
         model.remove(target)
     else:
         raise ValueError("mutation kind %r has no IfcOpenShell producer in this case — see this module's docstring for the measured reason" % kind)
-
     return model.to_string().encode("utf-8")
 
 
@@ -576,15 +603,13 @@ def apply_mutation(path: str, spec: dict) -> bytes:
 # region 🔖️Inverse
 def inverse_spec(kind: str) -> dict:
     """↩️ The inverse of one forward `(kind, params)` pair against this fixture's own real committed
-    header and `#619887` values, computed here from the fixture rather than read from any
-    implementation's `inverse()` method."""
-    if kind == "set-snapshot":
-        return {"kind": "set-snapshot", "params": {"fileSchema": ["IFC2X3"]}}
+    header and `#619887` values, in the same leaf wire the rows use — computed here from the fixture
+    rather than read from any implementation's `inverse()` method."""
     if kind == "set-header":
         return {"kind": "set-header", "params": ORIGINAL_HEADER}
     if kind == "upsert-instance":
         return {"kind": "upsert-instance", "params": ORIGINAL_COLUMN}
-    return {"kind": kind, "params": {}}
+    raise ValueError("%r has no IfcOpenShell inverse in this case" % kind)
 
 
 # endregion 🔖️Inverse
@@ -623,11 +648,8 @@ def first_divergence(path: str, expected, actual):
 
 
 def observable(kind: str, baseline: dict, projection: dict) -> None:
-    """👁️ Every row other than `no-mutation` MUST move the semantic projection. A row whose
-    parameters make the mutation a no-op passes whenever the reference library merely declined to
-    error, which is not a test."""
-    if kind == "no-mutation":
-        return
+    """👁️ Every row MUST move the semantic projection. A row whose parameters make the mutation a
+    no-op passes whenever the reference library merely declined to error, which is not a test."""
     if first_divergence("$", baseline, projection) is None:
         raise AssertionError("%r left IfcOpenShell's semantic projection of the IFC2X3 building model unchanged — a mutation that is not observable proves nothing, so this row's parameters do not exercise the kind they name" % kind)
 
@@ -636,10 +658,6 @@ def observable(kind: str, baseline: dict, projection: dict) -> None:
 
 
 # region 🔖️Handlers
-def no_mutation() -> dict:
-    return {"kind": "no-mutation", "params": {}}
-
-
 def spec_of(ctx: Context) -> dict:
     """📜️ The `(kind, params)` pair the scenario's own doc string carries — never a default."""
     for step in ctx.scenario["steps"]:
@@ -658,11 +676,11 @@ def apply_mutation_to_bytes(ctx: Context, produced: bytes, spec: dict) -> bytes:
 
 def mutate(ctx: Context) -> Outcome:
     """🔮️ IfcOpenShell applies the named mutation and re-serializes; the from-scratch reader
-    projects its own written bytes. The baseline runs one `no-mutation` cycle so the observability
-    law isolates the mutation rather than IfcOpenShell's own normal form."""
+    projects its own written bytes. The baseline runs one identity rewrite so the observability law
+    isolates the mutation rather than IfcOpenShell's own normal form."""
     path = mutable_input(ctx)
     spec = spec_of(ctx)
-    baseline = project(apply_mutation(path, no_mutation()).decode("utf-8"))
+    baseline = project(rewrite(path).decode("utf-8"))
     produced = apply_mutation(path, spec)
     projection = project(produced.decode("utf-8"))
     observable(spec["kind"], baseline, projection)
@@ -672,12 +690,11 @@ def mutate(ctx: Context) -> Outcome:
 def inverse(ctx: Context) -> Outcome:
     """↩️ The inverse law, checkable in role without a subject: IfcOpenShell applies the forward
     mutation and then the independently computed inverse, and the restored model MUST project
-    exactly as the untouched one does. `no-mutation` is not short-circuited — it runs the same two
-    cycles as every other kind, so the trivial case is evidence rather than an exemption."""
+    exactly as the untouched one does."""
     path = mutable_input(ctx)
     spec = spec_of(ctx)
     kind = spec["kind"]
-    baseline = project(apply_mutation(path, no_mutation()).decode("utf-8"))
+    baseline = project(rewrite(path).decode("utf-8"))
     mutated = apply_mutation(path, spec)
     restored = apply_mutation_to_bytes(ctx, mutated, inverse_spec(kind))
     projection = project(restored.decode("utf-8"))

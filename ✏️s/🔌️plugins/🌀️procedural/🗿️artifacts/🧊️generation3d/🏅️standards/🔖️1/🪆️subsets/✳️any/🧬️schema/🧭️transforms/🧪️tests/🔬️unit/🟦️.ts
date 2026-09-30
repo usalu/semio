@@ -1,7 +1,7 @@
 import { expect, test } from "bun:test";
 import { readFileSync } from "node:fs";
 import { Matrix4, Quaternion, Vector3 } from "three";
-import Ajv from "ajv/dist/2020.js";
+import Ajv from "ajv";
 import { composeRotation, composeScale, type AxisAngle } from "../../🟦️.ts";
 
 const fixtures = JSON.parse(readFileSync(new URL("../../🧫️fixtures/🔣️.json", import.meta.url), "utf8"));

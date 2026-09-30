@@ -65,9 +65,9 @@ PROGRAMS = {
 _ROOT = "shared://🧬️mutations"
 VECTORS = {
     "create-step": (f"{_ROOT}/🌱create-step/🧪️rejects-a-duplicate-step-id-at-the-root-path", "createStep", True),
-    "delete-step": (f"{_ROOT}/🗑️delete-step/🧪️rejects-a-root-step-id-addressed-inside-a-branch-body", "deleteStep", True),
-    "reorder-steps": (f"{_ROOT}/🔀reorder-steps/🧪️warns-that-an-over-clamped-index-leaves-the-tail-step-in-place", "reorderSteps", False),
-    "edit-step-params": (f"{_ROOT}/🔧edit-step-params/🧪️warns-that-step-1-already-carries-the-requested-params", "editStepParams", False),
+    "delete-step": (f"{_ROOT}/🗑️delete-step/🧪️rejects-root-step-id-addressed-inside-branch", "deleteStep", True),
+    "reorder-steps": (f"{_ROOT}/🔀reorder-steps/🧪️warns-over-clamped-index-leaves-tail-step", "reorderSteps", False),
+    "edit-step-params": (f"{_ROOT}/🔧edit-step-params/🧪️warns-step-1-already-carries-requested", "editStepParams", False),
 }
 
 

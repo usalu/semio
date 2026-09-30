@@ -5,15 +5,55 @@
   "type": "object",
   "additionalProperties": false,
   "required": [
+    "mutation",
     "id",
     "newModuleEfficiency"
   ],
   "properties": {
+    "mutation": {
+      "const": "changePvSystemModuleEfficiency"
+    },
     "id": {
-      "type": "integer"
+      "type": "integer",
+      "minimum": 0,
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "PV system",
+          "de": "PV-Anlage"
+        },
+        "description": {
+          "en": "The PV system this mutation changes, by id.",
+          "de": "PV-Anlage, die diese Mutation ändert, per ID."
+        },
+        "ref": {
+          "kind": "pvSystem"
+        },
+        "group": "target",
+        "order": 10
+      }
     },
     "newModuleEfficiency": {
-      "type": "number"
+      "type": "number",
+      "exclusiveMinimum": 0,
+      "maximum": 1,
+      "x-semio-ui": {
+        "widget": "slider",
+        "role": "value",
+        "label": {
+          "en": "Module efficiency",
+          "de": "Modulwirkungsgrad"
+        },
+        "displayUnit": "%",
+        "displayFactor": 100,
+        "step": 0.001,
+        "precision": 1,
+        "softMin": 0.001,
+        "softMax": 1,
+        "group": "efficiency",
+        "order": 20
+      }
     }
   }
 }

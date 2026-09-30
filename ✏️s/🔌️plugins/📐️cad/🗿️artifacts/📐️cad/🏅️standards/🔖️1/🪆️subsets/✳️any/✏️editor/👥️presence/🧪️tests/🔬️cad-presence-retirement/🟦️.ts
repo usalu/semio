@@ -88,8 +88,8 @@ export function cadPresenceRetirementSelfTests(): number {
   }
   const storeBase = join(WORKSPACE_ROOT, "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/👥️presence");
   const storeFixture: unknown = JSON.parse(readFileSync(join(storeBase, "🧫️fixtures/🧹️retirement.json"), "utf8"));
-  const storeSchema = JSON.parse(readFileSync(join(storeBase, "🧬️schema/🧹️retirement.schema.json"), "utf8"));
-  const validateStore = new Ajv({ strict: true, allErrors: true }).compile<PresenceStoreRetirementFixture>(storeSchema);
+  const storeSchema = JSON.parse(readFileSync(join(storeBase, "🧬️schema/🔣️.json"), "utf8"));
+  const validateStore = new Ajv({ strict: true, allErrors: true }).compile<PresenceStoreRetirementFixture>({ ...storeSchema, $ref: "#/$defs/PresenceRetirementV1" });
   if (!validateStore(storeFixture)) throw new Error(`presence Store retirement schema: ${JSON.stringify(validateStore.errors)}`);
   for (const law of storeFixture.cases) {
     if (law.expectedSnapshots !== law.peers.length + 1 || law.expectedActorBytes !== law.peers.reduce((sum, peer) => sum + Buffer.byteLength(peer.actor, "utf8"), 0)) throw new Error(`presence Store retirement oracle: ${law.name}`);
@@ -155,8 +155,13 @@ export function cadPresenceRetirementSelfTests(): number {
   if (!localOracle(replacements) || storeFixture.localCapture.expectedValueWhileOpen !== storeFixture.localCapture.value || !storeFixture.localCapture.expectedWorkerTerminal) throw new Error("presence local capture/replacement independent owner ledger");
   const retirementSource = readFileSync(join(storeBase, "♻️retirement/🦀️.rs"), "utf8");
   const cadSource = readFileSync(join(base, "♻️retirement/🦀️.rs"), "utf8");
+  const storeLawSource = readFileSync(join(storeBase, "../🧪️tests/🔬️unit/🦀️.rs"), "utf8");
+  const retirementLawSource = readFileSync(join(storeBase, "♻️retirement/🧪️tests/🔬️unit/🦀️.rs"), "utf8");
   const exactLocal = (store: string, retirement: string, cad: string): boolean =>
     toolJobImmutableOperationRootsExact(store)
+    && storeLawSource.includes("artifact_snapshot_root_is_o1_and_generation_stable_until_the_next_event")
+    && storeLawSource.includes("presence_local_read_is_o1_and_never_clones_the_payload_at_capture")
+    && storeLawSource.includes("transient_root_is_o1_and_retains_the_exact_pre_reset_value")
     && store.includes("pub base: ArtifactEphemeralBaseRead<P>")
     && store.includes("Presence(SnapshotRead<P>)")
     && store.includes("Arc::ptr_eq(installed, &root_retirement_factory)")
@@ -165,8 +170,8 @@ export function cadPresenceRetirementSelfTests(): number {
     && retirement.includes("self.active_returned_local.take()")
     && retirement.includes("presence store requires its exact detached terminal-empty owner before Drop")
     && retirement.includes("SnapshotRetirementStep::Pending { released_items: 0, released_bytes: 0 }")
-    && retirement.includes("MountedWorkerJobSession::try_new(job, params)")
-    && retirement.includes("owner.maintenance_local_reads_step(1, 4096)")
+    && retirementLawSource.includes("MountedWorkerJobSession::try_new(job, params)")
+    && retirementLawSource.includes("owner.maintenance_local_reads_step(1, 4096)")
     && cad.includes("*self.owned = Arc::into_inner(root)") && !cad.includes("Arc::try_unwrap(root)");
   if (!exactLocal(storeSource, retirementSource, cadSource)) throw new Error("presence local read, live return, detached close or final-owner authority is incomplete");
   const localHostiles = [
@@ -202,7 +207,7 @@ export function cadPresenceRetirementSelfTests(): number {
   };
   if (!exactCloseFactories(retirementSource)) throw new Error("Presence close lost exact original local/peer factory separation");
   const closeSourceHostiles = [
-    retirementSource.replace("terminal_is_empty: fn(&P) -> bool,", "terminal_is_empty: fn(&P) -> bool, factory: Arc<dyn SnapshotRetirementFactory<P>>,"),
+    retirementSource.replace("pub fn begin_retirement(&mut self, terminal_local: Arc<P>, terminal_is_empty: fn(&P) -> bool)", "pub fn begin_retirement(&mut self, terminal_local: Arc<P>, terminal_is_empty: fn(&P) -> bool, factory: Arc<dyn SnapshotRetirementFactory<P>>)"),
     retirementSource.replace("let local_factory = local_factory.clone();", "let local_factory = self.peer_retirement_factory.clone().unwrap();"),
     retirementSource.replace("let peer_factory = self.peer_retirement_factory.clone();", "let peer_factory = self.local_retirement_factory.clone();"),
     retirementSource.replace("advance_returned_local(reads, &mut self.active_returned, self.local_factory.as_ref()", "advance_returned_local(reads, &mut self.active_returned, self.peer_factory.as_ref()"),
@@ -211,8 +216,8 @@ export function cadPresenceRetirementSelfTests(): number {
   for (const hostile of closeSourceHostiles) if (hostile === retirementSource || exactCloseFactories(hostile)) throw new Error("Presence close guard admitted factory substitution or wrong returned-read retirement");
   const closeFactoryChecks = 2 + closeSchemaHostiles.length + closeSourceHostiles.length;
   const commitFixture: unknown = JSON.parse(readFileSync(join(storeBase, "🧫️fixtures/📌️peer-commit.json"), "utf8"));
-  const commitSchema = JSON.parse(readFileSync(join(storeBase, "🧬️schema/📌️peer-commit.schema.json"), "utf8"));
-  const validateCommit = new Ajv({ strict: true, allErrors: true }).compile<PresencePeerCommitFixture>(commitSchema);
+  const commitSchema = JSON.parse(readFileSync(join(storeBase, "🧬️schema/🔣️.json"), "utf8"));
+  const validateCommit = new Ajv({ strict: true, allErrors: true }).compile<PresencePeerCommitFixture>({ ...commitSchema, $ref: "#/$defs/PresencePeerCommitV1" });
   if (!validateCommit(commitFixture)) throw new Error("Presence peer commit fixture violates strict schema");
   for (const law of commitFixture.cases) if (law.accepted !== (law.sameStore && law.sameFactory && !law.stale) || law.expectedSnapshots !== 3 + Number(law.stale)) throw new Error(`Presence peer commit independent identity oracle: ${law.name}`);
   const commitSchemaHostiles = [{ ...commitFixture, maximumBytes: 8192 }, { ...commitFixture, cases: commitFixture.cases.map(law => ({ ...law, accepted: true })) }];
@@ -229,8 +234,8 @@ export function cadPresenceRetirementSelfTests(): number {
   for (const [store, retirement] of commitSourceHostiles) if (exactPeerCommit(store, retirement)) throw new Error("Presence peer commit guard admitted foreign/stale publication or lost base ownership");
   const commitChecks = 2 + commitFixture.cases.length + commitSchemaHostiles.length + commitSourceHostiles.length;
   const peerFixture: unknown = JSON.parse(readFileSync(join(storeBase, "🧫️fixtures/🛂️peer-admission.json"), "utf8"));
-  const peerSchema = JSON.parse(readFileSync(join(storeBase, "🧬️schema/🛂️peer-admission.schema.json"), "utf8"));
-  const validatePeer = new Ajv({ strict: true, allErrors: true }).compile<PresencePeerAdmissionFixture>(peerSchema);
+  const peerSchema = JSON.parse(readFileSync(join(storeBase, "🧬️schema/🔣️.json"), "utf8"));
+  const validatePeer = new Ajv({ strict: true, allErrors: true }).compile<PresencePeerAdmissionFixture>({ ...peerSchema, $ref: "#/$defs/PresencePeerAdmissionV1" });
   if (!validatePeer(peerFixture)) throw new Error(`peer admission fixture schema: ${JSON.stringify(validatePeer.errors)}`);
   for (const law of peerFixture.cases) {
     const bytes = Buffer.byteLength(law.actor.unit.repeat(law.actor.repeat), "utf8");
@@ -266,11 +271,19 @@ export function cadPresenceRetirementSelfTests(): number {
   for (const [store, rejection, plugin] of rejectedHostiles) if (exactRejectedActor(store, rejection, plugin)) throw new Error("peer rejection guard accepted dropped identity, false byte credit or missing mounted owner");
   if (validatePeer({ ...peerFixture, factoryBinding: { ...peerFixture.factoryBinding, expectedForeignRetirements: 1 } })) throw new Error("peer rejection fixture accepted a foreign factory");
   const channelSource = readFileSync(join(storeBase, "../../📡️spr/🧵️channel/🦀️.rs"), "utf8");
+  const pluginLawSource = readFileSync(join(storeBase, "../../🔌️plugin/🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🦀️.rs"), "utf8");
+  if (!pluginLawSource.includes("peer_presence_capture_is_one_arc_and_retirement_waits_for_then_drains_the_exact_root") || !pluginLawSource.includes("peer_roster_saturation_cancel_stale_and_interrupted_close_preserve_exact_authority")) throw new Error("peer capture native laws are missing");
+  const contextFixture = JSON.parse(readFileSync(join(WORKSPACE_ROOT, "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧵️retained-command/🧫️fixtures/🧬️request-context.json"), "utf8"));
+  const ephemeralOracle = new Ajv({ strict: true }).compile({ const: { mounted: { presenceGeneration: 0, transientGeneration: 0, documentEdits: 0 }, completed: { presenceGeneration: 1, transientGeneration: 1, documentEdits: 1 }, undone: { presenceGeneration: 1, transientGeneration: 1, documentCount: 0 } } });
+  if (!ephemeralOracle(contextFixture.ephemeralPublication)) throw new Error("ephemeral worker/publication neutral vectors disagree with the independent oracle");
   const captureProof = (plugin: string, store: string, channel: string, retirement: string): boolean => toolJobPeerInteractionRootsExact(plugin, store, channel, retirement);
   if (!captureProof(pluginSource, storeSource, channelSource, retirementSource)) throw new Error("peer capture census rejected its real exact helper/base/factory authority");
   const captureHostiles = [
+    [pluginSource.replace('assert!(self.tool_operations.can_insert(operation_id.0),', 'A::ephemeral(command).await; assert!(self.tool_operations.can_insert(operation_id.0),'), storeSource, channelSource, retirementSource],
+    [pluginSource.replaceAll("let canonical_base_revision = self.store.content_revision();", "let canonical_base_revision = self.store.content_revision(); self.decode_unbounded().await?;"), storeSource, channelSource, retirementSource],
+    [pluginSource.replaceAll("self.capture_typed_command_roots(command.as_ref(), meta).await?;", "self.foreign_capture_typed_command_roots(command.as_ref(), meta).await?;"), storeSource, channelSource, retirementSource],
     [pluginSource.replace("self.start_typed_command_operation(command, admission, meta, operation_id, None).await", "self.foreign_command_operation(command, admission, meta, operation_id, None).await"), storeSource, channelSource, retirementSource],
-    [pluginSource.replace("let presence_peers = self.presence_store.peers_root();", "let presence_peers = self.presence_store.peers().await;"), storeSource, channelSource, retirementSource],
+    [pluginSource.replace("presence_peers: self.presence_store.peers_root(),", "presence_peers: self.presence_store.peers().await,"), storeSource, channelSource, retirementSource],
     [pluginSource, storeSource.replace("!Arc::ptr_eq(&self.peers, &commit.base_root)", "false"), channelSource, retirementSource],
     [pluginSource, storeSource.replace("Arc::ptr_eq(factory, &commit.factory)", "true"), channelSource, retirementSource],
     [pluginSource, storeSource.replace("base_root: Arc<PresencePeersRoot<P>>,", "pub base_root: Arc<PresencePeersRoot<P>>,"), channelSource, retirementSource],
@@ -280,9 +293,9 @@ export function cadPresenceRetirementSelfTests(): number {
     [pluginSource.replace("self.validate_peer_roster_publication(seq, generation, &cancel)", "self.accept_unchecked_roster(seq, generation, &cancel)"), storeSource, channelSource, retirementSource],
     [pluginSource, storeSource, channelSource.replace("pub fn admit_page(seq: u64, own_color: Option<u8>, item_count: u32, page: FixedCommandPage)", "pub fn decode_before_admission(seq: u64, own_color: Option<u8>, item_count: u32, page: FixedCommandPage)"), retirementSource],
   ];
-  for (const [plugin, store, channel, retirement] of captureHostiles) {
+  for (const [caseIndex, [plugin, store, channel, retirement]] of captureHostiles.entries()) {
     if (plugin === pluginSource && store === storeSource && channel === channelSource && retirement === retirementSource) throw new Error("peer capture hostile missed its exact source target");
-    if (captureProof(plugin, store, channel, retirement)) throw new Error("peer capture census admitted a forged helper, public authority, stale root, foreign factory or bypassed ingress");
+    if (captureProof(plugin, store, channel, retirement)) throw new Error(`peer capture census admitted hostile ${caseIndex}: forged helper, public authority, stale root, foreign factory or bypassed ingress`);
   }
   return 1 + fixture.cases.length + fixture.storeCases.length + 2 + 1 + storeFixture.cases.length + 30 + peerFixture.cases.length + closeFactoryChecks + commitChecks + 1 + captureHostiles.length;
 }

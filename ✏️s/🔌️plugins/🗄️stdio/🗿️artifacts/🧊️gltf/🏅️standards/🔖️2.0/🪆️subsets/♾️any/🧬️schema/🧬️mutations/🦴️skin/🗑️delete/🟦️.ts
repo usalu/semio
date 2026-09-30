@@ -1,7 +1,13 @@
-/** 🦠️ delete-skin executable structural glTF command. */
-import type { GltfOrthographic, GltfPerspective, GltfSnapshot } from '../../📸️snapshot/🟦️.ts';
-import { clone, insert, order, position, reject, remove, relocate, reorder, repair, type GltfMutationRejection, type GltfStructuralResult } from './🟦️';
-export const GltfDeleteSkinDescriptor = { id: 's.stdio.gltf.mutation.delete-skin.v1', version: 1, touchedPathPattern: 'document/skins', referencePolicy: 'all typed skin references are remapped, repaired, or rejected' } as const;
-export interface GltfDeleteSkinPayload { index: number }
-export const validateGltfDeleteSkin = (payload: GltfDeleteSkinPayload, base: GltfSnapshot): GltfMutationRejection | undefined => { const index = position(payload.index, base.document.skins.length, 'document/skins'); if (index) return index;  return undefined; };
-export const applyGltfDeleteSkin = (base: GltfSnapshot, payload: GltfDeleteSkinPayload): GltfStructuralResult => { const rejection = validateGltfDeleteSkin(payload, base); if (rejection) return { accepted: false, rejection }; try { const next = clone(base); remove(next, 'skins', payload.index); return { accepted: true, snapshot: clone(next) }; } catch (error) { return { accepted: false, rejection: typeof error === 'object' && error && 'code' in error ? error as GltfMutationRejection : reject('gltf.mutation.apply-failed', 'document/skins', String(error)) }; } };
+/** 🗑️ `delete-skin` wire twin: the flat `Apply` payload `GltfDeleteSkinPayload` and the phase wire `DeleteSkinMutation`, exactly as `./🦀️.rs` writes them.
+ * @see ./🧬️schema/🔣️.json */
+import { gltfWireIndex, gltfWireObject, gltfWireRequired } from "../../../📸️snapshot/🟦️.ts";
+import { type GltfDiff, type GltfPhase, gltfWirePhase, parseGltfDiff } from "../../../🔺️diff/🟦️.ts";
+
+export interface GltfDeleteSkinPayload {
+  index: number;
+}
+
+export type DeleteSkinMutation = GltfPhase<GltfDeleteSkinPayload, GltfDiff>;
+
+export const parseGltfDeleteSkinPayload = gltfWireObject<GltfDeleteSkinPayload>({ index: gltfWireRequired(gltfWireIndex) });
+export const parseDeleteSkinMutation = gltfWirePhase(parseGltfDeleteSkinPayload, parseGltfDiff);

@@ -449,6 +449,15 @@
         "forwardAllArgs": true,
         "cwd": "{projectRoot}"
       }
+    },
+    "canonical-architecture": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "options": {
+        "command": "bun ./📜️script.ts canonical-architecture",
+        "cwd": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust"
+      },
+      "outputs": []
     }
   },
   "namedInputs": {

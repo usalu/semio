@@ -275,8 +275,7 @@ fn error_output_json(message: &str) -> String {
 // #region ⏱️EvaluationJobs
 
 /// ⏱️ Retained resumable evaluations keyed by `(operatorId, nodeHash)`. Bounded: a new job past the
-/// ceiling evicts the least recently stepped one rather than growing without limit — the same
-/// policy `brep_geometry`'s tessellation registry states, for the same reason.
+/// ceiling evicts the least recently stepped one rather than growing without limit.
 const EVALUATION_JOB_CAPACITY: usize = 16;
 
 struct RetainedEvaluation {

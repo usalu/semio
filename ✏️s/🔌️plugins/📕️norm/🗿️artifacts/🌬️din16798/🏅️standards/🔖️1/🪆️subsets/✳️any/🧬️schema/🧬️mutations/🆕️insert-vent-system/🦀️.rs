@@ -2,6 +2,8 @@ use crate::{Din16798Mutation, Din16798Snapshot, VentSystemDocument};
 #[derive(Clone, Debug, PartialEq, dsl::MutationLeaf, value_derive::ToValue, value_derive::FromValue)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 #[mutation_leaf(contract = ::protocol)]
+#[cfg_attr(test, serde(rename_all = "camelCase"))]
+#[value(rename_all = "camelCase")]
 pub struct InsertVentSystem { pub index: usize, pub vent: VentSystemDocument }
 impl protocol::MutationKind<Din16798Snapshot, Din16798Mutation> for InsertVentSystem {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "insert", entity: "vent-system", kind: "insert-vent-system", record: "InsertVentSystem" };

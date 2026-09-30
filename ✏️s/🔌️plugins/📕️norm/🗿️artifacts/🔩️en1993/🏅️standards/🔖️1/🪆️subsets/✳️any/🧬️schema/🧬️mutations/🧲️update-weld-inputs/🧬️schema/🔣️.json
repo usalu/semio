@@ -5,27 +5,17 @@
   "type": "object",
   "additionalProperties": false,
   "required": [
-    "newWeldAMm",
-    "newWeldFEdKn",
-    "newWeldFUMpa",
-    "newWeldLMm",
-    "newWeldSteelGrade"
+    "memberAction"
   ],
   "properties": {
-    "newWeldAMm": {
-      "type": "number"
-    },
-    "newWeldLMm": {
-      "type": "number"
-    },
-    "newWeldFUMpa": {
-      "type": "number"
-    },
-    "newWeldSteelGrade": {
-      "type": "string"
-    },
-    "newWeldFEdKn": {
-      "type": "number"
+    "memberAction": {
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1993/snapshot.json#/$defs/MemberAction",
+      "x-semio-ui": {
+        "label": {
+          "en": "Member action",
+          "de": "Bauteilbeanspruchung"
+        }
+      }
     }
   }
 }

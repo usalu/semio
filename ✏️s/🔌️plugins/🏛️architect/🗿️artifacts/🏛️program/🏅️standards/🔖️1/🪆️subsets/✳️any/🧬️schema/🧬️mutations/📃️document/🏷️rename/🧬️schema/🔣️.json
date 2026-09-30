@@ -5,16 +5,52 @@
   "type": "object",
   "additionalProperties": false,
   "required": [
+    "mutation",
     "id",
     "newName"
   ],
   "properties": {
+    "mutation": {
+      "const": "renameDocument"
+    },
     "id": {
-      "type": "integer",
-      "minimum": 0
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Document",
+          "de": "Dokument"
+        },
+        "description": {
+          "en": "The document to rename.",
+          "de": "Umzubenennender Eintrag vom Typ „Dokument“."
+        },
+        "ref": {
+          "kind": "document",
+          "domain": "program",
+          "granularity": "entity"
+        },
+        "group": "target",
+        "order": 10
+      }
     },
     "newName": {
-      "type": "string"
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "text",
+        "role": "value",
+        "label": {
+          "en": "New Name",
+          "de": "Neuer Name"
+        },
+        "description": {
+          "en": "New name of the document.",
+          "de": "Neuer Name des Eintrags vom Typ „Dokument“."
+        },
+        "group": "identity",
+        "order": 20
+      }
     }
   }
 }

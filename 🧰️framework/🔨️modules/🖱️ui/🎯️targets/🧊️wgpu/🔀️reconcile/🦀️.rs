@@ -857,8 +857,10 @@ fn input_node(record: &UiNodeRecord, controller: &str) -> UiNode {
         commit: props.commit.as_ref().map(|value| value.as_str().to_string()),
         min: props.min,
         max: props.max,
-        step: props.step,
+        step: props.step.or_else(|| props.precision.filter(|_| props.kind == ui_contract::InputKind::Number).map(|precision| 10_f64.powi(-i32::from(precision.min(ui_contract::UI_NUMBER_PRECISION_MAX))))),
         accept: props.accept.as_ref().map(|value| value.as_str().to_string()),
+        precision: props.precision.filter(|_| props.kind == ui_contract::InputKind::Number),
+        snaps: if props.kind == ui_contract::InputKind::Number { props.snaps.iter().copied().collect() } else { Vec::new() },
         on_change: input_commit_action(record, props, controller),
         // ⏎️⎋️🔁️ The three moments React's `SearchInput` binds BESIDE `onChange`. They are read
         // per-trigger (not resolved into the single `on_change` slot the way `input_commit_action`
@@ -928,6 +930,7 @@ fn slider_node(record: &UiNodeRecord, controller: &str) -> UiNode {
         max: props.max,
         step: props.step,
         unit: props.unit.as_ref().map(|value| value.as_str().to_string()),
+        snaps: props.snaps.iter().copied().collect(),
         on_change: record_action_or_inert(record, ui_contract::Trigger::Change, controller),
         presence: record_presence(record),
         menu: menu_ref(record),
@@ -943,6 +946,7 @@ fn number_stepper_node(record: &UiNodeRecord, controller: &str) -> UiNode {
         uniform: props.uniform,
         min: props.min,
         max: props.max,
+        precision: props.precision,
         on_absolute: record_action_or_inert(record, ui_contract::Trigger::Change, controller),
         on_delta: record_action_or_inert(record, ui_contract::Trigger::Delta, controller),
         presence: record_presence(record),
@@ -1844,4 +1848,8 @@ mod tests;
 #[cfg(test)]
 #[path = "../../../🧪️tests/🌳️document-tree-reconcile/🦀️.rs"]
 mod document_tree_reconcile_tests;
+
+#[cfg(test)]
+#[path = "../../../🧪️tests/🧪️conformance-corpus/🦀️.rs"]
+mod conformance_corpus_tests;
 // #endregion reconcile

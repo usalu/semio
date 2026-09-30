@@ -10,10 +10,38 @@
   ],
   "properties": {
     "id": {
-      "type": "string"
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Slot",
+          "de": "Slot"
+        },
+        "ref": {
+          "kind": "slot",
+          "domain": "slot",
+          "granularity": "slot"
+        },
+        "group": "target",
+        "order": 10
+      }
     },
     "tileId": {
-      "type": "string"
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Tile",
+          "de": "Kachel"
+        },
+        "ref": {
+          "kind": "tile"
+        },
+        "group": "target",
+        "order": 20
+      }
     }
   }
 }

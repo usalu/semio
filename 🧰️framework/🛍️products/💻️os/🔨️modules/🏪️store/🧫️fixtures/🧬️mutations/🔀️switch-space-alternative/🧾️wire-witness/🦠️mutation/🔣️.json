@@ -1,0 +1,6 @@
+{
+  "operation": "switchSpaceAlternative",
+  "payload": {
+    "alternativeId": "sa-other"
+  }
+}

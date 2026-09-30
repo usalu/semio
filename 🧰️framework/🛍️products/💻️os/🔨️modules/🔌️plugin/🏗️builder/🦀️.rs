@@ -57,6 +57,8 @@ pub struct PluginBuilder<State, PA: PluginApp = crate::app::NoPluginApp> {
     artifacts: Vec<ArtifactDeclaration>,
     /// 🏠️ Declarations of kinds another package owns, hosted in this plugin's guest — see [`Self::host_artifact`].
     hosted_artifacts: Vec<ArtifactDeclaration>,
+    /// 📚️ Shared schema documents of a plugin submodule — see [`Self::schema_documents`].
+    schema_documents: Vec<::semio_framework_schema::ScopeSchemaExports>,
     artifact_definitions: Vec<crate::app::ArtifactDefinition>,
     capabilities: Vec<CapabilityRequirement>,
     commands: Vec<(CommandDefinition, PluginCommandHandler)>,
@@ -117,6 +119,7 @@ impl<PA: PluginApp> PluginBuilder<NeedsLabel, PA> {
             version: None,
             artifacts: Vec::new(),
             hosted_artifacts: Vec::new(),
+            schema_documents: Vec::new(),
             artifact_definitions: Vec::new(),
             capabilities: Vec::new(),
             commands: Vec::new(),
@@ -153,6 +156,7 @@ impl<PA: PluginApp> PluginBuilder<NeedsLabel, PA> {
             version: None,
             artifacts: self.artifacts,
             hosted_artifacts: self.hosted_artifacts,
+            schema_documents: self.schema_documents,
             artifact_definitions: self.artifact_definitions,
             capabilities: self.capabilities,
             commands: self.commands,
@@ -191,6 +195,7 @@ impl<PA: PluginApp> PluginBuilder<NeedsVersion, PA> {
             version: Some(version.into()),
             artifacts: self.artifacts,
             hosted_artifacts: self.hosted_artifacts,
+            schema_documents: self.schema_documents,
             artifact_definitions: self.artifact_definitions,
             capabilities: self.capabilities,
             commands: self.commands,
@@ -244,6 +249,16 @@ impl<PA: PluginApp> PluginBuilder<Ready, PA> {
     /// `26/09/23/END-TO-END-OS-HUB-COLLABORATION-MCP` `📓️wp-lb2.md` (p9).
     pub fn host_artifact(mut self, declaration: ArtifactDeclaration) -> Self {
         self.hosted_artifacts.push(declaration);
+        self
+    }
+
+    /// 📚️ Declares the shared schema documents of a plugin submodule (`s.<plugin>.<submodule>`, e.g. `s.stdio.registry`) —
+    /// contracts several artifacts `$ref` that no single artifact owns — committed into the OS-wide export registry with
+    /// the other catalogs, so the runtime input reader (`registered_input_schema_document`) resolves them. The owning
+    /// plugin is this one or a direct dependency whose artifacts this guest hosts (`host_artifact`); identical rows are
+    /// tolerated, a conflicting row is fatal. Repeatable.
+    pub fn schema_documents(mut self, documents: ::semio_framework_schema::ScopeSchemaExports) -> Self {
+        self.schema_documents.push(documents);
         self
     }
 
@@ -402,11 +417,11 @@ impl<PA: PluginApp> PluginBuilder<Ready, PA> {
     where
         A::Mutation: protocol::SemanticMutation<A::Snapshot>,
     {
-        fn owner_mutation_roster<A: ArtifactApp>() -> (&'static str, &'static [protocol::SemanticDescriptor])
+        fn owner_mutation_roster<A: ArtifactApp>() -> (&'static str, &'static [protocol::SemanticDescriptor], &'static [&'static str])
         where
             A::Mutation: protocol::SemanticMutation<A::Snapshot>,
         {
-            (A::DOCUMENT_SCHEMA, <A::Mutation as protocol::SemanticMutation<A::Snapshot>>::kinds())
+            (A::DOCUMENT_SCHEMA, <A::Mutation as protocol::SemanticMutation<A::Snapshot>>::kinds(), <A::Mutation as protocol::Mutation<A::Snapshot>>::INPUT_SCHEMAS)
         }
         self.owner_mutation_rosters.push(owner_mutation_roster::<A>);
         self
@@ -468,11 +483,11 @@ impl<PA: PluginApp> PluginBuilder<Ready, PA> {
     where
         V::Mutation: protocol::SemanticMutation<V::Snapshot>,
     {
-        fn owner_mutation_roster<V: crate::app::ArtifactViewer>() -> (&'static str, &'static [protocol::SemanticDescriptor])
+        fn owner_mutation_roster<V: crate::app::ArtifactViewer>() -> (&'static str, &'static [protocol::SemanticDescriptor], &'static [&'static str])
         where
             V::Mutation: protocol::SemanticMutation<V::Snapshot>,
         {
-            (V::DOCUMENT_SCHEMA, <V::Mutation as protocol::SemanticMutation<V::Snapshot>>::kinds())
+            (V::DOCUMENT_SCHEMA, <V::Mutation as protocol::SemanticMutation<V::Snapshot>>::kinds(), <V::Mutation as protocol::Mutation<V::Snapshot>>::INPUT_SCHEMAS)
         }
         self.owner_mutation_rosters.push(owner_mutation_roster::<V>);
         self
@@ -528,11 +543,11 @@ impl<PA: PluginApp> PluginBuilder<Ready, PA> {
     where
         E::Mutation: protocol::SemanticMutation<E::Snapshot>,
     {
-        fn owner_mutation_roster<E: crate::app::ArtifactEditor>() -> (&'static str, &'static [protocol::SemanticDescriptor])
+        fn owner_mutation_roster<E: crate::app::ArtifactEditor>() -> (&'static str, &'static [protocol::SemanticDescriptor], &'static [&'static str])
         where
             E::Mutation: protocol::SemanticMutation<E::Snapshot>,
         {
-            (E::DOCUMENT_SCHEMA, <E::Mutation as protocol::SemanticMutation<E::Snapshot>>::kinds())
+            (E::DOCUMENT_SCHEMA, <E::Mutation as protocol::SemanticMutation<E::Snapshot>>::kinds(), <E::Mutation as protocol::Mutation<E::Snapshot>>::INPUT_SCHEMAS)
         }
         self.owner_mutation_rosters.push(owner_mutation_roster::<E>);
         self
@@ -616,6 +631,7 @@ impl<PA: PluginApp> PluginBuilder<Ready, PA> {
             version,
             artifacts,
             hosted_artifacts,
+            schema_documents,
             artifact_definitions,
             mut capabilities,
             commands,
@@ -693,6 +709,12 @@ impl<PA: PluginApp> PluginBuilder<Ready, PA> {
         for declaration in &flow_extensions {
             declaration.preflight(&plugin_id)?;
         }
+        for documents in &schema_documents {
+            let owner = documents.scope.strip_prefix("s.").and_then(|rest| rest.split_once('.')).map(|(owner, _)| owner);
+            if !owner.is_some_and(|owner| owner == plugin_id || dependencies.iter().any(|dependency| dependency.plugin_id == owner)) {
+                return Err(PluginAssemblyError::new("plugin-assembly.schema-documents-owner", format!("plugin {plugin_id:?} declares shared schema documents of {:?}, which is neither an `s.{plugin_id}.<submodule>` scope nor one of a direct dependency", documents.scope)));
+            }
+        }
         let document_app_ids: BTreeSet<_> = document_app_ids.into_iter().collect();
         for codec in &foreign_document_codecs {
             codec.preflight_foreign(&document_app_ids)?;
@@ -719,6 +741,7 @@ impl<PA: PluginApp> PluginBuilder<Ready, PA> {
         runtime.extend_contributions(contributed_inference_services, &owner_mutation_rosters, contributed_mutation_runtime)?;
 
         crate::app::declarations::commit_artifact_declarations(&plugin_id, &declared_artifacts)?;
+        runtime.share_schema_documents(schema_documents);
         runtime.publish_declared_catalogs()?;
 
         let mut plugin = Plugin::new(plugin_id.clone(), label, version).with_runtime_registry(runtime);

@@ -4,8 +4,14 @@
   "title": "SetPageMode",
   "type": "object",
   "additionalProperties": false,
-  "required": [],
+  "required": [
+    "mutation"
+  ],
   "properties": {
+    "mutation": {
+      "const": "setPageMode",
+      "description": "Aggregate discriminator spliced in by PdfMutation; absent when the payload stands alone."
+    },
     "mode": {
       "anyOf": [
         {
@@ -14,11 +20,44 @@
         {
           "type": "null"
         }
-      ]
-    },
-    "mutation": {
-      "const": "setPageMode",
-      "description": "Aggregate discriminator spliced in by PdfMutation; absent when the payload stands alone."
+      ],
+      "x-semio-ui": {
+        "widget": "select",
+        "label": {
+          "en": "Page mode",
+          "de": "Seitenmodus"
+        },
+        "description": {
+          "en": "Panel shown when the document opens.",
+          "de": "Beim Öffnen des Dokuments angezeigte Leiste."
+        },
+        "options": {
+          "useNone": {
+            "en": "Page only",
+            "de": "Nur Seite"
+          },
+          "useOutlines": {
+            "en": "Bookmarks panel",
+            "de": "Lesezeichenfenster"
+          },
+          "useThumbs": {
+            "en": "Page thumbnails",
+            "de": "Seitenminiaturen"
+          },
+          "fullScreen": {
+            "en": "Full screen",
+            "de": "Vollbild"
+          },
+          "useOc": {
+            "en": "Layers panel",
+            "de": "Ebenenfenster"
+          },
+          "useAttachments": {
+            "en": "Attachments panel",
+            "de": "Anlagenfenster"
+          }
+        }
+      }
     }
   }
 }

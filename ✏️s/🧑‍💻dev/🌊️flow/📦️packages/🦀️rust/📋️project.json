@@ -1,0 +1,49 @@
+{
+  "name": "@semio-tech/s-flow-composition-rs",
+  "root": "\u270f\ufe0fs/\ud83e\uddd1\u200d\ud83d\udcbbdev/\ud83c\udf0a\ufe0fflow/\ud83d\udce6\ufe0fpackages/\ud83e\udd80\ufe0frust",
+  "sourceRoot": "\u270f\ufe0fs/\ud83e\uddd1\u200d\ud83d\udcbbdev/\ud83c\udf0a\ufe0fflow",
+  "projectType": "library",
+  "tags": [
+    "lang:rust",
+    "role:test",
+    "scope:s"
+  ],
+  "targets": {
+    "source-check": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "options": {
+        "command": "bun ./\ud83d\udcdc\ufe0fscript.ts source-check",
+        "cwd": "\u270f\ufe0fs/\ud83e\uddd1\u200d\ud83d\udcbbdev/\ud83c\udf0a\ufe0fflow/\ud83d\udce6\ufe0fpackages/\ud83e\udd80\ufe0frust",
+        "forwardAllArgs": true
+      }
+    },
+    "test": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "options": {
+        "command": "bun ./\ud83d\udcdc\ufe0fscript.ts test",
+        "cwd": "\u270f\ufe0fs/\ud83e\uddd1\u200d\ud83d\udcbbdev/\ud83c\udf0a\ufe0fflow/\ud83d\udce6\ufe0fpackages/\ud83e\udd80\ufe0frust",
+        "forwardAllArgs": true
+      }
+    },
+    "port-sides-test": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "options": {
+        "command": "bun ./\ud83d\udcdc\ufe0fscript.ts port-sides-test",
+        "cwd": "\u270f\ufe0fs/\ud83e\uddd1\u200d\ud83d\udcbbdev/\ud83c\udf0a\ufe0fflow/\ud83d\udce6\ufe0fpackages/\ud83e\udd80\ufe0frust",
+        "forwardAllArgs": true
+      }
+    },
+    "canonical-architecture": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "options": {
+        "command": "bun ./\ud83d\udcdc\ufe0fscript.ts canonical-architecture",
+        "cwd": "\u270f\ufe0fs/\ud83e\uddd1\u200d\ud83d\udcbbdev/\ud83c\udf0a\ufe0fflow/\ud83d\udce6\ufe0fpackages/\ud83e\udd80\ufe0frust",
+        "forwardAllArgs": false
+      }
+    }
+  }
+}

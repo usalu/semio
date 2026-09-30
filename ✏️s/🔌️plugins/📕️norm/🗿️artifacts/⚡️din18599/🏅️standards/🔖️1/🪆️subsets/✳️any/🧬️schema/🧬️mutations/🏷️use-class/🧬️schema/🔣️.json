@@ -1,12 +1,32 @@
 {
-  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/norm/din18599/mutation/change-use-class/schema.json",
   "title": "ChangeUseClass",
   "type": "object",
-  "properties": {
-    "newUseClass": {
-      "type": "object"
-    }
-  },
   "additionalProperties": false,
-  "$id": "https://json.schemas.assets.semio-tech.com/s/norm/din18599/mutation/change-use-class/schema.json"
+  "required": [
+    "mutation",
+    "newUseClass"
+  ],
+  "properties": {
+    "mutation": {
+      "const": "changeUseClass"
+    },
+    "newUseClass": {
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/din18599/snapshot/schema.json#/$defs/UseClass",
+      "x-semio-ui": {
+        "role": "value",
+        "label": {
+          "en": "Usage profile",
+          "de": "Nutzungsprofil"
+        },
+        "description": {
+          "en": "Residential, office or school (DIN V 18599-10).",
+          "de": "Wohnen, Büro oder Schule (DIN V 18599-10)."
+        },
+        "group": "building",
+        "order": 10
+      }
+    }
+  }
 }

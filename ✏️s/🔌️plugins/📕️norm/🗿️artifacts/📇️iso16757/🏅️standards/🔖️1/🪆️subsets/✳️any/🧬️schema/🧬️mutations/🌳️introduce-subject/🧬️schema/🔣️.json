@@ -9,110 +9,43 @@
   ],
   "properties": {
     "subject": {
-      "title": "Subject",
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "definition",
-        "id",
-        "kind",
-        "names"
-      ],
-      "properties": {
-        "id": {
-          "type": "string"
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/iso16757/snapshot.json#/$defs/Subject",
+      "x-semio-ui": {
+        "role": "value",
+        "label": {
+          "en": "Dictionary subject",
+          "de": "Wörterbuch-Subjekt"
         },
-        "kind": {
-          "type": "string",
-          "enum": [
-            "ProductGroup",
-            "ProductClass",
-            "ProductSpecialization",
-            "CatalogueMetadata",
-            "ManufacturerMetadata",
-            "PropertyBlock",
-            "Port",
-            "Inlet",
-            "Outlet",
-            "InOutlet"
-          ]
+        "description": {
+          "en": "The complete dictionary subject to introduce (ISO 16757-2).",
+          "de": "Das vollständige einzuführende Wörterbuch-Subjekt (ISO 16757-2)."
         },
-        "names": {
-          "title": "Names",
-          "type": "object",
-          "additionalProperties": false,
-          "required": [
-            "alternatives",
-            "preferred"
-          ],
-          "properties": {
-            "preferred": {
-              "title": "LocalizedText",
-              "type": "object",
-              "additionalProperties": false,
-              "required": [
-                "locale",
-                "text"
-              ],
-              "properties": {
-                "locale": {
-                  "type": "string"
-                },
-                "text": {
-                  "type": "string"
-                }
-              }
-            },
-            "shortName": {
-              "type": "string"
-            },
-            "alternatives": {
-              "type": "array",
-              "items": {
-                "title": "LocalizedText",
-                "type": "object",
-                "additionalProperties": false,
-                "required": [
-                  "locale",
-                  "text"
-                ],
-                "properties": {
-                  "locale": {
-                    "type": "string"
-                  },
-                  "text": {
-                    "type": "string"
-                  }
-                }
-              }
-            }
-          }
-        },
-        "definition": {
-          "title": "LocalizedText",
-          "type": "object",
-          "additionalProperties": false,
-          "required": [
-            "locale",
-            "text"
-          ],
-          "properties": {
-            "locale": {
-              "type": "string"
-            },
-            "text": {
-              "type": "string"
-            }
-          }
-        },
-        "parentId": {
-          "type": "string"
-        }
+        "group": "record",
+        "order": 10
       }
     },
     "index": {
-      "type": "integer",
-      "minimum": 0
+      "type": [
+        "integer",
+        "null"
+      ],
+      "minimum": 0,
+      "x-semio-ui": {
+        "widget": "stepper",
+        "role": "value",
+        "label": {
+          "en": "Position",
+          "de": "Position"
+        },
+        "description": {
+          "en": "Zero-based list position at which the record is inserted.",
+          "de": "Nullbasierte Listenposition, an der der Datensatz eingefügt wird."
+        },
+        "step": 1,
+        "precision": 0,
+        "group": "target",
+        "order": 20
+      }
     }
   }
 }

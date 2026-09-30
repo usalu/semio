@@ -5,11 +5,29 @@
   "type": "object",
   "additionalProperties": false,
   "required": [
+    "mutation",
     "newAnnex"
   ],
   "properties": {
+    "mutation": {
+      "const": "changeAnnex"
+    },
     "newAnnex": {
-      "type": "string"
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "text",
+        "role": "value",
+        "label": {
+          "en": "National annex",
+          "de": "Nationaler Anhang"
+        },
+        "description": {
+          "en": "de applies DIN EN 1998-1/NA (seismic zones), en the recommended CEN values.",
+          "de": "de wendet DIN EN 1998-1/NA an (Erdbebenzonen), en die empfohlenen CEN-Werte."
+        },
+        "group": "annex",
+        "order": 10
+      }
     }
   }
 }

@@ -1,4 +1,28 @@
 {
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/norm/en1990/mutation/change-variables/schema.json",
   "title": "ChangeVariables",
-  "type": "object"
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "mutation",
+    "newVariables"
+  ],
+  "properties": {
+    "mutation": {
+      "const": "changeVariables"
+    },
+    "newVariables": {
+      "type": "array",
+      "items": {
+        "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1990/snapshot.json#/$defs/VariableAction"
+      },
+      "x-semio-ui": {
+        "label": {
+          "en": "Variable actions",
+          "de": "Veränderliche Einwirkungen"
+        }
+      }
+    }
+  }
 }

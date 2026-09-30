@@ -2,33 +2,47 @@
   "$schema": "http://json-schema.org/draft-07/schema#",
   "$id": "https://json.schemas.assets.semio-tech.com/os/infinite/artifacts/dag/vcs/mutation/create-node/schema.json",
   "title": "CreateNode",
-  "type": "object",
-  "$defs": {
-    "Payload": {
-      "type": "object",
-      "required": [
-        "node",
-        "index"
-      ],
-      "properties": {
-        "node": {
-          "$ref": "https://json.schemas.assets.semio-tech.com/os/infinite/artifacts/dag/vcs/schema.json#/$defs/DagNodeSpec"
-        },
-        "index": {
-          "$ref": "https://json.schemas.assets.semio-tech.com/os/infinite/artifacts/dag/vcs/schema.json#/$defs/U64"
-        }
-      }
-    }
-  },
-  "allOf": [
-    {
-      "$ref": "#/$defs/Payload"
-    }
-  ],
   "propertyNames": {
     "enum": [
+      "operation",
       "index",
       "node"
     ]
+  },
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "operation",
+    "node",
+    "index"
+  ],
+  "properties": {
+    "operation": {
+      "const": "createNode"
+    },
+    "node": {
+      "$ref": "https://json.schemas.assets.semio-tech.com/os/infinite/artifacts/dag/vcs/schema.json#/$defs/DagNodeSpec",
+      "x-semio-ui": {
+        "role": "value",
+        "label": {
+          "en": "Node",
+          "de": "Knoten"
+        },
+        "group": "record",
+        "order": 10
+      }
+    },
+    "index": {
+      "$ref": "https://json.schemas.assets.semio-tech.com/os/infinite/artifacts/dag/vcs/schema.json#/$defs/U64",
+      "x-semio-ui": {
+        "role": "value",
+        "label": {
+          "en": "Index",
+          "de": "Index"
+        },
+        "group": "record",
+        "order": 20
+      }
+    }
   }
 }

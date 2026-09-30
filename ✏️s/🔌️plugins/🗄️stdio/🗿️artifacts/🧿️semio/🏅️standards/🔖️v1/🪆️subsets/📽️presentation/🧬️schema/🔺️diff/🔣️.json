@@ -63,6 +63,9 @@
     "SlideDiff": {
       "type": "object",
       "properties": {
+        "id": {
+          "type": "string"
+        },
         "layoutId": {
           "type": [
             "string",

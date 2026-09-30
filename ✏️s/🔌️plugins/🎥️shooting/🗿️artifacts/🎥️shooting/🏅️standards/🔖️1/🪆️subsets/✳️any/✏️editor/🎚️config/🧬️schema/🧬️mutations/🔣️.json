@@ -1,0 +1,91 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/app/shooting/shooting/config/mutations.json",
+  "title": "ShootingConfigMutation",
+  "oneOf": [
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "ReplaceConfig"
+      ],
+      "properties": {
+        "ReplaceConfig": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/app/shooting/shooting/config/mutation/replace-config/schema.json"
+        }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "SetShotSelection"
+      ],
+      "properties": {
+        "SetShotSelection": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/app/shooting/shooting/config/mutation/set-shot-selection/schema.json"
+        }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "SetCenterModel"
+      ],
+      "properties": {
+        "SetCenterModel": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/app/shooting/shooting/config/mutation/set-center-model/schema.json"
+        }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "SetFitRevision"
+      ],
+      "properties": {
+        "SetFitRevision": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/app/shooting/shooting/config/mutation/set-fit-revision/schema.json"
+        }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "SetCameraDraftLabel"
+      ],
+      "properties": {
+        "SetCameraDraftLabel": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/app/shooting/shooting/config/mutation/set-camera-draft-label/schema.json"
+        }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "SetCamera"
+      ],
+      "properties": {
+        "SetCamera": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/app/shooting/shooting/config/mutation/set-camera/schema.json"
+        }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "SetDefaults"
+      ],
+      "properties": {
+        "SetDefaults": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/app/shooting/shooting/config/mutation/set-defaults/schema.json"
+        }
+      }
+    }
+  ]
+}

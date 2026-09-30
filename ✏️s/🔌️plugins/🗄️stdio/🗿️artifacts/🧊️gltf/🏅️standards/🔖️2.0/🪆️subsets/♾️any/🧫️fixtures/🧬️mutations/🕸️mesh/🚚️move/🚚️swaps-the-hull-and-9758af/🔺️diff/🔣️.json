@@ -1,17 +1,34 @@
 {
-  "id": "s.stdio.gltf.mutation.move-mesh.v1",
-  "version": 1,
-  "touchedPaths": [
-    "document/meshes/0",
-    "document/meshes/1"
-  ],
-  "payload": {
-    "index": 0,
-    "position": 1
+  "nodes": {
+    "modified": [
+      {
+        "index": 0,
+        "diff": {
+          "mesh": 1
+        }
+      },
+      {
+        "index": 1,
+        "diff": {
+          "mesh": 0
+        }
+      }
+    ]
   },
-  "operation": {
-    "kind": "move",
-    "index": 0,
-    "position": 1
+  "meshes": {
+    "modified": [
+      {
+        "index": 0,
+        "diff": {
+          "name": "deck"
+        }
+      },
+      {
+        "index": 1,
+        "diff": {
+          "name": "hull"
+        }
+      }
+    ]
   }
 }

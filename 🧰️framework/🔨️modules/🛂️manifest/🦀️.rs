@@ -173,13 +173,22 @@ pub enum ArgSchema {
         #[value(skip_serializing_if = "Option::is_none")]
         format: Option<ArgFormat>,
     },
+    /// 🔢️ `min`/`max` are hard bounds (`*_exclusive` makes one strict); every other field is a UI fact: `step` never
+    /// constrains validity, `soft_min`/`soft_max` narrow a slider's travel inside the hard bounds, `snaps` and
+    /// `snap_source` pull a dragged value onto points, `display_factor` converts the stored `unit` into `display_unit`.
     Number {
         #[serde(skip_serializing_if = "Option::is_none")]
         #[value(skip_serializing_if = "Option::is_none")]
         min: Option<f64>,
+        #[serde(default, skip_serializing_if = "std::ops::Not::not")]
+        #[value(default, skip_serializing_if = "std::ops::Not::not")]
+        min_exclusive: bool,
         #[serde(skip_serializing_if = "Option::is_none")]
         #[value(skip_serializing_if = "Option::is_none")]
         max: Option<f64>,
+        #[serde(default, skip_serializing_if = "std::ops::Not::not")]
+        #[value(default, skip_serializing_if = "std::ops::Not::not")]
+        max_exclusive: bool,
         #[serde(skip_serializing_if = "Option::is_none")]
         #[value(skip_serializing_if = "Option::is_none")]
         step: Option<f64>,
@@ -189,12 +198,88 @@ pub enum ArgSchema {
         #[serde(skip_serializing_if = "Option::is_none")]
         #[value(skip_serializing_if = "Option::is_none")]
         unit: Option<String>,
+        #[serde(default, skip_serializing_if = "Vec::is_empty")]
+        #[value(default, skip_serializing_if = "Vec::is_empty")]
+        snaps: Vec<f64>,
+        #[serde(skip_serializing_if = "Option::is_none")]
+        #[value(skip_serializing_if = "Option::is_none")]
+        snap_source: Option<SnapSource>,
+        #[serde(skip_serializing_if = "Option::is_none")]
+        #[value(skip_serializing_if = "Option::is_none")]
+        soft_min: Option<f64>,
+        #[serde(skip_serializing_if = "Option::is_none")]
+        #[value(skip_serializing_if = "Option::is_none")]
+        soft_max: Option<f64>,
+        #[serde(skip_serializing_if = "Option::is_none")]
+        #[value(skip_serializing_if = "Option::is_none")]
+        precision: Option<u32>,
+        #[serde(skip_serializing_if = "Option::is_none")]
+        #[value(skip_serializing_if = "Option::is_none")]
+        display_unit: Option<String>,
+        #[serde(skip_serializing_if = "Option::is_none")]
+        #[value(skip_serializing_if = "Option::is_none")]
+        display_factor: Option<f64>,
+        #[serde(skip_serializing_if = "Option::is_none")]
+        #[value(skip_serializing_if = "Option::is_none")]
+        scale: Option<NumberScale>,
     },
     Boolean,
-    Vec3 {
+    /// 🧭️ A fixed-length numeric tuple (`dims` components, e.g. a 3d position) edited component by component: every
+    /// component shares the inclusive hard bounds `min`/`max` and the number facets (`step`, `snaps`, `snap_source` — the
+    /// grid a 3d offset snaps to — `precision`, `display_unit`, `display_factor`). Under [`ArgPresentation::Color`] a
+    /// vector of 3 or 4 components within `0..=1` is an sRGB colour with straight alpha.
+    Vector {
+        dims: u32,
+        #[serde(skip_serializing_if = "Option::is_none")]
+        #[value(skip_serializing_if = "Option::is_none")]
+        min: Option<f64>,
+        #[serde(skip_serializing_if = "Option::is_none")]
+        #[value(skip_serializing_if = "Option::is_none")]
+        max: Option<f64>,
         #[serde(skip_serializing_if = "Option::is_none")]
         #[value(skip_serializing_if = "Option::is_none")]
         unit: Option<String>,
+        #[serde(skip_serializing_if = "Option::is_none")]
+        #[value(skip_serializing_if = "Option::is_none")]
+        step: Option<f64>,
+        #[serde(default, skip_serializing_if = "Vec::is_empty")]
+        #[value(default, skip_serializing_if = "Vec::is_empty")]
+        snaps: Vec<f64>,
+        #[serde(skip_serializing_if = "Option::is_none")]
+        #[value(skip_serializing_if = "Option::is_none")]
+        snap_source: Option<SnapSource>,
+        #[serde(skip_serializing_if = "Option::is_none")]
+        #[value(skip_serializing_if = "Option::is_none")]
+        precision: Option<u32>,
+        #[serde(skip_serializing_if = "Option::is_none")]
+        #[value(skip_serializing_if = "Option::is_none")]
+        display_unit: Option<String>,
+        #[serde(skip_serializing_if = "Option::is_none")]
+        #[value(skip_serializing_if = "Option::is_none")]
+        display_factor: Option<f64>,
+    },
+    /// 🎯️ The id (or, when `many`, the ids) of document entities of one of `kinds`, picked from the selection of
+    /// `domain` at `granularity` when both are named — the selection picker behind "use selection".
+    Reference {
+        kinds: Vec<String>,
+        #[serde(skip_serializing_if = "Option::is_none")]
+        #[value(skip_serializing_if = "Option::is_none")]
+        domain: Option<String>,
+        #[serde(skip_serializing_if = "Option::is_none")]
+        #[value(skip_serializing_if = "Option::is_none")]
+        granularity: Option<String>,
+        #[serde(default, skip_serializing_if = "std::ops::Not::not")]
+        #[value(default, skip_serializing_if = "std::ops::Not::not")]
+        many: bool,
+        #[serde(skip_serializing_if = "Option::is_none")]
+        #[value(skip_serializing_if = "Option::is_none")]
+        min_items: Option<u32>,
+        #[serde(skip_serializing_if = "Option::is_none")]
+        #[value(skip_serializing_if = "Option::is_none")]
+        max_items: Option<u32>,
+        #[serde(default, skip_serializing_if = "ReferenceIdType::is_string")]
+        #[value(default, skip_serializing_if = "ReferenceIdType::is_string")]
+        id_type: ReferenceIdType,
     },
     Array {
         items: Box<ArgSchema>,
@@ -238,9 +323,89 @@ pub fn interaction_entity_kind(interaction_id: &str, granularity_id: &str) -> St
 #[value(tag = "kind", rename_all = "camelCase", rename_all_fields = "camelCase")]
 pub enum ArgPresentation {
     Slider,
+    Stepper,
+    Dial,
+    Segmented,
     IconSelect { classifier_kind: String },
     Multiline,
     Hidden,
+    /// 🎨️ An sRGB colour: a [`ArgSchema::Vector`] of 3 (RGB) or 4 (RGBA, straight alpha) components within `0..=1`.
+    /// The one canonical colour mapping — a hex string stays `text`.
+    Color,
+}
+
+/// 🧲️ Where a number's snap points come from beyond its static `snaps`: every multiple of its `step`, a window
+/// config value named `key` (the grid spacing a tool snaps to), or the document value at JSON `pointer`.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValue, FromValue)]
+#[serde(tag = "kind", rename_all = "camelCase", rename_all_fields = "camelCase")]
+#[value(tag = "kind", rename_all = "camelCase", rename_all_fields = "camelCase")]
+pub enum SnapSource {
+    Step,
+    Config { key: String },
+    Snapshot { pointer: String },
+}
+
+/// 📈️ How a slider or dial maps its travel onto the value range.
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize, ToValue, FromValue)]
+#[serde(rename_all = "camelCase")]
+#[value(rename_all = "camelCase")]
+pub enum NumberScale {
+    Linear,
+    Log,
+}
+
+/// 🔢️ The JSON type of a reference's ids: text ids (the default, left off the wire) or integer ids. A selection id is
+/// always text, so an integer reference stages the integer its selected text spells ([`ReferenceIdType::id_value`]).
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Serialize, Deserialize, ToValue, FromValue)]
+#[serde(rename_all = "camelCase")]
+#[value(rename_all = "camelCase")]
+pub enum ReferenceIdType {
+    #[default]
+    String,
+    Integer,
+}
+
+impl ReferenceIdType {
+    /// 🔤️ Whether the ids are text — the default.
+    pub fn is_string(&self) -> bool {
+        *self == Self::String
+    }
+
+    /// 🎯️ The payload value of one selected id: the text itself, or the integer it spells — `None` for empty text or,
+    /// for an integer reference, text that is not a decimal integer within ±(2^53 − 1). TS twin: `referenceIdValue`.
+    pub fn id_value(self, id: &str) -> Option<DslValue> {
+        if id.is_empty() {
+            return None;
+        }
+        match self {
+            Self::String => Some(DslValue::String(id.to_string())),
+            Self::Integer => {
+                let digits = id.strip_prefix('-').unwrap_or(id);
+                if digits.is_empty() || !digits.bytes().all(|byte| byte.is_ascii_digit()) {
+                    return None;
+                }
+                let value = id.parse::<i64>().ok().filter(|value| value.unsigned_abs() <= REFERENCE_ID_INTEGER_MAX)?;
+                Some(if value < 0 { DslValue::int(value) } else { DslValue::uint(value as u64) })
+            }
+        }
+    }
+}
+
+/// 🔢️ The largest integer id magnitude a reference admits — the exact-integer range every host's numbers share.
+pub const REFERENCE_ID_INTEGER_MAX: u64 = (1 << 53) - 1;
+
+/// 🏷️ The text of one reference id value — a non-empty string id as it is, an integer id in decimal (the spelling a
+/// selection carries); `None` for anything else. TS twin: `referenceIdText`.
+pub fn reference_id_text(value: &DslValue) -> Option<String> {
+    match value {
+        DslValue::String(id) if !id.is_empty() => Some(id.clone()),
+        DslValue::Number(number) => match (number.as_i64(), number.as_u64()) {
+            (Some(value), _) if value.unsigned_abs() <= REFERENCE_ID_INTEGER_MAX => Some(value.to_string()),
+            (None, Some(value)) if value <= REFERENCE_ID_INTEGER_MAX => Some(value.to_string()),
+            _ => None,
+        },
+        _ => None,
+    }
 }
 //#endregion 🔖️ArgSchema
 
@@ -288,7 +453,50 @@ pub enum ActionArgControl {
         #[serde(skip_serializing_if = "Option::is_none")]
         #[value(skip_serializing_if = "Option::is_none")]
         step: Option<f64>,
+        #[serde(skip_serializing_if = "Option::is_none")]
+        #[value(skip_serializing_if = "Option::is_none")]
+        unit: Option<String>,
+        #[serde(skip_serializing_if = "Option::is_none")]
+        #[value(skip_serializing_if = "Option::is_none")]
+        precision: Option<u32>,
+        #[serde(skip_serializing_if = "Option::is_none")]
+        #[value(skip_serializing_if = "Option::is_none")]
+        display_unit: Option<String>,
+        #[serde(skip_serializing_if = "Option::is_none")]
+        #[value(skip_serializing_if = "Option::is_none")]
+        display_factor: Option<f64>,
     },
+    /// 🪜️ A number field with increment/decrement buttons of `step` (an integer steps by one unless it declares otherwise).
+    Stepper {
+        #[serde(skip_serializing_if = "Option::is_none")]
+        #[value(skip_serializing_if = "Option::is_none")]
+        min: Option<f64>,
+        #[serde(skip_serializing_if = "Option::is_none")]
+        #[value(skip_serializing_if = "Option::is_none")]
+        max: Option<f64>,
+        #[serde(skip_serializing_if = "Option::is_none")]
+        #[value(skip_serializing_if = "Option::is_none")]
+        step: Option<f64>,
+        #[serde(skip_serializing_if = "Option::is_none")]
+        #[value(skip_serializing_if = "Option::is_none")]
+        unit: Option<String>,
+        #[serde(skip_serializing_if = "Option::is_none")]
+        #[value(skip_serializing_if = "Option::is_none")]
+        precision: Option<u32>,
+        #[serde(skip_serializing_if = "Option::is_none")]
+        #[value(skip_serializing_if = "Option::is_none")]
+        display_unit: Option<String>,
+        #[serde(skip_serializing_if = "Option::is_none")]
+        #[value(skip_serializing_if = "Option::is_none")]
+        display_factor: Option<f64>,
+        #[serde(default, skip_serializing_if = "Vec::is_empty")]
+        #[value(default, skip_serializing_if = "Vec::is_empty")]
+        snaps: Vec<f64>,
+        #[serde(skip_serializing_if = "Option::is_none")]
+        #[value(skip_serializing_if = "Option::is_none")]
+        snap_source: Option<SnapSource>,
+    },
+    /// 🎚️ `min`/`max` are the travel range: the soft range when one is declared, else the hard bounds.
     Slider {
         min: f64,
         max: f64,
@@ -298,12 +506,117 @@ pub enum ActionArgControl {
         #[serde(skip_serializing_if = "Option::is_none")]
         #[value(skip_serializing_if = "Option::is_none")]
         unit: Option<String>,
+        #[serde(skip_serializing_if = "Option::is_none")]
+        #[value(skip_serializing_if = "Option::is_none")]
+        precision: Option<u32>,
+        #[serde(skip_serializing_if = "Option::is_none")]
+        #[value(skip_serializing_if = "Option::is_none")]
+        display_unit: Option<String>,
+        #[serde(skip_serializing_if = "Option::is_none")]
+        #[value(skip_serializing_if = "Option::is_none")]
+        display_factor: Option<f64>,
+        #[serde(default, skip_serializing_if = "Vec::is_empty")]
+        #[value(default, skip_serializing_if = "Vec::is_empty")]
+        snaps: Vec<f64>,
+        #[serde(skip_serializing_if = "Option::is_none")]
+        #[value(skip_serializing_if = "Option::is_none")]
+        snap_source: Option<SnapSource>,
+        #[serde(skip_serializing_if = "Option::is_none")]
+        #[value(skip_serializing_if = "Option::is_none")]
+        scale: Option<NumberScale>,
+    },
+    /// 🧭️ A rotary knob (an angle): `min`/`max` are its travel range exactly like [`Self::Slider`]'s.
+    Dial {
+        min: f64,
+        max: f64,
+        #[serde(skip_serializing_if = "Option::is_none")]
+        #[value(skip_serializing_if = "Option::is_none")]
+        step: Option<f64>,
+        #[serde(skip_serializing_if = "Option::is_none")]
+        #[value(skip_serializing_if = "Option::is_none")]
+        unit: Option<String>,
+        #[serde(skip_serializing_if = "Option::is_none")]
+        #[value(skip_serializing_if = "Option::is_none")]
+        precision: Option<u32>,
+        #[serde(skip_serializing_if = "Option::is_none")]
+        #[value(skip_serializing_if = "Option::is_none")]
+        display_unit: Option<String>,
+        #[serde(skip_serializing_if = "Option::is_none")]
+        #[value(skip_serializing_if = "Option::is_none")]
+        display_factor: Option<f64>,
+        #[serde(default, skip_serializing_if = "Vec::is_empty")]
+        #[value(default, skip_serializing_if = "Vec::is_empty")]
+        snaps: Vec<f64>,
+        #[serde(skip_serializing_if = "Option::is_none")]
+        #[value(skip_serializing_if = "Option::is_none")]
+        snap_source: Option<SnapSource>,
     },
     Toggle,
     Select {
         options: Vec<ActionArgOption>,
     },
-    Vec3,
+    /// 🔘️ The options as one row of mutually exclusive buttons — a [`Self::Select`] whose choices stay visible.
+    Segmented {
+        options: Vec<ActionArgOption>,
+    },
+    /// 🧭️ One number field per component, sharing the component facets of [`ArgSchema::Vector`].
+    Vector {
+        dims: u32,
+        #[serde(skip_serializing_if = "Option::is_none")]
+        #[value(skip_serializing_if = "Option::is_none")]
+        min: Option<f64>,
+        #[serde(skip_serializing_if = "Option::is_none")]
+        #[value(skip_serializing_if = "Option::is_none")]
+        max: Option<f64>,
+        #[serde(skip_serializing_if = "Option::is_none")]
+        #[value(skip_serializing_if = "Option::is_none")]
+        unit: Option<String>,
+        #[serde(skip_serializing_if = "Option::is_none")]
+        #[value(skip_serializing_if = "Option::is_none")]
+        step: Option<f64>,
+        #[serde(default, skip_serializing_if = "Vec::is_empty")]
+        #[value(default, skip_serializing_if = "Vec::is_empty")]
+        snaps: Vec<f64>,
+        #[serde(skip_serializing_if = "Option::is_none")]
+        #[value(skip_serializing_if = "Option::is_none")]
+        snap_source: Option<SnapSource>,
+        #[serde(skip_serializing_if = "Option::is_none")]
+        #[value(skip_serializing_if = "Option::is_none")]
+        precision: Option<u32>,
+        #[serde(skip_serializing_if = "Option::is_none")]
+        #[value(skip_serializing_if = "Option::is_none")]
+        display_unit: Option<String>,
+        #[serde(skip_serializing_if = "Option::is_none")]
+        #[value(skip_serializing_if = "Option::is_none")]
+        display_factor: Option<f64>,
+    },
+    /// 🎨️ A colour picker over an sRGB [`ArgSchema::Vector`] with components in `0..=1`: red, green, blue and, when
+    /// `alpha`, a straight (non-premultiplied) alpha as the fourth component.
+    Color {
+        alpha: bool,
+    },
+    /// 🎯️ A selection picker: chips of the picked ids, remove, and "use selection" from `domain` at `granularity`.
+    Reference {
+        kinds: Vec<String>,
+        #[serde(skip_serializing_if = "Option::is_none")]
+        #[value(skip_serializing_if = "Option::is_none")]
+        domain: Option<String>,
+        #[serde(skip_serializing_if = "Option::is_none")]
+        #[value(skip_serializing_if = "Option::is_none")]
+        granularity: Option<String>,
+        #[serde(default, skip_serializing_if = "std::ops::Not::not")]
+        #[value(default, skip_serializing_if = "std::ops::Not::not")]
+        many: bool,
+        #[serde(skip_serializing_if = "Option::is_none")]
+        #[value(skip_serializing_if = "Option::is_none")]
+        min_items: Option<u32>,
+        #[serde(skip_serializing_if = "Option::is_none")]
+        #[value(skip_serializing_if = "Option::is_none")]
+        max_items: Option<u32>,
+        #[serde(default, skip_serializing_if = "ReferenceIdType::is_string")]
+        #[value(default, skip_serializing_if = "ReferenceIdType::is_string")]
+        id_type: ReferenceIdType,
+    },
     IconSelect {
         classifier_kind: String,
     },
@@ -323,11 +636,13 @@ pub enum ActionArgControl {
     },
 }
 
-/// 📝️ Declares one argument of an action: its `id` (the JSON key sent in `ActionDescriptor.args`),
-/// human `label`, stored value `schema` (see `🔖️ArgSchema` — D6: this is the sole persisted truth,
-/// `control()` below is derived from it), an optional widget `presentation` hint, whether it is
-/// `required`, an optional `default` value, and an optional `description`. An empty
-/// `ActionDefinition.args` (the common case) means a no-argument action.
+/// 📝️ Declares one input of an action or a mutation: its `id` (the JSON key sent in `ActionDescriptor.args`; for a
+/// mutation input the single-segment RFC 6901 pointer of its key relative to its parent value, e.g. `/dx`), human
+/// `label`, stored value `schema` (see `🔖️ArgSchema` — D6: this is the sole persisted truth, `control()` below is
+/// derived from it), an optional widget `presentation` hint, whether it is `required` and `nullable`, an optional `default` value,
+/// an optional localized `description`, and the `group`/`order` a form sorts it by. An empty
+/// `ActionDefinition.args` (the common case) means a no-argument action. Mutation inputs come from
+/// [`mutation_input_defs`].
 // 🚧️ Kept additive: consumed outside this pass by 🛍️products/💻️os (plugin/renderer modules) and/or ✏️s/🔌️plugins/** while still serde-deriving; ToValue/FromValue added alongside, not replacing, Serialize/Deserialize. Ticket 26/09/01/RUNTIME-DEPENDENCY-ELIMINATION-FOR-S-PLUGINS-AND-ARTIFACTS.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValue, FromValue)]
 #[serde(rename_all = "camelCase")]
@@ -343,17 +658,35 @@ pub struct ActionArgDef {
     #[serde(default)]
     #[value(default)]
     pub required: bool,
+    /// 🫥️ Whether the value admits `null` (`type: [T, "null"]`, or a `null` branch beside one value branch): a "clear"
+    /// that a form offers beside the value, distinct from leaving an optional input out.
+    #[serde(default, skip_serializing_if = "std::ops::Not::not")]
+    #[value(default, skip_serializing_if = "std::ops::Not::not")]
+    pub nullable: bool,
     #[serde(skip_serializing_if = "Option::is_none")]
     #[value(skip_serializing_if = "Option::is_none")]
     pub default: Option<DslValue>,
     #[serde(skip_serializing_if = "Option::is_none")]
     #[value(skip_serializing_if = "Option::is_none")]
-    pub description: Option<String>,
+    pub description: Option<LocalizedLabel>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    #[value(skip_serializing_if = "Option::is_none")]
+    pub group: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    #[value(skip_serializing_if = "Option::is_none")]
+    pub order: Option<i64>,
+}
+
+impl ArgSchema {
+    /// 🔢️ A plain number with hard bounds and a UI `step`, carrying no display facts.
+    pub fn number(min: Option<f64>, max: Option<f64>, step: Option<f64>, integer: bool) -> Self {
+        ArgSchema::Number { min, min_exclusive: false, max, max_exclusive: false, step, integer, unit: None, snaps: Vec::new(), snap_source: None, soft_min: None, soft_max: None, precision: None, display_unit: None, display_factor: None, scale: None }
+    }
 }
 
 impl ActionArgDef {
     fn with_schema(id: impl Into<String>, label: impl Into<LocalizedLabel>, schema: ArgSchema) -> Self {
-        Self { id: id.into(), label: label.into(), schema, presentation: None, required: false, default: None, description: None }
+        Self { id: id.into(), label: label.into(), schema, presentation: None, required: false, nullable: false, default: None, description: None, group: None, order: None }
     }
 
     fn plain_string(format: Option<ArgFormat>) -> ArgSchema {
@@ -365,19 +698,19 @@ impl ActionArgDef {
         Self::with_schema(id, label, Self::plain_string(None))
     }
 
-    /// 🔢️ A numeric argument (unbounded stepper by default).
+    /// 🔢️ A numeric argument (a plain number field by default).
     pub fn number(id: impl Into<String>, label: impl Into<LocalizedLabel>) -> Self {
-        Self::with_schema(id, label, ArgSchema::Number { min: None, max: None, step: None, integer: false, unit: None })
+        Self::with_schema(id, label, ArgSchema::number(None, None, None, false))
     }
 
-    /// 🔢️ A non-negative 32-bit ordinal.
+    /// 🔢️ A non-negative 32-bit ordinal (a stepper).
     pub fn index(id: impl Into<String>, label: impl Into<LocalizedLabel>) -> Self {
-        Self::with_schema(id, label, ArgSchema::Number { min: Some(0.0), max: Some(u32::MAX as f64), step: Some(1.0), integer: true, unit: None })
+        Self::with_schema(id, label, ArgSchema::number(Some(0.0), Some(u32::MAX as f64), Some(1.0), true))
     }
 
     /// 🎚️ A bounded slider argument.
     pub fn slider(id: impl Into<String>, label: impl Into<LocalizedLabel>, min: f64, max: f64) -> Self {
-        let mut def = Self::with_schema(id, label, ArgSchema::Number { min: Some(min), max: Some(max), step: None, integer: false, unit: None });
+        let mut def = Self::with_schema(id, label, ArgSchema::number(Some(min), Some(max), None, false));
         def.presentation = Some(ArgPresentation::Slider);
         def
     }
@@ -392,9 +725,9 @@ impl ActionArgDef {
         Self::with_schema(id, label, ArgSchema::String { options, min_len: None, max_len: None, pattern: None, format: None })
     }
 
-    /// 🧭️ A three-component vector argument.
-    pub fn vec3(id: impl Into<String>, label: impl Into<LocalizedLabel>) -> Self {
-        Self::with_schema(id, label, ArgSchema::Vec3 { unit: None })
+    /// 🧭️ A `dims`-component numeric vector argument (a 3d point is `dims == 3`).
+    pub fn vector(id: impl Into<String>, label: impl Into<LocalizedLabel>, dims: u32) -> Self {
+        Self::with_schema(id, label, ArgSchema::Vector { dims, min: None, max: None, unit: None, step: None, snaps: Vec::new(), snap_source: None, precision: None, display_unit: None, display_factor: None })
     }
 
     /// 📜️ A list-of-strings argument — the shape every multi-entity verb takes (`ids`,
@@ -479,21 +812,34 @@ impl ActionArgDef {
     }
 
     /// 💬️ Attaches a description shown alongside the field.
-    pub fn describe(mut self, description: impl Into<String>) -> Self {
+    pub fn describe(mut self, description: impl Into<LocalizedLabel>) -> Self {
         self.description = Some(description.into());
         self
+    }
+
+    /// 🔑️ The JSON key this input writes: `id` itself for an action argument, the decoded segment of a
+    /// mutation input's single-segment pointer (`/new~1name` → `new/name`).
+    pub fn key(&self) -> String {
+        match self.id.strip_prefix('/') {
+            Some(segment) if !segment.contains('/') => segment.replace("~1", "/").replace("~0", "~"),
+            _ => self.id.clone(),
+        }
     }
 
     /// 🎛️ Derives this argument's renderer-facing `ActionArgControl` from its stored `schema` +
     /// `presentation` — D6 (ticket 26/08/17/LLM-FIRST-OS-VIA-THE-SEMIO-OS-MCP-GATEWAY packet
     /// P3-manifest-schema): `schema` is the ONLY persisted truth, this is computed fresh on every
-    /// call, never cached/stored. Order matters: a non-empty `options` list always wins Select over
-    /// any format; a `Slider` presentation or a fully-bounded `Number` wins Slider over plain Number.
+    /// call, never cached/stored. Order matters: a non-empty `options` list always wins Select (or
+    /// Segmented) over any format; a number's presentation wins, else an integer steps, else a
+    /// fully-bounded number slides, else it is a plain number field. TypeScript twin: `argControl`.
     pub fn control(&self) -> ActionArgControl {
         match &self.schema {
             ArgSchema::String { options, format, .. } => {
                 if !options.is_empty() {
-                    return ActionArgControl::Select { options: options.clone() };
+                    return match self.presentation {
+                        Some(ArgPresentation::Segmented) => ActionArgControl::Segmented { options: options.clone() },
+                        _ => ActionArgControl::Select { options: options.clone() },
+                    };
                 }
                 match format {
                     Some(ArgFormat::IconId) => ActionArgControl::IconSelect { classifier_kind: "icon".to_string() },
@@ -502,28 +848,52 @@ impl ActionArgDef {
                     _ => ActionArgControl::Text { placeholder: None },
                 }
             }
-            ArgSchema::Number { min, max, step, unit, .. } => {
-                if matches!(self.presentation, Some(ArgPresentation::Slider)) || (min.is_some() && max.is_some()) {
-                    ActionArgControl::Slider { min: min.unwrap_or(0.0), max: max.unwrap_or(0.0), step: *step, unit: unit.clone() }
-                } else {
-                    ActionArgControl::Number { min: *min, max: *max, step: *step }
+            ArgSchema::Number { min, max, step, integer, unit, snaps, snap_source, soft_min, soft_max, precision, display_unit, display_factor, scale, .. } => {
+                let travel_min = soft_min.or(*min).unwrap_or(0.0);
+                let travel_max = soft_max.or(*max).unwrap_or(0.0);
+                let (unit, display_unit, snaps, snap_source) = (unit.clone(), display_unit.clone(), snaps.clone(), snap_source.clone());
+                let (step, precision, display_factor) = (*step, *precision, *display_factor);
+                match self.presentation {
+                    Some(ArgPresentation::Slider) => ActionArgControl::Slider { min: travel_min, max: travel_max, step, unit, precision, display_unit, display_factor, snaps, snap_source, scale: *scale },
+                    Some(ArgPresentation::Dial) => ActionArgControl::Dial { min: travel_min, max: travel_max, step, unit, precision, display_unit, display_factor, snaps, snap_source },
+                    Some(ArgPresentation::Stepper) => ActionArgControl::Stepper { min: *min, max: *max, step, unit, precision, display_unit, display_factor, snaps, snap_source },
+                    _ if *integer => ActionArgControl::Stepper { min: *min, max: *max, step, unit, precision, display_unit, display_factor, snaps, snap_source },
+                    _ if min.is_some() && max.is_some() => ActionArgControl::Slider { min: travel_min, max: travel_max, step, unit, precision, display_unit, display_factor, snaps, snap_source, scale: *scale },
+                    _ => ActionArgControl::Number { min: *min, max: *max, step, unit, precision, display_unit, display_factor },
                 }
             }
             ArgSchema::Boolean => ActionArgControl::Toggle,
-            ArgSchema::Vec3 { .. } => ActionArgControl::Vec3,
+            ArgSchema::Vector { dims, .. } if self.presentation == Some(ArgPresentation::Color) => ActionArgControl::Color { alpha: *dims == 4 },
+            ArgSchema::Vector { dims, min, max, unit, step, snaps, snap_source, precision, display_unit, display_factor } => ActionArgControl::Vector {
+                dims: *dims,
+                min: *min,
+                max: *max,
+                unit: unit.clone(),
+                step: *step,
+                snaps: snaps.clone(),
+                snap_source: snap_source.clone(),
+                precision: *precision,
+                display_unit: display_unit.clone(),
+                display_factor: *display_factor,
+            },
+            ArgSchema::Reference { kinds, domain, granularity, many, min_items, max_items, id_type } => {
+                ActionArgControl::Reference { kinds: kinds.clone(), domain: domain.clone(), granularity: granularity.clone(), many: *many, min_items: *min_items, max_items: *max_items, id_type: *id_type }
+            }
             ArgSchema::Array { .. } | ArgSchema::Object { .. } | ArgSchema::Any => ActionArgControl::Text { placeholder: None },
         }
     }
 
     /// 📐️ JSON Schema (2020-12 leaf, no `$schema`/`$id` — the catalog compiler wraps those at
     /// the whole-action envelope, `📋️master.md` §3.2) for this one argument's value, folding in
-    /// `description`/`default`.
-    pub fn json_schema(&self) -> DslValue {
-        let DslValue::Object(mut entries) = arg_schema_json_schema(&self.schema) else {
+    /// `default` and the `description` resolved to one locale × terminology.
+    pub fn json_schema(&self, terminology: Terminology, locale: Locale) -> DslValue {
+        let value = arg_schema_json_schema(&self.schema, terminology, locale);
+        let value = if self.nullable { DslValue::object([("anyOf".to_string(), DslValue::Array(vec![value, DslValue::object([("type".to_string(), DslValue::String("null".to_string()))])]))]) } else { value };
+        let DslValue::Object(mut entries) = value else {
             unreachable!("arg_schema_json_schema always returns an object");
         };
         if let Some(description) = &self.description {
-            entries.push(("description".to_string(), DslValue::String(description.clone())));
+            entries.push(("description".to_string(), DslValue::String(description.resolve(terminology, locale).to_string())));
         }
         if let Some(default) = &self.default {
             entries.push(("default".to_string(), default.clone()));
@@ -569,9 +939,10 @@ fn apply_arg_format(entries: &mut Vec<(String, DslValue)>, format: &ArgFormat) {
 }
 
 /// 📐️ JSON Schema 2020-12 for one `ArgSchema` node (recursive over `Array`/`Object`) — carries
-/// `Number.unit`/`Vec3.unit` as `x-semio-unit`, `String.format` via `apply_arg_format`. No
-/// `additionalProperties`/`$schema`/`$id` at this altitude; the catalog compiler owns the envelope.
-fn arg_schema_json_schema(schema: &ArgSchema) -> DslValue {
+/// `Number.unit`/`Vector.unit` as `x-semio-unit`, `String.format` via `apply_arg_format`, a
+/// `Reference` as `x-semio-format: reference` with its `x-semio-ref`. A number's `step` is a UI fact, never
+/// `multipleOf`. No `additionalProperties`/`$schema`/`$id` at this altitude; the catalog compiler owns the envelope.
+fn arg_schema_json_schema(schema: &ArgSchema, terminology: Terminology, locale: Locale) -> DslValue {
     match schema {
         ArgSchema::String { options, min_len, max_len, pattern, format } => {
             let mut entries = vec![("type".to_string(), DslValue::String("string".to_string()))];
@@ -592,16 +963,13 @@ fn arg_schema_json_schema(schema: &ArgSchema) -> DslValue {
             }
             DslValue::Object(entries)
         }
-        ArgSchema::Number { min, max, step, integer, unit } => {
+        ArgSchema::Number { min, min_exclusive, max, max_exclusive, integer, unit, .. } => {
             let mut entries = vec![("type".to_string(), DslValue::String(if *integer { "integer" } else { "number" }.to_string()))];
             if let Some(min) = min {
-                entries.push(("minimum".to_string(), min.to_value()));
+                entries.push((if *min_exclusive { "exclusiveMinimum" } else { "minimum" }.to_string(), min.to_value()));
             }
             if let Some(max) = max {
-                entries.push(("maximum".to_string(), max.to_value()));
-            }
-            if let Some(step) = step {
-                entries.push(("multipleOf".to_string(), step.to_value()));
+                entries.push((if *max_exclusive { "exclusiveMaximum" } else { "maximum" }.to_string(), max.to_value()));
             }
             if let Some(unit) = unit {
                 entries.push(("x-semio-unit".to_string(), DslValue::String(unit.clone())));
@@ -609,20 +977,40 @@ fn arg_schema_json_schema(schema: &ArgSchema) -> DslValue {
             DslValue::Object(entries)
         }
         ArgSchema::Boolean => DslValue::object([("type".to_string(), DslValue::String("boolean".to_string()))]),
-        ArgSchema::Vec3 { unit } => {
+        ArgSchema::Vector { dims, min, max, unit, .. } => {
+            let mut component = vec![("type".to_string(), DslValue::String("number".to_string()))];
+            component.extend(min.iter().map(|min| ("minimum".to_string(), DslValue::json_number(*min))));
+            component.extend(max.iter().map(|max| ("maximum".to_string(), DslValue::json_number(*max))));
             let mut entries = vec![
                 ("type".to_string(), DslValue::String("array".to_string())),
-                ("items".to_string(), DslValue::object([("type".to_string(), DslValue::String("number".to_string()))])),
-                ("minItems".to_string(), DslValue::uint(3)),
-                ("maxItems".to_string(), DslValue::uint(3)),
+                ("items".to_string(), DslValue::Object(component)),
+                ("minItems".to_string(), DslValue::uint(u64::from(*dims))),
+                ("maxItems".to_string(), DslValue::uint(u64::from(*dims))),
             ];
             if let Some(unit) = unit {
                 entries.push(("x-semio-unit".to_string(), DslValue::String(unit.clone())));
             }
             DslValue::Object(entries)
         }
+        ArgSchema::Reference { kinds, domain, granularity, many, min_items, max_items, id_type } => {
+            let mut reference = vec![("kind".to_string(), DslValue::Array(kinds.iter().map(|kind| DslValue::String(kind.clone())).collect()))];
+            reference.extend(domain.iter().map(|domain| ("domain".to_string(), DslValue::String(domain.clone()))));
+            reference.extend(granularity.iter().map(|granularity| ("granularity".to_string(), DslValue::String(granularity.clone()))));
+            let id = DslValue::object([
+                ("type".to_string(), DslValue::String(if id_type.is_string() { "string" } else { "integer" }.to_string())),
+                ("x-semio-format".to_string(), DslValue::String("reference".to_string())),
+                ("x-semio-ref".to_string(), DslValue::Object(reference)),
+            ]);
+            if !*many {
+                return id;
+            }
+            let mut entries = vec![("type".to_string(), DslValue::String("array".to_string())), ("items".to_string(), id)];
+            entries.extend(min_items.iter().map(|min_items| ("minItems".to_string(), min_items.to_value())));
+            entries.extend(max_items.iter().map(|max_items| ("maxItems".to_string(), max_items.to_value())));
+            DslValue::Object(entries)
+        }
         ArgSchema::Array { items, min_items, max_items } => {
-            let mut entries = vec![("type".to_string(), DslValue::String("array".to_string())), ("items".to_string(), arg_schema_json_schema(items))];
+            let mut entries = vec![("type".to_string(), DslValue::String("array".to_string())), ("items".to_string(), arg_schema_json_schema(items, terminology, locale))];
             if let Some(min_items) = min_items {
                 entries.push(("minItems".to_string(), min_items.to_value()));
             }
@@ -635,9 +1023,9 @@ fn arg_schema_json_schema(schema: &ArgSchema) -> DslValue {
             let mut properties = Vec::new();
             let mut required = Vec::new();
             for field in fields {
-                properties.push((field.id.clone(), field.json_schema()));
+                properties.push((field.key(), field.json_schema(terminology, locale)));
                 if field.required {
-                    required.push(DslValue::String(field.id.clone()));
+                    required.push(DslValue::String(field.key()));
                 }
             }
             let mut entries = vec![
@@ -654,6 +1042,798 @@ fn arg_schema_json_schema(schema: &ArgSchema) -> DslValue {
     }
 }
 //#endregion 🔖️ActionArgs
+
+//#region 🔖️MutationInputs
+/// 🧭️ Resolves a cross-document `$ref`: the schema document whose `$id` is `id` (the reference without its fragment).
+pub trait InputSchemaResolver {
+    fn resolve(&self, id: &str) -> Option<DslValue>;
+}
+
+impl<F: Fn(&str) -> Option<DslValue>> InputSchemaResolver for F {
+    fn resolve(&self, id: &str) -> Option<DslValue> {
+        self(id)
+    }
+}
+
+/// 🚫️ The class of a [`InputSchemaError`], shared verbatim with the TypeScript twin and the lint `schema-mutation-input-ui`.
+#[derive(Clone, Copy, Debug, PartialEq, Eq, ToValue, FromValue)]
+#[value(rename_all = "camelCase")]
+pub enum InputSchemaErrorCode {
+    Malformed,
+    RefUnresolved,
+    UiInvalid,
+    WidgetIncompatible,
+    LabelMissing,
+    OptionLabelMissing,
+    LocaleMissing,
+}
+
+/// 🚫️ Why a mutation payload schema yields no input descriptors: the `code`, the RFC 6901 `pointer` of the input
+/// in the payload (`""` for the payload itself, `-` for "every array item") and a human `detail`.
+#[derive(Clone, Debug, PartialEq, Eq, ToValue, FromValue)]
+#[value(rename_all = "camelCase")]
+pub struct InputSchemaError {
+    pub code: InputSchemaErrorCode,
+    pub pointer: String,
+    pub detail: String,
+}
+
+impl std::fmt::Display for InputSchemaError {
+    fn fmt(&self, formatter: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(formatter, "{:?} at {:?}: {}", self.code, self.pointer, self.detail)
+    }
+}
+
+impl std::error::Error for InputSchemaError {}
+
+/// 📚️ The framework input-label glossary (`🔣️input-labels.json`, schema `InputLabelGlossary`): a label in every
+/// locale for the most frequent mutation input names, the fallback when an input carries no `x-semio-ui.label`.
+const INPUT_LABEL_GLOSSARY_JSON: &str = include_str!("🔣️input-labels.json");
+
+/// 📚️ The parsed [`INPUT_LABEL_GLOSSARY_JSON`], field name → label.
+pub fn input_label_glossary() -> &'static BTreeMap<String, LocalizedLabel> {
+    static GLOSSARY: std::sync::OnceLock<BTreeMap<String, LocalizedLabel>> = std::sync::OnceLock::new();
+    GLOSSARY.get_or_init(|| {
+        let document = dsl::os_pack::json::to_dsl_value(&dsl::os_pack::json::parse(INPUT_LABEL_GLOSSARY_JSON).expect("the input label glossary is JSON"));
+        let labels = document.get("labels").and_then(DslValue::as_object).expect("the input label glossary carries labels");
+        labels.iter().map(|(name, label)| (name.clone(), input_localized_text(label).expect("every glossary label names every locale"))).collect()
+    })
+}
+
+/// 🧬️ Reads a mutation leaf's payload JSON Schema (`MutationLeaf::PAYLOAD_SCHEMA`) into one [`ActionArgDef`] per
+/// input, in `properties` order: `$ref`s resolve against the document itself (`#/$defs/…`) or, for another `$id`,
+/// through `resolver`; hard bounds come from the standard keywords, UI facts from `x-semio-ui` (an outer annotation
+/// overrides the one on the `$ref` target key by key); a `const` or `role: discriminator` input is skipped; objects
+/// recurse into their fields. Without `x-semio-ui` the widget is inferred exactly as [`ActionArgDef::control`]
+/// derives it, a string or string array named `<kind>Id(s)` becomes a [`ArgSchema::Reference`] of that kind, and
+/// the label comes from [`input_label_glossary`] — an input with no label in every locale is an error, never a
+/// fallback. TypeScript twin: `mutationInputDefs` (`🛂️manifest/🟦️.ts`); fixture `🧫️fixtures/🧫️mutation-inputs`.
+pub fn mutation_input_defs(schema_json: &str, resolver: &dyn InputSchemaResolver) -> Result<Vec<ActionArgDef>, InputSchemaError> {
+    InputSchemaReader::parse(schema_json, resolver, false)?.inputs()
+}
+
+/// 🧺️ Every finding of a mutation leaf payload schema at once: the collecting twin of the fail-fast
+/// [`mutation_input_defs`] a runtime uses. Each refused input (at every nested pointer) is recorded and reading goes on
+/// past it — a label, description, group, order, role or widget fault keeps the input, a value fault drops its schema —
+/// so `findings` names every pointer an author must fix (first occurrence of each distinct finding, in reading order;
+/// its first entry is the error the fail-fast reader returns) and `inputs` holds what reads despite them. TypeScript
+/// twin: `mutationInputAudit`.
+#[derive(Clone, Debug, PartialEq)]
+pub struct InputSchemaAudit {
+    pub inputs: Vec<ActionArgDef>,
+    pub findings: Vec<InputSchemaError>,
+}
+
+/// 🧺️ Reads `schema_json` in collecting mode — see [`InputSchemaAudit`].
+pub fn mutation_input_audit(schema_json: &str, resolver: &dyn InputSchemaResolver) -> InputSchemaAudit {
+    let reader = match InputSchemaReader::parse(schema_json, resolver, true) {
+        Ok(reader) => reader,
+        Err(error) => return InputSchemaAudit { inputs: Vec::new(), findings: vec![error] },
+    };
+    let read = reader.inputs();
+    let mut findings = reader.findings.map(std::cell::RefCell::into_inner).unwrap_or_default();
+    let inputs = match read {
+        Ok(inputs) => inputs,
+        Err(error) => {
+            findings.push(error);
+            Vec::new()
+        }
+    };
+    let mut distinct: Vec<InputSchemaError> = Vec::with_capacity(findings.len());
+    for finding in findings {
+        if !distinct.contains(&finding) {
+            distinct.push(finding);
+        }
+    }
+    InputSchemaAudit { inputs, findings: distinct }
+}
+
+/// 🧭️ The [`InputSchemaResolver`] over every JSON Schema document registered in the OS-wide `schema://` export registry
+/// (artifact facets and named scope exports): the document whose `$id` is `id`, or `None` when no plugin published it.
+pub fn registered_input_schema_document(id: &str) -> Option<DslValue> {
+    let texts: Vec<&'static str> = semio_framework_schema::with_schema_export_registry(|registry| {
+        registry.entries().filter(|entry| entry.format == semio_framework_schema::SchemaFormat::JsonSchema).filter_map(|entry| registry.resolve(entry.scope, entry.export, entry.format).ok()).filter(|text| text.contains(id)).collect()
+    });
+    texts.into_iter().find_map(|text| {
+        let document = dsl::os_pack::json::to_dsl_value(&dsl::os_pack::json::parse(text).ok()?);
+        (document.get("$id").and_then(DslValue::as_str) == Some(id)).then_some(document)
+    })
+}
+
+/// 🧾️ The instance a leaf payload schema validates for a candidate `payload` (a `Mutation::payload_value`): the payload
+/// with every root `const` property the schema declares (the aggregate discriminator `payload_value` strips, e.g.
+/// `"mutation": "moveNode"`) spliced in where absent — hand the result to `OwnedJsonSchemaValidator`. TypeScript twin:
+/// `mutationInputInstance`.
+pub fn mutation_input_instance(schema_json: &str, resolver: &dyn InputSchemaResolver, payload: &DslValue) -> Result<DslValue, InputSchemaError> {
+    let reader = InputSchemaReader::parse(schema_json, resolver, false)?;
+    let mut root = reader.resolve(None, reader.root.clone(), "")?;
+    let mut entries = payload.as_object().map(<[(String, DslValue)]>::to_vec).ok_or_else(|| input_error(InputSchemaErrorCode::Malformed, "", "a mutation payload is an object"))?;
+    if root.node.get("properties").is_none() && root.node.get("allOf").is_none() && input_union(&root.node).is_some() {
+        let (key, variants) = reader.variants(&root, "")?;
+        let chosen = payload.get(&key).and_then(DslValue::as_str).ok_or_else(|| input_error(InputSchemaErrorCode::Malformed, "", format!("a union payload names its variant in {key}")))?;
+        root = variants.into_iter().find(|variant| variant.value == chosen).map(|variant| variant.member).ok_or_else(|| input_error(InputSchemaErrorCode::Malformed, "", format!("{chosen} is no variant of this payload union")))?;
+    }
+    let mut members = Vec::new();
+    reader.members(&root, "", 0, &mut members)?;
+    for (document, node) in &members {
+        for (key, property) in node.get("properties").and_then(DslValue::as_object).unwrap_or_default() {
+            if entries.iter().any(|(name, _)| name == key) {
+                continue;
+            }
+            if let Some(value) = reader.resolve(document.clone(), property.clone(), &input_pointer("", key))?.node.get("const") {
+                entries.push((key.clone(), value.clone()));
+            }
+        }
+    }
+    Ok(DslValue::Object(entries))
+}
+
+/// 🔀️ The `oneOf`/`anyOf` branches of a schema node, if it is a union.
+fn input_union(node: &DslValue) -> Option<&[DslValue]> {
+    node.get("oneOf").or_else(|| node.get("anyOf")).and_then(DslValue::as_array)
+}
+
+/// 🔀️ One variant of a discriminated payload union: the `const` its discriminator pins, the resolved member, and that
+/// member's resolved discriminator property.
+struct InputVariant {
+    value: String,
+    member: ResolvedInput,
+    discriminator: ResolvedInput,
+}
+
+const INPUT_UI_KEYS: [&str; 18] = ["widget", "role", "label", "description", "step", "precision", "softMin", "softMax", "snaps", "snapSource", "unit", "displayUnit", "displayFactor", "scale", "group", "order", "options", "ref"];
+const INPUT_UI_NUMBER_KEYS: [&str; 9] = ["step", "precision", "softMin", "softMax", "snaps", "snapSource", "displayUnit", "displayFactor", "scale"];
+
+/// 🧭️ The number facets a vector shares across its components (every [`INPUT_UI_NUMBER_KEYS`] but the slider travel keys).
+const INPUT_UI_VECTOR_KEYS: [&str; 6] = ["step", "precision", "snaps", "snapSource", "displayUnit", "displayFactor"];
+const INPUT_REF_DEPTH: usize = 32;
+
+fn input_error(code: InputSchemaErrorCode, pointer: &str, detail: impl Into<String>) -> InputSchemaError {
+    InputSchemaError { code, pointer: pointer.to_string(), detail: detail.into() }
+}
+
+fn input_pointer(parent: &str, key: &str) -> String {
+    format!("{parent}/{}", key.replace('~', "~0").replace('/', "~1"))
+}
+
+/// 🌐️ A `{<locale>: text}` map naming every locale, or a `{<terminology>: {<locale>: text}}` matrix naming every cell.
+fn input_localized_text(value: &DslValue) -> Result<LocalizedLabel, InputSchemaErrorCode> {
+    let entries = value.as_object().ok_or(InputSchemaErrorCode::UiInvalid)?;
+    let cell = |map: &DslValue, locale: Locale| map.get(locale.as_str()).and_then(DslValue::as_str).filter(|text| !text.is_empty()).map(str::to_string);
+    if entries.iter().all(|(key, _)| Locale::parse(key).is_some()) {
+        if Locale::ALL.iter().any(|locale| cell(value, *locale).is_none()) {
+            return Err(InputSchemaErrorCode::LocaleMissing);
+        }
+        return Ok(LocalizedLabel::from_fn(|_, locale| cell(value, locale).unwrap_or_default()));
+    }
+    if entries.iter().all(|(key, map)| Terminology::parse(key).is_some() && map.as_object().is_some_and(|cells| cells.iter().all(|(locale, _)| Locale::parse(locale).is_some()))) {
+        let complete = Terminology::ALL.iter().all(|terminology| value.get(terminology.as_str()).is_some_and(|map| Locale::ALL.iter().all(|locale| cell(map, *locale).is_some())));
+        if !complete {
+            return Err(InputSchemaErrorCode::LocaleMissing);
+        }
+        return Ok(LocalizedLabel::from_fn(|terminology, locale| value.get(terminology.as_str()).and_then(|map| cell(map, locale)).unwrap_or_default()));
+    }
+    Err(InputSchemaErrorCode::UiInvalid)
+}
+
+/// 🔤️ The single non-null JSON type a schema node declares (`"object"` for bare `properties`, `"array"` for bare
+/// `items`, `"string"` for an all-string `enum`), or `None` when it names several or none.
+fn input_type(node: &DslValue) -> Option<&'static str> {
+    const TYPES: [&str; 6] = ["string", "integer", "number", "boolean", "object", "array"];
+    let named: Vec<&str> = match node.get("type") {
+        Some(DslValue::String(name)) => vec![name.as_str()],
+        Some(DslValue::Array(names)) => names.iter().filter_map(DslValue::as_str).filter(|name| *name != "null").collect(),
+        _ if node.get("properties").is_some() => vec!["object"],
+        _ if node.get("items").is_some() => vec!["array"],
+        _ if node.get("enum").and_then(DslValue::as_array).is_some_and(|values| !values.is_empty() && values.iter().all(|value| value.as_str().is_some())) => vec!["string"],
+        _ => Vec::new(),
+    };
+    match named.as_slice() {
+        [name] => TYPES.iter().find(|candidate| *candidate == name).copied(),
+        _ => None,
+    }
+}
+
+/// 🎯️ `<kind>Id` / `<kind>_id` (a string) or `<kind>Ids` / `<kind>_ids` (an array) names a reference to `kind`;
+/// a leading `new` of a replacement value (`newZoneId`) is not part of the kind.
+fn input_inferred_reference_kind(key: &str, many: bool) -> Option<String> {
+    let stem = if many { key.strip_suffix("Ids").or_else(|| key.strip_suffix("_ids")) } else { key.strip_suffix("Id").or_else(|| key.strip_suffix("_id")) }?;
+    let stem = match stem.strip_prefix("new") {
+        Some(rest) if rest.starts_with(|first: char| first.is_ascii_uppercase()) => rest,
+        Some("") => return None,
+        _ => stem,
+    };
+    let mut characters = stem.chars();
+    let first = characters.next().filter(char::is_ascii_alphabetic)?;
+    if !characters.clone().all(|character| character.is_ascii_alphanumeric() || character == '_') {
+        return None;
+    }
+    Some(first.to_ascii_lowercase().to_string() + characters.as_str())
+}
+
+/// 🧬️ A schema node with every `$ref` hop and nullable union resolved, the document it lives in (`None` = the leaf
+/// itself), and the merged `x-semio-ui` annotation (outer keys win).
+struct ResolvedInput {
+    document: Option<String>,
+    node: DslValue,
+    ui: Vec<(String, DslValue)>,
+    refs: Vec<String>,
+    nullable: bool,
+}
+
+impl ResolvedInput {
+    fn ui(&self, key: &str) -> Option<&DslValue> {
+        self.ui.iter().find(|(name, _)| name == key).map(|(_, value)| value)
+    }
+
+    fn ui_str(&self, key: &str) -> Option<&str> {
+        self.ui(key).and_then(DslValue::as_str)
+    }
+}
+
+struct InputSchemaReader<'r> {
+    root: DslValue,
+    resolver: &'r dyn InputSchemaResolver,
+    documents: std::cell::RefCell<BTreeMap<String, DslValue>>,
+    active: std::cell::RefCell<Vec<String>>,
+    findings: Option<std::cell::RefCell<Vec<InputSchemaError>>>,
+}
+
+impl<'r> InputSchemaReader<'r> {
+    fn parse(schema_json: &str, resolver: &'r dyn InputSchemaResolver, collect: bool) -> Result<Self, InputSchemaError> {
+        let root = dsl::os_pack::json::parse(schema_json).map_err(|error| input_error(InputSchemaErrorCode::Malformed, "", error.to_string()))?;
+        Ok(Self {
+            root: dsl::os_pack::json::to_dsl_value(&root),
+            resolver,
+            documents: std::cell::RefCell::new(BTreeMap::new()),
+            active: std::cell::RefCell::new(vec!["#".to_string()]),
+            findings: collect.then(|| std::cell::RefCell::new(Vec::new())),
+        })
+    }
+
+    /// 🧺️ In collecting mode records `result`'s error and goes on with `fallback`; the fail-fast mode passes it through.
+    fn recover<T>(&self, result: Result<T, InputSchemaError>, fallback: impl FnOnce() -> T) -> Result<T, InputSchemaError> {
+        match (result, &self.findings) {
+            (Err(error), Some(findings)) => {
+                findings.borrow_mut().push(error);
+                Ok(fallback())
+            }
+            (result, _) => result,
+        }
+    }
+
+    /// 🧬️ Every input of the payload: a discriminated union's selector and variant fields, else the object's fields.
+    fn inputs(&self) -> Result<Vec<ActionArgDef>, InputSchemaError> {
+        let payload = self.resolve(None, self.root.clone(), "")?;
+        if payload.node.get("properties").is_none() && payload.node.get("allOf").is_none() {
+            if input_union(&payload.node).is_some() {
+                return self.variant_inputs(&payload, "");
+            }
+            return match input_type(&payload.node) {
+                Some("object") | None => Ok(Vec::new()),
+                _ => Err(input_error(InputSchemaErrorCode::Malformed, "", "a mutation payload schema describes an object")),
+            };
+        }
+        self.fields(&payload, "")
+    }
+
+    /// ♾️ Expands `node` unless a `$ref` it passed through is already being expanded on this path: a recursive schema then
+    /// yields a structured value (`ArgSchema::Any`), edited as a whole and validated by the leaf schema, never an endless tree.
+    fn guarded(&self, node: &ResolvedInput, expand: impl FnOnce() -> Result<ArgSchema, InputSchemaError>) -> Result<ArgSchema, InputSchemaError> {
+        if node.refs.iter().any(|key| self.active.borrow().contains(key)) {
+            return Ok(ArgSchema::Any);
+        }
+        let mark = self.active.borrow().len();
+        self.active.borrow_mut().extend(node.refs.iter().cloned());
+        let expanded = expand();
+        self.active.borrow_mut().truncate(mark);
+        expanded
+    }
+
+    fn target(&self, document: &Option<String>, reference: &str, pointer: &str) -> Result<(Option<String>, DslValue), InputSchemaError> {
+        let unresolved = |detail: String| input_error(InputSchemaErrorCode::RefUnresolved, pointer, detail);
+        let (id, fragment) = reference.split_once('#').unwrap_or((reference, ""));
+        let document = if id.is_empty() { document.clone() } else { Some(id.to_string()) };
+        let fragment_path: Vec<String> = fragment.split('/').skip(1).map(|segment| segment.replace("~1", "/").replace("~0", "~")).collect();
+        let walk = |start: &DslValue| -> Option<DslValue> {
+            let mut current = start;
+            for segment in &fragment_path {
+                current = match current {
+                    DslValue::Object(_) => current.get(segment)?,
+                    DslValue::Array(items) => items.get(segment.parse::<usize>().ok()?)?,
+                    _ => return None,
+                };
+            }
+            Some(current.clone())
+        };
+        let found = match &document {
+            None => walk(&self.root),
+            Some(id) => {
+                if !self.documents.borrow().contains_key(id) {
+                    let fetched = self.resolver.resolve(id).ok_or_else(|| unresolved(format!("no schema document has $id {id}")))?;
+                    self.documents.borrow_mut().insert(id.clone(), fetched);
+                }
+                walk(&self.documents.borrow()[id])
+            }
+        };
+        found.map(|node| (document, node)).ok_or_else(|| unresolved(format!("{reference} lands on nothing")))
+    }
+
+    fn resolve(&self, document: Option<String>, node: DslValue, pointer: &str) -> Result<ResolvedInput, InputSchemaError> {
+        let mut resolved = ResolvedInput { document, node, ui: Vec::new(), refs: Vec::new(), nullable: false };
+        for _ in 0..INPUT_REF_DEPTH {
+            if let Some(annotation) = resolved.node.get("x-semio-ui") {
+                let entries = self.recover(annotation.as_object().ok_or_else(|| input_error(InputSchemaErrorCode::UiInvalid, pointer, "x-semio-ui is an object")), Default::default)?;
+                for (key, value) in entries {
+                    if !INPUT_UI_KEYS.contains(&key.as_str()) {
+                        self.recover(Err(input_error(InputSchemaErrorCode::UiInvalid, pointer, format!("x-semio-ui carries the undeclared key {key}"))), || ())?;
+                        continue;
+                    }
+                    if !resolved.ui.iter().any(|(name, _)| name == key) {
+                        resolved.ui.push((key.clone(), value.clone()));
+                    }
+                }
+            }
+            if let Some(reference) = resolved.node.get("$ref").and_then(DslValue::as_str).map(str::to_string) {
+                let (document, node) = self.target(&resolved.document, &reference, pointer)?;
+                resolved.refs.push(format!("{}#{}", document.as_deref().unwrap_or_default(), reference.split_once('#').map_or("", |(_, fragment)| fragment)));
+                resolved.document = document;
+                resolved.node = node;
+                continue;
+            }
+            let union = resolved.node.get("oneOf").or_else(|| resolved.node.get("anyOf")).and_then(DslValue::as_array).map(<[DslValue]>::to_vec);
+            if let Some(branches) = union {
+                let null = |branch: &DslValue| branch.get("type").and_then(DslValue::as_str) == Some("null") && branch.as_object().is_some_and(|entries| entries.len() == 1);
+                let concrete: Vec<&DslValue> = branches.iter().filter(|branch| !null(branch)).collect();
+                if concrete.len() == 1 && concrete.len() < branches.len() {
+                    resolved.node = concrete[0].clone();
+                    resolved.nullable = true;
+                    continue;
+                }
+            }
+            resolved.nullable |= resolved.node.get("type").and_then(DslValue::as_array).is_some_and(|types| types.iter().any(|name| name.as_str() == Some("null")));
+            return Ok(resolved);
+        }
+        Err(input_error(InputSchemaErrorCode::Malformed, pointer, "a $ref chain exceeds 32 hops"))
+    }
+
+    /// 🧩️ The object itself and, depth first, every `allOf` member it composes (each resolved in its own document).
+    fn members(&self, object: &ResolvedInput, pointer: &str, depth: usize, members: &mut Vec<(Option<String>, DslValue)>) -> Result<(), InputSchemaError> {
+        if depth == INPUT_REF_DEPTH {
+            return Err(input_error(InputSchemaErrorCode::Malformed, pointer, "an allOf composition exceeds 32 levels"));
+        }
+        members.push((object.document.clone(), object.node.clone()));
+        for member in object.node.get("allOf").and_then(DslValue::as_array).unwrap_or_default() {
+            let resolved = self.resolve(object.document.clone(), member.clone(), pointer)?;
+            self.members(&resolved, pointer, depth + 1, members)?;
+        }
+        Ok(())
+    }
+
+    /// 🔀️ A discriminated union's variants: the first property of the first member that every member pins to a
+    /// distinct string `const`, and per member that value, the member and its discriminator property.
+    fn variants(&self, union: &ResolvedInput, pointer: &str) -> Result<(String, Vec<InputVariant>), InputSchemaError> {
+        let mut members = Vec::new();
+        for branch in input_union(&union.node).unwrap_or_default() {
+            let member = self.resolve(union.document.clone(), branch.clone(), pointer)?;
+            let mut composed = Vec::new();
+            self.members(&member, pointer, 0, &mut composed)?;
+            let mut pins: Vec<(String, Option<String>, ResolvedInput)> = Vec::new();
+            for (document, node) in &composed {
+                for (key, property) in node.get("properties").and_then(DslValue::as_object).unwrap_or_default() {
+                    if pins.iter().any(|(name, _, _)| name == key) {
+                        continue;
+                    }
+                    let resolved = self.resolve(document.clone(), property.clone(), &input_pointer(pointer, key))?;
+                    let value = resolved.node.get("const").and_then(DslValue::as_str).map(str::to_string);
+                    pins.push((key.clone(), value, resolved));
+                }
+            }
+            members.push((member, pins));
+        }
+        let pinned = |key: &str| -> Option<Vec<String>> {
+            let values: Vec<String> = members.iter().map(|(_, pins)| pins.iter().find(|(name, _, _)| name == key).and_then(|(_, value, _)| value.clone())).collect::<Option<_>>()?;
+            values.iter().enumerate().all(|(index, value)| !values[..index].contains(value)).then_some(values)
+        };
+        let key = members.first().and_then(|(_, pins)| pins.iter().map(|(name, _, _)| name.clone()).find(|name| pinned(name).is_some())).ok_or_else(|| input_error(InputSchemaErrorCode::Malformed, pointer, "a payload union names no property every variant pins to a distinct string const"))?;
+        let variants = members
+            .into_iter()
+            .filter_map(|(member, pins)| pins.into_iter().find(|(name, _, _)| *name == key).and_then(|(_, value, discriminator)| Some(InputVariant { value: value?, member, discriminator })))
+            .collect();
+        Ok((key, variants))
+    }
+
+    /// 🔀️ A discriminated union's inputs: one required variant selector (segmented up to four variants, else a select;
+    /// each option labelled by its member's `x-semio-ui.label` or the glossary) followed by every member's fields, each
+    /// grouped under its variant's value so an editor shows only the active variant's fields.
+    fn variant_inputs(&self, union: &ResolvedInput, pointer: &str) -> Result<Vec<ActionArgDef>, InputSchemaError> {
+        let (key, variants) = self.variants(union, pointer)?;
+        let selector = input_pointer(pointer, &key);
+        let discriminator = &variants.first().ok_or_else(|| input_error(InputSchemaErrorCode::Malformed, pointer, "a payload union has no variant"))?.discriminator;
+        let label = match discriminator.ui("label") {
+            Some(label) => input_localized_text(label).map_err(|code| input_error(code, &selector, "label names every locale")),
+            None => input_label_glossary().get(&key).cloned().ok_or_else(|| input_error(InputSchemaErrorCode::LabelMissing, &selector, format!("{key} has no x-semio-ui.label and no glossary label"))),
+        };
+        let label = self.recover(label, LocalizedLabel::default)?;
+        let description = discriminator.ui("description").map(|description| input_localized_text(description).map_err(|code| input_error(code, &selector, "description names every locale"))).transpose();
+        let description = self.recover(description, || None)?;
+        let options = variants
+            .iter()
+            .map(|variant| {
+                let label = match variant.member.ui("label") {
+                    Some(label) => input_localized_text(label).map_err(|code| input_error(code, &selector, format!("variant {} names every locale", variant.value))),
+                    None => input_label_glossary().get(&variant.value).cloned().ok_or_else(|| input_error(InputSchemaErrorCode::OptionLabelMissing, &selector, format!("variant {} has no x-semio-ui.label and no glossary label", variant.value))),
+                };
+                Ok(ActionArgOption { value: variant.value.clone(), label: self.recover(label, LocalizedLabel::default)? })
+            })
+            .collect::<Result<Vec<_>, InputSchemaError>>()?;
+        let presentation = (options.len() <= 4).then_some(ArgPresentation::Segmented);
+        let mut inputs = vec![ActionArgDef { id: input_pointer("", &key), label, schema: ArgSchema::String { options, min_len: None, max_len: None, pattern: None, format: None }, presentation, required: true, nullable: false, default: None, description, group: None, order: None }];
+        for variant in &variants {
+            for mut field in self.fields(&variant.member, pointer)? {
+                field.group = Some(variant.value.clone());
+                inputs.push(field);
+            }
+        }
+        Ok(inputs)
+    }
+
+    fn fields(&self, object: &ResolvedInput, pointer: &str) -> Result<Vec<ActionArgDef>, InputSchemaError> {
+        let mut members = Vec::new();
+        self.members(object, pointer, 0, &mut members)?;
+        let required: Vec<&str> = members.iter().flat_map(|(_, node)| node.get("required").and_then(DslValue::as_array).unwrap_or_default().iter().filter_map(DslValue::as_str)).collect();
+        let mut fields = Vec::new();
+        let mut seen = Vec::new();
+        for (document, node) in &members {
+            for (key, property) in node.get("properties").and_then(DslValue::as_object).unwrap_or_default() {
+                if seen.contains(&key.as_str()) {
+                    continue;
+                }
+                seen.push(key.as_str());
+                let child_pointer = input_pointer(pointer, key);
+                let Some(resolved) = self.recover(self.resolve(document.clone(), property.clone(), &child_pointer).map(Some), || None)? else { continue };
+                if let Some(field) = self.recover(self.input(key, &resolved, required.contains(&key.as_str()), &child_pointer), || None)? {
+                    fields.push(field);
+                }
+            }
+        }
+        Ok(fields)
+    }
+
+    fn input(&self, key: &str, input: &ResolvedInput, required: bool, pointer: &str) -> Result<Option<ActionArgDef>, InputSchemaError> {
+        let role = match input.ui("role") {
+            None => None,
+            Some(DslValue::String(role)) if ["value", "target", "discriminator"].contains(&role.as_str()) => Some(role.as_str()),
+            Some(_) => self.recover(Err(input_error(InputSchemaErrorCode::UiInvalid, pointer, "role is value, target or discriminator")), || None)?,
+        };
+        if role == Some("discriminator") || input.node.get("const").is_some() {
+            return Ok(None);
+        }
+        let widget = match input.ui("widget") {
+            None => None,
+            Some(DslValue::String(widget)) if ["slider", "stepper", "dial", "toggle", "select", "segmented", "text", "multiline", "vector", "color", "reference", "hidden"].contains(&widget.as_str()) => Some(widget.as_str()),
+            Some(_) => self.recover(Err(input_error(InputSchemaErrorCode::UiInvalid, pointer, "widget is not a declared widget")), || None)?,
+        };
+        let label = match input.ui("label") {
+            Some(label) => input_localized_text(label).map_err(|code| input_error(code, pointer, "label names every locale")),
+            None => input_label_glossary().get(key).cloned().ok_or_else(|| input_error(InputSchemaErrorCode::LabelMissing, pointer, format!("{key} has no x-semio-ui.label and no glossary label"))),
+        };
+        let label = self.recover(label, LocalizedLabel::default)?;
+        let description = input.ui("description").map(|description| input_localized_text(description).map_err(|code| input_error(code, pointer, "description names every locale"))).transpose();
+        let description = self.recover(description, || None)?;
+        let group = match input.ui("group") {
+            None => None,
+            Some(DslValue::String(group)) if !group.is_empty() => Some(group.clone()),
+            Some(_) => self.recover(Err(input_error(InputSchemaErrorCode::UiInvalid, pointer, "group is a non-empty string")), || None)?,
+        };
+        let order = match input.ui("order") {
+            None => None,
+            Some(order) => self.recover(order.as_i64().map(Some).ok_or_else(|| input_error(InputSchemaErrorCode::UiInvalid, pointer, "order is an integer")), || None)?,
+        };
+        let Some(schema) = self.recover(self.guarded(input, || self.schema(key, input, role, widget, pointer)).map(Some), || None)? else {
+            return Ok(Some(ActionArgDef { id: input_pointer("", key), label, schema: ArgSchema::Any, presentation: None, required, nullable: input.nullable, default: None, description, group, order }));
+        };
+        let compatible = match (widget, &schema) {
+            (Some("slider" | "stepper" | "dial"), ArgSchema::Number { .. }) | (Some("toggle"), ArgSchema::Boolean) | (Some("vector"), ArgSchema::Vector { .. }) | (Some("reference"), ArgSchema::Reference { .. }) | (Some("hidden") | None, _) => true,
+            (Some("color"), ArgSchema::Vector { dims, min, max, .. }) => matches!(dims, 3 | 4) && *min == Some(0.0) && *max == Some(1.0),
+            (Some("select" | "segmented"), ArgSchema::String { options, .. }) => !options.is_empty(),
+            (Some("text" | "multiline"), ArgSchema::String { options, .. }) => options.is_empty(),
+            _ => false,
+        };
+        if !compatible {
+            self.recover(Err(input_error(InputSchemaErrorCode::WidgetIncompatible, pointer, format!("widget {} cannot edit this value", widget.unwrap_or_default()))), || ())?;
+        }
+        let presentation = match widget {
+            Some("slider") => Some(ArgPresentation::Slider),
+            Some("stepper") => Some(ArgPresentation::Stepper),
+            Some("dial") => Some(ArgPresentation::Dial),
+            Some("segmented") => Some(ArgPresentation::Segmented),
+            Some("multiline") => Some(ArgPresentation::Multiline),
+            Some("hidden") => Some(ArgPresentation::Hidden),
+            Some("color") => Some(ArgPresentation::Color),
+            _ => None,
+        };
+        let default = input.node.get("default").cloned();
+        Ok(Some(ActionArgDef { id: input_pointer("", key), label, schema, presentation, required, nullable: input.nullable, default, description, group, order }))
+    }
+
+    fn schema(&self, key: &str, input: &ResolvedInput, role: Option<&str>, widget: Option<&str>, pointer: &str) -> Result<ArgSchema, InputSchemaError> {
+        let kind = input_type(&input.node);
+        if !matches!(kind, Some("integer" | "number")) {
+            if let Some((name, _)) = input.ui.iter().find(|(name, _)| INPUT_UI_NUMBER_KEYS.contains(&name.as_str()) && !(kind == Some("array") && INPUT_UI_VECTOR_KEYS.contains(&name.as_str()))) {
+                self.recover(Err(input_error(InputSchemaErrorCode::UiInvalid, pointer, format!("{name} only applies to a number"))), || ())?;
+            }
+        }
+        if input.ui("unit").is_some() && !matches!(kind, Some("integer" | "number" | "array")) {
+            self.recover(Err(input_error(InputSchemaErrorCode::UiInvalid, pointer, "unit only applies to a number or a vector")), || ())?;
+        }
+        if widget == Some("hidden") && matches!(kind, Some("object" | "array")) {
+            return Ok(ArgSchema::Any);
+        }
+        let many = kind == Some("array");
+        let items = match (many, input.node.get("items")) {
+            (true, Some(items)) => self.recover(self.resolve(input.document.clone(), items.clone(), &format!("{pointer}/-")).map(Some), || None)?,
+            _ => None,
+        };
+        let item_kind = items.as_ref().and_then(|items| input_type(&items.node));
+        let id_kind = if many { item_kind } else { kind };
+        let reference_shaped = id_kind == Some("string");
+        let explicit_reference = input.ui("ref").is_some() || widget == Some("reference") || role == Some("target");
+        if explicit_reference && !matches!(id_kind, Some("string" | "integer")) {
+            return Err(input_error(InputSchemaErrorCode::WidgetIncompatible, pointer, "a reference is a string or integer id or an array of them"));
+        }
+        let inferred_kind = (role.is_none() && widget.is_none() && reference_shaped && input.node.get("enum").is_none()).then(|| input_inferred_reference_kind(key, many)).flatten();
+        if explicit_reference || inferred_kind.is_some() {
+            if let Some((name, _)) = input.ui.iter().find(|(name, _)| name == "unit" || INPUT_UI_NUMBER_KEYS.contains(&name.as_str())) {
+                self.recover(Err(input_error(InputSchemaErrorCode::UiInvalid, pointer, format!("{name} does not apply to a reference"))), || ())?;
+            }
+            let id_type = if id_kind == Some("integer") { ReferenceIdType::Integer } else { ReferenceIdType::String };
+            return self.reference(key, input, many, inferred_kind, id_type, pointer);
+        }
+        if input.ui("options").is_some() && input.node.get("enum").is_none() {
+            self.recover(Err(input_error(InputSchemaErrorCode::UiInvalid, pointer, "options only label enum values")), || ())?;
+        }
+        match kind {
+            Some("string") => Ok(ArgSchema::String {
+                options: input_options(input, pointer)?,
+                min_len: input.node.get("minLength").and_then(DslValue::as_u64).map(|length| length as u32),
+                max_len: input.node.get("maxLength").and_then(DslValue::as_u64).map(|length| length as u32),
+                pattern: input.node.get("pattern").and_then(DslValue::as_str).map(str::to_string),
+                format: (input.node.get("format").and_then(DslValue::as_str) == Some("uri")).then_some(ArgFormat::Uri),
+            }),
+            Some(number @ ("integer" | "number")) => input_number(input, number == "integer", pointer),
+            Some("boolean") => Ok(ArgSchema::Boolean),
+            Some("object") if input.node.get("properties").is_some() || input.node.get("allOf").is_some() => Ok(ArgSchema::Object { fields: self.fields(input, pointer)? }),
+            Some("array") => {
+                let bound = |name: &str| input.node.get(name).and_then(DslValue::as_u64).map(|count| count as u32);
+                let (min_items, max_items) = (bound("minItems"), bound("maxItems"));
+                let numeric = matches!(item_kind, Some("integer" | "number"));
+                let fixed = min_items.filter(|count| Some(*count) == max_items && (2..=4).contains(count));
+                if matches!(widget, Some("vector" | "color")) || (numeric && fixed.is_some()) {
+                    let (Some(dims), Some(items)) = (fixed.filter(|_| numeric), items.as_ref()) else {
+                        return Err(input_error(InputSchemaErrorCode::WidgetIncompatible, pointer, "a vector is an array of 2 to 4 numbers of fixed length"));
+                    };
+                    let component = ResolvedInput { document: items.document.clone(), node: items.node.clone(), ui: input.ui.clone(), refs: Vec::new(), nullable: items.nullable };
+                    let ArgSchema::Number { min, min_exclusive, max, max_exclusive, snaps, snap_source, precision, display_unit, display_factor, .. } = input_number(&component, item_kind == Some("integer"), pointer)? else {
+                        unreachable!("input_number reads a number");
+                    };
+                    return Ok(ArgSchema::Vector {
+                        dims,
+                        min: min.filter(|_| !min_exclusive),
+                        max: max.filter(|_| !max_exclusive),
+                        unit: input_string(input, "unit", pointer)?,
+                        step: input_positive(input, "step", pointer)?,
+                        snaps,
+                        snap_source,
+                        precision,
+                        display_unit,
+                        display_factor,
+                    });
+                }
+                if let Some((name, _)) = input.ui.iter().find(|(name, _)| INPUT_UI_VECTOR_KEYS.contains(&name.as_str())).filter(|_| !numeric) {
+                    self.recover(Err(input_error(InputSchemaErrorCode::UiInvalid, pointer, format!("{name} only applies to a number or a vector"))), || ())?;
+                }
+                let items = match &items {
+                    Some(items) if numeric => {
+                        let mut ui = items.ui.clone();
+                        ui.extend(input.ui.iter().filter(|(name, _)| (name == "unit" || INPUT_UI_VECTOR_KEYS.contains(&name.as_str())) && !items.ui.iter().any(|(own, _)| own == name)).cloned());
+                        self.item_schema(&ResolvedInput { document: items.document.clone(), node: items.node.clone(), ui, refs: items.refs.clone(), nullable: items.nullable }, &format!("{pointer}/-"))?
+                    }
+                    Some(items) => self.item_schema(items, &format!("{pointer}/-"))?,
+                    None => ArgSchema::Any,
+                };
+                Ok(ArgSchema::Array { items: Box::new(items), min_items, max_items })
+            }
+            _ => Ok(ArgSchema::Any),
+        }
+    }
+
+    fn item_schema(&self, items: &ResolvedInput, pointer: &str) -> Result<ArgSchema, InputSchemaError> {
+        self.guarded(items, || self.item_schema_expanded(items, pointer))
+    }
+
+    fn item_schema_expanded(&self, items: &ResolvedInput, pointer: &str) -> Result<ArgSchema, InputSchemaError> {
+        if items.node.get("const").is_some() {
+            return Ok(ArgSchema::Any);
+        }
+        match input_type(&items.node) {
+            Some("string") => Ok(ArgSchema::String { options: input_options(items, pointer)?, min_len: None, max_len: None, pattern: None, format: None }),
+            Some(number @ ("integer" | "number")) => input_number(items, number == "integer", pointer),
+            Some("boolean") => Ok(ArgSchema::Boolean),
+            Some("object") if items.node.get("properties").is_some() || items.node.get("allOf").is_some() => Ok(ArgSchema::Object { fields: self.fields(items, pointer)? }),
+            Some("array") => {
+                let inner = match items.node.get("items") {
+                    Some(inner) => self.item_schema(&self.resolve(items.document.clone(), inner.clone(), &format!("{pointer}/-"))?, &format!("{pointer}/-"))?,
+                    None => ArgSchema::Any,
+                };
+                let bound = |name: &str| items.node.get(name).and_then(DslValue::as_u64).map(|count| count as u32);
+                Ok(ArgSchema::Array { items: Box::new(inner), min_items: bound("minItems"), max_items: bound("maxItems") })
+            }
+            _ => Ok(ArgSchema::Any),
+        }
+    }
+
+    fn reference(&self, key: &str, input: &ResolvedInput, many: bool, inferred_kind: Option<String>, id_type: ReferenceIdType, pointer: &str) -> Result<ArgSchema, InputSchemaError> {
+        let invalid = |detail: &str| input_error(InputSchemaErrorCode::UiInvalid, pointer, detail);
+        let reference = input.ui("ref");
+        if reference.is_some_and(|reference| reference.as_object().is_none_or(|entries| entries.iter().any(|(name, _)| !["kind", "domain", "granularity"].contains(&name.as_str())))) {
+            return Err(invalid("ref is {kind, domain?, granularity?}"));
+        }
+        let kinds = match reference.and_then(|reference| reference.get("kind")) {
+            Some(DslValue::String(kind)) if !kind.is_empty() => vec![kind.clone()],
+            Some(DslValue::Array(kinds)) if !kinds.is_empty() && kinds.iter().all(|kind| kind.as_str().is_some_and(|kind| !kind.is_empty())) => kinds.iter().filter_map(DslValue::as_str).map(str::to_string).collect(),
+            Some(_) => return Err(invalid("ref.kind is a non-empty string or a non-empty array of them")),
+            None => vec![inferred_kind.or_else(|| input_inferred_reference_kind(key, many)).ok_or_else(|| invalid("a target names its ref.kind"))?],
+        };
+        let text = |name: &str| -> Result<Option<String>, InputSchemaError> {
+            match reference.and_then(|reference| reference.get(name)) {
+                None => Ok(None),
+                Some(DslValue::String(value)) if !value.is_empty() => Ok(Some(value.clone())),
+                Some(_) => Err(invalid("ref.domain and ref.granularity are non-empty strings")),
+            }
+        };
+        let bound = |name: &str| input.node.get(name).and_then(DslValue::as_u64).map(|count| count as u32);
+        Ok(ArgSchema::Reference { kinds, domain: text("domain")?, granularity: text("granularity")?, many, min_items: many.then(|| bound("minItems")).flatten(), max_items: many.then(|| bound("maxItems")).flatten(), id_type })
+    }
+}
+
+fn input_string(input: &ResolvedInput, key: &str, pointer: &str) -> Result<Option<String>, InputSchemaError> {
+    match input.ui(key) {
+        None => Ok(None),
+        Some(DslValue::String(value)) if !value.is_empty() => Ok(Some(value.clone())),
+        Some(_) => Err(input_error(InputSchemaErrorCode::UiInvalid, pointer, format!("{key} is a non-empty string"))),
+    }
+}
+
+fn input_finite(input: &ResolvedInput, key: &str, pointer: &str) -> Result<Option<f64>, InputSchemaError> {
+    match input.ui(key) {
+        None => Ok(None),
+        Some(value) => value.as_f64().filter(|value| value.is_finite()).map(Some).ok_or_else(|| input_error(InputSchemaErrorCode::UiInvalid, pointer, format!("{key} is a finite number"))),
+    }
+}
+
+fn input_positive(input: &ResolvedInput, key: &str, pointer: &str) -> Result<Option<f64>, InputSchemaError> {
+    match input_finite(input, key, pointer)? {
+        Some(value) if value <= 0.0 => Err(input_error(InputSchemaErrorCode::UiInvalid, pointer, format!("{key} is positive"))),
+        value => Ok(value),
+    }
+}
+
+fn input_options(input: &ResolvedInput, pointer: &str) -> Result<Vec<ActionArgOption>, InputSchemaError> {
+    let Some(values) = input.node.get("enum").and_then(DslValue::as_array) else { return Ok(Vec::new()) };
+    let labels = input.ui("options");
+    if labels.is_some_and(|labels| labels.as_object().is_none_or(|entries| entries.iter().any(|(value, _)| !values.iter().any(|candidate| candidate.as_str() == Some(value.as_str()))))) {
+        return Err(input_error(InputSchemaErrorCode::UiInvalid, pointer, "options labels only declared enum values"));
+    }
+    values
+        .iter()
+        .map(|value| {
+            let value = value.as_str().ok_or_else(|| input_error(InputSchemaErrorCode::Malformed, pointer, "a labelled enum lists strings"))?;
+            let label = match labels.and_then(|labels| labels.get(value)) {
+                Some(label) => input_localized_text(label).map_err(|code| input_error(code, pointer, format!("option {value} names every locale")))?,
+                None => input_label_glossary().get(value).cloned().ok_or_else(|| input_error(InputSchemaErrorCode::OptionLabelMissing, pointer, format!("option {value} has no label")))?,
+            };
+            Ok(ActionArgOption { value: value.to_string(), label })
+        })
+        .collect()
+}
+
+fn input_number(input: &ResolvedInput, integer: bool, pointer: &str) -> Result<ArgSchema, InputSchemaError> {
+    let invalid = |detail: String| input_error(InputSchemaErrorCode::UiInvalid, pointer, detail);
+    let keyword = |name: &str| input.node.get(name).and_then(DslValue::as_f64);
+    let bound = |inclusive: Option<f64>, exclusive: Option<f64>, lower: bool| -> (Option<f64>, bool) {
+        match (inclusive, exclusive) {
+            (inclusive, None) => (inclusive, false),
+            (Some(inclusive), Some(exclusive)) if (lower && inclusive > exclusive) || (!lower && inclusive < exclusive) => (Some(inclusive), false),
+            (_, Some(exclusive)) if integer => (Some(if lower { exclusive.floor() + 1.0 } else { exclusive.ceil() - 1.0 }), false),
+            (_, Some(exclusive)) => (Some(exclusive), true),
+        }
+    };
+    let (min, min_exclusive) = bound(keyword("minimum"), keyword("exclusiveMinimum"), true);
+    let (max, max_exclusive) = bound(keyword("maximum"), keyword("exclusiveMaximum"), false);
+    let inside = |value: f64| min.is_none_or(|min| if min_exclusive { value > min } else { value >= min }) && max.is_none_or(|max| if max_exclusive { value < max } else { value <= max });
+    let snaps = match input.ui("snaps") {
+        None => Vec::new(),
+        Some(DslValue::Array(values)) => values.iter().map(|value| value.as_f64().filter(|value| value.is_finite())).collect::<Option<Vec<f64>>>().ok_or_else(|| invalid("snaps are finite numbers".to_string()))?,
+        Some(_) => return Err(invalid("snaps is an array of numbers".to_string())),
+    };
+    if let Some(snap) = snaps.iter().find(|snap| !inside(**snap)) {
+        return Err(invalid(format!("snap {snap} lies outside the hard bounds")));
+    }
+    let snap_source = match input.ui("snapSource") {
+        None => None,
+        Some(source) => Some(match source.as_object() {
+            Some([(name, DslValue::Bool(true))]) if name == "step" => SnapSource::Step,
+            Some([(name, DslValue::String(key))]) if name == "config" && !key.is_empty() => SnapSource::Config { key: key.clone() },
+            Some([(name, DslValue::String(target))]) if name == "snapshot" && (target.is_empty() || target.starts_with('/')) => SnapSource::Snapshot { pointer: target.clone() },
+            _ => return Err(invalid("snapSource is {step: true}, {config: key} or {snapshot: pointer}".to_string())),
+        }),
+    };
+    let soft_min = input_finite(input, "softMin", pointer)?;
+    let soft_max = input_finite(input, "softMax", pointer)?;
+    if soft_min.is_some_and(|soft| !inside(soft)) || soft_max.is_some_and(|soft| !inside(soft)) || soft_min.zip(soft_max).is_some_and(|(low, high)| low >= high) {
+        return Err(invalid("softMin < softMax lie inside the hard bounds".to_string()));
+    }
+    let scale = match input.ui_str("scale") {
+        None if input.ui("scale").is_none() => None,
+        Some("linear") => Some(NumberScale::Linear),
+        Some("log") => Some(NumberScale::Log),
+        _ => return Err(invalid("scale is linear or log".to_string())),
+    };
+    if scale == Some(NumberScale::Log) && !soft_min.or(min).is_some_and(|low| low > 0.0) {
+        return Err(invalid("a log scale starts at a positive softMin or minimum".to_string()));
+    }
+    let precision = match input.ui("precision") {
+        None => None,
+        Some(precision) => Some(precision.as_u64().filter(|digits| *digits <= 15).ok_or_else(|| invalid("precision is an integer 0..=15".to_string()))? as u32),
+    };
+    let display_factor = input_finite(input, "displayFactor", pointer)?;
+    if display_factor == Some(0.0) {
+        return Err(invalid("displayFactor is non-zero".to_string()));
+    }
+    Ok(ArgSchema::Number {
+        min,
+        min_exclusive,
+        max,
+        max_exclusive,
+        step: input_positive(input, "step", pointer)?.or(integer.then_some(1.0)),
+        integer,
+        unit: input_string(input, "unit", pointer)?,
+        snaps,
+        snap_source,
+        soft_min,
+        soft_max,
+        precision,
+        display_unit: input_string(input, "displayUnit", pointer)?,
+        display_factor,
+        scale,
+    })
+}
+
+#[cfg(test)]
+#[path = "🧪️tests/🧪️mutation-inputs/🦀️.rs"]
+mod mutation_inputs_tests;
+//#endregion 🔖️MutationInputs
 
 /// 🎯️ Neutral icon for an action or command whose owner does not declare presentation metadata.
 pub fn default_action_icon_id(kind: ActionKind) -> IconName {
@@ -1201,8 +2381,16 @@ impl ActionDefinition {
 /// concrete `entrySeq` from the history panel's "backwards" button).
 pub const REVERT_TO_COMMAND_ACTION_ID: &str = "revertToCommand";
 
-/// 🕹️ The seven framework-owned History actions, auto-injected into every `AppDefinition`.
+/// 🕹️ The framework-owned History actions, auto-injected into every `AppDefinition`: the seven history-lane verbs
+/// followed by the [`history_edit_action_definitions`] of non-destructive history editing.
 pub fn history_action_definitions() -> Vec<ActionDefinition> {
+    let mut actions = history_lane_action_definitions();
+    actions.extend(history_edit_action_definitions());
+    actions
+}
+
+/// 🕹️ The seven history-lane verbs: they move the applied stack or the head of the artifact.
+fn history_lane_action_definitions() -> Vec<ActionDefinition> {
     vec![
         ActionDefinition { keys: Some("mod+z".into()), ..ActionDefinition::resumable_framework("undo", LocalizedLabel::native("Undo", "Rückgängig"), ActionKind::History, "undo-2") }
             .describe(LocalizedLabel::native("Reverts the most recent edit on the open artifact and moves its head back one revision.", "Macht die letzte Änderung am geöffneten Artefakt rückgängig und setzt den Kopf eine Revision zurück."))
@@ -1227,6 +2415,179 @@ pub fn history_action_definitions() -> Vec<ActionDefinition> {
             .with_args([ActionArgDef::number("entrySeq", LocalizedLabel::native("Entry", "Eintrag")).required()]),
     ]
 }
+
+//#region 🔖️HistoryEdit
+/// ✏️ Opens (or retargets) the history-edit session on one applied mutation: `mutationId`.
+pub const HISTORY_EDIT_BEGIN_ACTION_ID: &str = "historyEditBegin";
+/// 🎚️ Sets one input of the edited mutation's draft: `path` (RFC 6901 pointer into the payload) and `value`.
+pub const HISTORY_EDIT_INPUT_ACTION_ID: &str = "historyEditInput";
+/// 🎯️ Sets the reference input at `path` from the current selection of its declared domain.
+pub const HISTORY_EDIT_USE_SELECTION_ACTION_ID: &str = "historyEditUseSelection";
+/// 🚫️ Drafts the edited mutation as withdrawn: it folds as a no-op.
+pub const HISTORY_EDIT_WITHDRAW_ACTION_ID: &str = "historyEditWithdraw";
+/// ✅️ Accepts the draft and replays everything downstream.
+pub const HISTORY_EDIT_ACCEPT_ACTION_ID: &str = "historyEditAccept";
+/// ↩️ Drops the draft and returns to the previous stage.
+pub const HISTORY_EDIT_DISCARD_ACTION_ID: &str = "historyEditDiscard";
+/// 🏁️ Opens the finalize prompt once the replayed history is clean.
+pub const HISTORY_EDIT_FINALIZE_ACTION_ID: &str = "historyEditFinalize";
+/// 🌿️ Commits the accepted drafts: as a new alternative named `name`, or with `choice: overwrite` over every alternative.
+pub const HISTORY_EDIT_COMMIT_ACTION_ID: &str = "historyEditCommit";
+/// ⬅️ Leaves the finalize prompt and returns to reviewing.
+pub const HISTORY_EDIT_BACK_ACTION_ID: &str = "historyEditBack";
+/// 🚪️ Leaves history editing and discards every draft.
+pub const HISTORY_EDIT_EXIT_ACTION_ID: &str = "historyEditExit";
+/// ⏹️ Cancels the running downstream replay.
+pub const HISTORY_EDIT_CANCEL_REPLAY_ACTION_ID: &str = "historyEditCancelReplay";
+/// 🔁️ Replays the accepted drafts again after a cancelled or faulted replay.
+pub const HISTORY_EDIT_RERUN_ACTION_ID: &str = "historyEditRerun";
+/// 🗂️ Every reserved history-edit verb, in lifecycle order. They are host-driven: applied to the session at the head of
+/// the dispatch, never queued behind guest work, never recorded as history rows.
+pub const HISTORY_EDIT_ACTION_IDS: [&str; 12] = [
+    HISTORY_EDIT_BEGIN_ACTION_ID,
+    HISTORY_EDIT_INPUT_ACTION_ID,
+    HISTORY_EDIT_USE_SELECTION_ACTION_ID,
+    HISTORY_EDIT_WITHDRAW_ACTION_ID,
+    HISTORY_EDIT_ACCEPT_ACTION_ID,
+    HISTORY_EDIT_DISCARD_ACTION_ID,
+    HISTORY_EDIT_FINALIZE_ACTION_ID,
+    HISTORY_EDIT_COMMIT_ACTION_ID,
+    HISTORY_EDIT_BACK_ACTION_ID,
+    HISTORY_EDIT_EXIT_ACTION_ID,
+    HISTORY_EDIT_CANCEL_REPLAY_ACTION_ID,
+    HISTORY_EDIT_RERUN_ACTION_ID,
+];
+/// 🪪️ `historyEditBegin`'s mutation id argument (`<editId>#<opIndex>`).
+pub const HISTORY_EDIT_ARG_MUTATION_ID: &str = "mutationId";
+/// 🧭️ The RFC 6901 pointer of one input inside the edited mutation's payload.
+pub const HISTORY_EDIT_ARG_PATH: &str = "path";
+/// 🎚️ `historyEditInput`'s new input value.
+pub const HISTORY_EDIT_ARG_VALUE: &str = "value";
+/// 🧿️ The session generation a verb addresses; absent addresses the live session.
+pub const HISTORY_EDIT_ARG_GENERATION: &str = "generation";
+/// 🏷️ `historyEditCommit`'s new alternative name.
+pub const HISTORY_EDIT_ARG_NAME: &str = "name";
+/// ✍️ The `historyEditCommit` choice (the finalize dialog's [`DIALOG_CHOICE_ARG`]) that overwrites every alternative.
+pub const HISTORY_EDIT_CHOICE_OVERWRITE: &str = "overwrite";
+/// 🗳️ The framework-injected finalize dialog of a history edit.
+pub const HISTORY_EDIT_FINALIZE_DIALOG_ID: &str = "finalizeHistoryEdit";
+
+/// ✏️ The twelve reserved history-edit verbs, part of [`history_action_definitions`]: never in the palette, no chords
+/// (the hosts bind remappable `ui.timeTravel.*` chords), rejected on a viewer, agent-addressable like undo.
+pub fn history_edit_action_definitions() -> Vec<ActionDefinition> {
+    let generation = || history_edit_hidden_arg(ActionArgDef::with_schema(HISTORY_EDIT_ARG_GENERATION, LocalizedLabel::native("Generation", "Generation"), ArgSchema::number(Some(0.0), None, Some(1.0), true)));
+    let path = || ActionArgDef::text(HISTORY_EDIT_ARG_PATH, LocalizedLabel::native("Input", "Eingabe")).describe(LocalizedLabel::native("RFC 6901 pointer of the input inside the mutation payload, such as /dx.", "RFC-6901-Zeiger der Eingabe in den Nutzdaten der Mutation, etwa /dx.")).required();
+    let verb = |id: &str, en: &str, de: &str, icon: &str| ActionDefinition { in_palette: false, ..ActionDefinition::resumable_framework(id, LocalizedLabel::native(en, de), ActionKind::History, icon) };
+    vec![
+        verb(HISTORY_EDIT_BEGIN_ACTION_ID, "Edit Mutation", "Mutation bearbeiten", "pencil")
+            .describe(LocalizedLabel::native(
+                "Opens history editing on one applied mutation: the artifact shows the state right before it with its inputs editable, and nothing downstream is applied until the draft is accepted.",
+                "Öffnet die Verlaufsbearbeitung für eine angewendete Mutation: Das Artefakt zeigt den Zustand direkt davor mit bearbeitbaren Eingaben, und nichts Späteres wird angewendet, bis der Entwurf übernommen ist.",
+            ))
+            .use_when(["edit an earlier step", "change a past operation", "fix a mutation in the history"])
+            .with_args([history_edit_hidden_arg(ActionArgDef::text(HISTORY_EDIT_ARG_MUTATION_ID, LocalizedLabel::native("Mutation", "Mutation")).required())]),
+        verb(HISTORY_EDIT_INPUT_ACTION_ID, "Set Mutation Input", "Mutationseingabe setzen", "sliders-horizontal")
+            .describe(LocalizedLabel::native(
+                "Sets one input of the mutation being edited; the value is validated against the mutation's input schema and previewed immediately.",
+                "Setzt eine Eingabe der bearbeiteten Mutation; der Wert wird gegen das Eingabeschema der Mutation geprüft und sofort in der Vorschau gezeigt.",
+            ))
+            .use_when(["change this value in the edited step", "set the input of the mutation"])
+            .with_args([path(), ActionArgDef::any(HISTORY_EDIT_ARG_VALUE, LocalizedLabel::native("Value", "Wert")).required(), generation()]),
+        verb(HISTORY_EDIT_USE_SELECTION_ACTION_ID, "Use Selection", "Auswahl verwenden", "mouse-pointer")
+            .describe(LocalizedLabel::native(
+                "Sets a reference input of the mutation being edited to the entities currently selected in its domain.",
+                "Setzt eine Referenzeingabe der bearbeiteten Mutation auf die aktuell ausgewählten Elemente ihres Bereichs.",
+            ))
+            .use_when(["use the current selection as targets"])
+            .with_args([path(), generation()]),
+        verb(HISTORY_EDIT_WITHDRAW_ACTION_ID, "Withdraw Mutation", "Mutation zurückziehen", "eye-off")
+            .describe(LocalizedLabel::native(
+                "Drafts the mutation being edited as withdrawn, so it no longer changes the artifact; use it for a step whose inputs cannot fix its error.",
+                "Entwirft die bearbeitete Mutation als zurückgezogen, sodass sie das Artefakt nicht mehr verändert; für einen Schritt, dessen Fehler sich über die Eingaben nicht beheben lässt.",
+            ))
+            .use_when(["drop this step", "skip this operation"])
+            .with_args([generation()]),
+        verb(HISTORY_EDIT_ACCEPT_ACTION_ID, "Accept Draft", "Entwurf übernehmen", "check")
+            .describe(LocalizedLabel::native(
+                "Accepts the draft of the mutation being edited and replays every later mutation, reporting success, warnings and errors per mutation.",
+                "Übernimmt den Entwurf der bearbeiteten Mutation und wendet alle späteren Mutationen neu an; Erfolg, Warnungen und Fehler werden je Mutation gemeldet.",
+            ))
+            .use_when(["apply the edit", "accept the change to the history"])
+            .with_args([generation()]),
+        verb(HISTORY_EDIT_DISCARD_ACTION_ID, "Discard Draft", "Entwurf verwerfen", "x")
+            .describe(LocalizedLabel::native("Drops the draft of the mutation being edited; accepted drafts stay.", "Verwirft den Entwurf der bearbeiteten Mutation; übernommene Entwürfe bleiben erhalten."))
+            .use_when(["discard this draft"])
+            .with_args([generation()]),
+        verb(HISTORY_EDIT_FINALIZE_ACTION_ID, "Finalize History Edit", "Verlaufsbearbeitung abschließen", "list-checks")
+            .describe(LocalizedLabel::native(
+                "Asks how to keep the edited history once no replayed mutation has an error: as a new alternative or by overwriting the existing history.",
+                "Fragt, wie der bearbeitete Verlauf behalten wird, sobald keine neu angewendete Mutation einen Fehler hat: als neue Alternative oder durch Überschreiben des bestehenden Verlaufs.",
+            ))
+            .use_when(["finish editing the history", "keep the edited history"])
+            .with_args([generation()]),
+        verb(HISTORY_EDIT_COMMIT_ACTION_ID, "Commit History Edit", "Verlaufsbearbeitung festschreiben", "git-commit")
+            .destructive()
+            .describe(LocalizedLabel::native(
+                "Commits the accepted drafts: as a new alternative named by name, keeping the original history, or with choice overwrite into every alternative that contains the edited mutations.",
+                "Schreibt die übernommenen Entwürfe fest: als neue Alternative mit dem Namen name, wobei der ursprüngliche Verlauf bleibt, oder mit choice overwrite in jede Alternative, die die bearbeiteten Mutationen enthält.",
+            ))
+            .use_when(["save the edited history as a new alternative", "overwrite the history with the edit"])
+            .with_args([
+                ActionArgDef::select(DIALOG_CHOICE_ARG, LocalizedLabel::native("Choice", "Auswahl"), vec![ActionArgOption::new(HISTORY_EDIT_CHOICE_OVERWRITE, LocalizedLabel::native("Overwrite", "Überschreiben"))]),
+                ActionArgDef::text(HISTORY_EDIT_ARG_NAME, LocalizedLabel::native("Alternative name", "Name der Alternative")),
+                generation(),
+            ]),
+        verb(HISTORY_EDIT_BACK_ACTION_ID, "Back to Review", "Zurück zur Prüfung", "arrow-left")
+            .describe(LocalizedLabel::native("Closes the finalize prompt and returns to reviewing the edited history.", "Schließt die Abschlussabfrage und kehrt zur Prüfung des bearbeiteten Verlaufs zurück."))
+            .use_when(["go back to reviewing"])
+            .with_args([generation()]),
+        verb(HISTORY_EDIT_EXIT_ACTION_ID, "Exit History Editing", "Verlaufsbearbeitung beenden", "rotate-ccw")
+            .describe(LocalizedLabel::native("Leaves history editing and discards every draft; the artifact is unchanged.", "Beendet die Verlaufsbearbeitung und verwirft alle Entwürfe; das Artefakt bleibt unverändert."))
+            .use_when(["stop editing the history", "cancel the history edit"]),
+        verb(HISTORY_EDIT_CANCEL_REPLAY_ACTION_ID, "Cancel Replay", "Neuanwendung abbrechen", "square")
+            .describe(LocalizedLabel::native(
+                "Cancels the running replay of later mutations; the drafts stay and the replay can be started again by accepting.",
+                "Bricht die laufende Neuanwendung späterer Mutationen ab; die Entwürfe bleiben, und die Neuanwendung kann durch Übernehmen erneut gestartet werden.",
+            ))
+            .use_when(["stop the replay"])
+            .with_args([generation()]),
+        verb(HISTORY_EDIT_RERUN_ACTION_ID, "Replay Again", "Erneut anwenden", "skip-forward")
+            .describe(LocalizedLabel::native(
+                "Replays every later mutation again with the accepted drafts after a cancelled or failed replay, so the history can be reviewed and finalized.",
+                "Wendet nach einer abgebrochenen oder fehlgeschlagenen Neuanwendung alle späteren Mutationen mit den übernommenen Entwürfen erneut an, damit der Verlauf geprüft und abgeschlossen werden kann.",
+            ))
+            .use_when(["replay the edited history again", "retry the replay"])
+            .with_args([generation()]),
+    ]
+}
+
+/// 🫥️ A history-edit argument the chrome fills from the session, never shown in a staged form.
+fn history_edit_hidden_arg(arg: ActionArgDef) -> ActionArgDef {
+    ActionArgDef { presentation: Some(ArgPresentation::Hidden), ..arg }
+}
+
+/// 🗳️ The framework-injected finalize prompt of a history edit (every non-viewer app declares it): the submit keeps
+/// the edit as a new alternative named by the staged `name` (the opener seeds a localized default), the destructive
+/// choice `overwrite` replaces the inputs in every alternative, and dismissing it goes back to reviewing.
+pub fn history_edit_finalize_dialog() -> DialogDefinition {
+    DialogDefinition::new(HISTORY_EDIT_FINALIZE_DIALOG_ID, LocalizedLabel::native("Finish editing history", "Verlaufsbearbeitung abschließen"), ActionRef::new(HISTORY_EDIT_COMMIT_ACTION_ID))
+        .body(LocalizedLabel::native("Keep the edit as a new alternative or overwrite the existing history.", "Die Bearbeitung als neue Alternative behalten oder den bestehenden Verlauf überschreiben."))
+        .args(vec![ActionArgDef::text(HISTORY_EDIT_ARG_NAME, LocalizedLabel::native("Alternative name", "Name der Alternative")).required()])
+        .submit_label(LocalizedLabel::native("New alternative", "Neue Alternative"))
+        .cancel_label(LocalizedLabel::native("Back", "Zurück"))
+        .on_cancel(ActionRef::new(HISTORY_EDIT_BACK_ACTION_ID))
+        .choice(
+            DialogChoice::new(HISTORY_EDIT_CHOICE_OVERWRITE, LocalizedLabel::native("Overwrite", "Überschreiben"), ActionRef::new(HISTORY_EDIT_COMMIT_ACTION_ID))
+                .description(LocalizedLabel::native("Replaces the edited mutations in every alternative that contains them.", "Ersetzt die bearbeiteten Mutationen in jeder Alternative, die sie enthält."))
+                .tone(semio_framework_ui_contract::Tone::Danger)
+                .destructive(),
+        )
+}
+
+#[cfg(test)]
+#[path = "🧪️tests/🧪️history-edit-actions/🦀️.rs"]
+mod history_edit_actions_tests;
+//#endregion 🔖️HistoryEdit
 
 /// 🎚️ The framework-owned action id apps dispatch to change the history panel's operations
 /// filter — auto-injected unconditionally (mirrors `RECORD_TUTORIAL_ACTION_ID`).
@@ -1271,7 +2632,12 @@ pub fn note_shell_command_action_definition() -> ActionDefinition {
         .describe(LocalizedLabel::native("Records a shell effect that already happened (navigation, export, spawn) in the session command log; the document is not changed.", "Vermerkt eine bereits erfolgte Shell-Wirkung (Navigation, Export, Start) im Sitzungsprotokoll; das Dokument wird nicht verändert."))
         .with_args([
         ActionArgDef::text("commandId", LocalizedLabel::native("Command", "Befehl")).required(),
-        ActionArgDef::text("label", LocalizedLabel::native("Label", "Bezeichnung")).required(),
+        ActionArgDef::any("label", LocalizedLabel::native("Label", "Bezeichnung"))
+            .describe(LocalizedLabel::native(
+                "The row's label in every locale: an object {en, de} (or a full localized label); plain text is kept as locale-invariant data, such as a file name.",
+                "Die Bezeichnung der Zeile in jeder Sprache: ein Objekt {en, de} (oder eine vollständige lokalisierte Bezeichnung); reiner Text bleibt sprachunabhängige Angabe, etwa ein Dateiname.",
+            ))
+            .required(),
         ActionArgDef::text("detail", LocalizedLabel::native("Detail", "Detail")),
     ])
 }
@@ -1299,7 +2665,7 @@ pub fn clipboard_action_definitions() -> Vec<ActionDefinition> {
             .describe(LocalizedLabel::native("Inserts the workspace clipboard's contents into the artifact at the chosen anchoring.", "Fügt den Inhalt der Zwischenablage an der gewählten Verankerung in das Artefakt ein."))
             .with_args([
             ActionArgDef::select("anchor", LocalizedLabel::native("Anchoring", "Verankerung"), anchoring_options).default_value(&"original"),
-            ActionArgDef::vec3("position", LocalizedLabel::native("Position", "Position")),
+            ActionArgDef::vector("position", LocalizedLabel::native("Position", "Position"), 3),
         ]),
     ]
 }
@@ -1583,8 +2949,8 @@ fn tool_run_action_arg(name: &'static str, required: bool) -> ActionArgDef {
     let (label, schema) = match name {
         semio_framework_tool_run::TOOL_RUN_ARG_TOOL_ID => (LocalizedLabel::native("Tool", "Werkzeug"), ActionArgDef::plain_string(None)),
         semio_framework_tool_run::TOOL_RUN_ARG_WINDOW_ID => (LocalizedLabel::native("Window", "Fenster"), ActionArgDef::plain_string(None)),
-        semio_framework_tool_run::TOOL_RUN_ARG_RUN_ID => (LocalizedLabel::native("Run", "Lauf"), ArgSchema::Number { min: Some(0.0), max: None, step: Some(1.0), integer: true, unit: None }),
-        _ => (LocalizedLabel::native("Generation", "Generation"), ArgSchema::Number { min: Some(0.0), max: None, step: Some(1.0), integer: true, unit: None }),
+        semio_framework_tool_run::TOOL_RUN_ARG_RUN_ID => (LocalizedLabel::native("Run", "Lauf"), ArgSchema::number(Some(0.0), None, Some(1.0), true)),
+        _ => (LocalizedLabel::native("Generation", "Generation"), ArgSchema::number(Some(0.0), None, Some(1.0), true)),
     };
     ActionArgDef { presentation: Some(ArgPresentation::Hidden), required, ..ActionArgDef::with_schema(name, label, schema) }
 }
@@ -3381,6 +4747,92 @@ pub struct DialogDefinition {
     #[serde(skip_serializing_if = "Option::is_none")]
     #[value(skip_serializing_if = "Option::is_none")]
     pub cancel_label: Option<LocalizedLabel>,
+    /// 🔀️ Further decisions offered beside the submit, in focus order before it. Each is gated on and
+    /// dispatches only the args it [`requires`](DialogChoice::requires) (plus the seed context), with
+    /// [`DIALOG_CHOICE_ARG`] naming the choice, so one action can serve several choices
+    /// (`historyEditCommit{choice}`); the submit alone is gated on the dialog's required args.
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    #[value(default, skip_serializing_if = "Vec::is_empty")]
+    pub choices: Vec<DialogChoice>,
+}
+
+/// 🔀️ The arg key a [`DialogChoice`] dispatch carries its own `id` under; reserved in a dialog with choices.
+pub const DIALOG_CHOICE_ARG: &str = "choice";
+
+/// 🎛️ One decision button of a [`DialogDefinition`]: a localized `label`, an optional `description` a
+/// reader hears with it (`aria-describedby`) and a sighted user reads beside it, the `action` it
+/// dispatches, the staged args it `requires` (enabled once they resolve, and the only form args it
+/// sends), its visual `tone`, and whether it is `destructive` (danger styling, and an agent lane must
+/// ask before taking it).
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValue, FromValue)]
+#[serde(rename_all = "camelCase")]
+#[value(rename_all = "camelCase")]
+pub struct DialogChoice {
+    pub id: String,
+    pub label: LocalizedLabel,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[value(default, skip_serializing_if = "Option::is_none")]
+    pub description: Option<LocalizedLabel>,
+    pub action: ActionRef,
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    #[value(default, skip_serializing_if = "Vec::is_empty")]
+    pub requires: Vec<String>,
+    #[serde(default, skip_serializing_if = "is_neutral_tone")]
+    #[value(default, skip_serializing_if = "is_neutral_tone")]
+    pub tone: semio_framework_ui_contract::Tone,
+    #[serde(default, skip_serializing_if = "std::ops::Not::not")]
+    #[value(default, skip_serializing_if = "std::ops::Not::not")]
+    pub destructive: bool,
+}
+
+fn is_neutral_tone(tone: &semio_framework_ui_contract::Tone) -> bool {
+    *tone == semio_framework_ui_contract::Tone::Neutral
+}
+
+impl DialogChoice {
+    pub fn new(id: impl Into<String>, label: impl Into<LocalizedLabel>, action: ActionRef) -> Self {
+        Self { id: id.into(), label: label.into(), description: None, action, requires: Vec::new(), tone: semio_framework_ui_contract::Tone::Neutral, destructive: false }
+    }
+
+    /// 🔗️ The staged args this choice consumes: it is enabled once they resolve and sends only them.
+    pub fn requires(mut self, args: impl IntoIterator<Item = impl Into<String>>) -> Self {
+        self.requires = args.into_iter().map(Into::into).collect();
+        self
+    }
+
+    /// 🚧️ The args of [`requires`](Self::requires) still unresolved in `effective` (absent, blank, or off
+    /// their current choice set) — the choice is enabled exactly when this is empty.
+    pub fn unresolved_args(&self, defs: &[ActionArgDef], effective: &DslValue) -> Vec<String> {
+        let required: Vec<ActionArgDef> = defs.iter().filter(|def| self.requires.contains(&def.id)).map(|def| ActionArgDef { required: true, ..def.clone() }).collect();
+        unresolved_action_args(&required, effective)
+    }
+
+    /// 📤️ The dispatch args: the seed context of `effective` (keys no arg of `defs` declares), the args this
+    /// choice requires, and [`DIALOG_CHOICE_ARG`] naming it.
+    pub fn dispatch_args(&self, defs: &[ActionArgDef], effective: &DslValue) -> DslValue {
+        let mut entries = effective.as_object().map(<[_]>::to_vec).unwrap_or_default();
+        entries.retain(|(key, _)| key != DIALOG_CHOICE_ARG && (self.requires.contains(key) || !defs.iter().any(|def| def.id == *key)));
+        entries.push((DIALOG_CHOICE_ARG.to_string(), DslValue::String(self.id.clone())));
+        DslValue::Object(entries)
+    }
+
+    /// 📝️ The consequence a reader hears with the button and a sighted user reads beside it.
+    pub fn description(mut self, description: impl Into<LocalizedLabel>) -> Self {
+        self.description = Some(description.into());
+        self
+    }
+
+    /// 🎨️ The button's colour role.
+    pub fn tone(mut self, tone: semio_framework_ui_contract::Tone) -> Self {
+        self.tone = tone;
+        self
+    }
+
+    /// ⚠️ Marks the choice destructive: danger styling, and an agent must ask before taking it.
+    pub fn destructive(mut self) -> Self {
+        self.destructive = true;
+        self
+    }
 }
 
 // 🚫️async: E1 — pure builder methods (self-mutation only, zero suspension points), reverted
@@ -3397,7 +4849,35 @@ impl DialogDefinition {
             submit_label: LocalizedLabel::native("OK", "OK"),
             cancel_action: None,
             cancel_label: None,
+            choices: Vec::new(),
         }
+    }
+
+    /// 🔀️ Appends one decision offered beside the submit.
+    pub fn choice(mut self, choice: DialogChoice) -> Self {
+        self.choices.push(choice);
+        self
+    }
+
+    /// 🧐️ Choice ids are non-empty and unique, a choice requires only declared args, and no staged arg
+    /// shadows [`DIALOG_CHOICE_ARG`].
+    pub fn validate_choices(&self) -> Result<(), String> {
+        let mut ids = std::collections::BTreeSet::new();
+        for choice in &self.choices {
+            if choice.id.trim().is_empty() {
+                return Err("choice id must be non-empty".to_string());
+            }
+            if !ids.insert(choice.id.as_str()) {
+                return Err(format!("duplicate choice id {}", choice.id));
+            }
+            if let Some(arg) = choice.requires.iter().find(|arg| !self.args.iter().any(|def| def.id == **arg)) {
+                return Err(format!("choice {} requires undeclared arg {arg}", choice.id));
+            }
+        }
+        if !self.choices.is_empty() && self.args.iter().any(|arg| arg.id == DIALOG_CHOICE_ARG) {
+            return Err(format!("arg {DIALOG_CHOICE_ARG} is reserved in a dialog with choices"));
+        }
+        Ok(())
     }
 
     /// 📝️ Attaches explanatory body text shown below the title.
@@ -3430,6 +4910,10 @@ impl DialogDefinition {
         self
     }
 }
+
+#[cfg(test)]
+#[path = "🧪️tests/🧪️dialog-choices/🦀️.rs"]
+mod dialog_choices_tests;
 //#endregion 🔖️Dialog
 
 // 🚧️ Kept additive: consumed outside this pass by 🛍️products/💻️os (plugin/renderer modules) and/or ✏️s/🔌️plugins/** while still serde-deriving; ToValue/FromValue added alongside, not replacing, Serialize/Deserialize. Ticket 26/09/01/RUNTIME-DEPENDENCY-ELIMINATION-FOR-S-PLUGINS-AND-ARTIFACTS.
@@ -5951,54 +7435,9 @@ impl Default for AppIo {
 //#endregion 🔖️AppIo
 
 //#region 🔖️ConfigSpec
-/// 🧮️ How one config field's value is edited/validated, independent of what record it belongs to.
-/// Deliberately hand-rolled rather than derived from `dsl_schema::Shape` (`dsl_schema`'s `Shape` isn't
-/// `Serialize`/`Deserialize` — `Shape::Record`/`Statements`/`Table` carry `fn() -> RecordSpec` pointers
-/// — and `semio-framework-core` doesn't depend on `dsl`/`dsl_schema` today, so wrapping it would add a
-/// new cross-crate dependency purely to reach a shape that can't round-trip over the wire anyway).
-// 🚧️ Needed in serde form too: referenced (directly or transitively) by a `🚧️ BLOCKED` serde-only manifest type above/below — see that type's own docstring.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValue, FromValue)]
-#[serde(rename_all = "camelCase", tag = "kind")]
-#[value(rename_all = "camelCase", tag = "kind")]
-pub enum ConfigFieldShape {
-    Number {
-        #[serde(skip_serializing_if = "Option::is_none")]
-        #[value(skip_serializing_if = "Option::is_none")]
-        min: Option<f64>,
-        #[serde(skip_serializing_if = "Option::is_none")]
-        #[value(skip_serializing_if = "Option::is_none")]
-        max: Option<f64>,
-        #[serde(skip_serializing_if = "Option::is_none")]
-        #[value(skip_serializing_if = "Option::is_none")]
-        step: Option<f64>,
-    },
-    Toggle,
-    Text,
-    Select {
-        options: Vec<String>,
-    },
-    Record {
-        fields: Vec<ConfigFieldSpec>,
-    },
-}
-
-/// 🧮️ One field of an app's declared configuration record — the whole-app-settings counterpart to
-/// `ActionArgDef` (which scopes to a single action's arguments instead).
-// 🚧️ Needed in serde form too: referenced (directly or transitively) by a `🚧️ BLOCKED` serde-only manifest type above/below — see that type's own docstring.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValue, FromValue)]
-#[serde(rename_all = "camelCase")]
-#[value(rename_all = "camelCase")]
-pub struct ConfigFieldSpec {
-    pub key: String,
-    pub label: String,
-    pub shape: ConfigFieldShape,
-    #[serde(skip_serializing_if = "Option::is_none")]
-    #[value(skip_serializing_if = "Option::is_none")]
-    pub default: Option<DslValue>,
-}
-
 /// 🧮️ An app's full typed configuration record — the manifest-level declaration
-/// `AppDefinition.config` carries. Empty until per-app waves populate it.
+/// `AppDefinition.config` carries: one [`ActionArgDef`] per field (its `id` is the config key), so a config field,
+/// an action argument and a mutation input share one input vocabulary and one renderer.
 // 🚧️ Needed in serde form too: referenced (directly or transitively) by a `🚧️ BLOCKED` serde-only manifest type above/below — see that type's own docstring.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValue, FromValue, Default)]
 #[serde(rename_all = "camelCase")]
@@ -6006,7 +7445,7 @@ pub struct ConfigFieldSpec {
 pub struct ConfigSpec {
     #[serde(default)]
     #[value(default)]
-    pub fields: Vec<ConfigFieldSpec>,
+    pub fields: Vec<ActionArgDef>,
 }
 
 impl ConfigSpec {
@@ -6017,29 +7456,15 @@ impl ConfigSpec {
 //#endregion 🔖️ConfigSpec
 
 //#region 🔖️CommandGrammar
-/// 🎛️ One field of a binary command variant — reuses `ConfigFieldShape` for the value shape (see
-/// `ConfigFieldShape`'s doc comment for why command grammar fields are hand-rolled rather than
-/// derived from `dsl_schema`). No `List`/array shape exists yet — the manifest's existing field-typed
-/// vocabulary (`ActionArgControl`: Text/Number/Slider/Toggle/Select/Vec3/IconSelect) has no array
-/// control either, so `ConfigFieldShape` doesn't invent one ahead of a real need.
-// 🚧️ Needed in serde form too: referenced (directly or transitively) by a `🚧️ BLOCKED` serde-only manifest type above/below — see that type's own docstring.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValue, FromValue)]
-#[serde(rename_all = "camelCase")]
-#[value(rename_all = "camelCase")]
-pub struct CommandFieldSpec {
-    pub key: String,
-    pub shape: ConfigFieldShape,
-    pub optional: bool,
-}
-
-/// 🎛️ One keyword-dispatched command variant (e.g. `move x=1 y=2`) and its field grammar.
+/// 🎛️ One keyword-dispatched command variant (e.g. `move x=1 y=2`) and its field grammar — one
+/// [`ActionArgDef`] per field, `required` where the grammar demands the field.
 // 🚧️ Needed in serde form too: referenced (directly or transitively) by a `🚧️ BLOCKED` serde-only manifest type above/below — see that type's own docstring.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValue, FromValue)]
 #[serde(rename_all = "camelCase")]
 #[value(rename_all = "camelCase")]
 pub struct CommandVariantSpec {
     pub keyword: String,
-    pub fields: Vec<CommandFieldSpec>,
+    pub fields: Vec<ActionArgDef>,
 }
 
 /// 🎛️ An app's full typed binary command grammar — the manifest-level declaration

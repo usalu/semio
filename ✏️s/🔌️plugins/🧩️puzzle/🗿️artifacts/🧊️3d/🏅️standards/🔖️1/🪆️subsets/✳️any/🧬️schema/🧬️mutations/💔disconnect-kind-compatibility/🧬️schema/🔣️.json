@@ -5,15 +5,39 @@
   "type": "object",
   "additionalProperties": false,
   "required": [
+    "mutation",
     "source",
     "target"
   ],
   "properties": {
+    "mutation": {
+      "const": "disconnectKindCompatibility"
+    },
     "source": {
-      "type": "string"
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "text",
+        "role": "value",
+        "label": {
+          "en": "Source kind",
+          "de": "Quellart"
+        },
+        "group": "kind",
+        "order": 10
+      }
     },
     "target": {
-      "type": "string"
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "text",
+        "role": "value",
+        "label": {
+          "en": "Target kind",
+          "de": "Zielart"
+        },
+        "group": "kind",
+        "order": 20
+      }
     }
   }
 }

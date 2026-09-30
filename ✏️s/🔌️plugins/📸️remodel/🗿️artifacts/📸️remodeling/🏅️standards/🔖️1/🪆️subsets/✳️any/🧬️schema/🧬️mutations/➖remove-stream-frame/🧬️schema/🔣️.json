@@ -5,17 +5,50 @@
   "type": "object",
   "additionalProperties": false,
   "required": [
+    "mutation",
     "frameIndex",
     "id"
   ],
   "properties": {
+    "mutation": {
+      "const": "removeStreamFrame"
+    },
     "id": {
-      "type": "string"
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Stream",
+          "de": "Stream"
+        },
+        "description": {
+          "en": "The stream that loses the frame.",
+          "de": "Stream, aus dem das Bild entfernt wird."
+        },
+        "ref": {
+          "kind": "stream"
+        },
+        "group": "target",
+        "order": 10
+      }
     },
     "frameIndex": {
       "type": "integer",
       "format": "uint32",
-      "minimum": 0
+      "minimum": 0,
+      "x-semio-ui": {
+        "widget": "stepper",
+        "role": "value",
+        "label": {
+          "en": "Frame Index",
+          "de": "Bildindex"
+        },
+        "step": 1,
+        "precision": 0,
+        "group": "media",
+        "order": 20
+      }
     }
   }
 }

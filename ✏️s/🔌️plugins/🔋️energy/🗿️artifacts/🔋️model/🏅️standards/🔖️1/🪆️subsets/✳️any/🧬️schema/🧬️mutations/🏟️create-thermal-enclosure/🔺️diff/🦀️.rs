@@ -10,7 +10,7 @@ pub fn diff(payload: &super::CreateThermalEnclosure, base: &EnergyModelSnapshot)
         return protocol::MutationOutcome::error("mutation.duplicate-id", format!("Thermal enclosure {} already exists.", payload.id.0), [payload.id.0.to_string()]);
     }
     if payload.index as usize > base.model.thermal_enclosures.len() {
-        return protocol::MutationOutcome::error("mutation.invariant", format!("Index {} is past the end of the model's {} thermal_enclosures.", payload.index, base.model.thermal_enclosures.len()), [payload.id.0.to_string()]);
+        return protocol::MutationOutcome::error("mutation.target-missing", format!("Index {} is past the end of the model's {} thermal_enclosures.", payload.index, base.model.thermal_enclosures.len()), [payload.id.0.to_string()]);
     }
     if let Some(missing) = payload.zone_ids.iter().find(|candidate| !base.model.zones.iter().any(|row| row.id == **candidate)) {
         return protocol::MutationOutcome::error("mutation.target-missing", format!("Zone {} does not exist.", missing.0), [missing.0.to_string()]);

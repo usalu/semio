@@ -6,5 +6,114 @@
     {
       "$ref": "https://json.schemas.assets.semio-tech.com/s/playbook/playbook/artifact.json"
     }
-  ]
+  ],
+  "title": "PlaybookProcedural",
+  "$defs": {
+    "GeometryImportSource": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "format",
+        "data",
+        "tolerance"
+      ],
+      "properties": {
+        "format": {
+          "enum": [
+            "step",
+            "obj",
+            "stl",
+            "glb"
+          ]
+        },
+        "data": {
+          "type": "string",
+          "minLength": 1
+        },
+        "tolerance": {
+          "type": "number",
+          "exclusiveMinimum": 0
+        }
+      }
+    },
+    "GeometryShellAdmission": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["tinyByteGrant", "completionByteGrant", "retainedAfterNativeDrain", "retainedOnTinyByteGrant", "releasedByCompletionByteGrant"],
+      "properties": {
+        "tinyByteGrant": { "type": "integer", "minimum": 1 },
+        "completionByteGrant": { "type": "integer", "minimum": 65536 },
+        "retainedAfterNativeDrain": { "const": true },
+        "retainedOnTinyByteGrant": { "const": true },
+        "releasedByCompletionByteGrant": { "const": true }
+      }
+    },
+    "GeometryLifetimeFixture": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "imports",
+        "parameters",
+        "handles",
+        "shellAdmission"
+      ],
+      "properties": {
+        "shellAdmission": { "$ref": "#/$defs/GeometryShellAdmission" },
+        "imports": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "$ref": "#/$defs/GeometryImportSource"
+          }
+        },
+        "parameters": {
+          "type": "array",
+          "minItems": 2,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "height",
+              "radius",
+              "sides"
+            ],
+            "properties": {
+              "height": {
+                "type": "number",
+                "exclusiveMinimum": 0
+              },
+              "radius": {
+                "type": "number",
+                "exclusiveMinimum": 0
+              },
+              "sides": {
+                "type": "integer",
+                "minimum": 3
+              }
+            }
+          }
+        },
+        "handles": {
+          "type": "array",
+          "minItems": 6,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "value",
+              "valid"
+            ],
+            "properties": {
+              "value": {
+                "type": "string"
+              },
+              "valid": {
+                "type": "boolean"
+              }
+            }
+          }
+        }
+      }
+    }
+  }
 }

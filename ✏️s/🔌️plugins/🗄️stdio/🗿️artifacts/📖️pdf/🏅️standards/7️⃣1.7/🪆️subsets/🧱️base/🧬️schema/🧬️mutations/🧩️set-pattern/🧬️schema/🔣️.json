@@ -5,15 +5,22 @@
   "type": "object",
   "additionalProperties": false,
   "required": [
+    "mutation",
     "pattern"
   ],
   "properties": {
-    "pattern": {
-      "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/pdf/1.7/base/snapshot.json#/$defs/PdfPattern"
-    },
     "mutation": {
       "const": "setPattern",
       "description": "Aggregate discriminator spliced in by PdfMutation; absent when the payload stands alone."
+    },
+    "pattern": {
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/pdf/1.7/base/snapshot.json#/$defs/PdfPattern",
+      "x-semio-ui": {
+        "label": {
+          "en": "Pattern",
+          "de": "Muster"
+        }
+      }
     }
   }
 }

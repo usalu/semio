@@ -10,10 +10,41 @@
   ],
   "properties": {
     "zoneId": {
-      "type": "string"
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Zone",
+          "de": "Zone"
+        },
+        "description": {
+          "en": "The ventilation zone this mutation addresses.",
+          "de": "Die Lüftungszone, die diese Mutation adressiert."
+        },
+        "ref": {
+          "kind": "zone"
+        },
+        "group": "target",
+        "order": 10
+      }
     },
     "newUsageType": {
-      "type": "string"
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "text",
+        "role": "value",
+        "label": {
+          "en": "Usage type",
+          "de": "Nutzungsart"
+        },
+        "description": {
+          "en": "office, residential, classroom, meeting or retail.",
+          "de": "office (Büro), residential (Wohnen), classroom (Unterrichtsraum), meeting (Besprechung) oder retail (Handel)."
+        },
+        "group": "comfort",
+        "order": 20
+      }
     }
   }
 }

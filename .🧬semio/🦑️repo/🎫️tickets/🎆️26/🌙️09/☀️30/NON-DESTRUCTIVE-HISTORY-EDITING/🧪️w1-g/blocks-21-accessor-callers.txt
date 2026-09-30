@@ -1,0 +1,157 @@
+<<<<<<< ANCHOR
+        fold_effective_edit(&mut snapshot, edit, &supersessions)?;
+    }
+    Ok(snapshot.into_inner())
+=======
+        fold_effective_edit(&mut snapshot, edit, &envelope.schema, &supersessions, usize::MAX);
+    }
+    Ok(snapshot.into_inner())
+>>>>>>> END
+<<<<<<< ANCHOR
+        fold_effective_edit(&mut snapshot, edit, supersessions)?;
+    }
+    Ok(snapshot.into_inner())
+=======
+        fold_effective_edit(&mut snapshot, edit, &envelope.schema, supersessions, usize::MAX);
+    }
+    Ok(snapshot.into_inner())
+>>>>>>> END
+<<<<<<< ANCHOR
+            fold_effective_edit(&mut folded, edit, &self.supersessions)?;
+=======
+            fold_effective_edit(&mut folded, edit, &self.envelope.schema, &self.supersessions, usize::MAX);
+>>>>>>> END
+<<<<<<< ANCHOR
+        fold_recorded::<P, Mutation>(Arc::new(self.envelope.vcs.initial_snapshot.clone()), next, 0, next.len(), &self.envelope.vcs.edits, &self.supersessions, Self::prefix_stride(next.len()))
+=======
+        fold_recorded::<P, Mutation>(Arc::new(self.envelope.vcs.initial_snapshot.clone()), next, 0, next.len(), &self.envelope.vcs.edits, &self.envelope.schema, &self.supersessions, Self::prefix_stride(next.len()))
+>>>>>>> END
+<<<<<<< ANCHOR
+        fold_recorded::<P, Mutation>(base, applied, length, from, &self.envelope.vcs.edits, supersessions, stride)
+=======
+        fold_recorded::<P, Mutation>(base, applied, length, from, &self.envelope.vcs.edits, &self.envelope.schema, supersessions, stride)
+>>>>>>> END
+<<<<<<< ANCHOR
+        let mut running = base;
+        for effective in effective_forwards::<P, Mutation>(edit, &supersessions).take(op_index) {
+            let effective = match effective {
+                Ok(effective) => effective,
+                Err(error) => {
+                    retire_shared_projection::<P, Mutation>(running);
+                    return Err(error);
+                }
+            };
+            if let Some(operation) = effective.operation() {
+                if let (Some(next), _) = fold_operation::<P, Mutation>(&running, operation, effective.op_index) {
+                    retire_shared_projection::<P, Mutation>(std::mem::replace(&mut running, Arc::new(next)));
+                }
+            }
+        }
+        Ok(running)
+=======
+        let mut running = base;
+        fold_effective_edit(&mut running, edit, &self.envelope.schema, &supersessions, op_index);
+        Ok(running)
+>>>>>>> END
+<<<<<<< ANCHOR
+    fn replay_suffix_partitioned(base: Arc<P>, order: &[String], k: usize, edits: &impl ReplayEdits<Mutation>, supersessions: &EffectiveSupersessions, policy: crate::os_spr::MergePolicy) -> Result<EditReplayResult<P, Mutation>, VcsError> {
+        let mut replay = EditReplay::new(ReplayMode::Merge(policy), base, order.to_vec(), k, supersessions.clone(), edits)?;
+=======
+    fn replay_suffix_partitioned(base: Arc<P>, order: &[String], k: usize, edits: &impl ReplayEdits<Mutation>, schema: &str, supersessions: &EffectiveSupersessions, policy: crate::os_spr::MergePolicy) -> Result<EditReplayResult<P, Mutation>, VcsError> {
+        let mut replay = EditReplay::new(ReplayMode::Merge(policy), base, order.to_vec(), k, schema, supersessions.clone(), edits)?;
+>>>>>>> END
+<<<<<<< ANCHOR
+        let replay = Self::replay_suffix_partitioned(base, &order, k, &edits_by_id, &self.supersessions, self.merge_policy);
+=======
+        let replay = Self::replay_suffix_partitioned(base, &order, k, &edits_by_id, &self.envelope.schema, &self.supersessions, self.merge_policy);
+>>>>>>> END
+<<<<<<< ANCHOR
+        let replay = Self::replay_suffix_partitioned(Arc::new(self.envelope.vcs.initial_snapshot.clone()), &fold.applied, 0, &edits_by_id, &fold.supersessions, crate::os_spr::MergePolicy::LaissezFaire);
+=======
+        let replay = Self::replay_suffix_partitioned(Arc::new(self.envelope.vcs.initial_snapshot.clone()), &fold.applied, 0, &edits_by_id, &self.envelope.schema, &fold.supersessions, crate::os_spr::MergePolicy::LaissezFaire);
+>>>>>>> END
+<<<<<<< ANCHOR
+    let mut replay = EditReplay::new(ReplayMode::Report, Arc::new(envelope.vcs.initial_snapshot.clone()), applied.to_vec(), 0, supersessions, &envelope.vcs.edits)?;
+=======
+    let mut replay = EditReplay::new(ReplayMode::Report, Arc::new(envelope.vcs.initial_snapshot.clone()), applied.to_vec(), 0, &envelope.schema, supersessions, &envelope.vcs.edits)?;
+>>>>>>> END
+<<<<<<< ANCHOR
+        let replay = EditReplay::new(ReplayMode::Report, base, applied.to_vec(), from, supersessions, &self.envelope.vcs.edits)?.with_base(self.generation, self.content_revision);
+=======
+        let replay = EditReplay::new(ReplayMode::Report, base, applied.to_vec(), from, &self.envelope.schema, supersessions, &self.envelope.vcs.edits)?.with_base(self.generation, self.content_revision);
+>>>>>>> END
+<<<<<<< ANCHOR
+    edit_ids: Option<Vec<MutationId>>,
+    supersessions: EffectiveSupersessions,
+    state: Option<Arc<P>>,
+    candidate: Option<Arc<P>>,
+=======
+    edit_ids: Option<Vec<MutationId>>,
+    schema: String,
+    supersessions: EffectiveSupersessions,
+    state: Option<Arc<P>>,
+    candidate: Option<Arc<P>>,
+>>>>>>> END
+<<<<<<< ANCHOR
+    /// 🌱️ A replay of `order[from..]` starting from `base`, the projection after `order[..from]`, reading every
+    /// operation through `supersessions`. `edits` must hold every edit the suffix names.
+    pub fn new(mode: ReplayMode, base: Arc<P>, order: Vec<String>, from: usize, supersessions: EffectiveSupersessions, edits: &impl ReplayEdits<Mutation>) -> Result<Self, VcsError> {
+        let mut replay = Self {
+            mode,
+            order,
+            from,
+            cursor: from,
+            operation: 0,
+            edit_ids: None,
+            supersessions,
+=======
+    /// 🌱️ A replay of `order[from..]` starting from `base`, the projection after `order[..from]`, reading every
+    /// operation of a document of `schema` through `supersessions`. `edits` must hold every edit the suffix names.
+    pub fn new(mode: ReplayMode, base: Arc<P>, order: Vec<String>, from: usize, schema: &str, supersessions: EffectiveSupersessions, edits: &impl ReplayEdits<Mutation>) -> Result<Self, VcsError> {
+        let mut replay = Self {
+            mode,
+            order,
+            from,
+            cursor: from,
+            operation: 0,
+            edit_ids: None,
+            schema: schema.to_string(),
+            supersessions,
+>>>>>>> END
+<<<<<<< ANCHOR
+        let effective = effective_operation::<P, Mutation>(&edit.forwards[index], index as u32, mutation_id, &self.supersessions)?;
+        let mut messages = Vec::new();
+        if let Some(operation) = effective.operation() {
+=======
+        let effective = effective_operation::<P, Mutation>(&edit.forwards[index], index as u32, mutation_id, &self.schema, &self.supersessions);
+        let mut messages: Vec<crate::os_spr::MutationMessage> = effective.fault().cloned().into_iter().collect();
+        if let Some(operation) = effective.operation() {
+>>>>>>> END
+<<<<<<< ANCHOR
+            self.edit_inverse.extend(back);
+            if let Some(next) = next {
+                let next = Arc::new(next);
+                let displaced = match self.mode {
+                    ReplayMode::Merge(_) => self.candidate.replace(next),
+                    ReplayMode::Report => self.state.replace(next),
+                };
+                if let Some(displaced) = displaced {
+                    retire_shared_projection::<P, Mutation>(displaced);
+                }
+            }
+=======
+            match next {
+                Some(next) => {
+                    self.edit_inverse.extend(back);
+                    let next = Arc::new(next);
+                    let displaced = match self.mode {
+                        ReplayMode::Merge(_) => self.candidate.replace(next),
+                        ReplayMode::Report => self.state.replace(next),
+                    };
+                    if let Some(displaced) = displaced {
+                        retire_shared_projection::<P, Mutation>(displaced);
+                    }
+                }
+                None => retire_scratch_operations::<P, Mutation>(back),
+            }
+>>>>>>> END

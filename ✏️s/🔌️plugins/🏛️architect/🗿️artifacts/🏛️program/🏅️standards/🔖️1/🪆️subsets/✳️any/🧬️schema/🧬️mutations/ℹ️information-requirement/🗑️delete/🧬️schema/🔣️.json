@@ -5,12 +5,34 @@
   "type": "object",
   "additionalProperties": false,
   "required": [
+    "mutation",
     "id"
   ],
   "properties": {
+    "mutation": {
+      "const": "deleteInformationRequirement"
+    },
     "id": {
-      "type": "integer",
-      "minimum": 0
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Information Requirement",
+          "de": "Informationsanforderung"
+        },
+        "description": {
+          "en": "The information requirement to delete.",
+          "de": "Zu löschender Eintrag vom Typ „Informationsanforderung“."
+        },
+        "ref": {
+          "kind": "informationRequirement",
+          "domain": "program",
+          "granularity": "entity"
+        },
+        "group": "target",
+        "order": 10
+      }
     }
   }
 }

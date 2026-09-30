@@ -142,7 +142,7 @@ async fn store_applies_layer_create() {
     // ("edit history insertion requires its exact mutation retirement factory"): a raster store is
     // built with the artifact's own `raster_document_store_owners`, never bare.
     store.install_document_store_owners_exact(crate::spr::raster_document_store_owners());
-    store.dispatch(ArtifactCommand::Apply { mutations: vec![RasterMutation::CreateLayer(create_layer::CreateLayer { parent_id: None, index: 0, layer: Box::new(pixel_layer("l1", "Base")) })], description: None }).await.expect("apply");
+    store.dispatch(ArtifactCommand::Apply { mutations: vec![RasterMutation::CreateLayer(create_layer::CreateLayer { parent_id: None, index: 0, layer: Box::new(pixel_layer("l1", "Base")) })], description: None, transaction: None }).await.expect("apply");
     assert_eq!(store.snapshot().expect("snapshot").layers.len(), 1);
     store::os_store::test_support::close_plain_test_store(&mut store);
 }

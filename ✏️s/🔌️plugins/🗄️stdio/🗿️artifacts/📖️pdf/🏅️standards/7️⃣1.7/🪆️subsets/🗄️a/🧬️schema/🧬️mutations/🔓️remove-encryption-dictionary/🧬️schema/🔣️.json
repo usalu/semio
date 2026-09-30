@@ -5,19 +5,20 @@
   "type": "object",
   "additionalProperties": false,
   "required": [
+    "mutation",
     "version",
     "revision"
   ],
   "properties": {
+    "mutation": {
+      "const": "removeEncryptionDictionary",
+      "description": "Aggregate discriminator spliced in by PdfAMutation; absent when the payload stands alone."
+    },
     "version": {
       "type": "integer"
     },
     "revision": {
       "type": "integer"
-    },
-    "mutation": {
-      "const": "removeEncryptionDictionary",
-      "description": "Aggregate discriminator spliced in by PdfAMutation; absent when the payload stands alone."
     }
   }
 }

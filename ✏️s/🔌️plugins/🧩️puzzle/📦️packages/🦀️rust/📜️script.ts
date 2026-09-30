@@ -2,7 +2,7 @@
 /** 🧩️ `@semio-tech/puzzle-plugin` router: `bun ./📜️script.ts test`. */
 import { readFileSync, readdirSync, existsSync, statSync } from "node:fs";
 import { join } from "node:path";
-import { registerPlaygroundSiteBuildCommands, BundleScript, ScriptRouter, resolveTestLevel, runBundleScriptMain, runCargoTestBudgeted, runWasmPackWebBuild } from "../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
+import { registerPlaygroundSiteBuildCommands, BundleScript, ScriptRouter, resolveTestLevel, runBundleScriptMain, runCargoTestBudgeted, runVitest, runWasmPackWebBuild } from "../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
 
 process.env.RUST_MIN_STACK ??= String(8 * 1024 * 1024);
 
@@ -21,6 +21,15 @@ class TestScript extends BundleScript {
   async run(segments: string[]): Promise<void> {
     const { rest } = resolveTestLevel(segments);
     await runCargoTestBudgeted(["semio-s-plugin-puzzle"], this.repoRoot, rest);
+  }
+}
+
+class CanonicalArchitectureScript extends BundleScript {
+  async run(): Promise<void> {
+    const { toolJobPuzzleReservedRoutesSelfTests } = await import("../../🧪️tests/🔬️tool-job-puzzle-reserved-routes/🟦️.ts");
+    console.log(`puzzle-reserved-route-contributions: checks=${toolJobPuzzleReservedRoutesSelfTests()}`);
+    resolveTestLevel([], "quick");
+    await runVitest(this.root, [], "../../🧪️tests/🎚️renderer-contract/🟦️.ts");
   }
 }
 
@@ -285,6 +294,7 @@ class FixturesScript extends BundleScript {
 const router = new ScriptRouter(import.meta.dir)
   .register("wasm", WasmScript)
   .register("test", TestScript)
+  .register("canonical-architecture", CanonicalArchitectureScript)
   .register("fixtures", FixturesScript);
 registerPlaygroundSiteBuildCommands(router);
 

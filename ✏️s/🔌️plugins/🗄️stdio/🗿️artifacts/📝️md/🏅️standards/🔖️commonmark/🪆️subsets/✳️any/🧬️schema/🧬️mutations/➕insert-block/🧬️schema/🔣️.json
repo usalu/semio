@@ -5,11 +5,16 @@
   "type": "object",
   "additionalProperties": false,
   "required": [
+    "mutation",
     "path",
     "index",
     "block"
   ],
   "properties": {
+    "mutation": {
+      "const": "insertBlock",
+      "description": "Aggregate discriminator spliced in by MdMutation; absent when the payload stands alone."
+    },
     "path": {
       "type": "array",
       "items": {
@@ -22,10 +27,6 @@
     },
     "block": {
       "$ref": "#/$defs/MdBlock"
-    },
-    "mutation": {
-      "const": "insertBlock",
-      "description": "Aggregate discriminator spliced in by MdMutation; absent when the payload stands alone."
     }
   },
   "$defs": {

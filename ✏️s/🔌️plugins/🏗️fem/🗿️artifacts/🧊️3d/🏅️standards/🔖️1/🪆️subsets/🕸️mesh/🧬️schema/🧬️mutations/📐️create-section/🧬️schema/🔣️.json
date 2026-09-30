@@ -5,9 +5,13 @@
   "type": "object",
   "additionalProperties": false,
   "required": [
+    "mutation",
     "section"
   ],
   "properties": {
+    "mutation": {
+      "const": "createSection"
+    },
     "section": {
       "title": "FemSection",
       "type": "object",
@@ -22,23 +26,124 @@
       ],
       "properties": {
         "id": {
-          "type": "string"
+          "type": "string",
+          "x-semio-ui": {
+            "widget": "text",
+            "role": "value",
+            "label": {
+              "en": "ID",
+              "de": "ID"
+            },
+            "description": {
+              "en": "Unique id of the record.",
+              "de": "Eindeutige ID des Eintrags."
+            },
+            "group": "identity",
+            "order": 10
+          }
         },
         "name": {
-          "type": "string"
+          "type": "string",
+          "x-semio-ui": {
+            "widget": "text",
+            "role": "value",
+            "label": {
+              "en": "Name",
+              "de": "Bezeichnung"
+            },
+            "group": "identity",
+            "order": 20
+          }
         },
         "area": {
-          "type": "number"
+          "type": "number",
+          "exclusiveMinimum": 0,
+          "x-semio-ui": {
+            "widget": "stepper",
+            "role": "value",
+            "label": {
+              "en": "Cross-sectional area",
+              "de": "Querschnittsfläche"
+            },
+            "unit": "m²",
+            "displayUnit": "cm²",
+            "displayFactor": 10000.0,
+            "step": 0.0001,
+            "precision": 2,
+            "group": "section",
+            "order": 30
+          }
         },
         "iy": {
-          "type": "number"
+          "type": "number",
+          "exclusiveMinimum": 0,
+          "x-semio-ui": {
+            "widget": "stepper",
+            "role": "value",
+            "label": {
+              "en": "Second moment of area Iy",
+              "de": "Flächenträgheitsmoment Iy"
+            },
+            "unit": "m⁴",
+            "displayUnit": "cm⁴",
+            "displayFactor": 100000000.0,
+            "step": 1e-08,
+            "precision": 1,
+            "group": "section",
+            "order": 40
+          }
         },
         "iz": {
-          "type": "number"
+          "type": "number",
+          "exclusiveMinimum": 0,
+          "x-semio-ui": {
+            "widget": "stepper",
+            "role": "value",
+            "label": {
+              "en": "Second moment of area Iz",
+              "de": "Flächenträgheitsmoment Iz"
+            },
+            "unit": "m⁴",
+            "displayUnit": "cm⁴",
+            "displayFactor": 100000000.0,
+            "step": 1e-08,
+            "precision": 1,
+            "group": "section",
+            "order": 50
+          }
         },
         "j": {
-          "type": "number"
+          "type": "number",
+          "exclusiveMinimum": 0,
+          "x-semio-ui": {
+            "widget": "stepper",
+            "role": "value",
+            "label": {
+              "en": "Torsion constant",
+              "de": "Torsionsflächenmoment"
+            },
+            "description": {
+              "en": "Saint-Venant torsion constant I_T.",
+              "de": "Torsionsflächenmoment 2. Grades I_T nach Saint-Venant."
+            },
+            "unit": "m⁴",
+            "displayUnit": "cm⁴",
+            "displayFactor": 100000000.0,
+            "step": 1e-08,
+            "precision": 1,
+            "group": "section",
+            "order": 60
+          }
         }
+      },
+      "x-semio-ui": {
+        "role": "value",
+        "label": {
+          "en": "Cross-section",
+          "de": "Querschnitt"
+        },
+        "group": "record",
+        "order": 10
       }
     }
   }

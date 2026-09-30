@@ -5,20 +5,17 @@
   "type": "object",
   "additionalProperties": false,
   "required": [
-    "newDeltaSigmaMpa",
-    "newFatigueCategory",
-    "newFatigueMethod"
+    "fatigueDetail"
   ],
   "properties": {
-    "newDeltaSigmaMpa": {
-      "type": "number"
-    },
-    "newFatigueCategory": {
-      "type": "integer",
-      "minimum": 0
-    },
-    "newFatigueMethod": {
-      "type": "string"
+    "fatigueDetail": {
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1993/snapshot.json#/$defs/FatigueDetail",
+      "x-semio-ui": {
+        "label": {
+          "en": "Fatigue detail",
+          "de": "Ermüdungsdetail"
+        }
+      }
     }
   }
 }

@@ -14,11 +14,11 @@ use semio_s_plugin_stdio_test_oracle::law::vector::Vector;
 fn vector(kind: &str) -> Result<Vector, String> {
     Ok(match kind {
         "set-camera" => Vector {
-            before: include_str!("../../👁️viewer/🎭️modes/👁️view/🪟️windows/🧊️model/🎚️config/🧫️fixtures/🎥️set-camera/✅️set-camera-applied/📸️snapshot/⬅️before/🔣️.json"),
-            mutation: include_str!("../../👁️viewer/🎭️modes/👁️view/🪟️windows/🧊️model/🎚️config/🧫️fixtures/🎥️set-camera/✅️set-camera-applied/🦠️mutation/🔣️.json"),
-            after: include_str!("../../👁️viewer/🎭️modes/👁️view/🪟️windows/🧊️model/🎚️config/🧫️fixtures/🎥️set-camera/✅️set-camera-applied/📸️snapshot/➡️after/🔣️.json"),
-            diff: include_str!("../../👁️viewer/🎭️modes/👁️view/🪟️windows/🧊️model/🎚️config/🧫️fixtures/🎥️set-camera/✅️set-camera-applied/🔺️diff/🔣️.json"),
-            outcome: include_str!("../../👁️viewer/🎭️modes/👁️view/🪟️windows/🧊️model/🎚️config/🧫️fixtures/🎥️set-camera/✅️set-camera-applied/🎯️outcome/🔣️.json"),
+            before: include_str!("../../👁️viewer/🎭️modes/👁️view/🪟️windows/🧊️model/🎚️config/🧫️fixtures/🎥️set-camera/✅️set-camera/📸️snapshot/⬅️before/🔣️.json"),
+            mutation: include_str!("../../👁️viewer/🎭️modes/👁️view/🪟️windows/🧊️model/🎚️config/🧫️fixtures/🎥️set-camera/✅️set-camera/🦠️mutation/🔣️.json"),
+            after: include_str!("../../👁️viewer/🎭️modes/👁️view/🪟️windows/🧊️model/🎚️config/🧫️fixtures/🎥️set-camera/✅️set-camera/📸️snapshot/➡️after/🔣️.json"),
+            diff: include_str!("../../👁️viewer/🎭️modes/👁️view/🪟️windows/🧊️model/🎚️config/🧫️fixtures/🎥️set-camera/✅️set-camera/🔺️diff/🔣️.json"),
+            outcome: include_str!("../../👁️viewer/🎭️modes/👁️view/🪟️windows/🧊️model/🎚️config/🧫️fixtures/🎥️set-camera/✅️set-camera/🎯️outcome/🔣️.json"),
             observable: true,
         },
         other => return Err(format!("no committed vector for {other:?}")),
@@ -29,11 +29,11 @@ fn vector(kind: &str) -> Result<Vector, String> {
 fn kept(kind: &str) -> Result<Vector, String> {
     Ok(match kind {
         "set-camera" => Vector {
-            before: include_str!("../../👁️viewer/🎭️modes/👁️view/🪟️windows/🧊️model/🎚️config/🧫️fixtures/🎥️set-camera/🟰️set-camera-no-op/📸️snapshot/⬅️before/🔣️.json"),
-            mutation: include_str!("../../👁️viewer/🎭️modes/👁️view/🪟️windows/🧊️model/🎚️config/🧫️fixtures/🎥️set-camera/🟰️set-camera-no-op/🦠️mutation/🔣️.json"),
-            after: include_str!("../../👁️viewer/🎭️modes/👁️view/🪟️windows/🧊️model/🎚️config/🧫️fixtures/🎥️set-camera/🟰️set-camera-no-op/📸️snapshot/➡️after/🔣️.json"),
-            diff: include_str!("../../👁️viewer/🎭️modes/👁️view/🪟️windows/🧊️model/🎚️config/🧫️fixtures/🎥️set-camera/🟰️set-camera-no-op/🔺️diff/🔣️.json"),
-            outcome: include_str!("../../👁️viewer/🎭️modes/👁️view/🪟️windows/🧊️model/🎚️config/🧫️fixtures/🎥️set-camera/🟰️set-camera-no-op/🎯️outcome/🔣️.json"),
+            before: include_str!("../../👁️viewer/🎭️modes/👁️view/🪟️windows/🧊️model/🎚️config/🧫️fixtures/🎥️set-camera/🟰️set-camera/📸️snapshot/⬅️before/🔣️.json"),
+            mutation: include_str!("../../👁️viewer/🎭️modes/👁️view/🪟️windows/🧊️model/🎚️config/🧫️fixtures/🎥️set-camera/🟰️set-camera/🦠️mutation/🔣️.json"),
+            after: include_str!("../../👁️viewer/🎭️modes/👁️view/🪟️windows/🧊️model/🎚️config/🧫️fixtures/🎥️set-camera/🟰️set-camera/📸️snapshot/➡️after/🔣️.json"),
+            diff: include_str!("../../👁️viewer/🎭️modes/👁️view/🪟️windows/🧊️model/🎚️config/🧫️fixtures/🎥️set-camera/🟰️set-camera/🔺️diff/🔣️.json"),
+            outcome: include_str!("../../👁️viewer/🎭️modes/👁️view/🪟️windows/🧊️model/🎚️config/🧫️fixtures/🎥️set-camera/🟰️set-camera/🎯️outcome/🔣️.json"),
             observable: false,
         },
         other => return Err(format!("no committed no-op vector for {other:?}")),

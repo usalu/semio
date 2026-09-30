@@ -10,8 +10,7 @@ pub const TOUCHED_PATHS: &[&str] = &["document/materials/{material}/alphaMode"];
 pub fn touched_paths(payload: &GltfChangeMaterialAlphaModePayload) -> Vec<String> {
     vec![format!("document/materials/{}/alphaMode", payload.material)]
 }
-#[derive(Clone, Debug, PartialEq, Eq, value_derive::ToValue, value_derive::FromValue, dsl::MutationLeaf)]
-#[mutation_leaf(contract = ::protocol)]
+#[derive(Clone, Debug, PartialEq, Eq, value_derive::ToValue, value_derive::FromValue)]
 #[value(rename_all = "camelCase")]
 pub struct GltfChangeMaterialAlphaModeRejection {
     pub code: String,
@@ -43,13 +42,10 @@ pub fn apply(snapshot: &mut GltfSnapshot, payload: &GltfChangeMaterialAlphaModeP
     snapshot.document.materials[payload.material].alpha_mode = payload.alpha_mode;
     Ok(())
 }
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
 
 //#region 🧬️DirectMutation
 #[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::MutationLeaf)]
-#[mutation_leaf(contract = ::protocol)]
+#[mutation_leaf(contract = ::protocol, payload = Apply)]
 #[value(tag = "phase", content = "value", rename_all = "camelCase")]
 pub enum ChangeMaterialAlphaModeMutation {
     Apply(GltfChangeMaterialAlphaModePayload),
@@ -96,8 +92,8 @@ impl protocol::MutationKind<GltfSnapshot, super::GltfMutation> for ChangeMateria
 
 //#region 🧪️Tests
 #[cfg(test)]
-#[path = "🧪️tests/🔬️direct-leaf/🦀️.rs"]
-mod direct_leaf_tests;
+#[path = "🧪️tests/🎭️switches-the-79b834/🦀️.rs"]
+mod case_switches_the_79b834;
 //#endregion 🧪️Tests
 
 #[cfg(test)]

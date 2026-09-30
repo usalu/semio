@@ -23,13 +23,13 @@ export type { ConnectNodes } from "./🤝️connect-nodes/🧬️schema/🟦️.
 export type { MoveNode } from "./🧭move-node/🧬️schema/🟦️.ts";
 
 export type WiresMutation =
-  | ({ mutation: "disconnectNodes" } & DisconnectNodes)
-  | ({ mutation: "editNodeText" } & EditNodeText)
-  | ({ mutation: "createNode" } & CreateNode)
-  | ({ mutation: "changeNodeKind" } & ChangeNodeKind)
-  | ({ mutation: "resizeNode" } & ResizeNode)
-  | ({ mutation: "changeNodeShape" } & ChangeNodeShape)
-  | ({ mutation: "deleteNode" } & DeleteNode)
-  | ({ mutation: "setNodeRoot" } & SetNodeRoot)
-  | ({ mutation: "connectNodes" } & ConnectNodes)
-  | ({ mutation: "moveNode" } & MoveNode);
+  | DisconnectNodes
+  | EditNodeText
+  | CreateNode
+  | ChangeNodeKind
+  | ResizeNode
+  | ChangeNodeShape
+  | DeleteNode
+  | SetNodeRoot
+  | ConnectNodes
+  | MoveNode;

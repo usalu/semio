@@ -17,9 +17,9 @@ Feature: Apply every typed DXF R12 mutation to a real-world drawing
     Then the oracle and the subject agree on the semantic projection
     Examples:
       | id                 | params                                                                                                                                          |
-      | insert-block       | {"index": 1, "name": "BENCH_MARK", "basePoint": [0, 0, 0], "entities": [{"entityKind": "line", "layer": "0", "start": [0, 0, 0], "end": [100, 0, 0]}]} |
+      | insert-block       | {"index": 1, "block": {"name": "BENCH_MARK", "basePoint": [0, 0, 0], "entities": [{"line": {"start": [0, 0, 0], "end": [100, 0, 0], "layer": "0"}}]}} |
       | remove-block       | {"index": 1}                                                                                                                                     |
-      | set-block          | {"index": 0, "name": "SHELTER_POST", "basePoint": [0, 0, 0], "entities": [{"entityKind": "circle", "layer": "0", "center": [0, 0, 0], "radius": 20}]} |
+      | set-block          | {"index": 0, "block": {"name": "SHELTER_POST", "basePoint": [0, 0, 0], "entities": [{"circle": {"center": [0, 0, 0], "radius": 20, "layer": "0"}}]}} |
 
   @id-inverse
   @level-exhaustive
@@ -33,6 +33,6 @@ Feature: Apply every typed DXF R12 mutation to a real-world drawing
     Then the oracle and the subject agree on the semantic projection
     Examples:
       | id                 | params                                                                                                                                          |
-      | insert-block       | {"index": 1, "name": "BENCH_MARK", "basePoint": [0, 0, 0], "entities": [{"entityKind": "line", "layer": "0", "start": [0, 0, 0], "end": [100, 0, 0]}]} |
+      | insert-block       | {"index": 1, "block": {"name": "BENCH_MARK", "basePoint": [0, 0, 0], "entities": [{"line": {"start": [0, 0, 0], "end": [100, 0, 0], "layer": "0"}}]}} |
       | remove-block       | {"index": 1}                                                                                                                                     |
-      | set-block          | {"index": 0, "name": "SHELTER_POST", "basePoint": [0, 0, 0], "entities": [{"entityKind": "circle", "layer": "0", "center": [0, 0, 0], "radius": 20}]} |
+      | set-block          | {"index": 0, "block": {"name": "SHELTER_POST", "basePoint": [0, 0, 0], "entities": [{"circle": {"center": [0, 0, 0], "radius": 20, "layer": "0"}}]}} |

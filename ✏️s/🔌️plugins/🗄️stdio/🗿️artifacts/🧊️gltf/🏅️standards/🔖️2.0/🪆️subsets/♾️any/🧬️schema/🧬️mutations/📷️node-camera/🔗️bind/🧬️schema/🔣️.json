@@ -1,7 +1,7 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
   "$id": "https://json.schemas.assets.semio-tech.com/s/stdio/gltf/2.0/any/mutation/bind-node-camera/schema.json",
-  "title": "GltfBindNodeCameraMutation",
+  "title": "GltfBindNodeCameraPayload",
   "type": "object",
   "additionalProperties": false,
   "required": [
@@ -11,22 +11,78 @@
   "properties": {
     "node": {
       "type": "integer",
-      "minimum": 0
+      "minimum": 0,
+      "x-semio-ui": {
+        "widget": "stepper",
+        "label": {
+          "en": "Node",
+          "de": "Knoten"
+        },
+        "description": {
+          "en": "Index of the node, counted from 0.",
+          "de": "Index des Knotens, ab 0 gezählt."
+        },
+        "precision": 0,
+        "group": "target",
+        "order": 10
+      }
     },
     "camera": {
       "type": "integer",
-      "minimum": 0
+      "minimum": 0,
+      "x-semio-ui": {
+        "widget": "stepper",
+        "label": {
+          "en": "Camera",
+          "de": "Kamera"
+        },
+        "description": {
+          "en": "Index of the camera, counted from 0.",
+          "de": "Index der Kamera, ab 0 gezählt."
+        },
+        "precision": 0,
+        "group": "value",
+        "order": 20
+      }
     }
   },
-  "x-semio": {
-    "id": "s.stdio.gltf.mutation.bind-node-camera.v1",
-    "version": 1,
-    "phase": "mutation",
-    "kind": "bind",
-    "touchedPaths": [
-      "document/nodes/*/camera"
-    ],
-    "referencePolicy": "validates the typed camera reference"
-  },
-  "x-semio-mutation": "bind-node-camera"
+  "$defs": {
+    "BindNodeCameraMutation": {
+      "description": "The whole wire of BindNodeCameraMutation: the editable apply payload (this document's root) or the inert restore.",
+      "oneOf": [
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "phase",
+            "value"
+          ],
+          "properties": {
+            "phase": {
+              "const": "apply"
+            },
+            "value": {
+              "$ref": "#"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "phase",
+            "value"
+          ],
+          "properties": {
+            "phase": {
+              "const": "restore"
+            },
+            "value": {
+              "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/gltf/2.0/any/diff.json"
+            }
+          }
+        }
+      ]
+    }
+  }
 }

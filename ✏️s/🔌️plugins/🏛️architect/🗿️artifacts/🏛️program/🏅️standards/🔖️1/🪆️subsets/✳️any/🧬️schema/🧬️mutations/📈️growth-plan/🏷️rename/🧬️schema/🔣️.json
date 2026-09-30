@@ -5,16 +5,52 @@
   "type": "object",
   "additionalProperties": false,
   "required": [
+    "mutation",
     "id",
     "newName"
   ],
   "properties": {
+    "mutation": {
+      "const": "renameGrowthPlan"
+    },
     "id": {
-      "type": "integer",
-      "minimum": 0
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Growth Plan",
+          "de": "Wachstumsplan"
+        },
+        "description": {
+          "en": "The growth plan to rename.",
+          "de": "Umzubenennender Eintrag vom Typ „Wachstumsplan“."
+        },
+        "ref": {
+          "kind": "growthPlan",
+          "domain": "program",
+          "granularity": "entity"
+        },
+        "group": "target",
+        "order": 10
+      }
     },
     "newName": {
-      "type": "string"
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "text",
+        "role": "value",
+        "label": {
+          "en": "New Name",
+          "de": "Neuer Name"
+        },
+        "description": {
+          "en": "New name of the growth plan.",
+          "de": "Neuer Name des Eintrags vom Typ „Wachstumsplan“."
+        },
+        "group": "identity",
+        "order": 20
+      }
     }
   }
 }

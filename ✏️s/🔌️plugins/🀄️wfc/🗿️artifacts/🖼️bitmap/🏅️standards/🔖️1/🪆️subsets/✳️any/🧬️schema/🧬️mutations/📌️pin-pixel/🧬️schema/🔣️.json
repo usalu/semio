@@ -10,8 +10,8 @@
     "color"
   ],
   "properties": {
-    "x": { "type": "integer", "minimum": 0 },
-    "y": { "type": "integer", "minimum": 0 },
-    "color": { "type": "integer", "minimum": 0, "maximum": 255 }
+    "x": { "type": "integer", "minimum": 0, "x-semio-ui": { "widget": "stepper", "role": "value", "label": { "en": "X", "de": "X" }, "unit": "px", "step": 1, "precision": 0, "group": "position", "order": 10 } },
+    "y": { "type": "integer", "minimum": 0, "x-semio-ui": { "widget": "stepper", "role": "value", "label": { "en": "Y", "de": "Y" }, "unit": "px", "step": 1, "precision": 0, "group": "position", "order": 20 } },
+    "color": { "type": "integer", "minimum": 0, "maximum": 255, "x-semio-ui": { "widget": "stepper", "role": "value", "label": { "en": "Palette index", "de": "Palettenindex" }, "step": 1, "precision": 0, "group": "palette", "order": 30 } }
   }
 }

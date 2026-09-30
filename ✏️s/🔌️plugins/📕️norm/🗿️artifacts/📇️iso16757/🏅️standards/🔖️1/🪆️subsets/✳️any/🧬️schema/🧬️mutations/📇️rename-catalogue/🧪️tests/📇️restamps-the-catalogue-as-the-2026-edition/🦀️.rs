@@ -63,8 +63,8 @@ async fn renaming_back_restores_before() {
 }
 
 /// 🔣️ Both committed snapshots and the committed `rename-catalogue` payload are already canonical: decode →
-/// encode is a fixed point. The committed payload is spelled `{"RenameCatalogue": {"new_name": …}}` —
-/// externally tagged, snake_case payload key.
+/// encode is a fixed point. The committed payload is spelled `{"RenameCatalogue": {"newName": …}}` —
+/// externally tagged, camelCase payload key.
 #[semio_framework_async_macros::async_test]
 async fn committed_json_is_canonical() {
     for (side, text) in [("before", BEFORE), ("after", AFTER)] {

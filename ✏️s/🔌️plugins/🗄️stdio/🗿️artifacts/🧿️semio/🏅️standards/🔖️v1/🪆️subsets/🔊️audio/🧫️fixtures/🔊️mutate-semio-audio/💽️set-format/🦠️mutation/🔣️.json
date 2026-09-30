@@ -1,6 +1,7 @@
 {
   "kind": "set-format",
-  "params": {
+  "mutation": {
+    "mutation": "setFormat",
     "format": "pcm16"
   },
   "before": {

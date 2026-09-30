@@ -1,0 +1,19 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/framework/os/plugin/interaction/mutations.json",
+  "title": "InteractionConfigMutation",
+  "oneOf": [
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "setInteractionState"
+      ],
+      "properties": {
+        "setInteractionState": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/framework/os/plugin/interaction/mutation/set-interaction-state/schema.json"
+        }
+      }
+    }
+  ]
+}

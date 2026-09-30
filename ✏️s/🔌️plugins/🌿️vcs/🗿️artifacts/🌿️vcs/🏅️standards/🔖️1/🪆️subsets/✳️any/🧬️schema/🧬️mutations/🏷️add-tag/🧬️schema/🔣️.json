@@ -2,36 +2,18 @@
   "$schema": "http://json-schema.org/draft-07/schema#",
   "$id": "https://json.schemas.assets.semio-tech.com/s/vcs/vcs/mutation/add-tag/schema.json",
   "title": "AddTag",
-  "$ref": "#/$defs/Payload",
-  "$defs": {
-    "Payload": {
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "tag"
-      ],
-      "properties": {
-        "tag": {
-          "type": "string"
-        }
-      }
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "mutation",
+    "tag"
+  ],
+  "properties": {
+    "mutation": {
+      "const": "addTag"
     },
-    "Wire": {
-      "title": "AddTagMutation",
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "mutation",
-        "tag"
-      ],
-      "properties": {
-        "mutation": {
-          "const": "addTag"
-        },
-        "tag": {
-          "$ref": "#/$defs/Payload/properties/tag"
-        }
-      }
+    "tag": {
+      "type": "string"
     }
   }
 }

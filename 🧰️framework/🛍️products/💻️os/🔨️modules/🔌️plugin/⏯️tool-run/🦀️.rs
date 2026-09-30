@@ -847,6 +847,11 @@ impl<A: ArtifactApp> ToolRunLedger<A> {
         selected_entry!(self).map(ToolRunEntry::view)
     }
 
+    /// ⏪️ Whether a non-terminal mutating run holds provisional state on this instance: history editing cannot open then.
+    pub fn holds_mutating_run(&self) -> bool {
+        self.entries.iter().any(|entry| entry.definition.mutating && !entry.slot.state.is_terminal())
+    }
+
     /// 🧊️ `freeze` rebase policy: local artifact emits fail with `toolRun.busy` while a freezing run is non-terminal.
     pub fn freezes_local_emits(&self) -> bool {
         self.entries.iter().any(|entry| entry.definition.rebase == ToolRunRebasePolicy::Freeze && !entry.slot.state.is_terminal())
@@ -1266,6 +1271,9 @@ impl<A: ArtifactApp, M: SpaceMember + MemberFactory + 'static> VcsArtifactApp<A,
         let definition =
             self.registry.tool_run(&tool_id).map(|(_, definition)| definition.clone()).ok_or_else(|| Fault::new(FaultOrigin::Framework, FaultCode::new("toolRun.unknown-tool"), format!("tool '{tool_id}' declares no ToolRunDefinition")))?;
         let window_id = args.and_then(|args| args.get(TOOL_RUN_ARG_WINDOW_ID)).and_then(DslValue::as_str).map(str::to_string).or_else(|| view_state.and_then(|view| view.window_id.clone().or_else(|| view.focused_window_id.clone())));
+        if definition.mutating && self.time_travel.freezes_local_emits() {
+            return Ok(ToolRunActionOutcome::Rejected(ToolRunRejection::Busy));
+        }
         let lane = ToolRunLane { mutating: definition.mutating, tool_id: tool_id.clone(), window_id: if definition.mutating { None } else { window_id.clone() } };
         let live: Vec<(ToolRunLane, ToolRunState)> = self.tool_runs.entries.iter().map(|entry| (entry.lane(), entry.slot.state)).collect();
         let replaced = match lane.admit(&live) {
@@ -1851,6 +1859,7 @@ impl<A: ArtifactApp, M: SpaceMember + MemberFactory + 'static> VcsArtifactApp<A,
                 entry.provisional.clone(),
                 Some(description),
                 self.artifact_one_item_factory.as_ref(),
+                None,
             ) {
                 Ok(publication) => entry.finalize.as_mut().expect("finalize owner").publication = Some(publication),
                 Err(_) => return self.reject_tool_run_publication(run, generation),

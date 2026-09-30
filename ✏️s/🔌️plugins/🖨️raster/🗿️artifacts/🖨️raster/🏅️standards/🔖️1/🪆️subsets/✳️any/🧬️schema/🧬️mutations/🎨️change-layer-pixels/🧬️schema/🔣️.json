@@ -1,23 +1,61 @@
 {
-  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/raster/raster/mutation/change-layer-pixels/schema.json",
   "title": "ChangeLayerPixels",
   "type": "object",
   "additionalProperties": false,
   "required": [
+    "mutation",
     "layerId",
     "expectedImageKey",
     "content"
   ],
   "properties": {
+    "mutation": {
+      "const": "changeLayerPixels"
+    },
     "layerId": {
       "type": "string",
-      "minLength": 1
+      "minLength": 1,
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Layer",
+          "de": "Ebene"
+        },
+        "description": {
+          "en": "The layer this mutation addresses.",
+          "de": "Die Ebene, die diese Mutation adressiert."
+        },
+        "ref": {
+          "kind": "layer",
+          "domain": "layers",
+          "granularity": "layer"
+        },
+        "group": "target",
+        "order": 10
+      }
     },
     "expectedImageKey": {
       "type": [
         "string",
         "null"
-      ]
+      ],
+      "x-semio-ui": {
+        "widget": "text",
+        "role": "value",
+        "label": {
+          "en": "Expected image",
+          "de": "Erwartetes Bild"
+        },
+        "description": {
+          "en": "Value the layer must hold now; the edit is refused on a mismatch.",
+          "de": "Wert, den die Ebene jetzt haben muss; sonst wird die Bearbeitung abgelehnt."
+        },
+        "group": "pixels",
+        "order": 20
+      }
     },
     "content": {
       "type": "object",
@@ -32,7 +70,21 @@
           "type": [
             "string",
             "null"
-          ]
+          ],
+          "x-semio-ui": {
+            "widget": "text",
+            "role": "value",
+            "label": {
+              "en": "Image key",
+              "de": "Bildschlüssel"
+            },
+            "description": {
+              "en": "Asset key of the image; empty clears the pixels.",
+              "de": "Asset-Schlüssel des Bilds; leer leert die Pixel."
+            },
+            "group": "pixels",
+            "order": 10
+          }
         },
         "width": {
           "type": [
@@ -40,7 +92,20 @@
             "null"
           ],
           "minimum": 1,
-          "maximum": 16384
+          "maximum": 16384,
+          "x-semio-ui": {
+            "widget": "stepper",
+            "role": "value",
+            "label": {
+              "en": "Width",
+              "de": "Breite"
+            },
+            "unit": "px",
+            "step": 1,
+            "precision": 0,
+            "group": "pixels",
+            "order": 20
+          }
         },
         "height": {
           "type": [
@@ -48,8 +113,34 @@
             "null"
           ],
           "minimum": 1,
-          "maximum": 16384
+          "maximum": 16384,
+          "x-semio-ui": {
+            "widget": "stepper",
+            "role": "value",
+            "label": {
+              "en": "Height",
+              "de": "Höhe"
+            },
+            "unit": "px",
+            "step": 1,
+            "precision": 0,
+            "group": "pixels",
+            "order": 30
+          }
         }
+      },
+      "x-semio-ui": {
+        "role": "value",
+        "label": {
+          "en": "Pixels",
+          "de": "Pixel"
+        },
+        "description": {
+          "en": "The new image of the layer.",
+          "de": "Das neue Bild der Ebene."
+        },
+        "group": "pixels",
+        "order": 30
       }
     },
     "transform": {
@@ -68,25 +159,127 @@
       ],
       "properties": {
         "x": {
-          "type": "number"
+          "type": "number",
+          "x-semio-ui": {
+            "widget": "stepper",
+            "role": "value",
+            "label": {
+              "en": "X",
+              "de": "X"
+            },
+            "unit": "px",
+            "step": 1,
+            "precision": 1,
+            "group": "position",
+            "order": 10
+          }
         },
         "y": {
-          "type": "number"
+          "type": "number",
+          "x-semio-ui": {
+            "widget": "stepper",
+            "role": "value",
+            "label": {
+              "en": "Y",
+              "de": "Y"
+            },
+            "unit": "px",
+            "step": 1,
+            "precision": 1,
+            "group": "position",
+            "order": 20
+          }
         },
         "a": {
-          "type": "number"
+          "type": "number",
+          "x-semio-ui": {
+            "widget": "stepper",
+            "role": "value",
+            "label": {
+              "en": "Matrix a",
+              "de": "Matrix a"
+            },
+            "description": {
+              "en": "Affine coefficient a of [a b c d x y]; 1 keeps the x scale.",
+              "de": "Affiner Koeffizient a von [a b c d x y]; 1 behält die x-Skalierung."
+            },
+            "step": 0.01,
+            "precision": 4,
+            "group": "matrix",
+            "order": 30
+          }
         },
         "b": {
-          "type": "number"
+          "type": "number",
+          "x-semio-ui": {
+            "widget": "stepper",
+            "role": "value",
+            "label": {
+              "en": "Matrix b",
+              "de": "Matrix b"
+            },
+            "description": {
+              "en": "Affine coefficient b of [a b c d x y]; 0 without skew.",
+              "de": "Affiner Koeffizient b von [a b c d x y]; 0 ohne Scherung."
+            },
+            "step": 0.01,
+            "precision": 4,
+            "group": "matrix",
+            "order": 40
+          }
         },
         "c": {
-          "type": "number"
+          "type": "number",
+          "x-semio-ui": {
+            "widget": "stepper",
+            "role": "value",
+            "label": {
+              "en": "Matrix c",
+              "de": "Matrix c"
+            },
+            "description": {
+              "en": "Affine coefficient c of [a b c d x y]; 0 without skew.",
+              "de": "Affiner Koeffizient c von [a b c d x y]; 0 ohne Scherung."
+            },
+            "step": 0.01,
+            "precision": 4,
+            "group": "matrix",
+            "order": 50
+          }
         },
         "d": {
-          "type": "number"
+          "type": "number",
+          "x-semio-ui": {
+            "widget": "stepper",
+            "role": "value",
+            "label": {
+              "en": "Matrix d",
+              "de": "Matrix d"
+            },
+            "description": {
+              "en": "Affine coefficient d of [a b c d x y]; 1 keeps the y scale.",
+              "de": "Affiner Koeffizient d von [a b c d x y]; 1 behält die y-Skalierung."
+            },
+            "step": 0.01,
+            "precision": 4,
+            "group": "matrix",
+            "order": 60
+          }
         }
+      },
+      "x-semio-ui": {
+        "role": "value",
+        "label": {
+          "en": "Placement",
+          "de": "Platzierung"
+        },
+        "description": {
+          "en": "New placement; empty keeps the current one.",
+          "de": "Neue Platzierung; leer behält die aktuelle."
+        },
+        "group": "matrix",
+        "order": 40
       }
     }
-  },
-  "$id": "https://json.schemas.assets.semio-tech.com/s/raster/raster/mutation/change-layer-pixels/schema.json"
+  }
 }

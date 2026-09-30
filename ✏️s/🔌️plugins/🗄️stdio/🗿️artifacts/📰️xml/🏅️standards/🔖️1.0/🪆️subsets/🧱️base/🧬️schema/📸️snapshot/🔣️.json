@@ -10,10 +10,27 @@
   "properties": {
     "schema": {
       "type": "string",
-      "x-semio-state": "artifact"
+      "x-semio-state": "artifact",
+      "x-semio-ui": {
+        "widget": "text",
+        "label": {
+          "en": "Snapshot schema",
+          "de": "Snapshot-Schema"
+        },
+        "description": {
+          "en": "Identifier of the snapshot schema version.",
+          "de": "Kennung der Version des Snapshot-Schemas."
+        }
+      }
     },
     "doc": {
-      "$ref": "#/$defs/XmlDocument"
+      "$ref": "#/$defs/XmlDocument",
+      "x-semio-ui": {
+        "label": {
+          "en": "Document",
+          "de": "Dokument"
+        }
+      }
     }
   },
   "$defs": {
@@ -139,10 +156,32 @@
           "type": "string"
         },
         "encoding": {
-          "type": "string"
+          "type": "string",
+          "x-semio-ui": {
+            "widget": "text",
+            "label": {
+              "en": "Encoding",
+              "de": "Zeichenkodierung"
+            },
+            "description": {
+              "en": "Encoding name written in the XML declaration, e.g. UTF-8.",
+              "de": "In der XML-Deklaration angegebene Zeichenkodierung, z. B. UTF-8."
+            }
+          }
         },
         "standalone": {
-          "type": "boolean"
+          "type": "boolean",
+          "x-semio-ui": {
+            "widget": "toggle",
+            "label": {
+              "en": "Standalone document",
+              "de": "Standalone-Dokument"
+            },
+            "description": {
+              "en": "Declares that no external markup declaration affects the document content.",
+              "de": "Erklärt, dass keine externe Markup-Deklaration den Dokumentinhalt beeinflusst."
+            }
+          }
         },
         "quote": {
           "type": "string",
@@ -150,7 +189,28 @@
             "double",
             "single"
           ],
-          "description": "🗣️ Delimiter the declaration's pseudo-attributes are written with (XML 1.0 §2.8); absent means the default `\"` spelling."
+          "description": "🗣️ Delimiter the declaration's pseudo-attributes are written with (XML 1.0 §2.8); absent means the default `\"` spelling.",
+          "x-semio-ui": {
+            "widget": "segmented",
+            "label": {
+              "en": "Quote character",
+              "de": "Anführungszeichen"
+            },
+            "description": {
+              "en": "Delimiter of the XML declaration's pseudo-attributes.",
+              "de": "Begrenzungszeichen der Pseudoattribute der XML-Deklaration."
+            },
+            "options": {
+              "double": {
+                "en": "Double quotes (\")",
+                "de": "Doppelte Anführungszeichen (\")"
+              },
+              "single": {
+                "en": "Single quotes (')",
+                "de": "Einfache Anführungszeichen (')"
+              }
+            }
+          }
         }
       }
     },
@@ -205,7 +265,18 @@
           "const": "entity"
         },
         "parameter": {
-          "type": "boolean"
+          "type": "boolean",
+          "x-semio-ui": {
+            "widget": "toggle",
+            "label": {
+              "en": "Parameter entity",
+              "de": "Parameter-Entity"
+            },
+            "description": {
+              "en": "Declares a parameter entity (%name;) instead of a general entity.",
+              "de": "Deklariert eine Parameter-Entity (%name;) statt einer allgemeinen Entity."
+            }
+          }
         },
         "name": {
           "type": "string"
@@ -224,18 +295,49 @@
         "prologPosition": {
           "type": "integer",
           "minimum": 0,
-          "description": "Number of prolog nodes preceding this declaration."
+          "description": "Number of prolog nodes preceding this declaration.",
+          "x-semio-ui": {
+            "widget": "stepper",
+            "label": {
+              "en": "Prolog position",
+              "de": "Position im Prolog"
+            },
+            "description": {
+              "en": "Number of prolog nodes before the document type declaration.",
+              "de": "Anzahl der Prolog-Knoten vor der Dokumenttypdeklaration."
+            }
+          }
         },
         "name": {
           "type": "string"
         },
         "externalId": {
-          "$ref": "#/$defs/XmlExternalId"
+          "$ref": "#/$defs/XmlExternalId",
+          "x-semio-ui": {
+            "label": {
+              "en": "External identifier",
+              "de": "Externer Bezeichner"
+            },
+            "description": {
+              "en": "SYSTEM or PUBLIC identifier of the external DTD subset.",
+              "de": "SYSTEM- oder PUBLIC-Bezeichner der externen DTD-Teilmenge."
+            }
+          }
         },
         "declarations": {
           "type": "array",
           "items": {
             "$ref": "#/$defs/XmlDtdDeclaration"
+          },
+          "x-semio-ui": {
+            "label": {
+              "en": "Markup declarations",
+              "de": "Markup-Deklarationen"
+            },
+            "description": {
+              "en": "Declarations of the internal DTD subset in document order.",
+              "de": "Deklarationen der internen DTD-Teilmenge in Dokumentreihenfolge."
+            }
           }
         }
       }
@@ -244,24 +346,56 @@
       "type": "object",
       "properties": {
         "root": {
-          "$ref": "#/$defs/XmlNode"
+          "$ref": "#/$defs/XmlNode",
+          "x-semio-ui": {
+            "label": {
+              "en": "Root element",
+              "de": "Wurzelelement"
+            }
+          }
         },
         "doctype": {
           "$ref": "#/$defs/XmlDoctype"
         },
         "declaration": {
-          "$ref": "#/$defs/XmlDeclaration"
+          "$ref": "#/$defs/XmlDeclaration",
+          "x-semio-ui": {
+            "label": {
+              "en": "XML declaration",
+              "de": "XML-Deklaration"
+            }
+          }
         },
         "prolog": {
           "type": "array",
           "items": {
             "$ref": "#/$defs/XmlNode"
+          },
+          "x-semio-ui": {
+            "label": {
+              "en": "Prolog",
+              "de": "Prolog"
+            },
+            "description": {
+              "en": "Comments and processing instructions before the root element.",
+              "de": "Kommentare und Verarbeitungsanweisungen vor dem Wurzelelement."
+            }
           }
         },
         "epilog": {
           "type": "array",
           "items": {
             "$ref": "#/$defs/XmlNode"
+          },
+          "x-semio-ui": {
+            "label": {
+              "en": "Epilog",
+              "de": "Epilog"
+            },
+            "description": {
+              "en": "Comments and processing instructions after the root element.",
+              "de": "Kommentare und Verarbeitungsanweisungen nach dem Wurzelelement."
+            }
           }
         }
       }

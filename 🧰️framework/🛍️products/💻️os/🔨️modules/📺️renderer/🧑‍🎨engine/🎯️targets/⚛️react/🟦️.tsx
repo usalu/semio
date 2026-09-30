@@ -4,8 +4,6 @@
 
 export type { ActionDescriptor, UiComponentSceneNode } from "@semio-tech/framework";
 
-import { aProjectOfLuhUdkFooterItem, fundedByZukunftBauFooterItem } from "../../../../../../../../♻️mit-bestand/🧺️demonstrator/⚛️footer.tsx";
-import { ENTWERFEN_MIT_BESTAND_BRAND_IDS } from "../../../../../../../../♻️mit-bestand/🧺️demonstrator/🪧️brand.ts";
 
 import React, {
   lazy,
@@ -731,8 +729,7 @@ import {
   panelTabDefinitionToNode,
   panelAnchorForGroup,
   integrateAppSettingsPanelTabsIntoFrameworkBranch,
-  SHELL_OWNED_PANEL_TAB_IDS,
-  shellRendersPanelTabItself,
+  partitionFrameworkHistoryPanelTab,
   uiIntentToActionDescriptor,
   resolveUtilities,
   resolveUtilityNodes,
@@ -807,15 +804,11 @@ import {
   AUTO_CHECKIN_EDIT_THRESHOLD,
   AutoCheckinScheduler,
   canCheckIn,
-  checkinActionText,
-  checkinMessagePlaceholderText,
-  checkinSubmitText,
-  checkinCancelText,
   type SyncPillState,
   computeSyncPillState,
   syncPillText,
 } from "../../🧱️elements/🛠️ShellHelpers/🟦️.tsx";
-export { NOTE_WORLD_NAVIGATION_ACTION_ID, buildNoteShellCommandAction, isShellOwnedCommandId, encodeEffectActionInvocation, encodeEffectCommandInvocation, TUTORIAL_RECORDING_EXCLUDED_ACTION_IDS, dispatchOpenedFiles, IMPORT_CHUNK_BYTES, importPayloadChunks, scheduleDispatchAction, sampleMediaFrameTimestampsMs, runTier2VideoFrames, type RequestMediaFramesArgs, runRequestMediaFrames, type ShellRoute, parseShellRoute, appBreadcrumb, resolveAppBreadcrumb, resolveArtifactByAppId, appWindowLabel, studioPanelFocusingSpawned, viewStateWithSpacePanel, retitleWindowLayoutNode, resolveFrameworkLayoutSeed, classifyWindowLayoutChange, flattenPanelTabLeaves, panelTabDefinitionToNode, panelAnchorForGroup, integrateAppSettingsPanelTabsIntoFrameworkBranch, SHELL_OWNED_PANEL_TAB_IDS, shellRendersPanelTabItself, uiIntentToActionDescriptor, resolveUtilities, resolveUtilityNodes, type SelectionUtilityOptions, spawnedWindowChromeForKind, uiNodeToTreePanelConfig, synthesizeLocalizedLabel, resolveManifestLabel, shellLabel, shellTabIcon, syncShellLabelLocale, shellTerminologyLabel, driverDisplayLabel, DEFAULT_PANEL_WIDTH_PX, createLatestAsyncDispatcher, createDirectionalAsyncDispatcher, createInFlightSkippingInterval, createCoalescingActionDispatcher, PUZZLE3D_MESH_COMMAND_RAW_BYTES, PUZZLE3D_MESH_PAGE_VALUES, type Puzzle3dBrushMeshPage, puzzle3dBrushMeshDigest, puzzle3dBrushMeshPages, type Puzzle3dBrushMeshQueueStep, puzzle3dBrushMeshQueueStep, drainPuzzle3dBrushMeshQueue, Puzzle3dBrushMeshRegistry, puzzle3dBrushMeshRegistry, windowMeasureTreeContainsId, windowMeasureDomId, qualifyWindowMeasureIds, renderWindowMeasuresTree, renderStagedArgControl, actionRequiresStagedForm, isEditableEventTarget, keyboardEventMatchesChord, type KeybindingIntent, resolveKeybindingIntent, resolveUtilityActivation, actionCategoryId, actionCategories, buildActionCategoryTree, type WindowActionPaneProps, WindowActionPane, type ResolvedCommand, commandAddressKey, resolveCommands, commandCategories, buildOsCommands, dispatchOsCommand, buildCommandCategoryTree, buildCommandCategoryTabs, buildToolTabs, toolCategoryOpenPath, toolLeafInactiveRepress, toolIdFromPanelTabId, reconcileToolTabSelection, toolPanelTreeContentRevision, type ToolTabSelection, type ToolTabSelectionEffect, preserveJsonIdentity, mergeRecordPreservingIdentity, type UiRefreshCache, introductionTargetsWindow, buildActiveUtilityByWindowId, buildUiRefreshRequest, applyUiRefreshResponseToCache, AUTO_CHECKIN_IDLE_MS, AUTO_CHECKIN_EDIT_THRESHOLD, AutoCheckinScheduler, canCheckIn, checkinActionText, checkinMessagePlaceholderText, checkinSubmitText, checkinCancelText, type SyncPillState, computeSyncPillState, syncPillText };
+export { NOTE_WORLD_NAVIGATION_ACTION_ID, buildNoteShellCommandAction, isShellOwnedCommandId, encodeEffectActionInvocation, encodeEffectCommandInvocation, TUTORIAL_RECORDING_EXCLUDED_ACTION_IDS, dispatchOpenedFiles, IMPORT_CHUNK_BYTES, importPayloadChunks, scheduleDispatchAction, sampleMediaFrameTimestampsMs, runTier2VideoFrames, type RequestMediaFramesArgs, runRequestMediaFrames, type ShellRoute, parseShellRoute, appBreadcrumb, resolveAppBreadcrumb, resolveArtifactByAppId, appWindowLabel, studioPanelFocusingSpawned, viewStateWithSpacePanel, retitleWindowLayoutNode, resolveFrameworkLayoutSeed, classifyWindowLayoutChange, flattenPanelTabLeaves, panelTabDefinitionToNode, panelAnchorForGroup, integrateAppSettingsPanelTabsIntoFrameworkBranch, partitionFrameworkHistoryPanelTab, uiIntentToActionDescriptor, resolveUtilities, resolveUtilityNodes, type SelectionUtilityOptions, spawnedWindowChromeForKind, uiNodeToTreePanelConfig, synthesizeLocalizedLabel, resolveManifestLabel, shellLabel, shellTabIcon, syncShellLabelLocale, shellTerminologyLabel, driverDisplayLabel, DEFAULT_PANEL_WIDTH_PX, createLatestAsyncDispatcher, createDirectionalAsyncDispatcher, createInFlightSkippingInterval, createCoalescingActionDispatcher, PUZZLE3D_MESH_COMMAND_RAW_BYTES, PUZZLE3D_MESH_PAGE_VALUES, type Puzzle3dBrushMeshPage, puzzle3dBrushMeshDigest, puzzle3dBrushMeshPages, type Puzzle3dBrushMeshQueueStep, puzzle3dBrushMeshQueueStep, drainPuzzle3dBrushMeshQueue, Puzzle3dBrushMeshRegistry, puzzle3dBrushMeshRegistry, windowMeasureTreeContainsId, windowMeasureDomId, qualifyWindowMeasureIds, renderWindowMeasuresTree, renderStagedArgControl, actionRequiresStagedForm, isEditableEventTarget, keyboardEventMatchesChord, type KeybindingIntent, resolveKeybindingIntent, resolveUtilityActivation, actionCategoryId, actionCategories, buildActionCategoryTree, type WindowActionPaneProps, WindowActionPane, type ResolvedCommand, commandAddressKey, resolveCommands, commandCategories, buildOsCommands, dispatchOsCommand, buildCommandCategoryTree, buildCommandCategoryTabs, buildToolTabs, toolCategoryOpenPath, toolLeafInactiveRepress, toolIdFromPanelTabId, reconcileToolTabSelection, toolPanelTreeContentRevision, type ToolTabSelection, type ToolTabSelectionEffect, preserveJsonIdentity, mergeRecordPreservingIdentity, type UiRefreshCache, introductionTargetsWindow, buildActiveUtilityByWindowId, buildUiRefreshRequest, applyUiRefreshResponseToCache, AUTO_CHECKIN_IDLE_MS, AUTO_CHECKIN_EDIT_THRESHOLD, AutoCheckinScheduler, canCheckIn, type SyncPillState, computeSyncPillState, syncPillText };
 export { pluginAvailabilityRouteV1, type PluginAvailabilityRouteV1 };
 export { pluginShouldEstablishSession };
 export { pluginShouldReceiveContributions };

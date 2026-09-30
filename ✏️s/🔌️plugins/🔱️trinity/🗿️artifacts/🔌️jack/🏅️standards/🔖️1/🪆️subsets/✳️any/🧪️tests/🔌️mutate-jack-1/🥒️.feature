@@ -35,7 +35,7 @@ Feature: Apply every typed jack scene mutation twice — once in Rust, once in P
   camelCase discriminators with snake_case arguments (`new_name`, `new_value`). Second: nothing in
   the specification says whether deleting a node also deletes the edges that name it; the reference
   cascades, on the grounds that `create-edge`'s own committed vector is rejected with
-  `mutation.invariant` when its endpoints are absent, so a delete that left a dangling edge would
+  `mutation.target-missing` when its endpoints are absent, so a delete that left a dangling edge would
   produce a document the format refuses to construct — and the `delete-node` row below nevertheless
   addresses `jack_orphan`, which no edge names, so the comparison never rests on that inference.
   Third, and the largest: ALL EIGHT committed vectors are NEGATIVE — three rejections and five

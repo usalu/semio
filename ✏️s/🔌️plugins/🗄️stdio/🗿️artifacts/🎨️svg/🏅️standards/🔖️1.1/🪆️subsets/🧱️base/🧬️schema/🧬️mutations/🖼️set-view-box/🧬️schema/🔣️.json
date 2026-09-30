@@ -23,7 +23,17 @@
         {
           "type": "null"
         }
-      ]
+      ],
+      "x-semio-ui": {
+        "label": {
+          "en": "View box",
+          "de": "Ansichtsrahmen (viewBox)"
+        },
+        "description": {
+          "en": "User-space rectangle mapped onto the viewport.",
+          "de": "Rechteck im Benutzerraum, das auf den Viewport abgebildet wird."
+        }
+      }
     }
   },
   "$defs": {
@@ -38,10 +48,32 @@
       ],
       "properties": {
         "minX": {
-          "type": "number"
+          "type": "number",
+          "x-semio-ui": {
+            "widget": "stepper",
+            "label": {
+              "en": "Minimum X",
+              "de": "Minimum X"
+            },
+            "description": {
+              "en": "Left edge of the viewBox in user units.",
+              "de": "Linker Rand der viewBox in Benutzereinheiten."
+            }
+          }
         },
         "minY": {
-          "type": "number"
+          "type": "number",
+          "x-semio-ui": {
+            "widget": "stepper",
+            "label": {
+              "en": "Minimum Y",
+              "de": "Minimum Y"
+            },
+            "description": {
+              "en": "Top edge of the viewBox in user units.",
+              "de": "Oberer Rand der viewBox in Benutzereinheiten."
+            }
+          }
         },
         "width": {
           "type": "number"
@@ -50,6 +82,43 @@
           "type": "number"
         }
       }
+    },
+    "SetViewBoxMutation": {
+      "description": "The whole wire of SetViewBoxMutation: the editable apply payload (this document's root) or the inert restore.",
+      "oneOf": [
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "phase",
+            "value"
+          ],
+          "properties": {
+            "phase": {
+              "const": "apply"
+            },
+            "value": {
+              "$ref": "#"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "phase",
+            "value"
+          ],
+          "properties": {
+            "phase": {
+              "const": "restore"
+            },
+            "value": {
+              "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/svg/1.1/base/diff.json"
+            }
+          }
+        }
+      ]
     }
   }
 }

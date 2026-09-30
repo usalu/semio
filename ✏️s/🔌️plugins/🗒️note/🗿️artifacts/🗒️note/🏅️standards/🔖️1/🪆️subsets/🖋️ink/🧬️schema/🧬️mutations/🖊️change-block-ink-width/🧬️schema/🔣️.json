@@ -5,15 +5,52 @@
   "type": "object",
   "additionalProperties": false,
   "required": [
+    "mutation",
     "id",
     "newStrokeWidth"
   ],
   "properties": {
+    "mutation": {
+      "const": "changeBlockInkWidth"
+    },
     "id": {
-      "type": "string"
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Block",
+          "de": "Block"
+        },
+        "description": {
+          "en": "The block this mutation addresses.",
+          "de": "Der Block, den diese Mutation adressiert."
+        },
+        "ref": {
+          "kind": "block",
+          "domain": "blocks",
+          "granularity": "block"
+        },
+        "group": "target",
+        "order": 10
+      }
     },
     "newStrokeWidth": {
-      "type": "number"
+      "type": "number",
+      "x-semio-ui": {
+        "widget": "stepper",
+        "role": "value",
+        "label": {
+          "en": "Stroke width",
+          "de": "Strichstärke"
+        },
+        "step": 0.5,
+        "precision": 1,
+        "softMin": 0.5,
+        "softMax": 32,
+        "group": "stroke",
+        "order": 20
+      }
     }
   }
 }

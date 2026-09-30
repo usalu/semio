@@ -11,7 +11,7 @@ pub fn diff(payload: &super::DeleteBattery, base: &EnergyModelSnapshot) -> proto
     };
     let _ = existing;
     if base.model.electrical_load_centers.iter().any(|centre| centre.battery_ids.contains(&payload.id)) {
-        return protocol::MutationOutcome::error("mutation.invariant", format!("Battery {} is still attached to an electrical load centre.", payload.id.0), [payload.id.0.to_string()]);
+        return protocol::MutationOutcome::error("mutation.target-referenced", format!("Battery {} is still attached to an electrical load centre.", payload.id.0), [payload.id.0.to_string()]);
     }
     let mut model = base.model.clone();
     model.battery_storage.retain(|item| item.id != payload.id);

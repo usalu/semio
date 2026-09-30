@@ -5,11 +5,30 @@
   "type": "object",
   "additionalProperties": false,
   "required": [
+    "mutation",
     "targetUri"
   ],
   "properties": {
+    "mutation": {
+      "const": "bindWeatherFile"
+    },
     "targetUri": {
-      "type": "string"
+      "type": "string",
+      "pattern": "^[^!]+![^@]+@[\\s\\S]+/[^/]+$",
+      "x-semio-ui": {
+        "widget": "text",
+        "role": "value",
+        "label": {
+          "en": "Weather file",
+          "de": "Wetterdatei"
+        },
+        "description": {
+          "en": "Artifact reference of the EPW weather file, e.g. doc!s.stdio.semio@v1/epw.",
+          "de": "Artefaktverweis auf die EPW-Wetterdatei, z. B. doc!s.stdio.semio@v1/epw."
+        },
+        "group": "source",
+        "order": 10
+      }
     }
   }
 }

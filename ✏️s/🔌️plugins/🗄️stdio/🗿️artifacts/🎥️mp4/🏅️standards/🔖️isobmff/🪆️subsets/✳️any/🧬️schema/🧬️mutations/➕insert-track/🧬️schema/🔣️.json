@@ -5,20 +5,27 @@
   "type": "object",
   "additionalProperties": false,
   "required": [
+    "mutation",
     "index",
     "track"
   ],
   "properties": {
+    "mutation": {
+      "const": "insertTrack",
+      "description": "Aggregate discriminator spliced in by Mp4Mutation; absent when the payload stands alone."
+    },
     "index": {
       "type": "integer",
       "minimum": 0
     },
     "track": {
-      "$ref": "#/$defs/Mp4Track"
-    },
-    "mutation": {
-      "const": "insertTrack",
-      "description": "Aggregate discriminator spliced in by Mp4Mutation; absent when the payload stands alone."
+      "$ref": "#/$defs/Mp4Track",
+      "x-semio-ui": {
+        "label": {
+          "en": "Track",
+          "de": "Spur"
+        }
+      }
     }
   },
   "$defs": {
@@ -37,15 +44,40 @@
         "trackId": {
           "type": "integer",
           "minimum": 0,
-          "maximum": 4294967295
+          "maximum": 4294967295,
+          "x-semio-ui": {
+            "widget": "stepper",
+            "label": {
+              "en": "Track ID",
+              "de": "Spur-ID"
+            }
+          }
         },
         "timescale": {
           "type": "integer",
           "minimum": 0,
-          "maximum": 4294967295
+          "maximum": 4294967295,
+          "x-semio-ui": {
+            "widget": "stepper",
+            "label": {
+              "en": "Timescale",
+              "de": "Zeitskala"
+            },
+            "description": {
+              "en": "Time units per second.",
+              "de": "Zeiteinheiten pro Sekunde."
+            },
+            "unit": "1/s"
+          }
         },
         "codec": {
-          "$ref": "#/$defs/Mp4Codec"
+          "$ref": "#/$defs/Mp4Codec",
+          "x-semio-ui": {
+            "label": {
+              "en": "Codec configuration",
+              "de": "Codec-Konfiguration"
+            }
+          }
         },
         "width": {
           "type": "integer",
@@ -58,7 +90,13 @@
           "maximum": 4294967295
         },
         "metadata": {
-          "$ref": "#/$defs/Mp4TrackMetadata"
+          "$ref": "#/$defs/Mp4TrackMetadata",
+          "x-semio-ui": {
+            "label": {
+              "en": "Track metadata",
+              "de": "Spur-Metadaten"
+            }
+          }
         },
         "chunkSampleCounts": {
           "type": "array",
@@ -66,12 +104,24 @@
             "type": "integer",
             "minimum": 0,
             "maximum": 4294967295
+          },
+          "x-semio-ui": {
+            "label": {
+              "en": "Samples per chunk",
+              "de": "Samples je Chunk"
+            }
           }
         },
         "samples": {
           "type": "array",
           "items": {
             "$ref": "#/$defs/Mp4Sample"
+          },
+          "x-semio-ui": {
+            "label": {
+              "en": "Samples",
+              "de": "Samples"
+            }
           }
         }
       }
@@ -93,7 +143,40 @@
             "jpeg",
             "mjpa"
           ],
-          "default": "avc1"
+          "default": "avc1",
+          "x-semio-ui": {
+            "widget": "select",
+            "label": {
+              "en": "Sample entry format",
+              "de": "Sample-Eintragsformat"
+            },
+            "options": {
+              "avc1": {
+                "en": "AVC / H.264 (avc1)",
+                "de": "AVC / H.264 (avc1)"
+              },
+              "avc3": {
+                "en": "AVC / H.264, in-band parameter sets (avc3)",
+                "de": "AVC / H.264, Parametersätze im Datenstrom (avc3)"
+              },
+              "hvc1": {
+                "en": "HEVC / H.265 (hvc1)",
+                "de": "HEVC / H.265 (hvc1)"
+              },
+              "hev1": {
+                "en": "HEVC / H.265, in-band parameter sets (hev1)",
+                "de": "HEVC / H.265, Parametersätze im Datenstrom (hev1)"
+              },
+              "jpeg": {
+                "en": "JPEG (jpeg)",
+                "de": "JPEG (jpeg)"
+              },
+              "mjpa": {
+                "en": "Motion JPEG A (mjpa)",
+                "de": "Motion JPEG A (mjpa)"
+              }
+            }
+          }
         },
         "sps": {
           "type": "array",
@@ -103,6 +186,12 @@
               "type": "integer",
               "minimum": 0,
               "maximum": 255
+            }
+          },
+          "x-semio-ui": {
+            "label": {
+              "en": "Sequence parameter sets (SPS)",
+              "de": "Sequenzparametersätze (SPS)"
             }
           }
         },
@@ -115,12 +204,30 @@
               "minimum": 0,
               "maximum": 255
             }
+          },
+          "x-semio-ui": {
+            "label": {
+              "en": "Picture parameter sets (PPS)",
+              "de": "Bildparametersätze (PPS)"
+            }
           }
         },
         "nalLengthSize": {
           "type": "integer",
           "minimum": 0,
-          "maximum": 255
+          "maximum": 255,
+          "x-semio-ui": {
+            "widget": "stepper",
+            "label": {
+              "en": "NAL length size",
+              "de": "Größe des NAL-Längenfelds"
+            },
+            "description": {
+              "en": "Bytes of the length prefix before each NAL unit (1, 2 or 4).",
+              "de": "Bytes des Längenpräfixes vor jeder NAL-Unit (1, 2 oder 4)."
+            },
+            "unit": "B"
+          }
         },
         "extension": {
           "anyOf": [
@@ -140,7 +247,13 @@
             {
               "type": "null"
             }
-          ]
+          ],
+          "x-semio-ui": {
+            "label": {
+              "en": "HEVC configuration (hvcC)",
+              "de": "HEVC-Konfiguration (hvcC)"
+            }
+          }
         }
       }
     },
@@ -156,17 +269,42 @@
         "chromaFormat": {
           "type": "integer",
           "minimum": 0,
-          "maximum": 255
+          "maximum": 255,
+          "x-semio-ui": {
+            "widget": "stepper",
+            "label": {
+              "en": "Chroma format",
+              "de": "Chroma-Format"
+            },
+            "description": {
+              "en": "0 = monochrome, 1 = 4:2:0, 2 = 4:2:2, 3 = 4:4:4.",
+              "de": "0 = monochrom, 1 = 4:2:0, 2 = 4:2:2, 3 = 4:4:4."
+            }
+          }
         },
         "bitDepthLumaMinus8": {
           "type": "integer",
           "minimum": 0,
-          "maximum": 255
+          "maximum": 255,
+          "x-semio-ui": {
+            "widget": "stepper",
+            "label": {
+              "en": "Luma bit depth − 8",
+              "de": "Luma-Bittiefe − 8"
+            }
+          }
         },
         "bitDepthChromaMinus8": {
           "type": "integer",
           "minimum": 0,
-          "maximum": 255
+          "maximum": 255,
+          "x-semio-ui": {
+            "widget": "stepper",
+            "label": {
+              "en": "Chroma bit depth − 8",
+              "de": "Chroma-Bittiefe − 8"
+            }
+          }
         },
         "spsExt": {
           "type": "array",
@@ -176,6 +314,12 @@
               "type": "integer",
               "minimum": 0,
               "maximum": 255
+            }
+          },
+          "x-semio-ui": {
+            "label": {
+              "en": "SPS extensions",
+              "de": "SPS-Erweiterungen"
             }
           }
         }
@@ -204,20 +348,66 @@
       "properties": {
         "creationTime": {
           "type": "integer",
-          "minimum": 0
+          "minimum": 0,
+          "x-semio-ui": {
+            "widget": "stepper",
+            "label": {
+              "en": "Creation time",
+              "de": "Erstellungszeit"
+            },
+            "description": {
+              "en": "Seconds since 1904-01-01 UTC.",
+              "de": "Sekunden seit 1904-01-01 UTC."
+            },
+            "unit": "s"
+          }
         },
         "modificationTime": {
           "type": "integer",
-          "minimum": 0
+          "minimum": 0,
+          "x-semio-ui": {
+            "widget": "stepper",
+            "label": {
+              "en": "Modification time",
+              "de": "Änderungszeit"
+            },
+            "description": {
+              "en": "Seconds since 1904-01-01 UTC.",
+              "de": "Sekunden seit 1904-01-01 UTC."
+            },
+            "unit": "s"
+          }
         },
         "flags": {
           "type": "integer",
           "minimum": 0,
-          "maximum": 4294967295
+          "maximum": 4294967295,
+          "x-semio-ui": {
+            "widget": "stepper",
+            "label": {
+              "en": "Track flags",
+              "de": "Spur-Flags"
+            },
+            "description": {
+              "en": "Bit 0 enabled, bit 1 in movie, bit 2 in preview.",
+              "de": "Bit 0 aktiviert, Bit 1 im Film, Bit 2 in der Vorschau."
+            }
+          }
         },
         "duration": {
           "type": "integer",
-          "minimum": 0
+          "minimum": 0,
+          "x-semio-ui": {
+            "widget": "stepper",
+            "label": {
+              "en": "Duration",
+              "de": "Dauer"
+            },
+            "description": {
+              "en": "In movie timescale units.",
+              "de": "In Einheiten der Filmzeitskala."
+            }
+          }
         },
         "layer": {
           "type": "integer",
@@ -227,12 +417,36 @@
         "alternateGroup": {
           "type": "integer",
           "minimum": -32768,
-          "maximum": 32767
+          "maximum": 32767,
+          "x-semio-ui": {
+            "widget": "stepper",
+            "label": {
+              "en": "Alternate group",
+              "de": "Alternativgruppe"
+            },
+            "description": {
+              "en": "Tracks of one group are alternatives; 0 means none.",
+              "de": "Spuren einer Gruppe sind Alternativen; 0 bedeutet keine."
+            }
+          }
         },
         "volume": {
           "type": "integer",
           "minimum": -32768,
-          "maximum": 32767
+          "maximum": 32767,
+          "x-semio-ui": {
+            "widget": "stepper",
+            "label": {
+              "en": "Volume",
+              "de": "Lautstärke"
+            },
+            "description": {
+              "en": "8.8 fixed point; 1.0 is full volume.",
+              "de": "8.8-Festkomma; 1,0 ist volle Lautstärke."
+            },
+            "displayFactor": 0.00390625,
+            "precision": 3
+          }
         },
         "matrix": {
           "type": "array",
@@ -242,39 +456,121 @@
             "maximum": 2147483647
           },
           "minItems": 9,
-          "maxItems": 9
+          "maxItems": 9,
+          "x-semio-ui": {
+            "label": {
+              "en": "Transformation matrix",
+              "de": "Transformationsmatrix"
+            },
+            "description": {
+              "en": "3×3 matrix {a,b,u, c,d,v, x,y,w} in 16.16 and 2.30 fixed point.",
+              "de": "3×3-Matrix {a,b,u, c,d,v, x,y,w} in 16.16- und 2.30-Festkomma."
+            }
+          }
         },
         "mediaDuration": {
           "type": "integer",
-          "minimum": 0
+          "minimum": 0,
+          "x-semio-ui": {
+            "widget": "stepper",
+            "label": {
+              "en": "Media duration",
+              "de": "Mediendauer"
+            },
+            "description": {
+              "en": "In media timescale units.",
+              "de": "In Einheiten der Medienzeitskala."
+            }
+          }
         },
         "mediaCreationTime": {
           "type": "integer",
-          "minimum": 0
+          "minimum": 0,
+          "x-semio-ui": {
+            "widget": "stepper",
+            "label": {
+              "en": "Media creation time",
+              "de": "Erstellungszeit der Medien"
+            },
+            "description": {
+              "en": "Seconds since 1904-01-01 UTC.",
+              "de": "Sekunden seit 1904-01-01 UTC."
+            },
+            "unit": "s"
+          }
         },
         "mediaModificationTime": {
           "type": "integer",
-          "minimum": 0
+          "minimum": 0,
+          "x-semio-ui": {
+            "widget": "stepper",
+            "label": {
+              "en": "Media modification time",
+              "de": "Änderungszeit der Medien"
+            },
+            "description": {
+              "en": "Seconds since 1904-01-01 UTC.",
+              "de": "Sekunden seit 1904-01-01 UTC."
+            },
+            "unit": "s"
+          }
         },
         "language": {
-          "type": "string"
+          "type": "string",
+          "x-semio-ui": {
+            "widget": "text",
+            "label": {
+              "en": "Language",
+              "de": "Sprache"
+            },
+            "description": {
+              "en": "ISO 639-2/T code of the media.",
+              "de": "ISO-639-2/T-Code der Medien."
+            }
+          }
         },
         "quality": {
           "type": "integer",
           "minimum": 0,
-          "maximum": 65535
+          "maximum": 65535,
+          "x-semio-ui": {
+            "widget": "stepper",
+            "label": {
+              "en": "Quality",
+              "de": "Qualität"
+            }
+          }
         },
         "handlerName": {
-          "type": "string"
+          "type": "string",
+          "x-semio-ui": {
+            "widget": "text",
+            "label": {
+              "en": "Handler name",
+              "de": "Handler-Name"
+            }
+          }
         },
         "edits": {
           "type": "array",
           "items": {
             "$ref": "#/$defs/Mp4Edit"
+          },
+          "x-semio-ui": {
+            "label": {
+              "en": "Edit list",
+              "de": "Schnittliste (Edit List)"
+            }
           }
         },
         "visual": {
-          "$ref": "#/$defs/Mp4VisualSampleEntry"
+          "$ref": "#/$defs/Mp4VisualSampleEntry",
+          "x-semio-ui": {
+            "label": {
+              "en": "Visual sample entry",
+              "de": "Visueller Sample-Eintrag"
+            }
+          }
         },
         "color": {
           "anyOf": [
@@ -294,7 +590,13 @@
             {
               "type": "null"
             }
-          ]
+          ],
+          "x-semio-ui": {
+            "label": {
+              "en": "Pixel aspect ratio (pasp)",
+              "de": "Pixel-Seitenverhältnis (pasp)"
+            }
+          }
         },
         "bitrate": {
           "anyOf": [
@@ -304,7 +606,13 @@
             {
               "type": "null"
             }
-          ]
+          ],
+          "x-semio-ui": {
+            "label": {
+              "en": "Bitrate (btrt)",
+              "de": "Bitrate (btrt)"
+            }
+          }
         }
       }
     },
@@ -320,20 +628,60 @@
       "properties": {
         "segmentDuration": {
           "type": "integer",
-          "minimum": 0
+          "minimum": 0,
+          "x-semio-ui": {
+            "widget": "stepper",
+            "label": {
+              "en": "Segment duration",
+              "de": "Segmentdauer"
+            },
+            "description": {
+              "en": "In movie timescale units.",
+              "de": "In Einheiten der Filmzeitskala."
+            }
+          }
         },
         "mediaTime": {
-          "type": "integer"
+          "type": "integer",
+          "x-semio-ui": {
+            "widget": "stepper",
+            "label": {
+              "en": "Media time",
+              "de": "Medienzeit"
+            },
+            "description": {
+              "en": "Start in media timescale units; -1 is an empty edit.",
+              "de": "Start in Einheiten der Medienzeitskala; -1 ist ein leerer Schnitt."
+            }
+          }
         },
         "mediaRateInteger": {
           "type": "integer",
           "minimum": -32768,
-          "maximum": 32767
+          "maximum": 32767,
+          "x-semio-ui": {
+            "widget": "stepper",
+            "label": {
+              "en": "Media rate",
+              "de": "Medienrate"
+            },
+            "description": {
+              "en": "Playback rate of the edit; 0 is a dwell.",
+              "de": "Wiedergaberate des Schnitts; 0 ist ein Standbild."
+            }
+          }
         },
         "mediaRateFraction": {
           "type": "integer",
           "minimum": -32768,
-          "maximum": 32767
+          "maximum": 32767,
+          "x-semio-ui": {
+            "widget": "stepper",
+            "label": {
+              "en": "Media rate fraction",
+              "de": "Medienrate, Bruchteil"
+            }
+          }
         }
       }
     },
@@ -358,7 +706,14 @@
         "dataReferenceIndex": {
           "type": "integer",
           "minimum": 0,
-          "maximum": 65535
+          "maximum": 65535,
+          "x-semio-ui": {
+            "widget": "stepper",
+            "label": {
+              "en": "Data reference index",
+              "de": "Datenreferenzindex"
+            }
+          }
         },
         "version": {
           "type": "integer",
@@ -368,50 +723,143 @@
         "revisionLevel": {
           "type": "integer",
           "minimum": 0,
-          "maximum": 65535
+          "maximum": 65535,
+          "x-semio-ui": {
+            "widget": "stepper",
+            "label": {
+              "en": "Revision level",
+              "de": "Revisionsstufe"
+            }
+          }
         },
         "vendor": {
           "type": "integer",
           "minimum": 0,
-          "maximum": 4294967295
+          "maximum": 4294967295,
+          "x-semio-ui": {
+            "widget": "stepper",
+            "label": {
+              "en": "Vendor",
+              "de": "Hersteller"
+            },
+            "description": {
+              "en": "Four-character vendor code.",
+              "de": "Vierstelliger Herstellercode."
+            }
+          }
         },
         "temporalQuality": {
           "type": "integer",
           "minimum": 0,
-          "maximum": 4294967295
+          "maximum": 4294967295,
+          "x-semio-ui": {
+            "widget": "stepper",
+            "label": {
+              "en": "Temporal quality",
+              "de": "Zeitliche Qualität"
+            }
+          }
         },
         "spatialQuality": {
           "type": "integer",
           "minimum": 0,
-          "maximum": 4294967295
+          "maximum": 4294967295,
+          "x-semio-ui": {
+            "widget": "stepper",
+            "label": {
+              "en": "Spatial quality",
+              "de": "Räumliche Qualität"
+            }
+          }
         },
         "horizontalResolution": {
           "type": "integer",
           "minimum": 0,
-          "maximum": 4294967295
+          "maximum": 4294967295,
+          "x-semio-ui": {
+            "widget": "stepper",
+            "label": {
+              "en": "Horizontal resolution",
+              "de": "Horizontale Auflösung"
+            },
+            "description": {
+              "en": "16.16 fixed point pixels per inch; 72 dpi is typical.",
+              "de": "16.16-Festkomma in Pixel pro Zoll; üblich sind 72 dpi."
+            },
+            "displayUnit": "dpi",
+            "displayFactor": 1.52587890625e-05,
+            "precision": 4
+          }
         },
         "verticalResolution": {
           "type": "integer",
           "minimum": 0,
-          "maximum": 4294967295
+          "maximum": 4294967295,
+          "x-semio-ui": {
+            "widget": "stepper",
+            "label": {
+              "en": "Vertical resolution",
+              "de": "Vertikale Auflösung"
+            },
+            "description": {
+              "en": "16.16 fixed point pixels per inch; 72 dpi is typical.",
+              "de": "16.16-Festkomma in Pixel pro Zoll; üblich sind 72 dpi."
+            },
+            "displayUnit": "dpi",
+            "displayFactor": 1.52587890625e-05,
+            "precision": 4
+          }
         },
         "frameCount": {
           "type": "integer",
           "minimum": 0,
-          "maximum": 65535
+          "maximum": 65535,
+          "x-semio-ui": {
+            "widget": "stepper",
+            "label": {
+              "en": "Frames per sample",
+              "de": "Bilder je Sample"
+            }
+          }
         },
         "compressorName": {
-          "type": "string"
+          "type": "string",
+          "x-semio-ui": {
+            "widget": "text",
+            "label": {
+              "en": "Compressor name",
+              "de": "Kompressorname"
+            }
+          }
         },
         "depth": {
           "type": "integer",
           "minimum": 0,
-          "maximum": 65535
+          "maximum": 65535,
+          "x-semio-ui": {
+            "widget": "stepper",
+            "label": {
+              "en": "Color depth",
+              "de": "Farbtiefe"
+            },
+            "unit": "bit"
+          }
         },
         "colorTableId": {
           "type": "integer",
           "minimum": -32768,
-          "maximum": 32767
+          "maximum": 32767,
+          "x-semio-ui": {
+            "widget": "stepper",
+            "label": {
+              "en": "Color table ID",
+              "de": "Farbtabellen-ID"
+            },
+            "description": {
+              "en": "-1 means the default color table.",
+              "de": "-1 bedeutet die Standardfarbtabelle."
+            }
+          }
         }
       }
     },
@@ -426,22 +874,66 @@
       ],
       "properties": {
         "colorType": {
-          "type": "string"
+          "type": "string",
+          "x-semio-ui": {
+            "widget": "text",
+            "label": {
+              "en": "Color type",
+              "de": "Farbtyp"
+            },
+            "description": {
+              "en": "colr box type, e.g. nclx.",
+              "de": "Typ der colr-Box, z. B. nclx."
+            }
+          }
         },
         "primaries": {
           "type": "integer",
           "minimum": 0,
-          "maximum": 65535
+          "maximum": 65535,
+          "x-semio-ui": {
+            "widget": "stepper",
+            "label": {
+              "en": "Color primaries",
+              "de": "Farbprimärvalenzen"
+            },
+            "description": {
+              "en": "ITU-T H.273 ColourPrimaries code point.",
+              "de": "Codepunkt ColourPrimaries nach ITU-T H.273."
+            }
+          }
         },
         "transfer": {
           "type": "integer",
           "minimum": 0,
-          "maximum": 65535
+          "maximum": 65535,
+          "x-semio-ui": {
+            "widget": "stepper",
+            "label": {
+              "en": "Transfer characteristics",
+              "de": "Übertragungscharakteristik"
+            },
+            "description": {
+              "en": "ITU-T H.273 TransferCharacteristics code point.",
+              "de": "Codepunkt TransferCharacteristics nach ITU-T H.273."
+            }
+          }
         },
         "matrix": {
           "type": "integer",
           "minimum": 0,
-          "maximum": 65535
+          "maximum": 65535,
+          "x-semio-ui": {
+            "widget": "stepper",
+            "label": {
+              "en": "Matrix coefficients",
+              "de": "Matrixkoeffizienten"
+            },
+            "description": {
+              "en": "ITU-T H.273 MatrixCoefficients code point.",
+              "de": "Codepunkt MatrixCoefficients nach ITU-T H.273."
+            }
+          }
         },
         "fullRange": {
           "anyOf": [
@@ -451,7 +943,18 @@
             {
               "type": "null"
             }
-          ]
+          ],
+          "x-semio-ui": {
+            "widget": "toggle",
+            "label": {
+              "en": "Full range",
+              "de": "Voller Wertebereich"
+            },
+            "description": {
+              "en": "Uses the full 0–255 range instead of the video range.",
+              "de": "Verwendet den vollen Bereich 0–255 statt des Videobereichs."
+            }
+          }
         }
       }
     },
@@ -466,12 +969,34 @@
         "horizontalSpacing": {
           "type": "integer",
           "minimum": 0,
-          "maximum": 4294967295
+          "maximum": 4294967295,
+          "x-semio-ui": {
+            "widget": "stepper",
+            "label": {
+              "en": "Horizontal spacing",
+              "de": "Horizontaler Abstand"
+            },
+            "description": {
+              "en": "hSpacing of the pixel aspect ratio.",
+              "de": "hSpacing des Pixel-Seitenverhältnisses."
+            }
+          }
         },
         "verticalSpacing": {
           "type": "integer",
           "minimum": 0,
-          "maximum": 4294967295
+          "maximum": 4294967295,
+          "x-semio-ui": {
+            "widget": "stepper",
+            "label": {
+              "en": "Vertical spacing",
+              "de": "Vertikaler Abstand"
+            },
+            "description": {
+              "en": "vSpacing of the pixel aspect ratio.",
+              "de": "vSpacing des Pixel-Seitenverhältnisses."
+            }
+          }
         }
       }
     },
@@ -487,17 +1012,41 @@
         "bufferSize": {
           "type": "integer",
           "minimum": 0,
-          "maximum": 4294967295
+          "maximum": 4294967295,
+          "x-semio-ui": {
+            "widget": "stepper",
+            "label": {
+              "en": "Decoding buffer size",
+              "de": "Decoder-Puffergröße"
+            },
+            "unit": "B"
+          }
         },
         "maximum": {
           "type": "integer",
           "minimum": 0,
-          "maximum": 4294967295
+          "maximum": 4294967295,
+          "x-semio-ui": {
+            "widget": "stepper",
+            "label": {
+              "en": "Maximum bitrate",
+              "de": "Maximale Bitrate"
+            },
+            "unit": "bit/s"
+          }
         },
         "average": {
           "type": "integer",
           "minimum": 0,
-          "maximum": 4294967295
+          "maximum": 4294967295,
+          "x-semio-ui": {
+            "widget": "stepper",
+            "label": {
+              "en": "Average bitrate",
+              "de": "Durchschnittliche Bitrate"
+            },
+            "unit": "bit/s"
+          }
         }
       }
     },
@@ -520,15 +1069,48 @@
         "duration": {
           "type": "integer",
           "minimum": 0,
-          "maximum": 4294967295
+          "maximum": 4294967295,
+          "x-semio-ui": {
+            "widget": "stepper",
+            "label": {
+              "en": "Duration",
+              "de": "Dauer"
+            },
+            "description": {
+              "en": "In media timescale units.",
+              "de": "In Einheiten der Medienzeitskala."
+            }
+          }
         },
         "ctsOffset": {
           "type": "integer",
           "minimum": -2147483648,
-          "maximum": 2147483647
+          "maximum": 2147483647,
+          "x-semio-ui": {
+            "widget": "stepper",
+            "label": {
+              "en": "Composition time offset",
+              "de": "Kompositionszeitversatz"
+            },
+            "description": {
+              "en": "Presentation minus decoding time, in media timescale units.",
+              "de": "Präsentations- minus Dekodierzeit in Einheiten der Medienzeitskala."
+            }
+          }
         },
         "sync": {
-          "type": "boolean"
+          "type": "boolean",
+          "x-semio-ui": {
+            "widget": "toggle",
+            "label": {
+              "en": "Sync sample",
+              "de": "Synchronisations-Sample"
+            },
+            "description": {
+              "en": "Key frame that decodes without earlier samples.",
+              "de": "Schlüsselbild, das ohne frühere Samples dekodierbar ist."
+            }
+          }
         }
       }
     },
@@ -556,78 +1138,213 @@
         "generalProfileSpace": {
           "type": "integer",
           "minimum": 0,
-          "maximum": 255
+          "maximum": 255,
+          "x-semio-ui": {
+            "widget": "stepper",
+            "label": {
+              "en": "Profile space",
+              "de": "Profilraum"
+            }
+          }
         },
         "generalTierFlag": {
-          "type": "boolean"
+          "type": "boolean",
+          "x-semio-ui": {
+            "widget": "toggle",
+            "label": {
+              "en": "High tier",
+              "de": "High Tier"
+            }
+          }
         },
         "generalProfileIdc": {
           "type": "integer",
           "minimum": 0,
-          "maximum": 255
+          "maximum": 255,
+          "x-semio-ui": {
+            "widget": "stepper",
+            "label": {
+              "en": "Profile",
+              "de": "Profil"
+            },
+            "description": {
+              "en": "general_profile_idc, e.g. 1 = Main, 2 = Main 10.",
+              "de": "general_profile_idc, z. B. 1 = Main, 2 = Main 10."
+            }
+          }
         },
         "generalProfileCompatibilityFlags": {
           "type": "integer",
           "minimum": 0,
-          "maximum": 4294967295
+          "maximum": 4294967295,
+          "x-semio-ui": {
+            "widget": "stepper",
+            "label": {
+              "en": "Profile compatibility flags",
+              "de": "Profil-Kompatibilitätsflags"
+            }
+          }
         },
         "generalConstraintIndicatorFlags": {
           "type": "integer",
           "minimum": 0,
-          "maximum": 281474976710655
+          "maximum": 281474976710655,
+          "x-semio-ui": {
+            "widget": "stepper",
+            "label": {
+              "en": "Constraint indicator flags",
+              "de": "Constraint-Indikator-Flags"
+            }
+          }
         },
         "generalLevelIdc": {
           "type": "integer",
           "minimum": 0,
-          "maximum": 255
+          "maximum": 255,
+          "x-semio-ui": {
+            "widget": "stepper",
+            "label": {
+              "en": "Level",
+              "de": "Level"
+            },
+            "description": {
+              "en": "general_level_idc: 30 × the HEVC level number.",
+              "de": "general_level_idc: 30 × die HEVC-Levelnummer."
+            }
+          }
         },
         "minSpatialSegmentationIdc": {
           "type": "integer",
           "minimum": 0,
-          "maximum": 65535
+          "maximum": 65535,
+          "x-semio-ui": {
+            "widget": "stepper",
+            "label": {
+              "en": "Minimum spatial segmentation",
+              "de": "Minimale räumliche Segmentierung"
+            }
+          }
         },
         "parallelismType": {
           "type": "integer",
           "minimum": 0,
-          "maximum": 255
+          "maximum": 255,
+          "x-semio-ui": {
+            "widget": "stepper",
+            "label": {
+              "en": "Parallelism type",
+              "de": "Parallelitätstyp"
+            },
+            "description": {
+              "en": "0 = mixed or unknown, 1 = slices, 2 = tiles, 3 = wavefront.",
+              "de": "0 = gemischt oder unbekannt, 1 = Slices, 2 = Tiles, 3 = Wavefront."
+            }
+          }
         },
         "chromaFormatIdc": {
           "type": "integer",
           "minimum": 0,
-          "maximum": 255
+          "maximum": 255,
+          "x-semio-ui": {
+            "widget": "stepper",
+            "label": {
+              "en": "Chroma format",
+              "de": "Chroma-Format"
+            },
+            "description": {
+              "en": "0 = monochrome, 1 = 4:2:0, 2 = 4:2:2, 3 = 4:4:4.",
+              "de": "0 = monochrom, 1 = 4:2:0, 2 = 4:2:2, 3 = 4:4:4."
+            }
+          }
         },
         "bitDepthLumaMinus8": {
           "type": "integer",
           "minimum": 0,
-          "maximum": 255
+          "maximum": 255,
+          "x-semio-ui": {
+            "widget": "stepper",
+            "label": {
+              "en": "Luma bit depth − 8",
+              "de": "Luma-Bittiefe − 8"
+            }
+          }
         },
         "bitDepthChromaMinus8": {
           "type": "integer",
           "minimum": 0,
-          "maximum": 255
+          "maximum": 255,
+          "x-semio-ui": {
+            "widget": "stepper",
+            "label": {
+              "en": "Chroma bit depth − 8",
+              "de": "Chroma-Bittiefe − 8"
+            }
+          }
         },
         "avgFrameRate": {
           "type": "integer",
           "minimum": 0,
-          "maximum": 65535
+          "maximum": 65535,
+          "x-semio-ui": {
+            "widget": "stepper",
+            "label": {
+              "en": "Average frame rate",
+              "de": "Durchschnittliche Bildrate"
+            },
+            "description": {
+              "en": "Frames per 256 seconds; 0 means unspecified.",
+              "de": "Bilder pro 256 Sekunden; 0 bedeutet unbestimmt."
+            }
+          }
         },
         "constantFrameRate": {
           "type": "integer",
           "minimum": 0,
-          "maximum": 255
+          "maximum": 255,
+          "x-semio-ui": {
+            "widget": "stepper",
+            "label": {
+              "en": "Constant frame rate",
+              "de": "Konstante Bildrate"
+            },
+            "description": {
+              "en": "0 = unknown, 1 = constant, 2 = constant per temporal layer.",
+              "de": "0 = unbekannt, 1 = konstant, 2 = je zeitlicher Ebene konstant."
+            }
+          }
         },
         "numTemporalLayers": {
           "type": "integer",
           "minimum": 0,
-          "maximum": 255
+          "maximum": 255,
+          "x-semio-ui": {
+            "widget": "stepper",
+            "label": {
+              "en": "Temporal layers",
+              "de": "Zeitliche Ebenen"
+            }
+          }
         },
         "temporalIdNested": {
-          "type": "boolean"
+          "type": "boolean",
+          "x-semio-ui": {
+            "widget": "toggle",
+            "label": {
+              "en": "Temporal ID nested",
+              "de": "Zeitliche ID verschachtelt"
+            }
+          }
         },
         "arrays": {
           "type": "array",
           "items": {
             "$ref": "#/$defs/Mp4HevcNalArray"
+          },
+          "x-semio-ui": {
+            "label": {
+              "en": "NAL unit arrays",
+              "de": "NAL-Unit-Arrays"
+            }
           }
         }
       }
@@ -641,12 +1358,30 @@
       ],
       "properties": {
         "arrayCompleteness": {
-          "type": "boolean"
+          "type": "boolean",
+          "x-semio-ui": {
+            "widget": "toggle",
+            "label": {
+              "en": "Array complete",
+              "de": "Array vollständig"
+            },
+            "description": {
+              "en": "All NAL units of this type are in the configuration, none in-band.",
+              "de": "Alle NAL-Units dieses Typs stehen in der Konfiguration, keine im Datenstrom."
+            }
+          }
         },
         "nalUnitType": {
           "type": "integer",
           "minimum": 0,
-          "maximum": 255
+          "maximum": 255,
+          "x-semio-ui": {
+            "widget": "stepper",
+            "label": {
+              "en": "NAL unit type",
+              "de": "NAL-Unit-Typ"
+            }
+          }
         },
         "nalUnits": {
           "type": "array",
@@ -656,6 +1391,12 @@
               "type": "integer",
               "minimum": 0,
               "maximum": 255
+            }
+          },
+          "x-semio-ui": {
+            "label": {
+              "en": "NAL units",
+              "de": "NAL-Units"
             }
           }
         }

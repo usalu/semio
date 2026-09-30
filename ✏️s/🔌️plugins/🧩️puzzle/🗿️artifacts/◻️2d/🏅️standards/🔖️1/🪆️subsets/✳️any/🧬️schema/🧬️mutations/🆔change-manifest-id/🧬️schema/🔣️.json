@@ -10,13 +10,35 @@
   ],
   "properties": {
     "mutation": {
-      "const": "changeManifestId"
+      "const": "changeManifestId",
+      "x-semio-ui": {
+        "widget": "hidden",
+        "role": "discriminator",
+        "label": {
+          "en": "Mutation",
+          "de": "Mutation"
+        }
+      }
     },
     "newManifestId": {
       "type": [
         "string",
         "null"
-      ]
+      ],
+      "x-semio-ui": {
+        "widget": "text",
+        "role": "value",
+        "label": {
+          "en": "Manifest",
+          "de": "Manifest"
+        },
+        "description": {
+          "en": "Id of the manifest this board follows.",
+          "de": "ID des Manifests, dem dieses Brett folgt."
+        },
+        "group": "kind",
+        "order": 10
+      }
     }
   }
 }

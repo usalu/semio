@@ -5,16 +5,17 @@
   "type": "object",
   "additionalProperties": false,
   "required": [
+    "mutation",
     "index"
   ],
   "properties": {
-    "index": {
-      "type": "integer",
-      "minimum": 0
-    },
     "mutation": {
       "const": "removeFace",
       "description": "Aggregate discriminator spliced in by ObjMutation; absent when the payload stands alone."
+    },
+    "index": {
+      "type": "integer",
+      "minimum": 0
     }
   }
 }

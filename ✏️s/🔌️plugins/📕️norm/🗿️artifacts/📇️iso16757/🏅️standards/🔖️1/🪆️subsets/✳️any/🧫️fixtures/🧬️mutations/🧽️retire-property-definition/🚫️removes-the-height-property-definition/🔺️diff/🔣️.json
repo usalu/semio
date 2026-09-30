@@ -8,7 +8,7 @@
           "locale": "en",
           "text": "Fixture Radiator Catalogue"
         },
-        "short_name": "Fixture",
+        "shortName": "Fixture",
         "alternatives": [
           {
             "locale": "de",
@@ -19,10 +19,10 @@
       "lifecycle": {
         "revision": "1",
         "status": "published",
-        "valid_from": null,
-        "valid_to": null
+        "validFrom": null,
+        "validTo": null
       },
-      "edition_profile": "FullPublished"
+      "editionProfile": "FullPublished"
     },
     "manufacturer": {
       "id": "mfg.fixture",
@@ -31,7 +31,7 @@
           "locale": "en",
           "text": "Fixture Heating Works"
         },
-        "short_name": null,
+        "shortName": null,
         "alternatives": []
       }
     },
@@ -39,7 +39,7 @@
       "id": "bsdd.fixture",
       "version": "2026-01"
     },
-    "product_groups": [
+    "productGroups": [
       {
         "id": "group.radiators",
         "names": {
@@ -47,69 +47,69 @@
             "locale": "en",
             "text": "Radiators"
           },
-          "short_name": null,
+          "shortName": null,
           "alternatives": []
         },
-        "dictionary_subject_id": "subject.radiator"
+        "dictionarySubjectId": "subject.radiator"
       }
     ],
-    "product_classes": [
+    "productClasses": [
       {
         "id": "class.panel-radiator",
-        "group_id": "group.radiators",
-        "parent_id": null,
+        "groupId": "group.radiators",
+        "parentId": null,
         "names": {
           "preferred": {
             "locale": "en",
             "text": "Panel radiator"
           },
-          "short_name": null,
+          "shortName": null,
           "alternatives": []
         },
-        "required_property_ids": [
+        "requiredPropertyIds": [
           "prop.height"
         ],
-        "optional_property_ids": []
+        "optionalPropertyIds": []
       }
     ],
-    "product_series": [
+    "productSeries": [
       {
         "id": "series-pr",
-        "class_id": "class.panel-radiator",
+        "classId": "class.panel-radiator",
         "names": {
           "preferred": {
             "locale": "en",
             "text": "PR series"
           },
-          "short_name": null,
+          "shortName": null,
           "alternatives": []
         },
-        "shared_property_values": {},
-        "geometry_id": null
+        "sharedPropertyValues": {},
+        "geometryId": null
       }
     ],
     "products": [
       {
         "id": "product.pr600",
-        "series_id": "series-pr",
+        "seriesId": "series-pr",
         "names": {
           "preferred": {
             "locale": "en",
             "text": "PR-600"
           },
-          "short_name": null,
+          "shortName": null,
           "alternatives": []
         },
-        "parameter_domains": [],
+        "parameterDomains": [],
         "variants": [],
-        "static_properties": []
+        "staticProperties": []
       }
     ],
-    "product_indexes": [],
-    "property_definitions": [],
+    "productIndexes": [],
+    "propertyDefinitions": [],
     "accessories": {},
     "compositions": {},
-    "descriptive_objects": [],
+    "descriptiveObjects": [],
     "extensions": {
       "fields": {}
     }

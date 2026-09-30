@@ -1,19 +1,27 @@
 {
-  "id": "s.stdio.gltf.mutation.delete-skin.v1",
-  "version": 1,
-  "touchedPaths": [
-    "document/skins/0"
-  ],
-  "payload": {
-    "index": 0
+  "nodes": {
+    "modified": [
+      {
+        "index": 0,
+        "diff": {
+          "skin": 0
+        }
+      }
+    ]
   },
-  "operation": {
-    "kind": "delete",
-    "index": 0,
-    "removed": {
-      "joints": [
-        0
-      ]
-    }
+  "skins": {
+    "removed": [
+      1
+    ],
+    "modified": [
+      {
+        "index": 0,
+        "diff": {
+          "joints": [
+            1
+          ]
+        }
+      }
+    ]
   }
 }

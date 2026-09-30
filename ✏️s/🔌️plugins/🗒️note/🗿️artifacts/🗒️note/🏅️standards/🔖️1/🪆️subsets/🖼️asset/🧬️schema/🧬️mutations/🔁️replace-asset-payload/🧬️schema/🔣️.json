@@ -5,12 +5,33 @@
   "type": "object",
   "additionalProperties": false,
   "required": [
+    "mutation",
     "key",
     "newAsset"
   ],
   "properties": {
+    "mutation": {
+      "const": "replaceAssetPayload"
+    },
     "key": {
-      "type": "string"
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Asset",
+          "de": "Asset"
+        },
+        "description": {
+          "en": "Key of the image asset this mutation addresses.",
+          "de": "Schlüssel des Bild-Assets, das diese Mutation adressiert."
+        },
+        "ref": {
+          "kind": "asset"
+        },
+        "group": "target",
+        "order": 10
+      }
     },
     "newAsset": {
       "title": "NoteImageAsset",
@@ -22,17 +43,84 @@
       ],
       "properties": {
         "mime": {
-          "type": "string"
+          "type": "string",
+          "x-semio-ui": {
+            "widget": "text",
+            "role": "value",
+            "label": {
+              "en": "Media type",
+              "de": "Medientyp"
+            },
+            "description": {
+              "en": "For example image/png.",
+              "de": "Zum Beispiel image/png."
+            },
+            "group": "source",
+            "order": 10
+          }
         },
         "data": {
-          "type": "string"
+          "type": "string",
+          "x-semio-ui": {
+            "widget": "multiline",
+            "role": "value",
+            "label": {
+              "en": "Data",
+              "de": "Daten"
+            },
+            "description": {
+              "en": "Base64-encoded image bytes.",
+              "de": "Base64-kodierte Bildbytes."
+            },
+            "group": "source",
+            "order": 20
+          }
         },
         "width": {
-          "type": "number"
+          "type": "number",
+          "x-semio-ui": {
+            "widget": "stepper",
+            "role": "value",
+            "label": {
+              "en": "Width",
+              "de": "Breite"
+            },
+            "unit": "px",
+            "step": 1,
+            "precision": 0,
+            "group": "size",
+            "order": 30
+          }
         },
         "height": {
-          "type": "number"
+          "type": "number",
+          "x-semio-ui": {
+            "widget": "stepper",
+            "role": "value",
+            "label": {
+              "en": "Height",
+              "de": "Höhe"
+            },
+            "unit": "px",
+            "step": 1,
+            "precision": 0,
+            "group": "size",
+            "order": 40
+          }
         }
+      },
+      "x-semio-ui": {
+        "role": "value",
+        "label": {
+          "en": "Image",
+          "de": "Bild"
+        },
+        "description": {
+          "en": "The image payload that replaces the stored one.",
+          "de": "Die Bilddaten, die die gespeicherten ersetzen."
+        },
+        "group": "record",
+        "order": 20
       }
     }
   }

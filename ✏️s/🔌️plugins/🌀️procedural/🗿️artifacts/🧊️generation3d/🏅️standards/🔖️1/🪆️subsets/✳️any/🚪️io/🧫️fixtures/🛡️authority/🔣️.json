@@ -1,0 +1,107 @@
+{
+  "format": "semio.generation3d.io-authority",
+  "version": 1,
+  "forbiddenSegments": [
+    "editor",
+    "viewer",
+    "renderer",
+    "FlowHost",
+    "FlowEvalSession",
+    "FlowGeometryPort",
+    "geometry_session",
+    "with_host",
+    "with_host_session"
+  ],
+  "forbiddenPrefixes": [
+    "semio_s_spatial_kernel",
+    "semio_framework_os_flow",
+    "semio_framework_os_renderer"
+  ],
+  "cases": [
+    {
+      "id": "neutral-mesh",
+      "source": "fn encode(mesh: &MeshData) { codecs::encode(mesh); }",
+      "allowed": true
+    },
+    {
+      "id": "artifact-geometry-codec",
+      "source": "use semio_s_artifact_stdio_semio::standards::v1::subsets::mesh::io;",
+      "allowed": true
+    },
+    {
+      "id": "comments",
+      "source": "// crate::editor::render();\n/* FlowEvalSession semio_s_spatial_kernel */\nfn encode() {}",
+      "allowed": true
+    },
+    {
+      "id": "literal",
+      "source": "const TEXT: &str = \"crate::editor::render() FlowEvalSession\";",
+      "allowed": true
+    },
+    {
+      "id": "editor-path",
+      "source": "fn encode() { crate::editor::export_mesh(); }",
+      "allowed": false
+    },
+    {
+      "id": "use-alias",
+      "source": "use crate::{editor as prepared, schema::Snapshot};",
+      "allowed": false
+    },
+    {
+      "id": "relative-viewer",
+      "source": "use super::viewer::Geometry;",
+      "allowed": false
+    },
+    {
+      "id": "renderer-crate",
+      "source": "use semio_framework_os_renderer::Mesh;",
+      "allowed": false
+    },
+    {
+      "id": "session-type",
+      "source": "fn encode(session: &FlowEvalSession) {}",
+      "allowed": false
+    },
+    {
+      "id": "host-evaluation",
+      "source": "fn encode() { FlowHost::default().evaluate(); }",
+      "allowed": false
+    },
+    {
+      "id": "macro-path",
+      "source": "macro_rules! encode { () => { crate::editor::export_mesh() }; }",
+      "allowed": false
+    },
+    {
+      "id": "macro-literal",
+      "source": "macro_rules! describe { () => { \"crate::editor::export_mesh()\" }; }",
+      "allowed": true
+    },
+    {
+      "id": "module-source",
+      "source": "#[path = \"../✏️editor/🦀️.rs\"] mod geometry;",
+      "allowed": false
+    },
+    {
+      "id": "include-source",
+      "source": "include!(\"../👁️viewer/🦀️.rs\");",
+      "allowed": false
+    },
+    {
+      "id": "spatial-kernel",
+      "source": "use semio_s_spatial_kernel_engine::Session;",
+      "allowed": false
+    },
+    {
+      "id": "asset-string",
+      "source": "const TEXT: &str = include_str!(\"fixtures/editor-description.txt\");",
+      "allowed": true
+    },
+    {
+      "id": "host-method",
+      "source": "fn encode(host: &Host) { host.with_host(|session| session.evaluate()); }",
+      "allowed": false
+    }
+  ]
+}

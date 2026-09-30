@@ -1,21 +1,19 @@
 {
-  "id": "s.stdio.gltf.mutation.reorder-scenes.v1",
-  "version": 1,
-  "touchedPaths": [
-    "document/scenes/1",
-    "document/scenes/0"
-  ],
-  "payload": {
-    "order": [
-      1,
-      0
-    ]
-  },
-  "operation": {
-    "kind": "reorder",
-    "order": [
-      1,
-      0
+  "scene": 1,
+  "scenes": {
+    "modified": [
+      {
+        "index": 0,
+        "diff": {
+          "name": "b"
+        }
+      },
+      {
+        "index": 1,
+        "diff": {
+          "name": "a"
+        }
+      }
     ]
   }
 }

@@ -13,7 +13,7 @@ pub fn diff(payload: &super::AddElectricalLoadCenterBattery, base: &EnergyModelS
         return protocol::MutationOutcome::error("mutation.target-missing", format!("Battery {} does not exist.", payload.battery_id.0), [payload.battery_id.0.to_string()]);
     }
     if payload.index as usize > existing.battery_ids.len() {
-        return protocol::MutationOutcome::error("mutation.invariant", format!("Index {} is past the end of Electrical load center {}'s {} members.", payload.index, payload.id.0, existing.battery_ids.len()), [payload.id.0.to_string()]);
+        return protocol::MutationOutcome::error("mutation.target-missing", format!("Index {} is past the end of Electrical load center {}'s {} members.", payload.index, payload.id.0, existing.battery_ids.len()), [payload.id.0.to_string()]);
     }
     if existing.battery_ids.contains(&payload.battery_id) {
         return protocol::MutationOutcome::empty().warn("mutation.no-op", format!("Battery {} already belongs to Electrical load center {}.", payload.battery_id.0, payload.id.0));

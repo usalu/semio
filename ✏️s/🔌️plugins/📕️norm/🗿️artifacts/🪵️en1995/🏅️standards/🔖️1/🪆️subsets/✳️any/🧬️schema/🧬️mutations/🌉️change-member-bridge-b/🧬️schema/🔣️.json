@@ -10,11 +10,43 @@
   ],
   "properties": {
     "memberId": {
-      "type": "string"
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Member",
+          "de": "Bauteil"
+        },
+        "description": {
+          "en": "The timber member this mutation addresses.",
+          "de": "Das Holzbauteil, das diese Mutation adressiert."
+        },
+        "ref": {
+          "kind": "member"
+        },
+        "group": "target",
+        "order": 10
+      }
     },
     "newValue": {
       "type": "number",
-      "format": "double"
+      "x-semio-ui": {
+        "widget": "stepper",
+        "role": "value",
+        "label": {
+          "en": "Fatigue parameter b",
+          "de": "Ermüdungsparameter b"
+        },
+        "description": {
+          "en": "Coefficient b of EN 1995-2 Annex A.",
+          "de": "Beiwert b nach EN 1995-2 Anhang A."
+        },
+        "step": 0.01,
+        "precision": 2,
+        "group": "fatigue",
+        "order": 20
+      }
     }
   }
 }

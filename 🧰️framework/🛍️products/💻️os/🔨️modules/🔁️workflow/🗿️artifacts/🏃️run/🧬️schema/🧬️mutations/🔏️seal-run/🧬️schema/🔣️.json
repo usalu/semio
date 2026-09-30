@@ -2,34 +2,62 @@
   "$schema": "http://json-schema.org/draft-07/schema#",
   "$id": "https://json.schemas.assets.semio-tech.com/os/workflow/artifacts/run/mutation/seal-run/schema.json",
   "title": "SealRun",
-  "type": "object",
-  "$defs": {
-    "Payload": {
-      "type": "object",
-      "required": [
-        "status"
-      ],
-      "properties": {
-        "status": {
-          "enum": [
-            "pending",
-            "running",
-            "succeeded",
-            "failed",
-            "canceled"
-          ]
-        }
-      }
-    }
-  },
-  "allOf": [
-    {
-      "$ref": "#/$defs/Payload"
-    }
-  ],
   "propertyNames": {
     "enum": [
+      "operation",
       "status"
     ]
+  },
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "operation",
+    "status"
+  ],
+  "properties": {
+    "operation": {
+      "const": "sealRun"
+    },
+    "status": {
+      "enum": [
+        "pending",
+        "running",
+        "succeeded",
+        "failed",
+        "canceled"
+      ],
+      "x-semio-ui": {
+        "widget": "select",
+        "role": "value",
+        "label": {
+          "en": "Run status",
+          "de": "Laufstatus"
+        },
+        "options": {
+          "pending": {
+            "en": "Pending",
+            "de": "Ausstehend"
+          },
+          "running": {
+            "en": "Running",
+            "de": "Läuft"
+          },
+          "succeeded": {
+            "en": "Succeeded",
+            "de": "Erfolgreich"
+          },
+          "failed": {
+            "en": "Failed",
+            "de": "Fehlgeschlagen"
+          },
+          "canceled": {
+            "en": "Canceled",
+            "de": "Abgebrochen"
+          }
+        },
+        "group": "state",
+        "order": 10
+      }
+    }
   }
 }

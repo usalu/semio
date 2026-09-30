@@ -5,27 +5,17 @@
   "type": "object",
   "additionalProperties": false,
   "required": [
-    "newFireDesignTemperatureC",
-    "newFireMassivity",
-    "newFireMu0",
-    "newFireRating",
-    "newFireThicknessMm"
+    "fireExposure"
   ],
   "properties": {
-    "newFireThicknessMm": {
-      "type": "number"
-    },
-    "newFireRating": {
-      "type": "string"
-    },
-    "newFireMassivity": {
-      "type": "number"
-    },
-    "newFireMu0": {
-      "type": "number"
-    },
-    "newFireDesignTemperatureC": {
-      "type": "number"
+    "fireExposure": {
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1993/snapshot.json#/$defs/FireExposure",
+      "x-semio-ui": {
+        "label": {
+          "en": "Fire exposure",
+          "de": "Brandbeanspruchung"
+        }
+      }
     }
   }
 }

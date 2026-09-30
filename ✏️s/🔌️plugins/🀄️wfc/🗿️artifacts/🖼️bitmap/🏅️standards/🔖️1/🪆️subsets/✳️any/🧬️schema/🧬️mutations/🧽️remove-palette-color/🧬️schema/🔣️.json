@@ -8,6 +8,6 @@
     "index"
   ],
   "properties": {
-    "index": { "type": "integer", "minimum": 0, "maximum": 255 }
+    "index": { "type": "integer", "minimum": 0, "maximum": 255, "x-semio-ui": { "widget": "stepper", "role": "value", "label": { "en": "Palette index", "de": "Palettenindex" }, "step": 1, "precision": 0, "group": "palette", "order": 10 } }
   }
 }

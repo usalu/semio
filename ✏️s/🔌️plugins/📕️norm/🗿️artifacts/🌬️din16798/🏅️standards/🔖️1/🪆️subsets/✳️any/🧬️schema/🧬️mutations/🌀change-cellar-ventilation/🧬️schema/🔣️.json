@@ -9,7 +9,21 @@
   ],
   "properties": {
     "newCellarVentilationM3H": {
-      "type": "number"
+      "type": "number",
+      "minimum": 0,
+      "x-semio-ui": {
+        "widget": "stepper",
+        "role": "value",
+        "label": {
+          "en": "Cellar airflow",
+          "de": "Kellerluftvolumenstrom"
+        },
+        "unit": "m³/h",
+        "step": 1,
+        "precision": 1,
+        "group": "building",
+        "order": 10
+      }
     }
   }
 }

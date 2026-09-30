@@ -1,210 +1,703 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/norm/en1996/mutations.json",
   "title": "En1996Mutation",
   "oneOf": [
     {
       "type": "object",
-      "description": "change-annex"
+      "additionalProperties": false,
+      "required": [
+        "ChangeConcentratedBearingLength"
+      ],
+      "properties": {
+        "ChangeConcentratedBearingLength": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1996/mutation/change-concentrated-bearing-length/schema.json"
+        }
+      }
     },
     {
       "type": "object",
-      "description": "change-masonry-class"
+      "additionalProperties": false,
+      "required": [
+        "ChangeSlabSpan"
+      ],
+      "properties": {
+        "ChangeSlabSpan": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1996/mutation/change-slab-span/schema.json"
+        }
+      }
     },
     {
       "type": "object",
-      "description": "change-design-situation"
+      "additionalProperties": false,
+      "required": [
+        "ChangeWallLength"
+      ],
+      "properties": {
+        "ChangeWallLength": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1996/mutation/change-wall-length/schema.json"
+        }
+      }
     },
     {
       "type": "object",
-      "description": "change-storeys"
+      "additionalProperties": false,
+      "required": [
+        "ChangeWallHeight"
+      ],
+      "properties": {
+        "ChangeWallHeight": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1996/mutation/change-wall-height/schema.json"
+        }
+      }
     },
     {
       "type": "object",
-      "description": "insert-wall"
+      "additionalProperties": false,
+      "required": [
+        "ChangeWallThickness"
+      ],
+      "properties": {
+        "ChangeWallThickness": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1996/mutation/change-wall-thickness/schema.json"
+        }
+      }
     },
     {
       "type": "object",
-      "description": "remove-wall"
+      "additionalProperties": false,
+      "required": [
+        "ChangeEccentricityBottom"
+      ],
+      "properties": {
+        "ChangeEccentricityBottom": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1996/mutation/change-eccentricity-bottom/schema.json"
+        }
+      }
     },
     {
       "type": "object",
-      "description": "change-wall-thickness"
+      "additionalProperties": false,
+      "required": [
+        "ChangeEccentricityTop"
+      ],
+      "properties": {
+        "ChangeEccentricityTop": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1996/mutation/change-eccentricity-top/schema.json"
+        }
+      }
     },
     {
       "type": "object",
-      "description": "change-wall-height"
+      "additionalProperties": false,
+      "required": [
+        "ChangePhiInfinity"
+      ],
+      "properties": {
+        "ChangePhiInfinity": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1996/mutation/change-phi-infinity/schema.json"
+        }
+      }
     },
     {
       "type": "object",
-      "description": "change-wall-length"
+      "additionalProperties": false,
+      "required": [
+        "ChangeQKSnow"
+      ],
+      "properties": {
+        "ChangeQKSnow": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1996/mutation/change-qk-snow/schema.json"
+        }
+      }
     },
     {
       "type": "object",
-      "description": "change-wall-type"
+      "additionalProperties": false,
+      "required": [
+        "InsertConcentrated"
+      ],
+      "properties": {
+        "InsertConcentrated": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1996/mutation/insert-concentrated/schema.json"
+        }
+      }
     },
     {
       "type": "object",
-      "description": "change-support-sides"
+      "additionalProperties": false,
+      "required": [
+        "InsertLoadCase"
+      ],
+      "properties": {
+        "InsertLoadCase": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1996/mutation/insert-load-case/schema.json"
+        }
+      }
     },
     {
       "type": "object",
-      "description": "change-slab-bearing-depth"
+      "additionalProperties": false,
+      "required": [
+        "InsertOpening"
+      ],
+      "properties": {
+        "InsertOpening": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1996/mutation/insert-opening/schema.json"
+        }
+      }
     },
     {
       "type": "object",
-      "description": "change-eccentricity-top"
+      "additionalProperties": false,
+      "required": [
+        "InsertWall"
+      ],
+      "properties": {
+        "InsertWall": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1996/mutation/insert-wall/schema.json"
+        }
+      }
     },
     {
       "type": "object",
-      "description": "change-eccentricity-bottom"
+      "additionalProperties": false,
+      "required": [
+        "RemoveConcentrated"
+      ],
+      "properties": {
+        "RemoveConcentrated": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1996/mutation/remove-concentrated/schema.json"
+        }
+      }
     },
     {
       "type": "object",
-      "description": "change-unit-group"
+      "additionalProperties": false,
+      "required": [
+        "RemoveLoadCase"
+      ],
+      "properties": {
+        "RemoveLoadCase": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1996/mutation/remove-load-case/schema.json"
+        }
+      }
     },
     {
       "type": "object",
-      "description": "change-unit-material"
+      "additionalProperties": false,
+      "required": [
+        "RemoveOpening"
+      ],
+      "properties": {
+        "RemoveOpening": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1996/mutation/remove-opening/schema.json"
+        }
+      }
     },
     {
       "type": "object",
-      "description": "change-unit-fb"
+      "additionalProperties": false,
+      "required": [
+        "RemoveWall"
+      ],
+      "properties": {
+        "RemoveWall": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1996/mutation/remove-wall/schema.json"
+        }
+      }
     },
     {
       "type": "object",
-      "description": "change-unit-length"
+      "additionalProperties": false,
+      "required": [
+        "ChangeAnnex"
+      ],
+      "properties": {
+        "ChangeAnnex": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1996/mutation/change-annex/schema.json"
+        }
+      }
     },
     {
       "type": "object",
-      "description": "change-unit-width"
+      "additionalProperties": false,
+      "required": [
+        "ChangeQPWind"
+      ],
+      "properties": {
+        "ChangeQPWind": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1996/mutation/change-qp-wind/schema.json"
+        }
+      }
     },
     {
       "type": "object",
-      "description": "change-unit-height"
+      "additionalProperties": false,
+      "required": [
+        "ChangeDesignSituation"
+      ],
+      "properties": {
+        "ChangeDesignSituation": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1996/mutation/change-design-situation/schema.json"
+        }
+      }
     },
     {
       "type": "object",
-      "description": "change-mortar-type"
+      "additionalProperties": false,
+      "required": [
+        "ChangeLoadCaseSituation"
+      ],
+      "properties": {
+        "ChangeLoadCaseSituation": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1996/mutation/change-load-case-situation/schema.json"
+        }
+      }
     },
     {
       "type": "object",
-      "description": "change-mortar-class"
+      "additionalProperties": false,
+      "required": [
+        "ChangeConcentratedForce"
+      ],
+      "properties": {
+        "ChangeConcentratedForce": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1996/mutation/change-concentrated-force/schema.json"
+        }
+      }
     },
     {
       "type": "object",
-      "description": "change-fm"
+      "additionalProperties": false,
+      "required": [
+        "ChangeGKSlab"
+      ],
+      "properties": {
+        "ChangeGKSlab": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1996/mutation/change-gk-slab/schema.json"
+        }
+      }
     },
     {
       "type": "object",
-      "description": "change-bed-joint-thickness"
+      "additionalProperties": false,
+      "required": [
+        "ChangeQKImposed"
+      ],
+      "properties": {
+        "ChangeQKImposed": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1996/mutation/change-qk-imposed/schema.json"
+        }
+      }
     },
     {
       "type": "object",
-      "description": "change-reinforced"
+      "additionalProperties": false,
+      "required": [
+        "ChangeIsBasement"
+      ],
+      "properties": {
+        "ChangeIsBasement": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1996/mutation/change-is-basement/schema.json"
+        }
+      }
     },
     {
       "type": "object",
-      "description": "change-as-vertical"
+      "additionalProperties": false,
+      "required": [
+        "ChangeStoreys"
+      ],
+      "properties": {
+        "ChangeStoreys": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1996/mutation/change-storeys/schema.json"
+        }
+      }
     },
     {
       "type": "object",
-      "description": "change-as-horizontal"
+      "additionalProperties": false,
+      "required": [
+        "ChangeMasonryClass"
+      ],
+      "properties": {
+        "ChangeMasonryClass": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1996/mutation/change-masonry-class/schema.json"
+        }
+      }
     },
     {
       "type": "object",
-      "description": "change-f-yd"
+      "additionalProperties": false,
+      "required": [
+        "ChangeImposedCategory"
+      ],
+      "properties": {
+        "ChangeImposedCategory": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1996/mutation/change-imposed-category/schema.json"
+        }
+      }
     },
     {
       "type": "object",
-      "description": "change-fire-rei"
+      "additionalProperties": false,
+      "required": [
+        "ChangeWallLabelDe"
+      ],
+      "properties": {
+        "ChangeWallLabelDe": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1996/mutation/change-wall-label-de/schema.json"
+        }
+      }
     },
     {
       "type": "object",
-      "description": "change-exposure"
+      "additionalProperties": false,
+      "required": [
+        "ChangeWallLabelEn"
+      ],
+      "properties": {
+        "ChangeWallLabelEn": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1996/mutation/change-wall-label-en/schema.json"
+        }
+      }
     },
     {
       "type": "object",
-      "description": "change-mu"
+      "additionalProperties": false,
+      "required": [
+        "ChangeExposure"
+      ],
+      "properties": {
+        "ChangeExposure": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1996/mutation/change-exposure/schema.json"
+        }
+      }
     },
     {
       "type": "object",
-      "description": "change-load-case-situation"
+      "additionalProperties": false,
+      "required": [
+        "ChangeConcentratedBearingArea"
+      ],
+      "properties": {
+        "ChangeConcentratedBearingArea": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1996/mutation/change-concentrated-bearing-area/schema.json"
+        }
+      }
     },
     {
       "type": "object",
-      "description": "change-wall-label-de"
+      "additionalProperties": false,
+      "required": [
+        "ChangeSlabBearingDepth"
+      ],
+      "properties": {
+        "ChangeSlabBearingDepth": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1996/mutation/change-slab-bearing-depth/schema.json"
+        }
+      }
     },
     {
       "type": "object",
-      "description": "change-wall-label-en"
+      "additionalProperties": false,
+      "required": [
+        "ChangeTributaryArea"
+      ],
+      "properties": {
+        "ChangeTributaryArea": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1996/mutation/change-tributary-area/schema.json"
+        }
+      }
     },
     {
       "type": "object",
-      "description": "insert-opening"
+      "additionalProperties": false,
+      "required": [
+        "ChangeFireRei"
+      ],
+      "properties": {
+        "ChangeFireRei": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1996/mutation/change-fire-rei/schema.json"
+        }
+      }
     },
     {
       "type": "object",
-      "description": "remove-opening"
+      "additionalProperties": false,
+      "required": [
+        "ChangeAsHorizontal"
+      ],
+      "properties": {
+        "ChangeAsHorizontal": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1996/mutation/change-as-horizontal/schema.json"
+        }
+      }
     },
     {
       "type": "object",
-      "description": "change-opening-width"
+      "additionalProperties": false,
+      "required": [
+        "ChangeAsVertical"
+      ],
+      "properties": {
+        "ChangeAsVertical": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1996/mutation/change-as-vertical/schema.json"
+        }
+      }
     },
     {
       "type": "object",
-      "description": "change-opening-height"
+      "additionalProperties": false,
+      "required": [
+        "ChangeFYd"
+      ],
+      "properties": {
+        "ChangeFYd": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1996/mutation/change-f-yd/schema.json"
+        }
+      }
     },
     {
       "type": "object",
-      "description": "change-opening-sill"
+      "additionalProperties": false,
+      "required": [
+        "ChangeReinforced"
+      ],
+      "properties": {
+        "ChangeReinforced": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1996/mutation/change-reinforced/schema.json"
+        }
+      }
     },
     {
       "type": "object",
-      "description": "insert-load-case"
+      "additionalProperties": false,
+      "required": [
+        "ChangeBedJointThickness"
+      ],
+      "properties": {
+        "ChangeBedJointThickness": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1996/mutation/change-bed-joint-thickness/schema.json"
+        }
+      }
     },
     {
       "type": "object",
-      "description": "remove-load-case"
+      "additionalProperties": false,
+      "required": [
+        "ChangeFm"
+      ],
+      "properties": {
+        "ChangeFm": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1996/mutation/change-fm/schema.json"
+        }
+      }
     },
     {
       "type": "object",
-      "description": "change-n-ed-top"
+      "additionalProperties": false,
+      "required": [
+        "ChangeMortarClass"
+      ],
+      "properties": {
+        "ChangeMortarClass": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1996/mutation/change-mortar-class/schema.json"
+        }
+      }
     },
     {
       "type": "object",
-      "description": "change-n-ed-mid"
+      "additionalProperties": false,
+      "required": [
+        "ChangeMortarType"
+      ],
+      "properties": {
+        "ChangeMortarType": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1996/mutation/change-mortar-type/schema.json"
+        }
+      }
     },
     {
       "type": "object",
-      "description": "change-n-ed-bottom"
+      "additionalProperties": false,
+      "required": [
+        "ChangeCPe"
+      ],
+      "properties": {
+        "ChangeCPe": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1996/mutation/change-c-pe/schema.json"
+        }
+      }
     },
     {
       "type": "object",
-      "description": "change-v-ed"
+      "additionalProperties": false,
+      "required": [
+        "ChangeDensity"
+      ],
+      "properties": {
+        "ChangeDensity": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1996/mutation/change-density/schema.json"
+        }
+      }
     },
     {
       "type": "object",
-      "description": "change-w-ed"
+      "additionalProperties": false,
+      "required": [
+        "ChangeSupportSides"
+      ],
+      "properties": {
+        "ChangeSupportSides": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1996/mutation/change-support-sides/schema.json"
+        }
+      }
     },
     {
       "type": "object",
-      "description": "insert-concentrated"
+      "additionalProperties": false,
+      "required": [
+        "ChangeUnitFb"
+      ],
+      "properties": {
+        "ChangeUnitFb": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1996/mutation/change-unit-fb/schema.json"
+        }
+      }
     },
     {
       "type": "object",
-      "description": "remove-concentrated"
+      "additionalProperties": false,
+      "required": [
+        "ChangeUnitGroup"
+      ],
+      "properties": {
+        "ChangeUnitGroup": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1996/mutation/change-unit-group/schema.json"
+        }
+      }
     },
     {
       "type": "object",
-      "description": "change-concentrated-force"
+      "additionalProperties": false,
+      "required": [
+        "ChangeUnitHeight"
+      ],
+      "properties": {
+        "ChangeUnitHeight": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1996/mutation/change-unit-height/schema.json"
+        }
+      }
     },
     {
       "type": "object",
-      "description": "change-concentrated-bearing-area"
+      "additionalProperties": false,
+      "required": [
+        "ChangeUnitLength"
+      ],
+      "properties": {
+        "ChangeUnitLength": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1996/mutation/change-unit-length/schema.json"
+        }
+      }
     },
     {
       "type": "object",
-      "description": "change-concentrated-bearing-length"
+      "additionalProperties": false,
+      "required": [
+        "ChangeUnitMaterial"
+      ],
+      "properties": {
+        "ChangeUnitMaterial": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1996/mutation/change-unit-material/schema.json"
+        }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "ChangeUnitWidth"
+      ],
+      "properties": {
+        "ChangeUnitWidth": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1996/mutation/change-unit-width/schema.json"
+        }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "ChangeWallType"
+      ],
+      "properties": {
+        "ChangeWallType": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1996/mutation/change-wall-type/schema.json"
+        }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "ChangeMu"
+      ],
+      "properties": {
+        "ChangeMu": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1996/mutation/change-mu/schema.json"
+        }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "ChangeOpeningHeight"
+      ],
+      "properties": {
+        "ChangeOpeningHeight": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1996/mutation/change-opening-height/schema.json"
+        }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "ChangeOpeningSill"
+      ],
+      "properties": {
+        "ChangeOpeningSill": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1996/mutation/change-opening-sill/schema.json"
+        }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "ChangeOpeningWidth"
+      ],
+      "properties": {
+        "ChangeOpeningWidth": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1996/mutation/change-opening-width/schema.json"
+        }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "ChangeHKEarth"
+      ],
+      "properties": {
+        "ChangeHKEarth": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1996/mutation/change-hk-earth/schema.json"
+        }
+      }
     }
   ]
 }

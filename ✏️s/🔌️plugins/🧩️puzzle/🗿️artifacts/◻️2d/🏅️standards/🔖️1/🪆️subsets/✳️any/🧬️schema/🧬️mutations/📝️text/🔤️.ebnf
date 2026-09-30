@@ -38,7 +38,10 @@ line = create node
      | resize target region
      | edit target region label
      | change target region hidden
-     | change target region locked ;
+     | change target region locked
+     | drag selection
+     | rotate selection
+     | scale selection ;
 create node = 'create-node', space, node block, space, index opt ;
 delete node = 'delete-node', space, id ;
 move node = 'move-node', space, id, space, number, space, number ;
@@ -72,6 +75,9 @@ resize target region = 'resize-target-region', space, id, space, number, space, 
 edit target region label = 'edit-target-region-label', space, id, space, text opt ;
 change target region hidden = 'change-target-region-hidden', space, id, space, boolean ;
 change target region locked = 'change-target-region-locked', space, id, space, boolean ;
+drag selection = 'drag-selection', space, id list, space, number, space, number ;
+rotate selection = 'rotate-selection', space, id list, space, number, space, number, space, number ;
+scale selection = 'scale-selection', space, id list, space, number, space, number, space, number ;
 node block = '{', newline, octet, { octet }, '}' ;
 handle block = '{', newline, octet, { octet }, '}' ;
 region block = '{', newline, octet, { octet }, '}' ;
@@ -94,6 +100,7 @@ number opt = number
      | 'none' ;
 boolean opt = boolean
      | 'none' ;
+id list = '[', { id }, ']' ;
 id = octet, { octet } ;
 number = octet, { octet } ;
 text = octet, { octet } ;

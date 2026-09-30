@@ -1,7 +1,8 @@
 import assert from "node:assert/strict";
 import { readFileSync, readdirSync } from "node:fs";
 import { join } from "node:path";
-import Ajv, { type AnySchema } from "ajv";
+import type { AnySchema } from "ajv";
+import { semioSchemaAjvV1 } from "../../../../../../../../../../../../🧰️framework/🛍️products/💻️os/🧪️tests/🧬️schema-oracle/🟦️.ts";
 import { parseJackArtifact } from "../../🟦️.ts";
 import { parseJackSnapshot } from "../../📸️snapshot/🟦️.ts";
 import { parseJackDiff } from "../../🔺️diff/🟦️.ts";
@@ -27,9 +28,7 @@ export function testJackDocumentContract(): void {
   const diffSchema = schema(new URL("../../🔺️diff/🔣️.json", import.meta.url));
   const snapshot = json(new URL(cases.snapshotFixture, import.meta.url));
   const diff = json(new URL(cases.diffFixture, import.meta.url));
-  const ajv = new Ajv({ strict: true, allErrors: true });
-  ajv.addKeyword("x-semio-state");
-  ajv.addKeyword("x-semio-child-kind");
+  const ajv = semioSchemaAjvV1({ allErrors: true });
   ajv.addSchema(ioSchema);
   ajv.addSchema(childSchema);
   ajv.addSchema(artifactSchema);

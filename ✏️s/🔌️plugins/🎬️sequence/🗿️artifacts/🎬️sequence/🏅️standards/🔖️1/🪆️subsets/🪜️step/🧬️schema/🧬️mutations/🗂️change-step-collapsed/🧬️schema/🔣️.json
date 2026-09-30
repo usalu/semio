@@ -2,42 +2,49 @@
   "$schema": "http://json-schema.org/draft-07/schema#",
   "$id": "https://json.schemas.assets.semio-tech.com/s/sequence/sequence/1/step/mutation/change-step-collapsed/schema.json",
   "title": "ChangeStepCollapsed",
-  "$ref": "#/$defs/Payload",
-  "$defs": {
-    "Payload": {
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "id",
-        "collapsed"
-      ],
-      "properties": {
-        "id": {
-          "type": "string"
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "mutation",
+    "id",
+    "collapsed"
+  ],
+  "properties": {
+    "mutation": {
+      "const": "changeStepCollapsed"
+    },
+    "id": {
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Step",
+          "de": "Schritt"
         },
-        "collapsed": {
-          "type": "boolean"
+        "description": {
+          "en": "The step to collapse or expand.",
+          "de": "Der ein- oder auszuklappende Schritt."
+        },
+        "ref": {
+          "kind": "step",
+          "domain": "steps",
+          "granularity": "step"
         }
       }
     },
-    "Wire": {
-      "title": "ChangeStepCollapsedMutation",
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "mutation",
-        "id",
-        "collapsed"
-      ],
-      "properties": {
-        "mutation": {
-          "const": "changeStepCollapsed"
+    "collapsed": {
+      "type": "boolean",
+      "x-semio-ui": {
+        "widget": "toggle",
+        "role": "value",
+        "label": {
+          "en": "Collapsed",
+          "de": "Eingeklappt"
         },
-        "id": {
-          "$ref": "#/$defs/Payload/properties/id"
-        },
-        "collapsed": {
-          "$ref": "#/$defs/Payload/properties/collapsed"
+        "description": {
+          "en": "The step's body is hidden in the editor.",
+          "de": "Der Rumpf des Schritts ist im Editor ausgeblendet."
         }
       }
     }

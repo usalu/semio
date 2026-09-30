@@ -5,15 +5,53 @@
   "type": "object",
   "additionalProperties": false,
   "required": [
+    "mutation",
     "id",
     "newDensityKgM3"
   ],
   "properties": {
+    "mutation": {
+      "const": "changeMaterialDensity"
+    },
     "id": {
-      "type": "integer"
+      "type": "integer",
+      "minimum": 0,
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Material",
+          "de": "Material"
+        },
+        "description": {
+          "en": "The material this mutation changes, by id.",
+          "de": "Material, das diese Mutation ändert, per ID."
+        },
+        "ref": {
+          "kind": "material",
+          "domain": "energyModel",
+          "granularity": "material"
+        },
+        "group": "target",
+        "order": 10
+      }
     },
     "newDensityKgM3": {
-      "type": "number"
+      "type": "number",
+      "exclusiveMinimum": 0,
+      "x-semio-ui": {
+        "widget": "stepper",
+        "role": "value",
+        "label": {
+          "en": "Density",
+          "de": "Rohdichte"
+        },
+        "unit": "kg/m³",
+        "step": 1,
+        "precision": 0,
+        "group": "thermal",
+        "order": 20
+      }
     }
   }
 }

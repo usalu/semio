@@ -1,21 +1,44 @@
 {
-  "id": "s.stdio.gltf.mutation.reorder-cameras.v1",
-  "version": 1,
-  "touchedPaths": [
-    "document/cameras/1",
-    "document/cameras/0"
-  ],
-  "payload": {
-    "order": [
-      1,
-      0
+  "nodes": {
+    "modified": [
+      {
+        "index": 0,
+        "diff": {
+          "camera": 1
+        }
+      },
+      {
+        "index": 1,
+        "diff": {
+          "camera": 0
+        }
+      }
     ]
   },
-  "operation": {
-    "kind": "reorder",
-    "order": [
-      1,
-      0
+  "cameras": {
+    "modified": [
+      {
+        "index": 0,
+        "diff": {
+          "type": "orthographic",
+          "orthographic": {
+            "xmag": 1,
+            "ymag": 1,
+            "zfar": 2,
+            "znear": 0.5
+          }
+        }
+      },
+      {
+        "index": 1,
+        "diff": {
+          "type": "perspective",
+          "perspective": {
+            "yfov": 0.5,
+            "znear": 0.5
+          }
+        }
+      }
     ]
   }
 }

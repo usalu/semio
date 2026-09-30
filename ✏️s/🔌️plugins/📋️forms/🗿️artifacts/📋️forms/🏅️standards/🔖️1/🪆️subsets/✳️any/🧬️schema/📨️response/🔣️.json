@@ -13,17 +13,62 @@
   "properties": {
     "id": {
       "type": "string",
-      "minLength": 1
+      "minLength": 1,
+      "x-semio-ui": {
+        "widget": "text",
+        "role": "value",
+        "label": {
+          "en": "ID",
+          "de": "ID"
+        },
+        "description": {
+          "en": "Unique response id.",
+          "de": "Eindeutige Antwort-ID."
+        },
+        "group": "identity",
+        "order": 10
+      }
     },
     "submittedAt": {
       "type": "integer",
       "minimum": 0,
       "maximum": 9007199254740991,
-      "description": "UTC milliseconds since the Unix epoch"
+      "description": "UTC milliseconds since the Unix epoch",
+      "x-semio-ui": {
+        "widget": "stepper",
+        "role": "value",
+        "label": {
+          "en": "Submitted at",
+          "de": "Übermittelt am"
+        },
+        "description": {
+          "en": "UTC milliseconds since the Unix epoch.",
+          "de": "UTC-Millisekunden seit der Unix-Epoche."
+        },
+        "unit": "ms",
+        "step": 1,
+        "precision": 0,
+        "group": "identity",
+        "order": 20
+      }
     },
     "definitionVersion": {
       "type": "string",
-      "minLength": 1
+      "minLength": 1,
+      "x-semio-ui": {
+        "widget": "text",
+        "role": "value",
+        "label": {
+          "en": "Form version",
+          "de": "Formularversion"
+        },
+        "description": {
+          "en": "Version of the form definition that was answered.",
+          "de": "Version der beantworteten Formulardefinition."
+        },
+        "group": "identity",
+        "order": 30
+      }
     },
     "answers": {
       "type": "array",
@@ -39,16 +84,69 @@
         "properties": {
           "questionId": {
             "type": "string",
-            "minLength": 1
+            "minLength": 1,
+            "x-semio-ui": {
+              "widget": "text",
+              "role": "value",
+              "label": {
+                "en": "Question",
+                "de": "Frage"
+              },
+              "description": {
+                "en": "Id of the answered question.",
+                "de": "ID der beantworteten Frage."
+              },
+              "group": "answers",
+              "order": 10
+            }
           },
           "label": {
-            "type": "string"
+            "type": "string",
+            "x-semio-ui": {
+              "widget": "text",
+              "role": "value",
+              "label": {
+                "en": "Label",
+                "de": "Beschriftung"
+              },
+              "group": "answers",
+              "order": 20
+            }
           },
           "kind": {
-            "type": "string"
+            "type": "string",
+            "x-semio-ui": {
+              "widget": "text",
+              "role": "value",
+              "label": {
+                "en": "Question type",
+                "de": "Fragetyp"
+              },
+              "group": "answers",
+              "order": 30
+            }
           },
-          "value": {}
+          "value": {
+            "x-semio-ui": {
+              "role": "value",
+              "label": {
+                "en": "Answer",
+                "de": "Antwort"
+              },
+              "group": "answers",
+              "order": 40
+            }
+          }
         }
+      },
+      "x-semio-ui": {
+        "role": "value",
+        "label": {
+          "en": "Answers",
+          "de": "Antworten"
+        },
+        "group": "answers",
+        "order": 40
       }
     }
   }

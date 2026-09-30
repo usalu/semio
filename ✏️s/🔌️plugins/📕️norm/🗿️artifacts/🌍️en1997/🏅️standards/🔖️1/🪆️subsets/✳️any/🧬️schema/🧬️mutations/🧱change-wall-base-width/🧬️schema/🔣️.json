@@ -5,15 +5,50 @@
   "type": "object",
   "additionalProperties": false,
   "required": [
+    "mutation",
     "id",
     "newBaseWidth"
   ],
   "properties": {
+    "mutation": {
+      "const": "changeWallBaseWidth"
+    },
     "id": {
-      "type": "string"
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Retaining wall",
+          "de": "Stützwand"
+        },
+        "description": {
+          "en": "The retaining wall this mutation addresses.",
+          "de": "Die Stützwand, die diese Mutation adressiert."
+        },
+        "ref": {
+          "kind": "retainingWall"
+        },
+        "group": "target",
+        "order": 10
+      }
     },
     "newBaseWidth": {
-      "type": "number"
+      "type": "number",
+      "exclusiveMinimum": 0,
+      "x-semio-ui": {
+        "widget": "stepper",
+        "role": "value",
+        "label": {
+          "en": "Base width b",
+          "de": "Sohlbreite b"
+        },
+        "unit": "m",
+        "step": 0.05,
+        "precision": 2,
+        "group": "retaining-wall",
+        "order": 20
+      }
     }
   }
 }

@@ -5,11 +5,27 @@
   "type": "object",
   "additionalProperties": false,
   "required": [
+    "mutation",
     "newUri"
   ],
   "properties": {
+    "mutation": {
+      "const": "changeUri"
+    },
     "newUri": {
-      "type": "string"
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "text",
+        "role": "value",
+        "label": {
+          "en": "New URI",
+          "de": "Neue URI"
+        },
+        "description": {
+          "en": "Location the document is associated with.",
+          "de": "Ort, dem das Dokument zugeordnet ist."
+        }
+      }
     }
   }
 }

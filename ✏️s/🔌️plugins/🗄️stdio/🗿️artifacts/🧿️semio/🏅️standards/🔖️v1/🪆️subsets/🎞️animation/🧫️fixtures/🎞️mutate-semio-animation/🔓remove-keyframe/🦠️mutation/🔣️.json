@@ -1,6 +1,7 @@
 {
   "kind": "remove-keyframe",
-  "params": {
+  "mutation": {
+    "mutation": "removeKeyframe",
     "timelineIndex": 0,
     "channelIndex": 0,
     "index": 0

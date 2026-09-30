@@ -77,8 +77,8 @@ async fn inverse_restores_before() {
 }
 
 /// 🔣️ Both committed snapshots and the committed mutation are already canonical. `ReorderStep`
-/// declares no `rename_all` of its own, so `to_index` stays snake_case on the wire while the enum
-/// tag is camelCased to `reorderStep`.
+/// declares `rename_all = "camelCase"` like its enum tag, so the wire spells `toIndex` beside
+/// `reorderStep`.
 #[semio_framework_async_macros::async_test]
 async fn committed_json_is_canonical() {
     for (label, text) in [("before", BEFORE), ("after", AFTER)] {

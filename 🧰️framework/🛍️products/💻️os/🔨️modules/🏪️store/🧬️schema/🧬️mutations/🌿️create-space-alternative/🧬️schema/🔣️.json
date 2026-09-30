@@ -19,19 +19,65 @@
       "properties": {
         "id": {
           "type": "string",
-          "minLength": 1
+          "minLength": 1,
+          "x-semio-ui": {
+            "widget": "text",
+            "role": "value",
+            "label": {
+              "en": "ID",
+              "de": "ID"
+            },
+            "description": {
+              "en": "Unique id of the record.",
+              "de": "Eindeutige ID des Eintrags."
+            },
+            "group": "identity",
+            "order": 10
+          }
         },
         "name": {
           "type": "string",
-          "minLength": 1
+          "minLength": 1,
+          "x-semio-ui": {
+            "widget": "text",
+            "role": "value",
+            "label": {
+              "en": "Name",
+              "de": "Name"
+            },
+            "group": "identity",
+            "order": 20
+          }
         },
         "checkpointIds": {
           "type": "array",
           "items": {
             "type": "string",
             "minLength": 1
+          },
+          "x-semio-ui": {
+            "widget": "reference",
+            "role": "target",
+            "label": {
+              "en": "Checkpoints",
+              "de": "Checkpoints"
+            },
+            "ref": {
+              "kind": "checkpoint"
+            },
+            "group": "target",
+            "order": 30
           }
         }
+      },
+      "x-semio-ui": {
+        "role": "value",
+        "label": {
+          "en": "Alternative",
+          "de": "Alternative"
+        },
+        "group": "record",
+        "order": 10
       }
     }
   }

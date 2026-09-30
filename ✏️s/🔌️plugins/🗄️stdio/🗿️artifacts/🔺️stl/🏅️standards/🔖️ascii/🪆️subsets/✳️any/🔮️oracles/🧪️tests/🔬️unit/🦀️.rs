@@ -8,8 +8,8 @@ fn spec(kind: &str, params: Json) -> Json {
 }
 
 #[test]
-fn no_mutation_re_emits_the_document_rather_than_handing_the_bytes_back() {
-    let output = oracle_apply_mutation(FIXTURE.as_bytes(), &spec("no-mutation", Json::Object(vec![]))).unwrap();
+fn round_trip_re_emits_the_document_rather_than_handing_the_bytes_back() {
+    let output = oracle_round_trip(FIXTURE.as_bytes()).unwrap();
     assert_eq!(ascii::read_name(&output).unwrap(), "box", "the solid name survives");
     assert_eq!(triangle_soup::read(&output).unwrap().len(), 2, "and so does every facet");
     assert_eq!(
@@ -22,7 +22,6 @@ fn no_mutation_re_emits_the_document_rather_than_handing_the_bytes_back() {
 #[test]
 fn every_kind_emits_ascii_that_keeps_the_solid_name() {
     for (kind, params) in [
-        ("no-mutation", Json::Object(vec![])),
         ("remove-triangle", Json::Object(vec![("index".to_string(), Json::Number(0.0))])),
         ("set-triangle-normal", Json::Object(vec![("index".to_string(), Json::Number(0.0)), ("normal".to_string(), Json::Array(vec![Json::Number(0.0), Json::Number(1.0), Json::Number(0.0)]))])),
     ] {
@@ -68,7 +67,7 @@ fn insert_and_remove_triangle_are_inverse_on_a_real_shaped_mesh() {
     let inserted = oracle_apply_mutation(FIXTURE.as_bytes(), &insert_spec).unwrap();
     assert_eq!(triangle_soup::read(&inserted).unwrap().len(), 3);
 
-    let inverse = oracle_inverse_spec(FIXTURE.as_bytes(), &insert_spec).unwrap();
+    let inverse = oracle_inverse_spec(FIXTURE.as_bytes(), &insert_spec).unwrap().unwrap();
     assert_eq!(inverse.str("kind"), "remove-triangle");
     let restored = oracle_apply_mutation(&inserted, &inverse).unwrap();
     let before = triangle_soup::read(FIXTURE.as_bytes()).unwrap();
@@ -86,7 +85,7 @@ fn remove_triangle_inverse_reinserts_the_original_triangle() {
     let removed = oracle_apply_mutation(FIXTURE.as_bytes(), &remove_spec).unwrap();
     assert_eq!(triangle_soup::read(&removed).unwrap().len(), 1);
 
-    let inverse = oracle_inverse_spec(FIXTURE.as_bytes(), &remove_spec).unwrap();
+    let inverse = oracle_inverse_spec(FIXTURE.as_bytes(), &remove_spec).unwrap().unwrap();
     assert_eq!(inverse.str("kind"), "insert-triangle");
     let restored = oracle_apply_mutation(&removed, &inverse).unwrap();
     assert_eq!(triangle_soup::read(&restored).unwrap().len(), 2);
@@ -105,8 +104,19 @@ fn set_snapshot_replaces_the_whole_triangle_list() {
             ]),
         ),
     ])]);
-    let output = oracle_apply_mutation(FIXTURE.as_bytes(), &spec("set-snapshot", Json::Object(vec![("triangles".to_string(), one_triangle)]))).unwrap();
+    let snapshot = Json::Object(vec![("schema".to_string(), Json::String("stdio.stl".to_string())), ("solidName".to_string(), Json::String("replaced".to_string())), ("triangles".to_string(), one_triangle)]);
+    let output = oracle_apply_mutation(FIXTURE.as_bytes(), &spec("set-snapshot", Json::Object(vec![("snapshot".to_string(), snapshot)]))).unwrap();
     assert_eq!(triangle_soup::read(&output).unwrap().len(), 1);
+    assert_eq!(ascii::read_name(&output).unwrap(), "replaced");
+}
+
+#[test]
+fn set_snapshot_inverse_restores_name_and_triangles_and_out_of_range_edits_leave_nothing_to_undo() {
+    let snapshot = Json::Object(vec![("schema".to_string(), Json::String("stdio.stl".to_string())), ("solidName".to_string(), Json::String("replaced".to_string())), ("triangles".to_string(), Json::Array(vec![]))]);
+    let forward = spec("set-snapshot", Json::Object(vec![("snapshot".to_string(), snapshot)]));
+    let restored = oracle_apply_mutation(&oracle_apply_mutation(FIXTURE.as_bytes(), &forward).unwrap(), &oracle_inverse_spec(FIXTURE.as_bytes(), &forward).unwrap().unwrap()).unwrap();
+    assert_eq!(oracle_document_projection(&restored).unwrap(), oracle_document_projection(FIXTURE.as_bytes()).unwrap());
+    assert!(oracle_inverse_spec(FIXTURE.as_bytes(), &spec("remove-triangle", Json::Object(vec![("index".to_string(), Json::Number(9.0))]))).unwrap().is_none());
 }
 
 /// 🔁️ The real committed fixture is written by a `f64` producer — `0.0`, `-8.881784197001252e-16`

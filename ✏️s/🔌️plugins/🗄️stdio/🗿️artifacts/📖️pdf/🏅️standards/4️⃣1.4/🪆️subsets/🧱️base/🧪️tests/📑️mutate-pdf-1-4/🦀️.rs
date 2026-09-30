@@ -90,39 +90,12 @@ mod subject {
     use super::mutable_input;
     use semio_repo_test_host::{Context, Json, Outcome};
     use semio_s_artifact_stdio_pdf::standards::v1_4::subsets::base::io::{decode_pdf, encode_pdf};
-    use semio_s_artifact_stdio_pdf::standards::v1_4::subsets::base::schema::mutations::{apply_pdf_mutation, inverse_pdf_mutation, InsertPage, MovePage, PdfMutation, RemovePage, ReplacePageText, ResizePage};
-    use semio_s_artifact_stdio_pdf::standards::v1_4::subsets::base::schema::snapshot::PageDoc;
+    use semio_s_artifact_stdio_pdf::standards::v1_4::subsets::base::schema::mutations::{apply_pdf_mutation, decode_pdf_mutation_payload, inverse_pdf_mutation, PdfMutation};
     use semio_s_plugin_stdio_test_oracle::artifacts::pdf::standards::v1_4::subsets::base::project_pdf_1_4;
 
+    /// 📨️ The scenario's `{kind, params}` row: `params` is the leaf wire payload, decoded generically.
     fn mutation_from_spec(spec: &Json) -> Result<PdfMutation, String> {
-        let params = spec.get("params").ok_or("Missing mutation parameters")?;
-        let number = |key| match params.get(key) {
-            Some(Json::Number(value)) if value.is_finite() => Ok(*value),
-            _ => Err(format!("{key} must be finite")),
-        };
-        let index = |key| {
-            let value = number(key)?;
-            if value < 0.0 || value.fract() != 0.0 || value >= usize::MAX as f64 {
-                Err(format!("{key} must be an index"))
-            } else {
-                Ok(value as usize)
-            }
-        };
-        Ok(match spec.str("kind").as_str() {
-            "insert-page" => {
-                let page = params.get("page").ok_or("Missing inserted page")?;
-                let dimension = |key| match page.get(key) {
-                    Some(Json::Number(value)) if value.is_finite() => Ok(*value),
-                    _ => Err(format!("{key} must be finite")),
-                };
-                PdfMutation::InsertPage(InsertPage { index: index("index")?, page: PageDoc { width: dimension("width")?, height: dimension("height")?, text: page.str("text") } })
-            }
-            "remove-page" => PdfMutation::RemovePage(RemovePage { index: index("index")? }),
-            "move-page" => PdfMutation::MovePage(MovePage { from: index("from")?, to: index("to")? }),
-            "resize-page" => PdfMutation::ResizePage(ResizePage { index: index("index")?, width: number("width")?, height: number("height")? }),
-            "replace-page-text" => PdfMutation::ReplacePageText(ReplacePageText { index: index("index")?, text: params.str("text") }),
-            other => return Err(format!("Unknown subject mutation {other:?}")),
-        })
+        decode_pdf_mutation_payload(&spec.str("kind"), &spec.get("params").cloned().unwrap_or(Json::Null).to_string())
     }
 
     pub fn mutate(ctx: &Context) -> Result<Outcome, String> {

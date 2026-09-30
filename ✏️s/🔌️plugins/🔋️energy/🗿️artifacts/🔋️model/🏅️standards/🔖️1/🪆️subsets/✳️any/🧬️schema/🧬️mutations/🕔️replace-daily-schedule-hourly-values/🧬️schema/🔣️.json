@@ -5,17 +5,56 @@
   "type": "object",
   "additionalProperties": false,
   "required": [
+    "mutation",
     "id",
     "newHourlyValues"
   ],
   "properties": {
+    "mutation": {
+      "const": "replaceDailyScheduleHourlyValues"
+    },
     "id": {
-      "type": "integer"
+      "type": "integer",
+      "minimum": 0,
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Daily schedule",
+          "de": "Tageszeitplan"
+        },
+        "description": {
+          "en": "The daily schedule this mutation changes, by id.",
+          "de": "Tageszeitplan, den diese Mutation ändert, per ID."
+        },
+        "ref": {
+          "kind": "dailySchedule",
+          "domain": "energyModel",
+          "granularity": "schedule"
+        },
+        "group": "target",
+        "order": 10
+      }
     },
     "newHourlyValues": {
       "type": "array",
       "items": {
         "type": "number"
+      },
+      "minItems": 24,
+      "maxItems": 24,
+      "x-semio-ui": {
+        "role": "value",
+        "label": {
+          "en": "Hourly values",
+          "de": "Stundenwerte"
+        },
+        "description": {
+          "en": "Twenty-four values, one per hour of the day.",
+          "de": "Vierundzwanzig Werte, einer je Tagesstunde."
+        },
+        "group": "values",
+        "order": 20
       }
     }
   }

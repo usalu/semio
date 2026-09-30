@@ -5,15 +5,16 @@
   "type": "object",
   "additionalProperties": false,
   "required": [
+    "mutation",
     "value"
   ],
   "properties": {
-    "value": {
-      "type": "string"
-    },
     "mutation": {
       "const": "insertSharedString",
       "description": "Aggregate discriminator spliced in by XlsxMutation; absent when the payload stands alone."
+    },
+    "value": {
+      "type": "string"
     }
   }
 }

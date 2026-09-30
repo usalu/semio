@@ -1,0 +1,275 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/replication/supersede-fold.json",
+  "title": "Semio Supersede Fold Law Steps",
+  "description": "Language-agnostic steps for the supersession half of the history fold: edits, transitions in arrival order, and the expected final alternative and effective supersessions after each prefix. HLCs are `{actor: 0, physical_ms: logicalMs, logical: 0}`; transition ids are given verbatim.",
+  "definitions": {
+    "Id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "OptionalString": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "Replacement": {
+      "oneOf": [
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "schema",
+            "payloadHex"
+          ],
+          "properties": {
+            "kind": {
+              "const": "input"
+            },
+            "schema": {
+              "type": "string"
+            },
+            "payloadHex": {
+              "type": "string",
+              "pattern": "^([0-9a-f]{2})*$"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "kind"
+          ],
+          "properties": {
+            "kind": {
+              "const": "withdrawn"
+            }
+          }
+        }
+      ]
+    },
+    "Transition": {
+      "type": "object",
+      "required": [
+        "kind"
+      ],
+      "properties": {
+        "kind": {
+          "enum": [
+            "revert",
+            "reinstate",
+            "commit",
+            "branch",
+            "checkout",
+            "repin",
+            "supersede"
+          ]
+        }
+      },
+      "description": "The `Transition` shape of `../🔣️history-transition/🔣️.json`; supersede inputs carry `Replacement`."
+    },
+    "TransitionStep": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "kind",
+        "id",
+        "actor",
+        "logicalMs",
+        "transition"
+      ],
+      "properties": {
+        "kind": {
+          "const": "transition"
+        },
+        "id": {
+          "$ref": "#/definitions/Id"
+        },
+        "actor": {
+          "$ref": "#/definitions/Id"
+        },
+        "logicalMs": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "transition": {
+          "$ref": "#/definitions/Transition"
+        }
+      }
+    },
+    "Supersession": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "target",
+        "transitionId",
+        "actor",
+        "logicalMs",
+        "scope",
+        "replacement"
+      ],
+      "properties": {
+        "target": {
+          "$ref": "#/definitions/Id"
+        },
+        "transitionId": {
+          "$ref": "#/definitions/Id"
+        },
+        "actor": {
+          "$ref": "#/definitions/Id"
+        },
+        "logicalMs": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "scope": {
+          "$ref": "#/definitions/OptionalString"
+        },
+        "replacement": {
+          "$ref": "#/definitions/Replacement"
+        }
+      }
+    },
+    "Step": {
+      "oneOf": [
+        {
+          "$ref": "#/definitions/TransitionStep"
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "label",
+            "expect"
+          ],
+          "properties": {
+            "kind": {
+              "const": "expect"
+            },
+            "label": {
+              "type": "string"
+            },
+            "expect": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "alternative",
+                "supersessions"
+              ],
+              "properties": {
+                "alternative": {
+                  "$ref": "#/definitions/OptionalString"
+                },
+                "supersessions": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/definitions/Supersession"
+                  }
+                }
+              }
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "label"
+          ],
+          "properties": {
+            "kind": {
+              "const": "reload"
+            },
+            "label": {
+              "type": "string"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "label",
+            "transition",
+            "detail"
+          ],
+          "properties": {
+            "kind": {
+              "const": "refuse"
+            },
+            "label": {
+              "type": "string"
+            },
+            "transition": {
+              "$ref": "#/definitions/TransitionStep"
+            },
+            "detail": {
+              "type": "string",
+              "minLength": 1
+            }
+          }
+        }
+      ]
+    }
+  },
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema",
+    "documentId",
+    "edits",
+    "steps"
+  ],
+  "properties": {
+    "schema": {
+      "const": "semio.history.supersede-fold"
+    },
+    "documentId": {
+      "$ref": "#/definitions/Id"
+    },
+    "edits": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "id",
+          "actor",
+          "logicalMs",
+          "mutationIds"
+        ],
+        "properties": {
+          "id": {
+            "$ref": "#/definitions/Id"
+          },
+          "actor": {
+            "$ref": "#/definitions/Id"
+          },
+          "logicalMs": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "mutationIds": {
+            "type": "array",
+            "items": {
+              "$ref": "#/definitions/Id"
+            }
+          }
+        }
+      }
+    },
+    "steps": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "$ref": "#/definitions/Step"
+      }
+    }
+  }
+}

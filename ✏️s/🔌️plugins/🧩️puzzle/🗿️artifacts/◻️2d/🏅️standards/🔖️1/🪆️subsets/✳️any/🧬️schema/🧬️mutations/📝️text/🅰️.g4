@@ -7,7 +7,7 @@ grammar Puzzle_puzzle2d_mutations;
 
 DOCUMENT: 'schema' [ ]+ 'puzzle.puzzle2d.mutations' ;
 
-line: createNode | deleteNode | moveNode | replaceNodeGeometry | changeNodeKind | editNodeText | changeNodeIcon | scaleNode | changeNodeVisible | changeNodeLocked | changeNodeRoot | changeNodeAnchor | addNodeHandle | removeNodeHandle | replaceNodeHandle | connectHandles | disconnectHandles | replaceEdgeGeometry | changeEdgeKind | changeEdgeTips | changeEdgeVisible | changeEdgeLocked | changeManifestId | connectKindCompatibility | disconnectKindCompatibility | replaceKindCatalogs | createTargetRegion | deleteTargetRegion | moveTargetRegion | resizeTargetRegion | editTargetRegionLabel | changeTargetRegionHidden | changeTargetRegionLocked ;
+line: createNode | deleteNode | moveNode | replaceNodeGeometry | changeNodeKind | editNodeText | changeNodeIcon | scaleNode | changeNodeVisible | changeNodeLocked | changeNodeRoot | changeNodeAnchor | addNodeHandle | removeNodeHandle | replaceNodeHandle | connectHandles | disconnectHandles | replaceEdgeGeometry | changeEdgeKind | changeEdgeTips | changeEdgeVisible | changeEdgeLocked | changeManifestId | connectKindCompatibility | disconnectKindCompatibility | replaceKindCatalogs | createTargetRegion | deleteTargetRegion | moveTargetRegion | resizeTargetRegion | editTargetRegionLabel | changeTargetRegionHidden | changeTargetRegionLocked | dragSelection | rotateSelection | scaleSelection ;
 createNode: 'create-node' SP nodeBlock SP indexOpt ;
 deleteNode: 'delete-node' SP id ;
 moveNode: 'move-node' SP id SP number SP number ;
@@ -41,6 +41,9 @@ resizeTargetRegion: 'resize-target-region' SP id SP number SP number ;
 editTargetRegionLabel: 'edit-target-region-label' SP id SP textOpt ;
 changeTargetRegionHidden: 'change-target-region-hidden' SP id SP boolean ;
 changeTargetRegionLocked: 'change-target-region-locked' SP id SP boolean ;
+dragSelection: 'drag-selection' SP idList SP number SP number ;
+rotateSelection: 'rotate-selection' SP idList SP number SP number SP number ;
+scaleSelection: 'scale-selection' SP idList SP number SP number SP number ;
 nodeBlock: '{' NL OCTET+ '}' ;
 handleBlock: '{' NL OCTET+ '}' ;
 regionBlock: '{' NL OCTET+ '}' ;
@@ -52,6 +55,7 @@ indexOpt: number | 'none' ;
 textOpt: text | 'none' ;
 numberOpt: number | 'none' ;
 booleanOpt: boolean | 'none' ;
+idList: '[' id* ']' ;
 id: OCTET+ ;
 number: OCTET+ ;
 text: OCTET+ ;

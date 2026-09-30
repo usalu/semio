@@ -2,35 +2,58 @@
   "$schema": "http://json-schema.org/draft-07/schema#",
   "$id": "https://json.schemas.assets.semio-tech.com/os/infinite/artifacts/dag/vcs/mutation/change-node-operator-kind/schema.json",
   "title": "ChangeNodeOperatorKind",
-  "type": "object",
-  "$defs": {
-    "Payload": {
-      "type": "object",
-      "required": [
-        "id"
-      ],
-      "properties": {
-        "id": {
-          "type": "string"
-        },
-        "newOperatorKind": {
-          "type": [
-            "string",
-            "null"
-          ]
-        }
-      }
-    }
-  },
-  "allOf": [
-    {
-      "$ref": "#/$defs/Payload"
-    }
-  ],
   "propertyNames": {
     "enum": [
+      "operation",
       "id",
       "newOperatorKind"
     ]
+  },
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "operation",
+    "id"
+  ],
+  "properties": {
+    "operation": {
+      "const": "changeNodeOperatorKind"
+    },
+    "id": {
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Node",
+          "de": "Knoten"
+        },
+        "ref": {
+          "kind": "node"
+        },
+        "group": "target",
+        "order": 10
+      }
+    },
+    "newOperatorKind": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "x-semio-ui": {
+        "widget": "text",
+        "role": "value",
+        "label": {
+          "en": "Operator kind",
+          "de": "Operatorart"
+        },
+        "description": {
+          "en": "Empty makes the node a plain value node.",
+          "de": "Leer macht den Knoten zu einem reinen Wertknoten."
+        },
+        "group": "kind",
+        "order": 20
+      }
+    }
   }
 }

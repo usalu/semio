@@ -1,13 +1,29 @@
 {
-  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/norm/en1991/mutation/change-fire-occupancy/schema.json",
+  "title": "ChangeFireOccupancy",
   "type": "object",
   "additionalProperties": false,
   "required": [
-    "new_fire_occupancy"
+    "newFireOccupancy"
   ],
   "properties": {
-    "new_fire_occupancy": {
-      "type": "string"
+    "newFireOccupancy": {
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "text",
+        "role": "value",
+        "label": {
+          "en": "Occupancy for fire design",
+          "de": "Nutzungsart für die Brandschutzbemessung"
+        },
+        "description": {
+          "en": "office, dwelling, hospital, shopping, industrial, warehouse or parking (EN 1991-1-2 Annex E).",
+          "de": "office (Büro), dwelling (Wohnen), hospital (Krankenhaus), shopping (Verkauf), industrial (Industrie), warehouse (Lager) oder parking (Parken) nach EN 1991-1-2 Anhang E."
+        },
+        "group": "fire",
+        "order": 10
+      }
     }
   }
 }

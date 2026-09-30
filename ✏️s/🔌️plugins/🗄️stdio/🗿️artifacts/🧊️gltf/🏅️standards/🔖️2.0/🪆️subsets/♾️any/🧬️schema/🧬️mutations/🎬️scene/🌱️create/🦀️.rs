@@ -6,8 +6,7 @@ use crate::GltfSnapshot;
 
 pub const ID: &str = "s.stdio.gltf.mutation.create-scene.v1";
 
-#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::MutationLeaf)]
-#[mutation_leaf(contract = ::protocol)]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
 #[value(rename_all = "camelCase", deny_unknown_fields)]
 pub struct GltfCreateScenePayload {
     pub position: u32,
@@ -28,7 +27,7 @@ pub fn apply(payload: &GltfCreateScenePayload, base: &GltfSnapshot) -> Result<Gl
 
 //#region 🧬️DirectMutation
 #[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::MutationLeaf)]
-#[mutation_leaf(contract = ::protocol)]
+#[mutation_leaf(contract = ::protocol, payload = Apply)]
 #[value(tag = "phase", content = "value", rename_all = "camelCase")]
 pub enum CreateSceneMutation {
     Apply(GltfCreateScenePayload),
@@ -72,8 +71,8 @@ impl protocol::MutationKind<GltfSnapshot, super::GltfMutation> for CreateSceneMu
 
 //#region 🧪️Tests
 #[cfg(test)]
-#[path = "🧪️tests/🔬️direct-leaf/🦀️.rs"]
-mod direct_leaf_tests;
+#[path = "🧪️tests/🎞️inserts-an-empty-3bc9ce/🦀️.rs"]
+mod case_inserts_an_empty_3bc9ce;
 //#endregion 🧪️Tests
 
 #[cfg(test)]

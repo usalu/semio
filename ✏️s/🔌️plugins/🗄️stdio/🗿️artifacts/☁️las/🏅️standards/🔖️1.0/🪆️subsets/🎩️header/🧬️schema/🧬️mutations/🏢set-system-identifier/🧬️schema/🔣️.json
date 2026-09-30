@@ -5,15 +5,27 @@
   "type": "object",
   "additionalProperties": false,
   "required": [
+    "mutation",
     "systemIdentifier"
   ],
   "properties": {
-    "systemIdentifier": {
-      "type": "string"
-    },
     "mutation": {
       "const": "setSystemIdentifier",
       "description": "Aggregate discriminator spliced in by LasMutation; absent when the payload stands alone."
+    },
+    "systemIdentifier": {
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "text",
+        "label": {
+          "en": "System identifier",
+          "de": "Systemkennung"
+        },
+        "description": {
+          "en": "Hardware or process that produced the data.",
+          "de": "Hardware oder Prozess, der die Daten erzeugt hat."
+        }
+      }
     }
   }
 }

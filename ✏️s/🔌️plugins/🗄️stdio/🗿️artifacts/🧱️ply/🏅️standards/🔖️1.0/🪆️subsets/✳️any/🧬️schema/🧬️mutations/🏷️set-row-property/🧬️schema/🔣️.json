@@ -5,28 +5,62 @@
   "type": "object",
   "additionalProperties": false,
   "required": [
-    "element_name",
-    "row_index",
-    "property_name",
+    "mutation",
+    "elementName",
+    "rowIndex",
+    "propertyName",
     "value"
   ],
   "properties": {
-    "element_name": {
-      "type": "string"
-    },
-    "row_index": {
-      "type": "integer",
-      "minimum": 0
-    },
-    "property_name": {
-      "type": "string"
-    },
-    "value": {
-      "$ref": "#/$defs/PlyValue"
-    },
     "mutation": {
       "const": "setRowProperty",
       "description": "Aggregate discriminator spliced in by PlyMutation; absent when the payload stands alone."
+    },
+    "elementName": {
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "text",
+        "label": {
+          "en": "Element",
+          "de": "Element"
+        },
+        "description": {
+          "en": "Name of the PLY element whose rows are addressed.",
+          "de": "Name des PLY-Elements, dessen Zeilen adressiert werden."
+        }
+      }
+    },
+    "rowIndex": {
+      "type": "integer",
+      "minimum": 0,
+      "x-semio-ui": {
+        "widget": "stepper",
+        "label": {
+          "en": "Row index",
+          "de": "Zeilenindex"
+        },
+        "description": {
+          "en": "Zero-based row of the element.",
+          "de": "Nullbasierte Zeile des Elements."
+        }
+      }
+    },
+    "propertyName": {
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "text",
+        "label": {
+          "en": "Property",
+          "de": "Eigenschaft"
+        },
+        "description": {
+          "en": "Name of the element property to set.",
+          "de": "Name der zu setzenden Elementeigenschaft."
+        }
+      }
+    },
+    "value": {
+      "$ref": "#/$defs/PlyValue"
     }
   },
   "$defs": {

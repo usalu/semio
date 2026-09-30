@@ -9,17 +9,59 @@
   ],
   "properties": {
     "extension": {
-      "type": "string"
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "text",
+        "label": {
+          "en": "Extension",
+          "de": "Erweiterung"
+        },
+        "description": {
+          "en": "Extension name, e.g. KHR_materials_unlit.",
+          "de": "Name der Erweiterung, z. B. KHR_materials_unlit."
+        },
+        "group": "value",
+        "order": 10
+      }
     }
   },
-  "x-semio": {
-    "id": "s.stdio.gltf.mutation.remove-required-extension.v1",
-    "version": 1,
-    "phase": "mutation",
-    "touchedPaths": [
-      "document/extensionsRequired"
-    ],
-    "referencePolicy": "removes only an existing requirement"
-  },
-  "x-semio-mutation": "remove-required-extension"
+  "$defs": {
+    "RemoveRequiredExtensionMutation": {
+      "description": "The whole wire of RemoveRequiredExtensionMutation: the editable apply payload (this document's root) or the inert restore.",
+      "oneOf": [
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "phase",
+            "value"
+          ],
+          "properties": {
+            "phase": {
+              "const": "apply"
+            },
+            "value": {
+              "$ref": "#"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "phase",
+            "value"
+          ],
+          "properties": {
+            "phase": {
+              "const": "restore"
+            },
+            "value": {
+              "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/gltf/2.0/any/diff.json"
+            }
+          }
+        }
+      ]
+    }
+  }
 }

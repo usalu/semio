@@ -10,10 +10,40 @@
   ],
   "properties": {
     "index": {
-      "type": "integer"
+      "type": "integer",
+      "minimum": 0,
+      "x-semio-ui": {
+        "widget": "stepper",
+        "role": "value",
+        "label": {
+          "en": "Wall",
+          "de": "Wand"
+        },
+        "description": {
+          "en": "Zero-based position of the wall in its list.",
+          "de": "Nullbasierte Position der Wand in der Liste."
+        },
+        "step": 1,
+        "precision": 0,
+        "group": "target",
+        "order": 10
+      }
     },
     "newExposure": {
-      "type": "string"
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1996/snapshot.json#/$defs/ExposureClass",
+      "x-semio-ui": {
+        "role": "value",
+        "label": {
+          "en": "Exposure class",
+          "de": "Expositionsklasse"
+        },
+        "description": {
+          "en": "Mx1 to Mx5 (EN 1996-2 Annex A).",
+          "de": "Mx1 bis Mx5 (EN 1996-2 Anhang A)."
+        },
+        "group": "durability",
+        "order": 20
+      }
     }
   }
 }

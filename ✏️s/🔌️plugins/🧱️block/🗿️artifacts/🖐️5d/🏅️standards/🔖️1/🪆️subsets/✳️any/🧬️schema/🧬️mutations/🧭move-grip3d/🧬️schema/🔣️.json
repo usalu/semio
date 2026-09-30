@@ -5,13 +5,32 @@
   "type": "object",
   "additionalProperties": false,
   "required": [
+    "mutation",
     "id",
     "newDirection",
     "newPosition"
   ],
   "properties": {
+    "mutation": {
+      "const": "moveGrip3d"
+    },
     "id": {
-      "type": "string"
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Grip",
+          "de": "Griff"
+        },
+        "ref": {
+          "kind": "grip",
+          "domain": "grip",
+          "granularity": "grip"
+        },
+        "group": "target",
+        "order": 10
+      }
     },
     "newPosition": {
       "type": "array",
@@ -19,7 +38,21 @@
         "type": "number"
       },
       "minItems": 3,
-      "maxItems": 3
+      "maxItems": 3,
+      "x-semio-ui": {
+        "widget": "vector",
+        "role": "value",
+        "label": {
+          "en": "3D position",
+          "de": "3D-Position"
+        },
+        "group": "geometry",
+        "order": 20,
+        "step": 0.1,
+        "snapSource": {
+          "step": true
+        }
+      }
     },
     "newDirection": {
       "type": "array",
@@ -27,7 +60,21 @@
         "type": "number"
       },
       "minItems": 3,
-      "maxItems": 3
+      "maxItems": 3,
+      "x-semio-ui": {
+        "widget": "vector",
+        "role": "value",
+        "label": {
+          "en": "3D direction",
+          "de": "3D-Richtung"
+        },
+        "description": {
+          "en": "Outward connection direction.",
+          "de": "Nach außen gerichtete Verbindungsrichtung."
+        },
+        "group": "geometry",
+        "order": 30
+      }
     }
   }
 }

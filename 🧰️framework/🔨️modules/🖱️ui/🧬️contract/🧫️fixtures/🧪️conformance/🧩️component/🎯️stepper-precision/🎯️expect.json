@@ -1,0 +1,33 @@
+{
+  "case": "stepper-precision",
+  "kind": "component",
+  "description": "A bounded NumberStepper stepping by a quarter and showing two fraction digits, with absolute and relative bindings.",
+  "outcome": "accept",
+  "limits": null,
+  "tree": {
+    "root": 0,
+    "nodeCount": 1,
+    "shape": [
+      {
+        "id": 0,
+        "key": "#0",
+        "type": "numberStepper",
+        "children": []
+      }
+    ]
+  },
+  "accessibility": [
+    {
+      "id": 0,
+      "label": "Scale",
+      "description": null,
+      "live": "off",
+      "shortcut": null,
+      "hidden": false
+    }
+  ],
+  "actionIds": [
+    "app.setScale@1",
+    "app.nudgeScale@1"
+  ]
+}

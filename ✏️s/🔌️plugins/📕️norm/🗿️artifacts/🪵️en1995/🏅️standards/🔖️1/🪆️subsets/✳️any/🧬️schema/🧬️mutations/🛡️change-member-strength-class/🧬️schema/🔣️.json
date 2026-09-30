@@ -10,10 +10,41 @@
   ],
   "properties": {
     "memberId": {
-      "type": "string"
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Member",
+          "de": "Bauteil"
+        },
+        "description": {
+          "en": "The timber member this mutation addresses.",
+          "de": "Das Holzbauteil, das diese Mutation adressiert."
+        },
+        "ref": {
+          "kind": "member"
+        },
+        "group": "target",
+        "order": 10
+      }
     },
     "newValue": {
-      "type": "string"
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "text",
+        "role": "value",
+        "label": {
+          "en": "Strength class",
+          "de": "Festigkeitsklasse"
+        },
+        "description": {
+          "en": "E.g. C24, GL24h, GL28c, LVL32 or CLT100 (EN 338, EN 14080).",
+          "de": "Z. B. C24, GL24h, GL28c, LVL32 oder CLT100 (EN 338, EN 14080)."
+        },
+        "group": "material",
+        "order": 20
+      }
     }
   }
 }

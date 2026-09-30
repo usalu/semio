@@ -2,7 +2,9 @@
   "$schema": "http://json-schema.org/draft-07/schema#",
   "$id": "https://json.schemas.assets.semio-tech.com/s/stdio/gltf/2.0/any/snapshot.json",
   "title": "GltfSnapshot",
+  "description": "Persisted stdio.gltf snapshot: the typed glTF 2.0 document plus the resolved bytes of every document buffer.",
   "type": "object",
+  "additionalProperties": false,
   "required": [
     "schema",
     "document",
@@ -12,483 +14,30 @@
   "properties": {
     "schema": {
       "type": "string",
-      "x-semio-state": "artifact"
+      "x-semio-state": "artifact",
+      "x-semio-ui": {
+        "label": {
+          "en": "Schema",
+          "de": "Schema"
+        },
+        "description": {
+          "en": "Identifier of the snapshot schema this document follows.",
+          "de": "Kennung des Snapshot-Schemas, dem dieses Dokument folgt."
+        }
+      }
     },
     "document": {
-      "type": "object",
+      "$ref": "#/$defs/GltfDocument",
       "x-semio-state": "artifact",
-      "required": [
-        "asset"
-      ],
-      "properties": {
-        "asset": {
-          "type": "object",
-          "required": [
-            "version"
-          ],
-          "properties": {
-            "version": {
-              "type": "string"
-            },
-            "generator": {
-              "type": "string"
-            },
-            "copyright": {
-              "type": "string"
-            },
-            "minVersion": {
-              "type": "string"
-            },
-            "extensions": {
-              "$ref": "#/$defs/GltfJson"
-            },
-            "extras": {
-              "$ref": "#/$defs/GltfJson"
-            }
-          }
-        },
-        "scene": {
-          "type": "integer",
-          "minimum": 0
-        },
-        "scenes": {
-          "type": "array",
-          "items": {
-            "type": "object",
-            "properties": {
-              "nodes": {
-                "type": "array",
-                "items": {
-                  "type": "integer"
-                }
-              },
-              "name": {
-                "type": "string"
-              }
-            }
-          }
-        },
-        "nodes": {
-          "type": "array",
-          "items": {
-            "type": "object",
-            "properties": {
-              "children": {
-                "type": "array",
-                "items": {
-                  "type": "integer"
-                }
-              },
-              "mesh": {
-                "type": "integer"
-              },
-              "camera": {
-                "type": "integer"
-              },
-              "skin": {
-                "type": "integer"
-              },
-              "matrix": {
-                "type": "array",
-                "items": {
-                  "type": "number"
-                },
-                "minItems": 16,
-                "maxItems": 16
-              },
-              "translation": {
-                "type": "array",
-                "items": {
-                  "type": "number"
-                },
-                "minItems": 3,
-                "maxItems": 3
-              },
-              "rotation": {
-                "type": "array",
-                "items": {
-                  "type": "number"
-                },
-                "minItems": 4,
-                "maxItems": 4
-              },
-              "scale": {
-                "type": "array",
-                "items": {
-                  "type": "number"
-                },
-                "minItems": 3,
-                "maxItems": 3
-              },
-              "weights": {
-                "type": "array",
-                "items": {
-                  "type": "number"
-                }
-              },
-              "name": {
-                "type": "string"
-              }
-            }
-          }
-        },
-        "meshes": {
-          "type": "array",
-          "items": {
-            "type": "object",
-            "properties": {
-              "primitives": {
-                "type": "array",
-                "items": {
-                  "type": "object",
-                  "properties": {
-                    "attributes": {
-                      "type": "object",
-                      "additionalProperties": {
-                        "type": "integer"
-                      }
-                    },
-                    "indices": {
-                      "type": "integer"
-                    },
-                    "material": {
-                      "type": "integer"
-                    },
-                    "mode": {
-                      "type": "integer"
-                    },
-                    "targets": {
-                      "type": "array",
-                      "items": {
-                        "type": "object",
-                        "additionalProperties": {
-                          "type": "integer"
-                        }
-                      }
-                    }
-                  }
-                }
-              },
-              "weights": {
-                "type": "array",
-                "items": {
-                  "type": "number"
-                }
-              },
-              "name": {
-                "type": "string"
-              }
-            }
-          }
-        },
-        "accessors": {
-          "type": "array",
-          "items": {
-            "type": "object",
-            "required": [
-              "componentType",
-              "count",
-              "type"
-            ],
-            "properties": {
-              "bufferView": {
-                "type": "integer"
-              },
-              "byteOffset": {
-                "type": "integer"
-              },
-              "componentType": {
-                "enum": [
-                  5120,
-                  5121,
-                  5122,
-                  5123,
-                  5125,
-                  5126
-                ]
-              },
-              "normalized": {
-                "type": "boolean"
-              },
-              "count": {
-                "type": "integer"
-              },
-              "type": {
-                "enum": [
-                  "SCALAR",
-                  "VEC2",
-                  "VEC3",
-                  "VEC4",
-                  "MAT2",
-                  "MAT3",
-                  "MAT4"
-                ]
-              },
-              "max": {
-                "type": "array",
-                "items": {
-                  "type": "number"
-                }
-              },
-              "min": {
-                "type": "array",
-                "items": {
-                  "type": "number"
-                }
-              },
-              "sparse": {
-                "type": "object"
-              },
-              "name": {
-                "type": "string"
-              }
-            }
-          }
-        },
-        "bufferViews": {
-          "type": "array",
-          "items": {
-            "type": "object",
-            "required": [
-              "buffer",
-              "byteLength"
-            ],
-            "properties": {
-              "buffer": {
-                "type": "integer"
-              },
-              "byteOffset": {
-                "type": "integer"
-              },
-              "byteLength": {
-                "type": "integer"
-              },
-              "byteStride": {
-                "type": "integer"
-              },
-              "target": {
-                "type": "integer"
-              },
-              "name": {
-                "type": "string"
-              }
-            }
-          }
-        },
-        "buffers": {
-          "type": "array",
-          "items": {
-            "type": "object",
-            "required": [
-              "byteLength"
-            ],
-            "properties": {
-              "byteLength": {
-                "type": "integer"
-              },
-              "uri": {
-                "type": "string"
-              },
-              "name": {
-                "type": "string"
-              }
-            }
-          }
-        },
-        "materials": {
-          "type": "array",
-          "items": {
-            "type": "object",
-            "properties": {
-              "name": {
-                "type": "string"
-              },
-              "pbrMetallicRoughness": {
-                "type": "object"
-              },
-              "normalTexture": {
-                "type": "object"
-              },
-              "occlusionTexture": {
-                "type": "object"
-              },
-              "emissiveTexture": {
-                "type": "object"
-              },
-              "emissiveFactor": {
-                "type": "array",
-                "items": {
-                  "type": "number"
-                },
-                "minItems": 3,
-                "maxItems": 3
-              },
-              "alphaMode": {
-                "enum": [
-                  "OPAQUE",
-                  "MASK",
-                  "BLEND"
-                ]
-              },
-              "alphaCutoff": {
-                "type": "number"
-              },
-              "doubleSided": {
-                "type": "boolean"
-              }
-            }
-          }
-        },
-        "textures": {
-          "type": "array",
-          "items": {
-            "type": "object",
-            "properties": {
-              "sampler": {
-                "type": "integer"
-              },
-              "source": {
-                "type": "integer"
-              },
-              "name": {
-                "type": "string"
-              }
-            }
-          }
-        },
-        "images": {
-          "type": "array",
-          "items": {
-            "type": "object",
-            "properties": {
-              "uri": {
-                "type": "string"
-              },
-              "mimeType": {
-                "type": "string"
-              },
-              "bufferView": {
-                "type": "integer"
-              },
-              "name": {
-                "type": "string"
-              }
-            }
-          }
-        },
-        "samplers": {
-          "type": "array",
-          "items": {
-            "type": "object",
-            "properties": {
-              "magFilter": {
-                "type": "integer"
-              },
-              "minFilter": {
-                "type": "integer"
-              },
-              "wrapS": {
-                "type": "integer"
-              },
-              "wrapT": {
-                "type": "integer"
-              },
-              "name": {
-                "type": "string"
-              }
-            }
-          }
-        },
-        "skins": {
-          "type": "array",
-          "items": {
-            "type": "object",
-            "properties": {
-              "inverseBindMatrices": {
-                "type": "integer"
-              },
-              "skeleton": {
-                "type": "integer"
-              },
-              "joints": {
-                "type": "array",
-                "items": {
-                  "type": "integer"
-                }
-              },
-              "name": {
-                "type": "string"
-              }
-            }
-          }
-        },
-        "animations": {
-          "type": "array",
-          "items": {
-            "type": "object",
-            "properties": {
-              "channels": {
-                "type": "array"
-              },
-              "samplers": {
-                "type": "array"
-              },
-              "name": {
-                "type": "string"
-              }
-            }
-          }
-        },
-        "cameras": {
-          "type": "array",
-          "items": {
-            "type": "object",
-            "required": [
-              "type"
-            ],
-            "properties": {
-              "type": {
-                "enum": [
-                  "perspective",
-                  "orthographic"
-                ]
-              },
-              "perspective": {
-                "type": "object"
-              },
-              "orthographic": {
-                "type": "object"
-              },
-              "name": {
-                "type": "string"
-              }
-            }
-          }
-        },
-        "extensionsUsed": {
-          "type": "array",
-          "items": {
-            "type": "string"
-          }
-        },
-        "extensionsRequired": {
-          "type": "array",
-          "items": {
-            "type": "string"
-          }
-        },
-        "extensions": {
-          "$ref": "#/$defs/GltfJson"
-        },
-        "extras": {
-          "$ref": "#/$defs/GltfJson"
+      "x-semio-ui": {
+        "label": {
+          "en": "glTF document",
+          "de": "glTF-Dokument"
         }
       }
     },
     "buffers": {
       "type": "array",
-      "x-semio-state": "artifact",
-      "description": "Resolved raw payload bytes, index-aligned with document.buffers.",
       "items": {
         "type": "array",
         "items": {
@@ -496,19 +45,1276 @@
           "minimum": 0,
           "maximum": 255
         }
+      },
+      "x-semio-state": "artifact",
+      "description": "Resolved raw payload bytes, index-aligned with document.buffers.",
+      "x-semio-ui": {
+        "label": {
+          "en": "Buffer bytes",
+          "de": "Pufferbytes"
+        }
       }
     },
     "sourceForm": {
-      "enum": [
-        "json",
-        "glb"
-      ],
-      "x-semio-state": "artifact"
+      "$ref": "#/$defs/GltfSourceForm",
+      "x-semio-state": "artifact",
+      "x-semio-ui": {
+        "label": {
+          "en": "Source form",
+          "de": "Quellformat"
+        }
+      }
     }
   },
   "$defs": {
+    "GltfAccessor": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "componentType",
+        "count",
+        "type"
+      ],
+      "properties": {
+        "bufferView": {
+          "type": "integer",
+          "minimum": 0,
+          "x-semio-ui": {
+            "label": {
+              "en": "Buffer view",
+              "de": "Pufferansicht"
+            }
+          }
+        },
+        "byteOffset": {
+          "type": "integer",
+          "minimum": 0,
+          "x-semio-ui": {
+            "label": {
+              "en": "Byte offset",
+              "de": "Byte-Versatz"
+            },
+            "unit": "B"
+          }
+        },
+        "componentType": {
+          "$ref": "#/$defs/GltfComponentType",
+          "x-semio-ui": {
+            "label": {
+              "en": "Component type",
+              "de": "Komponententyp"
+            },
+            "description": {
+              "en": "5120 byte, 5121 unsigned byte, 5122 short, 5123 unsigned short, 5125 unsigned int, 5126 float.",
+              "de": "5120 Byte, 5121 Byte ohne Vorzeichen, 5122 Short, 5123 Short ohne Vorzeichen, 5125 Integer ohne Vorzeichen, 5126 Gleitkommazahl."
+            },
+            "snaps": [
+              5120,
+              5121,
+              5122,
+              5123,
+              5125,
+              5126
+            ]
+          }
+        },
+        "normalized": {
+          "type": "boolean",
+          "x-semio-ui": {
+            "label": {
+              "en": "Normalized",
+              "de": "Normalisiert"
+            }
+          }
+        },
+        "count": {
+          "type": "integer",
+          "minimum": 0,
+          "x-semio-ui": {
+            "label": {
+              "en": "Element count",
+              "de": "Elementanzahl"
+            }
+          }
+        },
+        "type": {
+          "$ref": "#/$defs/GltfAccessorType",
+          "x-semio-ui": {
+            "label": {
+              "en": "Element type",
+              "de": "Elementtyp"
+            }
+          }
+        },
+        "max": {
+          "type": "array",
+          "items": {
+            "type": "number"
+          },
+          "x-semio-ui": {
+            "label": {
+              "en": "Maximum",
+              "de": "Maximum"
+            },
+            "description": {
+              "en": "Per-component maximum.",
+              "de": "Maximum je Komponente."
+            }
+          }
+        },
+        "min": {
+          "type": "array",
+          "items": {
+            "type": "number"
+          },
+          "x-semio-ui": {
+            "label": {
+              "en": "Minimum",
+              "de": "Minimum"
+            },
+            "description": {
+              "en": "Per-component minimum.",
+              "de": "Minimum je Komponente."
+            }
+          }
+        },
+        "sparse": {
+          "$ref": "#/$defs/GltfSparseAccessor",
+          "x-semio-ui": {
+            "label": {
+              "en": "Sparse storage",
+              "de": "Sparse-Speicherung"
+            }
+          }
+        },
+        "name": {
+          "type": "string",
+          "x-semio-ui": {
+            "label": {
+              "en": "Name",
+              "de": "Name"
+            }
+          }
+        },
+        "extensions": {
+          "$ref": "#/$defs/GltfJson",
+          "x-semio-ui": {
+            "label": {
+              "en": "Extensions",
+              "de": "Erweiterungen"
+            }
+          }
+        },
+        "extras": {
+          "$ref": "#/$defs/GltfJson",
+          "x-semio-ui": {
+            "label": {
+              "en": "Extras",
+              "de": "Zusatzdaten (extras)"
+            }
+          }
+        }
+      }
+    },
+    "GltfAccessorType": {
+      "type": "string",
+      "enum": [
+        "SCALAR",
+        "VEC2",
+        "VEC3",
+        "VEC4",
+        "MAT2",
+        "MAT3",
+        "MAT4"
+      ],
+      "x-semio-ui": {
+        "options": {
+          "SCALAR": {
+            "en": "Scalar",
+            "de": "Skalar"
+          },
+          "VEC2": {
+            "en": "2D vector",
+            "de": "2D-Vektor"
+          },
+          "VEC3": {
+            "en": "3D vector",
+            "de": "3D-Vektor"
+          },
+          "VEC4": {
+            "en": "4D vector",
+            "de": "4D-Vektor"
+          },
+          "MAT2": {
+            "en": "2×2 matrix",
+            "de": "2×2-Matrix"
+          },
+          "MAT3": {
+            "en": "3×3 matrix",
+            "de": "3×3-Matrix"
+          },
+          "MAT4": {
+            "en": "4×4 matrix",
+            "de": "4×4-Matrix"
+          }
+        }
+      },
+      "x-semio-formats": [
+        "🔣️jsonschema",
+        "🦀️rust",
+        "🟦️typescript"
+      ]
+    },
+    "GltfAlphaMode": {
+      "type": "string",
+      "enum": [
+        "OPAQUE",
+        "MASK",
+        "BLEND"
+      ],
+      "x-semio-ui": {
+        "options": {
+          "OPAQUE": {
+            "en": "Opaque",
+            "de": "Deckend"
+          },
+          "MASK": {
+            "en": "Mask",
+            "de": "Maskiert"
+          },
+          "BLEND": {
+            "en": "Blend",
+            "de": "Überblendet"
+          }
+        }
+      },
+      "x-semio-formats": [
+        "🔣️jsonschema",
+        "🦀️rust",
+        "🟦️typescript",
+        "🔗️graphql"
+      ]
+    },
+    "GltfAnimation": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "channels": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/GltfAnimationChannel"
+          },
+          "x-semio-ui": {
+            "label": {
+              "en": "Channels",
+              "de": "Kanäle"
+            }
+          }
+        },
+        "samplers": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/GltfAnimationSampler"
+          },
+          "x-semio-ui": {
+            "label": {
+              "en": "Animation samplers",
+              "de": "Animations-Sampler"
+            }
+          }
+        },
+        "name": {
+          "type": "string",
+          "x-semio-ui": {
+            "label": {
+              "en": "Name",
+              "de": "Name"
+            }
+          }
+        },
+        "extensions": {
+          "$ref": "#/$defs/GltfJson",
+          "x-semio-ui": {
+            "label": {
+              "en": "Extensions",
+              "de": "Erweiterungen"
+            }
+          }
+        },
+        "extras": {
+          "$ref": "#/$defs/GltfJson",
+          "x-semio-ui": {
+            "label": {
+              "en": "Extras",
+              "de": "Zusatzdaten (extras)"
+            }
+          }
+        }
+      }
+    },
+    "GltfAnimationChannel": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "sampler",
+        "target"
+      ],
+      "properties": {
+        "sampler": {
+          "type": "integer",
+          "minimum": 0,
+          "x-semio-ui": {
+            "label": {
+              "en": "Animation sampler",
+              "de": "Animations-Sampler"
+            }
+          }
+        },
+        "target": {
+          "$ref": "#/$defs/GltfAnimationChannelTarget",
+          "x-semio-ui": {
+            "label": {
+              "en": "Animated property",
+              "de": "Animierte Eigenschaft"
+            }
+          }
+        },
+        "extensions": {
+          "$ref": "#/$defs/GltfJson",
+          "x-semio-ui": {
+            "label": {
+              "en": "Extensions",
+              "de": "Erweiterungen"
+            }
+          }
+        },
+        "extras": {
+          "$ref": "#/$defs/GltfJson",
+          "x-semio-ui": {
+            "label": {
+              "en": "Extras",
+              "de": "Zusatzdaten (extras)"
+            }
+          }
+        }
+      }
+    },
+    "GltfAnimationChannelTarget": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "path"
+      ],
+      "properties": {
+        "node": {
+          "type": "integer",
+          "minimum": 0,
+          "x-semio-ui": {
+            "label": {
+              "en": "Node",
+              "de": "Knoten"
+            },
+            "description": {
+              "en": "Index of the node, counted from 0.",
+              "de": "Index des Knotens, ab 0 gezählt."
+            }
+          }
+        },
+        "path": {
+          "$ref": "#/$defs/GltfAnimationPath",
+          "x-semio-ui": {
+            "label": {
+              "en": "Animated property",
+              "de": "Animierte Eigenschaft"
+            }
+          }
+        },
+        "extensions": {
+          "$ref": "#/$defs/GltfJson",
+          "x-semio-ui": {
+            "label": {
+              "en": "Extensions",
+              "de": "Erweiterungen"
+            }
+          }
+        },
+        "extras": {
+          "$ref": "#/$defs/GltfJson",
+          "x-semio-ui": {
+            "label": {
+              "en": "Extras",
+              "de": "Zusatzdaten (extras)"
+            }
+          }
+        }
+      }
+    },
+    "GltfAnimationPath": {
+      "type": "string",
+      "enum": [
+        "translation",
+        "rotation",
+        "scale",
+        "weights"
+      ],
+      "x-semio-ui": {
+        "options": {
+          "translation": {
+            "en": "Translation",
+            "de": "Verschiebung"
+          },
+          "rotation": {
+            "en": "Rotation",
+            "de": "Drehung"
+          },
+          "scale": {
+            "en": "Scale",
+            "de": "Skalierung"
+          },
+          "weights": {
+            "en": "Morph weights",
+            "de": "Morph-Gewichte"
+          }
+        }
+      },
+      "x-semio-formats": [
+        "🔣️jsonschema",
+        "🦀️rust",
+        "🟦️typescript",
+        "🔗️graphql"
+      ]
+    },
+    "GltfAnimationSampler": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "input",
+        "output"
+      ],
+      "properties": {
+        "input": {
+          "type": "integer",
+          "minimum": 0,
+          "x-semio-ui": {
+            "label": {
+              "en": "Keyframe times",
+              "de": "Keyframe-Zeiten"
+            },
+            "description": {
+              "en": "Accessor with the keyframe input times.",
+              "de": "Accessor mit den Keyframe-Zeiten."
+            }
+          }
+        },
+        "interpolation": {
+          "$ref": "#/$defs/GltfInterpolation",
+          "x-semio-ui": {
+            "label": {
+              "en": "Interpolation",
+              "de": "Interpolation"
+            }
+          }
+        },
+        "output": {
+          "type": "integer",
+          "minimum": 0,
+          "x-semio-ui": {
+            "label": {
+              "en": "Keyframe values",
+              "de": "Keyframe-Werte"
+            },
+            "description": {
+              "en": "Accessor with the keyframe output values.",
+              "de": "Accessor mit den Keyframe-Werten."
+            }
+          }
+        },
+        "extensions": {
+          "$ref": "#/$defs/GltfJson",
+          "x-semio-ui": {
+            "label": {
+              "en": "Extensions",
+              "de": "Erweiterungen"
+            }
+          }
+        },
+        "extras": {
+          "$ref": "#/$defs/GltfJson",
+          "x-semio-ui": {
+            "label": {
+              "en": "Extras",
+              "de": "Zusatzdaten (extras)"
+            }
+          }
+        }
+      }
+    },
+    "GltfAsset": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "version"
+      ],
+      "properties": {
+        "version": {
+          "type": "string",
+          "x-semio-ui": {
+            "label": {
+              "en": "glTF version",
+              "de": "glTF-Version"
+            }
+          }
+        },
+        "generator": {
+          "type": "string",
+          "x-semio-ui": {
+            "label": {
+              "en": "Generator",
+              "de": "Generator"
+            },
+            "description": {
+              "en": "Tool that produced the asset.",
+              "de": "Werkzeug, das das Asset erzeugt hat."
+            }
+          }
+        },
+        "copyright": {
+          "type": "string",
+          "x-semio-ui": {
+            "label": {
+              "en": "Copyright",
+              "de": "Urheberrechtsvermerk"
+            }
+          }
+        },
+        "minVersion": {
+          "type": "string",
+          "x-semio-ui": {
+            "label": {
+              "en": "Minimum version",
+              "de": "Mindestversion"
+            },
+            "description": {
+              "en": "Minimum glTF version a loader must support.",
+              "de": "glTF-Mindestversion, die ein Lader unterstützen muss."
+            }
+          }
+        },
+        "extensions": {
+          "$ref": "#/$defs/GltfJson",
+          "x-semio-ui": {
+            "label": {
+              "en": "Extensions",
+              "de": "Erweiterungen"
+            }
+          }
+        },
+        "extras": {
+          "$ref": "#/$defs/GltfJson",
+          "x-semio-ui": {
+            "label": {
+              "en": "Extras",
+              "de": "Zusatzdaten (extras)"
+            }
+          }
+        }
+      }
+    },
+    "GltfBuffer": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "byteLength"
+      ],
+      "properties": {
+        "byteLength": {
+          "type": "integer",
+          "minimum": 0,
+          "x-semio-ui": {
+            "label": {
+              "en": "Byte length",
+              "de": "Byte-Länge"
+            },
+            "unit": "B"
+          }
+        },
+        "uri": {
+          "type": "string",
+          "x-semio-ui": {
+            "label": {
+              "en": "URI",
+              "de": "URI"
+            }
+          }
+        },
+        "name": {
+          "type": "string",
+          "x-semio-ui": {
+            "label": {
+              "en": "Name",
+              "de": "Name"
+            }
+          }
+        },
+        "extensions": {
+          "$ref": "#/$defs/GltfJson",
+          "x-semio-ui": {
+            "label": {
+              "en": "Extensions",
+              "de": "Erweiterungen"
+            }
+          }
+        },
+        "extras": {
+          "$ref": "#/$defs/GltfJson",
+          "x-semio-ui": {
+            "label": {
+              "en": "Extras",
+              "de": "Zusatzdaten (extras)"
+            }
+          }
+        }
+      }
+    },
+    "GltfBufferView": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "buffer",
+        "byteLength"
+      ],
+      "properties": {
+        "buffer": {
+          "type": "integer",
+          "minimum": 0,
+          "x-semio-ui": {
+            "label": {
+              "en": "Buffer",
+              "de": "Puffer"
+            },
+            "description": {
+              "en": "Index of the buffer, counted from 0.",
+              "de": "Index des Puffers, ab 0 gezählt."
+            }
+          }
+        },
+        "byteOffset": {
+          "type": "integer",
+          "minimum": 0,
+          "x-semio-ui": {
+            "label": {
+              "en": "Byte offset",
+              "de": "Byte-Versatz"
+            },
+            "unit": "B"
+          }
+        },
+        "byteLength": {
+          "type": "integer",
+          "minimum": 0,
+          "x-semio-ui": {
+            "label": {
+              "en": "Byte length",
+              "de": "Byte-Länge"
+            },
+            "unit": "B"
+          }
+        },
+        "byteStride": {
+          "type": "integer",
+          "minimum": 0,
+          "x-semio-ui": {
+            "label": {
+              "en": "Byte stride",
+              "de": "Byte-Schrittweite"
+            },
+            "unit": "B"
+          }
+        },
+        "target": {
+          "type": "integer",
+          "minimum": 0,
+          "x-semio-ui": {
+            "label": {
+              "en": "Binding target",
+              "de": "Bindungsziel"
+            },
+            "description": {
+              "en": "34962 vertex attributes (ARRAY_BUFFER), 34963 indices (ELEMENT_ARRAY_BUFFER).",
+              "de": "34962 Vertexattribute (ARRAY_BUFFER), 34963 Indizes (ELEMENT_ARRAY_BUFFER)."
+            }
+          }
+        },
+        "name": {
+          "type": "string",
+          "x-semio-ui": {
+            "label": {
+              "en": "Name",
+              "de": "Name"
+            }
+          }
+        },
+        "extensions": {
+          "$ref": "#/$defs/GltfJson",
+          "x-semio-ui": {
+            "label": {
+              "en": "Extensions",
+              "de": "Erweiterungen"
+            }
+          }
+        },
+        "extras": {
+          "$ref": "#/$defs/GltfJson",
+          "x-semio-ui": {
+            "label": {
+              "en": "Extras",
+              "de": "Zusatzdaten (extras)"
+            }
+          }
+        }
+      }
+    },
+    "GltfCamera": {
+      "oneOf": [
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "type",
+            "perspective"
+          ],
+          "properties": {
+            "type": {
+              "const": "perspective",
+              "x-semio-ui": {
+                "label": {
+                  "en": "Projection type",
+                  "de": "Projektionsart"
+                }
+              }
+            },
+            "perspective": {
+              "$ref": "#/$defs/GltfPerspective",
+              "x-semio-ui": {
+                "label": {
+                  "en": "Perspective projection",
+                  "de": "Perspektivische Projektion"
+                }
+              }
+            },
+            "name": {
+              "type": "string",
+              "x-semio-ui": {
+                "label": {
+                  "en": "Name",
+                  "de": "Name"
+                }
+              }
+            },
+            "extensions": {
+              "$ref": "#/$defs/GltfJson",
+              "x-semio-ui": {
+                "label": {
+                  "en": "Extensions",
+                  "de": "Erweiterungen"
+                }
+              }
+            },
+            "extras": {
+              "$ref": "#/$defs/GltfJson",
+              "x-semio-ui": {
+                "label": {
+                  "en": "Extras",
+                  "de": "Zusatzdaten (extras)"
+                }
+              }
+            }
+          },
+          "x-semio-ui": {
+            "label": {
+              "en": "Perspective projection",
+              "de": "Perspektivische Projektion"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "type",
+            "orthographic"
+          ],
+          "properties": {
+            "type": {
+              "const": "orthographic",
+              "x-semio-ui": {
+                "label": {
+                  "en": "Projection type",
+                  "de": "Projektionsart"
+                }
+              }
+            },
+            "orthographic": {
+              "$ref": "#/$defs/GltfOrthographic",
+              "x-semio-ui": {
+                "label": {
+                  "en": "Orthographic projection",
+                  "de": "Orthografische Projektion"
+                }
+              }
+            },
+            "name": {
+              "type": "string",
+              "x-semio-ui": {
+                "label": {
+                  "en": "Name",
+                  "de": "Name"
+                }
+              }
+            },
+            "extensions": {
+              "$ref": "#/$defs/GltfJson",
+              "x-semio-ui": {
+                "label": {
+                  "en": "Extensions",
+                  "de": "Erweiterungen"
+                }
+              }
+            },
+            "extras": {
+              "$ref": "#/$defs/GltfJson",
+              "x-semio-ui": {
+                "label": {
+                  "en": "Extras",
+                  "de": "Zusatzdaten (extras)"
+                }
+              }
+            }
+          },
+          "x-semio-ui": {
+            "label": {
+              "en": "Orthographic projection",
+              "de": "Orthografische Projektion"
+            }
+          }
+        }
+      ]
+    },
+    "GltfCameraProjection": {
+      "oneOf": [
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "type",
+            "perspective"
+          ],
+          "properties": {
+            "type": {
+              "const": "perspective",
+              "x-semio-ui": {
+                "label": {
+                  "en": "Projection type",
+                  "de": "Projektionsart"
+                }
+              }
+            },
+            "perspective": {
+              "$ref": "#/$defs/GltfPerspective",
+              "x-semio-ui": {
+                "label": {
+                  "en": "Perspective projection",
+                  "de": "Perspektivische Projektion"
+                }
+              }
+            }
+          },
+          "x-semio-ui": {
+            "label": {
+              "en": "Perspective projection",
+              "de": "Perspektivische Projektion"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "type",
+            "orthographic"
+          ],
+          "properties": {
+            "type": {
+              "const": "orthographic",
+              "x-semio-ui": {
+                "label": {
+                  "en": "Projection type",
+                  "de": "Projektionsart"
+                }
+              }
+            },
+            "orthographic": {
+              "$ref": "#/$defs/GltfOrthographic",
+              "x-semio-ui": {
+                "label": {
+                  "en": "Orthographic projection",
+                  "de": "Orthografische Projektion"
+                }
+              }
+            }
+          },
+          "x-semio-ui": {
+            "label": {
+              "en": "Orthographic projection",
+              "de": "Orthografische Projektion"
+            }
+          }
+        }
+      ],
+      "x-semio-formats": [
+        "🔣️jsonschema",
+        "🦀️rust",
+        "🟦️typescript"
+      ]
+    },
+    "GltfComponentType": {
+      "description": "accessor.componentType as its numeric glTF code.",
+      "type": "integer",
+      "enum": [
+        5120,
+        5121,
+        5122,
+        5123,
+        5125,
+        5126
+      ],
+      "minimum": 5120,
+      "maximum": 5126,
+      "x-semio-formats": [
+        "🔣️jsonschema",
+        "🦀️rust",
+        "🟦️typescript"
+      ]
+    },
+    "GltfDocument": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "asset"
+      ],
+      "properties": {
+        "asset": {
+          "$ref": "#/$defs/GltfAsset",
+          "x-semio-ui": {
+            "label": {
+              "en": "Asset metadata",
+              "de": "Asset-Metadaten"
+            }
+          }
+        },
+        "scene": {
+          "type": "integer",
+          "minimum": 0,
+          "x-semio-ui": {
+            "label": {
+              "en": "Default scene",
+              "de": "Standardszene"
+            }
+          }
+        },
+        "scenes": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/GltfScene"
+          },
+          "x-semio-ui": {
+            "label": {
+              "en": "Scenes",
+              "de": "Szenen"
+            }
+          }
+        },
+        "nodes": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/GltfNode"
+          },
+          "x-semio-ui": {
+            "label": {
+              "en": "Nodes",
+              "de": "Knoten"
+            }
+          }
+        },
+        "meshes": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/GltfMesh"
+          },
+          "x-semio-ui": {
+            "label": {
+              "en": "Meshes",
+              "de": "Netze"
+            }
+          }
+        },
+        "accessors": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/GltfAccessor"
+          },
+          "x-semio-ui": {
+            "label": {
+              "en": "Accessors",
+              "de": "Accessoren"
+            }
+          }
+        },
+        "bufferViews": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/GltfBufferView"
+          },
+          "x-semio-ui": {
+            "label": {
+              "en": "Buffer views",
+              "de": "Pufferansichten"
+            }
+          }
+        },
+        "buffers": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/GltfBuffer"
+          },
+          "x-semio-ui": {
+            "label": {
+              "en": "Buffers",
+              "de": "Puffer"
+            }
+          }
+        },
+        "materials": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/GltfMaterial"
+          },
+          "x-semio-ui": {
+            "label": {
+              "en": "Materials",
+              "de": "Materialien"
+            }
+          }
+        },
+        "textures": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/GltfTexture"
+          },
+          "x-semio-ui": {
+            "label": {
+              "en": "Textures",
+              "de": "Texturen"
+            }
+          }
+        },
+        "images": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/GltfImage"
+          },
+          "x-semio-ui": {
+            "label": {
+              "en": "Images",
+              "de": "Bilder"
+            }
+          }
+        },
+        "samplers": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/GltfSampler"
+          },
+          "x-semio-ui": {
+            "label": {
+              "en": "Texture samplers",
+              "de": "Textur-Sampler"
+            }
+          }
+        },
+        "skins": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/GltfSkin"
+          },
+          "x-semio-ui": {
+            "label": {
+              "en": "Skins",
+              "de": "Skins"
+            }
+          }
+        },
+        "animations": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/GltfAnimation"
+          },
+          "x-semio-ui": {
+            "label": {
+              "en": "Animations",
+              "de": "Animationen"
+            }
+          }
+        },
+        "cameras": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/GltfCamera"
+          },
+          "x-semio-ui": {
+            "label": {
+              "en": "Cameras",
+              "de": "Kameras"
+            }
+          }
+        },
+        "extensionsUsed": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "x-semio-ui": {
+            "label": {
+              "en": "Extensions used",
+              "de": "Verwendete Erweiterungen"
+            }
+          }
+        },
+        "extensionsRequired": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "x-semio-ui": {
+            "label": {
+              "en": "Extensions required",
+              "de": "Erforderliche Erweiterungen"
+            }
+          }
+        },
+        "extensions": {
+          "$ref": "#/$defs/GltfJson",
+          "x-semio-ui": {
+            "label": {
+              "en": "Extensions",
+              "de": "Erweiterungen"
+            }
+          }
+        },
+        "extras": {
+          "$ref": "#/$defs/GltfJson",
+          "x-semio-ui": {
+            "label": {
+              "en": "Extras",
+              "de": "Zusatzdaten (extras)"
+            }
+          }
+        }
+      }
+    },
+    "GltfImage": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "uri": {
+          "type": "string",
+          "x-semio-ui": {
+            "label": {
+              "en": "URI",
+              "de": "URI"
+            }
+          }
+        },
+        "mimeType": {
+          "type": "string",
+          "x-semio-ui": {
+            "label": {
+              "en": "Media type",
+              "de": "Medientyp"
+            }
+          }
+        },
+        "bufferView": {
+          "type": "integer",
+          "minimum": 0,
+          "x-semio-ui": {
+            "label": {
+              "en": "Buffer view",
+              "de": "Pufferansicht"
+            }
+          }
+        },
+        "name": {
+          "type": "string",
+          "x-semio-ui": {
+            "label": {
+              "en": "Name",
+              "de": "Name"
+            }
+          }
+        },
+        "extensions": {
+          "$ref": "#/$defs/GltfJson",
+          "x-semio-ui": {
+            "label": {
+              "en": "Extensions",
+              "de": "Erweiterungen"
+            }
+          }
+        },
+        "extras": {
+          "$ref": "#/$defs/GltfJson",
+          "x-semio-ui": {
+            "label": {
+              "en": "Extras",
+              "de": "Zusatzdaten (extras)"
+            }
+          }
+        }
+      }
+    },
+    "GltfInterpolation": {
+      "type": "string",
+      "enum": [
+        "LINEAR",
+        "STEP",
+        "CUBICSPLINE"
+      ],
+      "x-semio-ui": {
+        "options": {
+          "LINEAR": {
+            "en": "Linear",
+            "de": "Linear"
+          },
+          "STEP": {
+            "en": "Step",
+            "de": "Stufenweise"
+          },
+          "CUBICSPLINE": {
+            "en": "Cubic spline",
+            "de": "Kubischer Spline"
+          }
+        }
+      },
+      "x-semio-formats": [
+        "🔣️jsonschema",
+        "🦀️rust",
+        "🟦️typescript",
+        "🔗️graphql"
+      ]
+    },
     "GltfJson": {
-      "description": "This artifact's own JSON value enum (extras/extensions).",
+      "description": "Any JSON value: a glTF `extras`/`extensions` slot (GltfJson).",
       "anyOf": [
         {
           "type": "null"
@@ -534,7 +1340,1245 @@
             "$ref": "#/$defs/GltfJson"
           }
         }
+      ],
+      "x-semio-formats": [
+        "🔣️jsonschema",
+        "🦀️rust",
+        "🟦️typescript",
+        "🔗️graphql"
       ]
+    },
+    "GltfMaterial": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "name": {
+          "type": "string",
+          "x-semio-ui": {
+            "label": {
+              "en": "Name",
+              "de": "Name"
+            }
+          }
+        },
+        "pbrMetallicRoughness": {
+          "$ref": "#/$defs/GltfPbrMetallicRoughness",
+          "x-semio-ui": {
+            "label": {
+              "en": "PBR metallic-roughness",
+              "de": "PBR Metallic-Roughness"
+            }
+          }
+        },
+        "normalTexture": {
+          "$ref": "#/$defs/GltfNormalTextureInfo",
+          "x-semio-ui": {
+            "label": {
+              "en": "Normal texture",
+              "de": "Normalentextur"
+            }
+          }
+        },
+        "occlusionTexture": {
+          "$ref": "#/$defs/GltfOcclusionTextureInfo",
+          "x-semio-ui": {
+            "label": {
+              "en": "Occlusion texture",
+              "de": "Okklusionstextur"
+            }
+          }
+        },
+        "emissiveTexture": {
+          "$ref": "#/$defs/GltfTextureInfo",
+          "x-semio-ui": {
+            "label": {
+              "en": "Emissive texture",
+              "de": "Emissionstextur"
+            }
+          }
+        },
+        "emissiveFactor": {
+          "type": "array",
+          "items": {
+            "type": "number"
+          },
+          "minItems": 3,
+          "maxItems": 3,
+          "x-semio-ui": {
+            "label": {
+              "en": "Emissive factor",
+              "de": "Emissionsfaktor"
+            }
+          }
+        },
+        "alphaMode": {
+          "$ref": "#/$defs/GltfAlphaMode",
+          "x-semio-ui": {
+            "label": {
+              "en": "Alpha mode",
+              "de": "Alphamodus"
+            }
+          }
+        },
+        "alphaCutoff": {
+          "type": "number",
+          "x-semio-ui": {
+            "label": {
+              "en": "Alpha cutoff",
+              "de": "Alpha-Schwellenwert"
+            }
+          }
+        },
+        "doubleSided": {
+          "type": "boolean",
+          "x-semio-ui": {
+            "label": {
+              "en": "Double-sided",
+              "de": "Doppelseitig"
+            }
+          }
+        },
+        "extensions": {
+          "$ref": "#/$defs/GltfJson",
+          "x-semio-ui": {
+            "label": {
+              "en": "Extensions",
+              "de": "Erweiterungen"
+            }
+          }
+        },
+        "extras": {
+          "$ref": "#/$defs/GltfJson",
+          "x-semio-ui": {
+            "label": {
+              "en": "Extras",
+              "de": "Zusatzdaten (extras)"
+            }
+          }
+        }
+      }
+    },
+    "GltfMesh": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "primitives": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/GltfPrimitive"
+          },
+          "x-semio-ui": {
+            "label": {
+              "en": "Primitives",
+              "de": "Primitive"
+            }
+          }
+        },
+        "weights": {
+          "type": "array",
+          "items": {
+            "type": "number"
+          },
+          "x-semio-ui": {
+            "label": {
+              "en": "Morph weights",
+              "de": "Morph-Gewichte"
+            }
+          }
+        },
+        "name": {
+          "type": "string",
+          "x-semio-ui": {
+            "label": {
+              "en": "Name",
+              "de": "Name"
+            }
+          }
+        },
+        "extensions": {
+          "$ref": "#/$defs/GltfJson",
+          "x-semio-ui": {
+            "label": {
+              "en": "Extensions",
+              "de": "Erweiterungen"
+            }
+          }
+        },
+        "extras": {
+          "$ref": "#/$defs/GltfJson",
+          "x-semio-ui": {
+            "label": {
+              "en": "Extras",
+              "de": "Zusatzdaten (extras)"
+            }
+          }
+        }
+      }
+    },
+    "GltfMorphTarget": {
+      "description": "Attribute semantic to accessor index (GltfMorphTarget).",
+      "type": "object",
+      "additionalProperties": {
+        "type": "integer",
+        "minimum": 0
+      }
+    },
+    "GltfNode": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "children": {
+          "type": "array",
+          "items": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "x-semio-ui": {
+            "label": {
+              "en": "Children",
+              "de": "Kindknoten"
+            }
+          }
+        },
+        "mesh": {
+          "type": "integer",
+          "minimum": 0,
+          "x-semio-ui": {
+            "label": {
+              "en": "Mesh",
+              "de": "Netz"
+            },
+            "description": {
+              "en": "Index of the mesh, counted from 0.",
+              "de": "Index des Netzes, ab 0 gezählt."
+            }
+          }
+        },
+        "camera": {
+          "type": "integer",
+          "minimum": 0,
+          "x-semio-ui": {
+            "label": {
+              "en": "Camera",
+              "de": "Kamera"
+            },
+            "description": {
+              "en": "Index of the camera, counted from 0.",
+              "de": "Index der Kamera, ab 0 gezählt."
+            }
+          }
+        },
+        "skin": {
+          "type": "integer",
+          "minimum": 0,
+          "x-semio-ui": {
+            "label": {
+              "en": "Skin",
+              "de": "Skin"
+            },
+            "description": {
+              "en": "Index of the skin, counted from 0.",
+              "de": "Index des Skins, ab 0 gezählt."
+            }
+          }
+        },
+        "matrix": {
+          "type": "array",
+          "items": {
+            "type": "number"
+          },
+          "minItems": 16,
+          "maxItems": 16,
+          "x-semio-ui": {
+            "label": {
+              "en": "Matrix",
+              "de": "Matrix"
+            },
+            "description": {
+              "en": "4×4 transform, column-major.",
+              "de": "4×4-Transformationsmatrix, spaltenweise."
+            }
+          }
+        },
+        "translation": {
+          "type": "array",
+          "items": {
+            "type": "number"
+          },
+          "minItems": 3,
+          "maxItems": 3,
+          "x-semio-ui": {
+            "label": {
+              "en": "Translation",
+              "de": "Verschiebung"
+            }
+          }
+        },
+        "rotation": {
+          "type": "array",
+          "items": {
+            "type": "number"
+          },
+          "minItems": 4,
+          "maxItems": 4,
+          "x-semio-ui": {
+            "label": {
+              "en": "Rotation",
+              "de": "Drehung"
+            },
+            "description": {
+              "en": "Unit quaternion (x, y, z, w).",
+              "de": "Einheitsquaternion (x, y, z, w)."
+            }
+          }
+        },
+        "scale": {
+          "type": "array",
+          "items": {
+            "type": "number"
+          },
+          "minItems": 3,
+          "maxItems": 3,
+          "x-semio-ui": {
+            "label": {
+              "en": "Scale",
+              "de": "Skalierung"
+            }
+          }
+        },
+        "weights": {
+          "type": "array",
+          "items": {
+            "type": "number"
+          },
+          "x-semio-ui": {
+            "label": {
+              "en": "Morph weights",
+              "de": "Morph-Gewichte"
+            }
+          }
+        },
+        "name": {
+          "type": "string",
+          "x-semio-ui": {
+            "label": {
+              "en": "Name",
+              "de": "Name"
+            }
+          }
+        },
+        "extensions": {
+          "$ref": "#/$defs/GltfJson",
+          "x-semio-ui": {
+            "label": {
+              "en": "Extensions",
+              "de": "Erweiterungen"
+            }
+          }
+        },
+        "extras": {
+          "$ref": "#/$defs/GltfJson",
+          "x-semio-ui": {
+            "label": {
+              "en": "Extras",
+              "de": "Zusatzdaten (extras)"
+            }
+          }
+        }
+      }
+    },
+    "GltfNormalTextureInfo": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "index"
+      ],
+      "properties": {
+        "index": {
+          "type": "integer",
+          "minimum": 0,
+          "x-semio-ui": {
+            "label": {
+              "en": "Texture",
+              "de": "Textur"
+            },
+            "description": {
+              "en": "Index of the texture, counted from 0.",
+              "de": "Index der Textur, ab 0 gezählt."
+            }
+          }
+        },
+        "texCoord": {
+          "type": "integer",
+          "minimum": 0,
+          "x-semio-ui": {
+            "label": {
+              "en": "Texture coordinate set",
+              "de": "Texturkoordinatensatz"
+            },
+            "description": {
+              "en": "n of TEXCOORD_n.",
+              "de": "n von TEXCOORD_n."
+            }
+          }
+        },
+        "scale": {
+          "type": "number",
+          "x-semio-ui": {
+            "label": {
+              "en": "Normal scale",
+              "de": "Normalen-Skalierung"
+            }
+          }
+        },
+        "extensions": {
+          "$ref": "#/$defs/GltfJson",
+          "x-semio-ui": {
+            "label": {
+              "en": "Extensions",
+              "de": "Erweiterungen"
+            }
+          }
+        },
+        "extras": {
+          "$ref": "#/$defs/GltfJson",
+          "x-semio-ui": {
+            "label": {
+              "en": "Extras",
+              "de": "Zusatzdaten (extras)"
+            }
+          }
+        }
+      }
+    },
+    "GltfOcclusionTextureInfo": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "index"
+      ],
+      "properties": {
+        "index": {
+          "type": "integer",
+          "minimum": 0,
+          "x-semio-ui": {
+            "label": {
+              "en": "Texture",
+              "de": "Textur"
+            },
+            "description": {
+              "en": "Index of the texture, counted from 0.",
+              "de": "Index der Textur, ab 0 gezählt."
+            }
+          }
+        },
+        "texCoord": {
+          "type": "integer",
+          "minimum": 0,
+          "x-semio-ui": {
+            "label": {
+              "en": "Texture coordinate set",
+              "de": "Texturkoordinatensatz"
+            },
+            "description": {
+              "en": "n of TEXCOORD_n.",
+              "de": "n von TEXCOORD_n."
+            }
+          }
+        },
+        "strength": {
+          "type": "number",
+          "x-semio-ui": {
+            "label": {
+              "en": "Occlusion strength",
+              "de": "Okklusionsstärke"
+            }
+          }
+        },
+        "extensions": {
+          "$ref": "#/$defs/GltfJson",
+          "x-semio-ui": {
+            "label": {
+              "en": "Extensions",
+              "de": "Erweiterungen"
+            }
+          }
+        },
+        "extras": {
+          "$ref": "#/$defs/GltfJson",
+          "x-semio-ui": {
+            "label": {
+              "en": "Extras",
+              "de": "Zusatzdaten (extras)"
+            }
+          }
+        }
+      }
+    },
+    "GltfOrthographic": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "xmag",
+        "ymag",
+        "zfar",
+        "znear"
+      ],
+      "properties": {
+        "xmag": {
+          "type": "number",
+          "x-semio-ui": {
+            "label": {
+              "en": "Horizontal magnification",
+              "de": "Horizontale Vergrößerung"
+            }
+          }
+        },
+        "ymag": {
+          "type": "number",
+          "x-semio-ui": {
+            "label": {
+              "en": "Vertical magnification",
+              "de": "Vertikale Vergrößerung"
+            }
+          }
+        },
+        "zfar": {
+          "type": "number",
+          "x-semio-ui": {
+            "label": {
+              "en": "Far clipping plane",
+              "de": "Hintere Schnittebene"
+            }
+          }
+        },
+        "znear": {
+          "type": "number",
+          "x-semio-ui": {
+            "label": {
+              "en": "Near clipping plane",
+              "de": "Vordere Schnittebene"
+            }
+          }
+        },
+        "extensions": {
+          "$ref": "#/$defs/GltfJson",
+          "x-semio-ui": {
+            "label": {
+              "en": "Extensions",
+              "de": "Erweiterungen"
+            }
+          }
+        },
+        "extras": {
+          "$ref": "#/$defs/GltfJson",
+          "x-semio-ui": {
+            "label": {
+              "en": "Extras",
+              "de": "Zusatzdaten (extras)"
+            }
+          }
+        }
+      }
+    },
+    "GltfPbrMetallicRoughness": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "baseColorFactor": {
+          "type": "array",
+          "items": {
+            "type": "number"
+          },
+          "minItems": 4,
+          "maxItems": 4,
+          "x-semio-ui": {
+            "label": {
+              "en": "Base color factor",
+              "de": "Grundfarbfaktor"
+            },
+            "description": {
+              "en": "Linear RGBA multipliers.",
+              "de": "Lineare RGBA-Faktoren."
+            }
+          }
+        },
+        "baseColorTexture": {
+          "$ref": "#/$defs/GltfTextureInfo",
+          "x-semio-ui": {
+            "label": {
+              "en": "Base color texture",
+              "de": "Grundfarbtextur"
+            }
+          }
+        },
+        "metallicFactor": {
+          "type": "number",
+          "x-semio-ui": {
+            "label": {
+              "en": "Metallic factor",
+              "de": "Metallizitätsfaktor"
+            }
+          }
+        },
+        "roughnessFactor": {
+          "type": "number",
+          "x-semio-ui": {
+            "label": {
+              "en": "Roughness factor",
+              "de": "Rauheitsfaktor"
+            }
+          }
+        },
+        "metallicRoughnessTexture": {
+          "$ref": "#/$defs/GltfTextureInfo",
+          "x-semio-ui": {
+            "label": {
+              "en": "Metallic-roughness texture",
+              "de": "Metallizitäts-Rauheits-Textur"
+            }
+          }
+        },
+        "extensions": {
+          "$ref": "#/$defs/GltfJson",
+          "x-semio-ui": {
+            "label": {
+              "en": "Extensions",
+              "de": "Erweiterungen"
+            }
+          }
+        },
+        "extras": {
+          "$ref": "#/$defs/GltfJson",
+          "x-semio-ui": {
+            "label": {
+              "en": "Extras",
+              "de": "Zusatzdaten (extras)"
+            }
+          }
+        }
+      }
+    },
+    "GltfPerspective": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "yfov",
+        "znear"
+      ],
+      "properties": {
+        "aspectRatio": {
+          "type": "number",
+          "x-semio-ui": {
+            "label": {
+              "en": "Aspect ratio",
+              "de": "Seitenverhältnis"
+            },
+            "description": {
+              "en": "Width over height of the viewport.",
+              "de": "Breite zu Höhe des Sichtfensters."
+            }
+          }
+        },
+        "yfov": {
+          "type": "number",
+          "x-semio-ui": {
+            "label": {
+              "en": "Vertical field of view",
+              "de": "Vertikaler Öffnungswinkel"
+            },
+            "description": {
+              "en": "In radians.",
+              "de": "Im Bogenmaß."
+            }
+          }
+        },
+        "zfar": {
+          "type": "number",
+          "x-semio-ui": {
+            "label": {
+              "en": "Far clipping plane",
+              "de": "Hintere Schnittebene"
+            }
+          }
+        },
+        "znear": {
+          "type": "number",
+          "x-semio-ui": {
+            "label": {
+              "en": "Near clipping plane",
+              "de": "Vordere Schnittebene"
+            }
+          }
+        },
+        "extensions": {
+          "$ref": "#/$defs/GltfJson",
+          "x-semio-ui": {
+            "label": {
+              "en": "Extensions",
+              "de": "Erweiterungen"
+            }
+          }
+        },
+        "extras": {
+          "$ref": "#/$defs/GltfJson",
+          "x-semio-ui": {
+            "label": {
+              "en": "Extras",
+              "de": "Zusatzdaten (extras)"
+            }
+          }
+        }
+      }
+    },
+    "GltfPrimitive": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "attributes"
+      ],
+      "properties": {
+        "attributes": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "x-semio-ui": {
+            "label": {
+              "en": "Vertex attributes",
+              "de": "Vertexattribute"
+            },
+            "description": {
+              "en": "Attribute semantic to accessor index.",
+              "de": "Attributsemantik zu Accessor-Index."
+            }
+          }
+        },
+        "indices": {
+          "type": "integer",
+          "minimum": 0,
+          "x-semio-ui": {
+            "label": {
+              "en": "Index accessor",
+              "de": "Index-Accessor"
+            }
+          }
+        },
+        "material": {
+          "type": "integer",
+          "minimum": 0,
+          "x-semio-ui": {
+            "label": {
+              "en": "Material",
+              "de": "Material"
+            },
+            "description": {
+              "en": "Index of the material, counted from 0.",
+              "de": "Index des Materials, ab 0 gezählt."
+            }
+          }
+        },
+        "mode": {
+          "type": "integer",
+          "minimum": 0,
+          "x-semio-ui": {
+            "label": {
+              "en": "Topology mode",
+              "de": "Topologiemodus"
+            },
+            "description": {
+              "en": "0 points, 1 lines, 2 line loop, 3 line strip, 4 triangles, 5 triangle strip, 6 triangle fan.",
+              "de": "0 Punkte, 1 Linien, 2 Linienschleife, 3 Linienzug, 4 Dreiecke, 5 Dreiecksstreifen, 6 Dreiecksfächer."
+            }
+          }
+        },
+        "targets": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/GltfMorphTarget"
+          },
+          "x-semio-ui": {
+            "label": {
+              "en": "Morph targets",
+              "de": "Morph-Ziele"
+            }
+          }
+        },
+        "extensions": {
+          "$ref": "#/$defs/GltfJson",
+          "x-semio-ui": {
+            "label": {
+              "en": "Extensions",
+              "de": "Erweiterungen"
+            }
+          }
+        },
+        "extras": {
+          "$ref": "#/$defs/GltfJson",
+          "x-semio-ui": {
+            "label": {
+              "en": "Extras",
+              "de": "Zusatzdaten (extras)"
+            }
+          }
+        }
+      }
+    },
+    "GltfSampler": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "magFilter": {
+          "type": "integer",
+          "minimum": 0,
+          "x-semio-ui": {
+            "label": {
+              "en": "Magnification filter",
+              "de": "Vergrößerungsfilter"
+            },
+            "description": {
+              "en": "9728 nearest, 9729 linear.",
+              "de": "9728 nächster Nachbar, 9729 linear."
+            }
+          }
+        },
+        "minFilter": {
+          "type": "integer",
+          "minimum": 0,
+          "x-semio-ui": {
+            "label": {
+              "en": "Minification filter",
+              "de": "Verkleinerungsfilter"
+            }
+          }
+        },
+        "wrapS": {
+          "type": "integer",
+          "minimum": 0,
+          "x-semio-ui": {
+            "label": {
+              "en": "Wrap mode S",
+              "de": "Wiederholungsmodus S"
+            },
+            "description": {
+              "en": "33071 clamp to edge, 33648 mirrored repeat, 10497 repeat.",
+              "de": "33071 am Rand fixieren, 33648 gespiegelt wiederholen, 10497 wiederholen."
+            }
+          }
+        },
+        "wrapT": {
+          "type": "integer",
+          "minimum": 0,
+          "x-semio-ui": {
+            "label": {
+              "en": "Wrap mode T",
+              "de": "Wiederholungsmodus T"
+            },
+            "description": {
+              "en": "33071 clamp to edge, 33648 mirrored repeat, 10497 repeat.",
+              "de": "33071 am Rand fixieren, 33648 gespiegelt wiederholen, 10497 wiederholen."
+            }
+          }
+        },
+        "name": {
+          "type": "string",
+          "x-semio-ui": {
+            "label": {
+              "en": "Name",
+              "de": "Name"
+            }
+          }
+        },
+        "extensions": {
+          "$ref": "#/$defs/GltfJson",
+          "x-semio-ui": {
+            "label": {
+              "en": "Extensions",
+              "de": "Erweiterungen"
+            }
+          }
+        },
+        "extras": {
+          "$ref": "#/$defs/GltfJson",
+          "x-semio-ui": {
+            "label": {
+              "en": "Extras",
+              "de": "Zusatzdaten (extras)"
+            }
+          }
+        }
+      }
+    },
+    "GltfScene": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "nodes": {
+          "type": "array",
+          "items": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "x-semio-ui": {
+            "label": {
+              "en": "Root nodes",
+              "de": "Wurzelknoten"
+            }
+          }
+        },
+        "name": {
+          "type": "string",
+          "x-semio-ui": {
+            "label": {
+              "en": "Name",
+              "de": "Name"
+            }
+          }
+        },
+        "extensions": {
+          "$ref": "#/$defs/GltfJson",
+          "x-semio-ui": {
+            "label": {
+              "en": "Extensions",
+              "de": "Erweiterungen"
+            }
+          }
+        },
+        "extras": {
+          "$ref": "#/$defs/GltfJson",
+          "x-semio-ui": {
+            "label": {
+              "en": "Extras",
+              "de": "Zusatzdaten (extras)"
+            }
+          }
+        }
+      }
+    },
+    "GltfSkin": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "inverseBindMatrices": {
+          "type": "integer",
+          "minimum": 0,
+          "x-semio-ui": {
+            "label": {
+              "en": "Inverse bind matrices",
+              "de": "Inverse Bindungsmatrizen"
+            }
+          }
+        },
+        "skeleton": {
+          "type": "integer",
+          "minimum": 0,
+          "x-semio-ui": {
+            "label": {
+              "en": "Skeleton root",
+              "de": "Skelettwurzel"
+            }
+          }
+        },
+        "joints": {
+          "type": "array",
+          "items": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "x-semio-ui": {
+            "label": {
+              "en": "Joints",
+              "de": "Gelenke"
+            }
+          }
+        },
+        "name": {
+          "type": "string",
+          "x-semio-ui": {
+            "label": {
+              "en": "Name",
+              "de": "Name"
+            }
+          }
+        },
+        "extensions": {
+          "$ref": "#/$defs/GltfJson",
+          "x-semio-ui": {
+            "label": {
+              "en": "Extensions",
+              "de": "Erweiterungen"
+            }
+          }
+        },
+        "extras": {
+          "$ref": "#/$defs/GltfJson",
+          "x-semio-ui": {
+            "label": {
+              "en": "Extras",
+              "de": "Zusatzdaten (extras)"
+            }
+          }
+        }
+      }
+    },
+    "GltfSourceForm": {
+      "type": "string",
+      "enum": [
+        "json",
+        "glb"
+      ],
+      "x-semio-ui": {
+        "options": {
+          "json": {
+            "en": "glTF JSON",
+            "de": "glTF-JSON"
+          },
+          "glb": {
+            "en": "GLB binary",
+            "de": "GLB-Binärdatei"
+          }
+        }
+      },
+      "x-semio-formats": [
+        "🔣️jsonschema",
+        "🦀️rust",
+        "🟦️typescript",
+        "🔗️graphql"
+      ]
+    },
+    "GltfSparseAccessor": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "count",
+        "indices",
+        "values"
+      ],
+      "properties": {
+        "count": {
+          "type": "integer",
+          "minimum": 0,
+          "x-semio-ui": {
+            "label": {
+              "en": "Sparse element count",
+              "de": "Anzahl der Sparse-Elemente"
+            }
+          }
+        },
+        "indices": {
+          "$ref": "#/$defs/GltfSparseIndices",
+          "x-semio-ui": {
+            "label": {
+              "en": "Sparse indices",
+              "de": "Sparse-Indizes"
+            }
+          }
+        },
+        "values": {
+          "$ref": "#/$defs/GltfSparseValues",
+          "x-semio-ui": {
+            "label": {
+              "en": "Sparse values",
+              "de": "Sparse-Werte"
+            }
+          }
+        }
+      }
+    },
+    "GltfSparseIndices": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "bufferView",
+        "componentType"
+      ],
+      "properties": {
+        "bufferView": {
+          "type": "integer",
+          "minimum": 0,
+          "x-semio-ui": {
+            "label": {
+              "en": "Buffer view",
+              "de": "Pufferansicht"
+            }
+          }
+        },
+        "byteOffset": {
+          "type": "integer",
+          "minimum": 0,
+          "x-semio-ui": {
+            "label": {
+              "en": "Byte offset",
+              "de": "Byte-Versatz"
+            },
+            "unit": "B"
+          }
+        },
+        "componentType": {
+          "$ref": "#/$defs/GltfComponentType",
+          "x-semio-ui": {
+            "label": {
+              "en": "Component type",
+              "de": "Komponententyp"
+            },
+            "description": {
+              "en": "5120 byte, 5121 unsigned byte, 5122 short, 5123 unsigned short, 5125 unsigned int, 5126 float.",
+              "de": "5120 Byte, 5121 Byte ohne Vorzeichen, 5122 Short, 5123 Short ohne Vorzeichen, 5125 Integer ohne Vorzeichen, 5126 Gleitkommazahl."
+            },
+            "snaps": [
+              5120,
+              5121,
+              5122,
+              5123,
+              5125,
+              5126
+            ]
+          }
+        }
+      }
+    },
+    "GltfSparseValues": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "bufferView"
+      ],
+      "properties": {
+        "bufferView": {
+          "type": "integer",
+          "minimum": 0,
+          "x-semio-ui": {
+            "label": {
+              "en": "Buffer view",
+              "de": "Pufferansicht"
+            }
+          }
+        },
+        "byteOffset": {
+          "type": "integer",
+          "minimum": 0,
+          "x-semio-ui": {
+            "label": {
+              "en": "Byte offset",
+              "de": "Byte-Versatz"
+            },
+            "unit": "B"
+          }
+        }
+      }
+    },
+    "GltfTexture": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "sampler": {
+          "type": "integer",
+          "minimum": 0,
+          "x-semio-ui": {
+            "label": {
+              "en": "Sampler",
+              "de": "Sampler"
+            }
+          }
+        },
+        "source": {
+          "type": "integer",
+          "minimum": 0,
+          "x-semio-ui": {
+            "label": {
+              "en": "Image",
+              "de": "Bild"
+            },
+            "description": {
+              "en": "Index of the image, counted from 0.",
+              "de": "Index des Bildes, ab 0 gezählt."
+            }
+          }
+        },
+        "name": {
+          "type": "string",
+          "x-semio-ui": {
+            "label": {
+              "en": "Name",
+              "de": "Name"
+            }
+          }
+        },
+        "extensions": {
+          "$ref": "#/$defs/GltfJson",
+          "x-semio-ui": {
+            "label": {
+              "en": "Extensions",
+              "de": "Erweiterungen"
+            }
+          }
+        },
+        "extras": {
+          "$ref": "#/$defs/GltfJson",
+          "x-semio-ui": {
+            "label": {
+              "en": "Extras",
+              "de": "Zusatzdaten (extras)"
+            }
+          }
+        }
+      }
+    },
+    "GltfTextureInfo": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "index"
+      ],
+      "properties": {
+        "index": {
+          "type": "integer",
+          "minimum": 0,
+          "x-semio-ui": {
+            "label": {
+              "en": "Texture",
+              "de": "Textur"
+            },
+            "description": {
+              "en": "Index of the texture, counted from 0.",
+              "de": "Index der Textur, ab 0 gezählt."
+            }
+          }
+        },
+        "texCoord": {
+          "type": "integer",
+          "minimum": 0,
+          "x-semio-ui": {
+            "label": {
+              "en": "Texture coordinate set",
+              "de": "Texturkoordinatensatz"
+            },
+            "description": {
+              "en": "n of TEXCOORD_n.",
+              "de": "n von TEXCOORD_n."
+            }
+          }
+        },
+        "extensions": {
+          "$ref": "#/$defs/GltfJson",
+          "x-semio-ui": {
+            "label": {
+              "en": "Extensions",
+              "de": "Erweiterungen"
+            }
+          }
+        },
+        "extras": {
+          "$ref": "#/$defs/GltfJson",
+          "x-semio-ui": {
+            "label": {
+              "en": "Extras",
+              "de": "Zusatzdaten (extras)"
+            }
+          }
+        }
+      }
     }
   }
 }

@@ -3,7 +3,7 @@ name = "semio-framework-os-flow"
 version = "0.1.0"
 edition = "2021"
 rust-version.workspace = true
-description = "OS flow family — document/host/vcs + brep geometry session; operators (light/draw/brep/bim) are packaged extensions"
+description = "OS flow family — document/host/vcs and supplied geometry ports; operators (light/draw/brep/bim) are packaged extensions"
 
 [package.metadata.semio]
 role = "product"
@@ -43,7 +43,6 @@ ui_styling = { path = "../../../../../../🔨️modules/🖱️ui/🎨️styling
 ui_wgpu = { path = "../../../../../../🔨️modules/🖱️ui/📦️packages/🦀️rust", package = "semio-framework-ui", features = ["wgpu"] }
 semio-framework-3d = { path = "../../../../../../🔨️modules/🧊️3d/📦️packages/🦀️rust" }
 semio-framework-2d = { path = "../../../../../../🔨️modules/◻️2d/📦️packages/🦀️rust", features = ["serde"] }
-semio-s-artifact-stdio-semio = { workspace = true }
 base64 = "0.22"
 serde = { version = "1", features = ["derive"] }
 serde_json = "1"
@@ -64,15 +63,6 @@ semio-framework-async-macros = { path = "../../../../../../🔨️modules/⏳️
 # against. Nothing in this crate's program logic names the contract crate — the catalogue rides an
 # app-scoped section, never a surface payload (ticket 26/09/09/PROCEDURAL-3D-END-TO-END).
 ui_contract = { path = "../../../../../../🔨️modules/🖱️ui/🧬️contract/📦️packages/🦀️rust", package = "semio-framework-ui-contract" }
-semio-s-plugin-flow-extension-brep = { path = "../../../../../../../✏️s/🔌️plugins/🌊️flow/🧩️extensions/📐️brep/📦️packages/🦀️rust", default-features = false }
-semio-s-plugin-flow-extension-primitive = { path = "../../../../../../../✏️s/🔌️plugins/🌊️flow/🧩️extensions/🔤️primitive/📦️packages/🦀️rust", default-features = false }
-semio-s-plugin-flow-extension-math = { path = "../../../../../../../✏️s/🔌️plugins/🌊️flow/🧩️extensions/🧮️math/📦️packages/🦀️rust", default-features = false }
-semio-s-plugin-flow-extension-text = { path = "../../../../../../../✏️s/🔌️plugins/🌊️flow/🧩️extensions/📝️text/📦️packages/🦀️rust", default-features = false }
-semio-s-plugin-flow-extension-logic = { path = "../../../../../../../✏️s/🔌️plugins/🌊️flow/🧩️extensions/🧠️logic/📦️packages/🦀️rust", default-features = false }
-semio-s-plugin-flow-extension-dictionary = { path = "../../../../../../../✏️s/🔌️plugins/🌊️flow/🧩️extensions/📖️dictionary/📦️packages/🦀️rust", default-features = false }
-semio-s-plugin-flow-extension-list = { path = "../../../../../../../✏️s/🔌️plugins/🌊️flow/🧩️extensions/📃️list/📦️packages/🦀️rust", default-features = false }
-semio-s-plugin-flow-extension-draw = { path = "../../../../../../../✏️s/🔌️plugins/🌊️flow/🧩️extensions/🖍️draw/📦️packages/🦀️rust", default-features = false }
-semio-s-plugin-flow-extension-bim = { path = "../../../../../../../✏️s/🔌️plugins/🌊️flow/🧩️extensions/🏗️bim/📦️packages/🦀️rust", default-features = false }
 
 # ⚠️ RUNTIME-DEPENDENCY-ELIMINATION-FOR-S-PLUGINS-AND-ARTIFACTS (26/09/01): `ui_wgpu`'s `wgpu-engine`
 # feature (the real `wgpu` crate and its `wasm-bindgen-futures`/`js-sys`/`wasm-bindgen` chain) is
@@ -87,11 +77,7 @@ ui_wgpu = { path = "../../../../../../🔨️modules/🖱️ui/📦️packages/�
 # deleted: native keeps it for this crate's own `#[cfg(test)]` suite over the bridge protocol.
 ui_webgpu = { path = "../../../../../../🔨️modules/🖱️ui/🖌️render/🎯️targets/🧊️webgpu/📦️packages/🦀️rust", package = "semio-framework-ui-backend-webgpu" }
 
-# 🌉️ Browser-only: `getrandom`'s `wasm_js` backend and the `wasm_bridge` JS-callable tessellation
-# exports (`📐️brep-geometry/🦀️.rs`) both require an actual JS engine (the former backs
-# onto `Math.random`/`crypto.getRandomValues`, the wasm-pack-built `createFlowSession` bundle the
-# React renderer imports). Excluded from `wasm32-wasip2` because `target_arch = "wasm32"` is TRUE
-# for the WASI component target too, where neither applies.
+# 🌉️ Browser byte-ABI and canvas bindings require a JavaScript engine and are excluded from WASI.
 [target.'cfg(all(target_arch = "wasm32", not(target_env = "p2")))'.dependencies]
 getrandom = { version = "0.3.4", features = ["wasm_js"] }
 wasm-bindgen = "0.2.106"
@@ -106,16 +92,3 @@ web-sys = { version = "0.3.98", features = ["HtmlCanvasElement"] }
 [[test]]
 name = "flow_mesh_pack_wire"
 path = "../../🧪️tests/🎒️mesh-pack-wire/🦀️.rs"
-
-# 🔌️ Port-type laws (which wires a node graph may accept) — ticket 26/09/09/PROCEDURAL-3D-END-TO-END.
-# Declared as its own `[[test]]` so the rule stays runnable from this crate's PUBLIC surface alone.
-[[test]]
-name = "flow_port_types"
-path = "../../🧪️tests/🔌️port-types/🦀️.rs"
-
-# 🌉️ `brep_invoke` bridge laws — the verb catalog is the dispatcher arm for arm, every verb dispatches, and the
-# affine-transform vectors answer over the wire (ticket 26/09/23, slice CD1). Its own `[[test]]` so the wire contract stays
-# runnable from this crate's PUBLIC surface alone.
-[[test]]
-name = "flow_brep_invoke"
-path = "../../🧪️tests/📐️brep-invoke/🦀️.rs"

@@ -2,47 +2,9 @@
   "$schema": "http://json-schema.org/draft-07/schema#",
   "$id": "https://json.schemas.assets.semio-tech.com/os/infinite/artifacts/dag/vcs/mutation/connect-nodes/schema.json",
   "title": "ConnectNodes",
-  "type": "object",
-  "$defs": {
-    "Payload": {
-      "type": "object",
-      "required": [
-        "id",
-        "source",
-        "target",
-        "routeStyle",
-        "properties",
-        "index"
-      ],
-      "properties": {
-        "id": {
-          "type": "string"
-        },
-        "source": {
-          "type": "string"
-        },
-        "target": {
-          "type": "string"
-        },
-        "routeStyle": {
-          "$ref": "https://json.schemas.assets.semio-tech.com/os/infinite/artifacts/dag/vcs/schema.json#/$defs/EdgeRouteStyle"
-        },
-        "properties": {
-          "$ref": "https://json.schemas.assets.semio-tech.com/os/infinite/artifacts/dag/vcs/schema.json#/$defs/PropertyBag"
-        },
-        "index": {
-          "$ref": "https://json.schemas.assets.semio-tech.com/os/infinite/artifacts/dag/vcs/schema.json#/$defs/U64"
-        }
-      }
-    }
-  },
-  "allOf": [
-    {
-      "$ref": "#/$defs/Payload"
-    }
-  ],
   "propertyNames": {
     "enum": [
+      "operation",
       "id",
       "index",
       "properties",
@@ -50,5 +12,117 @@
       "source",
       "target"
     ]
+  },
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "operation",
+    "id",
+    "source",
+    "target",
+    "routeStyle",
+    "properties",
+    "index"
+  ],
+  "properties": {
+    "operation": {
+      "const": "connectNodes"
+    },
+    "id": {
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "text",
+        "role": "value",
+        "label": {
+          "en": "Edge ID",
+          "de": "Kanten-ID"
+        },
+        "description": {
+          "en": "Id of the new edge.",
+          "de": "ID der neuen Kante."
+        },
+        "group": "identity",
+        "order": 10
+      }
+    },
+    "source": {
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Source node",
+          "de": "Quellknoten"
+        },
+        "ref": {
+          "kind": "node"
+        },
+        "group": "target",
+        "order": 20
+      }
+    },
+    "target": {
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Target node",
+          "de": "Zielknoten"
+        },
+        "ref": {
+          "kind": "node"
+        },
+        "group": "target",
+        "order": 30
+      }
+    },
+    "routeStyle": {
+      "$ref": "https://json.schemas.assets.semio-tech.com/os/infinite/artifacts/dag/vcs/schema.json#/$defs/EdgeRouteStyle",
+      "x-semio-ui": {
+        "widget": "segmented",
+        "role": "value",
+        "label": {
+          "en": "Route style",
+          "de": "Linienführung"
+        },
+        "options": {
+          "bezier": {
+            "en": "Curved",
+            "de": "Gebogen"
+          },
+          "sharpSz": {
+            "en": "Orthogonal (S/Z)",
+            "de": "Rechtwinklig (S/Z)"
+          }
+        },
+        "group": "edge",
+        "order": 40
+      }
+    },
+    "properties": {
+      "$ref": "https://json.schemas.assets.semio-tech.com/os/infinite/artifacts/dag/vcs/schema.json#/$defs/PropertyBag",
+      "x-semio-ui": {
+        "role": "value",
+        "label": {
+          "en": "Properties",
+          "de": "Eigenschaften"
+        },
+        "group": "record",
+        "order": 50
+      }
+    },
+    "index": {
+      "$ref": "https://json.schemas.assets.semio-tech.com/os/infinite/artifacts/dag/vcs/schema.json#/$defs/U64",
+      "x-semio-ui": {
+        "role": "value",
+        "label": {
+          "en": "Index",
+          "de": "Index"
+        },
+        "group": "record",
+        "order": 60
+      }
+    }
   }
 }

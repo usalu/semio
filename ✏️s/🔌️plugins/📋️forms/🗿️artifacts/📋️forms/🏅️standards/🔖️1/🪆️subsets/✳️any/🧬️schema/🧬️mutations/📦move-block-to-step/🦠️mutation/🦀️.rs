@@ -13,6 +13,7 @@ use protocol::{MutationKind, SemanticDescriptor};
 /// step.
 #[derive(Clone, Debug, PartialEq, dsl::ToValue, dsl::FromValue, dsl::MutationLeaf)]
 #[mutation_leaf(contract = ::protocol)]
+#[value(rename_all = "camelCase")]
 pub struct MoveBlockToStep {
     pub step_id: String,
     pub block_id: String,

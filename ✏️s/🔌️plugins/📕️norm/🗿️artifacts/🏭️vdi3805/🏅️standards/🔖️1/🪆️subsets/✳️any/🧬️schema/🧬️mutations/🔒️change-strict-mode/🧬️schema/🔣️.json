@@ -9,7 +9,21 @@
   ],
   "properties": {
     "newStrictMode": {
-      "type": "boolean"
+      "type": "boolean",
+      "x-semio-ui": {
+        "widget": "toggle",
+        "role": "value",
+        "label": {
+          "en": "Strict mode",
+          "de": "Strenger Modus"
+        },
+        "description": {
+          "en": "Reject records that deviate from the VDI 3805 sheet definition.",
+          "de": "Datensätze ablehnen, die von der Blattdefinition der VDI 3805 abweichen."
+        },
+        "group": "catalogue",
+        "order": 10
+      }
     }
   }
 }

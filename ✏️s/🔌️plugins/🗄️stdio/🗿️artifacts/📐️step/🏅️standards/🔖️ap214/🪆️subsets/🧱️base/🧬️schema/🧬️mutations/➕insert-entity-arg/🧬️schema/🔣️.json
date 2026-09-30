@@ -5,25 +5,40 @@
   "type": "object",
   "additionalProperties": false,
   "required": [
+    "mutation",
     "id",
-    "arg_index",
+    "argIndex",
     "value"
   ],
   "properties": {
+    "mutation": {
+      "const": "insertEntityArg",
+      "description": "Aggregate discriminator spliced in by StepMutation; absent when the payload stands alone."
+    },
     "id": {
       "type": "integer",
       "minimum": 0
     },
-    "arg_index": {
+    "argIndex": {
       "type": "integer",
-      "minimum": 0
+      "minimum": 0,
+      "x-semio-ui": {
+        "widget": "stepper",
+        "label": {
+          "en": "Argument position",
+          "de": "Argumentposition"
+        },
+        "description": {
+          "en": "Position of the argument in the entity's attribute list, counted from 0.",
+          "de": "Position des Arguments in der Attributliste der Entität, ab 0 gezählt."
+        },
+        "precision": 0,
+        "group": "target",
+        "order": 20
+      }
     },
     "value": {
       "$ref": "#/$defs/StepValue"
-    },
-    "mutation": {
-      "const": "insertEntityArg",
-      "description": "Aggregate discriminator spliced in by StepMutation; absent when the payload stands alone."
     }
   },
   "$defs": {

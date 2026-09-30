@@ -2,22 +2,30 @@
   "$schema": "http://json-schema.org/draft-07/schema#",
   "$id": "https://json.schemas.assets.semio-tech.com/app/gis/gisterrain/window/config/mutation/set-camera/schema.json",
   "title": "SetCamera",
-  "$defs": {
-    "Payload": {
-      "type": "object",
-      "required": [
-        "cameraJson"
-      ],
-      "properties": {
-        "cameraJson": {
-          "type": "string"
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "operation",
+    "cameraJson"
+  ],
+  "properties": {
+    "operation": {
+      "const": "setCamera"
+    },
+    "cameraJson": {
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "multiline",
+        "role": "value",
+        "label": {
+          "en": "Camera",
+          "de": "Kamera"
+        },
+        "description": {
+          "en": "Camera state of the terrain view as JSON text.",
+          "de": "Kamerazustand der Geländeansicht als JSON-Text."
         }
       }
     }
-  },
-  "allOf": [
-    {
-      "$ref": "#/$defs/Payload"
-    }
-  ]
+  }
 }

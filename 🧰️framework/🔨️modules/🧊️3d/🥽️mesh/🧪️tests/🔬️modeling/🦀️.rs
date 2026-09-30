@@ -546,6 +546,17 @@ fn retained_modeling_jobs_slice_work_and_match_synchronous_geometry() {
         };
         assert!(calls >= case["minimumSteps"].as_u64().unwrap() as usize);
         assert_eq!(output.to_obj().unwrap(),synchronous.to_obj().unwrap());
+        assert_edit_surface(&output,None,case["volume"].as_f64());
+        let transfer = output.tessellate().unwrap();
+        let (positions,faces) = output.polygon_soup();
+        let rebuilt = HalfedgeMesh::from_faces(&positions,&faces).unwrap().tessellate().unwrap();
+        assert_eq!(transfer.normals,rebuilt.normals);
+        let points = transfer.positions.chunks_exact(3).map(|p| parry3d::na::Point3::new(p[0],p[1],p[2])).collect::<Vec<_>>();
+        let indices = transfer.indices.chunks_exact(3).map(|i| [i[0],i[1],i[2]]).collect::<Vec<_>>();
+        use parry3d::shape::Shape;
+        let volume = parry3d::shape::TriMesh::new(points,indices).mass_properties(1.0).mass() as f64;
+        if let Some(expected) = case["volume"].as_f64() { assert!((volume-expected).abs() < 1e-6); }
+        if let Some(minimum) = case["minimumVolume"].as_f64() { assert!(volume > minimum); }
         assert_eq!(source.to_obj().unwrap(),before);
         assert_eq!(sliced.progress().units_done,sliced.progress().units_total);
         sliced.cancel();
@@ -559,5 +570,16 @@ fn retained_modeling_jobs_slice_work_and_match_synchronous_geometry() {
         let mut batched = make_job();
         let output = loop { match batched.step(3).unwrap() { MeshModelingStep::Done(mesh) => break mesh, MeshModelingStep::Working(_) => {}, MeshModelingStep::Cancelled(_) => panic!("unexpected cancellation") } };
         assert_eq!(output.to_obj().unwrap(),synchronous.to_obj().unwrap());
+        for phase in case["cancelPhases"].as_array().unwrap() {
+            let phase = phase.as_str().unwrap();
+            let mut job = make_job();
+            while job.progress().phase != phase {
+                assert!(matches!(job.step(1).unwrap(),MeshModelingStep::Working(_)),"missing phase {phase}");
+            }
+            let held = job.progress();
+            job.cancel();
+            assert!(matches!(job.step(1000).unwrap(),MeshModelingStep::Cancelled(progress) if progress == held));
+            assert_eq!(source.to_obj().unwrap(),before);
+        }
     }
 }

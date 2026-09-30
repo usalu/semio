@@ -13,6 +13,7 @@ use super::*;
 //#region 🔖️Payload
 #[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::MutationLeaf, dsl::DslRecord)]
 #[mutation_leaf(contract = ::protocol)]
+#[value(rename_all = "camelCase")]
 #[dsl(keyword = "set-unknown-statements")]
 pub struct SetUnknownStatements {
     pub unknown_statements: Vec<ObjUnknownStatement>,

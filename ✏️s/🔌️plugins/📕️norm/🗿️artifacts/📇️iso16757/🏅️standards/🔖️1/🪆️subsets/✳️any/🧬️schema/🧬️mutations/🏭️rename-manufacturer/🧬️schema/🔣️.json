@@ -9,7 +9,17 @@
   ],
   "properties": {
     "newName": {
-      "type": "string"
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "text",
+        "role": "value",
+        "label": {
+          "en": "Manufacturer name",
+          "de": "Herstellername"
+        },
+        "group": "catalogue",
+        "order": 10
+      }
     }
   }
 }

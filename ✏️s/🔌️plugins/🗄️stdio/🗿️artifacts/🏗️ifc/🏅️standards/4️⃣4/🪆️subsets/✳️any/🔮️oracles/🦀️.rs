@@ -60,17 +60,6 @@ fn str_field(value: &Json, key: &str) -> Result<String, String> {
     }
 }
 #[cfg(feature = "oracles")]
-fn str_array(value: &Json, key: &str) -> Vec<String> {
-    value
-        .array(key)
-        .iter()
-        .filter_map(|entry| match entry {
-            Json::String(s) => Some(s.clone()),
-            _ => None,
-        })
-        .collect()
-}
-#[cfg(feature = "oracles")]
 fn usize_field(value: &Json, key: &str) -> Result<usize, String> {
     num_field(value, key).map(|number| number as usize)
 }
@@ -82,7 +71,7 @@ fn u64_field(value: &Json, key: &str) -> Result<u64, String> {
 
 #[cfg(feature = "oracles")]
 mod oracles {
-    use super::{num_field, str_array, str_field, u64_field, usize_field};
+    use super::{num_field, str_field, u64_field, usize_field};
     use ruststep::ast::{DataSection, EntityInstance, Exchange, Name, Parameter, Record};
     use semio_repo_test_host::Json;
     use std::str::FromStr;
@@ -184,27 +173,96 @@ mod oracles {
     //#endregion 🔖️RuststepEscapeDefect
 
     //#region 🔖️ValueGrammar
-    /// 🔤️ This module's own JSON wire grammar for one Part-21 argument value — the wire shape the
-    /// feature file's `Examples` tables and this subset's subject-side `mutation_from_spec` both
-    /// speak (`{"t":"real","v":1.0}`-shaped), independent of `IfcValue`'s own serde tagging.
-    fn value_from_json(value: &Json) -> Result<Parameter, String> {
-        match str_field(value, "t")?.as_str() {
-            "unset" => Ok(Parameter::NotProvided),
-            "derived" => Ok(Parameter::Omitted),
-            "integer" => Ok(Parameter::Integer(num_field(value, "v")? as i64)),
-            "real" => Ok(Parameter::Real(num_field(value, "v")?)),
-            "string" => Ok(Parameter::String(str_field(value, "v")?)),
-            "enum" => Ok(Parameter::Enumeration(str_field(value, "v")?)),
-            "reference" => Ok(Parameter::Ref(Name::Entity(u64_field(value, "v")?))),
-            "aggregate" => Ok(Parameter::List(value.array("v").iter().map(value_from_json).collect::<Result<Vec<_>, String>>()?)),
-            "typed" => Ok(Parameter::Typed { keyword: str_field(value, "name")?, parameter: Box::new(value_from_json(value.get("v").ok_or("typed value requires a v field")?)?) }),
-            other => Err(format!("unknown value type {other:?}")),
+    /// 🧾️ One `IfcValue` wire value (`{kind, value}`, the leaf payload shape) as the argument `ruststep` models. Read
+    /// here from the wire, never through the production `FromValue`.
+    fn value_from_wire(value: &Json) -> Result<Parameter, String> {
+        Ok(match str_field(value, "kind")?.as_str() {
+            "unset" => Parameter::NotProvided,
+            "derived" => Parameter::Omitted,
+            "integer" => Parameter::Integer(num_field(value, "value")? as i64),
+            "real" => Parameter::Real(num_field(value, "value")?),
+            "string" => Parameter::String(str_field(value, "value")?),
+            "enum" => Parameter::Enumeration(str_field(value, "value")?),
+            "reference" => Parameter::Ref(Name::Entity(u64_field(value, "value")?)),
+            "aggregate" => Parameter::List(values_from_wire(value, "value")?),
+            "typedValue" => {
+                let typed = value.get("value").ok_or("a typed value carries `value`")?;
+                match <[Parameter; 1]>::try_from(values_from_wire(typed, "items")?) {
+                    Ok([item]) => Parameter::Typed { keyword: str_field(typed, "name")?, parameter: Box::new(item) },
+                    Err(items) => return Err(format!("a Part-21 defined type wraps exactly one value, not {}", items.len())),
+                }
+            }
+            other => return Err(format!("unknown IfcValue kind {other:?}")),
+        })
+    }
+
+    fn values_from_wire(value: &Json, key: &str) -> Result<Vec<Parameter>, String> {
+        value.array(key).iter().map(value_from_wire).collect()
+    }
+
+    /// 🧾️ One `ruststep` argument as its `IfcValue` wire value — the exact inverse of [`value_from_wire`].
+    fn value_to_wire(param: &Parameter) -> Json {
+        let tagged = |kind: &str, value: Option<Json>| Json::Object(std::iter::once(("kind".to_string(), Json::String(kind.to_string()))).chain(value.map(|value| ("value".to_string(), value))).collect());
+        match param {
+            Parameter::NotProvided => tagged("unset", None),
+            Parameter::Omitted => tagged("derived", None),
+            Parameter::Integer(value) => tagged("integer", Some(Json::Number(*value as f64))),
+            Parameter::Real(value) => tagged("real", Some(Json::Number(*value))),
+            Parameter::String(value) => tagged("string", Some(Json::String(value.clone()))),
+            Parameter::Enumeration(value) => tagged("enum", Some(Json::String(value.clone()))),
+            Parameter::List(items) => tagged("aggregate", Some(Json::Array(items.iter().map(value_to_wire).collect()))),
+            Parameter::Ref(name) => tagged("reference", Some(Json::Number(name_id(name) as f64))),
+            Parameter::Typed { keyword, parameter } => tagged("typedValue", Some(Json::Object(vec![("name".to_string(), Json::String(keyword.clone())), ("items".to_string(), Json::Array(vec![value_to_wire(parameter)]))]))),
         }
     }
 
-    /// 🔤️ The inverse projection: an independently-parsed `Parameter` back into this module's own
-    /// canonical JSON shape — used both to echo a real argument back out in `project_ifc_4_any` and,
-    /// transitively, inside `aggregate`'s recursion.
+    /// 🧩️ One `IfcEntity` wire record (`{id, name, args, complex?}`) as a simple, or — with `complex` records — a complex
+    /// instance.
+    fn entity_from_wire(value: &Json) -> Result<EntityInstance, String> {
+        let id = u64_field(value, "id")?;
+        let record = |entry: &Json| -> Result<Record, String> { Ok(Record { name: str_field(entry, "name")?, parameter: Parameter::List(values_from_wire(entry, "args")?) }) };
+        let complex = value.array("complex");
+        if complex.is_empty() {
+            return Ok(EntityInstance::Simple { id, record: record(value)? });
+        }
+        Ok(EntityInstance::Complex { id, subsuper: ruststep::ast::SubSuperRecord(std::iter::once(value).chain(complex.iter()).map(record).collect::<Result<Vec<_>, String>>()?) })
+    }
+
+    fn entity_to_wire(entity: &EntityInstance) -> Result<Json, String> {
+        let record = |record: &Record| -> Result<Vec<(String, Json)>, String> { Ok(vec![("name".to_string(), Json::String(record.name.clone())), ("args".to_string(), Json::Array(args(record)?.iter().map(value_to_wire).collect()))]) };
+        let mut members = vec![("id".to_string(), Json::Number(entity_id(entity) as f64))];
+        members.extend(record(primary_record(entity))?);
+        if let EntityInstance::Complex { subsuper, .. } = entity {
+            members.push(("complex".to_string(), Json::Array(subsuper.0[1..].iter().map(|extra| record(extra).map(Json::Object)).collect::<Result<Vec<_>, String>>()?)));
+        }
+        Ok(Json::Object(members))
+    }
+
+    /// 📇️ The three `HEADER;` records ISO 10303-21 §8.2 fixes, in its own order, keyed by their `IfcHeader` wire name.
+    const HEADER_RECORDS: [(&str, &str); 3] = [("FILE_DESCRIPTION", "fileDescription"), ("FILE_NAME", "fileName"), ("FILE_SCHEMA", "fileSchema")];
+
+    /// 📸️ `set-snapshot`: the whole document becomes the `IfcSnapshot` wire record — its header and its entities, in the
+    /// record's own order.
+    fn replace_with_snapshot(exchange: &mut Exchange, snapshot: &Json) -> Result<(), String> {
+        let header = snapshot.get("header").ok_or("an IFC4 snapshot carries `header`")?;
+        exchange.header = HEADER_RECORDS.iter().map(|(record, member)| Ok(Record { name: record.to_string(), parameter: Parameter::List(values_from_wire(header, member)?) })).collect::<Result<Vec<_>, String>>()?;
+        exchange.data = vec![DataSection { meta: Vec::new(), entities: snapshot.array("entities").iter().map(entity_from_wire).collect::<Result<Vec<_>, String>>()? }];
+        Ok(())
+    }
+
+    /// 📸️ The document as a `set-snapshot` payload `{snapshot}` — what restores it through [`replace_with_snapshot`].
+    fn snapshot_payload_of(exchange: &Exchange) -> Result<Json, String> {
+        let header = HEADER_RECORDS
+            .iter()
+            .map(|(record, member)| Ok((member.to_string(), Json::Array(header_record(exchange, record).map(args).transpose()?.map(|items| items.iter().map(value_to_wire).collect()).unwrap_or_default()))))
+            .collect::<Result<Vec<_>, String>>()?;
+        let entities = exchange.data.iter().flat_map(|section| section.entities.iter()).map(entity_to_wire).collect::<Result<Vec<_>, String>>()?;
+        let snapshot = Json::Object(vec![("schema".to_string(), Json::String("stdio.ifc".to_string())), ("header".to_string(), Json::Object(header)), ("entities".to_string(), Json::Array(entities))]);
+        Ok(Json::Object(vec![("snapshot".to_string(), snapshot)]))
+    }
+
+    /// 🔤️ An independently-parsed `Parameter` in this module's own canonical projection shape — the argument form
+    /// `project_ifc_4_any` echoes back, recursively for aggregates.
     fn value_to_json(param: &Parameter) -> Json {
         let tv = |t: &str, v: Json| Json::Object(vec![("t".to_string(), Json::String(t.to_string())), ("v".to_string(), v)]);
         match param {
@@ -384,40 +442,28 @@ mod oracles {
     /// honest real behaviour of a positional entity-graph removal, not hidden by a cascading delete
     /// this subset's `IfcMutation::RemoveEntity` does not itself perform either (`schema::diff::
     /// diff_remove_entity` only removes the one keyed entity — confirmed by reading that file).
-    /// `set-snapshot` is pragmatic: it overrides the one header field the wave-7 scenario actually
-    /// exercises (`FILE_SCHEMA`) on the already-decoded document, the same precedent this wave's
-    /// `📑️mutate-pdf-1-7`/`📐️mutate-step-ap214` oracles use (patches known fields rather than requiring
-    /// the full snapshot literal inline in a Gherkin cell).
+    /// Every arm reads the leaf wire payload (`IfcValue`/`IfcEntity`/`IfcSnapshot` wire), and `set-snapshot` replaces
+    /// the whole document with the snapshot record.
     fn apply(exchange: &mut Exchange, kind: &str, params: &Json) -> Result<(), String> {
         match kind {
-            "no-mutation" => Ok(()),
-
-            "set-snapshot" => {
-                let schemas = str_array(params, "fileSchema");
-                if schemas.is_empty() {
-                    return Err("set-snapshot requires a non-empty fileSchema field".to_string());
-                }
-                let record = header_record_mut(exchange, "FILE_SCHEMA").ok_or("input carries no FILE_SCHEMA header record")?;
-                record.parameter = Parameter::List(vec![Parameter::List(schemas.into_iter().map(Parameter::String).collect())]);
-                Ok(())
-            }
+            "set-snapshot" => replace_with_snapshot(exchange, params.get("snapshot").ok_or("set-snapshot carries `snapshot`")?),
 
             "set-file-description" => {
-                let values = params.array("values").iter().map(value_from_json).collect::<Result<Vec<_>, String>>()?;
+                let values = values_from_wire(params, "values")?;
                 let record = header_record_mut(exchange, "FILE_DESCRIPTION").ok_or("input carries no FILE_DESCRIPTION header record")?;
                 record.parameter = Parameter::List(values);
                 Ok(())
             }
 
             "set-file-name" => {
-                let values = params.array("values").iter().map(value_from_json).collect::<Result<Vec<_>, String>>()?;
+                let values = values_from_wire(params, "values")?;
                 let record = header_record_mut(exchange, "FILE_NAME").ok_or("input carries no FILE_NAME header record")?;
                 record.parameter = Parameter::List(values);
                 Ok(())
             }
 
             "set-file-schema" => {
-                let values = params.array("values").iter().map(value_from_json).collect::<Result<Vec<_>, String>>()?;
+                let values = values_from_wire(params, "values")?;
                 let record = header_record_mut(exchange, "FILE_SCHEMA").ok_or("input carries no FILE_SCHEMA header record")?;
                 record.parameter = Parameter::List(values);
                 Ok(())
@@ -425,13 +471,10 @@ mod oracles {
 
             "insert-entity" => {
                 let index = usize_field(params, "index")?;
-                let entity_json = params.get("entity").ok_or("insert-entity requires an entity field")?;
-                let id = u64_field(entity_json, "id")?;
-                let name = str_field(entity_json, "name")?;
-                let args: Vec<Parameter> = entity_json.array("args").iter().map(value_from_json).collect::<Result<Vec<_>, String>>()?;
+                let entity = entity_from_wire(params.get("entity").ok_or("insert-entity requires an entity field")?)?;
                 let section = exchange.data.first_mut().ok_or("input carries no DATA section")?;
                 let clamped = index.min(section.entities.len());
-                section.entities.insert(clamped, EntityInstance::Simple { id, record: Record { name, parameter: Parameter::List(args) } });
+                section.entities.insert(clamped, entity);
                 Ok(())
             }
 
@@ -458,7 +501,7 @@ mod oracles {
             "set-entity-arg" => {
                 let id = u64_field(params, "id")?;
                 let arg_index = usize_field(params, "index")?;
-                let value = value_from_json(params.get("value").ok_or("set-entity-arg requires a value field")?)?;
+                let value = value_from_wire(params.get("value").ok_or("set-entity-arg requires a value field")?)?;
                 let section = exchange.data.first_mut().ok_or("input carries no DATA section")?;
                 let entity = section.entities.iter_mut().find(|entity| entity_id(entity) == id).ok_or_else(|| format!("set-entity-arg: no entity with id {id}"))?;
                 let args = args_mut(primary_record_mut(entity))?;
@@ -469,7 +512,7 @@ mod oracles {
             "insert-entity-arg" => {
                 let id = u64_field(params, "id")?;
                 let arg_index = usize_field(params, "index")?;
-                let value = value_from_json(params.get("value").ok_or("insert-entity-arg requires a value field")?)?;
+                let value = value_from_wire(params.get("value").ok_or("insert-entity-arg requires a value field")?)?;
                 let section = exchange.data.first_mut().ok_or("input carries no DATA section")?;
                 let entity = section.entities.iter_mut().find(|entity| entity_id(entity) == id).ok_or_else(|| format!("insert-entity-arg: no entity with id {id}"))?;
                 let args = args_mut(primary_record_mut(entity))?;
@@ -497,14 +540,29 @@ mod oracles {
     //#endregion 🔖️Apply
 
     //#region 🔖️Dispatch
-    pub fn apply_mutation(input: &[u8], kind: &str, params: &Json) -> Result<Vec<u8>, String> {
+    fn read(input: &[u8]) -> Result<Exchange, String> {
         let text = std::str::from_utf8(input).map_err(|error| format!("input is not UTF-8: {error}"))?;
         let mut exchange = parse_exchange(text)?;
         if exchange.data.is_empty() {
             exchange.data.push(DataSection { meta: Vec::new(), entities: Vec::new() });
         }
+        Ok(exchange)
+    }
+
+    pub fn apply_mutation(input: &[u8], kind: &str, params: &Json) -> Result<Vec<u8>, String> {
+        let mut exchange = read(input)?;
         apply(&mut exchange, kind, params)?;
         Ok(write_exchange(&exchange).into_bytes())
+    }
+
+    /// 🔁️ Decode and re-encode with no mutation: `ruststep`'s parse, this module's writer.
+    pub fn round_trip(input: &[u8]) -> Result<Vec<u8>, String> {
+        Ok(write_exchange(&read(input)?).into_bytes())
+    }
+
+    /// 📸️ The untouched document as the `set-snapshot` payload that restores it.
+    pub fn snapshot_payload(input: &[u8]) -> Result<Json, String> {
+        snapshot_payload_of(&read(input)?)
     }
     //#endregion 🔖️Dispatch
 
@@ -601,6 +659,18 @@ pub fn oracle_apply_mutation(input: &[u8], spec: &Json) -> Result<Vec<u8>, Strin
     oracles::apply_mutation(input, &kind, params)
 }
 
+/// 🔁️ Decodes and re-encodes the artifact with no mutation — the identity cycle every law's baseline runs.
+#[cfg(feature = "oracles")]
+pub fn oracle_round_trip(input: &[u8]) -> Result<Vec<u8>, String> {
+    oracles::round_trip(input)
+}
+
+/// 📸️ The untouched artifact as the `set-snapshot` wire payload that restores it — the inverse of `set-snapshot`.
+#[cfg(feature = "oracles")]
+pub fn oracle_snapshot_payload(input: &[u8]) -> Result<Json, String> {
+    oracles::snapshot_payload(input)
+}
+
 /// 👁️ This subset's own semantic projection, re-exported at the module's public surface so the
 /// case adapter can reach it as `oracle_apply_mutation`'s sibling.
 #[cfg(feature = "oracles")]
@@ -611,6 +681,16 @@ pub fn project_ifc_4_any(bytes: &[u8]) -> Result<Json, String> {
 /// 🚫️ Without the `oracles` feature the reference implementation is not linked at all.
 #[cfg(not(feature = "oracles"))]
 pub fn oracle_apply_mutation(_input: &[u8], _spec: &Json) -> Result<Vec<u8>, String> {
+    Err("the `oracles` feature is disabled — this host was not built with the registered reference implementations".to_string())
+}
+
+#[cfg(not(feature = "oracles"))]
+pub fn oracle_round_trip(_input: &[u8]) -> Result<Vec<u8>, String> {
+    Err("the `oracles` feature is disabled — this host was not built with the registered reference implementations".to_string())
+}
+
+#[cfg(not(feature = "oracles"))]
+pub fn oracle_snapshot_payload(_input: &[u8]) -> Result<Json, String> {
     Err("the `oracles` feature is disabled — this host was not built with the registered reference implementations".to_string())
 }
 

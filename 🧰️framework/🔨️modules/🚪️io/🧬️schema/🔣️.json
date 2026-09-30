@@ -1,7 +1,7 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
   "$id": "https://json.schemas.assets.semio-tech.com/framework/io/schema.json",
-  "title": "Artifact Addressing",
+  "title": "Artifact IO Contracts",
   "$defs": {
     "ArtifactDialect": {
       "type": "object",
@@ -13,13 +13,34 @@
       ],
       "properties": {
         "artifactKind": {
-          "type": "string"
+          "type": "string",
+          "x-semio-ui": {
+            "widget": "text",
+            "label": {
+              "en": "Artifact kind",
+              "de": "Artefaktart"
+            }
+          }
         },
         "standard": {
-          "type": "string"
+          "type": "string",
+          "x-semio-ui": {
+            "widget": "text",
+            "label": {
+              "en": "Standard",
+              "de": "Standard"
+            }
+          }
         },
         "subset": {
-          "type": "string"
+          "type": "string",
+          "x-semio-ui": {
+            "widget": "text",
+            "label": {
+              "en": "Subset",
+              "de": "Teilmenge"
+            }
+          }
         }
       }
     },
@@ -32,10 +53,87 @@
       ],
       "properties": {
         "artifactId": {
-          "type": "string"
+          "type": "string",
+          "x-semio-ui": {
+            "widget": "reference",
+            "role": "target",
+            "label": {
+              "en": "Artifact",
+              "de": "Artefakt"
+            },
+            "description": {
+              "en": "The referenced artifact.",
+              "de": "Das referenzierte Artefakt."
+            },
+            "ref": {
+              "kind": "artifact"
+            }
+          }
         },
         "dialect": {
+          "$ref": "#/$defs/ArtifactDialect",
+          "x-semio-ui": {
+            "label": {
+              "en": "Dialect",
+              "de": "Dialekt"
+            },
+            "description": {
+              "en": "Artifact kind, standard and subset of the referenced artifact.",
+              "de": "Artefaktart, Standard und Teilmenge des referenzierten Artefakts."
+            }
+          }
+        }
+      }
+    },
+    "IoFidelity": {
+      "type": "string",
+      "enum": [
+        "Exact",
+        "Canonical",
+        "Semantic",
+        "Lossy"
+      ]
+    },
+    "IoEntryDescriptor": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "from",
+        "into",
+        "fidelity",
+        "sniffs"
+      ],
+      "properties": {
+        "from": {
           "$ref": "#/$defs/ArtifactDialect"
+        },
+        "into": {
+          "$ref": "#/$defs/ArtifactDialect"
+        },
+        "fidelity": {
+          "$ref": "#/$defs/IoFidelity"
+        },
+        "sniffs": {
+          "type": "boolean"
+        }
+      }
+    },
+    "IoRoute": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "hops",
+        "fidelity"
+      ],
+      "properties": {
+        "hops": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/IoEntryDescriptor"
+          }
+        },
+        "fidelity": {
+          "$ref": "#/$defs/IoFidelity"
         }
       }
     }

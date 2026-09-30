@@ -1,0 +1,6 @@
+{
+  "operation": "changePublicationPresence",
+  "payload": {
+    "revision": 7
+  }
+}

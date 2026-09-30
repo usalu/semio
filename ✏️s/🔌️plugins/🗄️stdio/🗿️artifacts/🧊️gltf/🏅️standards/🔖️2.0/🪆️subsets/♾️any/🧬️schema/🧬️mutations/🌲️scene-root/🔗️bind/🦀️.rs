@@ -4,8 +4,7 @@ use crate::schema::modules::mutation_support::top_level::rejection_outcome;
 use crate::schema::modules::mutation_support::top_level::{reject, GltfTopLevelMutationRejection};
 use crate::GltfSnapshot;
 pub const ID: &str = "s.stdio.gltf.mutation.bind-scene-root-node.v1";
-#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::MutationLeaf)]
-#[mutation_leaf(contract = ::protocol)]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
 #[value(rename_all = "camelCase", deny_unknown_fields)]
 pub struct GltfBindSceneRootNodePayload {
     pub scene: usize,
@@ -34,7 +33,7 @@ pub fn apply(payload: &GltfBindSceneRootNodePayload, base: &GltfSnapshot) -> Res
 
 //#region 🧬️DirectMutation
 #[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::MutationLeaf)]
-#[mutation_leaf(contract = ::protocol)]
+#[mutation_leaf(contract = ::protocol, payload = Apply)]
 #[value(tag = "phase", content = "value", rename_all = "camelCase")]
 pub enum BindSceneRootNodeMutation {
     Apply(GltfBindSceneRootNodePayload),
@@ -78,8 +77,8 @@ impl protocol::MutationKind<GltfSnapshot, super::GltfMutation> for BindSceneRoot
 
 //#region 🧪️Tests
 #[cfg(test)]
-#[path = "🧪️tests/🔬️direct-leaf/🦀️.rs"]
-mod direct_leaf_tests;
+#[path = "🧪️tests/📥️promotes-the-b86f40/🦀️.rs"]
+mod case_promotes_the_b86f40;
 //#endregion 🧪️Tests
 
 #[cfg(test)]

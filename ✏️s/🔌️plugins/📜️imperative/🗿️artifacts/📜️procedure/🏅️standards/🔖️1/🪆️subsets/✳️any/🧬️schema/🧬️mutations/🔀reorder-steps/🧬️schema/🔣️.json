@@ -5,25 +5,92 @@
   "type": "object",
   "additionalProperties": false,
   "required": [
+    "mutation",
     "pathRef",
     "id",
     "toIndex"
   ],
   "properties": {
+    "mutation": {
+      "const": "reorderSteps"
+    },
     "pathRef": {
       "type": "object",
       "additionalProperties": false,
       "properties": {
         "owner": {
-          "type": "string"
+          "type": [
+            "string",
+            "null"
+          ],
+          "x-semio-ui": {
+            "widget": "reference",
+            "role": "value",
+            "label": {
+              "en": "Owner Step",
+              "de": "Übergeordneter Schritt"
+            },
+            "description": {
+              "en": "Control step whose body holds the list; empty for the top-level list.",
+              "de": "Steuerschritt, dessen Rumpf die Liste enthält; leer für die oberste Liste."
+            },
+            "ref": {
+              "kind": "step",
+              "domain": "steps",
+              "granularity": "step"
+            }
+          }
         },
         "slot": {
-          "type": "string"
+          "type": [
+            "string",
+            "null"
+          ],
+          "x-semio-ui": {
+            "widget": "text",
+            "role": "value",
+            "label": {
+              "en": "Body Slot",
+              "de": "Rumpf-Slot"
+            },
+            "description": {
+              "en": "Name of the owner's body that holds the list.",
+              "de": "Name des Rumpfs des übergeordneten Schritts, der die Liste enthält."
+            }
+          }
+        }
+      },
+      "x-semio-ui": {
+        "role": "value",
+        "label": {
+          "en": "Path Reference",
+          "de": "Pfadreferenz"
+        },
+        "description": {
+          "en": "The step list that holds the step.",
+          "de": "Die Schrittliste, die den Schritt enthält."
         }
       }
     },
     "id": {
-      "type": "string"
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Step",
+          "de": "Schritt"
+        },
+        "description": {
+          "en": "The step this mutation addresses.",
+          "de": "Der Schritt, den diese Mutation adressiert."
+        },
+        "ref": {
+          "kind": "step",
+          "domain": "steps",
+          "granularity": "step"
+        }
+      }
     },
     "toIndex": {
       "type": "integer",

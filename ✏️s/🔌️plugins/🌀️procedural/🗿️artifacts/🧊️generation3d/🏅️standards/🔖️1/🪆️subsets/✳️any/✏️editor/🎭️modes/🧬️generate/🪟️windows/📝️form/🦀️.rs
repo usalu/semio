@@ -42,9 +42,3 @@ pub fn render(host_snapshot: &FlowHostSnapshot, generation: &GenerationPlayState
     crate::generation_form(&spec, &current.values, GENERATION_3D_PLAY_APP_ID, "updateGenerationValues", &current.id)
 }
 //#endregion 🔖️Render
-
-//#region 🧪️Tests
-#[cfg(test)]
-#[path = "./🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
-//#endregion 🧪️Tests

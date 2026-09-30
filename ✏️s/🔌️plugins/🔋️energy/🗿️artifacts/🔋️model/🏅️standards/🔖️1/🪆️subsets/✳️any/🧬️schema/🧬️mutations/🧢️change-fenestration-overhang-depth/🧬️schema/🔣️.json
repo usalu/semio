@@ -5,15 +5,57 @@
   "type": "object",
   "additionalProperties": false,
   "required": [
+    "mutation",
     "id",
     "newOverhangDepthM"
   ],
   "properties": {
+    "mutation": {
+      "const": "changeFenestrationOverhangDepth"
+    },
     "id": {
-      "type": "integer"
+      "type": "integer",
+      "minimum": 0,
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Window",
+          "de": "Fenster"
+        },
+        "description": {
+          "en": "The window this mutation changes, by id.",
+          "de": "Fenster, das diese Mutation ändert, per ID."
+        },
+        "ref": {
+          "kind": "fenestration",
+          "domain": "energyModel",
+          "granularity": "fenestration"
+        },
+        "group": "target",
+        "order": 10
+      }
     },
     "newOverhangDepthM": {
-      "type": "number"
+      "type": "number",
+      "minimum": 0,
+      "x-semio-ui": {
+        "widget": "stepper",
+        "role": "value",
+        "label": {
+          "en": "Overhang depth",
+          "de": "Überstandstiefe"
+        },
+        "description": {
+          "en": "Projection of the horizontal overhang above the head; 0 means none.",
+          "de": "Auskragung des horizontalen Überstands über dem Sturz; 0 bedeutet keiner."
+        },
+        "unit": "m",
+        "step": 0.01,
+        "precision": 2,
+        "group": "shading",
+        "order": 20
+      }
     }
   }
 }

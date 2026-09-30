@@ -5,18 +5,31 @@
   "type": "object",
   "additionalProperties": false,
   "required": [
+    "mutation",
     "values"
   ],
   "properties": {
+    "mutation": {
+      "const": "setFileSchema",
+      "description": "Aggregate discriminator spliced in by IfcMutation; absent when the payload stands alone."
+    },
     "values": {
       "type": "array",
       "items": {
         "$ref": "#/$defs/IfcValue"
+      },
+      "x-semio-ui": {
+        "label": {
+          "en": "FILE_SCHEMA values",
+          "de": "FILE_SCHEMA-Werte"
+        },
+        "description": {
+          "en": "Parameters of the STEP header entity FILE_SCHEMA.",
+          "de": "Parameter der STEP-Kopfentität FILE_SCHEMA."
+        },
+        "group": "value",
+        "order": 10
       }
-    },
-    "mutation": {
-      "const": "setFileSchema",
-      "description": "Aggregate discriminator spliced in by IfcMutation; absent when the payload stands alone."
     }
   },
   "$defs": {

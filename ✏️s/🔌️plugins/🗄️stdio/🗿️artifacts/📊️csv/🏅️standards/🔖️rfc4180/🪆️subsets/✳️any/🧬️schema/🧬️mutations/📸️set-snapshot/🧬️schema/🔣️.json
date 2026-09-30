@@ -5,11 +5,23 @@
   "type": "object",
   "additionalProperties": false,
   "required": [
+    "mutation",
     "snapshot"
   ],
   "properties": {
+    "mutation": {
+      "const": "setSnapshot"
+    },
     "snapshot": {
-      "$ref": "#/$defs/CsvSnapshot"
+      "$ref": "#/$defs/CsvSnapshot",
+      "x-semio-ui": {
+        "label": {
+          "en": "CSV table",
+          "de": "CSV-Tabelle"
+        },
+        "group": "value",
+        "order": 10
+      }
     }
   },
   "$defs": {
@@ -21,15 +33,37 @@
       ],
       "properties": {
         "schema": {
-          "type": "string"
+          "type": "string",
+          "x-semio-ui": {
+            "label": {
+              "en": "Schema",
+              "de": "Schema"
+            },
+            "description": {
+              "en": "Identifier of the snapshot schema this document follows.",
+              "de": "Kennung des Snapshot-Schemas, dem dieses Dokument folgt."
+            }
+          }
         },
         "hasHeader": {
-          "type": "boolean"
+          "type": "boolean",
+          "x-semio-ui": {
+            "label": {
+              "en": "First record is a header",
+              "de": "Erster Datensatz ist Kopfzeile"
+            }
+          }
         },
         "records": {
           "type": "array",
           "items": {
             "$ref": "#/$defs/CsvRecord"
+          },
+          "x-semio-ui": {
+            "label": {
+              "en": "Records",
+              "de": "Datensätze"
+            }
           }
         }
       }
@@ -42,6 +76,12 @@
           "type": "array",
           "items": {
             "$ref": "#/$defs/CsvField"
+          },
+          "x-semio-ui": {
+            "label": {
+              "en": "Fields",
+              "de": "Felder"
+            }
           }
         }
       }
@@ -51,10 +91,22 @@
       "additionalProperties": false,
       "properties": {
         "value": {
-          "type": "string"
+          "type": "string",
+          "x-semio-ui": {
+            "label": {
+              "en": "Field value",
+              "de": "Feldwert"
+            }
+          }
         },
         "quoted": {
-          "type": "boolean"
+          "type": "boolean",
+          "x-semio-ui": {
+            "label": {
+              "en": "Quoted",
+              "de": "In Anführungszeichen"
+            }
+          }
         }
       }
     }

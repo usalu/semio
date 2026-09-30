@@ -1,0 +1,10 @@
+{
+  "factor": 0.5,
+  "mutation": "scaleSelection",
+  "pivotX": 20.0,
+  "pivotY": 10.0,
+  "targets": [
+    "node-a",
+    "region-1"
+  ]
+}

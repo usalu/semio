@@ -5,15 +5,50 @@
   "type": "object",
   "additionalProperties": false,
   "required": [
+    "mutation",
     "id",
     "newFixtureCount"
   ],
   "properties": {
+    "mutation": {
+      "const": "changeWaterSystemFixtureCount"
+    },
     "id": {
-      "type": "integer"
+      "type": "integer",
+      "minimum": 0,
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Water system",
+          "de": "Wasseranlage"
+        },
+        "description": {
+          "en": "The water system this mutation changes, by id.",
+          "de": "Wasseranlage, die diese Mutation ändert, per ID."
+        },
+        "ref": {
+          "kind": "waterSystem"
+        },
+        "group": "target",
+        "order": 10
+      }
     },
     "newFixtureCount": {
-      "type": "integer"
+      "type": "integer",
+      "minimum": 1,
+      "x-semio-ui": {
+        "widget": "stepper",
+        "role": "value",
+        "label": {
+          "en": "Fixtures",
+          "de": "Anzahl Entnahmestellen"
+        },
+        "step": 1,
+        "precision": 0,
+        "group": "capacity",
+        "order": 20
+      }
     }
   }
 }

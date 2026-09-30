@@ -34,6 +34,13 @@
   },
   "cases": [
     {
+      "id": "owned-native-output-capture",
+      "mutation": "native-output-override",
+      "expected": "passed",
+      "builds": 1,
+      "assertions": 2
+    },
+    {
       "id": "captured-debug-output",
       "mutation": "debug-output",
       "expected": "passed",
@@ -165,6 +172,40 @@
       "expected": "denied",
       "builds": 0,
       "assertions": 0
+    }
+  ],
+  "lawLimitVectors": [
+    {
+      "count": 0,
+      "accepted": false
+    },
+    {
+      "count": 1,
+      "accepted": true
+    },
+    {
+      "count": 256,
+      "accepted": true
+    },
+    {
+      "count": 257,
+      "accepted": true
+    },
+    {
+      "count": 323,
+      "accepted": true
+    },
+    {
+      "count": 1024,
+      "accepted": true
+    },
+    {
+      "count": 4096,
+      "accepted": true
+    },
+    {
+      "count": 4097,
+      "accepted": false
     }
   ]
 }

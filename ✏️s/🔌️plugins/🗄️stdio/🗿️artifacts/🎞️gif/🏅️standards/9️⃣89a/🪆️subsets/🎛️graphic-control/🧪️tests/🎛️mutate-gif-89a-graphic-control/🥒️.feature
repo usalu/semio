@@ -16,11 +16,11 @@ Feature: Apply every typed GIF 89a mutation to a real-world animation
       """
     Then the oracle and the subject agree on the semantic projection
     Examples:
-      | id                          | params                                                                   |
-      | set-frame-delay             | {"index":1,"delayCs":250}                                                |
-      | set-frame-disposal          | {"index":1,"disposal":"restoreToBackground"}                            |
-      | set-frame-transparency      | {"index":1,"transparentIndex":3}                                         |
-      | set-frame-user-input        | {"index":1,"userInput":true}                                            |
+      | id | params |
+      | set-frame-delay | {"index":1,"delayCs":250} |
+      | set-frame-disposal | {"index":1,"disposal":"restoreToBackground"} |
+      | set-frame-transparency | {"index":1,"transparentIndex":3} |
+      | set-frame-user-input | {"index":1,"userInput":true} |
 
   @id-inverse
   @level-exhaustive
@@ -33,8 +33,8 @@ Feature: Apply every typed GIF 89a mutation to a real-world animation
       """
     Then the original semantic projection is recovered
     Examples:
-      | id                          | params                                                                   |
-      | set-frame-delay             | {"index":1,"delayCs":250}                                                |
-      | set-frame-disposal          | {"index":1,"disposal":"restoreToBackground"}                            |
-      | set-frame-transparency      | {"index":1,"transparentIndex":3}                                         |
-      | set-frame-user-input        | {"index":1,"userInput":true}                                            |
+      | id | params |
+      | set-frame-delay | {"index":1,"delayCs":250} |
+      | set-frame-disposal | {"index":1,"disposal":"restoreToBackground"} |
+      | set-frame-transparency | {"index":1,"transparentIndex":3} |
+      | set-frame-user-input | {"index":1,"userInput":true} |

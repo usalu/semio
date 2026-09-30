@@ -5,15 +5,22 @@
   "type": "object",
   "additionalProperties": false,
   "required": [
+    "mutation",
     "relation"
   ],
   "properties": {
-    "relation": {
-      "$ref": "#/$defs/ModelRelation"
-    },
     "mutation": {
       "const": "insertRelation",
       "description": "Aggregate discriminator spliced in by SemioModelMutation; absent when the payload stands alone."
+    },
+    "relation": {
+      "$ref": "#/$defs/ModelRelation",
+      "x-semio-ui": {
+        "label": {
+          "en": "Relation",
+          "de": "Beziehung"
+        }
+      }
     }
   },
   "$defs": {

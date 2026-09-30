@@ -2,7 +2,7 @@
 use crate::schema::diff::TiffDiff;
 use crate::TiffSnapshot;
 
-pub use crate::schema::operations::{apply_tiff_mutation, inverse_tiff_mutation};
+pub use crate::schema::operations::{apply_tiff_mutation, decode_tiff_mutation_payload, inverse_tiff_mutation};
 
 //#region Owners
 pub use super::change_byte_order::ChangeByteOrderMutation;

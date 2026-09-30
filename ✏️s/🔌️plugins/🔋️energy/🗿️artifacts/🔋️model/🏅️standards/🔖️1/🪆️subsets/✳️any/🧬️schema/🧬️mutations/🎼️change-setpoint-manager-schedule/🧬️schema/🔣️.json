@@ -5,19 +5,95 @@
   "type": "object",
   "additionalProperties": false,
   "required": [
+    "mutation",
     "id",
     "newSchedulePresent",
     "newScheduleId"
   ],
   "properties": {
+    "mutation": {
+      "const": "changeSetpointManagerSchedule"
+    },
     "id": {
-      "type": "integer"
+      "type": "integer",
+      "minimum": 0,
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Setpoint manager",
+          "de": "Sollwertführung"
+        },
+        "description": {
+          "en": "The setpoint manager this mutation changes, by id.",
+          "de": "Sollwertführung, die diese Mutation ändert, per ID."
+        },
+        "ref": {
+          "kind": "setpointManager"
+        },
+        "group": "target",
+        "order": 10
+      }
     },
     "newSchedulePresent": {
-      "type": "boolean"
+      "type": "boolean",
+      "x-semio-ui": {
+        "widget": "toggle",
+        "role": "value",
+        "label": {
+          "en": "Use schedule",
+          "de": "Zeitplan verwenden"
+        },
+        "description": {
+          "en": "Off means no setpoint schedule; its id is then 0.",
+          "de": "Aus bedeutet kein Sollwertzeitplan; dessen ID ist dann 0."
+        },
+        "group": "schedule",
+        "order": 20
+      }
     },
     "newScheduleId": {
-      "type": "integer"
+      "type": "integer",
+      "minimum": 0,
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Setpoint schedule",
+          "de": "Sollwertzeitplan"
+        },
+        "description": {
+          "en": "Setpoint in °C over time, by id; 0 while no schedule is used.",
+          "de": "Sollwert in °C im Zeitverlauf, per ID; 0, solange kein Zeitplan verwendet wird."
+        },
+        "ref": {
+          "kind": "schedule",
+          "domain": "energyModel",
+          "granularity": "schedule"
+        },
+        "group": "schedule",
+        "order": 30
+      }
     }
-  }
+  },
+  "allOf": [
+    {
+      "if": {
+        "type": "object",
+        "properties": {
+          "newSchedulePresent": {
+            "const": false
+          }
+        }
+      },
+      "then": {
+        "type": "object",
+        "properties": {
+          "newScheduleId": {
+            "const": 0
+          }
+        }
+      }
+    }
+  ]
 }

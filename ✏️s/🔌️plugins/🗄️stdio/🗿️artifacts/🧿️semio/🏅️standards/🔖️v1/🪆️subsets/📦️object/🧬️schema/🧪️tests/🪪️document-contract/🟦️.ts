@@ -1,9 +1,9 @@
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
-import Ajv from "ajv";
 import fg from "fast-glob";
 import { applyPatch } from "fast-json-patch";
+import { addSemioMutationLeafSchemasV1, semioSchemaAjvV1 } from "../../../../../../../../../../../../🧰️framework/🛍️products/💻️os/🧪️tests/🧬️schema-oracle/🟦️.ts";
 import * as artifact from "../../🟦️.ts";
 import * as snapshot from "../../📸️snapshot/🟦️.ts";
 import * as diff from "../../🔺️diff/🟦️.ts";
@@ -14,8 +14,7 @@ const read = (path: string) => JSON.parse(readFileSync(new URL(path, import.meta
 /** 🧪️ Persisted Object fields and exact child references agree with independent schema admission. */
 export function testSemioObjectDocumentContract(): void {
   testSchemaRecordOracle();
-  const ajv = new Ajv({ strict: true, allErrors: true });
-  for (const key of ["x-semio-state", "x-semio-child"]) ajv.addKeyword(key);
+  const ajv = semioSchemaAjvV1({ allErrors: true });
   for (const path of ["../../../../../../../../../../../..//🧰️framework/🔨️modules/🚪️io/🧬️schema/🔣️.json","../../../../../../../../../../../..//🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🪆️child/🧬️schema/🔣️.json","../../../../✉️base/🧬️schema/🪆️child/🔣️.json","../../../../✉️base/🧬️schema/🧮️geometry/🔣️.json"]) ajv.addSchema(read(path));
   const fixtures = read("../../🧫️fixtures/🪪️document-contract/🔣️.json");
   const childIdentity = (value: any): boolean => ["brep", "mesh", "properties"].every((field) => !value[field] || ajv.compile({ const: value[field].target.artifactId })(value[field].childId));
@@ -44,8 +43,7 @@ export function testSemioObjectDocumentContract(): void {
     assert.deepEqual(expected, entry.after, "independent patch oracle");
     assert.deepEqual(diff.applySemioObjectDiff(artifact.parseSemioObjectArtifact(entry.before), diff.parseSemioObjectDiff(entry.diff)), expected, "parent edit preserves untouched child references");
   }
-  const mutationRoot = fileURLToPath(new URL("../../🧬️mutations/", import.meta.url));
-  for (const file of fg.sync("*/🧬️schema/🔣️.json", { cwd: mutationRoot, absolute: true })) ajv.addSchema(JSON.parse(readFileSync(file, "utf8")));
+  addSemioMutationLeafSchemasV1(ajv, new URL("../../🧬️mutations/", import.meta.url));
   const mutationSchema = ajv.compile(read("../../🧬️mutations/🔣️.json"));
   let snapshots = 0, diffs = 0, mutations = 0;
   const corpusRoot = fileURLToPath(new URL("../../../🧫️fixtures/🧬️mutations/", import.meta.url));

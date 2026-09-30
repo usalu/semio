@@ -409,4 +409,7 @@ mod tests;
 #[cfg(test)]
 #[path = "📸️set-snapshot/🧪️tests/🔤️rewrites-the-second-slides-textbox-and-adds-a-speaker-note/🦀️.rs"]
 mod set_snapshot_rewrites_the_second_slides_textbox_and_adds_a_speaker_note;
+#[cfg(test)]
+#[path = "📸️set-snapshot/🧪️tests/🔃️reverses-the-slide-order/🦀️.rs"]
+mod set_snapshot_reverses_the_slide_order;
 //#endregion 🧪️FixtureCases

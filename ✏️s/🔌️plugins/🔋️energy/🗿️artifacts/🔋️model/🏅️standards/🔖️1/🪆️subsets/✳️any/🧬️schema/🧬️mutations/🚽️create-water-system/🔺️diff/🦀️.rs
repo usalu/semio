@@ -10,7 +10,7 @@ pub fn diff(payload: &super::CreateWaterSystem, base: &EnergyModelSnapshot) -> p
         return protocol::MutationOutcome::error("mutation.duplicate-id", format!("Water system {} already exists.", payload.id.0), [payload.id.0.to_string()]);
     }
     if payload.index as usize > base.model.water_systems.len() {
-        return protocol::MutationOutcome::error("mutation.invariant", format!("Index {} is past the end of the model's {} water_systems.", payload.index, base.model.water_systems.len()), [payload.id.0.to_string()]);
+        return protocol::MutationOutcome::error("mutation.target-missing", format!("Index {} is past the end of the model's {} water_systems.", payload.index, base.model.water_systems.len()), [payload.id.0.to_string()]);
     }
     if !(base.model.schedules.constants.iter().any(|schedule| schedule.id == payload.schedule_id)
         || base.model.schedules.daily.iter().any(|schedule| schedule.id == payload.schedule_id)

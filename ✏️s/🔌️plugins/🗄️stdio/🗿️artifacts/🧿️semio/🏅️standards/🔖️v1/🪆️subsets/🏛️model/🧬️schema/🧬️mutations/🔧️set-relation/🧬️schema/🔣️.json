@@ -5,9 +5,14 @@
   "type": "object",
   "additionalProperties": false,
   "required": [
+    "mutation",
     "id"
   ],
   "properties": {
+    "mutation": {
+      "const": "setRelation",
+      "description": "Aggregate discriminator spliced in by SemioModelMutation; absent when the payload stands alone."
+    },
     "id": {
       "type": "string"
     },
@@ -40,10 +45,6 @@
           "type": "null"
         }
       ]
-    },
-    "mutation": {
-      "const": "setRelation",
-      "description": "Aggregate discriminator spliced in by SemioModelMutation; absent when the payload stands alone."
     }
   },
   "$defs": {

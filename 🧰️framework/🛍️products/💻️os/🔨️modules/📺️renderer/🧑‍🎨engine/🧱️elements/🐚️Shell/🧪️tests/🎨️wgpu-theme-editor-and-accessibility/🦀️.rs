@@ -583,6 +583,7 @@ fn field_and_engagement_labels_reach_focusable_child_controls() {
             uniform: false,
             min: None,
             max: None,
+            precision: None,
             on_absolute: action.clone(),
             on_delta: action,
             presence: UiPresence::default(),

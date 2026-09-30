@@ -5,15 +5,16 @@
   "type": "object",
   "additionalProperties": false,
   "required": [
+    "mutation",
     "sheet"
   ],
   "properties": {
-    "sheet": {
-      "$ref": "#/$defs/XlsxSheet"
-    },
     "mutation": {
       "const": "insertSheet",
       "description": "Aggregate discriminator spliced in by XlsxMutation; absent when the payload stands alone."
+    },
+    "sheet": {
+      "$ref": "#/$defs/XlsxSheet"
     }
   },
   "$defs": {
@@ -31,6 +32,12 @@
           "type": "array",
           "items": {
             "$ref": "#/$defs/XlsxCell"
+          },
+          "x-semio-ui": {
+            "label": {
+              "en": "Cells",
+              "de": "Zellen"
+            }
           }
         }
       }
@@ -51,7 +58,18 @@
         "col": {
           "type": "integer",
           "minimum": 0,
-          "maximum": 4294967295
+          "maximum": 4294967295,
+          "x-semio-ui": {
+            "widget": "stepper",
+            "label": {
+              "en": "Column",
+              "de": "Spalte"
+            },
+            "description": {
+              "en": "Zero-based column index of the cell.",
+              "de": "Nullbasierter Spaltenindex der Zelle."
+            }
+          }
         },
         "value": {
           "$ref": "#/$defs/XlsxCellValue"

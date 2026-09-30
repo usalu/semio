@@ -1,8 +1,17 @@
-/** 🦠️ bind-morph-target-attribute: cohesive atomic mesh mutation. */
-import type { GltfJson, GltfSnapshot, GltfPrimitive, GltfMorphTarget } from '../../📸️snapshot/🟦️.ts';
-import { run, reject, positionIn, itemIndex, permutation, moveItem, type GltfLeafResult, type GltfMutationRejection } from './🟦️';
-export const GltfBindMorphTargetAttributeDescriptor = { id: 's.stdio.gltf.mutation.bind-morph-target-attribute.v1', version: 1, kind: 'bind', touchedPaths: ["document/meshes/*/primitives/*/targets/*/attributes"], referencePolicy: 'semantic keys are unique and accessor identity is validated' } as const;
-export interface GltfBindMorphTargetAttributePayload { mesh: number; primitive: number; target: number; semantic: string; accessor: number }
-export type GltfBindMorphTargetAttributeResult = GltfLeafResult;
-export const validateGltfBindMorphTargetAttribute = (payload: GltfBindMorphTargetAttributePayload, base: GltfSnapshot): GltfMutationRejection | undefined => { const mesh = itemIndex(payload.mesh, base.document.meshes.length, 'document/meshes'); if (mesh) return mesh; const primitive = itemIndex(payload.primitive, base.document.meshes[payload.mesh]!.primitives.length, `document/meshes/${payload.mesh}/primitives`); if (primitive) return primitive; const target = itemIndex(payload.target, base.document.meshes[payload.mesh]!.primitives[payload.primitive]!.targets.length, 'document/meshes/primitives/targets'); if (target) return target; const accessor = itemIndex(payload.accessor, base.document.accessors.length, 'document/accessors'); if (accessor) return accessor; if (!payload.semantic.trim() || Object.prototype.hasOwnProperty.call(base.document.meshes[payload.mesh]!.primitives[payload.primitive]!.targets[payload.target]!, payload.semantic)) return reject('gltf.mutation.invalid-attribute-semantic', 'document/meshes/primitives/targets', 'semantic must be non-empty and unique'); return undefined; };
-export const applyGltfBindMorphTargetAttribute = (base: GltfSnapshot, payload: GltfBindMorphTargetAttributePayload): GltfBindMorphTargetAttributeResult => run(base, payload, validateGltfBindMorphTargetAttribute, (next, payload) => { next.document.meshes[payload.mesh]!.primitives[payload.primitive]!.targets[payload.target]![payload.semantic] = payload.accessor; }, GltfBindMorphTargetAttributeDescriptor.touchedPaths);
+/** 🔗️ `bind-morph-target-attribute` wire twin: the flat `Apply` payload `GltfBindMorphTargetAttributePayload` and the phase wire `BindMorphTargetAttributeMutation`, exactly as `./🦀️.rs` writes them.
+ * @see ./🧬️schema/🔣️.json */
+import { gltfWireIndex, gltfWireObject, gltfWireRequired, gltfWireString } from "../../../📸️snapshot/🟦️.ts";
+import { type GltfDiff, type GltfPhase, gltfWirePhase, parseGltfDiff } from "../../../🔺️diff/🟦️.ts";
+
+export interface GltfBindMorphTargetAttributePayload {
+  mesh: number;
+  primitive: number;
+  target: number;
+  semantic: string;
+  accessor: number;
+}
+
+export type BindMorphTargetAttributeMutation = GltfPhase<GltfBindMorphTargetAttributePayload, GltfDiff>;
+
+export const parseGltfBindMorphTargetAttributePayload = gltfWireObject<GltfBindMorphTargetAttributePayload>({ mesh: gltfWireRequired(gltfWireIndex), primitive: gltfWireRequired(gltfWireIndex), target: gltfWireRequired(gltfWireIndex), semantic: gltfWireRequired(gltfWireString), accessor: gltfWireRequired(gltfWireIndex) });
+export const parseBindMorphTargetAttributeMutation = gltfWirePhase(parseGltfBindMorphTargetAttributePayload, parseGltfDiff);

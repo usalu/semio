@@ -1,0 +1,34 @@
+{
+  "operation": "addNode",
+  "node": {
+    "id": "n1",
+    "pluginId": "plugin",
+    "appId": "app",
+    "label": "n1",
+    "yields": "",
+    "artifactRef": "artifacts/n1",
+    "configRef": "config/n1",
+    "x": 0.0,
+    "y": 0.0,
+    "width": 220.0,
+    "height": 100.0,
+    "inputs": [],
+    "outputs": [
+      {
+        "id": "n1:out:out",
+        "spec": {
+          "id": "out",
+          "label": "Out",
+          "direction": "out",
+          "mediaType": {
+            "class": "data",
+            "form": "value"
+          },
+          "kindId": "kind.a",
+          "required": false,
+          "multiplicity": "many"
+        }
+      }
+    ]
+  }
+}

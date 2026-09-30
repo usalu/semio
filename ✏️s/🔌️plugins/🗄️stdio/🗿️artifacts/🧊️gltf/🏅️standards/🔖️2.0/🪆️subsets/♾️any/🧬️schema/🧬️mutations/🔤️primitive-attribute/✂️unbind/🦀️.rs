@@ -4,8 +4,7 @@ use crate::schema::modules::mutation_support::top_level::rejection_outcome;
 use crate::schema::modules::mutation_support::top_level::{reject, GltfTopLevelMutationRejection};
 use crate::GltfSnapshot;
 pub const ID: &str = "s.stdio.gltf.mutation.unbind-primitive-attribute.v1";
-#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::MutationLeaf)]
-#[mutation_leaf(contract = ::protocol)]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
 #[value(rename_all = "camelCase")]
 pub struct GltfUnbindPrimitiveAttributePayload {
     pub mesh: usize,
@@ -31,7 +30,7 @@ pub fn apply(payload: &GltfUnbindPrimitiveAttributePayload, base: &GltfSnapshot)
 
 //#region 🧬️DirectMutation
 #[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::MutationLeaf)]
-#[mutation_leaf(contract = ::protocol)]
+#[mutation_leaf(contract = ::protocol, payload = Apply)]
 #[value(tag = "phase", content = "value", rename_all = "camelCase")]
 pub enum UnbindPrimitiveAttributeMutation {
     Apply(GltfUnbindPrimitiveAttributePayload),
@@ -75,6 +74,6 @@ impl protocol::MutationKind<GltfSnapshot, super::GltfMutation> for UnbindPrimiti
 
 //#region 🧪️Tests
 #[cfg(test)]
-#[path = "🧪️tests/🔬️direct-leaf/🦀️.rs"]
-mod direct_leaf_tests;
+#[path = "🧪️tests/🔗️unbinds-normal-d381d3/🦀️.rs"]
+mod case_unbinds_normal_d381d3;
 //#endregion 🧪️Tests

@@ -5,9 +5,13 @@
   "type": "object",
   "additionalProperties": false,
   "required": [
+    "mutation",
     "gcp"
   ],
   "properties": {
+    "mutation": {
+      "const": "createGcp"
+    },
     "gcp": {
       "type": "object",
       "title": "GroundControlPoint",
@@ -20,10 +24,34 @@
       ],
       "properties": {
         "id": {
-          "type": "string"
+          "type": "string",
+          "x-semio-ui": {
+            "widget": "text",
+            "role": "value",
+            "label": {
+              "en": "Point ID",
+              "de": "Punkt-ID"
+            },
+            "description": {
+              "en": "Unique ID of the new ground control point.",
+              "de": "Eindeutige ID des neuen Passpunkts."
+            },
+            "group": "identity",
+            "order": 10
+          }
         },
         "name": {
-          "type": "string"
+          "type": "string",
+          "x-semio-ui": {
+            "widget": "text",
+            "role": "value",
+            "label": {
+              "en": "Name",
+              "de": "Bezeichnung"
+            },
+            "group": "identity",
+            "order": 20
+          }
         },
         "worldPosition": {
           "type": "array",
@@ -32,7 +60,22 @@
             "format": "double"
           },
           "minItems": 3,
-          "maxItems": 3
+          "maxItems": 3,
+          "x-semio-ui": {
+            "widget": "vector",
+            "role": "value",
+            "label": {
+              "en": "World Position",
+              "de": "Weltkoordinaten"
+            },
+            "description": {
+              "en": "Surveyed position in the project coordinate system.",
+              "de": "Eingemessene Lage im Projektkoordinatensystem."
+            },
+            "step": 0.001,
+            "group": "geometry",
+            "order": 30
+          }
         },
         "observations": {
           "type": "array",
@@ -47,12 +90,41 @@
             ],
             "properties": {
               "streamId": {
-                "type": "string"
+                "type": "string",
+                "x-semio-ui": {
+                  "widget": "reference",
+                  "role": "target",
+                  "label": {
+                    "en": "Stream",
+                    "de": "Stream"
+                  },
+                  "description": {
+                    "en": "The stream of the measured frame.",
+                    "de": "Stream des gemessenen Bildes."
+                  },
+                  "ref": {
+                    "kind": "stream"
+                  },
+                  "group": "media",
+                  "order": 10
+                }
               },
               "frameIndex": {
                 "type": "integer",
                 "format": "uint32",
-                "minimum": 0
+                "minimum": 0,
+                "x-semio-ui": {
+                  "widget": "stepper",
+                  "role": "value",
+                  "label": {
+                    "en": "Frame Index",
+                    "de": "Bildindex"
+                  },
+                  "step": 1,
+                  "precision": 0,
+                  "group": "media",
+                  "order": 20
+                }
               },
               "pixel": {
                 "type": "array",
@@ -61,11 +133,45 @@
                   "format": "float"
                 },
                 "minItems": 2,
-                "maxItems": 2
+                "maxItems": 2,
+                "x-semio-ui": {
+                  "widget": "vector",
+                  "role": "value",
+                  "label": {
+                    "en": "Pixel Position (px)",
+                    "de": "Bildposition (px)"
+                  },
+                  "unit": "px",
+                  "step": 0.1,
+                  "group": "geometry",
+                  "order": 30
+                }
               }
             }
+          },
+          "x-semio-ui": {
+            "role": "value",
+            "label": {
+              "en": "Observations",
+              "de": "Passpunktmessungen"
+            },
+            "group": "media",
+            "order": 40
           }
         }
+      },
+      "x-semio-ui": {
+        "role": "value",
+        "label": {
+          "en": "Ground Control Point",
+          "de": "Passpunkt"
+        },
+        "description": {
+          "en": "A surveyed point used to georeference the reconstruction.",
+          "de": "Eingemessener Punkt zur Georeferenzierung der Rekonstruktion."
+        },
+        "group": "record",
+        "order": 10
       }
     }
   }

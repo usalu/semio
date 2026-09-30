@@ -5,9 +5,13 @@
   "type": "object",
   "additionalProperties": false,
   "required": [
+    "mutation",
     "generation"
   ],
   "properties": {
+    "mutation": {
+      "const": "createGeneration"
+    },
     "generation": {
       "title": "FormGeneration",
       "type": "object",
@@ -15,19 +19,71 @@
       "required": [
         "id",
         "name",
-        "valuesJson"
+        "values"
       ],
       "properties": {
         "id": {
-          "type": "string"
+          "type": "string",
+          "x-semio-ui": {
+            "widget": "text",
+            "role": "value",
+            "label": {
+              "en": "ID",
+              "de": "ID"
+            },
+            "description": {
+              "en": "Unique generation id.",
+              "de": "Eindeutige Generierungs-ID."
+            },
+            "group": "identity",
+            "order": 10
+          }
         },
         "name": {
-          "type": "string"
-        },
-        "valuesJson": {
           "type": "string",
-          "contentMediaType": "application/json"
+          "x-semio-ui": {
+            "widget": "text",
+            "role": "value",
+            "label": {
+              "en": "Name",
+              "de": "Name"
+            },
+            "group": "identity",
+            "order": 20
+          }
+        },
+        "values": {
+          "type": "object",
+          "additionalProperties": {
+            "description": "the answer, any JSON value"
+          },
+          "x-semio-ui": {
+            "role": "value",
+            "label": {
+              "en": "Answers",
+              "de": "Antworten"
+            },
+            "description": {
+              "en": "Answer per question id.",
+              "de": "Antwort je Fragen-ID."
+            },
+            "group": "value",
+            "order": 30
+          }
         }
+      },
+      "x-semio-ui": {
+        "role": "value",
+        "label": {
+          "en": "Generation",
+          "de": "Generierung"
+        },
+        "description": {
+          "en": "The complete generation to add.",
+          "de": "Die vollständige hinzuzufügende Generierung."
+        },
+        "group": "record",
+        "order": 10
       }
     }
   }

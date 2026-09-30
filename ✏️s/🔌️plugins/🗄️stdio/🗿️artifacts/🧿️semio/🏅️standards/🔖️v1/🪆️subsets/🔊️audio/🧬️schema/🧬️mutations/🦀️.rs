@@ -82,6 +82,15 @@ pub fn apply_semio_audio_mutation(snapshot: &mut SemioAudioSnapshot, mutation: &
 pub fn inverse_semio_audio_mutation(mutation: &SemioAudioMutation, base: &SemioAudioSnapshot) -> Vec<SemioAudioMutation> {
     <SemioAudioMutation as Mutation<SemioAudioSnapshot>>::inverse(mutation, base)
 }
+
+/// 📥️ Decodes this subset's internally tagged (`{"mutation": "<camelCaseVariant>", ...}`) wire value — the shape
+/// `🔊️mutate-semio-audio`'s committed specification vectors and doc strings carry — into a real [`SemioAudioMutation`]. A thin
+/// `pack::from_json_str` wrapper over `ToValue`/`FromValue`, so the test adapter reads the committed wire value instead of
+/// re-declaring it field by field beside it.
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn decode_semio_audio_mutation_json(text: &str) -> Result<SemioAudioMutation, String> {
+    pack::from_json_str(text).map_err(|error| error.to_string())
+}
 //#endregion 🔖️Apply
 
 //#region 🔖️MutationTrait
@@ -273,7 +282,7 @@ impl OpBinary for SemioAudioMutation {
 /// 🌱 Representative `SemioAudioMutation` cases, one per variant — single source of truth for
 /// `ops_grammar_conformance_law`/`protocol_walk_law` in `🎹️composer/🦀️.rs` and this
 /// file's own `op_text_binary_roundtrip_law`.
-#[cfg(all(test, feature = "conversion-audio"))]
+#[cfg(test)]
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub(crate) fn demo_mutation_cases() -> Vec<SemioAudioMutation> {
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9

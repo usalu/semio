@@ -113,6 +113,7 @@ fn sample_envelope(id: &str, deps: Vec<&str>) -> MutationEnvelope {
         diff: ArtifactDiff { schema: crate::ids::SchemaId("diff.v1".into()), payload: id.as_bytes().to_vec() },
         inverse: InverseMutation { schema: crate::ids::SchemaId("diff.v1".into()), payload: Vec::new() },
         timestamp: crate::ids::HybridLogicalTimestamp::new(1, 0),
+        transaction: None,
     }
 }
 
@@ -422,6 +423,7 @@ fn mutation_envelope_from_edit_derives_one_envelope_per_forward_op_using_explici
                 label: None,
                 group_id: None,
                 origin: crate::mutation::MutationOrigin::Owner,
+                transaction: None,
             },
             crate::mutation::MutationMeta {
                 mutation_id: Some(crate::ids::MutationId("op-b".into())),
@@ -435,6 +437,7 @@ fn mutation_envelope_from_edit_derives_one_envelope_per_forward_op_using_explici
                 label: None,
                 group_id: None,
                 origin: crate::mutation::MutationOrigin::Owner,
+                transaction: Some(crate::mutation::TransactionRef { id: "tx-0011223344556677".into(), tool: "app#select".into() }),
             },
         ],
         description: None,
@@ -461,6 +464,8 @@ fn mutation_envelope_from_edit_derives_one_envelope_per_forward_op_using_explici
     // Second op's meta has no author_id -> falls back to `edit.actor`, not "unknown".
     assert_eq!(envelopes[1].mutation_id, crate::ids::MutationId("op-b".into()));
     assert_eq!(envelopes[1].actor, crate::ids::ActorId("actor-fallback".into()));
+    assert_eq!(envelopes[0].transaction, None, "an operation authored outside a tool transaction carries none");
+    assert_eq!(envelopes[1].transaction, edit.mutation_meta[1].transaction, "the meta's transaction rides the wire envelope");
 }
 
 #[test]
@@ -524,6 +529,24 @@ fn envelope_binary_round_trips() {
     assert_eq!(pos, out.len(), "decode must consume exactly the encoded bytes");
 }
 
+/// 🧾️ A tool transaction rides the binary envelope and its value shape; an invalid flag is refused.
+#[test]
+fn envelope_transaction_round_trips_through_binary_and_value() {
+    let mut envelope = sample_envelope("operation-1", vec!["operation-0"]);
+    envelope.transaction = Some(crate::mutation::TransactionRef { id: "tx-0123456789abcdef".into(), tool: "app#select".into() });
+    let mut out = Vec::new();
+    encode_envelope(&envelope, &mut out);
+    let mut pos = 0;
+    assert_eq!(decode_envelope(&out, &mut pos).expect("decode"), envelope);
+    assert_eq!(pos, out.len());
+    let decoded: MutationEnvelope = crate::value::FromValue::from_value(crate::value::ToValue::to_value(&envelope)).expect("value decode");
+    assert_eq!(decoded, envelope);
+    let mut plain = Vec::new();
+    encode_envelope(&sample_envelope("operation-1", vec!["operation-0"]), &mut plain);
+    *plain.last_mut().expect("transaction flag") = 2;
+    assert!(format!("{:?}", decode_envelope(&plain, &mut 0).expect_err("flag 2")).contains("transaction flag 2"));
+}
+
 #[test]
 fn envelope_binary_encoding_is_deterministic() {
     let envelope = sample_envelope("operation-1", vec!["operation-0"]);
@@ -546,6 +569,7 @@ fn envelope_binary_round_trips_with_empty_dependencies_and_payloads() {
         diff: ArtifactDiff { schema: crate::ids::SchemaId("s".into()), payload: Vec::new() },
         inverse: InverseMutation { schema: crate::ids::SchemaId("s".into()), payload: Vec::new() },
         timestamp: crate::ids::HybridLogicalTimestamp::new(0, 0),
+        transaction: None,
     };
     let mut out = Vec::new();
     encode_envelope(&envelope, &mut out);
@@ -615,6 +639,8 @@ fn document_backbone_batch_fixture_is_exact_bounded_and_u64_safe() {
                     assert_eq!(actual.timestamp.actor.to_string(), expected["timestamp"]["actor"].as_str().expect("timestamp actor"));
                     assert_eq!(actual.timestamp.physical_ms.to_string(), expected["timestamp"]["physicalMs"].as_str().expect("timestamp physicalMs"));
                     assert_eq!(actual.timestamp.logical.to_string(), expected["timestamp"]["logical"].as_str().expect("timestamp logical"));
+                    let transaction = &expected["transaction"];
+                    assert_eq!(actual.transaction, (!transaction.is_null()).then(|| crate::mutation::TransactionRef { id: transaction["id"].as_str().expect("transaction id").into(), tool: transaction["tool"].as_str().expect("transaction tool").into() }), "{}", row["id"]);
                 }
             }
             (Err(crate::ProtocolError::LimitExceeded(_)), "limit") => {}

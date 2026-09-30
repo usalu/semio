@@ -1,0 +1,33 @@
+{
+  "valid": {
+    "ownerRoot": "app/dev",
+    "viteConfig": "app/dev/builder/🟦️.ts",
+    "browserEntry": "app/dev/entry/🟦️.ts"
+  },
+  "validPaths": [
+    "app/dev/🟦️.ts",
+    "app/dev/a-b.ts"
+  ],
+  "invalidPaths": [
+    "",
+    "/app/a.ts",
+    "../a.ts",
+    "app/../a.ts",
+    "app/./a.ts",
+    "app//a.ts",
+    "C:/app/a.ts",
+    "C:\\app\\a.ts",
+    "app/a.ts/",
+    "app/\u0000a.ts"
+  ],
+  "invalid": [
+    {},
+    null,
+    {
+      "ownerRoot": "app/dev",
+      "viteConfig": "app/dev/builder.ts",
+      "browserEntry": "app/dev/entry.ts",
+      "unknown": true
+    }
+  ]
+}

@@ -6,13 +6,13 @@ use crate::schema::mutations::create_widget::CreateWidget;
 use crate::schema::mutations::FlowMutation;
 use crate::schema::widget_with_id;
 use crate::{flow_working_scene, FlowSnapshot};
-use protocol::{Identified, PlanError, Planner};
+use protocol::{Identified, MutationMessage, PlanError, Planner};
 
 use super::mutation::DuplicateWidget;
 
 //#region 🧩️Plan
 pub fn plan(payload: &DuplicateWidget, base: &FlowSnapshot, planner: &mut Planner<FlowSnapshot, FlowMutation>) -> Result<(), PlanError> {
-    precondition(payload, base).map_err(PlanError::Invalid)?;
+    precondition(payload, base).map_err(PlanError::Refused)?;
     let scene = flow_working_scene(base);
     let source = scene.widgets.iter().find(|widget| widget.id() == &payload.source_id).expect("precondition confirmed source_id is present");
     let copy = widget_with_id(source, payload.new_id.clone());
@@ -30,19 +30,20 @@ pub fn plan(payload: &DuplicateWidget, base: &FlowSnapshot, planner: &mut Planne
     Ok(())
 }
 
-/// ✅️ Shared by `plan` (mapped to a typed `PlanError`, so a direct `Planner::call`/`plan_of` caller
-/// never panics on bad input) and `CompositeMutationKind::validate` (the `ArtifactStore::dispatch`
-/// pre-check every mutation gets before it is even encoded).
-pub fn precondition(payload: &DuplicateWidget, base: &FlowSnapshot) -> Result<(), String> {
+/// ✅️ The plan's domain refusals, each with its own code and target so the folded outcome names the
+/// real cause: an id equal to its source breaks the payload invariant, a missing source is
+/// `target-missing`, an occupied `new_id` is `duplicate-id` — mapped to [`PlanError::Refused`], so a
+/// direct `Planner::call`/`plan_of` caller never panics on bad input.
+pub fn precondition(payload: &DuplicateWidget, base: &FlowSnapshot) -> Result<(), MutationMessage> {
     if payload.source_id == payload.new_id {
-        return Err("duplicate-widget: new_id must differ from source_id".into());
+        return Err(MutationMessage::fatal("mutation.invariant", "duplicate-widget: new_id must differ from source_id").at([payload.new_id.clone()]));
     }
     let scene = flow_working_scene(base);
     if !scene.widgets.iter().any(|widget| widget.id() == &payload.source_id) {
-        return Err(format!("duplicate-widget: source widget \"{}\" not found", payload.source_id));
+        return Err(MutationMessage::fatal("mutation.target-missing", format!("duplicate-widget: source widget \"{}\" not found", payload.source_id)).at([payload.source_id.clone()]));
     }
     if scene.widgets.iter().any(|widget| widget.id() == &payload.new_id) {
-        return Err(format!("duplicate-widget: id \"{}\" already taken", payload.new_id));
+        return Err(MutationMessage::fatal("mutation.duplicate-id", format!("duplicate-widget: id \"{}\" already taken", payload.new_id)).at([payload.new_id.clone()]));
     }
     Ok(())
 }

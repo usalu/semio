@@ -355,7 +355,7 @@ pub fn apply_restore(restore: &GltfChangeNodeNameRestore, base: &GltfSnapshot) -
 /// docs (`deny_unknown_fields` enum-container enforcement, ticket
 /// `.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️01/RUNTIME-DEPENDENCY-ELIMINATION-FOR-S-PLUGINS-AND-ARTIFACTS`).
 #[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::MutationLeaf)]
-#[mutation_leaf(contract = ::protocol)]
+#[mutation_leaf(contract = ::protocol, payload = Apply)]
 #[value(tag = "phase", content = "value", rename_all = "camelCase", deny_unknown_fields)]
 pub enum ChangeNodeNameMutation {
     Apply(GltfChangeNodeNamePayload),
@@ -402,8 +402,8 @@ impl protocol::MutationKind<GltfSnapshot, super::GltfMutation> for ChangeNodeNam
 
 //#region 🧪️Tests
 #[cfg(test)]
-#[path = "🧪️tests/🔬️direct-leaf/🦀️.rs"]
-mod direct_leaf_tests;
+#[path = "🧪️tests/✏️renames-the-root-f1e002/🦀️.rs"]
+mod case_renames_the_root_f1e002;
 //#endregion 🧪️Tests
 
 #[cfg(test)]

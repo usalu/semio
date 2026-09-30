@@ -11,11 +11,11 @@ use crate::standards::v1::subsets::mesh::schema::mutations::SemioMeshMutation;
 use crate::standards::v1::subsets::mesh::schema::snapshot::SemioMeshSnapshot;
 use protocol::{Mutation, MutationDiff};
 
-const BEFORE: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/⚙️change-material-metallic/🪙️raises-the-metallic-factor-to-fully-metallic/📸️snapshot/⬅️before/🔣️.json");
-const AFTER: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/⚙️change-material-metallic/🪙️raises-the-metallic-factor-to-fully-metallic/📸️snapshot/➡️after/🔣️.json");
-const MUTATION: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/⚙️change-material-metallic/🪙️raises-the-metallic-factor-to-fully-metallic/🦠️mutation/🔣️.json");
-const DIFF: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/⚙️change-material-metallic/🪙️raises-the-metallic-factor-to-fully-metallic/🔺️diff/🔣️.json");
-const OUTCOME: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/⚙️change-material-metallic/🪙️raises-the-metallic-factor-to-fully-metallic/🎯️outcome/🔣️.json");
+const BEFORE: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/⚙️change-material-metallic/🪙️raises-metallic-factor-fully-metallic/📸️snapshot/⬅️before/🔣️.json");
+const AFTER: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/⚙️change-material-metallic/🪙️raises-metallic-factor-fully-metallic/📸️snapshot/➡️after/🔣️.json");
+const MUTATION: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/⚙️change-material-metallic/🪙️raises-metallic-factor-fully-metallic/🦠️mutation/🔣️.json");
+const DIFF: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/⚙️change-material-metallic/🪙️raises-metallic-factor-fully-metallic/🔺️diff/🔣️.json");
+const OUTCOME: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/⚙️change-material-metallic/🪙️raises-metallic-factor-fully-metallic/🎯️outcome/🔣️.json");
 
 fn before() -> SemioMeshSnapshot {
     dsl::json::from_json_str(BEFORE).expect("change-material-metallic before snapshot decodes")

@@ -5,15 +5,55 @@
   "type": "object",
   "additionalProperties": false,
   "required": [
-    "topic_guid",
+    "mutation",
+    "topicGuid",
     "guid"
   ],
   "properties": {
-    "topic_guid": {
-      "type": "string"
+    "mutation": {
+      "const": "setViewpointComponents"
+    },
+    "topicGuid": {
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Topic",
+          "de": "Thema"
+        },
+        "description": {
+          "en": "GUID of the topic.",
+          "de": "GUID des Themas."
+        },
+        "ref": {
+          "kind": "topic",
+          "domain": "bcf"
+        },
+        "group": "target",
+        "order": 10
+      }
     },
     "guid": {
-      "type": "string"
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Viewpoint",
+          "de": "Ansichtspunkt"
+        },
+        "description": {
+          "en": "GUID of the viewpoint.",
+          "de": "GUID des Ansichtspunkts."
+        },
+        "ref": {
+          "kind": "viewpoint",
+          "domain": "bcf"
+        },
+        "group": "target",
+        "order": 20
+      }
     },
     "components": {
       "anyOf": [
@@ -23,7 +63,15 @@
         {
           "type": "null"
         }
-      ]
+      ],
+      "x-semio-ui": {
+        "label": {
+          "en": "Components",
+          "de": "Bauteile"
+        },
+        "group": "value",
+        "order": 30
+      }
     }
   },
   "$defs": {
@@ -35,15 +83,37 @@
           "type": "array",
           "items": {
             "type": "string"
+          },
+          "x-semio-ui": {
+            "label": {
+              "en": "Selected components",
+              "de": "Ausgewählte Bauteile"
+            },
+            "description": {
+              "en": "IFC GUIDs of the selected components.",
+              "de": "IFC-GUIDs der ausgewählten Bauteile."
+            }
           }
         },
         "visibility": {
-          "$ref": "#/$defs/BcfVisibility"
+          "$ref": "#/$defs/BcfVisibility",
+          "x-semio-ui": {
+            "label": {
+              "en": "Visibility",
+              "de": "Sichtbarkeit"
+            }
+          }
         },
         "coloring": {
           "type": "array",
           "items": {
             "$ref": "#/$defs/BcfColoring"
+          },
+          "x-semio-ui": {
+            "label": {
+              "en": "Coloring",
+              "de": "Einfärbung"
+            }
           }
         }
       }
@@ -56,12 +126,28 @@
       ],
       "properties": {
         "defaultVisibility": {
-          "type": "boolean"
+          "type": "boolean",
+          "x-semio-ui": {
+            "label": {
+              "en": "Visible by default",
+              "de": "Standardmäßig sichtbar"
+            }
+          }
         },
         "exceptions": {
           "type": "array",
           "items": {
             "type": "string"
+          },
+          "x-semio-ui": {
+            "label": {
+              "en": "Exceptions",
+              "de": "Ausnahmen"
+            },
+            "description": {
+              "en": "IFC GUIDs of components that deviate from the default visibility.",
+              "de": "IFC-GUIDs der Bauteile, die von der Standardsichtbarkeit abweichen."
+            }
           }
         }
       }
@@ -74,12 +160,32 @@
       ],
       "properties": {
         "color": {
-          "type": "string"
+          "type": "string",
+          "x-semio-ui": {
+            "label": {
+              "en": "Color",
+              "de": "Farbe"
+            },
+            "description": {
+              "en": "ARGB or RGB hex color.",
+              "de": "ARGB- oder RGB-Hexfarbe."
+            }
+          }
         },
         "components": {
           "type": "array",
           "items": {
             "type": "string"
+          },
+          "x-semio-ui": {
+            "label": {
+              "en": "Components",
+              "de": "Bauteile"
+            },
+            "description": {
+              "en": "IFC GUIDs of the colored components.",
+              "de": "IFC-GUIDs der eingefärbten Bauteile."
+            }
           }
         }
       }

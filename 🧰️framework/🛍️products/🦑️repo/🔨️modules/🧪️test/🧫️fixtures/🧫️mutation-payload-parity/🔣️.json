@@ -1,0 +1,1355 @@
+{
+  "$comment": "Language-agnostic corpus of the `schema-mutation-payload-parity` lint (`🧬️schema/📋️orchestration/🟦️.ts`, region ⚖️MutationPayloadParity). Each case gives a Rust aggregate source, the variant, a leaf payload schema, an optional aggregate schema and a committed fixture value; an optional `leafRust` holds the leaf enum whose `#[mutation_leaf(payload = <Variant>)]` makes it a wrapped leaf (only that variant's content is editable and witnesses the leaf schema); it expects the wire layout read off `#[value(...)]`, the variant wire name, the leaf payload `payload_value()` yields (`null` when the fixture is not that variant in that layout) and the findings as sorted `class@pointer` strings; a given aggregate schema's branch is the one the repo-wide rule derives (`mutationAggregateBranch`). The third-party oracle (Ajv 2019 with `unevaluatedProperties: false`) must agree on every `invalid` and `undescribed` verdict. `features` pins the wire-form row reader `mutationFeatureRows` over the harness's own `parseFeature`: every expanded step docstring `{\"kind\": <k>, \"params\": <p>}` is a row at its scenario's line; data tables and other templates are not.",
+  "cases": [
+    {
+      "id": "internally-tagged-payload-matches-its-leaf",
+      "rust": "/// Doc mentions #[value(tag = \"fake\")] and dsl::Mutations inside a comment.\n#[derive(Clone, Debug, PartialEq, dsl::Mutations, value_derive::ToValue, value_derive::FromValue)]\n#[value(tag = \"mutation\", rename_all = \"camelCase\")]\n#[mutations(snapshot = S, diff = D, schema = \"puzzle.puzzle2d\")]\npub enum Puzzle2dMutation {\n    MoveNode(super::move_node::MoveNode),\n    RemoveNodeHandle(super::remove_node_handle::RemoveNodeHandle),\n}",
+      "aggregate": "Puzzle2dMutation",
+      "variant": "MoveNode",
+      "layout": {
+        "tag": "mutation",
+        "content": null,
+        "renameAll": "camelCase"
+      },
+      "wireName": "moveNode",
+      "leaf": {
+        "$schema": "http://json-schema.org/draft-07/schema#",
+        "$id": "https://json.schemas.assets.semio-tech.com/test/parity/mutation/move-node/schema.json",
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "mutation",
+          "id",
+          "newX",
+          "newY"
+        ],
+        "properties": {
+          "mutation": {
+            "const": "moveNode"
+          },
+          "id": {
+            "type": "string"
+          },
+          "newX": {
+            "type": "number"
+          },
+          "newY": {
+            "type": "number"
+          }
+        }
+      },
+      "aggregateSchema": {
+        "$schema": "http://json-schema.org/draft-07/schema#",
+        "$id": "https://json.schemas.assets.semio-tech.com/test/parity/mutations.json",
+        "oneOf": [
+          {
+            "$ref": "https://json.schemas.assets.semio-tech.com/test/parity/mutation/move-node/schema.json"
+          }
+        ]
+      },
+      "fixture": {
+        "id": "node-a",
+        "mutation": "moveNode",
+        "newX": 5.0,
+        "newY": 7.0
+      },
+      "payload": {
+        "id": "node-a",
+        "newX": 5.0,
+        "newY": 7.0
+      },
+      "findings": []
+    },
+    {
+      "id": "snake-case-payload-drifts-from-a-camel-case-leaf",
+      "rust": "#[derive(Clone, Debug, PartialEq, dsl::Mutations, ToValue, FromValue)]\n#[value(tag = \"mutation\", rename_all = \"camelCase\")]\npub enum GraphMutation { ChangeGraphDirected(ChangeGraphDirected) }",
+      "aggregate": "GraphMutation",
+      "variant": "ChangeGraphDirected",
+      "layout": {
+        "tag": "mutation",
+        "content": null,
+        "renameAll": "camelCase"
+      },
+      "wireName": "changeGraphDirected",
+      "leaf": {
+        "$schema": "http://json-schema.org/draft-07/schema#",
+        "$id": "https://json.schemas.assets.semio-tech.com/test/parity/mutation/change-graph-directed/schema.json",
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "mutation",
+          "newDirected"
+        ],
+        "properties": {
+          "mutation": {
+            "const": "changeGraphDirected"
+          },
+          "newDirected": {
+            "type": "boolean"
+          }
+        }
+      },
+      "aggregateSchema": null,
+      "fixture": {
+        "mutation": "changeGraphDirected",
+        "new_directed": true
+      },
+      "payload": {
+        "new_directed": true
+      },
+      "findings": [
+        "invalid@"
+      ]
+    },
+    {
+      "id": "externally-tagged-payload-sits-under-its-variant-key",
+      "rust": "#[derive(Clone, Debug, PartialEq, dsl::Mutations, value_derive::ToValue, value_derive::FromValue)]\n#[mutations(snapshot = LowpolySnapshot, diff = LowpolyDiff, schema = \"s.lowpoly.lowpoly\")]\npub enum LowpolyMutation {\n    CreateObject(super::create_object::CreateObject),\n    MoveObject(super::move_object::MoveObject),\n}",
+      "aggregate": "LowpolyMutation",
+      "variant": "MoveObject",
+      "layout": {
+        "tag": null,
+        "content": null,
+        "renameAll": null
+      },
+      "wireName": "MoveObject",
+      "leaf": {
+        "$schema": "http://json-schema.org/draft-07/schema#",
+        "$id": "https://json.schemas.assets.semio-tech.com/test/parity/mutation/move-object/schema.json",
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "id",
+          "newPosition"
+        ],
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "newPosition": {
+            "type": "array",
+            "items": {
+              "type": "number"
+            },
+            "minItems": 3,
+            "maxItems": 3
+          }
+        }
+      },
+      "aggregateSchema": {
+        "$schema": "http://json-schema.org/draft-07/schema#",
+        "$id": "https://json.schemas.assets.semio-tech.com/test/parity/external-mutations.json",
+        "oneOf": [
+          {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "MoveObject"
+            ],
+            "properties": {
+              "MoveObject": {
+                "$ref": "https://json.schemas.assets.semio-tech.com/test/parity/mutation/move-object/schema.json"
+              }
+            }
+          }
+        ]
+      },
+      "fixture": {
+        "MoveObject": {
+          "id": "obj-hull",
+          "newPosition": [
+            2.5,
+            0.0,
+            -1.5
+          ]
+        }
+      },
+      "payload": {
+        "id": "obj-hull",
+        "newPosition": [
+          2.5,
+          0.0,
+          -1.5
+        ]
+      },
+      "findings": []
+    },
+    {
+      "id": "externally-tagged-aggregate-refuses-an-internally-tagged-fixture",
+      "rust": "#[derive(Clone, Debug, PartialEq, dsl::Mutations, ToValue, FromValue)]\npub enum LowpolyMutation { MoveObject(MoveObject) }",
+      "aggregate": "LowpolyMutation",
+      "variant": "MoveObject",
+      "layout": {
+        "tag": null,
+        "content": null,
+        "renameAll": null
+      },
+      "wireName": "MoveObject",
+      "leaf": {
+        "$schema": "http://json-schema.org/draft-07/schema#",
+        "$id": "https://json.schemas.assets.semio-tech.com/test/parity/mutation/move-object-2/schema.json",
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "id"
+        ],
+        "properties": {
+          "id": {
+            "type": "string"
+          }
+        }
+      },
+      "aggregateSchema": null,
+      "fixture": {
+        "mutation": "moveObject",
+        "id": "obj-hull"
+      },
+      "payload": null,
+      "findings": [
+        "layout@"
+      ]
+    },
+    {
+      "id": "adjacently-tagged-payload-is-the-content-member",
+      "rust": "#[derive(Clone, Debug, PartialEq, dsl::Mutations, ToValue, FromValue)]\n#[value(tag = \"mutation\", content = \"payload\", rename_all = \"kebab-case\")]\npub enum PngMutation {\n    #[value(rename = \"set-snapshot\")]\n    SetSnapshot(SetSnapshot),\n}",
+      "aggregate": "PngMutation",
+      "variant": "SetSnapshot",
+      "layout": {
+        "tag": "mutation",
+        "content": "payload",
+        "renameAll": "kebab-case"
+      },
+      "wireName": "set-snapshot",
+      "leaf": {
+        "$schema": "http://json-schema.org/draft-07/schema#",
+        "$id": "https://json.schemas.assets.semio-tech.com/test/parity/mutation/set-snapshot/schema.json",
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "width"
+        ],
+        "properties": {
+          "width": {
+            "type": "integer",
+            "minimum": 0
+          }
+        }
+      },
+      "aggregateSchema": {
+        "$schema": "http://json-schema.org/draft-07/schema#",
+        "$id": "https://json.schemas.assets.semio-tech.com/test/parity/adjacent-mutations.json",
+        "oneOf": [
+          {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "mutation",
+              "payload"
+            ],
+            "properties": {
+              "mutation": {
+                "const": "set-snapshot"
+              },
+              "payload": {
+                "$ref": "https://json.schemas.assets.semio-tech.com/test/parity/mutation/set-snapshot/schema.json"
+              }
+            }
+          }
+        ]
+      },
+      "fixture": {
+        "mutation": "set-snapshot",
+        "payload": {
+          "width": 4
+        }
+      },
+      "payload": {
+        "width": 4
+      },
+      "findings": []
+    },
+    {
+      "id": "an-object-without-members-describes-nothing",
+      "rust": "#[derive(Clone, Debug, PartialEq, dsl::Mutations, ToValue, FromValue)]\npub enum LayoutMutation { UpdateLink(UpdateLink) }",
+      "aggregate": "LayoutMutation",
+      "variant": "UpdateLink",
+      "layout": {
+        "tag": null,
+        "content": null,
+        "renameAll": null
+      },
+      "wireName": "UpdateLink",
+      "leaf": {
+        "$schema": "http://json-schema.org/draft-07/schema#",
+        "$id": "https://json.schemas.assets.semio-tech.com/test/parity/mutation/update-link/schema.json",
+        "title": "UpdateLink",
+        "type": "object"
+      },
+      "aggregateSchema": null,
+      "fixture": {
+        "UpdateLink": {
+          "id": "link-2",
+          "path": "caption.png"
+        }
+      },
+      "payload": {
+        "id": "link-2",
+        "path": "caption.png"
+      },
+      "findings": [
+        "opaque@#",
+        "undescribed@/id",
+        "undescribed@/path"
+      ]
+    },
+    {
+      "id": "an-open-object-leaves-an-extra-member-undescribed",
+      "rust": "#[derive(Clone, Debug, PartialEq, dsl::Mutations, ToValue, FromValue)]\n#[value(tag = \"mutation\", rename_all = \"camelCase\")]\npub enum GridMutation { ChangeTileMedia(ChangeTileMedia) }",
+      "aggregate": "GridMutation",
+      "variant": "ChangeTileMedia",
+      "layout": {
+        "tag": "mutation",
+        "content": null,
+        "renameAll": "camelCase"
+      },
+      "wireName": "changeTileMedia",
+      "leaf": {
+        "$schema": "http://json-schema.org/draft-07/schema#",
+        "$id": "https://json.schemas.assets.semio-tech.com/test/parity/mutation/change-tile-media/schema.json",
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "mutation",
+          "media"
+        ],
+        "properties": {
+          "mutation": {
+            "const": "changeTileMedia"
+          },
+          "media": {
+            "type": "object",
+            "required": [
+              "kind"
+            ],
+            "properties": {
+              "kind": {
+                "type": "string"
+              }
+            }
+          }
+        }
+      },
+      "aggregateSchema": null,
+      "fixture": {
+        "mutation": "changeTileMedia",
+        "media": {
+          "kind": "mesh",
+          "mesh": {
+            "positions": []
+          }
+        }
+      },
+      "payload": {
+        "media": {
+          "kind": "mesh",
+          "mesh": {
+            "positions": []
+          }
+        }
+      },
+      "findings": [
+        "undescribed@/media/mesh"
+      ]
+    },
+    {
+      "id": "an-option-emitted-as-null-needs-a-nullable-type",
+      "rust": "#[derive(Clone, Debug, PartialEq, dsl::Mutations, ToValue, FromValue)]\n#[value(tag = \"mutation\", rename_all = \"camelCase\")]\npub enum Block2dMutation { UpdatePresentation(UpdatePresentation) }",
+      "aggregate": "Block2dMutation",
+      "variant": "UpdatePresentation",
+      "layout": {
+        "tag": "mutation",
+        "content": null,
+        "renameAll": "camelCase"
+      },
+      "wireName": "updatePresentation",
+      "leaf": {
+        "$schema": "http://json-schema.org/draft-07/schema#",
+        "$id": "https://json.schemas.assets.semio-tech.com/test/parity/mutation/update-presentation/schema.json",
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "mutation"
+        ],
+        "properties": {
+          "mutation": {
+            "const": "updatePresentation"
+          },
+          "newRadius": {
+            "type": "number"
+          }
+        }
+      },
+      "aggregateSchema": null,
+      "fixture": {
+        "mutation": "updatePresentation",
+        "newRadius": null
+      },
+      "payload": {
+        "newRadius": null
+      },
+      "findings": [
+        "invalid@"
+      ]
+    },
+    {
+      "id": "a-nullable-option-accepts-the-null-it-emits",
+      "rust": "#[derive(Clone, Debug, PartialEq, dsl::Mutations, ToValue, FromValue)]\n#[value(tag = \"mutation\", rename_all = \"camelCase\")]\npub enum Block2dMutation { UpdatePresentation(UpdatePresentation) }",
+      "aggregate": "Block2dMutation",
+      "variant": "UpdatePresentation",
+      "layout": {
+        "tag": "mutation",
+        "content": null,
+        "renameAll": "camelCase"
+      },
+      "wireName": "updatePresentation",
+      "leaf": {
+        "$schema": "http://json-schema.org/draft-07/schema#",
+        "$id": "https://json.schemas.assets.semio-tech.com/test/parity/mutation/update-presentation-nullable/schema.json",
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "mutation",
+          "newRadius"
+        ],
+        "properties": {
+          "mutation": {
+            "const": "updatePresentation"
+          },
+          "newRadius": {
+            "type": [
+              "number",
+              "null"
+            ]
+          }
+        }
+      },
+      "aggregateSchema": null,
+      "fixture": {
+        "mutation": "updatePresentation",
+        "newRadius": null
+      },
+      "payload": {
+        "newRadius": null
+      },
+      "findings": []
+    },
+    {
+      "id": "an-aggregate-whose-leaves-lack-the-tag-const-rejects-its-own-wire",
+      "rust": "#[derive(Clone, Debug, PartialEq, dsl::Mutations, ToValue, FromValue)]\n#[value(tag = \"mutation\", rename_all = \"camelCase\")]\npub enum EnergyModelMutation { AddAirLoopTerminalZone(AddAirLoopTerminalZone) }",
+      "aggregate": "EnergyModelMutation",
+      "variant": "AddAirLoopTerminalZone",
+      "layout": {
+        "tag": "mutation",
+        "content": null,
+        "renameAll": "camelCase"
+      },
+      "wireName": "addAirLoopTerminalZone",
+      "leaf": {
+        "$schema": "http://json-schema.org/draft-07/schema#",
+        "$id": "https://json.schemas.assets.semio-tech.com/test/parity/mutation/add-air-loop-terminal-zone/schema.json",
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "id",
+          "zoneId"
+        ],
+        "properties": {
+          "id": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "zoneId": {
+            "type": "integer",
+            "minimum": 0
+          }
+        }
+      },
+      "aggregateSchema": {
+        "$schema": "http://json-schema.org/draft-07/schema#",
+        "$id": "https://json.schemas.assets.semio-tech.com/test/parity/energy-mutations.json",
+        "oneOf": [
+          {
+            "$ref": "https://json.schemas.assets.semio-tech.com/test/parity/mutation/add-air-loop-terminal-zone/schema.json"
+          }
+        ]
+      },
+      "fixture": {
+        "mutation": "addAirLoopTerminalZone",
+        "id": 17,
+        "zoneId": 99
+      },
+      "payload": {
+        "id": 17,
+        "zoneId": 99
+      },
+      "findings": [
+        "aggregate@"
+      ]
+    },
+    {
+      "id": "an-exhaustive-case-record-carries-the-wire-in-its-mutation-member",
+      "rust": "#[derive(Clone, Debug, PartialEq, dsl::Mutations, ToValue, FromValue)]\n#[value(tag = \"mutation\", rename_all = \"camelCase\")]\npub enum SemioFlowMutation { RemoveEdge(RemoveEdge) }",
+      "aggregate": "SemioFlowMutation",
+      "variant": "RemoveEdge",
+      "layout": {
+        "tag": "mutation",
+        "content": null,
+        "renameAll": "camelCase"
+      },
+      "wireName": "removeEdge",
+      "leaf": {
+        "$schema": "http://json-schema.org/draft-07/schema#",
+        "$id": "https://json.schemas.assets.semio-tech.com/test/parity/mutation/remove-edge/schema.json",
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "mutation",
+          "id"
+        ],
+        "properties": {
+          "mutation": {
+            "const": "removeEdge"
+          },
+          "id": {
+            "type": "string"
+          }
+        }
+      },
+      "aggregateSchema": null,
+      "fixture": {
+        "kind": "remove-edge",
+        "mutation": {
+          "mutation": "removeEdge",
+          "id": "e1"
+        },
+        "before": {
+          "edges": []
+        },
+        "after": {
+          "edges": []
+        }
+      },
+      "payload": {
+        "id": "e1"
+      },
+      "findings": []
+    },
+    {
+      "id": "a-wrapped-leaf-exposes-its-payload-variant-content",
+      "rust": "#[derive(Clone, Debug, PartialEq, dsl::Mutations, ToValue, FromValue)]\n#[value(tag = \"mutation\", content = \"payload\", rename_all = \"camelCase\")]\npub enum SvgMutation {\n    SetText(super::set_text::SetTextMutation),\n}",
+      "leafRust": "#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::MutationLeaf)]\n#[mutation_leaf(contract = ::protocol)]\n#[value(rename_all = \"camelCase\")]\npub struct SetTextPayload { pub path: NodePath, pub text: String }\n\n#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::MutationLeaf)]\n#[mutation_leaf(contract = ::protocol, payload = Apply)]\n#[value(tag = \"phase\", content = \"value\", rename_all = \"camelCase\")]\npub enum SetTextMutation {\n    Apply(SetTextPayload),\n    Restore(SvgDiff),\n}",
+      "aggregate": "SvgMutation",
+      "variant": "SetText",
+      "layout": {
+        "tag": "mutation",
+        "content": "payload",
+        "renameAll": "camelCase"
+      },
+      "wireName": "setText",
+      "leaf": {
+        "$schema": "http://json-schema.org/draft-07/schema#",
+        "$id": "https://json.schemas.assets.semio-tech.com/test/parity/mutation/set-text/schema.json",
+        "title": "SetTextPayload",
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "path",
+          "text"
+        ],
+        "properties": {
+          "path": {
+            "type": "array",
+            "items": {
+              "type": "integer",
+              "minimum": 0
+            }
+          },
+          "text": {
+            "type": "string"
+          }
+        }
+      },
+      "aggregateSchema": null,
+      "fixture": {
+        "mutation": "setText",
+        "payload": {
+          "phase": "apply",
+          "value": {
+            "path": [
+              2
+            ],
+            "text": "World"
+          }
+        }
+      },
+      "payload": {
+        "path": [
+          2
+        ],
+        "text": "World"
+      },
+      "findings": []
+    },
+    {
+      "id": "a-non-payload-variant-of-a-wrapped-leaf-is-inert",
+      "rust": "#[derive(Clone, Debug, PartialEq, dsl::Mutations, ToValue, FromValue)]\n#[value(tag = \"mutation\", content = \"payload\", rename_all = \"camelCase\")]\npub enum SvgMutation {\n    SetText(super::set_text::SetTextMutation),\n}",
+      "leafRust": "#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::MutationLeaf)]\n#[mutation_leaf(contract = ::protocol)]\n#[value(rename_all = \"camelCase\")]\npub struct SetTextPayload { pub path: NodePath, pub text: String }\n\n#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::MutationLeaf)]\n#[mutation_leaf(contract = ::protocol, payload = Apply)]\n#[value(tag = \"phase\", content = \"value\", rename_all = \"camelCase\")]\npub enum SetTextMutation {\n    Apply(SetTextPayload),\n    Restore(SvgDiff),\n}",
+      "aggregate": "SvgMutation",
+      "variant": "SetText",
+      "layout": {
+        "tag": "mutation",
+        "content": "payload",
+        "renameAll": "camelCase"
+      },
+      "wireName": "setText",
+      "leaf": {
+        "$schema": "http://json-schema.org/draft-07/schema#",
+        "$id": "https://json.schemas.assets.semio-tech.com/test/parity/mutation/set-text/schema.json",
+        "title": "SetTextPayload",
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "path",
+          "text"
+        ],
+        "properties": {
+          "path": {
+            "type": "array",
+            "items": {
+              "type": "integer",
+              "minimum": 0
+            }
+          },
+          "text": {
+            "type": "string"
+          }
+        }
+      },
+      "aggregateSchema": null,
+      "fixture": {
+        "mutation": "setText",
+        "payload": {
+          "phase": "restore",
+          "value": {
+            "nodes": []
+          }
+        }
+      },
+      "payload": null,
+      "findings": []
+    },
+    {
+      "id": "an-adjacent-aggregate-refers-to-a-wrapped-leaf-wire-enum",
+      "rust": "#[derive(Clone, Debug, PartialEq, dsl::Mutations, ToValue, FromValue)]\n#[value(tag = \"mutation\", content = \"payload\", rename_all = \"camelCase\")]\npub enum SvgMutation {\n    SetText(super::set_text::SetTextMutation),\n}",
+      "leafRust": "#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::MutationLeaf)]\n#[mutation_leaf(contract = ::protocol)]\n#[value(rename_all = \"camelCase\")]\npub struct SetTextPayload { pub path: NodePath, pub text: String }\n\n#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::MutationLeaf)]\n#[mutation_leaf(contract = ::protocol, payload = Apply)]\n#[value(tag = \"phase\", content = \"value\", rename_all = \"camelCase\")]\npub enum SetTextMutation {\n    Apply(SetTextPayload),\n    Restore(SvgDiff),\n}",
+      "aggregate": "SvgMutation",
+      "variant": "SetText",
+      "layout": {
+        "tag": "mutation",
+        "content": "payload",
+        "renameAll": "camelCase"
+      },
+      "wireName": "setText",
+      "leaf": {
+        "$schema": "http://json-schema.org/draft-07/schema#",
+        "$id": "https://json.schemas.assets.semio-tech.com/test/parity/mutation/set-text/schema.json",
+        "title": "SetTextPayload",
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "path",
+          "text"
+        ],
+        "properties": {
+          "path": {
+            "type": "array",
+            "items": {
+              "type": "integer",
+              "minimum": 0
+            }
+          },
+          "text": {
+            "type": "string"
+          }
+        },
+        "$defs": {
+          "SetTextMutation": {
+            "oneOf": [
+              {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "phase",
+                  "value"
+                ],
+                "properties": {
+                  "phase": {
+                    "const": "apply"
+                  },
+                  "value": {
+                    "$ref": "#"
+                  }
+                }
+              },
+              {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "phase",
+                  "value"
+                ],
+                "properties": {
+                  "phase": {
+                    "const": "restore"
+                  },
+                  "value": {
+                    "type": "object",
+                    "additionalProperties": true
+                  }
+                }
+              }
+            ]
+          }
+        }
+      },
+      "aggregateSchema": {
+        "$schema": "http://json-schema.org/draft-07/schema#",
+        "$id": "https://json.schemas.assets.semio-tech.com/test/parity/wrapped/mutations.json",
+        "oneOf": [
+          {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "mutation",
+              "payload"
+            ],
+            "properties": {
+              "mutation": {
+                "const": "setText"
+              },
+              "payload": {
+                "$ref": "https://json.schemas.assets.semio-tech.com/test/parity/mutation/set-text/schema.json#/$defs/SetTextMutation"
+              }
+            }
+          }
+        ]
+      },
+      "fixture": {
+        "mutation": "setText",
+        "payload": {
+          "phase": "apply",
+          "value": {
+            "path": [
+              2
+            ],
+            "text": "World"
+          }
+        }
+      },
+      "payload": {
+        "path": [
+          2
+        ],
+        "text": "World"
+      },
+      "findings": []
+    },
+    {
+      "id": "an-inert-variant-of-a-wrapped-leaf-still-meets-its-aggregate",
+      "rust": "#[derive(Clone, Debug, PartialEq, dsl::Mutations, ToValue, FromValue)]\n#[value(tag = \"mutation\", content = \"payload\", rename_all = \"camelCase\")]\npub enum SvgMutation {\n    SetText(super::set_text::SetTextMutation),\n}",
+      "leafRust": "#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::MutationLeaf)]\n#[mutation_leaf(contract = ::protocol)]\n#[value(rename_all = \"camelCase\")]\npub struct SetTextPayload { pub path: NodePath, pub text: String }\n\n#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::MutationLeaf)]\n#[mutation_leaf(contract = ::protocol, payload = Apply)]\n#[value(tag = \"phase\", content = \"value\", rename_all = \"camelCase\")]\npub enum SetTextMutation {\n    Apply(SetTextPayload),\n    Restore(SvgDiff),\n}",
+      "aggregate": "SvgMutation",
+      "variant": "SetText",
+      "layout": {
+        "tag": "mutation",
+        "content": "payload",
+        "renameAll": "camelCase"
+      },
+      "wireName": "setText",
+      "leaf": {
+        "$schema": "http://json-schema.org/draft-07/schema#",
+        "$id": "https://json.schemas.assets.semio-tech.com/test/parity/mutation/set-text/schema.json",
+        "title": "SetTextPayload",
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "path",
+          "text"
+        ],
+        "properties": {
+          "path": {
+            "type": "array",
+            "items": {
+              "type": "integer",
+              "minimum": 0
+            }
+          },
+          "text": {
+            "type": "string"
+          }
+        },
+        "$defs": {
+          "SetTextMutation": {
+            "oneOf": [
+              {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "phase",
+                  "value"
+                ],
+                "properties": {
+                  "phase": {
+                    "const": "apply"
+                  },
+                  "value": {
+                    "$ref": "#"
+                  }
+                }
+              },
+              {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "phase",
+                  "value"
+                ],
+                "properties": {
+                  "phase": {
+                    "const": "restore"
+                  },
+                  "value": {
+                    "type": "object",
+                    "additionalProperties": true
+                  }
+                }
+              }
+            ]
+          }
+        }
+      },
+      "aggregateSchema": {
+        "$schema": "http://json-schema.org/draft-07/schema#",
+        "$id": "https://json.schemas.assets.semio-tech.com/test/parity/wrapped/mutations.json",
+        "oneOf": [
+          {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "mutation",
+              "payload"
+            ],
+            "properties": {
+              "mutation": {
+                "const": "setText"
+              },
+              "payload": {
+                "$ref": "https://json.schemas.assets.semio-tech.com/test/parity/mutation/set-text/schema.json#/$defs/SetTextMutation"
+              }
+            }
+          }
+        ]
+      },
+      "fixture": {
+        "mutation": "setText",
+        "payload": {
+          "phase": "restore",
+          "value": {
+            "nodes": []
+          }
+        }
+      },
+      "payload": null,
+      "findings": []
+    },
+    {
+      "id": "an-invariant-refusal-is-a-negative-witness-the-schema-must-reject",
+      "rust": "/// Doc mentions #[value(tag = \"fake\")] and dsl::Mutations inside a comment.\n#[derive(Clone, Debug, PartialEq, dsl::Mutations, value_derive::ToValue, value_derive::FromValue)]\n#[value(tag = \"mutation\", rename_all = \"camelCase\")]\n#[mutations(snapshot = S, diff = D, schema = \"puzzle.puzzle2d\")]\npub enum Puzzle2dMutation {\n    ScaleSelection(super::scale_selection::ScaleSelection),\n    RemoveNodeHandle(super::remove_node_handle::RemoveNodeHandle),\n}",
+      "aggregate": "Puzzle2dMutation",
+      "variant": "ScaleSelection",
+      "layout": {
+        "tag": "mutation",
+        "content": null,
+        "renameAll": "camelCase"
+      },
+      "wireName": "scaleSelection",
+      "leaf": {
+        "$schema": "http://json-schema.org/draft-07/schema#",
+        "$id": "https://json.schemas.assets.semio-tech.com/test/parity/mutation/scale-selection/schema.json",
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "mutation",
+          "targets",
+          "factor"
+        ],
+        "properties": {
+          "mutation": {
+            "const": "scaleSelection"
+          },
+          "targets": {
+            "type": "array",
+            "minItems": 1,
+            "items": {
+              "type": "string"
+            }
+          },
+          "factor": {
+            "type": "number",
+            "exclusiveMinimum": 0
+          }
+        }
+      },
+      "aggregateSchema": {
+        "$schema": "http://json-schema.org/draft-07/schema#",
+        "$id": "https://json.schemas.assets.semio-tech.com/test/parity/scale/mutations.json",
+        "oneOf": [
+          {
+            "$ref": "https://json.schemas.assets.semio-tech.com/test/parity/mutation/scale-selection/schema.json"
+          }
+        ]
+      },
+      "outcome": {
+        "code": "mutation.invariant",
+        "path": [
+          "node-a"
+        ],
+        "status": "rejected"
+      },
+      "fixture": {
+        "factor": 0.0,
+        "mutation": "scaleSelection",
+        "targets": [
+          "node-a"
+        ]
+      },
+      "payload": {
+        "factor": 0.0,
+        "targets": [
+          "node-a"
+        ]
+      },
+      "findings": []
+    },
+    {
+      "id": "an-invariant-refusal-the-schema-accepts-is-reported-negative",
+      "rust": "/// Doc mentions #[value(tag = \"fake\")] and dsl::Mutations inside a comment.\n#[derive(Clone, Debug, PartialEq, dsl::Mutations, value_derive::ToValue, value_derive::FromValue)]\n#[value(tag = \"mutation\", rename_all = \"camelCase\")]\n#[mutations(snapshot = S, diff = D, schema = \"puzzle.puzzle2d\")]\npub enum Puzzle2dMutation {\n    ScaleSelection(super::scale_selection::ScaleSelection),\n    RemoveNodeHandle(super::remove_node_handle::RemoveNodeHandle),\n}",
+      "aggregate": "Puzzle2dMutation",
+      "variant": "ScaleSelection",
+      "layout": {
+        "tag": "mutation",
+        "content": null,
+        "renameAll": "camelCase"
+      },
+      "wireName": "scaleSelection",
+      "leaf": {
+        "$schema": "http://json-schema.org/draft-07/schema#",
+        "$id": "https://json.schemas.assets.semio-tech.com/test/parity/mutation/scale-selection/schema.json",
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "mutation",
+          "targets",
+          "factor"
+        ],
+        "properties": {
+          "mutation": {
+            "const": "scaleSelection"
+          },
+          "targets": {
+            "type": "array",
+            "minItems": 1,
+            "items": {
+              "type": "string"
+            }
+          },
+          "factor": {
+            "type": "number",
+            "exclusiveMinimum": 0
+          }
+        }
+      },
+      "aggregateSchema": {
+        "$schema": "http://json-schema.org/draft-07/schema#",
+        "$id": "https://json.schemas.assets.semio-tech.com/test/parity/scale/mutations.json",
+        "oneOf": [
+          {
+            "$ref": "https://json.schemas.assets.semio-tech.com/test/parity/mutation/scale-selection/schema.json"
+          }
+        ]
+      },
+      "outcome": {
+        "code": "mutation.invariant",
+        "path": [
+          "node-a"
+        ],
+        "status": "rejected"
+      },
+      "fixture": {
+        "factor": 2.0,
+        "mutation": "scaleSelection",
+        "targets": [
+          "node-a"
+        ]
+      },
+      "payload": {
+        "factor": 2.0,
+        "targets": [
+          "node-a"
+        ]
+      },
+      "findings": [
+        "negative@"
+      ]
+    },
+    {
+      "id": "another-refusal-code-keeps-the-fixture-positive",
+      "rust": "/// Doc mentions #[value(tag = \"fake\")] and dsl::Mutations inside a comment.\n#[derive(Clone, Debug, PartialEq, dsl::Mutations, value_derive::ToValue, value_derive::FromValue)]\n#[value(tag = \"mutation\", rename_all = \"camelCase\")]\n#[mutations(snapshot = S, diff = D, schema = \"puzzle.puzzle2d\")]\npub enum Puzzle2dMutation {\n    ScaleSelection(super::scale_selection::ScaleSelection),\n    RemoveNodeHandle(super::remove_node_handle::RemoveNodeHandle),\n}",
+      "aggregate": "Puzzle2dMutation",
+      "variant": "ScaleSelection",
+      "layout": {
+        "tag": "mutation",
+        "content": null,
+        "renameAll": "camelCase"
+      },
+      "wireName": "scaleSelection",
+      "leaf": {
+        "$schema": "http://json-schema.org/draft-07/schema#",
+        "$id": "https://json.schemas.assets.semio-tech.com/test/parity/mutation/scale-selection/schema.json",
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "mutation",
+          "targets",
+          "factor"
+        ],
+        "properties": {
+          "mutation": {
+            "const": "scaleSelection"
+          },
+          "targets": {
+            "type": "array",
+            "minItems": 1,
+            "items": {
+              "type": "string"
+            }
+          },
+          "factor": {
+            "type": "number",
+            "exclusiveMinimum": 0
+          }
+        }
+      },
+      "aggregateSchema": {
+        "$schema": "http://json-schema.org/draft-07/schema#",
+        "$id": "https://json.schemas.assets.semio-tech.com/test/parity/scale/mutations.json",
+        "oneOf": [
+          {
+            "$ref": "https://json.schemas.assets.semio-tech.com/test/parity/mutation/scale-selection/schema.json"
+          }
+        ]
+      },
+      "outcome": {
+        "code": "mutation.target-missing",
+        "path": [
+          "node-z"
+        ],
+        "status": "rejected"
+      },
+      "fixture": {
+        "factor": 0.0,
+        "mutation": "scaleSelection",
+        "targets": [
+          "node-z"
+        ]
+      },
+      "payload": {
+        "factor": 0.0,
+        "targets": [
+          "node-z"
+        ]
+      },
+      "findings": [
+        "invalid@",
+        "aggregate@"
+      ]
+    },
+    {
+      "id": "a-schema-valid-refusal-naming-a-declared-invariant-is-clean",
+      "rust": "/// Doc mentions #[value(tag = \"fake\")] and dsl::Mutations inside a comment.\n#[derive(Clone, Debug, PartialEq, dsl::Mutations, value_derive::ToValue, value_derive::FromValue)]\n#[value(tag = \"mutation\", rename_all = \"camelCase\")]\n#[mutations(snapshot = S, diff = D, schema = \"puzzle.puzzle2d\")]\npub enum Puzzle2dMutation {\n    ConnectSteps(super::connect_steps::ConnectSteps),\n    RemoveNodeHandle(super::remove_node_handle::RemoveNodeHandle),\n}",
+      "aggregate": "Puzzle2dMutation",
+      "variant": "ConnectSteps",
+      "layout": {
+        "tag": "mutation",
+        "content": null,
+        "renameAll": "camelCase"
+      },
+      "wireName": "connectSteps",
+      "leaf": {
+        "$schema": "http://json-schema.org/draft-07/schema#",
+        "$id": "https://json.schemas.assets.semio-tech.com/test/parity/mutation/connect-steps/schema.json",
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "mutation",
+          "from",
+          "to"
+        ],
+        "properties": {
+          "mutation": {
+            "const": "connectSteps"
+          },
+          "from": {
+            "type": "string",
+            "minLength": 1
+          },
+          "to": {
+            "type": "string",
+            "minLength": 1
+          }
+        },
+        "x-semio-invariant": [
+          {
+            "id": "distinct-endpoints",
+            "description": {
+              "en": "A step never connects to itself: from and to differ.",
+              "de": "Ein Schritt verbindet sich nie mit sich selbst: from und to unterscheiden sich."
+            }
+          }
+        ]
+      },
+      "aggregateSchema": {
+        "$schema": "http://json-schema.org/draft-07/schema#",
+        "$id": "https://json.schemas.assets.semio-tech.com/test/parity/connect/mutations.json",
+        "oneOf": [
+          {
+            "$ref": "https://json.schemas.assets.semio-tech.com/test/parity/mutation/connect-steps/schema.json"
+          }
+        ]
+      },
+      "outcome": {
+        "code": "mutation.invariant",
+        "path": [
+          "step-a"
+        ],
+        "status": "rejected",
+        "invariant": "distinct-endpoints"
+      },
+      "invariants": [
+        "distinct-endpoints"
+      ],
+      "fixture": {
+        "from": "step-a",
+        "mutation": "connectSteps",
+        "to": "step-a"
+      },
+      "payload": {
+        "from": "step-a",
+        "to": "step-a"
+      },
+      "findings": []
+    },
+    {
+      "id": "a-refusal-naming-an-undeclared-invariant-is-reported-negative",
+      "rust": "/// Doc mentions #[value(tag = \"fake\")] and dsl::Mutations inside a comment.\n#[derive(Clone, Debug, PartialEq, dsl::Mutations, value_derive::ToValue, value_derive::FromValue)]\n#[value(tag = \"mutation\", rename_all = \"camelCase\")]\n#[mutations(snapshot = S, diff = D, schema = \"puzzle.puzzle2d\")]\npub enum Puzzle2dMutation {\n    ConnectSteps(super::connect_steps::ConnectSteps),\n    RemoveNodeHandle(super::remove_node_handle::RemoveNodeHandle),\n}",
+      "aggregate": "Puzzle2dMutation",
+      "variant": "ConnectSteps",
+      "layout": {
+        "tag": "mutation",
+        "content": null,
+        "renameAll": "camelCase"
+      },
+      "wireName": "connectSteps",
+      "leaf": {
+        "$schema": "http://json-schema.org/draft-07/schema#",
+        "$id": "https://json.schemas.assets.semio-tech.com/test/parity/mutation/connect-steps/schema.json",
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "mutation",
+          "from",
+          "to"
+        ],
+        "properties": {
+          "mutation": {
+            "const": "connectSteps"
+          },
+          "from": {
+            "type": "string",
+            "minLength": 1
+          },
+          "to": {
+            "type": "string",
+            "minLength": 1
+          }
+        }
+      },
+      "aggregateSchema": {
+        "$schema": "http://json-schema.org/draft-07/schema#",
+        "$id": "https://json.schemas.assets.semio-tech.com/test/parity/connect/mutations.json",
+        "oneOf": [
+          {
+            "$ref": "https://json.schemas.assets.semio-tech.com/test/parity/mutation/connect-steps/schema.json"
+          }
+        ]
+      },
+      "outcome": {
+        "code": "mutation.invariant",
+        "path": [
+          "step-a"
+        ],
+        "status": "rejected",
+        "invariant": "distinct-endpoints"
+      },
+      "invariants": [],
+      "fixture": {
+        "from": "step-a",
+        "mutation": "connectSteps",
+        "to": "step-a"
+      },
+      "payload": {
+        "from": "step-a",
+        "to": "step-a"
+      },
+      "findings": [
+        "negative@"
+      ]
+    },
+    {
+      "id": "a-refusal-naming-another-invariant-id-is-reported-negative",
+      "rust": "/// Doc mentions #[value(tag = \"fake\")] and dsl::Mutations inside a comment.\n#[derive(Clone, Debug, PartialEq, dsl::Mutations, value_derive::ToValue, value_derive::FromValue)]\n#[value(tag = \"mutation\", rename_all = \"camelCase\")]\n#[mutations(snapshot = S, diff = D, schema = \"puzzle.puzzle2d\")]\npub enum Puzzle2dMutation {\n    ConnectSteps(super::connect_steps::ConnectSteps),\n    RemoveNodeHandle(super::remove_node_handle::RemoveNodeHandle),\n}",
+      "aggregate": "Puzzle2dMutation",
+      "variant": "ConnectSteps",
+      "layout": {
+        "tag": "mutation",
+        "content": null,
+        "renameAll": "camelCase"
+      },
+      "wireName": "connectSteps",
+      "leaf": {
+        "$schema": "http://json-schema.org/draft-07/schema#",
+        "$id": "https://json.schemas.assets.semio-tech.com/test/parity/mutation/connect-steps/schema.json",
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "mutation",
+          "from",
+          "to"
+        ],
+        "properties": {
+          "mutation": {
+            "const": "connectSteps"
+          },
+          "from": {
+            "type": "string",
+            "minLength": 1
+          },
+          "to": {
+            "type": "string",
+            "minLength": 1
+          }
+        },
+        "x-semio-invariant": [
+          {
+            "id": "distinct-endpoints",
+            "description": {
+              "en": "A step never connects to itself: from and to differ.",
+              "de": "Ein Schritt verbindet sich nie mit sich selbst: from und to unterscheiden sich."
+            }
+          }
+        ]
+      },
+      "aggregateSchema": {
+        "$schema": "http://json-schema.org/draft-07/schema#",
+        "$id": "https://json.schemas.assets.semio-tech.com/test/parity/connect/mutations.json",
+        "oneOf": [
+          {
+            "$ref": "https://json.schemas.assets.semio-tech.com/test/parity/mutation/connect-steps/schema.json"
+          }
+        ]
+      },
+      "outcome": {
+        "code": "mutation.invariant",
+        "path": [
+          "step-a"
+        ],
+        "status": "rejected",
+        "invariant": "no-self-loop"
+      },
+      "invariants": [
+        "distinct-endpoints"
+      ],
+      "fixture": {
+        "from": "step-a",
+        "mutation": "connectSteps",
+        "to": "step-a"
+      },
+      "payload": {
+        "from": "step-a",
+        "to": "step-a"
+      },
+      "findings": [
+        "negative@"
+      ]
+    }
+  ],
+  "features": [
+    {
+      "id": "only-outline-rows-with-a-kind-and-params-template-are-wire-rows",
+      "source": "Feature: Apply every typed mutation\n\n  @id-table\n  @level-quick\n  @mode-conformance\n  Scenario: A plain scenario keeps its data table out\n    Given the document\n      | kind | params |\n      | set-text | {\"path\": [9]} |\n\n  @id-mutate\n  @level-exhaustive\n  @mode-differential\n  Scenario Outline: Apply <id> to the real document\n    When the <id> mutation is applied with its parameters\n      \"\"\"\n      {\"kind\": \"<id>\", \"params\": <params>}\n      \"\"\"\n    Then the projection moved\n    Examples:\n      | id       | params                                   |\n      | set-text | {\"path\": [2], \"text\": \"World\"}            |\n      | set-name | {\"path\": [], \"name\": \"g\"}                |\n\n  @id-vector\n  @level-exhaustive\n  @mode-conformance\n  Scenario Outline: Vectors use another template and are skipped\n    When the <id> vector runs\n      \"\"\"\n      {\"kind\": \"<id>\", \"vector\": \"<vector>\"}\n      \"\"\"\n    Examples:\n      | id       | vector |\n      | set-text | v1     |\n",
+      "rows": [
+        {
+          "line": 14,
+          "kind": "set-text",
+          "params": {
+            "path": [
+              2
+            ],
+            "text": "World"
+          }
+        },
+        {
+          "line": 14,
+          "kind": "set-name",
+          "params": {
+            "path": [],
+            "name": "g"
+          }
+        }
+      ]
+    },
+    {
+      "id": "only-when-steps-that-apply-the-named-kind-are-wire-rows",
+      "source": "Feature: Only mutation steps are wire rows\n\n  @id-identity-round-trip\n  @level-long\n  @mode-round-trip\n  Scenario: Decode and re-encode the committed artifact\n    Given the plugin's own committed DSL artifact asset://demo\n    When it is parsed with parse_dsl and printed back with print_dsl\n    Then the printed bytes are identical to the committed bytes\n      \"\"\"\n      {\"kind\": \"identity-round-trip\", \"params\": {\"carrier\": \"byte-exact\"}}\n      \"\"\"\n\n  @id-inverse\n  @level-exhaustive\n  @mode-property\n  Scenario Outline: Undoing <id> restores the document\n    Given the committed before-snapshot\n    When the <id> mutation is applied and then undone with its own inverse\n      \"\"\"\n      {\"kind\": \"<id>\", \"params\": <params>}\n      \"\"\"\n    Then the projection equals the base projection again\n      \"\"\"\n      {\"kind\": \"<id>\", \"params\": <params>}\n      \"\"\"\n    Examples:\n      | id       | params                  |\n      | set-name | {\"path\": [], \"name\": \"g\"} |\n\n  @id-refused\n  @level-quick\n  @mode-error\n  Scenario: A refused kind is attempted\n    When the set-text mutation is attempted with its parameters\n      \"\"\"\n      {\"kind\": \"set-text\", \"params\": {\"path\": [7], \"text\": \"x\"}}\n      \"\"\"\n",
+      "rows": [
+        {
+          "line": 17,
+          "kind": "set-name",
+          "params": {
+            "path": [],
+            "name": "g"
+          }
+        },
+        {
+          "line": 34,
+          "kind": "set-text",
+          "params": {
+            "path": [
+              7
+            ],
+            "text": "x"
+          }
+        }
+      ]
+    }
+  ]
+}

@@ -5,9 +5,14 @@
   "type": "object",
   "additionalProperties": false,
   "required": [
+    "mutation",
     "index"
   ],
   "properties": {
+    "mutation": {
+      "const": "setTimelineName",
+      "description": "Aggregate discriminator spliced in by SemioAnimationMutation; absent when the payload stands alone."
+    },
     "index": {
       "type": "integer",
       "minimum": 0
@@ -21,10 +26,6 @@
           "type": "null"
         }
       ]
-    },
-    "mutation": {
-      "const": "setTimelineName",
-      "description": "Aggregate discriminator spliced in by SemioAnimationMutation; absent when the payload stands alone."
     }
   }
 }

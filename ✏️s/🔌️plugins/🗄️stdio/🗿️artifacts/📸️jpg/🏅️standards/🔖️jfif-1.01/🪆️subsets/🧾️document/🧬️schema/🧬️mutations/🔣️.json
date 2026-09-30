@@ -7,10 +7,33 @@
     {
       "type": "object",
       "additionalProperties": false,
-      "required": ["mutation", "payload"],
+      "required": [
+        "mutation",
+        "payload"
+      ],
       "properties": {
-        "mutation": { "const": "patch-snapshot" },
-        "payload": { "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/jpg/jfif-1.01/document/mutation/patch-snapshot/schema.json" }
+        "mutation": {
+          "const": "set-snapshot"
+        },
+        "payload": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/jpg/jfif-1.01/document/mutation/set-snapshot/schema.json"
+        }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "mutation",
+        "payload"
+      ],
+      "properties": {
+        "mutation": {
+          "const": "patch-snapshot"
+        },
+        "payload": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/jpg/jfif-1.01/document/mutation/patch-snapshot/schema.json"
+        }
       }
     },
     {
@@ -38,74 +61,10 @@
       ],
       "properties": {
         "mutation": {
-          "const": "change-re-encode-quality"
+          "const": "replace-quant-table"
         },
         "payload": {
-          "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/jpg/jfif-1.01/document/mutation/change-re-encode-quality/schema.json"
-        }
-      }
-    },
-    {
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "mutation",
-        "payload"
-      ],
-      "properties": {
-        "mutation": {
-          "const": "change-restart-interval"
-        },
-        "payload": {
-          "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/jpg/jfif-1.01/document/mutation/change-restart-interval/schema.json"
-        }
-      }
-    },
-    {
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "mutation",
-        "payload"
-      ],
-      "properties": {
-        "mutation": {
-          "const": "insert-other-segment"
-        },
-        "payload": {
-          "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/jpg/jfif-1.01/document/mutation/insert-other-segment/schema.json"
-        }
-      }
-    },
-    {
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "mutation",
-        "payload"
-      ],
-      "properties": {
-        "mutation": {
-          "const": "remove-huffman-table"
-        },
-        "payload": {
-          "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/jpg/jfif-1.01/document/mutation/remove-huffman-table/schema.json"
-        }
-      }
-    },
-    {
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "mutation",
-        "payload"
-      ],
-      "properties": {
-        "mutation": {
-          "const": "remove-other-segment"
-        },
-        "payload": {
-          "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/jpg/jfif-1.01/document/mutation/remove-other-segment/schema.json"
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/jpg/jfif-1.01/document/mutation/replace-quant-table/schema.json"
         }
       }
     },
@@ -150,6 +109,70 @@
       ],
       "properties": {
         "mutation": {
+          "const": "remove-huffman-table"
+        },
+        "payload": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/jpg/jfif-1.01/document/mutation/remove-huffman-table/schema.json"
+        }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "mutation",
+        "payload"
+      ],
+      "properties": {
+        "mutation": {
+          "const": "change-restart-interval"
+        },
+        "payload": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/jpg/jfif-1.01/document/mutation/change-restart-interval/schema.json"
+        }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "mutation",
+        "payload"
+      ],
+      "properties": {
+        "mutation": {
+          "const": "insert-other-segment"
+        },
+        "payload": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/jpg/jfif-1.01/document/mutation/insert-other-segment/schema.json"
+        }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "mutation",
+        "payload"
+      ],
+      "properties": {
+        "mutation": {
+          "const": "remove-other-segment"
+        },
+        "payload": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/jpg/jfif-1.01/document/mutation/remove-other-segment/schema.json"
+        }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "mutation",
+        "payload"
+      ],
+      "properties": {
+        "mutation": {
           "const": "replace-pixels"
         },
         "payload": {
@@ -166,26 +189,10 @@
       ],
       "properties": {
         "mutation": {
-          "const": "replace-quant-table"
+          "const": "change-re-encode-quality"
         },
         "payload": {
-          "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/jpg/jfif-1.01/document/mutation/replace-quant-table/schema.json"
-        }
-      }
-    },
-    {
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "mutation",
-        "payload"
-      ],
-      "properties": {
-        "mutation": {
-          "const": "set-snapshot"
-        },
-        "payload": {
-          "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/jpg/jfif-1.01/document/mutation/set-snapshot/schema.json"
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/jpg/jfif-1.01/document/mutation/change-re-encode-quality/schema.json"
         }
       }
     }

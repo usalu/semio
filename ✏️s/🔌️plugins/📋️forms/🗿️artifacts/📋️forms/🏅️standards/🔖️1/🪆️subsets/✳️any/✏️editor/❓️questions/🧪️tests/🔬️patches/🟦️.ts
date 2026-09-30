@@ -3,7 +3,7 @@ import { applyPatch, compare } from "fast-json-patch";
 import fixture from "../../🧫️fixtures/🔣️patches.json";
 import choices from "../../🧫️fixtures/🔣️choices.json";
 import choiceSchema from "../../🧬️schema/🔣️choice-edit.json";
-import Ajv from "ajv/dist/2020.js";
+import Ajv from "ajv";
 import { patchChoice, patchQuestion } from "../../🟦️.ts";
 import type { FormQuestion, DslValue } from "../../../../🧬️schema/🧬️mutations/🟦️.ts";
 

@@ -26,11 +26,10 @@ fn mutable_input(ctx: &Context) -> Result<Vec<u8>, String> {
 //#endregion 🔖️Input
 
 //#region 🔖️Oracle
-/// 🔮️ Applies the declared mutation with `mp4` and projects the result independently.
 /// 👁️ `@id-mutate`: applies the row's kind with the registered reference implementation and ASSERTS
 /// the result is distinguishable from the untouched fixture. The exemption list is empty — every
 /// kind this vocabulary declares reaches the compared projection — so a kind that stops moving it
-/// fails here rather than reporting a green identical to `no-mutation`'s.
+/// fails here rather than reporting a green identical to an unchanged movie's.
 fn mutate_oracle(ctx: &Context) -> Result<Outcome, String> {
     let spec = ctx.doc_json()?;
     let input = mutable_input(ctx)?;
@@ -77,176 +76,40 @@ mod subject {
     use super::mutable_input;
     use semio_repo_test_host::{Context, Json, Outcome};
     use semio_s_artifact_stdio_mp4::standards::isobmff::subsets::any::io::{decode_mp4, encode_mp4};
-    use semio_s_artifact_stdio_mp4::standards::isobmff::subsets::any::schema::mutations;
-    use semio_s_artifact_stdio_mp4::standards::isobmff::subsets::any::schema::mutations::{apply_mp4_mutation, Mp4Mutation};
-    use semio_s_artifact_stdio_mp4::standards::isobmff::subsets::any::schema::snapshot::{Mp4Codec, Mp4Ftyp, Mp4Sample, Mp4Snapshot, Mp4Track};
+    use semio_s_artifact_stdio_mp4::standards::isobmff::subsets::any::schema::mutations::{apply_mp4_mutation, decode_mp4_mutation_payload, inverse_mp4_mutation, Mp4Mutation};
     use semio_s_plugin_stdio_test_oracle::artifacts::mp4::standards::v_isobmff::subsets::any::project_mp4_mutation;
     use semio_s_plugin_stdio_test_oracle::law;
 
     //#region 🔖️SpecReading
-    /// 🔎️ A second, independently written reading of the SAME `params` JSON schema the oracle reads
-    /// in `../../../🏅️standards/🔖️isobmff/🪆️subsets/✳️any/🦀️oracle.rs` — deliberately not
-    /// shared code, so a bug in one reading has nothing to hide behind in the other.
-    fn number(value: &Json, key: &str, fallback: f64) -> f64 {
-        match value.get(key) {
-            Some(Json::Number(found)) => *found,
-            _ => fallback,
-        }
-    }
-    fn usize_field(value: &Json, key: &str) -> usize {
-        number(value, key, 0.0).max(0.0) as usize
-    }
-    fn boolean(value: &Json, key: &str, fallback: bool) -> bool {
-        match value.get(key) {
-            Some(Json::Bool(found)) => *found,
-            _ => fallback,
-        }
-    }
-    fn strings(value: &Json, key: &str) -> Vec<String> {
-        match value.get(key) {
-            Some(Json::Array(items)) => items.iter().filter_map(|item| if let Json::String(text) = item { Some(text.clone()) } else { None }).collect(),
-            _ => Vec::new(),
-        }
-    }
-    fn bytes(value: &Json, key: &str) -> Vec<u8> {
-        match value.get(key) {
-            Some(Json::Array(items)) => items.iter().filter_map(|item| if let Json::Number(n) = item { Some(*n as u8) } else { None }).collect(),
-            _ => Vec::new(),
-        }
-    }
-
-    fn ftyp_from_json(value: &Json, fallback: &Mp4Ftyp) -> Mp4Ftyp {
-        let major_brand = value.str("majorBrand");
-        let compatible_brands = strings(value, "compatibleBrands");
-        Mp4Ftyp {
-            major_brand: if major_brand.is_empty() { fallback.major_brand.clone() } else { major_brand },
-            minor_version: number(value, "minorVersion", fallback.minor_version as f64) as u32,
-            compatible_brands: if compatible_brands.is_empty() { fallback.compatible_brands.clone() } else { compatible_brands },
-        }
-    }
-
-    fn sample_from_json(value: &Json) -> Mp4Sample {
-        Mp4Sample { data: bytes(value, "data"), duration: number(value, "duration", 0.0) as u32, cts_offset: number(value, "ctsOffset", 0.0) as i32, sync: boolean(value, "sync", true) }
-    }
-
-    /// 🧮️ Re-groups a retained `stsc` chunking onto a shortened sample list, so the document
-    /// `set-snapshot` hands over is internally consistent rather than carrying a grouping that
-    /// claims more samples than the track holds. The encoder reconciles a stale grouping on its own
-    /// (`../../🏅️standards/🔖️isobmff/🪆️subsets/✳️any/🚪️io/🦀️.rs`'s
-    /// `normalized_chunk_sample_counts`, pinned by its own test), but a case that means "replace the
-    /// document with THIS one" must hand over a document a real producer could have written.
-    fn grouping_for(retained: &[u32], samples: usize) -> Vec<u32> {
-        let mut remaining = samples;
-        let mut counts = Vec::new();
-        for count in retained {
-            let taken = (*count as usize).min(remaining);
-            remaining -= taken;
-            if taken > 0 {
-                counts.push(taken as u32);
-            }
-        }
-        if remaining > 0 {
-            counts.push(remaining as u32);
-        }
-        counts
-    }
-
-    /// 🦠️ Builds the real `Mp4Mutation` this scenario's `{"kind", "params"}` doc string describes.
-    /// `set-snapshot` mirrors the oracle's own reading (replace `ftyp`, drop the first track's last
-    /// sample) — a real multi-facet whole-document replace rather than a `SetFtyp` alias.
-    /// `insert-track` duplicates the real track 0 (the fixture's only track — it carries no audio),
-    /// mirroring the oracle's own bound on what a real second track can be here.
-    fn mutation_from_spec(spec: &Json, base: &Mp4Snapshot) -> Result<Mp4Mutation, String> {
-        let params = spec.get("params").cloned().unwrap_or(Json::Object(Vec::new()));
-        match spec.str("kind").as_str() {
-            "set-snapshot" => {
-                let mut snapshot = base.clone();
-                snapshot.ftyp = ftyp_from_json(&params.get("ftyp").cloned().unwrap_or(Json::Object(Vec::new())), &base.ftyp);
-                if let Some(track) = snapshot.tracks.first_mut() {
-                    track.samples.pop();
-                    track.chunk_sample_counts = grouping_for(&track.chunk_sample_counts, track.samples.len());
-                }
-                Ok(Mp4Mutation::SetSnapshot(mutations::set_snapshot::SetSnapshot { snapshot }))
-            }
-            "set-ftyp" => Ok(Mp4Mutation::SetFtyp(mutations::set_ftyp::SetFtyp { ftyp: ftyp_from_json(&params, &base.ftyp) })),
-            "insert-track" => {
-                let source = base.tracks.first().ok_or("mp4: no track to duplicate for insert-track")?;
-                let track_id = base.tracks.iter().map(|track| track.track_id).max().unwrap_or(0) + 1;
-                Ok(Mp4Mutation::InsertTrack(mutations::insert_track::InsertTrack { index: usize_field(&params, "index"), track: Mp4Track { track_id, ..source.clone() } }))
-            }
-            "remove-track" => Ok(Mp4Mutation::RemoveTrack(mutations::remove_track::RemoveTrack { index: usize_field(&params, "index") })),
-            "set-track-dimensions" => Ok(Mp4Mutation::SetTrackDimensions(mutations::set_track_dimensions::SetTrackDimensions { track_index: usize_field(&params, "trackIndex"), width: number(&params, "width", 0.0) as u32, height: number(&params, "height", 0.0) as u32 })),
-            "set-track-codec" => {
-                let track_index = usize_field(&params, "trackIndex");
-                let fallback_nal = base.tracks.get(track_index).map(|track| track.codec.nal_length_size).unwrap_or(4);
-                Ok(Mp4Mutation::SetTrackCodec(mutations::set_track_codec::SetTrackCodec { track_index, codec: Mp4Codec::avc(vec![bytes(&params, "sps")], vec![bytes(&params, "pps")], fallback_nal, None) }))
-            }
-            "insert-sample" => Ok(Mp4Mutation::InsertSample(mutations::insert_sample::InsertSample { track_index: usize_field(&params, "trackIndex"), index: usize_field(&params, "index"), sample: sample_from_json(&params.get("sample").cloned().unwrap_or(Json::Object(Vec::new()))) })),
-            "remove-sample" => Ok(Mp4Mutation::RemoveSample(mutations::remove_sample::RemoveSample { track_index: usize_field(&params, "trackIndex"), index: usize_field(&params, "index") })),
-            "set-sample-sync" => Ok(Mp4Mutation::SetSampleSync(mutations::set_sample_sync::SetSampleSync { track_index: usize_field(&params, "trackIndex"), index: usize_field(&params, "index"), sync: boolean(&params, "sync", true) })),
-            other => Err(format!("test case does not know mutation kind {other:?}")),
-        }
+    /// 🦠️ Decodes the scenario's `{"kind", "params"}` doc string: `params` is the leaf's own wire payload, read
+    /// through the vocabulary's derive-generated decoder rather than a params grammar written beside it.
+    fn mutation_from_spec(spec: &Json) -> Result<Mp4Mutation, String> {
+        decode_mp4_mutation_payload(&spec.str("kind"), &spec.get("params").cloned().unwrap_or(Json::Null).to_string())
     }
     //#endregion 🔖️SpecReading
-
-    //#region 🔖️Inverse
-    /// ↩️ `Mp4Mutation::inverse` in closed form — the same per-variant mapping
-    /// `../../🏅️standards/🔖️isobmff/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦀️.rs`'s own
-    /// `Mutation::inverse` impl gives, transplanted rather than called through the trait (same
-    /// precedent as `🌴️mutate-pdf-1-7`'s own `inverse_of`/`mutate-wav-riff-pcm`'s own
-    /// `restore_mutation`): a bug in one reading has nothing to hide behind in the other.
-    /// `NoMutation` was dropped from the vocabulary, so an index that no longer resolves in
-    /// `original` restores to `None` (nothing to undo) rather than to a sentinel variant.
-    fn restore_mutation(applied: &Mp4Mutation, original: &Mp4Snapshot) -> Option<Mp4Mutation> {
-        Some(match applied {
-            Mp4Mutation::SetSnapshot(_) => Mp4Mutation::SetSnapshot(mutations::set_snapshot::SetSnapshot { snapshot: original.clone() }),
-            Mp4Mutation::PatchSnapshot(_) => Mp4Mutation::SetSnapshot(mutations::set_snapshot::SetSnapshot { snapshot: original.clone() }),
-            Mp4Mutation::SetFtyp(_) => Mp4Mutation::SetFtyp(mutations::set_ftyp::SetFtyp { ftyp: original.ftyp.clone() }),
-            Mp4Mutation::InsertTrack(mutations::insert_track::InsertTrack { index, .. }) => Mp4Mutation::RemoveTrack(mutations::remove_track::RemoveTrack { index: *index }),
-            Mp4Mutation::RemoveTrack(mutations::remove_track::RemoveTrack { index }) => match original.tracks.get(*index) {
-                Some(track) => Mp4Mutation::InsertTrack(mutations::insert_track::InsertTrack { index: *index, track: track.clone() }),
-                None => return None,
-            },
-            Mp4Mutation::SetTrackDimensions(mutations::set_track_dimensions::SetTrackDimensions { track_index, .. }) => match original.tracks.get(*track_index) {
-                Some(track) => Mp4Mutation::SetTrackDimensions(mutations::set_track_dimensions::SetTrackDimensions { track_index: *track_index, width: track.width, height: track.height }),
-                None => return None,
-            },
-            Mp4Mutation::SetTrackCodec(mutations::set_track_codec::SetTrackCodec { track_index, .. }) => match original.tracks.get(*track_index) {
-                Some(track) => Mp4Mutation::SetTrackCodec(mutations::set_track_codec::SetTrackCodec { track_index: *track_index, codec: track.codec.clone() }),
-                None => return None,
-            },
-            Mp4Mutation::InsertSample(_) | Mp4Mutation::RemoveSample(_) => Mp4Mutation::SetSnapshot(mutations::set_snapshot::SetSnapshot { snapshot: original.clone() }),
-            Mp4Mutation::SetSampleSync(mutations::set_sample_sync::SetSampleSync { track_index, index, .. }) => match original.tracks.get(*track_index).and_then(|track| track.samples.get(*index)) {
-                Some(sample) => Mp4Mutation::SetSampleSync(mutations::set_sample_sync::SetSampleSync { track_index: *track_index, index: *index, sync: sample.sync }),
-                None => return None,
-            },
-        })
-    }
-    //#endregion 🔖️Inverse
 
     //#region 🔖️Scenarios
     /// 🎯️ Decode → apply the declared mutation → re-encode, projected through the SAME independent
     /// reader the oracle used.
     pub fn mutate(ctx: &Context) -> Result<Outcome, String> {
         let input = mutable_input(ctx)?;
-        let base = decode_mp4(&input).map_err(|error| format!("decode_mp4 failed: {error}"))?;
-        let mutation = mutation_from_spec(&ctx.doc_json()?, &base)?;
-        let mut snapshot = base;
-        apply_mp4_mutation(&mut snapshot, &mutation);
+        let mut snapshot = decode_mp4(&input).map_err(|error| format!("decode_mp4 failed: {error}"))?;
+        apply_mp4_mutation(&mut snapshot, &mutation_from_spec(&ctx.doc_json()?)?);
         let bytes = encode_mp4(&snapshot);
         let projection = project_mp4_mutation(&bytes)?;
         Ok(Outcome::with_raw(bytes, projection))
     }
 
-    /// 🎯️ Decode → apply the declared mutation → apply its inverse → re-encode. The result must
-    /// project back onto the pristine original — the inverse oracle's own reference claim.
+    /// 🎯️ Decode → apply the declared mutation → apply every mutation the vocabulary's own inverse returns
+    /// against the pre-mutation snapshot → re-encode. The result must project back onto the pristine
+    /// original — the inverse oracle's own reference claim.
     pub fn inverse(ctx: &Context) -> Result<Outcome, String> {
         let input = mutable_input(ctx)?;
         let original = decode_mp4(&input).map_err(|error| format!("decode_mp4 failed: {error}"))?;
-        let mutation = mutation_from_spec(&ctx.doc_json()?, &original)?;
+        let mutation = mutation_from_spec(&ctx.doc_json()?)?;
         let mut snapshot = original.clone();
         apply_mp4_mutation(&mut snapshot, &mutation);
-        if let Some(undo) = restore_mutation(&mutation, &original) {
+        for undo in inverse_mp4_mutation(&mutation, &original) {
             apply_mp4_mutation(&mut snapshot, &undo);
         }
         let bytes = encode_mp4(&snapshot);
@@ -291,10 +154,10 @@ mod subject {
 /// base ids, which the host resolves for every Examples row, and plain scenarios under their own ids.
 pub fn adapter() -> Adapter {
     let mut built = Adapter::new("rust");
-    built = built.oracle("mutate", mutate_oracle).oracle("no-mutation-baseline-mutate", mutate_oracle).oracle("inverse", inverse_oracle).oracle("no-mutation-baseline-inverse", inverse_oracle);
+    built = built.oracle("mutate", mutate_oracle).oracle("inverse", inverse_oracle);
     #[cfg(feature = "sut")]
     {
-        built = built.subject("mutate", subject::mutate).subject("no-mutation-baseline-mutate", subject::mutate).subject("inverse", subject::inverse).subject("no-mutation-baseline-inverse", subject::inverse);
+        built = built.subject("mutate", subject::mutate).subject("inverse", subject::inverse);
     }
     built = built.oracle("identity-round-trip", round_trip_oracle);
     #[cfg(feature = "sut")]

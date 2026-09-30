@@ -152,6 +152,8 @@ import {
 } from "@semio-tech/framework";
 import { decodeScenePackField, decodeScenePackValue } from "@semio-tech/framework-os";
 import { uiAccessibilityValueV1, uiProgressFractionV1 } from "../../../../../../../🔨️modules/🖱️ui/🧬️contract/♿️accessibility/🟦️.ts";
+import { formatUiNumber, formatUiNumberFixed, roundUiNumber } from "../../../../../../../🔨️modules/🖱️ui/🧬️contract/🔢️number-format/🟦️.ts";
+import { uiNumberKeyValue } from "../../../../../../../🔨️modules/🖱️ui/🧬️contract/🧩️component/🟦️.ts";
 import { shellLabel } from "../🛠️ShellHelpers/🟦️.tsx";
 import { useMapContextMenuSpecs } from "../🏛️ShellHost/🟦️.tsx";
 import { ShellFaultBoundary } from "../🐚️Shell/🟦️.tsx";
@@ -184,6 +186,9 @@ export type UiPresenceOverlayEntry = {
   readonly hovered?: boolean;
   readonly selected?: boolean;
   readonly previewed?: boolean;
+  /** 👥️ Host-localized lines about peers acting on this node (e.g. "Ada is editing this in time travel"), read out
+   * after a tree row's own description. */
+  readonly notes?: readonly string[];
 };
 
 export type UiPresenceOverlayValue = {
@@ -210,7 +215,9 @@ export function useUiPresenceOverlay(): UiPresenceOverlayValue {
   return useMemo(() => {
     if (guest.byKey.size === 0) return provided;
     if (provided.byKey.size === 0) return guest;
-    return { byKey: new Map([...provided.byKey, ...guest.byKey]) };
+    const byKey = new Map(provided.byKey);
+    for (const [key, entry] of guest.byKey) byKey.set(key, { ...byKey.get(key), ...entry });
+    return { byKey };
   }, [provided, guest]);
 }
 //#endregion PresenceOverlay
@@ -1124,7 +1131,7 @@ type DeclarativeUiControl =
   | (DeclarativeControlBase & { readonly type: "select"; readonly id: string; readonly value: string; readonly items: readonly { readonly value: string; readonly label: string }[]; readonly placeholder?: string; readonly onChange: ActionDescriptor })
   | (DeclarativeControlBase & { readonly type: "toggle"; readonly id: string; readonly iconId: string; readonly pressed: boolean; readonly text?: string; readonly onChange: ActionDescriptor })
   | (DeclarativeControlBase & { readonly type: "keyValue"; readonly entries: readonly { readonly label: string; readonly value: string }[] })
-  | (DeclarativeControlBase & { readonly type: "slider"; readonly id: string; readonly value: number; readonly min: number; readonly max: number; readonly step: number; readonly unit?: string; readonly onChange: ActionDescriptor })
+  | (DeclarativeControlBase & { readonly type: "slider"; readonly id: string; readonly value: number; readonly min: number; readonly max: number; readonly step: number; readonly unit?: string; readonly snaps?: readonly number[]; readonly onChange: ActionDescriptor })
   | (DeclarativeControlBase & { readonly type: "numberStepper"; readonly id: string; readonly value: number; readonly step: number; readonly uniform: boolean; readonly min?: number; readonly max?: number; readonly onAbsolute: ActionDescriptor; readonly onDelta: ActionDescriptor })
   | (DeclarativeControlBase & { readonly type: "ring"; readonly id: string; readonly orbId: string; readonly t: number; readonly onChange: ActionDescriptor })
   | (DeclarativeControlBase & { readonly type: "iconSelect"; readonly id: string; readonly value: string; readonly uniform: boolean; readonly classifierKind: string; readonly onChange: ActionDescriptor })
@@ -1168,7 +1175,7 @@ export function renderUiControl(control: DeclarativeUiControl, onAction: (action
     case "keyValue":
       return <dl className="grid grid-cols-[auto_1fr] gap-x-single gap-y-single text-xs" data-ui-path={path}>{control.entries.map((entry, index) => <div key={`${entry.label}:${index}`} className="contents"><dt className="text-muted-foreground">{entry.label}</dt><dd className="tabular-nums">{entry.value}</dd></div>)}</dl>;
     case "slider": {
-      const slider = <Slider id={control.id} data-ui-path={path} className="w-full min-w-0" max={control.max} min={control.min} step={control.step} value={[control.value]} aria-valuetext={uiAccessibilityValueV1({ type: "slider", value: control.value, min: control.min, max: control.max, step: control.step, unit: control.unit ?? null }).valueText ?? undefined} onValueChange={(values) => dispatchDeclarativeControlAction(onAction, control.onChange, { value: values[0] ?? control.value })} />;
+      const slider = <Slider id={control.id} data-ui-path={path} className="w-full min-w-0" max={control.max} min={control.min} step={control.step} snapValues={control.snaps} value={[control.value]} aria-valuetext={uiAccessibilityValueV1({ type: "slider", value: control.value, min: control.min, max: control.max, step: control.step, unit: control.unit ?? null, snaps: [...(control.snaps ?? [])] }).valueText ?? undefined} onValueChange={(values) => dispatchDeclarativeControlAction(onAction, control.onChange, { value: values[0] ?? control.value })} />;
       if (!control.unit) return slider;
       return <div className="flex min-w-0 w-full items-center gap-single">{slider}<span className="text-muted-foreground shrink-0 text-xs tabular-nums">{control.value} {control.unit}</span></div>;
     }
@@ -1258,18 +1265,25 @@ function TextView({ record }: { readonly record: UiNodeRecord }) {
 
 function ButtonView({ record, context }: { readonly record: UiNodeRecord; readonly context: UiInterpreterContext }) {
   const component = record.component as Extract<Component, { type: "button" }>;
+  const id = nodeDomId(context.store, record, context.domScope);
+  const { props: aria, describedBy } = accessibilityAriaProps(record.accessibility, id);
   return (
-    <Button
-      id={nodeDomId(context.store, record, context.domScope)}
-      data-ui-node-id={record.id} data-ui-node-key={record.key}
-      text={component.label}
-      icon={resolveControlIconNode(component.icon)}
-      disabled={record.disabled}
-      aria-label={record.accessibility.label ?? undefined}
-      className={activityBorderClass(record)}
-      aria-busy={record.activity === "loading" || record.activity === "waiting" || undefined}
-      onClick={() => dispatchTrigger(context, record, "activate")}
-    />
+    <>
+      <Button
+        id={id}
+        data-ui-node-id={record.id} data-ui-node-key={record.key}
+        data-tone={record.style.tone ?? undefined}
+        text={component.label}
+        icon={resolveControlIconNode(component.icon)}
+        disabled={record.disabled}
+        aria-label={record.accessibility.label ?? undefined}
+        aria-describedby={aria["aria-describedby"] as string | undefined}
+        className={activityBorderClass(record)}
+        aria-busy={record.activity === "loading" || record.activity === "waiting" || undefined}
+        onClick={() => dispatchTrigger(context, record, "activate")}
+      />
+      {describedBy}
+    </>
   );
 }
 
@@ -1316,7 +1330,7 @@ function InputView({ record, context }: { readonly record: UiNodeRecord; readonl
   const continuous = component.kind === "number" && !commitOnBlur;
   const commitValue = (raw: string) => {
     if (commitOnBlur && !takeDraftCommit(raw)) return;
-    const value: UiValue = component.kind === "number" ? toUiValue(Number(raw)) : toUiValue(raw);
+    const value: UiValue = component.kind === "number" ? toUiValue(component.precision == null ? Number(raw) : roundUiNumber(Number(raw), component.precision)) : toUiValue(raw);
     if (continuous) {
       lane.offer(value);
       return;
@@ -1330,6 +1344,18 @@ function InputView({ record, context }: { readonly record: UiNodeRecord; readonl
     event.preventDefault();
     commitValue((event.target as HTMLInputElement | HTMLTextAreaElement).value);
     (event.target as HTMLInputElement | HTMLTextAreaElement).blur();
+  };
+  /** 📌️ A number field's page keys follow the shared keyboard law: the adjacent detent (`snaps`), else ten steps —
+   * staged in the draft of a blur-committed field, offered on the lane of a continuous one. */
+  const pageKey = (event: ReactKeyboardEvent<HTMLInputElement | HTMLTextAreaElement>): boolean => {
+    const current = Number((event.target as HTMLInputElement).value);
+    if (component.kind !== "number" || (event.key !== "PageUp" && event.key !== "PageDown") || !Number.isFinite(current)) return false;
+    event.preventDefault();
+    const next = uiNumberKeyValue(current, component.min ?? null, component.max ?? null, component.step ?? 1, component.snaps ?? [], event.key === "PageUp" ? "pageUp" : "pageDown", false);
+    const text = component.precision == null ? formatUiNumber(next) : formatUiNumberFixed(next, component.precision);
+    if (commitOnBlur) setDraft(text);
+    else commitValue(text);
+    return true;
   };
   if (component.kind === "longText") {
     return (
@@ -1360,11 +1386,11 @@ function InputView({ record, context }: { readonly record: UiNodeRecord; readonl
       placeholder={component.placeholder ?? undefined}
       min={component.min ?? undefined}
       max={component.max ?? undefined}
-      step={component.step ?? undefined}
+      step={component.step ?? (component.kind === "number" && component.precision != null ? 10 ** -component.precision : undefined)}
       accept={component.kind === "file" ? (component.accept ?? undefined) : undefined}
       onChange={commitOnBlur && component.kind !== "file" ? (event) => setDraft(event.target.value) : (event) => commitValue(component.kind === "file" ? (event.target.files?.[0]?.name ?? "") : event.target.value)}
-      onKeyDown={commitOnBlur ? commitOnEnter : undefined}
-      onBlur={commitOnBlur ? (event) => commitValue(component.kind === "file" ? (event.target.files?.[0]?.name ?? "") : event.target.value) : continuous ? (event) => lane.commit(toUiValue(Number(event.target.value))) : undefined}
+      onKeyDown={(event) => { if (!pageKey(event) && commitOnBlur) commitOnEnter(event); }}
+      onBlur={commitOnBlur ? (event) => commitValue(component.kind === "file" ? (event.target.files?.[0]?.name ?? "") : event.target.value) : continuous ? (event) => lane.commit(toUiValue(component.precision == null ? Number(event.target.value) : roundUiNumber(Number(event.target.value), component.precision))) : undefined}
     />
   );
 }
@@ -1418,6 +1444,7 @@ function SliderView({ record, context }: { readonly record: UiNodeRecord; readon
       max={component.max}
       min={component.min}
       step={component.step}
+      snapValues={component.snaps}
       value={[component.value]}
       onValueChange={(values) => lane.offer(toUiValue(values[0] ?? component.value))}
       onValueCommit={(values) => lane.commit(toUiValue(values[0] ?? component.value))}
@@ -1442,6 +1469,7 @@ function NumberStepperView({ record, context }: { readonly record: UiNodeRecord;
       step={component.step}
       min={component.min ?? undefined}
       max={component.max ?? undefined}
+      precision={component.precision ?? undefined}
       value={component.uniform ? component.value : undefined}
       mixed={!component.uniform}
       onChange={(value) => dispatchTrigger(context, record, "change", toUiValue(value))}
@@ -2096,7 +2124,7 @@ export function treeItemToTreeData(store: UiDocumentStore, state: UiDocumentStat
     windowKey: record.key || undefined,
     windowPath,
     label: props.label,
-    description: props.description,
+    description: [props.description, ...(presence.notes ?? [])].filter((line): line is string => typeof line === "string" && line !== "").join(" · ") || undefined,
     icon: props.icon ? resolveControlIconNode(props.icon, 12) : undefined,
     defaultOpen: props.defaultOpen ?? undefined,
     isSelected: Boolean(presence.selected) || leftoverTreeItemSelectedV1(record.key, leftoverIds),

@@ -840,6 +840,7 @@ async fn a_guest_backed_codec_refuses_the_two_operations_the_wit_does_not_export
         diff: store::os_spr::ArtifactDiff { schema: store::os_spr::SchemaId("gis.map".to_string()), payload: Vec::new() },
         inverse: store::os_spr::InverseMutation { schema: store::os_spr::SchemaId("gis.map".to_string()), payload: Vec::new() },
         timestamp: store::os_spr::HybridLogicalTimestamp::new(1, 1),
+        transaction: None,
     };
     let printed = guest_edit_text_from_envelope(&envelope).await.expect_err("there is no per-envelope codec printer");
     let store::VcsError::Deserialize(message) = &printed else { panic!("edit-text must refuse by decode, got {printed:?}") };

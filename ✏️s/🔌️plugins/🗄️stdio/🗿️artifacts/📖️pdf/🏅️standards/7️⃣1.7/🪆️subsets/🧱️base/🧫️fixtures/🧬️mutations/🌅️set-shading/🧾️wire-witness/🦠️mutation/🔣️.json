@@ -1,0 +1,25 @@
+{
+  "mutation": "setShading",
+  "shading": {
+    "id": "id",
+    "colorSpace": {
+      "kind": "deviceRgb"
+    },
+    "kind": {
+      "kind": "functionBased",
+      "function": {
+        "kind": "array",
+        "functions": []
+      }
+    },
+    "background": [],
+    "bbox": [
+      0,
+      0,
+      0,
+      0
+    ],
+    "antiAlias": false,
+    "extra": []
+  }
+}

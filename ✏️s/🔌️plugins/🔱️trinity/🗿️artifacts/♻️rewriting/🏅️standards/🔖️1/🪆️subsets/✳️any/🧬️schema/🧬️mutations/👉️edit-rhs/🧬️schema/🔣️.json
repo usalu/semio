@@ -5,11 +5,27 @@
   "type": "object",
   "additionalProperties": false,
   "required": [
+    "mutation",
     "newRhsJson"
   ],
   "properties": {
+    "mutation": {
+      "const": "editRhs"
+    },
     "newRhsJson": {
-      "type": "string"
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "multiline",
+        "role": "value",
+        "label": {
+          "en": "New Replacement",
+          "de": "Neue Ersetzung"
+        },
+        "description": {
+          "en": "Right-hand side of the rule as JSON.",
+          "de": "Rechte Regelseite als JSON."
+        }
+      }
     }
   }
 }

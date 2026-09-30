@@ -1,0 +1,9 @@
+{
+  "mutation": "deleteAnimation",
+  "payload": {
+    "phase": "apply",
+    "value": {
+      "index": 1
+    }
+  }
+}

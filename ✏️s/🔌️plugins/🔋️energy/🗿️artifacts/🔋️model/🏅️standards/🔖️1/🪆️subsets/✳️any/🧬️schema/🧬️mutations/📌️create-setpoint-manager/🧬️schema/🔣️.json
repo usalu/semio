@@ -5,6 +5,7 @@
   "type": "object",
   "additionalProperties": false,
   "required": [
+    "mutation",
     "id",
     "name",
     "kind",
@@ -16,32 +17,255 @@
     "scheduleId"
   ],
   "properties": {
+    "mutation": {
+      "const": "createSetpointManager"
+    },
     "id": {
-      "type": "integer"
+      "type": "integer",
+      "minimum": 0,
+      "x-semio-ui": {
+        "widget": "stepper",
+        "role": "value",
+        "label": {
+          "en": "ID",
+          "de": "ID"
+        },
+        "description": {
+          "en": "Id the new setpoint manager is created under; later mutations address it by this id.",
+          "de": "ID, unter der das neue Objekt angelegt wird; spätere Mutationen adressieren es darüber."
+        },
+        "step": 1,
+        "precision": 0,
+        "group": "identity",
+        "order": 10
+      }
     },
     "name": {
-      "type": "string"
+      "type": "string",
+      "pattern": "[^\\t\\n\\u000B\\f\\r \\u0085\\u00A0\\u1680\\u2000-\\u200A\\u2028\\u2029\\u202F\\u205F\\u3000]",
+      "x-semio-ui": {
+        "widget": "text",
+        "role": "value",
+        "label": {
+          "en": "Name",
+          "de": "Name"
+        },
+        "group": "identity",
+        "order": 20
+      }
     },
     "kind": {
-      "type": "string"
+      "type": "string",
+      "enum": [
+        "Scheduled",
+        "OutdoorAirReset",
+        "WarmestZone",
+        "ColdestZone"
+      ],
+      "x-semio-ui": {
+        "widget": "select",
+        "role": "value",
+        "label": {
+          "en": "Control law",
+          "de": "Regelgesetz"
+        },
+        "options": {
+          "Scheduled": {
+            "en": "Scheduled",
+            "de": "Zeitplangeführt"
+          },
+          "OutdoorAirReset": {
+            "en": "Outdoor air reset",
+            "de": "Außentemperaturgeführt"
+          },
+          "WarmestZone": {
+            "en": "Warmest zone",
+            "de": "Wärmste Zone"
+          },
+          "ColdestZone": {
+            "en": "Coldest zone",
+            "de": "Kälteste Zone"
+          }
+        },
+        "group": "control",
+        "order": 30
+      }
     },
     "lowOutdoorC": {
-      "type": "number"
+      "type": "number",
+      "x-semio-ui": {
+        "widget": "stepper",
+        "role": "value",
+        "label": {
+          "en": "Low outdoor temperature",
+          "de": "Untere Außentemperatur"
+        },
+        "description": {
+          "en": "Lower end of the outdoor temperature range; 0 unless the law is OutdoorAirReset.",
+          "de": "Unteres Ende des Außentemperaturbereichs; 0 außer beim Regelgesetz OutdoorAirReset."
+        },
+        "unit": "°C",
+        "step": 0.5,
+        "precision": 1,
+        "group": "control",
+        "order": 40
+      }
     },
     "highOutdoorC": {
-      "type": "number"
+      "type": "number",
+      "x-semio-ui": {
+        "widget": "stepper",
+        "role": "value",
+        "label": {
+          "en": "High outdoor temperature",
+          "de": "Obere Außentemperatur"
+        },
+        "description": {
+          "en": "Upper end of the outdoor temperature range, above the lower end; 0 unless the law is OutdoorAirReset.",
+          "de": "Oberes Ende des Außentemperaturbereichs, über dem unteren Ende; 0 außer beim Regelgesetz OutdoorAirReset."
+        },
+        "unit": "°C",
+        "step": 0.5,
+        "precision": 1,
+        "group": "control",
+        "order": 50
+      }
     },
     "lowSetpointC": {
-      "type": "number"
+      "type": "number",
+      "x-semio-ui": {
+        "widget": "stepper",
+        "role": "value",
+        "label": {
+          "en": "Setpoint at low outdoor temperature",
+          "de": "Sollwert bei unterer Außentemperatur"
+        },
+        "description": {
+          "en": "0 unless the law is OutdoorAirReset.",
+          "de": "0 außer beim Regelgesetz OutdoorAirReset."
+        },
+        "unit": "°C",
+        "step": 0.5,
+        "precision": 1,
+        "group": "control",
+        "order": 60
+      }
     },
     "highSetpointC": {
-      "type": "number"
+      "type": "number",
+      "x-semio-ui": {
+        "widget": "stepper",
+        "role": "value",
+        "label": {
+          "en": "Setpoint at high outdoor temperature",
+          "de": "Sollwert bei oberer Außentemperatur"
+        },
+        "description": {
+          "en": "0 unless the law is OutdoorAirReset.",
+          "de": "0 außer beim Regelgesetz OutdoorAirReset."
+        },
+        "unit": "°C",
+        "step": 0.5,
+        "precision": 1,
+        "group": "control",
+        "order": 70
+      }
     },
     "schedulePresent": {
-      "type": "boolean"
+      "type": "boolean",
+      "x-semio-ui": {
+        "widget": "toggle",
+        "role": "value",
+        "label": {
+          "en": "Use schedule",
+          "de": "Zeitplan verwenden"
+        },
+        "description": {
+          "en": "Off means no setpoint schedule; its id is then 0.",
+          "de": "Aus bedeutet kein Sollwertzeitplan; dessen ID ist dann 0."
+        },
+        "group": "schedule",
+        "order": 80
+      }
     },
     "scheduleId": {
-      "type": "integer"
+      "type": "integer",
+      "minimum": 0,
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Setpoint schedule",
+          "de": "Sollwertzeitplan"
+        },
+        "description": {
+          "en": "Setpoint in °C over time, by id; 0 while no schedule is used.",
+          "de": "Sollwert in °C im Zeitverlauf, per ID; 0, solange kein Zeitplan verwendet wird."
+        },
+        "ref": {
+          "kind": "schedule",
+          "domain": "energyModel",
+          "granularity": "schedule"
+        },
+        "group": "schedule",
+        "order": 90
+      }
     }
-  }
+  },
+  "allOf": [
+    {
+      "if": {
+        "type": "object",
+        "properties": {
+          "kind": {
+            "const": "OutdoorAirReset"
+          }
+        }
+      },
+      "else": {
+        "type": "object",
+        "properties": {
+          "lowOutdoorC": {
+            "const": 0
+          },
+          "highOutdoorC": {
+            "const": 0
+          },
+          "lowSetpointC": {
+            "const": 0
+          },
+          "highSetpointC": {
+            "const": 0
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "type": "object",
+        "properties": {
+          "schedulePresent": {
+            "const": false
+          }
+        }
+      },
+      "then": {
+        "type": "object",
+        "properties": {
+          "scheduleId": {
+            "const": 0
+          }
+        }
+      }
+    }
+  ],
+  "x-semio-invariant": [
+    {
+      "id": "outdoor-reset-range",
+      "description": {
+        "en": "Under OutdoorAirReset the high outdoor temperature lies above the low one.",
+        "de": "Beim Regelgesetz OutdoorAirReset liegt die obere Außentemperatur über der unteren."
+      }
+    }
+  ]
 }

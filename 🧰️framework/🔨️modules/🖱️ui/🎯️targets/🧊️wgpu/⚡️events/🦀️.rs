@@ -511,7 +511,7 @@ fn editable_value(node: &UiNode) -> Option<String> {
     match node {
         UiNode::Input(input) => Some(input.value.clone()),
         UiNode::IconSelect(select) => Some(select.value.clone()),
-        UiNode::NumberStepper(stepper) => Some(ui_contract::format_ui_number(stepper.value)),
+        UiNode::NumberStepper(stepper) => Some(crate::wgpu::stepper::stepper_value_text(stepper.value, stepper.precision)),
         _ => None,
     }
 }
@@ -532,7 +532,7 @@ fn commits_on_blur(node: &UiNode) -> bool {
 fn edit_commit_action(node: &Node, text: &str) -> Option<FiredAction> {
     match &node.spec.0 {
         UiNode::Input(input) => {
-            let value = if input.input_kind == "number" { DslValue::float(constrain_number_input(text.parse::<f64>().unwrap_or(f64::NAN), input.min, input.max, input.step)) } else { DslValue::String(text.to_string()) };
+            let value = if input.input_kind == "number" { DslValue::float(constrain_number_field(text.parse::<f64>().unwrap_or(f64::NAN), input)) } else { DslValue::String(text.to_string()) };
             let trigger = if commits_on_blur(&node.spec.0) { Trigger::Commit } else { Trigger::Change };
             fired_action(&input.on_change, trigger, value)
         }
@@ -581,8 +581,19 @@ pub fn constrain_number_input(value: f64, min: Option<f64>, max: Option<f64>, st
     stepped.max(min.unwrap_or(f64::NEG_INFINITY)).min(max.unwrap_or(f64::INFINITY))
 }
 
+/// 🎯️ A number field's committed value: a detent kept exactly (it may sit off the step ladder), else
+/// [`constrain_number_input`] rounded to its precision.
+fn constrain_number_field(value: f64, input: &crate::wgpu::component::ui::UiInputNode) -> f64 {
+    if input.snaps.contains(&value) {
+        return value;
+    }
+    let constrained = constrain_number_input(value, input.min, input.max, input.step);
+    input.precision.map_or(constrained, |precision| ui_contract::round_ui_number(constrained, precision))
+}
+
 fn constrain_stepper_value(value: f64, stepper: &UiNumberStepperNode) -> f64 {
-    value.max(stepper.min.unwrap_or(f64::NEG_INFINITY)).min(stepper.max.unwrap_or(f64::INFINITY))
+    let clamped = value.max(stepper.min.unwrap_or(f64::NEG_INFINITY)).min(stepper.max.unwrap_or(f64::INFINITY));
+    stepper.precision.map_or(clamped, |precision| ui_contract::round_ui_number(clamped, precision))
 }
 
 fn number_stepper_live_value(node: &Node, stepper: &UiNumberStepperNode) -> f64 {
@@ -593,7 +604,11 @@ fn slider_live_value(node: &Node, slider: &UiSliderNode) -> f64 {
     node.state.slider_draft_value.unwrap_or(slider.value)
 }
 
+/// 🧲️ A detent is kept exactly (it may sit off the step ladder); every other value is stepped and clamped.
 fn constrain_slider_value(value: f64, slider: &UiSliderNode) -> f64 {
+    if slider.snaps.contains(&value) {
+        return value;
+    }
     constrain_number_input(value, Some(slider.min), Some(slider.max), Some(slider.step))
 }
 
@@ -630,7 +645,7 @@ fn pointer_commit_action(node: &Node, bounds: Rect, x: f32, y: f32, inline: Flow
         UiNode::Slider(slider) => {
             let unit_width = slider_unit_label(slider.value, slider.unit.as_deref()).map(|_| inline_suffix_width);
             let track = slider_control_presentation(bounds, slider.value, slider.min, slider.max, unit_width, control_gap, inline).slider.track_cell;
-            track.contains(x, y).then(|| fired_action(&slider.on_change, Trigger::Change, DslValue::float(slider_value_at(track, x, slider.min, slider.max, slider.step)))).flatten()
+            track.contains(x, y).then(|| fired_action(&slider.on_change, Trigger::Change, DslValue::float(slider_value_at(track, x, slider.min, slider.max, slider.step, &slider.snaps)))).flatten()
         }
         UiNode::Ring(ring) => fired_action(&ring.on_change, Trigger::Change, DslValue::float(ring_t_at(bounds, x, y))),
         UiNode::NumberStepper(stepper) => {
@@ -652,35 +667,26 @@ fn pointer_commit_action(node: &Node, bounds: Rect, x: f32, y: f32, inline: Flow
     }
 }
 
-/// 🎚️ The value one arrow/`Home`/`End`/`Page` key commits on a focused `Slider`, clamped to the
-/// track — ported from React's own `Slider` (`🧱️elements/🎚️Slider/🟦️.tsx:383-396`):
-/// `ArrowRight`/`ArrowUp`/`PageUp` step up, `ArrowLeft`/`ArrowDown`/`PageDown` step down,
-/// `Home`/`End` jump to the ends, and `PageUp`/`PageDown` or any `Shift` chord move ten steps at
-/// once. `None` for every other key, so it never swallows one.
+/// 🎚️ The value one arrow/`Home`/`End`/`Page` key commits on a focused `Slider` — the shared keyboard
+/// law (`ui_contract::slider_key_value`, pinned by `🧫️number-controls`), so React, the retained canvas and
+/// the shell dialog land a key on the same value. The inline pair arrives already mirrored for `rtl`
+/// (`mirrored_inline_key`) and `Shift` walks ten rungs. `None` for every other key, so it never swallows one.
 fn slider_key_value_from(slider: &UiSliderNode, current: f64, key: &str, shift: bool) -> Option<f64> {
-    let delta = match key {
-        "ArrowRight" | "ArrowUp" | "PageUp" => 1.0,
-        "ArrowLeft" | "ArrowDown" | "PageDown" => -1.0,
-        "Home" | "End" => 0.0,
+    let key = match key {
+        "ArrowRight" | "ArrowUp" => ui_contract::SliderKey::Increment,
+        "ArrowLeft" | "ArrowDown" => ui_contract::SliderKey::Decrement,
+        "PageUp" => ui_contract::SliderKey::PageUp,
+        "PageDown" => ui_contract::SliderKey::PageDown,
+        "Home" => ui_contract::SliderKey::Home,
+        "End" => ui_contract::SliderKey::End,
         _ => return None,
     };
-    let multiplier = if matches!(key, "PageUp" | "PageDown") || shift { SLIDER_PAGE_STEPS } else { 1.0 };
-    let step = if slider.step > 0.0 { slider.step } else { 1.0 };
-    let value = match key {
-        "Home" => slider.min,
-        "End" => slider.max,
-        _ => current + delta * step * multiplier,
-    };
-    Some(value.clamp(slider.min, slider.max))
+    Some(ui_contract::slider_key_value(current, slider.min, slider.max, slider.step, slider.snaps.iter().copied(), key, shift))
 }
 
 fn slider_key_value(slider: &UiSliderNode, key: &str, shift: bool) -> Option<f64> {
     slider_key_value_from(slider, slider.value, key, shift)
 }
-
-/// 🎚️ How many steps a `PageUp`/`PageDown` (or a `Shift` chord) moves a slider — React's own
-/// `multiplier` (`🧱️elements/🎚️Slider/🟦️.tsx:394`).
-const SLIDER_PAGE_STEPS: f64 = 10.0;
 
 /// ➕️➖️ One `NumberStepper` increment/decrement of `sign`, taking the relative `Delta` path only for
 /// a node that DECLARES that binding — see the long note at this function's pointer-side caller.
@@ -1967,7 +1973,7 @@ impl EventRouter {
         let Some(node) = tree.node_mut(id) else { return };
         let UiNode::NumberStepper(stepper) = &node.spec.0 else { return };
         let value = constrain_stepper_value(number_stepper_live_value(node, stepper) + delta, stepper);
-        let text = ui_contract::format_ui_number(value);
+        let text = crate::wgpu::stepper::stepper_value_text(value, stepper.precision);
         let caret = text.len();
         node.state.edit = Some(EditState { text, caret, anchor: caret, composition: None, scroll_x: 0.0 });
         tree.mark_dirty(id, NodeFlags::DIRTY_PAINT);
@@ -1977,7 +1983,7 @@ impl EventRouter {
         let Some(node) = tree.node_mut(id) else { return };
         let UiNode::NumberStepper(stepper) = &node.spec.0 else { return };
         let Some(value) = node.state.edit.as_ref().and_then(|edit| edit.text.parse::<f64>().ok()).filter(|value| value.is_finite()) else { return };
-        let text = ui_contract::format_ui_number(constrain_stepper_value(value, stepper));
+        let text = crate::wgpu::stepper::stepper_value_text(constrain_stepper_value(value, stepper), stepper.precision);
         let caret = text.len();
         node.state.edit = Some(EditState { text, caret, anchor: caret, composition: None, scroll_x: 0.0 });
     }
@@ -2242,6 +2248,16 @@ impl EventRouter {
                     edit.text.replace_range(edit.caret..end, "");
                     mutated = true;
                 }
+            }
+            "PageUp" | "PageDown" => {
+                let UiNode::Input(input) = &node.spec.0 else { return out };
+                let Some(current) = edit.text.trim().parse::<f64>().ok().filter(|value| value.is_finite() && input.input_kind == "number") else { return out };
+                let key = if key == "PageUp" { ui_contract::SliderKey::PageUp } else { ui_contract::SliderKey::PageDown };
+                let next = ui_contract::ui_number_key_value(current, input.min, input.max, input.step.unwrap_or(1.0), input.snaps.iter().copied(), key, false);
+                edit.text = input.precision.map_or_else(|| ui_contract::format_ui_number(next), |precision| ui_contract::format_ui_number_fixed(next, precision));
+                edit.caret = edit.text.len();
+                edit.anchor = edit.caret;
+                mutated = true;
             }
             "a" | "A" if modifiers.ctrl || modifiers.meta => {
                 edit.anchor = 0;
@@ -2961,7 +2977,7 @@ impl EventRouter {
             UiNode::Slider(slider) => {
                 let unit_width = slider_unit_label(slider.value, slider.unit.as_deref()).map(|_| inline_suffix_width);
                 let track = slider_control_presentation(bounds, slider_live_value(node, slider), slider.min, slider.max, unit_width, self.control_gap, self.flow.inline).slider.track_cell;
-                (None, track.contains(x, y).then(|| slider_value_at(track, x, slider.min, slider.max, slider.step)))
+                (None, track.contains(x, y).then(|| slider_value_at(track, x, slider.min, slider.max, slider.step, &slider.snaps)))
             }
             UiNode::NumberStepper(stepper) => (number_stepper_sign_at(bounds, x, y, self.flow.inline, self.control_border).filter(|sign| number_stepper_can_step(node, stepper, *sign)).map(|sign| sign * stepper.step), None),
             _ => (None, None),

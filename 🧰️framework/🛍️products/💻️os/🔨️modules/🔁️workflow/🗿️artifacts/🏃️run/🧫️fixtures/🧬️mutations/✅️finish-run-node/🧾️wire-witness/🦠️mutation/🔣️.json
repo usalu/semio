@@ -1,0 +1,29 @@
+{
+  "operation": "finishRunNode",
+  "nodeRecord": {
+    "nodeId": "n1",
+    "status": "cacheHit",
+    "documentFingerprint": "doc-fp",
+    "configFingerprint": "cfg-fp",
+    "inputFingerprints": [
+      {
+        "portId": "n1:in:in",
+        "fingerprint": "in-fp"
+      }
+    ],
+    "outputFingerprints": [
+      {
+        "portId": "n1:out:out",
+        "fingerprint": "out-fp"
+      }
+    ],
+    "outputs": [
+      {
+        "portId": "n1:out:out",
+        "artifactId": "artifact-1",
+        "path": "out/n1"
+      }
+    ],
+    "durationMs": 12.5
+  }
+}

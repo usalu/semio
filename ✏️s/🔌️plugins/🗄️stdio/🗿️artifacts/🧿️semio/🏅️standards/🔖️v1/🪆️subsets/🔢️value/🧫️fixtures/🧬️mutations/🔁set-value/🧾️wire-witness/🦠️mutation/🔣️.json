@@ -1,0 +1,41 @@
+{
+  "mutation": "setValue",
+  "path": [
+    {
+      "kind": "key",
+      "key": "models"
+    },
+    {
+      "kind": "index",
+      "index": 0
+    },
+    {
+      "kind": "key",
+      "key": "model"
+    },
+    {
+      "kind": "key",
+      "key": "geometry"
+    },
+    {
+      "kind": "key",
+      "key": "vertices"
+    },
+    {
+      "kind": "index",
+      "index": 0
+    },
+    {
+      "kind": "key",
+      "key": "position"
+    },
+    {
+      "kind": "index",
+      "index": 1
+    }
+  ],
+  "value": {
+    "kind": "int",
+    "lexeme": "5"
+  }
+}

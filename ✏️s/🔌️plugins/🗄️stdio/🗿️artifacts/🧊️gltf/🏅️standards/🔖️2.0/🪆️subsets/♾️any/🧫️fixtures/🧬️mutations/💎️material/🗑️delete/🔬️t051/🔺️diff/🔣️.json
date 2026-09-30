@@ -1,17 +1,30 @@
 {
-  "id": "s.stdio.gltf.mutation.delete-material.v1",
-  "version": 1,
-  "touchedPaths": [
-    "document/materials/0"
-  ],
-  "payload": {
-    "index": 0
+  "meshes": {
+    "modified": [
+      {
+        "index": 0,
+        "diff": {
+          "primitives": [
+            {
+              "attributes": {},
+              "material": 0
+            }
+          ]
+        }
+      }
+    ]
   },
-  "operation": {
-    "kind": "delete",
-    "index": 0,
-    "removed": {
-      "name": "glass"
-    }
+  "materials": {
+    "removed": [
+      1
+    ],
+    "modified": [
+      {
+        "index": 0,
+        "diff": {
+          "name": "steel"
+        }
+      }
+    ]
   }
 }

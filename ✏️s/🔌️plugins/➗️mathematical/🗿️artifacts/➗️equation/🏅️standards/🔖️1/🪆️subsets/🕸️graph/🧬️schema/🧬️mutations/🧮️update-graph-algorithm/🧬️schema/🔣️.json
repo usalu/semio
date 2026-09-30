@@ -9,10 +9,37 @@
   ],
   "properties": {
     "newAlgorithm": {
-      "type": "string"
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "text",
+        "role": "value",
+        "label": {
+          "en": "New Algorithm",
+          "de": "Neuer Algorithmus"
+        },
+        "description": {
+          "en": "Graph algorithm to run, e.g. bfs or dfs.",
+          "de": "Auszuführender Graphalgorithmus, z. B. bfs oder dfs."
+        }
+      }
     },
     "newAlgorithmSeed": {
-      "type": "string"
+      "type": [
+        "string",
+        "null"
+      ],
+      "x-semio-ui": {
+        "widget": "text",
+        "role": "value",
+        "label": {
+          "en": "New Algorithm Seed",
+          "de": "Neuer Algorithmus-Startwert"
+        },
+        "description": {
+          "en": "Input of the algorithm, e.g. the start node id; empty for none.",
+          "de": "Eingabe des Algorithmus, z. B. die ID des Startknotens; leer für keine."
+        }
+      }
     }
   }
 }

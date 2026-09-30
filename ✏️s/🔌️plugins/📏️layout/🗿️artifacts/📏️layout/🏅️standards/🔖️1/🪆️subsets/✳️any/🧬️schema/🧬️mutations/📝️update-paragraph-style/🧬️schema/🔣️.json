@@ -6,13 +6,13 @@
   "additionalProperties": false,
   "required": ["id", "name", "fontFamily", "fontSize", "fontWeight", "leading", "tracking", "alignment"],
   "properties": {
-    "id": { "type": "string", "minLength": 1 },
-    "name": { "type": "string", "minLength": 1 },
-    "fontFamily": { "type": "string", "minLength": 1 },
-    "fontSize": { "type": "number", "exclusiveMinimum": 0 },
-    "fontWeight": { "type": "integer", "minimum": 1 },
-    "leading": { "type": "number", "exclusiveMinimum": 0 },
-    "tracking": { "type": "number" },
-    "alignment": { "type": "string", "enum": ["left", "center", "right", "justify"] }
+    "id": { "type": "string", "minLength": 1, "x-semio-ui": { "widget": "reference", "role": "target", "label": { "en": "Paragraph style", "de": "Absatzformat" }, "ref": { "kind": "paragraphStyle" }, "group": "target", "order": 10 } },
+    "name": { "type": "string", "minLength": 1, "x-semio-ui": { "widget": "text", "role": "value", "label": { "en": "Style name", "de": "Formatname" }, "group": "identity", "order": 20 } },
+    "fontFamily": { "type": "string", "minLength": 1, "x-semio-ui": { "widget": "text", "role": "value", "label": { "en": "Font family", "de": "Schriftfamilie" }, "group": "type", "order": 30 } },
+    "fontSize": { "type": "number", "exclusiveMinimum": 0, "x-semio-ui": { "widget": "stepper", "role": "value", "label": { "en": "Font size", "de": "Schriftgrad" }, "unit": "pt", "step": 0.5, "precision": 1, "group": "type", "order": 40 } },
+    "fontWeight": { "type": "integer", "minimum": 1, "x-semio-ui": { "widget": "stepper", "role": "value", "label": { "en": "Font weight", "de": "Schriftstärke" }, "description": { "en": "CSS weight, e.g. 400 regular, 700 bold.", "de": "CSS-Stärke, z. B. 400 normal, 700 fett." }, "step": 100, "precision": 0, "group": "type", "order": 50 } },
+    "leading": { "type": "number", "exclusiveMinimum": 0, "x-semio-ui": { "widget": "stepper", "role": "value", "label": { "en": "Leading", "de": "Zeilenabstand" }, "unit": "pt", "step": 0.5, "precision": 1, "group": "type", "order": 60 } },
+    "tracking": { "type": "number", "x-semio-ui": { "widget": "stepper", "role": "value", "label": { "en": "Tracking", "de": "Laufweite" }, "description": { "en": "Letter spacing in thousandths of an em.", "de": "Zeichenabstand in Tausendstel Geviert." }, "step": 1, "precision": 0, "group": "type", "order": 70 } },
+    "alignment": { "type": "string", "enum": ["left", "center", "right", "justify"], "x-semio-ui": { "widget": "segmented", "role": "value", "label": { "en": "Alignment", "de": "Ausrichtung" }, "options": { "left": { "en": "Left", "de": "Links" }, "center": { "en": "Centered", "de": "Zentriert" }, "right": { "en": "Right", "de": "Rechts" }, "justify": { "en": "Justified", "de": "Blocksatz" } }, "group": "type", "order": 80 } }
   }
 }

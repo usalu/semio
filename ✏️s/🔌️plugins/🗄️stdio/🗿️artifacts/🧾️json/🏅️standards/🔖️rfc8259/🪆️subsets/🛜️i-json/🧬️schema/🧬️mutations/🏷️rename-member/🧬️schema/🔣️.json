@@ -5,11 +5,16 @@
   "type": "object",
   "additionalProperties": false,
   "required": [
+    "mutation",
     "path",
     "from",
     "to"
   ],
   "properties": {
+    "mutation": {
+      "const": "renameMember",
+      "description": "Aggregate discriminator spliced in by JsonIJsonMutation; absent when the payload stands alone."
+    },
     "path": {
       "type": "array",
       "items": {
@@ -21,10 +26,6 @@
     },
     "to": {
       "type": "string"
-    },
-    "mutation": {
-      "const": "renameMember",
-      "description": "Aggregate discriminator spliced in by JsonIJsonMutation; absent when the payload stands alone."
     }
   },
   "$defs": {

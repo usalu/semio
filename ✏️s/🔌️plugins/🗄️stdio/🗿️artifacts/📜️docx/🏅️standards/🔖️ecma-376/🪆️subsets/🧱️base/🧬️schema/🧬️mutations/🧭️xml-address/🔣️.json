@@ -11,10 +11,35 @@
       "type": "string",
       "minLength": 1,
       "pattern": "^[^/\\\\]+(?:/[^/\\\\]+)*$",
-      "not": { "pattern": "(^|/)\\.{1,2}(/|$)" }
+      "not": { "pattern": "(^|/)\\.{1,2}(/|$)" },
+      "x-semio-ui": {
+        "label": { "en": "Part", "de": "Paketteil" },
+        "description": { "en": "OPC part name inside the package, e.g. word/document.xml.", "de": "OPC-Teilname im Paket, z. B. word/document.xml." }
+      }
     },
-    "nodePath": { "type": "array", "items": { "type": "integer", "minimum": 0, "maximum": 9007199254740991 } },
-    "expectedName": { "type": "string", "minLength": 1 },
-    "revision": { "type": "string", "pattern": "^[0-9a-f]{16}$" }
+    "nodePath": {
+      "type": "array",
+      "items": { "type": "integer", "minimum": 0, "maximum": 9007199254740991 },
+      "x-semio-ui": {
+        "label": { "en": "Node path", "de": "Knotenpfad" },
+        "description": { "en": "Child indices from the part's root element.", "de": "Kindindizes ab dem Wurzelelement des Teils." }
+      }
+    },
+    "expectedName": {
+      "type": "string",
+      "minLength": 1,
+      "x-semio-ui": {
+        "label": { "en": "Expected element name", "de": "Erwarteter Elementname" },
+        "description": { "en": "Expanded name the addressed node must have, e.g. {…/main}p.", "de": "Erweiterter Name, den der adressierte Knoten haben muss, z. B. {…/main}p." }
+      }
+    },
+    "revision": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{16}$",
+      "x-semio-ui": {
+        "label": { "en": "Revision stamp", "de": "Revisionsstempel" },
+        "description": { "en": "Lineage revision the address was taken at; a stale stamp refuses the edit.", "de": "Abstammungsrevision, zu der die Adresse erfasst wurde; ein veralteter Stempel lehnt die Bearbeitung ab." }
+      }
+    }
   }
 }

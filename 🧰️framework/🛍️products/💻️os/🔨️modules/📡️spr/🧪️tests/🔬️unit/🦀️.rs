@@ -52,7 +52,7 @@ async fn compile_ops_decompile_ops_round_trip() {
             inverse: Vec::new(),
             meta: None, lane: None,
         }],
-        transitions: vec![HistoryTransitionRecord { id: "transition-1".to_string(), actor: "actor-1".to_string(), hlt: (1, 1_700_000_000_000, 2), dependencies: vec!["e0".to_string()], payload: vec![0, 1, 3, 0xff] }],
+        transitions: vec![HistoryTransitionRecord { id: "transition-1".to_string(), actor: "actor-1".to_string(), hlt: (1, 1_700_000_000_000, 2), dependencies: vec!["e0".to_string()], observed: Some("peer-op".to_string()), payload: vec![0, 1, 3, 0xff] }],
         composition: None,
         conflicts: Vec::new(),
     };

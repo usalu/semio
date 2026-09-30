@@ -114,7 +114,7 @@ async fn a_long_set_operation_answers_within_the_wall_allowance_and_resumes() {
     let (capability, stepped_operator) = fixture();
     assert_eq!(capability, "evaluate");
     assert_eq!(stepped_operator.operator_id, "brep.bool.cut");
-    let registry = neural_engine::ColdOwner::new(module_registry().await);
+    let registry = neural_engine::ColdOwner::new(module_registry(geometry_session()));
     let (box_out, cylinder_out) = bored_box_operands(&registry).await;
     let (a, b) = (channel_payload(&box_out, "geometryOut").await, channel_payload(&cylinder_out, "geometryOut").await);
     let node_hash = 0x_bee_f00_u64;
@@ -159,7 +159,7 @@ async fn a_long_set_operation_answers_within_the_wall_allowance_and_resumes() {
     // ♾️ The same cut, unbudgeted, over fresh operands in a fresh kernel — the stepped path IS the
     // algorithm, so the two answers must agree on everything but the minted handle id.
     reset_test_kernel().await;
-    let control_registry = neural_engine::ColdOwner::new(module_registry().await);
+    let control_registry = neural_engine::ColdOwner::new(module_registry(geometry_session()));
     let (box_out, cylinder_out) = bored_box_operands(&control_registry).await;
     let (a, b) = (channel_payload(&box_out, "geometryOut").await, channel_payload(&cylinder_out, "geometryOut").await);
     let one_shot_json = pack::json::parse_bytes(&flow_extension_sdk::evaluate_invoke_json(&control_registry, cut_request_json(&a, &b, 0, 1_000_000, 3_600_000_000).as_bytes()).expect("evaluate"))
@@ -184,7 +184,7 @@ async fn a_long_set_operation_answers_within_the_wall_allowance_and_resumes() {
 async fn a_cancel_between_round_trips_retires_the_parked_evaluation() {
     let _serial = test_serial().await;
     reset_test_kernel().await;
-    let registry = neural_engine::ColdOwner::new(module_registry().await);
+    let registry = neural_engine::ColdOwner::new(module_registry(geometry_session()));
     let (box_out, cylinder_out) = bored_box_operands(&registry).await;
     let (a, b) = (channel_payload(&box_out, "geometryOut").await, channel_payload(&cylinder_out, "geometryOut").await);
     let node_hash = 0x_c0_1d_u64;
@@ -209,7 +209,7 @@ async fn a_cancel_between_round_trips_retires_the_parked_evaluation() {
 async fn an_unbudgeted_operator_completes_in_one_round_trip() {
     let _serial = test_serial().await;
     reset_test_kernel().await;
-    let registry = neural_engine::ColdOwner::new(module_registry().await);
+    let registry = neural_engine::ColdOwner::new(module_registry(geometry_session()));
     let input_json = pack::json::to_string(&pack::json::object([("width".to_string(), number_json(1.0)), ("depth".to_string(), number_json(1.0)), ("height".to_string(), number_json(1.0))]));
     let request = pack::json::to_string(&pack::json::object([
         ("operatorId".to_string(), pack::json::Value::from("brep.prim3d.box")),

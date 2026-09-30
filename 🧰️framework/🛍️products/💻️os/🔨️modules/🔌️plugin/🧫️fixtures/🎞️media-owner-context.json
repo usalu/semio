@@ -1,0 +1,17 @@
+{
+  "schema": "semio.test.media-owner-context/v1",
+  "valueSchema": {
+    "type": "object",
+    "required": ["owner", "count"],
+    "additionalProperties": false,
+    "properties": {"owner": {"type": "string", "minLength": 1}, "count": {"type": "integer"}}
+  },
+  "cases": [
+    {"owner": "alpha", "count": 7, "expected": {"owner": "alpha", "count": 7}},
+    {"owner": "beta", "count": 7, "expected": {"owner": "beta", "count": 7}}
+  ],
+  "invalid": [{"count": 7}, {"owner": "alpha"}, {"owner": "", "count": 7}, {"owner": "alpha", "count": "7"}],
+  "refusals": ["foreign-owner", "closed-owner", "unknown-port"],
+  "defaultPort": "artifact:out",
+  "contextPort": "retained:out"
+}

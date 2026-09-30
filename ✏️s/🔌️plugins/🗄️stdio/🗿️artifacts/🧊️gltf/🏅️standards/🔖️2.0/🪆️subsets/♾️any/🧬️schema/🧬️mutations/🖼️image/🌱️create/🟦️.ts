@@ -1,7 +1,13 @@
-/** 🦠️ create-image executable structural glTF command. */
-import type { GltfOrthographic, GltfPerspective, GltfSnapshot } from '../../📸️snapshot/🟦️.ts';
-import { clone, insert, order, position, reject, remove, relocate, reorder, repair, type GltfMutationRejection, type GltfStructuralResult } from './🟦️';
-export const GltfCreateImageDescriptor = { id: 's.stdio.gltf.mutation.create-image.v1', version: 1, touchedPathPattern: 'document/images', referencePolicy: 'all typed image references are remapped, repaired, or rejected' } as const;
-export interface GltfCreateImagePayload { position: number }
-export const validateGltfCreateImage = (payload: GltfCreateImagePayload, base: GltfSnapshot): GltfMutationRejection | undefined => { const index = position(payload.position, base.document.images.length, 'document/images', true); if (index) return index;    return undefined; };
-export const applyGltfCreateImage = (base: GltfSnapshot, payload: GltfCreateImagePayload): GltfStructuralResult => { const rejection = validateGltfCreateImage(payload, base); if (rejection) return { accepted: false, rejection }; try { const next = clone(base); insert(next, 'images', payload.position, {}); return { accepted: true, snapshot: clone(next) }; } catch (error) { return { accepted: false, rejection: typeof error === 'object' && error && 'code' in error ? error as GltfMutationRejection : reject('gltf.mutation.apply-failed', 'document/images', String(error)) }; } };
+/** 🌱️ `create-image` wire twin: the flat `Apply` payload `GltfCreateImagePayload` and the phase wire `CreateImageMutation`, exactly as `./🦀️.rs` writes them.
+ * @see ./🧬️schema/🔣️.json */
+import { gltfWireIndex, gltfWireObject, gltfWireRequired } from "../../../📸️snapshot/🟦️.ts";
+import { type GltfDiff, type GltfPhase, gltfWirePhase, parseGltfDiff } from "../../../🔺️diff/🟦️.ts";
+
+export interface GltfCreateImagePayload {
+  position: number;
+}
+
+export type CreateImageMutation = GltfPhase<GltfCreateImagePayload, GltfDiff>;
+
+export const parseGltfCreateImagePayload = gltfWireObject<GltfCreateImagePayload>({ position: gltfWireRequired(gltfWireIndex) });
+export const parseCreateImageMutation = gltfWirePhase(parseGltfCreateImagePayload, parseGltfDiff);

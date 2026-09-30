@@ -2,84 +2,1130 @@
   "$schema": "http://json-schema.org/draft-07/schema#",
   "$id": "https://json.schemas.assets.semio-tech.com/s/stdio/gltf/2.0/any/diff.json",
   "title": "GltfDiff",
-  "description": "Sparse per-field diff. Index-keyed collection triples per top-level array; no full-replace snapshot slot.",
+  "description": "Sparse per-field glTF diff: an absent member is unchanged; index-keyed removed/modified/added triples per top-level array; no full-replace snapshot slot.",
   "type": "object",
   "additionalProperties": false,
   "properties": {
     "asset": {
-      "type": "object",
-      "description": "Sparse GltfAssetDiff"
+      "$ref": "#/$defs/GltfAssetDiff",
+      "x-semio-ui": {
+        "label": {
+          "en": "Asset metadata",
+          "de": "Asset-Metadaten"
+        }
+      }
     },
     "scene": {
-      "type": [
-        "integer",
-        "null"
-      ]
+      "anyOf": [
+        {
+          "type": "integer",
+          "minimum": 0
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "x-semio-ui": {
+        "label": {
+          "en": "Default scene",
+          "de": "Standardszene"
+        }
+      }
     },
     "scenes": {
-      "$ref": "#/definitions/collectionDiff"
+      "$ref": "#/$defs/GltfScenesDiff",
+      "x-semio-ui": {
+        "label": {
+          "en": "Scenes",
+          "de": "Szenen"
+        }
+      }
     },
     "nodes": {
-      "$ref": "#/definitions/collectionDiff"
+      "$ref": "#/$defs/GltfNodesDiff",
+      "x-semio-ui": {
+        "label": {
+          "en": "Nodes",
+          "de": "Knoten"
+        }
+      }
     },
     "meshes": {
-      "$ref": "#/definitions/collectionDiff"
+      "$ref": "#/$defs/GltfMeshesDiff",
+      "x-semio-ui": {
+        "label": {
+          "en": "Meshes",
+          "de": "Netze"
+        }
+      }
     },
     "accessors": {
-      "$ref": "#/definitions/collectionDiff"
+      "$ref": "#/$defs/GltfAccessorsDiff",
+      "x-semio-ui": {
+        "label": {
+          "en": "Accessors",
+          "de": "Accessoren"
+        }
+      }
     },
     "bufferViews": {
-      "$ref": "#/definitions/collectionDiff"
+      "$ref": "#/$defs/GltfBufferViewsDiff",
+      "x-semio-ui": {
+        "label": {
+          "en": "Buffer views",
+          "de": "Pufferansichten"
+        }
+      }
     },
     "buffers": {
-      "$ref": "#/definitions/collectionDiff"
+      "$ref": "#/$defs/GltfBuffersDiff",
+      "x-semio-ui": {
+        "label": {
+          "en": "Buffers",
+          "de": "Puffer"
+        }
+      }
     },
     "bufferBytes": {
-      "$ref": "#/definitions/collectionDiff"
+      "$ref": "#/$defs/GltfBufferBytesDiff",
+      "x-semio-ui": {
+        "label": {
+          "en": "Buffer bytes",
+          "de": "Pufferbytes"
+        }
+      }
     },
     "materials": {
-      "$ref": "#/definitions/collectionDiff"
+      "$ref": "#/$defs/GltfMaterialsDiff",
+      "x-semio-ui": {
+        "label": {
+          "en": "Materials",
+          "de": "Materialien"
+        }
+      }
     },
     "textures": {
-      "$ref": "#/definitions/collectionDiff"
+      "$ref": "#/$defs/GltfTexturesDiff",
+      "x-semio-ui": {
+        "label": {
+          "en": "Textures",
+          "de": "Texturen"
+        }
+      }
     },
     "images": {
-      "$ref": "#/definitions/collectionDiff"
+      "$ref": "#/$defs/GltfImagesDiff",
+      "x-semio-ui": {
+        "label": {
+          "en": "Images",
+          "de": "Bilder"
+        }
+      }
     },
     "samplers": {
-      "$ref": "#/definitions/collectionDiff"
+      "$ref": "#/$defs/GltfSamplersDiff",
+      "x-semio-ui": {
+        "label": {
+          "en": "Texture samplers",
+          "de": "Textur-Sampler"
+        }
+      }
     },
     "skins": {
-      "$ref": "#/definitions/collectionDiff"
+      "$ref": "#/$defs/GltfSkinsDiff",
+      "x-semio-ui": {
+        "label": {
+          "en": "Skins",
+          "de": "Skins"
+        }
+      }
     },
     "animations": {
-      "$ref": "#/definitions/collectionDiff"
+      "$ref": "#/$defs/GltfAnimationsDiff",
+      "x-semio-ui": {
+        "label": {
+          "en": "Animations",
+          "de": "Animationen"
+        }
+      }
     },
     "cameras": {
-      "$ref": "#/definitions/collectionDiff"
+      "$ref": "#/$defs/GltfCamerasDiff",
+      "x-semio-ui": {
+        "label": {
+          "en": "Cameras",
+          "de": "Kameras"
+        }
+      }
     },
     "extensionsUsed": {
       "type": "array",
       "items": {
         "type": "string"
+      },
+      "x-semio-ui": {
+        "label": {
+          "en": "Extensions used",
+          "de": "Verwendete Erweiterungen"
+        }
       }
     },
     "extensionsRequired": {
       "type": "array",
       "items": {
         "type": "string"
+      },
+      "x-semio-ui": {
+        "label": {
+          "en": "Extensions required",
+          "de": "Erforderliche Erweiterungen"
+        }
       }
     },
-    "extensions": {},
-    "extras": {},
+    "extensions": {
+      "$ref": "#/$defs/GltfJsonPresence",
+      "x-semio-ui": {
+        "label": {
+          "en": "Extensions",
+          "de": "Erweiterungen"
+        }
+      }
+    },
+    "extras": {
+      "$ref": "#/$defs/GltfJsonPresence",
+      "x-semio-ui": {
+        "label": {
+          "en": "Extras",
+          "de": "Zusatzdaten (extras)"
+        }
+      }
+    },
     "sourceForm": {
-      "enum": [
-        "json",
-        "glb"
-      ]
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/gltf/2.0/any/snapshot.json#/$defs/GltfSourceForm",
+      "x-semio-ui": {
+        "label": {
+          "en": "Source form",
+          "de": "Quellformat"
+        }
+      }
     }
   },
   "$defs": {
+    "GltfAccessorDiff": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "bufferView": {
+          "anyOf": [
+            {
+              "type": "integer",
+              "minimum": 0
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "x-semio-ui": {
+            "label": {
+              "en": "Buffer view",
+              "de": "Pufferansicht"
+            }
+          }
+        },
+        "byteOffset": {
+          "type": "integer",
+          "minimum": 0,
+          "x-semio-ui": {
+            "label": {
+              "en": "Byte offset",
+              "de": "Byte-Versatz"
+            },
+            "unit": "B"
+          }
+        },
+        "componentType": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/gltf/2.0/any/snapshot.json#/$defs/GltfComponentType",
+          "x-semio-ui": {
+            "label": {
+              "en": "Component type",
+              "de": "Komponententyp"
+            },
+            "description": {
+              "en": "5120 byte, 5121 unsigned byte, 5122 short, 5123 unsigned short, 5125 unsigned int, 5126 float.",
+              "de": "5120 Byte, 5121 Byte ohne Vorzeichen, 5122 Short, 5123 Short ohne Vorzeichen, 5125 Integer ohne Vorzeichen, 5126 Gleitkommazahl."
+            },
+            "snaps": [
+              5120,
+              5121,
+              5122,
+              5123,
+              5125,
+              5126
+            ]
+          }
+        },
+        "normalized": {
+          "type": "boolean",
+          "x-semio-ui": {
+            "label": {
+              "en": "Normalized",
+              "de": "Normalisiert"
+            }
+          }
+        },
+        "count": {
+          "type": "integer",
+          "minimum": 0,
+          "x-semio-ui": {
+            "label": {
+              "en": "Element count",
+              "de": "Elementanzahl"
+            }
+          }
+        },
+        "kind": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/gltf/2.0/any/snapshot.json#/$defs/GltfAccessorType",
+          "x-semio-ui": {
+            "label": {
+              "en": "Element type",
+              "de": "Elementtyp"
+            }
+          }
+        },
+        "max": {
+          "anyOf": [
+            {
+              "type": "array",
+              "items": {
+                "type": "number"
+              }
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "x-semio-ui": {
+            "label": {
+              "en": "Maximum",
+              "de": "Maximum"
+            },
+            "description": {
+              "en": "Per-component maximum.",
+              "de": "Maximum je Komponente."
+            }
+          }
+        },
+        "min": {
+          "anyOf": [
+            {
+              "type": "array",
+              "items": {
+                "type": "number"
+              }
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "x-semio-ui": {
+            "label": {
+              "en": "Minimum",
+              "de": "Minimum"
+            },
+            "description": {
+              "en": "Per-component minimum.",
+              "de": "Minimum je Komponente."
+            }
+          }
+        },
+        "sparse": {
+          "anyOf": [
+            {
+              "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/gltf/2.0/any/snapshot.json#/$defs/GltfSparseAccessor"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "x-semio-ui": {
+            "label": {
+              "en": "Sparse storage",
+              "de": "Sparse-Speicherung"
+            }
+          }
+        },
+        "name": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "x-semio-ui": {
+            "label": {
+              "en": "Name",
+              "de": "Name"
+            }
+          }
+        },
+        "extensions": {
+          "$ref": "#/$defs/GltfJsonPresence",
+          "x-semio-ui": {
+            "label": {
+              "en": "Extensions",
+              "de": "Erweiterungen"
+            }
+          }
+        },
+        "extras": {
+          "$ref": "#/$defs/GltfJsonPresence",
+          "x-semio-ui": {
+            "label": {
+              "en": "Extras",
+              "de": "Zusatzdaten (extras)"
+            }
+          }
+        }
+      }
+    },
+    "GltfAccessorsDiff": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "removed": {
+          "type": "array",
+          "items": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "x-semio-ui": {
+            "label": {
+              "en": "Removed",
+              "de": "Entfernt"
+            }
+          }
+        },
+        "modified": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "index",
+              "diff"
+            ],
+            "properties": {
+              "index": {
+                "type": "integer",
+                "minimum": 0,
+                "x-semio-ui": {
+                  "label": {
+                    "en": "Index",
+                    "de": "Index"
+                  }
+                }
+              },
+              "diff": {
+                "$ref": "#/$defs/GltfAccessorDiff",
+                "x-semio-ui": {
+                  "label": {
+                    "en": "Changes",
+                    "de": "Änderungen"
+                  }
+                }
+              }
+            }
+          },
+          "x-semio-ui": {
+            "label": {
+              "en": "Modified",
+              "de": "Geändert"
+            }
+          }
+        },
+        "added": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "index",
+              "item"
+            ],
+            "properties": {
+              "index": {
+                "type": "integer",
+                "minimum": 0,
+                "x-semio-ui": {
+                  "label": {
+                    "en": "Index",
+                    "de": "Index"
+                  }
+                }
+              },
+              "item": {
+                "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/gltf/2.0/any/snapshot.json#/$defs/GltfAccessor",
+                "x-semio-ui": {
+                  "label": {
+                    "en": "Item",
+                    "de": "Eintrag"
+                  }
+                }
+              }
+            }
+          },
+          "x-semio-ui": {
+            "label": {
+              "en": "Added",
+              "de": "Hinzugefügt"
+            }
+          }
+        }
+      }
+    },
+    "GltfAnimationsDiff": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "removed": {
+          "type": "array",
+          "items": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "x-semio-ui": {
+            "label": {
+              "en": "Removed",
+              "de": "Entfernt"
+            }
+          }
+        },
+        "modified": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "index",
+              "diff"
+            ],
+            "properties": {
+              "index": {
+                "type": "integer",
+                "minimum": 0,
+                "x-semio-ui": {
+                  "label": {
+                    "en": "Index",
+                    "de": "Index"
+                  }
+                }
+              },
+              "diff": {
+                "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/gltf/2.0/any/snapshot.json#/$defs/GltfAnimation",
+                "x-semio-ui": {
+                  "label": {
+                    "en": "Changes",
+                    "de": "Änderungen"
+                  }
+                }
+              }
+            }
+          },
+          "x-semio-ui": {
+            "label": {
+              "en": "Modified",
+              "de": "Geändert"
+            }
+          }
+        },
+        "added": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "index",
+              "item"
+            ],
+            "properties": {
+              "index": {
+                "type": "integer",
+                "minimum": 0,
+                "x-semio-ui": {
+                  "label": {
+                    "en": "Index",
+                    "de": "Index"
+                  }
+                }
+              },
+              "item": {
+                "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/gltf/2.0/any/snapshot.json#/$defs/GltfAnimation",
+                "x-semio-ui": {
+                  "label": {
+                    "en": "Item",
+                    "de": "Eintrag"
+                  }
+                }
+              }
+            }
+          },
+          "x-semio-ui": {
+            "label": {
+              "en": "Added",
+              "de": "Hinzugefügt"
+            }
+          }
+        }
+      }
+    },
+    "GltfAssetDiff": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "version": {
+          "type": "string",
+          "x-semio-ui": {
+            "label": {
+              "en": "glTF version",
+              "de": "glTF-Version"
+            }
+          }
+        },
+        "generator": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "x-semio-ui": {
+            "label": {
+              "en": "Generator",
+              "de": "Generator"
+            },
+            "description": {
+              "en": "Tool that produced the asset.",
+              "de": "Werkzeug, das das Asset erzeugt hat."
+            }
+          }
+        },
+        "copyright": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "x-semio-ui": {
+            "label": {
+              "en": "Copyright",
+              "de": "Urheberrechtsvermerk"
+            }
+          }
+        },
+        "minVersion": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "x-semio-ui": {
+            "label": {
+              "en": "Minimum version",
+              "de": "Mindestversion"
+            },
+            "description": {
+              "en": "Minimum glTF version a loader must support.",
+              "de": "glTF-Mindestversion, die ein Lader unterstützen muss."
+            }
+          }
+        },
+        "extensions": {
+          "$ref": "#/$defs/GltfJsonPresence",
+          "x-semio-ui": {
+            "label": {
+              "en": "Extensions",
+              "de": "Erweiterungen"
+            }
+          }
+        },
+        "extras": {
+          "$ref": "#/$defs/GltfJsonPresence",
+          "x-semio-ui": {
+            "label": {
+              "en": "Extras",
+              "de": "Zusatzdaten (extras)"
+            }
+          }
+        }
+      }
+    },
+    "GltfBufferBytesDiff": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "removed": {
+          "type": "array",
+          "items": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "x-semio-ui": {
+            "label": {
+              "en": "Removed",
+              "de": "Entfernt"
+            }
+          }
+        },
+        "modified": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "index",
+              "diff"
+            ],
+            "properties": {
+              "index": {
+                "type": "integer",
+                "minimum": 0,
+                "x-semio-ui": {
+                  "label": {
+                    "en": "Index",
+                    "de": "Index"
+                  }
+                }
+              },
+              "diff": {
+                "type": "array",
+                "items": {
+                  "type": "integer",
+                  "minimum": 0,
+                  "maximum": 255
+                },
+                "x-semio-ui": {
+                  "label": {
+                    "en": "Changes",
+                    "de": "Änderungen"
+                  }
+                }
+              }
+            }
+          },
+          "x-semio-ui": {
+            "label": {
+              "en": "Modified",
+              "de": "Geändert"
+            }
+          }
+        },
+        "added": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "index",
+              "item"
+            ],
+            "properties": {
+              "index": {
+                "type": "integer",
+                "minimum": 0,
+                "x-semio-ui": {
+                  "label": {
+                    "en": "Index",
+                    "de": "Index"
+                  }
+                }
+              },
+              "item": {
+                "type": "array",
+                "items": {
+                  "type": "integer",
+                  "minimum": 0,
+                  "maximum": 255
+                },
+                "x-semio-ui": {
+                  "label": {
+                    "en": "Item",
+                    "de": "Eintrag"
+                  }
+                }
+              }
+            }
+          },
+          "x-semio-ui": {
+            "label": {
+              "en": "Added",
+              "de": "Hinzugefügt"
+            }
+          }
+        }
+      }
+    },
+    "GltfBufferDiff": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "byteLength": {
+          "type": "integer",
+          "minimum": 0,
+          "x-semio-ui": {
+            "label": {
+              "en": "Byte length",
+              "de": "Byte-Länge"
+            },
+            "unit": "B"
+          }
+        },
+        "uri": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "x-semio-ui": {
+            "label": {
+              "en": "URI",
+              "de": "URI"
+            }
+          }
+        },
+        "name": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "x-semio-ui": {
+            "label": {
+              "en": "Name",
+              "de": "Name"
+            }
+          }
+        },
+        "extensions": {
+          "$ref": "#/$defs/GltfJsonPresence",
+          "x-semio-ui": {
+            "label": {
+              "en": "Extensions",
+              "de": "Erweiterungen"
+            }
+          }
+        },
+        "extras": {
+          "$ref": "#/$defs/GltfJsonPresence",
+          "x-semio-ui": {
+            "label": {
+              "en": "Extras",
+              "de": "Zusatzdaten (extras)"
+            }
+          }
+        }
+      }
+    },
+    "GltfBufferViewsDiff": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "removed": {
+          "type": "array",
+          "items": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "x-semio-ui": {
+            "label": {
+              "en": "Removed",
+              "de": "Entfernt"
+            }
+          }
+        },
+        "modified": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "index",
+              "diff"
+            ],
+            "properties": {
+              "index": {
+                "type": "integer",
+                "minimum": 0,
+                "x-semio-ui": {
+                  "label": {
+                    "en": "Index",
+                    "de": "Index"
+                  }
+                }
+              },
+              "diff": {
+                "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/gltf/2.0/any/snapshot.json#/$defs/GltfBufferView",
+                "x-semio-ui": {
+                  "label": {
+                    "en": "Changes",
+                    "de": "Änderungen"
+                  }
+                }
+              }
+            }
+          },
+          "x-semio-ui": {
+            "label": {
+              "en": "Modified",
+              "de": "Geändert"
+            }
+          }
+        },
+        "added": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "index",
+              "item"
+            ],
+            "properties": {
+              "index": {
+                "type": "integer",
+                "minimum": 0,
+                "x-semio-ui": {
+                  "label": {
+                    "en": "Index",
+                    "de": "Index"
+                  }
+                }
+              },
+              "item": {
+                "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/gltf/2.0/any/snapshot.json#/$defs/GltfBufferView",
+                "x-semio-ui": {
+                  "label": {
+                    "en": "Item",
+                    "de": "Eintrag"
+                  }
+                }
+              }
+            }
+          },
+          "x-semio-ui": {
+            "label": {
+              "en": "Added",
+              "de": "Hinzugefügt"
+            }
+          }
+        }
+      }
+    },
+    "GltfBuffersDiff": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "removed": {
+          "type": "array",
+          "items": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "x-semio-ui": {
+            "label": {
+              "en": "Removed",
+              "de": "Entfernt"
+            }
+          }
+        },
+        "modified": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "index",
+              "diff"
+            ],
+            "properties": {
+              "index": {
+                "type": "integer",
+                "minimum": 0,
+                "x-semio-ui": {
+                  "label": {
+                    "en": "Index",
+                    "de": "Index"
+                  }
+                }
+              },
+              "diff": {
+                "$ref": "#/$defs/GltfBufferDiff",
+                "x-semio-ui": {
+                  "label": {
+                    "en": "Changes",
+                    "de": "Änderungen"
+                  }
+                }
+              }
+            }
+          },
+          "x-semio-ui": {
+            "label": {
+              "en": "Modified",
+              "de": "Geändert"
+            }
+          }
+        },
+        "added": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "index",
+              "item"
+            ],
+            "properties": {
+              "index": {
+                "type": "integer",
+                "minimum": 0,
+                "x-semio-ui": {
+                  "label": {
+                    "en": "Index",
+                    "de": "Index"
+                  }
+                }
+              },
+              "item": {
+                "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/gltf/2.0/any/snapshot.json#/$defs/GltfBuffer",
+                "x-semio-ui": {
+                  "label": {
+                    "en": "Item",
+                    "de": "Eintrag"
+                  }
+                }
+              }
+            }
+          },
+          "x-semio-ui": {
+            "label": {
+              "en": "Added",
+              "de": "Hinzugefügt"
+            }
+          }
+        }
+      }
+    },
+    "GltfCamerasDiff": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "removed": {
+          "type": "array",
+          "items": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "x-semio-ui": {
+            "label": {
+              "en": "Removed",
+              "de": "Entfernt"
+            }
+          }
+        },
+        "modified": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "index",
+              "diff"
+            ],
+            "properties": {
+              "index": {
+                "type": "integer",
+                "minimum": 0,
+                "x-semio-ui": {
+                  "label": {
+                    "en": "Index",
+                    "de": "Index"
+                  }
+                }
+              },
+              "diff": {
+                "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/gltf/2.0/any/snapshot.json#/$defs/GltfCamera",
+                "x-semio-ui": {
+                  "label": {
+                    "en": "Changes",
+                    "de": "Änderungen"
+                  }
+                }
+              }
+            }
+          },
+          "x-semio-ui": {
+            "label": {
+              "en": "Modified",
+              "de": "Geändert"
+            }
+          }
+        },
+        "added": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "index",
+              "item"
+            ],
+            "properties": {
+              "index": {
+                "type": "integer",
+                "minimum": 0,
+                "x-semio-ui": {
+                  "label": {
+                    "en": "Index",
+                    "de": "Index"
+                  }
+                }
+              },
+              "item": {
+                "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/gltf/2.0/any/snapshot.json#/$defs/GltfCamera",
+                "x-semio-ui": {
+                  "label": {
+                    "en": "Item",
+                    "de": "Eintrag"
+                  }
+                }
+              }
+            }
+          },
+          "x-semio-ui": {
+            "label": {
+              "en": "Added",
+              "de": "Hinzugefügt"
+            }
+          }
+        }
+      }
+    },
     "GltfDiffDerivation": {
       "type": "object",
       "additionalProperties": false,
@@ -106,15 +1152,1317 @@
         "touchedRegions": {
           "type": "array",
           "items": {
-            "$ref": "#/definitions/touchedRegion"
+            "$ref": "#/$defs/GltfTouchedRegion"
           },
           "uniqueItems": true
         }
+      },
+      "x-semio-formats": [
+        "🔣️jsonschema",
+        "🟦️typescript",
+        "🔗️graphql",
+        "🛰️protobuf"
+      ]
+    },
+    "GltfImagesDiff": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "removed": {
+          "type": "array",
+          "items": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "x-semio-ui": {
+            "label": {
+              "en": "Removed",
+              "de": "Entfernt"
+            }
+          }
+        },
+        "modified": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "index",
+              "diff"
+            ],
+            "properties": {
+              "index": {
+                "type": "integer",
+                "minimum": 0,
+                "x-semio-ui": {
+                  "label": {
+                    "en": "Index",
+                    "de": "Index"
+                  }
+                }
+              },
+              "diff": {
+                "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/gltf/2.0/any/snapshot.json#/$defs/GltfImage",
+                "x-semio-ui": {
+                  "label": {
+                    "en": "Changes",
+                    "de": "Änderungen"
+                  }
+                }
+              }
+            }
+          },
+          "x-semio-ui": {
+            "label": {
+              "en": "Modified",
+              "de": "Geändert"
+            }
+          }
+        },
+        "added": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "index",
+              "item"
+            ],
+            "properties": {
+              "index": {
+                "type": "integer",
+                "minimum": 0,
+                "x-semio-ui": {
+                  "label": {
+                    "en": "Index",
+                    "de": "Index"
+                  }
+                }
+              },
+              "item": {
+                "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/gltf/2.0/any/snapshot.json#/$defs/GltfImage",
+                "x-semio-ui": {
+                  "label": {
+                    "en": "Item",
+                    "de": "Eintrag"
+                  }
+                }
+              }
+            }
+          },
+          "x-semio-ui": {
+            "label": {
+              "en": "Added",
+              "de": "Hinzugefügt"
+            }
+          }
+        }
       }
-    }
-  },
-  "definitions": {
-    "touchedRegion": {
+    },
+    "GltfJsonPresence": {
+      "description": "`Option<Option<GltfJson>>` on the wire: absent clears the slot, present sets it (a present JSON null stays distinct).",
+      "oneOf": [
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "state"
+          ],
+          "properties": {
+            "state": {
+              "const": "absent",
+              "x-semio-ui": {
+                "label": {
+                  "en": "Presence",
+                  "de": "Vorhandensein"
+                }
+              }
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "state",
+            "value"
+          ],
+          "properties": {
+            "state": {
+              "const": "present",
+              "x-semio-ui": {
+                "label": {
+                  "en": "Presence",
+                  "de": "Vorhandensein"
+                }
+              }
+            },
+            "value": {
+              "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/gltf/2.0/any/snapshot.json#/$defs/GltfJson",
+              "x-semio-ui": {
+                "label": {
+                  "en": "Value",
+                  "de": "Wert"
+                }
+              }
+            }
+          }
+        }
+      ],
+      "x-semio-formats": [
+        "🔣️jsonschema",
+        "🟦️typescript"
+      ]
+    },
+    "GltfMaterialDiff": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "name": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "x-semio-ui": {
+            "label": {
+              "en": "Name",
+              "de": "Name"
+            }
+          }
+        },
+        "pbrMetallicRoughness": {
+          "anyOf": [
+            {
+              "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/gltf/2.0/any/snapshot.json#/$defs/GltfPbrMetallicRoughness"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "x-semio-ui": {
+            "label": {
+              "en": "PBR metallic-roughness",
+              "de": "PBR Metallic-Roughness"
+            }
+          }
+        },
+        "normalTexture": {
+          "anyOf": [
+            {
+              "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/gltf/2.0/any/snapshot.json#/$defs/GltfNormalTextureInfo"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "x-semio-ui": {
+            "label": {
+              "en": "Normal texture",
+              "de": "Normalentextur"
+            }
+          }
+        },
+        "occlusionTexture": {
+          "anyOf": [
+            {
+              "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/gltf/2.0/any/snapshot.json#/$defs/GltfOcclusionTextureInfo"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "x-semio-ui": {
+            "label": {
+              "en": "Occlusion texture",
+              "de": "Okklusionstextur"
+            }
+          }
+        },
+        "emissiveTexture": {
+          "anyOf": [
+            {
+              "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/gltf/2.0/any/snapshot.json#/$defs/GltfTextureInfo"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "x-semio-ui": {
+            "label": {
+              "en": "Emissive texture",
+              "de": "Emissionstextur"
+            }
+          }
+        },
+        "emissiveFactor": {
+          "type": "array",
+          "items": {
+            "type": "number"
+          },
+          "minItems": 3,
+          "maxItems": 3,
+          "x-semio-ui": {
+            "label": {
+              "en": "Emissive factor",
+              "de": "Emissionsfaktor"
+            }
+          }
+        },
+        "alphaMode": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/gltf/2.0/any/snapshot.json#/$defs/GltfAlphaMode",
+          "x-semio-ui": {
+            "label": {
+              "en": "Alpha mode",
+              "de": "Alphamodus"
+            }
+          }
+        },
+        "alphaCutoff": {
+          "type": "number",
+          "x-semio-ui": {
+            "label": {
+              "en": "Alpha cutoff",
+              "de": "Alpha-Schwellenwert"
+            }
+          }
+        },
+        "doubleSided": {
+          "type": "boolean",
+          "x-semio-ui": {
+            "label": {
+              "en": "Double-sided",
+              "de": "Doppelseitig"
+            }
+          }
+        },
+        "extensions": {
+          "$ref": "#/$defs/GltfJsonPresence",
+          "x-semio-ui": {
+            "label": {
+              "en": "Extensions",
+              "de": "Erweiterungen"
+            }
+          }
+        },
+        "extras": {
+          "$ref": "#/$defs/GltfJsonPresence",
+          "x-semio-ui": {
+            "label": {
+              "en": "Extras",
+              "de": "Zusatzdaten (extras)"
+            }
+          }
+        }
+      }
+    },
+    "GltfMaterialsDiff": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "removed": {
+          "type": "array",
+          "items": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "x-semio-ui": {
+            "label": {
+              "en": "Removed",
+              "de": "Entfernt"
+            }
+          }
+        },
+        "modified": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "index",
+              "diff"
+            ],
+            "properties": {
+              "index": {
+                "type": "integer",
+                "minimum": 0,
+                "x-semio-ui": {
+                  "label": {
+                    "en": "Index",
+                    "de": "Index"
+                  }
+                }
+              },
+              "diff": {
+                "$ref": "#/$defs/GltfMaterialDiff",
+                "x-semio-ui": {
+                  "label": {
+                    "en": "Changes",
+                    "de": "Änderungen"
+                  }
+                }
+              }
+            }
+          },
+          "x-semio-ui": {
+            "label": {
+              "en": "Modified",
+              "de": "Geändert"
+            }
+          }
+        },
+        "added": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "index",
+              "item"
+            ],
+            "properties": {
+              "index": {
+                "type": "integer",
+                "minimum": 0,
+                "x-semio-ui": {
+                  "label": {
+                    "en": "Index",
+                    "de": "Index"
+                  }
+                }
+              },
+              "item": {
+                "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/gltf/2.0/any/snapshot.json#/$defs/GltfMaterial",
+                "x-semio-ui": {
+                  "label": {
+                    "en": "Item",
+                    "de": "Eintrag"
+                  }
+                }
+              }
+            }
+          },
+          "x-semio-ui": {
+            "label": {
+              "en": "Added",
+              "de": "Hinzugefügt"
+            }
+          }
+        }
+      }
+    },
+    "GltfMeshDiff": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "primitives": {
+          "type": "array",
+          "items": {
+            "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/gltf/2.0/any/snapshot.json#/$defs/GltfPrimitive"
+          },
+          "x-semio-ui": {
+            "label": {
+              "en": "Primitives",
+              "de": "Primitive"
+            }
+          }
+        },
+        "weights": {
+          "type": "array",
+          "items": {
+            "type": "number"
+          },
+          "x-semio-ui": {
+            "label": {
+              "en": "Morph weights",
+              "de": "Morph-Gewichte"
+            }
+          }
+        },
+        "name": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "x-semio-ui": {
+            "label": {
+              "en": "Name",
+              "de": "Name"
+            }
+          }
+        },
+        "extensions": {
+          "$ref": "#/$defs/GltfJsonPresence",
+          "x-semio-ui": {
+            "label": {
+              "en": "Extensions",
+              "de": "Erweiterungen"
+            }
+          }
+        },
+        "extras": {
+          "$ref": "#/$defs/GltfJsonPresence",
+          "x-semio-ui": {
+            "label": {
+              "en": "Extras",
+              "de": "Zusatzdaten (extras)"
+            }
+          }
+        }
+      }
+    },
+    "GltfMeshesDiff": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "removed": {
+          "type": "array",
+          "items": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "x-semio-ui": {
+            "label": {
+              "en": "Removed",
+              "de": "Entfernt"
+            }
+          }
+        },
+        "modified": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "index",
+              "diff"
+            ],
+            "properties": {
+              "index": {
+                "type": "integer",
+                "minimum": 0,
+                "x-semio-ui": {
+                  "label": {
+                    "en": "Index",
+                    "de": "Index"
+                  }
+                }
+              },
+              "diff": {
+                "$ref": "#/$defs/GltfMeshDiff",
+                "x-semio-ui": {
+                  "label": {
+                    "en": "Changes",
+                    "de": "Änderungen"
+                  }
+                }
+              }
+            }
+          },
+          "x-semio-ui": {
+            "label": {
+              "en": "Modified",
+              "de": "Geändert"
+            }
+          }
+        },
+        "added": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "index",
+              "item"
+            ],
+            "properties": {
+              "index": {
+                "type": "integer",
+                "minimum": 0,
+                "x-semio-ui": {
+                  "label": {
+                    "en": "Index",
+                    "de": "Index"
+                  }
+                }
+              },
+              "item": {
+                "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/gltf/2.0/any/snapshot.json#/$defs/GltfMesh",
+                "x-semio-ui": {
+                  "label": {
+                    "en": "Item",
+                    "de": "Eintrag"
+                  }
+                }
+              }
+            }
+          },
+          "x-semio-ui": {
+            "label": {
+              "en": "Added",
+              "de": "Hinzugefügt"
+            }
+          }
+        }
+      }
+    },
+    "GltfNodeDiff": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "children": {
+          "type": "array",
+          "items": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "x-semio-ui": {
+            "label": {
+              "en": "Children",
+              "de": "Kindknoten"
+            }
+          }
+        },
+        "mesh": {
+          "anyOf": [
+            {
+              "type": "integer",
+              "minimum": 0
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "x-semio-ui": {
+            "label": {
+              "en": "Mesh",
+              "de": "Netz"
+            },
+            "description": {
+              "en": "Index of the mesh, counted from 0.",
+              "de": "Index des Netzes, ab 0 gezählt."
+            }
+          }
+        },
+        "camera": {
+          "anyOf": [
+            {
+              "type": "integer",
+              "minimum": 0
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "x-semio-ui": {
+            "label": {
+              "en": "Camera",
+              "de": "Kamera"
+            },
+            "description": {
+              "en": "Index of the camera, counted from 0.",
+              "de": "Index der Kamera, ab 0 gezählt."
+            }
+          }
+        },
+        "skin": {
+          "anyOf": [
+            {
+              "type": "integer",
+              "minimum": 0
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "x-semio-ui": {
+            "label": {
+              "en": "Skin",
+              "de": "Skin"
+            },
+            "description": {
+              "en": "Index of the skin, counted from 0.",
+              "de": "Index des Skins, ab 0 gezählt."
+            }
+          }
+        },
+        "matrix": {
+          "anyOf": [
+            {
+              "type": "array",
+              "items": {
+                "type": "number"
+              },
+              "minItems": 16,
+              "maxItems": 16
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "x-semio-ui": {
+            "label": {
+              "en": "Matrix",
+              "de": "Matrix"
+            },
+            "description": {
+              "en": "4×4 transform, column-major.",
+              "de": "4×4-Transformationsmatrix, spaltenweise."
+            }
+          }
+        },
+        "translation": {
+          "anyOf": [
+            {
+              "type": "array",
+              "items": {
+                "type": "number"
+              },
+              "minItems": 3,
+              "maxItems": 3
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "x-semio-ui": {
+            "label": {
+              "en": "Translation",
+              "de": "Verschiebung"
+            }
+          }
+        },
+        "rotation": {
+          "anyOf": [
+            {
+              "type": "array",
+              "items": {
+                "type": "number"
+              },
+              "minItems": 4,
+              "maxItems": 4
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "x-semio-ui": {
+            "label": {
+              "en": "Rotation",
+              "de": "Drehung"
+            },
+            "description": {
+              "en": "Unit quaternion (x, y, z, w).",
+              "de": "Einheitsquaternion (x, y, z, w)."
+            }
+          }
+        },
+        "scale": {
+          "anyOf": [
+            {
+              "type": "array",
+              "items": {
+                "type": "number"
+              },
+              "minItems": 3,
+              "maxItems": 3
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "x-semio-ui": {
+            "label": {
+              "en": "Scale",
+              "de": "Skalierung"
+            }
+          }
+        },
+        "weights": {
+          "type": "array",
+          "items": {
+            "type": "number"
+          },
+          "x-semio-ui": {
+            "label": {
+              "en": "Morph weights",
+              "de": "Morph-Gewichte"
+            }
+          }
+        },
+        "name": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "x-semio-ui": {
+            "label": {
+              "en": "Name",
+              "de": "Name"
+            }
+          }
+        },
+        "extensions": {
+          "$ref": "#/$defs/GltfJsonPresence",
+          "x-semio-ui": {
+            "label": {
+              "en": "Extensions",
+              "de": "Erweiterungen"
+            }
+          }
+        },
+        "extras": {
+          "$ref": "#/$defs/GltfJsonPresence",
+          "x-semio-ui": {
+            "label": {
+              "en": "Extras",
+              "de": "Zusatzdaten (extras)"
+            }
+          }
+        }
+      }
+    },
+    "GltfNodesDiff": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "removed": {
+          "type": "array",
+          "items": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "x-semio-ui": {
+            "label": {
+              "en": "Removed",
+              "de": "Entfernt"
+            }
+          }
+        },
+        "modified": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "index",
+              "diff"
+            ],
+            "properties": {
+              "index": {
+                "type": "integer",
+                "minimum": 0,
+                "x-semio-ui": {
+                  "label": {
+                    "en": "Index",
+                    "de": "Index"
+                  }
+                }
+              },
+              "diff": {
+                "$ref": "#/$defs/GltfNodeDiff",
+                "x-semio-ui": {
+                  "label": {
+                    "en": "Changes",
+                    "de": "Änderungen"
+                  }
+                }
+              }
+            }
+          },
+          "x-semio-ui": {
+            "label": {
+              "en": "Modified",
+              "de": "Geändert"
+            }
+          }
+        },
+        "added": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "index",
+              "item"
+            ],
+            "properties": {
+              "index": {
+                "type": "integer",
+                "minimum": 0,
+                "x-semio-ui": {
+                  "label": {
+                    "en": "Index",
+                    "de": "Index"
+                  }
+                }
+              },
+              "item": {
+                "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/gltf/2.0/any/snapshot.json#/$defs/GltfNode",
+                "x-semio-ui": {
+                  "label": {
+                    "en": "Item",
+                    "de": "Eintrag"
+                  }
+                }
+              }
+            }
+          },
+          "x-semio-ui": {
+            "label": {
+              "en": "Added",
+              "de": "Hinzugefügt"
+            }
+          }
+        }
+      }
+    },
+    "GltfSamplersDiff": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "removed": {
+          "type": "array",
+          "items": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "x-semio-ui": {
+            "label": {
+              "en": "Removed",
+              "de": "Entfernt"
+            }
+          }
+        },
+        "modified": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "index",
+              "diff"
+            ],
+            "properties": {
+              "index": {
+                "type": "integer",
+                "minimum": 0,
+                "x-semio-ui": {
+                  "label": {
+                    "en": "Index",
+                    "de": "Index"
+                  }
+                }
+              },
+              "diff": {
+                "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/gltf/2.0/any/snapshot.json#/$defs/GltfSampler",
+                "x-semio-ui": {
+                  "label": {
+                    "en": "Changes",
+                    "de": "Änderungen"
+                  }
+                }
+              }
+            }
+          },
+          "x-semio-ui": {
+            "label": {
+              "en": "Modified",
+              "de": "Geändert"
+            }
+          }
+        },
+        "added": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "index",
+              "item"
+            ],
+            "properties": {
+              "index": {
+                "type": "integer",
+                "minimum": 0,
+                "x-semio-ui": {
+                  "label": {
+                    "en": "Index",
+                    "de": "Index"
+                  }
+                }
+              },
+              "item": {
+                "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/gltf/2.0/any/snapshot.json#/$defs/GltfSampler",
+                "x-semio-ui": {
+                  "label": {
+                    "en": "Item",
+                    "de": "Eintrag"
+                  }
+                }
+              }
+            }
+          },
+          "x-semio-ui": {
+            "label": {
+              "en": "Added",
+              "de": "Hinzugefügt"
+            }
+          }
+        }
+      }
+    },
+    "GltfSceneDiff": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "nodes": {
+          "type": "array",
+          "items": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "x-semio-ui": {
+            "label": {
+              "en": "Root nodes",
+              "de": "Wurzelknoten"
+            }
+          }
+        },
+        "name": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "x-semio-ui": {
+            "label": {
+              "en": "Name",
+              "de": "Name"
+            }
+          }
+        },
+        "extensions": {
+          "$ref": "#/$defs/GltfJsonPresence",
+          "x-semio-ui": {
+            "label": {
+              "en": "Extensions",
+              "de": "Erweiterungen"
+            }
+          }
+        },
+        "extras": {
+          "$ref": "#/$defs/GltfJsonPresence",
+          "x-semio-ui": {
+            "label": {
+              "en": "Extras",
+              "de": "Zusatzdaten (extras)"
+            }
+          }
+        }
+      }
+    },
+    "GltfScenesDiff": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "removed": {
+          "type": "array",
+          "items": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "x-semio-ui": {
+            "label": {
+              "en": "Removed",
+              "de": "Entfernt"
+            }
+          }
+        },
+        "modified": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "index",
+              "diff"
+            ],
+            "properties": {
+              "index": {
+                "type": "integer",
+                "minimum": 0,
+                "x-semio-ui": {
+                  "label": {
+                    "en": "Index",
+                    "de": "Index"
+                  }
+                }
+              },
+              "diff": {
+                "$ref": "#/$defs/GltfSceneDiff",
+                "x-semio-ui": {
+                  "label": {
+                    "en": "Changes",
+                    "de": "Änderungen"
+                  }
+                }
+              }
+            }
+          },
+          "x-semio-ui": {
+            "label": {
+              "en": "Modified",
+              "de": "Geändert"
+            }
+          }
+        },
+        "added": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "index",
+              "item"
+            ],
+            "properties": {
+              "index": {
+                "type": "integer",
+                "minimum": 0,
+                "x-semio-ui": {
+                  "label": {
+                    "en": "Index",
+                    "de": "Index"
+                  }
+                }
+              },
+              "item": {
+                "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/gltf/2.0/any/snapshot.json#/$defs/GltfScene",
+                "x-semio-ui": {
+                  "label": {
+                    "en": "Item",
+                    "de": "Eintrag"
+                  }
+                }
+              }
+            }
+          },
+          "x-semio-ui": {
+            "label": {
+              "en": "Added",
+              "de": "Hinzugefügt"
+            }
+          }
+        }
+      }
+    },
+    "GltfSkinsDiff": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "removed": {
+          "type": "array",
+          "items": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "x-semio-ui": {
+            "label": {
+              "en": "Removed",
+              "de": "Entfernt"
+            }
+          }
+        },
+        "modified": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "index",
+              "diff"
+            ],
+            "properties": {
+              "index": {
+                "type": "integer",
+                "minimum": 0,
+                "x-semio-ui": {
+                  "label": {
+                    "en": "Index",
+                    "de": "Index"
+                  }
+                }
+              },
+              "diff": {
+                "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/gltf/2.0/any/snapshot.json#/$defs/GltfSkin",
+                "x-semio-ui": {
+                  "label": {
+                    "en": "Changes",
+                    "de": "Änderungen"
+                  }
+                }
+              }
+            }
+          },
+          "x-semio-ui": {
+            "label": {
+              "en": "Modified",
+              "de": "Geändert"
+            }
+          }
+        },
+        "added": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "index",
+              "item"
+            ],
+            "properties": {
+              "index": {
+                "type": "integer",
+                "minimum": 0,
+                "x-semio-ui": {
+                  "label": {
+                    "en": "Index",
+                    "de": "Index"
+                  }
+                }
+              },
+              "item": {
+                "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/gltf/2.0/any/snapshot.json#/$defs/GltfSkin",
+                "x-semio-ui": {
+                  "label": {
+                    "en": "Item",
+                    "de": "Eintrag"
+                  }
+                }
+              }
+            }
+          },
+          "x-semio-ui": {
+            "label": {
+              "en": "Added",
+              "de": "Hinzugefügt"
+            }
+          }
+        }
+      }
+    },
+    "GltfTexturesDiff": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "removed": {
+          "type": "array",
+          "items": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "x-semio-ui": {
+            "label": {
+              "en": "Removed",
+              "de": "Entfernt"
+            }
+          }
+        },
+        "modified": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "index",
+              "diff"
+            ],
+            "properties": {
+              "index": {
+                "type": "integer",
+                "minimum": 0,
+                "x-semio-ui": {
+                  "label": {
+                    "en": "Index",
+                    "de": "Index"
+                  }
+                }
+              },
+              "diff": {
+                "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/gltf/2.0/any/snapshot.json#/$defs/GltfTexture",
+                "x-semio-ui": {
+                  "label": {
+                    "en": "Changes",
+                    "de": "Änderungen"
+                  }
+                }
+              }
+            }
+          },
+          "x-semio-ui": {
+            "label": {
+              "en": "Modified",
+              "de": "Geändert"
+            }
+          }
+        },
+        "added": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "index",
+              "item"
+            ],
+            "properties": {
+              "index": {
+                "type": "integer",
+                "minimum": 0,
+                "x-semio-ui": {
+                  "label": {
+                    "en": "Index",
+                    "de": "Index"
+                  }
+                }
+              },
+              "item": {
+                "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/gltf/2.0/any/snapshot.json#/$defs/GltfTexture",
+                "x-semio-ui": {
+                  "label": {
+                    "en": "Item",
+                    "de": "Eintrag"
+                  }
+                }
+              }
+            }
+          },
+          "x-semio-ui": {
+            "label": {
+              "en": "Added",
+              "de": "Hinzugefügt"
+            }
+          }
+        }
+      }
+    },
+    "GltfTouchedRegion": {
+      "type": "string",
       "enum": [
         "asset",
         "scene",
@@ -137,42 +2485,12 @@
         "extensions",
         "extras",
         "sourceForm"
+      ],
+      "x-semio-formats": [
+        "🔣️jsonschema",
+        "🟦️typescript",
+        "🔗️graphql"
       ]
-    },
-    "collectionDiff": {
-      "type": "object",
-      "properties": {
-        "removed": {
-          "type": "array",
-          "items": {
-            "type": "integer"
-          }
-        },
-        "modified": {
-          "type": "array",
-          "items": {
-            "type": "object",
-            "properties": {
-              "index": {
-                "type": "integer"
-              },
-              "diff": {}
-            }
-          }
-        },
-        "added": {
-          "type": "array",
-          "items": {
-            "type": "object",
-            "properties": {
-              "index": {
-                "type": "integer"
-              },
-              "item": {}
-            }
-          }
-        }
-      }
     }
   }
 }

@@ -30,9 +30,13 @@ fn procedural_payload_vectors_match_the_json_oracle() {
     let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🔁️payload-mutations.json")).expect("independent JSON parser");
     let base: ModuleRenderPayload = pack::json::from_json_str(&fixture["base"].to_string()).expect("owned base");
     assert_eq!(ModulePayloadMutation::DESCRIPTORS.len(), 1);
+    const WITNESSES: [(&str, &str); 2] = [
+        ("🎚️sets-params", include_str!("../../🧫️fixtures/🧬️mutations/📦️set-payload/🎚️sets-params/🦠️mutation/🔣️.json")),
+        ("🫙️clears-params", include_str!("../../🧫️fixtures/🧬️mutations/📦️set-payload/🫙️clears-params/🦠️mutation/🔣️.json")),
+    ];
     for row in fixture["cases"].as_array().expect("mutation vectors") {
-        let mutation: ModulePayloadMutation = pack::json::from_json_str(&row["mutation"].to_string()).expect("owned operation");
-        assert_eq!(serde_json::from_str::<serde_json::Value>(&to_json_string(&mutation)).expect("independent operation oracle"), row["mutation"]);
+        let witness = WITNESSES.iter().find(|(case, _)| row["witness"] == *case).map(|(_, text)| *text).expect("case names a committed wire witness");
+        let mutation: ModulePayloadMutation = store::os_store::test_support::assert_wire_witness(witness);
         let post = mutation.diff(&base).diff().apply(&base).expect("apply mutation");
         assert_eq!(serde_json::from_str::<serde_json::Value>(&to_json_string(&post)).expect("independent state oracle"), row["expected"]);
         assert_eq!(ModulePayloadMutation::parse_op(&mutation.print_op()).expect("operation text"), mutation);
@@ -49,6 +53,8 @@ async fn procedural_actor_descriptor_matches_the_json_oracle() {
     let manifest = __SEMIO_PLUGIN_RUNTIME.with(|runtime| resolve_ready(semio_framework_plugin::plugin_runtime::plugin_manifest(runtime)));
     assert_eq!(manifest.plugin_id, MODULE_PLUGIN_ID, "bundle assembly: {}", manifest.label);
     let bytes = __SEMIO_PLUGIN_RUNTIME.with(|runtime| resolve_ready(semio_framework_plugin::describe::describe_extension_with_apps(runtime)));
+    semio_framework_plugin::plugin_runtime::extension_dispose_cold().expect("cold actor inspection retires its installed extension");
+    assert!(semio_framework_plugin::plugin_runtime::extension_terminal_is_empty());
     let value = store::pack_rt::decode_wire_value(&bytes).expect("first-party wire decoder");
     let descriptor: serde_json::Value = value.into();
     assert_eq!(descriptor["role"], fixture["role"]);
@@ -138,7 +144,7 @@ async fn module_app_declares_window_kinds() {
 #[semio_framework_async_macros::async_test]
 async fn module_manifest_contributes_building_component() {
     let bundle = module_extension_bundle();
-    let manifest = bundle.manifest;
+    let manifest = bundle.into_manifest_cold().unwrap();
     assert_eq!(manifest.topic_contributions.len(), 2);
     let topic = &manifest.topic_contributions[0];
     assert_eq!(topic.topic, "playbook.blockKind");
@@ -312,7 +318,7 @@ async fn command_envelope_round_trip_holds_for_an_applied_operation() {
     store.install_document_store_owners_exact(semio_framework_plugin::bounded_document_store_owners::<ModuleRenderPayload, ModulePayloadMutation>());
     let mut payload = default_payload();
     payload.interactive = false;
-    store.dispatch(ArtifactCommand::Apply { mutations: vec![ModulePayloadMutation::SetPayload(SetPayload { payload })], description: None }).await.expect("apply");
+    store.dispatch(ArtifactCommand::Apply { mutations: vec![ModulePayloadMutation::SetPayload(SetPayload { payload })], description: None, transaction: None }).await.expect("apply");
     let edit: &Edit<ModulePayloadMutation> = store.envelope().vcs.edits.last().expect("dispatch must have recorded an edit");
     store::os_store::test_support::assert_command_envelope_round_trip::<ModuleRenderPayload, ModulePayloadMutation>(edit, &ArtifactId(store.envelope().id.clone()), &SchemaId(store.envelope().schema.clone())).await;
     while !store.close_owned_terminal_is_empty() {
@@ -321,3 +327,89 @@ async fn command_envelope_round_trip_holds_for_an_applied_operation() {
 }
 //#endregion 🔖️CommandEnvelopeTests
 //#endregion 🔖️DslAndOpText
+
+#[test]
+fn instance_geometry_admits_session_shell_before_terminal() {
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🌐️geometry-lifetime/🔣️.json")).unwrap();
+    let admission = &fixture["shellAdmission"];
+    let complete_bytes = admission["completionByteGrant"].as_u64().unwrap() as usize;
+    let mut owner = ModuleGeometryOwner::new();
+    for _ in 0..1_000_000 {
+        let step = owner.close_step(64, complete_bytes).unwrap();
+        if step == PluginCloseStep::Complete || (owner.registry.is_none() && owner.registry_retirement.terminal_is_empty() && Session::terminal_is_empty(&owner.session)) { break; }
+    }
+    assert!(Session::terminal_is_empty(&owner.session));
+    assert_eq!(!owner.terminal_is_empty(), admission["retainedAfterNativeDrain"].as_bool().unwrap());
+    assert!(matches!(owner.close_step(1, admission["tinyByteGrant"].as_u64().unwrap() as usize).unwrap(), PluginCloseStep::Pending { released_items: 0, released_bytes: 0 }));
+    assert_eq!(!owner.terminal_is_empty(), admission["retainedOnTinyByteGrant"].as_bool().unwrap());
+    let PluginCloseStep::Pending { released_items, released_bytes } = owner.close_step(1, complete_bytes).unwrap() else { panic!("granted instance shell retirement reports physical release"); };
+    assert_eq!(released_items, 1);
+    assert_eq!(released_bytes > 0 && owner.terminal_is_empty(), admission["releasedByCompletionByteGrant"].as_bool().unwrap());
+    assert_eq!(owner.close_step(0, 0).unwrap(), PluginCloseStep::Complete);
+}
+
+#[semio_framework_async_macros::async_test]
+async fn instance_geometry_replays_durable_sources_and_preserves_preview_authority() {
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🌐️geometry-lifetime/🔣️.json")).expect("independent lifetime fixture");
+    let own_fixture = parse_json(include_str!("../../🧫️fixtures/🌐️geometry-lifetime/🔣️.json")).expect("first-party lifetime fixture");
+    assert_eq!(serde_json::from_str::<serde_json::Value>(&json_to_string(&own_fixture)).expect("independent fixture output"), fixture);
+    for row in fixture["handles"].as_array().expect("canonical handle vectors") {
+        assert_eq!(is_brep_geometry_handle(row["value"].as_str().unwrap()), row["valid"].as_bool().unwrap());
+    }
+    let mut first = ModuleGeometryOwner::new();
+    let mut second = ModuleGeometryOwner::new();
+    for source in fixture["imports"].as_array().expect("durable imports") {
+        let mut payload = default_payload();
+        handle_import_solid(&mut first, &mut payload, source["format"].as_str().unwrap(), source["data"].as_str().unwrap());
+        let stored = params_as_json(&payload.params);
+        assert_eq!(serde_json::from_str::<serde_json::Value>(&json_to_string(stored.get("__solidImport").expect("source"))).unwrap(), *source);
+        let handles = imported_geometry_handles(&mut first, &stored).expect("first authority");
+        assert!(!handles.is_empty());
+        assert!(second.session.export_solid_json(&handles, "obj", 0.1).contains("error"));
+        let replayed = imported_geometry_handles(&mut second, &stored).expect("reopened source");
+        let original: serde_json::Value = serde_json::from_str(&first.session.export_solid_json(&handles, "obj", 0.1)).unwrap();
+        let reopened: serde_json::Value = serde_json::from_str(&second.session.export_solid_json(&replayed, "obj", 0.1)).unwrap();
+        assert!(original.get("error").is_none() && reopened.get("error").is_none());
+        let original_data = original["data"].as_str().filter(|data| !data.is_empty()).expect("original exported geometry");
+        let reopened_data = reopened["data"].as_str().filter(|data| !data.is_empty()).expect("reopened exported geometry");
+        assert_eq!(original_data, reopened_data, "durable replay preserves geometry rather than ephemeral handles");
+        assert_eq!(imported_geometry_handles(&mut second, &stored).unwrap(), replayed, "same live source reuses the instance cache");
+        let before = json_to_string(&params_as_json(&payload.params));
+        handle_export_solid(&mut second, &mut payload, "obj");
+        assert!(!params_as_json(&payload.params).get("__solidExport").unwrap().get("error").is_some());
+        assert_eq!(json_to_string(&stored), before);
+    }
+    let snapshot: FlowHostSnapshot = pack::json::from_json_str(HEX_COLUMN_FIXTURE_JSON).unwrap();
+    for params in fixture["parameters"].as_array().expect("preview variants") {
+        let params = parse_json(&params.to_string()).unwrap();
+        let (meshes, instances) = evaluated_preview_payload(&mut first, &snapshot, &params);
+        let meshes: serde_json::Value = serde_json::from_str(&meshes).unwrap();
+        let instances: serde_json::Value = serde_json::from_str(&instances).unwrap();
+        assert!(!meshes.as_array().unwrap().is_empty());
+        assert!(meshes.as_array().unwrap().iter().all(|mesh| mesh["id"].as_str().unwrap().starts_with("eval-")));
+        for mesh in meshes.as_array().unwrap() {
+            let positions = mesh["data"]["positions"].as_array().expect("evaluated mesh coordinates");
+            assert!(!positions.is_empty() && positions.len() % 3 == 0);
+            let mut minimum_z = f64::INFINITY;
+            let mut maximum_z = f64::NEG_INFINITY;
+            let mut maximum_radius = 0.0_f64;
+            for vertex in positions.chunks_exact(3) {
+                let [x, y, z] = std::array::from_fn(|axis| vertex[axis].as_f64().expect("independent numeric coordinates"));
+                minimum_z = minimum_z.min(z);
+                maximum_z = maximum_z.max(z);
+                maximum_radius = maximum_radius.max(x.hypot(y));
+            }
+            assert!((maximum_z - minimum_z - params.get("height").unwrap().as_f64().unwrap()).abs() < 1e-5);
+            assert!((maximum_radius - params.get("radius").unwrap().as_f64().unwrap()).abs() < 1e-5);
+        }
+        assert!(!instances.as_array().unwrap().is_empty());
+    }
+    snapshot.retire_cold();
+    for owner in [&mut first, &mut second] {
+        assert!(matches!(owner.close_step(0, 65_536).unwrap(), PluginCloseStep::Pending { released_items: 0, released_bytes: 0 }));
+        for _ in 0..1_000_000 {
+            if matches!(owner.close_step(64, 65_536).unwrap(), PluginCloseStep::Complete) { break; }
+        }
+        assert!(owner.terminal_is_empty(), "instance geometry retirement completes");
+    }
+}

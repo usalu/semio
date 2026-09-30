@@ -5,14 +5,54 @@
   "type": "object",
   "additionalProperties": false,
   "required": [
+    "mutation",
     "id"
   ],
   "properties": {
+    "mutation": {
+      "const": "changeObjectKind"
+    },
     "id": {
-      "type": "string"
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Object",
+          "de": "Objekt"
+        },
+        "description": {
+          "en": "The object this mutation addresses.",
+          "de": "Das Objekt, das diese Mutation adressiert."
+        },
+        "ref": {
+          "kind": "object",
+          "domain": "vortex",
+          "granularity": "object"
+        },
+        "group": "target",
+        "order": 10
+      }
     },
     "newObjectKind": {
-      "type": "string"
+      "type": [
+        "string",
+        "null"
+      ],
+      "x-semio-ui": {
+        "widget": "text",
+        "role": "value",
+        "label": {
+          "en": "Object kind",
+          "de": "Objektart"
+        },
+        "description": {
+          "en": "Id of a kind from the kind catalog.",
+          "de": "ID einer Art aus dem Artenkatalog."
+        },
+        "group": "kind",
+        "order": 20
+      }
     }
   }
 }

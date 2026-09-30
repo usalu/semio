@@ -11,11 +11,11 @@ use crate::standards::v1::subsets::brep::schema::snapshot::{decode_semio_brep_sn
 use pack::value::ToValue;
 use protocol::{Mutation, MutationDiff};
 
-const BEFORE: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🐚create-shell/🐚️adds-a-second-shell-that-reuses-the-face-with-flipped-sense/📸️snapshot/⬅️before/🔣️.json");
-const AFTER: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🐚create-shell/🐚️adds-a-second-shell-that-reuses-the-face-with-flipped-sense/📸️snapshot/➡️after/🔣️.json");
-const MUTATION: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🐚create-shell/🐚️adds-a-second-shell-that-reuses-the-face-with-flipped-sense/🦠️mutation/🔣️.json");
-const DIFF: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🐚create-shell/🐚️adds-a-second-shell-that-reuses-the-face-with-flipped-sense/🔺️diff/🔣️.json");
-const OUTCOME: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🐚create-shell/🐚️adds-a-second-shell-that-reuses-the-face-with-flipped-sense/🎯️outcome/🔣️.json");
+const BEFORE: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🐚create-shell/🐚️adds-second-shell-reuses-face-flipped-sense/📸️snapshot/⬅️before/🔣️.json");
+const AFTER: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🐚create-shell/🐚️adds-second-shell-reuses-face-flipped-sense/📸️snapshot/➡️after/🔣️.json");
+const MUTATION: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🐚create-shell/🐚️adds-second-shell-reuses-face-flipped-sense/🦠️mutation/🔣️.json");
+const DIFF: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🐚create-shell/🐚️adds-second-shell-reuses-face-flipped-sense/🔺️diff/🔣️.json");
+const OUTCOME: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🐚create-shell/🐚️adds-second-shell-reuses-face-flipped-sense/🎯️outcome/🔣️.json");
 
 fn before() -> SemioBrepSnapshot {
     decode_semio_brep_snapshot_json(BEFORE).expect("create-shell before snapshot decodes")

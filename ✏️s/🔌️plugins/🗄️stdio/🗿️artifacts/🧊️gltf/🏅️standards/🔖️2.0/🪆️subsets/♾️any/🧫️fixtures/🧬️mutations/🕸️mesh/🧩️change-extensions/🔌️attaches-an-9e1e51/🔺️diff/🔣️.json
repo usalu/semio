@@ -5,7 +5,10 @@
         "index": 0,
         "diff": {
           "extensions": {
-            "KHR_materials_unlit": {}
+            "state": "present",
+            "value": {
+              "KHR_materials_unlit": {}
+            }
           }
         }
       }

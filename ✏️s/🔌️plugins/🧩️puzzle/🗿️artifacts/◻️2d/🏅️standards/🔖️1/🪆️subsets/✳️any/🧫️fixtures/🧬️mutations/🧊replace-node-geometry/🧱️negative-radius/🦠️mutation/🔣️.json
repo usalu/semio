@@ -1,0 +1,8 @@
+{
+  "id": "node-a",
+  "mutation": "replaceNodeGeometry",
+  "newHeight": null,
+  "newRadius": -4.0,
+  "newShape": "circle",
+  "newWidth": null
+}

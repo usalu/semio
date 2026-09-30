@@ -1,0 +1,6 @@
+{
+  "operation": "removeSpaceCheckpoint",
+  "payload": {
+    "checkpointId": "sc-1"
+  }
+}

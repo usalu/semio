@@ -1,0 +1,70 @@
+{
+  "name": "@semio-tech/s-spatial-kernel-semio-session-rs",
+  "root": "\u270f\ufe0fs/\ud83d\udd28\ufe0fmodules/\ud83c\udf10\ufe0fspatial-kernel/\u2699\ufe0fengine/\ud83e\udde0\ufe0fsemio/\ud83c\udf0a\ufe0fsession/\ud83d\udce6\ufe0fpackages/\ud83e\udd80\ufe0frust",
+  "sourceRoot": "\u270f\ufe0fs/\ud83d\udd28\ufe0fmodules/\ud83c\udf10\ufe0fspatial-kernel/\u2699\ufe0fengine/\ud83e\udde0\ufe0fsemio/\ud83c\udf0a\ufe0fsession",
+  "projectType": "library",
+  "tags": [
+    "lang:rust",
+    "role:s-module",
+    "scope:s"
+  ],
+  "targets": {
+    "check": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "options": {
+        "command": "bun ./\ud83d\udcdc\ufe0fscript.ts check",
+        "cwd": "\u270f\ufe0fs/\ud83d\udd28\ufe0fmodules/\ud83c\udf10\ufe0fspatial-kernel/\u2699\ufe0fengine/\ud83e\udde0\ufe0fsemio/\ud83c\udf0a\ufe0fsession/\ud83d\udce6\ufe0fpackages/\ud83e\udd80\ufe0frust",
+        "forwardAllArgs": true
+      }
+    },
+    "test": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "options": {
+        "command": "bun ./\ud83d\udcdc\ufe0fscript.ts test",
+        "cwd": "\u270f\ufe0fs/\ud83d\udd28\ufe0fmodules/\ud83c\udf10\ufe0fspatial-kernel/\u2699\ufe0fengine/\ud83e\udde0\ufe0fsemio/\ud83c\udf0a\ufe0fsession/\ud83d\udce6\ufe0fpackages/\ud83e\udd80\ufe0frust",
+        "forwardAllArgs": true
+      }
+    },
+    "wasm": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "options": {
+        "command": "bun ./\ud83d\udcdc\ufe0fscript.ts wasm",
+        "cwd": "\u270f\ufe0fs/\ud83d\udd28\ufe0fmodules/\ud83c\udf10\ufe0fspatial-kernel/\u2699\ufe0fengine/\ud83e\udde0\ufe0fsemio/\ud83c\udf0a\ufe0fsession/\ud83d\udce6\ufe0fpackages/\ud83e\udd80\ufe0frust",
+        "forwardAllArgs": true
+      }
+    },
+    "source-check": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "options": {
+        "command": "bun ./\ud83d\udcdc\ufe0fscript.ts source-check",
+        "cwd": "\u270f\ufe0fs/\ud83d\udd28\ufe0fmodules/\ud83c\udf10\ufe0fspatial-kernel/\u2699\ufe0fengine/\ud83e\udde0\ufe0fsemio/\ud83c\udf0a\ufe0fsession/\ud83d\udce6\ufe0fpackages/\ud83e\udd80\ufe0frust",
+        "forwardAllArgs": true
+      }
+    },
+    "browser-test": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "dependsOn": [
+        "wasm"
+      ],
+      "options": {
+        "command": "bun ./\ud83d\udcdc\ufe0fscript.ts browser-test",
+        "cwd": "\u270f\ufe0fs/\ud83d\udd28\ufe0fmodules/\ud83c\udf10\ufe0fspatial-kernel/\u2699\ufe0fengine/\ud83e\udde0\ufe0fsemio/\ud83c\udf0a\ufe0fsession/\ud83d\udce6\ufe0fpackages/\ud83e\udd80\ufe0frust",
+        "forwardAllArgs": true
+      }
+    },
+    "canonical-architecture": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "options": {
+        "command": "bun ./\ud83d\udcdc\ufe0fscript.ts canonical-architecture",
+        "cwd": "\u270f\ufe0fs/\ud83d\udd28\ufe0fmodules/\ud83c\udf10\ufe0fspatial-kernel/\u2699\ufe0fengine/\ud83e\udde0\ufe0fsemio/\ud83c\udf0a\ufe0fsession/\ud83d\udce6\ufe0fpackages/\ud83e\udd80\ufe0frust",
+        "forwardAllArgs": false
+      }
+    }
+  }
+}

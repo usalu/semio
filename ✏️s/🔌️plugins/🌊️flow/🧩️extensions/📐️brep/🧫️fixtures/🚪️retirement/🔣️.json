@@ -1,0 +1,19 @@
+{
+  "evaluate": {
+    "operatorId": "brep.prim3d.box",
+    "inputJson": "{\"width\":{\"$schema\":\"number\",\"value\":1.0},\"depth\":{\"$schema\":\"number\",\"value\":1.0},\"height\":{\"$schema\":\"number\",\"value\":1.0}}",
+    "nodeHash": 700001
+  },
+  "tessellate": {
+    "tolerance": 0.03125,
+    "budget": 1,
+    "wallMicros": 0,
+    "chunk": 0
+  },
+  "grant": [
+    1,
+    65536
+  ],
+  "steps": 100000,
+  "geometrySchema": "geometry"
+}

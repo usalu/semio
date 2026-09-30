@@ -5,11 +5,32 @@
   "type": "object",
   "additionalProperties": false,
   "required": [
+    "mutation",
     "index"
   ],
   "properties": {
+    "mutation": {
+      "const": "removeFooting"
+    },
     "index": {
-      "type": "integer"
+      "type": "integer",
+      "minimum": 0,
+      "x-semio-ui": {
+        "widget": "stepper",
+        "role": "value",
+        "label": {
+          "en": "Spread foundation",
+          "de": "Flachgründung"
+        },
+        "description": {
+          "en": "Zero-based position of the spread foundation in its list.",
+          "de": "Nullbasierte Position der Flachgründung in der Liste."
+        },
+        "step": 1,
+        "precision": 0,
+        "group": "target",
+        "order": 10
+      }
     }
   }
 }

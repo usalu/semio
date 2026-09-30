@@ -4,7 +4,8 @@
 //! `TrustedPluginModuleBundleV1` / `TrustedPluginModuleIndexV1` in [`🔣️.json`](../🧬️schema/🔣️.json);
 //! the language-agnostic law is `🧫️fixtures/🧩️plugin-module/🔣️.json`.
 
-use super::schema::{TrustedBundlePluginModuleV1, TrustedPluginModuleBundleV1, TrustedPluginModuleFileV1, TrustedPluginModuleIndexV1, TRUSTED_PLUGIN_MODULE_INDEX_SCHEMA, TRUSTED_PLUGIN_MODULE_SCHEMA};
+use super::schema::{TrustedBundlePluginModuleV1};
+use directory::os_plugin_module_schema::{TrustedPluginModuleBundleV1, TrustedPluginModuleFileV1, TrustedPluginModuleIndexV1, TRUSTED_PLUGIN_MODULE_INDEX_SCHEMA, TRUSTED_PLUGIN_MODULE_SCHEMA};
 use super::{catalog, catalog_error, decode_digest, valid_identity, valid_package_id, AuthorityError, TRUSTED_COMPONENT_MAX_BYTES};
 use directory::os_directory::hex_lower;
 use semio_framework_hash::{Hasher, Sha256};

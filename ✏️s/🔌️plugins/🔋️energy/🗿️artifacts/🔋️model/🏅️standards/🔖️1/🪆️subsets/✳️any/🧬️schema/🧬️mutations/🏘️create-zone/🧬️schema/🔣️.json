@@ -5,6 +5,7 @@
   "type": "object",
   "additionalProperties": false,
   "required": [
+    "mutation",
     "id",
     "name",
     "volumeM3",
@@ -13,23 +14,109 @@
     "partOfTotalFloorArea"
   ],
   "properties": {
+    "mutation": {
+      "const": "createZone"
+    },
     "id": {
-      "type": "integer"
+      "type": "integer",
+      "minimum": 0,
+      "x-semio-ui": {
+        "widget": "stepper",
+        "role": "value",
+        "label": {
+          "en": "ID",
+          "de": "ID"
+        },
+        "description": {
+          "en": "Id the new zone is created under; later mutations address it by this id.",
+          "de": "ID, unter der das neue Objekt angelegt wird; spätere Mutationen adressieren es darüber."
+        },
+        "step": 1,
+        "precision": 0,
+        "group": "identity",
+        "order": 10
+      }
     },
     "name": {
-      "type": "string"
+      "type": "string",
+      "pattern": "[^\\t\\n\\u000B\\f\\r \\u0085\\u00A0\\u1680\\u2000-\\u200A\\u2028\\u2029\\u202F\\u205F\\u3000]",
+      "x-semio-ui": {
+        "widget": "text",
+        "role": "value",
+        "label": {
+          "en": "Name",
+          "de": "Name"
+        },
+        "group": "identity",
+        "order": 20
+      }
     },
     "volumeM3": {
-      "type": "number"
+      "type": "number",
+      "exclusiveMinimum": 0,
+      "x-semio-ui": {
+        "widget": "stepper",
+        "role": "value",
+        "label": {
+          "en": "Air volume",
+          "de": "Luftvolumen"
+        },
+        "unit": "m³",
+        "step": 0.1,
+        "precision": 1,
+        "group": "geometry",
+        "order": 30
+      }
     },
     "multiplier": {
-      "type": "integer"
+      "type": "integer",
+      "minimum": 1,
+      "x-semio-ui": {
+        "widget": "stepper",
+        "role": "value",
+        "label": {
+          "en": "Multiplier",
+          "de": "Multiplikator"
+        },
+        "description": {
+          "en": "Number of identical instances this object stands for; at least 1.",
+          "de": "Anzahl gleicher Exemplare, die dieses Objekt vertritt; mindestens 1."
+        },
+        "step": 1,
+        "precision": 0,
+        "group": "geometry",
+        "order": 40
+      }
     },
     "conditioned": {
-      "type": "boolean"
+      "type": "boolean",
+      "x-semio-ui": {
+        "widget": "toggle",
+        "role": "value",
+        "label": {
+          "en": "Conditioned",
+          "de": "Konditioniert"
+        },
+        "description": {
+          "en": "Heated or cooled by the HVAC system.",
+          "de": "Von der Anlagentechnik beheizt oder gekühlt."
+        },
+        "group": "thermal",
+        "order": 50
+      }
     },
     "partOfTotalFloorArea": {
-      "type": "boolean"
+      "type": "boolean",
+      "x-semio-ui": {
+        "widget": "toggle",
+        "role": "value",
+        "label": {
+          "en": "Counts toward total floor area",
+          "de": "Zählt zur Gesamtgeschossfläche"
+        },
+        "group": "geometry",
+        "order": 60
+      }
     }
   }
 }

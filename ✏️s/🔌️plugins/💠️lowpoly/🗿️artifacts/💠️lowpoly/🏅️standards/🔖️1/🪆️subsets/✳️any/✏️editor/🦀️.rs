@@ -1429,6 +1429,7 @@ fn lowpoly_store_edit<M>(prefix: &str, forward: M, inverse: Vec<M>, description:
             label: None,
             group_id: None,
             origin: Default::default(),
+            transaction: None,
         }],
         description,
         coalesce_key: None,
@@ -2040,7 +2041,7 @@ impl ArtifactEditor for LowpolyPlayApp {
         lowpoly_export_media(port, doc, &LowpolyScratch::default())
     }
 
-    fn export_media_with_request_context(port: &str, doc: &ArtifactView<'_, LowpolySnapshot>, transient: &semio_framework_plugin::TransientView<'_, LowpolyTransient>) -> Result<Media, MediaError> {
+    fn export_media_with_request_context(_owner: &semio_framework_plugin::ArtifactInstanceOperationOwnerHandle, port: &str, doc: &ArtifactView<'_, LowpolySnapshot>, transient: &semio_framework_plugin::TransientView<'_, LowpolyTransient>) -> Result<Media, MediaError> {
         let scratch = LowpolyScratch::from_transient(transient.snapshot, crate::LowpolySelection::default()).map_err(|error| MediaError::Payload(port.into(), error))?;
         lowpoly_export_media(port, doc, &scratch)
     }

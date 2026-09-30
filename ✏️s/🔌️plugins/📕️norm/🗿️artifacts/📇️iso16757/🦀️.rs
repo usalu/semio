@@ -29,6 +29,7 @@ use std::collections::BTreeMap;
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 #[value(transparent)]
 #[value(rename_all = "camelCase")]
+#[cfg_attr(test, serde(rename_all = "camelCase"))]
 pub struct CatalogueId(pub String);
 
 /// 🔗️ Hand `DslField` bridge for `CatalogueId`: a tuple ("newtype") struct has no named fields for
@@ -53,6 +54,7 @@ impl dsl::DslField for CatalogueId {
 #[derive(Clone, Debug, PartialEq, Eq, Hash, dsl::DslRecord, value_derive::ToValue, value_derive::FromValue)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 #[value(rename_all = "camelCase")]
+#[cfg_attr(test, serde(rename_all = "camelCase"))]
 pub struct DictionaryRef {
     pub id: String,
     pub version: String,
@@ -67,6 +69,7 @@ pub use crate::document::LocalizedText;
 #[derive(Clone, Debug, PartialEq, dsl::DslRecord, value_derive::ToValue, value_derive::FromValue)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 #[value(rename_all = "camelCase")]
+#[cfg_attr(test, serde(rename_all = "camelCase"))]
 pub struct Names {
     pub preferred: LocalizedText,
     pub short_name: Option<String>,
@@ -78,6 +81,7 @@ pub struct Names {
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, dsl::DslRecord, value_derive::ToValue, value_derive::FromValue)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 #[value(rename_all = "camelCase")]
+#[cfg_attr(test, serde(rename_all = "camelCase"))]
 pub struct DimensionSignature {
     pub length: i8,
     pub mass: i8,
@@ -99,6 +103,7 @@ impl DimensionSignature {
 #[derive(Clone, Debug, PartialEq, dsl::DslRecord, value_derive::ToValue, value_derive::FromValue)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 #[value(rename_all = "camelCase")]
+#[cfg_attr(test, serde(rename_all = "camelCase"))]
 pub struct CatalogueUnit {
     pub symbol: String,
     pub dimension: DimensionSignature,
@@ -165,6 +170,7 @@ pub enum NullState {
 #[derive(Clone, Copy, Debug, PartialEq, Eq, dsl::DslRecord, value_derive::ToValue, value_derive::FromValue)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 #[value(rename_all = "camelCase")]
+#[cfg_attr(test, serde(rename_all = "camelCase"))]
 pub struct Cardinality {
     pub min: u32,
     pub max: Option<u32>,
@@ -192,6 +198,7 @@ impl Cardinality {
 #[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 #[value(rename_all = "camelCase")]
+#[cfg_attr(test, serde(rename_all = "camelCase"))]
 pub struct CatalogueReference {
     pub uri: String,
     pub label: Option<String>,
@@ -201,6 +208,7 @@ pub struct CatalogueReference {
 #[derive(Clone, Debug, Default, PartialEq, dsl::DslRecord, value_derive::ToValue, value_derive::FromValue)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 #[value(rename_all = "camelCase")]
+#[cfg_attr(test, serde(rename_all = "camelCase"))]
 pub struct ExtensionBag {
     pub fields: BTreeMap<String, dsl::DslValue>,
 }
@@ -209,6 +217,7 @@ pub struct ExtensionBag {
 #[derive(Clone, Debug, PartialEq, dsl::DslRecord, value_derive::ToValue, value_derive::FromValue)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 #[value(rename_all = "camelCase")]
+#[cfg_attr(test, serde(rename_all = "camelCase"))]
 pub struct Lifecycle {
     pub revision: String,
     pub status: String,
@@ -225,6 +234,7 @@ pub mod part_1 {
     #[derive(Clone, Debug, PartialEq, dsl::DslRecord, value_derive::ToValue, value_derive::FromValue)]
     #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
     #[value(rename_all = "camelCase")]
+    #[cfg_attr(test, serde(rename_all = "camelCase"))]
     pub struct Manufacturer {
         pub id: String,
         pub names: Names,
@@ -234,6 +244,7 @@ pub mod part_1 {
     #[derive(Clone, Debug, PartialEq, dsl::DslRecord, value_derive::ToValue, value_derive::FromValue)]
     #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
     #[value(rename_all = "camelCase")]
+    #[cfg_attr(test, serde(rename_all = "camelCase"))]
     pub struct ProductGroup {
         pub id: String,
         pub names: Names,
@@ -244,6 +255,7 @@ pub mod part_1 {
     #[derive(Clone, Debug, PartialEq, dsl::DslRecord, value_derive::ToValue, value_derive::FromValue)]
     #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
     #[value(rename_all = "camelCase")]
+    #[cfg_attr(test, serde(rename_all = "camelCase"))]
     pub struct ProductClass {
         pub id: String,
         pub group_id: String,
@@ -257,6 +269,7 @@ pub mod part_1 {
     #[derive(Clone, Debug, PartialEq, dsl::DslRecord, value_derive::ToValue, value_derive::FromValue)]
     #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
     #[value(rename_all = "camelCase")]
+    #[cfg_attr(test, serde(rename_all = "camelCase"))]
     pub struct ProductSeries {
         pub id: String,
         pub class_id: String,
@@ -269,6 +282,7 @@ pub mod part_1 {
     #[derive(Clone, Debug, PartialEq, dsl::DslRecord, value_derive::ToValue, value_derive::FromValue)]
     #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
     #[value(rename_all = "camelCase")]
+    #[cfg_attr(test, serde(rename_all = "camelCase"))]
     pub struct ParameterDomain {
         pub parameter_id: String,
         pub allowed_values: Vec<CatalogueValue>,
@@ -279,6 +293,7 @@ pub mod part_1 {
     #[derive(Clone, Debug, PartialEq, dsl::DslRecord, value_derive::ToValue, value_derive::FromValue)]
     #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
     #[value(rename_all = "camelCase")]
+    #[cfg_attr(test, serde(rename_all = "camelCase"))]
     pub struct PropertyDefinition {
         pub id: String,
         pub names: Names,
@@ -303,6 +318,7 @@ pub mod part_1 {
     #[derive(Clone, Debug, PartialEq, dsl::DslRecord, value_derive::ToValue, value_derive::FromValue)]
     #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
     #[value(rename_all = "camelCase")]
+    #[cfg_attr(test, serde(rename_all = "camelCase"))]
     pub struct PropertyValue {
         pub definition_id: String,
         pub value: CatalogueValue,
@@ -313,6 +329,7 @@ pub mod part_1 {
     #[derive(Clone, Debug, PartialEq, dsl::DslRecord, value_derive::ToValue, value_derive::FromValue)]
     #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
     #[value(rename_all = "camelCase")]
+    #[cfg_attr(test, serde(rename_all = "camelCase"))]
     pub struct ProductVariant {
         pub id: String,
         pub parameter_values: BTreeMap<String, CatalogueValue>,
@@ -325,6 +342,7 @@ pub mod part_1 {
     #[derive(Clone, Debug, PartialEq, dsl::DslRecord, value_derive::ToValue, value_derive::FromValue)]
     #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
     #[value(rename_all = "camelCase")]
+    #[cfg_attr(test, serde(rename_all = "camelCase"))]
     pub struct Product {
         pub id: String,
         pub series_id: String,
@@ -338,6 +356,7 @@ pub mod part_1 {
     #[derive(Clone, Debug, PartialEq, dsl::DslRecord, value_derive::ToValue, value_derive::FromValue)]
     #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
     #[value(rename_all = "camelCase")]
+    #[cfg_attr(test, serde(rename_all = "camelCase"))]
     pub struct ProductIndex {
         pub id: String,
         pub product_id: String,
@@ -349,6 +368,7 @@ pub mod part_1 {
     #[derive(Clone, Debug, PartialEq, dsl::DslRecord, value_derive::ToValue, value_derive::FromValue)]
     #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
     #[value(rename_all = "camelCase")]
+    #[cfg_attr(test, serde(rename_all = "camelCase"))]
     pub struct AccessoryRelationship {
         pub accessory_product_id: String,
         pub required: bool,
@@ -360,6 +380,7 @@ pub mod part_1 {
     #[derive(Clone, Debug, PartialEq, dsl::DslRecord, value_derive::ToValue, value_derive::FromValue)]
     #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
     #[value(rename_all = "camelCase")]
+    #[cfg_attr(test, serde(rename_all = "camelCase"))]
     pub struct CompositionRelationship {
         pub component_product_id: String,
         pub quantity: u32,
@@ -369,6 +390,7 @@ pub mod part_1 {
     #[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
     #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
     #[value(rename_all = "camelCase")]
+    #[cfg_attr(test, serde(rename_all = "camelCase"))]
     pub struct GeometryReference {
         pub geometry_id: String,
         pub lod: Option<String>,
@@ -378,6 +400,7 @@ pub mod part_1 {
     #[derive(Clone, Debug, PartialEq, dsl::DslRecord, value_derive::ToValue, value_derive::FromValue)]
     #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
     #[value(rename_all = "camelCase")]
+    #[cfg_attr(test, serde(rename_all = "camelCase"))]
     pub struct DescriptiveObject {
         pub id: String,
         pub media_type: String,
@@ -390,6 +413,7 @@ pub mod part_1 {
     #[derive(Clone, Debug, PartialEq, dsl::DslRecord, value_derive::ToValue, value_derive::FromValue)]
     #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
     #[value(rename_all = "camelCase")]
+    #[cfg_attr(test, serde(rename_all = "camelCase"))]
     pub struct Catalogue {
         pub id: CatalogueId,
         pub metadata: CatalogueMetadata,
@@ -418,6 +442,7 @@ pub mod part_1 {
     #[derive(Clone, Debug, PartialEq, dsl::DslRecord, value_derive::ToValue, value_derive::FromValue)]
     #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
     #[value(rename_all = "camelCase")]
+    #[cfg_attr(test, serde(rename_all = "camelCase"))]
     pub struct CatalogueMetadata {
         pub names: Names,
         pub lifecycle: Lifecycle,
@@ -444,6 +469,7 @@ pub mod part_1 {
     #[derive(Clone, Debug, PartialEq, dsl::DslRecord, value_derive::ToValue, value_derive::FromValue)]
     #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
     #[value(rename_all = "camelCase")]
+    #[cfg_attr(test, serde(rename_all = "camelCase"))]
     pub struct SelectionConstraint {
         #[cfg_attr(test, serde(default))]
         pub id: String,
@@ -471,6 +497,7 @@ pub mod part_1 {
     #[derive(Clone, Debug, PartialEq, dsl::DslRecord, value_derive::ToValue, value_derive::FromValue)]
     #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
     #[value(rename_all = "camelCase")]
+    #[cfg_attr(test, serde(rename_all = "camelCase"))]
     pub struct SelectionRequest {
         pub class_id: String,
         pub constraints: Vec<SelectionConstraint>,
@@ -481,6 +508,7 @@ pub mod part_1 {
     #[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
     #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
     #[value(rename_all = "camelCase")]
+    #[cfg_attr(test, serde(rename_all = "camelCase"))]
     pub struct SelectionResult {
         pub matches: Vec<ProductIndex>,
         pub ambiguity: bool,
@@ -491,6 +519,7 @@ pub mod part_1 {
     #[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
     #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
     #[value(rename_all = "camelCase")]
+    #[cfg_attr(test, serde(rename_all = "camelCase"))]
     pub struct BimEmbedding {
         pub selected_index_id: String,
         pub frozen_parameters: std::collections::HashMap<String, CatalogueValue>,
@@ -523,6 +552,7 @@ pub mod part_2 {
     #[derive(Clone, Debug, PartialEq, dsl::DslRecord, value_derive::ToValue, value_derive::FromValue)]
     #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
     #[value(rename_all = "camelCase")]
+    #[cfg_attr(test, serde(rename_all = "camelCase"))]
     pub struct PortDefinition {
         pub id: String,
         pub medium: String,
@@ -535,6 +565,7 @@ pub mod part_2 {
     #[derive(Clone, Copy, Debug, PartialEq, dsl::DslRecord, value_derive::ToValue, value_derive::FromValue)]
     #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
     #[value(rename_all = "camelCase")]
+    #[cfg_attr(test, serde(rename_all = "camelCase"))]
     pub struct BoundingBox {
         pub min: [f64; 3],
         pub max: [f64; 3],
@@ -566,6 +597,7 @@ pub mod part_2 {
     #[derive(Clone, Debug, PartialEq, dsl::DslRecord, value_derive::ToValue, value_derive::FromValue)]
     #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
     #[value(rename_all = "camelCase")]
+    #[cfg_attr(test, serde(rename_all = "camelCase"))]
     pub struct PrimitiveKind {
         pub id: String,
         pub parameters: Vec<String>,
@@ -613,6 +645,7 @@ pub mod part_2 {
     #[derive(Clone, Debug, PartialEq, dsl::DslRecord, value_derive::ToValue, value_derive::FromValue)]
     #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
     #[value(rename_all = "camelCase")]
+    #[cfg_attr(test, serde(rename_all = "camelCase"))]
     pub struct GeometryObject {
         pub id: String,
         #[dsl(statements, block)]
@@ -629,6 +662,7 @@ pub mod part_2 {
     #[derive(Clone, Debug, PartialEq, dsl::DslRecord, value_derive::ToValue, value_derive::FromValue)]
     #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
     #[value(rename_all = "camelCase")]
+    #[cfg_attr(test, serde(rename_all = "camelCase"))]
     pub struct SpaceEnvelope {
         #[cfg_attr(test, serde(default = "default_installation_space_id"))]
         pub id: String,
@@ -644,6 +678,7 @@ pub mod part_2 {
     #[derive(Clone, Debug, PartialEq, dsl::DslRecord, value_derive::ToValue, value_derive::FromValue)]
     #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
     #[value(rename_all = "camelCase")]
+    #[cfg_attr(test, serde(rename_all = "camelCase"))]
     pub struct SurfaceDefinition {
         pub id: String,
         pub purpose: String,
@@ -654,6 +689,7 @@ pub mod part_2 {
     #[derive(Clone, Debug, Default, PartialEq, dsl::DslRecord, value_derive::ToValue, value_derive::FromValue)]
     #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
     #[value(rename_all = "camelCase")]
+    #[cfg_attr(test, serde(rename_all = "camelCase"))]
     pub struct GeometryCatalogue {
         pub objects: BTreeMap<String, GeometryObject>,
         #[dsl(table)]
@@ -703,6 +739,7 @@ pub mod part_4 {
     #[derive(Clone, Debug, PartialEq, dsl::DslRecord, value_derive::ToValue, value_derive::FromValue)]
     #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
     #[value(rename_all = "camelCase")]
+    #[cfg_attr(test, serde(rename_all = "camelCase"))]
     pub struct Subject {
         pub id: String,
         pub kind: SubjectKind,
@@ -731,6 +768,7 @@ pub mod part_4 {
     #[derive(Clone, Debug, PartialEq, dsl::DslRecord, value_derive::ToValue, value_derive::FromValue)]
     #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
     #[value(rename_all = "camelCase")]
+    #[cfg_attr(test, serde(rename_all = "camelCase"))]
     pub struct Relationship {
         pub id: String,
         pub kind: RelationshipKind,
@@ -743,6 +781,7 @@ pub mod part_4 {
     #[derive(Clone, Debug, PartialEq, dsl::DslRecord, value_derive::ToValue, value_derive::FromValue)]
     #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
     #[value(rename_all = "camelCase")]
+    #[cfg_attr(test, serde(rename_all = "camelCase"))]
     pub struct DictionaryProperty {
         pub id: String,
         pub names: Names,
@@ -757,6 +796,7 @@ pub mod part_4 {
     #[derive(Clone, Debug, PartialEq, dsl::DslRecord, value_derive::ToValue, value_derive::FromValue)]
     #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
     #[value(rename_all = "camelCase")]
+    #[cfg_attr(test, serde(rename_all = "camelCase"))]
     pub struct ControlledValueList {
         pub id: String,
         pub values: Vec<String>,
@@ -767,6 +807,7 @@ pub mod part_4 {
     #[derive(Clone, Debug, PartialEq, dsl::DslRecord, value_derive::ToValue, value_derive::FromValue)]
     #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
     #[value(rename_all = "camelCase")]
+    #[cfg_attr(test, serde(rename_all = "camelCase"))]
     pub struct ValueConstraint {
         pub min: Option<f64>,
         pub max: Option<f64>,
@@ -777,6 +818,7 @@ pub mod part_4 {
     #[derive(Clone, Debug, PartialEq, dsl::DslRecord, value_derive::ToValue, value_derive::FromValue)]
     #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
     #[value(rename_all = "camelCase")]
+    #[cfg_attr(test, serde(rename_all = "camelCase"))]
     pub struct Dictionary {
         pub reference: DictionaryRef,
         #[dsl(table)]
@@ -795,6 +837,7 @@ pub mod part_4 {
     #[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
     #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
     #[value(rename_all = "camelCase")]
+    #[cfg_attr(test, serde(rename_all = "camelCase"))]
     pub struct Iso12006Mapping {
         pub dictionary_object_id: String,
         pub iso12006_uri: String,
@@ -857,6 +900,7 @@ pub mod part_5 {
     #[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
     #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
     #[value(rename_all = "camelCase")]
+    #[cfg_attr(test, serde(rename_all = "camelCase"))]
     pub struct ExternalMedia {
         pub id: String,
         pub uri: String,
@@ -869,6 +913,7 @@ pub mod part_5 {
     #[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
     #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
     #[value(rename_all = "camelCase")]
+    #[cfg_attr(test, serde(rename_all = "camelCase"))]
     pub struct IfcCatalogueNode {
         pub entity_type: String,
         pub global_id: String,
@@ -881,6 +926,7 @@ pub mod part_5 {
     #[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
     #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
     #[value(rename_all = "camelCase")]
+    #[cfg_attr(test, serde(rename_all = "camelCase"))]
     pub struct IfcCatalogue {
         pub schema: String,
         pub metadata: IfcCatalogueNode,
@@ -893,6 +939,7 @@ pub mod part_5 {
     #[derive(Clone, Copy, Debug, PartialEq, dsl::DslRecord, value_derive::ToValue, value_derive::FromValue)]
     #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
     #[value(rename_all = "camelCase")]
+    #[cfg_attr(test, serde(rename_all = "camelCase"))]
     pub struct ScriptLimits {
         pub max_steps: u32,
         pub max_recursion: u32,
@@ -909,6 +956,7 @@ pub mod part_5 {
     #[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
     #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
     #[value(rename_all = "camelCase")]
+    #[cfg_attr(test, serde(rename_all = "camelCase"))]
     pub struct ScriptResult {
         pub value: f64,
         pub diagnostics: Vec<String>,

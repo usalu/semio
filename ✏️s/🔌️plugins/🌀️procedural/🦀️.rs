@@ -101,7 +101,7 @@ pub fn plugin() -> Result<Plugin<ProceduralApps>, PluginAssemblyError> {
             "s.procedural.host-media.mesh-import",
             semio_s_artifact_procedural_generation3d::artifact_kind(),
             semio_s_artifact_procedural_generation3d::GENERATION_3D_SCHEMA,
-            semio_s_artifact_procedural_generation3d::editor::generation3d::generation3d_document_from_mesh,
+            semio_s_artifact_procedural_generation3d::standards::v1::subsets::any::io::mesh_bridge::generation3d_document_from_mesh,
         )?)
         .plugin_command(commands::list_flow_extensions_command(), Box::new(commands::list_flow_extensions))
         .editor::<semio_s_artifact_procedural_generation2d::editor::generation2d::Generation2dPlayApp>(semio_s_artifact_procedural_generation2d::editor::generation2d::create_generation2d_app())

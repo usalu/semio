@@ -21,11 +21,12 @@ use semio_s_plugin_stdio_test_oracle::law;
 
 
 //#region 🔖️Input
-const INPUT: &str = "shared://🏘️abbau-aufbau-masterarbeit-grundriss/🖼️.jpg";
-
-/// 🧫️ Copies the immutable fixture into the work directory and returns the mutable copy's bytes.
+/// 🧫️ Copies the immutable document the scenario's own `Given` names into the work directory and returns the
+/// mutable copy's bytes — the real scan, or for the raster outlines the small document a whole-raster wire payload
+/// fits in.
 fn mutable_input(ctx: &Context) -> Result<Vec<u8>, String> {
-    let copy = ctx.copy_fixture(INPUT, Some("input.jpg"))?;
+    let input = ctx.step_fixture_uris().into_iter().next().ok_or_else(|| format!("scenario {} names no input document", ctx.scenario.id))?;
+    let copy = ctx.copy_fixture(&input, Some("input.jpg"))?;
     std::fs::read(&copy).map_err(|error| error.to_string())
 }
 //#endregion 🔖️Input
@@ -54,6 +55,11 @@ const JPG_TOLERANCE: f64 = 400_000.0;
 /// written to real bytes — must move the projection, and the law below fails the scenario if it
 /// does not.
 const UNOBSERVABLE: &[&str] = &["replace-quant-table", "remove-quant-table", "replace-huffman-table", "remove-huffman-table", "change-restart-interval"];
+
+/// 🔲️ The raster outlines run on a 32x24 document: its 768 pixels are fewer than [`JPG_TOLERANCE`], which is sized
+/// for the scan and would excuse ANY change there, so their observability claim is exact — the replacement must
+/// move the histogram at all. The inverse law and the profile comparison keep the profile's slack.
+const RASTER_OBSERVABILITY_SLACK: f64 = 0.0;
 //#endregion 🔖️Lossy
 
 //#region 🔖️Oracle
@@ -76,12 +82,22 @@ fn unmutated_baseline(original: &[u8]) -> Result<semio_repo_test_host::Json, Str
 /// exactly as an unchanged round trip does — which is what all eight non-raster kinds did while this case
 /// compared only geometry and a luma histogram.
 fn mutate_oracle(ctx: &Context) -> Result<Outcome, String> {
+    mutate_oracle_within(ctx, JPG_TOLERANCE)
+}
+
+/// 🔲️ [`mutate_oracle`] for the raster outlines, whose observability claim is exact (see
+/// [`RASTER_OBSERVABILITY_SLACK`]).
+fn mutate_raster_oracle(ctx: &Context) -> Result<Outcome, String> {
+    mutate_oracle_within(ctx, RASTER_OBSERVABILITY_SLACK)
+}
+
+fn mutate_oracle_within(ctx: &Context, slack: f64) -> Result<Outcome, String> {
     let original = mutable_input(ctx)?;
     let spec = ctx.doc_json()?;
     let before = unmutated_baseline(&original)?;
     let bytes = oracle_apply_mutation(&original, &spec)?;
     let projection = project_jpg_mutation(&bytes)?;
-    law::mutation_is_observable_within(&spec.str("kind"), &projection, &before, UNOBSERVABLE, &[], JPG_TOLERANCE)?;
+    law::mutation_is_observable_within(&spec.str("kind"), &projection, &before, UNOBSERVABLE, &[], slack)?;
     Ok(Outcome::with_raw(bytes, projection))
 }
 
@@ -130,71 +146,15 @@ fn identity_round_trip_oracle(ctx: &Context) -> Result<Outcome, String> {
 mod subject {
     use super::mutable_input;
     use semio_repo_test_host::{Context, Json, Outcome};
-    use semio_s_artifact_stdio_jpg::schema::diff::JpgHuffmanTableKey;
-    use semio_s_artifact_stdio_jpg::schema::mutations::{apply_jpg_mutation, inverse_jpg_mutation, JpgMutation};
-    use semio_s_artifact_stdio_jpg::schema::snapshot::{JfifDensityUnits, JpgHuffmanClass, JpgHuffmanTable, JpgQuantTable, JpgSegment};
+    use semio_s_artifact_stdio_jpg::schema::mutations::{apply_jpg_mutation, decode_jpg_mutation_payload, inverse_jpg_mutation, JpgMutation};
     use semio_s_artifact_stdio_jpg::io::{decode_jpg, encode_jpg};
-    use semio_s_artifact_stdio_jpg::JpgSnapshot;
     use semio_s_plugin_stdio_test_oracle::artifacts::jpg::standards::v_jfif_1_01::subsets::document::project_jpg_mutation;
 
-    //#region 🔖️Json
-    fn number(value: &Json, key: &str, fallback: f64) -> f64 {
-        match value.get(key) {
-            Some(Json::Number(n)) => *n,
-            _ => fallback,
-        }
-    }
-
-    fn fill_of(params: &Json, fallback: [u8; 4]) -> [u8; 4] {
-        let values = params.array("fill");
-        let component = |index: usize, default: u8| values.get(index).and_then(|v| match v { Json::Number(n) => Some(*n as u8), _ => None }).unwrap_or(default);
-        [component(0, fallback[0]), component(1, fallback[1]), component(2, fallback[2]), component(3, fallback[3])]
-    }
-
-    fn hex_decode(text: &str) -> Result<Vec<u8>, String> {
-        if text.len() % 2 != 0 {
-            return Err(format!("odd-length hex string {text:?}"));
-        }
-        (0..text.len()).step_by(2).map(|i| u8::from_str_radix(&text[i..i + 2], 16).map_err(|error| error.to_string())).collect()
-    }
-    //#endregion 🔖️Json
-
     //#region 🔖️MutationFromSpec
-    /// 🧬️ The same 12-kind params grammar the oracle's `oracle_apply_mutation` reads, translated
-    /// into the REAL typed `JpgMutation` this subset's own codec applies.
-    fn mutation_from_spec(kind: &str, params: &Json, base: &JpgSnapshot) -> Result<JpgMutation, String> {
-        match kind {
-            "change-jfif-header" => {
-                let version = params.array("version");
-                let component = |index: usize, fallback: u8| version.get(index).and_then(|v| match v { Json::Number(n) => Some(*n as u8), _ => None }).unwrap_or(fallback);
-                let density_units = match params.str("densityUnits").as_str() {
-                    "pixels-per-inch" => JfifDensityUnits::PixelsPerInch,
-                    "pixels-per-cm" => JfifDensityUnits::PixelsPerCm,
-                    _ => JfifDensityUnits::Aspect,
-                };
-                Ok(JpgMutation::ChangeJfifHeader(semio_s_artifact_stdio_jpg::schema::mutations::ChangeJfifHeaderMutation { version: (component(0, 1), component(1, 1)), density_units, x_density: number(params, "xDensity", 1.0) as u16, y_density: number(params, "yDensity", 1.0) as u16, thumbnail: None }))
-            }
-            "replace-quant-table" => Ok(JpgMutation::ReplaceQuantTable(semio_s_artifact_stdio_jpg::schema::mutations::ReplaceQuantTableMutation { table: JpgQuantTable { id: number(params, "id", 0.0) as u8, precision: 0, values: [number(params, "fill", 10.0) as u16; 64] } })),
-            "remove-quant-table" => Ok(JpgMutation::RemoveQuantTable(semio_s_artifact_stdio_jpg::schema::mutations::RemoveQuantTableMutation { id: number(params, "id", 0.0) as u8 })),
-            "replace-huffman-table" => {
-                let class = if params.str("class") == "ac" { JpgHuffmanClass::Ac } else { JpgHuffmanClass::Dc };
-                let seed = number(params, "fill", 1.0) as u8;
-                Ok(JpgMutation::ReplaceHuffmanTable(semio_s_artifact_stdio_jpg::schema::mutations::ReplaceHuffmanTableMutation { table: JpgHuffmanTable { id: number(params, "id", 0.0) as u8, class, bits: [seed; 16], values: vec![seed, seed.wrapping_add(1)] } }))
-            }
-            "remove-huffman-table" => {
-                let class = if params.str("class") == "ac" { JpgHuffmanClass::Ac } else { JpgHuffmanClass::Dc };
-                Ok(JpgMutation::RemoveHuffmanTable(semio_s_artifact_stdio_jpg::schema::mutations::RemoveHuffmanTableMutation { key: JpgHuffmanTableKey { class, id: number(params, "id", 0.0) as u8 } }))
-            }
-            "change-restart-interval" => Ok(JpgMutation::ChangeRestartInterval(semio_s_artifact_stdio_jpg::schema::mutations::ChangeRestartIntervalMutation { restart_interval: Some(number(params, "restartInterval", 16.0) as u16) })),
-            "insert-other-segment" => Ok(JpgMutation::InsertOtherSegment(semio_s_artifact_stdio_jpg::schema::mutations::InsertOtherSegmentMutation { index: number(params, "index", 0.0) as usize, segment: JpgSegment { marker: number(params, "marker", 226.0) as u8, data: hex_decode(&params.str("data"))? } })),
-            "remove-other-segment" => Ok(JpgMutation::RemoveOtherSegment(semio_s_artifact_stdio_jpg::schema::mutations::RemoveOtherSegmentMutation { index: number(params, "index", 0.0) as usize })),
-            "replace-pixels" => {
-                let fill = fill_of(params, [9, 9, 9, 255]);
-                Ok(JpgMutation::ReplacePixels(semio_s_artifact_stdio_jpg::schema::mutations::ReplacePixelsMutation { pixels: fill.iter().copied().cycle().take(base.pixels.len()).collect() }))
-            }
-            "change-re-encode-quality" => Ok(JpgMutation::ChangeReEncodeQuality(semio_s_artifact_stdio_jpg::schema::mutations::ChangeReEncodeQualityMutation { quality: Some(number(params, "quality", 90.0).clamp(1.0, 100.0) as u8) })),
-            other => Err(format!("mutation kind {other:?} has no subject implementation")),
-        }
+    /// 🦠️ Decodes the scenario's `{"kind", "params"}` doc string: `params` is the leaf's own wire payload, read
+    /// through the vocabulary's derive-generated decoder rather than a params grammar written beside it.
+    fn mutation_from_spec(spec: &Json) -> Result<JpgMutation, String> {
+        decode_jpg_mutation_payload(&spec.str("kind"), &spec.get("params").cloned().unwrap_or(Json::Null).to_string())
     }
     //#endregion 🔖️MutationFromSpec
 
@@ -202,12 +162,8 @@ mod subject {
     /// ▶️ Full parse → typed mutate → re-serialize, never a splice of the input bytes.
     pub fn mutate(ctx: &Context) -> Result<Outcome, String> {
         let bytes = mutable_input(ctx)?;
-        let base = decode_jpg(&bytes).map_err(|error| format!("decode_jpg failed: {error:?}"))?;
-        let spec = ctx.doc_json()?;
-        let params = spec.get("params").cloned().unwrap_or(Json::Null);
-        let mutation = mutation_from_spec(&spec.str("kind"), &params, &base)?;
-        let mut snapshot = base.clone();
-        apply_jpg_mutation(&mut snapshot, &mutation);
+        let mut snapshot = decode_jpg(&bytes).map_err(|error| format!("decode_jpg failed: {error:?}"))?;
+        apply_jpg_mutation(&mut snapshot, &mutation_from_spec(&ctx.doc_json()?)?);
         let output = encode_jpg(&snapshot).map_err(|error| format!("encode_jpg failed: {error:?}"))?;
         if output == bytes {
             return Err("byte pass-through: output is bit-identical to the input".to_string());
@@ -224,9 +180,7 @@ mod subject {
     pub fn inverse(ctx: &Context) -> Result<Outcome, String> {
         let bytes = mutable_input(ctx)?;
         let base = decode_jpg(&bytes).map_err(|error| format!("decode_jpg failed: {error:?}"))?;
-        let spec = ctx.doc_json()?;
-        let params = spec.get("params").cloned().unwrap_or(Json::Null);
-        let mutation = mutation_from_spec(&spec.str("kind"), &params, &base)?;
+        let mutation = mutation_from_spec(&ctx.doc_json()?)?;
         let mut snapshot = base.clone();
         apply_jpg_mutation(&mut snapshot, &mutation);
         for undo in inverse_jpg_mutation(&mutation, &base) {
@@ -259,11 +213,11 @@ mod subject {
 /// 🧭️ Registration entry point the generated host calls.
 pub fn adapter() -> Adapter {
     let mut built = Adapter::new("rust");
-    built = built.oracle("mutate", mutate_oracle).oracle("inverse", inverse_oracle);
+    built = built.oracle("mutate", mutate_oracle).oracle("mutate-raster", mutate_raster_oracle).oracle("inverse", inverse_oracle).oracle("inverse-raster", inverse_oracle);
     built = built.oracle("identity-round-trip", identity_round_trip_oracle);
     #[cfg(feature = "sut")]
     {
-        built = built.subject("mutate", subject::mutate).subject("inverse", subject::inverse);
+        built = built.subject("mutate", subject::mutate).subject("mutate-raster", subject::mutate).subject("inverse", subject::inverse).subject("inverse-raster", subject::inverse);
         built = built.subject("identity-round-trip", subject::identity_round_trip);
     }
     built

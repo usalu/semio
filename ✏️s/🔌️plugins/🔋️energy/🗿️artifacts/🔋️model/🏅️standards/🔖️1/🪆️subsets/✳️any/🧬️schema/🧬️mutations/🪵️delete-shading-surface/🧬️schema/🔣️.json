@@ -5,11 +5,35 @@
   "type": "object",
   "additionalProperties": false,
   "required": [
+    "mutation",
     "id"
   ],
   "properties": {
+    "mutation": {
+      "const": "deleteShadingSurface"
+    },
     "id": {
-      "type": "integer"
+      "type": "integer",
+      "minimum": 0,
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Shading surface",
+          "de": "Verschattungsfläche"
+        },
+        "description": {
+          "en": "The shading surface to delete, by id.",
+          "de": "Verschattungsfläche, die diese Mutation löscht, per ID."
+        },
+        "ref": {
+          "kind": "shadingSurface",
+          "domain": "energyModel",
+          "granularity": "shading"
+        },
+        "group": "target",
+        "order": 10
+      }
     }
   }
 }

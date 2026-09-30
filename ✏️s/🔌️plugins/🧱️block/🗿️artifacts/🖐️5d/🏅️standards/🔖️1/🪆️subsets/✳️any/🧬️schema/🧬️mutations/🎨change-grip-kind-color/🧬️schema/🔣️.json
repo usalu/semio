@@ -5,15 +5,48 @@
   "type": "object",
   "additionalProperties": false,
   "required": [
+    "mutation",
     "id",
     "newColor"
   ],
   "properties": {
+    "mutation": {
+      "const": "changeGripKindColor"
+    },
     "id": {
-      "type": "string"
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Grip kind",
+          "de": "Griffart"
+        },
+        "ref": {
+          "kind": "gripKind",
+          "domain": "grip",
+          "granularity": "gripKind"
+        },
+        "group": "target",
+        "order": 10
+      }
     },
     "newColor": {
-      "type": "string"
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "text",
+        "role": "value",
+        "label": {
+          "en": "Color",
+          "de": "Farbe"
+        },
+        "description": {
+          "en": "CSS color, e.g. #3366ff.",
+          "de": "CSS-Farbe, z. B. #3366ff."
+        },
+        "group": "appearance",
+        "order": 20
+      }
     }
   }
 }

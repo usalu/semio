@@ -5,12 +5,30 @@
   "type": "object",
   "additionalProperties": false,
   "required": [
+    "mutation",
     "asset",
     "key"
   ],
   "properties": {
+    "mutation": {
+      "const": "createAsset"
+    },
     "key": {
-      "type": "string"
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "text",
+        "role": "value",
+        "label": {
+          "en": "Key",
+          "de": "Schlüssel"
+        },
+        "description": {
+          "en": "Unique key the blocks use to show this asset.",
+          "de": "Eindeutiger Schlüssel, mit dem Blöcke dieses Asset zeigen."
+        },
+        "group": "identity",
+        "order": 10
+      }
     },
     "asset": {
       "title": "NoteImageAsset",
@@ -22,17 +40,84 @@
       ],
       "properties": {
         "mime": {
-          "type": "string"
+          "type": "string",
+          "x-semio-ui": {
+            "widget": "text",
+            "role": "value",
+            "label": {
+              "en": "Media type",
+              "de": "Medientyp"
+            },
+            "description": {
+              "en": "For example image/png.",
+              "de": "Zum Beispiel image/png."
+            },
+            "group": "source",
+            "order": 10
+          }
         },
         "data": {
-          "type": "string"
+          "type": "string",
+          "x-semio-ui": {
+            "widget": "multiline",
+            "role": "value",
+            "label": {
+              "en": "Data",
+              "de": "Daten"
+            },
+            "description": {
+              "en": "Base64-encoded image bytes.",
+              "de": "Base64-kodierte Bildbytes."
+            },
+            "group": "source",
+            "order": 20
+          }
         },
         "width": {
-          "type": "number"
+          "type": "number",
+          "x-semio-ui": {
+            "widget": "stepper",
+            "role": "value",
+            "label": {
+              "en": "Width",
+              "de": "Breite"
+            },
+            "unit": "px",
+            "step": 1,
+            "precision": 0,
+            "group": "size",
+            "order": 30
+          }
         },
         "height": {
-          "type": "number"
+          "type": "number",
+          "x-semio-ui": {
+            "widget": "stepper",
+            "role": "value",
+            "label": {
+              "en": "Height",
+              "de": "Höhe"
+            },
+            "unit": "px",
+            "step": 1,
+            "precision": 0,
+            "group": "size",
+            "order": 40
+          }
         }
+      },
+      "x-semio-ui": {
+        "role": "value",
+        "label": {
+          "en": "Image",
+          "de": "Bild"
+        },
+        "description": {
+          "en": "The image payload to store.",
+          "de": "Die zu speichernden Bilddaten."
+        },
+        "group": "record",
+        "order": 20
       }
     }
   }

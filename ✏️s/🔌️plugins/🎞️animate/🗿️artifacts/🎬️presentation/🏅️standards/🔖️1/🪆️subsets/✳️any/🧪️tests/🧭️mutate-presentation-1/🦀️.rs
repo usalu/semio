@@ -87,7 +87,7 @@ mod subject {
 
     fn mutation(spec: &Json) -> Result<PresentationMutation, String> {
         let params = spec.get("params").ok_or_else(|| "the scenario doc string carries no params member".to_string())?;
-        decode_presentation_mutation_json(&params.to_string())
+        decode_presentation_mutation_json(&spec.str("kind"), &params.to_string())
     }
     //#endregion 🔖️CommittedInput
 

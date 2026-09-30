@@ -10,7 +10,21 @@
   "properties": {
     "id": {
       "type": "integer",
-      "minimum": 0
+      "minimum": 0,
+      "x-semio-ui": {
+        "widget": "stepper",
+        "label": {
+          "en": "Group relationship",
+          "de": "Gruppenbeziehung"
+        },
+        "description": {
+          "en": "STEP instance id of the IfcRelAssignsToGroup.",
+          "de": "STEP-Instanz-ID der IfcRelAssignsToGroup."
+        },
+        "precision": 0,
+        "group": "target",
+        "order": 10
+      }
     },
     "assignment": {
       "anyOf": [
@@ -20,7 +34,19 @@
         {
           "type": "null"
         }
-      ]
+      ],
+      "x-semio-ui": {
+        "label": {
+          "en": "Group assignment",
+          "de": "Gruppenzuweisung"
+        },
+        "description": {
+          "en": "Empty removes the relationship.",
+          "de": "Leer entfernt die Beziehung."
+        },
+        "group": "value",
+        "order": 20
+      }
     }
   },
   "$defs": {
@@ -34,7 +60,18 @@
       ],
       "properties": {
         "globalId": {
-          "type": "string"
+          "type": "string",
+          "x-semio-ui": {
+            "widget": "text",
+            "label": {
+              "en": "GlobalId",
+              "de": "GlobalId"
+            },
+            "description": {
+              "en": "22-character IFC GUID of the object.",
+              "de": "22-stellige IFC-GUID des Objekts."
+            }
+          }
         },
         "ownerHistory": {
           "anyOf": [
@@ -45,18 +82,48 @@
             {
               "type": "null"
             }
-          ]
+          ],
+          "x-semio-ui": {
+            "label": {
+              "en": "Owner history",
+              "de": "Eigentümerhistorie"
+            },
+            "description": {
+              "en": "STEP instance id of the IfcOwnerHistory.",
+              "de": "STEP-Instanz-ID der IfcOwnerHistory."
+            }
+          }
         },
         "relatedObjects": {
           "type": "array",
           "items": {
             "type": "integer",
             "minimum": 0
+          },
+          "x-semio-ui": {
+            "label": {
+              "en": "Related objects",
+              "de": "Zugeordnete Objekte"
+            },
+            "description": {
+              "en": "STEP instance ids of the assigned objects.",
+              "de": "STEP-Instanz-IDs der zugeordneten Objekte."
+            }
           }
         },
         "relatingGroup": {
           "type": "integer",
-          "minimum": 0
+          "minimum": 0,
+          "x-semio-ui": {
+            "label": {
+              "en": "Group",
+              "de": "Gruppe"
+            },
+            "description": {
+              "en": "STEP instance id of the relating IfcGroup.",
+              "de": "STEP-Instanz-ID der zuweisenden IfcGroup."
+            }
+          }
         }
       }
     }

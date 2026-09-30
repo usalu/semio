@@ -44,7 +44,6 @@ import { runHomeE2eCli, runStudioE2eVerify } from "../🎬️studio/🟦️.ts";
 
 import { CATALOG_SMOKE_DEFAULT_OUT_REL, catalogSmokeExitCode, runCatalogSmokeVerify } from "../🔬️catalog-smoke/🟦️.ts";
 
-import { runCollabE2eCli } from "../🤝️collaboration/🟦️.ts";
 
 import { runProgramMatrixCli } from "../🧮️program-matrix/🟦️.ts";
 
@@ -75,10 +74,6 @@ class VerifyScript extends BundleScript {
     const port = process.env.S_OS_PORT ?? "6070";
     const studioUrl = process.env.S_STUDIO_URL ?? `http://127.0.0.1:${port}/`;
     const timeoutMs = Number(process.env.S_STUDIO_E2E_TIMEOUT_MS ?? 300_000);
-    if (segments[0] === "collab") {
-      await runCollabE2eCli(segments.slice(1));
-      return;
-    }
     if (segments[0] === "hub-sweep") {
       await runHubDocumentSweepCli(repoRoot, join(repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🤖️generated/🗂️hub-document-sweep"), segments.slice(1));
       return;

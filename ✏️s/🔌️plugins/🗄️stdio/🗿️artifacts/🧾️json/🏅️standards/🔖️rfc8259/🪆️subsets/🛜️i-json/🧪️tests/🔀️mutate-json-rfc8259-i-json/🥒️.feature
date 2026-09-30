@@ -26,8 +26,8 @@ Feature: Apply every typed RFC 7493 I-JSON mutation to a real-world document
       names exist, which is precisely what the clause forbids.
     - `set-string` — §2.4. Writes a string over a string and refuses a Unicode noncharacter.
 
-  The remaining six (`no-mutation`, `set-snapshot`, `upsert-member`, `remove-member`,
-  `insert-array-element`, `remove-array-element`) are INHERITED from ✳️any unchanged, because RFC 7493
+  The remaining five (`set-snapshot`, `upsert-member`, `remove-member`, `insert-array-element`,
+  `remove-array-element`) are INHERITED from ✳️any unchanged, because RFC 7493
   says nothing about arrays and nothing about member insertion or deletion beyond uniqueness. That is
   the honest finding for them and it is recorded here rather than dressed up as a difference.
 
@@ -59,27 +59,15 @@ Feature: Apply every typed RFC 7493 I-JSON mutation to a real-world document
     Then the oracle and the subject agree on the semantic projection
     Examples:
       | id                   | params                                                                                                                                              |
-      | set-snapshot         | {"value": {"schema": "spatial.modelspace", "revision": 1, "models": [{"id": "replaced", "model": {"schema": "spatial.model", "revision": 1}}]}}      |
-      | set-top-level        | {"object": {"schema": "spatial.modelspace", "revision": 5, "models": []}}                                                                            |
-      | upsert-member        | {"path": ["models", 0, "model"], "key": "revision", "value": 99}                                                                                    |
-      | remove-member        | {"path": ["models", 0, "model", "objects", 0], "key": "typology"}                                                                                   |
-      | rename-member        | {"path": ["models", 0, "model", "geometry"], "from": "anchors", "to": "anchorPoints"}                                                               |
-      | set-safe-number      | {"path": ["models", 0, "model", "revision"], "lexeme": "9007199254740991"}                                                                          |
-      | set-string           | {"path": ["models", 0, "id"], "value": "hexagonal-cut-concrete-forest-left, RFC 7493 §2.4 clean: Ünïcödé mit Sonderzeichen"}                        |
-      | insert-array-element | {"path": ["models", 0, "model", "geometry", "vertices"], "index": 0, "value": {"id": "i-json-mutation-test-vertex", "position": [0, 0, 0]}}          |
-      | remove-array-element | {"path": ["models", 0, "model", "geometry", "vertices"], "index": 10}                                                                               |
-
-  @id-no-mutation-baseline-mutate
-  @level-exhaustive
-  @mode-differential
-  Scenario: Apply no-mutation to the real document
-    Given the real input document shared://🔣️.json
-    When the no-mutation mutation is applied with its parameters
-      """
-      {"kind": "no-mutation", "params": {}}
-      """
-    Then the oracle and the subject agree on the semantic projection
-
+      | set-snapshot         | {"snapshot": {"schema": "stdio.json", "value": {"kind": "object", "members": [{"key": "schema", "value": {"kind": "string", "value": "spatial.modelspace"}}, {"key": "revision", "value": {"kind": "number", "lexeme": "1"}}, {"key": "models", "value": {"kind": "array", "items": [{"kind": "object", "members": [{"key": "id", "value": {"kind": "string", "value": "replaced"}}, {"key": "model", "value": {"kind": "object", "members": [{"key": "schema", "value": {"kind": "string", "value": "spatial.model"}}, {"key": "revision", "value": {"kind": "number", "lexeme": "1"}}]}}]}]}}]}}} |
+      | set-top-level        | {"root": {"kind": "object", "members": [{"key": "schema", "value": {"kind": "string", "value": "spatial.modelspace"}}, {"key": "revision", "value": {"kind": "number", "lexeme": "5"}}, {"key": "models", "value": {"kind": "array", "items": []}}]}} |
+      | upsert-member        | {"path": [{"kind": "key", "value": "models"}, {"kind": "index", "value": 0}, {"kind": "key", "value": "model"}], "key": "revision", "value": {"kind": "number", "lexeme": "99"}} |
+      | remove-member        | {"path": [{"kind": "key", "value": "models"}, {"kind": "index", "value": 0}, {"kind": "key", "value": "model"}, {"kind": "key", "value": "objects"}, {"kind": "index", "value": 0}], "key": "typology"} |
+      | rename-member        | {"path": [{"kind": "key", "value": "models"}, {"kind": "index", "value": 0}, {"kind": "key", "value": "model"}, {"kind": "key", "value": "geometry"}], "from": "anchors", "to": "anchorPoints"} |
+      | set-safe-number      | {"path": [{"kind": "key", "value": "models"}, {"kind": "index", "value": 0}, {"kind": "key", "value": "model"}, {"kind": "key", "value": "revision"}], "lexeme": "9007199254740991"} |
+      | set-string           | {"path": [{"kind": "key", "value": "models"}, {"kind": "index", "value": 0}, {"kind": "key", "value": "id"}], "value": "hexagonal-cut-concrete-forest-left, RFC 7493 §2.4 clean: Ünïcödé mit Sonderzeichen"} |
+      | insert-array-element | {"path": [{"kind": "key", "value": "models"}, {"kind": "index", "value": 0}, {"kind": "key", "value": "model"}, {"kind": "key", "value": "geometry"}, {"kind": "key", "value": "vertices"}], "index": 0, "value": {"kind": "object", "members": [{"key": "id", "value": {"kind": "string", "value": "i-json-mutation-test-vertex"}}, {"key": "position", "value": {"kind": "array", "items": [{"kind": "number", "lexeme": "0"}, {"kind": "number", "lexeme": "0"}, {"kind": "number", "lexeme": "0"}]}}]}} |
+      | remove-array-element | {"path": [{"kind": "key", "value": "models"}, {"kind": "index", "value": 0}, {"kind": "key", "value": "model"}, {"kind": "key", "value": "geometry"}, {"kind": "key", "value": "vertices"}], "index": 10} |
   @id-inverse
   @level-exhaustive
   @mode-differential
@@ -93,28 +81,15 @@ Feature: Apply every typed RFC 7493 I-JSON mutation to a real-world document
     Then the oracle and the subject agree on the semantic projection
     Examples:
       | id                   | params                                                                                                                                              |
-      | set-snapshot         | {"value": {"schema": "spatial.modelspace", "revision": 1, "models": [{"id": "replaced", "model": {"schema": "spatial.model", "revision": 1}}]}}      |
-      | set-top-level        | {"object": {"schema": "spatial.modelspace", "revision": 5, "models": []}}                                                                            |
-      | upsert-member        | {"path": ["models", 0, "model"], "key": "revision", "value": 99}                                                                                    |
-      | remove-member        | {"path": ["models", 0, "model", "objects", 0], "key": "typology"}                                                                                   |
-      | rename-member        | {"path": ["models", 0, "model", "geometry"], "from": "anchors", "to": "anchorPoints"}                                                               |
-      | set-safe-number      | {"path": ["models", 0, "model", "revision"], "lexeme": "9007199254740991"}                                                                          |
-      | set-string           | {"path": ["models", 0, "id"], "value": "hexagonal-cut-concrete-forest-left, RFC 7493 §2.4 clean: Ünïcödé mit Sonderzeichen"}                        |
-      | insert-array-element | {"path": ["models", 0, "model", "geometry", "vertices"], "index": 0, "value": {"id": "i-json-mutation-test-vertex", "position": [0, 0, 0]}}          |
-      | remove-array-element | {"path": ["models", 0, "model", "geometry", "vertices"], "index": 10}                                                                               |
-
-  @id-no-mutation-baseline-inverse
-  @level-exhaustive
-  @mode-differential
-  Scenario: Undoing no-mutation restores the real document
-    Given the real input document shared://🔣️.json
-    When the no-mutation mutation is applied with its parameters
-      """
-      {"kind": "no-mutation", "params": {}}
-      """
-    And the inverse mutation is applied to that result
-    Then the oracle and the subject agree on the semantic projection
-
+      | set-snapshot         | {"snapshot": {"schema": "stdio.json", "value": {"kind": "object", "members": [{"key": "schema", "value": {"kind": "string", "value": "spatial.modelspace"}}, {"key": "revision", "value": {"kind": "number", "lexeme": "1"}}, {"key": "models", "value": {"kind": "array", "items": [{"kind": "object", "members": [{"key": "id", "value": {"kind": "string", "value": "replaced"}}, {"key": "model", "value": {"kind": "object", "members": [{"key": "schema", "value": {"kind": "string", "value": "spatial.model"}}, {"key": "revision", "value": {"kind": "number", "lexeme": "1"}}]}}]}]}}]}}} |
+      | set-top-level        | {"root": {"kind": "object", "members": [{"key": "schema", "value": {"kind": "string", "value": "spatial.modelspace"}}, {"key": "revision", "value": {"kind": "number", "lexeme": "5"}}, {"key": "models", "value": {"kind": "array", "items": []}}]}} |
+      | upsert-member        | {"path": [{"kind": "key", "value": "models"}, {"kind": "index", "value": 0}, {"kind": "key", "value": "model"}], "key": "revision", "value": {"kind": "number", "lexeme": "99"}} |
+      | remove-member        | {"path": [{"kind": "key", "value": "models"}, {"kind": "index", "value": 0}, {"kind": "key", "value": "model"}, {"kind": "key", "value": "objects"}, {"kind": "index", "value": 0}], "key": "typology"} |
+      | rename-member        | {"path": [{"kind": "key", "value": "models"}, {"kind": "index", "value": 0}, {"kind": "key", "value": "model"}, {"kind": "key", "value": "geometry"}], "from": "anchors", "to": "anchorPoints"} |
+      | set-safe-number      | {"path": [{"kind": "key", "value": "models"}, {"kind": "index", "value": 0}, {"kind": "key", "value": "model"}, {"kind": "key", "value": "revision"}], "lexeme": "9007199254740991"} |
+      | set-string           | {"path": [{"kind": "key", "value": "models"}, {"kind": "index", "value": 0}, {"kind": "key", "value": "id"}], "value": "hexagonal-cut-concrete-forest-left, RFC 7493 §2.4 clean: Ünïcödé mit Sonderzeichen"} |
+      | insert-array-element | {"path": [{"kind": "key", "value": "models"}, {"kind": "index", "value": 0}, {"kind": "key", "value": "model"}, {"kind": "key", "value": "geometry"}, {"kind": "key", "value": "vertices"}], "index": 0, "value": {"kind": "object", "members": [{"key": "id", "value": {"kind": "string", "value": "i-json-mutation-test-vertex"}}, {"key": "position", "value": {"kind": "array", "items": [{"kind": "number", "lexeme": "0"}, {"kind": "number", "lexeme": "0"}, {"kind": "number", "lexeme": "0"}]}}]}} |
+      | remove-array-element | {"path": [{"kind": "key", "value": "models"}, {"kind": "index", "value": 0}, {"kind": "key", "value": "model"}, {"kind": "key", "value": "geometry"}, {"kind": "key", "value": "vertices"}], "index": 10} |
   @id-i-json-conformance
   @level-quick
   @mode-conformance

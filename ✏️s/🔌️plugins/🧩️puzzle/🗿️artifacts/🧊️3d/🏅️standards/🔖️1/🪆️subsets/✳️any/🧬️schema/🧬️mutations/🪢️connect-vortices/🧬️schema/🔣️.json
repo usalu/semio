@@ -5,6 +5,7 @@
   "type": "object",
   "additionalProperties": false,
   "required": [
+    "mutation",
     "attracted",
     "attracting",
     "gap",
@@ -18,38 +19,230 @@
     "y"
   ],
   "properties": {
+    "mutation": {
+      "const": "connectVortices"
+    },
     "id": {
-      "type": "string"
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "text",
+        "role": "value",
+        "label": {
+          "en": "ID",
+          "de": "ID"
+        },
+        "description": {
+          "en": "Unique id of the new attraction.",
+          "de": "Eindeutige ID der neuen Anziehung."
+        },
+        "group": "identity",
+        "order": 10
+      }
     },
     "attracting": {
-      "type": "string"
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Attracting vortex",
+          "de": "Anziehender Vortex"
+        },
+        "description": {
+          "en": "Full id (object:vortex) of the vortex that attracts.",
+          "de": "Vollständige ID (Objekt:Vortex) des anziehenden Vortex."
+        },
+        "ref": {
+          "kind": "vortex",
+          "domain": "vortex",
+          "granularity": "vortex"
+        },
+        "group": "target",
+        "order": 20
+      }
     },
     "attracted": {
-      "type": "string"
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Attracted vortex",
+          "de": "Angezogener Vortex"
+        },
+        "description": {
+          "en": "Full id (object:vortex) of the vortex that is attracted.",
+          "de": "Vollständige ID (Objekt:Vortex) des angezogenen Vortex."
+        },
+        "ref": {
+          "kind": "vortex",
+          "domain": "vortex",
+          "granularity": "vortex"
+        },
+        "group": "target",
+        "order": 30
+      }
     },
     "gap": {
-      "type": "number"
+      "type": "number",
+      "x-semio-ui": {
+        "widget": "stepper",
+        "role": "value",
+        "label": {
+          "en": "Gap",
+          "de": "Spalt"
+        },
+        "unit": "m",
+        "step": 0.01,
+        "precision": 3,
+        "group": "offset",
+        "order": 40
+      }
     },
     "shift": {
-      "type": "number"
+      "type": "number",
+      "x-semio-ui": {
+        "widget": "stepper",
+        "role": "value",
+        "label": {
+          "en": "Shift",
+          "de": "Verschiebung"
+        },
+        "unit": "m",
+        "step": 0.01,
+        "precision": 3,
+        "group": "offset",
+        "order": 50
+      }
     },
     "rise": {
-      "type": "number"
+      "type": "number",
+      "x-semio-ui": {
+        "widget": "stepper",
+        "role": "value",
+        "label": {
+          "en": "Rise",
+          "de": "Anstieg"
+        },
+        "unit": "m",
+        "step": 0.01,
+        "precision": 3,
+        "group": "offset",
+        "order": 60
+      }
     },
     "rotation": {
-      "type": "number"
+      "type": "number",
+      "x-semio-ui": {
+        "widget": "dial",
+        "role": "value",
+        "label": {
+          "en": "Rotation",
+          "de": "Drehung"
+        },
+        "unit": "deg",
+        "step": 1,
+        "precision": 1,
+        "softMin": -180,
+        "softMax": 180,
+        "snaps": [
+          -180,
+          -90,
+          0,
+          90,
+          180
+        ],
+        "group": "rotation",
+        "order": 70
+      }
     },
     "turn": {
-      "type": "number"
+      "type": "number",
+      "x-semio-ui": {
+        "widget": "dial",
+        "role": "value",
+        "label": {
+          "en": "Turn",
+          "de": "Drehung um Achse"
+        },
+        "unit": "deg",
+        "step": 1,
+        "precision": 1,
+        "softMin": -180,
+        "softMax": 180,
+        "snaps": [
+          -180,
+          -90,
+          0,
+          90,
+          180
+        ],
+        "group": "rotation",
+        "order": 80
+      }
     },
     "tilt": {
-      "type": "number"
+      "type": "number",
+      "x-semio-ui": {
+        "widget": "dial",
+        "role": "value",
+        "label": {
+          "en": "Tilt",
+          "de": "Neigung"
+        },
+        "unit": "deg",
+        "step": 1,
+        "precision": 1,
+        "softMin": -180,
+        "softMax": 180,
+        "snaps": [
+          -180,
+          -90,
+          0,
+          90,
+          180
+        ],
+        "group": "rotation",
+        "order": 90
+      }
     },
     "x": {
-      "type": "number"
+      "type": "number",
+      "x-semio-ui": {
+        "widget": "stepper",
+        "role": "value",
+        "label": {
+          "en": "Diagram X",
+          "de": "Diagramm-X"
+        },
+        "description": {
+          "en": "Horizontal offset in the connection diagram.",
+          "de": "Horizontaler Versatz im Verbindungsdiagramm."
+        },
+        "step": 1,
+        "precision": 2,
+        "group": "diagram",
+        "order": 100
+      }
     },
     "y": {
-      "type": "number"
+      "type": "number",
+      "x-semio-ui": {
+        "widget": "stepper",
+        "role": "value",
+        "label": {
+          "en": "Diagram Y",
+          "de": "Diagramm-Y"
+        },
+        "description": {
+          "en": "Vertical offset in the connection diagram.",
+          "de": "Vertikaler Versatz im Verbindungsdiagramm."
+        },
+        "step": 1,
+        "precision": 2,
+        "group": "diagram",
+        "order": 110
+      }
     }
   }
 }

@@ -5,12 +5,30 @@
   "type": "object",
   "additionalProperties": false,
   "required": [
+    "mutation",
     "newCatalogGeneration"
   ],
   "properties": {
+    "mutation": {
+      "const": "changeCatalogGeneration"
+    },
     "newCatalogGeneration": {
       "type": "integer",
-      "minimum": 0
+      "minimum": 0,
+      "x-semio-ui": {
+        "widget": "stepper",
+        "role": "value",
+        "label": {
+          "en": "New Catalog Generation",
+          "de": "Neue Katalog-Generation"
+        },
+        "description": {
+          "en": "Generation of the installed catalog the home view shows.",
+          "de": "Generation des installierten Katalogs, den die Startansicht zeigt."
+        },
+        "step": 1,
+        "precision": 0
+      }
     }
   }
 }

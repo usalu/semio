@@ -188,7 +188,15 @@ pub(crate) mod context {
         let result = block_on(app.dispatch_typed(Puzzle2dCommand::from_action(action, args.cloned(), window_id.map(str::to_string)), &action_meta));
         settle(app, result)
     }
-    
+
+    /// 🧰️ [`dispatch`] of an app verb from an explicit window view — for a law that needs what the view carries,
+    /// such as the window's active utility.
+    pub fn dispatch_in_view(app: &mut Puzzle2dApp, action: &str, args: Option<&Value>, window_id: Option<&str>, view_state: ViewModel) -> Result<InvocationResult, Fault> {
+        let action_meta = ActionMeta { view_state: Some(view_state), ..meta("local") };
+        let result = block_on(app.dispatch_typed(Puzzle2dCommand::from_action(action, args.cloned(), window_id.map(str::to_string)), &action_meta));
+        settle(app, result)
+    }
+
     /// 🧾 How many DOCUMENT edits one dispatch actually committed. `InvocationResult.mutations` is
     /// the INLINE carrier and the typed/retained ladder never uses it: a migrated verb commits its edits
     /// inside the operation and reports them as command-log upserts, which `settle` adopts above.
@@ -443,11 +451,11 @@ async fn select_then_delete_selection_removes_the_node() {
     close_app(&mut app);
 }
 
-/// 🌀️ A transform gesture streams one dispatch per drag tick. Every tick folds into ONE `Edit`
-/// through its `coalesce_key`, so a 3-tick move costs the 64-slot edit ledger one slot and ONE undo
-/// restores the pose the gesture started from (3d's gumball laws, ported).
+/// 🌀️ A nudge is one logical operation: each `translateSelection` dispatch is ONE select-tool transaction and
+/// ONE edit, so three nudges are three edits that accumulate on the document, and one undo takes back only the
+/// last — never the whole run (a coalesced amend no longer exists).
 #[semio_framework_async_macros::async_test]
-async fn transform_gesture_ticks_coalesce_into_one_undo_step() {
+async fn three_nudges_are_three_transactions_and_one_undo_takes_back_the_last() {
     let mut app = app_with_registry();
     dispatch(&mut app, "addNode", Some(&json!({ "kind": "node" })), None).expect("add node");
     let id = first_node_id(&app);
@@ -455,12 +463,12 @@ async fn transform_gesture_ticks_coalesce_into_one_undo_step() {
     let node_x = |app: &Puzzle2dApp| fixture_nodes(&fixture_of(app))[0].get("x").and_then(Value::as_f64).expect("x");
     let start = node_x(&app);
     for dx in [1.0, 2.0, 3.0] {
-        let result = dispatch(&mut app, "translateSelection", Some(&json!({ "dx": dx, "dy": 0.0 })), None).expect("drag tick");
-        assert_eq!(committed_edits(&result), 1, "every tick is one granular patch");
+        let result = dispatch(&mut app, "translateSelection", Some(&json!({ "dx": dx, "dy": 0.0 })), None).expect("nudge");
+        assert_eq!(committed_edits(&result), 1, "every nudge is one edit");
     }
-    assert!((node_x(&app) - start - 6.0).abs() < 1e-9, "three ticks accumulate 1+2+3 on x");
+    assert!((node_x(&app) - start - 6.0).abs() < 1e-9, "three nudges accumulate 1+2+3 on x");
     dispatch(&mut app, "undo", None, None).expect("undo");
-    assert!((node_x(&app) - start).abs() < 1e-9, "one undo restores the whole coalesced drag");
+    assert!((node_x(&app) - start - 3.0).abs() < 1e-9, "one undo takes back only the last nudge");
     close_app(&mut app);
 }
 
@@ -520,7 +528,7 @@ async fn command_envelope_round_trip_holds_for_an_applied_operation() {
 
     let mut store = puzzle2d_store(create_document_envelope(PUZZLE_2D_SCHEMA, "puzzle2d", Puzzle2dSnapshot::default(), None)).await.expect("store");
     let node = Puzzle2dNode { id: "n1".into(), ..Default::default() };
-    store.dispatch(ArtifactCommand::Apply { mutations: vec![crate::standards::v1::subsets::any::schema::mutations::create_node(node, None)], description: None }).await.expect("apply");
+    store.dispatch(ArtifactCommand::Apply { mutations: vec![crate::standards::v1::subsets::any::schema::mutations::create_node(node, None)], description: None, transaction: None }).await.expect("apply");
     let envelope = store.envelope();
     let edit: &Edit<Puzzle2dMutation> = envelope.vcs.edits.last().expect("dispatch must have recorded an edit");
     semio_framework_os_kernel::os_store::test_support::assert_command_envelope_round_trip::<Puzzle2dSnapshot, Puzzle2dMutation>(edit, &ArtifactId(envelope.id.clone()), &SchemaId(envelope.schema.clone())).await;
@@ -792,13 +800,17 @@ fn every_declared_action_resolves_to_a_command() {
             let id = action.id.as_str();
             declared.push(id.to_string());
             // 🕰️ Framework-owned verbs never reach `command_from_action`: history, clipboard, the
-            // interaction six, the injected utility/tool switches and the tool-run controls.
+            // interaction six, the injected utility/tool switches, the tool-run and history-edit controls, the
+            // operation cancel and the whole-document export/import.
             let reserved = matches!(
                 id,
                 "undo" | "redo" | "commitCheckpoint" | "createAlternative" | "switchAlternative" | "checkoutCheckpoint" | "copy" | "cut" | "paste" | "revertToCommand" | "historyFilter" | "setHistoryCommandFilter" | "noteShellCommand" | "recordTutorial" | "interactionSelect" | "interactionHover" | "clearSelection" | "selectAll" | "setSelectionMode" | "setInteractionGranularity"
             ) || id == SET_ACTIVE_UTILITY_ACTION_ID
                 || id == semio_framework_plugin::SET_ACTIVE_TOOL_ACTION_ID
-                || semio_framework_plugin::is_tool_run_action_id(id);
+                || semio_framework_plugin::is_tool_run_action_id(id)
+                || semio_framework_plugin::is_time_travel_action_id(id)
+                || id == semio_framework_plugin::app::CANCEL_TYPED_OPERATION_ACTION_ID
+                || matches!(id, semio_framework::EXPORT_ARTIFACT_DOCUMENT_ACTION_ID | semio_framework::IMPORT_ARTIFACT_DOCUMENT_ACTION_ID);
             if !reserved && Puzzle2dCommand::try_from_action(id, None, None).is_none() {
                 unresolved.push(id.to_string());
             }
@@ -997,7 +1009,7 @@ fn painted_fixture_parses(app: &mut Puzzle2dApp, what: &str) {
     panic!("{what}: the board engine refused the painted fixture ({} chars); first refused node = {bad_node:?}; first refused edge = {bad_edge:?}; head = {head}", fixture_json.len());
 }
 
-/// 🖱️ A node drag (`nodeDragEnd` through `applyBoardEvents`) must leave a fixture the engine still
+/// 🖱️ A node drag (one `gesture` record through `applyBoardEvents`) must leave a fixture the engine still
 /// paints — after the store round-trip, not just in the scene the command patched (2026-09-17: three
 /// blank panes after every drag on Nakagin).
 #[semio_framework_async_macros::async_test]
@@ -1009,7 +1021,7 @@ async fn dragging_a_node_keeps_the_painted_board_parseable() {
     let id = node.get("id").and_then(Value::as_str).expect("node id").to_string();
     let x = node.get("x").and_then(Value::as_f64).expect("x") + 8.0;
     let y = node.get("y").and_then(Value::as_f64).expect("y") + 4.0;
-    let events = json!([{ "name": "nodeMove", "payload": { "id": id, "x": x, "y": y } }, { "name": "nodeDragEnd", "payload": { "moves": [{ "id": id, "x": x, "y": y }] } }]).to_string();
+    let events = json!([{ "name": "gesture", "payload": { "gestureId": "gesture-1", "kind": "drag", "targets": [id], "dx": 8.0, "dy": 4.0, "proximity": [] } }]).to_string();
     let result = dispatch(&mut app, "applyBoardEvents", Some(&json!({ "eventsJson": events })), Some(overview::WINDOW_KIND_ID));
     assert!(result.is_ok(), "applyBoardEvents must not fault: {:?}", result.err());
     let moved = fixture_nodes(&fixture_of(&app)).iter().find(|node| node.get("id").and_then(Value::as_str) == Some(id.as_str())).cloned().expect("moved node");
@@ -1483,37 +1495,35 @@ async fn set_transform_gumball_flag_composes_the_handles_without_touching_the_do
     close_app(&mut app);
 }
 
-/// 🔄️ LAW: one `nodeRotate` board row is ONE history edit that turns the selected nodes about the
-/// pivot the ring drew — the same `rotateSelection` math, so the in-canvas preview and the committed
-/// document agree. A zero-angle or id-less row commits nothing.
+/// 🔄️ LAW: one ring `rotate` gesture record is ONE history edit that turns its targets about the pivot the ring
+/// drew — the `rotate-selection` leaf the select tool yields, so the in-canvas preview and the committed document
+/// agree. A zero-angle or target-less record commits nothing.
 #[semio_framework_async_macros::async_test]
-async fn a_node_rotate_board_event_commits_one_rotate_selection_edit() {
+async fn a_rotate_gesture_record_commits_one_rotate_selection_edit() {
     let mut app = concrete_forest_app();
     let node_id = first_node_id(&app);
     let before = fixture_of(&app);
     let node_before = fixture_nodes(&before).iter().find(|node| node.get("id").and_then(Value::as_str) == Some(node_id.as_str())).cloned().expect("node before");
     let (x0, y0) = (node_before.get("x").and_then(Value::as_f64).expect("x"), node_before.get("y").and_then(Value::as_f64).expect("y"));
-    let rotate = json!([{ "name": "nodeRotate", "payload": { "ids": [node_id.clone()], "radians": std::f64::consts::PI, "pivot": { "x": 0.0, "y": 0.0 } } }]).to_string();
-    let result = dispatch(&mut app, "applyBoardEvents", Some(&json!({ "eventsJson": rotate })), Some(overview::WINDOW_KIND_ID)).expect("rotate event");
-    assert!(committed_edits(&result) > 0, "a rotate commit is a document edit");
+    let record = |angle: f64, targets: Value| json!([{ "name": "gesture", "payload": { "gestureId": "gesture-1", "kind": "rotate", "targets": targets, "pivotX": x0, "pivotY": y0 + 10.0, "angle": angle, "proximity": [] } }]).to_string();
+    let result = dispatch(&mut app, "applyBoardEvents", Some(&json!({ "eventsJson": record(std::f64::consts::PI, json!([node_id.clone()])) })), Some(overview::WINDOW_KIND_ID)).expect("rotate record");
+    assert_eq!(committed_edits(&result), 1, "a rotate record is one document edit");
     let after = fixture_of(&app);
     let node_after = fixture_nodes(&after).iter().find(|node| node.get("id").and_then(Value::as_str) == Some(node_id.as_str())).cloned().expect("node after");
     let (x1, y1) = (node_after.get("x").and_then(Value::as_f64).expect("x"), node_after.get("y").and_then(Value::as_f64).expect("y"));
-    // 🔄️ A single-node selection's centroid IS that node, so a half turn about it leaves it put; the
-    // law that matters here is that the row reaches `puzzle2d_transform_selection` at all.
-    assert!((x1 - x0).abs() < 1e-6 && (y1 - y0).abs() < 1e-6, "a half turn about the node's own centroid is a fixed point: ({x0},{y0}) -> ({x1},{y1})");
-    let noop = dispatch(&mut app, "applyBoardEvents", Some(&json!({ "eventsJson": json!([{ "name": "nodeRotate", "payload": { "ids": [node_id.clone()], "radians": 0.0 } }]).to_string() })), Some(overview::WINDOW_KIND_ID)).expect("zero rotate");
-    assert_eq!(committed_edits(&noop), 0, "a zero-angle rotate commits nothing");
-    let idless = dispatch(&mut app, "applyBoardEvents", Some(&json!({ "eventsJson": json!([{ "name": "nodeRotate", "payload": { "ids": [], "radians": 1.0 } }]).to_string() })), Some(overview::WINDOW_KIND_ID)).expect("id-less rotate");
-    assert_eq!(committed_edits(&idless), 0, "an id-less rotate commits nothing");
+    assert!((x1 - x0).abs() < 1e-6 && (y1 - (y0 + 20.0)).abs() < 1e-6, "a half turn about a pivot 10 below mirrors the node 20 down: ({x0},{y0}) -> ({x1},{y1})");
+    let noop = dispatch(&mut app, "applyBoardEvents", Some(&json!({ "eventsJson": record(0.0, json!([node_id.clone()])) })), Some(overview::WINDOW_KIND_ID)).expect("zero rotate");
+    assert_eq!(committed_edits(&noop), 0, "a zero-angle record commits nothing");
+    let targetless = dispatch(&mut app, "applyBoardEvents", Some(&json!({ "eventsJson": record(1.0, json!([])) })), Some(overview::WINDOW_KIND_ID)).expect("target-less rotate");
+    assert_eq!(committed_edits(&targetless), 0, "a target-less record commits nothing");
     close_app(&mut app);
 }
 
-/// 🔄️ LAW: a rotate row turns EVERY selected node about the shared pivot and carries its handle
-/// angles with it, so edges keep their geometry — the guest half of the board engine's preview.
+/// 🔄️ LAW: a rotate record turns EVERY unlocked target about the recorded pivot and carries its handle angles
+/// with it, so edges keep their geometry; a locked target stays put — the guest half of the ring's preview.
 #[test]
-fn rotating_a_two_node_selection_orbits_both_about_the_centroid() {
-    let mut fixture = json!({
+fn a_rotate_record_orbits_a_two_node_selection_about_its_recorded_pivot() {
+    let fixture = json!({
         "schema": "puzzle.2d.fixture",
         "camera": { "x": 0.0, "y": 0.0, "zoom": 1.0 },
         "nodes": [
@@ -1523,8 +1533,15 @@ fn rotating_a_two_node_selection_orbits_both_about_the_centroid() {
         ],
         "edges": []
     });
-    let ids = ["node-a".to_string(), "node-b".to_string(), "node-locked".to_string()];
-    crate::editor::puzzle2d::puzzle2d_transform_selection(&mut fixture, &ids, crate::editor::puzzle2d::Puzzle2dTransform::Rotate { radians: std::f64::consts::FRAC_PI_2 });
+    let base = Puzzle2dPlaySnapshot::new(fixture).typed().clone();
+    let targets = vec!["node-a".to_string(), "node-b".to_string(), "node-locked".to_string()];
+    let (pivot_x, pivot_y) = puzzle2d_selection_pivot(&base, &targets, false).expect("pivot");
+    let record = Puzzle2dSelectionRecord { targets, motion: Puzzle2dSelectionMotion::Rotate { pivot_x, pivot_y, angle: std::f64::consts::FRAC_PI_2 }, proximity: Vec::new(), connect: false };
+    let yields = select_utility::puzzle2d_selection_yields(&base, std::slice::from_ref(&record), 0.0);
+    assert_eq!(yields.len(), 1, "a rotate yields its one leaf and no connection");
+    let mut after = base.clone();
+    crate::standards::v1::subsets::any::schema::mutations::apply_puzzle2d_mutation(&mut after, &yields[0].1).expect("the leaf applies");
+    let fixture = Value::from(dsl::ToValue::to_value(&after));
     let a = transform_law_node(&fixture, "node-a");
     assert!(a.get("x").and_then(Value::as_f64).expect("x").abs() < 1e-6 && (a.get("y").and_then(Value::as_f64).expect("y") + 40.0).abs() < 1e-6, "node-a orbits to (0,-40): {a}");
     let b = transform_law_node(&fixture, "node-b");
@@ -1542,9 +1559,9 @@ fn law_target_regions(fixture: &Value) -> Vec<Value> {
     fixture.get("targetRegions").and_then(Value::as_array).cloned().unwrap_or_default()
 }
 
-/// 🎯️ LAW: the board engine's three region rows fold onto the SAME mutation paths the palette verbs
-/// use — `regionCreate` mints one row through `addTargetRegion`'s own push, `regionMove` and
-/// `regionResize` push an absolute pose through `relocateTargetRegion`, one history edit each.
+/// 🎯️ LAW: the board engine's region gestures land one history edit each — `regionCreate` mints one row through
+/// `addTargetRegion`'s own push, a body drag is a `drag` gesture record yielding the `drag-selection` leaf, and
+/// `regionResize` pushes an absolute pose through `relocateTargetRegion`.
 #[semio_framework_async_macros::async_test]
 async fn board_region_events_commit_one_edit_each_through_the_target_region_verbs() {
     let mut app = concrete_forest_app();
@@ -1555,10 +1572,11 @@ async fn board_region_events_commit_one_edit_each_through_the_target_region_verb
     let id = regions[0].get("id").and_then(Value::as_str).expect("minted id").to_string();
     assert_eq!(regions[0].get("width").and_then(Value::as_f64), Some(60.5), "the engine's rectangle is committed verbatim — it already snapped it");
 
-    let moved = json!([{ "name": "regionMove", "payload": { "id": id.clone(), "x": 100.5, "y": 200.5 } }]).to_string();
-    dispatch(&mut app, "applyBoardEvents", Some(&json!({ "eventsJson": moved })), Some(overview::WINDOW_KIND_ID)).expect("region move");
+    let moved = json!([{ "name": "gesture", "payload": { "gestureId": "gesture-1", "kind": "drag", "targets": [id.clone()], "dx": 121.0, "dy": 211.0, "proximity": [] } }]).to_string();
+    let result = dispatch(&mut app, "applyBoardEvents", Some(&json!({ "eventsJson": moved })), Some(overview::WINDOW_KIND_ID)).expect("region move");
+    assert_eq!(committed_edits(&result), 1, "a region body drag is one edit");
     let regions = law_target_regions(&fixture_of(&app));
-    assert_eq!(regions[0].get("x").and_then(Value::as_f64), Some(100.5), "a move relocates the minimum corner");
+    assert_eq!(regions[0].get("x").and_then(Value::as_f64), Some(100.5), "a move translates the minimum corner by the offset");
     assert_eq!(regions[0].get("width").and_then(Value::as_f64), Some(60.5), "and never restates the extent it did not touch");
 
     let resized = json!([{ "name": "regionResize", "payload": { "id": id.clone(), "x": 100.5, "y": 200.5, "width": 12.5, "height": 8.5 } }]).to_string();
@@ -1567,7 +1585,7 @@ async fn board_region_events_commit_one_edit_each_through_the_target_region_verb
     assert_eq!(regions[0].get("width").and_then(Value::as_f64), Some(12.5), "a resize pushes corner AND extent");
     assert_eq!(regions[0].get("height").and_then(Value::as_f64), Some(8.5));
 
-    let unknown = json!([{ "name": "regionMove", "payload": { "id": "never-painted", "x": 1.5, "y": 1.5 } }]).to_string();
+    let unknown = json!([{ "name": "gesture", "payload": { "gestureId": "gesture-2", "kind": "drag", "targets": ["never-painted"], "dx": 1.5, "dy": 1.5, "proximity": [] } }]).to_string();
     dispatch(&mut app, "applyBoardEvents", Some(&json!({ "eventsJson": unknown })), Some(overview::WINDOW_KIND_ID)).expect("unknown region");
     let regions = law_target_regions(&fixture_of(&app));
     assert_eq!(regions[0].get("x").and_then(Value::as_f64), Some(100.5), "a row naming a region the board never held moves nothing");

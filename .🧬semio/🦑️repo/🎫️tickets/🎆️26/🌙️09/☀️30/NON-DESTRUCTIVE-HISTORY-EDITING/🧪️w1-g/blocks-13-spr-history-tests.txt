@@ -1,0 +1,27 @@
+<<<<<<< ANCHOR
+                    origin: crate::os_spr::command::MutationOrigin::Contributed { plugin_id: "flow".to_string(), mutation_id: crate::os_spr::ids::SchemaId("widget.doc#recolor".to_string()), payload_hash: crate::os_spr::ids::PayloadHash([3u8; 32]) },
+                    messages: Vec::new(),
+                }]), lane: None,
+=======
+                    origin: crate::os_spr::command::MutationOrigin::Contributed { plugin_id: "flow".to_string(), mutation_id: crate::os_spr::ids::SchemaId("widget.doc#recolor".to_string()), payload_hash: crate::os_spr::ids::PayloadHash([3u8; 32]) },
+                    messages: Vec::new(),
+                    transaction: Some(crate::os_spr::command::TransactionRef { id: "tx-0123456789abcdef".to_string(), tool: "s.puzzle.2d#select".to_string() }),
+                }]), lane: None,
+>>>>>>> END
+<<<<<<< ANCHOR
+        payload_hash: None,
+        group_id: None,
+        origin: crate::os_spr::command::MutationOrigin::Owner,
+        messages: vec![
+=======
+        payload_hash: None,
+        group_id: None,
+        origin: crate::os_spr::command::MutationOrigin::Owner,
+        transaction: None,
+        messages: vec![
+>>>>>>> END
+<<<<<<< ANCHOR
+    let meta = HistoryOpMeta { op_id: None, dependencies: Vec::new(), base_version: 0, author_id: None, hlt: None, undo_policy: 0, payload_hash: None, group_id: None, origin: crate::os_spr::command::MutationOrigin::Owner, messages: Vec::new() };
+=======
+    let meta = HistoryOpMeta { op_id: None, dependencies: Vec::new(), base_version: 0, author_id: None, hlt: None, undo_policy: 0, payload_hash: None, group_id: None, origin: crate::os_spr::command::MutationOrigin::Owner, messages: Vec::new(), transaction: None };
+>>>>>>> END

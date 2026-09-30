@@ -272,6 +272,7 @@ fn gis3d_store_edit<M>(prefix: &str, forward: M, inverse: Vec<M>, description: O
             label: None,
             group_id: None,
             origin: Default::default(),
+            transaction: None,
         }],
         description,
         coalesce_key: None,

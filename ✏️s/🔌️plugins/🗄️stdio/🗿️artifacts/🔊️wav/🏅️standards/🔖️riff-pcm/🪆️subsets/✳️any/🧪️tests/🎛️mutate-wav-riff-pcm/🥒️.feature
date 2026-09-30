@@ -36,6 +36,11 @@ Feature: Apply every typed WAV RIFF-PCM mutation to a real-world recording
   @id-mutate rows drive the same decode/encode pipeline and every one of them moves both the bytes
   and the compared projection, which is what proves a real parse happened.
 
+  Every Examples `params` cell is exactly the leaf's wire payload — its `payload_value()`, camelCase, no
+  aggregate tag — which the subject decodes through the derive-generated `from_payload_value` and the
+  owned oracle reads by the same field names; no hand-written params grammar sits between the row and
+  the typed mutation.
+
   Every scenario copies the immutable fixture into the case work directory before touching it; the
   committed fixture is never written to. The owned oracle is isolated from the subject codec, and
   both results are read back by that INDEPENDENT reader before the
@@ -53,22 +58,12 @@ Feature: Apply every typed WAV RIFF-PCM mutation to a real-world recording
       """
     Then the oracle and the subject agree on the semantic projection
     Examples:
-      | id               | params                                                                                                  |
-      | set-snapshot     | {"fmt":{"channels":1,"sampleRate":8000},"data":{"samples":[1000,-1000,500,-500,250,-250,125,-125]},"otherChunks":[{"fourcc":"fact","data":[8,0,0,0]}]} |
-      | set-fmt          | {"fmt":{"channels":2,"sampleRate":22050}}                                                               |
-      | set-data         | {"data":{"samples":[3000,-3000,1500,-1500,750,-750,375,-375]}}                                          |
-      | set-other-chunks | {"chunks":[{"fourcc":"fact","data":[4,0,0,0]},{"fourcc":"LIST","data":[73,78,70,79]}]}                  |
-
-  @id-no-mutation-baseline-mutate
-  @level-exhaustive
-  @mode-conformance
-  Scenario: Apply no-mutation to the real recording
-    Given the real input recording shared://🎙️bauen-mit-bestand-ausschnitt/🔊️.wav
-    When the no-mutation mutation is applied with its parameters
-      """
-      {"kind": "no-mutation", "params": {}}
-      """
-    Then the oracle and the subject agree on the semantic projection
+      | id               | params |
+      | set-snapshot     | {"snapshot":{"schema":"stdio.wav","fmt":{"audioFormat":1,"channels":1,"sampleRate":8000,"byteRate":16000,"blockAlign":2,"bitsPerSample":16},"data":{"kind":"pcm16","value":[1000,-1000,500,-500,250,-250,125,-125]},"otherChunks":[{"fourcc":"fact","data":[8,0,0,0]}],"chunkOrder":[{"kind":"format"},{"kind":"samples"},{"kind":"other","value":0}]}} |
+      | set-fmt          | {"fmt":{"audioFormat":1,"channels":2,"sampleRate":22050,"byteRate":88200,"blockAlign":4,"bitsPerSample":16}} |
+      | set-data         | {"data":{"kind":"pcm16","value":[3000,-3000,1500,-1500,750,-750,375,-375]}} |
+      | patch-data       | {"index":4000,"removeCount":8,"data":{"kind":"pcm16","value":[3000,-3000,1500,-1500]}} |
+      | set-other-chunks | {"chunks":[{"fourcc":"fact","data":[4,0,0,0]},{"fourcc":"LIST","data":[73,78,70,79]}]} |
 
   @id-inverse
   @level-exhaustive
@@ -82,23 +77,12 @@ Feature: Apply every typed WAV RIFF-PCM mutation to a real-world recording
     And the mutation's inverse is applied
     Then the recording is restored to its original semantic projection
     Examples:
-      | id               | params                                                                                                  |
-      | set-snapshot     | {"fmt":{"channels":1,"sampleRate":8000},"data":{"samples":[1000,-1000,500,-500,250,-250,125,-125]},"otherChunks":[{"fourcc":"fact","data":[8,0,0,0]}]} |
-      | set-fmt          | {"fmt":{"channels":2,"sampleRate":22050}}                                                               |
-      | set-data         | {"data":{"samples":[3000,-3000,1500,-1500,750,-750,375,-375]}}                                          |
-      | set-other-chunks | {"chunks":[{"fourcc":"fact","data":[4,0,0,0]},{"fourcc":"LIST","data":[73,78,70,79]}]}                  |
-
-  @id-no-mutation-baseline-inverse
-  @level-exhaustive
-  @mode-property
-  Scenario: Undoing no-mutation restores the recording
-    Given the real input recording shared://🎙️bauen-mit-bestand-ausschnitt/🔊️.wav
-    When the no-mutation mutation is applied with its parameters
-      """
-      {"kind": "no-mutation", "params": {}}
-      """
-    And the mutation's inverse is applied
-    Then the recording is restored to its original semantic projection
+      | id               | params |
+      | set-snapshot     | {"snapshot":{"schema":"stdio.wav","fmt":{"audioFormat":1,"channels":1,"sampleRate":8000,"byteRate":16000,"blockAlign":2,"bitsPerSample":16},"data":{"kind":"pcm16","value":[1000,-1000,500,-500,250,-250,125,-125]},"otherChunks":[{"fourcc":"fact","data":[8,0,0,0]}],"chunkOrder":[{"kind":"format"},{"kind":"samples"},{"kind":"other","value":0}]}} |
+      | set-fmt          | {"fmt":{"audioFormat":1,"channels":2,"sampleRate":22050,"byteRate":88200,"blockAlign":4,"bitsPerSample":16}} |
+      | set-data         | {"data":{"kind":"pcm16","value":[3000,-3000,1500,-1500,750,-750,375,-375]}} |
+      | patch-data       | {"index":4000,"removeCount":8,"data":{"kind":"pcm16","value":[3000,-3000,1500,-1500]}} |
+      | set-other-chunks | {"chunks":[{"fourcc":"fact","data":[4,0,0,0]},{"fourcc":"LIST","data":[73,78,70,79]}]} |
 
   @id-identity-round-trip
   @level-long

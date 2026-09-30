@@ -1530,7 +1530,9 @@
         1,
         3
       ],
-      "minimumSteps": 12
+      "minimumSteps": 12,
+      "volume": 0.9976536686473018,
+      "cancelPhases": ["snapshot", "validate", "profile", "clip", "reconstruct"]
     },
     {
       "name": "decimation-candidates-sliced",
@@ -1541,7 +1543,9 @@
         1,
         3
       ],
-      "minimumSteps": 3
+      "minimumSteps": 3,
+      "minimumVolume": 0.05,
+      "cancelPhases": ["snapshot", "edges", "candidate", "reconstruct"]
     }
   ]
 }

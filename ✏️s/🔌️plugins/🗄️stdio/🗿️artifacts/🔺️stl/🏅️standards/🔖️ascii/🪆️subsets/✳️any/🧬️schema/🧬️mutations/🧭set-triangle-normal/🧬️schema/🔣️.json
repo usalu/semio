@@ -5,10 +5,15 @@
   "type": "object",
   "additionalProperties": false,
   "required": [
+    "mutation",
     "index",
     "normal"
   ],
   "properties": {
+    "mutation": {
+      "const": "setTriangleNormal",
+      "description": "Aggregate discriminator spliced in by StlMutation; absent when the payload stands alone."
+    },
     "index": {
       "type": "integer",
       "minimum": 0
@@ -20,10 +25,6 @@
       },
       "minItems": 3,
       "maxItems": 3
-    },
-    "mutation": {
-      "const": "setTriangleNormal",
-      "description": "Aggregate discriminator spliced in by StlMutation; absent when the payload stands alone."
     }
   }
 }

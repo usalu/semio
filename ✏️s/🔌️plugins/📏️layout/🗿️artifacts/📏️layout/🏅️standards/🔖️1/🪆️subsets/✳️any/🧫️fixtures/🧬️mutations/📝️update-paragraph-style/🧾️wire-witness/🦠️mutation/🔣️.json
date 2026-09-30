@@ -1,0 +1,12 @@
+{
+  "UpdateParagraphStyle": {
+    "id": "para-body",
+    "name": "Body",
+    "fontFamily": "Inter",
+    "fontSize": 10.5,
+    "fontWeight": 400,
+    "leading": 14.0,
+    "tracking": 0.0,
+    "alignment": "left"
+  }
+}

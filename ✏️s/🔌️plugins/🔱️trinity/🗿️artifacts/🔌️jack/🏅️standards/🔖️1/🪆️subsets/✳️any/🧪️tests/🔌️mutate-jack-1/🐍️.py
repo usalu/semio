@@ -38,7 +38,7 @@ document's query and leaves the scene alone.
 
 **What is inferred rather than read, and on what grounds.** Nothing states whether deleting a node
 also deletes the edges that name it. The document HAS the invariant — `create-edge`'s committed
-vector is rejected with `mutation.invariant` precisely because its endpoints are absent — so a
+vector is rejected with `mutation.target-missing` precisely because its endpoints are absent — so a
 delete that left a dangling edge behind would produce a document the format refuses to construct.
 This implementation therefore cascades, and says so; the feature's `delete-node` row nevertheless
 addresses a node no edge names, so the cross-language comparison never rests on the inference.

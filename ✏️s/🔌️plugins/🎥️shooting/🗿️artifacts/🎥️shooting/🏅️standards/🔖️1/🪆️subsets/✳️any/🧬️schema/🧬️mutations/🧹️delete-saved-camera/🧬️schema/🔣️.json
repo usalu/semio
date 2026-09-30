@@ -5,11 +5,32 @@
   "type": "object",
   "additionalProperties": false,
   "required": [
+    "mutation",
     "id"
   ],
   "properties": {
+    "mutation": {
+      "const": "deleteSavedCamera"
+    },
     "id": {
-      "type": "string"
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Saved camera",
+          "de": "Gespeicherte Kamera"
+        },
+        "description": {
+          "en": "The saved camera this mutation addresses.",
+          "de": "Die gespeicherte Kamera, die diese Mutation adressiert."
+        },
+        "ref": {
+          "kind": "savedCamera"
+        },
+        "group": "target",
+        "order": 10
+      }
     }
   }
 }

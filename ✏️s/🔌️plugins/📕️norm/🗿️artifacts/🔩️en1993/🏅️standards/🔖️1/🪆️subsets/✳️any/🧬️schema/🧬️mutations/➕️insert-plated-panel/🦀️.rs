@@ -3,6 +3,8 @@ use crate::{PlatedPanel, En1993Mutation, En1993Snapshot};
 #[derive(Clone, Debug, PartialEq, dsl::MutationLeaf, value_derive::ToValue, value_derive::FromValue)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 #[mutation_leaf(contract = ::protocol)]
+#[cfg_attr(test, serde(rename_all = "camelCase"))]
+#[value(rename_all = "camelCase")]
 pub struct InsertPlatedPanel { pub index: usize, pub plated_panel: PlatedPanel }
 impl protocol::MutationKind<En1993Snapshot, En1993Mutation> for InsertPlatedPanel {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "insert", entity: "plated-panel", kind: "insert-plated-panel", record: "InsertedPlatedPanel" };

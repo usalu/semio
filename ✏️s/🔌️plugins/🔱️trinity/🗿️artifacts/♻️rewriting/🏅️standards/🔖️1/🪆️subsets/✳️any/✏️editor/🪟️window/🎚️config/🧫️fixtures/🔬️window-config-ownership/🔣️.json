@@ -9,14 +9,7 @@
   "cases": [
     {
       "windowId": "before-left",
-      "mutation": {
-        "kind": "set-camera",
-        "camera": {
-          "x": 10,
-          "y": 20,
-          "zoom": 2
-        }
-      },
+      "witness": "🎥️set-camera",
       "expected": {
         "before-left": {
           "camera": {
@@ -34,10 +27,7 @@
     },
     {
       "windowId": "before-right",
-      "mutation": {
-        "kind": "set-lod-mode",
-        "value": "compact"
-      },
+      "witness": "🔍️set-lod-mode",
       "expected": {
         "before-left": {
           "camera": {

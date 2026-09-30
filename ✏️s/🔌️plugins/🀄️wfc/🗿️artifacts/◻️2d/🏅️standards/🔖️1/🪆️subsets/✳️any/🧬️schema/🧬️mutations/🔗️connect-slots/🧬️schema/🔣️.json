@@ -20,17 +20,84 @@
       ],
       "properties": {
         "id": {
-          "type": "string"
+          "type": "string",
+          "x-semio-ui": {
+            "widget": "text",
+            "role": "value",
+            "label": {
+              "en": "ID",
+              "de": "ID"
+            },
+            "description": {
+              "en": "Unique id of the record.",
+              "de": "Eindeutige ID des Eintrags."
+            },
+            "group": "identity",
+            "order": 10
+          }
         },
         "fromSlotId": {
-          "type": "string"
+          "type": "string",
+          "x-semio-ui": {
+            "widget": "reference",
+            "role": "target",
+            "label": {
+              "en": "From slot",
+              "de": "Von Slot"
+            },
+            "ref": {
+              "kind": "slot",
+              "domain": "slot",
+              "granularity": "slot"
+            },
+            "group": "target",
+            "order": 20
+          }
         },
         "toSlotId": {
-          "type": "string"
+          "type": "string",
+          "x-semio-ui": {
+            "widget": "reference",
+            "role": "target",
+            "label": {
+              "en": "To slot",
+              "de": "Zu Slot"
+            },
+            "ref": {
+              "kind": "slot",
+              "domain": "slot",
+              "granularity": "slot"
+            },
+            "group": "target",
+            "order": 30
+          }
         },
         "relation": {
-          "type": "string"
+          "type": "string",
+          "x-semio-ui": {
+            "widget": "text",
+            "role": "value",
+            "label": {
+              "en": "Relation",
+              "de": "Relation"
+            },
+            "description": {
+              "en": "Adjacency class, e.g. adjacent, above or beside.",
+              "de": "Nachbarschaftsklasse, z. B. adjacent, above oder beside."
+            },
+            "group": "rule",
+            "order": 40
+          }
         }
+      },
+      "x-semio-ui": {
+        "role": "value",
+        "label": {
+          "en": "Connection",
+          "de": "Verbindung"
+        },
+        "group": "record",
+        "order": 10
       }
     }
   }

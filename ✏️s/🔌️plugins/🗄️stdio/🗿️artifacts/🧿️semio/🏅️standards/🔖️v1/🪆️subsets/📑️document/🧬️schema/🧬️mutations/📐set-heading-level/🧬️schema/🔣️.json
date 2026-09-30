@@ -5,21 +5,29 @@
   "type": "object",
   "additionalProperties": false,
   "required": [
+    "mutation",
     "path",
     "level"
   ],
   "properties": {
+    "mutation": {
+      "const": "setHeadingLevel",
+      "description": "Aggregate discriminator spliced in by SemioDocumentMutation; absent when the payload stands alone."
+    },
     "path": {
       "$ref": "#/$defs/DocBlockPath"
     },
     "level": {
       "type": "integer",
       "minimum": 0,
-      "maximum": 255
-    },
-    "mutation": {
-      "const": "setHeadingLevel",
-      "description": "Aggregate discriminator spliced in by SemioDocumentMutation; absent when the payload stands alone."
+      "maximum": 255,
+      "x-semio-ui": {
+        "widget": "stepper",
+        "label": {
+          "en": "Heading level",
+          "de": "Überschriftenebene"
+        }
+      }
     }
   },
   "$defs": {
@@ -34,6 +42,16 @@
           "type": "array",
           "items": {
             "$ref": "#/$defs/DocPathSegment"
+          },
+          "x-semio-ui": {
+            "label": {
+              "en": "Block path",
+              "de": "Blockpfad"
+            },
+            "description": {
+              "en": "Child indices from the document root to the block.",
+              "de": "Kindindizes vom Dokumentstamm bis zum Block."
+            }
           }
         },
         "index": {

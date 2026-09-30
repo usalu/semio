@@ -75,10 +75,10 @@ async fn declared_outcome_holds_and_a_negative_intensity_is_fatal() {
     assert_eq!(outcome.get("status").and_then(serde_json::Value::as_str), Some("applied"), "change-scene-sun-intensity/dims-scene-sun-to-half: this fixture declares `applied`");
     assert!(mutation().diff(&before()).messages().is_empty(), "change-scene-sun-intensity/dims-scene-sun-to-half: a real dim must raise no diagnostic");
 
-    let extinguished: ShootingMutation = serde_json::from_str(r#"{"mutation":"changeSceneSunIntensity","new_intensity":0.0}"#).expect("probe mutation decodes");
+    let extinguished: ShootingMutation = serde_json::from_str(r#"{"mutation":"changeSceneSunIntensity","newIntensity":0.0}"#).expect("probe mutation decodes");
     assert!(extinguished.diff(&before()).messages().is_empty(), "change-scene-sun-intensity/dims-scene-sun-to-half: zero is a legal intensity, the guard rejects only NEGATIVE values");
 
-    let negative: ShootingMutation = serde_json::from_str(r#"{"mutation":"changeSceneSunIntensity","new_intensity":-1.0}"#).expect("probe mutation decodes");
+    let negative: ShootingMutation = serde_json::from_str(r#"{"mutation":"changeSceneSunIntensity","newIntensity":-1.0}"#).expect("probe mutation decodes");
     let rejected = negative.diff(&before());
     assert_eq!(rejected.worst_level(), Some(protocol::Severity::Fatal), "change-scene-sun-intensity/dims-scene-sun-to-half: a negative intensity must be Fatal");
     assert_eq!(rejected.messages()[0].code.0, "mutation.invariant", "change-scene-sun-intensity/dims-scene-sun-to-half: the non-negativity guard's frozen code");

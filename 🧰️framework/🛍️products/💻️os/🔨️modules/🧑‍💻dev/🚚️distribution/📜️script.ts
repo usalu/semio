@@ -1,4 +1,5 @@
 #!/usr/bin/env bun
+import { loadDevContribution, resolveDevContributionFile } from "../🧩️contribution/📥️loading/🟦️.ts";
 import { frameworkOsLockedPrefsEnv } from "../../../../🦑️repo/🔨️modules/📚️library/🎮️playground/🔒️preferences/🟦️.ts";
 import { readFileSync } from "node:fs";
 import { join, resolve } from "node:path";
@@ -22,8 +23,9 @@ class BuildScript extends Script {
     const [variant, renderer, profile] = args;
     if (args.length !== 3 || renderer !== "react" || profile !== "release" || !/^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(variant)) throw new Error("build <variant> react release");
     const workspace = getWorkspaceRoot(), root = resolve(import.meta.dir, ".."), packageRoot = join(root, "📦️packages/🟦️typescript");
-    const catalog = JSON.parse(readFileSync(join(root, "../🔌️plugin/📇️registry/🤖️generated/🎠️playgrounds.json"), "utf8")) as { variant: string; distDir?: string }[];
+    const catalog = JSON.parse(readFileSync(join(root, "../🔌️plugin/📇️registry/🤖️generated/🎠️playgrounds.json"), "utf8")) as { variant: string; distDir?: string; brand?: string; devContribution?: string }[];
     const playground = catalog.find((row) => row.variant === variant);
+    const contribution = playground ? loadDevContribution(workspace, playground) : undefined;
     if (!playground) throw new Error(`Unknown production playground: ${variant}`);
     const output = playgroundReactReleaseOutputPath(workspace, packageRoot, playground);
     const controller = new AbortController();
@@ -32,7 +34,7 @@ class BuildScript extends Script {
     const interrupt = (): void => stop("SIGINT"), terminate = (): void => stop("SIGTERM");
     process.once("SIGINT", interrupt); process.once("SIGTERM", terminate);
     try {
-      await buildViteArtifact({ root, workspace, config: join(root, "🏗️builder/🌐️vite/🟦️.ts"), output, owner: `os-dev:${variant}:react:release`, signal: controller.signal, environment: { ...frameworkOsLockedPrefsEnv({ ...process.env, SEMIO_BRAND: undefined }), SEMIO_PLUGIN: variant, SEMIO_RENDERER: "react", SEMIO_BUILD_MODE: "ship", SEMIO_BRAND: undefined, PLAYGROUND_APP_KIND: undefined } });
+      await buildViteArtifact({ root, workspace, config: contribution ? resolveDevContributionFile(workspace, contribution.viteConfig, contribution.ownerRoot) : join(root, "🏗️builder/🌐️vite/🟦️.ts"), output, owner: `os-dev:${variant}:react:release`, signal: controller.signal, environment: { ...frameworkOsLockedPrefsEnv({ ...process.env, SEMIO_BRAND: undefined }), SEMIO_PLUGIN: variant, SEMIO_RENDERER: "react", SEMIO_BUILD_MODE: "ship", SEMIO_BRAND: undefined, PLAYGROUND_APP_KIND: undefined } });
     } catch (error) { if (!cancelled) throw error; process.exitCode = cancelled === "SIGINT" ? 130 : 143; }
     finally { process.removeListener("SIGINT", interrupt); process.removeListener("SIGTERM", terminate); }
   }

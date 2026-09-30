@@ -9,7 +9,24 @@
   ],
   "properties": {
     "byteOrder": {
-      "$ref": "#/$defs/TiffByteOrder"
+      "$ref": "#/$defs/TiffByteOrder",
+      "x-semio-ui": {
+        "widget": "segmented",
+        "label": {
+          "en": "Byte order",
+          "de": "Byte-Reihenfolge"
+        },
+        "options": {
+          "littleEndian": {
+            "en": "Little-endian (II)",
+            "de": "Little-Endian (II)"
+          },
+          "bigEndian": {
+            "en": "Big-endian (MM)",
+            "de": "Big-Endian (MM)"
+          }
+        }
+      }
     }
   },
   "$defs": {

@@ -17,10 +17,10 @@ use crate::standards::v1::subsets::graph::schema::mutations::disconnect_nodes::D
 use crate::{equation_graph, EquationDiff, EquationMutation, EquationSnapshot};
 use semio_framework_os_kernel::ToValue;
 
-const BEFORE: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🔗️connect-nodes/🧪️rejects-an-edge-between-two-absent-endpoints/📸️snapshot/⬅️before/🔣️.json");
-const AFTER: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🔗️connect-nodes/🧪️rejects-an-edge-between-two-absent-endpoints/📸️snapshot/➡️after/🔣️.json");
-const MUTATION: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🔗️connect-nodes/🧪️rejects-an-edge-between-two-absent-endpoints/🦠️mutation/🔣️.json");
-const OUTCOME: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🔗️connect-nodes/🧪️rejects-an-edge-between-two-absent-endpoints/🎯️outcome/🔣️.json");
+const BEFORE: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🔗️connect-nodes/🧪️rejects-edge-between-two-absent-endpoints/📸️snapshot/⬅️before/🔣️.json");
+const AFTER: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🔗️connect-nodes/🧪️rejects-edge-between-two-absent-endpoints/📸️snapshot/➡️after/🔣️.json");
+const MUTATION: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🔗️connect-nodes/🧪️rejects-edge-between-two-absent-endpoints/🦠️mutation/🔣️.json");
+const OUTCOME: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🔗️connect-nodes/🧪️rejects-edge-between-two-absent-endpoints/🎯️outcome/🔣️.json");
 
 fn before() -> EquationSnapshot {
     pack::from_json_str(BEFORE).expect("before snapshot decodes")

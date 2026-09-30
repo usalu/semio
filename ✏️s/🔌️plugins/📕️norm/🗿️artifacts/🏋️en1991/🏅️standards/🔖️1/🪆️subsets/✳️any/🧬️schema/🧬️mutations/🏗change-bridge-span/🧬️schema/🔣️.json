@@ -9,7 +9,21 @@
   ],
   "properties": {
     "newBridgeSpan": {
-      "type": "number"
+      "type": "number",
+      "minimum": 0,
+      "x-semio-ui": {
+        "widget": "stepper",
+        "role": "value",
+        "label": {
+          "en": "Bridge span L",
+          "de": "Stützweite der Brücke L"
+        },
+        "unit": "m",
+        "step": 0.5,
+        "precision": 2,
+        "group": "bridge",
+        "order": 10
+      }
     }
   }
 }

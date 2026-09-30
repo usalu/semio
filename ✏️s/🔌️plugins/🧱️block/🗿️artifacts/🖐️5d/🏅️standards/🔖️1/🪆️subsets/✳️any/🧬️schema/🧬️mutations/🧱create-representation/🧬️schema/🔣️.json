@@ -5,9 +5,13 @@
   "type": "object",
   "additionalProperties": false,
   "required": [
+    "mutation",
     "representation"
   ],
   "properties": {
+    "mutation": {
+      "const": "createRepresentation"
+    },
     "representation": {
       "title": "BlockRepresentation",
       "type": "object",
@@ -21,25 +25,88 @@
       ],
       "properties": {
         "id": {
-          "type": "string"
+          "type": "string",
+          "x-semio-ui": {
+            "widget": "text",
+            "role": "value",
+            "label": {
+              "en": "ID",
+              "de": "ID"
+            },
+            "description": {
+              "en": "Unique id of the record.",
+              "de": "Eindeutige ID des Eintrags."
+            },
+            "group": "identity",
+            "order": 10
+          }
         },
         "name": {
-          "type": "string"
+          "type": "string",
+          "x-semio-ui": {
+            "widget": "text",
+            "role": "value",
+            "label": {
+              "en": "Name",
+              "de": "Name"
+            },
+            "group": "identity",
+            "order": 20
+          }
         },
         "meshUrl": {
-          "type": "string"
+          "type": "string",
+          "x-semio-ui": {
+            "widget": "text",
+            "role": "value",
+            "label": {
+              "en": "Mesh URL",
+              "de": "Mesh-URL"
+            },
+            "group": "source",
+            "order": 30
+          }
         },
         "tags": {
           "type": "array",
           "items": {
             "type": "string"
+          },
+          "x-semio-ui": {
+            "role": "value",
+            "label": {
+              "en": "Tags",
+              "de": "Schlagwörter"
+            },
+            "group": "record",
+            "order": 40
           }
         },
         "lod": {
-          "type": "string"
+          "type": "string",
+          "x-semio-ui": {
+            "widget": "text",
+            "role": "value",
+            "label": {
+              "en": "Level of detail",
+              "de": "Detailstufe"
+            },
+            "group": "source",
+            "order": 50
+          }
         },
         "description": {
-          "type": "string"
+          "type": "string",
+          "x-semio-ui": {
+            "widget": "multiline",
+            "role": "value",
+            "label": {
+              "en": "Description",
+              "de": "Beschreibung"
+            },
+            "group": "value",
+            "order": 60
+          }
         },
         "attributes": {
           "type": "array",
@@ -53,17 +120,69 @@
             ],
             "properties": {
               "key": {
-                "type": "string"
+                "type": "string",
+                "x-semio-ui": {
+                  "widget": "text",
+                  "role": "value",
+                  "label": {
+                    "en": "Key",
+                    "de": "Schlüssel"
+                  },
+                  "group": "metadata",
+                  "order": 10
+                }
               },
               "value": {
-                "type": "string"
+                "type": "string",
+                "x-semio-ui": {
+                  "widget": "text",
+                  "role": "value",
+                  "label": {
+                    "en": "Value",
+                    "de": "Wert"
+                  },
+                  "group": "metadata",
+                  "order": 20
+                }
               },
               "definition": {
-                "type": "string"
+                "type": "string",
+                "x-semio-ui": {
+                  "widget": "text",
+                  "role": "value",
+                  "label": {
+                    "en": "Definition",
+                    "de": "Definition"
+                  },
+                  "description": {
+                    "en": "Name or URI of the attribute's definition.",
+                    "de": "Name oder URI der Attributdefinition."
+                  },
+                  "group": "metadata",
+                  "order": 30
+                }
               }
             }
+          },
+          "x-semio-ui": {
+            "role": "value",
+            "label": {
+              "en": "Attributes",
+              "de": "Attribute"
+            },
+            "group": "record",
+            "order": 70
           }
         }
+      },
+      "x-semio-ui": {
+        "role": "value",
+        "label": {
+          "en": "Representation",
+          "de": "Darstellung"
+        },
+        "group": "record",
+        "order": 10
       }
     }
   }

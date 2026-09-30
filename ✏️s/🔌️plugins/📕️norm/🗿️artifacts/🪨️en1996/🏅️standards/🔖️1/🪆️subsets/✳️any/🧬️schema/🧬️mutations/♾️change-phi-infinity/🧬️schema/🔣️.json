@@ -1,5 +1,6 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/norm/en1996/mutation/change-phi-infinity/schema.json",
   "title": "ChangePhiInfinity",
   "type": "object",
   "additionalProperties": false,
@@ -9,10 +10,40 @@
   ],
   "properties": {
     "index": {
-      "type": "integer"
+      "type": "integer",
+      "minimum": 0,
+      "x-semio-ui": {
+        "widget": "stepper",
+        "role": "value",
+        "label": {
+          "en": "Wall",
+          "de": "Wand"
+        },
+        "description": {
+          "en": "Zero-based position of the wall in its list.",
+          "de": "Nullbasierte Position der Wand in der Liste."
+        },
+        "step": 1,
+        "precision": 0,
+        "group": "target",
+        "order": 10
+      }
     },
     "newPhiInfinity": {
-      "type": "number"
+      "type": "number",
+      "minimum": 0,
+      "x-semio-ui": {
+        "widget": "stepper",
+        "role": "value",
+        "label": {
+          "en": "Final creep coefficient φ_∞",
+          "de": "Endkriechzahl φ_∞"
+        },
+        "step": 0.01,
+        "precision": 2,
+        "group": "material",
+        "order": 20
+      }
     }
   }
 }

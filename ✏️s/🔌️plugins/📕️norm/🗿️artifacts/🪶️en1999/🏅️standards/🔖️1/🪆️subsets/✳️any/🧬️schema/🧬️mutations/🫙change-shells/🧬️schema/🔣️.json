@@ -5,14 +5,31 @@
   "type": "object",
   "additionalProperties": false,
   "required": [
+    "mutation",
     "shells"
   ],
   "properties": {
-    "shells": {}
-  },
-  "owner": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/🪶️en1999/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🫙change-shells",
-  "semanticKind": "change-shells",
-  "emoji": "🫙",
-  "aggregateVariant": "ChangeShells",
-  "displayName": "Change Shells"
+    "mutation": {
+      "const": "changeShells"
+    },
+    "shells": {
+      "type": "array",
+      "items": {
+        "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1999/snapshot.json#/$defs/AluminiumShell"
+      },
+      "x-semio-ui": {
+        "role": "value",
+        "label": {
+          "en": "Shell structures",
+          "de": "Schalentragwerke"
+        },
+        "description": {
+          "en": "The complete list of shell structures (EN 1999-1-5).",
+          "de": "Die vollständige Liste der Schalentragwerke (EN 1999-1-5)."
+        },
+        "group": "record",
+        "order": 10
+      }
+    }
+  }
 }

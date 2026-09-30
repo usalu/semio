@@ -5,15 +5,16 @@
   "type": "object",
   "additionalProperties": false,
   "required": [
+    "mutation",
     "script"
   ],
   "properties": {
-    "script": {
-      "type": "string"
-    },
     "mutation": {
       "const": "insertJavascriptAction",
       "description": "Aggregate discriminator spliced in by PdfEMutation; absent when the payload stands alone."
+    },
+    "script": {
+      "type": "string"
     }
   }
 }

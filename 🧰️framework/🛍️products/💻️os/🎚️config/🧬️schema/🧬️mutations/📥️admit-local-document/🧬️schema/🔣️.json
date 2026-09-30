@@ -5,6 +5,7 @@
   "type": "object",
   "additionalProperties": false,
   "required": [
+    "mutation",
     "admittedAtMs",
     "documentId",
     "name",
@@ -13,31 +14,115 @@
     "target"
   ],
   "properties": {
+    "mutation": {
+      "const": "admitLocalDocument"
+    },
     "documentId": {
       "type": "string",
       "minLength": 1,
-      "maxLength": 256
+      "maxLength": 256,
+      "x-semio-ui": {
+        "widget": "text",
+        "role": "value",
+        "label": {
+          "en": "Document ID",
+          "de": "Dokument-ID"
+        },
+        "group": "identity",
+        "order": 10
+      }
     },
     "schema": {
       "type": "string",
       "minLength": 1,
-      "maxLength": 256
+      "maxLength": 256,
+      "x-semio-ui": {
+        "widget": "text",
+        "role": "value",
+        "label": {
+          "en": "Schema",
+          "de": "Schema"
+        },
+        "group": "identity",
+        "order": 20
+      }
     },
     "name": {
       "type": "string",
-      "maxLength": 256
+      "maxLength": 256,
+      "x-semio-ui": {
+        "widget": "text",
+        "role": "value",
+        "label": {
+          "en": "Name",
+          "de": "Name"
+        },
+        "group": "identity",
+        "order": 30
+      }
     },
     "storage": {
-      "$ref": "#/$defs/LocalDocumentStorage"
+      "$ref": "#/$defs/LocalDocumentStorage",
+      "x-semio-ui": {
+        "widget": "segmented",
+        "role": "value",
+        "label": {
+          "en": "Storage",
+          "de": "Speicherform"
+        },
+        "description": {
+          "en": "Folder: a folder event log; file: one document file.",
+          "de": "Ordner: ein Ereignisprotokoll im Ordner; Datei: eine einzelne Dokumentdatei."
+        },
+        "options": {
+          "folder": {
+            "en": "Folder",
+            "de": "Ordner"
+          },
+          "file": {
+            "en": "File",
+            "de": "Datei"
+          }
+        },
+        "group": "storage",
+        "order": 40
+      }
     },
     "target": {
       "type": "string",
       "minLength": 1,
-      "maxLength": 4096
+      "maxLength": 4096,
+      "x-semio-ui": {
+        "widget": "text",
+        "role": "value",
+        "label": {
+          "en": "Location",
+          "de": "Speicherort"
+        },
+        "group": "storage",
+        "order": 50
+      }
     },
     "admittedAtMs": {
       "type": "integer",
-      "minimum": 0
+      "minimum": 0,
+      "x-semio-ui": {
+        "widget": "stepper",
+        "role": "value",
+        "label": {
+          "en": "Admitted at",
+          "de": "Aufgenommen am"
+        },
+        "description": {
+          "en": "Unix time in milliseconds.",
+          "de": "Unix-Zeit in Millisekunden."
+        },
+        "unit": "ms",
+        "step": 1,
+        "precision": 0,
+        "group": "metadata",
+        "order": 60
+      }
     }
   },
   "$defs": {

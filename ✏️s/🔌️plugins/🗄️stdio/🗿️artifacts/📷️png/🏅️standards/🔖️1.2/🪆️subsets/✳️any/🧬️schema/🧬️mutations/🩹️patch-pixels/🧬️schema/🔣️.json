@@ -7,8 +7,36 @@
   "required": ["index", "removeCount", "pixels"],
   "properties": {
     "index": { "type": "integer", "minimum": 0 },
-    "removeCount": { "type": "integer", "minimum": 0 },
+    "removeCount": {
+      "type": "integer",
+      "minimum": 0,
+      "x-semio-ui": {
+        "widget": "stepper",
+        "label": {
+          "en": "Remove count",
+          "de": "Anzahl zu entfernender Elemente"
+        },
+        "description": {
+          "en": "Number of items removed at the index before the new items are inserted.",
+          "de": "Anzahl der Elemente, die am Index vor dem Einfügen der neuen Elemente entfernt werden."
+        }
+      }
+    },
     "pixels": { "type": "array", "items": { "type": "integer", "minimum": 0, "maximum": 255 } },
-    "moveTo": { "type": ["integer", "null"], "minimum": 0 }
+    "moveTo": {
+      "type": ["integer", "null"],
+      "minimum": 0,
+      "x-semio-ui": {
+        "widget": "stepper",
+        "label": {
+          "en": "Move to index",
+          "de": "Verschieben nach Index"
+        },
+        "description": {
+          "en": "Index the patched range is moved to.",
+          "de": "Index, an den der geänderte Bereich verschoben wird."
+        }
+      }
+    }
   }
 }

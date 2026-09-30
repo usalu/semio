@@ -22,7 +22,7 @@ pub use crate::engine::brep::{BrepFace, BrepMesh, BrepVertex};
 /// domain-select literal, `Aggregate` = a parenthesized list, `TypedValue` = a simple/complex
 /// defined-type wrapper (`IFCLENGTHMEASURE(3000.)`-shaped).
 #[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
-#[value(rename_all = "camelCase")]
+#[value(rename_all = "camelCase", rename_all_fields = "camelCase")]
 #[derive(Default)]
 pub enum StepValue {
     #[default]

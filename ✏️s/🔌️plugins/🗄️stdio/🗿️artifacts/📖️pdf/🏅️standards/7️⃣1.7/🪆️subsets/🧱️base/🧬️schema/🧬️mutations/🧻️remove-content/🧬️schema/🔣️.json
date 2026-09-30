@@ -5,11 +5,16 @@
   "type": "object",
   "additionalProperties": false,
   "required": [
+    "mutation",
     "index",
     "at",
     "count"
   ],
   "properties": {
+    "mutation": {
+      "const": "removeContent",
+      "description": "Aggregate discriminator spliced in by PdfMutation; absent when the payload stands alone."
+    },
     "index": {
       "type": "integer",
       "minimum": 0
@@ -21,10 +26,6 @@
     "count": {
       "type": "integer",
       "minimum": 0
-    },
-    "mutation": {
-      "const": "removeContent",
-      "description": "Aggregate discriminator spliced in by PdfMutation; absent when the payload stands alone."
     }
   }
 }

@@ -22,46 +22,206 @@
       ],
       "properties": {
         "id": {
-          "type": "string"
+          "type": "string",
+          "x-semio-ui": {
+            "widget": "text",
+            "role": "value",
+            "label": {
+              "en": "ID",
+              "de": "ID"
+            },
+            "description": {
+              "en": "Unique id of the record.",
+              "de": "Eindeutige ID des Eintrags."
+            },
+            "group": "identity",
+            "order": 10
+          }
         },
         "path": {
-          "type": "string"
+          "type": "string",
+          "x-semio-ui": {
+            "widget": "text",
+            "role": "value",
+            "label": {
+              "en": "Path",
+              "de": "Pfad"
+            },
+            "group": "source",
+            "order": 20
+          }
         },
         "hash": {
-          "type": "string"
+          "type": "string",
+          "x-semio-ui": {
+            "widget": "text",
+            "role": "value",
+            "label": {
+              "en": "Checksum",
+              "de": "Prüfsumme"
+            },
+            "group": "source",
+            "order": 30
+          }
         },
         "width": {
           "type": "integer",
-          "minimum": 0
+          "minimum": 0,
+          "x-semio-ui": {
+            "widget": "stepper",
+            "role": "value",
+            "label": {
+              "en": "Pixel width",
+              "de": "Pixelbreite"
+            },
+            "unit": "px",
+            "step": 1,
+            "precision": 0,
+            "group": "source",
+            "order": 40
+          }
         },
         "height": {
           "type": "integer",
-          "minimum": 0
+          "minimum": 0,
+          "x-semio-ui": {
+            "widget": "stepper",
+            "role": "value",
+            "label": {
+              "en": "Pixel height",
+              "de": "Pixelhöhe"
+            },
+            "unit": "px",
+            "step": 1,
+            "precision": 0,
+            "group": "source",
+            "order": 50
+          }
         },
         "dpi": {
           "type": "integer",
-          "minimum": 0
+          "minimum": 0,
+          "x-semio-ui": {
+            "widget": "stepper",
+            "role": "value",
+            "label": {
+              "en": "Resolution",
+              "de": "Auflösung"
+            },
+            "unit": "dpi",
+            "step": 1,
+            "precision": 0,
+            "group": "source",
+            "order": 60
+          }
         },
         "colorProfile": {
-          "type": "string"
+          "type": [
+            "string",
+            "null"
+          ],
+          "x-semio-ui": {
+            "widget": "text",
+            "role": "value",
+            "label": {
+              "en": "Color profile",
+              "de": "Farbprofil"
+            },
+            "group": "source",
+            "order": 70
+          }
         },
         "state": {
-          "type": "string"
+          "type": [
+            "string",
+            "null"
+          ],
+          "x-semio-ui": {
+            "widget": "text",
+            "role": "value",
+            "label": {
+              "en": "Link state",
+              "de": "Verknüpfungsstatus"
+            },
+            "group": "source",
+            "order": 80
+          }
         },
         "proxyDataUrl": {
-          "type": "string"
+          "type": [
+            "string",
+            "null"
+          ],
+          "x-semio-ui": {
+            "widget": "hidden",
+            "role": "value",
+            "label": {
+              "en": "Preview",
+              "de": "Vorschau"
+            },
+            "group": "source",
+            "order": 90
+          }
         },
         "artifactKind": {
-          "type": "string"
+          "type": "string",
+          "x-semio-ui": {
+            "widget": "text",
+            "role": "value",
+            "label": {
+              "en": "Artifact kind",
+              "de": "Artefaktart"
+            },
+            "group": "source",
+            "order": 100
+          }
         },
         "artifactRef": {
-          "type": "string"
+          "type": "string",
+          "x-semio-ui": {
+            "widget": "text",
+            "role": "value",
+            "label": {
+              "en": "Artifact reference",
+              "de": "Artefaktverweis"
+            },
+            "group": "source",
+            "order": 110
+          }
         }
+      },
+      "x-semio-ui": {
+        "role": "value",
+        "label": {
+          "en": "Link",
+          "de": "Verknüpfung"
+        },
+        "group": "record",
+        "order": 10
       }
     },
     "index": {
-      "type": "integer",
-      "minimum": 0
+      "type": [
+        "integer",
+        "null"
+      ],
+      "minimum": 0,
+      "x-semio-ui": {
+        "widget": "stepper",
+        "role": "value",
+        "label": {
+          "en": "Index",
+          "de": "Index"
+        },
+        "description": {
+          "en": "Position in the list; empty appends at the end.",
+          "de": "Position in der Liste; leer hängt am Ende an."
+        },
+        "step": 1,
+        "precision": 0,
+        "group": "order",
+        "order": 20
+      }
     }
   }
 }

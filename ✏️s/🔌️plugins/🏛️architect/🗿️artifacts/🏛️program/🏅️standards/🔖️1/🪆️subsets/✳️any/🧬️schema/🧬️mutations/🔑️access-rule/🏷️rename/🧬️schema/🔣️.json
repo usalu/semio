@@ -5,16 +5,52 @@
   "type": "object",
   "additionalProperties": false,
   "required": [
+    "mutation",
     "id",
     "newName"
   ],
   "properties": {
+    "mutation": {
+      "const": "renameAccessRule"
+    },
     "id": {
-      "type": "integer",
-      "minimum": 0
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Access Rule",
+          "de": "Zugangsregel"
+        },
+        "description": {
+          "en": "The access rule to rename.",
+          "de": "Umzubenennender Eintrag vom Typ „Zugangsregel“."
+        },
+        "ref": {
+          "kind": "accessRule",
+          "domain": "program",
+          "granularity": "entity"
+        },
+        "group": "target",
+        "order": 10
+      }
     },
     "newName": {
-      "type": "string"
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "text",
+        "role": "value",
+        "label": {
+          "en": "New Name",
+          "de": "Neuer Name"
+        },
+        "description": {
+          "en": "New name of the access rule.",
+          "de": "Neuer Name des Eintrags vom Typ „Zugangsregel“."
+        },
+        "group": "identity",
+        "order": 20
+      }
     }
   }
 }

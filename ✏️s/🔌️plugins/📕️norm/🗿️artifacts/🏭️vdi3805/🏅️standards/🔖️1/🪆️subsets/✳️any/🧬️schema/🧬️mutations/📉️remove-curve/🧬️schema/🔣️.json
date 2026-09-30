@@ -9,7 +9,24 @@
   ],
   "properties": {
     "id": {
-      "type": "string"
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Characteristic curve",
+          "de": "Kennlinie"
+        },
+        "description": {
+          "en": "The characteristic curve this mutation addresses.",
+          "de": "Die Kennlinie, die diese Mutation adressiert."
+        },
+        "ref": {
+          "kind": "curve"
+        },
+        "group": "target",
+        "order": 10
+      }
     }
   }
 }

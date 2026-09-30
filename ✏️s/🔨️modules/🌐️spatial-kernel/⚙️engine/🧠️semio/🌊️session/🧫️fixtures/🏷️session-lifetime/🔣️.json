@@ -1,0 +1,27 @@
+{
+  "schema": "semio.geometry-session-lifetime/v1",
+  "independentBoxes": [
+    {
+      "width": 2,
+      "depth": 3,
+      "height": 4,
+      "volume": 24
+    },
+    {
+      "width": 5,
+      "depth": 3,
+      "height": 4,
+      "volume": 60
+    }
+  ],
+  "sharedHandle": {
+    "radius": 1,
+    "tolerance": 0.05
+  },
+  "lifecycle": [
+    "cancel",
+    "close",
+    "retire",
+    "drop"
+  ]
+}

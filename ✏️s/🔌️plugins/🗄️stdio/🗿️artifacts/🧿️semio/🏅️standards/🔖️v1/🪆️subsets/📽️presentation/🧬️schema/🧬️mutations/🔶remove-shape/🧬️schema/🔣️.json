@@ -5,10 +5,15 @@
   "type": "object",
   "additionalProperties": false,
   "required": [
+    "mutation",
     "slide_index",
     "shape_index"
   ],
   "properties": {
+    "mutation": {
+      "const": "removeShape",
+      "description": "Aggregate discriminator spliced in by SemioPresentationMutation; absent when the payload stands alone."
+    },
     "slide_index": {
       "type": "integer",
       "minimum": 0
@@ -16,10 +21,6 @@
     "shape_index": {
       "type": "integer",
       "minimum": 0
-    },
-    "mutation": {
-      "const": "removeShape",
-      "description": "Aggregate discriminator spliced in by SemioPresentationMutation; absent when the payload stands alone."
     }
   }
 }

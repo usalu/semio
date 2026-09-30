@@ -196,8 +196,51 @@
       "accepted": false
     },
     {
+      "id": "history-edit-reviewing",
+      "prefixHex": "016180400105652d3223300201",
+      "repeatHex": "00",
+      "repeatCount": 0,
+      "suffixHex": "",
+      "accepted": true,
+      "canonicalHex": "016180400105652d3223300201",
+      "expected": {
+        "actor": "a",
+        "connectedAtMs": 1,
+        "views": [],
+        "historyEdit": {
+          "mutationId": "e-2#0",
+          "stage": "reviewing",
+          "drafts": 1
+        }
+      }
+    },
+    {
+      "id": "history-edit-unknown-stage",
+      "prefixHex": "016180400105652d3223300500",
+      "repeatHex": "00",
+      "repeatCount": 0,
+      "suffixHex": "",
+      "accepted": false
+    },
+    {
+      "id": "history-edit-drafts-over-u32",
+      "prefixHex": "016180400105652d322330008080808010",
+      "repeatHex": "00",
+      "repeatCount": 0,
+      "suffixHex": "",
+      "accepted": false
+    },
+    {
+      "id": "history-edit-truncated",
+      "prefixHex": "016180400105652d3223",
+      "repeatHex": "00",
+      "repeatCount": 0,
+      "suffixHex": "",
+      "accepted": false
+    },
+    {
       "id": "unknown-flag",
-      "prefixHex": "0161804001",
+      "prefixHex": "016180800101",
       "repeatHex": "00",
       "repeatCount": 0,
       "suffixHex": "",

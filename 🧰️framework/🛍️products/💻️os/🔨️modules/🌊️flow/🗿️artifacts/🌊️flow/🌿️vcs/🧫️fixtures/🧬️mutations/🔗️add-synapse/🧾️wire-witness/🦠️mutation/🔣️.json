@@ -1,0 +1,11 @@
+{
+  "operation": "addSynapse",
+  "index": 1,
+  "synapse": {
+    "id": "s3",
+    "from": "a",
+    "to": "c",
+    "fromPort": "out",
+    "toPort": "in"
+  }
+}

@@ -1,7 +1,13 @@
-/** 🦠️ create-animation executable structural glTF command. */
-import type { GltfOrthographic, GltfPerspective, GltfSnapshot } from '../../📸️snapshot/🟦️.ts';
-import { clone, insert, order, position, reject, remove, relocate, reorder, repair, type GltfMutationRejection, type GltfStructuralResult } from './🟦️';
-export const GltfCreateAnimationDescriptor = { id: 's.stdio.gltf.mutation.create-animation.v1', version: 1, touchedPathPattern: 'document/animations', referencePolicy: 'all typed animation references are remapped, repaired, or rejected' } as const;
-export interface GltfCreateAnimationPayload { position: number }
-export const validateGltfCreateAnimation = (payload: GltfCreateAnimationPayload, base: GltfSnapshot): GltfMutationRejection | undefined => { const index = position(payload.position, base.document.animations.length, 'document/animations', true); if (index) return index;    return undefined; };
-export const applyGltfCreateAnimation = (base: GltfSnapshot, payload: GltfCreateAnimationPayload): GltfStructuralResult => { const rejection = validateGltfCreateAnimation(payload, base); if (rejection) return { accepted: false, rejection }; try { const next = clone(base); insert(next, 'animations', payload.position, { channels: [], samplers: [] }); return { accepted: true, snapshot: clone(next) }; } catch (error) { return { accepted: false, rejection: typeof error === 'object' && error && 'code' in error ? error as GltfMutationRejection : reject('gltf.mutation.apply-failed', 'document/animations', String(error)) }; } };
+/** 🌱️ `create-animation` wire twin: the flat `Apply` payload `GltfCreateAnimationPayload` and the phase wire `CreateAnimationMutation`, exactly as `./🦀️.rs` writes them.
+ * @see ./🧬️schema/🔣️.json */
+import { gltfWireIndex, gltfWireObject, gltfWireRequired } from "../../../📸️snapshot/🟦️.ts";
+import { type GltfDiff, type GltfPhase, gltfWirePhase, parseGltfDiff } from "../../../🔺️diff/🟦️.ts";
+
+export interface GltfCreateAnimationPayload {
+  position: number;
+}
+
+export type CreateAnimationMutation = GltfPhase<GltfCreateAnimationPayload, GltfDiff>;
+
+export const parseGltfCreateAnimationPayload = gltfWireObject<GltfCreateAnimationPayload>({ position: gltfWireRequired(gltfWireIndex) });
+export const parseCreateAnimationMutation = gltfWirePhase(parseGltfCreateAnimationPayload, parseGltfDiff);

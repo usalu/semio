@@ -9,13 +9,13 @@
     {
       "name": "Use the First Existing Page",
       "input": { "definition": { "steps": [{ "id": "a", "title": "A", "blocks": [] }, { "id": "b", "title": "B", "blocks": [] }] }, "question": { "id": "q", "kind": "text", "label": "Name" }, "stepId": null, "newStepId": "page" },
-      "event": { "mutation": "createBlock", "step_id": "a", "block": { "id": "q", "kind": "text", "label": "Name" }, "index": null },
+      "event": { "mutation": "createBlock", "stepId": "a", "block": { "id": "q", "kind": "text", "label": "Name" }, "index": null },
       "patch": [{ "op": "add", "path": "/steps/0/blocks/0", "value": { "id": "q", "kind": "text", "label": "Name" } }]
     },
     {
       "name": "Respect the Requested Page",
       "input": { "definition": { "steps": [{ "id": "a", "title": "A", "blocks": [] }, { "id": "b", "title": "B", "blocks": [] }] }, "question": { "id": "q", "kind": "text", "label": "Name" }, "stepId": "b", "newStepId": "page" },
-      "event": { "mutation": "createBlock", "step_id": "b", "block": { "id": "q", "kind": "text", "label": "Name" }, "index": null },
+      "event": { "mutation": "createBlock", "stepId": "b", "block": { "id": "q", "kind": "text", "label": "Name" }, "index": null },
       "patch": [{ "op": "add", "path": "/steps/1/blocks/0", "value": { "id": "q", "kind": "text", "label": "Name" } }]
     },
     {

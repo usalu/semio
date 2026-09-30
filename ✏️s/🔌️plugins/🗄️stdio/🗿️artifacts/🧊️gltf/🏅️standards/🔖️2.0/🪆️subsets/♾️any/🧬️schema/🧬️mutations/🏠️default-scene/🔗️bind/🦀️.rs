@@ -4,8 +4,7 @@ use crate::schema::modules::mutation_support::top_level::{reject, GltfTopLevelMu
 use crate::GltfSnapshot;
 pub const ID: &str = "s.stdio.gltf.mutation.bind-default-scene.v1";
 pub const TOUCHED_PATHS: &[&str] = &["document/scene"];
-#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::MutationLeaf)]
-#[mutation_leaf(contract = ::protocol)]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
 #[value(rename_all = "camelCase")]
 pub struct GltfBindDefaultScenePayload {
     pub scene: usize,
@@ -30,7 +29,7 @@ pub fn apply(payload: &GltfBindDefaultScenePayload, base: &GltfSnapshot) -> Resu
 
 //#region 🧬️DirectMutation
 #[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::MutationLeaf)]
-#[mutation_leaf(contract = ::protocol)]
+#[mutation_leaf(contract = ::protocol, payload = Apply)]
 #[value(tag = "phase", content = "value", rename_all = "camelCase")]
 pub enum BindDefaultSceneMutation {
     Apply(GltfBindDefaultScenePayload),
@@ -74,6 +73,6 @@ impl protocol::MutationKind<GltfSnapshot, super::GltfMutation> for BindDefaultSc
 
 //#region 🧪️Tests
 #[cfg(test)]
-#[path = "🧪️tests/🔬️direct-leaf/🦀️.rs"]
-mod direct_leaf_tests;
+#[path = "🧪️tests/🎞️moves-the-0e42fe/🦀️.rs"]
+mod case_moves_the_0e42fe;
 //#endregion 🧪️Tests

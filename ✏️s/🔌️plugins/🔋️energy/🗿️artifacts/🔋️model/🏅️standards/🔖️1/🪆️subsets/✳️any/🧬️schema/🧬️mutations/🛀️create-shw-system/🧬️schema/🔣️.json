@@ -5,6 +5,7 @@
   "type": "object",
   "additionalProperties": false,
   "required": [
+    "mutation",
     "index",
     "id",
     "heaterCapacityW",
@@ -13,23 +14,123 @@
     "scheduleId"
   ],
   "properties": {
+    "mutation": {
+      "const": "createShwSystem"
+    },
     "index": {
-      "type": "integer"
+      "type": "integer",
+      "minimum": 0,
+      "x-semio-ui": {
+        "widget": "stepper",
+        "role": "value",
+        "label": {
+          "en": "Position",
+          "de": "Position"
+        },
+        "description": {
+          "en": "Insertion position in the model's list; 0 is first.",
+          "de": "Einfügeposition in der Modellliste; 0 ist die erste."
+        },
+        "step": 1,
+        "precision": 0,
+        "group": "order",
+        "order": 10
+      }
     },
     "id": {
-      "type": "integer"
+      "type": "integer",
+      "minimum": 0,
+      "x-semio-ui": {
+        "widget": "stepper",
+        "role": "value",
+        "label": {
+          "en": "ID",
+          "de": "ID"
+        },
+        "description": {
+          "en": "Id the new service hot water system is created under; later mutations address it by this id.",
+          "de": "ID, unter der das neue Objekt angelegt wird; spätere Mutationen adressieren es darüber."
+        },
+        "step": 1,
+        "precision": 0,
+        "group": "identity",
+        "order": 20
+      }
     },
     "heaterCapacityW": {
-      "type": "number"
+      "type": "number",
+      "x-semio-ui": {
+        "widget": "stepper",
+        "role": "value",
+        "label": {
+          "en": "Heater capacity",
+          "de": "Heizleistung"
+        },
+        "unit": "W",
+        "displayUnit": "kW",
+        "displayFactor": 0.001,
+        "step": 100,
+        "precision": 2,
+        "group": "capacity",
+        "order": 30
+      }
     },
     "storageVolumeM3": {
-      "type": "number"
+      "type": "number",
+      "x-semio-ui": {
+        "widget": "stepper",
+        "role": "value",
+        "label": {
+          "en": "Storage volume",
+          "de": "Speichervolumen"
+        },
+        "unit": "m³",
+        "displayUnit": "L",
+        "displayFactor": 1000,
+        "step": 0.01,
+        "precision": 0,
+        "group": "capacity",
+        "order": 40
+      }
     },
     "setpointC": {
-      "type": "number"
+      "type": "number",
+      "x-semio-ui": {
+        "widget": "stepper",
+        "role": "value",
+        "label": {
+          "en": "Tank setpoint",
+          "de": "Speichersolltemperatur"
+        },
+        "unit": "°C",
+        "step": 0.5,
+        "precision": 1,
+        "group": "control",
+        "order": 50
+      }
     },
     "scheduleId": {
-      "type": "integer"
+      "type": "integer",
+      "minimum": 0,
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Schedule",
+          "de": "Zeitplan"
+        },
+        "description": {
+          "en": "Fraction schedule scaling the design value over time, by id.",
+          "de": "Anteilszeitplan, der den Bemessungswert zeitlich skaliert, per ID."
+        },
+        "ref": {
+          "kind": "schedule",
+          "domain": "energyModel",
+          "granularity": "schedule"
+        },
+        "group": "schedule",
+        "order": 60
+      }
     }
   }
 }

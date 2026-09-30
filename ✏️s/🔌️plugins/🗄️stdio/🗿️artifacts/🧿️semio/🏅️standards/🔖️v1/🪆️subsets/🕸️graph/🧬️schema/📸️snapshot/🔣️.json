@@ -12,7 +12,18 @@
   "properties": {
     "schema": {
       "type": "string",
-      "x-semio-state": "artifact"
+      "x-semio-state": "artifact",
+      "x-semio-ui": {
+        "widget": "text",
+        "label": {
+          "en": "Snapshot schema",
+          "de": "Snapshot-Schema"
+        },
+        "description": {
+          "en": "Identifier of the snapshot schema version.",
+          "de": "Kennung der Version des Snapshot-Schemas."
+        }
+      }
     },
     "nodes": {
       "type": "array",
@@ -59,8 +70,30 @@
                     "in",
                     "out",
                     "inOut"
-                  ]
+                  ],
+                  "x-semio-ui": {
+                    "options": {
+                      "in": {
+                        "en": "Input",
+                        "de": "Eingang"
+                      },
+                      "out": {
+                        "en": "Output",
+                        "de": "Ausgang"
+                      },
+                      "inOut": {
+                        "en": "Input and output",
+                        "de": "Ein- und Ausgang"
+                      }
+                    }
+                  }
                 }
+              }
+            },
+            "x-semio-ui": {
+              "label": {
+                "en": "Ports",
+                "de": "Ports"
               }
             }
           },
@@ -76,6 +109,12 @@
               }
             }
           }
+        }
+      },
+      "x-semio-ui": {
+        "label": {
+          "en": "Nodes",
+          "de": "Knoten"
         }
       }
     },
@@ -116,6 +155,12 @@
           "label": {
             "type": "string"
           }
+        }
+      },
+      "x-semio-ui": {
+        "label": {
+          "en": "Edges",
+          "de": "Kanten"
         }
       }
     }

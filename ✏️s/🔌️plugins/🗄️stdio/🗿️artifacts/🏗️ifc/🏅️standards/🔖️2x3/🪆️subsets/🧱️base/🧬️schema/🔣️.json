@@ -41,17 +41,84 @@
             "typed",
             "unset",
             "derived"
-          ]
+          ],
+          "x-semio-ui": {
+            "label": {
+              "en": "Value kind",
+              "de": "Wertart"
+            },
+            "options": {
+              "ref": {
+                "en": "Instance reference",
+                "de": "Instanzverweis"
+              },
+              "str": {
+                "en": "String",
+                "de": "Zeichenkette"
+              },
+              "enum": {
+                "en": "Enumeration",
+                "de": "Aufzählung"
+              },
+              "int": {
+                "en": "Integer",
+                "de": "Ganzzahl"
+              },
+              "real": {
+                "en": "Real",
+                "de": "Gleitkommazahl"
+              },
+              "list": {
+                "en": "List",
+                "de": "Liste"
+              },
+              "typed": {
+                "en": "Typed value",
+                "de": "Typisierter Wert"
+              },
+              "unset": {
+                "en": "Unset ($)",
+                "de": "Nicht gesetzt ($)"
+              },
+              "derived": {
+                "en": "Derived (*)",
+                "de": "Abgeleitet (*)"
+              }
+            }
+          }
         },
-        "value": {},
+        "value": {
+          "x-semio-ui": {
+            "label": {
+              "en": "Value",
+              "de": "Wert"
+            }
+          }
+        },
         "values": {
           "type": "array",
           "items": {
             "$ref": "#/$defs/Part21Value"
+          },
+          "x-semio-ui": {
+            "label": {
+              "en": "List items",
+              "de": "Listenelemente"
+            }
           }
         },
         "typeName": {
-          "type": "string"
+          "type": "string",
+          "x-semio-ui": {
+            "label": {
+              "en": "Type name",
+              "de": "Typname"
+            },
+            "description": {
+              "en": "Defined type of a typed value, e.g. IFCLABEL.",
+              "de": "Definierter Typ eines typisierten Werts, z. B. IFCLABEL."
+            }
+          }
         }
       },
       "required": [
@@ -62,12 +129,24 @@
       "type": "object",
       "properties": {
         "typeName": {
-          "type": "string"
+          "type": "string",
+          "x-semio-ui": {
+            "label": {
+              "en": "Entity type",
+              "de": "Entitätstyp"
+            }
+          }
         },
         "arguments": {
           "type": "array",
           "items": {
             "$ref": "#/$defs/Part21Value"
+          },
+          "x-semio-ui": {
+            "label": {
+              "en": "Attribute values",
+              "de": "Attributwerte"
+            }
           }
         }
       },
@@ -80,12 +159,32 @@
       "type": "object",
       "properties": {
         "id": {
-          "type": "integer"
+          "type": "integer",
+          "x-semio-ui": {
+            "label": {
+              "en": "Instance id",
+              "de": "Instanz-ID"
+            },
+            "description": {
+              "en": "STEP instance id (#n).",
+              "de": "STEP-Instanz-ID (#n)."
+            }
+          }
         },
         "entities": {
           "type": "array",
           "items": {
             "$ref": "#/$defs/Part21Entity"
+          },
+          "x-semio-ui": {
+            "label": {
+              "en": "Entities",
+              "de": "Entitäten"
+            },
+            "description": {
+              "en": "One entity, or the parts of a complex entity.",
+              "de": "Eine Entität oder die Teile einer komplexen Entität."
+            }
           }
         }
       },
@@ -101,18 +200,36 @@
           "type": "array",
           "items": {
             "$ref": "#/$defs/Part21Value"
+          },
+          "x-semio-ui": {
+            "label": {
+              "en": "File description",
+              "de": "Dateibeschreibung"
+            }
           }
         },
         "fileName": {
           "type": "array",
           "items": {
             "$ref": "#/$defs/Part21Value"
+          },
+          "x-semio-ui": {
+            "label": {
+              "en": "File name",
+              "de": "Dateiname"
+            }
           }
         },
         "fileSchema": {
           "type": "array",
           "items": {
             "$ref": "#/$defs/Part21Value"
+          },
+          "x-semio-ui": {
+            "label": {
+              "en": "File schema",
+              "de": "Dateischema"
+            }
           }
         }
       },
@@ -126,12 +243,24 @@
       "type": "object",
       "properties": {
         "header": {
-          "$ref": "#/$defs/Part21Header"
+          "$ref": "#/$defs/Part21Header",
+          "x-semio-ui": {
+            "label": {
+              "en": "STEP header",
+              "de": "STEP-Kopfteil"
+            }
+          }
         },
         "instances": {
           "type": "array",
           "items": {
             "$ref": "#/$defs/Part21Instance"
+          },
+          "x-semio-ui": {
+            "label": {
+              "en": "Instances",
+              "de": "Instanzen"
+            }
           }
         }
       },
@@ -144,52 +273,148 @@
       "type": "object",
       "properties": {
         "producer": {
-          "type": "string"
+          "type": "string",
+          "x-semio-ui": {
+            "label": {
+              "en": "Producer",
+              "de": "Hersteller"
+            }
+          }
         },
         "module": {
-          "type": "string"
+          "type": "string",
+          "x-semio-ui": {
+            "label": {
+              "en": "Module",
+              "de": "Modul"
+            }
+          }
         },
         "creationDate": {
-          "type": "string"
+          "type": "string",
+          "x-semio-ui": {
+            "label": {
+              "en": "Creation date",
+              "de": "Erstellungsdatum"
+            }
+          }
         },
         "host": {
-          "type": "string"
+          "type": "string",
+          "x-semio-ui": {
+            "label": {
+              "en": "Host",
+              "de": "Host"
+            }
+          }
         },
         "database": {
-          "type": "string"
+          "type": "string",
+          "x-semio-ui": {
+            "label": {
+              "en": "Database",
+              "de": "Datenbank"
+            }
+          }
         },
         "databaseVersion": {
-          "type": "string"
+          "type": "string",
+          "x-semio-ui": {
+            "label": {
+              "en": "Database version",
+              "de": "Datenbankversion"
+            }
+          }
         },
         "databaseCreationDate": {
-          "type": "string"
+          "type": "string",
+          "x-semio-ui": {
+            "label": {
+              "en": "Database creation date",
+              "de": "Erstellungsdatum der Datenbank"
+            }
+          }
         },
         "schema": {
-          "type": "string"
+          "type": "string",
+          "x-semio-ui": {
+            "label": {
+              "en": "EXPRESS schema",
+              "de": "EXPRESS-Schema"
+            }
+          }
         },
         "model": {
-          "type": "string"
+          "type": "string",
+          "x-semio-ui": {
+            "label": {
+              "en": "Model",
+              "de": "Modell"
+            }
+          }
         },
         "modelCreationDate": {
-          "type": "string"
+          "type": "string",
+          "x-semio-ui": {
+            "label": {
+              "en": "Model creation date",
+              "de": "Erstellungsdatum des Modells"
+            }
+          }
         },
         "headerModel": {
-          "type": "string"
+          "type": "string",
+          "x-semio-ui": {
+            "label": {
+              "en": "Header model",
+              "de": "Kopfteilmodell"
+            }
+          }
         },
         "headerModelCreationDate": {
-          "type": "string"
+          "type": "string",
+          "x-semio-ui": {
+            "label": {
+              "en": "Header model creation date",
+              "de": "Erstellungsdatum des Kopfteilmodells"
+            }
+          }
         },
         "user": {
-          "type": "string"
+          "type": "string",
+          "x-semio-ui": {
+            "label": {
+              "en": "User",
+              "de": "Benutzer"
+            }
+          }
         },
         "group": {
-          "type": "string"
+          "type": "string",
+          "x-semio-ui": {
+            "label": {
+              "en": "Group",
+              "de": "Gruppe"
+            }
+          }
         },
         "license": {
-          "type": "string"
+          "type": "string",
+          "x-semio-ui": {
+            "label": {
+              "en": "License",
+              "de": "Lizenz"
+            }
+          }
         },
         "options": {
-          "type": "string"
+          "type": "string",
+          "x-semio-ui": {
+            "label": {
+              "en": "Options",
+              "de": "Optionen"
+            }
+          }
         }
       },
       "required": [

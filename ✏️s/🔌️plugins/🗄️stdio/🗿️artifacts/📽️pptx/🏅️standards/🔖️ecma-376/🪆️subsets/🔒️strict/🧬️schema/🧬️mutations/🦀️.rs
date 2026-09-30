@@ -231,6 +231,12 @@ pub fn stamp_conformance_class(mut snapshot: PptxSnapshot, strict: bool) -> Pptx
     }
     snapshot
 }
+
+/// 🏅️ The one whole-package operation that moves `base` into (`strict`) or out of the strict conformance class: a
+/// `set-snapshot` of [`stamp_conformance_class`]'s stamp — what a class conversion records as one edit.
+pub fn stamp_conformance_class_mutation(base: &PptxSnapshot, strict: bool) -> PptxStrictMutation {
+    PptxStrictMutation::SetSnapshot(set_snapshot::SetSnapshot { snapshot: stamp_conformance_class(base.clone(), strict) })
+}
 //#endregion 🔖️Helpers
 
 //#region 🔖️DiffBuilders

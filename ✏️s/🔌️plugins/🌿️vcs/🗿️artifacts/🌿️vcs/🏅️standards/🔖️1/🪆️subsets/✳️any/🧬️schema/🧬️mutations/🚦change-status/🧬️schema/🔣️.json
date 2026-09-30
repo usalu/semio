@@ -2,34 +2,24 @@
   "$schema": "http://json-schema.org/draft-07/schema#",
   "$id": "https://json.schemas.assets.semio-tech.com/s/vcs/vcs/mutation/change-status/schema.json",
   "title": "ChangeStatus",
-  "$ref": "#/$defs/Payload",
-  "$defs": {
-    "Payload": {
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "newStatus"
-      ],
-      "properties": {
-        "newStatus": {
-          "type": "string"
-        }
-      }
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "mutation",
+    "newStatus"
+  ],
+  "properties": {
+    "mutation": {
+      "const": "changeStatus"
     },
-    "Wire": {
-      "title": "ChangeStatusMutation",
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "mutation",
-        "newStatus"
-      ],
-      "properties": {
-        "mutation": {
-          "const": "changeStatus"
-        },
-        "newStatus": {
-          "$ref": "#/$defs/Payload/properties/newStatus"
+    "newStatus": {
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "text",
+        "role": "value",
+        "label": {
+          "en": "New Status",
+          "de": "Neuer Status"
         }
       }
     }

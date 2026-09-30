@@ -1,0 +1,11 @@
+{
+  "mutation": "bindNodeChild",
+  "payload": {
+    "phase": "apply",
+    "value": {
+      "parent": 0,
+      "child": 1,
+      "position": 0
+    }
+  }
+}

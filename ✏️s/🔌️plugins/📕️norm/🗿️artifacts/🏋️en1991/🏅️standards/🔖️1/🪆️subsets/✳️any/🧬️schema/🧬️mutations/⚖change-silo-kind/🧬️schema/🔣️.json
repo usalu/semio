@@ -9,7 +9,21 @@
   ],
   "properties": {
     "newSiloKind": {
-      "type": "string"
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "text",
+        "role": "value",
+        "label": {
+          "en": "Silo or tank",
+          "de": "Silo oder Tank"
+        },
+        "description": {
+          "en": "silo (bulk solids, EN 1991-4 §5) or tank (liquids, §7).",
+          "de": "silo (Schüttgut, EN 1991-4 §5) oder tank (Flüssigkeit, §7)."
+        },
+        "group": "silo",
+        "order": 10
+      }
     }
   }
 }

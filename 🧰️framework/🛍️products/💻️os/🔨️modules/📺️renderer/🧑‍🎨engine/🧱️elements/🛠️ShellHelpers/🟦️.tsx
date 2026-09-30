@@ -28,10 +28,17 @@ import {
     type AppRole,
     type AppRouter,
     type AppWindowKindDefinition,
+    type HistoryEntry,
+    historyEntryKey,
     historyEntryLabelText,
+    type HistoryPatch,
+    type HistoryTimeTravel,
     // 🎫️ ticket 26/08/17/LLM-FIRST-OS-VIA-THE-SEMIO-OS-MCP-GATEWAY packet P3-manifest-schema, D6:
     // `ActionArgDef.control` is gone (derived, not stored) — every reader below now calls this instead.
     argControl,
+    referenceIdText,
+    referenceIdValue,
+    type ReferenceIdType,
     type ArtifactDialect,
     type ArtifactKindChoice,
     artifactKindChoices,
@@ -80,10 +87,12 @@ import {
     type PluginViewState,
     RECORD_TUTORIAL_ACTION_ID,
     resolvePluginHostConfig,
+    type Severity,
     resolveUiDirtyScope,
     resolveWindowActions,
     SET_ACTIVE_UTILITY_ACTION_ID,
     SHELL_LOCALES,
+    type ShellLocale,
     START_INTRODUCTION_ACTION_ID,
     START_TUTORIAL_ACTION_ID,
     type ToolDefinition,
@@ -112,6 +121,7 @@ import {
     packValueFromBase64,
     packValueToBase64,
 } from "@semio-tech/framework-os";
+import { decodePresenceHistoryEdit, decodePresenceInteraction, decodePresenceToolRun, type ArtifactPresenceHistoryEdit, type ArtifactPresenceInteraction, type ArtifactPresenceToolRun } from "@semio-tech/framework-replication";
 import {
     decodeWorldProjectionTemplateId,
 } from "@semio-tech/infinite-world-r3f";
@@ -141,6 +151,7 @@ import {
     singleTreeLeaf,
     Slider,
     staticTreePanelDefinition,
+    Stepper,
     Toggle,
     ToggleGroup,
     Tree,
@@ -175,6 +186,8 @@ import React, {
     useState
 } from "react";
 import { hopTrace } from "../../../../../../../🔨️modules/⏱️trace/🟦️.ts";
+import { formatUiNumber, formatUiNumberFixed, roundUiNumber } from "../../../../../../../🔨️modules/🖱️ui/🧬️contract/🔢️number-format/🟦️.ts";
+import { parseUiColorHex, uiColorHex, uiNumberKeyValue } from "../../../../../../../🔨️modules/🖱️ui/🧬️contract/🧩️component/🟦️.ts";
 import type { SelectionMode } from "../../../../../../../🔨️modules/🛂️manifest/🟦️.ts";
 import { type ContinuationCancel, type ContinuationScheduler, hostContinuations } from "../../../../../../../🔨️modules/⏳️async/🪃️continuation/🟦️.ts";
 import { IMPORT_CHUNK_BYTES, type ImportChunk, importChunkArguments, importPayloadChunks, mediaExportBytes, mergeUiDirtyScopes, uiDirtyScopeWantsCatalogue, uiDirtyScopeWantsPanelBody, uiDirtyScopeWantsSection, uiDirtyScopeWantsWindowBody, type UiDirtySection } from "../../../../../../../🔨️modules/🎠️kernel/🟦️.ts";
@@ -274,6 +287,39 @@ export function historyPatchShouldApplyV1(
   return patch.cursor === currentCursor && (patch.upserts?.length ?? 0) > 0;
 }
 
+/** 🧾️ One program's history as the shell projects it: the cursor undo/redo act on, the rows folded under
+ * {@link historyEntryKey}, the checkpoint the check-in lane watches, and the live history-edit session the time-travel
+ * band and window indicators show (`null` while none is open — every patch carries the session in full). */
+export type ShellHistoryProjectionV1 = {
+  readonly cursor: number;
+  readonly entries: Readonly<Record<string, HistoryEntry>>;
+  readonly canUndo: boolean;
+  readonly canRedo: boolean;
+  readonly currentCheckpointId: string | undefined;
+  readonly timeTravel: HistoryTimeTravel | null;
+};
+
+/** 🧾️ What a program whose history has not been read yet projects: no rows, no session. */
+export const EMPTY_SHELL_HISTORY_PROJECTION_V1: ShellHistoryProjectionV1 = { cursor: 0, entries: {}, canUndo: false, canRedo: false, currentCheckpointId: undefined, timeTravel: null };
+
+/** 🧾️ `current` after one admitted patch ({@link historyPatchShouldApplyV1}): a snapshot replaces the rows, a delta
+ * upserts them, and the session is the patch's own — a patch without one closes it. */
+export function shellHistoryProjectionAfterPatchV1(current: ShellHistoryProjectionV1, patch: HistoryPatch, replace: boolean): ShellHistoryProjectionV1 {
+  const entries: Record<string, HistoryEntry> = replace ? {} : { ...current.entries };
+  for (const entry of patch.upserts ?? []) entries[historyEntryKey(entry)] = entry;
+  return { cursor: patch.cursor, entries, canUndo: patch.canUndo ?? false, canRedo: patch.canRedo ?? false, currentCheckpointId: replace ? patch.currentCheckpointId : (patch.currentCheckpointId ?? current.currentCheckpointId), timeTravel: patch.timeTravel ?? null };
+}
+
+/** 🎞️ One unsolicited mid-operation frame (`AppFrame::Invocation`, `in_reply_to` 0): the dirty scope a running
+ * operation asks the shell to refresh and the history patch a running replay publishes. */
+export type OperationProgressV1 = { readonly uiScope?: UiDirtyScope; readonly historyPatch?: HistoryPatch };
+
+/** 🎞️ What the shell does with one progress frame: refresh its scope (nothing when it carried none — a bare frame is
+ * never read as a full refresh) and fold its history patch into the program's projection. */
+export function operationProgressPartsV1(progress: OperationProgressV1): { readonly scope: UiDirtyScope; readonly historyPatch: HistoryPatch | undefined } {
+  return { scope: progress.uiScope === undefined ? { kind: "none" } : resolveUiDirtyScope(progress.uiScope), historyPatch: progress.historyPatch };
+}
+
 /** 🧾️ The framework history cursor as the shell publishes it on `data-history-json` — the ONE readable
  * statement of what undo and redo would actually do right now.
  *
@@ -290,7 +336,7 @@ export const SHELL_HISTORY_DOM_LABELS = 8;
 export function shellHistoryCursorDomV1(
   projection: {
     readonly cursor: number;
-    readonly entries: Readonly<Record<number, { readonly seq: number; readonly label: LocalizedLabel; readonly actionId: string }>>;
+    readonly entries: Readonly<Record<string, { readonly seq: number; readonly label: LocalizedLabel; readonly actionId: string }>>;
     readonly canUndo: boolean;
     readonly canRedo: boolean;
     readonly currentCheckpointId?: string;
@@ -401,7 +447,7 @@ export interface ShellCommandInverse {
  * unconditionally) is an identity, not an inverse. Without it the guest records the row with no
  * inverse and `undo` steps over it straight onto the user's document edit — see
  * `🔌️plugin/🦀️.rs`'s `noteShellCommand` branch and `dispatch_chrome_history_action`. */
-export function buildNoteShellCommandAction(controllerId: string, commandId: string, label: string, detail?: Record<string, unknown>, inverse?: ShellCommandInverse): ActionDescriptor {
+export function buildNoteShellCommandAction(controllerId: string, commandId: string, label: ShellLabelTextV1, detail?: Record<string, unknown>, inverse?: ShellCommandInverse): ActionDescriptor {
   return {
     controllerId,
     action: NOTE_SHELL_COMMAND_ACTION_ID,
@@ -414,39 +460,20 @@ export function buildNoteShellCommandAction(controllerId: string, commandId: str
  * action id the guest itself declared, while a `🐚️Shell`-kind row replays chrome the guest has no
  * window kind for. Dispatching the latter into the guest is what produced the framework-wide
  * `undeclared-action (guest window=… causedBy=…)` error after every undo (ticket 26/09/18 §3.2). */
-/** 🌐️ The nine chrome commands `noteShellCommand` journals, each paired with the `ui.shellCommand.*`
- * key whose EN/DE text it was built from. The pairing is the map, not a `shell.X → ui.shellCommand.X`
- * derivation, because a derived key resolves to itself for an id nobody translated and the row would
- * then read `ui.shellCommand.whatever` instead of its own text.
- *
- * ⏳️ Why this exists at all: `noteShellCommand(commandId, label, …)` takes a `string`, and every call
- * site passes `shellLabel("ui.shellCommand.…")` — already resolved in the locale that was current
- * when the user dragged the panel. The guest journals that ONE string, so the row's `LocalizedLabel`
- * carries the dispatch locale on every axis, and `historyEntryLabelText` re-resolving it against a
- * new locale can only hand back the same frozen text. Measured on 2026-09-21 (S10 §2.10 item 2):
- * after switching the shell to German the older rows still read `"Switch Panel Tab"` while the newly
- * journalled one read `"Panel-Tab wechseln"` — which breaks `HistoryEntry.label`'s own promise that
- * "a locale switch re-renders the whole ledger instead of leaving logged rows in their dispatch
- * locale". A chrome row's label is CHROME: the shell owns its text and knows its current locale, so
- * the shell resolves it at render from the row's `actionId` and never trusts the frozen string.
- * Plugin rows are untouched — their `LocalizedLabel` really does carry every locale. */
-const SHELL_CHROME_COMMAND_LABEL_KEYS: Readonly<Record<string, UiTranslationKey>> = {
-  "shell.dockMove": "ui.shellCommand.dockMove",
-  "shell.panelTab": "ui.shellCommand.panelTab",
-  "shell.panelToggle": "ui.shellCommand.panelToggle",
-  "shell.windowActivate": "ui.shellCommand.windowActivate",
-  "shell.windowClose": "ui.shellCommand.windowClose",
-  "shell.windowMove": "ui.shellCommand.windowMove",
-  "shell.windowOpenInNewWindow": "ui.shellCommand.windowOpenInNewWindow",
-  "shell.windowResize": "ui.shellCommand.windowResize",
-  "shell.windowSplit": "ui.shellCommand.windowSplit",
-};
+/** 🌐️ One text in every shell locale — what a journalled `noteShellCommand` row carries (`{en, de}`), so the guest stores
+ * a real `LocalizedLabel::native` and the Rust history body re-renders the row on a locale switch instead of freezing it
+ * in the locale it was dispatched in (ticket 26/09/18 S10 §2.10 item 2).
+ * @see ../../../../🔌️plugin/🦀️.rs */
+export type ShellLabelTextV1 = Readonly<Record<ShellLocale, string>>;
 
-/** 🌐️ This shell's own current-locale text for a journalled chrome command row, or `null` when the
- * id is not one of the nine — in which case the caller keeps the row's carried `LocalizedLabel`. */
-export function shellChromeCommandLabel(commandId: string): string | null {
-  const key = SHELL_CHROME_COMMAND_LABEL_KEYS[commandId];
-  return key === undefined ? null : shellLabel(key);
+/** 🌐️ A chrome translation key's text in every shell locale, at the active driver's label tier. */
+export function shellLabelTextV1(key: UiTranslationKey, options?: Record<string, unknown>): ShellLabelTextV1 {
+  return Object.fromEntries(SHELL_LOCALES.map((locale) => [locale, resolveTranslationLabel(uiI18n.tIn(locale, key, options)) ?? key])) as ShellLabelTextV1;
+}
+
+/** 🌐️ A manifest label's text in every shell locale on one terminology; a plain string reads the same in each. */
+export function manifestLabelTextV1(label: LocalizedLabel | string, terminology: string): ShellLabelTextV1 {
+  return Object.fromEntries(SHELL_LOCALES.map((locale) => [locale, resolveManifestLabel(label, terminology, locale)])) as ShellLabelTextV1;
 }
 
 export function isShellOwnedCommandId(commandId: string): boolean {
@@ -687,6 +714,8 @@ export async function presenceEphemeralSnapshotWithinBoundV1(
     ) => Promise<{
       readonly presence: readonly number[];
       readonly interaction?: readonly number[];
+      readonly toolRun?: readonly number[];
+      readonly historyEdit?: readonly number[];
       readonly activeTool?: string;
       readonly presenceGeneration?: number;
       readonly transientGeneration?: number;
@@ -698,6 +727,8 @@ export async function presenceEphemeralSnapshotWithinBoundV1(
   | {
       readonly presence: readonly number[];
       readonly interaction?: readonly number[];
+      readonly toolRun?: readonly number[];
+      readonly historyEdit?: readonly number[];
       readonly activeTool?: string;
       readonly presenceGeneration?: number;
       readonly transientGeneration?: number;
@@ -714,6 +745,18 @@ export async function presenceEphemeralSnapshotWithinBoundV1(
   } finally {
     if (timer !== undefined) clearTimeout(timer);
   }
+}
+
+/** 👥️ The fields of this human's presence heartbeat an app's ephemeral snapshot owns, decoded and present only when the
+ * snapshot carries them: the declared-broadcast interaction slice (bit 5), the tool-run summary (bit 10) and the open
+ * history edit (bit 13) — the React twin of what the native host stamps, so a peer sees who edits history on which
+ * mutation whichever renderer that human runs. */
+export function presenceEphemeralPeerFieldsV1(snapshot: { readonly interaction?: readonly number[]; readonly toolRun?: readonly number[]; readonly historyEdit?: readonly number[] } | undefined): { readonly interaction?: ArtifactPresenceInteraction; readonly toolRun?: ArtifactPresenceToolRun; readonly historyEdit?: ArtifactPresenceHistoryEdit } {
+  return {
+    ...(snapshot?.interaction !== undefined && snapshot.interaction.length > 0 ? { interaction: decodePresenceInteraction(Uint8Array.from(snapshot.interaction), [0]) } : {}),
+    ...(snapshot?.toolRun !== undefined && snapshot.toolRun.length > 0 ? { toolRun: decodePresenceToolRun(Uint8Array.from(snapshot.toolRun)) } : {}),
+    ...(snapshot?.historyEdit !== undefined && snapshot.historyEdit.length > 0 ? { historyEdit: decodePresenceHistoryEdit(Uint8Array.from(snapshot.historyEdit)) } : {}),
+  };
 }
 
 function presenceIdentityPackBase64(identity: { readonly clientId: string; readonly name: string }): string {
@@ -1624,19 +1667,14 @@ export function integrateAppSettingsPanelTabsIntoFrameworkBranch(frameworkSettin
 }
 
 /**
- * 🕰️ Panel tab ids the shell mounts as its own chrome, so an app-declared tab carrying one of them
- * must never be mounted a second time out of `AppDefinition.panelTabs`. `framework.panel.history` is
- * injected into EVERY app (`🔌️plugin/🦀️.rs` `AppBuilder::build_definition`) so the guest renders the
- * history body, while the shell also builds that tab host-side; mounting both puts two identically-named
- * tab buttons and two nodes with one DOM id in the same anchor, and the guest-rendered twin namespaces
- * every child element as `panel:<key>/<id>` ({@link uiNodeToTreePanelConfig}), so `framework.history.entry.<seq>`
- * stops resolving by its declared id.
+ * 🕰️ Splits the framework History tab off a list of app panel tabs. `framework.panel.history` is injected into EVERY
+ * app in the Settings group (`🔌️plugin/🦀️.rs` `AppBuilder::build_definition`) and its body is the guest's own
+ * `framework.body.history`, rendered through the interpreter like every other panel body; the dock keeps it a
+ * bottom-right leaf beside Settings, Marketplace and the Task manager instead of nesting it inside the Settings branch,
+ * exactly as the wgpu shell's dock assembly partitions it.
  */
-export const SHELL_OWNED_PANEL_TAB_IDS: readonly string[] = [FRAMEWORK_PANEL_TAB_HISTORY_ID];
-
-/** 🕰️ True when {@link SHELL_OWNED_PANEL_TAB_IDS} already covers this panel tab id — the one gate the dock's app-declared anchors filter on. */
-export function shellRendersPanelTabItself(panelTabId: string): boolean {
-  return SHELL_OWNED_PANEL_TAB_IDS.includes(panelTabId);
+export function partitionFrameworkHistoryPanelTab<Tab extends { readonly kind: PanelTabKind }>(tabs: readonly Tab[]): { readonly history: Tab | undefined; readonly rest: readonly Tab[] } {
+  return { history: tabs.find((tab) => panelTabKindId(tab.kind) === FRAMEWORK_PANEL_TAB_HISTORY_ID), rest: tabs.filter((tab) => panelTabKindId(tab.kind) !== FRAMEWORK_PANEL_TAB_HISTORY_ID) };
 }
 
 /** 🪟️ One leaf in a framework layout tree, with optional instance/template binding for multi-pane world views. */
@@ -2218,8 +2256,8 @@ export function panelTabDefinitionToNode(
 /** 🎭️ The panels of an actor-bound (hub) document, rendered by the document's verified browser actor rather than
  * the shell's local instance, which never sees the live document (ticket 26/09/23 C10, audit G-P1-4). `stores`
  * holds one retained store per panel-tab id, patched in place by the actor's offers; `onIntent` routes that
- * panel's gestures back to the same actor; `onAction` refuses a bare descriptor exactly as the actor's window does.
- * A tab without a store yet shows the pending body — never the local instance's stale one. */
+ * panel's gestures back to the same actor, except the host-owned ones ({@link panelActionRoutesThroughHostV1}), which
+ * go to the shell's `onAction`. A tab without a store yet shows the pending body — never the local instance's stale one. */
 export type BrowserActorPanelHostV1 = Readonly<{
   stores: ReadonlyMap<string, UiDocumentStore>;
   onIntent: (tabId: string, intent: UiIntent) => void;
@@ -2228,19 +2266,68 @@ export type BrowserActorPanelHostV1 = Readonly<{
 
 /** 🗂️ The panel-tab ids whose bodies an actor may render for `app`: its panel-tab leaves with a body, exactly the
  * panels the local refresh asks a guest for (`buildUiRefreshRequest`). */
-/** ⚔️ The localized reason for a hub's refusal of one of this human's command batches, read from the refusal's own
- * `MutationMessage` codes — the hub's outcome step grades a region another human's concurrent command also touched as
- * `mutation.clamped` and a structural constraint that command now holds as `mutation.invariant`
- * (`🛢️db/🗿️artifact` `grade_conflict_record`, frozen code set). `null` for a refusal that names no conflict (admission,
- * transport): the notice then says only that the hub refused the change. The hub's own `reason` text is English
+/** 🛟️ Every history-edit refusal code the shell names, with its label key: the event log's and the hub's `history.*`
+ * transition refusals (`🛢️db/🗿️artifact`, `🏪️store/🔄️sync`) and a live session's `timeTravel.*` refusals
+ * (`⏪️time-travel`). The `history.*` texts are byte-equal with the wgpu shell's.
+ * @see ../../../../../../../../🔨️modules/🛢️db/🗿️artifact/🦀️.rs
+ * @see ../../../../../../../../../../🔨️modules/⏪️time-travel/🟦️.ts */
+export const HISTORY_REFUSAL_LABEL_KEYS = {
+  "history.malformed-transition": "ui.history.refusal.malformedTransition",
+  "history.unknown-target": "ui.history.refusal.unknownTarget",
+  "history.transition-refused": "ui.history.refusal.transitionRefused",
+  "timeTravel.frozen": "ui.timeTravel.refusal.frozen",
+  "timeTravel.illegal": "ui.timeTravel.refusal.illegal",
+  "timeTravel.stale": "ui.timeTravel.refusal.stale",
+  "timeTravel.blocked": "ui.timeTravel.refusal.blocked",
+  "timeTravel.empty": "ui.timeTravel.refusal.empty",
+  "timeTravel.cancelled": "ui.timeTravel.refusal.cancelled",
+  "timeTravel.name-invalid": "ui.timeTravel.refusal.nameInvalid",
+} as const satisfies Readonly<Record<string, UiTranslationKey>>;
+
+/** 🛟️ One code of {@link HISTORY_REFUSAL_LABEL_KEYS}. */
+export type HistoryRefusalCodeV1 = keyof typeof HISTORY_REFUSAL_LABEL_KEYS;
+
+/** 🔎️ `code` when it is a history-edit refusal the shell names, else `null`. */
+export function historyRefusalCodeV1(code: unknown): HistoryRefusalCodeV1 | null {
+  return typeof code === "string" && Object.hasOwn(HISTORY_REFUSAL_LABEL_KEYS, code) ? (code as HistoryRefusalCodeV1) : null;
+}
+
+/** 🔎️ The history-edit refusal a dispatch fault carries, as its own code or its first cause naming one. */
+export function historyRefusalOfFaultV1(fault: { readonly code: string; readonly causes?: readonly { readonly code?: string }[] }): HistoryRefusalCodeV1 | null {
+  return historyRefusalCodeV1(fault.code) ?? fault.causes?.map((cause) => historyRefusalCodeV1(cause.code)).find((code) => code !== null) ?? null;
+}
+
+/** 🔎️ The history-edit refusal a reserved verb answered with its silent `{rejected: <code>}` result, else `null`. */
+export function historyRefusalOfOutputV1(output: unknown): HistoryRefusalCodeV1 | null {
+  return typeof output === "object" && output !== null ? historyRefusalCodeV1((output as { readonly rejected?: unknown }).rejected) : null;
+}
+
+/** 📣️ One transient notice: its localized text, severity and the machine code `data-notice-code` publishes. */
+export type ShellNoticeV1 = { readonly text: string; readonly kind: Severity; readonly code: string };
+
+/** 🛟️ The notice for a history-edit refusal: a `history.*` transition refusal is an error, a session refusal keeps the
+ * severity its fault reported and is a warning when it arrives without one (a verb's silent `{rejected}` result). */
+export function historyRefusalNoticeV1(code: HistoryRefusalCodeV1, severity: Severity = "warning"): ShellNoticeV1 {
+  return { text: String(shellLabel(HISTORY_REFUSAL_LABEL_KEYS[code])), kind: code.startsWith("history.") ? "error" : severity, code };
+}
+
+/** ⚔️ The notice for a hub's refusal of one of this human's command batches, read from the refusal's own
+ * `MutationMessage` codes. A batch refused for a history transition names that refusal
+ * ({@link historyRefusalNoticeV1}); otherwise the hub's outcome step graded a region another human's concurrent command
+ * also touched as `mutation.clamped` or a structural constraint that command now holds as `mutation.invariant`
+ * (`🛢️db/🗿️artifact` `grade_conflict_record`, frozen code set), named after `ui.conflict.hubRejected`; a refusal
+ * naming neither (admission, transport) says only that the hub refused the change. The hub's own `reason` text is English
  * diagnostics and never reaches the human (ticket 26/09/23 C10, audit G-P2-3).
  * @see ../../../../../../../../🔨️modules/🛢️db/🗿️artifact/🦀️.rs */
-export function hubCommandRejectionReasonKeyV1(messages: readonly number[]): "ui.conflict.hubConcurrentEdit" | "ui.conflict.hubConcurrentInvariant" | null {
-  if (messages.length === 0) return null;
-  const decoded: unknown = JSON.parse(new TextDecoder("utf-8", { fatal: true }).decode(Uint8Array.from(messages)));
+export function hubCommandRejectionNoticeV1(messages: readonly number[]): ShellNoticeV1 {
+  const decoded: unknown = messages.length === 0 ? [] : JSON.parse(new TextDecoder("utf-8", { fatal: true }).decode(Uint8Array.from(messages)));
   if (!Array.isArray(decoded) || decoded.some((message) => message === null || typeof message !== "object" || typeof (message as { code?: unknown }).code !== "string")) throw new Error("hub command rejection: invalid messages");
-  const codes = new Set(decoded.map((message) => (message as { code: string }).code));
-  return codes.has("mutation.invariant") ? "ui.conflict.hubConcurrentInvariant" : codes.has("mutation.clamped") ? "ui.conflict.hubConcurrentEdit" : null;
+  const codes = decoded.map((message) => (message as { code: string }).code);
+  const history = codes.map(historyRefusalCodeV1).find((code) => code !== null);
+  if (history !== undefined && history !== null) return historyRefusalNoticeV1(history);
+  const reason = codes.includes("mutation.invariant") ? "ui.conflict.hubConcurrentInvariant" : codes.includes("mutation.clamped") ? "ui.conflict.hubConcurrentEdit" : null;
+  const rejected = String(shellLabel("ui.conflict.hubRejected"));
+  return { text: reason === null ? rejected : `${rejected}: ${shellLabel(reason)}`, kind: "warning", code: "sync.command.rejected" };
 }
 
 export function browserActorPanelKeysV1(app: Pick<AppDefinition, "panelTabs">): ReadonlySet<string> {
@@ -2713,6 +2800,13 @@ function cachedStoreTreePanelConfigV1(cache: PanelTreeConfigCacheV1 | undefined,
   return config;
 }
 
+/** 🎭️ Whether a panel gesture of an actor-bound document belongs to the host rather than the actor: `undo` takes the
+ * host's undo route (the remote inference history when one is mounted, else the actor), and the explicit check-in
+ * (`framework.checkin`) is shell state no actor holds. */
+export function panelActionRoutesThroughHostV1(action: ActionDescriptor): boolean {
+  return action.action === "undo" || action.controllerId === FRAMEWORK_CHECKIN_CONTROLLER_ID;
+}
+
 /** 🗂️ A shell-rendered panel over its body store ({@link cachedStoreTreePanelConfigV1}); a tab whose body has no store yet
  * shows the pending body. */
 function cachedBodyStoreTreePanelConfigV1(cache: PanelTreeConfigCacheV1 | undefined, tabId: string, store: UiDocumentStore | undefined, bodyKey: string, onAction: (action: ActionDescriptor) => void, treeWindows: TreeWindowHostV1 | null): TreePanelConfig {
@@ -2724,7 +2818,10 @@ function cachedBodyStoreTreePanelConfigV1(cache: PanelTreeConfigCacheV1 | undefi
 function cachedActorTreePanelConfigV1(cache: PanelTreeConfigCacheV1 | undefined, tabId: string, actorPanels: BrowserActorPanelHostV1, bodyKey: string, treeWindows: TreeWindowHostV1 | null): TreePanelConfig {
   const store = actorPanels.stores.get(tabId);
   if (store === undefined) return cachedTreePanelConfigV1(cache, tabId, pendingPanelUiNodeV1(), bodyKey, actorPanels.onAction, treeWindows);
-  return cachedStoreTreePanelConfigV1(cache, tabId, store, bodyKey, treeWindows, actorPanels.onIntent, () => interpretedTreePanelConfigV1(store, tabId, actorPanels.onAction, (intent) => actorPanels.onIntent(tabId, intent), bodyKey, treeWindows));
+  return cachedStoreTreePanelConfigV1(cache, tabId, store, bodyKey, treeWindows, actorPanels.onIntent, () => interpretedTreePanelConfigV1(store, tabId, actorPanels.onAction, (intent) => {
+    const action = uiIntentToActionDescriptor(intent);
+    return panelActionRoutesThroughHostV1(action) ? actorPanels.onAction(action) : actorPanels.onIntent(tabId, intent);
+  }, bodyKey, treeWindows));
 }
 
 /** 🦴 The ONE pending body — `pendingPanelUiNode()` mints a fresh object per call, which would miss
@@ -3111,27 +3208,15 @@ export class AutoCheckinScheduler {
   }
 }
 
-const CHECKIN_ACTION_LABEL: FrozenLabel = { en: "Check In", de: "Einchecken" };
-/** 📌️ `#s-checkin`'s own label — mirrors `⚛️react/🟦️.tsx`'s `ui.checkin.action` bilingual pair
- * (that barrel sits downstream of `ShellHost`, so it cannot be imported here without a cycle — see
- * `SurfaceRoleLabels`'s header doc for the identical constraint). */
-export function checkinActionText(locale: string): string {
-  return frozenLabelText(CHECKIN_ACTION_LABEL, locale);
-}
+/** 📌️ The framework-reserved controller of the history body's explicit `#s-checkin` button (`🔌️plugin/🦀️.rs`
+ * `FRAMEWORK_CHECKIN_CONTROLLER_ID`): the shell answers its `submit` itself — no artifact app holds a check-in — with
+ * the message it carries, else `"check-in"`, exactly as the wgpu shell's `handle_checkin_action`. */
+export const FRAMEWORK_CHECKIN_CONTROLLER_ID = "framework.checkin";
 
-const CHECKIN_MESSAGE_PLACEHOLDER_LABEL: FrozenLabel = { en: "Check-in message", de: "Check-in-Nachricht" };
-export function checkinMessagePlaceholderText(locale: string): string {
-  return frozenLabelText(CHECKIN_MESSAGE_PLACEHOLDER_LABEL, locale);
-}
-
-const CHECKIN_SUBMIT_LABEL: FrozenLabel = { en: "Commit", de: "Übernehmen" };
-export function checkinSubmitText(locale: string): string {
-  return frozenLabelText(CHECKIN_SUBMIT_LABEL, locale);
-}
-
-const CHECKIN_CANCEL_LABEL: FrozenLabel = { en: "Cancel", de: "Abbrechen" };
-export function checkinCancelText(locale: string): string {
-  return frozenLabelText(CHECKIN_CANCEL_LABEL, locale);
+/** 📌️ The checkpoint message a `framework.checkin` `submit` carries: its trimmed `message`, else `"check-in"`. */
+export function checkinSubmitMessageV1(args: unknown): string {
+  const message = typeof args === "object" && args !== null && typeof (args as { readonly message?: unknown }).message === "string" ? (args as { readonly message: string }).message.trim() : "";
+  return message === "" ? "check-in" : message;
 }
 
 /** 📌️ The hub Check In's own status vocabulary: a running phase with its progress, and one sentence
@@ -3161,22 +3246,6 @@ const CHECKIN_ABORT_LABEL: FrozenLabel = { en: "Cancel check-in", de: "Einchecke
 /** 🛑️ The running Check In's own cancel control. */
 export function checkinAbortText(locale: string): string {
   return frozenLabelText(CHECKIN_ABORT_LABEL, locale);
-}
-
-/** 🕰️ The History panel's own five labels. They were English string literals in the JSX, so the whole
- * panel read untranslated to a German pass while the Rust/wgpu twin of the same panel
- * (`🔌️plugin/🦀️.rs` `framework.history.*`) has always been bilingual. `revert` names the per-entry
- * `↶` control, which is the shell's ONLY revert-to-command affordance. */
-const HISTORY_PANEL_LABELS: Readonly<Record<"undo" | "redo" | "checkpoint" | "commands" | "revert", FrozenLabel>> = {
-  undo: { en: "Undo", de: "Rückgängig" },
-  redo: { en: "Redo", de: "Wiederholen" },
-  checkpoint: { en: "Checkpoint", de: "Checkpoint" },
-  commands: { en: "Commands", de: "Befehle" },
-  revert: { en: "Revert to Command", de: "Auf Befehl zurücksetzen" },
-};
-
-export function historyPanelText(key: keyof typeof HISTORY_PANEL_LABELS, locale: string): string {
-  return frozenLabelText(HISTORY_PANEL_LABELS[key], locale);
 }
 
 /** 👁️✏️ ticket §C5 item 5 — "viewers never checkpoint": the one predicate gating BOTH the
@@ -3303,8 +3372,9 @@ export function resolveAppLabel(overlay: PluginAppLabelsOverlay, kind: "windowKi
 }
 
 /** 🗣️ Resolves one action-arg's label + (for `select` controls) its options' labels from the overlay's `actionArgLabels` map, keyed `"{scopeId}.{argId}"` / `"{scopeId}.{argId}.option.{value}"`. `scopeId` is an action id for staged/palette forms, a dialog id for dialog args, or a command id for command args. `ActionArgDef.label`/`ActionArgOption.label` are manifest `LocalizedLabel` fields, resolved for `terminology`/`locale` before the overlay's (always-empty, see the `AppLabelsOverlay` deletion note) fallback lookup even applies. */
-export type ResolvedActionArgDef = Omit<ActionArgDef, "label" | "schema"> & {
+export type ResolvedActionArgDef = Omit<ActionArgDef, "label" | "schema" | "description"> & {
   readonly label: string;
+  readonly description?: string;
   readonly schema: Exclude<ActionArgDef["schema"], { kind: "string" }> | (Omit<Extract<ActionArgDef["schema"], { kind: "string" }>, "options"> & { readonly options: { value: string; label: string }[] });
 };
 
@@ -3327,17 +3397,18 @@ function resolveArtifactKindChoiceLabel(choice: { readonly kindId: string; reado
 
 function resolveActionArgDef(def: ActionArgDef, scopeId: string, overlay: PluginAppLabelsOverlay, terminology: string, locale: string, manifests: readonly { readonly apps: readonly unknown[] }[], selectedArtifactKinds?: readonly ArtifactKindChoice[]): ResolvedActionArgDef {
   const label = resolveAppLabel(overlay, "actionArg", `${scopeId}.${def.id}`, resolveManifestLabel(def.label, terminology, locale));
-  if (def.schema.kind !== "string") return { ...def, label, schema: def.schema };
+  const description = def.description === undefined ? undefined : resolveManifestLabel(def.description, terminology, locale);
+  if (def.schema.kind !== "string") return { ...def, label, description, schema: def.schema };
   if (def.schema.format?.kind === "artifactKind") {
     const choices = selectedArtifactKinds ?? artifactKindChoices(manifests, def.schema.format.roles);
     const options = choices.map((choice) => ({ value: encodeArtifactKindChoice(choice), label: resolveArtifactKindChoiceLabel(choice, locale) }));
-    return { ...def, label, schema: { ...def.schema, options } };
+    return { ...def, label, description, schema: { ...def.schema, options } };
   }
   const options = actionArgStringOptions(def.schema).map((option) => ({ ...option, label: resolveAppLabel(overlay, "actionArg", `${scopeId}.${def.id}.option.${option.value}`, resolveManifestLabel(option.label, terminology, locale)) }));
-  return { ...def, label, schema: { ...def.schema, options } };
+  return { ...def, label, description, schema: { ...def.schema, options } };
 }
 
-/** 🗣️ Resolves a `DialogDefinition`'s title/body/submitLabel/cancelLabel/args from the overlay's `dialogLabels`/`actionArgLabels` maps, keyed by the dialog's own id. `title`/`body`/`submitLabel`/`cancelLabel` are all manifest `LocalizedLabel` fields. */
+/** 🗣️ Resolves a `DialogDefinition`'s title/body/submitLabel/cancelLabel/choices/args from the overlay's `dialogLabels`/`actionArgLabels` maps, keyed by the dialog's own id. `title`/`body`/`submitLabel`/`cancelLabel` are all manifest `LocalizedLabel` fields. */
 export function resolveDialogDefinition(dialog: DialogDefinition, overlay: PluginAppLabelsOverlay, terminology: string, locale: string, manifests: readonly { readonly apps: readonly unknown[] }[] = [], selectedArtifactKinds?: readonly ArtifactKindChoice[]): Omit<DialogDefinition, "args"> & { readonly args: ResolvedActionArgDef[] } {
   return {
     ...dialog,
@@ -3345,6 +3416,11 @@ export function resolveDialogDefinition(dialog: DialogDefinition, overlay: Plugi
     body: dialog.body ? resolveAppLabel(overlay, "dialog", `${dialog.id}.body`, resolveManifestLabel(dialog.body, terminology, locale)) : dialog.body,
     submitLabel: resolveAppLabel(overlay, "dialog", `${dialog.id}.submit`, resolveManifestLabel(dialog.submitLabel, terminology, locale)),
     cancelLabel: dialog.cancelLabel ? resolveAppLabel(overlay, "dialog", `${dialog.id}.cancel`, resolveManifestLabel(dialog.cancelLabel, terminology, locale)) : dialog.cancelLabel,
+    ...(dialog.choices ? { choices: dialog.choices.map((choice) => ({
+      ...choice,
+      label: resolveAppLabel(overlay, "dialog", `${dialog.id}.choice.${choice.id}.label`, resolveManifestLabel(choice.label, terminology, locale)),
+      ...(choice.description ? { description: resolveAppLabel(overlay, "dialog", `${dialog.id}.choice.${choice.id}.description`, resolveManifestLabel(choice.description, terminology, locale)) } : {}),
+    })) } : {}),
     args: dialog.args.map((def) => resolveActionArgDef(def, dialog.id, overlay, terminology, locale, manifests, selectedArtifactKinds)),
   };
 }
@@ -4393,19 +4469,200 @@ export function utilityBarNode(utilities: readonly UtilityNode[] | undefined, wi
 }
 
 //#region 🧰️WindowActionPane
+/** 🎛️ What a staged field reads from the shell beyond its own value: the live interaction selection of a domain (every
+ * domain's when the reference names none) a reference input's "use current selection" takes. */
+export type StagedArgContextV1 = { readonly selection?: (domain: string | undefined) => readonly string[] };
+
+/** 🕹️ The ids selected in `domain` of an interaction state, or in every domain when `domain` is absent. */
+export function interactionSelectionIdsV1(state: InteractionState, domain: string | undefined): readonly string[] {
+  return domain === undefined ? Object.values(state.selection).flatMap((entry) => entry.ids) : (state.selection[domain]?.ids ?? []);
+}
+
+/** 🔢️ A staged number as the human reads it: scaled by `displayFactor`, printed at `precision`, followed by the display
+ * unit (else the stored unit). */
+export function stagedNumberDisplayText(value: number, control: { readonly precision?: number; readonly displayFactor?: number; readonly displayUnit?: string; readonly unit?: string }): string {
+  const shown = value * (control.displayFactor ?? 1);
+  const text = control.precision === undefined ? formatUiNumber(shown) : formatUiNumberFixed(shown, control.precision);
+  const unit = control.displayUnit ?? control.unit;
+  return unit ? `${text} ${unit}` : text;
+}
+
+/** 🧷️ The ids a reference input holds, whether it takes many or one, as the text a selection spells them in. */
+function stagedReferenceIds(value: unknown): readonly string[] {
+  return (Array.isArray(value) ? value : [value]).flatMap((id) => referenceIdText(id) ?? []);
+}
+
+/** 🧷️ A staged reference input with the W1-E `reference_list` recipe semantics: one chip per referenced id that removes
+ * it on activation (announced as "Remove <id>"), an empty line while there is none, and a "use current selection"
+ * button that takes the live selection (capped at `maxItems`, the first id for a single reference). */
+function StagedReferenceField({ id, labelledBy, value, many, maxItems, domain, idType, disabled, selection, onChange }: { readonly id: string; readonly labelledBy?: string; readonly value: unknown; readonly many: boolean; readonly maxItems?: number; readonly domain?: string; readonly idType?: ReferenceIdType; readonly disabled?: boolean; readonly selection?: StagedArgContextV1["selection"]; readonly onChange: (value: unknown) => void }): ReactElement {
+  const ids = stagedReferenceIds(value);
+  const removeLabel = (item: string) => String(shellLabel("ui.referenceList.remove", { item }));
+  const commit = (next: readonly string[]) => {
+    const values = next.flatMap((text) => referenceIdValue(idType, text) ?? []);
+    onChange(many ? values : (values[0] ?? (idType === "integer" ? null : "")));
+  };
+  return (
+    <div id={id} role="group" aria-labelledby={labelledBy} data-staged-reference="" className="flex w-full min-w-0 flex-col gap-tiny">
+      {ids.length === 0 ? (
+        <span data-staged-reference-empty="" className="text-xs text-muted-foreground">{shellLabel("ui.referenceList.empty")}</span>
+      ) : (
+        <div role="toolbar" aria-labelledby={labelledBy} className="flex flex-wrap gap-tiny">
+          {ids.map((item) => (
+            <button key={item} type="button" data-staged-reference-chip={item} aria-label={removeLabel(item)} title={removeLabel(item)} disabled={disabled} className="inline-flex items-center gap-tiny rounded-sm border px-single text-xs" onClick={() => commit(ids.filter((other) => other !== item))}>
+              {item}
+              <Icon icon="x" size="small" />
+            </button>
+          ))}
+        </div>
+      )}
+      <button type="button" data-staged-reference-use-selection="" disabled={disabled || selection === undefined} className="self-start text-xs underline" onClick={() => {
+        const picked = [...new Set(selection?.(domain) ?? [])];
+        commit(many ? picked.slice(0, maxItems ?? picked.length) : picked.slice(0, 1));
+      }}>
+        {shellLabel("ui.referenceList.useSelection")}
+      </button>
+    </div>
+  );
+}
+
+/** 🎨️ A staged sRGB colour over the vector it edits (components within 0..1): a native colour picker for red, green and blue
+ * and, with `alpha`, the straight alpha as a number field named "a" — the staged value keeps 3 or 4 components. */
+/** 🎨️ A staged colour with the W1-E `color_input` recipe semantics: the swatch (the platform's colour picker, named by
+ * the field), the hex field — typed hex is staged once it parses (`parseUiColorHex`), on Enter or blur, keeping the
+ * alpha when the text carries none — and, for a colour with alpha, the opacity slider over 0..1. sRGB components in
+ * 0..1, straight alpha. */
+function StagedColorField({ id, labelledBy, value, alpha, disabled, required, onChange }: { readonly id: string; readonly labelledBy?: string; readonly value: unknown; readonly alpha: boolean; readonly disabled?: boolean; readonly required?: boolean; readonly onChange: (value: unknown) => void }): ReactElement {
+  const components = Array.isArray(value) ? value : [];
+  const rgba = [0, 1, 2, 3].map((index) => {
+    const component = Number(components[index] ?? (index === 3 ? 1 : 0));
+    return Number.isFinite(component) ? Math.min(1, Math.max(0, component)) : 0;
+  });
+  const [draft, setDraft] = useState<string | null>(null);
+  const commit = (next: readonly number[]) => onChange(alpha ? [...next] : next.slice(0, 3));
+  const commitHex = (text: string) => {
+    setDraft(null);
+    const parsed = parseUiColorHex(text);
+    if (parsed) commit(/^#?([0-9a-f]{4}|[0-9a-f]{8})$/i.test(text.trim()) ? parsed : [...parsed.slice(0, 3), rgba[3]!]);
+  };
+  return (
+    <div id={id} role="group" aria-labelledby={labelledBy} data-staged-control="color" className="flex w-full min-w-0 flex-wrap items-center gap-single">
+      <input
+        id={`${id}.swatch`}
+        type="color"
+        aria-labelledby={labelledBy}
+        className="h-medium w-medium shrink-0 cursor-pointer rounded-sm border"
+        value={uiColorHex(rgba, false)}
+        disabled={disabled}
+        onChange={(event) => {
+          const parsed = parseUiColorHex(event.target.value);
+          if (parsed) commit([...parsed.slice(0, 3), rgba[3]!]);
+        }}
+      />
+      <Input
+        id={`${id}.hex`}
+        aria-label={String(shellLabel("ui.colorInput.hex"))}
+        required={required}
+        type="text"
+        spellCheck={false}
+        className="h-medium w-[7rem] min-w-0 font-mono"
+        value={draft ?? uiColorHex(rgba, alpha)}
+        disabled={disabled}
+        onChange={(event) => setDraft(event.target.value)}
+        onBlur={(event) => commitHex(event.target.value)}
+        onKeyDown={(event) => {
+          if (event.key !== "Enter") return;
+          event.preventDefault();
+          commitHex(event.currentTarget.value);
+        }}
+      />
+      {alpha ? <Slider id={`${id}.alpha`} aria-label={String(shellLabel("ui.colorInput.alpha"))} className="min-w-[6rem] flex-1" min={0} max={1} step={0.01} value={[rgba[3]!]} disabled={disabled} onValueChange={(values) => commit([...rgba.slice(0, 3), values[0] ?? rgba[3]!])} /> : null}
+    </div>
+  );
+}
+
+/** 🧭️ A staged vector with the W1-E `vector_input` recipe semantics: one named number field per component sharing the
+ * vector's facets — bounds, a step (else one unit of its precision), its display unit and factor, and its detents,
+ * which the page keys jump between through the shared keyboard law (`uiNumberKeyValue`). */
+function StagedVectorField({ id, labelledBy, value, control, disabled, required, onChange }: { readonly id: string; readonly labelledBy?: string; readonly value: unknown; readonly control: Extract<ActionArgControl, { kind: "vector" }>; readonly disabled?: boolean; readonly required?: boolean; readonly onChange: (value: unknown) => void }): ReactElement {
+  const tuple = Array.isArray(value) && value.length >= control.dims ? (value as readonly number[]) : null;
+  const axes = Array.from({ length: control.dims }, (_, index) => ["x", "y", "z", "w"][index] ?? String(index));
+  const factor = control.displayFactor ?? 1;
+  const unit = control.displayUnit ?? control.unit;
+  const step = control.step ?? (control.precision === undefined ? undefined : 10 ** -control.precision);
+  const commit = (index: number, next: number) => {
+    const values = axes.map((_, component) => tuple?.[component] ?? 0);
+    values[index] = Math.min(control.max ?? Number.POSITIVE_INFINITY, Math.max(control.min ?? Number.NEGATIVE_INFINITY, next));
+    onChange(values);
+  };
+  return (
+    <div id={id} role="group" aria-labelledby={labelledBy} data-staged-control="vector" className="flex w-full min-w-0 flex-wrap gap-single">
+      {axes.map((axis, index) => (
+        <div key={`${id}.${axis}`} className="flex min-w-[4rem] flex-1 items-center gap-tiny text-xs text-muted-foreground">
+          <label htmlFor={`${id}.${axis}`}>{unit ? `${axis} (${unit})` : axis}</label>
+          <Input
+            id={`${id}.${axis}`}
+            required={required}
+            type="number"
+            className="h-medium w-full min-w-0"
+            value={tuple ? formatUiNumber((tuple[index] ?? 0) * factor) : ""}
+            min={control.min === undefined ? undefined : control.min * factor}
+            max={control.max === undefined ? undefined : control.max * factor}
+            step={step === undefined ? undefined : step * factor}
+            disabled={disabled}
+            onKeyDown={(event) => {
+              if (event.key !== "PageUp" && event.key !== "PageDown") return;
+              event.preventDefault();
+              commit(index, uiNumberKeyValue(tuple?.[index] ?? 0, control.min ?? null, control.max ?? null, control.step ?? step ?? 1, control.snaps ?? [], event.key === "PageUp" ? "pageUp" : "pageDown", false));
+            }}
+            onChange={(event) => {
+              const parsed = Number(event.target.value);
+              if (event.target.value === "" || !Number.isFinite(parsed)) return;
+              commit(index, (control.precision === undefined ? parsed : roundUiNumber(parsed, control.precision)) / factor);
+            }}
+          />
+        </div>
+      ))}
+    </div>
+  );
+}
+
 /**
  * 🎛️ Renders one {@link ActionArgControl} into a STAGED form field — the crucial difference from
  * `renderUiControl` in `ui-interpreter.tsx` is that this dispatches NOTHING globally; `onChange` only
  * writes to the caller's local staged buffer. `value` is the already-resolved effective value
- * (staged ?? default ?? unset).
+ * (staged ?? default ?? unset). Stepper, dial (a detented slider read in display units), segmented choice, vector
+ * axes and reference chips follow the W1-E contract recipes.
  */
-export function renderStagedArgControl(def: ResolvedActionArgDef, value: unknown, onChange: (value: unknown) => void, disabled?: boolean, field?: UIDialogFieldBinding): ReactElement {
+export function renderStagedArgControl(def: ResolvedActionArgDef, value: unknown, onChange: (value: unknown) => void, disabled?: boolean, field?: UIDialogFieldBinding, context: StagedArgContextV1 = {}): ReactElement {
+  const control = renderStagedArgValueControl(def, value, onChange, disabled, field, context);
+  if (!def.nullable) return control;
+  const cleared = value === null;
+  return (
+    <div className="flex w-full min-w-0 items-center gap-single" data-staged-nullable="">
+      <div className="min-w-0 flex-1">{control}</div>
+      <button type="button" aria-pressed={cleared} aria-describedby={field?.labelledBy} disabled={disabled} className="shrink-0 text-xs underline" onClick={() => onChange(cleared ? undefined : null)}>
+        {shellLabel("ui.nullableInput.clear")}
+      </button>
+    </div>
+  );
+}
+
+/** 🎛️ The value control of one staged argument, without the clear toggle a nullable input adds around it. */
+function renderStagedArgValueControl(def: ResolvedActionArgDef, value: unknown, onChange: (value: unknown) => void, disabled?: boolean, field?: UIDialogFieldBinding, context: StagedArgContextV1 = {}): ReactElement {
   const control: ActionArgControl = argControl(def);
   const fieldId = field?.id ?? def.id;
   const labelledBy = field?.labelledBy;
   switch (control.kind) {
     case "text":
       return <Input id={fieldId} aria-labelledby={labelledBy} required={field?.required} type="text" className="h-medium w-full min-w-0" value={typeof value === "string" ? value : ""} placeholder={control.placeholder} disabled={disabled} onChange={(event) => onChange(event.target.value)} />;
+    case "stepper":
+      return <Stepper id={fieldId} aria-labelledby={labelledBy} value={typeof value === "number" && Number.isFinite(value) ? value : undefined} defaultValue={control.min ?? 0} min={control.min} max={control.max} step={control.step ?? 1} precision={control.precision} disabled={disabled} onChange={(next) => onChange(next)} />;
+    case "slider":
+    case "dial": {
+      const numeric = typeof value === "number" && Number.isFinite(value) ? value : control.min;
+      return <Slider id={fieldId} aria-labelledby={labelledBy} aria-valuetext={stagedNumberDisplayText(numeric, control)} data-staged-control={control.kind} className="w-full min-w-0" min={control.min} max={control.max} step={control.step ?? 1} snapValues={control.snaps} formatDisplayValue={(shown) => stagedNumberDisplayText(shown, control)} value={[numeric]} disabled={disabled} onValueChange={(values) => onChange(values[0] ?? numeric)} />;
+    }
     case "number":
       return (
         <Input
@@ -4422,21 +4679,24 @@ export function renderStagedArgControl(def: ResolvedActionArgDef, value: unknown
           onChange={(event) => onChange(event.target.value === "" ? undefined : Number(event.target.value))}
         />
       );
-    case "slider": {
-      const numeric = typeof value === "number" && Number.isFinite(value) ? value : control.min;
-      const slider = <Slider id={fieldId} aria-labelledby={labelledBy} className="w-full min-w-0" min={control.min} max={control.max} step={control.step ?? 1} value={[numeric]} disabled={disabled} onValueChange={(values) => onChange(values[0] ?? numeric)} />;
-      if (!control.unit) return slider;
-      return (
-        <div className="flex w-full min-w-0 items-center gap-single">
-          {slider}
-          <span className="shrink-0 text-xs tabular-nums text-muted-foreground">
-            {numeric} {control.unit}
-          </span>
-        </div>
-      );
-    }
     case "toggle":
       return <Toggle id={fieldId} aria-labelledby={labelledBy} icon="check" pressed={value === true} text={uiDataLabel(def.label)} disabled={disabled} onPressedChange={(pressed) => onChange(pressed)} />;
+    case "segmented": {
+      if (def.schema.kind !== "string") throw new Error("Segmented control requires a string argument schema");
+      const options = actionArgStringOptions(def.schema);
+      return (
+        <ToggleGroup
+          id={fieldId}
+          kind="single"
+          aria-labelledby={labelledBy}
+          data-staged-control="segmented"
+          disabled={disabled || options.length === 0}
+          value={typeof value === "string" && options.some((option) => option.value === value) ? value : ""}
+          onValueChange={(next) => { if (next !== "") onChange(next); }}
+          items={options.map((option) => ({ value: option.value, icon: "circle-dot", text: option.label }))}
+        />
+      );
+    }
     case "artifactKind":
     case "surfaceApp":
     case "select": {
@@ -4456,34 +4716,12 @@ export function renderStagedArgControl(def: ResolvedActionArgDef, value: unknown
         </Select>
       );
     }
-    case "vec3": {
-      const tuple = Array.isArray(value) && value.length >= 3 ? (value as readonly number[]) : null;
-      const axes = ["x", "y", "z"] as const;
-      return (
-        <div className="grid grid-cols-3 gap-single">
-          {axes.map((axis, index) => (
-            <Input
-              key={`${def.id}.${axis}`}
-              id={`${fieldId}.${axis}`}
-              aria-label={`${uiDataLabel(def.label)} ${axis}`}
-              required={field?.required}
-              type="number"
-              className="h-medium w-full min-w-0"
-              value={tuple ? String(tuple[index] ?? 0) : ""}
-              placeholder={axis}
-              disabled={disabled}
-              onChange={(event) => {
-                const parsed = Number(event.target.value);
-                if (!Number.isFinite(parsed)) return;
-                const next: [number, number, number] = tuple ? [tuple[0] ?? 0, tuple[1] ?? 0, tuple[2] ?? 0] : [0, 0, 0];
-                next[index] = parsed;
-                onChange(next);
-              }}
-            />
-          ))}
-        </div>
-      );
-    }
+    case "reference":
+      return <StagedReferenceField id={fieldId} labelledBy={labelledBy} value={value} many={control.many ?? false} maxItems={control.maxItems} domain={control.domain} idType={control.idType} disabled={disabled} selection={context.selection} onChange={onChange} />;
+    case "vector":
+      return <StagedVectorField id={fieldId} labelledBy={labelledBy} value={value} control={control} disabled={disabled} required={field?.required} onChange={onChange} />;
+    case "color":
+      return <StagedColorField id={fieldId} labelledBy={labelledBy} value={value} alpha={control.alpha} disabled={disabled} required={field?.required} onChange={onChange} />;
     case "iconSelect":
       return <IconSelector id={fieldId} aria-labelledby={labelledBy} disabled={disabled} classifyIconSelectorMode={undefined} value={typeof value === "string" ? value : ""} uniform onChange={(next) => onChange(next)} />;
   }

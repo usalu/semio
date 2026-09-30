@@ -13,17 +13,96 @@
     "zoneTimestepMinutes": {
       "type": "integer",
       "minimum": 1,
-      "maximum": 60
+      "maximum": 60,
+      "x-semio-ui": {
+        "widget": "stepper",
+        "role": "value",
+        "label": {
+          "en": "Zone timestep",
+          "de": "Zonenzeitschritt"
+        },
+        "description": {
+          "en": "Heat balance timestep; divisors of 60 give whole steps per hour.",
+          "de": "Zeitschritt der Wärmebilanz; Teiler von 60 ergeben ganze Schritte pro Stunde."
+        },
+        "unit": "min",
+        "step": 1,
+        "precision": 0,
+        "snaps": [
+          1,
+          2,
+          3,
+          4,
+          5,
+          6,
+          10,
+          12,
+          15,
+          20,
+          30,
+          60
+        ],
+        "group": "simulation",
+        "order": 10
+      }
     },
     "systemTimestepMinutes": {
       "type": "integer",
       "minimum": 1,
-      "maximum": 60
+      "maximum": 60,
+      "x-semio-ui": {
+        "widget": "stepper",
+        "role": "value",
+        "label": {
+          "en": "System timestep",
+          "de": "Anlagenzeitschritt"
+        },
+        "description": {
+          "en": "HVAC system timestep; divisors of 60 give whole steps per hour.",
+          "de": "Zeitschritt der Anlagentechnik; Teiler von 60 ergeben ganze Schritte pro Stunde."
+        },
+        "unit": "min",
+        "step": 1,
+        "precision": 0,
+        "snaps": [
+          1,
+          2,
+          3,
+          4,
+          5,
+          6,
+          10,
+          12,
+          15,
+          20,
+          30,
+          60
+        ],
+        "group": "simulation",
+        "order": 20
+      }
     },
     "warmupDays": {
       "type": "integer",
       "minimum": 0,
-      "maximum": 365
+      "maximum": 365,
+      "x-semio-ui": {
+        "widget": "stepper",
+        "role": "value",
+        "label": {
+          "en": "Warm-up days",
+          "de": "Einschwingtage"
+        },
+        "description": {
+          "en": "Days simulated before the run period to settle the building's thermal mass.",
+          "de": "Vor dem Simulationszeitraum gerechnete Tage, damit die Speichermasse einschwingt."
+        },
+        "unit": "d",
+        "step": 1,
+        "precision": 0,
+        "group": "simulation",
+        "order": 30
+      }
     }
   }
 }

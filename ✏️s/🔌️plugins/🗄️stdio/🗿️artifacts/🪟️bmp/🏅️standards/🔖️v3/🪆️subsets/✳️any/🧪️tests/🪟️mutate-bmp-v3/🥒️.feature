@@ -58,9 +58,17 @@ Feature: Apply every typed BMP v3 mutation to a real-world document
   subject side the ONLY channel from input to output is decode_bmp → the DSL text codec → parse_dsl
   → encode_bmp, so a byte that survives did so by being modelled.
 
-  ⚠️ KNOWN OPEN DIVERGENCE — `mutate-replace-pixel-data` (this case's parity ratio is recorded in the
-  ticket, not here). The row fills the
-  whole raster with rgb(200,40,40), a colour the committed 240-entry table has no entry for. The
+  Every Examples `params` cell is exactly the leaf's wire payload — its `payload_value()`, camelCase,
+  no aggregate tag — decoded by the subject through the derive-generated `from_payload_value` and
+  read by the `image` oracle by the same field names. `replace-pixel-data`'s payload is the whole
+  replacement RGBA raster, which for this 2334x2560 plan would be 23.9 million numbers in one cell,
+  so that kind runs in its own outlines on the committed 4x4, 7-entry indexed document
+  (`shared://🎨️replace-palette-entry-applied/⬅️before.bmp`) — the same palette storage the real
+  plan has, so the row still lands on an indexed document.
+
+  ⚠️ KNOWN OPEN DIVERGENCE — `mutate-raster-replace-pixel-data` (this case's parity ratio is recorded
+  in the ticket, not here). The row fills the
+  whole raster with rgb(200,40,40), a colour the 7-entry table has no entry for. The
   oracle answers by switching the document to 24-bit direct colour (`storage: direct`,
   `paletteEntries: 0`); `encode_bmp` answers with an Err, and
   `unrepresentable_palette_edit_is_reported_not_narrowed`
@@ -84,12 +92,25 @@ Feature: Apply every typed BMP v3 mutation to a real-world document
       """
     Then the oracle and the subject agree on the semantic projection
     Examples:
-      | id                    | params                                                            |
-      | change-header-fields      | {"rowOrder":"top-down","xPixelsPerMeter":2835,"yPixelsPerMeter":2835}              |
-      | insert-palette-entry   | {"index":240,"entry":{"b":10,"g":20,"r":30,"reserved":0}}                         |
-      | remove-palette-entry   | {"index":239}                                                                     |
-      | replace-palette-entry      | {"index":239,"entry":{"b":1,"g":2,"r":3,"reserved":0}}                            |
-      | replace-pixel-data         | {"fill":[200,40,40,255]}                                                          |
+      | id | params |
+      | change-header-fields | {"rowOrder":"topDown","xPixelsPerMeter":2835,"yPixelsPerMeter":2835} |
+      | insert-palette-entry | {"index":240,"entry":{"b":10,"g":20,"r":30,"reserved":0}} |
+      | remove-palette-entry | {"index":239} |
+      | replace-palette-entry | {"index":239,"entry":{"b":1,"g":2,"r":3,"reserved":0}} |
+
+  @id-mutate-raster
+  @level-exhaustive
+  @mode-differential
+  Scenario Outline: Apply <id> to a small indexed document
+    Given the small indexed input document shared://🎨️replace-palette-entry-applied/⬅️before.bmp
+    When the <id> mutation is applied with its parameters
+      """
+      {"kind": "<id>", "params": <params>}
+      """
+    Then the oracle and the subject agree on the semantic projection
+    Examples:
+      | id | params |
+      | replace-pixel-data | {"pixels":[200,40,40,255,200,40,40,255,200,40,40,255,200,40,40,255,200,40,40,255,200,40,40,255,200,40,40,255,200,40,40,255,200,40,40,255,200,40,40,255,200,40,40,255,200,40,40,255,200,40,40,255,200,40,40,255,200,40,40,255,200,40,40,255]} |
 
   @id-inverse
   @level-exhaustive
@@ -104,12 +125,27 @@ Feature: Apply every typed BMP v3 mutation to a real-world document
     Then the oracle and the subject agree on the semantic projection
     And that projection matches the untouched original document
     Examples:
-      | id                    | params                                                            |
-      | change-header-fields      | {"rowOrder":"top-down","xPixelsPerMeter":2835,"yPixelsPerMeter":2835}              |
-      | insert-palette-entry   | {"index":240,"entry":{"b":10,"g":20,"r":30,"reserved":0}}                         |
-      | remove-palette-entry   | {"index":239}                                                                     |
-      | replace-palette-entry      | {"index":239,"entry":{"b":1,"g":2,"r":3,"reserved":0}}                            |
-      | replace-pixel-data         | {"fill":[200,40,40,255]}                                                          |
+      | id | params |
+      | change-header-fields | {"rowOrder":"topDown","xPixelsPerMeter":2835,"yPixelsPerMeter":2835} |
+      | insert-palette-entry | {"index":240,"entry":{"b":10,"g":20,"r":30,"reserved":0}} |
+      | remove-palette-entry | {"index":239} |
+      | replace-palette-entry | {"index":239,"entry":{"b":1,"g":2,"r":3,"reserved":0}} |
+
+  @id-inverse-raster
+  @level-exhaustive
+  @mode-property
+  Scenario Outline: Undoing <id> restores a small indexed document
+    Given the small indexed input document shared://🎨️replace-palette-entry-applied/⬅️before.bmp
+    When the <id> mutation is applied with its parameters
+      """
+      {"kind": "<id>", "params": <params>}
+      """
+    And the mutation's own algebraic inverse is applied next
+    Then the oracle and the subject agree on the semantic projection
+    And that projection matches the untouched original document
+    Examples:
+      | id | params |
+      | replace-pixel-data | {"pixels":[200,40,40,255,200,40,40,255,200,40,40,255,200,40,40,255,200,40,40,255,200,40,40,255,200,40,40,255,200,40,40,255,200,40,40,255,200,40,40,255,200,40,40,255,200,40,40,255,200,40,40,255,200,40,40,255,200,40,40,255,200,40,40,255]} |
 
   @id-identity-round-trip
   @level-long

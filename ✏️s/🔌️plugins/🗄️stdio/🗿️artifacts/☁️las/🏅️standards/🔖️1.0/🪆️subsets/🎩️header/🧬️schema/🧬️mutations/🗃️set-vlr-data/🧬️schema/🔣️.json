@@ -5,10 +5,15 @@
   "type": "object",
   "additionalProperties": false,
   "required": [
+    "mutation",
     "index",
     "data"
   ],
   "properties": {
+    "mutation": {
+      "const": "setVlrData",
+      "description": "Aggregate discriminator spliced in by LasMutation; absent when the payload stands alone."
+    },
     "index": {
       "type": "integer",
       "minimum": 0
@@ -20,10 +25,6 @@
         "minimum": 0,
         "maximum": 255
       }
-    },
-    "mutation": {
-      "const": "setVlrData",
-      "description": "Aggregate discriminator spliced in by LasMutation; absent when the payload stands alone."
     }
   }
 }

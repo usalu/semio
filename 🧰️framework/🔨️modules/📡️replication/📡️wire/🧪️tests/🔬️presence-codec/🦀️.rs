@@ -1,5 +1,5 @@
 
-use super::{PresenceDomain, PresenceInteraction, PresencePeer, PresencePrincipalKind, PresenceToolRun, PresenceToolRunState, PresenceUi, PresenceViewKind, PresenceWindowView, decode_presence_peer, decode_presence_tool_run, encode_presence_peer, encode_presence_tool_run};
+use super::{PresenceDomain, PresenceHistoryEdit, PresenceHistoryEditStage, PresenceInteraction, PresencePeer, PresencePrincipalKind, PresenceToolRun, PresenceToolRunState, PresenceUi, PresenceViewKind, PresenceWindowView, decode_presence_history_edit, decode_presence_peer, decode_presence_tool_run, encode_presence_history_edit, encode_presence_peer, encode_presence_tool_run};
 
 fn bounded_codec_fixture() -> serde_json::Value {
     serde_json::from_str(include_str!("../../../🧫️fixtures/👥️presence-peer-codec-v1/🔣️.json")).expect("presence peer codec fixture")
@@ -75,7 +75,7 @@ async fn presence_peer_decoder_rejects_hostile_counts_before_allocation() {
 
 #[semio_framework_async_macros::async_test]
 async fn presence_peer_binary_round_trips_with_every_field_absent() {
-    let peer = PresencePeer { actor: "peer-1".into(), connected_at_ms: 1000, label: None, presence_pack: None, user_id: None, role: None, drag_ghost_json: None, interaction: None, color: None, surface: None, views: Vec::new(), ui: None, tool_run: None, principal_kind: None, active_tool: None };
+    let peer = PresencePeer { actor: "peer-1".into(), connected_at_ms: 1000, label: None, presence_pack: None, user_id: None, role: None, drag_ghost_json: None, interaction: None, color: None, surface: None, views: Vec::new(), ui: None, tool_run: None, principal_kind: None, active_tool: None, history_edit: None };
     let bytes = encode_presence_peer(&peer).await;
     assert_eq!(decode_presence_peer(&bytes).await.unwrap(), peer);
 }
@@ -101,6 +101,7 @@ async fn presence_peer_binary_round_trips_with_every_field_present() {
         tool_run: Some(PresenceToolRun { tool_id: "fill".into(), state: PresenceToolRunState::Running, stage: 1, completed: 42, total: Some(100) }),
         principal_kind: None,
         active_tool: Some("brush".into()),
+        history_edit: Some(PresenceHistoryEdit { mutation_id: "e-7#1".into(), stage: PresenceHistoryEditStage::Replaying, drafts: 2 }),
     };
     let bytes = encode_presence_peer(&peer).await;
     assert_eq!(decode_presence_peer(&bytes).await.unwrap(), peer);
@@ -124,6 +125,7 @@ async fn presence_peer_active_tool_round_trips() {
         tool_run: None,
         principal_kind: None,
         active_tool: Some("select".into()),
+        history_edit: None,
     };
     let bytes = encode_presence_peer(&peer).await;
     assert_eq!(decode_presence_peer(&bytes).await.unwrap(), peer);
@@ -149,7 +151,7 @@ async fn presence_peer_round_trips_views_ui_color_surface() {
         views: vec![PresenceWindowView { window_id: "w1".into(), space: "geo".into(), kind: PresenceViewKind::Geo { lng: 8.5, lat: 47.4, zoom: 12.0, bearing: 0.0, pitch: 0.0 }, size: [500.0, 400.0], pointer: Some([8.5, 47.4, 0.0]), ray_origin: None }],
         ui: Some(PresenceUi { hovered_path: None, focused_path: Some("panel[0]#tools".into()), pressed_path: None }),
         tool_run: None,
-        principal_kind: None, active_tool: None,
+        principal_kind: None, active_tool: None, history_edit: None,
     };
     let bytes = encode_presence_peer(&peer).await;
     let decoded = decode_presence_peer(&bytes).await.unwrap();
@@ -161,11 +163,11 @@ async fn presence_peer_round_trips_views_ui_color_surface() {
 
 #[semio_framework_async_macros::async_test]
 async fn presence_peer_rejects_unknown_flag_bits() {
-    // Hand-built rather than mutating an encode output: flags is a varint_u64. Bit 13 is one past
-    // the frozen 0..=12 range (bit 12 = active_tool). The next field to take bit 13 must move this.
+    // Hand-built rather than mutating an encode output: flags is a varint_u64. Bit 14 is one past
+    // the frozen 0..=13 range (bit 13 = history_edit). The next field to take bit 14 must move this.
     let mut bytes = Vec::new();
     crate::write_str(&mut bytes, "peer-5");
-    crate::wire::write_varint_u64(&mut bytes, 1 << 13);
+    crate::wire::write_varint_u64(&mut bytes, 1 << 14);
     crate::wire::write_varint_u64(&mut bytes, 1000);
     let err = decode_presence_peer(&bytes).await.unwrap_err();
     assert!(matches!(err, crate::ProtocolError::Malformed { what: "presence peer flags", .. }));
@@ -210,6 +212,7 @@ async fn presence_peer_principal_kind_round_trips_in_both_codecs() {
             tool_run: None,
             principal_kind: kind,
             active_tool: None,
+            history_edit: None,
         };
         let bytes = encode_presence_peer(&peer).await;
         assert_eq!(decode_presence_peer(&bytes).await.unwrap(), peer, "binary codec, {kind:?}");
@@ -236,6 +239,7 @@ async fn presence_peer_principal_kind_round_trips_in_both_codecs() {
         tool_run: None,
         principal_kind: Some(PresencePrincipalKind::Agent),
         active_tool: None,
+        history_edit: None,
     });
     assert_eq!(serde_json::Value::from(encoded.clone())["principalKind"], serde_json::json!("agent"));
     let crate::value::DslValue::Object(mut fields) = encoded else { panic!("a peer encodes as an object") };
@@ -265,7 +269,7 @@ async fn presence_peer_tool_run_round_trips_every_state_with_wire_spelling() {
         assert_eq!(PresenceToolRunState::from_wire_name(spelling), Some(state));
         assert_eq!(state as u8, tag as u8);
         for total in [None, Some(9)] {
-            let peer = PresencePeer { actor: "peer-6".into(), connected_at_ms: 1, label: None, presence_pack: None, user_id: None, role: None, drag_ghost_json: None, interaction: None, color: None, surface: None, views: Vec::new(), ui: None, tool_run: Some(PresenceToolRun { tool_id: "fill".into(), state, stage: 2, completed: 3, total }), principal_kind: None, active_tool: None };
+            let peer = PresencePeer { actor: "peer-6".into(), connected_at_ms: 1, label: None, presence_pack: None, user_id: None, role: None, drag_ghost_json: None, interaction: None, color: None, surface: None, views: Vec::new(), ui: None, tool_run: Some(PresenceToolRun { tool_id: "fill".into(), state, stage: 2, completed: 3, total }), principal_kind: None, active_tool: None, history_edit: None };
             let bytes = encode_presence_peer(&peer).await;
             assert_eq!(decode_presence_peer(&bytes).await.unwrap(), peer);
             let value = crate::value::ToValue::to_value(&peer);
@@ -276,6 +280,37 @@ async fn presence_peer_tool_run_round_trips_every_state_with_wire_spelling() {
     assert_eq!(PresenceToolRunState::from_wire_name("idle"), None);
 }
 
+/// ⏪️ The history-edit summary round-trips through both codecs with every stage's wire spelling, its standalone body
+/// is the peer's flag-bit-13 suffix, and a bad stage tag or trailing bytes are refused.
+#[semio_framework_async_macros::async_test]
+async fn presence_peer_history_edit_round_trips_every_stage_with_wire_spelling() {
+    let stages = [(PresenceHistoryEditStage::Editing, "editing"), (PresenceHistoryEditStage::Replaying, "replaying"), (PresenceHistoryEditStage::Reviewing, "reviewing"), (PresenceHistoryEditStage::Choosing, "choosing"), (PresenceHistoryEditStage::Finalizing, "finalizing")];
+    for (tag, (stage, spelling)) in stages.into_iter().enumerate() {
+        assert_eq!((stage.wire_name(), PresenceHistoryEditStage::from_wire_name(spelling), stage as u8), (spelling, Some(stage), tag as u8));
+        let history_edit = PresenceHistoryEdit { mutation_id: "e-2#0".into(), stage, drafts: 3 };
+        let peer = PresencePeer { actor: "peer-8".into(), connected_at_ms: 1, label: None, presence_pack: None, user_id: None, role: None, drag_ghost_json: None, interaction: None, color: None, surface: None, views: Vec::new(), ui: None, tool_run: None, principal_kind: None, active_tool: None, history_edit: Some(history_edit.clone()) };
+        let bytes = encode_presence_peer(&peer).await;
+        assert_eq!(decode_presence_peer(&bytes).await.unwrap(), peer);
+        let mut body = Vec::new();
+        encode_presence_history_edit(&history_edit, &mut body);
+        assert!(bytes.ends_with(&body), "the frame body is the peer's own history edit section");
+        assert_eq!(decode_presence_history_edit(&body).unwrap(), history_edit);
+        let value = crate::value::ToValue::to_value(&peer);
+        assert_eq!(serde_json::Value::from(value.clone())["historyEdit"], serde_json::json!({ "mutationId": "e-2#0", "stage": spelling, "drafts": 3 }));
+        assert_eq!(<PresencePeer as crate::value::FromValue>::from_value(value).unwrap(), peer);
+    }
+    assert_eq!(PresenceHistoryEditStage::from_wire_name("inactive"), None, "an inactive session publishes no summary");
+    let mut bad_stage = Vec::new();
+    crate::write_str(&mut bad_stage, "e-2#0");
+    bad_stage.push(5);
+    crate::wire::write_varint_u64(&mut bad_stage, 0);
+    assert!(decode_presence_history_edit(&bad_stage).is_err(), "an unknown stage tag is refused");
+    let mut trailing = Vec::new();
+    encode_presence_history_edit(&PresenceHistoryEdit { mutation_id: "e-2#0".into(), stage: PresenceHistoryEditStage::Editing, drafts: 0 }, &mut trailing);
+    trailing.push(0);
+    assert!(decode_presence_history_edit(&trailing).is_err(), "trailing bytes are refused");
+}
+
 /// ⏯️ The standalone summary body an `AppFrame::Ephemeral` carries is byte-identical to the peer's flag-bit-10
 /// suffix, and its decoder keeps the peer limits (`completed ≤ total`, no trailing bytes).
 #[semio_framework_async_macros::async_test]
@@ -283,7 +318,7 @@ async fn presence_tool_run_standalone_body_is_the_peer_suffix_with_the_peer_limi
     let tool_run = PresenceToolRun { tool_id: "fill".into(), state: PresenceToolRunState::Running, stage: 1, completed: 42, total: Some(100) };
     let mut body = Vec::new();
     encode_presence_tool_run(&tool_run, &mut body);
-    let peer = PresencePeer { actor: "peer-7".into(), connected_at_ms: 1, label: None, presence_pack: None, user_id: None, role: None, drag_ghost_json: None, interaction: None, color: None, surface: None, views: Vec::new(), ui: None, tool_run: Some(tool_run.clone()), principal_kind: None, active_tool: None };
+    let peer = PresencePeer { actor: "peer-7".into(), connected_at_ms: 1, label: None, presence_pack: None, user_id: None, role: None, drag_ghost_json: None, interaction: None, color: None, surface: None, views: Vec::new(), ui: None, tool_run: Some(tool_run.clone()), principal_kind: None, active_tool: None, history_edit: None };
     assert!(encode_presence_peer(&peer).await.ends_with(&body), "the frame body is the peer's own tool run section");
     assert_eq!(decode_presence_tool_run(&body).unwrap(), tool_run);
     let mut trailing = body.clone();
@@ -304,7 +339,7 @@ async fn presence_tool_run_standalone_body_is_the_peer_suffix_with_the_peer_limi
 
 //#region 🔖️InteractionBit
 async fn peer_with_interaction(interaction: Option<PresenceInteraction>) -> PresencePeer {
-    PresencePeer { actor: "peer-3".into(), connected_at_ms: 1000, label: None, presence_pack: None, user_id: None, role: None, drag_ghost_json: None, interaction, color: None, surface: None, views: Vec::new(), ui: None, tool_run: None, principal_kind: None, active_tool: None }
+    PresencePeer { actor: "peer-3".into(), connected_at_ms: 1000, label: None, presence_pack: None, user_id: None, role: None, drag_ghost_json: None, interaction, color: None, surface: None, views: Vec::new(), ui: None, tool_run: None, principal_kind: None, active_tool: None, history_edit: None }
 }
 
 /// 🔎️ Presence byte index: `actor str`'s own varint-length prefix (1 byte for `peer_with_interaction`'s

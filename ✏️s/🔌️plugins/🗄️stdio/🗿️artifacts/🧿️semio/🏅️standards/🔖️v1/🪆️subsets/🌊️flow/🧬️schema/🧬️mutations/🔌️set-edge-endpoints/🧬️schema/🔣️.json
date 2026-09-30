@@ -5,11 +5,16 @@
   "type": "object",
   "additionalProperties": false,
   "required": [
+    "mutation",
     "id",
     "from",
     "to"
   ],
   "properties": {
+    "mutation": {
+      "const": "setEdgeEndpoints",
+      "description": "Aggregate discriminator spliced in by SemioFlowMutation; absent when the payload stands alone."
+    },
     "id": {
       "type": "string"
     },
@@ -18,10 +23,6 @@
     },
     "to": {
       "$ref": "#/$defs/PortRef"
-    },
-    "mutation": {
-      "const": "setEdgeEndpoints",
-      "description": "Aggregate discriminator spliced in by SemioFlowMutation; absent when the payload stands alone."
     }
   },
   "$defs": {

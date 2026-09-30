@@ -5,19 +5,80 @@
   "type": "object",
   "additionalProperties": false,
   "required": [
+    "mutation",
     "id",
     "index",
     "materialId"
   ],
   "properties": {
+    "mutation": {
+      "const": "addConstructionLayer"
+    },
     "id": {
-      "type": "integer"
+      "type": "integer",
+      "minimum": 0,
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Construction",
+          "de": "Konstruktion"
+        },
+        "description": {
+          "en": "The construction this mutation changes, by id.",
+          "de": "Konstruktion, die diese Mutation ändert, per ID."
+        },
+        "ref": {
+          "kind": "construction",
+          "domain": "energyModel",
+          "granularity": "construction"
+        },
+        "group": "target",
+        "order": 10
+      }
     },
     "index": {
-      "type": "integer"
+      "type": "integer",
+      "minimum": 0,
+      "x-semio-ui": {
+        "widget": "stepper",
+        "role": "value",
+        "label": {
+          "en": "Layer position",
+          "de": "Schichtposition"
+        },
+        "description": {
+          "en": "Insertion position; 0 is the outside layer.",
+          "de": "Einfügeposition; 0 ist die äußere Schicht."
+        },
+        "step": 1,
+        "precision": 0,
+        "group": "order",
+        "order": 20
+      }
     },
     "materialId": {
-      "type": "integer"
+      "type": "integer",
+      "minimum": 0,
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Layer material",
+          "de": "Schichtmaterial"
+        },
+        "description": {
+          "en": "Material the new layer is made of, by id.",
+          "de": "Material der neuen Schicht, per ID."
+        },
+        "ref": {
+          "kind": "material",
+          "domain": "energyModel",
+          "granularity": "material"
+        },
+        "group": "construction",
+        "order": 30
+      }
     }
   }
 }

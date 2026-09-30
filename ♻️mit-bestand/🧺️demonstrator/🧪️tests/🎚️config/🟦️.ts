@@ -13,7 +13,7 @@ export default defineConfig({
     root: testRoot,
     name: "@semio-tech/mit-bestand-demonstrator",
     environment: "node",
-    include: [],
+    include: ["long", "exhaustive"].includes(process.env.SEMIO_TEST_LEVEL ?? "") ? ["./🧪️tests/🏛️shell-brand/🟦️.ts"] : [],
     includeSource: [
       "./📜️script.ts",
       "./🪧️brand.ts",

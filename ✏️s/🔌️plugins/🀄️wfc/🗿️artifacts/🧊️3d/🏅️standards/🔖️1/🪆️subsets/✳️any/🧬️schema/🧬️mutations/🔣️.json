@@ -4,49 +4,184 @@
   "title": "Wfc3dMutation",
   "oneOf": [
     {
-      "$ref": "./create-slot/schema.json"
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "CreateSlot"
+      ],
+      "properties": {
+        "CreateSlot": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/wfc/wfc3d/1/any/mutation/create-slot/schema.json"
+        }
+      }
     },
     {
-      "$ref": "./delete-slot/schema.json"
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "DeleteSlot"
+      ],
+      "properties": {
+        "DeleteSlot": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/wfc/wfc3d/1/any/mutation/delete-slot/schema.json"
+        }
+      }
     },
     {
-      "$ref": "./move-slot/schema.json"
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "MoveSlot"
+      ],
+      "properties": {
+        "MoveSlot": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/wfc/wfc3d/1/any/mutation/move-slot/schema.json"
+        }
+      }
     },
     {
-      "$ref": "./resize-slot/schema.json"
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "ResizeSlot"
+      ],
+      "properties": {
+        "ResizeSlot": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/wfc/wfc3d/1/any/mutation/resize-slot/schema.json"
+        }
+      }
     },
     {
-      "$ref": "./connect-slots/schema.json"
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "ConnectSlots"
+      ],
+      "properties": {
+        "ConnectSlots": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/wfc/wfc3d/1/any/mutation/connect-slots/schema.json"
+        }
+      }
     },
     {
-      "$ref": "./disconnect-slots/schema.json"
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "DisconnectSlots"
+      ],
+      "properties": {
+        "DisconnectSlots": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/wfc/wfc3d/1/any/mutation/disconnect-slots/schema.json"
+        }
+      }
     },
     {
-      "$ref": "./pin-slot/schema.json"
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "PinSlot"
+      ],
+      "properties": {
+        "PinSlot": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/wfc/wfc3d/1/any/mutation/pin-slot/schema.json"
+        }
+      }
     },
     {
-      "$ref": "./unpin-slot/schema.json"
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "UnpinSlot"
+      ],
+      "properties": {
+        "UnpinSlot": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/wfc/wfc3d/1/any/mutation/unpin-slot/schema.json"
+        }
+      }
     },
     {
-      "$ref": "./create-tile/schema.json"
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "CreateTile"
+      ],
+      "properties": {
+        "CreateTile": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/wfc/wfc3d/1/any/mutation/create-tile/schema.json"
+        }
+      }
     },
     {
-      "$ref": "./delete-tile/schema.json"
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "DeleteTile"
+      ],
+      "properties": {
+        "DeleteTile": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/wfc/wfc3d/1/any/mutation/delete-tile/schema.json"
+        }
+      }
     },
     {
-      "$ref": "./change-tile-weight/schema.json"
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "ChangeTileWeight"
+      ],
+      "properties": {
+        "ChangeTileWeight": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/wfc/wfc3d/1/any/mutation/change-tile-weight/schema.json"
+        }
+      }
     },
     {
-      "$ref": "./change-tile-media/schema.json"
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "ChangeTileMedia"
+      ],
+      "properties": {
+        "ChangeTileMedia": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/wfc/wfc3d/1/any/mutation/change-tile-media/schema.json"
+        }
+      }
     },
     {
-      "$ref": "./create-rule/schema.json"
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "CreateRule"
+      ],
+      "properties": {
+        "CreateRule": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/wfc/wfc3d/1/any/mutation/create-rule/schema.json"
+        }
+      }
     },
     {
-      "$ref": "./delete-rule/schema.json"
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "DeleteRule"
+      ],
+      "properties": {
+        "DeleteRule": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/wfc/wfc3d/1/any/mutation/delete-rule/schema.json"
+        }
+      }
     },
     {
-      "$ref": "./change-seed/schema.json"
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "ChangeSeed"
+      ],
+      "properties": {
+        "ChangeSeed": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/wfc/wfc3d/1/any/mutation/change-seed/schema.json"
+        }
+      }
     }
   ]
 }

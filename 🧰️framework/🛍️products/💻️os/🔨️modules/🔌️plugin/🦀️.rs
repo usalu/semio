@@ -19,6 +19,10 @@ extern crate semio_framework_os_kernel as dsl;
 static PLUGIN_HEAP_WITNESS: semio_framework_trace::HeapWitness = semio_framework_trace::HeapWitness;
 //#endregion 🧮️HeapWitness
 
+#[cfg(any(test, feature = "artifact-app-testing"))]
+#[path = "🧪️tests/🧰️ui-action-collection/🦀️.rs"]
+pub mod ui_action_laws;
+
 //#region 📄️DeclarationFixtureMutationMount
 #[cfg(test)]
 #[path = "🧪️tests/🛰️declaration-channels/🦀️.rs"]
@@ -4461,6 +4465,12 @@ pub mod app {
             &self.definitions
         }
 
+        /// 📚️ Adds the plugin-level shared schema documents (`PluginBuilder::schema_documents`) to the ones
+        /// [`Self::publish_declared_catalogs`] commits.
+        pub(crate) fn share_schema_documents(&mut self, documents: Vec<::semio_framework_schema::ScopeSchemaExports>) {
+            self.schema_documents.extend(documents);
+        }
+
         /// 📌️ Publishes the store's and io vocabulary's own schema documents, the declared shared schema documents, and the
         /// schema and inference descriptors the `.artifact(…)` declarations contributed into the OS-wide
         /// catalogs — the same two descriptor channels `commit_artifact_declarations` publishes for the declaration tree, each
@@ -4494,9 +4504,9 @@ pub mod app {
                 self.inference_services.register(service).map_err(|error| PluginAssemblyError::new("plugin-assembly.contribution-inference", error.to_string()))?;
             }
             for provider in owner_rosters {
-                let (artifact_schema, kinds) = provider();
-                for descriptor in kinds {
-                    let entry = WireMutationRosterEntry::owner(artifact_schema, descriptor);
+                let (artifact_schema, kinds, input_schemas) = provider();
+                for (index, descriptor) in kinds.iter().enumerate() {
+                    let entry = WireMutationRosterEntry::owner(artifact_schema, descriptor, input_schemas.get(index).copied());
                     if let Some(existing) = self.owner_mutations.get(&entry.mutation_id) {
                         if existing != &entry {
                             return Err(PluginAssemblyError::new("plugin-assembly.owner-mutation-roster", format!("conflicting owner mutation roster entry for {:?}", entry.mutation_id)));
@@ -4817,7 +4827,7 @@ pub mod app {
 
     /// 🗂️ One roster row of `contributor.list-artifact-mutations` — an owner mutation
     /// (`"<document-schema>#<kebab-kind>"`, `contributor`/`artifact_kind` both `None`) or a contributed
-    /// one (`contributor`/`artifact_kind` both `Some`).
+    /// one (`contributor`/`artifact_kind` both `Some`) — with the input descriptors a history editor offers.
     #[derive(Clone, Debug, PartialEq, ToValue, FromValue)]
     #[value(rename_all = "camelCase")]
     pub struct WireMutationRosterEntry {
@@ -4830,10 +4840,33 @@ pub mod app {
         pub contributor: Option<String>,
         #[value(default, skip_serializing_if = "Option::is_none")]
         pub artifact_kind: Option<String>,
+        pub inputs: WireMutationInputs,
+    }
+
+    /// 🎛️ The editable inputs of one roster row: the descriptors its leaf payload schema declares
+    /// (`semio_framework::mutation_input_defs`), the reason that schema declares none a user could edit,
+    /// or `opaque` when the row publishes no payload schema (a contributed plan edits its target's own ops).
+    #[derive(Clone, Debug, PartialEq, ToValue, FromValue)]
+    #[value(tag = "status", rename_all = "camelCase", rename_all_fields = "camelCase")]
+    pub enum WireMutationInputs {
+        Declared { inputs: Vec<semio_framework::ActionArgDef> },
+        Refused { error: semio_framework::InputSchemaError },
+        Opaque,
+    }
+
+    impl WireMutationInputs {
+        /// 🧬️ Reads one leaf payload schema, resolving cross-document `$ref`s through the registered schema catalog.
+        fn of(payload_schema: Option<&'static str>) -> Self {
+            match payload_schema.map(|schema| semio_framework::mutation_input_defs(schema, &semio_framework::registered_input_schema_document)) {
+                None => Self::Opaque,
+                Some(Ok(inputs)) => Self::Declared { inputs },
+                Some(Err(error)) => Self::Refused { error },
+            }
+        }
     }
 
     impl WireMutationRosterEntry {
-        fn owner(artifact_schema: &str, descriptor: &::protocol::SemanticDescriptor) -> Self {
+        fn owner(artifact_schema: &str, descriptor: &::protocol::SemanticDescriptor, payload_schema: Option<&'static str>) -> Self {
             Self {
                 mutation_id: format!("{artifact_schema}#{}", descriptor.kind),
                 verb: descriptor.verb.to_string(),
@@ -4842,11 +4875,12 @@ pub mod app {
                 record: descriptor.record.to_string(),
                 contributor: None,
                 artifact_kind: None,
+                inputs: WireMutationInputs::of(payload_schema),
             }
         }
 
         fn contributed(plugin_id: &str, artifact_kind: &str, mutation_id: String, semantics: &semio_framework::ContributedMutationSemantics) -> Self {
-            Self { mutation_id, verb: semantics.verb.clone(), entity: semantics.entity.clone(), kind: semantics.kind.clone(), record: semantics.record.clone(), contributor: Some(plugin_id.to_string()), artifact_kind: Some(artifact_kind.to_string()) }
+            Self { mutation_id, verb: semantics.verb.clone(), entity: semantics.entity.clone(), kind: semantics.kind.clone(), record: semantics.record.clone(), contributor: Some(plugin_id.to_string()), artifact_kind: Some(artifact_kind.to_string()), inputs: WireMutationInputs::Opaque }
         }
     }
 
@@ -4956,9 +4990,9 @@ pub mod app {
     pub(crate) async fn commit_owner_mutation_roster(providers: &[OwnerMutationRoster]) -> Result<(), PluginAssemblyError> {
         let mut registry = owner_mutation_roster_registry().await.write().map_err(|_| PluginAssemblyError::new("plugin-assembly.owner-mutation-roster", "owner mutation roster registry is poisoned"))?;
         for provider in providers {
-            let (artifact_schema, kinds) = provider();
-            for descriptor in kinds {
-                let entry = WireMutationRosterEntry::owner(artifact_schema, descriptor);
+            let (artifact_schema, kinds, input_schemas) = provider();
+            for (index, descriptor) in kinds.iter().enumerate() {
+                let entry = WireMutationRosterEntry::owner(artifact_schema, descriptor, input_schemas.get(index).copied());
                 if let Some(existing) = registry.get(&entry.mutation_id) {
                     if *existing != entry {
                         return Err(PluginAssemblyError::new("plugin-assembly.owner-mutation-roster", format!("conflicting owner mutation roster entry for {:?}", entry.mutation_id)));
@@ -5733,7 +5767,7 @@ pub mod app {
             let (dialect, role) = semio_framework::parse_surface_app_id(&self.id).map_err(|error| PluginAssemblyError::new("app-definition.invalid", format!("app id {} must be a canonical surface id: {error}", self.id)))?;
             let app_declared_actions = !self.actions.is_empty();
             let mut actions = self.actions;
-            for framework_action in history_action_definitions().into_iter().chain(clipboard_action_definitions()).filter(|action| role != AppRole::Viewer || !VIEWER_REJECTED_ACTION_IDS.contains(&action.id.as_str())) {
+            for framework_action in history_action_definitions().into_iter().chain(clipboard_action_definitions()).filter(|action| role != AppRole::Viewer || !viewer_rejects_action(&action.id)) {
                 if declared_action_ids.insert(framework_action.id.clone()) {
                     actions.push(framework_action);
                 }
@@ -5975,6 +6009,9 @@ pub mod app {
                     }
                 }
             }
+            if role != AppRole::Viewer && !self.dialogs.iter().any(|dialog| dialog.id == semio_framework::HISTORY_EDIT_FINALIZE_DIALOG_ID) {
+                self.dialogs.push(semio_framework::history_edit_finalize_dialog());
+            }
             let mut dialog_ids = HashSet::new();
             for dialog in &self.dialogs {
                 if !(!dialog.id.trim().is_empty()) {
@@ -5990,6 +6027,12 @@ pub mod app {
                     if !(declared_action_ids.contains(cancel_action.as_str())) {
                         return Err(PluginAssemblyError::new("app-definition.invalid", format!("app {} dialog {} cancel_action references undeclared action {}", self.id, dialog.id, cancel_action.as_str())));
                     }
+                }
+                if let Err(reason) = dialog.validate_choices() {
+                    return Err(PluginAssemblyError::new("app-definition.invalid", format!("app {} dialog {} {reason}", self.id, dialog.id)));
+                }
+                if let Some(choice) = dialog.choices.iter().find(|choice| !declared_action_ids.contains(choice.action.as_str())) {
+                    return Err(PluginAssemblyError::new("app-definition.invalid", format!("app {} dialog {} choice {} references undeclared action {}", self.id, dialog.id, choice.id, choice.action.as_str())));
                 }
                 validate_arg_defs(&self.id, &format!("dialog {}", dialog.id), &dialog.args);
             }
@@ -7386,6 +7429,18 @@ pub mod app {
     #[path = "🧪️tests/🔬️tool-run/🦀️.rs"]
     mod tool_run_tests;
 
+    #[path = "⏪️time-travel/🦀️.rs"]
+    pub mod time_travel;
+    pub use time_travel::{history_mutation_entry, is_time_travel_action_id, SupersedeLedger, SupersedeRecord, SupersedeRole, TimeTravelActionOutcome, TimeTravelActionRefusal, TimeTravelEditor, TimeTravelEditorPanel, TimeTravelLedger, TimeTravelPanel, HISTORY_ROW_MUTATION_ROWS, TIME_TRAVEL_TURN_WALL_US};
+
+    #[cfg(test)]
+    #[path = "🧪️tests/🧪️time-travel/🦀️.rs"]
+    mod time_travel_tests;
+
+    #[cfg(test)]
+    #[path = "🧪️tests/🧪️supersede-ledger/🦀️.rs"]
+    mod supersede_ledger_tests;
+
     //#region 🔖️ArtifactAppLaws
     #[cfg(any(test, feature = "artifact-app-testing"))]
     pub mod artifact_app_laws {
@@ -8034,10 +8089,27 @@ pub mod app {
             assert_eq!(probe(app), after, "redo did not reapply the expected snapshot");
         }
 
-        /// 🧪️ Every declared app action must bridge through `command_from_action` and round-trip `command_id`. A REQUIRED
-        /// toggle without a default has no unset state a submitted dispatch could carry, so it is staged `false` — the one
-        /// value that exists for every such flag — and a set-verb that refuses a missing value (`setSelectionHidden{hidden}`)
-        /// bridges exactly as a validated dispatch reaches it.
+        /// 🧬️ Preserves declared defaults and stages schema-validated representatives for required bridge inputs.
+        fn declared_bridge_arguments(args: &[semio_framework::ActionArgDef]) -> Result<semio_framework::DslValue, String> {
+            use semio_framework::{ArgSchema, DslValue};
+            let mut representatives = Vec::new();
+            for argument in args.iter().filter(|argument| argument.required && argument.default.is_none()) {
+                let candidates = match &argument.schema {
+                    ArgSchema::String { options, .. } if options.len() == 1 => vec![DslValue::String(options[0].value.clone())],
+                    _ => declared_argument_alternatives(argument).map(|(first, second)| vec![first, second]).unwrap_or_default(),
+                };
+                let schema = argument.json_schema(crate::Terminology::Native, crate::Locale::En);
+                let validator = semio_framework_schema::OwnedJsonSchemaValidator::compile(&dsl::json::to_json_string(&schema))
+                    .map_err(|error| format!("required argument {} schema cannot be validated: {error}", argument.id))?;
+                let value = candidates.into_iter().find(|candidate| validator.validate_json(&dsl::json::to_json_string(candidate)).is_ok())
+                    .ok_or_else(|| format!("required argument {} has no supported schema-valid representative: {:?}", argument.id, argument.schema))?;
+                representatives.push((argument.id.clone(), value));
+            }
+            Ok(semio_framework::effective_action_args(args, &DslValue::Object(representatives), None))
+        }
+
+        /// 🧪️ Every declared app action bridges through `command_from_action` and round-trips `command_id`
+        /// with its declared defaults and schema-validated representatives for required inputs without defaults.
         ///
         /// 🧱️ Window-KIT catalog rows are framework-owned surface verbs, not app actions: the shared
         /// `window_kind_definition` scaffold below mints them (and stamps them `Migrated`) for the
@@ -8045,7 +8117,6 @@ pub mod app {
         /// composes one of those kits inherits an id it never authored a command row for. They belong
         /// in this skip list for exactly the same reason the framework-reserved verbs above do.
         pub async fn assert_declared_actions_bridge_to_commands<A: ArtifactApp + Default>(manifest: fn() -> App) {
-            use semio_framework::{effective_action_args, ArgSchema, DslValue};
             let definition = manifest().definition;
             let _app = A::default();
             let skip = [
@@ -8076,14 +8147,13 @@ pub mod app {
                 "setInteractionGranularity",
             ];
             for action in definition.window_kinds.iter().flat_map(|window| semio_framework::window_kind_actions(&definition, window)) {
-                if skip.contains(&action.id.as_str()) || crate::is_tool_run_action_id(&action.id) || action.id == crate::plugin_app_close_prelude::CANCEL_TYPED_OPERATION_ACTION_ID {
+                if skip.contains(&action.id.as_str()) || crate::is_tool_run_action_id(&action.id) || crate::is_time_travel_action_id(&action.id) || action.id == crate::plugin_app_close_prelude::CANCEL_TYPED_OPERATION_ACTION_ID {
                     continue;
                 }
                 if matches!(action.id.as_str(), "replace-text" | "set-cell" | "set-node") {
                     continue;
                 }
-                let required_toggles = DslValue::Object(action.args.iter().filter(|def| def.required && def.default.is_none() && matches!(def.schema, ArgSchema::Boolean)).map(|def| (def.id.clone(), DslValue::Bool(false))).collect());
-                let staged = effective_action_args(&action.args, &required_toggles, None);
+                let staged = declared_bridge_arguments(&action.args).unwrap_or_else(|error| panic!("action {} could not stage required arguments: {error}", action.id));
                 let command = A::command_from_action(&action.id, Some(&staged)).await.unwrap_or_else(|error| panic!("action {} failed to bridge: {}", action.id, error.message));
                 assert_eq!(A::command_id(&command).await, action.id.as_str(), "command_id mismatch for action {}", action.id);
             }
@@ -8325,7 +8395,12 @@ pub mod app {
                     Some((number(low), number(high)))
                 }
                 ArgSchema::Boolean => Some((DslValue::Bool(false), DslValue::Bool(true))),
-                ArgSchema::Vec3 { .. } => Some((DslValue::Array(vec![DslValue::float(1.0), DslValue::float(2.0), DslValue::float(3.0)]), DslValue::Array(vec![DslValue::float(3.0), DslValue::float(2.0), DslValue::float(1.0)]))),
+                ArgSchema::Vector { dims, .. } => {
+                    let vector = |start: f64, direction: f64| DslValue::Array((0..*dims).map(|index| DslValue::float(start + direction * f64::from(index))).collect());
+                    Some((vector(1.0, 1.0), vector(f64::from(*dims), -1.0)))
+                }
+                ArgSchema::Reference { many: false, .. } => Some((text("p8-alpha"), text("p8-beta"))),
+                ArgSchema::Reference { many: true, .. } => Some((DslValue::Array(vec![text("p8-alpha")]), DslValue::Array(vec![text("p8-beta")]))),
                 ArgSchema::Array { items, .. } => match items.as_ref() {
                     ArgSchema::String { options, .. } if options.len() >= 2 => Some((DslValue::Array(vec![text(&options[0].value)]), DslValue::Array(vec![text(&options[1].value)]))),
                     ArgSchema::String { options, .. } if options.is_empty() => Some((DslValue::Array(vec![text("p8-alpha")]), DslValue::Array(vec![text("p8-beta")]))),
@@ -9213,8 +9288,8 @@ pub mod app {
                 V::export_media(port, doc)
             }
 
-            fn export_media_with_request_context(port: &str, doc: &super::ArtifactView<'_, Self::Snapshot>, transient: &super::TransientView<'_, Self::Transient>) -> Result<super::Media, super::MediaError> {
-                V::export_media_with_request_context(port, doc, transient)
+            fn export_media_with_request_context(owner: &super::ArtifactInstanceOperationOwnerHandle, port: &str, doc: &super::ArtifactView<'_, Self::Snapshot>, transient: &super::TransientView<'_, Self::Transient>) -> Result<super::Media, super::MediaError> {
+                V::export_media_with_request_context(owner, port, doc, transient)
             }
 
             fn media_fingerprint(port: &str, doc: &super::ArtifactView<'_, Self::Snapshot>) -> Result<super::MediaFingerprint, super::MediaError> {
@@ -11820,39 +11895,11 @@ pub mod app {
     /// machinery `TransientStore` requires would be unused ceremony.
     pub type InteractionHoverState = BTreeMap<String, protocol::DomainHover>;
 
-    pub use crate::local_interaction::set_state::SetInteractionState;
-
-    /// 🕹️ Framework interaction mutation aggregate; its direct leaf owns metadata and ordinary semantics.
-    /// 🧊️ Whole-state cold codecs/evaluation do not certify a retained restore or reserved interaction route.
-    #[derive(Clone, Debug, PartialEq)]
-    pub enum InteractionConfigMutation {
-        SetState(SetInteractionState),
-    }
-
-    /// 🌱️ Hand-written, not derived — `#[derive(ToValue, FromValue)]` only supports internally-
-    /// tagged enums (`#[value(tag = "…")]`) or plain unit enums; this single-variant enum is
-    /// externally tagged (serde's own default with no `tag` attribute above), so its wire shape
-    /// (`{"setState": …}`, matching `#[serde(rename_all = "camelCase")]`'s variant renaming) is
-    /// reproduced by hand instead.
-    impl protocol::ToValue for InteractionConfigMutation {
-        fn to_value(&self) -> DslValue {
-            let InteractionConfigMutation::SetState(state) = self;
-            DslValue::object([("setState".to_string(), protocol::ToValue::to_value(state))])
-        }
-    }
-    impl protocol::FromValue for InteractionConfigMutation {
-        fn from_value(value: DslValue) -> Result<Self, protocol::ValueError> {
-            let entries = DslValue::into_object(value)?;
-            match entries.iter().find(|(k, _)| k == "setState") {
-                Some((_, v)) => Ok(InteractionConfigMutation::SetState(protocol::FromValue::from_value(v.clone()).map_err(|error: protocol::ValueError| error.under("setState"))?)),
-                None => Err(protocol::ValueError::new("missing `setState` variant payload")),
-            }
-        }
-    }
+    pub use crate::local_interaction::mutations::{InteractionConfigMutation, SetInteractionState};
 
     impl InteractionConfigMutation {
         pub fn set_state(state: protocol::InteractionState) -> Self {
-            Self::SetState(SetInteractionState { state })
+            Self::SetInteractionState(SetInteractionState { state })
         }
     }
 
@@ -11867,7 +11914,7 @@ pub mod app {
 
     impl ::protocol::MutationDiff<protocol::InteractionState> for InteractionConfigMutation {
         fn apply(&self, _base: &protocol::InteractionState) -> protocol::MutationApplyResult<protocol::InteractionState> {
-            let InteractionConfigMutation::SetState(state) = self;
+            let InteractionConfigMutation::SetInteractionState(state) = self;
             state.apply()
         }
         fn absorb(&mut self, other: Self) {
@@ -11875,28 +11922,9 @@ pub mod app {
         }
     }
 
-    impl ::protocol::Mutation<protocol::InteractionState> for InteractionConfigMutation {
-        type Diff = InteractionConfigMutation;
-        const DESCRIPTORS: &'static [protocol::MutationLeafDescriptor] = &[<SetInteractionState as protocol::MutationLeaf>::DESCRIPTOR];
-
-        fn descriptor(&self) -> &'static protocol::MutationLeafDescriptor {
-            &Self::DESCRIPTORS[0]
-        }
-
-        fn diff(&self, _base: &protocol::InteractionState) -> ::protocol::MutationOutcome<Self::Diff> {
-            let InteractionConfigMutation::SetState(state) = self;
-            state.diff()
-        }
-
-        fn inverse(&self, base: &protocol::InteractionState) -> Vec<Self> {
-            let InteractionConfigMutation::SetState(state) = self;
-            state.inverse(base)
-        }
-    }
-
     impl ::protocol::OpText for InteractionConfigMutation {
         fn print_op(&self) -> String {
-            let InteractionConfigMutation::SetState(state) = self;
+            let InteractionConfigMutation::SetInteractionState(state) = self;
             format!("set-interaction-state {}", dsl::os_pack::json::to_json_string(state))
         }
         fn parse_op(line: &str) -> Result<Self, ::store::TextError> {
@@ -11908,7 +11936,7 @@ pub mod app {
 
     impl ::protocol::OpBinary for InteractionConfigMutation {
         fn encode_op(&self) -> Result<Vec<u8>, ::protocol::ProtocolError> {
-            let InteractionConfigMutation::SetState(state) = self;
+            let InteractionConfigMutation::SetInteractionState(state) = self;
             Ok(dsl::os_pack::json::to_json_string(state).into_bytes())
         }
         fn decode_op(bytes: &[u8]) -> Result<Self, ::protocol::ProtocolError> {
@@ -11946,6 +11974,12 @@ pub mod app {
         redo: InverseAction,
     }
 
+    /// 🗝️ What a backfilled command-log row references: a document edit or a `Supersede` history transition.
+    enum CommandLogAppendKey {
+        Edit(String),
+        Transition(String),
+    }
+
     /// 🧾️ Inputs for one appended session command before its sequence and timestamp are assigned.
     struct CommandLogAppend<'a> {
         action_id: &'a str,
@@ -11953,6 +11987,7 @@ pub mod app {
         kind: ActionKind,
         edit_id: Option<String>,
         config_edit_id: Option<String>,
+        transition_id: Option<String>,
         timestamp: Option<String>,
         inverse: Option<InverseAction>,
     }
@@ -11987,6 +12022,10 @@ pub mod app {
         /// folded — a group dispatch always issues a plain `Apply`, see `Emit::child_emits`'s own doc
         /// comment), so it needs no "latest" reduction on the `CommandView` side.
         pub child_edit_ids: Vec<String>,
+        /// ✏️ Set iff this row is a `Supersede` history transition of the DOCUMENT store's event log (a history edit, or
+        /// the undo or redo of one) — backfilled from the transitions, never from a live dispatch, so local, remote and
+        /// reloaded history edits are rows alike (`VcsArtifactApp::backfill_command_log`).
+        pub transition_id: Option<String>,
         /// 🔢️ How many consecutive identical `View`/`🐚️Shell` dispatches folded into this one row —
         /// see `VcsArtifactApp::record_command`. Always `1` for `Mutation`/`History`/`Clipboard` entries
         /// and for anything carrying an `edit_id`, which never fold.
@@ -12014,6 +12053,11 @@ pub mod app {
         pub config_edit_id: Option<String>,
         /// 🧩️ Verbatim `CommandLogEntry::child_edit_ids` — see that field's own doc comment.
         pub child_edit_ids: Vec<String>,
+        /// ✏️ Verbatim `CommandLogEntry::transition_id`; such a row's label, `applied` and `revertible` derive from the
+        /// supersede ledger (`SupersedeLedger`).
+        pub transition_id: Option<String>,
+        /// 🖋️ The actor who authored this row's document edit or history transition.
+        pub author: Option<String>,
         /// 📜️ The LAST [`HISTORY_ROW_OPERATION_PREVIEW`] forward operations of this entry's edit, printed via
         /// `OpText::print_op`, newest last — a bounded preview, so reading the history costs the same per key at the end of a
         /// long coalesced typing run as at its start; empty for cursor-motion entries and for a dangling `edit_id` (document
@@ -12034,6 +12078,27 @@ pub mod app {
         pub count: u32,
         /// ⏪️ See `CommandLogEntry::inverse`.
         pub inverse: Option<InverseAction>,
+        /// 🛠️ The committed tool transaction this row's edit carries (`MutationMeta.transaction` of its first op).
+        pub transaction: Option<protocol::TransactionRef>,
+        /// ✏️ The applied mutations of this row's edit (at most [`HISTORY_ROW_MUTATION_ROWS`]), durable outcomes only;
+        /// a history edit overlays its replay on them when projected.
+        pub mutations: Vec<MutationView>,
+    }
+
+    /// ✏️ One applied mutation of a history row: its replica-independent id, applied position and index in its edit,
+    /// localized label (of its effective input), durable outcome and supersession state, and whether history editing
+    /// may replace its inputs.
+    #[derive(Clone, Debug, PartialEq)]
+    pub struct MutationView {
+        pub mutation_id: String,
+        pub position: u32,
+        pub op_index: u32,
+        pub label: LocalizedLabel,
+        pub worst: Option<dsl::Severity>,
+        pub messages: Vec<protocol::MutationMessage>,
+        pub superseded: bool,
+        pub withdrawn: bool,
+        pub editable: bool,
     }
 
     /// 📜️ Operations a history row previews: its edit's newest ones (see `CommandView::op_lines`).
@@ -12130,9 +12195,24 @@ pub mod app {
     /// ⚠️ React's press OPENS a message dialog whose typed text rides the checkpoint; the message
     /// is shell-local state this assembler cannot see, so the row dispatches `submit` directly and
     /// the shell falls back to its own `"check-in"` message (React's own blank-draft fallback).
-    pub async fn ui_history_panel(history: &HistoryView, controller_id: &str, is_de: bool, read_only: bool, view: &ViewModel) -> UiAssemblyResult<BuiltNode> {
-        let action_item = |id: &str, icon_id: IconName, label_en: &str, label_de: &str, action: &str, enabled: bool| -> UiAssemblyResult<BuiltNode> {
-            let label = if is_de { label_de } else { label_en };
+    ///
+    /// ⏪️ While a history edit is open (`time_travel`), the body leads with the session band
+    /// (`framework.history.timeTravel`) and, while a mutation is being edited, its draft editor
+    /// (`framework.history.editor`); the history-lane actions and the per-row revert are frozen, and every
+    /// row's mutations carry the session overlay (replay outcome, pending, edited).
+    ///
+    /// ↩️ Undo is enabled exactly where its chord and palette entry are: for every editor outside a history edit. The
+    /// host routes an `undo` to a remote (inference) history it owns, which this guest cannot see, and an undo with
+    /// nothing to undo is a benign no-op; `can_undo` therefore never disables it here.
+    ///
+    /// ✏️ A row with applied mutations expands to one child per mutation (the flagged ones first, at most
+    /// [`HISTORY_PANEL_MUTATION_ROWS`]): its label, a description naming its state and severity in words (colour is
+    /// never the only carrier), tone and icon by severity, and an Edit row action (`historyEditBegin{mutationId}`,
+    /// also the row's activation) when it is editable and this is not a viewer.
+    pub async fn ui_history_panel(history: &HistoryView, time_travel: Option<&TimeTravelPanel>, controller_id: &str, locale: Locale, read_only: bool, view: &ViewModel) -> UiAssemblyResult<BuiltNode> {
+        let frozen = time_travel.is_some();
+        let text_of = |text: time_travel::HistoryPanelText| text.text(locale);
+        let action_item = |id: &str, icon_id: IconName, label: &str, action: &str, enabled: bool| -> UiAssemblyResult<BuiltNode> {
             let action = ActionId::try_v1(controller_id, action).ok_or_else(|| ui_assembly_error("history-panel.action-id"))?;
             let button_id = UiText::try_format(format_args!("{id}.run")).ok_or_else(|| ui_assembly_error("history-panel.button-id"))?;
             let icon = ui_text(icon_id.as_str(), "history-panel.icon")?;
@@ -12151,13 +12231,14 @@ pub mod app {
             HistoryCommandFilter::OnlyMutations => "onlyMutations",
         };
         let mut filter_builder = select(ui_text(filter_value, "history-panel.filter-value")?);
-        for (value, label) in [("all", if is_de { "Alle" } else { "All" }), ("withoutMutations", if is_de { "Ohne Operationen" } else { "Without Operations" }), ("onlyMutations", if is_de { "Nur Operationen" } else { "Only Operations" })] {
-            filter_builder = filter_builder.try_item(ui_text(value, "history-panel.filter-item-value")?, ui_label(label, "history-panel.filter-item-label")?).map_err(|_| ui_assembly_error("history-panel.filter-items"))?;
+        for (value, label) in [("all", time_travel::HistoryPanelText::FilterAll), ("withoutMutations", time_travel::HistoryPanelText::FilterWithoutMutations), ("onlyMutations", time_travel::HistoryPanelText::FilterOnlyMutations)] {
+            filter_builder = filter_builder.try_item(ui_text(value, "history-panel.filter-item-value")?, ui_label(text_of(label), "history-panel.filter-item-label")?).map_err(|_| ui_assembly_error("history-panel.filter-items"))?;
         }
         let filter_builder = filter_builder.try_id("framework.history.filter.control").map_err(|_| ui_assembly_error("history-panel.filter-id"))?;
+        let filter_builder = filter_builder.try_label(text_of(time_travel::HistoryPanelText::Filter)).map_err(|_| ui_assembly_error("history-panel.filter-label"))?;
         let filter_action = ActionId::try_v1(controller_id, SET_HISTORY_COMMAND_FILTER_ACTION_ID).ok_or_else(|| ui_assembly_error("history-panel.filter-action"))?;
         let filter_select = filter_builder.try_on(Trigger::Change, filter_action).map_err(|_| ui_assembly_error("history-panel.filter-binding"))?.try_build().map_err(|_| ui_assembly_error("history-panel.filter-build"))?;
-        let filter_builder = ui::tree_item(ui_label("Filter", "history-panel.filter-label")?).icon(ui_text(IconName::Filter.as_str(), "history-panel.filter-icon")?);
+        let filter_builder = ui::tree_item(ui_label(text_of(time_travel::HistoryPanelText::Filter), "history-panel.filter-label")?).icon(ui_text(IconName::Filter.as_str(), "history-panel.filter-icon")?);
         let filter_builder = filter_builder.try_id("framework.history.filter").map_err(|_| ui_assembly_error("history-panel.filter-item-id"))?;
         let filter_item = filter_builder.try_child(filter_select).map_err(|_| ui_assembly_error("history-panel.filter-child"))?.try_build().map_err(|_| ui_assembly_error("history-panel.filter-item-build"))?;
 
@@ -12171,23 +12252,39 @@ pub mod app {
             })
             .collect();
         let windows = TreeWindows::for_body(view, FRAMEWORK_HISTORY_BODY_KEY);
-        let commands_section = tree_window_section(&windows, "framework.history.commands", ui_label(if is_de { "Befehle" } else { "Commands" }, "history-panel.commands-label")?, true, &command_rows, |entry| {
-            let entry_label = entry.label.resolve(Terminology::Native, if is_de { Locale::De } else { Locale::En });
+        let commands_section = tree_window_section(&windows, "framework.history.commands", ui_label(text_of(time_travel::HistoryPanelText::Commands), "history-panel.commands-label")?, true, &command_rows, |entry| {
+            let entry_label = entry.label.resolve(Terminology::Native, locale);
             let label = if entry.count > 1 { UiText::clipped(&format!("{entry_label} x{}", entry.count)) } else { UiText::clipped(entry_label) };
             let id = UiText::try_format(format_args!("framework.history.entry.{}", entry.seq)).ok_or_else(|| ui_assembly_error("history-panel.command-id"))?;
+            let mutations: Vec<semio_framework::kernel::HistoryMutationEntry> = entry.mutations.iter().map(|mutation| history_mutation_entry(mutation, time_travel)).collect();
+            let worst = mutations.iter().filter_map(|mutation| mutation.worst).max();
             let mut builder = ui::tree_item(Label(label)).icon(ui_text(history_panel_icon_id(entry.kind).as_str(), "history-panel.command-icon")?);
             builder = builder.try_id(&id).map_err(|_| ui_assembly_error("history-panel.command-id"))?;
-            if !entry.op_lines.is_empty() {
-                builder = builder.description(UiText::clipped(&entry.op_lines.join(" \u{b7} ")));
+            let mut description = entry.op_lines.join(" \u{b7} ");
+            if let Some(worst) = worst {
+                let severity = time_travel::history_severity_text(worst, locale);
+                description = if description.is_empty() { severity.to_string() } else { format!("{severity} \u{b7} {description}") };
+                builder = builder.tone(time_travel::history_severity_tone(Some(worst)).0);
             }
-            if entry.edit_id.is_some() && !entry.applied {
+            if let Some(author) = entry.author.as_deref().filter(|_| entry.transition_id.is_some()) {
+                description = if description.is_empty() { author.to_string() } else { format!("{author} \u{b7} {description}") };
+            }
+            if !description.is_empty() {
+                builder = builder.description(UiText::clipped(&description));
+            }
+            if (entry.edit_id.is_some() || entry.transition_id.is_some()) && !entry.applied {
                 builder = builder.dimmed(true);
             }
-            if entry.revertible && !read_only {
+            if entry.revertible && !read_only && !frozen {
                 let mut args = UiMapBuilder::try_new().ok_or_else(|| ui_assembly_error("history-panel.row-action-args"))?;
                 args.push("entrySeq".to_owned(), UiValue::Number(entry.seq as f64)).map_err(|_| ui_assembly_error("history-panel.row-action-args"))?;
-                let revert = row_action(IconName::RotateCcw.as_str(), if is_de { "Zur\u{fc}ck bis hier" } else { "Backwards" }, REVERT_TO_COMMAND_ACTION_ID, RowActionPlacement::Menu)?;
+                let revert = row_action(IconName::RotateCcw.as_str(), text_of(time_travel::HistoryPanelText::Backwards), REVERT_TO_COMMAND_ACTION_ID, RowActionPlacement::Menu)?;
                 builder = builder.try_row_action(revert).map_err(|_| ui_assembly_error("history-panel.row-actions"))?.target(row_target(controller_id, Some(UiValue::Map(args.finish())), None)?);
+            }
+            let mut shown: Vec<&semio_framework::kernel::HistoryMutationEntry> = mutations.iter().filter(|mutation| mutation.worst.is_some() || mutation.edited || mutation.superseded).collect();
+            shown.extend(mutations.iter().filter(|mutation| mutation.worst.is_none() && !mutation.edited && !mutation.superseded));
+            for mutation in shown.into_iter().take(HISTORY_PANEL_MUTATION_ROWS) {
+                builder = builder.try_child(history_panel_mutation_row(mutation, controller_id, locale, read_only)?).map_err(|_| ui_assembly_error("history-panel.mutation-rows"))?;
             }
             builder.try_build().map_err(|_| ui_assembly_error("history-panel.command-build"))
         })?;
@@ -12196,24 +12293,25 @@ pub mod app {
             None
         } else {
             let pending = uncommitted_command_count(history);
-            let text = if is_de { "Einchecken" } else { "Check In" };
+            let text = text_of(time_travel::HistoryPanelText::CheckIn);
             let text = if pending > 0 { format!("{text} ({pending})") } else { text.to_string() };
             let icon = ui_text(IconName::GitCommit.as_str(), "history-panel.checkin-icon")?;
             let submit = ActionId::try_v1(FRAMEWORK_CHECKIN_CONTROLLER_ID, "submit").ok_or_else(|| ui_assembly_error("history-panel.checkin-action"))?;
-            let builder = button(ui_label(text.as_str(), "history-panel.checkin-label")?).icon(icon.clone());
+            let builder = button(ui_label(text.as_str(), "history-panel.checkin-label")?).icon(icon.clone()).disabled(frozen);
             let builder = builder.try_id("s-checkin").map_err(|_| ui_assembly_error("history-panel.checkin-button-id"))?;
             let trigger = builder.try_on(Trigger::Activate, submit).map_err(|_| ui_assembly_error("history-panel.checkin-binding"))?.try_build().map_err(|_| ui_assembly_error("history-panel.checkin-button-build"))?;
-            let builder = ui::tree_item(ui_label(text.as_str(), "history-panel.checkin-item-label")?).icon(icon);
+            let builder = ui::tree_item(ui_label(text.as_str(), "history-panel.checkin-item-label")?).icon(icon).disabled(frozen);
             let builder = builder.try_id("framework.history.checkin").map_err(|_| ui_assembly_error("history-panel.checkin-item-id"))?;
             Some(builder.try_child(trigger).map_err(|_| ui_assembly_error("history-panel.checkin-item-child"))?.try_build().map_err(|_| ui_assembly_error("history-panel.checkin-item-build"))?)
         };
+        let mutable = !read_only && !frozen;
         let mut action_items = BuiltChildren::default();
         for item in [
-            Some(action_item("framework.history.undo", IconName::Undo, "Undo", "Rückgängig", "undo", history.can_undo && !read_only)?),
-            Some(action_item("framework.history.redo", IconName::Redo, "Redo", "Wiederholen", "redo", history.can_redo && !read_only)?),
-            Some(action_item("framework.history.commitCheckpoint", IconName::GitCommit, "Commit Checkpoint", "Checkpoint", "commitCheckpoint", !read_only)?),
+            Some(action_item("framework.history.undo", IconName::Undo, text_of(time_travel::HistoryPanelText::Undo), "undo", mutable)?),
+            Some(action_item("framework.history.redo", IconName::Redo, text_of(time_travel::HistoryPanelText::Redo), "redo", history.can_redo && mutable)?),
+            Some(action_item("framework.history.commitCheckpoint", IconName::GitCommit, text_of(time_travel::HistoryPanelText::CommitCheckpoint), "commitCheckpoint", mutable)?),
             checkin_item,
-            Some(action_item("framework.history.createAlternative", IconName::GitBranch, "Create Alternative", "Alternative erstellen", "createAlternative", !read_only)?),
+            Some(action_item("framework.history.createAlternative", IconName::GitBranch, text_of(time_travel::HistoryPanelText::CreateAlternative), "createAlternative", mutable)?),
             Some(filter_item),
         ]
         .into_iter()
@@ -12221,13 +12319,47 @@ pub mod app {
         {
             action_items.try_push(item).map_err(|_| ui_assembly_error("history-panel.actions"))?;
         }
-        let actions_builder = tree_section(ui_label(if is_de { "Aktionen" } else { "Actions" }, "history-panel.actions-label")?).default_open(true);
+        let actions_builder = tree_section(ui_label(text_of(time_travel::HistoryPanelText::Actions), "history-panel.actions-label")?).default_open(true);
         let actions_builder = actions_builder.try_id("framework.history.actions").map_err(|_| ui_assembly_error("history-panel.actions-id"))?;
         let actions_section = actions_builder.try_children(action_items).map_err(|_| ui_assembly_error("history-panel.actions"))?.try_build().map_err(|_| ui_assembly_error("history-panel.actions-build"))?;
         let mut sections = BuiltChildren::default();
+        if let Some(panel) = time_travel {
+            sections.try_push(time_travel::time_travel_band_section(panel, controller_id, locale)?).map_err(|_| ui_assembly_error("history-panel.sections"))?;
+            if let Some(editor) = panel.editor.as_ref().filter(|_| !read_only) {
+                sections.try_push(time_travel::time_travel_editor_section(panel, editor, controller_id, locale, &windows)?).map_err(|_| ui_assembly_error("history-panel.sections"))?;
+            }
+        }
         sections.try_push(actions_section).map_err(|_| ui_assembly_error("history-panel.sections"))?;
         sections.try_push(commands_section).map_err(|_| ui_assembly_error("history-panel.sections"))?;
         tree().try_children(sections).map_err(|_| ui_assembly_error("history-panel.sections"))?.try_build().map_err(|_| ui_assembly_error("history-panel.build"))
+    }
+
+    /// ✏️ Mutation children one history row shows at most (flagged ones first); the wire carries up to
+    /// [`HISTORY_ROW_MUTATION_ROWS`].
+    pub const HISTORY_PANEL_MUTATION_ROWS: usize = 8;
+
+    /// ✏️ One mutation child of a history row: label, state-and-severity description in words, tone and icon by
+    /// severity, and Edit (`historyEditBegin{mutationId}`, also its activation) when editable and not a viewer.
+    fn history_panel_mutation_row(mutation: &semio_framework::kernel::HistoryMutationEntry, controller_id: &str, locale: Locale, read_only: bool) -> UiAssemblyResult<BuiltNode> {
+        let (tone, icon) = time_travel::history_severity_tone(mutation.worst);
+        let icon = if mutation.pending { "clock" } else if mutation.edited { "edit" } else { icon };
+        let id = UiText::try_format(format_args!("framework.history.mutation.{}", mutation.mutation_id)).ok_or_else(|| ui_assembly_error("history-panel.mutation-id"))?;
+        let mut builder = ui::tree_item(Label(UiText::clipped(mutation.label.resolve(Terminology::Native, locale)))).icon(ui_text(icon, "history-panel.mutation-icon")?).tone(if mutation.worst.is_some() { tone } else { Tone::Neutral });
+        builder = builder.try_id(&id).map_err(|_| ui_assembly_error("history-panel.mutation-id"))?;
+        let description = time_travel::history_mutation_description(mutation, locale);
+        if !description.is_empty() {
+            builder = builder.description(UiText::clipped(&description));
+        }
+        if mutation.pending || mutation.withdrawn {
+            builder = builder.dimmed(true);
+        }
+        if mutation.editable && !read_only {
+            let mut args = UiMapBuilder::try_new().ok_or_else(|| ui_assembly_error("history-panel.mutation-args"))?;
+            args.push(semio_framework::HISTORY_EDIT_ARG_MUTATION_ID.to_owned(), UiValue::Text(UiText::clipped(&mutation.mutation_id))).map_err(|_| ui_assembly_error("history-panel.mutation-args"))?;
+            let edit = row_action(IconName::Edit.as_str(), time_travel::HistoryPanelText::Edit.text(locale), semio_framework::HISTORY_EDIT_BEGIN_ACTION_ID, RowActionPlacement::Row)?;
+            builder = builder.try_row_action(edit).map_err(|_| ui_assembly_error("history-panel.mutation-actions"))?.target(row_target(controller_id, Some(UiValue::Map(args.finish())), Some(semio_framework::HISTORY_EDIT_BEGIN_ACTION_ID))?);
+        }
+        builder.try_build().map_err(|_| ui_assembly_error("history-panel.mutation-build"))
     }
     //#endregion 🔖️HistoryPanel
 
@@ -12246,6 +12378,11 @@ pub mod app {
         pub draft_mutations: Vec<DraftMutation>,
         pub description: Option<String>,
         pub coalesce_key: Option<String>,
+        /// 🛠️ The committed `ToolTransaction` that authored `artifact_mutations`: stamped on every published op as
+        /// `MutationMeta.transaction`, so history lists the gesture as one row and edits its yielded mutations.
+        /// `None` outside a tool transaction; refused together with a `coalesce_key` or `child_emits` (one commit is
+        /// one plain edit). Build it with [`Emit::commit_transaction`].
+        pub transaction: Option<protocol::TransactionRef>,
         pub effects: Vec<Effect>,
         /// 🔁️ Zero-or-more extension capability invocations whose OUTCOME must come back to this app
         /// — see [`ExtensionInvocation`]. Deliberately NOT expressible through `effects`: the
@@ -12292,6 +12429,7 @@ pub mod app {
                 draft_mutations: Vec::new(),
                 description: None,
                 coalesce_key: None,
+                transaction: None,
                 effects: Vec::new(),
                 extension_invocations: Vec::new(),
                 events: Vec::new(),
@@ -12648,6 +12786,14 @@ pub mod app {
         /// amending would be O(N²) (draw drafts, lowpoly strokes). See `🔖️UtilityPreviewContract`.
         pub fn commit(artifact_mutations: Vec<Mutation>, description: impl Into<String>) -> Self {
             Self { artifact_mutations, description: Some(description.into()), ..Default::default() }
+        }
+
+        /// 🛠️ A committed `ToolTransaction` (`ToolMachineRunner`'s `ToolStep::Committed(transaction, mutations)`)
+        /// published as ONE document edit whose every op carries `transaction`; with no description the history row
+        /// is labelled from the mutations' own `MutationKind` labels. An empty transaction is an empty emission.
+        pub fn commit_transaction(transaction: protocol::TransactionRef, artifact_mutations: Vec<Mutation>) -> Self {
+            let transaction = (!artifact_mutations.is_empty()).then_some(transaction);
+            Self { artifact_mutations, transaction, ..Default::default() }
         }
 
         /// 🧮️ A config-operation emission carrying `config_mutations` and nothing else — the
@@ -13451,8 +13597,8 @@ pub mod app {
         /// undo group, or a failure mode: they are applied unconditionally and cannot fail, so
         /// folding them into `handle`'s `Result<Emit, Fault>` would misrepresent them.
         ///
-        /// Defaults to emitting nothing, so an app with no shareable or UI-local state writes no
-        /// code. Called on every dispatched command, right before `handle`.
+        /// Defaults to emitting nothing. An app-owned job invokes this from its measured, cancellable
+        /// worker stage and transfers the result to its completion; dispatch never invokes it.
         async fn ephemeral(_command: &Self::Command, _doc: &ArtifactView<'_, Self::Snapshot>, _cfg: &ConfigView<'_, Self::Config>, _presence: &PresenceView<'_, Self::Presence>, _transient: &TransientView<'_, Self::Transient>) -> EphemeralEmit<Self> {
             EphemeralEmit::default()
         }
@@ -13476,6 +13622,13 @@ pub mod app {
         /// path; hidden host catalogue publication does not impersonate an interactive reducer.
         fn host_configuration_mutation(_action: &str, _args: Option<&DslValue>) -> Result<Option<Self::ConfigMutation>, Fault> {
             Ok(None)
+        }
+        /// 🏷️ The history label of one applied document operation in every shell locale — for a
+        /// `#[derive(Mutations)]` aggregate `Some(protocol::SemanticMutation::label(op))`. `None` shows the
+        /// operation's text line, which is locale-invariant data. History rows, the history-edit editor and
+        /// tool-transaction rows without a description read it.
+        fn mutation_label(_op: &Self::Mutation) -> Option<LocalizedLabel> {
+            None
         }
         async fn initial_draft() -> Self::Draft {
             Self::Draft::default()
@@ -13760,8 +13913,8 @@ pub mod app {
             Ok(Media { media_type, payload: MediaPayload::Structured { schema: Self::DOCUMENT_SCHEMA.to_string(), json: store::pack_rt::pack_value_to_base64(&bytes) } })
         }
         /// 🧮️ Exports with the exact immutable transient snapshot captured for this request.
-        async fn export_media_with_request_context(port: &str, doc: &ArtifactView<'_, Self::Snapshot>, transient: &TransientView<'_, Self::Transient>) -> Result<Media, MediaError> {
-            let _ = transient;
+        async fn export_media_with_request_context(owner: &ArtifactInstanceOperationOwnerHandle, port: &str, doc: &ArtifactView<'_, Self::Snapshot>, transient: &TransientView<'_, Self::Transient>) -> Result<Media, MediaError> {
+            let _ = (owner, transient);
             Self::export_media(port, doc).await
         }
         /// 🎞️ Builds the operation that replaces the whole document with `snapshot` — the seam the
@@ -13916,6 +14069,9 @@ pub mod app {
         /// ⏯️ This instance's tool run summary (`PluginApp::tool_run_presence`, contract §3.4) — the local
         /// `PresencePeer.tool_run` the host's heartbeat assembly stamps; `None` without a run.
         pub tool_run: Option<protocol::PresenceToolRun>,
+        /// ⏪️ This instance's open history edit (`TimeTravelLedger::presence`) — the local `PresencePeer.history_edit`
+        /// a host stamps; `None` while no history edit is open.
+        pub history_edit: Option<protocol::PresenceHistoryEdit>,
     }
 
     #[derive(Clone, Copy, Debug, PartialEq, Eq)]
@@ -14021,7 +14177,7 @@ pub mod app {
         /// interaction verb owes the host (`TypedOperationUiProgress`). The default answers the scope
         /// alone, for a `PluginApp` that folds nothing.
         fn take_typed_operation_ui_progress(&mut self) -> Option<TypedOperationUiProgress> {
-            self.take_typed_operation_ui_scope().map(|ui_scope| TypedOperationUiProgress { ui_scope, leftover: None })
+            self.take_typed_operation_ui_scope().map(|ui_scope| TypedOperationUiProgress { ui_scope, leftover: None, history_patch: None })
         }
         /// 🏁️ Drains one terminal typed-operation witness, resolving its command-log delta and
         /// content revision against CURRENT state — the payload of one `AppFrame::OperationCompleted`.
@@ -15910,6 +16066,9 @@ pub mod app {
     pub struct TypedOperationUiProgress {
         pub ui_scope: UiDirtyScope,
         pub leftover: Option<TypedOperationLeftover>,
+        /// ⏪️ The history delta a driver turn owes the hosts (history-edit stage and replay progress), riding the same
+        /// unsolicited frame as the scope so the band moves without a dispatch.
+        pub history_patch: Option<HistoryPatch>,
     }
 
     /// 🕹️ The leftover `InteractionView` envelope (`{ "interactionView": … }`, exactly what
@@ -16202,6 +16361,8 @@ pub mod app {
 
     /// 🧬 Immutable app-owned state captured by the scheduler for one retained job lifetime.
     pub struct ArtifactOwnedToolJobContext<A: ArtifactApp> {
+        presence_local: Option<std::sync::Arc<store::SnapshotRead<A::Presence>>>,
+        presence_peers: Option<std::sync::Arc<store::PresencePeersRoot<A::Presence>>>,
         pub app_instance_id: u32,
         pub view_state: Option<ViewModel>,
         pub canonical_base_revision: [u8; 32],
@@ -16281,11 +16442,24 @@ pub mod app {
             let ArtifactOwnedToolJobSnapshots { children, draft, transient, window_config, window_transient } = snapshots;
             let identity_digest =
                 artifact_owned_tool_job_context_identity_digest(app_instance_id, view_state.as_ref(), canonical_base_revision, draft_generation, transient_generation, children.identity_digest(), (window_config.as_ref(), window_transient.as_ref()));
-            Self { app_instance_id, view_state, canonical_base_revision, draft_generation, transient_generation, children, draft, transient, window_config, window_transient, identity_digest, tool_run: None }
+            Self { app_instance_id, view_state, canonical_base_revision, draft_generation, transient_generation, children, draft, transient, window_config, window_transient, identity_digest, tool_run: None, presence_local: None, presence_peers: None }
         }
 
         pub fn identity_digest(&self) -> u64 {
             self.identity_digest
+        }
+
+        /// 👥️ Retains the exact O(1) presence read authority for an app-owned worker stage.
+        pub fn with_presence(mut self, local: store::SnapshotRead<A::Presence>, peers: std::sync::Arc<store::PresencePeersRoot<A::Presence>>) -> Self {
+            self.presence_local = Some(std::sync::Arc::new(local));
+            self.presence_peers = Some(peers);
+            self
+        }
+
+
+        /// 👥️ Borrows immutable captured presence without projecting or granting publication authority.
+        pub fn presence_view(&self) -> Option<PresenceView<'_, A::Presence>> {
+            Some(PresenceView { local: self.presence_local.as_ref()?.get(), peers: PresencePeersView { root: self.presence_peers.as_deref()? } })
         }
 
         /// ⏯️ Binds the instance's tool run as of command admission (identity, state, provisional entities).
@@ -16377,8 +16551,9 @@ pub mod app {
     /// 📬️ Completed document mutations paired with their ephemeral output.
     type ArtifactToolEmission<A> = (ArtifactMutationOutcome<<A as ArtifactApp>::Mutation, <A as ArtifactApp>::ConfigMutation, <A as ArtifactApp>::DraftMutation>, EphemeralEmit<A>);
 
-    /// 📖️ Non-capturing provider of one document schema and its semantic mutation roster.
-    pub type OwnerMutationRoster = fn() -> (&'static str, &'static [protocol::SemanticDescriptor]);
+    /// 📖️ Non-capturing provider of one document schema, its semantic mutation roster and, row for row, each
+    /// kind's leaf payload JSON Schema (`Mutation::INPUT_SCHEMAS`; shorter or empty when the aggregate publishes none).
+    pub type OwnerMutationRoster = fn() -> (&'static str, &'static [protocol::SemanticDescriptor], &'static [&'static str]);
 
     pub trait ArtifactOwnedDisposer<T>: Send {
         fn close_step(&mut self, owner: &mut T, maximum_items: usize, maximum_bytes: usize) -> Result<PluginCloseStep, Fault>;
@@ -16515,6 +16690,7 @@ pub mod app {
                 label: None,
                 group_id: None,
                 origin: Default::default(),
+                transaction: None,
             }],
             description,
             coalesce_key: None,
@@ -16668,6 +16844,7 @@ pub mod app {
         ValidateEnvelope,
         ValidateEditPair { left: usize, right: usize },
         CloneInitial,
+        FoldSupersessions,
         SeedHistory { edit: usize, lane: u8, index: usize },
         FindApplied { position: usize, scan: usize },
         ApplyForward { position: usize, edit: usize, mutation: usize },
@@ -16866,8 +17043,24 @@ pub mod app {
                     let mut digest = store::ArtifactStoreInitializationDigest::new(b"bounded.initial");
                     digest.observe(&pack);
                     *self.runtime = Some(store::ArtifactStoreInitializationRuntime::new(&envelope.id, &envelope.schema, envelope.vcs.initial_snapshot.clone(), digest.finish()));
-                    self.phase = BoundedStoreInitializationPhase::SeedHistory { edit: 0, lane: 0, index: 0 };
+                    self.phase = BoundedStoreInitializationPhase::FoldSupersessions;
                     cx.consume_fuel(pack.len().max(1) as u64);
+                    semio_framework_job::StepOutcome::Yield
+                }
+                BoundedStoreInitializationPhase::FoldSupersessions => {
+                    let envelope = self.envelope.as_ref().expect("bounded envelope remains retained while its supersessions fold");
+                    let events = envelope.vcs.edits.len().saturating_add(envelope.transitions.len());
+                    match store::fold_envelope_history(envelope) {
+                        Ok(fold) => match self.runtime.as_mut().expect("bounded runtime remains retained while supersessions fold").set_supersessions(fold.supersessions) {
+                            Ok(()) => self.phase = BoundedStoreInitializationPhase::SeedHistory { edit: 0, lane: 0, index: 0 },
+                            Err(error) => {
+                                self.fault = Some(error.into_bytes());
+                                self.phase = BoundedStoreInitializationPhase::RetireFault;
+                            }
+                        },
+                        Err(_) => self.fail(b"bounded-store.initializer-history-fold"),
+                    }
+                    cx.consume_fuel(events.max(1) as u64);
                     semio_framework_job::StepOutcome::Yield
                 }
                 BoundedStoreInitializationPhase::SeedHistory { edit, lane, index } => {
@@ -16922,32 +17115,33 @@ pub mod app {
                     semio_framework_job::StepOutcome::Yield
                 }
                 BoundedStoreInitializationPhase::ApplyForward { position, edit, mutation } => {
-                    let Some(operation) = self.envelope.as_ref().and_then(|envelope| envelope.vcs.edits.get(edit)).expect("bounded applied edit remains retained").forwards.get(mutation).cloned() else {
+                    let envelope = self.envelope.as_ref().expect("bounded envelope remains retained while its forwards fold");
+                    let entry = envelope.vcs.edits.get(edit).expect("bounded applied edit remains retained");
+                    let Some(original) = entry.forwards.get(mutation) else {
                         self.phase = BoundedStoreInitializationPhase::HashInverse { position, edit, mutation: 0 };
                         return semio_framework_job::StepOutcome::Yield;
                     };
+                    let mutation_id = entry.mutation_meta.get(mutation).and_then(|meta| meta.mutation_id.clone()).or_else(|| original.mutation_id()).unwrap_or_else(|| protocol::MutationId(format!("{}#{mutation}", entry.id)));
+                    let supersessions = self.runtime.as_ref().expect("bounded runtime remains retained while forwards fold").supersessions();
+                    let Some(operation) = store::effective_operation::<P, M>(original, mutation as u32, mutation_id, &envelope.schema, supersessions).operation().cloned() else {
+                        self.phase = BoundedStoreInitializationPhase::ApplyForward { position, edit, mutation: mutation + 1 };
+                        cx.consume_fuel(1);
+                        return semio_framework_job::StepOutcome::Yield;
+                    };
                     let Some(bytes) = self.hash_operation(&operation) else {
+                        <M as Mutation<P>>::retire_cold(operation);
                         self.fail(b"bounded-store.initializer-forward-encoding");
                         return semio_framework_job::StepOutcome::Yield;
                     };
                     let current = self.runtime.as_mut().and_then(store::ArtifactStoreInitializationRuntime::current_mut).expect("bounded runtime current snapshot remains retained");
-                    let (diff, messages) = operation.diff(current).into_parts();
-                    if messages.iter().any(|message| message.level == protocol::Severity::Fatal) {
-                        self.fail(b"bounded-store.initializer-fatal-mutation");
-                        return semio_framework_job::StepOutcome::Yield;
+                    let (next, _) = store::fold_operation::<P, M>(current, &operation, mutation as u32);
+                    <M as Mutation<P>>::retire_cold(operation);
+                    if let Some(next) = next {
+                        let previous = std::mem::replace(current, next);
+                        *self.active = Some(store::ArtifactOwnedValueRetirementFactory::retire_owned(&BoundedConfigRetirementFactory::<P>::new(), previous));
                     }
-                    match diff.apply(current) {
-                        Ok(next) => {
-                            let previous = std::mem::replace(current, next);
-                            *self.active = Some(store::ArtifactOwnedValueRetirementFactory::retire_owned(&BoundedConfigRetirementFactory::<P>::new(), previous));
-                            self.phase = BoundedStoreInitializationPhase::ApplyForward { position, edit, mutation: mutation + 1 };
-                            cx.consume_fuel(bytes.max(1) as u64);
-                        }
-                        Err(error) => {
-                            self.fault = Some(error.to_string().into_bytes());
-                            self.phase = BoundedStoreInitializationPhase::RetireFault;
-                        }
-                    }
+                    self.phase = BoundedStoreInitializationPhase::ApplyForward { position, edit, mutation: mutation + 1 };
+                    cx.consume_fuel(bytes.max(1) as u64);
                     semio_framework_job::StepOutcome::Yield
                 }
                 BoundedStoreInitializationPhase::HashInverse { position, edit, mutation } => {
@@ -20898,7 +21092,7 @@ pub mod app {
             app.dispatch_typed_command_inner(next, admission, &meta).await.unwrap();
             let next_id = *app.latest_wins_order.items.front().unwrap();
             let old_key = app.latest_wins_commands.get(next_id).unwrap().lease.as_ref().unwrap().key.clone();
-            app.store.dispatch(ArtifactCommand::Apply { mutations: vec![mutation(13)], description: None }).await.unwrap();
+            app.store.dispatch(ArtifactCommand::Apply { mutations: vec![mutation(13)], description: None, transaction: None }).await.unwrap();
             let fresh_revision = app.store.content_revision_now();
             for _ in 0..100_000 {
                 if app.tool_operations.get(next_id).is_some() {
@@ -23492,6 +23686,13 @@ pub mod app {
         /// ⏯️ The ephemeral local-only tool run ledger (contract §3.3): provisional document ops folded
         /// into an overlay the renderer reads, never touching `store` until the one-edit finalize.
         pub(crate) tool_runs: ToolRunLedger<A>,
+        /// ⏪️ The ephemeral local-only history-edit session (design §7 of ticket
+        /// 26/09/30/NON-DESTRUCTIVE-HISTORY-EDITING): drafts previewed and replayed beside the store, never touching it
+        /// until the one finalize commit.
+        pub(crate) time_travel: TimeTravelLedger<A>,
+        /// ✏️ Every `Supersede` transition of the store's event log, classified per author (history edit, its undo, its
+        /// redo) — derived from the transitions, so the history rows and undo of history edits survive reload.
+        pub(crate) supersedes: SupersedeLedger,
     }
 
     impl<A: ArtifactApp, M: SpaceMember + MemberFactory + 'static> VcsArtifactApp<A, M> {
@@ -23614,6 +23815,7 @@ pub mod app {
             || CLIPBOARD_ACTION_IDS.contains(&action)
             || INTERACTION_ACTION_IDS.contains(&action)
             || is_tool_run_action_id(action)
+            || is_time_travel_action_id(action)
             || action == CANCEL_TYPED_OPERATION_ACTION_ID
             || matches!(action, REVERT_TO_COMMAND_ACTION_ID | SET_HISTORY_COMMAND_FILTER_ACTION_ID | NOTE_SHELL_COMMAND_ACTION_ID | RECORD_TUTORIAL_ACTION_ID)
             || matches!(action, semio_framework::EXPORT_ARTIFACT_DOCUMENT_ACTION_ID | semio_framework::IMPORT_ARTIFACT_DOCUMENT_ACTION_ID)
@@ -23655,6 +23857,23 @@ pub mod app {
     /// Spectator; this guard is the backstop for a dispatch no manifest offered.
     const VIEWER_REJECTED_ACTION_IDS: [&str; 7] = ["undo", "redo", "commitCheckpoint", "createAlternative", REVERT_TO_COMMAND_ACTION_ID, "cut", "paste"];
 
+    /// 🔒️ Whether a `Viewer`-role instance rejects `action`: the [`VIEWER_REJECTED_ACTION_IDS`] and every history-edit
+    /// verb (editing history supersedes inputs, which a viewer never may).
+    fn viewer_rejects_action(action: &str) -> bool {
+        VIEWER_REJECTED_ACTION_IDS.contains(&action) || is_time_travel_action_id(action)
+    }
+
+    /// 🧊️ The framework-reserved verbs a history-edit session freezes: the history-lane verbs (they move the applied
+    /// stack or the head and would invalidate the session base silently) and the clipboard verbs that edit the document.
+    fn time_travel_freezes_reserved_action(action: &str) -> bool {
+        HISTORY_ACTION_IDS.contains(&action) || matches!(action, REVERT_TO_COMMAND_ACTION_ID | "cut" | "paste")
+    }
+
+    /// 🧊️ The `timeTravel.frozen` refusal of `verb` while a history edit is open on this instance.
+    fn time_travel_frozen_fault(verb: &str) -> Fault {
+        Fault::new(FaultOrigin::Framework, FaultCode::new(semio_framework_time_travel::TIME_TRAVEL_FROZEN_CODE), format!("verb {verb:?} would change the document while a history edit is open on this instance"))
+    }
+
     /// 🔒️ Frozen fault (contract §2.3): exact code `viewer.read-only`, `FaultOrigin::Framework` — a
     /// mutating verb reached a `Viewer`-role `VcsArtifactApp` instance, either through
     /// `dispatch_action`/`dispatch_import_media`'s string-verb guard or `dispatch_emit`'s non-empty
@@ -23666,6 +23885,36 @@ pub mod app {
         Fault::new(FaultOrigin::Framework, FaultCode::new("viewer.read-only"), format!("'{verb}' is not permitted on a viewer instance (contract §2.3)"))
     }
     //#endregion 🔖️ViewerGuard
+
+    /// 🏷️ A noted shell command's history label in every locale: a full `LocalizedLabel`, an `{en, de}` pair, or plain
+    /// text (locale-invariant data, e.g. a file name); the optional `detail` is appended in every locale. Without a
+    /// label the command id stands, as data.
+    fn note_shell_command_label(label: Option<&DslValue>, command_id: &str, detail: Option<&DslValue>) -> LocalizedLabel {
+        let base = match label {
+            Some(DslValue::String(text)) => LocalizedLabel::data(text.clone()),
+            Some(value @ DslValue::Object(_)) => match (value.get("en").and_then(DslValue::as_str), value.get("de").and_then(DslValue::as_str)) {
+                (Some(en), Some(de)) => LocalizedLabel::native(en, de),
+                _ => <LocalizedLabel as protocol::FromValue>::from_value(value.clone()).unwrap_or_else(|_| LocalizedLabel::data(command_id)),
+            },
+            _ => LocalizedLabel::data(command_id),
+        };
+        match detail.and_then(DslValue::as_str) {
+            Some(detail) => LocalizedLabel::from_fn(|terminology, locale| format!("{} - {detail}", base.resolve(terminology, locale))),
+            None => base,
+        }
+    }
+
+    /// 🛠️ A committed tool transaction is exactly one plain document edit: a transaction riding a coalesced amend or
+    /// owned-child edits is refused instead of silently losing its stamp.
+    fn tool_transaction_shape_fault(verb: &str, transaction: Option<&protocol::TransactionRef>, coalesced: bool, children: bool) -> Option<Fault> {
+        let transaction = transaction?;
+        let shape = match (coalesced, children) {
+            (false, false) => return None,
+            (true, _) => "a coalesced amend",
+            (false, true) => "owned-child edits",
+        };
+        Some(Fault::new(FaultOrigin::Framework, FaultCode::new("toolTransaction.shape"), format!("verb {verb:?} published tool transaction {:?} with {shape}; a committed transaction is one plain document edit", transaction.id)))
+    }
 
     fn typed_operation_document_is_fresh(operation: &semio_framework_job::Operation, canonical_revision: [u8; 32], live_revision: [u8; 32], live_generation: u64) -> bool {
         let live_short = semio_framework_job::RevisionId(u64::from_be_bytes(live_revision[..8].try_into().expect("revision lane width")));
@@ -24120,6 +24369,9 @@ pub mod app {
         }
 
         async fn validate_framework_reserved_commit(&self, verb: &str, permit: &FrameworkReservedCommitPermit) -> Result<(), Fault> {
+            if self.time_travel.freezes_local_emits() && time_travel_freezes_reserved_action(verb) {
+                return Err(time_travel_frozen_fault(verb));
+            }
             if permit.lease.is_cancelled().await {
                 return Err(Fault::new(FaultOrigin::Framework, FaultCode::new("interactive-job.cancelled"), format!("framework route '{verb}' was cancelled before commit")));
             }
@@ -24260,6 +24512,7 @@ pub mod app {
             let interaction_id = format!("{}-interaction", app_id);
             let interaction_envelope = create_document_envelope::<protocol::InteractionState, InteractionConfigMutation>("framework.interaction", &interaction_id, protocol::InteractionState::default(), None);
             let mut store = ArtifactStore::new(envelope).await.expect("failed to create document store");
+            store.enable_convergence_early_exit();
             if let Some(owners) = A::build_document_store_owners() {
                 store.install_document_store_owners_exact(owners);
             }
@@ -24275,7 +24528,7 @@ pub mod app {
             interaction_store.install_document_store_owners_exact(crate::local_interaction::retirement::interaction_store_owners());
             let genesis_mutations = A::genesis().await;
             if !genesis_mutations.is_empty() {
-                store.dispatch(ArtifactCommand::Apply { mutations: genesis_mutations, description: Some("genesis".to_string()) }).await.expect("ArtifactApp::genesis mutations must apply cleanly onto a freshly constructed store");
+                store.dispatch(ArtifactCommand::Apply { mutations: genesis_mutations, description: Some("genesis".to_string()), transaction: None }).await.expect("ArtifactApp::genesis mutations must apply cleanly onto a freshly constructed store");
             }
             let dispatch_report = protocol::DispatchReport { policy: store.merge_policy(), worst: None, messages: Vec::new() };
             let mut framework_tool_registry = ArtifactToolFactoryRegistry::<A>::new(&tool_jobs, &app_id);
@@ -24525,6 +24778,8 @@ pub mod app {
                 pending_presence: Vec::new(),
                 presence_marked_keys: std::collections::BTreeMap::new(),
                 tool_runs: ToolRunLedger::default(),
+                time_travel: TimeTravelLedger::default(),
+                supersedes: SupersedeLedger::default(),
             };
             this.seed_genesis_children().await.expect("ArtifactApp::genesis_child_pack members must open cleanly onto a freshly constructed store");
             this.followed_parent_generation = this.store.generation_now();
@@ -25262,6 +25517,7 @@ pub mod app {
                     Ok(displaced) => displaced,
                     Err(_) => unreachable!("prevalidated publication cannot reject inside its non-suspending commit boundary"),
                 };
+                self.store.enable_convergence_early_exit();
                 let displaced_children = std::mem::replace(&mut self.children, candidate_children);
                 let displaced_content = std::mem::replace(&mut *self.child_content_root, candidate_content);
                 let displaced_content_retirements = std::mem::replace(&mut self.child_content_retirements, replacement_content_retirements);
@@ -26602,7 +26858,7 @@ pub mod app {
         /// (live dispatch); `Some(..)` preserves an edit's original `started_at` (backfill). Always a
         /// fresh row (`count: 1`) — folding consecutive `View`/`🐚️Shell` dispatches is `record_command`'s job.
         fn push_log_entry(&mut self, append: CommandLogAppend<'_>) {
-            let CommandLogAppend { action_id, label, kind, edit_id, config_edit_id, timestamp, inverse } = append;
+            let CommandLogAppend { action_id, label, kind, edit_id, config_edit_id, transition_id, timestamp, inverse } = append;
             self.next_command_seq += 1;
             self.command_log.push(CommandLogEntry {
                 seq: self.next_command_seq,
@@ -26613,6 +26869,7 @@ pub mod app {
                 edit_id,
                 config_edit_ids: config_edit_id.into_iter().collect(),
                 child_edit_ids: Vec::new(),
+                transition_id,
                 count: 1,
                 inverse,
             });
@@ -26644,7 +26901,7 @@ pub mod app {
                     },
                 },
             };
-            self.push_log_entry(CommandLogAppend { action_id, label, kind, edit_id, config_edit_id, timestamp: None, inverse });
+            self.push_log_entry(CommandLogAppend { action_id, label, kind, edit_id, config_edit_id, transition_id: None, timestamp: None, inverse });
             if matches!(kind, ActionKind::History) {
                 self.history_dirty_sequences.extend(self.command_log.iter().map(|entry| entry.seq));
             } else {
@@ -26666,9 +26923,17 @@ pub mod app {
         /// 🧮️ Same backfill, for the CONFIG store's own edits — a config edit reached via `seed`/
         /// `load_config_pack`/ingest never passes through `dispatch_emit` either.
         async fn backfill_command_log(&mut self) {
+            self.refresh_supersede_ledger();
             let logged: HashSet<&str> = self.command_log.iter().filter_map(|entry| entry.edit_id.as_deref()).collect();
-            let mut missing: Vec<(String, LocalizedLabel, String)> = Vec::new();
+            let logged_transitions: HashSet<&str> = self.command_log.iter().filter_map(|entry| entry.transition_id.as_deref()).collect();
+            let mut transitions = self.supersedes.records.iter().enumerate().filter(|(_, record)| !logged_transitions.contains(record.transition_id.as_str())).map(|(index, record)| (index, record.timestamp)).peekable();
+            let mut missing: Vec<(CommandLogAppendKey, LocalizedLabel, String)> = Vec::new();
             for edit in self.store.envelope().vcs.edits.iter().filter(|edit| !logged.contains(edit.id.as_str())) {
+                let at = edit.mutation_meta.first().map(|meta| meta.timestamp);
+                while let Some((index, _)) = transitions.next_if(|(_, timestamp)| at.is_some_and(|at| *timestamp < at)) {
+                    let record = &self.supersedes.records[index];
+                    missing.push((CommandLogAppendKey::Transition(record.transition_id.clone()), self.supersede_row_label(index), record.timestamp.physical_ms.to_string()));
+                }
                 let label = match edit.description.clone() {
                     Some(description) => description,
                     None => match edit.forwards.first() {
@@ -26676,10 +26941,17 @@ pub mod app {
                         None => edit.id.clone(),
                     },
                 };
-                missing.push((edit.id.clone(), LocalizedLabel::data(label), edit.started_at.clone()));
+                missing.push((CommandLogAppendKey::Edit(edit.id.clone()), LocalizedLabel::data(label), edit.started_at.clone()));
             }
-            for (edit_id, label, timestamp) in missing {
-                self.push_log_entry(CommandLogAppend { action_id: "apply", label, kind: ActionKind::Mutation, edit_id: Some(edit_id), config_edit_id: None, timestamp: Some(timestamp), inverse: None });
+            for (index, _) in transitions {
+                let record = &self.supersedes.records[index];
+                missing.push((CommandLogAppendKey::Transition(record.transition_id.clone()), self.supersede_row_label(index), record.timestamp.physical_ms.to_string()));
+            }
+            for (key, label, timestamp) in missing {
+                match key {
+                    CommandLogAppendKey::Edit(edit_id) => self.push_log_entry(CommandLogAppend { action_id: "apply", label, kind: ActionKind::Mutation, edit_id: Some(edit_id), config_edit_id: None, transition_id: None, timestamp: Some(timestamp), inverse: None }),
+                    CommandLogAppendKey::Transition(transition_id) => self.push_log_entry(CommandLogAppend { action_id: semio_framework::HISTORY_EDIT_COMMIT_ACTION_ID, label, kind: ActionKind::History, edit_id: None, config_edit_id: None, transition_id: Some(transition_id), timestamp: Some(timestamp), inverse: None }),
+                }
             }
             let logged_config: HashSet<&str> = self.command_log.iter().flat_map(|entry| entry.config_edit_ids.iter().map(String::as_str)).collect();
             let mut missing_config: Vec<(String, LocalizedLabel, String)> = Vec::new();
@@ -26694,7 +26966,7 @@ pub mod app {
                 missing_config.push((edit.id.clone(), LocalizedLabel::data(label), edit.started_at.clone()));
             }
             for (config_edit_id, label, timestamp) in missing_config {
-                self.push_log_entry(CommandLogAppend { action_id: "configApply", label, kind: ActionKind::Mutation, edit_id: None, config_edit_id: Some(config_edit_id), timestamp: Some(timestamp), inverse: None });
+                self.push_log_entry(CommandLogAppend { action_id: "configApply", label, kind: ActionKind::Mutation, edit_id: None, config_edit_id: Some(config_edit_id), transition_id: None, timestamp: Some(timestamp), inverse: None });
             }
         }
 
@@ -26820,8 +27092,42 @@ pub mod app {
             let edits_by_id: HashMap<&str, &protocol::Edit<A::Mutation>> = envelope.vcs.edits.iter().map(|edit| (edit.id.as_str(), edit)).collect();
             let config_edits_by_id: HashMap<&str, &protocol::Edit<A::ConfigMutation>> = config_envelope.vcs.edits.iter().map(|edit| (edit.id.as_str(), edit)).collect();
             let printed: HashMap<&str, (usize, &[String])> = previous.map_or_else(HashMap::new, |previous| previous.commands.iter().filter_map(|row| row.edit_id.as_deref().map(|edit_id| (edit_id, (row.op_count, row.op_lines.as_slice())))).collect());
+            let labelled: HashMap<&str, &MutationView> = previous.map_or_else(HashMap::new, |previous| previous.commands.iter().flat_map(|row| row.mutations.iter()).filter(|mutation| !mutation.superseded).map(|mutation| (mutation.mutation_id.as_str(), mutation)).collect());
+            let applied_ops = self.store.mutation_ops().unwrap_or_default();
+            let durable = self.store.mutation_outcomes().unwrap_or_default();
+            let outcomes: HashMap<&str, &protocol::MutationReplayOutcome> = durable.iter().map(|outcome| (outcome.mutation_id.0.as_str(), outcome)).collect();
+            let mut ops_by_edit: HashMap<&str, Vec<&store::AppliedMutation<'_, A::Mutation>>> = HashMap::new();
+            for op in &applied_ops {
+                ops_by_edit.entry(op.edit_id).or_default().push(op);
+            }
+            let supersede_author = self.supersede_author();
+            let applied_entries = self.supersedes.applied_entries(self.store.supersessions().iter());
             let mut commands: Vec<CommandView> = Vec::with_capacity(self.command_log.len());
             for entry in self.command_log.iter() {
+                if let Some((index, record)) = entry.transition_id.as_deref().and_then(|transition_id| self.supersedes.record(transition_id)) {
+                    let applied = self.supersedes.row_applied(index, &applied_entries);
+                    commands.push(CommandView {
+                        seq: entry.seq,
+                        action_id: entry.action_id.clone(),
+                        label: self.supersede_row_label(index),
+                        kind: entry.kind,
+                        timestamp: entry.timestamp.clone(),
+                        edit_id: None,
+                        config_edit_id: None,
+                        child_edit_ids: Vec::new(),
+                        transition_id: Some(record.transition_id.clone()),
+                        author: Some(record.actor.clone()),
+                        op_lines: Vec::new(),
+                        op_count: 0,
+                        applied,
+                        revertible: record.role != SupersedeRole::Undo && record.actor == supersede_author && self.supersedes.undoable(supersede_author, record.entry, &applied_entries),
+                        count: entry.count,
+                        inverse: None,
+                        transaction: None,
+                        mutations: Vec::new(),
+                    });
+                    continue;
+                }
                 let edit = entry.edit_id.as_deref().and_then(|edit_id| edits_by_id.get(edit_id).copied());
                 let mut op_lines = Vec::new();
                 let mut op_count = 0;
@@ -26842,21 +27148,37 @@ pub mod app {
                     || (config_applied && config_edit.is_some_and(|edit| edit.actor.is_none() || edit.actor.as_deref() == config_local_actor))
                     || child_applied
                     || (entry.inverse.is_some() && !self.shell_undone.contains(&entry.seq));
+                let mutations = entry.edit_id.as_deref().and_then(|edit_id| ops_by_edit.get(edit_id)).map_or_else(Vec::new, |ops| time_travel::history_mutation_views::<A>(ops, &outcomes, &labelled));
+                let transaction = edit.and_then(|edit| edit.mutation_meta.first()).and_then(|meta| meta.transaction.clone());
+                let label = match (edit, mutations.first()) {
+                    (Some(edit), Some(first)) if transaction.is_some() && edit.description.is_none() => {
+                        let more = op_count.saturating_sub(1);
+                        LocalizedLabel::from_fn(|terminology, locale| {
+                            let first = first.label.resolve(terminology, locale);
+                            if more > 0 { format!("{first} (+{more})") } else { first.to_string() }
+                        })
+                    }
+                    _ => entry.label.clone(),
+                };
                 commands.push(CommandView {
                     seq: entry.seq,
                     action_id: entry.action_id.clone(),
-                    label: entry.label.clone(),
+                    label,
                     kind: entry.kind,
                     timestamp: entry.timestamp.clone(),
                     edit_id: entry.edit_id.clone(),
                     config_edit_id: latest_config_edit_id.map(str::to_string),
                     child_edit_ids: entry.child_edit_ids.clone(),
+                    transition_id: None,
+                    author: edit.and_then(|edit| edit.actor.clone()),
                     op_lines,
                     op_count,
                     applied,
                     revertible,
                     count: entry.count,
                     inverse: entry.inverse.clone(),
+                    transaction,
+                    mutations,
                 });
             }
             commands.reverse();
@@ -26864,8 +27186,9 @@ pub mod app {
                 columns: build_history_columns(envelope).await,
                 can_undo: !self.store.applied_edit_ids().is_empty()
                     || !child_applied_tails.is_empty()
-                    || self.command_log.iter().any(|entry| entry.inverse.is_some() && entry.edit_id.is_none() && entry.config_edit_ids.is_empty() && !self.shell_undone.contains(&entry.seq)),
-                can_redo: !self.store.redo_edit_ids().is_empty() || child_has_redo_tail || !self.shell_redo.is_empty(),
+                    || self.command_log.iter().any(|entry| entry.inverse.is_some() && entry.edit_id.is_none() && entry.config_edit_ids.is_empty() && !self.shell_undone.contains(&entry.seq))
+                    || self.supersede_can_undo(),
+                can_redo: !self.store.redo_edit_ids().is_empty() || child_has_redo_tail || !self.shell_redo.is_empty() || self.supersede_redo_target().is_some(),
                 active_alternative_id: envelope.active_alternative_id.clone(),
                 current_checkpoint_id: self.store.current_checkpoint_id().map(str::to_string),
                 commands,
@@ -26879,11 +27202,13 @@ pub mod app {
             self.refresh_cache().await?;
             let history = self.cache.as_ref().expect("history cache refreshed").3.as_ref().clone();
             let dirty = std::mem::take(&mut self.history_dirty_sequences);
+            let time_travel = self.time_travel.panel();
             let upserts = history
                 .commands
                 .iter()
                 .filter(|entry| snapshot || dirty.contains(&entry.seq))
-                .map(|entry| HistoryEntry {
+                .map(|entry| (entry, entry.mutations.iter().map(|mutation| history_mutation_entry(mutation, time_travel.as_ref())).collect::<Vec<_>>()))
+                .map(|(entry, mutations)| HistoryEntry {
                     seq: entry.seq,
                     action_id: entry.action_id.clone(),
                     label: entry.label.clone(),
@@ -26902,6 +27227,12 @@ pub mod app {
                     applied: entry.applied,
                     revertible: entry.revertible,
                     count: entry.count,
+                    edit_id: entry.edit_id.clone(),
+                    transaction: entry.transaction.as_ref().map(|transaction| semio_framework::kernel::HistoryTransaction { id: transaction.id.clone(), tool: transaction.tool.clone() }),
+                    transition_id: entry.transition_id.clone(),
+                    author: entry.author.clone(),
+                    worst: mutations.iter().filter_map(|mutation| mutation.worst).max(),
+                    mutations,
                 })
                 .collect();
             Ok(HistoryPatch {
@@ -26917,6 +27248,7 @@ pub mod app {
                     HistoryCommandFilter::OnlyMutations => "onlyMutations",
                 }
                 .into(),
+                time_travel: time_travel.map(|panel| panel.status),
             })
         }
 
@@ -26958,6 +27290,7 @@ pub mod app {
                                 if command.op_count != edit.forwards.len() {
                                     command.op_lines = edit.forwards[edit.forwards.len().saturating_sub(HISTORY_ROW_OPERATION_PREVIEW)..].iter().map(|operation| operation.print_op()).collect();
                                     command.op_count = edit.forwards.len();
+                                    command.mutations = self.history_edit_mutation_views(&edit.id, &command.mutations);
                                 }
                                 true
                             })
@@ -27283,7 +27616,10 @@ pub mod app {
         /// is already the real inverse, and `revertToCommand`'s edit_id branch replays that.
         async fn dispatch_emit_inner(&mut self, verb: &str, mut emit: Emit<A::Mutation, A::ConfigMutation, A::DraftMutation>, meta: &ActionMeta) -> Result<InvocationResult, Fault> {
             Self::mint_extension_invocations(meta.instance_id, &mut emit)?;
-            let Emit { artifact_mutations, config_mutations, window_config_mutations, draft_mutations, description, coalesce_key, effects, extension_invocations, events, ui_scope, child_emits, interaction_writes, tasks } = emit;
+            let Emit { artifact_mutations, config_mutations, window_config_mutations, draft_mutations, description, coalesce_key, transaction, effects, extension_invocations, events, ui_scope, child_emits, interaction_writes, tasks } = emit;
+            if let Some(fault) = tool_transaction_shape_fault(verb, transaction.as_ref(), coalesce_key.is_some(), !child_emits.is_empty()) {
+                return Err(fault);
+            }
             let effects = self.stamp_load_document_effects(effects)?;
             debug_assert!(extension_invocations.is_empty(), "mint_extension_invocations drains the lane before destructuring");
 
@@ -27304,6 +27640,10 @@ pub mod app {
 
             if !artifact_mutations.is_empty() && self.tool_runs.freezes_local_emits() {
                 return Err(Fault::new(FaultOrigin::Framework, FaultCode::new("toolRun.busy"), format!("verb {verb:?} would emit artifact mutations while a freezing tool run is non-terminal on this instance")));
+            }
+
+            if (!artifact_mutations.is_empty() || !child_emits.is_empty()) && self.time_travel.freezes_local_emits() {
+                return Err(time_travel_frozen_fault(verb));
             }
 
             if !artifact_mutations.is_empty() && self.pending_transaction.is_some() {
@@ -27348,7 +27688,7 @@ pub mod app {
 
             if !draft_mutations.is_empty() {
                 self.draft_store.set_local_actor_id(Some(meta.actor.clone())).map_err(|error| error.into_fault())?;
-                self.draft_store.dispatch(ArtifactCommand::Apply { mutations: draft_mutations, description: None }).await.map_err(|error| error.into_fault())?;
+                self.draft_store.dispatch(ArtifactCommand::Apply { mutations: draft_mutations, description: None, transaction: None }).await.map_err(|error| error.into_fault())?;
             }
 
             let declared_kind = self.declared_dispatch_kind(verb);
@@ -27362,7 +27702,7 @@ pub mod app {
                 let before_config_edit_id = self.config_store.envelope().vcs.edits.last().map(|edit| edit.id.clone());
                 let config_command = match &coalesce_key {
                     Some(key) => ArtifactCommand::AmendLast { mutations: config_mutations, coalesce_key: Some(format!("config:{key}")) },
-                    None => ArtifactCommand::Apply { mutations: config_mutations, description: description.clone() },
+                    None => ArtifactCommand::Apply { mutations: config_mutations, description: description.clone(), transaction: None },
                 };
                 self.config_store.dispatch(config_command).await.map_err(|error| error.into_fault())?;
                 let amended_same_config_edit = before_config_edit_id.is_some() && self.config_store.envelope().vcs.edits.last().map(|edit| &edit.id) == before_config_edit_id.as_ref();
@@ -27413,7 +27753,7 @@ pub mod app {
             let log_label = description.clone().map(LocalizedLabel::data);
             let vcs_command = match coalesce_key {
                 Some(key) => ArtifactCommand::AmendLast { mutations: artifact_mutations, coalesce_key: Some(key) },
-                None => ArtifactCommand::Apply { mutations: artifact_mutations, description },
+                None => ArtifactCommand::Apply { mutations: artifact_mutations, description, transaction },
             };
             match self.store.dispatch(vcs_command).await {
                 Ok(receipt) => self.record_dispatch_receipt(receipt),
@@ -28083,7 +28423,7 @@ pub mod app {
             if minted {
                 self.interaction_store.set_local_actor_id(Some(meta.actor.clone())).map_err(|error| error.into_fault())?;
                 self.interaction_store
-                    .dispatch(ArtifactCommand::ApplyInLane { mutations: vec![InteractionConfigMutation::set_state(persisted.clone())], description: None, lane: HistoryLane::Interaction })
+                    .dispatch(ArtifactCommand::ApplyInLane { mutations: vec![InteractionConfigMutation::set_state(persisted.clone())], description: None, lane: HistoryLane::Interaction, transaction: None })
                     .await
                     .map_err(|error| error.into_fault())?;
             }
@@ -28921,6 +29261,9 @@ pub mod app {
         /// has no exact pending spawn slot`). `retire_pending_reserved_latest_wins` still runs first, so
         /// an interaction storm keeps its latest-wins retirement rather than filling the table.
         async fn dispatch_framework_reserved_action(&mut self, action: &str, args: Option<&DslValue>, meta: &ActionMeta) -> Result<InvocationResult, Fault> {
+            if self.time_travel.freezes_local_emits() && time_travel_freezes_reserved_action(action) {
+                return Err(time_travel_frozen_fault(action));
+            }
             let contract = self.qualified_tool_proof(action)?.contract();
             let decoded_items = bounded_json_items(args, contract.max_decoded_items)?;
             let wire_args = args.cloned();
@@ -29185,6 +29528,9 @@ pub mod app {
                 return Err(Fault::new(FaultOrigin::Framework, FaultCode::new("interactive-job.cancelled"), format!("framework route '{action}' was cancelled at commit")));
             }
             if action == "undo" || action == "redo" {
+                if let Some(result) = self.dispatch_supersede_history_action(action, meta).await? {
+                    return Ok(result);
+                }
                 if let Some(result) = self.dispatch_chrome_history_action(action, meta).await? {
                     return Ok(result);
                 }
@@ -29221,6 +29567,10 @@ pub mod app {
             let action = REVERT_TO_COMMAND_ACTION_ID;
             self.refresh_cache().await?;
             let entry_seq = args.and_then(|value| value.get("entrySeq")).and_then(DslValue::as_f64).map(|seq| seq as u64);
+            let transition_id = entry_seq.and_then(|seq| self.command_log.iter().find(|entry| entry.seq == seq)).and_then(|entry| entry.transition_id.clone());
+            if let Some(transition_id) = transition_id {
+                return Ok(Ok(self.revert_history_edit_row(&transition_id, meta).await?));
+            }
             let target = entry_seq.and_then(|seq| {
                 self.cache.as_ref().and_then(|(_, _, _, history)| history.commands.iter().find(|entry| entry.seq == seq && entry.revertible)).map(|entry| (entry.edit_id.clone(), entry.config_edit_id.clone(), entry.kind, entry.inverse.clone()))
             });
@@ -29352,18 +29702,14 @@ pub mod app {
             }
             if action == NOTE_SHELL_COMMAND_ACTION_ID {
                 let command_id = args.and_then(|value| value.get("commandId")).and_then(DslValue::as_str).ok_or_else(|| "noteShellCommand missing required commandId".to_string())?;
-                let label = args.and_then(|value| value.get("label")).and_then(DslValue::as_str).unwrap_or(command_id);
                 let detail = args.and_then(|value| value.get("detail")).cloned();
-                let label = match &detail {
-                    Some(DslValue::String(detail)) => format!("{label} - {detail}"),
-                    _ => label.to_string(),
-                };
+                let label = note_shell_command_label(args.and_then(|value| value.get("label")), command_id, detail.as_ref());
                 let inverse = args
                     .and_then(|value| value.get("inverseCommandId"))
                     .and_then(DslValue::as_str)
                     .map(|inverse_command_id| InverseAction { action_id: inverse_command_id.to_string(), args: args.and_then(|value| value.get("inverseArgs")).cloned().or(detail) });
                 self.validate_framework_reserved_commit(action, permit).await?;
-                self.record_command(command_id, ActionKind::Shell, Some(LocalizedLabel::data(label)), None, None, inverse);
+                self.record_command(command_id, ActionKind::Shell, Some(label), None, None, inverse);
                 return Ok(Self::empty_result(action, meta, Vec::new(), Vec::new(), UiDirtyScope::None).await);
             }
             if action == RECORD_TUTORIAL_ACTION_ID {
@@ -29394,7 +29740,7 @@ pub mod app {
         }
 
         pub(crate) async fn dispatch_action(&mut self, action: &str, args: Option<&DslValue>, meta: &ActionMeta) -> Result<InvocationResult, Fault> {
-            if A::ROLE == AppRole::Viewer && VIEWER_REJECTED_ACTION_IDS.contains(&action) {
+            if A::ROLE == AppRole::Viewer && viewer_rejects_action(action) {
                 return Err(viewer_read_only_fault(action));
             }
             if action==CANCEL_TYPED_OPERATION_ACTION_ID {return self.dispatch_operation_cancellation(args,meta).await;}
@@ -29403,6 +29749,9 @@ pub mod app {
             }
             if is_tool_run_action_id(action) {
                 return self.dispatch_tool_run_action(action, args, meta).await;
+            }
+            if is_time_travel_action_id(action) {
+                return Box::pin(self.dispatch_time_travel_action(action, args, meta)).await;
             }
             if is_framework_reserved_action_id(action) {
                 return self.dispatch_framework_reserved_action(action, args, meta).await;
@@ -29700,26 +30049,12 @@ pub mod app {
         /// ([`drive_agent_lane_preview`]) to the completion it would publish — publishing nothing. Every job shape an
         /// app owns previews this way: the SDK's retained command, a plugin's own tool-command job (puzzle, writer, …)
         /// and a download job, whose file an agent transaction cannot carry and is refused by name. The run holds a
-        /// keyed cancellation lease, so cancelling the document cancels the preview. Like the shell lane it first asks the
-        /// app's `ArtifactApp::ephemeral` hook, over the same captured roots. Answers the emit, how many presence,
-        /// transient and window-transient mutations the hook and the job's completion would publish (lanes an agent
+        /// keyed cancellation lease, so cancelling the document cancels the preview. Answers the emit, how many presence,
+        /// transient and window-transient mutations the job's completion would publish (lanes an agent
         /// transaction cannot carry, see [`agent_lane_uncarried_lanes`]) and how many of the job's own steps ran.
         async fn preview_typed_command_job(&mut self, command: Box<A::Command>, admission: AdmittedToolCommand, meta: &ActionMeta) -> Result<(Emit<A::Mutation, A::ConfigMutation, A::DraftMutation>, (usize, usize, usize), u64), Fault> {
             let verb = admission.verb.clone();
             let roots = self.capture_typed_command_roots(command.as_ref(), meta).await?;
-            let hook = {
-                let presence_local = self.presence_store.local_read().map_err(Fault::from)?;
-                let doc = ArtifactView::with_children(roots.snapshot.as_ref(), roots.history.as_ref(), ChildContentView::clone(&roots.children));
-                let cfg = ConfigView { snapshot: roots.config.as_ref(), window: roots.window_config_authority.as_ref().map(|authority| &authority.snapshot) };
-                let presence_view = PresenceView { local: presence_local.get(), peers: PresencePeersView { root: roots.presence_peers.as_ref() } };
-                let transient_view = TransientView { snapshot: roots.transient.as_ref(), window: roots.window_transient_authority.as_ref().map(|authority| &authority.snapshot) };
-                let emission = A::ephemeral(command.as_ref(), &doc, &cfg, &presence_view, &transient_view).await;
-                presence_local.return_to_registry();
-                emission
-            };
-            if !hook.window_transient.is_empty() {
-                return Err(plugin_sdk_fault("ephemeral hook emitted a window-transient mutation, which only a tool job's own completion may publish"));
-            }
             let operation_id =
                 self.admit_typed_operation_slot().ok_or_else(|| Fault::new(FaultOrigin::Framework, FaultCode::new("interactive-job.typed-operation-capacity"), "every fixed typed-operation and segmented-output slot already owns a live operation"))?;
             let seed_handle = artifact_handle_of(&format!("{}/{}/{verb}/{}", meta.instance_id, self.tool_job_controller_id, roots.base_revision.0)).await;
@@ -29742,6 +30077,7 @@ pub mod app {
                         window_transient: roots.window_transient_authority.as_ref().map(|authority| authority.snapshot.clone()),
                     },
                 )
+                .with_presence(self.presence_store.local_read().map_err(Fault::from)?, std::sync::Arc::clone(&roots.presence_peers))
                 .with_tool_run(self.tool_runs.view_for(meta.view_state.as_ref().and_then(|view| view.window_id.as_deref()))),
             );
             let key = admission.proof.key();
@@ -29794,7 +30130,7 @@ pub mod app {
             let steps = driven?;
             match completion.take()? {
                 Some(ArtifactToolCompletionValue::Emit(emit, ephemeral)) => {
-                    emit.map(|emit| (emit, (hook.presence.len() + ephemeral.presence.len(), hook.transient.len() + ephemeral.transient.len(), ephemeral.window_transient.len()), steps)).map_err(ArtifactBoundedToolFault::into_fault)
+                    emit.map(|emit| (emit, (ephemeral.presence.len(), ephemeral.transient.len(), ephemeral.window_transient.len()), steps)).map_err(ArtifactBoundedToolFault::into_fault)
                 }
                 Some(ArtifactToolCompletionValue::Download(_, _)) => Err(agent_lane_uncarried_fault(&verb, "a file download")),
                 None => Err(Fault::new(FaultOrigin::Framework, FaultCode::new("interactive-job.missing-output"), format!("the previewed job of action '{verb}' completed without producer output"))),
@@ -30808,11 +31144,27 @@ pub mod app {
                             }
                         }
                     } else if let Some(mutation) = ephemeral.window_transient.pop() {
-                        let authority = mounted.window_transient_authority.as_mut().ok_or_else(|| plugin_sdk_fault("window transient emission requires one exact captured ViewModel window authority"))?;
-                        self.window_transient_store.refresh(authority)?;
-                        let publication = self.window_transient_store.begin(mounted.operation.operation, authority, mutation)?;
-                        mounted.pending_artifact_publication = Some(PendingArtifactStorePublication::WindowTransient(publication));
-                        return Ok(());
+                        let authority = match mounted.window_transient_authority.as_mut() {
+                            Some(authority) => authority,
+                            None => {
+                                ephemeral.window_transient.push(mutation);
+                                return Err(plugin_sdk_fault("window transient emission requires one exact captured ViewModel window authority"));
+                            }
+                        };
+                        if let Err(fault) = self.window_transient_store.refresh(authority) {
+                            ephemeral.window_transient.push(mutation);
+                            return Err(fault);
+                        }
+                        match self.window_transient_store.begin(mounted.operation.operation, authority, mutation) {
+                            Ok(publication) => {
+                                mounted.pending_artifact_publication = Some(PendingArtifactStorePublication::WindowTransient(publication));
+                                return Ok(());
+                            }
+                            Err(super::window_transient::RejectedWindowTransientEmission { mutation, fault }) => {
+                                ephemeral.window_transient.push(mutation);
+                                return Err(fault);
+                            }
+                        }
                     } else {
                         TypedOperationResultPage::try_serialize(
                             token,
@@ -30869,11 +31221,18 @@ pub mod app {
                             }
                         }
                     }
+                    if let Some(fault) = tool_transaction_shape_fault(&mounted.verb, emit.transaction.as_ref(), emit.coalesce_key.is_some(), !emit.child_emits.is_empty()) {
+                        return Err(fault);
+                    }
+                    if (!emit.artifact_mutations.is_empty() || !emit.child_emits.is_empty()) && self.time_travel.freezes_local_emits() {
+                        return Err(time_travel_frozen_fault(&mounted.verb));
+                    }
                     if emit.child_emits.is_empty() && !emit.artifact_mutations.is_empty() {
                         let mutations = std::mem::take(&mut emit.artifact_mutations);
                         let description = emit.description.take();
+                        let transaction = emit.transaction.take();
                         let publication_result = if self.store.backbone_ref().is_some() {
-                            self.store.begin_outbound_apply_batch(mounted.operation.operation, mounted.artifact_generation, mounted.canonical_revision, mounted.meta.actor.clone(), mutations, description, self.artifact_one_item_factory.as_ref())
+                            self.store.begin_outbound_apply_batch(mounted.operation.operation, mounted.artifact_generation, mounted.canonical_revision, mounted.meta.actor.clone(), mutations, description, self.artifact_one_item_factory.as_ref(), transaction)
                         } else {
                             self.store.begin_apply_batch(
                                 mounted.operation.operation,
@@ -30884,6 +31243,7 @@ pub mod app {
                                 description,
                                 HistoryLane::Document,
                                 self.artifact_one_item_factory.as_ref(),
+                                transaction,
                             )
                         };
                         match publication_result {
@@ -30911,6 +31271,7 @@ pub mod app {
                             None,
                             HistoryLane::Document,
                             self.config_one_item_factory.as_ref(),
+                            None,
                         ) {
                             Ok(mut publication) => {
                                 publication.set_coalesce_key(emit.coalesce_key.clone());
@@ -30948,6 +31309,7 @@ pub mod app {
                             None,
                             HistoryLane::Document,
                             self.draft_one_item_factory.as_ref(),
+                            None,
                         ) {
                             Ok(publication) => {
                                 mounted.pending_artifact_publication = Some(PendingArtifactStorePublication::Draft(publication));
@@ -30984,11 +31346,27 @@ pub mod app {
                             }
                         }
                     } else if let Some(mutation) = ephemeral.window_transient.pop() {
-                        let authority = mounted.window_transient_authority.as_mut().ok_or_else(|| plugin_sdk_fault("window transient emission requires one exact captured ViewModel window authority"))?;
-                        self.window_transient_store.refresh(authority)?;
-                        let publication = self.window_transient_store.begin(mounted.operation.operation, authority, mutation)?;
-                        mounted.pending_artifact_publication = Some(PendingArtifactStorePublication::WindowTransient(publication));
-                        return Ok(());
+                        let authority = match mounted.window_transient_authority.as_mut() {
+                            Some(authority) => authority,
+                            None => {
+                                ephemeral.window_transient.push(mutation);
+                                return Err(plugin_sdk_fault("window transient emission requires one exact captured ViewModel window authority"));
+                            }
+                        };
+                        if let Err(fault) = self.window_transient_store.refresh(authority) {
+                            ephemeral.window_transient.push(mutation);
+                            return Err(fault);
+                        }
+                        match self.window_transient_store.begin(mounted.operation.operation, authority, mutation) {
+                            Ok(publication) => {
+                                mounted.pending_artifact_publication = Some(PendingArtifactStorePublication::WindowTransient(publication));
+                                return Ok(());
+                            }
+                            Err(super::window_transient::RejectedWindowTransientEmission { mutation, fault }) => {
+                                ephemeral.window_transient.push(mutation);
+                                return Err(fault);
+                            }
+                        }
                     } else if !emit.child_emits.is_empty() {
                         if mounted.pending_child_publication.is_some() {
                             return Err(plugin_sdk_fault("typed-operation retained more than one child-group publication owner"));
@@ -31196,13 +31574,23 @@ pub mod app {
             })
         }
 
-        /// 👥️🫧️ `ArtifactApp::ephemeral`'s own contract: "Called on every dispatched command, right
-        /// before `handle`", "applied unconditionally and cannot fail". The migrated route hands the
-        /// reducer to a worker, so the only place the hook can still run BEFORE the reducer — with the
-        /// document, config, presence and transient roots this dispatch captured — is here, and the
-        /// two lanes are applied directly (the same `apply` the framework-reserved clipboard route
-        /// uses), never through the job's declared publication lanes: the hook is not the reducer and
-        /// its lanes have no op log, no undo group and no failure mode.
+        /// 🧪️ Observes actual capture authority without exposing production dispatch preparation.
+        #[cfg(test)]
+        pub(crate) async fn test_capture_presence_roots(&mut self, command: &A::Command, meta: &ActionMeta) -> Result<(std::sync::Arc<PeerPresenceRoot>, std::sync::Arc<store::PresencePeersRoot<A::Presence>>), Fault> {
+            let TypedCommandRoots { peer_presence, presence_peers, .. } = self.capture_typed_command_roots(command, meta).await?;
+            Ok((peer_presence, presence_peers))
+        }
+
+        /// 🧪️ Mounts an exact typed admission so laws can observe the boundary before producer completion.
+        #[cfg(test)]
+        pub(crate) async fn test_mount_typed_command(&mut self, command: A::Command, verb: &str, meta: &ActionMeta) -> Result<InvocationResult, Fault> {
+            let payload = ::protocol::OpBinary::encode_op(&command).map_err(|error| error.into_fault())?;
+            let admission = self.admit_command_wire(verb, &payload, 1).await?;
+            self.dispatch_typed_command_inner(Box::new(command), admission, meta).await
+        }
+
+        /// 🧵️ Captures immutable roots and mounts one admitted worker turn. Ephemeral producers
+        /// execute inside their app-owned job and publish through its declared completion lanes.
         async fn start_typed_command_operation(
             &mut self,
             command: Box<A::Command>,
@@ -31239,27 +31627,6 @@ pub mod app {
                 window_config_authority,
                 window_transient_authority,
             } = self.capture_typed_command_roots(command.as_ref(), meta).await?;
-            let ephemeral_emission = {
-                let presence_local = self.presence_store.local_read().map_err(Fault::from)?;
-                let doc = ArtifactView::with_children(snapshot.as_ref(), history.as_ref(), ChildContentView::clone(&children));
-                let cfg = ConfigView { snapshot: config.as_ref(), window: window_config_authority.as_ref().map(|authority| &authority.snapshot) };
-                let presence_view = PresenceView { local: presence_local.get(), peers: PresencePeersView { root: presence_peers.as_ref() } };
-                let transient_view = TransientView { snapshot: transient.as_ref(), window: window_transient_authority.as_ref().map(|authority| &authority.snapshot) };
-                let emission = A::ephemeral(command.as_ref(), &doc, &cfg, &presence_view, &transient_view).await;
-                presence_local.return_to_registry();
-                emission
-            };
-            if !ephemeral_emission.window_transient.is_empty() {
-                return Err(plugin_sdk_fault("ephemeral hook emitted a window-transient mutation, which only a tool job's own completion may publish"));
-            }
-            let (transient, presence_generation, transient_generation) = if ephemeral_emission.presence.is_empty() && ephemeral_emission.transient.is_empty() {
-                (transient, presence_generation, transient_generation)
-            } else {
-                drop(transient);
-                self.presence_store.apply(&ephemeral_emission.presence).await.map_err(|error| Fault::from(error.to_string()))?;
-                self.transient_store.apply(&ephemeral_emission.transient).await.map_err(|error| Fault::from(error.to_string()))?;
-                (self.transient_store.current_root(), self.presence_store.generation().await, self.transient_store.generation().await)
-            };
             let parent_document_id = self.store.envelope().id.clone();
             let seed_handle = artifact_handle_of(&format!("{}/{}/{verb}/{}", meta.instance_id, self.tool_job_controller_id, base_revision.0)).await;
             let operation = semio_framework_job::Operation::new(operation_id, base_revision, generation, (seed_handle.0 as u64) ^ ((seed_handle.0 >> 64) as u64));
@@ -31294,6 +31661,7 @@ pub mod app {
                         window_transient: window_transient_authority.as_ref().map(|authority| authority.snapshot.clone()),
                     },
                 )
+                .with_presence(self.presence_store.local_read().map_err(Fault::from)?, std::sync::Arc::clone(&presence_peers))
                 .with_tool_run(self.tool_runs.view_for(meta.view_state.as_ref().and_then(|view| view.window_id.as_deref()))),
             );
             let operation_spec = match admission.proof.clone() {
@@ -32585,6 +32953,10 @@ pub mod app {
                 let step = self.tool_runs.close_step(&mut self.store, maximum_items, maximum_bytes)?;
                 return Ok(if step == PluginCloseStep::Complete { PluginCloseStep::Pending { released_items: 1, released_bytes: 0 } } else { step });
             }
+            if !self.time_travel.terminal_is_empty() {
+                let step = self.time_travel.close_step(&mut self.store, maximum_items, maximum_bytes)?;
+                return Ok(if step == PluginCloseStep::Complete { PluginCloseStep::Pending { released_items: 1, released_bytes: 0 } } else { step });
+            }
             if self.local_interaction_query.is_some() {
                 let step = self.advance_local_interaction_query_one(maximum_items, maximum_bytes)?;
                 drop(self.take_local_interaction_query_reply());
@@ -33089,6 +33461,7 @@ pub mod app {
         fn close_terminal_is_empty(&self) -> bool {
             self.close_started
                 && self.tool_runs.terminal_is_empty()
+                && self.time_travel.terminal_is_empty()
                 && self.close_owned_stage >= 8
                 && self.close_document_disposer.is_none()
                 && self.close_config_disposer.is_none()
@@ -33266,6 +33639,9 @@ pub mod app {
             if self.tool_run_has_pending_work() {
                 self.drive_tool_run_turn().await?;
             }
+            if self.time_travel_has_pending_work() {
+                self.drive_time_travel_turn().await?;
+            }
             self.drive_artifact_envelope_decode_worker()?;
             if self.local_interaction_query.as_ref().is_some_and(|query| query.has_pending_work()) {
                 self.local_interaction_query_turn = !self.local_interaction_query_turn;
@@ -33290,6 +33666,7 @@ pub mod app {
             self.operation_progress_retired
                 || self.derivable_follow_awaits_retirement()
                 || self.tool_run_has_pending_work()
+                || self.time_travel_has_pending_work()
                 || !self.reserved_commits.is_empty()
                 || self.reserved_commit_outcome.is_some()
                 || !self.tool_operations.is_empty()
@@ -33309,6 +33686,7 @@ pub mod app {
             self.operation_progress_retired
                 || self.derivable_follow_awaits_retirement()
                 || self.tool_run_has_pending_work()
+                || self.time_travel_has_pending_work()
                 || !self.reserved_commits.is_empty()
                 || self.reserved_commit_outcome.is_some()
                 || !self.tool_operations.is_empty()
@@ -33444,7 +33822,7 @@ pub mod app {
         }
         fn take_typed_operation_ui_progress(&mut self) -> Option<TypedOperationUiProgress> {
             let ui_scope = self.typed_ui_outbox.pop().or_else(||self.take_operation_progress_scope())?;
-            Some(TypedOperationUiProgress { ui_scope, leftover: self.typed_inline_interaction_leftover.take() })
+            Some(TypedOperationUiProgress { ui_scope, leftover: self.typed_inline_interaction_leftover.take(), history_patch: self.time_travel.take_patch() })
         }
 
         /// 🧾️ ticket 26/09/02/PUZZLE-3D-END-TO-END wave B21: the dirty set is only authoritative AFTER the
@@ -33624,6 +34002,9 @@ pub mod app {
         /// as a contract gap for the coordinator/host lanes to close (e.g. by always
         /// preferring the pre-planned form, which does carry `origin`).
         async fn transaction_prepare(&mut self, txn_id: &str, mutation_id: &str, payload: &[u8], prepared_ops: &[Vec<u8>], prepared_child_ops: &[u8], label: &str, origin: Option<protocol::MutationOrigin>) -> TransactionPrepareOutcome {
+            if self.time_travel.freezes_local_emits() {
+                return TransactionPrepareOutcome { foreign: Vec::new(), rejection: Some(Self::transaction_fault(FaultOrigin::Framework, semio_framework_time_travel::TIME_TRAVEL_FROZEN_CODE, format!("transaction {txn_id:?} would change the document while a history edit is open on this instance"))) };
+            }
             if self.pending_transaction.is_some() {
                 return TransactionPrepareOutcome { foreign: Vec::new(), rejection: Some(Self::transaction_fault(FaultOrigin::Plugin, "transaction.instance-busy", "a transaction is already pending on this instance")) };
             }
@@ -33711,7 +34092,7 @@ pub mod app {
                 return self.commit_transaction_group(&txn_id, ops, children, description, origin, meta).await;
             }
             self.store.set_local_actor_id(Some(meta.actor.clone())).map_err(|error| error.into_fault())?;
-            self.store.dispatch(ArtifactCommand::Apply { mutations: ops, description: description.clone() }).await.map_err(|error| Self::transaction_fault(FaultOrigin::Plugin, "transaction.commit-failed", format!("{error:?}")))?;
+            self.store.dispatch(ArtifactCommand::Apply { mutations: ops, description: description.clone(), transaction: None }).await.map_err(|error| Self::transaction_fault(FaultOrigin::Plugin, "transaction.commit-failed", format!("{error:?}")))?;
             self.cache = None;
             self.store.stamp_tail_group_id(&txn_id).await.map_err(|error| Self::transaction_fault(FaultOrigin::Plugin, "transaction.commit-failed", format!("{error:?}")))?;
             self.store.stamp_tail_origin(origin).await.map_err(|error| Self::transaction_fault(FaultOrigin::Plugin, "transaction.commit-failed", format!("{error:?}")))?;
@@ -33809,6 +34190,7 @@ pub mod app {
                 transient_generation: self.transient_store.generation().await,
                 interaction: interaction_bytes,
                 tool_run: self.tool_runs.presence(),
+                history_edit: self.time_travel.presence(),
             }
         }
 
@@ -34061,7 +34443,7 @@ pub mod app {
             if mutations.is_empty() {
                 return Ok(());
             }
-            self.store.dispatch(ArtifactCommand::Apply { mutations, description: None }).await.map_err(|error| error.into_fault())?;
+            self.store.dispatch(ArtifactCommand::Apply { mutations, description: None, transaction: None }).await.map_err(|error| error.into_fault())?;
             self.cache = None;
             Ok(())
         }
@@ -34135,7 +34517,11 @@ pub mod app {
                 let Some((_, _, _, history)) = self.cache.as_ref() else {
                     return Err(plugin_sdk_fault("render cache unavailable after refresh"));
                 };
-                let root = ui_history_panel(history, &self.registry.controller_id, view_state.locale == Locale::De, A::ROLE == AppRole::Viewer, view_state).await.map_err(|error| plugin_sdk_fault(error.to_string()))?;
+                let mut time_travel = self.time_travel.panel();
+                if let Some(panel) = time_travel.as_mut() {
+                    self.resolve_time_travel_snaps(panel, view_state);
+                }
+                let root = ui_history_panel(history, time_travel.as_ref(), &self.registry.controller_id, view_state.locale, A::ROLE == AppRole::Viewer, view_state).await.map_err(|error| plugin_sdk_fault(error.to_string()))?;
                 return Ok(built_to_component_tree(root));
             }
             if body_key == FRAMEWORK_TOOL_RUN_BODY_KEY {
@@ -34169,11 +34555,11 @@ pub mod app {
             let render_operation = self.live_render_operation();
             let parent_document_id = self.store.envelope().id.clone();
             let mut node = {
-                let VcsArtifactApp { app: _, cache, child_content_root, tool_runs, .. } = self;
+                let VcsArtifactApp { app: _, cache, child_content_root, tool_runs, time_travel, .. } = self;
                 let Some((_, snapshot, config, history)) = cache.as_ref() else {
                     return Err(plugin_sdk_fault("render cache unavailable after refresh"));
                 };
-                let doc = ArtifactView::with_render_context(tool_runs.overlay_or(snapshot).as_ref(), history.as_ref(), ChildContentView::clone(child_content_root), render_operation, parent_document_id, None)
+                let doc = ArtifactView::with_render_context(time_travel.render_snapshot_or(tool_runs, snapshot).as_ref(), history.as_ref(), ChildContentView::clone(child_content_root), render_operation, parent_document_id, None)
                     .await
                     .with_tool_run(tool_runs.view_for(view_state.window_id.as_deref()))
                     .with_operations(&operation_progress);
@@ -34200,9 +34586,9 @@ pub mod app {
             let interaction = InteractionView { state: &interaction_state, hover: &interaction_hover, peers: interaction_peers.as_ref() };
             let render_operation = self.live_render_operation();
             let parent_document_id = self.store.envelope().id.clone();
-            let VcsArtifactApp { window_config_store, window_transient_store, cache, child_content_root, transient_store, tool_runs, .. } = self;
+            let VcsArtifactApp { window_config_store, window_transient_store, cache, child_content_root, transient_store, tool_runs, time_travel, .. } = self;
             let (_, snapshot, config, history) = cache.as_ref().expect("cache refreshed above");
-            let doc = ArtifactView::with_render_context(tool_runs.overlay_or(snapshot).as_ref(), history.as_ref(), ChildContentView::clone(child_content_root), render_operation, parent_document_id, None)
+            let doc = ArtifactView::with_render_context(time_travel.render_snapshot_or(tool_runs, snapshot).as_ref(), history.as_ref(), ChildContentView::clone(child_content_root), render_operation, parent_document_id, None)
                 .await
                 .with_tool_run(tool_runs.view_for(view_state.window_id.as_deref()));
             let mut engagements = HashMap::new();
@@ -34237,9 +34623,9 @@ pub mod app {
             let interaction = InteractionView { state: &interaction_state, hover: &interaction_hover, peers: interaction_peers.as_ref() };
             let render_operation = self.live_render_operation();
             let parent_document_id = self.store.envelope().id.clone();
-            let VcsArtifactApp { window_config_store, cache, child_content_root, tool_runs, .. } = self;
+            let VcsArtifactApp { window_config_store, cache, child_content_root, tool_runs, time_travel, .. } = self;
             let (_, snapshot, config, history) = cache.as_ref().expect("cache refreshed above");
-            let doc = ArtifactView::with_render_context(tool_runs.overlay_or(snapshot).as_ref(), history.as_ref(), ChildContentView::clone(child_content_root), render_operation, parent_document_id, None)
+            let doc = ArtifactView::with_render_context(time_travel.render_snapshot_or(tool_runs, snapshot).as_ref(), history.as_ref(), ChildContentView::clone(child_content_root), render_operation, parent_document_id, None)
                 .await
                 .with_tool_run(tool_runs.view_for(view_state.window_id.as_deref()));
             let mut measures = HashMap::new();
@@ -34268,9 +34654,9 @@ pub mod app {
             };
             let render_operation = self.live_render_operation();
             let parent_document_id = self.store.envelope().id.clone();
-            let VcsArtifactApp { app: _, cache, child_content_root, tool_runs, .. } = self;
+            let VcsArtifactApp { app: _, cache, child_content_root, tool_runs, time_travel, .. } = self;
             let (_, snapshot, config, history) = cache.as_ref().expect("cache refreshed above");
-            let doc = ArtifactView::with_render_context(tool_runs.overlay_or(snapshot).as_ref(), history.as_ref(), ChildContentView::clone(child_content_root), render_operation, parent_document_id, None)
+            let doc = ArtifactView::with_render_context(time_travel.render_snapshot_or(tool_runs, snapshot).as_ref(), history.as_ref(), ChildContentView::clone(child_content_root), render_operation, parent_document_id, None)
                 .await
                 .with_tool_run(tool_runs.view_for(view_state.window_id.as_deref()));
             let cfg = ConfigView { snapshot: config.as_ref(), window: window_config.as_ref().map(|authority| &authority.snapshot) };
@@ -34411,12 +34797,12 @@ pub mod app {
             self.refresh_cache().await.map_err(|error| MediaError::Payload(port.to_string(), error.message))?;
             let render_operation = self.live_render_operation();
             let parent_document_id = self.store.envelope().id.clone();
-            let VcsArtifactApp { app: _, cache, child_content_root, transient_store, .. } = self;
+            let VcsArtifactApp { app: _, cache, child_content_root, transient_store, instance_operation_owner, .. } = self;
             let (_, snapshot, config, history) = cache.as_ref().expect("cache refreshed above");
             let doc = ArtifactView::with_render_context(snapshot.as_ref(), history.as_ref(), ChildContentView::clone(child_content_root), render_operation, parent_document_id, None).await;
             let _cfg = ConfigView { snapshot: config.as_ref(), window: None };
             let transient = transient_store.current_root();
-            A::export_media_with_request_context(port, &doc, &TransientView { snapshot: transient.as_ref(), window: None }).await
+            A::export_media_with_request_context(instance_operation_owner, port, &doc, &TransientView { snapshot: transient.as_ref(), window: None }).await
         }
 
         async fn submit_media_export(&mut self, port: &str) -> Result<ArtifactMediaExportHandle, MediaError> {
@@ -36008,6 +36394,11 @@ pub mod app {
         fn build_retargetable_tool_run_job(_request: ToolRunJobRequest<'_, EditorApp<Self>>) -> Result<Option<Box<dyn ToolRunRetargetableJob<Self::Config>>>, Fault> {
             Ok(None)
         }
+        /// 🏷️ This editor's localized history label of one document operation — forwarded verbatim to
+        /// `ArtifactApp::mutation_label` by `EditorApp<Self>`, where the contract lives.
+        fn mutation_label(_op: &Self::Mutation) -> Option<LocalizedLabel> {
+            None
+        }
         fn register_window_transient_owners(_registry: &mut WindowTransientOwnerRegistry) -> Result<(), Fault> {
             Ok(())
         }
@@ -36338,8 +36729,8 @@ pub mod app {
             let bytes = doc.snapshot.encode_pack();
             Ok(Media { media_type, payload: MediaPayload::Structured { schema: Self::DOCUMENT_SCHEMA.to_string(), json: store::pack_rt::pack_value_to_base64(&bytes) } })
         }
-        fn export_media_with_request_context(port: &str, doc: &ArtifactView<'_, Self::Snapshot>, transient: &TransientView<'_, Self::Transient>) -> Result<Media, MediaError> {
-            let _ = transient;
+        fn export_media_with_request_context(owner: &ArtifactInstanceOperationOwnerHandle, port: &str, doc: &ArtifactView<'_, Self::Snapshot>, transient: &TransientView<'_, Self::Transient>) -> Result<Media, MediaError> {
+            let _ = (owner, transient);
             Self::export_media(port, doc)
         }
         fn whole_document_operation(_snapshot: Self::Snapshot) -> Option<Self::Mutation> {
@@ -36479,7 +36870,7 @@ pub mod app {
         }
         let mut owner = store::ArtifactStore::<A::Snapshot, A::Mutation>::new(envelope).await?;
         owner.install_document_store_owners_exact(A::build_document_store_owners().unwrap_or_else(store::bounded_artifact_store_owners));
-        let printed = match owner.dispatch(store::ArtifactCommand::Apply { mutations, description: None }).await {
+        let printed = match owner.dispatch(store::ArtifactCommand::Apply { mutations, description: None, transaction: None }).await {
             Ok(_) => store::print_document_pack(owner.envelope()).await,
             Err(error) => Err(error),
         };
@@ -36507,6 +36898,19 @@ pub mod app {
         }
         drop(owner);
         printed
+    }
+
+    /// 📜️ The fault a `codec.replay-envelopes` refusal crosses the guest boundary as: a ledger whose replay raises an
+    /// `Error` or `Fatal` under `MergePolicy::Normal` (the hub check-in strictness, e.g. a blocking supersession) is the
+    /// typed `ledger-not-replayable` naming its first blocking messages, so linked and guest codecs answer Check In alike.
+    pub fn replay_envelopes_fault(error: store::VcsError) -> Fault {
+        match error {
+            store::VcsError::Rejected { messages, .. } => {
+                let blocking: Vec<String> = messages.iter().filter(|message| protocol::MergePolicy::Normal.rejects(message.level)).take(8).map(|message| format!("{}: {}", message.code.0, message.message)).collect();
+                Fault::new(FaultOrigin::Framework, FaultCode::new("ledger-not-replayable"), format!("the ledger does not replay under the check-in policy ({} blocking message(s)): {}", messages.len(), blocking.join("; ")))
+            }
+            other => other.into_fault(),
+        }
     }
 
     /// 📜️ The guest half of `world actor`'s `codec.replay-envelopes` export: the app's own owner
@@ -36569,7 +36973,7 @@ pub mod app {
             Box::pin(async move { artifact_app_apply_ops::<A>(pack, spr, ops).await.map_err(|error| error.into_fault()) })
         }
         fn replay_envelopes<'a, A: ArtifactApp>(pack: &'a [u8], spr: &'a [u8], envelopes: &'a [u8]) -> ArtifactCodecFuture<'a, store::ArtifactPackFiles> {
-            Box::pin(async move { artifact_app_replay_envelopes::<A>(pack, spr, envelopes).await.map_err(|error| error.into_fault()) })
+            Box::pin(async move { artifact_app_replay_envelopes::<A>(pack, spr, envelopes).await.map_err(replay_envelopes_fault) })
         }
         ArtifactCodecTableV1 { pack_schema_hash: pack_schema_hash::<A>, genesis: genesis::<A>, print_mirror: print_mirror::<A>, apply_ops: apply_ops::<A>, replay_envelopes: replay_envelopes::<A> }
     }
@@ -36885,8 +37289,8 @@ pub mod app {
             let bytes = doc.snapshot.encode_pack();
             Ok(Media { media_type, payload: MediaPayload::Structured { schema: Self::DOCUMENT_SCHEMA.to_string(), json: store::pack_rt::pack_value_to_base64(&bytes) } })
         }
-        fn export_media_with_request_context(port: &str, doc: &ArtifactView<'_, Self::Snapshot>, transient: &TransientView<'_, Self::Transient>) -> Result<Media, MediaError> {
-            let _ = transient;
+        fn export_media_with_request_context(owner: &ArtifactInstanceOperationOwnerHandle, port: &str, doc: &ArtifactView<'_, Self::Snapshot>, transient: &TransientView<'_, Self::Transient>) -> Result<Media, MediaError> {
+            let _ = (owner, transient);
             Self::export_media(port, doc)
         }
         /// 🌀️ `io-async-signatures`: async signature (delegates to the now-async `export_media`).
@@ -37136,6 +37540,9 @@ pub mod app {
         fn host_configuration_mutation(action: &str, args: Option<&DslValue>) -> Result<Option<Self::ConfigMutation>, Fault> {
             E::host_configuration_mutation(action, args)
         }
+        fn mutation_label(op: &Self::Mutation) -> Option<LocalizedLabel> {
+            E::mutation_label(op)
+        }
         async fn initial_draft() -> Self::Draft {
             E::initial_draft()
         }
@@ -37261,8 +37668,8 @@ pub mod app {
         async fn export_media(port: &str, doc: &ArtifactView<'_, Self::Snapshot>) -> Result<Media, MediaError> {
             E::export_media(port, doc)
         }
-        async fn export_media_with_request_context(port: &str, doc: &ArtifactView<'_, Self::Snapshot>, transient: &TransientView<'_, Self::Transient>) -> Result<Media, MediaError> {
-            E::export_media_with_request_context(port, doc, transient)
+        async fn export_media_with_request_context(owner: &ArtifactInstanceOperationOwnerHandle, port: &str, doc: &ArtifactView<'_, Self::Snapshot>, transient: &TransientView<'_, Self::Transient>) -> Result<Media, MediaError> {
+            E::export_media_with_request_context(owner, port, doc, transient)
         }
         async fn whole_document_operation(snapshot: Self::Snapshot) -> Option<Self::Mutation> {
             E::whole_document_operation(snapshot)
@@ -37539,8 +37946,8 @@ pub mod app {
         async fn export_media(port: &str, doc: &ArtifactView<'_, Self::Snapshot>) -> Result<Media, MediaError> {
             V::export_media(port, doc)
         }
-        async fn export_media_with_request_context(port: &str, doc: &ArtifactView<'_, Self::Snapshot>, transient: &TransientView<'_, Self::Transient>) -> Result<Media, MediaError> {
-            V::export_media_with_request_context(port, doc, transient)
+        async fn export_media_with_request_context(owner: &ArtifactInstanceOperationOwnerHandle, port: &str, doc: &ArtifactView<'_, Self::Snapshot>, transient: &TransientView<'_, Self::Transient>) -> Result<Media, MediaError> {
+            V::export_media_with_request_context(owner, port, doc, transient)
         }
         async fn media_fingerprint(port: &str, doc: &ArtifactView<'_, Self::Snapshot>) -> Result<MediaFingerprint, MediaError> {
             V::media_fingerprint(port, doc)
@@ -38276,6 +38683,7 @@ pub mod app {
 #[path = "🏗️builder/🦀️.rs"]
 mod builder;
 
+#[path = "."]
 pub mod plugin_runtime {
     // #region plugin_runtime
     //! 📤️ WASM component export glue for plugin bundles.
@@ -40643,6 +41051,8 @@ pub mod plugin_runtime {
             "catalog"
         } else if matches!(action_id, "copy" | "cut" | "paste") {
             "clipboard-instack"
+        } else if crate::app::is_tool_run_action_id(action_id) || crate::app::is_time_travel_action_id(action_id) || action_id == crate::app::CANCEL_TYPED_OPERATION_ACTION_ID {
+            "host-driven"
         } else {
             "spawn-admit"
         }
@@ -41798,7 +42208,7 @@ pub mod plugin_runtime {
                 output: progress.leftover.as_ref().map(|leftover| encode_wire_serialized(&leftover.view)).unwrap_or_default(),
                 diagnostics: Vec::new(),
                 ui_scope: encode_wire_serialized(&progress.ui_scope),
-                history_patch: Vec::new(),
+                history_patch: progress.history_patch.as_ref().map(encode_wire_serialized).unwrap_or_default(),
                 messages: Vec::new(),
                 mutations: Vec::new(),
                 inverse_group: Vec::new(),
@@ -43255,13 +43665,18 @@ pub mod plugin_runtime {
             let instance = find_instance(list, instance_id)?;
             Ok(resolve_ready(instance.app.ephemeral_snapshot()))
         });
-        if let Ok(EphemeralSnapshot { presence, presence_generation, transient_generation, interaction, tool_run }) = ephemeral.await {
+        if let Ok(EphemeralSnapshot { presence, presence_generation, transient_generation, interaction, tool_run, history_edit }) = ephemeral.await {
             let tool_run = tool_run.map_or_else(Vec::new, |tool_run| {
                 let mut bytes = Vec::new();
                 protocol::encode_presence_tool_run(&tool_run, &mut bytes);
                 bytes
             });
-            frames.push(protocol::AppFrame::Ephemeral { presence, presence_generation, transient_generation, interaction, tool_run });
+            let history_edit = history_edit.map_or_else(Vec::new, |history_edit| {
+                let mut bytes = Vec::new();
+                protocol::encode_presence_history_edit(&history_edit, &mut bytes);
+                bytes
+            });
+            frames.push(protocol::AppFrame::Ephemeral { presence, presence_generation, transient_generation, interaction, tool_run, history_edit });
         }
 
         if let Some(outcome) = with_instances_mut(runtime, |list| {
@@ -43648,6 +44063,9 @@ pub mod plugin_runtime {
     #[macro_export]
     macro_rules! __semio_plugin_actor_exports {
         ($bundle_fn:expr, $app:ty, $describe:path) => {
+            $crate::__semio_plugin_actor_exports!($bundle_fn, $app, $describe, || {});
+        };
+        ($bundle_fn:expr, $app:ty, $describe:path, $refresh:expr) => {
             $crate::component_persistent_local! {
                 static __SEMIO_PLUGIN_RUNTIME: $crate::plugin_runtime::PluginRuntime<$app> = $crate::plugin_runtime::PluginRuntime::new();
             }
@@ -43658,6 +44076,7 @@ pub mod plugin_runtime {
                     $crate::plugin_runtime::install_guest_panic_report();
                     __semio_install_plugin_bundle();
                 });
+                ($refresh)();
             }
 
             #[cfg(all(target_arch = "wasm32", target_env = "p2"))]
@@ -43704,12 +44123,23 @@ pub mod plugin_runtime {
 
     //#region 🧩️Extension
     /// 📨️ Encoded extension request handler owned by its guest bundle.
-    type ExtensionRequestHandler = Box<dyn Fn(&[u8]) -> Result<Vec<u8>, Fault> + Send + 'static>;
+    enum ExtensionRequestHandler { Plain(fn(&[u8]) -> Result<Vec<u8>, Fault>), Owned }
+
+    use crate::app::PluginCloseStep;
+    #[path = "🧩️extension/🚪️retirement/🦀️.rs"]
+    mod extension_retirement;
+    pub use extension_retirement::ExtensionResourceOwner;
+    use extension_retirement::{ExtensionBundleRegistry, MetadataRetirement};
 
     /// 🧩️ Extension guest bundle — no apps; contributes + invoke handlers.
     pub struct ExtensionBundle {
-        pub manifest: ExtensionManifest,
-        handlers: HashMap<String, ExtensionRequestHandler>,
+        pub manifest: std::mem::ManuallyDrop<ExtensionManifest>,
+        handlers: std::mem::ManuallyDrop<Vec<(String, ExtensionRequestHandler)>>,
+        resource_owner: std::mem::ManuallyDrop<Option<Box<dyn ExtensionResourceOwner>>>,
+        closing: bool,
+        close_cancelled: bool,
+        manifest_retired: bool,
+        metadata_retirement: std::mem::ManuallyDrop<MetadataRetirement>,
     }
 
     /// 🌉️ `CapabilityRequirement`/`PluginDependency`/`ArtifactContributionDescriptor`/`ExecutionMode`
@@ -43773,7 +44203,7 @@ pub mod plugin_runtime {
         pub fn new(extension_id: impl Into<String>, label: impl Into<String>, version: impl Into<String>) -> Self {
             let extension_id = extension_id.into();
             Self {
-                manifest: ExtensionManifest {
+                manifest: std::mem::ManuallyDrop::new(ExtensionManifest {
                     package_id: format!("semio:{extension_id}"),
                     extension_id,
                     label: label.into(),
@@ -43785,8 +44215,13 @@ pub mod plugin_runtime {
                     contributions: Vec::new(),
                     execution: ExecutionMode::default(),
                     capability_requests: Vec::new(),
-                },
-                handlers: HashMap::new(),
+                }),
+                handlers: std::mem::ManuallyDrop::new(Vec::new()),
+                resource_owner: std::mem::ManuallyDrop::new(None),
+                closing: false,
+                close_cancelled: false,
+                manifest_retired: false,
+                metadata_retirement: std::mem::ManuallyDrop::new(MetadataRetirement::default()),
             }
         }
 
@@ -43862,8 +44297,10 @@ pub mod plugin_runtime {
         }
 
         /// 🔀️ Registers a capability handler invoked via WIT `extension::invoke`.
-        pub fn handler(mut self, capability: impl Into<String>, handler: impl Fn(&[u8]) -> Result<Vec<u8>, Fault> + Send + 'static) -> Self {
-            self.handlers.insert(capability.into(), Box::new(handler));
+        pub fn handler(mut self, capability: impl Into<String>, handler: fn(&[u8]) -> Result<Vec<u8>, Fault>) -> Self {
+            let capability = capability.into();
+            assert!(!matches!(capability.as_str(), "extension.close.cancel" | "extension.close.resume"), "extension close control capability is reserved");
+            self.insert_handler(capability, ExtensionRequestHandler::Plain(handler));
             self
         }
 
@@ -43887,71 +44324,88 @@ pub mod plugin_runtime {
     #[cfg(test)]
     include!("🧪️tests/🔬️plugin-runtime-extension-bundle-dependency/🦀️.rs");
 
+    #[cfg(test)]
+    include!("🧪️tests/🔬️extension-retirement/🦀️.rs");
+
     crate::component_persistent_local! {
-        static EXTENSION_BUNDLE: RefCell<Option<ExtensionBundle>> = RefCell::new(None);
-        static EXTENSION_ACTIVE: Cell<bool> = Cell::new(false);
+        static EXTENSION_BUNDLE: RefCell<ExtensionBundleRegistry> = RefCell::new(ExtensionBundleRegistry::new());
     }
 
-    /// 📤️ Installs the process-local extension bundle (from `extension_exports!`).
-    pub async fn install_extension_bundle(bundle: ExtensionBundle) {
-        EXTENSION_BUNDLE.with(|slot| {
-            *slot.borrow_mut() = Some(bundle);
-        });
-        EXTENSION_ACTIVE.with(|slot| slot.set(false));
+    /// 📤️ Admits one replacement while retaining the current owner; refusal leaves the candidate untouched.
+    pub async fn install_extension_bundle(candidate: &mut Option<ExtensionBundle>) -> Result<bool, Fault> {
+        EXTENSION_BUNDLE.with(|slot| slot.try_borrow_mut().map_err(|_| plugin_internal_fault("extension install authority is busy"))?.install(candidate))
     }
 
     /// 📦️ Returns the installed extension manifest (empty defaults when unset).
     pub async fn extension_manifest() -> ExtensionManifest {
-        EXTENSION_BUNDLE.with(|slot| {
-            slot.borrow().as_ref().map_or_else(
-                || ExtensionManifest {
-                    package_id: String::new(),
-                    extension_id: String::new(),
-                    label: String::new(),
-                    version: String::new(),
-                    extends: String::new(),
-                    capabilities: Vec::new(),
-                    topic_contributions: Vec::new(),
-                    dependencies: Vec::new(),
-                    contributions: Vec::new(),
-                    execution: ExecutionMode::default(),
-                    capability_requests: Vec::new(),
-                },
-                |bundle| bundle.manifest.clone(),
-            )
-        })
+        EXTENSION_BUNDLE.with(|slot| slot.borrow().current().map_or_else(ExtensionManifest::empty, |bundle| (*bundle.manifest).clone()))
     }
 
-    /// 🚨️ Marks the extension active for subsequent `extension_invoke` calls.
+    /// 🚨️ Requests activation after any admitted replacement has retired its predecessor.
     pub async fn extension_activate() -> Result<(), Fault> {
-        let ready = EXTENSION_BUNDLE.with(|slot| slot.borrow().is_some());
-        if !ready {
-            return Err(Fault::new(FaultOrigin::Plugin, FaultCode::new("extension.missing"), "extension bundle not installed"));
-        }
-        EXTENSION_ACTIVE.with(|slot| slot.set(true));
-        Ok(())
+        EXTENSION_BUNDLE.with(|slot| slot.try_borrow_mut().map_err(|_| plugin_internal_fault("extension activation authority is busy"))?.activate())
     }
 
-    /// 🛑 Clears the active flag without dropping handlers.
+    /// 🔒️ Seals invocation and retains all installed resource owners for budgeted retirement.
     pub async fn extension_deactivate() {
-        EXTENSION_ACTIVE.with(|slot| slot.set(false));
+        EXTENSION_BUNDLE.with(|slot| slot.borrow_mut().begin_close());
     }
 
-    /// 🔀️ Dispatches `capability` to the registered handler with wire-encoded `request` bytes.
-    pub async fn extension_invoke(capability: &str, request: &[u8]) -> Result<Vec<u8>, Fault> {
-        if !EXTENSION_ACTIVE.with(|slot| slot.get()) {
-            return Err(Fault::new(FaultOrigin::Plugin, FaultCode::new("extension.inactive"), "extension not activated"));
-        }
+    /// ❄️ Explicitly disposes the installed registry for cold inspection and test callers.
+    pub fn extension_dispose_cold() -> Result<(), Fault> {
         EXTENSION_BUNDLE.with(|slot| {
-            let bundle = slot.borrow();
-            let Some(bundle) = bundle.as_ref() else {
-                return Err(Fault::new(FaultOrigin::Plugin, FaultCode::new("extension.missing"), "extension bundle not installed"));
-            };
-            let Some(handler) = bundle.handlers.get(capability) else {
-                return Err(Fault::new(FaultOrigin::Plugin, FaultCode::new("extension.unknown-capability"), format!("unknown extension capability '{capability}'")));
-            };
-            handler(request)
+            let mut registry = slot.try_borrow_mut().map_err(|_| plugin_internal_fault("extension cold disposal authority is busy"))?;
+            registry.begin_close();
+            registry.resume_close();
+            loop {
+                let bytes = 65536.max(registry.next_close_byte_demand());
+                match registry.close_step(64,bytes)? {
+                    PluginCloseStep::Complete => return Ok(()),
+                    PluginCloseStep::Pending { .. } => {},
+                    _ => return Err(plugin_internal_fault("cold extension disposal requires exclusive resource authority")),
+                }
+            }
         })
+    }
+
+    pub fn extension_close_step(maximum_items: usize, maximum_bytes: usize) -> Result<PluginCloseStep, Fault> {
+        EXTENSION_BUNDLE.with(|slot| slot.try_borrow_mut().map_err(|_| plugin_internal_fault("extension close authority is busy"))?.close_step(maximum_items,maximum_bytes))
+    }
+
+    pub fn extension_terminal_is_empty() -> bool {
+        EXTENSION_BUNDLE.with(|slot| slot.try_borrow().is_ok_and(|registry| registry.terminal_is_empty()))
+    }
+
+    /// 📏️ Returns the exact retained allocation demand without advancing its cursor.
+    pub fn extension_next_close_byte_demand() -> Result<usize, Fault> {
+        EXTENSION_BUNDLE.with(|slot| slot.try_borrow().map(|registry| registry.next_close_byte_demand()).map_err(|_| plugin_internal_fault("extension close demand authority is busy")))
+    }
+
+    pub fn extension_cancel_close() {
+        EXTENSION_BUNDLE.with(|slot| slot.borrow_mut().cancel_close());
+    }
+
+    pub fn extension_resume_close() {
+        EXTENSION_BUNDLE.with(|slot| slot.borrow_mut().resume_close());
+    }
+
+    pub(crate) fn extension_retirement_turn(maximum_items: usize, maximum_bytes: usize) -> Result<bool, Fault> {
+        EXTENSION_BUNDLE.with(|slot| {
+            let mut registry = slot.try_borrow_mut().map_err(|_| plugin_internal_fault("extension retirement authority is busy"))?;
+            if !registry.has_retirement() { return Ok(false); }
+            let step = registry.close_step(maximum_items,maximum_bytes)?;
+            Ok(registry.has_retirement() && !matches!(step, PluginCloseStep::Blocked { .. } | PluginCloseStep::AwaitingInput { .. }))
+        })
+    }
+
+    /// 🔀️ Dispatches through the current unsealed owner's registered capability handler.
+    pub async fn extension_invoke(capability: &str, request: &[u8]) -> Result<Vec<u8>, Fault> {
+        if matches!(capability, "extension.close.cancel" | "extension.close.resume") {
+            if !request.is_empty() { return Err(Fault::new(FaultOrigin::Framework, FaultCode::new("extension.close-control-payload"), "extension close controls require an empty request")); }
+            if capability == "extension.close.cancel" { extension_cancel_close(); } else { extension_resume_close(); }
+            return Ok(Vec::new());
+        }
+        EXTENSION_BUNDLE.with(|slot| slot.try_borrow().map_err(|_| plugin_internal_fault("extension invocation authority is busy"))?.invoke(capability,request))
     }
 
     /// 🚧️ PLACEHOLDER for W1-A. PLUGIN-DEPENDENCIES-ARTIFACT-CONTRIBUTIONS-AND-COMPOSITE-MUTATIONS
@@ -43974,19 +44428,33 @@ pub mod plugin_runtime {
     #[macro_export]
     macro_rules! extension_exports {
         ($bundle_fn:expr, $plugin_fn:expr, $app:ty) => {
+            $crate::component_persistent_local! {
+                static __SEMIO_PENDING_EXTENSION: std::cell::RefCell<Option<$crate::ExtensionBundle>> = std::cell::RefCell::new(None);
+            }
             $crate::__semio_plugin_actor_exports!(
                 || {
-                    $crate::app::resolve_ready($crate::plugin_runtime::install_extension_bundle(($bundle_fn)()));
+                    __SEMIO_PENDING_EXTENSION.with(|pending| {
+                        let mut pending = pending.borrow_mut();
+                        if pending.is_none() { *pending = Some(($bundle_fn)()); }
+                        $crate::app::resolve_ready($crate::plugin_runtime::install_extension_bundle(&mut pending))
+                    }).map_err(|fault| $crate::PluginAssemblyError::new("extension.install", format!("{fault:?}")))?;
                     $crate::app::resolve_ready($crate::plugin_runtime::extension_activate()).map_err(|fault| $crate::PluginAssemblyError::new("extension.activate", format!("{fault:?}")))?;
                     ($plugin_fn)()
                 },
                 $app,
-                $crate::describe::describe_extension_with_apps
+                $crate::describe::describe_extension_with_apps,
+                || __SEMIO_PENDING_EXTENSION.with(|pending| {
+                    let mut pending = pending.borrow_mut();
+                    if pending.is_some() && $crate::app::resolve_ready($crate::plugin_runtime::install_extension_bundle(&mut pending)).expect("retained extension admission") {
+                        $crate::app::resolve_ready($crate::plugin_runtime::extension_activate()).expect("admitted extension activation");
+                    }
+                })
             );
         };
         ($bundle_fn:expr) => {
             $crate::component_persistent_local! {
                 static __SEMIO_EXTENSION_RUNTIME: $crate::plugin_runtime::PluginRuntime<$crate::app::NoPluginApp> = $crate::plugin_runtime::PluginRuntime::new();
+                static __SEMIO_PENDING_EXTENSION: std::cell::RefCell<Option<$crate::ExtensionBundle>> = std::cell::RefCell::new(None);
             }
 
             fn __semio_ensure_extension_runtime() {
@@ -43995,6 +44463,12 @@ pub mod plugin_runtime {
                     $crate::plugin_runtime::install_guest_panic_report();
                     __semio_install_extension_bundle();
                     $crate::app::resolve_ready($crate::plugin_runtime::extension_activate()).expect("installed extension activation");
+                });
+                __SEMIO_PENDING_EXTENSION.with(|pending| {
+                    let mut pending = pending.borrow_mut();
+                    if pending.is_some() && $crate::app::resolve_ready($crate::plugin_runtime::install_extension_bundle(&mut pending)).expect("retained extension admission") {
+                        $crate::app::resolve_ready($crate::plugin_runtime::extension_activate()).expect("admitted extension activation");
+                    }
                 });
             }
 
@@ -44009,7 +44483,11 @@ pub mod plugin_runtime {
 
             // 🚫️async: E1 called from the sync `std::sync::Once` closure of `__semio_ensure_extension_runtime`.
             fn __semio_install_extension_bundle() {
-                $crate::app::resolve_ready($crate::plugin_runtime::install_extension_bundle(($bundle_fn)()));
+                __SEMIO_PENDING_EXTENSION.with(|pending| {
+                    let mut pending = pending.borrow_mut();
+                    if pending.is_none() { *pending = Some(($bundle_fn)()); }
+                    $crate::app::resolve_ready($crate::plugin_runtime::install_extension_bundle(&mut pending)).expect("retained extension admission");
+                });
             }
 
             // 🧬️ A2 (design-abi.md §1): one `world actor` for both roles now — extensions link the
@@ -44835,6 +45313,7 @@ pub use app::artifact_app_laws;
 pub use app::tool_run::{
     is_tool_run_action_id, ToolRunActionOutcome, ToolRunDriver, ToolRunJob, ToolRunJobPort, ToolRunJobPurpose, ToolRunJobRequest, ToolRunLedger, ToolRunRetargetableJob, ToolRunTickReceipt, ToolRunTraceKeys, ToolRunView, FRAMEWORK_TOOL_RUN_BODY_KEY,
 };
+pub use app::time_travel::{history_mutation_entry, is_time_travel_action_id, SupersedeLedger, SupersedeRecord, SupersedeRole, TimeTravelActionOutcome, TimeTravelActionRefusal, TimeTravelEditor, TimeTravelEditorPanel, TimeTravelLedger, TimeTravelPanel, HISTORY_ROW_MUTATION_ROWS, TIME_TRAVEL_TURN_WALL_US};
 pub use app::ActionFactory;
 pub use app::{
     artifact_app_apply_ops,
@@ -45081,9 +45560,9 @@ pub use engagement::{engagement_token_matches, strip_engagement_prefix};
 // repointed during its own W3 migration wave, not here (SDK crate stays frozen during W3 per
 // `important.md`'s sequencing constraints).
 pub use plugin_runtime::{
-    extension_activate, extension_deactivate, extension_invoke, extension_manifest, install_extension_bundle, install_plugin_bundle, install_plugin_bundle_result, plugin_artifact_apply_ops, plugin_artifact_genesis, plugin_artifact_pack_schema_hash,
+    extension_activate, extension_deactivate, extension_invoke, extension_manifest, extension_close_step, extension_terminal_is_empty, extension_next_close_byte_demand, extension_cancel_close, extension_resume_close, install_extension_bundle, install_plugin_bundle, install_plugin_bundle_result, plugin_artifact_apply_ops, plugin_artifact_genesis, plugin_artifact_pack_schema_hash,
     plugin_artifact_print_mirror, plugin_artifact_replay_envelopes, plugin_attach_backbone, plugin_cancel_media_export, plugin_detach_backbone, plugin_document_pack, plugin_ingest_operations, plugin_load_document_pack, plugin_poll_media_export,
-    plugin_retain_media_export_result, plugin_submit_media_export, plugin_take_media_export_chunk, plugin_take_segmented_download_chunk, ExtensionBundle, ExtensionManifest,
+    plugin_retain_media_export_result, plugin_submit_media_export, plugin_take_media_export_chunk, plugin_take_segmented_download_chunk, ExtensionBundle, ExtensionManifest, ExtensionResourceOwner,
 };
 pub use semio_framework::*;
 pub use semio_framework::{MediaForm, MediaPortDirection, MediaPortSpec};

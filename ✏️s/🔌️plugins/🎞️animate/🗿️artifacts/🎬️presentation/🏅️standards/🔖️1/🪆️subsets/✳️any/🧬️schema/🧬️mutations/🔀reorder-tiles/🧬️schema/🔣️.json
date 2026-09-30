@@ -10,7 +10,24 @@
   ],
   "properties": {
     "id": {
-      "type": "string"
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Tile",
+          "de": "Kachel"
+        },
+        "description": {
+          "en": "The tile this mutation addresses.",
+          "de": "Die Kachel, die diese Mutation adressiert."
+        },
+        "ref": {
+          "kind": "tile",
+          "domain": "tiles",
+          "granularity": "tile"
+        }
+      }
     },
     "toIndex": {
       "type": "integer",

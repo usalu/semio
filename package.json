@@ -280,6 +280,8 @@
     "ajv-formats": "3.0.1",
     "binaryen": "^130.0.0",
     "chevrotain": "^11.0.3",
+    "color-string": "1.9.1",
+    "decimal.js": "10.6.0",
     "dependency-cruiser": "^16.10.0",
     "emoji-regex": "^10.6.0",
     "eslint": "^10.0.1",

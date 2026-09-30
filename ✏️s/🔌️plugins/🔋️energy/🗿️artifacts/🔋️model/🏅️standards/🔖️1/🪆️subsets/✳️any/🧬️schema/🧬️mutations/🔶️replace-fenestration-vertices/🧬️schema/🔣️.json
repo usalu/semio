@@ -5,12 +5,36 @@
   "type": "object",
   "additionalProperties": false,
   "required": [
+    "mutation",
     "id",
     "newVerticesM"
   ],
   "properties": {
+    "mutation": {
+      "const": "replaceFenestrationVertices"
+    },
     "id": {
-      "type": "integer"
+      "type": "integer",
+      "minimum": 0,
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Window",
+          "de": "Fenster"
+        },
+        "description": {
+          "en": "The window this mutation changes, by id.",
+          "de": "Fenster, das diese Mutation ändert, per ID."
+        },
+        "ref": {
+          "kind": "fenestration",
+          "domain": "energyModel",
+          "granularity": "fenestration"
+        },
+        "group": "target",
+        "order": 10
+      }
     },
     "newVerticesM": {
       "type": "array",
@@ -21,6 +45,30 @@
         },
         "minItems": 3,
         "maxItems": 3
+      },
+      "anyOf": [
+        {
+          "type": "array",
+          "maxItems": 0
+        },
+        {
+          "type": "array",
+          "minItems": 3
+        }
+      ],
+      "x-semio-ui": {
+        "role": "value",
+        "label": {
+          "en": "Vertices",
+          "de": "Eckpunkte"
+        },
+        "description": {
+          "en": "Aperture polygon in the host surface's plane, counter-clockwise seen from outside; empty derives the rectangle from area, height and sill height.",
+          "de": "Öffnungspolygon in der Ebene der Trägerfläche, von außen gesehen gegen den Uhrzeigersinn; leer leitet das Rechteck aus Fläche, Höhe und Brüstungshöhe ab."
+        },
+        "unit": "m",
+        "group": "geometry",
+        "order": 20
       }
     }
   }

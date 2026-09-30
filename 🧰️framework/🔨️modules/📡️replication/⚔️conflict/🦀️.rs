@@ -373,6 +373,120 @@ impl crate::value::FromValue for MergeReport {
         })
     }
 }
+
+/// 🔬️ One operation's result in a Report-mode replay, keyed by its replica-independent
+/// [`crate::ids::MutationId`] (`edit_id`/`op_index` locate it in this replica's ledger only):
+/// the worst level and every message it raised (`worst: None` is success), and whether its
+/// effective input is a supersession (`superseded`) that withdraws it (`withdrawn`).
+#[derive(Clone, Debug, PartialEq)]
+pub struct MutationReplayOutcome {
+    pub mutation_id: crate::ids::MutationId,
+    pub edit_id: String,
+    pub op_index: u32,
+    pub worst: Option<crate::diagnostic::Severity>,
+    pub messages: Vec<crate::MutationMessage>,
+    pub superseded: bool,
+    pub withdrawn: bool,
+}
+
+impl crate::value::ToValue for MutationReplayOutcome {
+    fn to_value(&self) -> crate::value::DslValue {
+        crate::value::DslValue::object(vec![
+            ("mutationId".to_string(), crate::value::ToValue::to_value(&self.mutation_id)),
+            ("editId".to_string(), crate::value::ToValue::to_value(&self.edit_id)),
+            ("opIndex".to_string(), crate::value::ToValue::to_value(&self.op_index)),
+            ("worst".to_string(), crate::value::ToValue::to_value(&self.worst)),
+            ("messages".to_string(), crate::value::ToValue::to_value(&self.messages)),
+            ("superseded".to_string(), crate::value::ToValue::to_value(&self.superseded)),
+            ("withdrawn".to_string(), crate::value::ToValue::to_value(&self.withdrawn)),
+        ])
+    }
+}
+impl crate::value::FromValue for MutationReplayOutcome {
+    fn from_value(value: crate::value::DslValue) -> Result<Self, crate::value::ValueError> {
+        let crate::value::DslValue::Object(fields) = value else {
+            return Err(crate::value::ValueError::new(format!("expected an object for MutationReplayOutcome, found {value:?}")));
+        };
+        let mut mutation_id = None;
+        let mut edit_id = None;
+        let mut op_index = None;
+        let mut worst = None;
+        let mut messages = None;
+        let mut superseded = None;
+        let mut withdrawn = None;
+        for (key, entry) in fields {
+            match key.as_str() {
+                "mutationId" => mutation_id = Some(<crate::ids::MutationId as crate::value::FromValue>::from_value(entry).map_err(|e| e.under("mutationId"))?),
+                "editId" => edit_id = Some(<String as crate::value::FromValue>::from_value(entry).map_err(|e| e.under("editId"))?),
+                "opIndex" => op_index = Some(<u32 as crate::value::FromValue>::from_value(entry).map_err(|e| e.under("opIndex"))?),
+                "worst" => worst = <Option<crate::diagnostic::Severity> as crate::value::FromValue>::from_value(entry).map_err(|e| e.under("worst"))?,
+                "messages" => messages = Some(<Vec<crate::MutationMessage> as crate::value::FromValue>::from_value(entry).map_err(|e| e.under("messages"))?),
+                "superseded" => superseded = Some(<bool as crate::value::FromValue>::from_value(entry).map_err(|e| e.under("superseded"))?),
+                "withdrawn" => withdrawn = Some(<bool as crate::value::FromValue>::from_value(entry).map_err(|e| e.under("withdrawn"))?),
+                _ => {}
+            }
+        }
+        Ok(MutationReplayOutcome {
+            mutation_id: mutation_id.ok_or_else(|| crate::value::ValueError::new("MutationReplayOutcome missing mutationId"))?,
+            edit_id: edit_id.ok_or_else(|| crate::value::ValueError::new("MutationReplayOutcome missing editId"))?,
+            op_index: op_index.ok_or_else(|| crate::value::ValueError::new("MutationReplayOutcome missing opIndex"))?,
+            worst,
+            messages: messages.ok_or_else(|| crate::value::ValueError::new("MutationReplayOutcome missing messages"))?,
+            superseded: superseded.ok_or_else(|| crate::value::ValueError::new("MutationReplayOutcome missing superseded"))?,
+            withdrawn: withdrawn.ok_or_else(|| crate::value::ValueError::new("MutationReplayOutcome missing withdrawn"))?,
+        })
+    }
+}
+
+/// 📋️ A policy-independent Report-mode suffix replay: the applied position it started from, one
+/// outcome per replayed operation in applied order, and the worst level across all of them.
+#[derive(Clone, Debug, Default, PartialEq)]
+pub struct ReplayReport {
+    pub from_position: u32,
+    pub outcomes: Vec<MutationReplayOutcome>,
+    pub worst: Option<crate::diagnostic::Severity>,
+}
+
+impl ReplayReport {
+    /// 🚧️ Whether any replayed operation reached `Error` or `Fatal` (the `MergePolicy::Normal` floor
+    /// hub check-in replays under): such a history edit cannot be finalized.
+    pub fn blocks_finalize(&self) -> bool {
+        self.outcomes.iter().any(|outcome| outcome.worst.is_some_and(|worst| crate::MergePolicy::Normal.rejects(worst)))
+    }
+}
+
+impl crate::value::ToValue for ReplayReport {
+    fn to_value(&self) -> crate::value::DslValue {
+        crate::value::DslValue::object(vec![
+            ("fromPosition".to_string(), crate::value::ToValue::to_value(&self.from_position)),
+            ("outcomes".to_string(), crate::value::ToValue::to_value(&self.outcomes)),
+            ("worst".to_string(), crate::value::ToValue::to_value(&self.worst)),
+        ])
+    }
+}
+impl crate::value::FromValue for ReplayReport {
+    fn from_value(value: crate::value::DslValue) -> Result<Self, crate::value::ValueError> {
+        let crate::value::DslValue::Object(fields) = value else {
+            return Err(crate::value::ValueError::new(format!("expected an object for ReplayReport, found {value:?}")));
+        };
+        let mut from_position = None;
+        let mut outcomes = None;
+        let mut worst = None;
+        for (key, entry) in fields {
+            match key.as_str() {
+                "fromPosition" => from_position = Some(<u32 as crate::value::FromValue>::from_value(entry).map_err(|e| e.under("fromPosition"))?),
+                "outcomes" => outcomes = Some(<Vec<MutationReplayOutcome> as crate::value::FromValue>::from_value(entry).map_err(|e| e.under("outcomes"))?),
+                "worst" => worst = <Option<crate::diagnostic::Severity> as crate::value::FromValue>::from_value(entry).map_err(|e| e.under("worst"))?,
+                _ => {}
+            }
+        }
+        Ok(ReplayReport {
+            from_position: from_position.ok_or_else(|| crate::value::ValueError::new("ReplayReport missing fromPosition"))?,
+            outcomes: outcomes.ok_or_else(|| crate::value::ValueError::new("ReplayReport missing outcomes"))?,
+            worst,
+        })
+    }
+}
 //#endregion 🔖️Reports
 
 //#region 🧪️Tests

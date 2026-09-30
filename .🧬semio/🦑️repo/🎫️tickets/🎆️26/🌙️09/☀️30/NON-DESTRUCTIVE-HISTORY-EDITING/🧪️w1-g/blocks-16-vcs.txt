@@ -1,0 +1,20 @@
+<<<<<<< ANCHOR
+    /// ❓️ `store::ArtifactStore::resolve_conflict` was called with an id that names no
+    /// currently-`Open` conflict on this store.
+    UnknownConflict(String),
+}
+=======
+    /// ❓️ `store::ArtifactStore::resolve_conflict` was called with an id that names no
+    /// currently-`Open` conflict on this store.
+    UnknownConflict(String),
+    /// ⌛️ A result computed against store generation `expected_generation` (a finished history replay) was offered
+    /// after the store moved on to `generation`; the caller computes it again against the live state.
+    Stale { expected_generation: u64, generation: u64 },
+}
+>>>>>>> END
+<<<<<<< ANCHOR
+            Self::UnknownConflict(id) => write!(formatter, "unknown conflict id: {id}"),
+=======
+            Self::UnknownConflict(id) => write!(formatter, "unknown conflict id: {id}"),
+            Self::Stale { expected_generation, generation } => write!(formatter, "stale result: computed at generation {expected_generation}, store is at {generation}"),
+>>>>>>> END

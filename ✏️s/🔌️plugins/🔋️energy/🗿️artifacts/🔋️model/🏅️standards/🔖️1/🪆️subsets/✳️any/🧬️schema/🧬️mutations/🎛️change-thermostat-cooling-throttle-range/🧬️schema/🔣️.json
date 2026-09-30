@@ -5,15 +5,57 @@
   "type": "object",
   "additionalProperties": false,
   "required": [
+    "mutation",
     "id",
     "newCoolingThrottleRangeK"
   ],
   "properties": {
+    "mutation": {
+      "const": "changeThermostatCoolingThrottleRange"
+    },
     "id": {
-      "type": "integer"
+      "type": "integer",
+      "minimum": 0,
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Thermostat",
+          "de": "Thermostat"
+        },
+        "description": {
+          "en": "The thermostat this mutation changes, by id.",
+          "de": "Thermostat, den diese Mutation ändert, per ID."
+        },
+        "ref": {
+          "kind": "thermostat",
+          "domain": "energyModel",
+          "granularity": "thermostat"
+        },
+        "group": "target",
+        "order": 10
+      }
     },
     "newCoolingThrottleRangeK": {
-      "type": "number"
+      "type": "number",
+      "exclusiveMinimum": 0,
+      "x-semio-ui": {
+        "widget": "stepper",
+        "role": "value",
+        "label": {
+          "en": "Cooling throttle range",
+          "de": "Kühl-Proportionalbereich"
+        },
+        "description": {
+          "en": "Temperature band over which cooling ramps from off to full output.",
+          "de": "Temperaturband, in dem die Kühlleistung von null auf voll ansteigt."
+        },
+        "unit": "K",
+        "step": 0.1,
+        "precision": 1,
+        "group": "control",
+        "order": 20
+      }
     }
   }
 }

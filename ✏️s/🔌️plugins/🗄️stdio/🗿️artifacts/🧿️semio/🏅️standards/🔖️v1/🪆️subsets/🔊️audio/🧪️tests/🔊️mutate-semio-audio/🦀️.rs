@@ -34,9 +34,7 @@ mod subject {
     use semio_repo_test_host::{digest, Context, Json, Outcome};
     use semio_s_plugin_stdio_test_oracle::law::carrier_is_exact;
     use semio_s_artifact_stdio_semio::standards::v1::subsets::base::schema::mutations::semio_mutation_refusals;
-    use semio_s_artifact_stdio_semio::standards::v1::subsets::audio::schema::mutations::{
-        apply_semio_audio_mutation, insert_channel, insert_tag, inverse_semio_audio_mutation, remove_channel, remove_tag, set_channel_samples, set_format, set_sample_rate, set_snapshot, set_tag_value, SemioAudioMutation,
-    };
+    use semio_s_artifact_stdio_semio::standards::v1::subsets::audio::schema::mutations::{apply_semio_audio_mutation, decode_semio_audio_mutation_json, inverse_semio_audio_mutation, set_snapshot, SemioAudioMutation};
     use semio_s_artifact_stdio_semio::standards::v1::subsets::audio::schema::snapshot::{parse_semio_audio_dsl, print_semio_audio_dsl, SemioAudioChannel, SemioAudioFormat, SemioAudioSnapshot, SemioAudioTag};
 
     /// 🎤️ The document every mutation row runs on: the first real second of the real committed
@@ -64,12 +62,6 @@ mod subject {
             Some(Json::Array(found)) => Ok(found.clone()),
             None => Ok(Vec::new()),
             _ => Err(format!("member {key:?} must be an array")),
-        }
-    }
-    fn object(value: &Json, key: &str) -> Result<Json, String> {
-        match value.get(key) {
-            Some(found @ Json::Object(_)) => Ok(found.clone()),
-            _ => Err(format!("member {key:?} must be an object")),
         }
     }
     fn samples(value: &Json) -> Result<Vec<f32>, String> {
@@ -116,29 +108,15 @@ mod subject {
         })
     }
 
-    /// 🦠️ A `{kind, params}` payload — the shape the feature writes and the shape the committed
-    /// specification vectors carry — decoded into the real typed mutation.
-    ///
-    /// 🧭️ `"no-mutation"` is the dropped `NoMutation` verb's committed spelling (`no` is not an
-    /// APPROVED_VERB, so the leaf migration could not keep it as a variant) — it maps to the
-    /// identity mutation `SetSnapshot(base.clone())` rather than failing, so the committed
-    /// `no-mutation` scenario keeps exercising the "nothing changes" law instead of being deleted.
-    fn mutation_of(payload: &Json, base: &SemioAudioSnapshot) -> Result<SemioAudioMutation, String> {
-        let kind = text(payload, "kind")?;
-        let params = object(payload, "params")?;
-        match kind.as_str() {
-            "no-mutation" => Ok(SemioAudioMutation::SetSnapshot(set_snapshot::SetSnapshot { snapshot: base.clone() })),
-            "set-snapshot" => Ok(SemioAudioMutation::SetSnapshot(set_snapshot::SetSnapshot { snapshot: snapshot_of(&object(&params, "snapshot")?)? })),
-            "set-sample-rate" => Ok(SemioAudioMutation::SetSampleRate(set_sample_rate::SetSampleRate { sample_rate: number(&params, "sampleRate")? as u32 })),
-            "set-format" => Ok(SemioAudioMutation::SetFormat(set_format::SetFormat { format: format_of(&text(&params, "format")?)? })),
-            "insert-channel" => Ok(SemioAudioMutation::InsertChannel(insert_channel::InsertChannel { index: number(&params, "index")? as usize, channel: channel_of(&object(&params, "channel")?)? })),
-            "remove-channel" => Ok(SemioAudioMutation::RemoveChannel(remove_channel::RemoveChannel { index: number(&params, "index")? as usize })),
-            "set-channel-samples" => Ok(SemioAudioMutation::SetChannelSamples(set_channel_samples::SetChannelSamples { index: number(&params, "index")? as usize, samples: samples(&params)? })),
-            "insert-tag" => Ok(SemioAudioMutation::InsertTag(insert_tag::InsertTag { index: number(&params, "index")? as usize, tag: tag_of(&object(&params, "tag")?)? })),
-            "remove-tag" => Ok(SemioAudioMutation::RemoveTag(remove_tag::RemoveTag { index: number(&params, "index")? as usize })),
-            "set-tag-value" => Ok(SemioAudioMutation::SetTagValue(set_tag_value::SetTagValue { index: number(&params, "index")? as usize, value: text(&params, "value")? })),
-            other => Err(format!("mutate-semio-audio: no decoder for kind {other:?}")),
+    /// 🦠️ A committed wire value (`{"mutation": "<camelCaseVariant>", …}`) — the shape the feature writes and the shape
+    /// the committed specification vectors carry — decoded through this subset's own production JSON bridge.
+    /// `noMutation` is the `no-mutation` baselines' scenario sentinel — the dropped `NoMutation` verb's spelling, `no`
+    /// not being an approved verb — and maps to the identity `set-snapshot(base)`.
+    fn mutation_of(wire: &Json, base: &SemioAudioSnapshot) -> Result<SemioAudioMutation, String> {
+        if matches!(wire.get("mutation"), Some(Json::String(tag)) if tag.as_str() == "noMutation") {
+            return Ok(SemioAudioMutation::SetSnapshot(set_snapshot::SetSnapshot { snapshot: base.clone() }));
         }
+        decode_semio_audio_mutation_json(&wire.to_string())
     }
     //#endregion 🔖️Decoding
 
@@ -243,7 +221,7 @@ mod subject {
         let vector = ctx.fixture_json(ctx.scenario.steps.iter().flat_map(|(_, text)| text.split_whitespace()).find(|uri| uri.starts_with("shared://🔊️mutate-semio-audio/") && uri.ends_with(&format!("{kind}/🦠️mutation/🔣️.json"))).ok_or_else(|| format!("{}: no declared vector for {kind}", ctx.scenario.id))?)?;
         let expected = snapshot_of(vector.get("after").ok_or_else(|| "specification vector is missing its \"after\" member".to_string())?)?;
         let mut current = snapshot_of(vector.get("before").ok_or_else(|| "specification vector is missing its \"before\" member".to_string())?)?;
-        let mutation = mutation_of(&vector, &current)?;
+        let mutation = mutation_of(vector.get("mutation").ok_or_else(|| "specification vector is missing its \"mutation\" member".to_string())?, &current)?;
         apply(&mut current, &mutation, ctx.scenario.id.as_str())?;
         if current != expected {
             return Err(disagreement(&format!("{}: the applied snapshot does not match the committed after-snapshot", ctx.scenario.id), &current, &expected));

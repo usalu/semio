@@ -28,9 +28,9 @@ fn every_kind_moves_its_axis_and_the_verdict_the_tables_name() {
         ("set-sof-marker", r#"{"marker": 194}"#, Some("stdio.jpg.baseline.sof-marker")),
         ("set-sample-precision", r#"{"precision": 12}"#, Some("stdio.jpg.baseline.precision")),
         ("set-arithmetic", r#"{"arithmetic": true}"#, Some("stdio.jpg.baseline.arithmetic-conditioning-present")),
-        ("insert-huffman-table", r#"{"index": 4, "class": "dc", "id": 2}"#, Some("stdio.jpg.baseline.huffman-table-count")),
-        ("remove-huffman-table", r#"{"class": "dc", "id": 0}"#, None),
-        ("insert-frame-component", r#"{"index": 3, "id": 4, "hSampling": 1, "vSampling": 1}"#, None),
+        ("insert-huffman-table", r#"{"index": 4, "table": {"id": 2, "class": "dc", "bits": [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0], "values": []}}"#, Some("stdio.jpg.baseline.huffman-table-count")),
+        ("remove-huffman-table", r#"{"key": {"class": "dc", "id": 0}}"#, None),
+        ("insert-frame-component", r#"{"index": 3, "component": {"id": 4, "hSampling": 1, "vSampling": 1, "quantTableId": 0}}"#, None),
         ("remove-frame-component", r#"{"id": 3}"#, None),
         ("set-component-sampling", r#"{"id": 1, "hSampling": 5, "vSampling": 1}"#, Some("stdio.jpg.baseline.component-sampling")),
     ] {

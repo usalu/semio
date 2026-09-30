@@ -5,15 +5,27 @@
   "type": "object",
   "additionalProperties": false,
   "required": [
+    "mutation",
     "display"
   ],
   "properties": {
-    "display": {
-      "type": "boolean"
-    },
     "mutation": {
       "const": "setDisplayDocTitle",
       "description": "Aggregate discriminator spliced in by PdfUaMutation; absent when the payload stands alone."
+    },
+    "display": {
+      "type": "boolean",
+      "x-semio-ui": {
+        "widget": "toggle",
+        "label": {
+          "en": "Display document title",
+          "de": "Dokumenttitel anzeigen"
+        },
+        "description": {
+          "en": "Show the document title instead of the file name in the window title (PDF/UA).",
+          "de": "Dokumenttitel statt Dateiname in der Titelleiste anzeigen (PDF/UA)."
+        }
+      }
     }
   }
 }

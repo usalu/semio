@@ -93,3 +93,61 @@ async fn the_json_carrier_pairs_hold_the_kinds_the_csv_carrier_cannot_see() {
         assert_eq!(exported_carrier(&undone).await, before, "{kind}: the exported carrier after the inverse differs from the committed before-carrier");
     }
 }
+
+#[semio_framework_async_macros::async_test]
+async fn artifact_io_descriptors_match_the_neutral_fixture() {
+    use semio_framework::io::io_mechanism::{io_entries, io_register, io_route};
+    use semio_framework::io_schema::{ArtifactDialect, IoEntryDescriptor, IoRoute};
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/📇️descriptor-parity.json")).expect("neutral descriptors");
+    let declaration = super::io();
+    let actual = declaration.entries.iter().map(|entry| IoEntryDescriptor { from: ArtifactDialect::from(entry.from), into: ArtifactDialect::from(entry.into), fidelity: entry.fidelity, sniffs: entry.sniff.is_some() }).collect::<Vec<_>>();
+    let encoded: serde_json::Value = serde_json::from_str(&pack::to_json_string(&actual)).expect("independent descriptor JSON oracle");
+    assert_eq!(encoded, fixture["entries"]);
+    assert_eq!(pack::from_json_str::<Vec<IoEntryDescriptor>>(&fixture["entries"].to_string()).expect("owned descriptors"), actual);
+    for row in fixture["invalidEntries"].as_array().expect("invalid descriptors") {
+        assert!(pack::from_json_str::<IoEntryDescriptor>(&row.to_string()).is_err(), "{row}");
+    }
+    for row in fixture["routes"].as_array().expect("routes") {
+        let route = pack::from_json_str::<IoRoute>(&row.to_string()).expect("owned route");
+        assert_eq!(serde_json::from_str::<serde_json::Value>(&pack::to_json_string(&route)).expect("independent route oracle"), *row);
+    }
+    for row in fixture["invalidRoutes"].as_array().expect("invalid routes") {
+        assert!(pack::from_json_str::<IoRoute>(&row.to_string()).is_err(), "{row}");
+    }
+    io_register(declaration.entries).expect("sequence registry");
+    let mut registered = io_entries().into_iter().filter(|entry| entry.from.artifact_kind == "s.sequence.sequence" || entry.into.artifact_kind == "s.sequence.sequence").collect::<Vec<_>>();
+    registered.sort_by_key(|entry| (entry.from.to_coordinate(), entry.into.to_coordinate()));
+    let mut expected = actual.clone();
+    expected.sort_by_key(|entry| (entry.from.to_coordinate(), entry.into.to_coordinate()));
+    assert_eq!(registered, expected);
+    let route = io_route(&actual[6].from, &actual[6].into, 1).await.expect("registered exact text route").value;
+    assert_eq!(serde_json::from_str::<serde_json::Value>(&pack::to_json_string(&route)).expect("route JSON"), fixture["routes"][0]);
+    eprintln!("Artifact IO descriptor parity entries={}, registered={}", actual.len(), registered.len());
+}
+
+#[semio_framework_async_macros::async_test]
+async fn artifact_io_reset_payload_and_registered_text_route_preserve_the_native_snapshot() {
+    use semio_framework::io::io_mechanism::{io_register, io_route, io_run};
+    use semio_framework::io_schema::{ArtifactDialect, CARRIER_TEXT};
+    let vectors: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🔁️carrier-contracts.json")).expect("neutral native snapshots");
+    io_register(super::io().entries).expect("sequence IO registration");
+    let native = ArtifactDialect::from(crate::SEQUENCE_DIALECT);
+    let text = ArtifactDialect::from(CARRIER_TEXT);
+    for row in vectors["cases"].as_array().expect("cases") {
+        let snapshot = neural_engine::ColdOwner::new(SequenceSnapshot::from_host_snapshot(pack::from_json_str::<SequenceHostSnapshot>(&row["fixture"].to_string()).expect("neutral snapshot")));
+        let payload = super::snapshot_pack(&snapshot);
+        assert_eq!(payload, <SequenceSnapshot as store::ArtifactPack>::encode_pack(&snapshot));
+        let effect = crate::editor::sequence::reset_sequence_document_effect(&snapshot);
+        let semio_framework_plugin::Effect::LoadDocument { pack: effect_pack, spr } = effect else { panic!("load effect") };
+        assert_eq!(effect_pack, payload);
+        assert!(!spr.is_empty());
+        let export = io_route(&native, &text, 1).await.expect("text export route").value;
+        let exported = io_run(&export, IoPayload::Binary(payload.clone())).await.expect("registered text export").value;
+        let IoPayload::Text(body) = &exported else { panic!("raw carrier text") };
+        assert_eq!(body, &<SequenceSnapshot as store::ArtifactDsl>::print_dsl(&snapshot));
+        let import = io_route(&text, &native, 1).await.expect("text import route").value;
+        let restored = io_run(&import, exported).await.expect("registered text import").value;
+        assert_eq!(restored, IoPayload::Binary(payload));
+        eprintln!("Artifact IO native reset and text route bytes={}, spr={}", effect_pack.len(), spr.len());
+    }
+}

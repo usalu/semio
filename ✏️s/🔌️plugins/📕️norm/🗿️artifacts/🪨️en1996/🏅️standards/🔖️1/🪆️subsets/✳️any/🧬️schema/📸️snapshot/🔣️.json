@@ -1,6 +1,6 @@
 {
-  "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "semio://norm/en1996/snapshot",
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/norm/en1996/snapshot.json",
   "title": "En1996Snapshot",
   "type": "object",
   "additionalProperties": false,
@@ -268,6 +268,1062 @@
                 }
               }
             }
+          }
+        }
+      }
+    }
+  },
+  "$defs": {
+    "ConcentratedLoad": {
+      "title": "ConcentratedLoad",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "forceN",
+        "bearingAreaM2",
+        "bearingLengthM"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "forceN": {
+          "type": "number",
+          "x-semio-ui": {
+            "widget": "stepper",
+            "label": {
+              "en": "Characteristic concentrated force F_k",
+              "de": "Charakteristische Einzellast F_k"
+            },
+            "unit": "N",
+            "displayUnit": "kN",
+            "displayFactor": 0.001,
+            "step": 1000,
+            "precision": 1
+          }
+        },
+        "bearingAreaM2": {
+          "type": "number",
+          "x-semio-ui": {
+            "widget": "stepper",
+            "label": {
+              "en": "Loaded area A_b",
+              "de": "Belastete Fläche A_b"
+            },
+            "unit": "m²",
+            "displayUnit": "cm²",
+            "displayFactor": 10000,
+            "step": 0.0001,
+            "precision": 0
+          }
+        },
+        "bearingLengthM": {
+          "type": "number",
+          "x-semio-ui": {
+            "widget": "stepper",
+            "label": {
+              "en": "Bearing length of the concentrated load",
+              "de": "Auflagerlänge der Einzellast"
+            },
+            "unit": "m",
+            "displayUnit": "mm",
+            "displayFactor": 1000,
+            "step": 0.005,
+            "precision": 0
+          }
+        }
+      }
+    },
+    "WallLoadCase": {
+      "title": "WallLoadCase",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "designSituation",
+        "imposedCategory",
+        "gKSlabN",
+        "qKImposedPa",
+        "tributaryAreaM2",
+        "slabSpanM",
+        "qKSnowPa",
+        "qPWindPa",
+        "cPe",
+        "hKEarthN",
+        "concentrated"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "designSituation": {
+          "type": "string",
+          "x-semio-ui": {
+            "widget": "text",
+            "label": {
+              "en": "Design situation",
+              "de": "Bemessungssituation"
+            },
+            "description": {
+              "en": "Persistent, Transient, Accidental or Seismic (EN 1990 §3.2).",
+              "de": "Persistent (ständig), Transient (vorübergehend), Accidental (außergewöhnlich) oder Seismic (Erdbeben) nach EN 1990 §3.2."
+            }
+          }
+        },
+        "imposedCategory": {
+          "type": "string",
+          "x-semio-ui": {
+            "label": {
+              "en": "Wall",
+              "de": "Wand"
+            },
+            "description": {
+              "en": "Zero-based position of the wall in its list.",
+              "de": "Nullbasierte Position der Wand in der Liste."
+            }
+          }
+        },
+        "gKSlabN": {
+          "type": "number",
+          "x-semio-ui": {
+            "widget": "stepper",
+            "label": {
+              "en": "Characteristic permanent slab load G_k",
+              "de": "Charakteristische ständige Deckenauflast G_k"
+            },
+            "unit": "N",
+            "displayUnit": "kN",
+            "displayFactor": 0.001,
+            "step": 1000,
+            "precision": 1
+          }
+        },
+        "qKImposedPa": {
+          "type": "number",
+          "x-semio-ui": {
+            "widget": "stepper",
+            "label": {
+              "en": "Characteristic imposed load q_k",
+              "de": "Charakteristische Nutzlast q_k"
+            },
+            "unit": "Pa",
+            "displayUnit": "kN/m²",
+            "displayFactor": 0.001,
+            "step": 50,
+            "precision": 2
+          }
+        },
+        "tributaryAreaM2": {
+          "type": "number",
+          "x-semio-ui": {
+            "widget": "stepper",
+            "label": {
+              "en": "Tributary floor area",
+              "de": "Lasteinzugsfläche"
+            },
+            "unit": "m²",
+            "step": 0.5,
+            "precision": 2
+          }
+        },
+        "slabSpanM": {
+          "type": "number",
+          "x-semio-ui": {
+            "widget": "stepper",
+            "label": {
+              "en": "Clear span of the slab l_f",
+              "de": "Lichte Deckenstützweite l_f"
+            },
+            "unit": "m",
+            "step": 0.05,
+            "precision": 2
+          }
+        },
+        "qKSnowPa": {
+          "type": "number",
+          "x-semio-ui": {
+            "widget": "stepper",
+            "label": {
+              "en": "Characteristic snow load s_k",
+              "de": "Charakteristische Schneelast s_k"
+            },
+            "unit": "Pa",
+            "displayUnit": "kN/m²",
+            "displayFactor": 0.001,
+            "step": 50,
+            "precision": 2
+          }
+        },
+        "qPWindPa": {
+          "type": "number",
+          "x-semio-ui": {
+            "widget": "stepper",
+            "label": {
+              "en": "Peak velocity pressure q_p",
+              "de": "Böengeschwindigkeitsdruck q_p"
+            },
+            "unit": "Pa",
+            "displayUnit": "kN/m²",
+            "displayFactor": 0.001,
+            "step": 50,
+            "precision": 2
+          }
+        },
+        "cPe": {
+          "type": "number",
+          "x-semio-ui": {
+            "widget": "stepper",
+            "label": {
+              "en": "Wall",
+              "de": "Wand"
+            },
+            "description": {
+              "en": "Zero-based position of the wall in its list.",
+              "de": "Nullbasierte Position der Wand in der Liste."
+            },
+            "step": 1,
+            "precision": 0
+          }
+        },
+        "hKEarthN": {
+          "type": "number",
+          "x-semio-ui": {
+            "widget": "stepper",
+            "label": {
+              "en": "Characteristic earth pressure resultant H_k",
+              "de": "Charakteristische Erddruckresultierende H_k"
+            },
+            "unit": "N",
+            "displayUnit": "kN",
+            "displayFactor": 0.001,
+            "step": 1000,
+            "precision": 1
+          }
+        },
+        "concentrated": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/ConcentratedLoad"
+          },
+          "x-semio-ui": {
+            "label": {
+              "en": "Wall",
+              "de": "Wand"
+            },
+            "description": {
+              "en": "Zero-based position of the wall in its list.",
+              "de": "Nullbasierte Position der Wand in der Liste."
+            }
+          }
+        }
+      }
+    },
+    "WallOpening": {
+      "title": "WallOpening",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "widthM",
+        "heightM",
+        "sillHeightM"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "widthM": {
+          "type": "number",
+          "x-semio-ui": {
+            "widget": "stepper",
+            "label": {
+              "en": "Opening width",
+              "de": "Öffnungsbreite"
+            },
+            "unit": "m",
+            "step": 0.05,
+            "precision": 2
+          }
+        },
+        "heightM": {
+          "type": "number",
+          "x-semio-ui": {
+            "widget": "stepper",
+            "label": {
+              "en": "Clear wall height h",
+              "de": "Lichte Wandhöhe h"
+            },
+            "unit": "m",
+            "step": 0.05,
+            "precision": 2
+          }
+        },
+        "sillHeightM": {
+          "type": "number",
+          "x-semio-ui": {
+            "widget": "stepper",
+            "label": {
+              "en": "Sill height",
+              "de": "Brüstungshöhe"
+            },
+            "unit": "m",
+            "step": 0.05,
+            "precision": 2
+          }
+        }
+      }
+    },
+    "MasonryWall": {
+      "title": "MasonryWall",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "labelEn",
+        "labelDe",
+        "wallType",
+        "thicknessM",
+        "heightM",
+        "lengthM",
+        "supportSides",
+        "openings",
+        "slabBearingDepthM",
+        "eccentricityTopM",
+        "eccentricityBottomM",
+        "unitGroup",
+        "unitMaterial",
+        "fBPa",
+        "unitLengthM",
+        "unitWidthM",
+        "unitHeightM",
+        "mortarType",
+        "mortarClass",
+        "mortarStrengthPa",
+        "bedJointThicknessM",
+        "reinforced",
+        "asVerticalM2",
+        "asHorizontalM2",
+        "fYdPa",
+        "fireReiMin",
+        "exposure",
+        "mu",
+        "densityKgM3",
+        "phiInfinity",
+        "isBasement",
+        "loadCases"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "labelEn": {
+          "type": "string",
+          "x-semio-ui": {
+            "widget": "text",
+            "label": {
+              "en": "English label",
+              "de": "Englische Bezeichnung"
+            }
+          }
+        },
+        "labelDe": {
+          "type": "string",
+          "x-semio-ui": {
+            "widget": "text",
+            "label": {
+              "en": "German label",
+              "de": "Deutsche Bezeichnung"
+            }
+          }
+        },
+        "wallType": {
+          "$ref": "#/$defs/WallType",
+          "x-semio-ui": {
+            "label": {
+              "en": "Wall type",
+              "de": "Wandart"
+            },
+            "description": {
+              "en": "LoadBearing, Shear or NonLoadBearing.",
+              "de": "LoadBearing (tragend), Shear (aussteifend) oder NonLoadBearing (nichttragend)."
+            }
+          }
+        },
+        "thicknessM": {
+          "type": "number",
+          "x-semio-ui": {
+            "widget": "stepper",
+            "label": {
+              "en": "Wall thickness t",
+              "de": "Wanddicke t"
+            },
+            "unit": "m",
+            "displayUnit": "mm",
+            "displayFactor": 1000,
+            "step": 0.005,
+            "precision": 0
+          }
+        },
+        "heightM": {
+          "type": "number",
+          "x-semio-ui": {
+            "widget": "stepper",
+            "label": {
+              "en": "Clear wall height h",
+              "de": "Lichte Wandhöhe h"
+            },
+            "unit": "m",
+            "step": 0.05,
+            "precision": 2
+          }
+        },
+        "lengthM": {
+          "type": "number",
+          "x-semio-ui": {
+            "widget": "stepper",
+            "label": {
+              "en": "Wall length l",
+              "de": "Wandlänge l"
+            },
+            "unit": "m",
+            "step": 0.05,
+            "precision": 2
+          }
+        },
+        "supportSides": {
+          "type": "integer",
+          "minimum": 0,
+          "x-semio-ui": {
+            "widget": "stepper",
+            "label": {
+              "en": "Number of supported edges",
+              "de": "Anzahl der gehaltenen Ränder"
+            },
+            "description": {
+              "en": "Two-, three- or four-sided support (EN 1996-1-1 §5.5.1.2).",
+              "de": "Zwei-, drei- oder vierseitig gehalten (EN 1996-1-1 §5.5.1.2)."
+            },
+            "step": 1,
+            "precision": 0
+          }
+        },
+        "openings": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/WallOpening"
+          },
+          "x-semio-ui": {
+            "label": {
+              "en": "Openings",
+              "de": "Öffnungen"
+            }
+          }
+        },
+        "slabBearingDepthM": {
+          "type": "number",
+          "x-semio-ui": {
+            "widget": "stepper",
+            "label": {
+              "en": "Slab bearing depth a",
+              "de": "Deckenauflagertiefe a"
+            },
+            "unit": "m",
+            "displayUnit": "mm",
+            "displayFactor": 1000,
+            "step": 0.005,
+            "precision": 0
+          }
+        },
+        "eccentricityTopM": {
+          "type": "number",
+          "x-semio-ui": {
+            "widget": "stepper",
+            "label": {
+              "en": "Eccentricity at the wall head e_o",
+              "de": "Lastausmitte am Wandkopf e_o"
+            },
+            "unit": "m",
+            "displayUnit": "mm",
+            "displayFactor": 1000,
+            "step": 0.001,
+            "precision": 0
+          }
+        },
+        "eccentricityBottomM": {
+          "type": "number",
+          "x-semio-ui": {
+            "widget": "stepper",
+            "label": {
+              "en": "Eccentricity at the wall base e_u",
+              "de": "Lastausmitte am Wandfuß e_u"
+            },
+            "unit": "m",
+            "displayUnit": "mm",
+            "displayFactor": 1000,
+            "step": 0.001,
+            "precision": 0
+          }
+        },
+        "unitGroup": {
+          "$ref": "#/$defs/UnitGroup",
+          "x-semio-ui": {
+            "label": {
+              "en": "Masonry unit group",
+              "de": "Steingruppe"
+            },
+            "description": {
+              "en": "Group1 to Group4 (EN 1996-1-1 Table 3.1).",
+              "de": "Group1 bis Group4 (EN 1996-1-1 Tabelle 3.1)."
+            }
+          }
+        },
+        "unitMaterial": {
+          "$ref": "#/$defs/UnitMaterial",
+          "x-semio-ui": {
+            "label": {
+              "en": "Unit material",
+              "de": "Steinart"
+            },
+            "description": {
+              "en": "Clay, CalciumSilicate, Aerated or Concrete.",
+              "de": "Clay (Mauerziegel), CalciumSilicate (Kalksandstein), Aerated (Porenbeton) oder Concrete (Betonstein)."
+            }
+          }
+        },
+        "fBPa": {
+          "type": "number",
+          "x-semio-ui": {
+            "widget": "stepper",
+            "label": {
+              "en": "Normalised compressive strength of the unit f_b",
+              "de": "Normierte Steindruckfestigkeit f_b"
+            },
+            "unit": "Pa",
+            "displayUnit": "N/mm²",
+            "displayFactor": 1e-06,
+            "step": 500000.0,
+            "precision": 1
+          }
+        },
+        "unitLengthM": {
+          "type": "number",
+          "x-semio-ui": {
+            "widget": "stepper",
+            "label": {
+              "en": "Unit length",
+              "de": "Steinlänge"
+            },
+            "unit": "m",
+            "displayUnit": "mm",
+            "displayFactor": 1000,
+            "step": 0.005,
+            "precision": 0
+          }
+        },
+        "unitWidthM": {
+          "type": "number",
+          "x-semio-ui": {
+            "widget": "stepper",
+            "label": {
+              "en": "Unit width",
+              "de": "Steinbreite"
+            },
+            "unit": "m",
+            "displayUnit": "mm",
+            "displayFactor": 1000,
+            "step": 0.005,
+            "precision": 0
+          }
+        },
+        "unitHeightM": {
+          "type": "number",
+          "x-semio-ui": {
+            "widget": "stepper",
+            "label": {
+              "en": "Unit height",
+              "de": "Steinhöhe"
+            },
+            "unit": "m",
+            "displayUnit": "mm",
+            "displayFactor": 1000,
+            "step": 0.005,
+            "precision": 0
+          }
+        },
+        "mortarType": {
+          "$ref": "#/$defs/MortarType",
+          "x-semio-ui": {
+            "label": {
+              "en": "Mortar type",
+              "de": "Mörtelart"
+            },
+            "description": {
+              "en": "GeneralPurpose, ThinLayer or Lightweight.",
+              "de": "GeneralPurpose (Normalmauermörtel), ThinLayer (Dünnbettmörtel) oder Lightweight (Leichtmauermörtel)."
+            }
+          }
+        },
+        "mortarClass": {
+          "$ref": "#/$defs/MortarClass",
+          "x-semio-ui": {
+            "label": {
+              "en": "Mortar strength class",
+              "de": "Mörtelklasse"
+            },
+            "description": {
+              "en": "M1, M2_5, M5, M10, M15 or M20 (f_m in N/mm²).",
+              "de": "M1, M2_5, M5, M10, M15 oder M20 (f_m in N/mm²)."
+            }
+          }
+        },
+        "mortarStrengthPa": {
+          "type": "number",
+          "x-semio-ui": {
+            "widget": "stepper",
+            "label": {
+              "en": "Mortar compressive strength f_m",
+              "de": "Mörteldruckfestigkeit f_m"
+            },
+            "unit": "Pa",
+            "displayUnit": "N/mm²",
+            "displayFactor": 1e-06,
+            "step": 500000.0,
+            "precision": 1
+          }
+        },
+        "bedJointThicknessM": {
+          "type": "number",
+          "x-semio-ui": {
+            "widget": "stepper",
+            "label": {
+              "en": "Bed joint thickness",
+              "de": "Lagerfugendicke"
+            },
+            "unit": "m",
+            "displayUnit": "mm",
+            "displayFactor": 1000,
+            "step": 0.001,
+            "precision": 0
+          }
+        },
+        "reinforced": {
+          "type": "boolean",
+          "x-semio-ui": {
+            "widget": "toggle",
+            "label": {
+              "en": "Reinforced masonry",
+              "de": "Bewehrtes Mauerwerk"
+            }
+          }
+        },
+        "asVerticalM2": {
+          "type": "number",
+          "x-semio-ui": {
+            "widget": "stepper",
+            "label": {
+              "en": "Vertical reinforcement area A_s",
+              "de": "Querschnitt der vertikalen Bewehrung A_s"
+            },
+            "unit": "m²",
+            "displayUnit": "cm²",
+            "displayFactor": 10000,
+            "step": 1e-06,
+            "precision": 2
+          }
+        },
+        "asHorizontalM2": {
+          "type": "number",
+          "x-semio-ui": {
+            "widget": "stepper",
+            "label": {
+              "en": "Bed joint reinforcement area A_s",
+              "de": "Querschnitt der Lagerfugenbewehrung A_s"
+            },
+            "unit": "m²",
+            "displayUnit": "cm²",
+            "displayFactor": 10000,
+            "step": 1e-06,
+            "precision": 2
+          }
+        },
+        "fYdPa": {
+          "type": "number",
+          "x-semio-ui": {
+            "widget": "stepper",
+            "label": {
+              "en": "Design yield strength of reinforcement f_yd",
+              "de": "Bemessungswert der Streckgrenze der Bewehrung f_yd"
+            },
+            "unit": "Pa",
+            "displayUnit": "N/mm²",
+            "displayFactor": 1e-06,
+            "step": 5000000.0,
+            "precision": 0
+          }
+        },
+        "fireReiMin": {
+          "type": "integer",
+          "minimum": 0,
+          "x-semio-ui": {
+            "widget": "stepper",
+            "label": {
+              "en": "Required fire resistance REI",
+              "de": "Erforderliche Feuerwiderstandsdauer REI"
+            },
+            "description": {
+              "en": "Fire resistance in minutes, e.g. 30, 60, 90 (EN 1996-1-2).",
+              "de": "Feuerwiderstandsdauer in Minuten, z. B. 30, 60, 90 (EN 1996-1-2)."
+            },
+            "unit": "min",
+            "step": 1,
+            "precision": 0
+          }
+        },
+        "exposure": {
+          "$ref": "#/$defs/ExposureClass",
+          "x-semio-ui": {
+            "label": {
+              "en": "Exposure class",
+              "de": "Expositionsklasse"
+            },
+            "description": {
+              "en": "Mx1 to Mx5 (EN 1996-2 Annex A).",
+              "de": "Mx1 bis Mx5 (EN 1996-2 Anhang A)."
+            }
+          }
+        },
+        "mu": {
+          "type": "number",
+          "x-semio-ui": {
+            "widget": "stepper",
+            "label": {
+              "en": "Friction coefficient μ",
+              "de": "Reibungsbeiwert μ"
+            },
+            "step": 0.01,
+            "precision": 2
+          }
+        },
+        "densityKgM3": {
+          "type": "number",
+          "x-semio-ui": {
+            "widget": "stepper",
+            "label": {
+              "en": "Masonry density ρ",
+              "de": "Rohdichte des Mauerwerks ρ"
+            },
+            "unit": "kg/m³",
+            "step": 10,
+            "precision": 0
+          }
+        },
+        "phiInfinity": {
+          "type": "number",
+          "x-semio-ui": {
+            "widget": "stepper",
+            "label": {
+              "en": "Final creep coefficient φ_∞",
+              "de": "Endkriechzahl φ_∞"
+            },
+            "step": 0.01,
+            "precision": 2
+          }
+        },
+        "isBasement": {
+          "type": "boolean",
+          "x-semio-ui": {
+            "widget": "toggle",
+            "label": {
+              "en": "Basement wall",
+              "de": "Kellerwand"
+            },
+            "description": {
+              "en": "Checked for earth pressure per EN 1996-3/NA.",
+              "de": "Nachweis für Erddruck nach EN 1996-3/NA."
+            }
+          }
+        },
+        "loadCases": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/WallLoadCase"
+          },
+          "x-semio-ui": {
+            "label": {
+              "en": "Load cases",
+              "de": "Lastfälle"
+            }
+          }
+        }
+      }
+    },
+    "AnnexChoice": {
+      "title": "AnnexChoice",
+      "type": "string",
+      "enum": [
+        "En",
+        "De"
+      ],
+      "x-semio-ui": {
+        "options": {
+          "En": {
+            "en": "Recommended CEN values (EN)",
+            "de": "Empfohlene CEN-Werte (EN)"
+          },
+          "De": {
+            "en": "German national annex (DIN EN)",
+            "de": "Deutscher Nationaler Anhang (DIN EN)"
+          }
+        }
+      }
+    },
+    "DesignSituation": {
+      "title": "DesignSituation",
+      "type": "string",
+      "enum": [
+        "Persistent",
+        "Transient",
+        "Accidental",
+        "Seismic"
+      ],
+      "x-semio-ui": {
+        "options": {
+          "Persistent": {
+            "en": "Persistent",
+            "de": "Ständig"
+          },
+          "Transient": {
+            "en": "Transient",
+            "de": "Vorübergehend"
+          },
+          "Accidental": {
+            "en": "Accidental",
+            "de": "Außergewöhnlich"
+          },
+          "Seismic": {
+            "en": "Seismic",
+            "de": "Erdbeben"
+          }
+        }
+      }
+    },
+    "MasonryClass": {
+      "title": "MasonryClass",
+      "type": "string",
+      "enum": [
+        "Class1",
+        "Class2",
+        "Class3",
+        "Class4",
+        "Class5"
+      ],
+      "x-semio-ui": {
+        "options": {
+          "Class1": {
+            "en": "Class 1",
+            "de": "Klasse 1"
+          },
+          "Class2": {
+            "en": "Class 2",
+            "de": "Klasse 2"
+          },
+          "Class3": {
+            "en": "Class 3",
+            "de": "Klasse 3"
+          },
+          "Class4": {
+            "en": "Class 4",
+            "de": "Klasse 4"
+          },
+          "Class5": {
+            "en": "Class 5",
+            "de": "Klasse 5"
+          }
+        }
+      }
+    },
+    "ExposureClass": {
+      "title": "ExposureClass",
+      "type": "string",
+      "enum": [
+        "Mx1",
+        "Mx2",
+        "Mx3",
+        "Mx4",
+        "Mx5"
+      ],
+      "x-semio-ui": {
+        "options": {
+          "Mx1": {
+            "en": "MX1",
+            "de": "MX1"
+          },
+          "Mx2": {
+            "en": "MX2",
+            "de": "MX2"
+          },
+          "Mx3": {
+            "en": "MX3",
+            "de": "MX3"
+          },
+          "Mx4": {
+            "en": "MX4",
+            "de": "MX4"
+          },
+          "Mx5": {
+            "en": "MX5",
+            "de": "MX5"
+          }
+        }
+      }
+    },
+    "MortarClass": {
+      "title": "MortarClass",
+      "type": "string",
+      "enum": [
+        "M1",
+        "M2_5",
+        "M5",
+        "M10",
+        "M15",
+        "M20"
+      ],
+      "x-semio-ui": {
+        "options": {
+          "M1": {
+            "en": "M1",
+            "de": "M1"
+          },
+          "M2_5": {
+            "en": "M2.5",
+            "de": "M2,5"
+          },
+          "M5": {
+            "en": "M5",
+            "de": "M5"
+          },
+          "M10": {
+            "en": "M10",
+            "de": "M10"
+          },
+          "M15": {
+            "en": "M15",
+            "de": "M15"
+          },
+          "M20": {
+            "en": "M20",
+            "de": "M20"
+          }
+        }
+      }
+    },
+    "MortarType": {
+      "title": "MortarType",
+      "type": "string",
+      "enum": [
+        "GeneralPurpose",
+        "ThinLayer",
+        "Lightweight"
+      ],
+      "x-semio-ui": {
+        "options": {
+          "GeneralPurpose": {
+            "en": "General-purpose mortar",
+            "de": "Normalmauermörtel"
+          },
+          "ThinLayer": {
+            "en": "Thin-layer mortar",
+            "de": "Dünnbettmörtel"
+          },
+          "Lightweight": {
+            "en": "Lightweight mortar",
+            "de": "Leichtmauermörtel"
+          }
+        }
+      }
+    },
+    "UnitGroup": {
+      "title": "UnitGroup",
+      "type": "string",
+      "enum": [
+        "Group1",
+        "Group2",
+        "Group3",
+        "Group4"
+      ],
+      "x-semio-ui": {
+        "options": {
+          "Group1": {
+            "en": "Group 1",
+            "de": "Gruppe 1"
+          },
+          "Group2": {
+            "en": "Group 2",
+            "de": "Gruppe 2"
+          },
+          "Group3": {
+            "en": "Group 3",
+            "de": "Gruppe 3"
+          },
+          "Group4": {
+            "en": "Group 4",
+            "de": "Gruppe 4"
+          }
+        }
+      }
+    },
+    "UnitMaterial": {
+      "title": "UnitMaterial",
+      "type": "string",
+      "enum": [
+        "Clay",
+        "CalciumSilicate",
+        "Aerated",
+        "Concrete"
+      ],
+      "x-semio-ui": {
+        "options": {
+          "Clay": {
+            "en": "Clay",
+            "de": "Ziegel"
+          },
+          "CalciumSilicate": {
+            "en": "Calcium silicate",
+            "de": "Kalksandstein"
+          },
+          "Aerated": {
+            "en": "Autoclaved aerated concrete",
+            "de": "Porenbeton"
+          },
+          "Concrete": {
+            "en": "Concrete",
+            "de": "Beton"
+          }
+        }
+      }
+    },
+    "WallType": {
+      "title": "WallType",
+      "type": "string",
+      "enum": [
+        "LoadBearing",
+        "Shear",
+        "NonLoadBearing"
+      ],
+      "x-semio-ui": {
+        "options": {
+          "LoadBearing": {
+            "en": "Load-bearing wall",
+            "de": "Tragende Wand"
+          },
+          "Shear": {
+            "en": "Shear wall",
+            "de": "Aussteifende Wand"
+          },
+          "NonLoadBearing": {
+            "en": "Non-load-bearing wall",
+            "de": "Nichttragende Wand"
           }
         }
       }

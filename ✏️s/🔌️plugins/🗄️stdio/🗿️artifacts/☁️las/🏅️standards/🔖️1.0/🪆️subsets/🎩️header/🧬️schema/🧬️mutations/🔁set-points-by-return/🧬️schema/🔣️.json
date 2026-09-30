@@ -5,9 +5,14 @@
   "type": "object",
   "additionalProperties": false,
   "required": [
+    "mutation",
     "counts"
   ],
   "properties": {
+    "mutation": {
+      "const": "setPointsByReturn",
+      "description": "Aggregate discriminator spliced in by LasMutation; absent when the payload stands alone."
+    },
     "counts": {
       "type": "array",
       "items": {
@@ -16,11 +21,17 @@
         "maximum": 4294967295
       },
       "minItems": 5,
-      "maxItems": 5
-    },
-    "mutation": {
-      "const": "setPointsByReturn",
-      "description": "Aggregate discriminator spliced in by LasMutation; absent when the payload stands alone."
+      "maxItems": 5,
+      "x-semio-ui": {
+        "label": {
+          "en": "Points by return",
+          "de": "Punkte je Echo"
+        },
+        "description": {
+          "en": "Number of points of the first to fifth return.",
+          "de": "Anzahl der Punkte des ersten bis fünften Echos."
+        }
+      }
     }
   }
 }

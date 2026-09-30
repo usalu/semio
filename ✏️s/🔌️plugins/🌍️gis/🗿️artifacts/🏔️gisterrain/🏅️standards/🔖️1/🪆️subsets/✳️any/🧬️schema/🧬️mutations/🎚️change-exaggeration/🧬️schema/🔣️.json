@@ -9,7 +9,21 @@
   ],
   "properties": {
     "newExaggeration": {
-      "type": "number"
+      "type": "number",
+      "x-semio-ui": {
+        "widget": "stepper",
+        "role": "value",
+        "label": {
+          "en": "New Vertical Exaggeration",
+          "de": "Neue Überhöhung"
+        },
+        "description": {
+          "en": "Factor that lifts the terrain heights.",
+          "de": "Faktor, mit dem die Geländehöhen angehoben werden."
+        },
+        "step": 0.1,
+        "precision": 2
+      }
     }
   }
 }

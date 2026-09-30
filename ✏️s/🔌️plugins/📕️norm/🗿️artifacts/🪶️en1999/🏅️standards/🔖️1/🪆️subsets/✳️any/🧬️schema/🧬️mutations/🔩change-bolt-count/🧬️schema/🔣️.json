@@ -5,19 +5,66 @@
   "type": "object",
   "additionalProperties": false,
   "required": [
+    "mutation",
     "connectionId",
     "newRows",
     "newBoltsPerRow"
   ],
   "properties": {
+    "mutation": {
+      "const": "changeBoltCount"
+    },
     "connectionId": {
-      "type": "string"
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Connection",
+          "de": "Verbindung"
+        },
+        "description": {
+          "en": "The connection this mutation addresses.",
+          "de": "Die Verbindung, die diese Mutation adressiert."
+        },
+        "ref": {
+          "kind": "connection"
+        },
+        "group": "target",
+        "order": 10
+      }
     },
     "newRows": {
-      "type": "integer"
+      "type": "integer",
+      "minimum": 0,
+      "x-semio-ui": {
+        "widget": "stepper",
+        "role": "value",
+        "label": {
+          "en": "Number of bolt rows",
+          "de": "Anzahl der Schraubenreihen"
+        },
+        "step": 1,
+        "precision": 0,
+        "group": "bolts",
+        "order": 20
+      }
     },
     "newBoltsPerRow": {
-      "type": "integer"
+      "type": "integer",
+      "minimum": 0,
+      "x-semio-ui": {
+        "widget": "stepper",
+        "role": "value",
+        "label": {
+          "en": "Bolts per row",
+          "de": "Schrauben je Reihe"
+        },
+        "step": 1,
+        "precision": 0,
+        "group": "bolts",
+        "order": 30
+      }
     }
   }
 }

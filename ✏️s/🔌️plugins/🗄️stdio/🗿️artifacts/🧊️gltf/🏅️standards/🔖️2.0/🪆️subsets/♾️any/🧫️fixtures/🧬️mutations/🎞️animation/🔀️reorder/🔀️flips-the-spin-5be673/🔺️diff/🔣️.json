@@ -1,21 +1,18 @@
 {
-  "id": "s.stdio.gltf.mutation.reorder-animations.v1",
-  "version": 1,
-  "touchedPaths": [
-    "document/animations/1",
-    "document/animations/0"
-  ],
-  "payload": {
-    "order": [
-      1,
-      0
-    ]
-  },
-  "operation": {
-    "kind": "reorder",
-    "order": [
-      1,
-      0
+  "animations": {
+    "modified": [
+      {
+        "index": 0,
+        "diff": {
+          "name": "bob"
+        }
+      },
+      {
+        "index": 1,
+        "diff": {
+          "name": "spin"
+        }
+      }
     ]
   }
 }

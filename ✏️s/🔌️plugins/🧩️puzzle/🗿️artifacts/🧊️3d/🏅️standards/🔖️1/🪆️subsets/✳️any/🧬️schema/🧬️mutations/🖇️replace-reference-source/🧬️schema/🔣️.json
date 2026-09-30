@@ -5,12 +5,35 @@
   "type": "object",
   "additionalProperties": false,
   "required": [
+    "mutation",
     "id",
     "newSource"
   ],
   "properties": {
+    "mutation": {
+      "const": "replaceReferenceSource"
+    },
     "id": {
-      "type": "string"
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Reference",
+          "de": "Referenz"
+        },
+        "description": {
+          "en": "The reference image this mutation addresses.",
+          "de": "Das Referenzbild, das diese Mutation adressiert."
+        },
+        "ref": {
+          "kind": "reference",
+          "domain": "vortex",
+          "granularity": "reference"
+        },
+        "group": "target",
+        "order": 10
+      }
     },
     "newSource": {
       "title": "Puzzle3dReferenceSource",
@@ -21,11 +44,52 @@
       ],
       "properties": {
         "url": {
-          "type": "string"
+          "type": "string",
+          "x-semio-ui": {
+            "widget": "text",
+            "role": "value",
+            "label": {
+              "en": "Source URL",
+              "de": "Quell-URL"
+            },
+            "description": {
+              "en": "Address of the file, e.g. an https or data URL.",
+              "de": "Adresse der Datei, z. B. eine https- oder data-URL."
+            },
+            "group": "source",
+            "order": 10
+          }
         },
         "mediaKind": {
-          "type": "string"
+          "type": "string",
+          "x-semio-ui": {
+            "widget": "text",
+            "role": "value",
+            "label": {
+              "en": "Media kind",
+              "de": "Medienart"
+            },
+            "description": {
+              "en": "For example image or drawing.",
+              "de": "Zum Beispiel image (Bild) oder drawing (Zeichnung)."
+            },
+            "group": "source",
+            "order": 20
+          }
         }
+      },
+      "x-semio-ui": {
+        "role": "value",
+        "label": {
+          "en": "Source",
+          "de": "Quelle"
+        },
+        "description": {
+          "en": "Where the reference media lives and what kind it is.",
+          "de": "Wo das Referenzmedium liegt und welcher Art es ist."
+        },
+        "group": "source",
+        "order": 20
       }
     }
   }

@@ -1,7 +1,7 @@
 {
   "UpdateGrid": {
-    "baseline_grid": 18.0,
-    "baseline_offset": 4.0,
-    "snap_to_baseline": false
+    "baselineGrid": 18.0,
+    "baselineOffset": 4.0,
+    "snapToBaseline": false
   }
 }

@@ -1,6 +1,24 @@
 {
-  "$comment": "Language-agnostic draft-07 structural-validation vectors. Consumed by the owned Rust validator (⚛️component/🦀️.rs test `owned_validator_agrees_with_the_shared_draft07_vectors`) and by the ajv + ajv-formats oracle spec (✅️draft07-oracle.test.ts). `errorPath` is a JSON Pointer into the instance, ajv's `instancePath` spelling; the Rust twin renders it as `$`, `$.name`, `$.items[0]`.",
+  "$comment": "Language-agnostic draft-07 structural-validation vectors. Consumed by the owned Rust validator (⚛️component/🦀️.rs test `owned_validator_agrees_with_the_shared_draft07_vectors`) and by the ajv + ajv-formats oracle spec (✅️draft07-oracle.test.ts). `errorPath` is a JSON Pointer into the instance, ajv's `instancePath` spelling; the Rust twin renders it as `$`, `$.name`, `$.items[0]`. `assertedFormats` pins `ASSERTED_STRING_FORMATS`; `annotationFormats` are the proto-derived spellings every validator must accept as annotations (the strict Ajv oracle registers exactly these two lists).",
   "dialect": "http://json-schema.org/draft-07/schema#",
+  "assertedFormats": [
+    "date",
+    "date-time",
+    "email",
+    "regex",
+    "time",
+    "uri",
+    "uuid"
+  ],
+  "annotationFormats": [
+    "base64",
+    "double",
+    "float",
+    "int32",
+    "int64",
+    "uint32",
+    "uint64"
+  ],
   "cases": [
     {
       "id": "object-required-and-additional-properties",
@@ -1148,6 +1166,22 @@
           "blob": {
             "type": "string",
             "format": "base64"
+          },
+          "single": {
+            "type": "number",
+            "format": "float"
+          },
+          "index": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "stamp": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "size": {
+            "type": "integer",
+            "format": "uint64"
           }
         }
       },
@@ -1155,12 +1189,20 @@
         {
           "ratio": 0.5,
           "count": 7,
-          "blob": "not-valid-base64!!"
+          "blob": "not-valid-base64!!",
+          "single": 1e+39,
+          "index": -7,
+          "stamp": -9007199254740991,
+          "size": 0
         },
         {
           "ratio": -1.5,
           "count": 0,
-          "blob": ""
+          "blob": "",
+          "single": -0.25,
+          "index": 2147483647,
+          "stamp": 0,
+          "size": -3
         }
       ],
       "invalid": [

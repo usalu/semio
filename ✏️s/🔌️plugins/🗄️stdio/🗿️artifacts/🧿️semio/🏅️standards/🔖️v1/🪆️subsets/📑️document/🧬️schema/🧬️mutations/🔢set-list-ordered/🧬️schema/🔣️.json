@@ -5,19 +5,27 @@
   "type": "object",
   "additionalProperties": false,
   "required": [
+    "mutation",
     "path",
     "ordered"
   ],
   "properties": {
+    "mutation": {
+      "const": "setListOrdered",
+      "description": "Aggregate discriminator spliced in by SemioDocumentMutation; absent when the payload stands alone."
+    },
     "path": {
       "$ref": "#/$defs/DocBlockPath"
     },
     "ordered": {
-      "type": "boolean"
-    },
-    "mutation": {
-      "const": "setListOrdered",
-      "description": "Aggregate discriminator spliced in by SemioDocumentMutation; absent when the payload stands alone."
+      "type": "boolean",
+      "x-semio-ui": {
+        "widget": "toggle",
+        "label": {
+          "en": "Ordered list",
+          "de": "Nummerierte Liste"
+        }
+      }
     }
   },
   "$defs": {
@@ -32,6 +40,16 @@
           "type": "array",
           "items": {
             "$ref": "#/$defs/DocPathSegment"
+          },
+          "x-semio-ui": {
+            "label": {
+              "en": "Block path",
+              "de": "Blockpfad"
+            },
+            "description": {
+              "en": "Child indices from the document root to the block.",
+              "de": "Kindindizes vom Dokumentstamm bis zum Block."
+            }
           }
         },
         "index": {

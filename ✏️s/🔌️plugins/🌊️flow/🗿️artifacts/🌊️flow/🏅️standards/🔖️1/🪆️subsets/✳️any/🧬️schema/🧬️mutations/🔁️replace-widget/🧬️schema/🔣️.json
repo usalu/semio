@@ -5,124 +5,36 @@
   "type": "object",
   "additionalProperties": false,
   "required": [
+    "mutation",
     "id",
     "widget"
   ],
   "properties": {
+    "mutation": {
+      "const": "replaceWidget"
+    },
     "id": {
-      "type": "string"
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Widget",
+          "de": "Widget"
+        },
+        "description": {
+          "en": "The widget this mutation addresses.",
+          "de": "Das Widget, das diese Mutation adressiert."
+        },
+        "ref": {
+          "kind": "widget",
+          "domain": "graph",
+          "granularity": "node"
+        }
+      }
     },
     "widget": {
-      "oneOf": [
-        {
-          "type": "object",
-          "properties": {
-            "kind": {
-              "const": "Neuron"
-            }
-          },
-          "required": [
-            "kind"
-          ],
-          "additionalProperties": false
-        },
-        {
-          "type": "object",
-          "properties": {
-            "kind": {
-              "const": "InputSlider"
-            }
-          },
-          "required": [
-            "kind"
-          ],
-          "additionalProperties": false
-        },
-        {
-          "type": "object",
-          "properties": {
-            "kind": {
-              "const": "InputNote"
-            }
-          },
-          "required": [
-            "kind"
-          ],
-          "additionalProperties": false
-        },
-        {
-          "type": "object",
-          "properties": {
-            "kind": {
-              "const": "InputImage"
-            }
-          },
-          "required": [
-            "kind"
-          ],
-          "additionalProperties": false
-        },
-        {
-          "type": "object",
-          "properties": {
-            "kind": {
-              "const": "Variable"
-            }
-          },
-          "required": [
-            "kind"
-          ],
-          "additionalProperties": false
-        },
-        {
-          "type": "object",
-          "properties": {
-            "kind": {
-              "const": "OutputPreview"
-            }
-          },
-          "required": [
-            "kind"
-          ],
-          "additionalProperties": false
-        },
-        {
-          "type": "object",
-          "properties": {
-            "kind": {
-              "const": "OutputAction"
-            }
-          },
-          "required": [
-            "kind"
-          ],
-          "additionalProperties": false
-        },
-        {
-          "type": "object",
-          "properties": {
-            "kind": {
-              "const": "OutputExport"
-            }
-          },
-          "required": [
-            "kind"
-          ],
-          "additionalProperties": false
-        },
-        {
-          "type": "object",
-          "properties": {
-            "kind": {
-              "const": "Cluster"
-            }
-          },
-          "required": [
-            "kind"
-          ],
-          "additionalProperties": false
-        }
-      ]
+      "$ref": "https://json.schemas.assets.semio-tech.com/os/flow/artifacts/flow/vcs/snapshot.json#/$defs/Widget"
     }
   }
 }

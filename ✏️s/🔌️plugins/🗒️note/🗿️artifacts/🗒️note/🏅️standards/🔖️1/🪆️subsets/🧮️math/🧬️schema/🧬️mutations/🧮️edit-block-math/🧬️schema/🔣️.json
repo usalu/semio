@@ -5,15 +5,52 @@
   "type": "object",
   "additionalProperties": false,
   "required": [
+    "mutation",
     "id",
     "newTex"
   ],
   "properties": {
+    "mutation": {
+      "const": "editBlockMath"
+    },
     "id": {
-      "type": "string"
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Block",
+          "de": "Block"
+        },
+        "description": {
+          "en": "The block this mutation addresses.",
+          "de": "Der Block, den diese Mutation adressiert."
+        },
+        "ref": {
+          "kind": "block",
+          "domain": "blocks",
+          "granularity": "block"
+        },
+        "group": "target",
+        "order": 10
+      }
     },
     "newTex": {
-      "type": "string"
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "multiline",
+        "role": "value",
+        "label": {
+          "en": "Formula",
+          "de": "Formel"
+        },
+        "description": {
+          "en": "TeX source of the formula.",
+          "de": "TeX-Quelltext der Formel."
+        },
+        "group": "content",
+        "order": 20
+      }
     }
   }
 }

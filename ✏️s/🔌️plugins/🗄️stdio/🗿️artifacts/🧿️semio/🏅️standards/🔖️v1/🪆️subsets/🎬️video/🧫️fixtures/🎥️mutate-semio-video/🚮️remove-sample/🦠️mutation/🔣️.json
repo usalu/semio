@@ -1,6 +1,7 @@
 {
   "kind": "remove-sample",
-  "params": {
+  "mutation": {
+    "mutation": "removeSample",
     "streamIndex": 0,
     "index": 0
   },

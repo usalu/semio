@@ -6,14 +6,44 @@
   "additionalProperties": false,
   "required": [
     "index",
-    "cold_formed_member"
+    "coldFormedMember"
   ],
   "properties": {
     "index": {
-      "type": "integer"
+      "type": "integer",
+      "minimum": 0,
+      "x-semio-ui": {
+        "widget": "stepper",
+        "role": "value",
+        "label": {
+          "en": "Position",
+          "de": "Position"
+        },
+        "description": {
+          "en": "Zero-based list position at which the record is inserted.",
+          "de": "Nullbasierte Listenposition, an der der Datensatz eingefügt wird."
+        },
+        "step": 1,
+        "precision": 0,
+        "group": "target",
+        "order": 10
+      }
     },
-    "cold_formed_member": {
-      "type": "object"
+    "coldFormedMember": {
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1993/snapshot.json#/$defs/ColdFormedMember",
+      "x-semio-ui": {
+        "role": "value",
+        "label": {
+          "en": "Cold-formed member",
+          "de": "Kaltprofil-Bauteil"
+        },
+        "description": {
+          "en": "The complete cold-formed member record to insert.",
+          "de": "Der vollständige einzufügende Datensatz des Kaltprofil-Bauteils."
+        },
+        "group": "record",
+        "order": 20
+      }
     }
   }
 }

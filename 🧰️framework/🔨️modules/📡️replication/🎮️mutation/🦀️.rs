@@ -230,6 +230,38 @@ pub trait Mutation<P>: Clone + crate::value::ToValue + crate::value::FromValue {
     fn foreign_steps(&self, _base: &P) -> Vec<ForeignStep> {
         Vec::new()
     }
+    /// 🧬️ Per [`Self::DESCRIPTORS`] row, that leaf's payload JSON Schema (`MutationLeaf::PAYLOAD_SCHEMA`) — the static
+    /// roster of editable inputs a plugin publishes without an operation at hand. `#[derive(Mutations)]` fills it; a
+    /// hand-written projection bridge forwards its source aggregate's.
+    const INPUT_SCHEMAS: &'static [&'static str] = &[];
+    /// 🧬️ The payload JSON Schema of this operation's own leaf, or `None` when its inputs are not editable.
+    /// `#[derive(Mutations)]` answers the wrapped leaf's `MutationLeaf::PAYLOAD_SCHEMA`.
+    fn input_schema(&self) -> Option<&'static str> {
+        None
+    }
+    /// 🧬️ The value [`Self::input_schema`] describes: the leaf payload without any aggregate tag or wrapper, so a
+    /// generic editor never depends on the aggregate's wire layout. The default is the whole value.
+    fn payload_value(&self) -> crate::value::DslValue {
+        self.to_value()
+    }
+    /// 🧬️ Rebuilds this operation's own kind from an edited [`Self::payload_value`]; a value that does not decode as
+    /// that leaf is refused, never reinterpreted as another kind. The default decodes the whole value.
+    fn with_payload_value(&self, value: crate::value::DslValue) -> Result<Self, crate::value::ValueError>
+    where
+        Self: Sized,
+    {
+        Self::from_value(value)
+    }
+    /// 🧬️ Builds the operation of semantic kind `kind` (its leaf descriptor's `semantic_kind`) from its editable payload
+    /// ([`Self::payload_value`]) alone — the constructor a wire witness such as a `🥒️.feature` row decodes through.
+    /// `#[derive(Mutations)]` answers every leaf kind of the aggregate; the default refuses.
+    fn from_payload_value(kind: &str, value: crate::value::DslValue) -> Result<Self, crate::value::ValueError>
+    where
+        Self: Sized,
+    {
+        let _ = value;
+        Err(crate::value::ValueError::new(format!("{kind} has no payload constructor")))
+    }
 }
 //#endregion 🔖️Mutation
 
@@ -924,10 +956,41 @@ const fn mutation_leaf_source_path_matches_direct_or_payload(owner: &str, payloa
         && mutation_leaf_descriptor_bytes_at(value, owner.len() + 1 + payload_facet.len() + 1, filename)
 }
 
-/// 🪪️ Metadata-only ownership contract for a direct mutation leaf.
+/// 🪪️ Ownership contract for a direct mutation leaf, and the editable payload of one of its operations.
 pub trait MutationLeaf {
     const DESCRIPTOR: MutationLeafDescriptor;
     const PROVENANCE: MutationSourceProvenance;
+    /// 🧬️ The leaf's normative payload JSON Schema text (`DESCRIPTOR.payload_schema`, embedded at compile time by
+    /// `#[derive(dsl::MutationLeaf)]`) — the source of its input descriptors (`manifest::mutation_input_defs`).
+    const PAYLOAD_SCHEMA: &'static str;
+    /// 🧬️ [`Self::PAYLOAD_SCHEMA`] when this operation is user-editable, else `None`. A leaf whose type wraps its payload
+    /// in one variant of an enum (`#[mutation_leaf(payload = Apply)]`) is editable only in that variant; its other
+    /// variants (an internal inverse such as `Restore`) are not.
+    fn input_schema(&self) -> Option<&'static str> {
+        Some(Self::PAYLOAD_SCHEMA)
+    }
+    /// 🧬️ The value [`Self::input_schema`] describes: the whole leaf value, or the content of the `payload` variant.
+    fn input_value(&self) -> crate::value::DslValue
+    where
+        Self: crate::value::ToValue,
+    {
+        crate::value::ToValue::to_value(self)
+    }
+    /// 🧬️ Rebuilds this operation from an edited [`Self::input_value`]; an operation that is not editable refuses.
+    fn with_input_value(&self, value: crate::value::DslValue) -> Result<Self, crate::value::ValueError>
+    where
+        Self: Sized + crate::value::FromValue,
+    {
+        <Self as crate::value::FromValue>::from_value(value)
+    }
+    /// 🧬️ A new editable operation of this leaf from its [`Self::input_value`] alone: the whole leaf value, or the content
+    /// of the `payload` variant.
+    fn from_input_value(value: crate::value::DslValue) -> Result<Self, crate::value::ValueError>
+    where
+        Self: Sized + crate::value::FromValue,
+    {
+        <Self as crate::value::FromValue>::from_value(value)
+    }
 }
 //#endregion 🪪️MutationLeaf
 
@@ -1353,6 +1416,58 @@ impl crate::value::FromValue for ForeignStep {
 
 //#region 🔖️Meta
 
+/// 🧾️ The committed tool transaction that authored an operation: `id` is `tx-<hex16>`
+/// ([`TransactionRef::mint`]), `tool` the authoring action/tool id `<appId>#<toolId>`. Every
+/// operation one transaction produced carries the same ref, in the edit ledger and on the wire.
+#[derive(Clone, Debug, PartialEq, Eq, Hash)]
+pub struct TransactionRef {
+    pub id: String,
+    pub tool: String,
+}
+
+impl TransactionRef {
+    /// 🪪️ `tx-{hex16(blake3(actor | hlc | tool))}`: deterministic per author, tick and tool.
+    pub fn mint(actor: &crate::ids::ActorId, timestamp: &crate::ids::HybridLogicalTimestamp, tool: impl Into<String>) -> Self {
+        let tool = tool.into();
+        let mut material = Vec::with_capacity(actor.0.len() + tool.len() + 32);
+        crate::write_str(&mut material, &actor.0);
+        crate::wire::write_varint_u64(&mut material, timestamp.actor);
+        crate::wire::write_varint_u64(&mut material, timestamp.physical_ms);
+        crate::wire::write_varint_u64(&mut material, timestamp.logical);
+        crate::write_str(&mut material, &tool);
+        let digest = crate::wire::RecordHasher::hash(&crate::format::Blake3Hasher, &material);
+        let mut id = String::with_capacity("tx-".len() + 16);
+        id.push_str("tx-");
+        for byte in &digest[..8] {
+            id.push_str(&format!("{byte:02x}"));
+        }
+        Self { id, tool }
+    }
+}
+
+impl crate::value::ToValue for TransactionRef {
+    fn to_value(&self) -> crate::value::DslValue {
+        crate::value::DslValue::object(vec![("id".to_string(), crate::value::ToValue::to_value(&self.id)), ("tool".to_string(), crate::value::ToValue::to_value(&self.tool))])
+    }
+}
+impl crate::value::FromValue for TransactionRef {
+    fn from_value(value: crate::value::DslValue) -> Result<Self, crate::value::ValueError> {
+        let crate::value::DslValue::Object(fields) = value else {
+            return Err(crate::value::ValueError::new(format!("expected an object for TransactionRef, found {value:?}")));
+        };
+        let mut id = None;
+        let mut tool = None;
+        for (key, entry) in fields {
+            match key.as_str() {
+                "id" => id = Some(<String as crate::value::FromValue>::from_value(entry).map_err(|error| error.under("id"))?),
+                "tool" => tool = Some(<String as crate::value::FromValue>::from_value(entry).map_err(|error| error.under("tool"))?),
+                _ => {}
+            }
+        }
+        Ok(TransactionRef { id: id.ok_or_else(|| crate::value::ValueError::new("TransactionRef missing id"))?, tool: tool.ok_or_else(|| crate::value::ValueError::new("TransactionRef missing tool"))? })
+    }
+}
+
 /// 🧾️ Per-operation causal/undo metadata attached to one `Edit` slot. Moved from
 /// `crate::os_store::MutationMeta` (was `vcs/rs/lib.rs` L59) with the id-flavored fields upgraded from bare
 /// `String`/`Option<String>` to the `protocol_core` newtypes and `timestamp` upgraded from
@@ -1396,6 +1511,9 @@ pub struct MutationMeta {
     /// `.🧬semio/🦑️repo/🎫️tickets/26/08/16/PLUGIN-DEPENDENCIES-ARTIFACT-CONTRIBUTIONS-AND-COMPOSITE-MUTATIONS/📋️contract-freeze.md`
     /// §1.
     pub origin: MutationOrigin,
+    /// 🧾️ The committed tool transaction that authored this operation (`None`: authored outside
+    /// any tool transaction). Wire-omitted when `None`, like `group_id`.
+    pub transaction: Option<TransactionRef>,
 }
 
 /// 🌉️ Hand-written, not derived — same DAG reason as the other replication-crate types above.
@@ -1431,6 +1549,9 @@ impl crate::value::ToValue for MutationMeta {
         if !self.origin.is_owner() {
             entries.push(("origin".to_string(), crate::value::ToValue::to_value(&self.origin)));
         }
+        if self.transaction.is_some() {
+            entries.push(("transaction".to_string(), crate::value::ToValue::to_value(&self.transaction)));
+        }
         crate::value::DslValue::object(entries)
     }
 }
@@ -1450,6 +1571,7 @@ impl crate::value::FromValue for MutationMeta {
         let mut label = None;
         let mut group_id = None;
         let mut origin = MutationOrigin::Owner;
+        let mut transaction = None;
         for (key, entry) in fields {
             match key.as_str() {
                 "mutation_id" => mutation_id = <Option<crate::ids::MutationId> as crate::value::FromValue>::from_value(entry).map_err(|error| error.under("mutation_id"))?,
@@ -1463,6 +1585,7 @@ impl crate::value::FromValue for MutationMeta {
                 "label" => label = <Option<String> as crate::value::FromValue>::from_value(entry).map_err(|error| error.under("label"))?,
                 "group_id" => group_id = <Option<String> as crate::value::FromValue>::from_value(entry).map_err(|error| error.under("group_id"))?,
                 "origin" => origin = <MutationOrigin as crate::value::FromValue>::from_value(entry).map_err(|error| error.under("origin"))?,
+                "transaction" => transaction = <Option<TransactionRef> as crate::value::FromValue>::from_value(entry).map_err(|error| error.under("transaction"))?,
                 _ => {}
             }
         }
@@ -1478,6 +1601,7 @@ impl crate::value::FromValue for MutationMeta {
             label,
             group_id,
             origin,
+            transaction,
         })
     }
 }
@@ -1574,6 +1698,10 @@ impl<Op: crate::value::FromValue> crate::value::FromValue for Edit<Op> {
         })
     }
 }
+
+#[cfg(test)]
+#[path = "🧪️tests/🧪️transaction-ref/🦀️.rs"]
+mod transaction_ref_tests;
 //#endregion 🔖️Meta
 
 //#region 🔖️Origin

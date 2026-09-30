@@ -5,11 +5,30 @@
   "type": "object",
   "additionalProperties": false,
   "required": [
+    "mutation",
     "targetUri"
   ],
   "properties": {
+    "mutation": {
+      "const": "connectReferencedModel"
+    },
     "targetUri": {
-      "type": "string"
+      "type": "string",
+      "pattern": "^[^!]+![^@]+@[\\s\\S]+/[^/]+$",
+      "x-semio-ui": {
+        "widget": "text",
+        "role": "value",
+        "label": {
+          "en": "Referenced model",
+          "de": "Referenziertes Modell"
+        },
+        "description": {
+          "en": "Artifact reference of the model that supplies the geometry, e.g. doc!s.stdio.semio@v1/model.",
+          "de": "Artefaktverweis auf das Modell, das die Geometrie liefert, z. B. doc!s.stdio.semio@v1/model."
+        },
+        "group": "source",
+        "order": 10
+      }
     }
   }
 }

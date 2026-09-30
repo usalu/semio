@@ -18,7 +18,7 @@ pub mod board_host {
         snap_region_scalar, snap_transform_angle, transform_pivot_of,
         transform_ring_angle_delta, transform_ring_hit, transform_ring_radius_world, ActiveUtility, BoardElementStyleKind, CachedIconBody, CachedIconPaintLease, CanvasPalette, CompatSpecificity, EdgeData, EdgeDescJson, EdgeKindDef,
         EdgeStrokePattern, EdgeTipDef, REGION_GRIP_PX, REGION_LABEL_INSET_PX, REGION_MIN_EXTENT_WORLD, TRANSFORM_RING_HIT_TOLERANCE_PX,
-        EdgeTipGeometry, FixtureJson, GraphPortMode, HandleData, HandleDescJson, HandleKindDef, IconPaintCache, Interaction, LinkCompatRule, NodeData, NodeDescJson, NodeKindDef, NodeKindHandleTemplate, NodeShape, RegionData, RegionDescJson,
+        EdgeTipGeometry, FixtureJson, GestureStage, GraphPortMode, HandleData, HandleDescJson, HandleKindDef, IconPaintCache, Interaction, LinkCompatRule, NodeData, NodeDescJson, NodeKindDef, NodeKindHandleTemplate, NodeShape, RegionData, RegionDescJson,
         RegionGrip, SceneDescriptorJson, SelectionOptions, TransformGumballFlags, WireData, WireKindDef,
     };
     use crate::infinite::canvas::camera::Camera;
@@ -1534,6 +1534,7 @@ pub mod board_host {
     /// cancel restores the exact pre-gesture geometry.
     #[derive(Clone, Debug)]
     struct BoardTransformDrag {
+        gesture: GestureStage,
         pivot: Point,
         grab: Point,
         radius_world: f64,
@@ -1547,11 +1548,13 @@ pub mod board_host {
     /// cancel restores the exact pre-gesture rectangle.
     #[derive(Clone, Debug)]
     struct BoardRegionDrag {
+        gesture: GestureStage,
         id: String,
         grip: RegionGrip,
         grab: Point,
         start_bounds: [f64; 4],
         bounds: [f64; 4],
+        delta: Vec2,
     }
 
     /// 🖍️ A live area-brush paint: the grid-snapped anchor and the corner the pointer is at. A release
@@ -1590,13 +1593,15 @@ pub mod board_host {
     pub const BOARD_EVENT_PAYLOAD_BYTE_CAPACITY: usize = 16 * 1024;
     pub const BOARD_EVENT_KEY_BYTE_CAPACITY: usize = 256;
 
+    /// 🏷️ Every row kind the board engine publishes. `NodeMove` and `TransformPreview` are live-preview
+    /// frames hosts mirror into sibling panes and never dispatch; a finished pointer gesture is ONE `Gesture`
+    /// record (drag, rotate), riding one batch with the `select` row its press staged.
     #[derive(Clone, Copy, Debug, PartialEq, Eq)]
     pub enum BoardEventKind {
         Camera,
         NodeMove,
-        NodeDragEnd,
-        NodeRotate,
         TransformPreview,
+        Gesture,
         Select,
         Preselect,
         PreselectCancel,
@@ -1612,18 +1617,39 @@ pub mod board_host {
         IndirectConnect,
         ProximityConnect,
         RegionCreate,
-        RegionMove,
         RegionResize,
     }
 
     impl BoardEventKind {
+        pub const ALL: [Self; 20] = [
+            Self::Camera,
+            Self::NodeMove,
+            Self::TransformPreview,
+            Self::Gesture,
+            Self::Select,
+            Self::Preselect,
+            Self::PreselectCancel,
+            Self::Hover,
+            Self::BrushPreview,
+            Self::BrushCandidates,
+            Self::BrushPlace,
+            Self::LinkCompatibleNodes,
+            Self::LinkTargetRing,
+            Self::EdgeCreate,
+            Self::EdgeDelete,
+            Self::NodeDelete,
+            Self::IndirectConnect,
+            Self::ProximityConnect,
+            Self::RegionCreate,
+            Self::RegionResize,
+        ];
+
         pub fn name(self) -> &'static str {
             match self {
                 Self::Camera => "camera",
                 Self::NodeMove => "nodeMove",
-                Self::NodeDragEnd => "nodeDragEnd",
-                Self::NodeRotate => "nodeRotate",
                 Self::TransformPreview => "transformPreview",
+                Self::Gesture => "gesture",
                 Self::Select => "select",
                 Self::Preselect => "preselect",
                 Self::PreselectCancel => "preselectCancel",
@@ -1639,10 +1665,22 @@ pub mod board_host {
                 Self::IndirectConnect => "indirectConnect",
                 Self::ProximityConnect => "proximityConnect",
                 Self::RegionCreate => "regionCreate",
-                Self::RegionMove => "regionMove",
                 Self::RegionResize => "regionResize",
             }
         }
+
+        /// 🔎️ The kind a row `name` spells, `None` for a name the engine never publishes.
+        pub fn parse(name: &str) -> Option<Self> {
+            Self::ALL.into_iter().find(|kind| kind.name() == name)
+        }
+    }
+
+    /// 🎬️ What one released pointer gesture did, in its record's own terms: a drag by one offset, or a
+    /// rotation by `angle` radians (counter-clockwise) about `pivot`.
+    #[derive(Clone, Copy, Debug, PartialEq)]
+    pub enum BoardGestureMotion {
+        Drag { dx: f64, dy: f64 },
+        Rotate { pivot: Point, angle: f64 },
     }
 
     #[derive(Debug, PartialEq, Eq)]
@@ -1960,14 +1998,91 @@ pub mod board_host {
             payload.finish(BoardEventKind::NodeMove, Some(id))
         }
 
-        fn node_drag_end<'a>(moves: impl IntoIterator<Item = (&'a str, f64, f64)>) -> Result<Self, BoardEventFault> {
-            Self::moves_row(BoardEventKind::NodeDragEnd, moves)
-        }
-
         /// 🔄️ The live rotate-ring frame as resolved positions — a TRANSIENT row hosts mirror into
         /// sibling panes and drop before dispatch, so a drag previews everywhere and still commits once.
         fn transform_preview<'a>(moves: impl IntoIterator<Item = (&'a str, f64, f64)>) -> Result<Self, BoardEventFault> {
             Self::moves_row(BoardEventKind::TransformPreview, moves)
+        }
+
+        /// 🕹️ The selection a gesture's press staged, published at its release. `gesture_id` tags it when the
+        /// release also carries the gesture record, so both leave as one dispatch.
+        fn staged_select(ids: &[String], merge: Option<&str>, gesture_id: Option<&str>) -> Result<Self, BoardEventFault> {
+            if ids.len() > BOARD_POINTER_ITEM_CAPACITY {
+                return Err(BoardEventFault::ItemCredits);
+            }
+            let mut payload = BoardPayloadBuilder::new();
+            payload.raw("{\"ids\":")?;
+            payload.string_array(ids.iter().map(String::as_str))?;
+            payload.raw(",\"exitHighlightIds\":[]")?;
+            if let Some(merge) = merge {
+                payload.raw(",\"gestureMergeMode\":")?;
+                payload.string(merge)?;
+            }
+            if let Some(gesture_id) = gesture_id {
+                payload.raw(",\"gestureId\":")?;
+                payload.string(gesture_id)?;
+            }
+            payload.raw("}")?;
+            payload.finish(BoardEventKind::Select, None)
+        }
+
+        /// 🎬️ ONE finished pointer gesture: its id, kind, the ids it acted on, its motion and the proximity
+        /// handle pairs it recorded — never positions, so the record is a parametric input a guest can yield
+        /// as one editable mutation.
+        fn gesture<'a>(gesture_id: &str, targets: impl IntoIterator<Item = &'a str>, motion: BoardGestureMotion, proximity: &[(String, String)]) -> Result<Self, BoardEventFault> {
+            let mut payload = BoardPayloadBuilder::new();
+            payload.raw("{\"gestureId\":")?;
+            payload.string(gesture_id)?;
+            payload.raw(",\"kind\":")?;
+            payload.string(match motion {
+                BoardGestureMotion::Drag { .. } => "drag",
+                BoardGestureMotion::Rotate { .. } => "rotate",
+            })?;
+            payload.raw(",\"targets\":[")?;
+            let mut count = 0usize;
+            for id in targets {
+                if count == BOARD_POINTER_ITEM_CAPACITY {
+                    return Err(BoardEventFault::ItemCredits);
+                }
+                if count > 0 {
+                    payload.raw(",")?;
+                }
+                payload.string(id)?;
+                count += 1;
+            }
+            if count == 0 {
+                return Err(BoardEventFault::Schema);
+            }
+            payload.raw("]")?;
+            match motion {
+                BoardGestureMotion::Drag { dx, dy } => {
+                    payload.raw(",\"dx\":")?;
+                    payload.number(dx)?;
+                    payload.raw(",\"dy\":")?;
+                    payload.number(dy)?;
+                }
+                BoardGestureMotion::Rotate { pivot, angle } => {
+                    payload.raw(",\"pivotX\":")?;
+                    payload.number(pivot.x)?;
+                    payload.raw(",\"pivotY\":")?;
+                    payload.number(pivot.y)?;
+                    payload.raw(",\"angle\":")?;
+                    payload.number(angle)?;
+                }
+            }
+            payload.raw(",\"proximity\":[")?;
+            for (index, (source, target)) in proximity.iter().enumerate() {
+                if index > 0 {
+                    payload.raw(",")?;
+                }
+                payload.raw("{\"source\":")?;
+                payload.string(source)?;
+                payload.raw(",\"target\":")?;
+                payload.string(target)?;
+                payload.raw("}")?;
+            }
+            payload.raw("]}")?;
+            payload.finish(BoardEventKind::Gesture, None)
         }
 
         fn moves_row<'a>(kind: BoardEventKind, moves: impl IntoIterator<Item = (&'a str, f64, f64)>) -> Result<Self, BoardEventFault> {
@@ -1997,36 +2112,6 @@ pub mod board_host {
             payload.finish(kind, None)
         }
 
-        /// 🔄️ The whole rotate gesture as ONE row: every id the ring turned, the absolute delta in
-        /// radians and the pivot it turned about. A drag never streams rows — the in-canvas preview
-        /// is engine-local and only the release reaches the document, so one gesture is one edit.
-        fn node_rotate<'a>(ids: impl IntoIterator<Item = &'a str>, radians: f64, pivot: Point) -> Result<Self, BoardEventFault> {
-            let mut payload = BoardPayloadBuilder::new();
-            payload.raw("{\"ids\":[")?;
-            let mut count = 0usize;
-            for id in ids {
-                if count == BOARD_POINTER_ITEM_CAPACITY {
-                    return Err(BoardEventFault::ItemCredits);
-                }
-                if count > 0 {
-                    payload.raw(",")?;
-                }
-                payload.string(id)?;
-                count += 1;
-            }
-            if count == 0 {
-                return Err(BoardEventFault::Schema);
-            }
-            payload.raw("],\"radians\":")?;
-            payload.number(radians)?;
-            payload.raw(",\"pivot\":{\"x\":")?;
-            payload.number(pivot.x)?;
-            payload.raw(",\"y\":")?;
-            payload.number(pivot.y)?;
-            payload.raw("}}")?;
-            payload.finish(BoardEventKind::NodeRotate, None)
-        }
-
         /// 🎯️ One painted target region, as the normalized rectangle the brush released on. The id is
         /// minted by the document, never here — the engine paints geometry, the guest owns identity.
         fn region_create(bounds: [f64; 4]) -> Result<Self, BoardEventFault> {
@@ -2041,20 +2126,6 @@ pub mod board_host {
             payload.number(bounds[3] - bounds[1])?;
             payload.raw("}")?;
             payload.finish(BoardEventKind::RegionCreate, None)
-        }
-
-        /// 🚚️ A region body drag committed on release: the new minimum corner only, so a move never
-        /// re-states an extent it did not touch.
-        fn region_move(id: &str, bounds: [f64; 4]) -> Result<Self, BoardEventFault> {
-            let mut payload = BoardPayloadBuilder::new();
-            payload.raw("{\"id\":")?;
-            payload.string(id)?;
-            payload.raw(",\"x\":")?;
-            payload.number(bounds[0])?;
-            payload.raw(",\"y\":")?;
-            payload.number(bounds[1])?;
-            payload.raw("}")?;
-            payload.finish(BoardEventKind::RegionMove, Some(id))
         }
 
         /// 📐️ A region grip drag committed on release: corner AND extent, because a west/north grip
@@ -2535,6 +2606,8 @@ pub mod board_host {
         area_brush_extent: (f64, f64),
         pub port_mode: GraphPortMode,
         interaction_revision: u64,
+        /// 🪪️ Serial of the last pointer gesture opened ([`GestureStage::id`] is `gesture-<serial>`).
+        gesture_serial: u64,
         pending_delete_planning: Option<BoardDeletePlanningOperation>,
         pending_delete_operation: Option<BoardDeleteOperation>,
         pending_pointer_commit: Option<BoardPointerCommitOperation>,
@@ -3450,7 +3523,7 @@ pub mod board_host {
         pub fn event_count(&self) -> usize {
             match self.kind {
                 BoardPointerPlanKind::FinishPan { .. } => 1,
-                BoardPointerPlanKind::FinishDrag => usize::from(self.delta_len).min(1),
+                BoardPointerPlanKind::FinishDrag => usize::from(self.output_len > 2),
                 BoardPointerPlanKind::SelectionPreview { .. } | BoardPointerPlanKind::SelectionCommit => 1,
                 BoardPointerPlanKind::LinkMove { .. } => usize::from(self.output_len > 2),
                 BoardPointerPlanKind::LinkFinish { .. } => usize::from(self.output_len > 2),
@@ -3526,34 +3599,6 @@ pub mod board_host {
                     output.push_str(&camera[2].to_string());
                     output.push_str("}}]");
                 }
-                BoardPointerPlanKind::FinishDrag if self.delta_len > 0 => {
-                    let mut admitted_bytes = 64usize;
-                    for index in 0..usize::from(self.delta_len) {
-                        let delta = self.deltas[index].expect("bounded board delta");
-                        admitted_bytes = admitted_bytes.checked_add(board_json_string_bytes(self.id(delta.id))).and_then(|bytes| bytes.checked_add(96)).ok_or(BoardPointerPlanFault::ByteCredits)?;
-                    }
-                    if admitted_bytes > BOARD_POINTER_BYTE_CAPACITY {
-                        return Err(BoardPointerPlanFault::ByteCredits);
-                    }
-                    output.push_str("[{\"name\":\"nodeDragEnd\",\"payload\":{\"moves\":[");
-                    for index in 0..usize::from(self.delta_len) {
-                        let delta = self.deltas[index].expect("bounded board delta");
-                        if index > 0 {
-                            output.push(',');
-                        }
-                        output.push_str("{\"id\":");
-                        write_json_string(output, self.id(delta.id));
-                        output.push_str(",\"x\":");
-                        output.push_str(&delta.x.to_string());
-                        output.push_str(",\"y\":");
-                        output.push_str(&delta.y.to_string());
-                        output.push('}');
-                        if output.len() > BOARD_POINTER_BYTE_CAPACITY {
-                            return Err(BoardPointerPlanFault::ByteCredits);
-                        }
-                    }
-                    output.push_str("]}}]");
-                }
                 _ => output.push_str("[]"),
             }
             if output.len() > BOARD_POINTER_BYTE_CAPACITY {
@@ -3562,25 +3607,6 @@ pub mod board_host {
             Ok(())
         }
 
-    }
-
-    fn write_json_string(output: &mut String, value: &str) {
-        output.push('"');
-        for character in value.chars() {
-            match character {
-                '"' => output.push_str("\\\""),
-                '\\' => output.push_str("\\\\"),
-                '\n' => output.push_str("\\n"),
-                '\r' => output.push_str("\\r"),
-                '\t' => output.push_str("\\t"),
-                character if character <= '\u{1f}' => {
-                    use std::fmt::Write;
-                    let _ = write!(output, "\\u{:04x}", character as u32);
-                }
-                character => output.push(character),
-            }
-        }
-        output.push('"');
     }
 
     fn board_json_string_bytes(value: &str) -> usize {
@@ -3695,6 +3721,7 @@ pub mod board_host {
                 area_brush_extent: (REGION_DEFAULT_BRUSH_EXTENT_WORLD, REGION_DEFAULT_BRUSH_EXTENT_WORLD),
                 port_mode: GraphPortMode::Ported,
                 interaction_revision: 0,
+                gesture_serial: 0,
                 pending_delete_planning: None,
                 pending_delete_operation: None,
                 pending_pointer_commit: None,
@@ -3822,11 +3849,16 @@ pub mod board_host {
                     self.interaction = Interaction::None;
                     true
                 }
-                Interaction::DragNodes { primary_id, start_positions, proximity_pair, .. } => {
+                Interaction::DragNodes { primary_id, start_positions, proximity_pair, gesture, .. } => {
                     if let Some((id, _)) = start_positions.pop_first() {
                         drop(id);
                         return false;
                     }
+                    if let Some(id) = gesture.select.as_mut().and_then(|(ids, _)| ids.pop()).or_else(|| gesture.restore.as_mut().and_then(BTreeSet::pop_first)) {
+                        drop(id);
+                        return false;
+                    }
+                    drop(std::mem::take(gesture));
                     if let Some((left, right)) = proximity_pair.take() {
                         if right.is_empty() {
                             drop(left);
@@ -3970,8 +4002,11 @@ pub mod board_host {
                         self.push_close_string(key);
                         self.push_close_string(value.id);
                         self.push_close_optional_string(value.label);
+                    } else if let Some(id) = self.region_drag.as_mut().and_then(|drag| drag.gesture.restore.as_mut()).and_then(BTreeSet::pop_first) {
+                        self.push_close_string(id);
                     } else if let Some(drag) = self.region_drag.take() {
                         self.push_close_string(drag.id);
+                        self.push_close_string(drag.gesture.id);
                     } else {
                         self.region_paint = None;
                         self.close_phase = BoardHostClosePhase::Selection;
@@ -8034,17 +8069,94 @@ pub mod board_host {
             }
         }
 
-        /// 🏁️ Emits final node coordinates after a drag gesture so hosts can commit declarative fixture state once.
-        fn push_node_drag_end_events(&mut self, start_positions: &BTreeMap<String, (f64, f64)>) {
-            if !start_positions.keys().any(|id| self.nodes.contains_key(id)) {
+        //#region 🎬️Gestures
+        /// 🪪️ Opens the next pointer gesture: a fresh id, nothing staged yet.
+        fn begin_gesture(&mut self) -> GestureStage {
+            self.gesture_serial = self.gesture_serial.wrapping_add(1);
+            GestureStage { id: format!("gesture-{}", self.gesture_serial), select: None, restore: None }
+        }
+
+        /// 🕹️ Applies a press's selection change to the engine at once and stages its `select` row on
+        /// `gesture`, keeping the pre-press selection for a cancel. An unchanged selection stages nothing.
+        fn stage_selection_ids(&mut self, gesture: &mut GestureStage, ids: &[String], merge: Option<&str>) {
+            let next: BTreeSet<String> = ids.iter().cloned().collect();
+            if next == self.selection {
                 return;
             }
-            let event = BoardOwnedEvent::node_drag_end(start_positions.keys().filter_map(|id| self.nodes.get(id).map(|node| (id.as_str(), node.x, node.y))));
-            let Some(reservation) = self.reserve_owned_event(event) else {
+            let previous = std::mem::replace(&mut self.selection, next);
+            gesture.restore.get_or_insert(previous);
+            gesture.select = Some((Self::sorted_selection_ids(&self.selection), merge.map(str::to_string)));
+            self.preselect.clear();
+            self.preselect_removed.clear();
+            self.last_preselect_emit_sig = None;
+            self.last_select_emit_sig = None;
+            self.selection_exit_highlight.clear();
+            self.sync_selection_flags_to_objects();
+        }
+
+        /// ↩️ Restores the selection a cancelled gesture's press staged; nothing is published.
+        fn restore_gesture_selection(&mut self, gesture: GestureStage) {
+            let Some(restore) = gesture.restore else {
                 return;
             };
-            self.publish_event_reservation(reservation);
+            self.selection = restore;
+            self.selection_exit_highlight.clear();
+            self.sync_selection_flags_to_objects();
+            self.bump_content_scene_generation();
         }
+
+        /// 🏁️ The rows one released gesture publishes: its staged `select` (tagged with the gesture id when a
+        /// record follows) and the record itself — `(None, None)` for a release that changed nothing.
+        fn gesture_release_events(gesture: &GestureStage, record: Option<Result<BoardOwnedEvent, BoardEventFault>>) -> [Option<Result<BoardOwnedEvent, BoardEventFault>>; 2] {
+            let tag = record.is_some().then_some(gesture.id.as_str());
+            [gesture.select.as_ref().map(|(ids, merge)| BoardOwnedEvent::staged_select(ids, merge.as_deref(), tag)), record]
+        }
+
+        /// 🏁️ Publishes one released gesture as ONE batch, so a host flushes `select` and the record together.
+        fn publish_gesture_release(&mut self, gesture: &GestureStage, record: Option<Result<BoardOwnedEvent, BoardEventFault>>) {
+            let (first, second) = match Self::gesture_release_events(gesture, record) {
+                [Some(select), record] => (select, record),
+                [None, Some(record)] => (record, None),
+                [None, None] => return,
+            };
+            if let Some(reservation) = self.reserve_owned_batch(first, second) {
+                self.publish_event_batch(reservation);
+            }
+        }
+
+        /// 🎬️ The drag record of `start_positions` moved by `delta`, `None` for a release that never moved.
+        fn drag_gesture_record(gesture: &GestureStage, start_positions: &BTreeMap<String, (f64, f64)>, delta: Vec2, proximity_pair: Option<&(String, String)>) -> Option<Result<BoardOwnedEvent, BoardEventFault>> {
+            if (delta.x == 0.0 && delta.y == 0.0) || start_positions.is_empty() {
+                return None;
+            }
+            Some(BoardOwnedEvent::gesture(&gesture.id, start_positions.keys().map(String::as_str), BoardGestureMotion::Drag { dx: delta.x, dy: delta.y }, proximity_pair.map(std::slice::from_ref).unwrap_or_default()))
+        }
+
+        /// 🧲️ The common offset a drag of `start_positions` grabbed at `offset` reaches at `world`, snapped to the grid
+        /// when snapping is on — the one rule the live preview, the release record and the wgpu plan all share.
+        fn drag_delta(&self, world: Point, primary_id: &str, offset: Vec2, start_positions: &BTreeMap<String, (f64, f64)>) -> Option<Vec2> {
+            let (px0, py0) = start_positions.get(primary_id).copied()?;
+            let (nx, ny) = (world.x - offset.x, world.y - offset.y);
+            let (tx, ty) = if self.grid_snap_enabled { self.snap_world_pair(nx, ny) } else { (nx, ny) };
+            Some(Vec2::new(tx - px0, ty - py0))
+        }
+        /// ↩️ Abandons a live node drag with zero trace: every member returns to its grab-time position, the
+        /// press's staged selection is undone, and nothing reaches the document. The restored positions go out as
+        /// transient `nodeMove` preview rows only, so sibling panes that mirrored the drag snap back too.
+        fn cancel_node_drag(&mut self, start_positions: BTreeMap<String, (f64, f64)>, gesture: GestureStage) {
+            for (id, (x, y)) in &start_positions {
+                if let Some(node) = self.nodes.get_mut(id) {
+                    node.x = *x;
+                    node.y = *y;
+                    if let Ok(reservation) = BoardOwnedEvent::node_move(id, *x, *y).map_err(|_| ()).and_then(|event| self.events.reserve_event(event).map_err(|_| ())) {
+                        self.publish_event_reservation(reservation);
+                    }
+                }
+            }
+            self.restore_gesture_selection(gesture);
+            self.bump_content_scene_generation();
+        }
+        //#endregion 🎬️Gestures
 
         #[cfg(test)]
         pub fn drain_events_json(&mut self) -> String {
@@ -12105,7 +12217,7 @@ pub mod board_host {
                     let camera = [origin.x - delta.x / origin.zoom, origin.y - delta.y / origin.zoom, origin.zoom];
                     Ok(BoardPointerPlan::empty(self.interaction_revision, BoardPointerPlanKind::Pan { camera }))
                 }
-                (BoardPointerPhase::Move, Interaction::DragNodes { primary_id, offset, start_positions, .. }) => self.plan_drag_pointer(world, primary_id, *offset, start_positions, BoardPointerPlanKind::DragMove),
+                (BoardPointerPhase::Move, Interaction::DragNodes { primary_id, offset, start_positions, .. }) => self.plan_drag_pointer(world, (primary_id, *offset, start_positions), None),
                 (_, Interaction::SelectionPending { initial_ids, start, start_screen }) => self.plan_selection_pending_pointer(intent, initial_ids, *start, *start_screen, screen, world),
                 (_, Interaction::Selection { initial_ids, points, screen_points, start, start_screen }) => self.plan_selection_pointer(intent, initial_ids, points, screen_points, *start, *start_screen, screen, world),
                 (BoardPointerPhase::Move, Interaction::LinkAtSourceHandle { source_id, start_screen }) => self.plan_link_move_pointer(source_id, Some(*start_screen), screen, world),
@@ -12123,34 +12235,28 @@ pub mod board_host {
                     plan.seal_events()?;
                     Ok(plan)
                 }
-                (BoardPointerPhase::Up, Interaction::DragNodes { primary_id, offset, start_positions, .. }) => self.plan_drag_pointer(world, primary_id, *offset, start_positions, BoardPointerPlanKind::FinishDrag),
+                (BoardPointerPhase::Up, Interaction::DragNodes { primary_id, offset, start_positions, proximity_pair, gesture, .. }) => self.plan_drag_pointer(world, (primary_id, *offset, start_positions), Some((gesture, proximity_pair.as_ref()))),
                 (BoardPointerPhase::Up, Interaction::None) => Ok(BoardPointerPlan::empty(self.interaction_revision, BoardPointerPlanKind::Idle)),
                 (BoardPointerPhase::Leave, Interaction::None) => self.plan_hover_pointer(None),
                 (BoardPointerPhase::Leave, _) => Ok(BoardPointerPlan::empty(self.interaction_revision, BoardPointerPlanKind::Idle)),
             }
         }
 
-        fn plan_drag_pointer(&self, world: Point, primary_id: &str, offset: Vec2, start_positions: &BTreeMap<String, (f64, f64)>, kind: BoardPointerPlanKind) -> Result<BoardPointerPlan, BoardPointerPlanFault> {
+        /// 🧲️ A drag frame (`DragMove`) or its release (`FinishDrag`) as a retained plan: every member's resolved
+        /// position, and for the release the staged `select` plus the ONE gesture record, sealed as one page.
+        fn plan_drag_pointer(&self, world: Point, drag: (&str, Vec2, &BTreeMap<String, (f64, f64)>), release: Option<(&GestureStage, Option<&(String, String)>)>) -> Result<BoardPointerPlan, BoardPointerPlanFault> {
+            let (primary_id, offset, start_positions) = drag;
             if start_positions.len() > BOARD_POINTER_ITEM_CAPACITY {
                 return Err(BoardPointerPlanFault::ItemCredits);
             }
-            let Some((px0, py0)) = start_positions.get(primary_id).copied() else {
-                return Err(BoardPointerPlanFault::Unsupported);
-            };
-            let nx = world.x - offset.x;
-            let ny = world.y - offset.y;
-            let (dx, dy) = if self.grid_snap_enabled {
-                let (snx, sny) = self.snap_world_pair(nx, ny);
-                (snx - px0, sny - py0)
-            } else {
-                (nx - px0, ny - py0)
-            };
-            let mut plan = BoardPointerPlan::empty(self.interaction_revision, kind);
+            let delta = self.drag_delta(world, primary_id, offset, start_positions).ok_or(BoardPointerPlanFault::Unsupported)?;
+            let mut plan = BoardPointerPlan::empty(self.interaction_revision, if release.is_some() { BoardPointerPlanKind::FinishDrag } else { BoardPointerPlanKind::DragMove });
             for (id, (x, y)) in start_positions {
-                plan.push_delta(id, x + dx, y + dy)?;
+                plan.push_delta(id, x + delta.x, y + delta.y)?;
             }
-            if matches!(kind, BoardPointerPlanKind::FinishDrag) {
-                plan.seal_events()?;
+            if let Some((gesture, proximity_pair)) = release {
+                let [select, record] = Self::gesture_release_events(gesture, Self::drag_gesture_record(gesture, start_positions, delta, proximity_pair));
+                plan.seal_optional_events(&[select.transpose().map_err(|_| BoardPointerPlanFault::ByteCredits)?, record.transpose().map_err(|_| BoardPointerPlanFault::ByteCredits)?])?;
             }
             Ok(plan)
         }
@@ -12559,16 +12665,16 @@ pub mod board_host {
                         let nid = hid.clone();
                         let nx = node.x;
                         let ny = node.y;
+                        let mut gesture = self.begin_gesture();
                         let members_before: Vec<String> = self.selection.iter().filter(|id| self.nodes.get(*id).is_some_and(|n| n.draggable)).cloned().collect();
                         let drag_group_before = members_before.contains(&nid) && members_before.len() > 1;
                         let force_pick_merge = (pick_mode == "replace" && !drag_group_before) || pick_mode == "subtractive" || (pick_mode == "invertive" && merge_from_modifiers);
                         if !drag_group_before || force_pick_merge {
                             let next = merge_pick_into_selection(&self.selection, &nid, pick_mode.as_str());
                             let ids: Vec<_> = next.iter().cloned().collect();
-                            let gesture = merge_from_modifiers.then_some(pick_mode.as_str());
-                            self.set_selection_ids_gestured(&ids, gesture);
+                            self.stage_selection_ids(&mut gesture, &ids, merge_from_modifiers.then_some(pick_mode.as_str()));
                         }
-                        let members: Vec<String> = self.selection.iter().filter(|id| self.nodes.get(*id).is_some_and(|n| n.draggable)).cloned().collect();
+                        let members: Vec<String> = self.selection.iter().filter(|id| self.nodes.get(*id).is_some_and(|n| n.draggable && !n.locked)).cloned().collect();
                         let drag_group = members.contains(&nid) && members.len() > 1;
                         let mut start_positions = BTreeMap::new();
                         for id in if drag_group { members.as_slice() } else { std::slice::from_ref(&nid) } {
@@ -12576,7 +12682,7 @@ pub mod board_host {
                                 start_positions.insert(id.clone(), (n.x, n.y));
                             }
                         }
-                        self.interaction = Interaction::DragNodes { primary_id: nid, offset: world - Point::new(nx, ny), start_positions, proximity_pair: None };
+                        self.interaction = Interaction::DragNodes { primary_id: nid, offset: world - Point::new(nx, ny), start_positions, proximity_pair: None, gesture, delta: Vec2::ZERO };
                         self.set_hovered_id(hit);
                         return;
                     }
@@ -12655,45 +12761,33 @@ pub mod board_host {
                 return;
             }
             match std::mem::replace(&mut self.interaction, Interaction::None) {
-                Interaction::DragNodes { primary_id, offset, start_positions, proximity_pair: retained_proximity_pair } => {
-                    let start_positions_cloned = start_positions.clone();
-                    let (px0, py0) = start_positions.get(&primary_id).copied().unwrap_or((0.0, 0.0));
-                    let nx = world.x - offset.x;
-                    let ny = world.y - offset.y;
-                    let mut dx = nx - px0;
-                    let mut dy = ny - py0;
-                    if self.grid_snap_enabled {
-                        let (snx, sny) = self.snap_world_pair(nx, ny);
-                        dx = snx - px0;
-                        dy = sny - py0;
-                    }
+                Interaction::DragNodes { primary_id, offset, start_positions, proximity_pair: retained_proximity_pair, gesture, delta: retained_delta } => {
+                    let Some(delta) = self.drag_delta(world, &primary_id, offset, &start_positions) else {
+                        self.interaction = Interaction::DragNodes { primary_id, offset, start_positions, proximity_pair: retained_proximity_pair, gesture, delta: retained_delta };
+                        return;
+                    };
                     let mut event_count = 0usize;
                     let mut event_bytes = 0usize;
                     for (id, (ox0, oy0)) in &start_positions {
                         if self.nodes.contains_key(id) {
                             event_count += 1;
-                            let Some(bytes) = board_node_move_owned_bytes(id, ox0 + dx, oy0 + dy) else {
+                            let Some(total) = board_node_move_owned_bytes(id, ox0 + delta.x, oy0 + delta.y).and_then(|bytes| event_bytes.checked_add(bytes)) else {
                                 self.event_schema_fault = true;
-                                self.interaction = Interaction::DragNodes { primary_id, offset, start_positions: start_positions_cloned, proximity_pair: retained_proximity_pair };
-                                return;
-                            };
-                            let Some(total) = event_bytes.checked_add(bytes) else {
-                                self.event_schema_fault = true;
-                                self.interaction = Interaction::DragNodes { primary_id, offset, start_positions: start_positions_cloned, proximity_pair: retained_proximity_pair };
+                                self.interaction = Interaction::DragNodes { primary_id, offset, start_positions, proximity_pair: retained_proximity_pair, gesture, delta: retained_delta };
                                 return;
                             };
                             event_bytes = total;
                         }
                     }
                     if self.events.reserve(event_count, event_bytes).is_err() {
-                        self.interaction = Interaction::DragNodes { primary_id, offset, start_positions: start_positions_cloned, proximity_pair: retained_proximity_pair };
+                        self.interaction = Interaction::DragNodes { primary_id, offset, start_positions, proximity_pair: retained_proximity_pair, gesture, delta: retained_delta };
                         return;
                     }
                     let mut geometry_changed = false;
                     for (id, (ox0, oy0)) in &start_positions {
                         if let Some(n) = self.nodes.get_mut(id) {
-                            let mx = ox0 + dx;
-                            let my = oy0 + dy;
+                            let mx = ox0 + delta.x;
+                            let my = oy0 + delta.y;
                             if (n.x - mx).abs() > 1e-9 || (n.y - my).abs() > 1e-9 {
                                 geometry_changed = true;
                             }
@@ -12707,7 +12801,7 @@ pub mod board_host {
                         self.bump_content_scene_generation();
                     }
                     let proximity_pair = if start_positions.len() == 1 { self.node_drag_proximity_handle_pair(primary_id.as_str()) } else { None };
-                    self.interaction = Interaction::DragNodes { primary_id, offset, start_positions: start_positions_cloned, proximity_pair };
+                    self.interaction = Interaction::DragNodes { primary_id, offset, start_positions, proximity_pair, gesture, delta };
                 }
                 Interaction::Pan { origin, start_screen } => {
                     let delta = screen - start_screen;
@@ -12850,14 +12944,9 @@ pub mod board_host {
                     self.clear_link_gesture_events();
                     self.update_hover_from_world(world);
                 }
-                Interaction::DragNodes { start_positions, proximity_pair: Some((src, tgt)), .. } => {
-                    let _ = self.try_commit_link_edge(&src, &tgt, Some(BoardEventKind::ProximityConnect));
-                    self.push_node_drag_end_events(&start_positions);
-                    self.interaction = Interaction::None;
-                    self.update_hover_from_world(world);
-                }
-                Interaction::DragNodes { start_positions, .. } => {
-                    self.push_node_drag_end_events(&start_positions);
+                Interaction::DragNodes { start_positions, proximity_pair, gesture, delta, .. } => {
+                    let record = Self::drag_gesture_record(&gesture, &start_positions, delta, proximity_pair.as_ref());
+                    self.publish_gesture_release(&gesture, record);
                     self.interaction = Interaction::None;
                     self.update_hover_from_world(world);
                 }
@@ -12939,15 +13028,7 @@ pub mod board_host {
             let interaction = std::mem::take(&mut self.interaction);
             let cancelled_interaction = !matches!(interaction, Interaction::None);
             match interaction {
-                Interaction::DragNodes { start_positions, .. } => {
-                    for (id, (x, y)) in start_positions {
-                        if let Some(node) = self.nodes.get_mut(&id) {
-                            node.x = x;
-                            node.y = y;
-                        }
-                    }
-                    self.bump_content_scene_generation();
-                }
+                Interaction::DragNodes { start_positions, gesture, .. } => self.cancel_node_drag(start_positions, gesture),
                 Interaction::SelectionPending { initial_ids, .. } | Interaction::Selection { initial_ids, .. } => {
                     self.selection = initial_ids;
                     self.preselect.clear();
@@ -12992,6 +13073,10 @@ pub mod board_host {
             };
             let prev = std::mem::replace(&mut self.interaction, Interaction::None);
             match prev {
+                Interaction::DragNodes { start_positions, gesture, .. } => {
+                    self.cancel_node_drag(start_positions, gesture);
+                    true
+                }
                 Interaction::SelectionPending { .. } => {
                     self.set_selection_screen_preview(None);
                     true
@@ -13139,7 +13224,8 @@ pub mod board_host {
                 return false;
             }
             let start_handle_angles = self.handles.iter().filter(|(_, handle)| start_positions.contains_key(&handle.node_id)).map(|(id, handle)| (id.clone(), handle.angle)).collect();
-            self.transform_drag = Some(BoardTransformDrag { pivot, grab: world, radius_world, radians: 0.0, start_positions, start_handle_angles });
+            let gesture = self.begin_gesture();
+            self.transform_drag = Some(BoardTransformDrag { gesture, pivot, grab: world, radius_world, radians: 0.0, start_positions, start_handle_angles });
             self.set_hovered_id(None);
             true
         }
@@ -13177,20 +13263,15 @@ pub mod board_host {
             }
         }
 
-        /// 🏁️ Ends the gesture with ONE `nodeRotate` row carrying the absolute delta and the
-        /// pivot. A zero-angle release (a click on the ring) commits nothing.
+        /// 🏁️ Ends the gesture with ONE `rotate` gesture record carrying the turned ids, the pivot and the
+        /// angle — however many preview frames the drag painted. A zero-angle release (a click on the ring)
+        /// commits nothing.
         fn commit_transform_drag(&mut self) -> bool {
             let Some(drag) = self.transform_drag.take() else {
                 return false;
             };
-            if drag.radians == 0.0 {
-                return true;
-            }
-            let event = BoardOwnedEvent::node_rotate(drag.start_positions.keys().map(String::as_str), drag.radians, drag.pivot);
-            let Some(reservation) = self.reserve_owned_event(event) else {
-                return true;
-            };
-            self.publish_event_reservation(reservation);
+            let record = (drag.radians != 0.0).then(|| BoardOwnedEvent::gesture(&drag.gesture.id, drag.start_positions.keys().map(String::as_str), BoardGestureMotion::Rotate { pivot: drag.pivot, angle: drag.radians }, &[]));
+            self.publish_gesture_release(&drag.gesture, record);
             true
         }
 
@@ -13358,13 +13439,15 @@ pub mod board_host {
                 return false;
             };
             let ids: Vec<String> = merge_pick_into_selection(&self.selection, &id, "replace").into_iter().collect();
-            self.set_selection_ids_gestured(&ids, None);
             if locked {
+                self.set_selection_ids_gestured(&ids, None);
                 self.interaction = Interaction::None;
                 self.set_hovered_id(None);
                 return true;
             }
-            self.region_drag = Some(BoardRegionDrag { id, grip, grab: world, start_bounds, bounds: start_bounds });
+            let mut gesture = self.begin_gesture();
+            self.stage_selection_ids(&mut gesture, &ids, None);
+            self.region_drag = Some(BoardRegionDrag { gesture, id, grip, grab: world, start_bounds, bounds: start_bounds, delta: Vec2::ZERO });
             self.set_hovered_id(None);
             true
         }
@@ -13379,39 +13462,56 @@ pub mod board_host {
             let dx = snap_region_scalar(world.x - drag.grab.x, step);
             let dy = snap_region_scalar(world.y - drag.grab.y, step);
             drag.bounds = region_grip_drag(drag.start_bounds, drag.grip, dx, dy);
+            drag.delta = Vec2::new(dx, dy);
             self.region_drag = Some(drag);
             self.bump_content_scene_generation();
         }
 
-        /// 🏁️ Ends a region gesture with exactly ONE row: `regionMove` for a body drag,
-        /// `regionResize` for a grip drag. A release that moved nothing commits nothing.
+        /// 🏁️ Ends a region gesture as ONE batch with the `select` its press staged: a body drag is a `drag`
+        /// gesture record by the snapped offset, a grip drag one `regionResize`. A release that moved nothing
+        /// publishes only the selection.
         fn commit_region_drag(&mut self) -> bool {
             let Some(drag) = self.region_drag.take() else {
                 return false;
             };
-            if drag.bounds == drag.start_bounds {
-                return true;
+            let moved = drag.bounds != drag.start_bounds;
+            if moved {
+                if let Some(region) = self.regions.get_mut(&drag.id) {
+                    region.x = drag.bounds[0];
+                    region.y = drag.bounds[1];
+                    region.width = drag.bounds[2] - drag.bounds[0];
+                    region.height = drag.bounds[3] - drag.bounds[1];
+                }
+                self.bump_content_scene_generation();
             }
-            let event = if drag.grip == RegionGrip::Body { BoardOwnedEvent::region_move(&drag.id, drag.bounds) } else { BoardOwnedEvent::region_resize(&drag.id, drag.bounds) };
-            if let Some(region) = self.regions.get_mut(&drag.id) {
-                region.x = drag.bounds[0];
-                region.y = drag.bounds[1];
-                region.width = drag.bounds[2] - drag.bounds[0];
-                region.height = drag.bounds[3] - drag.bounds[1];
+            match (moved, drag.grip) {
+                (false, _) => self.publish_gesture_release(&drag.gesture, None),
+                (true, RegionGrip::Body) => {
+                    let motion = BoardGestureMotion::Drag { dx: drag.delta.x, dy: drag.delta.y };
+                    self.publish_gesture_release(&drag.gesture, Some(BoardOwnedEvent::gesture(&drag.gesture.id, [drag.id.as_str()], motion, &[])));
+                }
+                (true, _) => {
+                    let [select, _] = Self::gesture_release_events(&drag.gesture, None);
+                    let resize = BoardOwnedEvent::region_resize(&drag.id, drag.bounds);
+                    let reservation = match select {
+                        Some(select) => self.reserve_owned_batch(select, Some(resize)),
+                        None => self.reserve_owned_batch(resize, None),
+                    };
+                    if let Some(reservation) = reservation {
+                        self.publish_event_batch(reservation);
+                    }
+                }
             }
-            self.bump_content_scene_generation();
-            let Some(reservation) = self.reserve_owned_event(event) else {
-                return true;
-            };
-            self.publish_event_reservation(reservation);
             true
         }
 
-        /// ↩️ Abandons a live region gesture without touching the document.
+        /// ↩️ Abandons a live region gesture with zero trace: the rectangle and the selection its press staged
+        /// return, and the document is never touched.
         fn cancel_region_drag(&mut self) -> bool {
-            if self.region_drag.take().is_none() {
+            let Some(drag) = self.region_drag.take() else {
                 return false;
-            }
+            };
+            self.restore_gesture_selection(drag.gesture);
             self.bump_content_scene_generation();
             true
         }
@@ -13532,7 +13632,7 @@ pub mod board_host {
             if !self.lod_uses_bounded_drag() {
                 return false;
             }
-            let members = self.selection_draggable_node_members();
+            let members: Vec<String> = self.selection_draggable_node_members().into_iter().filter(|id| self.nodes.get(id).is_some_and(|n| !n.locked)).collect();
             if members.is_empty() {
                 return false;
             }
@@ -13559,7 +13659,8 @@ pub mod board_host {
                     start_positions.insert(id.clone(), (n.x, n.y));
                 }
             }
-            self.interaction = Interaction::DragNodes { primary_id, offset: world - Point::new(px0, py0), start_positions, proximity_pair: None };
+            let gesture = self.begin_gesture();
+            self.interaction = Interaction::DragNodes { primary_id, offset: world - Point::new(px0, py0), start_positions, proximity_pair: None, gesture, delta: Vec2::ZERO };
             self.set_hovered_id(None);
             true
         }

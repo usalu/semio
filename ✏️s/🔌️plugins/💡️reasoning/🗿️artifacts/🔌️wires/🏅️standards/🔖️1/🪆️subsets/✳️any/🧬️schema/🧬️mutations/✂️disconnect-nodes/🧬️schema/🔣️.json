@@ -5,11 +5,32 @@
   "type": "object",
   "additionalProperties": false,
   "required": [
+    "mutation",
     "edgeId"
   ],
   "properties": {
+    "mutation": {
+      "const": "disconnectNodes"
+    },
     "edgeId": {
-      "type": "string"
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Edge",
+          "de": "Kante"
+        },
+        "description": {
+          "en": "The edge to remove.",
+          "de": "Die zu entfernende Kante."
+        },
+        "ref": {
+          "kind": "edge",
+          "domain": "graph",
+          "granularity": "edge"
+        }
+      }
     }
   }
 }

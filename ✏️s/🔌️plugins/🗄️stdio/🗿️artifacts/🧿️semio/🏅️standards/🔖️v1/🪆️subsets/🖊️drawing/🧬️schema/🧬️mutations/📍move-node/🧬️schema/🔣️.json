@@ -13,7 +13,13 @@
       "$ref": "#/$defs/NodePath"
     },
     "new_origin": {
-      "$ref": "#/$defs/SemioPoint2"
+      "$ref": "#/$defs/SemioPoint2",
+      "x-semio-ui": {
+        "label": {
+          "en": "Origin",
+          "de": "Ursprung"
+        }
+      }
     }
   },
   "$defs": {

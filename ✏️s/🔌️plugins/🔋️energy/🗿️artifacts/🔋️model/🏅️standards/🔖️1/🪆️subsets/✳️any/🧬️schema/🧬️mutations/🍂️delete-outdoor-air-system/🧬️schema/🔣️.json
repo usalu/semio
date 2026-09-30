@@ -5,11 +5,33 @@
   "type": "object",
   "additionalProperties": false,
   "required": [
+    "mutation",
     "id"
   ],
   "properties": {
+    "mutation": {
+      "const": "deleteOutdoorAirSystem"
+    },
     "id": {
-      "type": "integer"
+      "type": "integer",
+      "minimum": 0,
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Outdoor air system",
+          "de": "Außenluftsystem"
+        },
+        "description": {
+          "en": "The outdoor air system to delete, by id.",
+          "de": "Außenluftsystem, das diese Mutation löscht, per ID."
+        },
+        "ref": {
+          "kind": "outdoorAirSystem"
+        },
+        "group": "target",
+        "order": 10
+      }
     }
   }
 }

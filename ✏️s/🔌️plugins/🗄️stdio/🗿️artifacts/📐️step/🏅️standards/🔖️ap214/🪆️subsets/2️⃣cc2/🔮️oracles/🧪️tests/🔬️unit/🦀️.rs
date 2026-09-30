@@ -39,56 +39,17 @@ fn every_kind_is_observable_and_its_own_inverse_restores_the_projection() {
         let kind = case.str("kind");
         let mutated = oracle_apply_mutation(&input, &case).unwrap_or_else(|error| panic!("{kind} failed: {error}"));
         let after = project(&mutated).unwrap();
-        if kind != "no-mutation" {
-            assert_ne!(after, original, "{kind} left the conformance projection unchanged -- a mutation that is not observable proves nothing");
-        }
+        assert_ne!(after, original, "{kind} left the conformance projection unchanged -- a mutation that is not observable proves nothing");
         let inverse = oracle_inverse_spec(&input, &case).unwrap();
         let restored = oracle_apply_mutation(&mutated, &inverse).unwrap_or_else(|error| panic!("{kind} inverse failed: {error}"));
         assert_eq!(project(&restored).unwrap(), original, "applying {kind} and then its own inverse must restore the original projection");
     }
 }
 
-/// 📇️ One spec per declared kind, with parameters chosen against the REAL fixture's own content:
-/// `#13` is a real representation, `#827`/`#822`/`#821` are the real product chain.
+/// 📇️ One spec per declared kind — the case's own `Examples` rows, read from its feature file so the unit law and
+/// the scenario run the same leaf wire payloads.
 fn exercised_specs() -> Vec<Json> {
-    vec![
-        spec("no-mutation", Json::Object(Vec::new())),
-        spec(
-            "set-snapshot",
-            object(vec![
-                ("fileSchema", Json::Array(vec![Json::String("AUTOMOTIVE_DESIGN".to_string())])),
-                (
-                    "productIdentity",
-                    object(vec![
-                        ("product", Json::Number(1.0)),
-                        ("productName", Json::String("Document".to_string())),
-                        ("formation", Json::Number(2.0)),
-                        ("formationId", Json::String("A".to_string())),
-                        ("definition", Json::Number(3.0)),
-                        ("definitionId", Json::String("A".to_string())),
-                    ]),
-                ),
-            ]),
-        ),
-        spec("set-file-schema", object(vec![("schemas", Json::Array(vec![Json::String("CONFIG_CONTROL_DESIGN".to_string())]))])),
-        spec("set-product-identity", object(vec![("identity", Json::Null)])),
-        spec(
-            "set-shape-representation",
-            object(vec![
-                ("id", Json::Number(836.0)),
-                (
-                    "representation",
-                    object(vec![
-                        ("typeName", Json::String("GEOMETRICALLY_BOUNDED_WIREFRAME_SHAPE_REPRESENTATION".to_string())),
-                        ("name", Json::String("Document".to_string())),
-                        ("items", Json::Array(vec![Json::Number(837.0), Json::Number(895.0)])),
-                        ("context", Json::Number(835.0)),
-                    ]),
-                ),
-            ]),
-        ),
-        spec("demote-shape-representation", object(vec![("id", Json::Number(13.0))])),
-    ]
+    crate::law::feature_rows(include_str!("../../../🧪️tests/🔬️2-mutate-step-ap214-cc2/🥒️.feature")).into_iter().map(|(kind, params)| spec(&kind, params)).collect()
 }
 
 #[test]

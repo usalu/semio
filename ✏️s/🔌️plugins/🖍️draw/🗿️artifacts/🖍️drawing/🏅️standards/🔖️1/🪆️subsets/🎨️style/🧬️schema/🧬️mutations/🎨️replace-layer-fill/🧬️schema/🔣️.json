@@ -4,42 +4,45 @@
   "title": "ReplaceLayerFill",
   "type": "object",
   "additionalProperties": false,
-  "required": ["layerId"],
+  "required": ["mutation","layerId"],
   "$defs": {
-    "Color": {"type": "array", "items": {"type": "number"}, "minItems": 4, "maxItems": 4},
+    "Color": {"type": "array", "items": {"type": "number", "minimum": 0, "maximum": 1}, "minItems": 4, "maxItems": 4},
     "Stops": {
       "type": "array",
       "items": {
         "type": "object", "additionalProperties": false, "required": ["offset", "color"],
-        "properties": {"offset": {"type": "number"}, "color": {"$ref": "#/$defs/Color"}}
+        "properties": {"offset": {"type": "number", "x-semio-ui": {"widget": "slider", "role": "value", "label": {"en": "Offset", "de": "Position"}, "description": {"en": "Where the stop sits along the gradient, 0 to 1.", "de": "Lage des Stopps entlang des Verlaufs, 0 bis 1."}, "step": 0.01, "precision": 2, "softMin": 0, "softMax": 1, "snaps": [0, 0.25, 0.5, 0.75, 1], "group": "style", "order": 10}}, "color": {"$ref": "#/$defs/Color", "x-semio-ui": {"widget": "color", "role": "value", "label": {"en": "Color", "de": "Farbe"}, "description": {"en": "Red, green, blue and alpha, each from 0 to 1.", "de": "Rot, Grün, Blau und Alpha, jeweils von 0 bis 1."}, "step": 0.01, "group": "style", "order": 20}}}
       }
     }
   },
   "properties": {
-    "layerId": {"type": "string"},
+    "mutation": {
+      "const": "replaceLayerFill"
+    },
+    "layerId": {"type": "string", "x-semio-ui": {"widget": "reference", "role": "target", "label": {"en": "Layer", "de": "Ebene"}, "description": {"en": "The layer this mutation addresses.", "de": "Die Ebene, die diese Mutation adressiert."}, "ref": {"kind": "layer", "domain": "strokes", "granularity": "stroke"}, "group": "target", "order": 10}},
     "fill": {
       "oneOf": [
         {
           "type": "object", "additionalProperties": false, "required": ["kind", "color"],
-          "properties": {"kind": {"const": "solid"}, "color": {"$ref": "#/$defs/Color"}}
+          "properties": {"kind": {"const": "solid", "x-semio-ui": {"widget": "hidden", "role": "discriminator", "label": {"en": "Kind", "de": "Art"}}}, "color": {"$ref": "#/$defs/Color", "x-semio-ui": {"widget": "color", "role": "value", "label": {"en": "Color", "de": "Farbe"}, "description": {"en": "Red, green, blue and alpha, each from 0 to 1.", "de": "Rot, Grün, Blau und Alpha, jeweils von 0 bis 1."}, "step": 0.01, "group": "style", "order": 20}}}, "x-semio-ui": {"label": {"en": "Solid", "de": "Vollton"}}
         },
         {
           "type": "object", "additionalProperties": false, "required": ["kind", "x1", "y1", "x2", "y2", "stops"],
           "properties": {
-            "kind": {"const": "linearGradient"},
-            "x1": {"type": "number"}, "y1": {"type": "number"}, "x2": {"type": "number"}, "y2": {"type": "number"},
-            "stops": {"$ref": "#/$defs/Stops"}
-          }
+            "kind": {"const": "linearGradient", "x-semio-ui": {"widget": "hidden", "role": "discriminator", "label": {"en": "Kind", "de": "Art"}}},
+            "x1": {"type": "number", "x-semio-ui": {"widget": "stepper", "role": "value", "label": {"en": "Start X", "de": "Start X"}, "step": 1, "precision": 2, "group": "geometry", "order": 20}}, "y1": {"type": "number", "x-semio-ui": {"widget": "stepper", "role": "value", "label": {"en": "Start Y", "de": "Start Y"}, "step": 1, "precision": 2, "group": "geometry", "order": 30}}, "x2": {"type": "number", "x-semio-ui": {"widget": "stepper", "role": "value", "label": {"en": "End X", "de": "Ende X"}, "step": 1, "precision": 2, "group": "geometry", "order": 40}}, "y2": {"type": "number", "x-semio-ui": {"widget": "stepper", "role": "value", "label": {"en": "End Y", "de": "Ende Y"}, "step": 1, "precision": 2, "group": "geometry", "order": 50}},
+            "stops": {"$ref": "#/$defs/Stops", "x-semio-ui": {"role": "value", "label": {"en": "Color stops", "de": "Farbstopps"}, "description": {"en": "Colors along the gradient.", "de": "Farben entlang des Verlaufs."}, "group": "style", "order": 60}}
+          }, "x-semio-ui": {"label": {"en": "Linear gradient", "de": "Linearer Verlauf"}}
         },
         {
           "type": "object", "additionalProperties": false, "required": ["kind", "cx", "cy", "r", "stops"],
           "properties": {
-            "kind": {"const": "radialGradient"},
-            "cx": {"type": "number"}, "cy": {"type": "number"}, "r": {"type": "number"},
-            "stops": {"$ref": "#/$defs/Stops"}
-          }
+            "kind": {"const": "radialGradient", "x-semio-ui": {"widget": "hidden", "role": "discriminator", "label": {"en": "Kind", "de": "Art"}}},
+            "cx": {"type": "number", "x-semio-ui": {"widget": "stepper", "role": "value", "label": {"en": "Center X", "de": "Mittelpunkt X"}, "step": 1, "precision": 2, "group": "geometry", "order": 20}}, "cy": {"type": "number", "x-semio-ui": {"widget": "stepper", "role": "value", "label": {"en": "Center Y", "de": "Mittelpunkt Y"}, "step": 1, "precision": 2, "group": "geometry", "order": 30}}, "r": {"type": "number", "minimum": 0, "x-semio-ui": {"widget": "stepper", "role": "value", "label": {"en": "Radius", "de": "Radius"}, "step": 1, "precision": 2, "group": "geometry", "order": 40}},
+            "stops": {"$ref": "#/$defs/Stops", "x-semio-ui": {"role": "value", "label": {"en": "Color stops", "de": "Farbstopps"}, "description": {"en": "Colors along the gradient.", "de": "Farben entlang des Verlaufs."}, "group": "style", "order": 50}}
+          }, "x-semio-ui": {"label": {"en": "Radial gradient", "de": "Radialer Verlauf"}}
         }
-      ]
+      ], "x-semio-ui": {"role": "value", "label": {"en": "Fill", "de": "Füllung"}, "description": {"en": "The new fill; empty removes it.", "de": "Die neue Füllung; leer entfernt sie."}, "group": "style", "order": 20}
     }
   }
 }

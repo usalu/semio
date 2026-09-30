@@ -5,15 +5,16 @@
   "type": "object",
   "additionalProperties": false,
   "required": [
+    "mutation",
     "snapshot"
   ],
   "properties": {
-    "snapshot": {
-      "$ref": "#/$defs/ObjSnapshot"
-    },
     "mutation": {
       "const": "setSnapshot",
       "description": "Aggregate discriminator spliced in by ObjMutation; absent when the payload stands alone."
+    },
+    "snapshot": {
+      "$ref": "#/$defs/ObjSnapshot"
     }
   },
   "$defs": {
@@ -25,24 +26,53 @@
       ],
       "properties": {
         "schema": {
-          "type": "string"
+          "type": "string",
+          "x-semio-ui": {
+            "widget": "text",
+            "label": {
+              "en": "Snapshot schema",
+              "de": "Snapshot-Schema"
+            },
+            "description": {
+              "en": "Identifier of the snapshot schema version.",
+              "de": "Kennung der Version des Snapshot-Schemas."
+            }
+          }
         },
         "vertices": {
           "type": "array",
           "items": {
             "$ref": "#/$defs/ObjVertex"
+          },
+          "x-semio-ui": {
+            "label": {
+              "en": "Geometric vertices",
+              "de": "Geometrische Eckpunkte"
+            }
           }
         },
         "texcoords": {
           "type": "array",
           "items": {
             "$ref": "#/$defs/ObjTexCoord"
+          },
+          "x-semio-ui": {
+            "label": {
+              "en": "Texture coordinates",
+              "de": "Texturkoordinaten"
+            }
           }
         },
         "normals": {
           "type": "array",
           "items": {
             "$ref": "#/$defs/ObjNormal"
+          },
+          "x-semio-ui": {
+            "label": {
+              "en": "Vertex normals",
+              "de": "Eckpunktnormalen"
+            }
           }
         },
         "faces": {
@@ -55,12 +85,24 @@
           "type": "array",
           "items": {
             "$ref": "#/$defs/ObjGroup"
+          },
+          "x-semio-ui": {
+            "label": {
+              "en": "Groups",
+              "de": "Gruppen"
+            }
           }
         },
         "objects": {
           "type": "array",
           "items": {
             "$ref": "#/$defs/ObjObject"
+          },
+          "x-semio-ui": {
+            "label": {
+              "en": "Objects",
+              "de": "Objekte"
+            }
           }
         },
         "mtllib": {
@@ -71,24 +113,61 @@
             {
               "type": "null"
             }
-          ]
+          ],
+          "x-semio-ui": {
+            "widget": "text",
+            "label": {
+              "en": "Material library",
+              "de": "Materialbibliothek"
+            },
+            "description": {
+              "en": "File name of the `mtllib` statement.",
+              "de": "Dateiname der Anweisung `mtllib`."
+            }
+          }
         },
         "usemtl": {
           "type": "array",
           "items": {
             "$ref": "#/$defs/ObjUsemtlRange"
+          },
+          "x-semio-ui": {
+            "label": {
+              "en": "Material assignments",
+              "de": "Materialzuweisungen"
+            },
+            "description": {
+              "en": "`usemtl` ranges over the faces.",
+              "de": "`usemtl`-Bereiche über die Flächen."
+            }
           }
         },
         "smoothingGroups": {
           "type": "array",
           "items": {
             "$ref": "#/$defs/ObjSmoothingRange"
+          },
+          "x-semio-ui": {
+            "label": {
+              "en": "Smoothing groups",
+              "de": "Glättungsgruppen"
+            }
           }
         },
         "unknownStatements": {
           "type": "array",
           "items": {
             "$ref": "#/$defs/ObjUnknownStatement"
+          },
+          "x-semio-ui": {
+            "label": {
+              "en": "Unknown statements",
+              "de": "Unbekannte Anweisungen"
+            },
+            "description": {
+              "en": "Lines without a dedicated field, kept verbatim.",
+              "de": "Zeilen ohne eigenes Feld, unverändert erhalten."
+            }
           }
         }
       }
@@ -119,7 +198,18 @@
             {
               "type": "null"
             }
-          ]
+          ],
+          "x-semio-ui": {
+            "widget": "stepper",
+            "label": {
+              "en": "Weight (w)",
+              "de": "Gewicht (w)"
+            },
+            "description": {
+              "en": "Optional fourth component of a geometric vertex; defaults to 1.",
+              "de": "Optionale vierte Komponente eines geometrischen Eckpunkts; Standard 1."
+            }
+          }
         }
       }
     },
@@ -132,10 +222,24 @@
       ],
       "properties": {
         "u": {
-          "type": "number"
+          "type": "number",
+          "x-semio-ui": {
+            "widget": "stepper",
+            "label": {
+              "en": "U",
+              "de": "U"
+            }
+          }
         },
         "v": {
-          "type": "number"
+          "type": "number",
+          "x-semio-ui": {
+            "widget": "stepper",
+            "label": {
+              "en": "V",
+              "de": "V"
+            }
+          }
         },
         "w": {
           "anyOf": [
@@ -145,7 +249,18 @@
             {
               "type": "null"
             }
-          ]
+          ],
+          "x-semio-ui": {
+            "widget": "stepper",
+            "label": {
+              "en": "Depth (w)",
+              "de": "Tiefe (w)"
+            },
+            "description": {
+              "en": "Optional third texture coordinate; defaults to 0.",
+              "de": "Optionale dritte Texturkoordinate; Standard 0."
+            }
+          }
         }
       }
     },
@@ -180,6 +295,12 @@
           "type": "array",
           "items": {
             "$ref": "#/$defs/ObjFaceVertex"
+          },
+          "x-semio-ui": {
+            "label": {
+              "en": "Face vertices",
+              "de": "Flächeneckpunkte"
+            }
           }
         }
       }
@@ -194,7 +315,18 @@
         "vertex": {
           "type": "integer",
           "minimum": 0,
-          "maximum": 4294967295
+          "maximum": 4294967295,
+          "x-semio-ui": {
+            "widget": "stepper",
+            "label": {
+              "en": "Vertex number",
+              "de": "Eckpunktnummer"
+            },
+            "description": {
+              "en": "Zero-based index into the geometric vertices; the file writes it one-based.",
+              "de": "Nullbasierter Index in die geometrischen Eckpunkte; die Datei schreibt ihn einsbasiert."
+            }
+          }
         },
         "texcoord": {
           "anyOf": [
@@ -206,7 +338,18 @@
             {
               "type": "null"
             }
-          ]
+          ],
+          "x-semio-ui": {
+            "widget": "stepper",
+            "label": {
+              "en": "Texture coordinate number",
+              "de": "Texturkoordinatennummer"
+            },
+            "description": {
+              "en": "Zero-based index into the texture coordinates; the file writes it one-based.",
+              "de": "Nullbasierter Index in die Texturkoordinaten; die Datei schreibt ihn einsbasiert."
+            }
+          }
         },
         "normal": {
           "anyOf": [
@@ -270,7 +413,18 @@
       "properties": {
         "faceIndexFrom": {
           "type": "integer",
-          "minimum": 0
+          "minimum": 0,
+          "x-semio-ui": {
+            "widget": "stepper",
+            "label": {
+              "en": "First face",
+              "de": "Erste Fläche"
+            },
+            "description": {
+              "en": "Zero-based face index where the range starts.",
+              "de": "Nullbasierter Flächenindex, an dem der Bereich beginnt."
+            }
+          }
         },
         "material": {
           "type": "string"
@@ -286,7 +440,18 @@
       "properties": {
         "faceIndexFrom": {
           "type": "integer",
-          "minimum": 0
+          "minimum": 0,
+          "x-semio-ui": {
+            "widget": "stepper",
+            "label": {
+              "en": "First face",
+              "de": "Erste Fläche"
+            },
+            "description": {
+              "en": "Zero-based face index where the range starts.",
+              "de": "Nullbasierter Flächenindex, an dem der Bereich beginnt."
+            }
+          }
         },
         "group": {
           "anyOf": [
@@ -298,7 +463,18 @@
             {
               "type": "null"
             }
-          ]
+          ],
+          "x-semio-ui": {
+            "widget": "stepper",
+            "label": {
+              "en": "Smoothing group",
+              "de": "Glättungsgruppe"
+            },
+            "description": {
+              "en": "Smoothing group number; 0 turns smoothing off.",
+              "de": "Nummer der Glättungsgruppe; 0 schaltet die Glättung aus."
+            }
+          }
         }
       }
     },
@@ -312,10 +488,28 @@
       "properties": {
         "lineIndex": {
           "type": "integer",
-          "minimum": 0
+          "minimum": 0,
+          "x-semio-ui": {
+            "widget": "stepper",
+            "label": {
+              "en": "Line index",
+              "de": "Zeilenindex"
+            },
+            "description": {
+              "en": "Source line of the statement.",
+              "de": "Quellzeile der Anweisung."
+            }
+          }
         },
         "raw": {
-          "type": "string"
+          "type": "string",
+          "x-semio-ui": {
+            "widget": "text",
+            "label": {
+              "en": "Raw line",
+              "de": "Rohzeile"
+            }
+          }
         }
       }
     }

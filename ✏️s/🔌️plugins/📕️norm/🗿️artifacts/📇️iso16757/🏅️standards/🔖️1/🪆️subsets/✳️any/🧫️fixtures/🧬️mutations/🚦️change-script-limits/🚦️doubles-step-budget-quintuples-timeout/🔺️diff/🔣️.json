@@ -1,0 +1,15 @@
+{
+  "artifact": null,
+  "catalogue": null,
+  "dictionary": null,
+  "geometry": null,
+  "selection": null,
+  "partNumberRule": null,
+  "partNumberInputs": null,
+  "scriptLimits": {
+    "maxSteps": 20000,
+    "maxRecursion": 128,
+    "timeoutMs": 250
+  },
+  "exchangeProcess": null
+}

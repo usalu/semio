@@ -9,7 +9,21 @@
   ],
   "properties": {
     "newStructureKind": {
-      "type": "string"
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "text",
+        "role": "value",
+        "label": {
+          "en": "Structure type",
+          "de": "Tragwerksart"
+        },
+        "description": {
+          "en": "building (EN 1994-1-1) or bridge (EN 1994-2).",
+          "de": "building (Hochbau, EN 1994-1-1) oder bridge (Brückenbau, EN 1994-2)."
+        },
+        "group": "annex",
+        "order": 10
+      }
     }
   }
 }

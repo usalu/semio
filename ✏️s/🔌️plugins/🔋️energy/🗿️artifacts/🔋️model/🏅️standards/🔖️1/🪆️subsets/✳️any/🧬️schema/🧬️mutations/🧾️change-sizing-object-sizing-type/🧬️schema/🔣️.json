@@ -5,19 +5,65 @@
   "type": "object",
   "additionalProperties": false,
   "required": [
+    "mutation",
     "id",
     "newSizingType"
   ],
   "properties": {
+    "mutation": {
+      "const": "changeSizingObjectSizingType"
+    },
     "id": {
-      "type": "integer"
+      "type": "integer",
+      "minimum": 0,
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Sizing object",
+          "de": "Auslegungsobjekt"
+        },
+        "description": {
+          "en": "The sizing object this mutation changes, by id.",
+          "de": "Auslegungsobjekt, das diese Mutation ändert, per ID."
+        },
+        "ref": {
+          "kind": "sizingObject"
+        },
+        "group": "target",
+        "order": 10
+      }
     },
     "newSizingType": {
       "enum": [
         "Heating",
         "Cooling",
         "OutdoorAir"
-      ]
+      ],
+      "x-semio-ui": {
+        "widget": "segmented",
+        "role": "value",
+        "label": {
+          "en": "Sizing type",
+          "de": "Auslegungsart"
+        },
+        "options": {
+          "Heating": {
+            "en": "Heating",
+            "de": "Heizung"
+          },
+          "Cooling": {
+            "en": "Cooling",
+            "de": "Kühlung"
+          },
+          "OutdoorAir": {
+            "en": "Outdoor air",
+            "de": "Außenluft"
+          }
+        },
+        "group": "sizing",
+        "order": 20
+      }
     }
   }
 }

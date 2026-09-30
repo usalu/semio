@@ -154,11 +154,11 @@ fn vector(kind: &str) -> Vector {
             outcome: include_str!("../../🧫️fixtures/🧬️mutations/🎨change-machine-icon/🪚️swaps-the-saw-icon/🎯️outcome/🔣️.json"),
         },
         "replace-machine-capabilities" => Vector {
-            before: include_str!("../../🧫️fixtures/🧬️mutations/🔁replace-machine-capabilities/🕳️trades-the-blade-cut-for-a-gated-pocket-cut/📸️snapshot/⬅️before/🔣️.json"),
-            mutation: include_str!("../../🧫️fixtures/🧬️mutations/🔁replace-machine-capabilities/🕳️trades-the-blade-cut-for-a-gated-pocket-cut/🦠️mutation/🔣️.json"),
-            after: include_str!("../../🧫️fixtures/🧬️mutations/🔁replace-machine-capabilities/🕳️trades-the-blade-cut-for-a-gated-pocket-cut/📸️snapshot/➡️after/🔣️.json"),
-            diff: include_str!("../../🧫️fixtures/🧬️mutations/🔁replace-machine-capabilities/🕳️trades-the-blade-cut-for-a-gated-pocket-cut/🔺️diff/🔣️.json"),
-            outcome: include_str!("../../🧫️fixtures/🧬️mutations/🔁replace-machine-capabilities/🕳️trades-the-blade-cut-for-a-gated-pocket-cut/🎯️outcome/🔣️.json"),
+            before: include_str!("../../🧫️fixtures/🧬️mutations/🔁replace-machine-capabilities/🕳️trades-blade-cut-gated-pocket-cut/📸️snapshot/⬅️before/🔣️.json"),
+            mutation: include_str!("../../🧫️fixtures/🧬️mutations/🔁replace-machine-capabilities/🕳️trades-blade-cut-gated-pocket-cut/🦠️mutation/🔣️.json"),
+            after: include_str!("../../🧫️fixtures/🧬️mutations/🔁replace-machine-capabilities/🕳️trades-blade-cut-gated-pocket-cut/📸️snapshot/➡️after/🔣️.json"),
+            diff: include_str!("../../🧫️fixtures/🧬️mutations/🔁replace-machine-capabilities/🕳️trades-blade-cut-gated-pocket-cut/🔺️diff/🔣️.json"),
+            outcome: include_str!("../../🧫️fixtures/🧬️mutations/🔁replace-machine-capabilities/🕳️trades-blade-cut-gated-pocket-cut/🎯️outcome/🔣️.json"),
         },
         "move-stock" => Vector {
             before: include_str!("../../🧫️fixtures/🧬️mutations/📍move-stock/🎈️lifts-and-tilts-the-stock/📸️snapshot/⬅️before/🔣️.json"),

@@ -7,7 +7,7 @@ export type LocalizedText = {
 
 export type Names = {
   preferred: LocalizedText;
-  short_name?: string | null;
+  shortName?: string | null;
   alternatives: LocalizedText[];
 };
 
@@ -21,7 +21,7 @@ export type DimensionSignature = {
 export type CatalogueUnit = {
   symbol: string;
   dimension: DimensionSignature;
-  si_factor: number;
+  siFactor: number;
 };
 
 export type CatalogueValue =
@@ -41,14 +41,14 @@ export type CatalogueValue =
 export type Lifecycle = {
   revision: string;
   status: string;
-  valid_from?: string | null;
-  valid_to?: string | null;
+  validFrom?: string | null;
+  validTo?: string | null;
 };
 
 export type CatalogueMetadata = {
   names: Names;
   lifecycle: Lifecycle;
-  edition_profile: string;
+  editionProfile: string;
 };
 
 export type Manufacturer = {
@@ -64,79 +64,79 @@ export type DictionaryRef = {
 export type ProductGroup = {
   id: string;
   names: Names;
-  dictionary_subject_id?: string | null;
+  dictionarySubjectId?: string | null;
 };
 
 export type ProductClass = {
   id: string;
-  group_id: string;
-  parent_id?: string | null;
+  groupId: string;
+  parentId?: string | null;
   names: Names;
-  required_property_ids: string[];
-  optional_property_ids: string[];
+  requiredPropertyIds: string[];
+  optionalPropertyIds: string[];
 };
 
 export type ProductSeries = {
   id: string;
-  class_id: string;
+  classId: string;
   names: Names;
-  shared_property_values: Record<string, CatalogueValue>;
-  geometry_id?: string | null;
+  sharedPropertyValues: Record<string, CatalogueValue>;
+  geometryId?: string | null;
 };
 
 export type ParameterDomain = {
-  parameter_id: string;
-  allowed_values: CatalogueValue[];
-  default_value?: CatalogueValue;
+  parameterId: string;
+  allowedValues: CatalogueValue[];
+  defaultValue?: CatalogueValue;
 };
 
 export type PropertyValue = {
-  definition_id: string;
+  definitionId: string;
   value: CatalogueValue;
-  function_id?: string | null;
+  functionId?: string | null;
 };
 
 export type ProductVariant = {
   id: string;
-  parameter_values: Record<string, CatalogueValue>;
-  property_values: PropertyValue[];
-  article_number?: string | null;
-  geometry_id?: string | null;
+  parameterValues: Record<string, CatalogueValue>;
+  propertyValues: PropertyValue[];
+  articleNumber?: string | null;
+  geometryId?: string | null;
 };
 
 export type Product = {
   id: string;
-  series_id: string;
+  seriesId: string;
   names: Names;
-  parameter_domains: ParameterDomain[];
+  parameterDomains: ParameterDomain[];
   variants: ProductVariant[];
-  static_properties: PropertyValue[];
+  staticProperties: PropertyValue[];
 };
 
 export type ProductIndex = {
   id: string;
-  product_id: string;
-  variant_id?: string | null;
-  search_tags: string[];
+  productId: string;
+  variantId?: string | null;
+  searchTags: string[];
 };
 
 export type PropertyDefinition = {
   id: string;
   names: Names;
-  data_type: string;
+  dataType: string;
   unit?: CatalogueUnit | null;
   cardinality: { min: number; max?: number | null };
   kind: string;
-  dictionary_property_id?: string | null;
+  dictionaryPropertyId?: string | null;
 };
 
 export type AccessoryRelationship = {
-  accessory_product_id: string;
+  accessoryProductId: string;
   quantity?: number;
 };
 
 export type CompositionRelationship = {
-  component_product_id: string;
+  componentProductId: string;
   quantity: number;
 };
 
@@ -145,21 +145,21 @@ export type Catalogue = {
   metadata: CatalogueMetadata;
   manufacturer: Manufacturer;
   dictionary: DictionaryRef;
-  product_groups: ProductGroup[];
-  product_classes: ProductClass[];
-  product_series: ProductSeries[];
+  productGroups: ProductGroup[];
+  productClasses: ProductClass[];
+  productSeries: ProductSeries[];
   products: Product[];
-  product_indexes: ProductIndex[];
-  property_definitions: PropertyDefinition[];
+  productIndexes: ProductIndex[];
+  propertyDefinitions: PropertyDefinition[];
   accessories: Record<string, AccessoryRelationship[]>;
   compositions: Record<string, CompositionRelationship[]>;
-  descriptive_objects: DescriptiveObject[];
+  descriptiveObjects: DescriptiveObject[];
   extensions: ExtensionBag;
 };
 
 export type DescriptiveObject = {
   id: string;
-  media_type: string;
+  mediaType: string;
   uri: string;
   language?: string | null;
   checksum?: string | null;
@@ -174,20 +174,20 @@ export type Subject = {
   kind: string;
   names: Names;
   definition: LocalizedText;
-  parent_id?: string | null;
+  parentId?: string | null;
 };
 
 export type Relationship = {
   id?: string;
   kind: string;
-  from_id: string;
-  to_id: string;
+  fromId: string;
+  toId: string;
 };
 
 export type DictionaryProperty = {
   id: string;
   names: Names;
-  data_type?: string;
+  dataType?: string;
   unit?: CatalogueUnit | null;
 };
 
@@ -201,8 +201,8 @@ export type Dictionary = {
   subjects: Subject[];
   relationships: Relationship[];
   properties: DictionaryProperty[];
-  controlled_lists: ControlledValueList[];
-  meta_subjects: Subject[];
+  controlledLists: ControlledValueList[];
+  metaSubjects: Subject[];
 };
 
 export type BoundingBox = {
@@ -246,7 +246,7 @@ export type GeometryObject = {
   spaces: Space[];
   surfaces: Surface[];
   ports: Port[];
-  parameter_bindings: Record<string, string>;
+  parameterBindings: Record<string, string>;
 };
 
 export type PrimitiveKind = {
@@ -256,20 +256,20 @@ export type PrimitiveKind = {
 
 export type GeometryCatalogue = {
   objects: Record<string, GeometryObject>;
-  primitive_registry: PrimitiveKind[];
+  primitiveRegistry: PrimitiveKind[];
 };
 
 export type SelectionConstraint = {
   id?: string;
-  property_id: string;
+  propertyId: string;
   operator: string;
   value: CatalogueValue;
 };
 
 export type SelectionRequest = {
-  class_id: string;
+  classId: string;
   constraints: SelectionConstraint[];
-  series_id?: string | null;
+  seriesId?: string | null;
 };
 
 export type PartNumberRule =
@@ -278,9 +278,9 @@ export type PartNumberRule =
   | { kind: "script"; function_id: string; source: string };
 
 export type ScriptLimits = {
-  max_steps: number;
-  max_recursion: number;
-  timeout_ms: number;
+  maxSteps: number;
+  maxRecursion: number;
+  timeoutMs: number;
 };
 
 export interface Iso16757Snapshot {

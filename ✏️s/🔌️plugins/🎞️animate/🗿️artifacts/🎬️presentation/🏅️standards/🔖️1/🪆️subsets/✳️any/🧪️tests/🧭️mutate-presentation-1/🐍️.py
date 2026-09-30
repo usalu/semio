@@ -21,8 +21,8 @@ as an OPAQUE marker rather than a real value: applying either kind changes the m
 from base` holds, honestly, on the fact that the field was TOUCHED) and the inverse restores the
 PRIOR marker — this verifies the identity-of-touch, not the real frame/source content, and that
 limitation is stated here rather than concealed. The seven `tiles`-scoped kinds are verified for
-real: transcribed VERBATIM from this feature's own committed `Examples` `params` column (committed,
-checked-in material), applied to the real committed `tiles` base, and checked both forward (`differs
+real: each scenario's own committed `params` cell — the leaf wire payload the leaf schema describes,
+read through `ctx.doc_json()` — applied to the real committed `tiles` base, and checked both forward (`differs
 from base`) and backward (`inverse restores base exactly`).
 """
 
@@ -40,18 +40,8 @@ from semio_repo_test import Adapter, Context, Outcome
 # region 🔖️Fixtures
 BASE_URI = "shared://🧭️mutate-presentation-1/🔣️.json"
 
-#: 🧫️ Transcribed verbatim from this feature's `Examples` `params` column.
-PARAMS = {
-    "resize-source-frame": {"ResizeSourceFrame": {"newFrame": {"x": 0.0, "y": 0.0, "width": 1.0, "height": 1.0}}},
-    "replace-source": {"ReplaceSource": {"newSource": {"src": "/fixture-deck.png", "kind": "figure", "frame": {"x": 0.0, "y": 0.0, "width": 1.0, "height": 1.0}, "sourceAspect": 1.5, "pdfPage": None}}},
-    "create-tile": {"CreateTile": {"index": 1, "tile": {"id": "t-macro", "name": "Macro", "crop": {"x": 0.4, "y": 0.4, "width": 0.2, "height": 0.2}}}},
-    "delete-tile": {"DeleteTile": {"id": "t-hero"}},
-    "delete-tiles": {"DeleteTiles": {"ids": ["t-alpha", "t-omega"]}},
-    "rename-tile": {"RenameTile": {"id": "t-hero", "newName": "Lead"}},
-    "resize-tile-crop": {"ResizeTileCrop": {"id": "t-hero", "newCrop": {"x": 0.3, "y": 0.3, "width": 0.4, "height": 0.4}}},
-    "reorder-tiles": {"ReorderTiles": {"id": "t-hero", "toIndex": 2}},
-    "replace-tiles": {"ReplaceTiles": {"newTiles": []}},
-}
+#: 🏷️ The nine kinds of `PresentationMutation`, in declaration order; each row's `params` is read from its own scenario.
+KINDS = ("resize-source-frame", "replace-source", "create-tile", "delete-tile", "delete-tiles", "rename-tile", "resize-tile-crop", "reorder-tiles", "replace-tiles")
 
 SOURCE_SCOPED = {"resize-source-frame", "replace-source"}
 
@@ -60,18 +50,6 @@ def _read_base(ctx: Context):
     tiles = json.loads(ctx.fixture_bytes(BASE_URI))["tiles"]
     return {"source": "BASE", "tiles": tiles}
 # endregion 🔖️Fixtures
-
-
-# region 🔖️Wire
-def unwrap(wire):
-    """📨 The EXTERNALLY-tagged form this vocabulary uses (`PresentationMutation` declares no
-    `#[serde(tag)]`), with camelCase payload fields — `{"<Variant>": {...}}`."""
-    if isinstance(wire, dict) and len(wire) == 1:
-        tag = next(iter(wire))
-        if isinstance(wire[tag], dict):
-            return tag, wire[tag]
-    raise AssertionError("unrecognised mutation wire form: %s" % json.dumps(wire))
-# endregion 🔖️Wire
 
 
 # region 🔖️Tree
@@ -198,7 +176,7 @@ def inverse_apply(kind, base_graph, payload, mutated_graph):
 def _mutate_for(kind):
     def handler(ctx: Context) -> Outcome:
         base = _read_base(ctx)
-        after = APPLIERS[kind](base, list(PARAMS[kind].values())[0])
+        after = APPLIERS[kind](base, ctx.doc_json()["params"])
         assert after != base, f"mutate-{kind}: the mutation must move the projection, but it produced the base graph unchanged"
         payload_bytes = json.dumps(after, sort_keys=True, separators=(",", ":"), default=str).encode("utf-8")
         return Outcome(projection=after, raw=payload_bytes)
@@ -208,7 +186,7 @@ def _mutate_for(kind):
 def _inverse_for(kind):
     def handler(ctx: Context) -> Outcome:
         base = _read_base(ctx)
-        payload = list(PARAMS[kind].values())[0]
+        payload = ctx.doc_json()["params"]
         mutated = APPLIERS[kind](base, payload)
         restored = inverse_apply(kind, base, payload, mutated)
         assert restored == base, f"inverse-{kind}: {restored} != committed base graph {base}"
@@ -223,7 +201,7 @@ def adapter() -> Adapter:
     """🧭️ Registration is by full expanded scenario id, so this mirrors the feature's `Examples`
     tables exactly. Oracle role only."""
     built = Adapter("python")
-    for kind in PARAMS:
+    for kind in KINDS:
         built = built.oracle(f"mutate-{kind}", _mutate_for(kind)).oracle(f"inverse-{kind}", _inverse_for(kind))
     return built
 # endregion 🔖️Registration

@@ -34,21 +34,72 @@
           "minimum": 0
         },
         "productName": {
-          "type": "string"
+          "type": "string",
+          "x-semio-ui": {
+            "widget": "text",
+            "label": {
+              "en": "Product name",
+              "de": "Produktname"
+            }
+          }
         },
         "formation": {
           "type": "integer",
-          "minimum": 0
+          "minimum": 0,
+          "x-semio-ui": {
+            "widget": "stepper",
+            "label": {
+              "en": "Product version",
+              "de": "Produktversion"
+            },
+            "description": {
+              "en": "Instance number (#n) of the PRODUCT_DEFINITION_FORMATION.",
+              "de": "Instanznummer (#n) der PRODUCT_DEFINITION_FORMATION."
+            }
+          }
         },
         "formationId": {
-          "type": "string"
+          "type": "string",
+          "x-semio-ui": {
+            "widget": "text",
+            "label": {
+              "en": "Product version ID",
+              "de": "Produktversions-ID"
+            },
+            "description": {
+              "en": "`id` attribute of the PRODUCT_DEFINITION_FORMATION.",
+              "de": "Attribut `id` der PRODUCT_DEFINITION_FORMATION."
+            }
+          }
         },
         "definition": {
           "type": "integer",
-          "minimum": 0
+          "minimum": 0,
+          "x-semio-ui": {
+            "widget": "stepper",
+            "label": {
+              "en": "Product definition",
+              "de": "Produktdefinition"
+            },
+            "description": {
+              "en": "Instance number (#n) of the PRODUCT_DEFINITION.",
+              "de": "Instanznummer (#n) der PRODUCT_DEFINITION."
+            }
+          }
         },
         "definitionId": {
-          "type": "string"
+          "type": "string",
+          "x-semio-ui": {
+            "widget": "text",
+            "label": {
+              "en": "Product definition ID",
+              "de": "Produktdefinitions-ID"
+            },
+            "description": {
+              "en": "`id` attribute of the PRODUCT_DEFINITION.",
+              "de": "Attribut `id` der PRODUCT_DEFINITION."
+            }
+          }
         }
       }
     }

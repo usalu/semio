@@ -5,15 +5,49 @@
   "type": "object",
   "additionalProperties": false,
   "required": [
+    "mutation",
     "format"
   ],
   "properties": {
-    "format": {
-      "$ref": "#/$defs/SemioAudioFormat"
-    },
     "mutation": {
       "const": "setFormat",
       "description": "Aggregate discriminator spliced in by SemioAudioMutation; absent when the payload stands alone."
+    },
+    "format": {
+      "$ref": "#/$defs/SemioAudioFormat",
+      "x-semio-ui": {
+        "widget": "select",
+        "label": {
+          "en": "Sample format",
+          "de": "Sample-Format"
+        },
+        "options": {
+          "pcm8": {
+            "en": "PCM, 8-bit",
+            "de": "PCM, 8 Bit"
+          },
+          "pcm16": {
+            "en": "PCM, 16-bit",
+            "de": "PCM, 16 Bit"
+          },
+          "pcm24": {
+            "en": "PCM, 24-bit",
+            "de": "PCM, 24 Bit"
+          },
+          "pcm32": {
+            "en": "PCM, 32-bit",
+            "de": "PCM, 32 Bit"
+          },
+          "f32": {
+            "en": "Float, 32-bit",
+            "de": "Gleitkomma, 32 Bit"
+          },
+          "f64": {
+            "en": "Float, 64-bit",
+            "de": "Gleitkomma, 64 Bit"
+          }
+        }
+      }
     }
   },
   "$defs": {
@@ -24,8 +58,8 @@
         "pcm16",
         "pcm24",
         "pcm32",
-        "float32",
-        "float64"
+        "f32",
+        "f64"
       ]
     }
   }

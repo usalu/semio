@@ -5,6 +5,7 @@
   "type": "object",
   "additionalProperties": false,
   "required": [
+    "mutation",
     "index",
     "id",
     "hourlyValues",
@@ -13,35 +14,176 @@
     "limitsMax"
   ],
   "properties": {
+    "mutation": {
+      "const": "createDailySchedule"
+    },
     "index": {
-      "type": "integer"
+      "type": "integer",
+      "minimum": 0,
+      "x-semio-ui": {
+        "widget": "stepper",
+        "role": "value",
+        "label": {
+          "en": "Position",
+          "de": "Position"
+        },
+        "description": {
+          "en": "Insertion position in the model's list; 0 is first.",
+          "de": "Einfügeposition in der Modellliste; 0 ist die erste."
+        },
+        "step": 1,
+        "precision": 0,
+        "group": "order",
+        "order": 10
+      }
     },
     "id": {
-      "type": "integer"
+      "type": "integer",
+      "minimum": 0,
+      "x-semio-ui": {
+        "widget": "stepper",
+        "role": "value",
+        "label": {
+          "en": "ID",
+          "de": "ID"
+        },
+        "description": {
+          "en": "Id the new daily schedule is created under; later mutations address it by this id.",
+          "de": "ID, unter der das neue Objekt angelegt wird; spätere Mutationen adressieren es darüber."
+        },
+        "step": 1,
+        "precision": 0,
+        "group": "identity",
+        "order": 20
+      }
     },
     "hourlyValues": {
       "type": "array",
       "items": {
         "type": "number"
+      },
+      "minItems": 24,
+      "maxItems": 24,
+      "x-semio-ui": {
+        "role": "value",
+        "label": {
+          "en": "Hourly values",
+          "de": "Stundenwerte"
+        },
+        "description": {
+          "en": "Twenty-four values, one per hour of the day.",
+          "de": "Vierundzwanzig Werte, einer je Tagesstunde."
+        },
+        "group": "values",
+        "order": 30
       }
     },
     "interpolation": {
       "enum": [
         "Continuous",
         "Discrete"
-      ]
+      ],
+      "x-semio-ui": {
+        "widget": "segmented",
+        "role": "value",
+        "label": {
+          "en": "Interpolation",
+          "de": "Interpolation"
+        },
+        "options": {
+          "Continuous": {
+            "en": "Continuous",
+            "de": "Stetig"
+          },
+          "Discrete": {
+            "en": "Discrete",
+            "de": "Diskret"
+          }
+        },
+        "group": "values",
+        "order": 40
+      }
     },
     "limitsMin": {
       "type": [
         "number",
         "null"
-      ]
+      ],
+      "x-semio-ui": {
+        "widget": "stepper",
+        "role": "value",
+        "label": {
+          "en": "Lower limit",
+          "de": "Untergrenze"
+        },
+        "description": {
+          "en": "Clamps every value; set both limits or neither.",
+          "de": "Begrenzt jeden Wert; beide Grenzen oder keine setzen."
+        },
+        "step": 0.01,
+        "precision": 2,
+        "group": "values",
+        "order": 50
+      }
     },
     "limitsMax": {
       "type": [
         "number",
         "null"
-      ]
+      ],
+      "x-semio-ui": {
+        "widget": "stepper",
+        "role": "value",
+        "label": {
+          "en": "Upper limit",
+          "de": "Obergrenze"
+        },
+        "description": {
+          "en": "Clamps every value; set both limits or neither.",
+          "de": "Begrenzt jeden Wert; beide Grenzen oder keine setzen."
+        },
+        "step": 0.01,
+        "precision": 2,
+        "group": "values",
+        "order": 60
+      }
     }
-  }
+  },
+  "allOf": [
+    {
+      "if": {
+        "type": "object",
+        "properties": {
+          "limitsMin": {
+            "const": null
+          }
+        }
+      },
+      "then": {
+        "type": "object",
+        "properties": {
+          "limitsMax": {
+            "type": "null"
+          }
+        }
+      },
+      "else": {
+        "type": "object",
+        "properties": {
+          "limitsMax": {
+            "type": "number"
+          }
+        }
+      }
+    }
+  ],
+  "x-semio-invariant": [
+    {
+      "id": "limits-ordered",
+      "description": {
+        "en": "When both limits are set, the lower limit does not exceed the upper one.",
+        "de": "Sind beide Grenzen gesetzt, überschreitet die Untergrenze die Obergrenze nicht."
+      }
+    }
+  ]
 }

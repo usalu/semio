@@ -1,8 +1,16 @@
-/** 🦠️ move-morph-target: cohesive atomic mesh mutation. */
-import type { GltfJson, GltfSnapshot, GltfPrimitive, GltfMorphTarget } from '../../📸️snapshot/🟦️.ts';
-import { run, reject, positionIn, itemIndex, permutation, moveItem, type GltfLeafResult, type GltfMutationRejection } from './🟦️';
-export const GltfMoveMorphTargetDescriptor = { id: 's.stdio.gltf.mutation.move-morph-target.v1', version: 1, kind: 'move', touchedPaths: ["document/meshes/*/primitives/*/targets"], referencePolicy: 'reorders one target within its primitive' } as const;
-export interface GltfMoveMorphTargetPayload { mesh: number; primitive: number; target: number; position: number }
-export type GltfMoveMorphTargetResult = GltfLeafResult;
-export const validateGltfMoveMorphTarget = (payload: GltfMoveMorphTargetPayload, base: GltfSnapshot): GltfMutationRejection | undefined => { const mesh = itemIndex(payload.mesh, base.document.meshes.length, 'document/meshes'); if (mesh) return mesh; const primitive = itemIndex(payload.primitive, base.document.meshes[payload.mesh]!.primitives.length, `document/meshes/${payload.mesh}/primitives`); if (primitive) return primitive; const target = itemIndex(payload.target, base.document.meshes[payload.mesh]!.primitives[payload.primitive]!.targets.length, 'document/meshes/primitives/targets'); if (target) return target; const position = itemIndex(payload.position, base.document.meshes[payload.mesh]!.primitives[payload.primitive]!.targets.length, 'document/meshes/primitives/targets'); if (position) return position; if (payload.target === payload.position) return reject('gltf.mutation.no-observable-change', 'document/meshes/primitives/targets', 'destination equals source'); return undefined; };
-export const applyGltfMoveMorphTarget = (base: GltfSnapshot, payload: GltfMoveMorphTargetPayload): GltfMoveMorphTargetResult => run(base, payload, validateGltfMoveMorphTarget, (next, payload) => { moveItem(next.document.meshes[payload.mesh]!.primitives[payload.primitive]!.targets, payload.target, payload.position); }, GltfMoveMorphTargetDescriptor.touchedPaths);
+/** 🚚️ `move-morph-target` wire twin: the flat `Apply` payload `GltfMoveMorphTargetPayload` and the phase wire `MoveMorphTargetMutation`, exactly as `./🦀️.rs` writes them.
+ * @see ./🧬️schema/🔣️.json */
+import { gltfWireIndex, gltfWireObject, gltfWireRequired } from "../../../📸️snapshot/🟦️.ts";
+import { type GltfDiff, type GltfPhase, gltfWirePhase, parseGltfDiff } from "../../../🔺️diff/🟦️.ts";
+
+export interface GltfMoveMorphTargetPayload {
+  mesh: number;
+  primitive: number;
+  target: number;
+  position: number;
+}
+
+export type MoveMorphTargetMutation = GltfPhase<GltfMoveMorphTargetPayload, GltfDiff>;
+
+export const parseGltfMoveMorphTargetPayload = gltfWireObject<GltfMoveMorphTargetPayload>({ mesh: gltfWireRequired(gltfWireIndex), primitive: gltfWireRequired(gltfWireIndex), target: gltfWireRequired(gltfWireIndex), position: gltfWireRequired(gltfWireIndex) });
+export const parseMoveMorphTargetMutation = gltfWirePhase(parseGltfMoveMorphTargetPayload, parseGltfDiff);

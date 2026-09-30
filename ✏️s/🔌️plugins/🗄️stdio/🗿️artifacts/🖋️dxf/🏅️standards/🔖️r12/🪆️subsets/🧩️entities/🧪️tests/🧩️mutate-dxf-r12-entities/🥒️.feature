@@ -17,9 +17,9 @@ Feature: Apply every typed DXF R12 mutation to a real-world drawing
     Then the oracle and the subject agree on the semantic projection
     Examples:
       | id                 | params                                                                                                                                          |
-      | insert-entity      | {"index": 2, "entityKind": "circle", "layer": "0", "center": [1200, 100, 0], "radius": 30}                                                      |
+      | insert-entity      | {"index": 2, "entity": {"circle": {"center": [1200, 100, 0], "radius": 30, "layer": "0"}}} |
       | remove-entity      | {"index": 3}                                                                                                                                     |
-      | set-entity         | {"index": 5, "entityKind": "text", "layer": "DIMS", "position": [200, 260, 0], "height": 80, "value": "WAVE 7 SHELTER"}                          |
+      | set-entity         | {"index": 5, "entity": {"text": {"position": [200, 260, 0], "height": 80, "value": "WAVE 7 SHELTER", "layer": "DIMS"}}} |
 
   @id-inverse
   @level-exhaustive
@@ -33,6 +33,6 @@ Feature: Apply every typed DXF R12 mutation to a real-world drawing
     Then the oracle and the subject agree on the semantic projection
     Examples:
       | id                 | params                                                                                                                                          |
-      | insert-entity      | {"index": 2, "entityKind": "circle", "layer": "0", "center": [1200, 100, 0], "radius": 30}                                                      |
+      | insert-entity      | {"index": 2, "entity": {"circle": {"center": [1200, 100, 0], "radius": 30, "layer": "0"}}} |
       | remove-entity      | {"index": 3}                                                                                                                                     |
-      | set-entity         | {"index": 5, "entityKind": "text", "layer": "DIMS", "position": [200, 260, 0], "height": 80, "value": "WAVE 7 SHELTER"}                          |
+      | set-entity         | {"index": 5, "entity": {"text": {"position": [200, 260, 0], "height": 80, "value": "WAVE 7 SHELTER", "layer": "DIMS"}}} |

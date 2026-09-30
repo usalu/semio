@@ -85,7 +85,7 @@ Feature: Apply every typed cad composition mutation twice — once in Rust, once
       | delete-building-model          | 💥delete-building-model/🏚️vacates-the-building-slot                               |
       | create-energy-model            | ⚡create-energy-model/⚡️rehandles-the-occupied-energy-slot                        |
       | delete-energy-model            | 🔌delete-energy-model/🔌️vacates-the-energy-slot                                   |
-      | create-structure-classic-model | 🏛️create-structure-classic-model/🏛️rehandles-the-occupied-structure-classic-slot  |
+      | create-structure-classic-model | 🏛️create-structure-classic-model/🏛️rehandles-occupied-structure-classic-slot  |
       | delete-structure-classic-model | 💣delete-structure-classic-model/🏚️vacates-the-structure-classic-slot             |
       | create-drawing                 | 📐️create-drawing/📐️appends-drawing-2                                             |
       | delete-drawing                 | 🧹delete-drawing/🚫️removes-drawing-1                                              |
@@ -124,7 +124,7 @@ Feature: Apply every typed cad composition mutation twice — once in Rust, once
       | delete-building-model          | 💥delete-building-model/🏚️vacates-the-building-slot                               |
       | create-energy-model            | ⚡create-energy-model/⚡️rehandles-the-occupied-energy-slot                        |
       | delete-energy-model            | 🔌delete-energy-model/🔌️vacates-the-energy-slot                                   |
-      | create-structure-classic-model | 🏛️create-structure-classic-model/🏛️rehandles-the-occupied-structure-classic-slot  |
+      | create-structure-classic-model | 🏛️create-structure-classic-model/🏛️rehandles-occupied-structure-classic-slot  |
       | delete-structure-classic-model | 💣delete-structure-classic-model/🏚️vacates-the-structure-classic-slot             |
       | create-drawing                 | 📐️create-drawing/📐️appends-drawing-2                                             |
       | delete-drawing                 | 🧹delete-drawing/🚫️removes-drawing-1                                              |

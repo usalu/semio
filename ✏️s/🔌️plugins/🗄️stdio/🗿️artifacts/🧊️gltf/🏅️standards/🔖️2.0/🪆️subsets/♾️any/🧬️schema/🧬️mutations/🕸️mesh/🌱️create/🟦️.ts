@@ -1,7 +1,13 @@
-/** 🦠️ create-mesh executable structural glTF command. */
-import type { GltfOrthographic, GltfPerspective, GltfSnapshot } from '../../📸️snapshot/🟦️.ts';
-import { clone, insert, order, position, reject, remove, relocate, reorder, repair, type GltfMutationRejection, type GltfStructuralResult } from './🟦️';
-export const GltfCreateMeshDescriptor = { id: 's.stdio.gltf.mutation.create-mesh.v1', version: 1, touchedPathPattern: 'document/meshes', referencePolicy: 'all typed mesh references are remapped, repaired, or rejected' } as const;
-export interface GltfCreateMeshPayload { position: number }
-export const validateGltfCreateMesh = (payload: GltfCreateMeshPayload, base: GltfSnapshot): GltfMutationRejection | undefined => { const index = position(payload.position, base.document.meshes.length, 'document/meshes', true); if (index) return index;    return undefined; };
-export const applyGltfCreateMesh = (base: GltfSnapshot, payload: GltfCreateMeshPayload): GltfStructuralResult => { const rejection = validateGltfCreateMesh(payload, base); if (rejection) return { accepted: false, rejection }; try { const next = clone(base); insert(next, 'meshes', payload.position, { primitives: [], weights: [] }); return { accepted: true, snapshot: clone(next) }; } catch (error) { return { accepted: false, rejection: typeof error === 'object' && error && 'code' in error ? error as GltfMutationRejection : reject('gltf.mutation.apply-failed', 'document/meshes', String(error)) }; } };
+/** 🌱️ `create-mesh` wire twin: the flat `Apply` payload `GltfCreateMeshPayload` and the phase wire `CreateMeshMutation`, exactly as `./🦀️.rs` writes them.
+ * @see ./🧬️schema/🔣️.json */
+import { gltfWireIndex, gltfWireObject, gltfWireRequired } from "../../../📸️snapshot/🟦️.ts";
+import { type GltfDiff, type GltfPhase, gltfWirePhase, parseGltfDiff } from "../../../🔺️diff/🟦️.ts";
+
+export interface GltfCreateMeshPayload {
+  position: number;
+}
+
+export type CreateMeshMutation = GltfPhase<GltfCreateMeshPayload, GltfDiff>;
+
+export const parseGltfCreateMeshPayload = gltfWireObject<GltfCreateMeshPayload>({ position: gltfWireRequired(gltfWireIndex) });
+export const parseCreateMeshMutation = gltfWirePhase(parseGltfCreateMeshPayload, parseGltfDiff);

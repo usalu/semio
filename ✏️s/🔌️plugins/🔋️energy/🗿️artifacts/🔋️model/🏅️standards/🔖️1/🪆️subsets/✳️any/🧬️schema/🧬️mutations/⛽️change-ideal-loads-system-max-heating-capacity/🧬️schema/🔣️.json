@@ -5,19 +5,105 @@
   "type": "object",
   "additionalProperties": false,
   "required": [
+    "mutation",
     "id",
     "newCapacityPresent",
     "newMaxHeatingCapacityW"
   ],
   "properties": {
+    "mutation": {
+      "const": "changeIdealLoadsSystemMaxHeatingCapacity"
+    },
     "id": {
-      "type": "integer"
+      "type": "integer",
+      "minimum": 0,
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Ideal loads system",
+          "de": "Ideallastsystem"
+        },
+        "description": {
+          "en": "The ideal loads system this mutation changes, by id.",
+          "de": "Ideallastsystem, das diese Mutation ändert, per ID."
+        },
+        "ref": {
+          "kind": "idealLoadsSystem",
+          "domain": "energyModel",
+          "granularity": "hvac"
+        },
+        "group": "target",
+        "order": 10
+      }
     },
     "newCapacityPresent": {
-      "type": "boolean"
+      "type": "boolean",
+      "x-semio-ui": {
+        "widget": "toggle",
+        "role": "value",
+        "label": {
+          "en": "Limit heating capacity",
+          "de": "Heizleistung begrenzen"
+        },
+        "description": {
+          "en": "Off means unlimited; the heating capacity is then 0.",
+          "de": "Aus bedeutet unbegrenzt; die Heizleistung ist dann 0."
+        },
+        "group": "capacity",
+        "order": 20
+      }
     },
     "newMaxHeatingCapacityW": {
-      "type": "number"
+      "type": "number",
+      "x-semio-ui": {
+        "widget": "stepper",
+        "role": "value",
+        "label": {
+          "en": "Maximum heating capacity",
+          "de": "Maximale Heizleistung"
+        },
+        "description": {
+          "en": "Only while the heating capacity is limited.",
+          "de": "Nur solange die Heizleistung begrenzt ist."
+        },
+        "unit": "W",
+        "displayUnit": "kW",
+        "displayFactor": 0.001,
+        "step": 100,
+        "precision": 2,
+        "group": "capacity",
+        "order": 30
+      }
     }
-  }
+  },
+  "allOf": [
+    {
+      "if": {
+        "type": "object",
+        "properties": {
+          "newCapacityPresent": {
+            "const": false
+          }
+        }
+      },
+      "then": {
+        "type": "object",
+        "properties": {
+          "newMaxHeatingCapacityW": {
+            "const": 0
+          }
+        }
+      },
+      "else": {
+        "type": "object",
+        "properties": {
+          "newMaxHeatingCapacityW": {
+            "type": "number",
+            "exclusiveMinimum": 0
+          }
+        }
+      }
+    }
+  ]
 }

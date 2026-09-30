@@ -5,16 +5,52 @@
   "type": "object",
   "additionalProperties": false,
   "required": [
+    "mutation",
     "id",
     "newName"
   ],
   "properties": {
+    "mutation": {
+      "const": "renameSecurityRequirement"
+    },
     "id": {
-      "type": "integer",
-      "minimum": 0
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Security Requirement",
+          "de": "Sicherungsanforderung"
+        },
+        "description": {
+          "en": "The security requirement to rename.",
+          "de": "Umzubenennender Eintrag vom Typ „Sicherungsanforderung“."
+        },
+        "ref": {
+          "kind": "securityRequirement",
+          "domain": "program",
+          "granularity": "entity"
+        },
+        "group": "target",
+        "order": 10
+      }
     },
     "newName": {
-      "type": "string"
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "text",
+        "role": "value",
+        "label": {
+          "en": "New Name",
+          "de": "Neuer Name"
+        },
+        "description": {
+          "en": "New name of the security requirement.",
+          "de": "Neuer Name des Eintrags vom Typ „Sicherungsanforderung“."
+        },
+        "group": "identity",
+        "order": 20
+      }
     }
   }
 }

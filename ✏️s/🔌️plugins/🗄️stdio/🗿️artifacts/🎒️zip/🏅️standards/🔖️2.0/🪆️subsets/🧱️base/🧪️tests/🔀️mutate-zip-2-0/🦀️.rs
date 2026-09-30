@@ -28,7 +28,7 @@ fn mutable_input(ctx: &Context) -> Result<Vec<u8>, String> {
     std::fs::read(&copy).map_err(|error| error.to_string())
 }
 
-/// 🧫️ The scenario's `{"kind": ..., "params": {...}}` spec, read from its doc string.
+/// 🧫️ The scenario's `{"kind": ..., "params": <leaf wire payload>}` witness, read from its doc string.
 fn spec(ctx: &Context) -> Result<Json, String> {
     ctx.doc_json()
 }
@@ -91,70 +91,39 @@ mod subject {
     use super::{mutable_input, spec};
     use semio_repo_test_host::{Context, Json, Outcome};
     use semio_s_artifact_stdio_zip::standards::v2_0::subsets::base::io::{decode_zip, encode_zip};
-    use semio_s_artifact_stdio_zip::standards::v2_0::subsets::base::schema::mutations::add_entry::AddEntry;
     use semio_s_artifact_stdio_zip::standards::v2_0::subsets::base::schema::mutations::apply_zip_mutation;
-    use semio_s_artifact_stdio_zip::standards::v2_0::subsets::base::schema::mutations::remove_entry::RemoveEntry;
-    use semio_s_artifact_stdio_zip::standards::v2_0::subsets::base::schema::mutations::rename_entry::RenameEntry;
-    use semio_s_artifact_stdio_zip::standards::v2_0::subsets::base::schema::mutations::set_archive_comment::SetArchiveComment;
-    use semio_s_artifact_stdio_zip::standards::v2_0::subsets::base::schema::mutations::set_entry_data::SetEntryData;
-    use semio_s_artifact_stdio_zip::standards::v2_0::subsets::base::schema::mutations::set_snapshot::SetSnapshot;
-    use semio_s_artifact_stdio_zip::standards::v2_0::subsets::base::schema::snapshot::ZipEntry;
-    use semio_s_artifact_stdio_zip::{ZipMutation, ZipSnapshot, STDIO_ZIP_DOCUMENT_SCHEMA};
+    use semio_s_artifact_stdio_zip::{from_json_str, to_json_string, DslValue, Mutation, ZipMutation, ZipSnapshot};
     use semio_s_plugin_stdio_test_oracle::artifacts::zip::standards::v2_0::subsets::base::project_zip_mutation;
+    use semio_s_plugin_stdio_test_oracle::law::params_are_wire;
 
     //#region 🔖️Spec
-    /// 🦠️ Builds the real typed `ZipMutation` this scenario's `{"kind", "params"}` spec describes —
-    /// the same 6 kinds the mutations file's own `KINDS` declares, kept honest against them by that
-    /// file's `kinds_matches_enum_variants_and_manifest` test.
-    fn zip_mutation_from_json(value: &Json) -> Result<ZipMutation, String> {
-        let params = value.get("params").cloned().unwrap_or(Json::Object(Vec::new()));
-        Ok(match value.str("kind").as_str() {
-            "set-snapshot" => ZipMutation::SetSnapshot(SetSnapshot {
-                snapshot: ZipSnapshot {
-                    schema: STDIO_ZIP_DOCUMENT_SCHEMA.to_string(),
-                    entries: params.array("entries").iter().map(|entry| ZipEntry { name: entry.str("name"), data: entry.str("content").into_bytes(), ..Default::default() }).collect(),
-                    comment: params.str("comment"),
-                    ..Default::default()
-                },
-            }),
-            "set-archive-comment" => ZipMutation::SetArchiveComment(SetArchiveComment { comment: params.str("comment"), comment_utf8: true }),
-            "add-entry" => ZipMutation::AddEntry(AddEntry {
-                entry: ZipEntry { name: params.str("name"), data: params.str("content").into_bytes(), ..Default::default() },
-                before: params.get("before").map(|_| params.str("before")),
-            }),
-            "remove-entry" => ZipMutation::RemoveEntry(RemoveEntry { name: params.str("name") }),
-            "rename-entry" => ZipMutation::RenameEntry(RenameEntry { name: params.str("name"), new_name: params.str("newName") }),
-            "set-entry-data" => ZipMutation::SetEntryData(SetEntryData { name: params.str("name"), data: params.str("content").into_bytes() }),
-            kind => return Err(format!("mutation kind {kind:?} has no subject implementation")),
-        })
+    /// 🦠️ The scenario's `{kind, params}` witness decoded generically: `params` IS the leaf's wire
+    /// payload, so the derive-generated `from_payload_value` is the only decoder, and re-emitting the
+    /// decoded payload must give back exactly `params`.
+    fn mutation_from_spec(spec: &Json) -> Result<ZipMutation, String> {
+        let kind = spec.str("kind");
+        let params = spec.get("params").cloned().unwrap_or(Json::Null);
+        let payload: DslValue = from_json_str(&params.to_string()).map_err(|error| error.to_string())?;
+        let mutation = <ZipMutation as Mutation<ZipSnapshot>>::from_payload_value(&kind, payload).map_err(|error| error.to_string())?;
+        params_are_wire(&kind, &params, &to_json_string(&<ZipMutation as Mutation<ZipSnapshot>>::payload_value(&mutation)))?;
+        Ok(mutation)
     }
 
-    /// ↩️ This mutation's own inverse against `original` — the snapshot as it stood before the
-    /// forward mutation ran. Mirrors `../../🏅️standards/🔖️2.0/🪆️subsets/🧱️base/🧬️schema/🧬️mutations/
-    /// 🦀️.rs`'s `agg_inverse` algebra directly (not through the `protocol::Mutation`
-    /// trait) so this adapter carries no dependency on that internal crate. Missing/already-absent
-    /// target ⇒ `Vec::new()` — there is no "no-op mutation", only an inverse with nothing to undo.
-    fn invert_zip_mutation(original: &ZipSnapshot, mutation: &ZipMutation) -> Vec<ZipMutation> {
-        match mutation {
-            ZipMutation::SetSnapshot(_) => vec![ZipMutation::SetSnapshot(SetSnapshot { snapshot: original.clone() })],
-            ZipMutation::SetArchiveComment(_) => {
-                vec![ZipMutation::SetArchiveComment(SetArchiveComment { comment: original.comment.clone(), comment_utf8: original.comment_utf8 })]
-            }
-            ZipMutation::AddEntry(AddEntry { entry, .. }) => vec![ZipMutation::RemoveEntry(RemoveEntry { name: entry.name.clone() })],
-            ZipMutation::RemoveEntry(RemoveEntry { name }) => original.entries.iter().position(|entry| entry.name == *name).map(|index| vec![ZipMutation::AddEntry(AddEntry { entry: original.entries[index].clone(), before: original.entries.get(index + 1).map(|entry| entry.name.clone()) })]).unwrap_or_default(),
-            ZipMutation::RenameEntry(RenameEntry { name, new_name }) => vec![ZipMutation::RenameEntry(RenameEntry { name: new_name.clone(), new_name: name.clone() })],
-            ZipMutation::SetEntryData(SetEntryData { name, .. }) => original.entries.iter().find(|entry| entry.name == *name).map(|entry| vec![ZipMutation::SetEntryData(SetEntryData { name: name.clone(), data: entry.data.clone() })]).unwrap_or_default(),
-        }
+    fn decode(input: &[u8]) -> Result<ZipSnapshot, String> {
+        decode_zip(input).map_err(|error| format!("decode_zip failed: {error}"))
+    }
+
+    fn encode(snapshot: &ZipSnapshot) -> Result<Vec<u8>, String> {
+        encode_zip(snapshot).map_err(|error| format!("encode_zip failed: {error}"))
     }
     //#endregion 🔖️Spec
 
     //#region 🔖️Handlers
     pub fn mutate(ctx: &Context) -> Result<Outcome, String> {
         let input = mutable_input(ctx)?;
-        let mutation = zip_mutation_from_json(&spec(ctx)?)?;
-        let mut snapshot = decode_zip(&input).map_err(|error| format!("decode_zip failed: {error}"))?;
-        apply_zip_mutation(&mut snapshot, &mutation);
-        let bytes = encode_zip(&snapshot).map_err(|error| format!("encode_zip failed: {error}"))?;
+        let mut snapshot = decode(&input)?;
+        apply_zip_mutation(&mut snapshot, &mutation_from_spec(&spec(ctx)?)?);
+        let bytes = encode(&snapshot)?;
         if bytes == input {
             return Err("byte pass-through: output is bit-identical to the input".into());
         }
@@ -162,24 +131,24 @@ mod subject {
         Ok(Outcome::with_raw(bytes, projection))
     }
 
+    /// ↩️ The forward witness is undone by `ZipMutation::inverse` itself — the vocabulary's own
+    /// algebra is the law under test, never a transcription of it.
     pub fn inverse(ctx: &Context) -> Result<Outcome, String> {
-        let input = mutable_input(ctx)?;
-        let original = decode_zip(&input).map_err(|error| format!("decode_zip failed: {error}"))?;
-        let mutation = zip_mutation_from_json(&spec(ctx)?)?;
+        let original = decode(&mutable_input(ctx)?)?;
+        let mutation = mutation_from_spec(&spec(ctx)?)?;
         let mut snapshot = original.clone();
         apply_zip_mutation(&mut snapshot, &mutation);
-        for inverse_mutation in invert_zip_mutation(&original, &mutation) {
-            apply_zip_mutation(&mut snapshot, &inverse_mutation);
+        for step in <ZipMutation as Mutation<ZipSnapshot>>::inverse(&mutation, &original) {
+            apply_zip_mutation(&mut snapshot, &step);
         }
-        let bytes = encode_zip(&snapshot).map_err(|error| format!("encode_zip failed: {error}"))?;
+        let bytes = encode(&snapshot)?;
         let projection = project_zip_mutation(&bytes)?;
         Ok(Outcome::with_raw(bytes, projection))
     }
 
     pub fn round_trip(ctx: &Context) -> Result<Outcome, String> {
         let input = mutable_input(ctx)?;
-        let snapshot = decode_zip(&input).map_err(|error| format!("decode_zip failed: {error}"))?;
-        let bytes = encode_zip(&snapshot).map_err(|error| format!("encode_zip failed: {error}"))?;
+        let bytes = encode(&decode(&input)?)?;
         if bytes == input {
             return Err("byte pass-through: output is bit-identical to the input".into());
         }
@@ -194,15 +163,10 @@ mod subject {
 /// 🧭️ Registration entry point the generated host calls.
 pub fn adapter() -> Adapter {
     let mut built = Adapter::new("rust");
-    built = built.oracle("mutate", mutate_oracle).oracle("no-mutation-baseline-mutate", mutate_oracle).oracle("inverse", inverse_oracle).oracle("no-mutation-baseline-inverse", inverse_oracle);
+    built = built.oracle("mutate", mutate_oracle).oracle("inverse", inverse_oracle).oracle("identity-round-trip", round_trip_oracle);
     #[cfg(feature = "sut")]
     {
-        built = built.subject("mutate", subject::mutate).subject("no-mutation-baseline-mutate", subject::mutate).subject("inverse", subject::inverse).subject("no-mutation-baseline-inverse", subject::inverse);
-    }
-    built = built.oracle("identity-round-trip", round_trip_oracle);
-    #[cfg(feature = "sut")]
-    {
-        built = built.subject("identity-round-trip", subject::round_trip);
+        built = built.subject("mutate", subject::mutate).subject("inverse", subject::inverse).subject("identity-round-trip", subject::round_trip);
     }
     built
 }

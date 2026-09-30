@@ -11,34 +11,137 @@
   ],
   "properties": {
     "mutation": {
-      "const": "replaceNodeGeometry"
+      "const": "replaceNodeGeometry",
+      "x-semio-ui": {
+        "widget": "hidden",
+        "role": "discriminator",
+        "label": {
+          "en": "Mutation",
+          "de": "Mutation"
+        }
+      }
     },
     "id": {
-      "type": "string"
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Node",
+          "de": "Knoten"
+        },
+        "description": {
+          "en": "The node this mutation addresses.",
+          "de": "Der Knoten, den diese Mutation adressiert."
+        },
+        "ref": {
+          "kind": "node",
+          "domain": "vortex",
+          "granularity": "node"
+        },
+        "group": "target",
+        "order": 10
+      }
     },
     "newShape": {
-      "type": [
-        "string",
-        "null"
-      ]
+      "anyOf": [
+        {
+          "type": "string",
+          "enum": [
+            "circle",
+            "rectangle"
+          ]
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "x-semio-ui": {
+        "widget": "select",
+        "role": "value",
+        "label": {
+          "en": "Shape",
+          "de": "Form"
+        },
+        "options": {
+          "circle": {
+            "en": "Circle",
+            "de": "Kreis"
+          },
+          "rectangle": {
+            "en": "Rectangle",
+            "de": "Rechteck"
+          }
+        },
+        "group": "geometry",
+        "order": 20
+      }
     },
     "newRadius": {
       "type": [
         "number",
         "null"
-      ]
+      ],
+      "exclusiveMinimum": 0,
+      "x-semio-ui": {
+        "widget": "stepper",
+        "role": "value",
+        "label": {
+          "en": "Radius",
+          "de": "Radius"
+        },
+        "step": 1,
+        "precision": 2,
+        "snapSource": {
+          "config": "gridFactor"
+        },
+        "group": "geometry",
+        "order": 30
+      }
     },
     "newWidth": {
       "type": [
         "number",
         "null"
-      ]
+      ],
+      "exclusiveMinimum": 0,
+      "x-semio-ui": {
+        "widget": "stepper",
+        "role": "value",
+        "label": {
+          "en": "Width",
+          "de": "Breite"
+        },
+        "step": 1,
+        "precision": 2,
+        "snapSource": {
+          "config": "gridFactor"
+        },
+        "group": "geometry",
+        "order": 40
+      }
     },
     "newHeight": {
       "type": [
         "number",
         "null"
-      ]
+      ],
+      "exclusiveMinimum": 0,
+      "x-semio-ui": {
+        "widget": "stepper",
+        "role": "value",
+        "label": {
+          "en": "Height",
+          "de": "Höhe"
+        },
+        "step": 1,
+        "precision": 2,
+        "snapSource": {
+          "config": "gridFactor"
+        },
+        "group": "geometry",
+        "order": 50
+      }
     }
   }
 }

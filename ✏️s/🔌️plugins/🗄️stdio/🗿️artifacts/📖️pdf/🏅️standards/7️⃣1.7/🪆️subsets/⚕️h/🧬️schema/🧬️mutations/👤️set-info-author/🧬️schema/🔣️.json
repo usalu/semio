@@ -5,15 +5,16 @@
   "type": "object",
   "additionalProperties": false,
   "required": [
+    "mutation",
     "author"
   ],
   "properties": {
-    "author": {
-      "type": "string"
-    },
     "mutation": {
       "const": "setInfoAuthor",
       "description": "Aggregate discriminator spliced in by PdfHMutation; absent when the payload stands alone."
+    },
+    "author": {
+      "type": "string"
     }
   }
 }

@@ -1,9 +1,34 @@
 //! 🧪️ The mesh contract is shared with the independent Three.js oracle.
 use super::*;
 
+struct TestGeometryRegistry {
+    registry: Option<neural_engine::ColdOwner<neural_engine::Registry>>,
+    session: Session,
+}
+
+impl TestGeometryRegistry {
+    fn new() -> Self {
+        let session = Session::new();
+        let registry = neural_engine::ColdOwner::new(super::super::module_registry(&session));
+        Self { registry: Some(registry), session }
+    }
+}
+
+impl std::ops::Deref for TestGeometryRegistry {
+    type Target = neural_engine::Registry;
+    fn deref(&self) -> &Self::Target { self.registry.as_ref().expect("open fixture registry") }
+}
+
+impl Drop for TestGeometryRegistry {
+    fn drop(&mut self) {
+        drop(self.registry.take());
+        self.session.close();
+    }
+}
+
 #[semio_framework_async_macros::async_test]
 async fn mesh_knife_widget_preserves_shared_fixture_surfaces() {
-    let registry = neural_engine::ColdOwner::new(super::super::module_registry().await);
+    let registry = TestGeometryRegistry::new();
     let fixtures = pack::json::parse(include_str!("../../../../../../../../🧰️framework/🔨️modules/🧊️3d/🥽️mesh/🧫️fixtures/✂️knife-cut/🔣️.json")).unwrap();
     let info = registry.operator_info("brep.mesh.knifeCut").unwrap();
     assert!(info.inputs.iter().any(|channel| channel.name == "start" && channel.value_types.iter().any(|kind| kind == "point")));
@@ -31,7 +56,7 @@ async fn mesh_knife_widget_preserves_shared_fixture_surfaces() {
 
 #[semio_framework_async_macros::async_test]
 async fn mesh_component_transforms_match_shared_fixtures() {
-    let registry = neural_engine::ColdOwner::new(super::super::module_registry().await);
+    let registry = TestGeometryRegistry::new();
     let fixture = pack::json::parse(include_str!("../../🧫️fixtures/🧭️component-transform/🔣️.json")).unwrap();
     let source = decode_mesh(&pack::json::to_string(fixture.get("mesh").unwrap())).unwrap();
     for case in fixture.get("cases").unwrap().as_array().unwrap() {
@@ -60,7 +85,7 @@ async fn mesh_component_transforms_match_shared_fixtures() {
 
 #[semio_framework_async_macros::async_test]
 async fn mesh_loop_cut_consumes_preview_halfedge_ids() {
-    let registry = neural_engine::ColdOwner::new(super::super::module_registry().await);
+    let registry = TestGeometryRegistry::new();
     let source = HalfedgeMesh::box_prim(1.0, 1.0, 1.0).unwrap();
     let preview = source.tessellate().unwrap();
     let edge = *preview.edge_ids.iter().find(|&&id| id as usize >= source.edge_count()).expect("preview has sparse halfedge ids");
@@ -79,7 +104,7 @@ async fn mesh_loop_cut_consumes_preview_halfedge_ids() {
 
 #[semio_framework_async_macros::async_test]
 async fn brep_scale_preserves_each_axis_and_explicit_center() {
-    let registry = neural_engine::ColdOwner::new(super::super::module_registry().await);
+    let registry = TestGeometryRegistry::new();
     let fixture = pack::json::parse(include_str!("../../🧫️fixtures/🔣️.json")).unwrap();
     for case in fixture.get("brepScales").unwrap().as_array().unwrap() {
         let coordinates = |key: &str| [0, 1, 2].map(|axis| case.get(key).unwrap().as_array().unwrap()[axis].as_f64().unwrap());
@@ -87,7 +112,7 @@ async fn brep_scale_preserves_each_axis_and_explicit_center() {
         let source = registry.dispatch_cold("brep.prim3d.box", input).unwrap();
         let output = registry.dispatch_cold("brep.xform.scale", Dictionary::new().insert("geometry", source.get("solid").unwrap().clone()).insert("factor", Value::Dictionary(vector_dictionary(coordinates("factors")))).insert("center", Value::Dictionary(point_dictionary(coordinates("center"))))).unwrap();
         let handle = read_geometry(&output, "geometryOut").unwrap();
-        with_kernel_read(|kernel| {
+        registry.session.with_kernel_read(|kernel| {
             let mesh = kernel.tessellate(&handle, 0.1).map_err(|error| map_kernel_error(&error))?;
             let minimum = [0, 1, 2].map(|axis| mesh.position.chunks_exact(3).map(|point| point[axis] as f64).fold(f64::INFINITY, f64::min));
             let maximum = [0, 1, 2].map(|axis| mesh.position.chunks_exact(3).map(|point| point[axis] as f64).fold(f64::NEG_INFINITY, f64::max));
@@ -104,7 +129,7 @@ async fn brep_scale_preserves_each_axis_and_explicit_center() {
 
 #[semio_framework_async_macros::async_test]
 async fn mesh_reflections_preserve_outward_winding_at_every_scale() {
-    let registry = neural_engine::ColdOwner::new(super::super::module_registry().await);
+    let registry = TestGeometryRegistry::new();
     let fixture = pack::json::parse(include_str!("../../🧫️fixtures/🔣️.json")).unwrap();
     for case in fixture.get("reflections").unwrap().as_array().unwrap() {
         let factors = case.get("factors").unwrap().as_array().unwrap().iter().map(|value| value.as_f64().unwrap()).collect::<Vec<_>>();
@@ -146,7 +171,7 @@ fn indexed_mesh_contract_fixtures() {
 
 #[semio_framework_async_macros::async_test]
 async fn mesh_widgets_are_registered_and_typed() {
-    let registry = neural_engine::ColdOwner::new(super::super::module_registry().await);
+    let registry = TestGeometryRegistry::new();
     for id in ["brep.mesh.box", "brep.mesh.construct", "brep.mesh.fromBrep", "brep.mesh.extrude", "brep.mesh.inset", "brep.mesh.loopCut", "brep.mesh.knifeCut", "brep.mesh.analyze", "brep.mesh.exportObj"] {
         let info = registry.operator_info(id).expect(id);
         assert!(info.group.iter().any(|group| group.starts_with("Mesh")));
@@ -156,7 +181,7 @@ async fn mesh_widgets_are_registered_and_typed() {
 
 #[semio_framework_async_macros::async_test]
 async fn mesh_widget_workflow_fixtures_execute() {
-    let registry = neural_engine::ColdOwner::new(super::super::module_registry().await);
+    let registry = TestGeometryRegistry::new();
     let fixture = pack::json::parse(include_str!("../../🧫️fixtures/🔣️.json")).unwrap();
     for case in fixture.get("workflows").unwrap().as_array().unwrap() {
         let operation = case.get("operation").unwrap().as_str().unwrap();
@@ -205,7 +230,7 @@ fn brep_tessellation_seams_become_shared_mesh_vertices() {
 
 #[semio_framework_async_macros::async_test]
 async fn mesh_workbench_creates_edits_analyzes_and_converts() {
-    let registry = neural_engine::ColdOwner::new(super::super::module_registry().await);
+    let registry = TestGeometryRegistry::new();
     let defaults = |id: &str| registry.operator_info(id).unwrap().inputs.iter().fold(Dictionary::new(), |input, channel| match &channel.default {
         Some(value) => input.insert(channel.name.clone(), value.clone()),
         None => input,
@@ -222,13 +247,13 @@ async fn mesh_workbench_creates_edits_analyzes_and_converts() {
     assert!((volume - 1.32).abs() < 1e-5);
     let brep = registry.dispatch_cold("brep.mesh.toBrep", defaults("brep.mesh.toBrep").insert("mesh", output.get("meshOut").unwrap().clone())).unwrap();
     let handle = read_geometry(&brep, "geometry").unwrap();
-    let transfer = with_kernel_read(|kernel| kernel.tessellate(&handle, 0.1).map_err(|error| map_kernel_error(&error))).unwrap();
+    let transfer = registry.session.with_kernel_read(|kernel| kernel.tessellate(&handle, 0.1).map_err(|error| map_kernel_error(&error))).unwrap();
     assert!(!transfer.index.is_empty());
 }
 
 #[semio_framework_async_macros::async_test]
 async fn mesh_inspection_widgets_match_portable_fixtures() {
-    let registry = neural_engine::ColdOwner::new(super::super::module_registry().await);
+    let registry = TestGeometryRegistry::new();
     let fixture = pack::json::parse(include_str!("../../🧫️fixtures/🔎️inspection/🔣️.json")).unwrap();
     let mesh = decode_mesh(&pack::json::to_string(fixture.get("mesh").unwrap())).unwrap();
     let seed = neural_engine::ColdOwner::new(mesh_output(&mesh).unwrap());
@@ -255,7 +280,7 @@ async fn mesh_inspection_widgets_match_portable_fixtures() {
 
 #[semio_framework_async_macros::async_test]
 async fn mesh_modeling_widgets_match_kernel_portable_fixtures() {
-    let registry = neural_engine::ColdOwner::new(super::super::module_registry().await);
+    let registry = TestGeometryRegistry::new();
     let fixtures = pack::json::parse(include_str!("../../../../../../../../🧰️framework/🔨️modules/🧊️3d/🥽️mesh/🧫️fixtures/🛠️modeling/🔣️.json")).unwrap();
     for (key, operation) in [("bevels", "bevel"), ("dissolutions", "dissolveVertices"), ("merges", "mergeVertices"), ("mirrors", "mirror"), ("decimations", "decimate")] {
         for fixture in fixtures.get(key).unwrap().as_array().unwrap() {
@@ -303,7 +328,7 @@ async fn mesh_modeling_widgets_match_kernel_portable_fixtures() {
 
 #[semio_framework_async_macros::async_test]
 async fn mesh_face_merge_widgets_preserve_fixture_surface() {
-    let registry = neural_engine::ColdOwner::new(super::super::module_registry().await);
+    let registry = TestGeometryRegistry::new();
     let fixture = pack::json::parse(include_str!("../../🧫️fixtures/🧵️merge-faces/🔣️.json")).unwrap();
     let source = decode_mesh(&pack::json::to_string(fixture.get("mesh").unwrap())).unwrap();
     let seed = neural_engine::ColdOwner::new(mesh_output(&source).unwrap());
@@ -320,7 +345,7 @@ async fn mesh_face_merge_widgets_preserve_fixture_surface() {
 
 #[semio_framework_async_macros::async_test]
 async fn reflected_preview_edge_ids_inspect_the_serialized_mesh() {
-    let registry = neural_engine::ColdOwner::new(super::super::module_registry().await);
+    let registry = TestGeometryRegistry::new();
     let fixtures = pack::json::parse(include_str!("../../🧫️fixtures/🔎️inspection/🔣️.json")).unwrap();
     let source = neural_engine::ColdOwner::new(mesh_output(&HalfedgeMesh::box_prim(1.0, 1.0, 1.0).unwrap()).unwrap());
     for transform in fixtures.get("previewTransforms").unwrap().as_array().unwrap() {
@@ -340,7 +365,7 @@ async fn reflected_preview_edge_ids_inspect_the_serialized_mesh() {
 #[semio_framework_async_macros::async_test]
 async fn mesh_modeling_yields_and_cancels_through_graph_evaluation_handler() {
     let _serial = super::super::tests::test_serial().await;
-    let registry = neural_engine::ColdOwner::new(super::super::module_registry().await);
+    let registry = TestGeometryRegistry::new();
     let fixture = pack::json::parse(include_str!("../../🧫️fixtures/⏱️modeling-budget/🔣️.json")).unwrap();
     let mesh = decode_mesh(&pack::json::to_string(fixture.get("mesh").unwrap())).unwrap();
     let source = neural_engine::ColdOwner::new(mesh_output(&mesh).unwrap());

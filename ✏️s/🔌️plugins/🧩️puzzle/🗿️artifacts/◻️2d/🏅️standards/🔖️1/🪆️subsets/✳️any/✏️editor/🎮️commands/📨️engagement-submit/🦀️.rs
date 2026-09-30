@@ -1,13 +1,15 @@
 //! 🤝️ `engagement-submit` command.
 
 use crate::editor::puzzle2d::modes::edit::tools::fill;
-use crate::editor::puzzle2d::{puzzle2d_transform_selection, Puzzle2dActionCtx, Puzzle2dTransform};
+use crate::editor::puzzle2d::{puzzle2d_selection_pivot, Puzzle2dActionCtx, Puzzle2dSelectionMotion, Puzzle2dSelectionRecord};
 use semio_framework_plugin::kernel::Effect;
 use serde_json::Value;
 
 /// 🤝️ Parses one typed engagement line: `select` / `brush` (utility switch), `fill [<n>]` (activate
 /// the fill tool, optionally retargeting its count), `clear` (empty the live selection), the
-/// transform verbs `move <dx> <dy>`, `rotate <deg>`, `scale <factor>` over the live selection, and
+/// transform verbs `move <dx> <dy>`, `rotate <deg>`, `scale <factor>` over the live selection — each ONE
+/// select-tool transaction yielding the same parametric leaf `translateSelection`/`rotateSelection`/
+/// `scaleSelection` yield — and
 /// `connect <handle> <handle>` — which takes its two operands from the ORIGINAL line, since handle
 /// ids are case-sensitive and the verb match reads the lowercased one.
 pub fn engagement_submit(ctx: &mut Puzzle2dActionCtx<'_>, args: Option<&Value>) {
@@ -58,15 +60,23 @@ pub fn engagement_submit(ctx: &mut Puzzle2dActionCtx<'_>, args: Option<&Value>) 
             true
         }
         "move" if numbers.len() >= 2 => {
-            puzzle2d_transform_selection(&mut ctx.scene.fixture, &selected_ids, Puzzle2dTransform::Translate { dx: numbers[0], dy: numbers[1] });
+            let targets = ctx.selected_transform_targets();
+            ctx.commit_selection("engagementSubmit", vec![Puzzle2dSelectionRecord::drag(targets, numbers[0], numbers[1])]);
             true
         }
         "rotate" if !numbers.is_empty() => {
-            puzzle2d_transform_selection(&mut ctx.scene.fixture, &selected_ids, Puzzle2dTransform::Rotate { radians: numbers[0].to_radians() });
+            let document = ctx.base;
+            let targets: Vec<String> = ctx.selected_transform_targets().into_iter().filter(|id| document.typed().nodes.iter().any(|node| &node.id == id)).collect();
+            if let Some((pivot_x, pivot_y)) = puzzle2d_selection_pivot(document.typed(), &targets, false) {
+                ctx.commit_selection("engagementSubmit", vec![Puzzle2dSelectionRecord { targets, motion: Puzzle2dSelectionMotion::Rotate { pivot_x, pivot_y, angle: numbers[0].to_radians() }, proximity: Vec::new(), connect: false }]);
+            }
             true
         }
         "scale" if numbers.first().is_some_and(|factor| *factor > 0.0) => {
-            puzzle2d_transform_selection(&mut ctx.scene.fixture, &selected_ids, Puzzle2dTransform::Scale { factor: numbers[0] });
+            let targets = ctx.selected_transform_targets();
+            if let Some((pivot_x, pivot_y)) = puzzle2d_selection_pivot(ctx.base.typed(), &targets, true) {
+                ctx.commit_selection("engagementSubmit", vec![Puzzle2dSelectionRecord { targets, motion: Puzzle2dSelectionMotion::Scale { pivot_x, pivot_y, factor: numbers[0] }, proximity: Vec::new(), connect: false }]);
+            }
             true
         }
         _ => false,

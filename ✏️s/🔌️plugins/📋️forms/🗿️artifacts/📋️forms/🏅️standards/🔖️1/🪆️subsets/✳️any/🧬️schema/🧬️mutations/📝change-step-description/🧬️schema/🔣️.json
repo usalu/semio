@@ -5,17 +5,54 @@
   "type": "object",
   "additionalProperties": false,
   "required": [
+    "mutation",
     "id"
   ],
   "properties": {
-    "id": {
-      "type": "string"
+    "mutation": {
+      "const": "changeStepDescription"
     },
-    "new_description": {
+    "id": {
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Step",
+          "de": "Schritt"
+        },
+        "description": {
+          "en": "The form step this mutation addresses.",
+          "de": "Der Formularschritt, den diese Mutation adressiert."
+        },
+        "ref": {
+          "kind": "step",
+          "domain": "fields",
+          "granularity": "section"
+        },
+        "group": "target",
+        "order": 10
+      }
+    },
+    "newDescription": {
       "type": [
         "string",
         "null"
-      ]
+      ],
+      "x-semio-ui": {
+        "widget": "multiline",
+        "role": "value",
+        "label": {
+          "en": "Description",
+          "de": "Beschreibung"
+        },
+        "description": {
+          "en": "Introduction shown above the step; empty removes it.",
+          "de": "Einleitung über dem Schritt; leer entfernt sie."
+        },
+        "group": "content",
+        "order": 20
+      }
     }
   }
 }

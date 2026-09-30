@@ -5,12 +5,35 @@
   "type": "object",
   "additionalProperties": false,
   "required": [
+    "mutation",
     "id",
     "newParagraphs"
   ],
   "properties": {
+    "mutation": {
+      "const": "editBlockText"
+    },
     "id": {
-      "type": "string"
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Block",
+          "de": "Block"
+        },
+        "description": {
+          "en": "The block this mutation addresses.",
+          "de": "Der Block, den diese Mutation adressiert."
+        },
+        "ref": {
+          "kind": "block",
+          "domain": "blocks",
+          "granularity": "block"
+        },
+        "group": "target",
+        "order": 10
+      }
     },
     "newParagraphs": {
       "type": "array",
@@ -33,24 +56,104 @@
               ],
               "properties": {
                 "text": {
-                  "type": "string"
+                  "type": "string",
+                  "x-semio-ui": {
+                    "widget": "text",
+                    "role": "value",
+                    "label": {
+                      "en": "Text",
+                      "de": "Text"
+                    },
+                    "group": "content",
+                    "order": 10
+                  }
                 },
                 "bold": {
-                  "type": "boolean"
+                  "type": "boolean",
+                  "x-semio-ui": {
+                    "widget": "toggle",
+                    "role": "value",
+                    "label": {
+                      "en": "Bold",
+                      "de": "Fett"
+                    },
+                    "group": "format",
+                    "order": 20
+                  }
                 },
                 "italic": {
-                  "type": "boolean"
+                  "type": "boolean",
+                  "x-semio-ui": {
+                    "widget": "toggle",
+                    "role": "value",
+                    "label": {
+                      "en": "Italic",
+                      "de": "Kursiv"
+                    },
+                    "group": "format",
+                    "order": 30
+                  }
                 },
                 "underline": {
-                  "type": "boolean"
+                  "type": "boolean",
+                  "x-semio-ui": {
+                    "widget": "toggle",
+                    "role": "value",
+                    "label": {
+                      "en": "Underline",
+                      "de": "Unterstrichen"
+                    },
+                    "group": "format",
+                    "order": 40
+                  }
                 },
                 "link": {
-                  "type": "string"
+                  "type": "string",
+                  "x-semio-ui": {
+                    "widget": "text",
+                    "role": "value",
+                    "label": {
+                      "en": "Link",
+                      "de": "Link"
+                    },
+                    "description": {
+                      "en": "Target URL of the run.",
+                      "de": "Ziel-URL des Abschnitts."
+                    },
+                    "group": "format",
+                    "order": 50
+                  }
                 }
               }
+            },
+            "x-semio-ui": {
+              "role": "value",
+              "label": {
+                "en": "Runs",
+                "de": "Abschnitte"
+              },
+              "description": {
+                "en": "Stretches of text sharing one format.",
+                "de": "Textstücke mit gleicher Formatierung."
+              },
+              "group": "content",
+              "order": 10
             }
           }
         }
+      },
+      "x-semio-ui": {
+        "role": "value",
+        "label": {
+          "en": "Paragraphs",
+          "de": "Absätze"
+        },
+        "description": {
+          "en": "The complete new text, paragraph by paragraph.",
+          "de": "Der vollständige neue Text, Absatz für Absatz."
+        },
+        "group": "content",
+        "order": 20
       }
     }
   }

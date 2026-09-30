@@ -10,10 +10,41 @@
   ],
   "properties": {
     "elementId": {
-      "type": "string"
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Envelope element",
+          "de": "Bauteil der Gebäudehülle"
+        },
+        "description": {
+          "en": "The envelope element this mutation addresses.",
+          "de": "Das Bauteil der Gebäudehülle, das diese Mutation adressiert."
+        },
+        "ref": {
+          "kind": "element"
+        },
+        "group": "target",
+        "order": 10
+      }
     },
     "newAdjacent": {
-      "type": "string"
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "text",
+        "role": "value",
+        "label": {
+          "en": "Adjacent space",
+          "de": "Angrenzender Bereich"
+        },
+        "description": {
+          "en": "exterior, ground, unheated or otherHeated.",
+          "de": "exterior (Außenluft), ground (Erdreich), unheated (unbeheizter Raum) oder otherHeated (anderer beheizter Raum)."
+        },
+        "group": "envelope",
+        "order": 20
+      }
     }
   }
 }

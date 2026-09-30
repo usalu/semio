@@ -5,15 +5,27 @@
   "type": "object",
   "additionalProperties": false,
   "required": [
+    "mutation",
     "trailingNewline"
   ],
   "properties": {
-    "trailingNewline": {
-      "type": "boolean"
-    },
     "mutation": {
       "const": "setTrailingNewline",
       "description": "Aggregate discriminator spliced in by TsvMutation; absent when the payload stands alone."
+    },
+    "trailingNewline": {
+      "type": "boolean",
+      "x-semio-ui": {
+        "widget": "toggle",
+        "label": {
+          "en": "Trailing newline",
+          "de": "Abschließender Zeilenumbruch"
+        },
+        "description": {
+          "en": "Ends the last record with a line break.",
+          "de": "Beendet den letzten Datensatz mit einem Zeilenumbruch."
+        }
+      }
     }
   }
 }

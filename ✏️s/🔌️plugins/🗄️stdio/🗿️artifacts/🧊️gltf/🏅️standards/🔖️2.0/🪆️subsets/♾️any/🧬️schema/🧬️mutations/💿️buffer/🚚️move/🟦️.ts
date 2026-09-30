@@ -1,7 +1,14 @@
-/** 🦠️ move-buffer executable structural glTF command. */
-import type { GltfOrthographic, GltfPerspective, GltfSnapshot } from '../../📸️snapshot/🟦️.ts';
-import { clone, insert, order, position, reject, remove, relocate, reorder, repair, type GltfMutationRejection, type GltfStructuralResult } from './🟦️';
-export const GltfMoveBufferDescriptor = { id: 's.stdio.gltf.mutation.move-buffer.v1', version: 1, touchedPathPattern: 'document/buffers', referencePolicy: 'all typed buffer references are remapped, repaired, or rejected' } as const;
-export interface GltfMoveBufferPayload { index: number; position: number }
-export const validateGltfMoveBuffer = (payload: GltfMoveBufferPayload, base: GltfSnapshot): GltfMutationRejection | undefined => { const index = position(payload.index, base.document.buffers.length, 'document/buffers'); if (index) return index; const destination = position(payload.position, base.document.buffers.length, 'document/buffers'); if (destination) return destination; if (payload.index === payload.position) return reject('gltf.mutation.no-observable-change', 'document/buffers', 'destination equals source'); if (base.document.buffers.length !== base.buffers.length) return reject('gltf.mutation.buffer-alignment', 'buffers', 'descriptor and bytes arrays must align'); return undefined; };
-export const applyGltfMoveBuffer = (base: GltfSnapshot, payload: GltfMoveBufferPayload): GltfStructuralResult => { const rejection = validateGltfMoveBuffer(payload, base); if (rejection) return { accepted: false, rejection }; try { const next = clone(base); relocate(next, 'buffers', payload.index, payload.position); return { accepted: true, snapshot: clone(next) }; } catch (error) { return { accepted: false, rejection: typeof error === 'object' && error && 'code' in error ? error as GltfMutationRejection : reject('gltf.mutation.apply-failed', 'document/buffers', String(error)) }; } };
+/** 🚚️ `move-buffer` wire twin: the flat `Apply` payload `GltfMoveBufferPayload` and the phase wire `MoveBufferMutation`, exactly as `./🦀️.rs` writes them.
+ * @see ./🧬️schema/🔣️.json */
+import { gltfWireIndex, gltfWireObject, gltfWireRequired } from "../../../📸️snapshot/🟦️.ts";
+import { type GltfDiff, type GltfPhase, gltfWirePhase, parseGltfDiff } from "../../../🔺️diff/🟦️.ts";
+
+export interface GltfMoveBufferPayload {
+  index: number;
+  position: number;
+}
+
+export type MoveBufferMutation = GltfPhase<GltfMoveBufferPayload, GltfDiff>;
+
+export const parseGltfMoveBufferPayload = gltfWireObject<GltfMoveBufferPayload>({ index: gltfWireRequired(gltfWireIndex), position: gltfWireRequired(gltfWireIndex) });
+export const parseMoveBufferMutation = gltfWirePhase(parseGltfMoveBufferPayload, parseGltfDiff);

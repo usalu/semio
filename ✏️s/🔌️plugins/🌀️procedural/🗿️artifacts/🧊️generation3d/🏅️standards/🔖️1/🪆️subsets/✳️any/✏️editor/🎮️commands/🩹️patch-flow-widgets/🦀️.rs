@@ -53,8 +53,7 @@ pub fn handle(payload: &PatchFlowWidgets, doc: &ArtifactView<'_, Generation3dSna
     Ok(Emit { artifact_mutations, coalesce_key, ui_scope, ..Default::default() })
 }
 
-//#region 🧪️Tests
+
 #[cfg(test)]
 #[path = "🧪️tests/🔬️unit/🦀️.rs"]
 mod tests;
-//#endregion 🧪️Tests

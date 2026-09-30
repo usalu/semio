@@ -7,6 +7,7 @@ use crate::{EditionId, Vdi3805Mutation, Vdi3805Snapshot};
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 #[cfg_attr(test, serde(rename_all = "camelCase"))]
 #[mutation_leaf(contract = ::protocol)]
+#[value(rename_all = "camelCase")]
 pub struct ChangeCorrectionAsOf {
     pub new_correction_as_of: EditionId,
 }

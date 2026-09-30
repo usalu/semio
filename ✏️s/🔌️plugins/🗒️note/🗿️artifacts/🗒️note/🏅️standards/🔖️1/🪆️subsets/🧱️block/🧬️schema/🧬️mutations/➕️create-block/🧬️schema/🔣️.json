@@ -5,18 +5,76 @@
   "type": "object",
   "additionalProperties": false,
   "required": [
+    "mutation",
     "block"
   ],
   "properties": {
+    "mutation": {
+      "const": "createBlock"
+    },
     "block": {
-      "$ref": "#/$defs/NoteBlockNode"
+      "$ref": "#/$defs/NoteBlockNode",
+      "x-semio-ui": {
+        "role": "value",
+        "label": {
+          "en": "Block",
+          "de": "Block"
+        },
+        "description": {
+          "en": "The complete block to add.",
+          "de": "Der vollständige hinzuzufügende Block."
+        },
+        "group": "record",
+        "order": 10
+      }
     },
     "parentId": {
-      "type": "string"
+      "type": [
+        "string",
+        "null"
+      ],
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Container",
+          "de": "Container"
+        },
+        "description": {
+          "en": "Group block to place the block in; the page when omitted.",
+          "de": "Gruppenblock, in den der Block kommt; ohne Angabe die Seite."
+        },
+        "ref": {
+          "kind": "block",
+          "domain": "blocks",
+          "granularity": "block"
+        },
+        "group": "placement",
+        "order": 20
+      }
     },
     "index": {
-      "type": "integer",
-      "minimum": 0
+      "type": [
+        "integer",
+        "null"
+      ],
+      "minimum": 0,
+      "x-semio-ui": {
+        "widget": "stepper",
+        "role": "value",
+        "label": {
+          "en": "Index",
+          "de": "Index"
+        },
+        "description": {
+          "en": "Position in the list; the end when omitted.",
+          "de": "Position in der Liste; ohne Angabe am Ende."
+        },
+        "step": 1,
+        "precision": 0,
+        "group": "order",
+        "order": 30
+      }
     }
   },
   "$defs": {
@@ -29,7 +87,21 @@
       ],
       "properties": {
         "kind": {
-          "type": "string"
+          "type": "string",
+          "x-semio-ui": {
+            "widget": "text",
+            "role": "value",
+            "label": {
+              "en": "Kind",
+              "de": "Art"
+            },
+            "description": {
+              "en": "text, image, table, math, stroke or group.",
+              "de": "text (Text), image (Bild), table (Tabelle), math (Formel), stroke (Strich) oder group (Gruppe)."
+            },
+            "group": "kind",
+            "order": 10
+          }
         }
       }
     }

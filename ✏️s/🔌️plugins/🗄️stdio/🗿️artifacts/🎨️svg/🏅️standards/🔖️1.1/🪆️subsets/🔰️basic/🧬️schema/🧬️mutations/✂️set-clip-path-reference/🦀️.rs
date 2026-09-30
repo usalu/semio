@@ -8,6 +8,7 @@ use super::*;
 //#region 🔖️Payload
 #[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::MutationLeaf)]
 #[mutation_leaf(contract = ::protocol)]
+#[value(rename_all = "camelCase")]
 pub struct SetClipPathReference {
     pub(crate) path: NodePath,
     pub(crate) clip_path_id: Option<String>,

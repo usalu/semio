@@ -1,0 +1,65 @@
+{
+  "artifact": null,
+  "camera": null,
+  "edges": null,
+  "meta": null,
+  "nodes": {
+    "added": [],
+    "patched": [
+      {
+        "id": "node-a",
+        "patch": {
+          "replacement": {
+            "anchor": "fixed",
+            "handles": [
+              {
+                "angle": 1.5707963267948966,
+                "handleKind": "handle-kind-a",
+                "id": "handle-1"
+              },
+              {
+                "angle": 3.0707963267948966,
+                "handleKind": "handle-kind-a",
+                "id": "handle-spare"
+              }
+            ],
+            "iconKind": "icon-alpha",
+            "id": "node-a",
+            "nodeKind": "node-kind-a",
+            "radius": 10.0,
+            "shape": "circle",
+            "text": "Alpha",
+            "x": 30.0,
+            "y": -10.0
+          }
+        }
+      },
+      {
+        "id": "node-b",
+        "patch": {
+          "replacement": {
+            "anchor": "fixed",
+            "handles": [
+              {
+                "angle": 4.570796326794897,
+                "handleKind": "handle-kind-b",
+                "id": "handle-2"
+              }
+            ],
+            "height": 12.0,
+            "id": "node-b",
+            "nodeKind": "node-kind-b",
+            "shape": "rectangle",
+            "width": 30.0,
+            "x": 10.0,
+            "y": 30.0
+          }
+        }
+      }
+    ],
+    "removed": [],
+    "reordered": null
+  },
+  "schema": null,
+  "targetRegions": null
+}

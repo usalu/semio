@@ -1,9 +1,9 @@
 //! 🧪️ Hierarchical fixture triad `🏗️update-crane-inputs` / `🏋️widens-the-crane-wheel-contact-patch-under-a-heavier-wheel`.
 use crate::{En1993Diff, En1993Mutation, En1993Snapshot};
-const BEFORE: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🏗️update-crane-inputs/🏋️widens-the-crane-wheel-contact-patch-under-a-heavier-wheel/📸️snapshot/⬅️before/🔣️.json");
-const AFTER: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🏗️update-crane-inputs/🏋️widens-the-crane-wheel-contact-patch-under-a-heavier-wheel/📸️snapshot/➡️after/🔣️.json");
-const MUTATION: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🏗️update-crane-inputs/🏋️widens-the-crane-wheel-contact-patch-under-a-heavier-wheel/🦠️mutation/🔣️.json");
-const OUTCOME: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🏗️update-crane-inputs/🏋️widens-the-crane-wheel-contact-patch-under-a-heavier-wheel/🎯️outcome/🔣️.json");
+const BEFORE: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🏗️update-crane-inputs/🏋️widens-crane-wheel-contact-patch-under-heavier/📸️snapshot/⬅️before/🔣️.json");
+const AFTER: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🏗️update-crane-inputs/🏋️widens-crane-wheel-contact-patch-under-heavier/📸️snapshot/➡️after/🔣️.json");
+const MUTATION: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🏗️update-crane-inputs/🏋️widens-crane-wheel-contact-patch-under-heavier/🦠️mutation/🔣️.json");
+const OUTCOME: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🏗️update-crane-inputs/🏋️widens-crane-wheel-contact-patch-under-heavier/🎯️outcome/🔣️.json");
 fn before() -> En1993Snapshot { serde_json::from_str(BEFORE).expect("before") }
 fn expected_after() -> En1993Snapshot { serde_json::from_str(AFTER).expect("after") }
 fn mutation() -> En1993Mutation { serde_json::from_str(MUTATION).expect("mutation") }

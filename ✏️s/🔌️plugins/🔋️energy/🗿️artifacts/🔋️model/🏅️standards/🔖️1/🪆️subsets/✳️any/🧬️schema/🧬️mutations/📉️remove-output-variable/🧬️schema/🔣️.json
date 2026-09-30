@@ -5,15 +5,47 @@
   "type": "object",
   "additionalProperties": false,
   "required": [
+    "mutation",
     "name",
     "key"
   ],
   "properties": {
+    "mutation": {
+      "const": "removeOutputVariable"
+    },
     "name": {
-      "type": "string"
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "text",
+        "role": "value",
+        "label": {
+          "en": "Variable name",
+          "de": "Variablenname"
+        },
+        "description": {
+          "en": "Output variable to report, e.g. Zone Mean Air Temperature.",
+          "de": "Zu berichtende Ausgabevariable, z. B. Zone Mean Air Temperature."
+        },
+        "group": "output",
+        "order": 10
+      }
     },
     "key": {
-      "type": "string"
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "text",
+        "role": "value",
+        "label": {
+          "en": "Key value",
+          "de": "Schlüsselwert"
+        },
+        "description": {
+          "en": "Object the variable reports for, e.g. a zone name.",
+          "de": "Objekt, für das die Variable berichtet, z. B. ein Zonenname."
+        },
+        "group": "output",
+        "order": 20
+      }
     }
   }
 }

@@ -5,7 +5,7 @@ use crate::results_window_config::{NormResultsWindowConfig, NormResultsWindowCon
 #[derive(Clone, Debug, PartialEq, dsl::DslRecord, dsl::MutationLeaf, value_derive::ToValue, value_derive::FromValue)]
 #[dsl(keyword = "change-selected-check-index")]
 #[mutation_leaf(contract = ::protocol)]
-#[value(deny_unknown_fields)]
+#[value(rename_all = "camelCase", deny_unknown_fields)]
 pub struct ChangeSelectedCheckIndex {
     pub index: Option<u32>,
 }

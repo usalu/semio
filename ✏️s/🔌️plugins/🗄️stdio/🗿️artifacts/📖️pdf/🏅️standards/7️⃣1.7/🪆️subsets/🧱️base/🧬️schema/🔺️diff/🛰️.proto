@@ -305,3 +305,16 @@ message PdfSetPdfRect {
   string kind = 1;
   repeated double value = 2;
 }
+
+message PdfPathSegment {
+  string kind = 1;
+  optional uint64 index = 2;
+  optional string key = 3;
+}
+
+enum PdfPageBox {
+  PDFPAGEBOX_CROP = 0;
+  PDFPAGEBOX_BLEED = 1;
+  PDFPAGEBOX_TRIM = 2;
+  PDFPAGEBOX_ART = 3;
+}

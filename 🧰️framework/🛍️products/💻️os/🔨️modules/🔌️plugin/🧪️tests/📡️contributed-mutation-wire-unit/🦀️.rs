@@ -94,4 +94,10 @@ fn serde_binary_and_composite_plan_match_the_leaf() {
     assert_eq!(<AddValue as CompositeMutationKind<WireTestSnapshot, WireTestMutation>>::SEMANTICS.kind, "add-value");
     assert_eq!(<AddValue as CompositeMutationKind<WireTestSnapshot, WireTestMutation>>::label(&AddValue { delta: 5 }), protocol::LocalizedLabel::native("Add 5 to value", "5 zu Wert hinzufügen"));
 }
+
+/// 🧾️ The committed wire witnesses decode through the aggregate's `FromValue` and re-encode to exactly the committed JSON.
+#[test]
+fn committed_wire_witnesses_are_the_canonical_wire() {
+    ::store::os_store::test_support::assert_wire_witness::<WireTestMutation>(include_str!("../../🧫️fixtures/📡️contributed-mutation-wire/🧬️mutations/➕️add-value/🧫️fixtures/🧾️wire-witness/🦠️mutation/🔣️.json"));
+}
 //#endregion 🧪️ContributedMutationWireLaws

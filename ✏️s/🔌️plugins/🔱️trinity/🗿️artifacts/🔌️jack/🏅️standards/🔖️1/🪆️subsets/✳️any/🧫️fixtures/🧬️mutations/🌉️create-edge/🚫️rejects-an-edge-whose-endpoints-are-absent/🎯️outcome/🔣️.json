@@ -1,7 +1,8 @@
 {
   "status": "rejected",
-  "code": "mutation.invariant",
+  "code": "mutation.target-missing",
   "path": [
-    "shaft-to-capsule-a"
+    "shaft",
+    "capsule-a"
   ]
 }

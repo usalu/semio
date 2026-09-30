@@ -1,0 +1,25 @@
+[package]
+name = "semio-framework-time-travel"
+version = "0.1.0"
+edition = "2021"
+rust-version.workspace = true
+description = "Domain-neutral, pure time-travel session: the reducer of one ephemeral local-only history edit (identity, generation and base stamp, stages, accepted drafts, pending draft, replay report, progress, fault), its events, effects, refusals and EN/DE labels. Ticket 26/09/30/NON-DESTRUCTIVE-HISTORY-EDITING lane W1-B."
+
+[package.metadata.semio]
+role = "framework"
+id = "time-travel"
+
+[lints]
+workspace = true
+
+[lib]
+name = "semio_framework_time_travel"
+path = "🦀️.rs"
+
+[dependencies]
+semio-framework-replication = { workspace = true }
+# 🌱️ `ToValue`/`FromValue` derives, rooted at `::protocol::value` through `#[value(crate = …)]`.
+semio-framework-value-derive = { workspace = true }
+
+[dev-dependencies]
+serde_json = { workspace = true }

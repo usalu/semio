@@ -14,6 +14,7 @@ use semio_framework_value_derive::{FromValue as FromValueDerive, ToValue as ToVa
 /// is how a plain integer coefficient is expressed.
 #[derive(Clone, Debug, PartialEq, ToValueDerive, FromValueDerive, dsl::MutationLeaf)]
 #[mutation_leaf(contract = ::protocol)]
+#[value(rename_all = "camelCase")]
 pub struct ChangeCoefficient {
     pub label: EquationNodeLabel,
     pub numer: String,

@@ -1,6 +1,7 @@
 {
   "kind": "insert-channel",
-  "params": {
+  "mutation": {
+    "mutation": "insertChannel",
     "index": 1,
     "channel": {
       "samples": [

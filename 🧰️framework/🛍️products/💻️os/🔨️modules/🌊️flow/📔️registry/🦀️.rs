@@ -563,7 +563,8 @@ pub fn flow_extension_registry_generation() -> u64 {
     flow_extension_state().lock().expect("flow extension registry").generation
 }
 
-pub(crate) fn flow_registry() -> neural::SharedRegistry {
+/// 📔️ Reads the neutral contribution registry for hosts using the shared contribution composition.
+pub fn flow_operator_registry() -> neural::SharedRegistry {
     flow_extension_registry()
 }
 

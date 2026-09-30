@@ -5,15 +5,53 @@
   "type": "object",
   "additionalProperties": false,
   "required": [
+    "mutation",
     "id",
     "newVolumeM3"
   ],
   "properties": {
+    "mutation": {
+      "const": "changeZoneVolume"
+    },
     "id": {
-      "type": "integer"
+      "type": "integer",
+      "minimum": 0,
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Zone",
+          "de": "Zone"
+        },
+        "description": {
+          "en": "The zone this mutation changes, by id.",
+          "de": "Zone, die diese Mutation ändert, per ID."
+        },
+        "ref": {
+          "kind": "zone",
+          "domain": "energyModel",
+          "granularity": "zone"
+        },
+        "group": "target",
+        "order": 10
+      }
     },
     "newVolumeM3": {
-      "type": "number"
+      "type": "number",
+      "exclusiveMinimum": 0,
+      "x-semio-ui": {
+        "widget": "stepper",
+        "role": "value",
+        "label": {
+          "en": "Air volume",
+          "de": "Luftvolumen"
+        },
+        "unit": "m³",
+        "step": 0.1,
+        "precision": 1,
+        "group": "geometry",
+        "order": 20
+      }
     }
   }
 }

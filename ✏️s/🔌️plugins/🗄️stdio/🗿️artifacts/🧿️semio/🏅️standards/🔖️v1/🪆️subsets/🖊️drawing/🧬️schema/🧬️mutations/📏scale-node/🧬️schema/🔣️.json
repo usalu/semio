@@ -13,7 +13,13 @@
       "$ref": "#/$defs/NodePath"
     },
     "new_scale": {
-      "$ref": "#/$defs/SemioPoint3"
+      "$ref": "#/$defs/SemioPoint3",
+      "x-semio-ui": {
+        "label": {
+          "en": "Scale",
+          "de": "Skalierung"
+        }
+      }
     }
   },
   "$defs": {

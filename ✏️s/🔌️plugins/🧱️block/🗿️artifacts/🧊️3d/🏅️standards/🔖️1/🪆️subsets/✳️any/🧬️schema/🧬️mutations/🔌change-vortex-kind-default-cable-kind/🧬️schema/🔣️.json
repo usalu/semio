@@ -5,15 +5,42 @@
   "type": "object",
   "additionalProperties": false,
   "required": [
+    "mutation",
     "id",
     "newDefaultCableKind"
   ],
   "properties": {
+    "mutation": {
+      "const": "changeVortexKindDefaultCableKind"
+    },
     "id": {
-      "type": "string"
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Vortex kind",
+          "de": "Wirbelart"
+        },
+        "ref": {
+          "kind": "vortexKind"
+        },
+        "group": "target",
+        "order": 10
+      }
     },
     "newDefaultCableKind": {
-      "type": "string"
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "text",
+        "role": "value",
+        "label": {
+          "en": "Default cable kind",
+          "de": "Standard-Kabelart"
+        },
+        "group": "kind",
+        "order": 20
+      }
     }
   }
 }

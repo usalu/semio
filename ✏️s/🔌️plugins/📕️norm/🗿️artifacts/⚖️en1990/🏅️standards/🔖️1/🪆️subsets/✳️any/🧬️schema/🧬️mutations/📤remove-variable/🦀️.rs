@@ -3,6 +3,8 @@ use crate::{En1990Mutation, En1990Snapshot};
 #[derive(Clone, Debug, PartialEq, dsl::MutationLeaf, value_derive::ToValue, value_derive::FromValue)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 #[mutation_leaf(contract = ::protocol)]
+#[cfg_attr(test, serde(rename_all = "camelCase"))]
+#[value(rename_all = "camelCase")]
 pub struct RemoveVariable { pub index: usize, }
 impl protocol::MutationKind<En1990Snapshot, En1990Mutation> for RemoveVariable {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "remove", entity: "variable", kind: "remove-variable", record: "RemovedVariable" };

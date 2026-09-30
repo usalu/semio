@@ -5,20 +5,21 @@
   "type": "object",
   "additionalProperties": false,
   "required": [
+    "mutation",
     "index",
     "element"
   ],
   "properties": {
+    "mutation": {
+      "const": "addElement",
+      "description": "Aggregate discriminator spliced in by PlyMutation; absent when the payload stands alone."
+    },
     "index": {
       "type": "integer",
       "minimum": 0
     },
     "element": {
       "$ref": "#/$defs/PlyElement"
-    },
-    "mutation": {
-      "const": "addElement",
-      "description": "Aggregate discriminator spliced in by PlyMutation; absent when the payload stands alone."
     }
   },
   "$defs": {
@@ -49,6 +50,16 @@
           "type": "array",
           "items": {
             "$ref": "#/$defs/PlyRow"
+          },
+          "x-semio-ui": {
+            "label": {
+              "en": "Rows",
+              "de": "Zeilen"
+            },
+            "description": {
+              "en": "One value set per element instance.",
+              "de": "Ein Wertesatz je Elementinstanz."
+            }
           }
         }
       }

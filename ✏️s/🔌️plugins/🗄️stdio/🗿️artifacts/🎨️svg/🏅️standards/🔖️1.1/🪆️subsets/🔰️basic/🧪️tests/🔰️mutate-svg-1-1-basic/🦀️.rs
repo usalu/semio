@@ -40,9 +40,9 @@ fn mutable_mouse_input(ctx: &Context) -> Result<Vec<u8>, String> {
 //#endregion 🔖️Input
 
 //#region 🔖️Oracle
-/// 👁️ The forward mutation, with the OBSERVABILITY law asserted in role: a kind other than
-/// `no-mutation` whose parameters leave the semantic projection exactly where it was has not been
-/// tested by this scenario at all -- it proves only that the reference library declined to error.
+/// 👁️ The forward mutation, with the OBSERVABILITY law asserted in role: a kind whose parameters
+/// leave the semantic projection exactly where it was has not been tested by this scenario at all
+/// -- it proves only that the reference library declined to error.
 /// Every `Examples` row is chosen against the real artifact's actual content for that reason, and
 /// this check is what keeps them so.
 fn mutate_oracle(ctx: &Context) -> Result<Outcome, String> {
@@ -51,7 +51,7 @@ fn mutate_oracle(ctx: &Context) -> Result<Outcome, String> {
     let kind = spec.str("kind");
     let bytes = oracle_apply_mutation(&input, &spec)?;
     let projection = project_svg_basic(&bytes)?;
-    if kind != "no-mutation" && projection_divergence(&projection, &project_svg_basic(&input)?).is_none() {
+    if projection_divergence(&projection, &project_svg_basic(&input)?).is_none() {
         return Err(format!("{kind:?} left the semantic projection exactly as it found it -- a mutation whose parameters make it a no-op against the real artifact is not a test of that kind"));
     }
     Ok(Outcome::with_raw(bytes, projection))
@@ -119,140 +119,15 @@ fn round_trip_oracle_once(input: &[u8], what: &str) -> Result<(Vec<u8>, Json), S
 mod subject {
     use super::mutable_input;
     use semio_repo_test_host::{Context, Json, Outcome};
-    use semio_s_artifact_stdio_svg::standards::v1_1::subsets::base::schema::snapshot::{element_attr, parse_view_box, set_element_attr, view_box_to_string, NodePath, SvgSnapshot, TransformOp, ViewBox};
-    use semio_s_artifact_stdio_svg::standards::v1_1::subsets::basic::schema::mutations::{apply_svg_basic_mutation, insert_basic_element, insert_clip_path_shape, inverse_svg_basic_mutation, remove_element, set_basic_attribute, set_clip_path_reference, set_snapshot, set_text, set_transform, set_view_box, stamp_base_profile, SvgBasicMutation};
-    use semio_s_artifact_stdio_xml::standards::v1_0::subsets::base::schema::snapshot::{XmlAttr, XmlNode};
+    use semio_s_artifact_stdio_svg::standards::v1_1::subsets::base::schema::snapshot::SvgSnapshot;
+    use semio_s_artifact_stdio_svg::standards::v1_1::subsets::basic::schema::mutations::{apply_svg_basic_mutation, decode_svg_basic_mutation_payload_json, inverse_svg_basic_mutation, SvgBasicMutation};
     use semio_s_plugin_stdio_test_oracle::artifacts::svg::standards::v1_1::subsets::basic::project_svg_basic;
 
     //#region 🔖️SpecCodec
-    fn number_field(value: &Json, key: &str) -> f64 {
-        match value.get(key) {
-            Some(Json::Number(number)) => *number,
-            _ => 0.0,
-        }
-    }
-
-    fn usize_field(value: &Json, key: &str) -> usize {
-        number_field(value, key).max(0.0) as usize
-    }
-
-    fn str_field(value: &Json, key: &str) -> Option<String> {
-        match value.get(key) {
-            Some(Json::String(text)) if !text.is_empty() => Some(text.clone()),
-            _ => None,
-        }
-    }
-
-    fn path_field(value: &Json, key: &str) -> NodePath {
-        match value.get(key) {
-            Some(Json::Array(items)) => items
-                .iter()
-                .map(|item| match item {
-                    Json::Number(n) => n.max(0.0) as usize,
-                    _ => 0,
-                })
-                .collect(),
-            _ => Vec::new(),
-        }
-    }
-
-    fn view_box_field(value: &Json, key: &str) -> Option<ViewBox> {
-        match value.get(key) {
-            Some(Json::Array(items)) if items.len() == 4 => {
-                let n: Vec<f64> = items
-                    .iter()
-                    .map(|item| match item {
-                        Json::Number(x) => *x,
-                        _ => 0.0,
-                    })
-                    .collect();
-                Some(ViewBox { min_x: n[0], min_y: n[1], width: n[2], height: n[3] })
-            }
-            _ => None,
-        }
-    }
-
-    fn transform_op_field(value: &Json) -> TransformOp {
-        let num = |key: &str| number_field(value, key);
-        let opt_num = |key: &str| match value.get(key) {
-            Some(Json::Number(n)) => Some(*n),
-            _ => None,
-        };
-        match value.str("kind").as_str() {
-            "matrix" => TransformOp::Matrix { a: num("a"), b: num("b"), c: num("c"), d: num("d"), e: num("e"), f: num("f") },
-            "translate" => TransformOp::Translate { x: num("x"), y: opt_num("y") },
-            "scale" => TransformOp::Scale { x: num("x"), y: opt_num("y") },
-            "rotate" => TransformOp::Rotate {
-                angle: num("angle"),
-                center: match (opt_num("cx"), opt_num("cy")) {
-                    (Some(cx), Some(cy)) => Some((cx, cy)),
-                    _ => None,
-                },
-            },
-            "skewX" => TransformOp::SkewX { angle: num("angle") },
-            _ => TransformOp::SkewY { angle: num("angle") },
-        }
-    }
-
-    fn transform_field(value: &Json, key: &str) -> Option<Vec<TransformOp>> {
-        match value.get(key) {
-            Some(Json::Array(items)) => Some(items.iter().map(transform_op_field).collect()),
-            _ => None,
-        }
-    }
-
-    /// 🔎️ The same owned node JSON grammar the oracle side speaks, decoded into the PRODUCTION
-    /// `XmlNode` here instead of the oracle's own independent tree type.
-    fn json_to_xml_node(value: &Json) -> XmlNode {
-        match value.str("kind").as_str() {
-            "text" => XmlNode::Text { text: value.str("text") },
-            "cdata" => XmlNode::CData { text: value.str("text") },
-            "comment" => XmlNode::Comment { text: value.str("text") },
-            "pi" => XmlNode::ProcessingInstruction { target: value.str("target"), data: value.str("data") },
-            _ => XmlNode::Element { name: value.str("name"), attrs: value.array("attrs").iter().map(|a| XmlAttr { name: a.str("name"), value: a.str("value") }).collect(), children: value.array("children").iter().map(json_to_xml_node).collect() },
-        }
-    }
-
-    /// 📄️ The scenario's `<id>`/`<params>` spec turned into the ONE typed `SvgBasicMutation` this
-    /// subset declares for it. An undeclared kind is an error, never a silent no-op.
-    fn mutation_from_spec(spec: &Json, base: &SvgSnapshot) -> Result<SvgBasicMutation, String> {
-        let params = spec.get("params").cloned().unwrap_or(Json::Null);
-        match spec.str("kind").as_str() {
-            "set-snapshot" => {
-                let mut snapshot = base.clone();
-                if let Some(root) = snapshot.doc.root.as_mut() {
-                    if let Some(id) = str_field(&params, "rootId") {
-                        set_element_attr(root, "id", Some(id));
-                    }
-                    if let Some(width) = match params.get("viewBoxWidth") {
-                        Some(Json::Number(n)) => Some(*n),
-                        _ => None,
-                    } {
-                        let mut view_box = element_attr(root, "viewBox").and_then(|s| parse_view_box(s).ok()).unwrap_or(ViewBox { min_x: 0.0, min_y: 0.0, width: 0.0, height: 0.0 });
-                        view_box.width = width;
-                        set_element_attr(root, "viewBox", Some(view_box_to_string(&view_box)));
-                    }
-                }
-                Ok(SvgBasicMutation::SetSnapshot(set_snapshot::SetSnapshot { snapshot }))
-            }
-            "stamp-base-profile" => Ok(SvgBasicMutation::StampBaseProfile(stamp_base_profile::StampBaseProfile { base_profile: str_field(&params, "baseProfile"), version: str_field(&params, "version") })),
-            "insert-basic-element" => Ok(SvgBasicMutation::InsertBasicElement(insert_basic_element::InsertBasicElement { parent: path_field(&params, "parent"), index: usize_field(&params, "index"), node: json_to_xml_node(params.get("node").unwrap_or(&Json::Null)) })),
-            "remove-element" => Ok(SvgBasicMutation::RemoveElement(remove_element::RemoveElement { parent: path_field(&params, "parent"), index: usize_field(&params, "index") })),
-            "set-basic-attribute" => Ok(SvgBasicMutation::SetBasicAttribute(set_basic_attribute::SetBasicAttribute {
-                path: path_field(&params, "path"),
-                name: params.str("name"),
-                value: match params.get("value") {
-                    Some(Json::String(v)) => Some(v.clone()),
-                    _ => None,
-                },
-            })),
-            "set-clip-path-reference" => Ok(SvgBasicMutation::SetClipPathReference(set_clip_path_reference::SetClipPathReference { path: path_field(&params, "path"), clip_path_id: str_field(&params, "clipPathId") })),
-            "insert-clip-path-shape" => Ok(SvgBasicMutation::InsertClipPathShape(insert_clip_path_shape::InsertClipPathShape { clip_path_id: params.str("clipPathId"), index: usize_field(&params, "index"), node: json_to_xml_node(params.get("node").unwrap_or(&Json::Null)) })),
-            "set-text" => Ok(SvgBasicMutation::SetText(set_text::SetText { path: path_field(&params, "path"), text: params.str("text") })),
-            "set-view-box" => Ok(SvgBasicMutation::SetViewBox(set_view_box::SetViewBox { path: path_field(&params, "path"), view_box: view_box_field(&params, "viewBox") })),
-            "set-transform" => Ok(SvgBasicMutation::SetTransform(set_transform::SetTransform { path: path_field(&params, "path"), transform: transform_field(&params, "transform") })),
-            other => Err(format!("mutation kind {other:?} has no subject implementation")),
-        }
+    /// 📄️ The scenario's `<id>`/`<params>` spec decoded as the leaf wire payload it is, through the aggregate's own
+    /// derive-generated payload constructor — never re-declared field by field here.
+    fn mutation_from_spec(spec: &Json) -> Result<SvgBasicMutation, String> {
+        decode_svg_basic_mutation_payload_json(&spec.str("kind"), &spec.get("params").cloned().unwrap_or(Json::Null).to_string())
     }
     //#endregion 🔖️SpecCodec
 
@@ -269,7 +144,7 @@ mod subject {
 
     pub fn mutate(ctx: &Context) -> Result<Outcome, String> {
         let base = base_snapshot(ctx)?;
-        let mutation = mutation_from_spec(&ctx.doc_json()?, &base)?;
+        let mutation = mutation_from_spec(&ctx.doc_json()?)?;
         let mut snapshot = base;
         apply_svg_basic_mutation(&mut snapshot, &mutation);
         outcome_of(&snapshot)
@@ -280,7 +155,7 @@ mod subject {
     /// transcription of it.
     pub fn inverse(ctx: &Context) -> Result<Outcome, String> {
         let base = base_snapshot(ctx)?;
-        let mutation = mutation_from_spec(&ctx.doc_json()?, &base)?;
+        let mutation = mutation_from_spec(&ctx.doc_json()?)?;
         let undo = inverse_svg_basic_mutation(&mutation, &base);
         let mut snapshot = base;
         apply_svg_basic_mutation(&mut snapshot, &mutation);
@@ -317,10 +192,10 @@ mod subject {
 /// base ids, which the host resolves for every Examples row, and plain scenarios under their own ids.
 pub fn adapter() -> Adapter {
     let mut built = Adapter::new("rust");
-    built = built.oracle("mutate", mutate_oracle).oracle("no-mutation-baseline-mutate", mutate_oracle).oracle("inverse", inverse_oracle).oracle("no-mutation-baseline-inverse", inverse_oracle);
+    built = built.oracle("mutate", mutate_oracle).oracle("inverse", inverse_oracle);
     #[cfg(feature = "sut")]
     {
-        built = built.subject("mutate", subject::mutate).subject("no-mutation-baseline-mutate", subject::mutate).subject("inverse", subject::inverse).subject("no-mutation-baseline-inverse", subject::inverse);
+        built = built.subject("mutate", subject::mutate).subject("inverse", subject::inverse);
     }
     built = built.oracle("identity-round-trip", identity_round_trip_oracle);
     #[cfg(feature = "sut")]

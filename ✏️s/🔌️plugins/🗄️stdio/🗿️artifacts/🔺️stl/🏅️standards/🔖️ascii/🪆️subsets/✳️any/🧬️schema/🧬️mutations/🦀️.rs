@@ -85,6 +85,23 @@ pub fn apply_stl_mutation(snapshot: &mut StlSnapshot, mutation: &StlMutation) ->
 }
 //#endregion 🔖️Apply
 
+//#region 🚪️Reachability
+/// 🪪️ The [`StlMutation`] of semantic kind `kind` built from its leaf wire payload (`payload_value()`) in JSON text by the
+/// derive-generated `from_payload_value` — how a `{"kind", "params"}` feature row reaches the aggregate without naming the
+/// private `protocol` alias and without any hand mapping.
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn decode_stl_mutation_payload(kind: &str, text: &str) -> Result<StlMutation, String> {
+    protocol::os_pack::json::from_json_str(text).and_then(|payload| <StlMutation as Mutation<StlSnapshot>>::from_payload_value(kind, payload)).map_err(|error| error.to_string())
+}
+
+/// ↩️ `Mutation::inverse` for [`StlMutation`] against the pre-mutation `base` — the production inverse itself, reachable
+/// without naming the `protocol` alias.
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn inverse_stl_mutation(base: &StlSnapshot, mutation: &StlMutation) -> Vec<StlMutation> {
+    <StlMutation as Mutation<StlSnapshot>>::inverse(mutation, base)
+}
+//#endregion 🚪️Reachability
+
 //#region 🔖️MutationTrait
 /// ▶️ Lifted verbatim from the former hand-rolled `impl Mutation<StlSnapshot> for StlMutation`;
 /// every leaf's `MutationKind::diff` reconstructs its `StlMutation` and delegates here, so this

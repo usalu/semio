@@ -4,9 +4,28 @@
   "title": "ChangeObjectKindIcon",
   "type": "object",
   "additionalProperties": false,
+  "required": [
+    "mutation"
+  ],
   "properties": {
+    "mutation": {
+      "const": "changeObjectKindIcon"
+    },
     "newIcon": {
-      "type": "string"
+      "type": [
+        "string",
+        "null"
+      ],
+      "x-semio-ui": {
+        "widget": "text",
+        "role": "value",
+        "label": {
+          "en": "Icon",
+          "de": "Symbol"
+        },
+        "group": "value",
+        "order": 10
+      }
     }
   }
 }

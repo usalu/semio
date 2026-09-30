@@ -1,10 +1,12 @@
 {
-  "operation": {
-    "scene": 0,
-    "value": "alternate"
-  },
-  "after": "alternate",
-  "touchedPaths": [
-    "document/scenes/*/name"
-  ]
+  "scenes": {
+    "modified": [
+      {
+        "index": 0,
+        "diff": {
+          "name": "alternate"
+        }
+      }
+    ]
+  }
 }

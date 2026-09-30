@@ -3,17 +3,13 @@
   "$id": "https://json.schemas.assets.semio-tech.com/framework/os/store/fixtures/demo/mutation/delete-n/schema.json",
   "title": "DeleteN",
   "type": "object",
-  "$defs": {
-    "Payload": {
-      "type": "object",
-      "properties": {},
-      "required": []
-    }
-  },
-  "allOf": [
-    {
-      "$ref": "#/$defs/Payload"
-    }
+  "additionalProperties": false,
+  "required": [
+    "operation"
   ],
-  "propertyNames": false
+  "properties": {
+    "operation": {
+      "const": "deleteN"
+    }
+  }
 }

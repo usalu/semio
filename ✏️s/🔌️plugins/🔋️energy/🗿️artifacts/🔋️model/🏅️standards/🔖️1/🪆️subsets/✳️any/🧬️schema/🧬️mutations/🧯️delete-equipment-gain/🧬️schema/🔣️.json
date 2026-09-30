@@ -5,11 +5,35 @@
   "type": "object",
   "additionalProperties": false,
   "required": [
+    "mutation",
     "id"
   ],
   "properties": {
+    "mutation": {
+      "const": "deleteEquipmentGain"
+    },
     "id": {
-      "type": "integer"
+      "type": "integer",
+      "minimum": 0,
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Equipment gain",
+          "de": "Gerätewärmegewinn"
+        },
+        "description": {
+          "en": "The equipment gain to delete, by id.",
+          "de": "Gerätewärmegewinn, den diese Mutation löscht, per ID."
+        },
+        "ref": {
+          "kind": "equipmentGain",
+          "domain": "energyModel",
+          "granularity": "load"
+        },
+        "group": "target",
+        "order": 10
+      }
     }
   }
 }

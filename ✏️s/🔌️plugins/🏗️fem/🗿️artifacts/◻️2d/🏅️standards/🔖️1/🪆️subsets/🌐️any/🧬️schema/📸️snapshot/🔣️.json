@@ -93,19 +93,43 @@
           "type": "integer",
           "format": "uint32",
           "minimum": 1,
-          "x-semio-invariant": "mutations::guards::analysis_bounds — at least one modal mode"
+          "x-semio-invariant": [
+            {
+              "id": "analysis-modal-mode-count",
+              "description": {
+                "en": "At least one modal mode is requested.",
+                "de": "Mindestens eine Eigenform wird angefordert."
+              }
+            }
+          ]
         },
         "bucklingCount": {
           "type": "integer",
           "format": "uint32",
           "minimum": 1,
-          "x-semio-invariant": "mutations::guards::analysis_bounds — at least one buckling mode"
+          "x-semio-invariant": [
+            {
+              "id": "analysis-buckling-mode-count",
+              "description": {
+                "en": "At least one buckling mode is requested.",
+                "de": "Mindestens eine Knickform wird angefordert."
+              }
+            }
+          ]
         },
         "deformationScale": {
           "type": "number",
           "format": "double",
           "exclusiveMinimum": 0,
-          "x-semio-invariant": "mutations::guards::analysis_bounds — a positive deformation exaggeration"
+          "x-semio-invariant": [
+            {
+              "id": "analysis-deformation-scale-positive",
+              "description": {
+                "en": "The deformation exaggeration is positive.",
+                "de": "Die Verformungsüberhöhung ist positiv."
+              }
+            }
+          ]
         }
       }
     }

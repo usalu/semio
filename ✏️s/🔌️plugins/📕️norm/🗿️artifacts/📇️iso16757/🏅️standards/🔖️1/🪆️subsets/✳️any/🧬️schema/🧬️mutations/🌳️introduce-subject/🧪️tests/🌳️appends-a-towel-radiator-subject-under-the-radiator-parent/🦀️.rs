@@ -11,11 +11,11 @@
 
 use crate::{Iso16757Diff, Iso16757Mutation, Iso16757Snapshot};
 
-const BEFORE: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🌳️introduce-subject/🌳️appends-a-towel-radiator-subject-under-the-radiator-parent/📸️snapshot/⬅️before/🔣️.json");
-const AFTER: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🌳️introduce-subject/🌳️appends-a-towel-radiator-subject-under-the-radiator-parent/📸️snapshot/➡️after/🔣️.json");
-const MUTATION: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🌳️introduce-subject/🌳️appends-a-towel-radiator-subject-under-the-radiator-parent/🦠️mutation/🔣️.json");
-const DIFF: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🌳️introduce-subject/🌳️appends-a-towel-radiator-subject-under-the-radiator-parent/🔺️diff/🔣️.json");
-const OUTCOME: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🌳️introduce-subject/🌳️appends-a-towel-radiator-subject-under-the-radiator-parent/🎯️outcome/🔣️.json");
+const BEFORE: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🌳️introduce-subject/🌳️appends-towel-radiator-subject-under-radiator/📸️snapshot/⬅️before/🔣️.json");
+const AFTER: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🌳️introduce-subject/🌳️appends-towel-radiator-subject-under-radiator/📸️snapshot/➡️after/🔣️.json");
+const MUTATION: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🌳️introduce-subject/🌳️appends-towel-radiator-subject-under-radiator/🦠️mutation/🔣️.json");
+const DIFF: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🌳️introduce-subject/🌳️appends-towel-radiator-subject-under-radiator/🔺️diff/🔣️.json");
+const OUTCOME: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🌳️introduce-subject/🌳️appends-towel-radiator-subject-under-radiator/🎯️outcome/🔣️.json");
 
 fn before() -> Iso16757Snapshot {
     serde_json::from_str(BEFORE).expect("the committed before-snapshot decodes")

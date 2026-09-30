@@ -1,7 +1,7 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
   "$id": "https://json.schemas.assets.semio-tech.com/s/stdio/gltf/2.0/any/mutation/reorder-primitive-attributes/schema.json",
-  "title": "GltfReorderPrimitiveAttributesMutation",
+  "title": "GltfReorderPrimitiveAttributesPayload",
   "type": "object",
   "additionalProperties": false,
   "required": [
@@ -12,28 +12,96 @@
   "properties": {
     "mesh": {
       "type": "integer",
-      "minimum": 0
+      "minimum": 0,
+      "x-semio-ui": {
+        "widget": "stepper",
+        "label": {
+          "en": "Mesh",
+          "de": "Netz"
+        },
+        "description": {
+          "en": "Index of the mesh, counted from 0.",
+          "de": "Index des Netzes, ab 0 gezählt."
+        },
+        "precision": 0,
+        "group": "target",
+        "order": 10
+      }
     },
     "primitive": {
       "type": "integer",
-      "minimum": 0
+      "minimum": 0,
+      "x-semio-ui": {
+        "widget": "stepper",
+        "label": {
+          "en": "Primitive",
+          "de": "Primitiv"
+        },
+        "description": {
+          "en": "Index of the primitive within the mesh, counted from 0.",
+          "de": "Index des Primitivs im Netz, ab 0 gezählt."
+        },
+        "precision": 0,
+        "group": "target",
+        "order": 20
+      }
     },
     "order": {
       "type": "array",
       "items": {
         "type": "string"
+      },
+      "x-semio-ui": {
+        "label": {
+          "en": "New order",
+          "de": "Neue Reihenfolge"
+        },
+        "description": {
+          "en": "The current indices, listed in their new order.",
+          "de": "Die bisherigen Indizes in ihrer neuen Reihenfolge."
+        },
+        "group": "value",
+        "order": 30
       }
     }
   },
-  "x-semio": {
-    "id": "s.stdio.gltf.mutation.reorder-primitive-attributes.v1",
-    "version": 1,
-    "phase": "mutation",
-    "kind": "reorder",
-    "touchedPaths": [
-      "document/meshes/*/primitives/*/attributes"
-    ],
-    "referencePolicy": "accepts only the complete semantic-key permutation"
-  },
-  "x-semio-mutation": "reorder-primitive-attributes"
+  "$defs": {
+    "ReorderPrimitiveAttributesMutation": {
+      "description": "The whole wire of ReorderPrimitiveAttributesMutation: the editable apply payload (this document's root) or the inert restore.",
+      "oneOf": [
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "phase",
+            "value"
+          ],
+          "properties": {
+            "phase": {
+              "const": "apply"
+            },
+            "value": {
+              "$ref": "#"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "phase",
+            "value"
+          ],
+          "properties": {
+            "phase": {
+              "const": "restore"
+            },
+            "value": {
+              "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/gltf/2.0/any/diff.json"
+            }
+          }
+        }
+      ]
+    }
+  }
 }

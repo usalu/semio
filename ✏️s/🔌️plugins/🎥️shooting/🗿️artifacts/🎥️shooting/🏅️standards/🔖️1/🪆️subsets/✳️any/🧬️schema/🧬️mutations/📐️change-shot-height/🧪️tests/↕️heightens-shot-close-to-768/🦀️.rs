@@ -75,7 +75,7 @@ async fn declared_outcome_holds_and_a_zero_height_is_fatal() {
     assert_eq!(outcome.get("status").and_then(serde_json::Value::as_str), Some("applied"), "change-shot-height/heightens-shot-close-to-768: this fixture declares `applied`");
     assert!(mutation().diff(&before()).messages().is_empty(), "change-shot-height/heightens-shot-close-to-768: a real resize must raise no diagnostic");
 
-    let collapsed: ShootingMutation = serde_json::from_str(r#"{"mutation":"changeShotHeight","id":"shot-close","new_height":0}"#).expect("probe mutation decodes");
+    let collapsed: ShootingMutation = serde_json::from_str(r#"{"mutation":"changeShotHeight","id":"shot-close","newHeight":0}"#).expect("probe mutation decodes");
     let rejected = collapsed.diff(&before());
     assert_eq!(rejected.worst_level(), Some(protocol::Severity::Fatal), "change-shot-height/heightens-shot-close-to-768: a zero height must be Fatal");
     assert_eq!(rejected.messages()[0].code.0, "mutation.invariant", "change-shot-height/heightens-shot-close-to-768: the positivity guard's frozen code");

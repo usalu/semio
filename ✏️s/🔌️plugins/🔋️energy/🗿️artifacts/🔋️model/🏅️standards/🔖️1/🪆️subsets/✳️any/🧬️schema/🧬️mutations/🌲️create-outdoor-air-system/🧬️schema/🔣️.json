@@ -5,23 +5,92 @@
   "type": "object",
   "additionalProperties": false,
   "required": [
+    "mutation",
     "id",
     "airLoopId",
     "minOaFlowM3S",
     "economizerEnabled"
   ],
   "properties": {
+    "mutation": {
+      "const": "createOutdoorAirSystem"
+    },
     "id": {
-      "type": "integer"
+      "type": "integer",
+      "minimum": 0,
+      "x-semio-ui": {
+        "widget": "stepper",
+        "role": "value",
+        "label": {
+          "en": "ID",
+          "de": "ID"
+        },
+        "description": {
+          "en": "Id the new outdoor air system is created under; later mutations address it by this id.",
+          "de": "ID, unter der das neue Objekt angelegt wird; spätere Mutationen adressieren es darüber."
+        },
+        "step": 1,
+        "precision": 0,
+        "group": "identity",
+        "order": 10
+      }
     },
     "airLoopId": {
-      "type": "integer"
+      "type": "integer",
+      "minimum": 0,
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Air loop",
+          "de": "Luftkreislauf"
+        },
+        "description": {
+          "en": "Air loop the outdoor air system feeds, by id.",
+          "de": "Luftkreislauf, den das Außenluftsystem versorgt, per ID."
+        },
+        "ref": {
+          "kind": "airLoop"
+        },
+        "group": "assignment",
+        "order": 20
+      }
     },
     "minOaFlowM3S": {
-      "type": "number"
+      "type": "number",
+      "minimum": 0,
+      "x-semio-ui": {
+        "widget": "stepper",
+        "role": "value",
+        "label": {
+          "en": "Minimum outdoor air flow",
+          "de": "Minimaler Außenluftvolumenstrom"
+        },
+        "unit": "m³/s",
+        "displayUnit": "m³/h",
+        "displayFactor": 3600,
+        "step": 0.002777777777777778,
+        "precision": 0,
+        "group": "ventilation",
+        "order": 30
+      }
     },
     "economizerEnabled": {
-      "type": "boolean"
+      "type": "boolean",
+      "x-semio-ui": {
+        "widget": "toggle",
+        "role": "value",
+        "label": {
+          "en": "Economizer",
+          "de": "Economizer (freie Kühlung)"
+        },
+        "description": {
+          "en": "Raises the outdoor air share when outdoor air can cool.",
+          "de": "Erhöht den Außenluftanteil, wenn Außenluft kühlen kann."
+        },
+        "group": "ventilation",
+        "order": 40
+      }
     }
   }
 }

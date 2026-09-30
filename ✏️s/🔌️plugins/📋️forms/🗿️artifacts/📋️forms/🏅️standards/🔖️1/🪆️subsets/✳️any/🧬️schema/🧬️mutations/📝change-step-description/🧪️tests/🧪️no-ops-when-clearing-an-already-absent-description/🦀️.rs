@@ -22,11 +22,11 @@
 use crate::mutations::{apply_form_edit_mutation, inverse_form_mutation, FormMutation};
 use crate::{forms_steps, replace_forms_steps, FormStep, FormsDiff, FormsSnapshot};
 
-const BEFORE: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/📝change-step-description/🧪️no-ops-when-clearing-an-already-absent-description/📸️snapshot/⬅️before/🔣️.json");
-const AFTER: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/📝change-step-description/🧪️no-ops-when-clearing-an-already-absent-description/📸️snapshot/➡️after/🔣️.json");
-const MUTATION: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/📝change-step-description/🧪️no-ops-when-clearing-an-already-absent-description/🦠️mutation/🔣️.json");
-const DIFF: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/📝change-step-description/🧪️no-ops-when-clearing-an-already-absent-description/🔺️diff/🔣️.json");
-const OUTCOME: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/📝change-step-description/🧪️no-ops-when-clearing-an-already-absent-description/🎯️outcome/🔣️.json");
+const BEFORE: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/📝change-step-description/🧪️no-ops-when-clearing-already-absent/📸️snapshot/⬅️before/🔣️.json");
+const AFTER: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/📝change-step-description/🧪️no-ops-when-clearing-already-absent/📸️snapshot/➡️after/🔣️.json");
+const MUTATION: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/📝change-step-description/🧪️no-ops-when-clearing-already-absent/🦠️mutation/🔣️.json");
+const DIFF: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/📝change-step-description/🧪️no-ops-when-clearing-already-absent/🔺️diff/🔣️.json");
+const OUTCOME: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/📝change-step-description/🧪️no-ops-when-clearing-already-absent/🎯️outcome/🔣️.json");
 
 fn mutation() -> FormMutation {
     dsl::os_pack::json::from_json_str(MUTATION).expect("mutation decodes")

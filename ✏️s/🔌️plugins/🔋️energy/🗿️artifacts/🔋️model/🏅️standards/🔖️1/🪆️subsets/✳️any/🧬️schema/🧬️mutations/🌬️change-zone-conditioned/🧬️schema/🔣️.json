@@ -5,15 +5,53 @@
   "type": "object",
   "additionalProperties": false,
   "required": [
+    "mutation",
     "id",
     "newConditioned"
   ],
   "properties": {
+    "mutation": {
+      "const": "changeZoneConditioned"
+    },
     "id": {
-      "type": "integer"
+      "type": "integer",
+      "minimum": 0,
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Zone",
+          "de": "Zone"
+        },
+        "description": {
+          "en": "The zone this mutation changes, by id.",
+          "de": "Zone, die diese Mutation ändert, per ID."
+        },
+        "ref": {
+          "kind": "zone",
+          "domain": "energyModel",
+          "granularity": "zone"
+        },
+        "group": "target",
+        "order": 10
+      }
     },
     "newConditioned": {
-      "type": "boolean"
+      "type": "boolean",
+      "x-semio-ui": {
+        "widget": "toggle",
+        "role": "value",
+        "label": {
+          "en": "Conditioned",
+          "de": "Konditioniert"
+        },
+        "description": {
+          "en": "Heated or cooled by the HVAC system.",
+          "de": "Von der Anlagentechnik beheizt oder gekühlt."
+        },
+        "group": "thermal",
+        "order": 20
+      }
     }
   }
 }

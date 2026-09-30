@@ -297,7 +297,7 @@ pub type IoResult<T> = Result<IoOutcome<T>, IoError>;
 /// 📇️ One registered `IoEntry`, erased to owned/wire data — the shape the WIT `list-io-entries`
 /// guest export and the TS `IoEntryDescriptor[]` mirror both use.
 #[derive(Clone, Debug, PartialEq, ToValue, FromValue)]
-#[value(rename_all = "camelCase")]
+#[value(rename_all = "camelCase", deny_unknown_fields)]
 pub struct IoEntryDescriptor {
     pub from: ArtifactDialect,
     pub into: ArtifactDialect,
@@ -309,7 +309,7 @@ pub struct IoEntryDescriptor {
 /// `&'static IoEntry` pointers — so it can cross the WIT `io-routes` boundary; `io_run` re-resolves
 /// each hop's `(from, into)` pair against the live registry.
 #[derive(Clone, Debug, PartialEq, ToValue, FromValue)]
-#[value(rename_all = "camelCase")]
+#[value(rename_all = "camelCase", deny_unknown_fields)]
 pub struct IoRoute {
     pub hops: Vec<IoEntryDescriptor>,
     pub fidelity: IoFidelity,

@@ -1,0 +1,126 @@
+{
+  "surface": "conformance.composite.color-input",
+  "revision": 0,
+  "root": 0,
+  "nodes": [
+    {
+      "id": 0,
+      "key": "#0",
+      "component": {
+        "type": "container",
+        "role": "group",
+        "label": "Tint"
+      },
+      "layout": {
+        "kind": "stack",
+        "axis": "horizontal",
+        "gap": "sm",
+        "padding": {
+          "all": "none"
+        },
+        "align": "stretch",
+        "justify": "start",
+        "grow": false,
+        "wrap": true
+      },
+      "style": {},
+      "activity": "idle",
+      "accessibility": {},
+      "children": [
+        1,
+        2,
+        3
+      ]
+    },
+    {
+      "id": 1,
+      "key": "swatch",
+      "component": {
+        "type": "input",
+        "kind": "color",
+        "value": "#ff8000"
+      },
+      "layout": {
+        "kind": "leaf",
+        "width": "hug",
+        "height": "hug"
+      },
+      "style": {},
+      "activity": "idle",
+      "accessibility": {
+        "label": "Tint"
+      },
+      "bindings": [
+        {
+          "trigger": "change",
+          "action": {
+            "scope": "app",
+            "name": "setTint",
+            "version": 1
+          }
+        }
+      ]
+    },
+    {
+      "id": 2,
+      "key": "hex",
+      "component": {
+        "type": "input",
+        "value": "#ff800080",
+        "commit": "blur"
+      },
+      "layout": {
+        "kind": "leaf",
+        "width": "hug",
+        "height": "hug"
+      },
+      "style": {},
+      "activity": "idle",
+      "accessibility": {
+        "label": "Hex"
+      },
+      "bindings": [
+        {
+          "trigger": "change",
+          "action": {
+            "scope": "app",
+            "name": "setTint",
+            "version": 1
+          }
+        }
+      ]
+    },
+    {
+      "id": 3,
+      "key": "alpha",
+      "component": {
+        "type": "slider",
+        "value": 0.5,
+        "min": 0.0,
+        "max": 1.0,
+        "step": 0.01
+      },
+      "layout": {
+        "kind": "leaf",
+        "width": "hug",
+        "height": "hug"
+      },
+      "style": {},
+      "activity": "idle",
+      "accessibility": {
+        "label": "Alpha"
+      },
+      "bindings": [
+        {
+          "trigger": "change",
+          "action": {
+            "scope": "app",
+            "name": "setTintAlpha",
+            "version": 1
+          }
+        }
+      ]
+    }
+  ],
+  "layoutEpoch": 0
+}

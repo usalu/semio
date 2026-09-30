@@ -92,15 +92,11 @@ mod oracles {
     //#endregion 🔖️Tree
 
     //#region 🔖️JsonValue
-    fn number_field(value: &Json, key: &str) -> f64 {
-        match value.get(key) {
-            Some(Json::Number(number)) => *number,
-            _ => 0.0,
-        }
-    }
-
     fn usize_field(value: &Json, key: &str) -> usize {
-        number_field(value, key).max(0.0) as usize
+        match value.get(key) {
+            Some(Json::Number(number)) => number.max(0.0) as usize,
+            _ => 0,
+        }
     }
 
     fn usize_path(items: Vec<Json>) -> Vec<usize> {
@@ -113,125 +109,70 @@ mod oracles {
             .collect()
     }
 
-    fn non_empty(value: &Json, key: &str) -> Option<String> {
-        match value.get(key) {
-            Some(Json::String(text)) if !text.is_empty() => Some(text.clone()),
-            _ => None,
-        }
+    fn member(value: &Json, key: &str) -> Json {
+        value.get(key).cloned().unwrap_or(Json::Null)
     }
 
-    /// 🔎️ Owned node-spec JSON grammar mutation params speak: `{"kind":"element","name":...,
-    /// "attrs":[{"name":...,"value":...}],"children":[...]}` | `{"kind":"text"|"cdata"|"comment",
-    /// "text":...}` | `{"kind":"pi","target":...,"data":...}`.
-    fn json_to_xnode(value: &Json) -> Result<XNode, String> {
+    /// 🔎️ One `XmlNode` wire value — `{"kind":"element","name","attrs":[{"name","value"}],"children"}` |
+    /// `{"kind":"text"|"cData"|"comment","text"}` | `{"kind":"processingInstruction","target","data"}` — the node union
+    /// the leaf payload schema declares, read into this module's own tree.
+    fn xnode_from_wire(value: &Json) -> Result<XNode, String> {
         match value.str("kind").as_str() {
             "element" => Ok(XNode::Element {
                 name: value.str("name"),
                 attrs: value.array("attrs").iter().map(|attr| (attr.str("name"), attr.str("value"))).collect(),
-                children: value.array("children").iter().map(json_to_xnode).collect::<Result<Vec<_>, _>>()?,
+                children: value.array("children").iter().map(xnode_from_wire).collect::<Result<Vec<_>, _>>()?,
             }),
             "text" => Ok(XNode::Text(value.str("text"))),
-            "cdata" => Ok(XNode::CData(value.str("text"))),
+            "cData" => Ok(XNode::CData(value.str("text"))),
             "comment" => Ok(XNode::Comment(value.str("text"))),
-            "pi" => Ok(XNode::Pi { target: value.str("target"), data: value.str("data") }),
+            "processingInstruction" => Ok(XNode::Pi { target: value.str("target"), data: value.str("data") }),
             other => Err(format!("unknown node kind {other:?}")),
         }
     }
 
-    /// 🔁️ The reverse of [`json_to_xnode`] — used to capture a removed node's exact value so
-    /// `inverse_spec` can hand it back to [`json_to_xnode`] as the undo's own `insert-element` params.
-    fn xnode_to_json(node: &XNode) -> Json {
-        match node {
-            XNode::Element { name, attrs, children } => Json::Object(vec![
-                ("kind".to_string(), Json::String("element".to_string())),
-                ("name".to_string(), Json::String(name.clone())),
-                ("attrs".to_string(), Json::Array(attrs.iter().map(|(key, value)| Json::Object(vec![("name".to_string(), Json::String(key.clone())), ("value".to_string(), Json::String(value.clone()))])).collect())),
-                ("children".to_string(), Json::Array(children.iter().map(xnode_to_json).collect())),
-            ]),
-            XNode::Text(text) => Json::Object(vec![("kind".to_string(), Json::String("text".to_string())), ("text".to_string(), Json::String(text.clone()))]),
-            XNode::CData(text) => Json::Object(vec![("kind".to_string(), Json::String("cdata".to_string())), ("text".to_string(), Json::String(text.clone()))]),
-            XNode::Comment(text) => Json::Object(vec![("kind".to_string(), Json::String("comment".to_string())), ("text".to_string(), Json::String(text.clone()))]),
-            XNode::Pi { target, data } => Json::Object(vec![("kind".to_string(), Json::String("pi".to_string())), ("target".to_string(), Json::String(target.clone())), ("data".to_string(), Json::String(data.clone()))]),
+    /// 📄️ An `XmlDeclaration` wire value (`null` = no declaration). The `quote` facet is writer freedom the quick-xml
+    /// writer does not model, and the projection never compares it.
+    fn declaration_from_wire(value: &Json) -> Option<XDecl> {
+        match value {
+            Json::Object(_) => Some(XDecl {
+                version: value.str("version"),
+                encoding: match value.get("encoding") {
+                    Some(Json::String(text)) => Some(text.clone()),
+                    _ => None,
+                },
+                standalone: match value.get("standalone") {
+                    Some(Json::Bool(flag)) => Some(*flag),
+                    _ => None,
+                },
+            }),
+            _ => None,
         }
     }
 
-    /// 📄️ `{"version":...,"encoding":...,"standalone":...}` when present, absent (no `version` key)
-    /// meaning "no declaration" — the same convention `set-doctype`'s `name` key uses below.
-    fn json_to_declaration(params: &Json) -> Option<XDecl> {
-        non_empty(params, "version").map(|version| XDecl {
-            version,
-            encoding: non_empty(params, "encoding"),
-            standalone: match params.get("standalone") {
-                Some(Json::Bool(value)) => Some(*value),
-                _ => None,
-            },
-        })
-    }
-
-    fn declaration_to_json(declaration: &Option<XDecl>) -> Json {
-        match declaration {
-            None => Json::Object(vec![]),
-            Some(decl) => Json::Object(vec![
-                ("version".to_string(), Json::String(decl.version.clone())),
-                (
-                    "encoding".to_string(),
-                    match &decl.encoding {
-                        Some(value) => Json::String(value.clone()),
-                        None => Json::Null,
-                    },
-                ),
-                (
-                    "standalone".to_string(),
-                    match decl.standalone {
-                        Some(value) => Json::Bool(value),
-                        None => Json::Null,
-                    },
-                ),
-            ]),
+    /// 📜️ An `XmlDoctype` wire value (`null` = no doctype): name, `SYSTEM`/`PUBLIC` external identifier (tag `kind`) and
+    /// the typed internal-subset `declarations` (tag `kind`, `entity` alone).
+    fn doctype_from_wire(value: &Json) -> Result<Option<XDoctype>, String> {
+        if !matches!(value, Json::Object(_)) {
+            return Ok(None);
         }
-    }
-
-    fn json_to_doctype(params: &Json) -> Option<XDoctype> {
-        let name = non_empty(params, "name")?;
-        let external_id = match params.get("externalId") {
-            Some(value) if !matches!(value, Json::Null) => match value.str("kind").as_str() {
-                "system" => Some(XExternalId::System { system_id: value.str("systemId") }),
-                "public" => Some(XExternalId::Public { public_id: value.str("publicId"), system_id: value.str("systemId") }),
-                _ => None,
+        let external_id = match member(value, "externalId") {
+            id @ Json::Object(_) => match id.str("kind").as_str() {
+                "system" => Some(XExternalId::System { system_id: id.str("systemId") }),
+                "public" => Some(XExternalId::Public { public_id: id.str("publicId"), system_id: id.str("systemId") }),
+                other => return Err(format!("doctype: unrecognised external identifier kind {other:?}")),
             },
             _ => None,
         };
-        let entities = params.array("entities").iter().map(|entry| XEntity { parameter: matches!(entry.get("parameter"), Some(Json::Bool(true))), name: entry.str("name"), value: entry.str("value") }).collect();
-        Some(XDoctype { prolog_position: usize_field(params, "prologPosition"), name, external_id, entities })
-    }
-
-    fn doctype_to_json(doctype: &Option<XDoctype>) -> Json {
-        match doctype {
-            None => Json::Object(vec![]),
-            Some(dt) => Json::Object(vec![
-                ("prologPosition".to_string(), Json::Number(dt.prolog_position as f64)),
-                ("name".to_string(), Json::String(dt.name.clone())),
-                (
-                    "externalId".to_string(),
-                    match &dt.external_id {
-                        None => Json::Null,
-                        Some(XExternalId::System { system_id }) => Json::Object(vec![("kind".to_string(), Json::String("system".to_string())), ("systemId".to_string(), Json::String(system_id.clone()))]),
-                        Some(XExternalId::Public { public_id, system_id }) => {
-                            Json::Object(vec![("kind".to_string(), Json::String("public".to_string())), ("publicId".to_string(), Json::String(public_id.clone())), ("systemId".to_string(), Json::String(system_id.clone()))])
-                        }
-                    },
-                ),
-                (
-                    "entities".to_string(),
-                    Json::Array(
-                        dt.entities
-                            .iter()
-                            .map(|entity| Json::Object(vec![("parameter".to_string(), Json::Bool(entity.parameter)), ("name".to_string(), Json::String(entity.name.clone())), ("value".to_string(), Json::String(entity.value.clone()))]))
-                            .collect(),
-                    ),
-                ),
-            ]),
-        }
+        let entities = value
+            .array("declarations")
+            .iter()
+            .map(|entry| match entry.str("kind").as_str() {
+                "entity" => Ok(XEntity { parameter: matches!(entry.get("parameter"), Some(Json::Bool(true))), name: entry.str("name"), value: entry.str("value") }),
+                other => Err(format!("doctype: unrecognised declaration kind {other:?}")),
+            })
+            .collect::<Result<Vec<_>, String>>()?;
+        Ok(Some(XDoctype { prolog_position: usize_field(value, "prologPosition"), name: value.str("name"), external_id, entities }))
     }
     //#endregion 🔖️JsonValue
 
@@ -579,21 +520,17 @@ mod oracles {
     //#endregion 🔖️Serialize
 
     //#region 🔖️Forward
-    /// ▶️ Applies one `{kind, params}` mutation to `doc` in place. Out-of-range indices / unresolved
-    /// paths are errors here (never a silent no-op), matching this dispatch's own contract, though
-    /// every example this subset's own feature exercises resolves against the real document.
+    /// ▶️ Applies one `{kind, params}` mutation to `doc` in place, reading `params` as that leaf's wire payload.
+    /// Out-of-range indices / unresolved paths are errors here (never a silent no-op), matching this dispatch's own
+    /// contract, though every example this subset's own feature exercises resolves against the real document.
     fn apply_kind(doc: &mut XDoc, kind: &str, params: &Json) -> Result<(), String> {
         match kind {
-            "no-mutation" => {}
-            "set-snapshot" => {
-                *doc = parse(params.str("xml").as_bytes())?;
-            }
-            "set-declaration" => doc.declaration = json_to_declaration(params),
-            "set-doctype" => doc.doctype = json_to_doctype(params),
+            "set-declaration" => doc.declaration = declaration_from_wire(&member(params, "declaration")),
+            "set-doctype" => doc.doctype = doctype_from_wire(&member(params, "doctype"))?,
             "insert-element" => {
                 let path = usize_path(params.array("path"));
                 let index = usize_field(params, "index");
-                let node = json_to_xnode(&params.get("node").cloned().unwrap_or(Json::Null))?;
+                let node = xnode_from_wire(&member(params, "node"))?;
                 let XNode::Element { children, .. } = resolve_mut(doc.root.as_mut(), &path).ok_or("insert-element: path does not resolve to an element")? else {
                     return Err("insert-element: path does not address an element".to_string());
                 };
@@ -616,16 +553,7 @@ mod oracles {
                     Some(Json::String(text)) => Some(text.clone()),
                     _ => None,
                 };
-                let XNode::Element { attrs, .. } = resolve_mut(doc.root.as_mut(), &path).ok_or("set-attribute: path does not resolve to an element")? else {
-                    return Err("set-attribute: path does not address an element".to_string());
-                };
-                match value {
-                    Some(next) => match attrs.iter_mut().find(|(key, _)| key == &name) {
-                        Some(entry) => entry.1 = next,
-                        None => attrs.push((name, next)),
-                    },
-                    None => attrs.retain(|(key, _)| key != &name),
-                }
+                set_attribute(doc, &path, &name, value)?;
             }
             "set-text" => {
                 let path = usize_path(params.array("path"));
@@ -639,72 +567,72 @@ mod oracles {
         }
         Ok(())
     }
+
+    /// 🏷️ Sets (`Some`) or removes (`None`) one attribute of the element at `path`, updating in place when present.
+    fn set_attribute(doc: &mut XDoc, path: &[usize], name: &str, value: Option<String>) -> Result<(), String> {
+        let XNode::Element { attrs, .. } = resolve_mut(doc.root.as_mut(), path).ok_or("set-attribute: path does not resolve to an element")? else {
+            return Err("set-attribute: path does not address an element".to_string());
+        };
+        match value {
+            Some(next) => match attrs.iter_mut().find(|(key, _)| key == name) {
+                Some(entry) => entry.1 = next,
+                None => attrs.push((name.to_string(), next)),
+            },
+            None => attrs.retain(|(key, _)| key != name),
+        }
+        Ok(())
+    }
     //#endregion 🔖️Forward
 
     //#region 🔖️Inverse
-    /// ↩️ Reads `base` (the CURRENT, pre-mutation document) to build the spec that undoes `{kind,
-    /// params}` — same law `XmlMutation::inverse` proves at the Rust-model level, computed here
-    /// against the reference library instead.
-    fn inverse_spec(base: &XDoc, kind: &str, params: &Json) -> Json {
-        let spec = |inverse_kind: &str, inverse_params: Json| Json::Object(vec![("kind".to_string(), Json::String(inverse_kind.to_string())), ("params".to_string(), inverse_params)]);
-        let obj = |entries: Vec<(&str, Json)>| Json::Object(entries.into_iter().map(|(key, value)| (key.to_string(), value)).collect());
+    /// ↩️ Undoes `{kind, params}` on `doc` (the tree the forward step left behind) by restoring what the forward step
+    /// discarded from `base` — the same law `XmlMutation::inverse` proves at the Rust-model level, computed here against
+    /// the reference library's own tree instead.
+    fn invert(base: &XDoc, doc: &mut XDoc, kind: &str, params: &Json) -> Result<(), String> {
+        let path = usize_path(params.array("path"));
         match kind {
-            "no-mutation" => spec("no-mutation", obj(vec![])),
-            "set-snapshot" => spec("set-snapshot", obj(vec![("xml", Json::String(String::from_utf8(serialize(base).unwrap_or_default()).unwrap_or_default()))])),
-            "set-declaration" => spec("set-declaration", declaration_to_json(&base.declaration)),
-            "set-doctype" => spec("set-doctype", doctype_to_json(&base.doctype)),
+            "set-declaration" => doc.declaration = base.declaration.clone(),
+            "set-doctype" => doc.doctype = base.doctype.clone(),
             "insert-element" => {
-                let path_json = params.array("path");
-                let index = usize_field(params, "index");
-                spec("remove-element", obj(vec![("path", Json::Array(path_json)), ("index", Json::Number(index as f64))]))
+                let XNode::Element { children, .. } = resolve_mut(doc.root.as_mut(), &path).ok_or("inverse insert-element: path does not resolve to an element")? else {
+                    return Err("inverse insert-element: path does not address an element".to_string());
+                };
+                let index = usize_field(params, "index").min(children.len().saturating_sub(1));
+                children.remove(index);
             }
             "remove-element" => {
-                let path_json = params.array("path");
-                let path = usize_path(path_json.clone());
                 let index = usize_field(params, "index");
-                let node = match resolve(base.root.as_ref(), &path) {
+                let captured = match resolve(base.root.as_ref(), &path) {
                     Some(XNode::Element { children, .. }) => children.get(index).cloned(),
                     _ => None,
                 };
-                match node {
-                    Some(existing) => spec("insert-element", obj(vec![("path", Json::Array(path_json)), ("index", Json::Number(index as f64)), ("node", xnode_to_json(&existing))])),
-                    None => spec("no-mutation", obj(vec![])),
+                if let Some(node) = captured {
+                    let XNode::Element { children, .. } = resolve_mut(doc.root.as_mut(), &path).ok_or("inverse remove-element: path does not resolve to an element")? else {
+                        return Err("inverse remove-element: path does not address an element".to_string());
+                    };
+                    children.insert(index.min(children.len()), node);
                 }
             }
             "set-attribute" => {
-                let path_json = params.array("path");
-                let path = usize_path(path_json.clone());
                 let name = params.str("name");
                 let prior = match resolve(base.root.as_ref(), &path) {
                     Some(XNode::Element { attrs, .. }) => attrs.iter().find(|(key, _)| key == &name).map(|(_, value)| value.clone()),
                     _ => None,
                 };
-                spec(
-                    "set-attribute",
-                    obj(vec![
-                        ("path", Json::Array(path_json)),
-                        ("name", Json::String(name)),
-                        (
-                            "value",
-                            match prior {
-                                Some(value) => Json::String(value),
-                                None => Json::Null,
-                            },
-                        ),
-                    ]),
-                )
+                set_attribute(doc, &path, &name, prior)?;
             }
             "set-text" => {
-                let path_json = params.array("path");
-                let path = usize_path(path_json.clone());
                 let prior = match resolve(base.root.as_ref(), &path) {
                     Some(XNode::Text(text)) => text.clone(),
-                    _ => String::new(),
+                    _ => return Err("inverse set-text: the original target is not a text node".to_string()),
                 };
-                spec("set-text", obj(vec![("path", Json::Array(path_json)), ("text", Json::String(prior))]))
+                if let Some(XNode::Text(current)) = resolve_mut(doc.root.as_mut(), &path) {
+                    *current = prior;
+                }
             }
-            other => spec(other, params.clone()),
+            other => return Err(format!("mutation kind {other:?} has no oracle inverse implementation")),
         }
+        Ok(())
     }
     //#endregion 🔖️Inverse
 
@@ -730,11 +658,15 @@ mod oracles {
             return Err("mutation spec carries no `kind`".to_string());
         }
         let base = parse(input)?;
-        let inverse = inverse_spec(&base, kind, params);
-        let mut doc = base;
+        let mut doc = base.clone();
         apply_kind(&mut doc, kind, params)?;
-        apply_kind(&mut doc, &inverse.str("kind"), inverse.get("params").unwrap_or(&Json::Null))?;
+        invert(&base, &mut doc, kind, params)?;
         serialize(&doc)
+    }
+
+    /// 🔁️ Decode then re-encode through this module's own tree alone — the oracle half of the identity law.
+    pub fn round_trip(input: &[u8]) -> Result<Vec<u8>, String> {
+        serialize(&parse(input)?)
     }
 
     //#region 🔖️Projection
@@ -764,7 +696,29 @@ mod oracles {
     fn doctype_projection(doctype: &Option<XDoctype>) -> Json {
         match doctype {
             None => Json::Null,
-            Some(_) => doctype_to_json(doctype),
+            Some(dt) => Json::Object(vec![
+                ("prologPosition".to_string(), Json::Number(dt.prolog_position as f64)),
+                ("name".to_string(), Json::String(dt.name.clone())),
+                (
+                    "externalId".to_string(),
+                    match &dt.external_id {
+                        None => Json::Null,
+                        Some(XExternalId::System { system_id }) => Json::Object(vec![("kind".to_string(), Json::String("system".to_string())), ("systemId".to_string(), Json::String(system_id.clone()))]),
+                        Some(XExternalId::Public { public_id, system_id }) => {
+                            Json::Object(vec![("kind".to_string(), Json::String("public".to_string())), ("publicId".to_string(), Json::String(public_id.clone())), ("systemId".to_string(), Json::String(system_id.clone()))])
+                        }
+                    },
+                ),
+                (
+                    "entities".to_string(),
+                    Json::Array(
+                        dt.entities
+                            .iter()
+                            .map(|entity| Json::Object(vec![("parameter".to_string(), Json::Bool(entity.parameter)), ("name".to_string(), Json::String(entity.name.clone())), ("value".to_string(), Json::String(entity.value.clone()))]))
+                            .collect(),
+                    ),
+                ),
+            ]),
         }
     }
 
@@ -838,6 +792,12 @@ pub fn oracle_apply_mutation_inverse(input: &[u8], spec: &Json) -> Result<Vec<u8
     oracles::apply_mutation_inverse(input, &kind, &params)
 }
 
+/// 🔁️ Decodes and re-encodes one real artifact through the reference implementation alone.
+#[cfg(feature = "oracles")]
+pub fn oracle_round_trip(input: &[u8]) -> Result<Vec<u8>, String> {
+    oracles::round_trip(input)
+}
+
 /// 👁️ This subset's own semantic projection. @see [`oracles::project`].
 #[cfg(feature = "oracles")]
 pub fn project_xml_1_0(bytes: &[u8]) -> Result<Json, String> {
@@ -852,6 +812,11 @@ pub fn oracle_apply_mutation(_input: &[u8], _spec: &Json) -> Result<Vec<u8>, Str
 
 #[cfg(not(feature = "oracles"))]
 pub fn oracle_apply_mutation_inverse(_input: &[u8], _spec: &Json) -> Result<Vec<u8>, String> {
+    Err("the `oracles` feature is disabled — this host was not built with the registered reference implementations".to_string())
+}
+
+#[cfg(not(feature = "oracles"))]
+pub fn oracle_round_trip(_input: &[u8]) -> Result<Vec<u8>, String> {
     Err("the `oracles` feature is disabled — this host was not built with the registered reference implementations".to_string())
 }
 

@@ -1,6 +1,0 @@
-/** 🧪️ Focused move-morph-target-attribute mutation-law probe. */
-import type { GltfSnapshot } from '../../../📸️snapshot/🟦️.ts';
-import { applyGltfMoveMorphTargetAttribute, type GltfMoveMorphTargetAttributePayload } from './🟦️';
-import { deriveGltfMoveMorphTargetAttributeDiff } from './🟦️';
-import { deriveGltfMoveMorphTargetAttributeInverse } from './🟦️';
-export const assertGltfMoveMorphTargetAttributeLaws = (base: GltfSnapshot, payload: GltfMoveMorphTargetAttributePayload) => { const applied = applyGltfMoveMorphTargetAttribute(base, payload); if (!applied.accepted) return applied; const replay = applyGltfMoveMorphTargetAttribute(base, payload); const direct = deriveGltfMoveMorphTargetAttributeDiff(base, payload); const undo = deriveGltfMoveMorphTargetAttributeInverse(base, payload); if (!replay.accepted || !direct.accepted || !undo.accepted || JSON.stringify(applied.snapshot) !== JSON.stringify(replay.snapshot) || JSON.stringify(applied.diff) !== JSON.stringify(replay.diff) || JSON.stringify(applied.touchedPaths) !== JSON.stringify(undo.touchedPaths)) throw new Error('move-morph-target-attribute violates replay, direct-diff, or undo determinism'); return { applied, direct, undo }; };

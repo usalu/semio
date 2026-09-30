@@ -210,7 +210,7 @@ impl ParityHarness {
                         views: Vec::new(),
                         ui: None,
                         tool_run: None,
-                        principal_kind: None, active_tool: None,
+                        principal_kind: None, active_tool: None, history_edit: None,
                     };
                     peers.push(presence_to_bytes(&peer).await);
                 }

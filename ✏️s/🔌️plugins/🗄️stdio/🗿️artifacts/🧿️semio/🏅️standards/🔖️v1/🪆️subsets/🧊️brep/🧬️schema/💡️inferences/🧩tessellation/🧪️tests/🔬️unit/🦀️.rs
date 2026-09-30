@@ -326,7 +326,7 @@ async fn coedge_uv_prefers_stored_pcurve_when_present() {
         coedge.pcurve = Some(pcurve);
         coedge.prange = (0.0, 1.0);
     }
-    let mut cache = HashMap::new();
+    let mut cache = BTreeMap::new();
     cache.insert(edge, sample_edge_points(&body, edge, 0.1).unwrap());
     let (_positions, uvs, _poles) = collect_loop_uv(&body, outer, body.surfaces.get(surface).unwrap(), &cache).unwrap();
     assert!((uvs[0].0 - 5.0).abs() < 1e-9 && (uvs[0].1 - 5.0).abs() < 1e-9, "first sample should come from the stored pcurve, got {:?}", uvs[0]);

@@ -955,7 +955,7 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
     });
 
     it("recovers a child that refuses an inbound hub frame: actor-lost reopen, frontier kept, never a malformed-frame rebuild", async () => {
-      const batch = new Uint8Array(Buffer.from("01016d01640161000000017301aa016902bbcc03ffffffffffffffffff0105", "hex"));
+      const batch = new Uint8Array(Buffer.from("01016d01640161000000017301aa016902bbcc03ffffffffffffffffff010500", "hex"));
       const serverFrame = Uint8Array.from([0, 3, ...batch, 6, ...new TextEncoder().encode("remote"), 1, 100, 0, 1, 101, 0, ...new Array(32).fill(0)]);
       const decoded = decodeServerFrame(serverFrame).frame;
       const exactBatch = extractServerCommandsDocumentBackboneBatchExact(serverFrame);
@@ -1013,7 +1013,7 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
     });
 
     it("preserves a server Commands batch with a maximum-u64 HLC through the raw actor event", async () => {
-      const batch = new Uint8Array(Buffer.from("01016d01640161000000017301aa016902bbcc03ffffffffffffffffff0105", "hex"));
+      const batch = new Uint8Array(Buffer.from("01016d01640161000000017301aa016902bbcc03ffffffffffffffffff010500", "hex"));
       const serverFrame = Uint8Array.from([0, 3, ...batch, 6, ...new TextEncoder().encode("remote"), 1, 100, 0, 1, 101, 0, ...new Array(32).fill(0)]);
       const decoded = decodeServerFrame(serverFrame).frame;
       const exactBatch = extractServerCommandsDocumentBackboneBatchExact(serverFrame);
@@ -1074,20 +1074,24 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
       expect(stampedFolder.surface).toBeUndefined();
     });
 
-    it("stampSession publishes an actor-bound document's own presence pack and interaction, never the Shell's local instance's", async () => {
-      const { encodePresenceInteraction } = await import("../../../../🔨️modules/📡️replication/🟦️.ts");
+    it("stampSession publishes an actor-bound document's own presence pack, interaction, tool run and history edit, never the Shell's local instance's", async () => {
+      const { encodePresenceHistoryEdit, encodePresenceInteraction, encodePresenceToolRun } = await import("../../../../🔨️modules/📡️replication/🟦️.ts");
       const fixture = JSON.parse(await (await import("node:fs/promises")).readFile(new URL("./🔨️modules/📺️renderer/🧑‍🎨engine/🧫️fixtures/👕️canvas-presence/🔣️.json", source.url), "utf8")) as { readonly paint: readonly { readonly roster: readonly ArtifactPresencePeer[] }[] };
       const selecting = fixture.paint[0]!.roster.find((row) => row.actor === "peer-a")!;
       const config: ArtifactActorConfig = { documentId: "doc-4", schema: "demo/v1", bindings: [{ kind: "hub", dataClass: "persistedShared", baseUrl: "http://hub.test", spaceId: "studio-1" }], actor: "actor-1" };
-      const shellPeer: ArtifactPresencePeer = { actor: "actor-1", connectedAtMs: 1000, views: [], presencePack: [9, 9], interaction: { app_id: "local-instance", domains: [] } };
-      const snapshot = { presence: [1, 2, 3], presenceGeneration: 4, transientGeneration: 5, interaction: encodePresenceInteraction(selecting.interaction!) };
+      const localEdit = { mutationId: "local", stage: "editing", drafts: 0 } as const;
+      const shellPeer: ArtifactPresencePeer = { actor: "actor-1", connectedAtMs: 1000, views: [], presencePack: [9, 9], interaction: { app_id: "local-instance", domains: [] }, historyEdit: localEdit };
+      const toolRun = { toolId: "fill", state: "running", stage: 1, completed: 2, total: 5 } as const;
+      const historyEdit = { mutationId: "m-2", stage: "replaying", drafts: 1 } as const;
+      const snapshot = { presence: [1, 2, 3], presenceGeneration: 4, transientGeneration: 5, interaction: encodePresenceInteraction(selecting.interaction!), toolRun: encodePresenceToolRun(toolRun), historyEdit: encodePresenceHistoryEdit(historyEdit) };
       const bound = stampSession(shellPeer, { config, sessionColor: 3, browserActorReservation: { ephemeralSnapshot: snapshot } } as unknown as ArtifactState);
       expect(bound.presencePack).toEqual([1, 2, 3]);
       expect(bound.interaction).toEqual(selecting.interaction);
+      expect([bound.toolRun, bound.historyEdit]).toEqual([toolRun, historyEdit]);
       const unpublished = stampSession(shellPeer, { config, sessionColor: 3, browserActorReservation: { ephemeralSnapshot: null } } as unknown as ArtifactState);
-      expect([unpublished.presencePack, unpublished.interaction]).toEqual([undefined, undefined]);
+      expect([unpublished.presencePack, unpublished.interaction, unpublished.historyEdit]).toEqual([undefined, undefined, undefined]);
       const local = stampSession(shellPeer, { config, sessionColor: 3, browserActorReservation: null } as unknown as ArtifactState);
-      expect([local.presencePack, local.interaction]).toEqual([shellPeer.presencePack, shellPeer.interaction]);
+      expect([local.presencePack, local.interaction, local.historyEdit]).toEqual([shellPeer.presencePack, shellPeer.interaction, localEdit]);
     });
 
     it("handleHubFrame stores the hub-assigned session color on a Session frame", () => {
@@ -3016,7 +3020,7 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
           if (scenario === "lost-submit") {
             expect(harness.ports().at(-1)?.phase).toBe(fixture.unknownPhase);
             harness.bodies.push(JSON.stringify({
-              schema: "semio.hub.inference-job-reconcile-result/v1", version: 1, requestId: fixture.requestId, found: true,
+              schema: "semio.framework.job-reconcile-result/v1", version: 1, requestId: fixture.requestId, found: true,
               job: {
                 receipt: { schema: "semio.hub.inference-job-receipt/v1", jobId: JOB, state: "running", proposalState: "none", proposalHash: null, cursor: 0, expiresAtMs: 1_700_000_060_000 },
                 page: { jobId: JOB, state: "running", proposalState: "none", cancelRequested: false, expired: false, proposalHash: null, events: [], progress: [], nextCursor: 0 },
@@ -3074,7 +3078,7 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
           if (scenario === "approval-response") release();
           else {
             harness.bodies.push(JSON.stringify({
-              schema: "semio.hub.inference-job-reconcile-result/v1", version: 1, requestId: fixture.requestId, found: true,
+              schema: "semio.framework.job-reconcile-result/v1", version: 1, requestId: fixture.requestId, found: true,
               job: {
                 receipt: { schema: "semio.hub.inference-job-receipt/v1", jobId: JOB, state: "succeeded", proposalState: "approved", proposalHash: HASH, cursor: 1, expiresAtMs: 1_700_000_060_000 },
                 page: { jobId: JOB, state: "succeeded", proposalState: "approved", cancelRequested: false, expired: true, proposalHash: HASH, events: [], progress: [], nextCursor: 1 },
@@ -3674,6 +3678,7 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
           diff: { schema: envelope.diff.schemaId, payload: diffPayload },
           inverse: { schema: envelope.inverse.inverseDiff.schemaId, payload: encodePackValue(envelope.inverse.inverseDiff.payload) },
           timestamp,
+          transaction: null,
         }]),
       });
     }
@@ -6139,6 +6144,7 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
             diff: { schema: value.diff.schemaId, payload: value.document === "doc-a" ? opaqueNoncanonicalPack : encodePackValue(value.diff.payload) },
             inverse: { schema: value.inverse.inverseDiff.schemaId, payload: encodePackValue(value.inverse.inverseDiff.payload) },
             timestamp: { actor: 7n, physical_ms: 9_007_199_254_740_992n, logical: 11n },
+            transaction: null,
           }]),
         }),
       });
@@ -6207,6 +6213,7 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
               diff: { schema: "demo/v1", payload: encodePackValue("x".repeat(textBytes)) },
               inverse: { schema: "demo/v1", payload: encodePackValue(null) },
               timestamp: { actor: 1n, physical_ms: 2n, logical: 3n },
+              transaction: null,
             }]),
           });
           if (message.byteLength === target) return message;
@@ -6258,7 +6265,7 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
       (globalThis as unknown as { WebSocket: unknown }).WebSocket = FakeHubWebSocket;
       (globalThis as unknown as { BroadcastChannel: unknown }).BroadcastChannel = BoundPortBroadcastChannel;
       testSeams.documentSocketGrantTestIssue = async () => ({ schema: "semio.hub.document-socket-grant/v1", protocol: "semio.session.v1", actorId: `hub.v1.${"4".repeat(64)}`, expiresAtMs: Number.MAX_SAFE_INTEGER });
-      const replacement = (documentId: string) => ({ mutation_id: "hub-replacement", document_id: documentId, actor: "caller", dependencies: [], observed: null, target: [], diff: { schema: "demo/v1", payload: Array.from(encodePackValue("hub")) }, inverse: { schema: "demo/v1", payload: Array.from(encodePackValue(null)) }, timestamp: { actor: 1n, physical_ms: 2n, logical: 4n } });
+      const replacement = (documentId: string) => ({ mutation_id: "hub-replacement", document_id: documentId, actor: "caller", dependencies: [], observed: null, target: [], diff: { schema: "demo/v1", payload: Array.from(encodePackValue("hub")) }, inverse: { schema: "demo/v1", payload: Array.from(encodePackValue(null)) }, timestamp: { actor: 1n, physical_ms: 2n, logical: 4n }, transaction: null });
       const cases = [
         { documentId: "doc-ack-refused", outcome: { Rejected: { reason: "stale-base", messages: [] } }, expected: { kind: "rejected", reason: "stale-base", messages: [] } },
         { documentId: "doc-ack-transformed", outcome: { Transformed: { envelope: replacement("doc-ack-transformed") } }, expected: { kind: "transformed" } },
@@ -6268,7 +6275,7 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
           FakeHubWebSocket.instances = [];
           const edit = (id: string) => encodeBackboneMessage({
             kind: "mutations",
-            envelopes: encodeDocumentBackboneEnvelopeBatchExact([{ mutation_id: id, document_id: row.documentId, actor: "caller", dependencies: [], observed: null, target: [], diff: { schema: "demo/v1", payload: encodePackValue(id) }, inverse: { schema: "demo/v1", payload: encodePackValue(null) }, timestamp: { actor: 1n, physical_ms: 2n, logical: 3n } }]),
+            envelopes: encodeDocumentBackboneEnvelopeBatchExact([{ mutation_id: id, document_id: row.documentId, actor: "caller", dependencies: [], observed: null, target: [], diff: { schema: "demo/v1", payload: encodePackValue(id) }, inverse: { schema: "demo/v1", payload: encodePackValue(null) }, timestamp: { actor: 1n, physical_ms: 2n, logical: 3n }, transaction: null }]),
           });
           const outcomes: BackboneWorkerResponse[] = [];
           testSeams.workerPostTestSink = (message) => outcomes.push(message);
@@ -6315,7 +6322,7 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
       const documentId = "doc-ack-transient";
       const edit = (id: string, padding = 0) => encodeBackboneMessage({
         kind: "mutations",
-        envelopes: encodeDocumentBackboneEnvelopeBatchExact([{ mutation_id: id, document_id: documentId, actor: "caller", dependencies: [], observed: null, target: [], diff: { schema: "demo/v1", payload: encodePackValue(id + "x".repeat(padding)) }, inverse: { schema: "demo/v1", payload: encodePackValue(null) }, timestamp: { actor: 1n, physical_ms: 2n, logical: 3n } }]),
+        envelopes: encodeDocumentBackboneEnvelopeBatchExact([{ mutation_id: id, document_id: documentId, actor: "caller", dependencies: [], observed: null, target: [], diff: { schema: "demo/v1", payload: encodePackValue(id + "x".repeat(padding)) }, inverse: { schema: "demo/v1", payload: encodePackValue(null) }, timestamp: { actor: 1n, physical_ms: 2n, logical: 3n }, transaction: null }]),
       });
       const sentIds = (socket: FakeHubWebSocket) => socket.sent.flatMap((bytes) => {
         const decoded = decodeClientFrame(bytes).frame;
@@ -6451,7 +6458,7 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
       testSeams.documentSocketGrantTestIssue = async () => ({ schema: "semio.hub.document-socket-grant/v1", protocol: "semio.session.v1", actorId: actor, expiresAtMs: Number.MAX_SAFE_INTEGER });
       const edit = (documentId: string, id: string) => encodeBackboneMessage({
         kind: "mutations",
-        envelopes: encodeDocumentBackboneEnvelopeBatchExact([{ mutation_id: id, document_id: documentId, actor: "caller", dependencies: [], observed: null, target: [], diff: { schema: "demo/v1", payload: encodePackValue(id) }, inverse: { schema: "demo/v1", payload: encodePackValue(null) }, timestamp: { actor: 1n, physical_ms: 2n, logical: 3n } }]),
+        envelopes: encodeDocumentBackboneEnvelopeBatchExact([{ mutation_id: id, document_id: documentId, actor: "caller", dependencies: [], observed: null, target: [], diff: { schema: "demo/v1", payload: encodePackValue(id) }, inverse: { schema: "demo/v1", payload: encodePackValue(null) }, timestamp: { actor: 1n, physical_ms: 2n, logical: 3n }, transaction: null }]),
       });
       const hello = (socket: FakeHubWebSocket) => {
         const decoded = decodeClientFrame(socket.sent[0]!).frame;
@@ -7211,7 +7218,7 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
           fields.checkpoint = { ...fields.checkpoint, baselineFrontier: { ...fields.checkpoint.baselineFrontier, documentId } };
           state.executionTargetLease = !actorBound ? null : new DocumentExecutionTargetLease(documentExecutionTargetLeaseMintToken, parseDocumentExecutionTargetLeaseFieldsV1(fields), fixture.hubOrigin, hexBytes(fixture.componentHex), hexBytes(fixture.descriptorHex));
           state.actor = "hub.v1.self";
-          const envelope = { mutation_id: `${documentId}:m-1`, document_id: documentId, actor: "hub.v1.peer", dependencies: [], observed: null, target: [], diff: { schema: "gis.map.operation", payload: encodePackValue({ op: 1 }) }, inverse: { schema: "gis.map.operation.inverse", payload: encodePackValue(null) }, timestamp: { actor: 2n, physical_ms: 3n, logical: 0n } };
+          const envelope = { mutation_id: `${documentId}:m-1`, document_id: documentId, actor: "hub.v1.peer", dependencies: [], observed: null, target: [], diff: { schema: "gis.map.operation", payload: encodePackValue({ op: 1 }) }, inverse: { schema: "gis.map.operation.inverse", payload: encodePackValue(null) }, timestamp: { actor: 2n, physical_ms: 3n, logical: 0n }, transaction: null };
           const batch = encodeBatch([envelope]);
           const frontier = { document_id: documentId, head_edit_ordinal: 1, head_edit_id: envelope.mutation_id, last_commit_seq: 1, chain_hash: new Array(32).fill(1) };
           posted.length = 0;
@@ -7260,7 +7267,7 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
           state.pendingBatches.set(7, [local]);
           const frontier = (ordinal: number, head: string) => ({ document_id: documentId, head_edit_ordinal: ordinal, head_edit_id: head, last_commit_seq: ordinal, chain_hash: new Array(32).fill(ordinal) });
           if (interleaved) {
-            const remote = { mutation_id: `${documentId}:peer-1`, document_id: documentId, actor: "hub.v1.peer", dependencies: [], observed: null, target: [], diff: { schema: "gis.map.operation", payload: encodePackValue({ op: 1 }) }, inverse: { schema: "gis.map.operation.inverse", payload: encodePackValue(null) }, timestamp: { actor: 2n, physical_ms: 3n, logical: 0n } };
+            const remote = { mutation_id: `${documentId}:peer-1`, document_id: documentId, actor: "hub.v1.peer", dependencies: [], observed: null, target: [], diff: { schema: "gis.map.operation", payload: encodePackValue({ op: 1 }) }, inverse: { schema: "gis.map.operation.inverse", payload: encodePackValue(null) }, timestamp: { actor: 2n, physical_ms: 3n, logical: 0n }, transaction: null };
             await handleHubFrame(state, { Commands: { envelopes: [{ ...remote, diff: { schema: remote.diff.schema, payload: Array.from(remote.diff.payload) }, inverse: { schema: remote.inverse.schema, payload: Array.from(remote.inverse.payload) }, timestamp: { actor: 2, physical_ms: 3, logical: 0 } }], origin: "hub.v1.peer", frontier: frontier(1, remote.mutation_id) } } as unknown as Parameters<typeof handleHubFrame>[1], null, null, encodeBatch([remote]));
           }
           expect(state.remoteFoldedOverLocal, documentId).toBe(interleaved);

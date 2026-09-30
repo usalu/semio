@@ -61,9 +61,10 @@
 //! [`project_avi_1_0`] is the shared independent-reader projection both this module's own handlers
 //! AND the case's subject handlers read their results back through before comparison.
 //!
-//! Binary payloads (a `movi` chunk's data, an unknown top-level chunk's data, `strf`'s `extra`
-//! bytes) travel through mutation params as lowercase hex — the same convention `💬️bcf`'s oracle and
-//! `AviSnapshot::parse_dsl`/`print_dsl` already use for binary-in-text.
+//! Mutation params are the leaf's wire payload (`payload_value()`): binary payloads (a `movi` chunk's
+//! data, an unknown top-level chunk's data, `strf`'s `extra` bytes) travel as byte arrays, and a member
+//! this independent model has no slot for (a non-64-byte `rcFrame` form, `strhExtra`, `strlExtra`,
+//! `hdrlExtra`) is refused rather than silently dropped.
 //!
 //! @see ../🔣️oracle.json — the mutation catalog this module is measured against.
 //! @see ../🧬️schema/🧬️mutations/🦀️.rs — the mutation vocabulary itself (`AviMutation::KINDS`).
@@ -166,20 +167,30 @@ mod oracles {
     }
     //#endregion 🔖️Model
 
-    //#region 🔖️Hex
-    /// 🔤️ Lowercase hex, the same binary-in-text convention `💬️bcf`'s oracle and `AviSnapshot`'s own
-    /// DSL form already use.
-    fn hex_encode(bytes: &[u8]) -> String {
-        bytes.iter().map(|byte| format!("{byte:02x}")).collect()
+    //#region 🔖️Bytes
+    /// 🔢️ Bytes as the vocabulary's own wire spells them: a JSON array of `0..=255` integers.
+    fn bytes_to_json(bytes: &[u8]) -> Json {
+        Json::Array(bytes.iter().map(|byte| Json::Number(f64::from(*byte))).collect())
     }
 
-    fn hex_decode(text: &str) -> Result<Vec<u8>, String> {
-        if text.len() % 2 != 0 {
-            return Err(format!("odd hex length ({} chars)", text.len()));
+    /// 🔢️ A byte-array member; an absent member is the empty default the vocabulary declares.
+    fn bytes_from_json(value: &Json, key: &str) -> Result<Vec<u8>, String> {
+        match value.get(key) {
+            None => Ok(Vec::new()),
+            Some(Json::Array(items)) => items.iter().map(|item| match item { Json::Number(n) if (0.0..=255.0).contains(n) && n.fract() == 0.0 => Ok(*n as u8), other => Err(format!("`{key}` carries {} where a byte belongs", other.to_string())) }).collect(),
+            Some(other) => Err(format!("`{key}` must be a byte array, not {}", other.to_string())),
         }
-        (0..text.len()).step_by(2).map(|i| u8::from_str_radix(&text[i..i + 2], 16).map_err(|error| format!("invalid hex {:?}: {error}", &text[i..i + 2]))).collect()
     }
-    //#endregion 🔖️Hex
+
+    /// 🚫️ A retained member this independent model has no slot for must be empty; anything else is refused.
+    fn refuse_unmodelled(value: &Json, key: &str) -> Result<(), String> {
+        match value.get(key) {
+            None => Ok(()),
+            Some(Json::Array(items)) if items.is_empty() => Ok(()),
+            Some(other) => Err(format!("`{key}` carries {}, which this independent AVI model has no slot for", other.to_string())),
+        }
+    }
+    //#endregion 🔖️Bytes
 
     //#region 🔖️Fourcc
     fn fourcc_str(id: ChunkId) -> String {
@@ -594,11 +605,19 @@ mod oracles {
             ("rcFrameTop", Json::Number(header.rc_frame_top as f64)),
             ("rcFrameRight", Json::Number(header.rc_frame_right as f64)),
             ("rcFrameBottom", Json::Number(header.rc_frame_bottom as f64)),
+            ("rcFrameWidth", Json::Number(16.0)),
+            ("strhExtra", Json::Array(Vec::new())),
         ])
     }
 
-    fn strh_from_json(value: &Json) -> OStreamHeader {
-        OStreamHeader {
+    /// 📏️ This model always writes the modern 64-byte `strh` (`rcFrame` as four `LONG`s), so any other declared
+    /// `rcFrameWidth` is refused rather than silently promoted.
+    fn strh_from_json(value: &Json) -> Result<OStreamHeader, String> {
+        if value.get("rcFrameWidth").is_some_and(|width| *width != Json::Number(16.0)) {
+            return Err(format!("`rcFrameWidth` {} is not the 64-byte form this model writes", value.get("rcFrameWidth").map(Json::to_string).unwrap_or_default()));
+        }
+        refuse_unmodelled(value, "strhExtra")?;
+        Ok(OStreamHeader {
             fcc_type: value.str("fccType"),
             fcc_handler: value.str("fccHandler"),
             flags: num(value, "flags") as u32,
@@ -616,7 +635,7 @@ mod oracles {
             rc_frame_top: num(value, "rcFrameTop") as i32,
             rc_frame_right: num(value, "rcFrameRight") as i32,
             rc_frame_bottom: num(value, "rcFrameBottom") as i32,
-        }
+        })
     }
 
     /// 🎨️ `{"format": "bitmapInfo"|"waveFormat"|"raw", ...}` — the same `#[serde(tag = "format",
@@ -646,9 +665,9 @@ mod oracles {
                 ("avgBytesPerSec", Json::Number(*avg_bytes_per_sec as f64)),
                 ("blockAlign", Json::Number(*block_align as f64)),
                 ("bitsPerSample", Json::Number(*bits_per_sample as f64)),
-                ("extra", Json::String(hex_encode(extra))),
+                ("extra", bytes_to_json(extra)),
             ]),
-            OStreamFormat::Raw { data } => obj(vec![("format", Json::String("raw".to_string())), ("data", Json::String(hex_encode(data)))]),
+            OStreamFormat::Raw { data } => obj(vec![("format", Json::String("raw".to_string())), ("data", bytes_to_json(data))]),
         }
     }
 
@@ -674,85 +693,67 @@ mod oracles {
                 avg_bytes_per_sec: num(value, "avgBytesPerSec") as u32,
                 block_align: num(value, "blockAlign") as u16,
                 bits_per_sample: num(value, "bitsPerSample") as u16,
-                extra: match value.get("extra") {
-                    Some(Json::String(hex)) if !hex.is_empty() => hex_decode(hex)?,
-                    _ => Vec::new(),
-                },
+                extra: bytes_from_json(value, "extra")?,
             }),
-            "raw" => Ok(OStreamFormat::Raw {
-                data: match value.get("data") {
-                    Some(Json::String(hex)) if !hex.is_empty() => hex_decode(hex)?,
-                    _ => Vec::new(),
-                },
-            }),
+            "raw" => Ok(OStreamFormat::Raw { data: bytes_from_json(value, "data")? }),
             other => Err(format!("unknown strf format {other:?}")),
         }
     }
 
     fn chunk_to_json(chunk: &OChunk) -> Json {
-        obj(vec![("fourcc", Json::String(chunk.fourcc.clone())), ("data", Json::String(hex_encode(&chunk.data))), ("keyframe", Json::Bool(chunk.keyframe))])
+        obj(vec![("fourcc", Json::String(chunk.fourcc.clone())), ("data", bytes_to_json(&chunk.data)), ("keyframe", Json::Bool(chunk.keyframe))])
     }
 
-    fn chunk_from_json(value: &Json) -> OChunk {
-        OChunk {
-            fourcc: value.str("fourcc"),
-            data: match value.get("data") {
-                Some(Json::String(hex)) if !hex.is_empty() => hex_decode(hex).unwrap_or_default(),
-                _ => Vec::new(),
-            },
-            keyframe: flag(value, "keyframe"),
-        }
+    fn chunk_from_json(value: &Json) -> Result<OChunk, String> {
+        Ok(OChunk { fourcc: value.str("fourcc"), data: bytes_from_json(value, "data")?, keyframe: flag(value, "keyframe") })
     }
 
     fn riff_chunk_to_json(item: &ORiffChunk) -> Json {
-        obj(vec![("fourcc", Json::String(item.fourcc.clone())), ("data", Json::String(hex_encode(&item.data)))])
+        obj(vec![("fourcc", Json::String(item.fourcc.clone())), ("data", bytes_to_json(&item.data))])
     }
 
-    fn riff_chunk_from_json(value: &Json) -> ORiffChunk {
-        ORiffChunk {
-            fourcc: value.str("fourcc"),
-            data: match value.get("data") {
-                Some(Json::String(hex)) if !hex.is_empty() => hex_decode(hex).unwrap_or_default(),
-                _ => Vec::new(),
-            },
-        }
+    fn riff_chunk_from_json(value: &Json) -> Result<ORiffChunk, String> {
+        Ok(ORiffChunk { fourcc: value.str("fourcc"), data: bytes_from_json(value, "data")? })
     }
 
     fn stream_to_json(stream: &OStream) -> Json {
-        obj(vec![("strh", strh_to_json(&stream.strh)), ("strf", strf_to_json(&stream.strf)), ("chunks", Json::Array(stream.chunks.iter().map(chunk_to_json).collect()))])
+        obj(vec![("strh", strh_to_json(&stream.strh)), ("strf", strf_to_json(&stream.strf)), ("chunks", Json::Array(stream.chunks.iter().map(chunk_to_json).collect())), ("strlExtra", Json::Array(Vec::new()))])
     }
 
     fn stream_from_json(value: &Json) -> Result<OStream, String> {
-        Ok(OStream { strh: strh_from_json(&value.get("strh").cloned().unwrap_or(Json::Null)), strf: strf_from_json(&value.get("strf").cloned().unwrap_or(Json::Null))?, chunks: value.array("chunks").iter().map(chunk_from_json).collect() })
+        refuse_unmodelled(value, "strlExtra")?;
+        Ok(OStream { strh: strh_from_json(&value.get("strh").cloned().unwrap_or(Json::Null))?, strf: strf_from_json(&value.get("strf").cloned().unwrap_or(Json::Null))?, chunks: value.array("chunks").iter().map(chunk_from_json).collect::<Result<_, _>>()? })
     }
 
     fn doc_to_json(doc: &ODoc) -> Json {
         obj(vec![
+            ("schema", Json::String("stdio.avi".to_string())),
             ("mainHeader", main_header_to_json(&doc.main_header)),
             ("streams", Json::Array(doc.streams.iter().map(stream_to_json).collect())),
             ("idx1Present", Json::Bool(doc.idx1_present)),
             ("unknownChunks", Json::Array(doc.unknown_chunks.iter().map(riff_chunk_to_json).collect())),
+            ("hdrlExtra", Json::Array(Vec::new())),
         ])
     }
 
     fn doc_from_json(value: &Json) -> Result<ODoc, String> {
+        refuse_unmodelled(value, "hdrlExtra")?;
         Ok(ODoc {
             main_header: main_header_from_json(&value.get("mainHeader").cloned().unwrap_or(Json::Null)),
             streams: value.array("streams").iter().map(stream_from_json).collect::<Result<_, _>>()?,
             idx1_present: flag(value, "idx1Present"),
-            unknown_chunks: value.array("unknownChunks").iter().map(riff_chunk_from_json).collect(),
+            unknown_chunks: value.array("unknownChunks").iter().map(riff_chunk_from_json).collect::<Result<_, _>>()?,
         })
     }
     //#endregion 🔖️JsonValue
 
     //#region 🔖️Forward
-    /// 🦠️ Applies one declared mutation kind, described by `spec` (`{"kind": ..., "params": {...}}`),
+    /// 🦠️ Applies one declared mutation kind, described by `spec` (`{"kind": ..., "params": <wire payload>}`),
     /// to an already-decoded document. An unrecognised kind, or an out-of-range stream/chunk/
     /// unknown-chunk index, is an error — never a silent no-op.
     fn apply_kind(doc: &mut ODoc, kind: &str, params: &Json) -> Result<(), String> {
         match kind {
-            "no-mutation" => {}
-            "set-snapshot" => *doc = doc_from_json(params)?,
+            "set-snapshot" => *doc = doc_from_json(&params.get("snapshot").cloned().unwrap_or(Json::Null))?,
             "set-main-header" => doc.main_header = main_header_from_json(&params.get("mainHeader").cloned().unwrap_or(Json::Null)),
             "set-idx1-present" => doc.idx1_present = flag(params, "idx1Present"),
             "insert-stream" => {
@@ -772,7 +773,7 @@ mod oracles {
             }
             "set-stream-header" => {
                 let index = index_of(params, "streamIndex");
-                let strh = strh_from_json(&params.get("strh").cloned().unwrap_or(Json::Null));
+                let strh = strh_from_json(&params.get("strh").cloned().unwrap_or(Json::Null))?;
                 doc.streams.get_mut(index).ok_or_else(|| format!("set-stream-header: no stream at index {index}"))?.strh = strh;
             }
             "set-stream-format" => {
@@ -783,7 +784,7 @@ mod oracles {
             "insert-chunk" => {
                 let stream_index = index_of(params, "streamIndex");
                 let index = index_of(params, "index");
-                let chunk = chunk_from_json(&params.get("chunk").cloned().unwrap_or(Json::Null));
+                let chunk = chunk_from_json(&params.get("chunk").cloned().unwrap_or(Json::Null))?;
                 let stream = doc.streams.get_mut(stream_index).ok_or_else(|| format!("insert-chunk: no stream at index {stream_index}"))?;
                 if index > stream.chunks.len() {
                     return Err(format!("insert-chunk: index {index} out of bounds for {} chunk(s)", stream.chunks.len()));
@@ -808,7 +809,7 @@ mod oracles {
             }
             "add-unknown-chunk" => {
                 let index = index_of(params, "index");
-                let item = riff_chunk_from_json(&params.get("item").cloned().unwrap_or(Json::Null));
+                let item = riff_chunk_from_json(&params.get("item").cloned().unwrap_or(Json::Null))?;
                 if index > doc.unknown_chunks.len() {
                     return Err(format!("add-unknown-chunk: index {index} out of bounds for {} chunk(s)", doc.unknown_chunks.len()));
                 }
@@ -830,63 +831,37 @@ mod oracles {
     //#region 🔖️Inverse
     /// ↩️ Reads `base` (the CURRENT, pre-mutation document) to build the spec that undoes `{kind,
     /// params}` — same law `AviMutation::inverse` proves at the Rust-model level, computed here
-    /// against `riff` instead.
-    fn inverse_spec(base: &ODoc, kind: &str, params: &Json) -> Json {
+    /// against `riff` instead. An index `base` does not resolve has nothing to undo and is an error:
+    /// the forward mutation refuses it too.
+    fn inverse_spec(base: &ODoc, kind: &str, params: &Json) -> Result<Json, String> {
         let spec = |inverse_kind: &str, inverse_params: Json| obj(vec![("kind", Json::String(inverse_kind.to_string())), ("params", inverse_params)]);
-        match kind {
-            "no-mutation" => spec("no-mutation", obj(vec![])),
-            "set-snapshot" => spec("set-snapshot", doc_to_json(base)),
+        let stream = |index: usize| base.streams.get(index).ok_or_else(|| format!("{kind}: no stream at index {index} to restore"));
+        let chunk = |stream_index: usize, index: usize| base.streams.get(stream_index).and_then(|stream| stream.chunks.get(index)).ok_or_else(|| format!("{kind}: no chunk {stream_index}/{index} to restore"));
+        Ok(match kind {
+            "set-snapshot" => spec("set-snapshot", obj(vec![("snapshot", doc_to_json(base))])),
             "set-main-header" => spec("set-main-header", obj(vec![("mainHeader", main_header_to_json(&base.main_header))])),
             "set-idx1-present" => spec("set-idx1-present", obj(vec![("idx1Present", Json::Bool(base.idx1_present))])),
             "insert-stream" => spec("remove-stream", obj(vec![("index", Json::Number(index_of(params, "index") as f64))])),
-            "remove-stream" => {
-                let index = index_of(params, "index");
-                match base.streams.get(index) {
-                    Some(stream) => spec("insert-stream", obj(vec![("index", Json::Number(index as f64)), ("stream", stream_to_json(stream))])),
-                    None => spec("no-mutation", obj(vec![])),
-                }
-            }
-            "set-stream-header" => {
-                let index = index_of(params, "streamIndex");
-                match base.streams.get(index) {
-                    Some(stream) => spec("set-stream-header", obj(vec![("streamIndex", Json::Number(index as f64)), ("strh", strh_to_json(&stream.strh))])),
-                    None => spec("no-mutation", obj(vec![])),
-                }
-            }
-            "set-stream-format" => {
-                let index = index_of(params, "streamIndex");
-                match base.streams.get(index) {
-                    Some(stream) => spec("set-stream-format", obj(vec![("streamIndex", Json::Number(index as f64)), ("strf", strf_to_json(&stream.strf))])),
-                    None => spec("no-mutation", obj(vec![])),
-                }
-            }
+            "remove-stream" => spec("insert-stream", obj(vec![("index", Json::Number(index_of(params, "index") as f64)), ("stream", stream_to_json(stream(index_of(params, "index"))?))])),
+            "set-stream-header" => spec("set-stream-header", obj(vec![("streamIndex", Json::Number(index_of(params, "streamIndex") as f64)), ("strh", strh_to_json(&stream(index_of(params, "streamIndex"))?.strh))])),
+            "set-stream-format" => spec("set-stream-format", obj(vec![("streamIndex", Json::Number(index_of(params, "streamIndex") as f64)), ("strf", strf_to_json(&stream(index_of(params, "streamIndex"))?.strf))])),
             "insert-chunk" => spec("remove-chunk", obj(vec![("streamIndex", Json::Number(index_of(params, "streamIndex") as f64)), ("index", Json::Number(index_of(params, "index") as f64))])),
             "remove-chunk" => {
-                let stream_index = index_of(params, "streamIndex");
-                let index = index_of(params, "index");
-                match base.streams.get(stream_index).and_then(|stream| stream.chunks.get(index)) {
-                    Some(chunk) => spec("insert-chunk", obj(vec![("streamIndex", Json::Number(stream_index as f64)), ("index", Json::Number(index as f64)), ("chunk", chunk_to_json(chunk))])),
-                    None => spec("no-mutation", obj(vec![])),
-                }
+                let (stream_index, index) = (index_of(params, "streamIndex"), index_of(params, "index"));
+                spec("insert-chunk", obj(vec![("streamIndex", Json::Number(stream_index as f64)), ("index", Json::Number(index as f64)), ("chunk", chunk_to_json(chunk(stream_index, index)?))]))
             }
             "set-chunk-keyframe" => {
-                let stream_index = index_of(params, "streamIndex");
-                let index = index_of(params, "index");
-                match base.streams.get(stream_index).and_then(|stream| stream.chunks.get(index)) {
-                    Some(chunk) => spec("set-chunk-keyframe", obj(vec![("streamIndex", Json::Number(stream_index as f64)), ("index", Json::Number(index as f64)), ("keyframe", Json::Bool(chunk.keyframe))])),
-                    None => spec("no-mutation", obj(vec![])),
-                }
+                let (stream_index, index) = (index_of(params, "streamIndex"), index_of(params, "index"));
+                spec("set-chunk-keyframe", obj(vec![("streamIndex", Json::Number(stream_index as f64)), ("index", Json::Number(index as f64)), ("keyframe", Json::Bool(chunk(stream_index, index)?.keyframe))]))
             }
             "add-unknown-chunk" => spec("remove-unknown-chunk", obj(vec![("index", Json::Number(index_of(params, "index") as f64))])),
             "remove-unknown-chunk" => {
                 let index = index_of(params, "index");
-                match base.unknown_chunks.get(index) {
-                    Some(item) => spec("add-unknown-chunk", obj(vec![("index", Json::Number(index as f64)), ("item", riff_chunk_to_json(item))])),
-                    None => spec("no-mutation", obj(vec![])),
-                }
+                let item = base.unknown_chunks.get(index).ok_or_else(|| format!("{kind}: no unknown chunk at index {index} to restore"))?;
+                spec("add-unknown-chunk", obj(vec![("index", Json::Number(index as f64)), ("item", riff_chunk_to_json(item))]))
             }
-            other => spec(other, params.clone()),
-        }
+            other => return Err(format!("mutation kind {other:?} has no oracle inverse")),
+        })
     }
     //#endregion 🔖️Inverse
 
@@ -901,9 +876,14 @@ mod oracles {
     /// its projection against the ORIGINAL input's own.
     pub fn apply_mutation_inverse(input: &[u8], kind: &str, params: &Json) -> Result<Vec<u8>, String> {
         let base = decode(input)?;
-        let inverse = inverse_spec(&base, kind, params);
         let mutated = apply_mutation(input, kind, params)?;
+        let inverse = inverse_spec(&base, kind, params)?;
         apply_mutation(&mutated, &inverse.str("kind"), &inverse.get("params").cloned().unwrap_or(Json::Null))
+    }
+
+    /// 🔁️ Decodes and re-encodes from this module's own model alone — the identity round trip.
+    pub fn rewrite(input: &[u8]) -> Result<Vec<u8>, String> {
+        Ok(encode(&decode(input)?))
     }
 
     //#region 🔖️Projection
@@ -974,6 +954,12 @@ pub fn oracle_apply_mutation_inverse(input: &[u8], spec: &Json) -> Result<Vec<u8
     oracles::apply_mutation_inverse(input, &kind, &spec.get("params").cloned().unwrap_or(Json::Null))
 }
 
+/// 🔁️ The `@id-identity-round-trip` computation: full `riff` decode, re-serialized from the independent model alone.
+#[cfg(feature = "oracles")]
+pub fn oracle_identity_round_trip(input: &[u8]) -> Result<Vec<u8>, String> {
+    oracles::rewrite(input)
+}
+
 /// 👁️ This subset's own semantic projection. @see [`oracles::project`].
 #[cfg(feature = "oracles")]
 pub fn project_avi_1_0(bytes: &[u8]) -> Result<Json, String> {
@@ -988,6 +974,11 @@ pub fn oracle_apply_mutation(_input: &[u8], _spec: &Json) -> Result<Vec<u8>, Str
 
 #[cfg(not(feature = "oracles"))]
 pub fn oracle_apply_mutation_inverse(_input: &[u8], _spec: &Json) -> Result<Vec<u8>, String> {
+    Err("the `oracles` feature is disabled — this host was not built with the registered reference implementations".to_string())
+}
+
+#[cfg(not(feature = "oracles"))]
+pub fn oracle_identity_round_trip(_input: &[u8]) -> Result<Vec<u8>, String> {
     Err("the `oracles` feature is disabled — this host was not built with the registered reference implementations".to_string())
 }
 

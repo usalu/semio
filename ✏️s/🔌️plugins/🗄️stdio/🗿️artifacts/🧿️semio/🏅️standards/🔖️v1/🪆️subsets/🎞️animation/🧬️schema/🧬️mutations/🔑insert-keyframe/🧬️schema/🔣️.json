@@ -5,12 +5,17 @@
   "type": "object",
   "additionalProperties": false,
   "required": [
+    "mutation",
     "timelineIndex",
     "channelIndex",
     "index",
     "keyframe"
   ],
   "properties": {
+    "mutation": {
+      "const": "insertKeyframe",
+      "description": "Aggregate discriminator spliced in by SemioAnimationMutation; absent when the payload stands alone."
+    },
     "timelineIndex": {
       "type": "integer",
       "minimum": 0
@@ -24,11 +29,13 @@
       "minimum": 0
     },
     "keyframe": {
-      "$ref": "#/$defs/AnimKeyframe"
-    },
-    "mutation": {
-      "const": "insertKeyframe",
-      "description": "Aggregate discriminator spliced in by SemioAnimationMutation; absent when the payload stands alone."
+      "$ref": "#/$defs/AnimKeyframe",
+      "x-semio-ui": {
+        "label": {
+          "en": "Keyframe",
+          "de": "Schlüsselbild"
+        }
+      }
     }
   },
   "$defs": {

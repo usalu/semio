@@ -9,34 +9,19 @@
   ],
   "properties": {
     "geometryObject": {
-      "title": "GeometryObject",
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "id"
-      ],
-      "properties": {
-        "id": {
-          "type": "string"
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/iso16757/snapshot.json#/$defs/GeometryObject",
+      "x-semio-ui": {
+        "role": "value",
+        "label": {
+          "en": "Geometry object",
+          "de": "Geometrieobjekt"
         },
-        "shape": {
-          "type": "object"
+        "description": {
+          "en": "The complete parametric geometry object (ISO 16757-4) to introduce.",
+          "de": "Das vollständige einzuführende parametrische Geometrieobjekt (ISO 16757-4)."
         },
-        "symbolic": {
-          "type": "object"
-        },
-        "spaces": {
-          "type": "array"
-        },
-        "surfaces": {
-          "type": "array"
-        },
-        "ports": {
-          "type": "array"
-        },
-        "parameterBindings": {
-          "type": "object"
-        }
+        "group": "record",
+        "order": 10
       }
     }
   }

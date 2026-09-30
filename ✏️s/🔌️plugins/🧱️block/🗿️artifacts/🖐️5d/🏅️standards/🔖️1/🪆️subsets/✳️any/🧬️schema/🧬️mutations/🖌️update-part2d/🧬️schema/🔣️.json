@@ -4,24 +4,128 @@
   "title": "UpdatePart2d",
   "type": "object",
   "additionalProperties": false,
+  "required": [
+    "mutation",
+    "newShape",
+    "newRadius",
+    "newWidth",
+    "newHeight",
+    "newColor",
+    "newIconKind"
+  ],
   "properties": {
+    "mutation": {
+      "const": "updatePart2d"
+    },
     "newShape": {
-      "type": "string"
+      "type": [
+        "string",
+        "null"
+      ],
+      "x-semio-ui": {
+        "widget": "text",
+        "role": "value",
+        "label": {
+          "en": "Shape",
+          "de": "Form"
+        },
+        "description": {
+          "en": "Outline shape, e.g. circle or rectangle; empty clears it.",
+          "de": "Umrissform, z. B. circle oder rectangle; leer entfernt sie."
+        },
+        "group": "appearance",
+        "order": 10
+      }
     },
     "newRadius": {
-      "type": "number"
+      "type": [
+        "number",
+        "null"
+      ],
+      "x-semio-ui": {
+        "widget": "stepper",
+        "role": "value",
+        "label": {
+          "en": "Radius",
+          "de": "Radius"
+        },
+        "step": 0.1,
+        "precision": 2,
+        "group": "geometry",
+        "order": 20
+      }
     },
     "newWidth": {
-      "type": "number"
+      "type": [
+        "number",
+        "null"
+      ],
+      "x-semio-ui": {
+        "widget": "stepper",
+        "role": "value",
+        "label": {
+          "en": "Width",
+          "de": "Breite"
+        },
+        "step": 0.1,
+        "precision": 2,
+        "group": "geometry",
+        "order": 30
+      }
     },
     "newHeight": {
-      "type": "number"
+      "type": [
+        "number",
+        "null"
+      ],
+      "x-semio-ui": {
+        "widget": "stepper",
+        "role": "value",
+        "label": {
+          "en": "Height",
+          "de": "Höhe"
+        },
+        "step": 0.1,
+        "precision": 2,
+        "group": "geometry",
+        "order": 40
+      }
     },
     "newColor": {
-      "type": "string"
+      "type": [
+        "string",
+        "null"
+      ],
+      "x-semio-ui": {
+        "widget": "text",
+        "role": "value",
+        "label": {
+          "en": "Color",
+          "de": "Farbe"
+        },
+        "description": {
+          "en": "CSS color, e.g. #3366ff.",
+          "de": "CSS-Farbe, z. B. #3366ff."
+        },
+        "group": "appearance",
+        "order": 50
+      }
     },
     "newIconKind": {
-      "type": "string"
+      "type": [
+        "string",
+        "null"
+      ],
+      "x-semio-ui": {
+        "widget": "text",
+        "role": "value",
+        "label": {
+          "en": "Icon",
+          "de": "Symbol"
+        },
+        "group": "appearance",
+        "order": 60
+      }
     }
   }
 }

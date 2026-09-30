@@ -72,6 +72,20 @@ pub fn apply_csv_mutation(snapshot: &mut CsvSnapshot, mutation: &CsvMutation) ->
         Err(error) => protocol::MutationOutcome::error(error.code, error.message, error.target).absorb_messages(outcome.messages().to_vec()),
     }
 }
+
+/// ↩️ The aggregate's own `Mutation::inverse`, reachable for a caller that cannot name the trait.
+pub fn inverse_csv_mutation(mutation: &CsvMutation, base: &CsvSnapshot) -> Vec<CsvMutation> {
+    <CsvMutation as Mutation<CsvSnapshot>>::inverse(mutation, base)
+}
+
+/// 📥️ Decodes one leaf wire payload (a `🥒️.feature` row's `params`: the leaf's `payload_value()`, no aggregate tag) into
+/// the operation of semantic kind `kind` through the derive-generated `Mutation::from_payload_value`, so a caller that
+/// cannot name the trait reads the committed wire instead of re-declaring it field by field.
+pub fn decode_csv_mutation_payload_json(kind: &str, payload: &str) -> Result<CsvMutation, String> {
+    use semio_s_artifact_stdio_contract::pack;
+    let value = pack::parse_json(payload).map_err(|error| error.to_string())?;
+    <CsvMutation as Mutation<CsvSnapshot>>::from_payload_value(kind, pack::json_to_dsl_value(&value)).map_err(|error| error.to_string())
+}
 //#endregion 🔖️Apply
 
 //#region 🔖️MutationTrait

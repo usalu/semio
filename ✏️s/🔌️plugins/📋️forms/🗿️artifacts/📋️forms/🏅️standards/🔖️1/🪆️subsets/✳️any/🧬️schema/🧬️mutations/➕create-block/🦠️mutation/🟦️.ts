@@ -1,10 +1,9 @@
-/** 🧩️ `create-block` payload — mirrors Rust `CreateBlock` (`../🦀️.rs:14`). No
- * `#[serde(rename_all)]` on the struct itself, so `step_id` stays snake_case (confirmed by the
- * committed `per-verb 🧪️tests 🦠️mutation/🔣️.json` fixture) despite the enum-level camelCase tag. */
+/** 🧩️ `create-block` payload — mirrors Rust `CreateBlock` (`../🦀️.rs:14`).
+ * Its `#[value(rename_all = "camelCase")]` spells `stepId` camelCase, like the enum-level tag. */
 import type { FormQuestion } from "../../🟦️.ts";
 
 export interface CreateBlock {
-  step_id: string;
+  stepId: string;
   block: FormQuestion;
   index: number | null;
 }

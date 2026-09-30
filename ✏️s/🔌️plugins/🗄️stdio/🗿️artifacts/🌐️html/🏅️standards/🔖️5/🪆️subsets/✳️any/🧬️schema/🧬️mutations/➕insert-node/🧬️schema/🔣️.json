@@ -5,28 +5,67 @@
   "type": "object",
   "additionalProperties": false,
   "required": [
+    "mutation",
     "parent",
     "index",
     "node"
   ],
   "properties": {
+    "mutation": {
+      "const": "insertNode",
+      "description": "Aggregate discriminator spliced in by HtmlMutation; absent when the payload stands alone."
+    },
     "parent": {
       "type": "array",
       "items": {
         "type": "integer",
         "minimum": 0
+      },
+      "x-semio-ui": {
+        "label": {
+          "en": "Parent path",
+          "de": "Pfad des Elternknotens"
+        },
+        "description": {
+          "en": "Child indices from the document root to the parent node.",
+          "de": "Kindindizes vom Dokumentstamm bis zum Elternknoten."
+        },
+        "group": "target",
+        "order": 10
       }
     },
     "index": {
       "type": "integer",
-      "minimum": 0
+      "minimum": 0,
+      "x-semio-ui": {
+        "widget": "stepper",
+        "label": {
+          "en": "Child position",
+          "de": "Kindposition"
+        },
+        "description": {
+          "en": "Position among the parent's children, counted from 0.",
+          "de": "Position unter den Kindknoten des Elternknotens, ab 0 gezählt."
+        },
+        "precision": 0,
+        "group": "target",
+        "order": 20
+      }
     },
     "node": {
-      "$ref": "#/$defs/HtmlNode"
-    },
-    "mutation": {
-      "const": "insertNode",
-      "description": "Aggregate discriminator spliced in by HtmlMutation; absent when the payload stands alone."
+      "$ref": "#/$defs/HtmlNode",
+      "x-semio-ui": {
+        "label": {
+          "en": "Node",
+          "de": "Knoten"
+        },
+        "description": {
+          "en": "The element, text or comment node to insert.",
+          "de": "Der einzufügende Element-, Text- oder Kommentarknoten."
+        },
+        "group": "value",
+        "order": 30
+      }
     }
   },
   "$defs": {

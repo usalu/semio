@@ -15,6 +15,12 @@
       "type": "array",
       "items": {
         "$ref": "#/$defs/BrepSolidShell"
+      },
+      "x-semio-ui": {
+        "label": {
+          "en": "Shells",
+          "de": "Schalen"
+        }
       }
     }
   },

@@ -4,31 +4,13 @@
   "title": "WriterMainWindowTransientMutation",
   "oneOf": [
     {
-      "type": "object",
-      "additionalProperties": false,
-      "required": ["kind", "selection"],
-      "properties": {
-        "kind": { "const": "set-editor-selection" },
-        "selection": { "$ref": "schema.json#/properties/editorSelection" }
-      }
+      "$ref": "https://json.schemas.assets.semio-tech.com/app/writer/writer/window/main/transient/mutation/set-editor-selection/schema.json"
     },
     {
-      "type": "object",
-      "additionalProperties": false,
-      "required": ["kind", "value"],
-      "properties": {
-        "kind": { "const": "set-lint-generation" },
-        "value": { "type": "integer", "minimum": 0 }
-      }
+      "$ref": "https://json.schemas.assets.semio-tech.com/app/writer/writer/window/main/transient/mutation/set-lint-generation/schema.json"
     },
     {
-      "type": "object",
-      "additionalProperties": false,
-      "required": ["kind", "value"],
-      "properties": {
-        "kind": { "const": "set-engagement-input" },
-        "value": { "type": "string", "maxLength": 4096 }
-      }
+      "$ref": "https://json.schemas.assets.semio-tech.com/app/writer/writer/window/main/transient/mutation/set-engagement-input/schema.json"
     }
   ]
 }

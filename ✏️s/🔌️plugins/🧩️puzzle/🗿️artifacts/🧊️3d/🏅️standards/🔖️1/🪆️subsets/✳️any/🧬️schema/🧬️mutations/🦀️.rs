@@ -373,6 +373,19 @@ impl Mutation<Value> for Puzzle3dMutation {
     /// (the `#[mutations(snapshot = ...)]` type); this bridge `impl Mutation<Value>` is hand-written
     /// and forwards here too, same as every other method in this impl.
     const DESCRIPTORS: &'static [protocol::MutationLeafDescriptor] = <Self as Mutation<Puzzle3dSnapshot>>::DESCRIPTORS;
+    const INPUT_SCHEMAS: &'static [&'static str] = <Self as Mutation<Puzzle3dSnapshot>>::INPUT_SCHEMAS;
+
+    fn input_schema(&self) -> Option<&'static str> {
+        Mutation::<Puzzle3dSnapshot>::input_schema(self)
+    }
+
+    fn payload_value(&self) -> dsl::DslValue {
+        Mutation::<Puzzle3dSnapshot>::payload_value(self)
+    }
+
+    fn with_payload_value(&self, value: dsl::DslValue) -> Result<Self, dsl::ValueError> {
+        Mutation::<Puzzle3dSnapshot>::with_payload_value(self, value)
+    }
 
     fn descriptor(&self) -> &'static protocol::MutationLeafDescriptor {
         Mutation::<Puzzle3dSnapshot>::descriptor(self)
@@ -556,6 +569,19 @@ impl Mutation<Puzzle3dPlaySnapshot> for Puzzle3dMutation {
     /// `Mutation<Puzzle3dSnapshot>`, so this hand-written impl forwards its descriptor metadata
     /// there too.
     const DESCRIPTORS: &'static [protocol::MutationLeafDescriptor] = <Self as Mutation<Puzzle3dSnapshot>>::DESCRIPTORS;
+    const INPUT_SCHEMAS: &'static [&'static str] = <Self as Mutation<Puzzle3dSnapshot>>::INPUT_SCHEMAS;
+
+    fn input_schema(&self) -> Option<&'static str> {
+        Mutation::<Puzzle3dSnapshot>::input_schema(self)
+    }
+
+    fn payload_value(&self) -> dsl::DslValue {
+        Mutation::<Puzzle3dSnapshot>::payload_value(self)
+    }
+
+    fn with_payload_value(&self, value: dsl::DslValue) -> Result<Self, dsl::ValueError> {
+        Mutation::<Puzzle3dSnapshot>::with_payload_value(self, value)
+    }
 
     fn descriptor(&self) -> &'static protocol::MutationLeafDescriptor {
         Mutation::<Puzzle3dSnapshot>::descriptor(self)

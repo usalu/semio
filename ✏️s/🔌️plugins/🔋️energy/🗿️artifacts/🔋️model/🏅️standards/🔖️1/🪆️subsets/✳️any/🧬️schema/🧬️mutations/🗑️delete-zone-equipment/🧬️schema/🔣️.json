@@ -5,11 +5,33 @@
   "type": "object",
   "additionalProperties": false,
   "required": [
+    "mutation",
     "id"
   ],
   "properties": {
+    "mutation": {
+      "const": "deleteZoneEquipment"
+    },
     "id": {
-      "type": "integer"
+      "type": "integer",
+      "minimum": 0,
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Zone equipment",
+          "de": "Zonengerät"
+        },
+        "description": {
+          "en": "The zone equipment to delete, by id.",
+          "de": "Zonengerät, das diese Mutation löscht, per ID."
+        },
+        "ref": {
+          "kind": "zoneEquipment"
+        },
+        "group": "target",
+        "order": 10
+      }
     }
   }
 }

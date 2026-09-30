@@ -5,9 +5,36 @@
   "type": "object",
   "additionalProperties": false,
   "required": [
+    "mutation",
     "solid"
   ],
+  "x-semio-invariant": [
+    {
+      "id": "solid-outline-encloses-area",
+      "description": {
+        "en": "The footprint polygon encloses a non-zero area.",
+        "de": "Das Grundrisspolygon umschließt eine Fläche ungleich null."
+      }
+    },
+    {
+      "id": "solid-hole-encloses-area",
+      "description": {
+        "en": "Every opening polygon encloses a non-zero area.",
+        "de": "Jedes Aussparungspolygon umschließt eine Fläche ungleich null."
+      }
+    },
+    {
+      "id": "solid-holes-inside-outline",
+      "description": {
+        "en": "Every opening vertex lies strictly inside the footprint.",
+        "de": "Jeder Eckpunkt einer Aussparung liegt echt innerhalb des Grundrisses."
+      }
+    }
+  ],
   "properties": {
+    "mutation": {
+      "const": "createSolid"
+    },
     "solid": {
       "title": "FemSolid",
       "type": "object",
@@ -26,10 +53,34 @@
       ],
       "properties": {
         "id": {
-          "type": "string"
+          "type": "string",
+          "x-semio-ui": {
+            "widget": "text",
+            "role": "value",
+            "label": {
+              "en": "ID",
+              "de": "ID"
+            },
+            "description": {
+              "en": "Unique id of the record.",
+              "de": "Eindeutige ID des Eintrags."
+            },
+            "group": "identity",
+            "order": 10
+          }
         },
         "name": {
-          "type": "string"
+          "type": "string",
+          "x-semio-ui": {
+            "widget": "text",
+            "role": "value",
+            "label": {
+              "en": "Name",
+              "de": "Bezeichnung"
+            },
+            "group": "identity",
+            "order": 20
+          }
         },
         "outline": {
           "type": "array",
@@ -40,6 +91,20 @@
             },
             "minItems": 2,
             "maxItems": 2
+          },
+          "minItems": 3,
+          "x-semio-ui": {
+            "role": "value",
+            "label": {
+              "en": "Outline",
+              "de": "Umriss"
+            },
+            "description": {
+              "en": "Closed polygon of x, y vertices in m.",
+              "de": "Geschlossenes Polygon aus x-, y-Eckpunkten in m."
+            },
+            "group": "record",
+            "order": 30
           }
         },
         "holes": {
@@ -53,7 +118,21 @@
               },
               "minItems": 2,
               "maxItems": 2
-            }
+            },
+            "minItems": 3
+          },
+          "x-semio-ui": {
+            "role": "value",
+            "label": {
+              "en": "Openings",
+              "de": "Aussparungen"
+            },
+            "description": {
+              "en": "Polygons cut out of the outline.",
+              "de": "Aus dem Umriss ausgeschnittene Polygone."
+            },
+            "group": "record",
+            "order": 40
           }
         },
         "axis": {
@@ -62,24 +141,137 @@
             "x",
             "y",
             "z"
-          ]
+          ],
+          "x-semio-ui": {
+            "widget": "segmented",
+            "role": "value",
+            "label": {
+              "en": "Extrusion axis",
+              "de": "Extrusionsachse"
+            },
+            "options": {
+              "x": {
+                "en": "X axis",
+                "de": "x-Achse"
+              },
+              "y": {
+                "en": "Y axis",
+                "de": "y-Achse"
+              },
+              "z": {
+                "en": "Z axis",
+                "de": "z-Achse"
+              }
+            },
+            "group": "geometry",
+            "order": 50
+          }
         },
         "baseZ": {
-          "type": "number"
+          "type": "number",
+          "x-semio-ui": {
+            "widget": "stepper",
+            "role": "value",
+            "label": {
+              "en": "Base elevation",
+              "de": "Basishöhe"
+            },
+            "description": {
+              "en": "Coordinate along the extrusion axis where the solid starts.",
+              "de": "Koordinate entlang der Extrusionsachse, an der der Körper beginnt."
+            },
+            "unit": "m",
+            "step": 0.1,
+            "precision": 3,
+            "group": "geometry",
+            "order": 60
+          }
         },
         "height": {
-          "type": "number"
+          "type": "number",
+          "exclusiveMinimum": 0,
+          "x-semio-ui": {
+            "widget": "stepper",
+            "role": "value",
+            "label": {
+              "en": "Extrusion height",
+              "de": "Extrusionshöhe"
+            },
+            "unit": "m",
+            "step": 0.1,
+            "precision": 3,
+            "group": "geometry",
+            "order": 70
+          }
         },
         "layers": {
           "type": "integer",
-          "minimum": 0
+          "minimum": 1,
+          "x-semio-ui": {
+            "widget": "stepper",
+            "role": "value",
+            "label": {
+              "en": "Element layers",
+              "de": "Elementlagen"
+            },
+            "description": {
+              "en": "Number of element layers through the extrusion height.",
+              "de": "Anzahl der Elementlagen über die Extrusionshöhe."
+            },
+            "step": 1,
+            "precision": 0,
+            "group": "mesh",
+            "order": 80
+          }
         },
         "meshSize": {
-          "type": "number"
+          "type": "number",
+          "exclusiveMinimum": 0,
+          "x-semio-ui": {
+            "widget": "stepper",
+            "role": "value",
+            "label": {
+              "en": "Mesh size",
+              "de": "Netzweite"
+            },
+            "description": {
+              "en": "Target edge length of the finite elements.",
+              "de": "Angestrebte Kantenlänge der finiten Elemente."
+            },
+            "unit": "m",
+            "step": 0.01,
+            "precision": 3,
+            "group": "mesh",
+            "order": 90
+          }
         },
         "materialId": {
-          "type": "string"
+          "type": "string",
+          "x-semio-ui": {
+            "widget": "reference",
+            "role": "target",
+            "label": {
+              "en": "Material",
+              "de": "Material"
+            },
+            "ref": {
+              "kind": "material",
+              "domain": "fem3d",
+              "granularity": "material"
+            },
+            "group": "target",
+            "order": 100
+          }
         }
+      },
+      "x-semio-ui": {
+        "role": "value",
+        "label": {
+          "en": "Solid",
+          "de": "Volumenkörper"
+        },
+        "group": "record",
+        "order": 10
       }
     }
   }

@@ -5,15 +5,51 @@
   "type": "object",
   "additionalProperties": false,
   "required": [
-    "step_id",
+    "mutation",
+    "stepId",
     "block"
   ],
   "properties": {
-    "step_id": {
-      "type": "string"
+    "mutation": {
+      "const": "replaceBlock"
+    },
+    "stepId": {
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Step",
+          "de": "Schritt"
+        },
+        "description": {
+          "en": "The form step this mutation addresses.",
+          "de": "Der Formularschritt, den diese Mutation adressiert."
+        },
+        "ref": {
+          "kind": "step",
+          "domain": "fields",
+          "granularity": "section"
+        },
+        "group": "target",
+        "order": 10
+      }
     },
     "block": {
-      "$ref": "https://json.schemas.assets.semio-tech.com/s/forms/forms/definition.json#/$defs/Question"
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/forms/forms/definition.json#/$defs/Question",
+      "x-semio-ui": {
+        "role": "value",
+        "label": {
+          "en": "Question",
+          "de": "Frage"
+        },
+        "description": {
+          "en": "The question that replaces the one with the same id.",
+          "de": "Die Frage, die die gleichnamige ersetzt."
+        },
+        "group": "record",
+        "order": 20
+      }
     }
   }
 }

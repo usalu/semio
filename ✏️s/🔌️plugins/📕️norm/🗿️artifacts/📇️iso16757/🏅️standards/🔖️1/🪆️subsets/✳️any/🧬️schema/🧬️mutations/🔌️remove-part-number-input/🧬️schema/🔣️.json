@@ -9,7 +9,21 @@
   ],
   "properties": {
     "key": {
-      "type": "string"
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "text",
+        "role": "value",
+        "label": {
+          "en": "Part-number input",
+          "de": "Eingabe der Artikelnummernregel"
+        },
+        "description": {
+          "en": "Key of the input the part-number rule reads, e.g. height.",
+          "de": "Schlüssel der Eingabe, die die Artikelnummernregel liest, z. B. height."
+        },
+        "group": "target",
+        "order": 10
+      }
     }
   }
 }

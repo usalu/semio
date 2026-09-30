@@ -5,27 +5,68 @@
   "type": "object",
   "additionalProperties": false,
   "required": [
+    "mutation",
     "method",
     "window_bits",
     "level_hint"
   ],
   "properties": {
+    "mutation": {
+      "const": "setCompressionParams",
+      "description": "Aggregate discriminator spliced in by DeflateMutation; absent when the payload stands alone."
+    },
     "method": {
       "type": "integer",
       "minimum": 0,
-      "maximum": 255
+      "maximum": 255,
+      "x-semio-ui": {
+        "widget": "stepper",
+        "label": {
+          "en": "Compression method (CM)",
+          "de": "Kompressionsverfahren (CM)"
+        },
+        "description": {
+          "en": "8 is deflate.",
+          "de": "8 ist Deflate."
+        },
+        "precision": 0,
+        "group": "value",
+        "order": 10
+      }
     },
     "window_bits": {
       "type": "integer",
       "minimum": 0,
-      "maximum": 255
+      "maximum": 255,
+      "x-semio-ui": {
+        "widget": "stepper",
+        "label": {
+          "en": "Window size",
+          "de": "Fenstergröße"
+        },
+        "description": {
+          "en": "Base-2 logarithm of the LZ77 window, 8 to 15.",
+          "de": "Zweierlogarithmus des LZ77-Fensters, 8 bis 15."
+        },
+        "unit": "bit",
+        "precision": 0,
+        "softMin": 8,
+        "softMax": 15,
+        "group": "value",
+        "order": 20
+      }
     },
     "level_hint": {
-      "$ref": "#/$defs/DeflateLevelHint"
-    },
-    "mutation": {
-      "const": "setCompressionParams",
-      "description": "Aggregate discriminator spliced in by DeflateMutation; absent when the payload stands alone."
+      "$ref": "#/$defs/DeflateLevelHint",
+      "x-semio-ui": {
+        "widget": "select",
+        "label": {
+          "en": "Compression level (FLEVEL)",
+          "de": "Kompressionsstufe (FLEVEL)"
+        },
+        "group": "value",
+        "order": 30
+      }
     }
   },
   "$defs": {
@@ -36,7 +77,27 @@
         "fast",
         "default",
         "maximum"
-      ]
+      ],
+      "x-semio-ui": {
+        "options": {
+          "fastest": {
+            "en": "Fastest",
+            "de": "Am schnellsten"
+          },
+          "fast": {
+            "en": "Fast",
+            "de": "Schnell"
+          },
+          "default": {
+            "en": "Default",
+            "de": "Standard"
+          },
+          "maximum": {
+            "en": "Maximum compression",
+            "de": "Maximale Kompression"
+          }
+        }
+      }
     }
   }
 }

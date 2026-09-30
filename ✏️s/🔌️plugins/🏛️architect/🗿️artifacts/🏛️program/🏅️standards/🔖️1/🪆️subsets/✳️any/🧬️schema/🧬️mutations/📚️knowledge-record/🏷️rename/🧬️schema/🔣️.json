@@ -5,16 +5,52 @@
   "type": "object",
   "additionalProperties": false,
   "required": [
+    "mutation",
     "id",
     "newName"
   ],
   "properties": {
+    "mutation": {
+      "const": "renameKnowledgeRecord"
+    },
     "id": {
-      "type": "integer",
-      "minimum": 0
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Knowledge Record",
+          "de": "Wissenseintrag"
+        },
+        "description": {
+          "en": "The knowledge record to rename.",
+          "de": "Umzubenennender Eintrag vom Typ „Wissenseintrag“."
+        },
+        "ref": {
+          "kind": "knowledgeRecord",
+          "domain": "program",
+          "granularity": "entity"
+        },
+        "group": "target",
+        "order": 10
+      }
     },
     "newName": {
-      "type": "string"
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "text",
+        "role": "value",
+        "label": {
+          "en": "New Name",
+          "de": "Neuer Name"
+        },
+        "description": {
+          "en": "New name of the knowledge record.",
+          "de": "Neuer Name des Eintrags vom Typ „Wissenseintrag“."
+        },
+        "group": "identity",
+        "order": 20
+      }
     }
   }
 }

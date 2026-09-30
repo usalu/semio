@@ -105,6 +105,14 @@
         "cwd": "🧰️framework/🔨️modules/🖱️ui/🎯️targets/⚛️react/📦️packages/🟦️typescript",
         "command": "bun ./📜️script.ts check-chrome-i18n"
       }
+    },
+    "canonical-architecture": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "options": {
+        "cwd": "🧰️framework/🔨️modules/🖱️ui/🎯️targets/⚛️react/📦️packages/🟦️typescript",
+        "command": "bun ./📜️script.ts canonical-architecture"
+      }
     }
   }
 }

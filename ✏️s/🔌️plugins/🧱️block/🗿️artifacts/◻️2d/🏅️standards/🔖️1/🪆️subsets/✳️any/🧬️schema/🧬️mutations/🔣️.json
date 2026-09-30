@@ -5,28 +5,13 @@
   "description": "One of 26 semantic mutation kinds — see x-mutation-kind on each $def.",
   "oneOf": [
     {
-      "$ref": "https://json.schemas.assets.semio-tech.com/s/block/block2d/mutation/add-attribute/schema.json"
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/block/block2d/mutation/rename-node-kind/schema.json"
     },
     {
-      "$ref": "https://json.schemas.assets.semio-tech.com/s/block/block2d/mutation/add-author/schema.json"
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/block/block2d/mutation/change-node-kind-label/schema.json"
     },
     {
-      "$ref": "https://json.schemas.assets.semio-tech.com/s/block/block2d/mutation/add-compatibility-rule/schema.json"
-    },
-    {
-      "$ref": "https://json.schemas.assets.semio-tech.com/s/block/block2d/mutation/change-handle-handle-kind/schema.json"
-    },
-    {
-      "$ref": "https://json.schemas.assets.semio-tech.com/s/block/block2d/mutation/change-handle-kind-color/schema.json"
-    },
-    {
-      "$ref": "https://json.schemas.assets.semio-tech.com/s/block/block2d/mutation/change-handle-kind-default-wire-kind/schema.json"
-    },
-    {
-      "$ref": "https://json.schemas.assets.semio-tech.com/s/block/block2d/mutation/change-handle-kind-label/schema.json"
-    },
-    {
-      "$ref": "https://json.schemas.assets.semio-tech.com/s/block/block2d/mutation/change-meta-description/schema.json"
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/block/block2d/mutation/change-node-kind-variant/schema.json"
     },
     {
       "$ref": "https://json.schemas.assets.semio-tech.com/s/block/block2d/mutation/change-node-kind-description/schema.json"
@@ -35,52 +20,67 @@
       "$ref": "https://json.schemas.assets.semio-tech.com/s/block/block2d/mutation/change-node-kind-icon/schema.json"
     },
     {
-      "$ref": "https://json.schemas.assets.semio-tech.com/s/block/block2d/mutation/change-node-kind-label/schema.json"
-    },
-    {
       "$ref": "https://json.schemas.assets.semio-tech.com/s/block/block2d/mutation/change-node-kind-unit/schema.json"
     },
     {
-      "$ref": "https://json.schemas.assets.semio-tech.com/s/block/block2d/mutation/change-node-kind-variant/schema.json"
-    },
-    {
-      "$ref": "https://json.schemas.assets.semio-tech.com/s/block/block2d/mutation/create-handle/schema.json"
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/block/block2d/mutation/update-presentation/schema.json"
     },
     {
       "$ref": "https://json.schemas.assets.semio-tech.com/s/block/block2d/mutation/create-handle-kind/schema.json"
     },
     {
-      "$ref": "https://json.schemas.assets.semio-tech.com/s/block/block2d/mutation/delete-handle/schema.json"
-    },
-    {
       "$ref": "https://json.schemas.assets.semio-tech.com/s/block/block2d/mutation/delete-handle-kind/schema.json"
-    },
-    {
-      "$ref": "https://json.schemas.assets.semio-tech.com/s/block/block2d/mutation/move-camera2d/schema.json"
-    },
-    {
-      "$ref": "https://json.schemas.assets.semio-tech.com/s/block/block2d/mutation/move-handle/schema.json"
-    },
-    {
-      "$ref": "https://json.schemas.assets.semio-tech.com/s/block/block2d/mutation/remove-attribute/schema.json"
-    },
-    {
-      "$ref": "https://json.schemas.assets.semio-tech.com/s/block/block2d/mutation/remove-author/schema.json"
-    },
-    {
-      "$ref": "https://json.schemas.assets.semio-tech.com/s/block/block2d/mutation/remove-compatibility-rule/schema.json"
     },
     {
       "$ref": "https://json.schemas.assets.semio-tech.com/s/block/block2d/mutation/rename-handle-kind/schema.json"
     },
     {
-      "$ref": "https://json.schemas.assets.semio-tech.com/s/block/block2d/mutation/rename-node-kind/schema.json"
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/block/block2d/mutation/change-handle-kind-label/schema.json"
+    },
+    {
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/block/block2d/mutation/change-handle-kind-color/schema.json"
+    },
+    {
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/block/block2d/mutation/change-handle-kind-default-wire-kind/schema.json"
+    },
+    {
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/block/block2d/mutation/create-handle/schema.json"
+    },
+    {
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/block/block2d/mutation/delete-handle/schema.json"
+    },
+    {
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/block/block2d/mutation/move-handle/schema.json"
+    },
+    {
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/block/block2d/mutation/change-handle-handle-kind/schema.json"
+    },
+    {
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/block/block2d/mutation/add-compatibility-rule/schema.json"
+    },
+    {
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/block/block2d/mutation/remove-compatibility-rule/schema.json"
+    },
+    {
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/block/block2d/mutation/add-attribute/schema.json"
+    },
+    {
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/block/block2d/mutation/remove-attribute/schema.json"
+    },
+    {
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/block/block2d/mutation/add-author/schema.json"
+    },
+    {
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/block/block2d/mutation/remove-author/schema.json"
+    },
+    {
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/block/block2d/mutation/move-camera2d/schema.json"
     },
     {
       "$ref": "https://json.schemas.assets.semio-tech.com/s/block/block2d/mutation/scale-camera2d/schema.json"
     },
     {
-      "$ref": "https://json.schemas.assets.semio-tech.com/s/block/block2d/mutation/update-presentation/schema.json"
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/block/block2d/mutation/change-meta-description/schema.json"
     }
   ]
 }

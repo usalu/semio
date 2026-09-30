@@ -34,7 +34,7 @@
       "x-semio-state": "artifact"
     },
     "catalog": {
-      "$ref": "https://json.schemas.assets.semio-tech.com/os/store/child.json",
+      "$ref": "https://json.schemas.assets.semio-tech.com/os/store/child/schema.json",
       "x-semio-state": "artifact"
     },
     "vortexKindExtra": {

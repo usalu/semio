@@ -1,6 +1,6 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "$id": "https://json.schemas.assets.semio-tech.com/os/store/child/owner.json",
+  "$id": "https://json.schemas.assets.semio-tech.com/os/store/child/owner/schema.json",
   "title": "OwnerRef",
   "type": "object",
   "additionalProperties": false,

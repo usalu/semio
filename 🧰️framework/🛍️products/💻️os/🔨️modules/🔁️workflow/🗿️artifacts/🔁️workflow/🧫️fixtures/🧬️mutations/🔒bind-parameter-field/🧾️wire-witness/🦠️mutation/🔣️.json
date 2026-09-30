@@ -1,0 +1,8 @@
+{
+  "operation": "bindParameterField",
+  "binding": {
+    "parameterId": "p1",
+    "nodeId": "n1",
+    "fieldPath": "/zoom"
+  }
+}

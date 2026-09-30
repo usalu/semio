@@ -1,12 +1,15 @@
 {
   "kind": "insert-sample",
-  "params": {
+  "mutation": {
+    "mutation": "insertSample",
     "streamIndex": 0,
     "index": 1,
     "sample": {
       "pts": 17,
       "key": true,
-      "data": "aa"
+      "data": [
+        170
+      ]
     }
   },
   "before": {

@@ -5,5 +5,5 @@
   "type": "object",
   "additionalProperties": false,
   "required": ["value"],
-  "properties": { "value": { "type": "string" } }
+  "properties": { "value": { "type": "string", "x-semio-ui": {"widget": "text", "role": "value", "label": {"en": "Display mode", "de": "Darstellungsmodus"}, "description": {"en": "shaded, shaded+edges, wireframe or points.", "de": "shaded (schattiert), shaded+edges (schattiert mit Kanten), wireframe (Drahtgitter) oder points (Punkte)."}, "group": "view", "order": 10} } }
 }

@@ -5,56 +5,74 @@
   "type": "object",
   "additionalProperties": false,
   "required": [
+    "mutation",
     "index",
     "layer"
   ],
   "properties": {
+    "mutation": {
+      "const": "createLayer"
+    },
     "parentId": {
-      "type": "string"
+      "type": [
+        "string",
+        "null"
+      ],
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Parent group",
+          "de": "Übergeordnete Gruppe"
+        },
+        "description": {
+          "en": "Group layer that holds the layer; the root when omitted.",
+          "de": "Gruppenebene, die die Ebene enthält; ohne Angabe die Wurzel."
+        },
+        "ref": {
+          "kind": "layer",
+          "domain": "layers",
+          "granularity": "layer"
+        },
+        "group": "placement",
+        "order": 10
+      }
     },
     "index": {
       "type": "integer",
-      "minimum": 0
+      "minimum": 0,
+      "x-semio-ui": {
+        "widget": "stepper",
+        "role": "value",
+        "label": {
+          "en": "Index",
+          "de": "Index"
+        },
+        "description": {
+          "en": "Position in the list; the end when omitted.",
+          "de": "Position in der Liste; ohne Angabe am Ende."
+        },
+        "step": 1,
+        "precision": 0,
+        "group": "order",
+        "order": 20
+      }
     },
     "layer": {
-      "oneOf": [
-        {
-          "type": "object",
-          "properties": {
-            "kind": {
-              "const": "Pixel"
-            }
-          },
-          "required": [
-            "kind"
-          ],
-          "additionalProperties": false
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/raster/raster/artifact.json#/$defs/RasterLayerNode",
+      "x-semio-ui": {
+        "role": "value",
+        "label": {
+          "en": "Layer",
+          "de": "Ebene"
         },
-        {
-          "type": "object",
-          "properties": {
-            "kind": {
-              "const": "Group"
-            }
-          },
-          "required": [
-            "kind"
-          ],
-          "additionalProperties": false
+        "description": {
+          "en": "The kind of layer to add.",
+          "de": "Die Art der hinzuzufügenden Ebene."
         },
-        {
-          "type": "object",
-          "properties": {
-            "kind": {
-              "const": "Adjustment"
-            }
-          },
-          "required": [
-            "kind"
-          ],
-          "additionalProperties": false
-        }
-      ]
+        "group": "record",
+        "order": 30
+      }
     }
   }
 }

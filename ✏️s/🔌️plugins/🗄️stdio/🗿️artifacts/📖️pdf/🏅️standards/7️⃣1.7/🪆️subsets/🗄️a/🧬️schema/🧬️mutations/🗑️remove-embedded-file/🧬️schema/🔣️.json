@@ -5,15 +5,16 @@
   "type": "object",
   "additionalProperties": false,
   "required": [
+    "mutation",
     "fileName"
   ],
   "properties": {
-    "fileName": {
-      "type": "string"
-    },
     "mutation": {
       "const": "removeEmbeddedFile",
       "description": "Aggregate discriminator spliced in by PdfAMutation; absent when the payload stands alone."
+    },
+    "fileName": {
+      "type": "string"
     }
   }
 }

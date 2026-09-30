@@ -72,7 +72,8 @@ fn proximity_never_exceeds_the_gesture_budget() {
     assert_eq!(puzzle2d_proximity_connect(&mut fixture, &moved, 12.0), PUZZLE2D_PROXIMITY_GESTURE_MAX, "one gesture spends at most its fixed edge budget");
 }
 
-/// 🚚️ A `nodeDragEnd` drop inside the radius lands the move AND its new edge as ONE history edit.
+/// 🚚️ A drag record whose drop lands inside the radius yields the move AND its new edge as ONE transaction — one
+/// history edit whose connection carries the id the select tool minted from the pair.
 #[test]
 fn node_drop_auto_connects_as_one_history_edit() {
     let mut app = app_with_registry();
@@ -80,10 +81,12 @@ fn node_drop_auto_connects_as_one_history_edit() {
     dispatch(&mut app, "importFixture", Some(&json!({ "json": seed })), None).expect("seed the board");
     let before = fixture_of(&app);
     assert!(fixture_edges(&before).is_empty(), "the seeded board starts unconnected: {before}");
-    let events = json!([{ "name": "nodeDragEnd", "payload": { "moves": [{ "id": "right", "x": 52.0, "y": 0.0 }] } }]).to_string();
-    dispatch(&mut app, "applyBoardEvents", Some(&json!({ "eventsJson": events })), None).expect("drop");
+    let events = json!([{ "name": "gesture", "payload": { "gestureId": "gesture-1", "kind": "drag", "targets": ["right"], "dx": -948.0, "dy": 0.0, "proximity": [] } }]).to_string();
+    let result = dispatch(&mut app, "applyBoardEvents", Some(&json!({ "eventsJson": events })), None).expect("drop");
+    assert_eq!(committed_edits(&result), 1, "the drop and its connection are one edit");
     let dropped = fixture_of(&app);
     assert_eq!(fixture_edges(&dropped).len(), 1, "the drop auto-connects the facing handles: {dropped}");
+    assert_eq!(fixture_edges(&dropped)[0].get("id").and_then(Value::as_str), Some("edge-left:v0-right:v0"), "the stationary peer is the source and the id is minted from the pair: {dropped}");
     dispatch(&mut app, "undo", None, None).expect("undo");
     let restored = fixture_of(&app);
     assert!(fixture_edges(&restored).is_empty(), "ONE undo takes the drop and its edge back together: {restored}");

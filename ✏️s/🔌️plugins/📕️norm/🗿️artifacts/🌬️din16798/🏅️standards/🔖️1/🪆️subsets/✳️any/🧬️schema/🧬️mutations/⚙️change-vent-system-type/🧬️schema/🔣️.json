@@ -10,10 +10,41 @@
   ],
   "properties": {
     "ventId": {
-      "type": "string"
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Ventilation system",
+          "de": "Lüftungsanlage"
+        },
+        "description": {
+          "en": "The ventilation system this mutation addresses.",
+          "de": "Die Lüftungsanlage, die diese Mutation adressiert."
+        },
+        "ref": {
+          "kind": "ventSystem"
+        },
+        "group": "target",
+        "order": 10
+      }
     },
     "newSystemType": {
-      "type": "string"
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "text",
+        "role": "value",
+        "label": {
+          "en": "Ventilation system type",
+          "de": "Art der Lüftungsanlage"
+        },
+        "description": {
+          "en": "central_mech (central mechanical), decentral_mech (decentral mechanical) or natural.",
+          "de": "central_mech (zentral mechanisch), decentral_mech (dezentral mechanisch) oder natural (freie Lüftung)."
+        },
+        "group": "ventilation",
+        "order": 20
+      }
     }
   }
 }

@@ -1,12 +1,33 @@
 {
-  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/norm/din18599/mutation/change-net-floor-area-m2/schema.json",
   "title": "ChangeNetFloorAreaM2",
   "type": "object",
-  "properties": {
-    "newNetFloorAreaM2": {
-      "type": "number"
-    }
-  },
   "additionalProperties": false,
-  "$id": "https://json.schemas.assets.semio-tech.com/s/norm/din18599/mutation/change-net-floor-area-m2/schema.json"
+  "required": [
+    "mutation",
+    "newNetFloorAreaM2"
+  ],
+  "properties": {
+    "mutation": {
+      "const": "changeNetFloorAreaM2"
+    },
+    "newNetFloorAreaM2": {
+      "type": "number",
+      "exclusiveMinimum": 0,
+      "x-semio-ui": {
+        "widget": "stepper",
+        "role": "value",
+        "label": {
+          "en": "Net floor area A_NGF",
+          "de": "Nettogrundfläche A_NGF"
+        },
+        "unit": "m²",
+        "step": 1,
+        "precision": 1,
+        "group": "building",
+        "order": 10
+      }
+    }
+  }
 }

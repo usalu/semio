@@ -5,11 +5,25 @@
   "type": "object",
   "additionalProperties": false,
   "required": [
+    "mutation",
     "newEnabled"
   ],
   "properties": {
+    "mutation": {
+      "const": "changeSceneShadowEnabled"
+    },
     "newEnabled": {
-      "type": "boolean"
+      "type": "boolean",
+      "x-semio-ui": {
+        "widget": "toggle",
+        "role": "value",
+        "label": {
+          "en": "Shadows",
+          "de": "Schatten"
+        },
+        "group": "lighting",
+        "order": 10
+      }
     }
   }
 }

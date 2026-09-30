@@ -445,3 +445,10 @@ fn direct_owners_descriptors_and_language_neutral_catalog_correspond() {
     }
     assert!(!catalog_kinds.contains(&"set-snapshot"));
 }
+
+/// 🧾️ The committed payload-only wire witness of `create-edge` (its only quintet is a refusal) decodes through
+/// `TrinityGraphMutation`'s `FromValue` and re-encodes to exactly the committed JSON.
+#[test]
+fn committed_wire_witnesses_are_the_canonical_wire() {
+    store::os_store::test_support::assert_wire_witness::<TrinityGraphMutation>(include_str!("../../../../🧫️fixtures/🧬️mutations/🌉️create-edge/🧾️wire-witness/🦠️mutation/🔣️.json"));
+}

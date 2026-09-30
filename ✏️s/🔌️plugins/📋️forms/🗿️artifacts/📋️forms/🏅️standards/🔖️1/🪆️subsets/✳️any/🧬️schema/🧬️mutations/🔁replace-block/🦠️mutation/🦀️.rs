@@ -11,6 +11,7 @@ use protocol::{MutationKind, SemanticDescriptor};
 /// 🔁️ Replaces the block matching `block.id` inside `step_id`'s `blocks` wholesale.
 #[derive(Clone, Debug, PartialEq, dsl::ToValue, dsl::FromValue, dsl::MutationLeaf)]
 #[mutation_leaf(contract = ::protocol)]
+#[value(rename_all = "camelCase")]
 pub struct ReplaceBlock {
     pub step_id: String,
     pub block: FormQuestion,

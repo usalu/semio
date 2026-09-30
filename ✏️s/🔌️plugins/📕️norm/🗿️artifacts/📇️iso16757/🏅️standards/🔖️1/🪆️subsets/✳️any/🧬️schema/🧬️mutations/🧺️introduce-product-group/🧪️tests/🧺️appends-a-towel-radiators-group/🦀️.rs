@@ -59,7 +59,7 @@ async fn deleting_the_towel_radiators_group_restores_before() {
 }
 
 /// 🔣️ Both committed snapshots and the committed `introduce-product-group` payload are already canonical: decode →
-/// encode is a fixed point. The committed payload is spelled `{"IntroduceProductGroup": {"product_group": {…},
+/// encode is a fixed point. The committed payload is spelled `{"IntroduceProductGroup": {"productGroup": {…},
 /// "index": null}}` — `Names.short_name` and `dictionary_subject_id` are plain `Option`s with no skip
 /// attribute, so both appear as explicit `null`.
 #[semio_framework_async_macros::async_test]

@@ -5,11 +5,41 @@
   "type": "object",
   "additionalProperties": false,
   "required": [
+    "mutation",
     "newAzimuth"
   ],
   "properties": {
+    "mutation": {
+      "const": "changeSceneSunAzimuth"
+    },
     "newAzimuth": {
-      "type": "number"
+      "type": "number",
+      "x-semio-ui": {
+        "widget": "dial",
+        "role": "value",
+        "label": {
+          "en": "Sun azimuth",
+          "de": "Sonnenazimut"
+        },
+        "description": {
+          "en": "Compass direction of the sun.",
+          "de": "Himmelsrichtung der Sonne."
+        },
+        "unit": "deg",
+        "step": 1,
+        "precision": 1,
+        "softMin": 0,
+        "softMax": 360,
+        "snaps": [
+          0,
+          90,
+          180,
+          270,
+          360
+        ],
+        "group": "lighting",
+        "order": 10
+      }
     }
   }
 }

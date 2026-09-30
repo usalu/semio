@@ -10,24 +10,40 @@
   ],
   "properties": {
     "index": {
-      "type": "integer"
+      "type": "integer",
+      "minimum": 0,
+      "x-semio-ui": {
+        "widget": "stepper",
+        "role": "value",
+        "label": {
+          "en": "Position",
+          "de": "Position"
+        },
+        "description": {
+          "en": "Zero-based list position at which the record is inserted.",
+          "de": "Nullbasierte Listenposition, an der der Datensatz eingefügt wird."
+        },
+        "step": 1,
+        "precision": 0,
+        "group": "target",
+        "order": 10
+      }
     },
     "joint": {
-      "type": "object",
-      "category": "A",
-      "frictionMu": 0.5,
-      "preloadForce": 0.0,
-      "slipFactorKs": 1.0,
-      "frictionSurfaces": 1,
-      "gauge": 0.06,
-      "actions": [
-        {
-          "id": "jf-1",
-          "loadCaseId": "g-permanent",
-          "shear": 0.0,
-          "tension": 0.0
-        }
-      ]
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1993/snapshot.json#/$defs/SteelJoint",
+      "x-semio-ui": {
+        "role": "value",
+        "label": {
+          "en": "Joint",
+          "de": "Anschluss"
+        },
+        "description": {
+          "en": "The complete joint record to insert.",
+          "de": "Der vollständige einzufügende Datensatz des Anschlusses."
+        },
+        "group": "record",
+        "order": 20
+      }
     }
   }
 }

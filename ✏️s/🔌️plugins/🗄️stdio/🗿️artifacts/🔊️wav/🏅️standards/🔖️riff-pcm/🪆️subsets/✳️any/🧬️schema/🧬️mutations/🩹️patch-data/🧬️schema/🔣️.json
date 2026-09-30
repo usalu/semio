@@ -4,12 +4,40 @@
   "title": "PatchData",
   "type": "object",
   "additionalProperties": false,
-  "required": ["index", "removeCount", "data"],
+  "required": ["mutation","index", "removeCount", "data"],
   "properties": {
     "index": { "type": "integer", "minimum": 0 },
-    "removeCount": { "type": "integer", "minimum": 0 },
-    "data": { "$ref": "../set-data/schema.json#/$defs/WavData" },
-    "moveTo": { "type": ["integer", "null"], "minimum": 0 },
+    "removeCount": {
+      "type": "integer",
+      "minimum": 0,
+      "x-semio-ui": {
+        "widget": "stepper",
+        "label": {
+          "en": "Remove count",
+          "de": "Anzahl zu entfernender Elemente"
+        },
+        "description": {
+          "en": "Number of items removed at the index before the new items are inserted.",
+          "de": "Anzahl der Elemente, die am Index vor dem Einfügen der neuen Elemente entfernt werden."
+        }
+      }
+    },
+    "data": { "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/wav/riff-pcm/any/mutation/set-data/schema.json#/$defs/WavData" },
+    "moveTo": {
+      "type": ["integer", "null"],
+      "minimum": 0,
+      "x-semio-ui": {
+        "widget": "stepper",
+        "label": {
+          "en": "Move to index",
+          "de": "Verschieben nach Index"
+        },
+        "description": {
+          "en": "Index the patched range is moved to.",
+          "de": "Index, an den der geänderte Bereich verschoben wird."
+        }
+      }
+    },
     "mutation": { "const": "patchData", "description": "Aggregate discriminator spliced in by WavMutation; absent when the payload stands alone." }
   }
 }

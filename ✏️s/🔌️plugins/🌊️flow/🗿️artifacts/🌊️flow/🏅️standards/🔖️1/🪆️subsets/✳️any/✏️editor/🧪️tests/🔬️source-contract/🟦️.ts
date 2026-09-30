@@ -1,5 +1,6 @@
 /** 🧪️ Strict language-neutral Flow byte-frontier fixtures and independent JSON oracle. */
 import Ajv from "ajv";
+import { semioSchemaAjvV1 } from "../../../../../../../../../../../../🧰️framework/🛍️products/💻️os/🧪️tests/🧬️schema-oracle/🟦️.ts";
 import { strict as assert } from "node:assert";
 import { createHash } from "node:crypto";
 import { fileURLToPath } from "node:url";
@@ -349,7 +350,8 @@ const snapshotPaths = [...new Bun.Glob("**/📸️snapshot/*/🔣️.json").scan
 assert.equal(snapshotPaths.length, 20);
 const assetSnapshots = await Promise.all(snapshotPaths.map(path => Bun.file(new URL(path, mutationFixtureRoot)).json()));
 const demo = await Bun.file(new URL("../../../🖼️assets/🎬️demo/🗣️.dsl.semio", import.meta.url)).text();
-assetSnapshots.push(JSON.parse(demo.slice(demo.indexOf("\n") + 1)));
+assert(demo.startsWith("semio flow.flow.dsl v1\nschema=flow.host_snapshot\n"), "the demo ships its content child's genesis scene in the host grammar, never a bare content reference");
+for (const widget of ["input-slider id=slider", "neuron id=add", "output-preview id=preview"]) assert(demo.includes(widget), `the demo scene must carry ${widget}`);
 for (const snapshot of assetSnapshots) {
   assert.equal(typeof snapshot.content.childId, "string");
   const exactTarget = new Ajv({ strict: true }).compile({ const: { artifactId: snapshot.content.childId, dialect: identity.dialect } });
@@ -388,16 +390,14 @@ const duplicateRoot = new URL("../../../🧬️schema/🧬️mutations/👯️du
 const duplicateSource = await Bun.file(new URL("🦀️.rs", duplicateRoot)).text();
 const duplicateFixture = await Bun.file(new URL("👯️duplicate-widget/🚫️rejects-duplicating-onto-a-taken-id/🦠️mutation/🔣️.json", mutationFixtureRoot)).json();
 const duplicateModule = await Bun.file(new URL("🧬️schema/🔣️.json", duplicateRoot)).json();
-const duplicateAjv = new Ajv({ strict: true, allErrors: true });
-duplicateAjv.addKeyword({ keyword: "x-semio-formats", metaSchema: { type: "array", items: { type: "string" } } });
-const validateDuplicate = duplicateAjv.addSchema(duplicateModule).compile({ $ref: `${duplicateModule.$id}#` });
-const { mutation: duplicateMutation, ...duplicatePayload } = duplicateFixture;
+const validateDuplicate = semioSchemaAjvV1({ strict: true, allErrors: true }).addSchema(duplicateModule).compile({ $ref: `${duplicateModule.$id}#` });
 assert(duplicateSource.includes('#[value(rename_all = "camelCase")]'));
-assert.equal(duplicateMutation, "duplicateWidget");
-assert(validateDuplicate(duplicatePayload), JSON.stringify(validateDuplicate.errors));
+assert.equal(duplicateFixture.mutation, "duplicateWidget");
+assert(validateDuplicate(duplicateFixture), JSON.stringify(validateDuplicate.errors));
+assert(!validateDuplicate({ ...duplicateFixture, mutation: "createWidget" }), "the leaf pins its aggregate tag");
 assert.deepEqual(Object.keys(duplicateFixture).sort(), ["fromPort", "mutation", "newId", "sourceId", "synapseId", "toPort"]);
 for (const key of ["source_id", "new_id", "synapse_id", "from_port", "to_port"]) assert(!Object.hasOwn(duplicateFixture, key));
-assert(!validateDuplicate({ ...duplicatePayload, sourceId: undefined, source_id: duplicatePayload.sourceId }));
+assert(!validateDuplicate({ ...duplicateFixture, sourceId: undefined, source_id: duplicateFixture.sourceId }));
 //#endregion 🪪️ContentIdentityOracle
 //#region 🧹️StoreOwnerOracle
 const storeOwners = await Bun.file(new URL("../../🧫️fixtures/🏪️store-owners/🔣️.json", import.meta.url)).json();
@@ -523,6 +523,7 @@ const factoryToolIds = {
   FlowChildGroupJobFactory: toolIdList("FLOW_CHILD_GROUP_TOOL_IDS"),
   FlowHostEffectJobFactory: toolIdList("FLOW_HOST_ONLY_TOOL_IDS"),
   FlowGraphOperationJobFactory: toolIdList("FLOW_GRAPH_OPERATION_TOOL_IDS"),
+  FlowContributionsJobFactory: toolIdList("FLOW_CONTRIBUTIONS_TOOL_IDS"),
 };
 const owned = new Map<string, string>();
 for (const row of interactiveJob.factories) {
@@ -532,7 +533,7 @@ for (const row of interactiveJob.factories) {
     owned.set(tool, row.factory);
   }
 }
-assert.deepEqual([...owned.keys()].sort(), [...interactiveJob.migrated].sort(), "the four factories must partition every migrated id exactly");
+assert.deepEqual([...owned.keys()].sort(), [...interactiveJob.migrated].sort(), "the five factories must partition every migrated id exactly");
 for (const hostile of [
   { ...interactiveJob, migrated: interactiveJob.migrated.slice(1) },
   { ...interactiveJob, batchOnlyPendingRewrite: ["addGeneration"] },

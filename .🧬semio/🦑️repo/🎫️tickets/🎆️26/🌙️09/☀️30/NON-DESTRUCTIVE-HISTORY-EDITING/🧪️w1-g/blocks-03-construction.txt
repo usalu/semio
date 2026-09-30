@@ -1,0 +1,130 @@
+<<<<<<< ANCHOR
+    close_active: std::mem::ManuallyDrop<Option<Box<dyn ErasedSnapshotRetirement>>>,
+    close_phase: u8,
+    taken: bool,
+}
+=======
+    close_active: std::mem::ManuallyDrop<Option<Box<dyn ErasedSnapshotRetirement>>>,
+    supersessions: std::mem::ManuallyDrop<EffectiveSupersessions>,
+    close_phase: u8,
+    taken: bool,
+}
+>>>>>>> END
+<<<<<<< ANCHOR
+            close_active: std::mem::ManuallyDrop::new(None),
+            close_phase: 0,
+=======
+            close_active: std::mem::ManuallyDrop::new(None),
+            supersessions: std::mem::ManuallyDrop::new(EffectiveSupersessions::new()),
+            close_phase: 0,
+>>>>>>> END
+<<<<<<< ANCHOR
+    pub fn current_mut(&mut self) -> Option<&mut P> {
+        self.current.as_mut()
+    }
+=======
+    pub fn current_mut(&mut self) -> Option<&mut P> {
+        self.current.as_mut()
+    }
+
+    /// ✏️ Installs the effective supersessions the initializer folds the applied edits with; the adopted store keeps
+    /// them as the map its projection was made under.
+    pub fn set_supersessions(&mut self, supersessions: EffectiveSupersessions) -> Result<(), String> {
+        if !self.supersessions.is_empty() {
+            return Err("artifact store initialization supersessions are installed exactly once".into());
+        }
+        *self.supersessions = supersessions;
+        Ok(())
+    }
+
+    /// ✏️ The effective supersessions the initializer folds the applied edits with.
+    pub fn supersessions(&self) -> &EffectiveSupersessions {
+        &self.supersessions
+    }
+>>>>>>> END
+<<<<<<< ANCHOR
+                if let Some(dag) = self.dag.take() {
+                    *self.close_active = Some(Box::new(ArtifactStoreMutationDagRetirement::new(dag)));
+                    return Ok(SnapshotRetirementStep::Pending { released_items: 0, released_bytes: 0 });
+                }
+                self.close_phase = 8;
+=======
+                if let Some(dag) = self.dag.take() {
+                    *self.close_active = Some(Box::new(ArtifactStoreMutationDagRetirement::new(dag)));
+                    return Ok(SnapshotRetirementStep::Pending { released_items: 0, released_bytes: 0 });
+                }
+                if let Some(entry) = self.supersessions.pop_first() {
+                    *self.close_active = Some(Box::new(ArtifactStoreSupersessionRetirement::new(BTreeMap::from([entry]))));
+                    return Ok(SnapshotRetirementStep::Pending { released_items: 0, released_bytes: 0 });
+                }
+                self.close_phase = 8;
+>>>>>>> END
+<<<<<<< ANCHOR
+                let revision = unsafe { std::mem::ManuallyDrop::take(&mut self.revision) };
+                assert!(applied.is_empty() && redo.is_empty() && cursor_applied.is_empty() && cursor_redo.is_empty() && revision.applied.is_empty() && revision.redo.is_empty());
+                drop((applied, redo, cursor_applied, cursor_redo, revision));
+=======
+                let revision = unsafe { std::mem::ManuallyDrop::take(&mut self.revision) };
+                let supersessions = unsafe { std::mem::ManuallyDrop::take(&mut self.supersessions) };
+                assert!(applied.is_empty() && redo.is_empty() && cursor_applied.is_empty() && cursor_redo.is_empty() && revision.applied.is_empty() && revision.redo.is_empty() && supersessions.is_empty());
+                drop((applied, redo, cursor_applied, cursor_redo, revision, supersessions));
+>>>>>>> END
+<<<<<<< ANCHOR
+    fn into_parts(mut self) -> (P, Vec<String>, Vec<String>, ArtifactCursor, Option<String>, crate::os_spr::MutationDag, i32, HybridLogicalTimestamp, [u8; 32], CursorRevisionAccumulator) {
+=======
+    #[allow(clippy::type_complexity)]
+    fn into_parts(mut self) -> (P, Vec<String>, Vec<String>, ArtifactCursor, Option<String>, crate::os_spr::MutationDag, i32, HybridLogicalTimestamp, [u8; 32], CursorRevisionAccumulator, EffectiveSupersessions) {
+>>>>>>> END
+<<<<<<< ANCHOR
+        let revision = unsafe { std::mem::ManuallyDrop::take(&mut self.revision) };
+        self.taken = true;
+        (current, applied, redo, cursor, actor, dag, self.edit_sequence, self.clock, self.initial_digest, revision)
+=======
+        let revision = unsafe { std::mem::ManuallyDrop::take(&mut self.revision) };
+        let supersessions = unsafe { std::mem::ManuallyDrop::take(&mut self.supersessions) };
+        self.taken = true;
+        (current, applied, redo, cursor, actor, dag, self.edit_sequence, self.clock, self.initial_digest, revision, supersessions)
+>>>>>>> END
+<<<<<<< ANCHOR
+    let (current, applied_edit_ids, redo_edit_ids, cursor, local_actor_id, dag, edit_sequence, clock, initial_digest, revision_accumulator) = runtime.into_parts();
+=======
+    let (current, applied_edit_ids, redo_edit_ids, cursor, local_actor_id, dag, edit_sequence, clock, initial_digest, revision_accumulator, supersessions) = runtime.into_parts();
+>>>>>>> END
+<<<<<<< ANCHOR
+        let crate::os_spr::HistoryFold { applied: loaded_applied_edit_ids, redo: loaded_redo_edit_ids, checkpoint: current_checkpoint_id, alternative, .. } = fold_envelope_history(envelope)?;
+        envelope.active_alternative_id = alternative;
+        validate_history_lanes(envelope, &loaded_applied_edit_ids, &loaded_redo_edit_ids).await?;
+        let current = Self::fold_history(envelope, &loaded_applied_edit_ids).await?;
+=======
+        let crate::os_spr::HistoryFold { applied: loaded_applied_edit_ids, redo: loaded_redo_edit_ids, checkpoint: current_checkpoint_id, alternative, supersessions, .. } = fold_envelope_history(envelope)?;
+        envelope.active_alternative_id = alternative;
+        validate_history_lanes(envelope, &loaded_applied_edit_ids, &loaded_redo_edit_ids).await?;
+        let current = Self::fold_history(envelope, &loaded_applied_edit_ids, &supersessions).await?;
+>>>>>>> END
+<<<<<<< ANCHOR
+        let (retired_applied, retired_redo) = revision_accumulator.reconcile(&applied_edit_ids, &redo_edit_ids, &envelope.vcs.edits);
+        assert!(retired_applied.is_empty() && retired_redo.is_empty(), "new revision accumulator unexpectedly displaced an owner during construction");
+=======
+        let (retired_applied, retired_redo) = revision_accumulator.reconcile::<P, Mutation>(&applied_edit_ids, &redo_edit_ids, &envelope.vcs.edits, &supersessions, None);
+        assert!(retired_applied.is_empty() && retired_redo.is_empty(), "new revision accumulator unexpectedly displaced an owner during construction");
+>>>>>>> END
+<<<<<<< ANCHOR
+        let crate::os_spr::HistoryFold { applied: applied_edit_ids, redo: redo_edit_ids, checkpoint: current_checkpoint_id, alternative, .. } = fold_envelope_history(envelope)?;
+        envelope.active_alternative_id = alternative;
+        validate_history_lanes(envelope, &applied_edit_ids, &redo_edit_ids).await?;
+        let current = Self::fold_history(envelope, &applied_edit_ids).await?;
+=======
+        let crate::os_spr::HistoryFold { applied: applied_edit_ids, redo: redo_edit_ids, checkpoint: current_checkpoint_id, alternative, supersessions, .. } = fold_envelope_history(envelope)?;
+        envelope.active_alternative_id = alternative;
+        validate_history_lanes(envelope, &applied_edit_ids, &redo_edit_ids).await?;
+        let current = Self::fold_history(envelope, &applied_edit_ids, &supersessions).await?;
+>>>>>>> END
+<<<<<<< ANCHOR
+        let envelope = candidate.take().expect("an adopted reload takes its validated envelope exactly once");
+        self.commit_document_roots_retained(envelope, Arc::new(current), dag, None, commit_authority);
+=======
+        let envelope = candidate.take().expect("an adopted reload takes its validated envelope exactly once");
+        self.clear_prefix_ring()?;
+        self.commit_document_roots_retained(envelope, Arc::new(current), dag, None, commit_authority);
+        self.replace_supersessions_retained(supersessions)?;
+>>>>>>> END

@@ -18,11 +18,11 @@ use protocol::{Mutation, MutationDiff};
 #[path = "../../🔺️diff/🦀️.rs"]
 mod leaf_diff;
 
-const BEFORE: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🗑️remove-metadata-entry/💬️removes-the-comment-entry-and-keeps-the-author-entry/📸️snapshot/⬅️before/🔣️.json");
-const AFTER: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🗑️remove-metadata-entry/💬️removes-the-comment-entry-and-keeps-the-author-entry/📸️snapshot/➡️after/🔣️.json");
-const MUTATION: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🗑️remove-metadata-entry/💬️removes-the-comment-entry-and-keeps-the-author-entry/🦠️mutation/🔣️.json");
-const DIFF: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🗑️remove-metadata-entry/💬️removes-the-comment-entry-and-keeps-the-author-entry/🔺️diff/🔣️.json");
-const OUTCOME: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🗑️remove-metadata-entry/💬️removes-the-comment-entry-and-keeps-the-author-entry/🎯️outcome/🔣️.json");
+const BEFORE: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🗑️remove-metadata-entry/💬️removes-comment-entry-keeps-author-entry/📸️snapshot/⬅️before/🔣️.json");
+const AFTER: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🗑️remove-metadata-entry/💬️removes-comment-entry-keeps-author-entry/📸️snapshot/➡️after/🔣️.json");
+const MUTATION: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🗑️remove-metadata-entry/💬️removes-comment-entry-keeps-author-entry/🦠️mutation/🔣️.json");
+const DIFF: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🗑️remove-metadata-entry/💬️removes-comment-entry-keeps-author-entry/🔺️diff/🔣️.json");
+const OUTCOME: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🗑️remove-metadata-entry/💬️removes-comment-entry-keeps-author-entry/🎯️outcome/🔣️.json");
 
 fn before() -> SemioImageSnapshot {
     dsl::json::from_json_str(BEFORE).expect("remove-metadata-entry before snapshot decodes")

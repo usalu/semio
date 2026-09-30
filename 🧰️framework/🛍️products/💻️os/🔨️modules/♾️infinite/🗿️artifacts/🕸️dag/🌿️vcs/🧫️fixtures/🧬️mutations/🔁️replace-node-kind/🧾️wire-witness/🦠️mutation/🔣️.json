@@ -1,0 +1,15 @@
+{
+  "operation": "replaceNodeKind",
+  "id": "a",
+  "newKind": {
+    "kind": "note",
+    "text": "x",
+    "output": {
+      "id": "out",
+      "label": "Output",
+      "cardinality": "!",
+      "shape": "semicircle",
+      "visible": true
+    }
+  }
+}

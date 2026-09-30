@@ -18,11 +18,11 @@ use crate::standards::v1::subsets::presentation::schema::diff::{SemioPresentatio
 use crate::standards::v1::subsets::presentation::schema::mutations::{apply_semio_presentation_mutation, SemioPresentationMutation};
 use crate::standards::v1::subsets::presentation::schema::snapshot::SemioPresentationSnapshot;
 
-const BEFORE: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/📸️set-snapshot/🔤️rewrites-the-second-slides-textbox-and-adds-a-speaker-note/📸️snapshot/⬅️before/🔣️.json");
-const AFTER: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/📸️set-snapshot/🔤️rewrites-the-second-slides-textbox-and-adds-a-speaker-note/📸️snapshot/➡️after/🔣️.json");
-const MUTATION: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/📸️set-snapshot/🔤️rewrites-the-second-slides-textbox-and-adds-a-speaker-note/🦠️mutation/🔣️.json");
-const DIFF: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/📸️set-snapshot/🔤️rewrites-the-second-slides-textbox-and-adds-a-speaker-note/🔺️diff/🔣️.json");
-const OUTCOME: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/📸️set-snapshot/🔤️rewrites-the-second-slides-textbox-and-adds-a-speaker-note/🎯️outcome/🔣️.json");
+const BEFORE: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/📸️set-snapshot/🔤️rewrites-second-slides-textbox-adds-speaker/📸️snapshot/⬅️before/🔣️.json");
+const AFTER: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/📸️set-snapshot/🔤️rewrites-second-slides-textbox-adds-speaker/📸️snapshot/➡️after/🔣️.json");
+const MUTATION: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/📸️set-snapshot/🔤️rewrites-second-slides-textbox-adds-speaker/🦠️mutation/🔣️.json");
+const DIFF: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/📸️set-snapshot/🔤️rewrites-second-slides-textbox-adds-speaker/🔺️diff/🔣️.json");
+const OUTCOME: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/📸️set-snapshot/🔤️rewrites-second-slides-textbox-adds-speaker/🎯️outcome/🔣️.json");
 
 fn before() -> SemioPresentationSnapshot {
     dsl::json::from_json_str(BEFORE).expect("before presentation snapshot decodes")

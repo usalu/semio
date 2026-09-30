@@ -657,7 +657,7 @@ pub const VALUE_TYPE_GEOMETRY: &str = "geometry";
 /// press resolves to whichever the lookup happened to reach first. The display names (`code`,
 /// `abbreviation`, `fullName`) are untouched — this is an identity, not a label.
 ///
-/// @see `✏️s/🔌️plugins/🌊️flow/🧩️extensions/🧫️fixtures/🔌️port-sides/🔣️.json` — the catalogue-wide law
+/// @see `✏️s/🧑‍💻dev/🌊️flow/🧫️fixtures/🔌️port-sides/🔣️.json` — the catalogue-wide law
 pub fn produced_channel_id(input_id: &str) -> String {
     format!("{input_id}Out")
 }

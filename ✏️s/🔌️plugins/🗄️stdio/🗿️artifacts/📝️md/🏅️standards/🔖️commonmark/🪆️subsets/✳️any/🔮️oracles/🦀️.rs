@@ -259,7 +259,6 @@ mod live {
 
         match spec.str("kind").as_str() {
             "" => return Err("mutation spec carries no `kind`".to_string()),
-            "no-mutation" => {}
             "set-snapshot" => {
                 for child in root.children().collect::<Vec<_>>() {
                     child.detach();
@@ -314,6 +313,16 @@ mod live {
 
         let mut out = String::new();
         format_commonmark(root, &options, &mut out).map_err(|error| format!("comrak could not format the document: {error}"))?;
+        Ok(out.into_bytes())
+    }
+
+    /// 🔁️ Parses one real artifact into `comrak`'s own AST and re-renders CommonMark from it alone.
+    pub fn oracle_round_trip(input: &[u8]) -> Result<Vec<u8>, String> {
+        let text = std::str::from_utf8(input).map_err(|error| format!("input is not valid UTF-8: {error}"))?;
+        let arena = Arena::new();
+        let options = Options::default();
+        let mut out = String::new();
+        format_commonmark(parse_document(&arena, text, &options), &options, &mut out).map_err(|error| format!("comrak could not format the document: {error}"))?;
         Ok(out.into_bytes())
     }
     //#endregion 🔖️Dispatch
@@ -430,14 +439,12 @@ mod live {
         Ok(current)
     }
 
-    /// 🔎️ The block at `path`/`index` in the ORIGINAL projected document, or `None` when the
-    /// address does not resolve — mirrors production `agg_inverse`'s own graceful "nothing to
-    /// invert against" fallback (the EMPTY vec, since the `26/08/29/S-END-TO-END` migration dropped
-    /// `NoMutation`) rather than panicking on a stale address.
-    fn block_at(doc: &Json, path: &Json, index: usize) -> Result<Option<Json>, String> {
+    /// 🔎️ The block at `path`/`index` in the ORIGINAL projected document; a stale address is an error, since every
+    /// row this oracle serves addresses the real document.
+    fn block_at(doc: &Json, path: &Json, index: usize) -> Result<Json, String> {
         let path_steps = as_array(Some(path));
         let container = container_at(doc, &path_steps)?;
-        Ok(container.get(index).cloned())
+        container.get(index).cloned().ok_or_else(|| format!("inverse: the original document has no block {index} at {path:?}"))
     }
 
     /// ↩️ The spec for the mutation that undoes `spec`, computed from the ORIGINAL document's own
@@ -454,7 +461,6 @@ mod live {
         let path = params.get("path").cloned().unwrap_or(Json::Array(Vec::new()));
 
         let (inverse_kind, inverse_params) = match kind.as_str() {
-            "no-mutation" => ("no-mutation".to_string(), Json::Object(Vec::new())),
             "set-snapshot" => ("set-snapshot".to_string(), Json::Object(vec![("snapshot".to_string(), original)])),
             "insert-block" => {
                 let index = json_usize(&params, "index")?;
@@ -462,27 +468,18 @@ mod live {
             }
             "remove-block" => {
                 let index = json_usize(&params, "index")?;
-                match block_at(&original, &path, index)? {
-                    Some(block) => ("insert-block".to_string(), Json::Object(vec![("path".to_string(), path), ("index".to_string(), Json::Number(index as f64)), ("block".to_string(), block)])),
-                    None => ("no-mutation".to_string(), Json::Object(Vec::new())),
-                }
+                let block = block_at(&original, &path, index)?;
+                ("insert-block".to_string(), Json::Object(vec![("path".to_string(), path), ("index".to_string(), Json::Number(index as f64)), ("block".to_string(), block)]))
             }
             "replace-block" => {
                 let index = json_usize(&params, "index")?;
-                match block_at(&original, &path, index)? {
-                    Some(block) => ("replace-block".to_string(), Json::Object(vec![("path".to_string(), path), ("index".to_string(), Json::Number(index as f64)), ("block".to_string(), block)])),
-                    None => ("no-mutation".to_string(), Json::Object(Vec::new())),
-                }
+                let block = block_at(&original, &path, index)?;
+                ("replace-block".to_string(), Json::Object(vec![("path".to_string(), path), ("index".to_string(), Json::Number(index as f64)), ("block".to_string(), block)]))
             }
             "set-inlines" => {
                 let index = json_usize(&params, "index")?;
-                match block_at(&original, &path, index)? {
-                    Some(block) => match block.get("inlines") {
-                        Some(inlines) => ("set-inlines".to_string(), Json::Object(vec![("path".to_string(), path), ("index".to_string(), Json::Number(index as f64)), ("inlines".to_string(), inlines.clone())])),
-                        None => ("no-mutation".to_string(), Json::Object(Vec::new())),
-                    },
-                    None => ("no-mutation".to_string(), Json::Object(Vec::new())),
-                }
+                let inlines = block_at(&original, &path, index)?.get("inlines").cloned().ok_or("set-inlines inverse: the original block carries no inlines")?;
+                ("set-inlines".to_string(), Json::Object(vec![("path".to_string(), path), ("index".to_string(), Json::Number(index as f64)), ("inlines".to_string(), inlines)]))
             }
             other => return Err(format!("mutation kind {other:?} has no inverse spec")),
         };
@@ -492,7 +489,7 @@ mod live {
 }
 
 #[cfg(feature = "oracles")]
-pub use live::{inverse_mutation_spec, oracle_apply_mutation, project_md};
+pub use live::{inverse_mutation_spec, oracle_apply_mutation, oracle_round_trip, project_md};
 
 //#region 🔖️Unavailable
 /// 🚫️ Without the `oracles` feature the reference implementation is not linked at all, and every
@@ -505,6 +502,9 @@ mod unavailable {
     pub fn oracle_apply_mutation(_input: &[u8], _spec: &Json) -> Result<Vec<u8>, String> {
         Err(MESSAGE.to_string())
     }
+    pub fn oracle_round_trip(_input: &[u8]) -> Result<Vec<u8>, String> {
+        Err(MESSAGE.to_string())
+    }
     pub fn project_md(_input: &[u8]) -> Result<Json, String> {
         Err(MESSAGE.to_string())
     }
@@ -514,5 +514,5 @@ mod unavailable {
 }
 
 #[cfg(not(feature = "oracles"))]
-pub use unavailable::{inverse_mutation_spec, oracle_apply_mutation, project_md};
+pub use unavailable::{inverse_mutation_spec, oracle_apply_mutation, oracle_round_trip, project_md};
 //#endregion 🔖️Unavailable

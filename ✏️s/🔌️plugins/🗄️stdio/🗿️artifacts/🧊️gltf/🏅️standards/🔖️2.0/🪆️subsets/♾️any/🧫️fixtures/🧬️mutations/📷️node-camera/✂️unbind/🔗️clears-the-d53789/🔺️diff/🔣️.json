@@ -1,9 +1,12 @@
 {
-  "operation": {
-    "node": 0
-  },
-  "after": null,
-  "touchedPaths": [
-    "document/nodes/*/camera"
-  ]
+  "nodes": {
+    "modified": [
+      {
+        "index": 0,
+        "diff": {
+          "camera": null
+        }
+      }
+    ]
+  }
 }

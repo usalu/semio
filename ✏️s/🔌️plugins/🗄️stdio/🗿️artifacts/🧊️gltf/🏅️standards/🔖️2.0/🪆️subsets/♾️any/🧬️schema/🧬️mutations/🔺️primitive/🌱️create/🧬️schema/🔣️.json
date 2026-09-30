@@ -1,7 +1,7 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
   "$id": "https://json.schemas.assets.semio-tech.com/s/stdio/gltf/2.0/any/mutation/create-primitive/schema.json",
-  "title": "GltfCreatePrimitiveMutation",
+  "title": "GltfCreatePrimitivePayload",
   "type": "object",
   "additionalProperties": false,
   "required": [
@@ -11,22 +11,78 @@
   "properties": {
     "mesh": {
       "type": "integer",
-      "minimum": 0
+      "minimum": 0,
+      "x-semio-ui": {
+        "widget": "stepper",
+        "label": {
+          "en": "Mesh",
+          "de": "Netz"
+        },
+        "description": {
+          "en": "Index of the mesh, counted from 0.",
+          "de": "Index des Netzes, ab 0 gezählt."
+        },
+        "precision": 0,
+        "group": "target",
+        "order": 10
+      }
     },
     "position": {
       "type": "integer",
-      "minimum": 0
+      "minimum": 0,
+      "x-semio-ui": {
+        "widget": "stepper",
+        "label": {
+          "en": "Insert position",
+          "de": "Einfügeposition"
+        },
+        "description": {
+          "en": "Target index in the list, counted from 0.",
+          "de": "Zielindex in der Liste, ab 0 gezählt."
+        },
+        "precision": 0,
+        "group": "value",
+        "order": 20
+      }
     }
   },
-  "x-semio": {
-    "id": "s.stdio.gltf.mutation.create-primitive.v1",
-    "version": 1,
-    "phase": "mutation",
-    "kind": "create",
-    "touchedPaths": [
-      "document/meshes/*/primitives"
-    ],
-    "referencePolicy": "creates an empty primitive only at a valid mesh-local position"
-  },
-  "x-semio-mutation": "create-primitive"
+  "$defs": {
+    "CreatePrimitiveMutation": {
+      "description": "The whole wire of CreatePrimitiveMutation: the editable apply payload (this document's root) or the inert restore.",
+      "oneOf": [
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "phase",
+            "value"
+          ],
+          "properties": {
+            "phase": {
+              "const": "apply"
+            },
+            "value": {
+              "$ref": "#"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "phase",
+            "value"
+          ],
+          "properties": {
+            "phase": {
+              "const": "restore"
+            },
+            "value": {
+              "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/gltf/2.0/any/diff.json"
+            }
+          }
+        }
+      ]
+    }
+  }
 }

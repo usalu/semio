@@ -9,7 +9,19 @@
   ],
   "properties": {
     "new_schema": {
-      "type": "string"
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "text",
+        "role": "value",
+        "label": {
+          "en": "New Schema",
+          "de": "Neues Schema"
+        },
+        "description": {
+          "en": "Schema identity of the playground document.",
+          "de": "Schema-Identität des Playground-Dokuments."
+        }
+      }
     }
   }
 }

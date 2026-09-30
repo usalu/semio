@@ -89,7 +89,12 @@ mod live {
         }
     }
 
+    /// 🎨️ A `GifColorTable` wire value as `gif`'s flat RGB palette. `gif`'s writer never sets a table's sort flag,
+    /// so a sorted table is refused rather than silently unsorted.
     fn palette_from_json(json: &Json) -> Result<Vec<u8>, String> {
+        if bool_field(json, "sorted") == Some(true) {
+            return Err("gif's writer cannot set a colour table's sort flag".to_string());
+        }
         let mut out = Vec::new();
         for color in json.array("colors") {
             out.push(num(&color, "r").ok_or("color table entry missing r")? as u8);
@@ -160,6 +165,7 @@ mod live {
 
     fn doc_to_json(doc: &OracleDoc) -> Json {
         Json::Object(vec![
+            ("schema".to_string(), Json::String("stdio.gif".to_string())),
             ("width".to_string(), Json::Number(doc.width as f64)),
             ("height".to_string(), Json::Number(doc.height as f64)),
             ("gct".to_string(), if doc.gct.is_empty() { Json::Null } else { palette_to_json(&doc.gct) }),
@@ -257,7 +263,6 @@ mod live {
     /// subject's own `apply_gif_mutation`.
     fn apply_kind(doc: &mut OracleDoc, kind: &str, params: &Json) -> Result<(), String> {
         match kind {
-            "no-mutation" => {}
             "set-snapshot" => *doc = doc_from_json(params.get("snapshot").ok_or("set-snapshot: missing snapshot")?)?,
             "set-screen-size" => {
                 doc.width = num(params, "width").ok_or("set-screen-size: missing width")? as u16;
@@ -343,11 +348,11 @@ mod live {
     /// document) exactly as `GifMutation::inverse` does over `GifSnapshot`
     /// (`../../🧬️schema/🧬️mutations/🦀️.rs`) — reimplemented independently here against
     /// `OracleDoc`, never by calling that function. `insert-image`'s inverse is a `remove-image` at
-    /// the same landed index, matching that function's own documented semantics.
-    pub fn inverse_spec(original_bytes: &[u8], kind: &str, params: &Json) -> Result<Json, String> {
+    /// the same landed index, matching that function's own documented semantics; an index-targeted
+    /// kind whose target the original does not hold changed nothing and has no inverse (`None`).
+    fn inverse_spec(original_bytes: &[u8], kind: &str, params: &Json) -> Result<Option<(&'static str, Json)>, String> {
         let original = oracle_decode(original_bytes)?;
-        let (inverse_kind, inverse_params) = match kind {
-            "no-mutation" => ("no-mutation", Json::Object(Vec::new())),
+        Ok(Some(match kind {
             "set-snapshot" => ("set-snapshot", Json::Object(vec![("snapshot".to_string(), doc_to_json(&original))])),
             "set-screen-size" => ("set-screen-size", Json::Object(vec![("width".to_string(), Json::Number(original.width as f64)), ("height".to_string(), Json::Number(original.height as f64))])),
             "set-global-color-table" => ("set-global-color-table", Json::Object(vec![("gct".to_string(), if original.gct.is_empty() { Json::Null } else { palette_to_json(&original.gct) })])),
@@ -361,7 +366,7 @@ mod live {
                 let index = num(params, "index").ok_or("remove-image: missing index")? as usize;
                 match original.images.get(index) {
                     Some(image) => ("insert-image", Json::Object(vec![("index".to_string(), Json::Number(index as f64)), ("image".to_string(), image_to_json(image))])),
-                    None => ("no-mutation", Json::Object(Vec::new())),
+                    None => return Ok(None),
                 }
             }
             "move-image" => {
@@ -391,26 +396,40 @@ mod live {
                             ("height".to_string(), Json::Number(image.height as f64)),
                         ]),
                     ),
-                    None => ("no-mutation", Json::Object(Vec::new())),
+                    None => return Ok(None),
                 }
             }
             "set-image-pixels" => {
                 let index = num(params, "index").ok_or("set-image-pixels: missing index")? as usize;
                 match original.images.get(index) {
                     Some(image) => ("set-image-pixels", Json::Object(vec![("index".to_string(), Json::Number(index as f64)), ("indices".to_string(), Json::Array(image.indices.iter().map(|b| Json::Number(*b as f64)).collect()))])),
-                    None => ("no-mutation", Json::Object(Vec::new())),
+                    None => return Ok(None),
                 }
             }
             "set-image-interlace" => {
                 let index = num(params, "index").ok_or("set-image-interlace: missing index")? as usize;
                 match original.images.get(index) {
                     Some(image) => ("set-image-interlace", Json::Object(vec![("index".to_string(), Json::Number(index as f64)), ("interlace".to_string(), Json::Bool(image.interlaced))])),
-                    None => ("no-mutation", Json::Object(Vec::new())),
+                    None => return Ok(None),
                 }
             }
             other => return Err(format!("mutation kind {:?} has no oracle inverse", other)),
-        };
-        Ok(Json::Object(vec![("kind".to_string(), Json::String(inverse_kind.to_string())), ("params".to_string(), inverse_params)]))
+        }))
+    }
+
+    /// ↩️ Applies the independently computed inverse of `spec` on top of `mutated`.
+    pub fn apply_mutation_inverse(original_bytes: &[u8], spec: &Json, mutated: &[u8]) -> Result<Vec<u8>, String> {
+        let empty_params = Json::Object(Vec::new());
+        let mut doc = oracle_decode(mutated)?;
+        if let Some((kind, params)) = inverse_spec(original_bytes, &spec.str("kind"), spec.get("params").unwrap_or(&empty_params))? {
+            apply_kind(&mut doc, kind, &params)?;
+        }
+        oracle_encode(&doc)
+    }
+
+    /// 🔁️ A full decode through the reference reader, re-encoded from `OracleDoc` alone.
+    pub fn rewrite(input: &[u8]) -> Result<Vec<u8>, String> {
+        oracle_encode(&oracle_decode(input)?)
     }
     //#endregion 🔖️Dispatch
 
@@ -483,12 +502,17 @@ pub fn oracle_apply_mutation(input: &[u8], spec: &Json) -> Result<Vec<u8>, Strin
     live::apply_mutation(input, spec)
 }
 
-/// ↩️ The independently-computed inverse of one mutation spec, relative to the document as it
-/// stood BEFORE that mutation — used by the `inverse-<kind>` scenarios to restore the original
-/// without calling into the subject's own `GifMutation::inverse`.
+/// ↩️ Applies the independently computed inverse of `spec` — relative to the document as it stood BEFORE that
+/// mutation — on top of `mutated`, without calling into the subject's own `GifMutation::inverse`.
 #[cfg(feature = "oracles")]
-pub fn oracle_inverse_spec(original_bytes: &[u8], kind: &str, params: &Json) -> Result<Json, String> {
-    live::inverse_spec(original_bytes, kind, params)
+pub fn oracle_apply_mutation_inverse(original_bytes: &[u8], spec: &Json, mutated: &[u8]) -> Result<Vec<u8>, String> {
+    live::apply_mutation_inverse(original_bytes, spec, mutated)
+}
+
+/// 🔁️ The `@id-identity-round-trip` computation: a full `gif` decode re-encoded from the independent model alone.
+#[cfg(feature = "oracles")]
+pub fn oracle_identity_round_trip(input: &[u8]) -> Result<Vec<u8>, String> {
+    live::rewrite(input)
 }
 
 /// 👁️ Projects GIF87a bytes (oracle or subject, either role) onto the surface every
@@ -507,7 +531,12 @@ pub fn oracle_apply_mutation(_input: &[u8], _spec: &Json) -> Result<Vec<u8>, Str
 }
 
 #[cfg(not(feature = "oracles"))]
-pub fn oracle_inverse_spec(_original_bytes: &[u8], _kind: &str, _params: &Json) -> Result<Json, String> {
+pub fn oracle_apply_mutation_inverse(_original_bytes: &[u8], _spec: &Json, _mutated: &[u8]) -> Result<Vec<u8>, String> {
+    Err("the `oracles` feature is disabled — this host was not built with the registered reference implementations".to_string())
+}
+
+#[cfg(not(feature = "oracles"))]
+pub fn oracle_identity_round_trip(_input: &[u8]) -> Result<Vec<u8>, String> {
     Err("the `oracles` feature is disabled — this host was not built with the registered reference implementations".to_string())
 }
 

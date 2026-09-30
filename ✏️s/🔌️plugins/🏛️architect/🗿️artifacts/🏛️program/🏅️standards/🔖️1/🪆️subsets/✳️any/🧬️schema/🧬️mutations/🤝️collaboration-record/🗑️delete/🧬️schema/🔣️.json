@@ -5,12 +5,34 @@
   "type": "object",
   "additionalProperties": false,
   "required": [
+    "mutation",
     "id"
   ],
   "properties": {
+    "mutation": {
+      "const": "deleteCollaborationRecord"
+    },
     "id": {
-      "type": "integer",
-      "minimum": 0
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Collaboration Record",
+          "de": "Zusammenarbeitseintrag"
+        },
+        "description": {
+          "en": "The collaboration record to delete.",
+          "de": "Zu löschender Eintrag vom Typ „Zusammenarbeitseintrag“."
+        },
+        "ref": {
+          "kind": "collaborationRecord",
+          "domain": "program",
+          "granularity": "entity"
+        },
+        "group": "target",
+        "order": 10
+      }
     }
   }
 }

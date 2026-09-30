@@ -165,11 +165,31 @@ fn label_bytes(label: &Option<crate::Label>) -> usize {
 // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
 fn component_is_finite(component: &crate::Component) -> bool {
     match component {
-        crate::Component::Slider(props) => [props.value, props.min, props.max, props.step].into_iter().all(f64::is_finite),
+        crate::Component::Slider(props) => [props.value, props.min, props.max, props.step].into_iter().chain(props.snaps.iter().copied()).all(f64::is_finite),
         crate::Component::NumberStepper(props) => [Some(props.value), Some(props.step), props.min, props.max].into_iter().flatten().all(f64::is_finite) && props.min.zip(props.max).is_none_or(|(min, max)| min <= max),
         crate::Component::Ring(props) => props.t.is_finite(),
         crate::Component::Progress(props) => props.completed.is_finite() && props.total.is_none_or(f64::is_finite),
-        crate::Component::Input(props) => [props.min, props.max, props.step].into_iter().flatten().all(|value| value.is_finite()),
+        crate::Component::Input(props) => [props.min, props.max, props.step].into_iter().flatten().chain(props.snaps.iter().copied()).all(|value| value.is_finite()),
+        _ => true,
+    }
+}
+
+/// 🧲️ The detent law every renderer shares: finite, strictly ascending, inside `min..=max` — the admission
+/// gate behind [`UiContractViolation::InvalidSnaps`] (TS twin `snapsAreValid`, `🛡️limits/🟦️.ts`).
+pub fn snaps_are_valid(snaps: impl IntoIterator<Item = f64>, min: f64, max: f64) -> bool {
+    let mut previous = f64::NEG_INFINITY;
+    snaps.into_iter().all(|snap| {
+        let valid = snap.is_finite() && snap > previous && snap >= min && snap <= max;
+        previous = snap;
+        valid
+    })
+}
+
+// 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
+fn component_snaps_are_valid(component: &crate::Component) -> bool {
+    match component {
+        crate::Component::Slider(props) => props.snaps_are_valid(),
+        crate::Component::Input(props) => props.snaps_are_valid(),
         _ => true,
     }
 }
@@ -297,6 +317,11 @@ pub enum UiContractViolation {
     InvalidRowTarget {
         node: crate::UiNodeId,
     },
+    /// 📍️ A Slider's or number field's `snaps` are not strictly ascending inside its bounds — see
+    /// [`crate::snaps_are_valid`].
+    InvalidSnaps {
+        node: crate::UiNodeId,
+    },
 }
 
 /// 🌲️ Validates `snapshot` against `limits`, collecting every [`UiContractViolation`] found rather
@@ -401,6 +426,10 @@ fn validate_core<'a>(
                         }
                         if !component_is_finite(&record.component) {
                             if violations.try_push(UiContractViolation::NonFiniteNumber { node: id }).is_err() {
+                                return violations;
+                            }
+                        } else if !component_snaps_are_valid(&record.component) {
+                            if violations.try_push(UiContractViolation::InvalidSnaps { node: id }).is_err() {
                                 return violations;
                             }
                         }
@@ -971,6 +1000,9 @@ impl UiPatchApplyProducer {
                 }
                 if !component_is_finite(&record.component) {
                     return self.reject_violation(UiContractViolation::NonFiniteNumber { node: frame.id });
+                }
+                if !component_snaps_are_valid(&record.component) {
+                    return self.reject_violation(UiContractViolation::InvalidSnaps { node: frame.id });
                 }
                 if let crate::Component::TreeItem(props) = &record.component {
                     if let Some(toolbar) = props.inline_toolbar.filter(|_| !tree_inline_toolbar_is_valid(record, |id| draft.nodes.get(&id))) {

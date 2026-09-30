@@ -235,7 +235,7 @@ impl Default for Generation3dViewCommand {
 //#region 🧵️RetainedCommands
 /// 🧾️ Every viewer tool id, in `Generation3dViewCommand` declaration order — a bijection with the
 /// command enum's rows and with `Generation3dViewBoundedCommandJobFactory::PUBLICATION_CONTRACTS`.
-const GENERATION3D_VIEW_TOOL_IDS: &[&str] = &["setShowMode", "setLodMode", "setCamera", "toggleSun", "setSunAzimuth", "setSunElevation", "setSunIntensity"];
+pub const GENERATION3D_VIEW_TOOL_IDS: &[&str] = &["setShowMode", "setLodMode", "setCamera", "toggleSun", "setSunAzimuth", "setSunElevation", "setSunIntensity"];
 /// 🎨️ The navbar example picker's own tool id — an APP-scoped gesture, dispatched from the shell
 /// chrome rather than from a window, exactly as it is on the sibling surface. Kept out of
 /// [`GENERATION3D_VIEW_TOOL_IDS`] for that reason: that list is the statement of what THIS viewer's
@@ -1736,28 +1736,11 @@ pub fn create_generation3d_viewer() -> semio_framework_plugin::AppDefinition {
 }
 //#endregion 🔖️Manifest
 
-//#region 🧪️UnitTests
+
 #[cfg(test)]
 #[path = "🧪️tests/🔬️unit/🦀️.rs"]
-pub(crate) mod unit_tests;
-//#endregion 🧪️UnitTests
+mod unit_tests;
 
-
-//#region 🧪️EvalChain
-/// ⏱️ The read-only surface's half of the ONE addressed evaluation law — its own module because it
-/// answers the SAME language-agnostic fixture (`🧫️fixtures/🪟️tick-addressing.json`) the sibling
-/// surface answers, plus the served-order recovery law that proves a painted viewer preview.
-#[cfg(test)]
-#[path = "🧪️tests/🔬️eval-chain/🦀️.rs"]
-mod eval_chain_tests;
-//#endregion 🧪️EvalChain
-
-//#region 🧪️StatusContract
-/// 📈️ The read-only surface's half of the ONE preview-window status contract — its own module
-/// because it answers the SAME language-agnostic fixture (`🧫️fixtures/🛑️preview-cancel.json`) the
-/// editor's cancellation lane answers, whose third-party twin lives beside the editor's own cancel
-/// command.
 #[cfg(test)]
 #[path = "🧪️tests/🔬️status-contract/🦀️.rs"]
 mod status_contract_tests;
-//#endregion 🧪️StatusContract

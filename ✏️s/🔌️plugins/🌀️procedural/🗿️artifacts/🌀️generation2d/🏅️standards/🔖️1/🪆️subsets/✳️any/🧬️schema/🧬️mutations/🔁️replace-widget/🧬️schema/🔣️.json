@@ -9,116 +9,1554 @@
   ],
   "properties": {
     "widget": {
+      "$ref": "#/$defs/Widget",
+      "x-semio-ui": {
+        "role": "value",
+        "label": {
+          "en": "Widget",
+          "de": "Baustein"
+        },
+        "description": {
+          "en": "The widget kind to place.",
+          "de": "Die zu platzierende Bausteinart."
+        },
+        "group": "record",
+        "order": 10
+      }
+    }
+  },
+  "$defs": {
+    "Widget": {
       "oneOf": [
         {
           "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "id",
+            "neuronKind",
+            "params",
+            "inputPorts",
+            "outputPorts",
+            "preview"
+          ],
           "properties": {
             "kind": {
-              "const": "Neuron"
+              "const": "neuron",
+              "x-semio-ui": {
+                "widget": "hidden",
+                "role": "discriminator",
+                "label": {
+                  "en": "Kind",
+                  "de": "Art"
+                }
+              }
+            },
+            "id": {
+              "type": "string",
+              "x-semio-ui": {
+                "widget": "text",
+                "role": "value",
+                "label": {
+                  "en": "ID",
+                  "de": "ID"
+                },
+                "description": {
+                  "en": "Unique widget id in this graph.",
+                  "de": "Eindeutige Baustein-ID in diesem Graphen."
+                },
+                "group": "identity",
+                "order": 10
+              }
+            },
+            "neuronKind": {
+              "type": "string",
+              "x-semio-ui": {
+                "widget": "text",
+                "role": "value",
+                "label": {
+                  "en": "Neuron kind",
+                  "de": "Neuronenart"
+                },
+                "description": {
+                  "en": "Operator id, e.g. math.add.",
+                  "de": "Operator-ID, z. B. math.add."
+                },
+                "group": "kind",
+                "order": 20
+              }
+            },
+            "params": {
+              "$ref": "#/$defs/Dictionary",
+              "x-semio-ui": {
+                "role": "value",
+                "label": {
+                  "en": "Parameters",
+                  "de": "Parameter"
+                },
+                "description": {
+                  "en": "Operator parameters by key.",
+                  "de": "Operatorparameter je Schlüssel."
+                },
+                "group": "value",
+                "order": 30
+              }
+            },
+            "inputPorts": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              },
+              "x-semio-ui": {
+                "role": "value",
+                "label": {
+                  "en": "Input ports",
+                  "de": "Eingänge"
+                },
+                "group": "ports",
+                "order": 40
+              }
+            },
+            "outputPorts": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              },
+              "x-semio-ui": {
+                "role": "value",
+                "label": {
+                  "en": "Output ports",
+                  "de": "Ausgänge"
+                },
+                "group": "ports",
+                "order": 50
+              }
+            },
+            "preview": {
+              "type": "boolean",
+              "x-semio-ui": {
+                "widget": "toggle",
+                "role": "value",
+                "label": {
+                  "en": "Preview",
+                  "de": "Vorschau"
+                },
+                "group": "appearance",
+                "order": 60
+              }
             }
           },
-          "required": [
-            "kind"
-          ],
-          "additionalProperties": false
+          "x-semio-ui": {
+            "label": {
+              "en": "Neuron",
+              "de": "Neuron"
+            }
+          }
         },
         {
           "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "id",
+            "label",
+            "value",
+            "min",
+            "max",
+            "step"
+          ],
           "properties": {
             "kind": {
-              "const": "InputSlider"
+              "const": "inputSlider",
+              "x-semio-ui": {
+                "widget": "hidden",
+                "role": "discriminator",
+                "label": {
+                  "en": "Kind",
+                  "de": "Art"
+                }
+              }
+            },
+            "id": {
+              "type": "string",
+              "x-semio-ui": {
+                "widget": "text",
+                "role": "value",
+                "label": {
+                  "en": "ID",
+                  "de": "ID"
+                },
+                "description": {
+                  "en": "Unique widget id in this graph.",
+                  "de": "Eindeutige Baustein-ID in diesem Graphen."
+                },
+                "group": "identity",
+                "order": 10
+              }
+            },
+            "label": {
+              "type": "string",
+              "x-semio-ui": {
+                "widget": "text",
+                "role": "value",
+                "label": {
+                  "en": "Label",
+                  "de": "Bezeichnung"
+                },
+                "group": "appearance",
+                "order": 20
+              }
+            },
+            "value": {
+              "type": "number",
+              "x-semio-ui": {
+                "widget": "stepper",
+                "role": "value",
+                "label": {
+                  "en": "Value",
+                  "de": "Wert"
+                },
+                "step": 0.1,
+                "precision": 3,
+                "group": "value",
+                "order": 30
+              }
+            },
+            "min": {
+              "type": "number",
+              "x-semio-ui": {
+                "widget": "stepper",
+                "role": "value",
+                "label": {
+                  "en": "Minimum",
+                  "de": "Minimum"
+                },
+                "step": 0.1,
+                "precision": 3,
+                "group": "range",
+                "order": 40
+              }
+            },
+            "max": {
+              "type": "number",
+              "x-semio-ui": {
+                "widget": "stepper",
+                "role": "value",
+                "label": {
+                  "en": "Maximum",
+                  "de": "Maximum"
+                },
+                "step": 0.1,
+                "precision": 3,
+                "group": "range",
+                "order": 50
+              }
+            },
+            "step": {
+              "type": "number",
+              "x-semio-ui": {
+                "widget": "stepper",
+                "role": "value",
+                "label": {
+                  "en": "Step",
+                  "de": "Schrittweite"
+                },
+                "step": 0.1,
+                "precision": 3,
+                "group": "range",
+                "order": 60
+              }
             }
           },
-          "required": [
-            "kind"
-          ],
-          "additionalProperties": false
+          "x-semio-ui": {
+            "label": {
+              "en": "Slider input",
+              "de": "Schiebereglereingabe"
+            }
+          }
         },
         {
           "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "id",
+            "text"
+          ],
           "properties": {
             "kind": {
-              "const": "InputNote"
+              "const": "inputNote",
+              "x-semio-ui": {
+                "widget": "hidden",
+                "role": "discriminator",
+                "label": {
+                  "en": "Kind",
+                  "de": "Art"
+                }
+              }
+            },
+            "id": {
+              "type": "string",
+              "x-semio-ui": {
+                "widget": "text",
+                "role": "value",
+                "label": {
+                  "en": "ID",
+                  "de": "ID"
+                },
+                "description": {
+                  "en": "Unique widget id in this graph.",
+                  "de": "Eindeutige Baustein-ID in diesem Graphen."
+                },
+                "group": "identity",
+                "order": 10
+              }
+            },
+            "text": {
+              "type": "string",
+              "x-semio-ui": {
+                "widget": "multiline",
+                "role": "value",
+                "label": {
+                  "en": "Text",
+                  "de": "Text"
+                },
+                "group": "value",
+                "order": 20
+              }
             }
           },
-          "required": [
-            "kind"
-          ],
-          "additionalProperties": false
+          "x-semio-ui": {
+            "label": {
+              "en": "Note input",
+              "de": "Notizeingabe"
+            }
+          }
         },
         {
           "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "id",
+            "src"
+          ],
           "properties": {
             "kind": {
-              "const": "InputImage"
+              "const": "inputImage",
+              "x-semio-ui": {
+                "widget": "hidden",
+                "role": "discriminator",
+                "label": {
+                  "en": "Kind",
+                  "de": "Art"
+                }
+              }
+            },
+            "id": {
+              "type": "string",
+              "x-semio-ui": {
+                "widget": "text",
+                "role": "value",
+                "label": {
+                  "en": "ID",
+                  "de": "ID"
+                },
+                "description": {
+                  "en": "Unique widget id in this graph.",
+                  "de": "Eindeutige Baustein-ID in diesem Graphen."
+                },
+                "group": "identity",
+                "order": 10
+              }
+            },
+            "src": {
+              "type": "string",
+              "x-semio-ui": {
+                "widget": "text",
+                "role": "value",
+                "label": {
+                  "en": "Image source",
+                  "de": "Bildquelle"
+                },
+                "description": {
+                  "en": "Address of the image, e.g. an https or data URL.",
+                  "de": "Adresse des Bildes, z. B. eine https- oder data-URL."
+                },
+                "group": "source",
+                "order": 20
+              }
             }
           },
-          "required": [
-            "kind"
-          ],
-          "additionalProperties": false
+          "x-semio-ui": {
+            "label": {
+              "en": "Image input",
+              "de": "Bildeingabe"
+            }
+          }
         },
         {
           "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "id",
+            "name",
+            "schema"
+          ],
           "properties": {
             "kind": {
-              "const": "Variable"
+              "const": "variable",
+              "x-semio-ui": {
+                "widget": "hidden",
+                "role": "discriminator",
+                "label": {
+                  "en": "Kind",
+                  "de": "Art"
+                }
+              }
+            },
+            "id": {
+              "type": "string",
+              "x-semio-ui": {
+                "widget": "text",
+                "role": "value",
+                "label": {
+                  "en": "ID",
+                  "de": "ID"
+                },
+                "description": {
+                  "en": "Unique widget id in this graph.",
+                  "de": "Eindeutige Baustein-ID in diesem Graphen."
+                },
+                "group": "identity",
+                "order": 10
+              }
+            },
+            "name": {
+              "type": "string",
+              "x-semio-ui": {
+                "widget": "text",
+                "role": "value",
+                "label": {
+                  "en": "Name",
+                  "de": "Name"
+                },
+                "group": "identity",
+                "order": 20
+              }
+            },
+            "schema": {
+              "type": "string",
+              "x-semio-ui": {
+                "widget": "text",
+                "role": "value",
+                "label": {
+                  "en": "Schema",
+                  "de": "Schema"
+                },
+                "description": {
+                  "en": "Value schema of the variable, e.g. dictionary.",
+                  "de": "Werteschema der Variablen, z. B. dictionary."
+                },
+                "group": "kind",
+                "order": 30
+              }
             }
           },
-          "required": [
-            "kind"
-          ],
-          "additionalProperties": false
+          "x-semio-ui": {
+            "label": {
+              "en": "Variable",
+              "de": "Variable"
+            }
+          }
         },
         {
           "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "id",
+            "preview",
+            "expanded"
+          ],
           "properties": {
             "kind": {
-              "const": "OutputPreview"
+              "const": "outputPreview",
+              "x-semio-ui": {
+                "widget": "hidden",
+                "role": "discriminator",
+                "label": {
+                  "en": "Kind",
+                  "de": "Art"
+                }
+              }
+            },
+            "id": {
+              "type": "string",
+              "x-semio-ui": {
+                "widget": "text",
+                "role": "value",
+                "label": {
+                  "en": "ID",
+                  "de": "ID"
+                },
+                "description": {
+                  "en": "Unique widget id in this graph.",
+                  "de": "Eindeutige Baustein-ID in diesem Graphen."
+                },
+                "group": "identity",
+                "order": 10
+              }
+            },
+            "preview": {
+              "$ref": "#/$defs/Dictionary",
+              "x-semio-ui": {
+                "role": "value",
+                "label": {
+                  "en": "Preview values",
+                  "de": "Vorschauwerte"
+                },
+                "group": "value",
+                "order": 20
+              }
+            },
+            "expanded": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              },
+              "x-semio-ui": {
+                "role": "value",
+                "label": {
+                  "en": "Expanded entries",
+                  "de": "Aufgeklappte Einträge"
+                },
+                "group": "appearance",
+                "order": 30
+              }
             }
           },
-          "required": [
-            "kind"
-          ],
-          "additionalProperties": false
+          "x-semio-ui": {
+            "label": {
+              "en": "Preview output",
+              "de": "Vorschauausgabe"
+            }
+          }
         },
         {
           "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "id",
+            "action"
+          ],
           "properties": {
             "kind": {
-              "const": "OutputAction"
+              "const": "outputAction",
+              "x-semio-ui": {
+                "widget": "hidden",
+                "role": "discriminator",
+                "label": {
+                  "en": "Kind",
+                  "de": "Art"
+                }
+              }
+            },
+            "id": {
+              "type": "string",
+              "x-semio-ui": {
+                "widget": "text",
+                "role": "value",
+                "label": {
+                  "en": "ID",
+                  "de": "ID"
+                },
+                "description": {
+                  "en": "Unique widget id in this graph.",
+                  "de": "Eindeutige Baustein-ID in diesem Graphen."
+                },
+                "group": "identity",
+                "order": 10
+              }
+            },
+            "action": {
+              "type": "string",
+              "x-semio-ui": {
+                "widget": "text",
+                "role": "value",
+                "label": {
+                  "en": "Action",
+                  "de": "Aktion"
+                },
+                "group": "value",
+                "order": 20
+              }
             }
           },
-          "required": [
-            "kind"
-          ],
-          "additionalProperties": false
+          "x-semio-ui": {
+            "label": {
+              "en": "Action output",
+              "de": "Aktionsausgabe"
+            }
+          }
         },
         {
           "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "id",
+            "format"
+          ],
           "properties": {
             "kind": {
-              "const": "OutputExport"
+              "const": "outputExport",
+              "x-semio-ui": {
+                "widget": "hidden",
+                "role": "discriminator",
+                "label": {
+                  "en": "Kind",
+                  "de": "Art"
+                }
+              }
+            },
+            "id": {
+              "type": "string",
+              "x-semio-ui": {
+                "widget": "text",
+                "role": "value",
+                "label": {
+                  "en": "ID",
+                  "de": "ID"
+                },
+                "description": {
+                  "en": "Unique widget id in this graph.",
+                  "de": "Eindeutige Baustein-ID in diesem Graphen."
+                },
+                "group": "identity",
+                "order": 10
+              }
+            },
+            "format": {
+              "type": "string",
+              "x-semio-ui": {
+                "widget": "text",
+                "role": "value",
+                "label": {
+                  "en": "Format",
+                  "de": "Format"
+                },
+                "description": {
+                  "en": "Export format, e.g. svg or png.",
+                  "de": "Exportformat, z. B. svg oder png."
+                },
+                "group": "value",
+                "order": 20
+              }
             }
           },
-          "required": [
-            "kind"
-          ],
-          "additionalProperties": false
+          "x-semio-ui": {
+            "label": {
+              "en": "Export output",
+              "de": "Exportausgabe"
+            }
+          }
         },
         {
           "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "id",
+            "name",
+            "tree",
+            "flow"
+          ],
           "properties": {
             "kind": {
-              "const": "Cluster"
+              "const": "cluster",
+              "x-semio-ui": {
+                "widget": "hidden",
+                "role": "discriminator",
+                "label": {
+                  "en": "Kind",
+                  "de": "Art"
+                }
+              }
+            },
+            "id": {
+              "type": "string",
+              "x-semio-ui": {
+                "widget": "text",
+                "role": "value",
+                "label": {
+                  "en": "ID",
+                  "de": "ID"
+                },
+                "description": {
+                  "en": "Unique widget id in this graph.",
+                  "de": "Eindeutige Baustein-ID in diesem Graphen."
+                },
+                "group": "identity",
+                "order": 10
+              }
+            },
+            "name": {
+              "type": "string",
+              "x-semio-ui": {
+                "widget": "text",
+                "role": "value",
+                "label": {
+                  "en": "Name",
+                  "de": "Name"
+                },
+                "group": "identity",
+                "order": 20
+              }
+            },
+            "tree": {
+              "$ref": "#/$defs/FlowTree",
+              "x-semio-ui": {
+                "role": "value",
+                "label": {
+                  "en": "Graph",
+                  "de": "Graph"
+                },
+                "description": {
+                  "en": "Neurons and synapses inside the cluster.",
+                  "de": "Neuronen und Synapsen im Cluster."
+                },
+                "group": "record",
+                "order": 30
+              }
+            },
+            "flow": {
+              "$ref": "#/$defs/FlowUi",
+              "x-semio-ui": {
+                "role": "value",
+                "label": {
+                  "en": "Layout",
+                  "de": "Anordnung"
+                },
+                "description": {
+                  "en": "Canvas presentation of the cluster graph.",
+                  "de": "Darstellung des Clustergraphen auf der Leinwand."
+                },
+                "group": "appearance",
+                "order": 40
+              }
             }
           },
-          "required": [
-            "kind"
-          ],
-          "additionalProperties": false
+          "x-semio-ui": {
+            "label": {
+              "en": "Cluster",
+              "de": "Cluster"
+            }
+          }
         }
       ]
+    },
+    "Dictionary": {
+      "type": "object",
+      "additionalProperties": {
+        "description": "a neural value, any JSON value"
+      }
+    },
+    "CameraJson": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "x",
+        "y",
+        "zoom"
+      ],
+      "properties": {
+        "x": {
+          "type": "number",
+          "x-semio-ui": {
+            "widget": "stepper",
+            "role": "value",
+            "label": {
+              "en": "X",
+              "de": "X"
+            },
+            "step": 1,
+            "precision": 3,
+            "group": "camera",
+            "order": 10
+          }
+        },
+        "y": {
+          "type": "number",
+          "x-semio-ui": {
+            "widget": "stepper",
+            "role": "value",
+            "label": {
+              "en": "Y",
+              "de": "Y"
+            },
+            "step": 1,
+            "precision": 3,
+            "group": "camera",
+            "order": 20
+          }
+        },
+        "zoom": {
+          "type": "number",
+          "x-semio-ui": {
+            "widget": "stepper",
+            "role": "value",
+            "label": {
+              "en": "Zoom",
+              "de": "Zoom"
+            },
+            "step": 0.1,
+            "precision": 3,
+            "group": "camera",
+            "order": 30
+          }
+        }
+      }
+    },
+    "WidgetLayout": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "x",
+        "y"
+      ],
+      "properties": {
+        "x": {
+          "type": "number",
+          "x-semio-ui": {
+            "widget": "stepper",
+            "role": "value",
+            "label": {
+              "en": "X",
+              "de": "X"
+            },
+            "step": 1,
+            "precision": 3,
+            "group": "position",
+            "order": 10
+          }
+        },
+        "y": {
+          "type": "number",
+          "x-semio-ui": {
+            "widget": "stepper",
+            "role": "value",
+            "label": {
+              "en": "Y",
+              "de": "Y"
+            },
+            "step": 1,
+            "precision": 3,
+            "group": "position",
+            "order": 20
+          }
+        }
+      }
+    },
+    "FlowUi": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "camera",
+        "nodes",
+        "previews"
+      ],
+      "properties": {
+        "camera": {
+          "$ref": "#/$defs/CameraJson",
+          "x-semio-ui": {
+            "role": "value",
+            "label": {
+              "en": "Camera",
+              "de": "Kamera"
+            },
+            "group": "camera",
+            "order": 10
+          }
+        },
+        "nodes": {
+          "type": "object",
+          "additionalProperties": {
+            "$ref": "#/$defs/FlowNodeGui"
+          },
+          "x-semio-ui": {
+            "role": "value",
+            "label": {
+              "en": "Nodes",
+              "de": "Knoten"
+            },
+            "description": {
+              "en": "Presentation per node id.",
+              "de": "Darstellung je Knoten-ID."
+            },
+            "group": "record",
+            "order": 20
+          }
+        },
+        "previews": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/FlowPreviewGui"
+          },
+          "x-semio-ui": {
+            "role": "value",
+            "label": {
+              "en": "Previews",
+              "de": "Vorschauen"
+            },
+            "group": "record",
+            "order": 30
+          }
+        }
+      }
+    },
+    "FlowNodeGui": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "layout",
+        "chrome"
+      ],
+      "properties": {
+        "layout": {
+          "$ref": "#/$defs/WidgetLayout",
+          "x-semio-ui": {
+            "role": "value",
+            "label": {
+              "en": "Position",
+              "de": "Position"
+            },
+            "group": "position",
+            "order": 10
+          }
+        },
+        "chrome": {
+          "$ref": "#/$defs/NodeChrome",
+          "x-semio-ui": {
+            "role": "value",
+            "label": {
+              "en": "Chrome",
+              "de": "Rahmen"
+            },
+            "group": "appearance",
+            "order": 20
+          }
+        }
+      }
+    },
+    "NodeChrome": {
+      "oneOf": [
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "preview"
+          ],
+          "properties": {
+            "kind": {
+              "const": "plain",
+              "x-semio-ui": {
+                "widget": "hidden",
+                "role": "discriminator",
+                "label": {
+                  "en": "Kind",
+                  "de": "Art"
+                }
+              }
+            },
+            "preview": {
+              "type": "boolean",
+              "x-semio-ui": {
+                "widget": "toggle",
+                "role": "value",
+                "label": {
+                  "en": "Preview",
+                  "de": "Vorschau"
+                },
+                "group": "appearance",
+                "order": 10
+              }
+            }
+          },
+          "x-semio-ui": {
+            "label": {
+              "en": "Plain",
+              "de": "Schlicht"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "label",
+            "min",
+            "max",
+            "step",
+            "value"
+          ],
+          "properties": {
+            "kind": {
+              "const": "slider",
+              "x-semio-ui": {
+                "widget": "hidden",
+                "role": "discriminator",
+                "label": {
+                  "en": "Kind",
+                  "de": "Art"
+                }
+              }
+            },
+            "label": {
+              "type": "string",
+              "x-semio-ui": {
+                "widget": "text",
+                "role": "value",
+                "label": {
+                  "en": "Label",
+                  "de": "Bezeichnung"
+                },
+                "group": "appearance",
+                "order": 10
+              }
+            },
+            "min": {
+              "type": "number",
+              "x-semio-ui": {
+                "widget": "stepper",
+                "role": "value",
+                "label": {
+                  "en": "Minimum",
+                  "de": "Minimum"
+                },
+                "step": 0.1,
+                "precision": 3,
+                "group": "range",
+                "order": 20
+              }
+            },
+            "max": {
+              "type": "number",
+              "x-semio-ui": {
+                "widget": "stepper",
+                "role": "value",
+                "label": {
+                  "en": "Maximum",
+                  "de": "Maximum"
+                },
+                "step": 0.1,
+                "precision": 3,
+                "group": "range",
+                "order": 30
+              }
+            },
+            "step": {
+              "type": "number",
+              "x-semio-ui": {
+                "widget": "stepper",
+                "role": "value",
+                "label": {
+                  "en": "Step",
+                  "de": "Schrittweite"
+                },
+                "step": 0.1,
+                "precision": 3,
+                "group": "range",
+                "order": 40
+              }
+            },
+            "value": {
+              "type": "number",
+              "x-semio-ui": {
+                "widget": "stepper",
+                "role": "value",
+                "label": {
+                  "en": "Value",
+                  "de": "Wert"
+                },
+                "step": 0.1,
+                "precision": 3,
+                "group": "value",
+                "order": 50
+              }
+            }
+          },
+          "x-semio-ui": {
+            "label": {
+              "en": "Slider",
+              "de": "Schieberegler"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "text"
+          ],
+          "properties": {
+            "kind": {
+              "const": "note",
+              "x-semio-ui": {
+                "widget": "hidden",
+                "role": "discriminator",
+                "label": {
+                  "en": "Kind",
+                  "de": "Art"
+                }
+              }
+            },
+            "text": {
+              "type": "string",
+              "x-semio-ui": {
+                "widget": "multiline",
+                "role": "value",
+                "label": {
+                  "en": "Text",
+                  "de": "Text"
+                },
+                "group": "value",
+                "order": 10
+              }
+            }
+          },
+          "x-semio-ui": {
+            "label": {
+              "en": "Note",
+              "de": "Notiz"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "src"
+          ],
+          "properties": {
+            "kind": {
+              "const": "image",
+              "x-semio-ui": {
+                "widget": "hidden",
+                "role": "discriminator",
+                "label": {
+                  "en": "Kind",
+                  "de": "Art"
+                }
+              }
+            },
+            "src": {
+              "type": "string",
+              "x-semio-ui": {
+                "widget": "text",
+                "role": "value",
+                "label": {
+                  "en": "Image source",
+                  "de": "Bildquelle"
+                },
+                "group": "source",
+                "order": 10
+              }
+            }
+          },
+          "x-semio-ui": {
+            "label": {
+              "en": "Image",
+              "de": "Bild"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "name",
+            "schema"
+          ],
+          "properties": {
+            "kind": {
+              "const": "variable",
+              "x-semio-ui": {
+                "widget": "hidden",
+                "role": "discriminator",
+                "label": {
+                  "en": "Kind",
+                  "de": "Art"
+                }
+              }
+            },
+            "name": {
+              "type": "string",
+              "x-semio-ui": {
+                "widget": "text",
+                "role": "value",
+                "label": {
+                  "en": "Name",
+                  "de": "Name"
+                },
+                "group": "identity",
+                "order": 10
+              }
+            },
+            "schema": {
+              "type": "string",
+              "x-semio-ui": {
+                "widget": "text",
+                "role": "value",
+                "label": {
+                  "en": "Schema",
+                  "de": "Schema"
+                },
+                "group": "kind",
+                "order": 20
+              }
+            }
+          },
+          "x-semio-ui": {
+            "label": {
+              "en": "Variable",
+              "de": "Variable"
+            }
+          }
+        }
+      ]
+    },
+    "FlowPreviewGui": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "mode",
+        "preview",
+        "expanded"
+      ],
+      "properties": {
+        "id": {
+          "type": "string",
+          "x-semio-ui": {
+            "widget": "text",
+            "role": "value",
+            "label": {
+              "en": "ID",
+              "de": "ID"
+            },
+            "group": "identity",
+            "order": 10
+          }
+        },
+        "source": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/FlowChannelRef"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "x-semio-ui": {
+            "role": "value",
+            "label": {
+              "en": "Source",
+              "de": "Quelle"
+            },
+            "group": "ports",
+            "order": 20
+          }
+        },
+        "mode": {
+          "type": "string",
+          "x-semio-ui": {
+            "widget": "text",
+            "role": "value",
+            "label": {
+              "en": "Mode",
+              "de": "Modus"
+            },
+            "group": "appearance",
+            "order": 30
+          }
+        },
+        "preview": {
+          "$ref": "#/$defs/Dictionary",
+          "x-semio-ui": {
+            "role": "value",
+            "label": {
+              "en": "Preview values",
+              "de": "Vorschauwerte"
+            },
+            "group": "value",
+            "order": 40
+          }
+        },
+        "expanded": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "x-semio-ui": {
+            "role": "value",
+            "label": {
+              "en": "Expanded entries",
+              "de": "Aufgeklappte Einträge"
+            },
+            "group": "appearance",
+            "order": 50
+          }
+        },
+        "layout": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/WidgetLayout"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "x-semio-ui": {
+            "role": "value",
+            "label": {
+              "en": "Position",
+              "de": "Position"
+            },
+            "group": "position",
+            "order": 60
+          }
+        }
+      }
+    },
+    "FlowChannelRef": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "neuron",
+        "channel"
+      ],
+      "properties": {
+        "neuron": {
+          "type": "string",
+          "x-semio-ui": {
+            "widget": "text",
+            "role": "value",
+            "label": {
+              "en": "Neuron",
+              "de": "Neuron"
+            },
+            "group": "ports",
+            "order": 10
+          }
+        },
+        "channel": {
+          "type": "string",
+          "x-semio-ui": {
+            "widget": "text",
+            "role": "value",
+            "label": {
+              "en": "Channel",
+              "de": "Kanal"
+            },
+            "group": "ports",
+            "order": 20
+          }
+        }
+      }
+    },
+    "FlowTree": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "neurons",
+        "synapses"
+      ],
+      "properties": {
+        "neurons": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/FlowNeuron"
+          },
+          "x-semio-ui": {
+            "role": "value",
+            "label": {
+              "en": "Neurons",
+              "de": "Neuronen"
+            },
+            "group": "record",
+            "order": 10
+          }
+        },
+        "synapses": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/SynapseSpec"
+          },
+          "x-semio-ui": {
+            "role": "value",
+            "label": {
+              "en": "Synapses",
+              "de": "Synapsen"
+            },
+            "group": "record",
+            "order": 20
+          }
+        }
+      }
+    },
+    "FlowNeuron": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "kind",
+        "params"
+      ],
+      "properties": {
+        "id": {
+          "type": "string",
+          "x-semio-ui": {
+            "widget": "text",
+            "role": "value",
+            "label": {
+              "en": "ID",
+              "de": "ID"
+            },
+            "group": "identity",
+            "order": 10
+          }
+        },
+        "kind": {
+          "type": "string",
+          "x-semio-ui": {
+            "widget": "text",
+            "role": "value",
+            "label": {
+              "en": "Neuron kind",
+              "de": "Neuronenart"
+            },
+            "group": "kind",
+            "order": 20
+          }
+        },
+        "params": {
+          "$ref": "#/$defs/Dictionary",
+          "x-semio-ui": {
+            "role": "value",
+            "label": {
+              "en": "Parameters",
+              "de": "Parameter"
+            },
+            "group": "value",
+            "order": 30
+          }
+        },
+        "tree": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/FlowTree"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "x-semio-ui": {
+            "role": "value",
+            "label": {
+              "en": "Nested graph",
+              "de": "Verschachtelter Graph"
+            },
+            "group": "record",
+            "order": 40
+          }
+        }
+      }
+    },
+    "SynapseSpec": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "from",
+        "to",
+        "fromPort",
+        "toPort"
+      ],
+      "properties": {
+        "id": {
+          "type": "string",
+          "x-semio-ui": {
+            "widget": "text",
+            "role": "value",
+            "label": {
+              "en": "ID",
+              "de": "ID"
+            },
+            "group": "identity",
+            "order": 10
+          }
+        },
+        "from": {
+          "type": "string",
+          "x-semio-ui": {
+            "widget": "text",
+            "role": "value",
+            "label": {
+              "en": "From",
+              "de": "Von"
+            },
+            "group": "ports",
+            "order": 20
+          }
+        },
+        "to": {
+          "type": "string",
+          "x-semio-ui": {
+            "widget": "text",
+            "role": "value",
+            "label": {
+              "en": "To",
+              "de": "Nach"
+            },
+            "group": "ports",
+            "order": 30
+          }
+        },
+        "fromPort": {
+          "type": "string",
+          "x-semio-ui": {
+            "widget": "text",
+            "role": "value",
+            "label": {
+              "en": "From port",
+              "de": "Ausgang"
+            },
+            "group": "ports",
+            "order": 40
+          }
+        },
+        "toPort": {
+          "type": "string",
+          "x-semio-ui": {
+            "widget": "text",
+            "role": "value",
+            "label": {
+              "en": "To port",
+              "de": "Eingang"
+            },
+            "group": "ports",
+            "order": 50
+          }
+        }
+      }
     }
   }
 }

@@ -1,6 +1,6 @@
 {
   "InsertLayer": {
-    "element_id": "wall-north",
+    "elementId": "wall-north",
     "index": 0,
     "layer": {
       "id": "layer-extra",

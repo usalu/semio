@@ -15,7 +15,7 @@
 //! both fold from `🧩️plan` through `protocol::fold_plan_diff`/`fold_plan_inverse`. The scene is
 //! seeded with BOTH `note-alpha` (a valid source) and `note-beta` (the id the payload wants for the
 //! copy), so planning gets past the "source missing" precondition and dies on the third one —
-//! `new_id` already taken — the branch a composite folds into a Fatal `mutation.invariant`.
+//! `new_id` already taken — the branch the composite refuses as a Fatal `mutation.duplicate-id` addressed at `new_id`.
 
 use crate::schema::mutations::{apply_flow_mutation, inverse_flow_mutation, to_framework_mutation, FlowMutation};
 use crate::{cache_flow_content, flow_working_scene, FlowDiff, FlowSnapshot};
@@ -56,19 +56,19 @@ async fn a_refused_plan_leaves_the_document_at_the_committed_after() {
     assert_eq!(flow_working_scene(&base).widgets.len(), 2, "the seeded scene must still hold exactly the source widget and the id-squatting widget");
 }
 
-/// 🚨️ A composite reports a planning refusal as ONE Fatal `mutation.invariant` with an EMPTY target
-/// — `fold_plan_diff` stamps `PlanError`'s own text and never a per-entity address, which is what
-/// makes this verb's diagnostic shape unlike every id-addressed leaf verb in this vocabulary. The
-/// message text pins the third precondition branch (`new_id` already taken), not the first two.
+/// 🚨️ A composite reports its precondition refusal as ONE Fatal message carrying the precondition's own
+/// domain code and target (`PlanError::Refused`): an occupied `new_id` is `mutation.duplicate-id` at
+/// that id, exactly what a bare `create-widget` onto the same id raises. The message text pins the
+/// third precondition branch (`new_id` already taken), not the first two.
 #[semio_framework_async_macros::async_test]
-async fn a_taken_new_id_folds_into_a_fatal_untargeted_invariant() {
+async fn a_taken_new_id_folds_into_a_fatal_duplicate_id() {
     let produced = <FlowMutation as protocol::Mutation<FlowSnapshot>>::diff(&mutation(), &before());
     assert_eq!(produced.diff(), &FlowDiff::default(), "an all-or-nothing composite refusal must fold to an empty diff, never a half-planned create");
     let messages = produced.messages();
     assert_eq!(messages.len(), 1, "exactly one diagnostic is expected — the plan dies before its first step is recorded, got {messages:?}");
-    assert_eq!(messages[0].code.0, "mutation.invariant", "a PlanError folds into mutation.invariant, not the duplicate-id a bare create-widget would raise");
+    assert_eq!(messages[0].code.0, "mutation.duplicate-id", "an occupied new_id is a state refusal, never a payload invariant");
     assert_eq!(messages[0].level, protocol::Severity::Fatal, "a refused plan is Fatal — no merge policy may absorb a half-applied composite");
-    assert!(messages[0].target.is_empty(), "fold_plan_diff never addresses a PlanError to an entity, got {:?}", messages[0].target);
+    assert_eq!(messages[0].target, ["note-beta"], "the refusal addresses the occupied id, got {:?}", messages[0].target);
     assert_eq!(messages[0].message, "duplicate-widget: id \"note-beta\" already taken", "the refusal must come from duplicate-widget's own new_id-taken precondition");
     let semantics = <FlowMutation as protocol::SemanticMutation<FlowSnapshot>>::semantics(&mutation());
     assert_eq!((semantics.verb, semantics.entity, semantics.kind, semantics.record), ("duplicate", "widget", "duplicate-widget", "DuplicatedWidget"), "the fixture must be bound to duplicate-widget's own descriptor");
@@ -99,7 +99,7 @@ async fn committed_json_is_canonical() {
     assert_eq!(reencoded, original, "duplicate-widget/rejects-duplicating-onto-a-taken-id: committed mutation JSON is not canonical");
 }
 
-/// 🎯️ The declared rejection — status, code and (empty) path — is exactly what the fold emits.
+/// 🎯️ The declared rejection — status, code and path — is exactly what the fold emits.
 #[semio_framework_async_macros::async_test]
 async fn declared_outcome_holds() {
     let outcome: serde_json::Value = serde_json::from_str(OUTCOME).expect("outcome decodes");
@@ -108,5 +108,5 @@ async fn declared_outcome_holds() {
     let message = produced.messages().first().expect("a rejected outcome carries a diagnostic");
     assert_eq!(outcome.get("code").and_then(serde_json::Value::as_str), Some(message.code.0.as_str()), "the declared code must match the emitted one");
     let declared_path: Vec<String> = outcome.get("path").and_then(serde_json::Value::as_array).expect("a rejected outcome declares a path").iter().map(|entry| entry.as_str().expect("path segments are strings").to_string()).collect();
-    assert_eq!(declared_path, message.target, "the declared path must match the emitted target — both empty, because a composite refusal has no entity address");
+    assert_eq!(declared_path, message.target, "the declared path must match the emitted target — the occupied new_id");
 }

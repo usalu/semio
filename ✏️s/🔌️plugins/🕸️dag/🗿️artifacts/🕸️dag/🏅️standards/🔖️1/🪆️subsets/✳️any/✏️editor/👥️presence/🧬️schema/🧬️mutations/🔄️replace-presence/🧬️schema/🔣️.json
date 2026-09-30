@@ -18,13 +18,66 @@
       ],
       "properties": {
         "cameraX": {
-          "type": "number"
+          "type": "number",
+          "x-semio-ui": {
+            "widget": "stepper",
+            "role": "value",
+            "label": {
+              "en": "Camera X",
+              "de": "Kamera X"
+            },
+            "description": {
+              "en": "Horizontal centre of the view.",
+              "de": "Horizontaler Mittelpunkt der Ansicht."
+            },
+            "step": 1,
+            "precision": 2
+          }
         },
         "cameraY": {
-          "type": "number"
+          "type": "number",
+          "x-semio-ui": {
+            "widget": "stepper",
+            "role": "value",
+            "label": {
+              "en": "Camera Y",
+              "de": "Kamera Y"
+            },
+            "description": {
+              "en": "Vertical centre of the view.",
+              "de": "Vertikaler Mittelpunkt der Ansicht."
+            },
+            "step": 1,
+            "precision": 2
+          }
         },
         "cameraZoom": {
-          "type": "number"
+          "type": "number",
+          "x-semio-ui": {
+            "widget": "stepper",
+            "role": "value",
+            "label": {
+              "en": "Camera Zoom",
+              "de": "Kamerazoom"
+            },
+            "description": {
+              "en": "Magnification of the view; 1 is actual size.",
+              "de": "Vergrößerung der Ansicht; 1 ist Originalgröße."
+            },
+            "step": 0.1,
+            "precision": 2
+          }
+        }
+      },
+      "x-semio-ui": {
+        "role": "value",
+        "label": {
+          "en": "Presence",
+          "de": "Präsenz"
+        },
+        "description": {
+          "en": "Camera this participant shares with others.",
+          "de": "Kamera, die diese Person mit anderen teilt."
         }
       }
     }

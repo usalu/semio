@@ -5,15 +5,55 @@
   "type": "object",
   "additionalProperties": false,
   "required": [
+    "mutation",
     "id",
     "newSolarAbsorptance"
   ],
   "properties": {
+    "mutation": {
+      "const": "changeMaterialSolarAbsorptance"
+    },
     "id": {
-      "type": "integer"
+      "type": "integer",
+      "minimum": 0,
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Material",
+          "de": "Material"
+        },
+        "description": {
+          "en": "The material this mutation changes, by id.",
+          "de": "Material, das diese Mutation ändert, per ID."
+        },
+        "ref": {
+          "kind": "material",
+          "domain": "energyModel",
+          "granularity": "material"
+        },
+        "group": "target",
+        "order": 10
+      }
     },
     "newSolarAbsorptance": {
-      "type": "number"
+      "type": "number",
+      "minimum": 0,
+      "maximum": 1,
+      "x-semio-ui": {
+        "widget": "slider",
+        "role": "value",
+        "label": {
+          "en": "Solar absorptance",
+          "de": "Solarer Absorptionsgrad"
+        },
+        "step": 0.01,
+        "precision": 2,
+        "softMin": 0,
+        "softMax": 1,
+        "group": "optics",
+        "order": 20
+      }
     }
   }
 }

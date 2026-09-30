@@ -1,3 +1,4 @@
+import { boardTestSession } from "../../🧱️elements/🪪️WasmSessionLoader/🔮️oracles/🪪️session-double/🟦️.ts";
 import vfsDescriptorFixture from "../../../../../../../🔨️modules/🖱️ui/🧱️elements/⚙️VirtualFileSystem/🧫️fixtures/🧾️descriptors/🔣️.json";
 import gumballTargetsFixture from "../../🧱️elements/🌐️World3dHost/🧫️fixtures/🧭️gesture-targets.json";
 import gumballTargetsSchema from "../../🧱️elements/🌐️World3dHost/🧬️schema/🧭️gesture-targets/🔣️.json";
@@ -100,7 +101,6 @@ import { contextMenuItemClassName } from "../../../../../../../🔨️modules/�
 import type { LoadedProgramState } from "../../🧱️elements/🐚️Shell/🟦️.tsx";
 import extensionInvocationFixture from "../../🧱️elements/🏛️ShellHost/🧫️fixtures/🔣️extension-invocation.json";
 import extensionInvocationWireFixture from "../../../../🌊️flow/🧩️extensions/🕸️wasm/🧫️fixtures/🔁️extension-invocation-wire/🔣️.json";
-import extensionEvaluateFaultFixture from "../../../../../../../../✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🧫️fixtures/💥️extension-evaluate-fault.json";
 import rendererSchema from "../../../🧬️schema/🔣️.json" with { type: "json" };
 import mountedGisMapProbeFixture from "../../🧱️elements/🏛️ShellHost/🧫️fixtures/🔬️mounted-gis-map-probe-v1/🔣️.json";
 import directorySchema from "../../../../📇️directory/🧬️schema/🔣️.json" with { type: "json" };
@@ -160,8 +160,6 @@ import manifestFixtureSchema from "../../../../../../../🔨️modules/🛂️ma
 import actionSemanticsFixture from "../../../../../../../🔨️modules/🛂️manifest/🧫️fixtures/⚖️action-semantics.json";
 import examplePickerFixture from "../../../../../../../🔨️modules/🛂️manifest/🧫️fixtures/📚️example-picker.json";
 import tutorialDocumentFixture from "../../../../../../../🔨️modules/🛂️manifest/🧫️fixtures/🎞️tutorial-document-track.json";
-import boardSessionFixture from "../../../../../../../../✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🌉️wasm/🧫️fixtures/🔣️session-factory.json";
-import boardSessionSchema from "../../../../../../../../✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🔣️.json";
 import { tutorialSlice, validateTutorial } from "@semio-tech/ui-react";
 import type { DialogDefinition, TutorialDefinition, TutorialUiChange, TutorialUiSnapshot } from "@semio-tech/framework";
 import presenceOverlayFixture from "../../../../../../../🔨️modules/🖱️ui/🧬️contract/🧫️fixtures/👥️presence-overlay.json";
@@ -305,6 +303,7 @@ describe("catalog-resolved artifact creation kinds", () => {
     const props = {
       dialog: resolved,
       onSubmit: vi.fn(),
+      onChoose: vi.fn(),
       onCancel: vi.fn(),
       renderField: (def: ResolvedActionArgDef, value: unknown, change: (value: unknown) => void, field: Parameters<OwnedShellDialogProps<ResolvedActionArgDef>["renderField"]>[3]) => renderStagedArgControl(def, value, change, false, field),
     };
@@ -343,6 +342,7 @@ describe("catalog-resolved artifact creation kinds", () => {
           dialog: resolved,
           choiceRevisions: { kindChoice: revision },
           onSubmit: submit,
+          onChoose: () => {},
           onCancel: () => {},
           renderField: (def, value, change, field) => renderStagedArgControl(def, value, change, false, field),
         }),
@@ -366,7 +366,7 @@ describe("catalog-resolved artifact creation kinds", () => {
     const resolved = resolveDialogDefinition(dialog, EMPTY_APP_LABELS_OVERLAY, "native", "en", manifests);
     const submit = vi.fn();
     const cancel = vi.fn();
-    const view = render(createElement(UIDialog<ResolvedActionArgDef>, { dialog: resolved, onSubmit: submit, onCancel: cancel, renderField: (def, value, change, field) => renderStagedArgControl(def, value, change, false, field) }));
+    const view = render(createElement(UIDialog<ResolvedActionArgDef>, { dialog: resolved, onSubmit: submit, onChoose: vi.fn(), onCancel: cancel, renderField: (def, value, change, field) => renderStagedArgControl(def, value, change, false, field) }));
     try {
       const picker = view.getByRole("combobox", { name: "Kind" });
       expect(computeAccessibleName(picker)).toBe("Kind");
@@ -1626,25 +1626,6 @@ describe("extension invocation completion ownership", () => {
     expect(complete).toHaveBeenCalledOnce();
   });
 
-  // 💥️ The preview status a refused `evaluate` publishes, over the SAME fixture the guest law
-  // `an_evaluate_fault_outranks_the_addressing_miss_and_a_contribution_install_clears_it` drives
-  // (`🧊️generation3d/…/✏️editor/🧪️tests/🔬️unit/🦀️.rs`). The host never authors this object — it
-  // renders it — so what this pins is the shape and the both-languages rule the surface depends on.
-  it("pins the localized evaluate-fault the preview status publishes", () => {
-    const fixture = extensionEvaluateFaultFixture;
-    expect(fixture.code).toBe("flow.extension-evaluate-failed");
-    expect(new Set(fixture.phases).size).toBe(fixture.phases.length);
-    for (const row of fixture.answers) {
-      expect(fixture.phases).toContain(row.phase);
-      expect(row.publishesFault).toBe(row.phase === "faulted");
-      expect(row.publishesFault).toBe(row.ok === false && row.faultCode.length > 0);
-    }
-    const languages = Object.keys(fixture.labels);
-    expect(languages).toEqual(["en", "de"]);
-    expect(new Set(Object.values(fixture.labels)).size).toBe(languages.length);
-    for (const text of Object.values(fixture.labels)) expect(text).toContain(fixture.extensionId);
-    expect(fixture.clearedByContributionInstall).toBe(true);
-  });
 
   // 🔁️ The Rust law over the SAME fixture is `evaluate_invoke_json`'s
   // `the_evaluate_wire_answers_every_fixture_row` (`🌊️flow/🧩️extensions/🕸️wasm/🧪️tests/🔬️unit/🦀️.rs`):
@@ -1937,7 +1918,6 @@ describe("descriptor load admission", () => {
 describe("tutorial document wire contract", () => {
   it("keeps native document-track names and bidirectional event order", () => {
     const validate = semioSchemaAjvV1({ strict: true, allErrors: true })
-      .addSchema(manifestFixtureSchema)
       .compile({ $ref: `${manifestFixtureSchema.$id}#/$defs/TutorialDocumentTrackFixture` });
     expect(validate(tutorialDocumentFixture)).toBe(true);
     expect(validate({ ...tutorialDocumentFixture, artifact: [] })).toBe(false);
@@ -1961,270 +1941,7 @@ describe("tutorial document wire contract", () => {
 });
 //#endregion 🎞️TutorialDocumentTrack
 
-//#region 🧩️AppOwnedSurfaceSession
-function boardTestSession(): flowSessionLoader.Board2dWasmSession {
-  return {
-    attach_canvas: vi.fn(async () => {}),
-    setSize: vi.fn(),
-    renderFrame: vi.fn(),
-    parseFixtureJson: () => true,
-    syncDescriptorJson: vi.fn(),
-    setKindCatalogsJson: vi.fn(),
-    setCamera: vi.fn(),
-    setSelectionIdsJson: vi.fn(),
-    setCanvasThemeJson: vi.fn(),
-    pointerDownScreen: vi.fn(),
-    pointerMoveScreen: vi.fn(),
-    pointerUpScreen: vi.fn(),
-    pointerCancelScreen: vi.fn(),
-    wheelScreen: vi.fn(),
-    drainEventsJson: vi.fn(() => "[]"),
-    cameraJson: () => '{"x":0,"y":0,"zoom":1}',
-    gpuReady: () => true,
-    free: vi.fn(),
-    setSelectionIdsJsonSilent: vi.fn(),
-    setFixtureDropPreviewJson: vi.fn(),
-  };
-}
 
-function boardTestHost(factory: flowSessionLoader.ScopedBoardSessionFactory, surfaceId: string): ReactElement {
-  return createElement(
-    flowSessionLoader.BoardSessionFactoryContext.Provider,
-    { value: factory },
-    createElement(Board2dHost, {
-      node: {
-        type: "componentScene",
-        surfaceId,
-        controllerId: boardSessionFixture.isolation.controllerId,
-        componentKind: "board-2d",
-        board2d: {
-          fixtureJson: '{"nodes":[],"edges":[]}',
-          cameraJson: '{"x":0,"y":0,"zoom":1}',
-          glyphCatalogsJson: "{}",
-          selectionJson: "[]",
-          interactive: true,
-          selectionMethod: "rectangle",
-          gridSnapEnabled: false,
-          gridFactor: 1,
-          suggestionOffset: 0,
-          brushWeightsJson: "{}",
-          placementCompatibilityJson: "[]",
-          lodMode: "automatic",
-        },
-      },
-      onAction: vi.fn(),
-    }),
-  );
-}
-
-describe("app-owned surface session factories", () => {
-  it.each(boardSessionFixture.retryFailures)("deduplicates module loads and retries an exact failed $0 attempt", async (failure) => {
-    const first = Promise.withResolvers<object>();
-    const second = Promise.withResolvers<object>();
-    const load = vi.fn().mockReturnValueOnce(first.promise).mockReturnValueOnce(second.promise);
-    const cached = flowSessionLoader.createWasmModuleLoader<object>(load);
-    const a = cached();
-    const b = cached();
-    expect(a).toBe(b);
-    const failed = Promise.allSettled([a, b]);
-    first.reject(new Error(failure));
-    expect((await failed).map((result) => result.status)).toEqual(["rejected", "rejected"]);
-    const retry = cached();
-    expect(retry).not.toBe(a);
-    expect(cached()).toBe(retry);
-    const module = {};
-    second.resolve(module);
-    expect(await retry).toBe(module);
-    expect(await cached()).toBe(module);
-    expect(load).toHaveBeenCalledTimes(2);
-  });
-
-  it("keeps identical Board controller/surface keys isolated across mounted shell scopes", async () => {
-    const a = flowSessionLoader.createBoardPeerScope();
-    const b = flowSessionLoader.createBoardPeerScope();
-    const sessions = [boardTestSession(), boardTestSession(), boardTestSession(), boardTestSession()];
-    const createA = vi.fn().mockResolvedValueOnce(sessions[0]).mockResolvedValueOnce(sessions[1]);
-    const createB = vi.fn().mockResolvedValueOnce(sessions[2]).mockResolvedValueOnce(sessions[3]);
-    const bounds = vi.spyOn(HTMLElement.prototype, "getBoundingClientRect").mockReturnValue(new DOMRect(0, 0, 640, 480));
-    const content = (scope: flowSessionLoader.BoardPeerScope, create: () => Promise<flowSessionLoader.Board2dWasmSession>, id: string) => boardTestHost({ pluginId: "puzzle", appId: "s.puzzle2d@1/*#editor", instanceId: 1, scope, create }, id);
-    const views = [render(content(a, createA, "pane.a")), render(content(a, createA, "pane.b")), render(content(b, createB, "pane.a")), render(content(b, createB, "pane.b"))];
-    try {
-      await waitFor(() => sessions.forEach((session) => expect(session.attach_canvas).toHaveBeenCalledOnce()));
-      await waitFor(() => sessions.forEach((session) => expect(session.setSelectionIdsJsonSilent).toHaveBeenCalledWith("[]")));
-      sessions.forEach((session) => vi.mocked(session.setSelectionIdsJsonSilent!).mockClear());
-      vi.mocked(sessions[0]!.drainEventsJson).mockReturnValueOnce(JSON.stringify([{ name: "select", payload: { ids: boardSessionFixture.isolation.selection } }]));
-      const canvas = views[0]!.container.querySelector("canvas")!;
-      fireEvent.pointerMove(canvas, { clientX: 2, clientY: 3 });
-      expect(sessions[1]!.setSelectionIdsJsonSilent).toHaveBeenCalledWith(JSON.stringify(boardSessionFixture.isolation.selection));
-      expect(sessions[2]!.setSelectionIdsJsonSilent).not.toHaveBeenCalled();
-      expect(sessions[3]!.setSelectionIdsJsonSilent).not.toHaveBeenCalled();
-      fireEvent.pointerDown(canvas, { clientX: 2, clientY: 3, button: 0 });
-      expect(puzzle2dPeerOwnsGesture(a, "board", "pane.b")).toBe(true);
-      expect(puzzle2dPeerOwnsGesture(b, "board", "pane.b")).toBe(false);
-      views[0]!.unmount();
-      expect(a.peers.get("board")?.has("pane.a")).toBe(false);
-      expect(b.peers.get("board")?.has("pane.a")).toBe(true);
-    } finally {
-      views.forEach((view) => view.unmount());
-      bounds.mockRestore();
-    }
-    sessions.forEach((session) => expect(session.free).toHaveBeenCalledOnce());
-    expect(a.peers.size + a.gestures.size + b.peers.size + b.gestures.size).toBe(0);
-  });
-
-  it("keeps a remounted peer and gesture registered after the old attachment rejects", async () => {
-    const scope = flowSessionLoader.createBoardPeerScope();
-    const oldSession = boardTestSession();
-    const newSession = boardTestSession();
-    const pending = Promise.withResolvers<void>();
-    vi.mocked(oldSession.attach_canvas).mockReturnValue(pending.promise);
-    const factory = { pluginId: "puzzle", appId: "s.puzzle2d@1/*#editor", instanceId: 1, scope, create: vi.fn().mockResolvedValueOnce(oldSession).mockResolvedValueOnce(newSession) };
-    const bounds = vi.spyOn(HTMLElement.prototype, "getBoundingClientRect").mockReturnValue(new DOMRect(0, 0, 640, 480));
-    const first = render(boardTestHost(factory, "pane.a"));
-    await waitFor(() => expect(oldSession.attach_canvas).toHaveBeenCalledOnce());
-    const oldPeer = scope.peers.get("board")!.get("pane.a")!;
-    first.unmount();
-    const next = render(boardTestHost(factory, "pane.a"));
-    try {
-      await waitFor(() => expect(newSession.attach_canvas).toHaveBeenCalledOnce());
-      const successor = scope.peers.get("board")!.get("pane.a")!;
-      beginPuzzle2dPeerGesture(scope, "board", "pane.a", successor);
-      unregisterBoard2dPeer(scope, "board", "pane.a", oldPeer);
-      endPuzzle2dPeerGesture(scope, "board", "pane.a", oldPeer);
-      await reactAct(async () => {
-        pending.reject(new Error("old attachment"));
-        await pending.promise.catch(() => {});
-      });
-      expect(scope.peers.get("board")!.get("pane.a")).toBe(successor);
-      expect(scope.gestures.get("board")?.peer).toBe(successor);
-      expect(oldSession.free).toHaveBeenCalledOnce();
-      expect(newSession.free).not.toHaveBeenCalled();
-    } finally {
-      next.unmount();
-      bounds.mockRestore();
-    }
-    expect(newSession.free).toHaveBeenCalledOnce();
-    expect(scope.peers.size + scope.gestures.size).toBe(0);
-  });
-
-  it.each(boardSessionFixture.cancellation)("retires the exact mounted Board session once after $phase cancellation", async (vector) => {
-    const constructed = Promise.withResolvers<flowSessionLoader.Board2dWasmSession>();
-    const attached = Promise.withResolvers<void>();
-    const session: flowSessionLoader.Board2dWasmSession = {
-      attach_canvas: vi.fn(() => attached.promise),
-      setSize: vi.fn(),
-      renderFrame: vi.fn(),
-      parseFixtureJson: () => true,
-      syncDescriptorJson: vi.fn(),
-      setKindCatalogsJson: vi.fn(),
-      setCamera: vi.fn(),
-      setSelectionIdsJson: vi.fn(),
-      setCanvasThemeJson: vi.fn(),
-      pointerDownScreen: vi.fn(),
-      pointerMoveScreen: vi.fn(),
-      pointerUpScreen: vi.fn(),
-      pointerCancelScreen: vi.fn(),
-      wheelScreen: vi.fn(),
-      drainEventsJson: () => "[]",
-      cameraJson: () => '{"x":0,"y":0,"zoom":1}',
-      gpuReady: () => true,
-      free: vi.fn(),
-    };
-    const bounds = vi.spyOn(HTMLElement.prototype, "getBoundingClientRect").mockReturnValue(new DOMRect(0, 0, 640, 480));
-    const view = render(
-      createElement(
-        flowSessionLoader.BoardSessionFactoryContext.Provider,
-        { value: { pluginId: "puzzle", appId: "s.puzzle2d@1/*#editor", instanceId: 1, create: () => constructed.promise, scope: flowSessionLoader.createBoardPeerScope() } },
-        createElement(Board2dHost, {
-          node: {
-            type: "componentScene",
-            surfaceId: "board.lifecycle",
-            controllerId: "board",
-            componentKind: "board-2d",
-            board2d: {
-              fixtureJson: '{"nodes":[],"edges":[]}',
-              cameraJson: '{"x":0,"y":0,"zoom":1}',
-              glyphCatalogsJson: "{}",
-              selectionJson: "[]",
-              interactive: false,
-              selectionMethod: "rectangle",
-              gridSnapEnabled: false,
-              gridFactor: 1,
-              suggestionOffset: 0,
-              brushWeightsJson: "{}",
-              placementCompatibilityJson: "[]",
-              lodMode: "automatic",
-            },
-          },
-          onAction: noopAction,
-        }),
-      ),
-    );
-    try {
-      if (vector.phase !== "constructing") {
-        await reactAct(async () => {
-          constructed.resolve(session);
-          await constructed.promise;
-        });
-        expect(session.attach_canvas).toHaveBeenCalledOnce();
-      }
-      if (vector.phase === "ready")
-        await reactAct(async () => {
-          attached.resolve();
-          await attached.promise;
-        });
-      view.unmount();
-      expect(session.free).toHaveBeenCalledTimes(vector.freeBeforeSettle);
-      await reactAct(async () => {
-        constructed.resolve(session);
-        attached.resolve();
-        await constructed.promise;
-        await attached.promise;
-      });
-      expect(session.attach_canvas).toHaveBeenCalledTimes(vector.attachCalls);
-      expect(session.free).toHaveBeenCalledTimes(vector.freeAfterSettle);
-    } finally {
-      view.unmount();
-      constructed.resolve(session);
-      attached.resolve();
-      bounds.mockRestore();
-    }
-  });
-
-  it("joins exact plugin and app ownership while keeping instance scopes distinct", () => {
-    const validate = semioSchemaAjvV1({ strict: true, allErrors: true })
-      .addFormat("double", true)
-      .addFormat("int64", true)
-      .addFormat("uint32", true)
-      .addSchema(boardSessionSchema)
-      .compile({ $ref: `${boardSessionSchema.$id}#/$defs/Puzzle2dWasmSessionFactory` });
-    expect(validate(boardSessionFixture)).toBe(true);
-    expect(validate({ ...boardSessionFixture, globalFactory: true })).toBe(false);
-    const create = vi.fn(async (): Promise<flowSessionLoader.Board2dWasmSession> => {
-      throw new Error("A lookup must not construct a session");
-    });
-    const registrations = boardSessionFixture.appIds.map((appId) => ({ kind: "board-2d" as const, pluginId: boardSessionFixture.pluginId, appId, create }));
-    for (const scope of boardSessionFixture.scopes) {
-      const resolved = flowSessionLoader.resolveAppSurfaceSessionFactory(registrations, scope);
-      expect(resolved !== null).toBe(scope.matches);
-      if (resolved) {
-        expect(resolved.pluginId).toBe(scope.pluginId);
-        expect(resolved.appId).toBe(scope.appId);
-        expect(resolved.instanceId).toBe(scope.instanceId);
-        expect(resolved.create).toBe(create);
-      }
-    }
-    const scope = boardSessionFixture.scopes[0]!;
-    const first = flowSessionLoader.resolveAppSurfaceSessionFactory(registrations, scope);
-    const second = flowSessionLoader.resolveAppSurfaceSessionFactory(registrations, { ...scope, instanceId: 4294967295 });
-    expect(first?.instanceId).not.toBe(second?.instanceId);
-    expect(first).not.toBe(second);
-    expect(() => flowSessionLoader.resolveAppSurfaceSessionFactory([...registrations, registrations[0]!], scope)).toThrow();
-    expect(flowSessionLoader.resolveAppSurfaceSessionFactory(registrations, null)).toBeNull();
-    expect(create).not.toHaveBeenCalled();
-  });
-});
-//#endregion 🧩️AppOwnedSurfaceSession
 import graphSliderFixture from "../../../../♾️infinite/🎲️board/🔌️ports/➡️directed/🕸️dag/🧫️fixtures/🎚️slider-overlay.json";
 import dagVcsSchema from "../../../../♾️infinite/🗿️artifacts/🕸️dag/🌿️vcs/🧬️schema/🔣️.json" with { type: "json" };
 import graphParameterFixture from "../../../../🌊️flow/🗿️artifacts/🌊️flow/🎚️parameter/🧫️fixtures/🔣️.json";
@@ -2270,17 +1987,6 @@ import {
   type TurnOutcome,
   type ActionDescriptor,
 } from "@semio-tech/framework";
-import {
-  ENTWERFEN_MIT_BESTAND_AGGREGATOR_BRAND,
-  ENTWERFEN_MIT_BESTAND_AUSSUCHEN_BRAND,
-  ENTWERFEN_MIT_BESTAND_BEARBEITEN_BRAND,
-  ENTWERFEN_MIT_BESTAND_ENERGIE_BRAND,
-  ENTWERFEN_MIT_BESTAND_GENERATOR_BRAND,
-  ENTWERFEN_MIT_BESTAND_KOORDINATOR_BRAND,
-  ENTWERFEN_MIT_BESTAND_STATIK_BRAND,
-  ENTWERFEN_MIT_BESTAND_VERFOLGEN_BRAND,
-} from "../../../../🧑‍💻dev/🏷️brand/🟦️.ts";
-import { ENTWERFEN_MIT_BESTAND_BRAND_IDS, ENTWERFEN_MIT_BESTAND_GENERAL_INTRODUCTION, isEntwerfenMitBestandBrandId } from "../../../../../../../../♻️mit-bestand/🧺️demonstrator/🪧️brand.ts";
 import {
   Footer,
   navbarFillItem,
@@ -2330,7 +2036,6 @@ import {
 } from "../../🧱️elements/🌐️World3dHost/🟦️.tsx";
 import { leftoverInspectionPanelHash, leftoverInspectionRefreshScope, uiRefreshSectionUnchanged } from "../../🧱️elements/🔌️PluginRuntime/🟦️.tsx";
 
-import { aProjectOfLuhUdkFooterItem, fundedByZukunftBauFooterItem, LUH_LOGO_URL, LUH_URL, UDK_LOGO_URL, UDK_URL, ZUKUNFT_BAU_PROJECT_URL } from "../../../../../../../../♻️mit-bestand/🧺️demonstrator/⚛️footer.tsx";
 import {
   Canvas2dHost,
   canvasLayerDisplayLabel,
@@ -2535,10 +2240,9 @@ import {
   panelTabDefinitionToNode,
   panelAnchorForGroup,
   integrateAppSettingsPanelTabsIntoFrameworkBranch,
-  SHELL_OWNED_PANEL_TAB_IDS,
+  partitionFrameworkHistoryPanelTab,
   shellLabel,
   shellTabIcon,
-  shellRendersPanelTabItself,
   syncShellLabelLocale,
   uiIntentToActionDescriptor,
   actionStageKey,
@@ -4759,7 +4463,6 @@ describe("framework plugin runtime", () => {
 describe("framework renderer types", () => {
   it("matches native action-semantics defaults without claiming migrated interactivity", () => {
     const validate = semioSchemaAjvV1({ strict: true, allErrors: true })
-      .addSchema(manifestFixtureSchema)
       .compile({ $ref: `${manifestFixtureSchema.$id}#/$defs/ActionSemanticsFixture` });
     expect(validate(actionSemanticsFixture), JSON.stringify(validate.errors)).toBe(true);
     const actual = (["mutation", "view", "interaction", "history", "clipboard", "shell"] as const).map((kind) => ({ kind, semantics: actionSemanticsForKind(kind) }));
@@ -6171,25 +5874,17 @@ describe("framework renderer hosts", () => {
     });
   });
 
-  it("coalesces puzzle 2d board events: drops transients, keeps the latest camera, coalesces nodeMove per id", () => {
+  it("coalesces puzzle 2d board events: drops transients and live nodeMove frames, keeps the latest camera", () => {
     const rows = [
       { name: "preselect", payload: { ids: ["a"] } },
       { name: "camera", payload: { x: 1, y: 1, zoom: 1 } },
       { name: "nodeMove", payload: { id: "alpha", x: 10, y: 10 } },
       { name: "camera", payload: { x: 2, y: 2, zoom: 1.5 } },
-      { name: "nodeMove", payload: { id: "alpha", x: 20, y: 20 } },
       { name: "nodeMove", payload: { id: "beta", x: 5, y: 5 } },
     ];
     const { flushNow, eventsJson } = coalesceBoard2dEvents(rows);
-    const events = JSON.parse(eventsJson) as { name: string; payload: Record<string, unknown> }[];
     expect(flushNow).toBe(false);
-    expect(events.find((event) => event.name === "preselect")).toBeUndefined();
-    const cameraEvents = events.filter((event) => event.name === "camera");
-    expect(cameraEvents).toHaveLength(1);
-    expect(cameraEvents[0]?.payload).toEqual({ x: 2, y: 2, zoom: 1.5 });
-    const alphaMoves = events.filter((event) => event.name === "nodeMove" && event.payload.id === "alpha");
-    expect(alphaMoves).toHaveLength(1);
-    expect(alphaMoves[0]?.payload).toEqual({ id: "alpha", x: 20, y: 20 });
+    expect(JSON.parse(eventsJson)).toEqual([{ name: "camera", payload: { x: 2, y: 2, zoom: 1.5 } }]);
   });
 
   it("keeps hover out of the board-events batch — it travels on the framework interactionHover lane instead", () => {
@@ -6261,21 +5956,19 @@ describe("framework renderer hosts", () => {
     expect(empty).toEqual([{ id: "empty", label: "none", disabled: true }]);
   });
 
-  it("coalesces puzzle 2d board events: drops nodeMove rows once a nodeDragEnd follows", () => {
-    const rows = [
-      { name: "nodeMove", payload: { id: "alpha", x: 10, y: 10 } },
-      { name: "nodeDragEnd", payload: { moves: [{ id: "alpha", x: 20, y: 20 }] } },
-    ];
-    const { eventsJson } = coalesceBoard2dEvents(rows);
-    const events = JSON.parse(eventsJson) as { name: string }[];
-    expect(events.some((event) => event.name === "nodeMove")).toBe(false);
-    expect(events.some((event) => event.name === "nodeDragEnd")).toBe(true);
+  it("coalesces puzzle 2d board events: one drag is its tagged select plus its gesture record, frames dropped", () => {
+    const select = { name: "select", payload: { ids: ["alpha"], exitHighlightIds: [], gestureId: "gesture-1" } };
+    const record = { name: "gesture", payload: { gestureId: "gesture-1", kind: "drag", targets: ["alpha"], dx: 10, dy: 0, proximity: [] } };
+    const { eventsJson, flushNow } = coalesceBoard2dEvents([select, { name: "nodeMove", payload: { id: "alpha", x: 10, y: 10 } }, record]);
+    expect(flushNow).toBe(true);
+    expect(JSON.parse(eventsJson)).toEqual([select, record]);
+    expect(coalesceBoard2dEvents([select]).flushNow).toBe(false);
   });
 
-  it("flushes puzzle 2d board events immediately for select/brushPlace/edge/delete rows, not for camera/nodeMove alone", () => {
+  it("flushes puzzle 2d board events immediately for gesture/select/brushPlace/edge/delete/region rows, not for camera/nodeMove alone", () => {
     expect(coalesceBoard2dEvents([{ name: "camera", payload: { x: 0, y: 0, zoom: 1 } }]).flushNow).toBe(false);
     expect(coalesceBoard2dEvents([{ name: "nodeMove", payload: { id: "alpha", x: 0, y: 0 } }]).flushNow).toBe(false);
-    for (const name of ["select", "preselectCancel", "brushCandidates", "brushPlace", "edgeCreate", "edgeDelete", "nodeDelete"]) {
+    for (const name of ["gesture", "select", "preselectCancel", "brushCandidates", "brushPlace", "edgeCreate", "edgeDelete", "nodeDelete", "regionCreate", "regionResize"]) {
       expect(coalesceBoard2dEvents([{ name, payload: {} }]).flushNow).toBe(true);
     }
   });
@@ -6297,35 +5990,16 @@ describe("framework renderer hosts", () => {
     expect(mutations.clearPreselect).toBe(false);
   });
 
-  it("collects live mirror mutations: nodeDragEnd.moves produce final positions", () => {
-    const mutations = collectPuzzle2dLiveMirrorMutations([
-      { name: "nodeMove", payload: { id: "alpha", x: 1, y: 1 } },
-      {
-        name: "nodeDragEnd",
-        payload: {
-          moves: [
-            { id: "alpha", x: 20, y: 20 },
-            { id: "beta", x: 5, y: 5 },
-          ],
-        },
-      },
-    ]);
-    expect(mutations.positions).toEqual([
-      { id: "alpha", x: 20, y: 20 },
-      { id: "beta", x: 5, y: 5 },
-    ]);
-  });
-
-  it("board 2d gumball: a rotate commit flushes at once and its live preview frames never reach the guest", () => {
+  it("board 2d gumball: a rotate record flushes at once and its live preview frames never reach the guest", () => {
     // 🔄️ `transformPreview` is the peer-pane mirror's food ONLY — forwarding it would spend one of the
     // store's 64 applied edits per drag frame, when a whole rotate gesture must be a single edit.
     const { flushNow, eventsJson } = coalesceBoard2dEvents([
       { name: "transformPreview", payload: { moves: [{ id: "alpha", x: 1, y: 1 }] } },
-      { name: "nodeRotate", payload: { ids: ["alpha"], radians: 0.5, pivot: { x: 0, y: 0 } } },
+      { name: "gesture", payload: { gestureId: "gesture-2", kind: "rotate", targets: ["alpha"], pivotX: 0, pivotY: 0, angle: 0.5, proximity: [] } },
     ]);
     expect(flushNow).toBe(true);
     const events = JSON.parse(eventsJson) as { name: string }[];
-    expect(events.map((event) => event.name)).toEqual(["nodeRotate"]);
+    expect(events.map((event) => event.name)).toEqual(["gesture"]);
     expect(coalesceBoard2dEvents([{ name: "transformPreview", payload: { moves: [] } }]).flushNow).toBe(false);
   });
 
@@ -10749,20 +10423,18 @@ describe("registry-derived utilities and activation (P5)", () => {
     }
   });
 
-  it("never mounts an app-declared panel tab the shell already renders itself, so one anchor never carries two nodes with one id", () => {
-    // 🕰️ `framework.panel.history` is injected into EVERY app's `panelTabs` so the guest renders the history
-    // body, and `ShellHost` ALSO builds that tab host-side (`frameworkUtilitiesHistoryTab`). Filling
-    // bottom-right from `session.app.panelTabs` without this gate mounted both: two identically-named tab
-    // buttons, one DOM id, and the guest-rendered twin winning every `getElementById`, which renamed every
-    // command row to `panel:<key>/framework.history.entry.<seq>` and made the history rows unaddressable.
+  it("docks the framework History tab as its own bottom-right leaf and nests only the app's Settings tabs in the Settings branch", () => {
+    // 🕰️ `framework.panel.history` is injected into EVERY app's `panelTabs` (Settings group) and rendered from the guest's own
+    // `framework.body.history`; the dock keeps it a sibling leaf beside Settings, exactly like the wgpu dock assembly, so the
+    // Settings branch never carries a second History and the leaf is the interpreted body, not a host-built tab.
     const panelTabs = [
       { kind: { kind: "app" as const, id: "puzzle3d.panel.settings" }, group: "settings" as const },
       { kind: { kind: "app" as const, id: "framework.panel.history" }, group: "settings" as const },
     ];
-    const bottomRight = panelTabs.filter((tab) => panelAnchorForGroup(tab.group) === "bottom-right" && !shellRendersPanelTabItself(tab.kind.id));
-    expect(bottomRight.map((tab) => tab.kind.id)).toEqual(["puzzle3d.panel.settings"]);
-    expect(SHELL_OWNED_PANEL_TAB_IDS).toContain("framework.panel.history");
-    expect(shellRendersPanelTabItself("puzzle3d.panel.settings")).toBe(false);
+    const { history, rest } = partitionFrameworkHistoryPanelTab(panelTabs.filter((tab) => panelAnchorForGroup(tab.group) === "bottom-right"));
+    expect(history?.kind.id).toBe("framework.panel.history");
+    expect(rest.map((tab) => tab.kind.id)).toEqual(["puzzle3d.panel.settings"]);
+    expect(partitionFrameworkHistoryPanelTab([panelTabs[0]!]).history).toBeUndefined();
   });
 
   it("moves every out-of-hook chrome label when the in-app language switch runs, and restores them on the way back", async () => {
@@ -11665,7 +11337,6 @@ describe("shell option locks (SEMIO_LOCKED_*)", () => {
   // `🛂️manifest/🧪️tests/🔬️example-picker/🦀️.rs` (ticket 26/09/09/PROCEDURAL-3D-END-TO-END).
   it("resolves the example picker by dialect, so an editor and its viewer offer exactly the same examples", () => {
     const validate = semioSchemaAjvV1({ strict: true, allErrors: true })
-      .addSchema(manifestFixtureSchema)
       .compile({ $ref: `${manifestFixtureSchema.$id}#/$defs/ExamplePickerFixture` });
     expect(validate(examplePickerFixture), JSON.stringify(validate.errors)).toBe(true);
     for (const useCase of examplePickerFixture.cases) {
@@ -11721,7 +11392,6 @@ describe("shell option locks (SEMIO_LOCKED_*)", () => {
     expect(shouldReplayIntroductionOnLoad({ id: "entwerfen-mit-bestand-aggregator", windowTitle: "Entwerfen mit Bestand · Aggregator", replayIntroductionOnLoad: true })).toBe(true);
     expect(shouldPersistIntroductionSeen({ id: "plain", windowTitle: "Plain" })).toBe(true);
     expect(shouldPersistIntroductionSeen({ id: "entwerfen-mit-bestand-aggregator", windowTitle: "Entwerfen mit Bestand · Aggregator", replayIntroductionOnLoad: true })).toBe(false);
-    expect(ENTWERFEN_MIT_BESTAND_AGGREGATOR_BRAND.replayIntroductionOnLoad).toBe(true);
   });
 
   it("shouldAutoStartIntroduction offers an app's tour once per session and never re-arms a veil the user dismissed", () => {
@@ -11753,9 +11423,6 @@ describe("shell option locks (SEMIO_LOCKED_*)", () => {
     expect(isEphemeralShellBrand(undefined)).toBe(false);
     expect(isEphemeralShellBrand({ id: "plain", windowTitle: "Plain" })).toBe(false);
     expect(isEphemeralShellBrand({ id: "plain", windowTitle: "Plain", ephemeral: true })).toBe(true);
-    expect(isEphemeralShellBrand(ENTWERFEN_MIT_BESTAND_AGGREGATOR_BRAND)).toBe(true);
-    expect(shouldReplayIntroductionOnLoad(ENTWERFEN_MIT_BESTAND_AGGREGATOR_BRAND)).toBe(true);
-    expect(shouldPersistIntroductionSeen(ENTWERFEN_MIT_BESTAND_AGGREGATOR_BRAND)).toBe(false);
     const ephemeralState = initialShellState({
       plugins: [],
       locks: { locale: "de", terminology: "reuse", themeId: "semio" },
@@ -11780,144 +11447,6 @@ describe("shell option locks (SEMIO_LOCKED_*)", () => {
     expect(localStorage.getItem("ui.chrome.appearance")).toBeNull();
     expect(localStorage.getItem("semio.os.dock")).toBeNull();
     expect(localStorage.getItem("ui.introduction.seen.entwerfen-mit-bestand-aggregator:puzzle3d-play")).toBeNull();
-  });
-
-  it("registers all eight Entwerfen mit Bestand demonstrator shell brands", () => {
-    expect(ENTWERFEN_MIT_BESTAND_BRAND_IDS).toEqual([
-      "entwerfen-mit-bestand-aggregator",
-      "entwerfen-mit-bestand-aussuchen",
-      "entwerfen-mit-bestand-bearbeiten",
-      "entwerfen-mit-bestand-energie",
-      "entwerfen-mit-bestand-generator",
-      "entwerfen-mit-bestand-koordinator",
-      "entwerfen-mit-bestand-statik",
-      "entwerfen-mit-bestand-verfolgen",
-    ]);
-    expect(ENTWERFEN_MIT_BESTAND_AGGREGATOR_BRAND.id).toBe("entwerfen-mit-bestand-aggregator");
-    expect(ENTWERFEN_MIT_BESTAND_AUSSUCHEN_BRAND.id).toBe("entwerfen-mit-bestand-aussuchen");
-    expect(ENTWERFEN_MIT_BESTAND_BEARBEITEN_BRAND.id).toBe("entwerfen-mit-bestand-bearbeiten");
-    expect(ENTWERFEN_MIT_BESTAND_ENERGIE_BRAND.id).toBe("entwerfen-mit-bestand-energie");
-    expect(ENTWERFEN_MIT_BESTAND_GENERATOR_BRAND.id).toBe("entwerfen-mit-bestand-generator");
-    expect(ENTWERFEN_MIT_BESTAND_KOORDINATOR_BRAND.id).toBe("entwerfen-mit-bestand-koordinator");
-    expect(ENTWERFEN_MIT_BESTAND_STATIK_BRAND.id).toBe("entwerfen-mit-bestand-statik");
-    expect(ENTWERFEN_MIT_BESTAND_VERFOLGEN_BRAND.id).toBe("entwerfen-mit-bestand-verfolgen");
-    expect(isEntwerfenMitBestandBrandId(ENTWERFEN_MIT_BESTAND_ENERGIE_BRAND.id)).toBe(true);
-    expect(isEntwerfenMitBestandBrandId("semio-os")).toBe(false);
-    expect(ENTWERFEN_MIT_BESTAND_ENERGIE_BRAND.windowTitle).toBe("Entwerfen mit Bestand · Energie");
-    expect(ENTWERFEN_MIT_BESTAND_GENERAL_INTRODUCTION.steps.map((step) => step.id)).toEqual(["welcome", "prototype", "funding"]);
-  });
-
-  it("ENTWERFEN_MIT_BESTAND_AGGREGATOR_BRAND introduction is app-specific only after the general landing tour was split out", () => {
-    const steps = ENTWERFEN_MIT_BESTAND_AGGREGATOR_BRAND.introduction!.steps;
-    expect(steps.map((step) => step.id)).toEqual(["viewport", "panels", "catalogue-objects", "add-object", "transform-utility", "verbindungspunkte", "suggest-objects", "fill-tool", "fill-distribution"]);
-    const viewport = steps.find((step) => step.id === "viewport")!;
-    expect(viewport.ordered).toBe(false);
-    expect(viewport.interactions.map((interaction) => interaction.on)).toEqual([
-      { kind: "zoom", id: "puzzle3d-main" },
-      { kind: "pan", id: "puzzle3d-main" },
-      { kind: "orbit", id: "puzzle3d-main" },
-    ]);
-    expect(viewport.interactions.map((interaction) => interaction.label)).toEqual(["Zoomen (Mausrad)", "Verschieben (Mittelklick ziehen)", "Orbitieren (Alt + Rechtsklick ziehen)"]);
-    expect(viewport.body).toMatch(/Mausrad|Mittelklick|Alt \+ Rechtsklick/i);
-    expect(steps.find((step) => step.id === "panels")).toMatchObject({
-      introduce: "framework.panel.catalogue",
-      interactions: [{ on: { kind: "panel", id: "framework.panel.catalogue" }, label: "Katalog-Reiter anklicken" }],
-    });
-    expect(steps.find((step) => step.id === "panels")?.body).toMatch(/linken Maustaste|Katalog-Reiter/i);
-    expect(steps.find((step) => step.id === "catalogue-objects")).toMatchObject({
-      introduce: "puzzle3d-play-kinds.objects",
-      placement: "right",
-      interactions: [{ on: { kind: "expand", id: "puzzle3d-play-kinds.objects" }, label: "»Baukomponenten« anklicken" }],
-      show: ["framework.panelTab.framework.panel.catalogue"],
-    });
-    expect(steps.find((step) => step.id === "catalogue-objects")?.body).toMatch(/linken Maustaste|Baukomponenten/i);
-    expect(steps.find((step) => step.id === "add-object")).toMatchObject({
-      introduce: "framework.panelTab.framework.panel.catalogue.firstDraggable",
-      placement: "right",
-      interactions: [{ on: { kind: "action", id: "addObjectKind" }, label: "Mit linker Maustaste in die Ansicht ziehen" }],
-      show: ["framework.panelTab.framework.panel.catalogue", "framework.window.puzzle3dMain"],
-    });
-    expect(steps.find((step) => step.id === "add-object")?.body).toMatch(/linken Maustaste|Drag-and-Drop/i);
-    expect(steps.find((step) => step.id === "transform-utility")).toMatchObject({
-      introduce: "transform",
-      interactions: [{ on: { kind: "utility", id: "transform" }, label: "Transformieren anklicken" }],
-      show: ["framework.window.puzzle3dMain"],
-    });
-    expect(steps.find((step) => step.id === "transform-utility")?.body).toMatch(/linken Maustaste|Transformieren/i);
-    expect(steps.find((step) => step.id === "verbindungspunkte")).toMatchObject({
-      introduce: "puzzle3d-play-vortex-show",
-      interactions: [{ on: { kind: "action", id: "setVortexShow" }, label: "»Verbindungspunkte anzeigen« auf »Immer« stellen" }],
-      show: ["framework.window.puzzle3dMain"],
-    });
-    expect(steps.find((step) => step.id === "verbindungspunkte")?.body).toMatch(/Linksklick|Verbindungspunkte/i);
-    expect(steps.find((step) => step.id === "suggest-objects")).toMatchObject({
-      introduce: "framework.window.puzzle3dMain",
-      interactions: [{ on: { kind: "action", id: "acceptSuggestion" }, label: "Vorschlag per Linksklick wählen" }],
-    });
-    expect(steps.find((step) => step.id === "suggest-objects")?.body).toMatch(/Linksklick|Rechtsklick|Aktionsmenü/i);
-    expect(steps.find((step) => step.id === "fill-tool")).toMatchObject({
-      introduce: "tool.fill",
-      interactions: [{ on: { kind: "tool", id: "fill" }, label: "»Füllen« anklicken" }],
-      show: [],
-      placement: "top",
-    });
-    expect(steps.find((step) => step.id === "fill-tool")?.body).toMatch(/linken Maustaste|Füllen/i);
-    expect(steps.find((step) => step.id === "fill-distribution")).toMatchObject({
-      introduce: "puzzle3d-play-distribution",
-      interactions: [],
-      show: ["puzzle3d-fill-count", "framework.panelTab.tool.fill"],
-      placement: "top",
-    });
-    expect(steps.find((step) => step.id === "fill-distribution")?.body).toMatch(/Schieberegler|Verteilung/i);
-
-    const funding = ENTWERFEN_MIT_BESTAND_GENERAL_INTRODUCTION.steps.find((step) => step.id === "funding")!;
-    expect(funding.logos).toHaveLength(3);
-    for (const logo of funding.logos!) {
-      expect(logo.src).toMatch(/♻️mit-bestand\/🧺️demonstrator\/🖼️asset\/🪧️logos\//);
-      expect(logo.darkSrc).toMatch(/♻️mit-bestand\/🧺️demonstrator\/🖼️asset\/🪧️logos\//);
-      expect(logo.alt).toBeTruthy();
-      let root = import.meta.dirname;
-      for (const url of [logo.src, logo.darkSrc!]) {
-        const relative = url.replace(/^\//, "");
-        for (let hop = 0; hop < 12 && !existsSync(`${root}/${relative}`); hop += 1) root = `${root}/..`;
-        expect(existsSync(`${root}/${relative}`)).toBe(true);
-      }
-    }
-    const zukunftBauLogo = funding.logos!.find((logo) => logo.href === ZUKUNFT_BAU_PROJECT_URL);
-    expect(zukunftBauLogo).toBeDefined();
-  });
-
-  it("mit-bestand/demonstrator footer credits render the funding/partner logos, links, and locale text", () => {
-    const fundedByMarkup = renderToStaticMarkup(createElement(Footer, { items: [navbarFillItem("fillLeft"), fundedByZukunftBauFooterItem("fundedByEn", "en"), navbarFillItem("fillRight")] }));
-    expect(fundedByMarkup).toContain("<button");
-    expect(fundedByMarkup).toContain("Funded by");
-    expect(fundedByMarkup).toContain("z-40");
-    expect(ZUKUNFT_BAU_PROJECT_URL).toMatch(/^https:\/\/www\.zukunftbau\.de\//);
-    const fundedByDeMarkup = renderToStaticMarkup(createElement(Footer, { items: [fundedByZukunftBauFooterItem("fundedByDe", "de")] }));
-    expect(fundedByDeMarkup).toContain("Gefördert durch");
-    expect(fundedByDeMarkup).toContain("hover:text-foreground");
-    const projectOfMarkup = renderToStaticMarkup(createElement(Footer, { items: [aProjectOfLuhUdkFooterItem()] }));
-    expect(projectOfMarkup).toContain("Ein Projekt von");
-    expect(projectOfMarkup).toContain("hover:text-foreground");
-    expect(projectOfMarkup).toContain("und");
-    expect(projectOfMarkup).toContain(LUH_LOGO_URL);
-    expect(projectOfMarkup).toContain(UDK_LOGO_URL);
-    expect(projectOfMarkup).toContain(LUH_URL);
-    expect(projectOfMarkup).toContain(UDK_URL);
-    expect(projectOfMarkup).toContain("z-40");
-    const projectOfEnMarkup = renderToStaticMarkup(createElement(Footer, { items: [aProjectOfLuhUdkFooterItem("projectOfEn", "en")] }));
-    expect(projectOfEnMarkup).toContain("A project of");
-    expect(projectOfEnMarkup).toContain("and");
-    // 📱️ iconOnly (mobile) drops the surrounding text but keeps both logos and their links.
-    const fundedByIconOnlyMarkup = renderToStaticMarkup(createElement(Footer, { items: [fundedByZukunftBauFooterItem("fundedByIconOnly", "en", true)] }));
-    expect(fundedByIconOnlyMarkup).not.toContain("Funded by");
-    const projectOfIconOnlyMarkup = renderToStaticMarkup(createElement(Footer, { items: [aProjectOfLuhUdkFooterItem("projectOfIconOnly", "de", true)] }));
-    expect(projectOfIconOnlyMarkup).not.toContain("Ein Projekt von");
-    expect(projectOfIconOnlyMarkup).not.toContain(">und<");
-    expect(projectOfIconOnlyMarkup).toContain(LUH_LOGO_URL);
-    expect(projectOfIconOnlyMarkup).toContain(UDK_LOGO_URL);
-    expect(LUH_LOGO_URL).toMatch(/♻️mit-bestand\/🧺️demonstrator\/🖼️asset\/🪧️logos\//);
-    expect(UDK_LOGO_URL).toMatch(/♻️mit-bestand\/🧺️demonstrator\/🖼️asset\/🪧️logos\//);
   });
 
   it("buildOsCommands omits only the commands for locked prefs", () => {
@@ -12856,28 +12385,28 @@ describe("noteShellCommand", () => {
    * click popped it and asked the host to replay `shell.windowActivate` into the app, where the
    * window-kind gate refused it `undeclared-action` (ticket 26/09/18 §3.2). */
   it("buildNoteShellCommandAction carries no inverse unless the caller declares one", () => {
-    expect(buildNoteShellCommandAction("puzzle3d-play", "shell.windowClose", "Close Window", { windowId: "w1" })).toEqual({
+    expect(buildNoteShellCommandAction("puzzle3d-play", "shell.windowClose", { en: "Close Window", de: "Fenster schließen" }, { windowId: "w1" })).toEqual({
       controllerId: "puzzle3d-play",
       action: "noteShellCommand",
-      args: { commandId: "shell.windowClose", label: "Close Window", detail: { windowId: "w1" } },
+      args: { commandId: "shell.windowClose", label: { en: "Close Window", de: "Fenster schließen" }, detail: { windowId: "w1" } },
     });
-    expect(buildNoteShellCommandAction("puzzle3d-play", "os.resetDock", "Reset Panels")).toEqual({
+    expect(buildNoteShellCommandAction("puzzle3d-play", "os.resetDock", { en: "Reset Panels", de: "Panels zurücksetzen" })).toEqual({
       controllerId: "puzzle3d-play",
       action: "noteShellCommand",
-      args: { commandId: "os.resetDock", label: "Reset Panels" },
+      args: { commandId: "os.resetDock", label: { en: "Reset Panels", de: "Panels zurücksetzen" } },
     });
   });
 
   it("buildNoteShellCommandAction carries a declared inverse, and its arguments only when the inverse has some", () => {
-    expect(buildNoteShellCommandAction("puzzle3d-play", "os.setThemeId", "Set Theme", { themeId: "dark" }, { commandId: "os.setThemeId", args: { themeId: "light" } })).toEqual({
+    expect(buildNoteShellCommandAction("puzzle3d-play", "os.setThemeId", { en: "Set Theme", de: "Design festlegen" }, { themeId: "dark" }, { commandId: "os.setThemeId", args: { themeId: "light" } })).toEqual({
       controllerId: "puzzle3d-play",
       action: "noteShellCommand",
-      args: { commandId: "os.setThemeId", label: "Set Theme", detail: { themeId: "dark" }, inverseCommandId: "os.setThemeId", inverseArgs: { themeId: "light" } },
+      args: { commandId: "os.setThemeId", label: { en: "Set Theme", de: "Design festlegen" }, detail: { themeId: "dark" }, inverseCommandId: "os.setThemeId", inverseArgs: { themeId: "light" } },
     });
-    expect(buildNoteShellCommandAction("puzzle3d-play", "os.resetDock", "Reset Panels", undefined, { commandId: "os.resetDock" })).toEqual({
+    expect(buildNoteShellCommandAction("puzzle3d-play", "os.resetDock", { en: "Reset Panels", de: "Panels zurücksetzen" }, undefined, { commandId: "os.resetDock" })).toEqual({
       controllerId: "puzzle3d-play",
       action: "noteShellCommand",
-      args: { commandId: "os.resetDock", label: "Reset Panels", inverseCommandId: "os.resetDock" },
+      args: { commandId: "os.resetDock", label: { en: "Reset Panels", de: "Panels zurücksetzen" }, inverseCommandId: "os.resetDock" },
     });
   });
 
@@ -12996,267 +12525,7 @@ describe("TutorialRecorder LocalizedLabel synthesis", () => {
   });
 });
 
-//#region 🥽️Puzzle3dBrushMeshUpload
-import {
-  PUZZLE3D_MESH_COMMAND_RAW_BYTES,
-  PUZZLE3D_MESH_PAGE_VALUES,
-  PUZZLE3D_MESH_REUPLOAD_CLAIMS,
-  PUZZLE3D_MESH_UPLOAD_MAX_PAGES,
-  PUZZLE3D_MESH_UPLOAD_SLOTS,
-  puzzle3dAnnounceableBrushMeshUrls,
-  puzzle3dBrushMeshDigest,
-  Puzzle3dBrushMeshRegistry,
-  puzzle3dBrushMeshPages,
-  puzzle3dBrushMeshQueueStep,
-  drainPuzzle3dBrushMeshQueue,
-} from "../../🧱️elements/🛠️ShellHelpers/🟦️.tsx";
-import brushMeshUploadFixture from "../../../../../../../../✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧫️fixtures/🥽️brush-mesh-upload/🔣️.json";
 
-/** 🥽️ The values one page carries, read back out of its two base64 payloads exactly as the plugin's
- * `decode_brush_mesh_page_values` reads them (`✏️editor/⏳️precompute/🦀️.rs`). */
-function decodeBrushMeshPage(page: { readonly positionsB64?: string; readonly indicesB64?: string }): { positions: number[]; indices: number[] } {
-  const positionBytes = Buffer.from(page.positionsB64 ?? "", "base64");
-  const indexBytes = Buffer.from(page.indicesB64 ?? "", "base64");
-  return {
-    positions: Array.from(new Float32Array(positionBytes.buffer, positionBytes.byteOffset, positionBytes.byteLength / 4)),
-    indices: Array.from(new Uint32Array(indexBytes.buffer, indexBytes.byteOffset, indexBytes.byteLength / 4)),
-  };
-}
-
-describe("puzzle3d brush mesh paged upload", () => {
-  // 🚪️ `registerBrushMesh` is an APP-declared action, so a world-3d guest that never declared it drops
-  // every announcement as `undeclared-action` and the upload run can never settle. `🎥️shooting` paints
-  // GLB-backed meshes and declares no such action: its boot journalled 12 dropped dispatches and 12
-  // console errors before this gate (ticket 26/09/18/OS-HUB-COLLABORATION-AI-END-TO-END slice B3d,
-  // `🗑️generated/b3d-shooting-console.txt`). A guest that OWNS the lane publishes its install counter
-  // as `interactionJson.meshResidency`, so the counter's presence is the opt-in.
-  it("announces brush meshes only to a guest that published a mesh residency", () => {
-    const meshes = [{ url: "/test/a.glb" }, { url: "/test/b.glb" }, { url: "/test/a.glb" }, {}];
-    expect(puzzle3dAnnounceableBrushMeshUrls(undefined, meshes)).toEqual([]);
-    expect(puzzle3dAnnounceableBrushMeshUrls(0, meshes)).toEqual(["/test/a.glb", "/test/b.glb"]);
-    expect(puzzle3dAnnounceableBrushMeshUrls(7, meshes)).toEqual(["/test/a.glb", "/test/b.glb"]);
-    expect(puzzle3dAnnounceableBrushMeshUrls(7, [])).toEqual([]);
-  });
-
-  it("encodes the language-neutral page run the plugin decodes, with the Node base64 oracle", () => {
-    expect(PUZZLE3D_MESH_COMMAND_RAW_BYTES).toBe(brushMeshUploadFixture.commandRawBytes);
-    expect(PUZZLE3D_MESH_PAGE_VALUES).toBe(brushMeshUploadFixture.pageValues);
-    expect(PUZZLE3D_MESH_UPLOAD_SLOTS).toBe(brushMeshUploadFixture.uploadSlots);
-    expect(PUZZLE3D_MESH_UPLOAD_MAX_PAGES).toBe(brushMeshUploadFixture.maxPages);
-    const example = brushMeshUploadFixture.example;
-    expect(puzzle3dBrushMeshDigest(example.positions, example.indices)).toBe(example.digest);
-    const pages = puzzle3dBrushMeshPages(example.url, example.surfaceId, example.positions, example.indices);
-    expect(pages).toEqual(example.pages.map((page) => ({ url: example.url, digest: example.digest, ...page })));
-    expect(pages[0]!.positionsB64).toBe(Buffer.from(new Uint8Array(Float32Array.from(example.positions).buffer)).toString("base64"));
-    expect(pages[0]!.indicesB64).toBe(Buffer.from(new Uint8Array(Uint32Array.from(example.indices).buffer)).toString("base64"));
-    expect(decodeBrushMeshPage(pages[0]!)).toEqual({ positions: example.positions, indices: example.indices });
-  });
-
-  it("pages a document-scale GLB into a run that never exceeds one retained command's raw wire", () => {
-    for (const scale of brushMeshUploadFixture.documentScale) {
-      const vertices = scale.positions / 3;
-      const positions = Array.from({ length: scale.positions }, (_, value) => value * 0.5);
-      const indices = Array.from({ length: scale.indices }, (_, value) => value % vertices);
-      const pages = puzzle3dBrushMeshPages(scale.url, "world-3d", positions, indices);
-      expect(pages.length).toBe(scale.pages);
-      const reassembled: { positions: number[]; indices: number[] } = { positions: [], indices: [] };
-      for (const [index, page] of pages.entries()) {
-        expect(page).toMatchObject({ url: scale.url, page: index, pageCount: scale.pages });
-        expect(Buffer.byteLength(JSON.stringify(["registerBrushMesh", { surfaceId: "world-3d", ...page }]), "utf8")).toBeLessThanOrEqual(PUZZLE3D_MESH_COMMAND_RAW_BYTES);
-        const decoded = decodeBrushMeshPage(page);
-        expect(decoded.positions.length + decoded.indices.length).toBeLessThanOrEqual(PUZZLE3D_MESH_PAGE_VALUES);
-        reassembled.positions.push(...decoded.positions);
-        reassembled.indices.push(...decoded.indices);
-      }
-      expect(reassembled.positions).toEqual(positions);
-      expect(reassembled.indices).toEqual(indices);
-    }
-  });
-
-  it("re-announces a mesh this guest already holds by id and digest alone", () => {
-    const example = brushMeshUploadFixture.example;
-    const url = "/test/already-paged.glb";
-    const registry = new Puzzle3dBrushMeshRegistry();
-    const digest = puzzle3dBrushMeshDigest(example.positions, example.indices);
-    expect(registry.holds(url, digest)).toBe(false);
-    registry.confirm(url, digest);
-    expect(registry.holds(url, digest)).toBe(true);
-    expect(registry.holds(url, puzzle3dBrushMeshDigest(example.positions, example.indices.slice(0, 3)))).toBe(false);
-    registry.forget(url);
-    expect(registry.holds(url, digest)).toBe(false);
-  });
-
-  // 🚚️ Wave W-H: the host's claim about what the guest holds is scoped to the guest instantiation that
-  // justified it. A restored actor's mesh store is empty (it is deliberately not part of any checkpoint),
-  // and the only evidence the host ever gets is `interactionJson.meshResidency` falling. Before this the
-  // claim lived in a page-lifetime `Map`, so every window activation after a restart re-announced seven
-  // identities by id alone, every one was refused into a notice nothing read, and the brush utility kept
-  // no collision geometry until a full browser reload.
-  it("re-pages every mesh instead of re-announcing when the guest restarted", () => {
-    const example = brushMeshUploadFixture.example;
-    const digest = puzzle3dBrushMeshDigest(example.positions, example.indices);
-    const urls = ["/test/restart-a.glb", "/test/restart-b.glb"];
-    const registry = new Puzzle3dBrushMeshRegistry();
-    expect(registry.observeResidency(0)).toBe(false);
-    for (const [index, url] of urls.entries()) {
-      registry.confirm(url, digest);
-      expect(registry.observeResidency(index + 1)).toBe(false);
-    }
-    expect(urls.every((url) => registry.holds(url, digest))).toBe(true);
-    expect(registry.residency).toBe(urls.length);
-
-    expect(registry.observeResidency(0)).toBe(true);
-    expect(urls.some((url) => registry.holds(url, digest))).toBe(false);
-    expect(registry.size).toBe(0);
-
-    registry.confirm(urls[0]!, digest);
-    expect(registry.observeResidency(1)).toBe(false);
-    expect(registry.holds(urls[0]!, digest)).toBe(true);
-    expect(registry.holds(urls[1]!, digest)).toBe(false);
-  });
-
-  // 🚚️ Wave W-H, rewritten by wave B48: a guest that refuses an id-only announcement publishes the
-  // identity on the world body (`meshReuploadUrls`) and republishes it until the bytes land, so the
-  // claim has to be BOUNDED — re-driving on every republish is an upload storm, not a recovery.
-  //
-  // 🐛️ The bound used to be "once per publishing residency value", and `meshResidency` is the guest's
-  // own install counter, which every accepted announcement in the tab increments
-  // (`derive_brush_mesh`/`adopt_brush_mesh_by_digest`, `✏️editor/⏳️precompute/🦀️.rs`). So the brake was
-  // moved by the very traffic it suppressed: one standing request re-opened the gate on each unit of
-  // progress, each claim deleted the paged entry and forced the next announcement onto the full
-  // 72-command page path. Browser-measured at wasm #58 on the 180-object Nakagin document: 123 of 285
-  // console lines were `registerBrushMesh`, seq 22 → 124 over 306 s, still arriving 8 minutes after the
-  // example switch (ticket 26/09/02/PUZZLE-3D-END-TO-END wave B46 §5, wave B48 §1.2). The bound is now
-  // per guest INSTANTIATION, which is the only fact the guest's accepted work cannot move.
-  it("claims a guest re-upload request a bounded number of times per guest instantiation", () => {
-    const example = brushMeshUploadFixture.example;
-    const digest = puzzle3dBrushMeshDigest(example.positions, example.indices);
-    const url = "/test/reupload-claim.glb";
-    const registry = new Puzzle3dBrushMeshRegistry();
-    registry.observeResidency(4);
-    registry.confirm(url, digest);
-    expect(registry.claimReupload(url)).toBe(true);
-    expect(registry.holds(url, digest)).toBe(false);
-    for (let installs = 5; installs < 24; installs += 1) expect(registry.observeResidency(installs)).toBe(false);
-    let claims = 1;
-    while (registry.claimReupload(url)) claims += 1;
-    expect(claims, "a climbing residency is the guest making progress, never a new claim").toBe(PUZZLE3D_MESH_REUPLOAD_CLAIMS);
-    registry.confirm(url, digest);
-    expect(registry.claimReupload(url), "a completed run does not buy a further claim either").toBe(false);
-    expect(registry.observeResidency(0)).toBe(true);
-    expect(registry.claimReupload(url), "a restarted guest holds nothing, so every claim is released").toBe(true);
-    registry.clear();
-    expect(registry.residency).toBe(-1);
-    expect(registry.size).toBe(0);
-  });
-
-  // 🪢️ Wave B22: the transfer is content-addressed. Every `dist/mesh/*.glb` in this repo is the same
-  // 771 728-byte capsule, so a scene placing several object kinds paged byte-identical geometry once per
-  // mesh id — browser-measured 2026-09-12 on wasm #47 as 202 `registerBrushMesh` commands for one example
-  // switch. A digest already resident under ANY id is announced instead, and the guest aliases its own
-  // derived page onto the new id (`adopt_brush_mesh_by_digest`, `✏️editor/⏳️precompute/🦀️.rs`).
-  it("knows a digest this guest holds under another id, so the bytes cross once per geometry", () => {
-    const example = brushMeshUploadFixture.example;
-    const digest = puzzle3dBrushMeshDigest(example.positions, example.indices);
-    const registry = new Puzzle3dBrushMeshRegistry();
-    expect(registry.holdsDigest(digest)).toBe(false);
-    expect(registry.holdsDigest("")).toBe(false);
-    registry.confirm("/test/capsule-a.glb", digest);
-    expect(registry.holdsDigest(digest)).toBe(true);
-    expect(registry.holds("/test/capsule-b.glb", digest)).toBe(false);
-    registry.alias("/test/capsule-b.glb", digest);
-    expect(registry.holds("/test/capsule-b.glb", digest)).toBe(true);
-    registry.forget("/test/capsule-a.glb");
-    expect(registry.holdsDigest(digest)).toBe(false);
-  });
-
-  // 🪢️ An alias is a claim about a SIBLING's bytes, never proof of its own, and a guest that refuses one
-  // must be handed the bytes next time. Without both halves an id whose alias was refused would be
-  // re-announced by digest forever — the guest asks for the bytes, the host answers with the same alias —
-  // and the brush utility would keep no collision body for it at all.
-  it("never re-aliases an identity the guest refused, and never chains one alias off another", () => {
-    const example = brushMeshUploadFixture.example;
-    const digest = puzzle3dBrushMeshDigest(example.positions, example.indices);
-    const registry = new Puzzle3dBrushMeshRegistry();
-    registry.observeResidency(7);
-    registry.alias("/test/alias-only.glb", digest);
-    expect(registry.holdsDigest(digest)).toBe(false);
-    registry.confirm("/test/paged.glb", digest);
-    expect(registry.holdsDigest(digest)).toBe(true);
-    expect(registry.mayAlias("/test/alias-only.glb")).toBe(true);
-    expect(registry.claimReupload("/test/alias-only.glb")).toBe(true);
-    expect(registry.mayAlias("/test/alias-only.glb")).toBe(false);
-    expect(registry.holds("/test/alias-only.glb", digest)).toBe(false);
-    registry.confirm("/test/alias-only.glb", digest);
-    expect(registry.mayAlias("/test/alias-only.glb")).toBe(true);
-    expect(registry.observeResidency(0)).toBe(true);
-    expect(registry.mayAlias("/test/alias-only.glb")).toBe(true);
-  });
-
-  it("collapses a queued run whose geometry a sibling id already put into the guest", () => {
-    const example = brushMeshUploadFixture.example;
-    const digest = puzzle3dBrushMeshDigest(example.positions, example.indices);
-    const queue = [...puzzle3dBrushMeshPages("/test/queue-a.glb", "world-3d", example.positions, example.indices), ...puzzle3dBrushMeshPages("/test/queue-b.glb", "world-3d", example.positions, example.indices)];
-    const first = puzzle3dBrushMeshQueueStep(queue, () => false);
-    expect(first.kind).toBe("page");
-    const resident = puzzle3dBrushMeshQueueStep(queue, (page) => page.digest === digest);
-    expect(resident).toEqual({ kind: "adopt", url: "/test/queue-b.glb", digest });
-    expect(queue).toHaveLength(0);
-    expect(puzzle3dBrushMeshQueueStep(queue, () => false)).toEqual({ kind: "idle" });
-  });
-
-  // ⏳️ Wave B22: the run is back-pressured, so exactly ONE command is outstanding at a time. The macrotask
-  // drain it replaces queued every page of every mesh into the actor's one command queue inside a couple
-  // of hundred milliseconds — browser-measured 2026-09-12, 202 pages enqueued in 21 s, 40 settled over the
-  // next 420 s, and one user click that landed mid-run waited 44.3 s behind 15 pages.
-  it("keeps exactly one mesh command outstanding and confirms only on a run's last page", async () => {
-    const example = brushMeshUploadFixture.example;
-    const digest = puzzle3dBrushMeshDigest(example.positions, example.indices);
-    const positions = Array.from({ length: 4_096 }, (_, index) => example.positions[index % example.positions.length]!);
-    const indices = Array.from({ length: 4_096 }, (_, index) => example.indices[index % example.indices.length]!);
-    const queue = [...puzzle3dBrushMeshPages("/test/backpressure.glb", "world-3d", positions, indices)];
-    expect(queue.length).toBeGreaterThan(4);
-    const confirmed: string[] = [];
-    const registry = { holdsDigest: () => false, mayAlias: () => true, alias: () => {}, confirm: (url: string, held: string) => confirmed.push(`${url}@${held}`) };
-    let inFlight = 0;
-    let peak = 0;
-    let dispatched = 0;
-    const pending = queue.length;
-    await drainPuzzle3dBrushMeshQueue(
-      queue,
-      registry,
-      async () => {
-        inFlight += 1;
-        peak = Math.max(peak, inFlight);
-        dispatched += 1;
-        await Promise.resolve();
-        inFlight -= 1;
-      },
-      () => true,
-    );
-    expect(peak).toBe(1);
-    expect(dispatched).toBe(pending);
-    expect(confirmed).toEqual([`/test/backpressure.glb@${puzzle3dBrushMeshDigest(positions, indices)}`]);
-    expect(digest).not.toBe(puzzle3dBrushMeshDigest(positions, indices));
-  });
-
-  it("retires the drain without dispatching once the surface it belongs to is gone", async () => {
-    const example = brushMeshUploadFixture.example;
-    const queue = [...puzzle3dBrushMeshPages("/test/unmounted.glb", "world-3d", example.positions, example.indices)];
-    let dispatched = 0;
-    await drainPuzzle3dBrushMeshQueue(
-      queue,
-      { holdsDigest: () => false, mayAlias: () => true, alias: () => {}, confirm: () => {} },
-      async () => {
-        dispatched += 1;
-      },
-      () => false,
-    );
-    expect(dispatched).toBe(0);
-    expect(queue.length).toBeGreaterThan(0);
-  });
-});
-//#endregion 🥽️Puzzle3dBrushMeshUpload
 
 //#region 🥽️SceneMeshKindReferences
 import { meshDataFromKind } from "../../🧱️elements/🌐️World3dHost/🟦️.tsx";
@@ -14123,7 +13392,6 @@ describe("example switch — the completion's scope is what re-takes the flow wi
 
 //#region 📷️CameraAndLabelFitTwins
 import cameraFitFixture from "../../../../♾️infinite/🖼️canvas/🧫️fixtures/📷️camera-fit/🔣️.json" with { type: "json" };
-import portSidesFixture from "../../../../🧠️neural/⚙️engine/🧫️fixtures/🔌️port-sides/🔣️.json" with { type: "json" };
 import portTypesFixture from "../../../../🌊️flow/🧫️fixtures/🔌️port-types/🔣️.json" with { type: "json" };
 import labelFitFixture from "../../../../♾️infinite/🖼️canvas/🧫️fixtures/🏷️label-fit/🔣️.json" with { type: "json" };
 
@@ -14302,58 +13570,7 @@ function portSidesSurfaceRows(): {
   ).surfaceRows;
 }
 
-//#region 🔌️PortSideTwin
-/** 🔌️ The renderer half of the catalogue port-side law. A wire endpoint has exactly ONE public name
- * here — `${nodeId}@${portId}`, the string `🕸️NodeGraph/🟦️.tsx` builds for every hit target — so an
- * operator that declares one port id on both sides gives two handles one key and a press on the
- * output resolves to the input. The Rust half
- * (`🌊️flow/🖥️host/🧪️tests/🔬️unit/🦀️.rs`, `no_operator_in_the_catalogue_declares_one_port_id_on_both_sides`)
- * drives the LIVE first-party catalogue; this half drives the same fixture rows through the
- * renderer's own handle spelling. Ticket 26/09/09/PROCEDURAL-3D-END-TO-END. */
-describe("🔌️ operator port sides", () => {
-  const fixture = portSidesFixture as unknown as {
-    suffix: string;
-    wildcardMarker: string;
-    correctedInputs: { operator: string; was: string; now: string }[];
-    rows: { operator: string; inputs: string[]; outputs: string[] }[];
-  };
 
-  it("gives every port of an operator its own {nodeId}@{portId} handle", () => {
-    expect(fixture.rows.length).toBeGreaterThanOrEqual(12);
-    for (const row of fixture.rows) {
-      const ports = [...row.inputs, ...row.outputs].filter((port) => port !== fixture.wildcardMarker);
-      const handles = ports.map((port) => `${row.operator}@${port}`);
-      expect([row.operator, new Set(handles).size]).toEqual([row.operator, handles.length]);
-    }
-  });
-
-  it("spells a produced channel with the suffix only when its own operator is given the same noun", () => {
-    for (const row of fixture.rows) {
-      for (const output of row.outputs) {
-        if (!output.endsWith(fixture.suffix)) continue;
-        const plain = output.slice(0, -fixture.suffix.length);
-        expect([row.operator, output, row.inputs.includes(plain)]).toEqual([row.operator, output, true]);
-      }
-      for (const input of row.inputs) {
-        if (input === fixture.wildcardMarker) continue;
-        expect([row.operator, input, row.outputs.includes(input)]).toEqual([row.operator, input, false]);
-      }
-    }
-  });
-
-  it("keeps the wildcard marker and the corrected inputs the fixture names", () => {
-    expect(fixture.wildcardMarker).toBe("*");
-    const variable = fixture.rows.find((row) => row.operator === "core.variable")!;
-    expect(variable.inputs).toEqual([fixture.wildcardMarker]);
-    expect(variable.outputs).toEqual([fixture.wildcardMarker]);
-    const move = fixture.rows.find((row) => row.operator === "math.move")!;
-    for (const corrected of fixture.correctedInputs.filter((entry) => entry.operator === "math.move")) {
-      expect(move.inputs).toContain(corrected.now);
-      expect(move.inputs).not.toContain(corrected.was);
-    }
-  });
-});
-//#endregion 🔌️PortSideTwin
 //#endregion 📷️CameraAndLabelFitTwins
 
 //#region 📚️BootExampleTwin

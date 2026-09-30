@@ -114,7 +114,7 @@ const PANEL_TREE: BuiltNode = node({
       key: "field-name",
       component: { type: "container", role: "field", label: "Name", description: "Display label", required: null, error: null, defaultOpen: null, dropOverlay: null },
       layout: COLUMN,
-      children: [node({ key: "input-name", component: { type: "input", kind: "text", value: "Board A", placeholder: null, commit: "blur", min: null, max: null, step: null, accept: null }, bindings: [bind("commit", "setName")] })],
+      children: [node({ key: "input-name", component: { type: "input", kind: "text", value: "Board A", placeholder: null, commit: "blur", min: null, max: null, step: null, accept: null, precision: null, snaps: [] }, bindings: [bind("commit", "setName")] })],
     }),
     node({
       key: "field-kind",
@@ -128,7 +128,7 @@ const PANEL_TREE: BuiltNode = node({
         }),
       ],
     }),
-    node({ key: "slider-opacity", component: { type: "slider", value: 0.8, min: 0, max: 1, step: 0.05, unit: "α" }, bindings: [bind("change", "setOpacity")] }),
+    node({ key: "slider-opacity", component: { type: "slider", value: 0.8, min: 0, max: 1, step: 0.05, unit: "α", snaps: [0.25, 0.5, 0.75] }, bindings: [bind("change", "setOpacity")] }),
     node({ key: "summary", component: { type: "keyValueList", entries: [{ label: "Id", value: "node-42" }, { label: "Updated", value: "2026-07-19" }] } }),
   ],
 });

@@ -5,16 +5,31 @@
   "type": "object",
   "additionalProperties": false,
   "required": [
+    "mutation",
     "index"
   ],
   "properties": {
-    "index": {
-      "type": "integer",
-      "minimum": 0
-    },
     "mutation": {
       "const": "removeEntity",
       "description": "Aggregate discriminator spliced in by DxfMutation; absent when the payload stands alone."
+    },
+    "index": {
+      "type": "integer",
+      "minimum": 0,
+      "x-semio-ui": {
+        "widget": "stepper",
+        "label": {
+          "en": "Entity",
+          "de": "Objekt"
+        },
+        "description": {
+          "en": "Index of the entity in the ENTITIES section, counted from 0.",
+          "de": "Index des Objekts im Abschnitt ENTITIES, ab 0 gezählt."
+        },
+        "precision": 0,
+        "group": "target",
+        "order": 10
+      }
     }
   }
 }

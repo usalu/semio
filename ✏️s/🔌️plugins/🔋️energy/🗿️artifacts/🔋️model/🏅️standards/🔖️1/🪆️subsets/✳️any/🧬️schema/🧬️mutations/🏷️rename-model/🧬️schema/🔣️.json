@@ -5,11 +5,26 @@
   "type": "object",
   "additionalProperties": false,
   "required": [
+    "mutation",
     "newName"
   ],
   "properties": {
+    "mutation": {
+      "const": "renameModel"
+    },
     "newName": {
-      "type": "string"
+      "type": "string",
+      "pattern": "[^\\t\\n\\u000B\\f\\r \\u0085\\u00A0\\u1680\\u2000-\\u200A\\u2028\\u2029\\u202F\\u205F\\u3000]",
+      "x-semio-ui": {
+        "widget": "text",
+        "role": "value",
+        "label": {
+          "en": "Name",
+          "de": "Name"
+        },
+        "group": "identity",
+        "order": 10
+      }
     }
   }
 }

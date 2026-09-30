@@ -26,10 +26,8 @@
 //! libraries. [`project_bcf_2_1`] is the shared independent-reader projection both this module's own
 //! handlers AND the case's subject handlers read their results back through before comparison.
 //!
-//! Binary payloads (a viewpoint's PNG snapshot, a raw retained part's bytes) travel through mutation
-//! params as lowercase hex — the same convention `BcfSnapshot::parse_dsl`/`print_dsl` already use
-//! for this artifact's own whole-document DSL encoding, kept here rather than reaching for a new
-//! base64 dependency this artifact does not otherwise need.
+//! Mutation params are the leaf wire payload (design §11): binary payloads (a viewpoint's PNG snapshot, a raw retained
+//! part's `data`) travel as byte arrays, a whole document as the `BcfSnapshot` wire.
 //!
 //! @see ../🔣️oracle.json — the mutation catalog this module is measured against.
 //! @see ../🧬️schema/🧬️mutations/🦀️.rs — the mutation vocabulary itself (`BcfMutation::KINDS`).
@@ -128,21 +126,6 @@ mod oracles {
         parts: Vec<ORawPart>,
     }
     //#endregion 🔖️Model
-
-    //#region 🔖️Hex
-    /// 🔤️ Lowercase hex, the same binary-in-text convention `BcfSnapshot::print_dsl` already uses
-    /// for this artifact's whole-document DSL form.
-    fn hex_encode(bytes: &[u8]) -> String {
-        bytes.iter().map(|byte| format!("{byte:02x}")).collect()
-    }
-
-    fn hex_decode(text: &str) -> Result<Vec<u8>, String> {
-        if text.len() % 2 != 0 {
-            return Err(format!("odd hex length ({} chars)", text.len()));
-        }
-        (0..text.len()).step_by(2).map(|i| u8::from_str_radix(&text[i..i + 2], 16).map_err(|error| format!("invalid hex {:?}: {error}", &text[i..i + 2]))).collect()
-    }
-    //#endregion 🔖️Hex
 
     //#region 🔖️XmlTree
     /// 🌳 Minimal owned XML node — element-with-attributes-and-children or leaf text — sufficient
@@ -690,6 +673,24 @@ mod oracles {
         Json::Array(items.iter().map(|item| Json::String(item.clone())).collect())
     }
 
+    fn bytes_of(value: &Json) -> Result<Vec<u8>, String> {
+        match value {
+            Json::Array(items) => items.iter().map(|item| if let Json::Number(byte) = item { Ok(*byte as u8) } else { Err(format!("a byte array holds only numbers, found {item:?}")) }).collect(),
+            other => Err(format!("expected a byte array, found {other:?}")),
+        }
+    }
+
+    fn bytes_json(bytes: &[u8]) -> Json {
+        Json::Array(bytes.iter().map(|byte| Json::Number(*byte as f64)).collect())
+    }
+
+    fn optional_bytes(value: Option<&Json>) -> Result<Option<Vec<u8>>, String> {
+        match value {
+            Some(Json::Null) | None => Ok(None),
+            Some(bytes) => bytes_of(bytes).map(Some),
+        }
+    }
+
     fn number_field(value: &Json, key: &str) -> f64 {
         match value.get(key) {
             Some(Json::Number(number)) => *number,
@@ -796,11 +797,7 @@ mod oracles {
             Some(Json::Null) | None => None,
             Some(node) => Some(components_from_json(node)),
         };
-        let snapshot = match value.get("snapshot") {
-            Some(Json::String(hex)) if !hex.is_empty() => Some(hex_decode(hex)?),
-            _ => None,
-        };
-        Ok(OViewpoint { guid: value.str("guid"), camera, components, snapshot })
+        Ok(OViewpoint { guid: value.str("guid"), camera, components, snapshot: optional_bytes(value.get("snapshot"))? })
     }
 
     fn viewpoint_to_json(viewpoint: &OViewpoint) -> Json {
@@ -823,7 +820,7 @@ mod oracles {
             (
                 "snapshot",
                 match &viewpoint.snapshot {
-                    Some(bytes) => Json::String(hex_encode(bytes)),
+                    Some(bytes) => bytes_json(bytes),
                     None => Json::Null,
                 },
             ),
@@ -867,22 +864,18 @@ mod oracles {
             parts: value
                 .array("parts")
                 .iter()
-                .map(|entry| {
-                    let data = match entry.get("content") {
-                        Some(Json::String(hex)) if !hex.is_empty() => hex_decode(hex)?,
-                        _ => Vec::new(),
-                    };
-                    Ok(ORawPart { name: entry.str("name"), data })
-                })
+                .map(|entry| Ok(ORawPart { name: entry.str("name"), data: optional_bytes(entry.get("data"))?.unwrap_or_default() }))
                 .collect::<Result<_, String>>()?,
         })
     }
 
+    /// 📸️ The whole document as the `BcfSnapshot` wire — `set-snapshot`'s payload.
     fn doc_to_json(doc: &ODoc) -> Json {
         obj(vec![
+            ("schema", Json::String("stdio.bcf".to_string())),
             ("version", Json::String(doc.version.clone())),
             ("topics", Json::Array(doc.topics.iter().map(topic_to_json).collect())),
-            ("parts", Json::Array(doc.parts.iter().map(|part| obj(vec![("name", Json::String(part.name.clone())), ("content", Json::String(hex_encode(&part.data)))])).collect())),
+            ("parts", Json::Array(doc.parts.iter().map(|part| obj(vec![("name", Json::String(part.name.clone())), ("data", bytes_json(&part.data))])).collect())),
         ])
     }
     //#endregion 🔖️JsonValue
@@ -898,8 +891,7 @@ mod oracles {
     /// does not exist, is an error — never a silent no-op.
     fn apply_kind(doc: &mut ODoc, kind: &str, params: &Json) -> Result<(), String> {
         match kind {
-            "no-mutation" => {}
-            "set-snapshot" => *doc = doc_from_json(params)?,
+            "set-snapshot" => *doc = doc_from_json(&params.get("snapshot").cloned().ok_or("set-snapshot: missing `snapshot`")?)?,
             "set-version" => doc.version = params.str("version"),
             "insert-topic" => {
                 let topic = topic_from_json(&params.get("topic").cloned().unwrap_or(Json::Null))?;
@@ -1016,10 +1008,7 @@ mod oracles {
             }
             "set-viewpoint-snapshot" => {
                 let viewpoint = find_viewpoint_mut(doc, &params.str("topicGuid"), &params.str("guid"))?;
-                viewpoint.snapshot = match params.get("snapshot") {
-                    Some(Json::String(hex)) if !hex.is_empty() => Some(hex_decode(hex)?),
-                    _ => None,
-                };
+                viewpoint.snapshot = optional_bytes(params.get("snapshot"))?;
             }
             other => return Err(format!("mutation kind {other:?} has no oracle implementation")),
         }
@@ -1028,23 +1017,23 @@ mod oracles {
     //#endregion 🔖️Forward
 
     //#region 🔖️Inverse
-    /// ↩️ Reads `base` (the CURRENT, pre-mutation document) to build the spec that undoes `{kind,
+    /// ↩️ Reads `base` (the CURRENT, pre-mutation document) to build the wire spec that undoes `{kind,
     /// params}` — same law `BcfMutation::inverse` proves at the Rust-model level, computed here
-    /// against the reference libraries instead.
-    fn inverse_spec(base: &ODoc, kind: &str, params: &Json) -> Json {
+    /// against the reference libraries instead. A target the forward step could not find leaves
+    /// nothing to undo (`None`), as that method's empty inverse does.
+    fn inverse_spec(base: &ODoc, kind: &str, params: &Json) -> Result<Option<Json>, String> {
         let spec = |inverse_kind: &str, inverse_params: Json| obj(vec![("kind", Json::String(inverse_kind.to_string())), ("params", inverse_params)]);
         let find_topic = |guid: &str| base.topics.iter().find(|topic| topic.guid == guid);
         let find_comment = |topic_guid: &str, guid: &str| find_topic(topic_guid).and_then(|topic| topic.comments.iter().find(|comment| comment.guid == guid));
         let find_viewpoint = |topic_guid: &str, guid: &str| find_topic(topic_guid).and_then(|topic| topic.viewpoints.iter().find(|viewpoint| viewpoint.guid == guid));
 
-        match kind {
-            "no-mutation" => spec("no-mutation", obj(vec![])),
-            "set-snapshot" => spec("set-snapshot", doc_to_json(base)),
+        Ok(Some(match kind {
+            "set-snapshot" => spec("set-snapshot", obj(vec![("snapshot", doc_to_json(base))])),
             "set-version" => spec("set-version", obj(vec![("version", Json::String(base.version.clone()))])),
             "insert-topic" => spec("remove-topic", obj(vec![("guid", Json::String(params.get("topic").map(|topic| topic.str("guid")).unwrap_or_default()))])),
             "remove-topic" => match find_topic(&params.str("guid")) {
                 Some(topic) => spec("insert-topic", obj(vec![("topic", topic_to_json(topic))])),
-                None => spec("no-mutation", obj(vec![])),
+                None => return Ok(None),
             },
             "set-topic-markup" => {
                 let guid = params.str("guid");
@@ -1077,7 +1066,7 @@ mod oracles {
             "insert-comment" => spec("remove-comment", obj(vec![("topicGuid", Json::String(params.str("topicGuid"))), ("guid", Json::String(params.get("comment").map(|comment| comment.str("guid")).unwrap_or_default()))])),
             "remove-comment" => match find_comment(&params.str("topicGuid"), &params.str("guid")) {
                 Some(comment) => spec("insert-comment", obj(vec![("topicGuid", Json::String(params.str("topicGuid"))), ("comment", comment_to_json(comment))])),
-                None => spec("no-mutation", obj(vec![])),
+                None => return Ok(None),
             },
             "set-comment" => {
                 let topic_guid = params.str("topicGuid");
@@ -1108,7 +1097,7 @@ mod oracles {
             "insert-viewpoint" => spec("remove-viewpoint", obj(vec![("topicGuid", Json::String(params.str("topicGuid"))), ("guid", Json::String(params.get("viewpoint").map(|viewpoint| viewpoint.str("guid")).unwrap_or_default()))])),
             "remove-viewpoint" => match find_viewpoint(&params.str("topicGuid"), &params.str("guid")) {
                 Some(viewpoint) => spec("insert-viewpoint", obj(vec![("topicGuid", Json::String(params.str("topicGuid"))), ("viewpoint", viewpoint_to_json(viewpoint))])),
-                None => spec("no-mutation", obj(vec![])),
+                None => return Ok(None),
             },
             "set-viewpoint-camera" => {
                 let camera = find_viewpoint(&params.str("topicGuid"), &params.str("guid")).and_then(|viewpoint| viewpoint.camera.as_ref());
@@ -1154,15 +1143,15 @@ mod oracles {
                         (
                             "snapshot",
                             match snapshot {
-                                Some(bytes) => Json::String(hex_encode(bytes)),
+                                Some(bytes) => bytes_json(bytes),
                                 None => Json::Null,
                             },
                         ),
                     ]),
                 )
             }
-            other => spec(other, params.clone()),
-        }
+            other => return Err(format!("mutation kind {other:?} has no oracle inverse")),
+        }))
     }
     //#endregion 🔖️Inverse
 
@@ -1177,9 +1166,17 @@ mod oracles {
     /// its projection against the ORIGINAL input's own.
     pub fn apply_mutation_inverse(input: &[u8], kind: &str, params: &Json) -> Result<Vec<u8>, String> {
         let base = decode(input)?;
-        let inverse = inverse_spec(&base, kind, params);
         let mutated = apply_mutation(input, kind, params)?;
-        apply_mutation(&mutated, &inverse.str("kind"), &inverse.get("params").cloned().unwrap_or(Json::Null))
+        match inverse_spec(&base, kind, params)? {
+            Some(inverse) => apply_mutation(&mutated, &inverse.str("kind"), &inverse.get("params").cloned().unwrap_or(Json::Null)),
+            None => Ok(mutated),
+        }
+    }
+
+    /// 🔁️ The identity round trip's own producer: the `zip`+`quick-xml` composition decodes the archive and re-encodes it
+    /// from its own model alone.
+    pub fn round_trip(input: &[u8]) -> Result<Vec<u8>, String> {
+        encode(&decode(input)?)
     }
 
     //#region 🔖️Projection
@@ -1278,6 +1275,17 @@ pub fn oracle_apply_mutation_inverse(input: &[u8], spec: &Json) -> Result<Vec<u8
 #[cfg(feature = "oracles")]
 pub fn project_bcf_2_1(bytes: &[u8]) -> Result<Json, String> {
     oracles::project(bytes)
+}
+
+/// 🔁️ @see [`oracles::round_trip`].
+#[cfg(feature = "oracles")]
+pub fn oracle_round_trip(input: &[u8]) -> Result<Vec<u8>, String> {
+    oracles::round_trip(input)
+}
+
+#[cfg(not(feature = "oracles"))]
+pub fn oracle_round_trip(_input: &[u8]) -> Result<Vec<u8>, String> {
+    Err("the `oracles` feature is disabled — this host was not built with the registered reference implementations".to_string())
 }
 
 /// 🚫️ Without the `oracles` feature the reference implementations are not linked at all.

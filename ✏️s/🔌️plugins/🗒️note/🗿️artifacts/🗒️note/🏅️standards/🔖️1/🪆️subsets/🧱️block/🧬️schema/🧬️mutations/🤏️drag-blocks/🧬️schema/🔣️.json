@@ -5,22 +5,75 @@
   "type": "object",
   "additionalProperties": false,
   "required": [
+    "mutation",
     "dx",
     "dy",
     "ids"
   ],
   "properties": {
+    "mutation": {
+      "const": "dragBlocks"
+    },
     "ids": {
       "type": "array",
       "items": {
         "type": "string"
+      },
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Blocks",
+          "de": "Blöcke"
+        },
+        "description": {
+          "en": "Blocks to drag; missing ones are skipped.",
+          "de": "Zu ziehende Blöcke; fehlende werden übersprungen."
+        },
+        "ref": {
+          "kind": "block",
+          "domain": "blocks",
+          "granularity": "block"
+        },
+        "group": "target",
+        "order": 10
       }
     },
     "dx": {
-      "type": "number"
+      "type": "number",
+      "x-semio-ui": {
+        "widget": "stepper",
+        "role": "value",
+        "label": {
+          "en": "Offset X",
+          "de": "Versatz X"
+        },
+        "step": 1,
+        "precision": 1,
+        "snapSource": {
+          "snapshot": "/snapGridSpacing"
+        },
+        "group": "offset",
+        "order": 20
+      }
     },
     "dy": {
-      "type": "number"
+      "type": "number",
+      "x-semio-ui": {
+        "widget": "stepper",
+        "role": "value",
+        "label": {
+          "en": "Offset Y",
+          "de": "Versatz Y"
+        },
+        "step": 1,
+        "precision": 1,
+        "snapSource": {
+          "snapshot": "/snapGridSpacing"
+        },
+        "group": "offset",
+        "order": 30
+      }
     }
   }
 }

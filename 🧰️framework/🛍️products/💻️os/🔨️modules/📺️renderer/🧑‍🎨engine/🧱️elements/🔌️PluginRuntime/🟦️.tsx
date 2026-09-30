@@ -217,7 +217,7 @@ export type PluginWasmHandle = {
    * right now. */
   readonly ephemeralSnapshot?: (
     instanceId: number,
-  ) => Promise<{ readonly presence: readonly number[]; readonly presenceGeneration: number; readonly transientGeneration: number; readonly interaction: readonly number[] } | null>;
+  ) => Promise<{ readonly presence: readonly number[]; readonly presenceGeneration: number; readonly transientGeneration: number; readonly interaction: readonly number[]; readonly toolRun: readonly number[]; readonly historyEdit: readonly number[] } | null>;
   /** 👥️ Pushes the document-wide presence roster into this instance's plugin app — the ONLY plugin
    * ingress for peers (contract-freeze §C7.6). `ownColor` is this actor's own hub-assigned palette
    * index (`null` for a folder-only session with no hub); `peers` is the whole roster with the
@@ -270,9 +270,11 @@ export type PluginWasmHandle = {
    * so its final UI scope, history delta and host effects reach the shell HERE and nowhere else.
    * Returns the unsubscribe. */
   readonly subscribeOperationCompletions: (instanceId: number, listener: (completion: PluginOperationCompletion) => void) => () => void;
-  /** 🎞️ Subscribes to the `UiDirtyScope` a running operation asks the shell to refresh mid-operation (a tool run's live
-   * process). Best effort: the shell's refresh coalescer drops what it cannot keep up with. Returns the unsubscribe. */
-  readonly subscribeOperationProgress: (instanceId: number, listener: (uiScope: InvocationResponse["uiScope"]) => void) => () => void;
+  /** 🎞️ Subscribes to what a running operation hands the shell mid-operation: the `UiDirtyScope` to refresh (a tool run's
+   * live process) and the `HistoryPatch` a running history replay publishes (its stage and `done/total`), each absent
+   * when the frame carried none. Best effort: the shell's refresh coalescer drops what it cannot keep up with. Returns
+   * the unsubscribe. */
+  readonly subscribeOperationProgress: (instanceId: number, listener: (progress: { readonly uiScope?: InvocationResponse["uiScope"]; readonly historyPatch?: HistoryPatch }) => void) => () => void;
   /** 💼️ Fires (coalesced) while an Isolated spawned job of `instanceId` reports `step-job` progress — the
    * shell answers with a full refresh so surfaces adopting the job's retained output re-render as it advances. */
   readonly subscribeSpawnedJobProgress?: (instanceId: number, listener: () => void) => () => void;
@@ -4090,9 +4092,9 @@ export async function adaptPluginHandle(pluginId: string, lease: { readonly hand
     // the turn that produced it — a drain poll, or a refresh turn that advanced the operation — must not answer the progress
     // refresh it asks for, or the lane drops every later frame of a running tool run, its last one included.
     subscribeOperationProgress: (instanceId, listener) =>
-      requireChannel(instanceId).onOperationProgress((uiScope) => {
+      requireChannel(instanceId).onOperationProgress((progress) => {
         noteGuestIngressV1(instanceId);
-        listener(uiScope as InvocationResponse["uiScope"]);
+        listener(progress as { readonly uiScope?: InvocationResponse["uiScope"]; readonly historyPatch?: HistoryPatch });
       }),
     dispose: () => {
       if (disposal) return disposal;

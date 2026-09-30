@@ -5,11 +5,32 @@
   "type": "object",
   "additionalProperties": false,
   "required": [
+    "mutation",
     "id"
   ],
   "properties": {
+    "mutation": {
+      "const": "deleteGcp"
+    },
     "id": {
-      "type": "string"
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Ground Control Point",
+          "de": "Passpunkt"
+        },
+        "description": {
+          "en": "The ground control point to delete.",
+          "de": "Zu löschender Passpunkt."
+        },
+        "ref": {
+          "kind": "gcp"
+        },
+        "group": "target",
+        "order": 10
+      }
     }
   }
 }

@@ -25,10 +25,51 @@
     "bitDepth": {
       "type": "integer",
       "minimum": 0,
-      "maximum": 255
+      "maximum": 255,
+      "x-semio-ui": {
+        "widget": "stepper",
+        "label": {
+          "en": "Bit depth",
+          "de": "Bittiefe"
+        },
+        "description": {
+          "en": "Bits per sample or palette index (1, 2, 4, 8 or 16).",
+          "de": "Bits je Abtastwert oder Palettenindex (1, 2, 4, 8 oder 16)."
+        },
+        "unit": "bit"
+      }
     },
     "colorType": {
-      "$ref": "#/$defs/PngColorType"
+      "$ref": "#/$defs/PngColorType",
+      "x-semio-ui": {
+        "widget": "select",
+        "label": {
+          "en": "Color type",
+          "de": "Farbtyp"
+        },
+        "options": {
+          "grayscale": {
+            "en": "Grayscale",
+            "de": "Graustufen"
+          },
+          "rgb": {
+            "en": "RGB",
+            "de": "RGB"
+          },
+          "palette": {
+            "en": "Palette",
+            "de": "Palette"
+          },
+          "grayscaleAlpha": {
+            "en": "Grayscale with alpha",
+            "de": "Graustufen mit Alpha"
+          },
+          "rgba": {
+            "en": "RGB with alpha",
+            "de": "RGB mit Alpha"
+          }
+        }
+      }
     },
     "interlace": {
       "type": "boolean"

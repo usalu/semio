@@ -32,7 +32,7 @@
     "Envelope": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["mutationId", "documentId", "actor", "dependencies", "observed", "target", "diff", "inverse", "timestamp"],
+      "required": ["mutationId", "documentId", "actor", "dependencies", "observed", "target", "diff", "inverse", "timestamp", "transaction"],
       "properties": {
         "mutationId": { "type": "string" },
         "documentId": { "type": "string" },
@@ -61,6 +61,13 @@
             "physicalMs": { "type": "string", "pattern": "^(0|[1-9][0-9]{0,19})$" },
             "logical": { "type": "string", "pattern": "^(0|[1-9][0-9]{0,19})$" }
           }
+        },
+        "transaction": {
+          "oneOf": [
+            { "type": "null" },
+            { "type": "object", "additionalProperties": false, "required": ["id", "tool"], "properties": { "id": { "type": "string" }, "tool": { "type": "string" } } }
+          ],
+          "description": "The committed tool transaction that authored the operation: flag 0, or flag 1 then id and tool text, after the HLC."
         }
       }
     },

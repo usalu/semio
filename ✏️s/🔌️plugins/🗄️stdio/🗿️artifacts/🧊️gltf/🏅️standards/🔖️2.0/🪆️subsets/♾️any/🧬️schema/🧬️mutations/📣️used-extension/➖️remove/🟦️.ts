@@ -1,7 +1,13 @@
-/** 🦠️ remove-used-extension executable glTF command. */
-import type { GltfJson, GltfSnapshot } from '../../📸️snapshot/🟦️.ts';
-import { clone, reject, run, same, type GltfLeafResult, type GltfMutationRejection } from './🟦️';
-export const GltfWithdrawUsedExtensionDescriptor = { id: 's.stdio.gltf.mutation.remove-used-extension.v1', version: 1, touchedPaths: ["document/extensionsUsed"], referencePolicy: 'withdraw rejects an active requirement' } as const;
-export interface GltfWithdrawUsedExtensionPayload { extension: string }
-export const validateGltfWithdrawUsedExtension = (payload: GltfWithdrawUsedExtensionPayload, base: GltfSnapshot): GltfMutationRejection | undefined => { if (!base.document.extensionsUsed.includes(payload.extension)) return reject('gltf.mutation.extension-absent', 'document/extensionsUsed', 'extension is not declared'); if (base.document.extensionsRequired.includes(payload.extension)) return reject('gltf.mutation.extension-required', 'document/extensionsRequired', 'remove the requirement first'); return undefined; };
-export const applyGltfWithdrawUsedExtension = (base: GltfSnapshot, payload: GltfWithdrawUsedExtensionPayload): GltfLeafResult => run(base, payload, validateGltfWithdrawUsedExtension, (next, payload) => { next.document.extensionsUsed = next.document.extensionsUsed.filter(value => value !== payload.extension); });
+/** ➖️ `remove-used-extension` wire twin: the flat `Apply` payload `GltfWithdrawUsedExtensionPayload` and the phase wire `RemoveUsedExtensionMutation`, exactly as `./🦀️.rs` writes them.
+ * @see ./🧬️schema/🔣️.json */
+import { gltfWireObject, gltfWireRequired, gltfWireString } from "../../../📸️snapshot/🟦️.ts";
+import { type GltfDiff, type GltfPhase, gltfWirePhase, parseGltfDiff } from "../../../🔺️diff/🟦️.ts";
+
+export interface GltfWithdrawUsedExtensionPayload {
+  extension: string;
+}
+
+export type RemoveUsedExtensionMutation = GltfPhase<GltfWithdrawUsedExtensionPayload, GltfDiff>;
+
+export const parseGltfWithdrawUsedExtensionPayload = gltfWireObject<GltfWithdrawUsedExtensionPayload>({ extension: gltfWireRequired(gltfWireString) });
+export const parseRemoveUsedExtensionMutation = gltfWirePhase(parseGltfWithdrawUsedExtensionPayload, parseGltfDiff);

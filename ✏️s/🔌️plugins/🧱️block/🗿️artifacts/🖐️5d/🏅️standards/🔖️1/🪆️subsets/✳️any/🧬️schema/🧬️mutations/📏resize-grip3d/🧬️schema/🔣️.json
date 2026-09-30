@@ -5,15 +5,46 @@
   "type": "object",
   "additionalProperties": false,
   "required": [
+    "mutation",
     "id",
     "newRadius3d"
   ],
   "properties": {
+    "mutation": {
+      "const": "resizeGrip3d"
+    },
     "id": {
-      "type": "string"
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Grip",
+          "de": "Griff"
+        },
+        "ref": {
+          "kind": "grip",
+          "domain": "grip",
+          "granularity": "grip"
+        },
+        "group": "target",
+        "order": 10
+      }
     },
     "newRadius3d": {
-      "type": "number"
+      "type": "number",
+      "x-semio-ui": {
+        "widget": "stepper",
+        "role": "value",
+        "label": {
+          "en": "3D radius",
+          "de": "3D-Radius"
+        },
+        "step": 0.01,
+        "precision": 3,
+        "group": "geometry",
+        "order": 20
+      }
     }
   }
 }

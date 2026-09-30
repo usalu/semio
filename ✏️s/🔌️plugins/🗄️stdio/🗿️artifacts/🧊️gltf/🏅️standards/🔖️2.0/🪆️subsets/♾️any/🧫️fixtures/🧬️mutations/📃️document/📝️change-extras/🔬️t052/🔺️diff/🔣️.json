@@ -1,5 +1,8 @@
 {
   "extras": {
-    "exportedBy": "semio"
+    "state": "present",
+    "value": {
+      "exportedBy": "semio"
+    }
   }
 }

@@ -1,0 +1,212 @@
+{
+  "schema": "semio.framework.job-reconcile-fixture/v1",
+  "cases": [
+    {
+      "name": "request",
+      "kind": "request",
+      "value": {
+        "schema": "semio.framework.job-reconcile/v1",
+        "version": 1,
+        "requestId": "11111111111111111111111111111111"
+      },
+      "accepted": true
+    },
+    {
+      "name": "request-schema",
+      "kind": "request",
+      "value": {
+        "schema": "semio.hub.inference-job-reconcile/v1",
+        "version": 1,
+        "requestId": "11111111111111111111111111111111"
+      },
+      "accepted": false
+    },
+    {
+      "name": "request-version",
+      "kind": "request",
+      "value": {
+        "schema": "semio.framework.job-reconcile/v1",
+        "version": 2,
+        "requestId": "11111111111111111111111111111111"
+      },
+      "accepted": false
+    },
+    {
+      "name": "request-requestId",
+      "kind": "request",
+      "value": {
+        "schema": "semio.framework.job-reconcile/v1",
+        "version": 1,
+        "requestId": "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA"
+      },
+      "accepted": false
+    },
+    {
+      "name": "request-userId",
+      "kind": "request",
+      "value": {
+        "schema": "semio.framework.job-reconcile/v1",
+        "version": 1,
+        "requestId": "11111111111111111111111111111111",
+        "userId": "owner"
+      },
+      "accepted": false
+    },
+    {
+      "name": "missing-request-id",
+      "kind": "request",
+      "value": {
+        "schema": "semio.framework.job-reconcile/v1",
+        "version": 1
+      },
+      "accepted": false
+    },
+    {
+      "name": "found-neutral-payload",
+      "kind": "result",
+      "value": {
+        "schema": "semio.framework.job-reconcile-result/v1",
+        "version": 1,
+        "requestId": "11111111111111111111111111111111",
+        "found": true,
+        "job": {
+          "taskId": "task-1"
+        }
+      },
+      "accepted": true
+    },
+    {
+      "name": "found-empty-payload",
+      "kind": "result",
+      "value": {
+        "schema": "semio.framework.job-reconcile-result/v1",
+        "version": 1,
+        "requestId": "11111111111111111111111111111111",
+        "found": true,
+        "job": {}
+      },
+      "accepted": true
+    },
+    {
+      "name": "not-found",
+      "kind": "result",
+      "value": {
+        "schema": "semio.framework.job-reconcile-result/v1",
+        "version": 1,
+        "requestId": "11111111111111111111111111111111",
+        "found": false,
+        "job": null
+      },
+      "accepted": true
+    },
+    {
+      "name": "result-schema",
+      "kind": "result",
+      "value": {
+        "schema": "semio.hub.inference-job-reconcile-result/v1",
+        "version": 1,
+        "requestId": "11111111111111111111111111111111",
+        "found": true,
+        "job": {
+          "taskId": "task-1"
+        }
+      },
+      "accepted": false
+    },
+    {
+      "name": "result-version",
+      "kind": "result",
+      "value": {
+        "schema": "semio.framework.job-reconcile-result/v1",
+        "version": 2,
+        "requestId": "11111111111111111111111111111111",
+        "found": true,
+        "job": {
+          "taskId": "task-1"
+        }
+      },
+      "accepted": false
+    },
+    {
+      "name": "result-requestId",
+      "kind": "result",
+      "value": {
+        "schema": "semio.framework.job-reconcile-result/v1",
+        "version": 1,
+        "requestId": "1111111111111111111111111111111",
+        "found": true,
+        "job": {
+          "taskId": "task-1"
+        }
+      },
+      "accepted": false
+    },
+    {
+      "name": "result-found",
+      "kind": "result",
+      "value": {
+        "schema": "semio.framework.job-reconcile-result/v1",
+        "version": 1,
+        "requestId": "11111111111111111111111111111111",
+        "found": 0,
+        "job": {
+          "taskId": "task-1"
+        }
+      },
+      "accepted": false
+    },
+    {
+      "name": "result-job",
+      "kind": "result",
+      "value": {
+        "schema": "semio.framework.job-reconcile-result/v1",
+        "version": 1,
+        "requestId": "11111111111111111111111111111111",
+        "found": true,
+        "job": []
+      },
+      "accepted": false
+    },
+    {
+      "name": "result-authority",
+      "kind": "result",
+      "value": {
+        "schema": "semio.framework.job-reconcile-result/v1",
+        "version": 1,
+        "requestId": "11111111111111111111111111111111",
+        "found": true,
+        "job": {
+          "taskId": "task-1"
+        },
+        "authority": "server"
+      },
+      "accepted": false
+    },
+    {
+      "name": "not-found-with-job",
+      "kind": "result",
+      "value": {
+        "schema": "semio.framework.job-reconcile-result/v1",
+        "version": 1,
+        "requestId": "11111111111111111111111111111111",
+        "found": false,
+        "job": {
+          "taskId": "task-1"
+        }
+      },
+      "accepted": false
+    },
+    {
+      "name": "found-null",
+      "kind": "result",
+      "value": {
+        "schema": "semio.framework.job-reconcile-result/v1",
+        "version": 1,
+        "requestId": "11111111111111111111111111111111",
+        "found": true,
+        "job": null
+      },
+      "accepted": false
+    }
+  ]
+}

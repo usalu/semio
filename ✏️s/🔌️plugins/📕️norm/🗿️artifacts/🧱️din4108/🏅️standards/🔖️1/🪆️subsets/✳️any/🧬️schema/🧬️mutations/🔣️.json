@@ -1,48 +1,523 @@
 {
-  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/norm/din4108/mutations.json",
   "title": "Din4108Mutation",
-  "type": "object",
-  "required": [
-    "kind"
-  ],
-  "properties": {
-    "kind": {
-      "type": "string",
-      "enum": [
-        "change-climate-zone",
-        "change-usage",
-        "change-t-int-c",
-        "change-rh-int",
-        "change-airtightness-n50",
-        "change-has-mechanical-ventilation",
-        "change-bb2-details-conform",
-        "insert-zone",
-        "remove-zone",
-        "change-zone-floor-area",
-        "change-zone-heaviness",
-        "change-zone-night-ventilation",
-        "insert-zone-window",
-        "remove-zone-window",
-        "change-zone-window-area",
-        "change-zone-window-g-value",
-        "change-zone-window-shading-fc",
-        "insert-element",
-        "remove-element",
-        "change-element-area",
-        "change-element-adjacent",
-        "change-element-kind",
-        "insert-layer",
-        "remove-layer",
-        "reorder-layers",
-        "change-layer-thickness",
-        "change-layer-lambda",
-        "change-layer-mu",
-        "change-layer-material-id",
-        "insert-thermal-bridge",
-        "remove-thermal-bridge",
-        "change-thermal-bridge-psi",
-        "change-thermal-bridge-length"
-      ]
+  "oneOf": [
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "ChangeClimateZone"
+      ],
+      "properties": {
+        "ChangeClimateZone": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/din4108/mutation/change-climate-zone/schema.json"
+        }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "ChangeUsage"
+      ],
+      "properties": {
+        "ChangeUsage": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/din4108/mutation/change-usage/schema.json"
+        }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "ChangeTIntC"
+      ],
+      "properties": {
+        "ChangeTIntC": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/din4108/mutation/change-t-int-c/schema.json"
+        }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "ChangeRhInt"
+      ],
+      "properties": {
+        "ChangeRhInt": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/din4108/mutation/change-rh-int/schema.json"
+        }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "ChangeAirtightnessN50"
+      ],
+      "properties": {
+        "ChangeAirtightnessN50": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/din4108/mutation/change-airtightness-n50/schema.json"
+        }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "ChangeHasMechanicalVentilation"
+      ],
+      "properties": {
+        "ChangeHasMechanicalVentilation": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/din4108/mutation/change-has-mechanical-ventilation/schema.json"
+        }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "ChangeBb2DetailsConform"
+      ],
+      "properties": {
+        "ChangeBb2DetailsConform": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/din4108/mutation/change-bb2-details-conform/schema.json"
+        }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "InsertZone"
+      ],
+      "properties": {
+        "InsertZone": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/din4108/mutation/insert-zone/schema.json"
+        }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "RemoveZone"
+      ],
+      "properties": {
+        "RemoveZone": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/din4108/mutation/remove-zone/schema.json"
+        }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "ChangeZoneFloorArea"
+      ],
+      "properties": {
+        "ChangeZoneFloorArea": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/din4108/mutation/change-zone-floor-area/schema.json"
+        }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "ChangeZoneHeaviness"
+      ],
+      "properties": {
+        "ChangeZoneHeaviness": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/din4108/mutation/change-zone-heaviness/schema.json"
+        }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "ChangeZoneNightVentilation"
+      ],
+      "properties": {
+        "ChangeZoneNightVentilation": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/din4108/mutation/change-zone-night-ventilation/schema.json"
+        }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "InsertZoneWindow"
+      ],
+      "properties": {
+        "InsertZoneWindow": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/din4108/mutation/insert-zone-window/schema.json"
+        }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "RemoveZoneWindow"
+      ],
+      "properties": {
+        "RemoveZoneWindow": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/din4108/mutation/remove-zone-window/schema.json"
+        }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "ChangeZoneWindowArea"
+      ],
+      "properties": {
+        "ChangeZoneWindowArea": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/din4108/mutation/change-zone-window-area/schema.json"
+        }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "ChangeZoneWindowGValue"
+      ],
+      "properties": {
+        "ChangeZoneWindowGValue": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/din4108/mutation/change-zone-window-g-value/schema.json"
+        }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "ChangeZoneWindowShadingFc"
+      ],
+      "properties": {
+        "ChangeZoneWindowShadingFc": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/din4108/mutation/change-zone-window-shading-fc/schema.json"
+        }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "InsertElement"
+      ],
+      "properties": {
+        "InsertElement": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/din4108/mutation/insert-element/schema.json"
+        }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "RemoveElement"
+      ],
+      "properties": {
+        "RemoveElement": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/din4108/mutation/remove-element/schema.json"
+        }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "ChangeElementArea"
+      ],
+      "properties": {
+        "ChangeElementArea": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/din4108/mutation/change-element-area/schema.json"
+        }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "ChangeElementAdjacent"
+      ],
+      "properties": {
+        "ChangeElementAdjacent": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/din4108/mutation/change-element-adjacent/schema.json"
+        }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "ChangeElementKind"
+      ],
+      "properties": {
+        "ChangeElementKind": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/din4108/mutation/change-element-kind/schema.json"
+        }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "InsertLayer"
+      ],
+      "properties": {
+        "InsertLayer": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/din4108/mutation/insert-layer/schema.json"
+        }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "RemoveLayer"
+      ],
+      "properties": {
+        "RemoveLayer": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/din4108/mutation/remove-layer/schema.json"
+        }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "ReorderLayers"
+      ],
+      "properties": {
+        "ReorderLayers": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/din4108/mutation/reorder-layers/schema.json"
+        }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "ChangeLayerThickness"
+      ],
+      "properties": {
+        "ChangeLayerThickness": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/din4108/mutation/change-layer-thickness/schema.json"
+        }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "ChangeLayerLambda"
+      ],
+      "properties": {
+        "ChangeLayerLambda": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/din4108/mutation/change-layer-lambda/schema.json"
+        }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "ChangeLayerMu"
+      ],
+      "properties": {
+        "ChangeLayerMu": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/din4108/mutation/change-layer-mu/schema.json"
+        }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "ChangeLayerMaterialId"
+      ],
+      "properties": {
+        "ChangeLayerMaterialId": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/din4108/mutation/change-layer-material-id/schema.json"
+        }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "InsertThermalBridge"
+      ],
+      "properties": {
+        "InsertThermalBridge": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/din4108/mutation/insert-thermal-bridge/schema.json"
+        }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "RemoveThermalBridge"
+      ],
+      "properties": {
+        "RemoveThermalBridge": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/din4108/mutation/remove-thermal-bridge/schema.json"
+        }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "ChangeThermalBridgePsi"
+      ],
+      "properties": {
+        "ChangeThermalBridgePsi": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/din4108/mutation/change-thermal-bridge-psi/schema.json"
+        }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "ChangeThermalBridgeLength"
+      ],
+      "properties": {
+        "ChangeThermalBridgeLength": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/din4108/mutation/change-thermal-bridge-length/schema.json"
+        }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "ChangeElementOrientationDeg"
+      ],
+      "properties": {
+        "ChangeElementOrientationDeg": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/din4108/mutation/change-element-orientation-deg/schema.json"
+        }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "ChangeElementInclinationDeg"
+      ],
+      "properties": {
+        "ChangeElementInclinationDeg": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/din4108/mutation/change-element-inclination-deg/schema.json"
+        }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "ChangeElementDeltaUg"
+      ],
+      "properties": {
+        "ChangeElementDeltaUg": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/din4108/mutation/change-element-delta-ug/schema.json"
+        }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "ChangeElementDeltaUf"
+      ],
+      "properties": {
+        "ChangeElementDeltaUf": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/din4108/mutation/change-element-delta-uf/schema.json"
+        }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "ChangeElementDeltaUr"
+      ],
+      "properties": {
+        "ChangeElementDeltaUr": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/din4108/mutation/change-element-delta-ur/schema.json"
+        }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "ChangeThermalBridgeBb2Type"
+      ],
+      "properties": {
+        "ChangeThermalBridgeBb2Type": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/din4108/mutation/change-thermal-bridge-bb2-type/schema.json"
+        }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "ChangeZoneWindowOrientation"
+      ],
+      "properties": {
+        "ChangeZoneWindowOrientation": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/din4108/mutation/change-zone-window-orientation/schema.json"
+        }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "ChangeZoneWindowInclinationDeg"
+      ],
+      "properties": {
+        "ChangeZoneWindowInclinationDeg": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/din4108/mutation/change-zone-window-inclination-deg/schema.json"
+        }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "ChangeLayerApplicationType"
+      ],
+      "properties": {
+        "ChangeLayerApplicationType": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/din4108/mutation/change-layer-application-type/schema.json"
+        }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "ChangeLayerCompressiveClass"
+      ],
+      "properties": {
+        "ChangeLayerCompressiveClass": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/din4108/mutation/change-layer-compressive-class/schema.json"
+        }
+      }
     }
-  }
+  ]
 }

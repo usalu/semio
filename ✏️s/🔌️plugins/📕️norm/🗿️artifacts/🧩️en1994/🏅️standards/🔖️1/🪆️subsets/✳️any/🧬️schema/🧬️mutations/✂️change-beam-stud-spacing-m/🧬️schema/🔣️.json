@@ -10,10 +10,43 @@
   ],
   "properties": {
     "index": {
-      "type": "integer"
+      "type": "integer",
+      "minimum": 0,
+      "x-semio-ui": {
+        "widget": "stepper",
+        "role": "value",
+        "label": {
+          "en": "Composite beam",
+          "de": "Verbundträger"
+        },
+        "description": {
+          "en": "Zero-based position of the composite beam in its list.",
+          "de": "Nullbasierte Position des Verbundträgers in der Liste."
+        },
+        "step": 1,
+        "precision": 0,
+        "group": "target",
+        "order": 10
+      }
     },
     "newSpacingM": {
-      "type": "number"
+      "type": "number",
+      "exclusiveMinimum": 0,
+      "x-semio-ui": {
+        "widget": "stepper",
+        "role": "value",
+        "label": {
+          "en": "Headed stud spacing e_L",
+          "de": "Dübelabstand in Längsrichtung e_L"
+        },
+        "unit": "m",
+        "displayUnit": "mm",
+        "displayFactor": 1000,
+        "step": 0.005,
+        "precision": 0,
+        "group": "shear-connection",
+        "order": 20
+      }
     }
   }
 }

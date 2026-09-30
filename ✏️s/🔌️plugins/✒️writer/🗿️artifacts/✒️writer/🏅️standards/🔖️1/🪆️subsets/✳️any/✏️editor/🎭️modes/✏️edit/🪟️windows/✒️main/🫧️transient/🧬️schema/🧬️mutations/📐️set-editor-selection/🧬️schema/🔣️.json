@@ -4,22 +4,63 @@
   "title": "SetEditorSelection",
   "type": "object",
   "properties": {
+    "kind": {
+      "const": "set-editor-selection"
+    },
     "selection": {
       "anyOf": [
         { "type": "null" },
         {
           "type": "object",
           "properties": {
-            "start": { "type": "integer", "minimum": 0 },
-            "end": { "type": "integer", "minimum": 0 },
-            "splice": { "type": "integer", "minimum": 0 }
+            "start": {
+              "type": "integer",
+              "minimum": 0,
+              "x-semio-ui": {
+                "widget": "stepper",
+                "role": "value",
+                "label": { "en": "Start", "de": "Anfang" },
+                "description": { "en": "Anchor offset of the selection.", "de": "Ankerposition der Auswahl." },
+                "step": 1,
+                "precision": 0
+              }
+            },
+            "end": {
+              "type": "integer",
+              "minimum": 0,
+              "x-semio-ui": {
+                "widget": "stepper",
+                "role": "value",
+                "label": { "en": "End", "de": "Ende" },
+                "description": { "en": "Caret offset of the selection.", "de": "Position der Einfügemarke der Auswahl." },
+                "step": 1,
+                "precision": 0
+              }
+            },
+            "splice": {
+              "type": "integer",
+              "minimum": 0,
+              "x-semio-ui": {
+                "widget": "stepper",
+                "role": "value",
+                "label": { "en": "Applied Splice", "de": "Angewandter Eingriff" },
+                "description": { "en": "Sequence number of the last text splice this window applied; 0 for none.", "de": "Sequenznummer des zuletzt von diesem Fenster angewandten Texteingriffs; 0 für keinen." },
+                "step": 1,
+                "precision": 0
+              }
+            }
           },
           "required": ["start", "end", "splice"],
           "additionalProperties": false
         }
-      ]
+      ],
+      "x-semio-ui": {
+        "role": "value",
+        "label": { "en": "Selection", "de": "Auswahl" },
+        "description": { "en": "Text selection of this window; empty clears it.", "de": "Textauswahl dieses Fensters; leer hebt sie auf." }
+      }
     }
   },
-  "required": ["selection"],
+  "required": ["kind","selection"],
   "additionalProperties": false
 }

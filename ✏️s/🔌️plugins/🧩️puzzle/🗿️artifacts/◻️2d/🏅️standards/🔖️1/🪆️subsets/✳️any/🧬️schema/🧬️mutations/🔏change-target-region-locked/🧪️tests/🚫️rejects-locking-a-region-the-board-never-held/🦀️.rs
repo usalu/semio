@@ -11,11 +11,11 @@ use crate::standards::v1::subsets::any::schema::mutations::Puzzle2dMutation;
 use crate::standards::v1::subsets::any::schema::mutations::{apply_puzzle2d_mutation, inverse_puzzle2d_mutation};
 use crate::Puzzle2dSnapshot;
 
-const BEFORE: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🔏change-target-region-locked/🚫️rejects-locking-a-region-the-board-never-held/📸️snapshot/⬅️before/🔣️.json");
-const AFTER: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🔏change-target-region-locked/🚫️rejects-locking-a-region-the-board-never-held/📸️snapshot/➡️after/🔣️.json");
-const MUTATION: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🔏change-target-region-locked/🚫️rejects-locking-a-region-the-board-never-held/🦠️mutation/🔣️.json");
-const OUTCOME: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🔏change-target-region-locked/🚫️rejects-locking-a-region-the-board-never-held/🎯️outcome/🔣️.json");
-const DIFF_ABSENT: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🔏change-target-region-locked/🚫️rejects-locking-a-region-the-board-never-held/🔺️diff/🚫️.absent");
+const BEFORE: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🔏change-target-region-locked/🚫️rejects-locking-region-board-never-held/📸️snapshot/⬅️before/🔣️.json");
+const AFTER: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🔏change-target-region-locked/🚫️rejects-locking-region-board-never-held/📸️snapshot/➡️after/🔣️.json");
+const MUTATION: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🔏change-target-region-locked/🚫️rejects-locking-region-board-never-held/🦠️mutation/🔣️.json");
+const OUTCOME: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🔏change-target-region-locked/🚫️rejects-locking-region-board-never-held/🎯️outcome/🔣️.json");
+const DIFF_ABSENT: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🔏change-target-region-locked/🚫️rejects-locking-region-board-never-held/🔺️diff/🚫️.absent");
 
 fn before() -> Puzzle2dSnapshot {
     dsl::json::from_json_str(BEFORE).expect("before snapshot decodes")

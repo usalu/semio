@@ -417,14 +417,7 @@ fn every_chord_glyph_the_formatter_emits_rasterises() {
 fn a_confirm_dialogs_sheet_is_encoded_in_the_foreground_pass_over_a_blurred_scrim() {
     let theme = Theme::light();
     let mut shell = ShellState::new(Vec::new(), String::new());
-    shell.chrome_build.open_dialog(ChromeDialogRequest {
-        id: "confirm-1".into(),
-        title: "Delete?".into(),
-        body: "Sure?".into(),
-        confirm_label: "Delete".into(),
-        confirm_action: ActionDescriptor { controller_id: "test".into(), action: "delete".into(), args: None },
-        cancel_label: "Cancel".into(),
-    });
+    shell.chrome_build.open_dialog(ChromeDialogRequest::confirm("confirm-1", "Delete?", "delete"));
     let mut overlay = DrawList::default();
     let mut atlas = FontAtlas::builtin();
     let mut input = InputState::<ActionDescriptor>::default();

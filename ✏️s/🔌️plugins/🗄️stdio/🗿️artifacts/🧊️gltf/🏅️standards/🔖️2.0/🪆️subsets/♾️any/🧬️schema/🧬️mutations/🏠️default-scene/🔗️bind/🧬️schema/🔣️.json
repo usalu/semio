@@ -10,17 +10,60 @@
   "properties": {
     "scene": {
       "type": "integer",
-      "minimum": 0
+      "minimum": 0,
+      "x-semio-ui": {
+        "widget": "stepper",
+        "label": {
+          "en": "Scene",
+          "de": "Szene"
+        },
+        "description": {
+          "en": "Index of the scene, counted from 0.",
+          "de": "Index der Szene, ab 0 gezählt."
+        },
+        "precision": 0,
+        "group": "target",
+        "order": 10
+      }
     }
   },
-  "x-semio": {
-    "id": "s.stdio.gltf.mutation.bind-default-scene.v1",
-    "version": 1,
-    "phase": "mutation",
-    "touchedPaths": [
-      "document/scene"
-    ],
-    "referencePolicy": "validates one explicit scene reference"
-  },
-  "x-semio-mutation": "bind-default-scene"
+  "$defs": {
+    "BindDefaultSceneMutation": {
+      "description": "The whole wire of BindDefaultSceneMutation: the editable apply payload (this document's root) or the inert restore.",
+      "oneOf": [
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "phase",
+            "value"
+          ],
+          "properties": {
+            "phase": {
+              "const": "apply"
+            },
+            "value": {
+              "$ref": "#"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "phase",
+            "value"
+          ],
+          "properties": {
+            "phase": {
+              "const": "restore"
+            },
+            "value": {
+              "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/gltf/2.0/any/diff.json"
+            }
+          }
+        }
+      ]
+    }
+  }
 }

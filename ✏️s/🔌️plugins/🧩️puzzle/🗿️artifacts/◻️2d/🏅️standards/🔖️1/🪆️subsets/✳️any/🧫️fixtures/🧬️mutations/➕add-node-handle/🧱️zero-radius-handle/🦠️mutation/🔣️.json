@@ -1,0 +1,10 @@
+{
+  "handle": {
+    "angle": 0.5,
+    "id": "handle-new",
+    "radius": 0.0
+  },
+  "index": null,
+  "mutation": "addNodeHandle",
+  "nodeId": "node-a"
+}

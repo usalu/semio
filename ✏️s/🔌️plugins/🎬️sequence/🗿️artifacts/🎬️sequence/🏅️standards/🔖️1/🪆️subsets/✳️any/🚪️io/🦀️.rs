@@ -54,6 +54,11 @@ pub fn io() -> semio_framework_plugin::app::declarations::IoDeclaration {
 }
 //#endregion 🔖️IoDeclaration
 
+/// 📦️ Encodes the subset's native snapshot for host document loading.
+pub fn snapshot_pack(snapshot: &crate::SequenceSnapshot) -> Vec<u8> {
+    <crate::SequenceSnapshot as store::ArtifactPack>::encode_pack(snapshot)
+}
+
 #[cfg(test)]
 #[path = "🧪️tests/🔬️carrier-contract/🦀️.rs"]
 mod carrier_contract;

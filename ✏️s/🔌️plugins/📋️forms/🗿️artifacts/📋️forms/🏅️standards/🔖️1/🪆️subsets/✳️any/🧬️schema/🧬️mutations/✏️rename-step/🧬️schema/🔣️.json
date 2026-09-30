@@ -5,15 +5,48 @@
   "type": "object",
   "additionalProperties": false,
   "required": [
+    "mutation",
     "id",
-    "new_title"
+    "newTitle"
   ],
   "properties": {
-    "id": {
-      "type": "string"
+    "mutation": {
+      "const": "renameStep"
     },
-    "new_title": {
-      "type": "string"
+    "id": {
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Step",
+          "de": "Schritt"
+        },
+        "description": {
+          "en": "The form step this mutation addresses.",
+          "de": "Der Formularschritt, den diese Mutation adressiert."
+        },
+        "ref": {
+          "kind": "step",
+          "domain": "fields",
+          "granularity": "section"
+        },
+        "group": "target",
+        "order": 10
+      }
+    },
+    "newTitle": {
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "text",
+        "role": "value",
+        "label": {
+          "en": "Title",
+          "de": "Titel"
+        },
+        "group": "identity",
+        "order": 20
+      }
     }
   }
 }

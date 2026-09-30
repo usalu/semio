@@ -13,11 +13,11 @@ use crate::standards::v1::subsets::object::schema::mutations::SemioObjectMutatio
 use crate::standards::v1::subsets::object::schema::snapshot::SemioObjectSnapshot;
 use protocol::{Mutation, MutationDiff};
 
-const BEFORE: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🏷️create-properties/🏷️attaches-a-properties-child-to-an-object-that-has-none/📸️snapshot/⬅️before/🔣️.json");
-const AFTER: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🏷️create-properties/🏷️attaches-a-properties-child-to-an-object-that-has-none/📸️snapshot/➡️after/🔣️.json");
-const MUTATION: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🏷️create-properties/🏷️attaches-a-properties-child-to-an-object-that-has-none/🦠️mutation/🔣️.json");
-const DIFF: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🏷️create-properties/🏷️attaches-a-properties-child-to-an-object-that-has-none/🔺️diff/🔣️.json");
-const OUTCOME: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🏷️create-properties/🏷️attaches-a-properties-child-to-an-object-that-has-none/🎯️outcome/🔣️.json");
+const BEFORE: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🏷️create-properties/🏷️attaches-properties-child-object-has-none/📸️snapshot/⬅️before/🔣️.json");
+const AFTER: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🏷️create-properties/🏷️attaches-properties-child-object-has-none/📸️snapshot/➡️after/🔣️.json");
+const MUTATION: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🏷️create-properties/🏷️attaches-properties-child-object-has-none/🦠️mutation/🔣️.json");
+const DIFF: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🏷️create-properties/🏷️attaches-properties-child-object-has-none/🔺️diff/🔣️.json");
+const OUTCOME: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🏷️create-properties/🏷️attaches-properties-child-object-has-none/🎯️outcome/🔣️.json");
 
 fn before() -> SemioObjectSnapshot {
     dsl::json::from_json_str(BEFORE).expect("🏷️create-properties before snapshot decodes")

@@ -30,7 +30,7 @@ pub fn apply(payload: &GltfMoveSkinPayload, base: &GltfSnapshot) -> Result<GltfS
 
 //#region 🧬️DirectMutation
 #[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::MutationLeaf)]
-#[mutation_leaf(contract = ::protocol)]
+#[mutation_leaf(contract = ::protocol, payload = Apply)]
 #[value(tag = "phase", content = "value", rename_all = "camelCase")]
 pub enum MoveSkinMutation {
     Apply(GltfMoveSkinPayload),
@@ -74,6 +74,6 @@ impl protocol::MutationKind<GltfSnapshot, super::GltfMutation> for MoveSkinMutat
 
 //#region 🧪️Tests
 #[cfg(test)]
-#[path = "🧪️tests/🔬️direct-leaf/🦀️.rs"]
-mod direct_leaf_tests;
+#[path = "🧪️tests/🚚️swaps-the-two-skins-dddb3f/🦀️.rs"]
+mod case_swaps_the_two_skins_dddb3f;
 //#endregion 🧪️Tests

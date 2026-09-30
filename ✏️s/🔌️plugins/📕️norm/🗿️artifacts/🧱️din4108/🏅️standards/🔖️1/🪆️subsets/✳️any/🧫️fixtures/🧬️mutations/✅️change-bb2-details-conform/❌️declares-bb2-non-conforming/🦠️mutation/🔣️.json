@@ -1,1 +1,5 @@
-{"ChangeBb2DetailsConform":{"new_bb2_details_conform":false}}
+{
+  "ChangeBb2DetailsConform": {
+    "newBb2DetailsConform": false
+  }
+}

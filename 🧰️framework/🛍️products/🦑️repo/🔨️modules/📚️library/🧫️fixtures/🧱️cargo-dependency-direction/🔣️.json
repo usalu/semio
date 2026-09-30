@@ -1,0 +1,639 @@
+{
+  "schemaVersion": 1,
+  "policy": {
+    "areaLayers": {
+      "framework": "framework",
+      "implementation": "implementation",
+      "hub": "implementation"
+    },
+    "roles": [
+      "framework",
+      "product",
+      "hub",
+      "s-module",
+      "plugin",
+      "extension",
+      "tool",
+      "library",
+      "artifact",
+      "test"
+    ],
+    "rules": {
+      "cargo-framework-no-implementation-role": {
+        "fromRoles": [
+          "framework"
+        ],
+        "toRoles": [
+          "s-module",
+          "plugin",
+          "extension",
+          "hub"
+        ]
+      },
+      "cargo-modules-no-plugins": {
+        "fromRoles": [
+          "s-module"
+        ],
+        "toRoles": [
+          "plugin",
+          "extension"
+        ]
+      },
+      "cargo-plugins-no-extensions": {
+        "fromRoles": [
+          "plugin"
+        ],
+        "toRoles": [
+          "extension"
+        ]
+      }
+    }
+  },
+  "cases": [
+    {
+      "id": "semantic-kernel-peer",
+      "packages": [
+        {
+          "name": "neutral_source",
+          "owner": "framework/product",
+          "role": "product",
+          "dependencies": [
+            {
+              "name": "neutral_target",
+              "alias": "neutral_target",
+              "owner": "framework/os-kernel",
+              "kind": "normal",
+              "optional": false,
+              "platform": null
+            }
+          ]
+        },
+        {
+          "name": "neutral_target",
+          "owner": "framework/os-kernel",
+          "role": "framework",
+          "dependencies": []
+        }
+      ],
+      "violations": [],
+      "problems": []
+    },
+    {
+      "id": "upward-normal",
+      "packages": [
+        {
+          "name": "neutral_source",
+          "owner": "framework/source",
+          "role": "product",
+          "dependencies": [
+            {
+              "name": "neutral_target",
+              "alias": "neutral_target",
+              "owner": "implementation/plugin",
+              "kind": "normal",
+              "optional": false,
+              "platform": null
+            }
+          ]
+        },
+        {
+          "name": "neutral_target",
+          "owner": "implementation/plugin",
+          "role": "plugin",
+          "dependencies": []
+        }
+      ],
+      "violations": [
+        {
+          "rule": "cargo-framework-no-implementation",
+          "from": "framework/source",
+          "to": "implementation/plugin",
+          "alias": "neutral_target",
+          "kind": "normal",
+          "optional": false,
+          "platform": null
+        }
+      ],
+      "problems": []
+    },
+    {
+      "id": "upward-development-renamed",
+      "packages": [
+        {
+          "name": "neutral_source",
+          "owner": "framework/source",
+          "role": "framework",
+          "dependencies": [
+            {
+              "name": "neutral_target",
+              "alias": "fixture_alias",
+              "owner": "implementation/plugin",
+              "kind": "dev",
+              "optional": false,
+              "platform": null
+            }
+          ]
+        },
+        {
+          "name": "neutral_target",
+          "owner": "implementation/plugin",
+          "role": "plugin",
+          "dependencies": []
+        }
+      ],
+      "violations": [
+        {
+          "rule": "cargo-framework-no-implementation",
+          "from": "framework/source",
+          "to": "implementation/plugin",
+          "alias": "fixture_alias",
+          "kind": "dev",
+          "optional": false,
+          "platform": null
+        },
+        {
+          "rule": "cargo-framework-no-implementation-role",
+          "from": "framework/source",
+          "to": "implementation/plugin",
+          "alias": "fixture_alias",
+          "kind": "dev",
+          "optional": false,
+          "platform": null
+        }
+      ],
+      "problems": []
+    },
+    {
+      "id": "upward-build-optional-platform",
+      "packages": [
+        {
+          "name": "neutral_source",
+          "owner": "framework/source",
+          "role": "product",
+          "dependencies": [
+            {
+              "name": "neutral_target",
+              "alias": "neutral_target",
+              "owner": "implementation/plugin",
+              "kind": "build",
+              "optional": true,
+              "platform": "cfg(windows)"
+            }
+          ]
+        },
+        {
+          "name": "neutral_target",
+          "owner": "implementation/plugin",
+          "role": "plugin",
+          "dependencies": []
+        }
+      ],
+      "violations": [
+        {
+          "rule": "cargo-framework-no-implementation",
+          "from": "framework/source",
+          "to": "implementation/plugin",
+          "alias": "neutral_target",
+          "kind": "build",
+          "optional": true,
+          "platform": "cfg(windows)"
+        }
+      ],
+      "problems": []
+    },
+    {
+      "id": "implementation-downward",
+      "packages": [
+        {
+          "name": "neutral_source",
+          "owner": "implementation/plugin",
+          "role": "plugin",
+          "dependencies": [
+            {
+              "name": "neutral_target",
+              "alias": "neutral_target",
+              "owner": "framework/os-kernel",
+              "kind": "normal",
+              "optional": false,
+              "platform": null
+            }
+          ]
+        },
+        {
+          "name": "neutral_target",
+          "owner": "framework/os-kernel",
+          "role": "framework",
+          "dependencies": []
+        }
+      ],
+      "violations": [],
+      "problems": []
+    },
+    {
+      "id": "module-to-plugin",
+      "packages": [
+        {
+          "name": "neutral_source",
+          "owner": "implementation/module",
+          "role": "s-module",
+          "dependencies": [
+            {
+              "name": "neutral_target",
+              "alias": "neutral_target",
+              "owner": "implementation/plugin",
+              "kind": "normal",
+              "optional": false,
+              "platform": null
+            }
+          ]
+        },
+        {
+          "name": "neutral_target",
+          "owner": "implementation/plugin",
+          "role": "plugin",
+          "dependencies": []
+        }
+      ],
+      "violations": [
+        {
+          "rule": "cargo-modules-no-plugins",
+          "from": "implementation/module",
+          "to": "implementation/plugin",
+          "alias": "neutral_target",
+          "kind": "normal",
+          "optional": false,
+          "platform": null
+        }
+      ],
+      "problems": []
+    },
+    {
+      "id": "plugin-to-extension",
+      "packages": [
+        {
+          "name": "neutral_source",
+          "owner": "implementation/plugin",
+          "role": "plugin",
+          "dependencies": [
+            {
+              "name": "neutral_target",
+              "alias": "neutral_target",
+              "owner": "implementation/extension",
+              "kind": "normal",
+              "optional": false,
+              "platform": null
+            }
+          ]
+        },
+        {
+          "name": "neutral_target",
+          "owner": "implementation/extension",
+          "role": "extension",
+          "dependencies": []
+        }
+      ],
+      "violations": [
+        {
+          "rule": "cargo-plugins-no-extensions",
+          "from": "implementation/plugin",
+          "to": "implementation/extension",
+          "alias": "neutral_target",
+          "kind": "normal",
+          "optional": false,
+          "platform": null
+        }
+      ],
+      "problems": []
+    },
+    {
+      "id": "plugin-to-extension-development",
+      "packages": [
+        {
+          "name": "neutral_source",
+          "owner": "implementation/plugin",
+          "role": "plugin",
+          "dependencies": [
+            {
+              "name": "neutral_target",
+              "alias": "neutral_target",
+              "owner": "implementation/extension",
+              "kind": "dev",
+              "optional": false,
+              "platform": null
+            }
+          ]
+        },
+        {
+          "name": "neutral_target",
+          "owner": "implementation/extension",
+          "role": "extension",
+          "dependencies": []
+        }
+      ],
+      "violations": [
+        {
+          "rule": "cargo-plugins-no-extensions",
+          "from": "implementation/plugin",
+          "to": "implementation/extension",
+          "alias": "neutral_target",
+          "kind": "dev",
+          "optional": false,
+          "platform": null
+        }
+      ],
+      "problems": []
+    },
+    {
+      "id": "missing-source-role",
+      "packages": [
+        {
+          "name": "neutral_source",
+          "owner": "framework/source",
+          "role": null,
+          "dependencies": [
+            {
+              "name": "neutral_target",
+              "alias": "neutral_target",
+              "owner": "implementation/plugin",
+              "kind": "normal",
+              "optional": false,
+              "platform": null
+            }
+          ]
+        },
+        {
+          "name": "neutral_target",
+          "owner": "implementation/plugin",
+          "role": "plugin",
+          "dependencies": []
+        }
+      ],
+      "violations": [
+        {
+          "rule": "cargo-framework-no-implementation",
+          "from": "framework/source",
+          "to": "implementation/plugin",
+          "alias": "neutral_target",
+          "kind": "normal",
+          "optional": false,
+          "platform": null
+        }
+      ],
+      "problems": [
+        {
+          "code": "missing-role",
+          "owner": "framework/source"
+        }
+      ]
+    },
+    {
+      "id": "missing-target-role",
+      "packages": [
+        {
+          "name": "neutral_source",
+          "owner": "framework/source",
+          "role": "product",
+          "dependencies": [
+            {
+              "name": "neutral_target",
+              "alias": "neutral_target",
+              "owner": "implementation/plugin",
+              "kind": "normal",
+              "optional": false,
+              "platform": null
+            }
+          ]
+        },
+        {
+          "name": "neutral_target",
+          "owner": "implementation/plugin",
+          "role": null,
+          "dependencies": []
+        }
+      ],
+      "violations": [
+        {
+          "rule": "cargo-framework-no-implementation",
+          "from": "framework/source",
+          "to": "implementation/plugin",
+          "alias": "neutral_target",
+          "kind": "normal",
+          "optional": false,
+          "platform": null
+        }
+      ],
+      "problems": [
+        {
+          "code": "missing-role",
+          "owner": "implementation/plugin"
+        }
+      ]
+    },
+    {
+      "id": "unknown-role",
+      "packages": [
+        {
+          "name": "neutral_source",
+          "owner": "framework/source",
+          "role": "unclassified",
+          "dependencies": [
+            {
+              "name": "neutral_target",
+              "alias": "neutral_target",
+              "owner": "implementation/plugin",
+              "kind": "normal",
+              "optional": false,
+              "platform": null
+            }
+          ]
+        },
+        {
+          "name": "neutral_target",
+          "owner": "implementation/plugin",
+          "role": "plugin",
+          "dependencies": []
+        }
+      ],
+      "violations": [
+        {
+          "rule": "cargo-framework-no-implementation",
+          "from": "framework/source",
+          "to": "implementation/plugin",
+          "alias": "neutral_target",
+          "kind": "normal",
+          "optional": false,
+          "platform": null
+        }
+      ],
+      "problems": [
+        {
+          "code": "unknown-role",
+          "owner": "framework/source"
+        }
+      ]
+    },
+    {
+      "id": "external-same-name",
+      "packages": [
+        {
+          "name": "neutral_source",
+          "owner": "framework/source",
+          "role": "product",
+          "dependencies": [
+            {
+              "name": "neutral_target",
+              "alias": "neutral_target",
+              "owner": null,
+              "kind": "normal",
+              "optional": false,
+              "platform": null
+            }
+          ]
+        },
+        {
+          "name": "neutral_target",
+          "owner": "implementation/plugin",
+          "role": "plugin",
+          "dependencies": []
+        }
+      ],
+      "violations": [],
+      "problems": []
+    },
+    {
+      "id": "upward-hub",
+      "packages": [
+        {
+          "name": "neutral_source",
+          "owner": "framework/source",
+          "role": "product",
+          "dependencies": [
+            {
+              "name": "neutral_target",
+              "alias": "neutral_target",
+              "owner": "hub/server",
+              "kind": "normal",
+              "optional": false,
+              "platform": null
+            }
+          ]
+        },
+        {
+          "name": "neutral_target",
+          "owner": "hub/server",
+          "role": "hub",
+          "dependencies": []
+        }
+      ],
+      "violations": [
+        {
+          "rule": "cargo-framework-no-implementation",
+          "from": "framework/source",
+          "to": "hub/server",
+          "alias": "neutral_target",
+          "kind": "normal",
+          "optional": false,
+          "platform": null
+        }
+      ],
+      "problems": []
+    },
+    {
+      "id": "upward-optional-nonnative",
+      "packages": [
+        {
+          "name": "neutral_source",
+          "owner": "framework/source",
+          "role": "framework",
+          "dependencies": [
+            {
+              "name": "neutral_target",
+              "alias": "neutral_target",
+              "owner": "implementation/plugin",
+              "kind": "normal",
+              "optional": true,
+              "platform": "cfg(target_os = \"wasi\")"
+            }
+          ]
+        },
+        {
+          "name": "neutral_target",
+          "owner": "implementation/plugin",
+          "role": "plugin",
+          "dependencies": []
+        }
+      ],
+      "violations": [
+        {
+          "rule": "cargo-framework-no-implementation",
+          "from": "framework/source",
+          "to": "implementation/plugin",
+          "alias": "neutral_target",
+          "kind": "normal",
+          "optional": true,
+          "platform": "cfg(target_os = \"wasi\")"
+        },
+        {
+          "rule": "cargo-framework-no-implementation-role",
+          "from": "framework/source",
+          "to": "implementation/plugin",
+          "alias": "neutral_target",
+          "kind": "normal",
+          "optional": true,
+          "platform": "cfg(target_os = \"wasi\")"
+        }
+      ],
+      "problems": []
+    },
+    {
+      "id": "implicit-local-member",
+      "packages": [
+        {
+          "name": "neutral_source",
+          "owner": "framework/source",
+          "role": "product",
+          "dependencies": [
+            {
+              "name": "neutral_target",
+              "alias": "neutral_target",
+              "owner": "implementation/plugin",
+              "kind": "normal",
+              "optional": false,
+              "platform": null
+            }
+          ]
+        },
+        {
+          "name": "neutral_target",
+          "owner": "implementation/plugin",
+          "role": "plugin",
+          "dependencies": []
+        }
+      ],
+      "violations": [
+        {
+          "rule": "cargo-framework-no-implementation",
+          "from": "framework/source",
+          "to": "implementation/plugin",
+          "alias": "neutral_target",
+          "kind": "normal",
+          "optional": false,
+          "platform": null
+        }
+      ],
+      "problems": []
+    }
+  ],
+  "corruptions": [
+    "missing-package",
+    "missing-member",
+    "missing-local-target",
+    "missing-dependency",
+    "wrong-kind",
+    "wrong-platform",
+    "wrong-optional",
+    "wrong-role",
+    "duplicate-package",
+    "unclassified-owner"
+  ]
+}

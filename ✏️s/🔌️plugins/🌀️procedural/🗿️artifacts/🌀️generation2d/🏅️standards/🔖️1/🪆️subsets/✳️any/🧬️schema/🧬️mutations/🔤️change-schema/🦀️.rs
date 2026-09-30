@@ -10,6 +10,7 @@ use semio_framework_value_derive::{FromValue, ToValue};
 /// 🏷️ `change-schema` payload — the fixture's new schema id.
 #[derive(Clone, Debug, PartialEq, ToValue, FromValue, dsl::MutationLeaf)]
 #[mutation_leaf(contract = ::protocol)]
+#[value(rename_all = "camelCase")]
 pub struct ChangeSchema {
     pub schema: String,
 }

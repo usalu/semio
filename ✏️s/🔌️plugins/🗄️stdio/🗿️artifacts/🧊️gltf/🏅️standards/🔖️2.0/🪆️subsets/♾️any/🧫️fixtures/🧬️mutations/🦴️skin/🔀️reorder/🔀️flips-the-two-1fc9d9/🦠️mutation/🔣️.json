@@ -1,0 +1,12 @@
+{
+  "mutation": "reorderSkins",
+  "payload": {
+    "phase": "apply",
+    "value": {
+      "order": [
+        1,
+        0
+      ]
+    }
+  }
+}

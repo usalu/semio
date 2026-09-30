@@ -1,17 +1,42 @@
 {
-  "id": "s.stdio.gltf.mutation.move-texture.v1",
-  "version": 1,
-  "touchedPaths": [
-    "document/textures/0",
-    "document/textures/1"
-  ],
-  "payload": {
-    "index": 0,
-    "position": 1
+  "materials": {
+    "modified": [
+      {
+        "index": 0,
+        "diff": {
+          "pbrMetallicRoughness": {
+            "baseColorTexture": {
+              "index": 1
+            }
+          }
+        }
+      },
+      {
+        "index": 1,
+        "diff": {
+          "pbrMetallicRoughness": {
+            "baseColorTexture": {
+              "index": 0
+            }
+          }
+        }
+      }
+    ]
   },
-  "operation": {
-    "kind": "move",
-    "index": 0,
-    "position": 1
+  "textures": {
+    "modified": [
+      {
+        "index": 0,
+        "diff": {
+          "name": "normal"
+        }
+      },
+      {
+        "index": 1,
+        "diff": {
+          "name": "albedo"
+        }
+      }
+    ]
   }
 }

@@ -1,0 +1,16 @@
+{
+  "mutation": "changeMeshExtraData",
+  "payload": {
+    "phase": "apply",
+    "value": {
+      "mesh": 0,
+      "data": {
+        "state": "present",
+        "value": {
+          "author": "semio",
+          "revision": 2
+        }
+      }
+    }
+  }
+}

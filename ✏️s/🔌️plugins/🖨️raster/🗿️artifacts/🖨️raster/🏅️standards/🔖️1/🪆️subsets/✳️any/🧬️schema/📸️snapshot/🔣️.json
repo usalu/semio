@@ -16,7 +16,7 @@
     },
     "assets": {
       "type": "object",
-      "additionalProperties": { "$ref": "https://json.schemas.assets.semio-tech.com/os/store/child.json" },
+      "additionalProperties": { "$ref": "https://json.schemas.assets.semio-tech.com/os/store/child/schema.json" },
       "x-semio-state": "artifact",
       "x-semio-child-kind": "s.stdio.semio.image"
     }

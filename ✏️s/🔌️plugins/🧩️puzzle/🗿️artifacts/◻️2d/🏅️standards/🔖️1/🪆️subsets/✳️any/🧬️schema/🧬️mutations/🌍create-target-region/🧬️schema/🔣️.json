@@ -11,17 +11,54 @@
   ],
   "properties": {
     "mutation": {
-      "const": "createTargetRegion"
+      "const": "createTargetRegion",
+      "x-semio-ui": {
+        "widget": "hidden",
+        "role": "discriminator",
+        "label": {
+          "en": "Mutation",
+          "de": "Mutation"
+        }
+      }
     },
     "targetRegion": {
-      "$ref": "#/$defs/Puzzle2dTargetRegion"
+      "$ref": "#/$defs/Puzzle2dTargetRegion",
+      "x-semio-ui": {
+        "role": "value",
+        "label": {
+          "en": "Target region",
+          "de": "Zielregion"
+        },
+        "description": {
+          "en": "The complete target region record to add.",
+          "de": "Die vollständige hinzuzufügende Zielregion."
+        },
+        "group": "record",
+        "order": 10
+      }
     },
     "index": {
       "type": [
         "integer",
         "null"
       ],
-      "minimum": 0
+      "minimum": 0,
+      "x-semio-ui": {
+        "widget": "stepper",
+        "role": "value",
+        "label": {
+          "en": "Index",
+          "de": "Index"
+        },
+        "description": {
+          "en": "Position in the list; empty appends at the end.",
+          "de": "Position in der Liste; leer hängt am Ende an."
+        },
+        "step": 1,
+        "precision": 0,
+        "group": "order",
+        "order": 20
+      }
     }
   },
   "$defs": {
@@ -40,28 +77,132 @@
       ],
       "properties": {
         "id": {
-          "type": "string"
+          "type": "string",
+          "x-semio-ui": {
+            "widget": "text",
+            "role": "value",
+            "label": {
+              "en": "ID",
+              "de": "ID"
+            },
+            "description": {
+              "en": "Unique target region id on this board.",
+              "de": "Eindeutige Zielregions-ID auf diesem Brett."
+            },
+            "group": "identity",
+            "order": 10
+          }
         },
         "x": {
-          "type": "number"
+          "type": "number",
+          "x-semio-ui": {
+            "widget": "stepper",
+            "role": "value",
+            "label": {
+              "en": "X",
+              "de": "X"
+            },
+            "step": 1,
+            "precision": 2,
+            "snapSource": {
+              "config": "gridFactor"
+            },
+            "group": "position",
+            "order": 20
+          }
         },
         "y": {
-          "type": "number"
+          "type": "number",
+          "x-semio-ui": {
+            "widget": "stepper",
+            "role": "value",
+            "label": {
+              "en": "Y",
+              "de": "Y"
+            },
+            "step": 1,
+            "precision": 2,
+            "snapSource": {
+              "config": "gridFactor"
+            },
+            "group": "position",
+            "order": 30
+          }
         },
         "width": {
-          "type": "number"
+          "type": "number",
+          "x-semio-ui": {
+            "widget": "stepper",
+            "role": "value",
+            "label": {
+              "en": "Width",
+              "de": "Breite"
+            },
+            "step": 1,
+            "precision": 2,
+            "snapSource": {
+              "config": "gridFactor"
+            },
+            "group": "geometry",
+            "order": 40
+          }
         },
         "height": {
-          "type": "number"
+          "type": "number",
+          "x-semio-ui": {
+            "widget": "stepper",
+            "role": "value",
+            "label": {
+              "en": "Height",
+              "de": "Höhe"
+            },
+            "step": 1,
+            "precision": 2,
+            "snapSource": {
+              "config": "gridFactor"
+            },
+            "group": "geometry",
+            "order": 50
+          }
         },
         "label": {
-          "type": "string"
+          "type": "string",
+          "x-semio-ui": {
+            "widget": "text",
+            "role": "value",
+            "label": {
+              "en": "Label",
+              "de": "Beschriftung"
+            },
+            "group": "appearance",
+            "order": 60
+          }
         },
         "hidden": {
-          "type": "boolean"
+          "type": "boolean",
+          "x-semio-ui": {
+            "widget": "toggle",
+            "role": "value",
+            "label": {
+              "en": "Hidden",
+              "de": "Ausgeblendet"
+            },
+            "group": "state",
+            "order": 70
+          }
         },
         "locked": {
-          "type": "boolean"
+          "type": "boolean",
+          "x-semio-ui": {
+            "widget": "toggle",
+            "role": "value",
+            "label": {
+              "en": "Locked",
+              "de": "Gesperrt"
+            },
+            "group": "state",
+            "order": 80
+          }
         }
       }
     }

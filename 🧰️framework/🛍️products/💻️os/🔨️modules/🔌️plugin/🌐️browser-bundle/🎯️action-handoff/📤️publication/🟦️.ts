@@ -4,9 +4,10 @@ import { BROWSER_ACTOR_ACTION_MUTATION_MAXIMUM, BROWSER_ACTOR_ACTION_PACK_MAXIMU
 
 /** 🕰️ A pack-encoded `HistoryPatch` the guest published with a result, forwarded verbatim to the Shell's History projection. */
 export type BrowserActorHistoryPatchBytesV1 = readonly number[] | null;
-/** 👥️ The guest's own presence pack and declared-broadcast interaction slice, as its last `AppFrame::Ephemeral` carried
- * them (contract-freeze §C7.6) — what a presence heartbeat of the actor-bound document publishes for this human. */
-export type BrowserActorEphemeralSnapshotV1 = Readonly<{ presence: readonly number[]; presenceGeneration: number; transientGeneration: number; interaction: readonly number[] }>;
+/** 👥️ The guest's own presence pack, declared-broadcast interaction slice and tool-run and history-edit summaries, as its
+ * last `AppFrame::Ephemeral` carried them (contract-freeze §C7.6) — what a presence heartbeat of the actor-bound document
+ * publishes for this human. */
+export type BrowserActorEphemeralSnapshotV1 = Readonly<{ presence: readonly number[]; presenceGeneration: number; transientGeneration: number; interaction: readonly number[]; toolRun: readonly number[]; historyEdit: readonly number[] }>;
 export type BrowserActorUnsolicitedPublicationV1 =
   | { readonly kind: "ephemeral"; readonly snapshot: BrowserActorEphemeralSnapshotV1 }
   | { readonly kind: "merge-report" }
@@ -97,7 +98,7 @@ function projection(value: unknown): BrowserActorHostEffectV1 {
 }
 
 function ephemeralPublication(frame: Extract<ReturnType<typeof decodeAppFrame>, { readonly Ephemeral: unknown }>["Ephemeral"]): Extract<BrowserActorUnsolicitedPublicationV1, { readonly kind: "ephemeral" }> {
-  return { kind: "ephemeral", snapshot: { presence: Array.from(frame.presence), presenceGeneration: frame.presence_generation, transientGeneration: frame.transient_generation, interaction: Array.from(frame.interaction) } };
+  return { kind: "ephemeral", snapshot: { presence: Array.from(frame.presence), presenceGeneration: frame.presence_generation, transientGeneration: frame.transient_generation, interaction: Array.from(frame.interaction), toolRun: Array.from(frame.tool_run), historyEdit: Array.from(frame.history_edit) } };
 }
 
 /** 📬️ Accepts only ordinary, unsolicited intent completion frames, the `Ephemeral` snapshot every guest exchange appends

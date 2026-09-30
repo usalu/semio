@@ -1,12 +1,37 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/app/trinity/jack/results-window/transient/mutation/replace-query-result/schema.json",
   "title": "ReplaceJackResultsWindowQueryResult",
   "type": "object",
   "additionalProperties": false,
-  "required": ["executionId", "result", "error"],
+  "required": ["kind", "executionId", "result", "error"],
   "properties": {
-    "executionId": { "type": ["string", "null"] },
-    "result": { "type": ["object", "null"] },
-    "error": { "type": ["string", "null"] }
+    "kind": { "const": "replace-query-result" },
+    "executionId": {
+      "type": ["string", "null"],
+      "x-semio-ui": {
+        "widget": "text",
+        "role": "value",
+        "label": { "en": "Execution ID", "de": "Ausführungs-ID" },
+        "description": { "en": "Run that produced the result; empty before the first run.", "de": "Lauf, der das Ergebnis erzeugt hat; leer vor dem ersten Lauf." }
+      }
+    },
+    "result": {
+      "oneOf": [{ "$ref": "https://json.schemas.assets.semio-tech.com/s/trinity/jack/artifact.json#/$defs/QueryResult" }, { "type": "null" }],
+      "x-semio-ui": {
+        "role": "value",
+        "label": { "en": "Result", "de": "Ergebnis" },
+        "description": { "en": "Query result table; empty when the run failed.", "de": "Ergebnistabelle der Abfrage; leer, wenn der Lauf fehlschlug." }
+      }
+    },
+    "error": {
+      "type": ["string", "null"],
+      "x-semio-ui": {
+        "widget": "multiline",
+        "role": "value",
+        "label": { "en": "Error", "de": "Fehler" },
+        "description": { "en": "Error message of a failed run.", "de": "Fehlermeldung eines fehlgeschlagenen Laufs." }
+      }
+    }
   }
 }

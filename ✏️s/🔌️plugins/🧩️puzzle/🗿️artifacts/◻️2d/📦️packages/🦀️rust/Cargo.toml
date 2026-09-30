@@ -16,7 +16,7 @@ path = "../../🦀️.rs"
 
 [features]
 default = []
-component-app-assembly = ["semio-framework-plugin/component-guest", "dep:semio-framework-async", "dep:semio-framework-geometry", "dep:semio-framework-os-infinite", "dep:semio-framework-ui-contract", "dep:semio-framework-ui-scene", "dep:wasm-bindgen"]
+component-app-assembly = ["semio-framework-plugin/component-guest", "dep:machine", "dep:semio-framework-async", "dep:semio-framework-geometry", "dep:semio-framework-os-infinite", "dep:semio-framework-tool-machine", "dep:semio-framework-ui-contract", "dep:semio-framework-ui-scene", "dep:wasm-bindgen"]
 
 [dependencies]
 wasm-bindgen = { workspace = true, optional = true }
@@ -47,6 +47,10 @@ serde_json = { workspace = true }
 semio-framework-async = { workspace = true, optional = true }
 semio-framework-ui-contract = { workspace = true, optional = true }
 semio-framework-ui-scene = { workspace = true, optional = true }
+# 🛠️ The select tool is a `🔄️machine` statechart folded by the tool-machine runner; `statechart!` expands to
+# `machine::…`, so the kernel dependency carries that name.
+machine = { path = "../../../../../../../🧰️framework/🔨️modules/🔄️machine/📦️packages/🦀️rust", package = "semio-framework-machine", default-features = false, features = ["macros"], optional = true }
+semio-framework-tool-machine = { workspace = true, optional = true }
 
 [target.'cfg(all(target_arch = "wasm32", not(target_env = "p2")))'.dependencies]
 js-sys = { workspace = true }

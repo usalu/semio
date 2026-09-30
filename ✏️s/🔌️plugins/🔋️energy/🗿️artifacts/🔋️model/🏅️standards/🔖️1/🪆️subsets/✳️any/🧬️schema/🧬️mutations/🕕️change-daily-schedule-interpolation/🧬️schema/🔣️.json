@@ -5,18 +5,62 @@
   "type": "object",
   "additionalProperties": false,
   "required": [
+    "mutation",
     "id",
     "newInterpolation"
   ],
   "properties": {
+    "mutation": {
+      "const": "changeDailyScheduleInterpolation"
+    },
     "id": {
-      "type": "integer"
+      "type": "integer",
+      "minimum": 0,
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Daily schedule",
+          "de": "Tageszeitplan"
+        },
+        "description": {
+          "en": "The daily schedule this mutation changes, by id.",
+          "de": "Tageszeitplan, den diese Mutation ändert, per ID."
+        },
+        "ref": {
+          "kind": "dailySchedule",
+          "domain": "energyModel",
+          "granularity": "schedule"
+        },
+        "group": "target",
+        "order": 10
+      }
     },
     "newInterpolation": {
       "enum": [
         "Continuous",
         "Discrete"
-      ]
+      ],
+      "x-semio-ui": {
+        "widget": "segmented",
+        "role": "value",
+        "label": {
+          "en": "Interpolation",
+          "de": "Interpolation"
+        },
+        "options": {
+          "Continuous": {
+            "en": "Continuous",
+            "de": "Stetig"
+          },
+          "Discrete": {
+            "en": "Discrete",
+            "de": "Diskret"
+          }
+        },
+        "group": "values",
+        "order": 20
+      }
     }
   }
 }

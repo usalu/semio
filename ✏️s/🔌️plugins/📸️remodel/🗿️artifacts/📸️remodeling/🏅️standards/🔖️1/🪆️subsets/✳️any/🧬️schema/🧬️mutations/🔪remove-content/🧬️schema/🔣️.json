@@ -5,17 +5,54 @@
   "type": "object",
   "additionalProperties": false,
   "required": [
+    "mutation",
     "contentId",
     "from"
   ],
   "properties": {
+    "mutation": {
+      "const": "removeContent"
+    },
     "contentId": {
-      "type": "string"
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Content",
+          "de": "Inhalt"
+        },
+        "description": {
+          "en": "Durable content that is truncated.",
+          "de": "Dauerhafter Inhalt, der gekürzt wird."
+        },
+        "ref": {
+          "kind": "content"
+        },
+        "group": "target",
+        "order": 10
+      }
     },
     "from": {
       "type": "integer",
       "format": "uint64",
-      "minimum": 0
+      "minimum": 0,
+      "x-semio-ui": {
+        "widget": "stepper",
+        "role": "value",
+        "label": {
+          "en": "From Leaf Index",
+          "de": "Ab Blockindex"
+        },
+        "description": {
+          "en": "Leaves from this index on are removed.",
+          "de": "Blöcke ab diesem Index werden entfernt."
+        },
+        "step": 1,
+        "precision": 0,
+        "group": "media",
+        "order": 20
+      }
     }
   }
 }

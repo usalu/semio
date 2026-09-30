@@ -5,15 +5,44 @@
   "type": "object",
   "additionalProperties": false,
   "required": [
+    "mutation",
     "id",
     "newDefaultRopeKind"
   ],
   "properties": {
+    "mutation": {
+      "const": "changeGripKindDefaultRopeKind"
+    },
     "id": {
-      "type": "string"
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Grip kind",
+          "de": "Griffart"
+        },
+        "ref": {
+          "kind": "gripKind",
+          "domain": "grip",
+          "granularity": "gripKind"
+        },
+        "group": "target",
+        "order": 10
+      }
     },
     "newDefaultRopeKind": {
-      "type": "string"
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "text",
+        "role": "value",
+        "label": {
+          "en": "Default rope kind",
+          "de": "Standard-Seilart"
+        },
+        "group": "kind",
+        "order": 20
+      }
     }
   }
 }

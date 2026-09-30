@@ -4,25 +4,10 @@
   "title": "FlowMutation",
   "oneOf": [
     {
-      "$ref": "https://json.schemas.assets.semio-tech.com/s/flow/flow/mutation/connect-widgets/schema.json"
-    },
-    {
       "$ref": "https://json.schemas.assets.semio-tech.com/s/flow/flow/mutation/create-widget/schema.json"
     },
     {
       "$ref": "https://json.schemas.assets.semio-tech.com/s/flow/flow/mutation/delete-widget/schema.json"
-    },
-    {
-      "$ref": "https://json.schemas.assets.semio-tech.com/s/flow/flow/mutation/disconnect-widgets/schema.json"
-    },
-    {
-      "$ref": "https://json.schemas.assets.semio-tech.com/s/flow/flow/mutation/duplicate-widget/schema.json"
-    },
-    {
-      "$ref": "https://json.schemas.assets.semio-tech.com/s/flow/flow/mutation/move-widgets/schema.json"
-    },
-    {
-      "$ref": "https://json.schemas.assets.semio-tech.com/s/flow/flow/mutation/reorder-synapses/schema.json"
     },
     {
       "$ref": "https://json.schemas.assets.semio-tech.com/s/flow/flow/mutation/reorder-widgets/schema.json"
@@ -31,7 +16,22 @@
       "$ref": "https://json.schemas.assets.semio-tech.com/s/flow/flow/mutation/replace-widget/schema.json"
     },
     {
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/flow/flow/mutation/connect-widgets/schema.json"
+    },
+    {
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/flow/flow/mutation/disconnect-widgets/schema.json"
+    },
+    {
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/flow/flow/mutation/reorder-synapses/schema.json"
+    },
+    {
       "$ref": "https://json.schemas.assets.semio-tech.com/s/flow/flow/mutation/update-synapse-endpoints/schema.json"
+    },
+    {
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/flow/flow/mutation/move-widgets/schema.json"
+    },
+    {
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/flow/flow/mutation/duplicate-widget/schema.json"
     }
   ]
 }

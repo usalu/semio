@@ -5,23 +5,45 @@
   "type": "object",
   "additionalProperties": false,
   "required": [
+    "mutation",
     "path",
     "name"
   ],
   "properties": {
+    "mutation": {
+      "const": "setElementName",
+      "description": "Aggregate discriminator spliced in by HtmlMutation; absent when the payload stands alone."
+    },
     "path": {
       "type": "array",
       "items": {
         "type": "integer",
         "minimum": 0
+      },
+      "x-semio-ui": {
+        "label": {
+          "en": "Node path",
+          "de": "Knotenpfad"
+        },
+        "description": {
+          "en": "Child indices from the document root to the node.",
+          "de": "Kindindizes vom Dokumentstamm bis zum Knoten."
+        },
+        "group": "target",
+        "order": 10
       }
     },
     "name": {
-      "type": "string"
-    },
-    "mutation": {
-      "const": "setElementName",
-      "description": "Aggregate discriminator spliced in by HtmlMutation; absent when the payload stands alone."
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "text",
+        "label": {
+          "en": "Tag name",
+          "de": "Elementname"
+        },
+        "group": "value",
+        "order": 20
+      }
     }
   }
 }

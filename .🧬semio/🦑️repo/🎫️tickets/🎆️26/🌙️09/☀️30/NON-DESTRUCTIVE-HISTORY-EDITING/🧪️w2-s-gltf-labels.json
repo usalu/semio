@@ -1,0 +1,1463 @@
+{
+  "GltfDiff.scene": {
+    "label": {
+      "en": "Default scene",
+      "de": "Standardszene"
+    }
+  },
+  "GltfDiff.scenes": {
+    "label": {
+      "en": "Scenes",
+      "de": "Szenen"
+    }
+  },
+  "GltfDiff.nodes": {
+    "label": {
+      "en": "Nodes",
+      "de": "Knoten"
+    }
+  },
+  "GltfDiff.meshes": {
+    "label": {
+      "en": "Meshes",
+      "de": "Netze"
+    }
+  },
+  "GltfDiff.accessors": {
+    "label": {
+      "en": "Accessors",
+      "de": "Accessoren"
+    }
+  },
+  "GltfDiff.bufferViews": {
+    "label": {
+      "en": "Buffer views",
+      "de": "Pufferansichten"
+    }
+  },
+  "GltfDiff.buffers": {
+    "label": {
+      "en": "Buffers",
+      "de": "Puffer"
+    }
+  },
+  "GltfDiff.bufferBytes": {
+    "label": {
+      "en": "Buffer bytes",
+      "de": "Pufferbytes"
+    }
+  },
+  "GltfDiff.materials": {
+    "label": {
+      "en": "Materials",
+      "de": "Materialien"
+    }
+  },
+  "GltfDiff.textures": {
+    "label": {
+      "en": "Textures",
+      "de": "Texturen"
+    }
+  },
+  "GltfDiff.images": {
+    "label": {
+      "en": "Images",
+      "de": "Bilder"
+    }
+  },
+  "GltfDiff.samplers": {
+    "label": {
+      "en": "Texture samplers",
+      "de": "Textur-Sampler"
+    }
+  },
+  "GltfDiff.skins": {
+    "label": {
+      "en": "Skins",
+      "de": "Skins"
+    }
+  },
+  "GltfDiff.animations": {
+    "label": {
+      "en": "Animations",
+      "de": "Animationen"
+    }
+  },
+  "GltfDiff.cameras": {
+    "label": {
+      "en": "Cameras",
+      "de": "Kameras"
+    }
+  },
+  "GltfDiff.extensionsUsed": {
+    "label": {
+      "en": "Extensions used",
+      "de": "Verwendete Erweiterungen"
+    }
+  },
+  "GltfDiff.extensionsRequired": {
+    "label": {
+      "en": "Extensions required",
+      "de": "Erforderliche Erweiterungen"
+    }
+  },
+  "GltfDiff.extensions": {
+    "label": {
+      "en": "Extensions",
+      "de": "Erweiterungen"
+    }
+  },
+  "GltfDiff.extras": {
+    "label": {
+      "en": "Extras",
+      "de": "Zusatzdaten (extras)"
+    }
+  },
+  "GltfDiff.sourceForm": {
+    "label": {
+      "en": "Source form",
+      "de": "Quellformat"
+    }
+  },
+  "GltfAssetDiff.generator": {
+    "label": {
+      "en": "Generator",
+      "de": "Generator"
+    },
+    "description": {
+      "en": "Tool that produced the asset.",
+      "de": "Werkzeug, das das Asset erzeugt hat."
+    }
+  },
+  "GltfAssetDiff.copyright": {
+    "label": {
+      "en": "Copyright",
+      "de": "Urheberrechtsvermerk"
+    }
+  },
+  "GltfAssetDiff.minVersion": {
+    "label": {
+      "en": "Minimum version",
+      "de": "Mindestversion"
+    },
+    "description": {
+      "en": "Minimum glTF version a loader must support.",
+      "de": "glTF-Mindestversion, die ein Lader unterstützen muss."
+    }
+  },
+  "GltfAssetDiff.extensions": {
+    "label": {
+      "en": "Extensions",
+      "de": "Erweiterungen"
+    }
+  },
+  "GltfAssetDiff.extras": {
+    "label": {
+      "en": "Extras",
+      "de": "Zusatzdaten (extras)"
+    }
+  },
+  "GltfSceneDiff.nodes": {
+    "label": {
+      "en": "Root nodes",
+      "de": "Wurzelknoten"
+    }
+  },
+  "GltfSceneDiff.extensions": {
+    "label": {
+      "en": "Extensions",
+      "de": "Erweiterungen"
+    }
+  },
+  "GltfSceneDiff.extras": {
+    "label": {
+      "en": "Extras",
+      "de": "Zusatzdaten (extras)"
+    }
+  },
+  "GltfScene.nodes": {
+    "label": {
+      "en": "Root nodes",
+      "de": "Wurzelknoten"
+    }
+  },
+  "GltfScene.extensions": {
+    "label": {
+      "en": "Extensions",
+      "de": "Erweiterungen"
+    }
+  },
+  "GltfScene.extras": {
+    "label": {
+      "en": "Extras",
+      "de": "Zusatzdaten (extras)"
+    }
+  },
+  "GltfNodeDiff.children": {
+    "label": {
+      "en": "Children",
+      "de": "Kindknoten"
+    }
+  },
+  "GltfNodeDiff.mesh": {
+    "label": {
+      "en": "Mesh",
+      "de": "Netz"
+    },
+    "description": {
+      "en": "Index of the mesh, counted from 0.",
+      "de": "Index des Netzes, ab 0 gezählt."
+    }
+  },
+  "GltfNodeDiff.camera": {
+    "label": {
+      "en": "Camera",
+      "de": "Kamera"
+    },
+    "description": {
+      "en": "Index of the camera, counted from 0.",
+      "de": "Index der Kamera, ab 0 gezählt."
+    }
+  },
+  "GltfNodeDiff.skin": {
+    "label": {
+      "en": "Skin",
+      "de": "Skin"
+    },
+    "description": {
+      "en": "Index of the skin, counted from 0.",
+      "de": "Index des Skins, ab 0 gezählt."
+    }
+  },
+  "GltfNodeDiff.matrix": {
+    "label": {
+      "en": "Matrix",
+      "de": "Matrix"
+    },
+    "description": {
+      "en": "4×4 transform, column-major.",
+      "de": "4×4-Transformationsmatrix, spaltenweise."
+    }
+  },
+  "GltfNodeDiff.translation": {
+    "label": {
+      "en": "Translation",
+      "de": "Verschiebung"
+    }
+  },
+  "GltfNodeDiff.rotation": {
+    "label": {
+      "en": "Rotation",
+      "de": "Drehung"
+    },
+    "description": {
+      "en": "Unit quaternion (x, y, z, w).",
+      "de": "Einheitsquaternion (x, y, z, w)."
+    }
+  },
+  "GltfNodeDiff.scale": {
+    "label": {
+      "en": "Scale",
+      "de": "Skalierung"
+    }
+  },
+  "GltfNodeDiff.weights": {
+    "label": {
+      "en": "Morph weights",
+      "de": "Morph-Gewichte"
+    }
+  },
+  "GltfNodeDiff.extensions": {
+    "label": {
+      "en": "Extensions",
+      "de": "Erweiterungen"
+    }
+  },
+  "GltfNodeDiff.extras": {
+    "label": {
+      "en": "Extras",
+      "de": "Zusatzdaten (extras)"
+    }
+  },
+  "GltfNode.children": {
+    "label": {
+      "en": "Children",
+      "de": "Kindknoten"
+    }
+  },
+  "GltfNode.mesh": {
+    "label": {
+      "en": "Mesh",
+      "de": "Netz"
+    },
+    "description": {
+      "en": "Index of the mesh, counted from 0.",
+      "de": "Index des Netzes, ab 0 gezählt."
+    }
+  },
+  "GltfNode.camera": {
+    "label": {
+      "en": "Camera",
+      "de": "Kamera"
+    },
+    "description": {
+      "en": "Index of the camera, counted from 0.",
+      "de": "Index der Kamera, ab 0 gezählt."
+    }
+  },
+  "GltfNode.skin": {
+    "label": {
+      "en": "Skin",
+      "de": "Skin"
+    },
+    "description": {
+      "en": "Index of the skin, counted from 0.",
+      "de": "Index des Skins, ab 0 gezählt."
+    }
+  },
+  "GltfNode.matrix": {
+    "label": {
+      "en": "Matrix",
+      "de": "Matrix"
+    },
+    "description": {
+      "en": "4×4 transform, column-major.",
+      "de": "4×4-Transformationsmatrix, spaltenweise."
+    }
+  },
+  "GltfNode.translation": {
+    "label": {
+      "en": "Translation",
+      "de": "Verschiebung"
+    }
+  },
+  "GltfNode.rotation": {
+    "label": {
+      "en": "Rotation",
+      "de": "Drehung"
+    },
+    "description": {
+      "en": "Unit quaternion (x, y, z, w).",
+      "de": "Einheitsquaternion (x, y, z, w)."
+    }
+  },
+  "GltfNode.scale": {
+    "label": {
+      "en": "Scale",
+      "de": "Skalierung"
+    }
+  },
+  "GltfNode.weights": {
+    "label": {
+      "en": "Morph weights",
+      "de": "Morph-Gewichte"
+    }
+  },
+  "GltfNode.extensions": {
+    "label": {
+      "en": "Extensions",
+      "de": "Erweiterungen"
+    }
+  },
+  "GltfNode.extras": {
+    "label": {
+      "en": "Extras",
+      "de": "Zusatzdaten (extras)"
+    }
+  },
+  "GltfMeshDiff.primitives": {
+    "label": {
+      "en": "Primitives",
+      "de": "Primitive"
+    }
+  },
+  "GltfMeshDiff.weights": {
+    "label": {
+      "en": "Morph weights",
+      "de": "Morph-Gewichte"
+    }
+  },
+  "GltfMeshDiff.extensions": {
+    "label": {
+      "en": "Extensions",
+      "de": "Erweiterungen"
+    }
+  },
+  "GltfMeshDiff.extras": {
+    "label": {
+      "en": "Extras",
+      "de": "Zusatzdaten (extras)"
+    }
+  },
+  "GltfPrimitive.attributes": {
+    "label": {
+      "en": "Vertex attributes",
+      "de": "Vertexattribute"
+    },
+    "description": {
+      "en": "Attribute semantic to accessor index.",
+      "de": "Attributsemantik zu Accessor-Index."
+    }
+  },
+  "GltfPrimitive.indices": {
+    "label": {
+      "en": "Index accessor",
+      "de": "Index-Accessor"
+    }
+  },
+  "GltfPrimitive.material": {
+    "label": {
+      "en": "Material",
+      "de": "Material"
+    },
+    "description": {
+      "en": "Index of the material, counted from 0.",
+      "de": "Index des Materials, ab 0 gezählt."
+    }
+  },
+  "GltfPrimitive.mode": {
+    "label": {
+      "en": "Topology mode",
+      "de": "Topologiemodus"
+    },
+    "description": {
+      "en": "0 points, 1 lines, 2 line loop, 3 line strip, 4 triangles, 5 triangle strip, 6 triangle fan.",
+      "de": "0 Punkte, 1 Linien, 2 Linienschleife, 3 Linienzug, 4 Dreiecke, 5 Dreiecksstreifen, 6 Dreiecksfächer."
+    }
+  },
+  "GltfPrimitive.targets": {
+    "label": {
+      "en": "Morph targets",
+      "de": "Morph-Ziele"
+    }
+  },
+  "GltfPrimitive.extensions": {
+    "label": {
+      "en": "Extensions",
+      "de": "Erweiterungen"
+    }
+  },
+  "GltfPrimitive.extras": {
+    "label": {
+      "en": "Extras",
+      "de": "Zusatzdaten (extras)"
+    }
+  },
+  "GltfMesh.primitives": {
+    "label": {
+      "en": "Primitives",
+      "de": "Primitive"
+    }
+  },
+  "GltfMesh.weights": {
+    "label": {
+      "en": "Morph weights",
+      "de": "Morph-Gewichte"
+    }
+  },
+  "GltfMesh.extensions": {
+    "label": {
+      "en": "Extensions",
+      "de": "Erweiterungen"
+    }
+  },
+  "GltfMesh.extras": {
+    "label": {
+      "en": "Extras",
+      "de": "Zusatzdaten (extras)"
+    }
+  },
+  "GltfAccessorDiff.bufferView": {
+    "label": {
+      "en": "Buffer view",
+      "de": "Pufferansicht"
+    }
+  },
+  "GltfAccessorDiff.byteOffset": {
+    "label": {
+      "en": "Byte offset",
+      "de": "Byte-Versatz"
+    },
+    "unit": "B"
+  },
+  "GltfAccessorDiff.componentType": {
+    "label": {
+      "en": "Component type",
+      "de": "Komponententyp"
+    }
+  },
+  "GltfAccessorDiff.normalized": {
+    "label": {
+      "en": "Normalized",
+      "de": "Normalisiert"
+    }
+  },
+  "GltfAccessorDiff.count": {
+    "label": {
+      "en": "Element count",
+      "de": "Elementanzahl"
+    }
+  },
+  "GltfAccessorDiff.kind": {
+    "label": {
+      "en": "Element type",
+      "de": "Elementtyp"
+    }
+  },
+  "GltfAccessorDiff.max": {
+    "label": {
+      "en": "Maximum",
+      "de": "Maximum"
+    },
+    "description": {
+      "en": "Per-component maximum.",
+      "de": "Maximum je Komponente."
+    }
+  },
+  "GltfAccessorDiff.min": {
+    "label": {
+      "en": "Minimum",
+      "de": "Minimum"
+    },
+    "description": {
+      "en": "Per-component minimum.",
+      "de": "Minimum je Komponente."
+    }
+  },
+  "GltfAccessorDiff.sparse": {
+    "label": {
+      "en": "Sparse storage",
+      "de": "Sparse-Speicherung"
+    }
+  },
+  "GltfAccessorDiff.extensions": {
+    "label": {
+      "en": "Extensions",
+      "de": "Erweiterungen"
+    }
+  },
+  "GltfAccessorDiff.extras": {
+    "label": {
+      "en": "Extras",
+      "de": "Zusatzdaten (extras)"
+    }
+  },
+  "GltfComponentType": {
+    "options": {
+      "Byte": {
+        "en": "Byte (signed 8-bit)",
+        "de": "Byte (8 Bit, vorzeichenbehaftet)"
+      },
+      "UnsignedByte": {
+        "en": "Unsigned byte (8-bit)",
+        "de": "Byte (8 Bit, vorzeichenlos)"
+      },
+      "Short": {
+        "en": "Short (signed 16-bit)",
+        "de": "Short (16 Bit, vorzeichenbehaftet)"
+      },
+      "UnsignedShort": {
+        "en": "Unsigned short (16-bit)",
+        "de": "Short (16 Bit, vorzeichenlos)"
+      },
+      "UnsignedInt": {
+        "en": "Unsigned int (32-bit)",
+        "de": "Integer (32 Bit, vorzeichenlos)"
+      },
+      "Float": {
+        "en": "Float (32-bit)",
+        "de": "Gleitkommazahl (32 Bit)"
+      }
+    }
+  },
+  "GltfAccessorType": {
+    "options": {
+      "Scalar": {
+        "en": "Scalar",
+        "de": "Skalar"
+      },
+      "Vec2": {
+        "en": "2D vector",
+        "de": "2D-Vektor"
+      },
+      "Vec3": {
+        "en": "3D vector",
+        "de": "3D-Vektor"
+      },
+      "Vec4": {
+        "en": "4D vector",
+        "de": "4D-Vektor"
+      },
+      "Mat2": {
+        "en": "2×2 matrix",
+        "de": "2×2-Matrix"
+      },
+      "Mat3": {
+        "en": "3×3 matrix",
+        "de": "3×3-Matrix"
+      },
+      "Mat4": {
+        "en": "4×4 matrix",
+        "de": "4×4-Matrix"
+      }
+    }
+  },
+  "GltfSparseAccessor.count": {
+    "label": {
+      "en": "Sparse element count",
+      "de": "Anzahl der Sparse-Elemente"
+    }
+  },
+  "GltfSparseAccessor.indices": {
+    "label": {
+      "en": "Sparse indices",
+      "de": "Sparse-Indizes"
+    }
+  },
+  "GltfSparseAccessor.values": {
+    "label": {
+      "en": "Sparse values",
+      "de": "Sparse-Werte"
+    }
+  },
+  "GltfSparseIndices.bufferView": {
+    "label": {
+      "en": "Buffer view",
+      "de": "Pufferansicht"
+    }
+  },
+  "GltfSparseIndices.byteOffset": {
+    "label": {
+      "en": "Byte offset",
+      "de": "Byte-Versatz"
+    },
+    "unit": "B"
+  },
+  "GltfSparseIndices.componentType": {
+    "label": {
+      "en": "Component type",
+      "de": "Komponententyp"
+    }
+  },
+  "GltfSparseValues.bufferView": {
+    "label": {
+      "en": "Buffer view",
+      "de": "Pufferansicht"
+    }
+  },
+  "GltfSparseValues.byteOffset": {
+    "label": {
+      "en": "Byte offset",
+      "de": "Byte-Versatz"
+    },
+    "unit": "B"
+  },
+  "GltfAccessor.bufferView": {
+    "label": {
+      "en": "Buffer view",
+      "de": "Pufferansicht"
+    }
+  },
+  "GltfAccessor.byteOffset": {
+    "label": {
+      "en": "Byte offset",
+      "de": "Byte-Versatz"
+    },
+    "unit": "B"
+  },
+  "GltfAccessor.componentType": {
+    "label": {
+      "en": "Component type",
+      "de": "Komponententyp"
+    }
+  },
+  "GltfAccessor.normalized": {
+    "label": {
+      "en": "Normalized",
+      "de": "Normalisiert"
+    }
+  },
+  "GltfAccessor.count": {
+    "label": {
+      "en": "Element count",
+      "de": "Elementanzahl"
+    }
+  },
+  "GltfAccessor.type": {
+    "label": {
+      "en": "Element type",
+      "de": "Elementtyp"
+    }
+  },
+  "GltfAccessor.max": {
+    "label": {
+      "en": "Maximum",
+      "de": "Maximum"
+    },
+    "description": {
+      "en": "Per-component maximum.",
+      "de": "Maximum je Komponente."
+    }
+  },
+  "GltfAccessor.min": {
+    "label": {
+      "en": "Minimum",
+      "de": "Minimum"
+    },
+    "description": {
+      "en": "Per-component minimum.",
+      "de": "Minimum je Komponente."
+    }
+  },
+  "GltfAccessor.sparse": {
+    "label": {
+      "en": "Sparse storage",
+      "de": "Sparse-Speicherung"
+    }
+  },
+  "GltfAccessor.extensions": {
+    "label": {
+      "en": "Extensions",
+      "de": "Erweiterungen"
+    }
+  },
+  "GltfAccessor.extras": {
+    "label": {
+      "en": "Extras",
+      "de": "Zusatzdaten (extras)"
+    }
+  },
+  "GltfBufferView.buffer": {
+    "label": {
+      "en": "Buffer",
+      "de": "Puffer"
+    },
+    "description": {
+      "en": "Index of the buffer, counted from 0.",
+      "de": "Index des Puffers, ab 0 gezählt."
+    }
+  },
+  "GltfBufferView.byteOffset": {
+    "label": {
+      "en": "Byte offset",
+      "de": "Byte-Versatz"
+    },
+    "unit": "B"
+  },
+  "GltfBufferView.byteLength": {
+    "label": {
+      "en": "Byte length",
+      "de": "Byte-Länge"
+    },
+    "unit": "B"
+  },
+  "GltfBufferView.byteStride": {
+    "label": {
+      "en": "Byte stride",
+      "de": "Byte-Schrittweite"
+    },
+    "unit": "B"
+  },
+  "GltfBufferView.target": {
+    "label": {
+      "en": "Binding target",
+      "de": "Bindungsziel"
+    },
+    "description": {
+      "en": "34962 vertex attributes (ARRAY_BUFFER), 34963 indices (ELEMENT_ARRAY_BUFFER).",
+      "de": "34962 Vertexattribute (ARRAY_BUFFER), 34963 Indizes (ELEMENT_ARRAY_BUFFER)."
+    }
+  },
+  "GltfBufferView.extensions": {
+    "label": {
+      "en": "Extensions",
+      "de": "Erweiterungen"
+    }
+  },
+  "GltfBufferView.extras": {
+    "label": {
+      "en": "Extras",
+      "de": "Zusatzdaten (extras)"
+    }
+  },
+  "GltfBufferDiff.byteLength": {
+    "label": {
+      "en": "Byte length",
+      "de": "Byte-Länge"
+    },
+    "unit": "B"
+  },
+  "GltfBufferDiff.uri": {
+    "label": {
+      "en": "URI",
+      "de": "URI"
+    }
+  },
+  "GltfBufferDiff.extensions": {
+    "label": {
+      "en": "Extensions",
+      "de": "Erweiterungen"
+    }
+  },
+  "GltfBufferDiff.extras": {
+    "label": {
+      "en": "Extras",
+      "de": "Zusatzdaten (extras)"
+    }
+  },
+  "GltfBuffer.byteLength": {
+    "label": {
+      "en": "Byte length",
+      "de": "Byte-Länge"
+    },
+    "unit": "B"
+  },
+  "GltfBuffer.uri": {
+    "label": {
+      "en": "URI",
+      "de": "URI"
+    }
+  },
+  "GltfBuffer.extensions": {
+    "label": {
+      "en": "Extensions",
+      "de": "Erweiterungen"
+    }
+  },
+  "GltfBuffer.extras": {
+    "label": {
+      "en": "Extras",
+      "de": "Zusatzdaten (extras)"
+    }
+  },
+  "GltfMaterialDiff.pbrMetallicRoughness": {
+    "label": {
+      "en": "PBR metallic-roughness",
+      "de": "PBR Metallic-Roughness"
+    }
+  },
+  "GltfMaterialDiff.normalTexture": {
+    "label": {
+      "en": "Normal texture",
+      "de": "Normalentextur"
+    }
+  },
+  "GltfMaterialDiff.occlusionTexture": {
+    "label": {
+      "en": "Occlusion texture",
+      "de": "Okklusionstextur"
+    }
+  },
+  "GltfMaterialDiff.emissiveTexture": {
+    "label": {
+      "en": "Emissive texture",
+      "de": "Emissionstextur"
+    }
+  },
+  "GltfMaterialDiff.emissiveFactor": {
+    "label": {
+      "en": "Emissive factor",
+      "de": "Emissionsfaktor"
+    }
+  },
+  "GltfMaterialDiff.alphaMode": {
+    "label": {
+      "en": "Alpha mode",
+      "de": "Alphamodus"
+    }
+  },
+  "GltfMaterialDiff.alphaCutoff": {
+    "label": {
+      "en": "Alpha cutoff",
+      "de": "Alpha-Schwellenwert"
+    }
+  },
+  "GltfMaterialDiff.doubleSided": {
+    "label": {
+      "en": "Double-sided",
+      "de": "Doppelseitig"
+    }
+  },
+  "GltfMaterialDiff.extensions": {
+    "label": {
+      "en": "Extensions",
+      "de": "Erweiterungen"
+    }
+  },
+  "GltfMaterialDiff.extras": {
+    "label": {
+      "en": "Extras",
+      "de": "Zusatzdaten (extras)"
+    }
+  },
+  "GltfPbrMetallicRoughness.baseColorFactor": {
+    "label": {
+      "en": "Base color factor",
+      "de": "Grundfarbfaktor"
+    },
+    "description": {
+      "en": "Linear RGBA multipliers.",
+      "de": "Lineare RGBA-Faktoren."
+    }
+  },
+  "GltfPbrMetallicRoughness.baseColorTexture": {
+    "label": {
+      "en": "Base color texture",
+      "de": "Grundfarbtextur"
+    }
+  },
+  "GltfPbrMetallicRoughness.metallicFactor": {
+    "label": {
+      "en": "Metallic factor",
+      "de": "Metallizitätsfaktor"
+    }
+  },
+  "GltfPbrMetallicRoughness.roughnessFactor": {
+    "label": {
+      "en": "Roughness factor",
+      "de": "Rauheitsfaktor"
+    }
+  },
+  "GltfPbrMetallicRoughness.metallicRoughnessTexture": {
+    "label": {
+      "en": "Metallic-roughness texture",
+      "de": "Metallizitäts-Rauheits-Textur"
+    }
+  },
+  "GltfPbrMetallicRoughness.extensions": {
+    "label": {
+      "en": "Extensions",
+      "de": "Erweiterungen"
+    }
+  },
+  "GltfPbrMetallicRoughness.extras": {
+    "label": {
+      "en": "Extras",
+      "de": "Zusatzdaten (extras)"
+    }
+  },
+  "GltfTextureInfo.index": {
+    "label": {
+      "en": "Texture",
+      "de": "Textur"
+    },
+    "description": {
+      "en": "Index of the texture, counted from 0.",
+      "de": "Index der Textur, ab 0 gezählt."
+    }
+  },
+  "GltfTextureInfo.texCoord": {
+    "label": {
+      "en": "Texture coordinate set",
+      "de": "Texturkoordinatensatz"
+    },
+    "description": {
+      "en": "n of TEXCOORD_n.",
+      "de": "n von TEXCOORD_n."
+    }
+  },
+  "GltfTextureInfo.extensions": {
+    "label": {
+      "en": "Extensions",
+      "de": "Erweiterungen"
+    }
+  },
+  "GltfTextureInfo.extras": {
+    "label": {
+      "en": "Extras",
+      "de": "Zusatzdaten (extras)"
+    }
+  },
+  "GltfNormalTextureInfo.index": {
+    "label": {
+      "en": "Texture",
+      "de": "Textur"
+    },
+    "description": {
+      "en": "Index of the texture, counted from 0.",
+      "de": "Index der Textur, ab 0 gezählt."
+    }
+  },
+  "GltfNormalTextureInfo.texCoord": {
+    "label": {
+      "en": "Texture coordinate set",
+      "de": "Texturkoordinatensatz"
+    },
+    "description": {
+      "en": "n of TEXCOORD_n.",
+      "de": "n von TEXCOORD_n."
+    }
+  },
+  "GltfNormalTextureInfo.scale": {
+    "label": {
+      "en": "Normal scale",
+      "de": "Normalen-Skalierung"
+    }
+  },
+  "GltfNormalTextureInfo.extensions": {
+    "label": {
+      "en": "Extensions",
+      "de": "Erweiterungen"
+    }
+  },
+  "GltfNormalTextureInfo.extras": {
+    "label": {
+      "en": "Extras",
+      "de": "Zusatzdaten (extras)"
+    }
+  },
+  "GltfOcclusionTextureInfo.index": {
+    "label": {
+      "en": "Texture",
+      "de": "Textur"
+    },
+    "description": {
+      "en": "Index of the texture, counted from 0.",
+      "de": "Index der Textur, ab 0 gezählt."
+    }
+  },
+  "GltfOcclusionTextureInfo.texCoord": {
+    "label": {
+      "en": "Texture coordinate set",
+      "de": "Texturkoordinatensatz"
+    },
+    "description": {
+      "en": "n of TEXCOORD_n.",
+      "de": "n von TEXCOORD_n."
+    }
+  },
+  "GltfOcclusionTextureInfo.strength": {
+    "label": {
+      "en": "Occlusion strength",
+      "de": "Okklusionsstärke"
+    }
+  },
+  "GltfOcclusionTextureInfo.extensions": {
+    "label": {
+      "en": "Extensions",
+      "de": "Erweiterungen"
+    }
+  },
+  "GltfOcclusionTextureInfo.extras": {
+    "label": {
+      "en": "Extras",
+      "de": "Zusatzdaten (extras)"
+    }
+  },
+  "GltfAlphaMode": {
+    "options": {
+      "OPAQUE": {
+        "en": "Opaque",
+        "de": "Deckend"
+      },
+      "MASK": {
+        "en": "Mask",
+        "de": "Maskiert"
+      },
+      "BLEND": {
+        "en": "Blend",
+        "de": "Überblendet"
+      }
+    }
+  },
+  "GltfMaterial.pbrMetallicRoughness": {
+    "label": {
+      "en": "PBR metallic-roughness",
+      "de": "PBR Metallic-Roughness"
+    }
+  },
+  "GltfMaterial.normalTexture": {
+    "label": {
+      "en": "Normal texture",
+      "de": "Normalentextur"
+    }
+  },
+  "GltfMaterial.occlusionTexture": {
+    "label": {
+      "en": "Occlusion texture",
+      "de": "Okklusionstextur"
+    }
+  },
+  "GltfMaterial.emissiveTexture": {
+    "label": {
+      "en": "Emissive texture",
+      "de": "Emissionstextur"
+    }
+  },
+  "GltfMaterial.emissiveFactor": {
+    "label": {
+      "en": "Emissive factor",
+      "de": "Emissionsfaktor"
+    }
+  },
+  "GltfMaterial.alphaMode": {
+    "label": {
+      "en": "Alpha mode",
+      "de": "Alphamodus"
+    }
+  },
+  "GltfMaterial.alphaCutoff": {
+    "label": {
+      "en": "Alpha cutoff",
+      "de": "Alpha-Schwellenwert"
+    }
+  },
+  "GltfMaterial.doubleSided": {
+    "label": {
+      "en": "Double-sided",
+      "de": "Doppelseitig"
+    }
+  },
+  "GltfMaterial.extensions": {
+    "label": {
+      "en": "Extensions",
+      "de": "Erweiterungen"
+    }
+  },
+  "GltfMaterial.extras": {
+    "label": {
+      "en": "Extras",
+      "de": "Zusatzdaten (extras)"
+    }
+  },
+  "GltfTexture.sampler": {
+    "label": {
+      "en": "Sampler",
+      "de": "Sampler"
+    }
+  },
+  "GltfTexture.source": {
+    "label": {
+      "en": "Image",
+      "de": "Bild"
+    },
+    "description": {
+      "en": "Index of the image, counted from 0.",
+      "de": "Index des Bildes, ab 0 gezählt."
+    }
+  },
+  "GltfTexture.extensions": {
+    "label": {
+      "en": "Extensions",
+      "de": "Erweiterungen"
+    }
+  },
+  "GltfTexture.extras": {
+    "label": {
+      "en": "Extras",
+      "de": "Zusatzdaten (extras)"
+    }
+  },
+  "GltfImage.uri": {
+    "label": {
+      "en": "URI",
+      "de": "URI"
+    }
+  },
+  "GltfImage.mimeType": {
+    "label": {
+      "en": "Media type",
+      "de": "Medientyp"
+    }
+  },
+  "GltfImage.bufferView": {
+    "label": {
+      "en": "Buffer view",
+      "de": "Pufferansicht"
+    }
+  },
+  "GltfImage.extensions": {
+    "label": {
+      "en": "Extensions",
+      "de": "Erweiterungen"
+    }
+  },
+  "GltfImage.extras": {
+    "label": {
+      "en": "Extras",
+      "de": "Zusatzdaten (extras)"
+    }
+  },
+  "GltfSampler.magFilter": {
+    "label": {
+      "en": "Magnification filter",
+      "de": "Vergrößerungsfilter"
+    },
+    "description": {
+      "en": "9728 nearest, 9729 linear.",
+      "de": "9728 nächster Nachbar, 9729 linear."
+    }
+  },
+  "GltfSampler.minFilter": {
+    "label": {
+      "en": "Minification filter",
+      "de": "Verkleinerungsfilter"
+    }
+  },
+  "GltfSampler.wrapS": {
+    "label": {
+      "en": "Wrap mode S",
+      "de": "Wiederholungsmodus S"
+    },
+    "description": {
+      "en": "33071 clamp to edge, 33648 mirrored repeat, 10497 repeat.",
+      "de": "33071 am Rand fixieren, 33648 gespiegelt wiederholen, 10497 wiederholen."
+    }
+  },
+  "GltfSampler.wrapT": {
+    "label": {
+      "en": "Wrap mode T",
+      "de": "Wiederholungsmodus T"
+    },
+    "description": {
+      "en": "33071 clamp to edge, 33648 mirrored repeat, 10497 repeat.",
+      "de": "33071 am Rand fixieren, 33648 gespiegelt wiederholen, 10497 wiederholen."
+    }
+  },
+  "GltfSampler.extensions": {
+    "label": {
+      "en": "Extensions",
+      "de": "Erweiterungen"
+    }
+  },
+  "GltfSampler.extras": {
+    "label": {
+      "en": "Extras",
+      "de": "Zusatzdaten (extras)"
+    }
+  },
+  "GltfSkin.inverseBindMatrices": {
+    "label": {
+      "en": "Inverse bind matrices",
+      "de": "Inverse Bindungsmatrizen"
+    }
+  },
+  "GltfSkin.skeleton": {
+    "label": {
+      "en": "Skeleton root",
+      "de": "Skelettwurzel"
+    }
+  },
+  "GltfSkin.joints": {
+    "label": {
+      "en": "Joints",
+      "de": "Gelenke"
+    }
+  },
+  "GltfSkin.extensions": {
+    "label": {
+      "en": "Extensions",
+      "de": "Erweiterungen"
+    }
+  },
+  "GltfSkin.extras": {
+    "label": {
+      "en": "Extras",
+      "de": "Zusatzdaten (extras)"
+    }
+  },
+  "GltfAnimation.channels": {
+    "label": {
+      "en": "Channels",
+      "de": "Kanäle"
+    }
+  },
+  "GltfAnimation.samplers": {
+    "label": {
+      "en": "Animation samplers",
+      "de": "Animations-Sampler"
+    }
+  },
+  "GltfAnimation.extensions": {
+    "label": {
+      "en": "Extensions",
+      "de": "Erweiterungen"
+    }
+  },
+  "GltfAnimation.extras": {
+    "label": {
+      "en": "Extras",
+      "de": "Zusatzdaten (extras)"
+    }
+  },
+  "GltfAnimationChannel.sampler": {
+    "label": {
+      "en": "Animation sampler",
+      "de": "Animations-Sampler"
+    }
+  },
+  "GltfAnimationChannel.target": {
+    "label": {
+      "en": "Animated property",
+      "de": "Animierte Eigenschaft"
+    }
+  },
+  "GltfAnimationChannel.extensions": {
+    "label": {
+      "en": "Extensions",
+      "de": "Erweiterungen"
+    }
+  },
+  "GltfAnimationChannel.extras": {
+    "label": {
+      "en": "Extras",
+      "de": "Zusatzdaten (extras)"
+    }
+  },
+  "GltfAnimationChannelTarget.node": {
+    "label": {
+      "en": "Node",
+      "de": "Knoten"
+    },
+    "description": {
+      "en": "Index of the node, counted from 0.",
+      "de": "Index des Knotens, ab 0 gezählt."
+    }
+  },
+  "GltfAnimationChannelTarget.path": {
+    "label": {
+      "en": "Animated property",
+      "de": "Animierte Eigenschaft"
+    }
+  },
+  "GltfAnimationChannelTarget.extensions": {
+    "label": {
+      "en": "Extensions",
+      "de": "Erweiterungen"
+    }
+  },
+  "GltfAnimationChannelTarget.extras": {
+    "label": {
+      "en": "Extras",
+      "de": "Zusatzdaten (extras)"
+    }
+  },
+  "GltfAnimationPath": {
+    "options": {
+      "translation": {
+        "en": "Translation",
+        "de": "Verschiebung"
+      },
+      "rotation": {
+        "en": "Rotation",
+        "de": "Drehung"
+      },
+      "scale": {
+        "en": "Scale",
+        "de": "Skalierung"
+      },
+      "weights": {
+        "en": "Morph weights",
+        "de": "Morph-Gewichte"
+      }
+    }
+  },
+  "GltfAnimationSampler.input": {
+    "label": {
+      "en": "Keyframe times",
+      "de": "Keyframe-Zeiten"
+    },
+    "description": {
+      "en": "Accessor with the keyframe input times.",
+      "de": "Accessor mit den Keyframe-Zeiten."
+    }
+  },
+  "GltfAnimationSampler.interpolation": {
+    "label": {
+      "en": "Interpolation",
+      "de": "Interpolation"
+    }
+  },
+  "GltfAnimationSampler.output": {
+    "label": {
+      "en": "Keyframe values",
+      "de": "Keyframe-Werte"
+    },
+    "description": {
+      "en": "Accessor with the keyframe output values.",
+      "de": "Accessor mit den Keyframe-Werten."
+    }
+  },
+  "GltfAnimationSampler.extensions": {
+    "label": {
+      "en": "Extensions",
+      "de": "Erweiterungen"
+    }
+  },
+  "GltfAnimationSampler.extras": {
+    "label": {
+      "en": "Extras",
+      "de": "Zusatzdaten (extras)"
+    }
+  },
+  "GltfInterpolation": {
+    "options": {
+      "LINEAR": {
+        "en": "Linear",
+        "de": "Linear"
+      },
+      "STEP": {
+        "en": "Step",
+        "de": "Stufenweise"
+      },
+      "CUBICSPLINE": {
+        "en": "Cubic spline",
+        "de": "Kubischer Spline"
+      }
+    }
+  },
+  "GltfCamera.projection": {
+    "label": {
+      "en": "Projection",
+      "de": "Projektion"
+    }
+  },
+  "GltfCamera.extensions": {
+    "label": {
+      "en": "Extensions",
+      "de": "Erweiterungen"
+    }
+  },
+  "GltfCamera.extras": {
+    "label": {
+      "en": "Extras",
+      "de": "Zusatzdaten (extras)"
+    }
+  },
+  "GltfSourceForm": {
+    "options": {
+      "json": {
+        "en": "glTF JSON",
+        "de": "glTF-JSON"
+      },
+      "glb": {
+        "en": "GLB binary",
+        "de": "GLB-Binärdatei"
+      }
+    }
+  },
+  "Collection.removed": {
+    "label": {
+      "en": "Removed",
+      "de": "Entfernt"
+    }
+  },
+  "Collection.modified": {
+    "label": {
+      "en": "Modified",
+      "de": "Geändert"
+    }
+  },
+  "Collection.added": {
+    "label": {
+      "en": "Added",
+      "de": "Hinzugefügt"
+    }
+  },
+  "Collection.diff": {
+    "label": {
+      "en": "Changes",
+      "de": "Änderungen"
+    }
+  }
+}

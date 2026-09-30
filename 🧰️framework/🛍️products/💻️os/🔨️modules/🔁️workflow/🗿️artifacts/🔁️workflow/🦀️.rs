@@ -780,8 +780,8 @@ pub enum WorkflowParameterType {
     Text,
 }
 
-/// 🎯️ `field_path` names a `ConfigFieldSpec.key` in the target node's app's declared `ConfigSpec` —
-/// see `validate_workflow_parameter_config_binding` (type-checks against the field's `ConfigFieldShape`).
+/// 🎯️ `field_path` names a field `id` in the target node's app's declared `ConfigSpec` —
+/// see `validate_workflow_parameter_config_binding` (type-checks against the field's `ArgSchema`).
 #[derive(Clone, Debug, PartialEq, ::semio_framework_value_derive::ToValue, ::semio_framework_value_derive::FromValue, dsl::DslRecord)]
 #[value(rename_all = "camelCase")]
 pub struct WorkflowParameterBinding {
@@ -938,7 +938,7 @@ pub async fn patch_workflow_parameter(parameter: &WorkflowParameter, patch: &dsl
 /// precedent).
 pub async fn validate_workflow_parameter_config_binding(binding: &WorkflowParameterBinding, parameter_type: &WorkflowParameterType, config_spec: &semio_framework::ConfigSpec) -> Result<(), protocol::MutationMessage> {
     let uri = format!("{}#{}", binding.node_id, binding.field_path);
-    let Some(field) = config_spec.fields.iter().find(|field| field.key == binding.field_path) else {
+    let Some(field) = config_spec.fields.iter().find(|field| field.id == binding.field_path) else {
         return Err(protocol::MutationMessage {
             level: dsl::Severity::Warning,
             code: dsl::FaultCode::new("workflow/parameter-binding-invalid"),
@@ -947,20 +947,19 @@ pub async fn validate_workflow_parameter_config_binding(binding: &WorkflowParame
             op_index: None,
         });
     };
-    let compatible = matches!(
-        (parameter_type, &field.shape),
-        (WorkflowParameterType::Numeric, semio_framework::ConfigFieldShape::Number { .. })
-            | (WorkflowParameterType::Categorical, semio_framework::ConfigFieldShape::Select { .. })
-            | (WorkflowParameterType::Toggle, semio_framework::ConfigFieldShape::Toggle)
-            | (WorkflowParameterType::Text, semio_framework::ConfigFieldShape::Text)
-    );
+    let compatible = match (parameter_type, &field.schema) {
+        (WorkflowParameterType::Numeric, semio_framework::ArgSchema::Number { .. }) | (WorkflowParameterType::Toggle, semio_framework::ArgSchema::Boolean) => true,
+        (WorkflowParameterType::Categorical, semio_framework::ArgSchema::String { options, .. }) => !options.is_empty(),
+        (WorkflowParameterType::Text, semio_framework::ArgSchema::String { options, .. }) => options.is_empty(),
+        _ => false,
+    };
     if compatible {
         Ok(())
     } else {
         Err(protocol::MutationMessage {
             level: dsl::Severity::Warning,
             code: dsl::FaultCode::new("workflow/parameter-binding-invalid"),
-            message: format!("parameter type {parameter_type:?} cannot drive config field '{}' ({:?})", binding.field_path, field.shape),
+            message: format!("parameter type {parameter_type:?} cannot drive config field '{}' ({:?})", binding.field_path, field.schema),
             target: vec![uri],
             op_index: None,
         })
@@ -1040,6 +1039,7 @@ pub fn sync_workflow_parameter_ports(graph: &Workflow, bindings: &[WorkflowParam
 /// is a glob matched against collection entry paths at run time (W5's `SpaceRunner` job); this crate
 /// only carries the declaration + validates bindings resolve (`validate_workflow_snapshot`).
 #[derive(Clone, Debug, PartialEq, ::semio_framework_value_derive::ToValue, ::semio_framework_value_derive::FromValue)]
+#[value(rename_all = "camelCase")]
 pub struct WorkflowInput {
     pub id: String,
     pub kind_id: String,
@@ -1109,6 +1109,7 @@ impl dsl::DslField for WorkflowInput {
 
 /// 🔗️ Binds a declared [`WorkflowInput`] slot onto one node's in-port.
 #[derive(Clone, Debug, PartialEq, ::semio_framework_value_derive::ToValue, ::semio_framework_value_derive::FromValue, dsl::DslRecord)]
+#[value(rename_all = "camelCase")]
 pub struct WorkflowInputBinding {
     pub input_id: String,
     pub node_id: String,
@@ -1118,6 +1119,7 @@ pub struct WorkflowInputBinding {
 /// 📤️ Names where a node's out-port materializes in the output collection — `path_template` like
 /// `"renders/{node}/{input.stem}.{ext}"` (resolved at run time by W5's `SpaceRunner`).
 #[derive(Clone, Debug, PartialEq, ::semio_framework_value_derive::ToValue, ::semio_framework_value_derive::FromValue, dsl::DslRecord)]
+#[value(rename_all = "camelCase")]
 pub struct WorkflowOutputBinding {
     pub node_id: String,
     pub port_id: String,

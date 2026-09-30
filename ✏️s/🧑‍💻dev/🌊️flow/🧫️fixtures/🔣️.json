@@ -1,0 +1,41 @@
+{
+  "schema": "semio.s.flow-composition/v1",
+  "owner": "✏️s/🧑‍💻dev/🌊️flow",
+  "tests": [
+    {
+      "target": "flow_catalogue",
+      "laws": [
+        "no_operator_in_the_catalogue_declares_one_port_id_on_both_sides",
+        "every_named_port_side_row_is_the_catalogue_the_extensions_register",
+        "a_renamed_output_keeps_the_display_name_it_always_had",
+        "fixture_kind_infos_json_covers_every_first_party_extension",
+        "app_catalogue_carries_every_operator_and_palette_section",
+        "rectangle_extrude_fixture_port_labels_follow_draw_lod",
+        "rectangle_extrude_fixture_evaluates_solid_output",
+        "hexagonal_mushroom_fixture_reports_extruded_solid_output",
+        "supplied_operator_registries_and_geometry_ports_keep_host_authorities_independent"
+      ]
+    },
+    {
+      "target": "flow_port_types",
+      "laws": [
+        "every_named_channel_declares_the_value_types_the_fixture_records",
+        "every_fixture_pair_is_accepted_or_refused_as_the_fixture_says",
+        "a_vector_output_is_refused_by_the_wire_input_that_accepts_the_profile",
+        "the_flow_host_refuses_the_drop_and_keeps_the_displaced_wire",
+        "an_undeclared_channel_stays_connectable"
+      ]
+    }
+  ],
+  "extensions": [
+    "bim",
+    "brep",
+    "dictionary",
+    "draw",
+    "list",
+    "logic",
+    "math",
+    "primitive",
+    "text"
+  ]
+}

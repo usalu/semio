@@ -5,16 +5,52 @@
   "type": "object",
   "additionalProperties": false,
   "required": [
+    "mutation",
     "id",
     "newName"
   ],
   "properties": {
+    "mutation": {
+      "const": "renameOperationalRequirement"
+    },
     "id": {
-      "type": "integer",
-      "minimum": 0
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Operational Requirement",
+          "de": "Betriebsanforderung"
+        },
+        "description": {
+          "en": "The operational requirement to rename.",
+          "de": "Umzubenennender Eintrag vom Typ „Betriebsanforderung“."
+        },
+        "ref": {
+          "kind": "operationalRequirement",
+          "domain": "program",
+          "granularity": "entity"
+        },
+        "group": "target",
+        "order": 10
+      }
     },
     "newName": {
-      "type": "string"
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "text",
+        "role": "value",
+        "label": {
+          "en": "New Name",
+          "de": "Neuer Name"
+        },
+        "description": {
+          "en": "New name of the operational requirement.",
+          "de": "Neuer Name des Eintrags vom Typ „Betriebsanforderung“."
+        },
+        "group": "identity",
+        "order": 20
+      }
     }
   }
 }

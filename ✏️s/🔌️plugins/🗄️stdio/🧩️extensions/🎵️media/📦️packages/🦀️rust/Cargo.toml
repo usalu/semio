@@ -59,6 +59,7 @@ semio-s-artifact-stdio-mp4 = { workspace = true, features = ["component-app-asse
 semio-s-artifact-stdio-mp3 = { workspace = true, features = ["component-app-assembly"] }
 semio-s-artifact-stdio-wav = { workspace = true, features = ["component-app-assembly"] }
 semio-s-artifact-stdio-avi = { workspace = true, features = ["component-app-assembly"] }
+semio-s-artifact-stdio-contract = { workspace = true }
 semio-framework = { workspace = true }
 semio-framework-dispatch-macros = { workspace = true }
 semio-framework-plugin = { workspace = true }

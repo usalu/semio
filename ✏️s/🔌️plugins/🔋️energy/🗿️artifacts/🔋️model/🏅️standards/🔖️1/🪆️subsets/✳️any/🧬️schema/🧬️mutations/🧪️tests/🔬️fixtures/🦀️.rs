@@ -196,7 +196,11 @@ pub fn write_when_requested(case: &Case) {
     write_file(root.join("📸️snapshot/➡️after/🔣️.json"), &json(pack::json::from_dsl_value(&after.to_value())));
     write_file(root.join("🦠️mutation/🔣️.json"), &json(pack::json::from_dsl_value(&mutation.to_value())));
     write_file(root.join("🔺️diff/🔣️.json"), &json(pack::json::from_dsl_value(&outcome.diff().to_value())));
-    write_file(root.join("🎯️outcome/🔣️.json"), &json(outcome_document(&outcome)));
+    let mut document = outcome_document(&outcome);
+    if let (Some(invariant), Some(object)) = (committed_outcome(case).1, document.as_object_mut()) {
+        object.insert("invariant", pack::json::Value::String(invariant));
+    }
+    write_file(root.join("🎯️outcome/🔣️.json"), &json(document));
 }
 
 /// ▶️ Applying the committed mutation to the committed before-snapshot reproduces the committed
@@ -237,11 +241,32 @@ pub fn assert_canonical(case: &Case) {
     assert!(pack::json::value_eq_ignoring_object_order(&reencoded, &committed(case, "mutation", case.mutation)), "{}/{}: committed mutation payload is not canonical", case.kind, case.directory);
 }
 
-/// 🎯️ The diagnostics the implementation raises are the ones the committed outcome declares.
+/// 🧷️ The payload-intrinsic invariant ids the committed mutation's own leaf payload schema declares in `x-semio-invariant`.
+fn declared_invariants(case: &Case) -> Vec<String> {
+    let mutation: EnergyModelMutation = pack::json::from_json_str(case.mutation).expect("committed mutation payload decodes");
+    let schema = <EnergyModelMutation as Mutation<EnergyModelSnapshot>>::input_schema(&mutation).expect("every energy leaf publishes its payload schema");
+    let document = pack::json::parse(schema).expect("leaf payload schema is valid JSON");
+    document.get("x-semio-invariant").and_then(pack::json::Value::as_array).map(|rows| rows.iter().filter_map(|row| row.get("id").and_then(pack::json::Value::as_str).map(str::to_string)).collect()).unwrap_or_default()
+}
+
+/// 🧷️ The committed outcome split into the part the implementation produces and the `invariant` id a payload-intrinsic
+/// refusal names — a rule the produced message cannot carry, which the leaf schema declares in `x-semio-invariant`.
+fn committed_outcome(case: &Case) -> (pack::json::Value, Option<String>) {
+    let mut declared = committed(case, "outcome", case.outcome);
+    let invariant = declared.as_object_mut().and_then(|object| object.remove("invariant")).map(|value| value.as_str().expect("an outcome's invariant is an id").to_string());
+    (declared, invariant)
+}
+
+/// 🎯️ The diagnostics the implementation raises are the ones the committed outcome declares; a named invariant is a
+/// `mutation.invariant` refusal whose id the leaf's payload schema declares.
 pub fn assert_outcome(case: &Case) {
     let produced = outcome_document(&built(case));
-    let declared = committed(case, "outcome", case.outcome);
+    let (declared, invariant) = committed_outcome(case);
     assert!(pack::json::value_eq_ignoring_object_order(&produced, &declared), "{}/{}: produced outcome {produced:?} differs from the committed one {declared:?}", case.kind, case.directory);
+    if let Some(invariant) = invariant {
+        assert_eq!(produced["code"].as_str(), Some("mutation.invariant"), "{}/{}: only a mutation.invariant refusal names an invariant", case.kind, case.directory);
+        assert!(declared_invariants(case).contains(&invariant), "{}/{}: the leaf payload schema declares no x-semio-invariant {invariant:?}", case.kind, case.directory);
+    }
 }
 
 /// 🔺️ The produced delta is the committed delta — which pins WHICH fields the kind may touch,

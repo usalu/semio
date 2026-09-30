@@ -1,0 +1,17 @@
+{
+  "mutation": "patchSnapshot",
+  "patch": {
+    "edits": [
+      {
+        "path": [
+          "fmt",
+          "sampleRate"
+        ],
+        "edit": {
+          "operation": "set",
+          "value": 22050
+        }
+      }
+    ]
+  }
+}

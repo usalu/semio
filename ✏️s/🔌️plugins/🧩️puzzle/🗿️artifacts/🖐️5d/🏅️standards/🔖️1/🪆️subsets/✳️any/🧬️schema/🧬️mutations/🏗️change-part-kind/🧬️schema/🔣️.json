@@ -5,14 +5,54 @@
   "type": "object",
   "additionalProperties": false,
   "required": [
+    "mutation",
     "id"
   ],
   "properties": {
+    "mutation": {
+      "const": "changePartKind"
+    },
     "id": {
-      "type": "string"
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Part",
+          "de": "Teil"
+        },
+        "description": {
+          "en": "The part this mutation addresses.",
+          "de": "Das Teil, das diese Mutation adressiert."
+        },
+        "ref": {
+          "kind": "part",
+          "domain": "vortex",
+          "granularity": "part"
+        },
+        "group": "target",
+        "order": 10
+      }
     },
     "newPartKind": {
-      "type": "string"
+      "type": [
+        "string",
+        "null"
+      ],
+      "x-semio-ui": {
+        "widget": "text",
+        "role": "value",
+        "label": {
+          "en": "Part kind",
+          "de": "Teilart"
+        },
+        "description": {
+          "en": "Id of a kind from the kind catalog.",
+          "de": "ID einer Art aus dem Artenkatalog."
+        },
+        "group": "kind",
+        "order": 20
+      }
     }
   }
 }

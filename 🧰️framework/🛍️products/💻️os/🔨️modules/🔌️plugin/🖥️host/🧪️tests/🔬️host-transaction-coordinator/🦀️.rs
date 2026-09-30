@@ -93,6 +93,7 @@ async fn a_two_member_transaction_commits_and_group_undo_restores_both() {
                 record: "widget.doc".into(),
                 contributor: Some("a".into()),
                 artifact_kind: Some("s.b.widget".into()),
+                inputs: HostMutationInputs::Opaque,
             }],
         )
         .await
@@ -222,6 +223,7 @@ async fn a_cycle_is_rejected() {
                 record: "widget.doc".into(),
                 contributor: Some("a".into()),
                 artifact_kind: Some("s.b.widget".into()),
+                inputs: HostMutationInputs::Opaque,
             }],
         )
         .await
@@ -287,6 +289,7 @@ async fn a_member_rejection_rolls_back_every_already_prepared_member() {
                 record: "widget.doc".into(),
                 contributor: Some("a".into()),
                 artifact_kind: Some("s.b.widget".into()),
+                inputs: HostMutationInputs::Opaque,
             }],
         )
         .await
@@ -347,6 +350,7 @@ async fn a_chain_deeper_than_max_plan_depth_is_rejected() {
                 record: "widget.doc".into(),
                 contributor: Some("a".into()),
                 artifact_kind: Some("s.b.widget".into()),
+                inputs: HostMutationInputs::Opaque,
             }],
         )
         .await

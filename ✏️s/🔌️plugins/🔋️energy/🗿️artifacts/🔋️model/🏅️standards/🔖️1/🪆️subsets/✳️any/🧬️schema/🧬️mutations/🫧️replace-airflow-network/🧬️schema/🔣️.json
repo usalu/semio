@@ -5,6 +5,7 @@
   "type": "object",
   "additionalProperties": false,
   "required": [
+    "mutation",
     "present",
     "zoneIds",
     "nodeIds",
@@ -12,29 +13,145 @@
     "linkIds"
   ],
   "properties": {
+    "mutation": {
+      "const": "replaceAirflowNetwork"
+    },
     "present": {
-      "type": "boolean"
+      "type": "boolean",
+      "x-semio-ui": {
+        "widget": "toggle",
+        "role": "value",
+        "label": {
+          "en": "Airflow network",
+          "de": "Luftströmungsnetz"
+        },
+        "description": {
+          "en": "Off removes the network; on replaces it with the lists below.",
+          "de": "Aus entfernt das Netz; ein ersetzt es durch die folgenden Listen."
+        },
+        "group": "network",
+        "order": 10
+      }
     },
     "zoneIds": {
       "type": "array",
       "items": {
-        "type": "integer"
+        "type": "integer",
+        "minimum": 0
+      },
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Zones",
+          "de": "Zonen"
+        },
+        "description": {
+          "en": "Zones in the network, by id, paired one-to-one with the zone nodes.",
+          "de": "Zonen im Netz, per ID, paarweise den Zonenknoten zugeordnet."
+        },
+        "ref": {
+          "kind": "zone",
+          "domain": "energyModel",
+          "granularity": "zone"
+        },
+        "group": "network",
+        "order": 20
       }
     },
     "nodeIds": {
       "type": "array",
       "items": {
-        "type": "integer"
+        "type": "integer",
+        "minimum": 0
+      },
+      "x-semio-ui": {
+        "role": "value",
+        "label": {
+          "en": "Zone nodes",
+          "de": "Zonenknoten"
+        },
+        "description": {
+          "en": "Airflow network node number of each zone, in zone order.",
+          "de": "Knotennummer jeder Zone im Luftströmungsnetz, in Zonenreihenfolge."
+        },
+        "group": "network",
+        "order": 30
       }
     },
     "outdoorNodeId": {
-      "type": "integer"
+      "type": "integer",
+      "minimum": 0,
+      "x-semio-ui": {
+        "widget": "stepper",
+        "role": "value",
+        "label": {
+          "en": "Outdoor node",
+          "de": "Außenknoten"
+        },
+        "description": {
+          "en": "Node number of the outdoor environment.",
+          "de": "Knotennummer der Außenumgebung."
+        },
+        "step": 1,
+        "precision": 0,
+        "group": "network",
+        "order": 40
+      }
     },
     "linkIds": {
       "type": "array",
       "items": {
-        "type": "integer"
+        "type": "integer",
+        "minimum": 0
+      },
+      "x-semio-ui": {
+        "role": "value",
+        "label": {
+          "en": "Links",
+          "de": "Strömungspfade"
+        },
+        "description": {
+          "en": "Airflow network link numbers.",
+          "de": "Nummern der Strömungspfade im Netz."
+        },
+        "group": "network",
+        "order": 50
       }
     }
-  }
+  },
+  "allOf": [
+    {
+      "if": {
+        "type": "object",
+        "properties": {
+          "present": {
+            "const": false
+          }
+        }
+      },
+      "then": {
+        "type": "object",
+        "properties": {
+          "zoneIds": {
+            "type": "array",
+            "maxItems": 0
+          },
+          "linkIds": {
+            "type": "array",
+            "maxItems": 0
+          }
+        }
+      }
+    }
+  ],
+  "x-semio-invariant": [
+    {
+      "id": "zone-node-pairs",
+      "description": {
+        "en": "Zones and zone nodes pair one to one: both lists have the same length.",
+        "de": "Zonen und Zonenknoten sind paarweise zugeordnet: beide Listen sind gleich lang."
+      }
+    }
+  ]
 }

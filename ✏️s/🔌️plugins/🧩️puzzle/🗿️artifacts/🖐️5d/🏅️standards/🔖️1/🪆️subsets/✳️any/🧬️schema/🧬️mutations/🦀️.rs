@@ -407,6 +407,19 @@ impl Mutation<Value> for Puzzle5dMutation {
     /// through to the derive's own table exactly like `may_emit_foreign_steps` already does below,
     /// rather than hand-authoring a duplicate 28-entry table here.
     const DESCRIPTORS: &'static [protocol::MutationLeafDescriptor] = <Self as Mutation<Puzzle5dSnapshot>>::DESCRIPTORS;
+    const INPUT_SCHEMAS: &'static [&'static str] = <Self as Mutation<Puzzle5dSnapshot>>::INPUT_SCHEMAS;
+
+    fn input_schema(&self) -> Option<&'static str> {
+        Mutation::<Puzzle5dSnapshot>::input_schema(self)
+    }
+
+    fn payload_value(&self) -> dsl::DslValue {
+        Mutation::<Puzzle5dSnapshot>::payload_value(self)
+    }
+
+    fn with_payload_value(&self, value: dsl::DslValue) -> Result<Self, dsl::ValueError> {
+        Mutation::<Puzzle5dSnapshot>::with_payload_value(self, value)
+    }
 
     fn descriptor(&self) -> &'static protocol::MutationLeafDescriptor {
         <Self as Mutation<Puzzle5dSnapshot>>::descriptor(self)
@@ -566,6 +579,19 @@ impl Mutation<Puzzle5dPlaySnapshot> for Puzzle5dMutation {
     /// is projection-independent, so this forwards to the derive's own table too, same as
     /// `may_emit_foreign_steps` already does immediately below.
     const DESCRIPTORS: &'static [protocol::MutationLeafDescriptor] = <Self as Mutation<Puzzle5dSnapshot>>::DESCRIPTORS;
+    const INPUT_SCHEMAS: &'static [&'static str] = <Self as Mutation<Puzzle5dSnapshot>>::INPUT_SCHEMAS;
+
+    fn input_schema(&self) -> Option<&'static str> {
+        Mutation::<Puzzle5dSnapshot>::input_schema(self)
+    }
+
+    fn payload_value(&self) -> dsl::DslValue {
+        Mutation::<Puzzle5dSnapshot>::payload_value(self)
+    }
+
+    fn with_payload_value(&self, value: dsl::DslValue) -> Result<Self, dsl::ValueError> {
+        Mutation::<Puzzle5dSnapshot>::with_payload_value(self, value)
+    }
 
     fn descriptor(&self) -> &'static protocol::MutationLeafDescriptor {
         <Self as Mutation<Puzzle5dSnapshot>>::descriptor(self)

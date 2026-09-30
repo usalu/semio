@@ -4,18 +4,51 @@
   "type": "object",
   "additionalProperties": false,
   "required": [
+    "mutation",
     "response"
   ],
   "properties": {
+    "mutation": {
+      "const": "commitResponse"
+    },
     "response": {
-      "$ref": "https://json.schemas.assets.semio-tech.com/s/forms/forms/response.json"
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/forms/forms/response.json",
+      "x-semio-ui": {
+        "role": "value",
+        "label": {
+          "en": "Response",
+          "de": "Antwort"
+        },
+        "description": {
+          "en": "The submitted response to store.",
+          "de": "Die zu speichernde übermittelte Antwort."
+        },
+        "group": "record",
+        "order": 10
+      }
     },
     "index": {
       "type": [
         "integer",
         "null"
       ],
-      "minimum": 0
+      "minimum": 0,
+      "x-semio-ui": {
+        "widget": "stepper",
+        "role": "value",
+        "label": {
+          "en": "Index",
+          "de": "Index"
+        },
+        "description": {
+          "en": "Position in the list; the end when omitted.",
+          "de": "Position in der Liste; ohne Angabe am Ende."
+        },
+        "step": 1,
+        "precision": 0,
+        "group": "order",
+        "order": 20
+      }
     }
   },
   "title": "CommitResponse"

@@ -1,0 +1,74 @@
+{
+  "name": "@semio-tech/s-fixture-sweep-rs",
+  "root": "✏️s/🧑‍💻dev/🧹️fixture-sweep/📦️packages/🦀️rust",
+  "sourceRoot": "✏️s/🧑‍💻dev/🧹️fixture-sweep",
+  "projectType": "library",
+  "tags": [
+    "lang:rust",
+    "role:test",
+    "family:s-fixture-sweep",
+    "scope:s"
+  ],
+  "targets": {
+    "source-check": {
+      "executor": "nx:run-commands",
+      "cache": true,
+      "options": {
+        "command": "bun ./📜️script.ts source-check",
+        "cwd": "✏️s/🧑‍💻dev/🧹️fixture-sweep/📦️packages/🦀️rust",
+        "forwardAllArgs": true
+      },
+      "outputs": []
+    },
+    "test": {
+      "executor": "nx:run-commands",
+      "cache": true,
+      "options": {
+        "command": "bun ./📜️script.ts test",
+        "cwd": "✏️s/🧑‍💻dev/🧹️fixture-sweep/📦️packages/🦀️rust",
+        "forwardAllArgs": true
+      },
+      "outputs": []
+    },
+    "test-quick": {
+      "executor": "nx:run-commands",
+      "cache": true,
+      "options": {
+        "command": "bun ./📜️script.ts source-check",
+        "cwd": "✏️s/🧑‍💻dev/🧹️fixture-sweep/📦️packages/🦀️rust",
+        "forwardAllArgs": true
+      },
+      "outputs": []
+    },
+    "test-long": {
+      "executor": "nx:run-commands",
+      "cache": true,
+      "options": {
+        "command": "bun ./📜️script.ts test long",
+        "cwd": "✏️s/🧑‍💻dev/🧹️fixture-sweep/📦️packages/🦀️rust",
+        "forwardAllArgs": true
+      },
+      "outputs": []
+    },
+    "test-exhaustive": {
+      "executor": "nx:run-commands",
+      "cache": true,
+      "options": {
+        "command": "bun ./📜️script.ts test exhaustive",
+        "cwd": "✏️s/🧑‍💻dev/🧹️fixture-sweep/📦️packages/🦀️rust",
+        "forwardAllArgs": true
+      },
+      "outputs": []
+    },
+    "canonical-architecture": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "options": {
+        "command": "bun ./📜️script.ts source-check",
+        "cwd": "✏️s/🧑‍💻dev/🧹️fixture-sweep/📦️packages/🦀️rust",
+        "forwardAllArgs": true
+      },
+      "outputs": []
+    }
+  }
+}

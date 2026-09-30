@@ -5,9 +5,14 @@
   "type": "object",
   "additionalProperties": false,
   "required": [
+    "mutation",
     "id"
   ],
   "properties": {
+    "mutation": {
+      "const": "setSpatialNode",
+      "description": "Aggregate discriminator spliced in by SemioModelMutation; absent when the payload stands alone."
+    },
     "id": {
       "type": "string"
     },
@@ -19,7 +24,27 @@
         {
           "type": "null"
         }
-      ]
+      ],
+      "x-semio-ui": {
+        "options": {
+          "site": {
+            "en": "Site",
+            "de": "Grundstück"
+          },
+          "building": {
+            "en": "Building",
+            "de": "Gebäude"
+          },
+          "storey": {
+            "en": "Storey",
+            "de": "Geschoss"
+          },
+          "space": {
+            "en": "Space",
+            "de": "Raum"
+          }
+        }
+      }
     },
     "name": {
       "anyOf": [
@@ -57,10 +82,6 @@
           "type": "null"
         }
       ]
-    },
-    "mutation": {
-      "const": "setSpatialNode",
-      "description": "Aggregate discriminator spliced in by SemioModelMutation; absent when the payload stands alone."
     }
   },
   "$defs": {
@@ -83,7 +104,13 @@
       ],
       "properties": {
         "translation": {
-          "$ref": "#/$defs/SemioPoint3"
+          "$ref": "#/$defs/SemioPoint3",
+          "x-semio-ui": {
+            "label": {
+              "en": "Translation",
+              "de": "Verschiebung"
+            }
+          }
         },
         "rotation": {
           "$ref": "#/$defs/SemioQuaternion"
@@ -133,7 +160,18 @@
           "type": "number"
         },
         "w": {
-          "type": "number"
+          "type": "number",
+          "x-semio-ui": {
+            "widget": "stepper",
+            "label": {
+              "en": "W",
+              "de": "W"
+            },
+            "description": {
+              "en": "Scalar part of the rotation quaternion.",
+              "de": "Skalarteil des Rotationsquaternions."
+            }
+          }
         }
       }
     }

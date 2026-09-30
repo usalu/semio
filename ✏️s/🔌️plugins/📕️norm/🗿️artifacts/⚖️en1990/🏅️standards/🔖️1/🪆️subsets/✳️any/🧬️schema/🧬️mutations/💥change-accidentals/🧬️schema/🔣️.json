@@ -1,4 +1,28 @@
 {
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/norm/en1990/mutation/change-accidentals/schema.json",
   "title": "ChangeAccidentals",
-  "type": "object"
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "mutation",
+    "newAccidentals"
+  ],
+  "properties": {
+    "mutation": {
+      "const": "changeAccidentals"
+    },
+    "newAccidentals": {
+      "type": "array",
+      "items": {
+        "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1990/snapshot.json#/$defs/AccidentalAction"
+      },
+      "x-semio-ui": {
+        "label": {
+          "en": "Accidental actions",
+          "de": "Außergewöhnliche Einwirkungen"
+        }
+      }
+    }
+  }
 }

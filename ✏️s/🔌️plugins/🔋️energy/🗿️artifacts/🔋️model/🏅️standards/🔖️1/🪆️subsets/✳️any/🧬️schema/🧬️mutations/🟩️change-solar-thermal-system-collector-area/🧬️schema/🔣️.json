@@ -5,15 +5,51 @@
   "type": "object",
   "additionalProperties": false,
   "required": [
+    "mutation",
     "id",
     "newCollectorAreaM2"
   ],
   "properties": {
+    "mutation": {
+      "const": "changeSolarThermalSystemCollectorArea"
+    },
     "id": {
-      "type": "integer"
+      "type": "integer",
+      "minimum": 0,
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Solar thermal system",
+          "de": "Solarthermieanlage"
+        },
+        "description": {
+          "en": "The solar thermal system this mutation changes, by id.",
+          "de": "Solarthermieanlage, die diese Mutation ändert, per ID."
+        },
+        "ref": {
+          "kind": "solarThermalSystem"
+        },
+        "group": "target",
+        "order": 10
+      }
     },
     "newCollectorAreaM2": {
-      "type": "number"
+      "type": "number",
+      "exclusiveMinimum": 0,
+      "x-semio-ui": {
+        "widget": "stepper",
+        "role": "value",
+        "label": {
+          "en": "Collector area",
+          "de": "Kollektorfläche"
+        },
+        "unit": "m²",
+        "step": 0.1,
+        "precision": 2,
+        "group": "geometry",
+        "order": 20
+      }
     }
   }
 }

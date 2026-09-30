@@ -77,16 +77,16 @@ Feature: Apply every typed semio AUDIO mutation to a real recording, against an 
       """
     Then the independent implementation and the subject agree on the resulting snapshot
     Examples:
-      | id                  | mutation |
-      | set-snapshot        | {"kind":"set-snapshot","params":{"snapshot":{"schema":"stdio.semio.audio","sampleRate":44100,"format":"f32","channels":[{"samples":[0.0,1.0]}],"tags":[{"key":"TIT2","value":"Bauen mit Bestand (Ausschnitt)"}]}}} |
-      | set-sample-rate     | {"kind":"set-sample-rate","params":{"sampleRate":48000}} |
-      | set-format          | {"kind":"set-format","params":{"format":"pcm24"}} |
-      | insert-channel      | {"kind":"insert-channel","params":{"index":1,"channel":{"samples":[-1.0,-0.8359375,-0.71875,-0.71875]}}} |
-      | remove-channel      | {"kind":"remove-channel","params":{"index":0}} |
-      | set-channel-samples | {"kind":"set-channel-samples","params":{"index":0,"samples":[-1.0,-0.8359375,-0.71875,-0.71875]}} |
-      | insert-tag          | {"kind":"insert-tag","params":{"index":0,"tag":{"key":"TALB","value":"33. Projektetage"}}} |
-      | remove-tag          | {"kind":"remove-tag","params":{"index":0}} |
-      | set-tag-value       | {"kind":"set-tag-value","params":{"index":1,"value":"Bauen mit Bestand, Ausschnitt 1"}} |
+      | id                  | mutation                                                                                                                                                                                                   |
+      | set-snapshot        | {"mutation":"setSnapshot","snapshot":{"schema":"stdio.semio.audio","sampleRate":44100,"format":"f32","channels":[{"samples":[0.0,1.0]}],"tags":[{"key":"TIT2","value":"Bauen mit Bestand (Ausschnitt)"}]}} |
+      | set-sample-rate     | {"mutation":"setSampleRate","sampleRate":48000}                                                                                                                                                            |
+      | set-format          | {"mutation":"setFormat","format":"pcm24"}                                                                                                                                                                  |
+      | insert-channel      | {"mutation":"insertChannel","index":1,"channel":{"samples":[-1.0,-0.8359375,-0.71875,-0.71875]}}                                                                                                           |
+      | remove-channel      | {"mutation":"removeChannel","index":0}                                                                                                                                                                     |
+      | set-channel-samples | {"mutation":"setChannelSamples","index":0,"samples":[-1.0,-0.8359375,-0.71875,-0.71875]}                                                                                                                   |
+      | insert-tag          | {"mutation":"insertTag","index":0,"tag":{"key":"TALB","value":"33. Projektetage"}}                                                                                                                         |
+      | remove-tag          | {"mutation":"removeTag","index":0}                                                                                                                                                                         |
+      | set-tag-value       | {"mutation":"setTagValue","index":1,"value":"Bauen mit Bestand, Ausschnitt 1"}                                                                                                                             |
 
   @id-no-mutation-baseline-mutate
   @level-exhaustive
@@ -95,7 +95,7 @@ Feature: Apply every typed semio AUDIO mutation to a real recording, against an 
     Given the real recording shared://🔊️mutate-semio-audio/🏚️bauen-mit-bestand-ausschnitt/🗣️.dsl.semio
     When the no-mutation mutation is applied to the recording parsed from it
       """
-      {"kind":"no-mutation","params":{}}
+      {"mutation":"noMutation"}
       """
     Then the independent implementation and the subject agree on the resulting snapshot
 
@@ -110,16 +110,16 @@ Feature: Apply every typed semio AUDIO mutation to a real recording, against an 
       """
     Then both sides restore the recording and agree on the mutated and the restored snapshot
     Examples:
-      | id                  | mutation |
-      | set-snapshot        | {"kind":"set-snapshot","params":{"snapshot":{"schema":"stdio.semio.audio","sampleRate":44100,"format":"f32","channels":[{"samples":[0.0,1.0]}],"tags":[{"key":"TIT2","value":"Bauen mit Bestand (Ausschnitt)"}]}}} |
-      | set-sample-rate     | {"kind":"set-sample-rate","params":{"sampleRate":48000}} |
-      | set-format          | {"kind":"set-format","params":{"format":"pcm24"}} |
-      | insert-channel      | {"kind":"insert-channel","params":{"index":1,"channel":{"samples":[-1.0,-0.8359375,-0.71875,-0.71875]}}} |
-      | remove-channel      | {"kind":"remove-channel","params":{"index":0}} |
-      | set-channel-samples | {"kind":"set-channel-samples","params":{"index":0,"samples":[-1.0,-0.8359375,-0.71875,-0.71875]}} |
-      | insert-tag          | {"kind":"insert-tag","params":{"index":0,"tag":{"key":"TALB","value":"33. Projektetage"}}} |
-      | remove-tag          | {"kind":"remove-tag","params":{"index":0}} |
-      | set-tag-value       | {"kind":"set-tag-value","params":{"index":1,"value":"Bauen mit Bestand, Ausschnitt 1"}} |
+      | id                  | mutation                                                                                                                                                                                                   |
+      | set-snapshot        | {"mutation":"setSnapshot","snapshot":{"schema":"stdio.semio.audio","sampleRate":44100,"format":"f32","channels":[{"samples":[0.0,1.0]}],"tags":[{"key":"TIT2","value":"Bauen mit Bestand (Ausschnitt)"}]}} |
+      | set-sample-rate     | {"mutation":"setSampleRate","sampleRate":48000}                                                                                                                                                            |
+      | set-format          | {"mutation":"setFormat","format":"pcm24"}                                                                                                                                                                  |
+      | insert-channel      | {"mutation":"insertChannel","index":1,"channel":{"samples":[-1.0,-0.8359375,-0.71875,-0.71875]}}                                                                                                           |
+      | remove-channel      | {"mutation":"removeChannel","index":0}                                                                                                                                                                     |
+      | set-channel-samples | {"mutation":"setChannelSamples","index":0,"samples":[-1.0,-0.8359375,-0.71875,-0.71875]}                                                                                                                   |
+      | insert-tag          | {"mutation":"insertTag","index":0,"tag":{"key":"TALB","value":"33. Projektetage"}}                                                                                                                         |
+      | remove-tag          | {"mutation":"removeTag","index":0}                                                                                                                                                                         |
+      | set-tag-value       | {"mutation":"setTagValue","index":1,"value":"Bauen mit Bestand, Ausschnitt 1"}                                                                                                                             |
 
   @id-no-mutation-baseline-inverse
   @level-exhaustive
@@ -128,7 +128,7 @@ Feature: Apply every typed semio AUDIO mutation to a real recording, against an 
     Given the real recording shared://🔊️mutate-semio-audio/🏚️bauen-mit-bestand-ausschnitt/🗣️.dsl.semio
     When the no-mutation mutation is applied to the recording parsed from it and each side undoes it with its own computed inverse
       """
-      {"kind":"no-mutation","params":{}}
+      {"mutation":"noMutation"}
       """
     Then both sides restore the recording and agree on the mutated and the restored snapshot
 

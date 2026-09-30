@@ -47,12 +47,25 @@ fn j_arr(v: &Json) -> Option<&Vec<Json>> {
         _ => None,
     }
 }
-fn hex_decode(s: &str) -> Result<Vec<u8>, String> {
-    let s = s.trim();
-    if s.len() % 2 != 0 {
-        return Err("hex: odd length".to_string());
+/// 🔢️ A byte-array wire value, strictly `0..=255` integers.
+fn wire_bytes(v: &Json) -> Result<Vec<u8>, String> {
+    j_arr(v).ok_or("tiff oracle: bytes must be a JSON array")?.iter().map(|item| match item { Json::Number(n) if (0.0..=255.0).contains(n) && n.fract() == 0.0 => Ok(*n as u8), other => Err(format!("tiff oracle: {} is no byte", other.to_string())) }).collect()
+}
+
+/// 🏷️ TIFF6 §2 Table 2's twelve field types in code order (1-12), spelled as the vocabulary's `TiffFieldType` wire.
+const FIELD_TYPE_NAMES: [&str; 12] = ["byte", "ascii", "short", "long", "rational", "sByte", "undefined", "sShort", "sLong", "sRational", "float", "double"];
+
+/// 🏷️ One tag's `TiffFieldType` name plus its `TiffValues` wire value (`{kind, value}`) as an [`OracleValue`]; the two
+/// must name the same type.
+fn wire_value(field_kind: &str, values: &Json) -> Result<OracleValue, String> {
+    let code = FIELD_TYPE_NAMES.iter().position(|name| *name == field_kind).ok_or_else(|| format!("tiff oracle: {field_kind:?} is no TIFF 6.0 field type"))? as u16 + 1;
+    if values.str("kind") != field_kind {
+        return Err(format!("tiff oracle: a {field_kind} tag carries {:?} values", values.str("kind")));
     }
-    (0..s.len()).step_by(2).map(|i| u8::from_str_radix(&s[i..i + 2], 16).map_err(|e| format!("hex: {e}"))).collect()
+    match values.get("value").ok_or("tiff oracle: tag values carry no `value`")? {
+        Json::String(text) => OracleValue::from_json(code, &Json::Array(vec![Json::String(text.clone())])),
+        other => OracleValue::from_json(code, other),
+    }
 }
 //#endregion 🔖️JsonHelpers
 
@@ -591,31 +604,19 @@ pub fn project_tiff(input: &[u8]) -> Result<Json, String> {
 //#endregion 🔖️RasterProjection
 
 //#region 🔖️MutationParams
-/// 🧩️ Parses one `{"entries":[{"tag":n,"type":n,"values":[...]}],"pixels":"<hex>"}` JSON object
-/// into an [`OracleIfd`] — the shared shape `insert-ifd`'s `ifd` param
-/// uses. `StripOffsets`/`StripByteCounts` are never accepted from a caller (they are
-/// always layout-computed at [`write_tiff`] time) — a caller wanting a raster IFD supplies `pixels`
-/// (raw strip bytes, hex, already in the sample layout its own `SamplesPerPixel` tag declares).
+/// 🧩️ Parses one `TiffIfd` wire value (`{"entries": [TiffTag…], "pixels": [byte…]}`) into an [`OracleIfd`] — the
+/// shape `insert-ifd`'s `ifd` carries. `StripOffsets`/`StripByteCounts` are never accepted from a caller (they are
+/// always layout-computed at [`write_tiff`] time); a raster IFD's `pixels` are its raw strip bytes, already in the
+/// sample layout its own `SamplesPerPixel` tag declares, and an IFD without them carries no strip.
 fn parse_ifd_json(v: &Json) -> Result<OracleIfd, String> {
     let entries = j_get(v, "entries").and_then(j_arr).ok_or("tiff oracle: ifd needs an `entries` array")?;
-    let entries: Vec<OracleTag> = entries
+    let mut entries = entries
         .iter()
-        .filter_map(|e| {
-            let tag = j_get(e, "tag").and_then(j_num)? as u16;
-            if tag == TAG_STRIP_OFFSETS || tag == TAG_STRIP_BYTE_COUNTS {
-                return None;
-            }
-            let type_code = j_get(e, "type").and_then(j_num)? as u16;
-            let values = j_get(e, "values")?;
-            Some(OracleValue::from_json(type_code, values).map(|value| OracleTag { tag, value }))
-        })
+        .filter(|e| !matches!(j_get(e, "tag").and_then(j_num).map(|tag| tag as u16), Some(TAG_STRIP_OFFSETS | TAG_STRIP_BYTE_COUNTS)))
+        .map(|e| Ok(OracleTag { tag: j_get(e, "tag").and_then(j_num).ok_or("tiff oracle: entry needs `tag`")? as u16, value: wire_value(&e.str("kind"), j_get(e, "values").ok_or("tiff oracle: entry needs `values`")?)? }))
         .collect::<Result<Vec<_>, String>>()?;
-    let mut entries = entries;
     entries.sort_by_key(|t| t.tag);
-    let strip = match j_get(v, "pixels").and_then(j_str) {
-        Some(hex) => Some(hex_decode(hex)?),
-        None => None,
-    };
+    let strip = j_get(v, "pixels").map(wire_bytes).transpose()?.filter(|bytes| !bytes.is_empty());
     Ok(OracleIfd { entries, strip })
 }
 
@@ -639,7 +640,11 @@ pub fn oracle_apply_mutation(input: &[u8], spec: &Json) -> Result<Vec<u8>, Strin
     let mut doc = read_tiff(input)?;
     match kind.as_str() {
         "change-byte-order" => {
-            doc.little_endian = p_str("byteOrder") != Some("big-endian");
+            doc.little_endian = match p_str("byteOrder") {
+                Some("littleEndian") => true,
+                Some("bigEndian") => false,
+                other => return Err(format!("tiff oracle: {other:?} is no byte order")),
+            };
         }
         "insert-ifd" => {
             let index = (p_num("index").ok_or("tiff oracle: insert-ifd needs `index`")? as usize).min(doc.ifds.len());
@@ -655,10 +660,10 @@ pub fn oracle_apply_mutation(input: &[u8], spec: &Json) -> Result<Vec<u8>, Strin
         "replace-tag" => {
             let ifd_index = p_num("ifdIndex").ok_or("tiff oracle: replace-tag needs `ifdIndex`")? as usize;
             let tag = p_num("tag").ok_or("tiff oracle: replace-tag needs `tag`")? as u16;
-            let type_code = p_num("type").ok_or("tiff oracle: replace-tag needs `type`")? as u16;
+            let field_kind = p_str("kind").ok_or("tiff oracle: replace-tag needs `kind`")?;
             let values = params.and_then(|p| j_get(p, "values")).ok_or("tiff oracle: replace-tag needs `values`")?;
             if let Some(ifd) = doc.ifds.get_mut(ifd_index) {
-                ifd.set(tag, OracleValue::from_json(type_code, values)?);
+                ifd.set(tag, wire_value(field_kind, values)?);
             }
         }
         "remove-tag" => {
@@ -669,8 +674,7 @@ pub fn oracle_apply_mutation(input: &[u8], spec: &Json) -> Result<Vec<u8>, Strin
             }
         }
         "replace-pixels" => {
-            let hex = p_str("pixels").ok_or("tiff oracle: replace-pixels needs `pixels` (hex RGBA8)")?;
-            let rgba = hex_decode(hex)?;
+            let rgba = wire_bytes(params.and_then(|p| j_get(p, "pixels")).ok_or("tiff oracle: replace-pixels needs `pixels` (RGBA8 bytes)")?)?;
             let ifd0 = doc.ifds.first_mut().ok_or("tiff oracle: replace-pixels needs an existing IFD 0")?;
             let width = ifd0.get(TAG_IMAGE_WIDTH).and_then(|t| t.value.first_u32()).ok_or("tiff oracle: IFD 0 has no ImageWidth")?;
             let height = ifd0.get(TAG_IMAGE_LENGTH).and_then(|t| t.value.first_u32()).ok_or("tiff oracle: IFD 0 has no ImageLength")?;

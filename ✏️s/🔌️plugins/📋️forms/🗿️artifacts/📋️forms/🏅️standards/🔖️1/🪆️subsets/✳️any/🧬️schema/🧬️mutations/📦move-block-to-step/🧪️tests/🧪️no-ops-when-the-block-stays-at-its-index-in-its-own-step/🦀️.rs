@@ -22,11 +22,11 @@
 use crate::mutations::{apply_form_edit_mutation, inverse_form_mutation, FormMutation};
 use crate::{forms_steps, replace_forms_steps, FormQuestion, FormStep, FormsDiff, FormsSnapshot};
 
-const BEFORE: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/📦move-block-to-step/🧪️no-ops-when-the-block-stays-at-its-index-in-its-own-step/📸️snapshot/⬅️before/🔣️.json");
-const AFTER: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/📦move-block-to-step/🧪️no-ops-when-the-block-stays-at-its-index-in-its-own-step/📸️snapshot/➡️after/🔣️.json");
-const MUTATION: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/📦move-block-to-step/🧪️no-ops-when-the-block-stays-at-its-index-in-its-own-step/🦠️mutation/🔣️.json");
-const DIFF: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/📦move-block-to-step/🧪️no-ops-when-the-block-stays-at-its-index-in-its-own-step/🔺️diff/🔣️.json");
-const OUTCOME: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/📦move-block-to-step/🧪️no-ops-when-the-block-stays-at-its-index-in-its-own-step/🎯️outcome/🔣️.json");
+const BEFORE: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/📦move-block-to-step/🧪️no-ops-when-block-stays-index-own-step/📸️snapshot/⬅️before/🔣️.json");
+const AFTER: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/📦move-block-to-step/🧪️no-ops-when-block-stays-index-own-step/📸️snapshot/➡️after/🔣️.json");
+const MUTATION: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/📦move-block-to-step/🧪️no-ops-when-block-stays-index-own-step/🦠️mutation/🔣️.json");
+const DIFF: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/📦move-block-to-step/🧪️no-ops-when-block-stays-index-own-step/🔺️diff/🔣️.json");
+const OUTCOME: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/📦move-block-to-step/🧪️no-ops-when-block-stays-index-own-step/🎯️outcome/🔣️.json");
 
 fn mutation() -> FormMutation {
     dsl::os_pack::json::from_json_str(MUTATION).expect("mutation decodes")
@@ -103,8 +103,8 @@ async fn inverse_restores_before() {
 }
 
 /// 🔣️ Both committed snapshots and the committed mutation are already canonical. `MoveBlockToStep`
-/// declares no `rename_all` of its own, so `step_id`/`block_id`/`to_step_id` stay snake_case on the
-/// wire while the enum tag is camelCased to `moveBlockToStep`.
+/// declares `rename_all = "camelCase"` like its enum tag, so the wire spells `stepId`/`blockId`/
+/// `toStepId` beside `moveBlockToStep`.
 #[semio_framework_async_macros::async_test]
 async fn committed_json_is_canonical() {
     for (label, text) in [("before", BEFORE), ("after", AFTER)] {

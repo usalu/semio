@@ -4,16 +4,46 @@
   "title": "UnbindOutput",
   "type": "object",
   "properties": {
-    "node_id": {
-      "type": "string"
+    "operation": {
+      "const": "unbindOutput"
     },
-    "port_id": {
-      "type": "string"
+    "nodeId": {
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Node",
+          "de": "Knoten"
+        },
+        "ref": {
+          "kind": "node"
+        },
+        "group": "target",
+        "order": 10
+      }
+    },
+    "portId": {
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Port",
+          "de": "Anschluss"
+        },
+        "ref": {
+          "kind": "port"
+        },
+        "group": "target",
+        "order": 20
+      }
     }
   },
   "required": [
-    "node_id",
-    "port_id"
+    "operation",
+    "nodeId",
+    "portId"
   ],
   "additionalProperties": false
 }

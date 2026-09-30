@@ -1236,10 +1236,15 @@ pub(crate) fn paint_node_step_with_driver(
                         input_node.value.as_str()
                     }
                 });
+                let swatch = (input_node.input_kind == "color").then(|| color_input_swatch(bounds, display)).flatten();
+                let text_bounds = swatch.map_or(bounds, |(_, _, text_bounds)| text_bounds);
                 match cursor.phase {
                     0 => {
                         let result = retained_fixed_output(draw, |draw| {
                             push_control_border(draw, bounds, theme, if focus_ring_visible(flags) { theme.accent } else { theme.border_normal }, theme.input_bg);
+                            if let Some((swatch, color, _)) = swatch {
+                                draw.push_rounded([swatch.x, swatch.y, swatch.w, swatch.h], color, 2.0);
+                            }
                         });
                         cursor.advance(1);
                         if result.is_err() {
@@ -1248,7 +1253,7 @@ pub(crate) fn paint_node_step_with_driver(
                             RetainedNodePaintStep::Pending
                         }
                     }
-                    1 => match retained_text_node_step(display, bounds, theme.font_size_body, if input_node.value.is_empty() { theme.text_muted } else { theme.text }, atlas, draw, cursor) {
+                    1 => match retained_text_node_step(display, text_bounds, theme.font_size_body, if input_node.value.is_empty() { theme.text_muted } else { theme.text }, atlas, draw, cursor) {
                         RetainedNodePaintStep::Complete => {
                             cursor.advance(2);
                             RetainedNodePaintStep::Pending
@@ -1260,7 +1265,7 @@ pub(crate) fn paint_node_step_with_driver(
                             cursor.advance(3);
                             return RetainedNodePaintStep::Pending;
                         };
-                        match retained_caret_step(&edit.text, edit.caret, bounds, theme.font_size_body, RetainedCaretAlignment::Start, theme.accent, atlas, draw, cursor) {
+                        match retained_caret_step(&edit.text, edit.caret, text_bounds, theme.font_size_body, RetainedCaretAlignment::Start, theme.accent, atlas, draw, cursor) {
                             RetainedNodePaintStep::Complete => {
                                 cursor.advance(3);
                                 RetainedNodePaintStep::Pending
@@ -1498,9 +1503,12 @@ pub(crate) fn paint_node_step_with_driver(
                     let value = node.state.slider_draft_value.unwrap_or(slider.value);
                     let unit_label = crate::wgpu::layout::slider_unit_label(slider.value, slider.unit.as_deref());
                     let presentation = crate::wgpu::layout::slider_control_presentation(bounds, value, slider.min, slider.max, unit_label.as_ref().map(|_| layout.inline_suffix_width), theme.gap_standard, inline).slider;
-                    let result = retained_fixed_output(draw, |draw| {
+                    let result = retained_fixed_output_budgeted(draw, RETAINED_NODE_FIXED_OUTPUT_ITEMS.max(3 + slider.snaps.len()), |draw| {
                         draw.push_rounded([presentation.rail.x, presentation.rail.y, presentation.rail.w, presentation.rail.h], theme.muted, presentation.rail.h * 0.5);
                         draw.push_rounded([presentation.range.x, presentation.range.y, presentation.range.w, presentation.range.h], theme.text_element, presentation.range.h * 0.5);
+                        for tick in crate::wgpu::slider::slider_tick_rects(presentation.rail, slider.min, slider.max, &slider.snaps, theme.stroke_hairline.max(1.0), presentation.thumb.h * 0.75) {
+                            draw.push_solid([tick.x, tick.y, tick.w, tick.h], theme.text_element.with_alpha(theme.text_element.a * 0.6));
+                        }
                         draw.push_rounded([presentation.thumb.x, presentation.thumb.y, presentation.thumb.w, presentation.thumb.h], theme.text_element, presentation.thumb.h * 0.5);
                     });
                     cursor.advance(1);
@@ -1601,7 +1609,7 @@ pub(crate) fn paint_node_step_with_driver(
                             }
                             label
                         } else if stepper.uniform {
-                            ui_contract::format_ui_number(stepper.value)
+                            crate::wgpu::stepper::stepper_value_text(stepper.value, stepper.precision)
                         } else {
                             UI_INSPECTOR_MIXED_PLACEHOLDER.to_string()
                         };
@@ -2941,7 +2949,11 @@ fn paint_input(node: &UiInputNode, edit: Option<&EditState>, bounds: Rect, flags
     let focused = focus_ring_visible(flags);
     let border = if focused { theme.accent } else { theme.border_normal };
     push_control_border(draw, bounds, theme, border, theme.input_bg);
-    let text_x = bounds.x + 8.0;
+    let swatch = (node.input_kind == "color").then(|| color_input_swatch(bounds, edit.map_or(node.value.as_str(), |edit| edit.text.as_str()))).flatten();
+    if let Some((swatch, color, _)) = swatch {
+        draw.push_rounded([swatch.x, swatch.y, swatch.w, swatch.h], color, 2.0);
+    }
+    let text_x = swatch.map_or(bounds.x, |(_, _, text_bounds)| text_bounds.x) + 8.0;
     let text_baseline_y = bounds.y + (bounds.h + theme.font_size_body) * 0.5 - 2.0;
     if let Some(edit) = focused.then_some(edit).flatten() {
         let (start, end) = edit_selection_bounds(edit.anchor, edit.caret);
@@ -2965,6 +2977,17 @@ fn paint_input(node: &UiInputNode, edit: Option<&EditState>, bounds: Rect, flags
     }
     let (display, muted): (&str, bool) = if node.value.is_empty() { (node.placeholder.as_ref().map(Label::as_str).unwrap_or(""), true) } else { (node.value.as_str(), false) };
     draw_text_on(draw, atlas, display, text_x, text_baseline_y, theme.font_size_body, if muted { theme.text_muted } else { theme.text });
+}
+
+/// 🎨️ A colour field's swatch — a square inset at its leading edge, filled with the colour its text parses to
+/// (`ui_contract::parse_ui_color_hex`, the `color_input` recipe's law) — and the bounds its hex text paints in beside
+/// it. `None` for text that is not a colour, which then paints as plain text.
+pub(crate) fn color_input_swatch(bounds: Rect, text: &str) -> Option<(Rect, Rgba, Rect)> {
+    let rgba = ui_contract::parse_ui_color_hex(text)?;
+    let side = (bounds.h - 8.0).max(4.0);
+    let swatch = Rect::new(bounds.x + 4.0, bounds.y + (bounds.h - side) * 0.5, side, side);
+    let channel = |component: f64| (component * 255.0).round() as u8;
+    Some((swatch, Rgba::from_srgb8(channel(rgba[0]), channel(rgba[1]), channel(rgba[2]), channel(rgba[3])), Rect::new(swatch.x + side, bounds.y, (bounds.w - side - 4.0).max(0.0), bounds.h)))
 }
 
 /// 🔽️ `retained` is `Some((tree, id))` for a real top-level `Select` node (able to read its
@@ -3071,6 +3094,9 @@ fn paint_slider(node: &UiSliderNode, bounds: Rect, theme: &Theme, atlas: &mut Fo
     let presentation = control.slider;
     draw.push_rounded([presentation.rail.x, presentation.rail.y, presentation.rail.w, presentation.rail.h], theme.muted, presentation.rail.h * 0.5);
     draw.push_rounded([presentation.range.x, presentation.range.y, presentation.range.w, presentation.range.h], theme.text_element, presentation.range.h * 0.5);
+    for tick in crate::wgpu::slider::slider_tick_rects(presentation.rail, node.min, node.max, &node.snaps, theme.stroke_hairline.max(1.0), presentation.thumb.h * 0.75) {
+        draw.push_solid([tick.x, tick.y, tick.w, tick.h], theme.text_element.with_alpha(theme.text_element.a * 0.6));
+    }
     draw.push_rounded([presentation.thumb.x, presentation.thumb.y, presentation.thumb.w, presentation.thumb.h], theme.text_element, presentation.thumb.h * 0.5);
     let text = ui_contract::format_ui_number(node.value);
     let (width, _) = atlas.measure_text(&text, theme.font_size_small);
@@ -3111,7 +3137,7 @@ fn paint_number_stepper(node: &UiNumberStepperNode, bounds: Rect, flags: NodeFla
     draw.push_scissor(bounds);
     push_stepper_chrome(draw, bounds, segments, ui_contract::FlowInline::Ltr, flags, None, theme);
     push_stepper_icon(draw, icons, "minus", minus, ui_contract::FlowInline::Ltr, theme);
-    let (text, color) = if node.uniform { (ui_contract::format_ui_number(node.value), theme.text) } else { (UI_INSPECTOR_MIXED_PLACEHOLDER.to_string(), theme.text_muted) };
+    let (text, color) = if node.uniform { (crate::wgpu::stepper::stepper_value_text(node.value, node.precision), theme.text) } else { (UI_INSPECTOR_MIXED_PLACEHOLDER.to_string(), theme.text_muted) };
     let width = atlas.measure_text(&text, theme.font_size_body).0;
     draw_text_on(draw, atlas, &text, center.x + (center.w - width).max(0.0) * 0.5, center.y + (center.h + theme.font_size_body) * 0.5 - 2.0, theme.font_size_body, color);
     push_stepper_icon(draw, icons, "plus", plus, ui_contract::FlowInline::Ltr, theme);

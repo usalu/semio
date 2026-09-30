@@ -8,6 +8,23 @@
       "type": "array",
       "items": {
         "type": "string"
+      },
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Selected shots",
+          "de": "Ausgewählte Aufnahmen"
+        },
+        "description": {
+          "en": "Shots selected in the gallery.",
+          "de": "In der Galerie ausgewählte Aufnahmen."
+        },
+        "ref": {
+          "kind": "shot"
+        },
+        "group": "selection",
+        "order": 10
       }
     }
   },

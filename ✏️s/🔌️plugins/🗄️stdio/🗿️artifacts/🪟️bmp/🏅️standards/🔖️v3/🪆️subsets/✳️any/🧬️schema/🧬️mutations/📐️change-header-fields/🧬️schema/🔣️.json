@@ -15,7 +15,22 @@
         {
           "type": "null"
         }
-      ]
+      ],
+      "x-semio-ui": {
+        "widget": "stepper",
+        "label": {
+          "en": "Header size",
+          "de": "Headergröße"
+        },
+        "description": {
+          "en": "biSize: 40 for BITMAPINFOHEADER.",
+          "de": "biSize: 40 für BITMAPINFOHEADER."
+        },
+        "unit": "B",
+        "precision": 0,
+        "group": "value",
+        "order": 10
+      }
     },
     "width": {
       "anyOf": [
@@ -27,7 +42,18 @@
         {
           "type": "null"
         }
-      ]
+      ],
+      "x-semio-ui": {
+        "widget": "stepper",
+        "label": {
+          "en": "Width",
+          "de": "Breite"
+        },
+        "unit": "px",
+        "precision": 0,
+        "group": "value",
+        "order": 20
+      }
     },
     "height": {
       "anyOf": [
@@ -39,7 +65,18 @@
         {
           "type": "null"
         }
-      ]
+      ],
+      "x-semio-ui": {
+        "widget": "stepper",
+        "label": {
+          "en": "Height",
+          "de": "Höhe"
+        },
+        "unit": "px",
+        "precision": 0,
+        "group": "value",
+        "order": 30
+      }
     },
     "rowOrder": {
       "anyOf": [
@@ -49,7 +86,16 @@
         {
           "type": "null"
         }
-      ]
+      ],
+      "x-semio-ui": {
+        "widget": "segmented",
+        "label": {
+          "en": "Row order",
+          "de": "Zeilenreihenfolge"
+        },
+        "group": "value",
+        "order": 40
+      }
     },
     "planes": {
       "anyOf": [
@@ -61,7 +107,21 @@
         {
           "type": "null"
         }
-      ]
+      ],
+      "x-semio-ui": {
+        "widget": "stepper",
+        "label": {
+          "en": "Color planes",
+          "de": "Farbebenen"
+        },
+        "description": {
+          "en": "Always 1.",
+          "de": "Immer 1."
+        },
+        "precision": 0,
+        "group": "value",
+        "order": 50
+      }
     },
     "bitsPerPixel": {
       "anyOf": [
@@ -73,7 +133,21 @@
         {
           "type": "null"
         }
-      ]
+      ],
+      "x-semio-ui": {
+        "widget": "stepper",
+        "label": {
+          "en": "Bits per pixel",
+          "de": "Bits pro Pixel"
+        },
+        "description": {
+          "en": "Color depth: 1, 4, 8, 16, 24 or 32.",
+          "de": "Farbtiefe: 1, 4, 8, 16, 24 oder 32."
+        },
+        "precision": 0,
+        "group": "value",
+        "order": 60
+      }
     },
     "compression": {
       "anyOf": [
@@ -85,7 +159,21 @@
         {
           "type": "null"
         }
-      ]
+      ],
+      "x-semio-ui": {
+        "widget": "stepper",
+        "label": {
+          "en": "Compression",
+          "de": "Kompression"
+        },
+        "description": {
+          "en": "biCompression, e.g. 0 = BI_RGB, 1 = BI_RLE8.",
+          "de": "biCompression, z. B. 0 = BI_RGB, 1 = BI_RLE8."
+        },
+        "precision": 0,
+        "group": "value",
+        "order": 70
+      }
     },
     "imageSize": {
       "anyOf": [
@@ -97,7 +185,18 @@
         {
           "type": "null"
         }
-      ]
+      ],
+      "x-semio-ui": {
+        "widget": "stepper",
+        "label": {
+          "en": "Image size",
+          "de": "Bildgröße"
+        },
+        "unit": "B",
+        "precision": 0,
+        "group": "value",
+        "order": 80
+      }
     },
     "xPixelsPerMeter": {
       "anyOf": [
@@ -109,7 +208,18 @@
         {
           "type": "null"
         }
-      ]
+      ],
+      "x-semio-ui": {
+        "widget": "stepper",
+        "label": {
+          "en": "Horizontal resolution",
+          "de": "Horizontale Auflösung"
+        },
+        "unit": "px/m",
+        "precision": 0,
+        "group": "value",
+        "order": 90
+      }
     },
     "yPixelsPerMeter": {
       "anyOf": [
@@ -121,7 +231,18 @@
         {
           "type": "null"
         }
-      ]
+      ],
+      "x-semio-ui": {
+        "widget": "stepper",
+        "label": {
+          "en": "Vertical resolution",
+          "de": "Vertikale Auflösung"
+        },
+        "unit": "px/m",
+        "precision": 0,
+        "group": "value",
+        "order": 100
+      }
     },
     "colorsUsed": {
       "anyOf": [
@@ -133,7 +254,17 @@
         {
           "type": "null"
         }
-      ]
+      ],
+      "x-semio-ui": {
+        "widget": "stepper",
+        "label": {
+          "en": "Colors used",
+          "de": "Verwendete Farben"
+        },
+        "precision": 0,
+        "group": "value",
+        "order": 110
+      }
     },
     "colorsImportant": {
       "anyOf": [
@@ -145,7 +276,17 @@
         {
           "type": "null"
         }
-      ]
+      ],
+      "x-semio-ui": {
+        "widget": "stepper",
+        "label": {
+          "en": "Important colors",
+          "de": "Wichtige Farben"
+        },
+        "precision": 0,
+        "group": "value",
+        "order": 120
+      }
     }
   },
   "$defs": {
@@ -154,7 +295,19 @@
       "enum": [
         "bottomUp",
         "topDown"
-      ]
+      ],
+      "x-semio-ui": {
+        "options": {
+          "bottomUp": {
+            "en": "Bottom-up",
+            "de": "Von unten nach oben"
+          },
+          "topDown": {
+            "en": "Top-down",
+            "de": "Von oben nach unten"
+          }
+        }
+      }
     }
   }
 }

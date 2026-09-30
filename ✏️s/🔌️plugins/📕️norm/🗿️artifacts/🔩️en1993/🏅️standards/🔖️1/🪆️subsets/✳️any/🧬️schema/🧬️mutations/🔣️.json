@@ -4,151 +4,592 @@
   "title": "En1993Mutation",
   "oneOf": [
     {
-      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1993/mutation/change-annex/schema.json"
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "ChangeAnnex"
+      ],
+      "properties": {
+        "ChangeAnnex": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1993/mutation/change-annex/schema.json"
+        }
+      }
     },
     {
-      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1993/mutation/update-member-properties/schema.json"
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "UpdateMemberProperties"
+      ],
+      "properties": {
+        "UpdateMemberProperties": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1993/mutation/update-member-properties/schema.json"
+        }
+      }
     },
     {
-      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1993/mutation/update-fire-inputs/schema.json"
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "UpdateFireInputs"
+      ],
+      "properties": {
+        "UpdateFireInputs": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1993/mutation/update-fire-inputs/schema.json"
+        }
+      }
     },
     {
-      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1993/mutation/update-cold-formed-inputs/schema.json"
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "UpdateColdFormedInputs"
+      ],
+      "properties": {
+        "UpdateColdFormedInputs": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1993/mutation/update-cold-formed-inputs/schema.json"
+        }
+      }
     },
     {
-      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1993/mutation/update-stainless-inputs/schema.json"
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "UpdateStainlessInputs"
+      ],
+      "properties": {
+        "UpdateStainlessInputs": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1993/mutation/update-stainless-inputs/schema.json"
+        }
+      }
     },
     {
-      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1993/mutation/update-plated-inputs/schema.json"
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "UpdatePlatedInputs"
+      ],
+      "properties": {
+        "UpdatePlatedInputs": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1993/mutation/update-plated-inputs/schema.json"
+        }
+      }
     },
     {
-      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1993/mutation/update-silo-shell-inputs/schema.json"
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "UpdateSiloShellInputs"
+      ],
+      "properties": {
+        "UpdateSiloShellInputs": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1993/mutation/update-silo-shell-inputs/schema.json"
+        }
+      }
     },
     {
-      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1993/mutation/update-bolt-inputs/schema.json"
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "UpdateBoltInputs"
+      ],
+      "properties": {
+        "UpdateBoltInputs": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1993/mutation/update-bolt-inputs/schema.json"
+        }
+      }
     },
     {
-      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1993/mutation/update-weld-inputs/schema.json"
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "UpdateWeldInputs"
+      ],
+      "properties": {
+        "UpdateWeldInputs": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1993/mutation/update-weld-inputs/schema.json"
+        }
+      }
     },
     {
-      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1993/mutation/update-fatigue-inputs/schema.json"
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "UpdateFatigueInputs"
+      ],
+      "properties": {
+        "UpdateFatigueInputs": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1993/mutation/update-fatigue-inputs/schema.json"
+        }
+      }
     },
     {
-      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1993/mutation/update-through-thickness-inputs/schema.json"
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "UpdateThroughThicknessInputs"
+      ],
+      "properties": {
+        "UpdateThroughThicknessInputs": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1993/mutation/update-through-thickness-inputs/schema.json"
+        }
+      }
     },
     {
-      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1993/mutation/update-tension-component-inputs/schema.json"
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "UpdateTensionComponentInputs"
+      ],
+      "properties": {
+        "UpdateTensionComponentInputs": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1993/mutation/update-tension-component-inputs/schema.json"
+        }
+      }
     },
     {
-      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1993/mutation/update-hss-inputs/schema.json"
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "UpdateHssInputs"
+      ],
+      "properties": {
+        "UpdateHssInputs": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1993/mutation/update-hss-inputs/schema.json"
+        }
+      }
     },
     {
-      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1993/mutation/update-bridge-inputs/schema.json"
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "UpdateBridgeInputs"
+      ],
+      "properties": {
+        "UpdateBridgeInputs": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1993/mutation/update-bridge-inputs/schema.json"
+        }
+      }
     },
     {
-      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1993/mutation/update-tower-inputs/schema.json"
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "UpdateTowerInputs"
+      ],
+      "properties": {
+        "UpdateTowerInputs": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1993/mutation/update-tower-inputs/schema.json"
+        }
+      }
     },
     {
-      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1993/mutation/update-pile-inputs/schema.json"
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "UpdatePileInputs"
+      ],
+      "properties": {
+        "UpdatePileInputs": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1993/mutation/update-pile-inputs/schema.json"
+        }
+      }
     },
     {
-      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1993/mutation/update-crane-inputs/schema.json"
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "UpdateCraneInputs"
+      ],
+      "properties": {
+        "UpdateCraneInputs": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1993/mutation/update-crane-inputs/schema.json"
+        }
+      }
     },
     {
-      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1993/mutation/insert-material/schema.json"
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "InsertMaterial"
+      ],
+      "properties": {
+        "InsertMaterial": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1993/mutation/insert-material/schema.json"
+        }
+      }
     },
     {
-      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1993/mutation/remove-material/schema.json"
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "RemoveMaterial"
+      ],
+      "properties": {
+        "RemoveMaterial": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1993/mutation/remove-material/schema.json"
+        }
+      }
     },
     {
-      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1993/mutation/insert-section/schema.json"
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "InsertSection"
+      ],
+      "properties": {
+        "InsertSection": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1993/mutation/insert-section/schema.json"
+        }
+      }
     },
     {
-      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1993/mutation/remove-section/schema.json"
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "RemoveSection"
+      ],
+      "properties": {
+        "RemoveSection": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1993/mutation/remove-section/schema.json"
+        }
+      }
     },
     {
-      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1993/mutation/insert-member/schema.json"
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "InsertMember"
+      ],
+      "properties": {
+        "InsertMember": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1993/mutation/insert-member/schema.json"
+        }
+      }
     },
     {
-      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1993/mutation/remove-member/schema.json"
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "RemoveMember"
+      ],
+      "properties": {
+        "RemoveMember": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1993/mutation/remove-member/schema.json"
+        }
+      }
     },
     {
-      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1993/mutation/insert-load-case/schema.json"
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "InsertLoadCase"
+      ],
+      "properties": {
+        "InsertLoadCase": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1993/mutation/insert-load-case/schema.json"
+        }
+      }
     },
     {
-      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1993/mutation/remove-load-case/schema.json"
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "RemoveLoadCase"
+      ],
+      "properties": {
+        "RemoveLoadCase": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1993/mutation/remove-load-case/schema.json"
+        }
+      }
     },
     {
-      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1993/mutation/insert-member-action/schema.json"
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "InsertMemberAction"
+      ],
+      "properties": {
+        "InsertMemberAction": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1993/mutation/insert-member-action/schema.json"
+        }
+      }
     },
     {
-      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1993/mutation/remove-member-action/schema.json"
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "RemoveMemberAction"
+      ],
+      "properties": {
+        "RemoveMemberAction": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1993/mutation/remove-member-action/schema.json"
+        }
+      }
     },
     {
-      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1993/mutation/insert-joint/schema.json"
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "InsertJoint"
+      ],
+      "properties": {
+        "InsertJoint": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1993/mutation/insert-joint/schema.json"
+        }
+      }
     },
     {
-      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1993/mutation/remove-joint/schema.json"
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "RemoveJoint"
+      ],
+      "properties": {
+        "RemoveJoint": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1993/mutation/remove-joint/schema.json"
+        }
+      }
     },
     {
-      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1993/mutation/insert-fatigue-detail/schema.json"
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "InsertFatigueDetail"
+      ],
+      "properties": {
+        "InsertFatigueDetail": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1993/mutation/insert-fatigue-detail/schema.json"
+        }
+      }
     },
     {
-      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1993/mutation/remove-fatigue-detail/schema.json"
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "RemoveFatigueDetail"
+      ],
+      "properties": {
+        "RemoveFatigueDetail": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1993/mutation/remove-fatigue-detail/schema.json"
+        }
+      }
     },
     {
-      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1993/mutation/insert-fire-exposure/schema.json"
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "InsertFireExposure"
+      ],
+      "properties": {
+        "InsertFireExposure": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1993/mutation/insert-fire-exposure/schema.json"
+        }
+      }
     },
     {
-      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1993/mutation/remove-fire-exposure/schema.json"
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "RemoveFireExposure"
+      ],
+      "properties": {
+        "RemoveFireExposure": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1993/mutation/remove-fire-exposure/schema.json"
+        }
+      }
     },
     {
-      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1993/mutation/insert-cold-formed-member/schema.json"
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "InsertColdFormedMember"
+      ],
+      "properties": {
+        "InsertColdFormedMember": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1993/mutation/insert-cold-formed-member/schema.json"
+        }
+      }
     },
     {
-      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1993/mutation/remove-cold-formed-member/schema.json"
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "RemoveColdFormedMember"
+      ],
+      "properties": {
+        "RemoveColdFormedMember": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1993/mutation/remove-cold-formed-member/schema.json"
+        }
+      }
     },
     {
-      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1993/mutation/insert-plated-panel/schema.json"
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "InsertPlatedPanel"
+      ],
+      "properties": {
+        "InsertPlatedPanel": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1993/mutation/insert-plated-panel/schema.json"
+        }
+      }
     },
     {
-      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1993/mutation/remove-plated-panel/schema.json"
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "RemovePlatedPanel"
+      ],
+      "properties": {
+        "RemovePlatedPanel": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1993/mutation/remove-plated-panel/schema.json"
+        }
+      }
     },
     {
-      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1993/mutation/insert-silo-shell/schema.json"
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "InsertSiloShell"
+      ],
+      "properties": {
+        "InsertSiloShell": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1993/mutation/insert-silo-shell/schema.json"
+        }
+      }
     },
     {
-      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1993/mutation/remove-silo-shell/schema.json"
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "RemoveSiloShell"
+      ],
+      "properties": {
+        "RemoveSiloShell": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1993/mutation/remove-silo-shell/schema.json"
+        }
+      }
     },
     {
-      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1993/mutation/insert-tension-component/schema.json"
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "InsertTensionComponent"
+      ],
+      "properties": {
+        "InsertTensionComponent": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1993/mutation/insert-tension-component/schema.json"
+        }
+      }
     },
     {
-      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1993/mutation/remove-tension-component/schema.json"
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "RemoveTensionComponent"
+      ],
+      "properties": {
+        "RemoveTensionComponent": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1993/mutation/remove-tension-component/schema.json"
+        }
+      }
     },
     {
-      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1993/mutation/insert-bridge-fatigue/schema.json"
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "InsertBridgeFatigue"
+      ],
+      "properties": {
+        "InsertBridgeFatigue": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1993/mutation/insert-bridge-fatigue/schema.json"
+        }
+      }
     },
     {
-      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1993/mutation/remove-bridge-fatigue/schema.json"
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "RemoveBridgeFatigue"
+      ],
+      "properties": {
+        "RemoveBridgeFatigue": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1993/mutation/remove-bridge-fatigue/schema.json"
+        }
+      }
     },
     {
-      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1993/mutation/insert-tower-leg/schema.json"
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "InsertTowerLeg"
+      ],
+      "properties": {
+        "InsertTowerLeg": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1993/mutation/insert-tower-leg/schema.json"
+        }
+      }
     },
     {
-      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1993/mutation/remove-tower-leg/schema.json"
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "RemoveTowerLeg"
+      ],
+      "properties": {
+        "RemoveTowerLeg": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1993/mutation/remove-tower-leg/schema.json"
+        }
+      }
     },
     {
-      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1993/mutation/insert-pile/schema.json"
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "InsertPile"
+      ],
+      "properties": {
+        "InsertPile": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1993/mutation/insert-pile/schema.json"
+        }
+      }
     },
     {
-      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1993/mutation/remove-pile/schema.json"
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "RemovePile"
+      ],
+      "properties": {
+        "RemovePile": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1993/mutation/remove-pile/schema.json"
+        }
+      }
     },
     {
-      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1993/mutation/insert-crane-runway/schema.json"
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "InsertCraneRunway"
+      ],
+      "properties": {
+        "InsertCraneRunway": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1993/mutation/insert-crane-runway/schema.json"
+        }
+      }
     },
     {
-      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1993/mutation/remove-crane-runway/schema.json"
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "RemoveCraneRunway"
+      ],
+      "properties": {
+        "RemoveCraneRunway": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1993/mutation/remove-crane-runway/schema.json"
+        }
+      }
     }
   ]
 }

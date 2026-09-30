@@ -1,0 +1,13 @@
+{
+  "metadataFiles": [
+    ".source-content-sha256",
+    ".source-stat-index.json"
+  ],
+  "sourceFiles": {
+    "🦀️.rs": "fn retained_source() {}\n",
+    "nested/🔣️.json": "{\"authored\":true}\n"
+  },
+  "componentBase": "fixture_component",
+  "unexpected": "private-source.json",
+  "schema": "semio.dev.source-stat-index/v1"
+}

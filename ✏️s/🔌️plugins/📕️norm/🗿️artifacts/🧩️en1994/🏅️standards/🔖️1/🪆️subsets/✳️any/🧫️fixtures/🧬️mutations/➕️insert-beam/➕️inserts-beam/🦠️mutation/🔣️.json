@@ -49,9 +49,7 @@
           "category": "self_steel",
           "stage": "construction",
           "qAreaPa": 0.0,
-          "mKNm": 0.0,
-          "vKN": 0.0,
-          "nKN": 0.0,
+          "fKN": 0.0,
           "deltaSigmaKPa": 0.0,
           "deltaTauKPa": 0.0
         },
@@ -61,9 +59,7 @@
           "category": "wet_concrete",
           "stage": "construction",
           "qAreaPa": 0.0,
-          "mKNm": 0.0,
-          "vKN": 0.0,
-          "nKN": 0.0,
+          "fKN": 0.0,
           "deltaSigmaKPa": 0.0,
           "deltaTauKPa": 0.0
         },
@@ -73,9 +69,7 @@
           "category": "construction",
           "stage": "construction",
           "qAreaPa": 1000.0,
-          "mKNm": 0.0,
-          "vKN": 0.0,
-          "nKN": 0.0,
+          "fKN": 0.0,
           "deltaSigmaKPa": 0.0,
           "deltaTauKPa": 0.0
         },
@@ -85,9 +79,7 @@
           "category": "self_steel",
           "stage": "composite",
           "qAreaPa": 0.0,
-          "mKNm": 0.0,
-          "vKN": 0.0,
-          "nKN": 0.0,
+          "fKN": 0.0,
           "deltaSigmaKPa": 0.0,
           "deltaTauKPa": 0.0
         },
@@ -97,9 +89,7 @@
           "category": "slab",
           "stage": "composite",
           "qAreaPa": 0.0,
-          "mKNm": 0.0,
-          "vKN": 0.0,
-          "nKN": 0.0,
+          "fKN": 0.0,
           "deltaSigmaKPa": 0.0,
           "deltaTauKPa": 0.0
         },
@@ -109,9 +99,7 @@
           "category": "finishes",
           "stage": "composite",
           "qAreaPa": 0.0,
-          "mKNm": 0.0,
-          "vKN": 0.0,
-          "nKN": 0.0,
+          "fKN": 0.0,
           "deltaSigmaKPa": 0.0,
           "deltaTauKPa": 0.0
         },
@@ -121,9 +109,7 @@
           "category": "B",
           "stage": "composite",
           "qAreaPa": 2000.0,
-          "mKNm": 0.0,
-          "vKN": 0.0,
-          "nKN": 0.0,
+          "fKN": 0.0,
           "deltaSigmaKPa": 0.0,
           "deltaTauKPa": 0.0
         }

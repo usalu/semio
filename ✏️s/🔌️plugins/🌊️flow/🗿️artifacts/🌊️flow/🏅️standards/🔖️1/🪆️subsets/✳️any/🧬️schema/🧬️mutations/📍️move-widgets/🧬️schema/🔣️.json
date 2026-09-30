@@ -5,9 +5,13 @@
   "type": "object",
   "additionalProperties": false,
   "required": [
+    "mutation",
     "entries"
   ],
   "properties": {
+    "mutation": {
+      "const": "moveWidgets"
+    },
     "entries": {
       "type": "array",
       "items": {
@@ -38,6 +42,17 @@
               }
             }
           }
+        }
+      },
+      "x-semio-ui": {
+        "role": "value",
+        "label": {
+          "en": "Widget Positions",
+          "de": "Widget-Positionen"
+        },
+        "description": {
+          "en": "New layout per widget.",
+          "de": "Neues Layout je Widget."
         }
       }
     }

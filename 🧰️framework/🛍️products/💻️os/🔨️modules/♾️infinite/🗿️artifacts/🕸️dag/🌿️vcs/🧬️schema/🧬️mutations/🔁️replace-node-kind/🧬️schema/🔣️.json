@@ -2,34 +2,51 @@
   "$schema": "http://json-schema.org/draft-07/schema#",
   "$id": "https://json.schemas.assets.semio-tech.com/os/infinite/artifacts/dag/vcs/mutation/replace-node-kind/schema.json",
   "title": "ReplaceNodeKind",
-  "type": "object",
-  "$defs": {
-    "Payload": {
-      "type": "object",
-      "required": [
-        "id",
-        "newKind"
-      ],
-      "properties": {
-        "id": {
-          "type": "string"
-        },
-        "newKind": {
-          "$ref": "https://json.schemas.assets.semio-tech.com/os/infinite/artifacts/dag/vcs/schema.json#/$defs/DagNodeKind"
-        }
-      },
-      "description": "Actual intrinsic DagNodeKind payload; the shared intrinsic DslField lowering provides text and binary codecs."
-    }
-  },
-  "allOf": [
-    {
-      "$ref": "#/$defs/Payload"
-    }
-  ],
   "propertyNames": {
     "enum": [
+      "operation",
       "id",
       "newKind"
     ]
+  },
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "operation",
+    "id",
+    "newKind"
+  ],
+  "properties": {
+    "operation": {
+      "const": "replaceNodeKind"
+    },
+    "id": {
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Node",
+          "de": "Knoten"
+        },
+        "ref": {
+          "kind": "node"
+        },
+        "group": "target",
+        "order": 10
+      }
+    },
+    "newKind": {
+      "$ref": "https://json.schemas.assets.semio-tech.com/os/infinite/artifacts/dag/vcs/schema.json#/$defs/DagNodeKind",
+      "x-semio-ui": {
+        "role": "value",
+        "label": {
+          "en": "Node kind",
+          "de": "Knotenart"
+        },
+        "group": "record",
+        "order": 20
+      }
+    }
   }
 }

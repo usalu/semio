@@ -5,6 +5,7 @@
   "type": "object",
   "additionalProperties": false,
   "required": [
+    "mutation",
     "id",
     "newGap",
     "newRise",
@@ -16,32 +17,191 @@
     "newY"
   ],
   "properties": {
+    "mutation": {
+      "const": "replaceFastenerGeometry"
+    },
     "id": {
-      "type": "string"
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Fastener",
+          "de": "Verbinder"
+        },
+        "description": {
+          "en": "The fastener this mutation addresses.",
+          "de": "Der Verbinder, den diese Mutation adressiert."
+        },
+        "ref": {
+          "kind": "fastener",
+          "domain": "vortex",
+          "granularity": "fastener"
+        },
+        "group": "target",
+        "order": 10
+      }
     },
     "newGap": {
-      "type": "number"
+      "type": "number",
+      "x-semio-ui": {
+        "widget": "stepper",
+        "role": "value",
+        "label": {
+          "en": "Gap",
+          "de": "Spalt"
+        },
+        "unit": "m",
+        "step": 0.01,
+        "precision": 3,
+        "group": "offset",
+        "order": 20
+      }
     },
     "newShift": {
-      "type": "number"
+      "type": "number",
+      "x-semio-ui": {
+        "widget": "stepper",
+        "role": "value",
+        "label": {
+          "en": "Shift",
+          "de": "Verschiebung"
+        },
+        "unit": "m",
+        "step": 0.01,
+        "precision": 3,
+        "group": "offset",
+        "order": 30
+      }
     },
     "newRise": {
-      "type": "number"
+      "type": "number",
+      "x-semio-ui": {
+        "widget": "stepper",
+        "role": "value",
+        "label": {
+          "en": "Rise",
+          "de": "Anstieg"
+        },
+        "unit": "m",
+        "step": 0.01,
+        "precision": 3,
+        "group": "offset",
+        "order": 40
+      }
     },
     "newRotation": {
-      "type": "number"
+      "type": "number",
+      "x-semio-ui": {
+        "widget": "dial",
+        "role": "value",
+        "label": {
+          "en": "Rotation",
+          "de": "Drehung"
+        },
+        "unit": "deg",
+        "step": 1,
+        "precision": 1,
+        "softMin": -180,
+        "softMax": 180,
+        "snaps": [
+          -180,
+          -90,
+          0,
+          90,
+          180
+        ],
+        "group": "rotation",
+        "order": 50
+      }
     },
     "newTurn": {
-      "type": "number"
+      "type": "number",
+      "x-semio-ui": {
+        "widget": "dial",
+        "role": "value",
+        "label": {
+          "en": "Turn",
+          "de": "Drehung um Achse"
+        },
+        "unit": "deg",
+        "step": 1,
+        "precision": 1,
+        "softMin": -180,
+        "softMax": 180,
+        "snaps": [
+          -180,
+          -90,
+          0,
+          90,
+          180
+        ],
+        "group": "rotation",
+        "order": 60
+      }
     },
     "newTilt": {
-      "type": "number"
+      "type": "number",
+      "x-semio-ui": {
+        "widget": "dial",
+        "role": "value",
+        "label": {
+          "en": "Tilt",
+          "de": "Neigung"
+        },
+        "unit": "deg",
+        "step": 1,
+        "precision": 1,
+        "softMin": -180,
+        "softMax": 180,
+        "snaps": [
+          -180,
+          -90,
+          0,
+          90,
+          180
+        ],
+        "group": "rotation",
+        "order": 70
+      }
     },
     "newX": {
-      "type": "number"
+      "type": "number",
+      "x-semio-ui": {
+        "widget": "stepper",
+        "role": "value",
+        "label": {
+          "en": "Diagram X",
+          "de": "Diagramm-X"
+        },
+        "description": {
+          "en": "Horizontal offset in the connection diagram.",
+          "de": "Horizontaler Versatz im Verbindungsdiagramm."
+        },
+        "step": 1,
+        "precision": 2,
+        "group": "diagram",
+        "order": 80
+      }
     },
     "newY": {
-      "type": "number"
+      "type": "number",
+      "x-semio-ui": {
+        "widget": "stepper",
+        "role": "value",
+        "label": {
+          "en": "Diagram Y",
+          "de": "Diagramm-Y"
+        },
+        "description": {
+          "en": "Vertical offset in the connection diagram.",
+          "de": "Vertikaler Versatz im Verbindungsdiagramm."
+        },
+        "step": 1,
+        "precision": 2,
+        "group": "diagram",
+        "order": 90
+      }
     }
   }
 }

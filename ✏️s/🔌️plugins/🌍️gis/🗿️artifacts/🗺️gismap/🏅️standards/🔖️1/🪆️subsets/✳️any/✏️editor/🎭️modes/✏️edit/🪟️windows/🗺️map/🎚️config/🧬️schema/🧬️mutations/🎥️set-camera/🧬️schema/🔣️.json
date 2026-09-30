@@ -3,22 +3,31 @@
   "$id": "https://json.schemas.assets.semio-tech.com/window/gis/map/config/mutation/set-camera/schema.json",
   "title": "SetCamera",
   "type": "object",
-  "$defs": {
-    "Payload": {
-      "type": "object",
-      "required": [
-        "cameraJson"
-      ],
-      "properties": {
-        "cameraJson": {
-          "type": "string"
-        }
+  "additionalProperties": false,
+  "required": [
+    "operation",
+    "cameraJson"
+  ],
+  "properties": {
+    "operation": {
+      "const": "setCamera"
+    },
+    "cameraJson": {
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "multiline",
+        "role": "value",
+        "label": {
+          "en": "Camera (JSON)",
+          "de": "Kamera (JSON)"
+        },
+        "description": {
+          "en": "Serialized map camera.",
+          "de": "Serialisierte Kartenkamera."
+        },
+        "group": "camera",
+        "order": 10
       }
     }
-  },
-  "allOf": [
-    {
-      "$ref": "#/$defs/Payload"
-    }
-  ]
+  }
 }

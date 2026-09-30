@@ -5,19 +5,17 @@
   "type": "object",
   "additionalProperties": false,
   "required": [
-    "newT10ActualThicknessMm",
-    "newT10SteelSubgrade",
-    "newT10TEdC"
+    "section"
   ],
   "properties": {
-    "newT10SteelSubgrade": {
-      "type": "string"
-    },
-    "newT10ActualThicknessMm": {
-      "type": "number"
-    },
-    "newT10TEdC": {
-      "type": "number"
+    "section": {
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1993/snapshot.json#/$defs/SteelSection",
+      "x-semio-ui": {
+        "label": {
+          "en": "Cross-section",
+          "de": "Querschnitt"
+        }
+      }
     }
   }
 }

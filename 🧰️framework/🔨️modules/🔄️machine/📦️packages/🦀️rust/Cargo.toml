@@ -19,7 +19,6 @@ wasm-opt = false
 wasm-opt = false
 
 [lib]
-crate-type = ["rlib", "cdylib"]
 path = "🦀️.rs"
 
 [features]

@@ -54,6 +54,7 @@ pub fn plugin() -> Result<Plugin<StdioImageApps>, PluginAssemblyError> {
         .version(env!("CARGO_PKG_VERSION"))
         .package_id("semio:stdio-image")
         .depends_on("stdio", semio_framework::tree_pin!())
+        .schema_documents(semio_s_artifact_stdio_contract::STDIO_REGISTRY_SCHEMA_DOCUMENTS)
         .host_artifact(semio_s_artifact_stdio_png::declaration(semio_s_artifact_stdio_png::definition()?).map_err(PluginAssemblyError::definition)?)
         .host_artifact(semio_s_artifact_stdio_jpg::declaration(semio_s_artifact_stdio_jpg::definition()?).map_err(PluginAssemblyError::definition)?)
         .host_artifact(semio_s_artifact_stdio_bmp::declaration(semio_s_artifact_stdio_bmp::definition()?).map_err(PluginAssemblyError::definition)?)

@@ -3,6 +3,12 @@
   "$id": "https://json.schemas.assets.semio-tech.com/s/stdio/gltf/2.0/any/diff/text.json",
   "title": "GltfDiffTextDocument",
   "type": "object",
+  "x-semio-formats": [
+    "🔣️jsonschema",
+    "🟦️typescript",
+    "🔗️graphql",
+    "🛰️protobuf"
+  ],
   "additionalProperties": false,
   "required": [
     "text",
@@ -17,7 +23,7 @@
       "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/gltf/2.0/any/diff.json"
     },
     "derivation": {
-      "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/gltf/2.0/any/diff.json#/$defs/derivation"
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/gltf/2.0/any/diff.json#/$defs/GltfDiffDerivation"
     }
   }
 }

@@ -9,7 +9,20 @@
   ],
   "properties": {
     "id": {
-      "type": "string"
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Link",
+          "de": "Verknüpfung"
+        },
+        "ref": {
+          "kind": "link"
+        },
+        "group": "target",
+        "order": 10
+      }
     }
   }
 }

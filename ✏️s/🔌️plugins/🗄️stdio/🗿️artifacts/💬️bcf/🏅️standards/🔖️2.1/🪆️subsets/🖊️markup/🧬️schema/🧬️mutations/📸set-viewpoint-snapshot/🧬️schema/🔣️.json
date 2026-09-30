@@ -5,15 +5,55 @@
   "type": "object",
   "additionalProperties": false,
   "required": [
-    "topic_guid",
+    "mutation",
+    "topicGuid",
     "guid"
   ],
   "properties": {
-    "topic_guid": {
-      "type": "string"
+    "mutation": {
+      "const": "setViewpointSnapshot"
+    },
+    "topicGuid": {
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Topic",
+          "de": "Thema"
+        },
+        "description": {
+          "en": "GUID of the topic.",
+          "de": "GUID des Themas."
+        },
+        "ref": {
+          "kind": "topic",
+          "domain": "bcf"
+        },
+        "group": "target",
+        "order": 10
+      }
     },
     "guid": {
-      "type": "string"
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Viewpoint",
+          "de": "Ansichtspunkt"
+        },
+        "description": {
+          "en": "GUID of the viewpoint.",
+          "de": "GUID des Ansichtspunkts."
+        },
+        "ref": {
+          "kind": "viewpoint",
+          "domain": "bcf"
+        },
+        "group": "target",
+        "order": 20
+      }
     },
     "snapshot": {
       "anyOf": [
@@ -28,7 +68,19 @@
         {
           "type": "null"
         }
-      ]
+      ],
+      "x-semio-ui": {
+        "label": {
+          "en": "Snapshot image",
+          "de": "Snapshot-Bild"
+        },
+        "description": {
+          "en": "PNG bytes of the viewpoint snapshot; empty removes it.",
+          "de": "PNG-Bytes des Ansichtspunkt-Snapshots; leer entfernt ihn."
+        },
+        "group": "value",
+        "order": 30
+      }
     }
   }
 }

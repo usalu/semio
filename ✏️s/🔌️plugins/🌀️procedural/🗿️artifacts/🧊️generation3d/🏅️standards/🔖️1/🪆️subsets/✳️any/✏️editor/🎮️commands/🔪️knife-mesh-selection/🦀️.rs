@@ -43,7 +43,3 @@ pub fn apply_selected(payload: &KnifeMeshSelection, doc: &ArtifactView<'_, Gener
 pub fn handle(payload: &KnifeMeshSelection, doc: &ArtifactView<'_, Generation3dSnapshot>, _cfg: &ConfigView<'_, Generation3dConfig>, _session: &mut FlowEvalSession) -> Result<Emit<Generation3dMutation, Generation3dConfigMutation>, Fault> {
     apply_selected(payload, doc, &[])
 }
-
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;

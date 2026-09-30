@@ -5,12 +5,34 @@
   "type": "object",
   "additionalProperties": false,
   "required": [
+    "mutation",
     "id"
   ],
   "properties": {
+    "mutation": {
+      "const": "deleteKnowledgeRecord"
+    },
     "id": {
-      "type": "integer",
-      "minimum": 0
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Knowledge Record",
+          "de": "Wissenseintrag"
+        },
+        "description": {
+          "en": "The knowledge record to delete.",
+          "de": "Zu löschender Eintrag vom Typ „Wissenseintrag“."
+        },
+        "ref": {
+          "kind": "knowledgeRecord",
+          "domain": "program",
+          "granularity": "entity"
+        },
+        "group": "target",
+        "order": 10
+      }
     }
   }
 }

@@ -41,7 +41,7 @@
     },
     "emblem": {
       "anyOf": [
-        { "$ref": "https://json.schemas.assets.semio-tech.com/os/store/child.json" },
+        { "$ref": "https://json.schemas.assets.semio-tech.com/os/store/child/schema.json" },
         { "type": "null" }
       ],
       "x-semio-state": "artifact",

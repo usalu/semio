@@ -17,7 +17,40 @@
       "type": "string"
     },
     "topology": {
-      "$ref": "#/$defs/SemioTopology"
+      "$ref": "#/$defs/SemioTopology",
+      "x-semio-ui": {
+        "widget": "select",
+        "label": {
+          "en": "Primitive topology",
+          "de": "Primitivtopologie"
+        },
+        "options": {
+          "points": {
+            "en": "Points",
+            "de": "Punkte"
+          },
+          "lines": {
+            "en": "Lines",
+            "de": "Linien"
+          },
+          "lineStrip": {
+            "en": "Line strip",
+            "de": "Linienzug"
+          },
+          "triangles": {
+            "en": "Triangles",
+            "de": "Dreiecke"
+          },
+          "triangleStrip": {
+            "en": "Triangle strip",
+            "de": "Dreiecksstreifen"
+          },
+          "triangleFan": {
+            "en": "Triangle fan",
+            "de": "Dreiecksfächer"
+          }
+        }
+      }
     }
   },
   "$defs": {

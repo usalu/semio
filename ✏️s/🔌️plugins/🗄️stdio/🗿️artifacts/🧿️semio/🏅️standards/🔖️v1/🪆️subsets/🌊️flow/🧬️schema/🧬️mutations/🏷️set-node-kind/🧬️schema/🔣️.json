@@ -5,19 +5,20 @@
   "type": "object",
   "additionalProperties": false,
   "required": [
+    "mutation",
     "id",
     "kind"
   ],
   "properties": {
+    "mutation": {
+      "const": "setNodeKind",
+      "description": "Aggregate discriminator spliced in by SemioFlowMutation; absent when the payload stands alone."
+    },
     "id": {
       "type": "string"
     },
     "kind": {
       "type": "string"
-    },
-    "mutation": {
-      "const": "setNodeKind",
-      "description": "Aggregate discriminator spliced in by SemioFlowMutation; absent when the payload stands alone."
     }
   }
 }

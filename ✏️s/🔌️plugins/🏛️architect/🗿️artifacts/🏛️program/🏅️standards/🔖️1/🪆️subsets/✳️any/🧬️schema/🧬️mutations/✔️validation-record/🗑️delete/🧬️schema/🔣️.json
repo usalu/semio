@@ -5,12 +5,34 @@
   "type": "object",
   "additionalProperties": false,
   "required": [
+    "mutation",
     "id"
   ],
   "properties": {
+    "mutation": {
+      "const": "deleteValidationRecord"
+    },
     "id": {
-      "type": "integer",
-      "minimum": 0
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Validation Record",
+          "de": "Validierungseintrag"
+        },
+        "description": {
+          "en": "The validation record to delete.",
+          "de": "Zu löschender Eintrag vom Typ „Validierungseintrag“."
+        },
+        "ref": {
+          "kind": "validationRecord",
+          "domain": "program",
+          "granularity": "entity"
+        },
+        "group": "target",
+        "order": 10
+      }
     }
   }
 }

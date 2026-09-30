@@ -5,11 +5,33 @@
   "type": "object",
   "additionalProperties": false,
   "required": [
+    "mutation",
     "id"
   ],
   "properties": {
+    "mutation": {
+      "const": "deleteFault"
+    },
     "id": {
-      "type": "integer"
+      "type": "integer",
+      "minimum": 0,
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Fault",
+          "de": "Fehler"
+        },
+        "description": {
+          "en": "The fault to delete, by id.",
+          "de": "Fehler, den diese Mutation löscht, per ID."
+        },
+        "ref": {
+          "kind": "fault"
+        },
+        "group": "target",
+        "order": 10
+      }
     }
   }
 }

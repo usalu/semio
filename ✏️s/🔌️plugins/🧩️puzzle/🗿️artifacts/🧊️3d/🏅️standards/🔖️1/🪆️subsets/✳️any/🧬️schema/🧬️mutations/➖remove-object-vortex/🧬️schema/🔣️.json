@@ -5,15 +5,55 @@
   "type": "object",
   "additionalProperties": false,
   "required": [
+    "mutation",
     "objectId",
     "vortexId"
   ],
   "properties": {
+    "mutation": {
+      "const": "removeObjectVortex"
+    },
     "objectId": {
-      "type": "string"
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Object",
+          "de": "Objekt"
+        },
+        "description": {
+          "en": "The object that owns the vortex.",
+          "de": "Das Objekt, dem der Vortex gehört."
+        },
+        "ref": {
+          "kind": "object",
+          "domain": "vortex",
+          "granularity": "object"
+        },
+        "group": "target",
+        "order": 10
+      }
     },
     "vortexId": {
-      "type": "string"
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Vortex",
+          "de": "Vortex"
+        },
+        "description": {
+          "en": "Id of the vortex on its object.",
+          "de": "ID des Vortex an seinem Objekt."
+        },
+        "ref": {
+          "kind": "vortex"
+        },
+        "group": "target",
+        "order": 20
+      }
     }
   }
 }

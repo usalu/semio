@@ -9,7 +9,16 @@
   ],
   "properties": {
     "base": {
-      "type": "string"
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "text",
+        "label": {
+          "en": "Relationship base URI",
+          "de": "Basis-URI der Beziehungen"
+        },
+        "group": "value",
+        "order": 10
+      }
     }
   }
 }

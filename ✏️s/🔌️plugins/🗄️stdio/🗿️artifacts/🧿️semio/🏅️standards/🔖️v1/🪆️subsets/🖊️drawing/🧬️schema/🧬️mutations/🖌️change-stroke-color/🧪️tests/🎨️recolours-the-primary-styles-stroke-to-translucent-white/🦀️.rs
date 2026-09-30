@@ -10,11 +10,11 @@ use crate::standards::v1::subsets::drawing::schema::mutations::SemioDrawingMutat
 use crate::standards::v1::subsets::drawing::schema::snapshot::SemioDrawingSnapshot;
 use protocol::{Mutation, MutationDiff};
 
-const BEFORE: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🖌️change-stroke-color/🎨️recolours-the-primary-styles-stroke-to-translucent-white/📸️snapshot/⬅️before/🔣️.json");
-const AFTER: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🖌️change-stroke-color/🎨️recolours-the-primary-styles-stroke-to-translucent-white/📸️snapshot/➡️after/🔣️.json");
-const MUTATION: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🖌️change-stroke-color/🎨️recolours-the-primary-styles-stroke-to-translucent-white/🦠️mutation/🔣️.json");
-const DIFF: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🖌️change-stroke-color/🎨️recolours-the-primary-styles-stroke-to-translucent-white/🔺️diff/🔣️.json");
-const OUTCOME: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🖌️change-stroke-color/🎨️recolours-the-primary-styles-stroke-to-translucent-white/🎯️outcome/🔣️.json");
+const BEFORE: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🖌️change-stroke-color/🎨️recolours-primary-styles-stroke/📸️snapshot/⬅️before/🔣️.json");
+const AFTER: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🖌️change-stroke-color/🎨️recolours-primary-styles-stroke/📸️snapshot/➡️after/🔣️.json");
+const MUTATION: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🖌️change-stroke-color/🎨️recolours-primary-styles-stroke/🦠️mutation/🔣️.json");
+const DIFF: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🖌️change-stroke-color/🎨️recolours-primary-styles-stroke/🔺️diff/🔣️.json");
+const OUTCOME: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🖌️change-stroke-color/🎨️recolours-primary-styles-stroke/🎯️outcome/🔣️.json");
 
 fn before() -> SemioDrawingSnapshot {
     dsl::json::from_json_str(BEFORE).expect("change-stroke-color before snapshot decodes")

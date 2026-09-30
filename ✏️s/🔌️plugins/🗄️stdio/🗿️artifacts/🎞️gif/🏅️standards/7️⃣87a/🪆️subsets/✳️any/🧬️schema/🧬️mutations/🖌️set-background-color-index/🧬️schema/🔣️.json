@@ -5,17 +5,32 @@
   "type": "object",
   "additionalProperties": false,
   "required": [
+    "mutation",
     "index"
   ],
   "properties": {
-    "index": {
-      "type": "integer",
-      "minimum": 0,
-      "maximum": 255
-    },
     "mutation": {
       "const": "setBackgroundColorIndex",
       "description": "Aggregate discriminator spliced in by GifMutation; absent when the payload stands alone."
+    },
+    "index": {
+      "type": "integer",
+      "minimum": 0,
+      "maximum": 255,
+      "x-semio-ui": {
+        "widget": "stepper",
+        "label": {
+          "en": "Background color index",
+          "de": "Hintergrundfarbindex"
+        },
+        "description": {
+          "en": "Index of the palette color, 0 to 255.",
+          "de": "Index der Palettenfarbe, 0 bis 255."
+        },
+        "precision": 0,
+        "group": "value",
+        "order": 10
+      }
     }
   }
 }

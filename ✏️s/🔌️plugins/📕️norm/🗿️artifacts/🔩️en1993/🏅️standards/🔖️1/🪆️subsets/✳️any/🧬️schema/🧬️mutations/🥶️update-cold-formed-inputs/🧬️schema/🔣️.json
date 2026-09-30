@@ -5,31 +5,17 @@
   "type": "object",
   "additionalProperties": false,
   "required": [
-    "newCfBBarMm",
-    "newCfGrossResistanceKn",
-    "newCfKSigma",
-    "newCfNEdKn",
-    "newCfPsi",
-    "newCfTMm"
+    "coldFormedMember"
   ],
   "properties": {
-    "newCfBBarMm": {
-      "type": "number"
-    },
-    "newCfTMm": {
-      "type": "number"
-    },
-    "newCfKSigma": {
-      "type": "number"
-    },
-    "newCfPsi": {
-      "type": "number"
-    },
-    "newCfNEdKn": {
-      "type": "number"
-    },
-    "newCfGrossResistanceKn": {
-      "type": "number"
+    "coldFormedMember": {
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1993/snapshot.json#/$defs/ColdFormedMember",
+      "x-semio-ui": {
+        "label": {
+          "en": "Cold-formed member",
+          "de": "Kaltgeformtes Bauteil"
+        }
+      }
     }
   }
 }

@@ -1,0 +1,172 @@
+{
+  "case": "dialog-choices",
+  "kind": "composite",
+  "description": "A finalize prompt with a staged name field, a destructive choice described by its consequence, and the primary submit.",
+  "outcome": "accept",
+  "limits": null,
+  "tree": {
+    "root": 0,
+    "nodeCount": 10,
+    "shape": [
+      {
+        "id": 0,
+        "key": "#0",
+        "type": "container",
+        "children": [
+          1,
+          2,
+          3,
+          5,
+          6
+        ]
+      },
+      {
+        "id": 1,
+        "key": "title",
+        "type": "text",
+        "children": []
+      },
+      {
+        "id": 2,
+        "key": "body",
+        "type": "text",
+        "children": []
+      },
+      {
+        "id": 3,
+        "key": "name",
+        "type": "container",
+        "children": [
+          4
+        ]
+      },
+      {
+        "id": 4,
+        "key": "name.input",
+        "type": "input",
+        "children": []
+      },
+      {
+        "id": 5,
+        "key": "overwrite.description",
+        "type": "text",
+        "children": []
+      },
+      {
+        "id": 6,
+        "key": "actions",
+        "type": "container",
+        "children": [
+          7,
+          8,
+          9
+        ]
+      },
+      {
+        "id": 7,
+        "key": "cancel",
+        "type": "button",
+        "children": []
+      },
+      {
+        "id": 8,
+        "key": "overwrite",
+        "type": "button",
+        "children": []
+      },
+      {
+        "id": 9,
+        "key": "submit",
+        "type": "button",
+        "children": []
+      }
+    ]
+  },
+  "accessibility": [
+    {
+      "id": 0,
+      "label": "Finish editing history",
+      "description": "Keep the edit as a new alternative or overwrite the existing history.",
+      "live": "off",
+      "shortcut": null,
+      "hidden": false
+    },
+    {
+      "id": 1,
+      "label": null,
+      "description": null,
+      "live": "off",
+      "shortcut": null,
+      "hidden": false
+    },
+    {
+      "id": 2,
+      "label": null,
+      "description": null,
+      "live": "off",
+      "shortcut": null,
+      "hidden": false
+    },
+    {
+      "id": 3,
+      "label": null,
+      "description": null,
+      "live": "off",
+      "shortcut": null,
+      "hidden": false
+    },
+    {
+      "id": 4,
+      "label": "Alternative name",
+      "description": null,
+      "live": "off",
+      "shortcut": null,
+      "hidden": false
+    },
+    {
+      "id": 5,
+      "label": null,
+      "description": null,
+      "live": "off",
+      "shortcut": null,
+      "hidden": false
+    },
+    {
+      "id": 6,
+      "label": null,
+      "description": null,
+      "live": "off",
+      "shortcut": null,
+      "hidden": false
+    },
+    {
+      "id": 7,
+      "label": "Back",
+      "description": null,
+      "live": "off",
+      "shortcut": null,
+      "hidden": false
+    },
+    {
+      "id": 8,
+      "label": "Overwrite",
+      "description": "Replaces the edited mutations in every alternative that contains them.",
+      "live": "off",
+      "shortcut": null,
+      "hidden": false
+    },
+    {
+      "id": 9,
+      "label": "New alternative",
+      "description": null,
+      "live": "off",
+      "shortcut": null,
+      "hidden": false
+    }
+  ],
+  "actionIds": [
+    "app.historyEditBack@1",
+    "app.historyEditCommit@1",
+    "app.historyEditCommit@1"
+  ]
+}

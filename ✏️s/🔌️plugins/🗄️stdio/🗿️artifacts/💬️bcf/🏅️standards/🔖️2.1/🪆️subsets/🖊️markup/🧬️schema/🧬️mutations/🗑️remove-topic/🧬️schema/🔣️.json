@@ -5,11 +5,33 @@
   "type": "object",
   "additionalProperties": false,
   "required": [
+    "mutation",
     "guid"
   ],
   "properties": {
+    "mutation": {
+      "const": "removeTopic"
+    },
     "guid": {
-      "type": "string"
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Topic",
+          "de": "Thema"
+        },
+        "description": {
+          "en": "GUID of the topic.",
+          "de": "GUID des Themas."
+        },
+        "ref": {
+          "kind": "topic",
+          "domain": "bcf"
+        },
+        "group": "target",
+        "order": 10
+      }
     }
   }
 }

@@ -1,0 +1,10 @@
+{
+  "mutation": "createPrimitive",
+  "payload": {
+    "phase": "apply",
+    "value": {
+      "mesh": 0,
+      "position": 0
+    }
+  }
+}

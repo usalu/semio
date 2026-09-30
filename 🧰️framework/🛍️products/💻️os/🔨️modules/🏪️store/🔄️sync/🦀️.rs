@@ -939,6 +939,7 @@ async fn envelopes_from_history_edit(edit: &crate::os_spr::HistoryEdit, document
             diff: crate::os_spr::ArtifactDiff { schema: crate::os_spr::SchemaId(schema.to_string()), payload },
             inverse: crate::os_spr::InverseMutation { schema: crate::os_spr::SchemaId(schema.to_string()), payload: inverse_payload },
             timestamp,
+            transaction: None,
         });
     }
     Ok(envelopes)
@@ -980,6 +981,7 @@ async fn history_edit_from_envelope(envelope: &MutationEnvelope) -> crate::os_sp
             group_id: None,
             origin: crate::os_spr::command::MutationOrigin::Owner,
             messages: Vec::new(),
+            transaction: envelope.transaction.clone(),
         }]),
         lane: None,
     }
@@ -1413,6 +1415,26 @@ async fn rollback_envelope(envelope: &MutationEnvelope) -> Option<MutationEnvelo
         diff: crate::os_spr::ArtifactDiff { schema: envelope.inverse.schema.clone(), payload: envelope.inverse.payload.clone() },
         inverse: crate::os_spr::InverseMutation { schema: envelope.diff.schema.clone(), payload: envelope.diff.payload.clone() },
         timestamp: envelope.timestamp,
+        transaction: None,
+    })
+}
+
+/// 🛟️ The code of the typed refusal an actor raises when the hub refused a batch holding history transitions.
+pub const HISTORY_TRANSITION_REFUSED_CODE: &str = "history.transition-refused";
+
+/// 🛟️ The typed refusal of `refused`, a batch the hub refused for `reason`, when it holds history transitions (a refused
+/// `Supersede`, a foreign undo): no inverse rolls a transition back ([`rollback_envelope`]), so the document stays ahead
+/// of the hub until the hub's `RebootstrapRequired` rebuilds it from the canonical checkpoint pair, which holds no refused
+/// transition, and the unacknowledged work replays on top. The message targets every refused transition, so the runtime
+/// can say which history step the hub did not take (ticket 26/09/30 NON-DESTRUCTIVE-HISTORY-EDITING).
+fn irreversible_refusal(refused: &[MutationEnvelope], reason: &str) -> Option<MutationMessage> {
+    let transitions: Vec<String> = refused.iter().filter(|envelope| crate::os_spr::is_history_transition(envelope)).map(|envelope| envelope.mutation_id.0.clone()).collect();
+    (!transitions.is_empty()).then(|| MutationMessage {
+        level: crate::os_dsl::Severity::Error,
+        code: crate::os_dsl::FaultCode::new(HISTORY_TRANSITION_REFUSED_CODE),
+        message: format!("the hub refused {} history step(s) no inverse rolls back ({reason}); the document rebuilds from the hub's canonical checkpoint", transitions.len()),
+        target: transitions,
+        op_index: None,
     })
 }
 
@@ -1445,17 +1467,11 @@ async fn stamp_session(peer: &mut PresencePeer, session_color: Option<u8>, surfa
     peer.surface = surface.map(str::to_string);
 }
 
-/// ⏰️ Millisecond wall-clock reads for {@link next_timestamp}: `SystemTime` on native AND
-/// `wasm32-wasip2` (WASI's clock backs it fine), `js_sys::Date` only in the actual browser wasm
-/// build (`target_arch = "wasm32"` is TRUE for wasip2 too, so that arm is narrowed to exclude it).
-#[cfg(any(not(target_arch = "wasm32"), target_env = "p2"))]
+/// ⏰️ Millisecond wall-clock reads for {@link next_timestamp} and the native folder endpoint — the only
+/// readers, both native: the browser actor never stamps a clock, it carries the author's.
+#[cfg(not(target_arch = "wasm32"))]
 async fn now_ms() -> u64 {
     std::time::SystemTime::now().duration_since(std::time::UNIX_EPOCH).map_or(0, |duration| duration.as_millis() as u64)
-}
-
-#[cfg(all(target_arch = "wasm32", not(target_env = "p2")))]
-async fn now_ms() -> u64 {
-    js_sys::Date::now() as u64
 }
 
 /// 🧮️ A stable, deterministic `u64` seed for an actor id string, for
@@ -1469,9 +1485,10 @@ async fn actor_seed(actor: &str) -> u64 {
 }
 
 /// ⏰️ Advances `counter` and stamps a fresh {@link crate::os_spr::HybridLogicalTimestamp} for an
-/// outbound envelope — freshly stamped on every send (this actor never round-trips a locally-
-/// authored envelope's own timestamp back in; a remote-delivered envelope's `timestamp` is simply
-/// carried through unchanged).
+/// external folder envelope that carries no clock. An authored envelope's `(hlc, id)` is canonical: it
+/// crosses the wire exactly as the author folded it, so every replica orders it — and resolves the last
+/// supersession of an operation — by the same key (ticket 26/09/30 NON-DESTRUCTIVE-HISTORY-EDITING).
+#[cfg(not(target_arch = "wasm32"))]
 async fn next_timestamp(seed: u64, counter: &mut u64) -> crate::os_spr::HybridLogicalTimestamp {
     *counter = counter.wrapping_add(1);
     crate::os_spr::HybridLogicalTimestamp { actor: seed, physical_ms: now_ms().await, logical: *counter }
@@ -2186,7 +2203,7 @@ mod native_actor {
         next_batch_id: u64,
         next_local_rejection_batch_id: u64,
         /// ⏰️ This actor's `HybridLogicalTimestamp` seed (derived from `actor`) + logical tick
-        /// counter, for {@link next_timestamp} on every outbound wire envelope.
+        /// counter, for {@link next_timestamp} on an external folder envelope without a clock.
         hlc_seed: u64,
         hlc_counter: u64,
         current_pack: Option<Vec<u8>>,
@@ -3413,7 +3430,11 @@ mod native_actor {
                         }
                         self.persist_operations(&rollbacks).await;
                         let _ = self.deliver_remote_operations(rollbacks).await;
+                        let irreversible = irreversible_refusal(&sent, &reason);
                         self.emit(ArtifactEvent::CommandOutcome { batch_id, outcome: CommandAckOutcome::Rejected { reason, messages } });
+                        if let Some(refusal) = irreversible {
+                            self.emit(ArtifactEvent::Conflict(refusal));
+                        }
                     }
                 }
             }
@@ -3435,11 +3456,7 @@ mod native_actor {
             }
             let batch_id = self.next_batch_id;
             self.next_batch_id = self.next_batch_id.wrapping_add(1);
-            let mut wire_envelopes: Vec<MutationEnvelope> = Vec::new();
-            for envelope in envelopes {
-                let timestamp = next_timestamp(self.hlc_seed, &mut self.hlc_counter).await;
-                wire_envelopes.push(MutationEnvelope { actor: ActorId(socket_actor.clone()), timestamp, ..envelope.clone() });
-            }
+            let wire_envelopes: Vec<MutationEnvelope> = envelopes.iter().map(|envelope| MutationEnvelope { actor: ActorId(socket_actor.clone()), ..envelope.clone() }).collect();
             self.pending_batches.insert(batch_id, envelopes.to_vec());
             self.send_client_frame(ClientFrame::Commands { batch_id, envelopes: wire_envelopes }, Lane::Command).await;
             self.emit_status_if_changed().await;
@@ -4299,7 +4316,6 @@ mod wasm_actor {
         next_batch_id: u64,
         next_local_rejection_batch_id: u64,
         hlc_seed: Option<u64>,
-        hlc_counter: u64,
         remote_state: RemoteState,
         last_status: Option<ArtifactSyncStatus>,
         link: DocumentLink,
@@ -4520,7 +4536,7 @@ mod wasm_actor {
                 return;
             }
             note_authored_envelopes(&mut self.applied_op_ids, envelopes);
-            let (Some(socket_actor), Some(hlc_seed)) = (self.socket_actor.clone(), self.hlc_seed) else {
+            let Some(socket_actor) = self.socket_actor.clone() else {
                 self.queue_outbox(envelopes.iter().cloned());
                 return;
             };
@@ -4529,11 +4545,7 @@ mod wasm_actor {
                 return;
             }
             let max_frame = self.socket.as_ref().map_or(usize::MAX, |socket| socket.max_frame_bytes());
-            let mut wire_envelopes: Vec<MutationEnvelope> = Vec::with_capacity(envelopes.len());
-            for envelope in envelopes {
-                let timestamp = next_timestamp(hlc_seed, &mut self.hlc_counter).await;
-                wire_envelopes.push(MutationEnvelope { actor: ActorId(socket_actor.clone()), timestamp, ..envelope.clone() });
-            }
+            let wire_envelopes: Vec<MutationEnvelope> = envelopes.iter().map(|envelope| MutationEnvelope { actor: ActorId(socket_actor.clone()), ..envelope.clone() }).collect();
             let plan = commands_frames_within(max_frame, self.next_batch_id, envelopes.to_vec(), wire_envelopes).await;
             for frame in plan.frames {
                 self.next_batch_id = frame.batch_id.wrapping_add(1);
@@ -4944,7 +4956,11 @@ mod wasm_actor {
                             rollbacks.extend(rollback_envelope(envelope).await);
                         }
                         let _ = self.deliver_remote_operations(rollbacks).await;
+                        let irreversible = irreversible_refusal(&sent, &reason);
                         let _ = self.events.send(ArtifactEvent::CommandOutcome { batch_id, outcome: CommandAckOutcome::Rejected { reason, messages } });
+                        if let Some(refusal) = irreversible {
+                            let _ = self.events.send(ArtifactEvent::Conflict(refusal));
+                        }
                     }
                 }
             }
@@ -5019,7 +5035,6 @@ mod wasm_actor {
             next_batch_id: 0,
             next_local_rejection_batch_id: u64::MAX,
             hlc_seed: replica_hlc_seed().ok(),
-            hlc_counter: 0,
             remote_state: RemoteState::Detached,
             last_status: None,
             link: DocumentLink::opened(wall_ms()),

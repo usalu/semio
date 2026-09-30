@@ -9,7 +9,21 @@
   ],
   "properties": {
     "newEnVb": {
-      "type": "number"
+      "type": "number",
+      "minimum": 0,
+      "x-semio-ui": {
+        "widget": "stepper",
+        "role": "value",
+        "label": {
+          "en": "Basic wind velocity v_b (EN)",
+          "de": "Basiswindgeschwindigkeit v_b (EN)"
+        },
+        "unit": "m/s",
+        "step": 0.5,
+        "precision": 1,
+        "group": "site",
+        "order": 10
+      }
     }
   }
 }

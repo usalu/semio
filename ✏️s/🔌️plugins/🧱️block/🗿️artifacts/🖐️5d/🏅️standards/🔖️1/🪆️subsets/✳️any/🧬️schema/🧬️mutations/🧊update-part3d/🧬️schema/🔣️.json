@@ -4,22 +4,62 @@
   "title": "UpdatePart3d",
   "type": "object",
   "additionalProperties": false,
+  "required": [
+    "mutation"
+  ],
   "properties": {
+    "mutation": {
+      "const": "updatePart3d"
+    },
     "newOrientation": {
-      "type": "array",
+      "type": [
+        "array",
+        "null"
+      ],
       "items": {
         "type": "number"
       },
       "minItems": 4,
-      "maxItems": 4
+      "maxItems": 4,
+      "x-semio-ui": {
+        "widget": "vector",
+        "role": "value",
+        "label": {
+          "en": "Orientation",
+          "de": "Orientierung"
+        },
+        "description": {
+          "en": "Rotation as a unit quaternion (x, y, z, w); empty keeps it.",
+          "de": "Drehung als Einheitsquaternion (x, y, z, w); leer behält sie bei."
+        },
+        "group": "pose",
+        "order": 10
+      }
     },
     "newScale": {
-      "type": "array",
+      "type": [
+        "array",
+        "null"
+      ],
       "items": {
         "type": "number"
       },
       "minItems": 3,
-      "maxItems": 3
+      "maxItems": 3,
+      "x-semio-ui": {
+        "widget": "vector",
+        "role": "value",
+        "label": {
+          "en": "Scale",
+          "de": "Skalierung"
+        },
+        "description": {
+          "en": "Scale factor per axis; empty keeps it.",
+          "de": "Skalierungsfaktor je Achse; leer behält ihn bei."
+        },
+        "group": "pose",
+        "order": 20
+      }
     }
   }
 }

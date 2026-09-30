@@ -1,12 +1,32 @@
 {
-  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/norm/din18599/mutation/change-automation-class/schema.json",
   "title": "ChangeAutomationClass",
   "type": "object",
-  "properties": {
-    "newAutomationClass": {
-      "type": "object"
-    }
-  },
   "additionalProperties": false,
-  "$id": "https://json.schemas.assets.semio-tech.com/s/norm/din18599/mutation/change-automation-class/schema.json"
+  "required": [
+    "mutation",
+    "newAutomationClass"
+  ],
+  "properties": {
+    "mutation": {
+      "const": "changeAutomationClass"
+    },
+    "newAutomationClass": {
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/din18599/snapshot/schema.json#/$defs/AutomationClass",
+      "x-semio-ui": {
+        "role": "value",
+        "label": {
+          "en": "Building automation class",
+          "de": "Gebäudeautomationsklasse"
+        },
+        "description": {
+          "en": "Class A, B, C or D (DIN V 18599-11).",
+          "de": "Klasse A, B, C oder D (DIN V 18599-11)."
+        },
+        "group": "systems",
+        "order": 10
+      }
+    }
+  }
 }

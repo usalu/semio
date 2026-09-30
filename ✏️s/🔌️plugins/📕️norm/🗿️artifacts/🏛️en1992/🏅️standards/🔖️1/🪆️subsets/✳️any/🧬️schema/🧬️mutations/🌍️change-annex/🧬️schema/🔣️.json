@@ -9,7 +9,20 @@
   ],
   "properties": {
     "newAnnex": {
-      "type": "string"
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1992/snapshot.json#/$defs/AnnexChoice",
+      "x-semio-ui": {
+        "role": "value",
+        "label": {
+          "en": "National annex",
+          "de": "Nationaler Anhang"
+        },
+        "description": {
+          "en": "De applies the German national annex (DIN EN), En the recommended CEN values.",
+          "de": "De wendet den deutschen Nationalen Anhang (DIN EN) an, En die empfohlenen CEN-Werte."
+        },
+        "group": "annex",
+        "order": 10
+      }
     }
   }
 }

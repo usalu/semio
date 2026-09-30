@@ -4,8 +4,7 @@ use crate::schema::modules::mutation_support::top_level::rejection_outcome;
 use crate::schema::modules::mutation_support::top_level::{reject, GltfTopLevelMutationRejection};
 use crate::GltfSnapshot;
 pub const ID: &str = "s.stdio.gltf.mutation.unbind-morph-target-attribute.v1";
-#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::MutationLeaf)]
-#[mutation_leaf(contract = ::protocol)]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
 #[value(rename_all = "camelCase")]
 pub struct GltfUnbindMorphTargetAttributePayload {
     pub mesh: usize,
@@ -33,7 +32,7 @@ pub fn apply(payload: &GltfUnbindMorphTargetAttributePayload, base: &GltfSnapsho
 
 //#region 🧬️DirectMutation
 #[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::MutationLeaf)]
-#[mutation_leaf(contract = ::protocol)]
+#[mutation_leaf(contract = ::protocol, payload = Apply)]
 #[value(tag = "phase", content = "value", rename_all = "camelCase")]
 pub enum UnbindMorphTargetAttributeMutation {
     Apply(GltfUnbindMorphTargetAttributePayload),
@@ -77,6 +76,6 @@ impl protocol::MutationKind<GltfSnapshot, super::GltfMutation> for UnbindMorphTa
 
 //#region 🧪️Tests
 #[cfg(test)]
-#[path = "🧪️tests/🔬️direct-leaf/🦀️.rs"]
-mod direct_leaf_tests;
+#[path = "🧪️tests/🔗️unbinds-normal-9e80f9/🦀️.rs"]
+mod case_unbinds_normal_9e80f9;
 //#endregion 🧪️Tests

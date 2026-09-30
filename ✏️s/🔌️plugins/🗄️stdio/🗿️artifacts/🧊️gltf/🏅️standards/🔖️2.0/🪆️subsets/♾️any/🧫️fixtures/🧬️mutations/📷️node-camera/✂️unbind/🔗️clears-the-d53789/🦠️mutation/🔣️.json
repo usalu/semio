@@ -1,0 +1,9 @@
+{
+  "mutation": "unbindNodeCamera",
+  "payload": {
+    "phase": "apply",
+    "value": {
+      "node": 0
+    }
+  }
+}

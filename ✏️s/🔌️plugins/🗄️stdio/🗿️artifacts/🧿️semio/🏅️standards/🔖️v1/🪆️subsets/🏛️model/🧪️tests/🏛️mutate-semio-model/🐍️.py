@@ -267,7 +267,7 @@ def read_geometry_ref(reader: Reader) -> dict:
     reader.take("[")
     value = reader.hex()
     reader.take("]")
-    return {"kind": "brep", "brep_id": value} if letter == "B" else {"kind": "mesh", "mesh_id": value}
+    return {"kind": "brep", "brepId": value} if letter == "B" else {"kind": "mesh", "meshId": value}
 
 
 def read_pset_value(reader: Reader) -> dict:
@@ -406,7 +406,7 @@ def write_element_class(value: dict) -> str:
 def write_geometry_ref(value: dict) -> str:
     if value["kind"] == "none":
         return "N"
-    return "B[%s]" % hex_of(value["brep_id"]) if value["kind"] == "brep" else "M[%s]" % hex_of(value["mesh_id"])
+    return "B[%s]" % hex_of(value["brepId"]) if value["kind"] == "brep" else "M[%s]" % hex_of(value["meshId"])
 
 
 def write_pset_value(value: dict) -> str:
@@ -564,7 +564,7 @@ def parse_pack(data: bytes) -> dict:
             geometry = {"kind": "none"}
         else:
             reference, at = read_string(data, at)
-            geometry = {"kind": "brep", "brep_id": reference} if geometry_tag == 1 else {"kind": "mesh", "mesh_id": reference}
+            geometry = {"kind": "brep", "brepId": reference} if geometry_tag == 1 else {"kind": "mesh", "meshId": reference}
         spatial_id, at = read_opt_string(data, at)
         pset_count, at = read_varint(data, at)
         psets = []
@@ -632,9 +632,9 @@ def pack_bytes(document: dict) -> bytes:
         geometry = element["geometry"]
         body.append(GEOMETRY_ORDER.index(geometry["kind"]))
         if geometry["kind"] == "brep":
-            body += write_string(geometry["brep_id"])
+            body += write_string(geometry["brepId"])
         elif geometry["kind"] == "mesh":
-            body += write_string(geometry["mesh_id"])
+            body += write_string(geometry["meshId"])
         body += write_opt_string(element["spatialId"])
         body += write_varint(len(element["psets"]))
         for pset in element["psets"]:

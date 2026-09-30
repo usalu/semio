@@ -1,6 +1,9 @@
 {
   "schema": "generation3d.artifact-io-surface.v1",
   "note": "The USER-FACING law of this artifact's IO. `📓️io-codecs-2026-09-09.md` proved the nine leaves round-trip; `📓️audit-user-journey-gaps-2026-09-13.md` §6 found that nothing in the editor or the viewer named them, so a user could not import or export anything. This fixture states what the surface must offer: which formats the export picker lists, which extensions the file picker accepts, what filename and MIME each download carries, which leaves are deliberately withheld from import and why, and the one size refusal an import answers with (the framework reassembles a picked file's chunks before the import runs). Language-agnostic: an implementation in any language must publish the same roster, build the same download envelope and refuse the same sizes. Rust drives these rows against the real `document_io` module and the real app manifests; the TypeScript twin re-derives every one of them from this file's own prose without importing the Rust implementation.",
+  "registryText": { "source": "imported-unit-cube", "sourceKinds": ["native", "json-bridge"], "target": "s.stdio.txt", "preserveGraph": true },
+  "mergeGeometry": { "translation": [2, 0, 0], "vertexCount": 16, "triangleCount": 24, "volume": 2, "min": [0, 0, 0], "max": [3, 1, 1] },
+  "exportInputs": { "document": ["txt"], "preparedGeometry": ["stl", "obj", "ply", "gltf", "las", "dwg"], "rejectGeometryAsDocument": "obj", "rejectDocumentAsGeometry": "txt" },
   "artifactKind": "s.procedural.generation3d",
   "exportFormats": [
     { "id": "stl", "labelEn": "STL Mesh", "labelDe": "STL-Netz", "kindId": "s.stdio.stl.standard.ascii.representation.document", "extension": ".stl", "mime": "model/stl", "binary": true, "filename": "generation3d.stl", "geometry": true },

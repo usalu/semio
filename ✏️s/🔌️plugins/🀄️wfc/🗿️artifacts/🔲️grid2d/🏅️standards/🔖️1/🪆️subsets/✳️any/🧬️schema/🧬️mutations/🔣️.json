@@ -3,19 +3,173 @@
   "$id": "https://json.schemas.assets.semio-tech.com/s/wfc/grid2d/1/any/mutations.json",
   "title": "Grid2dMutation",
   "oneOf": [
-    { "$ref": "./change-seed/schema.json" },
-    { "$ref": "./resize-grid/schema.json" },
-    { "$ref": "./change-cell-size/schema.json" },
-    { "$ref": "./change-periodicity/schema.json" },
-    { "$ref": "./create-tile/schema.json" },
-    { "$ref": "./delete-tile/schema.json" },
-    { "$ref": "./change-tile-weight/schema.json" },
-    { "$ref": "./change-tile-media/schema.json" },
-    { "$ref": "./create-rule/schema.json" },
-    { "$ref": "./delete-rule/schema.json" },
-    { "$ref": "./pin-cell/schema.json" },
-    { "$ref": "./unpin-cell/schema.json" },
-    { "$ref": "./mask-cell/schema.json" },
-    { "$ref": "./unmask-cell/schema.json" }
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "ChangeSeed"
+      ],
+      "properties": {
+        "ChangeSeed": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/wfc/grid2d/1/any/mutation/change-seed/schema.json"
+        }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "ResizeGrid"
+      ],
+      "properties": {
+        "ResizeGrid": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/wfc/grid2d/1/any/mutation/resize-grid/schema.json"
+        }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "ChangeCellSize"
+      ],
+      "properties": {
+        "ChangeCellSize": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/wfc/grid2d/1/any/mutation/change-cell-size/schema.json"
+        }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "ChangePeriodicity"
+      ],
+      "properties": {
+        "ChangePeriodicity": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/wfc/grid2d/1/any/mutation/change-periodicity/schema.json"
+        }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "CreateTile"
+      ],
+      "properties": {
+        "CreateTile": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/wfc/grid2d/1/any/mutation/create-tile/schema.json"
+        }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "DeleteTile"
+      ],
+      "properties": {
+        "DeleteTile": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/wfc/grid2d/1/any/mutation/delete-tile/schema.json"
+        }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "ChangeTileWeight"
+      ],
+      "properties": {
+        "ChangeTileWeight": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/wfc/grid2d/1/any/mutation/change-tile-weight/schema.json"
+        }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "ChangeTileMedia"
+      ],
+      "properties": {
+        "ChangeTileMedia": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/wfc/grid2d/1/any/mutation/change-tile-media/schema.json"
+        }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "CreateRule"
+      ],
+      "properties": {
+        "CreateRule": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/wfc/grid2d/1/any/mutation/create-rule/schema.json"
+        }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "DeleteRule"
+      ],
+      "properties": {
+        "DeleteRule": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/wfc/grid2d/1/any/mutation/delete-rule/schema.json"
+        }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "PinCell"
+      ],
+      "properties": {
+        "PinCell": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/wfc/grid2d/1/any/mutation/pin-cell/schema.json"
+        }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "UnpinCell"
+      ],
+      "properties": {
+        "UnpinCell": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/wfc/grid2d/1/any/mutation/unpin-cell/schema.json"
+        }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "MaskCell"
+      ],
+      "properties": {
+        "MaskCell": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/wfc/grid2d/1/any/mutation/mask-cell/schema.json"
+        }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "UnmaskCell"
+      ],
+      "properties": {
+        "UnmaskCell": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/wfc/grid2d/1/any/mutation/unmask-cell/schema.json"
+        }
+      }
+    }
   ]
 }

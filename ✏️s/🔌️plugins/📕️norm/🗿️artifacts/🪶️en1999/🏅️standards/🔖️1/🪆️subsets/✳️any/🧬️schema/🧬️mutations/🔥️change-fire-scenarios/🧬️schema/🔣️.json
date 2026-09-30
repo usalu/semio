@@ -5,14 +5,31 @@
   "type": "object",
   "additionalProperties": false,
   "required": [
+    "mutation",
     "fireScenarios"
   ],
   "properties": {
-    "fireScenarios": {}
-  },
-  "owner": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/🪶️en1999/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔥️change-fire-scenarios",
-  "semanticKind": "change-fire-scenarios",
-  "emoji": "🔥️",
-  "aggregateVariant": "ChangeFireScenarios",
-  "displayName": "Change Fire Scenarios"
+    "mutation": {
+      "const": "changeFireScenarios"
+    },
+    "fireScenarios": {
+      "type": "array",
+      "items": {
+        "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1999/snapshot.json#/$defs/FireScenario"
+      },
+      "x-semio-ui": {
+        "role": "value",
+        "label": {
+          "en": "Fire scenarios",
+          "de": "Brandszenarien"
+        },
+        "description": {
+          "en": "The complete list of fire scenarios (EN 1999-1-2).",
+          "de": "Die vollständige Liste der Brandszenarien (EN 1999-1-2)."
+        },
+        "group": "record",
+        "order": 10
+      }
+    }
+  }
 }

@@ -5,6 +5,7 @@
   "type": "object",
   "additionalProperties": false,
   "required": [
+    "mutation",
     "id",
     "newHeight",
     "newPoints",
@@ -13,8 +14,30 @@
     "newY"
   ],
   "properties": {
+    "mutation": {
+      "const": "editBlockInkStroke"
+    },
     "id": {
-      "type": "string"
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Block",
+          "de": "Block"
+        },
+        "description": {
+          "en": "The block this mutation addresses.",
+          "de": "Der Block, den diese Mutation adressiert."
+        },
+        "ref": {
+          "kind": "block",
+          "domain": "blocks",
+          "granularity": "block"
+        },
+        "group": "target",
+        "order": 10
+      }
     },
     "newPoints": {
       "type": "array",
@@ -25,19 +48,92 @@
         },
         "minItems": 2,
         "maxItems": 2
+      },
+      "x-semio-ui": {
+        "role": "value",
+        "label": {
+          "en": "Points",
+          "de": "Punkte"
+        },
+        "description": {
+          "en": "Stroke points as (x, y) pairs inside the block.",
+          "de": "Strichpunkte als (x, y)-Paare im Block."
+        },
+        "group": "stroke",
+        "order": 20
       }
     },
     "newX": {
-      "type": "number"
+      "type": "number",
+      "x-semio-ui": {
+        "widget": "stepper",
+        "role": "value",
+        "label": {
+          "en": "X",
+          "de": "X"
+        },
+        "step": 1,
+        "precision": 1,
+        "snapSource": {
+          "snapshot": "/snapGridSpacing"
+        },
+        "group": "position",
+        "order": 30
+      }
     },
     "newY": {
-      "type": "number"
+      "type": "number",
+      "x-semio-ui": {
+        "widget": "stepper",
+        "role": "value",
+        "label": {
+          "en": "Y",
+          "de": "Y"
+        },
+        "step": 1,
+        "precision": 1,
+        "snapSource": {
+          "snapshot": "/snapGridSpacing"
+        },
+        "group": "position",
+        "order": 40
+      }
     },
     "newWidth": {
-      "type": "number"
+      "type": "number",
+      "x-semio-ui": {
+        "widget": "stepper",
+        "role": "value",
+        "label": {
+          "en": "Width",
+          "de": "Breite"
+        },
+        "step": 1,
+        "precision": 1,
+        "snapSource": {
+          "snapshot": "/snapGridSpacing"
+        },
+        "group": "size",
+        "order": 50
+      }
     },
     "newHeight": {
-      "type": "number"
+      "type": "number",
+      "x-semio-ui": {
+        "widget": "stepper",
+        "role": "value",
+        "label": {
+          "en": "Height",
+          "de": "Höhe"
+        },
+        "step": 1,
+        "precision": 1,
+        "snapSource": {
+          "snapshot": "/snapGridSpacing"
+        },
+        "group": "size",
+        "order": 60
+      }
     }
   }
 }

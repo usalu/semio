@@ -319,3 +319,30 @@ type PdfSetPdfRect {
   kind: String!
   value: [Float!]
 }
+
+"""Tagged union: exactly the fields of the variant `kind` names are populated."""
+type PdfPathSegment {
+  kind: String!
+  index: Int
+  key: String
+}
+
+input PdfPathSegmentInput {
+  kind: String!
+  index: Int
+  key: String
+}
+
+enum PdfPageBox {
+  CROP
+  BLEED
+  TRIM
+  ART
+}
+
+enum PdfPageBoxInput {
+  CROP
+  BLEED
+  TRIM
+  ART
+}

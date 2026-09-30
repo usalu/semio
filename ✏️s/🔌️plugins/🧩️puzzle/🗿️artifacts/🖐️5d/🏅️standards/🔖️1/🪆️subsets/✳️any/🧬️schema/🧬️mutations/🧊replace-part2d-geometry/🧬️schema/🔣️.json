@@ -5,23 +5,120 @@
   "type": "object",
   "additionalProperties": false,
   "required": [
+    "mutation",
     "id"
   ],
   "properties": {
+    "mutation": {
+      "const": "replacePart2dGeometry"
+    },
     "id": {
-      "type": "string"
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Part",
+          "de": "Teil"
+        },
+        "description": {
+          "en": "The part this mutation addresses.",
+          "de": "Das Teil, das diese Mutation adressiert."
+        },
+        "ref": {
+          "kind": "part",
+          "domain": "vortex",
+          "granularity": "part"
+        },
+        "group": "target",
+        "order": 10
+      }
     },
     "newShape": {
-      "type": "string"
+      "type": [
+        "string",
+        "null"
+      ],
+      "x-semio-ui": {
+        "widget": "text",
+        "role": "value",
+        "label": {
+          "en": "Shape",
+          "de": "Form"
+        },
+        "description": {
+          "en": "circle or rectangle.",
+          "de": "circle (Kreis) oder rectangle (Rechteck)."
+        },
+        "group": "board",
+        "order": 20
+      }
     },
     "newRadius": {
-      "type": "number"
+      "type": [
+        "number",
+        "null"
+      ],
+      "exclusiveMinimum": 0,
+      "x-semio-ui": {
+        "widget": "stepper",
+        "role": "value",
+        "label": {
+          "en": "Radius",
+          "de": "Radius"
+        },
+        "step": 1,
+        "precision": 2,
+        "snapSource": {
+          "config": "gridFactor"
+        },
+        "group": "board",
+        "order": 30
+      }
     },
     "newWidth": {
-      "type": "number"
+      "type": [
+        "number",
+        "null"
+      ],
+      "exclusiveMinimum": 0,
+      "x-semio-ui": {
+        "widget": "stepper",
+        "role": "value",
+        "label": {
+          "en": "Width",
+          "de": "Breite"
+        },
+        "step": 1,
+        "precision": 2,
+        "snapSource": {
+          "config": "gridFactor"
+        },
+        "group": "board",
+        "order": 40
+      }
     },
     "newHeight": {
-      "type": "number"
+      "type": [
+        "number",
+        "null"
+      ],
+      "exclusiveMinimum": 0,
+      "x-semio-ui": {
+        "widget": "stepper",
+        "role": "value",
+        "label": {
+          "en": "Height",
+          "de": "Höhe"
+        },
+        "step": 1,
+        "precision": 2,
+        "snapSource": {
+          "config": "gridFactor"
+        },
+        "group": "board",
+        "order": 50
+      }
     }
   }
 }

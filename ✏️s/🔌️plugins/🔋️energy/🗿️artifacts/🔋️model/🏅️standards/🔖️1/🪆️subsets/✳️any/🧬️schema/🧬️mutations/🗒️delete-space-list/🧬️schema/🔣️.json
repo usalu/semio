@@ -5,11 +5,33 @@
   "type": "object",
   "additionalProperties": false,
   "required": [
+    "mutation",
     "id"
   ],
   "properties": {
+    "mutation": {
+      "const": "deleteSpaceList"
+    },
     "id": {
-      "type": "integer"
+      "type": "integer",
+      "minimum": 0,
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Space list",
+          "de": "Raumliste"
+        },
+        "description": {
+          "en": "The space list to delete, by id.",
+          "de": "Raumliste, die diese Mutation löscht, per ID."
+        },
+        "ref": {
+          "kind": "spaceList"
+        },
+        "group": "target",
+        "order": 10
+      }
     }
   }
 }

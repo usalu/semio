@@ -10,11 +10,41 @@
   ],
   "properties": {
     "memberId": {
-      "type": "string"
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Member",
+          "de": "Bauteil"
+        },
+        "description": {
+          "en": "The timber member this mutation addresses.",
+          "de": "Das Holzbauteil, das diese Mutation adressiert."
+        },
+        "ref": {
+          "kind": "member"
+        },
+        "group": "target",
+        "order": 10
+      }
     },
     "newValue": {
       "type": "number",
-      "format": "double"
+      "minimum": 0,
+      "x-semio-ui": {
+        "widget": "stepper",
+        "role": "value",
+        "label": {
+          "en": "Annual number of constant amplitude stress cycles N_obs",
+          "de": "Jährliche Anzahl der Spannungswechsel N_obs"
+        },
+        "unit": "1/a",
+        "step": 1000,
+        "precision": 0,
+        "group": "fatigue",
+        "order": 20
+      }
     }
   }
 }

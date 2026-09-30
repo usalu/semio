@@ -435,6 +435,7 @@ fn block3d_next_edit<M>(prefix: &str, forward: M, inverse: Vec<M>, description: 
             label: None,
             group_id: None,
             origin: Default::default(),
+            transaction: None,
         }],
         description,
         coalesce_key: None,

@@ -4,31 +4,112 @@
   "title": "PresentationMutation",
   "oneOf": [
     {
-      "$ref": "https://json.schemas.assets.semio-tech.com/s/animate/presentation/mutation/create-tile/schema.json"
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "ResizeSourceFrame"
+      ],
+      "properties": {
+        "ResizeSourceFrame": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/animate/presentation/mutation/resize-source-frame/schema.json"
+        }
+      }
     },
     {
-      "$ref": "https://json.schemas.assets.semio-tech.com/s/animate/presentation/mutation/delete-tile/schema.json"
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "ReplaceSource"
+      ],
+      "properties": {
+        "ReplaceSource": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/animate/presentation/mutation/replace-source/schema.json"
+        }
+      }
     },
     {
-      "$ref": "https://json.schemas.assets.semio-tech.com/s/animate/presentation/mutation/delete-tiles/schema.json"
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "CreateTile"
+      ],
+      "properties": {
+        "CreateTile": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/animate/presentation/mutation/create-tile/schema.json"
+        }
+      }
     },
     {
-      "$ref": "https://json.schemas.assets.semio-tech.com/s/animate/presentation/mutation/rename-tile/schema.json"
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "DeleteTile"
+      ],
+      "properties": {
+        "DeleteTile": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/animate/presentation/mutation/delete-tile/schema.json"
+        }
+      }
     },
     {
-      "$ref": "https://json.schemas.assets.semio-tech.com/s/animate/presentation/mutation/reorder-tiles/schema.json"
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "DeleteTiles"
+      ],
+      "properties": {
+        "DeleteTiles": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/animate/presentation/mutation/delete-tiles/schema.json"
+        }
+      }
     },
     {
-      "$ref": "https://json.schemas.assets.semio-tech.com/s/animate/presentation/mutation/replace-source/schema.json"
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "RenameTile"
+      ],
+      "properties": {
+        "RenameTile": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/animate/presentation/mutation/rename-tile/schema.json"
+        }
+      }
     },
     {
-      "$ref": "https://json.schemas.assets.semio-tech.com/s/animate/presentation/mutation/replace-tiles/schema.json"
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "ResizeTileCrop"
+      ],
+      "properties": {
+        "ResizeTileCrop": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/animate/presentation/mutation/resize-tile-crop/schema.json"
+        }
+      }
     },
     {
-      "$ref": "https://json.schemas.assets.semio-tech.com/s/animate/presentation/mutation/resize-source-frame/schema.json"
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "ReorderTiles"
+      ],
+      "properties": {
+        "ReorderTiles": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/animate/presentation/mutation/reorder-tiles/schema.json"
+        }
+      }
     },
     {
-      "$ref": "https://json.schemas.assets.semio-tech.com/s/animate/presentation/mutation/resize-tile-crop/schema.json"
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "ReplaceTiles"
+      ],
+      "properties": {
+        "ReplaceTiles": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/animate/presentation/mutation/replace-tiles/schema.json"
+        }
+      }
     }
   ]
 }

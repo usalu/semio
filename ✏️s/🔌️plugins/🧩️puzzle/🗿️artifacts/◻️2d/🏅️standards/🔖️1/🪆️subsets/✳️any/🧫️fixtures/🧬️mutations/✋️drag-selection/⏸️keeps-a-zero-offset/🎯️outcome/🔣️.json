@@ -1,0 +1,12 @@
+{
+  "messages": [
+    {
+      "code": "mutation.no-op",
+      "level": "warn",
+      "target": [
+        "node-a"
+      ]
+    }
+  ],
+  "status": "no-op"
+}

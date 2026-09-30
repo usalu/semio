@@ -2,5 +2,5 @@
 import type { GeometryObject } from "../../🟦️.ts";
 
 export interface IntroduceGeometryObject {
-  geometry_object: GeometryObject;
+  geometryObject: GeometryObject;
 }

@@ -8,13 +8,57 @@
       "type": "object",
       "properties": {
         "cameraX": {
-          "type": "number"
+          "type": "number",
+          "x-semio-ui": {
+            "widget": "stepper",
+            "role": "value",
+            "label": {
+              "en": "Pan X",
+              "de": "Verschiebung X"
+            },
+            "step": 1,
+            "precision": 1,
+            "group": "camera",
+            "order": 10
+          }
         },
         "cameraY": {
-          "type": "number"
+          "type": "number",
+          "x-semio-ui": {
+            "widget": "stepper",
+            "role": "value",
+            "label": {
+              "en": "Pan Y",
+              "de": "Verschiebung Y"
+            },
+            "step": 1,
+            "precision": 1,
+            "group": "camera",
+            "order": 20
+          }
         },
         "cameraZoom": {
-          "type": "number"
+          "type": "number",
+          "x-semio-ui": {
+            "widget": "slider",
+            "role": "value",
+            "label": {
+              "en": "Zoom",
+              "de": "Zoom"
+            },
+            "step": 0.01,
+            "precision": 2,
+            "softMin": 0.1,
+            "softMax": 10,
+            "scale": "log",
+            "snaps": [
+              0.5,
+              1,
+              2
+            ],
+            "group": "camera",
+            "order": 30
+          }
         }
       },
       "required": [
@@ -22,7 +66,20 @@
         "cameraY",
         "cameraZoom"
       ],
-      "additionalProperties": false
+      "additionalProperties": false,
+      "x-semio-ui": {
+        "role": "value",
+        "label": {
+          "en": "Presence",
+          "de": "Präsenz"
+        },
+        "description": {
+          "en": "Where this participant looks on the canvas.",
+          "de": "Wohin diese Person auf der Fläche blickt."
+        },
+        "group": "record",
+        "order": 10
+      }
     }
   },
   "required": [

@@ -17,13 +17,13 @@ use semio_repo_test_host::Json;
 
 //#region 🔖️Dispatch
 /// 🦠️ Applies one declared mutation kind to a real artifact and returns the re-serialized bytes.
+/// `params` is the leaf's wire payload (`payload_value()`), read by the same field names the schema declares.
 /// An unrecognised kind is an error, never a silent no-op: a mutation that is quietly skipped
 /// reports as a passing test.
 #[cfg(feature = "oracles")]
 pub fn oracle_apply_mutation(input: &[u8], spec: &Json) -> Result<Vec<u8>, String> {
     let params = spec.get("params").cloned().unwrap_or(Json::Object(Vec::new()));
     match spec.str("kind").as_str() {
-        "no-mutation" => Ok(input.to_vec()),
         "set-fmt" => reference::mutate_set_fmt(input, &params),
         "set-data" => reference::mutate_set_data(input, &params),
         "patch-data" => reference::mutate_patch_data(input, &params),
@@ -59,8 +59,6 @@ pub fn oracle_apply_mutation_inverse(original_input: &[u8], spec: &Json, mutated
 
 /// 🔁️ The `@id-identity-round-trip` scenario's own independent computation: decode the `fmt `/`data`
 /// pair, retain opaque chunks, and write a fresh file from that model alone.
-/// Deliberately NOT `oracle_apply_mutation`'s `no-mutation` arm, which is a verbatim echo of the
-/// input bytes (the correct reference answer for "apply nothing", and no evidence of a parse).
 #[cfg(feature = "oracles")]
 pub fn oracle_identity_round_trip(input: &[u8]) -> Result<Vec<u8>, String> {
     reference::rewrite(input)
@@ -111,24 +109,31 @@ mod reference {
         }
     }
 
-    /// 🔎️ Every `i16` of a JSON number array — the sample vocabulary this oracle writes.
-    fn samples(value: &Json, key: &str) -> Vec<i16> {
-        match value.get(key) {
-            Some(Json::Array(items)) => items.iter().filter_map(|item| if let Json::Number(n) = item { Some(*n as i16) } else { None }).collect(),
-            _ => Vec::new(),
+    /// 🔎️ The `i16` samples of a `WavData` wire value — `{"kind": "pcm16", "value": [...]}`, the only sample
+    /// vocabulary this owned PCM16 oracle reads and writes; any other kind is refused rather than guessed.
+    fn samples(value: Option<&Json>) -> Result<Vec<i16>, String> {
+        let value = value.ok_or_else(|| "WavData wire value is missing".to_string())?;
+        if value.str("kind") != "pcm16" {
+            return Err(format!("the owned PCM16 oracle reads only pcm16 data, not {:?}", value.str("kind")));
         }
+        Ok(value.array("value").iter().filter_map(|item| if let Json::Number(n) = item { Some(*n as i16) } else { None }).collect())
     }
 
-    /// 🔎️ `{"fourcc": "...", "data": [byte, ...]}` entries — the `other_chunks` vocabulary.
+    /// 🔎️ `RiffChunk` wire entries `{"fourcc": "...", "data": [byte, ...]}` — the `otherChunks` vocabulary.
     fn chunk_list(value: &Json, key: &str) -> Vec<(String, Vec<u8>)> {
         value.array(key).into_iter().map(|entry| (entry.str("fourcc"), bytes(&entry, "data"))).collect()
     }
     //#endregion 🔖️JsonReading
 
     //#region 🔖️FmtSpec
-    /// 📐️ The plain PCM16 format fields exercised by this subset's catalog.
-    fn fmt_spec_of(value: &Json) -> PcmWavFormat {
-        PcmWavFormat { channels: number(value, "channels", 1.0) as u16, sample_rate: number(value, "sampleRate", 44_100.0) as u32, bits_per_sample: 16 }
+    /// 📐️ The PCM16 format fields of a `WavFmt` wire value; `byteRate`/`blockAlign` are re-derived by the writer.
+    fn fmt_spec_of(value: Option<&Json>) -> Result<PcmWavFormat, String> {
+        let value = value.ok_or_else(|| "WavFmt wire value is missing".to_string())?;
+        let bits_per_sample = number(value, "bitsPerSample", 0.0) as u16;
+        if bits_per_sample != 16 {
+            return Err(format!("the owned PCM16 oracle writes 16-bit samples, not {bits_per_sample}-bit"));
+        }
+        Ok(PcmWavFormat { channels: number(value, "channels", 1.0) as u16, sample_rate: number(value, "sampleRate", 44_100.0) as u32, bits_per_sample })
     }
     //#endregion 🔖️FmtSpec
 
@@ -148,14 +153,14 @@ mod reference {
     /// 🎚️ `SetFmt` — replaces the format block wholesale; `data`/`other_chunks` are untouched.
     pub fn mutate_set_fmt(input: &[u8], params: &Json) -> Result<Vec<u8>, String> {
         let mut wav = read(input)?;
-        wav.format = fmt_spec_of(&params.get("fmt").cloned().unwrap_or(Json::Object(Vec::new())));
+        wav.format = fmt_spec_of(params.get("fmt"))?;
         write(&wav)
     }
 
     /// 🔊️ `SetData` — replaces the sample data wholesale; `fmt`/`other_chunks` are untouched.
     pub fn mutate_set_data(input: &[u8], params: &Json) -> Result<Vec<u8>, String> {
         let mut wav = read(input)?;
-        wav.samples = samples(&params.get("data").cloned().unwrap_or(Json::Object(Vec::new())), "samples");
+        wav.samples = samples(params.get("data"))?;
         write(&wav)
     }
 
@@ -163,16 +168,17 @@ mod reference {
     pub fn mutate_patch_data(input: &[u8], params: &Json) -> Result<Vec<u8>, String> {
         let mut wav = read(input)?;
         let index = number(params, "index", f64::MAX) as usize;
+        let inserted = samples(params.get("data"))?;
         if let Some(Json::Number(move_to)) = params.get("moveTo") {
             let move_to = *move_to as usize;
-            if index >= wav.samples.len() || move_to >= wav.samples.len() { return Err("patch-data move is outside the sample range".into()); }
+            if number(params, "removeCount", 0.0) != 0.0 || !inserted.is_empty() || index >= wav.samples.len() || move_to >= wav.samples.len() { return Err("patch-data move is outside the sample range or carries replacement data".into()); }
             let sample = wav.samples.remove(index);
             wav.samples.insert(move_to, sample);
         } else {
             let remove_count = number(params, "removeCount", f64::MAX) as usize;
             let end = index.checked_add(remove_count).ok_or_else(|| "patch-data range overflows".to_string())?;
             if index > wav.samples.len() || end > wav.samples.len() { return Err("patch-data range is outside the sample lane".into()); }
-            wav.samples.splice(index..end, samples(params, "samples"));
+            wav.samples.splice(index..end, inserted);
         }
         write(&wav)
     }
@@ -184,13 +190,10 @@ mod reference {
         write(&wav)
     }
 
-    /// 🔁️ `SetSnapshot` — full replace: `fmt`, `data` and `other_chunks` all come from `params`.
+    /// 🔁️ `SetSnapshot` — full replace: `fmt`, `data` and `otherChunks` all come from the `snapshot` wire value.
     pub fn mutate_set_snapshot(_input: &[u8], params: &Json) -> Result<Vec<u8>, String> {
-        write(&PcmWav {
-            format: fmt_spec_of(&params.get("fmt").cloned().unwrap_or(Json::Object(Vec::new()))),
-            samples: samples(&params.get("data").cloned().unwrap_or(Json::Object(Vec::new())), "samples"),
-            other_chunks: chunk_list(params, "otherChunks"),
-        })
+        let snapshot = params.get("snapshot").ok_or_else(|| "set-snapshot carries no snapshot".to_string())?;
+        write(&PcmWav { format: fmt_spec_of(snapshot.get("fmt"))?, samples: samples(snapshot.get("data"))?, other_chunks: chunk_list(snapshot, "otherChunks") })
     }
     //#endregion 🔖️Mutate
 
@@ -210,7 +213,6 @@ mod reference {
         }
         let mut restored = read(mutated)?;
         match kind {
-            "no-mutation" => {}
             "set-fmt" => restored.format = original.format,
             "set-data" => restored.samples = original.samples,
             "patch-data" => restored.samples = original.samples,

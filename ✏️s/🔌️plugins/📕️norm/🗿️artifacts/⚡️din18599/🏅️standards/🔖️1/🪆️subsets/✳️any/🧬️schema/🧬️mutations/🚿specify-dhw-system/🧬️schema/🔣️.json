@@ -1,12 +1,32 @@
 {
-  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/norm/din18599/mutation/specify-dhw-system/schema.json",
   "title": "SpecifyDhwSystem",
   "type": "object",
-  "properties": {
-    "newDhw": {
-      "type": "object"
-    }
-  },
   "additionalProperties": false,
-  "$id": "https://json.schemas.assets.semio-tech.com/s/norm/din18599/mutation/specify-dhw-system/schema.json"
+  "required": [
+    "mutation",
+    "newDhw"
+  ],
+  "properties": {
+    "mutation": {
+      "const": "specifyDhwSystem"
+    },
+    "newDhw": {
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/din18599/snapshot/schema.json#/$defs/DhwSystem",
+      "x-semio-ui": {
+        "role": "value",
+        "label": {
+          "en": "Domestic hot water system",
+          "de": "Trinkwarmwassersystem"
+        },
+        "description": {
+          "en": "Specific demand, storage and distribution losses and the energy carrier.",
+          "de": "Spezifischer Bedarf, Speicher- und Verteilverluste sowie der Energieträger."
+        },
+        "group": "systems",
+        "order": 10
+      }
+    }
+  }
 }

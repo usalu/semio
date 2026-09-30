@@ -1,0 +1,96 @@
+{
+  "case": "vector-input",
+  "kind": "composite",
+  "description": "The `vector_input` recipe: a labelled group of keyed number fields sharing unit, step, precision, detents and commit convention.",
+  "outcome": "accept",
+  "limits": null,
+  "tree": {
+    "root": 0,
+    "nodeCount": 5,
+    "shape": [
+      {
+        "id": 0,
+        "key": "#0",
+        "type": "container",
+        "children": [
+          1,
+          3
+        ]
+      },
+      {
+        "id": 1,
+        "key": "dx.axis",
+        "type": "container",
+        "children": [
+          2
+        ]
+      },
+      {
+        "id": 2,
+        "key": "dx",
+        "type": "input",
+        "children": []
+      },
+      {
+        "id": 3,
+        "key": "dy.axis",
+        "type": "container",
+        "children": [
+          4
+        ]
+      },
+      {
+        "id": 4,
+        "key": "dy",
+        "type": "input",
+        "children": []
+      }
+    ]
+  },
+  "accessibility": [
+    {
+      "id": 0,
+      "label": null,
+      "description": null,
+      "live": "off",
+      "shortcut": null,
+      "hidden": false
+    },
+    {
+      "id": 1,
+      "label": null,
+      "description": null,
+      "live": "off",
+      "shortcut": null,
+      "hidden": false
+    },
+    {
+      "id": 2,
+      "label": "X",
+      "description": null,
+      "live": "off",
+      "shortcut": null,
+      "hidden": false
+    },
+    {
+      "id": 3,
+      "label": null,
+      "description": null,
+      "live": "off",
+      "shortcut": null,
+      "hidden": false
+    },
+    {
+      "id": 4,
+      "label": "Y",
+      "description": null,
+      "live": "off",
+      "shortcut": null,
+      "hidden": false
+    }
+  ],
+  "actionIds": [
+    "app.setDx@1",
+    "app.setDy@1"
+  ]
+}

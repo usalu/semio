@@ -1,0 +1,98 @@
+<<<<<<< ANCHOR
+        ValidateEditPair { left: usize, right: usize },
+        CloneInitial,
+        SeedHistory { edit: usize, lane: u8, index: usize },
+=======
+        ValidateEditPair { left: usize, right: usize },
+        CloneInitial,
+        FoldSupersessions,
+        SeedHistory { edit: usize, lane: u8, index: usize },
+>>>>>>> END
+<<<<<<< ANCHOR
+                    *self.runtime = Some(store::ArtifactStoreInitializationRuntime::new(&envelope.id, &envelope.schema, envelope.vcs.initial_snapshot.clone(), digest.finish()));
+                    self.phase = BoundedStoreInitializationPhase::SeedHistory { edit: 0, lane: 0, index: 0 };
+                    cx.consume_fuel(pack.len().max(1) as u64);
+                    semio_framework_job::StepOutcome::Yield
+                }
+=======
+                    *self.runtime = Some(store::ArtifactStoreInitializationRuntime::new(&envelope.id, &envelope.schema, envelope.vcs.initial_snapshot.clone(), digest.finish()));
+                    self.phase = BoundedStoreInitializationPhase::FoldSupersessions;
+                    cx.consume_fuel(pack.len().max(1) as u64);
+                    semio_framework_job::StepOutcome::Yield
+                }
+                BoundedStoreInitializationPhase::FoldSupersessions => {
+                    let envelope = self.envelope.as_ref().expect("bounded envelope remains retained while its supersessions fold");
+                    let events = envelope.vcs.edits.len().saturating_add(envelope.transitions.len());
+                    match store::fold_envelope_history(envelope) {
+                        Ok(fold) => match self.runtime.as_mut().expect("bounded runtime remains retained while supersessions fold").set_supersessions(fold.supersessions) {
+                            Ok(()) => self.phase = BoundedStoreInitializationPhase::SeedHistory { edit: 0, lane: 0, index: 0 },
+                            Err(error) => {
+                                self.fault = Some(error.into_bytes());
+                                self.phase = BoundedStoreInitializationPhase::RetireFault;
+                            }
+                        },
+                        Err(_) => self.fail(b"bounded-store.initializer-history-fold"),
+                    }
+                    cx.consume_fuel(events.max(1) as u64);
+                    semio_framework_job::StepOutcome::Yield
+                }
+>>>>>>> END
+<<<<<<< ANCHOR
+                BoundedStoreInitializationPhase::ApplyForward { position, edit, mutation } => {
+                    let Some(operation) = self.envelope.as_ref().and_then(|envelope| envelope.vcs.edits.get(edit)).expect("bounded applied edit remains retained").forwards.get(mutation).cloned() else {
+                        self.phase = BoundedStoreInitializationPhase::HashInverse { position, edit, mutation: 0 };
+                        return semio_framework_job::StepOutcome::Yield;
+                    };
+                    let Some(bytes) = self.hash_operation(&operation) else {
+                        self.fail(b"bounded-store.initializer-forward-encoding");
+                        return semio_framework_job::StepOutcome::Yield;
+                    };
+                    let current = self.runtime.as_mut().and_then(store::ArtifactStoreInitializationRuntime::current_mut).expect("bounded runtime current snapshot remains retained");
+                    let (diff, messages) = operation.diff(current).into_parts();
+                    if messages.iter().any(|message| message.level == protocol::Severity::Fatal) {
+                        self.fail(b"bounded-store.initializer-fatal-mutation");
+                        return semio_framework_job::StepOutcome::Yield;
+                    }
+                    match diff.apply(current) {
+=======
+                BoundedStoreInitializationPhase::ApplyForward { position, edit, mutation } => {
+                    let entry = self.envelope.as_ref().and_then(|envelope| envelope.vcs.edits.get(edit)).expect("bounded applied edit remains retained");
+                    let Some(original) = entry.forwards.get(mutation).cloned() else {
+                        self.phase = BoundedStoreInitializationPhase::HashInverse { position, edit, mutation: 0 };
+                        return semio_framework_job::StepOutcome::Yield;
+                    };
+                    let mutation_id = entry.mutation_meta.get(mutation).and_then(|meta| meta.mutation_id.clone()).or_else(|| original.mutation_id()).unwrap_or_else(|| protocol::MutationId(format!("{}#{mutation}", entry.id)));
+                    let replacement = self.runtime.as_ref().and_then(|runtime| runtime.supersessions().get(&mutation_id)).map(|supersession| supersession.replacement.clone());
+                    let operation = match replacement {
+                        None => original,
+                        Some(protocol::InputReplacement::Withdrawn) => {
+                            <M as Mutation<P>>::retire_cold(original);
+                            self.phase = BoundedStoreInitializationPhase::ApplyForward { position, edit, mutation: mutation + 1 };
+                            cx.consume_fuel(1);
+                            return semio_framework_job::StepOutcome::Yield;
+                        }
+                        Some(protocol::InputReplacement::Input { payload, .. }) => {
+                            <M as Mutation<P>>::retire_cold(original);
+                            match M::decode_op(&payload) {
+                                Ok(replacement) => replacement,
+                                Err(_) => {
+                                    self.fail(b"bounded-store.initializer-supersession-encoding");
+                                    return semio_framework_job::StepOutcome::Yield;
+                                }
+                            }
+                        }
+                    };
+                    let Some(bytes) = self.hash_operation(&operation) else {
+                        <M as Mutation<P>>::retire_cold(operation);
+                        self.fail(b"bounded-store.initializer-forward-encoding");
+                        return semio_framework_job::StepOutcome::Yield;
+                    };
+                    let current = self.runtime.as_mut().and_then(store::ArtifactStoreInitializationRuntime::current_mut).expect("bounded runtime current snapshot remains retained");
+                    let (diff, messages) = operation.diff(current).into_parts();
+                    <M as Mutation<P>>::retire_cold(operation);
+                    if messages.iter().any(|message| message.level == protocol::Severity::Fatal) {
+                        self.fail(b"bounded-store.initializer-fatal-mutation");
+                        return semio_framework_job::StepOutcome::Yield;
+                    }
+                    match diff.apply(current) {
+>>>>>>> END

@@ -1,0 +1,12 @@
+{
+  "mutation": "reorderBufferViews",
+  "payload": {
+    "phase": "apply",
+    "value": {
+      "order": [
+        1,
+        0
+      ]
+    }
+  }
+}

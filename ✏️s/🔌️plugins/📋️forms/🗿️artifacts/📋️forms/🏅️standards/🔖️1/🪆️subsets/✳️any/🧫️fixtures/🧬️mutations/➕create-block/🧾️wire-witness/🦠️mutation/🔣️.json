@@ -1,0 +1,10 @@
+{
+  "mutation": "createBlock",
+  "stepId": "step-basics",
+  "block": {
+    "id": "q-remarks",
+    "label": "Remarks",
+    "kind": "longText"
+  },
+  "index": 1
+}

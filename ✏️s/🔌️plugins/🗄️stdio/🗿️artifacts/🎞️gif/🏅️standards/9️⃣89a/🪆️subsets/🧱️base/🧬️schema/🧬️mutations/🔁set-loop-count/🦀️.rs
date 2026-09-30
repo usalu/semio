@@ -8,6 +8,7 @@ use super::*;
 #[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::DslRecord, dsl::MutationLeaf)]
 #[mutation_leaf(contract = ::protocol)]
 #[dsl(keyword = "set-loop-count")]
+#[value(rename_all = "camelCase")]
 pub struct SetLoopCount {
     pub(crate) loop_count: Option<u16>,
 }

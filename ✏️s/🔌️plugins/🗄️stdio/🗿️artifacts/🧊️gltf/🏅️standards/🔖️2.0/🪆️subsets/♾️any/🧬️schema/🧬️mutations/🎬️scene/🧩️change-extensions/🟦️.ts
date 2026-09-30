@@ -1,9 +1,22 @@
-/** 🦠️ change-scene-extension-data is an atomic, typed glTF 2.0 command. */
-import type { GltfJson, GltfSnapshot, GltfPrimitive, GltfMorphTarget, GltfAccessor, GltfSparseAccessor, GltfSparseIndices, GltfSparseValues } from '../../📸️snapshot/🟦️.ts';
-import { run, reject, positionIn, itemIndex, moveItem, type GltfLeafResult, type GltfMutationRejection } from './🟦️';
-export const GltfChangeSceneExtensionDataDescriptor = { id: 's.stdio.gltf.mutation.change-scene-extension-data.v1', version: 1, kind: 'change', touchedPaths: ["document/scenes/*/extensions"], referencePolicy: 'none' } as const;
-export type GltfDataPresence = { state: 'absent' } | { state: 'present'; value: GltfJson };
-export interface GltfChangeSceneExtensionDataPayload { scene: number; data: GltfDataPresence }
-export type GltfChangeSceneExtensionDataResult = GltfLeafResult;
-export const validateGltfChangeSceneExtensionData = (payload: GltfChangeSceneExtensionDataPayload, base: GltfSnapshot): GltfMutationRejection | undefined => { const scene = itemIndex(payload.scene, base.document.scenes.length, 'document/scenes'); if (scene) return scene; return undefined; };
-export const applyGltfChangeSceneExtensionData = (base: GltfSnapshot, payload: GltfChangeSceneExtensionDataPayload): GltfChangeSceneExtensionDataResult => run(base, payload, validateGltfChangeSceneExtensionData, (next, payload) => { next.document.scenes[payload.scene]!.extensions = payload.data.state === 'present' ? payload.data.value : undefined; }, GltfChangeSceneExtensionDataDescriptor.touchedPaths);
+/** 🧩️ `change-scene-extension-data` wire twin: the flat `Apply` payload `GltfChangeSceneExtensionDataPayload` and the phase wire `ChangeSceneExtensionDataMutation`, exactly as `./🦀️.rs` writes them.
+ * @see ./🧬️schema/🔣️.json */
+import { type GltfJson, gltfWireIndex, gltfWireLiteral, gltfWireObject, gltfWireRequired, gltfWireTagged, parseGltfJson } from "../../../📸️snapshot/🟦️.ts";
+import { type GltfDiff, type GltfPhase, gltfWirePhase, parseGltfDiff } from "../../../🔺️diff/🟦️.ts";
+
+export type GltfDataPresence =
+  | { state: "absent" }
+  | { state: "present"; value: GltfJson };
+
+export interface GltfChangeSceneExtensionDataPayload {
+  scene: number;
+  data: GltfDataPresence;
+}
+
+export type ChangeSceneExtensionDataMutation = GltfPhase<GltfChangeSceneExtensionDataPayload, GltfDiff>;
+
+export const parseGltfDataPresence = gltfWireTagged<GltfDataPresence, "state">("state", {
+  absent: gltfWireObject<Extract<GltfDataPresence, { state: "absent" }>>({ state: gltfWireRequired(gltfWireLiteral("absent")) }),
+  present: gltfWireObject<Extract<GltfDataPresence, { state: "present" }>>({ state: gltfWireRequired(gltfWireLiteral("present")), value: gltfWireRequired(parseGltfJson) }),
+});
+export const parseGltfChangeSceneExtensionDataPayload = gltfWireObject<GltfChangeSceneExtensionDataPayload>({ scene: gltfWireRequired(gltfWireIndex), data: gltfWireRequired(parseGltfDataPresence) });
+export const parseChangeSceneExtensionDataMutation = gltfWirePhase(parseGltfChangeSceneExtensionDataPayload, parseGltfDiff);

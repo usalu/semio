@@ -11,11 +11,11 @@ use crate::standards::v1::subsets::kit::schema::mutations::SemioKitMutation;
 use crate::standards::v1::subsets::kit::schema::snapshot::SemioKitSnapshot;
 use protocol::{Mutation, MutationDiff};
 
-const BEFORE: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🪢️bind-representation/🔗️binds-a-second-representation-to-an-existing-type/📸️snapshot/⬅️before/🔣️.json");
-const AFTER: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🪢️bind-representation/🔗️binds-a-second-representation-to-an-existing-type/📸️snapshot/➡️after/🔣️.json");
-const MUTATION: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🪢️bind-representation/🔗️binds-a-second-representation-to-an-existing-type/🦠️mutation/🔣️.json");
-const DIFF: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🪢️bind-representation/🔗️binds-a-second-representation-to-an-existing-type/🔺️diff/🔣️.json");
-const OUTCOME: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🪢️bind-representation/🔗️binds-a-second-representation-to-an-existing-type/🎯️outcome/🔣️.json");
+const BEFORE: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🪢️bind-representation/🔗️binds-second-representation-existing-type/📸️snapshot/⬅️before/🔣️.json");
+const AFTER: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🪢️bind-representation/🔗️binds-second-representation-existing-type/📸️snapshot/➡️after/🔣️.json");
+const MUTATION: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🪢️bind-representation/🔗️binds-second-representation-existing-type/🦠️mutation/🔣️.json");
+const DIFF: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🪢️bind-representation/🔗️binds-second-representation-existing-type/🔺️diff/🔣️.json");
+const OUTCOME: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🪢️bind-representation/🔗️binds-second-representation-existing-type/🎯️outcome/🔣️.json");
 
 fn before() -> SemioKitSnapshot {
     dsl::json::from_json_str(BEFORE).expect("bind-representation before snapshot decodes")

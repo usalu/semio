@@ -2,7 +2,7 @@
   "kind": "set-block-entity-layer",
   "mutation": {
     "mutation": "setBlockEntityLayer",
-    "block_name": "door",
+    "blockName": "door",
     "handle": "be1",
     "layer": "dim"
   },
@@ -59,8 +59,8 @@
             "y": 2.0
           },
           "radius": 1.0,
-          "start_angle": 0.0,
-          "end_angle": 180.0
+          "startAngle": 0.0,
+          "endAngle": 180.0
         }
       },
       {
@@ -84,13 +84,13 @@
             "x": 0.0,
             "y": 0.0
           },
-          "major_axis_end": {
+          "majorAxisEnd": {
             "x": 3.0,
             "y": 0.0
           },
           "ratio": 0.5,
-          "start_param": 0.0,
-          "end_param": 6.283
+          "startParam": 0.0,
+          "endParam": 6.283
         }
       },
       {
@@ -134,8 +134,8 @@
         "layer": "0",
         "entity": {
           "kind": "insert",
-          "block_name": "door",
-          "insertion_point": {
+          "blockName": "door",
+          "insertionPoint": {
             "x": 10.0,
             "y": 10.0
           },
@@ -174,11 +174,11 @@
         "layer": "dim",
         "entity": {
           "kind": "dimension",
-          "def_point": {
+          "defPoint": {
             "x": 0.0,
             "y": 0.0
           },
-          "text_position": {
+          "textPosition": {
             "x": 1.0,
             "y": 1.0
           },
@@ -241,8 +241,8 @@
             "y": 2.0
           },
           "radius": 1.0,
-          "start_angle": 0.0,
-          "end_angle": 180.0
+          "startAngle": 0.0,
+          "endAngle": 180.0
         }
       },
       {
@@ -266,13 +266,13 @@
             "x": 0.0,
             "y": 0.0
           },
-          "major_axis_end": {
+          "majorAxisEnd": {
             "x": 3.0,
             "y": 0.0
           },
           "ratio": 0.5,
-          "start_param": 0.0,
-          "end_param": 6.283
+          "startParam": 0.0,
+          "endParam": 6.283
         }
       },
       {
@@ -316,8 +316,8 @@
         "layer": "0",
         "entity": {
           "kind": "insert",
-          "block_name": "door",
-          "insertion_point": {
+          "blockName": "door",
+          "insertionPoint": {
             "x": 10.0,
             "y": 10.0
           },
@@ -356,11 +356,11 @@
         "layer": "dim",
         "entity": {
           "kind": "dimension",
-          "def_point": {
+          "defPoint": {
             "x": 0.0,
             "y": 0.0
           },
-          "text_position": {
+          "textPosition": {
             "x": 1.0,
             "y": 1.0
           },

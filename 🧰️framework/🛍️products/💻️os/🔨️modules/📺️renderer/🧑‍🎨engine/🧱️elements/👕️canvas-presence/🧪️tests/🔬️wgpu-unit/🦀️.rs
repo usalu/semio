@@ -82,6 +82,7 @@ pub(crate) fn peer(value: &Value) -> PresencePeer {
         tool_run: None,
         principal_kind: None,
         active_tool: value.get("activeTool").and_then(Value::as_str).map(str::to_string),
+        history_edit: None,
     }
 }
 

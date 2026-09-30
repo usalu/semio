@@ -28,7 +28,7 @@ Feature: Apply every typed DOCX ECMA-376 Transitional conformance-class mutation
 
   THE REFERENCE, AND WHAT IT CAN AND CANNOT WITNESS. `quick-xml` 0.42 rewrites word/document.xml's
   root element and every *.rels part; `zip` 6 reads all 7 entries of the real package and reassembles
-  the container from those entries alone, never patching input bytes. Both read AND write, so this case has a real second producer for all six kinds and every mutate scenario is honestly @mode-differential.
+  the container from those entries alone, never patching input bytes. Both read AND write, so this case has a real second producer for every kind and for the whole-package class stamp and every mutate scenario is honestly @mode-differential.
   The evidence stops at the three axes ISO/IEC 29500-4 gives this class. VML and mc:AlternateContent
   are LEGAL Transitional markup, so nothing here polices them and this case says nothing whatever
   about them — that is why it declares four kinds fewer than its 📏️strict sibling, and the reason is
@@ -58,22 +58,10 @@ Feature: Apply every typed DOCX ECMA-376 Transitional conformance-class mutation
     Then the oracle and the subject agree on the conformance-class projection
     Examples:
       | id                           | params                                                              |
-      | set-snapshot                 | {"conformanceClass": "strict"}                                      |
       | set-main-namespace           | {"namespace": "http://purl.oclc.org/ooxml/wordprocessingml/main"}   |
       | set-relationship-base        | {"base": "http://purl.oclc.org/ooxml/officeDocument/relationships"} |
       | set-conformance-attribute    | {"value": "strict"}                                                 |
       | remove-conformance-attribute | {}                                                                  |
-
-  @id-no-mutation-baseline-mutate
-  @level-exhaustive
-  @mode-differential
-  Scenario: Apply no-mutation to the real document package
-    Given the real input package shared://📜️example-readme.docx
-    When the no-mutation mutation is applied with its parameters
-      """
-      {"kind": "no-mutation", "params": {}}
-      """
-    Then the oracle and the subject agree on the conformance-class projection
 
   @id-inverse
   @level-exhaustive
@@ -88,22 +76,25 @@ Feature: Apply every typed DOCX ECMA-376 Transitional conformance-class mutation
     Then the conformance-class projection is the one the package started from
     Examples:
       | id                           | params                                                              |
-      | set-snapshot                 | {"conformanceClass": "strict"}                                      |
       | set-main-namespace           | {"namespace": "http://purl.oclc.org/ooxml/wordprocessingml/main"}   |
       | set-relationship-base        | {"base": "http://purl.oclc.org/ooxml/officeDocument/relationships"} |
       | set-conformance-attribute    | {"value": "strict"}                                                 |
       | remove-conformance-attribute | {}                                                                  |
 
-  @id-no-mutation-baseline-inverse
+  @id-stamp-conformance-class
+  @level-exhaustive
+  @mode-differential
+  Scenario: Stamp the real package into the strict class as one whole-package set-snapshot
+    Given the real input package shared://📜️example-readme.docx
+    When the package is stamped strict and the stamped package replaces it through set-snapshot
+    Then the oracle and the subject agree on the conformance-class projection
+
+  @id-stamp-conformance-class-inverse
   @level-exhaustive
   @mode-property
-  Scenario: Undoing no-mutation restores the real package
+  Scenario: Undoing the strict stamp restores the real package
     Given the real input package shared://📜️example-readme.docx
-    When the no-mutation mutation is applied with its parameters
-      """
-      {"kind": "no-mutation", "params": {}}
-      """
-    And the inverse mutation is applied to that result
+    When the package is stamped strict through set-snapshot and then stamped back
     Then the conformance-class projection is the one the package started from
 
   @id-identity-round-trip

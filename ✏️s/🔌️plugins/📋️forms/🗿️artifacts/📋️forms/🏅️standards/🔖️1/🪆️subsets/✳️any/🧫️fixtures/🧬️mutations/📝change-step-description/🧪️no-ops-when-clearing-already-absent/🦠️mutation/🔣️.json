@@ -1,0 +1,5 @@
+{
+  "mutation": "changeStepDescription",
+  "id": "step-basics",
+  "newDescription": null
+}

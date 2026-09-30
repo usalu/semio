@@ -1,4 +1,4 @@
-import vectors from './🔣️.json' with { type: 'json' };
+import vectors from '../🧫️fixtures/🔣️.json' with { type: 'json' };
 import { inferGltfEulerCharacteristic } from '../🟦️.ts';
 import type { GltfTsGeometryContext } from '../../../🔨️geometry-core/🟦️.ts';
 

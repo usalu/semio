@@ -40,6 +40,7 @@ pub fn plugin() -> Result<Plugin<StdioMediaApps>, PluginAssemblyError> {
         .version(env!("CARGO_PKG_VERSION"))
         .package_id("semio:stdio-media")
         .depends_on("stdio", semio_framework::tree_pin!())
+        .schema_documents(semio_s_artifact_stdio_contract::STDIO_REGISTRY_SCHEMA_DOCUMENTS)
         .host_artifact(semio_s_artifact_stdio_mp4::declaration(semio_s_artifact_stdio_mp4::definition()?).map_err(PluginAssemblyError::definition)?)
         .host_artifact(semio_s_artifact_stdio_mp3::declaration(semio_s_artifact_stdio_mp3::definition()?).map_err(PluginAssemblyError::definition)?)
         .host_artifact(semio_s_artifact_stdio_wav::declaration(semio_s_artifact_stdio_wav::definition()?).map_err(PluginAssemblyError::definition)?)

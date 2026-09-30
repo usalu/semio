@@ -5,19 +5,20 @@
   "type": "object",
   "additionalProperties": false,
   "required": [
+    "mutation",
     "subtype",
     "title"
   ],
   "properties": {
+    "mutation": {
+      "const": "insertMediaAnnotation",
+      "description": "Aggregate discriminator spliced in by PdfEMutation; absent when the payload stands alone."
+    },
     "subtype": {
       "type": "string"
     },
     "title": {
       "type": "string"
-    },
-    "mutation": {
-      "const": "insertMediaAnnotation",
-      "description": "Aggregate discriminator spliced in by PdfEMutation; absent when the payload stands alone."
     }
   }
 }

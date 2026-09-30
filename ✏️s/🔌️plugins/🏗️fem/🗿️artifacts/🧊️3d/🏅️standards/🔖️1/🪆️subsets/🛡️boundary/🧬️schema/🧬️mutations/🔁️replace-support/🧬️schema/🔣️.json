@@ -5,12 +5,31 @@
   "type": "object",
   "additionalProperties": false,
   "required": [
+    "mutation",
     "id",
     "newSupport"
   ],
   "properties": {
+    "mutation": {
+      "const": "replaceSupport"
+    },
     "id": {
-      "type": "string"
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Support",
+          "de": "Lager"
+        },
+        "ref": {
+          "kind": "support",
+          "domain": "fem3d",
+          "granularity": "support"
+        },
+        "group": "target",
+        "order": 10
+      }
     },
     "newSupport": {
       "title": "FemSupport",
@@ -23,10 +42,39 @@
       ],
       "properties": {
         "id": {
-          "type": "string"
+          "type": "string",
+          "x-semio-ui": {
+            "widget": "text",
+            "role": "value",
+            "label": {
+              "en": "ID",
+              "de": "ID"
+            },
+            "description": {
+              "en": "Unique id of the record.",
+              "de": "Eindeutige ID des Eintrags."
+            },
+            "group": "identity",
+            "order": 10
+          }
         },
         "nodeId": {
-          "type": "string"
+          "type": "string",
+          "x-semio-ui": {
+            "widget": "reference",
+            "role": "target",
+            "label": {
+              "en": "Node",
+              "de": "Knoten"
+            },
+            "ref": {
+              "kind": "node",
+              "domain": "fem3d",
+              "granularity": "node"
+            },
+            "group": "target",
+            "order": 20
+          }
         },
         "fixed": {
           "type": "array",
@@ -39,9 +87,55 @@
               "Rx",
               "Ry",
               "Rz"
-            ]
+            ],
+            "x-semio-ui": {
+              "options": {
+                "Tx": {
+                  "en": "Translation X",
+                  "de": "Verschiebung x"
+                },
+                "Ty": {
+                  "en": "Translation Y",
+                  "de": "Verschiebung y"
+                },
+                "Tz": {
+                  "en": "Translation Z",
+                  "de": "Verschiebung z"
+                },
+                "Rx": {
+                  "en": "Rotation about X",
+                  "de": "Verdrehung um x"
+                },
+                "Ry": {
+                  "en": "Rotation about Y",
+                  "de": "Verdrehung um y"
+                },
+                "Rz": {
+                  "en": "Rotation about Z",
+                  "de": "Verdrehung um z"
+                }
+              }
+            }
+          },
+          "x-semio-ui": {
+            "role": "value",
+            "label": {
+              "en": "Fixed degrees of freedom",
+              "de": "Gesperrte Freiheitsgrade"
+            },
+            "group": "record",
+            "order": 30
           }
         }
+      },
+      "x-semio-ui": {
+        "role": "value",
+        "label": {
+          "en": "New support",
+          "de": "Neues Lager"
+        },
+        "group": "record",
+        "order": 20
       }
     }
   }

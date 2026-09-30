@@ -5,15 +5,16 @@
   "type": "object",
   "additionalProperties": false,
   "required": [
+    "mutation",
     "handle"
   ],
   "properties": {
-    "handle": {
-      "type": "string"
-    },
     "mutation": {
       "const": "removeEntity",
       "description": "Aggregate discriminator spliced in by SemioCadMutation; absent when the payload stands alone."
+    },
+    "handle": {
+      "type": "string"
     }
   }
 }

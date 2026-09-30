@@ -2,6 +2,33 @@
 use super::*;
 use protocol::MutationDiff;
 
+/// 🧾️ Every committed wire witness decodes through `WorkflowMutation`'s `FromValue` and re-encodes to exactly the committed JSON.
+#[test]
+fn committed_wire_witnesses_are_the_canonical_wire() {
+    for witness in [
+        include_str!("../../🧫️fixtures/🧬️mutations/➕️add-node/🧾️wire-witness/🦠️mutation/🔣️.json"),
+        include_str!("../../🧫️fixtures/🧬️mutations/🗑️remove-node/🧾️wire-witness/🦠️mutation/🔣️.json"),
+        include_str!("../../🧫️fixtures/🧬️mutations/🔗connect-ports/🧾️wire-witness/🦠️mutation/🔣️.json"),
+        include_str!("../../🧫️fixtures/🧬️mutations/✂️disconnect-edge/🧾️wire-witness/🦠️mutation/🔣️.json"),
+        include_str!("../../🧫️fixtures/🧬️mutations/↔️move-node/🧾️wire-witness/🦠️mutation/🔣️.json"),
+        include_str!("../../🧫️fixtures/🧬️mutations/✏️rename-node/🧾️wire-witness/🦠️mutation/🔣️.json"),
+        include_str!("../../🧫️fixtures/🧬️mutations/🧩add-parameter/🧾️wire-witness/🦠️mutation/🔣️.json"),
+        include_str!("../../🧫️fixtures/🧬️mutations/🧹remove-parameter/🧾️wire-witness/🦠️mutation/🔣️.json"),
+        include_str!("../../🧫️fixtures/🧬️mutations/🩹change-parameter/🧾️wire-witness/🦠️mutation/🔣️.json"),
+        include_str!("../../🧫️fixtures/🧬️mutations/🔒bind-parameter-field/🧾️wire-witness/🦠️mutation/🔣️.json"),
+        include_str!("../../🧫️fixtures/🧬️mutations/🔓unbind-parameter-field/🧾️wire-witness/🦠️mutation/🔣️.json"),
+        include_str!("../../🧫️fixtures/🧬️mutations/🔄update-node-ports/🧾️wire-witness/🦠️mutation/🔣️.json"),
+        include_str!("../../🧫️fixtures/🧬️mutations/📥add-input/🧾️wire-witness/🦠️mutation/🔣️.json"),
+        include_str!("../../🧫️fixtures/🧬️mutations/🚮remove-input/🧾️wire-witness/🦠️mutation/🔣️.json"),
+        include_str!("../../🧫️fixtures/🧬️mutations/🔌bind-input/🧾️wire-witness/🦠️mutation/🔣️.json"),
+        include_str!("../../🧫️fixtures/🧬️mutations/🚪unbind-input/🧾️wire-witness/🦠️mutation/🔣️.json"),
+        include_str!("../../🧫️fixtures/🧬️mutations/📤bind-output/🧾️wire-witness/🦠️mutation/🔣️.json"),
+        include_str!("../../🧫️fixtures/🧬️mutations/⛔️unbind-output/🧾️wire-witness/🦠️mutation/🔣️.json"),
+    ] {
+        store::os_store::test_support::assert_wire_witness::<WorkflowMutation>(witness);
+    }
+}
+
 #[semio_framework_async_macros::async_test]
 async fn empty_workflow_default() {
     let workflow = empty_workflow().await;

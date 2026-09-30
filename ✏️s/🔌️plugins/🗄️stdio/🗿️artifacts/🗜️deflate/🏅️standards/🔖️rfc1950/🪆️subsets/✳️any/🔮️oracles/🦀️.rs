@@ -134,10 +134,10 @@ fn independent_inflate(input: &[u8]) -> Result<Vec<u8>, String> {
 
 //#region 🔖️Json
 #[cfg(feature = "oracles")]
-fn json_number(value: &Json, key: &str, default: f64) -> f64 {
+fn json_number(value: &Json, key: &str) -> Result<f64, String> {
     match value.get(key) {
-        Some(Json::Number(found)) => *found,
-        _ => default,
+        Some(Json::Number(found)) => Ok(*found),
+        _ => Err(format!("expected a numeric field {key:?}")),
     }
 }
 
@@ -149,65 +149,75 @@ fn json_optional_u32(value: &Json, key: &str) -> Option<u32> {
     }
 }
 
+/// 🔎️ A byte payload as the wire carries it: a plain JSON array of 0-255 numbers.
+#[cfg(feature = "oracles")]
+fn json_bytes(value: &Json, key: &str) -> Vec<u8> {
+    value.array(key).iter().filter_map(|item| if let Json::Number(number) = item { Some(*number as u8) } else { None }).collect()
+}
+
+#[cfg(feature = "oracles")]
+fn bytes_json(bytes: &[u8]) -> Json {
+    Json::Array(bytes.iter().map(|byte| Json::Number(*byte as f64)).collect())
+}
+
 #[cfg(feature = "oracles")]
 fn params_of(spec: &Json) -> Json {
     spec.get("params").cloned().unwrap_or_else(|| Json::Object(Vec::new()))
+}
+
+#[cfg(feature = "oracles")]
+fn object(pairs: Vec<(&str, Json)>) -> Json {
+    Json::Object(pairs.into_iter().map(|(key, value)| (key.to_string(), value)).collect())
 }
 //#endregion 🔖️Json
 
 //#region 🔖️Dispatch
 /// 🦠️ Applies one declared mutation kind to a real artifact and returns the re-serialized bytes.
-/// An unrecognised kind is an error, never a silent no-op: a mutation that is quietly skipped
-/// reports as a passing test.
+/// Every spec's `params` is the leaf's own wire payload (`DeflateMutation`'s `payload_value()`):
+/// `set-snapshot` reads `{snapshot: {compressionMethod, windowBits, compressionLevelHint, dictId?,
+/// payload}}`, `set-compression-params` reads `{method, window_bits, level_hint}`,
+/// `set-preset-dictionary` reads `{dict_id}` and `set-payload` reads `{payload}`. An unrecognised kind
+/// is an error, never a silent no-op: a mutation that is quietly skipped reports as a passing test.
 #[cfg(feature = "oracles")]
 pub fn oracle_apply_mutation(input: &[u8], spec: &Json) -> Result<Vec<u8>, String> {
-    let kind = spec.str("kind");
-    match kind.as_str() {
+    let params = params_of(spec);
+    match spec.str("kind").as_str() {
         "" => Err("mutation spec carries no `kind`".to_string()),
-        "no-mutation" => {
-            let (header, _) = Header::parse(input)?;
-            let payload = independent_inflate(input)?;
-            encode(&header, &payload)
-        }
         "set-snapshot" => {
-            let params = params_of(spec);
-            let header =
-                Header { method: json_number(&params, "method", 8.0) as u8, window_bits: json_number(&params, "windowBits", 7.0) as u8, level_hint_bits: level_hint_bits(&params.str("levelHint"))?, dict_id: json_optional_u32(&params, "dictId") };
-            encode(&header, params.str("payload").as_bytes())
+            let snapshot = params.get("snapshot").ok_or("set-snapshot requires a `snapshot` field")?;
+            let header = Header {
+                method: json_number(snapshot, "compressionMethod")? as u8,
+                window_bits: json_number(snapshot, "windowBits")? as u8,
+                level_hint_bits: level_hint_bits(&snapshot.str("compressionLevelHint"))?,
+                dict_id: json_optional_u32(snapshot, "dictId"),
+            };
+            encode(&header, &json_bytes(snapshot, "payload"))
         }
         "set-compression-params" => {
             let (original, _) = Header::parse(input)?;
             let payload = independent_inflate(input)?;
-            let params = params_of(spec);
-            let header = Header {
-                method: json_number(&params, "method", original.method as f64) as u8,
-                window_bits: json_number(&params, "windowBits", original.window_bits as f64) as u8,
-                level_hint_bits: level_hint_bits(&params.str("levelHint"))?,
-                dict_id: original.dict_id,
-            };
+            let header = Header { method: json_number(&params, "method")? as u8, window_bits: json_number(&params, "window_bits")? as u8, level_hint_bits: level_hint_bits(&params.str("level_hint"))?, dict_id: original.dict_id };
             encode(&header, &payload)
         }
         "set-preset-dictionary" => {
             let (original, _) = Header::parse(input)?;
             let payload = independent_inflate(input)?;
-            let params = params_of(spec);
-            encode(&Header { dict_id: json_optional_u32(&params, "dictId"), ..original }, &payload)
+            encode(&Header { dict_id: json_optional_u32(&params, "dict_id"), ..original }, &payload)
         }
         "set-payload" => {
             let (header, _) = Header::parse(input)?;
-            let params = params_of(spec);
-            encode(&header, params.str("payload").as_bytes())
+            encode(&header, &json_bytes(&params, "payload"))
         }
         other => Err(format!("mutation kind {:?} has no oracle implementation ({} input byte(s))", other, input.len())),
     }
 }
 
-/// 📦️ The decoded payload alone, independent of header framing — the `flate2` half of
-/// `project_deflate`, exposed separately so a caller building an inverse spec (which needs the
-/// ORIGINAL payload as text, not just its digest) never has to parse RFC1950 header bytes itself.
+/// 🔁️ The reference's own decode/re-encode: the header is parsed, the DEFLATE stream is genuinely
+/// inflated by `flate2` and re-deflated from the recovered payload alone.
 #[cfg(feature = "oracles")]
-pub fn independent_payload(input: &[u8]) -> Result<Vec<u8>, String> {
-    independent_inflate(input)
+pub fn oracle_round_trip(input: &[u8]) -> Result<Vec<u8>, String> {
+    let (header, _) = Header::parse(input)?;
+    encode(&header, &independent_inflate(input)?)
 }
 
 /// 👁️ Projects zlib bytes with the INDEPENDENT `flate2` reader onto this subset's own semantic
@@ -229,32 +239,36 @@ pub fn project_deflate(input: &[u8]) -> Result<Json, String> {
     ]))
 }
 
-/// ↩️ The spec for the mutation that undoes `kind`, computed from the ORIGINAL typed fields the
-/// same way `DeflateMutation::inverse` does (restore the prior value), but independently: this
-/// oracle module has no reachable path to the subject's own `protocol::Mutation` trait impl, and
-/// mirroring its algebra from data rather than calling it keeps the two implementations honestly
-/// separate.
+/// ↩️ The wire spec of the mutation that undoes `forward`, read out of `base` by the independent
+/// reader alone — the same restore-the-prior-value algebra `DeflateMutation::inverse` implements, but
+/// never reached through it: this oracle module has no path to the subject's `protocol::Mutation`, and
+/// mirroring the algebra from data keeps the two implementations honestly separate.
 #[cfg(feature = "oracles")]
-pub fn inverse_mutation_spec(kind: &str, method: u8, window_bits: u8, level_hint_bits: u8, dict_id: Option<u32>, payload: &[u8]) -> Result<Json, String> {
-    let dict_id_json = dict_id.map(|id| Json::Number(id as f64)).unwrap_or(Json::Null);
-    let payload_text = String::from_utf8(payload.to_vec()).map_err(|error| format!("original payload is not UTF-8 text: {error}"))?;
-    let params = match kind {
-        "no-mutation" => Json::Object(Vec::new()),
-        "set-snapshot" => Json::Object(vec![
-            ("method".to_string(), Json::Number(method as f64)),
-            ("windowBits".to_string(), Json::Number(window_bits as f64)),
-            ("levelHint".to_string(), Json::String(level_hint_name(level_hint_bits).to_string())),
-            ("dictId".to_string(), dict_id_json),
-            ("payload".to_string(), Json::String(payload_text)),
-        ]),
-        "set-compression-params" => {
-            Json::Object(vec![("method".to_string(), Json::Number(method as f64)), ("windowBits".to_string(), Json::Number(window_bits as f64)), ("levelHint".to_string(), Json::String(level_hint_name(level_hint_bits).to_string()))])
+pub fn oracle_inverse_spec(base: &[u8], forward: &Json) -> Result<Json, String> {
+    let (header, _) = Header::parse(base)?;
+    let payload = independent_inflate(base)?;
+    let dict_id = header.dict_id.map(|id| Json::Number(id as f64)).unwrap_or(Json::Null);
+    let kind = forward.str("kind");
+    let params = match kind.as_str() {
+        "set-snapshot" => {
+            let mut snapshot = vec![
+                ("schema", Json::String("stdio.deflate".to_string())),
+                ("compressionMethod", Json::Number(header.method as f64)),
+                ("windowBits", Json::Number(header.window_bits as f64)),
+                ("compressionLevelHint", Json::String(level_hint_name(header.level_hint_bits).to_string())),
+            ];
+            if let Some(id) = header.dict_id {
+                snapshot.push(("dictId", Json::Number(id as f64)));
+            }
+            snapshot.push(("payload", bytes_json(&payload)));
+            object(vec![("snapshot", object(snapshot))])
         }
-        "set-preset-dictionary" => Json::Object(vec![("dictId".to_string(), dict_id_json)]),
-        "set-payload" => Json::Object(vec![("payload".to_string(), Json::String(payload_text))]),
+        "set-compression-params" => object(vec![("method", Json::Number(header.method as f64)), ("window_bits", Json::Number(header.window_bits as f64)), ("level_hint", Json::String(level_hint_name(header.level_hint_bits).to_string()))]),
+        "set-preset-dictionary" => object(vec![("dict_id", dict_id)]),
+        "set-payload" => object(vec![("payload", bytes_json(&payload))]),
         other => return Err(format!("mutation kind {other:?} has no inverse spec")),
     };
-    Ok(Json::Object(vec![("kind".to_string(), Json::String(kind.to_string())), ("params".to_string(), params)]))
+    Ok(object(vec![("kind", Json::String(kind)), ("params", params)]))
 }
 //#endregion 🔖️Dispatch
 
@@ -268,17 +282,17 @@ mod unavailable {
     pub fn oracle_apply_mutation(_input: &[u8], _spec: &Json) -> Result<Vec<u8>, String> {
         Err(MESSAGE.to_string())
     }
-    pub fn independent_payload(_input: &[u8]) -> Result<Vec<u8>, String> {
+    pub fn oracle_round_trip(_input: &[u8]) -> Result<Vec<u8>, String> {
         Err(MESSAGE.to_string())
     }
     pub fn project_deflate(_input: &[u8]) -> Result<Json, String> {
         Err(MESSAGE.to_string())
     }
-    pub fn inverse_mutation_spec(_kind: &str, _method: u8, _window_bits: u8, _level_hint_bits: u8, _dict_id: Option<u32>, _payload: &[u8]) -> Result<Json, String> {
+    pub fn oracle_inverse_spec(_base: &[u8], _forward: &Json) -> Result<Json, String> {
         Err(MESSAGE.to_string())
     }
 }
 
 #[cfg(not(feature = "oracles"))]
-pub use unavailable::{independent_payload, inverse_mutation_spec, oracle_apply_mutation, project_deflate};
+pub use unavailable::{oracle_apply_mutation, oracle_inverse_spec, oracle_round_trip, project_deflate};
 //#endregion 🔖️Unavailable

@@ -5,11 +5,29 @@
   "type": "object",
   "additionalProperties": false,
   "required": [
+    "mutation",
     "newDomain"
   ],
   "properties": {
+    "mutation": {
+      "const": "changeDomain"
+    },
     "newDomain": {
-      "type": "string"
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "text",
+        "role": "value",
+        "label": {
+          "en": "Domain",
+          "de": "Domäne"
+        },
+        "description": {
+          "en": "Design domain this puzzle belongs to.",
+          "de": "Entwurfsdomäne, zu der dieses Puzzle gehört."
+        },
+        "group": "metadata",
+        "order": 10
+      }
     }
   }
 }

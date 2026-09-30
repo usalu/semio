@@ -1,9 +1,10 @@
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
-import Ajv, { type ValidateFunction } from 'ajv';
+import type { ValidateFunction } from 'ajv';
 import { getWorkspaceRoot } from '../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🗂️workspaces/🟦️.ts';
-import { runStdioTypeScriptCompiler } from '../../🧩️composition/🏗️build/🟦️.ts';
+import { semioSchemaAjvV1 } from '../../../../../🧰️framework/🛍️products/💻️os/🧪️tests/🧬️schema-oracle/🟦️.ts';
+import { runStdioTypeScriptCompiler } from '../../🏘️composition/🏗️build/🟦️.ts';
 import { parseDocxDiff } from '../../🗿️artifacts/📜️docx/🏅️standards/🔖️ecma-376/🪆️subsets/🧱️base/🧬️schema/🔺️diff/🟦️.ts';
 import { parseXlsxDiff } from '../../🗿️artifacts/📕️xlsx/🏅️standards/🔖️ecma-376/🪆️subsets/🧱️base/🧬️schema/🔺️diff/🟦️.ts';
 import { parsePptxDiff } from '../../🗿️artifacts/📽️pptx/🏅️standards/🔖️ecma-376/🪆️subsets/🧱️base/🧬️schema/🔺️diff/🟦️.ts';
@@ -36,7 +37,7 @@ export function testStdioOfficeSchemaContracts(repoRoot = getWorkspaceRoot()): v
   const artifacts = join(repoRoot, '✏️s/🔌️plugins/🗄️stdio/🗿️artifacts');
   const addressRoot = join(artifacts, '📜️docx/🏅️standards/🔖️ecma-376/🪆️subsets/🧱️base/🧬️schema/🧬️mutations/🧭️xml-address');
   const addresses = json(join(addressRoot, '🧫️fixtures/🔣️.json')) as { valid: Json[]; invalid: Json[] };
-  const validateAddress = new Ajv({ strict: true }).compile(json(join(addressRoot, '🔣️.json')));
+  const validateAddress = semioSchemaAjvV1().compile(json(join(addressRoot, '🔣️.json')));
   for (const address of addresses.valid) {
     valid(validateAddress, address, 'DOCX canonical XML address');
     assert.deepEqual(parseDocxXmlAddress(address), address);
@@ -48,7 +49,7 @@ export function testStdioOfficeSchemaContracts(repoRoot = getWorkspaceRoot()): v
   const xmlSnapshotSchema = json(join(artifacts, '📰️xml/🏅️standards/🔖️1.0/🪆️subsets/🧱️base/🧬️schema/📸️snapshot/🔣️.json'));
   const xmlDiffSchema = json(join(artifacts, '📰️xml/🏅️standards/🔖️1.0/🪆️subsets/🧱️base/🧬️schema/🔺️diff/🔣️.json'));
   const mutationRoot = join(addressRoot, '..');
-  const addressAjv = new Ajv({ strict: true }).addKeyword({ keyword: 'x-semio-state', schemaType: 'string' }).addSchema(json(join(addressRoot, '🔣️.json'))).addSchema(xmlSnapshotSchema);
+  const addressAjv = semioSchemaAjvV1().addSchema(json(join(addressRoot, '🔣️.json'))).addSchema(xmlSnapshotSchema);
   const addressedLeaves: { leaf: string; field: string; payload: { [key: string]: Json } }[] = [
     { leaf: '🔤set-run-text', field: 'address', payload: { mutation: 'setRunText', text: 'changed' } },
     { leaf: '🧩️replace-xml-node', field: 'address', payload: { mutation: 'replaceXmlNode', node: { kind: 'text', text: 'restored' } } },
@@ -67,16 +68,16 @@ export function testStdioOfficeSchemaContracts(repoRoot = getWorkspaceRoot()): v
   }
   const xlsxFidelityRoot = join(artifacts, '📕️xlsx/🏅️standards/🔖️ecma-376/🪆️subsets/🧱️base/🧫️fixtures/🧬️canonical-xml-save');
   const xlsxFidelity = json(join(xlsxFidelityRoot, '🔣️.json')) as { cases: Json[] };
-  valid(new Ajv({ strict: true }).compile(json(join(xlsxFidelityRoot, '🧬️schema/🔣️.json'))), xlsxFidelity, 'XLSX canonical save fixtures');
+  valid(semioSchemaAjvV1().compile(json(join(xlsxFidelityRoot, '🧬️schema/🔣️.json'))), xlsxFidelity, 'XLSX canonical save fixtures');
   const docxTableRoot = join(artifacts, '📜️docx/🏅️standards/🔖️ecma-376/🪆️subsets/🧱️base/🧫️fixtures/🧭️table-run-projection');
   const docxTable = json(join(docxTableRoot, '🔣️.json')) as { blocks: Json[][]; paths: Json[][] } & { [key: string]: Json };
-  valid(new Ajv({ strict: true }).compile(json(join(docxTableRoot, '🧬️schema/🔣️.json'))), docxTable, 'DOCX nested table draft fixture');
+  valid(semioSchemaAjvV1().compile(json(join(docxTableRoot, '🧬️schema/🔣️.json'))), docxTable, 'DOCX nested table draft fixture');
   assert.equal(docxTable.blocks.length, docxTable.paths.length);
   for (const [index, runs] of docxTable.blocks.entries()) assert.equal(runs.length, docxTable.paths[index].length);
   const docxNamespaceRoot = join(artifacts, '📜️docx/🏅️standards/🔖️ecma-376/🪆️subsets/🧱️base/🧫️fixtures/🏷️namespace-formatting');
-  valid(new Ajv({ strict: true }).compile(json(join(docxNamespaceRoot, '🧬️schema/🔣️.json'))), json(join(docxNamespaceRoot, '🔣️.json')), 'DOCX namespace and direct formatting fixtures');
+  valid(semioSchemaAjvV1().compile(json(join(docxNamespaceRoot, '🧬️schema/🔣️.json'))), json(join(docxNamespaceRoot, '🔣️.json')), 'DOCX namespace and direct formatting fixtures');
   const sparse = json(join(artifacts, '📰️xml/🏅️standards/🔖️1.0/🪆️subsets/🧱️base/🧬️schema/🔺️diff/🧫️fixtures/🌿️sparse-triples/🔣️.json')) as { valid: Json[]; invalid: Json[] };
-  const validateXmlDiff = new Ajv({ strict: true }).addKeyword({ keyword: 'x-semio-state', schemaType: 'string' }).addSchema(xmlSnapshotSchema).compile(xmlDiffSchema);
+  const validateXmlDiff = semioSchemaAjvV1().addSchema(xmlSnapshotSchema).compile(xmlDiffSchema);
   for (const diff of sparse.valid) {
     valid(validateXmlDiff, diff, 'XML sparse triple');
     assert.deepEqual(JSON.parse(JSON.stringify(parseXmlDiff(diff))), diff);
@@ -92,7 +93,7 @@ export function testStdioOfficeSchemaContracts(repoRoot = getWorkspaceRoot()): v
     const snapshotSchema = json(join(base, '🧬️schema/📸️snapshot/🔣️.json'));
     const diffSchema = json(join(base, '🧬️schema/🔺️diff/🔣️.json'));
     const fixture = join(base, '🧫️fixtures/🧬️mutations/📸️set-snapshot', row.slug);
-    const ajv = new Ajv({ strict: true, allErrors: true }).addKeyword({ keyword: 'x-semio-state', schemaType: 'string' }).addSchema(xmlSnapshotSchema).addSchema(xmlDiffSchema);
+    const ajv = semioSchemaAjvV1({ allErrors: true }).addSchema(xmlSnapshotSchema).addSchema(xmlDiffSchema);
     const validateSnapshot = ajv.compile(snapshotSchema);
     const validateDiff = ajv.compile(diffSchema);
     for (const state of ['⬅️before', '➡️after']) valid(validateSnapshot, json(join(fixture, '📸️snapshot', state, '🔣️.json')), `${row.artifact} ${state}`);
@@ -106,7 +107,7 @@ export function testStdioOfficeSchemaContracts(repoRoot = getWorkspaceRoot()): v
     const subsets = join(artifacts, row.artifact, '🏅️standards/🔖️ecma-376/🪆️subsets');
     const schemas = row.subsets.map((subset) => json(join(subsets, subset, '🧬️schema/🔣️.json')));
     const fixture = json(join(subsets, '🧱️base/🧫️fixtures/🧬️mutations/📸️set-snapshot', row.slug, '📸️snapshot/⬅️before/🔣️.json'));
-    const ajv = new Ajv({ strict: true, allErrors: true }).addKeyword({ keyword: 'x-semio-state', schemaType: 'string' }).addKeyword({ keyword: 'x-semio-formats', schemaType: 'array' }).addSchema(xmlSnapshotSchema);
+    const ajv = semioSchemaAjvV1({ allErrors: true }).addSchema(xmlSnapshotSchema);
     const validators = [ajv.compile(schemas[0]), ...schemas.slice(1).map((schema) => ajv.compile(schema))];
     for (const [index, validate] of validators.entries()) {
       valid(validate, fixture, `${row.artifact} ${row.subsets[index]} public artifact`);
@@ -116,7 +117,7 @@ export function testStdioOfficeSchemaContracts(repoRoot = getWorkspaceRoot()): v
   const docx = join(artifacts, '📜️docx/🏅️standards/🔖️ecma-376/🪆️subsets/🧱️base');
   const docxDiffSchema = json(join(docx, '🧬️schema/🔺️diff/🔣️.json')) as { $id: string } & Json;
   const optionalClear = json(join(artifacts, '📰️xml/🏅️standards/🔖️1.0/🪆️subsets/🧱️base/🧬️schema/🔺️diff/🧫️fixtures/🏳️optional-clear/🔣️.json')) as { cases: { name: string; diff: Json }[] };
-  const docxAjv = new Ajv({ strict: true }).addKeyword({ keyword: 'x-semio-state', schemaType: 'string' }).addSchema(xmlSnapshotSchema).addSchema(xmlDiffSchema).addSchema(docxDiffSchema);
+  const docxAjv = semioSchemaAjvV1().addSchema(xmlSnapshotSchema).addSchema(xmlDiffSchema).addSchema(docxDiffSchema);
   const validateDocxDiff = docxAjv.getSchema(docxDiffSchema.$id)!;
   for (const row of optionalClear.cases) {
     const diff = { xmlParts: { modified: [{ key: 'custom/document.xml', diff: { document: row.diff } }] } };
@@ -138,7 +139,7 @@ export function testStdioOfficeSchemaContracts(repoRoot = getWorkspaceRoot()): v
   const base = join(artifacts, '📽️pptx/🏅️standards/🔖️ecma-376/🪆️subsets/🧱️base');
   const schema = json(join(base, '🧬️schema/🔺️diff/🔣️.json')) as { $id: string } & Json;
   const fixture = json(join(base, '🧬️schema/🔺️diff/🧫️fixtures/🏷️placeholder-kind/🔣️.json')) as { expectedDiff: Json };
-  const ajv = new Ajv({ strict: true }).addKeyword({ keyword: 'x-semio-state', schemaType: 'string' }).addSchema(schema);
+  const ajv = semioSchemaAjvV1().addSchema(schema);
   const validateShape = ajv.compile({ $ref: `${schema.$id}#/$defs/PptxShapeDiff` });
   valid(validateShape, fixture.expectedDiff, 'PPTX placeholder kind diff');
   const parsed = parsePptxDiff({ presentation: { slides: { modified: [{ index: 0, diff: { shapes: { modified: [{ index: 0, diff: fixture.expectedDiff }] } } }] } } }).presentation?.slides?.modified?.[0]?.diff.shapes?.modified?.[0]?.diff;

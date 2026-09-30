@@ -19,7 +19,7 @@
 /// 🪡 Loop positions, surface parameters, and boundary flags.
 pub type TessellationLoopUv = (Vec<Pnt3>, Vec<(f64, f64)>, Vec<bool>);
 
-use std::collections::{HashMap, HashSet};
+use std::collections::{BTreeMap, HashMap, HashSet};
 
 use crate::standards::v1::subsets::brep::schema::diff::primitives::Wire;
 use crate::standards::v1::subsets::brep::schema::engine::{CurveKind, EdgeGroup, EdgeInfo, FaceGroup, FaceInfo, MeshTransfer, SurfaceKind};
@@ -192,7 +192,7 @@ pub struct TessellationJob {
     target: TessellationTarget,
     deflection: f64,
     edge_order: Vec<EdgeId>,
-    edge_cache: HashMap<EdgeId, Vec<(f64, Pnt3)>>,
+    edge_cache: BTreeMap<EdgeId, Vec<(f64, Pnt3)>>,
     faces: Vec<FaceId>,
     edge_cursor: usize,
     face_cursor: usize,
@@ -202,7 +202,19 @@ pub struct TessellationJob {
     phase: TessellationPhase,
 }
 
+struct RetiredEdgeSamples(BTreeMap<EdgeId, Vec<(f64, Pnt3)>>);
+impl crate::standards::v1::subsets::brep::schema::engine::retirement::RetirementFrontier for RetiredEdgeSamples {
+    fn advance(&mut self, payloads: &mut crate::standards::v1::subsets::brep::schema::engine::retirement::PayloadRetirement) -> bool {
+        if let Some((_, samples)) = self.0.pop_first() { payloads.pod(samples); }
+        self.0.is_empty()
+    }
+}
 impl TessellationJob {
+    /// 🧹️ Transfers all retained tessellation payloads without cancelling or clearing them.
+    pub fn detach_retirement(self, payloads: &mut crate::standards::v1::subsets::brep::schema::engine::retirement::PayloadRetirement) {
+        payloads.pod(self.edge_order); payloads.pod(self.faces);
+        payloads.frontier(RetiredEdgeSamples(self.edge_cache)); payloads.mesh_transfer(self.transfer);
+    }
     /// 🧩 A resumable tessellation of every face of `solid`.
     // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
     pub fn for_solid(body: &Body, solid: SolidId, deflection: f64) -> Result<Self, KernelError> {
@@ -243,7 +255,7 @@ impl TessellationJob {
         Self {
             target,
             deflection: deflection.max(1e-9),
-            edge_cache: HashMap::with_capacity(edge_order.len()),
+            edge_cache: BTreeMap::new(),
             edge_order,
             faces,
             edge_cursor: 0,
@@ -308,7 +320,7 @@ impl TessellationJob {
                         continue;
                     }
                     let edge = self.edge_order[self.edge_cursor];
-                    if let std::collections::hash_map::Entry::Vacant(slot) = self.edge_cache.entry(edge) {
+                    if let std::collections::btree_map::Entry::Vacant(slot) = self.edge_cache.entry(edge) {
                         slot.insert(sample_edge_points(body, edge, self.deflection)?);
                     }
                     self.edge_cursor += 1;
@@ -541,7 +553,7 @@ fn surface_kind_of(surface: &Surface) -> SurfaceKind {
 // #region 🧊FaceTessellate
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn append_face_mesh(transfer: &mut MeshTransfer, report: &mut TessellationReport, body: &Body, face_id: FaceId, deflection: f64, edge_cache: &HashMap<EdgeId, Vec<(f64, Pnt3)>>) -> Result<(), KernelError> {
+fn append_face_mesh(transfer: &mut MeshTransfer, report: &mut TessellationReport, body: &Body, face_id: FaceId, deflection: f64, edge_cache: &BTreeMap<EdgeId, Vec<(f64, Pnt3)>>) -> Result<(), KernelError> {
     let face = body.faces.get(face_id).ok_or_else(|| KernelError::MissingEntity(face_id.to_string()))?;
     let surface = body.surfaces.get(face.surface).ok_or_else(|| KernelError::MissingEntity(face.surface.to_string()))?;
     let Some(outer_id) = face.outer else {
@@ -619,7 +631,7 @@ fn append_face_mesh(transfer: &mut MeshTransfer, report: &mut TessellationReport
 /// nearest the previous sample) and pins the arbitrary `u` at poles/apexes to the previous branch
 /// so a boundary loop that touches a singularity stays a single well-formed ring vertex there.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn collect_loop_uv(body: &Body, loop_id: LoopId, surface: &Surface, edge_cache: &HashMap<EdgeId, Vec<(f64, Pnt3)>>) -> Result<TessellationLoopUv, KernelError> {
+fn collect_loop_uv(body: &Body, loop_id: LoopId, surface: &Surface, edge_cache: &BTreeMap<EdgeId, Vec<(f64, Pnt3)>>) -> Result<TessellationLoopUv, KernelError> {
     let mut positions: Vec<Pnt3> = Vec::new();
     let mut uvs: Vec<(f64, f64)> = Vec::new();
     let mut poles: Vec<bool> = Vec::new();

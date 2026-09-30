@@ -1,0 +1,5 @@
+# Exact Native Law Admission
+
+The concrete preserved3d corpus exceeds the current256-law pertarget cap. Added portable boundary vectors and an independent Ajv request-schema oracle for0/1/256/257/323/1024/4096/4097 identities. The compiler probe distinguishes early denial from actual compiler admission; all exact selection, target identity, executable fingerprinting and runtime receipt guards remain required. Canonicalized the owned law fixture schema dialect/metadata and its existing captured-output text to the actual current neutral fixture. Red validation is pending before raising the production cap.
+
+Actual red run:26pass/1fail609assertions;257selectors denied beforecompiler thoughportableoracle accepts. Raised pertarget cap to4096. Final existing ownedNx target passed27tests/626assertions in2s. All19hostile/native receipt vectors stillpass. Exact selector uniqueness, hashbound executable, package/target cardinality, cancellation/deadlines and output budgets unchanged. Ownedfiles: library/🟦️.ts; library/🧬️schema/🦀️exact-cargo-laws/🔣️.json; library/🧫️fixtures/🦀️exact-cargo-laws/🔣️.json; library/🧪️tests/🦀️exact-cargo-laws/🟦️.ts.

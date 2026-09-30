@@ -4,8 +4,7 @@ use crate::schema::modules::mutation_support::top_level::rejection_outcome;
 use crate::schema::modules::mutation_support::top_level::GltfTopLevelMutationRejection;
 use crate::GltfSnapshot;
 pub const ID: &str = "s.stdio.gltf.mutation.change-scene-name.v1";
-#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::MutationLeaf)]
-#[mutation_leaf(contract = ::protocol)]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
 #[value(rename_all = "camelCase")]
 pub struct GltfChangeSceneNamePayload {
     pub scene: usize,
@@ -26,7 +25,7 @@ pub fn apply(payload: &GltfChangeSceneNamePayload, base: &GltfSnapshot) -> Resul
 
 //#region 🧬️DirectMutation
 #[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::MutationLeaf)]
-#[mutation_leaf(contract = ::protocol)]
+#[mutation_leaf(contract = ::protocol, payload = Apply)]
 #[value(tag = "phase", content = "value", rename_all = "camelCase")]
 pub enum ChangeSceneNameMutation {
     Apply(GltfChangeSceneNamePayload),
@@ -70,6 +69,6 @@ impl protocol::MutationKind<GltfSnapshot, super::GltfMutation> for ChangeSceneNa
 
 //#region 🧪️Tests
 #[cfg(test)]
-#[path = "🧪️tests/🔬️direct-leaf/🦀️.rs"]
-mod direct_leaf_tests;
+#[path = "🧪️tests/✏️renames-the-main-4b6c9d/🦀️.rs"]
+mod case_renames_the_main_4b6c9d;
 //#endregion 🧪️Tests

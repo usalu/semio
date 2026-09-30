@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""🧩️ An INDEPENDENT second implementation of the `s.puzzle.2d` board document and its twenty-six
+"""🧩️ An INDEPENDENT second implementation of the `s.puzzle.2d` board document and its thirty-six
 typed mutations, in Python, serving as this case's differential oracle.
 
 **Why a second implementation and not a third-party library.** A `puzzle2d` document is a BOARD: nodes
@@ -51,6 +51,7 @@ only.
 # region 🔖️Imports
 import copy
 import json
+import math
 
 from semio_repo_test import Adapter, Outcome
 
@@ -154,8 +155,21 @@ KINDS = (
     "edit-target-region-label",
     "change-target-region-hidden",
     "change-target-region-locked",
+    "drag-selection",
+    "rotate-selection",
+    "scale-selection",
 )
 """🏷️ Every kind the catalog declares, in its declared order."""
+
+SELECTION_KINDS = ("drag-selection", "rotate-selection", "scale-selection")
+"""✋️ The three parametric selection transforms. Each names a TARGET SET rather than one record, and
+its ids are classified by which collection holds them: a node id is a node, a target-region id a
+region, anything else is absent; an empty or repeated target set breaks the schema and is refused as an
+invariant before any of this. An absent id, a locked member and — for a rotation, because a target
+region is an axis-aligned rectangle — a region are each skipped and reported as one
+`mutation.partial` per reason; when nothing survives the vector refuses (`mutation.target-missing`);
+identity parameters (a zero offset, a zero angle, a unit factor), or survivors that do not move, are a
+`mutation.no-op`. Positions are read off the base, so the transform replays on any base."""
 
 
 def tag_of(kind):
@@ -224,6 +238,28 @@ SPEC_VECTORS = (
     "edit-target-region-label-refused",
     "change-target-region-hidden-refused",
     "change-target-region-locked-refused",
+    "drag-selection-mixed",
+    "drag-selection-partial",
+    "drag-selection-refused",
+    "drag-selection-unchanged",
+    "rotate-selection-mixed",
+    "rotate-selection-partial",
+    "rotate-selection-refused",
+    "rotate-selection-unchanged",
+    "scale-selection-mixed",
+    "scale-selection-partial",
+    "scale-selection-refused",
+    "scale-selection-unchanged",
+    "drag-selection-invariant",
+    "rotate-selection-invariant",
+    "scale-selection-invariant",
+    "scale-selection-invariant-negative",
+    "scale-node-invariant",
+    "replace-node-geometry-invariant",
+    "create-node-invariant",
+    "add-node-handle-invariant",
+    "replace-node-handle-invariant",
+    "replace-kind-catalogs-invariant",
 )
 """🧾️ The row ids of the case's third Examples table — every committed vector the two exhaustive
 tables do not carry. A `mutate-<kind>` scenario id is a claim about that KIND, so a second row per
@@ -313,6 +349,175 @@ def written(record, member, value):
         record[member] = value
 
 
+FINITE_ARGUMENTS = {
+    "move-node": ("newX", "newY"),
+    "move-target-region": ("newX", "newY"),
+    "resize-target-region": ("newWidth", "newHeight"),
+    "connect-handles": ("gap", "shift", "rise", "rotation", "turn", "tilt", "x", "y"),
+    "replace-edge-geometry": ("newGap", "newShift", "newRise", "newRotation", "newTurn", "newTilt", "newX", "newY"),
+    "drag-selection": ("dx", "dy"),
+    "rotate-selection": ("pivotX", "pivotY", "angle"),
+    "scale-selection": ("pivotX", "pivotY", "factor"),
+}
+"""🧱️ The arguments each kind's payload schema types as a plain JSON `number`: a finite value is the only
+one a JSON number can carry, so anything else breaks the schema."""
+
+POSITIVE_ARGUMENTS = {
+    "scale-node": ("newScale",),
+    "replace-node-geometry": ("newRadius", "newWidth", "newHeight"),
+    "scale-selection": ("factor",),
+}
+"""🧱️ The arguments whose schema says `exclusiveMinimum: 0` (a null argument clears and is admitted)."""
+
+
+def finite(value):
+    """🔢️ A real JSON number, never a boolean, a NaN or an infinity."""
+    return isinstance(value, (int, float)) and not isinstance(value, bool) and math.isfinite(value)
+
+
+def positive(value):
+    """➕️ Absent, or a finite number greater than zero."""
+    return value is None or (finite(value) and value > 0)
+
+
+def handle_violation(handle):
+    """🔘️ The first hard bound of the handle record a handle breaks, or `None`."""
+    if not finite(handle["angle"]):
+        return "handle angle is not finite"
+    return next(("handle %s is not positive" % member for member in ("radius", "scale") if not positive(handle.get(member))), None)
+
+
+def node_violation(node):
+    """🔵️ The first hard bound of the node record a node breaks, or `None`."""
+    if not (finite(node["x"]) and finite(node["y"])):
+        return "node position is not finite"
+    if node.get("shape") not in (None, "circle", "rectangle"):
+        return "node shape %r is neither circle nor rectangle" % node.get("shape")
+    if node.get("anchor") not in ("fixed", "derived"):
+        return "node anchor %r is neither fixed nor derived" % node.get("anchor")
+    member = next((member for member in ("radius", "width", "height", "scale") if not positive(node.get(member))), None)
+    if member is not None:
+        return "node %s is not positive" % member
+    return next((violation for violation in map(handle_violation, node["handles"]) if violation), None)
+
+
+def catalogs_violation(catalogs):
+    """📚️ The first hard bound a kind catalogue breaks: a template angle, radius or rim parameter `t`, an
+    author rank or a handle-kind order."""
+    for kind in catalogs["nodes"]:
+        for template in kind["handles"]:
+            if not finite(template["angle"]) or not positive(template.get("radius")):
+                return "template %r angle or radius is out of bounds" % template["id"]
+            if template.get("t") is not None and not (finite(template["t"]) and 0 <= template["t"] <= 1):
+                return "template %r rim parameter t %r lies off the outline" % (template["id"], template["t"])
+        if any(author.get("rank") is not None and author["rank"] < 0 for author in kind["authors"]):
+            return "an author rank is negative"
+    if any(kind.get("order") is not None and kind["order"] < 0 for kind in catalogs["handles"]):
+        return "a handle-kind order is negative"
+    return None
+
+
+def invariant_violation(kind, payload):
+    """🧱️ Which hard bound of its own leaf schema this payload breaks, or `None` — the value both
+    implementations must refuse as a Fatal `mutation.invariant` before they look at the board."""
+    for argument in FINITE_ARGUMENTS.get(kind, ()):
+        if not finite(payload[argument]):
+            return "%s is not finite" % argument
+    for argument in POSITIVE_ARGUMENTS.get(kind, ()):
+        if not positive(payload.get(argument)):
+            return "%s is not positive" % argument
+    if kind == "replace-node-geometry" and payload.get("newShape") not in (None, "circle", "rectangle"):
+        return "newShape %r is neither circle nor rectangle" % payload.get("newShape")
+    if kind in ("create-node", "add-node-handle", "create-target-region") and payload.get("index") is not None and payload["index"] < 0:
+        return "index is negative"
+    if kind == "create-node":
+        return node_violation(payload["node"])
+    if kind == "add-node-handle":
+        return handle_violation(payload["handle"])
+    if kind == "replace-node-handle":
+        return handle_violation(payload["newHandle"])
+    if kind == "create-target-region":
+        region = payload["targetRegion"]
+        return next(("region %s is not finite" % member for member in ("x", "y", "width", "height") if not finite(region[member])), None)
+    if kind == "replace-kind-catalogs" and payload["newCatalogs"] is not None:
+        return catalogs_violation(payload["newCatalogs"])
+    if kind == "connect-kind-compatibility" and payload["specificity"] not in ("general", "node", "edge", "handle", "wire", "vortex"):
+        return "specificity %r is not a declared one" % payload["specificity"]
+    if kind in SELECTION_KINDS:
+        if not payload["targets"]:
+            return "targets is empty"
+        if len(set(payload["targets"])) != len(payload["targets"]):
+            return "targets repeats an id"
+    return None
+
+
+def selection_transform(kind, payload):
+    """✋️ The per-record rule of one selection kind — `(node rule, region rule or None, identity)`.
+    A drag adds the offset; a rotation orbits the pivot counter-clockwise and turns every handle angle
+    by the same amount; a scale spreads positions from the pivot (a node keeps its own size) and scales
+    a region's corner AND extent."""
+    if kind == "drag-selection":
+        dx, dy = payload["dx"], payload["dy"]
+        return (lambda node: dict(node, x=node["x"] + dx, y=node["y"] + dy)), (lambda region: dict(region, x=region["x"] + dx, y=region["y"] + dy)), dx == 0 and dy == 0
+    cx, cy = payload["pivotX"], payload["pivotY"]
+    if kind == "rotate-selection":
+        radians = payload["angle"]
+        sin, cos = math.sin(radians), math.cos(radians)
+
+        def turned(node):
+            moved = dict(node, x=cx + (node["x"] - cx) * cos - (node["y"] - cy) * sin, y=cy + (node["x"] - cx) * sin + (node["y"] - cy) * cos)
+            moved["handles"] = [dict(handle, angle=handle["angle"] + radians) for handle in node["handles"]]
+            return moved
+
+        return turned, None, radians == 0
+    factor = payload["factor"]
+    return (lambda node: dict(node, x=cx + (node["x"] - cx) * factor, y=cy + (node["y"] - cy) * factor)), (lambda region: dict(region, x=cx + (region["x"] - cx) * factor, y=cy + (region["y"] - cy) * factor, width=region["width"] * factor, height=region["height"] * factor)), factor == 1
+
+
+def select_and_transform(document, kind, payload):
+    """🎯️ Applies one selection kind, answering the new document and the messages it raises; refuses
+    (AssertionError) when no target survives."""
+    node_rule, region_rule, identity = selection_transform(kind, payload)
+    skipped = {"missing": [], "locked": [], "fixed": []}
+    survivors = []
+    regions = {region["id"]: region for region in document.get("targetRegions", [])}
+    nodes = {node["id"]: node for node in document["nodes"]}
+    for identity_of in payload["targets"]:
+        if identity_of in nodes:
+            (skipped["locked"] if nodes[identity_of].get("locked", False) else survivors).append(identity_of)
+        elif identity_of in regions:
+            reason = "locked" if regions[identity_of]["locked"] else ("fixed" if region_rule is None else None)
+            (skipped[reason] if reason else survivors).append(identity_of)
+        else:
+            skipped["missing"].append(identity_of)
+    if not survivors:
+        raise AssertionError("mutate-%s: none of %r is an unlocked node or target region this transform applies to" % (kind, payload["targets"]))
+    messages = [{"code": "mutation.partial", "level": "warn", "target": skipped[reason]} for reason in ("missing", "locked", "fixed") if skipped[reason]]
+    moved = False
+    if not identity:
+        for at, node in enumerate(document["nodes"]):
+            if node["id"] in survivors and node_rule(node) != node:
+                document["nodes"][at] = node_rule(node)
+                moved = True
+        for at, region in enumerate(document.get("targetRegions", [])):
+            if region_rule is not None and region["id"] in survivors and region_rule(region) != region:
+                document["targetRegions"][at] = region_rule(region)
+                moved = True
+    if not moved:
+        messages.append({"code": "mutation.no-op", "level": "warn", "target": list(payload["targets"])})
+    return document, messages
+
+
+def selection_messages_hold(kind, before, payload, outcome):
+    """🗣️ A selection vector's committed messages are exactly the ones this implementation raises —
+    code, level and the skipped ids in payload order."""
+    if kind not in SELECTION_KINDS:
+        return
+    _document, messages = select_and_transform(copy.deepcopy(before), kind, payload)
+    if messages != outcome.get("messages", []):
+        raise AssertionError("mutate-%s: this implementation raises %s, the committed outcome declares %s" % (kind, json.dumps(messages), json.dumps(outcome.get("messages", []))))
+
+
 def attached_to(document, handle_ids):
     """✂️ The edges attached to any of these handles, in board order — what a node or handle removal
     severs."""
@@ -322,7 +527,11 @@ def attached_to(document, handle_ids):
 
 # region 🔖️Verbs
 def apply_mutation(document, kind, payload):
-    """🦠️ Applies one kind, answering the new document and the diagnostic codes it raised."""
+    """🦠️ Applies one kind, answering the new document and the diagnostic codes it raised. A payload
+    that breaks a hard bound of its own schema is refused first, whatever the board holds."""
+    violation = invariant_violation(kind, payload)
+    if violation is not None:
+        raise AssertionError("mutate-%s: invariant: %s" % (kind, violation))
     document = copy.deepcopy(document)
     if kind == "create-node":
         if any(node["id"] == payload["node"]["id"] for node in document["nodes"]):
@@ -414,6 +623,8 @@ def apply_mutation(document, kind, payload):
         region = document["targetRegions"][region_at(document, payload["id"], kind, "mutate")]
         for member, argument in REGION_GEOMETRY[kind]:
             region[member] = payload[argument]
+    elif kind in SELECTION_KINDS:
+        document, _messages = select_and_transform(document, kind, payload)
     elif kind == "edit-target-region-label":
         region = document["targetRegions"][region_at(document, payload["id"], kind, "mutate")]
         if payload["newLabel"] is None:
@@ -504,6 +715,19 @@ def inverse_mutation(document, kind, payload):
         member, argument = REGION_FLAGS[kind]
         region = document["targetRegions"][region_at(document, payload["id"], kind, "inverse")]
         return [(kind, {"id": payload["id"], argument: region[member]})]
+    if kind in SELECTION_KINDS:
+        moved, _messages = select_and_transform(copy.deepcopy(document), kind, payload)
+        steps = []
+        for node, after in zip(document["nodes"], moved["nodes"]):
+            if (node["x"], node["y"]) != (after["x"], after["y"]):
+                steps.append(("move-node", {"id": node["id"], "newX": node["x"], "newY": node["y"]}))
+            steps += [("replace-node-handle", {"nodeId": node["id"], "handleId": handle["id"], "newHandle": copy.deepcopy(handle)}) for handle, turned in zip(node["handles"], after["handles"]) if handle != turned]
+        for region, after in zip(document.get("targetRegions", []), moved.get("targetRegions", [])):
+            if (region["x"], region["y"]) != (after["x"], after["y"]):
+                steps.append(("move-target-region", {"id": region["id"], "newX": region["x"], "newY": region["y"]}))
+            if (region["width"], region["height"]) != (after["width"], after["height"]):
+                steps.append(("resize-target-region", {"id": region["id"], "newWidth": region["width"], "newHeight": region["height"]}))
+        return steps
     raise AssertionError("inverse-%s: this implementation declares no inverse for that kind" % kind)
 
 
@@ -601,9 +825,11 @@ def mutate_handler(kind):
         after = leaf(ctx, spec, "after")
         outcome = leaf(ctx, spec, "outcome")
         validate(before, "mutate-%s" % kind)
-        applied = apply_mutation(before, kind, payload_of(leaf(ctx, spec, "mutation"), kind))
+        payload = payload_of(leaf(ctx, spec, "mutation"), kind)
+        applied = apply_mutation(before, kind, payload)
         validate(applied, "mutate-%s" % kind)
         equals_committed(kind, applied, after)
+        selection_messages_hold(kind, before, payload, outcome)
         observable(kind, before, applied, declares_no_op(outcome))
         return outcome_of(applied)
 
@@ -678,11 +904,16 @@ def spec_vector_handler(ctx):
             apply_mutation(before, kind, payload)
         except AssertionError:
             equals_committed(kind, before, after)
+            if (outcome["code"] == "mutation.invariant") != (invariant_violation(kind, payload) is not None):
+                raise AssertionError("spec-vector-%s: the committed refusal is %r, this implementation's own invariant check says %r" % (kind, outcome["code"], invariant_violation(kind, payload)))
+            if kind in SELECTION_KINDS and outcome.get("path") != payload["targets"]:
+                raise AssertionError("spec-vector-%s: a refused selection names every target it was given, not %r" % (kind, outcome.get("path")))
             return outcome_of(after)
         raise AssertionError("spec-vector-%s: this implementation accepted a vector the committed outcome declares rejected" % kind)
     applied = apply_mutation(before, kind, payload)
     validate(applied, "spec-vector-%s" % kind)
     equals_committed(kind, applied, after)
+    selection_messages_hold(kind, before, payload, outcome)
     observable(kind, before, applied, declares_no_op(outcome))
     if spec["verdict"] == "noop":
         return outcome_of(applied)

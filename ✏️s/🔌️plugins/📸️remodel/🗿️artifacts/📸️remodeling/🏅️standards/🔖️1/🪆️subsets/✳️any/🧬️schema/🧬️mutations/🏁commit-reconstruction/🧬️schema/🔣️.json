@@ -5,6 +5,7 @@
   "type": "object",
   "additionalProperties": false,
   "required": [
+    "mutation",
     "assets",
     "geo",
     "mesh",
@@ -13,6 +14,9 @@
     "trajectory"
   ],
   "properties": {
+    "mutation": {
+      "const": "commitReconstruction"
+    },
     "sparse": {
       "anyOf": [
         {
@@ -27,7 +31,21 @@
             "points": {
               "type": "string",
               "format": "base64",
-              "description": "base64 of little-endian f32 lanes (semio_s_plugin_remodel PackedF32)"
+              "description": "base64 of little-endian f32 lanes (semio_s_plugin_remodel PackedF32)",
+              "x-semio-ui": {
+                "widget": "hidden",
+                "role": "value",
+                "label": {
+                  "en": "Points",
+                  "de": "Punkte"
+                },
+                "description": {
+                  "en": "Packed float32 xyz triples (base64).",
+                  "de": "Gepackte float32-xyz-Tripel (Base64)."
+                },
+                "group": "result",
+                "order": 10
+              }
             },
             "colors": {
               "type": [
@@ -35,14 +53,41 @@
                 "null"
               ],
               "format": "base64",
-              "description": "base64 of raw u8 lanes (semio_s_plugin_remodel PackedU8)"
+              "description": "base64 of raw u8 lanes (semio_s_plugin_remodel PackedU8)",
+              "x-semio-ui": {
+                "widget": "hidden",
+                "role": "value",
+                "label": {
+                  "en": "Colours",
+                  "de": "Farben"
+                },
+                "description": {
+                  "en": "Packed 8-bit RGB triples (base64).",
+                  "de": "Gepackte 8-Bit-RGB-Tripel (Base64)."
+                },
+                "group": "result",
+                "order": 20
+              }
             }
           }
         },
         {
           "type": "null"
         }
-      ]
+      ],
+      "x-semio-ui": {
+        "role": "value",
+        "label": {
+          "en": "Sparse Point Cloud",
+          "de": "Dünne Punktwolke"
+        },
+        "description": {
+          "en": "Sparse cloud produced by the run.",
+          "de": "Vom Lauf erzeugte dünne Punktwolke."
+        },
+        "group": "result",
+        "order": 10
+      }
     },
     "trajectory": {
       "anyOf": [
@@ -67,7 +112,24 @@
                 ],
                 "properties": {
                   "cameraId": {
-                    "type": "string"
+                    "type": "string",
+                    "x-semio-ui": {
+                      "widget": "reference",
+                      "role": "target",
+                      "label": {
+                        "en": "Camera",
+                        "de": "Kamera"
+                      },
+                      "description": {
+                        "en": "The camera this pose belongs to.",
+                        "de": "Kamera, zu der diese Pose gehört."
+                      },
+                      "ref": {
+                        "kind": "camera"
+                      },
+                      "group": "pose",
+                      "order": 10
+                    }
                   },
                   "rotationWxyz": {
                     "type": "array",
@@ -76,7 +138,22 @@
                       "format": "float"
                     },
                     "minItems": 4,
-                    "maxItems": 4
+                    "maxItems": 4,
+                    "x-semio-ui": {
+                      "widget": "vector",
+                      "role": "value",
+                      "label": {
+                        "en": "Rotation (Quaternion w, x, y, z)",
+                        "de": "Rotation (Quaternion w, x, y, z)"
+                      },
+                      "description": {
+                        "en": "Unit quaternion of the camera orientation.",
+                        "de": "Einheitsquaternion der Kameraorientierung."
+                      },
+                      "step": 0.001,
+                      "group": "pose",
+                      "order": 20
+                    }
                   },
                   "translation": {
                     "type": "array",
@@ -85,9 +162,33 @@
                       "format": "float"
                     },
                     "minItems": 3,
-                    "maxItems": 3
+                    "maxItems": 3,
+                    "x-semio-ui": {
+                      "widget": "vector",
+                      "role": "value",
+                      "label": {
+                        "en": "Translation",
+                        "de": "Translation"
+                      },
+                      "description": {
+                        "en": "Camera position in reconstruction coordinates.",
+                        "de": "Kameraposition in Rekonstruktionskoordinaten."
+                      },
+                      "step": 0.001,
+                      "group": "pose",
+                      "order": 30
+                    }
                   }
                 }
+              },
+              "x-semio-ui": {
+                "role": "value",
+                "label": {
+                  "en": "Camera Poses",
+                  "de": "Kameraposen"
+                },
+                "group": "result",
+                "order": 10
               }
             }
           }
@@ -95,7 +196,20 @@
         {
           "type": "null"
         }
-      ]
+      ],
+      "x-semio-ui": {
+        "role": "value",
+        "label": {
+          "en": "Camera Trajectory",
+          "de": "Kameratrajektorie"
+        },
+        "description": {
+          "en": "Camera poses recovered by the run.",
+          "de": "Vom Lauf rekonstruierte Kameraposen."
+        },
+        "group": "result",
+        "order": 20
+      }
     },
     "mesh": {
       "anyOf": [
@@ -121,7 +235,21 @@
               ],
               "properties": {
                 "childId": {
-                  "type": "string"
+                  "type": "string",
+                  "x-semio-ui": {
+                    "widget": "hidden",
+                    "role": "value",
+                    "label": {
+                      "en": "Child ID",
+                      "de": "Kind-ID"
+                    },
+                    "description": {
+                      "en": "Handle of the composed stdio mesh artifact.",
+                      "de": "Verweis auf das eingebettete stdio-Mesh-Artefakt."
+                    },
+                    "group": "result",
+                    "order": 10
+                  }
                 },
                 "target": {
                   "type": "object",
@@ -133,7 +261,17 @@
                   ],
                   "properties": {
                     "artifactId": {
-                      "type": "string"
+                      "type": "string",
+                      "x-semio-ui": {
+                        "widget": "hidden",
+                        "role": "value",
+                        "label": {
+                          "en": "Artifact ID",
+                          "de": "Artefakt-ID"
+                        },
+                        "group": "result",
+                        "order": 10
+                      }
                     },
                     "dialect": {
                       "type": "object",
@@ -146,18 +284,86 @@
                       ],
                       "properties": {
                         "artifactKind": {
-                          "type": "string"
+                          "type": "string",
+                          "x-semio-ui": {
+                            "widget": "hidden",
+                            "role": "value",
+                            "label": {
+                              "en": "Artifact Kind",
+                              "de": "Artefaktart"
+                            },
+                            "group": "result",
+                            "order": 10
+                          }
                         },
                         "standard": {
-                          "type": "string"
+                          "type": "string",
+                          "x-semio-ui": {
+                            "widget": "hidden",
+                            "role": "value",
+                            "label": {
+                              "en": "Standard",
+                              "de": "Standard"
+                            },
+                            "group": "result",
+                            "order": 20
+                          }
                         },
                         "subset": {
-                          "type": "string"
+                          "type": "string",
+                          "x-semio-ui": {
+                            "widget": "hidden",
+                            "role": "value",
+                            "label": {
+                              "en": "Subset",
+                              "de": "Teilmenge"
+                            },
+                            "group": "result",
+                            "order": 30
+                          }
                         }
+                      },
+                      "x-semio-ui": {
+                        "widget": "hidden",
+                        "role": "value",
+                        "label": {
+                          "en": "Dialect",
+                          "de": "Dialekt"
+                        },
+                        "group": "result",
+                        "order": 20
                       }
                     }
+                  },
+                  "x-semio-ui": {
+                    "widget": "hidden",
+                    "role": "value",
+                    "label": {
+                      "en": "Target Artifact",
+                      "de": "Zielartefakt"
+                    },
+                    "description": {
+                      "en": "Handle of the composed stdio mesh artifact.",
+                      "de": "Verweis auf das eingebettete stdio-Mesh-Artefakt."
+                    },
+                    "group": "result",
+                    "order": 20
                   }
                 }
+              },
+              "x-semio-ui": {
+                "widget": "hidden",
+                "role": "value",
+                "label": {
+                  "en": "Mesh Artifact",
+                  "de": "Mesh-Artefakt"
+                },
+                "description": {
+                  "en": "Handle of the composed stdio mesh artifact.",
+                  "de": "Verweis auf das eingebettete stdio-Mesh-Artefakt."
+                },
+                "group": "result",
+                "order": 10
               }
             },
             "source": {
@@ -167,13 +373,56 @@
                 "placeholder",
                 "reconstructed",
                 "imported"
-              ]
+              ],
+              "x-semio-ui": {
+                "widget": "segmented",
+                "role": "value",
+                "label": {
+                  "en": "Mesh Source",
+                  "de": "Mesh-Herkunft"
+                },
+                "options": {
+                  "placeholder": {
+                    "en": "Placeholder",
+                    "de": "Platzhalter"
+                  },
+                  "reconstructed": {
+                    "en": "Reconstructed",
+                    "de": "Rekonstruiert"
+                  },
+                  "imported": {
+                    "en": "Imported",
+                    "de": "Importiert"
+                  }
+                },
+                "group": "result",
+                "order": 20
+              }
             },
             "textureAssetId": {
               "type": [
                 "string",
                 "null"
-              ]
+              ],
+              "x-semio-ui": {
+                "widget": "reference",
+                "role": "target",
+                "label": {
+                  "en": "Texture Asset",
+                  "de": "Textur-Asset"
+                },
+                "description": {
+                  "en": "Texture image of the mesh; empty when untextured.",
+                  "de": "Texturbild des Mesh; leer, wenn untexturiert."
+                },
+                "ref": {
+                  "kind": "asset",
+                  "domain": "assets",
+                  "granularity": "asset"
+                },
+                "group": "result",
+                "order": 30
+              }
             },
             "watertight": {
               "anyOf": [
@@ -203,55 +452,169 @@
                     "vertexCount": {
                       "type": "integer",
                       "format": "uint32",
-                      "minimum": 0
+                      "minimum": 0,
+                      "x-semio-ui": {
+                        "widget": "hidden",
+                        "role": "value",
+                        "label": {
+                          "en": "Vertex Count",
+                          "de": "Anzahl der Eckpunkte"
+                        },
+                        "group": "report",
+                        "order": 10
+                      }
                     },
                     "triangleCount": {
                       "type": "integer",
                       "format": "uint32",
-                      "minimum": 0
+                      "minimum": 0,
+                      "x-semio-ui": {
+                        "widget": "hidden",
+                        "role": "value",
+                        "label": {
+                          "en": "Triangle Count",
+                          "de": "Anzahl der Dreiecke"
+                        },
+                        "group": "report",
+                        "order": 20
+                      }
                     },
                     "boundaryEdgeCount": {
                       "type": "integer",
                       "format": "uint32",
-                      "minimum": 0
+                      "minimum": 0,
+                      "x-semio-ui": {
+                        "widget": "hidden",
+                        "role": "value",
+                        "label": {
+                          "en": "Boundary Edges",
+                          "de": "Randkanten"
+                        },
+                        "group": "report",
+                        "order": 30
+                      }
                     },
                     "boundaryLoopCount": {
                       "type": "integer",
                       "format": "uint32",
-                      "minimum": 0
+                      "minimum": 0,
+                      "x-semio-ui": {
+                        "widget": "hidden",
+                        "role": "value",
+                        "label": {
+                          "en": "Boundary Loops",
+                          "de": "Randschleifen"
+                        },
+                        "group": "report",
+                        "order": 40
+                      }
                     },
                     "nonManifoldEdgeCount": {
                       "type": "integer",
                       "format": "uint32",
-                      "minimum": 0
+                      "minimum": 0,
+                      "x-semio-ui": {
+                        "widget": "hidden",
+                        "role": "value",
+                        "label": {
+                          "en": "Non-Manifold Edges",
+                          "de": "Nicht-mannigfaltige Kanten"
+                        },
+                        "group": "report",
+                        "order": 50
+                      }
                     },
                     "nonManifoldVertexCount": {
                       "type": "integer",
                       "format": "uint32",
-                      "minimum": 0
+                      "minimum": 0,
+                      "x-semio-ui": {
+                        "widget": "hidden",
+                        "role": "value",
+                        "label": {
+                          "en": "Non-Manifold Vertices",
+                          "de": "Nicht-mannigfaltige Eckpunkte"
+                        },
+                        "group": "report",
+                        "order": 60
+                      }
                     },
                     "connectedComponents": {
                       "type": "integer",
                       "format": "uint32",
-                      "minimum": 0
+                      "minimum": 0,
+                      "x-semio-ui": {
+                        "widget": "hidden",
+                        "role": "value",
+                        "label": {
+                          "en": "Connected Components",
+                          "de": "Zusammenhangskomponenten"
+                        },
+                        "group": "report",
+                        "order": 70
+                      }
                     },
                     "consistentlyOriented": {
-                      "type": "boolean"
+                      "type": "boolean",
+                      "x-semio-ui": {
+                        "widget": "hidden",
+                        "role": "value",
+                        "label": {
+                          "en": "Consistently Oriented",
+                          "de": "Konsistent orientiert"
+                        },
+                        "group": "report",
+                        "order": 80
+                      }
                     },
                     "eulerCharacteristic": {
                       "type": "integer",
-                      "format": "int64"
+                      "format": "int64",
+                      "x-semio-ui": {
+                        "widget": "hidden",
+                        "role": "value",
+                        "label": {
+                          "en": "Euler Characteristic",
+                          "de": "Euler-Charakteristik"
+                        },
+                        "group": "report",
+                        "order": 90
+                      }
                     },
                     "genus": {
                       "type": [
                         "integer",
                         "null"
                       ],
-                      "format": "int64"
+                      "format": "int64",
+                      "x-semio-ui": {
+                        "widget": "hidden",
+                        "role": "value",
+                        "label": {
+                          "en": "Genus",
+                          "de": "Geschlecht"
+                        },
+                        "description": {
+                          "en": "Topological genus of a closed 2-manifold.",
+                          "de": "Topologisches Geschlecht einer geschlossenen 2-Mannigfaltigkeit."
+                        },
+                        "group": "report",
+                        "order": 100
+                      }
                     },
                     "signedVolume": {
                       "type": "number",
-                      "format": "double"
+                      "format": "double",
+                      "x-semio-ui": {
+                        "widget": "hidden",
+                        "role": "value",
+                        "label": {
+                          "en": "Signed Volume",
+                          "de": "Vorzeichenbehaftetes Volumen"
+                        },
+                        "group": "report",
+                        "order": 110
+                      }
                     },
                     "selfIntersectionPairs": {
                       "type": [
@@ -259,33 +622,109 @@
                         "null"
                       ],
                       "format": "uint32",
-                      "minimum": 0
+                      "minimum": 0,
+                      "x-semio-ui": {
+                        "widget": "hidden",
+                        "role": "value",
+                        "label": {
+                          "en": "Self-Intersection Pairs",
+                          "de": "Selbstüberschneidungspaare"
+                        },
+                        "group": "report",
+                        "order": 120
+                      }
                     },
                     "closedFallbackUsed": {
-                      "type": "boolean"
+                      "type": "boolean",
+                      "x-semio-ui": {
+                        "widget": "hidden",
+                        "role": "value",
+                        "label": {
+                          "en": "Closing Fallback Used",
+                          "de": "Schließ-Rückfall verwendet"
+                        },
+                        "group": "report",
+                        "order": 130
+                      }
                     },
                     "isClosed": {
-                      "type": "boolean"
+                      "type": "boolean",
+                      "x-semio-ui": {
+                        "widget": "hidden",
+                        "role": "value",
+                        "label": {
+                          "en": "Closed",
+                          "de": "Geschlossen"
+                        },
+                        "group": "report",
+                        "order": 140
+                      }
                     },
                     "isTwoManifold": {
-                      "type": "boolean"
+                      "type": "boolean",
+                      "x-semio-ui": {
+                        "widget": "hidden",
+                        "role": "value",
+                        "label": {
+                          "en": "2-Manifold",
+                          "de": "2-Mannigfaltig"
+                        },
+                        "group": "report",
+                        "order": 150
+                      }
                     },
                     "isWatertight": {
-                      "type": "boolean"
+                      "type": "boolean",
+                      "x-semio-ui": {
+                        "widget": "hidden",
+                        "role": "value",
+                        "label": {
+                          "en": "Watertight",
+                          "de": "Wasserdicht"
+                        },
+                        "group": "report",
+                        "order": 160
+                      }
                     }
                   }
                 },
                 {
                   "type": "null"
                 }
-              ]
+              ],
+              "x-semio-ui": {
+                "role": "value",
+                "label": {
+                  "en": "Watertightness Report",
+                  "de": "Wasserdichtheitsbericht"
+                },
+                "description": {
+                  "en": "Derived from the mesh by the reconstruction; not edited by hand.",
+                  "de": "Von der Rekonstruktion aus dem Mesh abgeleitet; wird nicht von Hand bearbeitet."
+                },
+                "group": "report",
+                "order": 40
+              }
             }
           }
         },
         {
           "type": "null"
         }
-      ]
+      ],
+      "x-semio-ui": {
+        "role": "value",
+        "label": {
+          "en": "Mesh",
+          "de": "Mesh"
+        },
+        "description": {
+          "en": "Reconstructed mesh; empty keeps the stored mesh.",
+          "de": "Rekonstruiertes Mesh; leer behält das gespeicherte Mesh."
+        },
+        "group": "result",
+        "order": 30
+      }
     },
     "geo": {
       "anyOf": [
@@ -303,26 +742,96 @@
               "type": [
                 "string",
                 "null"
-              ]
+              ],
+              "x-semio-ui": {
+                "widget": "reference",
+                "role": "target",
+                "label": {
+                  "en": "DSM Raster",
+                  "de": "DOM-Raster"
+                },
+                "description": {
+                  "en": "Digital surface model raster.",
+                  "de": "Raster des digitalen Oberflächenmodells."
+                },
+                "ref": {
+                  "kind": "asset",
+                  "domain": "assets",
+                  "granularity": "asset"
+                },
+                "group": "result",
+                "order": 10
+              }
             },
             "dtmAssetId": {
               "type": [
                 "string",
                 "null"
-              ]
+              ],
+              "x-semio-ui": {
+                "widget": "reference",
+                "role": "target",
+                "label": {
+                  "en": "DTM Raster",
+                  "de": "DGM-Raster"
+                },
+                "description": {
+                  "en": "Digital terrain model raster.",
+                  "de": "Raster des digitalen Geländemodells."
+                },
+                "ref": {
+                  "kind": "asset",
+                  "domain": "assets",
+                  "granularity": "asset"
+                },
+                "group": "result",
+                "order": 20
+              }
             },
             "orthoAssetId": {
               "type": [
                 "string",
                 "null"
-              ]
+              ],
+              "x-semio-ui": {
+                "widget": "reference",
+                "role": "target",
+                "label": {
+                  "en": "Orthophoto",
+                  "de": "Orthofoto"
+                },
+                "description": {
+                  "en": "True orthophoto raster.",
+                  "de": "Raster des Orthofotos."
+                },
+                "ref": {
+                  "kind": "asset",
+                  "domain": "assets",
+                  "granularity": "asset"
+                },
+                "group": "result",
+                "order": 30
+              }
             }
           }
         },
         {
           "type": "null"
         }
-      ]
+      ],
+      "x-semio-ui": {
+        "role": "value",
+        "label": {
+          "en": "Geo Products",
+          "de": "Geoprodukte"
+        },
+        "description": {
+          "en": "DSM, DTM and orthophoto rasters produced by the run.",
+          "de": "Vom Lauf erzeugte DOM-, DGM- und Orthofoto-Raster."
+        },
+        "group": "result",
+        "order": 40
+      }
     },
     "qc": {
       "anyOf": [
@@ -342,14 +851,42 @@
           "properties": {
             "reprojectionRmsPx": {
               "type": "number",
-              "format": "double"
+              "format": "double",
+              "x-semio-ui": {
+                "widget": "hidden",
+                "role": "value",
+                "label": {
+                  "en": "Reprojection RMS (px)",
+                  "de": "RMS des Rückprojektionsfehlers (px)"
+                },
+                "description": {
+                  "en": "Computed by the reconstruction run; not edited by hand.",
+                  "de": "Vom Rekonstruktionslauf berechnet; wird nicht von Hand bearbeitet."
+                },
+                "group": "report",
+                "order": 10
+              }
             },
             "gcpCheckpointRmse": {
               "type": [
                 "number",
                 "null"
               ],
-              "format": "double"
+              "format": "double",
+              "x-semio-ui": {
+                "widget": "hidden",
+                "role": "value",
+                "label": {
+                  "en": "Checkpoint RMSE",
+                  "de": "RMSE der Kontrollpunkte"
+                },
+                "description": {
+                  "en": "Root mean square error at the ground control checkpoints.",
+                  "de": "Mittlerer quadratischer Fehler an den Kontrollpunkten."
+                },
+                "group": "report",
+                "order": 20
+              }
             },
             "watertight": {
               "anyOf": [
@@ -379,55 +916,169 @@
                     "vertexCount": {
                       "type": "integer",
                       "format": "uint32",
-                      "minimum": 0
+                      "minimum": 0,
+                      "x-semio-ui": {
+                        "widget": "hidden",
+                        "role": "value",
+                        "label": {
+                          "en": "Vertex Count",
+                          "de": "Anzahl der Eckpunkte"
+                        },
+                        "group": "report",
+                        "order": 10
+                      }
                     },
                     "triangleCount": {
                       "type": "integer",
                       "format": "uint32",
-                      "minimum": 0
+                      "minimum": 0,
+                      "x-semio-ui": {
+                        "widget": "hidden",
+                        "role": "value",
+                        "label": {
+                          "en": "Triangle Count",
+                          "de": "Anzahl der Dreiecke"
+                        },
+                        "group": "report",
+                        "order": 20
+                      }
                     },
                     "boundaryEdgeCount": {
                       "type": "integer",
                       "format": "uint32",
-                      "minimum": 0
+                      "minimum": 0,
+                      "x-semio-ui": {
+                        "widget": "hidden",
+                        "role": "value",
+                        "label": {
+                          "en": "Boundary Edges",
+                          "de": "Randkanten"
+                        },
+                        "group": "report",
+                        "order": 30
+                      }
                     },
                     "boundaryLoopCount": {
                       "type": "integer",
                       "format": "uint32",
-                      "minimum": 0
+                      "minimum": 0,
+                      "x-semio-ui": {
+                        "widget": "hidden",
+                        "role": "value",
+                        "label": {
+                          "en": "Boundary Loops",
+                          "de": "Randschleifen"
+                        },
+                        "group": "report",
+                        "order": 40
+                      }
                     },
                     "nonManifoldEdgeCount": {
                       "type": "integer",
                       "format": "uint32",
-                      "minimum": 0
+                      "minimum": 0,
+                      "x-semio-ui": {
+                        "widget": "hidden",
+                        "role": "value",
+                        "label": {
+                          "en": "Non-Manifold Edges",
+                          "de": "Nicht-mannigfaltige Kanten"
+                        },
+                        "group": "report",
+                        "order": 50
+                      }
                     },
                     "nonManifoldVertexCount": {
                       "type": "integer",
                       "format": "uint32",
-                      "minimum": 0
+                      "minimum": 0,
+                      "x-semio-ui": {
+                        "widget": "hidden",
+                        "role": "value",
+                        "label": {
+                          "en": "Non-Manifold Vertices",
+                          "de": "Nicht-mannigfaltige Eckpunkte"
+                        },
+                        "group": "report",
+                        "order": 60
+                      }
                     },
                     "connectedComponents": {
                       "type": "integer",
                       "format": "uint32",
-                      "minimum": 0
+                      "minimum": 0,
+                      "x-semio-ui": {
+                        "widget": "hidden",
+                        "role": "value",
+                        "label": {
+                          "en": "Connected Components",
+                          "de": "Zusammenhangskomponenten"
+                        },
+                        "group": "report",
+                        "order": 70
+                      }
                     },
                     "consistentlyOriented": {
-                      "type": "boolean"
+                      "type": "boolean",
+                      "x-semio-ui": {
+                        "widget": "hidden",
+                        "role": "value",
+                        "label": {
+                          "en": "Consistently Oriented",
+                          "de": "Konsistent orientiert"
+                        },
+                        "group": "report",
+                        "order": 80
+                      }
                     },
                     "eulerCharacteristic": {
                       "type": "integer",
-                      "format": "int64"
+                      "format": "int64",
+                      "x-semio-ui": {
+                        "widget": "hidden",
+                        "role": "value",
+                        "label": {
+                          "en": "Euler Characteristic",
+                          "de": "Euler-Charakteristik"
+                        },
+                        "group": "report",
+                        "order": 90
+                      }
                     },
                     "genus": {
                       "type": [
                         "integer",
                         "null"
                       ],
-                      "format": "int64"
+                      "format": "int64",
+                      "x-semio-ui": {
+                        "widget": "hidden",
+                        "role": "value",
+                        "label": {
+                          "en": "Genus",
+                          "de": "Geschlecht"
+                        },
+                        "description": {
+                          "en": "Topological genus of a closed 2-manifold.",
+                          "de": "Topologisches Geschlecht einer geschlossenen 2-Mannigfaltigkeit."
+                        },
+                        "group": "report",
+                        "order": 100
+                      }
                     },
                     "signedVolume": {
                       "type": "number",
-                      "format": "double"
+                      "format": "double",
+                      "x-semio-ui": {
+                        "widget": "hidden",
+                        "role": "value",
+                        "label": {
+                          "en": "Signed Volume",
+                          "de": "Vorzeichenbehaftetes Volumen"
+                        },
+                        "group": "report",
+                        "order": 110
+                      }
                     },
                     "selfIntersectionPairs": {
                       "type": [
@@ -435,43 +1086,162 @@
                         "null"
                       ],
                       "format": "uint32",
-                      "minimum": 0
+                      "minimum": 0,
+                      "x-semio-ui": {
+                        "widget": "hidden",
+                        "role": "value",
+                        "label": {
+                          "en": "Self-Intersection Pairs",
+                          "de": "Selbstüberschneidungspaare"
+                        },
+                        "group": "report",
+                        "order": 120
+                      }
                     },
                     "closedFallbackUsed": {
-                      "type": "boolean"
+                      "type": "boolean",
+                      "x-semio-ui": {
+                        "widget": "hidden",
+                        "role": "value",
+                        "label": {
+                          "en": "Closing Fallback Used",
+                          "de": "Schließ-Rückfall verwendet"
+                        },
+                        "group": "report",
+                        "order": 130
+                      }
                     },
                     "isClosed": {
-                      "type": "boolean"
+                      "type": "boolean",
+                      "x-semio-ui": {
+                        "widget": "hidden",
+                        "role": "value",
+                        "label": {
+                          "en": "Closed",
+                          "de": "Geschlossen"
+                        },
+                        "group": "report",
+                        "order": 140
+                      }
                     },
                     "isTwoManifold": {
-                      "type": "boolean"
+                      "type": "boolean",
+                      "x-semio-ui": {
+                        "widget": "hidden",
+                        "role": "value",
+                        "label": {
+                          "en": "2-Manifold",
+                          "de": "2-Mannigfaltig"
+                        },
+                        "group": "report",
+                        "order": 150
+                      }
                     },
                     "isWatertight": {
-                      "type": "boolean"
+                      "type": "boolean",
+                      "x-semio-ui": {
+                        "widget": "hidden",
+                        "role": "value",
+                        "label": {
+                          "en": "Watertight",
+                          "de": "Wasserdicht"
+                        },
+                        "group": "report",
+                        "order": 160
+                      }
                     }
                   }
                 },
                 {
                   "type": "null"
                 }
-              ]
+              ],
+              "x-semio-ui": {
+                "role": "value",
+                "label": {
+                  "en": "Watertightness Report",
+                  "de": "Wasserdichtheitsbericht"
+                },
+                "description": {
+                  "en": "Derived from the mesh by the reconstruction; not edited by hand.",
+                  "de": "Von der Rekonstruktion aus dem Mesh abgeleitet; wird nicht von Hand bearbeitet."
+                },
+                "group": "report",
+                "order": 30
+              }
             },
             "meanTrackLength": {
               "type": "number",
-              "format": "float"
+              "format": "float",
+              "x-semio-ui": {
+                "widget": "hidden",
+                "role": "value",
+                "label": {
+                  "en": "Mean Track Length",
+                  "de": "Mittlere Spurlänge"
+                },
+                "description": {
+                  "en": "Computed by the reconstruction run; not edited by hand.",
+                  "de": "Vom Rekonstruktionslauf berechnet; wird nicht von Hand bearbeitet."
+                },
+                "group": "report",
+                "order": 40
+              }
             },
             "registeredFrameRatio": {
               "type": "number",
-              "format": "float"
+              "format": "float",
+              "x-semio-ui": {
+                "widget": "hidden",
+                "role": "value",
+                "label": {
+                  "en": "Registered Frame Ratio",
+                  "de": "Anteil registrierter Bilder"
+                },
+                "description": {
+                  "en": "Computed by the reconstruction run; not edited by hand.",
+                  "de": "Vom Rekonstruktionslauf berechnet; wird nicht von Hand bearbeitet."
+                },
+                "group": "report",
+                "order": 50
+              }
             },
             "denseCoverageRatio": {
               "type": "number",
-              "format": "float"
+              "format": "float",
+              "x-semio-ui": {
+                "widget": "hidden",
+                "role": "value",
+                "label": {
+                  "en": "Dense Coverage Ratio",
+                  "de": "Abdeckungsgrad der dichten Punktwolke"
+                },
+                "description": {
+                  "en": "Computed by the reconstruction run; not edited by hand.",
+                  "de": "Vom Rekonstruktionslauf berechnet; wird nicht von Hand bearbeitet."
+                },
+                "group": "report",
+                "order": 60
+              }
             },
             "warnings": {
               "type": "array",
               "items": {
                 "type": "string"
+              },
+              "x-semio-ui": {
+                "widget": "hidden",
+                "role": "value",
+                "label": {
+                  "en": "Warnings",
+                  "de": "Warnungen"
+                },
+                "description": {
+                  "en": "Computed by the reconstruction run; not edited by hand.",
+                  "de": "Vom Rekonstruktionslauf berechnet; wird nicht von Hand bearbeitet."
+                },
+                "group": "report",
+                "order": 70
               }
             }
           }
@@ -479,7 +1249,20 @@
         {
           "type": "null"
         }
-      ]
+      ],
+      "x-semio-ui": {
+        "role": "value",
+        "label": {
+          "en": "Quality Report",
+          "de": "Qualitätsbericht"
+        },
+        "description": {
+          "en": "Computed by the reconstruction run; not edited by hand.",
+          "de": "Vom Rekonstruktionslauf berechnet; wird nicht von Hand bearbeitet."
+        },
+        "group": "result",
+        "order": 50
+      }
     },
     "assets": {
       "type": "array",
@@ -493,15 +1276,64 @@
         ],
         "properties": {
           "id": {
-            "type": "string"
+            "type": "string",
+            "x-semio-ui": {
+              "widget": "reference",
+              "role": "target",
+              "label": {
+                "en": "Asset",
+                "de": "Asset"
+              },
+              "description": {
+                "en": "The asset that is bound.",
+                "de": "Das zugeordnete Asset."
+              },
+              "ref": {
+                "kind": "asset",
+                "domain": "assets",
+                "granularity": "asset"
+              },
+              "group": "result",
+              "order": 10
+            }
           },
           "contentId": {
             "type": [
               "string",
               "null"
-            ]
+            ],
+            "x-semio-ui": {
+              "widget": "reference",
+              "role": "target",
+              "label": {
+                "en": "Content",
+                "de": "Inhalt"
+              },
+              "description": {
+                "en": "Durable content the asset binds to; empty leaves it unbound.",
+                "de": "Dauerhafter Inhalt, an den das Asset gebunden wird; leer lässt es ungebunden."
+              },
+              "ref": {
+                "kind": "content"
+              },
+              "group": "result",
+              "order": 20
+            }
           }
         }
+      },
+      "x-semio-ui": {
+        "role": "value",
+        "label": {
+          "en": "Asset Bindings",
+          "de": "Asset-Zuordnungen"
+        },
+        "description": {
+          "en": "Binds asset IDs to complete durable image content.",
+          "de": "Ordnet Asset-IDs vollständigen dauerhaften Bildinhalten zu."
+        },
+        "group": "result",
+        "order": 60
       }
     }
   }

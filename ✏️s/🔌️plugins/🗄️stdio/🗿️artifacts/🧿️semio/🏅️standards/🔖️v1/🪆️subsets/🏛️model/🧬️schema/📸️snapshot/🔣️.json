@@ -13,7 +13,18 @@
   "properties": {
     "schema": {
       "type": "string",
-      "x-semio-state": "artifact"
+      "x-semio-state": "artifact",
+      "x-semio-ui": {
+        "widget": "text",
+        "label": {
+          "en": "Snapshot schema",
+          "de": "Snapshot-Schema"
+        },
+        "description": {
+          "en": "Identifier of the snapshot schema version.",
+          "de": "Kennung der Version des Snapshot-Schemas."
+        }
+      }
     },
     "spatial": {
       "type": "array",
@@ -36,7 +47,27 @@
               "building",
               "storey",
               "space"
-            ]
+            ],
+            "x-semio-ui": {
+              "options": {
+                "site": {
+                  "en": "Site",
+                  "de": "Grundstück"
+                },
+                "building": {
+                  "en": "Building",
+                  "de": "Gebäude"
+                },
+                "storey": {
+                  "en": "Storey",
+                  "de": "Geschoss"
+                },
+                "space": {
+                  "en": "Space",
+                  "de": "Raum"
+                }
+              }
+            }
           },
           "name": {
             "type": "string"
@@ -50,6 +81,16 @@
           "placement": {
             "$ref": "#/definitions/transform"
           }
+        }
+      },
+      "x-semio-ui": {
+        "label": {
+          "en": "Spatial structure",
+          "de": "Räumliche Struktur"
+        },
+        "description": {
+          "en": "Site, building, storey and space hierarchy.",
+          "de": "Hierarchie aus Grundstück, Gebäude, Geschoss und Raum."
         }
       }
     },
@@ -70,19 +111,46 @@
             "type": "string"
           },
           "class": {
-            "$ref": "#/$defs/ElementClass"
+            "$ref": "#/$defs/ElementClass",
+            "x-semio-ui": {
+              "label": {
+                "en": "Element class",
+                "de": "Elementklasse"
+              }
+            }
           },
           "placement": {
             "$ref": "#/definitions/transform"
           },
           "geometry": {
-            "$ref": "#/$defs/GeometryRef"
+            "$ref": "#/$defs/GeometryRef",
+            "x-semio-ui": {
+              "label": {
+                "en": "Geometry",
+                "de": "Geometrie"
+              }
+            }
           },
           "spatialId": {
             "type": [
               "string",
               "null"
-            ]
+            ],
+            "x-semio-ui": {
+              "widget": "reference",
+              "role": "target",
+              "label": {
+                "en": "Spatial container",
+                "de": "Räumlicher Container"
+              },
+              "description": {
+                "en": "Spatial structure node that contains the element.",
+                "de": "Knoten der räumlichen Struktur, der das Element enthält."
+              },
+              "ref": {
+                "kind": "spatialNode"
+              }
+            }
           },
           "psets": {
             "type": "array",
@@ -115,8 +183,20 @@
                   }
                 }
               }
+            },
+            "x-semio-ui": {
+              "label": {
+                "en": "Property sets",
+                "de": "Eigenschaftssätze"
+              }
             }
           }
+        }
+      },
+      "x-semio-ui": {
+        "label": {
+          "en": "Elements",
+          "de": "Elemente"
         }
       }
     },
@@ -145,6 +225,12 @@
             "type": "string"
           }
         }
+      },
+      "x-semio-ui": {
+        "label": {
+          "en": "Relations",
+          "de": "Beziehungen"
+        }
       }
     }
   },
@@ -167,7 +253,51 @@
             "stair",
             "furniture",
             "other"
-          ]
+          ],
+          "x-semio-ui": {
+            "options": {
+              "wall": {
+                "en": "Wall",
+                "de": "Wand"
+              },
+              "slab": {
+                "en": "Slab",
+                "de": "Decke"
+              },
+              "column": {
+                "en": "Column",
+                "de": "Stütze"
+              },
+              "beam": {
+                "en": "Beam",
+                "de": "Träger"
+              },
+              "door": {
+                "en": "Door",
+                "de": "Tür"
+              },
+              "window": {
+                "en": "Window",
+                "de": "Fenster"
+              },
+              "roof": {
+                "en": "Roof",
+                "de": "Dach"
+              },
+              "stair": {
+                "en": "Stair",
+                "de": "Treppe"
+              },
+              "furniture": {
+                "en": "Furniture",
+                "de": "Möbel"
+              },
+              "other": {
+                "en": "Other",
+                "de": "Sonstiges"
+              }
+            }
+          }
         },
         "name": {
           "type": "string"
@@ -185,13 +315,47 @@
             "none",
             "brep",
             "mesh"
-          ]
+          ],
+          "x-semio-ui": {
+            "options": {
+              "none": {
+                "en": "None",
+                "de": "Keine"
+              },
+              "brep": {
+                "en": "B-rep",
+                "de": "B-Rep"
+              }
+            }
+          }
         },
         "brepId": {
-          "type": "string"
+          "type": "string",
+          "x-semio-ui": {
+            "widget": "reference",
+            "role": "target",
+            "label": {
+              "en": "B-rep",
+              "de": "B-Rep"
+            },
+            "ref": {
+              "kind": "brep"
+            }
+          }
         },
         "meshId": {
-          "type": "string"
+          "type": "string",
+          "x-semio-ui": {
+            "widget": "reference",
+            "role": "target",
+            "label": {
+              "en": "Mesh",
+              "de": "Netz"
+            },
+            "ref": {
+              "kind": "mesh"
+            }
+          }
         }
       }
     },
@@ -206,7 +370,19 @@
             "text",
             "number",
             "boolean"
-          ]
+          ],
+          "x-semio-ui": {
+            "options": {
+              "number": {
+                "en": "Number",
+                "de": "Zahl"
+              },
+              "boolean": {
+                "en": "Boolean",
+                "de": "Wahrheitswert"
+              }
+            }
+          }
         },
         "value": {}
       }
@@ -225,7 +401,35 @@
             "fillsVoid",
             "voidsElement",
             "other"
-          ]
+          ],
+          "x-semio-ui": {
+            "options": {
+              "aggregates": {
+                "en": "Aggregates",
+                "de": "Aggregiert"
+              },
+              "containedIn": {
+                "en": "Contained in",
+                "de": "Enthalten in"
+              },
+              "connectsTo": {
+                "en": "Connects to",
+                "de": "Verbunden mit"
+              },
+              "fillsVoid": {
+                "en": "Fills opening",
+                "de": "Füllt Öffnung"
+              },
+              "voidsElement": {
+                "en": "Opens element",
+                "de": "Öffnet Bauteil"
+              },
+              "other": {
+                "en": "Other",
+                "de": "Sonstige"
+              }
+            }
+          }
         },
         "label": {
           "type": "string"
@@ -272,7 +476,18 @@
           "type": "number"
         },
         "w": {
-          "type": "number"
+          "type": "number",
+          "x-semio-ui": {
+            "widget": "stepper",
+            "label": {
+              "en": "W",
+              "de": "W"
+            },
+            "description": {
+              "en": "Scalar part of the rotation quaternion.",
+              "de": "Skalarteil des Rotationsquaternions."
+            }
+          }
         }
       }
     },
@@ -285,7 +500,13 @@
       ],
       "properties": {
         "translation": {
-          "$ref": "#/definitions/point3"
+          "$ref": "#/definitions/point3",
+          "x-semio-ui": {
+            "label": {
+              "en": "Translation",
+              "de": "Verschiebung"
+            }
+          }
         },
         "rotation": {
           "$ref": "#/definitions/quaternion"

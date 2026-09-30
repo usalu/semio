@@ -5,15 +5,17 @@
   "type": "object",
   "additionalProperties": false,
   "required": [
-    "newTowerNEdKn",
-    "newTowerWindFactor"
+    "towerLeg"
   ],
   "properties": {
-    "newTowerWindFactor": {
-      "type": "number"
-    },
-    "newTowerNEdKn": {
-      "type": "number"
+    "towerLeg": {
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1993/snapshot.json#/$defs/TowerLeg",
+      "x-semio-ui": {
+        "label": {
+          "en": "Tower leg",
+          "de": "Turmeckstiel"
+        }
+      }
     }
   }
 }

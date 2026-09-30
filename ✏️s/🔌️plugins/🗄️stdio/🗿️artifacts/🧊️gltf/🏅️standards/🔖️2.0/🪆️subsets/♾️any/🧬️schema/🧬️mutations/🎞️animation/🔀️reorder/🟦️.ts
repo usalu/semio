@@ -1,7 +1,13 @@
-/** 🦠️ reorder-animations executable structural glTF command. */
-import type { GltfOrthographic, GltfPerspective, GltfSnapshot } from '../../📸️snapshot/🟦️.ts';
-import { clone, insert, order, position, reject, remove, relocate, reorder, repair, type GltfMutationRejection, type GltfStructuralResult } from './🟦️';
-export const GltfReorderAnimationsDescriptor = { id: 's.stdio.gltf.mutation.reorder-animations.v1', version: 1, touchedPathPattern: 'document/animations', referencePolicy: 'all typed animation references are remapped, repaired, or rejected' } as const;
-export interface GltfReorderAnimationsPayload { order: number[] }
-export const validateGltfReorderAnimations = (payload: GltfReorderAnimationsPayload, base: GltfSnapshot): GltfMutationRejection | undefined => { const permutation = order(payload.order, base.document.animations.length, 'document/animations'); if (permutation) return permutation; if (payload.order.every((value, index) => value === index)) return reject('gltf.mutation.no-observable-change', 'document/animations', 'order already matches');  return undefined; };
-export const applyGltfReorderAnimations = (base: GltfSnapshot, payload: GltfReorderAnimationsPayload): GltfStructuralResult => { const rejection = validateGltfReorderAnimations(payload, base); if (rejection) return { accepted: false, rejection }; try { const next = clone(base); reorder(next, 'animations', payload.order); return { accepted: true, snapshot: clone(next) }; } catch (error) { return { accepted: false, rejection: typeof error === 'object' && error && 'code' in error ? error as GltfMutationRejection : reject('gltf.mutation.apply-failed', 'document/animations', String(error)) }; } };
+/** 🔀️ `reorder-animations` wire twin: the flat `Apply` payload `GltfReorderAnimationsPayload` and the phase wire `ReorderAnimationsMutation`, exactly as `./🦀️.rs` writes them.
+ * @see ./🧬️schema/🔣️.json */
+import { gltfWireArray, gltfWireIndex, gltfWireObject, gltfWireRequired } from "../../../📸️snapshot/🟦️.ts";
+import { type GltfDiff, type GltfPhase, gltfWirePhase, parseGltfDiff } from "../../../🔺️diff/🟦️.ts";
+
+export interface GltfReorderAnimationsPayload {
+  order: number[];
+}
+
+export type ReorderAnimationsMutation = GltfPhase<GltfReorderAnimationsPayload, GltfDiff>;
+
+export const parseGltfReorderAnimationsPayload = gltfWireObject<GltfReorderAnimationsPayload>({ order: gltfWireRequired(gltfWireArray(gltfWireIndex)) });
+export const parseReorderAnimationsMutation = gltfWirePhase(parseGltfReorderAnimationsPayload, parseGltfDiff);

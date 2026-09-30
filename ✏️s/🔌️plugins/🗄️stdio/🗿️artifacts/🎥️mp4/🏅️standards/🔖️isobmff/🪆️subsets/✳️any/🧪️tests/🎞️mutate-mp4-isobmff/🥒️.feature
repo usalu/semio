@@ -8,9 +8,8 @@ Feature: Apply every typed ISO-BMFF mutation to a real-world video
   (`♻️mit-bestand/🎤️präsentation/📅️33.projektetage/🌐️public/🎥️bauen-mit-bestand.mp4`) carries exactly
   ONE stream (`codec_type=video`, `codec_name=h264`) and NO audio stream at all — checked directly on
   that file, not assumed from an earlier report. That bounds what `InsertTrack`/`RemoveTrack` can
-  exercise here: the only real track available to duplicate or remove is the video track itself, so
-  `insert-track` inserts a real second video track (a verbatim structural duplicate of the real
-  track, every sample byte-identical to the original), never a fabricated audio track. The excerpt
+  exercise here: the only real track kind available is video, so `insert-track` inserts a second
+  VIDEO track, never a fabricated audio track. The excerpt
   was derived ONCE with a real stream copy — no re-encoded pixels, every sample a genuine slice of
   the original encoded bitstream — and committed here rather than reading the 16 MB original via
   `asset://` on every scenario, with the exact derivation command: `ffmpeg -i
@@ -49,6 +48,15 @@ Feature: Apply every typed ISO-BMFF mutation to a real-world video
   `mutate-*` rows below are what prove a real parse happened: they drive the same decode/encode
   pipeline and every one of them moves both the bytes and the compared projection.
 
+  Every Examples `params` cell is exactly the leaf's wire payload — its `payload_value()`, camelCase,
+  no aggregate tag — decoded by the subject through the derive-generated `from_payload_value` and
+  read by the `mp4` oracle by the same field names. A row therefore states a whole track or movie
+  instead of asking the harness to clone one: `insert-track` inserts, and `set-snapshot` installs
+  under its own `ftyp`, the 16x16 two-sample AVC track of this subset's committed `set-snapshot`
+  specification vector — a verbatim duplicate of the real track would put 2.7 MB of sample bytes
+  into one cell. The oracle refuses what `mp4` 0.14 cannot write (a non-AVC sample entry, more than
+  one SPS or PPS) rather than approximating it.
+
   Every scenario copies the immutable fixture into the case work directory before touching it; the
   committed fixture is never written to. Both the oracle's and the subject's results are read back by
   the SAME independent `mp4`-backed projection (`ftyp`, per-track geometry/codec digest, and every
@@ -70,27 +78,16 @@ Feature: Apply every typed ISO-BMFF mutation to a real-world video
       """
     Then the oracle and the subject agree on the semantic projection
     Examples:
-      | id                    | params                                                                                                                     |
-      | set-snapshot          | {"ftyp":{"majorBrand":"isom","minorVersion":42,"compatibleBrands":["isom","iso2","avc1","mp41"]}}                         |
-      | set-ftyp              | {"majorBrand":"mp42","minorVersion":1,"compatibleBrands":["mp42","isom"]}                                                 |
-      | insert-track          | {"index":1}                                                                                                                |
-      | remove-track          | {"index":0}                                                                                                                |
-      | set-track-dimensions  | {"trackIndex":0,"width":640,"height":480}                                                                                 |
-      | set-track-codec       | {"trackIndex":0,"sps":[103,66,0,30,140,141,64],"pps":[104,206,60,128]}                                                    |
-      | insert-sample         | {"trackIndex":0,"index":10,"sample":{"data":[0,0,0,4,101,1,2,3],"duration":512,"ctsOffset":0,"sync":false}}               |
-      | remove-sample         | {"trackIndex":0,"index":10}                                                                                               |
-      | set-sample-sync       | {"trackIndex":0,"index":27,"sync":false}                                                                                   |
-
-  @id-no-mutation-baseline-mutate
-  @level-exhaustive
-  @mode-differential
-  Scenario: Apply no-mutation to the real video
-    Given the real input video shared://🎬️.mp4
-    When the no-mutation mutation is applied with its parameters
-      """
-      {"kind": "no-mutation", "params": {}}
-      """
-    Then the oracle and the subject agree on the semantic projection
+      | id | params |
+      | set-snapshot | {"snapshot":{"schema":"stdio.mp4","ftyp":{"majorBrand":"isom","minorVersion":42,"compatibleBrands":["isom","iso2","avc1","mp41"]},"movie":{"creationTime":0,"modificationTime":0,"timescale":1000,"duration":2000,"rate":65536,"volume":256,"matrix":[65536,0,0,0,65536,0,0,0,1073741824],"nextTrackId":2,"title":null,"encoder":null},"tracks":[{"trackId":1,"timescale":1000,"codec":{"sps":[[103,66,0,10]],"pps":[[104,206,56,128]],"nalLengthSize":4,"extension":null},"width":16,"height":16,"metadata":{"creationTime":0,"modificationTime":0,"flags":3,"duration":2000,"layer":0,"alternateGroup":0,"volume":0,"matrix":[65536,0,0,0,65536,0,0,0,1073741824],"mediaDuration":2000,"mediaCreationTime":0,"mediaModificationTime":0,"language":"und","quality":0,"handlerName":"VideoHandler","edits":[],"visual":{"dataReferenceIndex":1,"version":0,"revisionLevel":0,"vendor":0,"temporalQuality":0,"spatialQuality":0,"horizontalResolution":4718592,"verticalResolution":4718592,"frameCount":1,"compressorName":"","depth":24,"colorTableId":-1},"color":null,"pixelAspectRatio":null,"bitrate":null},"chunkSampleCounts":[2],"samples":[{"data":[0,0,0,1,101],"duration":1000,"ctsOffset":0,"sync":true},{"data":[0,0,0,1,97],"duration":1000,"ctsOffset":0,"sync":true}]}]}} |
+      | set-ftyp | {"ftyp":{"majorBrand":"mp42","minorVersion":1,"compatibleBrands":["mp42","isom"]}} |
+      | insert-track | {"index":1,"track":{"trackId":2,"timescale":1000,"codec":{"sps":[[103,66,0,10]],"pps":[[104,206,56,128]],"nalLengthSize":4,"extension":null},"width":16,"height":16,"metadata":{"creationTime":0,"modificationTime":0,"flags":3,"duration":2000,"layer":0,"alternateGroup":0,"volume":0,"matrix":[65536,0,0,0,65536,0,0,0,1073741824],"mediaDuration":2000,"mediaCreationTime":0,"mediaModificationTime":0,"language":"und","quality":0,"handlerName":"VideoHandler","edits":[],"visual":{"dataReferenceIndex":1,"version":0,"revisionLevel":0,"vendor":0,"temporalQuality":0,"spatialQuality":0,"horizontalResolution":4718592,"verticalResolution":4718592,"frameCount":1,"compressorName":"","depth":24,"colorTableId":-1},"color":null,"pixelAspectRatio":null,"bitrate":null},"chunkSampleCounts":[2],"samples":[{"data":[0,0,0,1,101],"duration":1000,"ctsOffset":0,"sync":true},{"data":[0,0,0,1,97],"duration":1000,"ctsOffset":0,"sync":true}]}} |
+      | remove-track | {"index":0} |
+      | set-track-dimensions | {"trackIndex":0,"width":640,"height":480} |
+      | set-track-codec | {"trackIndex":0,"codec":{"sps":[[103,66,0,30,140,141,64]],"pps":[[104,206,60,128]],"nalLengthSize":4,"extension":null}} |
+      | insert-sample | {"trackIndex":0,"index":10,"sample":{"data":[0,0,0,4,101,1,2,3],"duration":512,"ctsOffset":0,"sync":false}} |
+      | remove-sample | {"trackIndex":0,"index":10} |
+      | set-sample-sync | {"trackIndex":0,"index":27,"sync":false} |
 
   @id-inverse
   @level-exhaustive
@@ -104,28 +101,16 @@ Feature: Apply every typed ISO-BMFF mutation to a real-world video
     And the mutation's inverse is applied
     Then the video is restored to its original semantic projection
     Examples:
-      | id                    | params                                                                                                                     |
-      | set-snapshot          | {"ftyp":{"majorBrand":"isom","minorVersion":42,"compatibleBrands":["isom","iso2","avc1","mp41"]}}                         |
-      | set-ftyp              | {"majorBrand":"mp42","minorVersion":1,"compatibleBrands":["mp42","isom"]}                                                 |
-      | insert-track          | {"index":1}                                                                                                                |
-      | remove-track          | {"index":0}                                                                                                                |
-      | set-track-dimensions  | {"trackIndex":0,"width":640,"height":480}                                                                                 |
-      | set-track-codec       | {"trackIndex":0,"sps":[103,66,0,30,140,141,64],"pps":[104,206,60,128]}                                                    |
-      | insert-sample         | {"trackIndex":0,"index":10,"sample":{"data":[0,0,0,4,101,1,2,3],"duration":512,"ctsOffset":0,"sync":false}}               |
-      | remove-sample         | {"trackIndex":0,"index":10}                                                                                               |
-      | set-sample-sync       | {"trackIndex":0,"index":27,"sync":false}                                                                                   |
-
-  @id-no-mutation-baseline-inverse
-  @level-exhaustive
-  @mode-property
-  Scenario: Undoing no-mutation restores the real video
-    Given the real input video shared://🎬️.mp4
-    When the no-mutation mutation is applied with its parameters
-      """
-      {"kind": "no-mutation", "params": {}}
-      """
-    And the mutation's inverse is applied
-    Then the video is restored to its original semantic projection
+      | id | params |
+      | set-snapshot | {"snapshot":{"schema":"stdio.mp4","ftyp":{"majorBrand":"isom","minorVersion":42,"compatibleBrands":["isom","iso2","avc1","mp41"]},"movie":{"creationTime":0,"modificationTime":0,"timescale":1000,"duration":2000,"rate":65536,"volume":256,"matrix":[65536,0,0,0,65536,0,0,0,1073741824],"nextTrackId":2,"title":null,"encoder":null},"tracks":[{"trackId":1,"timescale":1000,"codec":{"sps":[[103,66,0,10]],"pps":[[104,206,56,128]],"nalLengthSize":4,"extension":null},"width":16,"height":16,"metadata":{"creationTime":0,"modificationTime":0,"flags":3,"duration":2000,"layer":0,"alternateGroup":0,"volume":0,"matrix":[65536,0,0,0,65536,0,0,0,1073741824],"mediaDuration":2000,"mediaCreationTime":0,"mediaModificationTime":0,"language":"und","quality":0,"handlerName":"VideoHandler","edits":[],"visual":{"dataReferenceIndex":1,"version":0,"revisionLevel":0,"vendor":0,"temporalQuality":0,"spatialQuality":0,"horizontalResolution":4718592,"verticalResolution":4718592,"frameCount":1,"compressorName":"","depth":24,"colorTableId":-1},"color":null,"pixelAspectRatio":null,"bitrate":null},"chunkSampleCounts":[2],"samples":[{"data":[0,0,0,1,101],"duration":1000,"ctsOffset":0,"sync":true},{"data":[0,0,0,1,97],"duration":1000,"ctsOffset":0,"sync":true}]}]}} |
+      | set-ftyp | {"ftyp":{"majorBrand":"mp42","minorVersion":1,"compatibleBrands":["mp42","isom"]}} |
+      | insert-track | {"index":1,"track":{"trackId":2,"timescale":1000,"codec":{"sps":[[103,66,0,10]],"pps":[[104,206,56,128]],"nalLengthSize":4,"extension":null},"width":16,"height":16,"metadata":{"creationTime":0,"modificationTime":0,"flags":3,"duration":2000,"layer":0,"alternateGroup":0,"volume":0,"matrix":[65536,0,0,0,65536,0,0,0,1073741824],"mediaDuration":2000,"mediaCreationTime":0,"mediaModificationTime":0,"language":"und","quality":0,"handlerName":"VideoHandler","edits":[],"visual":{"dataReferenceIndex":1,"version":0,"revisionLevel":0,"vendor":0,"temporalQuality":0,"spatialQuality":0,"horizontalResolution":4718592,"verticalResolution":4718592,"frameCount":1,"compressorName":"","depth":24,"colorTableId":-1},"color":null,"pixelAspectRatio":null,"bitrate":null},"chunkSampleCounts":[2],"samples":[{"data":[0,0,0,1,101],"duration":1000,"ctsOffset":0,"sync":true},{"data":[0,0,0,1,97],"duration":1000,"ctsOffset":0,"sync":true}]}} |
+      | remove-track | {"index":0} |
+      | set-track-dimensions | {"trackIndex":0,"width":640,"height":480} |
+      | set-track-codec | {"trackIndex":0,"codec":{"sps":[[103,66,0,30,140,141,64]],"pps":[[104,206,60,128]],"nalLengthSize":4,"extension":null}} |
+      | insert-sample | {"trackIndex":0,"index":10,"sample":{"data":[0,0,0,4,101,1,2,3],"duration":512,"ctsOffset":0,"sync":false}} |
+      | remove-sample | {"trackIndex":0,"index":10} |
+      | set-sample-sync | {"trackIndex":0,"index":27,"sync":false} |
 
   @id-identity-round-trip
   @level-long

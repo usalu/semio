@@ -14,11 +14,11 @@ use crate::schema::mutations::{apply_writer_mutation, inverse_writer_mutation, W
 use crate::WriterDiff;
 use crate::WriterSnapshot;
 
-const BEFORE: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/✂️splice-text/⚠️warns-that-an-already-removed-run-leaves-the-brief-unchanged/📸️snapshot/⬅️before/🔣️.json");
-const AFTER: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/✂️splice-text/⚠️warns-that-an-already-removed-run-leaves-the-brief-unchanged/📸️snapshot/➡️after/🔣️.json");
-const MUTATION: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/✂️splice-text/⚠️warns-that-an-already-removed-run-leaves-the-brief-unchanged/🦠️mutation/🔣️.json");
-const DIFF: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/✂️splice-text/⚠️warns-that-an-already-removed-run-leaves-the-brief-unchanged/🔺️diff/🔣️.json");
-const OUTCOME: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/✂️splice-text/⚠️warns-that-an-already-removed-run-leaves-the-brief-unchanged/🎯️outcome/🔣️.json");
+const BEFORE: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/✂️splice-text/⚠️warns-already-removed-run-leaves-brief-unchanged/📸️snapshot/⬅️before/🔣️.json");
+const AFTER: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/✂️splice-text/⚠️warns-already-removed-run-leaves-brief-unchanged/📸️snapshot/➡️after/🔣️.json");
+const MUTATION: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/✂️splice-text/⚠️warns-already-removed-run-leaves-brief-unchanged/🦠️mutation/🔣️.json");
+const DIFF: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/✂️splice-text/⚠️warns-already-removed-run-leaves-brief-unchanged/🔺️diff/🔣️.json");
+const OUTCOME: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/✂️splice-text/⚠️warns-already-removed-run-leaves-brief-unchanged/🎯️outcome/🔣️.json");
 
 fn before() -> WriterSnapshot {
     dsl::os_pack::json::from_json_str(BEFORE).expect("before writer document decodes")

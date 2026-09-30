@@ -34,7 +34,7 @@ use semio_repo_test_host::Json;
 //#region 🔖️Live
 #[cfg(feature = "oracles")]
 mod live {
-    use crate::markup::live::{json_to_path, member, node_at, node_at_mut, obj, parse_markup, usize_member, write_markup, MarkupDoc, MarkupNode};
+    use crate::markup::live::{doc_from_wire, json_to_path, member, node_at, node_at_mut, obj, parse_markup, usize_member, write_markup, MarkupDoc, MarkupNode};
     use semio_repo_test_host::Json;
 
     //#region 🔖️DoctypeGrammar
@@ -200,13 +200,14 @@ mod live {
         }
     }
 
-    fn json_to_declarations(value: &Json) -> Vec<Declaration> {
+    /// 🏷️ The `declarations` wire list (`XmlDtdDeclaration`, tag `kind`); the wire models `entity` alone.
+    fn json_to_declarations(value: &Json) -> Result<Vec<Declaration>, String> {
         value
             .array("declarations")
             .iter()
-            .map(|entry| match entry.get("raw") {
-                Some(Json::String(raw)) => Declaration::Opaque { raw: raw.clone() },
-                _ => Declaration::Entity { parameter: matches!(entry.get("parameter"), Some(Json::Bool(true))), name: entry.str("name"), value: entry.str("value") },
+            .map(|entry| match entry.str("kind").as_str() {
+                "entity" => Ok(Declaration::Entity { parameter: matches!(entry.get("parameter"), Some(Json::Bool(true))), name: entry.str("name"), value: entry.str("value") }),
+                other => Err(format!("set-internal-subset: unrecognised declaration kind {other:?}")),
             })
             .collect()
     }
@@ -219,9 +220,8 @@ mod live {
     /// silent no-op: a quietly skipped mutation reports as a passing test.
     pub fn apply(doc: &mut MarkupDoc, kind: &str, params: &Json) -> Result<(), String> {
         match kind {
-            "no-mutation" => Ok(()),
             "set-snapshot" => {
-                let replacement = parse_markup(params.str("xml").as_bytes())?;
+                let replacement = doc_from_wire(&member(&member(params, "snapshot"), "doc"))?;
                 let verdict = verdicts(&replacement)?;
                 if !matches!(verdict.get("doctypePresent"), Some(Json::Bool(true))) || !matches!(verdict.get("doctypeNameMatchesDocumentElement"), Some(Json::Bool(true))) {
                     return Err("set-snapshot: the replacement document is not XML 1.0 valid — §2.8 requires a DOCTYPE whose Name is the document element's name".to_string());
@@ -280,7 +280,7 @@ mod live {
             }
             "set-internal-subset" => {
                 let mut doctype = doctype_of(doc, "set-internal-subset")?;
-                doctype.declarations = json_to_declarations(params);
+                doctype.declarations = json_to_declarations(params)?;
                 set_doctype(doc, doctype);
                 Ok(())
             }
@@ -308,7 +308,6 @@ mod live {
     /// the name would silently reorder the subset.
     pub fn invert(base: &MarkupDoc, mut mutated: MarkupDoc, kind: &str, params: &Json) -> Result<MarkupDoc, String> {
         match kind {
-            "no-mutation" => Ok(mutated),
             "set-snapshot" => Ok(base.clone()),
             "declare-doctype" => match base.doctype.as_deref().map(parse_doctype).transpose()? {
                 Some(prior) => {

@@ -5,17 +5,50 @@
   "type": "object",
   "additionalProperties": false,
   "required": [
+    "mutation",
     "id",
     "observationIndex"
   ],
   "properties": {
+    "mutation": {
+      "const": "removeGcpObservation"
+    },
     "id": {
-      "type": "string"
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Ground Control Point",
+          "de": "Passpunkt"
+        },
+        "description": {
+          "en": "The ground control point that loses the measurement.",
+          "de": "Passpunkt, dessen Messung entfernt wird."
+        },
+        "ref": {
+          "kind": "gcp"
+        },
+        "group": "target",
+        "order": 10
+      }
     },
     "observationIndex": {
       "type": "integer",
       "format": "uint32",
-      "minimum": 0
+      "minimum": 0,
+      "x-semio-ui": {
+        "widget": "stepper",
+        "role": "value",
+        "label": {
+          "en": "Observation Index",
+          "de": "Messungsindex"
+        },
+        "step": 1,
+        "precision": 0,
+        "group": "media",
+        "order": 20
+      }
     }
   }
 }

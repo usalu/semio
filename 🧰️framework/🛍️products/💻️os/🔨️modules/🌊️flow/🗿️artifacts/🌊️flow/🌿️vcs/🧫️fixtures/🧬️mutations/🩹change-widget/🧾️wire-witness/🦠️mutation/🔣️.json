@@ -1,0 +1,9 @@
+{
+  "operation": "changeWidget",
+  "id": "a",
+  "widget": {
+    "kind": "inputNote",
+    "id": "renamed",
+    "text": "Changed"
+  }
+}

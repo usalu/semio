@@ -150,4 +150,10 @@ fn keyword_owned_record_codec_is_forwarded_once() {
         assert!(DependencyTestOp::parse_op(&format!("add-value {expected}")).is_err());
     }
 }
+
+/// 🧾️ The committed wire witnesses decode through the aggregate's `FromValue` and re-encode to exactly the committed JSON.
+#[test]
+fn committed_wire_witnesses_are_the_canonical_wire() {
+    ::store::os_store::test_support::assert_wire_witness::<DependencyTestOp>(include_str!("../../🧫️fixtures/🔗️dependency-contribution/🧬️mutations/➕️add-value/🧫️fixtures/🧾️wire-witness/🦠️mutation/🔣️.json"));
+}
 //#endregion 🧪️DependencyContributionLaws

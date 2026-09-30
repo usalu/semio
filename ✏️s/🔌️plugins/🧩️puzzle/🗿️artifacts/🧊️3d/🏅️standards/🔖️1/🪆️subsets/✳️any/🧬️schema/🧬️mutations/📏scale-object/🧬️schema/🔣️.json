@@ -5,11 +5,34 @@
   "type": "object",
   "additionalProperties": false,
   "required": [
+    "mutation",
     "id"
   ],
   "properties": {
+    "mutation": {
+      "const": "scaleObject"
+    },
     "id": {
-      "type": "string"
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Object",
+          "de": "Objekt"
+        },
+        "description": {
+          "en": "The object this mutation addresses.",
+          "de": "Das Objekt, das diese Mutation adressiert."
+        },
+        "ref": {
+          "kind": "object",
+          "domain": "vortex",
+          "granularity": "object"
+        },
+        "group": "target",
+        "order": 10
+      }
     },
     "newScale": {
       "oneOf": [
@@ -23,8 +46,24 @@
           },
           "minItems": 3,
           "maxItems": 3
+        },
+        {
+          "type": "null"
         }
-      ]
+      ],
+      "x-semio-ui": {
+        "role": "value",
+        "label": {
+          "en": "Scale",
+          "de": "Skalierung"
+        },
+        "description": {
+          "en": "One factor for all three axes, or one factor per axis (x, y, z).",
+          "de": "Ein Faktor für alle drei Achsen oder ein Faktor je Achse (x, y, z)."
+        },
+        "group": "pose",
+        "order": 20
+      }
     }
   }
 }

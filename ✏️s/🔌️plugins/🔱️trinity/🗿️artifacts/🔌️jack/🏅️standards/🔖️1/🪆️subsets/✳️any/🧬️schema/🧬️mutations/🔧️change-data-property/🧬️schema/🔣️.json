@@ -5,11 +5,15 @@
   "type": "object",
   "additionalProperties": false,
   "required": [
+    "mutation",
     "entity",
     "key",
     "new_value"
   ],
   "properties": {
+    "mutation": {
+      "const": "changeDataProperty"
+    },
     "entity": {
       "oneOf": [
         {
@@ -49,6 +53,18 @@
     "key": {
       "type": "string"
     },
-    "new_value": {}
+    "new_value": {
+      "x-semio-ui": {
+        "role": "value",
+        "label": {
+          "en": "New Value",
+          "de": "Neuer Wert"
+        },
+        "description": {
+          "en": "Property value; any JSON value.",
+          "de": "Eigenschaftswert; beliebiger JSON-Wert."
+        }
+      }
+    }
   }
 }

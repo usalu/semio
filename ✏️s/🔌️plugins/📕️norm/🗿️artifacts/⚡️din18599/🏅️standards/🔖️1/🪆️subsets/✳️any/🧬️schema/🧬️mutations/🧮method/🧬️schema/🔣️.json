@@ -1,12 +1,32 @@
 {
-  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/norm/din18599/mutation/change-method/schema.json",
   "title": "ChangeMethod",
   "type": "object",
-  "properties": {
-    "newMethod": {
-      "type": "object"
-    }
-  },
   "additionalProperties": false,
-  "$id": "https://json.schemas.assets.semio-tech.com/s/norm/din18599/mutation/change-method/schema.json"
+  "required": [
+    "mutation",
+    "newMethod"
+  ],
+  "properties": {
+    "mutation": {
+      "const": "changeMethod"
+    },
+    "newMethod": {
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/din18599/snapshot/schema.json#/$defs/CalculationMethod",
+      "x-semio-ui": {
+        "role": "value",
+        "label": {
+          "en": "Calculation method",
+          "de": "Berechnungsverfahren"
+        },
+        "description": {
+          "en": "Detailed monthly balance or tabular method.",
+          "de": "Detailliertes Monatsbilanzverfahren oder Tabellenverfahren."
+        },
+        "group": "building",
+        "order": 10
+      }
+    }
+  }
 }

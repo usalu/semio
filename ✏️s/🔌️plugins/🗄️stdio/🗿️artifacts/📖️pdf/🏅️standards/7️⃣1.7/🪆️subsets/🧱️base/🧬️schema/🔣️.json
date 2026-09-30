@@ -2,39 +2,11 @@
   "$schema": "http://json-schema.org/draft-07/schema#",
   "$id": "https://json.schemas.assets.semio-tech.com/s/stdio/pdf/1.7/base/artifact.json",
   "title": "PdfArtifact",
+  "description": "The complete persisted PDF artifact contract is the base snapshot contract and is referenced rather than restated.",
   "type": "object",
-  "required": [
-    "schema",
-    "declaredVersion",
-    "pages",
-    "info",
-    "objects",
-    "trailer"
-  ],
-  "properties": {
-    "schema": {
-      "type": "string",
-      "x-semio-state": "artifact"
-    },
-    "declaredVersion": {
-      "type": "string",
-      "x-semio-state": "artifact"
-    },
-    "pages": {
-      "type": "array",
-      "x-semio-state": "artifact"
-    },
-    "info": {
-      "type": "object",
-      "x-semio-state": "artifact"
-    },
-    "objects": {
-      "type": "array",
-      "x-semio-state": "artifact"
-    },
-    "trailer": {
-      "type": "array",
-      "x-semio-state": "artifact"
+  "allOf": [
+    {
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/pdf/1.7/base/snapshot.json"
     }
-  }
+  ]
 }

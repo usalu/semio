@@ -10,10 +10,41 @@
   ],
   "properties": {
     "zoneId": {
-      "type": "string"
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Zone",
+          "de": "Zone"
+        },
+        "description": {
+          "en": "The ventilation zone this mutation addresses.",
+          "de": "Die Lüftungszone, die diese Mutation adressiert."
+        },
+        "ref": {
+          "kind": "zone"
+        },
+        "group": "target",
+        "order": 10
+      }
     },
     "newComfortCategory": {
-      "type": "string"
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "text",
+        "role": "value",
+        "label": {
+          "en": "Indoor environment category",
+          "de": "Kategorie des Innenraumklimas"
+        },
+        "description": {
+          "en": "I (high), II (normal), III (moderate) or IV (low expectation), EN 16798-1.",
+          "de": "I (hohes), II (normales), III (mäßiges) oder IV (geringes Maß an Erwartungen) nach EN 16798-1."
+        },
+        "group": "comfort",
+        "order": 20
+      }
     }
   }
 }

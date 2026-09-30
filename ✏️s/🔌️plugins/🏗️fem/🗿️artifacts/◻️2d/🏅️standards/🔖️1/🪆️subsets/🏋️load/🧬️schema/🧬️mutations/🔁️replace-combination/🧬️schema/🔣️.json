@@ -2,7 +2,7 @@
   "$schema": "http://json-schema.org/draft-07/schema#",
   "$id": "https://json.schemas.assets.semio-tech.com/s/fem/2d/1/load/mutation/replace-combination/schema.json",
   "title": "ReplaceCombination",
-  "description": "The `replace-combination` mutation payload as it travels the wire: internally tagged with `\"mutation\": \"replaceCombination\"`, camelCase throughout. Structural only — the plausibility and geometry bounds this kind enforces live in the SNAPSHOT schema, because they are properties of a valid document rather than of a well-formed payload; each is annotated there with the `mutations::guards` function that raises them.",
+  "description": "The `replace-combination` mutation payload as it travels the wire: internally tagged with `\"mutation\": \"replaceCombination\"`, camelCase throughout. Its hard bounds and `x-semio-invariant` entries state exactly the payload-intrinsic breaches `mutations::guards` refuses as `mutation.invariant`, so every such payload fails this schema; refusals that depend on the base (a missing, duplicate or still-referenced target) belong to the diff alone.",
   "type": "object",
   "additionalProperties": false,
   "required": [
@@ -10,13 +10,45 @@
     "id",
     "newCombination"
   ],
+  "x-semio-invariant": [
+    {
+      "id": "combination-not-self-weighted",
+      "description": {
+        "en": "No term weights the combination itself.",
+        "de": "Kein Summand gewichtet die Kombination selbst."
+      }
+    }
+  ],
   "properties": {
     "mutation": {
       "const": "replaceCombination",
-      "description": "The internally tagged discriminator `#[value(tag = \"mutation\")]` puts on the wire."
+      "description": "The internally tagged discriminator `#[value(tag = \"mutation\")]` puts on the wire.",
+      "x-semio-ui": {
+        "widget": "hidden",
+        "role": "discriminator",
+        "label": {
+          "en": "Mutation",
+          "de": "Mutation"
+        }
+      }
     },
     "id": {
-      "type": "string"
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Load combination",
+          "de": "Lastfallkombination"
+        },
+        "ref": {
+          "kind": "combination",
+          "domain": "fem2d",
+          "granularity": "combination"
+        },
+        "group": "target",
+        "order": 20
+      }
     },
     "newCombination": {
       "title": "FemCombination",
@@ -29,10 +61,34 @@
       ],
       "properties": {
         "id": {
-          "type": "string"
+          "type": "string",
+          "x-semio-ui": {
+            "widget": "text",
+            "role": "value",
+            "label": {
+              "en": "ID",
+              "de": "ID"
+            },
+            "description": {
+              "en": "Unique id of the record.",
+              "de": "Eindeutige ID des Eintrags."
+            },
+            "group": "identity",
+            "order": 10
+          }
         },
         "name": {
-          "type": "string"
+          "type": "string",
+          "x-semio-ui": {
+            "widget": "text",
+            "role": "value",
+            "label": {
+              "en": "Name",
+              "de": "Bezeichnung"
+            },
+            "group": "identity",
+            "order": 20
+          }
         },
         "terms": {
           "type": "array",
@@ -46,15 +102,68 @@
             ],
             "properties": {
               "caseId": {
-                "type": "string"
+                "type": "string",
+                "x-semio-ui": {
+                  "widget": "reference",
+                  "role": "target",
+                  "label": {
+                    "en": "Load case",
+                    "de": "Lastfall"
+                  },
+                  "ref": {
+                    "kind": "loadCase",
+                    "domain": "fem2d",
+                    "granularity": "loadCase"
+                  },
+                  "group": "target",
+                  "order": 10
+                }
               },
               "factor": {
                 "type": "number",
-                "format": "double"
+                "format": "double",
+                "x-semio-ui": {
+                  "widget": "stepper",
+                  "role": "value",
+                  "label": {
+                    "en": "Factor",
+                    "de": "Faktor"
+                  },
+                  "description": {
+                    "en": "Partial or combination factor applied to the load case.",
+                    "de": "Teilsicherheits- bzw. Kombinationsbeiwert für den Lastfall."
+                  },
+                  "step": 0.05,
+                  "precision": 2,
+                  "group": "load",
+                  "order": 20
+                }
               }
             }
+          },
+          "x-semio-ui": {
+            "role": "value",
+            "label": {
+              "en": "Load case factors",
+              "de": "Lastfallfaktoren"
+            },
+            "description": {
+              "en": "Each load case of the combination with its factor.",
+              "de": "Jeder Lastfall der Kombination mit seinem Faktor."
+            },
+            "group": "record",
+            "order": 30
           }
         }
+      },
+      "x-semio-ui": {
+        "role": "value",
+        "label": {
+          "en": "New load combination",
+          "de": "Neue Lastfallkombination"
+        },
+        "group": "record",
+        "order": 30
       }
     }
   }

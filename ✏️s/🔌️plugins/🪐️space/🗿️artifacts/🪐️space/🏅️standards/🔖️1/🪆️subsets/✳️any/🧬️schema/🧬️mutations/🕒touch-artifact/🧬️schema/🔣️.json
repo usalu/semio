@@ -5,20 +5,66 @@
   "type": "object",
   "additionalProperties": false,
   "required": [
+    "mutation",
     "id",
     "updatedAtMs",
     "updatedBy"
   ],
   "properties": {
+    "mutation": {
+      "const": "touchArtifact"
+    },
     "id": {
-      "type": "string"
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Artifact",
+          "de": "Artefakt"
+        },
+        "description": {
+          "en": "The artifact this mutation addresses.",
+          "de": "Das Artefakt, das diese Mutation adressiert."
+        },
+        "ref": {
+          "kind": "artifact"
+        }
+      }
     },
     "updatedAtMs": {
       "type": "integer",
-      "minimum": 0
+      "minimum": 0,
+      "x-semio-ui": {
+        "widget": "stepper",
+        "role": "value",
+        "label": {
+          "en": "Updated At",
+          "de": "Aktualisiert am"
+        },
+        "description": {
+          "en": "Last change time in milliseconds since the Unix epoch.",
+          "de": "Zeitpunkt der letzten Änderung in Millisekunden seit der Unix-Epoche."
+        },
+        "unit": "ms",
+        "step": 1,
+        "precision": 0
+      }
     },
     "updatedBy": {
-      "type": "string"
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "text",
+        "role": "value",
+        "label": {
+          "en": "Updated By",
+          "de": "Aktualisiert von"
+        },
+        "description": {
+          "en": "Actor who changed the artifact last.",
+          "de": "Akteur, der das Artefakt zuletzt geändert hat."
+        }
+      }
     }
   }
 }

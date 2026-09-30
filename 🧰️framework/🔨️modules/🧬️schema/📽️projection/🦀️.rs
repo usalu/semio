@@ -19,30 +19,37 @@ export type ActionAddress = { pluginId: string, appId: string, modeId: string, w
         },
         SchemaMetadata {
             name: "ActionArgControl",
-            version: 1,
+            version: 2,
             typescript: r####"/**
  * 🎚️ Declarative input control for one action argument — a lean manifest-altitude enum,
  * deliberately NOT `ui_wgpu::wgpu::UiControlNode` (whose variants embed live values and immediate-dispatch
  * wiring). Renderers map each variant onto a staged form field. Tagged with `kind` to mirror the
  * sibling `UtilityNode`/`UiControlNode` declarative-tree convention.
  */
-export type ActionArgControl = { "kind": "text", placeholder?: string, } | { "kind": "number", min?: number, max?: number, step?: number, } | { "kind": "slider", min: number, max: number, step?: number, unit?: string, } | { "kind": "toggle" } | { "kind": "select", options: Array<ActionArgOption>, } | { "kind": "vec3" } | { "kind": "iconSelect", classifierKind: string, } | { "kind": "artifactKind", roles: Array<AppRole>, } | { "kind": "surfaceApp", roles: Array<AppRole>, dialectArg: string, };"####,
+export type ActionArgControl = { "kind": "text", placeholder?: string, } | { "kind": "number", min?: number, max?: number, step?: number, unit?: string, precision?: number, displayUnit?: string, displayFactor?: number, } | { "kind": "stepper", min?: number, max?: number, step?: number, unit?: string, precision?: number, displayUnit?: string, displayFactor?: number, snaps?: Array<number>, snapSource?: SnapSource, } | { "kind": "slider", min: number, max: number, step?: number, unit?: string, precision?: number, displayUnit?: string, displayFactor?: number, snaps?: Array<number>, snapSource?: SnapSource, scale?: NumberScale, } | { "kind": "dial", min: number, max: number, step?: number, unit?: string, precision?: number, displayUnit?: string, displayFactor?: number, snaps?: Array<number>, snapSource?: SnapSource, } | { "kind": "toggle" } | { "kind": "select", options: Array<ActionArgOption>, } | { "kind": "segmented", options: Array<ActionArgOption>, } | { "kind": "vector", dims: number, min?: number, max?: number, unit?: string, step?: number, snaps?: Array<number>, snapSource?: SnapSource, precision?: number, displayUnit?: string, displayFactor?: number, } | { "kind": "color", alpha: boolean, } | { "kind": "reference", kinds: Array<string>, domain?: string, granularity?: string, many?: boolean, minItems?: number, maxItems?: number, idType?: ReferenceIdType, } | { "kind": "iconSelect", classifierKind: string, } | { "kind": "artifactKind", roles: Array<AppRole>, } | { "kind": "surfaceApp", roles: Array<AppRole>, dialectArg: string, };"####,
         },
         SchemaMetadata {
             name: "ActionArgDef",
-            version: 1,
+            version: 2,
             typescript: r####"/**
- * 📝️ Declares one argument of an action: its `id` (the JSON key sent in `ActionDescriptor.args`),
- * human `label`, stored value `schema` (see `🔖️ArgSchema` — D6: this is the sole persisted truth,
- * `control()` below is derived from it), an optional widget `presentation` hint, whether it is
- * `required`, an optional `default` value, and an optional `description`. An empty
- * `ActionDefinition.args` (the common case) means a no-argument action.
+ * 📝️ Declares one input of an action or a mutation: its `id` (the JSON key sent in `ActionDescriptor.args`; for a
+ * mutation input the single-segment RFC 6901 pointer of its key relative to its parent value, e.g. `/dx`), human
+ * `label`, stored value `schema` (see `🔖️ArgSchema` — D6: this is the sole persisted truth, `control()` below is
+ * derived from it), an optional widget `presentation` hint, whether it is `required`, an optional `default` value,
+ * an optional localized `description`, and the `group`/`order` a form sorts it by. An empty
+ * `ActionDefinition.args` (the common case) means a no-argument action. Mutation inputs come from
+ * [`mutation_input_defs`].
  */
 export type ActionArgDef = { id: string,
 /**
  * 🗣️ Manifest-level, locale×terminology-checked — see `LocalizedLabel` (follow-up: no owned schema mirror yet).
  */
-label: unknown, schema: ArgSchema, presentation?: ArgPresentation, required: boolean, default?: unknown, description?: string, };"####,
+label: unknown, schema: ArgSchema, presentation?: ArgPresentation, required: boolean,
+/**
+ * 🫥️ Whether the value admits `null` (`type: [T, "null"]`, or a `null` branch beside one value branch): a "clear"
+ * that a form offers beside the value, distinct from leaving an optional input out.
+ */
+nullable?: boolean, default?: unknown, description?: unknown, group?: string, order?: number, };"####,
         },
         SchemaMetadata {
             name: "ActionArgOption",
@@ -305,22 +312,48 @@ export type ArgFormat = { "kind": "artifactRef" } | { "kind": "windowId" } | { "
         },
         SchemaMetadata {
             name: "ArgPresentation",
-            version: 1,
+            version: 2,
             typescript: r####"/**
  * 🖼️ How to WIDGET-render an argument beyond what its `ArgSchema` alone implies — consumed by
  * `ActionArgDef::control()` (e.g. a bounded `Number` still renders `Slider` without this, but a
  * single-bound one needs it to opt in).
  */
-export type ArgPresentation = { "kind": "slider" } | { "kind": "iconSelect", classifierKind: string, } | { "kind": "multiline" } | { "kind": "hidden" };"####,
+export type ArgPresentation = { "kind": "slider" } | { "kind": "stepper" } | { "kind": "dial" } | { "kind": "segmented" } | { "kind": "iconSelect", classifierKind: string, } | { "kind": "multiline" } | { "kind": "hidden" } | { "kind": "color" };"####,
+        },
+        SchemaMetadata {
+            name: "SnapSource",
+            version: 1,
+            typescript: r####"/**
+ * 🧲️ Where a number's snap points come from beyond its static `snaps`: every multiple of its `step`, a window
+ * config value named `key` (the grid spacing a tool snaps to), or the document value at JSON `pointer`.
+ */
+export type SnapSource = { "kind": "step" } | { "kind": "config", key: string, } | { "kind": "snapshot", pointer: string, };"####,
+        },
+        SchemaMetadata {
+            name: "NumberScale",
+            version: 1,
+            typescript: r####"/**
+ * 📈️ How a slider or dial maps its travel onto the value range.
+ */
+export type NumberScale = "linear" | "log";"####,
+        },
+        SchemaMetadata {
+            name: "ReferenceIdType",
+            version: 1,
+            typescript: r####"/**
+ * 🔢️ The JSON type of a reference's ids: text ids (the default, left off the wire) or integer ids. A selection id is
+ * always text, so an integer reference stages the integer its selected text spells.
+ */
+export type ReferenceIdType = "string" | "integer";"####,
         },
         SchemaMetadata {
             name: "ArgSchema",
-            version: 1,
+            version: 2,
             typescript: r####"/**
  * 🌳️ The stored, engine-neutral shape of one action argument's value — see this region's
  * header comment for the D6 stored/derived split.
  */
-export type ArgSchema = { "kind": "string", options: Array<ActionArgOption>, minLen?: number, maxLen?: number, pattern?: string, format?: ArgFormat, } | { "kind": "number", min?: number, max?: number, step?: number, integer: boolean, unit?: string, } | { "kind": "boolean" } | { "kind": "vec3", unit?: string, } | { "kind": "array", items: ArgSchema, minItems?: number, maxItems?: number, } | { "kind": "object", fields: Array<ActionArgDef>, } | { "kind": "any" };"####,
+export type ArgSchema = { "kind": "string", options: Array<ActionArgOption>, minLen?: number, maxLen?: number, pattern?: string, format?: ArgFormat, } | { "kind": "number", min?: number, minExclusive?: boolean, max?: number, maxExclusive?: boolean, step?: number, integer: boolean, unit?: string, snaps?: Array<number>, snapSource?: SnapSource, softMin?: number, softMax?: number, precision?: number, displayUnit?: string, displayFactor?: number, scale?: NumberScale, } | { "kind": "boolean" } | { "kind": "vector", dims: number, min?: number, max?: number, unit?: string, step?: number, snaps?: Array<number>, snapSource?: SnapSource, precision?: number, displayUnit?: string, displayFactor?: number, } | { "kind": "reference", kinds: Array<string>, domain?: string, granularity?: string, many?: boolean, minItems?: number, maxItems?: number, idType?: ReferenceIdType, } | { "kind": "array", items: ArgSchema, minItems?: number, maxItems?: number, } | { "kind": "object", fields: Array<ActionArgDef>, } | { "kind": "any" };"####,
         },
         SchemaMetadata {
             name: "ArtifactContributionDescriptor",
@@ -580,8 +613,24 @@ export type ContributionSet = { commands: Array<CommandDefinition>, menus: Array
 export type DescriptorEntry = { id: string, payload?: unknown, };"####,
         },
         SchemaMetadata {
+            name: "DialogChoice",
+            version: 2,
+            typescript: r####"/**
+ * 🎛️ One decision button of a [`DialogDefinition`]: a localized `label`, an optional `description` a
+ * reader hears with it (`aria-describedby`) and a sighted user reads beside it, the `action` it
+ * dispatches, the staged args it `requires` (enabled once they resolve, and the only form args it
+ * sends), its visual `tone`, and whether it is `destructive` (danger styling, and an agent lane must
+ * ask before taking it).
+ */
+export type DialogChoice = { id: string,
+/**
+ * 🗣️ Manifest-level, locale×terminology-checked — see `LocalizedLabel` (follow-up: no owned schema mirror yet).
+ */
+label: unknown, description?: unknown, action: ActionRef, requires?: Array<string>, tone?: Tone, destructive?: boolean, };"####,
+        },
+        SchemaMetadata {
             name: "DialogDefinition",
-            version: 1,
+            version: 3,
             typescript: r####"/**
  * 🗨️ A declared modal form dialog: a glass veil covers the screen and an info box (styled
  * identically to the introduction walkthrough box, see `ui_react`'s `GLASS_OVERLAY_BOX_CLASS`)
@@ -602,7 +651,14 @@ submitAction: ActionRef, submitLabel: unknown,
  * 📇️ Optional active-window action reference dispatched on any dismissal (Escape, veil
  * click, or the Cancel button).
  */
-cancelAction?: ActionRef, cancelLabel?: unknown, };"####,
+cancelAction?: ActionRef, cancelLabel?: unknown,
+/**
+ * 🔀️ Further decisions offered beside the submit, in focus order before it. Each is gated on and
+ * dispatches only the args it [`requires`](DialogChoice::requires) (plus the seed context), with
+ * [`DIALOG_CHOICE_ARG`] naming the choice, so one action can serve several choices
+ * (`historyEditCommit{choice}`); the submit alone is gated on the dialog's required args.
+ */
+choices?: Array<DialogChoice>, };"####,
         },
         SchemaMetadata {
             name: "DomainSelection",
@@ -2095,44 +2151,20 @@ export type ArtifactPresentation = { id: string, name: string, dimension: string
 export type ComposerEntryDescriptor = { writes: ArtifactDialect, reads: Array<ArtifactDialect>, };"####,
         },
         SchemaMetadata {
-            name: "ConfigFieldShape",
-            version: 1,
-            typescript: r####"/**
- * 🧮️ Owned edit and validation shape for one configuration field.
- */
-export type ConfigFieldShape = { "kind": "number", min?: number, max?: number, step?: number, } | { "kind": "toggle" } | { "kind": "text" } | { "kind": "select", options: Array<string>, } | { "kind": "record", fields: Array<ConfigFieldSpec>, };"####,
-        },
-        SchemaMetadata {
-            name: "ConfigFieldSpec",
-            version: 1,
-            typescript: r####"/**
- * 🧮️ One field in an app configuration record.
- */
-export type ConfigFieldSpec = { key: string, label: string, shape: ConfigFieldShape, default?: unknown, };"####,
-        },
-        SchemaMetadata {
             name: "ConfigSpec",
-            version: 1,
+            version: 2,
             typescript: r####"/**
- * 🧮️ An app's complete typed configuration declaration.
+ * 🧮️ An app's complete typed configuration declaration: one input per field, its `id` the config key.
  */
-export type ConfigSpec = { fields: Array<ConfigFieldSpec>, };"####,
-        },
-        SchemaMetadata {
-            name: "CommandFieldSpec",
-            version: 1,
-            typescript: r####"/**
- * 🎛️ One field in a keyword-dispatched command variant.
- */
-export type CommandFieldSpec = { key: string, shape: ConfigFieldShape, optional: boolean, };"####,
+export type ConfigSpec = { fields: Array<ActionArgDef>, };"####,
         },
         SchemaMetadata {
             name: "CommandVariantSpec",
-            version: 1,
+            version: 2,
             typescript: r####"/**
- * 🎛️ One keyword and its typed command fields.
+ * 🎛️ One keyword and its typed command fields, `required` where the grammar demands the field.
  */
-export type CommandVariantSpec = { keyword: string, fields: Array<CommandFieldSpec>, };"####,
+export type CommandVariantSpec = { keyword: string, fields: Array<ActionArgDef>, };"####,
         },
         SchemaMetadata {
             name: "CommandGrammar",
@@ -2197,7 +2229,7 @@ export type TopicContribution = { topic: string, payload: unknown, };"####,
 
     /// 🟦️ Renders the stable language projection consumed by framework clients.
     pub fn render_typescript() -> String {
-        let mut output = String::from("/** @generated by `bun nx run @semio-tech/framework:generate` from versioned owned framework schema metadata. Do not edit. */\n\nimport type { Label, StyleSpec, MenuRef as UiMenuRef, RowActionPlacement as UiTreeActionPlacement, WindowStackCorner } from \"../📜️ui-contract/🟦️.ts\";\nimport type { ShellLocale as Locale, ShellTerminology as Terminology } from \"../🎚️ui-axes/🟦️.ts\";\n\n");
+        let mut output = String::from("/** @generated by `bun nx run @semio-tech/framework:generate` from versioned owned framework schema metadata. Do not edit. */\n\nimport type { Label, StyleSpec, MenuRef as UiMenuRef, RowActionPlacement as UiTreeActionPlacement, Tone, WindowStackCorner } from \"../📜️ui-contract/🟦️.ts\";\nimport type { ShellLocale as Locale, ShellTerminology as Terminology } from \"../🎚️ui-axes/🟦️.ts\";\n\n");
         for (index, metadata) in TYPES.iter().enumerate() {
             output.push_str(metadata.typescript);
             output.push_str(if index + 1 == TYPES.len() { "\n" } else { "\n\n" });

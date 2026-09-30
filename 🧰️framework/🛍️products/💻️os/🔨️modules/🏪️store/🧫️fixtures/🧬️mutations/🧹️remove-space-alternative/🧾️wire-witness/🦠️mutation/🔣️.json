@@ -1,0 +1,6 @@
+{
+  "operation": "removeSpaceAlternative",
+  "payload": {
+    "alternativeId": "sa-other"
+  }
+}

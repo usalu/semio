@@ -1397,6 +1397,8 @@ pub struct PresencePeer {
     pub principal_kind: Option<PresencePrincipalKind>,
     /// 🛠️ Active editor tool/utility id (ARTIFACT scope). Distinct from `tool_run`.
     pub active_tool: Option<String>,
+    /// ⏪️ Summary of this peer's open history edit (ARTIFACT scope): who edits history, on which mutation, at which stage.
+    pub history_edit: Option<PresenceHistoryEdit>,
 }
 
 /// 🤖️ Which kind of principal holds a presence slot. An `Agent` peer is an AI agent acting
@@ -1527,6 +1529,84 @@ impl crate::value::FromValue for PresenceToolRun {
     }
 }
 
+/// ⏪️ Stage of a peer's open history edit, spelled like `HistoryTimeTravelStage` on the history wire. The binary tag
+/// is the declaration order and the JSON value is the camelCase wire name.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum PresenceHistoryEditStage {
+    Editing,
+    Replaying,
+    Reviewing,
+    Choosing,
+    Finalizing,
+}
+
+impl PresenceHistoryEditStage {
+    pub const ALL: [PresenceHistoryEditStage; 5] = [Self::Editing, Self::Replaying, Self::Reviewing, Self::Choosing, Self::Finalizing];
+
+    /// 🔤️ The camelCase wire spelling shared with `HistoryTimeTravelStage`.
+    pub fn wire_name(self) -> &'static str {
+        match self {
+            Self::Editing => "editing",
+            Self::Replaying => "replaying",
+            Self::Reviewing => "reviewing",
+            Self::Choosing => "choosing",
+            Self::Finalizing => "finalizing",
+        }
+    }
+
+    /// 🔡️ Inverse of [`Self::wire_name`].
+    pub fn from_wire_name(name: &str) -> Option<Self> {
+        Self::ALL.into_iter().find(|stage| stage.wire_name() == name)
+    }
+}
+
+/// 👥️ Ephemeral shared summary of a peer's open history edit ("Alice is editing history: Set count to 2"): the
+/// replica-independent id of the mutation whose inputs it drafts — every replica labels it from its own history rows,
+/// in its own locale — the session stage and how many drafts it accepted.
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub struct PresenceHistoryEdit {
+    pub mutation_id: String,
+    pub stage: PresenceHistoryEditStage,
+    pub drafts: u32,
+}
+
+impl crate::value::ToValue for PresenceHistoryEdit {
+    fn to_value(&self) -> crate::value::DslValue {
+        crate::value::DslValue::object(vec![
+            ("mutationId".to_string(), crate::value::ToValue::to_value(&self.mutation_id)),
+            ("stage".to_string(), crate::value::DslValue::String(self.stage.wire_name().to_string())),
+            ("drafts".to_string(), crate::value::ToValue::to_value(&self.drafts)),
+        ])
+    }
+}
+
+impl crate::value::FromValue for PresenceHistoryEdit {
+    fn from_value(value: crate::value::DslValue) -> Result<Self, crate::value::ValueError> {
+        let crate::value::DslValue::Object(fields) = value else {
+            return Err(crate::value::ValueError::new(format!("expected an object for PresenceHistoryEdit, found {value:?}")));
+        };
+        let mut mutation_id = None;
+        let mut stage = None;
+        let mut drafts = None;
+        for (key, entry) in fields {
+            match key.as_str() {
+                "mutationId" => mutation_id = Some(<String as crate::value::FromValue>::from_value(entry).map_err(|e| e.under("mutationId"))?),
+                "stage" => {
+                    let name = <String as crate::value::FromValue>::from_value(entry).map_err(|e| e.under("stage"))?;
+                    stage = Some(PresenceHistoryEditStage::from_wire_name(&name).ok_or_else(|| crate::value::ValueError::new(format!("unknown history edit stage {name}")).under("stage"))?);
+                }
+                "drafts" => drafts = Some(<u32 as crate::value::FromValue>::from_value(entry).map_err(|e| e.under("drafts"))?),
+                _ => {}
+            }
+        }
+        Ok(PresenceHistoryEdit {
+            mutation_id: mutation_id.ok_or_else(|| crate::value::ValueError::new("PresenceHistoryEdit missing mutationId"))?,
+            stage: stage.ok_or_else(|| crate::value::ValueError::new("PresenceHistoryEdit missing stage"))?,
+            drafts: drafts.ok_or_else(|| crate::value::ValueError::new("PresenceHistoryEdit missing drafts"))?,
+        })
+    }
+}
+
 /// 🌱️ Hand-written, not derived — same DAG reason as `SelectionMode` above. `presence_pack` mirrors
 /// the pre-existing `#[serde(with = "presence_pack_serde")]` base64-string wire shape byte-for-byte
 /// (rather than the default `Vec<u8>` numeric-array shape) via this crate's own
@@ -1574,6 +1654,9 @@ impl crate::value::ToValue for PresencePeer {
         if let Some(active_tool) = &self.active_tool {
             entries.push(("activeTool".to_string(), crate::value::ToValue::to_value(active_tool)));
         }
+        if let Some(history_edit) = &self.history_edit {
+            entries.push(("historyEdit".to_string(), crate::value::ToValue::to_value(history_edit)));
+        }
         crate::value::DslValue::object(entries)
     }
 }
@@ -1597,6 +1680,7 @@ impl crate::value::FromValue for PresencePeer {
         let mut tool_run = None;
         let mut principal_kind = None;
         let mut active_tool = None;
+        let mut history_edit = None;
         for (key, entry) in fields {
             match key.as_str() {
                 "actor" => actor = Some(<String as crate::value::FromValue>::from_value(entry).map_err(|e| e.under("actor"))?),
@@ -1627,6 +1711,7 @@ impl crate::value::FromValue for PresencePeer {
                     }
                 }
                 "activeTool" => active_tool = <Option<String> as crate::value::FromValue>::from_value(entry).map_err(|e| e.under("activeTool"))?,
+                "historyEdit" => history_edit = <Option<PresenceHistoryEdit> as crate::value::FromValue>::from_value(entry).map_err(|e| e.under("historyEdit"))?,
                 _ => {}
             }
         }
@@ -1646,6 +1731,7 @@ impl crate::value::FromValue for PresencePeer {
             tool_run,
             principal_kind,
             active_tool,
+            history_edit,
         })
     }
 }
@@ -1662,7 +1748,8 @@ impl crate::value::FromValue for PresencePeer {
 /// present. `flags` widened from a single `u8` to a varint (ticket 26/08/17/SHARED-PRESENCE-SESSION-
 /// COLORS-AND-UNIVERSAL-ARTIFACT-CREATION C7.1) now that bit 9 exceeds a byte's range. Bit 10 carries
 /// `tool_run` as `tool_id str | state u8 | stage varint | completed varint | total bool+varint?`.
-/// Bit 11 carries `principal_kind` as one declaration-order tag byte (`0` human, `1` agent); bit 12 carries `active_tool`; a peer
+/// Bit 11 carries `principal_kind` as one declaration-order tag byte (`0` human, `1` agent); bit 12 carries `active_tool`;
+/// bit 13 carries `history_edit` as `mutation_id str | stage u8 | drafts varint`; a peer
 /// that leaves it unset is the pre-agent wire shape and reads back as `None`, so every encoder and
 /// decoder written before the agent principal existed still round-trips byte-for-byte.
 pub async fn encode_presence_peer(peer: &PresencePeer) -> Vec<u8> {
@@ -1708,6 +1795,9 @@ pub async fn encode_presence_peer(peer: &PresencePeer) -> Vec<u8> {
     if peer.active_tool.is_some() {
         flags |= 1 << 12;
     }
+    if peer.history_edit.is_some() {
+        flags |= 1 << 13;
+    }
     crate::wire::write_varint_u64(&mut out, flags);
     crate::wire::write_varint_u64(&mut out, peer.connected_at_ms as u64);
     if let Some(label) = &peer.label {
@@ -1749,6 +1839,9 @@ pub async fn encode_presence_peer(peer: &PresencePeer) -> Vec<u8> {
     if let Some(active_tool) = &peer.active_tool {
         crate::write_str(&mut out, active_tool);
     }
+    if let Some(history_edit) = &peer.history_edit {
+        encode_presence_history_edit(history_edit, &mut out);
+    }
     out
 }
 
@@ -1764,6 +1857,14 @@ pub fn encode_presence_tool_run(tool_run: &PresenceToolRun, out: &mut Vec<u8>) {
     if let Some(total) = tool_run.total {
         crate::wire::write_varint_u64(out, total);
     }
+}
+
+/// ⏪️ Appends one `PresenceHistoryEdit` body — the exact bytes a `PresencePeer` carries under flag bit 13, and what a
+/// guest's `AppFrame::Ephemeral.history_edit` publishes.
+pub fn encode_presence_history_edit(history_edit: &PresenceHistoryEdit, out: &mut Vec<u8>) {
+    crate::write_str(out, &history_edit.mutation_id);
+    out.push(history_edit.stage as u8);
+    crate::wire::write_varint_u64(out, u64::from(history_edit.drafts));
 }
 
 /// 🛡️ Fixed hostile-input ceilings shared with the TypeScript presence decoder.
@@ -1945,6 +2046,14 @@ impl<'a> PresencePeerReader<'a> {
         Ok(PresenceToolRun { tool_id, state, stage, completed, total })
     }
 
+    fn history_edit(&mut self) -> Result<PresenceHistoryEdit, crate::ProtocolError> {
+        let mutation_id = self.text("presence history edit mutation")?;
+        let tag = self.byte("presence history edit stage")?;
+        let stage = *PresenceHistoryEditStage::ALL.get(usize::from(tag)).ok_or_else(|| self.malformed("presence history edit stage", format!("unknown tag {tag:#x}")))?;
+        let drafts = u32::try_from(self.varint("presence history edit drafts")?).map_err(|_| crate::ProtocolError::LimitExceeded("presence history edit drafts"))?;
+        Ok(PresenceHistoryEdit { mutation_id, stage, drafts })
+    }
+
     fn ui(&mut self) -> Result<PresenceUi, crate::ProtocolError> {
         Ok(PresenceUi { hovered_path: self.optional_text("presence ui hovered path")?, focused_path: self.optional_text("presence ui focused path")?, pressed_path: self.optional_text("presence ui pressed path")? })
     }
@@ -1961,6 +2070,17 @@ pub fn decode_presence_tool_run(bytes: &[u8]) -> Result<PresenceToolRun, crate::
     Ok(tool_run)
 }
 
+/// 🎞️ Exact inverse of [`encode_presence_history_edit`] over a standalone body: the peer decoder's limits (stage tag,
+/// `u32` drafts) and no trailing bytes.
+pub fn decode_presence_history_edit(bytes: &[u8]) -> Result<PresenceHistoryEdit, crate::ProtocolError> {
+    let limits = PRESENCE_PEER_WIRE_LIMITS_V1;
+    if bytes.len() > limits.maximum_entry_bytes { return Err(crate::ProtocolError::LimitExceeded("presence history edit bytes")); }
+    let mut reader = PresencePeerReader { bytes, position: 0, limits };
+    let history_edit = reader.history_edit()?;
+    if reader.position != bytes.len() { return Err(reader.malformed("presence history edit", "trailing bytes")); }
+    Ok(history_edit)
+}
+
 /// 🎯️ Exact, allocation-bounded inverse of [`encode_presence_peer`]. Unknown flags,
 /// noncanonical varints, non-finite view values, hostile collection counts, and trailing bytes are
 /// rejected before a peer can cross a network authority boundary.
@@ -1970,7 +2090,7 @@ pub async fn decode_presence_peer(bytes: &[u8]) -> Result<PresencePeer, crate::P
     let mut reader = PresencePeerReader { bytes, position: 0, limits };
     let actor = reader.text("presence peer actor")?;
     let flags = reader.varint("presence peer flags")?;
-    if flags >> 13 != 0 { return Err(reader.malformed("presence peer flags", format!("unknown flag bits set: {flags:#x}"))); }
+    if flags >> 14 != 0 { return Err(reader.malformed("presence peer flags", format!("unknown flag bits set: {flags:#x}"))); }
     let connected_at = reader.varint("presence peer connected at")?;
     if connected_at > limits.maximum_connected_at_ms { return Err(crate::ProtocolError::LimitExceeded("presence peer connected at")); }
     let connected_at_ms = connected_at as i64;
@@ -1987,8 +2107,9 @@ pub async fn decode_presence_peer(bytes: &[u8]) -> Result<PresencePeer, crate::P
     let tool_run = if flags & (1 << 10) != 0 { Some(reader.tool_run()?) } else { None };
     let principal_kind = if flags & (1 << 11) != 0 { Some(reader.principal_kind()?) } else { None };
     let active_tool = if flags & (1 << 12) != 0 { Some(reader.text("presence peer active tool")?) } else { None };
+    let history_edit = if flags & (1 << 13) != 0 { Some(reader.history_edit()?) } else { None };
     if reader.position != bytes.len() { return Err(reader.malformed("presence peer", "trailing bytes")); }
-    Ok(PresencePeer { actor, connected_at_ms, label, presence_pack, user_id, role, drag_ghost_json, interaction, color, surface, views, ui, tool_run, principal_kind, active_tool })
+    Ok(PresencePeer { actor, connected_at_ms, label, presence_pack, user_id, role, drag_ghost_json, interaction, color, surface, views, ui, tool_run, principal_kind, active_tool, history_edit })
 }
 
 #[cfg(test)]

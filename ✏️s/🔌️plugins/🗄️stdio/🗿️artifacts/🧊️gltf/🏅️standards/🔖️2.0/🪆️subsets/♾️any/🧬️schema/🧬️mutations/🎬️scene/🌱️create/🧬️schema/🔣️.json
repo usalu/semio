@@ -1,7 +1,7 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
   "$id": "https://json.schemas.assets.semio-tech.com/s/stdio/gltf/2.0/any/mutation/create-scene/schema.json",
-  "title": "GltfCreateScenePayloadV1",
+  "title": "GltfCreateScenePayload",
   "type": "object",
   "additionalProperties": false,
   "required": [
@@ -11,14 +11,60 @@
     "position": {
       "type": "integer",
       "minimum": 0,
-      "maximum": 4294967295
+      "maximum": 4294967295,
+      "x-semio-ui": {
+        "widget": "stepper",
+        "label": {
+          "en": "Insert position",
+          "de": "Einfügeposition"
+        },
+        "description": {
+          "en": "Target index in the list, counted from 0.",
+          "de": "Zielindex in der Liste, ab 0 gezählt."
+        },
+        "precision": 0,
+        "group": "value",
+        "order": 10
+      }
     }
   },
-  "x-semio": {
-    "id": "s.stdio.gltf.mutation.create-scene.v1",
-    "version": 1,
-    "phase": "mutation",
-    "touchedPathPattern": "document/scenes/{position}"
-  },
-  "x-semio-mutation": "create-scene"
+  "$defs": {
+    "CreateSceneMutation": {
+      "description": "The whole wire of CreateSceneMutation: the editable apply payload (this document's root) or the inert restore.",
+      "oneOf": [
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "phase",
+            "value"
+          ],
+          "properties": {
+            "phase": {
+              "const": "apply"
+            },
+            "value": {
+              "$ref": "#"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "phase",
+            "value"
+          ],
+          "properties": {
+            "phase": {
+              "const": "restore"
+            },
+            "value": {
+              "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/gltf/2.0/any/diff.json"
+            }
+          }
+        }
+      ]
+    }
+  }
 }

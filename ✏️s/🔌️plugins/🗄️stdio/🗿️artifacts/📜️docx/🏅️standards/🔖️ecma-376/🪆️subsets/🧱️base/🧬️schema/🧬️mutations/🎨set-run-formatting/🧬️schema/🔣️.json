@@ -5,26 +5,66 @@
   "type": "object",
   "additionalProperties": false,
   "required": [
+    "mutation",
     "address",
     "bold",
     "italic",
     "underline"
   ],
   "properties": {
-    "address": {
-      "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/docx/ecma-376/base/xml-address.json"
-    },
-    "bold": {
-      "type": "boolean"
-    },
-    "italic": {
-      "type": "boolean"
-    },
-    "underline": {
-      "type": "boolean"
-    },
     "mutation": {
       "const": "setRunFormatting"
+    },
+    "address": {
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/docx/ecma-376/base/xml-address.json",
+      "x-semio-ui": {
+        "label": {
+          "en": "Node address",
+          "de": "Knotenadresse"
+        },
+        "description": {
+          "en": "XML part, child path, expected element name and revision stamp of the addressed node.",
+          "de": "XML-Teil, Kindpfad, erwarteter Elementname und Revisionsstempel des adressierten Knotens."
+        },
+        "group": "target",
+        "order": 10
+      }
+    },
+    "bold": {
+      "type": "boolean",
+      "x-semio-ui": {
+        "widget": "toggle",
+        "label": {
+          "en": "Bold",
+          "de": "Fett"
+        },
+        "group": "value",
+        "order": 20
+      }
+    },
+    "italic": {
+      "type": "boolean",
+      "x-semio-ui": {
+        "widget": "toggle",
+        "label": {
+          "en": "Italic",
+          "de": "Kursiv"
+        },
+        "group": "value",
+        "order": 30
+      }
+    },
+    "underline": {
+      "type": "boolean",
+      "x-semio-ui": {
+        "widget": "toggle",
+        "label": {
+          "en": "Underline",
+          "de": "Unterstrichen"
+        },
+        "group": "value",
+        "order": 40
+      }
     }
   }
 }

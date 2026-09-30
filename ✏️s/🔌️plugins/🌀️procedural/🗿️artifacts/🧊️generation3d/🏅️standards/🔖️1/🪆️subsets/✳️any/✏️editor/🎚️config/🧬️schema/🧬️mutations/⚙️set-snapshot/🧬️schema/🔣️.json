@@ -5,5 +5,5 @@
   "type": "object",
   "additionalProperties": false,
   "required": ["config"],
-  "properties": { "config": { "$ref": "https://json.schemas.assets.semio-tech.com/app/procedural/3d/config/schema.json" } }
+  "properties": { "config": { "$ref": "https://json.schemas.assets.semio-tech.com/app/procedural/3d/config/schema.json", "x-semio-ui": {"role": "value", "label": {"en": "Configuration", "de": "Konfiguration"}, "description": {"en": "The complete editor configuration.", "de": "Die vollständige Editorkonfiguration."}, "group": "record", "order": 10} } }
 }

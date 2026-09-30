@@ -5,15 +5,41 @@
   "type": "object",
   "additionalProperties": false,
   "required": [
+    "mutation",
     "pathRef",
     "step"
   ],
   "properties": {
+    "mutation": {
+      "const": "createStep"
+    },
     "pathRef": {
-      "$ref": "#/$defs/PathRef"
+      "$ref": "#/$defs/PathRef",
+      "x-semio-ui": {
+        "role": "value",
+        "label": {
+          "en": "Path Reference",
+          "de": "Pfadreferenz"
+        },
+        "description": {
+          "en": "The step list that receives the step.",
+          "de": "Die Schrittliste, die den Schritt aufnimmt."
+        }
+      }
     },
     "step": {
-      "$ref": "#/$defs/Step"
+      "$ref": "#/$defs/Step",
+      "x-semio-ui": {
+        "role": "value",
+        "label": {
+          "en": "Step",
+          "de": "Schritt"
+        },
+        "description": {
+          "en": "The complete step record to add.",
+          "de": "Der vollständige hinzuzufügende Schritt."
+        }
+      }
     },
     "index": {
       "type": "integer",
@@ -27,10 +53,45 @@
       "additionalProperties": false,
       "properties": {
         "owner": {
-          "type": "string"
+          "type": [
+            "string",
+            "null"
+          ],
+          "x-semio-ui": {
+            "widget": "reference",
+            "role": "value",
+            "label": {
+              "en": "Owner Step",
+              "de": "Übergeordneter Schritt"
+            },
+            "description": {
+              "en": "Control step whose body holds the list; empty for the top-level list.",
+              "de": "Steuerschritt, dessen Rumpf die Liste enthält; leer für die oberste Liste."
+            },
+            "ref": {
+              "kind": "step",
+              "domain": "steps",
+              "granularity": "step"
+            }
+          }
         },
         "slot": {
-          "type": "string"
+          "type": [
+            "string",
+            "null"
+          ],
+          "x-semio-ui": {
+            "widget": "text",
+            "role": "value",
+            "label": {
+              "en": "Body Slot",
+              "de": "Rumpf-Slot"
+            },
+            "description": {
+              "en": "Name of the owner's body that holds the list.",
+              "de": "Name des Rumpfs des übergeordneten Schritts, der die Liste enthält."
+            }
+          }
         }
       }
     },
@@ -66,15 +127,51 @@
           "type": "string"
         },
         "params": {
-          "type": "object"
+          "type": "object",
+          "additionalProperties": {
+            "$ref": "#/$defs/NeuralValue"
+          }
         },
         "bodies": {
           "type": "object",
           "additionalProperties": {
             "$ref": "#/$defs/Path"
+          },
+          "x-semio-ui": {
+            "role": "value",
+            "label": {
+              "en": "Bodies",
+              "de": "Rümpfe"
+            },
+            "description": {
+              "en": "Nested step lists by body slot.",
+              "de": "Verschachtelte Schrittlisten je Rumpf-Slot."
+            }
           }
         }
       }
+    },
+    "NeuralValue": {
+      "anyOf": [
+        {
+          "type": "null"
+        },
+        {
+          "type": "boolean"
+        },
+        {
+          "type": "number"
+        },
+        {
+          "type": "string"
+        },
+        {
+          "type": "object",
+          "additionalProperties": {
+            "$ref": "#/$defs/NeuralValue"
+          }
+        }
+      ]
     }
   }
 }

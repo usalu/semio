@@ -5,16 +5,17 @@
   "type": "object",
   "additionalProperties": false,
   "required": [
+    "mutation",
     "index"
   ],
   "properties": {
-    "index": {
-      "type": "integer",
-      "minimum": 0
-    },
     "mutation": {
       "const": "removeRow",
       "description": "Aggregate discriminator spliced in by TsvMutation; absent when the payload stands alone."
+    },
+    "index": {
+      "type": "integer",
+      "minimum": 0
     }
   }
 }

@@ -35,6 +35,13 @@ pub fn inverse_x_conformance_mutation(mutation: &PdfX1Mutation, base: &PdfSnapsh
     use protocol::Mutation;
     mutation.inverse(base)
 }
+
+/// 📨️ Builds the operation of semantic kind `kind` from its editable payload JSON — the leaf wire (`payload_value()`) a
+/// `🥒️.feature` row carries — through the derive's generic `from_payload_value`.
+pub fn decode_x_conformance_mutation_payload(kind: &str, payload: &str) -> Result<PdfX1Mutation, String> {
+    use protocol::Mutation;
+    pack::from_json_str(payload).and_then(|value| PdfX1Mutation::from_payload_value(kind, value)).map_err(|error| error.to_string())
+}
 //#endregion 🔖️Delegation
 
 //#region 🧪️Structure

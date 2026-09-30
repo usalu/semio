@@ -1,0 +1,12 @@
+{
+  "mutation": "reorderImages",
+  "payload": {
+    "phase": "apply",
+    "value": {
+      "order": [
+        1,
+        0
+      ]
+    }
+  }
+}

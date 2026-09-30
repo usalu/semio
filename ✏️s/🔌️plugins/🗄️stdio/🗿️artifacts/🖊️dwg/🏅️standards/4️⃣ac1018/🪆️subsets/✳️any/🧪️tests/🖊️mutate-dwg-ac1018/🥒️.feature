@@ -45,8 +45,9 @@ Feature: Stamp a real DWG container R2004 and read the AC1018 preamble back at t
   the projection is the preamble triple plus the document's byte length. `byteLength` is what keeps
   `set-snapshot` (a whole-document replacement, collapsing the container to the 22-byte
   preamble-only shape) observably different from `set-version-info` (a field set in place). Every
-  row below moves that projection: the adapter fails any non-`no-mutation` row whose projection did
-  not change.
+  row below moves that projection: the adapter fails any row whose projection did not change. Every
+  row's `params` is the leaf wire payload of AC1024's `DwgMutation`, which this standard re-exports
+  (`set-snapshot` carries the `DwgSnapshot` wire), decoded by its own payload constructor.
 
   🔒️ The identity round trip asserts the EXACT-BYTES law, not the no-byte-pass-through law, and that
   is the correct law here rather than a missing one. The preamble is fixed-width with no writer
@@ -88,20 +89,8 @@ Feature: Stamp a real DWG container R2004 and read the AC1018 preamble back at t
     And a mutating row left the container stamped AC1018, asserted in role
     Examples:
       | id               | params |
-      | set-snapshot     | {"version": "AC1018", "maintenanceVersion": 0, "codepage": 30} |
+      | set-snapshot     | {"snapshot": {"schema": "stdio.dwg", "version": "AC1018", "maintenanceVersion": 0, "codepage": 30}} |
       | set-version-info | {"version": "AC1018", "maintenanceVersion": 0, "codepage": 30} |
-
-  @id-no-mutation-baseline-mutate
-  @level-exhaustive
-  @mode-conformance
-  Scenario: Apply no-mutation and read the R2004 stamp back
-    Given the real input drawing asset://🏛️architectural/🏛️architectural.dwg
-    When the no-mutation mutation is applied with its parameters
-      """
-      {"kind": "no-mutation", "params": {}}
-      """
-    Then the preamble projection reports the values the specification's own offsets predict, asserted in role
-    And a mutating row left the container stamped AC1018, asserted in role
 
   @id-inverse
   @level-exhaustive
@@ -116,20 +105,8 @@ Feature: Stamp a real DWG container R2004 and read the AC1018 preamble back at t
     Then the restored drawing's preamble projection equals the original's, asserted in role
     Examples:
       | id               | params |
-      | set-snapshot     | {"version": "AC1018", "maintenanceVersion": 0, "codepage": 30} |
+      | set-snapshot     | {"snapshot": {"schema": "stdio.dwg", "version": "AC1018", "maintenanceVersion": 0, "codepage": 30}} |
       | set-version-info | {"version": "AC1018", "maintenanceVersion": 0, "codepage": 30} |
-
-  @id-no-mutation-baseline-inverse
-  @level-exhaustive
-  @mode-property
-  Scenario: Undoing no-mutation brings the original stamp back
-    Given the real input drawing asset://🏛️architectural/🏛️architectural.dwg
-    When the no-mutation mutation is applied with its parameters
-      """
-      {"kind": "no-mutation", "params": {}}
-      """
-    And the inverse mutation computed against the untouched original is applied to that result
-    Then the restored drawing's preamble projection equals the original's, asserted in role
 
   @id-identity-round-trip
   @level-long

@@ -1,0 +1,15 @@
+# Playbook Schema And Command Discovery Review
+
+Read-only current source audit. No tests/builds, generator execution, or infrastructure edits. Current execution-owner results are attributed, not independently rerun.
+
+Procedural extension `🧬️schema/🔣️.json` now owns PascalCase GeometryImportSource and GeometryLifetimeFixture definitions. Fixture refs resolve through the same $defs in `🧪️tests/🔬️geometry-lifetime/🟦️.ts`. The independent Ajv strict oracle validates the portable imports/parameters/identity vectors and rejects embedded handles and empty source data. Ajv exists only in the test; the production module's public payload/mutation interface remains first-party. New internal owner/cache/work types are private. The existing semantic schema authority was extended rather than adding a target/fixture-local schema.
+
+The correct executable owner is `✏️s/🔌️plugins/📖️playbook/🧩️extensions/🌀️procedural/📦️packages/🦀️rust`, Nx @semio-tech/playbook-extension-procedural-rust. Its script registers geometry-contract and canonical-architecture, running the TS oracle and six explicitly named native laws. Project targets route through that script and include authored Rust/JSON/TS inputs. The main Playbook package is a separate owner; its unchanged script need not register this extension's command.
+
+Framework 3d now contributes canonical-architecture through one exact retained_modeling_jobs_slice_work_and_match_synchronous_geometry native law. This contribution does not claim the entire 108-test crate suite runs in the aggregate. Session/Flow canonical contribution handoff was still pending at this inspection and needs a settled-source follow-up rather than treating old manifest absence as final.
+
+Plugin registry `🚀️launch/🟦️.ts:223–246` recursively discovers all declared 📋️project.json targets. Lines 280–322 produce family target pickers and uncovered per-project target launch rows, honoring existing curated rows. Therefore the new commands require normal plugin-registry generate/check freshness; they do not require a custom seed insertion or target allowlist bypass. At this source snapshot geometry-contract was not yet present in generated launch output. The coordinator subsequently confirmed registry launch regeneration, so freshness must be assessed against that regenerated output rather than this earlier snapshot.
+
+Coordinator supplied the latest actual combined dependency verdict: 43.9 seconds, 280 packages, 3,155 local Cargo declarations, zero strict direction or metadata problems, and 3,082 framework JS/TS sources with zero direction violations. This supersedes the earlier 3,151-declaration owner report; native relocated-law runtime coverage remains a separate result. No blanket aggregate green inference follows from graph success.
+
+Replay oracle's latest native source now checks both exports lack error, requires nonempty string data, then compares actual geometry text. The earlier Null-equality assertion gap is closed in source. All observations remain subject to the execution owner's native run.

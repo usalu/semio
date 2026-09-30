@@ -1,0 +1,11 @@
+{
+  "mutation": "applyValue",
+  "payload": {
+    "mutation": {
+      "mutation": "removeNode",
+      "id": {
+        "value": "n-2"
+      }
+    }
+  }
+}

@@ -1,7 +1,14 @@
-/** 🦠️ move-used-extension executable glTF command. */
-import type { GltfJson, GltfSnapshot } from '../../📸️snapshot/🟦️.ts';
-import { clone, reject, run, same, type GltfLeafResult, type GltfMutationRejection } from './🟦️';
-export const GltfMoveUsedExtensionDescriptor = { id: 's.stdio.gltf.mutation.move-used-extension.v1', version: 1, touchedPaths: ["document/extensionsUsed"], referencePolicy: 'preserves declaration identity while changing only order' } as const;
-export interface GltfMoveUsedExtensionPayload { extension: string; position: number }
-export const validateGltfMoveUsedExtension = (payload: GltfMoveUsedExtensionPayload, base: GltfSnapshot): GltfMutationRejection | undefined => { const index = base.document.extensionsUsed.indexOf(payload.extension); if (index < 0) return reject('gltf.mutation.extension-absent', 'document/extensionsUsed', 'extension is not declared'); if (!Number.isInteger(payload.position) || payload.position < 0 || payload.position >= base.document.extensionsUsed.length) return reject('gltf.mutation.index-out-of-range', 'document/extensionsUsed', 'position must address a declaration'); if (index === payload.position) return reject('gltf.mutation.no-observable-change', 'document/extensionsUsed', 'destination equals source'); return undefined; };
-export const applyGltfMoveUsedExtension = (base: GltfSnapshot, payload: GltfMoveUsedExtensionPayload): GltfLeafResult => run(base, payload, validateGltfMoveUsedExtension, (next, payload) => { const value = next.document.extensionsUsed.splice(next.document.extensionsUsed.indexOf(payload.extension), 1)[0]!; next.document.extensionsUsed.splice(payload.position, 0, value); });
+/** 🚚️ `move-used-extension` wire twin: the flat `Apply` payload `GltfMoveUsedExtensionPayload` and the phase wire `MoveUsedExtensionMutation`, exactly as `./🦀️.rs` writes them.
+ * @see ./🧬️schema/🔣️.json */
+import { gltfWireIndex, gltfWireObject, gltfWireRequired, gltfWireString } from "../../../📸️snapshot/🟦️.ts";
+import { type GltfDiff, type GltfPhase, gltfWirePhase, parseGltfDiff } from "../../../🔺️diff/🟦️.ts";
+
+export interface GltfMoveUsedExtensionPayload {
+  extension: string;
+  position: number;
+}
+
+export type MoveUsedExtensionMutation = GltfPhase<GltfMoveUsedExtensionPayload, GltfDiff>;
+
+export const parseGltfMoveUsedExtensionPayload = gltfWireObject<GltfMoveUsedExtensionPayload>({ extension: gltfWireRequired(gltfWireString), position: gltfWireRequired(gltfWireIndex) });
+export const parseMoveUsedExtensionMutation = gltfWirePhase(parseGltfMoveUsedExtensionPayload, parseGltfDiff);

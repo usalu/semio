@@ -9,7 +9,21 @@
   ],
   "properties": {
     "newOutdoorCo2Ppm": {
-      "type": "number"
+      "type": "number",
+      "minimum": 0,
+      "x-semio-ui": {
+        "widget": "stepper",
+        "role": "value",
+        "label": {
+          "en": "Outdoor CO₂ concentration",
+          "de": "CO₂-Konzentration der Außenluft"
+        },
+        "unit": "ppm",
+        "step": 10,
+        "precision": 0,
+        "group": "air-quality",
+        "order": 10
+      }
     }
   }
 }

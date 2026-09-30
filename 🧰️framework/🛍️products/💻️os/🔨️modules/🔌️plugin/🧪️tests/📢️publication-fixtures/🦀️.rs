@@ -14,6 +14,13 @@ mod tests {
     use crate::app::{NoConfig, NoConfigMutation, NoPresence, NoPresenceMutation, NoTransient, NoTransientMutation};
     use protocol::{Mutation, MutationDiff, MutationKind, MutationLeaf, OpBinary, OpText};
 
+    /// 🧾️ The committed wire witnesses decode through the aggregate's `FromValue` and re-encode to exactly the committed JSON.
+    #[test]
+    fn committed_wire_witnesses_are_the_canonical_wire() {
+        ::store::os_store::test_support::assert_wire_witness::<PublicationPresenceMutation>(include_str!("../../🧫️fixtures/📢️publication-fixtures/👥️presence/🧬️mutations/📝️change-publication-presence/🧫️fixtures/🧾️wire-witness/🦠️mutation/🔣️.json"));
+        ::store::os_store::test_support::assert_wire_witness::<PublicationTransientMutation>(include_str!("../../🧫️fixtures/📢️publication-fixtures/🫧️transient/🧬️mutations/📝️change-publication-transient/🧫️fixtures/🧾️wire-witness/🦠️mutation/🔣️.json"));
+    }
+
     #[test]
     fn no_state_mutations_have_empty_rosters_and_reject_all_codec_input() {
         assert!(<NoConfigMutation as Mutation<NoConfig>>::DESCRIPTORS.is_empty());

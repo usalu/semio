@@ -13,26 +13,10 @@
       ],
       "properties": {
         "mutation": {
-          "const": "insertArrayElement"
+          "const": "setMember"
         },
         "payload": {
-          "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/json/rfc8259/base/mutation/insert-array-element/schema.json"
-        }
-      }
-    },
-    {
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "mutation",
-        "payload"
-      ],
-      "properties": {
-        "mutation": {
-          "const": "removeArrayElement"
-        },
-        "payload": {
-          "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/json/rfc8259/base/mutation/remove-array-element/schema.json"
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/json/rfc8259/base/mutation/set-member/schema.json#/$defs/SetMemberMutation"
         }
       }
     },
@@ -48,7 +32,7 @@
           "const": "removeMember"
         },
         "payload": {
-          "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/json/rfc8259/base/mutation/remove-member/schema.json"
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/json/rfc8259/base/mutation/remove-member/schema.json#/$defs/RemoveMemberMutation"
         }
       }
     },
@@ -61,10 +45,26 @@
       ],
       "properties": {
         "mutation": {
-          "const": "setMember"
+          "const": "insertArrayElement"
         },
         "payload": {
-          "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/json/rfc8259/base/mutation/set-member/schema.json"
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/json/rfc8259/base/mutation/insert-array-element/schema.json#/$defs/InsertArrayElementMutation"
+        }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "mutation",
+        "payload"
+      ],
+      "properties": {
+        "mutation": {
+          "const": "removeArrayElement"
+        },
+        "payload": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/json/rfc8259/base/mutation/remove-array-element/schema.json#/$defs/RemoveArrayElementMutation"
         }
       }
     },
@@ -80,7 +80,7 @@
           "const": "setScalar"
         },
         "payload": {
-          "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/json/rfc8259/base/mutation/set-scalar/schema.json"
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/json/rfc8259/base/mutation/set-scalar/schema.json#/$defs/SetScalarMutation"
         }
       }
     },

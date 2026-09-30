@@ -548,6 +548,13 @@ def fixture_json(ctx: Context, uri: str):
     return json.loads(ctx.fixture_bytes(uri).decode("utf-8"))
 
 
+def payload(ctx: Context) -> dict:
+    """🦠️ The scenario's own mutation payload — the committed fixture its steps name, or, for the `no-mutation`
+    baselines, the sentinel in its doc string."""
+    uri = next((uri for uri in step_uris(ctx, "shared://🖼️mutate-semio-image/") if uri.endswith("/🦠️mutation/🔣️.json")), None)
+    return json.loads(doc_string(ctx)) if uri is None else fixture_json(ctx, uri)
+
+
 def artifact(ctx: Context) -> dict:
     """🎞️ The real committed artifact, parsed through this implementation's own DSL reader."""
     return parse_dsl(ctx.fixture_bytes(ARTIFACT_DSL).decode("utf-8"))
@@ -576,7 +583,7 @@ def mutate(ctx: Context) -> Outcome:
     """🎯️ One verb applied to the real derived artifact by this implementation alone, with the
     resulting planes handed to Pillow so the third party — and not this file — states what they are."""
     document = artifact(ctx)
-    mutation = fixture_json(ctx, next(uri for uri in step_uris(ctx, "shared://🖼️mutate-semio-image/") if uri.endswith("/🦠️mutation/🔣️.json")))
+    mutation = payload(ctx)
     applied = apply_mutation(document, mutation)
     return Outcome({"document": projection_of(applied), "raster": pillow_report(applied)})
 
@@ -585,7 +592,7 @@ def inverse(ctx: Context) -> Outcome:
     """↩️ The metamorphic inverse law on the real artifact: the verb followed by its OWN computed
     inverse must restore the artifact exactly, frame order and every sample included."""
     document = artifact(ctx)
-    mutation = fixture_json(ctx, next(uri for uri in step_uris(ctx, "shared://🖼️mutate-semio-image/") if uri.endswith("/🦠️mutation/🔣️.json")))
+    mutation = payload(ctx)
     undo = inverse_mutation(document, mutation)
     mutated = apply_mutation(document, mutation)
     restored = apply_mutation(mutated, undo)

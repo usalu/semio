@@ -1,4 +1,43 @@
 {
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/norm/en1990/mutation/insert-member/schema.json",
   "title": "InsertMember",
-  "type": "object"
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "mutation",
+    "index",
+    "item"
+  ],
+  "properties": {
+    "mutation": {
+      "const": "insertMember"
+    },
+    "index": {
+      "type": "integer",
+      "minimum": 0,
+      "x-semio-ui": {
+        "label": {
+          "en": "Position",
+          "de": "Position"
+        },
+        "widget": "stepper",
+        "step": 1,
+        "precision": 0,
+        "description": {
+          "en": "Zero-based list position.",
+          "de": "Nullbasierte Listenposition."
+        }
+      }
+    },
+    "item": {
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1990/snapshot.json#/$defs/Member",
+      "x-semio-ui": {
+        "label": {
+          "en": "Member",
+          "de": "Bauteil"
+        }
+      }
+    }
+  }
 }

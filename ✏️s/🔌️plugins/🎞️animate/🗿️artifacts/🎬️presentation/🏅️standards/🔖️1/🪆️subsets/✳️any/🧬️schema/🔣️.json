@@ -108,12 +108,12 @@
       "x-semio-state": "artifact"
     },
     "presentation": {
-      "$ref": "https://json.schemas.assets.semio-tech.com/os/store/child.json",
+      "$ref": "https://json.schemas.assets.semio-tech.com/os/store/child/schema.json",
       "x-semio-state": "artifact",
       "x-semio-child-kind": "s.stdio.semio"
     },
     "animation": {
-      "$ref": "https://json.schemas.assets.semio-tech.com/os/store/child.json",
+      "$ref": "https://json.schemas.assets.semio-tech.com/os/store/child/schema.json",
       "x-semio-state": "artifact",
       "x-semio-child-kind": "s.stdio.semio"
     }

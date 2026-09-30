@@ -2,7 +2,7 @@
   "$schema": "http://json-schema.org/draft-07/schema#",
   "$id": "https://json.schemas.assets.semio-tech.com/s/fem/2d/1/mesh/mutation/create-element/schema.json",
   "title": "CreateElement",
-  "description": "The `create-element` mutation payload as it travels the wire: internally tagged with `\"mutation\": \"createElement\"`, camelCase throughout. Structural only — the plausibility and geometry bounds this kind enforces live in the SNAPSHOT schema, because they are properties of a valid document rather than of a well-formed payload; each is annotated there with the `mutations::guards` function that raises them.",
+  "description": "The `create-element` mutation payload as it travels the wire: internally tagged with `\"mutation\": \"createElement\"`, camelCase throughout. Its hard bounds and `x-semio-invariant` entries state exactly the payload-intrinsic breaches `mutations::guards` refuses as `mutation.invariant`, so every such payload fails this schema; refusals that depend on the base (a missing, duplicate or still-referenced target) belong to the diff alone.",
   "type": "object",
   "additionalProperties": false,
   "required": [
@@ -12,7 +12,15 @@
   "properties": {
     "mutation": {
       "const": "createElement",
-      "description": "The internally tagged discriminator `#[value(tag = \"mutation\")]` puts on the wire."
+      "description": "The internally tagged discriminator `#[value(tag = \"mutation\")]` puts on the wire.",
+      "x-semio-ui": {
+        "widget": "hidden",
+        "role": "discriminator",
+        "label": {
+          "en": "Mutation",
+          "de": "Mutation"
+        }
+      }
     },
     "element": {
       "title": "FemElement",
@@ -30,22 +38,110 @@
           ],
           "properties": {
             "kind": {
-              "const": "bar"
+              "const": "bar",
+              "x-semio-ui": {
+                "widget": "hidden",
+                "role": "discriminator",
+                "label": {
+                  "en": "Element type",
+                  "de": "Elementtyp"
+                }
+              }
             },
             "id": {
-              "type": "string"
+              "type": "string",
+              "x-semio-ui": {
+                "widget": "text",
+                "role": "value",
+                "label": {
+                  "en": "ID",
+                  "de": "ID"
+                },
+                "description": {
+                  "en": "Unique id of the record.",
+                  "de": "Eindeutige ID des Eintrags."
+                },
+                "group": "identity",
+                "order": 20
+              }
             },
             "start": {
-              "type": "string"
+              "type": "string",
+              "x-semio-ui": {
+                "widget": "reference",
+                "role": "target",
+                "label": {
+                  "en": "Start node",
+                  "de": "Anfangsknoten"
+                },
+                "ref": {
+                  "kind": "node",
+                  "domain": "fem2d",
+                  "granularity": "node"
+                },
+                "group": "target",
+                "order": 30
+              }
             },
             "end": {
-              "type": "string"
+              "type": "string",
+              "x-semio-ui": {
+                "widget": "reference",
+                "role": "target",
+                "label": {
+                  "en": "End node",
+                  "de": "Endknoten"
+                },
+                "ref": {
+                  "kind": "node",
+                  "domain": "fem2d",
+                  "granularity": "node"
+                },
+                "group": "target",
+                "order": 40
+              }
             },
             "materialId": {
-              "type": "string"
+              "type": "string",
+              "x-semio-ui": {
+                "widget": "reference",
+                "role": "target",
+                "label": {
+                  "en": "Material",
+                  "de": "Material"
+                },
+                "ref": {
+                  "kind": "material",
+                  "domain": "fem2d",
+                  "granularity": "material"
+                },
+                "group": "target",
+                "order": 50
+              }
             },
             "sectionId": {
-              "type": "string"
+              "type": "string",
+              "x-semio-ui": {
+                "widget": "reference",
+                "role": "target",
+                "label": {
+                  "en": "Cross-section",
+                  "de": "Querschnitt"
+                },
+                "ref": {
+                  "kind": "section",
+                  "domain": "fem2d",
+                  "granularity": "section"
+                },
+                "group": "target",
+                "order": 60
+              }
+            }
+          },
+          "x-semio-ui": {
+            "label": {
+              "en": "Bar (axial only)",
+              "de": "Fachwerkstab"
             }
           }
         },
@@ -62,26 +158,123 @@
           ],
           "properties": {
             "kind": {
-              "const": "beam"
+              "const": "beam",
+              "x-semio-ui": {
+                "widget": "hidden",
+                "role": "discriminator",
+                "label": {
+                  "en": "Element type",
+                  "de": "Elementtyp"
+                }
+              }
             },
             "id": {
-              "type": "string"
+              "type": "string",
+              "x-semio-ui": {
+                "widget": "text",
+                "role": "value",
+                "label": {
+                  "en": "ID",
+                  "de": "ID"
+                },
+                "description": {
+                  "en": "Unique id of the record.",
+                  "de": "Eindeutige ID des Eintrags."
+                },
+                "group": "identity",
+                "order": 20
+              }
             },
             "start": {
-              "type": "string"
+              "type": "string",
+              "x-semio-ui": {
+                "widget": "reference",
+                "role": "target",
+                "label": {
+                  "en": "Start node",
+                  "de": "Anfangsknoten"
+                },
+                "ref": {
+                  "kind": "node",
+                  "domain": "fem2d",
+                  "granularity": "node"
+                },
+                "group": "target",
+                "order": 30
+              }
             },
             "end": {
-              "type": "string"
+              "type": "string",
+              "x-semio-ui": {
+                "widget": "reference",
+                "role": "target",
+                "label": {
+                  "en": "End node",
+                  "de": "Endknoten"
+                },
+                "ref": {
+                  "kind": "node",
+                  "domain": "fem2d",
+                  "granularity": "node"
+                },
+                "group": "target",
+                "order": 40
+              }
             },
             "materialId": {
-              "type": "string"
+              "type": "string",
+              "x-semio-ui": {
+                "widget": "reference",
+                "role": "target",
+                "label": {
+                  "en": "Material",
+                  "de": "Material"
+                },
+                "ref": {
+                  "kind": "material",
+                  "domain": "fem2d",
+                  "granularity": "material"
+                },
+                "group": "target",
+                "order": 50
+              }
             },
             "sectionId": {
-              "type": "string"
+              "type": "string",
+              "x-semio-ui": {
+                "widget": "reference",
+                "role": "target",
+                "label": {
+                  "en": "Cross-section",
+                  "de": "Querschnitt"
+                },
+                "ref": {
+                  "kind": "section",
+                  "domain": "fem2d",
+                  "granularity": "section"
+                },
+                "group": "target",
+                "order": 60
+              }
+            }
+          },
+          "x-semio-ui": {
+            "label": {
+              "en": "Beam",
+              "de": "Balken"
             }
           }
         }
-      ]
+      ],
+      "x-semio-ui": {
+        "role": "value",
+        "label": {
+          "en": "Element",
+          "de": "Element"
+        },
+        "group": "record",
+        "order": 20
+      }
     }
   }
 }

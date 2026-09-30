@@ -76,7 +76,8 @@ Feature: Answer the same puzzle2d vectors a second time, in a second ecosystem, 
     Given every committed vector under shared://🧬️mutations/🔣️.json
     When each payload is validated against its leaf 🧬️schema/🔣️.json
     Then the committed payload carries its kind's own internally tagged discriminator
-    And the validator accepts the committed payload with no error
+    And the validator accepts every committed payload whose outcome is not a mutation.invariant refusal, with no error
+    And the validator rejects every committed payload the subject refuses as a mutation.invariant, because its own schema forbids it
     And the validator rejects the same payload once a member the schema does not declare is added
 
   @id-diff-reproduction

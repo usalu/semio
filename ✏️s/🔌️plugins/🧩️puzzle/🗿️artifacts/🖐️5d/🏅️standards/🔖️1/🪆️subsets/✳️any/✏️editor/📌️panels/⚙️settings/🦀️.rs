@@ -51,7 +51,7 @@ pub fn panel_window_id(view_state: &semio_framework_plugin::ViewModel) -> Option
 fn stepper_field(id: &str, label: &str, value: f64, step: f64, action: &str, window_id: Option<&str>) -> UiAssemblyResult<BuiltNode> {
     let (action, args) = ActionFactory::new(PUZZLE5D_PLAY_CONTROLLER_ID).action(action, window_args(window_id)?)?;
     let mut control =
-        BuiltNode::try_new(format!("{id}.control"), Component::NumberStepper(NumberStepperProps { value, step, uniform: true, min: None, max: None })).map_err(|_| PluginAssemblyError::new("ui.number-stepper", "number stepper admission failed"))?;
+        BuiltNode::try_new(format!("{id}.control"), Component::NumberStepper(NumberStepperProps { value, step, uniform: true, min: None, max: None, precision: None })).map_err(|_| PluginAssemblyError::new("ui.number-stepper", "number stepper admission failed"))?;
     control.bindings.try_push(ActionBinding { trigger: Trigger::Change, action, args, capability: None }).map_err(|_| PluginAssemblyError::new("ui.number-stepper", "number stepper binding admission failed"))?;
     ui::field(ui_label(label)?)
         .try_id(id)

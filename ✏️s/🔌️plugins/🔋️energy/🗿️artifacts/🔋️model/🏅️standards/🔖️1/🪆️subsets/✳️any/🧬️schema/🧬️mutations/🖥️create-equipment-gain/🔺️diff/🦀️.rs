@@ -10,7 +10,7 @@ pub fn diff(payload: &super::CreateEquipmentGain, base: &EnergyModelSnapshot) ->
         return protocol::MutationOutcome::error("mutation.duplicate-id", format!("Equipment Gain {} already exists.", payload.id.0), [payload.id.0.to_string()]);
     }
     if payload.index as usize > base.model.equipment.len() {
-        return protocol::MutationOutcome::error("mutation.invariant", format!("Index {} is past the end of the model's {} equipment.", payload.index, base.model.equipment.len()), [payload.id.0.to_string()]);
+        return protocol::MutationOutcome::error("mutation.target-missing", format!("Index {} is past the end of the model's {} equipment.", payload.index, base.model.equipment.len()), [payload.id.0.to_string()]);
     }
     if !base.model.zones.iter().any(|zone| zone.id == payload.zone_id) {
         return protocol::MutationOutcome::error("mutation.target-missing", format!("Zone {} does not exist.", payload.zone_id.0), [payload.zone_id.0.to_string()]);

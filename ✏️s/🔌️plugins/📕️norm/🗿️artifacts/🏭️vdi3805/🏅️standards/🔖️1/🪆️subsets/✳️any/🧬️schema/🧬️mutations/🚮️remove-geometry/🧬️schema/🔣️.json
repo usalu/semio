@@ -9,7 +9,24 @@
   ],
   "properties": {
     "id": {
-      "type": "string"
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Geometry",
+          "de": "Geometrie"
+        },
+        "description": {
+          "en": "The parametric geometry this mutation addresses.",
+          "de": "Die parametrische Geometrie, die diese Mutation adressiert."
+        },
+        "ref": {
+          "kind": "geometry"
+        },
+        "group": "target",
+        "order": 10
+      }
     }
   }
 }

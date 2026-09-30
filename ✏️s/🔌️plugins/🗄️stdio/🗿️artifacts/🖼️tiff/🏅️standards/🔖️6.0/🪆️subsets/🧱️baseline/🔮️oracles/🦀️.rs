@@ -73,17 +73,27 @@ fn number(params: &Json, key: &str) -> Result<u32, String> {
     }
 }
 
-/// 🦠️ Applies one kind to the axes as TIFF 6.0 defines the field it names: a set writes the field, a
-/// removal deletes it, and `set-snapshot` stamps the three value axes at once.
+/// 📸️ The axes of a `TiffSnapshot` wire value, read off its IFD 0 entries the way [`read_axes`] reads a file's: each
+/// tag's `TiffValues` as unsigned integers, the IFD count, and a raster present when the snapshot carries the
+/// canonical RGBA8 buffer its `ImageWidth` (256) × `ImageLength` (257) declares.
+fn snapshot_axes(snapshot: &Json) -> Axes {
+    let ifds = snapshot.array("ifds");
+    let entries = ifds.first().map(|ifd| ifd.array("entries")).unwrap_or_default();
+    let tag = |id: u32| -> Option<Vec<u32>> {
+        entries.iter().find(|entry| matches!(entry.get("tag"), Some(Json::Number(value)) if *value as u32 == id)).map(|entry| entry.get("values").map(|values| numbers(values, "value")).unwrap_or_default())
+    };
+    let dimension = |id: u32| tag(id).and_then(|values| values.first().copied()).unwrap_or(0) as usize;
+    let raster = dimension(256) > 0 && dimension(257) > 0 && snapshot.array("pixels").len() == dimension(256) * dimension(257) * 4;
+    Axes { ifd_count: ifds.len(), raster, compression: tag(259), photometric: tag(262), bits_per_sample: tag(258), tile_width: tag(322), tile_length: tag(323), strip_offsets: tag(273) }
+}
+
+/// 🦠️ Applies one kind to the axes as TIFF 6.0 defines the field it names: a set writes the field, a removal
+/// deletes it, and `set-snapshot` replaces the whole document with the wire snapshot's own axes. `params` is the
+/// leaf's wire payload (`payload_value()`).
 pub fn apply(axes: &Axes, kind: &str, params: &Json) -> Result<Axes, String> {
     let mut next = axes.clone();
     match kind {
-        "no-mutation" => {}
-        "set-snapshot" => {
-            next.compression = Some(vec![number(params, "compression")?]);
-            next.photometric = Some(vec![number(params, "photometric")?]);
-            next.bits_per_sample = Some(numbers(params, "bits"));
-        }
+        "set-snapshot" => next = snapshot_axes(params.get("snapshot").ok_or("set-snapshot carries no snapshot")?),
         "set-compression" => next.compression = Some(vec![number(params, "compression")?]),
         "set-photometric-interpretation" => next.photometric = Some(vec![number(params, "photometric")?]),
         "set-bits-per-sample" => next.bits_per_sample = Some(numbers(params, "bits")),

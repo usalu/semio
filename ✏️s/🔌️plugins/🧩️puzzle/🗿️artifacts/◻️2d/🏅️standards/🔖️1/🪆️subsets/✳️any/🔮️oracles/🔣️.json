@@ -42,7 +42,7 @@
         "secondImplementationLanguage": "python",
         "specificationSource": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️12/SEMANTIC-MUTATIONS-OVERHAUL/📓️derivation-rules.md; ../🧬️schema/📸️snapshot/🔣️.json; .🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️12/SEMANTIC-MUTATIONS-OVERHAUL/📓️derivation-rules.md; ../🧬️schema/🧬️mutations/🔣️.json; ../../../../../🧪️tests/mutate-puzzle-2d-1/🦀️.rs; 📓️w14-final-audit.md; 🔒️dependencies.json",
         "fixtureCoverage": {
-          "vectors": 75,
+          "vectors": 115,
           "capabilitiesCovered": [
             "puzzle-2d-1-mutate"
           ]
@@ -303,6 +303,10 @@
             {
               "id": "rejects-adding-a-door-to-a-capsule-the-board-never-held",
               "directoryName": "🚫️rejects-adding-a-door-to-a-capsule-the-board-never-held"
+            },
+            {
+              "id": "zero-radius-handle",
+              "directoryName": "🧱️zero-radius-handle"
             }
           ]
         },
@@ -591,6 +595,10 @@
             {
               "id": "rejects-a-capsule-id-the-tower-already-holds",
               "directoryName": "🚫️rejects-a-capsule-id-the-tower-already-holds"
+            },
+            {
+              "id": "zero-width-node",
+              "directoryName": "🧱️zero-width-node"
             }
           ]
         },
@@ -682,6 +690,37 @@
             {
               "id": "removes-handle-kind-pair",
               "directoryName": "🚫️removes-handle-kind-pair"
+            }
+          ]
+        },
+        {
+          "mutationId": "drag-selection",
+          "sourceMutationDirectoryName": "✋️drag-selection",
+          "mutationDirectoryName": "✋️drag-selection",
+          "scenarios": [
+            {
+              "id": "drags-two-nodes",
+              "directoryName": "✋️drags-two-nodes"
+            },
+            {
+              "id": "drags-node-and-region",
+              "directoryName": "🎯️drags-node-and-region"
+            },
+            {
+              "id": "skips-locked-ghost",
+              "directoryName": "⚠️skips-locked-ghost"
+            },
+            {
+              "id": "rejects-ghosts",
+              "directoryName": "🚫️rejects-ghosts"
+            },
+            {
+              "id": "keeps-a-zero-offset",
+              "directoryName": "⏸️keeps-a-zero-offset"
+            },
+            {
+              "id": "no-targets",
+              "directoryName": "🧱️no-targets"
             }
           ]
         },
@@ -807,6 +846,10 @@
             {
               "id": "clears-the-installed-handle-catalog",
               "directoryName": "🗑️clears-the-installed-handle-catalog"
+            },
+            {
+              "id": "off-rim-template",
+              "directoryName": "🧱️off-rim-template"
             }
           ]
         },
@@ -826,6 +869,10 @@
             {
               "id": "rejects-reshaping-a-capsule-the-board-never-held",
               "directoryName": "🚫️rejects-reshaping-a-capsule-the-board-never-held"
+            },
+            {
+              "id": "negative-radius",
+              "directoryName": "🧱️negative-radius"
             }
           ]
         },
@@ -841,6 +888,10 @@
             {
               "id": "rejects-replacing-a-door-the-tambour-never-had",
               "directoryName": "🚫️rejects-replacing-a-door-the-tambour-never-had"
+            },
+            {
+              "id": "negative-scale",
+              "directoryName": "🧱️negative-scale"
             }
           ]
         },
@@ -860,6 +911,37 @@
           ]
         },
         {
+          "mutationId": "rotate-selection",
+          "sourceMutationDirectoryName": "🔄️rotate-selection",
+          "mutationDirectoryName": "🔄️rotate-selection",
+          "scenarios": [
+            {
+              "id": "turns-two-nodes",
+              "directoryName": "🔄️turns-two-nodes"
+            },
+            {
+              "id": "skips-the-region",
+              "directoryName": "🎯️skips-the-region"
+            },
+            {
+              "id": "skips-locked-ghost",
+              "directoryName": "⚠️skips-locked-ghost"
+            },
+            {
+              "id": "rejects-ghosts",
+              "directoryName": "🚫️rejects-ghosts"
+            },
+            {
+              "id": "keeps-a-zero-angle",
+              "directoryName": "⏸️keeps-a-zero-angle"
+            },
+            {
+              "id": "repeated-targets",
+              "directoryName": "🧱️repeated-targets"
+            }
+          ]
+        },
+        {
           "mutationId": "scale-node",
           "sourceMutationDirectoryName": "📏scale-node",
           "mutationDirectoryName": "📏scale-node",
@@ -875,6 +957,45 @@
             {
               "id": "rejects-scaling-a-capsule-the-board-never-held",
               "directoryName": "🚫️rejects-scaling-a-capsule-the-board-never-held"
+            },
+            {
+              "id": "zero-scale",
+              "directoryName": "🧱️zero-scale"
+            }
+          ]
+        },
+        {
+          "mutationId": "scale-selection",
+          "sourceMutationDirectoryName": "🔍️scale-selection",
+          "mutationDirectoryName": "🔍️scale-selection",
+          "scenarios": [
+            {
+              "id": "doubles-two-nodes",
+              "directoryName": "🔍️doubles-two-nodes"
+            },
+            {
+              "id": "halves-node-region",
+              "directoryName": "🎯️halves-node-region"
+            },
+            {
+              "id": "skips-locked-ghost",
+              "directoryName": "⚠️skips-locked-ghost"
+            },
+            {
+              "id": "rejects-ghosts",
+              "directoryName": "🚫️rejects-ghosts"
+            },
+            {
+              "id": "keeps-a-unit-factor",
+              "directoryName": "⏸️keeps-a-unit-factor"
+            },
+            {
+              "id": "zero-factor",
+              "directoryName": "🧱️zero-factor"
+            },
+            {
+              "id": "negative-factor",
+              "directoryName": "⛔️negative-factor"
             }
           ]
         }
@@ -912,7 +1033,10 @@
         "resize-target-region",
         "edit-target-region-label",
         "change-target-region-hidden",
-        "change-target-region-locked"
+        "change-target-region-locked",
+        "drag-selection",
+        "rotate-selection",
+        "scale-selection"
       ]
     }
   ],
@@ -1379,6 +1503,27 @@
           ]
         },
         {
+          "id": "drag-selection",
+          "capability": "puzzle-2d-1-mutate",
+          "payloadSchema": "🧬️.schema.json",
+          "outcomes": [
+            "applied",
+            "no-op",
+            "rejected"
+          ],
+          "productionDispatch": {
+            "operation": "drag-selection",
+            "bridgeVersion": 1,
+            "variant": "DragSelection"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "puzzle-2d-1-mutate",
+              "qualifyingKind": "verified-native-second-implementation"
+            }
+          ]
+        },
+        {
           "id": "edit-node-text",
           "capability": "puzzle-2d-1-mutate",
           "payloadSchema": "🧬️.schema.json",
@@ -1587,6 +1732,27 @@
           ]
         },
         {
+          "id": "rotate-selection",
+          "capability": "puzzle-2d-1-mutate",
+          "payloadSchema": "🧬️.schema.json",
+          "outcomes": [
+            "applied",
+            "no-op",
+            "rejected"
+          ],
+          "productionDispatch": {
+            "operation": "rotate-selection",
+            "bridgeVersion": 1,
+            "variant": "RotateSelection"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "puzzle-2d-1-mutate",
+              "qualifyingKind": "verified-native-second-implementation"
+            }
+          ]
+        },
+        {
           "id": "scale-node",
           "capability": "puzzle-2d-1-mutate",
           "payloadSchema": "🧬️.schema.json",
@@ -1599,6 +1765,27 @@
             "operation": "scale-node",
             "bridgeVersion": 1,
             "variant": "ScaleNode"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "puzzle-2d-1-mutate",
+              "qualifyingKind": "verified-native-second-implementation"
+            }
+          ]
+        },
+        {
+          "id": "scale-selection",
+          "capability": "puzzle-2d-1-mutate",
+          "payloadSchema": "🧬️.schema.json",
+          "outcomes": [
+            "applied",
+            "no-op",
+            "rejected"
+          ],
+          "productionDispatch": {
+            "operation": "scale-selection",
+            "bridgeVersion": 1,
+            "variant": "ScaleSelection"
           },
           "oracleRequirements": [
             {

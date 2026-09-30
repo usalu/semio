@@ -8,11 +8,11 @@
       "type": "object",
       "additionalProperties": false,
       "required": [
-        "DemoteShapeRepresentation"
+        "SetSnapshot"
       ],
       "properties": {
-        "DemoteShapeRepresentation": {
-          "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/step/ap214/cc3/mutation/demote-shape-representation/schema.json"
+        "SetSnapshot": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/step/ap214/cc3/mutation/set-snapshot/schema.json"
         }
       }
     },
@@ -56,11 +56,11 @@
       "type": "object",
       "additionalProperties": false,
       "required": [
-        "SetSnapshot"
+        "DemoteShapeRepresentation"
       ],
       "properties": {
-        "SetSnapshot": {
-          "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/step/ap214/cc3/mutation/set-snapshot/schema.json"
+        "DemoteShapeRepresentation": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/step/ap214/cc3/mutation/demote-shape-representation/schema.json"
         }
       }
     }

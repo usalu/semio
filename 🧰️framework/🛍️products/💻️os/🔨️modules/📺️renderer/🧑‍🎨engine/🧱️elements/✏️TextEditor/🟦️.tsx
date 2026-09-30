@@ -715,7 +715,7 @@ function WasmEditorSurface({
   const [completionIndex, setCompletionIndex] = useState(0);
   const [contextMenu, setContextMenu] = useState<(SurfaceContextMenuResult & { readonly position: { readonly x: number; readonly y: number } }) | null>(null);
   const contextMenuTitleLabel = useLabel(contextMenu?.titleKey ?? "ui.surfaceContextMenu.editor");
-  const editorLabel = useLabel(scene.language ? "ui.host.languageEditor" : "ui.host.editor", { language: scene.language });
+  const editorLabel = useLabel(scene.language ? "ui.host.languageDocument" : "ui.host.documentPlaceholder", { language: scene.language });
 
   const completions = useMemo(() => parseJsonOr<readonly CompletionItem[]>(scene.completionsJson, []), [scene.completionsJson]);
   const renameInfo = useMemo(() => parseJsonOr<RenameInfo | null>(scene.renameJson, null), [scene.renameJson]);

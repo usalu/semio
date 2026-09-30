@@ -9,6 +9,7 @@ use super::*;
 #[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::DslRecord, dsl::MutationLeaf)]
 #[mutation_leaf(contract = ::protocol)]
 #[dsl(keyword = "set-track-dimensions")]
+#[value(rename_all = "camelCase")]
 pub struct SetTrackDimensions {
     pub track_index: usize,
     pub width: u32,

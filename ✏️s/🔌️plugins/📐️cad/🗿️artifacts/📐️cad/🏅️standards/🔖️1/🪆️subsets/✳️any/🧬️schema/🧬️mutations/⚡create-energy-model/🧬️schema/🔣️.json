@@ -5,11 +5,48 @@
   "type": "object",
   "additionalProperties": false,
   "required": [
-    "childId"
+    "mutation",
+    "childId",
+    "target"
   ],
   "properties": {
+    "mutation": {
+      "const": "createEnergyModel"
+    },
     "childId": {
-      "type": "string"
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "text",
+        "role": "value",
+        "label": {
+          "en": "Child ID",
+          "de": "Kind-ID"
+        },
+        "description": {
+          "en": "Id of the child model document this slot holds.",
+          "de": "ID des Kind-Modelldokuments in diesem Platz."
+        },
+        "group": "identity",
+        "order": 10
+      }
+    },
+    "target": {
+      "type": "string",
+      "minLength": 1,
+      "x-semio-ui": {
+        "widget": "text",
+        "role": "value",
+        "label": {
+          "en": "Target artifact",
+          "de": "Zielartefakt"
+        },
+        "description": {
+          "en": "Reference URI of the child model artifact (id!type@version/subset).",
+          "de": "Referenz-URI des Kind-Modellartefakts (id!typ@version/teilmenge)."
+        },
+        "group": "identity",
+        "order": 20
+      }
     }
   }
 }

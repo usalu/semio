@@ -828,24 +828,19 @@ impl ArtifactEditor for ShootingPlayApp {
     fn config_spec() -> semio_framework_plugin::ConfigSpec {
         semio_framework_plugin::ConfigSpec {
             fields: vec![
-                semio_framework_plugin::ConfigFieldSpec {
-                    key: "defaultShotFormat".into(),
-                    label: "Default Shot Format".into(),
-                    shape: semio_framework_plugin::ConfigFieldShape::Select { options: vec!["svg".into(), "png".into()] },
-                    default: Some(DslValue::String("png".into())),
-                },
-                semio_framework_plugin::ConfigFieldSpec {
-                    key: "defaultShotShape".into(),
-                    label: "Default Shot Shape".into(),
-                    shape: semio_framework_plugin::ConfigFieldShape::Select { options: vec!["rectangle".into(), "ellipse".into()] },
-                    default: Some(DslValue::String("rectangle".into())),
-                },
-                semio_framework_plugin::ConfigFieldSpec {
-                    key: "defaultAssetFormat".into(),
-                    label: "Default Asset Format".into(),
-                    shape: semio_framework_plugin::ConfigFieldShape::Select { options: vec!["glb".into()] },
-                    default: Some(DslValue::String("glb".into())),
-                },
+                ActionArgDef::select(
+                    "defaultShotFormat",
+                    LocalizedLabel::native("Default Shot Format", "Standard-Aufnahmeformat"),
+                    vec![ActionArgOption::new("svg", LocalizedLabel::native("SVG", "SVG")), ActionArgOption::new("png", LocalizedLabel::native("PNG", "PNG"))],
+                )
+                .default_value(&"png"),
+                ActionArgDef::select(
+                    "defaultShotShape",
+                    LocalizedLabel::native("Default Shot Shape", "Standard-Aufnahmeform"),
+                    vec![ActionArgOption::new("rectangle", LocalizedLabel::native("Rectangle", "Rechteck")), ActionArgOption::new("ellipse", LocalizedLabel::native("Ellipse", "Ellipse"))],
+                )
+                .default_value(&"rectangle"),
+                ActionArgDef::select("defaultAssetFormat", LocalizedLabel::native("Default Asset Format", "Standard-Asset-Format"), vec![ActionArgOption::new("glb", LocalizedLabel::native("GLB", "GLB"))]).default_value(&"glb"),
             ],
         }
     }

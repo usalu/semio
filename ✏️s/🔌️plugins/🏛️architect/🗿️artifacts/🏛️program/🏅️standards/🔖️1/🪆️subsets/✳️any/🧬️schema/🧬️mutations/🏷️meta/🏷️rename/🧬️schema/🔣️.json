@@ -5,11 +5,29 @@
   "type": "object",
   "additionalProperties": false,
   "required": [
+    "mutation",
     "newTitle"
   ],
   "properties": {
+    "mutation": {
+      "const": "renameMeta"
+    },
     "newTitle": {
-      "type": "string"
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "text",
+        "role": "value",
+        "label": {
+          "en": "New Title",
+          "de": "Neuer Titel"
+        },
+        "description": {
+          "en": "New title of the program.",
+          "de": "Neuer Titel des Programms."
+        },
+        "group": "identity",
+        "order": 10
+      }
     }
   }
 }

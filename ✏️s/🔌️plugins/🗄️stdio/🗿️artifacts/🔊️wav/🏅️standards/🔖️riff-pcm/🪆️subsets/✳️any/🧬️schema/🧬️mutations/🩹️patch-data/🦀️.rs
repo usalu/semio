@@ -4,6 +4,7 @@ use super::*;
 
 #[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::MutationLeaf)]
 #[mutation_leaf(contract = ::protocol)]
+#[value(rename_all = "camelCase")]
 pub struct PatchData {
     pub index: u64,
     pub remove_count: u64,

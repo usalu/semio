@@ -2,30 +2,30 @@
   "$schema": "http://json-schema.org/draft-07/schema#",
   "$id": "https://json.schemas.assets.semio-tech.com/os/flow/artifacts/flow/vcs/mutation/change-layout/schema.json",
   "title": "ChangeLayout",
-  "$defs": {
-    "Payload": {
-      "type": "object",
-      "properties": {
-        "entries": {
-          "type": "array",
-          "items": {
-            "$ref": "https://json.schemas.assets.semio-tech.com/os/flow/artifacts/flow/vcs/snapshot.json#/$defs/LayoutEntry"
-          }
-        }
-      },
-      "required": [
-        "entries"
-      ]
-    }
-  },
-  "allOf": [
-    {
-      "$ref": "#/$defs/Payload"
-    }
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "operation",
+    "entries"
   ],
-  "propertyNames": {
-    "enum": [
-      "entries"
-    ]
+  "properties": {
+    "operation": {
+      "const": "changeLayout"
+    },
+    "entries": {
+      "type": "array",
+      "items": {
+        "$ref": "https://json.schemas.assets.semio-tech.com/os/flow/artifacts/flow/vcs/snapshot.json#/$defs/LayoutEntry"
+      },
+      "x-semio-ui": {
+        "role": "value",
+        "label": {
+          "en": "Layout entries",
+          "de": "Layouteinträge"
+        },
+        "group": "record",
+        "order": 10
+      }
+    }
   }
 }

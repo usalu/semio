@@ -5,17 +5,50 @@
   "type": "object",
   "additionalProperties": false,
   "required": [
+    "mutation",
     "step"
   ],
   "properties": {
+    "mutation": {
+      "const": "createStep"
+    },
     "step": {
-      "$ref": "https://json.schemas.assets.semio-tech.com/s/forms/forms/definition.json#/$defs/Step"
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/forms/forms/definition.json#/$defs/Step",
+      "x-semio-ui": {
+        "role": "value",
+        "label": {
+          "en": "Step",
+          "de": "Schritt"
+        },
+        "description": {
+          "en": "The complete step to add.",
+          "de": "Der vollständige hinzuzufügende Schritt."
+        },
+        "group": "record",
+        "order": 10
+      }
     },
     "index": {
       "type": [
         "integer",
         "null"
-      ]
+      ],
+      "x-semio-ui": {
+        "widget": "stepper",
+        "role": "value",
+        "label": {
+          "en": "Index",
+          "de": "Index"
+        },
+        "description": {
+          "en": "Position in the list; the end when omitted.",
+          "de": "Position in der Liste; ohne Angabe am Ende."
+        },
+        "step": 1,
+        "precision": 0,
+        "group": "order",
+        "order": 20
+      }
     }
   }
 }

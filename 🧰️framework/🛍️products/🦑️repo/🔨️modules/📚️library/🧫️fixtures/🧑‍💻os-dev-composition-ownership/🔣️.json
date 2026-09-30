@@ -98,7 +98,7 @@
       "id": "engine-publication",
       "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/⚙️engine/📤️publication/🟦️.ts",
       "exports": [
-        "buildEngineWasm"
+        "ensureAppleDeveloperDir"
       ]
     },
     {
@@ -114,7 +114,8 @@
       "exports": [
         "awaitTcpReady",
         "awaitHttpOk",
-        "awaitChildExit"
+        "awaitChildExit",
+        "ColdBootCheckScript"
       ]
     },
     {
@@ -161,13 +162,6 @@
       ]
     },
     {
-      "id": "layering-policy",
-      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🧪️tests/🧹️layering-policy/🟦️.ts",
-      "exports": [
-        "CapabilityLayeringLintScript"
-      ]
-    },
-    {
       "id": "export-path-policy",
       "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🧪️tests/🧹️export-path-policy/🟦️.ts",
       "exports": [
@@ -200,13 +194,6 @@
       "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🧪️tests/🔬️catalog-smoke/🟦️.ts",
       "exports": [
         "runCatalogSmokeVerify"
-      ]
-    },
-    {
-      "id": "collaboration-verification",
-      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🧪️tests/🤝️collaboration/🟦️.ts",
-      "exports": [
-        "runCollabE2eVerify"
       ]
     },
     {
@@ -407,7 +394,6 @@
     "ActivationScript",
     "ServeScript",
     "PluginCapabilityLintScript",
-    "CapabilityLayeringLintScript",
     "PluginIndexExportPathLintScript",
     "HostHandleReachLintScript",
     "TestScript",
@@ -445,12 +431,11 @@
   ],
   "registration": {
     "target": "test-os-dev-composition-ownership",
-    "name": "🧹clean🧩️taxonomy🧑‍💻os-dev-composition-ownership",
     "command": "bun nx run @semio-tech/repo-lib:test-os-dev-composition-ownership",
     "packagePath": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/package.json",
     "projectPath": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📋️project.json",
-    "seedLaunchPath": ".vscode/🧩️launch.seed.jsonc",
-    "derivedLaunchPath": ".vscode/launch.json"
+    "derivedLaunchPath": ".vscode/launch.json",
+    "launchContribution": "declaredProjectTargets"
   },
   "contextChains": [
     {
@@ -734,20 +719,6 @@
       ]
     },
     {
-      "owner": "layering-policy",
-      "parentKind": "members-of-modules",
-      "members": [
-        {
-          "name": "🧪️tests",
-          "kind": "tests"
-        },
-        {
-          "name": "🧹️layering-policy",
-          "kind": "os-dev-layering-policy-tests"
-        }
-      ]
-    },
-    {
       "owner": "export-path-policy",
       "parentKind": "members-of-modules",
       "members": [
@@ -814,20 +785,6 @@
         {
           "name": "🔬️catalog-smoke",
           "kind": "os-dev-catalog-smoke-tests"
-        }
-      ]
-    },
-    {
-      "owner": "collaboration-verification",
-      "parentKind": "members-of-modules",
-      "members": [
-        {
-          "name": "🧪️tests",
-          "kind": "tests"
-        },
-        {
-          "name": "🤝️collaboration",
-          "kind": "os-dev-collaboration-tests"
         }
       ]
     },

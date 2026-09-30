@@ -4,22 +4,22 @@
   "title": "SGisGismap1AnyEditorConfigMutation",
   "oneOf": [
     {
-      "$ref": "https://json.schemas.assets.semio-tech.com/window/gis/map/config/mutation/set-camera/schema.json"
-    },
-    {
-      "$ref": "https://json.schemas.assets.semio-tech.com/window/gis/map/config/mutation/set-layer-stroke-scale/schema.json"
-    },
-    {
       "$ref": "https://json.schemas.assets.semio-tech.com/window/gis/map/config/mutation/set-layer-visibility/schema.json"
     },
     {
-      "$ref": "https://json.schemas.assets.semio-tech.com/window/gis/map/config/mutation/set-lod-mode/schema.json"
+      "$ref": "https://json.schemas.assets.semio-tech.com/window/gis/map/config/mutation/set-camera/schema.json"
     },
     {
       "$ref": "https://json.schemas.assets.semio-tech.com/window/gis/map/config/mutation/set-render-mode/schema.json"
     },
     {
       "$ref": "https://json.schemas.assets.semio-tech.com/window/gis/map/config/mutation/set-vector-style/schema.json"
+    },
+    {
+      "$ref": "https://json.schemas.assets.semio-tech.com/window/gis/map/config/mutation/set-lod-mode/schema.json"
+    },
+    {
+      "$ref": "https://json.schemas.assets.semio-tech.com/window/gis/map/config/mutation/set-layer-stroke-scale/schema.json"
     }
   ]
 }

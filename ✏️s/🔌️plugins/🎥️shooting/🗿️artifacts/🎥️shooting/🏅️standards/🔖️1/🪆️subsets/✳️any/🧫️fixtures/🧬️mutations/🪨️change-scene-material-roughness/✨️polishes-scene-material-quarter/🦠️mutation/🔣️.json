@@ -1,0 +1,4 @@
+{
+  "mutation": "changeSceneMaterialRoughness",
+  "newRoughness": 0.25
+}

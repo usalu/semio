@@ -5,12 +5,33 @@
   "type": "object",
   "additionalProperties": false,
   "required": [
+    "mutation",
     "id",
     "observation"
   ],
   "properties": {
+    "mutation": {
+      "const": "addGcpObservation"
+    },
     "id": {
-      "type": "string"
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Ground Control Point",
+          "de": "Passpunkt"
+        },
+        "description": {
+          "en": "The ground control point that is measured.",
+          "de": "Passpunkt, der gemessen wird."
+        },
+        "ref": {
+          "kind": "gcp"
+        },
+        "group": "target",
+        "order": 10
+      }
     },
     "observation": {
       "type": "object",
@@ -23,12 +44,41 @@
       ],
       "properties": {
         "streamId": {
-          "type": "string"
+          "type": "string",
+          "x-semio-ui": {
+            "widget": "reference",
+            "role": "target",
+            "label": {
+              "en": "Stream",
+              "de": "Stream"
+            },
+            "description": {
+              "en": "The stream of the measured frame.",
+              "de": "Stream des gemessenen Bildes."
+            },
+            "ref": {
+              "kind": "stream"
+            },
+            "group": "media",
+            "order": 10
+          }
         },
         "frameIndex": {
           "type": "integer",
           "format": "uint32",
-          "minimum": 0
+          "minimum": 0,
+          "x-semio-ui": {
+            "widget": "stepper",
+            "role": "value",
+            "label": {
+              "en": "Frame Index",
+              "de": "Bildindex"
+            },
+            "step": 1,
+            "precision": 0,
+            "group": "media",
+            "order": 20
+          }
         },
         "pixel": {
           "type": "array",
@@ -37,8 +87,33 @@
             "format": "float"
           },
           "minItems": 2,
-          "maxItems": 2
+          "maxItems": 2,
+          "x-semio-ui": {
+            "widget": "vector",
+            "role": "value",
+            "label": {
+              "en": "Pixel Position (px)",
+              "de": "Bildposition (px)"
+            },
+            "unit": "px",
+            "step": 0.1,
+            "group": "geometry",
+            "order": 30
+          }
         }
+      },
+      "x-semio-ui": {
+        "role": "value",
+        "label": {
+          "en": "Observation",
+          "de": "Passpunktmessung"
+        },
+        "description": {
+          "en": "Image position of the ground control point in one frame.",
+          "de": "Bildposition des Passpunkts in einem Bild."
+        },
+        "group": "record",
+        "order": 20
       }
     }
   }

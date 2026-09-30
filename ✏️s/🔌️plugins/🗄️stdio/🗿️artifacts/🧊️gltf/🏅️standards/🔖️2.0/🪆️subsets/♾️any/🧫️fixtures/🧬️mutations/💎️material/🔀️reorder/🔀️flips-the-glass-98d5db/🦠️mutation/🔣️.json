@@ -1,0 +1,12 @@
+{
+  "mutation": "reorderMaterials",
+  "payload": {
+    "phase": "apply",
+    "value": {
+      "order": [
+        1,
+        0
+      ]
+    }
+  }
+}

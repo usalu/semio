@@ -4,9 +4,37 @@
   "title": "SetActiveAsset",
   "type": "object",
   "additionalProperties": false,
+  "required": [
+    "mutation"
+  ],
   "properties": {
+    "mutation": {
+      "const": "setActiveAsset"
+    },
     "assetId": {
-      "type": "string"
+      "type": [
+        "string",
+        "null"
+      ],
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Active asset",
+          "de": "Aktives Objekt"
+        },
+        "description": {
+          "en": "The asset shown in the viewport.",
+          "de": "Das im Ansichtsfenster gezeigte Objekt."
+        },
+        "ref": {
+          "kind": "asset",
+          "domain": "assets",
+          "granularity": "asset"
+        },
+        "group": "target",
+        "order": 10
+      }
     }
   }
 }

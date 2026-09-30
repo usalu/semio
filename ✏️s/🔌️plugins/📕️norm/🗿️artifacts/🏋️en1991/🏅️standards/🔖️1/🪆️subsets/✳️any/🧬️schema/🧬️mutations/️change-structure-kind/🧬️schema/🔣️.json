@@ -9,7 +9,20 @@
   ],
   "properties": {
     "newStructureKind": {
-      "type": "boolean"
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1991/snapshot.json#/$defs/StructureKind",
+      "x-semio-ui": {
+        "role": "value",
+        "label": {
+          "en": "Structure type",
+          "de": "Tragwerksart"
+        },
+        "description": {
+          "en": "Building or bridge; EN 1991-2 traffic loads apply to bridges.",
+          "de": "Gebäude oder Brücke; Verkehrslasten nach EN 1991-2 gelten für Brücken."
+        },
+        "group": "site",
+        "order": 10
+      }
     }
   }
 }

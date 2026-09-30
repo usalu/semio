@@ -12,18 +12,49 @@
   "properties": {
     "schema": {
       "type": "string",
-      "x-semio-state": "artifact"
+      "x-semio-state": "artifact",
+      "x-semio-ui": {
+        "widget": "text",
+        "label": {
+          "en": "Snapshot schema",
+          "de": "Snapshot-Schema"
+        },
+        "description": {
+          "en": "Identifier of the snapshot schema version.",
+          "de": "Kennung der Version des Snapshot-Schemas."
+        }
+      }
     },
     "opc": {
       "$ref": "#/$defs/OpcPackage",
-      "x-semio-state": "artifact"
+      "x-semio-state": "artifact",
+      "x-semio-ui": {
+        "label": {
+          "en": "OPC package",
+          "de": "OPC-Paket"
+        },
+        "description": {
+          "en": "Open Packaging Conventions container of the document (ISO/IEC 29500-2).",
+          "de": "Container des Dokuments nach Open Packaging Conventions (ISO/IEC 29500-2)."
+        }
+      }
     },
     "xmlParts": {
       "type": "array",
       "items": {
         "$ref": "#/$defs/XlsxXmlPart"
       },
-      "x-semio-state": "artifact"
+      "x-semio-state": "artifact",
+      "x-semio-ui": {
+        "label": {
+          "en": "XML parts",
+          "de": "XML-Teile"
+        },
+        "description": {
+          "en": "Parsed XML parts of the package.",
+          "de": "Geparste XML-Teile des Pakets."
+        }
+      }
     }
   },
   "$defs": {
@@ -35,10 +66,26 @@
           "type": "array",
           "items": {
             "$ref": "#/$defs/OpcPart"
+          },
+          "x-semio-ui": {
+            "label": {
+              "en": "Package parts",
+              "de": "Paketteile"
+            }
           }
         },
         "contentTypes": {
-          "$ref": "#/$defs/OpcContentTypes"
+          "$ref": "#/$defs/OpcContentTypes",
+          "x-semio-ui": {
+            "label": {
+              "en": "Content types",
+              "de": "Inhaltstypen"
+            },
+            "description": {
+              "en": "Content of the [Content_Types].xml part.",
+              "de": "Inhalt des Teils [Content_Types].xml."
+            }
+          }
         },
         "relationships": {
           "type": "object",
@@ -46,6 +93,12 @@
             "type": "array",
             "items": {
               "$ref": "#/$defs/OpcRelationship"
+            }
+          },
+          "x-semio-ui": {
+            "label": {
+              "en": "Relationships",
+              "de": "Beziehungen"
             }
           }
         },
@@ -66,7 +119,18 @@
           "type": "string"
         },
         "contentType": {
-          "type": "string"
+          "type": "string",
+          "x-semio-ui": {
+            "widget": "text",
+            "label": {
+              "en": "Content type",
+              "de": "Inhaltstyp"
+            },
+            "description": {
+              "en": "MIME media type of the package part.",
+              "de": "MIME-Medientyp des Paketteils."
+            }
+          }
         },
         "bytes": {
           "type": "array",
@@ -74,6 +138,12 @@
             "type": "integer",
             "minimum": 0,
             "maximum": 255
+          },
+          "x-semio-ui": {
+            "label": {
+              "en": "Part bytes",
+              "de": "Bytes des Paketteils"
+            }
           }
         }
       }
@@ -97,6 +167,16 @@
             "additionalItems": false,
             "minItems": 2,
             "maxItems": 2
+          },
+          "x-semio-ui": {
+            "label": {
+              "en": "Default content types",
+              "de": "Standard-Inhaltstypen"
+            },
+            "description": {
+              "en": "Content type per file extension.",
+              "de": "Inhaltstyp je Dateierweiterung."
+            }
           }
         },
         "overrides": {
@@ -114,6 +194,16 @@
             "additionalItems": false,
             "minItems": 2,
             "maxItems": 2
+          },
+          "x-semio-ui": {
+            "label": {
+              "en": "Content type overrides",
+              "de": "Inhaltstyp-Überschreibungen"
+            },
+            "description": {
+              "en": "Content type per part name, overriding the extension default.",
+              "de": "Inhaltstyp je Teilname; überschreibt den Standard der Dateierweiterung."
+            }
           }
         }
       }
@@ -164,10 +254,27 @@
         },
         "contentType": {
           "type": "string",
-          "minLength": 1
+          "minLength": 1,
+          "x-semio-ui": {
+            "widget": "text",
+            "label": {
+              "en": "Content type",
+              "de": "Inhaltstyp"
+            },
+            "description": {
+              "en": "MIME media type of the package part.",
+              "de": "MIME-Medientyp des Paketteils."
+            }
+          }
         },
         "document": {
-          "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/xml/1.0/base/snapshot.json#/$defs/XmlDocument"
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/xml/1.0/base/snapshot.json#/$defs/XmlDocument",
+          "x-semio-ui": {
+            "label": {
+              "en": "XML document",
+              "de": "XML-Dokument"
+            }
+          }
         }
       }
     }

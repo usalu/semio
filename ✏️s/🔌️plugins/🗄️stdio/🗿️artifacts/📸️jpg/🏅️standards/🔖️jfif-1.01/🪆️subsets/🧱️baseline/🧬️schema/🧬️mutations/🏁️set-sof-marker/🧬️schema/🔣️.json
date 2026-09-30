@@ -11,7 +11,18 @@
     "marker": {
       "type": "integer",
       "minimum": 0,
-      "maximum": 255
+      "maximum": 255,
+      "x-semio-ui": {
+        "widget": "stepper",
+        "label": {
+          "en": "Marker",
+          "de": "Marker"
+        },
+        "description": {
+          "en": "Marker code following the 0xFF prefix.",
+          "de": "Markercode nach dem Präfix 0xFF."
+        }
+      }
     }
   }
 }

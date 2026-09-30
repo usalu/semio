@@ -2,38 +2,71 @@
   "$schema": "http://json-schema.org/draft-07/schema#",
   "$id": "https://json.schemas.assets.semio-tech.com/os/infinite/artifacts/dag/vcs/mutation/move-node/schema.json",
   "title": "MoveNode",
-  "type": "object",
-  "$defs": {
-    "Payload": {
-      "type": "object",
-      "required": [
-        "id",
-        "x",
-        "y"
-      ],
-      "properties": {
-        "id": {
-          "type": "string"
-        },
-        "x": {
-          "type": "number"
-        },
-        "y": {
-          "type": "number"
-        }
-      }
-    }
-  },
-  "allOf": [
-    {
-      "$ref": "#/$defs/Payload"
-    }
-  ],
   "propertyNames": {
     "enum": [
+      "operation",
       "id",
       "x",
       "y"
     ]
+  },
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "operation",
+    "id",
+    "x",
+    "y"
+  ],
+  "properties": {
+    "operation": {
+      "const": "moveNode"
+    },
+    "id": {
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Node",
+          "de": "Knoten"
+        },
+        "ref": {
+          "kind": "node"
+        },
+        "group": "target",
+        "order": 10
+      }
+    },
+    "x": {
+      "type": "number",
+      "x-semio-ui": {
+        "widget": "stepper",
+        "role": "value",
+        "label": {
+          "en": "X",
+          "de": "X"
+        },
+        "step": 1,
+        "precision": 2,
+        "group": "position",
+        "order": 20
+      }
+    },
+    "y": {
+      "type": "number",
+      "x-semio-ui": {
+        "widget": "stepper",
+        "role": "value",
+        "label": {
+          "en": "Y",
+          "de": "Y"
+        },
+        "step": 1,
+        "precision": 2,
+        "group": "position",
+        "order": 30
+      }
+    }
   }
 }

@@ -14,7 +14,7 @@ async fn rename_op_binary_round_trips_and_agrees_with_text() {
 async fn nakagin_document_text_round_trips_store_with_applied_operation() {
     let envelope = create_document_envelope_for_test();
     let mut doc_store = new_trinity_graph_store(envelope).await.expect("valid artifact store fixture");
-    doc_store.dispatch(store::ArtifactCommand::Apply { mutations: vec![rename_node("node-1".into(), "Renamed".into())], description: None }).await.expect("apply rename");
+    doc_store.dispatch(store::ArtifactCommand::Apply { mutations: vec![rename_node("node-1".into(), "Renamed".into())], description: None, transaction: None }).await.expect("apply rename");
     ::store::os_store::test_support::assert_document_text_round_trip(&doc_store).await;
     ::store::os_store::test_support::assert_document_pack_round_trip(&doc_store).await;
 }

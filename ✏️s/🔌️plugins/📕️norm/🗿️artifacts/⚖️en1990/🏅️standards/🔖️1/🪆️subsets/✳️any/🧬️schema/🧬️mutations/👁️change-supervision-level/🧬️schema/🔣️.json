@@ -1,4 +1,30 @@
 {
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/norm/en1990/mutation/change-supervision-level/schema.json",
   "title": "ChangeSupervisionLevel",
-  "type": "object"
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "mutation",
+    "newSupervisionLevel"
+  ],
+  "properties": {
+    "mutation": {
+      "const": "changeSupervisionLevel"
+    },
+    "newSupervisionLevel": {
+      "type": "string",
+      "x-semio-ui": {
+        "label": {
+          "en": "Design supervision level",
+          "de": "Überwachungsstufe der Planung"
+        },
+        "description": {
+          "en": "DSL1, DSL2 or DSL3 (EN 1990 Table B4).",
+          "de": "DSL1, DSL2 oder DSL3 (EN 1990 Tabelle B4)."
+        },
+        "widget": "text"
+      }
+    }
+  }
 }

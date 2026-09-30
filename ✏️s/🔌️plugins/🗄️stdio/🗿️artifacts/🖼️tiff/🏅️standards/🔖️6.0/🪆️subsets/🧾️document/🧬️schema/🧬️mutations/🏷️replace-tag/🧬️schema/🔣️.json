@@ -13,7 +13,18 @@
   "properties": {
     "ifdIndex": {
       "type": "integer",
-      "minimum": 0
+      "minimum": 0,
+      "x-semio-ui": {
+        "widget": "stepper",
+        "label": {
+          "en": "IFD index",
+          "de": "IFD-Index"
+        },
+        "description": {
+          "en": "Zero-based image file directory.",
+          "de": "Nullbasiertes Bilddateiverzeichnis."
+        }
+      }
     },
     "tag": {
       "type": "integer",
@@ -21,7 +32,59 @@
       "maximum": 65535
     },
     "kind": {
-      "$ref": "#/$defs/TiffFieldType"
+      "$ref": "#/$defs/TiffFieldType",
+      "x-semio-ui": {
+        "options": {
+          "byte": {
+            "en": "BYTE (8-bit unsigned)",
+            "de": "BYTE (8 Bit, vorzeichenlos)"
+          },
+          "ascii": {
+            "en": "ASCII (7-bit text)",
+            "de": "ASCII (7-Bit-Text)"
+          },
+          "short": {
+            "en": "SHORT (16-bit unsigned)",
+            "de": "SHORT (16 Bit, vorzeichenlos)"
+          },
+          "long": {
+            "en": "LONG (32-bit unsigned)",
+            "de": "LONG (32 Bit, vorzeichenlos)"
+          },
+          "rational": {
+            "en": "RATIONAL (unsigned fraction)",
+            "de": "RATIONAL (vorzeichenloser Bruch)"
+          },
+          "sByte": {
+            "en": "SBYTE (8-bit signed)",
+            "de": "SBYTE (8 Bit, vorzeichenbehaftet)"
+          },
+          "undefined": {
+            "en": "UNDEFINED (raw bytes)",
+            "de": "UNDEFINED (Rohbytes)"
+          },
+          "sShort": {
+            "en": "SSHORT (16-bit signed)",
+            "de": "SSHORT (16 Bit, vorzeichenbehaftet)"
+          },
+          "sLong": {
+            "en": "SLONG (32-bit signed)",
+            "de": "SLONG (32 Bit, vorzeichenbehaftet)"
+          },
+          "sRational": {
+            "en": "SRATIONAL (signed fraction)",
+            "de": "SRATIONAL (vorzeichenbehafteter Bruch)"
+          },
+          "float": {
+            "en": "FLOAT (32-bit IEEE)",
+            "de": "FLOAT (32 Bit, IEEE)"
+          },
+          "double": {
+            "en": "DOUBLE (64-bit IEEE)",
+            "de": "DOUBLE (64 Bit, IEEE)"
+          }
+        }
+      }
     },
     "values": {
       "$ref": "#/$defs/TiffValues"

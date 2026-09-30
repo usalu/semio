@@ -5,11 +5,33 @@
   "type": "object",
   "additionalProperties": false,
   "required": [
+    "mutation",
     "id"
   ],
   "properties": {
+    "mutation": {
+      "const": "deleteRefrigerationSystem"
+    },
     "id": {
-      "type": "integer"
+      "type": "integer",
+      "minimum": 0,
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Refrigeration system",
+          "de": "Kälteanlage"
+        },
+        "description": {
+          "en": "The refrigeration system to delete, by id.",
+          "de": "Kälteanlage, die diese Mutation löscht, per ID."
+        },
+        "ref": {
+          "kind": "refrigerationSystem"
+        },
+        "group": "target",
+        "order": 10
+      }
     }
   }
 }

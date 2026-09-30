@@ -5,13 +5,55 @@
   "type": "object",
   "properties": {
     "shotFormat": {
-      "type": "string"
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "text",
+        "role": "value",
+        "label": {
+          "en": "Shot format",
+          "de": "Aufnahmeformat"
+        },
+        "description": {
+          "en": "Image format, e.g. png or svg.",
+          "de": "Bildformat, z. B. png oder svg."
+        },
+        "group": "defaults",
+        "order": 10
+      }
     },
     "shotShape": {
-      "type": "string"
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "text",
+        "role": "value",
+        "label": {
+          "en": "Shot shape",
+          "de": "Aufnahmeform"
+        },
+        "description": {
+          "en": "Frame shape, e.g. rectangle or ellipse.",
+          "de": "Bildform, z. B. rectangle (Rechteck) oder ellipse (Ellipse)."
+        },
+        "group": "defaults",
+        "order": 20
+      }
     },
     "assetFormat": {
-      "type": "string"
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "text",
+        "role": "value",
+        "label": {
+          "en": "Asset format",
+          "de": "Objektformat"
+        },
+        "description": {
+          "en": "Model format, e.g. glb.",
+          "de": "Modellformat, z. B. glb."
+        },
+        "group": "defaults",
+        "order": 30
+      }
     }
   },
   "required": [

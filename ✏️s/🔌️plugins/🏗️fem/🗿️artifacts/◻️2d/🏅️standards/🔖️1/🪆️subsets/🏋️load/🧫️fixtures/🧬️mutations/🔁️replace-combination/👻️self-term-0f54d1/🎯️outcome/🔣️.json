@@ -1,6 +1,7 @@
 {
   "status": "rejected",
   "code": "mutation.invariant",
+  "invariant": "combination-not-self-weighted",
   "path": [
     "uls1"
   ]

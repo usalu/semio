@@ -1,14 +1,14 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "$id": "https://json.schemas.assets.semio-tech.com/s/wfc/bitmap/1/any/transient/set-solve/schema.json",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/wfc/bitmap/1/any/transient/mutation/set-solve/schema.json",
   "title": "SetSolve",
   "type": "object",
   "additionalProperties": false,
   "required": ["contradiction", "outputWidth", "outputHeight"],
   "properties": {
-    "outputPixels": { "type": ["string", "null"], "format": "base64" },
-    "contradiction": { "type": "boolean" },
-    "outputWidth": { "type": "integer", "minimum": 0 },
-    "outputHeight": { "type": "integer", "minimum": 0 }
+    "outputPixels": { "type": ["string", "null"], "format": "base64", "x-semio-ui": { "widget": "hidden", "role": "value", "label": { "en": "Output pixels", "de": "Ausgabepixel" }, "description": { "en": "Base64-encoded solved palette indices.", "de": "Base64-codierte gelöste Palettenindizes." }, "group": "output", "order": 10 } },
+    "contradiction": { "type": "boolean", "x-semio-ui": { "widget": "toggle", "role": "value", "label": { "en": "Contradiction", "de": "Widerspruch" }, "description": { "en": "The solver found no consistent assignment.", "de": "Der Löser fand keine widerspruchsfreie Zuordnung." }, "group": "solver", "order": 20 } },
+    "outputWidth": { "type": "integer", "minimum": 0, "x-semio-ui": { "widget": "stepper", "role": "value", "label": { "en": "Output width", "de": "Ausgabebreite" }, "unit": "px", "step": 1, "precision": 0, "group": "output", "order": 30 } },
+    "outputHeight": { "type": "integer", "minimum": 0, "x-semio-ui": { "widget": "stepper", "role": "value", "label": { "en": "Output height", "de": "Ausgabehöhe" }, "unit": "px", "step": 1, "precision": 0, "group": "output", "order": 40 } }
   }
 }

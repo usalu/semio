@@ -5,12 +5,31 @@
   "type": "object",
   "additionalProperties": false,
   "required": [
+    "mutation",
     "id",
     "newName"
   ],
   "properties": {
+    "mutation": {
+      "const": "renameArtifact"
+    },
     "id": {
-      "type": "string"
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Artifact",
+          "de": "Artefakt"
+        },
+        "description": {
+          "en": "The artifact this mutation addresses.",
+          "de": "Das Artefakt, das diese Mutation adressiert."
+        },
+        "ref": {
+          "kind": "artifact"
+        }
+      }
     },
     "newName": {
       "type": "string"

@@ -5,9 +5,14 @@
   "type": "object",
   "additionalProperties": false,
   "required": [
+    "mutation",
     "index"
   ],
   "properties": {
+    "mutation": {
+      "const": "setPageCropBox",
+      "description": "Aggregate discriminator spliced in by PdfMutation; absent when the payload stands alone."
+    },
     "index": {
       "type": "integer",
       "minimum": 0
@@ -25,11 +30,19 @@
         {
           "type": "null"
         }
-      ]
-    },
-    "mutation": {
-      "const": "setPageCropBox",
-      "description": "Aggregate discriminator spliced in by PdfMutation; absent when the payload stands alone."
+      ],
+      "x-semio-ui": {
+        "widget": "vector",
+        "label": {
+          "en": "Crop box",
+          "de": "Maskenrahmen (CropBox)"
+        },
+        "description": {
+          "en": "Visible region of the page as [llx lly urx ury].",
+          "de": "Sichtbarer Bereich der Seite als [llx lly urx ury]."
+        },
+        "unit": "pt"
+      }
     }
   }
 }

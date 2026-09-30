@@ -27,11 +27,15 @@
     "🖥️composite": {
       "patch": false,
       "cases": {
+        "color-input": "🎨️color-input",
         "dialog": "💭️dialog",
+        "dialog-choices": "🔀️dialog-choices",
         "form-with-validation": "☑️form-with-validation",
+        "reference-list": "🧷️reference-list",
         "surface-embedded": "🗺️surface-embedded",
         "toolbar": "🧰️toolbar",
-        "tree-nested-sections": "🌳️tree-nested-sections"
+        "tree-nested-sections": "🌳️tree-nested-sections",
+        "vector-input": "🧭️vector-input"
       }
     },
     "🚫️rejection": {
@@ -65,6 +69,7 @@
         "select": "🔽️select",
         "separator": "➖️separator",
         "slider": "🎚️slider",
+        "slider-with-snaps": "🧲️slider-with-snaps",
         "state-activity-finished": "🏁️state-activity-finished",
         "state-activity-loading": "⏳️state-activity-loading",
         "state-activity-waiting": "⏸️state-activity-waiting",
@@ -72,6 +77,7 @@
         "state-transition-celebrating": "🎉️state-transition-celebrating",
         "state-transition-introducing": "👋️state-transition-introducing",
         "state-with-menu": "🍽️state-with-menu",
+        "stepper-precision": "🎯️stepper-precision",
         "surface": "🗺️surface",
         "table": "📊️table",
         "text": "📝️text",

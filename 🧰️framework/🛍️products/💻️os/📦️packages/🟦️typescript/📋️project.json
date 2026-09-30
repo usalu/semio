@@ -7,48 +7,79 @@
       "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/👷️worker/🟦️.ts",
       "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🎚️config/**/*",
       "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🧫️fixtures/**/*",
-      "{projectRoot}/**/*"
-    , "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🧪️tests/🎚️config/🟦️.ts"]
+      "{projectRoot}/**/*",
+      "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🧪️tests/🎚️config/🟦️.ts"
+    ]
   },
   "targets": {
     "generate-wgpu": {
       "executor": "nx:run-commands",
-      "inputs": ["production", "^production"],
-      "options": { "cwd": "🧰️framework/🛍️products/💻️os/📦️packages/🟦️typescript", "command": "bun ./📜️script.ts generate-wgpu" }
+      "inputs": [
+        "production",
+        "^production"
+      ],
+      "options": {
+        "cwd": "🧰️framework/🛍️products/💻️os/📦️packages/🟦️typescript",
+        "command": "bun ./📜️script.ts generate-wgpu"
+      }
     },
     "preview-generated": {
       "executor": "nx:run-commands",
-      "options": { "cwd": "🧰️framework/🛍️products/💻️os/📦️packages/🟦️typescript", "command": "bun ./📜️script.ts preview-generated" },
+      "options": {
+        "cwd": "🧰️framework/🛍️products/💻️os/📦️packages/🟦️typescript",
+        "command": "bun ./📜️script.ts preview-generated"
+      },
       "outputs": []
     },
     "typecheck": {
       "executor": "nx:run-commands",
-      "options": { "cwd": "🧰️framework/🛍️products/💻️os/📦️packages/🟦️typescript", "command": "bun ./📜️script.ts typecheck" },
+      "options": {
+        "cwd": "🧰️framework/🛍️products/💻️os/📦️packages/🟦️typescript",
+        "command": "bun ./📜️script.ts typecheck"
+      },
       "outputs": []
     },
     "check-wgpu": {
       "executor": "nx:run-commands",
-      "inputs": ["production", "^production"],
-      "options": { "cwd": "🧰️framework/🛍️products/💻️os/📦️packages/🟦️typescript", "command": "bun ./📜️script.ts check-wgpu" }
+      "inputs": [
+        "production",
+        "^production"
+      ],
+      "options": {
+        "cwd": "🧰️framework/🛍️products/💻️os/📦️packages/🟦️typescript",
+        "command": "bun ./📜️script.ts check-wgpu"
+      }
     },
     "gis-map-inference-port-check": {
       "executor": "nx:run-commands",
-      "options": { "cwd": "🧰️framework/🛍️products/💻️os/📦️packages/🟦️typescript", "command": "bun ./📜️script.ts gis-map-inference-port-check" },
+      "options": {
+        "cwd": "🧰️framework/🛍️products/💻️os/📦️packages/🟦️typescript",
+        "command": "bun ./📜️script.ts gis-map-inference-port-check"
+      },
       "outputs": []
     },
     "gis-map-inference-port-browser-check": {
       "executor": "nx:run-commands",
-      "options": { "cwd": "🧰️framework/🛍️products/💻️os/📦️packages/🟦️typescript", "command": "bun ./📜️script.ts gis-map-inference-port-check long --browser" },
+      "options": {
+        "cwd": "🧰️framework/🛍️products/💻️os/📦️packages/🟦️typescript",
+        "command": "bun ./📜️script.ts gis-map-inference-port-check long --browser"
+      },
       "outputs": []
     },
     "document-opening-attempt-check": {
       "executor": "nx:run-commands",
-      "options": { "cwd": "🧰️framework/🛍️products/💻️os/📦️packages/🟦️typescript", "command": "bun ./📜️script.ts document-opening-attempt-check" },
+      "options": {
+        "cwd": "🧰️framework/🛍️products/💻️os/📦️packages/🟦️typescript",
+        "command": "bun ./📜️script.ts document-opening-attempt-check"
+      },
       "outputs": []
     },
     "cold-document-pair-browser-check": {
       "executor": "nx:run-commands",
-      "options": { "cwd": "🧰️framework/🛍️products/💻️os/📦️packages/🟦️typescript", "command": "bun ./📜️script.ts cold-document-pair-browser-check long" },
+      "options": {
+        "cwd": "🧰️framework/🛍️products/💻️os/📦️packages/🟦️typescript",
+        "command": "bun ./📜️script.ts cold-document-pair-browser-check long"
+      },
       "outputs": []
     },
     "test": {
@@ -86,6 +117,15 @@
         "command": "bun ./📜️script.ts test exhaustive",
         "forwardAllArgs": true
       }
+    },
+    "canonical-architecture": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "options": {
+        "command": "bun ./📜️script.ts test quick --testNamePattern=\"plugin module|hub program resolution|shared directory access policy\"",
+        "cwd": "🧰️framework/🛍️products/💻️os/📦️packages/🟦️typescript"
+      },
+      "outputs": []
     }
   }
 }

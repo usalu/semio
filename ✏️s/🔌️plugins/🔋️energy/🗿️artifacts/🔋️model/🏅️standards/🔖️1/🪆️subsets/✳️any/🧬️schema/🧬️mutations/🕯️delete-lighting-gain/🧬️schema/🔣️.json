@@ -5,11 +5,35 @@
   "type": "object",
   "additionalProperties": false,
   "required": [
+    "mutation",
     "id"
   ],
   "properties": {
+    "mutation": {
+      "const": "deleteLightingGain"
+    },
     "id": {
-      "type": "integer"
+      "type": "integer",
+      "minimum": 0,
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Lighting gain",
+          "de": "Beleuchtungswärmegewinn"
+        },
+        "description": {
+          "en": "The lighting gain to delete, by id.",
+          "de": "Beleuchtungswärmegewinn, den diese Mutation löscht, per ID."
+        },
+        "ref": {
+          "kind": "lightingGain",
+          "domain": "energyModel",
+          "granularity": "load"
+        },
+        "group": "target",
+        "order": 10
+      }
     }
   }
 }

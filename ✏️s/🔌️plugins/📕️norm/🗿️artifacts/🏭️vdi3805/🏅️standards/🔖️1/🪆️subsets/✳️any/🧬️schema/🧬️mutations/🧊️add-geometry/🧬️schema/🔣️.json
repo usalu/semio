@@ -9,99 +9,19 @@
   ],
   "properties": {
     "geometry": {
-      "title": "ParametricGeometry",
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "bbox",
-        "connections",
-        "id",
-        "parameters"
-      ],
-      "properties": {
-        "id": {
-          "type": "string"
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/vdi3805/snapshot.json#/$defs/ParametricGeometry",
+      "x-semio-ui": {
+        "role": "value",
+        "label": {
+          "en": "Geometry",
+          "de": "Geometrie"
         },
-        "bbox": {
-          "title": "BoundingBox",
-          "type": "object",
-          "additionalProperties": false,
-          "required": [
-            "maxX",
-            "maxY",
-            "maxZ",
-            "minX",
-            "minY",
-            "minZ"
-          ],
-          "properties": {
-            "minX": {
-              "type": "number"
-            },
-            "minY": {
-              "type": "number"
-            },
-            "minZ": {
-              "type": "number"
-            },
-            "maxX": {
-              "type": "number"
-            },
-            "maxY": {
-              "type": "number"
-            },
-            "maxZ": {
-              "type": "number"
-            }
-          }
+        "description": {
+          "en": "Parametric geometry with bounding box, connection points and parameters.",
+          "de": "Parametrische Geometrie mit Hüllquader, Anschlusspunkten und Parametern."
         },
-        "connections": {
-          "type": "array",
-          "items": {
-            "title": "ConnectionPoint",
-            "type": "object",
-            "additionalProperties": false,
-            "required": [
-              "direction",
-              "id",
-              "medium",
-              "position"
-            ],
-            "properties": {
-              "id": {
-                "type": "string"
-              },
-              "medium": {
-                "type": "string"
-              },
-              "position": {
-                "type": "array",
-                "items": {
-                  "type": "number"
-                },
-                "minItems": 3,
-                "maxItems": 3
-              },
-              "direction": {
-                "type": "array",
-                "items": {
-                  "type": "number"
-                },
-                "minItems": 3,
-                "maxItems": 3
-              },
-              "diameterMm": {
-                "type": "number"
-              }
-            }
-          }
-        },
-        "parameters": {
-          "type": "object",
-          "additionalProperties": {
-            "type": "number"
-          }
-        }
+        "group": "record",
+        "order": 10
       }
     }
   }

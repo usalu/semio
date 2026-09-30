@@ -5,21 +5,70 @@
   "type": "object",
   "additionalProperties": false,
   "required": [
+    "mutation",
     "layerId",
     "newHeight",
     "newWidth"
   ],
   "properties": {
+    "mutation": {
+      "const": "resizeLayer"
+    },
     "layerId": {
-      "type": "string"
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Layer",
+          "de": "Ebene"
+        },
+        "description": {
+          "en": "The layer this mutation addresses.",
+          "de": "Die Ebene, die diese Mutation adressiert."
+        },
+        "ref": {
+          "kind": "layer",
+          "domain": "layers",
+          "granularity": "layer"
+        },
+        "group": "target",
+        "order": 10
+      }
     },
     "newWidth": {
       "type": "integer",
-      "minimum": 0
+      "minimum": 0,
+      "x-semio-ui": {
+        "widget": "stepper",
+        "role": "value",
+        "label": {
+          "en": "Width",
+          "de": "Breite"
+        },
+        "unit": "px",
+        "step": 1,
+        "precision": 0,
+        "group": "size",
+        "order": 20
+      }
     },
     "newHeight": {
       "type": "integer",
-      "minimum": 0
+      "minimum": 0,
+      "x-semio-ui": {
+        "widget": "stepper",
+        "role": "value",
+        "label": {
+          "en": "Height",
+          "de": "Höhe"
+        },
+        "unit": "px",
+        "step": 1,
+        "precision": 0,
+        "group": "size",
+        "order": 30
+      }
     }
   }
 }

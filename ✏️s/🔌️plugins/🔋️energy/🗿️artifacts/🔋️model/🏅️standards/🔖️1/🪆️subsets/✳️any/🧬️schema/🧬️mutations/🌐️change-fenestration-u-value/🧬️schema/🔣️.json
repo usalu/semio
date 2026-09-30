@@ -5,15 +5,57 @@
   "type": "object",
   "additionalProperties": false,
   "required": [
+    "mutation",
     "id",
     "newUValueWM2k"
   ],
   "properties": {
+    "mutation": {
+      "const": "changeFenestrationUValue"
+    },
     "id": {
-      "type": "integer"
+      "type": "integer",
+      "minimum": 0,
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Window",
+          "de": "Fenster"
+        },
+        "description": {
+          "en": "The window this mutation changes, by id.",
+          "de": "Fenster, das diese Mutation ändert, per ID."
+        },
+        "ref": {
+          "kind": "fenestration",
+          "domain": "energyModel",
+          "granularity": "fenestration"
+        },
+        "group": "target",
+        "order": 10
+      }
     },
     "newUValueWM2k": {
-      "type": "number"
+      "type": "number",
+      "exclusiveMinimum": 0,
+      "x-semio-ui": {
+        "widget": "stepper",
+        "role": "value",
+        "label": {
+          "en": "U-value",
+          "de": "U-Wert"
+        },
+        "description": {
+          "en": "Thermal transmittance of the whole window.",
+          "de": "Wärmedurchgangskoeffizient des gesamten Fensters."
+        },
+        "unit": "W/(m²·K)",
+        "step": 0.01,
+        "precision": 2,
+        "group": "thermal",
+        "order": 20
+      }
     }
   }
 }

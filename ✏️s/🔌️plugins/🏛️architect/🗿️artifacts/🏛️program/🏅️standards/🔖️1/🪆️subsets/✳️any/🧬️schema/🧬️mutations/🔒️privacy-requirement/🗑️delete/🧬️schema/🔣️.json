@@ -5,12 +5,34 @@
   "type": "object",
   "additionalProperties": false,
   "required": [
+    "mutation",
     "id"
   ],
   "properties": {
+    "mutation": {
+      "const": "deletePrivacyRequirement"
+    },
     "id": {
-      "type": "integer",
-      "minimum": 0
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Privacy Requirement",
+          "de": "Privatsphäreanforderung"
+        },
+        "description": {
+          "en": "The privacy requirement to delete.",
+          "de": "Zu löschender Eintrag vom Typ „Privatsphäreanforderung“."
+        },
+        "ref": {
+          "kind": "privacyRequirement",
+          "domain": "program",
+          "granularity": "entity"
+        },
+        "group": "target",
+        "order": 10
+      }
     }
   }
 }

@@ -5,11 +5,16 @@
   "type": "object",
   "additionalProperties": false,
   "required": [
+    "mutation",
     "timelineIndex",
     "index",
     "target"
   ],
   "properties": {
+    "mutation": {
+      "const": "setChannelTarget",
+      "description": "Aggregate discriminator spliced in by SemioAnimationMutation; absent when the payload stands alone."
+    },
     "timelineIndex": {
       "type": "integer",
       "minimum": 0
@@ -20,10 +25,6 @@
     },
     "target": {
       "$ref": "#/$defs/AnimTarget"
-    },
-    "mutation": {
-      "const": "setChannelTarget",
-      "description": "Aggregate discriminator spliced in by SemioAnimationMutation; absent when the payload stands alone."
     }
   },
   "$defs": {

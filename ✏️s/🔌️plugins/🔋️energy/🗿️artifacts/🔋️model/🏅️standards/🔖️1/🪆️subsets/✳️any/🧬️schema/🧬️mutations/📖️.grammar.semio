@@ -66,7 +66,7 @@ change-fenestration-overhang-depth = "change-fenestration-overhang-depth" "id" "
 change-fenestration-overhang-offset = "change-fenestration-overhang-offset" "id" "=" NUMBER "new-overhang-offset-m" "=" NUMBER
 change-fenestration-fin-depth = "change-fenestration-fin-depth" "id" "=" NUMBER "new-fin-depth-m" "=" NUMBER
 change-fenestration-fin-offset = "change-fenestration-fin-offset" "id" "=" NUMBER "new-fin-offset-m" "=" NUMBER
-create-material = "create-material" "index" "=" NUMBER "id" "=" NUMBER "name" "=" TEXT "thickness-m" "=" NUMBER "conductivity-w-m-k" "=" NUMBER "density-kg-m3" "=" NUMBER "specific-heat-j-kg-k" "=" NUMBER "thermal-absorptance" "=" NUMBER "solar-absorptance" "=" NUMBER "visible-absorptance" "=" NUMBER
+create-material = "create-material" "index" "=" NUMBER "id" "=" NUMBER "name" "=" TEXT "roughness" "=" TEXT "thickness-m" "=" NUMBER "conductivity-w-m-k" "=" NUMBER "density-kg-m3" "=" NUMBER "specific-heat-j-kg-k" "=" NUMBER "thermal-absorptance" "=" NUMBER "solar-absorptance" "=" NUMBER "visible-absorptance" "=" NUMBER
 delete-material = "delete-material" "id" "=" NUMBER
 rename-material = "rename-material" "id" "=" NUMBER "new-name" "=" TEXT
 change-material-thickness = "change-material-thickness" "id" "=" NUMBER "new-thickness-m" "=" NUMBER

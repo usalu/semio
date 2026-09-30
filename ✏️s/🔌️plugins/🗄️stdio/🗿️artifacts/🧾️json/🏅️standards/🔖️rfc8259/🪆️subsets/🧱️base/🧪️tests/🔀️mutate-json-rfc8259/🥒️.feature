@@ -64,12 +64,11 @@ Feature: Apply every typed RFC 8259 JSON mutation to a real-world document
     Then the oracle and the subject agree on the semantic projection
     Examples:
       | id                    | params                                                                                                                                    |
-      | set-member            | {"path": ["models", 0, "model"], "key": "revision", "value": 99}                                                                         |
-      | remove-member         | {"path": ["models", 0, "model", "objects", 0], "key": "typology"}                                                                        |
-      | insert-array-element  | {"path": ["models", 0, "model", "geometry", "vertices"], "index": 0, "value": {"id": "mutation-test-vertex", "position": [0, 0, 0]}}     |
-      | remove-array-element  | {"path": ["models", 0, "model", "geometry", "vertices"], "index": 10}                                                                    |
-      | set-scalar            | {"path": ["models", 0, "model", "geometry", "vertices", 0, "position", 0], "value": 999.25}                                              |
-
+      | set-member            | {"path": [{"kind": "key", "value": "models"}, {"kind": "index", "value": 0}, {"kind": "key", "value": "model"}], "key": "revision", "value": {"kind": "number", "lexeme": "99"}} |
+      | remove-member         | {"path": [{"kind": "key", "value": "models"}, {"kind": "index", "value": 0}, {"kind": "key", "value": "model"}, {"kind": "key", "value": "objects"}, {"kind": "index", "value": 0}], "key": "typology"} |
+      | insert-array-element  | {"path": [{"kind": "key", "value": "models"}, {"kind": "index", "value": 0}, {"kind": "key", "value": "model"}, {"kind": "key", "value": "geometry"}, {"kind": "key", "value": "vertices"}], "index": 0, "value": {"kind": "object", "members": [{"key": "id", "value": {"kind": "string", "value": "mutation-test-vertex"}}, {"key": "position", "value": {"kind": "array", "items": [{"kind": "number", "lexeme": "0"}, {"kind": "number", "lexeme": "0"}, {"kind": "number", "lexeme": "0"}]}}]}} |
+      | remove-array-element  | {"path": [{"kind": "key", "value": "models"}, {"kind": "index", "value": 0}, {"kind": "key", "value": "model"}, {"kind": "key", "value": "geometry"}, {"kind": "key", "value": "vertices"}], "index": 10} |
+      | set-scalar            | {"path": [{"kind": "key", "value": "models"}, {"kind": "index", "value": 0}, {"kind": "key", "value": "model"}, {"kind": "key", "value": "geometry"}, {"kind": "key", "value": "vertices"}, {"kind": "index", "value": 0}, {"kind": "key", "value": "position"}, {"kind": "index", "value": 0}], "value": {"kind": "number", "lexeme": "999.25"}} |
   @id-inverse
   @level-exhaustive
   @mode-differential
@@ -83,12 +82,11 @@ Feature: Apply every typed RFC 8259 JSON mutation to a real-world document
     Then the oracle and the subject agree on the semantic projection of the original document
     Examples:
       | id                    | params                                                                                                                                    |
-      | set-member            | {"path": ["models", 0, "model"], "key": "revision", "value": 99}                                                                         |
-      | remove-member         | {"path": ["models", 0, "model", "objects", 0], "key": "typology"}                                                                        |
-      | insert-array-element  | {"path": ["models", 0, "model", "geometry", "vertices"], "index": 0, "value": {"id": "mutation-test-vertex", "position": [0, 0, 0]}}     |
-      | remove-array-element  | {"path": ["models", 0, "model", "geometry", "vertices"], "index": 10}                                                                    |
-      | set-scalar            | {"path": ["models", 0, "model", "geometry", "vertices", 0, "position", 0], "value": 999.25}                                              |
-
+      | set-member            | {"path": [{"kind": "key", "value": "models"}, {"kind": "index", "value": 0}, {"kind": "key", "value": "model"}], "key": "revision", "value": {"kind": "number", "lexeme": "99"}} |
+      | remove-member         | {"path": [{"kind": "key", "value": "models"}, {"kind": "index", "value": 0}, {"kind": "key", "value": "model"}, {"kind": "key", "value": "objects"}, {"kind": "index", "value": 0}], "key": "typology"} |
+      | insert-array-element  | {"path": [{"kind": "key", "value": "models"}, {"kind": "index", "value": 0}, {"kind": "key", "value": "model"}, {"kind": "key", "value": "geometry"}, {"kind": "key", "value": "vertices"}], "index": 0, "value": {"kind": "object", "members": [{"key": "id", "value": {"kind": "string", "value": "mutation-test-vertex"}}, {"key": "position", "value": {"kind": "array", "items": [{"kind": "number", "lexeme": "0"}, {"kind": "number", "lexeme": "0"}, {"kind": "number", "lexeme": "0"}]}}]}} |
+      | remove-array-element  | {"path": [{"kind": "key", "value": "models"}, {"kind": "index", "value": 0}, {"kind": "key", "value": "model"}, {"kind": "key", "value": "geometry"}, {"kind": "key", "value": "vertices"}], "index": 10} |
+      | set-scalar            | {"path": [{"kind": "key", "value": "models"}, {"kind": "index", "value": 0}, {"kind": "key", "value": "model"}, {"kind": "key", "value": "geometry"}, {"kind": "key", "value": "vertices"}, {"kind": "index", "value": 0}, {"kind": "key", "value": "position"}, {"kind": "index", "value": 0}], "value": {"kind": "number", "lexeme": "999.25"}} |
   @id-identity-round-trip
   @level-long
   @mode-round-trip

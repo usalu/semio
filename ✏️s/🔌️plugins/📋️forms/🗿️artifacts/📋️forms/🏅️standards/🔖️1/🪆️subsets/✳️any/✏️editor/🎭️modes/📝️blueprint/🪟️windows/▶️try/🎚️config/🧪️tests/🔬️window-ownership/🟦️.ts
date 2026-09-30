@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
-import Ajv from "ajv/dist/2020.js";
+import Ajv from "ajv";
 import { applyPatch, compare } from "fast-json-patch";
 import { applyFormsTryWindowConfigMutation, type FormsTryWindowConfig } from "../../🧬️schema/🟦️.ts";
 import { applyFormsTryWindowTransientMutation, type FormsTryWindowTransient } from "../../../🫧️transient/🧬️schema/🟦️.ts";

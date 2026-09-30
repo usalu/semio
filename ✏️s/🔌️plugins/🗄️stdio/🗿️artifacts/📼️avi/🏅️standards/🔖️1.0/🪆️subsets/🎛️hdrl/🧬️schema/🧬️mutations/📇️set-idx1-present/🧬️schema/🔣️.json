@@ -5,15 +5,29 @@
   "type": "object",
   "additionalProperties": false,
   "required": [
-    "idx1_present"
+    "mutation",
+    "idx1Present"
   ],
   "properties": {
-    "idx1_present": {
-      "type": "boolean"
-    },
     "mutation": {
       "const": "setIdx1Present",
       "description": "Aggregate discriminator spliced in by AviMutation; absent when the payload stands alone."
+    },
+    "idx1Present": {
+      "type": "boolean",
+      "x-semio-ui": {
+        "widget": "toggle",
+        "label": {
+          "en": "Legacy index (idx1)",
+          "de": "Legacy-Index (idx1)"
+        },
+        "description": {
+          "en": "Write the idx1 chunk index.",
+          "de": "Den Chunk-Index idx1 schreiben."
+        },
+        "group": "value",
+        "order": 10
+      }
     }
   }
 }

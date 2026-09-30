@@ -5,20 +5,43 @@
   "type": "object",
   "additionalProperties": false,
   "required": [
+    "mutation",
     "index",
     "entity"
   ],
   "properties": {
-    "index": {
-      "type": "integer",
-      "minimum": 0
-    },
-    "entity": {
-      "$ref": "#/$defs/IfcEntity"
-    },
     "mutation": {
       "const": "insertEntity",
       "description": "Aggregate discriminator spliced in by IfcMutation; absent when the payload stands alone."
+    },
+    "index": {
+      "type": "integer",
+      "minimum": 0,
+      "x-semio-ui": {
+        "widget": "stepper",
+        "label": {
+          "en": "Insert position",
+          "de": "Einfügeposition"
+        },
+        "description": {
+          "en": "Position in the DATA section, counted from 0.",
+          "de": "Position im DATA-Abschnitt, ab 0 gezählt."
+        },
+        "precision": 0,
+        "group": "target",
+        "order": 10
+      }
+    },
+    "entity": {
+      "$ref": "#/$defs/IfcEntity",
+      "x-semio-ui": {
+        "label": {
+          "en": "Entity",
+          "de": "Entität"
+        },
+        "group": "value",
+        "order": 20
+      }
     }
   },
   "$defs": {
@@ -33,21 +56,57 @@
       "properties": {
         "id": {
           "type": "integer",
-          "minimum": 0
+          "minimum": 0,
+          "x-semio-ui": {
+            "label": {
+              "en": "Instance id",
+              "de": "Instanz-ID"
+            },
+            "description": {
+              "en": "STEP instance id (#n) of the entity.",
+              "de": "STEP-Instanz-ID (#n) der Entität."
+            }
+          }
         },
         "name": {
-          "type": "string"
+          "type": "string",
+          "x-semio-ui": {
+            "label": {
+              "en": "Entity type",
+              "de": "Entitätstyp"
+            },
+            "description": {
+              "en": "Upper-case IFC entity name, e.g. IFCWALL.",
+              "de": "IFC-Entitätsname in Großbuchstaben, z. B. IFCWALL."
+            }
+          }
         },
         "args": {
           "type": "array",
           "items": {
             "$ref": "#/$defs/IfcValue"
+          },
+          "x-semio-ui": {
+            "label": {
+              "en": "Attributes",
+              "de": "Attribute"
+            },
+            "description": {
+              "en": "Attribute values in schema order.",
+              "de": "Attributwerte in Schemareihenfolge."
+            }
           }
         },
         "complex": {
           "type": "array",
           "items": {
             "$ref": "#/$defs/IfcComplexType"
+          },
+          "x-semio-ui": {
+            "label": {
+              "en": "Complex entity parts",
+              "de": "Teile der komplexen Entität"
+            }
           }
         }
       }
@@ -221,12 +280,24 @@
       ],
       "properties": {
         "name": {
-          "type": "string"
+          "type": "string",
+          "x-semio-ui": {
+            "label": {
+              "en": "Entity type",
+              "de": "Entitätstyp"
+            }
+          }
         },
         "args": {
           "type": "array",
           "items": {
             "$ref": "#/$defs/IfcValue"
+          },
+          "x-semio-ui": {
+            "label": {
+              "en": "Attributes",
+              "de": "Attribute"
+            }
           }
         }
       }

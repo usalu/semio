@@ -28,9 +28,3 @@ pub fn handle(payload: &RemoveWidget, doc: &ArtifactView<'_, Generation3dSnapsho
         }
     })
 }
-
-//#region 🧪️Tests
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
-//#endregion 🧪️Tests

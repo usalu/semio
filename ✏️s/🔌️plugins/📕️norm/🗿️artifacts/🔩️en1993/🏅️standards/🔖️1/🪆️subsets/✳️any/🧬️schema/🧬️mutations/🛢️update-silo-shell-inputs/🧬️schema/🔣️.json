@@ -5,31 +5,17 @@
   "type": "object",
   "additionalProperties": false,
   "required": [
-    "newShellSigmaXEdMpa",
-    "newSiloDepthM",
-    "newSiloGammaKnM3",
-    "newSiloK",
-    "newSiloRMm",
-    "newSiloTMm"
+    "siloShell"
   ],
   "properties": {
-    "newSiloTMm": {
-      "type": "number"
-    },
-    "newSiloRMm": {
-      "type": "number"
-    },
-    "newShellSigmaXEdMpa": {
-      "type": "number"
-    },
-    "newSiloK": {
-      "type": "number"
-    },
-    "newSiloGammaKnM3": {
-      "type": "number"
-    },
-    "newSiloDepthM": {
-      "type": "number"
+    "siloShell": {
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1993/snapshot.json#/$defs/SiloShell",
+      "x-semio-ui": {
+        "label": {
+          "en": "Silo shell",
+          "de": "Siloschale"
+        }
+      }
     }
   }
 }

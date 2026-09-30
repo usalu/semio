@@ -1,0 +1,9 @@
+{
+  "operation": "addWidget",
+  "index": 1,
+  "widget": {
+    "kind": "inputNote",
+    "id": "x",
+    "text": "X"
+  }
+}

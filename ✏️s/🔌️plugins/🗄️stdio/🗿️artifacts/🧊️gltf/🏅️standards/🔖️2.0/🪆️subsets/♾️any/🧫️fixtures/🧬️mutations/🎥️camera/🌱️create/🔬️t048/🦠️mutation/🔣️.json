@@ -1,0 +1,16 @@
+{
+  "mutation": "createCamera",
+  "payload": {
+    "phase": "apply",
+    "value": {
+      "position": 0,
+      "projection": {
+        "type": "perspective",
+        "perspective": {
+          "yfov": 0.5,
+          "znear": 0.5
+        }
+      }
+    }
+  }
+}

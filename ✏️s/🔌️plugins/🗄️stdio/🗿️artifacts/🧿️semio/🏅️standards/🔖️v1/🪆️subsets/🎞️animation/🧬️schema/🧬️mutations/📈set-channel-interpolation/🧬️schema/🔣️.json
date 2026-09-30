@@ -5,11 +5,16 @@
   "type": "object",
   "additionalProperties": false,
   "required": [
+    "mutation",
     "timelineIndex",
     "index",
     "interpolation"
   ],
   "properties": {
+    "mutation": {
+      "const": "setChannelInterpolation",
+      "description": "Aggregate discriminator spliced in by SemioAnimationMutation; absent when the payload stands alone."
+    },
     "timelineIndex": {
       "type": "integer",
       "minimum": 0
@@ -19,11 +24,24 @@
       "minimum": 0
     },
     "interpolation": {
-      "$ref": "#/$defs/AnimInterpolation"
-    },
-    "mutation": {
-      "const": "setChannelInterpolation",
-      "description": "Aggregate discriminator spliced in by SemioAnimationMutation; absent when the payload stands alone."
+      "$ref": "#/$defs/AnimInterpolation",
+      "x-semio-ui": {
+        "widget": "segmented",
+        "label": {
+          "en": "Interpolation",
+          "de": "Interpolation"
+        },
+        "options": {
+          "linear": {
+            "en": "Linear",
+            "de": "Linear"
+          },
+          "cubicSpline": {
+            "en": "Cubic spline",
+            "de": "Kubischer Spline"
+          }
+        }
+      }
     }
   },
   "$defs": {

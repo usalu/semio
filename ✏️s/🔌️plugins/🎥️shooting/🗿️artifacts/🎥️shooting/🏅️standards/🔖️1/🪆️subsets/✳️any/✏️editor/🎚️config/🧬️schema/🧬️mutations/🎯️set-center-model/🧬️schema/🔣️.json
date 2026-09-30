@@ -5,7 +5,21 @@
   "type": "object",
   "properties": {
     "value": {
-      "type": "boolean"
+      "type": "boolean",
+      "x-semio-ui": {
+        "widget": "toggle",
+        "role": "value",
+        "label": {
+          "en": "Center model",
+          "de": "Modell zentrieren"
+        },
+        "description": {
+          "en": "Keep the active asset centered in the viewport.",
+          "de": "Das aktive Objekt im Ansichtsfenster zentriert halten."
+        },
+        "group": "view",
+        "order": 10
+      }
     }
   },
   "required": [

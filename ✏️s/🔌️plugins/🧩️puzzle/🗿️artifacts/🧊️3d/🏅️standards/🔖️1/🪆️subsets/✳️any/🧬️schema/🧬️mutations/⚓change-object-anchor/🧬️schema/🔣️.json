@@ -5,19 +5,66 @@
   "type": "object",
   "additionalProperties": false,
   "required": [
+    "mutation",
     "id",
     "newAnchor"
   ],
   "properties": {
+    "mutation": {
+      "const": "changeObjectAnchor"
+    },
     "id": {
-      "type": "string"
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Object",
+          "de": "Objekt"
+        },
+        "description": {
+          "en": "The object this mutation addresses.",
+          "de": "Das Objekt, das diese Mutation adressiert."
+        },
+        "ref": {
+          "kind": "object",
+          "domain": "vortex",
+          "granularity": "object"
+        },
+        "group": "target",
+        "order": 10
+      }
     },
     "newAnchor": {
       "type": "string",
       "enum": [
-        "Fixed",
-        "Derived"
-      ]
+        "fixed",
+        "derived"
+      ],
+      "x-semio-ui": {
+        "widget": "segmented",
+        "role": "value",
+        "label": {
+          "en": "Anchor",
+          "de": "Verankerung"
+        },
+        "description": {
+          "en": "Fixed keeps the stored plane at a root; derived resets it to the default XY plane.",
+          "de": "Fest behält die gespeicherte Ebene an einer Wurzel; abgeleitet setzt sie auf die XY-Standardebene zurück."
+        },
+        "options": {
+          "fixed": {
+            "en": "Fixed",
+            "de": "Fest"
+          },
+          "derived": {
+            "en": "Derived",
+            "de": "Abgeleitet"
+          }
+        },
+        "group": "geometry",
+        "order": 20
+      }
     }
   }
 }

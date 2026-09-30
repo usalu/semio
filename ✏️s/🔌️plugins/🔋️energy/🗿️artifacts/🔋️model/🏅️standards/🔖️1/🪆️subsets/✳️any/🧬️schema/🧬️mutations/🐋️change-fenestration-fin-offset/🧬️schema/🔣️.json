@@ -5,15 +5,57 @@
   "type": "object",
   "additionalProperties": false,
   "required": [
+    "mutation",
     "id",
     "newFinOffsetM"
   ],
   "properties": {
+    "mutation": {
+      "const": "changeFenestrationFinOffset"
+    },
     "id": {
-      "type": "integer"
+      "type": "integer",
+      "minimum": 0,
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Window",
+          "de": "Fenster"
+        },
+        "description": {
+          "en": "The window this mutation changes, by id.",
+          "de": "Fenster, das diese Mutation ändert, per ID."
+        },
+        "ref": {
+          "kind": "fenestration",
+          "domain": "energyModel",
+          "granularity": "fenestration"
+        },
+        "group": "target",
+        "order": 10
+      }
     },
     "newFinOffsetM": {
-      "type": "number"
+      "type": "number",
+      "minimum": 0,
+      "x-semio-ui": {
+        "widget": "stepper",
+        "role": "value",
+        "label": {
+          "en": "Fin offset",
+          "de": "Seitenblendenabstand"
+        },
+        "description": {
+          "en": "Distance of the fins from the window jambs.",
+          "de": "Abstand der Seitenblenden von den Fensterlaibungen."
+        },
+        "unit": "m",
+        "step": 0.01,
+        "precision": 2,
+        "group": "shading",
+        "order": 20
+      }
     }
   }
 }

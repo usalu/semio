@@ -11,6 +11,7 @@ use protocol::{MutationKind, SemanticDescriptor};
 /// cannot be re-created).
 #[derive(Clone, Debug, PartialEq, dsl::ToValue, dsl::FromValue, dsl::MutationLeaf)]
 #[mutation_leaf(contract = ::protocol)]
+#[value(rename_all = "camelCase")]
 pub struct CreateStep {
     pub step: FormStep,
     pub index: Option<usize>,

@@ -5,8 +5,7 @@ use crate::schema::modules::mutation_support::top_level::GltfTopLevelMutationRej
 use crate::schema::snapshot::*;
 use crate::GltfSnapshot;
 pub const ID: &str = "s.stdio.gltf.mutation.create-primitive.v1";
-#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::MutationLeaf)]
-#[mutation_leaf(contract = ::protocol)]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
 #[value(rename_all = "camelCase")]
 pub struct GltfCreatePrimitivePayload {
     pub mesh: usize,
@@ -28,7 +27,7 @@ pub fn apply(payload: &GltfCreatePrimitivePayload, base: &GltfSnapshot) -> Resul
 
 //#region 🧬️DirectMutation
 #[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::MutationLeaf)]
-#[mutation_leaf(contract = ::protocol)]
+#[mutation_leaf(contract = ::protocol, payload = Apply)]
 #[value(tag = "phase", content = "value", rename_all = "camelCase")]
 pub enum CreatePrimitiveMutation {
     Apply(GltfCreatePrimitivePayload),
@@ -72,6 +71,6 @@ impl protocol::MutationKind<GltfSnapshot, super::GltfMutation> for CreatePrimiti
 
 //#region 🧪️Tests
 #[cfg(test)]
-#[path = "🧪️tests/🔬️direct-leaf/🦀️.rs"]
-mod direct_leaf_tests;
+#[path = "🧪️tests/🔬️t061/🦀️.rs"]
+mod case_t061;
 //#endregion 🧪️Tests

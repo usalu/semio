@@ -762,6 +762,7 @@ fn forms_next_edit<M>(prefix: &str, forward: M, inverse: Vec<M>, description: Op
             label: None,
             group_id: None,
             origin: Default::default(),
+            transaction: None,
         }],
         description,
         coalesce_key: None,

@@ -5,7 +5,7 @@
   "type": "object",
   "additionalProperties": false,
   "properties": {
-    "base_profile": {
+    "baseProfile": {
       "anyOf": [
         {
           "type": "string"
@@ -13,7 +13,18 @@
         {
           "type": "null"
         }
-      ]
+      ],
+      "x-semio-ui": {
+        "widget": "text",
+        "label": {
+          "en": "Base profile",
+          "de": "Basisprofil"
+        },
+        "description": {
+          "en": "Value of the root `baseProfile` attribute (tiny, basic or full).",
+          "de": "Wert des Wurzelattributs `baseProfile` (tiny, basic oder full)."
+        }
+      }
     },
     "version": {
       "anyOf": [

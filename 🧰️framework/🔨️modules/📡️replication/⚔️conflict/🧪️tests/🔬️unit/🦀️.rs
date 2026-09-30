@@ -56,6 +56,32 @@ async fn merge_report_round_trips_through_to_value() {
     let round_tripped: MergeReport = crate::value::FromValue::from_value(value).expect("decode");
     assert_eq!(round_tripped, report);
 }
+
+/// 📋️ Language-agnostic replay reports (shared with the TypeScript twin): every report decodes, re-encodes to the
+/// identical JSON, carries the maximum outcome level as `worst`, and blocks finalize iff an outcome is Error or Fatal.
+#[test]
+fn replay_report_fixture_decodes_round_trips_and_gates_finalize() {
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🧫️replay-report/🔣️.json")).expect("replay report fixture parses");
+    assert_eq!(fixture["schema"].as_str(), Some("semio.replication.replay-report"));
+    for case in fixture["cases"].as_array().expect("cases") {
+        let id = case["id"].as_str().expect("case id");
+        let report: ReplayReport = crate::value::FromValue::from_value(crate::value::DslValue::from(&case["report"])).unwrap_or_else(|error| panic!("{id}: {error:?}"));
+        assert_eq!(serde_json::Value::from(&crate::value::ToValue::to_value(&report)), case["report"], "{id}: round trip");
+        assert_eq!(report.worst, report.outcomes.iter().filter_map(|outcome| outcome.worst).max(), "{id}: worst");
+        assert_eq!(report.blocks_finalize(), case["expect"]["blocksFinalize"].as_bool().expect("blocksFinalize"), "{id}: blocks finalize");
+    }
+}
+
+/// 🚧️ Warnings never block finalize; one Error or Fatal anywhere in the suffix does.
+#[test]
+fn replay_report_blocks_finalize_on_error_or_fatal_only() {
+    let outcome = |worst: Option<crate::diagnostic::Severity>| MutationReplayOutcome { mutation_id: crate::ids::MutationId("op".into()), edit_id: "e".into(), op_index: 0, worst, messages: Vec::new(), superseded: false, withdrawn: false };
+    assert!(!ReplayReport::default().blocks_finalize());
+    for (worst, blocks) in [(None, false), (Some(crate::diagnostic::Severity::Info), false), (Some(crate::diagnostic::Severity::Warning), false), (Some(crate::diagnostic::Severity::Error), true), (Some(crate::diagnostic::Severity::Fatal), true)] {
+        let report = ReplayReport { from_position: 0, outcomes: vec![outcome(None), outcome(worst)], worst };
+        assert_eq!(report.blocks_finalize(), blocks, "{worst:?}");
+    }
+}
 //#endregion 🔖️Reports
 
 //#region 🔖️Conflict

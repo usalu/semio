@@ -1,7 +1,7 @@
 import { strict as assert } from "node:assert";
 import { mkdirSync, writeFileSync } from "node:fs";
 import { resolve } from "node:path";
-import fixture from "../../../../../🧫️fixtures/🎬️media-app-acceptance/🔣️.json";
+import fixture from "../../../../🧫️fixtures/🎬️media-app-acceptance/🔣️.json";
 
 type MediaAppReceipt = { readonly id: string; readonly url: string; readonly acceptedWindow: string; readonly acceptedNode: string; readonly token: string; readonly state: string; readonly kind: string; readonly mediaType: string; readonly reason: string; readonly rootCorrelated: boolean };
 

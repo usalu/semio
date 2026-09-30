@@ -5,20 +5,40 @@
   "type": "object",
   "additionalProperties": false,
   "required": [
+    "mutation",
     "index",
     "interlace"
   ],
   "properties": {
-    "index": {
-      "type": "integer",
-      "minimum": 0
-    },
-    "interlace": {
-      "type": "boolean"
-    },
     "mutation": {
       "const": "setFrameInterlace",
       "description": "Aggregate discriminator spliced in by GifMutation; absent when the payload stands alone."
+    },
+    "index": {
+      "type": "integer",
+      "minimum": 0,
+      "x-semio-ui": {
+        "widget": "stepper",
+        "label": {
+          "en": "Frame",
+          "de": "Einzelbild"
+        },
+        "description": {
+          "en": "Index of the frame, counted from 0.",
+          "de": "Index des Einzelbildes, ab 0 gezählt."
+        },
+        "precision": 0,
+        "group": "target",
+        "order": 10
+      }
+    },
+    "interlace": {
+      "type": "boolean",
+      "x-semio-ui": {
+        "widget": "toggle",
+        "group": "value",
+        "order": 20
+      }
     }
   }
 }

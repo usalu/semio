@@ -1,0 +1,10 @@
+{
+  "mutation": "changeNodeName",
+  "payload": {
+    "phase": "apply",
+    "value": {
+      "node": 0,
+      "value": "pivot"
+    }
+  }
+}

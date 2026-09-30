@@ -18,6 +18,12 @@
         "type": "integer",
         "minimum": 0,
         "maximum": 255
+      },
+      "x-semio-ui": {
+        "label": {
+          "en": "Bytes",
+          "de": "Bytes"
+        }
       }
     }
   }

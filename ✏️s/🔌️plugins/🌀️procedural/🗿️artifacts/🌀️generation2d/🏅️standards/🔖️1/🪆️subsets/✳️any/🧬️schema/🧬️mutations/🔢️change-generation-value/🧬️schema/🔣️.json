@@ -11,13 +11,57 @@
   ],
   "properties": {
     "id": {
-      "type": "string"
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Generation",
+          "de": "Generierung"
+        },
+        "description": {
+          "en": "The generation this mutation addresses.",
+          "de": "Die Generierung, die diese Mutation adressiert."
+        },
+        "ref": {
+          "kind": "generation"
+        },
+        "group": "target",
+        "order": 10
+      }
     },
     "questionId": {
-      "type": "string"
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "text",
+        "role": "value",
+        "label": {
+          "en": "Question",
+          "de": "Frage"
+        },
+        "description": {
+          "en": "Id of the question in the generation schema.",
+          "de": "ID der Frage im Generierungsschema."
+        },
+        "group": "target",
+        "order": 20
+      }
     },
     "value": {
-      "description": "any JSON value"
+      "description": "any JSON value",
+      "x-semio-ui": {
+        "role": "value",
+        "label": {
+          "en": "Answer",
+          "de": "Antwort"
+        },
+        "description": {
+          "en": "The new answer; any JSON value the question accepts.",
+          "de": "Die neue Antwort; jeder JSON-Wert, den die Frage annimmt."
+        },
+        "group": "value",
+        "order": 30
+      }
     }
   }
 }

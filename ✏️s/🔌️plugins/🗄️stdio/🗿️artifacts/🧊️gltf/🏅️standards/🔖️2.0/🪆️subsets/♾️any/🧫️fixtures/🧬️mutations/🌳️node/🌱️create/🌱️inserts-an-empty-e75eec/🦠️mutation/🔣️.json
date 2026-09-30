@@ -1,0 +1,9 @@
+{
+  "mutation": "createNode",
+  "payload": {
+    "phase": "apply",
+    "value": {
+      "position": 0
+    }
+  }
+}

@@ -518,8 +518,8 @@ export async function registerTests2(vitest: NonNullable<ImportMeta["vitest"]>, 
       { Emit: { in_reply_to: 11, document_ops: [], config_ops: [], draft_ops: [], output: [4], diagnostics: [], child_ops: [6, 7, 8] } },
       { Draft: { in_reply_to: 12, pack: [1], spr: [2], ops: "d" } },
       { Children: { in_reply_to: 13, entries: [{ slot: "s", child_id: "c", dialect: "d", envelope_pack: [1] }] } },
-      { Ephemeral: { presence: [1, 2], presence_generation: 3, transient_generation: 4, interaction: [7], tool_run: [8] } },
-      { Ephemeral: { presence: [1, 2], presence_generation: 3, transient_generation: 4, interaction: [], tool_run: [] } },
+      { Ephemeral: { presence: [1, 2], presence_generation: 3, transient_generation: 4, interaction: [7], tool_run: [8], history_edit: [9] } },
+      { Ephemeral: { presence: [1, 2], presence_generation: 3, transient_generation: 4, interaction: [], tool_run: [], history_edit: [] } },
       { HistorySnapshot: { in_reply_to: 14, history_patch: [1] } },
       { transactionProposal: { in_reply_to: 15, proposal_id: "prop-1", local_ops: [[1]], description: "move", coalesce_key: "k-1", foreign: [[2, 3]] } },
       { transactionPrepared: { txn_id: "txn-1", foreign: [[1]], rejection: [] } },
@@ -598,7 +598,7 @@ export async function registerTests2(vitest: NonNullable<ImportMeta["vitest"]>, 
       expect(encodeAppFrame({ Done: { in_reply_to: 0 } })[0]).toBe(0);
       expect(encodeAppFrame({ Invocation: { in_reply_to: 0, output: [], diagnostics: [], ui_scope: [], history_patch: [], messages: [], mutations: [], inverse_group: [] } })[0]).toBe(1);
       expect(encodeAppFrame({ Error: { in_reply_to: null, fault: [], report: [] } })[0]).toBe(9);
-      expect(encodeAppFrame({ Ephemeral: { presence: [], presence_generation: 0, transient_generation: 0, interaction: [], tool_run: [] } })[0]).toBe(13);
+      expect(encodeAppFrame({ Ephemeral: { presence: [], presence_generation: 0, transient_generation: 0, interaction: [], tool_run: [], history_edit: [] } })[0]).toBe(13);
       expect(encodeAppFrame({ HistorySnapshot: { in_reply_to: 0, history_patch: [] } })[0]).toBe(14);
       expect(encodeAppFrame({ transactionProposal: { in_reply_to: 0, proposal_id: "", local_ops: [], description: "", coalesce_key: "", foreign: [] } })[0]).toBe(15);
       expect(encodeAppFrame({ transactionPrepared: { txn_id: "", foreign: [], rejection: [] } })[0]).toBe(16);
@@ -712,7 +712,7 @@ export async function registerTests2(vitest: NonNullable<ImportMeta["vitest"]>, 
         ["Emit", { Emit: { in_reply_to: 1, document_ops: [1], config_ops: [], draft_ops: [], output: [2], diagnostics: [], child_ops: [] } }],
         ["Draft", { Draft: { in_reply_to: 1, pack: [1], spr: [2], ops: "d" } }],
         ["Children", { Children: { in_reply_to: 1, entries: [{ slot: "s", child_id: "c", dialect: "d", envelope_pack: [1] }] } }],
-        ["Ephemeral", { Ephemeral: { presence: [1, 2], presence_generation: 3, transient_generation: 4, interaction: [], tool_run: [] } }],
+        ["Ephemeral", { Ephemeral: { presence: [1, 2], presence_generation: 3, transient_generation: 4, interaction: [], tool_run: [], history_edit: [] } }],
         ["HistorySnapshot", { HistorySnapshot: { in_reply_to: 1, history_patch: [1] } }],
         ["UiPatch", { UiPatch: { in_reply_to: 1, surface: "1:body", kind: "window", revision: 3, base_revision: 2, ops: [9] } }],
         ["UiSnapshotEnd", { UiSnapshotEnd: { revision: 6 } }],
@@ -732,7 +732,7 @@ export async function registerTests2(vitest: NonNullable<ImportMeta["vitest"]>, 
         Emit: "0a010101000001020000",
         Draft: "0b01010101020164",
         Children: "0c01010173016301640101",
-        Ephemeral: "0d02010203040000",
+        Ephemeral: "0d0201020304000000",
         HistorySnapshot: "0e010101",
         UiPatch: "15010106313a626f64790677696e646f7703020109",
         UiSnapshotEnd: "1606",
@@ -1034,16 +1034,19 @@ export async function registerTests2(vitest: NonNullable<ImportMeta["vitest"]>, 
       const client = new AppChannelClient(handle, new AppChannelRequestSequence(), 7, "fixture");
       const flush = async () => { for (let index = 0; index < 12; index += 1) await Promise.resolve(); };
       expect(client.ephemeral()).toBeNull();
-      broadcast.push({ instanceId: 7, frames: [encodeAppFrame({ Ephemeral: { presence: [1], presence_generation: 1, transient_generation: 1, interaction: [], tool_run: [] } })] });
+      broadcast.push({ instanceId: 7, frames: [encodeAppFrame({ Ephemeral: { presence: [1], presence_generation: 1, transient_generation: 1, interaction: [], tool_run: [], history_edit: [] } })] });
       await flush();
-      expect(client.ephemeral()).toEqual({ presence: [1], presenceGeneration: 1, transientGeneration: 1, interaction: [] });
-      broadcast.push({ instanceId: 7, frames: [encodeAppFrame({ Done: { in_reply_to: 0 } }), encodeAppFrame({ Ephemeral: { presence: [2, 3], presence_generation: 2, transient_generation: 5, interaction: encodePresenceInteraction(selecting), tool_run: [] } })] });
-      broadcast.push({ instanceId: 8, frames: [encodeAppFrame({ Ephemeral: { presence: [9], presence_generation: 9, transient_generation: 9, interaction: [], tool_run: [] } })] });
+      expect(client.ephemeral()).toEqual({ presence: [1], presenceGeneration: 1, transientGeneration: 1, interaction: [], toolRun: [], historyEdit: [] });
+      const { encodePresenceHistoryEdit } = await import("../../../../🔨️modules/📡️replication/🟦️.ts");
+      const editing = encodePresenceHistoryEdit({ mutationId: "m-2", stage: "reviewing", drafts: 1 });
+      broadcast.push({ instanceId: 7, frames: [encodeAppFrame({ Done: { in_reply_to: 0 } }), encodeAppFrame({ Ephemeral: { presence: [2, 3], presence_generation: 2, transient_generation: 5, interaction: encodePresenceInteraction(selecting), tool_run: [], history_edit: editing } })] });
+      broadcast.push({ instanceId: 8, frames: [encodeAppFrame({ Ephemeral: { presence: [9], presence_generation: 9, transient_generation: 9, interaction: [], tool_run: [], history_edit: [] } })] });
       await flush();
       const snapshot = client.ephemeral();
       expect(snapshot?.presence).toEqual([2, 3]);
       expect([snapshot?.presenceGeneration, snapshot?.transientGeneration]).toEqual([2, 5]);
       expect(decodePresenceInteraction(Uint8Array.from(snapshot!.interaction), [0])).toEqual(selecting);
+      expect([snapshot?.toolRun, snapshot?.historyEdit]).toEqual([[], editing]);
       client.dispose();
     });
 
@@ -1096,7 +1099,7 @@ export async function registerTests2(vitest: NonNullable<ImportMeta["vitest"]>, 
           }
           else if (event === "startedWithNotice" || event === "pageWithNotice") {
             const reply: LocalInteractionQueryReply = event === "startedWithNotice" ? { kind: "started", token } : { kind: "page", page: { ...token, terminal: true, bytes: [0xe2, 0x9c, 0x93] } };
-            broadcast.push({ instanceId: 7, frames: [encodeAppFrame({ LocalInteractionQuery: { reply } }), encodeAppFrame({ Ephemeral: { presence: [], presence_generation: 0, transient_generation: 0, interaction: [], tool_run: [] } }), encodeAppFrame({ UiPatch: { in_reply_to: null, surface: "fixture", kind: "graph", revision: 1, base_revision: 0, ops: [] } })] });
+            broadcast.push({ instanceId: 7, frames: [encodeAppFrame({ LocalInteractionQuery: { reply } }), encodeAppFrame({ Ephemeral: { presence: [], presence_generation: 0, transient_generation: 0, interaction: [], tool_run: [], history_edit: [] } }), encodeAppFrame({ UiPatch: { in_reply_to: null, surface: "fixture", kind: "graph", revision: 1, base_revision: 0, ops: [] } })] });
             await flush(); expect(ordinaryComplete).toBe(false);
           }
           else if (event === "page") push({ kind: "page", page: { ...token, terminal: true, bytes: [0xe2, 0x9c, 0x93] } });
@@ -1271,10 +1274,12 @@ export async function registerTests2(vitest: NonNullable<ImportMeta["vitest"]>, 
      * command. Once the operation runs on the background drain that frame correlates with no waiter, so without this
      * subscription the renderer saw nothing until the run ended and then everything at once.
      */
-    it("delivers an unsolicited operation progress scope to its subscriber, never to a pending command waiter", async () => {
+    it("delivers an unsolicited operation progress scope and history patch to its subscriber, never to a pending command waiter", async () => {
       const progress: unknown[] = [];
+      const replay = { cursor: 9, timeTravel: { sessionId: "1", generation: 4, stage: "replaying", done: 3, total: 8, blocking: false, acceptedCount: 1 } };
       const handle = fakeHandle((_instanceId, commands) => [
         { Invocation: { in_reply_to: 0, output: [], diagnostics: [], ui_scope: Array.from(encodePackValue({ kind: "partial", panelBodies: ["framework.body.toolRun"] })), history_patch: [], messages: [], mutations: [], inverse_group: [] } },
+        { Invocation: { in_reply_to: 0, output: [], diagnostics: [], ui_scope: [], history_patch: Array.from(encodePackValue(replay)), messages: [], mutations: [], inverse_group: [] } },
         { Invocation: { in_reply_to: 0, output: [], diagnostics: [], ui_scope: [], history_patch: [], messages: [], mutations: [], inverse_group: [] } },
         { Invocation: { in_reply_to: Object.values(commands[0]!)[0]!.seq, output: [], diagnostics: [], ui_scope: Array.from(encodePackValue("full")), history_patch: [], messages: [], mutations: [], inverse_group: [] } },
       ]);
@@ -1282,10 +1287,10 @@ export async function registerTests2(vitest: NonNullable<ImportMeta["vitest"]>, 
       const unsubscribe = client.onOperationProgress((uiScope) => progress.push(uiScope));
       const frames = await client.command(new Uint8Array([1]), {});
       expect(frames).toHaveLength(1);
-      expect(progress).toEqual([{ kind: "partial", panelBodies: ["framework.body.toolRun"] }]);
+      expect(progress).toEqual([{ uiScope: { kind: "partial", panelBodies: ["framework.body.toolRun"] } }, { historyPatch: replay }]);
       unsubscribe();
       await client.command(new Uint8Array([2]), {});
-      expect(progress).toHaveLength(1);
+      expect(progress).toHaveLength(2);
     });
 
     it("matches the shared cross-language typed-operation completion fixture vector, byte-for-byte", async () => {
@@ -2041,8 +2046,8 @@ export async function registerTests4(vitest: NonNullable<ImportMeta["vitest"]>, 
       expect(() => decodeBrowserActorCommandPublicationV1(new Uint8Array([...invocation, 0]), fixture.commandRequest.actionSequence)).toThrow();
       expect(() => decodeBrowserActorCommandPublicationV1(encodeAppFrame({ Invocation: { in_reply_to: fixture.commandRequest.actionSequence, output: [], diagnostics: [], ui_scope: [], history_patch: [1], messages: [], mutations: [], inverse_group: [] } }), fixture.commandRequest.actionSequence)).toThrow();
       expect(decodeBrowserActorCommandPublicationV1(encodeAppFrame({ Invocation: { in_reply_to: fixture.commandRequest.actionSequence, output: [], diagnostics: [], ui_scope: [], history_patch: Array.from(encodePackValue(null)), messages: [], mutations: [], inverse_group: [] } }), fixture.commandRequest.actionSequence).kind).toBe("invocation");
-      const ephemeral = encodeAppFrame({ Ephemeral: { presence: [1, 2], presence_generation: 3, transient_generation: 4, interaction: [], tool_run: [] } });
-      const ephemeralSnapshot = { kind: "ephemeral", snapshot: { presence: [1, 2], presenceGeneration: 3, transientGeneration: 4, interaction: [] } };
+      const ephemeral = encodeAppFrame({ Ephemeral: { presence: [1, 2], presence_generation: 3, transient_generation: 4, interaction: [], tool_run: [], history_edit: [] } });
+      const ephemeralSnapshot = { kind: "ephemeral", snapshot: { presence: [1, 2], presenceGeneration: 3, transientGeneration: 4, interaction: [], toolRun: [], historyEdit: [] } };
       expect(decodeBrowserActorCommandPublicationV1(ephemeral, fixture.commandRequest.actionSequence)).toEqual(ephemeralSnapshot);
       expect(decodeBrowserActorIntentPublicationV1(ephemeral)).toEqual(ephemeralSnapshot);
       const progress = encodeAppFrame({ Invocation: { in_reply_to: 0, output: [1, 2], diagnostics: [], ui_scope: [3], history_patch: [], messages: [], mutations: [], inverse_group: [] } });
@@ -2353,7 +2358,7 @@ export async function registerTests4(vitest: NonNullable<ImportMeta["vitest"]>, 
     const fromHex = (hex: string): Uint8Array => new Uint8Array(Buffer.from(hex, "hex"));
 
     it("retains one exact causal OpBinary through actor send and receive frames", () => {
-      const batch = fromHex("01016d01640161000000017301aa016902bbcc03ffffffffffffffffff0105");
+      const batch = fromHex("01016d01640161000000017301aa016902bbcc03ffffffffffffffffff010500");
       const message = encodeBackboneMessage({ kind: "mutations", envelopes: batch });
       const clientInstanceId = "12345678-1234-4123-8123-123456789abc";
       const request = { kind: "send", documentId: "d", clientInstanceId, message: { kind: "documentBackbone", message } } as const;

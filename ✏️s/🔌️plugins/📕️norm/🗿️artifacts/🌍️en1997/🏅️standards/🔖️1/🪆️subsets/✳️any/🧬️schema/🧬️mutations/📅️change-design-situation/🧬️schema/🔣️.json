@@ -5,11 +5,29 @@
   "type": "object",
   "additionalProperties": false,
   "required": [
+    "mutation",
     "newDesignSituation"
   ],
   "properties": {
+    "mutation": {
+      "const": "changeDesignSituation"
+    },
     "newDesignSituation": {
-      "type": "string"
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "text",
+        "role": "value",
+        "label": {
+          "en": "Design situation",
+          "de": "Bemessungssituation"
+        },
+        "description": {
+          "en": "DIN 1054 design situation bsP, bsT or bsA (BS-P persistent, BS-T transient, BS-A accidental).",
+          "de": "Bemessungssituation nach DIN 1054: bsP (BS-P ständig), bsT (BS-T vorübergehend) oder bsA (BS-A außergewöhnlich)."
+        },
+        "group": "annex",
+        "order": 10
+      }
     }
   }
 }

@@ -71,11 +71,13 @@ Feature: Apply every typed BCF 2.1 markup mutation and round-trip a real-world c
   itself. The cross-semio `zip`+`quick-xml` composition (`../../🔮️oracles/🦀️.rs`) stays as the Rust supplement and
   asserts its own laws in role.
 
-  📌️ Every Examples row below other than `no-mutation` is required to MOVE the semantic projection,
-  and the adapter fails the scenario in role when it does not: a row whose parameters make the
-  mutation a no-op passes whenever the reference library merely declined to error, which is not a
-  test. The baseline it is measured against runs one `no-mutation` cycle first, so the comparison
-  isolates the mutation rather than the writer's own normal form.
+  📌️ Every Examples row below is required to MOVE the semantic projection, and the adapter fails the
+  scenario in role when it does not: a row whose parameters make the mutation a no-op passes whenever
+  the reference library merely declined to error, which is not a test. The baseline it is measured
+  against runs one unzip/rezip round trip first, so the comparison isolates the mutation rather than
+  the writer's own normal form. Every row's `params` is the leaf wire payload (`set-snapshot` carries
+  the whole `BcfSnapshot`, a viewpoint snapshot its PNG bytes), decoded by `BcfMutation`'s own payload
+  constructor.
   @id-mutate
   @level-exhaustive
   @mode-differential
@@ -89,7 +91,7 @@ Feature: Apply every typed BCF 2.1 markup mutation and round-trip a real-world c
     Then the jszip reader reads the subject's review and the committed after-document as the same BCF
     Examples:
       | id               | fixture                    | params |
-      | set-snapshot     | 🗃️set-snapshot-applied     | {"version": "2.1", "topics": [{"guid": "topic-replacement-04", "title": "Slab clash near the stair core", "description": "Replacement review: the slab intersects the stair-core column.", "status": "Open", "priority": "High", "labels": ["structural"], "creationDate": "2026-01-08T09:00:00Z", "creationAuthor": "dave@example.com", "comments": [], "viewpoints": []}], "parts": []} |
+      | set-snapshot     | 🗃️set-snapshot-applied     | {"snapshot": {"schema": "stdio.bcf", "version": "2.1", "topics": [{"guid": "topic-replacement-04", "title": "Slab clash near the stair core", "description": "Replacement review: the slab intersects the stair-core column.", "status": "Open", "priority": "High", "labels": ["structural"], "creationDate": "2026-01-08T09:00:00Z", "creationAuthor": "dave@example.com", "comments": [], "viewpoints": []}], "parts": []}} |
       | set-version      | 🔢️set-version-applied      | {"version": "2.2"} |
       | insert-topic     | 📌️insert-topic-applied     | {"topic": {"guid": "topic-new-03", "title": "New topic", "description": "", "status": "Open", "priority": "", "labels": [], "creationDate": "2026-01-07T09:00:00Z", "creationAuthor": "carol@example.com", "comments": [], "viewpoints": []}} |
       | remove-topic     | 🗑️remove-topic-applied     | {"guid": "topic-review-02"} |
@@ -97,18 +99,6 @@ Feature: Apply every typed BCF 2.1 markup mutation and round-trip a real-world c
       | insert-comment   | 🗨️insert-comment-applied   | {"topicGuid": "topic-clash-01", "comment": {"guid": "comment-02", "date": "2026-01-05T11:00:00Z", "author": "bob@example.com", "text": "Confirmed, rerouting duct.", "viewpointRef": null}} |
       | remove-comment   | 🧹️remove-comment-applied   | {"topicGuid": "topic-clash-01", "guid": "comment-01"} |
       | set-comment      | ✏️set-comment-applied      | {"topicGuid": "topic-clash-01", "guid": "comment-01", "text": "Please review — updated."} |
-
-  @id-no-mutation-baseline-mutate
-  @level-exhaustive
-  @mode-differential
-  Scenario: Apply no-mutation to the committed review pair
-    Given the real input document shared://⏸️no-mutation-applied/⬅️before.bcf
-    And the committed after-document shared://⏸️no-mutation-applied/➡️after.bcf
-    When the no-mutation mutation is applied with its parameters
-      """
-      {"kind": "no-mutation", "params": {}}
-      """
-    Then the jszip reader reads the subject's review and the committed after-document as the same BCF
 
   @id-inverse
   @level-exhaustive
@@ -122,7 +112,7 @@ Feature: Apply every typed BCF 2.1 markup mutation and round-trip a real-world c
     Then the jszip reader reads the restored review and the committed before-document as the same BCF
     Examples:
       | id               | fixture                    | params |
-      | set-snapshot     | 🗃️set-snapshot-applied     | {"version": "2.1", "topics": [{"guid": "topic-replacement-04", "title": "Slab clash near the stair core", "description": "Replacement review: the slab intersects the stair-core column.", "status": "Open", "priority": "High", "labels": ["structural"], "creationDate": "2026-01-08T09:00:00Z", "creationAuthor": "dave@example.com", "comments": [], "viewpoints": []}], "parts": []} |
+      | set-snapshot     | 🗃️set-snapshot-applied     | {"snapshot": {"schema": "stdio.bcf", "version": "2.1", "topics": [{"guid": "topic-replacement-04", "title": "Slab clash near the stair core", "description": "Replacement review: the slab intersects the stair-core column.", "status": "Open", "priority": "High", "labels": ["structural"], "creationDate": "2026-01-08T09:00:00Z", "creationAuthor": "dave@example.com", "comments": [], "viewpoints": []}], "parts": []}} |
       | set-version      | 🔢️set-version-applied      | {"version": "2.2"} |
       | insert-topic     | 📌️insert-topic-applied     | {"topic": {"guid": "topic-new-03", "title": "New topic", "description": "", "status": "Open", "priority": "", "labels": [], "creationDate": "2026-01-07T09:00:00Z", "creationAuthor": "carol@example.com", "comments": [], "viewpoints": []}} |
       | remove-topic     | 🗑️remove-topic-applied     | {"guid": "topic-review-02"} |
@@ -130,17 +120,6 @@ Feature: Apply every typed BCF 2.1 markup mutation and round-trip a real-world c
       | insert-comment   | 🗨️insert-comment-applied   | {"topicGuid": "topic-clash-01", "comment": {"guid": "comment-02", "date": "2026-01-05T11:00:00Z", "author": "bob@example.com", "text": "Confirmed, rerouting duct.", "viewpointRef": null}} |
       | remove-comment   | 🧹️remove-comment-applied   | {"topicGuid": "topic-clash-01", "guid": "comment-01"} |
       | set-comment      | ✏️set-comment-applied      | {"topicGuid": "topic-clash-01", "guid": "comment-01", "text": "Please review — updated."} |
-
-  @id-no-mutation-baseline-inverse
-  @level-exhaustive
-  @mode-differential
-  Scenario: Undoing no-mutation restores the committed review
-    Given the real input document shared://⏸️no-mutation-applied/⬅️before.bcf
-    When the no-mutation mutation is applied and then undone
-      """
-      {"kind": "no-mutation", "params": {}}
-      """
-    Then the jszip reader reads the restored review and the committed before-document as the same BCF
 
   @id-identity-round-trip
   @level-long

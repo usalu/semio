@@ -5,37 +5,173 @@
   "type": "object",
   "additionalProperties": false,
   "required": [
+    "mutation",
     "modelDefinitionId",
     "newMediaKind",
     "newSourceUrl",
     "referenceId"
   ],
   "properties": {
+    "mutation": {
+      "const": "replaceReferenceMedia"
+    },
     "modelDefinitionId": {
-      "type": "string"
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "text",
+        "role": "value",
+        "label": {
+          "en": "Model definition",
+          "de": "Modelldefinition"
+        },
+        "description": {
+          "en": "Id of the model the reference belongs to, e.g. aec.building.",
+          "de": "ID des Modells, zu dem die Referenz gehört, z. B. aec.building."
+        },
+        "group": "target",
+        "order": 10
+      }
     },
     "referenceId": {
-      "type": "string"
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Reference",
+          "de": "Referenz"
+        },
+        "description": {
+          "en": "The reference image this mutation addresses.",
+          "de": "Das Referenzbild, das diese Mutation adressiert."
+        },
+        "ref": {
+          "kind": "reference"
+        },
+        "group": "target",
+        "order": 20
+      }
     },
     "newSourceUrl": {
-      "type": "string"
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "text",
+        "role": "value",
+        "label": {
+          "en": "Source URL",
+          "de": "Quell-URL"
+        },
+        "description": {
+          "en": "Address of the file, e.g. an https or data URL.",
+          "de": "Adresse der Datei, z. B. eine https- oder data-URL."
+        },
+        "group": "source",
+        "order": 30
+      }
     },
     "newMediaKind": {
-      "type": "string"
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "text",
+        "role": "value",
+        "label": {
+          "en": "Media kind",
+          "de": "Medienart"
+        },
+        "description": {
+          "en": "For example image or drawing.",
+          "de": "Zum Beispiel image (Bild) oder drawing (Zeichnung)."
+        },
+        "group": "source",
+        "order": 40
+      }
     },
     "newOrientation": {
-      "type": "array",
+      "type": [
+        "array",
+        "null"
+      ],
       "items": {
         "type": "number"
       },
       "minItems": 4,
-      "maxItems": 4
+      "maxItems": 4,
+      "x-semio-ui": {
+        "widget": "vector",
+        "role": "value",
+        "label": {
+          "en": "Orientation",
+          "de": "Orientierung"
+        },
+        "description": {
+          "en": "Unit quaternion (x, y, z, w); (0, 0, 0, 1) is no rotation.",
+          "de": "Einheitsquaternion (x, y, z, w); (0, 0, 0, 1) ist keine Drehung."
+        },
+        "step": 0.01,
+        "group": "pose",
+        "order": 50
+      }
     },
     "newScale": {
-      "type": "number"
+      "type": [
+        "number",
+        "null"
+      ],
+      "x-semio-ui": {
+        "widget": "slider",
+        "role": "value",
+        "label": {
+          "en": "Scale",
+          "de": "Skalierung"
+        },
+        "description": {
+          "en": "Uniform factor applied to the image plane.",
+          "de": "Einheitlicher Faktor für die Bildebene."
+        },
+        "step": 0.01,
+        "precision": 2,
+        "softMin": 0.1,
+        "softMax": 10,
+        "scale": "log",
+        "snaps": [
+          0.25,
+          0.5,
+          1,
+          2,
+          4
+        ],
+        "group": "pose",
+        "order": 60
+      }
     },
     "newOpacity": {
-      "type": "number"
+      "type": [
+        "number",
+        "null"
+      ],
+      "x-semio-ui": {
+        "widget": "slider",
+        "role": "value",
+        "label": {
+          "en": "Opacity",
+          "de": "Deckkraft"
+        },
+        "displayUnit": "%",
+        "displayFactor": 100,
+        "step": 0.01,
+        "precision": 2,
+        "softMin": 0,
+        "softMax": 1,
+        "snaps": [
+          0,
+          0.25,
+          0.5,
+          0.75,
+          1
+        ],
+        "group": "appearance",
+        "order": 70
+      }
     }
   }
 }

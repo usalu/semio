@@ -2,19 +2,11 @@
   "$schema": "http://json-schema.org/draft-07/schema#",
   "$id": "https://json.schemas.assets.semio-tech.com/s/stdio/svg/1.1/base/artifact.json",
   "title": "SvgArtifact",
+  "description": "The complete persisted SVG artifact contract is the base snapshot contract and is referenced rather than restated.",
   "type": "object",
-  "required": [
-    "schema",
-    "doc"
-  ],
-  "properties": {
-    "schema": {
-      "type": "string",
-      "x-semio-state": "artifact"
-    },
-    "doc": {
-      "type": "object",
-      "x-semio-state": "artifact"
+  "allOf": [
+    {
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/svg/1.1/base/snapshot.json"
     }
-  }
+  ]
 }

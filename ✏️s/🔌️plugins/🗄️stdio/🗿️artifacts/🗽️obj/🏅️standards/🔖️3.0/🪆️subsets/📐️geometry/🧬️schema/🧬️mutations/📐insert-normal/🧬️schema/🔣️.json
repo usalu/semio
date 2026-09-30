@@ -5,20 +5,21 @@
   "type": "object",
   "additionalProperties": false,
   "required": [
+    "mutation",
     "index",
     "normal"
   ],
   "properties": {
+    "mutation": {
+      "const": "insertNormal",
+      "description": "Aggregate discriminator spliced in by ObjMutation; absent when the payload stands alone."
+    },
     "index": {
       "type": "integer",
       "minimum": 0
     },
     "normal": {
       "$ref": "#/$defs/ObjNormal"
-    },
-    "mutation": {
-      "const": "insertNormal",
-      "description": "Aggregate discriminator spliced in by ObjMutation; absent when the payload stands alone."
     }
   },
   "$defs": {

@@ -4,11 +4,107 @@
   "title": "AddInput",
   "type": "object",
   "properties": {
+    "operation": {
+      "const": "addInput"
+    },
     "input": {
-      "type": "object"
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "kindId",
+        "selector",
+        "required",
+        "multiplicity"
+      ],
+      "properties": {
+        "id": {
+          "type": "string",
+          "x-semio-ui": {
+            "widget": "text",
+            "role": "value",
+            "label": {
+              "en": "Input ID",
+              "de": "Eingangs-ID"
+            }
+          }
+        },
+        "kindId": {
+          "type": "string",
+          "x-semio-ui": {
+            "widget": "text",
+            "role": "value",
+            "label": {
+              "en": "Artifact kind",
+              "de": "Artefaktart"
+            }
+          }
+        },
+        "selector": {
+          "type": "string",
+          "x-semio-ui": {
+            "widget": "text",
+            "role": "value",
+            "label": {
+              "en": "Selector",
+              "de": "Selektor"
+            },
+            "description": {
+              "en": "Which artifacts the input picks.",
+              "de": "Welche Artefakte der Eingang auswählt."
+            }
+          }
+        },
+        "required": {
+          "type": "boolean",
+          "x-semio-ui": {
+            "widget": "toggle",
+            "role": "value",
+            "label": {
+              "en": "Required",
+              "de": "Erforderlich"
+            }
+          }
+        },
+        "multiplicity": {
+          "type": "string",
+          "enum": [
+            "one",
+            "many"
+          ],
+          "x-semio-ui": {
+            "widget": "segmented",
+            "role": "value",
+            "label": {
+              "en": "Multiplicity",
+              "de": "Vielfachheit"
+            },
+            "options": {
+              "one": {
+                "en": "One",
+                "de": "Eins"
+              },
+              "many": {
+                "en": "Many",
+                "de": "Viele"
+              }
+            }
+          }
+        }
+      },
+      "x-semio-ui": {
+        "role": "value",
+        "label": {
+          "en": "Input",
+          "de": "Eingang"
+        },
+        "group": "record",
+        "order": 10
+      }
     }
   },
   "required": [
+    "operation",
     "input"
   ],
   "additionalProperties": false

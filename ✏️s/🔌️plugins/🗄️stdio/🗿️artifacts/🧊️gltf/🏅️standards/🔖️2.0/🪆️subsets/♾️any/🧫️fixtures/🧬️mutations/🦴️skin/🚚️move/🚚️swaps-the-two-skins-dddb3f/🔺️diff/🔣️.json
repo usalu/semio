@@ -1,17 +1,38 @@
 {
-  "id": "s.stdio.gltf.mutation.move-skin.v1",
-  "version": 1,
-  "touchedPaths": [
-    "document/skins/0",
-    "document/skins/1"
-  ],
-  "payload": {
-    "index": 0,
-    "position": 1
+  "nodes": {
+    "modified": [
+      {
+        "index": 0,
+        "diff": {
+          "skin": 1
+        }
+      },
+      {
+        "index": 1,
+        "diff": {
+          "skin": 0
+        }
+      }
+    ]
   },
-  "operation": {
-    "kind": "move",
-    "index": 0,
-    "position": 1
+  "skins": {
+    "modified": [
+      {
+        "index": 0,
+        "diff": {
+          "joints": [
+            1
+          ]
+        }
+      },
+      {
+        "index": 1,
+        "diff": {
+          "joints": [
+            0
+          ]
+        }
+      }
+    ]
   }
 }

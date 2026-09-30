@@ -1,0 +1,139 @@
+{
+  "$schema": "./🧬️schema/🔣️.json",
+  "note": "🎨️ The colour law of the `color_input` recipe every renderer shares: `hex` formats sRGB components in 0..1 (straight alpha; a missing component 0, a missing alpha 1, values clamped) as a lowercase `#rrggbb`, or `#rrggbbaa` with alpha, each channel round(c × 255); `parse` reads what a user types — an optional `#`, 3, 4, 6 or 8 hex digits in any case, surrounding space ignored, the short forms doubling each digit — as components channel / 255 with alpha 1 when absent, and refuses everything else. Answered by `ui_color_hex`/`parse_ui_color_hex` in Rust and `uiColorHex`/`parseUiColorHex` in TypeScript; color-string is the third-party oracle.",
+  "hex": [
+    {
+      "case": "opaque-orange",
+      "rgba": [
+        1,
+        0.5,
+        0,
+        1
+      ],
+      "alpha": false,
+      "expected": "#ff8000"
+    },
+    {
+      "case": "with-alpha",
+      "rgba": [
+        1,
+        0.5,
+        0,
+        0.5
+      ],
+      "alpha": true,
+      "expected": "#ff800080"
+    },
+    {
+      "case": "clamped",
+      "rgba": [
+        1.5,
+        -0.2,
+        0.25
+      ],
+      "alpha": false,
+      "expected": "#ff0040"
+    },
+    {
+      "case": "missing-alpha-is-opaque",
+      "rgba": [
+        0,
+        0,
+        0
+      ],
+      "alpha": true,
+      "expected": "#000000ff"
+    },
+    {
+      "case": "half-channel-rounds-up",
+      "rgba": [
+        0.5,
+        0.5,
+        0.5
+      ],
+      "alpha": false,
+      "expected": "#808080"
+    },
+    {
+      "case": "missing-components-are-zero",
+      "rgba": [
+        1
+      ],
+      "alpha": false,
+      "expected": "#ff0000"
+    },
+    {
+      "case": "transparent",
+      "rgba": [
+        0.2,
+        0.4,
+        0.6,
+        0
+      ],
+      "alpha": true,
+      "expected": "#33669900"
+    }
+  ],
+  "parse": [
+    {
+      "case": "six-digits",
+      "text": "#ff8000",
+      "expected": [
+        1.0,
+        0.5019607843137255,
+        0.0,
+        1.0
+      ]
+    },
+    {
+      "case": "eight-digits-trimmed-upper",
+      "text": "  #FF800080 ",
+      "expected": [
+        1.0,
+        0.5019607843137255,
+        0.0,
+        0.5019607843137255
+      ]
+    },
+    {
+      "case": "three-digits",
+      "text": "#abc",
+      "expected": [
+        0.6666666666666666,
+        0.7333333333333333,
+        0.8,
+        1.0
+      ]
+    },
+    {
+      "case": "four-digits-without-hash",
+      "text": "abcd",
+      "expected": [
+        0.6666666666666666,
+        0.7333333333333333,
+        0.8,
+        0.8666666666666667
+      ]
+    },
+    {
+      "case": "five-digits",
+      "text": "#12345",
+      "expected": null
+    },
+    {
+      "case": "not-hex",
+      "text": "#ggg",
+      "expected": null
+    },
+    {
+      "case": "empty",
+      "text": "",
+      "expected": null
+    },
+    {
+      "case": "double-hash",
+      "text": "##fff",
+      "expected": null
+    }
+  ]
+}

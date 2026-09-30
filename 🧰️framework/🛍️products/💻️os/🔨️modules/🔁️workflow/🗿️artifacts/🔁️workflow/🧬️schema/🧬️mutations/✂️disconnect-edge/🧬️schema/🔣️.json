@@ -4,12 +4,29 @@
   "title": "DisconnectEdge",
   "type": "object",
   "properties": {
-    "edge_id": {
-      "type": "string"
+    "operation": {
+      "const": "disconnectEdge"
+    },
+    "edgeId": {
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Connection",
+          "de": "Verbindung"
+        },
+        "ref": {
+          "kind": "edge"
+        },
+        "group": "target",
+        "order": 10
+      }
     }
   },
   "required": [
-    "edge_id"
+    "operation",
+    "edgeId"
   ],
   "additionalProperties": false
 }

@@ -5,12 +5,17 @@
   "type": "object",
   "additionalProperties": false,
   "required": [
+    "mutation",
     "timelineIndex",
     "channelIndex",
     "index",
     "t"
   ],
   "properties": {
+    "mutation": {
+      "const": "setKeyframeTime",
+      "description": "Aggregate discriminator spliced in by SemioAnimationMutation; absent when the payload stands alone."
+    },
     "timelineIndex": {
       "type": "integer",
       "minimum": 0
@@ -24,11 +29,15 @@
       "minimum": 0
     },
     "t": {
-      "type": "number"
-    },
-    "mutation": {
-      "const": "setKeyframeTime",
-      "description": "Aggregate discriminator spliced in by SemioAnimationMutation; absent when the payload stands alone."
+      "type": "number",
+      "x-semio-ui": {
+        "widget": "stepper",
+        "label": {
+          "en": "Time",
+          "de": "Zeit"
+        },
+        "unit": "s"
+      }
     }
   }
 }

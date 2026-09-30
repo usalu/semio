@@ -5,9 +5,13 @@
   "type": "object",
   "additionalProperties": false,
   "required": [
+    "mutation",
     "newGovernance"
   ],
   "properties": {
+    "mutation": {
+      "const": "replaceGovernance"
+    },
     "newGovernance": {
       "title": "Governance",
       "type": "object",
@@ -15,6 +19,7 @@
       "required": [
         "accountabilityRules",
         "approvalMatrix",
+        "auditSchedule",
         "changeControlProcess",
         "complianceObligations",
         "dataGovernance",
@@ -27,60 +32,153 @@
         "governancePerformance",
         "id",
         "meetingCadence",
+        "ownerId",
+        "policyOwnershipId",
         "qualityPolicy",
+        "reportingFrequency",
+        "requirementOwnershipId",
         "responsibilities",
+        "reviewCycle",
         "reviewHierarchy",
+        "riskAppetite",
+        "riskOwnershipId",
         "roles",
         "stakeholderEngagementPlan"
       ],
       "properties": {
         "id": {
-          "type": "integer",
-          "minimum": 0
+          "type": "string",
+          "x-semio-ui": {
+            "widget": "text",
+            "role": "value",
+            "label": {
+              "en": "ID",
+              "de": "ID"
+            },
+            "group": "identity",
+            "order": 10
+          }
         },
         "framework": {
-          "type": "string"
+          "type": "string",
+          "x-semio-ui": {
+            "widget": "text",
+            "role": "value",
+            "label": {
+              "en": "Governance Framework",
+              "de": "Governance-Rahmenwerk"
+            },
+            "description": {
+              "en": "e.g. ISO 9001 or ISO 41001.",
+              "de": "z. B. ISO 9001 oder ISO 41001."
+            },
+            "group": "identity",
+            "order": 20
+          }
         },
         "roles": {
           "type": "array",
           "items": {
             "type": "string"
+          },
+          "x-semio-ui": {
+            "role": "value",
+            "label": {
+              "en": "Roles",
+              "de": "Rollen"
+            },
+            "group": "details",
+            "order": 30
           }
         },
         "responsibilities": {
           "type": "array",
           "items": {
             "type": "string"
+          },
+          "x-semio-ui": {
+            "role": "value",
+            "label": {
+              "en": "Responsibilities",
+              "de": "Verantwortlichkeiten"
+            },
+            "group": "details",
+            "order": 40
           }
         },
         "approvalMatrix": {
           "type": "array",
           "items": {
             "type": "string"
+          },
+          "x-semio-ui": {
+            "role": "value",
+            "label": {
+              "en": "Approval Matrix",
+              "de": "Freigabematrix"
+            },
+            "group": "details",
+            "order": 50
           }
         },
         "escalationPaths": {
           "type": "array",
           "items": {
             "type": "string"
+          },
+          "x-semio-ui": {
+            "role": "value",
+            "label": {
+              "en": "Escalation Paths",
+              "de": "Eskalationswege"
+            },
+            "group": "details",
+            "order": 60
           }
         },
         "meetingCadence": {
           "type": "array",
           "items": {
             "type": "string"
+          },
+          "x-semio-ui": {
+            "role": "value",
+            "label": {
+              "en": "Meeting Cadence",
+              "de": "Sitzungsrhythmus"
+            },
+            "group": "details",
+            "order": 70
           }
         },
         "decisionRights": {
           "type": "array",
           "items": {
             "type": "string"
+          },
+          "x-semio-ui": {
+            "role": "value",
+            "label": {
+              "en": "Decision Rights",
+              "de": "Entscheidungsrechte"
+            },
+            "group": "details",
+            "order": 80
           }
         },
         "changeControlProcess": {
           "type": "array",
           "items": {
             "type": "string"
+          },
+          "x-semio-ui": {
+            "role": "value",
+            "label": {
+              "en": "Change Control Process",
+              "de": "Änderungsmanagementprozess"
+            },
+            "group": "details",
+            "order": 90
           }
         },
         "qualityPolicy": {
@@ -92,95 +190,378 @@
           ],
           "properties": {
             "text": {
-              "type": "string"
+              "type": "string",
+              "x-semio-ui": {
+                "widget": "multiline",
+                "role": "value",
+                "label": {
+                  "en": "Text",
+                  "de": "Text"
+                },
+                "group": "details",
+                "order": 10
+              }
             },
             "format": {
-              "type": "string"
+              "type": "string",
+              "x-semio-ui": {
+                "widget": "text",
+                "role": "value",
+                "label": {
+                  "en": "Format",
+                  "de": "Format"
+                },
+                "description": {
+                  "en": "Text format hint, e.g. plain or markdown.",
+                  "de": "Hinweis auf das Textformat, z. B. plain oder markdown."
+                },
+                "group": "details",
+                "order": 20
+              }
             }
+          },
+          "x-semio-ui": {
+            "role": "value",
+            "label": {
+              "en": "Quality Policy",
+              "de": "Qualitätspolitik"
+            },
+            "group": "narrative",
+            "order": 100
           }
         },
         "riskAppetite": {
-          "type": "string"
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "x-semio-ui": {
+            "widget": "text",
+            "role": "value",
+            "label": {
+              "en": "Risk Appetite",
+              "de": "Risikobereitschaft"
+            },
+            "group": "details",
+            "order": 110
+          }
         },
         "complianceObligations": {
           "type": "array",
           "items": {
             "type": "string"
+          },
+          "x-semio-ui": {
+            "role": "value",
+            "label": {
+              "en": "Compliance Obligations",
+              "de": "Compliance-Pflichten"
+            },
+            "group": "details",
+            "order": 120
           }
         },
         "auditSchedule": {
-          "type": "string"
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "x-semio-ui": {
+            "widget": "text",
+            "role": "value",
+            "label": {
+              "en": "Audit Schedule",
+              "de": "Auditplan"
+            },
+            "group": "details",
+            "order": 130
+          }
         },
         "documentControl": {
           "type": "array",
           "items": {
             "type": "string"
+          },
+          "x-semio-ui": {
+            "role": "value",
+            "label": {
+              "en": "Document Control",
+              "de": "Dokumentenlenkung"
+            },
+            "group": "details",
+            "order": 140
           }
         },
         "stakeholderEngagementPlan": {
           "type": "array",
           "items": {
             "type": "string"
+          },
+          "x-semio-ui": {
+            "role": "value",
+            "label": {
+              "en": "Stakeholder Engagement Plan",
+              "de": "Beteiligungsplan"
+            },
+            "group": "details",
+            "order": 150
           }
         },
         "ethicsPolicy": {
           "type": "array",
           "items": {
             "type": "string"
+          },
+          "x-semio-ui": {
+            "role": "value",
+            "label": {
+              "en": "Ethics Policy",
+              "de": "Ethikrichtlinien"
+            },
+            "group": "details",
+            "order": 160
           }
         },
         "dataGovernance": {
           "type": "array",
           "items": {
             "type": "string"
+          },
+          "x-semio-ui": {
+            "role": "value",
+            "label": {
+              "en": "Data Governance",
+              "de": "Datenverwaltung"
+            },
+            "group": "details",
+            "order": 170
           }
         },
         "ownerId": {
-          "type": "integer",
-          "minimum": 0
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "x-semio-ui": {
+            "widget": "reference",
+            "role": "target",
+            "label": {
+              "en": "Owner",
+              "de": "Verantwortlich"
+            },
+            "description": {
+              "en": "The stakeholder responsible for this entry.",
+              "de": "Der Beteiligte, der für diesen Eintrag verantwortlich ist."
+            },
+            "ref": {
+              "kind": "stakeholder",
+              "domain": "program",
+              "granularity": "entity"
+            },
+            "group": "links",
+            "order": 180
+          }
         },
         "reviewCycle": {
-          "type": "string"
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "x-semio-ui": {
+            "widget": "text",
+            "role": "value",
+            "label": {
+              "en": "Review Cycle",
+              "de": "Überprüfungszyklus"
+            },
+            "group": "details",
+            "order": 190
+          }
         },
         "reviewHierarchy": {
           "type": "array",
           "items": {
             "type": "string"
+          },
+          "x-semio-ui": {
+            "role": "value",
+            "label": {
+              "en": "Review Hierarchy",
+              "de": "Prüfhierarchie"
+            },
+            "group": "details",
+            "order": 200
           }
         },
         "policyOwnershipId": {
-          "type": "integer",
-          "minimum": 0
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "x-semio-ui": {
+            "widget": "reference",
+            "role": "target",
+            "label": {
+              "en": "Policy Owner",
+              "de": "Verantwortlich für Richtlinien"
+            },
+            "ref": {
+              "kind": "stakeholder",
+              "domain": "program",
+              "granularity": "entity"
+            },
+            "group": "links",
+            "order": 210
+          }
         },
         "requirementOwnershipId": {
-          "type": "integer",
-          "minimum": 0
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "x-semio-ui": {
+            "widget": "reference",
+            "role": "target",
+            "label": {
+              "en": "Requirements Owner",
+              "de": "Verantwortlich für Anforderungen"
+            },
+            "ref": {
+              "kind": "stakeholder",
+              "domain": "program",
+              "granularity": "entity"
+            },
+            "group": "links",
+            "order": 220
+          }
         },
         "riskOwnershipId": {
-          "type": "integer",
-          "minimum": 0
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "x-semio-ui": {
+            "widget": "reference",
+            "role": "target",
+            "label": {
+              "en": "Risk Owner",
+              "de": "Risikoverantwortlich"
+            },
+            "ref": {
+              "kind": "stakeholder",
+              "domain": "program",
+              "granularity": "entity"
+            },
+            "group": "links",
+            "order": 230
+          }
         },
         "reportingFrequency": {
-          "type": "string"
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "x-semio-ui": {
+            "widget": "text",
+            "role": "value",
+            "label": {
+              "en": "Reporting Frequency",
+              "de": "Berichtshäufigkeit"
+            },
+            "group": "details",
+            "order": 240
+          }
         },
         "accountabilityRules": {
           "type": "array",
           "items": {
             "type": "string"
+          },
+          "x-semio-ui": {
+            "role": "value",
+            "label": {
+              "en": "Accountability Rules",
+              "de": "Verantwortlichkeitsregeln"
+            },
+            "group": "details",
+            "order": 250
           }
         },
         "exceptionManagement": {
           "type": "array",
           "items": {
             "type": "string"
+          },
+          "x-semio-ui": {
+            "role": "value",
+            "label": {
+              "en": "Exception Management",
+              "de": "Ausnahmemanagement"
+            },
+            "group": "details",
+            "order": 260
           }
         },
         "governancePerformance": {
           "type": "array",
           "items": {
             "type": "string"
+          },
+          "x-semio-ui": {
+            "role": "value",
+            "label": {
+              "en": "Governance Performance",
+              "de": "Governance-Kennzahlen"
+            },
+            "group": "details",
+            "order": 270
           }
         }
+      },
+      "x-semio-ui": {
+        "role": "value",
+        "label": {
+          "en": "Governance",
+          "de": "Governance"
+        },
+        "description": {
+          "en": "The complete governance; replaces the current one.",
+          "de": "Vollständige Governance; ersetzt die bisherige."
+        },
+        "group": "record",
+        "order": 10
       }
     }
   }

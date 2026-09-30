@@ -1,0 +1,34 @@
+{
+  "mutation": "setExtGState",
+  "state": {
+    "id": "id",
+    "lineWidth": 0,
+    "lineCap": "butt",
+    "lineJoin": "miter",
+    "miterLimit": 0,
+    "dash": [
+      [],
+      0
+    ],
+    "renderingIntent": "renderingIntent",
+    "overprintStroke": false,
+    "overprintFill": false,
+    "overprintMode": 0,
+    "font": [
+      "font",
+      0
+    ],
+    "blendMode": [],
+    "softMask": {
+      "kind": "none"
+    },
+    "strokeAlpha": 0,
+    "fillAlpha": 0,
+    "alphaIsShape": false,
+    "strokeAdjust": false,
+    "flatness": 0,
+    "smoothness": 0,
+    "textKnockout": false,
+    "extra": []
+  }
+}

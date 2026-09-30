@@ -1,6 +1,6 @@
 // #region 🧮️ActionArgumentResolution
 /** 🧮️ Resolves staged and default action arguments, then identifies unresolved required arguments. */
-import type { ActionArgDef } from "../🛂️manifest/🟦️.ts";
+import type { ActionArgDef, DialogChoice } from "../🛂️manifest/🟦️.ts";
 
 /** 🌱️ `seed` carries a dialog's pre-seeded context args (e.g. a row-scoped `spaceId` that is never a
  * declared, editable form field) through untouched: declared `defs` still resolve staged-then-default
@@ -47,5 +47,11 @@ export function invalidActionChoiceArgs(defs: readonly ActionArgDef[], effective
 export function unresolvedActionArgs(defs: readonly ActionArgDef[], effective: Readonly<Record<string, unknown>>): string[] {
   const unresolved = new Set([...missingRequiredArgs(defs, effective), ...invalidActionChoiceArgs(defs, effective)]);
   return defs.filter(def => unresolved.has(def.id)).map(def => def.id);
+}
+
+/** 🚧️ The args a dialog `choice` requires that are still unresolved in `effective` — the choice is enabled exactly when this is empty, whatever the submit's own required args; the twin of Rust `DialogChoice::unresolved_args`. */
+export function unresolvedDialogChoiceArgs(choice: DialogChoice, defs: readonly ActionArgDef[], effective: Readonly<Record<string, unknown>>): string[] {
+  const requires = choice.requires ?? [];
+  return unresolvedActionArgs(defs.filter((def) => requires.includes(def.id)).map((def) => ({ ...def, required: true })), effective);
 }
 // #endregion 🧮️ActionArgumentResolution

@@ -4,7 +4,7 @@
   "semanticKind": "set-interaction-state",
   "displayName": "Set Interaction State",
   "emoji": "🔁️",
-  "aggregateVariant": "SetState",
+  "aggregateVariant": "SetInteractionState",
   "payloadSchema": "🧬️schema/🔣️.json",
   "textOpcode": "set-interaction-state",
   "binaryTag": null,

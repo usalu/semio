@@ -6,6 +6,8 @@ use crate::{part_4::Subject, Iso16757Mutation, Iso16757Snapshot};
 #[derive(Clone, Debug, PartialEq, dsl::MutationLeaf, value_derive::ToValue, value_derive::FromValue)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 #[mutation_leaf(contract = ::protocol)]
+#[cfg_attr(test, serde(rename_all = "camelCase"))]
+#[value(rename_all = "camelCase")]
 pub struct IntroduceSubject {
     pub subject: Subject,
     pub index: Option<usize>,

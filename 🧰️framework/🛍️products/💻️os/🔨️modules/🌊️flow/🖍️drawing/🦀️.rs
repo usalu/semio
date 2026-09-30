@@ -1,5 +1,5 @@
 //! 🖍️ Flow 2D drawing kernel — ephemeral node-evaluation scene-graph kernel (content-addressed via
-//! the OS `EngineCache`, mirroring `📐️brep-geometry`'s own in-process `Brep` kernel precedent) plus
+//! the OS `EngineCache`) plus
 //! its JSON bridge for the flow `draw` operator extension.
 //!
 //! 🪦 Relocated verbatim from the framework's `🧰️framework/🔨️modules/◻️2d/🗄️store/🦀️.rs`
@@ -8,9 +8,7 @@
 //! (and, for the persisted drawing document, now is) `✳️drawing`'s real `ArtifactStore` + 17
 //! mutation triads + `🎛flattened-scene` inference. This kernel is NOT that persisted document: it
 //! is flow's own ephemeral, per-evaluation scratch geometry (shapes/booleans/gradients/text/trace/
-//! DWG round-trip built and discarded while a node graph runs) — the same ephemeral-compute role
-//! `📐️brep-geometry`'s own `Brep` kernel already legitimately plays for brep, unaffected by this
-//! ticket. It now lives here, private to flow, rather than as shared framework API: nothing outside
+//! DWG round-trip built and discarded while a node graph runs). It lives here, private to flow, rather than as shared framework API: nothing outside
 //! flow's own two files (`💻️os/🔨️modules/🌊️flow/🖍️drawing/🦀️.rs`, this file, and
 //! `✏️s/🔌️plugins/🌊️flow/🧩️extensions/🖍️draw/🦀️.rs`) ever referenced it. `PathSegment`/
 //! `Vec2`/`DrawingError` remain shared framework surface

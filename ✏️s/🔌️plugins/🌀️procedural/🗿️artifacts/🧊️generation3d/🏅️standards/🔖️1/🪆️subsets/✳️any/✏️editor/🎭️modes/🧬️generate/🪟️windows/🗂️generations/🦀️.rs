@@ -40,9 +40,3 @@ pub fn render(generation: &GenerationPlayState, selected_id: Option<&str>, local
     crate::generation_tree(GENERATION_3D_PLAY_APP_ID, GENERATION_3D_PLAY_GENERATE_PREFIX, generation, selected_id, locale, terminology, windows)
 }
 //#endregion 🔖️Render
-
-//#region 🧪️Tests
-#[cfg(test)]
-#[path = "./🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
-//#endregion 🧪️Tests

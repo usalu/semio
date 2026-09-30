@@ -5,15 +5,59 @@
   "type": "object",
   "additionalProperties": false,
   "required": [
+    "mutation",
     "id",
     "newSeverity"
   ],
   "properties": {
+    "mutation": {
+      "const": "changeFaultSeverity"
+    },
     "id": {
-      "type": "integer"
+      "type": "integer",
+      "minimum": 0,
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Fault",
+          "de": "Fehler"
+        },
+        "description": {
+          "en": "The fault this mutation changes, by id.",
+          "de": "Fehler, den diese Mutation ändert, per ID."
+        },
+        "ref": {
+          "kind": "fault"
+        },
+        "group": "target",
+        "order": 10
+      }
     },
     "newSeverity": {
-      "type": "number"
+      "type": "number",
+      "minimum": 0,
+      "maximum": 1,
+      "x-semio-ui": {
+        "widget": "slider",
+        "role": "value",
+        "label": {
+          "en": "Severity",
+          "de": "Schweregrad"
+        },
+        "description": {
+          "en": "0 is harmless, 100 % is the fault at full strength.",
+          "de": "0 ist wirkungslos, 100 % ist der Fehler in voller Stärke."
+        },
+        "displayUnit": "%",
+        "displayFactor": 100,
+        "step": 0.01,
+        "precision": 0,
+        "softMin": 0,
+        "softMax": 1,
+        "group": "fault",
+        "order": 20
+      }
     }
   }
 }

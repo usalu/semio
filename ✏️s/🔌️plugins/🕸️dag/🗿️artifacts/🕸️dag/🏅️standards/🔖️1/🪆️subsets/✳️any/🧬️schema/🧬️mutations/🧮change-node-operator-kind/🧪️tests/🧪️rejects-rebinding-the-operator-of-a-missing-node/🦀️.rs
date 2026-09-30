@@ -11,10 +11,10 @@
 use crate::mutations::{apply_dag_mutation, change_node_operator_kind, inverse_dag_mutation, DagMutation};
 use crate::{DagDiff, DagSnapshot};
 
-const BEFORE: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🧮change-node-operator-kind/🧪️rejects-rebinding-the-operator-of-a-missing-node/📸️snapshot/⬅️before/🔣️.json");
-const AFTER: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🧮change-node-operator-kind/🧪️rejects-rebinding-the-operator-of-a-missing-node/📸️snapshot/➡️after/🔣️.json");
-const MUTATION: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🧮change-node-operator-kind/🧪️rejects-rebinding-the-operator-of-a-missing-node/🦠️mutation/🔣️.json");
-const OUTCOME: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🧮change-node-operator-kind/🧪️rejects-rebinding-the-operator-of-a-missing-node/🎯️outcome/🔣️.json");
+const BEFORE: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🧮change-node-operator-kind/🧪️rejects-rebinding-operator-missing-node/📸️snapshot/⬅️before/🔣️.json");
+const AFTER: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🧮change-node-operator-kind/🧪️rejects-rebinding-operator-missing-node/📸️snapshot/➡️after/🔣️.json");
+const MUTATION: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🧮change-node-operator-kind/🧪️rejects-rebinding-operator-missing-node/🦠️mutation/🔣️.json");
+const OUTCOME: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🧮change-node-operator-kind/🧪️rejects-rebinding-operator-missing-node/🎯️outcome/🔣️.json");
 
 fn before() -> DagSnapshot {
     dsl::json::from_json_str(BEFORE).expect("before snapshot decodes")

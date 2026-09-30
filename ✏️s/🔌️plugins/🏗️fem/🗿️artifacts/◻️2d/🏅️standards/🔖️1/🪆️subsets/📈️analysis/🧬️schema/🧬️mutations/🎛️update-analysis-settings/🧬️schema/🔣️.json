@@ -2,7 +2,7 @@
   "$schema": "http://json-schema.org/draft-07/schema#",
   "$id": "https://json.schemas.assets.semio-tech.com/s/fem/2d/1/analysis/mutation/update-analysis-settings/schema.json",
   "title": "UpdateAnalysisSettings",
-  "description": "The `update-analysis-settings` mutation payload as it travels the wire: internally tagged with `\"mutation\": \"updateAnalysisSettings\"`, camelCase throughout. Structural only — the plausibility and geometry bounds this kind enforces live in the SNAPSHOT schema, because they are properties of a valid document rather than of a well-formed payload; each is annotated there with the `mutations::guards` function that raises them.",
+  "description": "The `update-analysis-settings` mutation payload as it travels the wire: internally tagged with `\"mutation\": \"updateAnalysisSettings\"`, camelCase throughout. Its hard bounds and `x-semio-invariant` entries state exactly the payload-intrinsic breaches `mutations::guards` refuses as `mutation.invariant`, so every such payload fails this schema; refusals that depend on the base (a missing, duplicate or still-referenced target) belong to the diff alone.",
   "type": "object",
   "additionalProperties": false,
   "required": [
@@ -12,7 +12,15 @@
   "properties": {
     "mutation": {
       "const": "updateAnalysisSettings",
-      "description": "The internally tagged discriminator `#[value(tag = \"mutation\")]` puts on the wire."
+      "description": "The internally tagged discriminator `#[value(tag = \"mutation\")]` puts on the wire.",
+      "x-semio-ui": {
+        "widget": "hidden",
+        "role": "discriminator",
+        "label": {
+          "en": "Mutation",
+          "de": "Mutation"
+        }
+      }
     },
     "settings": {
       "title": "FemAnalysisSettings",
@@ -27,17 +35,67 @@
         "modalCount": {
           "type": "integer",
           "format": "uint32",
-          "minimum": 0
+          "minimum": 1,
+          "x-semio-ui": {
+            "widget": "stepper",
+            "role": "value",
+            "label": {
+              "en": "Number of vibration modes",
+              "de": "Anzahl Eigenformen"
+            },
+            "step": 1,
+            "precision": 0,
+            "group": "analysis",
+            "order": 10
+          }
         },
         "bucklingCount": {
           "type": "integer",
           "format": "uint32",
-          "minimum": 0
+          "minimum": 1,
+          "x-semio-ui": {
+            "widget": "stepper",
+            "role": "value",
+            "label": {
+              "en": "Number of buckling modes",
+              "de": "Anzahl Knickformen"
+            },
+            "step": 1,
+            "precision": 0,
+            "group": "analysis",
+            "order": 20
+          }
         },
         "deformationScale": {
           "type": "number",
-          "format": "double"
+          "format": "double",
+          "exclusiveMinimum": 0,
+          "x-semio-ui": {
+            "widget": "stepper",
+            "role": "value",
+            "label": {
+              "en": "Deformation scale",
+              "de": "Verformungsmaßstab"
+            },
+            "description": {
+              "en": "Magnification the deformed shape is drawn with.",
+              "de": "Überhöhung, mit der die Verformungsfigur gezeichnet wird."
+            },
+            "step": 1,
+            "precision": 1,
+            "group": "analysis",
+            "order": 30
+          }
         }
+      },
+      "x-semio-ui": {
+        "role": "value",
+        "label": {
+          "en": "Analysis settings",
+          "de": "Analyseeinstellungen"
+        },
+        "group": "record",
+        "order": 20
       }
     }
   }

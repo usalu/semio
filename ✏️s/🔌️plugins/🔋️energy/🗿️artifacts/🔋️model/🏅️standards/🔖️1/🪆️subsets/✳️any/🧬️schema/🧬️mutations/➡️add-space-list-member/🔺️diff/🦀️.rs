@@ -13,7 +13,7 @@ pub fn diff(payload: &super::AddSpaceListMember, base: &EnergyModelSnapshot) -> 
         return protocol::MutationOutcome::error("mutation.target-missing", format!("Space {} does not exist.", payload.space_id.0), [payload.space_id.0.to_string()]);
     }
     if payload.index as usize > existing.space_ids.len() {
-        return protocol::MutationOutcome::error("mutation.invariant", format!("Index {} is past the end of Space list {}'s {} members.", payload.index, payload.id.0, existing.space_ids.len()), [payload.id.0.to_string()]);
+        return protocol::MutationOutcome::error("mutation.target-missing", format!("Index {} is past the end of Space list {}'s {} members.", payload.index, payload.id.0, existing.space_ids.len()), [payload.id.0.to_string()]);
     }
     if existing.space_ids.contains(&payload.space_id) {
         return protocol::MutationOutcome::empty().warn("mutation.no-op", format!("Space {} already belongs to Space list {}.", payload.space_id.0, payload.id.0));

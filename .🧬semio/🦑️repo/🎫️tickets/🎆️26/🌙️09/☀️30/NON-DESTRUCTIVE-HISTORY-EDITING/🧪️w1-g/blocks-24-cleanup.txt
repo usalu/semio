@@ -1,0 +1,70 @@
+<<<<<<< ANCHOR
+    /// 🧭️ Evicts ring entry `position` into a displaced slot the caller reserved: an alias another owner holds only
+    /// drops its count, the last owner retires through `factory`.
+    fn evict_prefix_snapshot_reserved(&mut self, position: usize, factory: &Arc<dyn SnapshotRetirementFactory<P>>) {
+        let entry = self.prefix_ring.remove(position);
+        if Arc::strong_count(&entry.snapshot) > 1 {
+            drop(entry);
+        } else {
+            self.displaced_retirements.push_reserved(factory.retire(entry.snapshot));
+        }
+    }
+=======
+    /// 🧭️ Evicts ring entry `position` into a displaced slot the caller reserved: an alias another owner holds only
+    /// drops its count, the last owner — decided atomically by [`Arc::try_unwrap`] — retires through `factory`.
+    fn evict_prefix_snapshot_reserved(&mut self, position: usize, factory: &Arc<dyn SnapshotRetirementFactory<P>>) {
+        let PrefixSnapshot { snapshot, .. } = self.prefix_ring.remove(position);
+        if let Ok(unique) = Arc::try_unwrap(snapshot) {
+            self.displaced_retirements.push_reserved(factory.retire(Arc::new(unique)));
+        }
+    }
+>>>>>>> END
+<<<<<<< ANCHOR
+    fn take_tail_snapshot_for_current(&mut self) -> Result<Arc<P>, VcsError> {
+        let Some((edit_id, _)) = self.tail_undo_cache.as_ref() else {
+            return Err(VcsError::ValidationFailed("artifact store tail snapshot reuse lost its exact owner".into()));
+        };
+        self.displaced_retirements.reserve(usize::from(!edit_id.is_empty()))?;
+        let (edit_id, snapshot) = self.tail_undo_cache.take().expect("validated tail snapshot reuse authority remains present");
+        if !edit_id.is_empty() {
+            self.displaced_retirements.push_reserved(Box::new(ArtifactStoreStringRetirement::new(edit_id)));
+        }
+        Ok(snapshot)
+    }
+
+=======
+>>>>>>> END
+<<<<<<< ANCHOR
+/// edit's forwards in [`ArtifactStore::project_applied`] and meets the `?` (measured 2026-09-20).
+=======
+/// edit's forwards in `ArtifactStore::project_applied` (since folded into [`ArtifactStore::reproject`]) and meets the `?`
+/// (measured 2026-09-20).
+>>>>>>> END
+<<<<<<< ANCHOR
+
+    /// 🟰️ Every Report replay folds the whole suffix again (the reference an early exit must equal).
+    pub fn disable_convergence_early_exit(&mut self) {
+        self.snapshot_equality = None;
+    }
+=======
+>>>>>>> END
+<<<<<<< ANCHOR
+    /// 📍️ The applied position the replay starts from.
+    pub fn from_position(&self) -> usize {
+        self.from
+    }
+
+    /// 📶️ Operations folded so far of the suffix total.
+=======
+    /// 📶️ Operations folded so far of the suffix total.
+>>>>>>> END
+<<<<<<< ANCHOR
+    /// 📍️ The applied position the replay started from.
+    pub fn from_position(&self) -> usize {
+        self.from
+    }
+
+    /// 🔢️ The store generation the replay was started against.
+=======
+    /// 🔢️ The store generation the replay was started against.
+>>>>>>> END

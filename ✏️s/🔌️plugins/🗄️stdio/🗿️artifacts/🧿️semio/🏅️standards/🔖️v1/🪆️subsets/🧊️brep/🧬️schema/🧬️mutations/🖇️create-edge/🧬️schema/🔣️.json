@@ -16,13 +16,41 @@
       "type": "string"
     },
     "start_vertex": {
-      "type": "string"
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Start vertex",
+          "de": "Startpunkt"
+        },
+        "ref": {
+          "kind": "vertex"
+        }
+      }
     },
     "end_vertex": {
-      "type": "string"
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "End vertex",
+          "de": "Endpunkt"
+        },
+        "ref": {
+          "kind": "vertex"
+        }
+      }
     },
     "curve": {
-      "$ref": "#/$defs/BrepCurve"
+      "$ref": "#/$defs/BrepCurve",
+      "x-semio-ui": {
+        "label": {
+          "en": "Curve",
+          "de": "Kurve"
+        }
+      }
     },
     "tol": {
       "type": "number"

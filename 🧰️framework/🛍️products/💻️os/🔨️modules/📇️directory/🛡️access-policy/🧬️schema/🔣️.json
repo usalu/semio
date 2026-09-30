@@ -1,0 +1,157 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/os/directory/access-policy/schema.json",
+  "$ref": "#/$defs/DirectoryAccessPolicyV1",
+  "$defs": {
+    "DirectoryAccessTextV1": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 256,
+      "x-semio-formats": [
+        "🔣️jsonschema"
+      ]
+    },
+    "DirectoryAccessRoleV1": {
+      "description": "A role a principal holds for one request: admin (an operator subject), owner (the space's owner), author/spectator (its membership), share (an exact document share token), authenticated (any signed-in human), agent-reader/agent-editor (an agent session under a read/edit delegation, only in its delegation's space; an agent holds no human role).",
+      "enum": [
+        "admin",
+        "owner",
+        "author",
+        "spectator",
+        "share",
+        "authenticated",
+        "agent-reader",
+        "agent-editor"
+      ]
+    },
+    "DirectoryAccessActionV1": {
+      "description": "Every access decision the hub takes: directory commands, agent delegation, document read/write/check-in, artifact creation, and space blob read/write.",
+      "enum": [
+        "space.create",
+        "space.rename",
+        "space.visibility",
+        "space.archive",
+        "space.delete",
+        "member.upsert",
+        "member.remove",
+        "invite.create",
+        "invite.revoke",
+        "document.announce",
+        "document.read",
+        "document.write",
+        "document.check-in",
+        "artifact.create",
+        "blob.read",
+        "blob.write",
+        "agent.delegate",
+        "preference.record",
+        "preference.read"
+      ]
+    },
+    "DirectoryAccessGrantV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "effect",
+        "roles",
+        "actions"
+      ],
+      "properties": {
+        "effect": {
+          "enum": [
+            "allow",
+            "deny"
+          ]
+        },
+        "roles": {
+          "type": "array",
+          "minItems": 1,
+          "uniqueItems": true,
+          "items": {
+            "$ref": "#/$defs/DirectoryAccessRoleV1"
+          }
+        },
+        "actions": {
+          "type": "array",
+          "minItems": 1,
+          "uniqueItems": true,
+          "items": {
+            "$ref": "#/$defs/DirectoryAccessActionV1"
+          }
+        },
+        "spaceKinds": {
+          "type": "array",
+          "minItems": 1,
+          "uniqueItems": true,
+          "items": {
+            "enum": [
+              "atelier",
+              "studio",
+              "archive"
+            ]
+          }
+        }
+      }
+    },
+    "DirectoryAccessPolicyV1": {
+      "description": "The hub's one declared access policy: closed by default, deny overrides allow, a grant limited to spaceKinds applies only in spaces of those kinds.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schema",
+        "grants"
+      ],
+      "properties": {
+        "schema": {
+          "const": "semio.os.directory.access-policy/v1"
+        },
+        "grants": {
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 64,
+          "items": {
+            "$ref": "#/$defs/DirectoryAccessGrantV1"
+          }
+        }
+      }
+    },
+    "DirectoryAccessDecisionVectorV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "name",
+        "roles",
+        "action",
+        "permitted"
+      ],
+      "properties": {
+        "name": {
+          "$ref": "#/$defs/DirectoryAccessTextV1"
+        },
+        "roles": {
+          "type": "array",
+          "uniqueItems": true,
+          "items": {
+            "$ref": "#/$defs/DirectoryAccessRoleV1"
+          }
+        },
+        "action": {
+          "$ref": "#/$defs/DirectoryAccessActionV1"
+        },
+        "spaceKind": {
+          "enum": [
+            "atelier",
+            "studio",
+            "archive"
+          ]
+        },
+        "permitted": {
+          "type": "boolean"
+        }
+      },
+      "x-semio-formats": [
+        "🔣️jsonschema"
+      ]
+    }
+  }
+}

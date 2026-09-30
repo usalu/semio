@@ -2047,6 +2047,15 @@ pub mod ui {
         #[serde(skip_serializing_if = "Option::is_none")]
         #[value(skip_serializing_if = "Option::is_none")]
         pub accept: Option<String>,
+        /// 🎯️ Fraction digits a number field commits — the contract's `InputProps.precision`.
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        #[value(default, skip_serializing_if = "Option::is_none")]
+        pub precision: Option<u16>,
+        /// 📌️ A number field's detents — the contract's `InputProps.snaps`: its page keys jump between them and a
+        /// committed detent is kept off the step ladder.
+        #[serde(default, skip_serializing_if = "Vec::is_empty")]
+        #[value(default, skip_serializing_if = "Vec::is_empty")]
+        pub snaps: Vec<f64>,
         pub on_change: ActionDescriptor,
         /// ⏎️ React's `SearchInput.onSubmit` — the line the user CONFIRMS with Enter, dispatched
         /// through [`ui_contract::Trigger::Submit`]. Distinct from `on_change`, which React fires on
@@ -2179,6 +2188,10 @@ pub mod ui {
         #[serde(skip_serializing_if = "Option::is_none")]
         #[value(skip_serializing_if = "Option::is_none")]
         pub unit: Option<String>,
+        /// 🧲️ Detents — the contract's `SliderProps.snaps`, painted as ticks and applied by the shared law.
+        #[serde(default, skip_serializing_if = "Vec::is_empty")]
+        #[value(default, skip_serializing_if = "Vec::is_empty")]
+        pub snaps: Vec<f64>,
         pub on_change: ActionDescriptor,
         #[serde(default, skip_serializing_if = "UiPresence::is_default")]
         #[value(default, skip_serializing_if = "UiPresence::is_default")]
@@ -2202,6 +2215,10 @@ pub mod ui {
         #[serde(default, skip_serializing_if = "Option::is_none")]
         #[value(default, skip_serializing_if = "Option::is_none")]
         pub max: Option<f64>,
+        /// 🎯️ Fraction digits it shows and commits — the contract's `NumberStepperProps.precision`.
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        #[value(default, skip_serializing_if = "Option::is_none")]
+        pub precision: Option<u16>,
         pub on_absolute: ActionDescriptor,
         pub on_delta: ActionDescriptor,
         #[serde(default, skip_serializing_if = "UiPresence::is_default")]
@@ -2695,6 +2712,8 @@ pub mod ui {
                 max: None,
                 step: None,
                 accept: None,
+                precision: None,
+                snaps: Vec::new(),
                 on_submit: None,
                 on_abort: None,
                 on_repeat_last: None,
@@ -2718,7 +2737,7 @@ pub mod ui {
             menu: None,
             id: id.clone(),
             label: label.into(),
-            child: Box::new(UiNode::NumberStepper(UiNumberStepperNode { menu: None, id, value: mixed.value, step, uniform: mixed.uniform, min: None, max: None, on_absolute: action.clone(), on_delta: action, presence: UiPresence::default() })),
+            child: Box::new(UiNode::NumberStepper(UiNumberStepperNode { menu: None, id, value: mixed.value, step, uniform: mixed.uniform, min: None, max: None, precision: None, on_absolute: action.clone(), on_delta: action, presence: UiPresence::default() })),
             description: None,
             required: None,
             error: None,

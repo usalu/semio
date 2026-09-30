@@ -5,20 +5,67 @@
   "type": "object",
   "additionalProperties": false,
   "required": [
+    "mutation",
     "layerId",
     "expected",
     "locked"
   ],
   "properties": {
+    "mutation": {
+      "const": "changeLayerLocked"
+    },
     "layerId": {
       "type": "string",
-      "minLength": 1
+      "minLength": 1,
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Layer",
+          "de": "Ebene"
+        },
+        "description": {
+          "en": "The layer this mutation addresses.",
+          "de": "Die Ebene, die diese Mutation adressiert."
+        },
+        "ref": {
+          "kind": "layer",
+          "domain": "layers",
+          "granularity": "layer"
+        },
+        "group": "target",
+        "order": 10
+      }
     },
     "expected": {
-      "type": "boolean"
+      "type": "boolean",
+      "x-semio-ui": {
+        "widget": "toggle",
+        "role": "value",
+        "label": {
+          "en": "Expected locked",
+          "de": "Erwartet gesperrt"
+        },
+        "description": {
+          "en": "Value the layer must hold now; the edit is refused on a mismatch.",
+          "de": "Wert, den die Ebene jetzt haben muss; sonst wird die Bearbeitung abgelehnt."
+        },
+        "group": "state",
+        "order": 20
+      }
     },
     "locked": {
-      "type": "boolean"
+      "type": "boolean",
+      "x-semio-ui": {
+        "widget": "toggle",
+        "role": "value",
+        "label": {
+          "en": "Locked",
+          "de": "Gesperrt"
+        },
+        "group": "state",
+        "order": 30
+      }
     }
   }
 }

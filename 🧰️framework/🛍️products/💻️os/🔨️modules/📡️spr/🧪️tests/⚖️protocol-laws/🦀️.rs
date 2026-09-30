@@ -140,7 +140,7 @@ async fn push_transition(rng: &mut SplitMix64, clock: &mut u64, adversarial: boo
     let hlt = (rng.next_range(4).await, *clock, rng.next_range(2).await);
     let id = next_ident(rng, "transition", transitions.len(), adversarial).await;
     let dependencies = transitions.last().map(|prior| vec![prior.id.clone()]).unwrap_or_default();
-    transitions.push(crate::os_spr::HistoryTransitionRecord { id, actor, hlt, dependencies, payload: crate::os_spr::encode_history_transition(&transition) });
+    transitions.push(crate::os_spr::HistoryTransitionRecord { id, actor, hlt, dependencies, observed: None, payload: crate::os_spr::encode_history_transition(&transition) });
 }
 
 /// 🎞️ Deterministic seeded `crate::os_spr::HistoryLog` fabricator.
@@ -262,6 +262,7 @@ impl OpDagGen {
                 diff: crate::os_spr::ArtifactDiff { schema: crate::os_spr::SchemaId("testkit.op".to_string()), payload: format!("index:{i}").into_bytes() },
                 inverse: crate::os_spr::InverseMutation { schema: crate::os_spr::SchemaId("testkit.op".to_string()), payload: Vec::new() },
                 timestamp: crate::os_spr::HybridLogicalTimestamp::new(i as u64, i as u64 * 10),
+                transaction: None,
             });
         }
         self.state = rng.0;

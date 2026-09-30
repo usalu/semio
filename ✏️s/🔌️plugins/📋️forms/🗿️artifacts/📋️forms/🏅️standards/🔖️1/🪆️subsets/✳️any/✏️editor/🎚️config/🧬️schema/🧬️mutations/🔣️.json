@@ -1,0 +1,31 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/app/forms/forms/config/mutations.json",
+  "title": "FormsConfigMutation",
+  "oneOf": [
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "ReplaceConfig"
+      ],
+      "properties": {
+        "ReplaceConfig": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/app/forms/forms/config/mutation/replace-config/schema.json"
+        }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "SetContributions"
+      ],
+      "properties": {
+        "SetContributions": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/app/forms/forms/config/mutation/set-contributions/schema.json"
+        }
+      }
+    }
+  ]
+}

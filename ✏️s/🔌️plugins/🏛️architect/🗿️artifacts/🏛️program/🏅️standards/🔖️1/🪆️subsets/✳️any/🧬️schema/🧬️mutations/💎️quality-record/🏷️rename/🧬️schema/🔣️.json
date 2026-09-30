@@ -5,16 +5,52 @@
   "type": "object",
   "additionalProperties": false,
   "required": [
+    "mutation",
     "id",
     "newName"
   ],
   "properties": {
+    "mutation": {
+      "const": "renameQualityRecord"
+    },
     "id": {
-      "type": "integer",
-      "minimum": 0
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Quality Record",
+          "de": "Qualitätseintrag"
+        },
+        "description": {
+          "en": "The quality record to rename.",
+          "de": "Umzubenennender Eintrag vom Typ „Qualitätseintrag“."
+        },
+        "ref": {
+          "kind": "qualityRecord",
+          "domain": "program",
+          "granularity": "entity"
+        },
+        "group": "target",
+        "order": 10
+      }
     },
     "newName": {
-      "type": "string"
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "text",
+        "role": "value",
+        "label": {
+          "en": "New Name",
+          "de": "Neuer Name"
+        },
+        "description": {
+          "en": "New name of the quality record.",
+          "de": "Neuer Name des Eintrags vom Typ „Qualitätseintrag“."
+        },
+        "group": "identity",
+        "order": 20
+      }
     }
   }
 }

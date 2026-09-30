@@ -22,6 +22,8 @@ use crate::editor::puzzle2d::engine::{handle_position_on_circle, handle_position
 use crate::editor::puzzle2d::modes::edit;
 use crate::editor::puzzle2d::modes::edit::tools::fill;
 use crate::editor::puzzle2d::precompute::fill as fill_run;
+pub use crate::editor::puzzle2d::modes::edit::windows::overview::utilities::select::{puzzle2d_selection_pivot, Puzzle2dSelectPhase, Puzzle2dSelectTool, Puzzle2dSelectionMotion, Puzzle2dSelectionRecord, SelectToolRequest};
+use semio_framework_tool_machine::{ToolAbortReason, ToolStep};
 use crate::editor::puzzle2d::modes::edit::windows::overview::utilities::{area_brush as area_brush_utility, brush as brush_utility, select as select_utility};
 use crate::editor::puzzle2d::modes::edit::windows::{detail, overview, selection};
 use crate::editor::puzzle2d::panels::{artifact, catalogue, inspection, settings};
@@ -1023,67 +1025,6 @@ pub fn patch_inspector_nodes(fixture: &mut Value, ids: &[String], field: &str, v
     }
 }
 
-/// 🔄️ One rigid/similarity transform of a node selection about its centroid.
-#[derive(Clone, Copy, Debug, PartialEq)]
-pub enum Puzzle2dTransform {
-    Translate { dx: f64, dy: f64 },
-    Rotate { radians: f64 },
-    Scale { factor: f64 },
-}
-
-/// 📐️ The centroid of the selected nodes' positions, `None` without a positioned selected node.
-pub fn puzzle2d_selection_centroid(fixture: &Value, ids: &[String]) -> Option<(f64, f64)> {
-    let mut count = 0usize;
-    let (mut sum_x, mut sum_y) = (0.0, 0.0);
-    for node in fixture_nodes(fixture) {
-        if !node.get("id").and_then(Value::as_str).is_some_and(|id| ids.iter().any(|selected| selected == id)) {
-            continue;
-        }
-        let (Some(x), Some(y)) = (node.get("x").and_then(Value::as_f64), node.get("y").and_then(Value::as_f64)) else { continue };
-        sum_x += x;
-        sum_y += y;
-        count += 1;
-    }
-    (count > 0).then(|| (sum_x / count as f64, sum_y / count as f64))
-}
-
-/// 🔄️ Applies `transform` to every selected node: positions move/orbit/spread about the selection
-/// centroid, and a rotation also turns every handle angle with its node so edges keep their geometry.
-/// Locked nodes stay where they are.
-pub fn puzzle2d_transform_selection(fixture: &mut Value, ids: &[String], transform: Puzzle2dTransform) {
-    let Some((cx, cy)) = puzzle2d_selection_centroid(fixture, ids) else { return };
-    let Some(nodes) = fixture.get_mut("nodes").and_then(Value::as_array_mut) else { return };
-    for node in nodes {
-        if !node.get("id").and_then(Value::as_str).is_some_and(|id| ids.iter().any(|selected| selected == id)) || node.get("locked").and_then(Value::as_bool) == Some(true) {
-            continue;
-        }
-        let (Some(x), Some(y)) = (node.get("x").and_then(Value::as_f64), node.get("y").and_then(Value::as_f64)) else { continue };
-        let (next_x, next_y) = match transform {
-            Puzzle2dTransform::Translate { dx, dy } => (x + dx, y + dy),
-            Puzzle2dTransform::Rotate { radians } => {
-                let (sin, cos) = radians.sin_cos();
-                (cx + (x - cx) * cos - (y - cy) * sin, cy + (x - cx) * sin + (y - cy) * cos)
-            }
-            Puzzle2dTransform::Scale { factor } => (cx + (x - cx) * factor, cy + (y - cy) * factor),
-        };
-        if let Some(object) = node.as_object_mut() {
-            object.insert("x".into(), json!(next_x));
-            object.insert("y".into(), json!(next_y));
-        }
-        if let Puzzle2dTransform::Rotate { radians } = transform {
-            if let Some(handles) = node.get_mut("handles").and_then(Value::as_array_mut) {
-                for handle in handles {
-                    if let Some(angle) = handle.get("angle").and_then(Value::as_f64) {
-                        if let Some(object) = handle.as_object_mut() {
-                            object.insert("angle".into(), json!(angle + radians));
-                        }
-                    }
-                }
-            }
-        }
-    }
-}
-
 //#region 🎯️TargetRegions
 /// 🎯️ The document's fill-constraining rectangles, or an empty slice when the board declares none.
 pub fn fixture_target_regions(fixture: &Value) -> &[Value] {
@@ -1194,51 +1135,6 @@ pub fn delete_target_regions_from_fixture(fixture: &mut Value, ids: &[String]) {
     }
 }
 
-/// 🔄️ Applies the gumball's own transform to every unlocked selected region — the 2d twin of
-/// puzzle3d's volume half of `puzzle3d_apply_translate`/`_scale`. A rotation is deliberately not
-/// answered: a target region is axis-aligned by construction.
-pub fn puzzle2d_transform_target_regions(fixture: &mut Value, ids: &[String], transform: Puzzle2dTransform) {
-    if ids.is_empty() {
-        return;
-    }
-    let centroid = puzzle2d_target_region_centroid(fixture, ids);
-    let Some((cx, cy)) = centroid else { return };
-    let Some(regions) = fixture.get_mut("targetRegions").and_then(Value::as_array_mut) else { return };
-    for region in regions.iter_mut() {
-        if !region.get("id").and_then(Value::as_str).is_some_and(|id| ids.iter().any(|selected| selected == id)) || region.get("locked").and_then(Value::as_bool) == Some(true) {
-            continue;
-        }
-        let read = |key: &str| region.get(key).and_then(Value::as_f64).unwrap_or(0.0);
-        let (x, y, width, height) = (read("x"), read("y"), read("width"), read("height"));
-        let next = match transform {
-            Puzzle2dTransform::Translate { dx, dy } => (x + dx, y + dy, width, height),
-            Puzzle2dTransform::Scale { factor } => (cx + (x - cx) * factor, cy + (y - cy) * factor, width * factor, height * factor),
-            Puzzle2dTransform::Rotate { .. } => continue,
-        };
-        if let Some(object) = region.as_object_mut() {
-            object.insert("x".into(), json!(next.0));
-            object.insert("y".into(), json!(next.1));
-            object.insert("width".into(), json!(next.2));
-            object.insert("height".into(), json!(next.3));
-        }
-    }
-}
-
-/// 📍️ Centre of the addressed regions' own centres — the pivot a scale gesture works about.
-pub fn puzzle2d_target_region_centroid(fixture: &Value, ids: &[String]) -> Option<(f64, f64)> {
-    let mut count = 0.0;
-    let (mut sum_x, mut sum_y) = (0.0, 0.0);
-    for region in fixture_target_regions(fixture) {
-        if !region.get("id").and_then(Value::as_str).is_some_and(|id| ids.iter().any(|selected| selected == id)) {
-            continue;
-        }
-        let bounds = puzzle2d_region_bounds(region);
-        sum_x += (bounds[0] + bounds[2]) / 2.0;
-        sum_y += (bounds[1] + bounds[3]) / 2.0;
-        count += 1.0;
-    }
-    (count > 0.0).then(|| (sum_x / count, sum_y / count))
-}
 //#endregion 🎯️TargetRegions
 
 /// 🎲️ Re-mints a node id when it collides with an existing one — client-side brush serials restart every session.
@@ -1621,9 +1517,11 @@ fn sync_host_from_envelope(host: &mut BoardHost, envelope: &Puzzle2dScene) {
 /// this no longer reconciles anything selection-shaped. Camera is deliberately NOT mirrored here:
 /// every action that moves the camera already writes the config's camera fields directly — re-deriving
 /// it from `host.camera` here used to blindly overwrite that write with the *pre-action* host camera.
-pub fn apply_host_events(host: &mut BoardHost, envelope: &mut Puzzle2dScene) -> bool {
+/// A guest-side host never receives a pointer, so it never records a gesture: its rows fold into the scene
+/// and nothing else.
+pub fn apply_host_events(host: &mut BoardHost, envelope: &mut Puzzle2dScene) {
     let events_raw = drain_board_events_json(host);
-    apply_board_events::apply_board_events_from_json(&events_raw, envelope)
+    let _ = apply_board_events::apply_board_events_from_json(&events_raw, envelope);
 }
 
 /// 🖌️ Re-enters the board host's brush slot on the handle this window transient remembers. The guest
@@ -1879,11 +1777,95 @@ pub struct Puzzle2dActionCtx<'a> {
     pub labels: &'static crate::editor::puzzle2d::terminology::Puzzle2dLabels,
     /// 🪪️ Exact public command authority retained by framework continuations.
     pub operation: Option<semio_framework_plugin::AppOperationContext>,
+    /// 🧬️ The typed document this action reads as its base — what the select tool yields against.
+    pub base: &'a Puzzle2dPlaySnapshot,
+    /// 🌱️ The admission's authoring seed every tool transaction this action commits is minted from; empty for
+    /// a render/test view without command authority, which then publishes the yielded mutations plainly.
+    pub authoring_seed: &'a str,
+    /// 📐️ The document revision this action reads (hex) — a persisted select-tool gesture opened on another one
+    /// is aborted, `baseMoved`.
+    pub base_revision: &'a str,
+    /// 🛠️ The tool transaction this action committed — stamped on every op it publishes.
+    pub transaction: &'a mut Option<protocol::TransactionRef>,
 }
 
 impl<'a> Puzzle2dActionCtx<'a> {
     pub fn selected_ids(&self) -> Vec<String> {
         self.selection.ids.clone()
+    }
+
+    /// 🛠️ Commits `records` through the select tool machine as ONE tool transaction of this action — the
+    /// parametric selection leaves plus the connections their drops land, yielded as `verb`. A request whose
+    /// every target is locked is refused at the tool with the one lock sentence and leaves zero trace; a request
+    /// with a movable target is yielded whole, and its leaf reports the locked rest as `mutation.partial`.
+    pub fn commit_selection(&mut self, verb: &str, records: Vec<Puzzle2dSelectionRecord>) {
+        self.transform_selection(verb, Puzzle2dSelectPhase::Once, records);
+    }
+
+    /// 🛠️ Drives this window's select tool through ONE dispatch of a selection transform. `Once` commits the
+    /// records as one transaction; `Stream` upserts them into the window's open transaction — opening it on the
+    /// first tick — which the window transient persists and the window previews; `Commit` folds the final records
+    /// in and commits the whole gesture as ONE edit; `Abort` drops the open gesture with zero trace. An open
+    /// gesture another verb (or a one-shot) interrupts is aborted `captureLost`; one whose document moved under it
+    /// is aborted `baseMoved`, and a stream tick or commit that found it is dropped with it.
+    pub fn transform_selection(&mut self, verb: &str, phase: Puzzle2dSelectPhase, records: Vec<Puzzle2dSelectionRecord>) {
+        let open = self.scene.runtime.select_tool.take().and_then(|state| Puzzle2dSelectTool::resume(&state).ok());
+        let open = match (open, phase) {
+            (Some(mut tool), Puzzle2dSelectPhase::Abort(reason)) => {
+                tool.abort(reason);
+                return;
+            }
+            (None, Puzzle2dSelectPhase::Abort(_)) => {
+                *self.ui_scope = UiDirtyScope::None;
+                return;
+            }
+            (Some(mut tool), _) if tool.base_revision() != self.base_revision => {
+                tool.abort(ToolAbortReason::BaseMoved);
+                if !matches!(phase, Puzzle2dSelectPhase::Once) {
+                    return;
+                }
+                None
+            }
+            (Some(mut tool), _) if tool.verb() != verb || matches!(phase, Puzzle2dSelectPhase::Once) => {
+                tool.abort(ToolAbortReason::CaptureLost);
+                None
+            }
+            (open, _) => open,
+        };
+        let mut tool = match open {
+            Some(tool) => tool,
+            None => match Puzzle2dSelectTool::start(verb, self.authoring_seed, self.base_revision) {
+                Ok(tool) => tool,
+                Err(_) => return,
+            },
+        };
+        let base = self.base.typed();
+        let refused = records.iter().any(|record| record.refused_as_locked(base));
+        let request = SelectToolRequest { base: std::sync::Arc::new(base.clone()), proximity_radius: self.scene.runtime.proximity_radius, records };
+        let event = match phase {
+            Puzzle2dSelectPhase::Stream => select_utility::select_tool::Event::Stream(request),
+            Puzzle2dSelectPhase::Commit if !tool.at_rest() => select_utility::select_tool::Event::Finish(request),
+            _ => select_utility::select_tool::Event::Records(request),
+        };
+        match tool.send(event) {
+            Ok(ToolStep::Committed(transaction, mutations)) => {
+                *self.transaction = (!self.authoring_seed.is_empty()).then_some(transaction);
+                self.artifact_mutations.extend(mutations);
+            }
+            Ok(ToolStep::Idle) if refused => {
+                self.notice(|labels| labels.selection_locked.as_str());
+                *self.ui_scope = UiDirtyScope::None;
+            }
+            Ok(_) | Err(_) => {}
+        }
+        self.scene.runtime.select_tool = tool.persist();
+    }
+
+    /// 🎯️ The selected ids a selection transform may move: nodes and target regions of the base, in first-seen
+    /// selection order without repeats — handles and edges are selection, never transform targets.
+    pub fn selected_transform_targets(&self) -> Vec<String> {
+        let typed = self.base.typed();
+        select_utility::puzzle2d_unique_targets(self.selection.ids.iter().filter(|id| typed.nodes.iter().any(|node| &node.id == *id) || typed.target_regions.iter().any(|region| &region.id == *id)).cloned())
     }
 
     /// 🧯️ Raises exactly ONE localized sentence on the shell's transient-notice channel
@@ -2058,8 +2040,14 @@ impl Puzzle2dPlayApp {
     ) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::ComponentTree> {
         let window_config = window::config_from_view_or_document(cfg, doc.snapshot.value());
         let window_kind = window::kind_for_view(view_state).unwrap_or(overview::WINDOW_KIND_ID);
-        let document_json = doc.snapshot.value().to_string();
-        let envelope = Self::scene_with(doc.snapshot.value().clone(), window::runtime(cfg.snapshot, &window_config, window_transient, Some(window_kind)), puzzle2d_active_utility(Some(view_state)), interaction);
+        let runtime = window::runtime(cfg.snapshot, &window_config, window_transient, Some(window_kind));
+        let active_utility = puzzle2d_active_utility(Some(view_state));
+        let fixture = match runtime.select_tool.as_ref().filter(|_| active_utility == select_utility::UTILITY_ID) {
+            Some(gesture) => Value::from(dsl::ToValue::to_value(&select_utility::puzzle2d_select_tool_preview(doc.snapshot.typed(), gesture))),
+            None => doc.snapshot.value().clone(),
+        };
+        let document_json = fixture.to_string();
+        let envelope = Self::scene_with(fixture, runtime, active_utility, interaction);
         let labels = puzzle2d_labels(view_state);
         // 🪟️ One `TreeWindows` per render, read off the host's `ViewModel::tree_windows` for exactly
         // the body being rendered — every panel container below shares its first-paint row budget.
@@ -2330,9 +2318,9 @@ impl semio_framework_plugin::ArtifactOwnedToolJobFactory for Puzzle2dRetainedCom
         ArtifactToolPublicationContract { tool_id: "engagementRepeatLast", lanes: &[ArtifactToolPublicationLane::WindowTransient] },
         ArtifactToolPublicationContract { tool_id: "openAddNodeDialog", lanes: &[ArtifactToolPublicationLane::HostOnly] },
         ArtifactToolPublicationContract { tool_id: "setLodModeForPane", lanes: &[ArtifactToolPublicationLane::WindowConfig] },
-        ArtifactToolPublicationContract { tool_id: "translateSelection", lanes: &[ArtifactToolPublicationLane::Artifact] },
-        ArtifactToolPublicationContract { tool_id: "rotateSelection", lanes: &[ArtifactToolPublicationLane::Artifact] },
-        ArtifactToolPublicationContract { tool_id: "scaleSelection", lanes: &[ArtifactToolPublicationLane::Artifact] },
+        ArtifactToolPublicationContract { tool_id: "translateSelection", lanes: &[ArtifactToolPublicationLane::Artifact, ArtifactToolPublicationLane::WindowTransient] },
+        ArtifactToolPublicationContract { tool_id: "rotateSelection", lanes: &[ArtifactToolPublicationLane::Artifact, ArtifactToolPublicationLane::WindowTransient] },
+        ArtifactToolPublicationContract { tool_id: "scaleSelection", lanes: &[ArtifactToolPublicationLane::Artifact, ArtifactToolPublicationLane::WindowTransient] },
         ArtifactToolPublicationContract { tool_id: "exportFixture", lanes: &[ArtifactToolPublicationLane::HostOnly] },
         ArtifactToolPublicationContract { tool_id: "importFixture", lanes: &[ArtifactToolPublicationLane::Artifact] },
         ArtifactToolPublicationContract { tool_id: "openImportFixture", lanes: &[ArtifactToolPublicationLane::HostOnly] },
@@ -2348,7 +2336,7 @@ impl semio_framework_plugin::ArtifactOwnedToolJobFactory for Puzzle2dRetainedCom
         ArtifactToolPublicationContract { tool_id: "applyBoardEvents", lanes: &[ArtifactToolPublicationLane::Artifact, ArtifactToolPublicationLane::WindowConfig, ArtifactToolPublicationLane::WindowTransient, ArtifactToolPublicationLane::Interaction] },
         ArtifactToolPublicationContract { tool_id: "acceptSuggestion", lanes: &[ArtifactToolPublicationLane::Artifact, ArtifactToolPublicationLane::WindowTransient, ArtifactToolPublicationLane::Interaction] },
         ArtifactToolPublicationContract { tool_id: "deleteSelection", lanes: &[ArtifactToolPublicationLane::Artifact, ArtifactToolPublicationLane::Interaction] },
-        ArtifactToolPublicationContract { tool_id: "patchInspectorNodes", lanes: &[ArtifactToolPublicationLane::Artifact] },
+        ArtifactToolPublicationContract { tool_id: "patchInspectorNodes", lanes: &[ArtifactToolPublicationLane::Artifact, ArtifactToolPublicationLane::WindowTransient] },
         ArtifactToolPublicationContract { tool_id: "setActiveExample", lanes: &[ArtifactToolPublicationLane::Artifact] },
         ArtifactToolPublicationContract { tool_id: "setFillCount", lanes: &[ArtifactToolPublicationLane::Config] },
         ArtifactToolPublicationContract { tool_id: "setSelectionFlag", lanes: &[ArtifactToolPublicationLane::Artifact] },
@@ -2424,6 +2412,7 @@ fn puzzle2d_config_store_edit(forward: Puzzle2dConfigMutation, inverse: Vec<Puzz
             label: None,
             group_id: None,
             origin: Default::default(),
+            transaction: None,
         }],
         description,
         coalesce_key: None,
@@ -2561,6 +2550,10 @@ impl store::ArtifactStoreOneItemPreparationFactory<Puzzle2dConfig, Puzzle2dConfi
 /// 🧾️ Inverse rows one `delete-node` may yield: the re-created node plus one `connect-handles` per edge
 /// on its handles — a node carries at most one edge per handle, and Nakagin's densest node has 12 handles.
 const PUZZLE2D_DELETE_NODE_INVERSE_ROWS: usize = 1 + 64;
+/// 🧾️ Inverse rows one `rotate-selection` target may yield: the restoring `move-node` plus one
+/// `replace-node-handle` per turned handle, under the same per-node handle ceiling as a delete.
+/// `drag-selection` restores one position per target and `scale-selection` a region's corner AND extent.
+const PUZZLE2D_ROTATE_SELECTION_INVERSE_ROWS: usize = 1 + 64;
 
 struct Puzzle2dArtifactStorePreparationFactory;
 
@@ -2596,6 +2589,7 @@ fn puzzle2d_artifact_store_edit(forward: Puzzle2dMutation, inverse: Vec<Puzzle2d
             label: None,
             group_id: None,
             origin: Default::default(),
+            transaction: None,
         }],
         description,
         coalesce_key: None,
@@ -2617,6 +2611,9 @@ impl store::ArtifactStoreOneItemPreparationFactory<Puzzle2dPlaySnapshot, Puzzle2
         }
         let work_items = match mutation {
             Puzzle2dMutation::DeleteNode(_) => 1 + PUZZLE2D_DELETE_NODE_INVERSE_ROWS,
+            Puzzle2dMutation::DragSelection(payload) => 1 + payload.targets.len(),
+            Puzzle2dMutation::ScaleSelection(payload) => 1 + 2 * payload.targets.len(),
+            Puzzle2dMutation::RotateSelection(payload) => (1 + payload.targets.len() * PUZZLE2D_ROTATE_SELECTION_INVERSE_ROWS).min(store::ARTIFACT_STORE_ONE_ITEM_MAXIMUM_WORK_ITEMS),
             _ => store::ARTIFACT_STORE_ONE_ITEM_INVERTIBLE_WORK_ITEMS,
         };
         Ok(store::ArtifactStoreOneItemFootprint { work_items, retained_bytes: store::ARTIFACT_STORE_ONE_ITEM_MAXIMUM_BYTES })
@@ -2737,10 +2734,10 @@ impl store::ArtifactStoreOneItemPreparation<Puzzle2dPlaySnapshot, Puzzle2dMutati
 /// truncated.
 const PUZZLE2D_BOARD_EVENT_BATCH_LIMIT: usize = 256;
 
-/// 🚚️ Whether one board-event batch drops a node — a drop is what arms the proximity auto-connect,
-/// so a batch carrying one prices the gesture's whole [`PUZZLE2D_PROXIMITY_GESTURE_MAX`] edge budget.
+/// 🚚️ Whether one board-event batch carries a gesture record — a drag drop is what arms the proximity
+/// auto-connect, so a batch carrying one prices the gesture's whole [`PUZZLE2D_PROXIMITY_GESTURE_MAX`] edge budget.
 fn puzzle2d_batch_drops_a_node(events: &[Value]) -> bool {
-    events.iter().any(|event| event.get("name").and_then(Value::as_str) == Some("nodeDragEnd"))
+    events.iter().any(|event| event.get("name").and_then(Value::as_str) == Some("gesture"))
 }
 
 fn puzzle2d_board_events_extent(command: &Puzzle2dCommand, _snapshot: &Puzzle2dPlaySnapshot, _interaction: &protocol::InteractionState) -> Option<usize> {
@@ -2760,6 +2757,8 @@ fn puzzle2d_board_events_extent(command: &Puzzle2dCommand, _snapshot: &Puzzle2dP
 struct Puzzle2dWindowCommandWork {
     tool_id: &'static str,
     extent: crate::retained_command::PuzzleCommandExtent<EditorApp<Puzzle2dPlayApp>>,
+    authoring_seed: String,
+    base_revision: String,
     consumed: bool,
     view_state: Option<semio_framework_plugin::ViewModel>,
     window_config: Option<semio_framework_plugin::WindowConfigSnapshot>,
@@ -2768,9 +2767,20 @@ struct Puzzle2dWindowCommandWork {
 }
 
 impl Puzzle2dWindowCommandWork {
-    fn new(tool_id: &'static str, extent: crate::retained_command::PuzzleCommandExtent<EditorApp<Puzzle2dPlayApp>>) -> Self {
-        Self { tool_id, extent, consumed: false, view_state: None, window_config: None, window_transient: None, ephemeral: None }
+    fn new(tool_id: &'static str, extent: crate::retained_command::PuzzleCommandExtent<EditorApp<Puzzle2dPlayApp>>, authoring_seed: String, base_revision: String) -> Self {
+        Self { tool_id, extent, authoring_seed, base_revision, consumed: false, view_state: None, window_config: None, window_transient: None, ephemeral: None }
     }
+}
+
+/// 🪟️ Whether `action` may publish its window's transient: a retained verb only when its exact publication contract
+/// names the lane, any other verb always.
+fn puzzle2d_publishes_window_transient(action: &str) -> bool {
+    <Puzzle2dRetainedCommandJobFactory as semio_framework_plugin::ArtifactOwnedToolJobFactory>::PUBLICATION_CONTRACTS.iter().find(|contract| contract.tool_id == action).is_none_or(|contract| contract.lanes.contains(&ArtifactToolPublicationLane::WindowTransient))
+}
+
+/// 📐️ A canonical document revision as lowercase hex — the identity a persisted select-tool gesture pins its base by.
+fn puzzle2d_revision_hex(revision: &[u8; 32]) -> String {
+    revision.iter().map(|byte| format!("{byte:02x}")).collect()
 }
 
 impl crate::retained_command::PuzzleCommandWork<EditorApp<Puzzle2dPlayApp>> for Puzzle2dWindowCommandWork {
@@ -2810,7 +2820,7 @@ impl crate::retained_command::PuzzleCommandWork<EditorApp<Puzzle2dPlayApp>> for 
         let window_transient = window::transient_from_snapshot(self.window_transient.as_ref());
         let window_kind = self.window_config.as_ref().map(semio_framework_plugin::WindowConfigSnapshot::window_kind_id).or_else(|| self.view_state.as_ref().and_then(window::kind_for_view)).unwrap_or(overview::WINDOW_KIND_ID);
         let selection = interaction.selection.get(PUZZLE2D_INTERACTION_DOMAIN).cloned().unwrap_or_default();
-        let (emit, ephemeral) = puzzle2d_dispatch_emit(command, snapshot.value(), config, &window_config, &window_transient, window_kind, self.view_state.as_ref(), puzzle2d_active_utility(self.view_state.as_ref()), &selection, None)?;
+        let (emit, ephemeral) = puzzle2d_dispatch_emit(command, snapshot, config, &window_config, &window_transient, window_kind, self.view_state.as_ref(), puzzle2d_active_utility(self.view_state.as_ref()), &selection, &self.authoring_seed, &self.base_revision, None)?;
         self.consumed = true;
         self.ephemeral = Some(ephemeral);
         Ok(crate::retained_command::PuzzleCommandWorkStep::Complete(emit))
@@ -2855,28 +2865,17 @@ impl crate::retained_command::PuzzleCommandWork<EditorApp<Puzzle2dPlayApp>> for 
     }
 }
 
-/// 🌀️ The coalesce key of a streamed gesture: every dispatch a single drag sends folds into ONE `Edit`
-/// through `ArtifactCommand::AmendLast`, so a 60-tick move costs the 64-slot edit ledger one slot and
-/// undoes in one step. Verbs that commit a whole gesture in one dispatch (a board drag arrives as one
-/// buffered `applyBoardEvents`, a fill run as the tool-run ledger's single finalize edit) return `None`.
-pub(crate) fn puzzle2d_gesture_coalesce_key(action: &str) -> Option<&'static str> {
-    match action {
-        "translateSelection" => Some("puzzle2d-gesture-translate"),
-        "rotateSelection" => Some("puzzle2d-gesture-rotate"),
-        "scaleSelection" => Some("puzzle2d-gesture-scale"),
-        _ => None,
-    }
-}
-
 /// 🎬️ THE dispatch pipeline — the one implementation both [`ArtifactEditor::handle`]'s batch path and
 /// every retained generic reduce run: rebuild the scene and a fresh board host from
-/// `(command, before, config, selection)`, run the `🎮️commands/*` arm, replay the host's owned
-/// events, then derive the granular document delta and the config snapshot. `operation` is the
-/// committed public authority a mounted continuation carries and is simply `None` for a retained
-/// work, which never sees an `ArtifactView`.
+/// `(command, document, config, selection)`, run the `🎮️commands/*` arm, replay the host's owned
+/// events, then derive the granular document delta and the config snapshot. A selection transform never
+/// touches the scene: its arm commits the select tool's ONE transaction, whose yielded parametric
+/// mutations ride this emit stamped with the transaction ref. `operation` is the committed public
+/// authority a mounted continuation carries and is simply `None` for a retained work, which never sees an
+/// `ArtifactView`; `authoring_seed` is the admission's seed every tool transaction id is minted from.
 fn puzzle2d_dispatch_emit(
     command: &Puzzle2dCommand,
-    before: &Value,
+    document: &Puzzle2dPlaySnapshot,
     config: &Puzzle2dConfig,
     window_config: &Puzzle2dWindowConfig,
     window_transient: &Puzzle2dWindowTransient,
@@ -2884,13 +2883,19 @@ fn puzzle2d_dispatch_emit(
     view_state: Option<&semio_framework_plugin::ViewModel>,
     active_utility: &str,
     selection: &protocol::DomainSelection,
+    authoring_seed: &str,
+    base_revision: &str,
     operation: Option<semio_framework_plugin::AppOperationContext>,
 ) -> Result<(Emit<Puzzle2dMutation, Puzzle2dConfigMutation>, EphemeralEmit<EditorApp<Puzzle2dPlayApp>>), Fault> {
     let (action, args, window_id) = (command.action_id(), command.args(), command.window_id());
+    let before = document.value();
     let active_utility = active_utility.to_string();
     let runtime = window::runtime(config, window_config, window_transient, Some(window_kind));
     let interaction = Puzzle2dInteractionSnapshot { granularity: selection.granularity.clone(), selected: selection.ids.clone(), hovered: Vec::new() };
     let mut scene = Puzzle2dPlayApp::scene_with(before.clone(), runtime, &active_utility, interaction);
+    // 🛠️ A window that left the select utility retires the select tool: its in-flight gesture aborts with zero trace
+    // at the first verb that may publish the window transient.
+    let retired_gesture = active_utility != select_utility::UTILITY_ID && puzzle2d_publishes_window_transient(action) && scene.runtime.select_tool.take().is_some_and(|state| select_utility::puzzle2d_select_tool_abort(&state, ToolAbortReason::Retired));
     // 🐚️ ArtifactApp::handle is pure (no &self) — rebuild a fresh BoardHost from the document
     // each call. The previous last_synced_fixture cache lived on &self and cannot return.
     let host = RefCell::new(BoardHost::default());
@@ -2905,6 +2910,7 @@ fn puzzle2d_dispatch_emit(
     let mut effects: Vec<Effect> = Vec::new();
     let mut artifact_mutations = Vec::new();
     let mut interaction_writes = Vec::new();
+    let mut transaction = None;
     // 🐢️ Default to Full (safe: every unrecognized/rare action re-renders everything); the
     // narrow-tier arms below override it to the smallest scope that actually covers what they touch.
     let mut ui_scope = UiDirtyScope::Full;
@@ -2923,6 +2929,10 @@ fn puzzle2d_dispatch_emit(
             ui_scope: &mut ui_scope,
             labels,
             operation,
+            base: document,
+            authoring_seed,
+            base_revision,
+            transaction: &mut transaction,
         };
         match action {
             "selectSameKind" => select_same_kind::select_same_kind(ctx),
@@ -2985,17 +2995,13 @@ fn puzzle2d_dispatch_emit(
             _ => {}
         }
     }
-    // 🔒️ The engine's own drained rows can carry a refused lock too (a brush/engagement arm that moved
-    // the host first); the epilogue answers it with the SAME one sentence the arms raise, never twice.
-    if apply_host_events(&mut host.borrow_mut(), &mut scene) && !effects.iter().any(|effect| matches!(effect, Effect::Notify { .. })) {
-        let labels = view_state.map_or_else(|| puzzle2d_labels(&semio_framework_plugin::ViewModel::default()), puzzle2d_labels);
-        effects.push(Effect::Notify { message: labels.selection_locked.as_str().to_string() });
-    }
+    apply_host_events(&mut host.borrow_mut(), &mut scene);
     let mut operations = puzzle2d_document_delta_operations(before, &scene.fixture).map_err(Fault::from)?;
     operations.append(&mut artifact_mutations);
     // 🐢️ Safety net: a `None` scope claims nothing needs re-rendering — never pair that with an
-    // actual document mutation (would silently desync remote clients' UI from the committed operation).
-    if !operations.is_empty() && matches!(ui_scope, UiDirtyScope::None) {
+    // actual document mutation (would silently desync remote clients' UI from the committed operation), nor with a
+    // retired gesture whose preview must leave the window.
+    if (!operations.is_empty() || retired_gesture) && matches!(ui_scope, UiDirtyScope::None) {
         ui_scope = UiDirtyScope::Full;
     }
     // 🧮️ B1: only a REAL config change becomes a `Puzzle2dConfigMutation` — `PartialEq` (derived)
@@ -3004,12 +3010,10 @@ fn puzzle2d_dispatch_emit(
     let config_mutations = if &next_config != config { vec![Puzzle2dConfigMutation::Snapshot { config: next_config }] } else { Vec::new() };
     let window_config_mutations = if &next_window_config != window_config { vec![window::addressed_config(view_state.ok_or_else(|| Fault::from("puzzle2d-window-context-required"))?, next_window_config)?] } else { Vec::new() };
     let window_transient = if &next_window_transient != window_transient { vec![window::addressed_transient(view_state.ok_or_else(|| Fault::from("puzzle2d-window-context-required"))?, next_window_transient)?] } else { Vec::new() };
-    // 🌀️ A gumball/keyboard transform streams one dispatch per drag tick; the coalesce key folds the
-    // whole gesture into ONE `Edit` (one history ledger slot of the 64, one undo step) exactly as 3d's
-    // `translateSelection`/`rotateSelection`/`scaleSelection` do. `setCamera` no longer coalesces — it
-    // is a View-kind action that never touches the document.
-    let coalesce_key = puzzle2d_gesture_coalesce_key(action).map(str::to_string).filter(|_| !operations.is_empty());
-    Ok((Emit { artifact_mutations: operations, config_mutations, window_config_mutations, coalesce_key, effects, ui_scope, interaction_writes, ..Default::default() }, EphemeralEmit { window_transient, ..Default::default() }))
+    // 🛠️ A committed select-tool transaction stamps every op of this ONE edit — the yielded leaves and any
+    // scene delta the same batch carried — so history lists the gesture as one row whose inputs stay editable.
+    let transaction = transaction.filter(|_| !operations.is_empty());
+    Ok((Emit { artifact_mutations: operations, config_mutations, window_config_mutations, transaction, effects, ui_scope, interaction_writes, ..Default::default() }, EphemeralEmit { window_transient, ..Default::default() }))
 }
 
 /// 🗂️ Upper bound on the entities one selection-acting retained step may touch. Nakagin — this
@@ -5121,7 +5125,9 @@ impl ArtifactEditor for Puzzle2dPlayApp {
         let window_config = window::config_from_view_or_document(cfg, doc.snapshot.value());
         let window_transient = Puzzle2dWindowTransient::default();
         let window_kind = view_state.and_then(window::kind_for_view).unwrap_or(overview::WINDOW_KIND_ID);
-        puzzle2d_dispatch_emit(command, doc.snapshot.value(), config, &window_config, &window_transient, window_kind, view_state, puzzle2d_active_utility(view_state), interaction.selection(PUZZLE2D_INTERACTION_DOMAIN), doc.operation_optional().cloned())
+        let authoring_seed = doc.operation_optional().map_or("", |operation| operation.authoring_seed.as_str());
+        let base_revision = doc.operation_optional().map(|operation| puzzle2d_revision_hex(&operation.canonical_base_revision)).unwrap_or_default();
+        puzzle2d_dispatch_emit(command, doc.snapshot, config, &window_config, &window_transient, window_kind, view_state, puzzle2d_active_utility(view_state), interaction.selection(PUZZLE2D_INTERACTION_DOMAIN), authoring_seed, &base_revision, doc.operation_optional().cloned())
             .map(|(emit, _)| emit)
     }
 
@@ -5135,6 +5141,12 @@ impl ArtifactEditor for Puzzle2dPlayApp {
     /// the Fill tool tab could not even be selected.
     fn host_configuration_mutation(_action: &str, _args: Option<&dsl::DslValue>) -> Result<Option<Self::ConfigMutation>, Fault> {
         Ok(None)
+    }
+
+    /// 🏷️ A document op's own localized label, so a select-tool transaction's history row reads its leaf —
+    /// "Drag 2 items by (80, 40)" / "2 Elemente um (80, 40) ziehen" — instead of the op's text line.
+    fn mutation_label(op: &Puzzle2dMutation) -> Option<LocalizedLabel> {
+        Some(protocol::SemanticMutation::<Puzzle2dPlaySnapshot>::label(op))
     }
 
     fn bounded_first_step_tool_proofs() -> Vec<semio_framework_plugin::ArtifactBoundedFirstStepProof> {
@@ -5161,8 +5173,8 @@ impl ArtifactEditor for Puzzle2dPlayApp {
             "reorganize" => Box::new(Puzzle2dForceLayoutWork::new("reorganize")),
             "addNode" => Box::new(crate::retained_command::BoundedFirstStepCommandWork::new("addNode", puzzle2d_retained_reduce, puzzle2d_retained_extent)),
             "exportFixture" => Box::new(Puzzle2dExportWork::default()),
-            "applyBoardEvents" => Box::new(Puzzle2dWindowCommandWork::new("applyBoardEvents", puzzle2d_board_events_extent)),
-            generic if PUZZLE2D_GENERIC_TOOL_IDS.contains(&generic) => Box::new(Puzzle2dWindowCommandWork::new(generic, puzzle2d_generic_extent)),
+            "applyBoardEvents" => Box::new(Puzzle2dWindowCommandWork::new("applyBoardEvents", puzzle2d_board_events_extent, request.authoring_seed.clone(), puzzle2d_revision_hex(&request.canonical_base_revision))),
+            generic if PUZZLE2D_GENERIC_TOOL_IDS.contains(&generic) => Box::new(Puzzle2dWindowCommandWork::new(generic, puzzle2d_generic_extent, request.authoring_seed.clone(), puzzle2d_revision_hex(&request.canonical_base_revision))),
             host_only if PUZZLE2D_HOST_ONLY_TOOL_IDS.contains(&host_only) => Box::new(crate::retained_command::NoopPuzzleCommandWork::new(host_only)),
             "redrawHandles" => Box::new(Puzzle2dRedrawHandlesWork::default()),
             _ => return Err(Fault::from("puzzle2d-command-tool-unmapped")),
@@ -5705,5 +5717,11 @@ mod clipboard_tests;
 #[cfg(test)]
 #[path = "🧪️tests/🔬️locks/🦀️.rs"]
 mod lock_tests;
+
+/// 🛠️ The select tool's own laws — one drag, one rotation, one nudge, one HUD move, one inspector delta is ONE
+/// tool transaction (one edit, one row, one ref, one parametric leaf), and a cancelled gesture leaves zero trace.
+#[cfg(test)]
+#[path = "🧪️tests/🧪️select-tool-transactions/🦀️.rs"]
+mod select_tool_transaction_tests;
 //#endregion 🧪️UnitTests
 

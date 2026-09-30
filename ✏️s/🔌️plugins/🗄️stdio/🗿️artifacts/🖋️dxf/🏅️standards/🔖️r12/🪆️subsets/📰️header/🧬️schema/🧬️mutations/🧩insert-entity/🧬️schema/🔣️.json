@@ -5,20 +5,39 @@
   "type": "object",
   "additionalProperties": false,
   "required": [
+    "mutation",
     "index",
     "entity"
   ],
   "properties": {
-    "index": {
-      "type": "integer",
-      "minimum": 0
-    },
-    "entity": {
-      "$ref": "#/$defs/DxfEntity"
-    },
     "mutation": {
       "const": "insertEntity",
       "description": "Aggregate discriminator spliced in by DxfMutation; absent when the payload stands alone."
+    },
+    "index": {
+      "type": "integer",
+      "minimum": 0,
+      "x-semio-ui": {
+        "widget": "stepper",
+        "label": {
+          "en": "Insert position",
+          "de": "Einfügeposition"
+        },
+        "precision": 0,
+        "group": "target",
+        "order": 10
+      }
+    },
+    "entity": {
+      "$ref": "#/$defs/DxfEntity",
+      "x-semio-ui": {
+        "label": {
+          "en": "Entity",
+          "de": "Objekt"
+        },
+        "group": "value",
+        "order": 20
+      }
     }
   },
   "$defs": {

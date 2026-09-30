@@ -3708,7 +3708,7 @@ pub async fn submit_gis_map_job(context: InferenceRouteContextV1<'_>, body: &[u8
 
 /// 🧭 Reconciles one previously submitted request without accepting or restarting work.
 pub async fn reconcile_gis_map_job(context: InferenceRouteContextV1<'_>, body: &[u8]) -> Result<InferenceJobReconcileResultV1, InferenceRouteErrorV1> {
-    let request = super::schema::InferenceJobReconcileRequestV1::decode(body)?;
+    let request = super::schema::decode_inference_job_reconcile_request_v1(body)?;
     let session = authenticated_session(context.directory, context.token).await?;
     let runtime = context.runtime;
     let gate = runtime.document_gate(&context.scope)?;
@@ -3717,7 +3717,7 @@ pub async fn reconcile_gis_map_job(context: InferenceRouteContextV1<'_>, body: &
     let reader = session_reader(&session, &context.scope);
     let job = runtime.ledger().reconcile_request(&request.request_id, &reader, context.now_ms)?;
     super::authorization::check_live_inference_session_author(context.directory, &session.id, &session.user_id, session.authorization_generation, &context.scope, || i64::try_from(context.now_ms).unwrap_or(i64::MAX), &control).await?;
-    Ok(InferenceJobReconcileResultV1 { schema: "semio.hub.inference-job-reconcile-result/v1", version: 1, request_id: request.request_id, found: job.is_some(), job })
+    Ok(InferenceJobReconcileResultV1 { schema: "semio.framework.job-reconcile-result/v1", version: 1, request_id: request.request_id, found: job.is_some(), job })
 }
 
 fn owner_page_receipt(runtime: &Arc<HubInferenceRuntimeV1>, job_id: &str, identity: &InferenceIdentityV1, expires_at_ms: u64, now_ms: u64) -> Result<InferenceJobReceiptV1, InferenceRouteErrorV1> {

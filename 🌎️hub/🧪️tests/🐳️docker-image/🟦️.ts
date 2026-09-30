@@ -15,7 +15,8 @@ import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { dirname, join } from "node:path";
 import { terminateOwnedChildTree } from "../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/🟦️.ts";
-import { hubForwardingProxy, hubProbeCall, hubProbeCreateArtifact, hubProbeCreateSpace, hubProbeCreationCatalog, hubProbeOpenDocument, hubProbeSignIn, hubSeedTrustedCatalog } from "../../🤝️integration-harness/🟦️.ts";
+import { hubForwardingProxy, hubSeedTrustedCatalog } from "../../🤝️integration-harness/🟦️.ts";
+import { hubProbeCall, hubProbeCreateArtifact, hubProbeCreateSpace, hubProbeCreationCatalog, hubProbeOpenDocument, hubProbeSignIn } from "../../../🧰️framework/🛍️products/💻️os/🔨️modules/📇️directory/🧪️testkit/📡️client-probe/🟦️.ts";
 
 /** 🏷️ The image repository every tag of this harness lives under. */
 export const HUB_IMAGE_REPOSITORY = "semio/os-hub";

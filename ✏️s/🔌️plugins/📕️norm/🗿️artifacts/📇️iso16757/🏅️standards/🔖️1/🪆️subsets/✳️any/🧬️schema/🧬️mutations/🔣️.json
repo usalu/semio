@@ -4,91 +4,352 @@
   "title": "Iso16757Mutation",
   "oneOf": [
     {
-      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/iso16757/mutation/add-selection-constraint/schema.json"
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "ChangeExchangeProcess"
+      ],
+      "properties": {
+        "ChangeExchangeProcess": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/iso16757/mutation/change-exchange-process/schema.json"
+        }
+      }
     },
     {
-      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/iso16757/mutation/change-exchange-process/schema.json"
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "ChangeScriptLimits"
+      ],
+      "properties": {
+        "ChangeScriptLimits": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/iso16757/mutation/change-script-limits/schema.json"
+        }
+      }
     },
     {
-      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/iso16757/mutation/change-part-number-input/schema.json"
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "ReplacePartNumberRule"
+      ],
+      "properties": {
+        "ReplacePartNumberRule": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/iso16757/mutation/replace-part-number-rule/schema.json"
+        }
+      }
     },
     {
-      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/iso16757/mutation/change-selection-class/schema.json"
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "ChangePartNumberInput"
+      ],
+      "properties": {
+        "ChangePartNumberInput": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/iso16757/mutation/change-part-number-input/schema.json"
+        }
+      }
     },
     {
-      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/iso16757/mutation/change-selection-series/schema.json"
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "RemovePartNumberInput"
+      ],
+      "properties": {
+        "RemovePartNumberInput": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/iso16757/mutation/remove-part-number-input/schema.json"
+        }
+      }
     },
     {
-      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/iso16757/mutation/introduce-geometry-object/schema.json"
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "ChangeSelectionClass"
+      ],
+      "properties": {
+        "ChangeSelectionClass": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/iso16757/mutation/change-selection-class/schema.json"
+        }
+      }
     },
     {
-      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/iso16757/mutation/introduce-product-class/schema.json"
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "ChangeSelectionSeries"
+      ],
+      "properties": {
+        "ChangeSelectionSeries": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/iso16757/mutation/change-selection-series/schema.json"
+        }
+      }
     },
     {
-      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/iso16757/mutation/introduce-product-group/schema.json"
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "AddSelectionConstraint"
+      ],
+      "properties": {
+        "AddSelectionConstraint": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/iso16757/mutation/add-selection-constraint/schema.json"
+        }
+      }
     },
     {
-      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/iso16757/mutation/introduce-product-index/schema.json"
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "RemoveSelectionConstraint"
+      ],
+      "properties": {
+        "RemoveSelectionConstraint": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/iso16757/mutation/remove-selection-constraint/schema.json"
+        }
+      }
     },
     {
-      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/iso16757/mutation/introduce-product-series/schema.json"
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "RenameCatalogue"
+      ],
+      "properties": {
+        "RenameCatalogue": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/iso16757/mutation/rename-catalogue/schema.json"
+        }
+      }
     },
     {
-      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/iso16757/mutation/introduce-product/schema.json"
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "RenameManufacturer"
+      ],
+      "properties": {
+        "RenameManufacturer": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/iso16757/mutation/rename-manufacturer/schema.json"
+        }
+      }
     },
     {
-      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/iso16757/mutation/introduce-property-definition/schema.json"
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "IntroduceProductGroup"
+      ],
+      "properties": {
+        "IntroduceProductGroup": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/iso16757/mutation/introduce-product-group/schema.json"
+        }
+      }
     },
     {
-      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/iso16757/mutation/introduce-subject/schema.json"
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "RetireProductGroup"
+      ],
+      "properties": {
+        "RetireProductGroup": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/iso16757/mutation/retire-product-group/schema.json"
+        }
+      }
     },
     {
-      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/iso16757/mutation/retire-geometry-object/schema.json"
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "RenameProductGroup"
+      ],
+      "properties": {
+        "RenameProductGroup": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/iso16757/mutation/rename-product-group/schema.json"
+        }
+      }
     },
     {
-      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/iso16757/mutation/retire-product-class/schema.json"
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "IntroduceProduct"
+      ],
+      "properties": {
+        "IntroduceProduct": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/iso16757/mutation/introduce-product/schema.json"
+        }
+      }
     },
     {
-      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/iso16757/mutation/retire-product-group/schema.json"
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "RetireProduct"
+      ],
+      "properties": {
+        "RetireProduct": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/iso16757/mutation/retire-product/schema.json"
+        }
+      }
     },
     {
-      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/iso16757/mutation/retire-product-index/schema.json"
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "RenameProduct"
+      ],
+      "properties": {
+        "RenameProduct": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/iso16757/mutation/rename-product/schema.json"
+        }
+      }
     },
     {
-      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/iso16757/mutation/retire-product-series/schema.json"
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "IntroducePropertyDefinition"
+      ],
+      "properties": {
+        "IntroducePropertyDefinition": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/iso16757/mutation/introduce-property-definition/schema.json"
+        }
+      }
     },
     {
-      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/iso16757/mutation/retire-product/schema.json"
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "RetirePropertyDefinition"
+      ],
+      "properties": {
+        "RetirePropertyDefinition": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/iso16757/mutation/retire-property-definition/schema.json"
+        }
+      }
     },
     {
-      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/iso16757/mutation/retire-property-definition/schema.json"
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "IntroduceSubject"
+      ],
+      "properties": {
+        "IntroduceSubject": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/iso16757/mutation/introduce-subject/schema.json"
+        }
+      }
     },
     {
-      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/iso16757/mutation/retire-subject/schema.json"
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "RetireSubject"
+      ],
+      "properties": {
+        "RetireSubject": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/iso16757/mutation/retire-subject/schema.json"
+        }
+      }
     },
     {
-      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/iso16757/mutation/remove-part-number-input/schema.json"
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "IntroduceProductClass"
+      ],
+      "properties": {
+        "IntroduceProductClass": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/iso16757/mutation/introduce-product-class/schema.json"
+        }
+      }
     },
     {
-      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/iso16757/mutation/remove-selection-constraint/schema.json"
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "RetireProductClass"
+      ],
+      "properties": {
+        "RetireProductClass": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/iso16757/mutation/retire-product-class/schema.json"
+        }
+      }
     },
     {
-      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/iso16757/mutation/rename-catalogue/schema.json"
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "IntroduceProductSeries"
+      ],
+      "properties": {
+        "IntroduceProductSeries": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/iso16757/mutation/introduce-product-series/schema.json"
+        }
+      }
     },
     {
-      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/iso16757/mutation/rename-manufacturer/schema.json"
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "RetireProductSeries"
+      ],
+      "properties": {
+        "RetireProductSeries": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/iso16757/mutation/retire-product-series/schema.json"
+        }
+      }
     },
     {
-      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/iso16757/mutation/rename-product-group/schema.json"
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "IntroduceProductIndex"
+      ],
+      "properties": {
+        "IntroduceProductIndex": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/iso16757/mutation/introduce-product-index/schema.json"
+        }
+      }
     },
     {
-      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/iso16757/mutation/rename-product/schema.json"
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "RetireProductIndex"
+      ],
+      "properties": {
+        "RetireProductIndex": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/iso16757/mutation/retire-product-index/schema.json"
+        }
+      }
     },
     {
-      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/iso16757/mutation/replace-part-number-rule/schema.json"
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "IntroduceGeometryObject"
+      ],
+      "properties": {
+        "IntroduceGeometryObject": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/iso16757/mutation/introduce-geometry-object/schema.json"
+        }
+      }
     },
     {
-      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/iso16757/mutation/change-script-limits/schema.json"
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "RetireGeometryObject"
+      ],
+      "properties": {
+        "RetireGeometryObject": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/iso16757/mutation/retire-geometry-object/schema.json"
+        }
+      }
     }
   ]
 }

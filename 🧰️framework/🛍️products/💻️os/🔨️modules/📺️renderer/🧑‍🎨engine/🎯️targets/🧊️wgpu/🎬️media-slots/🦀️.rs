@@ -6,12 +6,24 @@ use ui_wgpu::wgpu::{Rect, UiNode};
 pub const PRESENTED_MEDIA_SLOT_CAPACITY: usize = 32;
 pub const PRESENTED_MEDIA_DESCRIPTOR_BYTES: usize = 65_536;
 
+fn serialize_coordinate<S: serde::Serializer>(value: &f32, serializer: S) -> Result<S::Ok, S::Error> {
+    if replication::value::json_integer(f64::from(*value)).is_some() {
+        ui_contract::UiValue::Number(f64::from(*value)).serialize(serializer)
+    } else {
+        serializer.serialize_f32(*value)
+    }
+}
+
 #[derive(Clone, Debug, PartialEq, Deserialize, Serialize)]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
 pub struct PresentedMediaRect {
+    #[serde(serialize_with = "serialize_coordinate")]
     pub x: f32,
+    #[serde(serialize_with = "serialize_coordinate")]
     pub y: f32,
+    #[serde(serialize_with = "serialize_coordinate")]
     pub width: f32,
+    #[serde(serialize_with = "serialize_coordinate")]
     pub height: f32,
 }
 

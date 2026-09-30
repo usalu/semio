@@ -27,6 +27,7 @@ export async function registerTests2(vitest: NonNullable<ImportMeta["vitest"]>, 
     diff: Readonly<{ schema: string; payloadHex: string }>;
     inverse: Readonly<{ schema: string; payloadHex: string }>;
     timestamp: Readonly<{ actor: string; physicalMs: string; logical: string }>;
+    transaction: Readonly<{ id: string; tool: string }> | null;
   }>;
   type Fixture = Readonly<{
     schema: string;
@@ -52,6 +53,7 @@ export async function registerTests2(vitest: NonNullable<ImportMeta["vitest"]>, 
       diff: { schema: envelope.diff.schema, payloadHex: toHex(envelope.diff.payload) },
       inverse: { schema: envelope.inverse.schema, payloadHex: toHex(envelope.inverse.payload) },
       timestamp: { actor: envelope.timestamp.actor.toString(), physicalMs: envelope.timestamp.physical_ms.toString(), logical: envelope.timestamp.logical.toString() },
+      transaction: envelope.transaction,
     }));
 
   async function load(): Promise<Readonly<{ fixture: Fixture; schema: object }>> {

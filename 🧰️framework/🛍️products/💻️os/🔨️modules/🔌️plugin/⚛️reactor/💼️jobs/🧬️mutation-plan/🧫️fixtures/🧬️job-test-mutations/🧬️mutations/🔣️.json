@@ -1,14 +1,18 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
   "$id": "https://json.schemas.assets.semio-tech.com/framework/os/plugin/reactor/jobs/mutation-plan/tests/job-test-mutations/mutations.json",
-  "type": "object",
-  "additionalProperties": false,
-  "required": [
-    "AddValue"
-  ],
-  "properties": {
-    "AddValue": {
-      "$ref": "https://json.schemas.assets.semio-tech.com/framework/os/plugin/reactor/jobs/mutation-plan/tests/job-test-mutations/mutation/add-value/schema.json"
+  "oneOf": [
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "AddValue"
+      ],
+      "properties": {
+        "AddValue": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/framework/os/plugin/reactor/jobs/mutation-plan/tests/job-test-mutations/mutation/add-value/schema.json"
+        }
+      }
     }
-  }
+  ]
 }

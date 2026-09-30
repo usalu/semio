@@ -21,7 +21,7 @@
 import { spawnSync } from "node:child_process";
 import { createHash } from "node:crypto";
 import type { TrustedCatalogGuestResidencyStateV1 } from "../../📊️observability/🟦️.ts";
-import { hubProbeCall, hubProbeCreateArtifact, hubProbeCreateSpace, hubProbeCreationCatalog, hubProbeOpenPlan, hubProbeSignIn } from "../../🤝️integration-harness/🟦️.ts";
+import { hubProbeCall, hubProbeCreateArtifact, hubProbeCreateSpace, hubProbeCreationCatalog, hubProbeOpenPlan, hubProbeSignIn } from "../../../🧰️framework/🛍️products/💻️os/🔨️modules/📇️directory/🧪️testkit/📡️client-probe/🟦️.ts";
 import { listeningProcessId } from "../../🚀️local-bootstrap/🏃️execution/🟦️.ts";
 
 /** 🎛️ One watch. */

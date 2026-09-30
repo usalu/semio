@@ -29,7 +29,7 @@ use protocol::{OpBinary, OpText};
 /// 🧭️ One step down into a nested block container: `Quote` (own `blocks`), a `List` item's own
 /// `blocks`, or a `Table` cell's own `blocks`.
 #[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
-#[value(tag = "kind", rename_all = "camelCase")]
+#[value(tag = "kind", rename_all = "camelCase", rename_all_fields = "camelCase")]
 pub enum DocPathSegment {
     Quote { block_index: usize },
     ListItem { block_index: usize, item: usize },

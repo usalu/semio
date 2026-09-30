@@ -1,0 +1,9 @@
+{
+  "mutation": "unbindNodeMesh",
+  "payload": {
+    "phase": "apply",
+    "value": {
+      "node": 0
+    }
+  }
+}

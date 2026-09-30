@@ -1,0 +1,12 @@
+{
+  "messages": [
+    {
+      "code": "mutation.partial",
+      "level": "warn",
+      "target": [
+        "region-1"
+      ]
+    }
+  ],
+  "status": "applied"
+}

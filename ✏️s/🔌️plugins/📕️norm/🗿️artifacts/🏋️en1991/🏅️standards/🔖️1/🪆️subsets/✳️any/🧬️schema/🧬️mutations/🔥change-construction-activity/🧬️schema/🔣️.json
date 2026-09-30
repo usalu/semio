@@ -9,7 +9,21 @@
   ],
   "properties": {
     "newConstructionActivity": {
-      "type": "string"
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "text",
+        "role": "value",
+        "label": {
+          "en": "Construction activity",
+          "de": "Tätigkeit im Bauzustand"
+        },
+        "description": {
+          "en": "scaffolding, formwork, landing or working_platform (EN 1991-1-6).",
+          "de": "scaffolding (Gerüst), formwork (Schalung), landing (Lagerfläche) oder working_platform (Arbeitsbühne) nach EN 1991-1-6."
+        },
+        "group": "execution",
+        "order": 10
+      }
     }
   }
 }

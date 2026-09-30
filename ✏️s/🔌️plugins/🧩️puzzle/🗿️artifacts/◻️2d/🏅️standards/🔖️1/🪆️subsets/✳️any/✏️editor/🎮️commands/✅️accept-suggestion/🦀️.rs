@@ -25,7 +25,7 @@ pub fn accept_suggestion(ctx: &mut Puzzle2dActionCtx<'_>, args: Option<&Value>) 
     ctx.host.borrow_mut().brush_set_candidate_index(index);
     let before: Vec<String> = fixture_nodes(&ctx.scene.fixture).iter().filter_map(|node| node.get("id").and_then(Value::as_str)).map(str::to_string).collect();
     ctx.host.borrow_mut().brush_commit_slot();
-    let _ = apply_host_events(&mut ctx.host.borrow_mut(), ctx.scene);
+    apply_host_events(&mut ctx.host.borrow_mut(), ctx.scene);
     dismiss(ctx);
     let placed: Vec<String> = fixture_nodes(&ctx.scene.fixture).iter().filter_map(|node| node.get("id").and_then(Value::as_str)).filter(|id| !before.iter().any(|known| known == id)).map(str::to_string).collect();
     if !placed.is_empty() {

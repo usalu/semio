@@ -2,6 +2,7 @@
 import type { Component, UiContractViolation, UiDocumentLimits, UiNodeRecord } from "../../../../../🛂️manifest/🟦️.ts";
 import type { RetainedUiComponent, RetainedUiNodeRecord } from "../../📦️wire/🧾️typed/🟦️.ts";
 import type { RetainedUiNumericTable, RetainedUiSiblingKeys } from "../../🟦️.ts";
+import { snapsAreValid } from "../../../🛡️limits/🟦️.ts";
 
 type Program<T> = Generator<number, T, void>;
 type Record = UiNodeRecord | RetainedUiNodeRecord;
@@ -12,13 +13,19 @@ export type RetainedUiGraphNodes = { readonly size: number; lookup(id: number): 
 
 function finite(component: Component | RetainedUiComponent): boolean {
   switch (component.type) {
-    case "slider": return Number.isFinite(component.value) && Number.isFinite(component.min) && Number.isFinite(component.max) && Number.isFinite(component.step);
+    case "slider": return Number.isFinite(component.value) && Number.isFinite(component.min) && Number.isFinite(component.max) && Number.isFinite(component.step) && component.snaps.every(Number.isFinite);
     case "numberStepper": return Number.isFinite(component.value) && Number.isFinite(component.step) && (component.min == null || Number.isFinite(component.min)) && (component.max == null || Number.isFinite(component.max)) && (component.min == null || component.max == null || component.min <= component.max);
     case "ring": return Number.isFinite(component.t);
     case "progress": return Number.isFinite(component.completed) && (component.total == null || Number.isFinite(component.total));
-    case "input": return (component.min == null || Number.isFinite(component.min)) && (component.max == null || Number.isFinite(component.max)) && (component.step == null || Number.isFinite(component.step));
+    case "input": return (component.min == null || Number.isFinite(component.min)) && (component.max == null || Number.isFinite(component.max)) && (component.step == null || Number.isFinite(component.step)) && (component.snaps ?? []).every(Number.isFinite);
     default: return true;
   }
+}
+
+/** 🧲️ A slider's and a number field's detents obey the shared law; every other component passes — the twin of the Rust `snaps_are_valid` gate. */
+function validSnaps(component: Component | RetainedUiComponent): boolean {
+  if (component.type === "slider") return snapsAreValid(component.snaps, component.min, component.max);
+  return component.type !== "input" || snapsAreValid(component.snaps ?? [], component.min ?? Number.NEGATIVE_INFINITY, component.max ?? Number.POSITIVE_INFINITY);
 }
 
 function* violation(value: UiContractViolation, frontier: RetainedUiGraphFrontier, violations: RetainedUiNumericTable<UiContractViolation>): Program<void> {
@@ -80,6 +87,7 @@ export function* retainedUiGraphValidation(nodes: RetainedUiGraphNodes, root: nu
     const section = record.component.type === "container" && record.component.role === "section";
     if (frame.section && section) yield* violation({ type: "sectionNested", node: frame.id }, frontier, violations);
     if (!finite(record.component)) yield* violation({ type: "nonFiniteNumber", node: frame.id }, frontier, violations);
+    else if (!validSnaps(record.component)) yield* violation({ type: "invalidSnaps", node: frame.id }, frontier, violations);
     if (record.component.type === "treeItem" && record.component.inlineToolbar !== null && !(yield* validTreeToolbar(record, record.component.inlineToolbar, nodes))) yield* violation({ type: "invalidTreeInlineToolbar", node: frame.id, toolbar: record.component.inlineToolbar }, frontier, violations);
     if (record.component.type === "treeSection" && record.component.headerToolbar !== null && !(yield* validTreeToolbar(record, record.component.headerToolbar, nodes))) yield* violation({ type: "invalidTreeSectionHeaderToolbar", node: frame.id, toolbar: record.component.headerToolbar }, frontier, violations);
     if (record.component.type === "treeItem" && record.component.detail !== null && !(yield* validTreeDetail(record, nodes))) yield* violation({ type: "invalidTreeDetail", node: frame.id, detail: record.component.detail }, frontier, violations);
@@ -112,7 +120,7 @@ export function* retainedUiGraphValidation(nodes: RetainedUiGraphNodes, root: nu
  * `shapePreserving` — the candidate's node set, edge set and root are IDENTICAL to the base's. Then
  * `danglingRoot`, `cycle`, `depthQuota`, `orphanChild`, `duplicateSiblingKey` and `sectionNested` are
  * all decided by structure the base already proved, and the invariants a payload can still break are
- * `nonFiniteNumber` and `invalidRowTarget` on a replaced record. So this costs one index lookup per touched node instead of
+ * `nonFiniteNumber`, `invalidSnaps` and `invalidRowTarget` on a replaced record. So this costs one index lookup per touched node instead of
  * the base walk's three persistent-index writes per document node: measured 163 284 → 159 steps on the
  * Nakagin-scale 145-node scene surface (`📃️UiDocumentStore/🧪️tests/🧪️typedwire`'s re-publish law).
  *
@@ -124,6 +132,7 @@ export function* retainedUiGraphTouchedValidation(nodes: RetainedUiGraphNodes, t
     if (typeof entry === "number") { yield entry; continue; }
     const record = yield* nodes.lookup(entry[0]);
     if (record && !finite(record.component)) yield* violation({ type: "nonFiniteNumber", node: entry[0] }, frontier, violations);
+    else if (record && !validSnaps(record.component)) yield* violation({ type: "invalidSnaps", node: entry[0] }, frontier, violations);
     if (record && !validRowTarget(record)) yield* violation({ type: "invalidRowTarget", node: entry[0] }, frontier, violations);
   }
 }

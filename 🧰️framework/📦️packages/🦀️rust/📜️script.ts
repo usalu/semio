@@ -36,6 +36,24 @@ class ToolRunActionsTestScript extends BundleScript {
   }
 }
 
+/** ✏️ Runs the reserved history-edit verb fixture through Ajv plus the TypeScript mirror, then the Rust manifest law. */
+class HistoryEditActionsTestScript extends BundleScript {
+  async run(): Promise<void> {
+    await runTestBudgeted(process.execPath, ["test", join(this.root, "../../🔨️modules/🛂️manifest/🧪️tests/🧪️history-edit-actions/🟦️.ts")], { cwd: this.repoRoot });
+    await runCargoTestBudgeted(["semio-framework"], this.repoRoot, ["--lib", "manifest::history_edit_actions_tests"]);
+  }
+}
+
+/** 🧬️ Runs the mutation-input corpus (`🧫️fixtures/🧫️mutation-inputs`) through the TypeScript reader with the npm `jsonschema` and strict Ajv oracles, the Python `jsonschema` oracle, then the Rust reader. */
+class MutationInputsTestScript extends BundleScript {
+  async run(): Promise<void> {
+    const testCase = join(this.root, "../../🔨️modules/🛂️manifest/🧪️tests/🧪️mutation-inputs");
+    await runTestBudgeted(process.execPath, ["test", join(testCase, "🟦️.ts")], { cwd: this.repoRoot });
+    await runTestBudgeted(join(this.repoRoot, ".venv", process.platform === "win32" ? "Scripts/python.exe" : "bin/python"), [join(testCase, "🐍️.py")], { cwd: this.repoRoot });
+    await runCargoTestBudgeted(["semio-framework"], this.repoRoot, ["--lib", "manifest::mutation_inputs_tests"]);
+  }
+}
+
 /** 🔁️ Runs the shared host-effect invocation fixture: which channel a guest's `dispatchAction` re-enters, the ONE rule both renderer targets read. */
 class HostEffectInvocationTestScript extends BundleScript {
   async run(): Promise<void> {
@@ -132,6 +150,6 @@ class CheckScript extends BundleScript {
 }
 //#endregion 🔖️Typegen
 
-const router = new ScriptRouter(import.meta.dir).register("test", TestScript).register("test-action-choices", ActionChoicesTestScript).register("test-tool-run-actions", ToolRunActionsTestScript).register("test-host-effect-invocation", HostEffectInvocationTestScript).register("test-core-modules", CoreModulesTestScript).register("test-package-descriptor-value-codec", PackageDescriptorValueCodecTestScript).register("test-wire-retirement-source", WireRetirementSourceScript).register("test-wire-retirement-native", WireRetirementNativeScript).register("generate", GenerateScript).register("preview-generated", PreviewGeneratedScript).register("check", CheckScript).register("lint", LintScript);
+const router = new ScriptRouter(import.meta.dir).register("test", TestScript).register("test-action-choices", ActionChoicesTestScript).register("test-tool-run-actions", ToolRunActionsTestScript).register("test-history-edit-actions", HistoryEditActionsTestScript).register("test-mutation-inputs", MutationInputsTestScript).register("test-host-effect-invocation", HostEffectInvocationTestScript).register("test-core-modules", CoreModulesTestScript).register("test-package-descriptor-value-codec", PackageDescriptorValueCodecTestScript).register("test-wire-retirement-source", WireRetirementSourceScript).register("test-wire-retirement-native", WireRetirementNativeScript).register("generate", GenerateScript).register("preview-generated", PreviewGeneratedScript).register("check", CheckScript).register("lint", LintScript);
 
 await runBundleScriptMain(router, import.meta.url, { defaultCommand: "test" });

@@ -9,7 +9,20 @@
   ],
   "properties": {
     "newStoreys": {
-      "type": "integer"
+      "type": "integer",
+      "minimum": 0,
+      "x-semio-ui": {
+        "widget": "stepper",
+        "role": "value",
+        "label": {
+          "en": "Number of storeys",
+          "de": "Geschossanzahl"
+        },
+        "step": 1,
+        "precision": 0,
+        "group": "annex",
+        "order": 10
+      }
     }
   }
 }

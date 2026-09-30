@@ -139,6 +139,15 @@ pub fn inverse_semio_animation_mutation(mutation: &SemioAnimationMutation, base:
     <SemioAnimationMutation as Mutation<SemioAnimationSnapshot>>::inverse(mutation, base)
 }
 
+/// 📥️ Decodes this subset's internally tagged (`{"mutation": "<camelCaseVariant>", ...}`) wire value — the shape
+/// `🎞️mutate-semio-animation`'s committed specification vectors and doc strings carry — into a real [`SemioAnimationMutation`]. A thin
+/// `pack::from_json_str` wrapper over `ToValue`/`FromValue`, so the test adapter reads the committed wire value instead of
+/// re-declaring it field by field beside it.
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn decode_semio_animation_mutation_json(text: &str) -> Result<SemioAnimationMutation, String> {
+    pack::from_json_str(text).map_err(|error| error.to_string())
+}
+
 //#region 🔖️MutationTrait
 // 🚫️async: E1 pure codec/computation helper — lifted verbatim from the former `impl Mutation`.
 pub(crate) fn agg_diff(this: &SemioAnimationMutation, base: &SemioAnimationSnapshot) -> protocol::MutationOutcome<SemioAnimationDiff> {

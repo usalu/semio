@@ -94,5 +94,652 @@
       },
       "x-semio-state": "artifact"
     }
+  },
+  "$defs": {
+    "SpreadFoundation": {
+      "title": "SpreadFoundation",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "width",
+        "length",
+        "embedment",
+        "baseInclinationDeg",
+        "settlementLimit",
+        "loadCases"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "width": {
+          "type": "number",
+          "x-semio-ui": {
+            "widget": "stepper",
+            "label": {
+              "en": "Foundation width b",
+              "de": "Fundamentbreite b"
+            },
+            "unit": "m",
+            "step": 0.05,
+            "precision": 2
+          }
+        },
+        "length": {
+          "type": "number",
+          "x-semio-ui": {
+            "label": {
+              "en": "Foundation length L",
+              "de": "Fundamentlänge L"
+            },
+            "widget": "stepper",
+            "unit": "m",
+            "precision": 2
+          }
+        },
+        "embedment": {
+          "type": "number",
+          "x-semio-ui": {
+            "widget": "stepper",
+            "label": {
+              "en": "Embedment depth d",
+              "de": "Einbindetiefe d"
+            },
+            "unit": "m",
+            "step": 0.05,
+            "precision": 2
+          }
+        },
+        "baseInclinationDeg": {
+          "type": "number",
+          "x-semio-ui": {
+            "label": {
+              "en": "Base inclination α",
+              "de": "Sohlneigung α"
+            },
+            "widget": "stepper",
+            "unit": "°",
+            "precision": 1
+          }
+        },
+        "settlementLimit": {
+          "type": "number",
+          "x-semio-ui": {
+            "label": {
+              "en": "Admissible settlement s",
+              "de": "Zulässige Setzung s"
+            },
+            "widget": "stepper",
+            "unit": "m",
+            "displayUnit": "mm",
+            "displayFactor": 1000,
+            "precision": 1
+          }
+        },
+        "loadCases": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/FoundationLoadCase"
+          },
+          "x-semio-ui": {
+            "label": {
+              "en": "Load cases",
+              "de": "Lastfälle"
+            }
+          }
+        }
+      }
+    },
+    "SoilLayer": {
+      "title": "SoilLayer",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "soilType",
+        "depthTop",
+        "depthBottom",
+        "gamma",
+        "gammaPrime",
+        "phiPrimeDeg",
+        "cohesionEffective",
+        "cohesionUndrained",
+        "oedometricModulus",
+        "poissonRatio",
+        "cptQc",
+        "sptN"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "soilType": {
+          "type": "string",
+          "x-semio-ui": {
+            "label": {
+              "en": "Soil type",
+              "de": "Bodenart"
+            },
+            "description": {
+              "en": "e.g. sand, clay, gravel (DIN 18196 group).",
+              "de": "z. B. Sand, Ton, Kies (Bodengruppe nach DIN 18196)."
+            },
+            "widget": "text"
+          }
+        },
+        "depthTop": {
+          "type": "number",
+          "x-semio-ui": {
+            "label": {
+              "en": "Depth of layer top",
+              "de": "Tiefe der Schichtoberkante"
+            },
+            "widget": "stepper",
+            "unit": "m",
+            "precision": 2
+          }
+        },
+        "depthBottom": {
+          "type": "number",
+          "x-semio-ui": {
+            "label": {
+              "en": "Depth of layer bottom",
+              "de": "Tiefe der Schichtunterkante"
+            },
+            "widget": "stepper",
+            "unit": "m",
+            "precision": 2
+          }
+        },
+        "gamma": {
+          "type": "number",
+          "x-semio-ui": {
+            "label": {
+              "en": "Unit weight γ",
+              "de": "Wichte γ"
+            },
+            "widget": "stepper",
+            "unit": "N/m³",
+            "displayUnit": "kN/m³",
+            "displayFactor": 0.001,
+            "precision": 1
+          }
+        },
+        "gammaPrime": {
+          "type": "number",
+          "x-semio-ui": {
+            "label": {
+              "en": "Buoyant unit weight γ′",
+              "de": "Wichte unter Auftrieb γ′"
+            },
+            "widget": "stepper",
+            "unit": "N/m³",
+            "displayUnit": "kN/m³",
+            "displayFactor": 0.001,
+            "precision": 1
+          }
+        },
+        "phiPrimeDeg": {
+          "type": "number",
+          "x-semio-ui": {
+            "widget": "dial",
+            "label": {
+              "en": "Effective angle of shearing resistance φ′",
+              "de": "Effektiver Reibungswinkel φ′"
+            },
+            "unit": "°",
+            "step": 0.5,
+            "precision": 1
+          }
+        },
+        "cohesionEffective": {
+          "type": "number",
+          "x-semio-ui": {
+            "label": {
+              "en": "Effective cohesion c′",
+              "de": "Effektive Kohäsion c′"
+            },
+            "widget": "stepper",
+            "unit": "Pa",
+            "displayUnit": "kN/m²",
+            "displayFactor": 0.001,
+            "precision": 2
+          }
+        },
+        "cohesionUndrained": {
+          "type": "number",
+          "x-semio-ui": {
+            "label": {
+              "en": "Undrained shear strength c_u",
+              "de": "Undränierte Scherfestigkeit c_u"
+            },
+            "widget": "stepper",
+            "unit": "Pa",
+            "displayUnit": "kN/m²",
+            "displayFactor": 0.001,
+            "precision": 2
+          }
+        },
+        "oedometricModulus": {
+          "type": "number",
+          "x-semio-ui": {
+            "widget": "stepper",
+            "label": {
+              "en": "Oedometer modulus E_oed",
+              "de": "Steifemodul E_s"
+            },
+            "unit": "Pa",
+            "displayUnit": "N/mm²",
+            "displayFactor": 1e-06,
+            "step": 1000000.0,
+            "precision": 1
+          }
+        },
+        "poissonRatio": {
+          "type": "number",
+          "x-semio-ui": {
+            "label": {
+              "en": "Poisson's ratio ν",
+              "de": "Querdehnzahl ν"
+            },
+            "widget": "stepper",
+            "precision": 2
+          }
+        },
+        "cptQc": {
+          "type": "number",
+          "x-semio-ui": {
+            "label": {
+              "en": "Cone resistance q_c",
+              "de": "Spitzenwiderstand q_c"
+            },
+            "widget": "stepper",
+            "unit": "Pa",
+            "displayUnit": "N/mm²",
+            "displayFactor": 1e-06,
+            "precision": 1
+          }
+        },
+        "sptN": {
+          "type": "number",
+          "x-semio-ui": {
+            "label": {
+              "en": "SPT blow count N",
+              "de": "SPT-Schlagzahl N"
+            },
+            "widget": "stepper",
+            "precision": 0
+          }
+        }
+      }
+    },
+    "AnnexChoice": {
+      "title": "AnnexChoice",
+      "type": "string",
+      "enum": [
+        "En",
+        "De"
+      ],
+      "x-semio-ui": {
+        "options": {
+          "En": {
+            "en": "Recommended CEN values (EN)",
+            "de": "Empfohlene CEN-Werte (EN)"
+          },
+          "De": {
+            "en": "German national annex (DIN EN)",
+            "de": "Deutscher Nationaler Anhang (DIN EN)"
+          }
+        }
+      }
+    },
+    "Pile": {
+      "title": "Pile",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "pileType",
+        "diameter",
+        "length",
+        "count",
+        "alphaS",
+        "unitShaftResistance",
+        "unitBaseResistance",
+        "compressionPermanent",
+        "compressionVariable",
+        "tensionPermanent",
+        "tensionVariable",
+        "testProfiles"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "pileType": {
+          "type": "string",
+          "x-semio-ui": {
+            "label": {
+              "en": "Pile type",
+              "de": "Pfahlart"
+            },
+            "description": {
+              "en": "bored, driven or CFA.",
+              "de": "Bohrpfahl, Verdrängungspfahl oder Schneckenbohrpfahl."
+            },
+            "widget": "text"
+          }
+        },
+        "diameter": {
+          "type": "number",
+          "x-semio-ui": {
+            "label": {
+              "en": "Pile diameter D",
+              "de": "Pfahldurchmesser D"
+            },
+            "widget": "stepper",
+            "unit": "m",
+            "displayUnit": "mm",
+            "displayFactor": 1000,
+            "precision": 1
+          }
+        },
+        "length": {
+          "type": "number",
+          "x-semio-ui": {
+            "widget": "stepper",
+            "label": {
+              "en": "Pile length L",
+              "de": "Pfahllänge L"
+            },
+            "unit": "m",
+            "step": 0.5,
+            "precision": 2
+          }
+        },
+        "count": {
+          "type": "integer",
+          "minimum": 0,
+          "x-semio-ui": {
+            "widget": "stepper",
+            "label": {
+              "en": "Number of piles n",
+              "de": "Pfahlanzahl n"
+            },
+            "step": 1,
+            "precision": 0
+          }
+        },
+        "alphaS": {
+          "type": "number",
+          "x-semio-ui": {
+            "label": {
+              "en": "Shaft friction factor α_s",
+              "de": "Mantelreibungsbeiwert α_s"
+            },
+            "widget": "stepper",
+            "precision": 2
+          }
+        },
+        "unitShaftResistance": {
+          "type": "number",
+          "x-semio-ui": {
+            "label": {
+              "en": "Unit shaft resistance q_s",
+              "de": "Pfahlmantelreibung q_s"
+            },
+            "widget": "stepper",
+            "unit": "Pa",
+            "displayUnit": "kN/m²",
+            "displayFactor": 0.001,
+            "precision": 2
+          }
+        },
+        "unitBaseResistance": {
+          "type": "number",
+          "x-semio-ui": {
+            "label": {
+              "en": "Unit base resistance q_b",
+              "de": "Pfahlspitzenwiderstand q_b"
+            },
+            "widget": "stepper",
+            "unit": "Pa",
+            "displayUnit": "N/mm²",
+            "displayFactor": 1e-06,
+            "precision": 1
+          }
+        },
+        "compressionPermanent": {
+          "type": "number",
+          "x-semio-ui": {
+            "label": {
+              "en": "Permanent compression G_k",
+              "de": "Ständige Druckkraft G_k"
+            },
+            "widget": "stepper",
+            "unit": "N",
+            "displayUnit": "kN",
+            "displayFactor": 0.001,
+            "precision": 2
+          }
+        },
+        "compressionVariable": {
+          "type": "number",
+          "x-semio-ui": {
+            "label": {
+              "en": "Variable compression Q_k",
+              "de": "Veränderliche Druckkraft Q_k"
+            },
+            "widget": "stepper",
+            "unit": "N",
+            "displayUnit": "kN",
+            "displayFactor": 0.001,
+            "precision": 2
+          }
+        },
+        "tensionPermanent": {
+          "type": "number",
+          "x-semio-ui": {
+            "label": {
+              "en": "Permanent tension G_k",
+              "de": "Ständige Zugkraft G_k"
+            },
+            "widget": "stepper",
+            "unit": "N",
+            "displayUnit": "kN",
+            "displayFactor": 0.001,
+            "precision": 2
+          }
+        },
+        "tensionVariable": {
+          "type": "number",
+          "x-semio-ui": {
+            "label": {
+              "en": "Variable tension Q_k",
+              "de": "Veränderliche Zugkraft Q_k"
+            },
+            "widget": "stepper",
+            "unit": "N",
+            "displayUnit": "kN",
+            "displayFactor": 0.001,
+            "precision": 2
+          }
+        },
+        "testProfiles": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/PileTestProfile"
+          },
+          "x-semio-ui": {
+            "label": {
+              "en": "Pile load test profiles",
+              "de": "Probebelastungsprofile"
+            }
+          }
+        }
+      }
+    },
+    "FoundationLoadCase": {
+      "title": "FoundationLoadCase",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "designSituation",
+        "verticalPermanent",
+        "verticalVariable",
+        "horizontalPermanent",
+        "horizontalVariable",
+        "momentPermanent",
+        "momentVariable"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "designSituation": {
+          "type": "string",
+          "x-semio-ui": {
+            "widget": "text",
+            "label": {
+              "en": "Design situation",
+              "de": "Bemessungssituation"
+            },
+            "description": {
+              "en": "DIN 1054 design situation bsP, bsT or bsA (BS-P persistent, BS-T transient, BS-A accidental).",
+              "de": "Bemessungssituation nach DIN 1054: bsP (BS-P ständig), bsT (BS-T vorübergehend) oder bsA (BS-A außergewöhnlich)."
+            }
+          }
+        },
+        "verticalPermanent": {
+          "type": "number",
+          "x-semio-ui": {
+            "label": {
+              "en": "Permanent vertical load V_G,k",
+              "de": "Ständige Vertikallast V_G,k"
+            },
+            "widget": "stepper",
+            "unit": "N",
+            "displayUnit": "kN",
+            "displayFactor": 0.001,
+            "precision": 2
+          }
+        },
+        "verticalVariable": {
+          "type": "number",
+          "x-semio-ui": {
+            "label": {
+              "en": "Variable vertical load V_Q,k",
+              "de": "Veränderliche Vertikallast V_Q,k"
+            },
+            "widget": "stepper",
+            "unit": "N",
+            "displayUnit": "kN",
+            "displayFactor": 0.001,
+            "precision": 2
+          }
+        },
+        "horizontalPermanent": {
+          "type": "number",
+          "x-semio-ui": {
+            "label": {
+              "en": "Permanent horizontal load H_G,k",
+              "de": "Ständige Horizontallast H_G,k"
+            },
+            "widget": "stepper",
+            "unit": "N",
+            "displayUnit": "kN",
+            "displayFactor": 0.001,
+            "precision": 2
+          }
+        },
+        "horizontalVariable": {
+          "type": "number",
+          "x-semio-ui": {
+            "label": {
+              "en": "Variable horizontal load H_Q,k",
+              "de": "Veränderliche Horizontallast H_Q,k"
+            },
+            "widget": "stepper",
+            "unit": "N",
+            "displayUnit": "kN",
+            "displayFactor": 0.001,
+            "precision": 2
+          }
+        },
+        "momentPermanent": {
+          "type": "number",
+          "x-semio-ui": {
+            "label": {
+              "en": "Permanent moment M_G,k",
+              "de": "Ständiges Moment M_G,k"
+            },
+            "widget": "stepper",
+            "unit": "N·m",
+            "displayUnit": "kN·m",
+            "displayFactor": 0.001,
+            "precision": 2
+          }
+        },
+        "momentVariable": {
+          "type": "number",
+          "x-semio-ui": {
+            "label": {
+              "en": "Variable moment M_Q,k",
+              "de": "Veränderliches Moment M_Q,k"
+            },
+            "widget": "stepper",
+            "unit": "N·m",
+            "displayUnit": "kN·m",
+            "displayFactor": 0.001,
+            "precision": 2
+          }
+        }
+      }
+    },
+    "PileTestProfile": {
+      "title": "PileTestProfile",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "shaftResistance",
+        "baseResistance"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "shaftResistance": {
+          "type": "number",
+          "x-semio-ui": {
+            "label": {
+              "en": "Measured shaft resistance R_s,m",
+              "de": "Gemessener Mantelwiderstand R_s,m"
+            },
+            "widget": "stepper",
+            "unit": "N",
+            "displayUnit": "kN",
+            "displayFactor": 0.001,
+            "precision": 2
+          }
+        },
+        "baseResistance": {
+          "type": "number",
+          "x-semio-ui": {
+            "label": {
+              "en": "Measured base resistance R_b,m",
+              "de": "Gemessener Spitzenwiderstand R_b,m"
+            },
+            "widget": "stepper",
+            "unit": "N",
+            "displayUnit": "kN",
+            "displayFactor": 0.001,
+            "precision": 2
+          }
+        }
+      }
+    }
   }
 }

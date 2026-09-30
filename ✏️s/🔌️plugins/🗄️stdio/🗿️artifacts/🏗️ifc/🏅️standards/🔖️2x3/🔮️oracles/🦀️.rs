@@ -109,6 +109,150 @@ pub mod part21 {
     }
     //#endregion 🔖️JsonGrammar
 
+    //#region 🧾️Wire
+    /// 🔢️ One `Part21Decimal` wire record (`{negative, coefficient, scale, exponent?}`) as the real it denotes.
+    fn real_from_wire(value: &Json) -> Result<f64, String> {
+        let scale = u64_field(value, "scale")? as usize;
+        let digits = format!("{:0>width$}", str_field(value, "coefficient")?, width = scale + 1);
+        let (integer, fraction) = digits.split_at(digits.len() - scale);
+        let mantissa = format!("{}{integer}.{fraction}0", if matches!(value.get("negative"), Some(Json::Bool(true))) { "-" } else { "" });
+        let exponent = match value.get("exponent") {
+            None | Some(Json::Null) => 0,
+            Some(_) => num_field(value, "exponent")? as i32,
+        };
+        format!("{mantissa}e{exponent}").parse::<f64>().map_err(|error| format!("real {mantissa}e{exponent}: {error}"))
+    }
+
+    /// 🔢️ A real as its `Part21Decimal` wire record, spelled from the shortest decimal that round-trips it.
+    fn real_to_wire(value: f64) -> Json {
+        let text = format!("{value}");
+        let (negative, unsigned) = text.strip_prefix('-').map_or((false, text.as_str()), |rest| (true, rest));
+        let (integer, fraction) = unsigned.split_once('.').unwrap_or((unsigned, ""));
+        Json::Object(vec![
+            ("negative".to_string(), Json::Bool(negative)),
+            ("coefficient".to_string(), Json::String(format!("{integer}{fraction}"))),
+            ("scale".to_string(), Json::Number(fraction.len() as f64)),
+        ])
+    }
+
+    /// 🧾️ One `Part21Value` wire value (`{kind, value|values|typeName}`, the leaf payload shape) as the argument
+    /// `ruststep` models. Read here from the wire, never through the production `FromValue`.
+    pub fn value_from_wire(value: &Json) -> Result<Parameter, String> {
+        Ok(match str_field(value, "kind")?.as_str() {
+            "unset" => Parameter::NotProvided,
+            "derived" => Parameter::Omitted,
+            "int" => Parameter::Integer(num_field(value, "value")? as i64),
+            "real" => Parameter::Real(real_from_wire(value.get("value").ok_or("a real value carries `value`")?)?),
+            "str" => Parameter::String(str_field(value, "value")?),
+            "enum" => Parameter::Enumeration(str_field(value, "value")?),
+            "ref" => Parameter::Ref(Name::Entity(u64_field(value, "value")?)),
+            "list" => Parameter::List(values_from_wire(value, "values")?),
+            "typed" => match <[Parameter; 1]>::try_from(values_from_wire(value, "values")?) {
+                Ok([item]) => Parameter::Typed { keyword: str_field(value, "typeName")?, parameter: Box::new(item) },
+                Err(items) => return Err(format!("a Part-21 defined type wraps exactly one value, not {}", items.len())),
+            },
+            other => return Err(format!("unknown Part-21 value kind {other:?}")),
+        })
+    }
+
+    /// 🧾️ Every wire value of the array member `key`.
+    pub fn values_from_wire(value: &Json, key: &str) -> Result<Vec<Parameter>, String> {
+        value.array(key).iter().map(value_from_wire).collect()
+    }
+
+    /// 🧾️ One `ruststep` argument as its `Part21Value` wire value — the exact inverse of [`value_from_wire`]. A string
+    /// carries the literal `ruststep` read, which this module's writer re-emits verbatim.
+    pub fn value_to_wire(param: &Parameter) -> Json {
+        let tagged = |kind: &str, members: Vec<(&str, Json)>| Json::Object(std::iter::once(("kind".to_string(), Json::String(kind.to_string()))).chain(members.into_iter().map(|(key, value)| (key.to_string(), value))).collect());
+        match param {
+            Parameter::NotProvided => tagged("unset", Vec::new()),
+            Parameter::Omitted => tagged("derived", Vec::new()),
+            Parameter::Integer(value) => tagged("int", vec![("value", Json::Number(*value as f64))]),
+            Parameter::Real(value) => tagged("real", vec![("value", real_to_wire(*value))]),
+            Parameter::String(value) => tagged("str", vec![("value", Json::String(value.clone()))]),
+            Parameter::Enumeration(value) => tagged("enum", vec![("value", Json::String(value.clone()))]),
+            Parameter::List(items) => tagged("list", vec![("values", Json::Array(items.iter().map(value_to_wire).collect()))]),
+            Parameter::Ref(name) => tagged(
+                "ref",
+                vec![(
+                    "value",
+                    Json::Number(match name {
+                        Name::Entity(id) | Name::Value(id) => *id as f64,
+                        Name::ConstantEntity(_) | Name::ConstantValue(_) => 0.0,
+                    }),
+                )],
+            ),
+            Parameter::Typed { keyword, parameter } => tagged("typed", vec![("typeName", Json::String(keyword.clone())), ("values", Json::Array(vec![value_to_wire(parameter)]))]),
+        }
+    }
+
+    /// 🧩️ One `Part21Instance` wire record (`{id, entities: [{typeName, arguments}]}`) as a simple or complex instance.
+    pub fn instance_from_wire(value: &Json) -> Result<EntityInstance, String> {
+        let id = u64_field(value, "id")?;
+        let mut records = value.array("entities").iter().map(|entity| Ok(Record { name: str_field(entity, "typeName")?, parameter: Parameter::List(values_from_wire(entity, "arguments")?) })).collect::<Result<Vec<_>, String>>()?;
+        match records.len() {
+            0 => Err(format!("instance #{id} carries no entity")),
+            1 => Ok(EntityInstance::Simple { id, record: records.remove(0) }),
+            _ => Ok(EntityInstance::Complex { id, subsuper: ruststep::ast::SubSuperRecord(records) }),
+        }
+    }
+
+    fn instance_to_wire(entity: &EntityInstance) -> Json {
+        let entities = records(entity)
+            .into_iter()
+            .map(|record| {
+                let arguments = match &record.parameter {
+                    Parameter::List(items) => items.iter().map(value_to_wire).collect(),
+                    other => vec![value_to_wire(other)],
+                };
+                Json::Object(vec![("typeName".to_string(), Json::String(record.name.clone())), ("arguments".to_string(), Json::Array(arguments))])
+            })
+            .collect();
+        Json::Object(vec![("id".to_string(), Json::Number(entity_id(entity) as f64)), ("entities".to_string(), Json::Array(entities))])
+    }
+
+    /// 📇️ The three `HEADER;` records ISO 10303-21 §8.2 fixes, in its own order, keyed by their `Part21Header` wire name.
+    const HEADER_RECORDS: [(&str, &str); 3] = [("FILE_DESCRIPTION", "fileDescription"), ("FILE_NAME", "fileName"), ("FILE_SCHEMA", "fileSchema")];
+
+    /// 📇️ A `Part21Header` wire record as the three header records, replacing whatever the document declared.
+    pub fn header_from_wire(exchange: &mut Exchange, header: &Json) -> Result<(), String> {
+        exchange.header = HEADER_RECORDS.iter().map(|(record, member)| Ok(Record { name: record.to_string(), parameter: Parameter::List(values_from_wire(header, member)?) })).collect::<Result<Vec<_>, String>>()?;
+        Ok(())
+    }
+
+    fn header_to_wire(exchange: &Exchange) -> Json {
+        Json::Object(
+            HEADER_RECORDS
+                .iter()
+                .map(|(record, member)| {
+                    let values = match exchange.header.iter().find(|candidate| candidate.name == *record).map(|found| &found.parameter) {
+                        Some(Parameter::List(items)) => items.iter().map(value_to_wire).collect(),
+                        Some(other) => vec![value_to_wire(other)],
+                        None => Vec::new(),
+                    };
+                    (member.to_string(), Json::Array(values))
+                })
+                .collect(),
+        )
+    }
+
+    /// 📸️ `set-snapshot`: the whole document becomes the `Ifc2x3Snapshot` wire record `snapshot` — its header and its
+    /// instance graph, in the record's own order.
+    pub fn replace_with_snapshot(exchange: &mut Exchange, snapshot: &Json) -> Result<(), String> {
+        let document = snapshot.get("document").ok_or("an IFC2X3 snapshot carries `document`")?;
+        header_from_wire(exchange, document.get("header").ok_or("an IFC2X3 document carries `header`")?)?;
+        exchange.data = vec![DataSection { meta: Vec::new(), entities: document.array("instances").iter().map(instance_from_wire).collect::<Result<Vec<_>, String>>()? }];
+        Ok(())
+    }
+
+    /// 📸️ The document as a `set-snapshot` payload `{snapshot}` — what restores it through [`replace_with_snapshot`].
+    pub fn snapshot_payload(exchange: &Exchange) -> Json {
+        let instances = exchange.data.iter().flat_map(|section| section.entities.iter()).map(instance_to_wire).collect();
+        let document = Json::Object(vec![("header".to_string(), header_to_wire(exchange)), ("instances".to_string(), Json::Array(instances))]);
+        Json::Object(vec![("snapshot".to_string(), Json::Object(vec![("schema".to_string(), Json::String("stdio.ifc.2x3".to_string())), ("document".to_string(), document)]))])
+    }
+    //#endregion 🧾️Wire
+
     //#region 🔖️Reader
     /// 📥️ The one independent parse: `ruststep` 0.4 over real ISO 10303-21 clear text.
     pub fn read(input: &[u8]) -> Result<Exchange, String> {

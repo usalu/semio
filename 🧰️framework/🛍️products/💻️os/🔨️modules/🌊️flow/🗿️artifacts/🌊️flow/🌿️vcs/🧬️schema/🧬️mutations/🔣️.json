@@ -4,250 +4,34 @@
   "title": "FlowMutation",
   "oneOf": [
     {
-      "type": "object",
-      "allOf": [
-        {
-          "$ref": "https://json.schemas.assets.semio-tech.com/os/flow/artifacts/flow/vcs/mutation/add-widget/schema.json#/$defs/Payload"
-        },
-        {
-          "properties": {
-            "operation": {
-              "const": "addWidget"
-            }
-          },
-          "required": [
-            "operation"
-          ]
-        }
-      ],
-      "propertyNames": {
-        "enum": [
-          "index",
-          "operation",
-          "widget"
-        ]
-      }
+      "$ref": "https://json.schemas.assets.semio-tech.com/os/flow/artifacts/flow/vcs/mutation/add-widget/schema.json"
     },
     {
-      "type": "object",
-      "allOf": [
-        {
-          "$ref": "https://json.schemas.assets.semio-tech.com/os/flow/artifacts/flow/vcs/mutation/remove-widget/schema.json#/$defs/Payload"
-        },
-        {
-          "properties": {
-            "operation": {
-              "const": "removeWidget"
-            }
-          },
-          "required": [
-            "operation"
-          ]
-        }
-      ],
-      "propertyNames": {
-        "enum": [
-          "id",
-          "operation"
-        ]
-      }
+      "$ref": "https://json.schemas.assets.semio-tech.com/os/flow/artifacts/flow/vcs/mutation/remove-widget/schema.json"
     },
     {
-      "type": "object",
-      "allOf": [
-        {
-          "$ref": "https://json.schemas.assets.semio-tech.com/os/flow/artifacts/flow/vcs/mutation/move-widget/schema.json#/$defs/Payload"
-        },
-        {
-          "properties": {
-            "operation": {
-              "const": "moveWidget"
-            }
-          },
-          "required": [
-            "operation"
-          ]
-        }
-      ],
-      "propertyNames": {
-        "enum": [
-          "id",
-          "operation",
-          "toIndex"
-        ]
-      }
+      "$ref": "https://json.schemas.assets.semio-tech.com/os/flow/artifacts/flow/vcs/mutation/move-widget/schema.json"
     },
     {
-      "type": "object",
-      "allOf": [
-        {
-          "$ref": "https://json.schemas.assets.semio-tech.com/os/flow/artifacts/flow/vcs/mutation/change-widget/schema.json#/$defs/Payload"
-        },
-        {
-          "properties": {
-            "operation": {
-              "const": "changeWidget"
-            }
-          },
-          "required": [
-            "operation"
-          ]
-        }
-      ],
-      "propertyNames": {
-        "enum": [
-          "id",
-          "operation",
-          "widget"
-        ]
-      }
+      "$ref": "https://json.schemas.assets.semio-tech.com/os/flow/artifacts/flow/vcs/mutation/change-widget/schema.json"
     },
     {
-      "type": "object",
-      "allOf": [
-        {
-          "$ref": "https://json.schemas.assets.semio-tech.com/os/flow/artifacts/flow/vcs/mutation/add-synapse/schema.json#/$defs/Payload"
-        },
-        {
-          "properties": {
-            "operation": {
-              "const": "addSynapse"
-            }
-          },
-          "required": [
-            "operation"
-          ]
-        }
-      ],
-      "propertyNames": {
-        "enum": [
-          "index",
-          "operation",
-          "synapse"
-        ]
-      }
+      "$ref": "https://json.schemas.assets.semio-tech.com/os/flow/artifacts/flow/vcs/mutation/add-synapse/schema.json"
     },
     {
-      "type": "object",
-      "allOf": [
-        {
-          "$ref": "https://json.schemas.assets.semio-tech.com/os/flow/artifacts/flow/vcs/mutation/remove-synapse/schema.json#/$defs/Payload"
-        },
-        {
-          "properties": {
-            "operation": {
-              "const": "removeSynapse"
-            }
-          },
-          "required": [
-            "operation"
-          ]
-        }
-      ],
-      "propertyNames": {
-        "enum": [
-          "id",
-          "operation"
-        ]
-      }
+      "$ref": "https://json.schemas.assets.semio-tech.com/os/flow/artifacts/flow/vcs/mutation/remove-synapse/schema.json"
     },
     {
-      "type": "object",
-      "allOf": [
-        {
-          "$ref": "https://json.schemas.assets.semio-tech.com/os/flow/artifacts/flow/vcs/mutation/move-synapse/schema.json#/$defs/Payload"
-        },
-        {
-          "properties": {
-            "operation": {
-              "const": "moveSynapse"
-            }
-          },
-          "required": [
-            "operation"
-          ]
-        }
-      ],
-      "propertyNames": {
-        "enum": [
-          "id",
-          "operation",
-          "toIndex"
-        ]
-      }
+      "$ref": "https://json.schemas.assets.semio-tech.com/os/flow/artifacts/flow/vcs/mutation/move-synapse/schema.json"
     },
     {
-      "type": "object",
-      "allOf": [
-        {
-          "$ref": "https://json.schemas.assets.semio-tech.com/os/flow/artifacts/flow/vcs/mutation/change-synapse/schema.json#/$defs/Payload"
-        },
-        {
-          "properties": {
-            "operation": {
-              "const": "changeSynapse"
-            }
-          },
-          "required": [
-            "operation"
-          ]
-        }
-      ],
-      "propertyNames": {
-        "enum": [
-          "id",
-          "operation",
-          "synapse"
-        ]
-      }
+      "$ref": "https://json.schemas.assets.semio-tech.com/os/flow/artifacts/flow/vcs/mutation/change-synapse/schema.json"
     },
     {
-      "type": "object",
-      "allOf": [
-        {
-          "$ref": "https://json.schemas.assets.semio-tech.com/os/flow/artifacts/flow/vcs/mutation/change-layout/schema.json#/$defs/Payload"
-        },
-        {
-          "properties": {
-            "operation": {
-              "const": "changeLayout"
-            }
-          },
-          "required": [
-            "operation"
-          ]
-        }
-      ],
-      "propertyNames": {
-        "enum": [
-          "entries",
-          "operation"
-        ]
-      }
+      "$ref": "https://json.schemas.assets.semio-tech.com/os/flow/artifacts/flow/vcs/mutation/change-layout/schema.json"
     },
     {
-      "type": "object",
-      "allOf": [
-        {
-          "$ref": "https://json.schemas.assets.semio-tech.com/os/flow/artifacts/flow/vcs/mutation/replace-flow-host-snapshot/schema.json#/$defs/Payload"
-        },
-        {
-          "properties": {
-            "operation": {
-              "const": "replaceFlowHostSnapshot"
-            }
-          },
-          "required": [
-            "operation"
-          ]
-        }
-      ],
-      "propertyNames": {
-        "enum": [
-          "fixture",
-          "operation"
-        ]
-      }
+      "$ref": "https://json.schemas.assets.semio-tech.com/os/flow/artifacts/flow/vcs/mutation/replace-flow-host-snapshot/schema.json"
     }
   ]
 }

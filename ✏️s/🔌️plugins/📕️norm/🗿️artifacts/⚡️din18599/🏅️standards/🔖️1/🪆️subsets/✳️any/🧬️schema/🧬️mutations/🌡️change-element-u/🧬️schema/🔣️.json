@@ -1,15 +1,54 @@
 {
-  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/norm/din18599/mutation/change-element-u/schema.json",
   "title": "ChangeElementU",
   "type": "object",
-  "properties": {
-    "elementId": {
-      "type": "string"
-    },
-    "newUValueWM2K": {
-      "type": "number"
-    }
-  },
   "additionalProperties": false,
-  "$id": "https://json.schemas.assets.semio-tech.com/s/norm/din18599/mutation/change-element-u/schema.json"
+  "required": [
+    "mutation",
+    "elementId",
+    "newUValueWM2k"
+  ],
+  "properties": {
+    "mutation": {
+      "const": "changeElementU"
+    },
+    "elementId": {
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Envelope element",
+          "de": "Bauteil der Gebäudehülle"
+        },
+        "description": {
+          "en": "The envelope element this mutation addresses.",
+          "de": "Das Bauteil der Gebäudehülle, das diese Mutation adressiert."
+        },
+        "ref": {
+          "kind": "element"
+        },
+        "group": "target",
+        "order": 10
+      }
+    },
+    "newUValueWM2k": {
+      "type": "number",
+      "minimum": 0,
+      "x-semio-ui": {
+        "widget": "stepper",
+        "role": "value",
+        "label": {
+          "en": "Thermal transmittance U",
+          "de": "Wärmedurchgangskoeffizient U"
+        },
+        "unit": "W/(m²·K)",
+        "step": 0.01,
+        "precision": 3,
+        "group": "envelope",
+        "order": 20
+      }
+    }
+  }
 }

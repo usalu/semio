@@ -1,6 +1,7 @@
 /** 🧩️ Semantic plugin build plan owner. */
 
-import { ACTIVATION_RECEIPT_FILE, PLAYGROUND_SESSION_OUTPUT_ROOT_ENV, developmentRuntimeRoot, newestComponentSourceMtime, nextActivationReceipt, playgroundSessionOutputPath, pluginModulesRoot, publishActivationReceipt, readActivationReceipt, stagedModuleMtime, stagedModuleReportLines, stagedModuleVerdict, type StagedModuleFacts, type StagedModuleVerdict } from "../../../🧑‍💻dev/♻️activation/🟦️.ts";
+import { newestComponentSourceMtime, stagedModuleMtime } from "../🔍️freshness/🟦️.ts";
+import { ACTIVATION_RECEIPT_FILE, PLAYGROUND_SESSION_OUTPUT_ROOT_ENV, developmentRuntimeRoot, nextActivationReceipt, playgroundSessionOutputPath, pluginModulesRoot, publishActivationReceipt, readActivationReceipt, stagedModuleReportLines, stagedModuleVerdict, type StagedModuleFacts, type StagedModuleVerdict } from "../../../🧑‍💻dev/♻️activation/🟦️.ts";
 
 import { basename, dirname, isAbsolute, join, relative, resolve } from "node:path";
 
@@ -108,7 +109,7 @@ const playgroundCatalog = loadFrameworkOsPlaygroundCatalog();
 type ResolvedPlaygroundFilter = {
   readonly pluginId: string;
   readonly appId?: string;
-  readonly brand?: string;
+  readonly brand?: string; devContribution?: string;
 };
 
 /**
@@ -119,7 +120,7 @@ type ResolvedPlaygroundFilter = {
  */
 function resolvePlaygroundFilter(filterPlugin: string): ResolvedPlaygroundFilter {
   const row = playgroundCatalog.find((entry) => entry.variant === filterPlugin);
-  return row ? { pluginId: row.pluginId, appId: row.app, brand: row.brand } : { pluginId: filterPlugin };
+  return row ? { pluginId: row.pluginId, appId: row.app, brand: row.brand, devContribution: row.devContribution } : { pluginId: filterPlugin };
 }
 
 /** 🎯️ Resolves a raw filter to the crate pluginId `generatePluginRegistry`'s `filterPlaygroundPlugin` option expects, or `undefined` for the unfiltered/studio case. */

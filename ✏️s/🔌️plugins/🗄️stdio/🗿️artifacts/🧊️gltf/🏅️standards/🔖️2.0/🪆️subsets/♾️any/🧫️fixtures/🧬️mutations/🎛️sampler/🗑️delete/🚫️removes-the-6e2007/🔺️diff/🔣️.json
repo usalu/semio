@@ -1,17 +1,25 @@
 {
-  "id": "s.stdio.gltf.mutation.delete-sampler.v1",
-  "version": 1,
-  "touchedPaths": [
-    "document/samplers/0"
-  ],
-  "payload": {
-    "index": 0
+  "textures": {
+    "modified": [
+      {
+        "index": 0,
+        "diff": {
+          "sampler": 0
+        }
+      }
+    ]
   },
-  "operation": {
-    "kind": "delete",
-    "index": 0,
-    "removed": {
-      "magFilter": 9729
-    }
+  "samplers": {
+    "removed": [
+      1
+    ],
+    "modified": [
+      {
+        "index": 0,
+        "diff": {
+          "wrapS": 33071
+        }
+      }
+    ]
   }
 }

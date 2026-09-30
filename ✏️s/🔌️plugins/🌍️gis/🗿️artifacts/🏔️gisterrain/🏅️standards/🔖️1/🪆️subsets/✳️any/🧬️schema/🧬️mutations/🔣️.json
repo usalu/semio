@@ -4,10 +4,28 @@
   "title": "GisTerrainMutation",
   "oneOf": [
     {
-      "$ref": "https://json.schemas.assets.semio-tech.com/s/gis/gisterrain/mutation/change-exaggeration/schema.json"
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "ChangeExaggeration"
+      ],
+      "properties": {
+        "ChangeExaggeration": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/gis/gisterrain/mutation/change-exaggeration/schema.json"
+        }
+      }
     },
     {
-      "$ref": "https://json.schemas.assets.semio-tech.com/s/gis/gisterrain/mutation/change-imported-features/schema.json"
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "ChangeImportedFeatures"
+      ],
+      "properties": {
+        "ChangeImportedFeatures": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/gis/gisterrain/mutation/change-imported-features/schema.json"
+        }
+      }
     }
   ]
 }

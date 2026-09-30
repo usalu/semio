@@ -5,15 +5,30 @@
   "type": "object",
   "additionalProperties": false,
   "required": [
+    "mutation",
     "key",
     "newValue"
   ],
   "properties": {
+    "mutation": {
+      "const": "changeParameterBinding"
+    },
     "key": {
       "type": "string"
     },
     "newValue": {
-      "$ref": "https://json.schemas.assets.semio-tech.com/framework/value/schema.json#/$defs/DslValue"
+      "$ref": "https://json.schemas.assets.semio-tech.com/framework/value/schema.json#/$defs/DslValue",
+      "x-semio-ui": {
+        "role": "value",
+        "label": {
+          "en": "New Value",
+          "de": "Neuer Wert"
+        },
+        "description": {
+          "en": "Value bound to the rule parameter.",
+          "de": "An den Regelparameter gebundener Wert."
+        }
+      }
     }
   }
 }

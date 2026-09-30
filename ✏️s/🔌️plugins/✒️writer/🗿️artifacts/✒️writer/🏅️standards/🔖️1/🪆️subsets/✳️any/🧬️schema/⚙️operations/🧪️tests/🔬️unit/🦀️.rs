@@ -12,14 +12,14 @@ async fn seeded_store() -> crate::spr::OwnedWriterStore {
 #[semio_framework_async_macros::async_test]
 async fn writer_document_vcs_replays_text_mutations() {
     let mut store = seeded_store().await;
-    store.dispatch(store::ArtifactCommand::Apply { mutations: vec![WriterMutation::EditText(EditText { text: "hello".into() })], description: None }).await.expect("apply");
+    store.dispatch(store::ArtifactCommand::Apply { mutations: vec![WriterMutation::EditText(EditText { text: "hello".into() })], description: None, transaction: None }).await.expect("apply");
     assert_eq!(crate::writer_text(&store.snapshot().expect("snapshot")), "hello");
 }
 
 #[semio_framework_async_macros::async_test]
 async fn writer_document_vcs_undoes_text_mutation() {
     let mut store = seeded_store().await;
-    store.dispatch(store::ArtifactCommand::Apply { mutations: vec![WriterMutation::EditText(EditText { text: "hello".into() })], description: None }).await.expect("apply");
+    store.dispatch(store::ArtifactCommand::Apply { mutations: vec![WriterMutation::EditText(EditText { text: "hello".into() })], description: None, transaction: None }).await.expect("apply");
     store.dispatch(store::ArtifactCommand::Undo).await.expect("undo");
     assert_eq!(crate::writer_text(&store.snapshot().expect("snapshot")), "");
 }

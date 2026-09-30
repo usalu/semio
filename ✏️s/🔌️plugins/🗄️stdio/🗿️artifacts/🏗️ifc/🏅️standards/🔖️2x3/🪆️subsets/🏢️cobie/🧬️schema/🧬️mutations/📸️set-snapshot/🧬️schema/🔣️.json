@@ -9,7 +9,15 @@
   ],
   "properties": {
     "snapshot": {
-      "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/ifc/2x3/base/snapshot.json"
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/ifc/2x3/base/snapshot.json",
+      "x-semio-ui": {
+        "label": {
+          "en": "IFC model",
+          "de": "IFC-Modell"
+        },
+        "group": "value",
+        "order": 10
+      }
     }
   }
 }

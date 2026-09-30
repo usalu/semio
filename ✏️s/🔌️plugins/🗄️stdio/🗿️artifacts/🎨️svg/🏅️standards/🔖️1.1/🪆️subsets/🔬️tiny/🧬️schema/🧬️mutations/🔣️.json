@@ -8,6 +8,30 @@
       "type": "object",
       "additionalProperties": false,
       "required": [
+        "SetSnapshot"
+      ],
+      "properties": {
+        "SetSnapshot": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/svg/1.1/tiny/mutation/set-snapshot/schema.json"
+        }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "StampBaseProfile"
+      ],
+      "properties": {
+        "StampBaseProfile": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/svg/1.1/tiny/mutation/stamp-base-profile/schema.json"
+        }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
         "InsertTinyElement"
       ],
       "properties": {
@@ -32,11 +56,11 @@
       "type": "object",
       "additionalProperties": false,
       "required": [
-        "SetSnapshot"
+        "SetTinyAttribute"
       ],
       "properties": {
-        "SetSnapshot": {
-          "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/svg/1.1/tiny/mutation/set-snapshot/schema.json"
+        "SetTinyAttribute": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/svg/1.1/tiny/mutation/set-tiny-attribute/schema.json"
         }
       }
     },
@@ -56,30 +80,6 @@
       "type": "object",
       "additionalProperties": false,
       "required": [
-        "SetTinyAttribute"
-      ],
-      "properties": {
-        "SetTinyAttribute": {
-          "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/svg/1.1/tiny/mutation/set-tiny-attribute/schema.json"
-        }
-      }
-    },
-    {
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "SetTransform"
-      ],
-      "properties": {
-        "SetTransform": {
-          "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/svg/1.1/tiny/mutation/set-transform/schema.json"
-        }
-      }
-    },
-    {
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
         "SetViewBox"
       ],
       "properties": {
@@ -92,11 +92,11 @@
       "type": "object",
       "additionalProperties": false,
       "required": [
-        "StampBaseProfile"
+        "SetTransform"
       ],
       "properties": {
-        "StampBaseProfile": {
-          "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/svg/1.1/tiny/mutation/stamp-base-profile/schema.json"
+        "SetTransform": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/svg/1.1/tiny/mutation/set-transform/schema.json"
         }
       }
     },

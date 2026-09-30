@@ -1,0 +1,13 @@
+<<<<<<< ANCHOR
+    pub fn materialize_backbone_snapshot<P, Op>(document: &BackboneDocument<P, Op>, applied_edit_ids: &[String]) -> Result<P, VcsError>
+    where
+        P: Clone,
+        Op: Clone + Mutation<P>,
+    {
+=======
+    pub fn materialize_backbone_snapshot<P, Op>(document: &BackboneDocument<P, Op>, applied_edit_ids: &[String]) -> Result<P, VcsError>
+    where
+        P: Clone,
+        Op: Clone + Mutation<P> + protocol::OpBinary,
+    {
+>>>>>>> END

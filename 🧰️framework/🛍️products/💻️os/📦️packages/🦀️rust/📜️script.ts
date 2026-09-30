@@ -1732,6 +1732,44 @@ class CheckScript extends BundleScript {
   }
 }
 
+/** 🏛️ Verifies shared policy and mutation publication authority through exact native laws. */
+class CanonicalArchitectureScript extends BundleScript {
+  async run(segments: string[]): Promise<void> {
+    if (segments.length) throw new Error("canonical-architecture accepts no arguments");
+    const receipts = await runExactCargoLaws({
+      cwd: this.repoRoot,
+      ...exactCargoStageEnvironments(),
+      groups: [{
+        package: "semio-framework-os-kernel",
+        target: { kind: "lib", name: "semio_framework_os_kernel" },
+        laws: [
+          "plugin_module_schema_exports_match_declared_formats",
+          "declared_access_policy_matches_the_language_neutral_truth_table",
+          "access_policy_is_closed_by_default_and_deny_overrides_allow",
+          "one_item_publication_fixture_matches_the_third_party_json_oracle",
+          "artifact_snapshot_root_is_o1_and_generation_stable_until_the_next_event",
+          "presence_local_read_is_o1_and_never_clones_the_payload_at_capture",
+          "transient_root_is_o1_and_retains_the_exact_pre_reset_value",
+          "artifact_store_batch_publication_of_one_mutation_is_the_single_item_case",
+          "artifact_store_batch_publication_stages_two_hundred_mutations_into_one_ledger_slot_and_one_undo_step",
+          "artifact_store_batch_cancel_mid_flight_retires_every_staged_owner_without_publishing",
+          "artifact_store_one_item_digest_helper_matches_validation_and_rejects_forged_cursor_history",
+          "artifact_store_one_item_stale_saturation_and_cancel_leave_root_generation_and_revision_unchanged",
+          "retained_member_publication_rejects_wrong_owner_staleness_and_cancels_without_commit",
+        ],
+      }],
+      artifactDir: process.env.SEMIO_TEST_ARTIFACT_DIR,
+      buildBudgetMs: Number(process.env.SEMIO_BUILD_BUDGET_MS ?? 3_600_000),
+      listBudgetMs: 60_000,
+      lawBudgetMs: 120_000,
+      progress(event) {
+        console.log("canonical-architecture-native " + event.stage + ": " + (event.law ?? ""));
+      },
+    });
+    console.log("canonical-architecture-native receipts=" + receipts.length);
+  }
+}
+
 class TestScript extends BundleScript {
   async run(segments: string[]): Promise<void> {
     await runCargo(["test", "--manifest-path", "Cargo.toml", "--lib", ...segments], this.root);
@@ -2417,6 +2455,7 @@ const router = new ScriptRouter(import.meta.dir)
   .register("check", CheckScript)
   .register("retained-clone-check", RetainedCloneCheckScript)
   .register("test", TestScript)
+  .register("canonical-architecture", CanonicalArchitectureScript)
   .register("document-opening-attempt-native-check", DocumentOpeningAttemptNativeCheckScript)
   .register("test-scalar-wire-source", ScalarWireSourceScript)
   .register("generate-jco-package-adapter", GenerateJcoPackageAdapterScript)

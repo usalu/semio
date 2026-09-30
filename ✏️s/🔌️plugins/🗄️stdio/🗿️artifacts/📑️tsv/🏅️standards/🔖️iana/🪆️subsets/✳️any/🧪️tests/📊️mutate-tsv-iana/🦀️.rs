@@ -37,7 +37,7 @@ fn rows_json(rows: &[Vec<String>]) -> Json {
     Json::Array(rows.iter().map(|row| Json::Array(row.iter().cloned().map(Json::String).collect())).collect())
 }
 
-/// ↩️ The inverse mutation's OWN spec, computed by reading whatever pre-mutation state it needs
+/// ↩️ The inverse mutation's OWN spec (leaf wire payloads, like every row), computed by reading whatever pre-mutation state it needs
 /// straight out of `original` with the same independent reader the oracle mutates with — never by
 /// calling this repository's own `TsvMutation::inverse`, which would defeat the point of an
 /// independently-computed oracle. Mirrors that method's documented rule exactly (index-aware,
@@ -50,10 +50,10 @@ fn inverse_spec(original: &[u8], forward: &Json) -> Result<Json, String> {
         _ => None,
     };
     match forward.str("kind").as_str() {
-        "no-mutation" => Ok(kind_spec("no-mutation", json_object(vec![]))),
         "set-snapshot" => {
             let grid = read_grid(original)?;
-            Ok(kind_spec("set-snapshot", json_object(vec![("records", rows_json(&grid.records)), ("trailingNewline", Json::Bool(grid.trailing_newline)), ("lineEnding", Json::String(grid.line_ending))])))
+            let snapshot = json_object(vec![("schema", Json::String("stdio.tsv".to_string())), ("records", rows_json(&grid.records)), ("trailingNewline", Json::Bool(grid.trailing_newline)), ("lineEnding", Json::String(grid.line_ending))]);
+            Ok(kind_spec("set-snapshot", json_object(vec![("snapshot", snapshot)])))
         }
         "set-trailing-newline" => {
             let grid = read_grid(original)?;
@@ -135,71 +135,17 @@ fn round_trip_oracle(ctx: &Context) -> Result<Outcome, String> {
 //#region 🔖️Subject
 #[cfg(feature = "sut")]
 mod subject {
-    use super::{inverse_spec, mutable_input};
+    use super::mutable_input;
     use semio_repo_test_host::{Context, Json, Outcome};
-    use semio_framework_os_kernel::ArtifactDsl;
-    use semio_s_artifact_stdio_tsv::standards::iana::subsets::any::schema::mutations::{apply_tsv_mutation, insert_row, remove_row, set_cell, set_line_ending, set_snapshot, set_trailing_newline};
-    use semio_s_artifact_stdio_tsv::standards::iana::subsets::any::schema::snapshot::{decode_tsv, encode_tsv, LineEnding};
-    use semio_s_artifact_stdio_tsv::{TsvMutation, TsvSnapshot, STDIO_TSV_DOCUMENT_SCHEMA};
+    use semio_s_artifact_stdio_tsv::standards::iana::subsets::any::schema::mutations::{apply_tsv_mutation, decode_tsv_mutation_payload_json, inverse_tsv_mutation};
+    use semio_s_artifact_stdio_tsv::standards::iana::subsets::any::schema::snapshot::{decode_tsv, encode_tsv, parse_tsv_document, print_tsv_document};
+    use semio_s_artifact_stdio_tsv::{TsvMutation, TsvSnapshot};
     use semio_s_plugin_stdio_test_oracle::artifacts::tsv::standards::v_iana::subsets::any::project_tsv_grid;
 
-    fn parse_line_ending(value: &str) -> Result<LineEnding, String> {
-        match value {
-            "lf" => Ok(LineEnding::Lf),
-            "crlf" => Ok(LineEnding::Crlf),
-            other => Err(format!("unknown lineEnding {other:?}, expected \"lf\" or \"crlf\"")),
-        }
-    }
-
-    /// 🔀️ The same JSON mutation spec the oracle reads, turned into this repository's own typed
-    /// `TsvMutation` — the only channel between the feature's parameters and the subject's codec.
+    /// 🔀️ The scenario's `<id>`/`<params>` spec decoded as the leaf wire payload it is, through the aggregate's own
+    /// derive-generated payload constructor — the only channel between the feature's parameters and the subject's codec.
     fn mutation_from_spec(spec: &Json) -> Result<TsvMutation, String> {
-        let params = spec.get("params").cloned().unwrap_or(Json::Null);
-        let number = |key: &str| match params.get(key) {
-            Some(Json::Number(value)) => Some(*value),
-            _ => None,
-        };
-        let boolean = |key: &str| match params.get(key) {
-            Some(Json::Bool(value)) => Some(*value),
-            _ => None,
-        };
-        let strings = |key: &str| -> Vec<String> {
-            params
-                .array(key)
-                .iter()
-                .map(|entry| match entry {
-                    Json::String(text) => text.clone(),
-                    _ => String::new(),
-                })
-                .collect()
-        };
-        Ok(match spec.str("kind").as_str() {
-            "set-trailing-newline" => TsvMutation::SetTrailingNewline(set_trailing_newline::SetTrailingNewline { trailing_newline: boolean("trailingNewline").ok_or("set-trailing-newline: missing `trailingNewline`")? }),
-            "set-line-ending" => TsvMutation::SetLineEnding(set_line_ending::SetLineEnding { line_ending: parse_line_ending(&params.str("lineEnding"))? }),
-            "set-snapshot" => {
-                let records = params
-                    .array("records")
-                    .iter()
-                    .map(|row| match row {
-                        Json::Array(cells) => cells
-                            .iter()
-                            .map(|cell| match cell {
-                                Json::String(text) => text.clone(),
-                                _ => String::new(),
-                            })
-                            .collect(),
-                        _ => Vec::new(),
-                    })
-                    .collect();
-                TsvMutation::SetSnapshot(set_snapshot::SetSnapshot {
-                    snapshot: TsvSnapshot { schema: STDIO_TSV_DOCUMENT_SCHEMA.into(), records, trailing_newline: boolean("trailingNewline").unwrap_or(true), line_ending: params.get("lineEnding").and_then(|v| if let Json::String(s) = v { parse_line_ending(s).ok() } else { None }).unwrap_or(LineEnding::Lf) },
-                })
-            }
-            "insert-row" => TsvMutation::InsertRow(insert_row::InsertRow { index: number("index").ok_or("insert-row: missing `index`")? as usize, row: strings("row") }),
-            "remove-row" => TsvMutation::RemoveRow(remove_row::RemoveRow { index: number("index").ok_or("remove-row: missing `index`")? as usize }),
-            "set-cell" => TsvMutation::SetCell(set_cell::SetCell { row_index: number("rowIndex").ok_or("set-cell: missing `rowIndex`")? as usize, field_index: number("fieldIndex").ok_or("set-cell: missing `fieldIndex`")? as usize, value: params.str("value") }),
-            other => return Err(format!("no subject rule for kind {other:?}")),
-        })
+        decode_tsv_mutation_payload_json(&spec.str("kind"), &spec.get("params").cloned().unwrap_or(Json::Null).to_string())
     }
 
     fn decode(bytes: &[u8]) -> Result<TsvSnapshot, String> {
@@ -216,12 +162,16 @@ mod subject {
         Ok(Outcome::with_raw(output, projection))
     }
 
+    /// ↩️ The subset's OWN `Mutation::inverse` (`inverse_tsv_mutation`) applied after the forward step — the
+    /// implementation's algebra, compared against the oracle's independently derived undo in the parity phase.
     pub fn inverse(ctx: &Context) -> Result<Outcome, String> {
-        let input = mutable_input(ctx)?;
-        let spec = ctx.doc_json()?;
-        let mut snapshot = decode(&input)?;
-        apply_tsv_mutation(&mut snapshot, &mutation_from_spec(&spec)?);
-        apply_tsv_mutation(&mut snapshot, &mutation_from_spec(&inverse_spec(&input, &spec)?)?);
+        let mut snapshot = decode(&mutable_input(ctx)?)?;
+        let mutation = mutation_from_spec(&ctx.doc_json()?)?;
+        let undo = inverse_tsv_mutation(&mutation, &snapshot);
+        apply_tsv_mutation(&mut snapshot, &mutation);
+        for step in &undo {
+            apply_tsv_mutation(&mut snapshot, step);
+        }
         let output = encode_tsv(&snapshot).into_bytes();
         let projection = project_tsv_grid(&output)?;
         Ok(Outcome::with_raw(output, projection))
@@ -234,9 +184,9 @@ mod subject {
     /// trailing newline, line ending — is captured and replayed verbatim), so a raw decode/encode
     /// round trip through those two functions alone can never diverge from a well-formed input:
     /// that would make the tripwire untestable, not satisfied by accident. This case instead goes
-    /// through the artifact's REAL document codec (`ArtifactDsl::parse_dsl`/`print_dsl`, re-exported
-    /// by `semio_s_plugin_stdio` — the generated subject host links that crate, never `store` directly,
-    /// the same pair `register_document_codec` wires into production) — `print_dsl` always prepends
+    /// through the artifact's REAL document codec (`ArtifactDsl::parse_dsl`/`print_dsl`, reached through the
+    /// crate's own `parse_tsv_document`/`print_tsv_document` — the generated subject host links that crate, never
+    /// `store` directly, the same pair `register_document_codec` wires into production) — `print_dsl` always prepends
     /// the `semio iana.tsv.dsl v1` envelope line the real committed fixture does not carry, which is
     /// a genuine writer choice this artifact's persisted form makes, not a fabricated difference.
     /// The projection compared against the oracle is computed from the BODY alone
@@ -245,8 +195,8 @@ mod subject {
     pub fn identity_round_trip(ctx: &Context) -> Result<Outcome, String> {
         let input = mutable_input(ctx)?;
         let text = String::from_utf8(input.clone()).map_err(|error| format!("input is not UTF-8: {error}"))?;
-        let snapshot = <TsvSnapshot as ArtifactDsl>::parse_dsl(&text).map_err(|error| error.to_string())?;
-        let enveloped = <TsvSnapshot as ArtifactDsl>::print_dsl(&snapshot).into_bytes();
+        let snapshot = parse_tsv_document(&text)?;
+        let enveloped = print_tsv_document(&snapshot).into_bytes();
         if enveloped == input {
             return Err("byte pass-through: output is bit-identical to the input".to_string());
         }
@@ -261,10 +211,10 @@ mod subject {
 /// 🧭️ Registration entry point the generated host calls.
 pub fn adapter() -> Adapter {
     let mut built = Adapter::new("rust");
-    built = built.oracle("mutate", mutate_oracle).oracle("no-mutation-baseline-mutate", mutate_oracle).oracle("inverse", inverse_oracle).oracle("no-mutation-baseline-inverse", inverse_oracle);
+    built = built.oracle("mutate", mutate_oracle).oracle("inverse", inverse_oracle);
     #[cfg(feature = "sut")]
     {
-        built = built.subject("mutate", subject::mutate).subject("no-mutation-baseline-mutate", subject::mutate).subject("inverse", subject::inverse).subject("no-mutation-baseline-inverse", subject::inverse);
+        built = built.subject("mutate", subject::mutate).subject("inverse", subject::inverse);
     }
     built = built.oracle("identity-round-trip", round_trip_oracle);
     #[cfg(feature = "sut")]

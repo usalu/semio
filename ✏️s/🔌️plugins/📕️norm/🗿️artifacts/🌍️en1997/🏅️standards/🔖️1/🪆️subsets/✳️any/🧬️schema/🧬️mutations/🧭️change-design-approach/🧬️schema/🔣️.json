@@ -5,11 +5,29 @@
   "type": "object",
   "additionalProperties": false,
   "required": [
+    "mutation",
     "newDesignApproach"
   ],
   "properties": {
+    "mutation": {
+      "const": "changeDesignApproach"
+    },
     "newDesignApproach": {
-      "type": "string"
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "text",
+        "role": "value",
+        "label": {
+          "en": "Design approach",
+          "de": "Nachweisverfahren"
+        },
+        "description": {
+          "en": "da1, da2 or da3 (EN 1997-1 §2.4.7.3.4); Germany uses da2 (DIN 1054).",
+          "de": "da1, da2 oder da3 (EN 1997-1 §2.4.7.3.4); in Deutschland gilt da2 (DIN 1054)."
+        },
+        "group": "annex",
+        "order": 10
+      }
     }
   }
 }

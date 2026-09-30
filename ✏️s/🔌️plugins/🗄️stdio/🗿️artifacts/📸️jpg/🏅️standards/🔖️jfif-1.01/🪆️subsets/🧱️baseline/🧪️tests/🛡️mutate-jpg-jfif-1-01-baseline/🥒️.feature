@@ -38,8 +38,15 @@ Feature: Move a real photographic JPEG across every axis of the T.81 baseline co
   rows — `remove-huffman-table`, `insert-frame-component` and `remove-frame-component` move their
   axis in the direction that stays INSIDE the class (four tables down to three is still ≤2 per
   class, three components up to four is still ≤4), so they must move the projection and raise
-  nothing. Reading them as failures would be reading the standard backwards. `no-mutation` is the
-  identity element and is the one row exempt from the observability law.
+  nothing. Reading them as failures would be reading the standard backwards.
+
+  Every `params` cell is exactly the leaf's wire payload — its `payload_value()`, camelCase, no
+  aggregate tag — decoded by the subject through the derive-generated `from_payload_value` and read
+  by the reference by the same field names. `set-snapshot` therefore carries the whole replacement
+  document rather than three stamps on the scan: a 1x1 document with the scan's own shape (SOF with
+  three 1x1 components, two DQT, four DHT) and the three hard axes stamped out of the class (SOF2,
+  12-bit precision, arithmetic conditioning). The reference reads that document's axes off the
+  snapshot exactly as it reads the scan's off libjpeg-turbo's trace.
 
   @id-mutate
   @level-exhaustive
@@ -52,27 +59,16 @@ Feature: Move a real photographic JPEG across every axis of the T.81 baseline co
       """
     Then the conformance verdict gains exactly <code>, and the projection moves on this kind's own axis
     Examples:
-      | id                      | code                                            | params                                                    |
-      | set-snapshot            | stdio.jpg.baseline.sof-marker                   | {"sofMarker": 194, "precision": 12, "arithmetic": true}   |
-      | set-sof-marker          | stdio.jpg.baseline.sof-marker                   | {"marker": 194}                                           |
-      | set-sample-precision    | stdio.jpg.baseline.precision                    | {"precision": 12}                                         |
-      | set-arithmetic          | stdio.jpg.baseline.arithmetic-conditioning-present | {"arithmetic": true}                                   |
-      | insert-huffman-table    | stdio.jpg.baseline.huffman-table-count          | {"index": 4, "class": "dc", "id": 2}                      |
-      | remove-huffman-table    |                                                 | {"class": "dc", "id": 0}                                  |
-      | insert-frame-component  |                                                 | {"index": 3, "id": 4, "hSampling": 1, "vSampling": 1}     |
-      | remove-frame-component  |                                                 | {"id": 3}                                                 |
-      | set-component-sampling  | stdio.jpg.baseline.component-sampling           | {"id": 1, "hSampling": 5, "vSampling": 1}                 |
-
-  @id-no-mutation-baseline-mutate
-  @level-exhaustive
-  @mode-conformance
-  Scenario: Apply no-mutation to the real scan and read the class verdict back
-    Given the real input document shared://🏘️abbau-aufbau-masterarbeit-grundriss/🖼️.jpg
-    When the no-mutation mutation is applied to the decoded snapshot
-      """
-      {"kind": "no-mutation", "code": "", "params": {}}
-      """
-    Then the conformance verdict gains exactly , and the projection moves on this kind's own axis
+      | id | code | params |
+      | set-snapshot | stdio.jpg.baseline.sof-marker | {"snapshot":{"schema":"stdio.jpg","width":1,"height":1,"pixels":[128,128,128,255],"jfifVersion":[1,1],"jfifDensityUnits":"aspect","jfifXDensity":1,"jfifYDensity":1,"frame":{"precision":12,"width":1,"height":1,"components":[{"id":1,"hSampling":1,"vSampling":1,"quantTableId":0},{"id":2,"hSampling":1,"vSampling":1,"quantTableId":0},{"id":3,"hSampling":1,"vSampling":1,"quantTableId":0}]},"sofMarker":194,"arithmetic":true,"quantTables":[{"id":0,"precision":0,"values":[16,16,16,16,16,16,16,16,16,16,16,16,16,16,16,16,16,16,16,16,16,16,16,16,16,16,16,16,16,16,16,16,16,16,16,16,16,16,16,16,16,16,16,16,16,16,16,16,16,16,16,16,16,16,16,16,16,16,16,16,16,16,16,16]},{"id":1,"precision":0,"values":[17,17,17,17,17,17,17,17,17,17,17,17,17,17,17,17,17,17,17,17,17,17,17,17,17,17,17,17,17,17,17,17,17,17,17,17,17,17,17,17,17,17,17,17,17,17,17,17,17,17,17,17,17,17,17,17,17,17,17,17,17,17,17,17]}],"huffmanTables":[{"id":0,"class":"dc","bits":[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],"values":[]},{"id":0,"class":"ac","bits":[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],"values":[]},{"id":1,"class":"dc","bits":[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],"values":[]},{"id":1,"class":"ac","bits":[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],"values":[]}],"otherSegments":[]}} |
+      | set-sof-marker | stdio.jpg.baseline.sof-marker | {"marker":194} |
+      | set-sample-precision | stdio.jpg.baseline.precision | {"precision":12} |
+      | set-arithmetic | stdio.jpg.baseline.arithmetic-conditioning-present | {"arithmetic":true} |
+      | insert-huffman-table | stdio.jpg.baseline.huffman-table-count | {"index":4,"table":{"id":2,"class":"dc","bits":[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],"values":[]}} |
+      | remove-huffman-table |  | {"key":{"class":"dc","id":0}} |
+      | insert-frame-component |  | {"index":3,"component":{"id":4,"hSampling":1,"vSampling":1,"quantTableId":0}} |
+      | remove-frame-component |  | {"id":3} |
+      | set-component-sampling | stdio.jpg.baseline.component-sampling | {"id":1,"hSampling":5,"vSampling":1} |
 
   @id-inverse
   @level-exhaustive
@@ -85,24 +81,14 @@ Feature: Move a real photographic JPEG across every axis of the T.81 baseline co
       """
     Then the conformance projection is the original one again, axis for axis
     Examples:
-      | id                      | code                                            | params                                                    |
-      | set-snapshot            | stdio.jpg.baseline.sof-marker                   | {"sofMarker": 194, "precision": 12, "arithmetic": true}   |
-      | set-sof-marker          | stdio.jpg.baseline.sof-marker                   | {"marker": 194}                                           |
-      | set-sample-precision    | stdio.jpg.baseline.precision                    | {"precision": 12}                                         |
-      | set-arithmetic          | stdio.jpg.baseline.arithmetic-conditioning-present | {"arithmetic": true}                                   |
-      | insert-huffman-table    | stdio.jpg.baseline.huffman-table-count          | {"index": 4, "class": "dc", "id": 2}                      |
-      | remove-huffman-table    |                                                 | {"class": "dc", "id": 0}                                  |
-      | insert-frame-component  |                                                 | {"index": 3, "id": 4, "hSampling": 1, "vSampling": 1}     |
-      | remove-frame-component  |                                                 | {"id": 3}                                                 |
-      | set-component-sampling  | stdio.jpg.baseline.component-sampling           | {"id": 1, "hSampling": 5, "vSampling": 1}                 |
+      | id | code | params |
+      | set-snapshot | stdio.jpg.baseline.sof-marker | {"snapshot":{"schema":"stdio.jpg","width":1,"height":1,"pixels":[128,128,128,255],"jfifVersion":[1,1],"jfifDensityUnits":"aspect","jfifXDensity":1,"jfifYDensity":1,"frame":{"precision":12,"width":1,"height":1,"components":[{"id":1,"hSampling":1,"vSampling":1,"quantTableId":0},{"id":2,"hSampling":1,"vSampling":1,"quantTableId":0},{"id":3,"hSampling":1,"vSampling":1,"quantTableId":0}]},"sofMarker":194,"arithmetic":true,"quantTables":[{"id":0,"precision":0,"values":[16,16,16,16,16,16,16,16,16,16,16,16,16,16,16,16,16,16,16,16,16,16,16,16,16,16,16,16,16,16,16,16,16,16,16,16,16,16,16,16,16,16,16,16,16,16,16,16,16,16,16,16,16,16,16,16,16,16,16,16,16,16,16,16]},{"id":1,"precision":0,"values":[17,17,17,17,17,17,17,17,17,17,17,17,17,17,17,17,17,17,17,17,17,17,17,17,17,17,17,17,17,17,17,17,17,17,17,17,17,17,17,17,17,17,17,17,17,17,17,17,17,17,17,17,17,17,17,17,17,17,17,17,17,17,17,17]}],"huffmanTables":[{"id":0,"class":"dc","bits":[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],"values":[]},{"id":0,"class":"ac","bits":[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],"values":[]},{"id":1,"class":"dc","bits":[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],"values":[]},{"id":1,"class":"ac","bits":[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],"values":[]}],"otherSegments":[]}} |
+      | set-sof-marker | stdio.jpg.baseline.sof-marker | {"marker":194} |
+      | set-sample-precision | stdio.jpg.baseline.precision | {"precision":12} |
+      | set-arithmetic | stdio.jpg.baseline.arithmetic-conditioning-present | {"arithmetic":true} |
+      | insert-huffman-table | stdio.jpg.baseline.huffman-table-count | {"index":4,"table":{"id":2,"class":"dc","bits":[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],"values":[]}} |
+      | remove-huffman-table |  | {"key":{"class":"dc","id":0}} |
+      | insert-frame-component |  | {"index":3,"component":{"id":4,"hSampling":1,"vSampling":1,"quantTableId":0}} |
+      | remove-frame-component |  | {"id":3} |
+      | set-component-sampling | stdio.jpg.baseline.component-sampling | {"id":1,"hSampling":5,"vSampling":1} |
 
-  @id-no-mutation-baseline-inverse
-  @level-exhaustive
-  @mode-property
-  Scenario: Undoing no-mutation puts the real scan back inside the class
-    Given the real input document shared://🏘️abbau-aufbau-masterarbeit-grundriss/🖼️.jpg
-    When no-mutation is applied to the decoded snapshot and then its own computed inverse steps are applied
-      """
-      {"kind": "no-mutation", "code": "", "params": {}}
-      """
-    Then the conformance projection is the original one again, axis for axis

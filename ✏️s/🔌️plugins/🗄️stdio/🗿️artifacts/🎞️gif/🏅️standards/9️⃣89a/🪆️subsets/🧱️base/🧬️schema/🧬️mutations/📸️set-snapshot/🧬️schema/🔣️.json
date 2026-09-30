@@ -5,15 +5,24 @@
   "type": "object",
   "additionalProperties": false,
   "required": [
+    "mutation",
     "snapshot"
   ],
   "properties": {
-    "snapshot": {
-      "$ref": "#/$defs/GifSnapshot"
-    },
     "mutation": {
       "const": "setSnapshot",
       "description": "Aggregate discriminator spliced in by GifMutation; absent when the payload stands alone."
+    },
+    "snapshot": {
+      "$ref": "#/$defs/GifSnapshot",
+      "x-semio-ui": {
+        "label": {
+          "en": "GIF image",
+          "de": "GIF-Bild"
+        },
+        "group": "value",
+        "order": 10
+      }
     }
   },
   "$defs": {
@@ -27,17 +36,41 @@
       ],
       "properties": {
         "schema": {
-          "type": "string"
+          "type": "string",
+          "x-semio-ui": {
+            "label": {
+              "en": "Schema",
+              "de": "Schema"
+            },
+            "description": {
+              "en": "Identifier of the snapshot schema this document follows.",
+              "de": "Kennung des Snapshot-Schemas, dem dieses Dokument folgt."
+            }
+          }
         },
         "width": {
           "type": "integer",
           "minimum": 0,
-          "maximum": 4294967295
+          "maximum": 4294967295,
+          "x-semio-ui": {
+            "label": {
+              "en": "Logical screen width",
+              "de": "Breite des logischen Bildschirms"
+            },
+            "unit": "px"
+          }
         },
         "height": {
           "type": "integer",
           "minimum": 0,
-          "maximum": 4294967295
+          "maximum": 4294967295,
+          "x-semio-ui": {
+            "label": {
+              "en": "Logical screen height",
+              "de": "Höhe des logischen Bildschirms"
+            },
+            "unit": "px"
+          }
         },
         "gct": {
           "anyOf": [
@@ -47,17 +80,47 @@
             {
               "type": "null"
             }
-          ]
+          ],
+          "x-semio-ui": {
+            "label": {
+              "en": "Global color table",
+              "de": "Globale Farbtabelle"
+            },
+            "description": {
+              "en": "Empty removes the global color table.",
+              "de": "Leer entfernt die globale Farbtabelle."
+            }
+          }
         },
         "backgroundColorIndex": {
           "type": "integer",
           "minimum": 0,
-          "maximum": 255
+          "maximum": 255,
+          "x-semio-ui": {
+            "label": {
+              "en": "Background color index",
+              "de": "Hintergrundfarbindex"
+            },
+            "description": {
+              "en": "Index of the palette color, 0 to 255.",
+              "de": "Index der Palettenfarbe, 0 bis 255."
+            }
+          }
         },
         "pixelAspectRatio": {
           "type": "integer",
           "minimum": 0,
-          "maximum": 255
+          "maximum": 255,
+          "x-semio-ui": {
+            "label": {
+              "en": "Pixel aspect ratio",
+              "de": "Pixel-Seitenverhältnis"
+            },
+            "description": {
+              "en": "Stored byte: aspect = (value + 15) / 64; 0 means no information.",
+              "de": "Gespeichertes Byte: Seitenverhältnis = (Wert + 15) / 64; 0 bedeutet keine Angabe."
+            }
+          }
         },
         "loopCount": {
           "anyOf": [
@@ -69,24 +132,52 @@
             {
               "type": "null"
             }
-          ]
+          ],
+          "x-semio-ui": {
+            "label": {
+              "en": "Loop count",
+              "de": "Anzahl Wiederholungen"
+            },
+            "description": {
+              "en": "NETSCAPE2.0 loop count; 0 loops forever.",
+              "de": "NETSCAPE2.0-Wiederholungen; 0 wiederholt endlos."
+            }
+          }
         },
         "frames": {
           "type": "array",
           "items": {
             "$ref": "#/$defs/GifFrame"
+          },
+          "x-semio-ui": {
+            "label": {
+              "en": "Frames",
+              "de": "Einzelbilder"
+            }
           }
         },
         "comments": {
           "type": "array",
           "items": {
             "type": "string"
+          },
+          "x-semio-ui": {
+            "label": {
+              "en": "Comments",
+              "de": "Kommentare"
+            }
           }
         },
         "appExtensions": {
           "type": "array",
           "items": {
             "$ref": "#/$defs/GifAppExtension"
+          },
+          "x-semio-ui": {
+            "label": {
+              "en": "Application extensions",
+              "de": "Anwendungserweiterungen"
+            }
           }
         }
       }
@@ -96,12 +187,24 @@
       "additionalProperties": false,
       "properties": {
         "sorted": {
-          "type": "boolean"
+          "type": "boolean",
+          "x-semio-ui": {
+            "label": {
+              "en": "Sorted by importance",
+              "de": "Nach Wichtigkeit sortiert"
+            }
+          }
         },
         "colors": {
           "type": "array",
           "items": {
             "$ref": "#/$defs/GifRgb"
+          },
+          "x-semio-ui": {
+            "label": {
+              "en": "Colors",
+              "de": "Farben"
+            }
           }
         }
       }
@@ -118,17 +221,35 @@
         "r": {
           "type": "integer",
           "minimum": 0,
-          "maximum": 255
+          "maximum": 255,
+          "x-semio-ui": {
+            "label": {
+              "en": "Red",
+              "de": "Rot"
+            }
+          }
         },
         "g": {
           "type": "integer",
           "minimum": 0,
-          "maximum": 255
+          "maximum": 255,
+          "x-semio-ui": {
+            "label": {
+              "en": "Green",
+              "de": "Grün"
+            }
+          }
         },
         "b": {
           "type": "integer",
           "minimum": 0,
-          "maximum": 255
+          "maximum": 255,
+          "x-semio-ui": {
+            "label": {
+              "en": "Blue",
+              "de": "Blau"
+            }
+          }
         }
       }
     },
@@ -145,22 +266,50 @@
         "left": {
           "type": "integer",
           "minimum": 0,
-          "maximum": 4294967295
+          "maximum": 4294967295,
+          "x-semio-ui": {
+            "label": {
+              "en": "Left offset",
+              "de": "Abstand links"
+            },
+            "unit": "px"
+          }
         },
         "top": {
           "type": "integer",
           "minimum": 0,
-          "maximum": 4294967295
+          "maximum": 4294967295,
+          "x-semio-ui": {
+            "label": {
+              "en": "Top offset",
+              "de": "Abstand oben"
+            },
+            "unit": "px"
+          }
         },
         "width": {
           "type": "integer",
           "minimum": 0,
-          "maximum": 4294967295
+          "maximum": 4294967295,
+          "x-semio-ui": {
+            "label": {
+              "en": "Width",
+              "de": "Breite"
+            },
+            "unit": "px"
+          }
         },
         "height": {
           "type": "integer",
           "minimum": 0,
-          "maximum": 4294967295
+          "maximum": 4294967295,
+          "x-semio-ui": {
+            "label": {
+              "en": "Height",
+              "de": "Höhe"
+            },
+            "unit": "px"
+          }
         },
         "interlace": {
           "type": "boolean"
@@ -173,7 +322,13 @@
             {
               "type": "null"
             }
-          ]
+          ],
+          "x-semio-ui": {
+            "label": {
+              "en": "Local color table",
+              "de": "Lokale Farbtabelle"
+            }
+          }
         },
         "indices": {
           "type": "array",
@@ -181,15 +336,45 @@
             "type": "integer",
             "minimum": 0,
             "maximum": 255
+          },
+          "x-semio-ui": {
+            "label": {
+              "en": "Pixel color indices",
+              "de": "Pixel-Farbindizes"
+            },
+            "description": {
+              "en": "One palette index per pixel, row by row.",
+              "de": "Ein Palettenindex je Pixel, zeilenweise."
+            }
           }
         },
         "delayCs": {
           "type": "integer",
           "minimum": 0,
-          "maximum": 65535
+          "maximum": 65535,
+          "x-semio-ui": {
+            "label": {
+              "en": "Frame delay",
+              "de": "Bildverzögerung"
+            },
+            "unit": "cs",
+            "displayUnit": "s",
+            "displayFactor": 0.01,
+            "precision": 2
+          }
         },
         "disposal": {
-          "$ref": "#/$defs/GifDisposal"
+          "$ref": "#/$defs/GifDisposal",
+          "x-semio-ui": {
+            "label": {
+              "en": "Disposal method",
+              "de": "Entfernungsmethode"
+            },
+            "description": {
+              "en": "What happens to the frame before the next one is drawn.",
+              "de": "Was mit dem Einzelbild geschieht, bevor das nächste gezeichnet wird."
+            }
+          }
         },
         "transparentIndex": {
           "anyOf": [
@@ -201,10 +386,22 @@
             {
               "type": "null"
             }
-          ]
+          ],
+          "x-semio-ui": {
+            "label": {
+              "en": "Transparent color index",
+              "de": "Transparenzfarbindex"
+            }
+          }
         },
         "userInput": {
-          "type": "boolean"
+          "type": "boolean",
+          "x-semio-ui": {
+            "label": {
+              "en": "Wait for user input",
+              "de": "Auf Benutzereingabe warten"
+            }
+          }
         },
         "plainText": {
           "anyOf": [
@@ -214,7 +411,13 @@
             {
               "type": "null"
             }
-          ]
+          ],
+          "x-semio-ui": {
+            "label": {
+              "en": "Plain text extension",
+              "de": "Klartexterweiterung"
+            }
+          }
         }
       }
     },
@@ -225,7 +428,27 @@
         "doNotDispose",
         "restoreToBackground",
         "restoreToPrevious"
-      ]
+      ],
+      "x-semio-ui": {
+        "options": {
+          "unspecified": {
+            "en": "Not specified",
+            "de": "Nicht festgelegt"
+          },
+          "doNotDispose": {
+            "en": "Do not dispose",
+            "de": "Nicht entfernen"
+          },
+          "restoreToBackground": {
+            "en": "Restore to background",
+            "de": "Auf Hintergrund zurücksetzen"
+          },
+          "restoreToPrevious": {
+            "en": "Restore to previous",
+            "de": "Auf vorheriges Bild zurücksetzen"
+          }
+        }
+      }
     },
     "GifPlainText": {
       "type": "object",
@@ -244,42 +467,96 @@
         "left": {
           "type": "integer",
           "minimum": 0,
-          "maximum": 4294967295
+          "maximum": 4294967295,
+          "x-semio-ui": {
+            "label": {
+              "en": "Left offset",
+              "de": "Abstand links"
+            },
+            "unit": "px"
+          }
         },
         "top": {
           "type": "integer",
           "minimum": 0,
-          "maximum": 4294967295
+          "maximum": 4294967295,
+          "x-semio-ui": {
+            "label": {
+              "en": "Top offset",
+              "de": "Abstand oben"
+            },
+            "unit": "px"
+          }
         },
         "width": {
           "type": "integer",
           "minimum": 0,
-          "maximum": 4294967295
+          "maximum": 4294967295,
+          "x-semio-ui": {
+            "label": {
+              "en": "Width",
+              "de": "Breite"
+            },
+            "unit": "px"
+          }
         },
         "height": {
           "type": "integer",
           "minimum": 0,
-          "maximum": 4294967295
+          "maximum": 4294967295,
+          "x-semio-ui": {
+            "label": {
+              "en": "Height",
+              "de": "Höhe"
+            },
+            "unit": "px"
+          }
         },
         "cellWidth": {
           "type": "integer",
           "minimum": 0,
-          "maximum": 255
+          "maximum": 255,
+          "x-semio-ui": {
+            "label": {
+              "en": "Character cell width",
+              "de": "Zeichenzellenbreite"
+            },
+            "unit": "px"
+          }
         },
         "cellHeight": {
           "type": "integer",
           "minimum": 0,
-          "maximum": 255
+          "maximum": 255,
+          "x-semio-ui": {
+            "label": {
+              "en": "Character cell height",
+              "de": "Zeichenzellenhöhe"
+            },
+            "unit": "px"
+          }
         },
         "fgColorIndex": {
           "type": "integer",
           "minimum": 0,
-          "maximum": 255
+          "maximum": 255,
+          "x-semio-ui": {
+            "label": {
+              "en": "Text color index",
+              "de": "Textfarbindex"
+            }
+          }
         },
         "bgColorIndex": {
           "type": "integer",
           "minimum": 0,
-          "maximum": 255
+          "maximum": 255,
+          "x-semio-ui": {
+            "label": {
+              "en": "Background color index",
+              "de": "Hintergrundfarbindex"
+            }
+          }
         },
         "text": {
           "type": "string"
@@ -302,7 +579,17 @@
             "maximum": 255
           },
           "minItems": 8,
-          "maxItems": 8
+          "maxItems": 8,
+          "x-semio-ui": {
+            "label": {
+              "en": "Application identifier",
+              "de": "Anwendungskennung"
+            },
+            "description": {
+              "en": "Eight ASCII bytes, e.g. NETSCAPE.",
+              "de": "Acht ASCII-Bytes, z. B. NETSCAPE."
+            }
+          }
         },
         "authCode": {
           "type": "array",
@@ -312,7 +599,17 @@
             "maximum": 255
           },
           "minItems": 3,
-          "maxItems": 3
+          "maxItems": 3,
+          "x-semio-ui": {
+            "label": {
+              "en": "Authentication code",
+              "de": "Authentifizierungscode"
+            },
+            "description": {
+              "en": "Three bytes, e.g. 2.0.",
+              "de": "Drei Bytes, z. B. 2.0."
+            }
+          }
         },
         "data": {
           "type": "array",
@@ -320,6 +617,12 @@
             "type": "integer",
             "minimum": 0,
             "maximum": 255
+          },
+          "x-semio-ui": {
+            "label": {
+              "en": "Sub-block data",
+              "de": "Unterblockdaten"
+            }
           }
         }
       }

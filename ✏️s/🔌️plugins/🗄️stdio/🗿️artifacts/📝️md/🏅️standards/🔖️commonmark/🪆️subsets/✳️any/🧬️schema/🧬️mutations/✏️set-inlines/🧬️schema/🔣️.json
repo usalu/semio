@@ -5,11 +5,16 @@
   "type": "object",
   "additionalProperties": false,
   "required": [
+    "mutation",
     "path",
     "index",
     "inlines"
   ],
   "properties": {
+    "mutation": {
+      "const": "setInlines",
+      "description": "Aggregate discriminator spliced in by MdMutation; absent when the payload stands alone."
+    },
     "path": {
       "type": "array",
       "items": {
@@ -24,11 +29,17 @@
       "type": "array",
       "items": {
         "$ref": "#/$defs/MdInline"
+      },
+      "x-semio-ui": {
+        "label": {
+          "en": "Inline content",
+          "de": "Inline-Inhalt"
+        },
+        "description": {
+          "en": "Inline nodes of the block (text, emphasis, links, code spans).",
+          "de": "Inline-Knoten des Blocks (Text, Hervorhebung, Links, Code)."
+        }
       }
-    },
-    "mutation": {
-      "const": "setInlines",
-      "description": "Aggregate discriminator spliced in by MdMutation; absent when the payload stands alone."
     }
   },
   "$defs": {

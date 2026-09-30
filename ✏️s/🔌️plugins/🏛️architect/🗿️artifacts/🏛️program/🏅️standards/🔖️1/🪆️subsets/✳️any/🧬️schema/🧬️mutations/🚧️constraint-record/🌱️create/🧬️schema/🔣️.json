@@ -5,9 +5,13 @@
   "type": "object",
   "additionalProperties": false,
   "required": [
+    "mutation",
     "constraintRecord"
   ],
   "properties": {
+    "mutation": {
+      "const": "createConstraintRecord"
+    },
     "constraintRecord": {
       "title": "ConstraintRecord",
       "type": "object",
@@ -16,11 +20,16 @@
         "affectedEntityIds",
         "complianceStatus",
         "constraintType",
+        "effectiveDate",
+        "escalationContactId",
         "exceptions",
+        "expiryDate",
         "id",
+        "impactAssessment",
         "mitigationOptions",
+        "monitoringFrequency",
         "name",
-        "notes",
+        "ownerId",
         "ownership",
         "priority",
         "regulatoryBasis",
@@ -28,18 +37,44 @@
         "relatedRequirementIds",
         "resolutionPlan",
         "severity",
+        "source",
         "status",
         "summary",
-        "tags",
         "timestamps",
-        "traceLinks"
+        "traceLinks",
+        "waiverApprover",
+        "waiverStatus"
       ],
       "properties": {
         "id": {
-          "type": "string"
+          "type": "string",
+          "x-semio-ui": {
+            "widget": "text",
+            "role": "value",
+            "label": {
+              "en": "ID",
+              "de": "ID"
+            },
+            "description": {
+              "en": "Unique ID of the new entry.",
+              "de": "Eindeutige ID des neuen Eintrags."
+            },
+            "group": "identity",
+            "order": 10
+          }
         },
         "name": {
-          "type": "string"
+          "type": "string",
+          "x-semio-ui": {
+            "widget": "text",
+            "role": "value",
+            "label": {
+              "en": "Name",
+              "de": "Bezeichnung"
+            },
+            "group": "identity",
+            "order": 20
+          }
         },
         "description": {
           "title": "TextField",
@@ -50,77 +85,328 @@
           ],
           "properties": {
             "text": {
-              "type": "string"
+              "type": "string",
+              "x-semio-ui": {
+                "widget": "multiline",
+                "role": "value",
+                "label": {
+                  "en": "Text",
+                  "de": "Text"
+                },
+                "group": "details",
+                "order": 10
+              }
             },
             "format": {
-              "type": "string"
+              "type": "string",
+              "x-semio-ui": {
+                "widget": "text",
+                "role": "value",
+                "label": {
+                  "en": "Format",
+                  "de": "Format"
+                },
+                "description": {
+                  "en": "Text format hint, e.g. plain or markdown.",
+                  "de": "Hinweis auf das Textformat, z. B. plain oder markdown."
+                },
+                "group": "details",
+                "order": 20
+              }
             }
+          },
+          "x-semio-ui": {
+            "role": "value",
+            "label": {
+              "en": "Description",
+              "de": "Beschreibung"
+            },
+            "group": "narrative",
+            "order": 30
           }
         },
         "status": {
           "type": "string",
           "enum": [
-            "Draft",
-            "Proposed",
-            "UnderReview",
-            "Validated",
-            "Approved",
-            "Rejected",
-            "Deferred",
-            "Superseded",
-            "Archived",
-            "Open",
-            "Closed",
-            "AtRisk",
-            "Blocked",
-            "InProgress",
-            "Complete"
-          ]
+            "draft",
+            "proposed",
+            "underReview",
+            "validated",
+            "approved",
+            "rejected",
+            "deferred",
+            "superseded",
+            "archived",
+            "open",
+            "closed",
+            "atRisk",
+            "blocked",
+            "inProgress",
+            "complete"
+          ],
+          "x-semio-ui": {
+            "widget": "select",
+            "role": "value",
+            "label": {
+              "en": "Status",
+              "de": "Status"
+            },
+            "options": {
+              "draft": {
+                "en": "Draft",
+                "de": "Entwurf"
+              },
+              "proposed": {
+                "en": "Proposed",
+                "de": "Vorgeschlagen"
+              },
+              "underReview": {
+                "en": "Under Review",
+                "de": "In Prüfung"
+              },
+              "validated": {
+                "en": "Validated",
+                "de": "Validiert"
+              },
+              "approved": {
+                "en": "Approved",
+                "de": "Freigegeben"
+              },
+              "rejected": {
+                "en": "Rejected",
+                "de": "Abgelehnt"
+              },
+              "deferred": {
+                "en": "Deferred",
+                "de": "Zurückgestellt"
+              },
+              "superseded": {
+                "en": "Superseded",
+                "de": "Ersetzt"
+              },
+              "archived": {
+                "en": "Archived",
+                "de": "Archiviert"
+              },
+              "open": {
+                "en": "Open",
+                "de": "Offen"
+              },
+              "closed": {
+                "en": "Closed",
+                "de": "Geschlossen"
+              },
+              "atRisk": {
+                "en": "At Risk",
+                "de": "Gefährdet"
+              },
+              "blocked": {
+                "en": "Blocked",
+                "de": "Blockiert"
+              },
+              "inProgress": {
+                "en": "In Progress",
+                "de": "In Bearbeitung"
+              },
+              "complete": {
+                "en": "Complete",
+                "de": "Abgeschlossen"
+              }
+            },
+            "group": "status",
+            "order": 40
+          }
         },
         "priority": {
           "type": "string",
           "enum": [
-            "Mandatory",
-            "Essential",
-            "Preferred",
-            "Optional",
-            "Deferred",
-            "Prohibited"
-          ]
+            "mandatory",
+            "essential",
+            "preferred",
+            "optional",
+            "deferred",
+            "prohibited"
+          ],
+          "x-semio-ui": {
+            "widget": "select",
+            "role": "value",
+            "label": {
+              "en": "Priority",
+              "de": "Priorität"
+            },
+            "options": {
+              "mandatory": {
+                "en": "Mandatory",
+                "de": "Zwingend"
+              },
+              "essential": {
+                "en": "Essential",
+                "de": "Wesentlich"
+              },
+              "preferred": {
+                "en": "Preferred",
+                "de": "Wünschenswert"
+              },
+              "optional": {
+                "en": "Optional",
+                "de": "Optional"
+              },
+              "deferred": {
+                "en": "Deferred",
+                "de": "Zurückgestellt"
+              },
+              "prohibited": {
+                "en": "Prohibited",
+                "de": "Unzulässig"
+              }
+            },
+            "group": "status",
+            "order": 50
+          }
         },
         "ownership": {
           "title": "Ownership",
           "type": "object",
           "additionalProperties": false,
           "required": [
+            "authorityId",
             "consultantIds",
+            "ownerId",
             "participantIds"
           ],
           "properties": {
             "ownerId": {
-              "type": "string"
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "x-semio-ui": {
+                "widget": "reference",
+                "role": "target",
+                "label": {
+                  "en": "Owner",
+                  "de": "Verantwortlich"
+                },
+                "description": {
+                  "en": "The stakeholder responsible for this entry.",
+                  "de": "Der Beteiligte, der für diesen Eintrag verantwortlich ist."
+                },
+                "ref": {
+                  "kind": "stakeholder",
+                  "domain": "program",
+                  "granularity": "entity"
+                },
+                "group": "links",
+                "order": 10
+              }
             },
             "authorityId": {
-              "type": "string"
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "x-semio-ui": {
+                "widget": "reference",
+                "role": "target",
+                "label": {
+                  "en": "Accountable",
+                  "de": "Entscheidungsbefugt"
+                },
+                "description": {
+                  "en": "The stakeholder accountable for this entry.",
+                  "de": "Der Beteiligte, der für diesen Eintrag entscheidungsbefugt ist."
+                },
+                "ref": {
+                  "kind": "stakeholder",
+                  "domain": "program",
+                  "granularity": "entity"
+                },
+                "group": "links",
+                "order": 20
+              }
             },
             "consultantIds": {
               "type": "array",
               "items": {
                 "type": "string"
+              },
+              "x-semio-ui": {
+                "widget": "reference",
+                "role": "target",
+                "label": {
+                  "en": "Consulted",
+                  "de": "Konsultiert"
+                },
+                "description": {
+                  "en": "Stakeholders consulted on this entry.",
+                  "de": "Beteiligte, die zu diesem Eintrag konsultiert werden."
+                },
+                "ref": {
+                  "kind": "stakeholder",
+                  "domain": "program",
+                  "granularity": "entity"
+                },
+                "group": "links",
+                "order": 30
               }
             },
             "participantIds": {
               "type": "array",
               "items": {
                 "type": "string"
+              },
+              "x-semio-ui": {
+                "widget": "reference",
+                "role": "target",
+                "label": {
+                  "en": "Participants",
+                  "de": "Mitwirkende"
+                },
+                "description": {
+                  "en": "Stakeholders taking part in this entry.",
+                  "de": "Beteiligte, die an diesem Eintrag mitwirken."
+                },
+                "ref": {
+                  "kind": "stakeholder",
+                  "domain": "program",
+                  "granularity": "entity"
+                },
+                "group": "links",
+                "order": 40
               }
             }
+          },
+          "x-semio-ui": {
+            "role": "value",
+            "label": {
+              "en": "Ownership",
+              "de": "Zuständigkeiten"
+            },
+            "group": "ownership",
+            "order": 60
           }
         },
         "tags": {
           "type": "array",
           "items": {
             "type": "string"
+          },
+          "x-semio-ui": {
+            "role": "value",
+            "label": {
+              "en": "Tags",
+              "de": "Schlagwörter"
+            },
+            "group": "audit",
+            "order": 70
           }
         },
         "notes": {
@@ -135,12 +421,41 @@
             ],
             "properties": {
               "tag": {
-                "type": "string"
+                "type": "string",
+                "x-semio-ui": {
+                  "widget": "text",
+                  "role": "value",
+                  "label": {
+                    "en": "Tag",
+                    "de": "Schlagwort"
+                  },
+                  "group": "details",
+                  "order": 10
+                }
               },
               "text": {
-                "type": "string"
+                "type": "string",
+                "x-semio-ui": {
+                  "widget": "multiline",
+                  "role": "value",
+                  "label": {
+                    "en": "Text",
+                    "de": "Text"
+                  },
+                  "group": "details",
+                  "order": 20
+                }
               }
             }
+          },
+          "x-semio-ui": {
+            "role": "value",
+            "label": {
+              "en": "Notes",
+              "de": "Notizen"
+            },
+            "group": "audit",
+            "order": 80
           }
         },
         "timestamps": {
@@ -153,21 +468,98 @@
           ],
           "properties": {
             "created": {
-              "type": "string"
+              "type": "string",
+              "x-semio-ui": {
+                "widget": "text",
+                "role": "value",
+                "label": {
+                  "en": "Created",
+                  "de": "Erstellt am"
+                },
+                "description": {
+                  "en": "Date or date-time per ISO 8601.",
+                  "de": "Datum oder Zeitpunkt nach ISO 8601."
+                },
+                "group": "audit",
+                "order": 10
+              }
             },
             "updated": {
-              "type": "string"
+              "type": "string",
+              "x-semio-ui": {
+                "widget": "text",
+                "role": "value",
+                "label": {
+                  "en": "Updated",
+                  "de": "Geändert am"
+                },
+                "description": {
+                  "en": "Date or date-time per ISO 8601.",
+                  "de": "Datum oder Zeitpunkt nach ISO 8601."
+                },
+                "group": "audit",
+                "order": 20
+              }
             },
             "createdBy": {
-              "type": "string"
+              "type": "string",
+              "x-semio-ui": {
+                "widget": "reference",
+                "role": "target",
+                "label": {
+                  "en": "Created By",
+                  "de": "Erstellt von"
+                },
+                "ref": {
+                  "kind": "stakeholder",
+                  "domain": "program",
+                  "granularity": "entity"
+                },
+                "group": "links",
+                "order": 30
+              }
             },
             "updatedBy": {
-              "type": "string"
+              "type": "string",
+              "x-semio-ui": {
+                "widget": "reference",
+                "role": "target",
+                "label": {
+                  "en": "Updated By",
+                  "de": "Geändert von"
+                },
+                "ref": {
+                  "kind": "stakeholder",
+                  "domain": "program",
+                  "granularity": "entity"
+                },
+                "group": "links",
+                "order": 40
+              }
             }
+          },
+          "x-semio-ui": {
+            "role": "value",
+            "label": {
+              "en": "Timestamps",
+              "de": "Zeitstempel"
+            },
+            "group": "audit",
+            "order": 90
           }
         },
         "constraintType": {
-          "type": "string"
+          "type": "string",
+          "x-semio-ui": {
+            "widget": "text",
+            "role": "value",
+            "label": {
+              "en": "Constraint Type",
+              "de": "Art der Randbedingung"
+            },
+            "group": "details",
+            "order": 100
+          }
         },
         "summary": {
           "title": "TextField",
@@ -178,110 +570,469 @@
           ],
           "properties": {
             "text": {
-              "type": "string"
+              "type": "string",
+              "x-semio-ui": {
+                "widget": "multiline",
+                "role": "value",
+                "label": {
+                  "en": "Text",
+                  "de": "Text"
+                },
+                "group": "details",
+                "order": 10
+              }
             },
             "format": {
-              "type": "string"
+              "type": "string",
+              "x-semio-ui": {
+                "widget": "text",
+                "role": "value",
+                "label": {
+                  "en": "Format",
+                  "de": "Format"
+                },
+                "description": {
+                  "en": "Text format hint, e.g. plain or markdown.",
+                  "de": "Hinweis auf das Textformat, z. B. plain oder markdown."
+                },
+                "group": "details",
+                "order": 20
+              }
             }
+          },
+          "x-semio-ui": {
+            "role": "value",
+            "label": {
+              "en": "Summary",
+              "de": "Zusammenfassung"
+            },
+            "group": "narrative",
+            "order": 110
           }
         },
         "severity": {
           "type": "string",
           "enum": [
-            "Negligible",
-            "Low",
-            "Medium",
-            "High",
-            "Critical"
-          ]
+            "negligible",
+            "low",
+            "medium",
+            "high",
+            "critical"
+          ],
+          "x-semio-ui": {
+            "widget": "select",
+            "role": "value",
+            "label": {
+              "en": "Severity",
+              "de": "Schweregrad"
+            },
+            "options": {
+              "negligible": {
+                "en": "Negligible",
+                "de": "Vernachlässigbar"
+              },
+              "low": {
+                "en": "Low",
+                "de": "Gering"
+              },
+              "medium": {
+                "en": "Medium",
+                "de": "Mittel"
+              },
+              "high": {
+                "en": "High",
+                "de": "Hoch"
+              },
+              "critical": {
+                "en": "Critical",
+                "de": "Kritisch"
+              }
+            },
+            "group": "status",
+            "order": 120
+          }
         },
         "affectedEntityIds": {
           "type": "array",
           "items": {
             "type": "string"
+          },
+          "x-semio-ui": {
+            "widget": "reference",
+            "role": "target",
+            "label": {
+              "en": "Affected Entities",
+              "de": "Betroffene Entitäten"
+            },
+            "ref": {
+              "kind": "entity",
+              "domain": "program",
+              "granularity": "entity"
+            },
+            "group": "links",
+            "order": 130
           }
         },
         "source": {
-          "type": "string"
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "x-semio-ui": {
+            "widget": "text",
+            "role": "value",
+            "label": {
+              "en": "Source",
+              "de": "Quelle"
+            },
+            "group": "details",
+            "order": 140
+          }
         },
         "regulatoryBasis": {
           "type": "array",
           "items": {
             "type": "string"
+          },
+          "x-semio-ui": {
+            "role": "value",
+            "label": {
+              "en": "Regulatory Basis",
+              "de": "Rechtsgrundlage"
+            },
+            "group": "details",
+            "order": 150
           }
         },
         "mitigationOptions": {
           "type": "array",
           "items": {
             "type": "string"
+          },
+          "x-semio-ui": {
+            "role": "value",
+            "label": {
+              "en": "Mitigation Options",
+              "de": "Minderungsoptionen"
+            },
+            "group": "details",
+            "order": 160
           }
         },
         "ownerId": {
-          "type": "string"
-        },
-        "effectiveDate": {
-          "type": "string"
-        },
-        "expiryDate": {
-          "type": "string"
-        },
-        "waiverStatus": {
-          "type": "string"
-        },
-        "waiverApprover": {
-          "type": "string"
-        },
-        "impactAssessment": {
-          "title": "TextField",
-          "type": "object",
-          "additionalProperties": false,
-          "required": [
-            "text"
-          ],
-          "properties": {
-            "text": {
+          "anyOf": [
+            {
               "type": "string"
             },
-            "format": {
-              "type": "string"
+            {
+              "type": "null"
             }
+          ],
+          "x-semio-ui": {
+            "widget": "reference",
+            "role": "target",
+            "label": {
+              "en": "Owner",
+              "de": "Verantwortlich"
+            },
+            "description": {
+              "en": "The stakeholder responsible for this entry.",
+              "de": "Der Beteiligte, der für diesen Eintrag verantwortlich ist."
+            },
+            "ref": {
+              "kind": "stakeholder",
+              "domain": "program",
+              "granularity": "entity"
+            },
+            "group": "links",
+            "order": 170
+          }
+        },
+        "effectiveDate": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "x-semio-ui": {
+            "widget": "text",
+            "role": "value",
+            "label": {
+              "en": "Effective Date",
+              "de": "Gültig ab"
+            },
+            "description": {
+              "en": "Date or date-time per ISO 8601.",
+              "de": "Datum oder Zeitpunkt nach ISO 8601."
+            },
+            "group": "schedule",
+            "order": 180
+          }
+        },
+        "expiryDate": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "x-semio-ui": {
+            "widget": "text",
+            "role": "value",
+            "label": {
+              "en": "Expiry Date",
+              "de": "Ablaufdatum"
+            },
+            "description": {
+              "en": "Date or date-time per ISO 8601.",
+              "de": "Datum oder Zeitpunkt nach ISO 8601."
+            },
+            "group": "schedule",
+            "order": 190
+          }
+        },
+        "waiverStatus": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "x-semio-ui": {
+            "widget": "text",
+            "role": "value",
+            "label": {
+              "en": "Waiver Status",
+              "de": "Befreiungsstatus"
+            },
+            "group": "details",
+            "order": 200
+          }
+        },
+        "waiverApprover": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "x-semio-ui": {
+            "widget": "reference",
+            "role": "target",
+            "label": {
+              "en": "Waiver Approver",
+              "de": "Befreiung erteilt durch"
+            },
+            "ref": {
+              "kind": "stakeholder",
+              "domain": "program",
+              "granularity": "entity"
+            },
+            "group": "links",
+            "order": 210
+          }
+        },
+        "impactAssessment": {
+          "anyOf": [
+            {
+              "title": "TextField",
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "text"
+              ],
+              "properties": {
+                "text": {
+                  "type": "string",
+                  "x-semio-ui": {
+                    "widget": "multiline",
+                    "role": "value",
+                    "label": {
+                      "en": "Text",
+                      "de": "Text"
+                    },
+                    "group": "details",
+                    "order": 10
+                  }
+                },
+                "format": {
+                  "type": "string",
+                  "x-semio-ui": {
+                    "widget": "text",
+                    "role": "value",
+                    "label": {
+                      "en": "Format",
+                      "de": "Format"
+                    },
+                    "description": {
+                      "en": "Text format hint, e.g. plain or markdown.",
+                      "de": "Hinweis auf das Textformat, z. B. plain oder markdown."
+                    },
+                    "group": "details",
+                    "order": 20
+                  }
+                }
+              }
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "x-semio-ui": {
+            "role": "value",
+            "label": {
+              "en": "Impact Assessment",
+              "de": "Auswirkungsanalyse"
+            },
+            "group": "narrative",
+            "order": 220
           }
         },
         "resolutionPlan": {
           "type": "array",
           "items": {
             "type": "string"
+          },
+          "x-semio-ui": {
+            "role": "value",
+            "label": {
+              "en": "Resolution Plan",
+              "de": "Lösungsplan"
+            },
+            "group": "details",
+            "order": 230
           }
         },
         "relatedRequirementIds": {
           "type": "array",
           "items": {
             "type": "string"
+          },
+          "x-semio-ui": {
+            "widget": "reference",
+            "role": "target",
+            "label": {
+              "en": "Related Requirements",
+              "de": "Zugehörige Anforderungen"
+            },
+            "ref": {
+              "kind": "requirement",
+              "domain": "program",
+              "granularity": "entity"
+            },
+            "group": "links",
+            "order": 240
           }
         },
         "relatedDecisionIds": {
           "type": "array",
           "items": {
             "type": "string"
+          },
+          "x-semio-ui": {
+            "widget": "reference",
+            "role": "target",
+            "label": {
+              "en": "Related Decisions",
+              "de": "Zugehörige Entscheidungen"
+            },
+            "ref": {
+              "kind": "decision",
+              "domain": "program",
+              "granularity": "entity"
+            },
+            "group": "links",
+            "order": 250
           }
         },
         "monitoringFrequency": {
-          "type": "string"
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "x-semio-ui": {
+            "widget": "text",
+            "role": "value",
+            "label": {
+              "en": "Monitoring Frequency",
+              "de": "Überwachungsintervall"
+            },
+            "group": "details",
+            "order": 260
+          }
         },
         "complianceStatus": {
           "type": "string",
           "enum": [
-            "Pending",
-            "Passed",
-            "Failed",
-            "Waived",
-            "Deferred"
-          ]
+            "pending",
+            "passed",
+            "failed",
+            "waived",
+            "deferred"
+          ],
+          "x-semio-ui": {
+            "widget": "select",
+            "role": "value",
+            "label": {
+              "en": "Compliance Status",
+              "de": "Konformitätsstatus"
+            },
+            "options": {
+              "pending": {
+                "en": "Pending",
+                "de": "Ausstehend"
+              },
+              "passed": {
+                "en": "Passed",
+                "de": "Bestanden"
+              },
+              "failed": {
+                "en": "Failed",
+                "de": "Nicht bestanden"
+              },
+              "waived": {
+                "en": "Waived",
+                "de": "Befreit"
+              },
+              "deferred": {
+                "en": "Deferred",
+                "de": "Zurückgestellt"
+              }
+            },
+            "group": "status",
+            "order": 270
+          }
         },
         "exceptions": {
           "type": "array",
           "items": {
             "type": "string"
+          },
+          "x-semio-ui": {
+            "role": "value",
+            "label": {
+              "en": "Exceptions",
+              "de": "Ausnahmen"
+            },
+            "group": "details",
+            "order": 280
           }
         },
         "traceLinks": {
@@ -298,48 +1049,234 @@
             ],
             "properties": {
               "id": {
-                "type": "string"
+                "type": "string",
+                "x-semio-ui": {
+                  "widget": "text",
+                  "role": "value",
+                  "label": {
+                    "en": "ID",
+                    "de": "ID"
+                  },
+                  "group": "identity",
+                  "order": 10
+                }
               },
               "fromId": {
-                "type": "string"
+                "type": "string",
+                "x-semio-ui": {
+                  "widget": "reference",
+                  "role": "target",
+                  "label": {
+                    "en": "From",
+                    "de": "Von"
+                  },
+                  "ref": {
+                    "kind": "entity",
+                    "domain": "program",
+                    "granularity": "entity"
+                  },
+                  "group": "links",
+                  "order": 20
+                }
               },
               "toId": {
-                "type": "string"
+                "type": "string",
+                "x-semio-ui": {
+                  "widget": "reference",
+                  "role": "target",
+                  "label": {
+                    "en": "To",
+                    "de": "Nach"
+                  },
+                  "ref": {
+                    "kind": "entity",
+                    "domain": "program",
+                    "granularity": "entity"
+                  },
+                  "group": "links",
+                  "order": 30
+                }
               },
               "kind": {
                 "type": "string",
                 "enum": [
-                  "ObjectiveToRequirement",
-                  "StakeholderToRequirement",
-                  "UserToActivity",
-                  "ActivityToFunction",
-                  "FunctionToProgramElement",
-                  "RequirementToDecision",
-                  "RequirementToRisk",
-                  "RequirementToStandard",
-                  "RequirementToValidation",
-                  "RequirementToApproval",
-                  "RequirementToChange",
-                  "EquipmentToActivity",
-                  "ProcessToResource",
-                  "ConstraintToImpact",
-                  "ScenarioToDecision",
-                  "IssueToAction",
-                  "ActionToOwner",
-                  "DecisionToOutcome",
-                  "VersionToChange",
-                  "FullAuditTrail"
-                ]
+                  "objectiveToRequirement",
+                  "stakeholderToRequirement",
+                  "userToActivity",
+                  "activityToFunction",
+                  "functionToProgramElement",
+                  "requirementToDecision",
+                  "requirementToRisk",
+                  "requirementToStandard",
+                  "requirementToValidation",
+                  "requirementToApproval",
+                  "requirementToChange",
+                  "equipmentToActivity",
+                  "processToResource",
+                  "constraintToImpact",
+                  "scenarioToDecision",
+                  "issueToAction",
+                  "actionToOwner",
+                  "decisionToOutcome",
+                  "versionToChange",
+                  "fullAuditTrail"
+                ],
+                "x-semio-ui": {
+                  "widget": "select",
+                  "role": "value",
+                  "label": {
+                    "en": "Trace Kind",
+                    "de": "Art der Nachverfolgungsbeziehung"
+                  },
+                  "options": {
+                    "objectiveToRequirement": {
+                      "en": "Objective → Requirement",
+                      "de": "Ziel → Anforderung"
+                    },
+                    "stakeholderToRequirement": {
+                      "en": "Stakeholder → Requirement",
+                      "de": "Beteiligter → Anforderung"
+                    },
+                    "userToActivity": {
+                      "en": "User → Activity",
+                      "de": "Nutzer → Aktivität"
+                    },
+                    "activityToFunction": {
+                      "en": "Activity → Function",
+                      "de": "Aktivität → Funktion"
+                    },
+                    "functionToProgramElement": {
+                      "en": "Function → Program Element",
+                      "de": "Funktion → Programmelement"
+                    },
+                    "requirementToDecision": {
+                      "en": "Requirement → Decision",
+                      "de": "Anforderung → Entscheidung"
+                    },
+                    "requirementToRisk": {
+                      "en": "Requirement → Risk",
+                      "de": "Anforderung → Risiko"
+                    },
+                    "requirementToStandard": {
+                      "en": "Requirement → Standard",
+                      "de": "Anforderung → Norm"
+                    },
+                    "requirementToValidation": {
+                      "en": "Requirement → Validation",
+                      "de": "Anforderung → Validierung"
+                    },
+                    "requirementToApproval": {
+                      "en": "Requirement → Approval",
+                      "de": "Anforderung → Freigabe"
+                    },
+                    "requirementToChange": {
+                      "en": "Requirement → Change",
+                      "de": "Anforderung → Änderung"
+                    },
+                    "equipmentToActivity": {
+                      "en": "Equipment → Activity",
+                      "de": "Ausstattung → Aktivität"
+                    },
+                    "processToResource": {
+                      "en": "Process → Resource",
+                      "de": "Prozess → Ressource"
+                    },
+                    "constraintToImpact": {
+                      "en": "Constraint → Impact",
+                      "de": "Randbedingung → Auswirkung"
+                    },
+                    "scenarioToDecision": {
+                      "en": "Scenario → Decision",
+                      "de": "Szenario → Entscheidung"
+                    },
+                    "issueToAction": {
+                      "en": "Issue → Action",
+                      "de": "Offener Punkt → Maßnahme"
+                    },
+                    "actionToOwner": {
+                      "en": "Action → Owner",
+                      "de": "Maßnahme → Verantwortliche"
+                    },
+                    "decisionToOutcome": {
+                      "en": "Decision → Outcome",
+                      "de": "Entscheidung → Ergebnis"
+                    },
+                    "versionToChange": {
+                      "en": "Version → Change",
+                      "de": "Version → Änderung"
+                    },
+                    "fullAuditTrail": {
+                      "en": "Full Audit Trail",
+                      "de": "Vollständiger Prüfpfad"
+                    }
+                  },
+                  "group": "classification",
+                  "order": 40
+                }
               },
               "label": {
-                "type": "string"
+                "type": "string",
+                "x-semio-ui": {
+                  "widget": "text",
+                  "role": "value",
+                  "label": {
+                    "en": "Label",
+                    "de": "Beschriftung"
+                  },
+                  "group": "identity",
+                  "order": 50
+                }
               }
             }
+          },
+          "x-semio-ui": {
+            "role": "value",
+            "label": {
+              "en": "Trace Links",
+              "de": "Nachverfolgungsbeziehungen"
+            },
+            "group": "links",
+            "order": 290
           }
         },
         "escalationContactId": {
-          "type": "string"
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "x-semio-ui": {
+            "widget": "reference",
+            "role": "target",
+            "label": {
+              "en": "Escalation Contact",
+              "de": "Eskalationskontakt"
+            },
+            "ref": {
+              "kind": "stakeholder",
+              "domain": "program",
+              "granularity": "entity"
+            },
+            "group": "links",
+            "order": 300
+          }
         }
+      },
+      "x-semio-ui": {
+        "role": "value",
+        "label": {
+          "en": "Constraint",
+          "de": "Randbedingung"
+        },
+        "description": {
+          "en": "The new constraint with all of its fields.",
+          "de": "Neuer Eintrag vom Typ „Randbedingung“ mit allen Feldern."
+        },
+        "group": "record",
+        "order": 10
       }
     }
   }

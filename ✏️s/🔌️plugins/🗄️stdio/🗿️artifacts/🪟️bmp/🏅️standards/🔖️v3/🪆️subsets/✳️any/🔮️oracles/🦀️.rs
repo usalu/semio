@@ -54,24 +54,19 @@ mod oracles {
     const FORMAT: &str = "bmp";
 
     //#region 🔖️Json
-    /// 🔎️ Numeric member, or `None` for anything else — params are authored directly in the
-    /// feature file, so a missing/mistyped field is a legitimate default, never a panic.
+    /// 🔎️ Numeric member, or `None` for an absent one — `params` is the leaf's wire payload, whose `Option`
+    /// members the vocabulary leaves out when unset.
     fn num(params: &Json, key: &str) -> Option<f64> {
         match params.get(key) {
             Some(Json::Number(value)) => Some(*value),
             _ => None,
         }
     }
-    fn as_arr(value: &Json) -> &[Json] {
-        match value {
-            Json::Array(items) => items,
-            _ => &[],
-        }
-    }
-    fn num_at(items: &[Json], index: usize) -> Option<f64> {
-        match items.get(index) {
-            Some(Json::Number(value)) => Some(*value),
-            _ => None,
+    /// 🔢️ A byte-array member of a wire value.
+    fn bytes_of(params: &Json, key: &str) -> Result<Vec<u8>, String> {
+        match params.get(key) {
+            Some(Json::Array(items)) => items.iter().map(|item| match item { Json::Number(n) if (0.0..=255.0).contains(n) && n.fract() == 0.0 => Ok(*n as u8), other => Err(format!("`{key}` carries {} where a byte belongs", other.to_string())) }).collect(),
+            other => Err(format!("`{key}` must be a byte array, not {}", other.map(Json::to_string).unwrap_or_else(|| "nothing".to_string()))),
         }
     }
     fn empty_params() -> Json {
@@ -226,14 +221,9 @@ mod oracles {
     //#endregion 🔖️Encode
 
     //#region 🔖️Apply
-    fn fill_quad(params: &Json) -> [u8; 4] {
-        let fill = as_arr(params.get("fill").unwrap_or(&Json::Null));
-        [num_at(fill, 0).unwrap_or(0.0) as u8, num_at(fill, 1).unwrap_or(0.0) as u8, num_at(fill, 2).unwrap_or(0.0) as u8, num_at(fill, 3).unwrap_or(0.0) as u8]
-    }
-
-    fn solid_rgba(width: u32, height: u32, quad: [u8; 4]) -> Vec<u8> {
-        quad.iter().copied().cycle().take(width as usize * height as usize * 4).collect()
-    }
+    /// 🧾️ The `ChangeHeaderFieldsMutation` members `image` cannot write from a changed value: every other header
+    /// field is derived from the geometry and the storage, so a payload setting one is refused, not ignored.
+    const DERIVED_HEADER_FIELDS: [&str; 9] = ["headerSize", "width", "height", "planes", "bitsPerPixel", "compression", "imageSize", "colorsUsed", "colorsImportant"];
 
     fn palette_mut<'a>(doc: &'a mut OracleDoc, kind: &str) -> Result<&'a mut Vec<[u8; 3]>, String> {
         match &mut doc.content {
@@ -249,8 +239,11 @@ mod oracles {
     fn apply_kind(doc: &mut OracleDoc, kind: &str, params: &Json) -> Result<(), String> {
         match kind {
             "change-header-fields" => {
+                if let Some(field) = DERIVED_HEADER_FIELDS.iter().find(|field| params.get(field).is_some()) {
+                    return Err(format!("change-header-fields sets `{field}`, which this oracle derives from the image rather than writes"));
+                }
                 if let Some(order) = params.get("rowOrder") {
-                    doc.top_down = matches!(order, Json::String(value) if value == "top-down");
+                    doc.top_down = matches!(order, Json::String(value) if value == "topDown");
                 }
                 if let Some(value) = num(params, "xPixelsPerMeter") {
                     doc.x_pixels_per_meter = value as i32;
@@ -282,8 +275,11 @@ mod oracles {
                 }
             }
             "replace-pixel-data" => {
-                let quad = fill_quad(params);
-                doc.content = Content::Direct { rgba: solid_rgba(doc.width, doc.height, quad) };
+                let rgba = bytes_of(params, "pixels")?;
+                if rgba.len() != doc.width as usize * doc.height as usize * 4 {
+                    return Err(format!("replace-pixel-data carries {} bytes, not the {}x{} RGBA raster", rgba.len(), doc.width, doc.height));
+                }
+                doc.content = Content::Direct { rgba };
             }
             other => return Err(format!("mutation kind {other:?} has no oracle implementation")),
         }

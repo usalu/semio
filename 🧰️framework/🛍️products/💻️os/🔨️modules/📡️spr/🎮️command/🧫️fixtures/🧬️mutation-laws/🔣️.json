@@ -54,46 +54,22 @@
   ],
   "cases": [
     {
-      "operation": "addCounter",
-      "payload": {
-        "delta": 3
-      },
       "before": 10,
       "after": 13
     },
     {
-      "operation": "addCounterTwice",
-      "payload": {
-        "delta": 3
-      },
       "before": 10,
       "after": 16
     },
     {
-      "operation": "addCounterFourTimes",
-      "payload": {
-        "delta": 3
-      },
       "before": 10,
       "after": 22
     },
     {
-      "operation": "addCounterThenNotifyForeign",
-      "payload": {
-        "delta": 3,
-        "foreignCount": 2
-      },
       "before": 10,
       "after": 13
     },
     {
-      "operation": "addCounterSequence",
-      "payload": {
-        "deltas": [
-          2,
-          3
-        ]
-      },
       "before": 10,
       "after": 15
     }
@@ -197,4 +173,3 @@
     }
   ]
 }
-

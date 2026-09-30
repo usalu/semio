@@ -196,6 +196,14 @@ pub fn apply_xml_valid_mutation(snapshot: &mut XmlSnapshot, mutation: &XmlValidM
 pub fn inverse_xml_valid_mutation(mutation: &XmlValidMutation, base: &XmlSnapshot) -> Vec<XmlValidMutation> {
     Mutation::inverse(mutation, base)
 }
+
+/// 📥️ Decodes one leaf wire payload (a `🥒️.feature` row's `params`: the leaf's `payload_value()`, no aggregate tag) into
+/// the operation of semantic kind `kind` through the derive-generated `Mutation::from_payload_value`, so a caller that
+/// cannot name the trait reads the committed wire instead of re-declaring it field by field.
+pub fn decode_xml_valid_mutation_payload_json(kind: &str, payload: &str) -> Result<XmlValidMutation, String> {
+    let value = pack::parse_json(payload).map_err(|error| error.to_string())?;
+    <XmlValidMutation as Mutation<XmlSnapshot>>::from_payload_value(kind, pack::json_to_dsl_value(&value)).map_err(|error| error.to_string())
+}
 //#endregion 🔖️Apply
 
 //#region 🔖️MutationTrait

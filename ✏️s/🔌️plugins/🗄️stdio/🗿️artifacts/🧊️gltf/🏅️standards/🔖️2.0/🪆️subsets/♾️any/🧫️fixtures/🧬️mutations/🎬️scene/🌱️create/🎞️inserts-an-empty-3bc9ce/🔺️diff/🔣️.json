@@ -1,18 +1,21 @@
 {
-  "id": "s.stdio.gltf.mutation.create-scene.v1",
-  "version": 1,
-  "phase": "diff",
-  "touchedPaths": [
-    "document/scenes/0",
-    "document/scene"
-  ],
-  "position": 0,
-  "expectedSceneCount": 1,
-  "expectedDefaultSceneBefore": 0,
-  "expectedScenesBefore": [
-    {
-      "name": "main"
-    }
-  ],
-  "scene": {}
+  "scene": 1,
+  "scenes": {
+    "modified": [
+      {
+        "index": 0,
+        "diff": {
+          "name": null
+        }
+      }
+    ],
+    "added": [
+      {
+        "index": 1,
+        "item": {
+          "name": "main"
+        }
+      }
+    ]
+  }
 }

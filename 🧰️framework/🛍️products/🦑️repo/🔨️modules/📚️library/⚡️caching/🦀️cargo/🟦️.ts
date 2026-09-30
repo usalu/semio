@@ -1,5 +1,17 @@
 import { existsSync, readFileSync } from "node:fs";
 import { join, resolve } from "node:path";
+import { repoCacheDirectory } from "../🟦️.ts";
+
+/** 🏛️ Caller-owned values forwarded to a canonical execution without reading ambient state. */
+export interface CanonicalExecutionEnvironment {
+  readonly [key: string]: string | undefined;
+}
+
+/** 🔒️ Gives canonical Cargo producers one absolute deliverable and compiler-unit root. */
+export function canonicalArchitectureEnvironment(repoRoot: string, env: CanonicalExecutionEnvironment): CanonicalExecutionEnvironment {
+  const cargoRoot = resolve(repoRoot, env.CARGO_TARGET_DIR ?? repoCacheDirectory(repoRoot, "cargo", "canonical-architecture"));
+  return { ...env, CARGO_TARGET_DIR: cargoRoot, CARGO_BUILD_BUILD_DIR: cargoRoot };
+}
 
 /** 🔒️ The binding generator must have the same identity as the locked Rust crate. */
 export function wasmBindgenVersion(lock: string): string {

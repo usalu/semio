@@ -5,20 +5,27 @@
   "type": "object",
   "additionalProperties": false,
   "required": [
+    "mutation",
     "index",
     "slide"
   ],
   "properties": {
+    "mutation": {
+      "const": "insertSlide",
+      "description": "Aggregate discriminator spliced in by PptxMutation; absent when the payload stands alone."
+    },
     "index": {
       "type": "integer",
       "minimum": 0
     },
     "slide": {
-      "$ref": "#/$defs/PptxSlide"
-    },
-    "mutation": {
-      "const": "insertSlide",
-      "description": "Aggregate discriminator spliced in by PptxMutation; absent when the payload stands alone."
+      "$ref": "#/$defs/PptxSlide",
+      "x-semio-ui": {
+        "label": {
+          "en": "Slide",
+          "de": "Folie"
+        }
+      }
     }
   },
   "$defs": {
@@ -30,6 +37,12 @@
           "type": "array",
           "items": {
             "$ref": "#/$defs/PptxShape"
+          },
+          "x-semio-ui": {
+            "label": {
+              "en": "Shapes",
+              "de": "Formen"
+            }
           }
         }
       }

@@ -5,48 +5,273 @@
   "description": "Ordered, lexeme-preserving typed value graph — mirrors the 🦀️.rs sibling's real fields.",
   "$defs": {
     "SemioValue": {
-      "type": "object",
-      "properties": {
-        "kind": {
-          "enum": [
-            "null",
-            "bool",
-            "int",
-            "float",
-            "str",
-            "bytes",
-            "list",
-            "map",
-            "ref"
-          ]
-        },
-        "value": {
-          "type": [
-            "boolean",
-            "string"
-          ]
-        },
-        "lexeme": {
-          "type": "string"
-        },
-        "items": {
-          "type": "array",
-          "items": {
-            "$ref": "#/$defs/SemioValue"
+      "description": "One typed value, internally tagged on `kind` exactly as the Rust `SemioValue` enum: numbers keep their lexeme, bytes are raw octets.",
+      "oneOf": [
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "kind"
+          ],
+          "properties": {
+            "kind": {
+              "const": "null"
+            }
+          },
+          "x-semio-ui": {
+            "label": {
+              "en": "Null",
+              "de": "Null"
+            }
           }
         },
-        "entries": {
-          "type": "array",
-          "items": {
-            "$ref": "#/$defs/SemioValueEntry"
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "value"
+          ],
+          "properties": {
+            "kind": {
+              "const": "bool"
+            },
+            "value": {
+              "type": "boolean",
+              "x-semio-ui": {
+                "widget": "toggle",
+                "label": {
+                  "en": "Value",
+                  "de": "Wert"
+                }
+              }
+            }
+          },
+          "x-semio-ui": {
+            "label": {
+              "en": "Boolean",
+              "de": "Wahrheitswert"
+            }
           }
         },
-        "id": {
-          "$ref": "#/$defs/ValueId"
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "lexeme"
+          ],
+          "properties": {
+            "kind": {
+              "const": "int"
+            },
+            "lexeme": {
+              "type": "string",
+              "x-semio-ui": {
+                "widget": "text",
+                "label": {
+                  "en": "Lexeme",
+                  "de": "Lexem"
+                },
+                "description": {
+                  "en": "Exact textual form of a number or string value.",
+                  "de": "Genaue Textform eines Zahlen- oder Zeichenkettenwerts."
+                }
+              }
+            }
+          },
+          "x-semio-ui": {
+            "label": {
+              "en": "Integer",
+              "de": "Ganzzahl"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "lexeme"
+          ],
+          "properties": {
+            "kind": {
+              "const": "float"
+            },
+            "lexeme": {
+              "type": "string",
+              "x-semio-ui": {
+                "widget": "text",
+                "label": {
+                  "en": "Lexeme",
+                  "de": "Lexem"
+                },
+                "description": {
+                  "en": "Exact textual form of a number or string value.",
+                  "de": "Genaue Textform eines Zahlen- oder Zeichenkettenwerts."
+                }
+              }
+            }
+          },
+          "x-semio-ui": {
+            "label": {
+              "en": "Floating point",
+              "de": "Gleitkommazahl"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "value"
+          ],
+          "properties": {
+            "kind": {
+              "const": "str"
+            },
+            "value": {
+              "type": "string",
+              "x-semio-ui": {
+                "widget": "text",
+                "label": {
+                  "en": "Value",
+                  "de": "Wert"
+                }
+              }
+            }
+          },
+          "x-semio-ui": {
+            "label": {
+              "en": "Text",
+              "de": "Text"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "value"
+          ],
+          "properties": {
+            "kind": {
+              "const": "bytes"
+            },
+            "value": {
+              "type": "array",
+              "items": {
+                "type": "integer",
+                "minimum": 0,
+                "maximum": 255
+              },
+              "x-semio-ui": {
+                "label": {
+                  "en": "Bytes",
+                  "de": "Bytes"
+                }
+              }
+            }
+          },
+          "x-semio-ui": {
+            "label": {
+              "en": "Bytes",
+              "de": "Bytes"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "items"
+          ],
+          "properties": {
+            "kind": {
+              "const": "list"
+            },
+            "items": {
+              "type": "array",
+              "items": {
+                "$ref": "#/$defs/SemioValue"
+              },
+              "x-semio-ui": {
+                "label": {
+                  "en": "List items",
+                  "de": "Listenelemente"
+                }
+              }
+            }
+          },
+          "x-semio-ui": {
+            "label": {
+              "en": "List",
+              "de": "Liste"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "entries"
+          ],
+          "properties": {
+            "kind": {
+              "const": "map"
+            },
+            "entries": {
+              "type": "array",
+              "items": {
+                "$ref": "#/$defs/SemioValueEntry"
+              },
+              "x-semio-ui": {
+                "label": {
+                  "en": "Map entries",
+                  "de": "Map-Einträge"
+                }
+              }
+            }
+          },
+          "x-semio-ui": {
+            "label": {
+              "en": "Map",
+              "de": "Map"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "id"
+          ],
+          "properties": {
+            "kind": {
+              "const": "ref"
+            },
+            "id": {
+              "$ref": "#/$defs/ValueId",
+              "x-semio-ui": {
+                "label": {
+                  "en": "Referenced node",
+                  "de": "Referenzierter Knoten"
+                }
+              }
+            }
+          },
+          "x-semio-ui": {
+            "label": {
+              "en": "Reference",
+              "de": "Referenz"
+            }
+          }
         }
-      },
-      "required": [
-        "kind"
       ]
     },
     "SemioValueEntry": {
@@ -95,17 +320,40 @@
   "properties": {
     "schema": {
       "type": "string",
-      "x-semio-state": "artifact"
+      "x-semio-state": "artifact",
+      "x-semio-ui": {
+        "widget": "text",
+        "label": {
+          "en": "Snapshot schema",
+          "de": "Snapshot-Schema"
+        },
+        "description": {
+          "en": "Identifier of the snapshot schema version.",
+          "de": "Kennung der Version des Snapshot-Schemas."
+        }
+      }
     },
     "root": {
       "$ref": "#/$defs/SemioValue",
-      "x-semio-state": "artifact"
+      "x-semio-state": "artifact",
+      "x-semio-ui": {
+        "label": {
+          "en": "Root value",
+          "de": "Wurzelwert"
+        }
+      }
     },
     "nodes": {
       "type": "array",
       "x-semio-state": "artifact",
       "items": {
         "$ref": "#/$defs/SemioValueNode"
+      },
+      "x-semio-ui": {
+        "label": {
+          "en": "Nodes",
+          "de": "Knoten"
+        }
       }
     }
   },

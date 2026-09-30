@@ -167,6 +167,12 @@ pub fn apply_docx_mutation(snapshot: &mut DocxSnapshot, mutation: &DocxMutation)
         Err(error) => protocol::MutationOutcome::error(error.code, error.message, error.target).absorb_messages(outcome.messages().to_vec()),
     }
 }
+
+/// 📨️ Builds the operation of semantic kind `kind` from its editable payload JSON — the leaf wire (`payload_value()`) a
+/// `🥒️.feature` row carries — through the derive's generic `from_payload_value`.
+pub fn decode_docx_mutation_payload(kind: &str, payload: &str) -> Result<DocxMutation, String> {
+    protocol::os_pack::from_json_str(payload).and_then(|value| <DocxMutation as Mutation<DocxSnapshot>>::from_payload_value(kind, value)).map_err(|error| error.to_string())
+}
 //#endregion 🔖️Apply
 
 //#region 🔖️MutationTrait
@@ -1030,3 +1036,22 @@ mod tests;
 #[path = "🧪️tests/🔬️fixture/🦀️.rs"]
 mod fixture_tests;
 //#endregion 🧪️FixtureTests
+
+#[cfg(test)]
+mod w2w_debug_probe {
+    use super::*;
+    #[test]
+    fn debug_w2w_wire_probe() {
+        let readme = crate::standards::v_ecma_376::subsets::base::io::import::deserializers::decode_docx(include_bytes!("../../🧫️fixtures/📜️example-readme.docx")).expect("readme");
+        let address = docx_block_run_address(&readme, &DocxBlockPath { segments: vec![], index: 177 }, 0).expect("run 177/0");
+        println!("[DEBUG] w2w address177 {}", protocol::os_pack::to_json_string(&address));
+        for op in demo_mutation_cases() {
+            println!("[DEBUG] w2w demo {} {}", op.descriptor().semantic_kind, protocol::os_pack::to_json_string(&op));
+        }
+        let strict = crate::standards::v_ecma_376::subsets::strict::schema::mutations::DocxStrictMutation::SetSnapshot(crate::standards::v_ecma_376::subsets::strict::schema::mutations::set_snapshot::SetSnapshot { snapshot: crate::standards::v_ecma_376::subsets::strict::schema::mutations::stamp_conformance_class(DocxSnapshot::default(), true) });
+        println!("[DEBUG] w2w strict-snapshot {}", protocol::os_pack::to_json_string(&strict));
+        let transitional = crate::standards::v_ecma_376::subsets::transitional::schema::mutations::DocxTransitionalMutation::SetSnapshot(crate::standards::v_ecma_376::subsets::transitional::schema::mutations::set_snapshot::SetSnapshot { snapshot: crate::standards::v_ecma_376::subsets::transitional::schema::mutations::stamp_conformance_class(DocxSnapshot::default(), false) });
+        println!("[DEBUG] w2w transitional-snapshot {}", protocol::os_pack::to_json_string(&transitional));
+        println!("[DEBUG] w2w vml-markup {}", protocol::os_pack::to_json_string(&crate::standards::v_ecma_376::subsets::strict::schema::mutations::vml_markup()));
+    }
+}

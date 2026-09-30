@@ -1,7 +1,14 @@
-/** 🦠️ add-used-extension executable glTF command. */
-import type { GltfJson, GltfSnapshot } from '../../📸️snapshot/🟦️.ts';
-import { clone, reject, run, same, type GltfLeafResult, type GltfMutationRejection } from './🟦️';
-export const GltfDeclareUsedExtensionDescriptor = { id: 's.stdio.gltf.mutation.add-used-extension.v1', version: 1, touchedPaths: ["document/extensionsUsed"], referencePolicy: 'used extension identity is unique and ordered' } as const;
-export interface GltfDeclareUsedExtensionPayload { extension: string; position: number }
-export const validateGltfDeclareUsedExtension = (payload: GltfDeclareUsedExtensionPayload, base: GltfSnapshot): GltfMutationRejection | undefined => { if (!payload.extension.trim()) return reject('gltf.mutation.invalid-extension', 'document/extensionsUsed', 'extension must be non-empty'); if (base.document.extensionsUsed.includes(payload.extension)) return reject('gltf.mutation.duplicate-extension', 'document/extensionsUsed', 'extension is already declared');  if (!Number.isInteger(payload.position) || payload.position < 0 || payload.position > base.document.extensionsUsed.length) return reject('gltf.mutation.insert-out-of-range', 'document/extensionsUsed', 'position must be within the declaration list'); return undefined; };
-export const applyGltfDeclareUsedExtension = (base: GltfSnapshot, payload: GltfDeclareUsedExtensionPayload): GltfLeafResult => run(base, payload, validateGltfDeclareUsedExtension, (next, payload) => { next.document.extensionsUsed.splice(payload.position, 0, payload.extension); });
+/** ➕️ `add-used-extension` wire twin: the flat `Apply` payload `GltfDeclareUsedExtensionPayload` and the phase wire `AddUsedExtensionMutation`, exactly as `./🦀️.rs` writes them.
+ * @see ./🧬️schema/🔣️.json */
+import { gltfWireIndex, gltfWireObject, gltfWireRequired, gltfWireString } from "../../../📸️snapshot/🟦️.ts";
+import { type GltfDiff, type GltfPhase, gltfWirePhase, parseGltfDiff } from "../../../🔺️diff/🟦️.ts";
+
+export interface GltfDeclareUsedExtensionPayload {
+  extension: string;
+  position: number;
+}
+
+export type AddUsedExtensionMutation = GltfPhase<GltfDeclareUsedExtensionPayload, GltfDiff>;
+
+export const parseGltfDeclareUsedExtensionPayload = gltfWireObject<GltfDeclareUsedExtensionPayload>({ extension: gltfWireRequired(gltfWireString), position: gltfWireRequired(gltfWireIndex) });
+export const parseAddUsedExtensionMutation = gltfWirePhase(parseGltfDeclareUsedExtensionPayload, parseGltfDiff);

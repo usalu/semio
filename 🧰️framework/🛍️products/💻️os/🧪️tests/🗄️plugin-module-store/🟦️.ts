@@ -20,13 +20,14 @@ import {
   type PluginModuleCacheV1,
 } from "../../🔨️modules/🔌️plugin/📇️registry/🌎️hub-source/🗄️store/🟦️.ts";
 import { createHubPluginSource, HUB_PLUGIN_MODULE_ROUTE, TrustedPluginModuleTransientError, type HubPluginSourceNoticeV1, type PluginModuleLocksV1 } from "../../🔨️modules/🔌️plugin/📇️registry/🌎️hub-source/🟦️.ts";
-import { PLUGIN_MODULE_TRANSFER_RETRY_V1, TrustedPluginModuleRefusalV1 } from "../../🔨️modules/🔌️plugin/📇️registry/🌎️hub-source/🧬️schema/🟦️.ts";
+import { PLUGIN_MODULE_TRANSFER_RETRY_V1 } from "../../🔨️modules/🔌️plugin/📇️registry/🌎️hub-source/🧬️schema/🟦️.ts";
+import { TrustedPluginModuleRefusalV1 } from "../../🔨️modules/🔌️plugin/📇️registry/📦️deployment/🧬️schema/🟦️.ts";
 import { semioSchemaAjvV1 } from "../🧬️schema-oracle/🟦️.ts";
 
 const here = (path: string) => JSON.parse(readFileSync(fileURLToPath(new URL(path, import.meta.url)), "utf8"));
 const fixture = here("../../🔨️modules/🔌️plugin/📇️registry/🌎️hub-source/🧫️fixtures/🗄️store/🔣️.json");
 const storeSchema = here("../../🔨️modules/🔌️plugin/📇️registry/🌎️hub-source/🧬️schema/🔣️.json");
-const hubSchema = here("../../../../../🌎️hub/🗿️artifact-authority/🔏️trusted-catalog/🧬️schema/🔣️.json");
+const hubSchema = here("../../🔨️modules/🔌️plugin/📇️registry/📦️deployment/🧬️schema/🔣️.json");
 const origin: string = fixture.origin;
 type BundleId = "noteA" | "noteB" | "drawB";
 const hexBytes = (value: string) => Uint8Array.from(value.match(/../gu) ?? [], (pair) => Number.parseInt(pair, 16));
@@ -161,7 +162,7 @@ describe("🌎️ hub plugin source on the store", () => {
       }
       if (path === `${hubMount}${HUB_PLUGIN_MODULE_ROUTE}`) {
         if (options.offline) throw new TypeError("fetch failed");
-        return new Response(JSON.stringify({ schema: "semio.hub.trusted-plugin-module-index/v1", generationId, modules: ids.map((id) => fixture.bundles[id].entry).sort((a: any, b: any) => (a.pluginId < b.pluginId ? -1 : 1)) }));
+        return new Response(JSON.stringify({ schema: "semio.os.plugin-module-index/v1", generationId, modules: ids.map((id) => fixture.bundles[id].entry).sort((a: any, b: any) => (a.pluginId < b.pluginId ? -1 : 1)) }));
       }
       for (const id of ids) {
         const bundle = fixture.bundles[id];

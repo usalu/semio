@@ -1,6 +1,6 @@
 {
   "mutation": "createBlock",
-  "step_id": "step-outro",
+  "stepId": "step-outro",
   "block": {
     "id": "q-remarks",
     "label": "Remarks",

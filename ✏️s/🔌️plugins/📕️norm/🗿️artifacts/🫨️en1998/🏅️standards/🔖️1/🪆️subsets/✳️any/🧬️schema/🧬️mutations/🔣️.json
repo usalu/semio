@@ -1,4 +1,73 @@
 {
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/norm/en1998/mutations.json",
   "title": "En1998Mutation",
-  "type": "object"
+  "oneOf": [
+    {
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1998/mutation/change-annex/schema.json"
+    },
+    {
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1998/mutation/update-site/schema.json"
+    },
+    {
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1998/mutation/insert-building/schema.json"
+    },
+    {
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1998/mutation/remove-building/schema.json"
+    },
+    {
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1998/mutation/change-system-base-shear-resistance-n/schema.json"
+    },
+    {
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1998/mutation/change-storey-permanent-gk-n/schema.json"
+    },
+    {
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1998/mutation/change-storey-stiffness-x/schema.json"
+    },
+    {
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1998/mutation/change-storey-drift-xm/schema.json"
+    },
+    {
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1998/mutation/change-building-plan-regular/schema.json"
+    },
+    {
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1998/mutation/change-building-elevation-regular/schema.json"
+    },
+    {
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1998/mutation/change-member-detailing-compatible/schema.json"
+    },
+    {
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1998/mutation/change-building-masonry-wall-area-ratio/schema.json"
+    },
+    {
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1998/mutation/insert-bridge/schema.json"
+    },
+    {
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1998/mutation/change-bridge-v-rd-n/schema.json"
+    },
+    {
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1998/mutation/insert-assessment/schema.json"
+    },
+    {
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1998/mutation/change-assessment-rkn/schema.json"
+    },
+    {
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1998/mutation/insert-silo/schema.json"
+    },
+    {
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1998/mutation/insert-tank/schema.json"
+    },
+    {
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1998/mutation/insert-foundation/schema.json"
+    },
+    {
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1998/mutation/insert-retaining-wall/schema.json"
+    },
+    {
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1998/mutation/insert-tower/schema.json"
+    },
+    {
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1998/mutation/change-tower-m-rd-nm/schema.json"
+    }
+  ]
 }

@@ -13,7 +13,32 @@
         {
           "type": "null"
         }
-      ]
+      ],
+      "x-semio-ui": {
+        "widget": "select",
+        "label": {
+          "en": "Rendering intent (sRGB)",
+          "de": "Rendering Intent (sRGB)"
+        },
+        "options": {
+          "perceptual": {
+            "en": "Perceptual",
+            "de": "Wahrnehmungsorientiert"
+          },
+          "relativeColorimetric": {
+            "en": "Relative colorimetric",
+            "de": "Relativ farbmetrisch"
+          },
+          "saturation": {
+            "en": "Saturation",
+            "de": "Sättigung"
+          },
+          "absoluteColorimetric": {
+            "en": "Absolute colorimetric",
+            "de": "Absolut farbmetrisch"
+          }
+        }
+      }
     }
   },
   "$defs": {

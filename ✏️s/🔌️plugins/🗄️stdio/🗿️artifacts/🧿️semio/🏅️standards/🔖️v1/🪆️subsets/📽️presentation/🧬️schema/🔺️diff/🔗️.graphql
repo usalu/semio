@@ -6,7 +6,7 @@ type NamedModified { key: String!, diffJson: String! }
 type NamedTripleDiffMeta { removed: [String!]!, modified: [NamedModified!]!, added: [String!]! }
 
 type SlideFrameDiff { origin: SemioPoint2, width: Float, height: Float }
-type SlideDiff { layoutId: String, shapesJson: String, notesJson: String }
+type SlideDiff { id: String, layoutId: String, shapesJson: String, notesJson: String }
 
 type SemioPresentationDiff {
   mastersJson: String

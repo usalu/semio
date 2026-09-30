@@ -1,4 +1,3 @@
-import { ephemeralBox } from "@semio-tech/framework";
 // #region 🧲️Header
 /// <reference types="vite/client" />
 /// <reference types="vitest/importMeta" />
@@ -273,19 +272,10 @@ interface RawMeshTransfer {
   readonly error?: string;
 }
 
-type BrepWasmModule = {
-  readonly default?: () => Promise<unknown>;
+export interface BrepPreviewModule {
   readonly tessellate: (handle: string, tolerance: number) => string;
   readonly dispose: (handle: string) => void;
-  readonly brep_invoke?: (method: string, argsJson: string) => string;
 };
-
-const brepWasm = ephemeralBox<BrepWasmModule | null>("s.modules.3d.packages.typescript.index.ts.brepWasm", null);
-
-async function tessellateGeometryJson(handle: string, tolerance: number): Promise<string> {
-  const module = await ensureBrepWasmLoaded();
-  return module.tessellate(handle, tolerance);
-}
 
 /** 📦️ Parses worker-tessellated preview mesh JSON into a mesh transfer. */
 export function meshTransferFromPreviewPayload(value: unknown): MeshTransfer | null {
@@ -319,10 +309,10 @@ export interface BrepWasmBridge {
   disposeGeometry(ref: GeometryRef): void;
 }
 
-export function createBrepWasmBridge(module: BrepWasmModule): BrepWasmBridge {
+export function createBrepWasmBridge(module: BrepPreviewModule): BrepWasmBridge {
   return {
     async tessellateGeometry(ref, tolerance) {
-      const json = await tessellateGeometryJson(ref, tolerance);
+      const json = module.tessellate(ref, tolerance);
       const raw = JSON.parse(json) as RawMeshTransfer;
       if (raw.error) throw new Error(raw.error);
       return rawMeshToTransfer(raw);
@@ -331,97 +321,6 @@ export function createBrepWasmBridge(module: BrepWasmModule): BrepWasmBridge {
       module.dispose(ref);
     },
   };
-}
-
-/** 🕸️ The flow core wasm addressed by its module URL: a served (`http(s)`) asset is handed to the bindings to fetch, a
- * `file:` URL (a node or Bun test run) is read from disk, since `fetch` has no portable `file:` support. */
-async function flowCoreWasmSource(): Promise<{ readonly module_or_path: URL | Uint8Array }> {
-  const url = new URL("../../🛍️products/💻️os/🔨️modules/🌊️flow/🫀️core/🕸️bindings/flow_core_bg.wasm", import.meta.url);
-  if (url.protocol !== "file:") return { module_or_path: url };
-  const { readFile } = await import("node:fs/promises");
-  return { module_or_path: await readFile(url) };
-}
-
-/** ⏳️ Loads brep tessellation WASM via flow (standalone `flow_extension_brep` pack removed in Wave 3.c). */
-export async function ensureBrepWasmLoaded(): Promise<BrepWasmModule> {
-  if (brepWasm.current) return brepWasm.current;
-  const { default: initFlow, tessellate, dispose, brep_invoke } = await import("../../🛍️products/💻️os/🔨️modules/🌊️flow/🫀️core/🕸️bindings/flow_core.js");
-  if (typeof tessellate !== "function" || typeof dispose !== "function") {
-    throw new Error("flow brep tessellation exports missing — rebuild flow/core wasm");
-  }
-  if (initFlow) await initFlow(await flowCoreWasmSource());
-  brepWasm.current = { tessellate, dispose, brep_invoke };
-  return brepWasm.current;
-}
-
-/** 🌉️ Generic JSON-RPC call into the first-party Rust `BrepKernel` (see `brep_invoke` in
- * `🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/📐️brep-geometry/🦀️.rs`). Parses the JSON
- * result and throws on a `{"error"}` payload; used by `SemioBrepKernel`
- * (`✏️s/🔨️modules/🌐️spatial-kernel/⚙️engine/🧠️semio/🟦️.ts`). */
-export async function invokeBrep<T = unknown>(method: string, args: Record<string, unknown>): Promise<T> {
-  const module = await ensureBrepWasmLoaded();
-  if (typeof module.brep_invoke !== "function") {
-    throw new Error("flow brep_invoke export missing — rebuild flow/core wasm");
-  }
-  const raw = JSON.parse(module.brep_invoke(method, JSON.stringify(args))) as { readonly error?: string } & Record<string, unknown>;
-  if (raw.error) throw new Error(`brep_invoke ${method}: ${raw.error}`);
-  return raw as T;
-}
-
-export async function createDefaultBrepWasmBridge(): Promise<BrepWasmBridge> {
-  const module = await ensureBrepWasmLoaded();
-  return createBrepWasmBridge(module);
-}
-
-type BrepModuleWasm = {
-  readonly evaluate: (kindId: string, inputJson: string) => string;
-  readonly activate: () => void;
-  readonly initSync?: (input: { module: BufferSource }) => void;
-  readonly default?: (input?: unknown) => Promise<unknown>;
-};
-
-const brepModuleWasm = ephemeralBox<BrepModuleWasm | null>("s.modules.3d.packages.typescript.index.ts.brepModuleWasm", null);
-
-/** ⏳️ Brep operator WASM loader — standalone `flow_extension_brep` pack removed in Wave 3.c; install the packaged brep extension instead. */
-export async function ensureBrepModuleWasmLoaded(): Promise<BrepModuleWasm> {
-  if (brepModuleWasm.current) return brepModuleWasm.current;
-  throw new Error(
-    "flow_extension_brep wasm pack removed (Wave 3.c). Geometry IO operators now live in the packaged flow-extension-brep extension; install/enable it or call host flow tessellate/export APIs.",
-  );
-}
-
-function brepGeometryInput(handle: GeometryRef): string {
-  return JSON.stringify({
-    geometry: { $schema: "geometry", handle, kind: "solid" },
-    deflection: { $schema: "number", value: 0.1 },
-  });
-}
-
-function readBrepTextChannel(raw: Record<string, unknown>, channel: string): string {
-  const payload = raw[channel];
-  if (payload && typeof payload === "object" && payload !== null && "value" in payload && typeof (payload as { value: unknown }).value === "string") {
-    return (payload as { value: string }).value;
-  }
-  throw new Error(`brep export missing ${channel} payload`);
-}
-
-/** 💾️ Exports a brep geometry handle to OBJ text via flow brep WASM. */
-export async function exportObj(handle: GeometryRef, deflection = 0.1): Promise<string> {
-  const mod = await ensureBrepModuleWasmLoaded();
-  const input = JSON.stringify({
-    geometry: { $schema: "geometry", handle, kind: "solid" },
-    deflection: { $schema: "number", value: deflection },
-  });
-  const raw = JSON.parse(mod.evaluate("brep.io.exportObj", input)) as Record<string, unknown> & { error?: string };
-  if (raw.error) throw new Error(raw.error);
-  return readBrepTextChannel(raw, "obj");
-}
-
-/** 💾️ Exports a brep geometry handle to GLB bytes via tessellation. */
-export async function exportGltf(handle: GeometryRef, deflection = 0.1): Promise<Uint8Array> {
-  const bridge = await createDefaultBrepWasmBridge();
-  const mesh = await bridge.tessellateGeometry(handle, deflection);
-  return meshTransferToGlb(mesh);
 }
 
 /** 💾️ Serializes a {@link MeshTransfer} to OBJ text. */

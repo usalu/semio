@@ -5,8 +5,9 @@
 //! COMMITTED `➡️after.obj` of the row's pair (`⬅️before.obj` for an inverse row), answered by `🟦️.ts`, and the
 //! `obj-3-0-document-compare-v1` pipeline reads it and this subject's `actual-obj` with three's OBJLoader. The subject
 //! fully parses the committed `⬅️before.obj` into `ObjSnapshot`, applies the typed mutation through this subset's own
-//! `apply_obj_mutation` and re-serializes from the model alone (no byte pass-through). An inverse row applies the kind
-//! and then its inverse — a re-`set-*` of the value the committed before-document carries.
+//! `apply_obj_mutation` and re-serializes from the model alone (no byte pass-through). Every row's `params` is the leaf
+//! wire payload, decoded by `ObjMutation`'s own payload constructor; an inverse row applies the kind and then the
+//! production inverse — a re-`set-*` of the value the committed before-document carries.
 
 use semio_repo_test_host::Adapter;
 
@@ -15,55 +16,23 @@ use semio_repo_test_host::Adapter;
 mod subject {
     use semio_repo_test_host::{Context, Json, Outcome};
     use semio_s_artifact_stdio_obj::standards::v3_0::subsets::any::io::{decode_obj, encode_obj};
-    use semio_s_artifact_stdio_obj::standards::v3_0::subsets::any::schema::mutations::{apply_obj_mutation, set_mtllib, set_usemtl, ObjMutation};
-    use semio_s_artifact_stdio_obj::standards::v3_0::subsets::any::schema::snapshot::ObjUsemtlRange;
+    use semio_s_artifact_stdio_obj::standards::v3_0::subsets::any::schema::mutations::{apply_obj_mutation, decode_obj_mutation_payload, inverse_obj_mutation};
 
-    fn text(value: &Json, key: &str) -> Result<String, String> {
-        match value.get(key) {
-            Some(Json::String(text)) => Ok(text.clone()),
-            _ => Err(format!("expected text field {key:?}")),
-        }
-    }
-
-    fn index(value: &Json, key: &str) -> Result<usize, String> {
-        match value.get(key) {
-            Some(Json::Number(number)) => Ok(*number as usize),
-            _ => Err(format!("expected numeric field {key:?}")),
-        }
-    }
-
-    /// 🦠️ The row's `(kind, params)` as the typed mutation this subset owns; any other kind is an error.
-    fn mutation(kind: &str, params: &Json) -> Result<ObjMutation, String> {
-        Ok(match kind {
-            "set-mtllib" => ObjMutation::SetMtllib(set_mtllib::SetMtllib { mtllib: text(params, "mtllib").ok() }),
-            "set-usemtl" => ObjMutation::SetUsemtl(set_usemtl::SetUsemtl { usemtl: params.array("usemtl").iter().map(|entry| Ok(ObjUsemtlRange { face_index_from: index(entry, "faceIndexFrom")?, material: text(entry, "material")? })).collect::<Result<Vec<_>, String>>()? }),
-            other => return Err(format!("mutate-obj-3-0-material: {other:?} is not a kind of this subset")),
-        })
-    }
-
-    /// ↩️ The inverse: re-`set-*` of the value the committed before-document carries.
-    fn inverse(kind: &str, before: &semio_s_artifact_stdio_obj::standards::v3_0::subsets::any::schema::snapshot::ObjSnapshot) -> Result<ObjMutation, String> {
-        Ok(match kind {
-            "set-mtllib" => ObjMutation::SetMtllib(set_mtllib::SetMtllib { mtllib: before.mtllib.clone() }),
-            "set-usemtl" => ObjMutation::SetUsemtl(set_usemtl::SetUsemtl { usemtl: before.usemtl.clone() }),
-            other => return Err(format!("mutate-obj-3-0-material: {other:?} has no inverse in this subset")),
-        })
-    }
-
-    /// 📦️ Runs the row: decodes the committed before-document, applies the row's kind (and, for an inverse row, its
-    /// inverse), re-encodes, and answers the document as the `actual-obj` artifact the pipeline reads. A forward row must
-    /// not hand back its input bytes; a restored document may — the committed pairs are this encoder's canonical form.
+    /// 📦️ Runs the row: decodes the committed before-document, applies the row's wire payload decoded by `ObjMutation`'s
+    /// own payload constructor (and, for an inverse row, the production inverse computed against the before-document),
+    /// re-encodes, and answers the document as the `actual-obj` artifact the pipeline reads. A forward row must not hand
+    /// back its input bytes; a restored document may — the committed pairs are this encoder's canonical form.
     fn run(ctx: &Context, undo: bool) -> Result<Outcome, String> {
         let uri = ctx.step_fixture_uris().into_iter().find(|uri| uri.ends_with("/⬅️before.obj")).ok_or_else(|| "the row names no committed ⬅️before.obj".to_string())?;
         let input = ctx.fixture_bytes(&uri)?;
-        let before = decode_obj(std::str::from_utf8(&input).map_err(|error| error.to_string())?).map_err(|error| format!("decode_obj failed: {error}"))?;
+        let mut snapshot = decode_obj(std::str::from_utf8(&input).map_err(|error| error.to_string())?).map_err(|error| format!("decode_obj failed: {error}"))?;
         let spec = ctx.doc_json()?;
-        let empty = Json::Object(Vec::new());
         let kind = spec.str("kind");
-        let mut snapshot = before.clone();
-        apply_obj_mutation(&mut snapshot, &mutation(&kind, spec.get("params").unwrap_or(&empty))?);
-        if undo {
-            apply_obj_mutation(&mut snapshot, &inverse(&kind, &before)?);
+        let forward = decode_obj_mutation_payload(&kind, &spec.get("params").map_or_else(|| "null".to_string(), Json::to_string))?;
+        let backward = if undo { inverse_obj_mutation(&snapshot, &forward) } else { Vec::new() };
+        apply_obj_mutation(&mut snapshot, &forward);
+        for mutation in &backward {
+            apply_obj_mutation(&mut snapshot, mutation);
         }
         let bytes = encode_obj(&snapshot).into_bytes();
         if !undo && bytes == input {

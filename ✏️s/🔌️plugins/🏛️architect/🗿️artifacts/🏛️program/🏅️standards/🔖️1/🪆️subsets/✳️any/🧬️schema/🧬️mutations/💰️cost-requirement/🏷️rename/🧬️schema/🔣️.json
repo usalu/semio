@@ -5,16 +5,52 @@
   "type": "object",
   "additionalProperties": false,
   "required": [
+    "mutation",
     "id",
     "newName"
   ],
   "properties": {
+    "mutation": {
+      "const": "renameCostRequirement"
+    },
     "id": {
-      "type": "integer",
-      "minimum": 0
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Cost Requirement",
+          "de": "Kostenanforderung"
+        },
+        "description": {
+          "en": "The cost requirement to rename.",
+          "de": "Umzubenennender Eintrag vom Typ „Kostenanforderung“."
+        },
+        "ref": {
+          "kind": "costRequirement",
+          "domain": "program",
+          "granularity": "entity"
+        },
+        "group": "target",
+        "order": 10
+      }
     },
     "newName": {
-      "type": "string"
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "text",
+        "role": "value",
+        "label": {
+          "en": "New Name",
+          "de": "Neuer Name"
+        },
+        "description": {
+          "en": "New name of the cost requirement.",
+          "de": "Neuer Name des Eintrags vom Typ „Kostenanforderung“."
+        },
+        "group": "identity",
+        "order": 20
+      }
     }
   }
 }

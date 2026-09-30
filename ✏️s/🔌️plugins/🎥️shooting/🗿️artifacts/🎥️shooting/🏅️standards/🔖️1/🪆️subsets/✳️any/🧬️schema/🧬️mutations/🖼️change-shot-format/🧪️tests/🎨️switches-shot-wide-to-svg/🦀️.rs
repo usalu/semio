@@ -75,7 +75,7 @@ async fn declared_outcome_holds_and_an_unknown_shot_is_target_missing() {
     assert_eq!(outcome.get("status").and_then(serde_json::Value::as_str), Some("applied"), "change-shot-format/switches-shot-wide-to-svg: this fixture declares `applied`");
     assert!(mutation().diff(&before()).messages().is_empty(), "change-shot-format/switches-shot-wide-to-svg: a real format switch must raise no diagnostic");
 
-    let ghost: ShootingMutation = serde_json::from_str(r#"{"mutation":"changeShotFormat","id":"shot-ghost","new_format":"svg"}"#).expect("probe mutation decodes");
+    let ghost: ShootingMutation = serde_json::from_str(r#"{"mutation":"changeShotFormat","id":"shot-ghost","newFormat":"svg"}"#).expect("probe mutation decodes");
     let rejected = ghost.diff(&before());
     assert_eq!(rejected.worst_level(), Some(protocol::Severity::Error), "change-shot-format/switches-shot-wide-to-svg: an unknown shot is an Error");
     assert_eq!(rejected.messages()[0].code.0, "mutation.target-missing", "change-shot-format/switches-shot-wide-to-svg: the absence guard's frozen code");

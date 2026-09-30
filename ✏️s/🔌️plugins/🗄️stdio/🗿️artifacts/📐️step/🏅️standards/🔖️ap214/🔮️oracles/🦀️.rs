@@ -26,7 +26,7 @@
 //! five explicitly named subtypes and the "anything else geometry-bearing is rung 2" fallback are
 //! read off the standard on both sides, which is exactly what makes their agreement evidence.
 //!
-//! 🧬️ **Why `cc2`, `cc3`, `cc4` and `cc5` declare the SAME six kinds, and `cc1` and `cc6` do not.**
+//! 🧬️ **Why `cc2`, `cc3`, `cc4` and `cc5` declare the SAME five kinds, and `cc1` and `cc6` do not.**
 //! This is stated here, once, in the module all six share, rather than four times in four places.
 //!
 //! ISO 10303-214 §4.3 defines the six conformance classes as a MONOTONE LADDER over one capability:
@@ -40,14 +40,14 @@
 //! * **Strictly inside** (ceiling rung 2, 3, 4 or 5 — `cc2`…`cc5`). The class admits a
 //!   representation, so it has a ceiling type to WRITE ([`ladder::ceiling_type_of`] is `Some`), and
 //!   at least one rung sits above it, so there is something to DEMOTE from. Both ladder verbs exist:
-//!   `set-shape-representation` and `demote-shape-representation`. Six kinds, identical for all four
+//!   `set-shape-representation` and `demote-shape-representation`. Five kinds, identical for all four
 //!   — not a copy, a consequence, and the four modules differ only in `MAX_RUNG`.
 //! * **Below the ladder** (ceiling rung 1 — `cc1`). CC1 admits no representation at all, so
 //!   `ceiling_type_of(1)` is `None`: there is nothing to write and nothing to demote ONTO, and the
 //!   only repair for an instance that exists is deletion. `remove-shape-representation` replaces
-//!   both verbs. Five kinds, a different list.
+//!   both verbs. Four kinds, a different list.
 //! * **On top of the ladder** (ceiling rung 6 — `cc6`). Nothing can be above the top rung, so
-//!   `demote-shape-representation` has no possible subject and is not declared. Five kinds, a
+//!   `demote-shape-representation` has no possible subject and is not declared. Four kinds, a
 //!   different list again.
 //!
 //! [`tests::the_four_interior_classes_share_one_vocabulary_because_their_ceilings_share_one_place`]
@@ -446,7 +446,160 @@ pub mod part21 {
             None => exchange.header.push(Record { name: "FILE_SCHEMA".to_string(), parameter }),
         }
     }
+
+    /// ✍️ Replaces the header record `name`, appending it when the input has none.
+    pub fn set_header_record(exchange: &mut Exchange, record: Record) {
+        match header_record_mut(exchange, &record.name) {
+            Some(existing) => *existing = record,
+            None => exchange.header.push(record),
+        }
+    }
     //#endregion 🔖️Header
+
+    //#region 🧾️Wire
+    /// 🧾️ One `StepValue` wire value (`"unset"`, `"derived"` or a one-key record such as `{"real": 2.5}`, the leaf payload
+    /// shape) as the argument `ruststep` models. Read here from the wire, never through the production `FromValue`.
+    pub fn value_from_wire(value: &Json) -> Result<Parameter, String> {
+        if let Json::String(unit) = value {
+            return match unit.as_str() {
+                "unset" => Ok(Parameter::NotProvided),
+                "derived" => Ok(Parameter::Omitted),
+                other => Err(format!("unknown StepValue {other:?}")),
+            };
+        }
+        let Json::Object(members) = value else { return Err(format!("a StepValue is a string or a one-key record, not {value:?}")) };
+        let [(kind, content)] = members.as_slice() else { return Err(format!("a StepValue record carries exactly one key, not {}", members.len())) };
+        let number = || match content {
+            Json::Number(number) => Ok(*number),
+            other => Err(format!("{kind} carries a number, not {other:?}")),
+        };
+        let text = || match content {
+            Json::String(text) => Ok(text.clone()),
+            other => Err(format!("{kind} carries a string, not {other:?}")),
+        };
+        Ok(match kind.as_str() {
+            "integer" => Parameter::Integer(number()? as i64),
+            "real" => Parameter::Real(number()?),
+            "string" => Parameter::String(text()?),
+            "enum" => Parameter::Enumeration(text()?),
+            "reference" => Parameter::Ref(Name::Entity(number()? as u64)),
+            "aggregate" => Parameter::List(match content {
+                Json::Array(items) => items.iter().map(value_from_wire).collect::<Result<Vec<_>, String>>()?,
+                other => return Err(format!("aggregate carries an array, not {other:?}")),
+            }),
+            "typedValue" => Parameter::Typed { keyword: str_field(content, "typeName")?, parameter: Box::new(value_from_wire(content.get("value").ok_or("a typed value carries `value`")?)?) },
+            other => return Err(format!("unknown StepValue kind {other:?}")),
+        })
+    }
+
+    /// 🧾️ One `ruststep` argument as its `StepValue` wire value — the exact inverse of [`value_from_wire`]. A string
+    /// carries the literal `ruststep` read, which this module's writer re-emits verbatim.
+    pub fn value_to_wire(param: &Parameter) -> Json {
+        let keyed = |kind: &str, content: Json| Json::Object(vec![(kind.to_string(), content)]);
+        match param {
+            Parameter::NotProvided => Json::String("unset".to_string()),
+            Parameter::Omitted => Json::String("derived".to_string()),
+            Parameter::Integer(value) => keyed("integer", Json::Number(*value as f64)),
+            Parameter::Real(value) => keyed("real", Json::Number(*value)),
+            Parameter::String(value) => keyed("string", Json::String(value.clone())),
+            Parameter::Enumeration(value) => keyed("enum", Json::String(value.clone())),
+            Parameter::List(items) => keyed("aggregate", Json::Array(items.iter().map(value_to_wire).collect())),
+            Parameter::Ref(_) => keyed("reference", Json::Number(as_ref_id(param).unwrap_or_default() as f64)),
+            Parameter::Typed { keyword, parameter } => keyed("typedValue", Json::Object(vec![("typeName".to_string(), Json::String(keyword.clone())), ("value".to_string(), value_to_wire(parameter))])),
+        }
+    }
+
+    /// 🧩️ One `StepEntity` wire record (`{id, name, args, complex?}`) as a simple, or — with `complex` records — a
+    /// complex instance.
+    pub fn entity_from_wire(value: &Json) -> Result<EntityInstance, String> {
+        let id = u64_field(value, "id")?;
+        let record = |entry: &Json| -> Result<Record, String> { Ok(Record { name: str_field(entry, "name")?, parameter: Parameter::List(entry.array("args").iter().map(value_from_wire).collect::<Result<Vec<_>, String>>()?) }) };
+        let complex = value.array("complex");
+        if complex.is_empty() {
+            return Ok(EntityInstance::Simple { id, record: record(value)? });
+        }
+        Ok(EntityInstance::Complex { id, subsuper: ruststep::ast::SubSuperRecord(std::iter::once(value).chain(complex.iter()).map(record).collect::<Result<Vec<_>, String>>()?) })
+    }
+
+    fn entity_to_wire(entity: &EntityInstance) -> Result<Json, String> {
+        let record = |record: &Record| -> Result<Vec<(String, Json)>, String> { Ok(vec![("name".to_string(), Json::String(record.name.clone())), ("args".to_string(), Json::Array(args(record)?.iter().map(value_to_wire).collect()))]) };
+        let mut members = vec![("id".to_string(), Json::Number(entity_id(entity) as f64))];
+        members.extend(record(primary_record(entity))?);
+        if let EntityInstance::Complex { subsuper, .. } = entity {
+            members.push(("complex".to_string(), Json::Array(subsuper.0[1..].iter().map(|extra| record(extra).map(Json::Object)).collect::<Result<Vec<_>, String>>()?)));
+        }
+        Ok(Json::Object(members))
+    }
+
+    /// 📇️ `FILE_DESCRIPTION(description, implementation_level)` from its `StepFileDescription` wire record.
+    pub fn file_description_record(value: &Json) -> Result<Record, String> {
+        Ok(Record { name: "FILE_DESCRIPTION".to_string(), parameter: Parameter::List(vec![string_list(&str_array(value, "description")), Parameter::String(str_field(value, "implementationLevel")?)]) })
+    }
+
+    /// 📇️ `FILE_NAME(...)` — the seven ISO 10303-21 §8.2.3 attributes — from its `StepFileName` wire record.
+    pub fn file_name_record(value: &Json) -> Result<Record, String> {
+        let text = |key: &str| str_field(value, key).map(Parameter::String);
+        Ok(Record {
+            name: "FILE_NAME".to_string(),
+            parameter: Parameter::List(vec![text("name")?, text("timestamp")?, string_list(&str_array(value, "author")), string_list(&str_array(value, "organization")), text("preprocessorVersion")?, text("originatingSystem")?, text("authorization")?]),
+        })
+    }
+
+    /// 📇️ `FILE_SCHEMA((schemas))` from its `StepFileSchema` wire record.
+    pub fn file_schema_record(value: &Json) -> Result<Record, String> {
+        let schemas = str_array(value, "schemas");
+        if schemas.is_empty() {
+            return Err("FILE_SCHEMA must declare at least one schema".to_string());
+        }
+        Ok(Record { name: "FILE_SCHEMA".to_string(), parameter: Parameter::List(vec![string_list(&schemas)]) })
+    }
+
+    fn header_to_wire(exchange: &Exchange) -> Json {
+        let arguments = |name: &str| header_record(exchange, name).and_then(|record| args(record).ok()).cloned().unwrap_or_default();
+        let text = |items: &[Parameter], index: usize| Json::String(items.get(index).and_then(as_text).unwrap_or_default().to_string());
+        let texts = |items: &[Parameter], index: usize| {
+            Json::Array(match items.get(index) {
+                Some(Parameter::List(values)) => values.iter().filter_map(as_text).map(|value| Json::String(value.to_string())).collect(),
+                _ => Vec::new(),
+            })
+        };
+        let object = |members: Vec<(&str, Json)>| Json::Object(members.into_iter().map(|(key, value)| (key.to_string(), value)).collect());
+        let (description, name, schema) = (arguments("FILE_DESCRIPTION"), arguments("FILE_NAME"), arguments("FILE_SCHEMA"));
+        object(vec![
+            ("fileDescription", object(vec![("description", texts(&description, 0)), ("implementationLevel", text(&description, 1))])),
+            (
+                "fileName",
+                object(vec![
+                    ("name", text(&name, 0)),
+                    ("timestamp", text(&name, 1)),
+                    ("author", texts(&name, 2)),
+                    ("organization", texts(&name, 3)),
+                    ("preprocessorVersion", text(&name, 4)),
+                    ("originatingSystem", text(&name, 5)),
+                    ("authorization", text(&name, 6)),
+                ]),
+            ),
+            ("fileSchema", object(vec![("schemas", texts(&schema, 0))])),
+        ])
+    }
+
+    /// 📸️ `set-snapshot`: the whole document becomes the `StepSnapshot` wire record — its typed header and its entities,
+    /// in the record's own order.
+    pub fn replace_with_snapshot(exchange: &mut Exchange, snapshot: &Json) -> Result<(), String> {
+        let header = snapshot.get("header").ok_or("a STEP snapshot carries `header`")?;
+        let member = |key: &str| header.get(key).ok_or_else(|| format!("a STEP header carries `{key}`"));
+        exchange.header = vec![file_description_record(member("fileDescription")?)?, file_name_record(member("fileName")?)?, file_schema_record(member("fileSchema")?)?];
+        exchange.data = vec![DataSection { meta: Vec::new(), entities: snapshot.array("entities").iter().map(entity_from_wire).collect::<Result<Vec<_>, String>>()? }];
+        Ok(())
+    }
+
+    /// 📸️ The document as a `set-snapshot` payload `{snapshot}` — what restores it through [`replace_with_snapshot`].
+    pub fn snapshot_payload(exchange: &Exchange) -> Result<Json, String> {
+        let entities = exchange.data.iter().flat_map(|section| section.entities.iter()).map(entity_to_wire).collect::<Result<Vec<_>, String>>()?;
+        let snapshot = Json::Object(vec![("schema".to_string(), Json::String("stdio.step".to_string())), ("header".to_string(), header_to_wire(exchange)), ("entities".to_string(), Json::Array(entities))]);
+        Ok(Json::Object(vec![("snapshot".to_string(), snapshot)]))
+    }
+    //#endregion 🧾️Wire
 }
 //#endregion 🔖️Part21
 

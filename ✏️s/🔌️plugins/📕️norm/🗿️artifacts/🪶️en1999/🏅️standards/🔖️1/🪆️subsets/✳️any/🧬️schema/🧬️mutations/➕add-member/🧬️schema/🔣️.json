@@ -5,18 +5,49 @@
   "type": "object",
   "additionalProperties": false,
   "required": [
+    "mutation",
     "index",
     "member"
   ],
   "properties": {
-    "index": {
-      "type": "integer"
+    "mutation": {
+      "const": "addMember"
     },
-    "member": {}
-  },
-  "owner": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/🪶️en1999/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/➕add-member",
-  "semanticKind": "add-member",
-  "emoji": "➕",
-  "aggregateVariant": "AddMember",
-  "displayName": "Add Member"
+    "index": {
+      "type": "integer",
+      "minimum": 0,
+      "x-semio-ui": {
+        "widget": "stepper",
+        "role": "value",
+        "label": {
+          "en": "Position",
+          "de": "Position"
+        },
+        "description": {
+          "en": "Zero-based list position at which the record is inserted.",
+          "de": "Nullbasierte Listenposition, an der der Datensatz eingefügt wird."
+        },
+        "step": 1,
+        "precision": 0,
+        "group": "target",
+        "order": 10
+      }
+    },
+    "member": {
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1999/snapshot.json#/$defs/AluminiumMember",
+      "x-semio-ui": {
+        "role": "value",
+        "label": {
+          "en": "Member",
+          "de": "Bauteil"
+        },
+        "description": {
+          "en": "The complete aluminium member record to add.",
+          "de": "Der vollständige hinzuzufügende Aluminiumbauteil-Datensatz."
+        },
+        "group": "record",
+        "order": 20
+      }
+    }
+  }
 }

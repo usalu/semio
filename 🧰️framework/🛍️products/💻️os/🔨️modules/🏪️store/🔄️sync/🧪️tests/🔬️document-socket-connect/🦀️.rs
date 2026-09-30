@@ -220,6 +220,7 @@ fn sized_envelope(index: usize, payload_bytes: usize) -> crate::os_spr::Mutation
         diff: crate::os_spr::ArtifactDiff { schema: crate::os_spr::SchemaId("block.2d".into()), payload: vec![7; payload_bytes] },
         inverse: crate::os_spr::InverseMutation { schema: crate::os_spr::SchemaId("block.2d".into()), payload: Vec::new() },
         timestamp: crate::os_spr::HybridLogicalTimestamp::new(1, 1),
+        transaction: None,
     }
 }
 

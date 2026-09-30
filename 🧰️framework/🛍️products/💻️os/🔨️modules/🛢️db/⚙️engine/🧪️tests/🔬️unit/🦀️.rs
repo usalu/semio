@@ -2129,6 +2129,7 @@ async fn envelope(id: &str, deps: &[&str], actor: &str, document: &protocol::Art
         diff: protocol::ArtifactDiff { schema: protocol::SchemaId(db_artifact::DB_PATHMAP_SCHEMA.to_string()), payload: db_artifact::encode_pathmap_json(&serde_json::Value::Object(payload)).await.unwrap() },
         inverse: protocol::InverseMutation { schema: protocol::SchemaId(db_artifact::DB_PATHMAP_SCHEMA.to_string()), payload: db_artifact::encode_pathmap_json(&serde_json::Value::Object(serde_json::Map::new())).await.unwrap() },
         timestamp: protocol::HybridLogicalTimestamp::new(0, 0),
+        transaction: None,
     }
 }
 
@@ -4873,6 +4874,7 @@ mod long {
                             diff: protocol::ArtifactDiff { schema: protocol::SchemaId("storm.v1".to_string()), payload: vec![0x5a; 256] },
                             inverse: protocol::InverseMutation { schema: protocol::SchemaId("storm.v1".to_string()), payload: Vec::new() },
                             timestamp: protocol::HybridLogicalTimestamp::new(0, 0),
+                            transaction: None,
                         });
                         previous = Some(mutation_id);
                     }

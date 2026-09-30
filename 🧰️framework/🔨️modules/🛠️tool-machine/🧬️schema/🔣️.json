@@ -1,0 +1,945 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/framework/tool-machine/schema.json",
+  "title": "ToolMachineSchema",
+  "description": "Source of record for the 🛠️tool-machine framework module: tool yields, the tool transaction reducer (open, committed, aborted; keyed upsert in first-insertion order, retract, empty commit = no edit, abort = zero trace), the TransactionRef stamped on every op of a committed transaction, the refusals and abort reasons, the runner step (including host abort, reset and persist/resume) and the transaction-law fixture with its example drag gesture charts. Wire names are camelCase except the hybrid logical timestamp, which keeps the replication wire names; u64 values are JSON integers.",
+  "$defs": {
+    "U64": {
+      "type": "integer",
+      "minimum": 0,
+      "maximum": 9007199254740991
+    },
+    "I64": {
+      "type": "integer",
+      "minimum": -9007199254740991,
+      "maximum": 9007199254740991
+    },
+    "YieldKey": {
+      "type": "string",
+      "minLength": 1
+    },
+    "ToolId": {
+      "description": "Authoring action/tool id `<appId>#<toolId>`.",
+      "type": "string",
+      "minLength": 1
+    },
+    "TransactionId": {
+      "description": "`tx-` + the first 8 bytes of blake3(write_str(actor) | varint(hlc.actor) | varint(hlc.physical_ms) | varint(hlc.logical) | write_str(tool)) as lowercase hex; write_str = varint byte length + UTF-8, varint = unsigned LEB128.",
+      "type": "string",
+      "pattern": "^tx-[0-9a-f]{16}$"
+    },
+    "HybridLogicalTimestamp": {
+      "title": "HybridLogicalTimestamp",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "actor",
+        "physical_ms",
+        "logical"
+      ],
+      "properties": {
+        "actor": {
+          "$ref": "#/$defs/U64"
+        },
+        "physical_ms": {
+          "$ref": "#/$defs/U64"
+        },
+        "logical": {
+          "$ref": "#/$defs/U64"
+        }
+      }
+    },
+    "TransactionRef": {
+      "title": "TransactionRef",
+      "description": "The committed tool transaction that authored an operation (replication `TransactionRef`).",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "tool"
+      ],
+      "properties": {
+        "id": {
+          "$ref": "#/$defs/TransactionId"
+        },
+        "tool": {
+          "$ref": "#/$defs/ToolId"
+        }
+      }
+    },
+    "ToolYieldKind": {
+      "enum": [
+        "upsert",
+        "retract",
+        "commit",
+        "abort"
+      ]
+    },
+    "ToolYield": {
+      "title": "ToolYield",
+      "description": "One effect of a tool machine. `mutation` is the tool's parametric mutation, opaque to the transaction.",
+      "oneOf": [
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "key",
+            "mutation"
+          ],
+          "properties": {
+            "kind": {
+              "const": "upsert"
+            },
+            "key": {
+              "$ref": "#/$defs/YieldKey"
+            },
+            "mutation": true
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "key"
+          ],
+          "properties": {
+            "kind": {
+              "const": "retract"
+            },
+            "key": {
+              "$ref": "#/$defs/YieldKey"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "kind"
+          ],
+          "properties": {
+            "kind": {
+              "const": "commit"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "kind"
+          ],
+          "properties": {
+            "kind": {
+              "const": "abort"
+            }
+          }
+        }
+      ]
+    },
+    "ToolTransactionState": {
+      "enum": [
+        "open",
+        "committed",
+        "aborted"
+      ]
+    },
+    "ToolRefusal": {
+      "description": "toolTransaction.closed: a yield reached a committed or aborted transaction, or arrived while entering the initial configuration. toolTransaction.unclosed: an event left the tool at rest (its root's initial state active) with the transaction open. Every refusal publishes nothing and drops the transaction.",
+      "enum": [
+        "toolTransaction.closed",
+        "toolTransaction.unclosed"
+      ]
+    },
+    "ToolAbortReason": {
+      "description": "Who ended a transaction without an edit: the tool's abort yield, or a host cancel.",
+      "enum": [
+        "tool",
+        "blur",
+        "captureLost",
+        "baseMoved",
+        "frozen",
+        "retired"
+      ]
+    },
+    "TransactionEntry": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "key",
+        "mutation"
+      ],
+      "properties": {
+        "key": {
+          "$ref": "#/$defs/YieldKey"
+        },
+        "mutation": true
+      }
+    },
+    "TransactionEntries": {
+      "description": "Provisional entries in first-insertion order; keys are unique.",
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/TransactionEntry"
+      }
+    },
+    "ToolTransaction": {
+      "title": "ToolTransaction",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "transaction",
+        "state",
+        "entries"
+      ],
+      "properties": {
+        "transaction": {
+          "$ref": "#/$defs/TransactionRef"
+        },
+        "state": {
+          "$ref": "#/$defs/ToolTransactionState"
+        },
+        "entries": {
+          "$ref": "#/$defs/TransactionEntries"
+        }
+      }
+    },
+    "ToolStep": {
+      "title": "ToolStep",
+      "description": "What one event or host cancel did to a runner's transaction slot. `open` carries the runner's open transaction (ref and provisional entries); `committed` the batch to publish as exactly one edit; `aborted` (with who aborted) and `empty` publish nothing.",
+      "oneOf": [
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "kind"
+          ],
+          "properties": {
+            "kind": {
+              "const": "idle"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "transaction",
+            "entries"
+          ],
+          "properties": {
+            "kind": {
+              "const": "open"
+            },
+            "transaction": {
+              "$ref": "#/$defs/TransactionRef"
+            },
+            "entries": {
+              "$ref": "#/$defs/TransactionEntries"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "transaction",
+            "mutations"
+          ],
+          "properties": {
+            "kind": {
+              "const": "committed"
+            },
+            "transaction": {
+              "$ref": "#/$defs/TransactionRef"
+            },
+            "mutations": {
+              "type": "array",
+              "minItems": 1
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "transaction",
+            "reason"
+          ],
+          "properties": {
+            "kind": {
+              "const": "aborted"
+            },
+            "transaction": {
+              "$ref": "#/$defs/TransactionRef"
+            },
+            "reason": {
+              "$ref": "#/$defs/ToolAbortReason"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "transaction"
+          ],
+          "properties": {
+            "kind": {
+              "const": "empty"
+            },
+            "transaction": {
+              "$ref": "#/$defs/TransactionRef"
+            }
+          }
+        }
+      ]
+    },
+    "GesturePoint": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "x",
+        "y"
+      ],
+      "properties": {
+        "x": {
+          "$ref": "#/$defs/I64"
+        },
+        "y": {
+          "$ref": "#/$defs/I64"
+        }
+      }
+    },
+    "GestureInput": {
+      "title": "GestureInput",
+      "description": "Example drag gesture input: a magnet the dragged pointer connects to within `radius` (inclusive, Euclidean).",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "magnet",
+        "radius"
+      ],
+      "properties": {
+        "magnet": {
+          "$ref": "#/$defs/GesturePoint"
+        },
+        "radius": {
+          "$ref": "#/$defs/U64"
+        }
+      }
+    },
+    "GestureEvent": {
+      "title": "GestureEvent",
+      "oneOf": [
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "type",
+            "x",
+            "y"
+          ],
+          "properties": {
+            "type": {
+              "enum": [
+                "pointerDown",
+                "pointerMove"
+              ]
+            },
+            "x": {
+              "$ref": "#/$defs/I64"
+            },
+            "y": {
+              "$ref": "#/$defs/I64"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "type"
+          ],
+          "properties": {
+            "type": {
+              "enum": [
+                "pointerUp",
+                "escape"
+              ]
+            }
+          }
+        }
+      ]
+    },
+    "GestureMutation": {
+      "title": "GestureMutation",
+      "description": "Example parametric mutations: the net drag offset and a connection to the magnet.",
+      "oneOf": [
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "dx",
+            "dy"
+          ],
+          "properties": {
+            "kind": {
+              "const": "translate"
+            },
+            "dx": {
+              "$ref": "#/$defs/I64"
+            },
+            "dy": {
+              "$ref": "#/$defs/I64"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "x",
+            "y"
+          ],
+          "properties": {
+            "kind": {
+              "const": "connect"
+            },
+            "x": {
+              "$ref": "#/$defs/I64"
+            },
+            "y": {
+              "$ref": "#/$defs/I64"
+            }
+          }
+        }
+      ]
+    },
+    "GestureAction": {
+      "description": "press: remember the origin. drag: upsert `translate` {dx, dy} from the origin (retract it at zero offset), then upsert `connect` to the magnet when the pointer is within the radius, else retract it. release: commit. cancel: abort.",
+      "enum": [
+        "press",
+        "drag",
+        "release",
+        "cancel"
+      ]
+    },
+    "GestureChart": {
+      "title": "GestureChart",
+      "description": "The example tool statechart; the Rust `statechart!`, the TS kernel tables and the xstate oracle are all built to this chart.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "initial",
+        "states",
+        "transitions"
+      ],
+      "properties": {
+        "id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "initial": {
+          "type": "string",
+          "minLength": 1
+        },
+        "states": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "string",
+            "minLength": 1
+          }
+        },
+        "transitions": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "from",
+              "event",
+              "to",
+              "action"
+            ],
+            "properties": {
+              "from": {
+                "type": "string",
+                "minLength": 1
+              },
+              "event": {
+                "enum": [
+                  "pointerDown",
+                  "pointerMove",
+                  "pointerUp",
+                  "escape"
+                ]
+              },
+              "to": {
+                "type": "string",
+                "minLength": 1
+              },
+              "action": {
+                "oneOf": [
+                  {
+                    "$ref": "#/$defs/GestureAction"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              }
+            }
+          }
+        }
+      }
+    },
+    "GestureScenario": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "name",
+        "steps"
+      ],
+      "properties": {
+        "name": {
+          "type": "string",
+          "minLength": 1
+        },
+        "steps": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "oneOf": [
+              {
+                "description": "An event that settled into a step.",
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "event",
+                  "clock",
+                  "state",
+                  "step"
+                ],
+                "properties": {
+                  "event": {
+                    "$ref": "#/$defs/GestureEvent"
+                  },
+                  "clock": {
+                    "$ref": "#/$defs/HybridLogicalTimestamp"
+                  },
+                  "state": {
+                    "type": "string",
+                    "minLength": 1
+                  },
+                  "step": {
+                    "$ref": "#/$defs/ToolStep"
+                  }
+                }
+              },
+              {
+                "description": "An event the runner refused.",
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "event",
+                  "clock",
+                  "state",
+                  "refusal"
+                ],
+                "properties": {
+                  "event": {
+                    "$ref": "#/$defs/GestureEvent"
+                  },
+                  "clock": {
+                    "$ref": "#/$defs/HybridLogicalTimestamp"
+                  },
+                  "state": {
+                    "type": "string",
+                    "minLength": 1
+                  },
+                  "refusal": {
+                    "$ref": "#/$defs/ToolRefusal"
+                  }
+                }
+              },
+              {
+                "description": "A host abort and the step it reported.",
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "host",
+                  "reason",
+                  "state",
+                  "step"
+                ],
+                "properties": {
+                  "host": {
+                    "const": "abort"
+                  },
+                  "reason": {
+                    "$ref": "#/$defs/ToolAbortReason"
+                  },
+                  "state": {
+                    "type": "string",
+                    "minLength": 1
+                  },
+                  "step": {
+                    "$ref": "#/$defs/ToolStep"
+                  }
+                }
+              },
+              {
+                "description": "A silent host reset and the transaction it dropped.",
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "host",
+                  "state",
+                  "dropped"
+                ],
+                "properties": {
+                  "host": {
+                    "const": "reset"
+                  },
+                  "state": {
+                    "type": "string",
+                    "minLength": 1
+                  },
+                  "dropped": {
+                    "oneOf": [
+                      {
+                        "$ref": "#/$defs/TransactionRef"
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  }
+                }
+              },
+              {
+                "description": "The host persists the runner (`into_parts`) and resumes it with a fresh host; nothing is reported and the gesture continues.",
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "host",
+                  "state"
+                ],
+                "properties": {
+                  "host": {
+                    "const": "resume"
+                  },
+                  "state": {
+                    "type": "string",
+                    "minLength": 1
+                  }
+                }
+              }
+            ]
+          }
+        }
+      }
+    },
+    "TransactionLawFixture": {
+      "title": "TransactionLawFixture",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schema",
+        "states",
+        "yieldKinds",
+        "refusals",
+        "abortReasons",
+        "matrix",
+        "cases",
+        "ids",
+        "gesture",
+        "invariants"
+      ],
+      "properties": {
+        "schema": {
+          "const": "semio.framework.tool-machine.transaction-law.v1"
+        },
+        "states": {
+          "type": "array",
+          "minItems": 3,
+          "maxItems": 3,
+          "items": {
+            "$ref": "#/$defs/ToolTransactionState"
+          }
+        },
+        "yieldKinds": {
+          "type": "array",
+          "minItems": 4,
+          "maxItems": 4,
+          "items": {
+            "$ref": "#/$defs/ToolYieldKind"
+          }
+        },
+        "refusals": {
+          "type": "array",
+          "minItems": 2,
+          "maxItems": 2,
+          "items": {
+            "$ref": "#/$defs/ToolRefusal"
+          }
+        },
+        "abortReasons": {
+          "type": "array",
+          "minItems": 6,
+          "maxItems": 6,
+          "items": {
+            "$ref": "#/$defs/ToolAbortReason"
+          }
+        },
+        "matrix": {
+          "type": "array",
+          "minItems": 12,
+          "maxItems": 12,
+          "items": {
+            "oneOf": [
+              {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "from",
+                  "yield",
+                  "to"
+                ],
+                "properties": {
+                  "from": {
+                    "$ref": "#/$defs/ToolTransactionState"
+                  },
+                  "yield": {
+                    "$ref": "#/$defs/ToolYieldKind"
+                  },
+                  "to": {
+                    "$ref": "#/$defs/ToolTransactionState"
+                  }
+                }
+              },
+              {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "from",
+                  "yield",
+                  "refusal"
+                ],
+                "properties": {
+                  "from": {
+                    "$ref": "#/$defs/ToolTransactionState"
+                  },
+                  "yield": {
+                    "$ref": "#/$defs/ToolYieldKind"
+                  },
+                  "refusal": {
+                    "$ref": "#/$defs/ToolRefusal"
+                  }
+                }
+              }
+            ]
+          }
+        },
+        "cases": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "name",
+              "transaction",
+              "yields",
+              "expect"
+            ],
+            "properties": {
+              "name": {
+                "type": "string",
+                "minLength": 1
+              },
+              "transaction": {
+                "$ref": "#/$defs/TransactionRef"
+              },
+              "yields": {
+                "type": "array",
+                "items": {
+                  "$ref": "#/$defs/ToolYield"
+                }
+              },
+              "expect": {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "state",
+                  "entries",
+                  "refused"
+                ],
+                "properties": {
+                  "state": {
+                    "$ref": "#/$defs/ToolTransactionState"
+                  },
+                  "entries": {
+                    "$ref": "#/$defs/TransactionEntries"
+                  },
+                  "refused": {
+                    "description": "Indices of the yields the closed transaction refused.",
+                    "type": "array",
+                    "items": {
+                      "$ref": "#/$defs/U64"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "ids": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "actor",
+              "clock",
+              "tool",
+              "id"
+            ],
+            "properties": {
+              "actor": {
+                "type": "string"
+              },
+              "clock": {
+                "$ref": "#/$defs/HybridLogicalTimestamp"
+              },
+              "tool": {
+                "$ref": "#/$defs/ToolId"
+              },
+              "id": {
+                "$ref": "#/$defs/TransactionId"
+              }
+            }
+          }
+        },
+        "gesture": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "tool",
+            "actor",
+            "input",
+            "resume",
+            "variants"
+          ],
+          "properties": {
+            "tool": {
+              "$ref": "#/$defs/ToolId"
+            },
+            "actor": {
+              "type": "string"
+            },
+            "input": {
+              "$ref": "#/$defs/GestureInput"
+            },
+            "resume": {
+              "description": "Resume admission over the drag chart: a snapshot in `state` (reached by driving the chart) with no, an open, a committed or an aborted transaction; `ok` or the refusal.",
+              "type": "array",
+              "minItems": 1,
+              "items": {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "state",
+                  "transaction",
+                  "expect"
+                ],
+                "properties": {
+                  "state": {
+                    "type": "string",
+                    "minLength": 1
+                  },
+                  "transaction": {
+                    "enum": [
+                      "none",
+                      "open",
+                      "committed",
+                      "aborted"
+                    ]
+                  },
+                  "expect": {
+                    "oneOf": [
+                      {
+                        "const": "ok"
+                      },
+                      {
+                        "$ref": "#/$defs/ToolRefusal"
+                      }
+                    ]
+                  }
+                }
+              }
+            },
+            "variants": {
+              "type": "array",
+              "minItems": 1,
+              "items": {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "chart",
+                  "scenarios"
+                ],
+                "properties": {
+                  "chart": {
+                    "$ref": "#/$defs/GestureChart"
+                  },
+                  "scenarios": {
+                    "type": "array",
+                    "minItems": 1,
+                    "items": {
+                      "$ref": "#/$defs/GestureScenario"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "invariants": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "id",
+              "statement"
+            ],
+            "properties": {
+              "id": {
+                "type": "string",
+                "minLength": 1
+              },
+              "statement": {
+                "type": "string",
+                "minLength": 1
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}

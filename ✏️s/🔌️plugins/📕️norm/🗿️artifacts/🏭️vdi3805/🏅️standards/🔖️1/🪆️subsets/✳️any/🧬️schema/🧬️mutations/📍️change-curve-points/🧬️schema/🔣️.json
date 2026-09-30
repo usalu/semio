@@ -10,26 +10,42 @@
   ],
   "properties": {
     "id": {
-      "type": "string"
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Characteristic curve",
+          "de": "Kennlinie"
+        },
+        "description": {
+          "en": "The characteristic curve this mutation addresses.",
+          "de": "Die Kennlinie, die diese Mutation adressiert."
+        },
+        "ref": {
+          "kind": "curve"
+        },
+        "group": "target",
+        "order": 10
+      }
     },
     "newPoints": {
       "type": "array",
       "items": {
-        "title": "CurvePoint",
-        "type": "object",
-        "additionalProperties": false,
-        "required": [
-          "x",
-          "y"
-        ],
-        "properties": {
-          "x": {
-            "type": "number"
-          },
-          "y": {
-            "type": "number"
-          }
-        }
+        "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/vdi3805/snapshot.json#/$defs/CurvePoint"
+      },
+      "x-semio-ui": {
+        "role": "value",
+        "label": {
+          "en": "Curve points",
+          "de": "Kennlinienpunkte"
+        },
+        "description": {
+          "en": "Ordered (x, y) points in the curve's units.",
+          "de": "Geordnete (x, y)-Punkte in den Einheiten der Kennlinie."
+        },
+        "group": "curve",
+        "order": 20
       }
     }
   }

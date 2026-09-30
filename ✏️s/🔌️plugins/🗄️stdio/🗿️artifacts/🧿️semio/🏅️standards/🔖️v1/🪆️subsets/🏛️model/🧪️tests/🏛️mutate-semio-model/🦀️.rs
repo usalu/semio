@@ -112,8 +112,8 @@ mod subject {
     fn decode_geometry_ref(json: &Json) -> GeometryRef {
         match json.str("kind").as_str() {
             "none" => GeometryRef::None,
-            "brep" => GeometryRef::Brep { brep_id: json.str("brep_id") },
-            "mesh" => GeometryRef::Mesh { mesh_id: json.str("mesh_id") },
+            "brep" => GeometryRef::Brep { brep_id: json.str("brepId") },
+            "mesh" => GeometryRef::Mesh { mesh_id: json.str("meshId") },
             other => panic!("mutate-semio-model: unknown geometry reference {other:?}"),
         }
     }
@@ -264,8 +264,8 @@ mod subject {
     fn geometry_ref_json(geometry: &GeometryRef) -> Json {
         match geometry {
             GeometryRef::None => object(vec![("kind", text("none"))]),
-            GeometryRef::Brep { brep_id } => object(vec![("kind", text("brep")), ("brep_id", text(brep_id))]),
-            GeometryRef::Mesh { mesh_id } => object(vec![("kind", text("mesh")), ("mesh_id", text(mesh_id))]),
+            GeometryRef::Brep { brep_id } => object(vec![("kind", text("brep")), ("brepId", text(brep_id))]),
+            GeometryRef::Mesh { mesh_id } => object(vec![("kind", text("mesh")), ("meshId", text(mesh_id))]),
         }
     }
     fn pset_value_json(value: &PsetValue) -> Json {

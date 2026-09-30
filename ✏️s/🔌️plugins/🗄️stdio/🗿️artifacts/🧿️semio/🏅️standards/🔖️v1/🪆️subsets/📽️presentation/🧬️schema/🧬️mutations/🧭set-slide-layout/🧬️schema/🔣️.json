@@ -5,9 +5,14 @@
   "type": "object",
   "additionalProperties": false,
   "required": [
+    "mutation",
     "index"
   ],
   "properties": {
+    "mutation": {
+      "const": "setSlideLayout",
+      "description": "Aggregate discriminator spliced in by SemioPresentationMutation; absent when the payload stands alone."
+    },
     "index": {
       "type": "integer",
       "minimum": 0
@@ -20,11 +25,18 @@
         {
           "type": "null"
         }
-      ]
-    },
-    "mutation": {
-      "const": "setSlideLayout",
-      "description": "Aggregate discriminator spliced in by SemioPresentationMutation; absent when the payload stands alone."
+      ],
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Slide layout",
+          "de": "Folienlayout"
+        },
+        "ref": {
+          "kind": "layout"
+        }
+      }
     }
   }
 }

@@ -4,12 +4,29 @@
   "title": "UnbindInput",
   "type": "object",
   "properties": {
-    "input_id": {
-      "type": "string"
+    "operation": {
+      "const": "unbindInput"
+    },
+    "inputId": {
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Input",
+          "de": "Eingang"
+        },
+        "ref": {
+          "kind": "input"
+        },
+        "group": "target",
+        "order": 10
+      }
     }
   },
   "required": [
-    "input_id"
+    "operation",
+    "inputId"
   ],
   "additionalProperties": false
 }

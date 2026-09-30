@@ -5,5 +5,5 @@
   "type": "object",
   "additionalProperties": false,
   "required": ["camera"],
-  "properties": { "camera": { "$ref": "https://json.schemas.assets.semio-tech.com/app/procedural/3d/config/schema.json#/$defs/Generation3dPreviewCamera" } }
+  "properties": { "camera": { "$ref": "https://json.schemas.assets.semio-tech.com/app/procedural/3d/config/schema.json#/$defs/Generation3dPreviewCamera", "x-semio-ui": {"role": "value", "label": {"en": "Preview camera", "de": "Vorschaukamera"}, "description": {"en": "Camera of the 3D preview.", "de": "Kamera der 3D-Vorschau."}, "group": "camera", "order": 10} } }
 }

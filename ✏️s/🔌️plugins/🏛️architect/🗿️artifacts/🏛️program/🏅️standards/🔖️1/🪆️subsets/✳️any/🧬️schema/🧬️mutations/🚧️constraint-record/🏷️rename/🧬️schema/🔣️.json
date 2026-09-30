@@ -5,16 +5,52 @@
   "type": "object",
   "additionalProperties": false,
   "required": [
+    "mutation",
     "id",
     "newName"
   ],
   "properties": {
+    "mutation": {
+      "const": "renameConstraintRecord"
+    },
     "id": {
-      "type": "integer",
-      "minimum": 0
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Constraint",
+          "de": "Randbedingung"
+        },
+        "description": {
+          "en": "The constraint to rename.",
+          "de": "Umzubenennender Eintrag vom Typ „Randbedingung“."
+        },
+        "ref": {
+          "kind": "constraintRecord",
+          "domain": "program",
+          "granularity": "entity"
+        },
+        "group": "target",
+        "order": 10
+      }
     },
     "newName": {
-      "type": "string"
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "text",
+        "role": "value",
+        "label": {
+          "en": "New Name",
+          "de": "Neuer Name"
+        },
+        "description": {
+          "en": "New name of the constraint.",
+          "de": "Neuer Name des Eintrags vom Typ „Randbedingung“."
+        },
+        "group": "identity",
+        "order": 20
+      }
     }
   }
 }

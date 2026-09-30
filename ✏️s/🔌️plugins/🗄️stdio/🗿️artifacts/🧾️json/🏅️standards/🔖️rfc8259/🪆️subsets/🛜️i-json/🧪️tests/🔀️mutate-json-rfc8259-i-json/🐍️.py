@@ -42,7 +42,6 @@ MAX_SAFE_INTEGER_MAGNITUDE = 9007199254740991
 #: a Rust crate this Python host never links. The contract phase fails with
 #: `mutation-kind-uncovered`/`mutation-kind-undeclared` if this list drifts from either.
 KINDS = [
-    "no-mutation",
     "set-snapshot",
     "set-top-level",
     "upsert-member",
@@ -122,8 +121,8 @@ def document(ctx: Context):
 
 
 def spec(ctx: Context):
-    """📄️ The scenario's own `{"kind": ..., "params": ...}` doc string, decoded with the same hooks so
-    a number written in the feature table is a `Decimal` exactly as one read from the document is."""
+    """📄️ The scenario's own `{"kind": ..., "params": ...}` doc string — `params` is the leaf wire payload the leaf
+    payload schema describes — decoded with the same hooks so every number in it is a `Decimal`."""
     for step in ctx.scenario["steps"]:
         if step.get("docString"):
             return parse(step["docString"])
@@ -133,13 +132,64 @@ def spec(ctx: Context):
 # endregion 🔖️Codec
 
 
+# region 🔖️Wire
+def plain_value(wire):
+    """🌳 A tagged `JsonValue` wire value (`{"kind": "null"|"bool"|"number"|"string"|"array"|"object", ...}`, the
+    schema's own shape) into the reference's decoded model; a number keeps its verbatim lexeme as a `Decimal`."""
+    kind = wire["kind"]
+    if kind == "null":
+        return None
+    if kind == "bool":
+        return wire["value"]
+    if kind == "number":
+        return decimal.Decimal(wire["lexeme"])
+    if kind == "string":
+        return wire["value"]
+    if kind == "array":
+        return [plain_value(item) for item in wire["items"]]
+    if kind == "object":
+        return _pairs_hook([(member["key"], plain_value(member["value"])) for member in wire["members"]])
+    raise AssertionError("JsonValue wire: unrecognised kind %r" % kind)
+
+
+def wire_value(value):
+    """🌳 The reverse of `plain_value`: the reference's decoded model as the tagged `JsonValue` wire."""
+    if value is None:
+        return {"kind": "null"}
+    if isinstance(value, bool):
+        return {"kind": "bool", "value": value}
+    if isinstance(value, decimal.Decimal):
+        return {"kind": "number", "lexeme": str(value)}
+    if isinstance(value, str):
+        return {"kind": "string", "value": value}
+    if isinstance(value, list):
+        return {"kind": "array", "items": [wire_value(item) for item in value]}
+    return {"kind": "object", "members": [{"key": name, "value": wire_value(item)} for name, item in value.items()]}
+
+
+def wire_root(value):
+    """🌳 A decoded document root as the `JsonIJsonRoot` wire (`object` or `array` only, RFC 7493 §2.1)."""
+    wire = wire_value(value)
+    if wire["kind"] not in ("object", "array"):
+        raise AssertionError("RFC 7493 §2.1: a scalar document root is unrepresentable")
+    return wire
+
+
+def wire_path(path):
+    """🧭️ A navigation path as `JsonPathSegment` wire values."""
+    return [{"kind": "index", "value": segment} if isinstance(segment, int) else {"kind": "key", "value": segment} for segment in path]
+
+
+# endregion 🔖️Wire
+
+
 # region 🔖️Navigation
 def resolve(root, path):
     """🔎️ Walks `path` (a member name or an array index per step) and returns the addressed node."""
     node = root
     for segment in path:
-        if isinstance(segment, decimal.Decimal) or isinstance(segment, int):
-            index = int(segment)
+        if isinstance(segment, int):
+            index = segment
             if not isinstance(node, list) or index >= len(node):
                 raise AssertionError("path segment %r does not address an array element" % segment)
             node = node[index]
@@ -151,7 +201,8 @@ def resolve(root, path):
 
 
 def path_of(params) -> list:
-    return list(params.get("path", []))
+    """🧭️ The `path` wire (`JsonPathSegment`s) as member names and integer array indices."""
+    return [int(segment["value"]) if segment["kind"] == "index" else segment["value"] for segment in params.get("path", [])]
 
 
 # endregion 🔖️Navigation
@@ -165,31 +216,20 @@ def apply_mutation(root, mutation):
     kind = mutation["kind"]
     params = mutation.get("params") or {}
 
-    if kind == "no-mutation":
-        return root
-
     if kind == "set-snapshot":
-        return params["value"]
+        return plain_value(params["snapshot"]["value"])
 
     if kind == "set-top-level":
-        if "object" in params:
-            new_root = params["object"]
-            if not isinstance(new_root, dict):
-                raise AssertionError("RFC 7493 §2.1: set-top-level's `object` payload is not an object")
-            return new_root
-        if "array" in params:
-            new_root = params["array"]
-            if not isinstance(new_root, list):
-                raise AssertionError("RFC 7493 §2.1: set-top-level's `array` payload is not an array")
-            return new_root
-        raise AssertionError("RFC 7493 §2.1: set-top-level carries neither an `object` nor an `array` payload — a scalar document root is unrepresentable")
+        if params["root"]["kind"] not in ("object", "array"):
+            raise AssertionError("RFC 7493 §2.1: set-top-level's root is neither an object nor an array — a scalar document root is unrepresentable")
+        return plain_value(params["root"])
 
     target = resolve(root, path_of(params))
 
     if kind == "upsert-member":
         if not isinstance(target, dict):
             raise AssertionError("upsert-member: the addressed path is not an object")
-        target[params["key"]] = params["value"]
+        target[params["key"]] = plain_value(params["value"])
         return root
 
     if kind == "remove-member":
@@ -229,7 +269,7 @@ def apply_mutation(root, mutation):
     if kind == "insert-array-element":
         if not isinstance(target, list):
             raise AssertionError("insert-array-element: the addressed path is not an array")
-        target.insert(min(int(params["index"]), len(target)), params["value"])
+        target.insert(min(int(params["index"]), len(target)), plain_value(params["value"]))
         return root
 
     if kind == "remove-array-element":
@@ -249,34 +289,31 @@ def replace_at(root, path, value):
         return value
     parent = resolve(root, path[:-1])
     last = path[-1]
-    if isinstance(last, (decimal.Decimal, int)) and not isinstance(last, str):
-        parent[int(last)] = value
+    if isinstance(last, int):
+        parent[last] = value
     else:
         parent[last] = value
     return root
 
 
 def inverse_spec(original, mutation):
-    """↩️ The undo, recomputed INDEPENDENTLY by reading the pre-mutation document — never by asking
-    the subject for its own inverse, which would compare an implementation with itself."""
+    """↩️ The undo — leaf wire payloads, like every row — recomputed INDEPENDENTLY by reading the pre-mutation
+    document, never by asking the subject for its own inverse, which would compare an implementation with itself."""
     kind = mutation["kind"]
     params = mutation.get("params") or {}
     path = path_of(params)
+    snapshot = {"kind": "set-snapshot", "params": {"snapshot": {"schema": "stdio.json", "value": wire_value(original)}}}
 
-    if kind in ("no-mutation",):
-        return {"kind": "no-mutation", "params": {}}
     if kind == "set-snapshot":
-        return {"kind": "set-snapshot", "params": {"value": original}}
+        return snapshot
     if kind == "set-top-level":
-        if isinstance(original, dict):
-            return {"kind": "set-top-level", "params": {"object": original}}
-        return {"kind": "set-top-level", "params": {"array": original}}
+        return {"kind": "set-top-level", "params": {"root": wire_root(original)}}
     if kind == "upsert-member":
         parent = resolve(original, path)
         key = params["key"]
         if key in parent:
-            return {"kind": "upsert-member", "params": {"path": path, "key": key, "value": parent[key]}}
-        return {"kind": "remove-member", "params": {"path": path, "key": key}}
+            return {"kind": "upsert-member", "params": {"path": wire_path(path), "key": key, "value": wire_value(parent[key])}}
+        return {"kind": "remove-member", "params": {"path": wire_path(path), "key": key}}
     if kind == "remove-member":
         # ⚠️ Member order is state in this profile and `upsert-member` APPENDS an absent key, so it
         # only undoes the removal of the LAST member; anything else degrades to the whole-snapshot
@@ -285,20 +322,20 @@ def inverse_spec(original, mutation):
         key = params["key"]
         keys = list(parent.keys())
         if keys and keys[-1] == key:
-            return {"kind": "upsert-member", "params": {"path": path, "key": key, "value": parent[key]}}
-        return {"kind": "set-snapshot", "params": {"value": original}}
+            return {"kind": "upsert-member", "params": {"path": wire_path(path), "key": key, "value": wire_value(parent[key])}}
+        return snapshot
     if kind == "rename-member":
-        return {"kind": "rename-member", "params": {"path": path, "from": params["to"], "to": params["from"]}}
+        return {"kind": "rename-member", "params": {"path": wire_path(path), "from": params["to"], "to": params["from"]}}
     if kind == "set-safe-number":
-        return {"kind": "set-safe-number", "params": {"path": path, "lexeme": str(resolve(original, path))}}
+        return {"kind": "set-safe-number", "params": {"path": wire_path(path), "lexeme": str(resolve(original, path))}}
     if kind == "set-string":
-        return {"kind": "set-string", "params": {"path": path, "value": resolve(original, path)}}
+        return {"kind": "set-string", "params": {"path": wire_path(path), "value": resolve(original, path)}}
     if kind == "insert-array-element":
         target = resolve(original, path)
-        return {"kind": "remove-array-element", "params": {"path": path, "index": min(int(params["index"]), len(target))}}
+        return {"kind": "remove-array-element", "params": {"path": wire_path(path), "index": min(int(params["index"]), len(target))}}
     if kind == "remove-array-element":
         index = int(params["index"])
-        return {"kind": "insert-array-element", "params": {"path": path, "index": index, "value": resolve(original, path)[index]}}
+        return {"kind": "insert-array-element", "params": {"path": wire_path(path), "index": index, "value": wire_value(resolve(original, path)[index])}}
     raise AssertionError("no inverse rule for kind %r" % kind)
 
 
@@ -324,15 +361,13 @@ def mutate(ctx: Context) -> Outcome:
     which kind runs, which is why one function covers all ten.
 
     A mutation that silently changes nothing would still hand back a projection the subject could
-    match, so every kind except `no-mutation` is required here to actually move the document. That is
-    an assertion the reference can make ALONE, without waiting for the subject phase."""
+    match, so every kind is required here to actually move the document. That is an assertion the
+    reference can make ALONE, without waiting for the subject phase."""
     original = document(ctx)
     forward = spec(ctx)
     mutated = apply_mutation(document(ctx), forward)
-    if forward["kind"] != "no-mutation" and plain(mutated) == plain(original):
+    if plain(mutated) == plain(original):
         raise AssertionError("%s left the document unchanged — a mutation that applies to nothing is a silent no-op, not a pass" % forward["kind"])
-    if forward["kind"] == "no-mutation" and plain(mutated) != plain(original):
-        raise AssertionError("no-mutation changed the document")
     return Outcome(projected(mutated), serialize(mutated))
 
 
@@ -434,7 +469,7 @@ def identity_round_trip(ctx: Context) -> Outcome:
 def adapter() -> Adapter:
     """🧭️ Registration entry point the host calls. Handlers are registered under the Scenario Outline base
     ids, which the host resolves for every Examples row, and plain scenarios under their own ids."""
-    return Adapter("python").oracle("mutate", mutate).oracle("no-mutation-baseline-mutate", mutate).oracle("inverse", inverse).oracle("no-mutation-baseline-inverse", inverse).oracle("i-json-conformance", i_json_conformance).oracle("identity-round-trip", identity_round_trip)
+    return Adapter("python").oracle("mutate", mutate).oracle("inverse", inverse).oracle("i-json-conformance", i_json_conformance).oracle("identity-round-trip", identity_round_trip)
 
 
 # endregion 🔖️Registration

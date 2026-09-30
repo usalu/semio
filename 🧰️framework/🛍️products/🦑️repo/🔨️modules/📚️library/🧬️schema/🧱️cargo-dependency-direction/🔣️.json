@@ -1,0 +1,285 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schemaVersion",
+    "policy",
+    "cases",
+    "corruptions"
+  ],
+  "properties": {
+    "schemaVersion": {
+      "const": 1
+    },
+    "policy": {
+      "$ref": "#/$defs/Policy"
+    },
+    "cases": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "id",
+          "packages",
+          "violations",
+          "problems"
+        ],
+        "properties": {
+          "id": {
+            "type": "string",
+            "minLength": 1
+          },
+          "packages": {
+            "type": "array",
+            "minItems": 1,
+            "items": {
+              "$ref": "#/$defs/Package"
+            }
+          },
+          "violations": {
+            "type": "array",
+            "items": {
+              "$ref": "#/$defs/Violation"
+            }
+          },
+          "problems": {
+            "type": "array",
+            "items": {
+              "$ref": "#/$defs/Problem"
+            }
+          }
+        }
+      }
+    },
+    "corruptions": {
+      "type": "array",
+      "uniqueItems": true,
+      "items": {
+        "enum": [
+          "missing-package",
+          "missing-member",
+          "missing-local-target",
+          "missing-dependency",
+          "wrong-kind",
+          "wrong-platform",
+          "wrong-optional",
+          "wrong-role",
+          "duplicate-package",
+          "unclassified-owner"
+        ]
+      }
+    }
+  },
+  "$defs": {
+    "Policy": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "areaLayers",
+        "roles",
+        "rules"
+      ],
+      "properties": {
+        "areaLayers": {
+          "type": "object",
+          "minProperties": 1,
+          "additionalProperties": {
+            "enum": [
+              "framework",
+              "implementation",
+              "repo-wide"
+            ]
+          }
+        },
+        "roles": {
+          "type": "array",
+          "minItems": 1,
+          "uniqueItems": true,
+          "items": {
+            "type": "string",
+            "minLength": 1
+          }
+        },
+        "rules": {
+          "type": "object",
+          "minProperties": 1,
+          "additionalProperties": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "fromRoles",
+              "toRoles"
+            ],
+            "properties": {
+              "fromRoles": {
+                "type": "array",
+                "minItems": 1,
+                "uniqueItems": true,
+                "items": {
+                  "type": "string",
+                  "minLength": 1
+                }
+              },
+              "toRoles": {
+                "type": "array",
+                "minItems": 1,
+                "uniqueItems": true,
+                "items": {
+                  "type": "string",
+                  "minLength": 1
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "Dependency": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "name",
+        "alias",
+        "owner",
+        "kind",
+        "optional",
+        "platform"
+      ],
+      "properties": {
+        "name": {
+          "type": "string",
+          "minLength": 1
+        },
+        "alias": {
+          "type": "string",
+          "minLength": 1
+        },
+        "owner": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "kind": {
+          "enum": [
+            "normal",
+            "dev",
+            "build"
+          ]
+        },
+        "optional": {
+          "type": "boolean"
+        },
+        "platform": {
+          "type": [
+            "string",
+            "null"
+          ]
+        }
+      }
+    },
+    "Package": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "name",
+        "owner",
+        "role",
+        "dependencies"
+      ],
+      "properties": {
+        "name": {
+          "type": "string",
+          "minLength": 1
+        },
+        "owner": {
+          "type": "string",
+          "minLength": 1
+        },
+        "role": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "dependencies": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/Dependency"
+          }
+        }
+      }
+    },
+    "Violation": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "rule",
+        "from",
+        "to",
+        "alias",
+        "kind",
+        "optional",
+        "platform"
+      ],
+      "properties": {
+        "rule": {
+          "type": "string",
+          "minLength": 1
+        },
+        "from": {
+          "type": "string",
+          "minLength": 1
+        },
+        "to": {
+          "type": "string",
+          "minLength": 1
+        },
+        "alias": {
+          "type": "string",
+          "minLength": 1
+        },
+        "kind": {
+          "enum": [
+            "normal",
+            "dev",
+            "build"
+          ]
+        },
+        "optional": {
+          "type": "boolean"
+        },
+        "platform": {
+          "type": [
+            "string",
+            "null"
+          ]
+        }
+      }
+    },
+    "Problem": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "code",
+        "owner"
+      ],
+      "properties": {
+        "code": {
+          "enum": [
+            "missing-role",
+            "unknown-role",
+            "unclassified-owner"
+          ]
+        },
+        "owner": {
+          "type": "string",
+          "minLength": 1
+        }
+      }
+    }
+  }
+}

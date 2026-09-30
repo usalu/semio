@@ -10,6 +10,7 @@ use super::*;
 pub struct SetAttribute {
     pub(crate) path: NodePath,
     pub(crate) name: String,
+    #[value(default, skip_serializing_if = "Option::is_none", deserialize_with = "deserialize_double_option")]
     pub(crate) value: Option<Option<String>>,
 }
 

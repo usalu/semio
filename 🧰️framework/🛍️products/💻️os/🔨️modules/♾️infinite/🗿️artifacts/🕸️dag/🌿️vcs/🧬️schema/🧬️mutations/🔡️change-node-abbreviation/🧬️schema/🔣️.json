@@ -2,33 +2,52 @@
   "$schema": "http://json-schema.org/draft-07/schema#",
   "$id": "https://json.schemas.assets.semio-tech.com/os/infinite/artifacts/dag/vcs/mutation/change-node-abbreviation/schema.json",
   "title": "ChangeNodeAbbreviation",
-  "type": "object",
-  "$defs": {
-    "Payload": {
-      "type": "object",
-      "required": [
-        "id",
-        "newAbbreviation"
-      ],
-      "properties": {
-        "id": {
-          "type": "string"
-        },
-        "newAbbreviation": {
-          "type": "string"
-        }
-      }
-    }
-  },
-  "allOf": [
-    {
-      "$ref": "#/$defs/Payload"
-    }
-  ],
   "propertyNames": {
     "enum": [
+      "operation",
       "id",
       "newAbbreviation"
     ]
+  },
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "operation",
+    "id",
+    "newAbbreviation"
+  ],
+  "properties": {
+    "operation": {
+      "const": "changeNodeAbbreviation"
+    },
+    "id": {
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Node",
+          "de": "Knoten"
+        },
+        "ref": {
+          "kind": "node"
+        },
+        "group": "target",
+        "order": 10
+      }
+    },
+    "newAbbreviation": {
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "text",
+        "role": "value",
+        "label": {
+          "en": "Abbreviation",
+          "de": "Abkürzung"
+        },
+        "group": "value",
+        "order": 20
+      }
+    }
   }
 }

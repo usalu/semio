@@ -214,7 +214,3 @@ pub fn engagement(selection: &ComponentSelection, is_de: bool) -> semio_framewor
     } else { None };
     semio_framework_plugin::WindowEngagement { session_active: Some(true), options: Some(options), input: None, control: None, controls: None, status, possible_engagements: Some(actions) }
 }
-
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;

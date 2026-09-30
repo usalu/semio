@@ -5,20 +5,39 @@
   "type": "object",
   "additionalProperties": false,
   "required": [
+    "mutation",
     "index",
     "linetype"
   ],
   "properties": {
-    "index": {
-      "type": "integer",
-      "minimum": 0
-    },
-    "linetype": {
-      "$ref": "#/$defs/DxfLinetype"
-    },
     "mutation": {
       "const": "insertLinetype",
       "description": "Aggregate discriminator spliced in by DxfMutation; absent when the payload stands alone."
+    },
+    "index": {
+      "type": "integer",
+      "minimum": 0,
+      "x-semio-ui": {
+        "widget": "stepper",
+        "label": {
+          "en": "Insert position",
+          "de": "Einfügeposition"
+        },
+        "precision": 0,
+        "group": "target",
+        "order": 10
+      }
+    },
+    "linetype": {
+      "$ref": "#/$defs/DxfLinetype",
+      "x-semio-ui": {
+        "label": {
+          "en": "Linetype",
+          "de": "Linientyp"
+        },
+        "group": "value",
+        "order": 20
+      }
     }
   },
   "$defs": {
@@ -37,7 +56,17 @@
         "flags": {
           "type": "integer",
           "minimum": -2147483648,
-          "maximum": 2147483647
+          "maximum": 2147483647,
+          "x-semio-ui": {
+            "label": {
+              "en": "Standard flags",
+              "de": "Standard-Flags"
+            },
+            "description": {
+              "en": "Group code 70.",
+              "de": "Gruppencode 70."
+            }
+          }
         },
         "description": {
           "type": "string"
@@ -59,6 +88,12 @@
             "additionalItems": false,
             "minItems": 2,
             "maxItems": 2
+          },
+          "x-semio-ui": {
+            "label": {
+              "en": "Unknown group codes",
+              "de": "Unbekannte Gruppencodes"
+            }
           }
         }
       }

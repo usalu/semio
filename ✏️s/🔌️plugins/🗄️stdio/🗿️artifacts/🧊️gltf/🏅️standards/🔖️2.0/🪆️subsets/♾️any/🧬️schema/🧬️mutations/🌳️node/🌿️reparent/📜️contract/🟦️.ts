@@ -1,6 +1,0 @@
-/** 🧪️ Mutation-law probe for move-node-parent. */
-import type { GltfSnapshot } from '../../../📸️snapshot/🟦️.ts';
-import { applyGltfReparentNode, type GltfReparentNodePayload } from './🟦️';
-import { deriveGltfReparentNodeDiff } from './🟦️';
-import { deriveGltfReparentNodeInverse } from './🟦️';
-export const assertGltfReparentNodeLaws = (base: GltfSnapshot, payload: GltfReparentNodePayload) => { const first = applyGltfReparentNode(base, payload); if (!first.accepted) return first; const replay = applyGltfReparentNode(base, payload); if (!replay.accepted || JSON.stringify(first.snapshot) !== JSON.stringify(replay.snapshot) || JSON.stringify(first.diff) !== JSON.stringify(replay.diff)) throw new Error('move-node-parent replay is non-deterministic'); const direct = deriveGltfReparentNodeDiff(base, payload); const inverse = deriveGltfReparentNodeInverse(base, payload); if (!direct.accepted || !inverse.accepted || JSON.stringify(direct.touchedPaths) !== JSON.stringify(first.touchedPaths) || JSON.stringify(inverse.touchedPaths) !== JSON.stringify(first.touchedPaths)) throw new Error('move-node-parent diff or inverse law failed'); return { first, direct, inverse }; };

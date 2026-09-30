@@ -7067,10 +7067,9 @@ mod plugin_graph_tests;
 /// 🗂️ Host mirror of the guest `WireMutationRosterEntry` (contract §6's `contributor.
 /// list-artifact-mutations` roster row) — `semio-framework-plugin-host` does not depend on the
 /// guest SDK crate (same reasoning `ExtensionManifest` below already documents), so this is a
-/// field-for-field JSON-shape-identical local copy, decoded off the same `store::pack_rt::
-/// encode_wire_value`/`dsl::to_dsl_value` wire `list_artifact_mutations()` returns.
-#[derive(Clone, Debug, PartialEq, serde::Serialize, ToValue, serde::Deserialize, FromValue)]
-#[serde(rename_all = "camelCase")]
+/// field-for-field shape-identical local copy, decoded off the same `store::pack_rt::
+/// encode_wire_value`/`dsl::to_dsl_value` wire `list_artifact_mutations()` returns, `inputs` included.
+#[derive(Clone, Debug, PartialEq, ToValue, FromValue)]
 #[value(rename_all = "camelCase")]
 pub struct HostMutationRosterEntry {
     pub mutation_id: String,
@@ -7078,12 +7077,22 @@ pub struct HostMutationRosterEntry {
     pub entity: String,
     pub kind: String,
     pub record: String,
-    #[serde(default, skip_serializing_if = "Option::is_none")]
     #[value(default, skip_serializing_if = "Option::is_none")]
     pub contributor: Option<String>,
-    #[serde(default, skip_serializing_if = "Option::is_none")]
     #[value(default, skip_serializing_if = "Option::is_none")]
     pub artifact_kind: Option<String>,
+    pub inputs: HostMutationInputs,
+}
+
+/// 🎛️ Host mirror of the guest `WireMutationInputs`: the input descriptors a roster row's leaf payload schema declares
+/// (`semio_framework::mutation_input_defs`), the reason it declares none a user could edit, or `opaque` when the row
+/// publishes no payload schema (a contributed plan edits its target's own operations).
+#[derive(Clone, Debug, PartialEq, ToValue, FromValue)]
+#[value(tag = "status", rename_all = "camelCase", rename_all_fields = "camelCase")]
+pub enum HostMutationInputs {
+    Declared { inputs: Vec<semio_framework::ActionArgDef> },
+    Refused { error: semio_framework::InputSchemaError },
+    Opaque,
 }
 
 /// 🎞️ Host mirror of `WireArtifactMutationPlanRequest`/`Result` (contract §5.3's `contributor.

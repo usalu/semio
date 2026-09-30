@@ -5,80 +5,276 @@
   "type": "object",
   "additionalProperties": false,
   "required": [
+    "mutation",
     "part"
   ],
   "properties": {
+    "mutation": {
+      "const": "createPart"
+    },
     "part": {
       "title": "Puzzle5dPart",
       "type": "object",
       "additionalProperties": false,
       "required": [
-        "anchor",
         "grips",
         "id",
-        "part2d",
-        "part3d",
-        "partKind"
+        "2d",
+        "3d"
       ],
       "properties": {
         "id": {
-          "type": "string"
+          "type": "string",
+          "x-semio-ui": {
+            "widget": "text",
+            "role": "value",
+            "label": {
+              "en": "ID",
+              "de": "ID"
+            },
+            "description": {
+              "en": "Unique part id in this puzzle.",
+              "de": "Eindeutige Teil-ID in diesem Puzzle."
+            },
+            "group": "identity",
+            "order": 10
+          }
         },
         "partKind": {
-          "type": "string"
+          "type": "string",
+          "x-semio-ui": {
+            "widget": "text",
+            "role": "value",
+            "label": {
+              "en": "Part kind",
+              "de": "Teilart"
+            },
+            "description": {
+              "en": "Id of a kind from the kind catalog.",
+              "de": "ID einer Art aus dem Artenkatalog."
+            },
+            "group": "kind",
+            "order": 20
+          }
         },
         "anchor": {
           "type": "string",
           "enum": [
             "fixed",
             "derived"
-          ]
+          ],
+          "x-semio-ui": {
+            "widget": "segmented",
+            "role": "value",
+            "label": {
+              "en": "Anchor",
+              "de": "Verankerung"
+            },
+            "description": {
+              "en": "Fixed keeps the stored plane at a root; derived resets it to the default XY plane.",
+              "de": "Fest behält die gespeicherte Ebene an einer Wurzel; abgeleitet setzt sie auf die XY-Standardebene zurück."
+            },
+            "options": {
+              "fixed": {
+                "en": "Fixed",
+                "de": "Fest"
+              },
+              "derived": {
+                "en": "Derived",
+                "de": "Abgeleitet"
+              }
+            },
+            "group": "geometry",
+            "order": 30
+          }
         },
-        "part2d": {
+        "2d": {
           "title": "Puzzle5dPart2d",
           "type": "object",
           "additionalProperties": false,
           "required": [
-            "radius",
-            "shape",
-            "text",
             "x",
             "y"
           ],
           "properties": {
             "x": {
-              "type": "number"
+              "type": "number",
+              "x-semio-ui": {
+                "widget": "stepper",
+                "role": "value",
+                "label": {
+                  "en": "X",
+                  "de": "X"
+                },
+                "step": 1,
+                "precision": 2,
+                "snapSource": {
+                  "config": "gridFactor"
+                },
+                "group": "board",
+                "order": 10
+              }
             },
             "y": {
-              "type": "number"
+              "type": "number",
+              "x-semio-ui": {
+                "widget": "stepper",
+                "role": "value",
+                "label": {
+                  "en": "Y",
+                  "de": "Y"
+                },
+                "step": 1,
+                "precision": 2,
+                "snapSource": {
+                  "config": "gridFactor"
+                },
+                "group": "board",
+                "order": 20
+              }
             },
             "shape": {
-              "type": "string"
+              "type": "string",
+              "x-semio-ui": {
+                "widget": "text",
+                "role": "value",
+                "label": {
+                  "en": "Shape",
+                  "de": "Form"
+                },
+                "description": {
+                  "en": "circle or rectangle.",
+                  "de": "circle (Kreis) oder rectangle (Rechteck)."
+                },
+                "group": "board",
+                "order": 30
+              }
             },
             "radius": {
-              "type": "number"
+              "type": "number",
+              "exclusiveMinimum": 0,
+              "x-semio-ui": {
+                "widget": "stepper",
+                "role": "value",
+                "label": {
+                  "en": "Radius",
+                  "de": "Radius"
+                },
+                "step": 1,
+                "precision": 2,
+                "snapSource": {
+                  "config": "gridFactor"
+                },
+                "group": "board",
+                "order": 40
+              }
             },
             "width": {
-              "type": "number"
+              "type": "number",
+              "exclusiveMinimum": 0,
+              "x-semio-ui": {
+                "widget": "stepper",
+                "role": "value",
+                "label": {
+                  "en": "Width",
+                  "de": "Breite"
+                },
+                "step": 1,
+                "precision": 2,
+                "snapSource": {
+                  "config": "gridFactor"
+                },
+                "group": "board",
+                "order": 50
+              }
             },
             "height": {
-              "type": "number"
+              "type": "number",
+              "exclusiveMinimum": 0,
+              "x-semio-ui": {
+                "widget": "stepper",
+                "role": "value",
+                "label": {
+                  "en": "Height",
+                  "de": "Höhe"
+                },
+                "step": 1,
+                "precision": 2,
+                "snapSource": {
+                  "config": "gridFactor"
+                },
+                "group": "board",
+                "order": 60
+              }
             },
             "text": {
-              "type": "string"
+              "type": "string",
+              "x-semio-ui": {
+                "widget": "text",
+                "role": "value",
+                "label": {
+                  "en": "Text",
+                  "de": "Text"
+                },
+                "group": "appearance",
+                "order": 70
+              }
             },
             "iconKind": {
-              "type": "string"
+              "type": "string",
+              "x-semio-ui": {
+                "widget": "text",
+                "role": "value",
+                "label": {
+                  "en": "Icon",
+                  "de": "Symbol"
+                },
+                "group": "appearance",
+                "order": 80
+              }
             },
             "hidden": {
-              "type": "boolean"
+              "type": "boolean",
+              "x-semio-ui": {
+                "widget": "toggle",
+                "role": "value",
+                "label": {
+                  "en": "Hidden",
+                  "de": "Ausgeblendet"
+                },
+                "group": "state",
+                "order": 90
+              }
             },
             "locked": {
-              "type": "boolean"
+              "type": "boolean",
+              "x-semio-ui": {
+                "widget": "toggle",
+                "role": "value",
+                "label": {
+                  "en": "Locked",
+                  "de": "Gesperrt"
+                },
+                "group": "state",
+                "order": 100
+              }
             }
+          },
+          "x-semio-ui": {
+            "role": "value",
+            "label": {
+              "en": "Board",
+              "de": "Brett"
+            },
+            "description": {
+              "en": "How the part appears on the 2D board.",
+              "de": "Wie das Teil auf dem 2D-Brett erscheint."
+            },
+            "group": "board",
+            "order": 40
           }
         },
-        "part3d": {
+        "3d": {
           "title": "Puzzle5dPart3d",
           "type": "object",
           "additionalProperties": false,
@@ -92,10 +288,39 @@
                 "type": "number"
               },
               "minItems": 3,
-              "maxItems": 3
+              "maxItems": 3,
+              "x-semio-ui": {
+                "widget": "vector",
+                "role": "value",
+                "label": {
+                  "en": "Origin",
+                  "de": "Ursprung"
+                },
+                "unit": "m",
+                "step": 0.1,
+                "group": "pose",
+                "order": 10,
+                "snapSource": {
+                  "config": "gridSpacing"
+                }
+              }
             },
             "meshUrl": {
-              "type": "string"
+              "type": "string",
+              "x-semio-ui": {
+                "widget": "text",
+                "role": "value",
+                "label": {
+                  "en": "Mesh URL",
+                  "de": "Mesh-URL"
+                },
+                "description": {
+                  "en": "Address of the file, e.g. an https or data URL.",
+                  "de": "Adresse der Datei, z. B. eine https- oder data-URL."
+                },
+                "group": "source",
+                "order": 20
+              }
             },
             "orientation": {
               "type": "array",
@@ -103,14 +328,65 @@
                 "type": "number"
               },
               "minItems": 4,
-              "maxItems": 4
+              "maxItems": 4,
+              "x-semio-ui": {
+                "widget": "vector",
+                "role": "value",
+                "label": {
+                  "en": "Orientation",
+                  "de": "Orientierung"
+                },
+                "description": {
+                  "en": "Unit quaternion (x, y, z, w); (0, 0, 0, 1) is no rotation.",
+                  "de": "Einheitsquaternion (x, y, z, w); (0, 0, 0, 1) ist keine Drehung."
+                },
+                "step": 0.01,
+                "group": "pose",
+                "order": 30
+              }
             },
             "scale": {
-              "description": "any JSON value"
+              "description": "any JSON value",
+              "x-semio-ui": {
+                "role": "value",
+                "label": {
+                  "en": "Scale",
+                  "de": "Skalierung"
+                },
+                "description": {
+                  "en": "One factor for all three axes, or one factor per axis (x, y, z).",
+                  "de": "Ein Faktor für alle drei Achsen oder ein Faktor je Achse (x, y, z)."
+                },
+                "group": "pose",
+                "order": 40
+              }
             },
             "label": {
-              "type": "string"
+              "type": "string",
+              "x-semio-ui": {
+                "widget": "text",
+                "role": "value",
+                "label": {
+                  "en": "Label",
+                  "de": "Bezeichnung"
+                },
+                "group": "appearance",
+                "order": 50
+              }
             }
+          },
+          "x-semio-ui": {
+            "role": "value",
+            "label": {
+              "en": "World",
+              "de": "Welt"
+            },
+            "description": {
+              "en": "How the part appears in the 3D world.",
+              "de": "Wie das Teil in der 3D-Welt erscheint."
+            },
+            "group": "pose",
+            "order": 50
           }
         },
         "grips": {
@@ -120,46 +396,137 @@
             "type": "object",
             "additionalProperties": false,
             "required": [
-              "grip2d",
-              "grip3d",
-              "gripKind",
+              "2d",
+              "3d",
               "id"
             ],
             "properties": {
               "id": {
-                "type": "string"
+                "type": "string",
+                "x-semio-ui": {
+                  "widget": "text",
+                  "role": "value",
+                  "label": {
+                    "en": "ID",
+                    "de": "ID"
+                  },
+                  "description": {
+                    "en": "Id of the grip, unique on its part.",
+                    "de": "ID des Griffs, eindeutig an seinem Teil."
+                  },
+                  "group": "identity",
+                  "order": 10
+                }
               },
               "gripKind": {
-                "type": "string"
+                "type": "string",
+                "x-semio-ui": {
+                  "widget": "text",
+                  "role": "value",
+                  "label": {
+                    "en": "Grip kind",
+                    "de": "Griffart"
+                  },
+                  "description": {
+                    "en": "Id of a kind from the kind catalog.",
+                    "de": "ID einer Art aus dem Artenkatalog."
+                  },
+                  "group": "kind",
+                  "order": 20
+                }
               },
-              "grip2d": {
+              "2d": {
                 "title": "Puzzle5dGrip2d",
                 "type": "object",
                 "additionalProperties": false,
                 "required": [
-                  "angle",
-                  "gripKind",
-                  "radius"
+                  "angle"
                 ],
                 "properties": {
                   "angle": {
-                    "type": "number"
+                    "type": "number",
+                    "x-semio-ui": {
+                      "widget": "dial",
+                      "role": "value",
+                      "label": {
+                        "en": "Angle",
+                        "de": "Winkel"
+                      },
+                      "description": {
+                        "en": "Position on the part rim, counter-clockwise.",
+                        "de": "Position auf dem Teilrand, gegen den Uhrzeigersinn."
+                      },
+                      "unit": "rad",
+                      "displayUnit": "deg",
+                      "displayFactor": 57.29577951308232,
+                      "step": 0.017453292519943295,
+                      "precision": 4,
+                      "softMin": -3.141592653589793,
+                      "softMax": 3.141592653589793,
+                      "snaps": [
+                        -3.141592653589793,
+                        -1.5707963267948966,
+                        0,
+                        1.5707963267948966,
+                        3.141592653589793
+                      ],
+                      "group": "board",
+                      "order": 10
+                    }
                   },
                   "gripKind": {
-                    "type": "string"
+                    "type": "string",
+                    "x-semio-ui": {
+                      "widget": "text",
+                      "role": "value",
+                      "label": {
+                        "en": "Grip kind",
+                        "de": "Griffart"
+                      },
+                      "description": {
+                        "en": "Id of a kind from the kind catalog.",
+                        "de": "ID einer Art aus dem Artenkatalog."
+                      },
+                      "group": "kind",
+                      "order": 20
+                    }
                   },
                   "radius": {
-                    "type": "number"
+                    "type": "number",
+                    "x-semio-ui": {
+                      "widget": "stepper",
+                      "role": "value",
+                      "label": {
+                        "en": "Radius",
+                        "de": "Radius"
+                      },
+                      "step": 0.1,
+                      "precision": 2,
+                      "group": "board",
+                      "order": 30
+                    }
                   }
+                },
+                "x-semio-ui": {
+                  "role": "value",
+                  "label": {
+                    "en": "Board",
+                    "de": "Brett"
+                  },
+                  "description": {
+                    "en": "How the grip appears on the 2D board.",
+                    "de": "Wie der Griff auf dem 2D-Brett erscheint."
+                  },
+                  "group": "board",
+                  "order": 30
                 }
               },
-              "grip3d": {
+              "3d": {
                 "title": "Puzzle5dGrip3d",
                 "type": "object",
                 "additionalProperties": false,
                 "required": [
-                  "position",
-                  "radius"
+                  "position"
                 ],
                 "properties": {
                   "position": {
@@ -168,7 +535,26 @@
                       "type": "number"
                     },
                     "minItems": 3,
-                    "maxItems": 3
+                    "maxItems": 3,
+                    "x-semio-ui": {
+                      "widget": "vector",
+                      "role": "value",
+                      "label": {
+                        "en": "Position",
+                        "de": "Position"
+                      },
+                      "description": {
+                        "en": "Where the grip sits in the part's local frame.",
+                        "de": "Lage des Griffs im lokalen System des Teils."
+                      },
+                      "unit": "m",
+                      "step": 0.1,
+                      "group": "pose",
+                      "order": 10,
+                      "snapSource": {
+                        "config": "gridSpacing"
+                      }
+                    }
                   },
                   "direction": {
                     "type": "array",
@@ -176,24 +562,116 @@
                       "type": "number"
                     },
                     "minItems": 3,
-                    "maxItems": 3
+                    "maxItems": 3,
+                    "x-semio-ui": {
+                      "widget": "vector",
+                      "role": "value",
+                      "label": {
+                        "en": "Direction",
+                        "de": "Richtung"
+                      },
+                      "description": {
+                        "en": "Direction the grip points in.",
+                        "de": "Richtung, in die der Griff zeigt."
+                      },
+                      "step": 0.1,
+                      "group": "geometry",
+                      "order": 20
+                    }
                   },
                   "radius": {
-                    "type": "number"
+                    "type": "number",
+                    "x-semio-ui": {
+                      "widget": "stepper",
+                      "role": "value",
+                      "label": {
+                        "en": "Radius",
+                        "de": "Radius"
+                      },
+                      "unit": "m",
+                      "step": 0.01,
+                      "precision": 3,
+                      "group": "geometry",
+                      "order": 30
+                    }
                   },
                   "label": {
-                    "type": "string"
+                    "type": "string",
+                    "x-semio-ui": {
+                      "widget": "text",
+                      "role": "value",
+                      "label": {
+                        "en": "Label",
+                        "de": "Bezeichnung"
+                      },
+                      "group": "appearance",
+                      "order": 40
+                    }
                   }
+                },
+                "x-semio-ui": {
+                  "role": "value",
+                  "label": {
+                    "en": "World",
+                    "de": "Welt"
+                  },
+                  "description": {
+                    "en": "How the grip appears in the 3D world.",
+                    "de": "Wie der Griff in der 3D-Welt erscheint."
+                  },
+                  "group": "pose",
+                  "order": 40
                 }
               }
             }
+          },
+          "x-semio-ui": {
+            "role": "value",
+            "label": {
+              "en": "Grips",
+              "de": "Griffe"
+            },
+            "group": "topology",
+            "order": 60
           }
         }
+      },
+      "x-semio-ui": {
+        "role": "value",
+        "label": {
+          "en": "Part",
+          "de": "Teil"
+        },
+        "description": {
+          "en": "The complete part record to add.",
+          "de": "Das vollständige hinzuzufügende Teil."
+        },
+        "group": "record",
+        "order": 10
       }
     },
     "index": {
-      "type": "integer",
-      "minimum": 0
+      "type": [
+        "integer",
+        "null"
+      ],
+      "minimum": 0,
+      "x-semio-ui": {
+        "widget": "stepper",
+        "role": "value",
+        "label": {
+          "en": "Index",
+          "de": "Index"
+        },
+        "description": {
+          "en": "Position in the list; the end when omitted.",
+          "de": "Position in der Liste; ohne Angabe am Ende."
+        },
+        "step": 1,
+        "precision": 0,
+        "group": "order",
+        "order": 20
+      }
     }
   }
 }

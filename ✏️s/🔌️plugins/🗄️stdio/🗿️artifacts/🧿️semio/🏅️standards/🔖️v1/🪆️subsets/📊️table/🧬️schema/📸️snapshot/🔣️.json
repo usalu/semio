@@ -12,7 +12,18 @@
   "properties": {
     "schema": {
       "type": "string",
-      "x-semio-state": "artifact"
+      "x-semio-state": "artifact",
+      "x-semio-ui": {
+        "widget": "text",
+        "label": {
+          "en": "Snapshot schema",
+          "de": "Snapshot-Schema"
+        },
+        "description": {
+          "en": "Identifier of the snapshot schema version.",
+          "de": "Kennung der Version des Snapshot-Schemas."
+        }
+      }
     },
     "columns": {
       "type": "array",
@@ -32,8 +43,42 @@
               "float",
               "str",
               "bytes"
-            ]
+            ],
+            "x-semio-ui": {
+              "options": {
+                "null": {
+                  "en": "Null",
+                  "de": "Null"
+                },
+                "bool": {
+                  "en": "Boolean",
+                  "de": "Wahrheitswert"
+                },
+                "int": {
+                  "en": "Integer",
+                  "de": "Ganzzahl"
+                },
+                "float": {
+                  "en": "Floating point",
+                  "de": "Gleitkommazahl"
+                },
+                "str": {
+                  "en": "Text",
+                  "de": "Text"
+                },
+                "bytes": {
+                  "en": "Bytes",
+                  "de": "Bytes"
+                }
+              }
+            }
           }
+        }
+      },
+      "x-semio-ui": {
+        "label": {
+          "en": "Columns",
+          "de": "Spalten"
         }
       }
     },
@@ -45,11 +90,23 @@
         "properties": {
           "cells": {
             "type": "array",
-            "description": "positionally aligned with columns; items are SemioValue (see the value subset)",
+            "description": "positionally aligned with columns; each cell is a value-subset SemioValue",
             "items": {
-              "type": "object"
+              "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/semio/v1/value/snapshot.json#/$defs/SemioValue"
+            },
+            "x-semio-ui": {
+              "label": {
+                "en": "Cells",
+                "de": "Zellen"
+              }
             }
           }
+        }
+      },
+      "x-semio-ui": {
+        "label": {
+          "en": "Rows",
+          "de": "Zeilen"
         }
       }
     }

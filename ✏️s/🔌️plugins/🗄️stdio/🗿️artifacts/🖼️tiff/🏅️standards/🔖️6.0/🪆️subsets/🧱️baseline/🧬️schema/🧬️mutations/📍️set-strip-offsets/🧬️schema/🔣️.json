@@ -14,6 +14,16 @@
         "type": "integer",
         "minimum": 0,
         "maximum": 4294967295
+      },
+      "x-semio-ui": {
+        "label": {
+          "en": "Strip offsets",
+          "de": "Streifen-Offsets"
+        },
+        "description": {
+          "en": "StripOffsets (tag 273): byte offset of each strip.",
+          "de": "StripOffsets (Tag 273): Byte-Offset jedes Streifens."
+        }
       }
     }
   }

@@ -23,7 +23,7 @@ Feature: Apply every typed OBJ 3.0 mutation to a real-world mesh
   Both roles' results are read back by INDEPENDENT readers before `semantic-obj-3-0-v1` compares
   them. `tobj` supplies the mesh half — and on its own it is not enough to judge this vocabulary:
   it triangulates, re-indexes per `o`/`g` model and drops every declared row no face references, so
-  14 of the 22 kinds move nothing in it at all. (It also splits a model at every `o`/`g` transition,
+  14 of the 21 kinds move nothing in it at all. (It also splits a model at every `o`/`g` transition,
   which is why the projected vertex count is 8,576 rather than 8,449 and why a face that ends up in
   no band is immediately visible.) The other half is the document surface a mesh reader cannot see —
   declared `v`/`vt`/`vn` row counts with their per-component extent and totals, the `mtllib`
@@ -95,7 +95,7 @@ Feature: Apply every typed OBJ 3.0 mutation to a real-world mesh
     Then the oracle and the subject agree on the semantic projection
     Examples:
       | id                    | params                                                                                       |
-      | set-snapshot          | {"snapshot":{"vertices":[{"x":0,"y":0,"z":0},{"x":1,"y":0,"z":0},{"x":0,"y":1,"z":0}],"texcoords":[],"normals":[],"faces":[{"vertices":[{"vertex":0},{"vertex":1},{"vertex":2}]}],"groups":[],"objects":[],"mtllib":null,"usemtlRanges":[],"smoothingGroups":[],"unknownStatements":[]}} |
+      | set-snapshot          | {"snapshot": {"schema": "stdio.obj", "vertices": [{"x": 0, "y": 0, "z": 0}, {"x": 1, "y": 0, "z": 0}, {"x": 0, "y": 1, "z": 0}], "texcoords": [], "normals": [], "faces": [{"vertices": [{"vertex": 0}, {"vertex": 1}, {"vertex": 2}]}], "groups": [], "objects": [], "usemtl": [], "smoothingGroups": [], "unknownStatements": []}} |
       | insert-vertex         | {"index":8449,"vertex":{"x":0.5,"y":0.5,"z":0.5}}                                            |
       | remove-vertex         | {"index":8448}                                                                               |
       | set-vertex            | {"index":0,"vertex":{"x":1,"y":2,"z":3}}                                                     |
@@ -112,19 +112,8 @@ Feature: Apply every typed OBJ 3.0 mutation to a real-world mesh
       | remove-group          | {"name":"band-0"}                                                                            |
       | set-object            | {"name":"pattern-sphere","faces":[0,1,2]}                                                    |
       | remove-object         | {"name":"pattern-sphere"}                                                                    |
-      | set-smoothing-groups  | {"smoothingGroups":[{"faceIndexFrom":0,"group":1}]}                                          |
-      | set-unknown-statements | {"unknownStatements":[{"lineIndex":0,"raw":"# replaced by mutation"}]}                       |
-
-  @id-no-mutation-baseline-mutate
-  @level-exhaustive
-  @mode-differential
-  Scenario: Apply no-mutation to the real mesh
-    Given the real input mesh shared://🧪️pattern-sphere/🧊️.obj
-    When the no-mutation mutation is applied with its parameters
-      """
-      {"kind": "no-mutation", "params": {}}
-      """
-    Then the oracle and the subject agree on the semantic projection
+      | set-smoothing-groups  | {"smoothingGroups": [{"faceIndexFrom": 0, "group": 1}]} |
+      | set-unknown-statements | {"unknownStatements": [{"lineIndex": 0, "raw": "# replaced by mutation"}]} |
 
   @id-inverse
   @level-exhaustive
@@ -139,7 +128,7 @@ Feature: Apply every typed OBJ 3.0 mutation to a real-world mesh
     Then the mesh matches its pre-mutation semantic projection
     Examples:
       | id                    | params                                                                                       |
-      | set-snapshot          | {"snapshot":{"vertices":[{"x":0,"y":0,"z":0},{"x":1,"y":0,"z":0},{"x":0,"y":1,"z":0}],"texcoords":[],"normals":[],"faces":[{"vertices":[{"vertex":0},{"vertex":1},{"vertex":2}]}],"groups":[],"objects":[],"mtllib":null,"usemtlRanges":[],"smoothingGroups":[],"unknownStatements":[]}} |
+      | set-snapshot          | {"snapshot": {"schema": "stdio.obj", "vertices": [{"x": 0, "y": 0, "z": 0}, {"x": 1, "y": 0, "z": 0}, {"x": 0, "y": 1, "z": 0}], "texcoords": [], "normals": [], "faces": [{"vertices": [{"vertex": 0}, {"vertex": 1}, {"vertex": 2}]}], "groups": [], "objects": [], "usemtl": [], "smoothingGroups": [], "unknownStatements": []}} |
       | insert-vertex         | {"index":8449,"vertex":{"x":0.5,"y":0.5,"z":0.5}}                                            |
       | remove-vertex         | {"index":8448}                                                                               |
       | set-vertex            | {"index":0,"vertex":{"x":1,"y":2,"z":3}}                                                     |
@@ -156,20 +145,8 @@ Feature: Apply every typed OBJ 3.0 mutation to a real-world mesh
       | remove-group          | {"name":"band-0"}                                                                            |
       | set-object            | {"name":"pattern-sphere","faces":[0,1,2]}                                                    |
       | remove-object         | {"name":"pattern-sphere"}                                                                    |
-      | set-smoothing-groups  | {"smoothingGroups":[{"faceIndexFrom":0,"group":1}]}                                          |
-      | set-unknown-statements | {"unknownStatements":[{"lineIndex":0,"raw":"# replaced by mutation"}]}                       |
-
-  @id-no-mutation-baseline-inverse
-  @level-exhaustive
-  @mode-property
-  Scenario: Undoing no-mutation restores the real mesh
-    Given the real input mesh shared://🧪️pattern-sphere/🧊️.obj
-    When the no-mutation mutation is applied with its parameters
-      """
-      {"kind": "no-mutation", "params": {}}
-      """
-    And the mutation's own inverse is applied to the result
-    Then the mesh matches its pre-mutation semantic projection
+      | set-smoothing-groups  | {"smoothingGroups": [{"faceIndexFrom": 0, "group": 1}]} |
+      | set-unknown-statements | {"unknownStatements": [{"lineIndex": 0, "raw": "# replaced by mutation"}]} |
 
   @id-identity-round-trip
   @level-long

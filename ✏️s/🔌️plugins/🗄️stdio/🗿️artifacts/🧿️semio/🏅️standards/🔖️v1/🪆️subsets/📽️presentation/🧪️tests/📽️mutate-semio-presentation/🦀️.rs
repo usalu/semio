@@ -406,12 +406,16 @@ mod subject {
         parse_semio_presentation_dsl(&text)
     }
 
-    /// 📜️ The scenario's own committed mutation payload — the feature owns the vector. `base` is
-    /// the deck this payload is about to be applied to, needed only so `decode_mutation` can turn a
-    /// `noMutation` payload into the identity `set-snapshot(base)` mutation.
+    /// 📜️ The scenario's own mutation payload — the committed fixture its steps name, or, for the
+    /// `no-mutation` baselines, the sentinel in its doc string. The feature owns both. `base` is the
+    /// deck this payload is about to be applied to, needed only so `decode_mutation` can turn the
+    /// `noMutation` sentinel into the identity `set-snapshot(base)` mutation.
     fn payload(ctx: &Context, base: &SemioPresentationSnapshot) -> Result<SemioPresentationMutation, String> {
-        let uri = step_uris(ctx, "shared://📽️mutate-semio-presentation/").into_iter().find(|uri| uri.ends_with("/🦠️mutation/🔣️.json")).ok_or_else(|| format!("{}: the scenario names no mutation payload", ctx.scenario.id))?;
-        Ok(decode_mutation(&ctx.fixture_json(&uri)?, base))
+        let json = match step_uris(ctx, "shared://📽️mutate-semio-presentation/").into_iter().find(|uri| uri.ends_with("/🦠️mutation/🔣️.json")) {
+            Some(uri) => ctx.fixture_json(&uri)?,
+            None => ctx.doc_json()?,
+        };
+        Ok(decode_mutation(&json, base))
     }
 
     fn apply(current: &mut SemioPresentationSnapshot, step: &SemioPresentationMutation, what: &str) -> Result<(), String> {

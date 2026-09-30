@@ -2,7 +2,7 @@
   "pathBudget": {
     "unit": "utf16",
     "windowsMaxPath": 260,
-    "cloneRootMax": 20,
+    "cloneRootMax": 46,
     "componentMax": 255
   },
   "scriptEncoding": {

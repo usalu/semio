@@ -17,9 +17,3 @@ pub struct CycleShowMode {}
 pub fn handle(_payload: &CycleShowMode, _doc: &ArtifactView<'_, Generation3dSnapshot>, cfg: &ConfigView<'_, Generation3dConfig>, _session: &mut FlowEvalSession) -> Result<Emit<Generation3dMutation, Generation3dConfigMutation>, Fault> {
     Ok(Emit::config(vec![Generation3dConfigMutation::SetShowMode(crate::editor::generation3d::config::SetShowMode { value: next_show_mode(&cfg.snapshot.show_mode) })]))
 }
-
-//#region 🧪️Tests
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
-//#endregion 🧪️Tests

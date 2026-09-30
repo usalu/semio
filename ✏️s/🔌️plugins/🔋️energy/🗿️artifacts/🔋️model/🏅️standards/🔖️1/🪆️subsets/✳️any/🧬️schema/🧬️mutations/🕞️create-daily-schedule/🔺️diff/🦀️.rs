@@ -15,7 +15,7 @@ pub fn diff(payload: &super::CreateDailySchedule, base: &EnergyModelSnapshot) ->
         return protocol::MutationOutcome::error("mutation.duplicate-id", format!("Schedule {} is already defined.", payload.id.0), [payload.id.0.to_string()]);
     }
     if payload.index as usize > base.model.schedules.daily.len() {
-        return protocol::MutationOutcome::error("mutation.invariant", format!("Index {} is past the end of the model's {} daily schedules.", payload.index, base.model.schedules.daily.len()), [payload.id.0.to_string()]);
+        return protocol::MutationOutcome::error("mutation.target-missing", format!("Index {} is past the end of the model's {} daily schedules.", payload.index, base.model.schedules.daily.len()), [payload.id.0.to_string()]);
     }
     if payload.hourly_values.len() != 24 {
         return protocol::MutationOutcome::error("mutation.invariant", format!("A daily schedule carries twenty-four hourly values, got {}.", payload.hourly_values.len()), [payload.id.0.to_string()]);

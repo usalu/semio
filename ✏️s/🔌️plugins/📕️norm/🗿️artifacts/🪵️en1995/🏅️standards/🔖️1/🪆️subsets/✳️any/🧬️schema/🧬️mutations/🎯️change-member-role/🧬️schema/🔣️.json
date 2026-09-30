@@ -10,16 +10,55 @@
   ],
   "properties": {
     "memberId": {
-      "type": "string"
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Member",
+          "de": "Bauteil"
+        },
+        "description": {
+          "en": "The timber member this mutation addresses.",
+          "de": "Das Holzbauteil, das diese Mutation adressiert."
+        },
+        "ref": {
+          "kind": "member"
+        },
+        "group": "target",
+        "order": 10
+      }
     },
     "newValue": {
-      "type": "string",
-      "enum": [
-        "beam",
-        "column",
-        "floor",
-        "bridge"
-      ]
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1995/snapshot.json#/$defs/MemberRole",
+      "x-semio-ui": {
+        "widget": "segmented",
+        "role": "value",
+        "label": {
+          "en": "Structural role",
+          "de": "Tragwerksrolle"
+        },
+        "options": {
+          "Beam": {
+            "en": "Beam — bending member",
+            "de": "Träger — Biegebauteil"
+          },
+          "Column": {
+            "en": "Column — compression member",
+            "de": "Stütze — Druckbauteil"
+          },
+          "Floor": {
+            "en": "Floor — joist or panel with vibration check",
+            "de": "Decke — Balken oder Platte mit Schwingungsnachweis"
+          },
+          "Bridge": {
+            "en": "Bridge — EN 1995-2 girder",
+            "de": "Brücke — Träger nach EN 1995-2"
+          }
+        },
+        "group": "geometry",
+        "order": 20
+      }
     }
   }
 }

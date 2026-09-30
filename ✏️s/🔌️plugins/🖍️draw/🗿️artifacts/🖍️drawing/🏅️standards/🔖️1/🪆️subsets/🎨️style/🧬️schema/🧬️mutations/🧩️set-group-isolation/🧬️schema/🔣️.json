@@ -5,16 +5,53 @@
   "type": "object",
   "additionalProperties": false,
   "required": [
+    "mutation",
     "layerId",
     "isolation"
   ],
   "properties": {
+    "mutation": {
+      "const": "setGroupIsolation"
+    },
     "layerId": {
       "type": "string",
-      "minLength": 1
+      "minLength": 1,
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Layer",
+          "de": "Ebene"
+        },
+        "description": {
+          "en": "The layer this mutation addresses.",
+          "de": "Die Ebene, die diese Mutation adressiert."
+        },
+        "ref": {
+          "kind": "layer",
+          "domain": "strokes",
+          "granularity": "stroke"
+        },
+        "group": "target",
+        "order": 10
+      }
     },
     "isolation": {
-      "type": "boolean"
+      "type": "boolean",
+      "x-semio-ui": {
+        "widget": "toggle",
+        "role": "value",
+        "label": {
+          "en": "Isolated",
+          "de": "Isoliert"
+        },
+        "description": {
+          "en": "Composite the group on a transparent backdrop before blending it into its parent.",
+          "de": "Die Gruppe auf transparentem Hintergrund zusammensetzen, bevor sie mit der übergeordneten Ebene verrechnet wird."
+        },
+        "group": "appearance",
+        "order": 20
+      }
     }
   }
 }

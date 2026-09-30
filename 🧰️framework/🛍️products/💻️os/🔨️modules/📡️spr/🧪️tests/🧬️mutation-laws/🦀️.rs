@@ -71,27 +71,27 @@ mod tests {
         serde_json::from_str(include_str!("../../🧫️fixtures/🧬️mutation-laws/🔣️.json")).expect("law fixture")
     }
 
-    pub(crate) fn assert_leaf<T>(index: usize, wrap: fn(T) -> CounterMutation, descriptor: &str)
+    pub(crate) fn assert_leaf<T>(index: usize, wrap: fn(T) -> CounterMutation, descriptor: &str, witness: &str)
     where
         T: MutationLeaf + OpText + protocol::value::ToValue + protocol::value::FromValue + serde::Serialize + serde::de::DeserializeOwned + PartialEq + std::fmt::Debug,
     {
         let fixtures = fixture();
         let row = &fixtures["mutations"][index];
-        let value = serde_json::from_value::<T>(row["payload"].clone()).expect("direct payload");
-        assert_eq!(serde_json::to_value(&value).unwrap(), row["payload"]);
-        assert_eq!(crate::os_pack::json::from_json_str::<T>(&row["payload"].to_string()).expect("first-party direct payload"), value);
-        assert_eq!(serde_json::from_str::<serde_json::Value>(&crate::os_pack::json::to_json_string(&value)).unwrap(), row["payload"]);
+        let envelope: serde_json::Value = serde_json::from_str(witness).expect("committed wire witness");
+        let value = serde_json::from_value::<T>(envelope["payload"].clone()).expect("direct payload");
+        assert_eq!(serde_json::to_value(&value).unwrap(), envelope["payload"]);
+        assert_eq!(crate::os_pack::json::from_json_str::<T>(&envelope["payload"].to_string()).expect("first-party direct payload"), value);
+        assert_eq!(serde_json::from_str::<serde_json::Value>(&crate::os_pack::json::to_json_string(&value)).unwrap(), envelope["payload"]);
         assert_eq!(value.print_op(), row["text"].as_str().unwrap());
         assert_eq!(T::parse_op(&value.print_op()).unwrap(), value);
         assert!(T::parse_op("unknown").is_err());
-        let mut unknown = row["payload"].clone();
+        let mut unknown = envelope["payload"].clone();
         unknown["unknown"] = serde_json::json!(true);
         assert!(crate::os_pack::json::from_json_str::<T>(&unknown.to_string()).is_err());
         assert!(serde_json::from_value::<T>(unknown).is_err());
         let mutation = wrap(value);
         assert_eq!(mutation.descriptor(), &T::DESCRIPTOR);
         assert_eq!(serde_json::from_str::<serde_json::Value>(&crate::os_pack::json::to_json_string(&T::DESCRIPTOR)).unwrap(), serde_json::from_str::<serde_json::Value>(descriptor).unwrap());
-        let envelope = serde_json::json!({"operation": row["operation"], "payload": row["payload"]});
         assert_eq!(serde_json::to_value(&mutation).unwrap(), envelope);
         assert_eq!(serde_json::from_str::<serde_json::Value>(&crate::os_pack::json::to_json_string(&mutation)).unwrap(), envelope);
         assert_eq!(crate::os_pack::json::from_json_str::<CounterMutation>(&envelope.to_string()).unwrap(), mutation);

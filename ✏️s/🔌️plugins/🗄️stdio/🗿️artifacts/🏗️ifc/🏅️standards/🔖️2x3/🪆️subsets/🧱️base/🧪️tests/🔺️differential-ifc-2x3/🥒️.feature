@@ -3,7 +3,7 @@
 @comparison-semantic-ifc-v1
 Feature: Produce every schema-expressible IFC2X3 mutation twice, in two independent implementations
   This case exists for one reason: the sibling `../🧱️mutate-ifc-2x3` cannot make a differential claim.
-  `ruststep` 0.4 READS ISO 10303-21 and has no writer anywhere in the crate, so all 11 of its
+  `ruststep` 0.4 READS ISO 10303-21 and has no writer anywhere in the crate, so all 9 of its
   scenarios are honestly typed `@mode-property`/`@mode-round-trip` — a second READER standing beside
   this repository's own producer, never a second producer. **IfcOpenShell 0.8.4.post1 both reads and
   writes IFC**, and every scenario below is therefore `@mode-differential`: IfcOpenShell applies the
@@ -31,7 +31,7 @@ Feature: Produce every schema-expressible IFC2X3 mutation twice, in two independ
   still agree instance for instance. The IFC4 sibling reproduces its own earlier export byte for
   byte and therefore states, rather than asserts, its no-pass-through evidence.
 
-  📌️ FOUR of this subset's five mutation kinds appear below. `remove-instance` does not, and the
+  📌️ THREE of this subset's four mutation kinds appear below. `remove-instance` does not, and the
   reason is a measurement rather than an assumption: `ifcopenshell.file.remove`'s own documentation
   states it repairs references ("in the case of a list or set of references, the reference to the
   deleted will be removed from the aggregate"), while this subset's `Ifc2x3Mutation::RemoveInstance`
@@ -43,25 +43,25 @@ Feature: Produce every schema-expressible IFC2X3 mutation twice, in two independ
   unchanged and unweakened. The removal primitive is guarded the same way everywhere in this
   oracle: any path that would reach it with a non-zero inverse count refuses instead.
 
-  📌️ `set-snapshot` has a forward differential row below but NO inverse row, and the reason is a
-  defect this oracle found in IfcOpenShell 0.8.4.post1 rather than a convenience. The forward row
-  puts `IFC2X3-WAVE8-SNAPSHOT-MARKER` into the `FILE_SCHEMA` list — legal, since ISO 10303-21 §8.2.4
-  makes `schema_identifiers` a LIST — and IfcOpenShell writes it correctly. It then cannot read its
-  own output back: `ifcopenshell.open` returns WITHOUT raising, with the header intact and the data
-  section EMPTY, and re-serializing that model writes a 332-byte document carrying `DATA; ENDSEC;`
-  and none of the 3 464 real instances. No exception, no warning. (The same bytes through
-  `ifcopenshell.file.from_string` raise `RuntimeError: No schema loaded`, so IfcOpenShell's two
-  entry points disagree about whether this is an error at all.) IfcOpenShell therefore cannot be the
-  producer of the second half of that chain, and this case does not pretend it is. The oracle's
-  `open_model` guard makes the loss impossible to swallow anywhere else: every read compares
-  IfcOpenShell's materialized instance count against the count the document text declares and
-  refuses a truncated model. `inverse-set-snapshot` keeps its `ruststep`-backed scenario in
-  `../🧱️mutate-ifc-2x3`, unchanged — nothing is lost, and nothing false is claimed here.
+  📌️ `set-snapshot` has a forward differential row below but NO inverse row. The forward row replaces the
+  whole building model with a one-instance `Ifc2x3Snapshot` record — the real `IFCPROJECT` `#120` with
+  its references cleared — which IfcOpenShell builds through its own typed API into a fresh `IFC2X3`
+  model. The inverse would have to rebuild all 3 464 real instances, and IfcOpenShell can only place an
+  instance at a chosen id through `add`, which deep-copies every instance an argument references, so it
+  cannot reproduce the graph instance for instance. The oracle's `open_model` guard still compares
+  IfcOpenShell's materialized instance count against the count the document text declares on every
+  read and refuses a truncated model. `inverse-set-snapshot` keeps its `ruststep`-backed scenario in
+  `../🧱️mutate-ifc-2x3` — nothing is lost, and nothing false is claimed here.
 
-  📌️ Every Examples row other than `no-mutation` is required to MOVE the semantic projection, and
+  🧾️ Every row's `params` IS the leaf's wire payload, exactly as `payload_value()` emits it — camelCase,
+  the artifact's own value wire, `set-snapshot` carrying a whole snapshot record — so the subject decodes
+  it through the derive-generated `from_payload_value` and the reference reads the same wire; nothing maps a
+  parameter onto an operation by hand.
+
+  📌️ Every Examples row is required to MOVE the semantic projection, and
   the oracle fails the scenario in role when it does not: a row whose parameters make the mutation a
   no-op passes whenever the reference library merely declined to error, which is not a test. The
-  baseline it is measured against runs one `no-mutation` cycle first, so the comparison isolates the
+  baseline it is measured against runs one identity rewrite first, so the comparison isolates the
   mutation rather than IfcOpenShell's own normal form.
   @id-differential
   @level-exhaustive
@@ -74,11 +74,10 @@ Feature: Produce every schema-expressible IFC2X3 mutation twice, in two independ
       """
     Then both independently produced documents carry the same semantic projection
     Examples:
-      | id              | params                                                                                                                                                                                                                                                                                                                              |
-      | no-mutation     | {}                                                                                                                                                                                                                                                                                                                                  |
-      | set-snapshot    | {"fileSchema": ["IFC2X3", "IFC2X3-WAVE8-SNAPSHOT-MARKER"]}                                                                                                                                                                                                                                                                         |
-      | upsert-instance | {"instance": {"id": 619887, "entities": [{"name": "IFCCOLUMN", "args": [{"t": "string", "v": "0PfeWE7Aj7GBHCsLa67379"}, {"t": "reference", "v": 41}, {"t": "string", "v": "WAVE8-RENAMED-COLUMN"}, {"t": "unset"}, {"t": "string", "v": "UC-Universal Columns-Column:UC305x305x97"}, {"t": "reference", "v": 619886}, {"t": "reference", "v": 619879}, {"t": "string", "v": "552739"}]}]}} |
-      | set-header      | {"header": {"fileDescription": [{"t": "aggregate", "v": [{"t": "string", "v": "ViewDefinition [CoordinationView_V2.0]"}]}, {"t": "string", "v": "2;1"}], "fileName": [{"t": "string", "v": "wellness-center-sama-street-level-wave8"}, {"t": "string", "v": "2021-11-21T06:45:25"}, {"t": "aggregate", "v": [{"t": "string", "v": ""}]}, {"t": "aggregate", "v": [{"t": "string", "v": ""}]}, {"t": "string", "v": "The EXPRESS Data Manager Version 5.02.0100.07 : 28 Aug 2013"}, {"t": "string", "v": "21.0.0.383 - Exporter 21.0.0.383 - Alternate UI 21.0.0.383"}, {"t": "string", "v": ""}], "fileSchema": [{"t": "aggregate", "v": [{"t": "string", "v": "IFC2X3"}]}]}} |
+      | id              | params                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                        |
+      | set-snapshot    | {"snapshot": {"schema": "stdio.ifc.2x3", "document": {"header": {"fileDescription": [{"kind": "list", "values": [{"kind": "str", "value": "ViewDefinition [CoordinationView_V2.0]"}]}, {"kind": "str", "value": "2;1"}], "fileName": [{"kind": "str", "value": "wellness-center-sama-project"}, {"kind": "str", "value": "2021-11-21T06:45:25"}, {"kind": "list", "values": [{"kind": "str", "value": ""}]}, {"kind": "list", "values": [{"kind": "str", "value": ""}]}, {"kind": "str", "value": "The EXPRESS Data Manager Version 5.02.0100.07 : 28 Aug 2013"}, {"kind": "str", "value": "21.0.0.383 - Exporter 21.0.0.383 - Alternate UI 21.0.0.383"}, {"kind": "str", "value": ""}], "fileSchema": [{"kind": "list", "values": [{"kind": "str", "value": "IFC2X3"}]}]}, "instances": [{"id": 120, "entities": [{"typeName": "IFCPROJECT", "arguments": [{"kind": "str", "value": "0a3v3dJi10mxIqGCSrYdxN"}, {"kind": "unset"}, {"kind": "str", "value": "0001"}, {"kind": "unset"}, {"kind": "unset"}, {"kind": "str", "value": "Project Name"}, {"kind": "str", "value": "Project Status"}, {"kind": "unset"}, {"kind": "unset"}]}]}]}}} |
+      | upsert-instance | {"instance": {"id": 619887, "entities": [{"typeName": "IFCCOLUMN", "arguments": [{"kind": "str", "value": "0PfeWE7Aj7GBHCsLa67379"}, {"kind": "ref", "value": 41}, {"kind": "str", "value": "WAVE8-RENAMED-COLUMN"}, {"kind": "unset"}, {"kind": "str", "value": "UC-Universal Columns-Column:UC305x305x97"}, {"kind": "ref", "value": 619886}, {"kind": "ref", "value": 619879}, {"kind": "str", "value": "552739"}]}]}}                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                     |
+      | set-header      | {"header": {"fileDescription": [{"kind": "list", "values": [{"kind": "str", "value": "ViewDefinition [CoordinationView_V2.0]"}]}, {"kind": "str", "value": "2;1"}], "fileName": [{"kind": "str", "value": "wellness-center-sama-street-level-wave8"}, {"kind": "str", "value": "2021-11-21T06:45:25"}, {"kind": "list", "values": [{"kind": "str", "value": ""}]}, {"kind": "list", "values": [{"kind": "str", "value": ""}]}, {"kind": "str", "value": "The EXPRESS Data Manager Version 5.02.0100.07 : 28 Aug 2013"}, {"kind": "str", "value": "21.0.0.383 - Exporter 21.0.0.383 - Alternate UI 21.0.0.383"}, {"kind": "str", "value": ""}], "fileSchema": [{"kind": "list", "values": [{"kind": "str", "value": "IFC2X3"}]}]}}                                                                                                                                                                                                                                                                                                                                                                                                             |
 
   @id-differential-inverse
   @level-exhaustive
@@ -92,10 +91,9 @@ Feature: Produce every schema-expressible IFC2X3 mutation twice, in two independ
     And the mutation's own inverse is applied to the result
     Then both independently restored documents carry the same semantic projection
     Examples:
-      | id              | params                                                                                                                                                                                                                                                                                                                              |
-      | no-mutation     | {}                                                                                                                                                                                                                                                                                                                                  |
-      | upsert-instance | {"instance": {"id": 619887, "entities": [{"name": "IFCCOLUMN", "args": [{"t": "string", "v": "0PfeWE7Aj7GBHCsLa67379"}, {"t": "reference", "v": 41}, {"t": "string", "v": "WAVE8-RENAMED-COLUMN"}, {"t": "unset"}, {"t": "string", "v": "UC-Universal Columns-Column:UC305x305x97"}, {"t": "reference", "v": 619886}, {"t": "reference", "v": 619879}, {"t": "string", "v": "552739"}]}]}} |
-      | set-header      | {"header": {"fileDescription": [{"t": "aggregate", "v": [{"t": "string", "v": "ViewDefinition [CoordinationView_V2.0]"}]}, {"t": "string", "v": "2;1"}], "fileName": [{"t": "string", "v": "wellness-center-sama-street-level-wave8"}, {"t": "string", "v": "2021-11-21T06:45:25"}, {"t": "aggregate", "v": [{"t": "string", "v": ""}]}, {"t": "aggregate", "v": [{"t": "string", "v": ""}]}, {"t": "string", "v": "The EXPRESS Data Manager Version 5.02.0100.07 : 28 Aug 2013"}, {"t": "string", "v": "21.0.0.383 - Exporter 21.0.0.383 - Alternate UI 21.0.0.383"}, {"t": "string", "v": ""}], "fileSchema": [{"t": "aggregate", "v": [{"t": "string", "v": "IFC2X3"}]}]}} |
+      | id              | params                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                            |
+      | upsert-instance | {"instance": {"id": 619887, "entities": [{"typeName": "IFCCOLUMN", "arguments": [{"kind": "str", "value": "0PfeWE7Aj7GBHCsLa67379"}, {"kind": "ref", "value": 41}, {"kind": "str", "value": "WAVE8-RENAMED-COLUMN"}, {"kind": "unset"}, {"kind": "str", "value": "UC-Universal Columns-Column:UC305x305x97"}, {"kind": "ref", "value": 619886}, {"kind": "ref", "value": 619879}, {"kind": "str", "value": "552739"}]}]}}                                                                                                                                                                                                                                                                                                         |
+      | set-header      | {"header": {"fileDescription": [{"kind": "list", "values": [{"kind": "str", "value": "ViewDefinition [CoordinationView_V2.0]"}]}, {"kind": "str", "value": "2;1"}], "fileName": [{"kind": "str", "value": "wellness-center-sama-street-level-wave8"}, {"kind": "str", "value": "2021-11-21T06:45:25"}, {"kind": "list", "values": [{"kind": "str", "value": ""}]}, {"kind": "list", "values": [{"kind": "str", "value": ""}]}, {"kind": "str", "value": "The EXPRESS Data Manager Version 5.02.0100.07 : 28 Aug 2013"}, {"kind": "str", "value": "21.0.0.383 - Exporter 21.0.0.383 - Alternate UI 21.0.0.383"}, {"kind": "str", "value": ""}], "fileSchema": [{"kind": "list", "values": [{"kind": "str", "value": "IFC2X3"}]}]}} |
 
   @id-differential-identity-round-trip
   @level-long

@@ -1,6 +1,0 @@
-/** 🧪️ Focused bind-primitive-material mutation-law probe. */
-import type { GltfSnapshot } from '../../../📸️snapshot/🟦️.ts';
-import { applyGltfBindPrimitiveMaterial, type GltfBindPrimitiveMaterialPayload } from './🟦️';
-import { deriveGltfBindPrimitiveMaterialDiff } from './🟦️';
-import { deriveGltfBindPrimitiveMaterialInverse } from './🟦️';
-export const assertGltfBindPrimitiveMaterialLaws = (base: GltfSnapshot, payload: GltfBindPrimitiveMaterialPayload) => { const applied = applyGltfBindPrimitiveMaterial(base, payload); if (!applied.accepted) return applied; const replay = applyGltfBindPrimitiveMaterial(base, payload); const direct = deriveGltfBindPrimitiveMaterialDiff(base, payload); const undo = deriveGltfBindPrimitiveMaterialInverse(base, payload); if (!replay.accepted || !direct.accepted || !undo.accepted || JSON.stringify(applied.snapshot) !== JSON.stringify(replay.snapshot) || JSON.stringify(applied.diff) !== JSON.stringify(replay.diff) || JSON.stringify(applied.touchedPaths) !== JSON.stringify(undo.touchedPaths)) throw new Error('bind-primitive-material violates replay, direct-diff, or undo determinism'); return { applied, direct, undo }; };

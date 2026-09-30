@@ -9,7 +9,27 @@
   ],
   "properties": {
     "newAssumedBridgeTandem": {
-      "type": "number"
+      "type": "number",
+      "minimum": 0,
+      "x-semio-ui": {
+        "widget": "stepper",
+        "role": "value",
+        "label": {
+          "en": "Assumed tandem system axle load Q_ik",
+          "de": "Angesetzte Achslast der Doppelachse Q_ik"
+        },
+        "description": {
+          "en": "Value claimed by the design; the check compares it with the value derived from the standard.",
+          "de": "Vom Entwurf angesetzter Wert; der Nachweis vergleicht ihn mit dem nach der Norm ermittelten Wert."
+        },
+        "unit": "N",
+        "displayUnit": "kN",
+        "displayFactor": 0.001,
+        "step": 1000,
+        "precision": 0,
+        "group": "bridge",
+        "order": 10
+      }
     }
   }
 }

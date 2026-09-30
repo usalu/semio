@@ -5,18 +5,65 @@
   "type": "object",
   "additionalProperties": false,
   "required": [
+    "mutation",
     "layerId",
     "fillRule"
   ],
   "properties": {
+    "mutation": {
+      "const": "setLayerFillRule"
+    },
     "layerId": {
-      "type": "string"
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Layer",
+          "de": "Ebene"
+        },
+        "description": {
+          "en": "The layer this mutation addresses.",
+          "de": "Die Ebene, die diese Mutation adressiert."
+        },
+        "ref": {
+          "kind": "layer",
+          "domain": "strokes",
+          "granularity": "stroke"
+        },
+        "group": "target",
+        "order": 10
+      }
     },
     "fillRule": {
       "enum": [
         "evenodd",
         "nonzero"
-      ]
+      ],
+      "x-semio-ui": {
+        "widget": "segmented",
+        "role": "value",
+        "label": {
+          "en": "Fill rule",
+          "de": "Füllregel"
+        },
+        "description": {
+          "en": "Which regions of a self-overlapping path count as inside.",
+          "de": "Welche Bereiche eines sich überlappenden Pfads als innen gelten."
+        },
+        "options": {
+          "evenodd": {
+            "en": "Even-odd",
+            "de": "Gerade-ungerade"
+          },
+          "nonzero": {
+            "en": "Non-zero",
+            "de": "Nicht-null"
+          }
+        },
+        "group": "style",
+        "order": 20
+      }
     }
   }
 }

@@ -5,20 +5,47 @@
   "type": "object",
   "additionalProperties": false,
   "required": [
-    "stream_index",
+    "mutation",
+    "streamIndex",
     "strh"
   ],
   "properties": {
-    "stream_index": {
-      "type": "integer",
-      "minimum": 0
-    },
-    "strh": {
-      "$ref": "#/$defs/AviStreamHeader"
-    },
     "mutation": {
       "const": "setStreamHeader",
       "description": "Aggregate discriminator spliced in by AviMutation; absent when the payload stands alone."
+    },
+    "streamIndex": {
+      "type": "integer",
+      "minimum": 0,
+      "x-semio-ui": {
+        "widget": "stepper",
+        "label": {
+          "en": "Stream",
+          "de": "Datenstrom"
+        },
+        "description": {
+          "en": "Index of the stream, counted from 0.",
+          "de": "Index des Datenstroms, ab 0 gezählt."
+        },
+        "precision": 0,
+        "group": "target",
+        "order": 10
+      }
+    },
+    "strh": {
+      "$ref": "#/$defs/AviStreamHeader",
+      "x-semio-ui": {
+        "label": {
+          "en": "Stream header",
+          "de": "Datenstrom-Header"
+        },
+        "description": {
+          "en": "strh chunk",
+          "de": "strh-Chunk"
+        },
+        "group": "value",
+        "order": 20
+      }
     }
   },
   "$defs": {
@@ -46,90 +73,233 @@
       ],
       "properties": {
         "fccType": {
-          "type": "string"
+          "type": "string",
+          "x-semio-ui": {
+            "label": {
+              "en": "Stream type (FourCC)",
+              "de": "Datenstromtyp (FourCC)"
+            },
+            "description": {
+              "en": "vids, auds, txts or mids.",
+              "de": "vids, auds, txts oder mids."
+            }
+          }
         },
         "fccHandler": {
-          "type": "string"
+          "type": "string",
+          "x-semio-ui": {
+            "label": {
+              "en": "Handler (FourCC)",
+              "de": "Codec-Handler (FourCC)"
+            }
+          }
         },
         "flags": {
           "type": "integer",
           "minimum": 0,
-          "maximum": 4294967295
+          "maximum": 4294967295,
+          "x-semio-ui": {
+            "label": {
+              "en": "Flags",
+              "de": "Flags"
+            }
+          }
         },
         "priority": {
           "type": "integer",
           "minimum": 0,
-          "maximum": 65535
+          "maximum": 65535,
+          "x-semio-ui": {
+            "label": {
+              "en": "Priority",
+              "de": "Priorität"
+            }
+          }
         },
         "language": {
           "type": "integer",
           "minimum": 0,
-          "maximum": 65535
+          "maximum": 65535,
+          "x-semio-ui": {
+            "label": {
+              "en": "Language",
+              "de": "Sprache"
+            }
+          }
         },
         "initialFrames": {
           "type": "integer",
           "minimum": 0,
-          "maximum": 4294967295
+          "maximum": 4294967295,
+          "x-semio-ui": {
+            "label": {
+              "en": "Initial frames",
+              "de": "Anfangsframes"
+            }
+          }
         },
         "scale": {
           "type": "integer",
           "minimum": 0,
-          "maximum": 4294967295
+          "maximum": 4294967295,
+          "x-semio-ui": {
+            "label": {
+              "en": "Time scale",
+              "de": "Zeitbasis (Scale)"
+            },
+            "description": {
+              "en": "Rate / scale gives samples per second.",
+              "de": "Rate / Scale ergibt Samples pro Sekunde."
+            }
+          }
         },
         "rate": {
           "type": "integer",
           "minimum": 0,
-          "maximum": 4294967295
+          "maximum": 4294967295,
+          "x-semio-ui": {
+            "label": {
+              "en": "Rate",
+              "de": "Rate"
+            },
+            "description": {
+              "en": "Rate / scale gives samples per second.",
+              "de": "Rate / Scale ergibt Samples pro Sekunde."
+            }
+          }
         },
         "start": {
           "type": "integer",
           "minimum": 0,
-          "maximum": 4294967295
+          "maximum": 4294967295,
+          "x-semio-ui": {
+            "label": {
+              "en": "Start",
+              "de": "Start"
+            },
+            "description": {
+              "en": "Start time in scale units.",
+              "de": "Startzeit in Scale-Einheiten."
+            }
+          }
         },
         "length": {
           "type": "integer",
           "minimum": 0,
-          "maximum": 4294967295
+          "maximum": 4294967295,
+          "x-semio-ui": {
+            "label": {
+              "en": "Length",
+              "de": "Länge"
+            },
+            "description": {
+              "en": "Length in scale units.",
+              "de": "Länge in Scale-Einheiten."
+            }
+          }
         },
         "suggestedBufferSize": {
           "type": "integer",
           "minimum": 0,
-          "maximum": 4294967295
+          "maximum": 4294967295,
+          "x-semio-ui": {
+            "label": {
+              "en": "Suggested buffer size",
+              "de": "Empfohlene Puffergröße"
+            },
+            "unit": "B"
+          }
         },
         "quality": {
           "type": "integer",
           "minimum": -2147483648,
-          "maximum": 2147483647
+          "maximum": 2147483647,
+          "x-semio-ui": {
+            "label": {
+              "en": "Quality",
+              "de": "Qualität"
+            },
+            "description": {
+              "en": "0 to 10000, or -1 for the driver default.",
+              "de": "0 bis 10000 oder -1 für den Treiberstandard."
+            }
+          }
         },
         "sampleSize": {
           "type": "integer",
           "minimum": 0,
-          "maximum": 4294967295
+          "maximum": 4294967295,
+          "x-semio-ui": {
+            "label": {
+              "en": "Sample size",
+              "de": "Samplegröße"
+            },
+            "unit": "B"
+          }
         },
         "rcFrameLeft": {
           "type": "integer",
           "minimum": -2147483648,
-          "maximum": 2147483647
+          "maximum": 2147483647,
+          "x-semio-ui": {
+            "label": {
+              "en": "Frame rectangle left",
+              "de": "Bildrechteck links"
+            },
+            "unit": "px"
+          }
         },
         "rcFrameTop": {
           "type": "integer",
           "minimum": -2147483648,
-          "maximum": 2147483647
+          "maximum": 2147483647,
+          "x-semio-ui": {
+            "label": {
+              "en": "Frame rectangle top",
+              "de": "Bildrechteck oben"
+            },
+            "unit": "px"
+          }
         },
         "rcFrameRight": {
           "type": "integer",
           "minimum": -2147483648,
-          "maximum": 2147483647
+          "maximum": 2147483647,
+          "x-semio-ui": {
+            "label": {
+              "en": "Frame rectangle right",
+              "de": "Bildrechteck rechts"
+            },
+            "unit": "px"
+          }
         },
         "rcFrameBottom": {
           "type": "integer",
           "minimum": -2147483648,
-          "maximum": 2147483647
+          "maximum": 2147483647,
+          "x-semio-ui": {
+            "label": {
+              "en": "Frame rectangle bottom",
+              "de": "Bildrechteck unten"
+            },
+            "unit": "px"
+          }
         },
         "rcFrameWidth": {
           "type": "integer",
           "minimum": 0,
-          "maximum": 255
+          "maximum": 255,
+          "x-semio-ui": {
+            "label": {
+              "en": "Frame rectangle size",
+              "de": "Größe des Bildrechtecks"
+            },
+            "description": {
+              "en": "Bytes of rcFrame on disk: 8 for 16-bit, 16 for 32-bit coordinates.",
+              "de": "Bytes von rcFrame in der Datei: 8 für 16-Bit-, 16 für 32-Bit-Koordinaten."
+            },
+            "unit": "B"
+          }
         },
         "strhExtra": {
           "type": "array",
@@ -137,6 +307,12 @@
             "type": "integer",
             "minimum": 0,
             "maximum": 255
+          },
+          "x-semio-ui": {
+            "label": {
+              "en": "Extra header bytes",
+              "de": "Zusätzliche Header-Bytes"
+            }
           }
         }
       }

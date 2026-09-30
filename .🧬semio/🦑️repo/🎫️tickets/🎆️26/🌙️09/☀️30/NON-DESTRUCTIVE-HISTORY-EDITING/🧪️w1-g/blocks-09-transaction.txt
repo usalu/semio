@@ -1,0 +1,461 @@
+<<<<<<< ANCHOR
+pub enum ArtifactCommand<Mutation> {
+    Apply {
+        mutations: Vec<Mutation>,
+        #[value(skip_serializing_if = "Option::is_none")]
+        description: Option<String>,
+    },
+=======
+pub enum ArtifactCommand<Mutation> {
+    /// ▶️ Records `mutations` as one edit; `transaction` names the committed tool transaction that authored them, stamped
+    /// on every operation's metadata and wire envelope.
+    Apply {
+        mutations: Vec<Mutation>,
+        #[value(skip_serializing_if = "Option::is_none")]
+        description: Option<String>,
+        #[value(default, skip_serializing_if = "Option::is_none")]
+        transaction: Option<protocol::TransactionRef>,
+    },
+>>>>>>> END
+<<<<<<< ANCHOR
+    /// gets. New variant, not a field added to `Apply` itself, so every existing `Apply {
+    /// mutations, description }` construction across the workspace keeps compiling untouched.
+    ApplyInLane {
+        mutations: Vec<Mutation>,
+        #[value(skip_serializing_if = "Option::is_none")]
+        description: Option<String>,
+        #[value(default)]
+        lane: HistoryLane,
+    },
+=======
+    /// gets.
+    ApplyInLane {
+        mutations: Vec<Mutation>,
+        #[value(skip_serializing_if = "Option::is_none")]
+        description: Option<String>,
+        #[value(default)]
+        lane: HistoryLane,
+        #[value(default, skip_serializing_if = "Option::is_none")]
+        transaction: Option<protocol::TransactionRef>,
+    },
+>>>>>>> END
+<<<<<<< ANCHOR
+enum CommandHeaderLine {
+    Apply {
+        description: Option<String>,
+    },
+=======
+enum CommandHeaderLine {
+    /// ▶️ `transaction`/`tool` are the [`protocol::TransactionRef`] halves, present together or not at all.
+    Apply {
+        description: Option<String>,
+        transaction: Option<String>,
+        tool: Option<String>,
+    },
+>>>>>>> END
+<<<<<<< ANCHOR
+    ApplyInLane {
+        description: Option<String>,
+        lane: String,
+    },
+    AmendInLane {
+=======
+    ApplyInLane {
+        description: Option<String>,
+        lane: String,
+        transaction: Option<String>,
+        tool: Option<String>,
+    },
+    AmendInLane {
+>>>>>>> END
+<<<<<<< ANCHOR
+        ArtifactCommand::Apply { mutations, description } => {
+            out.push_str(&CommandHeaderLine::Apply { description: description.clone() }.print_op());
+            out.push('\n');
+            print_indented_ops(&mut out, mutations).await?;
+        }
+=======
+        ArtifactCommand::Apply { mutations, description, transaction } => {
+            let (transaction, tool) = transaction_text(transaction.as_ref());
+            out.push_str(&CommandHeaderLine::Apply { description: description.clone(), transaction, tool }.print_op());
+            out.push('\n');
+            print_indented_ops(&mut out, mutations).await?;
+        }
+>>>>>>> END
+<<<<<<< ANCHOR
+        ArtifactCommand::ApplyInLane { mutations, description, lane } => {
+            out.push_str(&CommandHeaderLine::ApplyInLane { description: description.clone(), lane: history_lane_to_token(*lane).await.to_string() }.print_op());
+=======
+        ArtifactCommand::ApplyInLane { mutations, description, lane, transaction } => {
+            let (transaction, tool) = transaction_text(transaction.as_ref());
+            out.push_str(&CommandHeaderLine::ApplyInLane { description: description.clone(), lane: history_lane_to_token(*lane).await.to_string(), transaction, tool }.print_op());
+>>>>>>> END
+<<<<<<< ANCHOR
+        CommandHeaderLine::Apply { description } => {
+            let mutations = parse_indented_ops(&body_lines).await?;
+            if mutations.is_empty() {
+                return Err(crate::os_dsl::__rt::field_error("apply requires at least one operation line"));
+            }
+            Ok(ArtifactCommand::Apply { mutations, description })
+        }
+=======
+        CommandHeaderLine::Apply { description, transaction, tool } => {
+            let transaction = transaction_from_text(transaction, tool)?;
+            let mutations = parse_indented_ops(&body_lines).await?;
+            if mutations.is_empty() {
+                return Err(crate::os_dsl::__rt::field_error("apply requires at least one operation line"));
+            }
+            Ok(ArtifactCommand::Apply { mutations, description, transaction })
+        }
+>>>>>>> END
+<<<<<<< ANCHOR
+        CommandHeaderLine::ApplyInLane { description, lane } => {
+            let mutations = parse_indented_ops(&body_lines).await?;
+            if mutations.is_empty() {
+                return Err(crate::os_dsl::__rt::field_error("apply-in-lane requires at least one operation line"));
+            }
+            Ok(ArtifactCommand::ApplyInLane { mutations, description, lane: parse_history_lane_token(&lane).await? })
+        }
+=======
+        CommandHeaderLine::ApplyInLane { description, lane, transaction, tool } => {
+            let transaction = transaction_from_text(transaction, tool)?;
+            let mutations = parse_indented_ops(&body_lines).await?;
+            if mutations.is_empty() {
+                return Err(crate::os_dsl::__rt::field_error("apply-in-lane requires at least one operation line"));
+            }
+            Ok(ArtifactCommand::ApplyInLane { mutations, description, lane: parse_history_lane_token(&lane).await?, transaction })
+        }
+>>>>>>> END
+<<<<<<< ANCHOR
+/// 🎯️ Format byte every encoded command starts with — matches `crate::os_dsl::op_rt::OP_BINARY_FORMAT`
+=======
+/// 🧾️ A transaction reference as its two text attributes.
+fn transaction_text(transaction: Option<&protocol::TransactionRef>) -> (Option<String>, Option<String>) {
+    match transaction {
+        Some(transaction) => (Some(transaction.id.clone()), Some(transaction.tool.clone())),
+        None => (None, None),
+    }
+}
+
+/// 🧾️ Inverse of [`transaction_text`]: both attributes or neither.
+fn transaction_from_text(transaction: Option<String>, tool: Option<String>) -> Result<Option<protocol::TransactionRef>, TextError> {
+    match (transaction, tool) {
+        (Some(id), Some(tool)) => Ok(Some(protocol::TransactionRef { id, tool })),
+        (None, None) => Ok(None),
+        _ => Err(crate::os_dsl::__rt::field_error("a transaction needs both its id and its tool")),
+    }
+}
+
+/// 🧾️ Binary twin of [`transaction_text`]: the id and tool strings after a `0b10` presence bit.
+fn write_command_transaction(out: &mut Vec<u8>, transaction: Option<&protocol::TransactionRef>) {
+    if let Some(transaction) = transaction {
+        write_command_str(out, &transaction.id);
+        write_command_str(out, &transaction.tool);
+    }
+}
+
+fn read_command_transaction(reader: &mut crate::os_pack::ByteReader<'_>, presence: u8) -> Result<Option<protocol::TransactionRef>, crate::os_spr::ProtocolError> {
+    if presence & 0b10 == 0 {
+        return Ok(None);
+    }
+    let id = read_command_str(reader)?;
+    let tool = read_command_str(reader)?;
+    Ok(Some(protocol::TransactionRef { id, tool }))
+}
+
+/// 🎯️ Format byte every encoded command starts with — matches `crate::os_dsl::op_rt::OP_BINARY_FORMAT`
+>>>>>>> END
+<<<<<<< ANCHOR
+            ArtifactCommand::Apply { mutations, description } => {
+                crate::os_pack::write_varint_u64(&mut out, 0);
+                out.push(if description.is_some() { 0b01 } else { 0 });
+                if let Some(text) = description {
+                    write_command_str(&mut out, text);
+                }
+                write_command_ops(&mut out, mutations)?;
+            }
+=======
+            ArtifactCommand::Apply { mutations, description, transaction } => {
+                crate::os_pack::write_varint_u64(&mut out, 0);
+                out.push(u8::from(description.is_some()) | (u8::from(transaction.is_some()) << 1));
+                if let Some(text) = description {
+                    write_command_str(&mut out, text);
+                }
+                write_command_transaction(&mut out, transaction.as_ref());
+                write_command_ops(&mut out, mutations)?;
+            }
+>>>>>>> END
+<<<<<<< ANCHOR
+            ArtifactCommand::ApplyInLane { mutations, description, lane } => {
+                crate::os_pack::write_varint_u64(&mut out, 11);
+                out.push(if description.is_some() { 0b01 } else { 0 });
+                if let Some(text) = description {
+                    write_command_str(&mut out, text);
+                }
+                out.push(history_lane_ordinal(*lane));
+                write_command_ops(&mut out, mutations)?;
+            }
+=======
+            ArtifactCommand::ApplyInLane { mutations, description, lane, transaction } => {
+                crate::os_pack::write_varint_u64(&mut out, 11);
+                out.push(u8::from(description.is_some()) | (u8::from(transaction.is_some()) << 1));
+                if let Some(text) = description {
+                    write_command_str(&mut out, text);
+                }
+                write_command_transaction(&mut out, transaction.as_ref());
+                out.push(history_lane_ordinal(*lane));
+                write_command_ops(&mut out, mutations)?;
+            }
+>>>>>>> END
+<<<<<<< ANCHOR
+            0 => {
+                let presence = reader.read_u8()?;
+                let description = if presence & 0b01 != 0 { Some(read_command_str(&mut reader)?) } else { None };
+                let mutations = read_command_ops(&mut reader)?;
+                Ok(ArtifactCommand::Apply { mutations, description })
+            }
+=======
+            0 => {
+                let presence = reader.read_u8()?;
+                let description = if presence & 0b01 != 0 { Some(read_command_str(&mut reader)?) } else { None };
+                let transaction = read_command_transaction(&mut reader, presence)?;
+                let mutations = read_command_ops(&mut reader)?;
+                Ok(ArtifactCommand::Apply { mutations, description, transaction })
+            }
+>>>>>>> END
+<<<<<<< ANCHOR
+            11 => {
+                let presence = reader.read_u8()?;
+                let description = if presence & 0b01 != 0 { Some(read_command_str(&mut reader)?) } else { None };
+                let lane = history_lane_from_ordinal(reader.read_u8()?)?;
+                let mutations = read_command_ops(&mut reader)?;
+                Ok(ArtifactCommand::ApplyInLane { mutations, description, lane })
+            }
+=======
+            11 => {
+                let presence = reader.read_u8()?;
+                let description = if presence & 0b01 != 0 { Some(read_command_str(&mut reader)?) } else { None };
+                let transaction = read_command_transaction(&mut reader, presence)?;
+                let lane = history_lane_from_ordinal(reader.read_u8()?)?;
+                let mutations = read_command_ops(&mut reader)?;
+                Ok(ArtifactCommand::ApplyInLane { mutations, description, lane, transaction })
+            }
+>>>>>>> END
+<<<<<<< ANCHOR
+        self.apply_command(mutations, description, HistoryLane::Document).await?;
+        self.last_projection_cause = Some(ArtifactProjectionCause::Apply);
+=======
+        self.apply_command(mutations, description, HistoryLane::Document, None).await?;
+        self.last_projection_cause = Some(ArtifactProjectionCause::Apply);
+>>>>>>> END
+<<<<<<< ANCHOR
+        self.apply_command(vec![mutation], description, lane).await?;
+=======
+        self.apply_command(vec![mutation], description, lane, None).await?;
+>>>>>>> END
+<<<<<<< ANCHOR
+            ArtifactCommand::Apply { mutations, description } => self.apply_command(mutations, description, HistoryLane::Document).await,
+            ArtifactCommand::ApplyInLane { mutations, description, lane } => self.apply_command(mutations, description, lane).await,
+=======
+            ArtifactCommand::Apply { mutations, description, transaction } => self.apply_command(mutations, description, HistoryLane::Document, transaction).await,
+            ArtifactCommand::ApplyInLane { mutations, description, lane, transaction } => self.apply_command(mutations, description, lane, transaction).await,
+>>>>>>> END
+<<<<<<< ANCHOR
+    async fn apply_command(&mut self, mutations: Vec<Mutation>, description: Option<String>, lane: HistoryLane) -> Result<(), VcsError> {
+        if mutations.is_empty() {
+            return Err(VcsError::EmptyApply);
+        }
+        let started_at = now_iso();
+        let pre_snapshot = Arc::clone(&*self.current);
+        let (forwards, inverse, mutation_meta, post, messages) = self.replay_mutations(&pre_snapshot, mutations).await?;
+=======
+    async fn apply_command(&mut self, mutations: Vec<Mutation>, description: Option<String>, lane: HistoryLane, transaction: Option<protocol::TransactionRef>) -> Result<(), VcsError> {
+        if mutations.is_empty() {
+            return Err(VcsError::EmptyApply);
+        }
+        let started_at = now_iso();
+        let pre_snapshot = Arc::clone(&*self.current);
+        let (forwards, inverse, mutation_meta, post, messages) = self.replay_mutations(&pre_snapshot, mutations, transaction.as_ref()).await?;
+>>>>>>> END
+<<<<<<< ANCHOR
+        if let Some(edit_id) = amend_target {
+            let pre_snapshot = Arc::clone(&*self.current);
+            let (new_forwards, new_inverse, new_mutation_meta, post, messages) = self.replay_mutations(&pre_snapshot, mutations).await?;
+=======
+        if let Some(edit_id) = amend_target {
+            let pre_snapshot = Arc::clone(&*self.current);
+            let transaction = self.envelope.vcs.edits.iter().find(|edit| edit.id == edit_id).and_then(|edit| edit.mutation_meta.first()).and_then(|meta| meta.transaction.clone());
+            let (new_forwards, new_inverse, new_mutation_meta, post, messages) = self.replay_mutations(&pre_snapshot, mutations, transaction.as_ref()).await?;
+>>>>>>> END
+<<<<<<< ANCHOR
+            let started_at = now_iso();
+            let pre_snapshot = Arc::clone(&*self.current);
+            let (forwards, inverse, mutation_meta, post, messages) = self.replay_mutations(&pre_snapshot, mutations).await?;
+            let actor = edit_actor_from_meta(&mutation_meta).await;
+            self.replace_local_actor_retained(actor.clone())?;
+            self.edit_sequence += 1;
+            let forwards_fingerprint = crate::os_pack::json::to_json_string(&forwards).into_bytes();
+            let edit_id = mint_edit_id(self.clock.actor, self.edit_sequence, &forwards_fingerprint).await;
+=======
+            let started_at = now_iso();
+            let pre_snapshot = Arc::clone(&*self.current);
+            let (forwards, inverse, mutation_meta, post, messages) = self.replay_mutations(&pre_snapshot, mutations, None).await?;
+            let actor = edit_actor_from_meta(&mutation_meta).await;
+            self.replace_local_actor_retained(actor.clone())?;
+            self.edit_sequence += 1;
+            let forwards_fingerprint = crate::os_pack::json::to_json_string(&forwards).into_bytes();
+            let edit_id = mint_edit_id(self.clock.actor, self.edit_sequence, &forwards_fingerprint).await;
+>>>>>>> END
+<<<<<<< ANCHOR
+    async fn replay_mutations(&mut self, pre_snapshot: &P, mutations: Vec<Mutation>) -> Result<(Vec<Mutation>, Vec<Mutation>, Vec<MutationMeta>, P, Vec<crate::os_spr::MutationMessage>), VcsError> {
+=======
+    async fn replay_mutations(&mut self, pre_snapshot: &P, mutations: Vec<Mutation>, transaction: Option<&protocol::TransactionRef>) -> Result<(Vec<Mutation>, Vec<Mutation>, Vec<MutationMeta>, P, Vec<crate::os_spr::MutationMessage>), VcsError> {
+>>>>>>> END
+<<<<<<< ANCHOR
+                payload_hash: Some(crate::os_spr::PayloadHash(*semio_framework_hash::hash(&encoded).as_bytes())),
+                semantic_kind: None,
+                label: None,
+                group_id: None,
+                origin: Default::default(),
+                transaction: None,
+            });
+=======
+                payload_hash: Some(crate::os_spr::PayloadHash(*semio_framework_hash::hash(&encoded).as_bytes())),
+                semantic_kind: Some(operation_semantic_kind::<P, Mutation>(&mutation, &self.envelope.schema)),
+                label: Some(mutation.descriptor().display_name.to_string()),
+                group_id: None,
+                origin: Default::default(),
+                transaction: transaction.cloned(),
+            });
+>>>>>>> END
+<<<<<<< ANCHOR
+        for meta in edit.mutation_meta.iter_mut() {
+            meta.mutation_id = Some(folded_identity.clone());
+        }
+=======
+        for (meta, operation) in edit.mutation_meta.iter_mut().zip(edit.forwards.iter()) {
+            meta.mutation_id = Some(folded_identity.clone());
+            meta.semantic_kind = Some(operation_semantic_kind::<P, Mutation>(operation, &self.envelope.schema));
+            meta.label = Some(operation.descriptor().display_name.to_string());
+            meta.transaction.clone_from(&publication.transaction);
+        }
+>>>>>>> END
+<<<<<<< ANCHOR
+    pub fn set_coalesce_key(&mut self, key: Option<String>) {
+        self.coalesce_key = key.filter(|value| !value.is_empty());
+    }
+=======
+    pub fn set_coalesce_key(&mut self, key: Option<String>) {
+        self.coalesce_key = key.filter(|value| !value.is_empty());
+    }
+
+    /// 🧾️ The committed tool transaction this gesture publishes for, stamped on every staged operation.
+    pub fn transaction(&self) -> Option<&protocol::TransactionRef> {
+        self.transaction.as_ref()
+    }
+>>>>>>> END
+<<<<<<< ANCHOR
+    coalesce_key: Option<String>,
+    outbound: bool,
+    announce_from: usize,
+}
+
+impl<P, Mutation> ArtifactStoreBatchPublication<P, Mutation> {
+=======
+    coalesce_key: Option<String>,
+    transaction: Option<protocol::TransactionRef>,
+    outbound: bool,
+    announce_from: usize,
+}
+
+impl<P, Mutation> ArtifactStoreBatchPublication<P, Mutation> {
+>>>>>>> END
+<<<<<<< ANCHOR
+            phase: ArtifactStoreOneItemPublicationPhase::Preparing,
+            coalesce_key: None,
+            outbound,
+            announce_from: 0,
+        })
+=======
+            phase: ArtifactStoreOneItemPublicationPhase::Preparing,
+            coalesce_key: None,
+            transaction,
+            outbound,
+            announce_from: 0,
+        })
+>>>>>>> END
+<<<<<<< ANCHOR
+        lane: HistoryLane,
+        factory: Option<&Arc<dyn ArtifactStoreOneItemPreparationFactory<P, Mutation>>>,
+    ) -> Result<ArtifactStoreBatchPublication<P, Mutation>, ArtifactStoreBatchAdmissionRejected<Mutation>>
+    where
+        P: Sync,
+        Mutation: Send,
+    {
+        self.begin_typed_apply_batch(operation, expected_generation, expected_revision, actor, mutations, description, lane, factory, false)
+    }
+=======
+        lane: HistoryLane,
+        factory: Option<&Arc<dyn ArtifactStoreOneItemPreparationFactory<P, Mutation>>>,
+        transaction: Option<protocol::TransactionRef>,
+    ) -> Result<ArtifactStoreBatchPublication<P, Mutation>, ArtifactStoreBatchAdmissionRejected<Mutation>>
+    where
+        P: Sync,
+        Mutation: Send,
+    {
+        self.begin_typed_apply_batch(operation, expected_generation, expected_revision, actor, mutations, description, lane, factory, false, transaction)
+    }
+>>>>>>> END
+<<<<<<< ANCHOR
+        description: Option<String>,
+        factory: Option<&Arc<dyn ArtifactStoreOneItemPreparationFactory<P, Mutation>>>,
+    ) -> Result<ArtifactStoreBatchPublication<P, Mutation>, ArtifactStoreBatchAdmissionRejected<Mutation>>
+    where
+        P: Sync,
+        Mutation: Send,
+    {
+        self.begin_typed_apply_batch(operation, expected_generation, expected_revision, actor, mutations, description, HistoryLane::Document, factory, true)
+    }
+=======
+        description: Option<String>,
+        factory: Option<&Arc<dyn ArtifactStoreOneItemPreparationFactory<P, Mutation>>>,
+        transaction: Option<protocol::TransactionRef>,
+    ) -> Result<ArtifactStoreBatchPublication<P, Mutation>, ArtifactStoreBatchAdmissionRejected<Mutation>>
+    where
+        P: Sync,
+        Mutation: Send,
+    {
+        self.begin_typed_apply_batch(operation, expected_generation, expected_revision, actor, mutations, description, HistoryLane::Document, factory, true, transaction)
+    }
+>>>>>>> END
+<<<<<<< ANCHOR
+        lane: HistoryLane,
+        factory: Option<&Arc<dyn ArtifactStoreOneItemPreparationFactory<P, Mutation>>>,
+        outbound: bool,
+    ) -> Result<ArtifactStoreBatchPublication<P, Mutation>, ArtifactStoreBatchAdmissionRejected<Mutation>>
+=======
+        lane: HistoryLane,
+        factory: Option<&Arc<dyn ArtifactStoreOneItemPreparationFactory<P, Mutation>>>,
+        outbound: bool,
+        transaction: Option<protocol::TransactionRef>,
+    ) -> Result<ArtifactStoreBatchPublication<P, Mutation>, ArtifactStoreBatchAdmissionRejected<Mutation>>
+>>>>>>> END
+<<<<<<< ANCHOR
+/// ⏰️ An edit's HLC: its first operation's stamped timestamp (the order key every fold uses).
+=======
+/// 🗣️ `<document schema>#<semantic kind>` of the leaf `operation` is — what `MutationMeta.semantic_kind` records.
+fn operation_semantic_kind<P, Mutation: self::Mutation<P>>(operation: &Mutation, schema: &str) -> SchemaId {
+    SchemaId(format!("{schema}#{}", operation.descriptor().semantic_kind))
+}
+
+/// 🗣️ Stamps every metadata record of `edit` with its operation's semantic kind and descriptor name — derived facts no
+/// persisted form carries, so every load and ingest path re-derives them.
+fn stamp_edit_semantics<P, Mutation: self::Mutation<P>>(edit: &mut Edit<Mutation>, schema: &str) {
+    for (meta, operation) in edit.mutation_meta.iter_mut().zip(edit.forwards.iter()) {
+        meta.semantic_kind = Some(operation_semantic_kind::<P, Mutation>(operation, schema));
+        meta.label = Some(operation.descriptor().display_name.to_string());
+    }
+}
+
+/// ⏰️ An edit's HLC: its first operation's stamped timestamp (the order key every fold uses).
+>>>>>>> END

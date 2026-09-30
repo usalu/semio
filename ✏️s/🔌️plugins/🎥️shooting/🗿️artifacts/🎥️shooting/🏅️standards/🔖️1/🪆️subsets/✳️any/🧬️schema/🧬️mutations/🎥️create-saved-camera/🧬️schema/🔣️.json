@@ -5,9 +5,13 @@
   "type": "object",
   "additionalProperties": false,
   "required": [
+    "mutation",
     "savedCamera"
   ],
   "properties": {
+    "mutation": {
+      "const": "createSavedCamera"
+    },
     "savedCamera": {
       "title": "ShootingSavedCamera",
       "type": "object",
@@ -19,10 +23,34 @@
       ],
       "properties": {
         "id": {
-          "type": "string"
+          "type": "string",
+          "x-semio-ui": {
+            "widget": "text",
+            "role": "value",
+            "label": {
+              "en": "ID",
+              "de": "ID"
+            },
+            "description": {
+              "en": "Unique saved camera id in this scene.",
+              "de": "Eindeutige ID der gespeicherten Kamera in dieser Szene."
+            },
+            "group": "identity",
+            "order": 10
+          }
         },
         "label": {
-          "type": "string"
+          "type": "string",
+          "x-semio-ui": {
+            "widget": "text",
+            "role": "value",
+            "label": {
+              "en": "Name",
+              "de": "Name"
+            },
+            "group": "identity",
+            "order": 20
+          }
         },
         "camera": {
           "title": "ShootingCamera",
@@ -41,7 +69,22 @@
                 "type": "number"
               },
               "minItems": 3,
-              "maxItems": 3
+              "maxItems": 3,
+              "x-semio-ui": {
+                "widget": "vector",
+                "role": "value",
+                "label": {
+                  "en": "Position",
+                  "de": "Position"
+                },
+                "description": {
+                  "en": "Where the camera stands.",
+                  "de": "Standpunkt der Kamera."
+                },
+                "step": 0.1,
+                "group": "camera",
+                "order": 10
+              }
             },
             "target": {
               "type": "array",
@@ -49,13 +92,73 @@
                 "type": "number"
               },
               "minItems": 3,
-              "maxItems": 3
+              "maxItems": 3,
+              "x-semio-ui": {
+                "widget": "vector",
+                "role": "value",
+                "label": {
+                  "en": "Look at",
+                  "de": "Blickziel"
+                },
+                "description": {
+                  "en": "The point the camera looks at.",
+                  "de": "Der Punkt, auf den die Kamera blickt."
+                },
+                "step": 0.1,
+                "group": "camera",
+                "order": 20
+              }
             },
             "zoom": {
-              "type": "number"
+              "type": "number",
+              "x-semio-ui": {
+                "widget": "slider",
+                "role": "value",
+                "label": {
+                  "en": "Zoom",
+                  "de": "Zoom"
+                },
+                "step": 0.01,
+                "precision": 2,
+                "softMin": 0.1,
+                "softMax": 10,
+                "scale": "log",
+                "snaps": [
+                  0.5,
+                  1,
+                  2
+                ],
+                "group": "camera",
+                "order": 30
+              }
             },
             "fov": {
-              "type": "number"
+              "type": "number",
+              "x-semio-ui": {
+                "widget": "slider",
+                "role": "value",
+                "label": {
+                  "en": "Field of view",
+                  "de": "Sichtfeld"
+                },
+                "description": {
+                  "en": "Vertical opening angle of a perspective camera.",
+                  "de": "Vertikaler Öffnungswinkel einer perspektivischen Kamera."
+                },
+                "unit": "deg",
+                "step": 1,
+                "precision": 1,
+                "softMin": 10,
+                "softMax": 120,
+                "snaps": [
+                  30,
+                  45,
+                  60,
+                  90
+                ],
+                "group": "camera",
+                "order": 40
+              }
             },
             "up": {
               "type": "array",
@@ -63,18 +166,88 @@
                 "type": "number"
               },
               "minItems": 3,
-              "maxItems": 3
+              "maxItems": 3,
+              "x-semio-ui": {
+                "widget": "vector",
+                "role": "value",
+                "label": {
+                  "en": "Up",
+                  "de": "Oben"
+                },
+                "description": {
+                  "en": "Up direction of the camera image.",
+                  "de": "Aufwärtsrichtung des Kamerabilds."
+                },
+                "step": 0.1,
+                "group": "camera",
+                "order": 50
+              }
             },
             "projection": {
-              "type": "string"
+              "type": "string",
+              "x-semio-ui": {
+                "widget": "text",
+                "role": "value",
+                "label": {
+                  "en": "Projection",
+                  "de": "Projektion"
+                },
+                "description": {
+                  "en": "perspective or orthographic.",
+                  "de": "perspective (perspektivisch) oder orthographic (orthografisch)."
+                },
+                "group": "camera",
+                "order": 60
+              }
             }
+          },
+          "x-semio-ui": {
+            "role": "value",
+            "label": {
+              "en": "Camera",
+              "de": "Kamera"
+            },
+            "group": "camera",
+            "order": 30
           }
         }
+      },
+      "x-semio-ui": {
+        "role": "value",
+        "label": {
+          "en": "Saved camera",
+          "de": "Gespeicherte Kamera"
+        },
+        "description": {
+          "en": "The complete saved camera to add.",
+          "de": "Die vollständige hinzuzufügende gespeicherte Kamera."
+        },
+        "group": "record",
+        "order": 10
       }
     },
     "index": {
-      "type": "integer",
-      "minimum": 0
+      "type": [
+        "integer",
+        "null"
+      ],
+      "minimum": 0,
+      "x-semio-ui": {
+        "widget": "stepper",
+        "role": "value",
+        "label": {
+          "en": "Index",
+          "de": "Index"
+        },
+        "description": {
+          "en": "Position in the list; the end when omitted.",
+          "de": "Position in der Liste; ohne Angabe am Ende."
+        },
+        "step": 1,
+        "precision": 0,
+        "group": "order",
+        "order": 20
+      }
     }
   }
 }

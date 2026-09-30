@@ -5,23 +5,17 @@
   "type": "object",
   "additionalProperties": false,
   "required": [
-    "newCraneDispersionMm",
-    "newCraneFZEdKn",
-    "newCraneTWMm",
-    "newCraneWheelContactLengthMm"
+    "craneRunway"
   ],
   "properties": {
-    "newCraneFZEdKn": {
-      "type": "number"
-    },
-    "newCraneWheelContactLengthMm": {
-      "type": "number"
-    },
-    "newCraneDispersionMm": {
-      "type": "number"
-    },
-    "newCraneTWMm": {
-      "type": "number"
+    "craneRunway": {
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1993/snapshot.json#/$defs/CraneRunway",
+      "x-semio-ui": {
+        "label": {
+          "en": "Crane runway",
+          "de": "Kranbahn"
+        }
+      }
     }
   }
 }

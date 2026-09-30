@@ -1,5 +1,5 @@
 {
   "mutation": "changeShotHeight",
   "id": "shot-close",
-  "new_height": 768
+  "newHeight": 768
 }

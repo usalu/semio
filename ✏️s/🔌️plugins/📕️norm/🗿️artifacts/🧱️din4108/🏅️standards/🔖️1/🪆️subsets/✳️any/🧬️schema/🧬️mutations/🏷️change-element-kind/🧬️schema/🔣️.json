@@ -10,10 +10,41 @@
   ],
   "properties": {
     "elementId": {
-      "type": "string"
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Envelope element",
+          "de": "Bauteil der Gebäudehülle"
+        },
+        "description": {
+          "en": "The envelope element this mutation addresses.",
+          "de": "Das Bauteil der Gebäudehülle, das diese Mutation adressiert."
+        },
+        "ref": {
+          "kind": "element"
+        },
+        "group": "target",
+        "order": 10
+      }
     },
     "newKind": {
-      "type": "string"
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "text",
+        "role": "value",
+        "label": {
+          "en": "Element type",
+          "de": "Bauteilart"
+        },
+        "description": {
+          "en": "wall, roof, floor, window, door, frameOpaque or rollerShutterBox.",
+          "de": "wall (Wand), roof (Dach), floor (Boden), window (Fenster), door (Tür), frameOpaque (opaker Rahmen) oder rollerShutterBox (Rollladenkasten)."
+        },
+        "group": "envelope",
+        "order": 20
+      }
     }
   }
 }

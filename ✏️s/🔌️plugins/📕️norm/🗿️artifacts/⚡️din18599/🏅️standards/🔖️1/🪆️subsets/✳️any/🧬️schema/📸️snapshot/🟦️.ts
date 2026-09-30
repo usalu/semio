@@ -97,7 +97,7 @@ export interface CoolingPlant {
 export interface CoolingSystem {
   /** @state artifact */
   plant: CoolingPlant | null;
-}; eer: number; energyCarrier: string };
+}
 
 export interface LightingSystem {
   /** @state artifact */

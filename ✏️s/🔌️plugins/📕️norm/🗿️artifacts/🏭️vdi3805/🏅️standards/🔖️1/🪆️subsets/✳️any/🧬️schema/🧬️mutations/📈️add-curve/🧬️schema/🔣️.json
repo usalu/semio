@@ -9,131 +9,19 @@
   ],
   "properties": {
     "curve": {
-      "title": "CharacteristicCurve",
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "id",
-        "points",
-        "xUnit",
-        "yUnit"
-      ],
-      "properties": {
-        "id": {
-          "type": "string"
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/vdi3805/snapshot.json#/$defs/CharacteristicCurve",
+      "x-semio-ui": {
+        "role": "value",
+        "label": {
+          "en": "Characteristic curve",
+          "de": "Kennlinie"
         },
-        "xUnit": {
-          "title": "VdiUnit",
-          "type": "object",
-          "additionalProperties": false,
-          "required": [
-            "delta",
-            "kind",
-            "siFactor",
-            "symbol"
-          ],
-          "properties": {
-            "symbol": {
-              "type": "string"
-            },
-            "kind": {
-              "type": "string",
-              "enum": [
-                "Dimensionless",
-                "Length",
-                "Area",
-                "Volume",
-                "Mass",
-                "Time",
-                "Temperature",
-                "Force",
-                "Pressure",
-                "Stress",
-                "Moment",
-                "Energy",
-                "Power",
-                "ThermalConductivity",
-                "ThermalResistance",
-                "HeatTransferCoefficient",
-                "AirPermeability",
-                "VentilationRate",
-                "Acceleration"
-              ]
-            },
-            "delta": {
-              "type": "boolean"
-            },
-            "siFactor": {
-              "type": "number"
-            }
-          }
+        "description": {
+          "en": "Curve with x/y units and points, e.g. a kv value or pump head curve.",
+          "de": "Kennlinie mit x/y-Einheiten und Punkten, z. B. kv-Wert- oder Förderhöhenkennlinie."
         },
-        "yUnit": {
-          "title": "VdiUnit",
-          "type": "object",
-          "additionalProperties": false,
-          "required": [
-            "delta",
-            "kind",
-            "siFactor",
-            "symbol"
-          ],
-          "properties": {
-            "symbol": {
-              "type": "string"
-            },
-            "kind": {
-              "type": "string",
-              "enum": [
-                "Dimensionless",
-                "Length",
-                "Area",
-                "Volume",
-                "Mass",
-                "Time",
-                "Temperature",
-                "Force",
-                "Pressure",
-                "Stress",
-                "Moment",
-                "Energy",
-                "Power",
-                "ThermalConductivity",
-                "ThermalResistance",
-                "HeatTransferCoefficient",
-                "AirPermeability",
-                "VentilationRate",
-                "Acceleration"
-              ]
-            },
-            "delta": {
-              "type": "boolean"
-            },
-            "siFactor": {
-              "type": "number"
-            }
-          }
-        },
-        "points": {
-          "type": "array",
-          "items": {
-            "title": "CurvePoint",
-            "type": "object",
-            "additionalProperties": false,
-            "required": [
-              "x",
-              "y"
-            ],
-            "properties": {
-              "x": {
-                "type": "number"
-              },
-              "y": {
-                "type": "number"
-              }
-            }
-          }
-        }
+        "group": "record",
+        "order": 10
       }
     }
   }

@@ -5,25 +5,118 @@
   "type": "object",
   "additionalProperties": false,
   "required": [
+    "mutation",
     "id",
     "newLimitsMin",
     "newLimitsMax"
   ],
   "properties": {
+    "mutation": {
+      "const": "changeDailyScheduleLimits"
+    },
     "id": {
-      "type": "integer"
+      "type": "integer",
+      "minimum": 0,
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Daily schedule",
+          "de": "Tageszeitplan"
+        },
+        "description": {
+          "en": "The daily schedule this mutation changes, by id.",
+          "de": "Tageszeitplan, den diese Mutation ändert, per ID."
+        },
+        "ref": {
+          "kind": "dailySchedule",
+          "domain": "energyModel",
+          "granularity": "schedule"
+        },
+        "group": "target",
+        "order": 10
+      }
     },
     "newLimitsMin": {
       "type": [
         "number",
         "null"
-      ]
+      ],
+      "x-semio-ui": {
+        "widget": "stepper",
+        "role": "value",
+        "label": {
+          "en": "Lower limit",
+          "de": "Untergrenze"
+        },
+        "description": {
+          "en": "Clamps every value; set both limits or neither.",
+          "de": "Begrenzt jeden Wert; beide Grenzen oder keine setzen."
+        },
+        "step": 0.01,
+        "precision": 2,
+        "group": "values",
+        "order": 20
+      }
     },
     "newLimitsMax": {
       "type": [
         "number",
         "null"
-      ]
+      ],
+      "x-semio-ui": {
+        "widget": "stepper",
+        "role": "value",
+        "label": {
+          "en": "Upper limit",
+          "de": "Obergrenze"
+        },
+        "description": {
+          "en": "Clamps every value; set both limits or neither.",
+          "de": "Begrenzt jeden Wert; beide Grenzen oder keine setzen."
+        },
+        "step": 0.01,
+        "precision": 2,
+        "group": "values",
+        "order": 30
+      }
     }
-  }
+  },
+  "allOf": [
+    {
+      "if": {
+        "type": "object",
+        "properties": {
+          "newLimitsMin": {
+            "const": null
+          }
+        }
+      },
+      "then": {
+        "type": "object",
+        "properties": {
+          "newLimitsMax": {
+            "type": "null"
+          }
+        }
+      },
+      "else": {
+        "type": "object",
+        "properties": {
+          "newLimitsMax": {
+            "type": "number"
+          }
+        }
+      }
+    }
+  ],
+  "x-semio-invariant": [
+    {
+      "id": "limits-ordered",
+      "description": {
+        "en": "When both limits are set, the lower limit does not exceed the upper one.",
+        "de": "Sind beide Grenzen gesetzt, überschreitet die Untergrenze die Obergrenze nicht."
+      }
+    }
+  ]
 }

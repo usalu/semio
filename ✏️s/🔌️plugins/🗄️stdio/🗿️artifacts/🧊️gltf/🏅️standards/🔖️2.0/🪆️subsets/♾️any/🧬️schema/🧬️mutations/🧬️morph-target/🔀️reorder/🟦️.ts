@@ -1,8 +1,15 @@
-/** 🦠️ reorder-morph-targets: cohesive atomic mesh mutation. */
-import type { GltfJson, GltfSnapshot, GltfPrimitive, GltfMorphTarget } from '../../📸️snapshot/🟦️.ts';
-import { run, reject, positionIn, itemIndex, permutation, moveItem, type GltfLeafResult, type GltfMutationRejection } from './🟦️';
-export const GltfReorderMorphTargetsDescriptor = { id: 's.stdio.gltf.mutation.reorder-morph-targets.v1', version: 1, kind: 'reorder', touchedPaths: ["document/meshes/*/primitives/*/targets"], referencePolicy: 'accepts only a complete target-index permutation' } as const;
-export interface GltfReorderMorphTargetsPayload { mesh: number; primitive: number; order: number[] }
-export type GltfReorderMorphTargetsResult = GltfLeafResult;
-export const validateGltfReorderMorphTargets = (payload: GltfReorderMorphTargetsPayload, base: GltfSnapshot): GltfMutationRejection | undefined => { const mesh = itemIndex(payload.mesh, base.document.meshes.length, 'document/meshes'); if (mesh) return mesh; const primitive = itemIndex(payload.primitive, base.document.meshes[payload.mesh]!.primitives.length, `document/meshes/${payload.mesh}/primitives`); if (primitive) return primitive; const order = permutation(payload.order, base.document.meshes[payload.mesh]!.primitives[payload.primitive]!.targets.length, 'document/meshes/primitives/targets'); if (order) return order; if (payload.order.every((value,index)=>value===index)) return reject('gltf.mutation.no-observable-change', 'document/meshes/primitives/targets', 'reorder must change order'); return undefined; };
-export const applyGltfReorderMorphTargets = (base: GltfSnapshot, payload: GltfReorderMorphTargetsPayload): GltfReorderMorphTargetsResult => run(base, payload, validateGltfReorderMorphTargets, (next, payload) => { const targets = next.document.meshes[payload.mesh]!.primitives[payload.primitive]!.targets; next.document.meshes[payload.mesh]!.primitives[payload.primitive]!.targets = payload.order.map(index => targets[index]!); }, GltfReorderMorphTargetsDescriptor.touchedPaths);
+/** 🔀️ `reorder-morph-targets` wire twin: the flat `Apply` payload `GltfReorderMorphTargetsPayload` and the phase wire `ReorderMorphTargetsMutation`, exactly as `./🦀️.rs` writes them.
+ * @see ./🧬️schema/🔣️.json */
+import { gltfWireArray, gltfWireIndex, gltfWireObject, gltfWireRequired } from "../../../📸️snapshot/🟦️.ts";
+import { type GltfDiff, type GltfPhase, gltfWirePhase, parseGltfDiff } from "../../../🔺️diff/🟦️.ts";
+
+export interface GltfReorderMorphTargetsPayload {
+  mesh: number;
+  primitive: number;
+  order: number[];
+}
+
+export type ReorderMorphTargetsMutation = GltfPhase<GltfReorderMorphTargetsPayload, GltfDiff>;
+
+export const parseGltfReorderMorphTargetsPayload = gltfWireObject<GltfReorderMorphTargetsPayload>({ mesh: gltfWireRequired(gltfWireIndex), primitive: gltfWireRequired(gltfWireIndex), order: gltfWireRequired(gltfWireArray(gltfWireIndex)) });
+export const parseReorderMorphTargetsMutation = gltfWirePhase(parseGltfReorderMorphTargetsPayload, parseGltfDiff);

@@ -4,8 +4,15 @@
   "title": "DeclareDoctype",
   "type": "object",
   "additionalProperties": false,
+  "required": [
+    "mutation"
+  ],
   "properties": {
-    "external_id": {
+    "mutation": {
+      "const": "declareDoctype",
+      "description": "Aggregate discriminator spliced in by XmlValidMutation; absent when the payload stands alone."
+    },
+    "externalId": {
       "anyOf": [
         {
           "$ref": "#/$defs/XmlExternalId"
@@ -13,11 +20,17 @@
         {
           "type": "null"
         }
-      ]
-    },
-    "mutation": {
-      "const": "declareDoctype",
-      "description": "Aggregate discriminator spliced in by XmlValidMutation; absent when the payload stands alone."
+      ],
+      "x-semio-ui": {
+        "label": {
+          "en": "External identifier",
+          "de": "Externer Bezeichner"
+        },
+        "description": {
+          "en": "SYSTEM or PUBLIC identifier of the external DTD subset.",
+          "de": "SYSTEM- oder PUBLIC-Bezeichner der externen DTD-Teilmenge."
+        }
+      }
     }
   },
   "$defs": {

@@ -2,33 +2,29 @@
   "$schema": "http://json-schema.org/draft-07/schema#",
   "$id": "https://json.schemas.assets.semio-tech.com/framework/os/store/fixtures/timestamped/mutation/set-n/schema.json",
   "title": "SetN",
-  "type": "object",
-  "$defs": {
-    "Payload": {
-      "type": "object",
-      "properties": {
-        "n": {
-          "$ref": "https://json.schemas.assets.semio-tech.com/os/store/fixtures/schema.json#/$defs/I32"
-        },
-        "physicalMs": {
-          "$ref": "https://json.schemas.assets.semio-tech.com/os/store/fixtures/schema.json#/$defs/U64"
-        }
-      },
-      "required": [
-        "n",
-        "physicalMs"
-      ]
-    }
-  },
-  "allOf": [
-    {
-      "$ref": "#/$defs/Payload"
-    }
-  ],
   "propertyNames": {
     "enum": [
+      "operation",
       "n",
       "physicalMs"
     ]
+  },
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "operation",
+    "n",
+    "physicalMs"
+  ],
+  "properties": {
+    "operation": {
+      "const": "setN"
+    },
+    "n": {
+      "$ref": "https://json.schemas.assets.semio-tech.com/os/store/fixtures/schema.json#/$defs/I32"
+    },
+    "physicalMs": {
+      "$ref": "https://json.schemas.assets.semio-tech.com/os/store/fixtures/schema.json#/$defs/U64"
+    }
   }
 }

@@ -16,6 +16,14 @@ Feature: Apply every typed TIFF 6.0 mutation to a real-world document
   needing a second fixture per row. Every scenario copies the fixture into the case work directory
   before touching it; the committed document is never written to.
 
+  Every Examples `params` cell is exactly the leaf's wire payload — its `payload_value()`, camelCase,
+  no aggregate tag — decoded by the subject through the derive-generated `from_payload_value` and
+  read by the oracle's IFD-chain codec by the same field names: a tag names its `TiffFieldType` and
+  carries its `TiffValues` as `{kind, value}`, and strip bytes travel as byte arrays. `replace-pixels`
+  carries the whole replacement RGBA raster of IFD 0, which for this 2275x2560 scan would be 23.3
+  million numbers in one cell, so it runs in its own outlines on the committed 4x4 RGB document
+  (`shared://🔲️replace-pixels-applied/⬅️before.tiff`) with the raster of that recipe's own after-image.
+
   On the @id-identity-round-trip scenario the "re-encoded bytes must differ from the input" half of
   the law binds the SUBJECT only, and deliberately does not bind the oracle: the committed fixture
   is itself the output of the oracle's own independent IFD-chain writer (see above), so that writer
@@ -54,12 +62,25 @@ Feature: Apply every typed TIFF 6.0 mutation to a real-world document
     Then the oracle and the subject agree on the semantic projection
     Examples:
       | id | params |
-      | change-byte-order | {"byteOrder": "big-endian"} |
-      | insert-ifd | {"index": 2, "ifd": {"entries": [{"tag":256,"type":4,"values":[8]},{"tag":257,"type":4,"values":[8]},{"tag":258,"type":3,"values":[8,8,8]},{"tag":259,"type":3,"values":[1]},{"tag":262,"type":3,"values":[2]},{"tag":277,"type":3,"values":[3]}], "pixels": "fefefefefefefefefefefefefefefef9f7f7f9f7f7fefefefefefefefefefefefefefefefcfbfbfaf7f7fbf7f7fbfafafefefefefefefefefefefefef7f4f4f8f3f3f9f6f6fefefefefefefefefefefefefbf9f9faf6f6faf7f7fdfdfdfefefefefefefefefefefefefaf7f7f8f8f8f8f6f6fbfafafefefefbf9f9fbf8f8fbf8f8f8f6f6fbfbfbfbfafaf9f6f6fdfcfcf9f6f6f9f5f5f8f4f4faf7f7f8f6f6faf8f8f8f4f4f8f5f5fcfcfcfbfafafbfafafbfafafcfbfbfcfbfbf8f4f4f9f6f6"}} |
-      | remove-ifd | {"index": 1} |
-      | replace-tag | {"ifdIndex": 0, "tag": 315, "type": 2, "values": ["Derived for ticket 26/08/23/END-TO-END-TESTING-REFACTOR"]} |
-      | remove-tag | {"ifdIndex": 0, "tag": 282} |
-      | replace-pixels | {"pixelsFixture": "shared://🖼️mutate-tiff-6-0/🖼️.rgba"} |
+      | change-byte-order | {"byteOrder":"bigEndian"} |
+      | insert-ifd | {"index":2,"ifd":{"entries":[{"tag":256,"kind":"long","values":{"kind":"long","value":[8]}},{"tag":257,"kind":"long","values":{"kind":"long","value":[8]}},{"tag":258,"kind":"short","values":{"kind":"short","value":[8,8,8]}},{"tag":259,"kind":"short","values":{"kind":"short","value":[1]}},{"tag":262,"kind":"short","values":{"kind":"short","value":[2]}},{"tag":277,"kind":"short","values":{"kind":"short","value":[3]}}],"pixels":[254,254,254,254,254,254,254,254,254,254,254,254,254,254,254,249,247,247,249,247,247,254,254,254,254,254,254,254,254,254,254,254,254,254,254,254,252,251,251,250,247,247,251,247,247,251,250,250,254,254,254,254,254,254,254,254,254,254,254,254,247,244,244,248,243,243,249,246,246,254,254,254,254,254,254,254,254,254,254,254,254,251,249,249,250,246,246,250,247,247,253,253,253,254,254,254,254,254,254,254,254,254,254,254,254,250,247,247,248,248,248,248,246,246,251,250,250,254,254,254,251,249,249,251,248,248,251,248,248,248,246,246,251,251,251,251,250,250,249,246,246,253,252,252,249,246,246,249,245,245,248,244,244,250,247,247,248,246,246,250,248,248,248,244,244,248,245,245,252,252,252,251,250,250,251,250,250,251,250,250,252,251,251,252,251,251,248,244,244,249,246,246]}} |
+      | remove-ifd | {"index":1} |
+      | replace-tag | {"ifdIndex":0,"tag":315,"kind":"ascii","values":{"kind":"ascii","value":"Derived for ticket 26/08/23/END-TO-END-TESTING-REFACTOR"}} |
+      | remove-tag | {"ifdIndex":0,"tag":282} |
+
+  @id-mutate-raster
+  @level-exhaustive
+  @mode-differential
+  Scenario Outline: Apply <id> to a small document
+    Given the small input document shared://🔲️replace-pixels-applied/⬅️before.tiff
+    When the <id> mutation is applied with its parameters
+      """
+      {"kind": "<id>", "params": <params>}
+      """
+    Then the oracle and the subject agree on the semantic projection
+    Examples:
+      | id | params |
+      | replace-pixels | {"pixels":[200,200,200,255,240,200,220,255,24,200,240,255,64,200,4,255,200,4,220,255,240,4,240,255,24,4,4,255,64,4,24,255,200,64,240,255,240,64,4,255,24,64,24,255,64,64,44,255,200,124,4,255,240,124,24,255,24,124,44,255,64,124,64,255]} |
 
   @id-inverse
   @level-exhaustive
@@ -74,12 +95,26 @@ Feature: Apply every typed TIFF 6.0 mutation to a real-world document
     Then the oracle and the subject agree on the semantic projection
     Examples:
       | id | params |
-      | change-byte-order | {"byteOrder": "big-endian"} |
-      | insert-ifd | {"index": 2, "ifd": {"entries": [{"tag":256,"type":4,"values":[8]},{"tag":257,"type":4,"values":[8]},{"tag":258,"type":3,"values":[8,8,8]},{"tag":259,"type":3,"values":[1]},{"tag":262,"type":3,"values":[2]},{"tag":277,"type":3,"values":[3]}], "pixels": "fefefefefefefefefefefefefefefef9f7f7f9f7f7fefefefefefefefefefefefefefefefcfbfbfaf7f7fbf7f7fbfafafefefefefefefefefefefefef7f4f4f8f3f3f9f6f6fefefefefefefefefefefefefbf9f9faf6f6faf7f7fdfdfdfefefefefefefefefefefefefaf7f7f8f8f8f8f6f6fbfafafefefefbf9f9fbf8f8fbf8f8f8f6f6fbfbfbfbfafaf9f6f6fdfcfcf9f6f6f9f5f5f8f4f4faf7f7f8f6f6faf8f8f8f4f4f8f5f5fcfcfcfbfafafbfafafbfafafcfbfbfcfbfbf8f4f4f9f6f6"}} |
-      | remove-ifd | {"index": 1} |
-      | replace-tag | {"ifdIndex": 0, "tag": 315, "type": 2, "values": ["Derived for ticket 26/08/23/END-TO-END-TESTING-REFACTOR"]} |
-      | remove-tag | {"ifdIndex": 0, "tag": 282} |
-      | replace-pixels | {"pixelsFixture": "shared://🖼️mutate-tiff-6-0/🖼️.rgba"} |
+      | change-byte-order | {"byteOrder":"bigEndian"} |
+      | insert-ifd | {"index":2,"ifd":{"entries":[{"tag":256,"kind":"long","values":{"kind":"long","value":[8]}},{"tag":257,"kind":"long","values":{"kind":"long","value":[8]}},{"tag":258,"kind":"short","values":{"kind":"short","value":[8,8,8]}},{"tag":259,"kind":"short","values":{"kind":"short","value":[1]}},{"tag":262,"kind":"short","values":{"kind":"short","value":[2]}},{"tag":277,"kind":"short","values":{"kind":"short","value":[3]}}],"pixels":[254,254,254,254,254,254,254,254,254,254,254,254,254,254,254,249,247,247,249,247,247,254,254,254,254,254,254,254,254,254,254,254,254,254,254,254,252,251,251,250,247,247,251,247,247,251,250,250,254,254,254,254,254,254,254,254,254,254,254,254,247,244,244,248,243,243,249,246,246,254,254,254,254,254,254,254,254,254,254,254,254,251,249,249,250,246,246,250,247,247,253,253,253,254,254,254,254,254,254,254,254,254,254,254,254,250,247,247,248,248,248,248,246,246,251,250,250,254,254,254,251,249,249,251,248,248,251,248,248,248,246,246,251,251,251,251,250,250,249,246,246,253,252,252,249,246,246,249,245,245,248,244,244,250,247,247,248,246,246,250,248,248,248,244,244,248,245,245,252,252,252,251,250,250,251,250,250,251,250,250,252,251,251,252,251,251,248,244,244,249,246,246]}} |
+      | remove-ifd | {"index":1} |
+      | replace-tag | {"ifdIndex":0,"tag":315,"kind":"ascii","values":{"kind":"ascii","value":"Derived for ticket 26/08/23/END-TO-END-TESTING-REFACTOR"}} |
+      | remove-tag | {"ifdIndex":0,"tag":282} |
+
+  @id-inverse-raster
+  @level-exhaustive
+  @mode-differential
+  Scenario Outline: Undoing <id> restores a small document
+    Given the small input document shared://🔲️replace-pixels-applied/⬅️before.tiff
+    When the <id> mutation is applied with its parameters
+      """
+      {"kind": "<id>", "params": <params>}
+      """
+    And its inverse is applied
+    Then the oracle and the subject agree on the semantic projection
+    Examples:
+      | id | params |
+      | replace-pixels | {"pixels":[200,200,200,255,240,200,220,255,24,200,240,255,64,200,4,255,200,4,220,255,240,4,240,255,24,4,4,255,64,4,24,255,200,64,240,255,240,64,4,255,24,64,24,255,64,64,44,255,200,124,4,255,240,124,24,255,24,124,44,255,64,124,64,255]} |
 
   @id-identity-round-trip
   @level-long

@@ -5,15 +5,24 @@
   "type": "object",
   "additionalProperties": false,
   "required": [
+    "mutation",
     "dataPeriods"
   ],
   "properties": {
-    "dataPeriods": {
-      "$ref": "#/$defs/EpwDataPeriods"
-    },
     "mutation": {
       "const": "setDataPeriods",
       "description": "Aggregate discriminator spliced in by EpwMutation; absent when the payload stands alone."
+    },
+    "dataPeriods": {
+      "$ref": "#/$defs/EpwDataPeriods",
+      "x-semio-ui": {
+        "label": {
+          "en": "Data periods",
+          "de": "Datenzeiträume"
+        },
+        "group": "value",
+        "order": 10
+      }
     }
   },
   "$defs": {
@@ -28,12 +37,24 @@
         "recordsPerHour": {
           "type": "integer",
           "minimum": 0,
-          "maximum": 4294967295
+          "maximum": 4294967295,
+          "x-semio-ui": {
+            "label": {
+              "en": "Records per hour",
+              "de": "Datensätze pro Stunde"
+            }
+          }
         },
         "periods": {
           "type": "array",
           "items": {
             "$ref": "#/$defs/EpwDataPeriod"
+          },
+          "x-semio-ui": {
+            "label": {
+              "en": "Periods",
+              "de": "Zeiträume"
+            }
           }
         }
       }
@@ -49,16 +70,40 @@
       ],
       "properties": {
         "name": {
-          "type": "string"
+          "type": "string",
+          "x-semio-ui": {
+            "label": {
+              "en": "Period name",
+              "de": "Name des Zeitraums"
+            }
+          }
         },
         "startDayOfWeek": {
-          "type": "string"
+          "type": "string",
+          "x-semio-ui": {
+            "label": {
+              "en": "Start weekday",
+              "de": "Wochentag des Beginns"
+            }
+          }
         },
         "startDate": {
-          "type": "string"
+          "type": "string",
+          "x-semio-ui": {
+            "label": {
+              "en": "Start date",
+              "de": "Anfangsdatum"
+            }
+          }
         },
         "endDate": {
-          "type": "string"
+          "type": "string",
+          "x-semio-ui": {
+            "label": {
+              "en": "End date",
+              "de": "Enddatum"
+            }
+          }
         }
       }
     }

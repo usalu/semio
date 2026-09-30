@@ -5,6 +5,7 @@
   "type": "object",
   "additionalProperties": false,
   "required": [
+    "mutation",
     "id",
     "newKind",
     "newLowOutdoorC",
@@ -13,23 +14,184 @@
     "newHighSetpointC"
   ],
   "properties": {
+    "mutation": {
+      "const": "replaceSetpointManagerKind"
+    },
     "id": {
-      "type": "integer"
+      "type": "integer",
+      "minimum": 0,
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Setpoint manager",
+          "de": "Sollwertführung"
+        },
+        "description": {
+          "en": "The setpoint manager this mutation changes, by id.",
+          "de": "Sollwertführung, die diese Mutation ändert, per ID."
+        },
+        "ref": {
+          "kind": "setpointManager"
+        },
+        "group": "target",
+        "order": 10
+      }
     },
     "newKind": {
-      "type": "string"
+      "type": "string",
+      "enum": [
+        "Scheduled",
+        "OutdoorAirReset",
+        "WarmestZone",
+        "ColdestZone"
+      ],
+      "x-semio-ui": {
+        "widget": "select",
+        "role": "value",
+        "label": {
+          "en": "Control law",
+          "de": "Regelgesetz"
+        },
+        "options": {
+          "Scheduled": {
+            "en": "Scheduled",
+            "de": "Zeitplangeführt"
+          },
+          "OutdoorAirReset": {
+            "en": "Outdoor air reset",
+            "de": "Außentemperaturgeführt"
+          },
+          "WarmestZone": {
+            "en": "Warmest zone",
+            "de": "Wärmste Zone"
+          },
+          "ColdestZone": {
+            "en": "Coldest zone",
+            "de": "Kälteste Zone"
+          }
+        },
+        "group": "control",
+        "order": 20
+      }
     },
     "newLowOutdoorC": {
-      "type": "number"
+      "type": "number",
+      "x-semio-ui": {
+        "widget": "stepper",
+        "role": "value",
+        "label": {
+          "en": "Low outdoor temperature",
+          "de": "Untere Außentemperatur"
+        },
+        "description": {
+          "en": "Lower end of the outdoor temperature range; 0 unless the law is OutdoorAirReset.",
+          "de": "Unteres Ende des Außentemperaturbereichs; 0 außer beim Regelgesetz OutdoorAirReset."
+        },
+        "unit": "°C",
+        "step": 0.5,
+        "precision": 1,
+        "group": "control",
+        "order": 30
+      }
     },
     "newHighOutdoorC": {
-      "type": "number"
+      "type": "number",
+      "x-semio-ui": {
+        "widget": "stepper",
+        "role": "value",
+        "label": {
+          "en": "High outdoor temperature",
+          "de": "Obere Außentemperatur"
+        },
+        "description": {
+          "en": "Upper end of the outdoor temperature range, above the lower end; 0 unless the law is OutdoorAirReset.",
+          "de": "Oberes Ende des Außentemperaturbereichs, über dem unteren Ende; 0 außer beim Regelgesetz OutdoorAirReset."
+        },
+        "unit": "°C",
+        "step": 0.5,
+        "precision": 1,
+        "group": "control",
+        "order": 40
+      }
     },
     "newLowSetpointC": {
-      "type": "number"
+      "type": "number",
+      "x-semio-ui": {
+        "widget": "stepper",
+        "role": "value",
+        "label": {
+          "en": "Setpoint at low outdoor temperature",
+          "de": "Sollwert bei unterer Außentemperatur"
+        },
+        "description": {
+          "en": "0 unless the law is OutdoorAirReset.",
+          "de": "0 außer beim Regelgesetz OutdoorAirReset."
+        },
+        "unit": "°C",
+        "step": 0.5,
+        "precision": 1,
+        "group": "control",
+        "order": 50
+      }
     },
     "newHighSetpointC": {
-      "type": "number"
+      "type": "number",
+      "x-semio-ui": {
+        "widget": "stepper",
+        "role": "value",
+        "label": {
+          "en": "Setpoint at high outdoor temperature",
+          "de": "Sollwert bei oberer Außentemperatur"
+        },
+        "description": {
+          "en": "0 unless the law is OutdoorAirReset.",
+          "de": "0 außer beim Regelgesetz OutdoorAirReset."
+        },
+        "unit": "°C",
+        "step": 0.5,
+        "precision": 1,
+        "group": "control",
+        "order": 60
+      }
     }
-  }
+  },
+  "allOf": [
+    {
+      "if": {
+        "type": "object",
+        "properties": {
+          "newKind": {
+            "const": "OutdoorAirReset"
+          }
+        }
+      },
+      "else": {
+        "type": "object",
+        "properties": {
+          "newLowOutdoorC": {
+            "const": 0
+          },
+          "newHighOutdoorC": {
+            "const": 0
+          },
+          "newLowSetpointC": {
+            "const": 0
+          },
+          "newHighSetpointC": {
+            "const": 0
+          }
+        }
+      }
+    }
+  ],
+  "x-semio-invariant": [
+    {
+      "id": "outdoor-reset-range",
+      "description": {
+        "en": "Under OutdoorAirReset the high outdoor temperature lies above the low one.",
+        "de": "Beim Regelgesetz OutdoorAirReset liegt die obere Außentemperatur über der unteren."
+      }
+    }
+  ]
 }

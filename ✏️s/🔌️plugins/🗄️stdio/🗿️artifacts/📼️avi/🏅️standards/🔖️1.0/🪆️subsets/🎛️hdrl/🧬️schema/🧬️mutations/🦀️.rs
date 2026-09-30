@@ -144,6 +144,19 @@ pub fn apply_avi_mutation(snapshot: &mut AviSnapshot, mutation: &AviMutation) ->
         Err(error) => protocol::MutationOutcome::error(error.code, error.message, error.target).absorb_messages(outcome.messages().to_vec()),
     }
 }
+
+/// ↩️ The vocabulary's own inverse of `mutation` against the pre-mutation `base`, reachable without naming the trait.
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn inverse_avi_mutation(mutation: &AviMutation, base: &AviSnapshot) -> Vec<AviMutation> {
+    <AviMutation as Mutation<AviSnapshot>>::inverse(mutation, base)
+}
+
+/// 📥️ Decodes one leaf's wire payload — its `payload_value()` JSON, no aggregate tag, the form every committed
+/// `{kind, params}` feature row carries — by semantic kind through the derive-generated `from_payload_value`.
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn decode_avi_mutation_payload(kind: &str, params: &str) -> Result<AviMutation, String> {
+    <AviMutation as Mutation<AviSnapshot>>::from_payload_value(kind, pack::from_json_str(params).map_err(|error| error.to_string())?).map_err(|error| error.to_string())
+}
 //#endregion 🔖️Mutation
 
 //#region OpCodecs

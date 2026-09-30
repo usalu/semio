@@ -19,7 +19,13 @@
         {
           "type": "null"
         }
-      ]
+      ],
+      "x-semio-ui": {
+        "label": {
+          "en": "Stroke color",
+          "de": "Konturfarbe"
+        }
+      }
     }
   },
   "$defs": {
@@ -34,16 +40,48 @@
       ],
       "properties": {
         "r": {
-          "type": "number"
+          "type": "number",
+          "x-semio-ui": {
+            "widget": "stepper",
+            "label": {
+              "en": "Red",
+              "de": "Rot"
+            }
+          }
         },
         "g": {
-          "type": "number"
+          "type": "number",
+          "x-semio-ui": {
+            "widget": "stepper",
+            "label": {
+              "en": "Green",
+              "de": "Grün"
+            }
+          }
         },
         "b": {
-          "type": "number"
+          "type": "number",
+          "x-semio-ui": {
+            "widget": "stepper",
+            "label": {
+              "en": "Blue",
+              "de": "Blau"
+            }
+          }
         },
         "a": {
-          "type": "number"
+          "type": "number",
+          "x-semio-ui": {
+            "widget": "stepper",
+            "label": {
+              "en": "Alpha",
+              "de": "Alpha"
+            },
+            "description": {
+              "en": "Opacity, 0 transparent to 1 opaque.",
+              "de": "Deckkraft, 0 transparent bis 1 deckend."
+            }
+          }
         }
       }
     }

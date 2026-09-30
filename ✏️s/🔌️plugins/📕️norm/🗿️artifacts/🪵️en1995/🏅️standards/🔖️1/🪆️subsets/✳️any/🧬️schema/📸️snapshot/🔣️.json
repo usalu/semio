@@ -28,5 +28,977 @@
       },
       "x-semio-state": "artifact"
     }
+  },
+  "$defs": {
+    "TimberConnection": {
+      "title": "TimberConnection",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "labelEn",
+        "labelDe",
+        "fastenerType",
+        "strengthClass",
+        "serviceClass",
+        "diameterM",
+        "number",
+        "rows",
+        "spacingM",
+        "edgeDistanceM",
+        "endDistanceM",
+        "t1M",
+        "t2M",
+        "steelPlate",
+        "steelPlateThicknessM",
+        "shearPlanes",
+        "fUK",
+        "actions"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "labelEn": {
+          "type": "string",
+          "x-semio-ui": {
+            "widget": "text",
+            "label": {
+              "en": "English label",
+              "de": "Englische Bezeichnung"
+            }
+          }
+        },
+        "labelDe": {
+          "type": "string",
+          "x-semio-ui": {
+            "widget": "text",
+            "label": {
+              "en": "German label",
+              "de": "Deutsche Bezeichnung"
+            }
+          }
+        },
+        "fastenerType": {
+          "type": "string",
+          "x-semio-ui": {
+            "widget": "text",
+            "label": {
+              "en": "Fastener type",
+              "de": "Art des Verbindungsmittels"
+            },
+            "description": {
+              "en": "nail, screw, bolt or dowel.",
+              "de": "nail (Nagel), screw (Schraube), bolt (Bolzen) oder dowel (Stabdübel)."
+            }
+          }
+        },
+        "strengthClass": {
+          "type": "string",
+          "x-semio-ui": {
+            "widget": "text",
+            "label": {
+              "en": "Strength class",
+              "de": "Festigkeitsklasse"
+            },
+            "description": {
+              "en": "E.g. C24, GL24h, GL28c, LVL32 or CLT100 (EN 338, EN 14080).",
+              "de": "Z. B. C24, GL24h, GL28c, LVL32 oder CLT100 (EN 338, EN 14080)."
+            }
+          }
+        },
+        "serviceClass": {
+          "type": "integer",
+          "minimum": 0,
+          "x-semio-ui": {
+            "widget": "stepper",
+            "label": {
+              "en": "Service class",
+              "de": "Nutzungsklasse"
+            },
+            "description": {
+              "en": "Service class 1, 2 or 3 (EN 1995-1-1 §2.3.1.3).",
+              "de": "Nutzungsklasse 1, 2 oder 3 (EN 1995-1-1 §2.3.1.3)."
+            },
+            "step": 1,
+            "precision": 0
+          }
+        },
+        "diameterM": {
+          "type": "number",
+          "x-semio-ui": {
+            "label": {
+              "en": "Fastener diameter d",
+              "de": "Durchmesser des Verbindungsmittels d"
+            },
+            "widget": "stepper",
+            "unit": "m",
+            "displayUnit": "mm",
+            "displayFactor": 1000,
+            "precision": 1
+          }
+        },
+        "number": {
+          "type": "integer",
+          "minimum": 0,
+          "x-semio-ui": {
+            "widget": "stepper",
+            "label": {
+              "en": "Number of fasteners n",
+              "de": "Anzahl der Verbindungsmittel n"
+            },
+            "step": 1,
+            "precision": 0
+          }
+        },
+        "rows": {
+          "type": "integer",
+          "minimum": 0,
+          "x-semio-ui": {
+            "widget": "stepper",
+            "label": {
+              "en": "Number of rows",
+              "de": "Anzahl der Reihen"
+            },
+            "step": 1,
+            "precision": 0
+          }
+        },
+        "spacingM": {
+          "type": "number",
+          "x-semio-ui": {
+            "label": {
+              "en": "Fastener spacing a₁",
+              "de": "Abstand der Verbindungsmittel a₁"
+            },
+            "widget": "stepper",
+            "unit": "m",
+            "displayUnit": "mm",
+            "displayFactor": 1000,
+            "precision": 1
+          }
+        },
+        "edgeDistanceM": {
+          "type": "number",
+          "x-semio-ui": {
+            "label": {
+              "en": "Edge distance a₄",
+              "de": "Randabstand a₄"
+            },
+            "widget": "stepper",
+            "unit": "m",
+            "displayUnit": "mm",
+            "displayFactor": 1000,
+            "precision": 1
+          }
+        },
+        "endDistanceM": {
+          "type": "number",
+          "x-semio-ui": {
+            "label": {
+              "en": "End distance a₃",
+              "de": "Hirnholzabstand a₃"
+            },
+            "widget": "stepper",
+            "unit": "m",
+            "displayUnit": "mm",
+            "displayFactor": 1000,
+            "precision": 1
+          }
+        },
+        "t1M": {
+          "type": "number",
+          "x-semio-ui": {
+            "label": {
+              "en": "Side member thickness t₁",
+              "de": "Dicke des Seitenholzes t₁"
+            },
+            "widget": "stepper",
+            "unit": "m",
+            "displayUnit": "mm",
+            "displayFactor": 1000,
+            "precision": 1
+          }
+        },
+        "t2M": {
+          "type": "number",
+          "x-semio-ui": {
+            "label": {
+              "en": "Central member thickness t₂",
+              "de": "Dicke des Mittelholzes t₂"
+            },
+            "widget": "stepper",
+            "unit": "m",
+            "displayUnit": "mm",
+            "displayFactor": 1000,
+            "precision": 1
+          }
+        },
+        "steelPlate": {
+          "type": "boolean",
+          "x-semio-ui": {
+            "widget": "toggle",
+            "label": {
+              "en": "Steel-to-timber connection",
+              "de": "Stahlblech-Holz-Verbindung"
+            }
+          }
+        },
+        "steelPlateThicknessM": {
+          "type": "number",
+          "x-semio-ui": {
+            "label": {
+              "en": "Steel plate thickness",
+              "de": "Stahlblechdicke"
+            },
+            "widget": "stepper",
+            "unit": "m",
+            "displayUnit": "mm",
+            "displayFactor": 1000,
+            "precision": 1
+          }
+        },
+        "shearPlanes": {
+          "type": "integer",
+          "minimum": 0,
+          "x-semio-ui": {
+            "widget": "stepper",
+            "label": {
+              "en": "Number of shear planes",
+              "de": "Anzahl der Scherfugen"
+            },
+            "step": 1,
+            "precision": 0
+          }
+        },
+        "fUK": {
+          "type": "number",
+          "x-semio-ui": {
+            "label": {
+              "en": "Fastener tensile strength f_u,k",
+              "de": "Zugfestigkeit des Verbindungsmittels f_u,k"
+            },
+            "widget": "stepper",
+            "unit": "Pa",
+            "displayUnit": "N/mm²",
+            "displayFactor": 1e-06,
+            "precision": 1
+          }
+        },
+        "actions": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/ConnectionAction"
+          },
+          "x-semio-ui": {
+            "label": {
+              "en": "Connection actions",
+              "de": "Einwirkungen auf die Verbindung"
+            }
+          }
+        }
+      }
+    },
+    "ConnectionAction": {
+      "title": "ConnectionAction",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "kind",
+        "loadDuration",
+        "fKN"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "kind": {
+          "type": "string",
+          "x-semio-ui": {
+            "widget": "text",
+            "label": {
+              "en": "Action type",
+              "de": "Einwirkungsart"
+            },
+            "description": {
+              "en": "permanent, imposed, snow, wind or accidental.",
+              "de": "permanent (ständig), imposed (Nutzlast), snow (Schnee), wind oder accidental (außergewöhnlich)."
+            }
+          }
+        },
+        "loadDuration": {
+          "type": "string",
+          "x-semio-ui": {
+            "widget": "text",
+            "label": {
+              "en": "Load-duration class",
+              "de": "Klasse der Lasteinwirkungsdauer"
+            },
+            "description": {
+              "en": "permanent, long, medium, short or instantaneous (EN 1995-1-1 Table 2.1).",
+              "de": "permanent (ständig), long (lang), medium (mittel), short (kurz) oder instantaneous (sehr kurz) nach EN 1995-1-1 Tabelle 2.1."
+            }
+          }
+        },
+        "fKN": {
+          "type": "number",
+          "x-semio-ui": {
+            "label": {
+              "en": "Characteristic force F_k",
+              "de": "Charakteristische Kraft F_k"
+            },
+            "widget": "stepper",
+            "unit": "N",
+            "displayUnit": "kN",
+            "displayFactor": 0.001,
+            "precision": 2
+          }
+        }
+      }
+    },
+    "TimberMember": {
+      "title": "TimberMember",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "labelEn",
+        "labelDe",
+        "role",
+        "strengthClass",
+        "serviceClass",
+        "support",
+        "bM",
+        "hM",
+        "spanM",
+        "supportLengthM",
+        "bearingLengthM",
+        "bucklingLengthYM",
+        "bucklingLengthZM",
+        "lateralRestraintSpacingM",
+        "notchDepthM",
+        "notchDistanceM",
+        "mCritNm",
+        "massKgPerM",
+        "massKgPerM2",
+        "dampingXi",
+        "fireDurationS",
+        "bridgeNObs",
+        "bridgeTLYears",
+        "bridgeBeta",
+        "bridgeA",
+        "bridgeB",
+        "bridgeCrowdPerM2",
+        "actions"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "labelEn": {
+          "type": "string",
+          "x-semio-ui": {
+            "widget": "text",
+            "label": {
+              "en": "English label",
+              "de": "Englische Bezeichnung"
+            }
+          }
+        },
+        "labelDe": {
+          "type": "string",
+          "x-semio-ui": {
+            "widget": "text",
+            "label": {
+              "en": "German label",
+              "de": "Deutsche Bezeichnung"
+            }
+          }
+        },
+        "role": {
+          "$ref": "#/$defs/MemberRole",
+          "x-semio-ui": {
+            "label": {
+              "en": "Structural role",
+              "de": "Tragwerksrolle"
+            }
+          }
+        },
+        "strengthClass": {
+          "type": "string",
+          "x-semio-ui": {
+            "widget": "text",
+            "label": {
+              "en": "Strength class",
+              "de": "Festigkeitsklasse"
+            },
+            "description": {
+              "en": "E.g. C24, GL24h, GL28c, LVL32 or CLT100 (EN 338, EN 14080).",
+              "de": "Z. B. C24, GL24h, GL28c, LVL32 oder CLT100 (EN 338, EN 14080)."
+            }
+          }
+        },
+        "serviceClass": {
+          "type": "integer",
+          "minimum": 0,
+          "x-semio-ui": {
+            "widget": "stepper",
+            "label": {
+              "en": "Service class",
+              "de": "Nutzungsklasse"
+            },
+            "description": {
+              "en": "Service class 1, 2 or 3 (EN 1995-1-1 §2.3.1.3).",
+              "de": "Nutzungsklasse 1, 2 oder 3 (EN 1995-1-1 §2.3.1.3)."
+            },
+            "step": 1,
+            "precision": 0
+          }
+        },
+        "support": {
+          "$ref": "#/$defs/SupportType",
+          "x-semio-ui": {
+            "label": {
+              "en": "Support conditions",
+              "de": "Lagerungsart"
+            }
+          }
+        },
+        "bM": {
+          "type": "number",
+          "x-semio-ui": {
+            "label": {
+              "en": "Width b",
+              "de": "Breite b"
+            },
+            "widget": "stepper",
+            "unit": "m",
+            "displayUnit": "mm",
+            "displayFactor": 1000,
+            "precision": 1
+          }
+        },
+        "hM": {
+          "type": "number",
+          "x-semio-ui": {
+            "label": {
+              "en": "Depth h",
+              "de": "Höhe h"
+            },
+            "widget": "stepper",
+            "unit": "m",
+            "displayUnit": "mm",
+            "displayFactor": 1000,
+            "precision": 1
+          }
+        },
+        "spanM": {
+          "type": "number",
+          "x-semio-ui": {
+            "label": {
+              "en": "Span l",
+              "de": "Stützweite l"
+            },
+            "widget": "stepper",
+            "unit": "m",
+            "precision": 2
+          }
+        },
+        "supportLengthM": {
+          "type": "number",
+          "x-semio-ui": {
+            "label": {
+              "en": "Support length",
+              "de": "Auflagerlänge"
+            },
+            "widget": "stepper",
+            "unit": "m",
+            "displayUnit": "mm",
+            "displayFactor": 1000,
+            "precision": 1
+          }
+        },
+        "bearingLengthM": {
+          "type": "number",
+          "x-semio-ui": {
+            "label": {
+              "en": "Bearing length l",
+              "de": "Aufstandslänge l"
+            },
+            "widget": "stepper",
+            "unit": "m",
+            "displayUnit": "mm",
+            "displayFactor": 1000,
+            "precision": 1
+          }
+        },
+        "bucklingLengthYM": {
+          "type": "number",
+          "x-semio-ui": {
+            "label": {
+              "en": "Buckling length l_ef,y",
+              "de": "Knicklänge l_ef,y"
+            },
+            "widget": "stepper",
+            "unit": "m",
+            "precision": 2
+          }
+        },
+        "bucklingLengthZM": {
+          "type": "number",
+          "x-semio-ui": {
+            "label": {
+              "en": "Buckling length l_ef,z",
+              "de": "Knicklänge l_ef,z"
+            },
+            "widget": "stepper",
+            "unit": "m",
+            "precision": 2
+          }
+        },
+        "lateralRestraintSpacingM": {
+          "type": "number",
+          "x-semio-ui": {
+            "label": {
+              "en": "Spacing of lateral restraints l_ef",
+              "de": "Abstand der seitlichen Halterungen l_ef"
+            },
+            "widget": "stepper",
+            "unit": "m",
+            "precision": 2
+          }
+        },
+        "notchDepthM": {
+          "type": "number",
+          "x-semio-ui": {
+            "label": {
+              "en": "Notch depth h − h_ef",
+              "de": "Ausklinkungstiefe h − h_ef"
+            },
+            "widget": "stepper",
+            "unit": "m",
+            "displayUnit": "mm",
+            "displayFactor": 1000,
+            "precision": 1
+          }
+        },
+        "notchDistanceM": {
+          "type": "number",
+          "x-semio-ui": {
+            "label": {
+              "en": "Notch distance x",
+              "de": "Abstand der Ausklinkung x"
+            },
+            "widget": "stepper",
+            "unit": "m",
+            "displayUnit": "mm",
+            "displayFactor": 1000,
+            "precision": 1
+          }
+        },
+        "mCritNm": {
+          "type": "number",
+          "x-semio-ui": {
+            "label": {
+              "en": "Critical bending moment M_crit",
+              "de": "Kritisches Biegemoment M_crit"
+            },
+            "widget": "stepper",
+            "unit": "N·m",
+            "displayUnit": "kN·m",
+            "displayFactor": 0.001,
+            "precision": 2
+          }
+        },
+        "massKgPerM": {
+          "type": "number",
+          "x-semio-ui": {
+            "label": {
+              "en": "Linear mass m",
+              "de": "Masse je Länge m"
+            },
+            "widget": "stepper",
+            "unit": "kg/m",
+            "precision": 1
+          }
+        },
+        "massKgPerM2": {
+          "type": "number",
+          "x-semio-ui": {
+            "label": {
+              "en": "Area mass m",
+              "de": "Flächenbezogene Masse m"
+            },
+            "widget": "stepper",
+            "unit": "kg/m²",
+            "precision": 1
+          }
+        },
+        "dampingXi": {
+          "type": "number",
+          "x-semio-ui": {
+            "label": {
+              "en": "Modal damping ratio ξ",
+              "de": "Modales Dämpfungsmaß ξ"
+            },
+            "widget": "stepper",
+            "unit": "1",
+            "displayUnit": "%",
+            "displayFactor": 100,
+            "precision": 1
+          }
+        },
+        "fireDurationS": {
+          "type": "number",
+          "x-semio-ui": {
+            "label": {
+              "en": "Fire exposure time t",
+              "de": "Branddauer t"
+            },
+            "widget": "stepper",
+            "unit": "s",
+            "displayUnit": "min",
+            "displayFactor": 0.016666666666666666,
+            "precision": 0
+          }
+        },
+        "bridgeNObs": {
+          "type": "number",
+          "x-semio-ui": {
+            "widget": "stepper",
+            "label": {
+              "en": "Annual number of constant amplitude stress cycles N_obs",
+              "de": "Jährliche Anzahl der Spannungswechsel N_obs"
+            },
+            "unit": "1/a",
+            "step": 1000,
+            "precision": 0
+          }
+        },
+        "bridgeTLYears": {
+          "type": "number",
+          "x-semio-ui": {
+            "label": {
+              "en": "Design working life t_L",
+              "de": "Nutzungsdauer t_L"
+            },
+            "widget": "stepper",
+            "unit": "a",
+            "precision": 0
+          }
+        },
+        "bridgeBeta": {
+          "type": "number",
+          "x-semio-ui": {
+            "widget": "stepper",
+            "label": {
+              "en": "Fatigue coefficient β",
+              "de": "Ermüdungsbeiwert β"
+            },
+            "description": {
+              "en": "Damage consequence factor β of EN 1995-2 Annex A.",
+              "de": "Beiwert β für die Schadensfolgen nach EN 1995-2 Anhang A."
+            },
+            "step": 0.01,
+            "precision": 2
+          }
+        },
+        "bridgeA": {
+          "type": "number",
+          "x-semio-ui": {
+            "widget": "stepper",
+            "label": {
+              "en": "Fatigue parameter a",
+              "de": "Ermüdungsparameter a"
+            },
+            "description": {
+              "en": "Coefficient a of EN 1995-2 Annex A.",
+              "de": "Beiwert a nach EN 1995-2 Anhang A."
+            },
+            "step": 0.01,
+            "precision": 2
+          }
+        },
+        "bridgeB": {
+          "type": "number",
+          "x-semio-ui": {
+            "widget": "stepper",
+            "label": {
+              "en": "Fatigue parameter b",
+              "de": "Ermüdungsparameter b"
+            },
+            "description": {
+              "en": "Coefficient b of EN 1995-2 Annex A.",
+              "de": "Beiwert b nach EN 1995-2 Anhang A."
+            },
+            "step": 0.01,
+            "precision": 2
+          }
+        },
+        "bridgeCrowdPerM2": {
+          "type": "number",
+          "x-semio-ui": {
+            "label": {
+              "en": "Pedestrian density",
+              "de": "Personendichte"
+            },
+            "widget": "stepper",
+            "unit": "1/m²",
+            "precision": 2
+          }
+        },
+        "actions": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/CharacteristicAction"
+          },
+          "x-semio-ui": {
+            "label": {
+              "en": "Characteristic actions",
+              "de": "Charakteristische Einwirkungen"
+            }
+          }
+        }
+      }
+    },
+    "CharacteristicAction": {
+      "title": "CharacteristicAction",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "kind",
+        "category",
+        "loadDuration",
+        "qLineNPerM",
+        "fPointN",
+        "mKNm",
+        "vKN",
+        "nKN",
+        "nTKN",
+        "fC90KN"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "kind": {
+          "type": "string",
+          "x-semio-ui": {
+            "widget": "text",
+            "label": {
+              "en": "Action type",
+              "de": "Einwirkungsart"
+            },
+            "description": {
+              "en": "permanent, imposed, snow, wind or accidental.",
+              "de": "permanent (ständig), imposed (Nutzlast), snow (Schnee), wind oder accidental (außergewöhnlich)."
+            }
+          }
+        },
+        "category": {
+          "type": "string",
+          "x-semio-ui": {
+            "widget": "text",
+            "label": {
+              "en": "Imposed load category",
+              "de": "Nutzungskategorie"
+            },
+            "description": {
+              "en": "A to H (EN 1991-1-1 Table 6.1); empty when the action is no imposed load.",
+              "de": "A bis H (EN 1991-1-1 Tabelle 6.1); leer, wenn die Einwirkung keine Nutzlast ist."
+            }
+          }
+        },
+        "loadDuration": {
+          "type": "string",
+          "x-semio-ui": {
+            "widget": "text",
+            "label": {
+              "en": "Load-duration class",
+              "de": "Klasse der Lasteinwirkungsdauer"
+            },
+            "description": {
+              "en": "permanent, long, medium, short or instantaneous (EN 1995-1-1 Table 2.1).",
+              "de": "permanent (ständig), long (lang), medium (mittel), short (kurz) oder instantaneous (sehr kurz) nach EN 1995-1-1 Tabelle 2.1."
+            }
+          }
+        },
+        "qLineNPerM": {
+          "type": "number",
+          "x-semio-ui": {
+            "label": {
+              "en": "Line load q_k",
+              "de": "Streckenlast q_k"
+            },
+            "widget": "stepper",
+            "unit": "N/m",
+            "displayUnit": "kN/m",
+            "displayFactor": 0.001,
+            "precision": 2
+          }
+        },
+        "fPointN": {
+          "type": "number",
+          "x-semio-ui": {
+            "label": {
+              "en": "Point load F_k",
+              "de": "Einzellast F_k"
+            },
+            "widget": "stepper",
+            "unit": "N",
+            "displayUnit": "kN",
+            "displayFactor": 0.001,
+            "precision": 2
+          }
+        },
+        "mKNm": {
+          "type": "number",
+          "x-semio-ui": {
+            "label": {
+              "en": "Characteristic bending moment M_k",
+              "de": "Charakteristisches Biegemoment M_k"
+            },
+            "widget": "stepper",
+            "unit": "N·m",
+            "displayUnit": "kN·m",
+            "displayFactor": 0.001,
+            "precision": 2
+          }
+        },
+        "vKN": {
+          "type": "number",
+          "x-semio-ui": {
+            "label": {
+              "en": "Characteristic shear force V_k",
+              "de": "Charakteristische Querkraft V_k"
+            },
+            "widget": "stepper",
+            "unit": "N",
+            "displayUnit": "kN",
+            "displayFactor": 0.001,
+            "precision": 2
+          }
+        },
+        "nKN": {
+          "type": "number",
+          "x-semio-ui": {
+            "label": {
+              "en": "Characteristic compression N_c,k",
+              "de": "Charakteristische Druckkraft N_c,k"
+            },
+            "widget": "stepper",
+            "unit": "N",
+            "displayUnit": "kN",
+            "displayFactor": 0.001,
+            "precision": 2
+          }
+        },
+        "nTKN": {
+          "type": "number",
+          "x-semio-ui": {
+            "label": {
+              "en": "Characteristic tension N_t,k",
+              "de": "Charakteristische Zugkraft N_t,k"
+            },
+            "widget": "stepper",
+            "unit": "N",
+            "displayUnit": "kN",
+            "displayFactor": 0.001,
+            "precision": 2
+          }
+        },
+        "fC90KN": {
+          "type": "number",
+          "x-semio-ui": {
+            "label": {
+              "en": "Compression perpendicular to grain F_c,90,k",
+              "de": "Querdruckkraft F_c,90,k"
+            },
+            "widget": "stepper",
+            "unit": "N",
+            "displayUnit": "kN",
+            "displayFactor": 0.001,
+            "precision": 2
+          }
+        }
+      }
+    },
+    "AnnexChoice": {
+      "title": "AnnexChoice",
+      "type": "string",
+      "enum": [
+        "En",
+        "De"
+      ],
+      "x-semio-ui": {
+        "options": {
+          "En": {
+            "en": "Recommended CEN values (EN)",
+            "de": "Empfohlene CEN-Werte (EN)"
+          },
+          "De": {
+            "en": "German national annex (DIN EN)",
+            "de": "Deutscher Nationaler Anhang (DIN EN)"
+          }
+        }
+      }
+    },
+    "MemberRole": {
+      "title": "MemberRole",
+      "type": "string",
+      "enum": [
+        "Beam",
+        "Column",
+        "Floor",
+        "Bridge"
+      ],
+      "x-semio-ui": {
+        "options": {
+          "Beam": {
+            "en": "Beam — bending member",
+            "de": "Träger — Biegebauteil"
+          },
+          "Column": {
+            "en": "Column — compression member",
+            "de": "Stütze — Druckbauteil"
+          },
+          "Floor": {
+            "en": "Floor — joist or panel with vibration check",
+            "de": "Decke — Balken oder Platte mit Schwingungsnachweis"
+          },
+          "Bridge": {
+            "en": "Bridge — EN 1995-2 girder",
+            "de": "Brücke — Träger nach EN 1995-2"
+          }
+        }
+      }
+    },
+    "SupportType": {
+      "title": "SupportType",
+      "type": "string",
+      "enum": [
+        "SimplySupported",
+        "Cantilever",
+        "ContinuousTwoSpan"
+      ],
+      "x-semio-ui": {
+        "options": {
+          "SimplySupported": {
+            "en": "Simply supported",
+            "de": "Einfeldträger"
+          },
+          "Cantilever": {
+            "en": "Cantilever",
+            "de": "Kragarm"
+          },
+          "ContinuousTwoSpan": {
+            "en": "Continuous over two spans",
+            "de": "Zweifeldträger"
+          }
+        }
+      }
+    }
   }
 }

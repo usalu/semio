@@ -3,6 +3,37 @@ mod declared_verb_verdict_tests {
 
     const LANES: [&str; 15] = ["artifact", "config", "draft", "presence", "transient", "windowConfig", "windowTransient", "child", "interaction", "effect", "event", "ui", "download", "terminal", "fault"];
 
+    /// 🧬️ Required bridge representatives obey every independently authored neutral value schema.
+    #[test]
+    fn declared_bridge_required_arguments_match_neutral_schemas() {
+        use semio_framework::{ActionArgDef, ActionArgOption, DslValue};
+        let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🎮️declared-bridge-arguments.json")).unwrap();
+        for case in fixture["cases"].as_array().unwrap() {
+            let args = case["args"].as_array().unwrap().iter().map(|argument| {
+                let mut schema = argument["schema"].clone();
+                if let Some(options) = schema.get_mut("options").and_then(serde_json::Value::as_array_mut) {
+                    for option in options { *option = serde_json::to_value(ActionArgOption::new(option.as_str().unwrap(), crate::LocalizedLabel::native("Choice", "Auswahl"))).unwrap(); }
+                }
+                let mut arg = ActionArgDef::text(argument["id"].as_str().unwrap(), crate::LocalizedLabel::native("Argument", "Argument"));
+                arg.schema = serde_json::from_value(schema).unwrap();
+                arg.required = argument["required"].as_bool().unwrap();
+                arg.nullable = argument["nullable"].as_bool().unwrap_or(false);
+                arg.default = argument.get("default").map(DslValue::from);
+                arg
+            }).collect::<Vec<_>>();
+            let actual = declared_bridge_arguments(&args);
+            if let Some(argument) = case["errorArgument"].as_str() {
+                assert!(actual.unwrap_err().contains(argument), "{}", case["name"]);
+            } else {
+                let actual = serde_json::from_str::<serde_json::Value>(&dsl::json::to_json_string(&actual.unwrap())).unwrap();
+                assert_eq!(actual, case["expected"], "{}", case["name"]);
+                let validator = semio_framework_schema::OwnedJsonSchemaValidator::compile(&case["valueSchema"].to_string()).unwrap();
+                validator.validate_json(&actual.to_string()).unwrap();
+                for invalid in case["invalid"].as_array().unwrap() { assert!(validator.validate_json(&invalid.to_string()).is_err(), "{} rejects {invalid}", case["name"]); }
+            }
+        }
+    }
+
     fn outcome(value: &serde_json::Value) -> DeclaredVerbOutcome {
         let text = |value: &serde_json::Value, key: &str| value[key].as_str().expect("fixture outcome text").to_string();
         if let Some(refusal) = value.get("unreachable") {
@@ -103,7 +134,7 @@ mod declared_verb_verdict_tests {
         let label = || LocalizedLabel::native("Probe", "Probe");
         let two = ActionArgDef::select("kind", label(), vec![ActionArgOption::new("owns", label()), ActionArgOption::new("uses", label())]);
         let one = ActionArgDef::select("kind", label(), vec![ActionArgOption::new("owns", label())]);
-        for argument in [two, ActionArgDef::text("name", label()), ActionArgDef::json_text("patch", label()), ActionArgDef::number("zoom", label()), ActionArgDef::slider("opacity", label(), 0.0, 1.0), ActionArgDef::toggle("snap", label()), ActionArgDef::vec3("offset", label()), ActionArgDef::text_list("ids", label())] {
+        for argument in [two, ActionArgDef::text("name", label()), ActionArgDef::json_text("patch", label()), ActionArgDef::number("zoom", label()), ActionArgDef::slider("opacity", label(), 0.0, 1.0), ActionArgDef::toggle("snap", label()), ActionArgDef::vector("offset", label(), 3), ActionArgDef::text_list("ids", label())] {
             let (first, second) = declared_argument_alternatives(&argument).unwrap_or_else(|| panic!("{} yields a pair", argument.id));
             assert_ne!(first, second, "{}", argument.id);
         }

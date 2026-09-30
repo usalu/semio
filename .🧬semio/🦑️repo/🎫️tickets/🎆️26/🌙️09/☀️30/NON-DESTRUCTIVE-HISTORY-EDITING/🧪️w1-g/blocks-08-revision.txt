@@ -1,0 +1,91 @@
+<<<<<<< ANCHOR
+    fn reconcile_stack<Mutation: ToValue>(
+        records: &mut Vec<CursorRevisionRecord>,
+        ids: &[String],
+        edits: &ArtifactHistoryLedger<Edit<Mutation>>,
+        domain: &[u8],
+        identity_digest: [u8; 32],
+        tail_chains: &mut Option<([u8; 32], EditDigestChains)>,
+    ) -> Vec<String> {
+        let mut common = 0;
+        while common < records.len().min(ids.len()) && records[common].id_digest == Self::hash_record(b"edit-id", &[ids[common].as_bytes()]) {
+            common += 1;
+        }
+        while records.len() > common {
+=======
+    /// 🔏️ `digest` of `edit` extended by the digest of the supersessions in effect for its operations: a revision names
+    /// the effective forwards, not only the recorded ones.
+    fn effective_edit_digest<P, Mutation: self::Mutation<P>>(edit: &Edit<Mutation>, digest: [u8; 32], supersessions: &EffectiveSupersessions) -> [u8; 32] {
+        match edit_supersession_digest::<P, Mutation>(edit, supersessions) {
+            Some(superseded) => Self::hash_record(b"edit-superseded", &[&digest, &superseded]),
+            None => digest,
+        }
+    }
+
+    /// 🧮️ `dirty_from` names the first position a replay rewrote (effective input, inverse or messages): records from
+    /// there on are rebuilt even where the ids still match.
+    #[allow(clippy::too_many_arguments)]
+    fn reconcile_stack<P, Mutation: ToValue + self::Mutation<P>>(
+        records: &mut Vec<CursorRevisionRecord>,
+        ids: &[String],
+        edits: &ArtifactHistoryLedger<Edit<Mutation>>,
+        domain: &[u8],
+        identity_digest: [u8; 32],
+        tail_chains: &mut Option<([u8; 32], EditDigestChains)>,
+        supersessions: &EffectiveSupersessions,
+        dirty_from: Option<usize>,
+    ) -> Vec<String> {
+        let mut common = 0;
+        while common < records.len().min(ids.len()) && records[common].id_digest == Self::hash_record(b"edit-id", &[ids[common].as_bytes()]) {
+            common += 1;
+        }
+        if let Some(dirty_from) = dirty_from {
+            common = common.min(dirty_from);
+            if common < records.len() {
+                *tail_chains = None;
+            }
+        }
+        while records.len() > common {
+>>>>>>> END
+<<<<<<< ANCHOR
+            let known = tail_chains.filter(|(id_digest, _)| *id_digest == records[common - 1].id_digest).map(|(_, chains)| chains);
+            let (edit_digest, chains) = Self::edit_digest_extending(edit, known);
+            *tail_chains = chains.map(|chains| (records[common - 1].id_digest, chains));
+            if records[common - 1].edit_digest != edit_digest {
+=======
+            let known = tail_chains.filter(|(id_digest, _)| *id_digest == records[common - 1].id_digest).map(|(_, chains)| chains);
+            let (edit_digest, chains) = Self::edit_digest_extending(edit, known);
+            let edit_digest = Self::effective_edit_digest::<P, Mutation>(edit, edit_digest, supersessions);
+            *tail_chains = chains.map(|chains| (records[common - 1].id_digest, chains));
+            if records[common - 1].edit_digest != edit_digest {
+>>>>>>> END
+<<<<<<< ANCHOR
+                None => {
+                    let edit = edits.iter().find(|edit| edit.id == *id).expect("validated cursor edit exists");
+                    let (edit_digest, chains) = Self::edit_digest_extending(edit, None);
+                    *tail_chains = chains.map(|chains| (id_digest, chains));
+                    edit_digest
+                }
+            };
+=======
+                None => {
+                    let edit = edits.iter().find(|edit| edit.id == *id).expect("validated cursor edit exists");
+                    let (edit_digest, chains) = Self::edit_digest_extending(edit, None);
+                    *tail_chains = chains.map(|chains| (id_digest, chains));
+                    Self::effective_edit_digest::<P, Mutation>(edit, edit_digest, supersessions)
+                }
+            };
+>>>>>>> END
+<<<<<<< ANCHOR
+    fn reconcile<Mutation: ToValue>(&mut self, applied_ids: &[String], redo_ids: &[String], edits: &ArtifactHistoryLedger<Edit<Mutation>>) -> (Vec<String>, Vec<String>) {
+        let applied = Self::reconcile_stack(&mut self.applied, applied_ids, edits, b"applied", self.identity_digest, &mut self.applied_tail_chains);
+        let redo = Self::reconcile_stack(&mut self.redo, redo_ids, edits, b"redo", self.identity_digest, &mut None);
+        (applied, redo)
+    }
+=======
+    fn reconcile<P, Mutation: ToValue + self::Mutation<P>>(&mut self, applied_ids: &[String], redo_ids: &[String], edits: &ArtifactHistoryLedger<Edit<Mutation>>, supersessions: &EffectiveSupersessions, dirty_from: Option<usize>) -> (Vec<String>, Vec<String>) {
+        let applied = Self::reconcile_stack::<P, Mutation>(&mut self.applied, applied_ids, edits, b"applied", self.identity_digest, &mut self.applied_tail_chains, supersessions, dirty_from);
+        let redo = Self::reconcile_stack::<P, Mutation>(&mut self.redo, redo_ids, edits, b"redo", self.identity_digest, &mut None, supersessions, None);
+        (applied, redo)
+    }
+>>>>>>> END

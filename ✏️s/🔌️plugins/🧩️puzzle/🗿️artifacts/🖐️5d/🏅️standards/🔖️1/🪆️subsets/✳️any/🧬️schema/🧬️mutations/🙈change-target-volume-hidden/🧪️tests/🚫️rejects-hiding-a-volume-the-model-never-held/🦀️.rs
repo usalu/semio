@@ -11,11 +11,11 @@ use crate::standards::v1::subsets::any::schema::mutations::Puzzle5dMutation;
 use crate::standards::v1::subsets::any::schema::mutations::{apply_puzzle5d_mutation, inverse_puzzle5d_mutation};
 use crate::Puzzle5dSnapshot;
 
-const BEFORE: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🙈change-target-volume-hidden/🚫️rejects-hiding-a-volume-the-model-never-held/📸️snapshot/⬅️before/🔣️.json");
-const AFTER: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🙈change-target-volume-hidden/🚫️rejects-hiding-a-volume-the-model-never-held/📸️snapshot/➡️after/🔣️.json");
-const MUTATION: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🙈change-target-volume-hidden/🚫️rejects-hiding-a-volume-the-model-never-held/🦠️mutation/🔣️.json");
-const OUTCOME: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🙈change-target-volume-hidden/🚫️rejects-hiding-a-volume-the-model-never-held/🎯️outcome/🔣️.json");
-const DIFF_ABSENT: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🙈change-target-volume-hidden/🚫️rejects-hiding-a-volume-the-model-never-held/🔺️diff/🚫️.absent");
+const BEFORE: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🙈change-target-volume-hidden/🚫️rejects-hiding-volume-model-never-held/📸️snapshot/⬅️before/🔣️.json");
+const AFTER: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🙈change-target-volume-hidden/🚫️rejects-hiding-volume-model-never-held/📸️snapshot/➡️after/🔣️.json");
+const MUTATION: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🙈change-target-volume-hidden/🚫️rejects-hiding-volume-model-never-held/🦠️mutation/🔣️.json");
+const OUTCOME: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🙈change-target-volume-hidden/🚫️rejects-hiding-volume-model-never-held/🎯️outcome/🔣️.json");
+const DIFF_ABSENT: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🙈change-target-volume-hidden/🚫️rejects-hiding-volume-model-never-held/🔺️diff/🚫️.absent");
 
 fn before() -> Puzzle5dSnapshot {
     dsl::json::from_json_str(BEFORE).expect("before snapshot decodes")

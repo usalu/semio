@@ -34,12 +34,6 @@
     ]
   },
   "mutations": {
-    "valid": [
-      {
-        "operation": "setCamera",
-        "cameraJson": "{\"position\":[1,2,3]}"
-      }
-    ],
     "invalid": [
       {},
       {

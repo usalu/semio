@@ -5,15 +5,55 @@
   "type": "object",
   "additionalProperties": false,
   "required": [
-    "topic_guid",
+    "mutation",
+    "topicGuid",
     "guid"
   ],
   "properties": {
-    "topic_guid": {
-      "type": "string"
+    "mutation": {
+      "const": "setComment"
+    },
+    "topicGuid": {
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Topic",
+          "de": "Thema"
+        },
+        "description": {
+          "en": "GUID of the topic.",
+          "de": "GUID des Themas."
+        },
+        "ref": {
+          "kind": "topic",
+          "domain": "bcf"
+        },
+        "group": "target",
+        "order": 10
+      }
     },
     "guid": {
-      "type": "string"
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Comment",
+          "de": "Kommentar"
+        },
+        "description": {
+          "en": "GUID of the comment.",
+          "de": "GUID des Kommentars."
+        },
+        "ref": {
+          "kind": "comment",
+          "domain": "bcf"
+        },
+        "group": "target",
+        "order": 20
+      }
     },
     "date": {
       "anyOf": [
@@ -23,7 +63,20 @@
         {
           "type": "null"
         }
-      ]
+      ],
+      "x-semio-ui": {
+        "widget": "text",
+        "label": {
+          "en": "Date",
+          "de": "Datum"
+        },
+        "description": {
+          "en": "ISO 8601 date and time.",
+          "de": "Datum und Uhrzeit nach ISO 8601."
+        },
+        "group": "value",
+        "order": 30
+      }
     },
     "author": {
       "anyOf": [
@@ -33,7 +86,12 @@
         {
           "type": "null"
         }
-      ]
+      ],
+      "x-semio-ui": {
+        "widget": "text",
+        "group": "value",
+        "order": 40
+      }
     },
     "text": {
       "anyOf": [
@@ -43,9 +101,18 @@
         {
           "type": "null"
         }
-      ]
+      ],
+      "x-semio-ui": {
+        "widget": "multiline",
+        "label": {
+          "en": "Comment text",
+          "de": "Kommentartext"
+        },
+        "group": "value",
+        "order": 50
+      }
     },
-    "viewpoint_ref": {
+    "viewpointRef": {
       "anyOf": [
         {
           "anyOf": [
@@ -60,7 +127,25 @@
         {
           "type": "null"
         }
-      ]
+      ],
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Viewpoint",
+          "de": "Ansichtspunkt"
+        },
+        "description": {
+          "en": "Viewpoint the comment refers to; empty clears it.",
+          "de": "Ansichtspunkt, auf den sich der Kommentar bezieht; leer löscht ihn."
+        },
+        "ref": {
+          "kind": "viewpoint",
+          "domain": "bcf"
+        },
+        "group": "target",
+        "order": 60
+      }
     }
   }
 }

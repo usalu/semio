@@ -58,9 +58,15 @@ function fakeHandle(overrides: Partial<WgpuPluginHandle> = {}): WgpuPluginHandle
     applyMutations: async () => {},
     loadAppDocumentArchive: async () => {},
     readAppDocumentArchive: async () => new Uint8Array(),
+    readAppDocumentIdentity: async (instanceId) => ({ appInstanceId: instanceId, parentDocumentId: null }),
     loadAppDocumentPack: async () => {},
     codec: async () => null,
     ephemeralSnapshot: () => null,
+    takeProgressHistoryPatches: () => [],
+    submitMediaExport: () => Promise.reject(new Error("fake.media-export")),
+    pollMediaExport: () => Promise.reject(new Error("fake.media-export")),
+    cancelMediaExport: async () => {},
+    takeMediaExportChunk: () => Promise.reject(new Error("fake.media-export")),
     dispose: async () => {},
     ...overrides,
   };
@@ -87,6 +93,20 @@ describe("framework renderer wgpu plugin bridge", () => {
     expect(published.ephemeralSnapshot(7)).toEqual({ presence: Uint8Array.from([1, 2]), presenceGeneration: 3, interaction: Uint8Array.from([4]) });
     expect(published.ephemeralSnapshot(8), "an instance whose guest published nothing carries no app presence").toBeNull();
     expect(wgpuEphemeralSnapshot(null)).toBeNull();
+  });
+
+  it("queues the history patch of an uncorrelated progress frame and hands it to Rust once, as JSON", async () => {
+    const { encodeAppFrame, encodePackValue, packUInt } = await import("@semio-tech/framework-os");
+    const { stashProgressHistoryPatch, takeProgressHistoryPatches } = await import("../../🎯️targets/🧊️wgpu/🐚️plugin-bridge/🟦️.ts");
+    const frame = (historyPatch: readonly number[]) => encodeAppFrame({ Invocation: { in_reply_to: 0, output: Array.from(encodePackValue(null)), diagnostics: Array.from(encodePackValue([])), ui_scope: Array.from(encodePackValue(null)), history_patch: historyPatch, messages: [], mutations: [], inverse_group: [] } });
+    stashProgressHistoryPatch(9_001, frame([]));
+    stashProgressHistoryPatch(9_001, frame(Array.from(encodePackValue({ cursor: packUInt(4n), timeTravel: { stage: "replaying", done: packUInt(2n), total: packUInt(5n) } }))));
+    const taken = takeProgressHistoryPatches(9_001) as readonly { readonly cursor: number; readonly timeTravel: { readonly stage: string; readonly done: number } }[];
+    expect(taken.map((patch) => [patch.cursor, patch.timeTravel.stage, patch.timeTravel.done]), "a frame without a patch queues nothing").toEqual([[4, "replaying", 2]]);
+    expect(takeProgressHistoryPatches(9_001), "a take drains the queue").toEqual([]);
+    const bridge = pluginHandleForBridge(fakeHandle({ takeProgressHistoryPatches: (instanceId) => (instanceId === 7 ? [{ cursor: 2n }] : []) }));
+    expect(bridge.takeProgressHistoryPatches(7)).toBe('[{"cursor":2}]');
+    expect(bridge.takeProgressHistoryPatches(8)).toBe("[]");
   });
 
   it("crosses the document-backbone door with an exact u64 binding generation and refuses an unknown operation", async () => {

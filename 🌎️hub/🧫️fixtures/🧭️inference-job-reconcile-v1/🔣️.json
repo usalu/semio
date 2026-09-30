@@ -2,7 +2,7 @@
   "schema": "semio.hub.inference-job-reconcile-fixture/v1",
   "maximumRequestBytes": 256,
   "request": {
-    "schema": "semio.hub.inference-job-reconcile/v1",
+    "schema": "semio.framework.job-reconcile/v1",
     "version": 1,
     "requestId": "11111111111111111111111111111111"
   },
@@ -21,7 +21,7 @@
       "name": "missing",
       "accepted": true,
       "value": {
-        "schema": "semio.hub.inference-job-reconcile-result/v1",
+        "schema": "semio.framework.job-reconcile-result/v1",
         "version": 1,
         "requestId": "11111111111111111111111111111111",
         "found": false,
@@ -32,7 +32,7 @@
       "name": "accepted-live",
       "accepted": true,
       "value": {
-        "schema": "semio.hub.inference-job-reconcile-result/v1",
+        "schema": "semio.framework.job-reconcile-result/v1",
         "version": 1,
         "requestId": "11111111111111111111111111111111",
         "found": true,
@@ -47,7 +47,7 @@
       "name": "cancelled-expired",
       "accepted": true,
       "value": {
-        "schema": "semio.hub.inference-job-reconcile-result/v1",
+        "schema": "semio.framework.job-reconcile-result/v1",
         "version": 1,
         "requestId": "11111111111111111111111111111111",
         "found": true,
@@ -62,7 +62,7 @@
       "name": "approved-undo-available",
       "accepted": true,
       "value": {
-        "schema": "semio.hub.inference-job-reconcile-result/v1",
+        "schema": "semio.framework.job-reconcile-result/v1",
         "version": 1,
         "requestId": "11111111111111111111111111111111",
         "found": true,
@@ -91,7 +91,7 @@
       "name": "approved-undo-prepared",
       "accepted": true,
       "value": {
-        "schema": "semio.hub.inference-job-reconcile-result/v1",
+        "schema": "semio.framework.job-reconcile-result/v1",
         "version": 1,
         "requestId": "11111111111111111111111111111111",
         "found": true,
@@ -106,7 +106,7 @@
       "name": "approved-undone",
       "accepted": true,
       "value": {
-        "schema": "semio.hub.inference-job-reconcile-result/v1",
+        "schema": "semio.framework.job-reconcile-result/v1",
         "version": 1,
         "requestId": "11111111111111111111111111111111",
         "found": true,

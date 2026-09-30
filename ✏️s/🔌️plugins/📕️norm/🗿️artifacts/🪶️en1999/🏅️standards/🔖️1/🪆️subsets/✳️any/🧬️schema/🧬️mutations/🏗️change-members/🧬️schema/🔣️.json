@@ -5,14 +5,31 @@
   "type": "object",
   "additionalProperties": false,
   "required": [
+    "mutation",
     "members"
   ],
   "properties": {
-    "members": {}
-  },
-  "owner": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/🪶️en1999/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏗️change-members",
-  "semanticKind": "change-members",
-  "emoji": "🏗️",
-  "aggregateVariant": "ChangeMembers",
-  "displayName": "Change Members"
+    "mutation": {
+      "const": "changeMembers"
+    },
+    "members": {
+      "type": "array",
+      "items": {
+        "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1999/snapshot.json#/$defs/AluminiumMember"
+      },
+      "x-semio-ui": {
+        "role": "value",
+        "label": {
+          "en": "Members",
+          "de": "Bauteile"
+        },
+        "description": {
+          "en": "The complete list of aluminium members.",
+          "de": "Die vollständige Liste der Aluminiumbauteile."
+        },
+        "group": "record",
+        "order": 10
+      }
+    }
+  }
 }

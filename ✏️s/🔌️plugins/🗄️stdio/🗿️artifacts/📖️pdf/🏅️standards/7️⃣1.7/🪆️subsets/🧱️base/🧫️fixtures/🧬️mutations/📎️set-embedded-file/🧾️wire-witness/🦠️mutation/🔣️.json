@@ -1,0 +1,18 @@
+{
+  "mutation": "setEmbeddedFile",
+  "file": {
+    "id": "id",
+    "fileName": "fileName",
+    "description": "description",
+    "mimeType": "mimeType",
+    "data": [],
+    "creationDate": {
+      "year": 0
+    },
+    "modificationDate": {
+      "year": 0
+    },
+    "relationship": "relationship",
+    "listed": false
+  }
+}

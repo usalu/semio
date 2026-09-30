@@ -10,7 +10,7 @@ pub fn diff(payload: &super::CreateSpaceList, base: &EnergyModelSnapshot) -> pro
         return protocol::MutationOutcome::error("mutation.duplicate-id", format!("Space list {} already exists.", payload.id.0), [payload.id.0.to_string()]);
     }
     if payload.index as usize > base.model.space_lists.len() {
-        return protocol::MutationOutcome::error("mutation.invariant", format!("Index {} is past the end of the model's {} space_lists.", payload.index, base.model.space_lists.len()), [payload.id.0.to_string()]);
+        return protocol::MutationOutcome::error("mutation.target-missing", format!("Index {} is past the end of the model's {} space_lists.", payload.index, base.model.space_lists.len()), [payload.id.0.to_string()]);
     }
     if let Some(missing) = payload.space_ids.iter().find(|candidate| !base.model.spaces.iter().any(|row| row.id == **candidate)) {
         return protocol::MutationOutcome::error("mutation.target-missing", format!("Space {} does not exist.", missing.0), [missing.0.to_string()]);

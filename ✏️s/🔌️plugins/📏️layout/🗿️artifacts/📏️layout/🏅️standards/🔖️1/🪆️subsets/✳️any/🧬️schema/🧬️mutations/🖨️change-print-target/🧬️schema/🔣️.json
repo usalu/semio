@@ -6,7 +6,24 @@
   "additionalProperties": false,
   "properties": {
     "newPrintTarget": {
-      "type": "string"
+      "type": [
+        "string",
+        "null"
+      ],
+      "x-semio-ui": {
+        "widget": "text",
+        "role": "value",
+        "label": {
+          "en": "Print target",
+          "de": "Druckziel"
+        },
+        "description": {
+          "en": "Output intent, e.g. cmyk; empty clears it.",
+          "de": "Ausgabeziel, z. B. cmyk; leer entfernt es."
+        },
+        "group": "output",
+        "order": 10
+      }
     }
   }
 }

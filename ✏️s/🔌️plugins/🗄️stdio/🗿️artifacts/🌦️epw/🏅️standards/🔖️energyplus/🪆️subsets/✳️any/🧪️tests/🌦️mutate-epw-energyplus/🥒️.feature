@@ -29,8 +29,8 @@ Feature: Apply every typed EnergyPlus EPW mutation to the only EPW this reposito
   and read-only (confirmed: no writer in its public API), which the fleet brief's §6 rules out as a
   differential producer regardless.
 
-  This is why the 13 declared kinds split into two evidence tiers rather than one:
-  `no-mutation`/`insert-record`/`remove-record`/`set-record-field` touch ONLY the record grid, so
+  This is why the 12 declared kinds split into two evidence tiers rather than one:
+  `insert-record`/`remove-record`/`set-record-field` touch ONLY the record grid, so
   `csv` is a genuine second PRODUCER for them and they are typed `@mode-differential`. The remaining
   nine (`set-snapshot`/`set-location`/`set-design-conditions`/`set-typical-extreme-periods`/
   `set-ground-temperatures`/`set-holidays-dst`/`set-comments1`/`set-comments2`/`set-data-periods`)
@@ -42,7 +42,9 @@ Feature: Apply every typed EnergyPlus EPW mutation to the only EPW this reposito
   between two independent producers it does not have.
 
   Every scenario copies the fixture into the case work directory before touching it; the committed
-  stub is never written to.
+  stub is never written to. Every row's `params` is the leaf wire payload (a record is the
+  `EpwRecord` object keyed by column, a snapshot the whole `EpwSnapshot`): the subject decodes it
+  through `EpwMutation`'s own payload constructor and the oracle reads the same keys.
 
   Honest limits: the Rust SUBJECT phase does not compile (a concurrent session's in-flight
   `ManuallyDrop<Option<RetainedJobPayload>>` migration in `semio-framework-job`, which the whole
@@ -72,20 +74,9 @@ Feature: Apply every typed EnergyPlus EPW mutation to the only EPW this reposito
     Then the oracle and the subject agree on the semantic projection
     Examples:
       | id               | params |
-      | insert-record      | {"index": 5, "fields": ["2026","1","15","99","0","?9?9?9?9E0?9?9?9?9?9?9?9?9?9?9?9?9?9?9?9?9?9?9?9?9?9?9?9?9?9?9?9?9","2.5","-1.0","70","101100","500","1200","280","300","200","100","30000","25000","5000","1500","250","3.0","5","3","20.0","22000","0","999999999","14","0.081","0","88","0.2","0","0"]} |
+      | insert-record      | {"index": 5, "record": {"year": "2026", "month": "1", "day": "15", "hour": "99", "minute": "0", "dataSourceUncertainty": "?9?9?9?9E0?9?9?9?9?9?9?9?9?9?9?9?9?9?9?9?9?9?9?9?9?9?9?9?9?9?9?9?9", "dryBulbTemp": "2.5", "dewPointTemp": "-1.0", "relativeHumidity": "70", "atmosphericPressure": "101100", "extraterrestrialHorizontalRadiation": "500", "extraterrestrialDirectNormalRadiation": "1200", "horizontalInfraredRadiation": "280", "globalHorizontalRadiation": "300", "directNormalRadiation": "200", "diffuseHorizontalRadiation": "100", "globalHorizontalIlluminance": "30000", "directNormalIlluminance": "25000", "diffuseHorizontalIlluminance": "5000", "zenithLuminance": "1500", "windDirection": "250", "windSpeed": "3.0", "totalSkyCover": "5", "opaqueSkyCover": "3", "visibility": "20.0", "ceilingHeight": "22000", "presentWeatherObservation": "0", "presentWeatherCodes": "999999999", "precipitableWater": "14", "aerosolOpticalDepth": "0.081", "snowDepth": "0", "daysSinceLastSnowfall": "88", "albedo": "0.2", "liquidPrecipDepth": "0", "liquidPrecipQuantity": "0"}} |
       | remove-record      | {"index": 10} |
       | set-record-field   | {"recordIndex": 3, "fieldIndex": 6, "value": "12.3"} |
-
-  @id-no-mutation-baseline-mutate
-  @level-exhaustive
-  @mode-differential
-  Scenario: Apply no-mutation to the real weather file's record grid
-    Given the real input weather file asset://🎬️demo/🧪️example/🌦️.epw
-    When the no-mutation mutation is applied with its parameters
-      """
-      {"kind": "no-mutation", "params": {}}
-      """
-    Then the oracle and the subject agree on the semantic projection
 
   @id-mutate
   @level-exhaustive
@@ -99,7 +90,7 @@ Feature: Apply every typed EnergyPlus EPW mutation to the only EPW this reposito
     Then the oracle and the subject agree on the semantic projection
     Examples:
       | id                           | params |
-      | set-snapshot                  | {"snapshot": {"location": {"city":"Berlin","stateProvince":"Berlin","country":"DEU","source":"semio-fixture","wmo":"10382","latitude":"52.52","longitude":"13.405","timeZone":"1.0","elevation":"34.0"},"designConditions":"DESIGN CONDITIONS,0","typicalExtremePeriods":"TYPICAL/EXTREME PERIODS,0","groundTemperatures":"GROUND TEMPERATURES,0","holidaysDst":"HOLIDAYS/DAYLIGHT SAVINGS,No,0,0,0","comments1":"COMMENTS 1,wave 7 set-snapshot replacement","comments2":"COMMENTS 2,wave 7 set-snapshot replacement","dataPeriods":{"recordsPerHour":1,"periods":[{"name":"Data","startDayOfWeek":"Monday","startDate":" 1/ 2","endDate":" 1/ 2"}]},"records":[["2026","1","16","1","0","?9?9?9?9E0?9?9?9?9?9?9?9?9?9?9?9?9?9?9?9?9?9?9?9?9?9?9?9?9?9?9?9?9","-5.0","-9.0","85","101100","0","0","280","0","0","0","0","0","0","0","200","2.0","3","2","20.0","22000","0","999999999","14","0.081","0","88","0.2","0","0"],["2026","1","16","2","0","?9?9?9?9E0?9?9?9?9?9?9?9?9?9?9?9?9?9?9?9?9?9?9?9?9?9?9?9?9?9?9?9?9","-4.5","-8.5","84","101100","0","0","280","0","0","0","0","0","0","0","205","2.1","3","2","20.0","22000","0","999999999","14","0.081","0","88","0.2","0","0"]]}} |
+      | set-snapshot                  | {"snapshot": {"schema": "stdio.epw", "location": {"city": "Berlin", "stateProvince": "Berlin", "country": "DEU", "source": "semio-fixture", "wmo": "10382", "latitude": "52.52", "longitude": "13.405", "timeZone": "1.0", "elevation": "34.0"}, "designConditions": "DESIGN CONDITIONS,0", "typicalExtremePeriods": "TYPICAL/EXTREME PERIODS,0", "groundTemperatures": "GROUND TEMPERATURES,0", "holidaysDst": "HOLIDAYS/DAYLIGHT SAVINGS,No,0,0,0", "comments1": "COMMENTS 1,wave 7 set-snapshot replacement", "comments2": "COMMENTS 2,wave 7 set-snapshot replacement", "dataPeriods": {"recordsPerHour": 1, "periods": [{"name": "Data", "startDayOfWeek": "Monday", "startDate": " 1/ 2", "endDate": " 1/ 2"}]}, "records": [{"year": "2026", "month": "1", "day": "16", "hour": "1", "minute": "0", "dataSourceUncertainty": "?9?9?9?9E0?9?9?9?9?9?9?9?9?9?9?9?9?9?9?9?9?9?9?9?9?9?9?9?9?9?9?9?9", "dryBulbTemp": "-5.0", "dewPointTemp": "-9.0", "relativeHumidity": "85", "atmosphericPressure": "101100", "extraterrestrialHorizontalRadiation": "0", "extraterrestrialDirectNormalRadiation": "0", "horizontalInfraredRadiation": "280", "globalHorizontalRadiation": "0", "directNormalRadiation": "0", "diffuseHorizontalRadiation": "0", "globalHorizontalIlluminance": "0", "directNormalIlluminance": "0", "diffuseHorizontalIlluminance": "0", "zenithLuminance": "0", "windDirection": "200", "windSpeed": "2.0", "totalSkyCover": "3", "opaqueSkyCover": "2", "visibility": "20.0", "ceilingHeight": "22000", "presentWeatherObservation": "0", "presentWeatherCodes": "999999999", "precipitableWater": "14", "aerosolOpticalDepth": "0.081", "snowDepth": "0", "daysSinceLastSnowfall": "88", "albedo": "0.2", "liquidPrecipDepth": "0", "liquidPrecipQuantity": "0"}, {"year": "2026", "month": "1", "day": "16", "hour": "2", "minute": "0", "dataSourceUncertainty": "?9?9?9?9E0?9?9?9?9?9?9?9?9?9?9?9?9?9?9?9?9?9?9?9?9?9?9?9?9?9?9?9?9", "dryBulbTemp": "-4.5", "dewPointTemp": "-8.5", "relativeHumidity": "84", "atmosphericPressure": "101100", "extraterrestrialHorizontalRadiation": "0", "extraterrestrialDirectNormalRadiation": "0", "horizontalInfraredRadiation": "280", "globalHorizontalRadiation": "0", "directNormalRadiation": "0", "diffuseHorizontalRadiation": "0", "globalHorizontalIlluminance": "0", "directNormalIlluminance": "0", "diffuseHorizontalIlluminance": "0", "zenithLuminance": "0", "windDirection": "205", "windSpeed": "2.1", "totalSkyCover": "3", "opaqueSkyCover": "2", "visibility": "20.0", "ceilingHeight": "22000", "presentWeatherObservation": "0", "presentWeatherCodes": "999999999", "precipitableWater": "14", "aerosolOpticalDepth": "0.081", "snowDepth": "0", "daysSinceLastSnowfall": "88", "albedo": "0.2", "liquidPrecipDepth": "0", "liquidPrecipQuantity": "0"}]}} |
       | set-location                  | {"location": {"city":"Berlin","stateProvince":"Berlin","country":"DEU","source":"semio-fixture","wmo":"10382","latitude":"52.52","longitude":"13.405","timeZone":"1.0","elevation":"34.0"}} |
       | set-design-conditions         | {"value": "DESIGN CONDITIONS,1,Wave 7 mutation test value"} |
       | set-typical-extreme-periods   | {"value": "TYPICAL/EXTREME PERIODS,1,Wave 7 mutation test period"} |
@@ -122,10 +113,10 @@ Feature: Apply every typed EnergyPlus EPW mutation to the only EPW this reposito
     Then the oracle and the subject agree on the semantic projection of the original weather file
     Examples:
       | id                           | params |
-      | insert-record                  | {"index": 5, "fields": ["2026","1","15","99","0","?9?9?9?9E0?9?9?9?9?9?9?9?9?9?9?9?9?9?9?9?9?9?9?9?9?9?9?9?9?9?9?9?9","2.5","-1.0","70","101100","500","1200","280","300","200","100","30000","25000","5000","1500","250","3.0","5","3","20.0","22000","0","999999999","14","0.081","0","88","0.2","0","0"]} |
+      | insert-record                  | {"index": 5, "record": {"year": "2026", "month": "1", "day": "15", "hour": "99", "minute": "0", "dataSourceUncertainty": "?9?9?9?9E0?9?9?9?9?9?9?9?9?9?9?9?9?9?9?9?9?9?9?9?9?9?9?9?9?9?9?9?9", "dryBulbTemp": "2.5", "dewPointTemp": "-1.0", "relativeHumidity": "70", "atmosphericPressure": "101100", "extraterrestrialHorizontalRadiation": "500", "extraterrestrialDirectNormalRadiation": "1200", "horizontalInfraredRadiation": "280", "globalHorizontalRadiation": "300", "directNormalRadiation": "200", "diffuseHorizontalRadiation": "100", "globalHorizontalIlluminance": "30000", "directNormalIlluminance": "25000", "diffuseHorizontalIlluminance": "5000", "zenithLuminance": "1500", "windDirection": "250", "windSpeed": "3.0", "totalSkyCover": "5", "opaqueSkyCover": "3", "visibility": "20.0", "ceilingHeight": "22000", "presentWeatherObservation": "0", "presentWeatherCodes": "999999999", "precipitableWater": "14", "aerosolOpticalDepth": "0.081", "snowDepth": "0", "daysSinceLastSnowfall": "88", "albedo": "0.2", "liquidPrecipDepth": "0", "liquidPrecipQuantity": "0"}} |
       | remove-record                  | {"index": 10} |
       | set-record-field               | {"recordIndex": 3, "fieldIndex": 6, "value": "12.3"} |
-      | set-snapshot                   | {"snapshot": {"location": {"city":"Berlin","stateProvince":"Berlin","country":"DEU","source":"semio-fixture","wmo":"10382","latitude":"52.52","longitude":"13.405","timeZone":"1.0","elevation":"34.0"},"designConditions":"DESIGN CONDITIONS,0","typicalExtremePeriods":"TYPICAL/EXTREME PERIODS,0","groundTemperatures":"GROUND TEMPERATURES,0","holidaysDst":"HOLIDAYS/DAYLIGHT SAVINGS,No,0,0,0","comments1":"COMMENTS 1,wave 7 set-snapshot replacement","comments2":"COMMENTS 2,wave 7 set-snapshot replacement","dataPeriods":{"recordsPerHour":1,"periods":[{"name":"Data","startDayOfWeek":"Monday","startDate":" 1/ 2","endDate":" 1/ 2"}]},"records":[["2026","1","16","1","0","?9?9?9?9E0?9?9?9?9?9?9?9?9?9?9?9?9?9?9?9?9?9?9?9?9?9?9?9?9?9?9?9?9","-5.0","-9.0","85","101100","0","0","280","0","0","0","0","0","0","0","200","2.0","3","2","20.0","22000","0","999999999","14","0.081","0","88","0.2","0","0"],["2026","1","16","2","0","?9?9?9?9E0?9?9?9?9?9?9?9?9?9?9?9?9?9?9?9?9?9?9?9?9?9?9?9?9?9?9?9?9","-4.5","-8.5","84","101100","0","0","280","0","0","0","0","0","0","0","205","2.1","3","2","20.0","22000","0","999999999","14","0.081","0","88","0.2","0","0"]]}} |
+      | set-snapshot                   | {"snapshot": {"schema": "stdio.epw", "location": {"city": "Berlin", "stateProvince": "Berlin", "country": "DEU", "source": "semio-fixture", "wmo": "10382", "latitude": "52.52", "longitude": "13.405", "timeZone": "1.0", "elevation": "34.0"}, "designConditions": "DESIGN CONDITIONS,0", "typicalExtremePeriods": "TYPICAL/EXTREME PERIODS,0", "groundTemperatures": "GROUND TEMPERATURES,0", "holidaysDst": "HOLIDAYS/DAYLIGHT SAVINGS,No,0,0,0", "comments1": "COMMENTS 1,wave 7 set-snapshot replacement", "comments2": "COMMENTS 2,wave 7 set-snapshot replacement", "dataPeriods": {"recordsPerHour": 1, "periods": [{"name": "Data", "startDayOfWeek": "Monday", "startDate": " 1/ 2", "endDate": " 1/ 2"}]}, "records": [{"year": "2026", "month": "1", "day": "16", "hour": "1", "minute": "0", "dataSourceUncertainty": "?9?9?9?9E0?9?9?9?9?9?9?9?9?9?9?9?9?9?9?9?9?9?9?9?9?9?9?9?9?9?9?9?9", "dryBulbTemp": "-5.0", "dewPointTemp": "-9.0", "relativeHumidity": "85", "atmosphericPressure": "101100", "extraterrestrialHorizontalRadiation": "0", "extraterrestrialDirectNormalRadiation": "0", "horizontalInfraredRadiation": "280", "globalHorizontalRadiation": "0", "directNormalRadiation": "0", "diffuseHorizontalRadiation": "0", "globalHorizontalIlluminance": "0", "directNormalIlluminance": "0", "diffuseHorizontalIlluminance": "0", "zenithLuminance": "0", "windDirection": "200", "windSpeed": "2.0", "totalSkyCover": "3", "opaqueSkyCover": "2", "visibility": "20.0", "ceilingHeight": "22000", "presentWeatherObservation": "0", "presentWeatherCodes": "999999999", "precipitableWater": "14", "aerosolOpticalDepth": "0.081", "snowDepth": "0", "daysSinceLastSnowfall": "88", "albedo": "0.2", "liquidPrecipDepth": "0", "liquidPrecipQuantity": "0"}, {"year": "2026", "month": "1", "day": "16", "hour": "2", "minute": "0", "dataSourceUncertainty": "?9?9?9?9E0?9?9?9?9?9?9?9?9?9?9?9?9?9?9?9?9?9?9?9?9?9?9?9?9?9?9?9?9", "dryBulbTemp": "-4.5", "dewPointTemp": "-8.5", "relativeHumidity": "84", "atmosphericPressure": "101100", "extraterrestrialHorizontalRadiation": "0", "extraterrestrialDirectNormalRadiation": "0", "horizontalInfraredRadiation": "280", "globalHorizontalRadiation": "0", "directNormalRadiation": "0", "diffuseHorizontalRadiation": "0", "globalHorizontalIlluminance": "0", "directNormalIlluminance": "0", "diffuseHorizontalIlluminance": "0", "zenithLuminance": "0", "windDirection": "205", "windSpeed": "2.1", "totalSkyCover": "3", "opaqueSkyCover": "2", "visibility": "20.0", "ceilingHeight": "22000", "presentWeatherObservation": "0", "presentWeatherCodes": "999999999", "precipitableWater": "14", "aerosolOpticalDepth": "0.081", "snowDepth": "0", "daysSinceLastSnowfall": "88", "albedo": "0.2", "liquidPrecipDepth": "0", "liquidPrecipQuantity": "0"}]}} |
       | set-location                   | {"location": {"city":"Berlin","stateProvince":"Berlin","country":"DEU","source":"semio-fixture","wmo":"10382","latitude":"52.52","longitude":"13.405","timeZone":"1.0","elevation":"34.0"}} |
       | set-design-conditions          | {"value": "DESIGN CONDITIONS,1,Wave 7 mutation test value"} |
       | set-typical-extreme-periods    | {"value": "TYPICAL/EXTREME PERIODS,1,Wave 7 mutation test period"} |
@@ -134,18 +125,6 @@ Feature: Apply every typed EnergyPlus EPW mutation to the only EPW this reposito
       | set-comments1                 | {"value": "COMMENTS 1,Wave 7 mutation test comment"} |
       | set-comments2                 | {"value": "COMMENTS 2,Wave 7 mutation test comment"} |
       | set-data-periods               | {"dataPeriods": {"recordsPerHour":1,"periods":[{"name":"Data","startDayOfWeek":"Monday","startDate":" 1/ 2","endDate":" 1/ 2"}]}} |
-
-  @id-no-mutation-baseline-inverse
-  @level-exhaustive
-  @mode-property
-  Scenario: Undoing no-mutation restores the real weather file
-    Given the real input weather file asset://🎬️demo/🧪️example/🌦️.epw
-    When the no-mutation mutation is applied with its parameters
-      """
-      {"kind": "no-mutation", "params": {}}
-      """
-    And the inverse mutation is applied to that result
-    Then the oracle and the subject agree on the semantic projection of the original weather file
 
   @id-identity-round-trip
   @level-long

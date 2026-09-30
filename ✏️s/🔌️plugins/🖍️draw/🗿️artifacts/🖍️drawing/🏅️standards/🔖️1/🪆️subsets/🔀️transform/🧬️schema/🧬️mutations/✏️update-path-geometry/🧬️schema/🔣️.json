@@ -1,21 +1,58 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "$id": "https://semio.tech/s/draw/update-path-geometry",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/draw/drawing/1/transform/mutation/update-path-geometry/schema.json",
+  "title": "UpdatePathGeometry",
   "type": "object",
   "additionalProperties": false,
   "required": [
+    "mutation",
     "layerId",
     "segments"
   ],
   "properties": {
+    "mutation": {
+      "const": "updatePathGeometry"
+    },
     "layerId": {
       "type": "string",
-      "minLength": 1
+      "minLength": 1,
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Layer",
+          "de": "Ebene"
+        },
+        "description": {
+          "en": "The layer this mutation addresses.",
+          "de": "Die Ebene, die diese Mutation adressiert."
+        },
+        "ref": {
+          "kind": "layer",
+          "domain": "strokes",
+          "granularity": "stroke"
+        },
+        "group": "target",
+        "order": 10
+      }
     },
     "segments": {
       "type": "array",
       "items": {
         "$ref": "https://json.schemas.assets.semio-tech.com/s/drawing/drawing/artifact.json#/$defs/PathSegment"
+      },
+      "x-semio-ui": {
+        "role": "value",
+        "label": {
+          "en": "Segments",
+          "de": "Segmente"
+        },
+        "description": {
+          "en": "The complete path, segment by segment.",
+          "de": "Der vollständige Pfad, Segment für Segment."
+        },
+        "group": "geometry",
+        "order": 20
       }
     }
   }

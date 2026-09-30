@@ -1,0 +1,117 @@
+{
+  "camera": {
+    "x": 0.0,
+    "y": 0.0,
+    "zoom": 1.0
+  },
+  "edges": [
+    {
+      "edgeKind": "edge-kind-a",
+      "gap": 1.0,
+      "id": "edge-1",
+      "rise": 0.0,
+      "rotation": 0.0,
+      "shift": 0.0,
+      "source": "handle-1",
+      "sourceTip": "none",
+      "target": "handle-2",
+      "targetTip": "arrow",
+      "tilt": 0.0,
+      "turn": 0.0,
+      "x": 0.0,
+      "y": 0.0
+    }
+  ],
+  "meta": {
+    "kindCompatibility": [
+      {
+        "bidirectional": true,
+        "important": false,
+        "source": "handle-kind-a",
+        "specificity": "handle",
+        "target": "handle-kind-b"
+      }
+    ],
+    "manifestId": "manifest-alpha"
+  },
+  "nodes": [
+    {
+      "anchor": "fixed",
+      "handles": [
+        {
+          "angle": 0.0,
+          "handleKind": "handle-kind-a",
+          "id": "handle-1"
+        },
+        {
+          "angle": 1.5,
+          "handleKind": "handle-kind-a",
+          "id": "handle-spare"
+        }
+      ],
+      "iconKind": "icon-alpha",
+      "id": "node-a",
+      "nodeKind": "node-kind-a",
+      "radius": 10.0,
+      "shape": "circle",
+      "text": "Alpha",
+      "x": 0.0,
+      "y": 0.0
+    },
+    {
+      "anchor": "fixed",
+      "handles": [
+        {
+          "angle": 3.0,
+          "handleKind": "handle-kind-b",
+          "id": "handle-2"
+        }
+      ],
+      "height": 12.0,
+      "id": "node-b",
+      "nodeKind": "node-kind-b",
+      "shape": "rectangle",
+      "width": 30.0,
+      "x": 42.0,
+      "y": 23.0
+    },
+    {
+      "anchor": "fixed",
+      "handles": [
+        {
+          "angle": 0.5,
+          "handleKind": "handle-kind-b",
+          "id": "handle-3"
+        }
+      ],
+      "id": "node-c",
+      "locked": true,
+      "nodeKind": "node-kind-b",
+      "radius": 8.0,
+      "shape": "circle",
+      "x": 80.0,
+      "y": 0.0
+    }
+  ],
+  "schema": "puzzle.2d.fixture",
+  "targetRegions": [
+    {
+      "height": 60.5,
+      "hidden": false,
+      "id": "region-1",
+      "locked": false,
+      "width": 80.5,
+      "x": -12.5,
+      "y": -12.5
+    },
+    {
+      "height": 20.0,
+      "hidden": false,
+      "id": "region-2",
+      "locked": true,
+      "width": 20.0,
+      "x": 60.0,
+      "y": -10.0
+    }
+  ]
+}

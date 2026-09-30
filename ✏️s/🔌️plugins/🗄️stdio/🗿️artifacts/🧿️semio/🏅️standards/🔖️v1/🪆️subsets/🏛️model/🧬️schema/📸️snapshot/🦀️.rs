@@ -82,7 +82,7 @@ pub enum ElementClass {
 /// (`brep`/`mesh`) — never inline duplication (w1b-type-ownership.md cross-reuse summary). Named
 /// variants throughout, never a bare tuple (f6-final-summary.md §4.3).
 #[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue)]
-#[value(tag = "kind", rename_all = "camelCase")]
+#[value(tag = "kind", rename_all = "camelCase", rename_all_fields = "camelCase")]
 pub enum GeometryRef {
     #[default]
     None,

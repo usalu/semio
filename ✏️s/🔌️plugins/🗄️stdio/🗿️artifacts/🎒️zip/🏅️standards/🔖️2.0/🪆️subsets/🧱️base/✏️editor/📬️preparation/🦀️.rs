@@ -190,6 +190,7 @@ impl app_store::ArtifactStoreOneItemPreparation<ZipSnapshot, ZipMutation> for Zi
                         label: None,
                         group_id: None,
                         origin: Default::default(),
+                        transaction: None,
                     }],
                     description: self.description.take(),
                     coalesce_key: None,

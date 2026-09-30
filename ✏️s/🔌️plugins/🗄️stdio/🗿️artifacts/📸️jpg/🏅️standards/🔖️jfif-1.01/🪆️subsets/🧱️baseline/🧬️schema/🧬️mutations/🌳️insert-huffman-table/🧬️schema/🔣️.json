@@ -33,7 +33,24 @@
           "maximum": 255
         },
         "class": {
-          "$ref": "#/$defs/JpgHuffmanClass"
+          "$ref": "#/$defs/JpgHuffmanClass",
+          "x-semio-ui": {
+            "widget": "segmented",
+            "label": {
+              "en": "Table class",
+              "de": "Tabellenklasse"
+            },
+            "options": {
+              "dc": {
+                "en": "DC coefficients",
+                "de": "DC-Koeffizienten"
+              },
+              "ac": {
+                "en": "AC coefficients",
+                "de": "AC-Koeffizienten"
+              }
+            }
+          }
         },
         "bits": {
           "type": "array",
@@ -43,7 +60,17 @@
             "maximum": 255
           },
           "minItems": 16,
-          "maxItems": 16
+          "maxItems": 16,
+          "x-semio-ui": {
+            "label": {
+              "en": "Codes per length",
+              "de": "Codes je Länge"
+            },
+            "description": {
+              "en": "BITS: number of Huffman codes of each length 1 to 16.",
+              "de": "BITS: Anzahl der Huffman-Codes je Länge 1 bis 16."
+            }
+          }
         },
         "values": {
           "type": "array",

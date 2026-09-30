@@ -1,0 +1,10 @@
+{
+  "mutation": "applyText",
+  "payload": {
+    "mutation": {
+      "RemoveRun": {
+        "index": 1
+      }
+    }
+  }
+}

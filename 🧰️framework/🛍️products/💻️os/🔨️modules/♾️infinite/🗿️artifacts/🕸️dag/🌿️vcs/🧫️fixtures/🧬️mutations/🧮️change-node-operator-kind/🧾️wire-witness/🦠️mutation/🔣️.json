@@ -1,0 +1,5 @@
+{
+  "operation": "changeNodeOperatorKind",
+  "id": "a",
+  "newOperatorKind": null
+}

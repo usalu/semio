@@ -702,6 +702,80 @@ export type UiTranslationSchema = {
         readonly agent: UiLabelValue;
       };
     };
+    /** ⏪️ Time-travel chrome of non-destructive history editing (ticket 26/09/30 NON-DESTRUCTIVE-HISTORY-EDITING):
+     * the persistent band, the per-window indicator, the remappable `ui.timeTravel.accept|discard|exit` chords and
+     * the localized `timeTravel.*` refusals. Stage and refusal texts are the `⏪️time-travel` module's own
+     * `TIME_TRAVEL_LABELS`. */
+    readonly timeTravel: {
+      readonly band: UiLabelValue;
+      readonly indicator: UiLabelValue;
+      readonly indicatorTarget: UiLabelValue;
+      readonly stage: {
+        readonly editing: UiLabelValue;
+        readonly replaying: UiLabelValue;
+        readonly reviewing: UiLabelValue;
+        readonly choosing: UiLabelValue;
+        readonly finalizing: UiLabelValue;
+      };
+      readonly target: UiLabelValue;
+      readonly progress: UiLabelValue;
+      readonly worst: UiLabelValue;
+      readonly review: {
+        readonly noChanges: UiLabelValue;
+        readonly needsReplay: UiLabelValue;
+        readonly blocked: UiLabelValue;
+        readonly ready: UiLabelValue;
+      };
+      readonly fault: UiLabelValue;
+      readonly accepted: UiLabelValue;
+      readonly accept: UiLabelValue;
+      readonly discard: UiLabelValue;
+      readonly exit: UiLabelValue;
+      readonly finalize: UiLabelValue;
+      readonly back: UiLabelValue;
+      readonly cancelReplay: UiLabelValue;
+      readonly rerun: UiLabelValue;
+      /** 👥️ A peer's open history edit, labelled from this replica's own history rows (no locale text on the wire). */
+      readonly peer: {
+        readonly editingRow: UiLabelValue;
+        readonly editingTarget: UiLabelValue;
+        readonly editingHistory: UiLabelValue;
+      };
+      readonly refusal: {
+        readonly frozen: UiLabelValue;
+        readonly illegal: UiLabelValue;
+        readonly stale: UiLabelValue;
+        readonly blocked: UiLabelValue;
+        readonly empty: UiLabelValue;
+        readonly cancelled: UiLabelValue;
+        readonly nameInvalid: UiLabelValue;
+      };
+    };
+    /** 🛟️ The hub and event-log refusals of history transitions (`history.malformed-transition`,
+     * `history.unknown-target`, `history.transition-refused`), byte-equal with the wgpu shell. */
+    readonly history: {
+      readonly refusal: {
+        readonly malformedTransition: UiLabelValue;
+        readonly unknownTarget: UiLabelValue;
+        readonly transitionRefused: UiLabelValue;
+      };
+    };
+    /** 🧷️ A staged reference input (W1-E `reference_list` recipe semantics): chips, their remove control, the empty
+     * line and the "use current selection" button. */
+    readonly referenceList: {
+      readonly useSelection: UiLabelValue;
+      readonly remove: UiLabelValue;
+      readonly empty: UiLabelValue;
+    };
+    /** 🎨️ A staged colour input (W1-E `color_input` recipe semantics): the hex field and the alpha slider beside the swatch. */
+    readonly colorInput: {
+      readonly hex: UiLabelValue;
+      readonly alpha: UiLabelValue;
+    };
+    /** 🫥️ A staged input whose value admits `null` (`ActionArgDef.nullable`): the toggle that clears it. */
+    readonly nullableInput: {
+      readonly clear: UiLabelValue;
+    };
   };
   readonly settings: {
     readonly layout: {
@@ -819,6 +893,8 @@ export type UiTranslateFn = <K extends UiTranslationKey>(key: K, options?: Recor
 /** @emoji 🪁️ Shared UI i18n port (wraps i18next; do not import i18next outside this bundle). */
 export interface UiI18nPort {
   readonly t: UiTranslateFn;
+  /** A key resolved in one given locale, whatever locale the port stands at — for text journalled in every locale. */
+  tIn<K extends UiTranslationKey>(locale: UiLocale, key: K, options?: Record<string, unknown>): unknown;
   /** Whether the live bundles define `key` — for a caller holding an open id space that only sometimes names a label. */
   exists(key: string): boolean;
   changeLanguage(locale: UiLocale): Promise<unknown>;

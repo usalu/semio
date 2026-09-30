@@ -26,7 +26,7 @@ a second IMPLEMENTATION, written in another language from the format's own commi
   `…/🧬️schema/🧬️mutations/📝️text/📖️.grammar.semio`, their JSON wire form is this case's
   committed per-kind specification vectors under `🧫️fixtures/`, and the three `DocBlockPath` segment
   tags are declared by the committed schema mirror `…/🧬️mutations/🟦️.ts`
-  (`quote` / `listItem` / `tableCell`) with the snake-case member spelling the committed vectors use.
+  (`quote` / `listItem` / `tableCell`) with the camelCase member spelling (`blockIndex`) the committed vectors use.
 
 Nothing here imports, links, wraps or transliterates the Rust subject. Every function was written
 against the documents above; where the two disagree the disagreement is a finding, not something to
@@ -575,7 +575,7 @@ def container(snapshot: dict, path: dict, verb: str) -> list:
     item or a table cell, and `index` then addresses inside the list this returns."""
     blocks = snapshot["blocks"]
     for segment in path.get("segments") or []:
-        at = segment["block_index"]
+        at = segment["blockIndex"]
         if not isinstance(at, int) or at < 0 or at >= len(blocks):
             raise AssertionError("%s descends into block %r of a list holding %d" % (verb, at, len(blocks)))
         block = blocks[at]

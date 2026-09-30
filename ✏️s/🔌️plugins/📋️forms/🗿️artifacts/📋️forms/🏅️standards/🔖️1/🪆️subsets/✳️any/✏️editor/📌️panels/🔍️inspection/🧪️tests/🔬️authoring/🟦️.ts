@@ -1,5 +1,5 @@
 import assert from "node:assert/strict";
-import Ajv from "ajv/dist/2020";
+import Ajv from "ajv";
 import schema from "../../🧬️schema/🔣️.json";
 import fixture from "../../🧫️fixtures/🔣️authoring.json";
 import { inspectionModel } from "../../🟦️.ts";

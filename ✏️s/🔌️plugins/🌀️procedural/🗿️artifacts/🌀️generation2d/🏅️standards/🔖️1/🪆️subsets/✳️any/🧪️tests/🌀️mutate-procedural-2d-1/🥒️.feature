@@ -34,13 +34,13 @@ Feature: Apply every typed generation2d mutation twice — once in Rust, once in
 
   📌️ A SIBLING NOTE, because the count of second implementations must not be overstated. This
   reference and `🧊️mutate-procedural-3d-1`'s are ONE implementation instantiated twice: the two
-  documents are the same shape and the two vocabularies differ only in three kind names and four
+  documents are the same shape and the two vocabularies differ only in three kind names and three
   argument names — which is precisely what both no-oracle decisions called the specification. Writing
-  them side by side surfaced two real divergences that neither case could see alone: `delete-widget`
+  them side by side surfaced one real divergence that neither case could see alone: `delete-widget`
   raises `mutation.cascade` at level `info` in `🌀️mutate-procedural-2d-1` and raises NOTHING in
-  `🧊️mutate-procedural-3d-1`, for an effect that is byte-for-byte identical in both committed vectors;
-  and `s.procedural.generation2d` spells one argument `question_id` in snake_case — the only
-  snake_case identifier in either document model — where its sibling spells it `questionId`.
+  `🧊️mutate-procedural-3d-1`, for an effect that is byte-for-byte identical in both committed vectors.
+  A second one, the snake_case `question_id` of `s.procedural.generation2d`, was fixed at the source:
+  both subsets now spell the argument `questionId`.
 
   📌️ TWO CEILINGS ON WHAT THIS COMPARISON ESTABLISHES, stated rather than implied. First, the
   SUBJECT half does not run this subset's codec: `🦀️component.rs` beside this file links no plugin
@@ -89,7 +89,7 @@ Feature: Apply every typed generation2d mutation twice — once in Rust, once in
       | id                      | vector                                                                                      |
       | create-widget           | 🌱️create-widget/📝️inserts-note-c-at-index-2                                            |
       | replace-widget          | 🔁️replace-widget/✍️rewrites-the-note-b-body-in-place                                   |
-      | delete-widget           | 🗑️delete-widget/🚫️removes-note-a-and-flags-the-dangling-synapse                       |
+      | delete-widget           | 🗑️delete-widget/🚫️removes-note-flags-dangling-synapse                       |
       | connect-synapse         | 🔗️connect-synapse/🔗️joins-note-b-to-note-c-at-index-1                                  |
       | replace-synapse         | 🔄️replace-synapse/🔗️repoints-link-ab-onto-the-alt-port                                 |
       | disconnect-synapse      | ✂️disconnect-synapse/✂️severs-link-ab-leaving-both-notes                              |
@@ -98,9 +98,9 @@ Feature: Apply every typed generation2d mutation twice — once in Rust, once in
       | update-camera           | 🎛️update-camera/📷️pans-and-zooms-the-graph-camera                                         |
       | change-schema           | 🔤️change-schema/🏷️restamps-the-fixture-schema                                          |
       | create-generation       | ➕create-generation/🌱️appends-generation-2-and-selects-it                              |
-      | delete-generation       | ➖delete-generation/🚫️removes-the-selected-generation-2-and-falls-back-to-generation-1 |
+      | delete-generation       | ➖delete-generation/🚫️removes-selected-generation-2-falls-back |
       | rename-generation       | 🏷️rename-generation/🏷️retitles-generation-1                                           |
-      | change-generation-value | 🔢️change-generation-value/📏️raises-the-height-answer-in-generation-1                   |
+      | change-generation-value | 🔢️change-generation-value/📏️raises-height-answer-generation                   |
 
   @id-inverse
   @level-exhaustive
@@ -123,7 +123,7 @@ Feature: Apply every typed generation2d mutation twice — once in Rust, once in
       | id                      | vector                                                                                      |
       | create-widget           | 🌱️create-widget/📝️inserts-note-c-at-index-2                                            |
       | replace-widget          | 🔁️replace-widget/✍️rewrites-the-note-b-body-in-place                                   |
-      | delete-widget           | 🗑️delete-widget/🚫️removes-note-a-and-flags-the-dangling-synapse                       |
+      | delete-widget           | 🗑️delete-widget/🚫️removes-note-flags-dangling-synapse                       |
       | connect-synapse         | 🔗️connect-synapse/🔗️joins-note-b-to-note-c-at-index-1                                  |
       | replace-synapse         | 🔄️replace-synapse/🔗️repoints-link-ab-onto-the-alt-port                                 |
       | disconnect-synapse      | ✂️disconnect-synapse/✂️severs-link-ab-leaving-both-notes                              |
@@ -132,14 +132,14 @@ Feature: Apply every typed generation2d mutation twice — once in Rust, once in
       | update-camera           | 🎛️update-camera/📷️pans-and-zooms-the-graph-camera                                         |
       | change-schema           | 🔤️change-schema/🏷️restamps-the-fixture-schema                                          |
       | create-generation       | ➕create-generation/🌱️appends-generation-2-and-selects-it                              |
-      | delete-generation       | ➖delete-generation/🚫️removes-the-selected-generation-2-and-falls-back-to-generation-1 |
+      | delete-generation       | ➖delete-generation/🚫️removes-selected-generation-2-falls-back |
       | rename-generation       | 🏷️rename-generation/🏷️retitles-generation-1                                           |
-      | change-generation-value | 🔢️change-generation-value/📏️raises-the-height-answer-in-generation-1                   |
+      | change-generation-value | 🔢️change-generation-value/📏️raises-height-answer-generation                   |
 
   @id-identity-round-trip
   @level-long
   @mode-round-trip
   Scenario: Decode and re-encode the two-widget graph with its two-generation history
-    Given the committed before-snapshot shared://🧬️mutations/➖delete-generation/🚫️removes-the-selected-generation-2-and-falls-back-to-generation-1/📸️snapshot/⬅️before/🔣️.json
+    Given the committed before-snapshot shared://🧬️mutations/➖delete-generation/🚫️removes-selected-generation-2-falls-back/📸️snapshot/⬅️before/🔣️.json
     When it is parsed by the platform's own dependency-free JSON reader, re-serialized and parsed again
     Then the document is unchanged and the re-serialized bytes are not the committed bytes

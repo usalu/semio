@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
-import Ajv from "ajv";
+import { addSemioMutationLeafSchemasV1, semioSchemaAjvV1 } from "../../../../../../../../../../../../../../../../../🧰️framework/🛍️products/💻️os/🧪️tests/🧬️schema-oracle/🟦️.ts";
 import { applyPatch } from "fast-json-patch";
 import { applyWriterMainWindowConfigMutation, type WriterMainWindowConfigMutation } from "../../🧬️schema/🧬️mutations/🟦️.ts";
 import { applyWriterMainWindowTransientMutation, type WriterMainWindowTransientMutation } from "../../../🫧️transient/🧬️schema/🧬️mutations/🟦️.ts";
@@ -14,9 +14,9 @@ export function testWriterWindowStateOracle(): void {
   const configMutationSchema = JSON.parse(readFileSync(new URL("../../🧬️schema/🧬️mutations/🔣️.json", import.meta.url), "utf8"));
   const transientSchema = JSON.parse(readFileSync(new URL("../../../🫧️transient/🧬️schema/🔣️.json", import.meta.url), "utf8"));
   const transientMutationSchema = JSON.parse(readFileSync(new URL("../../../🫧️transient/🧬️schema/🧬️mutations/🔣️.json", import.meta.url), "utf8"));
-  const ajv = new Ajv({ strict: true, allErrors: true });
-  ajv.addKeyword("x-semio-state");
-  ajv.addKeyword("x-semio-owner");
+  const ajv = semioSchemaAjvV1({ allErrors: true });
+  addSemioMutationLeafSchemasV1(ajv, new URL("../../🧬️schema/🧬️mutations/", import.meta.url));
+  addSemioMutationLeafSchemasV1(ajv, new URL("../../../🫧️transient/🧬️schema/🧬️mutations/", import.meta.url));
   const validateConfig = ajv.compile(configSchema);
   const validateTransient = ajv.compile(transientSchema);
   const validateConfigMutation = ajv.compile(configMutationSchema);

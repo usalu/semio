@@ -1,8 +1,22 @@
-/** 🦠️ change-node-transform is an atomic, typed glTF 2.0 command. */
-import type { GltfJson, GltfSnapshot, GltfPrimitive, GltfMorphTarget, GltfAccessor, GltfSparseAccessor, GltfSparseIndices, GltfSparseValues } from '../../📸️snapshot/🟦️.ts';
-import { run, reject, positionIn, itemIndex, moveItem, type GltfLeafResult, type GltfMutationRejection } from './🟦️';
-export const GltfTransformNodeDescriptor = { id: 's.stdio.gltf.mutation.change-node-transform.v1', version: 1, kind: 'change', touchedPaths: ["document/nodes/*/matrix","document/nodes/*/translation","document/nodes/*/rotation","document/nodes/*/scale"], referencePolicy: 'matrix and TRS are mutually exclusive; every scalar must be finite' } as const;
-export interface GltfTransformNodePayload { node: number; transform: { kind: 'matrix'; matrix: number[] } | { kind: 'trs'; translation?: [number, number, number]; rotation?: [number, number, number, number]; scale?: [number, number, number] } }
-export type GltfTransformNodeResult = GltfLeafResult;
-export const validateGltfTransformNode = (payload: GltfTransformNodePayload, base: GltfSnapshot): GltfMutationRejection | undefined => { const node = itemIndex(payload.node, base.document.nodes.length, 'document/nodes'); if (node) return node; const values = payload.transform.kind === 'matrix' ? payload.transform.matrix : [...(payload.transform.translation ?? []), ...(payload.transform.rotation ?? []), ...(payload.transform.scale ?? [])]; if ((payload.transform.kind === 'matrix' && payload.transform.matrix.length !== 16) || !values.every(Number.isFinite)) return reject('gltf.mutation.invalid-transform', `document/nodes/${payload.node}/transform`, 'transform values must be finite and matrix has 16 entries'); return undefined; };
-export const applyGltfTransformNode = (base: GltfSnapshot, payload: GltfTransformNodePayload): GltfTransformNodeResult => run(base, payload, validateGltfTransformNode, (next, payload) => { const node = next.document.nodes[payload.node]!; if (payload.transform.kind === 'matrix') { node.matrix = [...payload.transform.matrix]; node.translation = undefined; node.rotation = undefined; node.scale = undefined; } else { node.matrix = undefined; node.translation = payload.transform.translation; node.rotation = payload.transform.rotation; node.scale = payload.transform.scale; } }, GltfTransformNodeDescriptor.touchedPaths);
+/** 📐️ `change-node-transform` wire twin: the flat `Apply` payload `GltfTransformNodePayload` and the phase wire `ChangeNodeTransformMutation`, exactly as `./🦀️.rs` writes them.
+ * @see ./🧬️schema/🔣️.json */
+import { gltfWireArray, gltfWireIndex, gltfWireLiteral, gltfWireNullable, gltfWireNumber, gltfWireObject, gltfWireRequired, gltfWireTagged, gltfWireTuple } from "../../../📸️snapshot/🟦️.ts";
+import { type GltfDiff, type GltfPhase, gltfWirePhase, parseGltfDiff } from "../../../🔺️diff/🟦️.ts";
+
+export type GltfNodeTransform =
+  | { kind: "matrix"; matrix: number[] }
+  | { kind: "trs"; translation: [number, number, number] | null; rotation: [number, number, number, number] | null; scale: [number, number, number] | null };
+
+export interface GltfTransformNodePayload {
+  node: number;
+  transform: GltfNodeTransform;
+}
+
+export type ChangeNodeTransformMutation = GltfPhase<GltfTransformNodePayload, GltfDiff>;
+
+export const parseGltfNodeTransform = gltfWireTagged<GltfNodeTransform, "kind">("kind", {
+  matrix: gltfWireObject<Extract<GltfNodeTransform, { kind: "matrix" }>>({ kind: gltfWireRequired(gltfWireLiteral("matrix")), matrix: gltfWireRequired(gltfWireArray(gltfWireNumber, 16)) }),
+  trs: gltfWireObject<Extract<GltfNodeTransform, { kind: "trs" }>>({ kind: gltfWireRequired(gltfWireLiteral("trs")), translation: gltfWireRequired(gltfWireNullable(gltfWireTuple(gltfWireNumber, gltfWireNumber, gltfWireNumber))), rotation: gltfWireRequired(gltfWireNullable(gltfWireTuple(gltfWireNumber, gltfWireNumber, gltfWireNumber, gltfWireNumber))), scale: gltfWireRequired(gltfWireNullable(gltfWireTuple(gltfWireNumber, gltfWireNumber, gltfWireNumber))) }),
+});
+export const parseGltfTransformNodePayload = gltfWireObject<GltfTransformNodePayload>({ node: gltfWireRequired(gltfWireIndex), transform: gltfWireRequired(parseGltfNodeTransform) });
+export const parseChangeNodeTransformMutation = gltfWirePhase(parseGltfTransformNodePayload, parseGltfDiff);

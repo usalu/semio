@@ -168,8 +168,7 @@ pub(crate) fn apply_selected(payload: &NodeGraphEdit, doc: &ArtifactView<'_, Gen
     apply_operations(&doc.snapshot.host_snapshot, &sub_operations, selected)
 }
 
-//#region 🧪️Tests
+
 #[cfg(test)]
 #[path = "🧪️tests/🔬️unit/🦀️.rs"]
 mod tests;
-//#endregion 🧪️Tests

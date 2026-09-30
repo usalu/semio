@@ -9,7 +9,20 @@
   ],
   "properties": {
     "newDesignSituation": {
-      "type": "string"
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1996/snapshot.json#/$defs/DesignSituation",
+      "x-semio-ui": {
+        "role": "value",
+        "label": {
+          "en": "Design situation",
+          "de": "Bemessungssituation"
+        },
+        "description": {
+          "en": "Persistent, Transient, Accidental or Seismic (EN 1990 §3.2).",
+          "de": "Persistent (ständig), Transient (vorübergehend), Accidental (außergewöhnlich) oder Seismic (Erdbeben) nach EN 1990 §3.2."
+        },
+        "group": "annex",
+        "order": 10
+      }
     }
   }
 }

@@ -5,15 +5,26 @@
   "type": "object",
   "additionalProperties": false,
   "required": [
+    "mutation",
     "root"
   ],
   "properties": {
-    "root": {
-      "$ref": "#/$defs/JsonIJsonRoot"
-    },
     "mutation": {
       "const": "setTopLevel",
       "description": "Aggregate discriminator spliced in by JsonIJsonMutation; absent when the payload stands alone."
+    },
+    "root": {
+      "$ref": "#/$defs/JsonIJsonRoot",
+      "x-semio-ui": {
+        "label": {
+          "en": "Top-level value",
+          "de": "Wert der obersten Ebene"
+        },
+        "description": {
+          "en": "The object or array that forms the I-JSON text.",
+          "de": "Das Objekt oder Array, das den I-JSON-Text bildet."
+        }
+      }
     }
   },
   "$defs": {

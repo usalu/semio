@@ -4,8 +4,11 @@
   "title": "SetEngagementInput",
   "type": "object",
   "properties": {
+    "kind": {
+      "const": "set-engagement-input"
+    },
     "value": { "type": "string" }
   },
-  "required": ["value"],
+  "required": ["kind","value"],
   "additionalProperties": false
 }

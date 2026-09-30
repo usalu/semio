@@ -19,10 +19,23 @@
     },
     "vertex_index": {
       "type": "integer",
-      "minimum": 0
+      "minimum": 0,
+      "x-semio-ui": {
+        "widget": "stepper",
+        "label": {
+          "en": "Vertex index",
+          "de": "Eckpunktindex"
+        }
+      }
     },
     "new_point": {
-      "$ref": "#/$defs/SemioPoint3"
+      "$ref": "#/$defs/SemioPoint3",
+      "x-semio-ui": {
+        "label": {
+          "en": "Position",
+          "de": "Position"
+        }
+      }
     }
   },
   "$defs": {

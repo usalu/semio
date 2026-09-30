@@ -1,0 +1,75 @@
+[package]
+name = "semio-s-fixture-sweep"
+version = "0.1.0"
+edition = "2021"
+rust-version.workspace = true
+publish = false
+autotests = false
+description = "Fleet-wide real DSL fixture conformance test leaf"
+
+[package.metadata.semio]
+role = "test"
+id = "s-fixture-sweep"
+
+[lints]
+workspace = true
+
+[[test]]
+name = "fixture_sweep"
+path = "../../🧪️tests/🔬️fleet-example-sweep/🦀️.rs"
+
+[dependencies]
+semio-framework-artifact-flow-flow = { workspace = true }
+semio-framework-artifact-playbook-playbook = { workspace = true }
+semio-framework-artifact-space-space = { workspace = true }
+semio-framework-artifact-space-collection = { workspace = true }
+semio-framework-artifact-workflow-workflow = { workspace = true }
+semio-s-artifact-animate-presentation = { workspace = true }
+semio-s-artifact-block-2d = { workspace = true }
+semio-s-artifact-block-3d = { workspace = true }
+semio-s-artifact-block-5d = { workspace = true }
+semio-s-artifact-cad-cad = { workspace = true }
+semio-s-artifact-dag-dag = { workspace = true }
+semio-s-artifact-draw-drawing = { workspace = true }
+semio-s-artifact-fem-2d = { workspace = true }
+semio-s-artifact-fem-3d = { workspace = true }
+semio-s-artifact-gis-gismap = { workspace = true }
+semio-s-artifact-gis-gisterrain = { workspace = true }
+semio-s-artifact-imperative-procedure = { workspace = true }
+semio-s-artifact-layout-layout = { workspace = true }
+semio-s-artifact-lowpoly-lowpoly = { workspace = true }
+semio-s-artifact-mathematical-equation = { workspace = true }
+semio-s-artifact-norm-din16798 = { workspace = true }
+semio-s-artifact-norm-din18599 = { workspace = true }
+semio-s-artifact-norm-din4108 = { workspace = true }
+semio-s-artifact-norm-en1990 = { workspace = true }
+semio-s-artifact-norm-en1991 = { workspace = true }
+semio-s-artifact-norm-en1992 = { workspace = true }
+semio-s-artifact-norm-en1993 = { workspace = true }
+semio-s-artifact-norm-en1994 = { workspace = true }
+semio-s-artifact-norm-en1995 = { workspace = true }
+semio-s-artifact-norm-en1996 = { workspace = true }
+semio-s-artifact-norm-en1997 = { workspace = true }
+semio-s-artifact-norm-en1998 = { workspace = true }
+semio-s-artifact-norm-en1999 = { workspace = true }
+semio-s-artifact-norm-iso16757 = { workspace = true }
+semio-s-artifact-norm-vdi3805 = { workspace = true }
+semio-s-artifact-note-note = { workspace = true }
+semio-s-artifact-procedural-generation2d = { workspace = true }
+semio-s-artifact-procedural-generation3d = { workspace = true }
+semio-s-artifact-process-process3d = { workspace = true }
+semio-s-artifact-puzzle-2d = { workspace = true }
+semio-s-artifact-puzzle-3d = { workspace = true }
+semio-s-artifact-puzzle-5d = { workspace = true }
+semio-s-artifact-raster-raster = { workspace = true }
+semio-s-artifact-reasoning-wires = { workspace = true }
+semio-s-artifact-remodel-remodeling = { workspace = true }
+semio-s-artifact-sequence-sequence = { workspace = true }
+semio-s-artifact-shooting-shooting = { workspace = true }
+semio-s-artifact-sourcing-curation = { workspace = true }
+semio-s-artifact-space-home = { workspace = true }
+semio-s-artifact-trinity-jack = { workspace = true }
+semio-s-artifact-trinity-rewriting = { workspace = true }
+semio-s-artifact-vcs-vcs = { workspace = true }
+semio-s-artifact-writer-writer = { workspace = true }
+semio-framework-os-kernel = { workspace = true }

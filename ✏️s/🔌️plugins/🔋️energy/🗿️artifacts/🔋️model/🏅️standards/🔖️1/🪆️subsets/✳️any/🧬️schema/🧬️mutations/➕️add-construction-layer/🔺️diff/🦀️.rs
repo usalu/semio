@@ -13,7 +13,7 @@ pub fn diff(payload: &super::AddConstructionLayer, base: &EnergyModelSnapshot) -
         return protocol::MutationOutcome::error("mutation.target-missing", format!("Material {} does not exist.", payload.material_id.0), [payload.material_id.0.to_string()]);
     }
     if payload.index as usize > existing.layer_material_ids.len() {
-        return protocol::MutationOutcome::error("mutation.invariant", format!("Construction {} has {} layers, so index {} is past its end.", payload.id.0, existing.layer_material_ids.len(), payload.index), [payload.id.0.to_string()]);
+        return protocol::MutationOutcome::error("mutation.target-missing", format!("Construction {} has {} layers, so index {} is past its end.", payload.id.0, existing.layer_material_ids.len(), payload.index), [payload.id.0.to_string()]);
     }
     let mut model = base.model.clone();
     if let Some(construction) = model.constructions.iter_mut().find(|item| item.id == payload.id) {

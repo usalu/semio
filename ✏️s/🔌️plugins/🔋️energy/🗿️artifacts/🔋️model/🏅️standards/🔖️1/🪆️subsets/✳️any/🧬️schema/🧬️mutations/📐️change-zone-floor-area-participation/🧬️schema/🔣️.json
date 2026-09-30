@@ -5,15 +5,49 @@
   "type": "object",
   "additionalProperties": false,
   "required": [
+    "mutation",
     "id",
     "newPartOfTotalFloorArea"
   ],
   "properties": {
+    "mutation": {
+      "const": "changeZoneFloorAreaParticipation"
+    },
     "id": {
-      "type": "integer"
+      "type": "integer",
+      "minimum": 0,
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Zone",
+          "de": "Zone"
+        },
+        "description": {
+          "en": "The zone this mutation changes, by id.",
+          "de": "Zone, die diese Mutation ändert, per ID."
+        },
+        "ref": {
+          "kind": "zone",
+          "domain": "energyModel",
+          "granularity": "zone"
+        },
+        "group": "target",
+        "order": 10
+      }
     },
     "newPartOfTotalFloorArea": {
-      "type": "boolean"
+      "type": "boolean",
+      "x-semio-ui": {
+        "widget": "toggle",
+        "role": "value",
+        "label": {
+          "en": "Counts toward total floor area",
+          "de": "Zählt zur Gesamtgeschossfläche"
+        },
+        "group": "geometry",
+        "order": 20
+      }
     }
   }
 }

@@ -5,11 +5,29 @@
   "type": "object",
   "additionalProperties": false,
   "required": [
+    "mutation",
     "newFramework"
   ],
   "properties": {
+    "mutation": {
+      "const": "renameGovernance"
+    },
     "newFramework": {
-      "type": "string"
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "text",
+        "role": "value",
+        "label": {
+          "en": "New Governance Framework",
+          "de": "Neues Governance-Rahmenwerk"
+        },
+        "description": {
+          "en": "e.g. ISO 9001 or ISO 41001.",
+          "de": "z. B. ISO 9001 oder ISO 41001."
+        },
+        "group": "identity",
+        "order": 10
+      }
     }
   }
 }

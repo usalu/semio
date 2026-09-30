@@ -1,0 +1,102 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/replication/transaction-ref.json",
+  "title": "Semio Transaction Ref Mint Vectors",
+  "description": "`TransactionRef` minting vectors: the committed tool transaction id every operation of one tool gesture carries, derived from the author, its HLC tick and the tool id.",
+  "definitions": {
+    "TransactionRef": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "tool"
+      ],
+      "properties": {
+        "id": {
+          "type": "string",
+          "pattern": "^tx-[0-9a-f]{16}$"
+        },
+        "tool": {
+          "type": "string",
+          "minLength": 1
+        }
+      }
+    },
+    "Case": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "actor",
+        "hlc",
+        "tool",
+        "expect"
+      ],
+      "properties": {
+        "id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "actor": {
+          "type": "string",
+          "minLength": 1
+        },
+        "hlc": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "actor",
+            "physical_ms",
+            "logical"
+          ],
+          "properties": {
+            "actor": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 9007199254740991
+            },
+            "physical_ms": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 9007199254740991
+            },
+            "logical": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 9007199254740991
+            }
+          }
+        },
+        "tool": {
+          "type": "string",
+          "minLength": 1
+        },
+        "expect": {
+          "$ref": "#/definitions/TransactionRef"
+        }
+      }
+    }
+  },
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema",
+    "mint",
+    "cases"
+  ],
+  "properties": {
+    "schema": {
+      "const": "semio.replication.transaction-ref"
+    },
+    "mint": {
+      "type": "string"
+    },
+    "cases": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "$ref": "#/definitions/Case"
+      }
+    }
+  }
+}

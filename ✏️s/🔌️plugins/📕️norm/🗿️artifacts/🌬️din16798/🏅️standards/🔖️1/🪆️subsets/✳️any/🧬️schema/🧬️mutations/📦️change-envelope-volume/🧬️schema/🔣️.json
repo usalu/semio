@@ -9,7 +9,21 @@
   ],
   "properties": {
     "newEnvelopeVolumeM3": {
-      "type": "number"
+      "type": "number",
+      "minimum": 0,
+      "x-semio-ui": {
+        "widget": "stepper",
+        "role": "value",
+        "label": {
+          "en": "Internal air volume V",
+          "de": "Innenluftvolumen V"
+        },
+        "unit": "m³",
+        "step": 1,
+        "precision": 1,
+        "group": "building",
+        "order": 10
+      }
     }
   }
 }

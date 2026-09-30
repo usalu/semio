@@ -1,17 +1,37 @@
 {
-  "id": "s.stdio.gltf.mutation.move-material.v1",
-  "version": 1,
-  "touchedPaths": [
-    "document/materials/0",
-    "document/materials/1"
-  ],
-  "payload": {
-    "index": 0,
-    "position": 1
+  "meshes": {
+    "modified": [
+      {
+        "index": 0,
+        "diff": {
+          "primitives": [
+            {
+              "attributes": {},
+              "material": 1
+            },
+            {
+              "attributes": {},
+              "material": 0
+            }
+          ]
+        }
+      }
+    ]
   },
-  "operation": {
-    "kind": "move",
-    "index": 0,
-    "position": 1
+  "materials": {
+    "modified": [
+      {
+        "index": 0,
+        "diff": {
+          "name": "steel"
+        }
+      },
+      {
+        "index": 1,
+        "diff": {
+          "name": "glass"
+        }
+      }
+    ]
   }
 }

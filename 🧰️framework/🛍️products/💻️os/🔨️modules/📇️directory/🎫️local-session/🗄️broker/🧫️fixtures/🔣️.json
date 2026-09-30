@@ -1,0 +1,128 @@
+{
+  "schema": "semio.os.local-session-broker-fixture/v1",
+  "cases": [
+    {
+      "name": "record",
+      "kind": "record",
+      "value": {
+        "schema": "semio.hub.local-session-broker/v1",
+        "hubOrigin": "http://127.0.0.1:8787",
+        "runId": "11111111111111111111111111111111",
+        "port": 50123,
+        "secret": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "profiles": [
+          "developer"
+        ]
+      },
+      "accepted": true
+    },
+    {
+      "name": "record-unknown-authority",
+      "kind": "record",
+      "value": {
+        "schema": "semio.hub.local-session-broker/v1",
+        "hubOrigin": "http://127.0.0.1:8787",
+        "runId": "11111111111111111111111111111111",
+        "port": 50123,
+        "secret": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "profiles": [
+          "developer"
+        ],
+        "authority": "client"
+      },
+      "accepted": false
+    },
+    {
+      "name": "record-wrong-schema",
+      "kind": "record",
+      "value": {
+        "schema": "client",
+        "hubOrigin": "http://127.0.0.1:8787",
+        "runId": "11111111111111111111111111111111",
+        "port": 50123,
+        "secret": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "profiles": [
+          "developer"
+        ]
+      },
+      "accepted": false
+    },
+    {
+      "name": "request",
+      "kind": "request",
+      "value": {
+        "schema": "semio.hub.local-session-request/v1",
+        "profileId": "developer"
+      },
+      "accepted": true
+    },
+    {
+      "name": "request-unknown-authority",
+      "kind": "request",
+      "value": {
+        "schema": "semio.hub.local-session-request/v1",
+        "profileId": "developer",
+        "authority": "client"
+      },
+      "accepted": false
+    },
+    {
+      "name": "request-wrong-schema",
+      "kind": "request",
+      "value": {
+        "schema": "client",
+        "profileId": "developer"
+      },
+      "accepted": false
+    },
+    {
+      "name": "session",
+      "kind": "session",
+      "value": {
+        "schema": "semio.hub.local-session/v1",
+        "profileId": "developer",
+        "token": "session.v1.22222222222222222222222222222222.bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+        "userId": "developer-user"
+      },
+      "accepted": true
+    },
+    {
+      "name": "session-unknown-authority",
+      "kind": "session",
+      "value": {
+        "schema": "semio.hub.local-session/v1",
+        "profileId": "developer",
+        "token": "session.v1.22222222222222222222222222222222.bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+        "userId": "developer-user",
+        "authority": "client"
+      },
+      "accepted": false
+    },
+    {
+      "name": "session-wrong-schema",
+      "kind": "session",
+      "value": {
+        "schema": "client",
+        "profileId": "developer",
+        "token": "session.v1.22222222222222222222222222222222.bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+        "userId": "developer-user"
+      },
+      "accepted": false
+    },
+    {
+      "name": "broker-nonloopback",
+      "kind": "record",
+      "value": {
+        "schema": "semio.hub.local-session-broker/v1",
+        "hubOrigin": "https://example.com",
+        "runId": "11111111111111111111111111111111",
+        "port": 50123,
+        "secret": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "profiles": [
+          "developer"
+        ]
+      },
+      "accepted": false
+    }
+  ]
+}

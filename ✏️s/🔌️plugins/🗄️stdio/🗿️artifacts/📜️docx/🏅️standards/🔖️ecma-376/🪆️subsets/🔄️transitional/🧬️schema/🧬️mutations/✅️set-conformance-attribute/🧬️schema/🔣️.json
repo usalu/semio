@@ -9,7 +9,20 @@
   ],
   "properties": {
     "value": {
-      "type": "string"
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "text",
+        "label": {
+          "en": "Conformance class",
+          "de": "Konformitätsklasse"
+        },
+        "description": {
+          "en": "Value of w:conformance, e.g. strict or transitional.",
+          "de": "Wert von w:conformance, z. B. strict oder transitional."
+        },
+        "group": "value",
+        "order": 10
+      }
     }
   }
 }

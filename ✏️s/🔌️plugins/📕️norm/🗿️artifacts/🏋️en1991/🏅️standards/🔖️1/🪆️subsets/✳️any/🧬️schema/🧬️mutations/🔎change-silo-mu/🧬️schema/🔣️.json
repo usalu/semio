@@ -9,7 +9,20 @@
   ],
   "properties": {
     "newSiloMu": {
-      "type": "number"
+      "type": "number",
+      "minimum": 0,
+      "x-semio-ui": {
+        "widget": "stepper",
+        "role": "value",
+        "label": {
+          "en": "Wall friction coefficient μ",
+          "de": "Wandreibungskoeffizient μ"
+        },
+        "step": 0.01,
+        "precision": 2,
+        "group": "silo",
+        "order": 10
+      }
     }
   }
 }

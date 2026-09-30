@@ -5,20 +5,29 @@
   "type": "object",
   "additionalProperties": false,
   "required": [
+    "mutation",
     "data"
   ],
   "properties": {
+    "mutation": {
+      "const": "appendBytes",
+      "description": "Aggregate discriminator spliced in by BinaryMutation; absent when the payload stands alone."
+    },
     "data": {
       "type": "array",
       "items": {
         "type": "integer",
         "minimum": 0,
         "maximum": 255
+      },
+      "x-semio-ui": {
+        "label": {
+          "en": "Bytes to append",
+          "de": "Anzuhängende Bytes"
+        },
+        "group": "value",
+        "order": 10
       }
-    },
-    "mutation": {
-      "const": "appendBytes",
-      "description": "Aggregate discriminator spliced in by BinaryMutation; absent when the payload stands alone."
     }
   }
 }

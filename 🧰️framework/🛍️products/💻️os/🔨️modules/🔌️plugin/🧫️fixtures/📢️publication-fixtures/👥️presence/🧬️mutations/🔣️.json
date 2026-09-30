@@ -1,18 +1,22 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
   "$id": "https://json.schemas.assets.semio-tech.com/framework/os/plugin/tests/publication-fixtures/presence/mutations.json",
-  "type": "object",
-  "additionalProperties": false,
-  "required": [
-    "operation",
-    "payload"
-  ],
-  "properties": {
-    "operation": {
-      "const": "changePublicationPresence"
-    },
-    "payload": {
-      "$ref": "https://json.schemas.assets.semio-tech.com/framework/os/plugin/tests/publication-fixtures/presence/mutation/change-publication-presence/schema.json"
+  "oneOf": [
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "operation",
+        "payload"
+      ],
+      "properties": {
+        "operation": {
+          "const": "changePublicationPresence"
+        },
+        "payload": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/framework/os/plugin/tests/publication-fixtures/presence/mutation/change-publication-presence/schema.json"
+        }
+      }
     }
-  }
+  ]
 }

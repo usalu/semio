@@ -9,7 +9,25 @@
   ],
   "properties": {
     "newMixedTerrainUpwind": {
-      "type": "integer"
+      "type": "integer",
+      "minimum": 0,
+      "maximum": 4,
+      "x-semio-ui": {
+        "widget": "stepper",
+        "role": "value",
+        "label": {
+          "en": "Upwind terrain category",
+          "de": "Geländekategorie in Luv"
+        },
+        "description": {
+          "en": "Roughness upwind of the change: 0 and I to IV as 1 to 4.",
+          "de": "Rauigkeit in Luv des Wechsels: 0 sowie I bis IV als 1 bis 4."
+        },
+        "step": 1,
+        "precision": 0,
+        "group": "site",
+        "order": 10
+      }
     }
   }
 }

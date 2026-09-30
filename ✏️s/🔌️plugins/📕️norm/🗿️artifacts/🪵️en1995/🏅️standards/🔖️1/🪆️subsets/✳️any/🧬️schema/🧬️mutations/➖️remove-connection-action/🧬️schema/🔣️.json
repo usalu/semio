@@ -10,11 +10,44 @@
   ],
   "properties": {
     "connectionId": {
-      "type": "string"
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Connection",
+          "de": "Verbindung"
+        },
+        "description": {
+          "en": "The timber connection this mutation addresses.",
+          "de": "Die Holzverbindung, die diese Mutation adressiert."
+        },
+        "ref": {
+          "kind": "connection"
+        },
+        "group": "target",
+        "order": 10
+      }
     },
     "index": {
       "type": "integer",
-      "minimum": 0
+      "minimum": 0,
+      "x-semio-ui": {
+        "widget": "stepper",
+        "role": "value",
+        "label": {
+          "en": "Action",
+          "de": "Einwirkung"
+        },
+        "description": {
+          "en": "Zero-based position of the action within the connection in its list.",
+          "de": "Nullbasierte Position der Einwirkung in der Verbindung in der Liste."
+        },
+        "step": 1,
+        "precision": 0,
+        "group": "target",
+        "order": 20
+      }
     }
   }
 }

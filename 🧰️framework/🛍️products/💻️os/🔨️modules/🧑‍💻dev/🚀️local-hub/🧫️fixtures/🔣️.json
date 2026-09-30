@@ -1,0 +1,252 @@
+{
+  "cases": [
+    {
+      "name": "owner-command",
+      "accepted": true,
+      "value": {
+        "owner": {
+          "program": "bun",
+          "args": [
+            "nx",
+            "run",
+            "application:test-owner",
+            "--"
+          ]
+        },
+        "defaultProfileId": "human"
+      }
+    },
+    {
+      "name": "empty-command",
+      "accepted": false,
+      "value": {
+        "owner": {
+          "program": "",
+          "args": [
+            "nx"
+          ]
+        },
+        "defaultProfileId": "human"
+      }
+    },
+    {
+      "name": "empty-args",
+      "accepted": false,
+      "value": {
+        "owner": {
+          "program": "bun",
+          "args": []
+        },
+        "defaultProfileId": "human"
+      }
+    },
+    {
+      "name": "foreign-field",
+      "accepted": false,
+      "value": {
+        "owner": {
+          "program": "bun",
+          "args": [
+            "nx",
+            "run",
+            "application:test-owner",
+            "--"
+          ]
+        },
+        "defaultProfileId": "human",
+        "module": "specific/import.ts"
+      }
+    },
+    {
+      "name": "invalid-profile",
+      "accepted": false,
+      "value": {
+        "owner": {
+          "program": "bun",
+          "args": [
+            "nx",
+            "run",
+            "application:test-owner",
+            "--"
+          ]
+        },
+        "defaultProfileId": "Human"
+      }
+    },
+    {
+      "name": "non-string-arg",
+      "accepted": false,
+      "value": {
+        "owner": {
+          "program": "bun",
+          "args": [
+            1
+          ]
+        },
+        "defaultProfileId": "human"
+      }
+    },
+    {
+      "name": "extra-command-field",
+      "accepted": false,
+      "value": {
+        "owner": {
+          "program": "bun",
+          "args": [
+            "nx",
+            "run",
+            "application:test-owner",
+            "--"
+          ],
+          "cwd": "foreign"
+        },
+        "defaultProfileId": "human"
+      }
+    },
+    {
+      "name": "single-profile",
+      "accepted": true,
+      "value": {
+        "owner": {
+          "program": "bun",
+          "args": [
+            "nx",
+            "run",
+            "application:test-owner",
+            "--"
+          ]
+        },
+        "defaultProfileId": "a"
+      }
+    },
+    {
+      "name": "dotted-profile",
+      "accepted": true,
+      "value": {
+        "owner": {
+          "program": "bun",
+          "args": [
+            "nx",
+            "run",
+            "application:test-owner",
+            "--"
+          ]
+        },
+        "defaultProfileId": "alice.dev-1"
+      }
+    },
+    {
+      "name": "maximum-profile",
+      "accepted": true,
+      "value": {
+        "owner": {
+          "program": "bun",
+          "args": [
+            "nx",
+            "run",
+            "application:test-owner",
+            "--"
+          ]
+        },
+        "defaultProfileId": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+      }
+    },
+    {
+      "name": "too-long-profile",
+      "accepted": false,
+      "value": {
+        "owner": {
+          "program": "bun",
+          "args": [
+            "nx",
+            "run",
+            "application:test-owner",
+            "--"
+          ]
+        },
+        "defaultProfileId": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+      }
+    },
+    {
+      "name": "trailing-dot",
+      "accepted": false,
+      "value": {
+        "owner": {
+          "program": "bun",
+          "args": [
+            "nx",
+            "run",
+            "application:test-owner",
+            "--"
+          ]
+        },
+        "defaultProfileId": "alice."
+      }
+    },
+    {
+      "name": "trailing-hyphen",
+      "accepted": false,
+      "value": {
+        "owner": {
+          "program": "bun",
+          "args": [
+            "nx",
+            "run",
+            "application:test-owner",
+            "--"
+          ]
+        },
+        "defaultProfileId": "alice-"
+      }
+    },
+    {
+      "name": "leading-dot",
+      "accepted": false,
+      "value": {
+        "owner": {
+          "program": "bun",
+          "args": [
+            "nx",
+            "run",
+            "application:test-owner",
+            "--"
+          ]
+        },
+        "defaultProfileId": ".alice"
+      }
+    },
+    {
+      "name": "empty-profile",
+      "accepted": false,
+      "value": {
+        "owner": {
+          "program": "bun",
+          "args": [
+            "nx",
+            "run",
+            "application:test-owner",
+            "--"
+          ]
+        },
+        "defaultProfileId": ""
+      }
+    }
+  ],
+  "processCases": [
+    {
+      "name": "declared-owner",
+      "outcome": "spawned",
+      "expectedAlive": true
+    },
+    {
+      "name": "missing-executable",
+      "outcome": "refused",
+      "expectedAlive": false
+    },
+    {
+      "name": "cancelled-startup",
+      "outcome": "refused",
+      "expectedAlive": false
+    }
+  ]
+}

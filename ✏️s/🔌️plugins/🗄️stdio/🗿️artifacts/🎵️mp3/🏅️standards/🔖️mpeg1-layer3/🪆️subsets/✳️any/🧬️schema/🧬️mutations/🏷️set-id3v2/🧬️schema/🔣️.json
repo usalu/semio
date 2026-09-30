@@ -4,7 +4,13 @@
   "title": "SetId3v2",
   "type": "object",
   "additionalProperties": false,
+  "required": [
+    "mutation"
+  ],
   "properties": {
+    "mutation": {
+      "const": "setId3v2"
+    },
     "id3v2": {
       "anyOf": [
         {
@@ -13,7 +19,13 @@
         {
           "type": "null"
         }
-      ]
+      ],
+      "x-semio-ui": {
+        "label": {
+          "en": "ID3v2 tag",
+          "de": "ID3v2-Tag"
+        }
+      }
     }
   },
   "$defs": {
@@ -29,22 +41,49 @@
         "majorVersion": {
           "type": "integer",
           "minimum": 0,
-          "maximum": 255
+          "maximum": 255,
+          "x-semio-ui": {
+            "widget": "stepper",
+            "label": {
+              "en": "Major version",
+              "de": "Hauptversion"
+            }
+          }
         },
         "minorVersion": {
           "type": "integer",
           "minimum": 0,
-          "maximum": 255
+          "maximum": 255,
+          "x-semio-ui": {
+            "widget": "stepper",
+            "label": {
+              "en": "Revision",
+              "de": "Revision"
+            }
+          }
         },
         "flags": {
           "type": "integer",
           "minimum": 0,
-          "maximum": 255
+          "maximum": 255,
+          "x-semio-ui": {
+            "widget": "stepper",
+            "label": {
+              "en": "Tag flags",
+              "de": "Tag-Flags"
+            }
+          }
         },
         "frames": {
           "type": "array",
           "items": {
             "$ref": "#/$defs/Id3Frame"
+          },
+          "x-semio-ui": {
+            "label": {
+              "en": "ID3v2 frames",
+              "de": "ID3v2-Frames"
+            }
           }
         }
       }
@@ -63,7 +102,14 @@
         "flags": {
           "type": "integer",
           "minimum": 0,
-          "maximum": 65535
+          "maximum": 65535,
+          "x-semio-ui": {
+            "widget": "stepper",
+            "label": {
+              "en": "Frame flags",
+              "de": "Frame-Flags"
+            }
+          }
         },
         "data": {
           "type": "array",

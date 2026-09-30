@@ -9,18 +9,8 @@
  * @see ../🧬️schema/🔣️.json
  * @see ../🧫️fixtures/🗄️store/🔣️.json
  */
-import {
-  decodeTrustedPluginModuleBundleV1,
-  PLUGIN_MODULE_STORE_V1,
-  trustedPluginModuleBundleSha256V1,
-  trustedPluginModuleSourceOfEntryV1,
-  validatePluginModuleStoreRecordV1,
-  validTrustedPluginModulePathV1,
-  verifyTrustedPluginModuleFileV1,
-  type PluginModuleStoreRecordV1,
-  type TrustedPluginModuleBundleV1,
-  type TrustedPluginModuleFileV1,
-} from "../🧬️schema/🟦️.ts";
+import { PLUGIN_MODULE_STORE_V1, validatePluginModuleStoreRecordV1, type PluginModuleStoreRecordV1 } from "../🧬️schema/🟦️.ts";
+import { decodeTrustedPluginModuleBundleV1, trustedPluginModuleBundleSha256V1, trustedPluginModuleSourceOfEntryV1, validTrustedPluginModulePathV1, verifyTrustedPluginModuleFileV1, type TrustedPluginModuleBundleV1, type TrustedPluginModuleFileV1 } from "../../📦️deployment/🧬️schema/🟦️.ts";
 
 /** 🗄️ The part of a Cache Storage `Cache` the store uses. */
 export type PluginModuleCacheV1 = Readonly<{

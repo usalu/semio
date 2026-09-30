@@ -4,11 +4,71 @@
   "title": "BindInput",
   "type": "object",
   "properties": {
+    "operation": {
+      "const": "bindInput"
+    },
     "binding": {
-      "type": "object"
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "inputId",
+        "nodeId",
+        "portId"
+      ],
+      "properties": {
+        "inputId": {
+          "type": "string",
+          "x-semio-ui": {
+            "widget": "reference",
+            "role": "value",
+            "label": {
+              "en": "Input",
+              "de": "Eingang"
+            },
+            "ref": {
+              "kind": "input"
+            }
+          }
+        },
+        "nodeId": {
+          "type": "string",
+          "x-semio-ui": {
+            "widget": "reference",
+            "role": "value",
+            "label": {
+              "en": "Node",
+              "de": "Knoten"
+            },
+            "ref": {
+              "kind": "node"
+            }
+          }
+        },
+        "portId": {
+          "type": "string",
+          "x-semio-ui": {
+            "widget": "text",
+            "role": "value",
+            "label": {
+              "en": "Port",
+              "de": "Anschluss"
+            }
+          }
+        }
+      },
+      "x-semio-ui": {
+        "role": "value",
+        "label": {
+          "en": "Binding",
+          "de": "Bindung"
+        },
+        "group": "record",
+        "order": 10
+      }
     }
   },
   "required": [
+    "operation",
     "binding"
   ],
   "additionalProperties": false

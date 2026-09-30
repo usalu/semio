@@ -57,9 +57,8 @@ mod oracles {
     use semio_repo_test_host::Json;
 
     //#region 🔖️Json
-    /// 🔎️ Numeric member, or `None` for anything else — the docstring params this reads are
-    /// authored directly in the feature file, so a missing/mistyped field is a legitimate default,
-    /// never a panic.
+    /// 🔎️ Numeric member, or `None` for an absent or `null` one — `params` is the leaf's wire payload, whose
+    /// `Option` members are `null` when unset.
     fn num(params: &Json, key: &str) -> Option<f64> {
         match params.get(key) {
             Some(Json::Number(value)) => Some(*value),
@@ -72,23 +71,22 @@ mod oracles {
             _ => None,
         }
     }
-    fn as_str<'a>(params: &'a Json, key: &str) -> Option<&'a str> {
-        match params.get(key) {
-            Some(Json::String(value)) => Some(value.as_str()),
-            _ => None,
-        }
-    }
     fn as_arr(value: &Json) -> &[Json] {
         match value {
             Json::Array(items) => items,
             _ => &[],
         }
     }
-    fn num_at(items: &[Json], index: usize) -> Option<f64> {
-        match items.get(index) {
-            Some(Json::Number(value)) => Some(*value),
-            _ => None,
+    /// 🔢️ A byte-array member of a wire value.
+    fn bytes_of(params: &Json, key: &str) -> Result<Vec<u8>, String> {
+        match params.get(key) {
+            Some(Json::Array(items)) => items.iter().map(|item| match item { Json::Number(n) if (0.0..=255.0).contains(n) && n.fract() == 0.0 => Ok(*n as u8), other => Err(format!("`{key}` carries {} where a byte belongs", other.to_string())) }).collect(),
+            other => Err(format!("`{key}` must be a byte array, not {}", other.map(Json::to_string).unwrap_or_else(|| "nothing".to_string()))),
         }
+    }
+    /// 🔎️ An `Option` member of a wire value: `None` when it is absent or `null`.
+    fn present<'a>(params: &'a Json, key: &str) -> Option<&'a Json> {
+        params.get(key).filter(|value| !matches!(value, Json::Null))
     }
     fn empty_params() -> Json {
         Json::Object(Vec::new())
@@ -290,31 +288,22 @@ mod oracles {
     //#endregion 🔖️Encode
 
     //#region 🔖️Forward
-    fn fill_quad(params: &Json) -> [u8; 4] {
-        let fill = as_arr(params.get("fill").unwrap_or(&Json::Null));
-        [num_at(fill, 0).unwrap_or(0.0) as u8, num_at(fill, 1).unwrap_or(0.0) as u8, num_at(fill, 2).unwrap_or(0.0) as u8, num_at(fill, 3).unwrap_or(0.0) as u8]
-    }
-
-    fn solid_rgba(width: u32, height: u32, quad: [u8; 4]) -> Vec<u8> {
-        quad.iter().copied().cycle().take(width as usize * height as usize * 4).collect()
-    }
-
-    fn text_chunk_from(params: &Json) -> (String, String) {
-        (as_str(params, "keyword").unwrap_or("Comment").to_string(), as_str(params, "value").unwrap_or("").to_string())
-    }
-
-    /// 🗃️ A private/unregistered ancillary chunk from the row's own params, defaulting to `waVe`
-    /// (ancillary + private + safe-to-copy, reserved bit correctly uppercase per §5.4).
-    fn unknown_chunk_from(params: &Json) -> ([u8; 4], Vec<u8>) {
-        let requested = as_str(params, "kind").unwrap_or("waVe");
-        let mut kind = *b"waVe";
-        for (slot, byte) in kind.iter_mut().zip(requested.bytes()) {
-            *slot = byte;
+    /// 📝️ A `PngTextChunk` wire value as this model's `(keyword, value)` tEXt pair. `png::Info` writes only
+    /// uncompressed Latin-1 tEXt here, so a zTXt/iTXt chunk or a compressed one is refused rather than downgraded.
+    fn text_chunk_from(params: &Json) -> Result<(String, String), String> {
+        let chunk = params.get("chunk").ok_or("a text-chunk mutation carries no chunk")?;
+        if chunk.get("compressed") == Some(&Json::Bool(true)) || !matches!(chunk.str("kind").as_str(), "" | "text") || !chunk.str("languageTag").is_empty() || !chunk.str("translatedKeyword").is_empty() {
+            return Err("this oracle writes uncompressed tEXt chunks only".to_string());
         }
-        (kind, as_str(params, "data").unwrap_or("").as_bytes().to_vec())
+        Ok((chunk.str("keyword"), chunk.str("value")))
     }
 
-
+    /// 🗃️ A `PngChunk` wire value — its four chunk-type bytes and its payload bytes.
+    fn unknown_chunk_from(params: &Json) -> Result<([u8; 4], Vec<u8>), String> {
+        let chunk = params.get("chunk").ok_or("an unknown-chunk mutation carries no chunk")?;
+        let kind: [u8; 4] = bytes_of(chunk, "kind")?.try_into().map_err(|_| "a chunk type is exactly four bytes".to_string())?;
+        Ok((kind, bytes_of(chunk, "data")?))
+    }
 
     /// 🦠️ Applies one declared kind to the document model in place. Out-of-range text/unknown-chunk
     /// indices degrade to a no-op rather than erroring — the same documented behaviour as
@@ -323,42 +312,44 @@ mod oracles {
     fn apply_kind(doc: &mut OracleDoc, kind: &str, params: &Json) -> Result<(), String> {
         match kind {
             "change-header" => {}
-            "replace-palette" => {
-                let entries = as_arr(params.get("plte").unwrap_or(&Json::Null));
-                doc.palette = match params.get("plte") {
-                    Some(Json::Null) | None => None,
-                    _ => Some(entries.iter().flat_map(|entry| { let channels = as_arr(entry); [num_at(channels, 0).unwrap_or(0.0) as u8, num_at(channels, 1).unwrap_or(0.0) as u8, num_at(channels, 2).unwrap_or(0.0) as u8] }).collect()),
-                };
-            }
+            "replace-palette" => doc.palette = present(params, "plte").map(|entries| as_arr(entries).iter().flat_map(|entry| ["r", "g", "b"].map(|channel| num(entry, channel).unwrap_or(0.0) as u8)).collect()),
             "change-transparency" => {}
             "change-gamma" => doc.gama = num(params, "gama").map(|value| value as u32),
-            "change-chromaticities" => {
-                let read = |key: &str| num(params, key).unwrap_or(0.0) as u32;
-                doc.chrm = Some([read("whiteX"), read("whiteY"), read("redX"), read("redY"), read("greenX"), read("greenY"), read("blueX"), read("blueY")]);
-            }
+            "change-chromaticities" => doc.chrm = present(params, "chrm").map(|chrm| ["whiteX", "whiteY", "redX", "redY", "greenX", "greenY", "blueX", "blueY"].map(|key| num(chrm, key).unwrap_or(0.0) as u32)),
             "change-srgb-intent" => {
-                doc.srgb = Some(match as_str(params, "srgb") {
-                    Some("relative-colorimetric") => 1,
-                    Some("saturation") => 2,
-                    Some("absolute-colorimetric") => 3,
-                    _ => 0,
-                })
+                doc.srgb = match present(params, "srgb") {
+                    None => None,
+                    Some(Json::String(intent)) => Some(match intent.as_str() {
+                        "perceptual" => 0,
+                        "relativeColorimetric" => 1,
+                        "saturation" => 2,
+                        "absoluteColorimetric" => 3,
+                        other => return Err(format!("{other:?} is no sRGB rendering intent")),
+                    }),
+                    Some(other) => return Err(format!("`srgb` must be an intent name, not {}", other.to_string())),
+                }
             }
-            "change-physical-dims" => doc.phys = Some((num(params, "ppuX").unwrap_or(0.0) as u32, num(params, "ppuY").unwrap_or(0.0) as u32, as_bool(params, "unitIsMeter").unwrap_or(false))),
+            "change-physical-dims" => doc.phys = present(params, "phys").map(|phys| (num(phys, "ppuX").unwrap_or(0.0) as u32, num(phys, "ppuY").unwrap_or(0.0) as u32, as_bool(phys, "unitIsMeter").unwrap_or(false))),
             "change-timestamp" => {
-                let mut bytes = [0u8; 7];
-                bytes[0..2].copy_from_slice(&(num(params, "year").unwrap_or(2024.0) as u16).to_be_bytes());
-                bytes[2] = num(params, "month").unwrap_or(1.0) as u8;
-                bytes[3] = num(params, "day").unwrap_or(1.0) as u8;
-                bytes[4] = num(params, "hour").unwrap_or(0.0) as u8;
-                bytes[5] = num(params, "minute").unwrap_or(0.0) as u8;
-                bytes[6] = num(params, "second").unwrap_or(0.0) as u8;
-                doc.time = Some(bytes);
+                doc.time = present(params, "time").map(|time| {
+                    let mut bytes = [0u8; 7];
+                    bytes[0..2].copy_from_slice(&(num(time, "year").unwrap_or(0.0) as u16).to_be_bytes());
+                    for (slot, key) in ["month", "day", "hour", "minute", "second"].iter().enumerate() {
+                        bytes[2 + slot] = num(time, key).unwrap_or(0.0) as u8;
+                    }
+                    bytes
+                });
             }
-            "change-background" => doc.bkgd = Some([num(params, "r").unwrap_or(0.0) as u16, num(params, "g").unwrap_or(0.0) as u16, num(params, "b").unwrap_or(0.0) as u16]),
+            "change-background" => {
+                doc.bkgd = match present(params, "bkgd") {
+                    None => None,
+                    Some(bkgd) if bkgd.str("colorType") == "rgb" => Some(["r", "g", "b"].map(|channel| num(bkgd, channel).unwrap_or(0.0) as u16)),
+                    Some(bkgd) => return Err(format!("this oracle writes the 6-byte RGB bKGD form only, not {:?}", bkgd.str("colorType"))),
+                }
+            }
             "insert-text-chunk" => {
                 let at = index_of(params).min(doc.text_chunks.len());
-                doc.text_chunks.insert(at, text_chunk_from(params));
+                doc.text_chunks.insert(at, text_chunk_from(params)?);
             }
             "remove-text-chunk" => {
                 let at = index_of(params);
@@ -369,13 +360,19 @@ mod oracles {
             "replace-text-chunk" => {
                 let at = index_of(params);
                 if at < doc.text_chunks.len() {
-                    doc.text_chunks[at] = text_chunk_from(params);
+                    doc.text_chunks[at] = text_chunk_from(params)?;
                 }
             }
-            "replace-pixels" => doc.rgba = solid_rgba(doc.width, doc.height, fill_quad(params)),
+            "replace-pixels" => {
+                let rgba = bytes_of(params, "pixels")?;
+                if rgba.len() != doc.width as usize * doc.height as usize * 4 {
+                    return Err(format!("replace-pixels carries {} bytes, not the {}x{} RGBA raster", rgba.len(), doc.width, doc.height));
+                }
+                doc.rgba = rgba;
+            }
             "insert-unknown-chunk" => {
                 let at = index_of(params).min(doc.unknown_chunks.len());
-                doc.unknown_chunks.insert(at, unknown_chunk_from(params));
+                doc.unknown_chunks.insert(at, unknown_chunk_from(params)?);
             }
             "remove-unknown-chunk" => {
                 let at = index_of(params);
@@ -404,8 +401,10 @@ mod oracles {
         // 🎯️ The seeded target's content is deliberately NOT the row's own params: seeding with the
         // same keyword and value the row then sets would make `replace-text-chunk` replace a chunk with
         // its own twin, which is a mutation nothing can observe.
-        let text = || vec![("index", Json::Number(0.0)), ("keyword", Json::String("Source".to_string())), ("value", Json::String("arranged target, present only so a removal has something to remove".to_string()))];
-        let unknown = || vec![("index", Json::Number(0.0)), ("kind", Json::String("seEd".to_string())), ("data", Json::String("arranged target".to_string()))];
+        let object = |members: Vec<(&str, Json)>| Json::Object(members.into_iter().map(|(key, value)| (key.to_string(), value)).collect());
+        let bytes = |text: &str| Json::Array(text.bytes().map(|byte| Json::Number(f64::from(byte))).collect());
+        let text = || vec![("index", Json::Number(0.0)), ("chunk", object(vec![("keyword", Json::String("Source".to_string())), ("value", Json::String("arranged target, present only so a removal has something to remove".to_string())), ("compressed", Json::Bool(false)), ("kind", Json::String("text".to_string())), ("languageTag", Json::String(String::new())), ("translatedKeyword", Json::String(String::new()))]))];
+        let unknown = || vec![("index", Json::Number(0.0)), ("chunk", object(vec![("kind", bytes("seEd")), ("data", bytes("arranged target"))]))];
         match forward.str("kind").as_str() {
             "remove-text-chunk" | "replace-text-chunk" => seeded("insert-text-chunk", text()),
             "remove-unknown-chunk" => seeded("insert-unknown-chunk", unknown()),

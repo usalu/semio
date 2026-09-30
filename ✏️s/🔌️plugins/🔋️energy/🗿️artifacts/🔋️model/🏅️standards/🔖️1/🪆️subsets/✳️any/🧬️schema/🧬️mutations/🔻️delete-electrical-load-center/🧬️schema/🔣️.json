@@ -5,11 +5,33 @@
   "type": "object",
   "additionalProperties": false,
   "required": [
+    "mutation",
     "id"
   ],
   "properties": {
+    "mutation": {
+      "const": "deleteElectricalLoadCenter"
+    },
     "id": {
-      "type": "integer"
+      "type": "integer",
+      "minimum": 0,
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Electrical load center",
+          "de": "Stromverteiler"
+        },
+        "description": {
+          "en": "The electrical load center to delete, by id.",
+          "de": "Stromverteiler, den diese Mutation löscht, per ID."
+        },
+        "ref": {
+          "kind": "electricalLoadCenter"
+        },
+        "group": "target",
+        "order": 10
+      }
     }
   }
 }

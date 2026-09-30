@@ -1,4 +1,33 @@
 {
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/norm/en1990/mutation/change-reliability-class/schema.json",
   "title": "ChangeReliabilityClass",
-  "type": "object"
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "mutation",
+    "newReliabilityClass"
+  ],
+  "properties": {
+    "mutation": {
+      "const": "changeReliabilityClass"
+    },
+    "newReliabilityClass": {
+      "type": "integer",
+      "minimum": 0,
+      "x-semio-ui": {
+        "label": {
+          "en": "Reliability class RC",
+          "de": "Zuverlässigkeitsklasse RC"
+        },
+        "description": {
+          "en": "1 = RC1, 2 = RC2, 3 = RC3 (EN 1990 Annex B).",
+          "de": "1 = RC1, 2 = RC2, 3 = RC3 (EN 1990 Anhang B)."
+        },
+        "widget": "stepper",
+        "step": 1,
+        "precision": 0
+      }
+    }
+  }
 }

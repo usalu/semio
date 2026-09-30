@@ -5,15 +5,37 @@
   "type": "object",
   "additionalProperties": false,
   "required": [
+    "mutation",
     "format"
   ],
   "properties": {
-    "format": {
-      "$ref": "#/$defs/PlyFormat"
-    },
     "mutation": {
       "const": "setFormat",
       "description": "Aggregate discriminator spliced in by PlyMutation; absent when the payload stands alone."
+    },
+    "format": {
+      "$ref": "#/$defs/PlyFormat",
+      "x-semio-ui": {
+        "widget": "segmented",
+        "label": {
+          "en": "File format",
+          "de": "Dateiformat"
+        },
+        "options": {
+          "ascii": {
+            "en": "ASCII",
+            "de": "ASCII"
+          },
+          "binaryLittleEndian": {
+            "en": "Binary, little-endian",
+            "de": "Binär, Little-Endian"
+          },
+          "binaryBigEndian": {
+            "en": "Binary, big-endian",
+            "de": "Binär, Big-Endian"
+          }
+        }
+      }
     }
   },
   "$defs": {

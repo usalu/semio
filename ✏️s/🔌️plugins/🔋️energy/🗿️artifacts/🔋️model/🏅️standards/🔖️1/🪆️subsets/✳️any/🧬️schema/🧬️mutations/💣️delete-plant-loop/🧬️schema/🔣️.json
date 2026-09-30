@@ -5,11 +5,33 @@
   "type": "object",
   "additionalProperties": false,
   "required": [
+    "mutation",
     "id"
   ],
   "properties": {
+    "mutation": {
+      "const": "deletePlantLoop"
+    },
     "id": {
-      "type": "integer"
+      "type": "integer",
+      "minimum": 0,
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Plant loop",
+          "de": "Anlagenkreislauf"
+        },
+        "description": {
+          "en": "The plant loop to delete, by id.",
+          "de": "Anlagenkreislauf, den diese Mutation löscht, per ID."
+        },
+        "ref": {
+          "kind": "plantLoop"
+        },
+        "group": "target",
+        "order": 10
+      }
     }
   }
 }

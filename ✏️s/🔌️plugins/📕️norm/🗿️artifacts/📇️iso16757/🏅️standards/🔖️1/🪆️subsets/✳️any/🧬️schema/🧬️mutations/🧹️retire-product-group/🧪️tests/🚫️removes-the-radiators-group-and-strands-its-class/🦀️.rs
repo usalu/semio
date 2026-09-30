@@ -11,11 +11,11 @@
 
 use crate::{Iso16757Diff, Iso16757Mutation, Iso16757Snapshot};
 
-const BEFORE: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🧹️retire-product-group/🚫️removes-the-radiators-group-and-strands-its-class/📸️snapshot/⬅️before/🔣️.json");
-const AFTER: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🧹️retire-product-group/🚫️removes-the-radiators-group-and-strands-its-class/📸️snapshot/➡️after/🔣️.json");
-const MUTATION: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🧹️retire-product-group/🚫️removes-the-radiators-group-and-strands-its-class/🦠️mutation/🔣️.json");
-const DIFF: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🧹️retire-product-group/🚫️removes-the-radiators-group-and-strands-its-class/🔺️diff/🔣️.json");
-const OUTCOME: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🧹️retire-product-group/🚫️removes-the-radiators-group-and-strands-its-class/🎯️outcome/🔣️.json");
+const BEFORE: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🧹️retire-product-group/🚫️removes-radiators-group-strands-class/📸️snapshot/⬅️before/🔣️.json");
+const AFTER: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🧹️retire-product-group/🚫️removes-radiators-group-strands-class/📸️snapshot/➡️after/🔣️.json");
+const MUTATION: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🧹️retire-product-group/🚫️removes-radiators-group-strands-class/🦠️mutation/🔣️.json");
+const DIFF: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🧹️retire-product-group/🚫️removes-radiators-group-strands-class/🔺️diff/🔣️.json");
+const OUTCOME: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🧹️retire-product-group/🚫️removes-radiators-group-strands-class/🎯️outcome/🔣️.json");
 
 fn before() -> Iso16757Snapshot {
     serde_json::from_str(BEFORE).expect("the committed before-snapshot decodes")
@@ -60,7 +60,7 @@ async fn recreating_the_radiators_group_restores_before() {
 
 /// 🔣️ Both committed snapshots and the committed `retire-product-group` payload are already canonical: decode →
 /// encode is a fixed point. The committed payload is spelled `{"RetireProductGroup": {"id":
-/// "group.radiators"}}` — externally tagged, snake_case payload key.
+/// "group.radiators"}}` — externally tagged, camelCase payload key.
 #[semio_framework_async_macros::async_test]
 async fn committed_json_is_canonical() {
     for (side, text) in [("before", BEFORE), ("after", AFTER)] {

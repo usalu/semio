@@ -56,12 +56,21 @@ mod tests {
         serde_json::from_str(include_str!("../../🧫️fixtures/🧬️mutation-laws/🔣️.json")).unwrap()
     }
 
+    const WITNESSES: [&str; 5] = [
+        include_str!("../../🧫️fixtures/🧬️mutation-laws/🧬️mutations/➕️add-counter/🧫️fixtures/🧾️wire-witness/🦠️mutation/🔣️.json"),
+        include_str!("../../🧫️fixtures/🧬️mutation-laws/🧬️mutations/✌️add-counter-twice/🧫️fixtures/🧾️wire-witness/🦠️mutation/🔣️.json"),
+        include_str!("../../🧫️fixtures/🧬️mutation-laws/🧬️mutations/4️⃣add-counter-four-times/🧫️fixtures/🧾️wire-witness/🦠️mutation/🔣️.json"),
+        include_str!("../../🧫️fixtures/🧬️mutation-laws/🧬️mutations/🌐️add-counter-then-notify-foreign/🧫️fixtures/🧾️wire-witness/🦠️mutation/🔣️.json"),
+        include_str!("../../🧫️fixtures/🧬️mutation-laws/🧬️mutations/🔢️add-counter-sequence/🧫️fixtures/🧾️wire-witness/🦠️mutation/🔣️.json"),
+    ];
+
     #[test]
     fn counter_fixture_codecs_and_descriptors() {
         assert_eq!(<CounterMutation as Mutation<Counter>>::DESCRIPTORS.len(), 5);
-        for row in cases()["cases"].as_array().unwrap() {
-            let mut wire = row["payload"].clone();
-            wire["operation"] = row["operation"].clone();
+        let cases = cases();
+        assert_eq!(cases["cases"].as_array().unwrap().len(), WITNESSES.len());
+        for (witness, row) in WITNESSES.iter().zip(cases["cases"].as_array().unwrap()) {
+            let wire: serde_json::Value = serde_json::from_str(witness).unwrap();
             let op = serde_json::from_value::<CounterMutation>(wire.clone()).unwrap();
             let value_op: CounterMutation = crate::os_pack::json::from_json_str(&wire.to_string()).unwrap();
             assert_eq!(value_op, op, "first-party and independent serde parse the same neutral mutation");
@@ -82,7 +91,7 @@ mod tests {
             unknown["unknown"] = serde_json::json!(true);
             assert!(crate::os_pack::json::from_json_str::<CounterMutation>(&unknown.to_string()).is_err());
             assert!(serde_json::from_value::<CounterMutation>(unknown).is_err());
-            for key in row["payload"].as_object().unwrap().keys() {
+            for key in wire.as_object().unwrap().keys().filter(|key| *key != "operation") {
                 let mut missing = wire.clone();
                 missing.as_object_mut().unwrap().remove(key);
                 assert!(crate::os_pack::json::from_json_str::<CounterMutation>(&missing.to_string()).is_err());

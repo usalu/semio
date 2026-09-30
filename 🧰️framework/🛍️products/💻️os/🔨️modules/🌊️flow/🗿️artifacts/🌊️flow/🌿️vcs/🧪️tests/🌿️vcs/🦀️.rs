@@ -5,15 +5,31 @@ use crate::os_dsl::{DslValue, FromValue, ToValue};
 
 //#region 🧪️FixtureOwnership
 fn cases() -> serde_json::Value { serde_json::from_str(include_str!("../../🧫️fixtures/🔣️.json")).expect("neutral Flow cases") }
+/// 🧾️ The committed wire witness of each roster row: the Rust `ToValue` of one aggregate operation, in roster order.
+const WITNESSES: [&str; 10] = [
+    include_str!("../../🧫️fixtures/🧬️mutations/➕️add-widget/🧾️wire-witness/🦠️mutation/🔣️.json"),
+    include_str!("../../🧫️fixtures/🧬️mutations/🗑️remove-widget/🧾️wire-witness/🦠️mutation/🔣️.json"),
+    include_str!("../../🧫️fixtures/🧬️mutations/↔️move-widget/🧾️wire-witness/🦠️mutation/🔣️.json"),
+    include_str!("../../🧫️fixtures/🧬️mutations/🩹change-widget/🧾️wire-witness/🦠️mutation/🔣️.json"),
+    include_str!("../../🧫️fixtures/🧬️mutations/🔗️add-synapse/🧾️wire-witness/🦠️mutation/🔣️.json"),
+    include_str!("../../🧫️fixtures/🧬️mutations/✂️remove-synapse/🧾️wire-witness/🦠️mutation/🔣️.json"),
+    include_str!("../../🧫️fixtures/🧬️mutations/🔀️move-synapse/🧾️wire-witness/🦠️mutation/🔣️.json"),
+    include_str!("../../🧫️fixtures/🧬️mutations/🔄change-synapse/🧾️wire-witness/🦠️mutation/🔣️.json"),
+    include_str!("../../🧫️fixtures/🧬️mutations/📐️change-layout/🧾️wire-witness/🦠️mutation/🔣️.json"),
+    include_str!("../../🧫️fixtures/🧬️mutations/♻️replace-flow-host-snapshot/🧾️wire-witness/🦠️mutation/🔣️.json"),
+];
+fn witness(index: usize) -> serde_json::Value { serde_json::from_str(WITNESSES[index]).expect("committed Flow wire witness") }
+fn positive(index: usize) -> serde_json::Value {
+    let mut payload = witness(index);
+    payload.as_object_mut().expect("wire object").remove("operation");
+    payload
+}
 fn third_party_json<T: ToValue>(value: &T) -> serde_json::Value {
     serde_json::from_str(&crate::os_pack::json::to_json_string(value)).expect("first-party JSON must remain valid RFC 8259")
 }
 fn base() -> FlowHostSnapshot { FlowHostSnapshot::from_value(DslValue::from(&cases()["hostSnapshot"])).expect("Flow host document") }
 fn operation(index: usize) -> FlowMutation {
-    let cases = cases();
-    let mut value = cases["positives"][index].clone();
-    value["operation"] = cases["roster"][index]["operation"].clone();
-    FlowMutation::from_value(DslValue::from(&value)).expect("direct Flow operation")
+    FlowMutation::from_value(DslValue::from(&witness(index))).expect("direct Flow operation")
 }
 fn retire_diff(diff: FlowDiff) {
     for delta in diff.deltas {
@@ -58,7 +74,7 @@ fn assert_codecs(mutation: &FlowMutation) {
 pub(crate) fn assert_leaf_contract<T>(index: usize, wrap: fn(T) -> FlowMutation, descriptor: &str)
 where T: MutationLeaf + ToValue + FromValue {
     let cases = cases();
-    let payload = cases["positives"][index].clone();
+    let payload = positive(index);
     let leaf = T::from_value(DslValue::from(&payload)).expect("actual leaf payload");
     let mutation = wrap(leaf);
     assert_eq!(third_party_json(&T::DESCRIPTOR), serde_json::from_str::<serde_json::Value>(descriptor).expect("owned descriptor"));
@@ -99,11 +115,16 @@ where T: MutationLeaf + ToValue + FromValue {
 #[test]
 fn all_ten_codecs_and_descriptors() {
     assert_eq!(<FlowMutation as Mutation<FlowHostSnapshot>>::DESCRIPTORS.len(), 10);
-    for index in 0..10 { let mutation = operation(index); assert_codecs(&mutation); retire_mutation(mutation); }
+    for index in 0..10 {
+        let mutation = operation(index);
+        assert_eq!(third_party_json(&mutation), witness(index), "the committed wire witness is the canonical Rust wire");
+        assert_codecs(&mutation);
+        retire_mutation(mutation);
+    }
     for index in [0, 2, 4, 6] {
         for value in ["-1", "0.5", "4294967296", "1e21"] {
             let cases = cases();
-            let mut payload = cases["positives"][index].clone();
+            let mut payload = positive(index);
             let field = if index == 0 || index == 4 { "index" } else { "toIndex" };
             payload[field] = serde_json::from_str(value).expect("JSON number");
             payload["operation"] = cases["roster"][index]["operation"].clone();

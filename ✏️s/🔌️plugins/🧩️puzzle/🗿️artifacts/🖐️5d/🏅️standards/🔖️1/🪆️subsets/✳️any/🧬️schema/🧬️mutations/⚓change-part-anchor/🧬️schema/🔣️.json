@@ -5,19 +5,66 @@
   "type": "object",
   "additionalProperties": false,
   "required": [
+    "mutation",
     "id",
     "newAnchor"
   ],
   "properties": {
+    "mutation": {
+      "const": "changePartAnchor"
+    },
     "id": {
-      "type": "string"
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Part",
+          "de": "Teil"
+        },
+        "description": {
+          "en": "The part this mutation addresses.",
+          "de": "Das Teil, das diese Mutation adressiert."
+        },
+        "ref": {
+          "kind": "part",
+          "domain": "vortex",
+          "granularity": "part"
+        },
+        "group": "target",
+        "order": 10
+      }
     },
     "newAnchor": {
       "type": "string",
       "enum": [
         "fixed",
         "derived"
-      ]
+      ],
+      "x-semio-ui": {
+        "widget": "segmented",
+        "role": "value",
+        "label": {
+          "en": "Anchor",
+          "de": "Verankerung"
+        },
+        "description": {
+          "en": "Fixed keeps the stored plane at a root; derived resets it to the default XY plane.",
+          "de": "Fest behält die gespeicherte Ebene an einer Wurzel; abgeleitet setzt sie auf die XY-Standardebene zurück."
+        },
+        "options": {
+          "fixed": {
+            "en": "Fixed",
+            "de": "Fest"
+          },
+          "derived": {
+            "en": "Derived",
+            "de": "Abgeleitet"
+          }
+        },
+        "group": "geometry",
+        "order": 20
+      }
     }
   }
 }

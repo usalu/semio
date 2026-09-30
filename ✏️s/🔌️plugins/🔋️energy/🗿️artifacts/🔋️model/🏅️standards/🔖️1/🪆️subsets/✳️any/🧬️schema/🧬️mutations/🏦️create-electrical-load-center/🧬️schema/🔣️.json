@@ -5,6 +5,7 @@
   "type": "object",
   "additionalProperties": false,
   "required": [
+    "mutation",
     "index",
     "id",
     "name",
@@ -13,31 +14,132 @@
     "batteryIds"
   ],
   "properties": {
+    "mutation": {
+      "const": "createElectricalLoadCenter"
+    },
     "index": {
-      "type": "integer"
+      "type": "integer",
+      "minimum": 0,
+      "x-semio-ui": {
+        "widget": "stepper",
+        "role": "value",
+        "label": {
+          "en": "Position",
+          "de": "Position"
+        },
+        "description": {
+          "en": "Insertion position in the model's list; 0 is first.",
+          "de": "Einfügeposition in der Modellliste; 0 ist die erste."
+        },
+        "step": 1,
+        "precision": 0,
+        "group": "order",
+        "order": 10
+      }
     },
     "id": {
-      "type": "integer"
+      "type": "integer",
+      "minimum": 0,
+      "x-semio-ui": {
+        "widget": "stepper",
+        "role": "value",
+        "label": {
+          "en": "ID",
+          "de": "ID"
+        },
+        "description": {
+          "en": "Id the new electrical load center is created under; later mutations address it by this id.",
+          "de": "ID, unter der das neue Objekt angelegt wird; spätere Mutationen adressieren es darüber."
+        },
+        "step": 1,
+        "precision": 0,
+        "group": "identity",
+        "order": 20
+      }
     },
     "name": {
-      "type": "string"
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "text",
+        "role": "value",
+        "label": {
+          "en": "Name",
+          "de": "Name"
+        },
+        "group": "identity",
+        "order": 30
+      }
     },
     "generatorIds": {
       "type": "array",
       "items": {
-        "type": "integer"
+        "type": "integer",
+        "minimum": 0
+      },
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Generators",
+          "de": "Generatoren"
+        },
+        "description": {
+          "en": "Attached generators, by id.",
+          "de": "Angebundene Generatoren, per ID."
+        },
+        "ref": {
+          "kind": "generator"
+        },
+        "group": "member",
+        "order": 40
       }
     },
     "pvIds": {
       "type": "array",
       "items": {
-        "type": "integer"
+        "type": "integer",
+        "minimum": 0
+      },
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "PV systems",
+          "de": "PV-Anlagen"
+        },
+        "description": {
+          "en": "Attached PV systems, by id.",
+          "de": "Angebundene PV-Anlagen, per ID."
+        },
+        "ref": {
+          "kind": "pvSystem"
+        },
+        "group": "member",
+        "order": 50
       }
     },
     "batteryIds": {
       "type": "array",
       "items": {
-        "type": "integer"
+        "type": "integer",
+        "minimum": 0
+      },
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Batteries",
+          "de": "Batterien"
+        },
+        "description": {
+          "en": "Attached batteries, by id.",
+          "de": "Angebundene Batterien, per ID."
+        },
+        "ref": {
+          "kind": "battery"
+        },
+        "group": "member",
+        "order": 60
       }
     }
   }

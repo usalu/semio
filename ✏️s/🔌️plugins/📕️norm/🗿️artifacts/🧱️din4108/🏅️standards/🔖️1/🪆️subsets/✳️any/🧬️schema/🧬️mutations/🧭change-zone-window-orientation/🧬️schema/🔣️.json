@@ -11,13 +11,61 @@
   ],
   "properties": {
     "zoneId": {
-      "type": "string"
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Zone",
+          "de": "Zone"
+        },
+        "description": {
+          "en": "The thermal zone this mutation addresses.",
+          "de": "Die thermische Zone, die diese Mutation adressiert."
+        },
+        "ref": {
+          "kind": "zone"
+        },
+        "group": "target",
+        "order": 10
+      }
     },
     "windowId": {
-      "type": "string"
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Window",
+          "de": "Fenster"
+        },
+        "description": {
+          "en": "The window of the zone this mutation addresses.",
+          "de": "Das Fenster der Zone, das diese Mutation adressiert."
+        },
+        "ref": {
+          "kind": "window"
+        },
+        "group": "target",
+        "order": 20
+      }
     },
     "newOrientation": {
-      "type": "string"
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "text",
+        "role": "value",
+        "label": {
+          "en": "Window orientation",
+          "de": "Fensterorientierung"
+        },
+        "description": {
+          "en": "Compass direction N, NE, E, SE, S, SW, W or NW.",
+          "de": "Himmelsrichtung N, NE (NO), E (O), SE (SO), S, SW, W oder NW."
+        },
+        "group": "summer",
+        "order": 30
+      }
     }
   }
 }

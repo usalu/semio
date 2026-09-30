@@ -1,4 +1,33 @@
 {
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/norm/en1990/mutation/change-design-working-life-category/schema.json",
   "title": "ChangeDesignWorkingLifeCategory",
-  "type": "object"
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "mutation",
+    "newDesignWorkingLifeCategory"
+  ],
+  "properties": {
+    "mutation": {
+      "const": "changeDesignWorkingLifeCategory"
+    },
+    "newDesignWorkingLifeCategory": {
+      "type": "integer",
+      "minimum": 0,
+      "x-semio-ui": {
+        "label": {
+          "en": "Design working life category",
+          "de": "Kategorie der geplanten Nutzungsdauer"
+        },
+        "description": {
+          "en": "Category 1 to 5 (EN 1990 Table 2.1).",
+          "de": "Kategorie 1 bis 5 (EN 1990 Tabelle 2.1)."
+        },
+        "widget": "stepper",
+        "step": 1,
+        "precision": 0
+      }
+    }
+  }
 }

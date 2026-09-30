@@ -1,0 +1,54 @@
+{
+  "shellAdmission": {
+    "tinyByteGrant": 1,
+    "completionByteGrant": 65536,
+    "retainedAfterNativeDrain": true,
+    "retainedOnTinyByteGrant": true,
+    "releasedByCompletionByteGrant": true
+  },
+  "imports": [
+    {
+      "format": "obj",
+      "data": "v 0 0 0\nv 1 0 0\nv 0 1 0\nf 1 2 3\n",
+      "tolerance": 0.1
+    }
+  ],
+  "parameters": [
+    {
+      "height": 3.0,
+      "radius": 0.5,
+      "sides": 6
+    },
+    {
+      "height": 6.0,
+      "radius": 0.75,
+      "sides": 8
+    }
+  ],
+  "handles": [
+    {
+      "value": "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef",
+      "valid": true
+    },
+    {
+      "value": "abcdefabcdefabcdefabcdefabcdefabcdefabcdefabcdefabcdefabcdefabcd",
+      "valid": true
+    },
+    {
+      "value": "solid-aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+      "valid": false
+    },
+    {
+      "value": "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA",
+      "valid": false
+    },
+    {
+      "value": "gggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggg",
+      "valid": false
+    },
+    {
+      "value": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+      "valid": false
+    }
+  ]
+}

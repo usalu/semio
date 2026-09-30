@@ -11,11 +11,11 @@ use crate::standards::v1::subsets::kit::schema::mutations::SemioKitMutation;
 use crate::standards::v1::subsets::kit::schema::snapshot::SemioKitSnapshot;
 use protocol::{Mutation, MutationDiff};
 
-const BEFORE: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/📌change-representation-pin/📌️repins-the-representation-from-head-to-a-checkpoint/📸️snapshot/⬅️before/🔣️.json");
-const AFTER: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/📌change-representation-pin/📌️repins-the-representation-from-head-to-a-checkpoint/📸️snapshot/➡️after/🔣️.json");
-const MUTATION: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/📌change-representation-pin/📌️repins-the-representation-from-head-to-a-checkpoint/🦠️mutation/🔣️.json");
-const DIFF: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/📌change-representation-pin/📌️repins-the-representation-from-head-to-a-checkpoint/🔺️diff/🔣️.json");
-const OUTCOME: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/📌change-representation-pin/📌️repins-the-representation-from-head-to-a-checkpoint/🎯️outcome/🔣️.json");
+const BEFORE: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/📌change-representation-pin/📌️repins-representation-head-checkpoint/📸️snapshot/⬅️before/🔣️.json");
+const AFTER: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/📌change-representation-pin/📌️repins-representation-head-checkpoint/📸️snapshot/➡️after/🔣️.json");
+const MUTATION: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/📌change-representation-pin/📌️repins-representation-head-checkpoint/🦠️mutation/🔣️.json");
+const DIFF: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/📌change-representation-pin/📌️repins-representation-head-checkpoint/🔺️diff/🔣️.json");
+const OUTCOME: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/📌change-representation-pin/📌️repins-representation-head-checkpoint/🎯️outcome/🔣️.json");
 
 fn before() -> SemioKitSnapshot {
     dsl::json::from_json_str(BEFORE).expect("change-representation-pin before snapshot decodes")

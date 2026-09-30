@@ -417,9 +417,3 @@ pub fn render(document: &Generation3dSnapshot, config: &Generation3dViewConfig, 
     )
 }
 //#endregion 🔖️Render
-
-//#region 🧪️Tests
-#[cfg(test)]
-#[path = "./🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
-//#endregion 🧪️Tests

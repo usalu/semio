@@ -5,15 +5,16 @@
   "type": "object",
   "additionalProperties": false,
   "required": [
+    "mutation",
     "node"
   ],
   "properties": {
-    "node": {
-      "$ref": "#/$defs/FlowNode"
-    },
     "mutation": {
       "const": "insertNode",
       "description": "Aggregate discriminator spliced in by SemioFlowMutation; absent when the payload stands alone."
+    },
+    "node": {
+      "$ref": "#/$defs/FlowNode"
     }
   },
   "$defs": {

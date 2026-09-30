@@ -5,16 +5,52 @@
   "type": "object",
   "additionalProperties": false,
   "required": [
+    "mutation",
     "id",
     "newName"
   ],
   "properties": {
+    "mutation": {
+      "const": "renameUserProfile"
+    },
     "id": {
-      "type": "integer",
-      "minimum": 0
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "User Profile",
+          "de": "Nutzerprofil"
+        },
+        "description": {
+          "en": "The user profile to rename.",
+          "de": "Umzubenennender Eintrag vom Typ „Nutzerprofil“."
+        },
+        "ref": {
+          "kind": "userProfile",
+          "domain": "program",
+          "granularity": "entity"
+        },
+        "group": "target",
+        "order": 10
+      }
     },
     "newName": {
-      "type": "string"
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "text",
+        "role": "value",
+        "label": {
+          "en": "New Name",
+          "de": "Neuer Name"
+        },
+        "description": {
+          "en": "New name of the user profile.",
+          "de": "Neuer Name des Eintrags vom Typ „Nutzerprofil“."
+        },
+        "group": "identity",
+        "order": 20
+      }
     }
   }
 }

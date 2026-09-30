@@ -10,12 +10,42 @@
   ],
   "properties": {
     "id": {
-      "type": "string"
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Geometry",
+          "de": "Geometrie"
+        },
+        "description": {
+          "en": "The parametric geometry this mutation addresses.",
+          "de": "Die parametrische Geometrie, die diese Mutation adressiert."
+        },
+        "ref": {
+          "kind": "geometry"
+        },
+        "group": "target",
+        "order": 10
+      }
     },
     "newParameters": {
       "type": "object",
       "additionalProperties": {
         "type": "number"
+      },
+      "x-semio-ui": {
+        "role": "value",
+        "label": {
+          "en": "Geometry parameters",
+          "de": "Geometrieparameter"
+        },
+        "description": {
+          "en": "Named numeric parameters of the geometry.",
+          "de": "Benannte Zahlenparameter der Geometrie."
+        },
+        "group": "geometry",
+        "order": 20
       }
     }
   }

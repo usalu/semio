@@ -9,7 +9,17 @@
   ],
   "properties": {
     "newHasMechanicalVentilation": {
-      "type": "boolean"
+      "type": "boolean",
+      "x-semio-ui": {
+        "widget": "toggle",
+        "role": "value",
+        "label": {
+          "en": "Mechanical ventilation",
+          "de": "Mechanische Lüftung"
+        },
+        "group": "climate",
+        "order": 10
+      }
     }
   }
 }

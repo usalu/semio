@@ -1,6 +1,6 @@
 {
   "mutation": "createSavedCamera",
-  "saved_camera": {
+  "savedCamera": {
     "id": "cam-top",
     "label": "Top",
     "camera": {

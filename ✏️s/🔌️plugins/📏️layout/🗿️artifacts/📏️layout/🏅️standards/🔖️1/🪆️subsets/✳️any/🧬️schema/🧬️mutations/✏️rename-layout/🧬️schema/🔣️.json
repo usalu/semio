@@ -9,7 +9,17 @@
   ],
   "properties": {
     "newName": {
-      "type": "string"
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "text",
+        "role": "value",
+        "label": {
+          "en": "Layout name",
+          "de": "Layoutname"
+        },
+        "group": "identity",
+        "order": 10
+      }
     }
   }
 }

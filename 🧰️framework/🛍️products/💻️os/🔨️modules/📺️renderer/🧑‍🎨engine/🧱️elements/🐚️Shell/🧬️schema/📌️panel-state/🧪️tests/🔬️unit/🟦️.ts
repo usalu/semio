@@ -3,6 +3,7 @@ import { readFileSync } from "node:fs";
 import Ajv, { type AnySchema } from "ajv/dist/2020.js";
 import { applyPatch, getValueByPointer, type Operation } from "fast-json-patch";
 import { buildSpacePanelState, isSpacePanelState, panelJsonFromState, parsePanelState } from "../../../../../🛠️ShellHelpers/📌️panel/🟦️.ts";
+import routing from "../../../../🧫️fixtures/🎯️spawned-document-routing/🔣️.json";
 
 type SpawnedAppEntry = {
   id: string;
@@ -61,8 +62,7 @@ export function testHostPanelStateSchema(): void {
   const ajv = new Ajv({ strict: true, allErrors: true });
   const validate = ajv.compile(schema);
   const routingSchema = JSON.parse(readFileSync(new URL("../../../🎯️spawned-document-routing/🔣️.json", import.meta.url), "utf8"));
-  const routing = JSON.parse(readFileSync(new URL("../../../../🧫️fixtures/🎯️spawned-document-routing/🔣️.json", import.meta.url), "utf8"));
-  const validateRouting = ajv.compile(routingSchema);
+  const validateRouting = ajv.compile<typeof routing>(routingSchema);
   assert(validateRouting(routing), JSON.stringify(validateRouting.errors));
   assert.equal(validateRouting({ ...routing, foreign: true }), false);
   for (const law of routing.cases) {
@@ -71,7 +71,6 @@ export function testHostPanelStateSchema(): void {
     const owner = explicitSpawned ? spawned?.controllerId === law.controllerId ? spawned : null : spawned?.controllerId === law.controllerId && law.controllerId !== routing.host.controllerId ? spawned : law.controllerId === routing.host.controllerId ? routing.host : null;
     const expected = law.ownerPath === null ? null : getValueByPointer({ host: routing.host, spawned }, law.ownerPath);
     assert.deepEqual(owner, expected, law.id);
-    console.log(`[DEBUG] spawned JSON pointer oracle ${law.id}: ${JSON.stringify(expected)}`);
   }
   const schemaBounds = schema as AnySchema & {
     properties: { spawnedApps: { maxItems: number } };

@@ -5,6 +5,7 @@
   "type": "object",
   "additionalProperties": false,
   "required": [
+    "mutation",
     "id",
     "index",
     "year",
@@ -12,20 +13,106 @@
     "day"
   ],
   "properties": {
+    "mutation": {
+      "const": "addAnnualScheduleHoliday"
+    },
     "id": {
-      "type": "integer"
+      "type": "integer",
+      "minimum": 0,
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Annual schedule",
+          "de": "Jahreszeitplan"
+        },
+        "description": {
+          "en": "The annual schedule this mutation changes, by id.",
+          "de": "Jahreszeitplan, den diese Mutation ändert, per ID."
+        },
+        "ref": {
+          "kind": "annualSchedule",
+          "domain": "energyModel",
+          "granularity": "schedule"
+        },
+        "group": "target",
+        "order": 10
+      }
     },
     "index": {
-      "type": "integer"
+      "type": "integer",
+      "minimum": 0,
+      "x-semio-ui": {
+        "widget": "stepper",
+        "role": "value",
+        "label": {
+          "en": "Position",
+          "de": "Position"
+        },
+        "description": {
+          "en": "Insertion position in the holiday list; 0 is first.",
+          "de": "Einfügeposition in der Feiertagsliste; 0 ist die erste."
+        },
+        "step": 1,
+        "precision": 0,
+        "group": "order",
+        "order": 20
+      }
     },
     "year": {
-      "type": "integer"
+      "type": "integer",
+      "minimum": 0,
+      "maximum": 65535,
+      "x-semio-ui": {
+        "widget": "stepper",
+        "role": "value",
+        "label": {
+          "en": "Year",
+          "de": "Jahr"
+        },
+        "step": 1,
+        "precision": 0,
+        "group": "calendar",
+        "order": 30
+      }
     },
     "month": {
-      "type": "integer"
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 12,
+      "x-semio-ui": {
+        "widget": "stepper",
+        "role": "value",
+        "label": {
+          "en": "Month",
+          "de": "Monat"
+        },
+        "step": 1,
+        "precision": 0,
+        "softMin": 1,
+        "softMax": 12,
+        "group": "calendar",
+        "order": 40
+      }
     },
     "day": {
-      "type": "integer"
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 31,
+      "x-semio-ui": {
+        "widget": "stepper",
+        "role": "value",
+        "label": {
+          "en": "Day",
+          "de": "Tag"
+        },
+        "step": 1,
+        "precision": 0,
+        "softMin": 1,
+        "softMax": 31,
+        "group": "calendar",
+        "order": 50
+      }
     }
   }
 }

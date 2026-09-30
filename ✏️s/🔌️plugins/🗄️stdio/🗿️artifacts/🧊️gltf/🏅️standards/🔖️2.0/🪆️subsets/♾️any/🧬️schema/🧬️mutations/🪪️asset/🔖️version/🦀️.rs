@@ -4,8 +4,7 @@ use crate::schema::modules::mutation_support::top_level::{reject, GltfTopLevelMu
 use crate::GltfSnapshot;
 pub const ID: &str = "s.stdio.gltf.mutation.change-asset-version.v1";
 pub const TOUCHED_PATHS: &[&str] = &["document/asset/version"];
-#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::MutationLeaf)]
-#[mutation_leaf(contract = ::protocol)]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
 #[value(rename_all = "camelCase")]
 pub struct GltfChangeAssetVersionPayload {
     pub version: String,
@@ -30,7 +29,7 @@ pub fn apply(payload: &GltfChangeAssetVersionPayload, base: &GltfSnapshot) -> Re
 
 //#region 🧬️DirectMutation
 #[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::MutationLeaf)]
-#[mutation_leaf(contract = ::protocol)]
+#[mutation_leaf(contract = ::protocol, payload = Apply)]
 #[value(tag = "phase", content = "value", rename_all = "camelCase")]
 pub enum ChangeAssetVersionMutation {
     Apply(GltfChangeAssetVersionPayload),
@@ -74,6 +73,6 @@ impl protocol::MutationKind<GltfSnapshot, super::GltfMutation> for ChangeAssetVe
 
 //#region 🧪️Tests
 #[cfg(test)]
-#[path = "🧪️tests/🔬️direct-leaf/🦀️.rs"]
-mod direct_leaf_tests;
+#[path = "🧪️tests/🔖️raises-the-asset-f95b77/🦀️.rs"]
+mod case_raises_the_asset_f95b77;
 //#endregion 🧪️Tests

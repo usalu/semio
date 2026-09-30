@@ -10,10 +10,46 @@
   ],
   "properties": {
     "elementId": {
-      "type": "string"
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Envelope element",
+          "de": "Bauteil der Gebäudehülle"
+        },
+        "description": {
+          "en": "The envelope element this mutation addresses.",
+          "de": "Das Bauteil der Gebäudehülle, das diese Mutation adressiert."
+        },
+        "ref": {
+          "kind": "element"
+        },
+        "group": "target",
+        "order": 10
+      }
     },
     "newInclinationDeg": {
-      "type": "number"
+      "type": "number",
+      "minimum": 0,
+      "maximum": 180,
+      "x-semio-ui": {
+        "widget": "dial",
+        "role": "value",
+        "label": {
+          "en": "Inclination",
+          "de": "Neigung"
+        },
+        "description": {
+          "en": "Angle to the horizontal: 0° horizontal (roof, floor), 90° vertical (wall).",
+          "de": "Winkel zur Horizontalen: 0° waagerecht (Dach, Boden), 90° senkrecht (Wand)."
+        },
+        "unit": "°",
+        "step": 1,
+        "precision": 0,
+        "group": "envelope",
+        "order": 20
+      }
     }
   }
 }

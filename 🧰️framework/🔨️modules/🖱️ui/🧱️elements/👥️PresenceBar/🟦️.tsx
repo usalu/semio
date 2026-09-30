@@ -10,7 +10,6 @@ import { TableAvatar } from "../📻️TableAvatar/🟦️.tsx";
 import { cn } from "../../🔨️modules/🏷️class-name-composition/🟦️.ts";
 import { surfaceClass } from "../../🔨️modules/🌈️surface-presentation/🟦️.ts";
 import { useLabel } from "../🏷️Label/🟦️.tsx";
-import type { UiLabel } from "../🎗️UiLabel/🟦️.tsx";
 import { currentStylingAppearanceName } from "@semio-tech/ui-styling";
 import { presencePaint } from "../../🔨️modules/👥️presence-presentation/🟦️.ts";
 // #endregion 🔌️Adapters
@@ -46,6 +45,9 @@ export interface PresencePeer {
    * spoofed by a client; a peer with no declared kind is a person. An agent gets its own roster row
    * and its own badge — it is never folded into the human who delegated to it. */
   readonly isAgent?: boolean;
+  /** 🎬️ What the peer is doing right now that concerns this human, in the host's language (e.g. editing a mutation in
+   * time travel) — spoken as part of the chip's name and marked by `badge`, never by colour alone. */
+  readonly activity?: { readonly text: string; readonly badge: string };
 }
 
 /**
@@ -92,7 +94,7 @@ export const PresenceBar: React.FC<PresenceBarProps> = ({ peers, max = PRESENCE_
         const roleLabel = peer.role === "author" ? authorRoleLabel : peer.role === "spectator" ? spectatorRoleLabel : undefined;
         // 🤖️ The agent badge is part of the accessible name, not decoration beside it: a screen
         // reader must hear "Drafting agent (AI agent, Editing)" from the roster row itself.
-        const qualifiers = [peer.isAgent === true ? agentKindLabel : undefined, roleLabel].filter((value): value is UiLabel => value !== undefined);
+        const qualifiers = [peer.isAgent === true ? agentKindLabel : undefined, roleLabel, peer.activity?.text].filter((value): value is string => value !== undefined);
         const peerTitle = qualifiers.length > 0 ? `${peer.label} (${qualifiers.join(", ")})` : peer.label;
         return (
           <div
@@ -100,6 +102,7 @@ export const PresenceBar: React.FC<PresenceBarProps> = ({ peers, max = PRESENCE_
             role="listitem"
             data-row-id={`peer:${peer.actor}`}
             data-presence-kind={peer.isAgent === true ? "agent" : "human"}
+            data-presence-activity={peer.activity === undefined ? undefined : ""}
             tabIndex={0}
             title={peerTitle}
             aria-label={peerTitle}
@@ -116,6 +119,16 @@ export const PresenceBar: React.FC<PresenceBarProps> = ({ peers, max = PRESENCE_
                 🤖
               </span>
             ) : null}
+            {peer.activity === undefined ? null : (
+              <span
+                aria-hidden="true"
+                data-row-id={`peer-activity-badge:${peer.actor}`}
+                className={cn(surfaceClass, "pointer-events-none absolute -top-0.5 -right-0.5 flex size-3 items-center justify-center rounded-full border text-[8px] leading-none")}
+                style={{ borderColor: presencePaint(peer.color, appearance) }}
+              >
+                {peer.activity.badge}
+              </span>
+            )}
           </div>
         );
       })}

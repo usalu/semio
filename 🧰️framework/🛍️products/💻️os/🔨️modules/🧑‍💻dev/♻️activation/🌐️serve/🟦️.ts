@@ -1,3 +1,4 @@
+import { loadDevContribution, resolveDevContributionFile } from "../../🧩️contribution/📥️loading/🟦️.ts";
 /** 🧩️ Semantic activation serve owner. */
 
 import { ACTIVATION_RECEIPT_FILE, developmentRuntimeRoot, readActivationReceipt } from "../🟦️.ts";
@@ -42,7 +43,8 @@ import { playgroundCatalog, resolvePlaygroundFilter } from "../../../🔌️plug
 
 import { ActivationScript } from "../🏃️execution/🟦️.ts";
 import { reportServeStagedModuleFreshness } from "../🔍️freshness/🟦️.ts";
-import { ensureDevLocalHub, DEV_LOCAL_HUB_DATA_ENV, DEV_LOCAL_HUB_PROFILE_ENV } from "../../🚀️local-hub/🏃️execution/🟦️.ts";
+import { ensureDevLocalHub } from "../../🚀️local-hub/🏃️execution/🟦️.ts";
+import { DEV_LOCAL_HUB_DATA_ENV, DEV_LOCAL_HUB_PROFILE_ENV } from "../../🚀️local-hub/🧬️schema/🟦️.ts";
 
 
 
@@ -66,9 +68,17 @@ class ServeScript extends BundleScript {
     }
     void reportServeStagedModuleFreshness(variant, "react", profile, runtime, receipt);
     const resolved = resolvePlaygroundFilter(variant);
-    const hub = await ensureDevLocalHub(this.repoRoot, { hubUrl: process.env.S_HUB_URL || undefined });
+    const contribution = loadDevContribution(this.repoRoot, resolved);
+    const boot = new AbortController();
+    const cancelBoot = () => boot.abort();
+    process.once("SIGINT", cancelBoot);
+    process.once("SIGTERM", cancelBoot);
+    let hub: Awaited<ReturnType<typeof ensureDevLocalHub>>;
+    try { hub = await ensureDevLocalHub(this.repoRoot, { provider: contribution?.localHub, hubUrl: process.env.S_HUB_URL || undefined, signal: boot.signal }); }
+    finally { process.removeListener("SIGINT", cancelBoot); process.removeListener("SIGTERM", cancelBoot); }
+    if (boot.signal.aborted) return;
     const localHubEnv = hub ? { S_HUB_URL: hub.hubUrl, [DEV_LOCAL_HUB_DATA_ENV]: hub.dataDir, [DEV_LOCAL_HUB_PROFILE_ENV]: hub.profileId } : {};
-    await runViteBunxDev(this.root, serverArgs, { config: "../../🏗️builder/🌐️vite/🟦️.ts", portEnv: "S_OS_PORT", defaultPort: String(frameworkOsPlaygroundDefaultPort(playgroundCatalog, variant, renderer)), fixedPort: true, env: { SEMIO_PLUGIN: variant, SEMIO_RENDERER: renderer, SEMIO_BUILD_MODE: profile === "release" ? "ship" : "dev", SEMIO_BRAND: resolved.brand ?? "", VITE_SEMIO_PLUGIN: variant, VITE_SEMIO_RENDERER: renderer, VITE_SEMIO_APP_ID: resolved.appId ?? "", ...frameworkOsLockedPrefsEnv(), ...localHubEnv } });
+    await runViteBunxDev(this.root, serverArgs, { config: contribution ? resolveDevContributionFile(this.repoRoot, contribution.viteConfig, contribution.ownerRoot) : "../../🏗️builder/🌐️vite/🟦️.ts", portEnv: "S_OS_PORT", defaultPort: String(frameworkOsPlaygroundDefaultPort(playgroundCatalog, variant, renderer)), fixedPort: true, env: { SEMIO_PLUGIN: variant, SEMIO_RENDERER: renderer, SEMIO_BUILD_MODE: profile === "release" ? "ship" : "dev", SEMIO_BRAND: resolved.brand ?? "", VITE_SEMIO_PLUGIN: variant, VITE_SEMIO_RENDERER: renderer, VITE_SEMIO_APP_ID: resolved.appId ?? "", ...frameworkOsLockedPrefsEnv(), ...localHubEnv } });
   }
 }
 

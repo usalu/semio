@@ -11,13 +11,60 @@
   ],
   "properties": {
     "memberId": {
-      "type": "string"
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Member",
+          "de": "Bauteil"
+        },
+        "description": {
+          "en": "The reinforced concrete member this mutation addresses.",
+          "de": "Das Stahlbetonbauteil, das diese Mutation adressiert."
+        },
+        "ref": {
+          "kind": "member"
+        },
+        "group": "target",
+        "order": 10
+      }
     },
     "layerId": {
-      "type": "string"
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Bar layer",
+          "de": "Bewehrungslage"
+        },
+        "description": {
+          "en": "The longitudinal reinforcement layer of the member.",
+          "de": "Die Längsbewehrungslage des Bauteils."
+        },
+        "ref": {
+          "kind": "barLayer"
+        },
+        "group": "target",
+        "order": 20
+      }
     },
     "newCount": {
-      "type": "integer"
+      "type": "integer",
+      "minimum": 0,
+      "x-semio-ui": {
+        "widget": "stepper",
+        "role": "value",
+        "label": {
+          "en": "Number of bars n",
+          "de": "Stabanzahl n"
+        },
+        "step": 1,
+        "precision": 0,
+        "group": "reinforcement",
+        "order": 30
+      }
     }
   }
 }

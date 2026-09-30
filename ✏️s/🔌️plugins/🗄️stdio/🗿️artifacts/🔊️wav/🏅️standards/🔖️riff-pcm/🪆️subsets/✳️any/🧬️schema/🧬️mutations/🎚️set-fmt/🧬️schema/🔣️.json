@@ -5,15 +5,22 @@
   "type": "object",
   "additionalProperties": false,
   "required": [
+    "mutation",
     "fmt"
   ],
   "properties": {
-    "fmt": {
-      "$ref": "#/$defs/WavFmt"
-    },
     "mutation": {
       "const": "setFmt",
       "description": "Aggregate discriminator spliced in by WavMutation; absent when the payload stands alone."
+    },
+    "fmt": {
+      "$ref": "#/$defs/WavFmt",
+      "x-semio-ui": {
+        "label": {
+          "en": "Format chunk (fmt)",
+          "de": "Format-Chunk (fmt)"
+        }
+      }
     }
   },
   "$defs": {
@@ -32,32 +39,90 @@
         "audioFormat": {
           "type": "integer",
           "minimum": 0,
-          "maximum": 65535
+          "maximum": 65535,
+          "x-semio-ui": {
+            "widget": "stepper",
+            "label": {
+              "en": "Audio format",
+              "de": "Audioformat"
+            },
+            "description": {
+              "en": "wFormatTag, e.g. 1 = PCM, 3 = IEEE float, 0xFFFE = extensible.",
+              "de": "wFormatTag, z. B. 1 = PCM, 3 = IEEE-Gleitkomma, 0xFFFE = Extensible."
+            }
+          }
         },
         "channels": {
           "type": "integer",
           "minimum": 0,
-          "maximum": 65535
+          "maximum": 65535,
+          "x-semio-ui": {
+            "widget": "stepper",
+            "label": {
+              "en": "Channels",
+              "de": "Kanäle"
+            }
+          }
         },
         "sampleRate": {
           "type": "integer",
           "minimum": 0,
-          "maximum": 4294967295
+          "maximum": 4294967295,
+          "x-semio-ui": {
+            "widget": "stepper",
+            "label": {
+              "en": "Sample rate",
+              "de": "Abtastrate"
+            },
+            "unit": "Hz"
+          }
         },
         "byteRate": {
           "type": "integer",
           "minimum": 0,
-          "maximum": 4294967295
+          "maximum": 4294967295,
+          "x-semio-ui": {
+            "widget": "stepper",
+            "label": {
+              "en": "Byte rate",
+              "de": "Byterate"
+            },
+            "description": {
+              "en": "Average bytes per second.",
+              "de": "Durchschnittliche Bytes pro Sekunde."
+            },
+            "unit": "B/s"
+          }
         },
         "blockAlign": {
           "type": "integer",
           "minimum": 0,
-          "maximum": 65535
+          "maximum": 65535,
+          "x-semio-ui": {
+            "widget": "stepper",
+            "label": {
+              "en": "Block align",
+              "de": "Blockausrichtung"
+            },
+            "description": {
+              "en": "Bytes per sample frame across all channels.",
+              "de": "Bytes je Sample-Frame über alle Kanäle."
+            },
+            "unit": "B"
+          }
         },
         "bitsPerSample": {
           "type": "integer",
           "minimum": 0,
-          "maximum": 65535
+          "maximum": 65535,
+          "x-semio-ui": {
+            "widget": "stepper",
+            "label": {
+              "en": "Bits per sample",
+              "de": "Bits pro Sample"
+            },
+            "unit": "bit"
+          }
         },
         "ext": {
           "anyOf": [
@@ -73,7 +138,17 @@
             {
               "type": "null"
             }
-          ]
+          ],
+          "x-semio-ui": {
+            "label": {
+              "en": "Format extension",
+              "de": "Formaterweiterung"
+            },
+            "description": {
+              "en": "cbSize extension bytes of WAVEFORMATEX.",
+              "de": "cbSize-Erweiterungsbytes von WAVEFORMATEX."
+            }
+          }
         }
       }
     }

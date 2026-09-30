@@ -5,15 +5,49 @@
   "type": "object",
   "additionalProperties": false,
   "required": [
+    "mutation",
     "id",
     "newHandleKind"
   ],
   "properties": {
+    "mutation": {
+      "const": "changeHandleHandleKind"
+    },
     "id": {
-      "type": "string"
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Handle",
+          "de": "Griff"
+        },
+        "ref": {
+          "kind": "handle",
+          "domain": "handle",
+          "granularity": "handle"
+        },
+        "group": "target",
+        "order": 10
+      }
     },
     "newHandleKind": {
-      "type": "string"
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Handle kind",
+          "de": "Griffart"
+        },
+        "ref": {
+          "kind": "handleKind",
+          "domain": "handle",
+          "granularity": "handleKind"
+        },
+        "group": "target",
+        "order": 20
+      }
     }
   }
 }

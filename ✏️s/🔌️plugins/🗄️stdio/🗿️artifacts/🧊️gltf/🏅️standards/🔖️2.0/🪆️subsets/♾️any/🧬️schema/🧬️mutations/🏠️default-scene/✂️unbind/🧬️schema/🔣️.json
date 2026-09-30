@@ -5,14 +5,43 @@
   "type": "object",
   "additionalProperties": false,
   "properties": {},
-  "x-semio": {
-    "id": "s.stdio.gltf.mutation.unbind-default-scene.v1",
-    "version": 1,
-    "phase": "mutation",
-    "touchedPaths": [
-      "document/scene"
-    ],
-    "referencePolicy": "none"
-  },
-  "x-semio-mutation": "unbind-default-scene"
+  "$defs": {
+    "UnbindDefaultSceneMutation": {
+      "description": "The whole wire of UnbindDefaultSceneMutation: the editable apply payload (this document's root) or the inert restore.",
+      "oneOf": [
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "phase",
+            "value"
+          ],
+          "properties": {
+            "phase": {
+              "const": "apply"
+            },
+            "value": {
+              "$ref": "#"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "phase",
+            "value"
+          ],
+          "properties": {
+            "phase": {
+              "const": "restore"
+            },
+            "value": {
+              "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/gltf/2.0/any/diff.json"
+            }
+          }
+        }
+      ]
+    }
+  }
 }

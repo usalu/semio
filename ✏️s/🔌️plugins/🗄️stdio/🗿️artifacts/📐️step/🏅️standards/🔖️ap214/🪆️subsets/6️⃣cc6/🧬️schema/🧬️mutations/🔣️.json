@@ -8,6 +8,18 @@
       "type": "object",
       "additionalProperties": false,
       "required": [
+        "SetSnapshot"
+      ],
+      "properties": {
+        "SetSnapshot": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/step/ap214/cc6/mutation/set-snapshot/schema.json"
+        }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
         "SetFileSchema"
       ],
       "properties": {
@@ -37,18 +49,6 @@
       "properties": {
         "SetShapeRepresentation": {
           "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/step/ap214/cc6/mutation/set-shape-representation/schema.json"
-        }
-      }
-    },
-    {
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "SetSnapshot"
-      ],
-      "properties": {
-        "SetSnapshot": {
-          "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/step/ap214/cc6/mutation/set-snapshot/schema.json"
         }
       }
     }

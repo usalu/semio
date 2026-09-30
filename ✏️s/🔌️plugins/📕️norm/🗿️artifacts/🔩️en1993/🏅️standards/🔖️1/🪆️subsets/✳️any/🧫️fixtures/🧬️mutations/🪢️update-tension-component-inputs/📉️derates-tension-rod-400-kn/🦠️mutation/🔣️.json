@@ -1,0 +1,16 @@
+{
+  "UpdateTensionComponentInputs": {
+    "tensionComponent": {
+      "id": "ten-1",
+      "fUk": 500000.0,
+      "fK": 400000.0,
+      "actions": [
+        {
+          "id": "fa-1",
+          "loadCaseId": "g-permanent",
+          "force": 250000.0
+        }
+      ]
+    }
+  }
+}

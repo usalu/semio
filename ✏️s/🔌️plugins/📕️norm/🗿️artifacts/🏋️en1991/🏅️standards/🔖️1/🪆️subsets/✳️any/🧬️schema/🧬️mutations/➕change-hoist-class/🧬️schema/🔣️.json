@@ -9,7 +9,21 @@
   ],
   "properties": {
     "newHoistClass": {
-      "type": "string"
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "text",
+        "role": "value",
+        "label": {
+          "en": "Hoisting class",
+          "de": "Hubklasse"
+        },
+        "description": {
+          "en": "HC1 to HC4 (EN 1991-3 Annex B).",
+          "de": "HC1 bis HC4 (EN 1991-3 Anhang B)."
+        },
+        "group": "crane",
+        "order": 10
+      }
     }
   }
 }

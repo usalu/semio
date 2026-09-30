@@ -5,26 +5,94 @@
   "type": "object",
   "additionalProperties": false,
   "required": [
+    "mutation",
     "assetIds",
     "dx",
     "dy",
     "dz"
   ],
   "properties": {
+    "mutation": {
+      "const": "dragAssets"
+    },
     "assetIds": {
       "type": "array",
       "items": {
         "type": "string"
+      },
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Assets",
+          "de": "Objekte"
+        },
+        "description": {
+          "en": "Assets to transform; missing ones are skipped.",
+          "de": "Zu transformierende Objekte; fehlende werden übersprungen."
+        },
+        "ref": {
+          "kind": "asset",
+          "domain": "assets",
+          "granularity": "asset"
+        },
+        "group": "target",
+        "order": 10
       }
     },
     "dx": {
-      "type": "number"
+      "type": "number",
+      "x-semio-ui": {
+        "widget": "stepper",
+        "role": "value",
+        "label": {
+          "en": "Offset X",
+          "de": "Versatz X"
+        },
+        "step": 0.1,
+        "precision": 3,
+        "group": "offset",
+        "order": 20,
+        "snapSource": {
+          "step": true
+        }
+      }
     },
     "dy": {
-      "type": "number"
+      "type": "number",
+      "x-semio-ui": {
+        "widget": "stepper",
+        "role": "value",
+        "label": {
+          "en": "Offset Y",
+          "de": "Versatz Y"
+        },
+        "step": 0.1,
+        "precision": 3,
+        "group": "offset",
+        "order": 30,
+        "snapSource": {
+          "step": true
+        }
+      }
     },
     "dz": {
-      "type": "number"
+      "type": "number",
+      "x-semio-ui": {
+        "widget": "stepper",
+        "role": "value",
+        "label": {
+          "en": "Offset Z",
+          "de": "Versatz Z"
+        },
+        "step": 0.1,
+        "precision": 3,
+        "group": "offset",
+        "order": 40,
+        "snapSource": {
+          "step": true
+        }
+      }
     }
   }
 }

@@ -1,6 +1,6 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "$id": "https://json.schemas.assets.semio-tech.com/os/store/link.json",
+  "$id": "https://json.schemas.assets.semio-tech.com/os/store/link/schema.json",
   "title": "ArtifactLink",
   "type": "object",
   "additionalProperties": false,
@@ -14,7 +14,17 @@
       "$ref": "https://json.schemas.assets.semio-tech.com/framework/io/schema.json#/$defs/ArtifactRef"
     },
     "pin": {
-      "$ref": "#/$defs/LinkPin"
+      "$ref": "#/$defs/LinkPin",
+      "x-semio-ui": {
+        "label": {
+          "en": "Version pin",
+          "de": "Versionsfixierung"
+        },
+        "description": {
+          "en": "Which version the link follows: the live head, a checkpoint, or a stored snapshot.",
+          "de": "Welcher Version die Verknüpfung folgt: dem aktuellen Stand, einem Prüfpunkt oder einem gespeicherten Schnappschuss."
+        }
+      }
     },
     "role": {
       "type": "string"
@@ -63,7 +73,7 @@
               "const": "snapshot"
             },
             "blob": {
-              "$ref": "https://json.schemas.assets.semio-tech.com/os/store/blob.json"
+              "$ref": "https://json.schemas.assets.semio-tech.com/os/store/blob/schema.json"
             }
           }
         }

@@ -1,0 +1,23 @@
+<<<<<<< ANCHOR
+    pub fn has_capacity(&self) -> bool {
+=======
+    /// 🪑️ How many more entries the ledger admits one reservation at a time — the preflight of an atomic batch of inserts.
+    pub fn vacancies(&self) -> usize {
+        if self.group.is_some() || self.reservation.is_some() {
+            return 0;
+        }
+        let mut vacancies = 0;
+        let mut free = self.free_head;
+        while let Some(index) = free {
+            let slot = self.slot(index);
+            if slot.generation == u32::MAX {
+                return vacancies;
+            }
+            vacancies += 1;
+            free = slot.free_next;
+        }
+        vacancies + ARTIFACT_HISTORY_LEDGER_CAPACITY.saturating_sub(self.slots.len())
+    }
+
+    pub fn has_capacity(&self) -> bool {
+>>>>>>> END

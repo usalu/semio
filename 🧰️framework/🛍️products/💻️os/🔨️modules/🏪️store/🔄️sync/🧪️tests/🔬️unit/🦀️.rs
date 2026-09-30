@@ -33,6 +33,7 @@ fn document_backbone_envelope(id: &str, document_id: &str) -> MutationEnvelope {
         diff: crate::os_spr::ArtifactDiff { schema: crate::os_spr::SchemaId("demo/v1".into()), payload: vec![1] },
         inverse: crate::os_spr::InverseMutation { schema: crate::os_spr::SchemaId("demo/v1".into()), payload: vec![2] },
         timestamp: crate::os_spr::HybridLogicalTimestamp { actor: 3, physical_ms: 9_007_199_254_740_992, logical: 5 },
+        transaction: None,
     }
 }
 
@@ -162,7 +163,7 @@ async fn artifact_mailbox_nested_identifier_bytes_and_backbone_one_pop_preserve_
         views: Vec::new(),
         ui: None,
         tool_run: None,
-        principal_kind: None, active_tool: None,
+        principal_kind: None, active_tool: None, history_edit: None,
     };
     let nested_bytes = artifact_actor_message_bytes(&ArtifactActorMsg::PresenceHeartbeat { peer: Box::new(nested) }).expect("nested message fits");
     let bare_bytes = artifact_actor_message_bytes(&ArtifactActorMsg::PresenceHeartbeat { peer: Box::new(bare) }).expect("bare message fits");
@@ -332,6 +333,10 @@ impl Mutation<DemoSnapshot> for DemoMutation {
 
     fn inverse(&self, snapshot: &DemoSnapshot) -> Vec<Self> {
         vec![DemoMutation::SetN { n: snapshot.n }]
+    }
+
+    fn may_emit_foreign_steps(&self) -> bool {
+        false
     }
 }
 
@@ -529,6 +534,76 @@ async fn native_terminal_connection_failure_clears_receipt_actor_before_reissue(
     assert_eq!(envelopes[0].actor.0, reconnected);
     assert!(tokio::time::timeout(std::time::Duration::from_millis(30), reconnected_socket.next()).await.is_err(), "reconnect flush is exactly once");
     assert_eq!(actor.socket_epoch_test_state(), (Some(reconnected.into()), true, 1, Vec::new()));
+}
+
+/// 🛰️ A native document actor dialled into its own loopback hub socket as `socket_actor`, the receipt confirmed.
+#[cfg(not(target_arch = "wasm32"))]
+async fn confirmed_hub_actor(name: &str, socket_actor: &str) -> (native_actor::ArtifactActor, tokio_tungstenite::WebSocketStream<tokio::net::TcpStream>) {
+    let (_, remote) = ChannelBackbone::pair(name).await;
+    let (_, receiver) = artifact_mailbox_pair();
+    let (events, _) = broadcast::channel(8);
+    let mut actor = native_actor::ArtifactActor::new(
+        test_pool(),
+        ArtifactActorConfig { document_id: "authored-stamps".into(), schema: "demo/v1".into(), bindings: Vec::new(), watch_external: false, actor: name.into() },
+        remote,
+        receiver,
+        events,
+        Arc::new(std::sync::RwLock::new(None)),
+        Arc::new(std::sync::RwLock::new(None)),
+        None,
+        semio_framework_async::CancelToken::root_now(),
+    )
+    .await;
+    let mut socket = connect(&mut actor, socket_actor).await;
+    assert!(matches!(receive_frame(&mut socket).await, ClientFrame::SocketHelloV1 { .. }));
+    actor.inject_hub_frame(ServerFrame::Session { actor: socket_actor.into(), color: 1 }).await;
+    (actor, socket)
+}
+
+/// ⏰️ Author stamps are canonical: an authored envelope crosses the hub socket with its own `(hlc, id)` — only the
+/// actor is bound to the socket subject — so two replicas whose concurrent supersessions of one operation reach the hub
+/// in the opposite order of their authoring fold the same winner, the last by authored `(hlc, id)`. A send-time clock
+/// would let each author keep its own supersession (ticket 26/09/30/NON-DESTRUCTIVE-HISTORY-EDITING, audit F-M5).
+#[cfg(not(target_arch = "wasm32"))]
+#[tokio::test]
+async fn concurrent_supersessions_of_one_operation_converge_through_the_hub_socket() {
+    const LEFT: &str = "hub.v1.1111111111111111111111111111111111111111111111111111111111111111";
+    const RIGHT: &str = "hub.v1.2222222222222222222222222222222222222222222222222222222222222222";
+    let genesis = || create_document_envelope::<DemoSnapshot, DemoMutation>("demo/v1", "authored-stamps", DemoSnapshot { n: 0 }, None);
+    let mut left = crate::os_store::test_support::plain_test_store(genesis()).await;
+    let mut right = crate::os_store::test_support::plain_test_store(genesis()).await;
+    let mut shared = sample_operation_envelope("shared-edit", 1).await;
+    shared.document_id = ArtifactId("authored-stamps".into());
+    shared.actor = ActorId("peer".into());
+    shared.timestamp = crate::os_spr::HybridLogicalTimestamp { actor: 5, physical_ms: 1 << 50, logical: 0 };
+    for store in [&mut left, &mut right] {
+        store.ingest_remote(shared.clone()).await.expect("both replicas ingest the shared edit");
+    }
+    let target = shared.mutation_id.clone();
+    let supersede = |n: i32| ArtifactCommand::Supersede { scope: None, inputs: vec![crate::os_store::SupersedeInput { target: target.clone(), replacement: Some(DemoMutation::SetN { n }) }] };
+    left.dispatch(supersede(7)).await.expect("left supersedes");
+    right.dispatch(supersede(9)).await.expect("right supersedes concurrently");
+    let authored = |store: &crate::os_store::ArtifactStore<DemoSnapshot, DemoMutation>| store.envelope().transitions.last().cloned().expect("an authored supersession");
+    let (left_authored, right_authored) = (authored(&left), authored(&right));
+    let (winner, value) = if (left_authored.timestamp.cmp_key(), &left_authored.mutation_id.0) > (right_authored.timestamp.cmp_key(), &right_authored.mutation_id.0) { (&left_authored, 7) } else { (&right_authored, 9) };
+    let (mut right_actor, mut right_socket) = confirmed_hub_actor("right", RIGHT).await;
+    right_actor.relay_test_envelope(right_authored.clone()).await;
+    let ClientFrame::Commands { envelopes: right_wire, .. } = receive_frame(&mut right_socket).await else { panic!("the right replica relays one command batch") };
+    let (mut left_actor, mut left_socket) = confirmed_hub_actor("left", LEFT).await;
+    left_actor.relay_test_envelope(left_authored.clone()).await;
+    let ClientFrame::Commands { envelopes: left_wire, .. } = receive_frame(&mut left_socket).await else { panic!("the left replica relays one command batch") };
+    for (wire, authored, socket_actor) in [(&left_wire[0], &left_authored, LEFT), (&right_wire[0], &right_authored, RIGHT)] {
+        assert_eq!((&wire.mutation_id, wire.timestamp), (&authored.mutation_id, authored.timestamp), "the wire carries the authored identity and clock");
+        assert_eq!(wire.actor.0, socket_actor, "only the actor is bound to the socket subject");
+    }
+    left.ingest_remote(right_wire[0].clone()).await.expect("left ingests the right supersession from the hub");
+    right.ingest_remote(left_wire[0].clone()).await.expect("right ingests the left supersession from the hub");
+    for store in [&left, &right] {
+        assert_eq!(store.supersessions()[&target].transition_id, winner.mutation_id.0, "every replica folds the same last supersession");
+        assert_eq!(store.snapshot().expect("snapshot"), DemoSnapshot { n: value });
+    }
+    crate::os_store::test_support::close_plain_test_store(&mut left);
+    crate::os_store::test_support::close_plain_test_store(&mut right);
 }
 
 #[cfg(not(target_arch = "wasm32"))]
@@ -951,7 +1026,7 @@ async fn actor_stamps_session_color_and_surface_on_outbound_heartbeat() {
         views: Vec::new(),
         ui: None,
         tool_run: None,
-        principal_kind: None, active_tool: None,
+        principal_kind: None, active_tool: None, history_edit: None,
     };
     stamp_session(&mut peer, Some(7), Some("s.space.home@1/*#editor")).await;
     assert_eq!(peer.color, Some(7));
@@ -1012,6 +1087,7 @@ async fn wire_fixtures_stay_byte_identical_across_rust_and_ts() {
         diff: crate::os_spr::ArtifactDiff { schema: crate::os_spr::SchemaId("demo/v1".to_string()), payload: OpBinary::encode_op(&DemoMutation::SetN { n: 5 }).expect("encode demo op") },
         inverse: crate::os_spr::InverseMutation { schema: crate::os_spr::SchemaId("demo/v1".to_string()), payload: OpBinary::encode_op(&DemoMutation::SetN { n: 0 }).expect("encode demo op") },
         timestamp: crate::os_spr::HybridLogicalTimestamp { actor: 42, physical_ms: 1000, logical: 0 },
+        transaction: None,
     };
 
     let hello = ClientFrame::SocketHelloV1 { wire_version: 1, protocol_version: 1, schema: "demo/v1".to_string(), pack_schema_hash: [7u8; 32], resume_token: None, frontier: None };
@@ -1085,6 +1161,7 @@ async fn sample_wire_envelope_for_fixtures() -> MutationEnvelope {
         diff: crate::os_spr::ArtifactDiff { schema: crate::os_spr::SchemaId("demo/v1".to_string()), payload: OpBinary::encode_op(&DemoMutation::SetN { n: 6 }).expect("encode demo op") },
         inverse: crate::os_spr::InverseMutation { schema: crate::os_spr::SchemaId("demo/v1".to_string()), payload: OpBinary::encode_op(&DemoMutation::SetN { n: 5 }).expect("encode demo op") },
         timestamp: crate::os_spr::HybridLogicalTimestamp { actor: 42, physical_ms: 1001, logical: 0 },
+        transaction: None,
     }
 }
 
@@ -1124,7 +1201,7 @@ async fn sample_presence_peer_with_interaction() -> PresencePeer {
         ],
         ui: Some(crate::os_spr::PresenceUi { hovered_path: Some("row[2]#t1".to_string()), focused_path: None, pressed_path: None }),
         tool_run: None,
-        principal_kind: None, active_tool: None,
+        principal_kind: None, active_tool: None, history_edit: None,
     }
 }
 //#endregion 🧪️WireBridge
@@ -1359,7 +1436,7 @@ mod actor_tests {
         let mut store = crate::os_store::test_support::plain_test_store(demo_envelope("doc-a").await).await;
         store.attach_backbone(Backbones::Channel(channels.channel_backbone)).await.expect("attach");
 
-        store.dispatch(ArtifactCommand::Apply { mutations: vec![DemoMutation::SetN { n: 1 }], description: None }).await.expect("apply");
+        store.dispatch(ArtifactCommand::Apply { mutations: vec![DemoMutation::SetN { n: 1 }], description: None, transaction: None }).await.expect("apply");
         channels.cmd_tx.send(ArtifactActorMsg::LocalMutations { envelopes: Vec::new() }).expect("wake");
 
         let storage = FolderEventLogStorage::new(dir.path().to_path_buf());
@@ -1748,8 +1825,8 @@ mod actor_tests {
         let position = |store: &ArtifactStore<DemoSnapshot, DemoMutation>| (store.snapshot().expect("snapshot"), store.applied_edit_ids().len(), store.redo_edit_ids().len(), store.current_checkpoint_id().map(str::to_string));
 
         let steps: Vec<ArtifactCommand<DemoMutation>> = vec![
-            ArtifactCommand::Apply { mutations: vec![DemoMutation::SetN { n: 7 }], description: None },
-            ArtifactCommand::Apply { mutations: vec![DemoMutation::SetN { n: 9 }], description: None },
+            ArtifactCommand::Apply { mutations: vec![DemoMutation::SetN { n: 7 }], description: None, transaction: None },
+            ArtifactCommand::Apply { mutations: vec![DemoMutation::SetN { n: 9 }], description: None, transaction: None },
             ArtifactCommand::Undo,
             ArtifactCommand::CommitCheckpoint { message: Some("hub checkpoint".into()), authors: Vec::new() },
             ArtifactCommand::Redo,
@@ -1883,7 +1960,7 @@ mod actor_tests {
         wait_for_mock_hub_event("A Session", &hub, &mut events_a, |event| matches!(event, ArtifactEvent::Session { .. })).await;
 
         for n in [3, 4] {
-            store_a.dispatch(ArtifactCommand::Apply { mutations: vec![DemoMutation::SetN { n }], description: None }).await.expect("apply on a");
+            store_a.dispatch(ArtifactCommand::Apply { mutations: vec![DemoMutation::SetN { n }], description: None, transaction: None }).await.expect("apply on a");
             channels_a.cmd_tx.send(ArtifactActorMsg::LocalMutations { envelopes: Vec::new() }).expect("wake a");
             tokio::time::sleep(Duration::from_millis(80)).await;
         }
@@ -1947,7 +2024,7 @@ mod actor_tests {
         store_a.attach_backbone(Backbones::Channel(channels_a.channel_backbone)).await.expect("attach a");
         wait_for_mock_hub_event("A Session", &hub, &mut events_a, |event| matches!(event, ArtifactEvent::Session { .. })).await;
 
-        store_a.dispatch(ArtifactCommand::Apply { mutations: vec![DemoMutation::SetN { n: 5 }], description: None }).await.expect("apply on a");
+        store_a.dispatch(ArtifactCommand::Apply { mutations: vec![DemoMutation::SetN { n: 5 }], description: None, transaction: None }).await.expect("apply on a");
         host_a.close_key(&key_a);
 
         let event = wait_for_event(&mut events_b, |event| matches!(event, ArtifactEvent::DocumentBackbone { .. })).await;
@@ -1975,7 +2052,7 @@ mod actor_tests {
         store.attach_backbone(Backbones::Channel(channels.channel_backbone)).await.expect("attach");
         wait_for_mock_hub_event("A Session", &hub, &mut events, |event| matches!(event, ArtifactEvent::Session { .. })).await;
 
-        store.dispatch(ArtifactCommand::Apply { mutations: vec![DemoMutation::SetN { n: 1 }], description: None }).await.expect("apply");
+        store.dispatch(ArtifactCommand::Apply { mutations: vec![DemoMutation::SetN { n: 1 }], description: None, transaction: None }).await.expect("apply");
         channels.cmd_tx.send(ArtifactActorMsg::LocalMutations { envelopes: Vec::new() }).expect("wake");
 
         let event = wait_for_event(&mut events, |event| matches!(event, ArtifactEvent::CommandOutcome { .. })).await;
@@ -2268,9 +2345,9 @@ async fn folder_event_log_storage_round_trips_undo_position_through_pack_spr() {
     let storage = FolderEventLogStorage::new(dir.path().to_path_buf());
 
     let mut store = crate::os_store::test_support::plain_test_store(create_document_envelope::<DemoSnapshot, DemoMutation>("demo/v1", "doc-a", DemoSnapshot { n: 0 }, None)).await;
-    store.dispatch(ArtifactCommand::Apply { mutations: vec![DemoMutation::SetN { n: 1 }], description: None }).await.expect("apply e1");
+    store.dispatch(ArtifactCommand::Apply { mutations: vec![DemoMutation::SetN { n: 1 }], description: None, transaction: None }).await.expect("apply e1");
     let post_e1 = store.snapshot().expect("post-e1");
-    store.dispatch(ArtifactCommand::Apply { mutations: vec![DemoMutation::SetN { n: 2 }], description: None }).await.expect("apply e2");
+    store.dispatch(ArtifactCommand::Apply { mutations: vec![DemoMutation::SetN { n: 2 }], description: None, transaction: None }).await.expect("apply e2");
     store.dispatch(ArtifactCommand::Undo).await.expect("undo e2");
     assert_eq!(store.snapshot().expect("live"), post_e1, "precondition: live store is back at post-e1");
 
@@ -2307,11 +2384,11 @@ async fn folder_text_storage_round_trips_dsl_and_appends_ops() {
     storage.write("demo", "demo", &files).await.expect("write");
 
     let mut store = crate::os_store::test_support::plain_test_store(create_document_envelope::<DemoSnapshot, DemoMutation>("demo/v1", "demo", DemoSnapshot { n: 0 }, None)).await;
-    store.dispatch(ArtifactCommand::Apply { mutations: vec![DemoMutation::SetN { n: 1 }], description: None }).await.expect("apply 1");
+    store.dispatch(ArtifactCommand::Apply { mutations: vec![DemoMutation::SetN { n: 1 }], description: None, transaction: None }).await.expect("apply 1");
     let first_edit = store.envelope().vcs.edits.last().expect("first edit");
     storage.append_ops("demo", "demo", &print_edit_lines(first_edit).await.expect("print edit lines")).await.expect("append ops 1");
 
-    store.dispatch(ArtifactCommand::Apply { mutations: vec![DemoMutation::SetN { n: 2 }], description: None }).await.expect("apply 2");
+    store.dispatch(ArtifactCommand::Apply { mutations: vec![DemoMutation::SetN { n: 2 }], description: None, transaction: None }).await.expect("apply 2");
     let second_edit = store.envelope().vcs.edits.last().expect("second edit");
     storage.append_ops("demo", "demo", &print_edit_lines(second_edit).await.expect("print edit lines")).await.expect("append ops 2");
 
@@ -2357,11 +2434,11 @@ async fn folder_text_storage_round_trips_pack() {
     storage.write_pack("demo", "demo", &files, &dsl_mirror).await.expect("write pack");
 
     let mut store = crate::os_store::test_support::plain_test_store(create_document_envelope::<DemoSnapshot, DemoMutation>("demo/v1", "demo", DemoSnapshot { n: 0 }, None)).await;
-    store.dispatch(ArtifactCommand::Apply { mutations: vec![DemoMutation::SetN { n: 1 }], description: None }).await.expect("apply 1");
+    store.dispatch(ArtifactCommand::Apply { mutations: vec![DemoMutation::SetN { n: 1 }], description: None, transaction: None }).await.expect("apply 1");
     let first_edit = store.envelope().vcs.edits.last().expect("first edit");
     storage.append_ops("demo", "demo", &print_edit_lines(first_edit).await.expect("print edit lines")).await.expect("append ops 1");
 
-    store.dispatch(ArtifactCommand::Apply { mutations: vec![DemoMutation::SetN { n: 2 }], description: None }).await.expect("apply 2");
+    store.dispatch(ArtifactCommand::Apply { mutations: vec![DemoMutation::SetN { n: 2 }], description: None, transaction: None }).await.expect("apply 2");
     let second_edit = store.envelope().vcs.edits.last().expect("second edit");
     storage.append_ops("demo", "demo", &print_edit_lines(second_edit).await.expect("print edit lines")).await.expect("append ops 2");
 
@@ -2492,4 +2569,68 @@ async fn a_rebootstrap_waits_for_the_hosts_reseed_and_says_hello_at_its_baseline
     assert_eq!(frontier, Some(baseline.clone()), "the rebuilt socket says Hello at the pair's baseline");
     actor.inject_hub_frame(ServerFrame::Welcome { session_id: "session-reseed".into(), resume_token: "resume-reseed".into(), server_frontier: baseline.clone(), bootstrap: Bootstrap::None }).await;
     assert!(matches!(actor.bootstrap_test_state().6, RemoteState::Live { .. }), "the hub's None Welcome is accepted like a first open");
+}
+
+/// 🛟️ A hub-refused `Supersede` has no inverse (ticket 26/09/30 NON-DESTRUCTIVE-HISTORY-EDITING): the refused batch's
+/// operation rolls back by its inverse, the transition cannot, so the actor raises the typed
+/// [`HISTORY_TRANSITION_REFUSED_CODE`] refusal naming it; the hub's following `RebootstrapRequired` rebuilds the document
+/// from the canonical pair, and the refused batch is never requeued, resent or handed back to the re-seeded guest.
+#[cfg(not(target_arch = "wasm32"))]
+#[tokio::test]
+async fn a_refused_supersession_is_a_typed_refusal_and_reseeds_from_the_canonical_pair() {
+    let (bootstrap, pair) = demo_artifact_bootstrap(true).await;
+    let baseline = bootstrap.baseline_frontier.clone();
+    let (_backbone, remote) = ChannelBackbone::pair("native-refused-supersede-test").await;
+    let (_, receiver) = artifact_mailbox_pair();
+    let (events, mut event_rx) = broadcast::channel(32);
+    let mut actor = native_actor::ArtifactActor::new(
+        test_pool(),
+        ArtifactActorConfig { document_id: "demo".into(), schema: "demo/v1".into(), bindings: vec![PersistenceBinding::Hub { base_url: "http://hub.local".into(), space_id: "space-supersede".into(), surface: None }], watch_external: false, actor: "supersede-test".into() },
+        remote,
+        receiver,
+        events,
+        Arc::new(std::sync::RwLock::new(None)),
+        Arc::new(std::sync::RwLock::new(None)),
+        None,
+        semio_framework_async::CancelToken::root_now(),
+    )
+    .await;
+    let operation = sample_operation_envelope("supersede-edit", 5).await;
+    let supersede = crate::os_spr::TransitionSupersede { scope: None, inputs: vec![crate::os_spr::SupersededInput { target: MutationId("ghost".into()), replacement: crate::os_spr::InputReplacement::Withdrawn }] };
+    let dependencies = supersede.targets();
+    let transition = crate::os_spr::history_transition_envelope(&crate::os_spr::HistoryTransition::Supersede(supersede), &ArtifactId("demo".into()), &ActorId("supersede-test".into()), dependencies, crate::os_spr::HybridLogicalTimestamp::new(1, 9));
+    actor.queue_test_outbox(vec![operation.clone(), transition.clone()]);
+    let receipt = "hub.v1.ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff";
+    let mut socket = connect(&mut actor, receipt).await;
+    assert!(matches!(receive_frame(&mut socket).await, ClientFrame::SocketHelloV1 { .. }));
+    actor.inject_hub_frame(ServerFrame::Session { actor: receipt.into(), color: 2 }).await;
+    let ClientFrame::Commands { batch_id, envelopes } = receive_frame(&mut socket).await else { panic!("the Session flushes the queued batch") };
+    assert_eq!(envelopes.iter().map(|envelope| envelope.mutation_id.clone()).collect::<Vec<_>>(), vec![operation.mutation_id.clone(), transition.mutation_id.clone()]);
+    while event_rx.try_recv().is_ok() {}
+
+    actor.inject_hub_frame(ServerFrame::Ack { batch_id, stages: vec![AckStage::Applied { outcome: Box::new(ApplyOutcome::Rejected { reason: "history.unknown-target".into(), messages: Vec::new() }) }], frontier: baseline.clone() }).await;
+    let (mut rolled_back, mut outcome, mut refusal) = (Vec::new(), None, None);
+    while let Ok(event) = event_rx.try_recv() {
+        match event {
+            ArtifactEvent::DocumentBackbone { message } => rolled_back.extend(decode_document_backbone_message_exact(&message).expect("canonical rollback batch").into_iter().map(|envelope| envelope.mutation_id.0)),
+            ArtifactEvent::CommandOutcome { outcome: ack, .. } => outcome = Some(ack),
+            ArtifactEvent::Conflict(message) => refusal = Some(message),
+            _ => {}
+        }
+    }
+    assert_eq!(rolled_back, vec![format!("{}~undo", operation.mutation_id.0)], "only the operation rolls back; a transition has no inverse");
+    assert!(matches!(outcome, Some(CommandAckOutcome::Rejected { .. })), "the batch's own outcome is still reported: {outcome:?}");
+    let refusal = refusal.expect("a refused transition is a typed refusal the runtime can show");
+    assert_eq!((refusal.code.0.as_str(), refusal.level, refusal.target.clone()), (HISTORY_TRANSITION_REFUSED_CODE, crate::os_dsl::Severity::Error, vec![transition.mutation_id.0.clone()]));
+
+    let control = crate::os_spr::RebootstrapRequired { space_id: "space-supersede".into(), document_id: "demo".into(), checkpoint_id: [0x33; 32], descriptor_hash: [0x11; 32], baseline_frontier: baseline.clone() };
+    actor.inject_hub_frame(ServerFrame::RebootstrapRequired { control }).await;
+    assert!(std::iter::from_fn(|| event_rx.try_recv().ok()).any(|event| matches!(event, ArtifactEvent::RebootstrapRequired { .. })), "the hub's control makes the actor ask its host for the canonical pair");
+    let (_, _, _, _, _, _, _, outbox, rebootstrap) = actor.bootstrap_test_state();
+    assert_eq!((outbox, rebootstrap), (Vec::<String>::new(), true), "the refused batch is never requeued");
+    let baseline_frontier = crate::os_directory::ArtifactFrontier { document_id: "demo".into(), head_edit_ordinal: baseline.head_edit_ordinal, head_edit_id: baseline.head_edit_id.clone(), last_commit_seq: baseline.last_commit_seq, chain_hash: crate::os_directory::ArtifactHash(baseline.chain_hash) };
+    let _ = actor.handle_test_cmd(ArtifactActorMsg::Reseed { pack: pair.pack.clone(), spr: pair.spr.clone(), baseline: baseline_frontier }).await;
+    assert!(!std::iter::from_fn(|| event_rx.try_recv().ok()).any(|event| matches!(event, ArtifactEvent::RemoteMutations { .. } | ArtifactEvent::DocumentBackbone { .. })), "the re-seeded guest is handed nothing of the refused batch");
+    let (pack, _, frontier, _, _, _, _, outbox, rebootstrap) = actor.bootstrap_test_state();
+    assert_eq!((pack.as_deref(), frontier, outbox, rebootstrap), (Some(pair.pack.as_slice()), Some(baseline), Vec::<String>::new(), false), "the document restarts at the canonical pair");
 }

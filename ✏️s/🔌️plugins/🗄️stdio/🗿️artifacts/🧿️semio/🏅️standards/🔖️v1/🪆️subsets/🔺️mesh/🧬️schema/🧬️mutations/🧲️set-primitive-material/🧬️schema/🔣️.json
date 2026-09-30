@@ -23,7 +23,18 @@
         {
           "type": "null"
         }
-      ]
+      ],
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Material",
+          "de": "Material"
+        },
+        "ref": {
+          "kind": "material"
+        }
+      }
     }
   }
 }

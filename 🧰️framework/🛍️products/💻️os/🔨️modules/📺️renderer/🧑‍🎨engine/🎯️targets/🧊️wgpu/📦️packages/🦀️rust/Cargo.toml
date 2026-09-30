@@ -41,13 +41,15 @@ infinite_canvas = { path = "../../../../../../♾️infinite/📦️packages/�
 # so the Tutorial track's camera keyframes can convert to/from `OrbitController`/`Camera3d` — see
 # `//#region 🎬️Tutorial` in lib.rs.
 semio-framework-3d = { path = "../../../../../../../../../🔨️modules/🧊️3d/📦️packages/🦀️rust" }
-puzzle = { path = "../../../../../../../../../../✏️s/🔌️plugins/🧩️puzzle/📦️packages/🦀️rust", package = "semio-s-plugin-puzzle" }
 semio-framework-os-kernel = { path = "../../../../../../../📦️packages/🦀️rust", package = "semio-framework-os-kernel" }
 # 👕️ The replication contract's pure peer-overlay derivation (`peers_for_window`, `canvas_point_to_screen`, …) the wgpu
 # canvas-presence twin (`🧱️elements/👕️canvas-presence/🎯️targets/🧊️wgpu`) paints peers with. Workspace-internal.
 replication = { path = "../../../../../../../../../🔨️modules/📡️replication/📦️packages/🦀️rust", package = "semio-framework-replication" }
 semio-framework-os-config = { workspace = true }
 semio-framework-os-shell = { workspace = true }
+# ⏪️ The time-travel session's own EN/DE stage and refusal labels (`TimeTravelLabel`) the shell's time-travel band
+# reads, so the band and the Rust-built History body say the same words. Target-neutral, workspace-internal.
+semio-framework-time-travel = { workspace = true }
 ui_wgpu = { path = "../../../../../../../../../🔨️modules/🖱️ui/📦️packages/🦀️rust", features = ["wgpu-engine"], package = "semio-framework-ui" }
 semio-framework-ui-viewport = { path = "../../../../../../../../../🔨️modules/🖱️ui/🪟️viewport/📦️packages/🦀️rust" }
 # 🖥️ P3a (INTERACTIVE-JOB-RUNTIME-REFACTOR, ui-thread-isolation): `winit_app.rs`/`os_host.rs` already

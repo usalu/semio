@@ -335,6 +335,7 @@ type CreateMaterial {
   index: Int!
   id: Int!
   name: String!
+  roughness: String!
   thicknessM: Float!
   conductivityWMK: Float!
   densityKgM3: Float!

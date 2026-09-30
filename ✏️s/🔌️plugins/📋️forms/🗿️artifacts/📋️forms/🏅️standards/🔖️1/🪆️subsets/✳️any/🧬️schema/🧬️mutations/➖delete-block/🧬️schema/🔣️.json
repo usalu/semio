@@ -5,15 +5,57 @@
   "type": "object",
   "additionalProperties": false,
   "required": [
+    "mutation",
     "id",
-    "step_id"
+    "stepId"
   ],
   "properties": {
-    "step_id": {
-      "type": "string"
+    "mutation": {
+      "const": "deleteBlock"
+    },
+    "stepId": {
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Step",
+          "de": "Schritt"
+        },
+        "description": {
+          "en": "The form step this mutation addresses.",
+          "de": "Der Formularschritt, den diese Mutation adressiert."
+        },
+        "ref": {
+          "kind": "step",
+          "domain": "fields",
+          "granularity": "section"
+        },
+        "group": "target",
+        "order": 10
+      }
     },
     "id": {
-      "type": "string"
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Question",
+          "de": "Frage"
+        },
+        "description": {
+          "en": "The question this mutation addresses.",
+          "de": "Die Frage, die diese Mutation adressiert."
+        },
+        "ref": {
+          "kind": "question",
+          "domain": "fields",
+          "granularity": "field"
+        },
+        "group": "target",
+        "order": 20
+      }
     }
   }
 }

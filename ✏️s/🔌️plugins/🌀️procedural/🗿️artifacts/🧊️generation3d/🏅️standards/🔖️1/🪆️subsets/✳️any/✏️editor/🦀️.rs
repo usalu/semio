@@ -128,7 +128,7 @@ semio_framework_plugin::app_commands! {
 /// `resolve_preview_tessellate` always returned `false` — the 3d preview could never paint. (The
 /// throwaway also violated `FlowEvalSession`'s own `Drop` contract, which rejects a live drop.)
 /// Mirrors `FlowInstanceOperationOwner` in the flow artifact — the framework's reference owner.
-struct Generation3dInstanceOperationOwner {
+pub struct Generation3dInstanceOperationOwner {
     eval_session: Option<FlowEvalSession>,
     /// ⏯️ The `previewEval` run's surface-owned half: attached preview roster and the live job's port.
     run_link: crate::preview_eval::PreviewEvalRunLink,
@@ -136,7 +136,7 @@ struct Generation3dInstanceOperationOwner {
 }
 
 impl Generation3dInstanceOperationOwner {
-    fn new() -> Self {
+    pub fn new() -> Self {
         Self { eval_session: Some(FlowEvalSession::new()), run_link: crate::preview_eval::PreviewEvalRunLink::default(), closing: false }
     }
 
@@ -148,7 +148,7 @@ impl Generation3dInstanceOperationOwner {
     }
 
     /// ⏰️ A fold that changed the session wakes the live `previewEval` run job afterwards.
-    fn with_session_waking<R>(&mut self, body: impl FnOnce(&mut FlowEvalSession) -> R) -> Result<R, Fault> {
+    pub fn with_session_waking<R>(&mut self, body: impl FnOnce(&mut FlowEvalSession) -> R) -> Result<R, Fault> {
         let result = self.with_session(body);
         self.run_link.wake();
         result
@@ -277,7 +277,7 @@ fn parse_preview_camera_json(args: &dsl::DslValue) -> crate::editor::generation3
 /// 🕸️ Every node's visible port ids (`{nodeId}@{portId}`), read from the SAME
 /// `dag_host_snapshot_to_workflow` projection the node-graph window paints — so an interaction target and a
 /// graph pick can never drift apart.
-fn generation3d_port_ids_by_node(host_snapshot: &semio_framework_artifact_flow_flow::FlowHostSnapshot) -> std::collections::BTreeMap<String, Vec<String>> {
+pub fn generation3d_port_ids_by_node(host_snapshot: &semio_framework_artifact_flow_flow::FlowHostSnapshot) -> std::collections::BTreeMap<String, Vec<String>> {
     let (graph_nodes, _) = crate::standards::v1::subsets::any::schema::with_host(host_snapshot, |host| crate::standards::v1::subsets::any::schema::dag_host_snapshot_to_workflow(&host.dag.host_snapshot));
     graph_nodes.into_iter().map(|node| (node.id, node.inputs.into_iter().chain(node.outputs).map(|port| port.id).collect())).collect()
 }
@@ -293,7 +293,7 @@ fn generation3d_addressed_preview_eval(window: &semio_framework_plugin::WindowTr
 /// 🧱️ Every window body of the generation3d editor, rendered against one already-resolved set of
 /// `graph` marks. Shared by `render` (marks-free) and `render_with_request_context` (live marks) so
 /// there is exactly one body-key match in the app.
-fn generation3d_render_body(
+pub fn generation3d_render_body(
     body_key: &str,
     document: &Generation3dSnapshot,
     config: &Generation3dConfig,
@@ -446,7 +446,7 @@ const GENERATION3D_CONFIG_STORE_MAXIMUM_BYTES: usize = 262_144;
 /// every row of `bounded_first_step_tool_proofs!` alike, so the proof catalogue can never drift from
 /// the factory it proves. Its work-unit budget is the route capacity itself; `max_decoded_items`
 /// stays its own quantity (decoded JSON items on the wire, not staged edit rows).
-fn generation3d_bounded_contract() -> ToolExecutionContract {
+pub fn generation3d_bounded_contract() -> ToolExecutionContract {
     ToolExecutionContract::bounded_first_step(GENERATION3D_RETAINED_RAW_BYTES, GENERATION3D_RETAINED_DECODED_ITEMS, GENERATION3D_RETAINED_WORK_ITEMS as u64, 16_384, 7_500)
 }
 
@@ -950,7 +950,7 @@ impl semio_framework_plugin::ArtifactOwnedToolJobFactory for Generation3dBounded
 /// `flowEvalTick` round trip. Five of the eight bundled examples therefore never painted: at
 /// seconds per round trip a ten-chunk body is minutes of streaming with `phase: idle` on the
 /// surface the whole time (`📓️preview-mesh-delivery-2026-09-12.md`).
-fn generation3d_flow_eval_contract() -> ToolExecutionContract {
+pub fn generation3d_flow_eval_contract() -> ToolExecutionContract {
     ToolExecutionContract::bounded_first_step(GENERATION3D_FLOW_EVAL_RAW_BYTES, GENERATION3D_RETAINED_DECODED_ITEMS, GENERATION3D_RETAINED_WORK_ITEMS as u64, 16_384, 7_500)
 }
 
@@ -1048,7 +1048,7 @@ impl Generation3dFlowEvalJobFactoryProofs {
 /// 📄️ The user's import/export route. Its three tools are the whole UI surface of this artifact's
 /// nine `🚪️io` leaves, which ticket 26/09/09/PROCEDURAL-3D-END-TO-END found round-trip tested and
 /// reachable by nothing at all (`📓️audit-user-journey-gaps-2026-09-13.md` §6, P0 #1).
-fn generation3d_document_io_contract() -> ToolExecutionContract {
+pub fn generation3d_document_io_contract() -> ToolExecutionContract {
     ToolExecutionContract::bounded_first_step(GENERATION3D_DOCUMENT_IO_RAW_BYTES, GENERATION3D_RETAINED_DECODED_ITEMS, GENERATION3D_RETAINED_WORK_ITEMS as u64, 16_384, 7_500)
 }
 
@@ -1215,6 +1215,7 @@ impl Generation3dBoundedCommandJobFactoryProofs {
         tools: [
             "setActiveExample",
             "nodeGraphEdit",
+            "setWidgetInput",
             "deleteSelection",
             "removeWidget",
             "addWidget",
@@ -1278,7 +1279,7 @@ const GENERATION3D_CONTRIBUTIONS_RAW_BYTES: usize = semio_framework::kernel::COM
 /// 🧾️ The contributions route's ONE execution contract — deliberately NOT
 /// [`generation3d_bounded_contract`]: raising the 8 KiB gesture quota every interactive command
 /// lives under, just to let a boot-time host push through, would widen 29 unrelated routes.
-fn generation3d_contributions_contract() -> ToolExecutionContract {
+pub fn generation3d_contributions_contract() -> ToolExecutionContract {
     ToolExecutionContract::bounded_first_step(GENERATION3D_CONTRIBUTIONS_RAW_BYTES, GENERATION3D_RETAINED_DECODED_ITEMS, GENERATION3D_RETAINED_WORK_ITEMS as u64, 16_384, 7_500)
 }
 
@@ -1428,6 +1429,7 @@ fn generation3d_next_edit<M>(prefix: &str, forward: M, inverse: Vec<M>, descript
             label: None,
             group_id: None,
             origin: Default::default(),
+            transaction: None,
         }],
         description,
         coalesce_key: None,
@@ -1952,24 +1954,35 @@ impl ArtifactEditor for Generation3dPlayApp {
         Some(semio_framework::io::resolve_ready(generation3d_io()))
     }
 
-    /// 🎞️ `geometry:out` plus the inherited `document:out` default, replicated inline (overriding
-    /// `export_media` shadows the trait's provided body for every port on this app).
+    /// 📤️ Exports the declared document without evaluating its flow graph.
     fn export_media(port: &str, doc: &ArtifactView<'_, Generation3dSnapshot>) -> Result<semio_framework_plugin::Media, MediaError> {
-        match port {
-            "geometry:out" => {
-                let mesh = export_mesh_from_document(doc.snapshot);
-                Ok(semio_framework_plugin::Media {
-                    media_type: MediaType { class: MediaClass::ThreeD, form: MediaForm::Mesh },
-                    payload: semio_framework_plugin::MediaPayload::Structured { schema: "3d.mesh".into(), json: dsl::json::to_json_string(&mesh) },
-                })
-            }
-            "artifact:out" => {
-                let media_type = Self::io().map_or(MediaType { class: MediaClass::Data, form: MediaForm::Value }, |io| io.artifact_media_type);
-                let bytes = store::ArtifactPack::encode_pack(doc.snapshot);
-                Ok(semio_framework_plugin::Media { media_type, payload: semio_framework_plugin::MediaPayload::Structured { schema: Self::DOCUMENT_SCHEMA.to_string(), json: store::pack_rt::pack_value_to_base64(&bytes) } })
-            }
-            _ => Err(MediaError::NotImplemented),
+        if port != "artifact:out" {
+            return Err(MediaError::NotImplemented);
         }
+        let media_type = Self::io().map_or(MediaType { class: MediaClass::Data, form: MediaForm::Value }, |io| io.artifact_media_type);
+        let bytes = store::ArtifactPack::encode_pack(doc.snapshot);
+        Ok(semio_framework_plugin::Media { media_type, payload: semio_framework_plugin::MediaPayload::Structured { schema: Self::DOCUMENT_SCHEMA.to_string(), json: store::pack_rt::pack_value_to_base64(&bytes) } })
+    }
+
+    /// 🪪️ Reads geometry from the explicitly supplied instance's retained evaluation session.
+    fn export_media_with_request_context(
+        owner: &semio_framework_plugin::ArtifactInstanceOperationOwnerHandle,
+        port: &str,
+        doc: &ArtifactView<'_, Generation3dSnapshot>,
+        _transient: &semio_framework_plugin::TransientView<'_, Generation3dTransient>,
+    ) -> Result<semio_framework_plugin::Media, MediaError> {
+        if port != "geometry:out" {
+            return Self::export_media(port, doc);
+        }
+        let mesh = owner.with_mut::<Generation3dInstanceOperationOwner, _>(|owner| {
+            owner.with_session(|session| export_mesh_from_session(doc.snapshot, &Generation3dConfig::default(), session))
+        }).map_err(|error| MediaError::Payload(port.into(), error.message))?;
+        crate::standards::v1::subsets::any::io::mesh_bridge::semio_mesh_from_mesh_data(&mesh)
+            .map_err(|error| MediaError::Payload(port.into(), error.to_string()))?;
+        Ok(semio_framework_plugin::Media {
+            media_type: MediaType { class: MediaClass::ThreeD, form: MediaForm::Mesh },
+            payload: semio_framework_plugin::MediaPayload::Structured { schema: "3d.mesh".into(), json: dsl::json::to_json_string(&mesh) },
+        })
     }
 
     /// 🎞️ `"params:in"` — patches matching `InputSlider` widgets from a `{widgetId: number}` JSON
@@ -2562,14 +2575,14 @@ pub fn create_generation3d_app() -> semio_framework_plugin::AppDefinition {
                     ActionArgOption::new("loopCut", LocalizedLabel::native("Cut Edge Loops", "Kantenschleifen schneiden")),
                 ]).required().default_value(&"extrude"),
                 ActionArgDef::number("amount", LocalizedLabel::native("Distance / Inset", "Abstand / Einzug")).default_value(&0.1),
-                ActionArgDef { schema: semio_framework::ArgSchema::Number { min: Some(1.0), max: Some(256.0), step: Some(1.0), integer: true, unit: None }, ..ActionArgDef::number("cuts", LocalizedLabel::native("Loop Cuts", "Schleifenschnitte")).default_value(&1) },
+                ActionArgDef { schema: semio_framework::ArgSchema::number(Some(1.0), Some(256.0), Some(1.0), true), ..ActionArgDef::number("cuts", LocalizedLabel::native("Loop Cuts", "Schleifenschnitte")).default_value(&1) },
                 ActionArgDef::number("dx", LocalizedLabel::native("Move X", "Verschieben X")).default_value(&0.0),
                 ActionArgDef::number("dy", LocalizedLabel::native("Move Y", "Verschieben Y")).default_value(&0.0),
                 ActionArgDef::number("dz", LocalizedLabel::native("Move Z", "Verschieben Z")).default_value(&0.0),
             ])
             .action_args("knifeMeshSelection", vec![
-                ActionArgDef::vec3("start", LocalizedLabel::native("Cut Start", "Schnittanfang")).required().default_value(&[0.0, -1.0, 0.0]),
-                ActionArgDef::vec3("end", LocalizedLabel::native("Cut End", "Schnittende")).required().default_value(&[0.0, 1.0, 0.0]),
+                ActionArgDef::vector("start", LocalizedLabel::native("Cut Start", "Schnittanfang"), 3).required().default_value(&[0.0, -1.0, 0.0]),
+                ActionArgDef::vector("end", LocalizedLabel::native("Cut End", "Schnittende"), 3).required().default_value(&[0.0, 1.0, 0.0]),
             ])
             .action_args("addWidget", vec![
                 ActionArgDef::select("kind", LocalizedLabel::native("Kind", "Art"), vec![
@@ -3178,29 +3191,7 @@ pub fn preview_payload(eval_json: &str, host_snapshot: &semio_framework_artifact
 //#endregion 🔖️PreviewPipeline
 
 //#region 🔖️MeshBridge
-/// 🧊️ Rehomed from the deleted `⚙️engine` (ticket 26/08/12/ENGINELESS-ARTIFACTS-AND-APP-STATE-MACHINES) —
-/// the DWG-import mesh bridge: `export_mesh_from_document` builds a default [`Generation3dConfig`] to
-/// run the same preview pipeline the app's own render path uses, which is why this cluster is app
-/// behavior rather than artifact-schema-pure compute.
-pub fn merge_preview_meshes(meshes: &[semio_framework_plugin::MeshData]) -> semio_framework_plugin::MeshData {
-    let mut merged = semio_framework_plugin::MeshData::default();
-    for mesh in meshes {
-        let vertex_offset = (merged.positions.len() / 3) as u32;
-        merged.positions.extend(&mesh.positions);
-        merged.normals.extend(&mesh.normals);
-        merged.colors.extend(&mesh.colors);
-        merged.indices.extend(mesh.indices.iter().map(|index| index + vertex_offset));
-        merged.edge_positions.extend(&mesh.edge_positions);
-        if !mesh.edge_ids.is_empty() {
-            let edge_base = merged.edge_ids.len() as u32;
-            merged.edge_ids.extend(mesh.edge_ids.iter().map(|id| id + edge_base));
-        }
-    }
-    merged
-}
-
-/// 📦️ Every mesh a preview payload carries, merged — the half `export_mesh_from_document` and
-/// [`export_mesh_from_session`] share, so the decode/merge is written once.
+/// 📦️ Collects the materialized meshes already present in the owner preview payload.
 fn merged_meshes_from_payload(meshes_json: &str) -> semio_framework_plugin::MeshData {
     let meshes: Vec<semio_framework_plugin::MeshData> = dsl::json::parse(meshes_json)
         .ok()
@@ -3210,128 +3201,30 @@ fn merged_meshes_from_payload(meshes_json: &str) -> semio_framework_plugin::Mesh
         .filter_map(|entry| entry.get("data").cloned())
         .filter_map(|data| dsl::FromValue::from_value(dsl::json::to_dsl_value(&data)).ok())
         .collect();
-    merge_preview_meshes(&meshes)
+    crate::standards::v1::subsets::any::io::mesh_bridge::merge_meshes(&meshes)
 }
 
-/// 👁️ The document's merged preview mesh AS THE RETAINED SESSION ALREADY HAS IT — the evaluation
-/// `flowEvalResolve` folded and the bodies `flowTessellateResolve` delivered, with no second
-/// evaluation of anything.
-///
-/// 🐛️ This is what an export must read, and reading the other thing is a measured defect, not a
-/// preference: `export_mesh_from_document` builds a FRESH `FlowHost` and calls `host.evaluate()`
-/// synchronously. In the guest the brep/math operators are contributed by the HOST and reached only
-/// through the asynchronous extension chain, so that evaluation resolves nothing at all — "Export
-/// Document" on a fully painted 3-mesh preview faulted with `no preview geometry (no positions)`
-/// (measured live on 6018, ticket 26/09/09/PROCEDURAL-3D-END-TO-END io-surface lane).
-///
-/// ⏳️ It is also what makes the export's progress and cancellation the chain that already owns
-/// them: the expensive work is the `previewEval` run the status pill reports and its abort retires,
-/// and an export taken after it settles does no kernel work.
+/// 👁️ Prepares geometry from the retained evaluation and delivered mesh packs.
 pub fn export_mesh_from_session(snapshot: &Generation3dSnapshot, cfg: &Generation3dConfig, session: &FlowEvalSession) -> semio_framework_plugin::MeshData {
     let payload = preview_payload(session.eval_json(), &snapshot.host_snapshot, cfg, Some(session), &PreviewInteractionMarks::default());
     merged_meshes_from_payload(&payload.meshes_json)
 }
 
-pub fn export_mesh_from_document(projection: &Generation3dSnapshot) -> semio_framework_plugin::MeshData {
-    let config = Generation3dConfig::default();
-    let eval_json = crate::standards::v1::subsets::any::schema::with_host(&projection.host_snapshot, |host| host.evaluate().unwrap_or_default());
-    let (meshes_json, _) = preview_payload_from_eval(&eval_json, &projection.host_snapshot, &config);
-    // 🌉️ `MeshData` has its own first-party `FromValue` (see `mesh_data_for_preview_handle`'s
-    // note) — decode the per-mesh `data` field straight through the `pack::json`/`DslValue` bridge.
-    merged_meshes_from_payload(&meshes_json)
-}
-
-pub fn generation3d_mesh_from_document(doc: &dsl::DslValue) -> Result<semio_framework_plugin::MeshData, String> {
-    let projection = <Generation3dSnapshot as protocol::FromValue>::from_value(doc.clone()).map_err(|err| err.to_string())?;
-    let mesh = export_mesh_from_document(&projection);
-    projection.retire_cold();
-    Ok(mesh)
-}
-
-pub fn generation3d_document_from_mesh(mesh: &semio_framework_plugin::MeshData) -> Result<protocol::json::Value, String> {
-    let snapshot = crate::standards::v1::subsets::any::io::mesh_bridge::import_mesh_data(mesh).map_err(|error| error.to_string())?;
-    let value = protocol::json::from_dsl_value(&protocol::ToValue::to_value(&snapshot));
-    snapshot.retire_cold();
-    Ok(value)
-}
-
 //#endregion 🔖️MeshBridge
 
-//#region 🧪️UnitTests
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-pub(crate) mod unit_tests;
-//#endregion 🧪️UnitTests
 
-
-//#region 🧪️FoldContract
-/// 🧺️ The store's batched fold envelope, as this app's two durable lanes declare it — its own module
-/// because the law is about the PUBLICATION contract, not about any one command
-/// (ticket 26/09/09/PROCEDURAL-3D-END-TO-END).
 #[cfg(test)]
 #[path = "🧪️tests/🔬️fold-contract/🦀️.rs"]
 mod fold_contract;
-//#endregion 🧪️FoldContract
 
-//#region 🧪️TickAddressing
-/// 🪟️ The window address of the self-dispatched `flowEvalTick` chain — its own module because the law
-/// is about ADDRESSING (who arms the tick, and which window it names), not about evaluation
-/// (ticket 26/09/09/PROCEDURAL-3D-END-TO-END).
 #[cfg(test)]
-#[path = "🧪️tests/🔬️tick-addressing/🦀️.rs"]
-mod tick_addressing;
-//#endregion 🧪️TickAddressing
+#[path = "🧪️tests/🔬️unit/🦀️.rs"]
+mod unit_tests;
 
-//#region 🧪️WorkCapacity
-/// 🧮️ The retained route's ONE declared work capacity, as `ArtifactRetainedCommandPhase::Preflight`
-/// measures it — its own module because the law is about the DECLARATION, not about any one command
-/// (ticket 26/09/09/PROCEDURAL-3D-END-TO-END).
+#[cfg(test)]
+#[path = "🎮️commands/🔪️knife-mesh-selection/🧪️tests/🔬️unit/🦀️.rs"]
+mod knife_selection_tests;
+
 #[cfg(test)]
 #[path = "🧪️tests/🔬️work-capacity/🦀️.rs"]
 mod work_capacity;
-//#endregion 🧪️WorkCapacity
-
-//#region 🧪️ExampleSwitch
-/// 🎨️ The picker's own law: switching examples must REPUBLISH every window surface, not only replace
-/// the document — its own module because the law is about PUBLICATION of the switch, not about the
-/// fold envelope any one mutation fits (ticket 26/09/09/PROCEDURAL-3D-END-TO-END).
-#[cfg(test)]
-#[path = "🧪️tests/🔬️example-switch/🦀️.rs"]
-mod example_switch;
-//#endregion 🧪️ExampleSwitch
-
-//#region 🧪️GenerateInteractions
-/// 🎛️ The user-reachable interaction surface of generate mode, held against ONE language-agnostic
-/// table — its own module because the law is about what the app OFFERS, not about any one window's
-/// content (ticket 26/09/09/PROCEDURAL-3D-END-TO-END).
-#[cfg(test)]
-#[path = "🧪️tests/🔬️generate-interactions/🦀️.rs"]
-mod generate_interactions;
-//#endregion 🧪️GenerateInteractions
-
-//#region 🧪️ModePanels
-/// 📌️ Panel publication across play modes — its own module because the law is about the panel
-/// PROJECTION (which host view a panel body is rendered from), not about any one panel's content
-/// (ticket 26/09/09/PROCEDURAL-3D-END-TO-END).
-#[cfg(test)]
-#[path = "🧪️tests/🔬️mode-panels/🦀️.rs"]
-mod mode_panels;
-//#endregion 🧪️ModePanels
-
-//#region 🧪️InteractionScope
-/// 🕹️ What each framework-reserved interaction verb repaints, for both roles — its own module because
-/// the law is about the app's DECLARED interaction surfaces (which windows accept the `graph` domain),
-/// not about any one body's content (ticket 26/09/09/PROCEDURAL-3D-END-TO-END).
-#[cfg(test)]
-#[path = "🧪️tests/🕹️interaction-scope/🦀️.rs"]
-mod interaction_scope;
-//#endregion 🧪️InteractionScope
-
-//#region 🧪️SliderValues
-/// 🎚️ What a MOVED slider DELIVERS, graded against an independent per-value oracle — its own module
-/// because the law is about the geometry a released value converges on, not about the gesture's cost
-/// (ticket 26/09/09/PROCEDURAL-3D-END-TO-END).
-#[cfg(test)]
-#[path = "🧪️tests/🎚️slider-values/🦀️.rs"]
-mod slider_values;
-//#endregion 🧪️SliderValues

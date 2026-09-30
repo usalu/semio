@@ -4,8 +4,7 @@ use crate::schema::modules::mutation_support::top_level::rejection_outcome;
 use crate::schema::modules::mutation_support::top_level::{reject, GltfTopLevelMutationRejection};
 use crate::GltfSnapshot;
 pub const ID: &str = "s.stdio.gltf.mutation.bind-primitive-indices.v1";
-#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::MutationLeaf)]
-#[mutation_leaf(contract = ::protocol)]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
 #[value(rename_all = "camelCase")]
 pub struct GltfBindPrimitiveIndicesPayload {
     pub mesh: usize,
@@ -32,7 +31,7 @@ pub fn apply(payload: &GltfBindPrimitiveIndicesPayload, base: &GltfSnapshot) -> 
 
 //#region 🧬️DirectMutation
 #[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::MutationLeaf)]
-#[mutation_leaf(contract = ::protocol)]
+#[mutation_leaf(contract = ::protocol, payload = Apply)]
 #[value(tag = "phase", content = "value", rename_all = "camelCase")]
 pub enum BindPrimitiveIndicesMutation {
     Apply(GltfBindPrimitiveIndicesPayload),
@@ -76,6 +75,6 @@ impl protocol::MutationKind<GltfSnapshot, super::GltfMutation> for BindPrimitive
 
 //#region 🧪️Tests
 #[cfg(test)]
-#[path = "🧪️tests/🔬️direct-leaf/🦀️.rs"]
-mod direct_leaf_tests;
+#[path = "🧪️tests/🔢️binds-the-scalar-2b0259/🦀️.rs"]
+mod case_binds_the_scalar_2b0259;
 //#endregion 🧪️Tests

@@ -1,6 +1,6 @@
 {
-  "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "semio://norm/en1996/snapshot",
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/norm/en1996/artifact.json",
   "title": "En1996Snapshot",
   "type": "object",
   "additionalProperties": false,

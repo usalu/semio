@@ -5,15 +5,16 @@
   "type": "object",
   "additionalProperties": false,
   "required": [
+    "mutation",
     "snapshot"
   ],
   "properties": {
-    "snapshot": {
-      "$ref": "#/$defs/TsvSnapshot"
-    },
     "mutation": {
       "const": "setSnapshot",
       "description": "Aggregate discriminator spliced in by TsvMutation; absent when the payload stands alone."
+    },
+    "snapshot": {
+      "$ref": "#/$defs/TsvSnapshot"
     }
   },
   "$defs": {
@@ -25,7 +26,18 @@
       ],
       "properties": {
         "schema": {
-          "type": "string"
+          "type": "string",
+          "x-semio-ui": {
+            "widget": "text",
+            "label": {
+              "en": "Snapshot schema",
+              "de": "Snapshot-Schema"
+            },
+            "description": {
+              "en": "Identifier of the snapshot schema version.",
+              "de": "Kennung der Version des Snapshot-Schemas."
+            }
+          }
         },
         "records": {
           "type": "array",
@@ -34,13 +46,47 @@
             "items": {
               "type": "string"
             }
+          },
+          "x-semio-ui": {
+            "label": {
+              "en": "Records",
+              "de": "Datensätze"
+            }
           }
         },
         "trailingNewline": {
-          "type": "boolean"
+          "type": "boolean",
+          "x-semio-ui": {
+            "widget": "toggle",
+            "label": {
+              "en": "Trailing newline",
+              "de": "Abschließender Zeilenumbruch"
+            },
+            "description": {
+              "en": "Ends the last record with a line break.",
+              "de": "Beendet den letzten Datensatz mit einem Zeilenumbruch."
+            }
+          }
         },
         "lineEnding": {
-          "$ref": "#/$defs/LineEnding"
+          "$ref": "#/$defs/LineEnding",
+          "x-semio-ui": {
+            "widget": "segmented",
+            "label": {
+              "en": "Line ending",
+              "de": "Zeilenende"
+            },
+            "options": {
+              "lf": {
+                "en": "LF (Unix)",
+                "de": "LF (Unix)"
+              },
+              "crlf": {
+                "en": "CRLF (Windows)",
+                "de": "CRLF (Windows)"
+              }
+            }
+          }
         }
       }
     },

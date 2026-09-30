@@ -1,13 +1,35 @@
 {
-  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/norm/en1991/mutation/change-assumed-bridge-lm3/schema.json",
+  "title": "ChangeAssumedBridgeLm3",
   "type": "object",
   "additionalProperties": false,
   "required": [
-    "new_assumed_bridge_lm3"
+    "newAssumedBridgeLm3"
   ],
   "properties": {
-    "new_assumed_bridge_lm3": {
-      "type": "number"
+    "newAssumedBridgeLm3": {
+      "type": "number",
+      "minimum": 0,
+      "x-semio-ui": {
+        "widget": "stepper",
+        "role": "value",
+        "label": {
+          "en": "Assumed special vehicle axle load of load model 3",
+          "de": "Angesetzte Achslast des Sonderfahrzeugs (Lastmodell 3)"
+        },
+        "description": {
+          "en": "Value claimed by the design; the check compares it with the value derived from the standard.",
+          "de": "Vom Entwurf angesetzter Wert; der Nachweis vergleicht ihn mit dem nach der Norm ermittelten Wert."
+        },
+        "unit": "N",
+        "displayUnit": "kN",
+        "displayFactor": 0.001,
+        "step": 1000,
+        "precision": 0,
+        "group": "bridge",
+        "order": 10
+      }
     }
   }
 }

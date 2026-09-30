@@ -1,6 +1,7 @@
 //! 🔒️ Laws for the ONE lock promise: a locked node, handle, edge or target region refuses delete, the
 //! board drag, the rotate ring, the three transform verbs and an inspector patch — each with exactly
-//! one visible sentence, no document edit and no fault. The 2026-09-17 ◻️2d battery measured
+//! one visible sentence, no document edit and no fault. A selection transform refuses at the select tool
+//! only when EVERY target is locked; a mixed one commits and its leaf reports the locked rest. The 2026-09-17 ◻️2d battery measured
 //! `deleteSelection` erasing 12 entities whose inspector flag read `locked true` while the very same
 //! node's drag was (silently) refused: one verb honoured the lock, the other did not, and neither
 //! said anything.
@@ -50,7 +51,8 @@ fn delete_selection_refuses_a_locked_node_with_one_notice() {
     close_app(&mut app);
 }
 
-/// 🚀️ The three centroid transforms share one gate, so all three are asserted through the same law.
+/// 🚀️ The three transforms share the select tool's one refusal — every target locked — so all three are
+/// asserted through the same law.
 #[test]
 fn transform_verbs_refuse_a_locked_selection_with_one_notice() {
     for (verb, args) in [
@@ -66,33 +68,31 @@ fn transform_verbs_refuse_a_locked_selection_with_one_notice() {
     }
 }
 
-/// 🎲️ A pointer drag reaches the guest as `applyBoardEvents`, never as a transform verb — the rows the
-/// board streams (`nodeMove` per tick, `nodeDragEnd` on release, `nodeRotate` on ring release) each
-/// carry their own ids and each is refused on its own.
+/// 🎲️ A pointer drag reaches the guest as `applyBoardEvents`, never as a transform verb: ONE gesture record per
+/// release (a `drag`, a ring `rotate`), each refused at the select tool when every target it names is locked.
 #[test]
-fn board_drag_rows_refuse_a_locked_node_with_one_notice() {
-    for (row, events) in [
-        ("nodeMove", json!([{ "name": "nodeMove", "payload": { "id": "SEED", "x": 120.0, "y": 240.0 } }])),
-        ("nodeDragEnd", json!([{ "name": "nodeDragEnd", "payload": { "moves": [{ "id": "SEED", "x": 120.0, "y": 240.0 }] } }])),
-        ("nodeRotate", json!([{ "name": "nodeRotate", "payload": { "radians": 0.75, "ids": ["SEED"] } }])),
+fn board_gesture_records_refuse_a_locked_node_with_one_notice() {
+    for (kind, record) in [
+        ("drag", json!({ "gestureId": "gesture-1", "kind": "drag", "targets": ["SEED"], "dx": 120.0, "dy": 240.0, "proximity": [] })),
+        ("rotate", json!({ "gestureId": "gesture-2", "kind": "rotate", "targets": ["SEED"], "pivotX": 0.0, "pivotY": 0.0, "angle": 0.75, "proximity": [] })),
     ] {
         let (mut app, id) = locked_seed_app();
         let before = fixture_of(&app);
-        let events_json = serde_json::to_string(&events).expect("serialize rows").replace("SEED", &id);
-        let refused = dispatch(&mut app, "applyBoardEvents", Some(&json!({ "eventsJson": events_json })), None).expect("drag a locked node");
-        assert_refused(&app, &before, &refused, row);
+        let events_json = serde_json::to_string(&json!([{ "name": "gesture", "payload": record }])).expect("serialize rows").replace("SEED", &id);
+        let refused = dispatch(&mut app, "applyBoardEvents", Some(&json!({ "eventsJson": events_json })), None).expect("gesture on a locked node");
+        assert_refused(&app, &before, &refused, kind);
         close_app(&mut app);
     }
 }
 
-/// 🐢️ A pointer drag streams one `nodeMove` per tick. The refusal is answered ONCE per batch, or the
-/// board disappears behind a wall of toasts.
+/// 🐢️ However many locked records one flush carries, the refusal is answered ONCE, or the board disappears
+/// behind a wall of toasts.
 #[test]
-fn a_whole_locked_drag_batch_raises_exactly_one_notice() {
+fn a_whole_locked_gesture_batch_raises_exactly_one_notice() {
     let (mut app, id) = locked_seed_app();
-    let rows: Vec<Value> = (0..8).map(|step| json!({ "name": "nodeMove", "payload": { "id": id, "x": 10.0 * f64::from(step), "y": 0.0 } })).collect();
+    let rows: Vec<Value> = (0..3).map(|step| json!({ "name": "gesture", "payload": { "gestureId": format!("gesture-{step}"), "kind": "drag", "targets": [id], "dx": 10.0, "dy": 0.0, "proximity": [] } })).collect();
     let refused = dispatch(&mut app, "applyBoardEvents", Some(&json!({ "eventsJson": serde_json::to_string(&rows).expect("serialize rows") })), None).expect("drag a locked node");
-    assert_eq!(notices(&refused).len(), 1, "eight refused move rows raise one sentence, not eight: {:?}", refused.requested_effects);
+    assert_eq!(notices(&refused).len(), 1, "three refused records raise one sentence, not three: {:?}", refused.requested_effects);
     close_app(&mut app);
 }
 

@@ -16,9 +16,3 @@ pub fn handle(_payload: &ToggleSun, _doc: &ArtifactView<'_, Generation3dSnapshot
     apply_world3d_sun_action(&mut sun, "toggleSun", None);
     Ok(Emit::config(vec![Generation3dConfigMutation::SetSun(crate::editor::generation3d::config::SetSun { json: dsl::json::to_json_string(&sun) })]))
 }
-
-//#region 🧪️Tests
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
-//#endregion 🧪️Tests

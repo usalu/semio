@@ -9,7 +9,24 @@
   ],
   "properties": {
     "index": {
-      "type": "integer"
+      "type": "integer",
+      "minimum": 0,
+      "x-semio-ui": {
+        "widget": "stepper",
+        "role": "value",
+        "label": {
+          "en": "Plated panel",
+          "de": "Beulfeld"
+        },
+        "description": {
+          "en": "Zero-based position of the plated panel in its list.",
+          "de": "Nullbasierte Position des Beulfelds in der Liste."
+        },
+        "step": 1,
+        "precision": 0,
+        "group": "target",
+        "order": 10
+      }
     }
   }
 }

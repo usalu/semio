@@ -1,0 +1,25 @@
+{
+  "mutation": "setFont",
+  "font": {
+    "id": "id",
+    "kind": {
+      "kind": "type0",
+      "baseFont": "baseFont",
+      "cmap": {
+        "kind": "predefined",
+        "name": "name"
+      },
+      "descendant": {
+        "trueType": false,
+        "baseFont": "baseFont",
+        "descriptor": {
+          "fontName": "fontName"
+        }
+      }
+    },
+    "toUnicode": {
+      "byteWidth": 0
+    },
+    "extra": []
+  }
+}

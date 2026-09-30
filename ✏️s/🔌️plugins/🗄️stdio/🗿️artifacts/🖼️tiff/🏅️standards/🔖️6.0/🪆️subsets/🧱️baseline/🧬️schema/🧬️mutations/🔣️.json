@@ -13,58 +13,10 @@
       ],
       "properties": {
         "mutation": {
-          "const": "insert-tile-tags"
+          "const": "set-snapshot"
         },
         "payload": {
-          "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/tiff/6.0/baseline/mutation/insert-tile-tags/schema.json"
-        }
-      }
-    },
-    {
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "mutation",
-        "payload"
-      ],
-      "properties": {
-        "mutation": {
-          "const": "remove-strip-offsets"
-        },
-        "payload": {
-          "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/tiff/6.0/baseline/mutation/remove-strip-offsets/schema.json"
-        }
-      }
-    },
-    {
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "mutation",
-        "payload"
-      ],
-      "properties": {
-        "mutation": {
-          "const": "remove-tile-tags"
-        },
-        "payload": {
-          "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/tiff/6.0/baseline/mutation/remove-tile-tags/schema.json"
-        }
-      }
-    },
-    {
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "mutation",
-        "payload"
-      ],
-      "properties": {
-        "mutation": {
-          "const": "set-bits-per-sample"
-        },
-        "payload": {
-          "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/tiff/6.0/baseline/mutation/set-bits-per-sample/schema.json"
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/tiff/6.0/baseline/mutation/set-snapshot/schema.json"
         }
       }
     },
@@ -109,10 +61,42 @@
       ],
       "properties": {
         "mutation": {
-          "const": "set-snapshot"
+          "const": "set-bits-per-sample"
         },
         "payload": {
-          "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/tiff/6.0/baseline/mutation/set-snapshot/schema.json"
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/tiff/6.0/baseline/mutation/set-bits-per-sample/schema.json"
+        }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "mutation",
+        "payload"
+      ],
+      "properties": {
+        "mutation": {
+          "const": "insert-tile-tags"
+        },
+        "payload": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/tiff/6.0/baseline/mutation/insert-tile-tags/schema.json"
+        }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "mutation",
+        "payload"
+      ],
+      "properties": {
+        "mutation": {
+          "const": "remove-tile-tags"
+        },
+        "payload": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/tiff/6.0/baseline/mutation/remove-tile-tags/schema.json"
         }
       }
     },
@@ -129,6 +113,22 @@
         },
         "payload": {
           "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/tiff/6.0/baseline/mutation/set-strip-offsets/schema.json"
+        }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "mutation",
+        "payload"
+      ],
+      "properties": {
+        "mutation": {
+          "const": "remove-strip-offsets"
+        },
+        "payload": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/tiff/6.0/baseline/mutation/remove-strip-offsets/schema.json"
         }
       }
     }

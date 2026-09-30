@@ -10,6 +10,7 @@ use protocol::{MutationKind, SemanticDescriptor};
 /// position) via `create-block`.
 #[derive(Clone, Debug, PartialEq, dsl::ToValue, dsl::FromValue, dsl::MutationLeaf)]
 #[mutation_leaf(contract = ::protocol)]
+#[value(rename_all = "camelCase")]
 pub struct DeleteBlock {
     pub step_id: String,
     pub id: String,

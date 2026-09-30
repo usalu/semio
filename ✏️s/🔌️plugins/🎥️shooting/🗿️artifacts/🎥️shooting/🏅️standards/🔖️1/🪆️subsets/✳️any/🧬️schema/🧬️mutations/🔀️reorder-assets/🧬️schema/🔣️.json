@@ -5,16 +5,55 @@
   "type": "object",
   "additionalProperties": false,
   "required": [
+    "mutation",
     "id",
     "toIndex"
   ],
   "properties": {
+    "mutation": {
+      "const": "reorderAssets"
+    },
     "id": {
-      "type": "string"
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Asset",
+          "de": "Objekt"
+        },
+        "description": {
+          "en": "The asset this mutation addresses.",
+          "de": "Das Objekt, das diese Mutation adressiert."
+        },
+        "ref": {
+          "kind": "asset",
+          "domain": "assets",
+          "granularity": "asset"
+        },
+        "group": "target",
+        "order": 10
+      }
     },
     "toIndex": {
       "type": "integer",
-      "minimum": 0
+      "minimum": 0,
+      "x-semio-ui": {
+        "widget": "stepper",
+        "role": "value",
+        "label": {
+          "en": "New index",
+          "de": "Neuer Index"
+        },
+        "description": {
+          "en": "Position in the list after the move.",
+          "de": "Position in der Liste nach dem Verschieben."
+        },
+        "step": 1,
+        "precision": 0,
+        "group": "order",
+        "order": 20
+      }
     }
   }
 }

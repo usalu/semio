@@ -1,6 +1,6 @@
 {
   "UpdateTowerInputs": {
-    "tower_leg": {
+    "towerLeg": {
       "id": "tower-1",
       "memberId": "member-b1",
       "forceCoefficient": 1.5,

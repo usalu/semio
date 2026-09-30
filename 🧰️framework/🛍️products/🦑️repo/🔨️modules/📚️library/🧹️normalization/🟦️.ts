@@ -36,7 +36,7 @@ import { parseFixedDirectoryContractSetScope, parseNamedFixedDirectoryContractSe
 import { parseGeneratorInputProjection, parseSemanticOwnedCurrentSourceRevisions, parseSemanticOwnedDocumentCorrections, semanticExactOwnedDocumentCorrectionAuthority, semanticOwnedInputFileSnapshot, type GeneratorInputProjection, type SemanticOwnedInputFileSnapshot } from "../🔍️discovery/🟦️.ts";
 import { inspectRustAssertionMessageSpans, inspectRustCargoManifest, inspectRustJoinArgumentSpans, inspectRustManifestPathCandidates, inspectRustManifestPathReferences, inspectRustModuleGraph, inspectRustModuleGraphFacts, inspectRustNonRepoJoinBaseSpans, rustTokens as rustSyntaxTokens, rustTokenPairs, validateFrozenCoordinateEvidenceContracts, type RustModuleGraph, type FrozenCoordinateEvidenceContract } from "../🔍️discovery/🟦️.ts";
 import { validateFrozenMarkdownCoordinateEvidenceContracts, type FrozenMarkdownCoordinateEvidenceContract } from "../🔍️discovery/🟦️.ts";
-import { cargoPackageRootBuildScriptPath, classifyPackageSource, classifyPackageSourceDisposition, fixedSourceDispositionDecision, implementationLeafBasenameFinding, jsonDocumentDuplicateKeys, mutationCatalogSourceOwner, mutationCatalogSourceOwnersProblems, mutationOwnerIdentity, mutationOwnerRelativePath, mutationPayloadSchemaProblems, pathEmojiStatuteFindings, reservedDocumentationBasename, targetInsidePackageBoundaryFinding, taxonomyFileKindIsImplementation } from "../🔍️discovery/🟦️.ts";
+import { cargoPackageRootBuildScriptPath, classifyPackageSource, classifyPackageSourceDisposition, fixedSourceDispositionDecision, implementationLeafBasenameFinding, jsonDocumentDuplicateKeys, mutationCatalogSourceOwner, mutationCatalogSourceOwnersProblems, mutationOwnerIdentity, mutationOwnerRelativePath, mutationPayloadSchemaProblems, pathEmojiStatuteFindings, reservedDocumentationBasename, subsetIdForDirectoryName, targetInsidePackageBoundaryFinding, taxonomyFileKindIsImplementation } from "../🔍️discovery/🟦️.ts";
 import { basename, dirname, isAbsolute, join, parse, posix, relative, resolve, sep } from "node:path";
 import { artifactPathProjectionCatalogRoots, createTaxonomyPathMatcher, renderArtifactPathProjectionRoot, semanticArtifactEmptyFacetProjectionAuthority, semanticExactOwnedFileCatalog, semanticExactOwnedFileProjectionAuthority, semanticOwnedFileHistoryProjectionAuthority, semanticOwnedFileProjectionAuthority, semanticOwnedPrimaryFileProjectionAuthority, semanticPathProjectionAuthority, semanticPathProjectionReferenceConsumers, validateTaxonomy, type TaxonomyPathMatcher, type SemanticExactOwnedFileCase, type SemanticExactOwnedFileCatalog, type SemanticFacetPrimaryFileProjectionContract, type SemanticPathProjectionReferenceConsumerForm, type SemanticProjectionAuthorityNode, type Taxonomy as DiscoveryTaxonomy } from "../🔍️discovery/🟦️.ts";
 //#endregion 🔌️Adapters
@@ -3155,8 +3155,9 @@ function canonicalDirectory(path: string, parentCanonical: string, parentKindId:
   const topologyViolations = topologyFinding && topologyFinding.path === path.replaceAll("\\", "/").replace(/^\.\//u, "").replace(/\/+$/u, "").normalize("NFC")
     ? [violation(topologyFinding.breachId, topologyFinding.path, "A target boundary must own its language packages; it cannot be nested inside one.")]
     : [];
-  const domains = taxonomy.discoverySchema.mutationDomainOwners[dirname(path)], domainOwner = mutationDomainOwnerLocation(path, taxonomy);
-  if (domains && Object.hasOwn(domains, name) || domainOwner && path === `${domainOwner.root}/${domainOwner.relativePath}`) return { path: parentCanonical ? `${parentCanonical}/${name}` : name, kindId: "members-of-schema", violations: [] };
+  const owned = mutationFixtureMirrorOwnerPath(path, taxonomy), domains = taxonomy.discoverySchema.mutationDomainOwners[dirname(owned)], domainOwner = mutationDomainOwnerLocation(owned, taxonomy);
+  if (domains && Object.hasOwn(domains, name) || domainOwner && owned === `${domainOwner.root}/${domainOwner.relativePath}`) return { path: parentCanonical ? `${parentCanonical}/${name}` : name, kindId: "members-of-schema", violations: [] };
+  if (parentKindId === "subsets" && taxonomy.discoverySchema.subsetDirectoryOverrides?.[dirname(path)] && subsetIdForDirectoryName(dirname(path), name, taxonomy.discoverySchema) !== null) return { path: parentCanonical ? `${parentCanonical}/${name}` : name, kindId: "subset", violations: topologyViolations };
   const fixed = matchingFixedContracts(path, taxonomy.schema.fixedDirectoryContracts, taxonomy, packageLocation(path, taxonomy), parentKindId);
   if (fixed.ambiguous.length > 0) return { path: parentCanonical ? `${parentCanonical}/${name}` : name, kindId: null, violations: [violation("fixed-directory-contract-ambiguous", path, `Equal-specificity fixed directory contracts match: ${fixed.ambiguous.join(", ")}`)] };
   if (fixed.selected) {
@@ -5440,6 +5441,13 @@ function ancestorDirectoryKindIds(path: string, kinds: ReadonlyMap<string, strin
 }
 
 //#region 🧭️Canonical Mutation Case Pair
+/** 🪞️ The schema-side path a subset's `🧫️fixtures/🧬️mutations` mirror stands for, so a registered domain owner's
+ * `<domain>/<verb>` layout resolves identically on both sides; any other path is returned unchanged. */
+function mutationFixtureMirrorOwnerPath(path: string, taxonomy: LoadedTaxonomy): string {
+  const mirror = `/${taxonomy.discoverySchema.testFixturesDirName}/🧬️mutations/`, at = path.indexOf(mirror);
+  return at < 0 ? path : `${path.slice(0, at)}/${taxonomy.discoverySchema.mutationPayloadSchemaLocation.directoryName}/🧬️mutations/${path.slice(at + mirror.length)}`;
+}
+
 function mutationDomainOwnerLocation(path: string, taxonomy: LoadedTaxonomy): { root: string; relativePath: string; identity: string } | null {
   for (const root of Object.keys(taxonomy.discoverySchema.mutationDomainOwners)) {
     if (!path.startsWith(`${root}/`)) continue;
@@ -5530,7 +5538,8 @@ function projectionSourceAt(
     }
     const contextualUnprefixed = segment.capture === "scenarioId" && !splitLeadingEmoji(sourceName).emoji && new RegExp(taxonomy.schema.semanticDirectoryKinds[segment.kindId].slugPattern, "u").test(sourceName);
     if (kinds.get(currentPath) !== segment.kindId && !contextualUnprefixed) return null;
-    const slug = contextualUnprefixed ? sourceName : projectionDirectorySlug(canonicalName, segment.kindId, taxonomy);
+    const overriddenSubset = segment.capture === "subsetId" && taxonomy.discoverySchema.subsetDirectoryOverrides?.[dirname(currentPath)] !== undefined;
+    const slug = contextualUnprefixed ? sourceName : overriddenSubset ? subsetIdForDirectoryName(dirname(currentPath), canonicalName, taxonomy.discoverySchema) : projectionDirectorySlug(canonicalName, segment.kindId, taxonomy);
     if (!slug) return null;
     captures.set(segment.capture, slug);
   }
@@ -5626,7 +5635,7 @@ function projectionCatalogsForMutationSource(repoRoot: string, entries: Readonly
     const entry = projectionCatalogEntryForSubset(entries, owner, taxonomy);
     const path = entry?.sourcePath ?? `${owner}/${taxonomy.discoverySchema.testOraclesDirName}/🔣️.json`;
     const profile = { standardDirectoryName: owner.split("/").at(-3)!, subsetDirectoryName: basename(owner) };
-    const catalog = entry ? projectionCatalogVectors(absolutePath(repoRoot, path), profile) : { vectors: [], error: `catalog is missing at ${path}` };
+    const catalog = entry || existsSync(absolutePath(repoRoot, path)) ? projectionCatalogVectors(absolutePath(repoRoot, path), profile) : { vectors: [], error: `catalog is missing at ${path}` };
     return { owner, path, entry, ...catalog, vectors: catalog.vectors.map((vector) => ({ ...vector, catalogOwner: owner, catalogPath: path })) };
   });
 }
@@ -6351,7 +6360,9 @@ function validateMutationPayloadSchemas(repoRoot: string, entries: Map<string, M
   for (const entry of entries.values()) {
     const owner = entry.nodeKind === "directory" ? entry.sourcePath : dirname(entry.sourcePath), marker = owner.lastIndexOf("/🧬️mutations/");
     if (marker < 0) continue;
-    const root = owner.slice(0, marker + "/🧬️mutations".length), identity = mutationOwnerIdentity(root, owner.slice(root.length + 1), taxonomy.discoverySchema);
+    const root = owner.slice(0, marker + "/🧬️mutations".length);
+    if (basename(dirname(root)) === taxonomy.discoverySchema.testFixturesDirName) continue;
+    const identity = mutationOwnerIdentity(root, owner.slice(root.length + 1), taxonomy.discoverySchema);
     if (identity === null) continue;
     const state = owners.get(owner) ?? { identity, children: [] };
     state.children.push(entry);

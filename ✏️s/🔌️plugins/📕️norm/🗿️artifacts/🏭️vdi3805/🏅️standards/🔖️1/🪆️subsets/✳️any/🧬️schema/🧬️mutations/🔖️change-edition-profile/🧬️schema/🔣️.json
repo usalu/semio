@@ -5,19 +5,49 @@
   "type": "object",
   "additionalProperties": false,
   "required": [
-    "newChoice",
-    "sheet"
+    "sheet",
+    "newChoice"
   ],
   "properties": {
     "sheet": {
-      "type": "string"
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "text",
+        "role": "value",
+        "label": {
+          "en": "Sheet",
+          "de": "Blatt"
+        },
+        "description": {
+          "en": "VDI 3805 sheet number, e.g. 8.",
+          "de": "Blattnummer der VDI 3805, z. B. 8."
+        },
+        "group": "target",
+        "order": 10
+      }
     },
     "newChoice": {
-      "type": "string",
-      "enum": [
-        "Legacy",
-        "Current"
-      ]
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/vdi3805/snapshot.json#/$defs/EditionProfileChoice",
+      "x-semio-ui": {
+        "widget": "segmented",
+        "role": "value",
+        "label": {
+          "en": "Sheet edition",
+          "de": "Blattausgabe"
+        },
+        "options": {
+          "legacy": {
+            "en": "Legacy edition",
+            "de": "Frühere Ausgabe"
+          },
+          "current": {
+            "en": "Current edition",
+            "de": "Aktuelle Ausgabe"
+          }
+        },
+        "group": "catalogue",
+        "order": 20
+      }
     }
   }
 }

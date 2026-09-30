@@ -9,7 +9,7 @@ fn payload_str<'a>(payload: &'a Value, key: &str) -> Option<&'a str> {
     payload.get(key).and_then(Value::as_str)
 }
 
-/// 🎲️ Replays a board's event batch (`eventsJson`) in order: camera, node moves, brush placements through the
+/// 🎲️ Replays a board's event batch (`eventsJson`) in order: camera, drag gesture records, brush placements through the
 /// shared brush placement, edge creates and deletes, node deletes. Selection events are framework-owned.
 pub fn apply_board_events(ctx: &mut Puzzle5dActionCtx<'_>, args: Option<&Value>) {
     let Some(events) = args.and_then(|value| value.get("eventsJson")).and_then(Value::as_str).and_then(|text| parse(text).ok()).and_then(|value| value.as_array().cloned()) else {
@@ -24,16 +24,14 @@ pub fn apply_board_events(ctx: &mut Puzzle5dActionCtx<'_>, args: Option<&Value>)
                     ctx.scene.runtime.camera2d = camera;
                 }
             }
-            "nodeDragEnd" => {
-                for entry in payload.get("moves").and_then(Value::as_array).into_iter().flatten() {
-                    if let Some(id) = payload_str(entry, "id") {
-                        set_part_2d_position(&mut ctx.scene.document, id, entry.get("x").and_then(Value::as_f64), entry.get("y").and_then(Value::as_f64));
-                    }
-                }
-            }
-            "nodeMove" => {
-                if let Some(id) = payload_str(&payload, "id") {
-                    set_part_2d_position(&mut ctx.scene.document, id, payload.get("x").and_then(Value::as_f64), payload.get("y").and_then(Value::as_f64));
+            // 🎬️ A board drag is ONE `drag` gesture record: every target's flat pose moves by its offset, each id once.
+            "gesture" if payload_str(&payload, "kind") == Some("drag") => {
+                let (Some(dx), Some(dy)) = (payload.get("dx").and_then(Value::as_f64), payload.get("dy").and_then(Value::as_f64)) else { continue };
+                let mut seen = std::collections::HashSet::new();
+                for id in payload.get("targets").and_then(Value::as_array).into_iter().flatten().filter_map(Value::as_str).filter(|id| seen.insert(*id)) {
+                    let Some(part) = ctx.scene.document.parts.iter().find(|part| part.id == id) else { continue };
+                    let (x, y) = (part.part_2d.x + dx, part.part_2d.y + dy);
+                    set_part_2d_position(&mut ctx.scene.document, id, Some(x), Some(y));
                 }
             }
             "brushPlace" => {

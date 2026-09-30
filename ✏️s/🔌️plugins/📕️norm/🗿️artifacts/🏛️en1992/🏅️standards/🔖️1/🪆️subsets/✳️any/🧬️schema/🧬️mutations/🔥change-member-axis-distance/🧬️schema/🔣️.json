@@ -10,10 +10,47 @@
   ],
   "properties": {
     "memberId": {
-      "type": "string"
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Member",
+          "de": "Bauteil"
+        },
+        "description": {
+          "en": "The reinforced concrete member this mutation addresses.",
+          "de": "Das Stahlbetonbauteil, das diese Mutation adressiert."
+        },
+        "ref": {
+          "kind": "member"
+        },
+        "group": "target",
+        "order": 10
+      }
     },
     "newAxisDistance": {
-      "type": "number"
+      "type": "number",
+      "minimum": 0,
+      "x-semio-ui": {
+        "widget": "stepper",
+        "role": "value",
+        "label": {
+          "en": "Axis distance a",
+          "de": "Achsabstand a"
+        },
+        "description": {
+          "en": "Axis distance of the longitudinal bars to the exposed face (EN 1992-1-2 §5).",
+          "de": "Achsabstand der Längsbewehrung zur beflammten Oberfläche (EN 1992-1-2 §5)."
+        },
+        "unit": "m",
+        "displayUnit": "mm",
+        "displayFactor": 1000,
+        "step": 0.005,
+        "precision": 0,
+        "group": "fire",
+        "order": 20
+      }
     }
   }
 }

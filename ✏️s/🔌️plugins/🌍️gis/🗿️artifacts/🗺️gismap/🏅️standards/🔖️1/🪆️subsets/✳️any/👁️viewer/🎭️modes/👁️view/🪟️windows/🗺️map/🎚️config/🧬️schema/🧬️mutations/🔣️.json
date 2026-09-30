@@ -4,13 +4,7 @@
   "title": "GisMapViewerWindowConfigMutation",
   "oneOf": [
     {
-      "type": "object",
-      "additionalProperties": false,
-      "required": ["kind", "camera"],
-      "properties": {
-        "kind": { "const": "set-camera" },
-        "camera": { "$ref": "schema.json#/properties/camera" }
-      }
+      "$ref": "https://json.schemas.assets.semio-tech.com/app/gis/gismap/map-viewer-window/config/mutation/set-camera/schema.json"
     }
   ]
 }

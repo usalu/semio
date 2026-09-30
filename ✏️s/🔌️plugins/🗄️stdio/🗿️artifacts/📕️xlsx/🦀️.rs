@@ -15,6 +15,10 @@ pub use schema::diff::XlsxDiff;
 pub use schema::mutations::XlsxMutation;
 pub use schema::snapshot::XlsxSnapshot;
 pub use schema::XlsxArtifact;
+/// 🧬️ The wire contract a native test host decodes `🥒️.feature` witnesses through and inverts them with
+/// (`Mutation::from_payload_value`/`Mutation::inverse`), re-exported because such a host links this crate alone.
+pub use protocol::json::{from_json_str, to_json_string};
+pub use protocol::{DslValue, Mutation};
 
 /// 🏷️ Document schema / DSL envelope id.
 pub const STDIO_XLSX_DOCUMENT_SCHEMA: &str = "stdio.xlsx";

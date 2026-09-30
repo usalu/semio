@@ -23,28 +23,28 @@ input DeleteFrame { pageId: String! frameId: String! }
 input MoveFrame { pageId: String! frameId: String! newX: Float! newY: Float! }
 input ResizeFrame { pageId: String! frameId: String! newWidth: Float! newHeight: Float! }
 input RotateFrame { pageId: String! frameId: String! newRotation: Float! }
-input ChangeFrameFill { pageId: String! frameId: String! newFill: Bytes }
-input ChangeFrameStroke { pageId: String! frameId: String! newStroke: Bytes }
+input ChangeFrameFill { pageId: String! frameId: String! newFill: [Float!] }
+input ChangeFrameStroke { pageId: String! frameId: String! newStroke: [Float!] }
 input ChangeFrameWrapMode { pageId: String! frameId: String! newWrapMode: String! }
 input ChangeFrameColumns { pageId: String! frameId: String! newColumns: Float! }
 input UpdateGrid { baselineGrid: Float! baselineOffset: Float! snapToBaseline: Boolean! }
 input SetFrameFlags { pageId: String! frameId: String! locked: Boolean visible: Boolean }
-input UpdateParagraphStyle { id: String! name: String! fontFamily: String! fontSize: Float! fontWeight: Int! leading: Float! tracking: Float! alignment: String! }
+input UpdateParagraphStyle { id: String! name: String! fontFamily: String! fontSize: Float! fontWeight: Float! leading: Float! tracking: Float! alignment: String! }
 input UpdateTextFrame { pageId: String! frameId: String! storyId: String! threadNext: String insetX: Float! insetY: Float! insetWidth: Float! insetHeight: Float! }
 input UpdateLayer { pageId: String! layerId: String! name: String! visible: Boolean! locked: Boolean! }
-input CreateCharacterStyle { id: String! }
+input CreateCharacterStyle { id: String! name: String }
 input DeleteCharacterStyle { id: String! }
-input UpdateCharacterStyle { id: String! }
-input UpdateParentPage { id: String! }
-input UpdateSpread { id: String! }
-input SetPageParent { id: String! }
-input SetPageGuides { id: String! }
-input SetStoryRuns { id: String! }
-input UpdateLink { id: String! }
-input SetPageOverrides { id: String! }
-input CreateLayer { id: String! }
-input SetFrameLayer { id: String! }
-input SetDrawingText { id: String! }
-input ReorderFrame { id: String! }
+input UpdateCharacterStyle { id: String! name: String fontFamily: String fontSize: Float fontWeight: Float italic: Boolean color: [Float!] tracking: Float }
+input UpdateParentPage { id: String! name: String! width: Float! height: Float! }
+input UpdateSpread { id: String! name: String! }
+input SetPageParent { id: String! parentPageId: String }
+input SetPageGuides { id: String! guides: Bytes! }
+input SetStoryRuns { id: String! runs: Bytes! }
+input UpdateLink { id: String! width: Float! height: Float! dpi: Float! colorProfile: String }
+input SetPageOverrides { id: String! overrides: Bytes! }
+input CreateLayer { pageId: String! id: String! name: String! remove: Boolean! }
+input SetFrameLayer { pageId: String! frameId: String! layerId: String! }
+input SetDrawingText { index: Float! text: String! }
+input ReorderFrame { pageId: String! frameId: String! forward: Boolean! }
 
 union LayoutMutation = RenameLayout | ChangePrintTarget | ChangeDataFields | CreatePage | DeletePage | RenamePage | ChangePageWidth | ChangePageHeight | UpdatePageMargins | UpdatePageColumns | ReorderPages | CreateStory | DeleteStory | EditStory | CreateLink | DeleteLink | ChangeLinkPath | CreateFrame | DeleteFrame | MoveFrame | ResizeFrame | RotateFrame | ChangeFrameFill | ChangeFrameStroke | ChangeFrameWrapMode | ChangeFrameColumns | UpdateGrid | SetFrameFlags | UpdateParagraphStyle | UpdateTextFrame | UpdateLayer | CreateCharacterStyle | DeleteCharacterStyle | UpdateCharacterStyle | UpdateParentPage | UpdateSpread | SetPageParent | SetPageGuides | SetStoryRuns | UpdateLink | SetPageOverrides | CreateLayer | SetFrameLayer | SetDrawingText | ReorderFrame

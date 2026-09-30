@@ -23,7 +23,7 @@ export function testFormsQuestionPlacement(): void {
       assert.deepEqual(event, item.event, item.name);
       const actual: FormsDefinition = structuredClone(input.definition);
       if (event.mutation === "createStep") actual.steps.push(event.step);
-      else actual.steps.find(step => step.id === event.step_id)!.blocks.push(event.block);
+      else actual.steps.find(step => step.id === event.stepId)!.blocks.push(event.block);
       assert.deepEqual(actual, applyPatch(structuredClone(input.definition), item.patch as Operation[]).newDocument, item.name);
     }
     assert.deepEqual(input, item.input);

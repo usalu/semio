@@ -5,15 +5,50 @@
   "type": "object",
   "additionalProperties": false,
   "required": [
+    "mutation",
     "id",
     "newCaseCount"
   ],
   "properties": {
+    "mutation": {
+      "const": "changeRefrigerationSystemCaseCount"
+    },
     "id": {
-      "type": "integer"
+      "type": "integer",
+      "minimum": 0,
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Refrigeration system",
+          "de": "Kälteanlage"
+        },
+        "description": {
+          "en": "The refrigeration system this mutation changes, by id.",
+          "de": "Kälteanlage, die diese Mutation ändert, per ID."
+        },
+        "ref": {
+          "kind": "refrigerationSystem"
+        },
+        "group": "target",
+        "order": 10
+      }
     },
     "newCaseCount": {
-      "type": "integer"
+      "type": "integer",
+      "minimum": 1,
+      "x-semio-ui": {
+        "widget": "stepper",
+        "role": "value",
+        "label": {
+          "en": "Display cases",
+          "de": "Anzahl Kühlmöbel"
+        },
+        "step": 1,
+        "precision": 0,
+        "group": "capacity",
+        "order": 20
+      }
     }
   }
 }

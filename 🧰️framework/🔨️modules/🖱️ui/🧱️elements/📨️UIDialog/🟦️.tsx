@@ -7,7 +7,7 @@
 
 // #region 🔌️Adapters
 import * as React from "react";
-import { actionArgRequiresChoice, effectiveActionArgs, invalidActionChoiceArgs, unresolvedActionArgs, type ActionArgDef, type DialogDefinition } from "@semio-tech/framework";
+import { actionArgRequiresChoice, dialogChoiceArgs, effectiveActionArgs, invalidActionChoiceArgs, unresolvedActionArgs, unresolvedDialogChoiceArgs, type ActionArgDef, type DialogChoice, type DialogDefinition } from "@semio-tech/framework";
 import { cn } from "../../🔨️modules/🏷️class-name-composition/🟦️.ts";
 import { reactHostPort } from "../🔌️Ports/🟦️.tsx";
 import { keyboardEventMatchesOwnedHotkey, parseOwnedHotkeyChords, resolveControlKeybindingRaw, SHELL_KEYBINDINGS, useUiKeybindingsByControlId } from "../../🔨️modules/🕹️control-keybinding-context/🟦️.tsx";
@@ -33,11 +33,21 @@ export type UIDialogProps<Arg extends ActionArgDef = ActionArgDef> = {
   /** 🎛️ Injected staged-field renderer so ui-react never imports from framework/os/renderer. */
   readonly renderField: (def: Arg, value: unknown, onChange: (value: unknown) => void, field: UIDialogFieldBinding) => React.ReactElement;
   readonly onSubmit: (args: Record<string, unknown>) => void;
+  /** 🔀️ One of `dialog.choices` taken with its dispatch args (`dialogChoiceArgs`: the seed context, the args it requires and its id). */
+  readonly onChoose: (choice: DialogChoice, args: Record<string, unknown>) => void;
   readonly onCancel: () => void;
 };
 
+/** 🎨️ A choice's chrome: danger styling for a destructive one (never colour alone — its description rides
+ * `aria-describedby`), the filled style for a primary tone, the outlined style otherwise. The class lands on the
+ * button's group, so it reaches the button item through descendant selectors. */
+function dialogChoiceChrome(choice: DialogChoice): { readonly variant: "default" | "outline"; readonly className?: string } {
+  if (choice.destructive || choice.tone === "danger") return { variant: "outline", className: "text-destructive [&_[data-slot=button-group-item]]:text-destructive [&_[data-slot=button-group-item]]:!border-destructive/60 [&_[data-slot=button-group-item]:hover]:bg-destructive/10" };
+  return { variant: choice.tone === "primary" ? "default" : "outline" };
+}
+
 /** 🗨️ Accessible staged form using the owned modal boundary and scoped configurable shortcuts. */
-export function UIDialog<Arg extends ActionArgDef>({ dialog, seedArgs, notice, choiceRevisions, renderField, onSubmit, onCancel }: UIDialogProps<Arg>): React.ReactElement {
+export function UIDialog<Arg extends ActionArgDef>({ dialog, seedArgs, notice, choiceRevisions, renderField, onSubmit, onChoose, onCancel }: UIDialogProps<Arg>): React.ReactElement {
   const cancelLabel = useLabel("ui.common.cancel");
   const shellScope = useShellScopeOptional();
   const [portalContainer, setPortalContainer] = React.useState<Element | null>(() => shellScope?.portalLayerRef.current ?? null);
@@ -73,6 +83,9 @@ export function UIDialog<Arg extends ActionArgDef>({ dialog, seedArgs, notice, c
   const submit = reactHostPort.useCallback(() => {
     if (canSubmit) onSubmit(effective);
   }, [canSubmit, effective, onSubmit]);
+  const choices = dialog.choices ?? [];
+  const choiceEnabled = (choice: DialogChoice) => unresolvedDialogChoiceArgs(choice, dialog.args, effective).length === 0;
+  const choiceDescriptionId = (choice: DialogChoice) => `${labelPrefix}-choice-${choice.id}`;
 
   const onKeyDown = (event: React.KeyboardEvent<HTMLDivElement>) => {
     if (event.defaultPrevented || event.nativeEvent.isComposing || !(event.target instanceof Element) || event.target.closest('[role="dialog"]') !== event.currentTarget) return;
@@ -112,9 +125,20 @@ export function UIDialog<Arg extends ActionArgDef>({ dialog, seedArgs, notice, c
             ))}
           </div>
         )}
-        <div className="flex items-center justify-between gap-single">
+        {choices.some((choice) => choice.description != null) && (
+          <div className="mb-double flex flex-col gap-tiny">
+            {choices.map((choice) => choice.description == null ? null : <p key={choice.id} id={choiceDescriptionId(choice)} data-dialog-choice-description={choice.id} className="text-xs text-muted-foreground">{text(choice.description)}</p>)}
+          </div>
+        )}
+        <div className="flex flex-wrap items-center justify-between gap-single">
           <Button id="ui.dialog.cancel" variant="ghost" icon="x" text={dialog.cancelLabel ? text(dialog.cancelLabel) : cancelLabel} onClick={onCancel} />
-          <Button id="ui.dialog.submit" icon="check" text={text(dialog.submitLabel)} disabled={!canSubmit} onClick={submit} />
+          <div className="flex flex-wrap items-center justify-end gap-single">
+            {choices.map((choice) => {
+              const chrome = dialogChoiceChrome(choice);
+              return <Button key={choice.id} id={`ui.dialog.choice.${choice.id}`} variant={chrome.variant} className={chrome.className} icon={choice.destructive ? "triangle-alert" : "arrow-right"} text={text(choice.label)} data-dialog-choice={choice.id} data-tone={choice.tone ?? "neutral"} data-destructive={choice.destructive ? "true" : undefined} aria-describedby={choice.description == null ? undefined : choiceDescriptionId(choice)} disabled={!choiceEnabled(choice)} onClick={() => { if (choiceEnabled(choice)) onChoose(choice, dialogChoiceArgs(choice, dialog.args, effective)); }} />;
+            })}
+            <Button id="ui.dialog.submit" icon="check" text={text(dialog.submitLabel)} disabled={!canSubmit} onClick={submit} />
+          </div>
         </div>
       </DialogContent>
       </DialogPortal>

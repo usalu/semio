@@ -1,0 +1,15 @@
+{
+  "mutation": "setNode",
+  "id": {
+    "value": "aec.building.energy#objects"
+  },
+  "value": {
+    "kind": "bytes",
+    "value": [
+      0,
+      1,
+      2,
+      255
+    ]
+  }
+}

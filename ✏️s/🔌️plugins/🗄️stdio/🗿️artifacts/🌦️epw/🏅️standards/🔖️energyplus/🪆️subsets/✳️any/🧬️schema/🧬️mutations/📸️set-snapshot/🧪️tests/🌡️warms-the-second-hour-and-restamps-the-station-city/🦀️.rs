@@ -20,11 +20,11 @@ use crate::standards::energyplus::subsets::any::schema::diff::EpwDiff;
 use crate::standards::energyplus::subsets::any::schema::mutations::{apply_epw_mutation, EpwMutation};
 use crate::standards::energyplus::subsets::any::schema::snapshot::EpwSnapshot;
 
-const BEFORE: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/📸️set-snapshot/🌡️warms-the-second-hour-and-restamps-the-station-city/📸️snapshot/⬅️before/🔣️.json");
-const AFTER: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/📸️set-snapshot/🌡️warms-the-second-hour-and-restamps-the-station-city/📸️snapshot/➡️after/🔣️.json");
-const MUTATION: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/📸️set-snapshot/🌡️warms-the-second-hour-and-restamps-the-station-city/🦠️mutation/🔣️.json");
-const DIFF: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/📸️set-snapshot/🌡️warms-the-second-hour-and-restamps-the-station-city/🔺️diff/🔣️.json");
-const OUTCOME: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/📸️set-snapshot/🌡️warms-the-second-hour-and-restamps-the-station-city/🎯️outcome/🔣️.json");
+const BEFORE: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/📸️set-snapshot/🌡️warms-second-hour-restamps-station-city/📸️snapshot/⬅️before/🔣️.json");
+const AFTER: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/📸️set-snapshot/🌡️warms-second-hour-restamps-station-city/📸️snapshot/➡️after/🔣️.json");
+const MUTATION: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/📸️set-snapshot/🌡️warms-second-hour-restamps-station-city/🦠️mutation/🔣️.json");
+const DIFF: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/📸️set-snapshot/🌡️warms-second-hour-restamps-station-city/🔺️diff/🔣️.json");
+const OUTCOME: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/📸️set-snapshot/🌡️warms-second-hour-restamps-station-city/🎯️outcome/🔣️.json");
 
 fn before() -> EpwSnapshot {
     dsl::json::from_json_str(BEFORE).expect("before snapshot decodes")

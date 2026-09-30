@@ -10,10 +10,41 @@
   ],
   "properties": {
     "zoneId": {
-      "type": "string"
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Zone",
+          "de": "Zone"
+        },
+        "description": {
+          "en": "The ventilation zone this mutation addresses.",
+          "de": "Die Lüftungszone, die diese Mutation adressiert."
+        },
+        "ref": {
+          "kind": "zone"
+        },
+        "group": "target",
+        "order": 10
+      }
     },
     "newComfortModel": {
-      "type": "string"
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "text",
+        "role": "value",
+        "label": {
+          "en": "Thermal comfort model",
+          "de": "Behaglichkeitsmodell"
+        },
+        "description": {
+          "en": "fixed_hvac (PMV/PPD) or adaptive (EN 16798-1 Annex B.2).",
+          "de": "fixed_hvac (PMV/PPD) oder adaptive (adaptives Modell nach EN 16798-1 Anhang B.2)."
+        },
+        "group": "comfort",
+        "order": 20
+      }
     }
   }
 }

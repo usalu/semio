@@ -4,7 +4,9 @@
   "namedInputs": {
     "default": [
       "{workspaceRoot}/✏️s/🔌️plugins/📖️playbook/🧩️extensions/🌀️procedural/**/*.rs",
-      "{projectRoot}/**/*"
+      "{projectRoot}/**/*",
+      "{workspaceRoot}/✏️s/🔌️plugins/📖️playbook/🧩️extensions/🌀️procedural/**/*.json",
+      "{workspaceRoot}/✏️s/🔌️plugins/📖️playbook/🧩️extensions/🌀️procedural/**/*.ts"
     ]
   },
   "targets": {
@@ -57,6 +59,24 @@
         "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🏪️store/**/*.ts",
         "{workspaceRoot}/🧰️framework/🔨️modules/🎒️pack/**/*.ts"
       ]
+    },
+    "geometry-contract": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "options": {
+        "cwd": "✏️s/🔌️plugins/📖️playbook/🧩️extensions/🌀️procedural/📦️packages/🦀️rust",
+        "command": "bun ./📜️script.ts geometry-contract",
+        "forwardAllArgs": true
+      }
+    },
+    "canonical-architecture": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "options": {
+        "cwd": "✏️s/🔌️plugins/📖️playbook/🧩️extensions/🌀️procedural/📦️packages/🦀️rust",
+        "command": "bun ./📜️script.ts canonical-architecture",
+        "forwardAllArgs": true
+      }
     }
   }
 }

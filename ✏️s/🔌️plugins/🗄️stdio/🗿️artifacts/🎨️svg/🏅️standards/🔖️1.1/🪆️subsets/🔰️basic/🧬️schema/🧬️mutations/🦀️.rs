@@ -254,6 +254,14 @@ pub fn apply_svg_basic_mutation(snapshot: &mut SvgSnapshot, mutation: &SvgBasicM
 pub fn inverse_svg_basic_mutation(mutation: &SvgBasicMutation, base: &SvgSnapshot) -> Vec<SvgBasicMutation> {
     Mutation::inverse(mutation, base)
 }
+
+/// 📥️ Decodes one leaf wire payload (a `🥒️.feature` row's `params`: the leaf's `payload_value()`, no aggregate tag) into
+/// the operation of semantic kind `kind` through the derive-generated `Mutation::from_payload_value`, so a caller that
+/// cannot name the trait reads the committed wire instead of re-declaring it field by field.
+pub fn decode_svg_basic_mutation_payload_json(kind: &str, payload: &str) -> Result<SvgBasicMutation, String> {
+    let value = pack::parse_json(payload).map_err(|error| error.to_string())?;
+    <SvgBasicMutation as Mutation<SvgSnapshot>>::from_payload_value(kind, pack::json_to_dsl_value(&value)).map_err(|error| error.to_string())
+}
 //#endregion 🔖️Apply
 
 //#region 🔖️MutationTrait

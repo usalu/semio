@@ -1,13 +1,28 @@
 {
-  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/norm/en1991/mutation/change-storey-count/schema.json",
+  "title": "ChangeStoreyCount",
   "type": "object",
   "additionalProperties": false,
   "required": [
-    "new_storey_count"
+    "newStoreyCount"
   ],
   "properties": {
-    "new_storey_count": {
-      "type": "number"
+    "newStoreyCount": {
+      "type": "integer",
+      "minimum": 0,
+      "x-semio-ui": {
+        "widget": "stepper",
+        "role": "value",
+        "label": {
+          "en": "Number of storeys",
+          "de": "Geschossanzahl"
+        },
+        "step": 1,
+        "precision": 0,
+        "group": "fire",
+        "order": 10
+      }
     }
   }
 }

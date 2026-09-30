@@ -516,7 +516,7 @@ mod typed_command_full_operation_tests {
                 };
                 if boundary != "producer" {
                     let pending =
-                        app.store.begin_apply_batch(operation.operation, generation, revision, "fixture".into(), vec![mutation()], None, HistoryLane::Document, Some(&factory)).unwrap_or_else(|_| panic!("exact scalar document preparation admission"));
+                        app.store.begin_apply_batch(operation.operation, generation, revision, "fixture".into(), vec![mutation()], None, HistoryLane::Document, Some(&factory), None).unwrap_or_else(|_| panic!("exact scalar document preparation admission"));
                     mounted.pending_artifact_publication = Some(PendingArtifactStorePublication::Artifact(pending));
                     let target = match boundary {
                         "preparation" => store::ArtifactStoreOneItemPublicationPhase::Preparing,

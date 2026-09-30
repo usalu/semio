@@ -1,6 +1,6 @@
 {
-  "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "s.norm.en1998",
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/norm/en1998/snapshot.json",
   "title": "En1998Snapshot",
   "type": "object",
   "additionalProperties": false,
@@ -78,50 +78,90 @@
   },
   "$defs": {
     "En1998Site": {
+      "title": "En1998Site",
       "type": "object",
       "additionalProperties": false,
       "required": [
         "seismicZone",
         "aGr",
         "deGroundCombo",
+        "enGroundType",
+        "enSpectrumType",
         "importanceClass"
       ],
       "properties": {
         "seismicZone": {
-          "type": "string",
-          "enum": [
-            "zone0",
-            "zone1",
-            "zone2",
-            "zone3"
-          ]
+          "$ref": "#/$defs/DeSeismicZone",
+          "x-semio-ui": {
+            "label": {
+              "en": "Seismic zone",
+              "de": "Erdbebenzone"
+            }
+          }
         },
         "aGr": {
-          "type": "number"
+          "type": "number",
+          "x-semio-ui": {
+            "label": {
+              "en": "Reference peak ground acceleration a_gR",
+              "de": "Referenz-Spitzenbodenbeschleunigung a_gR"
+            },
+            "widget": "stepper",
+            "unit": "m/s²",
+            "precision": 2
+          }
         },
         "deGroundCombo": {
-          "type": "string",
-          "enum": [
-            "A-R",
-            "B-R",
-            "C-R",
-            "B-T",
-            "C-T",
-            "C-S"
-          ]
+          "$ref": "#/$defs/DeGroundCombo",
+          "x-semio-ui": {
+            "label": {
+              "en": "Ground class and subsoil class",
+              "de": "Baugrundklasse und Untergrundklasse"
+            }
+          }
         },
         "enGroundType": {
-          "type": "string"
+          "type": "string",
+          "x-semio-ui": {
+            "label": {
+              "en": "Ground type",
+              "de": "Baugrundklasse"
+            },
+            "description": {
+              "en": "A to E (EN 1998-1 Table 3.1); empty under the German annex.",
+              "de": "A bis E (EN 1998-1 Tabelle 3.1); leer beim deutschen Anhang."
+            },
+            "widget": "text"
+          }
         },
         "enSpectrumType": {
-          "type": "string"
+          "type": "string",
+          "x-semio-ui": {
+            "label": {
+              "en": "Spectrum type",
+              "de": "Spektrumtyp"
+            },
+            "description": {
+              "en": "type1 or type2; empty under the German annex.",
+              "de": "type1 oder type2; leer beim deutschen Anhang."
+            },
+            "widget": "text"
+          }
         },
         "importanceClass": {
-          "type": "string"
+          "type": "string",
+          "x-semio-ui": {
+            "label": {
+              "en": "Importance class",
+              "de": "Bedeutungskategorie"
+            },
+            "widget": "text"
+          }
         }
       }
     },
     "En1998System": {
+      "title": "En1998System",
       "type": "object",
       "additionalProperties": false,
       "required": [
@@ -140,32 +180,103 @@
           "type": "string"
         },
         "direction": {
-          "type": "string"
+          "type": "string",
+          "x-semio-ui": {
+            "label": {
+              "en": "Direction",
+              "de": "Richtung"
+            },
+            "description": {
+              "en": "x or y.",
+              "de": "x oder y."
+            },
+            "widget": "text"
+          }
         },
         "systemType": {
-          "type": "string"
+          "type": "string",
+          "x-semio-ui": {
+            "label": {
+              "en": "Structural type",
+              "de": "Tragwerkstyp"
+            },
+            "description": {
+              "en": "frame, wall, dual, inverted pendulum …",
+              "de": "Rahmen, Wand, Mischsystem, umgekehrtes Pendel …"
+            },
+            "widget": "text"
+          }
         },
         "material": {
           "type": "string"
         },
         "ductilityClass": {
-          "type": "string"
+          "type": "string",
+          "x-semio-ui": {
+            "label": {
+              "en": "Ductility class",
+              "de": "Duktilitätsklasse"
+            },
+            "description": {
+              "en": "DCL, DCM or DCH.",
+              "de": "DCL, DCM oder DCH."
+            },
+            "widget": "text"
+          }
         },
         "q0": {
-          "type": "number"
+          "type": "number",
+          "x-semio-ui": {
+            "label": {
+              "en": "Basic behaviour factor q₀",
+              "de": "Grundwert des Verhaltensbeiwerts q₀"
+            },
+            "widget": "stepper",
+            "precision": 2
+          }
         },
         "alphaUOverAlpha1": {
-          "type": "number"
+          "type": "number",
+          "x-semio-ui": {
+            "label": {
+              "en": "Overstrength ratio α_u/α₁",
+              "de": "Überfestigkeitsverhältnis α_u/α₁"
+            },
+            "widget": "stepper",
+            "precision": 2
+          }
         },
         "kW": {
-          "type": "number"
+          "type": "number",
+          "x-semio-ui": {
+            "label": {
+              "en": "Failure-mode factor k_w",
+              "de": "Beiwert der Versagensart k_w"
+            },
+            "widget": "stepper",
+            "precision": 2
+          }
         },
         "baseShearResistanceN": {
-          "type": "number"
+          "type": "number",
+          "x-semio-ui": {
+            "widget": "stepper",
+            "label": {
+              "en": "Building",
+              "de": "Gebäude"
+            },
+            "description": {
+              "en": "Zero-based position of the building in its list.",
+              "de": "Nullbasierte Position des Gebäudes in der Liste."
+            },
+            "step": 1,
+            "precision": 0
+          }
         }
       }
     },
     "En1998Storey": {
+      "title": "En1998Storey",
       "type": "object",
       "additionalProperties": false,
       "required": [
@@ -189,50 +300,180 @@
           "type": "string"
         },
         "heightM": {
-          "type": "number"
+          "type": "number",
+          "x-semio-ui": {
+            "label": {
+              "en": "Storey height",
+              "de": "Geschosshöhe"
+            },
+            "widget": "stepper",
+            "unit": "m",
+            "precision": 2
+          }
         },
         "permanentGkN": {
-          "type": "number"
+          "type": "number",
+          "x-semio-ui": {
+            "widget": "stepper",
+            "label": {
+              "en": "Building",
+              "de": "Gebäude"
+            },
+            "description": {
+              "en": "Zero-based position of the building in its list.",
+              "de": "Nullbasierte Position des Gebäudes in der Liste."
+            },
+            "step": 1,
+            "precision": 0
+          }
         },
         "correlatedOccupancy": {
-          "type": "boolean"
+          "type": "boolean",
+          "x-semio-ui": {
+            "label": {
+              "en": "Correlated occupancy",
+              "de": "Korrelierte Nutzung"
+            },
+            "widget": "toggle"
+          }
         },
         "variables": {
           "type": "array",
           "items": {
             "$ref": "#/$defs/En1998VariableAction"
+          },
+          "x-semio-ui": {
+            "label": {
+              "en": "Variable actions",
+              "de": "Veränderliche Einwirkungen"
+            }
           }
         },
         "stiffnessX": {
-          "type": "number"
+          "type": "number",
+          "x-semio-ui": {
+            "widget": "stepper",
+            "label": {
+              "en": "Building",
+              "de": "Gebäude"
+            },
+            "description": {
+              "en": "Zero-based position of the building in its list.",
+              "de": "Nullbasierte Position des Gebäudes in der Liste."
+            },
+            "step": 1,
+            "precision": 0
+          }
         },
         "stiffnessY": {
-          "type": "number"
+          "type": "number",
+          "x-semio-ui": {
+            "label": {
+              "en": "Lateral stiffness k_y",
+              "de": "Horizontalsteifigkeit k_y"
+            },
+            "widget": "stepper",
+            "unit": "N/m",
+            "displayUnit": "kN/m",
+            "displayFactor": 0.001,
+            "precision": 0
+          }
         },
         "centreOfMassXM": {
-          "type": "number"
+          "type": "number",
+          "x-semio-ui": {
+            "label": {
+              "en": "Centre of mass x",
+              "de": "Massenschwerpunkt x"
+            },
+            "widget": "stepper",
+            "unit": "m",
+            "precision": 2
+          }
         },
         "centreOfMassYM": {
-          "type": "number"
+          "type": "number",
+          "x-semio-ui": {
+            "label": {
+              "en": "Centre of mass y",
+              "de": "Massenschwerpunkt y"
+            },
+            "widget": "stepper",
+            "unit": "m",
+            "precision": 2
+          }
         },
         "centreOfStiffnessXM": {
-          "type": "number"
+          "type": "number",
+          "x-semio-ui": {
+            "label": {
+              "en": "Centre of stiffness x",
+              "de": "Steifigkeitsmittelpunkt x"
+            },
+            "widget": "stepper",
+            "unit": "m",
+            "precision": 2
+          }
         },
         "centreOfStiffnessYM": {
-          "type": "number"
+          "type": "number",
+          "x-semio-ui": {
+            "label": {
+              "en": "Centre of stiffness y",
+              "de": "Steifigkeitsmittelpunkt y"
+            },
+            "widget": "stepper",
+            "unit": "m",
+            "precision": 2
+          }
         },
         "driftXM": {
-          "type": "number"
+          "type": "number",
+          "x-semio-ui": {
+            "widget": "stepper",
+            "label": {
+              "en": "Design interstorey drift d_r,x",
+              "de": "Bemessungswert der Stockwerksverschiebung d_r,x"
+            },
+            "unit": "m",
+            "displayUnit": "mm",
+            "displayFactor": 1000,
+            "step": 0.001,
+            "precision": 1
+          }
         },
         "driftYM": {
-          "type": "number"
+          "type": "number",
+          "x-semio-ui": {
+            "label": {
+              "en": "Interstorey drift d_r,y",
+              "de": "Stockwerksverschiebung d_r,y"
+            },
+            "widget": "stepper",
+            "unit": "m",
+            "displayUnit": "mm",
+            "displayFactor": 1000,
+            "precision": 1
+          }
         },
         "shearResistanceN": {
-          "type": "number"
+          "type": "number",
+          "x-semio-ui": {
+            "label": {
+              "en": "Storey shear resistance V_Rd",
+              "de": "Geschossschubwiderstand V_Rd"
+            },
+            "widget": "stepper",
+            "unit": "N",
+            "displayUnit": "kN",
+            "displayFactor": 0.001,
+            "precision": 2
+          }
         }
       }
     },
     "En1998Member": {
+      "title": "En1998Member",
       "type": "object",
       "additionalProperties": false,
       "required": [
@@ -257,26 +498,89 @@
           "type": "string"
         },
         "detailingCompatibleWithQ": {
-          "type": "boolean"
+          "type": "boolean",
+          "x-semio-ui": {
+            "widget": "toggle",
+            "label": {
+              "en": "Detailing compatible with q",
+              "de": "Konstruktive Durchbildung passend zu q"
+            },
+            "description": {
+              "en": "Whether the member detailing meets the ductility class assumed for the behaviour factor q.",
+              "de": "Ob die konstruktive Durchbildung des Bauteils der für den Verhaltensbeiwert q angesetzten Duktilitätsklasse entspricht."
+            }
+          }
         },
         "minDimensionM": {
-          "type": "number"
+          "type": "number",
+          "x-semio-ui": {
+            "label": {
+              "en": "Minimum cross-section dimension b",
+              "de": "Kleinste Querschnittsabmessung b"
+            },
+            "widget": "stepper",
+            "unit": "m",
+            "displayUnit": "mm",
+            "displayFactor": 1000,
+            "precision": 1
+          }
         },
         "rho": {
-          "type": "number"
+          "type": "number",
+          "x-semio-ui": {
+            "label": {
+              "en": "Tension reinforcement ratio ρ",
+              "de": "Zugbewehrungsgrad ρ"
+            },
+            "widget": "stepper",
+            "unit": "1",
+            "displayUnit": "%",
+            "displayFactor": 100,
+            "precision": 2
+          }
         },
         "rhoPrime": {
-          "type": "number"
+          "type": "number",
+          "x-semio-ui": {
+            "label": {
+              "en": "Compression reinforcement ratio ρ′",
+              "de": "Druckbewehrungsgrad ρ′"
+            },
+            "widget": "stepper",
+            "unit": "1",
+            "displayUnit": "%",
+            "displayFactor": 100,
+            "precision": 2
+          }
         },
         "omegaWd": {
-          "type": "number"
+          "type": "number",
+          "x-semio-ui": {
+            "label": {
+              "en": "Mechanical volumetric ratio of confinement ω_wd",
+              "de": "Mechanischer Umschnürungsbewehrungsgrad ω_wd"
+            },
+            "widget": "stepper",
+            "precision": 3
+          }
         },
         "steelSectionClass": {
-          "type": "integer"
+          "type": "integer",
+          "minimum": 0,
+          "x-semio-ui": {
+            "label": {
+              "en": "Steel cross-section class",
+              "de": "Querschnittsklasse (Stahl)"
+            },
+            "widget": "stepper",
+            "step": 1,
+            "precision": 0
+          }
         }
       }
     },
     "En1998Building": {
+      "title": "En1998Building",
       "type": "object",
       "additionalProperties": false,
       "required": [
@@ -307,65 +611,204 @@
           "type": "string"
         },
         "planWidthM": {
-          "type": "number"
+          "type": "number",
+          "x-semio-ui": {
+            "label": {
+              "en": "Plan dimension L_x",
+              "de": "Grundrissabmessung L_x"
+            },
+            "widget": "stepper",
+            "unit": "m",
+            "precision": 2
+          }
         },
         "planLengthM": {
-          "type": "number"
+          "type": "number",
+          "x-semio-ui": {
+            "label": {
+              "en": "Plan dimension L_y",
+              "de": "Grundrissabmessung L_y"
+            },
+            "widget": "stepper",
+            "unit": "m",
+            "precision": 2
+          }
         },
         "systems": {
           "type": "array",
           "items": {
             "$ref": "#/$defs/En1998System"
+          },
+          "x-semio-ui": {
+            "label": {
+              "en": "Lateral load-resisting systems",
+              "de": "Aussteifungssysteme"
+            }
           }
         },
         "storeys": {
           "type": "array",
           "items": {
             "$ref": "#/$defs/En1998Storey"
+          },
+          "x-semio-ui": {
+            "label": {
+              "en": "Storeys",
+              "de": "Geschosse"
+            }
           }
         },
         "members": {
           "type": "array",
           "items": {
             "$ref": "#/$defs/En1998Member"
+          },
+          "x-semio-ui": {
+            "label": {
+              "en": "Members",
+              "de": "Bauteile"
+            }
           }
         },
         "planRegular": {
-          "type": "boolean"
+          "type": "boolean",
+          "x-semio-ui": {
+            "label": {
+              "en": "Building",
+              "de": "Gebäude"
+            },
+            "description": {
+              "en": "Zero-based position of the building in its list.",
+              "de": "Nullbasierte Position des Gebäudes in der Liste."
+            }
+          }
         },
         "elevationRegular": {
-          "type": "boolean"
+          "type": "boolean",
+          "x-semio-ui": {
+            "label": {
+              "en": "Building",
+              "de": "Gebäude"
+            },
+            "description": {
+              "en": "Zero-based position of the building in its list.",
+              "de": "Nullbasierte Position des Gebäudes in der Liste."
+            }
+          }
         },
         "t1Method": {
-          "type": "string"
+          "type": "string",
+          "x-semio-ui": {
+            "label": {
+              "en": "Fundamental period method",
+              "de": "Verfahren für die Grundschwingzeit"
+            },
+            "description": {
+              "en": "formula (4.6) or given.",
+              "de": "Formel (4.6) oder vorgegeben."
+            },
+            "widget": "text"
+          }
         },
         "t1GivenS": {
-          "type": "number"
+          "type": "number",
+          "x-semio-ui": {
+            "label": {
+              "en": "Given fundamental period T₁",
+              "de": "Vorgegebene Grundschwingzeit T₁"
+            },
+            "widget": "stepper",
+            "unit": "s",
+            "precision": 2
+          }
         },
         "ct": {
-          "type": "number"
+          "type": "number",
+          "x-semio-ui": {
+            "label": {
+              "en": "Coefficient C_t",
+              "de": "Beiwert C_t"
+            },
+            "widget": "stepper",
+            "precision": 3
+          }
         },
         "driftLimitClass": {
-          "type": "string"
+          "type": "string",
+          "x-semio-ui": {
+            "label": {
+              "en": "Interstorey drift limit class",
+              "de": "Klasse der Stockwerksverschiebungsgrenze"
+            },
+            "description": {
+              "en": "brittle, ductile or none (EN 1998-1 4.4.3.2).",
+              "de": "spröde, duktil oder keine (EN 1998-1 4.4.3.2)."
+            },
+            "widget": "text"
+          }
         },
         "nu": {
-          "type": "number"
+          "type": "number",
+          "x-semio-ui": {
+            "label": {
+              "en": "Reduction factor ν",
+              "de": "Abminderungsbeiwert ν"
+            },
+            "widget": "stepper",
+            "precision": 2
+          }
         },
         "multipleResistingSystems": {
-          "type": "boolean"
+          "type": "boolean",
+          "x-semio-ui": {
+            "label": {
+              "en": "Multiple resisting systems",
+              "de": "Mehrere Aussteifungssysteme"
+            },
+            "widget": "toggle"
+          }
         },
         "claimsSimpleMasonry": {
-          "type": "boolean"
+          "type": "boolean",
+          "x-semio-ui": {
+            "label": {
+              "en": "Simple masonry building",
+              "de": "Einfacher Mauerwerksbau"
+            },
+            "widget": "toggle"
+          }
         },
         "masonryWallAreaRatio": {
-          "type": "number"
+          "type": "number",
+          "x-semio-ui": {
+            "widget": "stepper",
+            "label": {
+              "en": "Building",
+              "de": "Gebäude"
+            },
+            "description": {
+              "en": "Zero-based position of the building in its list.",
+              "de": "Nullbasierte Position des Gebäudes in der Liste."
+            },
+            "step": 1,
+            "precision": 0
+          }
         },
         "accidentalEccentricityRatio": {
-          "type": "number"
+          "type": "number",
+          "x-semio-ui": {
+            "label": {
+              "en": "Accidental eccentricity ratio",
+              "de": "Verhältnis der zufälligen Exzentrizität"
+            },
+            "widget": "stepper",
+            "precision": 3
+          }
         }
       }
     },
     "En1998Bridge": {
+      "title": "En1998Bridge",
       "type": "object",
       "additionalProperties": false,
       "required": [
@@ -383,32 +826,97 @@
           "type": "string"
         },
         "periodRatio": {
-          "type": "number"
+          "type": "number",
+          "x-semio-ui": {
+            "label": {
+              "en": "Isolation period ratio T_isol/T_fixed",
+              "de": "Periodenverhältnis T_isol/T_fixed"
+            },
+            "widget": "stepper",
+            "precision": 2
+          }
         },
         "fundamentalPeriodS": {
-          "type": "number"
+          "type": "number",
+          "x-semio-ui": {
+            "label": {
+              "en": "Fundamental period T",
+              "de": "Grundschwingzeit T"
+            },
+            "widget": "stepper",
+            "unit": "s",
+            "precision": 2
+          }
         },
         "vRdN": {
-          "type": "number"
+          "type": "number",
+          "x-semio-ui": {
+            "widget": "stepper",
+            "label": {
+              "en": "Design shear resistance V_Rd",
+              "de": "Bemessungswert der Querkrafttragfähigkeit V_Rd"
+            },
+            "unit": "N",
+            "displayUnit": "kN",
+            "displayFactor": 0.001,
+            "step": 1000,
+            "precision": 0
+          }
         },
         "bearingDRdM": {
-          "type": "number"
+          "type": "number",
+          "x-semio-ui": {
+            "label": {
+              "en": "Bearing displacement capacity d_Rd",
+              "de": "Verschiebungskapazität des Lagers d_Rd"
+            },
+            "widget": "stepper",
+            "unit": "m",
+            "displayUnit": "mm",
+            "displayFactor": 1000,
+            "precision": 1
+          }
         },
         "permanentGkN": {
-          "type": "number"
+          "type": "number",
+          "x-semio-ui": {
+            "label": {
+              "en": "Permanent action ΣG_k",
+              "de": "Ständige Einwirkung ΣG_k"
+            },
+            "widget": "stepper",
+            "unit": "N",
+            "displayUnit": "kN",
+            "displayFactor": 0.001,
+            "precision": 2
+          }
         },
         "correlatedOccupancy": {
-          "type": "boolean"
+          "type": "boolean",
+          "x-semio-ui": {
+            "label": {
+              "en": "Correlated occupancy",
+              "de": "Korrelierte Nutzung"
+            },
+            "widget": "toggle"
+          }
         },
         "variables": {
           "type": "array",
           "items": {
             "$ref": "#/$defs/En1998VariableAction"
+          },
+          "x-semio-ui": {
+            "label": {
+              "en": "Variable actions",
+              "de": "Veränderliche Einwirkungen"
+            }
           }
         }
       }
     },
     "En1998Assessment": {
+      "title": "En1998Assessment",
       "type": "object",
       "additionalProperties": false,
       "required": [
@@ -424,23 +932,77 @@
           "type": "string"
         },
         "knowledgeLevel": {
-          "type": "string"
+          "type": "string",
+          "x-semio-ui": {
+            "label": {
+              "en": "Knowledge level",
+              "de": "Kenntnisstand"
+            },
+            "description": {
+              "en": "KL1, KL2 or KL3 (EN 1998-3).",
+              "de": "KL1, KL2 oder KL3 (EN 1998-3)."
+            },
+            "widget": "text"
+          }
         },
         "limitState": {
-          "type": "string"
+          "type": "string",
+          "x-semio-ui": {
+            "label": {
+              "en": "Limit state",
+              "de": "Grenzzustand"
+            },
+            "description": {
+              "en": "nc, sd or dl (EN 1998-3 Table 2.1).",
+              "de": "nc, sd oder dl (EN 1998-3 Tabelle 2.1)."
+            },
+            "widget": "text"
+          }
         },
         "supportedBuildingId": {
-          "type": "string"
+          "type": "string",
+          "x-semio-ui": {
+            "label": {
+              "en": "Assessed building",
+              "de": "Bewertetes Gebäude"
+            },
+            "widget": "reference",
+            "role": "value",
+            "ref": {
+              "kind": "building"
+            }
+          }
         },
         "rKN": {
-          "type": "number"
+          "type": "number",
+          "x-semio-ui": {
+            "widget": "stepper",
+            "label": {
+              "en": "Characteristic resistance R_k",
+              "de": "Charakteristischer Widerstand R_k"
+            },
+            "unit": "N",
+            "displayUnit": "kN",
+            "displayFactor": 0.001,
+            "step": 1000,
+            "precision": 0
+          }
         },
         "gammaEl": {
-          "type": "number"
+          "type": "number",
+          "x-semio-ui": {
+            "label": {
+              "en": "Partial factor γ_el",
+              "de": "Teilsicherheitsbeiwert γ_el"
+            },
+            "widget": "stepper",
+            "precision": 2
+          }
         }
       }
     },
     "En1998Silo": {
+      "title": "En1998Silo",
       "type": "object",
       "additionalProperties": false,
       "required": [
@@ -460,35 +1022,124 @@
           "type": "string"
         },
         "heightM": {
-          "type": "number"
+          "type": "number",
+          "x-semio-ui": {
+            "label": {
+              "en": "Silo height",
+              "de": "Silohöhe"
+            },
+            "widget": "stepper",
+            "unit": "m",
+            "precision": 2
+          }
         },
         "radiusM": {
-          "type": "number"
+          "type": "number",
+          "x-semio-ui": {
+            "label": {
+              "en": "Silo radius",
+              "de": "Siloradius"
+            },
+            "widget": "stepper",
+            "unit": "m",
+            "precision": 2
+          }
         },
         "permanentGkN": {
-          "type": "number"
+          "type": "number",
+          "x-semio-ui": {
+            "label": {
+              "en": "Permanent action ΣG_k",
+              "de": "Ständige Einwirkung ΣG_k"
+            },
+            "widget": "stepper",
+            "unit": "N",
+            "displayUnit": "kN",
+            "displayFactor": 0.001,
+            "precision": 2
+          }
         },
         "contentQkN": {
-          "type": "number"
+          "type": "number",
+          "x-semio-ui": {
+            "label": {
+              "en": "Content action Q_k",
+              "de": "Einwirkung aus Füllgut Q_k"
+            },
+            "widget": "stepper",
+            "unit": "N",
+            "displayUnit": "kN",
+            "displayFactor": 0.001,
+            "precision": 2
+          }
         },
         "contentCategory": {
-          "type": "string"
+          "type": "string",
+          "x-semio-ui": {
+            "label": {
+              "en": "Content category",
+              "de": "Füllgutkategorie"
+            },
+            "widget": "text"
+          }
         },
         "fillingRatio": {
-          "type": "number"
+          "type": "number",
+          "x-semio-ui": {
+            "label": {
+              "en": "Filling ratio",
+              "de": "Füllgrad"
+            },
+            "widget": "stepper",
+            "unit": "1",
+            "displayUnit": "%",
+            "displayFactor": 100,
+            "precision": 0
+          }
         },
         "nRdN": {
-          "type": "number"
+          "type": "number",
+          "x-semio-ui": {
+            "label": {
+              "en": "Axial resistance N_Rd",
+              "de": "Normalkraftwiderstand N_Rd"
+            },
+            "widget": "stepper",
+            "unit": "N",
+            "displayUnit": "kN",
+            "displayFactor": 0.001,
+            "precision": 2
+          }
         },
         "vRdN": {
-          "type": "number"
+          "type": "number",
+          "x-semio-ui": {
+            "label": {
+              "en": "Shear resistance V_Rd",
+              "de": "Schubwiderstand V_Rd"
+            },
+            "widget": "stepper",
+            "unit": "N",
+            "displayUnit": "kN",
+            "displayFactor": 0.001,
+            "precision": 2
+          }
         },
         "qNominal": {
-          "type": "number"
+          "type": "number",
+          "x-semio-ui": {
+            "label": {
+              "en": "Behaviour factor q",
+              "de": "Verhaltensbeiwert q"
+            },
+            "widget": "stepper",
+            "precision": 2
+          }
         }
       }
     },
     "En1998Tank": {
+      "title": "En1998Tank",
       "type": "object",
       "additionalProperties": false,
       "required": [
@@ -506,29 +1157,99 @@
           "type": "string"
         },
         "heightM": {
-          "type": "number"
+          "type": "number",
+          "x-semio-ui": {
+            "label": {
+              "en": "Tank height",
+              "de": "Behälterhöhe"
+            },
+            "widget": "stepper",
+            "unit": "m",
+            "precision": 2
+          }
         },
         "radiusM": {
-          "type": "number"
+          "type": "number",
+          "x-semio-ui": {
+            "label": {
+              "en": "Tank radius",
+              "de": "Behälterradius"
+            },
+            "widget": "stepper",
+            "unit": "m",
+            "precision": 2
+          }
         },
         "permanentGkN": {
-          "type": "number"
+          "type": "number",
+          "x-semio-ui": {
+            "label": {
+              "en": "Permanent action ΣG_k",
+              "de": "Ständige Einwirkung ΣG_k"
+            },
+            "widget": "stepper",
+            "unit": "N",
+            "displayUnit": "kN",
+            "displayFactor": 0.001,
+            "precision": 2
+          }
         },
         "contentQkN": {
-          "type": "number"
+          "type": "number",
+          "x-semio-ui": {
+            "label": {
+              "en": "Content action Q_k",
+              "de": "Einwirkung aus Füllgut Q_k"
+            },
+            "widget": "stepper",
+            "unit": "N",
+            "displayUnit": "kN",
+            "displayFactor": 0.001,
+            "precision": 2
+          }
         },
         "contentCategory": {
-          "type": "string"
+          "type": "string",
+          "x-semio-ui": {
+            "label": {
+              "en": "Content category",
+              "de": "Füllgutkategorie"
+            },
+            "widget": "text"
+          }
         },
         "fillingRatio": {
-          "type": "number"
+          "type": "number",
+          "x-semio-ui": {
+            "label": {
+              "en": "Filling ratio",
+              "de": "Füllgrad"
+            },
+            "widget": "stepper",
+            "unit": "1",
+            "displayUnit": "%",
+            "displayFactor": 100,
+            "precision": 0
+          }
         },
         "vRdN": {
-          "type": "number"
+          "type": "number",
+          "x-semio-ui": {
+            "label": {
+              "en": "Shear resistance V_Rd",
+              "de": "Schubwiderstand V_Rd"
+            },
+            "widget": "stepper",
+            "unit": "N",
+            "displayUnit": "kN",
+            "displayFactor": 0.001,
+            "precision": 2
+          }
         }
       }
     },
     "En1998Foundation": {
+      "title": "En1998Foundation",
       "type": "object",
       "additionalProperties": false,
       "required": [
@@ -545,26 +1266,85 @@
           "type": "string"
         },
         "supportedBuildingId": {
-          "type": "string"
+          "type": "string",
+          "x-semio-ui": {
+            "label": {
+              "en": "Supported building",
+              "de": "Getragenes Gebäude"
+            },
+            "widget": "reference",
+            "role": "value",
+            "ref": {
+              "kind": "building"
+            }
+          }
         },
         "areaM2": {
-          "type": "number"
+          "type": "number",
+          "x-semio-ui": {
+            "label": {
+              "en": "Foundation area",
+              "de": "Fundamentfläche"
+            },
+            "widget": "stepper",
+            "unit": "m²",
+            "precision": 2
+          }
         },
         "pRdPa": {
-          "type": "number"
+          "type": "number",
+          "x-semio-ui": {
+            "label": {
+              "en": "Bearing resistance p_Rd",
+              "de": "Sohldruckwiderstand p_Rd"
+            },
+            "widget": "stepper",
+            "unit": "Pa",
+            "displayUnit": "kN/m²",
+            "displayFactor": 0.001,
+            "precision": 2
+          }
         },
         "hRdN": {
-          "type": "number"
+          "type": "number",
+          "x-semio-ui": {
+            "label": {
+              "en": "Sliding resistance H_Rd",
+              "de": "Gleitwiderstand H_Rd"
+            },
+            "widget": "stepper",
+            "unit": "N",
+            "displayUnit": "kN",
+            "displayFactor": 0.001,
+            "precision": 2
+          }
         },
         "kFoundation": {
-          "type": "number"
+          "type": "number",
+          "x-semio-ui": {
+            "label": {
+              "en": "Foundation stiffness",
+              "de": "Fundamentsteifigkeit"
+            },
+            "widget": "stepper",
+            "precision": 0
+          }
         },
         "kSoil": {
-          "type": "number"
+          "type": "number",
+          "x-semio-ui": {
+            "label": {
+              "en": "Soil stiffness",
+              "de": "Bodensteifigkeit"
+            },
+            "widget": "stepper",
+            "precision": 0
+          }
         }
       }
     },
     "En1998RetainingWall": {
+      "title": "En1998RetainingWall",
       "type": "object",
       "additionalProperties": false,
       "required": [
@@ -580,23 +1360,72 @@
           "type": "string"
         },
         "heightM": {
-          "type": "number"
+          "type": "number",
+          "x-semio-ui": {
+            "label": {
+              "en": "Wall height H",
+              "de": "Wandhöhe H"
+            },
+            "widget": "stepper",
+            "unit": "m",
+            "precision": 2
+          }
         },
         "phiDeg": {
-          "type": "number"
+          "type": "number",
+          "x-semio-ui": {
+            "label": {
+              "en": "Friction angle φ′",
+              "de": "Reibungswinkel φ′"
+            },
+            "widget": "stepper",
+            "unit": "°",
+            "precision": 1
+          }
         },
         "soilGamma": {
-          "type": "number"
+          "type": "number",
+          "x-semio-ui": {
+            "label": {
+              "en": "Soil unit weight γ",
+              "de": "Wichte des Bodens γ"
+            },
+            "widget": "stepper",
+            "unit": "N/m³",
+            "displayUnit": "kN/m³",
+            "displayFactor": 0.001,
+            "precision": 1
+          }
         },
         "r": {
-          "type": "number"
+          "type": "number",
+          "x-semio-ui": {
+            "label": {
+              "en": "Factor r",
+              "de": "Beiwert r"
+            },
+            "widget": "stepper",
+            "precision": 2
+          }
         },
         "hRdNPerM": {
-          "type": "number"
+          "type": "number",
+          "x-semio-ui": {
+            "label": {
+              "en": "Horizontal resistance H_Rd",
+              "de": "Horizontalwiderstand H_Rd"
+            },
+            "widget": "stepper",
+            "unit": "N/m",
+            "displayUnit": "kN/m",
+            "displayFactor": 0.001,
+            "precision": 2
+          }
         }
       }
     },
     "En1998Tower": {
+      "title": "En1998Tower",
       "type": "object",
       "additionalProperties": false,
       "required": [
@@ -614,32 +1443,93 @@
           "type": "string"
         },
         "heightM": {
-          "type": "number"
+          "type": "number",
+          "x-semio-ui": {
+            "label": {
+              "en": "Height",
+              "de": "Höhe"
+            },
+            "widget": "stepper",
+            "unit": "m",
+            "precision": 2
+          }
         },
         "mRdNm": {
-          "type": "number"
+          "type": "number",
+          "x-semio-ui": {
+            "widget": "stepper",
+            "label": {
+              "en": "Design moment resistance M_Rd",
+              "de": "Bemessungswert der Biegetragfähigkeit M_Rd"
+            },
+            "unit": "N·m",
+            "displayUnit": "kN·m",
+            "displayFactor": 0.001,
+            "step": 1000,
+            "precision": 0
+          }
         },
         "isChimney": {
-          "type": "boolean"
+          "type": "boolean",
+          "x-semio-ui": {
+            "label": {
+              "en": "Chimney",
+              "de": "Schornstein"
+            },
+            "widget": "toggle"
+          }
         },
         "qNominal": {
-          "type": "number"
+          "type": "number",
+          "x-semio-ui": {
+            "label": {
+              "en": "Behaviour factor q",
+              "de": "Verhaltensbeiwert q"
+            },
+            "widget": "stepper",
+            "precision": 2
+          }
         },
         "permanentGkN": {
-          "type": "number"
+          "type": "number",
+          "x-semio-ui": {
+            "label": {
+              "en": "Permanent action ΣG_k",
+              "de": "Ständige Einwirkung ΣG_k"
+            },
+            "widget": "stepper",
+            "unit": "N",
+            "displayUnit": "kN",
+            "displayFactor": 0.001,
+            "precision": 2
+          }
         },
         "correlatedOccupancy": {
-          "type": "boolean"
+          "type": "boolean",
+          "x-semio-ui": {
+            "label": {
+              "en": "Correlated occupancy",
+              "de": "Korrelierte Nutzung"
+            },
+            "widget": "toggle"
+          }
         },
         "variables": {
           "type": "array",
           "items": {
             "$ref": "#/$defs/En1998VariableAction"
+          },
+          "x-semio-ui": {
+            "label": {
+              "en": "Variable actions",
+              "de": "Veränderliche Einwirkungen"
+            }
           }
         }
       }
     },
     "En1998VariableAction": {
+      "title": "En1998VariableAction",
       "type": "object",
       "additionalProperties": false,
       "required": [
@@ -652,10 +1542,102 @@
           "type": "string"
         },
         "category": {
-          "type": "string"
+          "type": "string",
+          "x-semio-ui": {
+            "label": {
+              "en": "Imposed-load category",
+              "de": "Nutzlastkategorie"
+            },
+            "description": {
+              "en": "A–H, snow or wind for ψ₂.",
+              "de": "A–H, Schnee oder Wind für ψ₂."
+            },
+            "widget": "text"
+          }
         },
         "qkN": {
-          "type": "number"
+          "type": "number",
+          "x-semio-ui": {
+            "label": {
+              "en": "Characteristic variable action Q_k",
+              "de": "Charakteristische veränderliche Einwirkung Q_k"
+            },
+            "widget": "stepper",
+            "unit": "N",
+            "displayUnit": "kN",
+            "displayFactor": 0.001,
+            "precision": 2
+          }
+        }
+      }
+    },
+    "DeSeismicZone": {
+      "title": "DeSeismicZone",
+      "type": "string",
+      "enum": [
+        "zone0",
+        "zone1",
+        "zone2",
+        "zone3"
+      ],
+      "x-semio-ui": {
+        "options": {
+          "zone0": {
+            "en": "Zone 0",
+            "de": "Erdbebenzone 0"
+          },
+          "zone1": {
+            "en": "Zone 1",
+            "de": "Erdbebenzone 1"
+          },
+          "zone2": {
+            "en": "Zone 2",
+            "de": "Erdbebenzone 2"
+          },
+          "zone3": {
+            "en": "Zone 3",
+            "de": "Erdbebenzone 3"
+          }
+        }
+      }
+    },
+    "DeGroundCombo": {
+      "title": "DeGroundCombo",
+      "type": "string",
+      "enum": [
+        "A-R",
+        "B-R",
+        "C-R",
+        "B-T",
+        "C-T",
+        "C-S"
+      ],
+      "x-semio-ui": {
+        "options": {
+          "A-R": {
+            "en": "Ground class A, subsoil class R",
+            "de": "Baugrundklasse A, Untergrundklasse R"
+          },
+          "B-R": {
+            "en": "Ground class B, subsoil class R",
+            "de": "Baugrundklasse B, Untergrundklasse R"
+          },
+          "C-R": {
+            "en": "Ground class C, subsoil class R",
+            "de": "Baugrundklasse C, Untergrundklasse R"
+          },
+          "B-T": {
+            "en": "Ground class B, subsoil class T",
+            "de": "Baugrundklasse B, Untergrundklasse T"
+          },
+          "C-T": {
+            "en": "Ground class C, subsoil class T",
+            "de": "Baugrundklasse C, Untergrundklasse T"
+          },
+          "C-S": {
+            "en": "Ground class C, subsoil class S",
+            "de": "Baugrundklasse C, Untergrundklasse S"
+          }
         }
       }
     }

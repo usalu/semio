@@ -17,10 +17,10 @@
 use crate::{equation_geometry, EquationDiff, EquationMutation, EquationSnapshot};
 use semio_framework_os_kernel::ToValue;
 
-const BEFORE: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/➖️remove-point/🧪️rejects-removing-a-point-from-an-empty-cloud/📸️snapshot/⬅️before/🔣️.json");
-const AFTER: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/➖️remove-point/🧪️rejects-removing-a-point-from-an-empty-cloud/📸️snapshot/➡️after/🔣️.json");
-const MUTATION: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/➖️remove-point/🧪️rejects-removing-a-point-from-an-empty-cloud/🦠️mutation/🔣️.json");
-const OUTCOME: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/➖️remove-point/🧪️rejects-removing-a-point-from-an-empty-cloud/🎯️outcome/🔣️.json");
+const BEFORE: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/➖️remove-point/🧪️rejects-removing-point-empty-cloud/📸️snapshot/⬅️before/🔣️.json");
+const AFTER: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/➖️remove-point/🧪️rejects-removing-point-empty-cloud/📸️snapshot/➡️after/🔣️.json");
+const MUTATION: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/➖️remove-point/🧪️rejects-removing-point-empty-cloud/🦠️mutation/🔣️.json");
+const OUTCOME: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/➖️remove-point/🧪️rejects-removing-point-empty-cloud/🎯️outcome/🔣️.json");
 
 fn before() -> EquationSnapshot {
     pack::from_json_str(BEFORE).expect("before snapshot decodes")

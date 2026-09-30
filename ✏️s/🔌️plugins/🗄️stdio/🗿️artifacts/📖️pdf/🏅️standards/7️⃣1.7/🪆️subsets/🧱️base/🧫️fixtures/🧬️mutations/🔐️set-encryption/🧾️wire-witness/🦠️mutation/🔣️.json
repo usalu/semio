@@ -1,0 +1,6 @@
+{
+  "mutation": "setEncryption",
+  "encryption": {
+    "algorithm": "rc4_40"
+  }
+}

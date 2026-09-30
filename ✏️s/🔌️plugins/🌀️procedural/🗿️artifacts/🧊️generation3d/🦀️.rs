@@ -87,42 +87,6 @@ pub fn definition() -> Result<semio_framework_plugin::ArtifactDefinition, semio_
                 .claim(ArtifactIdentityClaim::new(ArtifactIdentityNamespace::dialect(), "s.procedural.generation3d@1/*")?)?,
         )?
         .capability(
-            ArtifactCapability::new(ArtifactIdentity::parse("s.procedural.generation3d.composer.las")?, ArtifactCapabilityKind::composer())
-                .descriptor(b"s.stdio.las@1.0/*")?
-                .claim(ArtifactIdentityClaim::new(ArtifactIdentityNamespace::dialect(), "s.stdio.las@1.0/*")?)?,
-        )?
-        .capability(
-            ArtifactCapability::new(ArtifactIdentity::parse("s.procedural.generation3d.composer.ply")?, ArtifactCapabilityKind::composer())
-                .descriptor(b"s.stdio.ply@1.0/*")?
-                .claim(ArtifactIdentityClaim::new(ArtifactIdentityNamespace::dialect(), "s.stdio.ply@1.0/*")?)?,
-        )?
-        // 🖼️ No `composer.png`/`composer.json` here: both are generic bridge dialects with no
-        // real per-artifact fidelity difference (both generation2d's and generation3d's export stubs
-        // are equally `print_dsl` placeholders), so generation2d — the plugin's first-declared,
-        // primary 2D artifact — keeps the EXPORT claim (26/08/17/MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME
-        // D3, a documented tie-break, not evidence-backed like the DWG↔mesh-bridge split below). Import
-        // still works: `reads()` on this artifact's own native composer is unaffected by this removal.
-        .capability(
-            ArtifactCapability::new(ArtifactIdentity::parse("s.procedural.generation3d.composer.dwg")?, ArtifactCapabilityKind::composer())
-                .descriptor(b"s.stdio.dwg@ac1018/*")?
-                .claim(ArtifactIdentityClaim::new(ArtifactIdentityNamespace::dialect(), "s.stdio.dwg@ac1018/*")?)?,
-        )?
-        .capability(
-            ArtifactCapability::new(ArtifactIdentity::parse("s.procedural.generation3d.composer.stl")?, ArtifactCapabilityKind::composer())
-                .descriptor(b"s.stdio.stl@ascii/*")?
-                .claim(ArtifactIdentityClaim::new(ArtifactIdentityNamespace::dialect(), "s.stdio.stl@ascii/*")?)?,
-        )?
-        .capability(
-            ArtifactCapability::new(ArtifactIdentity::parse("s.procedural.generation3d.composer.gltf")?, ArtifactCapabilityKind::composer())
-                .descriptor(b"s.stdio.gltf@2.0/*")?
-                .claim(ArtifactIdentityClaim::new(ArtifactIdentityNamespace::dialect(), "s.stdio.gltf@2.0/*")?)?,
-        )?
-        .capability(
-            ArtifactCapability::new(ArtifactIdentity::parse("s.procedural.generation3d.composer.obj")?, ArtifactCapabilityKind::composer())
-                .descriptor(b"s.stdio.obj@3.0/*")?
-                .claim(ArtifactIdentityClaim::new(ArtifactIdentityNamespace::dialect(), "s.stdio.obj@3.0/*")?)?,
-        )?
-        .capability(
             ArtifactCapability::new(ArtifactIdentity::parse("s.procedural.generation3d.composer.txt")?, ArtifactCapabilityKind::composer())
                 .descriptor(b"s.stdio.txt@utf-8/*")?
                 .claim(ArtifactIdentityClaim::new(ArtifactIdentityNamespace::dialect(), "s.stdio.txt@utf-8/*")?)?,
@@ -158,25 +122,20 @@ pub fn declaration() -> Result<semio_framework_plugin::ArtifactDeclaration, semi
 //#endregion 🔖️Declaration
 
 //#region 🧪️Tests
+#[cfg(all(test, feature = "component-app-assembly"))]
+#[path = "🧪️tests/🔬️app-fixture/🦀️.rs"]
+pub(crate) mod app_fixture;
+
 #[cfg(test)]
 #[path = "🧪️tests/🔬️serial/🦀️.rs"]
 pub(crate) mod test_serial;
 
-#[cfg(test)]
-#[path = "🧪️tests/🔒️serial-lock-discipline/🦀️.rs"]
-mod serial_lock_discipline;
 
-#[cfg(test)]
-#[path = "🧪️tests/🔬️flow-operators/🦀️.rs"]
-pub(crate) mod flow_operators;
 
 #[cfg(test)]
 #[path = "🧪️tests/🔬️store-fixture/🦀️.rs"]
 pub(crate) mod store_fixture;
 
-#[cfg(test)]
-#[path = "🧪️tests/🔬️brep-extension/🦀️.rs"]
-pub(crate) mod brep_extension;
 
 #[cfg(test)]
 #[path = "🧪️tests/🔬️publication-authority/🦀️.rs"]

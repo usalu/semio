@@ -1,6 +1,7 @@
 //! 🔷️ Flow brep extension — geometry operators packaged as a runtime-installable unit.
 
-use flow_extension_sdk::brep_geometry::*;
+use semio_s_spatial_kernel_semio_session::*;
+use flow_extension_sdk::mesh::*;
 use flow_extension_sdk::build_manifest_json;
 use neural_engine::{channel_output, ChannelSpec, Dictionary, EvalError, Operator, OperatorImpl, OperatorInfo, Registry, Value};
 use semio_s_artifact_stdio_semio::standards::v1::subsets::brep::schema::diff::boolean::BooleanOp;
@@ -132,12 +133,23 @@ const INTENTIONALLY_UNEXPOSED: &[(&str, &str)] = &[
     ("export_gltf", "glTF/GLB leaves the extension only via the tessellation mesh bridge (export_solid_json \"glb\"), never this trait method directly"),
 ];
 
+macro_rules! retire_geometry_capture {
+    ($field:tt) => {
+        fn retirement_is_empty(&self) -> bool { self.$field.terminal_is_empty() }
+        fn retire_step(&mut self, items:usize, bytes:usize, _: &mut neural_engine::ValueRetirement) -> Result<neural_engine::ValueRetirementStep,&'static str> {
+            self.$field.close_step(items,bytes).map_err(|_| "brep.geometry-capture-retirement-failed")
+        }
+        fn retire_cold(mut self:Box<Self>) { self.$field.retire_cold(); }
+    };
+}
+
 macro_rules! geo_operation {
     ($name:ident, $channel:literal, |$k:ident, $i:ident| $expr:expr) => {
-        struct $name;
+        struct $name(SessionCapture);
         impl Operator for $name {
+            retire_geometry_capture!(0);
             fn evaluate(&self, input: &Dictionary) -> Result<Dictionary, EvalError> {
-                with_kernel(|$k| {
+                self.0.with_kernel(|$k| {
                     let $i = input;
                     let handle = $expr.map_err(|error| map_kernel_error(&error))?;
                     Ok(channel_output($channel, geometry_dict($k, &handle)?))
@@ -152,10 +164,11 @@ macro_rules! geo_operation {
 // curve_curvature/surface_point/surface_normal/validate) — safe to route through the read lock.
 macro_rules! num_operation {
     ($name:ident, $channel:literal, |$k:ident, $i:ident| $expr:expr) => {
-        struct $name;
+        struct $name(SessionCapture);
         impl Operator for $name {
+            retire_geometry_capture!(0);
             fn evaluate(&self, input: &Dictionary) -> Result<Dictionary, EvalError> {
-                with_kernel_read(|$k| {
+                self.0.with_kernel_read(|$k| {
                     let $i = input;
                     let value = $expr.map_err(|error| map_kernel_error(&error))?;
                     Ok(channel_output($channel, number_dictionary(value)))
@@ -167,10 +180,11 @@ macro_rules! num_operation {
 
 macro_rules! point_operation {
     ($name:ident, $channel:literal, |$k:ident, $i:ident| $expr:expr) => {
-        struct $name;
+        struct $name(SessionCapture);
         impl Operator for $name {
+            retire_geometry_capture!(0);
             fn evaluate(&self, input: &Dictionary) -> Result<Dictionary, EvalError> {
-                with_kernel_read(|$k| {
+                self.0.with_kernel_read(|$k| {
                     let $i = input;
                     let value = $expr.map_err(|error| map_kernel_error(&error))?;
                     Ok(channel_output($channel, point_dictionary(value)))
@@ -182,10 +196,11 @@ macro_rules! point_operation {
 
 macro_rules! vec_operation {
     ($name:ident, $channel:literal, |$k:ident, $i:ident| $expr:expr) => {
-        struct $name;
+        struct $name(SessionCapture);
         impl Operator for $name {
+            retire_geometry_capture!(0);
             fn evaluate(&self, input: &Dictionary) -> Result<Dictionary, EvalError> {
-                with_kernel_read(|$k| {
+                self.0.with_kernel_read(|$k| {
                     let $i = input;
                     let value = $expr.map_err(|error| map_kernel_error(&error))?;
                     Ok(channel_output($channel, vector_dictionary(value)))
@@ -197,10 +212,11 @@ macro_rules! vec_operation {
 
 macro_rules! text_operation {
     ($name:ident, $channel:literal, |$k:ident, $i:ident| $expr:expr) => {
-        struct $name;
+        struct $name(SessionCapture);
         impl Operator for $name {
+            retire_geometry_capture!(0);
             fn evaluate(&self, input: &Dictionary) -> Result<Dictionary, EvalError> {
-                with_kernel_read(|$k| {
+                self.0.with_kernel_read(|$k| {
                     let $i = input;
                     let value = $expr.map_err(|error| map_kernel_error(&error))?;
                     Ok(channel_output($channel, text_dictionary(value)))
@@ -217,10 +233,11 @@ geo_operation!(CylinderPrim, "solid", |k, i| k.cylinder_prim(read_channel_number
 geo_operation!(ConePrim, "solid", |k, i| k.cone_prim(read_channel_number(i, "radius")?, read_channel_number(i, "height")?));
 geo_operation!(TorusPrim, "solid", |k, i| k.torus_prim(read_channel_number(i, "major")?, read_channel_number(i, "minor")?));
 
-struct ConvexHullPrim;
+struct ConvexHullPrim(SessionCapture);
 impl Operator for ConvexHullPrim {
+            retire_geometry_capture!(0);
     fn evaluate(&self, input: &Dictionary) -> Result<Dictionary, EvalError> {
-        with_kernel(|kernel| {
+        self.0.with_kernel(|kernel| {
             let points = read_point_list(input, "points")?;
             let handle = kernel.convex_hull(&points).map_err(|error| map_kernel_error(&error))?;
             Ok(channel_output("solid", geometry_dict(kernel, &handle)?))
@@ -235,10 +252,11 @@ geo_operation!(CircleCurve, "curve", |k, i| k.circle_curve(read_xyz(i, "center")
 geo_operation!(ArcCurve, "curve", |k, i| k.arc_curve(read_xyz(i, "center")?, read_xyz(i, "normal")?, read_channel_number(i, "radius")?, read_channel_number(i, "startAngle")?, read_channel_number(i, "endAngle")?,));
 geo_operation!(EllipseCurve, "curve", |k, i| k.ellipse_curve(read_xyz(i, "center")?, read_xyz(i, "normal")?, read_channel_number(i, "semiMajor")?, read_channel_number(i, "semiMinor")?,));
 
-struct PolylineWire;
+struct PolylineWire(SessionCapture);
 impl Operator for PolylineWire {
+            retire_geometry_capture!(0);
     fn evaluate(&self, input: &Dictionary) -> Result<Dictionary, EvalError> {
-        with_kernel(|kernel| {
+        self.0.with_kernel(|kernel| {
             let points = read_point_list(input, "points")?;
             let handle = kernel.polyline_wire(&points).map_err(|error| map_kernel_error(&error))?;
             Ok(channel_output("wire", geometry_dict(kernel, &handle)?))
@@ -249,10 +267,11 @@ impl Operator for PolylineWire {
 geo_operation!(RectangleWire, "wire", |k, i| k.rectangle_wire(read_channel_number(i, "width")?, read_channel_number(i, "height")?));
 geo_operation!(RegularPolygonWire, "wire", |k, i| k.regular_polygon_wire(read_channel_number(i, "radius")?, read_channel_number(i, "sides")? as usize));
 
-struct InterpolateCurve;
+struct InterpolateCurve(SessionCapture);
 impl Operator for InterpolateCurve {
+            retire_geometry_capture!(0);
     fn evaluate(&self, input: &Dictionary) -> Result<Dictionary, EvalError> {
-        with_kernel(|kernel| {
+        self.0.with_kernel(|kernel| {
             let points = read_point_list(input, "points")?;
             let degree = read_channel_number(input, "degree")? as usize;
             let handle = kernel.interpolate_curve(&points, degree).map_err(|error| map_kernel_error(&error))?;
@@ -261,10 +280,11 @@ impl Operator for InterpolateCurve {
     }
 }
 
-struct ApproximateCurve;
+struct ApproximateCurve(SessionCapture);
 impl Operator for ApproximateCurve {
+            retire_geometry_capture!(0);
     fn evaluate(&self, input: &Dictionary) -> Result<Dictionary, EvalError> {
-        with_kernel(|kernel| {
+        self.0.with_kernel(|kernel| {
             let points = read_point_list(input, "points")?;
             let degree = read_channel_number(input, "degree")? as usize;
             let control_points = read_channel_number(input, "controlPoints")? as usize;
@@ -280,10 +300,11 @@ geo_operation!(HelixCurve, "curve", |k, i| k.helix_curve(read_xyz(i, "origin")?,
 // #region 🔖️Surfaces
 geo_operation!(PlaneSurface, "surface", |k, i| k.plane_surface(read_xyz(i, "origin")?, read_xyz(i, "normal")?));
 
-struct PlanarFacePoints;
+struct PlanarFacePoints(SessionCapture);
 impl Operator for PlanarFacePoints {
+            retire_geometry_capture!(0);
     fn evaluate(&self, input: &Dictionary) -> Result<Dictionary, EvalError> {
-        with_kernel(|kernel| {
+        self.0.with_kernel(|kernel| {
             let points = read_point_list(input, "points")?;
             let handle = kernel.planar_face_from_points(&points).map_err(|error| map_kernel_error(&error))?;
             Ok(channel_output("face", geometry_dict(kernel, &handle)?))
@@ -293,10 +314,11 @@ impl Operator for PlanarFacePoints {
 
 geo_operation!(PlanarFaceWire, "face", |k, i| k.planar_face_from_wire(&read_geometry(i, "wire")?));
 
-struct NurbsGridSurface;
+struct NurbsGridSurface(SessionCapture);
 impl Operator for NurbsGridSurface {
+            retire_geometry_capture!(0);
     fn evaluate(&self, input: &Dictionary) -> Result<Dictionary, EvalError> {
-        with_kernel(|kernel| {
+        self.0.with_kernel(|kernel| {
             let points = read_point_list(input, "points")?;
             let rows = read_channel_number(input, "rows")? as usize;
             let grid = points_to_grid(&points, rows)?;
@@ -308,10 +330,11 @@ impl Operator for NurbsGridSurface {
     }
 }
 
-struct CoonsPatch;
+struct CoonsPatch(SessionCapture);
 impl Operator for CoonsPatch {
+            retire_geometry_capture!(0);
     fn evaluate(&self, input: &Dictionary) -> Result<Dictionary, EvalError> {
-        with_kernel(|kernel| {
+        self.0.with_kernel(|kernel| {
             let curves = read_nested_point_lists(input, "curves")?;
             let handle = kernel.coons_patch(&curves).map_err(|error| map_kernel_error(&error))?;
             Ok(channel_output("surface", geometry_dict(kernel, &handle)?))
@@ -324,10 +347,11 @@ geo_operation!(ThickenFace, "solid", |k, i| k.thicken_face(&read_geometry(i, "fa
 // #endregion 🔖️Surfaces
 
 // #region 🔖️Sweeps
-struct ExtrudeCurve;
+struct ExtrudeCurve(SessionCapture);
 impl Operator for ExtrudeCurve {
+            retire_geometry_capture!(0);
     fn evaluate(&self, input: &Dictionary) -> Result<Dictionary, EvalError> {
-        with_kernel(|kernel| {
+        self.0.with_kernel(|kernel| {
             let wire = read_geometry(input, "wire")?;
             let vector = read_xyz(input, "vector")?;
             let handle = kernel.extrude_wire(&wire, vector).map_err(|error| map_kernel_error(&error))?;
@@ -336,10 +360,11 @@ impl Operator for ExtrudeCurve {
     }
 }
 
-struct ExtrudeFace;
+struct ExtrudeFace(SessionCapture);
 impl Operator for ExtrudeFace {
+            retire_geometry_capture!(0);
     fn evaluate(&self, input: &Dictionary) -> Result<Dictionary, EvalError> {
-        with_kernel(|kernel| {
+        self.0.with_kernel(|kernel| {
             let face = read_geometry(input, "face")?;
             let vector = read_xyz(input, "vector")?;
             let distance = (vector[0] * vector[0] + vector[1] * vector[1] + vector[2] * vector[2]).sqrt();
@@ -355,10 +380,11 @@ impl Operator for ExtrudeFace {
 geo_operation!(Revolve, "solid", |k, i| k.revolve(&read_geometry(i, "face")?, read_xyz(i, "axisOrigin")?, read_xyz(i, "axisDirection")?, read_channel_number(i, "angle")?,));
 geo_operation!(Sweep, "solid", |k, i| k.sweep(&read_geometry(i, "profile")?, &read_geometry(i, "path")?));
 
-struct Loft;
+struct Loft(SessionCapture);
 impl Operator for Loft {
+            retire_geometry_capture!(0);
     fn evaluate(&self, input: &Dictionary) -> Result<Dictionary, EvalError> {
-        with_kernel(|kernel| {
+        self.0.with_kernel(|kernel| {
             let profiles = read_geometry_list(input, "profiles")?;
             let smooth = read_channel_number(input, "smooth")? >= 0.5;
             let handle = kernel.loft(&profiles, smooth).map_err(|error| map_kernel_error(&error))?;
@@ -367,10 +393,11 @@ impl Operator for Loft {
     }
 }
 
-struct Pipe;
+struct Pipe(SessionCapture);
 impl Operator for Pipe {
+            retire_geometry_capture!(0);
     fn evaluate(&self, input: &Dictionary) -> Result<Dictionary, EvalError> {
-        with_kernel(|kernel| {
+        self.0.with_kernel(|kernel| {
             let profile = read_geometry(input, "profile")?;
             let path = read_geometry(input, "path")?;
             let guide_handle = read_optional_geometry(input, "guide");
@@ -395,17 +422,18 @@ geo_operation!(HelicalSweep, "solid", |k, i| k.helical_sweep(
 /// ⏱️ BRep set operations retain kernel plans across evaluator turns; mesh modeling jobs use the same domain-neutral scheduler.
 macro_rules! boolean_operation {
     ($name:ident, $op:expr) => {
-        struct $name;
+        struct $name(SessionCapture);
         impl Operator for $name {
+            retire_geometry_capture!(0);
             fn evaluate(&self, input: &Dictionary) -> Result<Dictionary, EvalError> {
-                with_kernel(|kernel| {
+                self.0.with_kernel(|kernel| {
                     let handle = kernel.boolean_sync(&read_geometry(input, "a")?, &read_geometry(input, "b")?, $op).map_err(|error| map_kernel_error(&error))?;
                     Ok(channel_output("solid", geometry_dict(kernel, &handle)?))
                 })
             }
 
             fn step_plan(&self, input: &Dictionary) -> Result<Option<Box<dyn neural_engine::OperatorJob>>, EvalError> {
-                BrepBooleanOperatorJob::admit(&read_geometry(input, "a")?, &read_geometry(input, "b")?, $op)
+                BrepBooleanOperatorJob::admit(&self.0, &read_geometry(input, "a")?, &read_geometry(input, "b")?, $op)
             }
         }
     };
@@ -424,6 +452,7 @@ boolean_operation!(Intersect, BooleanOp::Intersect);
 /// job the body again, which is what makes the job retainable across host turns: it borrows
 /// nothing.
 struct BrepBooleanOperatorJob {
+    session: Session,
     job: Option<BrepBooleanJob>,
     answered: Option<GeometryHandle>,
     cancelled: bool,
@@ -434,14 +463,14 @@ impl BrepBooleanOperatorJob {
     /// 🔀️ Admits one set operation. Always answers `Some`: even a fast-path result comes back as a
     /// job, because admission has already mutated the body and a `None` here would make the caller
     /// evaluate the whole boolean a second time.
-    fn admit(a: &GeometryHandle, b: &GeometryHandle, op: BooleanOp) -> Result<Option<Box<dyn neural_engine::OperatorJob>>, EvalError> {
-        with_kernel(|kernel| {
+    fn admit(session: &Session, a: &GeometryHandle, b: &GeometryHandle, op: BooleanOp) -> Result<Option<Box<dyn neural_engine::OperatorJob>>, EvalError> {
+        session.with_kernel(|kernel| {
             let admission = kernel.boolean_job_sync(a, b, op).map_err(|error| map_kernel_error(&error))?;
             let job = match admission {
-                BrepBooleanAdmission::Answered(handle) => BrepBooleanOperatorJob { job: None, answered: Some(handle), cancelled: false, progress: neural_engine::OperatorProgress { units_done: 1, units_total: 1, phase: "complete" } },
+                BrepBooleanAdmission::Answered(handle) => BrepBooleanOperatorJob { session: session.clone(), job: None, answered: Some(handle), cancelled: false, progress: neural_engine::OperatorProgress { units_done: 1, units_total: 1, phase: "complete" } },
                 BrepBooleanAdmission::Job(job) => {
                     let progress = job.progress();
-                    BrepBooleanOperatorJob { job: Some(job), answered: None, cancelled: false, progress: neural_engine::OperatorProgress { units_done: progress.units_done, units_total: progress.units_total, phase: progress.phase.tag() } }
+                    BrepBooleanOperatorJob { session: session.clone(), job: Some(job), answered: None, cancelled: false, progress: neural_engine::OperatorProgress { units_done: progress.units_done, units_total: progress.units_total, phase: progress.phase.tag() } }
                 }
             };
             Ok(Some(Box::new(job) as Box<dyn neural_engine::OperatorJob>))
@@ -449,8 +478,8 @@ impl BrepBooleanOperatorJob {
     }
 
     /// 📦️ The out dictionary a finished boolean produces — identical to the one-shot operator's.
-    fn output(handle: &GeometryHandle) -> Result<Dictionary, EvalError> {
-        with_kernel(|kernel| Ok(channel_output("solid", geometry_dict(kernel, handle)?)))
+    fn output(session: &Session, handle: &GeometryHandle) -> Result<Dictionary, EvalError> {
+        session.with_kernel(|kernel| Ok(channel_output("solid", geometry_dict(kernel, handle)?)))
     }
 }
 
@@ -460,12 +489,12 @@ impl neural_engine::OperatorJob for BrepBooleanOperatorJob {
             return Ok(neural_engine::OperatorJobStep::Cancelled(self.progress));
         }
         if let Some(handle) = self.answered.clone() {
-            return Ok(neural_engine::OperatorJobStep::Done(Self::output(&handle)?));
+            return Ok(neural_engine::OperatorJobStep::Done(Self::output(&self.session, &handle)?));
         }
         let Some(job) = self.job.as_mut() else {
             return Err(EvalError::InvalidInput("boolean job carries neither an answer nor a plan".to_string()));
         };
-        let step = with_kernel(|kernel| kernel.step_boolean_job_sync(job, budget.max(1)).map_err(|error| map_kernel_error(&error)))?;
+        let step = self.session.with_kernel(|kernel| kernel.step_boolean_job_sync(job, budget.max(1)).map_err(|error| map_kernel_error(&error)))?;
         match step {
             BrepBooleanStep::Working(progress) => {
                 self.progress = neural_engine::OperatorProgress { units_done: progress.units_done, units_total: progress.units_total, phase: progress.phase.tag() };
@@ -480,7 +509,7 @@ impl neural_engine::OperatorJob for BrepBooleanOperatorJob {
                 self.job = None;
                 self.answered = Some(handle.clone());
                 self.progress = neural_engine::OperatorProgress { units_done: self.progress.units_total.max(self.progress.units_done), units_total: self.progress.units_total.max(self.progress.units_done), phase: "complete" };
-                Ok(neural_engine::OperatorJobStep::Done(Self::output(&handle)?))
+                Ok(neural_engine::OperatorJobStep::Done(Self::output(&self.session, &handle)?))
             }
         }
     }
@@ -500,10 +529,11 @@ impl neural_engine::OperatorJob for BrepBooleanOperatorJob {
     }
 }
 
-struct CompoundCut;
+struct CompoundCut(SessionCapture);
 impl Operator for CompoundCut {
+            retire_geometry_capture!(0);
     fn evaluate(&self, input: &Dictionary) -> Result<Dictionary, EvalError> {
-        with_kernel(|kernel| {
+        self.0.with_kernel(|kernel| {
             let target = read_geometry(input, "target")?;
             let tools = read_geometry_list(input, "tools")?;
             let handle = kernel.compound_cut(&target, &tools).map_err(|error| map_kernel_error(&error))?;
@@ -541,10 +571,11 @@ geo_operation!(ChamferAsymmetric, "solid", |k, i| k.chamfer_asymmetric(&read_geo
 
 // 🎯️ Selective-edge variants: fillet/chamfer only the given edges instead of the whole solid —
 // avoids the full-solid edge-count cost when a user selects just one or a few edges.
-struct FilletEdges;
+struct FilletEdges(SessionCapture);
 impl Operator for FilletEdges {
+            retire_geometry_capture!(0);
     fn evaluate(&self, input: &Dictionary) -> Result<Dictionary, EvalError> {
-        with_kernel(|kernel| {
+        self.0.with_kernel(|kernel| {
             let geometry = read_geometry(input, "geometry")?;
             let edges = read_geometry_list(input, "edges")?;
             let radius = read_channel_number(input, "radius")?;
@@ -554,10 +585,11 @@ impl Operator for FilletEdges {
     }
 }
 
-struct ChamferEdges;
+struct ChamferEdges(SessionCapture);
 impl Operator for ChamferEdges {
+            retire_geometry_capture!(0);
     fn evaluate(&self, input: &Dictionary) -> Result<Dictionary, EvalError> {
-        with_kernel(|kernel| {
+        self.0.with_kernel(|kernel| {
             let geometry = read_geometry(input, "geometry")?;
             let edges = read_geometry_list(input, "edges")?;
             let distance = read_channel_number(input, "distance")?;
@@ -567,10 +599,11 @@ impl Operator for ChamferEdges {
     }
 }
 
-struct ShellMutation;
+struct ShellMutation(SessionCapture);
 impl Operator for ShellMutation {
+            retire_geometry_capture!(0);
     fn evaluate(&self, input: &Dictionary) -> Result<Dictionary, EvalError> {
-        with_kernel(|kernel| {
+        self.0.with_kernel(|kernel| {
             let geometry = read_geometry(input, "geometry")?;
             let thickness = read_channel_number(input, "thickness")?;
             let open_faces = read_geometry_list_or_empty(input, "openFaces")?;
@@ -580,10 +613,11 @@ impl Operator for ShellMutation {
     }
 }
 
-struct Draft;
+struct Draft(SessionCapture);
 impl Operator for Draft {
+            retire_geometry_capture!(0);
     fn evaluate(&self, input: &Dictionary) -> Result<Dictionary, EvalError> {
-        with_kernel(|kernel| {
+        self.0.with_kernel(|kernel| {
             let geometry = read_geometry(input, "geometry")?;
             let faces = read_geometry_list(input, "faces")?;
             let handle = kernel.draft(&geometry, &faces, read_xyz(input, "pullDirection")?, read_xyz(input, "neutralPoint")?, read_channel_number(input, "angle")?).map_err(|error| map_kernel_error(&error))?;
@@ -594,10 +628,11 @@ impl Operator for Draft {
 
 geo_operation!(OffsetSolid, "solid", |k, i| k.offset_solid(&read_geometry(i, "geometry")?, read_channel_number(i, "distance")?));
 
-struct Defeature;
+struct Defeature(SessionCapture);
 impl Operator for Defeature {
+            retire_geometry_capture!(0);
     fn evaluate(&self, input: &Dictionary) -> Result<Dictionary, EvalError> {
-        with_kernel(|kernel| {
+        self.0.with_kernel(|kernel| {
             let geometry = read_geometry(input, "geometry")?;
             let faces = read_geometry_list(input, "faces")?;
             let handle = kernel.defeature(&geometry, &faces).map_err(|error| map_kernel_error(&error))?;
@@ -610,10 +645,11 @@ impl Operator for Defeature {
 // #region 🔖️Intersect
 /// 🍰️ Emits EVERY section face the plane produced, not just the first — a solid with multiple
 /// disjoint cross-sections must not lose the rest silently (audit §13.2).
-struct Section;
+struct Section(SessionCapture);
 impl Operator for Section {
+            retire_geometry_capture!(0);
     fn evaluate(&self, input: &Dictionary) -> Result<Dictionary, EvalError> {
-        with_kernel(|kernel| {
+        self.0.with_kernel(|kernel| {
             let faces = kernel.section(&read_geometry(input, "solid")?, read_xyz(input, "planeOrigin")?, read_xyz(input, "planeNormal")?).map_err(|error| map_kernel_error(&error))?;
             if faces.is_empty() {
                 return Err(EvalError::InvalidInput("section produced no faces".into()));
@@ -627,20 +663,22 @@ impl Operator for Section {
 /// ✂️ Emits BOTH halves the plane produced — the earlier implementation silently discarded the
 /// negative half (audit §13.2's exact "continue after failure ... return a copied input" pattern,
 /// here a copied-output-minus-half pattern).
-struct Split;
+struct Split(SessionCapture);
 impl Operator for Split {
+            retire_geometry_capture!(0);
     fn evaluate(&self, input: &Dictionary) -> Result<Dictionary, EvalError> {
-        with_kernel(|kernel| {
+        self.0.with_kernel(|kernel| {
             let (positive, negative) = kernel.split(&read_geometry(input, "solid")?, read_xyz(input, "planeOrigin")?, read_xyz(input, "planeNormal")?).map_err(|error| map_kernel_error(&error))?;
             Ok(Dictionary::new().insert("positive", Value::Dictionary(geometry_dict(kernel, &positive)?)).insert("negative", Value::Dictionary(geometry_dict(kernel, &negative)?)))
         })
     }
 }
 
-struct CurveCurveIntersect;
+struct CurveCurveIntersect(SessionCapture);
 impl Operator for CurveCurveIntersect {
+            retire_geometry_capture!(0);
     fn evaluate(&self, input: &Dictionary) -> Result<Dictionary, EvalError> {
-        with_kernel(|kernel| {
+        self.0.with_kernel(|kernel| {
             let points = kernel.curve_curve_intersect(&read_geometry(input, "a")?, &read_geometry(input, "b")?, read_channel_number(input, "tolerance")?).map_err(|error| map_kernel_error(&error))?;
             let handle = wire_from_points(kernel, &points)?;
             Ok(channel_output("wire", geometry_dict(kernel, &handle)?))
@@ -648,10 +686,11 @@ impl Operator for CurveCurveIntersect {
     }
 }
 
-struct CurveSurfaceIntersect;
+struct CurveSurfaceIntersect(SessionCapture);
 impl Operator for CurveSurfaceIntersect {
+            retire_geometry_capture!(0);
     fn evaluate(&self, input: &Dictionary) -> Result<Dictionary, EvalError> {
-        with_kernel(|kernel| {
+        self.0.with_kernel(|kernel| {
             let points = kernel.curve_surface_intersect(&read_geometry(input, "curve")?, &read_geometry(input, "surface")?, read_channel_number(input, "tolerance")?).map_err(|error| map_kernel_error(&error))?;
             let handle = wire_from_points(kernel, &points)?;
             Ok(channel_output("wire", geometry_dict(kernel, &handle)?))
@@ -661,10 +700,11 @@ impl Operator for CurveSurfaceIntersect {
 
 /// 〰️ Emits EVERY intersection wire (two surfaces can meet along several disjoint curves), not
 /// just the first (audit §13.2).
-struct SurfaceSurfaceIntersect;
+struct SurfaceSurfaceIntersect(SessionCapture);
 impl Operator for SurfaceSurfaceIntersect {
+            retire_geometry_capture!(0);
     fn evaluate(&self, input: &Dictionary) -> Result<Dictionary, EvalError> {
-        with_kernel(|kernel| {
+        self.0.with_kernel(|kernel| {
             let wires = kernel.surface_surface_intersect(&read_geometry(input, "a")?, &read_geometry(input, "b")?, read_channel_number(input, "tolerance")?).map_err(|error| map_kernel_error(&error))?;
             if wires.is_empty() {
                 return Err(EvalError::InvalidInput("no intersection wire".into()));
@@ -680,10 +720,11 @@ impl Operator for SurfaceSurfaceIntersect {
 point_operation!(CurvePoint, "point", |k, i| k.curve_point(&read_geometry(i, "curve")?, read_channel_number(i, "parameter")?));
 vec_operation!(CurveTangent, "tangent", |k, i| k.curve_tangent(&read_geometry(i, "curve")?, read_channel_number(i, "parameter")?));
 
-struct CurveDomain;
+struct CurveDomain(SessionCapture);
 impl Operator for CurveDomain {
+            retire_geometry_capture!(0);
     fn evaluate(&self, input: &Dictionary) -> Result<Dictionary, EvalError> {
-        with_kernel_read(|kernel| {
+        self.0.with_kernel_read(|kernel| {
             let domain = kernel.curve_domain(&read_geometry(input, "curve")?).map_err(|error| map_kernel_error(&error))?;
             Ok(channel_output("span", number_dictionary(domain_span(domain))))
         })
@@ -697,10 +738,11 @@ vec_operation!(SurfaceNormal, "normal", |k, i| k.surface_normal(&read_geometry(i
 /// 🎯️ Certified nearest parameter on a curve — `curve_closest_parameter` exposes the achieved
 /// `distance` alongside the point/parameter so callers can tell a converged fit from a coarse one,
 /// per audit §13.2 ("achieved tolerance/error" is part of an operation's honest result).
-struct CurveClosestParameter;
+struct CurveClosestParameter(SessionCapture);
 impl Operator for CurveClosestParameter {
+            retire_geometry_capture!(0);
     fn evaluate(&self, input: &Dictionary) -> Result<Dictionary, EvalError> {
-        with_kernel_read(|kernel| {
+        self.0.with_kernel_read(|kernel| {
             let (parameter, point, distance) = kernel.curve_closest_parameter(&read_geometry(input, "curve")?, read_xyz(input, "point")?).map_err(|error| map_kernel_error(&error))?;
             Ok(Dictionary::new().insert("parameter", Value::Dictionary(number_dictionary(parameter))).insert("pointOut", Value::Dictionary(point_dictionary(point))).insert("distance", Value::Dictionary(number_dictionary(distance))))
         })
@@ -708,10 +750,11 @@ impl Operator for CurveClosestParameter {
 }
 
 /// 🎯️ Certified nearest `(u, v)` on a surface — see [`CurveClosestParameter`]'s docstring.
-struct SurfaceClosestUv;
+struct SurfaceClosestUv(SessionCapture);
 impl Operator for SurfaceClosestUv {
+            retire_geometry_capture!(0);
     fn evaluate(&self, input: &Dictionary) -> Result<Dictionary, EvalError> {
-        with_kernel_read(|kernel| {
+        self.0.with_kernel_read(|kernel| {
             let (u, v, point, distance) = kernel.surface_closest_uv(&read_geometry(input, "surface")?, read_xyz(input, "point")?).map_err(|error| map_kernel_error(&error))?;
             Ok(Dictionary::new()
                 .insert("u", Value::Dictionary(number_dictionary(u)))
@@ -735,10 +778,11 @@ fn geometry_list(kernel: &Brep, handles: Vec<GeometryHandle>) -> Result<Dictiona
 
 /// 🐚️ The solid's shells as independent geometry handles — `solid_shells` never silently fuses
 /// or drops inner voids/cavities, one output entry per shell.
-struct SolidShells;
+struct SolidShells(SessionCapture);
 impl Operator for SolidShells {
+            retire_geometry_capture!(0);
     fn evaluate(&self, input: &Dictionary) -> Result<Dictionary, EvalError> {
-        with_kernel(|kernel| {
+        self.0.with_kernel(|kernel| {
             let shells = kernel.solid_shells(&read_geometry(input, "solid")?).map_err(|error| map_kernel_error(&error))?;
             let list = geometry_list(kernel, shells)?;
             Ok(Dictionary::new().insert("shells", Value::Dictionary(list)))
@@ -746,10 +790,11 @@ impl Operator for SolidShells {
     }
 }
 
-struct CompoundOf;
+struct CompoundOf(SessionCapture);
 impl Operator for CompoundOf {
+            retire_geometry_capture!(0);
     fn evaluate(&self, input: &Dictionary) -> Result<Dictionary, EvalError> {
-        with_kernel(|kernel| {
+        self.0.with_kernel(|kernel| {
             let solids = read_geometry_list(input, "solids")?;
             let handle = kernel.compound(&solids).map_err(|error| map_kernel_error(&error))?;
             Ok(channel_output("compound", geometry_dict(kernel, &handle)?))
@@ -758,10 +803,11 @@ impl Operator for CompoundOf {
 }
 
 /// 💥️ Inverse of [`CompoundOf`] — every member solid as its own handle, none silently merged.
-struct Explode;
+struct Explode(SessionCapture);
 impl Operator for Explode {
+            retire_geometry_capture!(0);
     fn evaluate(&self, input: &Dictionary) -> Result<Dictionary, EvalError> {
-        with_kernel(|kernel| {
+        self.0.with_kernel(|kernel| {
             let solids = kernel.explode(&read_geometry(input, "compound")?).map_err(|error| map_kernel_error(&error))?;
             let list = geometry_list(kernel, solids)?;
             Ok(Dictionary::new().insert("solids", Value::Dictionary(list)))
@@ -771,10 +817,11 @@ impl Operator for Explode {
 
 /// 🏷️ The handle's persistent label (stable across deconstruct/reconstruct) as a diagnostic
 /// number — explicit `EvalError`, never a silent `0`/`-1` placeholder, when the handle carries none.
-struct GeometryLabel;
+struct GeometryLabel(SessionCapture);
 impl Operator for GeometryLabel {
+            retire_geometry_capture!(0);
     fn evaluate(&self, input: &Dictionary) -> Result<Dictionary, EvalError> {
-        with_kernel_read(|kernel| {
+        self.0.with_kernel_read(|kernel| {
             let handle = read_geometry(input, "geometry")?;
             let label = kernel.label(&handle).ok_or_else(|| EvalError::InvalidInput(format!("geometry {} carries no persistent label", handle.as_str())))?;
             Ok(channel_output("label", number_dictionary(label as f64)))
@@ -791,20 +838,22 @@ point_operation!(CenterOfMass, "center", |k, i| k.center_of_mass(&read_geometry(
 geo_operation!(BoundingBox, "box", |k, i| k.bounding_box(&read_geometry(i, "geometry")?));
 num_operation!(Distance, "distance", |k, i| k.distance(&read_geometry(i, "a")?, &read_geometry(i, "b")?));
 
-struct ClosestPoint;
+struct ClosestPoint(SessionCapture);
 impl Operator for ClosestPoint {
+            retire_geometry_capture!(0);
     fn evaluate(&self, input: &Dictionary) -> Result<Dictionary, EvalError> {
-        with_kernel_read(|kernel| {
+        self.0.with_kernel_read(|kernel| {
             let result = kernel.closest_point(&read_geometry(input, "geometry")?, read_xyz(input, "point")?).map_err(|error| map_kernel_error(&error))?;
             Ok(channel_output("pointOut", point_dictionary(result.point)))
         })
     }
 }
 
-struct ClassifyPoint;
+struct ClassifyPoint(SessionCapture);
 impl Operator for ClassifyPoint {
+            retire_geometry_capture!(0);
     fn evaluate(&self, input: &Dictionary) -> Result<Dictionary, EvalError> {
-        with_kernel_read(|kernel| {
+        self.0.with_kernel_read(|kernel| {
             let classification = kernel.classify_point(&read_geometry(input, "solid")?, read_xyz(input, "point")?).map_err(|error| map_kernel_error(&error))?;
             Ok(channel_output("classification", number_dictionary(classify_number(classification))))
         })
@@ -818,10 +867,11 @@ text_operation!(Validate, "report", |k, i| k.validate(&read_geometry(i, "geometr
 geo_operation!(Vertex, "vertex", |k, i| k.vertex(read_xyz(i, "point")?));
 geo_operation!(FaceFromWire, "face", |k, i| k.face_from_wire(&read_geometry(i, "wire")?));
 
-struct SewFaces;
+struct SewFaces(SessionCapture);
 impl Operator for SewFaces {
+            retire_geometry_capture!(0);
     fn evaluate(&self, input: &Dictionary) -> Result<Dictionary, EvalError> {
-        with_kernel(|kernel| {
+        self.0.with_kernel(|kernel| {
             let faces = read_geometry_list(input, "faces")?;
             let tolerance = read_channel_number(input, "tolerance")?;
             let handle = kernel.sew_faces(&faces, tolerance).map_err(|error| map_kernel_error(&error))?;
@@ -835,10 +885,11 @@ geo_operation!(ConvertToNurbs, "geometryOut", |k, i| k.convert_to_nurbs(&read_ge
 // #endregion 🔖️Utilities
 
 // #region 🔖️IO
-struct ExportStep;
+struct ExportStep(SessionCapture);
 impl Operator for ExportStep {
+            retire_geometry_capture!(0);
     fn evaluate(&self, input: &Dictionary) -> Result<Dictionary, EvalError> {
-        with_kernel_read(|kernel| {
+        self.0.with_kernel_read(|kernel| {
             let geometry = read_geometry(input, "geometry")?;
             let value = kernel.export_step(&[geometry]).map_err(|error| map_kernel_error(&error))?;
             Ok(channel_output("step", text_dictionary(value)))
@@ -846,10 +897,11 @@ impl Operator for ExportStep {
     }
 }
 
-struct ExportStl;
+struct ExportStl(SessionCapture);
 impl Operator for ExportStl {
+            retire_geometry_capture!(0);
     fn evaluate(&self, input: &Dictionary) -> Result<Dictionary, EvalError> {
-        with_kernel_read(|kernel| {
+        self.0.with_kernel_read(|kernel| {
             let geometry = read_geometry(input, "geometry")?;
             let deflection = read_channel_number(input, "deflection")?;
             let data = kernel.export_stl(&[geometry], deflection).map_err(|error| map_kernel_error(&error))?;
@@ -858,10 +910,11 @@ impl Operator for ExportStl {
     }
 }
 
-struct ExportObj;
+struct ExportObj(SessionCapture);
 impl Operator for ExportObj {
+            retire_geometry_capture!(0);
     fn evaluate(&self, input: &Dictionary) -> Result<Dictionary, EvalError> {
-        with_kernel_read(|kernel| {
+        self.0.with_kernel_read(|kernel| {
             let geometry = read_geometry(input, "geometry")?;
             let deflection = read_channel_number(input, "deflection")?;
             let value = kernel.export_obj(&[geometry], deflection).map_err(|error| map_kernel_error(&error))?;
@@ -870,10 +923,11 @@ impl Operator for ExportObj {
     }
 }
 
-struct ImportStep;
+struct ImportStep(SessionCapture);
 impl Operator for ImportStep {
+            retire_geometry_capture!(0);
     fn evaluate(&self, input: &Dictionary) -> Result<Dictionary, EvalError> {
-        with_kernel(|kernel| {
+        self.0.with_kernel(|kernel| {
             let data = read_text(input, "data")?;
             let shapes = kernel.import_step(&data).map_err(|error| map_kernel_error(&error))?;
             let handle = shapes.into_iter().next().ok_or_else(|| EvalError::InvalidInput("step import produced no solids".into()))?;
@@ -882,10 +936,11 @@ impl Operator for ImportStep {
     }
 }
 
-struct ImportStl;
+struct ImportStl(SessionCapture);
 impl Operator for ImportStl {
+            retire_geometry_capture!(0);
     fn evaluate(&self, input: &Dictionary) -> Result<Dictionary, EvalError> {
-        with_kernel(|kernel| {
+        self.0.with_kernel(|kernel| {
             let data = decode_base64(&read_text(input, "data")?)?;
             let tolerance = read_channel_number(input, "tolerance")?;
             let handle = kernel.import_stl(&data, tolerance).map_err(|error| map_kernel_error(&error))?;
@@ -894,10 +949,11 @@ impl Operator for ImportStl {
     }
 }
 
-struct ImportObj;
+struct ImportObj(SessionCapture);
 impl Operator for ImportObj {
+            retire_geometry_capture!(0);
     fn evaluate(&self, input: &Dictionary) -> Result<Dictionary, EvalError> {
-        with_kernel(|kernel| {
+        self.0.with_kernel(|kernel| {
             let data = read_text(input, "data")?;
             let tolerance = read_channel_number(input, "tolerance")?;
             let handle = kernel.import_obj(&data, tolerance).map_err(|error| map_kernel_error(&error))?;
@@ -906,10 +962,11 @@ impl Operator for ImportObj {
     }
 }
 
-struct ExportDwg;
+struct ExportDwg(SessionCapture);
 impl Operator for ExportDwg {
+            retire_geometry_capture!(0);
     fn evaluate(&self, input: &Dictionary) -> Result<Dictionary, EvalError> {
-        with_kernel_read(|kernel| {
+        self.0.with_kernel_read(|kernel| {
             let geometry = read_geometry(input, "geometry")?;
             let deflection = read_channel_number(input, "deflection")?;
             let data = semio_s_artifact_stdio_semio::standards::v1::subsets::brep::io::dwg::export(kernel, &[geometry], deflection).map_err(|error| map_kernel_error(&error))?;
@@ -918,10 +975,11 @@ impl Operator for ExportDwg {
     }
 }
 
-struct ImportDwg;
+struct ImportDwg(SessionCapture);
 impl Operator for ImportDwg {
+            retire_geometry_capture!(0);
     fn evaluate(&self, input: &Dictionary) -> Result<Dictionary, EvalError> {
-        with_kernel(|kernel| {
+        self.0.with_kernel(|kernel| {
             let data = decode_base64(&read_text(input, "data")?)?;
             let tolerance = read_channel_number(input, "tolerance")?;
             let handle = semio_s_artifact_stdio_semio::standards::v1::subsets::brep::io::dwg::import(kernel, &data, tolerance).map_err(|error| map_kernel_error(&error))?;
@@ -935,7 +993,7 @@ impl Operator for ImportDwg {
 mod mesh;
 
 /// 📦️ Registers brep geometry schema and operators.
-pub async fn register(registry: &mut Registry) {
+pub fn register(registry: &mut Registry, session: &Session) {
     registry.register_schema(geometry_schema());
     registry.register_schema(topology_element_schema("vertex", "Vertex", "emoji:📍️"));
     registry.register_schema(topology_element_schema("edge", "Edge", "emoji:〰"));
@@ -961,7 +1019,7 @@ pub async fn register(registry: &mut Registry) {
             group: vec!["Schemas".into()],
             ..Default::default()
         },
-        vec![OperatorImpl { schemas: vec!["geometry".into()], operator: Box::new(BrepDeconstruct) }],
+        vec![OperatorImpl { schemas: vec!["geometry".into()], operator: Box::new(BrepDeconstruct(session.capture())) }],
         &["geometry", "list"],
     );
 
@@ -975,9 +1033,9 @@ pub async fn register(registry: &mut Registry) {
         vec![number_channel("width", "brep.prim3d.box", 1.0), number_channel("depth", "brep.prim3d.box", 1.0), number_channel("height", "brep.prim3d.box", 1.0)],
         out_solid("BoxSolid"),
         &["Primitives 3D"],
-        Box::new(BoxPrim),
+        Box::new(BoxPrim(session.capture())),
     );
-    reg_geo(registry, "brep.prim3d.sphere", "Sphere", "Sphere", "emoji:⚪️", &q("sphere_prim", "Sphere solid"), vec![number_channel("radius", "brep.prim3d.sphere", 1.0)], out_solid("SphereSolid"), &["Primitives 3D"], Box::new(SpherePrim));
+    reg_geo(registry, "brep.prim3d.sphere", "Sphere", "Sphere", "emoji:⚪️", &q("sphere_prim", "Sphere solid"), vec![number_channel("radius", "brep.prim3d.sphere", 1.0)], out_solid("SphereSolid"), &["Primitives 3D"], Box::new(SpherePrim(session.capture())));
     reg_geo(
         registry,
         "brep.prim3d.cylinder",
@@ -988,7 +1046,7 @@ pub async fn register(registry: &mut Registry) {
         vec![number_channel("radius", "brep.prim3d.cylinder", 1.0), number_channel("height", "brep.prim3d.cylinder", 1.0)],
         out_solid("CylinderSolid"),
         &["Primitives 3D"],
-        Box::new(CylinderPrim),
+        Box::new(CylinderPrim(session.capture())),
     );
     reg_geo(
         registry,
@@ -1000,7 +1058,7 @@ pub async fn register(registry: &mut Registry) {
         vec![number_channel("radius", "brep.prim3d.cone", 1.0), number_channel("height", "brep.prim3d.cone", 1.0)],
         out_solid("ConeSolid"),
         &["Primitives 3D"],
-        Box::new(ConePrim),
+        Box::new(ConePrim(session.capture())),
     );
     reg_geo(
         registry,
@@ -1012,7 +1070,7 @@ pub async fn register(registry: &mut Registry) {
         vec![number_channel("major", "brep.prim3d.torus", 2.0), number_channel("minor", "brep.prim3d.torus", 0.5)],
         out_solid("TorusSolid"),
         &["Primitives 3D"],
-        Box::new(TorusPrim),
+        Box::new(TorusPrim(session.capture())),
     );
     reg_geo(
         registry,
@@ -1024,10 +1082,10 @@ pub async fn register(registry: &mut Registry) {
         vec![list_channel("points", "brep.prim3d.convexHull")],
         out_solid("ConvexHullSolid"),
         &["Primitives 3D"],
-        Box::new(ConvexHullPrim),
+        Box::new(ConvexHullPrim(session.capture())),
     );
 
-    reg_geo(registry, "brep.curve.line", "Line", "Line", "emoji:📏️", &q("line_curve", "Line curve"), vec![point_channel("start", "brep.curve.line"), point_channel("end", "brep.curve.line")], out_curve("LineCurve"), &["Curves"], Box::new(LineCurve));
+    reg_geo(registry, "brep.curve.line", "Line", "Line", "emoji:📏️", &q("line_curve", "Line curve"), vec![point_channel("start", "brep.curve.line"), point_channel("end", "brep.curve.line")], out_curve("LineCurve"), &["Curves"], Box::new(LineCurve(session.capture())));
     reg_geo(
         registry,
         "brep.curve.circle",
@@ -1038,7 +1096,7 @@ pub async fn register(registry: &mut Registry) {
         vec![point_channel("center", "brep.curve.circle"), point_channel("normal", "brep.curve.circle"), number_channel("radius", "brep.curve.circle", 1.0)],
         out_curve("CircleCurve"),
         &["Curves"],
-        Box::new(CircleCurve),
+        Box::new(CircleCurve(session.capture())),
     );
     reg_geo(
         registry,
@@ -1056,7 +1114,7 @@ pub async fn register(registry: &mut Registry) {
         ],
         out_curve("ArcCurve"),
         &["Curves"],
-        Box::new(ArcCurve),
+        Box::new(ArcCurve(session.capture())),
     );
     reg_geo(
         registry,
@@ -1068,9 +1126,9 @@ pub async fn register(registry: &mut Registry) {
         vec![point_channel("center", "brep.curve.ellipse"), point_channel("normal", "brep.curve.ellipse"), number_channel("semiMajor", "brep.curve.ellipse", 2.0), number_channel("semiMinor", "brep.curve.ellipse", 1.0)],
         out_curve("EllipseCurve"),
         &["Curves"],
-        Box::new(EllipseCurve),
+        Box::new(EllipseCurve(session.capture())),
     );
-    reg_geo(registry, "brep.curve.polyline", "Polyline", "Poly", "emoji:📏️", &q("polyline_wire", "Polyline wire"), vec![list_channel("points", "brep.curve.polyline")], out_wire("PolylineWire"), &["Curves"], Box::new(PolylineWire));
+    reg_geo(registry, "brep.curve.polyline", "Polyline", "Poly", "emoji:📏️", &q("polyline_wire", "Polyline wire"), vec![list_channel("points", "brep.curve.polyline")], out_wire("PolylineWire"), &["Curves"], Box::new(PolylineWire(session.capture())));
     reg_geo(
         registry,
         "brep.curve.rectangle",
@@ -1081,7 +1139,7 @@ pub async fn register(registry: &mut Registry) {
         vec![number_channel("width", "brep.curve.rectangle", 1.0), number_channel("height", "brep.curve.rectangle", 1.0)],
         out_wire("RectangleWire"),
         &["Curves"],
-        Box::new(RectangleWire),
+        Box::new(RectangleWire(session.capture())),
     );
     reg_geo(
         registry,
@@ -1093,7 +1151,7 @@ pub async fn register(registry: &mut Registry) {
         vec![number_channel("radius", "brep.curve.polygon", 1.0), number_channel("sides", "brep.curve.polygon", 6.0)],
         out_wire("RegularPolygonWire"),
         &["Curves"],
-        Box::new(RegularPolygonWire),
+        Box::new(RegularPolygonWire(session.capture())),
     );
     reg_geo(
         registry,
@@ -1105,7 +1163,7 @@ pub async fn register(registry: &mut Registry) {
         vec![list_channel("points", "brep.curve.interpolate"), number_channel("degree", "brep.curve.interpolate", 3.0)],
         out_curve("InterpolatedCurve"),
         &["Curves"],
-        Box::new(InterpolateCurve),
+        Box::new(InterpolateCurve(session.capture())),
     );
     reg_geo(
         registry,
@@ -1117,7 +1175,7 @@ pub async fn register(registry: &mut Registry) {
         vec![list_channel("points", "brep.curve.approximate"), number_channel("degree", "brep.curve.approximate", 3.0), number_channel("controlPoints", "brep.curve.approximate", 4.0)],
         out_curve("ApproximatedCurve"),
         &["Curves"],
-        Box::new(ApproximateCurve),
+        Box::new(ApproximateCurve(session.capture())),
     );
     reg_geo(
         registry,
@@ -1135,7 +1193,7 @@ pub async fn register(registry: &mut Registry) {
         ],
         out_curve("HelixCurve"),
         &["Curves"],
-        Box::new(HelixCurve),
+        Box::new(HelixCurve(session.capture())),
     );
 
     reg_geo(
@@ -1148,7 +1206,7 @@ pub async fn register(registry: &mut Registry) {
         vec![point_channel("origin", "brep.surf.plane"), point_channel("normal", "brep.surf.plane")],
         out_surface("PlaneSurface"),
         &["Surfaces"],
-        Box::new(PlaneSurface),
+        Box::new(PlaneSurface(session.capture())),
     );
     reg_geo(
         registry,
@@ -1160,7 +1218,7 @@ pub async fn register(registry: &mut Registry) {
         vec![list_channel("points", "brep.surf.planarFace")],
         out_face("PlanarFace"),
         &["Surfaces"],
-        Box::new(PlanarFacePoints),
+        Box::new(PlanarFacePoints(session.capture())),
     );
     reg_geo(
         registry,
@@ -1172,7 +1230,7 @@ pub async fn register(registry: &mut Registry) {
         vec![geometry_channel("wire", "brep.surf.planarFaceWire")],
         out_face("PlanarFaceWire"),
         &["Surfaces"],
-        Box::new(PlanarFaceWire),
+        Box::new(PlanarFaceWire(session.capture())),
     );
     reg_geo(
         registry,
@@ -1184,9 +1242,9 @@ pub async fn register(registry: &mut Registry) {
         vec![list_channel("points", "brep.surf.nurbsGrid"), number_channel("rows", "brep.surf.nurbsGrid", 2.0), number_channel("degreeU", "brep.surf.nurbsGrid", 3.0), number_channel("degreeV", "brep.surf.nurbsGrid", 3.0)],
         out_surface("NurbsSurface"),
         &["Surfaces"],
-        Box::new(NurbsGridSurface),
+        Box::new(NurbsGridSurface(session.capture())),
     );
-    reg_geo(registry, "brep.surf.coons", "Coons Patch", "Coons", "emoji:🧩️", &q("coons_patch", "Coons patch from boundary curves"), vec![list_channel("curves", "brep.surf.coons")], out_surface("CoonsPatch"), &["Surfaces"], Box::new(CoonsPatch));
+    reg_geo(registry, "brep.surf.coons", "Coons Patch", "Coons", "emoji:🧩️", &q("coons_patch", "Coons patch from boundary curves"), vec![list_channel("curves", "brep.surf.coons")], out_surface("CoonsPatch"), &["Surfaces"], Box::new(CoonsPatch(session.capture())));
     reg_geo(
         registry,
         "brep.surf.offset",
@@ -1197,7 +1255,7 @@ pub async fn register(registry: &mut Registry) {
         vec![geometry_channel("face", "brep.surf.offset"), number_channel("distance", "brep.surf.offset", 0.1)],
         out_face_result("OffsetFace"),
         &["Surfaces"],
-        Box::new(OffsetFace),
+        Box::new(OffsetFace(session.capture())),
     );
     reg_geo(
         registry,
@@ -1209,7 +1267,7 @@ pub async fn register(registry: &mut Registry) {
         vec![geometry_channel("face", "brep.surf.thicken"), number_channel("thickness", "brep.surf.thicken", 0.1)],
         out_solid("ThickenedSolid"),
         &["Surfaces"],
-        Box::new(ThickenFace),
+        Box::new(ThickenFace(session.capture())),
     );
 
     reg_geo(
@@ -1222,7 +1280,7 @@ pub async fn register(registry: &mut Registry) {
         vec![geometry_channel("wire", "brep.solid.extrude"), vector_channel("vector", "brep.solid.extrude", [0.0, 0.0, 5.0])],
         out_solid("ExtrudedSolid"),
         &["Solids"],
-        Box::new(ExtrudeCurve),
+        Box::new(ExtrudeCurve(session.capture())),
     );
     reg_geo(
         registry,
@@ -1234,7 +1292,7 @@ pub async fn register(registry: &mut Registry) {
         vec![geometry_channel("face", "brep.sweep.extrude"), vector_channel("vector", "brep.sweep.extrude", [0.0, 0.0, 1.0])],
         out_solid("ExtrudedSolid"),
         &["Sweeps"],
-        Box::new(ExtrudeFace),
+        Box::new(ExtrudeFace(session.capture())),
     );
     reg_geo(
         registry,
@@ -1246,7 +1304,7 @@ pub async fn register(registry: &mut Registry) {
         vec![geometry_channel("face", "brep.sweep.revolve"), point_channel("axisOrigin", "brep.sweep.revolve"), point_channel("axisDirection", "brep.sweep.revolve"), number_channel("angle", "brep.sweep.revolve", std::f64::consts::TAU)],
         out_solid("RevolvedSolid"),
         &["Sweeps"],
-        Box::new(Revolve),
+        Box::new(Revolve(session.capture())),
     );
     reg_geo(
         registry,
@@ -1258,7 +1316,7 @@ pub async fn register(registry: &mut Registry) {
         vec![list_channel("profiles", "brep.sweep.loft"), number_channel("smooth", "brep.sweep.loft", 0.0)],
         out_solid("LoftedSolid"),
         &["Sweeps"],
-        Box::new(Loft),
+        Box::new(Loft(session.capture())),
     );
     reg_geo(
         registry,
@@ -1270,7 +1328,7 @@ pub async fn register(registry: &mut Registry) {
         vec![geometry_channel("profile", "brep.sweep.sweep"), geometry_channel("path", "brep.sweep.sweep")],
         out_solid("SweptSolid"),
         &["Sweeps"],
-        Box::new(Sweep),
+        Box::new(Sweep(session.capture())),
     );
     reg_geo(
         registry,
@@ -1282,7 +1340,7 @@ pub async fn register(registry: &mut Registry) {
         vec![geometry_channel("profile", "brep.sweep.pipe"), geometry_channel("path", "brep.sweep.pipe"), geometry_channel("guide", "brep.sweep.pipe")],
         out_solid("PipeSolid"),
         &["Sweeps"],
-        Box::new(Pipe),
+        Box::new(Pipe(session.capture())),
     );
     reg_geo(
         registry,
@@ -1301,11 +1359,11 @@ pub async fn register(registry: &mut Registry) {
         ],
         out_solid("HelicalSolid"),
         &["Sweeps"],
-        Box::new(HelicalSweep),
+        Box::new(HelicalSweep(session.capture())),
     );
 
-    reg_geo(registry, "brep.bool.fuse", "Fuse", "Fuse", "emoji:🔗️", &q("fuse", "Boolean union"), vec![geometry_channel("a", "brep.bool.fuse"), geometry_channel("b", "brep.bool.fuse")], out_solid("FusedSolid"), &["Booleans"], Box::new(Fuse));
-    reg_geo(registry, "brep.bool.cut", "Cut", "Cut", "emoji:🔗️", &q("cut", "Boolean difference"), vec![geometry_channel("a", "brep.bool.cut"), geometry_channel("b", "brep.bool.cut")], out_solid("CutSolid"), &["Booleans"], Box::new(Cut));
+    reg_geo(registry, "brep.bool.fuse", "Fuse", "Fuse", "emoji:🔗️", &q("fuse", "Boolean union"), vec![geometry_channel("a", "brep.bool.fuse"), geometry_channel("b", "brep.bool.fuse")], out_solid("FusedSolid"), &["Booleans"], Box::new(Fuse(session.capture())));
+    reg_geo(registry, "brep.bool.cut", "Cut", "Cut", "emoji:🔗️", &q("cut", "Boolean difference"), vec![geometry_channel("a", "brep.bool.cut"), geometry_channel("b", "brep.bool.cut")], out_solid("CutSolid"), &["Booleans"], Box::new(Cut(session.capture())));
     reg_geo(
         registry,
         "brep.bool.intersect",
@@ -1316,7 +1374,7 @@ pub async fn register(registry: &mut Registry) {
         vec![geometry_channel("a", "brep.bool.intersect"), geometry_channel("b", "brep.bool.intersect")],
         out_solid("IntersectedSolid"),
         &["Booleans"],
-        Box::new(Intersect),
+        Box::new(Intersect(session.capture())),
     );
     reg_geo(
         registry,
@@ -1328,7 +1386,7 @@ pub async fn register(registry: &mut Registry) {
         vec![geometry_channel("target", "brep.bool.compoundCut"), list_channel("tools", "brep.bool.compoundCut")],
         out_solid("CompoundCutSolid"),
         &["Booleans"],
-        Box::new(CompoundCut),
+        Box::new(CompoundCut(session.capture())),
     );
 
     reg_geo(
@@ -1341,7 +1399,7 @@ pub async fn register(registry: &mut Registry) {
         vec![geometry_channel("geometry", "brep.xform.translate"), point_channel("offset", "math.move")],
         out_geometry_result("TranslatedGeometry"),
         &["Transforms"],
-        Box::new(Translate),
+        Box::new(Translate(session.capture())),
     );
     reg_geo(
         registry,
@@ -1353,7 +1411,7 @@ pub async fn register(registry: &mut Registry) {
         vec![geometry_channel("geometry", "brep.xform.rotate"), number_channel("angle", "brep.xform.rotate", std::f64::consts::FRAC_PI_4), point_channel("axis", "brep.xform.rotate")],
         out_geometry_result("RotatedGeometry"),
         &["Transforms"],
-        Box::new(Rotate),
+        Box::new(Rotate(session.capture())),
     );
     reg_geo(
         registry,
@@ -1370,7 +1428,7 @@ pub async fn register(registry: &mut Registry) {
         ],
         out_geometry_result("RotatedGeometry"),
         &["Transforms"],
-        Box::new(RotateAbout),
+        Box::new(RotateAbout(session.capture())),
     );
     reg_geo(
         registry,
@@ -1382,7 +1440,7 @@ pub async fn register(registry: &mut Registry) {
         vec![geometry_channel("geometry", "brep.xform.scale"), vector_channel("factor", "brep.xform.scale", [1.0, 1.0, 1.0]), point_channel("center", "brep.xform.scale")],
         out_geometry_result("ScaledGeometry"),
         &["Transforms"],
-        Box::new(Scale),
+        Box::new(Scale(session.capture())),
     );
     reg_geo(
         registry,
@@ -1394,9 +1452,9 @@ pub async fn register(registry: &mut Registry) {
         vec![geometry_channel("geometry", "brep.xform.mirror"), point_channel("origin", "brep.xform.mirror"), point_channel("normal", "brep.xform.mirror")],
         out_geometry_result("MirroredGeometry"),
         &["Transforms"],
-        Box::new(Mirror),
+        Box::new(Mirror(session.capture())),
     );
-    reg_geo(registry, "brep.xform.copy", "Copy", "Copy", "emoji:📋️", &q("copy_shape", "Copy geometry"), vec![geometry_channel("geometry", "brep.xform.copy")], out_geometry_result("CopiedGeometry"), &["Transforms"], Box::new(CopyShape));
+    reg_geo(registry, "brep.xform.copy", "Copy", "Copy", "emoji:📋️", &q("copy_shape", "Copy geometry"), vec![geometry_channel("geometry", "brep.xform.copy")], out_geometry_result("CopiedGeometry"), &["Transforms"], Box::new(CopyShape(session.capture())));
     reg_geo(
         registry,
         "brep.xform.linearPattern",
@@ -1407,7 +1465,7 @@ pub async fn register(registry: &mut Registry) {
         vec![geometry_channel("geometry", "brep.xform.linearPattern"), point_channel("direction", "brep.xform.linearPattern"), number_channel("spacing", "brep.xform.linearPattern", 1.0), number_channel("count", "brep.xform.linearPattern", 3.0)],
         out_compound("LinearPattern"),
         &["Transforms"],
-        Box::new(LinearPattern),
+        Box::new(LinearPattern(session.capture())),
     );
     reg_geo(
         registry,
@@ -1419,7 +1477,7 @@ pub async fn register(registry: &mut Registry) {
         vec![geometry_channel("geometry", "brep.xform.circularPattern"), point_channel("axis", "brep.xform.circularPattern"), number_channel("count", "brep.xform.circularPattern", 4.0)],
         out_compound("CircularPattern"),
         &["Transforms"],
-        Box::new(CircularPattern),
+        Box::new(CircularPattern(session.capture())),
     );
     reg_geo(
         registry,
@@ -1439,7 +1497,7 @@ pub async fn register(registry: &mut Registry) {
         ],
         out_compound("GridPattern"),
         &["Transforms"],
-        Box::new(GridPattern),
+        Box::new(GridPattern(session.capture())),
     );
 
     reg_geo(
@@ -1452,7 +1510,7 @@ pub async fn register(registry: &mut Registry) {
         vec![geometry_channel("geometry", "brep.solid.fillet"), number_channel("radius", "brep.solid.fillet", 0.1)],
         out_solid("FilletedSolid"),
         &["Features"],
-        Box::new(Fillet),
+        Box::new(Fillet(session.capture())),
     );
     reg_geo(
         registry,
@@ -1464,7 +1522,7 @@ pub async fn register(registry: &mut Registry) {
         vec![geometry_channel("geometry", "brep.solid.filletVariable"), number_channel("radiusStart", "brep.solid.filletVariable", 0.1), number_channel("radiusEnd", "brep.solid.filletVariable", 0.2)],
         out_solid("VariableFilletedSolid"),
         &["Features"],
-        Box::new(FilletVariable),
+        Box::new(FilletVariable(session.capture())),
     );
     reg_geo(
         registry,
@@ -1476,7 +1534,7 @@ pub async fn register(registry: &mut Registry) {
         vec![geometry_channel("geometry", "brep.solid.chamfer"), number_channel("distance", "brep.solid.chamfer", 0.1)],
         out_solid("ChamferedSolid"),
         &["Features"],
-        Box::new(Chamfer),
+        Box::new(Chamfer(session.capture())),
     );
     reg_geo(
         registry,
@@ -1488,7 +1546,7 @@ pub async fn register(registry: &mut Registry) {
         vec![geometry_channel("geometry", "brep.solid.chamferAsymmetric"), number_channel("d1", "brep.solid.chamferAsymmetric", 0.1), number_channel("d2", "brep.solid.chamferAsymmetric", 0.1)],
         out_solid("AsymmetricChamferedSolid"),
         &["Features"],
-        Box::new(ChamferAsymmetric),
+        Box::new(ChamferAsymmetric(session.capture())),
     );
     reg_geo(
         registry,
@@ -1500,7 +1558,7 @@ pub async fn register(registry: &mut Registry) {
         vec![geometry_channel("geometry", "brep.solid.filletEdges"), list_channel("edges", "brep.solid.filletEdges"), number_channel("radius", "brep.solid.filletEdges", 0.1)],
         out_solid("FilletedEdgesSolid"),
         &["Features"],
-        Box::new(FilletEdges),
+        Box::new(FilletEdges(session.capture())),
     );
     reg_geo(
         registry,
@@ -1512,7 +1570,7 @@ pub async fn register(registry: &mut Registry) {
         vec![geometry_channel("geometry", "brep.solid.chamferEdges"), list_channel("edges", "brep.solid.chamferEdges"), number_channel("distance", "brep.solid.chamferEdges", 0.1)],
         out_solid("ChamferedEdgesSolid"),
         &["Features"],
-        Box::new(ChamferEdges),
+        Box::new(ChamferEdges(session.capture())),
     );
     reg_geo(
         registry,
@@ -1524,7 +1582,7 @@ pub async fn register(registry: &mut Registry) {
         vec![geometry_channel("geometry", "brep.solid.shell"), number_channel("thickness", "brep.solid.shell", 0.1), list_channel("openFaces", "brep.solid.shell")],
         out_solid("ShelledSolid"),
         &["Features"],
-        Box::new(ShellMutation),
+        Box::new(ShellMutation(session.capture())),
     );
     reg_geo(
         registry,
@@ -1542,7 +1600,7 @@ pub async fn register(registry: &mut Registry) {
         ],
         out_solid("DraftedSolid"),
         &["Features"],
-        Box::new(Draft),
+        Box::new(Draft(session.capture())),
     );
     reg_geo(
         registry,
@@ -1554,7 +1612,7 @@ pub async fn register(registry: &mut Registry) {
         vec![geometry_channel("geometry", "brep.solid.offsetSolid"), number_channel("distance", "brep.solid.offsetSolid", 0.1)],
         out_solid("OffsetSolid"),
         &["Features"],
-        Box::new(OffsetSolid),
+        Box::new(OffsetSolid(session.capture())),
     );
     reg_geo(
         registry,
@@ -1566,7 +1624,7 @@ pub async fn register(registry: &mut Registry) {
         vec![geometry_channel("geometry", "brep.solid.defeature"), list_channel("faces", "brep.solid.defeature")],
         out_solid("DefeaturedSolid"),
         &["Features"],
-        Box::new(Defeature),
+        Box::new(Defeature(session.capture())),
     );
 
     register_typed(
@@ -1581,7 +1639,7 @@ pub async fn register(registry: &mut Registry) {
             vec![topology_output("F", "Fces", "faces", "geometry")],
             &["Intersect"],
         ),
-        Box::new(Section),
+        Box::new(Section(session.capture())),
         &["geometry", "list"],
     );
     register_typed(
@@ -1596,7 +1654,7 @@ pub async fn register(registry: &mut Registry) {
             vec![ChannelSpec::named("P", "Pos", "positive", "PositiveSolid").with_value_types(&["geometry"]), ChannelSpec::named("N", "Neg", "negative", "NegativeSolid").with_value_types(&["geometry"])],
             &["Intersect"],
         ),
-        Box::new(Split),
+        Box::new(Split(session.capture())),
         &["geometry"],
     );
     reg_geo(
@@ -1609,7 +1667,7 @@ pub async fn register(registry: &mut Registry) {
         vec![geometry_channel("a", "brep.intersect.curveCurve"), geometry_channel("b", "brep.intersect.curveCurve"), number_channel("tolerance", "brep.intersect.curveCurve", 0.001)],
         out_wire("CurveCurveIntersection"),
         &["Intersect"],
-        Box::new(CurveCurveIntersect),
+        Box::new(CurveCurveIntersect(session.capture())),
     );
     reg_geo(
         registry,
@@ -1621,7 +1679,7 @@ pub async fn register(registry: &mut Registry) {
         vec![geometry_channel("curve", "brep.intersect.curveSurface"), geometry_channel("surface", "brep.intersect.curveSurface"), number_channel("tolerance", "brep.intersect.curveSurface", 0.001)],
         out_wire("CurveSurfaceIntersection"),
         &["Intersect"],
-        Box::new(CurveSurfaceIntersect),
+        Box::new(CurveSurfaceIntersect(session.capture())),
     );
     register_typed(
         registry,
@@ -1635,7 +1693,7 @@ pub async fn register(registry: &mut Registry) {
             vec![topology_output("W", "Wres", "wires", "geometry")],
             &["Intersect"],
         ),
-        Box::new(SurfaceSurfaceIntersect),
+        Box::new(SurfaceSurfaceIntersect(session.capture())),
         &["geometry", "list"],
     );
 
@@ -1651,7 +1709,7 @@ pub async fn register(registry: &mut Registry) {
             vec![out_point("CurvePoint")],
             &["Evaluate"],
         ),
-        Box::new(CurvePoint),
+        Box::new(CurvePoint(session.capture())),
         &["point"],
     );
     register_typed(
@@ -1666,13 +1724,13 @@ pub async fn register(registry: &mut Registry) {
             vec![ChannelSpec::named("T", "Tan", "tangent", "CurveTangent").with_value_types(&["vector"])],
             &["Evaluate"],
         ),
-        Box::new(CurveTangent),
+        Box::new(CurveTangent(session.capture())),
         &["vector"],
     );
     register_typed(
         registry,
         operator_info_with_outputs("brep.eval.curveDomain", "Curve Domain", "Cdm", "emoji:📏️", &q("curve_domain", "Curve domain span"), vec![geometry_channel("curve", "brep.eval.curveDomain")], vec![out_span()], &["Evaluate"]),
-        Box::new(CurveDomain),
+        Box::new(CurveDomain(session.capture())),
         &["number"],
     );
     register_typed(
@@ -1687,7 +1745,7 @@ pub async fn register(registry: &mut Registry) {
             vec![out_curvature()],
             &["Evaluate"],
         ),
-        Box::new(CurveCurvature),
+        Box::new(CurveCurvature(session.capture())),
         &["number"],
     );
     register_typed(
@@ -1702,7 +1760,7 @@ pub async fn register(registry: &mut Registry) {
             vec![out_point("SurfacePoint")],
             &["Evaluate"],
         ),
-        Box::new(SurfacePoint),
+        Box::new(SurfacePoint(session.capture())),
         &["point"],
     );
     register_typed(
@@ -1717,7 +1775,7 @@ pub async fn register(registry: &mut Registry) {
             vec![out_normal("SurfaceNormal")],
             &["Evaluate"],
         ),
-        Box::new(SurfaceNormal),
+        Box::new(SurfaceNormal(session.capture())),
         &["vector"],
     );
     register_typed(
@@ -1732,7 +1790,7 @@ pub async fn register(registry: &mut Registry) {
             vec![ChannelSpec::named("T", "Prm", "parameter", "ClosestParameter").with_value_types(&["number"]), out_point_result("ClosestPoint"), ChannelSpec::named("D", "Dst", "distance", "AchievedDistance").with_value_types(&["number"])],
             &["Evaluate"],
         ),
-        Box::new(CurveClosestParameter),
+        Box::new(CurveClosestParameter(session.capture())),
         &["number", "point"],
     );
     register_typed(
@@ -1747,35 +1805,35 @@ pub async fn register(registry: &mut Registry) {
             vec![ChannelSpec::named("U", "U", "u", "ClosestU").with_value_types(&["number"]), ChannelSpec::named("V", "V", "v", "ClosestV").with_value_types(&["number"]), out_point_result("ClosestPoint"), ChannelSpec::named("D", "Dst", "distance", "AchievedDistance").with_value_types(&["number"])],
             &["Evaluate"],
         ),
-        Box::new(SurfaceClosestUv),
+        Box::new(SurfaceClosestUv(session.capture())),
         &["number", "point"],
     );
 
     register_typed(
         registry,
         operator_info_with_outputs("brep.measure.volume", "Volume", "Vol", "emoji:📐️", &q("volume", "Solid volume"), vec![geometry_channel("geometry", "brep.measure.volume")], vec![out_volume()], &["Measure"]),
-        Box::new(Volume),
+        Box::new(Volume(session.capture())),
         &["number"],
     );
     register_typed(
         registry,
         operator_info_with_outputs("brep.measure.area", "Area", "Area", "emoji:📐️", &q("area", "Surface area"), vec![geometry_channel("geometry", "brep.measure.area")], vec![out_area()], &["Measure"]),
-        Box::new(Area),
+        Box::new(Area(session.capture())),
         &["number"],
     );
     register_typed(
         registry,
         operator_info_with_outputs("brep.measure.length", "Length", "Len", "emoji:📐️", &q("length", "Curve length"), vec![geometry_channel("geometry", "brep.measure.length")], vec![out_length()], &["Measure"]),
-        Box::new(Length),
+        Box::new(Length(session.capture())),
         &["number"],
     );
     register_typed(
         registry,
         operator_info_with_outputs("brep.measure.centerOfMass", "Center Of Mass", "CoM", "emoji:📐️", &q("center_of_mass", "Center of mass"), vec![geometry_channel("geometry", "brep.measure.centerOfMass")], vec![out_center()], &["Measure"]),
-        Box::new(CenterOfMass),
+        Box::new(CenterOfMass(session.capture())),
         &["point"],
     );
-    reg_geo(registry, "brep.measure.boundingBox", "Bounding Box", "BBox", "emoji:📐️", &q("bounding_box", "Axis-aligned bounding box"), vec![geometry_channel("geometry", "brep.measure.boundingBox")], out_box(), &["Measure"], Box::new(BoundingBox));
+    reg_geo(registry, "brep.measure.boundingBox", "Bounding Box", "BBox", "emoji:📐️", &q("bounding_box", "Axis-aligned bounding box"), vec![geometry_channel("geometry", "brep.measure.boundingBox")], out_box(), &["Measure"], Box::new(BoundingBox(session.capture())));
     register_typed(
         registry,
         operator_info_with_outputs(
@@ -1788,7 +1846,7 @@ pub async fn register(registry: &mut Registry) {
             vec![out_distance()],
             &["Measure"],
         ),
-        Box::new(Distance),
+        Box::new(Distance(session.capture())),
         &["number"],
     );
     register_typed(
@@ -1803,7 +1861,7 @@ pub async fn register(registry: &mut Registry) {
             vec![out_point_result("ClosestPoint")],
             &["Measure"],
         ),
-        Box::new(ClosestPoint),
+        Box::new(ClosestPoint(session.capture())),
         &["point"],
     );
     register_typed(
@@ -1818,17 +1876,17 @@ pub async fn register(registry: &mut Registry) {
             vec![out_classification()],
             &["Measure"],
         ),
-        Box::new(ClassifyPoint),
+        Box::new(ClassifyPoint(session.capture())),
         &["number"],
     );
     register_typed(
         registry,
         operator_info_with_outputs("brep.measure.validate", "Validate", "Val", "emoji:📐️", &q("validate", "Validate geometry"), vec![geometry_channel("geometry", "brep.measure.validate")], vec![out_report()], &["Measure"]),
-        Box::new(Validate),
+        Box::new(Validate(session.capture())),
         &["text"],
     );
 
-    reg_geo(registry, "brep.util.vertex", "Vertex", "Vtx", "emoji:📍️", &q("vertex", "Create vertex"), vec![point_channel("point", "brep.util.vertex")], out_vertex(), &["Utilities"], Box::new(Vertex));
+    reg_geo(registry, "brep.util.vertex", "Vertex", "Vtx", "emoji:📍️", &q("vertex", "Create vertex"), vec![point_channel("point", "brep.util.vertex")], out_vertex(), &["Utilities"], Box::new(Vertex(session.capture())));
     reg_geo(
         registry,
         "brep.util.faceFromWire",
@@ -1839,7 +1897,7 @@ pub async fn register(registry: &mut Registry) {
         vec![geometry_channel("wire", "brep.util.faceFromWire")],
         out_face("FaceFromWire"),
         &["Utilities"],
-        Box::new(FaceFromWire),
+        Box::new(FaceFromWire(session.capture())),
     );
     reg_geo(
         registry,
@@ -1851,7 +1909,7 @@ pub async fn register(registry: &mut Registry) {
         vec![list_channel("faces", "brep.util.sew"), number_channel("tolerance", "brep.util.sew", 0.001)],
         out_solid("SewnSolid"),
         &["Utilities"],
-        Box::new(SewFaces),
+        Box::new(SewFaces(session.capture())),
     );
     reg_geo(
         registry,
@@ -1863,7 +1921,7 @@ pub async fn register(registry: &mut Registry) {
         vec![geometry_channel("geometry", "brep.util.heal"), number_channel("tolerance", "brep.util.heal", 0.001)],
         out_solid("HealedSolid"),
         &["Utilities"],
-        Box::new(HealSolid),
+        Box::new(HealSolid(session.capture())),
     );
     reg_geo(
         registry,
@@ -1875,7 +1933,7 @@ pub async fn register(registry: &mut Registry) {
         vec![geometry_channel("geometry", "brep.util.convertToNurbs")],
         out_geometry_result("NurbsGeometry"),
         &["Utilities"],
-        Box::new(ConvertToNurbs),
+        Box::new(ConvertToNurbs(session.capture())),
     );
 
     register_typed(
@@ -1890,10 +1948,10 @@ pub async fn register(registry: &mut Registry) {
             vec![topology_output("S", "Shls", "shells", "geometry")],
             &["Topology"],
         ),
-        Box::new(SolidShells),
+        Box::new(SolidShells(session.capture())),
         &["geometry", "list"],
     );
-    reg_geo(registry, "brep.topology.compound", "Compound", "Cmpd", "emoji:🗃️", &q("compound", "Combine solids into a compound"), vec![list_channel("solids", "brep.topology.compound")], out_compound("Compound"), &["Topology"], Box::new(CompoundOf));
+    reg_geo(registry, "brep.topology.compound", "Compound", "Cmpd", "emoji:🗃️", &q("compound", "Combine solids into a compound"), vec![list_channel("solids", "brep.topology.compound")], out_compound("Compound"), &["Topology"], Box::new(CompoundOf(session.capture())));
     register_typed(
         registry,
         operator_info_with_outputs(
@@ -1906,7 +1964,7 @@ pub async fn register(registry: &mut Registry) {
             vec![topology_output("S", "Slds", "solids", "geometry")],
             &["Topology"],
         ),
-        Box::new(Explode),
+        Box::new(Explode(session.capture())),
         &["geometry", "list"],
     );
     register_typed(
@@ -1921,14 +1979,14 @@ pub async fn register(registry: &mut Registry) {
             vec![ChannelSpec::named("L", "Lbl", "label", "PersistentLabel").with_value_types(&["number"])],
             &["Topology"],
         ),
-        Box::new(GeometryLabel),
+        Box::new(GeometryLabel(session.capture())),
         &["number"],
     );
 
     register_typed(
         registry,
         operator_info_with_outputs("brep.io.exportStep", "Export Step", "Stp", "emoji:💾️", &q("export_step", "Export STEP"), vec![geometry_channel("geometry", "brep.io.exportStep")], vec![out_step()], &["IO"]),
-        Box::new(ExportStep),
+        Box::new(ExportStep(session.capture())),
         &["text"],
     );
     register_typed(
@@ -1943,7 +2001,7 @@ pub async fn register(registry: &mut Registry) {
             vec![out_stl()],
             &["IO"],
         ),
-        Box::new(ExportStl),
+        Box::new(ExportStl(session.capture())),
         &["text"],
     );
     register_typed(
@@ -1958,10 +2016,10 @@ pub async fn register(registry: &mut Registry) {
             vec![out_obj()],
             &["IO"],
         ),
-        Box::new(ExportObj),
+        Box::new(ExportObj(session.capture())),
         &["text"],
     );
-    reg_geo(registry, "brep.io.importStep", "Import Step", "IStp", "emoji:📂️", &q("import_step", "Import STEP"), vec![ChannelSpec::requires("data", &["brep.io.importStep"]).with_value_types(&["text"])], out_geometry("ImportedGeometry"), &["IO"], Box::new(ImportStep));
+    reg_geo(registry, "brep.io.importStep", "Import Step", "IStp", "emoji:📂️", &q("import_step", "Import STEP"), vec![ChannelSpec::requires("data", &["brep.io.importStep"]).with_value_types(&["text"])], out_geometry("ImportedGeometry"), &["IO"], Box::new(ImportStep(session.capture())));
     reg_geo(
         registry,
         "brep.io.importStl",
@@ -1972,7 +2030,7 @@ pub async fn register(registry: &mut Registry) {
         vec![ChannelSpec::requires("data", &["brep.io.importStl"]).with_value_types(&["text"]), number_channel("tolerance", "brep.io.importStl", 0.1)],
         out_geometry("ImportedGeometry"),
         &["IO"],
-        Box::new(ImportStl),
+        Box::new(ImportStl(session.capture())),
     );
     reg_geo(
         registry,
@@ -1984,7 +2042,7 @@ pub async fn register(registry: &mut Registry) {
         vec![ChannelSpec::requires("data", &["brep.io.importObj"]).with_value_types(&["text"]), number_channel("tolerance", "brep.io.importObj", 0.1)],
         out_geometry("ImportedGeometry"),
         &["IO"],
-        Box::new(ImportObj),
+        Box::new(ImportObj(session.capture())),
     );
     register_typed(
         registry,
@@ -1998,7 +2056,7 @@ pub async fn register(registry: &mut Registry) {
             vec![ChannelSpec::named("D", "Dwg", "dwg", "DwgExport").with_value_types(&["text"])],
             &["IO"],
         ),
-        Box::new(ExportDwg),
+        Box::new(ExportDwg(session.capture())),
         &["text"],
     );
     reg_geo(
@@ -2011,21 +2069,26 @@ pub async fn register(registry: &mut Registry) {
         vec![ChannelSpec::requires("data", &["brep.io.importDwg"]).with_value_types(&["text"]), number_channel("tolerance", "brep.io.importDwg", 0.1)],
         out_geometry("ImportedGeometry"),
         &["IO"],
-        Box::new(ImportDwg),
+        Box::new(ImportDwg(session.capture())),
     );
 
-    mesh::register_mesh(registry);
+    mesh::register_mesh(registry, session);
     registry.finalize();
 }
 
 /// 🛂️ Manifest JSON for host contribution install (tests + packaging metadata).
 pub async fn extension_manifest_json() -> String {
-    build_manifest_json("brep", "Brep", env!("CARGO_PKG_VERSION"), &neural_engine::ColdOwner::new(module_registry().await), vec!["onStartup".into()], vec![], vec![], vec![])
+    let session = Session::new();
+    let registry = neural_engine::ColdOwner::new(module_registry(&session));
+    let manifest = build_manifest_json("brep", "Brep", env!("CARGO_PKG_VERSION"), &registry, vec!["onStartup".into()], vec![], vec![], vec![]);
+    drop(registry);
+    session.close();
+    manifest
 }
 
-pub async fn module_registry() -> Registry {
+pub fn module_registry(session: &Session) -> Registry {
     let mut registry = Registry::new();
-    register(&mut registry).await;
+    register(&mut registry, session);
     registry
 }
 
@@ -2042,7 +2105,7 @@ mod extension_guest {
     use super::module_registry;
     use flow_extension_sdk::{evaluate_invoke_json, flow_extension_topic_contribution};
     use semio_framework::{Fault, FaultCode, FaultOrigin};
-    use semio_framework_plugin::{ExecutionMode, ExtensionBundle};
+    use semio_framework_plugin::{ExecutionMode, ExtensionBundle, ExtensionResourceOwner, PluginCloseStep};
 
     const FLOW_APP_ID: &str = "flow-play";
     const PROCEDURAL3D_APP_ID: &str = "procedural3d-play";
@@ -2056,6 +2119,7 @@ mod extension_guest {
     const TESSELLATE_STEP_BUDGET: usize = 24;
 
     fn bundle() -> ExtensionBundle {
+        let session = super::Session::new().capture();
         let manifest_json = semio_framework::io::resolve_ready(super::extension_manifest_json());
         let flow_topic = flow_extension_topic_contribution(FLOW_APP_ID, EXTENSION_ID, EXTENSION_LABEL, "brep", &manifest_json);
         let procedural3d_topic = flow_extension_topic_contribution(PROCEDURAL3D_APP_ID, EXTENSION_ID, EXTENSION_LABEL, "brep", &manifest_json);
@@ -2063,34 +2127,57 @@ mod extension_guest {
         let bundle = bundle.mode(ExecutionMode::Linked);
         let bundle = bundle.contributes_topic(flow_topic.topic, flow_topic.payload);
         let bundle = bundle.contributes_topic(procedural3d_topic.topic, procedural3d_topic.payload);
-        let bundle = bundle.handler("evaluate", |req| {
-            evaluate_invoke_json(&neural_engine::ColdOwner::new(semio_framework::io::resolve_ready(module_registry())), req).map_err(|err| Fault::new(FaultOrigin::Plugin, FaultCode::new("extension.evaluate.bad-request"), err))
-        });
-        let bundle = bundle.handler("tessellate", |req| {
-            let request = pack::json::parse_bytes(req).map_err(|err| Fault::new(FaultOrigin::Plugin, FaultCode::new("extension.tessellate.bad-request"), err.to_string()))?;
-            let handle = request.get("handle").and_then(pack::json::Value::as_str).ok_or_else(|| Fault::new(FaultOrigin::Plugin, FaultCode::new("extension.tessellate.bad-request"), "missing field `handle`".to_string()))?;
-            let tolerance = request.get("tolerance").and_then(pack::json::Value::as_f64).unwrap_or(0.05);
-            let budget = request.get("budget").and_then(pack::json::Value::as_f64).map_or(TESSELLATE_STEP_BUDGET, |value| (value as usize).max(1));
-            let wall_micros = request.get("wallMicros").and_then(pack::json::Value::as_f64).map_or(flow_extension_sdk::brep_geometry::TESSELLATE_STEP_WALL_MICROS, |value| value.max(0.0) as u64);
-            let chunk = request.get("chunk").and_then(pack::json::Value::as_f64).map_or(0, |value| value.max(0.0) as usize);
-            Ok(flow_extension_sdk::brep_geometry::tessellate_step_envelope_json(handle, tolerance, budget, wall_micros, chunk).into_bytes())
-        });
-        let bundle = bundle.handler("evaluateCancel", |req| {
-            let request = pack::json::parse_bytes(req).map_err(|err| Fault::new(FaultOrigin::Plugin, FaultCode::new("extension.evaluate-cancel.bad-request"), err.to_string()))?;
-            let retired = match (request.get("operatorId").and_then(pack::json::Value::as_str), request.get("nodeHash").and_then(pack::json::Value::as_f64)) {
-                (Some(operator_id), Some(node_hash)) => usize::from(flow_extension_sdk::cancel_evaluation(operator_id, node_hash.max(0.0) as u64)),
-                _ => flow_extension_sdk::cancel_all_evaluations(),
-            };
-            Ok(pack::json::to_string(&pack::json::object([("ok".to_string(), pack::json::Value::Bool(true)), ("retired".to_string(), pack::json::Value::from(retired as u64))])).into_bytes())
-        });
-        bundle.handler("tessellateCancel", |req| {
-            let request = pack::json::parse_bytes(req).map_err(|err| Fault::new(FaultOrigin::Plugin, FaultCode::new("extension.tessellate-cancel.bad-request"), err.to_string()))?;
-            let retired = match (request.get("handle").and_then(pack::json::Value::as_str), request.get("tolerance").and_then(pack::json::Value::as_f64)) {
-                (Some(handle), Some(tolerance)) => usize::from(flow_extension_sdk::brep_geometry::cancel_tessellation(handle, tolerance)),
-                _ => flow_extension_sdk::brep_geometry::cancel_all_tessellations(),
-            };
-            Ok(pack::json::to_string(&pack::json::object([("ok".to_string(), pack::json::Value::Bool(true)), ("retired".to_string(), pack::json::Value::from(retired as u64))])).into_bytes())
-        })
+        bundle.resource_owner(BrepExtensionResources { session }).owned_handler("evaluate").owned_handler("tessellate").owned_handler("evaluateCancel").owned_handler("tessellateCancel")
+    }
+
+    struct BrepExtensionResources { session: super::SessionCapture }
+
+    impl ExtensionResourceOwner for BrepExtensionResources {
+        fn invoke(&self, capability: &str, req: &[u8]) -> Result<Vec<u8>, Fault> {
+            match capability {
+                "evaluate" => {
+                    evaluate_invoke_json(&neural_engine::ColdOwner::new(module_registry(&self.session)), req).map_err(|err| Fault::new(FaultOrigin::Plugin, FaultCode::new("extension.evaluate.bad-request"), err))
+                },
+                "tessellate" => {
+                    let request = pack::json::parse_bytes(req).map_err(|err| Fault::new(FaultOrigin::Plugin, FaultCode::new("extension.tessellate.bad-request"), err.to_string()))?;
+                    let handle = request.get("handle").and_then(pack::json::Value::as_str).ok_or_else(|| Fault::new(FaultOrigin::Plugin, FaultCode::new("extension.tessellate.bad-request"), "missing field `handle`".to_string()))?;
+                    let tolerance = request.get("tolerance").and_then(pack::json::Value::as_f64).unwrap_or(0.05);
+                    let budget = request.get("budget").and_then(pack::json::Value::as_f64).map_or(TESSELLATE_STEP_BUDGET, |value| (value as usize).max(1));
+                    let wall_micros = request.get("wallMicros").and_then(pack::json::Value::as_f64).map_or(flow_extension_sdk::mesh::TESSELLATE_STEP_WALL_MICROS, |value| value.max(0.0) as u64);
+                    let chunk = request.get("chunk").and_then(pack::json::Value::as_f64).map_or(0, |value| value.max(0.0) as usize);
+                    Ok(self.session.tessellate_step_envelope_json(handle, tolerance, budget, wall_micros, chunk).into_bytes())
+                },
+                "evaluateCancel" => {
+                    let request = pack::json::parse_bytes(req).map_err(|err| Fault::new(FaultOrigin::Plugin, FaultCode::new("extension.evaluate-cancel.bad-request"), err.to_string()))?;
+                    let retired = match (request.get("operatorId").and_then(pack::json::Value::as_str), request.get("nodeHash").and_then(pack::json::Value::as_f64)) {
+                        (Some(operator_id), Some(node_hash)) => usize::from(flow_extension_sdk::cancel_evaluation(operator_id, node_hash.max(0.0) as u64)),
+                        _ => flow_extension_sdk::cancel_all_evaluations(),
+                    };
+                    Ok(pack::json::to_string(&pack::json::object([("ok".to_string(), pack::json::Value::Bool(true)), ("retired".to_string(), pack::json::Value::from(retired as u64))])).into_bytes())
+                },
+                "tessellateCancel" => {
+                    let request = pack::json::parse_bytes(req).map_err(|err| Fault::new(FaultOrigin::Plugin, FaultCode::new("extension.tessellate-cancel.bad-request"), err.to_string()))?;
+                    let retired = match (request.get("handle").and_then(pack::json::Value::as_str), request.get("tolerance").and_then(pack::json::Value::as_f64)) {
+                        (Some(handle), Some(tolerance)) => usize::from(self.session.cancel_tessellation(handle, tolerance)),
+                        _ => self.session.cancel_all_tessellations(),
+                    };
+                    Ok(pack::json::to_string(&pack::json::object([("ok".to_string(), pack::json::Value::Bool(true)), ("retired".to_string(), pack::json::Value::from(retired as u64))])).into_bytes())
+                },
+                _ => Err(Fault::new(FaultOrigin::Plugin, FaultCode::new("extension.unknown-capability"), "unknown BREP capability")),
+            }
+        }
+        fn begin_close(&mut self) { if !self.session.terminal_is_empty() { self.session.begin_close(); } }
+        fn close_step(&mut self, items: usize, bytes: usize) -> Result<PluginCloseStep, Fault> {
+            match self.session.close_step(items, bytes).map_err(|message| Fault::new(FaultOrigin::Plugin, FaultCode::new("extension.brep-close"), message))? {
+                neural_engine::ValueRetirementStep::Pending { released_items, released_bytes } => Ok(PluginCloseStep::Pending { released_items, released_bytes }),
+                neural_engine::ValueRetirementStep::Blocked => Ok(PluginCloseStep::Blocked { reason: "BREP resource family is paused" }),
+                neural_engine::ValueRetirementStep::Complete => Ok(PluginCloseStep::Complete),
+            }
+        }
+        fn terminal_is_empty(&self) -> bool { self.session.terminal_is_empty() }
+        fn next_close_byte_demand(&self) -> usize { self.session.shell_byte_requirement().max(1) }
+        fn cancel_close(&mut self) { if !self.session.terminal_is_empty() { self.session.cancel_close(); } }
+        fn resume_close(&mut self) { if !self.session.terminal_is_empty() { self.session.resume_close(); } }
     }
 
     #[cfg(test)]

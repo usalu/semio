@@ -1,5 +1,5 @@
 {
   "mutation": "reorderShots",
   "id": "shot-close",
-  "to_index": 0
+  "toIndex": 0
 }

@@ -130,6 +130,34 @@ async fn fixed_history_ledger_preserves_order_capacity_and_aba_rejection() {
     assert!(ledger.terminal_is_empty());
 }
 
+/// 🪑️ `vacancies` answers exactly how many further inserts the ledger admits — a reuse of a tombstone counts, a held
+/// reservation leaves none — so a batch of inserts can be refused before its first one (the reprojection preflight).
+#[semio_framework_async_macros::async_test]
+async fn fixed_history_ledger_vacancies_count_every_admissible_insert() {
+    let mut ledger = ArtifactHistoryLedger::new();
+    assert_eq!(ledger.vacancies(), ARTIFACT_HISTORY_LEDGER_CAPACITY);
+    let mut keys = Vec::with_capacity(ARTIFACT_HISTORY_LEDGER_CAPACITY);
+    for index in 0..ARTIFACT_HISTORY_LEDGER_CAPACITY {
+        assert_eq!(ledger.vacancies(), ARTIFACT_HISTORY_LEDGER_CAPACITY - index);
+        keys.push(ledger.try_push(format!("history-{index:02}")).expect("fixed ledger admits its exact capacity"));
+    }
+    assert_eq!(ledger.vacancies(), 0);
+    ledger.remove_key(keys[3]).expect("live generation removes its exact owner");
+    ledger.remove_key(keys[9]).expect("live generation removes its exact owner");
+    assert_eq!(ledger.vacancies(), 2);
+    let reservation = ledger.reserve_one().expect("a tombstone admits a reservation");
+    assert_eq!(ledger.vacancies(), 0, "a held reservation admits no further insert");
+    ledger.cancel_reservation(reservation).expect("the exact reservation cancels");
+    assert_eq!(ledger.vacancies(), 2);
+    for vacancy in 0..2 {
+        ledger.try_push(format!("refill-{vacancy}")).expect("every counted vacancy admits one insert");
+    }
+    assert_eq!(ledger.vacancies(), 0);
+    assert!(ledger.try_push("overflow".to_string()).is_err());
+    while ledger.pop().is_some() {}
+    assert!(ledger.terminal_is_empty());
+}
+
 #[semio_framework_async_macros::async_test]
 async fn fixed_history_reservation_returns_exact_rejected_owner_and_blocks_aba() {
     let mut first = ArtifactHistoryLedger::new();

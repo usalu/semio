@@ -89,7 +89,7 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
   });
 
   //#region CorpusConformance
-  /** 🧪️ Consumes the shared conformance corpus (`🧬️contract/🧫️fixtures/🧪️conformance/`, 64 cases) —
+  /** 🧪️ Consumes the shared conformance corpus (`🧬️contract/🧫️fixtures/🧪️conformance/`, 70 cases) —
    * the load-bearing proof that this React store agrees with the Rust `apply_patch`/`validate_snapshot`
    * the GPU renderer also builds on. For each accept case: loads the snapshot (+ patch, if present)
    * into a real `📃️UiDocumentStore` and asserts the retained tree shape, every node's accessibility
@@ -151,8 +151,8 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
     }
 
     const cases = loadCorpus();
-    it("loads all 64 corpus fixtures", () => {
-      expect(cases.length).toBe(64);
+    it("loads all 70 corpus fixtures", () => {
+      expect(cases.length).toBe(70);
     });
 
     for (const testCase of cases) {
@@ -203,6 +203,50 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
         expect(allActionIds(state)).toEqual(testCase.expect.actionIds ?? []);
       });
     }
+
+    /** 🎚️ The number-control and recipe cases render their own semantics: one tick per detent, a stepper and
+     * number fields at their precision, chips named by their remove verb, a destructive choice described by
+     * its consequence — the React half of the wgpu `🧪️conformance-corpus` law over the same snapshots. */
+    it("renders the number-control and recipe cases with their own semantics", async () => {
+      const { render, cleanup, fireEvent } = await import("@semio-tech/ui-react/test");
+      const mount = (name: string) => {
+        const testCase = cases.find((candidate) => candidate.name === name)!;
+        const store = new UiDocumentStore(testCase.snapshot.surface);
+        store.loadSnapshot(testCase.snapshot);
+        return render(<UiNodeView store={store} id={testCase.snapshot.root} context={{ ...noopContext, store }} />);
+      };
+      const slider = mount("slider-with-snaps");
+      expect([...slider.container.querySelectorAll<HTMLElement>('[data-slot="slider-tick"]')].map((tick) => tick.dataset.snap)).toEqual(["2.5", "5", "7.5"]);
+      cleanup();
+      const stepper = mount("stepper-precision");
+      expect(stepper.container.querySelector<HTMLInputElement>('[data-stepper-input="true"]')!.value).toBe("2.50");
+      cleanup();
+      const vector = mount("vector-input");
+      const axes = [...vector.container.querySelectorAll<HTMLInputElement>('input[type="number"]')];
+      expect(axes.map((axis) => [axis.value, axis.step])).toEqual([["1.3", "0.5"], ["-3.0", "0.5"]]);
+      fireEvent.keyDown(axes[0]!, { key: "PageDown" });
+      fireEvent.keyDown(axes[1]!, { key: "PageUp" });
+      expect(axes.map((axis) => axis.value)).toEqual(["0.0", "0.0"]);
+      fireEvent.keyDown(axes[0]!, { key: "PageUp" });
+      expect(axes[0]!.value).toBe("5.0");
+      cleanup();
+      const color = mount("color-input");
+      const swatch = color.container.querySelector<HTMLInputElement>('input[type="color"]')!;
+      expect([swatch.value, swatch.getAttribute("aria-label")]).toEqual(["#ff8000", "Tint"]);
+      const hex = color.container.querySelector<HTMLInputElement>('input[aria-label="Hex"]')!;
+      expect(hex.value).toBe("#ff800080");
+      const alpha = color.container.querySelector<HTMLElement>('[role="slider"]')!;
+      expect([alpha.getAttribute("aria-valuemin"), alpha.getAttribute("aria-valuemax"), alpha.getAttribute("aria-valuenow")]).toEqual(["0", "1", "0.5"]);
+      cleanup();
+      const references = mount("reference-list");
+      expect([...references.container.querySelectorAll("button")].map((button) => button.getAttribute("aria-label"))).toEqual(expect.arrayContaining(["Remove Piece 3", "Remove Piece 7", "Use selection"]));
+      cleanup();
+      const choices = mount("dialog-choices");
+      const overwrite = choices.container.querySelector<HTMLButtonElement>('button[aria-label="Overwrite"]')!;
+      const described = (overwrite.getAttribute("aria-describedby") ?? "").split(" ").map((id) => document.getElementById(id)?.textContent ?? "").join(" ");
+      expect(described).toContain("Replaces the edited mutations in every alternative that contains them.");
+      cleanup();
+    });
   });
   //#endregion CorpusConformance
 

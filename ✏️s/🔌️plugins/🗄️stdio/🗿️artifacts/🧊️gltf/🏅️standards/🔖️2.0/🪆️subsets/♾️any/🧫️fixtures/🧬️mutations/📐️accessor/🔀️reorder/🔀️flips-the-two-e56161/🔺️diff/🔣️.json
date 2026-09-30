@@ -1,21 +1,35 @@
 {
-  "id": "s.stdio.gltf.mutation.reorder-accessors.v1",
-  "version": 1,
-  "touchedPaths": [
-    "document/accessors/1",
-    "document/accessors/0"
-  ],
-  "payload": {
-    "order": [
-      1,
-      0
+  "meshes": {
+    "modified": [
+      {
+        "index": 0,
+        "diff": {
+          "primitives": [
+            {
+              "attributes": {
+                "POSITION": 1,
+                "TEXCOORD_0": 0
+              }
+            }
+          ]
+        }
+      }
     ]
   },
-  "operation": {
-    "kind": "reorder",
-    "order": [
-      1,
-      0
+  "accessors": {
+    "modified": [
+      {
+        "index": 0,
+        "diff": {
+          "kind": "VEC2"
+        }
+      },
+      {
+        "index": 1,
+        "diff": {
+          "kind": "VEC3"
+        }
+      }
     ]
   }
 }

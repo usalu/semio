@@ -5,9 +5,14 @@
   "type": "object",
   "additionalProperties": false,
   "required": [
+    "mutation",
     "name"
   ],
   "properties": {
+    "mutation": {
+      "const": "setLayer",
+      "description": "Aggregate discriminator spliced in by SemioCadMutation; absent when the payload stands alone."
+    },
     "name": {
       "type": "string"
     },
@@ -21,7 +26,18 @@
         {
           "type": "null"
         }
-      ]
+      ],
+      "x-semio-ui": {
+        "widget": "stepper",
+        "label": {
+          "en": "Color index",
+          "de": "Farbindex"
+        },
+        "description": {
+          "en": "ACI color number; 256 = by layer, 0 = by block.",
+          "de": "ACI-Farbnummer; 256 = von Layer, 0 = von Block."
+        }
+      }
     },
     "lineType": {
       "anyOf": [
@@ -31,7 +47,14 @@
         {
           "type": "null"
         }
-      ]
+      ],
+      "x-semio-ui": {
+        "widget": "text",
+        "label": {
+          "en": "Line type",
+          "de": "Linientyp"
+        }
+      }
     },
     "visible": {
       "anyOf": [
@@ -42,10 +65,6 @@
           "type": "null"
         }
       ]
-    },
-    "mutation": {
-      "const": "setLayer",
-      "description": "Aggregate discriminator spliced in by SemioCadMutation; absent when the payload stands alone."
     }
   }
 }

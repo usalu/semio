@@ -1,12 +1,32 @@
 {
-  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/norm/din18599/mutation/change-attachment/schema.json",
   "title": "ChangeAttachment",
   "type": "object",
-  "properties": {
-    "newAttachment": {
-      "type": "object"
-    }
-  },
   "additionalProperties": false,
-  "$id": "https://json.schemas.assets.semio-tech.com/s/norm/din18599/mutation/change-attachment/schema.json"
+  "required": [
+    "mutation",
+    "newAttachment"
+  ],
+  "properties": {
+    "mutation": {
+      "const": "changeAttachment"
+    },
+    "newAttachment": {
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/din18599/snapshot/schema.json#/$defs/Attachment",
+      "x-semio-ui": {
+        "role": "value",
+        "label": {
+          "en": "Building attachment",
+          "de": "Anbausituation des Gebäudes"
+        },
+        "description": {
+          "en": "Detached, semi-detached, end terrace or mid terrace.",
+          "de": "Freistehend, Doppelhaushälfte, Reihenendhaus oder Reihenmittelhaus."
+        },
+        "group": "building",
+        "order": 10
+      }
+    }
+  }
 }

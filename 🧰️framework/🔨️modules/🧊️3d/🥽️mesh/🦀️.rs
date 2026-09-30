@@ -8,6 +8,10 @@
 use serde::{Deserialize, Serialize};
 use std::collections::{HashMap, HashSet};
 
+#[path = "🛠️modeling/🦀️.rs"]
+mod modeling;
+pub use modeling::{MeshModelingJob, MeshModelingProgress, MeshModelingStep};
+
 /// 🌉️ `HashSet<u32>` has no `ToValue`/`FromValue` blanket impl (`🌱️value/🔁️codec` only covers
 /// `Vec`/`BTreeMap<String,_>`/`HashMap<K:ToString,_>`/`Option`/arrays) — `HalfedgeMesh::uv_seams`
 /// names this bridge via `#[value(with = "u32_hashset_bridge")]`. Encodes as a `DslValue::Array`,
@@ -772,63 +776,8 @@ impl HalfedgeMesh {
     }
 
     /// ⏳ Reports progress and cancels atomically when the callback returns false.
-    pub fn bevel_edges_with_progress(&mut self, edges: &[EdgeId], amount: f32, segments: u32, mut progress: impl FnMut(f32) -> bool) -> MeshResult<()> {
-        if edges.is_empty() { return Err(MeshKernelError::EmptySelection); }
-        if !amount.is_finite() || amount <= 0.0 || !(1..=64).contains(&segments) { return Err(MeshKernelError::InvalidInput("bevel requires positive finite width and 1..=64 segments".into())); }
-        let (mut positions, mut faces) = self.polygon_soup();
-        let work = positions.len().saturating_mul(faces.len()).saturating_add(edges.len().saturating_mul(segments as usize).saturating_mul(self.halfedges.len()));
-        if work > 4_000_000 { return Err(MeshKernelError::InvalidInput("bevel work budget exceeded".into())); }
-        let extent = positions.iter().map(|point| Vec3(*point).sub(Vec3(positions[0])).length()).fold(0.0f32, f32::max);
-        let epsilon = extent * 1e-6;
-        if epsilon == 0.0 { return Err(MeshKernelError::DegenerateOperation); }
-        for (id, face) in faces.iter().enumerate() {
-            if !progress(0.2 * id as f32 / faces.len() as f32) { return Err(MeshKernelError::InvalidInput("operation cancelled".into())); }
-            let normal = self.face_normal(FaceId(id as u32))?;
-            let origin = Vec3(positions[face[0] as usize]);
-            if normal.length() == 0.0 || positions.iter().any(|point| Vec3(*point).sub(origin).dot(normal) > epsilon) { return Err(MeshKernelError::InvalidInput("bevel requires an outward convex mesh".into())); }
-        }
-        if self.halfedges.iter().any(|edge| edge.twin.is_none()) { return Err(MeshKernelError::InvalidInput("bevel requires a closed manifold mesh".into())); }
-        let mut selected = HashSet::new();
-        let mut planes = Vec::new();
-        for &edge in edges {
-            let he = self.halfedges.get(edge.0 as usize).ok_or(MeshKernelError::InvalidHandle)?;
-            let twin = he.twin.ok_or(MeshKernelError::NonManifold)?;
-            if !selected.insert(edge.0.min(twin)) { continue; }
-            let n1 = self.face_normal(FaceId(he.face.ok_or(MeshKernelError::InvalidHandle)?))?;
-            let n2 = self.face_normal(FaceId(self.halfedges[twin as usize].face.ok_or(MeshKernelError::InvalidHandle)?))?;
-            let cosine = n1.dot(n2).clamp(-1.0, 1.0);
-            let theta = cosine.acos();
-            let sine = theta.sin();
-            if sine.abs() < 1e-5 { return Err(MeshKernelError::DegenerateOperation); }
-            let origin = Vec3(positions[he.vertex as usize]);
-            let tangent = n2.sub(n1.scale(cosine)).scale(1.0 / sine);
-            let mut clearance = f32::INFINITY;
-            for (face, direction) in [(he.face, tangent), (self.halfedges[twin as usize].face, n1.sub(n2.scale(cosine)).scale(1.0 / sine))] {
-                for vertex in self.face_vertex_ids(FaceId(face.ok_or(MeshKernelError::InvalidHandle)?))? {
-                    let distance = origin.sub(Vec3(positions[vertex.0 as usize])).dot(direction);
-                    if distance > epsilon { clearance = clearance.min(distance); }
-                }
-            }
-            if amount >= clearance * 0.5 || amount <= epsilon { return Err(MeshKernelError::InvalidInput("bevel width must stay below half the neighboring face clearance".into())); }
-            let center = origin.sub(n1.add(n2).scale(amount / sine));
-            let radius = amount * (1.0 + cosine) / sine;
-            for index in 0..segments {
-                let angle = theta * (index as f32 + 0.5) / segments as f32;
-                let normal = n1.scale(angle.cos()).add(tangent.scale(angle.sin()));
-                let distance = normal.dot(center) + radius * (theta / (2.0 * segments as f32)).cos();
-                planes.push((normal, distance));
-            }
-        }
-        let count = planes.len();
-        for (index, (normal, distance)) in planes.into_iter().enumerate() {
-            if !progress(0.2 + 0.8 * index as f32 / count as f32) { return Err(MeshKernelError::InvalidInput("operation cancelled".into())); }
-            clip_convex_mesh(&mut positions, &mut faces, normal, distance, epsilon)?;
-        }
-        let mut result = Self::from_faces(&positions, &faces)?;
-        result.drop_unreferenced_vertices()?;
-        if result.halfedges.iter().enumerate().any(|(id,edge)| edge.twin.is_none_or(|twin| result.halfedges[twin as usize].twin != Some(id as u32))) { return Err(MeshKernelError::NonManifold); }
-        if result.face_count() < 4 || !progress(1.0) { return Err(MeshKernelError::InvalidInput("bevel cancelled or removed the solid".into())); }
-        *self = result;
+    pub fn bevel_edges_with_progress(&mut self, edges: &[EdgeId], amount: f32, segments: u32, progress: impl FnMut(f32) -> bool) -> MeshResult<()> {
+        *self = self.bevel_job(edges, amount, segments)?.finish_with_progress(progress)?;
         Ok(())
     }
 
@@ -1418,70 +1367,8 @@ impl HalfedgeMesh {
     }
 
     /// 🪶 Collapses shortest safe edges, preserving winding and manifold edge incidence.
-    pub fn decimate_with_progress(&mut self, target_ratio: f32, mut progress: impl FnMut(f32) -> bool) -> MeshResult<()> {
-        if !target_ratio.is_finite() || target_ratio <= 0.0 || target_ratio > 1.0 { return Err(MeshKernelError::InvalidInput("decimation ratio must be in (0,1]".into())); }
-        let initial = self.vertex_count();
-        let target = ((initial as f32 * target_ratio).ceil() as usize).max(4);
-        if target >= initial { return Ok(()); }
-        if initial.saturating_mul(self.halfedges.len()).saturating_mul(initial - target) > 32_000_000 { return Err(MeshKernelError::InvalidInput("decimation work budget exceeded".into())); }
-        let mut result = self.clone();
-        let closed = self.halfedges.iter().all(|edge| edge.twin.is_some());
-        while result.vertex_count() > target {
-            if !progress((initial - result.vertex_count()) as f32 / (initial - target) as f32) { return Err(MeshKernelError::InvalidInput("operation cancelled".into())); }
-            let (positions, faces) = result.polygon_soup();
-            let mut edges = HashSet::new();
-            for face in &faces { for i in 0..face.len() { let (a,b) = (face[i],face[(i+1)%face.len()]); edges.insert((a.min(b),a.max(b))); } }
-            let mut edges = edges.into_iter().collect::<Vec<_>>();
-            edges.sort_by(|&(a,b),&(c,d)| Vec3(positions[a as usize]).sub(Vec3(positions[b as usize])).length().total_cmp(&Vec3(positions[c as usize]).sub(Vec3(positions[d as usize])).length()).then((a,b).cmp(&(c,d))));
-            let mut replacement = None;
-            for (a,b) in edges {
-                let mut candidate_positions = positions.clone();
-                candidate_positions[a as usize] = Vec3(positions[a as usize]).lerp(Vec3(positions[b as usize]),0.5).0;
-                let mut candidate_faces = Vec::new();
-                let mut safe = true;
-                for original in &faces {
-                    let mut face = original.iter().map(|&id| if id == b { a } else { id }).collect::<Vec<_>>();
-                    face.dedup(); if face.first() == face.last() { face.pop(); }
-                    if face.len() < 3 { continue; }
-                    if face.iter().copied().collect::<HashSet<_>>().len() != face.len() { safe = false; break; }
-                    let before = newell_normal(&original.iter().map(|&id| Vec3(positions[id as usize])).collect::<Vec<_>>()).normalize();
-                    let after = newell_normal(&face.iter().map(|&id| Vec3(candidate_positions[id as usize])).collect::<Vec<_>>()).normalize();
-                    if after.length() == 0.0 || before.dot(after) <= 0.0 { safe = false; break; }
-                    candidate_faces.push(face);
-                }
-                if !safe || candidate_faces.len() < 4 { continue; }
-                let mut incidence = HashMap::<(u32,u32),(usize,i32)>::new();
-                for face in &candidate_faces {
-                    for i in 0..face.len() {
-                        let (a,b) = (face[i],face[(i+1)%face.len()]);
-                        let entry = incidence.entry((a.min(b),a.max(b))).or_default(); entry.0 += 1; entry.1 += if a < b { 1 } else { -1 };
-                    }
-                }
-                if !incidence.values().all(|edge| *edge == (2,0) || (!closed && edge.0 == 1)) { continue; }
-                if closed {
-                    let mut links = HashMap::new();
-                    for face in &candidate_faces {
-                        if let Some(index) = face.iter().position(|&id| id == a) {
-                            let previous = face[(index + face.len() - 1) % face.len()];
-                            let next = face[(index + 1) % face.len()];
-                            if links.insert(previous,next).is_some() { safe = false; break; }
-                        }
-                    }
-                    if !safe || links.is_empty() { continue; }
-                    let start = *links.keys().min().unwrap();
-                    let mut cursor = start;
-                    while let Some(next) = links.remove(&cursor) { cursor = next; if cursor == start { break; } }
-                    if cursor != start || !links.is_empty() { continue; }
-                }
-                let mut candidate = Self::from_faces(&candidate_positions,&candidate_faces)?;
-                candidate.drop_unreferenced_vertices()?;
-                if candidate.vertex_count() < result.vertex_count() { replacement = Some(candidate); break; }
-            }
-            let Some(candidate) = replacement else { break; };
-            result = candidate;
-        }
-        if !progress(1.0) { return Err(MeshKernelError::InvalidInput("operation cancelled".into())); }
-        *self = result;
+    pub fn decimate_with_progress(&mut self, target_ratio: f32, progress: impl FnMut(f32) -> bool) -> MeshResult<()> {
+        *self = self.decimate_job(target_ratio)?.finish_with_progress(progress)?;
         Ok(())
     }
 
@@ -1537,45 +1424,6 @@ impl HalfedgeMesh {
 }
 
 //#endregion Edit
-
-fn clip_convex_mesh(positions: &mut Vec<[f32; 3]>, faces: &mut Vec<Vec<u32>>, normal: Vec3, distance: f32, epsilon: f32) -> MeshResult<()> {
-    let mut intersections = HashMap::new();
-    let mut cap = HashSet::new();
-    let mut clipped = Vec::new();
-    for face in faces.iter() {
-        let mut result = Vec::new();
-        for index in 0..face.len() {
-            let (a,b) = (face[index],face[(index+1)%face.len()]);
-            let da = Vec3(positions[a as usize]).dot(normal) - distance;
-            let db = Vec3(positions[b as usize]).dot(normal) - distance;
-            if da <= epsilon { result.push(a); if da.abs() <= epsilon { cap.insert(a); } }
-            if (da > epsilon && db < -epsilon) || (da < -epsilon && db > epsilon) {
-                let key = (a.min(b),a.max(b));
-                let id = *intersections.entry(key).or_insert_with(|| {
-                    let point = Vec3(positions[a as usize]).lerp(Vec3(positions[b as usize]), da / (da-db));
-                    let id = positions.len() as u32; positions.push(point.0); id
-                });
-                result.push(id); cap.insert(id);
-            }
-        }
-        result.dedup();
-        if result.first() == result.last() { result.pop(); }
-        if result.len() >= 3 { clipped.push(result); }
-    }
-    if cap.len() < 3 { return Err(MeshKernelError::InvalidInput("bevel width does not intersect the solid".into())); }
-    let mut cap = cap.into_iter().collect::<Vec<_>>();
-    let center = cap.iter().fold(Vec3::ZERO, |sum,&id| sum.add(Vec3(positions[id as usize]).scale(1.0/cap.len() as f32)));
-    let axis = if normal.x().abs() < 0.9 { Vec3::new(1.0,0.0,0.0) } else { Vec3::new(0.0,1.0,0.0) };
-    let u = normal.cross(axis).normalize();
-    let v = normal.cross(u);
-    cap.sort_by(|&a,&b| {
-        let a = Vec3(positions[a as usize]).sub(center); let b = Vec3(positions[b as usize]).sub(center);
-        a.dot(v).atan2(a.dot(u)).total_cmp(&b.dot(v).atan2(b.dot(u)))
-    });
-    clipped.push(cap);
-    *faces = clipped;
-    Ok(())
-}
 
 //#region Uv
 

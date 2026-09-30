@@ -5,20 +5,21 @@
   "type": "object",
   "additionalProperties": false,
   "required": [
+    "mutation",
     "id",
     "name"
   ],
   "properties": {
+    "mutation": {
+      "const": "setEntityName",
+      "description": "Aggregate discriminator spliced in by StepMutation; absent when the payload stands alone."
+    },
     "id": {
       "type": "integer",
       "minimum": 0
     },
     "name": {
       "type": "string"
-    },
-    "mutation": {
-      "const": "setEntityName",
-      "description": "Aggregate discriminator spliced in by StepMutation; absent when the payload stands alone."
     }
   }
 }

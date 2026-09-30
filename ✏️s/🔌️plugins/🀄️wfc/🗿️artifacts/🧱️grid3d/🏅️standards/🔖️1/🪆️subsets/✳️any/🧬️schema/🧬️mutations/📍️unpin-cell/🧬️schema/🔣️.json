@@ -12,15 +12,51 @@
   "properties": {
     "x": {
       "type": "integer",
-      "minimum": 0
+      "minimum": 0,
+      "x-semio-ui": {
+        "widget": "stepper",
+        "role": "value",
+        "label": {
+          "en": "Column",
+          "de": "Spalte"
+        },
+        "step": 1,
+        "precision": 0,
+        "group": "cell",
+        "order": 10
+      }
     },
     "y": {
       "type": "integer",
-      "minimum": 0
+      "minimum": 0,
+      "x-semio-ui": {
+        "widget": "stepper",
+        "role": "value",
+        "label": {
+          "en": "Row",
+          "de": "Zeile"
+        },
+        "step": 1,
+        "precision": 0,
+        "group": "cell",
+        "order": 20
+      }
     },
     "z": {
       "type": "integer",
-      "minimum": 0
+      "minimum": 0,
+      "x-semio-ui": {
+        "widget": "stepper",
+        "role": "value",
+        "label": {
+          "en": "Layer",
+          "de": "Lage"
+        },
+        "step": 1,
+        "precision": 0,
+        "group": "cell",
+        "order": 30
+      }
     }
   }
 }

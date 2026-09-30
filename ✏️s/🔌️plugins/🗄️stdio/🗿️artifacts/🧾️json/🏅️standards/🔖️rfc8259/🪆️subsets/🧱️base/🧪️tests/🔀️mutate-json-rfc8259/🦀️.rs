@@ -42,7 +42,23 @@ fn number(value: &Json, key: &str) -> Option<f64> {
     }
 }
 
-/// ↩️ The inverse mutation's OWN spec, computed by reading whatever pre-mutation state it needs
+/// 🌳 A projected (plain) JSON value — what [`read_at`] hands back — as the tagged `JsonValue` wire a leaf payload
+/// carries (`{"kind":"number","lexeme":…}` …). A whole number prints without a fraction (`99`, not `99.0`) and any
+/// other one in its shortest round-trip form, both RFC 8259 §6 number lexemes.
+fn wire_value(value: &Json) -> Json {
+    let tagged = |kind: &str, pairs: Vec<(&str, Json)>| json_object([vec![("kind", Json::String(kind.to_string()))], pairs].concat());
+    match value {
+        Json::Null => tagged("null", vec![]),
+        Json::Bool(flag) => tagged("bool", vec![("value", Json::Bool(*flag))]),
+        Json::Number(n) if n.fract() == 0.0 && n.abs() < 1e15 => tagged("number", vec![("lexeme", Json::String(format!("{}", *n as i64)))]),
+        Json::Number(n) => tagged("number", vec![("lexeme", Json::String(format!("{n:?}")))]),
+        Json::String(text) => tagged("string", vec![("value", Json::String(text.clone()))]),
+        Json::Array(items) => tagged("array", vec![("items", Json::Array(items.iter().map(wire_value).collect()))]),
+        Json::Object(entries) => tagged("object", vec![("members", Json::Array(entries.iter().map(|(key, item)| json_object(vec![("key", Json::String(key.clone())), ("value", wire_value(item))])).collect()))]),
+    }
+}
+
+/// ↩️ The inverse mutation's OWN spec (leaf wire payloads, like every row), computed by reading whatever pre-mutation state it needs
 /// straight out of `original` with the SAME independent reader the oracle mutates with — never by
 /// calling this repository's own `JsonMutation::inverse`, which would defeat the point of an
 /// independently-computed oracle. Simpler than that method's own `RemoveMember` case: RFC 8259 §4
@@ -54,24 +70,17 @@ fn inverse_spec(original: &[u8], forward: &Json) -> Result<Json, String> {
     let params = forward.get("params").cloned().unwrap_or(Json::Null);
     let path = params.get("path").cloned().unwrap_or(Json::Array(Vec::new()));
     match forward.str("kind").as_str() {
-        "no-mutation" => Ok(kind_spec("no-mutation", json_object(vec![]))),
-        "set-snapshot" => {
-            let whole = read_at(original, &Json::Array(Vec::new()), &[])?.ok_or("set-snapshot inverse: document does not resolve")?;
-            Ok(kind_spec("set-snapshot", json_object(vec![("value", whole)])))
-        }
         "set-member" => {
             let key = params.str("key");
             match read_at(original, &path, &[PathSeg::Key(key.clone())])? {
-                Some(old) => Ok(kind_spec("set-member", json_object(vec![("path", path), ("key", Json::String(key)), ("value", old)]))),
+                Some(old) => Ok(kind_spec("set-member", json_object(vec![("path", path), ("key", Json::String(key)), ("value", wire_value(&old))]))),
                 None => Ok(kind_spec("remove-member", json_object(vec![("path", path), ("key", Json::String(key))]))),
             }
         }
         "remove-member" => {
             let key = params.str("key");
-            match read_at(original, &path, &[PathSeg::Key(key.clone())])? {
-                Some(old) => Ok(kind_spec("set-member", json_object(vec![("path", path), ("key", Json::String(key)), ("value", old)]))),
-                None => Ok(kind_spec("no-mutation", json_object(vec![]))),
-            }
+            let old = read_at(original, &path, &[PathSeg::Key(key.clone())])?.ok_or_else(|| format!("remove-member inverse: the original document has no member {key:?}"))?;
+            Ok(kind_spec("set-member", json_object(vec![("path", path), ("key", Json::String(key)), ("value", wire_value(&old))])))
         }
         "insert-array-element" => {
             let index = number(&params, "index").ok_or("insert-array-element inverse: missing `index`")? as usize;
@@ -85,11 +94,11 @@ fn inverse_spec(original: &[u8], forward: &Json) -> Result<Json, String> {
         "remove-array-element" => {
             let index = number(&params, "index").ok_or("remove-array-element inverse: missing `index`")? as usize;
             let old = read_at(original, &path, &[PathSeg::Index(index)])?.ok_or_else(|| format!("remove-array-element inverse: index {index} out of bounds"))?;
-            Ok(kind_spec("insert-array-element", json_object(vec![("path", path), ("index", Json::Number(index as f64)), ("value", old)])))
+            Ok(kind_spec("insert-array-element", json_object(vec![("path", path), ("index", Json::Number(index as f64)), ("value", wire_value(&old))])))
         }
         "set-scalar" => {
             let old = read_at(original, &path, &[])?.ok_or("set-scalar inverse: path does not resolve")?;
-            Ok(kind_spec("set-scalar", json_object(vec![("path", path), ("value", old)])))
+            Ok(kind_spec("set-scalar", json_object(vec![("path", path), ("value", wire_value(&old))])))
         }
         other => Err(format!("no inverse rule for kind {other:?}")),
     }
@@ -142,79 +151,19 @@ fn round_trip_oracle(ctx: &Context) -> Result<Outcome, String> {
 //#region 🔖️Subject
 #[cfg(feature = "sut")]
 mod subject {
-    use super::{inverse_spec, mutable_input, number};
+    use super::{inverse_spec, mutable_input};
     use semio_s_plugin_stdio_test_oracle::law::{inverse_restores, mutation_is_observable, round_trip_preserves};
     use semio_repo_test_host::{Context, Json, Outcome};
-    use semio_s_artifact_stdio_json::standards::v_rfc8259::subsets::base::schema::mutations::apply_json_mutation;
-    use semio_s_artifact_stdio_json::standards::v_rfc8259::subsets::base::schema::mutations::{
-        InsertArrayElementMutation, InsertArrayElementPayload, JsonMutation, JsonPath, JsonPathSegment, RemoveArrayElementMutation, RemoveArrayElementPayload, RemoveMemberMutation,
-        RemoveMemberPayload, SetMemberMutation, SetMemberPayload, SetScalarMutation, SetScalarPayload,
-    };
-    use semio_s_artifact_stdio_json::standards::v_rfc8259::subsets::base::schema::snapshot::{parse_json_text, write_json_text, JsonMember, JsonSnapshot, JsonValue};
+    use semio_s_artifact_stdio_json::standards::v_rfc8259::subsets::base::schema::mutations::{apply_json_mutation, decode_json_mutation_payload_json, JsonMutation};
+    use semio_s_artifact_stdio_json::standards::v_rfc8259::subsets::base::schema::snapshot::{parse_json_text, write_json_text, JsonSnapshot};
     use semio_s_artifact_stdio_json::STDIO_JSON_DOCUMENT_SCHEMA;
     use semio_s_plugin_stdio_test_oracle::artifacts::json::standards::v_rfc8259::subsets::base::project_json_value;
 
-    /// 🔀️ A mutation spec's `path` param into this repository's own `JsonPath` — a string entry is
-    /// an object key, a number entry is an array index. Mirrors the oracle's `path_from_spec`
-    /// exactly, but built against the SUBJECT's own `JsonPathSegment`, since the subject role must
-    /// not link the oracle role's json-rust-shaped `PathSeg`.
-    fn path_from_json(path: &Json) -> JsonPath {
-        match path {
-            Json::Array(segments) => segments
-                .iter()
-                .map(|segment| match segment {
-                    Json::String(key) => JsonPathSegment::Key(key.clone()),
-                    Json::Number(index) => JsonPathSegment::Index(*index as usize),
-                    _ => JsonPathSegment::Key(String::new()),
-                })
-                .collect(),
-            _ => Vec::new(),
-        }
-    }
-
-    /// 🔢️ A host `Json::Number` (always `f64`) into this subset's arbitrary-precision LEXEME —
-    /// whole values print without a decimal point (`99`, not `99.0`), which RFC 8259 §6's grammar
-    /// permits as a plain integer.
-    fn number_lexeme(n: f64) -> String {
-        if n.is_finite() && n.fract() == 0.0 && n.abs() < 1e15 {
-            format!("{}", n as i64)
-        } else {
-            format!("{n}")
-        }
-    }
-
-    fn value_from_json(value: &Json) -> JsonValue {
-        match value {
-            Json::Null => JsonValue::Null,
-            Json::Bool(flag) => JsonValue::Bool { value: *flag },
-            Json::Number(n) => JsonValue::Number { lexeme: number_lexeme(*n) },
-            Json::String(text) => JsonValue::String { value: text.clone() },
-            Json::Array(items) => JsonValue::Array { items: items.iter().map(value_from_json).collect() },
-            Json::Object(entries) => JsonValue::Object { members: entries.iter().map(|(key, value)| JsonMember { key: key.clone(), value: value_from_json(value) }).collect() },
-        }
-    }
-
-    /// 🔀️ The same JSON mutation spec the oracle reads, turned into this repository's own typed
-    /// `JsonMutation` — the only channel between the feature's parameters and the subject's codec.
+    /// 🔀️ The scenario's (or its inverse's) `<id>`/`<params>` spec decoded as the leaf wire payload it is, through the
+    /// aggregate's own derive-generated payload constructor — the only channel between the feature's parameters and the
+    /// subject's codec, never re-declared field by field here.
     fn mutation_from_spec(spec: &Json) -> Result<JsonMutation, String> {
-        let params = spec.get("params").cloned().unwrap_or(Json::Null);
-        let path = || path_from_json(&params.get("path").cloned().unwrap_or(Json::Array(Vec::new())));
-        let value = || value_from_json(&params.get("value").cloned().unwrap_or(Json::Null));
-        Ok(match spec.str("kind").as_str() {
-            "set-member" => JsonMutation::SetMember(SetMemberMutation::Apply(SetMemberPayload { path: path(), key: params.str("key"), value: value() })),
-            "remove-member" => JsonMutation::RemoveMember(RemoveMemberMutation::Apply(RemoveMemberPayload { path: path(), key: params.str("key") })),
-            "insert-array-element" => JsonMutation::InsertArrayElement(InsertArrayElementMutation::Apply(InsertArrayElementPayload {
-                path: path(),
-                index: number(&params, "index").ok_or("insert-array-element: missing `index`")? as usize,
-                value: value(),
-            })),
-            "remove-array-element" => JsonMutation::RemoveArrayElement(RemoveArrayElementMutation::Apply(RemoveArrayElementPayload {
-                path: path(),
-                index: number(&params, "index").ok_or("remove-array-element: missing `index`")? as usize,
-            })),
-            "set-scalar" => JsonMutation::SetScalar(SetScalarMutation::Apply(SetScalarPayload { path: path(), value: value() })),
-            other => return Err(format!("no subject rule for kind {other:?}")),
-        })
+        decode_json_mutation_payload_json(&spec.str("kind"), &spec.get("params").cloned().unwrap_or(Json::Null).to_string())
     }
 
     fn decode(bytes: &[u8]) -> Result<JsonSnapshot, String> {

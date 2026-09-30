@@ -16,7 +16,14 @@
           "type": "string"
         },
         "forward": {
-          "type": "boolean"
+          "type": "boolean",
+          "x-semio-ui": {
+            "widget": "toggle",
+            "label": {
+              "en": "Same direction as edge",
+              "de": "Gleichsinnig zur Kante"
+            }
+          }
         },
         "pcurve": {
           "oneOf": [
@@ -26,7 +33,17 @@
             {
               "type": "null"
             }
-          ]
+          ],
+          "x-semio-ui": {
+            "label": {
+              "en": "Parameter curve",
+              "de": "Parameterkurve"
+            },
+            "description": {
+              "en": "Curve of the coedge in the face's parameter space.",
+              "de": "Kurve der Koante im Parameterraum der Fläche."
+            }
+          }
         },
         "prange": {
           "type": "array",
@@ -34,16 +51,56 @@
             "type": "number"
           },
           "minItems": 2,
-          "maxItems": 2
+          "maxItems": 2,
+          "x-semio-ui": {
+            "widget": "vector",
+            "label": {
+              "en": "Parameter range",
+              "de": "Parameterbereich"
+            }
+          }
         },
         "loopId": {
-          "type": "string"
+          "type": "string",
+          "x-semio-ui": {
+            "widget": "reference",
+            "role": "target",
+            "label": {
+              "en": "Loop",
+              "de": "Schleife"
+            },
+            "ref": {
+              "kind": "loop"
+            }
+          }
         },
         "next": {
-          "type": "string"
+          "type": "string",
+          "x-semio-ui": {
+            "widget": "reference",
+            "role": "target",
+            "label": {
+              "en": "Next coedge",
+              "de": "Nächste Koante"
+            },
+            "ref": {
+              "kind": "coedge"
+            }
+          }
         },
         "prev": {
-          "type": "string"
+          "type": "string",
+          "x-semio-ui": {
+            "widget": "reference",
+            "role": "target",
+            "label": {
+              "en": "Previous coedge",
+              "de": "Vorherige Koante"
+            },
+            "ref": {
+              "kind": "coedge"
+            }
+          }
         }
       },
       "required": [
@@ -278,13 +335,41 @@
           "type": "string"
         },
         "startVertex": {
-          "type": "string"
+          "type": "string",
+          "x-semio-ui": {
+            "widget": "reference",
+            "role": "target",
+            "label": {
+              "en": "Start vertex",
+              "de": "Startpunkt"
+            },
+            "ref": {
+              "kind": "vertex"
+            }
+          }
         },
         "endVertex": {
-          "type": "string"
+          "type": "string",
+          "x-semio-ui": {
+            "widget": "reference",
+            "role": "target",
+            "label": {
+              "en": "End vertex",
+              "de": "Endpunkt"
+            },
+            "ref": {
+              "kind": "vertex"
+            }
+          }
         },
         "curve": {
-          "$ref": "#/$defs/BrepCurve"
+          "$ref": "#/$defs/BrepCurve",
+          "x-semio-ui": {
+            "label": {
+              "en": "Curve",
+              "de": "Kurve"
+            }
+          }
         },
         "tol": {
           "type": "number"
@@ -305,19 +390,62 @@
           "type": "string"
         },
         "outerLoop": {
-          "type": "string"
+          "type": "string",
+          "x-semio-ui": {
+            "widget": "reference",
+            "role": "target",
+            "label": {
+              "en": "Outer loop",
+              "de": "Äußere Schleife"
+            },
+            "ref": {
+              "kind": "loop"
+            }
+          }
         },
         "innerLoops": {
           "type": "array",
           "items": {
             "type": "string"
+          },
+          "x-semio-ui": {
+            "widget": "reference",
+            "role": "target",
+            "label": {
+              "en": "Inner loops",
+              "de": "Innere Schleifen"
+            },
+            "description": {
+              "en": "Loops that bound holes in the face.",
+              "de": "Schleifen, die Löcher in der Fläche begrenzen."
+            },
+            "ref": {
+              "kind": "loop"
+            }
           }
         },
         "surface": {
-          "$ref": "#/$defs/BrepSurface"
+          "$ref": "#/$defs/BrepSurface",
+          "x-semio-ui": {
+            "label": {
+              "en": "Surface",
+              "de": "Fläche (Geometrie)"
+            }
+          }
         },
         "orientation": {
-          "type": "boolean"
+          "type": "boolean",
+          "x-semio-ui": {
+            "widget": "toggle",
+            "label": {
+              "en": "Same orientation",
+              "de": "Gleichsinnig orientiert"
+            },
+            "description": {
+              "en": "On: the use agrees with the element's natural orientation.",
+              "de": "An: Die Verwendung stimmt mit der natürlichen Orientierung überein."
+            }
+          }
         },
         "tol": {
           "type": "number"
@@ -342,6 +470,12 @@
           "type": "array",
           "items": {
             "$ref": "#/$defs/BrepLoopEdge"
+          },
+          "x-semio-ui": {
+            "label": {
+              "en": "Edges",
+              "de": "Kanten"
+            }
           }
         }
       },
@@ -357,7 +491,18 @@
           "type": "string"
         },
         "orientation": {
-          "type": "boolean"
+          "type": "boolean",
+          "x-semio-ui": {
+            "widget": "toggle",
+            "label": {
+              "en": "Same orientation",
+              "de": "Gleichsinnig orientiert"
+            },
+            "description": {
+              "en": "On: the use agrees with the element's natural orientation.",
+              "de": "An: Die Verwendung stimmt mit der natürlichen Orientierung überein."
+            }
+          }
         }
       },
       "required": [
@@ -387,10 +532,32 @@
       "type": "object",
       "properties": {
         "face": {
-          "type": "string"
+          "type": "string",
+          "x-semio-ui": {
+            "widget": "reference",
+            "role": "target",
+            "label": {
+              "en": "Face",
+              "de": "Fläche"
+            },
+            "ref": {
+              "kind": "face"
+            }
+          }
         },
         "orientation": {
-          "type": "boolean"
+          "type": "boolean",
+          "x-semio-ui": {
+            "widget": "toggle",
+            "label": {
+              "en": "Same orientation",
+              "de": "Gleichsinnig orientiert"
+            },
+            "description": {
+              "en": "On: the use agrees with the element's natural orientation.",
+              "de": "An: Die Verwendung stimmt mit der natürlichen Orientierung überein."
+            }
+          }
         }
       },
       "required": [
@@ -408,6 +575,12 @@
           "type": "array",
           "items": {
             "$ref": "#/$defs/BrepSolidShell"
+          },
+          "x-semio-ui": {
+            "label": {
+              "en": "Shells",
+              "de": "Schalen"
+            }
           }
         }
       },
@@ -420,10 +593,32 @@
       "type": "object",
       "properties": {
         "shell": {
-          "type": "string"
+          "type": "string",
+          "x-semio-ui": {
+            "widget": "reference",
+            "role": "target",
+            "label": {
+              "en": "Shell",
+              "de": "Schale"
+            },
+            "ref": {
+              "kind": "shell"
+            }
+          }
         },
         "isVoid": {
-          "type": "boolean"
+          "type": "boolean",
+          "x-semio-ui": {
+            "widget": "toggle",
+            "label": {
+              "en": "Void shell",
+              "de": "Hohlraumschale"
+            },
+            "description": {
+              "en": "The shell bounds a cavity inside the solid.",
+              "de": "Die Schale begrenzt einen Hohlraum im Körper."
+            }
+          }
         }
       },
       "required": [
@@ -644,13 +839,30 @@
   "properties": {
     "schema": {
       "type": "string",
-      "x-semio-state": "artifact"
+      "x-semio-state": "artifact",
+      "x-semio-ui": {
+        "widget": "text",
+        "label": {
+          "en": "Snapshot schema",
+          "de": "Snapshot-Schema"
+        },
+        "description": {
+          "en": "Identifier of the snapshot schema version.",
+          "de": "Kennung der Version des Snapshot-Schemas."
+        }
+      }
     },
     "vertices": {
       "type": "array",
       "x-semio-state": "artifact",
       "items": {
         "$ref": "#/$defs/BrepVertex"
+      },
+      "x-semio-ui": {
+        "label": {
+          "en": "Vertices",
+          "de": "Eckpunkte"
+        }
       }
     },
     "edges": {
@@ -658,6 +870,12 @@
       "x-semio-state": "artifact",
       "items": {
         "$ref": "#/$defs/BrepEdge"
+      },
+      "x-semio-ui": {
+        "label": {
+          "en": "Edges",
+          "de": "Kanten"
+        }
       }
     },
     "loops": {
@@ -665,6 +883,12 @@
       "x-semio-state": "artifact",
       "items": {
         "$ref": "#/$defs/BrepLoop"
+      },
+      "x-semio-ui": {
+        "label": {
+          "en": "Loops",
+          "de": "Schleifen"
+        }
       }
     },
     "faces": {
@@ -679,6 +903,12 @@
       "x-semio-state": "artifact",
       "items": {
         "$ref": "#/$defs/BrepShell"
+      },
+      "x-semio-ui": {
+        "label": {
+          "en": "Shells",
+          "de": "Schalen"
+        }
       }
     },
     "solids": {
@@ -686,6 +916,12 @@
       "x-semio-state": "artifact",
       "items": {
         "$ref": "#/$defs/BrepSolid"
+      },
+      "x-semio-ui": {
+        "label": {
+          "en": "Solids",
+          "de": "Körper"
+        }
       }
     },
     "coedges": {
@@ -694,12 +930,33 @@
       "items": {
         "$ref": "#/$defs/BrepCoedge"
       },
-      "description": "empty for snapshots produced before this field existed"
+      "description": "empty for snapshots produced before this field existed",
+      "x-semio-ui": {
+        "label": {
+          "en": "Coedges",
+          "de": "Koanten"
+        },
+        "description": {
+          "en": "Oriented uses of edges inside loops.",
+          "de": "Orientierte Verwendungen von Kanten in Schleifen."
+        }
+      }
     },
     "nextLabel": {
       "type": "integer",
       "x-semio-state": "artifact",
-      "description": "native LabelSource high-water mark; 0 means no persistent-label history to preserve"
+      "description": "native LabelSource high-water mark; 0 means no persistent-label history to preserve",
+      "x-semio-ui": {
+        "widget": "stepper",
+        "label": {
+          "en": "Next persistent label",
+          "de": "Nächste persistente Kennung"
+        },
+        "description": {
+          "en": "High-water mark of the persistent label source; 0 means no history.",
+          "de": "Höchststand der Quelle persistenter Kennungen; 0 bedeutet keine Historie."
+        }
+      }
     }
   },
   "required": [

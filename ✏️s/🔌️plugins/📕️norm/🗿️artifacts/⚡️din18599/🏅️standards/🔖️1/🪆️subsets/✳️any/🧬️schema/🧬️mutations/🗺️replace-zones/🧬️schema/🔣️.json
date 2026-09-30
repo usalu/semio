@@ -1,12 +1,35 @@
 {
-  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/norm/din18599/mutation/replace-zones/schema.json",
   "title": "ReplaceZones",
   "type": "object",
-  "properties": {
-    "newZones": {
-      "type": "object"
-    }
-  },
   "additionalProperties": false,
-  "$id": "https://json.schemas.assets.semio-tech.com/s/norm/din18599/mutation/replace-zones/schema.json"
+  "required": [
+    "mutation",
+    "newZones"
+  ],
+  "properties": {
+    "mutation": {
+      "const": "replaceZones"
+    },
+    "newZones": {
+      "type": "array",
+      "items": {
+        "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/din18599/snapshot/schema.json#/$defs/ThermalZone"
+      },
+      "x-semio-ui": {
+        "role": "value",
+        "label": {
+          "en": "Zones",
+          "de": "Zonen"
+        },
+        "description": {
+          "en": "The complete list of building zones replacing the current one.",
+          "de": "Die vollständige Liste der Gebäudezonen, die die aktuelle ersetzt."
+        },
+        "group": "record",
+        "order": 10
+      }
+    }
+  }
 }

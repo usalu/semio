@@ -5,9 +5,13 @@
   "type": "object",
   "additionalProperties": false,
   "required": [
+    "mutation",
     "shot"
   ],
   "properties": {
+    "mutation": {
+      "const": "createShot"
+    },
     "shot": {
       "title": "ShootingShot",
       "type": "object",
@@ -22,36 +26,177 @@
       ],
       "properties": {
         "id": {
-          "type": "string"
+          "type": "string",
+          "x-semio-ui": {
+            "widget": "text",
+            "role": "value",
+            "label": {
+              "en": "ID",
+              "de": "ID"
+            },
+            "description": {
+              "en": "Unique shot id in this scene.",
+              "de": "Eindeutige Aufnahme-ID in dieser Szene."
+            },
+            "group": "identity",
+            "order": 10
+          }
         },
         "label": {
-          "type": "string"
+          "type": "string",
+          "x-semio-ui": {
+            "widget": "text",
+            "role": "value",
+            "label": {
+              "en": "Name",
+              "de": "Name"
+            },
+            "group": "identity",
+            "order": 20
+          }
         },
         "width": {
           "type": "integer",
-          "minimum": 0
+          "minimum": 0,
+          "x-semio-ui": {
+            "widget": "stepper",
+            "role": "value",
+            "label": {
+              "en": "Width",
+              "de": "Breite"
+            },
+            "unit": "px",
+            "step": 1,
+            "precision": 0,
+            "group": "output",
+            "order": 30
+          }
         },
         "height": {
           "type": "integer",
-          "minimum": 0
+          "minimum": 0,
+          "x-semio-ui": {
+            "widget": "stepper",
+            "role": "value",
+            "label": {
+              "en": "Height",
+              "de": "Höhe"
+            },
+            "unit": "px",
+            "step": 1,
+            "precision": 0,
+            "group": "output",
+            "order": 40
+          }
         },
         "format": {
-          "type": "string"
+          "type": "string",
+          "x-semio-ui": {
+            "widget": "text",
+            "role": "value",
+            "label": {
+              "en": "Format",
+              "de": "Format"
+            },
+            "description": {
+              "en": "Image format, e.g. png or svg.",
+              "de": "Bildformat, z. B. png oder svg."
+            },
+            "group": "output",
+            "order": 50
+          }
         },
         "shape": {
-          "type": "string"
+          "type": "string",
+          "x-semio-ui": {
+            "widget": "text",
+            "role": "value",
+            "label": {
+              "en": "Shape",
+              "de": "Form"
+            },
+            "description": {
+              "en": "Frame shape, e.g. rectangle or ellipse.",
+              "de": "Bildform, z. B. rectangle (Rechteck) oder ellipse (Ellipse)."
+            },
+            "group": "output",
+            "order": 60
+          }
         },
         "background": {
-          "type": "string"
+          "type": "string",
+          "x-semio-ui": {
+            "widget": "text",
+            "role": "value",
+            "label": {
+              "en": "Background",
+              "de": "Hintergrund"
+            },
+            "description": {
+              "en": "CSS color, e.g. #3366ff.",
+              "de": "CSS-Farbe, z. B. #3366ff."
+            },
+            "group": "output",
+            "order": 70
+          }
         },
         "cameraId": {
-          "type": "string"
+          "type": "string",
+          "x-semio-ui": {
+            "widget": "reference",
+            "role": "target",
+            "label": {
+              "en": "Camera",
+              "de": "Kamera"
+            },
+            "description": {
+              "en": "Saved camera this shot is rendered from; empty uses the viewport camera.",
+              "de": "Gespeicherte Kamera, aus der diese Aufnahme gerendert wird; leer nutzt die Ansichtskamera."
+            },
+            "ref": {
+              "kind": "savedCamera"
+            },
+            "group": "camera",
+            "order": 80
+          }
         }
+      },
+      "x-semio-ui": {
+        "role": "value",
+        "label": {
+          "en": "Shot",
+          "de": "Aufnahme"
+        },
+        "description": {
+          "en": "The complete shot record to add.",
+          "de": "Die vollständige hinzuzufügende Aufnahme."
+        },
+        "group": "record",
+        "order": 10
       }
     },
     "index": {
-      "type": "integer",
-      "minimum": 0
+      "type": [
+        "integer",
+        "null"
+      ],
+      "minimum": 0,
+      "x-semio-ui": {
+        "widget": "stepper",
+        "role": "value",
+        "label": {
+          "en": "Index",
+          "de": "Index"
+        },
+        "description": {
+          "en": "Position in the list; the end when omitted.",
+          "de": "Position in der Liste; ohne Angabe am Ende."
+        },
+        "step": 1,
+        "precision": 0,
+        "group": "order",
+        "order": 20
+      }
     }
   }
 }

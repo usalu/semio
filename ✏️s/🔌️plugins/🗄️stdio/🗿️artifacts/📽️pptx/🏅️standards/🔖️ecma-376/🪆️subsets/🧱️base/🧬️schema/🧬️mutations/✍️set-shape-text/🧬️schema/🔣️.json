@@ -5,11 +5,16 @@
   "type": "object",
   "additionalProperties": false,
   "required": [
+    "mutation",
     "slide_index",
     "shape_index",
     "text_frame"
   ],
   "properties": {
+    "mutation": {
+      "const": "setShapeText",
+      "description": "Aggregate discriminator spliced in by PptxMutation; absent when the payload stands alone."
+    },
     "slide_index": {
       "type": "integer",
       "minimum": 0
@@ -22,11 +27,17 @@
       "type": "array",
       "items": {
         "$ref": "#/$defs/PptxParagraph"
+      },
+      "x-semio-ui": {
+        "label": {
+          "en": "Text body",
+          "de": "Textkörper"
+        },
+        "description": {
+          "en": "Paragraphs of the shape's text body.",
+          "de": "Absätze des Textkörpers der Form."
+        }
       }
-    },
-    "mutation": {
-      "const": "setShapeText",
-      "description": "Aggregate discriminator spliced in by PptxMutation; absent when the payload stands alone."
     }
   },
   "$defs": {
@@ -38,6 +49,12 @@
           "type": "array",
           "items": {
             "$ref": "#/$defs/PptxRun"
+          },
+          "x-semio-ui": {
+            "label": {
+              "en": "Text runs",
+              "de": "Textläufe"
+            }
           }
         }
       }
@@ -53,10 +70,24 @@
           "type": "string"
         },
         "bold": {
-          "type": "boolean"
+          "type": "boolean",
+          "x-semio-ui": {
+            "widget": "toggle",
+            "label": {
+              "en": "Bold",
+              "de": "Fett"
+            }
+          }
         },
         "italic": {
-          "type": "boolean"
+          "type": "boolean",
+          "x-semio-ui": {
+            "widget": "toggle",
+            "label": {
+              "en": "Italic",
+              "de": "Kursiv"
+            }
+          }
         },
         "fontSize": {
           "anyOf": [
@@ -68,7 +99,19 @@
             {
               "type": "null"
             }
-          ]
+          ],
+          "x-semio-ui": {
+            "widget": "stepper",
+            "label": {
+              "en": "Font size",
+              "de": "Schriftgröße"
+            },
+            "description": {
+              "en": "Whole points; written as DrawingML `sz` in hundredths of a point.",
+              "de": "Ganze Punkt; geschrieben als DrawingML `sz` in Hundertstel Punkt."
+            },
+            "unit": "pt"
+          }
         }
       }
     }

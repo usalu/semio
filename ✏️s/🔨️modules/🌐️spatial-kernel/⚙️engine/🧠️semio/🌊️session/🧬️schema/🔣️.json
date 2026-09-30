@@ -1,0 +1,511 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/modules/spatial-kernel/engines/semio/session/component.json",
+  "title": "SemioGeometrySession",
+  "description": "🌐️ First-party Semio session invocation verbs and explicit geometry authority laws.",
+  "$defs": {
+    "SemioGeometryVerb": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "method",
+        "kernelOperation",
+        "args",
+        "result",
+        "label"
+      ],
+      "properties": {
+        "method": {
+          "type": "string",
+          "pattern": "^[a-z][A-Za-z]*$"
+        },
+        "kernelOperation": {
+          "type": "string",
+          "pattern": "^[a-z][a-z0-9_]*$"
+        },
+        "args": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/SemioGeometryArgument"
+          }
+        },
+        "result": {
+          "enum": [
+            "handle",
+            "handles",
+            "number",
+            "vec3",
+            "string",
+            "mesh",
+            "topology",
+            "unit"
+          ]
+        },
+        "label": {
+          "$ref": "#/$defs/SemioGeometryLabel"
+        }
+      },
+      "x-semio-formats": [
+        "🔣️jsonschema"
+      ]
+    },
+    "SemioGeometryArgument": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "name",
+        "type"
+      ],
+      "properties": {
+        "name": {
+          "type": "string",
+          "pattern": "^[a-z][A-Za-z]*$"
+        },
+        "type": {
+          "enum": [
+            "handle",
+            "handles",
+            "vec3",
+            "points",
+            "number",
+            "integer",
+            "boolean",
+            "string"
+          ]
+        },
+        "default": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "boolean"
+            }
+          ]
+        }
+      },
+      "x-semio-formats": [
+        "🔣️jsonschema"
+      ]
+    },
+    "SemioGeometryLabel": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "en",
+        "de"
+      ],
+      "properties": {
+        "en": {
+          "type": "string",
+          "minLength": 1
+        },
+        "de": {
+          "type": "string",
+          "minLength": 1
+        }
+      },
+      "x-semio-formats": [
+        "🔣️jsonschema"
+      ]
+    },
+    "SemioGeometryVerbsV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "$schema",
+        "schema",
+        "verbs"
+      ],
+      "properties": {
+        "$schema": {
+          "type": "string"
+        },
+        "schema": {
+          "const": "semio.flow.brep-invoke.verbs/v1"
+        },
+        "verbs": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "$ref": "#/$defs/SemioGeometryVerb"
+          }
+        }
+      },
+      "x-semio-formats": [
+        "🔣️jsonschema"
+      ]
+    },
+    "SemioGeometrySessionLifetimeV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "x-semio-formats": [
+        "🔣️jsonschema"
+      ],
+      "required": [
+        "schema",
+        "independentBoxes",
+        "sharedHandle",
+        "lifecycle"
+      ],
+      "properties": {
+        "schema": {
+          "const": "semio.geometry-session-lifetime/v1"
+        },
+        "independentBoxes": {
+          "type": "array",
+          "minItems": 2,
+          "maxItems": 2,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "width",
+              "depth",
+              "height",
+              "volume"
+            ],
+            "properties": {
+              "width": {
+                "type": "number",
+                "exclusiveMinimum": 0
+              },
+              "depth": {
+                "type": "number",
+                "exclusiveMinimum": 0
+              },
+              "height": {
+                "type": "number",
+                "exclusiveMinimum": 0
+              },
+              "volume": {
+                "type": "number",
+                "exclusiveMinimum": 0
+              }
+            }
+          }
+        },
+        "sharedHandle": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "radius",
+            "tolerance"
+          ],
+          "properties": {
+            "radius": {
+              "type": "number",
+              "exclusiveMinimum": 0
+            },
+            "tolerance": {
+              "type": "number",
+              "exclusiveMinimum": 0
+            }
+          }
+        },
+        "lifecycle": {
+          "const": [
+            "cancel",
+            "close",
+            "retire",
+            "drop"
+          ]
+        }
+      }
+    },
+    "SemioGeometrySessionOwnershipV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "x-semio-formats": [
+        "🔣️jsonschema"
+      ],
+      "required": [
+        "schema",
+        "package",
+        "groups"
+      ],
+      "properties": {
+        "schema": {
+          "const": "semio.geometry-session-ownership/v1"
+        },
+        "package": {
+          "const": "semio-s-spatial-kernel-semio-session"
+        },
+        "groups": {
+          "type": "array",
+          "minItems": 3,
+          "maxItems": 3,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "target",
+              "directory",
+              "laws"
+            ],
+            "properties": {
+              "target": {
+                "type": "string"
+              },
+              "directory": {
+                "type": "string"
+              },
+              "laws": {
+                "type": "array",
+                "minItems": 1,
+                "uniqueItems": true,
+                "items": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "SemioGeometrySessionRetirementV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "x-semio-formats": [
+        "🔣️jsonschema"
+      ],
+      "required": [
+        "schema",
+        "box",
+        "payloadBytes",
+        "grants",
+        "receipts",
+        "closeGrant",
+        "maximumSteps",
+        "capture",
+        "portBoundary"
+      ],
+      "properties": {
+        "schema": {
+          "const": "semio.geometry-session-retirement/v1"
+        },
+        "box": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "width",
+            "depth",
+            "height",
+            "volume"
+          ],
+          "properties": {
+            "width": {
+              "type": "number",
+              "exclusiveMinimum": 0
+            },
+            "depth": {
+              "type": "number",
+              "exclusiveMinimum": 0
+            },
+            "height": {
+              "type": "number",
+              "exclusiveMinimum": 0
+            },
+            "volume": {
+              "type": "number",
+              "exclusiveMinimum": 0
+            }
+          }
+        },
+        "payloadBytes": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "grants": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "array",
+            "minItems": 2,
+            "maxItems": 2,
+            "items": {
+              "type": "integer",
+              "minimum": 0
+            }
+          }
+        },
+        "receipts": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "$ref": "#/$defs/SemioGeometryCloseReceiptV1"
+          }
+        },
+        "closeGrant": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "items",
+            "bytes"
+          ],
+          "properties": {
+            "items": {
+              "type": "integer",
+              "minimum": 1
+            },
+            "bytes": {
+              "type": "integer",
+              "minimum": 1
+            }
+          }
+        },
+        "maximumSteps": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "capture": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "sharedRelease",
+            "rootRemainsOpen",
+            "lastReaderRequiresTerminal",
+            "shellBoundary",
+            "terminalPeerRelease"
+          ],
+          "properties": {
+            "sharedRelease": {
+              "$ref": "#/$defs/SemioGeometryCloseReceiptV1"
+            },
+            "rootRemainsOpen": {
+              "const": true
+            },
+            "lastReaderRequiresTerminal": {
+              "const": true
+            },
+            "shellBoundary": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "smallGrantDivisor",
+                "adequateGrantMultiplier",
+                "smallPhase",
+                "adequatePhase",
+                "releasedItems",
+                "releasedBytes"
+              ],
+              "properties": {
+                "smallGrantDivisor": {
+                  "const": 2
+                },
+                "adequateGrantMultiplier": {
+                  "const": 1
+                },
+                "smallPhase": {
+                  "const": "blocked"
+                },
+                "adequatePhase": {
+                  "const": "pending"
+                },
+                "releasedItems": {
+                  "const": 1
+                },
+                "releasedBytes": {
+                  "const": "actual-deallocated-layouts"
+                }
+              }
+            },
+            "terminalPeerRelease": {
+              "$ref": "#/$defs/SemioGeometryCloseReceiptV1"
+            }
+          }
+        },
+        "portBoundary": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "zeroGrants",
+            "smallGrantDivisor",
+            "adequateGrantMultiplier",
+            "producerRemainsOpen",
+            "producerVolume",
+            "boxReleaseItems",
+            "boxReleaseBytes",
+            "sealedPortMustRetire",
+            "smallPhase",
+            "adequatePhase",
+            "inlineBytes"
+          ],
+          "properties": {
+            "zeroGrants": {
+              "const": [
+                [
+                  0,
+                  3
+                ],
+                [
+                  1,
+                  0
+                ]
+              ]
+            },
+            "smallGrantDivisor": {
+              "const": 2
+            },
+            "adequateGrantMultiplier": {
+              "const": 1
+            },
+            "producerRemainsOpen": {
+              "const": true
+            },
+            "producerVolume": {
+              "const": 24
+            },
+            "boxReleaseItems": {
+              "const": 1
+            },
+            "boxReleaseBytes": {
+              "const": "concrete-box-layout"
+            },
+            "sealedPortMustRetire": {
+              "const": true
+            },
+            "smallPhase": {
+              "const": "blocked"
+            },
+            "adequatePhase": {
+              "const": "pending"
+            },
+            "inlineBytes": {
+              "const": 8192
+            }
+          }
+        }
+      }
+    },
+    "SemioGeometryCloseReceiptV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "phase",
+        "items",
+        "bytes"
+      ],
+      "properties": {
+        "phase": {
+          "enum": [
+            "blocked",
+            "pending",
+            "complete"
+          ]
+        },
+        "items": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "bytes": {
+          "type": "integer",
+          "minimum": 0
+        }
+      },
+      "x-semio-formats": [
+        "🔣️jsonschema"
+      ]
+    }
+  }
+}

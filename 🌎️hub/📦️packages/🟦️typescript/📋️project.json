@@ -9,6 +9,13 @@
     ]
   },
   "targets": {
+    "test-build-freshness": {
+      "executor": "nx:run-commands",
+      "options": {
+        "cwd": "🌎️hub/📦️packages/🟦️typescript",
+        "command": "bun ./📜️script.ts test build-freshness"
+      }
+    },
     "typecheck": {
       "executor": "nx:run-commands",
       "dependsOn": [],

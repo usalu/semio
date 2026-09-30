@@ -5,18 +5,25 @@
   "type": "object",
   "additionalProperties": false,
   "required": [
+    "mutation",
     "labels"
   ],
   "properties": {
+    "mutation": {
+      "const": "setPageLabels",
+      "description": "Aggregate discriminator spliced in by PdfMutation; absent when the payload stands alone."
+    },
     "labels": {
       "type": "array",
       "items": {
         "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/pdf/1.7/base/snapshot.json#/$defs/PdfPageLabelRange"
+      },
+      "x-semio-ui": {
+        "label": {
+          "en": "Page labels",
+          "de": "Seitenbeschriftungen"
+        }
       }
-    },
-    "mutation": {
-      "const": "setPageLabels",
-      "description": "Aggregate discriminator spliced in by PdfMutation; absent when the payload stands alone."
     }
   }
 }

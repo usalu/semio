@@ -5,20 +5,39 @@
   "type": "object",
   "additionalProperties": false,
   "required": [
+    "mutation",
     "index",
     "frame"
   ],
   "properties": {
-    "index": {
-      "type": "integer",
-      "minimum": 0
-    },
-    "frame": {
-      "$ref": "#/$defs/GifFrame"
-    },
     "mutation": {
       "const": "insertFrame",
       "description": "Aggregate discriminator spliced in by GifMutation; absent when the payload stands alone."
+    },
+    "index": {
+      "type": "integer",
+      "minimum": 0,
+      "x-semio-ui": {
+        "widget": "stepper",
+        "label": {
+          "en": "Insert position",
+          "de": "Einfügeposition"
+        },
+        "precision": 0,
+        "group": "target",
+        "order": 10
+      }
+    },
+    "frame": {
+      "$ref": "#/$defs/GifFrame",
+      "x-semio-ui": {
+        "label": {
+          "en": "Frame",
+          "de": "Einzelbild"
+        },
+        "group": "value",
+        "order": 20
+      }
     }
   },
   "$defs": {
@@ -35,22 +54,50 @@
         "left": {
           "type": "integer",
           "minimum": 0,
-          "maximum": 4294967295
+          "maximum": 4294967295,
+          "x-semio-ui": {
+            "label": {
+              "en": "Left offset",
+              "de": "Abstand links"
+            },
+            "unit": "px"
+          }
         },
         "top": {
           "type": "integer",
           "minimum": 0,
-          "maximum": 4294967295
+          "maximum": 4294967295,
+          "x-semio-ui": {
+            "label": {
+              "en": "Top offset",
+              "de": "Abstand oben"
+            },
+            "unit": "px"
+          }
         },
         "width": {
           "type": "integer",
           "minimum": 0,
-          "maximum": 4294967295
+          "maximum": 4294967295,
+          "x-semio-ui": {
+            "label": {
+              "en": "Width",
+              "de": "Breite"
+            },
+            "unit": "px"
+          }
         },
         "height": {
           "type": "integer",
           "minimum": 0,
-          "maximum": 4294967295
+          "maximum": 4294967295,
+          "x-semio-ui": {
+            "label": {
+              "en": "Height",
+              "de": "Höhe"
+            },
+            "unit": "px"
+          }
         },
         "interlace": {
           "type": "boolean"
@@ -63,7 +110,13 @@
             {
               "type": "null"
             }
-          ]
+          ],
+          "x-semio-ui": {
+            "label": {
+              "en": "Local color table",
+              "de": "Lokale Farbtabelle"
+            }
+          }
         },
         "indices": {
           "type": "array",
@@ -71,15 +124,45 @@
             "type": "integer",
             "minimum": 0,
             "maximum": 255
+          },
+          "x-semio-ui": {
+            "label": {
+              "en": "Pixel color indices",
+              "de": "Pixel-Farbindizes"
+            },
+            "description": {
+              "en": "One palette index per pixel, row by row.",
+              "de": "Ein Palettenindex je Pixel, zeilenweise."
+            }
           }
         },
         "delayCs": {
           "type": "integer",
           "minimum": 0,
-          "maximum": 65535
+          "maximum": 65535,
+          "x-semio-ui": {
+            "label": {
+              "en": "Frame delay",
+              "de": "Bildverzögerung"
+            },
+            "unit": "cs",
+            "displayUnit": "s",
+            "displayFactor": 0.01,
+            "precision": 2
+          }
         },
         "disposal": {
-          "$ref": "#/$defs/GifDisposal"
+          "$ref": "#/$defs/GifDisposal",
+          "x-semio-ui": {
+            "label": {
+              "en": "Disposal method",
+              "de": "Entfernungsmethode"
+            },
+            "description": {
+              "en": "What happens to the frame before the next one is drawn.",
+              "de": "Was mit dem Einzelbild geschieht, bevor das nächste gezeichnet wird."
+            }
+          }
         },
         "transparentIndex": {
           "anyOf": [
@@ -91,10 +174,22 @@
             {
               "type": "null"
             }
-          ]
+          ],
+          "x-semio-ui": {
+            "label": {
+              "en": "Transparent color index",
+              "de": "Transparenzfarbindex"
+            }
+          }
         },
         "userInput": {
-          "type": "boolean"
+          "type": "boolean",
+          "x-semio-ui": {
+            "label": {
+              "en": "Wait for user input",
+              "de": "Auf Benutzereingabe warten"
+            }
+          }
         },
         "plainText": {
           "anyOf": [
@@ -104,7 +199,13 @@
             {
               "type": "null"
             }
-          ]
+          ],
+          "x-semio-ui": {
+            "label": {
+              "en": "Plain text extension",
+              "de": "Klartexterweiterung"
+            }
+          }
         }
       }
     },
@@ -113,12 +214,24 @@
       "additionalProperties": false,
       "properties": {
         "sorted": {
-          "type": "boolean"
+          "type": "boolean",
+          "x-semio-ui": {
+            "label": {
+              "en": "Sorted by importance",
+              "de": "Nach Wichtigkeit sortiert"
+            }
+          }
         },
         "colors": {
           "type": "array",
           "items": {
             "$ref": "#/$defs/GifRgb"
+          },
+          "x-semio-ui": {
+            "label": {
+              "en": "Colors",
+              "de": "Farben"
+            }
           }
         }
       }
@@ -135,17 +248,35 @@
         "r": {
           "type": "integer",
           "minimum": 0,
-          "maximum": 255
+          "maximum": 255,
+          "x-semio-ui": {
+            "label": {
+              "en": "Red",
+              "de": "Rot"
+            }
+          }
         },
         "g": {
           "type": "integer",
           "minimum": 0,
-          "maximum": 255
+          "maximum": 255,
+          "x-semio-ui": {
+            "label": {
+              "en": "Green",
+              "de": "Grün"
+            }
+          }
         },
         "b": {
           "type": "integer",
           "minimum": 0,
-          "maximum": 255
+          "maximum": 255,
+          "x-semio-ui": {
+            "label": {
+              "en": "Blue",
+              "de": "Blau"
+            }
+          }
         }
       }
     },
@@ -156,7 +287,27 @@
         "doNotDispose",
         "restoreToBackground",
         "restoreToPrevious"
-      ]
+      ],
+      "x-semio-ui": {
+        "options": {
+          "unspecified": {
+            "en": "Not specified",
+            "de": "Nicht festgelegt"
+          },
+          "doNotDispose": {
+            "en": "Do not dispose",
+            "de": "Nicht entfernen"
+          },
+          "restoreToBackground": {
+            "en": "Restore to background",
+            "de": "Auf Hintergrund zurücksetzen"
+          },
+          "restoreToPrevious": {
+            "en": "Restore to previous",
+            "de": "Auf vorheriges Bild zurücksetzen"
+          }
+        }
+      }
     },
     "GifPlainText": {
       "type": "object",
@@ -175,42 +326,96 @@
         "left": {
           "type": "integer",
           "minimum": 0,
-          "maximum": 4294967295
+          "maximum": 4294967295,
+          "x-semio-ui": {
+            "label": {
+              "en": "Left offset",
+              "de": "Abstand links"
+            },
+            "unit": "px"
+          }
         },
         "top": {
           "type": "integer",
           "minimum": 0,
-          "maximum": 4294967295
+          "maximum": 4294967295,
+          "x-semio-ui": {
+            "label": {
+              "en": "Top offset",
+              "de": "Abstand oben"
+            },
+            "unit": "px"
+          }
         },
         "width": {
           "type": "integer",
           "minimum": 0,
-          "maximum": 4294967295
+          "maximum": 4294967295,
+          "x-semio-ui": {
+            "label": {
+              "en": "Width",
+              "de": "Breite"
+            },
+            "unit": "px"
+          }
         },
         "height": {
           "type": "integer",
           "minimum": 0,
-          "maximum": 4294967295
+          "maximum": 4294967295,
+          "x-semio-ui": {
+            "label": {
+              "en": "Height",
+              "de": "Höhe"
+            },
+            "unit": "px"
+          }
         },
         "cellWidth": {
           "type": "integer",
           "minimum": 0,
-          "maximum": 255
+          "maximum": 255,
+          "x-semio-ui": {
+            "label": {
+              "en": "Character cell width",
+              "de": "Zeichenzellenbreite"
+            },
+            "unit": "px"
+          }
         },
         "cellHeight": {
           "type": "integer",
           "minimum": 0,
-          "maximum": 255
+          "maximum": 255,
+          "x-semio-ui": {
+            "label": {
+              "en": "Character cell height",
+              "de": "Zeichenzellenhöhe"
+            },
+            "unit": "px"
+          }
         },
         "fgColorIndex": {
           "type": "integer",
           "minimum": 0,
-          "maximum": 255
+          "maximum": 255,
+          "x-semio-ui": {
+            "label": {
+              "en": "Text color index",
+              "de": "Textfarbindex"
+            }
+          }
         },
         "bgColorIndex": {
           "type": "integer",
           "minimum": 0,
-          "maximum": 255
+          "maximum": 255,
+          "x-semio-ui": {
+            "label": {
+              "en": "Background color index",
+              "de": "Hintergrundfarbindex"
+            }
+          }
         },
         "text": {
           "type": "string"

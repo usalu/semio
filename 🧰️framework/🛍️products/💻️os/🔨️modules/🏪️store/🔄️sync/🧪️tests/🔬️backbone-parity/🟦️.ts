@@ -84,6 +84,7 @@ function wireEnvelope(documentId: string, mutationId: string, n: number): WireMu
     diff: { schema: "demo/v1", payload: [n] },
     inverse: { schema: "demo/v1", payload: [0] },
     timestamp: { actor: 1, physical_ms: 1, logical: 1 },
+    transaction: null,
   };
 }
 

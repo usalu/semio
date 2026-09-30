@@ -25,7 +25,7 @@ async fn command_envelope_round_trip_holds_for_an_applied_operation() {
     // without it `Apply` is refused (`edit history insertion requires its exact mutation retirement
     // factory`) and the store cannot close at Drop either.
     let mut store = new_vcs_store(create_document_envelope(VCS_DOCUMENT_SCHEMA, "vcs-demo", crate::standards::v1::subsets::any::schema::empty_vcs_snapshot(), None)).await.expect("valid artifact store fixture");
-    store.dispatch(ArtifactCommand::Apply { mutations: vec![crate::mutations::rename_vcs("Renamed".into())], description: None }).await.expect("apply");
+    store.dispatch(ArtifactCommand::Apply { mutations: vec![crate::mutations::rename_vcs("Renamed".into())], description: None, transaction: None }).await.expect("apply");
     let edit: &Edit<VcsDemoMutation> = store.envelope().vcs.edits.last().expect("dispatch must have recorded an edit");
     store::os_store::test_support::assert_command_envelope_round_trip::<VcsSnapshot, VcsDemoMutation>(edit, &ArtifactId(store.envelope().id.clone()), &SchemaId(store.envelope().schema.clone())).await;
 }

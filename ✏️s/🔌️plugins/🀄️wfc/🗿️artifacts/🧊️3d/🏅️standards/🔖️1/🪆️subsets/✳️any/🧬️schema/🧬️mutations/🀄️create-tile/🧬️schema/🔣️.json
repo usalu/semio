@@ -11,7 +11,23 @@
   "properties": {
     "index": {
       "type": "integer",
-      "minimum": 0
+      "minimum": 0,
+      "x-semio-ui": {
+        "widget": "stepper",
+        "role": "value",
+        "label": {
+          "en": "Index",
+          "de": "Index"
+        },
+        "description": {
+          "en": "Position in the list; empty appends at the end.",
+          "de": "Position in der Liste; leer hängt am Ende an."
+        },
+        "step": 1,
+        "precision": 0,
+        "group": "order",
+        "order": 10
+      }
     },
     "tile": {
       "title": "Tile",
@@ -24,14 +40,54 @@
       ],
       "properties": {
         "id": {
-          "type": "string"
+          "type": "string",
+          "x-semio-ui": {
+            "widget": "text",
+            "role": "value",
+            "label": {
+              "en": "ID",
+              "de": "ID"
+            },
+            "description": {
+              "en": "Unique id of the record.",
+              "de": "Eindeutige ID des Eintrags."
+            },
+            "group": "identity",
+            "order": 10
+          }
         },
         "label": {
-          "type": "string"
+          "type": "string",
+          "x-semio-ui": {
+            "widget": "text",
+            "role": "value",
+            "label": {
+              "en": "Label",
+              "de": "Bezeichnung"
+            },
+            "group": "value",
+            "order": 20
+          }
         },
         "weight": {
           "type": "number",
-          "exclusiveMinimum": 0
+          "exclusiveMinimum": 0,
+          "x-semio-ui": {
+            "widget": "stepper",
+            "role": "value",
+            "label": {
+              "en": "Weight",
+              "de": "Gewicht"
+            },
+            "description": {
+              "en": "Relative frequency of the tile in a solution.",
+              "de": "Relative Häufigkeit der Kachel in einer Lösung."
+            },
+            "step": 0.1,
+            "precision": 2,
+            "group": "solver",
+            "order": 30
+          }
         },
         "media": {
           "oneOf": [
@@ -43,12 +99,33 @@
               ],
               "properties": {
                 "kind": {
-                  "const": "mesh"
+                  "const": "mesh",
+                  "x-semio-ui": {
+                    "widget": "hidden",
+                    "role": "discriminator",
+                    "label": {
+                      "en": "Media kind",
+                      "de": "Medienart"
+                    }
+                  }
                 },
                 "positions": {
                   "type": "array",
                   "items": {
                     "type": "number"
+                  },
+                  "x-semio-ui": {
+                    "role": "value",
+                    "label": {
+                      "en": "Vertex positions",
+                      "de": "Eckpunktkoordinaten"
+                    },
+                    "description": {
+                      "en": "Flat x, y, z list of the mesh vertices.",
+                      "de": "Flache x-, y-, z-Liste der Netzeckpunkte."
+                    },
+                    "group": "record",
+                    "order": 20
                   }
                 },
                 "indices": {
@@ -56,6 +133,19 @@
                   "items": {
                     "type": "integer",
                     "minimum": 0
+                  },
+                  "x-semio-ui": {
+                    "role": "value",
+                    "label": {
+                      "en": "Triangle indices",
+                      "de": "Dreiecksindizes"
+                    },
+                    "description": {
+                      "en": "Three vertex indices per triangle.",
+                      "de": "Drei Eckpunktindizes je Dreieck."
+                    },
+                    "group": "record",
+                    "order": 30
                   }
                 },
                 "color": {
@@ -71,24 +161,87 @@
                     "r": {
                       "type": "integer",
                       "minimum": 0,
-                      "maximum": 255
+                      "maximum": 255,
+                      "x-semio-ui": {
+                        "widget": "slider",
+                        "role": "value",
+                        "label": {
+                          "en": "Red",
+                          "de": "Rot"
+                        },
+                        "step": 1,
+                        "precision": 0,
+                        "group": "color",
+                        "order": 10
+                      }
                     },
                     "g": {
                       "type": "integer",
                       "minimum": 0,
-                      "maximum": 255
+                      "maximum": 255,
+                      "x-semio-ui": {
+                        "widget": "slider",
+                        "role": "value",
+                        "label": {
+                          "en": "Green",
+                          "de": "Grün"
+                        },
+                        "step": 1,
+                        "precision": 0,
+                        "group": "color",
+                        "order": 20
+                      }
                     },
                     "b": {
                       "type": "integer",
                       "minimum": 0,
-                      "maximum": 255
+                      "maximum": 255,
+                      "x-semio-ui": {
+                        "widget": "slider",
+                        "role": "value",
+                        "label": {
+                          "en": "Blue",
+                          "de": "Blau"
+                        },
+                        "step": 1,
+                        "precision": 0,
+                        "group": "color",
+                        "order": 30
+                      }
                     },
                     "a": {
                       "type": "integer",
                       "minimum": 0,
-                      "maximum": 255
+                      "maximum": 255,
+                      "x-semio-ui": {
+                        "widget": "slider",
+                        "role": "value",
+                        "label": {
+                          "en": "Alpha",
+                          "de": "Alpha"
+                        },
+                        "step": 1,
+                        "precision": 0,
+                        "group": "color",
+                        "order": 40
+                      }
                     }
+                  },
+                  "x-semio-ui": {
+                    "role": "value",
+                    "label": {
+                      "en": "Color",
+                      "de": "Farbe"
+                    },
+                    "group": "record",
+                    "order": 40
                   }
+                }
+              },
+              "x-semio-ui": {
+                "label": {
+                  "en": "Mesh",
+                  "de": "Netz"
                 }
               }
             },
@@ -101,7 +254,15 @@
               ],
               "properties": {
                 "kind": {
-                  "const": "meshChild"
+                  "const": "meshChild",
+                  "x-semio-ui": {
+                    "widget": "hidden",
+                    "role": "discriminator",
+                    "label": {
+                      "en": "Media kind",
+                      "de": "Medienart"
+                    }
+                  }
                 },
                 "child": {
                   "type": "object",
@@ -112,7 +273,17 @@
                   ],
                   "properties": {
                     "childId": {
-                      "type": "string"
+                      "type": "string",
+                      "x-semio-ui": {
+                        "widget": "text",
+                        "role": "value",
+                        "label": {
+                          "en": "Child ID",
+                          "de": "Kind-ID"
+                        },
+                        "group": "identity",
+                        "order": 10
+                      }
                     },
                     "target": {
                       "type": "object",
@@ -123,7 +294,17 @@
                       ],
                       "properties": {
                         "artifactId": {
-                          "type": "string"
+                          "type": "string",
+                          "x-semio-ui": {
+                            "widget": "text",
+                            "role": "value",
+                            "label": {
+                              "en": "Artifact ID",
+                              "de": "Artefakt-ID"
+                            },
+                            "group": "identity",
+                            "order": 10
+                          }
                         },
                         "dialect": {
                           "type": "object",
@@ -135,24 +316,105 @@
                           ],
                           "properties": {
                             "artifactKind": {
-                              "type": "string"
+                              "type": "string",
+                              "x-semio-ui": {
+                                "widget": "text",
+                                "role": "value",
+                                "label": {
+                                  "en": "Artifact kind",
+                                  "de": "Artefaktart"
+                                },
+                                "group": "kind",
+                                "order": 10
+                              }
                             },
                             "standard": {
-                              "type": "string"
+                              "type": "string",
+                              "x-semio-ui": {
+                                "widget": "text",
+                                "role": "value",
+                                "label": {
+                                  "en": "Standard",
+                                  "de": "Standard"
+                                },
+                                "group": "kind",
+                                "order": 20
+                              }
                             },
                             "subset": {
-                              "type": "string"
+                              "type": "string",
+                              "x-semio-ui": {
+                                "widget": "text",
+                                "role": "value",
+                                "label": {
+                                  "en": "Subset",
+                                  "de": "Teilmenge"
+                                },
+                                "group": "kind",
+                                "order": 30
+                              }
                             }
+                          },
+                          "x-semio-ui": {
+                            "role": "value",
+                            "label": {
+                              "en": "Dialect",
+                              "de": "Dialekt"
+                            },
+                            "group": "record",
+                            "order": 20
                           }
                         }
+                      },
+                      "x-semio-ui": {
+                        "role": "value",
+                        "label": {
+                          "en": "Target artifact",
+                          "de": "Zielartefakt"
+                        },
+                        "group": "record",
+                        "order": 20
                       }
                     }
+                  },
+                  "x-semio-ui": {
+                    "role": "value",
+                    "label": {
+                      "en": "Child artifact",
+                      "de": "Kindartefakt"
+                    },
+                    "group": "record",
+                    "order": 20
                   }
+                }
+              },
+              "x-semio-ui": {
+                "label": {
+                  "en": "Child mesh",
+                  "de": "Kindnetz"
                 }
               }
             }
-          ]
+          ],
+          "x-semio-ui": {
+            "role": "value",
+            "label": {
+              "en": "Tile media",
+              "de": "Kachelmedien"
+            },
+            "group": "record",
+            "order": 40
+          }
         }
+      },
+      "x-semio-ui": {
+        "role": "value",
+        "label": {
+          "en": "Tile",
+          "de": "Kachel"
+        },
+        "group": "record",
+        "order": 20
       }
     }
   }

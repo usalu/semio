@@ -1,12 +1,41 @@
 {
-  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/norm/din18599/mutation/change-delta-u-wb/schema.json",
   "title": "ChangeDeltaUWb",
   "type": "object",
-  "properties": {
-    "newDeltaUWbWM2K": {
-      "type": "number"
-    }
-  },
   "additionalProperties": false,
-  "$id": "https://json.schemas.assets.semio-tech.com/s/norm/din18599/mutation/change-delta-u-wb/schema.json"
+  "required": [
+    "mutation",
+    "newDeltaUWbWM2k"
+  ],
+  "properties": {
+    "mutation": {
+      "const": "changeDeltaUWb"
+    },
+    "newDeltaUWbWM2k": {
+      "type": "number",
+      "x-semio-ui": {
+        "widget": "stepper",
+        "role": "value",
+        "label": {
+          "en": "Thermal bridge surcharge ΔU_WB",
+          "de": "Wärmebrückenzuschlag ΔU_WB"
+        },
+        "description": {
+          "en": "Flat-rate 0.10, 0.05 (Supplement 2) or 0.03 W/(m²·K), or a detailed value (DIN V 18599-2).",
+          "de": "Pauschal 0,10, 0,05 (Beiblatt 2) oder 0,03 W/(m²·K) oder ein detailliert ermittelter Wert (DIN V 18599-2)."
+        },
+        "unit": "W/(m²·K)",
+        "step": 0.01,
+        "precision": 3,
+        "snaps": [
+          0.03,
+          0.05,
+          0.1
+        ],
+        "group": "envelope",
+        "order": 10
+      }
+    }
+  }
 }

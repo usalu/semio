@@ -1,0 +1,14 @@
+<<<<<<< ANCHOR
+            group_id: None,
+            origin: crate::os_spr::command::MutationOrigin::Owner,
+            messages: Vec::new(),
+        }]),
+        lane: None,
+=======
+            group_id: None,
+            origin: crate::os_spr::command::MutationOrigin::Owner,
+            messages: Vec::new(),
+            transaction: envelope.transaction.clone(),
+        }]),
+        lane: None,
+>>>>>>> END

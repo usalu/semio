@@ -13,16 +13,68 @@
       "additionalProperties": false,
       "properties": {
         "searchQuery": {
-          "type": "string"
+          "type": "string",
+          "x-semio-ui": {
+            "widget": "text",
+            "role": "value",
+            "label": {
+              "en": "Search Query",
+              "de": "Suchanfrage"
+            },
+            "group": "search",
+            "order": 10
+          }
         },
         "searchHistoryJson": {
-          "type": "string"
+          "type": "string",
+          "x-semio-ui": {
+            "widget": "hidden",
+            "role": "value",
+            "label": {
+              "en": "Search History (JSON)",
+              "de": "Suchverlauf (JSON)"
+            },
+            "description": {
+              "en": "Machine-written cache; not edited by hand.",
+              "de": "Maschinell geschriebener Zwischenspeicher; wird nicht von Hand bearbeitet."
+            },
+            "group": "search",
+            "order": 20
+          }
         },
         "lastResultJson": {
-          "type": "string"
+          "type": "string",
+          "x-semio-ui": {
+            "widget": "hidden",
+            "role": "value",
+            "label": {
+              "en": "Last Result (JSON)",
+              "de": "Letztes Ergebnis (JSON)"
+            },
+            "description": {
+              "en": "Machine-written cache; not edited by hand.",
+              "de": "Maschinell geschriebener Zwischenspeicher; wird nicht von Hand bearbeitet."
+            },
+            "group": "results",
+            "order": 30
+          }
         },
         "lastAnalysisJson": {
-          "type": "string"
+          "type": "string",
+          "x-semio-ui": {
+            "widget": "hidden",
+            "role": "value",
+            "label": {
+              "en": "Last Analysis (JSON)",
+              "de": "Letzte Analyse (JSON)"
+            },
+            "description": {
+              "en": "Machine-written cache; not edited by hand.",
+              "de": "Maschinell geschriebener Zwischenspeicher; wird nicht von Hand bearbeitet."
+            },
+            "group": "results",
+            "order": 40
+          }
         }
       },
       "required": [
@@ -30,7 +82,20 @@
         "searchHistoryJson",
         "lastResultJson",
         "lastAnalysisJson"
-      ]
+      ],
+      "x-semio-ui": {
+        "role": "value",
+        "label": {
+          "en": "Configuration",
+          "de": "Konfiguration"
+        },
+        "description": {
+          "en": "The complete architect editor configuration.",
+          "de": "Vollständige Konfiguration des Architect-Editors."
+        },
+        "group": "record",
+        "order": 10
+      }
     }
   }
 }

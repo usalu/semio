@@ -20,7 +20,7 @@ fn params_for(kind: &str) -> Json {
         "remove-output-intent" => json_object(vec![]),
         "set-trim-box" => json_object(vec![("pageIndex", Json::Number(0.0)), ("trimBox", Json::Array(vec![Json::Number(8.5), Json::Number(8.5), Json::Number(586.776), Json::Number(833.39)]))]),
         "remove-trim-box" => json_object(vec![("pageIndex", Json::Number(0.0))]),
-        "embed-font-file" => json_object(vec![("descriptorOrdinal", Json::Number(4.0)), ("key", Json::String("FontFile2".to_string())), ("programOrdinal", Json::Number(0.0))]),
+        "embed-font-file" => json_object(vec![("descriptorOrdinal", Json::Number(4.0)), ("key", Json::String("FontFile2".to_string())), ("program", json_object(vec![("num", Json::Number(803.0)), ("gen", Json::Number(0.0))]))]),
         "remove-font-file" => json_object(vec![("descriptorOrdinal", Json::Number(4.0))]),
         "insert-javascript-action" => json_object(vec![("script", Json::String("app.alert('this document phones home');".to_string()))]),
         "remove-javascript-action" => json_object(vec![("script", Json::String("app.alert('this document phones home');".to_string()))]),

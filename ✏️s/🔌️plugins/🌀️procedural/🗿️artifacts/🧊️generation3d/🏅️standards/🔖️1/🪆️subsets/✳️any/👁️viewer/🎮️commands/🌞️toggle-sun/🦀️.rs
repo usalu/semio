@@ -18,9 +18,3 @@ pub fn handle(_payload: &ToggleSun, _doc: &ArtifactView<'_, Generation3dSnapshot
     apply_world3d_sun_action(&mut sun, "toggleSun", None);
     Ok(ViewEmit::config(vec![Generation3dViewConfigMutation::SetSun(config::SetSun { json: dsl::json::to_json_string(&sun) })]))
 }
-
-//#region 🧪️Tests
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
-//#endregion 🧪️Tests

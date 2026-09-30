@@ -2123,7 +2123,7 @@
       "name": "🛠️dev🗄️os-hub🎫️local",
       "type": "node-terminal",
       "request": "launch",
-      "command": "bun nx run @semio-tech/framework-os-dev:local-hub",
+      "command": "bun nx run os-hub:local-hub-owner",
       "cwd": "${workspaceFolder}",
       "env": {
         "S_HUB_URL": "http://127.0.0.1:8787",
@@ -2242,7 +2242,7 @@
       "name": "🛠️dev🤝️os-collab-e2e",
       "type": "node-terminal",
       "request": "launch",
-      "command": "bun nx run @semio-tech/framework-os-dev:collab-e2e",
+      "command": "bun nx run os-hub:dev-collaboration",
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "3_dev",
@@ -3164,6 +3164,17 @@
       }
     },
     {
+      "name": "🏛️check🧩️canonical-architecture",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run workspace:verify-canonical-architecture",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "4_gate",
+        "order": 899.99
+      }
+    },
+    {
       "name": "📦️check🧅️layering",
       "type": "node-terminal",
       "request": "launch",
@@ -3255,11 +3266,33 @@
       "name": "📦️check🧹️fixture-sweep",
       "type": "node-terminal",
       "request": "launch",
-      "command": "bun nx run @semio-tech/dsl-fixture-sweep-rs:source-check",
+      "command": "bun nx run @semio-tech/s-fixture-sweep-rs:source-check",
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_build",
         "order": 206.17
+      }
+    },
+    {
+      "name": "📦️check🌊️flow-composition",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run @semio-tech/s-flow-composition-rs:source-check",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "4_build",
+        "order": 206.1701
+      }
+    },
+    {
+      "name": "📦️check🌐️semio-session",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run @semio-tech/s-spatial-kernel-semio-session-rs:source-check",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "4_build",
+        "order": 206.1702
       }
     },
     {

@@ -1,5 +1,5 @@
 {
   "mutation": "reorderSavedCameras",
   "id": "cam-close",
-  "to_index": 0
+  "toIndex": 0
 }

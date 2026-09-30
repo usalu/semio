@@ -1,7 +1,13 @@
-/** 🦠️ remove-required-extension executable glTF command. */
-import type { GltfJson, GltfSnapshot } from '../../📸️snapshot/🟦️.ts';
-import { clone, reject, run, same, type GltfLeafResult, type GltfMutationRejection } from './🟦️';
-export const GltfUnrequireExtensionDescriptor = { id: 's.stdio.gltf.mutation.remove-required-extension.v1', version: 1, touchedPaths: ["document/extensionsRequired"], referencePolicy: 'removes only an existing requirement' } as const;
-export interface GltfUnrequireExtensionPayload { extension: string }
-export const validateGltfUnrequireExtension = (payload: GltfUnrequireExtensionPayload, base: GltfSnapshot): GltfMutationRejection | undefined => { if (!base.document.extensionsRequired.includes(payload.extension)) return reject('gltf.mutation.extension-absent', 'document/extensionsRequired', 'extension is not declared');  return undefined; };
-export const applyGltfUnrequireExtension = (base: GltfSnapshot, payload: GltfUnrequireExtensionPayload): GltfLeafResult => run(base, payload, validateGltfUnrequireExtension, (next, payload) => { next.document.extensionsRequired = next.document.extensionsRequired.filter(value => value !== payload.extension); });
+/** ➖️ `remove-required-extension` wire twin: the flat `Apply` payload `GltfUnrequireExtensionPayload` and the phase wire `RemoveRequiredExtensionMutation`, exactly as `./🦀️.rs` writes them.
+ * @see ./🧬️schema/🔣️.json */
+import { gltfWireObject, gltfWireRequired, gltfWireString } from "../../../📸️snapshot/🟦️.ts";
+import { type GltfDiff, type GltfPhase, gltfWirePhase, parseGltfDiff } from "../../../🔺️diff/🟦️.ts";
+
+export interface GltfUnrequireExtensionPayload {
+  extension: string;
+}
+
+export type RemoveRequiredExtensionMutation = GltfPhase<GltfUnrequireExtensionPayload, GltfDiff>;
+
+export const parseGltfUnrequireExtensionPayload = gltfWireObject<GltfUnrequireExtensionPayload>({ extension: gltfWireRequired(gltfWireString) });
+export const parseRemoveRequiredExtensionMutation = gltfWirePhase(parseGltfUnrequireExtensionPayload, parseGltfDiff);

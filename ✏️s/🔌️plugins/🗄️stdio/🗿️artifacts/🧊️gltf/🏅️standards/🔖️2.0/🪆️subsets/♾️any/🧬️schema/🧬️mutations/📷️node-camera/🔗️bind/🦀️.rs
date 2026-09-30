@@ -4,8 +4,7 @@ use crate::schema::modules::mutation_support::top_level::rejection_outcome;
 use crate::schema::modules::mutation_support::top_level::GltfTopLevelMutationRejection;
 use crate::GltfSnapshot;
 pub const ID: &str = "s.stdio.gltf.mutation.bind-node-camera.v1";
-#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::MutationLeaf)]
-#[mutation_leaf(contract = ::protocol)]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
 #[value(rename_all = "camelCase")]
 pub struct GltfBindNodeCameraPayload {
     pub node: usize,
@@ -27,7 +26,7 @@ pub fn apply(payload: &GltfBindNodeCameraPayload, base: &GltfSnapshot) -> Result
 
 //#region 🧬️DirectMutation
 #[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::MutationLeaf)]
-#[mutation_leaf(contract = ::protocol)]
+#[mutation_leaf(contract = ::protocol, payload = Apply)]
 #[value(tag = "phase", content = "value", rename_all = "camelCase")]
 pub enum BindNodeCameraMutation {
     Apply(GltfBindNodeCameraPayload),
@@ -71,6 +70,6 @@ impl protocol::MutationKind<GltfSnapshot, super::GltfMutation> for BindNodeCamer
 
 //#region 🧪️Tests
 #[cfg(test)]
-#[path = "🧪️tests/🔬️direct-leaf/🦀️.rs"]
-mod direct_leaf_tests;
+#[path = "🧪️tests/🔗️binds-the-843e96/🦀️.rs"]
+mod case_binds_the_843e96;
 //#endregion 🧪️Tests

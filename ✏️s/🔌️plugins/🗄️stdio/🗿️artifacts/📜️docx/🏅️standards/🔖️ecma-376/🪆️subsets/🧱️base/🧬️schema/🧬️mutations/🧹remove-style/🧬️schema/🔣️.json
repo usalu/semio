@@ -5,15 +5,34 @@
   "type": "object",
   "additionalProperties": false,
   "required": [
+    "mutation",
     "id"
   ],
   "properties": {
-    "id": {
-      "type": "string"
-    },
     "mutation": {
       "const": "removeStyle",
       "description": "Aggregate discriminator spliced in by DocxMutation; absent when the payload stands alone."
+    },
+    "id": {
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Style",
+          "de": "Formatvorlage"
+        },
+        "description": {
+          "en": "Style id (w:styleId).",
+          "de": "Formatvorlagen-ID (w:styleId)."
+        },
+        "ref": {
+          "kind": "style",
+          "domain": "docx"
+        },
+        "group": "target",
+        "order": 10
+      }
     }
   }
 }

@@ -19,7 +19,7 @@ async fn math_document_text_round_trips_through_store() {
     // every `Apply` with `edit history insertion requires its exact mutation retirement factory`.
     let mut store = crate::standards::v1::subsets::any::io::snapshot::binary::new_equation_store(envelope).await.expect("valid artifact store fixture");
     let mutation = UpdateGraphAlgorithm { new_algorithm: "components".into(), new_algorithm_seed: None };
-    store.dispatch(store::ArtifactCommand::Apply { mutations: vec![EquationMutation::UpdateGraphAlgorithm(mutation)], description: None }).await.expect("apply");
+    store.dispatch(store::ArtifactCommand::Apply { mutations: vec![EquationMutation::UpdateGraphAlgorithm(mutation)], description: None, transaction: None }).await.expect("apply");
     store::os_store::test_support::assert_document_text_round_trip(&store).await;
     store::os_store::test_support::assert_document_pack_round_trip(&store).await;
 }

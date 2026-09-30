@@ -19,7 +19,13 @@ fn every_transition() -> Vec<HistoryTransition> {
         HistoryTransition::Checkout { checkpoint_id: "ck-1".into(), alternative_id: None },
         HistoryTransition::Checkout { checkpoint_id: "ck-1".into(), alternative_id: Some("alt-1".into()) },
         HistoryTransition::Repin { checkpoint_id: "ck-1".into(), pinned_checkpoint_id: "ck-2".into(), pins: vec![TransitionPin { child_uri: "semio://child".into(), checkpoint_id: "ck-c".into() }] },
+        HistoryTransition::Supersede(TransitionSupersede { scope: None, inputs: vec![input("op-a", &[1, 2, 3]), SupersededInput { target: MutationId("op-b".into()), replacement: InputReplacement::Withdrawn }] }),
+        HistoryTransition::Supersede(TransitionSupersede { scope: Some("alt-1".into()), inputs: vec![input("op-a", &[])] }),
     ]
+}
+
+fn input(target: &str, payload: &[u8]) -> SupersededInput {
+    SupersededInput { target: MutationId(target.into()), replacement: InputReplacement::Input { schema: "demo/v1".into(), payload: payload.to_vec() } }
 }
 
 /// 🔁️ Every variant survives an encode/decode round trip byte-exactly.
@@ -53,6 +59,20 @@ fn transition_ids_are_content_addressed() {
     assert!(a.mutation_id.0.starts_with("transition-"));
     let later = history_transition_envelope(&transition, &ArtifactId("doc".into()), &actor, Vec::new(), HybridLogicalTimestamp { logical: 3, ..tick });
     assert_ne!(a.mutation_id, later.mutation_id);
+}
+
+/// 🛂️ The actor string is authentication metadata, not content: the same authored transition (HLC and payload)
+/// has the same id whichever actor string an author, a relay or the hub's socket binding stamps on it.
+#[test]
+fn a_transition_id_ignores_the_actor_string() {
+    let tick = HybridLogicalTimestamp { actor: 2_557_761_449, physical_ms: 1_790_622_765_027, logical: 3 };
+    for transition in every_transition() {
+        let authored = history_transition_envelope(&transition, &ArtifactId("doc".into()), &ActorId("local".into()), Vec::new(), tick);
+        let rebound = history_transition_envelope(&transition, &ArtifactId("doc".into()), &ActorId("hub.v1.370722f0cfb78d4e3eaf44a8b576001a0afd3711c6d35e600e17b516da8ac1a0".into()), Vec::new(), tick);
+        assert_eq!(authored.mutation_id, rebound.mutation_id, "{transition:?}");
+        assert_eq!(authored.mutation_id, history_transition_id(&tick, &authored.diff.payload));
+        assert_ne!(authored.mutation_id, history_transition_envelope(&transition, &ArtifactId("doc".into()), &ActorId("local".into()), Vec::new(), HybridLogicalTimestamp { actor: tick.actor + 1, ..tick }).mutation_id, "the numeric HLC actor stays part of the address");
+    }
 }
 
 /// 🏷️ The schema tag alone routes an envelope: transitions decode, domain ops pass through as `None`.
@@ -231,7 +251,28 @@ fn fixture_transition(json: &serde_json::Value) -> HistoryTransition {
             pinned_checkpoint_id: text("pinnedCheckpointId"),
             pins: json["pins"].as_array().expect("fixture pins").iter().map(|pin| TransitionPin { child_uri: pin["childUri"].as_str().expect("pin uri").into(), checkpoint_id: pin["checkpointId"].as_str().expect("pin checkpoint").into() }).collect(),
         },
+        "supersede" => HistoryTransition::Supersede(TransitionSupersede {
+            scope: optional("scope"),
+            inputs: json["inputs"]
+                .as_array()
+                .expect("fixture inputs")
+                .iter()
+                .map(|input| SupersededInput { target: MutationId(input["target"].as_str().expect("input target").into()), replacement: fixture_replacement(&input["replacement"]) })
+                .collect(),
+        }),
         other => panic!("unknown fixture kind {other}"),
+    }
+}
+
+fn fixture_hex(hex: &str) -> Vec<u8> {
+    (0..hex.len()).step_by(2).map(|index| u8::from_str_radix(&hex[index..index + 2], 16).expect("hex byte")).collect()
+}
+
+fn fixture_replacement(json: &serde_json::Value) -> InputReplacement {
+    match json["kind"].as_str().expect("replacement kind") {
+        "input" => InputReplacement::Input { schema: json["schema"].as_str().expect("replacement schema").into(), payload: fixture_hex(json["payloadHex"].as_str().expect("replacement payloadHex")) },
+        "withdrawn" => InputReplacement::Withdrawn,
+        other => panic!("unknown replacement kind {other}"),
     }
 }
 
@@ -295,8 +336,9 @@ fn durable_collaborative_redo_fixture_survives_reload_and_hub_restart() {
 
 #[test]
 fn the_language_agnostic_fixture_matches_the_codec_byte_for_byte() {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../🧫️fixtures/🔀️history-transition-v1/🔣️.json")).expect("history transition fixture parses");
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../🧫️fixtures/🧫️history-transition/🔣️.json")).expect("history transition fixture parses");
     assert_eq!(fixture["diffSchema"].as_str(), Some(HISTORY_TRANSITION_SCHEMA));
+    let clock = HybridLogicalTimestamp { actor: fixture["idClock"]["actor"].as_u64().expect("idClock actor"), physical_ms: fixture["idClock"]["physicalMs"].as_u64().expect("idClock physicalMs"), logical: fixture["idClock"]["logical"].as_u64().expect("idClock logical") };
     for case in fixture["cases"].as_array().expect("fixture cases") {
         let id = case["id"].as_str().expect("case id");
         let hex = case["payloadHex"].as_str().expect("payload hex");
@@ -306,6 +348,14 @@ fn the_language_agnostic_fixture_matches_the_codec_byte_for_byte() {
                 let expected = fixture_transition(&case["expect"]["transition"]);
                 assert_eq!(encode_history_transition(&expected), bytes, "{id}: encode");
                 assert_eq!(decode_history_transition(&bytes).unwrap_or_else(|error| panic!("{id}: {error:?}")), expected, "{id}: decode");
+                let transition_id = case["expect"]["transitionId"].as_str().expect("transitionId");
+                assert_eq!(history_transition_id(&clock, &bytes).0, transition_id, "{id}: first-party id");
+                let mut material = Vec::new();
+                crate::wire::write_varint_u64(&mut material, clock.actor);
+                crate::wire::write_varint_u64(&mut material, clock.physical_ms);
+                crate::wire::write_varint_u64(&mut material, clock.logical);
+                crate::write_bytes(&mut material, &bytes);
+                assert_eq!(format!("transition-{}", &blake3::hash(&material).to_hex()[..16]), transition_id, "{id}: third-party blake3 id");
             }
             "malformed" => {
                 let detail = case["expect"]["detail"].as_str().expect("detail");
@@ -314,5 +364,148 @@ fn the_language_agnostic_fixture_matches_the_codec_byte_for_byte() {
             }
             other => panic!("{id}: unknown outcome {other}"),
         }
+    }
+}
+
+/// 🛂️ Authoring refuses exactly what the codec refuses: no input, a repeated target, an oversized scope or payload.
+#[test]
+fn supersede_validation_refuses_what_the_codec_refuses() {
+    let valid = TransitionSupersede { scope: Some("s".repeat(SUPERSEDE_SCOPE_MAX_BYTES)), inputs: vec![input("op-a", &vec![0; SUPERSEDE_PAYLOAD_MAX_BYTES])] };
+    assert!(valid.validate().is_ok());
+    assert_eq!(decode_history_transition(&encode_history_transition(&HistoryTransition::Supersede(valid.clone()))).expect("the bounds are inclusive"), HistoryTransition::Supersede(valid));
+    let refusals = [
+        (TransitionSupersede { scope: None, inputs: Vec::new() }, "supersede names no input"),
+        (TransitionSupersede { scope: None, inputs: vec![input("op-a", &[1]), input("op-a", &[2])] }, "supersede repeats target op-a"),
+        (TransitionSupersede { scope: Some("s".repeat(SUPERSEDE_SCOPE_MAX_BYTES + 1)), inputs: vec![input("op-a", &[])] }, "supersede scope exceeds 256 bytes"),
+        (TransitionSupersede { scope: None, inputs: vec![input("op-a", &vec![0; SUPERSEDE_PAYLOAD_MAX_BYTES + 1])] }, "supersede payload exceeds 262144 bytes"),
+    ];
+    for (supersede, detail) in refusals {
+        assert!(format!("{:?}", supersede.validate().expect_err(detail)).contains(detail), "{detail}");
+        let bytes = encode_history_transition(&HistoryTransition::Supersede(supersede));
+        assert!(format!("{:?}", decode_history_transition(&bytes).expect_err(detail)).contains(detail), "{detail}: decode");
+    }
+}
+
+/// 🔗️ A supersession's envelope depends on its targets, so a replica holds it until every superseded operation arrived.
+#[test]
+fn a_supersede_envelope_depends_on_its_targets() {
+    let supersede = TransitionSupersede { scope: None, inputs: vec![input("op-b", &[1]), input("op-a", &[2])] };
+    let envelope = history_transition_envelope(&HistoryTransition::Supersede(supersede.clone()), &ArtifactId("doc".into()), &ActorId("x".into()), supersede.targets(), HybridLogicalTimestamp::new(0, 1));
+    assert_eq!(envelope.dependencies, vec![MutationId("op-b".into()), MutationId("op-a".into())]);
+    assert!(envelope.target.is_empty());
+    assert_eq!(envelope.transaction, None);
+}
+
+fn supersede_fold_fixture() -> serde_json::Value {
+    serde_json::from_str(include_str!("../../../🧫️fixtures/🧫️supersede-fold/🔣️.json")).expect("supersede fold fixture parses")
+}
+
+fn fixture_step_envelope(document: &ArtifactId, step: &serde_json::Value) -> crate::causal::MutationEnvelope {
+    let transition = fixture_transition(&step["transition"]);
+    let dependencies = match &transition {
+        HistoryTransition::Supersede(supersede) => supersede.targets(),
+        _ => Vec::new(),
+    };
+    let clock = HybridLogicalTimestamp { actor: 0, physical_ms: step["logicalMs"].as_u64().expect("logicalMs"), logical: 0 };
+    let mut envelope = history_transition_envelope(&transition, document, &ActorId(step["actor"].as_str().expect("actor").into()), dependencies, clock);
+    envelope.mutation_id = MutationId(step["id"].as_str().expect("transition id").into());
+    envelope
+}
+
+fn expected_supersessions(expect: &serde_json::Value) -> std::collections::BTreeMap<MutationId, EffectiveSupersession> {
+    expect["supersessions"]
+        .as_array()
+        .expect("supersessions")
+        .iter()
+        .map(|row| {
+            (
+                MutationId(row["target"].as_str().expect("target").into()),
+                EffectiveSupersession {
+                    transition_id: row["transitionId"].as_str().expect("transitionId").into(),
+                    actor: row["actor"].as_str().expect("actor").into(),
+                    timestamp: HybridLogicalTimestamp { actor: 0, physical_ms: row["logicalMs"].as_u64().expect("logicalMs"), logical: 0 },
+                    scope: row["scope"].as_str().map(str::to_string),
+                    replacement: fixture_replacement(&row["replacement"]),
+                },
+            )
+        })
+        .collect()
+}
+
+/// ✏️ Language-agnostic supersede fold law (shared with the TypeScript fold twin): last-wins by `(hlc, id)` whatever
+/// the arrival order, no ownership rule, scope against the final alternative, composition with revert/commit/branch/
+/// checkout, a pure re-fold on reload, and an unknown target refused as a fold error.
+#[test]
+fn the_supersede_fold_fixture_matches_the_fold_law() {
+    let fixture = supersede_fold_fixture();
+    assert_eq!(fixture["schema"].as_str(), Some("semio.history.supersede-fold"));
+    let document = ArtifactId(fixture["documentId"].as_str().expect("documentId").into());
+    let edits: Vec<FoldEdit> = fixture["edits"]
+        .as_array()
+        .expect("edits")
+        .iter()
+        .map(|row| FoldEdit {
+            id: row["id"].as_str().expect("edit id").into(),
+            actor: Some(row["actor"].as_str().expect("actor").into()),
+            timestamp: HybridLogicalTimestamp { actor: 0, physical_ms: row["logicalMs"].as_u64().expect("logicalMs"), logical: 0 },
+            mutation_ids: row["mutationIds"].as_array().expect("mutationIds").iter().map(|id| MutationId(id.as_str().expect("mutation id").into())).collect(),
+        })
+        .collect();
+    let mut transitions: Vec<crate::causal::MutationEnvelope> = Vec::new();
+    for step in fixture["steps"].as_array().expect("steps") {
+        let label = step["label"].as_str().unwrap_or("transition");
+        match step["kind"].as_str().expect("step kind") {
+            "transition" => transitions.push(fixture_step_envelope(&document, step)),
+            "expect" => {
+                let fold = fold_history(&edits, &transitions, &none()).unwrap_or_else(|error| panic!("{label}: {error:?}"));
+                assert_eq!(fold.alternative, step["expect"]["alternative"].as_str().map(str::to_string), "{label}: alternative");
+                assert_eq!(fold.supersessions, expected_supersessions(&step["expect"]), "{label}: supersessions");
+            }
+            "reload" => assert_eq!(fold_history(&edits, &transitions, &none()).expect(label), fold_history(&edits, &transitions, &none()).expect(label), "{label}"),
+            "refuse" => {
+                let mut refused = transitions.clone();
+                refused.push(fixture_step_envelope(&document, &step["transition"]));
+                let error = fold_history(&edits, &refused, &none()).expect_err(label);
+                assert!(format!("{error:?}").contains(step["detail"].as_str().expect("detail")), "{label}: {error:?}");
+            }
+            other => panic!("unknown step kind {other}"),
+        }
+    }
+}
+
+/// 🔀️ Supersessions are a function of the event SET: every rotation of the fixture's transitions folds to the same projection.
+#[test]
+fn supersessions_are_a_function_of_the_event_set() {
+    let fixture = supersede_fold_fixture();
+    let document = ArtifactId(fixture["documentId"].as_str().expect("documentId").into());
+    let edits: Vec<FoldEdit> = fixture["edits"]
+        .as_array()
+        .expect("edits")
+        .iter()
+        .map(|row| FoldEdit {
+            id: row["id"].as_str().expect("edit id").into(),
+            actor: Some(row["actor"].as_str().expect("actor").into()),
+            timestamp: HybridLogicalTimestamp { actor: 0, physical_ms: row["logicalMs"].as_u64().expect("logicalMs"), logical: 0 },
+            mutation_ids: row["mutationIds"].as_array().expect("mutationIds").iter().map(|id| MutationId(id.as_str().expect("mutation id").into())).collect(),
+        })
+        .collect();
+    let transitions: Vec<crate::causal::MutationEnvelope> = fixture["steps"].as_array().expect("steps").iter().filter(|step| step["kind"] == "transition").map(|step| fixture_step_envelope(&document, step)).collect();
+    let expected = fold_history(&edits, &transitions, &none()).expect("fold");
+    assert!(!expected.supersessions.is_empty());
+    for rotation in 1..transitions.len() {
+        let mut shuffled = transitions.clone();
+        shuffled.rotate_left(rotation);
+        shuffled.reverse();
+        assert_eq!(fold_history(&edits, &shuffled, &none()).expect("fold"), expected, "rotation {rotation}");
+    }
+}
+
+/// 🌉️ The value shapes of a replacement and an effective supersession round-trip.
+#[test]
+fn supersession_values_round_trip() {
+    for replacement in [InputReplacement::Input { schema: "demo/v1".into(), payload: vec![1, 2] }, InputReplacement::Withdrawn] {
+        let supersession = EffectiveSupersession { transition_id: "transition-1".into(), actor: "alice".into(), timestamp: HybridLogicalTimestamp::new(3, 4), scope: Some("alt".into()), replacement };
+        let decoded: EffectiveSupersession = crate::value::FromValue::from_value(crate::value::ToValue::to_value(&supersession)).expect("decode");
+        assert_eq!(decoded, supersession);
     }
 }

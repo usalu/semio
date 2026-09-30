@@ -206,6 +206,7 @@ impl<P: RetainedClone, M, E: RetainedCloneEdit<P, M>> RetainedClonePreparation<P
                 label: None,
                 group_id: authority.group_id().map(str::to_string),
                 origin: Default::default(),
+                transaction: None,
             }],
             description: self.description.take(),
             coalesce_key: None,

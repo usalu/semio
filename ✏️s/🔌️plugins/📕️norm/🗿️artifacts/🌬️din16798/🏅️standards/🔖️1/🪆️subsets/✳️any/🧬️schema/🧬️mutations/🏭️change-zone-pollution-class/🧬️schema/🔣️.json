@@ -10,10 +10,41 @@
   ],
   "properties": {
     "zoneId": {
-      "type": "string"
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Zone",
+          "de": "Zone"
+        },
+        "description": {
+          "en": "The ventilation zone this mutation addresses.",
+          "de": "Die Lüftungszone, die diese Mutation adressiert."
+        },
+        "ref": {
+          "kind": "zone"
+        },
+        "group": "target",
+        "order": 10
+      }
     },
     "newPollutionClass": {
-      "type": "string"
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "text",
+        "role": "value",
+        "label": {
+          "en": "Building pollution class",
+          "de": "Emissionsklasse des Gebäudes"
+        },
+        "description": {
+          "en": "very_low, low or non_low (EN 16798-1 Annex B).",
+          "de": "very_low (sehr schadstoffarm), low (schadstoffarm) oder non_low (nicht schadstoffarm) nach EN 16798-1 Anhang B."
+        },
+        "group": "air-quality",
+        "order": 20
+      }
     }
   }
 }

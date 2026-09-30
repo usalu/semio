@@ -2,32 +2,44 @@
   "$schema": "http://json-schema.org/draft-07/schema#",
   "$id": "https://json.schemas.assets.semio-tech.com/os/flow/artifacts/flow/vcs/mutation/move-synapse/schema.json",
   "title": "MoveSynapse",
-  "$defs": {
-    "Payload": {
-      "type": "object",
-      "properties": {
-        "id": {
-          "type": "string"
-        },
-        "toIndex": {
-          "$ref": "https://json.schemas.assets.semio-tech.com/os/flow/artifacts/flow/vcs/snapshot.json#/$defs/Index"
-        }
-      },
-      "required": [
-        "id",
-        "toIndex"
-      ]
-    }
-  },
-  "allOf": [
-    {
-      "$ref": "#/$defs/Payload"
-    }
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "operation",
+    "id",
+    "toIndex"
   ],
-  "propertyNames": {
-    "enum": [
-      "id",
-      "toIndex"
-    ]
+  "properties": {
+    "operation": {
+      "const": "moveSynapse"
+    },
+    "id": {
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Synapse",
+          "de": "Synapse"
+        },
+        "ref": {
+          "kind": "synapse"
+        },
+        "group": "target",
+        "order": 10
+      }
+    },
+    "toIndex": {
+      "$ref": "https://json.schemas.assets.semio-tech.com/os/flow/artifacts/flow/vcs/snapshot.json#/$defs/Index",
+      "x-semio-ui": {
+        "role": "value",
+        "label": {
+          "en": "Target position",
+          "de": "Zielposition"
+        },
+        "group": "record",
+        "order": 20
+      }
+    }
   }
 }

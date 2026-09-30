@@ -17,7 +17,7 @@ async fn shooting_document_text_round_trips_store_with_applied_operation() {
     store.install_document_store_owners_exact(semio_framework_plugin::bounded_document_store_owners::<ShootingSnapshot, ShootingMutation>());
     let asset = crate::ShootingAsset { id: "a1".into(), name: "Asset".into(), url: "/mesh/a1.glb".into(), format: "glb".into(), origin: [0.0, 0.0, 0.0], orientation: Some([0.0, 0.0, 0.0, 1.0]), scale: None };
     let create = crate::standards::v1::subsets::any::schema::mutations::create_asset::CreateAsset { asset, index: Some(0) };
-    store.dispatch(ArtifactCommand::Apply { mutations: vec![ShootingMutation::CreateAsset(create)], description: None }).await.expect("apply");
+    store.dispatch(ArtifactCommand::Apply { mutations: vec![ShootingMutation::CreateAsset(create)], description: None, transaction: None }).await.expect("apply");
     store::os_store::test_support::assert_document_text_round_trip(&store).await;
     store::os_store::test_support::assert_document_pack_round_trip(&store).await;
     while !store.close_owned_terminal_is_empty() {

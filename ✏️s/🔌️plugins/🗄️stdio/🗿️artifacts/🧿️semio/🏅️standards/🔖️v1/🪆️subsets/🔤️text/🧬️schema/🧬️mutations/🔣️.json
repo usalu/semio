@@ -8,35 +8,11 @@
       "type": "object",
       "additionalProperties": false,
       "required": [
-        "AddMark"
+        "SetSnapshot"
       ],
       "properties": {
-        "AddMark": {
-          "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/semio/v1/text/mutation/add-mark/schema.json"
-        }
-      }
-    },
-    {
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "ChangeRunLanguage"
-      ],
-      "properties": {
-        "ChangeRunLanguage": {
-          "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/semio/v1/text/mutation/change-run-language/schema.json"
-        }
-      }
-    },
-    {
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "EditRun"
-      ],
-      "properties": {
-        "EditRun": {
-          "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/semio/v1/text/mutation/edit-run/schema.json"
+        "SetSnapshot": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/semio/v1/text/mutation/set-snapshot/schema.json"
         }
       }
     },
@@ -56,11 +32,11 @@
       "type": "object",
       "additionalProperties": false,
       "required": [
-        "RemoveMark"
+        "RemoveRun"
       ],
       "properties": {
-        "RemoveMark": {
-          "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/semio/v1/text/mutation/remove-mark/schema.json"
+        "RemoveRun": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/semio/v1/text/mutation/remove-run/schema.json"
         }
       }
     },
@@ -68,11 +44,23 @@
       "type": "object",
       "additionalProperties": false,
       "required": [
-        "RemoveRun"
+        "EditRun"
       ],
       "properties": {
-        "RemoveRun": {
-          "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/semio/v1/text/mutation/remove-run/schema.json"
+        "EditRun": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/semio/v1/text/mutation/edit-run/schema.json"
+        }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "ChangeRunLanguage"
+      ],
+      "properties": {
+        "ChangeRunLanguage": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/semio/v1/text/mutation/change-run-language/schema.json"
         }
       }
     },
@@ -92,11 +80,23 @@
       "type": "object",
       "additionalProperties": false,
       "required": [
-        "SetSnapshot"
+        "AddMark"
       ],
       "properties": {
-        "SetSnapshot": {
-          "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/semio/v1/text/mutation/set-snapshot/schema.json"
+        "AddMark": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/semio/v1/text/mutation/add-mark/schema.json"
+        }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "RemoveMark"
+      ],
+      "properties": {
+        "RemoveMark": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/semio/v1/text/mutation/remove-mark/schema.json"
         }
       }
     }

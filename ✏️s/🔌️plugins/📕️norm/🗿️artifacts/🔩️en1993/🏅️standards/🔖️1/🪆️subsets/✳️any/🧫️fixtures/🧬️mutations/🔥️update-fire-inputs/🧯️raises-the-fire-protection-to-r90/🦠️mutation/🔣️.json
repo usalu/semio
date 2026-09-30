@@ -1,6 +1,6 @@
 {
   "UpdateFireInputs": {
-    "fire_exposure": {
+    "fireExposure": {
       "id": "fire-1",
       "memberId": "member-b1",
       "rating": "r90",

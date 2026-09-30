@@ -7,7 +7,23 @@
     "value": {
       "type": "integer",
       "minimum": 0,
-      "maximum": 4294967295
+      "maximum": 4294967295,
+      "x-semio-ui": {
+        "widget": "stepper",
+        "role": "value",
+        "label": {
+          "en": "Fit revision",
+          "de": "Einpassungsrevision"
+        },
+        "description": {
+          "en": "Counter that re-fits the viewport when it changes.",
+          "de": "Zähler, der das Ansichtsfenster bei Änderung neu einpasst."
+        },
+        "step": 1,
+        "precision": 0,
+        "group": "view",
+        "order": 10
+      }
     }
   },
   "required": [

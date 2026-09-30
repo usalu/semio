@@ -5,19 +5,80 @@
   "type": "object",
   "additionalProperties": false,
   "required": [
+    "mutation",
     "id",
     "newX",
     "newY"
   ],
   "properties": {
+    "mutation": {
+      "const": "moveBlock"
+    },
     "id": {
-      "type": "string"
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Block",
+          "de": "Block"
+        },
+        "description": {
+          "en": "The block this mutation addresses.",
+          "de": "Der Block, den diese Mutation adressiert."
+        },
+        "ref": {
+          "kind": "block",
+          "domain": "blocks",
+          "granularity": "block"
+        },
+        "group": "target",
+        "order": 10
+      }
     },
     "newX": {
-      "type": "number"
+      "type": "number",
+      "x-semio-ui": {
+        "widget": "stepper",
+        "role": "value",
+        "label": {
+          "en": "X",
+          "de": "X"
+        },
+        "description": {
+          "en": "Absolute final x on the canvas.",
+          "de": "Absolute x-Endposition auf der Fläche."
+        },
+        "step": 1,
+        "precision": 1,
+        "snapSource": {
+          "snapshot": "/snapGridSpacing"
+        },
+        "group": "position",
+        "order": 20
+      }
     },
     "newY": {
-      "type": "number"
+      "type": "number",
+      "x-semio-ui": {
+        "widget": "stepper",
+        "role": "value",
+        "label": {
+          "en": "Y",
+          "de": "Y"
+        },
+        "description": {
+          "en": "Absolute final y on the canvas.",
+          "de": "Absolute y-Endposition auf der Fläche."
+        },
+        "step": 1,
+        "precision": 1,
+        "snapSource": {
+          "snapshot": "/snapGridSpacing"
+        },
+        "group": "position",
+        "order": 30
+      }
     }
   }
 }

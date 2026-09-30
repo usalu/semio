@@ -15,7 +15,39 @@
         "conductionGain",
         "solarTransmitted",
         "solarAbsorbed"
-      ]
+      ],
+      "x-semio-ui": {
+        "widget": "select",
+        "role": "value",
+        "label": {
+          "en": "Result field",
+          "de": "Ergebnisgröße"
+        },
+        "description": {
+          "en": "Surface result that colours the model.",
+          "de": "Flächenergebnis, nach dem das Modell eingefärbt wird."
+        },
+        "options": {
+          "conductionLoss": {
+            "en": "Conduction loss",
+            "de": "Transmissionswärmeverlust"
+          },
+          "conductionGain": {
+            "en": "Conduction gain",
+            "de": "Transmissionswärmegewinn"
+          },
+          "solarTransmitted": {
+            "en": "Transmitted solar",
+            "de": "Transmittierte Solarstrahlung"
+          },
+          "solarAbsorbed": {
+            "en": "Absorbed solar",
+            "de": "Absorbierte Solarstrahlung"
+          }
+        },
+        "group": "display",
+        "order": 10
+      }
     }
   }
 }

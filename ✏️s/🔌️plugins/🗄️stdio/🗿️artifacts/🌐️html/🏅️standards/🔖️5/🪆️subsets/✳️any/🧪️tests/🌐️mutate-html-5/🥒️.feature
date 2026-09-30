@@ -68,10 +68,10 @@ Feature: Apply every typed HTML 5 mutation to a real-world document
       {"kind": "<id>", "params": <params>}
       """
     Then the oracle and the subject agree on the semantic projection
-    And the semantic projection moved, unless the kind is no-mutation
+    And the semantic projection moved
     Examples:
       | id                | params                                                                                                                                                                                     |
-      | set-snapshot       | {"doctype": "DOCTYPE html", "root": {"kind":"element","name":"html","attributes":[{"name":"lang","value":"de"}],"children":[{"kind":"element","name":"head","attributes":[],"children":[{"kind":"element","name":"title","attributes":[],"children":[{"kind":"text","text":"Wave 7 Snapshot Title"}]}]},{"kind":"element","name":"body","attributes":[],"children":[{"kind":"text","text":"Wave 7 snapshot replacement content"}]}]}} |
+      | set-snapshot       | {"snapshot": {"schema":"stdio.html","doctype":"DOCTYPE html","root":{"kind":"element","name":"html","attributes":[{"name":"lang","value":"de"}],"children":[{"kind":"element","name":"head","attributes":[],"children":[{"kind":"element","name":"title","attributes":[],"children":[{"kind":"text","text":"Wave 7 Snapshot Title"}]}]},{"kind":"element","name":"body","attributes":[],"children":[{"kind":"text","text":"Wave 7 snapshot replacement content"}]}]}}} |
       | set-doctype        | {"doctype": "DOCTYPE htmlWave7"}                                                                                                                                                          |
       | insert-node        | {"parent": [2], "index": 0, "node": {"kind":"element","name":"div","attributes":[{"name":"id","value":"wave7-marker"}],"children":[{"kind":"text","text":"Wave 7 mutation testing"}]}}    |
       | remove-node        | {"parent": [2], "index": 9}                                                                                                                                                               |
@@ -80,18 +80,6 @@ Feature: Apply every typed HTML 5 mutation to a real-world document
       | set-text           | {"path": [0, 9, 0], "text": "Wave 7 Mutation Testing"}                                                                                                                                    |
       | set-comment        | {"path": [0, 5], "text": " Wave 7 replaced comment "}                                                                                                                                     |
       | set-raw-text       | {"path": [2, 29, 0], "text": "console.log('wave7');"}                                                                                                                                     |
-
-  @id-no-mutation-baseline-mutate
-  @level-exhaustive
-  @mode-differential
-  Scenario: Apply no-mutation to the real document
-    Given the real input document shared://🏚️zukunft-bau-entwerfen-mit-bestand/🌐️.html
-    When the no-mutation mutation is applied with its parameters
-      """
-      {"kind": "no-mutation", "params": {}}
-      """
-    Then the oracle and the subject agree on the semantic projection
-    And the semantic projection moved, unless the kind is no-mutation
 
   @id-inverse
   @level-exhaustive
@@ -105,7 +93,7 @@ Feature: Apply every typed HTML 5 mutation to a real-world document
     Then the oracle and the subject agree on the semantic projection
     Examples:
       | id                | params                                                                                                                                                                                     |
-      | set-snapshot       | {"doctype": "DOCTYPE html", "root": {"kind":"element","name":"html","attributes":[{"name":"lang","value":"de"}],"children":[{"kind":"element","name":"head","attributes":[],"children":[{"kind":"element","name":"title","attributes":[],"children":[{"kind":"text","text":"Wave 7 Snapshot Title"}]}]},{"kind":"element","name":"body","attributes":[],"children":[{"kind":"text","text":"Wave 7 snapshot replacement content"}]}]}} |
+      | set-snapshot       | {"snapshot": {"schema":"stdio.html","doctype":"DOCTYPE html","root":{"kind":"element","name":"html","attributes":[{"name":"lang","value":"de"}],"children":[{"kind":"element","name":"head","attributes":[],"children":[{"kind":"element","name":"title","attributes":[],"children":[{"kind":"text","text":"Wave 7 Snapshot Title"}]}]},{"kind":"element","name":"body","attributes":[],"children":[{"kind":"text","text":"Wave 7 snapshot replacement content"}]}]}}} |
       | set-doctype        | {"doctype": "DOCTYPE htmlWave7"}                                                                                                                                                          |
       | insert-node        | {"parent": [2], "index": 0, "node": {"kind":"element","name":"div","attributes":[{"name":"id","value":"wave7-marker"}],"children":[{"kind":"text","text":"Wave 7 mutation testing"}]}}    |
       | remove-node        | {"parent": [2], "index": 9}                                                                                                                                                               |
@@ -114,17 +102,6 @@ Feature: Apply every typed HTML 5 mutation to a real-world document
       | set-text           | {"path": [0, 9, 0], "text": "Wave 7 Mutation Testing"}                                                                                                                                    |
       | set-comment        | {"path": [0, 5], "text": " Wave 7 replaced comment "}                                                                                                                                     |
       | set-raw-text       | {"path": [2, 29, 0], "text": "console.log('wave7');"}                                                                                                                                     |
-
-  @id-no-mutation-baseline-inverse
-  @level-exhaustive
-  @mode-differential
-  Scenario: Undoing no-mutation restores the document
-    Given the real input document shared://🏚️zukunft-bau-entwerfen-mit-bestand/🌐️.html
-    When the no-mutation mutation is applied and then undone
-      """
-      {"kind": "no-mutation", "params": {}}
-      """
-    Then the oracle and the subject agree on the semantic projection
 
   @id-identity-round-trip
   @level-long

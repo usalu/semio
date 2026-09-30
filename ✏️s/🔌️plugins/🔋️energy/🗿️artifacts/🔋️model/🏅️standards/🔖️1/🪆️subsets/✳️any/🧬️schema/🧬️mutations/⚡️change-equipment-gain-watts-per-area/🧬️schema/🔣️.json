@@ -5,15 +5,57 @@
   "type": "object",
   "additionalProperties": false,
   "required": [
+    "mutation",
     "id",
     "newWattsPerArea"
   ],
   "properties": {
+    "mutation": {
+      "const": "changeEquipmentGainWattsPerArea"
+    },
     "id": {
-      "type": "integer"
+      "type": "integer",
+      "minimum": 0,
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Equipment gain",
+          "de": "Gerätewärmegewinn"
+        },
+        "description": {
+          "en": "The equipment gain this mutation changes, by id.",
+          "de": "Gerätewärmegewinn, den diese Mutation ändert, per ID."
+        },
+        "ref": {
+          "kind": "equipmentGain",
+          "domain": "energyModel",
+          "granularity": "load"
+        },
+        "group": "target",
+        "order": 10
+      }
     },
     "newWattsPerArea": {
-      "type": "number"
+      "type": "number",
+      "minimum": 0,
+      "x-semio-ui": {
+        "widget": "stepper",
+        "role": "value",
+        "label": {
+          "en": "Power per area",
+          "de": "Leistung pro Fläche"
+        },
+        "description": {
+          "en": "Installed power density per m² floor area.",
+          "de": "Installierte Leistungsdichte je m² Geschossfläche."
+        },
+        "unit": "W/m²",
+        "step": 0.1,
+        "precision": 1,
+        "group": "gains",
+        "order": 20
+      }
     }
   }
 }

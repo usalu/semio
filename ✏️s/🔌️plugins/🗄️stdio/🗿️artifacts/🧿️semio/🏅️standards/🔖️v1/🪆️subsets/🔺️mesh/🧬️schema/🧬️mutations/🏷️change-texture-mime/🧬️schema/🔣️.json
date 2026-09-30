@@ -13,7 +13,14 @@
       "type": "string"
     },
     "new_mime": {
-      "type": "string"
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "text",
+        "label": {
+          "en": "Media type",
+          "de": "Medientyp"
+        }
+      }
     }
   }
 }

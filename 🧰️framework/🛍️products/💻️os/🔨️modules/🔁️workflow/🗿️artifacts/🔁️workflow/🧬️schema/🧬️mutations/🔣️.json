@@ -1,0 +1,61 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/os/workflow/artifacts/workflow/mutations.json",
+  "title": "WorkflowMutation",
+  "oneOf": [
+    {
+      "$ref": "https://json.schemas.assets.semio-tech.com/os/workflow/artifacts/workflow/mutation/add-node/schema.json"
+    },
+    {
+      "$ref": "https://json.schemas.assets.semio-tech.com/os/workflow/artifacts/workflow/mutation/remove-node/schema.json"
+    },
+    {
+      "$ref": "https://json.schemas.assets.semio-tech.com/os/workflow/artifacts/workflow/mutation/connect-ports/schema.json"
+    },
+    {
+      "$ref": "https://json.schemas.assets.semio-tech.com/os/workflow/artifacts/workflow/mutation/disconnect-edge/schema.json"
+    },
+    {
+      "$ref": "https://json.schemas.assets.semio-tech.com/os/workflow/artifacts/workflow/mutation/move-node/schema.json"
+    },
+    {
+      "$ref": "https://json.schemas.assets.semio-tech.com/os/workflow/artifacts/workflow/mutation/rename-node/schema.json"
+    },
+    {
+      "$ref": "https://json.schemas.assets.semio-tech.com/os/workflow/artifacts/workflow/mutation/add-parameter/schema.json"
+    },
+    {
+      "$ref": "https://json.schemas.assets.semio-tech.com/os/workflow/artifacts/workflow/mutation/remove-parameter/schema.json"
+    },
+    {
+      "$ref": "https://json.schemas.assets.semio-tech.com/os/workflow/artifacts/workflow/mutation/change-parameter/schema.json"
+    },
+    {
+      "$ref": "https://json.schemas.assets.semio-tech.com/os/workflow/artifacts/workflow/mutation/bind-parameter-field/schema.json"
+    },
+    {
+      "$ref": "https://json.schemas.assets.semio-tech.com/os/workflow/artifacts/workflow/mutation/unbind-parameter-field/schema.json"
+    },
+    {
+      "$ref": "https://json.schemas.assets.semio-tech.com/os/workflow/artifacts/workflow/mutation/update-node-ports/schema.json"
+    },
+    {
+      "$ref": "https://json.schemas.assets.semio-tech.com/os/workflow/artifacts/workflow/mutation/add-input/schema.json"
+    },
+    {
+      "$ref": "https://json.schemas.assets.semio-tech.com/os/workflow/artifacts/workflow/mutation/remove-input/schema.json"
+    },
+    {
+      "$ref": "https://json.schemas.assets.semio-tech.com/os/workflow/artifacts/workflow/mutation/bind-input/schema.json"
+    },
+    {
+      "$ref": "https://json.schemas.assets.semio-tech.com/os/workflow/artifacts/workflow/mutation/unbind-input/schema.json"
+    },
+    {
+      "$ref": "https://json.schemas.assets.semio-tech.com/os/workflow/artifacts/workflow/mutation/bind-output/schema.json"
+    },
+    {
+      "$ref": "https://json.schemas.assets.semio-tech.com/os/workflow/artifacts/workflow/mutation/unbind-output/schema.json"
+    }
+  ]
+}

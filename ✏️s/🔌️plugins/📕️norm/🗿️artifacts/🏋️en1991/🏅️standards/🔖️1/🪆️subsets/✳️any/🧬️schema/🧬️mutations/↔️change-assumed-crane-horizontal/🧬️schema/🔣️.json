@@ -9,7 +9,27 @@
   ],
   "properties": {
     "newAssumedCraneHorizontal": {
-      "type": "number"
+      "type": "number",
+      "minimum": 0,
+      "x-semio-ui": {
+        "widget": "stepper",
+        "role": "value",
+        "label": {
+          "en": "Assumed horizontal crane force H_T",
+          "de": "Angesetzte horizontale Kranlast H_T"
+        },
+        "description": {
+          "en": "Value claimed by the design; the check compares it with the value derived from the standard.",
+          "de": "Vom Entwurf angesetzter Wert; der Nachweis vergleicht ihn mit dem nach der Norm ermittelten Wert."
+        },
+        "unit": "N",
+        "displayUnit": "kN",
+        "displayFactor": 0.001,
+        "step": 100,
+        "precision": 1,
+        "group": "crane",
+        "order": 10
+      }
     }
   }
 }

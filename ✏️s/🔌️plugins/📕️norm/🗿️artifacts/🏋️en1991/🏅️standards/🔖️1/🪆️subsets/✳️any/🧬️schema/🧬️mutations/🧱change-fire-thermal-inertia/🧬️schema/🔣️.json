@@ -1,13 +1,33 @@
 {
-  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/norm/en1991/mutation/change-fire-thermal-inertia/schema.json",
+  "title": "ChangeFireThermalInertia",
   "type": "object",
   "additionalProperties": false,
   "required": [
-    "new_fire_thermal_inertia"
+    "newFireThermalInertia"
   ],
   "properties": {
-    "new_fire_thermal_inertia": {
-      "type": "number"
+    "newFireThermalInertia": {
+      "type": "number",
+      "minimum": 0,
+      "x-semio-ui": {
+        "widget": "stepper",
+        "role": "value",
+        "label": {
+          "en": "Thermal absorptivity b",
+          "de": "Wärmeeindringzahl b"
+        },
+        "description": {
+          "en": "b = √(ρ·c·λ) of the enclosure (EN 1991-1-2 Annex A).",
+          "de": "b = √(ρ·c·λ) der Umfassungsbauteile (EN 1991-1-2 Anhang A)."
+        },
+        "unit": "J/(m²·s^½·K)",
+        "step": 10,
+        "precision": 0,
+        "group": "fire",
+        "order": 10
+      }
     }
   }
 }

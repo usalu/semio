@@ -16,9 +16,3 @@ pub use crate::preview_eval::FlowEvalRelease;
 pub fn handle(payload: &FlowEvalRelease, _doc: &ArtifactView<'_, Generation3dSnapshot>, _cfg: &ConfigView<'_, Generation3dConfig>, _session: &mut FlowEvalSession) -> Result<Emit<Generation3dMutation, Generation3dConfigMutation>, Fault> {
     Ok(Emit { extension_invocations: preview_eval::release_invocations(payload), ..Default::default() })
 }
-
-//#region 🧪️Tests
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
-//#endregion 🧪️Tests

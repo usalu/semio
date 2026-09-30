@@ -2,7 +2,7 @@ import { test, expect } from "bun:test";
 import { existsSync, mkdirSync, readFileSync, mkdtempSync, readdirSync, renameSync, rmSync, writeFileSync } from "node:fs";
 import { join, resolve } from "node:path";
 import { createHash } from "node:crypto";
-import Ajv2020 from "ajv/dist/2020.js";
+import Ajv from "ajv";
 import { getWorkspaceRoot, ExactCargoLawError, exactExecutableFingerprint, runExactCargoLawProcess, runExactCargoLaws, type ExactCargoLawPort } from "../../📦️packages/🟦️typescript/🟦️.ts";
 
 const fixture = JSON.parse(readFileSync(new URL("../../🧫️fixtures/🦀️exact-cargo-laws/🔣️.json", import.meta.url), "utf8"));
@@ -56,13 +56,13 @@ for (const mode of ["exit", "timeout", "cancelled", "output-limit"] as const) {
 }
 
 test("exact Cargo law fixture has independent strict schema and dual SHA-256 identity", async () => {
-  const validate = new Ajv2020({ strict: true, allErrors: true }).compile(schema);
+  const validate = new Ajv({ strict: true, allErrors: true }).addKeyword("x-semio-formats").compile(schema);
   expect(validate(fixture)).toBe(true);
   expect(validate({ ...fixture, extra: true })).toBe(false);
   const bytes = Buffer.from(fixture.executableBytesHex, "hex");
   expect(createHash("sha256").update(bytes).digest("hex")).toBe(fixture.executableSha256);
   expect(Buffer.from(await crypto.subtle.digest("SHA-256", bytes)).toString("hex")).toBe(fixture.executableSha256);
-  expect(new Set(fixture.cases.map((row: any) => row.id)).size).toBe(19);
+  expect(new Set(fixture.cases.map((row: any) => row.id)).size).toBe(20);
   expect(validate({ ...fixture, nativeArguments: ["--exact", "--test-threads=1", "--nocapture"] })).toBe(false);
 });
 
@@ -137,14 +137,15 @@ for (const row of fixture.cases) {
         const passed = row.mutation === "zero-pass" ? 0 : row.mutation === "two-pass" ? 2 : 1;
         const ignored = row.mutation === "ignored-law" ? 1 : 0;
         const captured = row.mutation === "debug-output" ? `\nsuccesses:\n---- ${args[0]} stdout ----\n${fixture.capturedOutput}\n\nsuccesses:\n    ${args[0]}\n\n` : row.mutation === "terminal-spoof" ? "\ntest result: ok. 1 passed; 0 failed; 0 ignored;\n" : "";
-        return { status: row.mutation === "native-exit" ? 101 : 0, signal: null, stdout: `test ${args[0]} ... ${ignored ? "ignored" : "ok"}\n${captured}test result: ok. ${passed} passed; 0 failed; ${ignored} ignored; 0 measured; 0 filtered out; finished in 0.00s\n`, stderr: "" };
+        const result = row.mutation === "native-output-override" && options.env.RUST_TEST_NOCAPTURE === "1" ? `${fixture.capturedOutput}\nok` : ignored ? "ignored" : "ok";
+        return { status: row.mutation === "native-exit" ? 101 : 0, signal: null, stdout: `test ${args[0]} ... ${result}\n${captured}test result: ok. ${passed} passed; 0 failed; ${ignored} ignored; 0 measured; 0 filtered out; finished in 0.00s\n`, stderr: "" };
       },
     };
     let assertions = 0;
     let outcome = "denied";
     try {
-      const env = { ...process.env, RUST_MIN_STACK: fixture.stageEnvironment.buildStack, SEMIO_STAGE_ENV_LAW: fixture.stageEnvironment.sharedValue, CARGO_TARGET_DIR: row.mutation === "source-cargo-target" ? root : undefined };
-      const receipts = await runExactCargoLaws({ cwd: root, artifactDir: root, env, nativeEnv: { RUST_MIN_STACK: fixture.stageEnvironment.nativeStack }, groups: [{ package: fixture.package, target: fixture.target, laws: fixture.laws }], cancelled: () => cancelled }, port);
+      const env = { ...process.env, RUST_MIN_STACK: fixture.stageEnvironment.buildStack, SEMIO_STAGE_ENV_LAW: fixture.stageEnvironment.sharedValue, CARGO_TARGET_DIR: row.mutation === "source-cargo-target" ? root : undefined, ...(row.mutation === "native-output-override" ? { RUST_TEST_NOCAPTURE: "1" } : {}) };
+      const receipts = await runExactCargoLaws({ cwd: root, artifactDir: root, env, nativeEnv: { RUST_MIN_STACK: fixture.stageEnvironment.nativeStack, ...(row.mutation === "native-output-override" ? { RUST_TEST_NOCAPTURE: "1" } : {}) }, groups: [{ package: fixture.package, target: fixture.target, laws: fixture.laws }], cancelled: () => cancelled }, port);
       assertions = receipts.reduce((sum, receipt) => sum + receipt.assertions, 0);
       expect(receipts[0]?.laws).toEqual(fixture.laws);
       expect(receipts[0]?.sha256).toBe(fixture.executableSha256);
@@ -162,3 +163,30 @@ for (const row of fixture.cases) {
     expect(readdirSync(root).filter(name => name.startsWith(fixture.activeLease.directoryPrefix))).toEqual([]);
   });
 }
+
+
+test("exact Cargo law counts match the portable schema before any compiler admission", async () => {
+  const validate = new Ajv({ strict: true }).addKeyword("x-semio-formats").compile(schema.$defs.ExactCargoLawIdentities);
+  for (const vector of fixture.lawLimitVectors) {
+    const laws = Array.from({ length: vector.count }, (_, index) => `corpus::law_${index}`);
+    expect(validate(laws)).toBe(vector.accepted);
+    const root = mkdtempSync(join(process.env.SEMIO_TEST_ARTIFACT_DIR!, "law-count-"));
+    let built = false;
+    const port: ExactCargoLawPort = {
+      fingerprint() { throw new Error("Denied build has no executable"); },
+      async probe(command) {
+        expect(command).toBe("cargo");
+        built = true;
+        return { status: 101, signal: null, stdout: "", stderr: "controlled admission witness" };
+      },
+    };
+    try {
+      await runExactCargoLaws({ cwd: root, artifactDir: root, groups: [{ package: fixture.package, target: fixture.target, laws }] }, port);
+      throw new Error("Controlled compiler refusal must terminate");
+    } catch (error) {
+      if (vector.accepted) expect(error).toBeInstanceOf(ExactCargoLawError);
+      else expect(String(error)).toContain("Exact Cargo law identities must be nonempty and unique");
+    }
+    expect(built).toBe(vector.accepted);
+  }
+});

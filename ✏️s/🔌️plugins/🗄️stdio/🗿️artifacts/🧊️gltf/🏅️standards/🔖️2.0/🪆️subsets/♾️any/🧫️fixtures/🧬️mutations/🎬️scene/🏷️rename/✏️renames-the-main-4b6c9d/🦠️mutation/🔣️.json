@@ -1,0 +1,10 @@
+{
+  "mutation": "changeSceneName",
+  "payload": {
+    "phase": "apply",
+    "value": {
+      "scene": 0,
+      "value": "alternate"
+    }
+  }
+}

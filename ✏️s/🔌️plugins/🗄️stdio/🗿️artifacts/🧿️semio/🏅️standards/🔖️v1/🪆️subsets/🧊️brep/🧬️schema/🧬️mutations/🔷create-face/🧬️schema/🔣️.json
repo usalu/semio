@@ -16,19 +16,62 @@
       "type": "string"
     },
     "outer_loop": {
-      "type": "string"
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Outer loop",
+          "de": "Äußere Schleife"
+        },
+        "ref": {
+          "kind": "loop"
+        }
+      }
     },
     "inner_loops": {
       "type": "array",
       "items": {
         "type": "string"
+      },
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Inner loops",
+          "de": "Innere Schleifen"
+        },
+        "description": {
+          "en": "Loops that bound holes in the face.",
+          "de": "Schleifen, die Löcher in der Fläche begrenzen."
+        },
+        "ref": {
+          "kind": "loop"
+        }
       }
     },
     "surface": {
-      "$ref": "#/$defs/BrepSurface"
+      "$ref": "#/$defs/BrepSurface",
+      "x-semio-ui": {
+        "label": {
+          "en": "Surface",
+          "de": "Fläche (Geometrie)"
+        }
+      }
     },
     "orientation": {
-      "type": "boolean"
+      "type": "boolean",
+      "x-semio-ui": {
+        "widget": "toggle",
+        "label": {
+          "en": "Same orientation",
+          "de": "Gleichsinnig orientiert"
+        },
+        "description": {
+          "en": "On: the use agrees with the element's natural orientation.",
+          "de": "An: Die Verwendung stimmt mit der natürlichen Orientierung überein."
+        }
+      }
     },
     "tol": {
       "type": "number"

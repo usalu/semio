@@ -1,0 +1,90 @@
+{
+  "$schema": "./🧬️schema/🔣️.json",
+  "note": "🎚️ The number-control laws every renderer shares: the slider detent law (`snaps` finite, strictly ascending, inside min..=max), the pointer law (clamp, quantize onto the step ladder from min, then pull onto the nearest snap within 3 % of the span, first snap wins a tie), the keyboard law of sliders and number fields (arrows walk the step ladder from min — from 0 without one —, a large arrow ten rungs, and never snap; from an off-ladder detent the first rung beyond it is one rung; page keys jump to the next detent strictly above or below, else ten rungs; Home and End reach the bounds and keep the value without one; an invalid step walks rungs of one; results clamp to the bounds and clean to the decimals of min and step), and the fixed-precision law (the spoken value of a number field or stepper carrying a precision, and exactly `precision` fraction digits, ties away from zero as JavaScript's toFixed at every magnitude, unsigned zero, precision capped at 15, magnitudes from 1e21 fall back to the twelve-digit format). Answered by `snaps_are_valid`/`slider_pointer_value`/`slider_adjacent_snap`/`slider_key_value`/`format_ui_number_fixed`/`round_ui_number` in Rust and their camelCase twins in TypeScript; decimal.js is the third-party rounding oracle.",
+  "validity": [
+    { "case": "ascending-inside", "min": 0, "max": 10, "snaps": [2.5, 5, 7.5], "valid": true },
+    { "case": "empty", "min": 0, "max": 10, "snaps": [], "valid": true },
+    { "case": "bounds-inclusive", "min": 0, "max": 10, "snaps": [0, 10], "valid": true },
+    { "case": "repeated", "min": 0, "max": 10, "snaps": [5, 5], "valid": false },
+    { "case": "descending", "min": 0, "max": 10, "snaps": [5, 2.5], "valid": false },
+    { "case": "below-min", "min": 0, "max": 10, "snaps": [-1, 5], "valid": false },
+    { "case": "above-max", "min": 0, "max": 10, "snaps": [5, 11], "valid": false }
+  ],
+  "pointer": [
+    { "case": "pulled-onto-snap", "value": 4.8, "min": 0, "max": 10, "step": 0.5, "snaps": [2.5, 5, 7.5], "expected": 5 },
+    { "case": "outside-radius-keeps-step", "value": 4.6, "min": 0, "max": 10, "step": 0.5, "snaps": [2.5, 5, 7.5], "expected": 4.5 },
+    { "case": "radius-measured-from-raw-value", "value": 7.21, "min": 0, "max": 10, "step": 0.5, "snaps": [2.5, 5, 7.5], "expected": 7.5 },
+    { "case": "clamped-below", "value": -3, "min": 0, "max": 10, "step": 0.5, "snaps": [2.5, 5, 7.5], "expected": 0 },
+    { "case": "clamped-above", "value": 12, "min": 0, "max": 10, "step": 0.5, "snaps": [2.5, 5, 7.5], "expected": 10 },
+    { "case": "no-snaps-steps", "value": 3.3, "min": 0, "max": 10, "step": 0.5, "snaps": [], "expected": 3.5 },
+    { "case": "continuous-snaps", "value": 3.33, "min": 0, "max": 10, "step": 0, "snaps": [3.3], "expected": 3.3 },
+    { "case": "tie-first-snap-wins", "value": 5, "min": 0, "max": 100, "step": 0, "snaps": [4, 6], "expected": 4 },
+    { "case": "ladder-starts-at-min", "value": 3.4, "min": 1, "max": 10, "step": 2, "snaps": [], "expected": 3 },
+    { "case": "detent-within-quarter-step", "value": 5.05, "min": 0, "max": 10, "step": 0.5, "snaps": [5.1], "expected": 5.1 }
+  ],
+  "adjacent": [
+    { "case": "page-up", "current": 5, "snaps": [2.5, 5, 7.5], "forward": true, "expected": 7.5 },
+    { "case": "page-down", "current": 5, "snaps": [2.5, 5, 7.5], "forward": false, "expected": 2.5 },
+    { "case": "between-snaps", "current": 3, "snaps": [2.5, 5, 7.5], "forward": true, "expected": 5 },
+    { "case": "past-last", "current": 7.5, "snaps": [2.5, 5, 7.5], "forward": true, "expected": null },
+    { "case": "before-first", "current": 0, "snaps": [2.5, 5, 7.5], "forward": false, "expected": null },
+    { "case": "no-snaps", "current": 0, "snaps": [], "forward": true, "expected": null }
+  ],
+  "keys": [
+    { "case": "arrow-one-rung", "current": 5, "min": 0, "max": 10, "step": 1, "snaps": [2.5, 5, 7.5], "key": "increment", "large": false, "expected": 6 },
+    { "case": "arrow-skips-detent", "current": 5, "min": 0, "max": 10, "step": 1, "snaps": [5.3], "key": "increment", "large": false, "expected": 6 },
+    { "case": "off-ladder-detent-down", "current": 3.2, "min": 0, "max": 10, "step": 1, "snaps": [3.2], "key": "decrement", "large": false, "expected": 3 },
+    { "case": "off-ladder-detent-up", "current": 3.2, "min": 0, "max": 10, "step": 1, "snaps": [3.2], "key": "increment", "large": false, "expected": 4 },
+    { "case": "large-arrow-ten-rungs", "current": 3.2, "min": 0, "max": 20, "step": 1, "snaps": [], "key": "increment", "large": true, "expected": 13 },
+    { "case": "large-arrow-down-clamped", "current": 3, "min": 0, "max": 20, "step": 1, "snaps": [], "key": "decrement", "large": true, "expected": 0 },
+    { "case": "page-up-to-detent", "current": 5, "min": 0, "max": 10, "step": 0.5, "snaps": [2.5, 5, 7.5], "key": "pageUp", "large": false, "expected": 7.5 },
+    { "case": "page-down-to-detent", "current": 5, "min": 0, "max": 10, "step": 0.5, "snaps": [2.5, 5, 7.5], "key": "pageDown", "large": false, "expected": 2.5 },
+    { "case": "page-up-past-last-detent", "current": 8, "min": 0, "max": 10, "step": 0.5, "snaps": [2.5, 5, 7.5], "key": "pageUp", "large": false, "expected": 10 },
+    { "case": "page-down-without-detents", "current": 5, "min": 0, "max": 10, "step": 0.5, "snaps": [], "key": "pageDown", "large": false, "expected": 0 },
+    { "case": "home", "current": 5, "min": -2, "max": 8, "step": 1, "snaps": [], "key": "home", "large": false, "expected": -2 },
+    { "case": "end", "current": 5, "min": -2, "max": 8, "step": 1, "snaps": [], "key": "end", "large": false, "expected": 8 },
+    { "case": "clamped-to-max", "current": 10, "min": 0, "max": 10.5, "step": 1, "snaps": [], "key": "increment", "large": false, "expected": 10.5 },
+    { "case": "invalid-step-walks-one", "current": 5, "min": 0, "max": 10, "step": 0, "snaps": [], "key": "increment", "large": false, "expected": 6 },
+    { "case": "decimal-cleanup", "current": 0.2, "min": 0, "max": 1, "step": 0.1, "snaps": [], "key": "increment", "large": false, "expected": 0.3 },
+    { "case": "ladder-from-min", "current": 1, "min": 0.25, "max": 5, "step": 0.5, "snaps": [], "key": "increment", "large": false, "expected": 1.25 },
+    { "case": "number-field-ladder-from-zero", "current": 1.3, "min": null, "max": null, "step": 0.5, "snaps": [], "key": "increment", "large": false, "expected": 1.5 },
+    { "case": "number-field-page-to-detent", "current": 2, "min": null, "max": null, "step": 0.5, "snaps": [0, 5], "key": "pageUp", "large": false, "expected": 5 },
+    { "case": "number-field-page-without-detent", "current": 2, "min": null, "max": null, "step": 0.5, "snaps": [], "key": "pageDown", "large": false, "expected": -3 },
+    { "case": "number-field-home-without-bound", "current": 2, "min": null, "max": null, "step": 1, "snaps": [], "key": "home", "large": false, "expected": 2 },
+    { "case": "number-field-end-to-bound", "current": 2, "min": null, "max": 10, "step": 1, "snaps": [], "key": "end", "large": false, "expected": 10 },
+    { "case": "number-field-clamped-to-min", "current": 1, "min": 0, "max": null, "step": 1, "snaps": [], "key": "decrement", "large": true, "expected": 0 }
+  ],
+  "fixed": [
+    { "case": "binary-tie-away-from-zero", "value": 0.125, "precision": 2, "expected": "0.13", "rounded": 0.13 },
+    { "case": "integer-tie-up", "value": 2.5, "precision": 0, "expected": "3", "rounded": 3 },
+    { "case": "integer-tie-negative", "value": -2.5, "precision": 0, "expected": "-3", "rounded": -3 },
+    { "case": "half-tie-up", "value": 0.5, "precision": 0, "expected": "1", "rounded": 1 },
+    { "case": "below-tie", "value": 1.005, "precision": 2, "expected": "1.00", "rounded": 1 },
+    { "case": "float-noise", "value": 0.30000000000000004, "precision": 2, "expected": "0.30", "rounded": 0.3 },
+    { "case": "unsigned-zero", "value": -0.001, "precision": 2, "expected": "0.00", "rounded": 0 },
+    { "case": "one-digit", "value": 1234.5678, "precision": 1, "expected": "1234.6", "rounded": 1234.6 },
+    { "case": "tie-above-two-pow-fifty", "value": 1125899906842624.2, "precision": 1, "expected": "1125899906842624.3", "rounded": 1125899906842624.2 },
+    { "case": "tie-above-two-pow-fifty-negative", "value": -1125899906842624.2, "precision": 1, "expected": "-1125899906842624.3", "rounded": -1125899906842624.2 },
+    { "case": "integer-tie-above-two-pow-fifty-one", "value": 2251799813685248.5, "precision": 0, "expected": "2251799813685249", "rounded": 2251799813685249 },
+    { "case": "odd-tie-above-two-pow-fifty", "value": 1125899906842624.8, "precision": 1, "expected": "1125899906842624.8", "rounded": 1125899906842624.8 },
+    { "case": "padded", "value": 3, "precision": 3, "expected": "3.000", "rounded": 3 },
+    { "case": "binary-just-below", "value": 2.675, "precision": 2, "expected": "2.67", "rounded": 2.67 },
+    { "case": "precision-capped", "value": 0.1, "precision": 20, "expected": "0.100000000000000", "rounded": 0.1 },
+    { "case": "exponent-fallback", "value": 1e21, "precision": 2, "expected": "1e+21", "rounded": 1e21 }
+  ],
+  "valueTexts": [
+    { "case": "number-input-at-precision", "component": { "type": "input", "kind": "number", "value": "2.5", "precision": 2 }, "valueText": "2.50" },
+    { "case": "text-input-ignores-precision", "component": { "type": "input", "value": "2.5", "precision": 2 }, "valueText": "2.5" },
+    { "case": "stepper-at-precision", "component": { "type": "numberStepper", "value": 2.5, "step": 0.25, "uniform": true, "precision": 2 }, "valueText": "2.50" },
+    { "case": "stepper-without-precision", "component": { "type": "numberStepper", "value": 2.5, "step": 0.25, "uniform": true }, "valueText": "2.5" }
+  ],
+  "documents": [
+    { "case": "slider-with-snaps", "component": { "type": "slider", "value": 5, "min": 0, "max": 10, "step": 0.5, "snaps": [2.5, 5, 7.5] }, "violation": null },
+    { "case": "descending-snaps", "component": { "type": "slider", "value": 5, "min": 0, "max": 10, "step": 0.5, "snaps": [7.5, 2.5] }, "violation": "invalidSnaps" },
+    { "case": "snap-outside-bounds", "component": { "type": "slider", "value": 5, "min": 0, "max": 10, "step": 0.5, "snaps": [2.5, 12] }, "violation": "invalidSnaps" },
+    { "case": "number-input-precision", "component": { "type": "input", "kind": "number", "value": "2.50", "precision": 2 }, "violation": null },
+    { "case": "number-input-snaps", "component": { "type": "input", "kind": "number", "value": "0", "step": 0.5, "snaps": [-5, 0, 5] }, "violation": null },
+    { "case": "number-input-snap-outside-bounds", "component": { "type": "input", "kind": "number", "value": "0", "min": 0, "max": 10, "snaps": [5, 12] }, "violation": "invalidSnaps" },
+    { "case": "stepper-precision", "component": { "type": "numberStepper", "value": 2.5, "step": 0.25, "uniform": true, "precision": 2 }, "violation": null }
+  ]
+}

@@ -52,17 +52,73 @@
       ],
       "properties": {
         "kind": {
-          "type": "string"
+          "type": "string",
+          "x-semio-ui": {
+            "widget": "text",
+            "role": "value",
+            "label": {
+              "en": "Kind",
+              "de": "Art"
+            },
+            "description": {
+              "en": "For example shape, path, text, trace or group.",
+              "de": "Zum Beispiel shape (Form), path (Pfad), text (Text), trace (Nachzeichnung) oder group (Gruppe)."
+            },
+            "group": "kind",
+            "order": 10
+          }
         },
         "attributes": {
           "type": "object",
           "properties": {
             "stroke": {
-              "$ref": "#/$defs/StrokeStyle"
+              "$ref": "#/$defs/StrokeStyle",
+              "x-semio-ui": {
+                "role": "value",
+                "label": {
+                  "en": "Stroke",
+                  "de": "Kontur"
+                },
+                "group": "style",
+                "order": 10
+              }
             },
             "fillRule": {
-              "$ref": "#/$defs/FillRule"
+              "$ref": "#/$defs/FillRule",
+              "x-semio-ui": {
+                "widget": "segmented",
+                "role": "value",
+                "label": {
+                  "en": "Fill rule",
+                  "de": "Füllregel"
+                },
+                "description": {
+                  "en": "Which regions of a self-overlapping path count as inside.",
+                  "de": "Welche Bereiche eines sich überlappenden Pfads als innen gelten."
+                },
+                "options": {
+                  "evenodd": {
+                    "en": "Even-odd",
+                    "de": "Gerade-ungerade"
+                  },
+                  "nonzero": {
+                    "en": "Non-zero",
+                    "de": "Nicht-null"
+                  }
+                },
+                "group": "style",
+                "order": 20
+              }
             }
+          },
+          "x-semio-ui": {
+            "role": "value",
+            "label": {
+              "en": "Attributes",
+              "de": "Attribute"
+            },
+            "group": "style",
+            "order": 20
           }
         },
         "blendMode": {
@@ -83,7 +139,83 @@
             "saturation",
             "color",
             "luminosity"
-          ]
+          ],
+          "x-semio-ui": {
+            "widget": "select",
+            "role": "value",
+            "label": {
+              "en": "Blend mode",
+              "de": "Füllmethode"
+            },
+            "options": {
+              "normal": {
+                "en": "Normal",
+                "de": "Normal"
+              },
+              "multiply": {
+                "en": "Multiply",
+                "de": "Multiplizieren"
+              },
+              "screen": {
+                "en": "Screen",
+                "de": "Negativ multiplizieren"
+              },
+              "overlay": {
+                "en": "Overlay",
+                "de": "Ineinanderkopieren"
+              },
+              "darken": {
+                "en": "Darken",
+                "de": "Abdunkeln"
+              },
+              "lighten": {
+                "en": "Lighten",
+                "de": "Aufhellen"
+              },
+              "colorDodge": {
+                "en": "Color dodge",
+                "de": "Farbig abwedeln"
+              },
+              "colorBurn": {
+                "en": "Color burn",
+                "de": "Farbig nachbelichten"
+              },
+              "hardLight": {
+                "en": "Hard light",
+                "de": "Hartes Licht"
+              },
+              "softLight": {
+                "en": "Soft light",
+                "de": "Weiches Licht"
+              },
+              "difference": {
+                "en": "Difference",
+                "de": "Differenz"
+              },
+              "exclusion": {
+                "en": "Exclusion",
+                "de": "Ausschluss"
+              },
+              "hue": {
+                "en": "Hue",
+                "de": "Farbton"
+              },
+              "saturation": {
+                "en": "Saturation",
+                "de": "Sättigung"
+              },
+              "color": {
+                "en": "Color",
+                "de": "Farbe"
+              },
+              "luminosity": {
+                "en": "Luminosity",
+                "de": "Luminanz"
+              }
+            },
+            "group": "appearance",
+            "order": 30
+          }
         }
       },
       "allOf": [
@@ -170,7 +302,15 @@
           ],
           "properties": {
             "kind": {
-              "const": "move"
+              "const": "move",
+              "x-semio-ui": {
+                "widget": "hidden",
+                "role": "discriminator",
+                "label": {
+                  "en": "Kind",
+                  "de": "Art"
+                }
+              }
             },
             "to": {
               "type": "array",
@@ -178,7 +318,24 @@
                 "type": "number"
               },
               "minItems": 2,
-              "maxItems": 2
+              "maxItems": 2,
+              "x-semio-ui": {
+                "widget": "vector",
+                "role": "value",
+                "label": {
+                  "en": "To",
+                  "de": "Nach"
+                },
+                "step": 1,
+                "group": "geometry",
+                "order": 20
+              }
+            }
+          },
+          "x-semio-ui": {
+            "label": {
+              "en": "Move to",
+              "de": "Bewegen nach"
             }
           }
         },
@@ -191,7 +348,15 @@
           ],
           "properties": {
             "kind": {
-              "const": "line"
+              "const": "line",
+              "x-semio-ui": {
+                "widget": "hidden",
+                "role": "discriminator",
+                "label": {
+                  "en": "Kind",
+                  "de": "Art"
+                }
+              }
             },
             "to": {
               "type": "array",
@@ -199,7 +364,24 @@
                 "type": "number"
               },
               "minItems": 2,
-              "maxItems": 2
+              "maxItems": 2,
+              "x-semio-ui": {
+                "widget": "vector",
+                "role": "value",
+                "label": {
+                  "en": "To",
+                  "de": "Nach"
+                },
+                "step": 1,
+                "group": "geometry",
+                "order": 20
+              }
+            }
+          },
+          "x-semio-ui": {
+            "label": {
+              "en": "Line to",
+              "de": "Linie nach"
             }
           }
         },
@@ -213,7 +395,15 @@
           ],
           "properties": {
             "kind": {
-              "const": "quad"
+              "const": "quad",
+              "x-semio-ui": {
+                "widget": "hidden",
+                "role": "discriminator",
+                "label": {
+                  "en": "Kind",
+                  "de": "Art"
+                }
+              }
             },
             "ctrl": {
               "type": "array",
@@ -221,7 +411,18 @@
                 "type": "number"
               },
               "minItems": 2,
-              "maxItems": 2
+              "maxItems": 2,
+              "x-semio-ui": {
+                "widget": "vector",
+                "role": "value",
+                "label": {
+                  "en": "Control point",
+                  "de": "Kontrollpunkt"
+                },
+                "step": 1,
+                "group": "geometry",
+                "order": 20
+              }
             },
             "to": {
               "type": "array",
@@ -229,7 +430,24 @@
                 "type": "number"
               },
               "minItems": 2,
-              "maxItems": 2
+              "maxItems": 2,
+              "x-semio-ui": {
+                "widget": "vector",
+                "role": "value",
+                "label": {
+                  "en": "To",
+                  "de": "Nach"
+                },
+                "step": 1,
+                "group": "geometry",
+                "order": 30
+              }
+            }
+          },
+          "x-semio-ui": {
+            "label": {
+              "en": "Quadratic curve",
+              "de": "Quadratische Kurve"
             }
           }
         },
@@ -244,7 +462,15 @@
           ],
           "properties": {
             "kind": {
-              "const": "cubic"
+              "const": "cubic",
+              "x-semio-ui": {
+                "widget": "hidden",
+                "role": "discriminator",
+                "label": {
+                  "en": "Kind",
+                  "de": "Art"
+                }
+              }
             },
             "ctrl1": {
               "type": "array",
@@ -252,7 +478,18 @@
                 "type": "number"
               },
               "minItems": 2,
-              "maxItems": 2
+              "maxItems": 2,
+              "x-semio-ui": {
+                "widget": "vector",
+                "role": "value",
+                "label": {
+                  "en": "First control point",
+                  "de": "Erster Kontrollpunkt"
+                },
+                "step": 1,
+                "group": "geometry",
+                "order": 20
+              }
             },
             "ctrl2": {
               "type": "array",
@@ -260,7 +497,18 @@
                 "type": "number"
               },
               "minItems": 2,
-              "maxItems": 2
+              "maxItems": 2,
+              "x-semio-ui": {
+                "widget": "vector",
+                "role": "value",
+                "label": {
+                  "en": "Second control point",
+                  "de": "Zweiter Kontrollpunkt"
+                },
+                "step": 1,
+                "group": "geometry",
+                "order": 30
+              }
             },
             "to": {
               "type": "array",
@@ -268,7 +516,24 @@
                 "type": "number"
               },
               "minItems": 2,
-              "maxItems": 2
+              "maxItems": 2,
+              "x-semio-ui": {
+                "widget": "vector",
+                "role": "value",
+                "label": {
+                  "en": "To",
+                  "de": "Nach"
+                },
+                "step": 1,
+                "group": "geometry",
+                "order": 40
+              }
+            }
+          },
+          "x-semio-ui": {
+            "label": {
+              "en": "Cubic curve",
+              "de": "Kubische Kurve"
             }
           }
         },
@@ -286,24 +551,102 @@
           ],
           "properties": {
             "kind": {
-              "const": "arc"
+              "const": "arc",
+              "x-semio-ui": {
+                "widget": "hidden",
+                "role": "discriminator",
+                "label": {
+                  "en": "Kind",
+                  "de": "Art"
+                }
+              }
             },
             "rx": {
               "type": "number",
-              "minimum": 0
+              "minimum": 0,
+              "x-semio-ui": {
+                "widget": "stepper",
+                "role": "value",
+                "label": {
+                  "en": "Radius X",
+                  "de": "Radius X"
+                },
+                "step": 1,
+                "precision": 2,
+                "group": "geometry",
+                "order": 20
+              }
             },
             "ry": {
               "type": "number",
-              "minimum": 0
+              "minimum": 0,
+              "x-semio-ui": {
+                "widget": "stepper",
+                "role": "value",
+                "label": {
+                  "en": "Radius Y",
+                  "de": "Radius Y"
+                },
+                "step": 1,
+                "precision": 2,
+                "group": "geometry",
+                "order": 30
+              }
             },
             "rotation": {
-              "type": "number"
+              "type": "number",
+              "x-semio-ui": {
+                "widget": "dial",
+                "role": "value",
+                "label": {
+                  "en": "Axis rotation",
+                  "de": "Achsendrehung"
+                },
+                "description": {
+                  "en": "Rotation of the ellipse's x axis.",
+                  "de": "Drehung der x-Achse der Ellipse."
+                },
+                "unit": "deg",
+                "step": 1,
+                "precision": 1,
+                "softMin": -180,
+                "softMax": 180,
+                "snaps": [
+                  -180,
+                  -90,
+                  0,
+                  90,
+                  180
+                ],
+                "group": "geometry",
+                "order": 40
+              }
             },
             "largeArc": {
-              "type": "boolean"
+              "type": "boolean",
+              "x-semio-ui": {
+                "widget": "toggle",
+                "role": "value",
+                "label": {
+                  "en": "Large arc",
+                  "de": "Großer Bogen"
+                },
+                "group": "geometry",
+                "order": 50
+              }
             },
             "sweep": {
-              "type": "boolean"
+              "type": "boolean",
+              "x-semio-ui": {
+                "widget": "toggle",
+                "role": "value",
+                "label": {
+                  "en": "Clockwise",
+                  "de": "Im Uhrzeigersinn"
+                },
+                "group": "geometry",
+                "order": 60
+              }
             },
             "to": {
               "type": "array",
@@ -311,7 +654,24 @@
                 "type": "number"
               },
               "minItems": 2,
-              "maxItems": 2
+              "maxItems": 2,
+              "x-semio-ui": {
+                "widget": "vector",
+                "role": "value",
+                "label": {
+                  "en": "To",
+                  "de": "Nach"
+                },
+                "step": 1,
+                "group": "geometry",
+                "order": 70
+              }
+            }
+          },
+          "x-semio-ui": {
+            "label": {
+              "en": "Arc",
+              "de": "Bogen"
             }
           }
         },
@@ -323,7 +683,21 @@
           ],
           "properties": {
             "kind": {
-              "const": "close"
+              "const": "close",
+              "x-semio-ui": {
+                "widget": "hidden",
+                "role": "discriminator",
+                "label": {
+                  "en": "Kind",
+                  "de": "Art"
+                }
+              }
+            }
+          },
+          "x-semio-ui": {
+            "label": {
+              "en": "Close path",
+              "de": "Pfad schließen"
             }
           }
         }
@@ -356,24 +730,116 @@
         "color": {
           "type": "array",
           "items": {
-            "type": "number"
+            "type": "number",
+            "minimum": 0,
+            "maximum": 1
           },
           "minItems": 4,
-          "maxItems": 4
+          "maxItems": 4,
+          "x-semio-ui": {
+            "widget": "color",
+            "role": "value",
+            "label": {
+              "en": "Color",
+              "de": "Farbe"
+            },
+            "description": {
+              "en": "Red, green, blue and alpha, each from 0 to 1.",
+              "de": "Rot, Grün, Blau und Alpha, jeweils von 0 bis 1."
+            },
+            "step": 0.01,
+            "group": "style",
+            "order": 10
+          }
         },
         "width": {
-          "type": "number"
+          "type": "number",
+          "x-semio-ui": {
+            "widget": "stepper",
+            "role": "value",
+            "label": {
+              "en": "Width",
+              "de": "Breite"
+            },
+            "step": 0.5,
+            "precision": 2,
+            "softMin": 0,
+            "softMax": 32,
+            "group": "style",
+            "order": 20
+          }
         },
         "cap": {
-          "$ref": "#/$defs/StrokeCap"
+          "$ref": "#/$defs/StrokeCap",
+          "x-semio-ui": {
+            "widget": "segmented",
+            "role": "value",
+            "label": {
+              "en": "Line cap",
+              "de": "Linienende"
+            },
+            "options": {
+              "butt": {
+                "en": "Butt",
+                "de": "Stumpf"
+              },
+              "round": {
+                "en": "Round",
+                "de": "Rund"
+              },
+              "square": {
+                "en": "Square",
+                "de": "Quadratisch"
+              }
+            },
+            "group": "style",
+            "order": 30
+          }
         },
         "join": {
-          "$ref": "#/$defs/StrokeJoin"
+          "$ref": "#/$defs/StrokeJoin",
+          "x-semio-ui": {
+            "widget": "segmented",
+            "role": "value",
+            "label": {
+              "en": "Line join",
+              "de": "Linienverbindung"
+            },
+            "options": {
+              "miter": {
+                "en": "Miter",
+                "de": "Gehrung"
+              },
+              "round": {
+                "en": "Round",
+                "de": "Rund"
+              },
+              "bevel": {
+                "en": "Bevel",
+                "de": "Abgeschrägt"
+              }
+            },
+            "group": "style",
+            "order": 40
+          }
         },
         "dash": {
           "type": "array",
           "items": {
             "type": "number"
+          },
+          "x-semio-ui": {
+            "role": "value",
+            "label": {
+              "en": "Dash pattern",
+              "de": "Strichmuster"
+            },
+            "description": {
+              "en": "Alternating dash and gap lengths.",
+              "de": "Abwechselnde Strich- und Lückenlängen."
+            },
+            "group": "style",
+            "order": 50
           }
         }
       }

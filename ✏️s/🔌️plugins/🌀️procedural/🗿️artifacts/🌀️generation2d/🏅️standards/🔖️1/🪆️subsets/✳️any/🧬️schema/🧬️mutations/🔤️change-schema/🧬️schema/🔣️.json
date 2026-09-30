@@ -9,7 +9,21 @@
   ],
   "properties": {
     "schema": {
-      "type": "string"
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "multiline",
+        "role": "value",
+        "label": {
+          "en": "Schema",
+          "de": "Schema"
+        },
+        "description": {
+          "en": "Question schema of the generations, as JSON text.",
+          "de": "Fragenschema der Generierungen als JSON-Text."
+        },
+        "group": "schema",
+        "order": 10
+      }
     }
   }
 }

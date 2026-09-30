@@ -5,26 +5,130 @@
   "type": "object",
   "additionalProperties": false,
   "required": [
+    "mutation",
     "assetIds",
     "sx",
     "sy",
     "sz"
   ],
   "properties": {
+    "mutation": {
+      "const": "scaleAssets"
+    },
     "assetIds": {
       "type": "array",
       "items": {
         "type": "string"
+      },
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Assets",
+          "de": "Objekte"
+        },
+        "description": {
+          "en": "Assets to transform; missing ones are skipped.",
+          "de": "Zu transformierende Objekte; fehlende werden übersprungen."
+        },
+        "ref": {
+          "kind": "asset",
+          "domain": "assets",
+          "granularity": "asset"
+        },
+        "group": "target",
+        "order": 10
       }
     },
     "sx": {
-      "type": "number"
+      "type": "number",
+      "exclusiveMinimum": 0,
+      "x-semio-ui": {
+        "widget": "slider",
+        "role": "value",
+        "label": {
+          "en": "Factor X",
+          "de": "Faktor X"
+        },
+        "description": {
+          "en": "Multiplies the current scale along x.",
+          "de": "Multipliziert die aktuelle Skalierung entlang x."
+        },
+        "step": 0.01,
+        "precision": 2,
+        "softMin": 0.1,
+        "softMax": 10,
+        "scale": "log",
+        "snaps": [
+          0.25,
+          0.5,
+          1,
+          2,
+          4
+        ],
+        "group": "scale",
+        "order": 20
+      }
     },
     "sy": {
-      "type": "number"
+      "type": "number",
+      "exclusiveMinimum": 0,
+      "x-semio-ui": {
+        "widget": "slider",
+        "role": "value",
+        "label": {
+          "en": "Factor Y",
+          "de": "Faktor Y"
+        },
+        "description": {
+          "en": "Multiplies the current scale along y.",
+          "de": "Multipliziert die aktuelle Skalierung entlang y."
+        },
+        "step": 0.01,
+        "precision": 2,
+        "softMin": 0.1,
+        "softMax": 10,
+        "scale": "log",
+        "snaps": [
+          0.25,
+          0.5,
+          1,
+          2,
+          4
+        ],
+        "group": "scale",
+        "order": 30
+      }
     },
     "sz": {
-      "type": "number"
+      "type": "number",
+      "exclusiveMinimum": 0,
+      "x-semio-ui": {
+        "widget": "slider",
+        "role": "value",
+        "label": {
+          "en": "Factor Z",
+          "de": "Faktor Z"
+        },
+        "description": {
+          "en": "Multiplies the current scale along z.",
+          "de": "Multipliziert die aktuelle Skalierung entlang z."
+        },
+        "step": 0.01,
+        "precision": 2,
+        "softMin": 0.1,
+        "softMax": 10,
+        "scale": "log",
+        "snaps": [
+          0.25,
+          0.5,
+          1,
+          2,
+          4
+        ],
+        "group": "scale",
+        "order": 40
+      }
     }
   }
 }

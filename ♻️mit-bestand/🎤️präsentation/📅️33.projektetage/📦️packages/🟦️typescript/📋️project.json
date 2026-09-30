@@ -7,8 +7,9 @@
       "{workspaceRoot}/🧰️framework/🔨️modules/🖱️ui/🎨️styling/🏗️builder/🌐️vite/🟦️.ts",
       "{workspaceRoot}/♻️mit-bestand/🎤️präsentation/📅️33.projektetage/🏗️builder/🌐️vite/🟦️.ts",
       "{workspaceRoot}/♻️mit-bestand/🎤️präsentation/📅️33.projektetage/slide/**/*.ts",
-      "{workspaceRoot}/♻️mit-bestand/🎤️präsentation/📅️33.projektetage/🌐️public/**/*"
-    , "{workspaceRoot}/♻️mit-bestand/🎤️präsentation/📅️33.projektetage/🧪️tests/🎚️config/🟦️.ts"]
+      "{workspaceRoot}/♻️mit-bestand/🎤️präsentation/📅️33.projektetage/🌐️public/**/*",
+      "{workspaceRoot}/♻️mit-bestand/🎤️präsentation/📅️33.projektetage/🧪️tests/🎚️config/🟦️.ts"
+    ]
   },
   "targets": {
     "dev": {
@@ -42,6 +43,22 @@
       "outputs": [
         "{projectRoot}/dist"
       ]
+    },
+    "test": {
+      "executor": "nx:run-commands",
+      "options": {
+        "cwd": "♻️mit-bestand/🎤️präsentation/📅️33.projektetage/📦️packages/🟦️typescript",
+        "command": "bun ./📜️script.ts test",
+        "forwardAllArgs": true
+      }
+    },
+    "canonical-architecture": {
+      "executor": "nx:run-commands",
+      "options": {
+        "cwd": "♻️mit-bestand/🎤️präsentation/📅️33.projektetage/📦️packages/🟦️typescript",
+        "command": "bun ./📜️script.ts test long \"../../🧪️tests/🎞️react-deck/🟦️.tsx\"",
+        "forwardAllArgs": true
+      }
     }
   }
 }

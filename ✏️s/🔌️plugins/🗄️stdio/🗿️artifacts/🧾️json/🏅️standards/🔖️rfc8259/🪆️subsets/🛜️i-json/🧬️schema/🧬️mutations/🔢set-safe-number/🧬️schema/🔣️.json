@@ -5,10 +5,15 @@
   "type": "object",
   "additionalProperties": false,
   "required": [
+    "mutation",
     "path",
     "lexeme"
   ],
   "properties": {
+    "mutation": {
+      "const": "setSafeNumber",
+      "description": "Aggregate discriminator spliced in by JsonIJsonMutation; absent when the payload stands alone."
+    },
     "path": {
       "type": "array",
       "items": {
@@ -16,11 +21,18 @@
       }
     },
     "lexeme": {
-      "type": "string"
-    },
-    "mutation": {
-      "const": "setSafeNumber",
-      "description": "Aggregate discriminator spliced in by JsonIJsonMutation; absent when the payload stands alone."
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "text",
+        "label": {
+          "en": "Number lexeme",
+          "de": "Zahlenlexem"
+        },
+        "description": {
+          "en": "Exact number spelling within the I-JSON safe range.",
+          "de": "Genaue Schreibweise der Zahl im sicheren I-JSON-Bereich."
+        }
+      }
     }
   },
   "$defs": {

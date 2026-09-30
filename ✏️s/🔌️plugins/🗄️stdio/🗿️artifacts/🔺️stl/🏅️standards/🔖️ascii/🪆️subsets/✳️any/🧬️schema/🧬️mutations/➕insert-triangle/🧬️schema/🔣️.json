@@ -5,20 +5,27 @@
   "type": "object",
   "additionalProperties": false,
   "required": [
+    "mutation",
     "index",
     "triangle"
   ],
   "properties": {
+    "mutation": {
+      "const": "insertTriangle",
+      "description": "Aggregate discriminator spliced in by StlMutation; absent when the payload stands alone."
+    },
     "index": {
       "type": "integer",
       "minimum": 0
     },
     "triangle": {
-      "$ref": "#/$defs/StlTriangle"
-    },
-    "mutation": {
-      "const": "insertTriangle",
-      "description": "Aggregate discriminator spliced in by StlMutation; absent when the payload stands alone."
+      "$ref": "#/$defs/StlTriangle",
+      "x-semio-ui": {
+        "label": {
+          "en": "Triangle",
+          "de": "Dreieck"
+        }
+      }
     }
   },
   "$defs": {
@@ -49,7 +56,17 @@
             "maxItems": 3
           },
           "minItems": 3,
-          "maxItems": 3
+          "maxItems": 3,
+          "x-semio-ui": {
+            "label": {
+              "en": "Vertices",
+              "de": "Eckpunkte"
+            },
+            "description": {
+              "en": "The three corner points in counter-clockwise order seen from outside.",
+              "de": "Die drei Eckpunkte gegen den Uhrzeigersinn, von außen gesehen."
+            }
+          }
         }
       }
     }

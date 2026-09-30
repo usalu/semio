@@ -5,19 +5,20 @@
   "type": "object",
   "additionalProperties": false,
   "required": [
+    "mutation",
     "handle",
     "layer"
   ],
   "properties": {
+    "mutation": {
+      "const": "setEntityLayer",
+      "description": "Aggregate discriminator spliced in by SemioCadMutation; absent when the payload stands alone."
+    },
     "handle": {
       "type": "string"
     },
     "layer": {
       "type": "string"
-    },
-    "mutation": {
-      "const": "setEntityLayer",
-      "description": "Aggregate discriminator spliced in by SemioCadMutation; absent when the payload stands alone."
     }
   }
 }

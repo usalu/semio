@@ -5,11 +5,32 @@
   "type": "object",
   "additionalProperties": false,
   "required": [
+    "mutation",
     "stepId"
   ],
   "properties": {
+    "mutation": {
+      "const": "removeStep"
+    },
     "stepId": {
-      "type": "string"
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Step",
+          "de": "Schritt"
+        },
+        "description": {
+          "en": "The step this mutation addresses.",
+          "de": "Der Schritt, den diese Mutation adressiert."
+        },
+        "ref": {
+          "kind": "step",
+          "domain": "blocks",
+          "granularity": "step"
+        }
+      }
     }
   }
 }

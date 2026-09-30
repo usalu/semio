@@ -153,30 +153,6 @@ pub(crate) fn class_inverse(base: &StepSnapshot, edit: &ClassEdit) -> Vec<StepCc
 }
 //#endregion 🔖️ClassEdit
 
-//#region 🚪️Reachability
-/// ▶️ [`apply_step_cc2_mutation`] in a signature that names only this subset's own public types, so
-/// an external crate can drive the real production apply path and still SEE a rejection instead of
-/// discarding it. `protocol` is a private `extern crate` alias in this plugin's glue, so nothing
-/// outside the crate can name `protocol::MutationOutcome` or `protocol::Mutation` — without these
-/// two wrappers a test host could only re-derive the semantics by hand and would then be testing its
-/// own re-derivation. Same wall, same fix as the 🧿️semio ✳️kit subset's.
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub fn apply_step_cc2_mutation_checked(snapshot: &mut StepSnapshot, mutation: &StepCc2Mutation) -> Result<(), String> {
-    let outcome = apply_step_cc2_mutation(snapshot, mutation);
-    match outcome.messages().first() {
-        None => Ok(()),
-        Some(message) => Err(format!("{:?} was rejected: [{}] {}", mutation, message.code.0, message.message)),
-    }
-}
-
-/// ↩️ `Mutation::inverse` for `StepCc2Mutation`, reachable without naming the `protocol` alias — the
-/// production inverse itself, never a copy of its rules.
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub fn inverse_step_cc2_mutation(base: &StepSnapshot, mutation: &StepCc2Mutation) -> Vec<StepCc2Mutation> {
-    <StepCc2Mutation as Mutation<StepSnapshot>>::inverse(mutation, base)
-}
-//#endregion 🚪️Reachability
-
 //#region 🧪️Tests
 #[cfg(test)]
 #[path = "🧪️tests/🔬️unit/🦀️.rs"]

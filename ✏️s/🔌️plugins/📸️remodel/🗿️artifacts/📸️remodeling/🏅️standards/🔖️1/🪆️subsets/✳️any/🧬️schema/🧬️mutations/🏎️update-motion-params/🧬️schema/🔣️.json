@@ -5,9 +5,13 @@
   "type": "object",
   "additionalProperties": false,
   "required": [
+    "mutation",
     "params"
   ],
   "properties": {
+    "mutation": {
+      "const": "updateMotionParams"
+    },
     "params": {
       "type": "object",
       "title": "MotionParams",
@@ -21,27 +25,97 @@
       ],
       "properties": {
         "enabled": {
-          "type": "boolean"
+          "type": "boolean",
+          "x-semio-ui": {
+            "widget": "toggle",
+            "role": "value",
+            "label": {
+              "en": "Motion Tracking Enabled",
+              "de": "Bewegungsverfolgung aktiviert"
+            },
+            "group": "parameters",
+            "order": 10
+          }
         },
         "maxTracks": {
           "type": "integer",
           "format": "uint32",
-          "minimum": 0
+          "minimum": 0,
+          "x-semio-ui": {
+            "widget": "stepper",
+            "role": "value",
+            "label": {
+              "en": "Max. Tracks",
+              "de": "Max. Spuren"
+            },
+            "step": 1,
+            "precision": 0,
+            "group": "parameters",
+            "order": 20
+          }
         },
         "trackWindowPx": {
           "type": "integer",
           "format": "uint32",
-          "minimum": 0
+          "minimum": 0,
+          "x-semio-ui": {
+            "widget": "stepper",
+            "role": "value",
+            "label": {
+              "en": "Track Window (px)",
+              "de": "Spurfenster (px)"
+            },
+            "unit": "px",
+            "step": 1,
+            "precision": 0,
+            "group": "parameters",
+            "order": 30
+          }
         },
         "minTrackQuality": {
           "type": "number",
-          "format": "float"
+          "format": "float",
+          "x-semio-ui": {
+            "widget": "slider",
+            "role": "value",
+            "label": {
+              "en": "Min. Track Quality",
+              "de": "Min. Spurqualität"
+            },
+            "step": 0.01,
+            "precision": 2,
+            "softMin": 0,
+            "softMax": 1,
+            "group": "parameters",
+            "order": 40
+          }
         },
         "minTrackLengthFrames": {
           "type": "integer",
           "format": "uint32",
-          "minimum": 0
+          "minimum": 0,
+          "x-semio-ui": {
+            "widget": "stepper",
+            "role": "value",
+            "label": {
+              "en": "Min. Track Length (frames)",
+              "de": "Min. Spurlänge (Bilder)"
+            },
+            "step": 1,
+            "precision": 0,
+            "group": "parameters",
+            "order": 50
+          }
         }
+      },
+      "x-semio-ui": {
+        "role": "value",
+        "label": {
+          "en": "Motion Tracking Parameters",
+          "de": "Parameter der Bewegungsverfolgung"
+        },
+        "group": "parameters",
+        "order": 10
       }
     }
   }

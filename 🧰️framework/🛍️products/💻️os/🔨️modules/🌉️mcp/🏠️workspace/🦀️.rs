@@ -2908,6 +2908,7 @@ pub(crate) fn agent_presence_peer(actor: &str) -> store::os_spr::PresencePeer {
         tool_run: None,
         principal_kind: None,
         active_tool: None,
+        history_edit: None,
     }
 }
 
@@ -4372,7 +4373,7 @@ impl HeadlessWorkspace {
         };
         if probe_store.applied_edit_ids().is_empty() {
             probe_store
-                .dispatch(store::ArtifactCommand::Apply { mutations: vec![ProbeMutation::SetValue(initial)], description: Some("os.agent headless seed".to_string()) })
+                .dispatch(store::ArtifactCommand::Apply { mutations: vec![ProbeMutation::SetValue(initial)], description: Some("os.agent headless seed".to_string()), transaction: None })
                 .await
                 .map_err(|error| GatewayError::new(GatewayErrorCode::Internal, format!("seeding `{artifact_id}`: {error}")))?;
             self.artifact_host.send_key(&self.origin.artifact_document_key(artifact_id), store::sync::ArtifactActorMsg::LocalMutations { envelopes: Vec::new() }).await;
@@ -4395,7 +4396,7 @@ impl HeadlessWorkspace {
         self.ensure_probe_artifact(artifact_id, serde_json::Value::Null).await?;
         let mut probe_store =
             self.open_probes.lock().unwrap_or_else(std::sync::PoisonError::into_inner).remove(artifact_id).ok_or_else(|| GatewayError::new(GatewayErrorCode::Internal, format!("`{artifact_id}` was just ensured open but is missing from open_probes")))?;
-        let dispatched = probe_store.dispatch(store::ArtifactCommand::Apply { mutations: vec![ProbeMutation::SetValue(value)], description: Some("os.agent headless mutation".to_string()) }).await;
+        let dispatched = probe_store.dispatch(store::ArtifactCommand::Apply { mutations: vec![ProbeMutation::SetValue(value)], description: Some("os.agent headless mutation".to_string()), transaction: None }).await;
         let applied_edit_ids = probe_store.applied_edit_ids();
         let head_edit_id = applied_edit_ids.last().cloned().unwrap_or_default();
         let cursor = applied_edit_ids.len().to_string();

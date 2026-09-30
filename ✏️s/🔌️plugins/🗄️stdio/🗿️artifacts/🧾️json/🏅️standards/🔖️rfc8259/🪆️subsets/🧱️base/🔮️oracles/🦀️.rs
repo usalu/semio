@@ -40,17 +40,16 @@ pub enum PathSeg {
     Index(usize),
 }
 
-/// 🔀️ A mutation spec's `path` param (`["models", 0, "model"]`) into `PathSeg`s — a string entry
-/// is an object key, a number entry is an array index.
+/// 🔀️ A `path` wire value — `JsonPathSegment`s (`{"kind":"key","value":<name>}` / `{"kind":"index","value":<n>}`), the
+/// leaf payload schema's own path shape — into `PathSeg`s.
 #[cfg(feature = "oracles")]
 pub fn path_from_spec(path: &Json) -> Vec<PathSeg> {
     match path {
         Json::Array(segments) => segments
             .iter()
-            .map(|segment| match segment {
-                Json::String(key) => PathSeg::Key(key.clone()),
-                Json::Number(index) => PathSeg::Index(*index as usize),
-                _ => PathSeg::Key(String::new()),
+            .map(|segment| match (segment.str("kind").as_str(), segment.get("value")) {
+                ("index", Some(Json::Number(index))) => PathSeg::Index(index.max(0.0) as usize),
+                _ => PathSeg::Key(segment.str("value")),
             })
             .collect(),
         _ => Vec::new(),
@@ -130,43 +129,33 @@ fn number(value: &Json, key: &str) -> Option<f64> {
 fn path_param(params: &Json) -> Vec<PathSeg> {
     path_from_spec(&params.get("path").cloned().unwrap_or(Json::Array(Vec::new())))
 }
-/// 🔢️ WORKED_AROUND_DEFECT — `json` 0.12's `impl From<f64> for JsonValue` is not round-trip exact.
-/// Its `Number` is a `(sign, mantissa: u64, exponent: i16)` decimal pair, and the conversion INTO it
-/// rounds: `JsonValue::from(2.7000102824824506_f64).dump()` yields `2.7000102824824507`, one ULP up,
-/// and `-8.881784197001252e-16` becomes `…253e-16`. Reproduced standalone against the crate alone —
-/// 2 of 9 probed values were moved — and the crate's own PARSER is exact on all of them, so the fix
-/// is to reach the same `Number` through the half that works: format the `f64` with Rust's own
-/// shortest-round-trip `{:?}` and let `json::parse` build the value. Non-finite doubles are not JSON
-/// numbers at all and become `null`, which is what the crate's own conversion does with them too.
-/// Without this, a `set-snapshot` carrying a real 8,449-vertex model back through the reference
-/// perturbs its coordinates and the inverse law fails on a defect that is not this repository's.
+/// 🌳 A tagged `JsonValue` wire value (`{"kind":"null"|"bool"|"number"|"string"|"array"|"object", ...}`) into
+/// `json::JsonValue`. A number is parsed from its verbatim `lexeme` by the reference parser itself, which is exact, so
+/// no lossy `f64` ever stands between the wire and the reference implementation.
 #[cfg(feature = "oracles")]
-fn library_number(number: f64) -> json::JsonValue {
-    if !number.is_finite() {
-        return json::JsonValue::Null;
-    }
-    json::parse(&format!("{number:?}")).unwrap_or(json::JsonValue::Null)
-}
-
-/// 🔀️ The host's own minimal `Json` (single `f64` number kind, no order distinction) into
-/// `json::JsonValue`, so a mutation's literal `value`/`snapshot` param can be written by the
-/// reference implementation.
-#[cfg(feature = "oracles")]
-fn json_to_library(value: &Json) -> json::JsonValue {
-    match value {
-        Json::Null => json::JsonValue::Null,
-        Json::Bool(flag) => json::JsonValue::from(*flag),
-        Json::Number(number) => library_number(*number),
-        Json::String(text) => json::JsonValue::from(text.clone()),
-        Json::Array(items) => json::JsonValue::Array(items.iter().map(json_to_library).collect()),
-        Json::Object(entries) => {
-            let mut object = json::object::Object::with_capacity(entries.len());
-            for (key, value) in entries {
-                object.insert(key, json_to_library(value));
+fn library_from_wire(value: &Json) -> Result<json::JsonValue, String> {
+    Ok(match value.str("kind").as_str() {
+        "null" => json::JsonValue::Null,
+        "bool" => json::JsonValue::from(matches!(value.get("value"), Some(Json::Bool(true)))),
+        "number" => json::parse(&value.str("lexeme")).map_err(|error| format!("number lexeme {:?}: {error}", value.str("lexeme")))?,
+        "string" => json::JsonValue::from(value.str("value")),
+        "array" => json::JsonValue::Array(value.array("items").iter().map(library_from_wire).collect::<Result<_, _>>()?),
+        "object" => {
+            let members = value.array("members");
+            let mut object = json::object::Object::with_capacity(members.len());
+            for member in &members {
+                object.insert(&member.str("key"), library_from_wire(member.get("value").unwrap_or(&Json::Null))?);
             }
             json::JsonValue::Object(object)
         }
-    }
+        other => return Err(format!("JsonValue wire: unrecognised kind {other:?}")),
+    })
+}
+
+/// 🌳 The `value` member of a leaf payload, read through [`library_from_wire`].
+#[cfg(feature = "oracles")]
+fn value_param(params: &Json) -> Result<json::JsonValue, String> {
+    library_from_wire(params.get("value").unwrap_or(&Json::Null))
 }
 //#endregion 🔖️SpecReaders
 
@@ -182,15 +171,10 @@ pub fn oracle_apply_mutation(input: &[u8], spec: &Json) -> Result<Vec<u8>, Strin
     let params = mutation_params(spec);
     match spec.str("kind").as_str() {
         "" => Err("mutation spec carries no `kind`".to_string()),
-        "no-mutation" => Ok(input.to_vec()),
-        "set-snapshot" => {
-            let value = json_to_library(&params.get("value").cloned().unwrap_or(Json::Null));
-            write_json(&value)
-        }
         "set-member" => {
             let path = path_param(&params);
             let key = params.str("key");
-            let value = json_to_library(&params.get("value").cloned().unwrap_or(Json::Null));
+            let value = value_param(&params)?;
             let mut root = read_json(input)?;
             match resolve_mut(&mut root, &path) {
                 Some(json::JsonValue::Object(object)) => {
@@ -215,7 +199,7 @@ pub fn oracle_apply_mutation(input: &[u8], spec: &Json) -> Result<Vec<u8>, Strin
         "insert-array-element" => {
             let path = path_param(&params);
             let index = number(&params, "index").ok_or("insert-array-element: missing `index`")? as usize;
-            let value = json_to_library(&params.get("value").cloned().unwrap_or(Json::Null));
+            let value = value_param(&params)?;
             let mut root = read_json(input)?;
             match resolve_mut(&mut root, &path) {
                 Some(json::JsonValue::Array(items)) => {
@@ -241,7 +225,7 @@ pub fn oracle_apply_mutation(input: &[u8], spec: &Json) -> Result<Vec<u8>, Strin
         }
         "set-scalar" => {
             let path = path_param(&params);
-            let value = json_to_library(&params.get("value").cloned().unwrap_or(Json::Null));
+            let value = value_param(&params)?;
             let mut root = read_json(input)?;
             match resolve_mut(&mut root, &path) {
                 Some(node) => *node = value,
@@ -265,8 +249,8 @@ pub fn oracle_apply_mutation(_input: &[u8], _spec: &Json) -> Result<Vec<u8>, Str
 /// the comparison engine reads projections) — keys keep whatever order `json::object::Object`'s
 /// hash-ordered tree iterates in, which is IGNORED at comparison time by the `ordered-json-v1`
 /// profile (see the module doc comment: `json` does not preserve insertion order at all).
-/// 🔢️ WORKED_AROUND_DEFECT, the mirror of [`library_number`] — `json` 0.12's `as_f64()` is not
-/// exact either. It recomputes `mantissa * 10^exponent` in floating point, so a value the crate
+/// 🔢️ WORKED_AROUND_DEFECT — `json` 0.12's `as_f64()` is not exact (the input side never converts
+/// through `f64` at all: [`library_from_wire`] parses the verbatim lexeme). It recomputes `mantissa * 10^exponent` in floating point, so a value the crate
 /// parsed and stores correctly comes back rounded: the real fixture's
 /// `-1.3283902924697095e-17` surface normal reads out as `…097e-17`. Reproduced standalone against
 /// the crate alone. The crate's own `dump()` of the same value is exact — it prints the stored
@@ -305,8 +289,8 @@ pub fn project_json_value(_bytes: &[u8]) -> Result<Json, String> {
     Err("the `oracles` feature is disabled — this host was not built with the registered reference implementations".to_string())
 }
 
-/// 🔎️ Reads the PROJECTED value found at `path` (the same string-key/number-index shape a mutation
-/// spec's own `path` param uses) with `extra` segments appended first — so an adapter deriving an
+/// 🔎️ Reads the PROJECTED value found at `path` (a mutation spec's own wire `path` param) with `extra`
+/// segments appended first — so an adapter deriving an
 /// independent inverse spec can address "member `key` under `path`" (`extra = [Key(key)]`) or
 /// "element `index` under `path`" (`extra = [Index(index)]`) without ever naming `json::JsonValue`
 /// itself. `Ok(None)` on the first unresolvable segment.

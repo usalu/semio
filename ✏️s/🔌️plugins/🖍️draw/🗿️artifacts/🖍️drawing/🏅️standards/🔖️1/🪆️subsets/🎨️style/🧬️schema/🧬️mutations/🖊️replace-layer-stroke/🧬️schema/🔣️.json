@@ -5,11 +5,34 @@
   "type": "object",
   "additionalProperties": false,
   "required": [
+    "mutation",
     "layerId"
   ],
   "properties": {
+    "mutation": {
+      "const": "replaceLayerStroke"
+    },
     "layerId": {
-      "type": "string"
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Layer",
+          "de": "Ebene"
+        },
+        "description": {
+          "en": "The layer this mutation addresses.",
+          "de": "Die Ebene, die diese Mutation adressiert."
+        },
+        "ref": {
+          "kind": "layer",
+          "domain": "strokes",
+          "granularity": "stroke"
+        },
+        "group": "target",
+        "order": 10
+      }
     },
     "stroke": {
       "title": "StrokeStyle",
@@ -25,34 +48,139 @@
         "color": {
           "type": "array",
           "items": {
-            "type": "number"
+            "type": "number",
+            "minimum": 0,
+            "maximum": 1
           },
           "minItems": 4,
-          "maxItems": 4
+          "maxItems": 4,
+          "x-semio-ui": {
+            "widget": "color",
+            "role": "value",
+            "label": {
+              "en": "Color",
+              "de": "Farbe"
+            },
+            "description": {
+              "en": "Red, green, blue and alpha, each from 0 to 1.",
+              "de": "Rot, Grün, Blau und Alpha, jeweils von 0 bis 1."
+            },
+            "step": 0.01,
+            "group": "style",
+            "order": 10
+          }
         },
         "width": {
-          "type": "number"
+          "type": "number",
+          "x-semio-ui": {
+            "widget": "stepper",
+            "role": "value",
+            "label": {
+              "en": "Width",
+              "de": "Breite"
+            },
+            "step": 0.5,
+            "precision": 2,
+            "softMin": 0,
+            "softMax": 32,
+            "group": "style",
+            "order": 20
+          }
         },
         "cap": {
           "enum": [
             "butt",
             "round",
             "square"
-          ]
+          ],
+          "x-semio-ui": {
+            "widget": "segmented",
+            "role": "value",
+            "label": {
+              "en": "Line cap",
+              "de": "Linienende"
+            },
+            "options": {
+              "butt": {
+                "en": "Butt",
+                "de": "Stumpf"
+              },
+              "round": {
+                "en": "Round",
+                "de": "Rund"
+              },
+              "square": {
+                "en": "Square",
+                "de": "Quadratisch"
+              }
+            },
+            "group": "style",
+            "order": 30
+          }
         },
         "join": {
           "enum": [
             "miter",
             "round",
             "bevel"
-          ]
+          ],
+          "x-semio-ui": {
+            "widget": "segmented",
+            "role": "value",
+            "label": {
+              "en": "Line join",
+              "de": "Linienverbindung"
+            },
+            "options": {
+              "miter": {
+                "en": "Miter",
+                "de": "Gehrung"
+              },
+              "round": {
+                "en": "Round",
+                "de": "Rund"
+              },
+              "bevel": {
+                "en": "Bevel",
+                "de": "Abgeschrägt"
+              }
+            },
+            "group": "style",
+            "order": 40
+          }
         },
         "dash": {
           "type": "array",
           "items": {
             "type": "number"
+          },
+          "x-semio-ui": {
+            "role": "value",
+            "label": {
+              "en": "Dash pattern",
+              "de": "Strichmuster"
+            },
+            "description": {
+              "en": "Alternating dash and gap lengths.",
+              "de": "Abwechselnde Strich- und Lückenlängen."
+            },
+            "group": "style",
+            "order": 50
           }
         }
+      },
+      "x-semio-ui": {
+        "role": "value",
+        "label": {
+          "en": "Stroke",
+          "de": "Kontur"
+        },
+        "description": {
+          "en": "The new stroke; empty removes it.",
+          "de": "Die neue Kontur; leer entfernt sie."
+        },
+        "group": "style",
+        "order": 20
       }
     }
   }

@@ -78,37 +78,51 @@ fn flag(params: &Json, key: &str) -> bool {
     matches!(params.get(key), Some(Json::Bool(true)))
 }
 
-/// 🦠️ Applies one kind to the axes as T.81 defines the field it names. An insertion of a table or a
-/// component that is already there, a removal of one that is not, and a sampling change of an absent
-/// component change nothing; an index past the end appends.
+/// 🔑️ A Huffman table's `(class, id)` key out of a `JpgHuffmanTable` or `JpgHuffmanTableKey` wire value.
+fn table_key(table: &Json) -> Result<(String, u32), String> {
+    Ok((table.str("class"), number(table, "id")?))
+}
+
+/// 📸️ The axes of a `JpgSnapshot` wire value, read off its frame header, entropy-coding flags and table list the
+/// way [`read_axes`] reads a file's markers.
+fn snapshot_axes(snapshot: &Json) -> Result<Axes, String> {
+    let frame = snapshot.get("frame").filter(|frame| !matches!(frame, Json::Null)).ok_or("the snapshot carries no frame header, so it has no baseline axes")?;
+    Ok(Axes {
+        sof_marker: number(snapshot, "sofMarker")? as u8,
+        precision: number(frame, "precision")?,
+        arithmetic: flag(snapshot, "arithmetic"),
+        huffman_tables: snapshot.array("huffmanTables").iter().map(table_key).collect::<Result<_, _>>()?,
+        components: frame.array("components").iter().map(|component| Ok((number(component, "id")?, number(component, "hSampling")?, number(component, "vSampling")?))).collect::<Result<_, String>>()?,
+    })
+}
+
+/// 🦠️ Applies one kind to the axes as T.81 defines the field it names; `params` is the leaf's wire payload
+/// (`payload_value()`). An insertion of a table or a component that is already there, a removal of one that is
+/// not, and a sampling change of an absent component change nothing; an index past the end appends.
 pub fn apply(axes: &Axes, kind: &str, params: &Json) -> Result<Axes, String> {
     let mut next = axes.clone();
     match kind {
-        "no-mutation" => {}
-        "set-snapshot" => {
-            next.sof_marker = number(params, "sofMarker")? as u8;
-            next.precision = number(params, "precision")?;
-            next.arithmetic = flag(params, "arithmetic");
-        }
+        "set-snapshot" => next = snapshot_axes(params.get("snapshot").ok_or("set-snapshot carries no snapshot")?)?,
         "set-sof-marker" => next.sof_marker = number(params, "marker")? as u8,
         "set-sample-precision" => next.precision = number(params, "precision")?,
         "set-arithmetic" => next.arithmetic = flag(params, "arithmetic"),
         "insert-huffman-table" => {
-            let key = (params.str("class"), number(params, "id")?);
+            let key = table_key(params.get("table").ok_or("insert-huffman-table carries no table")?)?;
             if !next.huffman_tables.contains(&key) {
                 let at = (number(params, "index")? as usize).min(next.huffman_tables.len());
                 next.huffman_tables.insert(at, key);
             }
         }
         "remove-huffman-table" => {
-            let key = (params.str("class"), number(params, "id")?);
+            let key = table_key(params.get("key").ok_or("remove-huffman-table carries no key")?)?;
             next.huffman_tables.retain(|table| *table != key);
         }
         "insert-frame-component" => {
-            let id = number(params, "id")?;
-            if !next.components.iter().any(|component| component.0 == id) {
+            let component = params.get("component").ok_or("insert-frame-component carries no component")?;
+            let id = number(component, "id")?;
+            if !next.components.iter().any(|existing| existing.0 == id) {
                 let at = (number(params, "index")? as usize).min(next.components.len());
-                next.components.insert(at, (id, number(params, "hSampling")?, number(params, "vSampling")?));
+                next.components.insert(at, (id, number(component, "hSampling")?, number(component, "vSampling")?));
             }
         }
         "remove-frame-component" => {

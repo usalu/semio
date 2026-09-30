@@ -11,11 +11,11 @@
 
 use crate::{Iso16757Diff, Iso16757Mutation, Iso16757Snapshot};
 
-const BEFORE: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🔄️change-exchange-process/🔄️advances-the-exchange-stage-to-determine-product/📸️snapshot/⬅️before/🔣️.json");
-const AFTER: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🔄️change-exchange-process/🔄️advances-the-exchange-stage-to-determine-product/📸️snapshot/➡️after/🔣️.json");
-const MUTATION: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🔄️change-exchange-process/🔄️advances-the-exchange-stage-to-determine-product/🦠️mutation/🔣️.json");
-const DIFF: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🔄️change-exchange-process/🔄️advances-the-exchange-stage-to-determine-product/🔺️diff/🔣️.json");
-const OUTCOME: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🔄️change-exchange-process/🔄️advances-the-exchange-stage-to-determine-product/🎯️outcome/🔣️.json");
+const BEFORE: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🔄️change-exchange-process/🔄️advances-exchange-stage-determine-product/📸️snapshot/⬅️before/🔣️.json");
+const AFTER: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🔄️change-exchange-process/🔄️advances-exchange-stage-determine-product/📸️snapshot/➡️after/🔣️.json");
+const MUTATION: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🔄️change-exchange-process/🔄️advances-exchange-stage-determine-product/🦠️mutation/🔣️.json");
+const DIFF: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🔄️change-exchange-process/🔄️advances-exchange-stage-determine-product/🔺️diff/🔣️.json");
+const OUTCOME: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🔄️change-exchange-process/🔄️advances-exchange-stage-determine-product/🎯️outcome/🔣️.json");
 
 fn before() -> Iso16757Snapshot {
     serde_json::from_str(BEFORE).expect("the committed before-snapshot decodes")
@@ -60,7 +60,7 @@ async fn returning_to_the_provide_catalogue_stage_restores_before() {
 
 /// 🔣️ Both committed snapshots and the committed `change-exchange-process` payload are already canonical: decode
 /// → encode is a fixed point. The committed payload is spelled `{"ChangeExchangeProcess":
-/// {"new_exchange_process": "DetermineProduct"}}` — `ExchangeProcess` has `#[dsl(key = "determineProduct")]`
+/// {"newExchangeProcess": "DetermineProduct"}}` — `ExchangeProcess` has `#[dsl(key = "determineProduct")]`
 /// for the DSL but NO serde rename, so the JSON spelling is the bare Rust variant name.
 #[semio_framework_async_macros::async_test]
 async fn committed_json_is_canonical() {

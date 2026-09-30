@@ -1455,6 +1455,7 @@ async fn cmd_profile(rest: &[String]) -> i32 {
             diff: protocol::ArtifactDiff { schema: protocol::SchemaId(db::document::DB_PATHMAP_SCHEMA.to_string()), payload: db::document::encode_pathmap_json(&serde_json::Value::Object(forward)).await.unwrap_or_default() },
             inverse: protocol::InverseMutation { schema: protocol::SchemaId(db::document::DB_PATHMAP_SCHEMA.to_string()), payload: db::document::encode_pathmap_json(&serde_json::Value::Object(backward)).await.unwrap_or_default() },
             timestamp: protocol::HybridLogicalTimestamp::new(0, now_ms().await),
+            transaction: None,
         };
         let batch = match db::document::CommandBatch::new(vec![envelope]).await {
             Ok(batch) => batch,

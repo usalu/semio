@@ -817,6 +817,9 @@ pub mod standards {
                             pub mod inverse;
                             pub use component::*;
                             #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌱create-node/🧪️tests/🧱️zero-width-node/🦀️.rs"]
+                            mod tests_zero_width_node;
+                            #[cfg(test)]
                             #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌱create-node/🧪️tests/🌱️appends-a-capsule-to-the-tower/🦀️.rs"]
                             mod tests_appends_a_capsule_to_the_tower;
                             #[cfg(test)]
@@ -873,6 +876,9 @@ pub mod standards {
                             #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧊replace-node-geometry/↩️inverse/🦀️.rs"]
                             pub mod inverse;
                             pub use component::*;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧊replace-node-geometry/🧪️tests/🧱️negative-radius/🦀️.rs"]
+                            mod tests_negative_radius;
                             #[cfg(test)]
                             #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧊replace-node-geometry/🧪️tests/🔳️circle-to-rectangle/🦀️.rs"]
                             mod tests_circle_to_rectangle;
@@ -949,6 +955,9 @@ pub mod standards {
                             #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📏scale-node/↩️inverse/🦀️.rs"]
                             pub mod inverse;
                             pub use component::*;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📏scale-node/🧪️tests/🧱️zero-scale/🦀️.rs"]
+                            mod tests_zero_scale;
                             #[cfg(test)]
                             #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📏scale-node/🧪️tests/📏️doubles-node-a/🦀️.rs"]
                             mod tests_doubles_node_a;
@@ -1045,6 +1054,9 @@ pub mod standards {
                             pub mod inverse;
                             pub use component::*;
                             #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/➕add-node-handle/🧪️tests/🧱️zero-radius-handle/🦀️.rs"]
+                            mod tests_zero_radius_handle;
+                            #[cfg(test)]
                             #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/➕add-node-handle/🧪️tests/➕️adds-a-third-slot-door-to-the-tambour/🦀️.rs"]
                             mod tests_adds_a_third_slot_door_to_the_tambour;
                             #[cfg(test)]
@@ -1082,6 +1094,9 @@ pub mod standards {
                             #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔌replace-node-handle/↩️inverse/🦀️.rs"]
                             pub mod inverse;
                             pub use component::*;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔌replace-node-handle/🧪️tests/🧱️negative-scale/🦀️.rs"]
+                            mod tests_negative_scale;
                             #[cfg(test)]
                             #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔌replace-node-handle/🧪️tests/🚫️rejects-replacing-a-door-the-tambour-never-had/🦀️.rs"]
                             mod tests_rejects_replacing_a_door_the_tambour_never_had;
@@ -1283,6 +1298,9 @@ pub mod standards {
                             pub mod inverse;
                             pub use component::*;
                             #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📚replace-kind-catalogs/🧪️tests/🧱️off-rim-template/🦀️.rs"]
+                            mod tests_off_rim_template;
+                            #[cfg(test)]
                             #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📚replace-kind-catalogs/🧪️tests/🗑️clears-the-installed-handle-catalog/🦀️.rs"]
                             mod tests_clears_the_installed_handle_catalog;
                             #[cfg(test)]
@@ -1406,6 +1424,93 @@ pub mod standards {
                             #[cfg(test)]
                             #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔏change-target-region-locked/🧪️tests/🚫️rejects-locking-a-region-the-board-never-held/🦀️.rs"]
                             mod tests_rejects_locking_a_region_the_board_never_held;
+                        }
+                        #[path = "."]
+                        pub mod drag_selection {
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/✋️drag-selection/🦀️.rs"]
+                            mod component;
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/✋️drag-selection/🔺️diff/🦀️.rs"]
+                            pub mod diff;
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/✋️drag-selection/↩️inverse/🦀️.rs"]
+                            pub mod inverse;
+                            pub use component::*;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/✋️drag-selection/🧪️tests/🧱️no-targets/🦀️.rs"]
+                            mod tests_no_targets;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/✋️drag-selection/🧪️tests/✋️drags-two-nodes/🦀️.rs"]
+                            mod tests_drags_two_nodes;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/✋️drag-selection/🧪️tests/🎯️drags-node-and-region/🦀️.rs"]
+                            mod tests_drags_node_and_region;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/✋️drag-selection/🧪️tests/⚠️skips-locked-ghost/🦀️.rs"]
+                            mod tests_skips_locked_ghost;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/✋️drag-selection/🧪️tests/🚫️rejects-ghosts/🦀️.rs"]
+                            mod tests_rejects_ghosts;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/✋️drag-selection/🧪️tests/⏸️keeps-a-zero-offset/🦀️.rs"]
+                            mod tests_keeps_a_zero_offset;
+                        }
+                        #[path = "."]
+                        pub mod rotate_selection {
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔄️rotate-selection/🦀️.rs"]
+                            mod component;
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔄️rotate-selection/🔺️diff/🦀️.rs"]
+                            pub mod diff;
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔄️rotate-selection/↩️inverse/🦀️.rs"]
+                            pub mod inverse;
+                            pub use component::*;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔄️rotate-selection/🧪️tests/🧱️repeated-targets/🦀️.rs"]
+                            mod tests_repeated_targets;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔄️rotate-selection/🧪️tests/🔄️turns-two-nodes/🦀️.rs"]
+                            mod tests_turns_two_nodes;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔄️rotate-selection/🧪️tests/🎯️skips-the-region/🦀️.rs"]
+                            mod tests_skips_the_region;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔄️rotate-selection/🧪️tests/⚠️skips-locked-ghost/🦀️.rs"]
+                            mod tests_skips_locked_ghost;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔄️rotate-selection/🧪️tests/🚫️rejects-ghosts/🦀️.rs"]
+                            mod tests_rejects_ghosts;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔄️rotate-selection/🧪️tests/⏸️keeps-a-zero-angle/🦀️.rs"]
+                            mod tests_keeps_a_zero_angle;
+                        }
+                        #[path = "."]
+                        pub mod scale_selection {
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔍️scale-selection/🦀️.rs"]
+                            mod component;
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔍️scale-selection/🔺️diff/🦀️.rs"]
+                            pub mod diff;
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔍️scale-selection/↩️inverse/🦀️.rs"]
+                            pub mod inverse;
+                            pub use component::*;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔍️scale-selection/🧪️tests/⛔️negative-factor/🦀️.rs"]
+                            mod tests_negative_factor;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔍️scale-selection/🧪️tests/🧱️zero-factor/🦀️.rs"]
+                            mod tests_zero_factor;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔍️scale-selection/🧪️tests/🔍️doubles-two-nodes/🦀️.rs"]
+                            mod tests_doubles_two_nodes;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔍️scale-selection/🧪️tests/🎯️halves-node-region/🦀️.rs"]
+                            mod tests_halves_node_region;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔍️scale-selection/🧪️tests/⚠️skips-locked-ghost/🦀️.rs"]
+                            mod tests_skips_locked_ghost;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔍️scale-selection/🧪️tests/🚫️rejects-ghosts/🦀️.rs"]
+                            mod tests_rejects_ghosts;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔍️scale-selection/🧪️tests/⏸️keeps-a-unit-factor/🦀️.rs"]
+                            mod tests_keeps_a_unit_factor;
                         }
                     }
                 }

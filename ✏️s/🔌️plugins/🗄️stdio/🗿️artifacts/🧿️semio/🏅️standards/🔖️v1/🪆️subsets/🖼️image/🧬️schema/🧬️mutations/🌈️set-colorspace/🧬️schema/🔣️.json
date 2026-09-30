@@ -5,15 +5,45 @@
   "type": "object",
   "additionalProperties": false,
   "required": [
+    "mutation",
     "colorspace"
   ],
   "properties": {
-    "colorspace": {
-      "$ref": "#/$defs/SemioColorspace"
-    },
     "mutation": {
       "const": "setColorspace",
       "description": "Aggregate discriminator spliced in by SemioImageMutation; absent when the payload stands alone."
+    },
+    "colorspace": {
+      "$ref": "#/$defs/SemioColorspace",
+      "x-semio-ui": {
+        "widget": "select",
+        "label": {
+          "en": "Color space",
+          "de": "Farbraum"
+        },
+        "options": {
+          "rgb": {
+            "en": "RGB",
+            "de": "RGB"
+          },
+          "rgba": {
+            "en": "RGB with alpha",
+            "de": "RGB mit Alpha"
+          },
+          "grayscale": {
+            "en": "Grayscale",
+            "de": "Graustufen"
+          },
+          "grayscaleAlpha": {
+            "en": "Grayscale with alpha",
+            "de": "Graustufen mit Alpha"
+          },
+          "indexed": {
+            "en": "Indexed color",
+            "de": "Indizierte Farben"
+          }
+        }
+      }
     }
   },
   "$defs": {

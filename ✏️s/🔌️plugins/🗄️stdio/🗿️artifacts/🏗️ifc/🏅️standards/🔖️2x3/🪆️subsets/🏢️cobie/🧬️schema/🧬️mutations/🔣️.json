@@ -8,6 +8,30 @@
       "type": "object",
       "additionalProperties": false,
       "required": [
+        "SetSnapshot"
+      ],
+      "properties": {
+        "SetSnapshot": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/ifc/2x3/cobie/mutation/set-snapshot/schema.json"
+        }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "SetViewDefinition"
+      ],
+      "properties": {
+        "SetViewDefinition": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/ifc/2x3/cobie/mutation/set-view-definition/schema.json"
+        }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
         "SetFacilityName"
       ],
       "properties": {
@@ -32,18 +56,6 @@
       "type": "object",
       "additionalProperties": false,
       "required": [
-        "SetSnapshot"
-      ],
-      "properties": {
-        "SetSnapshot": {
-          "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/ifc/2x3/cobie/mutation/set-snapshot/schema.json"
-        }
-      }
-    },
-    {
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
         "SetSpace"
       ],
       "properties": {
@@ -61,18 +73,6 @@
       "properties": {
         "SetTypeAssignment": {
           "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/ifc/2x3/cobie/mutation/set-type-assignment/schema.json"
-        }
-      }
-    },
-    {
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "SetViewDefinition"
-      ],
-      "properties": {
-        "SetViewDefinition": {
-          "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/ifc/2x3/cobie/mutation/set-view-definition/schema.json"
         }
       }
     }

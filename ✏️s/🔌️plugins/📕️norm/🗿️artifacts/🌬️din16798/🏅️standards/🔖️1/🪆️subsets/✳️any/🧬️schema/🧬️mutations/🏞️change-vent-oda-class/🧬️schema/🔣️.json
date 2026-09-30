@@ -10,10 +10,41 @@
   ],
   "properties": {
     "ventId": {
-      "type": "string"
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Ventilation system",
+          "de": "Lüftungsanlage"
+        },
+        "description": {
+          "en": "The ventilation system this mutation addresses.",
+          "de": "Die Lüftungsanlage, die diese Mutation adressiert."
+        },
+        "ref": {
+          "kind": "ventSystem"
+        },
+        "group": "target",
+        "order": 10
+      }
     },
     "newOdaClass": {
-      "type": "string"
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "text",
+        "role": "value",
+        "label": {
+          "en": "Outdoor air class ODA",
+          "de": "Außenluftklasse ODA"
+        },
+        "description": {
+          "en": "ODA1 (clean) to ODA4 (extremely high concentrations).",
+          "de": "ODA1 (rein) bis ODA4 (extrem hohe Konzentrationen)."
+        },
+        "group": "air-quality",
+        "order": 20
+      }
     }
   }
 }

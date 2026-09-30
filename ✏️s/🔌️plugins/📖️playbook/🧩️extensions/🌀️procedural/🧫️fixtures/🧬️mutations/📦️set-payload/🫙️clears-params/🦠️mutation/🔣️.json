@@ -1,0 +1,11 @@
+{
+  "mutation": "setPayload",
+  "payload": {
+    "fixtureSlug": "ä",
+    "params": null,
+    "questionId": "q",
+    "controllerId": "forms-play",
+    "surface": "try",
+    "interactive": true
+  }
+}

@@ -1,4 +1,26 @@
 {
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/norm/en1990/mutation/change-project-id/schema.json",
   "title": "ChangeProjectId",
-  "type": "object"
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "mutation",
+    "newProjectId"
+  ],
+  "properties": {
+    "mutation": {
+      "const": "changeProjectId"
+    },
+    "newProjectId": {
+      "type": "string",
+      "x-semio-ui": {
+        "label": {
+          "en": "Project identifier",
+          "de": "Projektkennung"
+        },
+        "widget": "text"
+      }
+    }
+  }
 }

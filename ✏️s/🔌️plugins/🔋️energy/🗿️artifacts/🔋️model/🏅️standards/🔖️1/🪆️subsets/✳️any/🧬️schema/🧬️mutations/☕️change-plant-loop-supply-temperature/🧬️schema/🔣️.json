@@ -5,15 +5,52 @@
   "type": "object",
   "additionalProperties": false,
   "required": [
+    "mutation",
     "id",
     "newSupplyTemperatureC"
   ],
   "properties": {
+    "mutation": {
+      "const": "changePlantLoopSupplyTemperature"
+    },
     "id": {
-      "type": "integer"
+      "type": "integer",
+      "minimum": 0,
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Plant loop",
+          "de": "Anlagenkreislauf"
+        },
+        "description": {
+          "en": "The plant loop this mutation changes, by id.",
+          "de": "Anlagenkreislauf, den diese Mutation ändert, per ID."
+        },
+        "ref": {
+          "kind": "plantLoop"
+        },
+        "group": "target",
+        "order": 10
+      }
     },
     "newSupplyTemperatureC": {
-      "type": "number"
+      "type": "number",
+      "minimum": -100,
+      "maximum": 300,
+      "x-semio-ui": {
+        "widget": "stepper",
+        "role": "value",
+        "label": {
+          "en": "Supply temperature",
+          "de": "Vorlauftemperatur"
+        },
+        "unit": "°C",
+        "step": 0.5,
+        "precision": 1,
+        "group": "plant",
+        "order": 20
+      }
     }
   }
 }

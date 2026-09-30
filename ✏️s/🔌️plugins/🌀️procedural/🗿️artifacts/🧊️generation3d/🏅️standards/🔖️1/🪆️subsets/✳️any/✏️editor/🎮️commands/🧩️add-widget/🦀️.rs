@@ -76,7 +76,7 @@ pub fn handle(payload: &AddWidget, doc: &ArtifactView<'_, Generation3dSnapshot>,
     let host_snapshot = &doc.snapshot.host_snapshot;
     let descriptor = payload.descriptor_json()?;
     if let Some(kind) = &payload.neuron_kind {
-        if !semio_framework_os_flow::flow_neuron_kind_info_map().contains_key(kind) && !matches!(kind.as_str(), semio_framework_artifact_flow_flow::neural_engine::INPUT_KIND | semio_framework_artifact_flow_flow::neural_engine::OUTPUT_KIND) {
+        if !semio_framework_os_flow::flow_neuron_kind_info_map().contains_key(kind) && !matches!(kind.as_str(), semio_framework_artifact_flow_flow::neural::INPUT_KIND | semio_framework_artifact_flow_flow::neural::OUTPUT_KIND) {
             return Err(creation_fault(format!("unknown neuron kind: {kind}")));
         }
     }
@@ -89,6 +89,7 @@ pub fn handle(payload: &AddWidget, doc: &ArtifactView<'_, Generation3dSnapshot>,
         Ok(Emit { artifact_mutations: commit_host_snapshot(host_snapshot, &host.host_snapshot), ..Default::default() })
     })
 }
+
 
 #[cfg(test)]
 #[path = "🧪️tests/🔬️unit/🦀️.rs"]

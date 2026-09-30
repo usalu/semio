@@ -1198,7 +1198,7 @@ async fn recursive_member_envelope_with_history(reference: &ArtifactRef, owner: 
     Box::pin(member.set_owner(Some(owner.clone()))).await;
     match &mut member {
         RecursiveTestMembers::Branch(store) => {
-            Box::pin(store.dispatch(store::ArtifactCommand::Apply { mutations: vec![RecursiveFixtureMutation { value }], description: Some("recursive historical member mutation".into()) }))
+            Box::pin(store.dispatch(store::ArtifactCommand::Apply { mutations: vec![RecursiveFixtureMutation { value }], description: Some("recursive historical member mutation".into()), transaction: None }))
                 .await
                 .expect("recursive historical member mutation");
         }
@@ -1234,6 +1234,7 @@ async fn append_malformed_transition_to_member_history(entry: &mut protocol::Own
         actor: "missing-child-edit-after-valid-prefix".into(),
         hlt: (1, 1, 0),
         dependencies: Vec::new(),
+        observed: None,
         payload: vec![0xff],
     });
     let encoded = Box::pin(protocol::encode_history(
@@ -1699,6 +1700,7 @@ async fn retained_window_input_recursive_document_archive_round_trips_the_comple
         actor: "missing-edit-after-valid-prefix".into(),
         hlt: (1, 1, 0),
         dependencies: Vec::new(),
+        observed: None,
         payload: vec![0xff],
     });
     malformed_history.parent_spr = Box::pin(protocol::encode_history(

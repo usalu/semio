@@ -2,32 +2,44 @@
   "$schema": "http://json-schema.org/draft-07/schema#",
   "$id": "https://json.schemas.assets.semio-tech.com/os/flow/artifacts/flow/vcs/mutation/change-widget/schema.json",
   "title": "ChangeWidget",
-  "$defs": {
-    "Payload": {
-      "type": "object",
-      "properties": {
-        "id": {
-          "type": "string"
-        },
-        "widget": {
-          "$ref": "https://json.schemas.assets.semio-tech.com/os/flow/artifacts/flow/vcs/snapshot.json#/$defs/Widget"
-        }
-      },
-      "required": [
-        "id",
-        "widget"
-      ]
-    }
-  },
-  "allOf": [
-    {
-      "$ref": "#/$defs/Payload"
-    }
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "operation",
+    "id",
+    "widget"
   ],
-  "propertyNames": {
-    "enum": [
-      "id",
-      "widget"
-    ]
+  "properties": {
+    "operation": {
+      "const": "changeWidget"
+    },
+    "id": {
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Widget",
+          "de": "Widget"
+        },
+        "ref": {
+          "kind": "widget"
+        },
+        "group": "target",
+        "order": 10
+      }
+    },
+    "widget": {
+      "$ref": "https://json.schemas.assets.semio-tech.com/os/flow/artifacts/flow/vcs/snapshot.json#/$defs/Widget",
+      "x-semio-ui": {
+        "role": "value",
+        "label": {
+          "en": "Widget",
+          "de": "Widget"
+        },
+        "group": "record",
+        "order": 20
+      }
+    }
   }
 }

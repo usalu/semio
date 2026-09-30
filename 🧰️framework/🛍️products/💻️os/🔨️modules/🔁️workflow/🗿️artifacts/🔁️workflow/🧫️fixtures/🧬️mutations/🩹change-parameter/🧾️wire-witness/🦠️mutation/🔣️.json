@@ -1,0 +1,10 @@
+{
+  "operation": "changeParameter",
+  "parameterId": "p1",
+  "parameter": {
+    "type": "toggle",
+    "id": "p1",
+    "name": "Flag",
+    "value": false
+  }
+}

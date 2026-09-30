@@ -4,8 +4,14 @@
   "title": "SetEncryption",
   "type": "object",
   "additionalProperties": false,
-  "required": [],
+  "required": [
+    "mutation"
+  ],
   "properties": {
+    "mutation": {
+      "const": "setEncryption",
+      "description": "Aggregate discriminator spliced in by PdfMutation; absent when the payload stands alone."
+    },
     "encryption": {
       "anyOf": [
         {
@@ -14,11 +20,13 @@
         {
           "type": "null"
         }
-      ]
-    },
-    "mutation": {
-      "const": "setEncryption",
-      "description": "Aggregate discriminator spliced in by PdfMutation; absent when the payload stands alone."
+      ],
+      "x-semio-ui": {
+        "label": {
+          "en": "Encryption",
+          "de": "Verschlüsselung"
+        }
+      }
     }
   }
 }

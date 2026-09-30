@@ -2,31 +2,27 @@
   "$schema": "http://json-schema.org/draft-07/schema#",
   "$id": "https://json.schemas.assets.semio-tech.com/framework/os/spr/command/tests/mutation-laws/mutation/add-counter-sequence/schema.json",
   "title": "AddCounterSequence",
-  "$defs": {
-    "Payload": {
-      "type": "object",
-      "required": [
-        "deltas"
-      ],
-      "properties": {
-        "deltas": {
-          "type": "array",
-          "items": {
-            "$ref": "https://json.schemas.assets.semio-tech.com/os/spr/command/component.json#/$defs/MutationLawsI64"
-          }
-        }
-      }
-    }
-  },
-  "type": "object",
-  "allOf": [
-    {
-      "$ref": "#/$defs/Payload"
-    }
-  ],
   "propertyNames": {
     "enum": [
+      "operation",
       "deltas"
     ]
+  },
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "operation",
+    "deltas"
+  ],
+  "properties": {
+    "operation": {
+      "const": "addCounterSequence"
+    },
+    "deltas": {
+      "type": "array",
+      "items": {
+        "$ref": "https://json.schemas.assets.semio-tech.com/os/spr/command/component.json#/$defs/MutationLawsI64"
+      }
+    }
   }
 }

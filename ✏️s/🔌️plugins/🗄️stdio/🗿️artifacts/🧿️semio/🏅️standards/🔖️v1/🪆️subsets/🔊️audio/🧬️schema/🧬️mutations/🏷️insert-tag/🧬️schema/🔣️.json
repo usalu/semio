@@ -5,20 +5,21 @@
   "type": "object",
   "additionalProperties": false,
   "required": [
+    "mutation",
     "index",
     "tag"
   ],
   "properties": {
+    "mutation": {
+      "const": "insertTag",
+      "description": "Aggregate discriminator spliced in by SemioAudioMutation; absent when the payload stands alone."
+    },
     "index": {
       "type": "integer",
       "minimum": 0
     },
     "tag": {
       "$ref": "#/$defs/SemioAudioTag"
-    },
-    "mutation": {
-      "const": "insertTag",
-      "description": "Aggregate discriminator spliced in by SemioAudioMutation; absent when the payload stands alone."
     }
   },
   "$defs": {

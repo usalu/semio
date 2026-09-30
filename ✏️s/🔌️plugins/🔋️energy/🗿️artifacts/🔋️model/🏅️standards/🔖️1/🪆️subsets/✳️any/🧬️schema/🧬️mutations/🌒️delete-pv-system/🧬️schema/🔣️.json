@@ -5,11 +5,33 @@
   "type": "object",
   "additionalProperties": false,
   "required": [
+    "mutation",
     "id"
   ],
   "properties": {
+    "mutation": {
+      "const": "deletePvSystem"
+    },
     "id": {
-      "type": "integer"
+      "type": "integer",
+      "minimum": 0,
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "PV system",
+          "de": "PV-Anlage"
+        },
+        "description": {
+          "en": "The PV system to delete, by id.",
+          "de": "PV-Anlage, die diese Mutation löscht, per ID."
+        },
+        "ref": {
+          "kind": "pvSystem"
+        },
+        "group": "target",
+        "order": 10
+      }
     }
   }
 }

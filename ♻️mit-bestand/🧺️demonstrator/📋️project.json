@@ -2,7 +2,12 @@
   "name": "@semio-tech/mit-bestand-demonstrator",
   "$schema": "../../node_modules/nx/schemas/project-schema.json",
   "namedInputs": {
-    "default": ["{projectRoot}/**/*", "{workspaceRoot}/♻️mit-bestand/🧺️demonstrator/🏗️builder/🌐️vite/🟦️.ts", "{workspaceRoot}/♻️mit-bestand/🧺️demonstrator/🔨️modules/🧪️e2e/🎚️config/🟦️.ts", "{workspaceRoot}/♻️mit-bestand/🧺️demonstrator/🧪️tests/🎚️config/🟦️.ts"]
+    "default": [
+      "{projectRoot}/**/*",
+      "{workspaceRoot}/♻️mit-bestand/🧺️demonstrator/🏗️builder/🌐️vite/🟦️.ts",
+      "{workspaceRoot}/♻️mit-bestand/🧺️demonstrator/🔨️modules/🧪️e2e/🎚️config/🟦️.ts",
+      "{workspaceRoot}/♻️mit-bestand/🧺️demonstrator/🧪️tests/🎚️config/🟦️.ts"
+    ]
   },
   "targets": {
     "prepare-dev": {
@@ -10,7 +15,10 @@
       "cache": true,
       "outputs": [],
       "inputs": [
-        { "dependentTasksOutputFiles": "**/*", "transitive": true }
+        {
+          "dependentTasksOutputFiles": "**/*",
+          "transitive": true
+        }
       ],
       "dependsOn": [
         "@semio-tech/framework-os-dev:prepare-aggregator-react-dev",
@@ -34,7 +42,10 @@
       "cache": true,
       "outputs": [],
       "inputs": [
-        { "dependentTasksOutputFiles": "**/*", "transitive": true }
+        {
+          "dependentTasksOutputFiles": "**/*",
+          "transitive": true
+        }
       ],
       "dependsOn": [
         "@semio-tech/framework-os-dev:prepare-aggregator-react-release",
@@ -106,7 +117,10 @@
         "{projectRoot}/dist/♻️activation/dev"
       ],
       "inputs": [
-        { "dependentTasksOutputFiles": "**/*", "transitive": true }
+        {
+          "dependentTasksOutputFiles": "**/*",
+          "transitive": true
+        }
       ],
       "dependsOn": [
         "prepare-dev",
@@ -123,7 +137,10 @@
       "cache": true,
       "outputs": [],
       "inputs": [
-        { "dependentTasksOutputFiles": "**/*", "transitive": true }
+        {
+          "dependentTasksOutputFiles": "**/*",
+          "transitive": true
+        }
       ],
       "dependsOn": [
         "@semio-tech/framework-os-dev:activate-energy-react-dev",
@@ -189,6 +206,14 @@
         "cwd": "♻️mit-bestand/🧺️demonstrator",
         "command": "bun ./🔨️modules/🧪️e2e/📜️script.ts test",
         "forwardAllArgs": false
+      }
+    },
+    "canonical-architecture": {
+      "executor": "nx:run-commands",
+      "options": {
+        "cwd": "♻️mit-bestand/🧺️demonstrator",
+        "command": "bun ./📜️script.ts test long \"./🧪️tests/🏛️shell-brand/🟦️.ts\"",
+        "forwardAllArgs": true
       }
     }
   }

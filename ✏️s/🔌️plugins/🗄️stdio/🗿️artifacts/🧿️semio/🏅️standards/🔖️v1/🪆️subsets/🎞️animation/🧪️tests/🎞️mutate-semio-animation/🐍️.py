@@ -64,6 +64,12 @@ KINDS = (
     "set-keyframe-value",
 )
 
+
+#: 🦠️ Every verb's wire tag — the camelCase variant name its internally tagged aggregate carries in `mutation`;
+#: `noMutation` is the `no-mutation` baselines' scenario sentinel (the dropped `NoMutation` verb's spelling).
+TAG_OF_KIND = {kind: kind.split("-")[0] + "".join(part.capitalize() for part in kind.split("-")[1:]) for kind in KINDS}
+KIND_OF_TAG = {tag: kind for kind, tag in TAG_OF_KIND.items()}
+
 #: 🎯️ `property = "t" | "r" | "s" | "w" | "c" ":" hex` — the four unit variants, in that order.
 PROPERTY_LETTER = {"translation": "t", "rotation": "r", "scale": "s", "weights": "w"}
 LETTER_PROPERTY = {letter: kind for kind, letter in PROPERTY_LETTER.items()}
@@ -298,11 +304,16 @@ def clone(value):
 
 
 def parts(mutation: dict) -> tuple:
-    """🔎️ Splits `{"kind": …, "params": {…}}` into its verb and its arguments."""
-    kind = mutation.get("kind")
-    if kind not in KINDS:
-        raise AssertionError("unknown verb %r — the vocabulary is %s" % (kind, ", ".join(KINDS)))
-    return kind, mutation.get("params") or {}
+    """🔎️ Splits the wire value `{"mutation": "<camelCaseVariant>", …}` into its verb and its arguments."""
+    tag = mutation.get("mutation")
+    if tag not in KIND_OF_TAG:
+        raise AssertionError("unknown verb %r — the vocabulary is %s" % (tag, ", ".join(KIND_OF_TAG)))
+    return KIND_OF_TAG[tag], {key: value for key, value in mutation.items() if key != "mutation"}
+
+
+def wire(kind: str, args: dict) -> dict:
+    """🦠️ The wire value of one verb and its arguments."""
+    return {"mutation": TAG_OF_KIND[kind], **args}
 
 
 def index_at(count: int, index, verb: str, inclusive: bool) -> int:
@@ -377,39 +388,39 @@ def inverse_mutation(snapshot: dict, mutation: dict) -> dict:
     overwrite with the value it displaced."""
     kind, args = parts(mutation)
     if kind == "no-mutation":
-        return {"kind": "no-mutation", "params": {}}
+        return wire("no-mutation", {})
     if kind == "set-snapshot":
-        return {"kind": "set-snapshot", "params": {"snapshot": clone(snapshot)}}
+        return wire("set-snapshot", {"snapshot": clone(snapshot)})
     if kind == "insert-timeline":
-        return {"kind": "remove-timeline", "params": {"index": args["index"]}}
+        return wire("remove-timeline", {"index": args["index"]})
     if kind == "remove-timeline":
         index = index_at(len(snapshot["timelines"]), args["index"], kind, False)
-        return {"kind": "insert-timeline", "params": {"index": index, "timeline": clone(snapshot["timelines"][index])}}
+        return wire("insert-timeline", {"index": index, "timeline": clone(snapshot["timelines"][index])})
     if kind == "set-timeline-name":
         index = index_at(len(snapshot["timelines"]), args["index"], kind, False)
-        return {"kind": "set-timeline-name", "params": {"index": index, "name": snapshot["timelines"][index]["name"]}}
+        return wire("set-timeline-name", {"index": index, "name": snapshot["timelines"][index]["name"]})
     if kind in ("insert-channel", "remove-channel", "set-channel-target", "set-channel-interpolation"):
         timeline = timeline_at(snapshot, args, kind)
         if kind == "insert-channel":
-            return {"kind": "remove-channel", "params": {"timelineIndex": args["timelineIndex"], "index": args["index"]}}
+            return wire("remove-channel", {"timelineIndex": args["timelineIndex"], "index": args["index"]})
         index = index_at(len(timeline["channels"]), args["index"], kind, False)
         was = timeline["channels"][index]
         if kind == "remove-channel":
-            return {"kind": "insert-channel", "params": {"timelineIndex": args["timelineIndex"], "index": index, "channel": clone(was)}}
+            return wire("insert-channel", {"timelineIndex": args["timelineIndex"], "index": index, "channel": clone(was)})
         if kind == "set-channel-target":
-            return {"kind": "set-channel-target", "params": {"timelineIndex": args["timelineIndex"], "index": index, "target": clone(was["target"])}}
-        return {"kind": "set-channel-interpolation", "params": {"timelineIndex": args["timelineIndex"], "index": index, "interpolation": was["interpolation"]}}
+            return wire("set-channel-target", {"timelineIndex": args["timelineIndex"], "index": index, "target": clone(was["target"])})
+        return wire("set-channel-interpolation", {"timelineIndex": args["timelineIndex"], "index": index, "interpolation": was["interpolation"]})
     channel = channel_at(snapshot, args, kind)
     if kind == "insert-keyframe":
-        return {"kind": "remove-keyframe", "params": {"timelineIndex": args["timelineIndex"], "channelIndex": args["channelIndex"], "index": args["index"]}}
+        return wire("remove-keyframe", {"timelineIndex": args["timelineIndex"], "channelIndex": args["channelIndex"], "index": args["index"]})
     index = index_at(len(channel["keyframes"]), args["index"], kind, False)
     was = channel["keyframes"][index]
     common = {"timelineIndex": args["timelineIndex"], "channelIndex": args["channelIndex"], "index": index}
     if kind == "remove-keyframe":
-        return {"kind": "insert-keyframe", "params": dict(common, keyframe=clone(was))}
+        return wire("insert-keyframe", dict(common, keyframe=clone(was)))
     if kind == "set-keyframe-time":
-        return {"kind": "set-keyframe-time", "params": dict(common, t=was["t"])}
-    return {"kind": "set-keyframe-value", "params": dict(common, value=clone(was["value"]))}
+        return wire("set-keyframe-time", dict(common, t=was["t"]))
+    return wire("set-keyframe-value", dict(common, value=clone(was["value"])))
 
 
 # endregion 🔖️Mutations
@@ -463,7 +474,7 @@ def spec_vector(ctx: Context) -> Outcome:
     what the verb means, independent of both implementations, kept from before this oracle existed."""
     kind = ctx.row()
     committed = vector(ctx, kind)
-    applied = apply_mutation(committed["before"], {"kind": committed["kind"], "params": committed["params"]})
+    applied = apply_mutation(committed["before"], committed["mutation"])
     if applied != committed["after"]:
         raise AssertionError("%s: the applied snapshot does not match the committed after-snapshot\n     got: %s\nexpected: %s" % (ctx.scenario["id"], json.dumps(applied), json.dumps(committed["after"])))
     return Outcome(applied)

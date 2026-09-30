@@ -675,7 +675,7 @@ wrapper (root `package.json:"nx"`), which rewrites `workspace:dev -- <variant>` 
 ## 🪟️ Windows Setup [↑](#-development)
 
 Native Windows development is zero-touch through the checked-in bootstrap script. Clone with long paths enabled
-(tracked fixture paths reach 239 characters below the clone root; `setup git` keeps `core.longpaths` in the clone's own
+(tracked fixture paths reach 210 characters below the clone root; `setup git` keeps `core.longpaths` in the clone's own
 `.git/config` afterwards) and run the script with the Windows PowerShell 5.1 that ships with Windows — no Bun needed yet:
 
 ```powershell

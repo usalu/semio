@@ -5,16 +5,52 @@
   "type": "object",
   "additionalProperties": false,
   "required": [
+    "mutation",
     "id",
     "newName"
   ],
   "properties": {
+    "mutation": {
+      "const": "renameSearchFilter"
+    },
     "id": {
-      "type": "integer",
-      "minimum": 0
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Search Filter",
+          "de": "Suchfilter"
+        },
+        "description": {
+          "en": "The search filter to rename.",
+          "de": "Umzubenennender Eintrag vom Typ „Suchfilter“."
+        },
+        "ref": {
+          "kind": "searchFilter",
+          "domain": "program",
+          "granularity": "entity"
+        },
+        "group": "target",
+        "order": 10
+      }
     },
     "newName": {
-      "type": "string"
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "text",
+        "role": "value",
+        "label": {
+          "en": "New Name",
+          "de": "Neuer Name"
+        },
+        "description": {
+          "en": "New name of the search filter.",
+          "de": "Neuer Name des Eintrags vom Typ „Suchfilter“."
+        },
+        "group": "identity",
+        "order": 20
+      }
     }
   }
 }

@@ -902,7 +902,7 @@ pub mod ooxml {
                 if part_bytes(&parts, &path).is_none() {
                     return Err(format!("set-worksheet-content-type: {path} is not in the package"));
                 }
-                set_content_type_override(&mut parts, &path, Some(&text(&params, "contentType")))?;
+                set_content_type_override(&mut parts, &path, Some(&text(&params, "content_type")))?;
             }
             other => return Err(format!("mutation kind {other:?} has no oracle implementation ({} input byte(s))", input.len())),
         }
@@ -990,13 +990,17 @@ pub mod ooxml {
                 None => return Err("remove-conformance-attribute has no inverse: the base declares no conformance attribute".to_string()),
             },
             "insert-vml-part" => kind_spec("remove-vml-part", vec![("path", path())]),
-            "remove-vml-part" => kind_spec("insert-vml-part", vec![("path", path())]),
+            "remove-vml-part" => {
+                let target = text(&params, "path");
+                let markup = part_bytes(&parts, &target).map(|bytes| String::from_utf8_lossy(bytes).into_owned()).ok_or_else(|| format!("remove-vml-part has no inverse: {target} is not in the base"))?;
+                kind_spec("insert-vml-part", vec![("path", path()), ("markup", Json::String(markup))])
+            }
             "insert-alternate-content" => kind_spec("remove-alternate-content", vec![("path", path())]),
             "remove-alternate-content" => kind_spec("insert-alternate-content", vec![("path", path())]),
             "set-worksheet-content-type" => {
                 let target = text(&params, "path");
                 let (defaults, overrides) = content_types(&parts)?;
-                kind_spec("set-worksheet-content-type", vec![("path", Json::String(target.clone())), ("contentType", Json::String(resolve_content_type(&defaults, &overrides, &target)))])
+                kind_spec("set-worksheet-content-type", vec![("path", Json::String(target.clone())), ("content_type", Json::String(resolve_content_type(&defaults, &overrides, &target)))])
             }
             other => return Err(format!("no inverse rule for kind {other:?}")),
         })
@@ -1306,15 +1310,6 @@ pub mod pdf_conformance {
             }
         }
         None
-    }
-
-    /// 🔤️ Every distinct font-program object currently referenced by any descriptor, in
-    /// object-number order — the ordinal space `embed-font-file` names its donor program in.
-    fn font_programs(document: &Document) -> Vec<ObjectId> {
-        let mut ids: Vec<ObjectId> = font_descriptors(document).into_iter().filter_map(|descriptor| font_program(document, descriptor).map(|(_, id, _, _)| id)).collect();
-        ids.sort();
-        ids.dedup();
-        ids
     }
 
     fn page_at(document: &Document, index: usize) -> Result<ObjectId, String> {
@@ -1628,7 +1623,7 @@ pub mod pdf_conformance {
                 if font_program(document, descriptor).is_some() {
                     return Err(format!("embed-font-file: descriptor ordinal {descriptor_ordinal} already carries an embedded font program"));
                 }
-                let program = program_reference(document, params)?;
+                let program = program_reference(params)?;
                 let dict = document.get_dictionary_mut(descriptor).map_err(|error| format!("embed-font-file: {error}"))?;
                 dict.set(key, Object::Reference(program));
                 Ok(())
@@ -1718,7 +1713,7 @@ pub mod pdf_conformance {
                 Ok(())
             }
             "set-display-doc-title" => {
-                let display = matches!(params.get("displayDocTitle"), Some(Json::Bool(true)));
+                let display = matches!(params.get("display"), Some(Json::Bool(true)));
                 let mut preferences = Dictionary::new();
                 preferences.set("DisplayDocTitle", Object::Boolean(display));
                 let catalog = catalog_dict_mut(document)?;
@@ -1821,18 +1816,13 @@ pub mod pdf_conformance {
         }
     }
 
-    /// 🔤️ The donor font-program object `embed-font-file` points a descriptor at, named either
-    /// exactly (`program: {num, gen}`, what an engine-computed inverse carries) or by ordinal into
-    /// the document's own program list (`programOrdinal`, what a feature row can actually author).
-    fn program_reference(document: &Document, params: &Json) -> Result<ObjectId, String> {
-        if let Some(reference) = params.get("program") {
-            let num = number(reference, "num").ok_or("embed-font-file: `program.num` must be a number")? as u32;
-            let generation = number(reference, "gen").unwrap_or(0.0) as u16;
-            return Ok((num, generation));
-        }
-        let programs = font_programs(document);
-        let index = ordinal(params, "programOrdinal")?;
-        programs.get(index).copied().ok_or_else(|| format!("embed-font-file: program ordinal {index} is out of range ({} font programs)", programs.len()))
+    /// 🔤️ The donor font-program object `embed-font-file` points a descriptor at — the leaf wire's exact `program: {num,
+    /// gen}` reference, which a feature row and an engine-computed inverse both carry.
+    fn program_reference(params: &Json) -> Result<ObjectId, String> {
+        let reference = params.get("program").ok_or("embed-font-file: `program` is required")?;
+        let num = number(reference, "num").ok_or("embed-font-file: `program.num` must be a number")? as u32;
+        let generation = number(reference, "gen").ok_or("embed-font-file: `program.gen` must be a number")? as u16;
+        Ok((num, generation))
     }
 
     /// 🏅️ Stamps every axis this profile OWNS into (or out of) its conformant state. Only the axes
@@ -1878,7 +1868,7 @@ pub mod pdf_conformance {
                 "displayDocTitle" => {
                     let present = catalog_dict(document).map(|catalog| catalog.has(b"ViewerPreferences")).unwrap_or(false);
                     if stamped {
-                        apply_in_place(document, "set-display-doc-title", &json_object(vec![("displayDocTitle", Json::Bool(true))]), profile)?;
+                        apply_in_place(document, "set-display-doc-title", &json_object(vec![("display", Json::Bool(true))]), profile)?;
                     } else if present {
                         apply_in_place(document, "remove-display-doc-title", &Json::Null, profile)?;
                     }
@@ -1958,7 +1948,7 @@ pub mod pdf_conformance {
             "remove-mark-info" => vec![kind_spec("set-mark-info", vec![("marked", Json::Bool(true))])],
             "remove-struct-tree-root" => vec![kind_spec("set-struct-tree-root", vec![])],
             "remove-lang" => vec![kind_spec("set-lang", vec![("lang", Json::String("de-CH".to_string()))])],
-            "remove-display-doc-title" => vec![kind_spec("set-display-doc-title", vec![("displayDocTitle", Json::Bool(true))])],
+            "remove-display-doc-title" => vec![kind_spec("set-display-doc-title", vec![("display", Json::Bool(true))])],
             "remove-signature-field" => vec![kind_spec("insert-signature-field", vec![("name", Json::String(params.str("name")))])],
             "remove-trim-box" => vec![kind_spec("set-trim-box", vec![("pageIndex", page_index()), ("trimBox", Json::Array(vec![Json::Number(0.0), Json::Number(0.0), Json::Number(595.276), Json::Number(841.89)]))])],
             "remove-dpart-root" | "set-dpart-metadata" | "remove-dpart-metadata" => vec![kind_spec("set-dpart-root", vec![("job", Json::String("arranged variable-data job".to_string()))])],
@@ -2062,10 +2052,10 @@ pub mod pdf_conformance {
                 kind_spec("set-lang", vec![("lang", Json::String(previous))])
             }
             "set-display-doc-title" => match catalog_dict(&document).ok().and_then(|catalog| catalog.get(b"ViewerPreferences").ok().and_then(|value| deref_dict(&document, value)).map(|dict| dict.get(b"DisplayDocTitle").ok().and_then(|value| value.as_bool().ok()).unwrap_or(false))) {
-                Some(previous) => kind_spec("set-display-doc-title", vec![("displayDocTitle", Json::Bool(previous))]),
+                Some(previous) => kind_spec("set-display-doc-title", vec![("display", Json::Bool(previous))]),
                 None => kind_spec("remove-display-doc-title", vec![]),
             },
-            "remove-display-doc-title" => kind_spec("set-display-doc-title", vec![("displayDocTitle", Json::Bool(true))]),
+            "remove-display-doc-title" => kind_spec("set-display-doc-title", vec![("display", Json::Bool(true))]),
             "set-info-title" => kind_spec("set-info-title", vec![("title", Json::String(info_entry(&document, "Title").unwrap_or_default()))]),
             "set-info-author" => kind_spec("set-info-author", vec![("author", Json::String(info_entry(&document, "Author").unwrap_or_default()))]),
             "insert-signature-field" => kind_spec("remove-signature-field", vec![("name", carry("name"))]),

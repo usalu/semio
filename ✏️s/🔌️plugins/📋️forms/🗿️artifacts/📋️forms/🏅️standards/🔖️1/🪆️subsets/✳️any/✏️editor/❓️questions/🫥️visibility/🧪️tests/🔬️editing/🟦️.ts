@@ -1,5 +1,5 @@
 import assert from "node:assert/strict";
-import Ajv from "ajv/dist/2020.js";
+import Ajv from "ajv";
 import { applyPatch, compare } from "fast-json-patch";
 import fixtures from "../../🧫️fixtures/🔣️.json";
 import schema from "../../🧬️schema/🔣️.json";

@@ -11,11 +11,11 @@ use crate::standards::v1::subsets::table::schema::mutations::SemioTableMutation;
 use crate::standards::v1::subsets::table::schema::snapshot::SemioTableSnapshot;
 use protocol::{Mutation, MutationDiff};
 
-const BEFORE: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🗑️delete-column/🗑️drops-the-middle-column-and-cascades-into-every-row/📸️snapshot/⬅️before/🔣️.json");
-const AFTER: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🗑️delete-column/🗑️drops-the-middle-column-and-cascades-into-every-row/📸️snapshot/➡️after/🔣️.json");
-const MUTATION: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🗑️delete-column/🗑️drops-the-middle-column-and-cascades-into-every-row/🦠️mutation/🔣️.json");
-const DIFF: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🗑️delete-column/🗑️drops-the-middle-column-and-cascades-into-every-row/🔺️diff/🔣️.json");
-const OUTCOME: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🗑️delete-column/🗑️drops-the-middle-column-and-cascades-into-every-row/🎯️outcome/🔣️.json");
+const BEFORE: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🗑️delete-column/🗑️drops-middle-column-cascades-every-row/📸️snapshot/⬅️before/🔣️.json");
+const AFTER: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🗑️delete-column/🗑️drops-middle-column-cascades-every-row/📸️snapshot/➡️after/🔣️.json");
+const MUTATION: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🗑️delete-column/🗑️drops-middle-column-cascades-every-row/🦠️mutation/🔣️.json");
+const DIFF: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🗑️delete-column/🗑️drops-middle-column-cascades-every-row/🔺️diff/🔣️.json");
+const OUTCOME: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🗑️delete-column/🗑️drops-middle-column-cascades-every-row/🎯️outcome/🔣️.json");
 
 fn before() -> SemioTableSnapshot {
     dsl::json::from_json_str(BEFORE).expect("delete-column before snapshot decodes")

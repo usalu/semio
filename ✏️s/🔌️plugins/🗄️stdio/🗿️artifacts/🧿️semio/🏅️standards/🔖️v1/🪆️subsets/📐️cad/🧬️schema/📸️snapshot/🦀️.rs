@@ -22,7 +22,7 @@ pub const STDIO_SEMIOCAD_DOCUMENT_SCHEMA: &str = "stdio.semio.cad";
 /// needing `T: Default` wherever the missing-key fallback runs — bcf's local `NamedTripleDiff`
 /// copy carries the identical requirement (see that file's own doc comment).
 #[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
-#[value(tag = "kind", rename_all = "camelCase")]
+#[value(tag = "kind", rename_all = "camelCase", rename_all_fields = "camelCase")]
 pub enum CadEntity {
     Line { a: SemioPoint2, b: SemioPoint2 },
     Arc { center: SemioPoint2, radius: f64, start_angle: f64, end_angle: f64 },

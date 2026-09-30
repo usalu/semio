@@ -1183,6 +1183,7 @@ mod wit_bridge {
     /// deliberately wrong `wit::OpenWindowEffect` import made `cargo check --target wasm32-wasip2
     /// --features component-guest` emit `help: consider importing … effects::OpenWindowEffect`
     /// (and the `events`/`ui` siblings the same way) — not guessed.
+    use crate::component::wasip2::semio::framework::capabilities as wit_capabilities;
     use crate::component::wasip2::semio::framework::effects as wit_effects;
     use crate::component::wasip2::semio::framework::events as wit_events;
     use crate::component::wasip2::semio::framework::instance_lifetime as wit_lifetime;
@@ -1473,8 +1474,8 @@ mod wit_bridge {
             W::InstanceLifecycleAck(receipt) => Event::InstanceLifecycleAck(semio_framework::kernel::ActorInstanceLifecycleAck { receipt: wit_lifecycle_receipt_to_kernel(receipt) }),
             W::Activate(payload) => Event::Activate { reason: wit_activation_to_kernel(payload.reason) },
             W::SuspendRequest(_) => Event::SuspendRequest,
-            W::CapabilityChanged(_) => Event::SuspendRequest,
-            W::QuotaChanged(_) => Event::SuspendRequest,
+            W::CapabilityChanged(payload) => Event::CapabilityChanged { change: wit_capability_change_to_kernel(payload.change) },
+            W::QuotaChanged(payload) => Event::QuotaChanged { quotas: decode_wire_quotas(&payload.quotas) },
             W::UiIntent(payload) => Event::UiIntent { instance: semio_framework::kernel::PluginInstanceId(payload.instance.to_string()), intent: payload.intent },
             W::SurfaceVisible(payload) => Event::SurfaceVisible { surface: format!("{}:{}", payload.surface.instance, payload.surface.surface), body_key: payload.body_key, view_state: payload.view_state },
             W::SurfaceHidden(payload) => Event::SurfaceHidden { surface: format!("{}:{}", payload.surface.instance, payload.surface.surface) },
@@ -1489,6 +1490,22 @@ mod wit_bridge {
             W::Timer(payload) => Event::Timer { id: payload.id },
             W::Wake => Event::Wake,
             W::Request(payload) => Event::Request { req: semio_framework::kernel::RequestId(payload.req), from: wit_endpoint_to_kernel(payload.params.origin), capability: payload.params.capability, payload: payload.params.payload },
+        }
+    }
+
+    /// 🎟️ Preserves broker changes as changes rather than turning them into resource shutdown.
+    fn wit_capability_change_to_kernel(change: wit_capabilities::CapabilityChange) -> semio_framework::kernel::CapabilityChange {
+        use semio_framework::kernel::{BrokerCapabilityGrant, CapabilityChange, CapabilityId, CapabilityToken};
+        let grant = |value: wit_capabilities::CapabilityGrant| BrokerCapabilityGrant {
+            id: CapabilityId(value.token.id),
+            token: CapabilityToken(u128::from(value.token.token)),
+            scope: value.scope,
+            expires_ms: value.expires_ms.and_then(|value| u64::try_from(value).ok()),
+        };
+        match change {
+            wit_capabilities::CapabilityChange::Granted(value) => { let grant = grant(value); CapabilityChange::Granted { id: grant.id.clone(), grant } },
+            wit_capabilities::CapabilityChange::Revoked(id) => CapabilityChange::Revoked { id: CapabilityId(id) },
+            wit_capabilities::CapabilityChange::Narrowed(value) => { let grant = grant(value); CapabilityChange::Narrowed { id: grant.id.clone(), grant } },
         }
     }
 

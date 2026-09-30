@@ -19,13 +19,16 @@ type AffineRefusal = { readonly id: string; readonly solid: AffineSolid; readonl
 type AffineFixture = { readonly schema: "s.stdio.semio.brep.affine-transforms/v1"; readonly tessellationTolerance: number; readonly volumeRelativeTolerance: number; readonly centerOfMassTolerance: number; readonly boundsTolerance: number; readonly normalTolerance: number; readonly cases: readonly AffineCase[]; readonly refusals: readonly AffineRefusal[] };
 type AffineMeasure = { readonly volume: number; readonly centerOfMass: Vec3; readonly bounds: AffineBounds; readonly faceNormals: readonly Vec3[]; readonly faceCount: number; readonly edgeCount: number };
 /** 🧩️ One implementation under the vectors: build the primitive, apply one step, measure the result. */
-type AffineKernelOps<S> = { readonly make: (solid: AffineSolid) => Promise<S>; readonly apply: (shape: S, step: AffineStep) => Promise<S>; readonly measure: (shape: S) => Promise<AffineMeasure> };
+type AffineKernelOps<S> = { readonly close?: () => Promise<void>; readonly make: (solid: AffineSolid) => Promise<S>; readonly apply: (shape: S, step: AffineStep) => Promise<S>; readonly measure: (shape: S) => Promise<AffineMeasure> };
 
-/** 🧠️ The CAD runtime's own path: the Rust `BrepKernel` over the `brep_invoke` wire (`invokeBrep`, flow-core wasm). */
+/** 🧠️ The CAD runtime's own path: the Rust `BrepKernel` over the `brep_invoke` wire (`invokeBrep`, Semio session wasm). */
 async function semioAffineOps(fixture: AffineFixture): Promise<AffineKernelOps<string>> {
-  const { invokeBrep } = await import("@semio-tech/s-3d-js");
+  const { SemioGeometrySession } = await import("../../🌊️session/🟦️.ts");
+  const session = new SemioGeometrySession();
+  const invokeBrep = session.invoke.bind(session);
   const handle = async (method: string, args: Record<string, unknown>) => (await invokeBrep<{ readonly handle: string }>(method, args)).handle;
   return {
+    close: () => session.close(),
     make: async ({ kind, ...args }) => handle(kind, args),
     apply: async (shape, { kind, ...args }) => handle(kind, { shape, ...args }),
     measure: async (shape) => {
@@ -46,7 +49,7 @@ async function semioAffineOps(fixture: AffineFixture): Promise<AffineKernelOps<s
   };
 }
 
-const BREP_INVOKE_CATALOG_PATH = "../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/📐️brep-geometry/";
+const BREP_INVOKE_CATALOG_PATH = "🌊️session/";
 
 /** 🧾️ One `brep_invoke` verb as the catalog declares it. */
 type BrepInvokeVerb = { readonly method: string; readonly kernelOperation: string; readonly args: readonly { readonly name: string; readonly type: string; readonly default?: number | boolean }[]; readonly result: string; readonly label: { readonly en: string; readonly de: string } };
@@ -233,15 +236,16 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
 
     it("the semio brep kernel answers every affine-transform vector and refuses every degenerate one", async () => {
       const fixture = await affineFixture(source);
-      expect(await affineDisagreements(fixture, await semioAffineOps(fixture))).toEqual([]);
+      const ops = await semioAffineOps(fixture);
+      try { expect(await affineDisagreements(fixture, ops)).toEqual([]); } finally { await ops.close?.(); }
     });
 
     it("every brep_invoke call the kernel makes is a declared verb with its declared arguments", async () => {
       const { readFile } = await import("node:fs/promises");
-      const { default: Ajv2020 } = await import("ajv/dist/2020.js");
+      const { default: Ajv2020 } = await import("ajv");
       const catalog = JSON.parse(await readFile(new URL(`${BREP_INVOKE_CATALOG_PATH}🔣️.json`, source.url), "utf8")) as { readonly verbs: readonly BrepInvokeVerb[] };
       const schema = JSON.parse(await readFile(new URL(`${BREP_INVOKE_CATALOG_PATH}🧬️schema/🔣️.json`, source.url), "utf8")) as object;
-      const validate = new Ajv2020({ strict: true, allErrors: true }).compile(schema);
+      const validate = new Ajv2020({ strict: true, allErrors: true }).addKeyword("x-semio-formats").compile({ $ref: "https://json.schemas.assets.semio-tech.com/s/modules/spatial-kernel/engines/semio/session/component.json#/$defs/SemioGeometryVerbsV1", ...schema });
       expect(validate(catalog), JSON.stringify(validate.errors)).toBe(true);
       const verbs = new Map(catalog.verbs.map((verb) => [verb.method, verb]));
       expect(verbs.size).toBe(catalog.verbs.length);

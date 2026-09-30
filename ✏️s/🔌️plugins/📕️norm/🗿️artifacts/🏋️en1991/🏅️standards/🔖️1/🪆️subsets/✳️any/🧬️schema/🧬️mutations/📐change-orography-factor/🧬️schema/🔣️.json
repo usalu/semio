@@ -9,7 +9,20 @@
   ],
   "properties": {
     "newOrographyFactor": {
-      "type": "number"
+      "type": "number",
+      "minimum": 0,
+      "x-semio-ui": {
+        "widget": "stepper",
+        "role": "value",
+        "label": {
+          "en": "Orography factor c_o",
+          "de": "Topografiebeiwert c_o"
+        },
+        "step": 0.01,
+        "precision": 2,
+        "group": "site",
+        "order": 10
+      }
     }
   }
 }

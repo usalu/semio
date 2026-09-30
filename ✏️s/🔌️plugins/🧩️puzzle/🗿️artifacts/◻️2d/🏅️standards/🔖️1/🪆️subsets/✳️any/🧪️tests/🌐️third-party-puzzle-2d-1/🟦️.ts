@@ -344,7 +344,12 @@ function payloadSchemas(ctx: AdapterContext): AdapterOutcome {
       continue;
     }
     checks += 1;
-    for (const error of validator.validate(vector.mutation, vector.schema).errors) failures.push(`${vector.id}: jsonschema rejects the committed payload at ${error.property} — ${error.message}`);
+    // 🧱️Schema-first: the payloads the subject refuses as a Fatal `mutation.invariant` are exactly the ones
+    // their own leaf schema forbids, so the validator must reject those and only those.
+    const errors = validator.validate(vector.mutation, vector.schema).errors;
+    if (vector.outcome?.code === "mutation.invariant") {
+      if (errors.length === 0) failures.push(`${vector.id}: the committed outcome is a mutation.invariant refusal, yet jsonschema accepts the payload — the schema does not forbid what the subject refuses`);
+    } else for (const error of errors) failures.push(`${vector.id}: jsonschema rejects the committed payload at ${error.property} — ${error.message}`);
     // 🧪️A validator that accepts everything would accept the payload too. The probe proves the
     // opposite by handing it a member the schema does not declare.
     if (vector.schema.additionalProperties === false) {
@@ -363,9 +368,9 @@ function touchedMembers(patch: readonly Operation[]): string[] {
   return [...new Set(patch.map((operation) => operation.path.replace(/^\//, "").split("/")[0]!))].sort();
 }
 
-/** 🆔 The ids a snapshot collection carries, in board order. */
+/** 🆔 The ids a snapshot collection carries, in board order; an omitted collection is empty. */
 function collectionIds(document: Json, member: string): string[] {
-  return (document[member] as Json[]).map((record) => record.id as string);
+  return ((document[member] ?? []) as Json[]).map((record) => record.id as string);
 }
 
 /**
@@ -376,9 +381,9 @@ function collectionIds(document: Json, member: string): string[] {
  * expresses a removal as field edits on records that did not change at all.
  */
 function patchedIds(before: Json, after: Json, member: string): Set<string> {
-  const survivors = new Map((after[member] as Json[]).map((record) => [record.id as string, record]));
+  const survivors = new Map(((after[member] ?? []) as Json[]).map((record) => [record.id as string, record]));
   const reached = new Set<string>();
-  for (const record of before[member] as Json[]) {
+  for (const record of (before[member] ?? []) as Json[]) {
     const twin = survivors.get(record.id as string);
     if (twin !== undefined && compare(record, twin).length > 0) reached.add(record.id as string);
   }
@@ -408,7 +413,7 @@ function diffReproduction(ctx: AdapterContext): AdapterOutcome {
     const declared = sorted(MEMBERS.filter((member) => vector.diff![member] !== null && vector.diff![member] !== undefined));
     checks += 1;
     if (JSON.stringify(declared) !== JSON.stringify(touchedMembers(patch))) failures.push(`${vector.id}: the typed diff declares ${JSON.stringify(declared)}, the RFC 6902 patch touches ${JSON.stringify(touchedMembers(patch))}`);
-    for (const member of ["nodes", "edges"]) {
+    for (const member of ["nodes", "edges", "targetRegions"]) {
       const delta = vector.diff[member] as Json | null | undefined;
       if (delta === null || delta === undefined) continue;
       const beforeIds = new Set(collectionIds(vector.before, member));
@@ -424,7 +429,8 @@ function diffReproduction(ctx: AdapterContext): AdapterOutcome {
         const replacement = entry.patch?.replacement;
         if (replacement === undefined || replacement === null) continue;
         checks += 1;
-        if (JSON.stringify(replacement) !== JSON.stringify((vector.after[member] as Json[]).find((record) => record.id === entry.id))) failures.push(`${vector.id}: the typed diff's replacement for ${member} ${JSON.stringify(entry.id)} does not equal the committed after-snapshot's record`);
+        const committed = ((vector.after[member] ?? []) as Json[]).find((record) => record.id === entry.id);
+        if (committed === undefined || compare(replacement, committed).length > 0) failures.push(`${vector.id}: the typed diff's replacement for ${member} ${JSON.stringify(entry.id)} does not equal the committed after-snapshot's record`);
       }
     }
     rows.push({ id: vector.id, kind: vector.kind, checks, ops: patch.length, members: declared });

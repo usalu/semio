@@ -22,8 +22,9 @@ use serde_json::Value;
 //#region 🔖️Mutations
 /// 🧮️ Semantic puzzle-2d document mutation vocabulary: id-keyed node/edge create-delete plus
 /// per-field/per-facet edits (spatial, geometry, presentation flags, handle membership), a
-/// handle-to-handle connect/disconnect relationship, and document-meta edits (manifest reference,
-/// kind-compatibility connect/disconnect, kind-catalog replace). There is deliberately no camera
+/// handle-to-handle connect/disconnect relationship, document-meta edits (manifest reference,
+/// kind-compatibility connect/disconnect, kind-catalog replace), and the three parametric selection
+/// transforms (`drag-`, `rotate-`, `scale-selection`) that record a gesture's own inputs. There is deliberately no camera
 /// mutation: the camera is session-only `Puzzle2dPlayRuntime` state in the play app (see
 /// `setCamera`'s `ActionKind::View`), never a VCS-tracked document edit. There is deliberately no
 /// whole-document mutation: import/reset/example-load goes through `store::ArtifactStore::reset`
@@ -67,6 +68,9 @@ pub enum Puzzle2dMutation {
     EditTargetRegionLabel(EditTargetRegionLabel),
     ChangeTargetRegionHidden(ChangeTargetRegionHidden),
     ChangeTargetRegionLocked(ChangeTargetRegionLocked),
+    DragSelection(DragSelection),
+    RotateSelection(RotateSelection),
+    ScaleSelection(ScaleSelection),
 }
 
 //#region 🏷️Kinds
@@ -108,6 +112,9 @@ pub const KINDS: &[&str] = &[
     "edit-target-region-label",
     "change-target-region-hidden",
     "change-target-region-locked",
+    "drag-selection",
+    "rotate-selection",
+    "scale-selection",
 ];
 //#endregion 🏷️Kinds
 //#endregion 🔖️Mutations
@@ -132,6 +139,7 @@ pub use super::create_node::{create_node, CreateNode};
 pub use super::create_target_region::{create_target_region, CreateTargetRegion};
 pub use super::delete_node::{delete_node, DeleteNode};
 pub use super::delete_target_region::{delete_target_region, DeleteTargetRegion};
+pub use super::drag_selection::{drag_selection, DragSelection};
 pub use super::disconnect_handles::{disconnect_handles, DisconnectHandles};
 pub use super::disconnect_kind_compatibility::{disconnect_kind_compatibility, DisconnectKindCompatibility};
 pub use super::edit_node_text::{edit_node_text, EditNodeText};
@@ -144,7 +152,203 @@ pub use super::replace_kind_catalogs::{replace_kind_catalogs, ReplaceKindCatalog
 pub use super::replace_node_geometry::{replace_node_geometry, ReplaceNodeGeometry};
 pub use super::replace_node_handle::{replace_node_handle, ReplaceNodeHandle};
 pub use super::resize_target_region::{resize_target_region, ResizeTargetRegion};
+pub use super::rotate_selection::{rotate_selection, RotateSelection};
 pub use super::scale_node::{scale_node, ScaleNode};
+pub use super::scale_selection::{scale_selection, ScaleSelection};
+
+//#region 🔖️SelectionTransform
+/// 🧭️ Shared diff of the three parametric selection leaves (`drag-`, `rotate-`, `scale-selection`).
+/// `targets` is classified by document membership against `base`: a node id goes through `node`, a
+/// target-region id through `region` (`None` when the transform has no meaning for an axis-aligned
+/// rectangle). An empty or repeated target set is the Fatal `mutation.invariant` the payload schema's
+/// `minItems`/`uniqueItems` forbid. Absent ids, locked members and inapplicable regions are skipped with one
+/// `mutation.partial` warning per reason (in that order, ids in payload order); nothing left is
+/// `mutation.target-missing`; an `identity` transform, or survivors that do not move, is
+/// `mutation.no-op`. Every moved record is patched whole from the base, in document order, so the leaf
+/// replays on any base.
+pub fn puzzle2d_selection_diff(
+    base: &Puzzle2dSnapshot,
+    targets: &[String],
+    identity: bool,
+    node: impl Fn(&crate::Puzzle2dNode) -> crate::Puzzle2dNode,
+    region: Option<&dyn Fn(&crate::Puzzle2dTargetRegion) -> crate::Puzzle2dTargetRegion>,
+) -> protocol::MutationOutcome<Puzzle2dDiff> {
+    use crate::standards::v1::subsets::any::schema::diff::{Puzzle2dNodePatch, Puzzle2dNodePatchEntry, Puzzle2dNodesDelta, Puzzle2dTargetRegionPatch, Puzzle2dTargetRegionPatchEntry, Puzzle2dTargetRegionsDelta};
+    if let Err(reason) = puzzle2d_targets_invariant(targets) {
+        return protocol::MutationOutcome::fatal("mutation.invariant", reason, targets.to_vec());
+    }
+    let (mut missing, mut locked, mut fixed, mut survivors) = (Vec::<String>::new(), Vec::<String>::new(), Vec::<String>::new(), std::collections::BTreeSet::<&str>::new());
+    for id in targets {
+        match (base.nodes.iter().find(|entry| &entry.id == id), base.target_regions.iter().find(|entry| &entry.id == id)) {
+            (Some(entry), _) if entry.locked != Some(true) => {
+                survivors.insert(id.as_str());
+            }
+            (Some(_), _) => locked.push(id.clone()),
+            (None, Some(entry)) if entry.locked => locked.push(id.clone()),
+            (None, Some(_)) if region.is_none() => fixed.push(id.clone()),
+            (None, Some(_)) => {
+                survivors.insert(id.as_str());
+            }
+            (None, None) => missing.push(id.clone()),
+        }
+    }
+    if survivors.is_empty() {
+        return protocol::MutationOutcome::error("mutation.target-missing", format!("none of the {} target(s) is an unlocked node or target region this transform applies to", targets.len()), targets.to_vec());
+    }
+    let partial: Vec<protocol::MutationMessage> = [(missing, "not on this board"), (locked, "locked"), (fixed, "axis-aligned target regions do not rotate")]
+        .into_iter()
+        .filter(|(ids, _)| !ids.is_empty())
+        .map(|(ids, reason)| protocol::MutationMessage::warn("mutation.partial", format!("{} of {} target(s) skipped ({reason}): {}", ids.len(), targets.len(), ids.join(", "))).at(ids))
+        .collect();
+    let nodes: Vec<Puzzle2dNodePatchEntry> = if identity {
+        Vec::new()
+    } else {
+        base.nodes.iter().filter(|entry| survivors.contains(entry.id.as_str())).filter_map(|entry| Some(node(entry)).filter(|next| next != entry).map(|next| Puzzle2dNodePatchEntry { id: entry.id.clone(), patch: Puzzle2dNodePatch { replacement: Some(next) } })).collect()
+    };
+    let regions: Vec<Puzzle2dTargetRegionPatchEntry> = match region.filter(|_| !identity) {
+        Some(transform) => base
+            .target_regions
+            .iter()
+            .filter(|entry| survivors.contains(entry.id.as_str()))
+            .filter_map(|entry| Some(transform(entry)).filter(|next| next != entry).map(|next| Puzzle2dTargetRegionPatchEntry { id: entry.id.clone(), patch: Puzzle2dTargetRegionPatch { replacement: Some(next) } }))
+            .collect(),
+        None => Vec::new(),
+    };
+    if nodes.is_empty() && regions.is_empty() {
+        return protocol::MutationOutcome::new(Puzzle2dDiff::default()).absorb_messages(partial.into_iter().chain([protocol::MutationMessage::warn("mutation.no-op", "no changes to apply").at(targets.to_vec())]));
+    }
+    protocol::MutationOutcome::new(Puzzle2dDiff {
+        nodes: (!nodes.is_empty()).then(|| Puzzle2dNodesDelta { patched: nodes, ..Default::default() }),
+        target_regions: (!regions.is_empty()).then(|| Puzzle2dTargetRegionsDelta { patched: regions, ..Default::default() }),
+        ..Default::default()
+    })
+    .absorb_messages(partial)
+}
+
+/// ↩️ Exact base-derived inverse of a selection transform: the absolute setters restoring every record
+/// its forward `outcome` moves — a node's position and each turned handle, a target region's corner and
+/// extent — so an undo never accumulates the float error a negated offset, angle or factor would.
+pub fn puzzle2d_selection_inverse(base: &Puzzle2dSnapshot, outcome: protocol::MutationOutcome<Puzzle2dDiff>) -> Vec<Puzzle2dMutation> {
+    let (diff, _) = outcome.into_parts();
+    let mut steps = Vec::new();
+    for entry in diff.nodes.iter().flat_map(|delta| &delta.patched) {
+        let (Some(before), Some(after)) = (base.nodes.iter().find(|node| node.id == entry.id), entry.patch.replacement.as_ref()) else { continue };
+        if (before.x, before.y) != (after.x, after.y) {
+            steps.push(move_node(before.id.clone(), before.x, before.y));
+        }
+        for handle in &before.handles {
+            if after.handles.iter().find(|turned| turned.id == handle.id) != Some(handle) {
+                steps.push(replace_node_handle(before.id.clone(), handle.id.clone(), handle.clone()));
+            }
+        }
+    }
+    for entry in diff.target_regions.iter().flat_map(|delta| &delta.patched) {
+        let (Some(before), Some(after)) = (base.target_regions.iter().find(|region| region.id == entry.id), entry.patch.replacement.as_ref()) else { continue };
+        if (before.x, before.y) != (after.x, after.y) {
+            steps.push(move_target_region(before.id.clone(), before.x, before.y));
+        }
+        if (before.width, before.height) != (after.width, after.height) {
+            steps.push(resize_target_region(before.id.clone(), before.width, before.height));
+        }
+    }
+    steps
+}
+
+/// 🔢️ A selection label's number as `(en, de)`: at most two decimals, trailing zeros and a negative zero
+/// dropped, a decimal point in English and a decimal comma in German.
+pub fn puzzle2d_selection_number(value: f64) -> (String, String) {
+    let rounded = (value * 100.0).round() / 100.0;
+    let text = format!("{:.2}", if rounded == 0.0 { 0.0 } else { rounded });
+    let en = text.trim_end_matches('0').trim_end_matches('.').to_string();
+    let de = en.replace('.', ",");
+    (en, de)
+}
+
+/// 🔠️ A selection label's counted noun, `(en, de)`: "1 item" / "1 Element", "3 items" / "3 Elemente".
+pub fn puzzle2d_selection_items(count: usize) -> (String, String) {
+    match count {
+        1 => ("1 item".to_string(), "1 Element".to_string()),
+        count => (format!("{count} items"), format!("{count} Elemente")),
+    }
+}
+//#endregion 🔖️SelectionTransform
+
+//#region 🔖️Invariants
+// 🚨️ Schema-first payload invariants: every value a puzzle 2d leaf payload schema forbids through its hard
+// bounds — a non-finite number, a non-positive extent, scale or factor, a shape outside `circle|rectangle`, a
+// template rim parameter outside `0..=1`, a negative catalogue order or rank, an empty or repeated target set —
+// is refused by the leaf's diff as a Fatal `mutation.invariant` with the default diff (the frozen verb-family
+// rule "Fatal non-finite or non-positive"), before the base is consulted.
+
+/// ♾️ Every named number is finite.
+pub fn puzzle2d_finite(values: &[(&str, f64)]) -> Result<(), String> {
+    values.iter().find(|(_, value)| !value.is_finite()).map_or(Ok(()), |(name, _)| Err(format!("{name} must be a finite number")))
+}
+
+/// ➕️ Every present named number is finite and greater than zero.
+pub fn puzzle2d_positive(values: &[(&str, Option<f64>)]) -> Result<(), String> {
+    values.iter().find(|(_, value)| value.is_some_and(|value| !(value.is_finite() && value > 0.0))).map_or(Ok(()), |(name, _)| Err(format!("{name} must be a finite number greater than 0")))
+}
+
+/// 🔷️ A present shape names one of the two figures a node can be.
+pub fn puzzle2d_shape(name: &str, shape: Option<&str>) -> Result<(), String> {
+    match shape {
+        Some(shape) if !matches!(shape, "circle" | "rectangle") => Err(format!("{name} must be circle or rectangle, not {shape:?}")),
+        _ => Ok(()),
+    }
+}
+
+/// 🗃️ A selection target set names at least one id and no id twice.
+pub fn puzzle2d_targets_invariant(targets: &[String]) -> Result<(), String> {
+    if targets.is_empty() {
+        return Err("targets must name at least one id".to_string());
+    }
+    match targets.iter().enumerate().find(|(at, id)| targets[..*at].contains(id)) {
+        Some((_, id)) => Err(format!("targets must not repeat {id:?}")),
+        None => Ok(()),
+    }
+}
+
+/// 🔘️ A handle record's bounds: a finite angle, a positive radius and scale when present.
+pub fn puzzle2d_handle_invariant(handle: &crate::Puzzle2dHandle) -> Result<(), String> {
+    puzzle2d_finite(&[("handle angle", handle.angle)]).and_then(|()| puzzle2d_positive(&[("handle radius", handle.radius), ("handle scale", handle.scale)]))
+}
+
+/// 🔵️ A node record's bounds: a finite position, a known shape, positive extents and scale, valid handles.
+pub fn puzzle2d_node_invariant(node: &crate::Puzzle2dNode) -> Result<(), String> {
+    puzzle2d_finite(&[("node x", node.x), ("node y", node.y)])
+        .and_then(|()| puzzle2d_shape("node shape", node.shape.as_deref()))
+        .and_then(|()| puzzle2d_positive(&[("node radius", node.radius), ("node width", node.width), ("node height", node.height), ("node scale", node.scale)]))
+        .and_then(|()| node.handles.iter().try_for_each(puzzle2d_handle_invariant))
+}
+
+/// 📐️ A target region's bounds: a finite corner and extent. A negative or zero extent is a brush stroke
+/// drawn from any corner, which the schema admits on purpose.
+pub fn puzzle2d_region_invariant(region: &crate::Puzzle2dTargetRegion) -> Result<(), String> {
+    puzzle2d_finite(&[("region x", region.x), ("region y", region.y), ("region width", region.width), ("region height", region.height)])
+}
+
+/// 📚️ Kind catalogue bounds: a handle template's finite angle, positive radius and rim parameter `t` within
+/// `0..=1`, a non-negative author rank and a non-negative handle-kind order.
+pub fn puzzle2d_catalogs_invariant(catalogs: &crate::Puzzle2dKindCatalogs) -> Result<(), String> {
+    for kind in &catalogs.nodes {
+        for template in &kind.handles {
+            puzzle2d_finite(&[("template angle", template.angle)])?;
+            puzzle2d_positive(&[("template radius", template.radius)])?;
+            if template.t.is_some_and(|t| !(0.0..=1.0).contains(&t)) {
+                return Err(format!("template {:?} rim parameter t must lie within 0..=1", template.id));
+            }
+        }
+        if let Some(author) = kind.authors.iter().find(|author| author.rank.is_some_and(|rank| rank < 0)) {
+            return Err(format!("author {:?} rank must not be negative", author.id));
+        }
+    }
+    match catalogs.handles.iter().find(|kind| kind.order.is_some_and(|order| order < 0)) {
+        Some(kind) => Err(format!("handle kind {:?} order must not be negative", kind.id)),
+        None => Ok(()),
+    }
+}
+//#endregion 🔖️Invariants
 
 //#region 🔖️SnapshotDelta
 /// 🔀️ Diffs two typed snapshots into a minimal semantic mutation set — the single source of truth
@@ -362,6 +566,19 @@ impl Mutation<Value> for Puzzle2dMutation {
     /// separate impl of the same trait and forwards to that one rather than duplicating its
     /// 33-entry descriptor table.
     const DESCRIPTORS: &'static [protocol::MutationLeafDescriptor] = <Self as Mutation<Puzzle2dSnapshot>>::DESCRIPTORS;
+    const INPUT_SCHEMAS: &'static [&'static str] = <Self as Mutation<Puzzle2dSnapshot>>::INPUT_SCHEMAS;
+
+    fn input_schema(&self) -> Option<&'static str> {
+        Mutation::<Puzzle2dSnapshot>::input_schema(self)
+    }
+
+    fn payload_value(&self) -> dsl::DslValue {
+        Mutation::<Puzzle2dSnapshot>::payload_value(self)
+    }
+
+    fn with_payload_value(&self, value: dsl::DslValue) -> Result<Self, dsl::ValueError> {
+        Mutation::<Puzzle2dSnapshot>::with_payload_value(self, value)
+    }
 
     fn descriptor(&self) -> &'static protocol::MutationLeafDescriptor {
         <Self as Mutation<Puzzle2dSnapshot>>::descriptor(self)
@@ -529,6 +746,19 @@ impl Mutation<Puzzle2dPlaySnapshot> for Puzzle2dMutation {
     /// is projection-independent, so this forwards to the derive's own table too, same as
     /// `may_emit_foreign_steps` already does immediately below.
     const DESCRIPTORS: &'static [protocol::MutationLeafDescriptor] = <Self as Mutation<Puzzle2dSnapshot>>::DESCRIPTORS;
+    const INPUT_SCHEMAS: &'static [&'static str] = <Self as Mutation<Puzzle2dSnapshot>>::INPUT_SCHEMAS;
+
+    fn input_schema(&self) -> Option<&'static str> {
+        Mutation::<Puzzle2dSnapshot>::input_schema(self)
+    }
+
+    fn payload_value(&self) -> dsl::DslValue {
+        Mutation::<Puzzle2dSnapshot>::payload_value(self)
+    }
+
+    fn with_payload_value(&self, value: dsl::DslValue) -> Result<Self, dsl::ValueError> {
+        Mutation::<Puzzle2dSnapshot>::with_payload_value(self, value)
+    }
 
     fn descriptor(&self) -> &'static protocol::MutationLeafDescriptor {
         <Self as Mutation<Puzzle2dSnapshot>>::descriptor(self)

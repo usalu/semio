@@ -12,11 +12,11 @@
 //! content; forging a value out of `std`'s deliberately unspecified default hasher is not
 //! authorable, and this branch reaches no hash at all.
 //!
-//! ➕ `create-block` is the ONLY verb in this vocabulary that answers a missing CONTAINER with
-//! Fatal `mutation.invariant`. Its three siblings that address a block (`delete-block`,
-//! `replace-block`, `move-block-to-step`) report the very same missing step as an Error-level
-//! `mutation.target-missing`; and this verb's own second guard, a colliding block id, is Fatal
-//! `mutation.duplicate-id` with a TWO-segment address. This case pins the first of those three.
+//! ➕ `create-block` answers a missing CONTAINER exactly like its three siblings that address a block
+//! (`delete-block`, `replace-block`, `move-block-to-step`): an Error-level `mutation.target-missing`
+//! at the step — a state-dependent refusal no payload schema can state. This verb's own second
+//! guard, a colliding block id, is Fatal `mutation.duplicate-id` with a TWO-segment address. This
+//! case pins the first of the two.
 
 use crate::mutations::{apply_form_edit_mutation, inverse_form_mutation, FormMutation};
 use crate::{forms_steps, FormsDiff, FormsSnapshot};
@@ -46,19 +46,19 @@ async fn rejection_leaves_the_document_at_the_committed_after() {
     assert_eq!((&snapshot.structure.child_id, &snapshot.results.child_id), (&base.structure.child_id, &base.results.child_id), "a rejected create must not mint new structure/results handles");
 }
 
-/// 🚨️ A missing owning step is FATAL `mutation.invariant` — `create-block`'s signature answer, and
-/// the only place this code appears in the forms vocabulary. The address is ONE segment, the step
-/// id: the block id joins it only on this verb's other Fatal branch, a duplicate block id.
+/// 🚨️ A missing owning step is an Error-level `mutation.target-missing`, like every sibling that
+/// addresses a step. The address is ONE segment, the step id: the block id joins it only on this
+/// verb's other branch, a Fatal duplicate block id.
 #[semio_framework_async_macros::async_test]
-async fn a_missing_owning_step_is_a_fatal_invariant() {
+async fn a_missing_owning_step_is_target_missing() {
     let base = before();
     assert!(forms_steps(&base).is_empty(), "rejects-a-block-for-a-step-that-does-not-exist's before-snapshot must decode to an unresolved, stepless scene");
     let produced = <FormMutation as protocol::Mutation<FormsSnapshot>>::diff(&mutation(), &base);
     assert_eq!(produced.diff(), &FormsDiff::default(), "a rejecting create-block must carry an empty diff, never a half-built pair of child handles");
     let messages = produced.messages();
     assert_eq!(messages.len(), 1, "exactly one diagnostic is expected, got {messages:?}");
-    assert_eq!(messages[0].code.0, "mutation.invariant", "a block whose owning step does not exist breaks an invariant — it is not a plain target-missing");
-    assert_eq!(messages[0].level, protocol::Severity::Fatal, "mutation.invariant is Fatal — no merge policy may absorb it");
+    assert_eq!(messages[0].code.0, "mutation.target-missing", "a block whose owning step does not exist is refused as a missing target, like its siblings");
+    assert_eq!(messages[0].level, protocol::Severity::Error, "a missing target is Error-level, like the siblings that address a step");
     assert_eq!(messages[0].target, vec!["step-outro".to_string()], "the diagnostic names the missing STEP, never the block that could not be placed");
     let semantics = <FormMutation as protocol::SemanticMutation<FormsSnapshot>>::semantics(&mutation());
     assert_eq!((semantics.verb, semantics.entity, semantics.kind, semantics.record), ("create", "block", "create-block", "CreatedBlock"), "the fixture must be bound to create-block's own descriptor");

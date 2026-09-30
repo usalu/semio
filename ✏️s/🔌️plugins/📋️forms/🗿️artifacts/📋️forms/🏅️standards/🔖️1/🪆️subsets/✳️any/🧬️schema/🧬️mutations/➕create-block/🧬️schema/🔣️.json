@@ -5,21 +5,73 @@
   "type": "object",
   "additionalProperties": false,
   "required": [
-    "step_id",
+    "mutation",
+    "stepId",
     "block"
   ],
   "properties": {
-    "step_id": {
-      "type": "string"
+    "mutation": {
+      "const": "createBlock"
+    },
+    "stepId": {
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Step",
+          "de": "Schritt"
+        },
+        "description": {
+          "en": "The form step this mutation addresses.",
+          "de": "Der Formularschritt, den diese Mutation adressiert."
+        },
+        "ref": {
+          "kind": "step",
+          "domain": "fields",
+          "granularity": "section"
+        },
+        "group": "target",
+        "order": 10
+      }
     },
     "block": {
-      "$ref": "https://json.schemas.assets.semio-tech.com/s/forms/forms/definition.json#/$defs/Question"
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/forms/forms/definition.json#/$defs/Question",
+      "x-semio-ui": {
+        "role": "value",
+        "label": {
+          "en": "Question",
+          "de": "Frage"
+        },
+        "description": {
+          "en": "The complete question to add.",
+          "de": "Die vollständige hinzuzufügende Frage."
+        },
+        "group": "record",
+        "order": 20
+      }
     },
     "index": {
       "type": [
         "integer",
         "null"
-      ]
+      ],
+      "x-semio-ui": {
+        "widget": "stepper",
+        "role": "value",
+        "label": {
+          "en": "Index",
+          "de": "Index"
+        },
+        "description": {
+          "en": "Position in the list; the end when omitted.",
+          "de": "Position in der Liste; ohne Angabe am Ende."
+        },
+        "step": 1,
+        "precision": 0,
+        "group": "order",
+        "order": 30
+      }
     }
   }
 }

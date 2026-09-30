@@ -116,50 +116,15 @@ fn spec_vector_oracle(ctx: &Context) -> Result<Outcome, String> {
 mod subject {
     use super::{mutable_input, spec_vector_text};
     use semio_repo_test_host::{Context, Json, Outcome};
-    use semio_s_artifact_stdio_txt::standards::v_utf_8::subsets::any::schema::mutations::{InsertLineMutation, RemoveLineMutation, SetLineEndingMutation, SetLineMutation, SetTrailingNewlineMutation, apply_txt_mutation};
-    use semio_s_artifact_stdio_txt::standards::v_utf_8::subsets::any::schema::snapshot::LineEnding;
-    use semio_s_artifact_stdio_txt::{STDIO_TXT_DOCUMENT_SCHEMA, TxtMutation, TxtSnapshot};
+    use semio_s_artifact_stdio_txt::standards::v_utf_8::subsets::any::schema::mutations::{apply_txt_mutation, decode_txt_mutation_payload_json, inverse_txt_mutation};
+    use semio_s_artifact_stdio_txt::{TxtMutation, TxtSnapshot};
     use semio_s_plugin_stdio_test_oracle::artifacts::txt::standards::v_utf_8::subsets::any::project_txt;
     use semio_s_plugin_stdio_test_oracle::law::{carrier_is_exact, inverse_restores, round_trip_preserves};
 
-    fn json_u32(params: &Json, key: &str) -> Result<u32, String> {
-        match params.get(key) {
-            Some(Json::Number(value)) if value.is_finite() && value.fract() == 0.0 && *value >= 0.0 && *value <= u32::MAX as f64 => Ok(*value as u32),
-            _ => Err(format!("mutation spec is missing numeric `{key}`")),
-        }
-    }
-
-    fn json_bool(params: &Json, key: &str) -> bool {
-        matches!(params.get(key), Some(Json::Bool(true)))
-    }
-
-    fn json_strings(params: &Json, key: &str) -> Vec<String> {
-        params
-            .array(key)
-            .iter()
-            .map(|entry| match entry {
-                Json::String(text) => text.clone(),
-                _ => String::new(),
-            })
-            .collect()
-    }
-
-    fn line_ending_of(params: &Json, key: &str) -> LineEnding {
-        if params.str(key) == "crLf" { LineEnding::CrLf } else { LineEnding::Lf }
-    }
-
-    /// 🔀️ The same JSON mutation spec the oracle reads, turned into this repository's own typed
-    /// `TxtMutation` — the only channel between the feature's parameters and the subject's codec.
+    /// 🔀️ The scenario's `<id>`/`<params>` spec decoded as the leaf wire payload it is, through the aggregate's own
+    /// derive-generated payload constructor — the only channel between the feature's parameters and the subject's codec.
     fn mutation_from_spec(spec: &Json) -> Result<TxtMutation, String> {
-        let params = spec.get("params").cloned().unwrap_or(Json::Null);
-        Ok(match spec.str("kind").as_str() {
-            "set-trailing-newline" => TxtMutation::SetTrailingNewline(SetTrailingNewlineMutation { value: json_bool(&params, "value") }),
-            "set-line-ending" => TxtMutation::SetLineEnding(SetLineEndingMutation { value: line_ending_of(&params, "value") }),
-            "insert-line" => TxtMutation::InsertLine(InsertLineMutation { index: json_u32(&params, "index")?, text: params.str("text") }),
-            "remove-line" => TxtMutation::RemoveLine(RemoveLineMutation { index: json_u32(&params, "index")? }),
-            "set-line" => TxtMutation::SetLine(SetLineMutation { index: json_u32(&params, "index")?, text: params.str("text") }),
-            other => return Err(format!("no subject rule for kind {other:?}")),
-        })
+        decode_txt_mutation_payload_json(&spec.str("kind"), &spec.get("params").cloned().unwrap_or(Json::Null).to_string())
     }
 
     fn decode(bytes: &[u8]) -> Result<TxtSnapshot, String> {
@@ -205,7 +170,7 @@ mod subject {
         let spec = ctx.doc_json()?;
         let mut snapshot = decode(&input)?;
         let mutation = mutation_from_spec(&spec)?;
-        let inverse = <TxtMutation as protocol::Mutation<TxtSnapshot>>::inverse(&mutation, &snapshot);
+        let inverse = inverse_txt_mutation(&mutation, &snapshot);
         apply_txt_mutation(&mut snapshot, &mutation);
         for step in inverse {
             apply_txt_mutation(&mut snapshot, &step);

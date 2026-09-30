@@ -333,6 +333,7 @@ impl app_store::ArtifactStoreOneItemPreparation<DocxSnapshot, DocxMutation> for 
                         label: None,
                         group_id: authority.group_id().map(str::to_owned),
                         origin: Default::default(),
+                        transaction: None,
                     }],
                     description: self.description.take(),
                     coalesce_key: None,

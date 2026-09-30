@@ -5,16 +5,50 @@
   "type": "object",
   "additionalProperties": false,
   "required": [
+    "mutation",
     "id",
     "newHeight"
   ],
   "properties": {
+    "mutation": {
+      "const": "changeShotHeight"
+    },
     "id": {
-      "type": "string"
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Shot",
+          "de": "Aufnahme"
+        },
+        "description": {
+          "en": "The shot this mutation addresses.",
+          "de": "Die Aufnahme, die diese Mutation adressiert."
+        },
+        "ref": {
+          "kind": "shot"
+        },
+        "group": "target",
+        "order": 10
+      }
     },
     "newHeight": {
       "type": "integer",
-      "minimum": 0
+      "minimum": 0,
+      "x-semio-ui": {
+        "widget": "stepper",
+        "role": "value",
+        "label": {
+          "en": "Height",
+          "de": "Höhe"
+        },
+        "unit": "px",
+        "step": 1,
+        "precision": 0,
+        "group": "output",
+        "order": 20
+      }
     }
   }
 }

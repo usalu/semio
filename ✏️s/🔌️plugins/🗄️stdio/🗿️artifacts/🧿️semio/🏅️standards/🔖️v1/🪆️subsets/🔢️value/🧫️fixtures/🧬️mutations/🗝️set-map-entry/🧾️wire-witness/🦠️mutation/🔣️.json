@@ -1,0 +1,22 @@
+{
+  "mutation": "setMapEntry",
+  "path": [
+    {
+      "kind": "key",
+      "key": "models"
+    },
+    {
+      "kind": "index",
+      "index": 0
+    },
+    {
+      "kind": "key",
+      "key": "model"
+    }
+  ],
+  "key": "revision",
+  "value": {
+    "kind": "float",
+    "lexeme": "1.5"
+  }
+}

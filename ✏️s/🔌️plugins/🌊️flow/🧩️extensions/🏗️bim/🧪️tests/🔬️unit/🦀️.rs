@@ -128,6 +128,7 @@ async fn evaluate_json_wall() {
     let out_json = evaluate_json(&reg, "bim.element.wall", &input_json);
     let out = pack::json::parse(&out_json).unwrap();
     assert_eq!(out.get("wall").and_then(|value| value.get("$schema")).and_then(pack::json::Value::as_str), Some("wall"));
+    semio_framework_plugin::plugin_runtime::extension_dispose_cold().unwrap();
 }
 
 #[semio_framework_async_macros::async_test]
@@ -154,7 +155,7 @@ async fn extension_bundle_extends_flow_and_evaluates() {
         .contributes_topic(flow_topic.topic, flow_topic.payload)
         .contributes_topic(procedural3d_topic.topic, procedural3d_topic.payload)
         .handler("evaluate", |req| Ok(evaluate_invoke_json(&neural_engine::ColdOwner::new(module_registry()), req).unwrap()));
-    install_extension_bundle(bundle).await;
+    assert!(install_extension_bundle(&mut Some(bundle)).await.unwrap());
     extension_activate().await.unwrap();
     let installed = extension_manifest().await;
     assert_eq!(installed.extension_id, "flow-extension-bim");

@@ -5,15 +5,16 @@
   "type": "object",
   "additionalProperties": false,
   "required": [
+    "mutation",
     "entity"
   ],
   "properties": {
-    "entity": {
-      "$ref": "#/$defs/CadEntityRecord"
-    },
     "mutation": {
       "const": "addEntity",
       "description": "Aggregate discriminator spliced in by SemioCadMutation; absent when the payload stands alone."
+    },
+    "entity": {
+      "$ref": "#/$defs/CadEntityRecord"
     }
   },
   "$defs": {

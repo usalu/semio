@@ -397,7 +397,7 @@ pub fn transform_list_to_string(ops: &[TransformOp]) -> String {
 /// rather than pre-resolved to absolute coordinates, since resolving requires walking the whole
 /// path with a running current-point/start-point state that belongs to a renderer, not the parser.
 #[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
-#[value(tag = "cmd", rename_all = "camelCase")]
+#[value(tag = "cmd", rename_all = "camelCase", rename_all_fields = "camelCase")]
 pub enum PathCommand {
     MoveTo { x: f64, y: f64, relative: bool },
     LineTo { x: f64, y: f64, relative: bool },
@@ -794,7 +794,7 @@ fn local_name(name: &str) -> &str {
 /// chose not to model in depth) fall into `Unknown` -- name/attrs/children kept byte-for-byte, so
 /// parsing never drops or corrupts content outside the typed surface.
 #[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
-#[value(tag = "kind", rename_all = "camelCase")]
+#[value(tag = "kind", rename_all = "camelCase", rename_all_fields = "camelCase")]
 pub enum SvgElement {
     Svg {
         common: CommonAttrs,

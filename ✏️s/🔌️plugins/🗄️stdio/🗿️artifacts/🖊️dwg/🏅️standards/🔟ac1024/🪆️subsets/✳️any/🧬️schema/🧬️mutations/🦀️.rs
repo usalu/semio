@@ -57,6 +57,14 @@ pub fn apply_dwg_mutation_checked(snapshot: &mut DwgSnapshot, mutation: &DwgMuta
 pub fn inverse_dwg_mutation(base: &DwgSnapshot, mutation: &DwgMutation) -> Vec<DwgMutation> {
     <DwgMutation as Mutation<DwgSnapshot>>::inverse(mutation, base)
 }
+
+/// 🪪️ The [`DwgMutation`] of semantic kind `kind` built from its leaf wire payload (`payload_value()`) in JSON text by the
+/// derive-generated `from_payload_value` — how a `{"kind", "params"}` feature row of either DWG standard reaches the
+/// aggregate without naming the `protocol` alias and without any hand mapping.
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn decode_dwg_mutation_payload(kind: &str, text: &str) -> Result<DwgMutation, String> {
+    protocol::os_pack::json::from_json_str(text).and_then(|payload| <DwgMutation as Mutation<DwgSnapshot>>::from_payload_value(kind, payload)).map_err(|error| error.to_string())
+}
 //#endregion 🚪️Reachability
 //#endregion 🔖️Mutations
 

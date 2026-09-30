@@ -27,9 +27,33 @@
           ],
           "properties": {
             "kind": {
-              "const": "const"
+              "const": "const",
+              "x-semio-ui": {
+                "widget": "hidden",
+                "role": "discriminator",
+                "label": {
+                  "en": "Kind",
+                  "de": "Art"
+                }
+              }
             },
-            "value": {}
+            "value": {
+              "x-semio-ui": {
+                "role": "value",
+                "label": {
+                  "en": "Value",
+                  "de": "Wert"
+                },
+                "group": "condition",
+                "order": 20
+              }
+            }
+          },
+          "x-semio-ui": {
+            "label": {
+              "en": "Constant",
+              "de": "Konstante"
+            }
           }
         },
         {
@@ -41,10 +65,38 @@
           ],
           "properties": {
             "kind": {
-              "const": "var"
+              "const": "var",
+              "x-semio-ui": {
+                "widget": "hidden",
+                "role": "discriminator",
+                "label": {
+                  "en": "Kind",
+                  "de": "Art"
+                }
+              }
             },
             "name": {
-              "type": "string"
+              "type": "string",
+              "x-semio-ui": {
+                "widget": "text",
+                "role": "value",
+                "label": {
+                  "en": "Question",
+                  "de": "Frage"
+                },
+                "description": {
+                  "en": "Id of the question whose answer is read.",
+                  "de": "ID der Frage, deren Antwort gelesen wird."
+                },
+                "group": "condition",
+                "order": 20
+              }
+            }
+          },
+          "x-semio-ui": {
+            "label": {
+              "en": "Answer of",
+              "de": "Antwort von"
             }
           }
         },
@@ -58,13 +110,45 @@
           ],
           "properties": {
             "kind": {
-              "const": "eq"
+              "const": "eq",
+              "x-semio-ui": {
+                "widget": "hidden",
+                "role": "discriminator",
+                "label": {
+                  "en": "Kind",
+                  "de": "Art"
+                }
+              }
             },
             "left": {
-              "$ref": "#/$defs/Expression"
+              "$ref": "#/$defs/Expression",
+              "x-semio-ui": {
+                "role": "value",
+                "label": {
+                  "en": "Left",
+                  "de": "Links"
+                },
+                "group": "condition",
+                "order": 20
+              }
             },
             "right": {
-              "$ref": "#/$defs/Expression"
+              "$ref": "#/$defs/Expression",
+              "x-semio-ui": {
+                "role": "value",
+                "label": {
+                  "en": "Right",
+                  "de": "Rechts"
+                },
+                "group": "condition",
+                "order": 30
+              }
+            }
+          },
+          "x-semio-ui": {
+            "label": {
+              "en": "Equals",
+              "de": "Gleich"
             }
           }
         },
@@ -77,10 +161,33 @@
           ],
           "properties": {
             "kind": {
-              "const": "truthy"
+              "const": "truthy",
+              "x-semio-ui": {
+                "widget": "hidden",
+                "role": "discriminator",
+                "label": {
+                  "en": "Kind",
+                  "de": "Art"
+                }
+              }
             },
             "expr": {
-              "$ref": "#/$defs/Expression"
+              "$ref": "#/$defs/Expression",
+              "x-semio-ui": {
+                "role": "value",
+                "label": {
+                  "en": "Expression",
+                  "de": "Ausdruck"
+                },
+                "group": "condition",
+                "order": 20
+              }
+            }
+          },
+          "x-semio-ui": {
+            "label": {
+              "en": "Is set",
+              "de": "Ist gesetzt"
             }
           }
         },
@@ -93,13 +200,36 @@
           ],
           "properties": {
             "kind": {
-              "const": "and"
+              "const": "and",
+              "x-semio-ui": {
+                "widget": "hidden",
+                "role": "discriminator",
+                "label": {
+                  "en": "Kind",
+                  "de": "Art"
+                }
+              }
             },
             "items": {
               "type": "array",
               "items": {
                 "$ref": "#/$defs/Expression"
+              },
+              "x-semio-ui": {
+                "role": "value",
+                "label": {
+                  "en": "Conditions",
+                  "de": "Bedingungen"
+                },
+                "group": "condition",
+                "order": 20
               }
+            }
+          },
+          "x-semio-ui": {
+            "label": {
+              "en": "All of",
+              "de": "Alle von"
             }
           }
         },
@@ -112,13 +242,36 @@
           ],
           "properties": {
             "kind": {
-              "const": "or"
+              "const": "or",
+              "x-semio-ui": {
+                "widget": "hidden",
+                "role": "discriminator",
+                "label": {
+                  "en": "Kind",
+                  "de": "Art"
+                }
+              }
             },
             "items": {
               "type": "array",
               "items": {
                 "$ref": "#/$defs/Expression"
+              },
+              "x-semio-ui": {
+                "role": "value",
+                "label": {
+                  "en": "Conditions",
+                  "de": "Bedingungen"
+                },
+                "group": "condition",
+                "order": 20
               }
+            }
+          },
+          "x-semio-ui": {
+            "label": {
+              "en": "Any of",
+              "de": "Eines von"
             }
           }
         }
@@ -135,57 +288,300 @@
       "properties": {
         "id": {
           "type": "string",
-          "minLength": 1
+          "minLength": 1,
+          "x-semio-ui": {
+            "widget": "text",
+            "role": "value",
+            "label": {
+              "en": "ID",
+              "de": "ID"
+            },
+            "description": {
+              "en": "Unique question id in this form.",
+              "de": "Eindeutige Fragen-ID in diesem Formular."
+            },
+            "group": "identity",
+            "order": 10
+          }
         },
         "kind": {
           "type": "string",
-          "minLength": 1
+          "minLength": 1,
+          "x-semio-ui": {
+            "widget": "text",
+            "role": "value",
+            "label": {
+              "en": "Question type",
+              "de": "Fragetyp"
+            },
+            "description": {
+              "en": "For example text or number.",
+              "de": "Zum Beispiel text (Text) oder number (Zahl)."
+            },
+            "group": "kind",
+            "order": 20
+          }
         },
         "label": {
-          "type": "string"
+          "type": "string",
+          "x-semio-ui": {
+            "widget": "text",
+            "role": "value",
+            "label": {
+              "en": "Label",
+              "de": "Beschriftung"
+            },
+            "group": "content",
+            "order": 30
+          }
         },
         "required": {
-          "type": "boolean"
+          "type": "boolean",
+          "x-semio-ui": {
+            "widget": "toggle",
+            "role": "value",
+            "label": {
+              "en": "Required",
+              "de": "Pflichtfeld"
+            },
+            "description": {
+              "en": "The form cannot be submitted without an answer.",
+              "de": "Das Formular kann ohne Antwort nicht übermittelt werden."
+            },
+            "group": "validation",
+            "order": 40
+          }
         },
-        "default": {},
+        "default": {
+          "x-semio-ui": {
+            "role": "value",
+            "label": {
+              "en": "Default",
+              "de": "Standardwert"
+            },
+            "description": {
+              "en": "Answer used until the respondent answers.",
+              "de": "Antwort, die gilt, bis die befragte Person antwortet."
+            },
+            "group": "value",
+            "order": 50
+          }
+        },
         "params": {
-          "type": "object"
+          "x-semio-ui": {
+            "role": "value",
+            "label": {
+              "en": "Parameters",
+              "de": "Parameter"
+            },
+            "description": {
+              "en": "Extra settings of the question type, any JSON value.",
+              "de": "Zusätzliche Einstellungen des Fragetyps, ein beliebiger JSON-Wert."
+            },
+            "group": "kind",
+            "order": 60
+          }
         },
         "condition": {
-          "$ref": "#/$defs/Expression"
+          "$ref": "#/$defs/Expression",
+          "x-semio-ui": {
+            "role": "value",
+            "label": {
+              "en": "Condition",
+              "de": "Bedingung"
+            },
+            "description": {
+              "en": "The question is shown only while this expression holds.",
+              "de": "Die Frage wird nur angezeigt, solange dieser Ausdruck gilt."
+            },
+            "group": "condition",
+            "order": 70
+          }
         },
         "description": {
-          "type": "string"
+          "type": "string",
+          "x-semio-ui": {
+            "widget": "multiline",
+            "role": "value",
+            "label": {
+              "en": "Description",
+              "de": "Beschreibung"
+            },
+            "group": "content",
+            "order": 80
+          }
         },
         "placeholder": {
-          "type": "string"
+          "type": "string",
+          "x-semio-ui": {
+            "widget": "text",
+            "role": "value",
+            "label": {
+              "en": "Placeholder",
+              "de": "Platzhalter"
+            },
+            "group": "content",
+            "order": 90
+          }
         },
         "unit": {
-          "type": "string"
+          "type": "string",
+          "x-semio-ui": {
+            "widget": "text",
+            "role": "value",
+            "label": {
+              "en": "Unit",
+              "de": "Einheit"
+            },
+            "description": {
+              "en": "Unit shown next to a number answer.",
+              "de": "Einheit neben einer Zahlenantwort."
+            },
+            "group": "content",
+            "order": 100
+          }
         },
         "text": {
-          "type": "string"
+          "type": "string",
+          "x-semio-ui": {
+            "widget": "multiline",
+            "role": "value",
+            "label": {
+              "en": "Text",
+              "de": "Text"
+            },
+            "description": {
+              "en": "Static text of an information block.",
+              "de": "Fester Text eines Informationsblocks."
+            },
+            "group": "content",
+            "order": 110
+          }
         },
         "schema": {
-          "type": "string"
+          "type": "string",
+          "x-semio-ui": {
+            "widget": "text",
+            "role": "value",
+            "label": {
+              "en": "Schema",
+              "de": "Schema"
+            },
+            "description": {
+              "en": "Schema id the answer follows.",
+              "de": "Schema-ID, der die Antwort folgt."
+            },
+            "group": "source",
+            "order": 120
+          }
         },
         "src": {
-          "type": "string"
+          "type": "string",
+          "x-semio-ui": {
+            "widget": "text",
+            "role": "value",
+            "label": {
+              "en": "Source",
+              "de": "Quelle"
+            },
+            "description": {
+              "en": "Address of the file, e.g. an https or data URL.",
+              "de": "Adresse der Datei, z. B. eine https- oder data-URL."
+            },
+            "group": "source",
+            "order": 130
+          }
         },
         "accept": {
-          "type": "string"
+          "type": "string",
+          "x-semio-ui": {
+            "widget": "text",
+            "role": "value",
+            "label": {
+              "en": "Accepted files",
+              "de": "Akzeptierte Dateien"
+            },
+            "description": {
+              "en": "File types an upload accepts, e.g. image/*.",
+              "de": "Dateitypen, die ein Upload annimmt, z. B. image/*."
+            },
+            "group": "source",
+            "order": 140
+          }
         },
         "fixtureSlug": {
-          "type": "string"
+          "type": "string",
+          "x-semio-ui": {
+            "widget": "text",
+            "role": "value",
+            "label": {
+              "en": "Fixture slug",
+              "de": "Fixture-Kürzel"
+            },
+            "description": {
+              "en": "Slug of the bundled fixture the question draws its data from.",
+              "de": "Kürzel der mitgelieferten Fixture, aus der die Frage ihre Daten bezieht."
+            },
+            "group": "source",
+            "order": 150
+          }
         },
         "min": {
-          "type": "number"
+          "type": "number",
+          "x-semio-ui": {
+            "widget": "stepper",
+            "role": "value",
+            "label": {
+              "en": "Minimum",
+              "de": "Minimum"
+            },
+            "description": {
+              "en": "Smallest accepted number.",
+              "de": "Kleinste zulässige Zahl."
+            },
+            "step": 1,
+            "precision": 2,
+            "group": "validation",
+            "order": 160
+          }
         },
         "max": {
-          "type": "number"
+          "type": "number",
+          "x-semio-ui": {
+            "widget": "stepper",
+            "role": "value",
+            "label": {
+              "en": "Maximum",
+              "de": "Maximum"
+            },
+            "description": {
+              "en": "Largest accepted number.",
+              "de": "Größte zulässige Zahl."
+            },
+            "step": 1,
+            "precision": 2,
+            "group": "validation",
+            "order": 170
+          }
         },
         "step": {
-          "type": "number"
+          "type": "number",
+          "x-semio-ui": {
+            "widget": "stepper",
+            "role": "value",
+            "label": {
+              "en": "Step",
+              "de": "Schrittweite"
+            },
+            "description": {
+              "en": "Increment of a number answer.",
+              "de": "Schrittweite einer Zahlenantwort."
+            },
+            "step": 0.1,
+            "precision": 2,
+            "group": "validation",
+            "order": 180
+          }
         },
         "options": {
           "type": "array",
@@ -199,12 +595,41 @@
             "properties": {
               "value": {
                 "type": "string",
-                "minLength": 1
+                "minLength": 1,
+                "x-semio-ui": {
+                  "widget": "text",
+                  "role": "value",
+                  "label": {
+                    "en": "Value",
+                    "de": "Wert"
+                  },
+                  "group": "choices",
+                  "order": 10
+                }
               },
               "label": {
-                "type": "string"
+                "type": "string",
+                "x-semio-ui": {
+                  "widget": "text",
+                  "role": "value",
+                  "label": {
+                    "en": "Label",
+                    "de": "Beschriftung"
+                  },
+                  "group": "choices",
+                  "order": 20
+                }
               }
             }
+          },
+          "x-semio-ui": {
+            "role": "value",
+            "label": {
+              "en": "Options",
+              "de": "Optionen"
+            },
+            "group": "choices",
+            "order": 190
           }
         },
         "fields": {
@@ -218,15 +643,56 @@
             "properties": {
               "key": {
                 "type": "string",
-                "minLength": 1
+                "minLength": 1,
+                "x-semio-ui": {
+                  "widget": "text",
+                  "role": "value",
+                  "label": {
+                    "en": "Key",
+                    "de": "Schlüssel"
+                  },
+                  "group": "choices",
+                  "order": 10
+                }
               },
               "label": {
-                "type": "string"
+                "type": "string",
+                "x-semio-ui": {
+                  "widget": "text",
+                  "role": "value",
+                  "label": {
+                    "en": "Label",
+                    "de": "Beschriftung"
+                  },
+                  "group": "choices",
+                  "order": 20
+                }
               },
               "value": {
-                "type": "number"
+                "type": "number",
+                "x-semio-ui": {
+                  "widget": "stepper",
+                  "role": "value",
+                  "label": {
+                    "en": "Value",
+                    "de": "Wert"
+                  },
+                  "step": 1,
+                  "precision": 2,
+                  "group": "choices",
+                  "order": 30
+                }
               }
             }
+          },
+          "x-semio-ui": {
+            "role": "value",
+            "label": {
+              "en": "Fields",
+              "de": "Felder"
+            },
+            "group": "choices",
+            "order": 200
           }
         }
       }
@@ -242,18 +708,61 @@
       "properties": {
         "id": {
           "type": "string",
-          "minLength": 1
+          "minLength": 1,
+          "x-semio-ui": {
+            "widget": "text",
+            "role": "value",
+            "label": {
+              "en": "ID",
+              "de": "ID"
+            },
+            "description": {
+              "en": "Unique step id in this form.",
+              "de": "Eindeutige Schritt-ID in diesem Formular."
+            },
+            "group": "identity",
+            "order": 10
+          }
         },
         "title": {
-          "type": "string"
+          "type": "string",
+          "x-semio-ui": {
+            "widget": "text",
+            "role": "value",
+            "label": {
+              "en": "Title",
+              "de": "Titel"
+            },
+            "group": "identity",
+            "order": 20
+          }
         },
         "description": {
-          "type": "string"
+          "type": "string",
+          "x-semio-ui": {
+            "widget": "multiline",
+            "role": "value",
+            "label": {
+              "en": "Description",
+              "de": "Beschreibung"
+            },
+            "group": "content",
+            "order": 30
+          }
         },
         "blocks": {
           "type": "array",
           "items": {
             "$ref": "#/$defs/Question"
+          },
+          "x-semio-ui": {
+            "role": "value",
+            "label": {
+              "en": "Questions",
+              "de": "Fragen"
+            },
+            "group": "content",
+            "order": 40
           }
         }
       }

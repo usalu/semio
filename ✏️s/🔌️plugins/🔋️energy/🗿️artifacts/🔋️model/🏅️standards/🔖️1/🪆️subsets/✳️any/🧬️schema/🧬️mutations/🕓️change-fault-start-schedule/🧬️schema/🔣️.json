@@ -5,15 +5,57 @@
   "type": "object",
   "additionalProperties": false,
   "required": [
+    "mutation",
     "id",
     "newStartScheduleId"
   ],
   "properties": {
+    "mutation": {
+      "const": "changeFaultStartSchedule"
+    },
     "id": {
-      "type": "integer"
+      "type": "integer",
+      "minimum": 0,
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Fault",
+          "de": "Fehler"
+        },
+        "description": {
+          "en": "The fault this mutation changes, by id.",
+          "de": "Fehler, den diese Mutation ändert, per ID."
+        },
+        "ref": {
+          "kind": "fault"
+        },
+        "group": "target",
+        "order": 10
+      }
     },
     "newStartScheduleId": {
-      "type": "integer"
+      "type": "integer",
+      "minimum": 0,
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Onset schedule",
+          "de": "Startzeitplan"
+        },
+        "description": {
+          "en": "When the fault is active, by id.",
+          "de": "Wann der Fehler wirkt, per ID."
+        },
+        "ref": {
+          "kind": "schedule",
+          "domain": "energyModel",
+          "granularity": "schedule"
+        },
+        "group": "schedule",
+        "order": 20
+      }
     }
   }
 }

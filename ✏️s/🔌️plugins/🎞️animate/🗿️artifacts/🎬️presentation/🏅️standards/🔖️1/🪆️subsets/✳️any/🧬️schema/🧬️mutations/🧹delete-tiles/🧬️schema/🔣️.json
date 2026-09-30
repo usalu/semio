@@ -12,6 +12,23 @@
       "type": "array",
       "items": {
         "type": "string"
+      },
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Tiles",
+          "de": "Kacheln"
+        },
+        "description": {
+          "en": "The tiles this mutation addresses.",
+          "de": "Die Kacheln, die diese Mutation adressiert."
+        },
+        "ref": {
+          "kind": "tile",
+          "domain": "tiles",
+          "granularity": "tile"
+        }
       }
     }
   }

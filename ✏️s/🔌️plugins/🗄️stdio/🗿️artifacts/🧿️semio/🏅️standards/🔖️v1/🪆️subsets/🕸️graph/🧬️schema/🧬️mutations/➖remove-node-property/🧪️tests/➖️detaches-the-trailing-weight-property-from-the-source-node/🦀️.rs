@@ -10,11 +10,11 @@ use crate::standards::v1::subsets::graph::schema::mutations::SemioGraphMutation;
 use crate::standards::v1::subsets::graph::schema::snapshot::SemioGraphSnapshot;
 use protocol::{Mutation, MutationDiff};
 
-const BEFORE: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/➖remove-node-property/➖️detaches-the-trailing-weight-property-from-the-source-node/📸️snapshot/⬅️before/🔣️.json");
-const AFTER: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/➖remove-node-property/➖️detaches-the-trailing-weight-property-from-the-source-node/📸️snapshot/➡️after/🔣️.json");
-const MUTATION: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/➖remove-node-property/➖️detaches-the-trailing-weight-property-from-the-source-node/🦠️mutation/🔣️.json");
-const DIFF: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/➖remove-node-property/➖️detaches-the-trailing-weight-property-from-the-source-node/🔺️diff/🔣️.json");
-const OUTCOME: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/➖remove-node-property/➖️detaches-the-trailing-weight-property-from-the-source-node/🎯️outcome/🔣️.json");
+const BEFORE: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/➖remove-node-property/➖️detaches-trailing-weight-property-source-node/📸️snapshot/⬅️before/🔣️.json");
+const AFTER: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/➖remove-node-property/➖️detaches-trailing-weight-property-source-node/📸️snapshot/➡️after/🔣️.json");
+const MUTATION: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/➖remove-node-property/➖️detaches-trailing-weight-property-source-node/🦠️mutation/🔣️.json");
+const DIFF: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/➖remove-node-property/➖️detaches-trailing-weight-property-source-node/🔺️diff/🔣️.json");
+const OUTCOME: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/➖remove-node-property/➖️detaches-trailing-weight-property-source-node/🎯️outcome/🔣️.json");
 
 fn before() -> SemioGraphSnapshot {
     dsl::json::from_json_str(BEFORE).expect("remove-node-property before snapshot decodes")

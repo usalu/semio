@@ -326,6 +326,7 @@ fn playbook_one_item_edit<M>(forward: M, inverse: Vec<M>, description: Option<St
             label: None,
             group_id: None,
             origin: Default::default(),
+            transaction: None,
         }],
         description,
         coalesce_key: None,

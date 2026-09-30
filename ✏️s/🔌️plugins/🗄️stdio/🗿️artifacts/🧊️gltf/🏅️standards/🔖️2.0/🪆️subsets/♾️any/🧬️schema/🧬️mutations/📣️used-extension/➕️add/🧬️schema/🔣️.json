@@ -10,21 +10,77 @@
   ],
   "properties": {
     "extension": {
-      "type": "string"
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "text",
+        "label": {
+          "en": "Extension",
+          "de": "Erweiterung"
+        },
+        "description": {
+          "en": "Extension name, e.g. KHR_materials_unlit.",
+          "de": "Name der Erweiterung, z. B. KHR_materials_unlit."
+        },
+        "group": "value",
+        "order": 10
+      }
     },
     "position": {
       "type": "integer",
-      "minimum": 0
+      "minimum": 0,
+      "x-semio-ui": {
+        "widget": "stepper",
+        "label": {
+          "en": "Insert position",
+          "de": "Einfügeposition"
+        },
+        "description": {
+          "en": "Target index in the list, counted from 0.",
+          "de": "Zielindex in der Liste, ab 0 gezählt."
+        },
+        "precision": 0,
+        "group": "value",
+        "order": 20
+      }
     }
   },
-  "x-semio": {
-    "id": "s.stdio.gltf.mutation.add-used-extension.v1",
-    "version": 1,
-    "phase": "mutation",
-    "touchedPaths": [
-      "document/extensionsUsed"
-    ],
-    "referencePolicy": "used extension identity is unique and ordered"
-  },
-  "x-semio-mutation": "add-used-extension"
+  "$defs": {
+    "AddUsedExtensionMutation": {
+      "description": "The whole wire of AddUsedExtensionMutation: the editable apply payload (this document's root) or the inert restore.",
+      "oneOf": [
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "phase",
+            "value"
+          ],
+          "properties": {
+            "phase": {
+              "const": "apply"
+            },
+            "value": {
+              "$ref": "#"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "phase",
+            "value"
+          ],
+          "properties": {
+            "phase": {
+              "const": "restore"
+            },
+            "value": {
+              "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/gltf/2.0/any/diff.json"
+            }
+          }
+        }
+      ]
+    }
+  }
 }

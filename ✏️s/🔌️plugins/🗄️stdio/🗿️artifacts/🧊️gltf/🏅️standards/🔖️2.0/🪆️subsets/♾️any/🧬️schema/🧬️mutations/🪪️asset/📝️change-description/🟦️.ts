@@ -1,7 +1,15 @@
-/** 🦠️ change-asset-descriptive-metadata executable glTF command. */
-import type { GltfJson, GltfSnapshot } from '../../📸️snapshot/🟦️.ts';
-import { clone, reject, run, same, type GltfLeafResult, type GltfMutationRejection } from './🟦️';
-export const GltfChangeAssetDescriptiveMetadataDescriptor = { id: 's.stdio.gltf.mutation.change-asset-descriptive-metadata.v1', version: 1, touchedPaths: ["document/asset/generator","document/asset/copyright","document/asset/minVersion"], referencePolicy: 'none' } as const;
-export interface GltfChangeAssetDescriptiveMetadataPayload { generator: string | null; copyright: string | null; minVersion: string | null }
-export const validateGltfChangeAssetDescriptiveMetadata = (payload: GltfChangeAssetDescriptiveMetadataPayload, base: GltfSnapshot): GltfMutationRejection | undefined => { if (payload.generator === (base.document.asset.generator ?? null) && payload.copyright === (base.document.asset.copyright ?? null) && payload.minVersion === (base.document.asset.minVersion ?? null)) return reject('gltf.mutation.no-observable-change', 'document/asset', 'descriptive metadata already has these values'); return undefined; };
-export const applyGltfChangeAssetDescriptiveMetadata = (base: GltfSnapshot, payload: GltfChangeAssetDescriptiveMetadataPayload): GltfLeafResult => run(base, payload, validateGltfChangeAssetDescriptiveMetadata, (next, payload) => { next.document.asset.generator = payload.generator ?? undefined; next.document.asset.copyright = payload.copyright ?? undefined; next.document.asset.minVersion = payload.minVersion ?? undefined; });
+/** 📝️ `change-asset-descriptive-metadata` wire twin: the flat `Apply` payload `GltfChangeAssetDescriptiveMetadataPayload` and the phase wire `ChangeAssetDescriptiveMetadataMutation`, exactly as `./🦀️.rs` writes them.
+ * @see ./🧬️schema/🔣️.json */
+import { gltfWireNullable, gltfWireObject, gltfWireRequired, gltfWireString } from "../../../📸️snapshot/🟦️.ts";
+import { type GltfDiff, type GltfPhase, gltfWirePhase, parseGltfDiff } from "../../../🔺️diff/🟦️.ts";
+
+export interface GltfChangeAssetDescriptiveMetadataPayload {
+  generator: string | null;
+  copyright: string | null;
+  minVersion: string | null;
+}
+
+export type ChangeAssetDescriptiveMetadataMutation = GltfPhase<GltfChangeAssetDescriptiveMetadataPayload, GltfDiff>;
+
+export const parseGltfChangeAssetDescriptiveMetadataPayload = gltfWireObject<GltfChangeAssetDescriptiveMetadataPayload>({ generator: gltfWireRequired(gltfWireNullable(gltfWireString)), copyright: gltfWireRequired(gltfWireNullable(gltfWireString)), minVersion: gltfWireRequired(gltfWireNullable(gltfWireString)) });
+export const parseChangeAssetDescriptiveMetadataMutation = gltfWirePhase(parseGltfChangeAssetDescriptiveMetadataPayload, parseGltfDiff);

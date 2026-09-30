@@ -1234,8 +1234,14 @@ export interface Taxonomy {
   readonly rootDataContractIds: readonly string[];
   readonly rootDocumentContractIds: readonly string[];
   readonly repoWideContractIds: readonly string[];
-  readonly layeringGeneratedContractIds: readonly string[];
-  readonly layeringGeneratedBanners: readonly string[];
+  readonly dependencyDirections: {
+    readonly roles: Readonly<Record<string, { readonly ownerPaths: readonly string[]; readonly externalPackages: readonly string[] }>>;
+    readonly rules: Readonly<Record<string, { readonly fromRoles: readonly string[]; readonly toRoles: readonly string[] }>>;
+  };
+  readonly cargoDependencyDirections: {
+    readonly roles: readonly string[];
+    readonly rules: Readonly<Record<string, { readonly fromRoles: readonly string[]; readonly toRoles: readonly string[] }>>;
+  };
   readonly areaLayers: Readonly<Record<string, "framework" | "implementation" | "repo-wide">>;
   readonly packageMaturityStates: readonly PackageMaturity[];
   /** 🧭️ How migration is detected — structurally, never from a hand-maintained package list. */
@@ -4031,7 +4037,7 @@ export function validateTaxonomy(taxonomy: Taxonomy = readTaxonomyUnchecked()): 
   };
   if (record(taxonomy.implementationLeafPolicy, "implementationLeafPolicy")) {
     const policy = taxonomy.implementationLeafPolicy;
-    const ignoredPathPatterns = ["**/.git", "**/.pytest_cache", "**/.venv", "**/.🧬semio", "**/__pycache__", "**/coverage", "**/dist", "**/node_modules", "**/storybook-static", "**/target", "**/📤️dist", "**/🗑️generated", "**/🔌️plugin-modules", "**/📦️packages/🦀️rust/pkg", "**/📦️packages/🟦️typescript/out", "**/📦️packages/🔷️dotnet/obj"];
+    const ignoredPathPatterns = ["**/.git", "**/.next", "**/.nx", "**/.pytest_cache", "**/.venv", "**/.🧬semio", "**/__pycache__", "**/coverage", "**/dist", "**/node_modules", "**/storybook-static", "**/target", "**/📤️dist", "**/🗑️generated", "**/🔌️plugin-modules", "**/📦️packages/🦀️rust/pkg", "**/📦️packages/🟦️typescript/out", "**/📦️packages/🔷️dotnet/obj"];
     if (Object.keys(policy).sort().join("\0") !== "fileKindIds\0ignoredPathPatterns\0roles" || policy.roles.join("\0") !== "source" || policy.fileKindIds.join("\0") !== "css\0html" || policy.ignoredPathPatterns.join("\0") !== ignoredPathPatterns.join("\0")) problems.push("implementationLeafPolicy must cover every source role plus exact CSS/HTML authored kinds and only the declared generated, cache and tool-state paths.");
     ids(policy.fileKindIds, taxonomy.fileKinds, "implementationLeafPolicy.fileKindIds");
     for (const [index, value] of policy.ignoredPathPatterns.entries()) pathPattern(value, `implementationLeafPolicy.ignoredPathPatterns[${index}]`);
@@ -5008,6 +5014,31 @@ export function validateTaxonomy(taxonomy: Taxonomy = readTaxonomyUnchecked()): 
       if (!exemptAreaRoots.some((root) => root.length > 0 && (area === root || area.startsWith(`${root}/`)))) problems.push(`areas[${JSON.stringify(area)}] may only be "exempt" inside a reserved subtree directory or a declared path exclusion, which discovery already skips.`);
     } else if (state !== "clean") problems.push(`areas[${JSON.stringify(area)}] must be "clean" or "exempt".`);
   }
+  if (record(taxonomy.dependencyDirections, "dependencyDirections") && record(taxonomy.dependencyDirections.roles, "dependencyDirections.roles") && record(taxonomy.dependencyDirections.rules, "dependencyDirections.rules")) {
+    for (const [role, contribution] of Object.entries(taxonomy.dependencyDirections.roles)) {
+      if (!role || !record(contribution, `dependencyDirections.roles.${role}`)) continue;
+      if (!Array.isArray(contribution.ownerPaths) || !Array.isArray(contribution.externalPackages)) problems.push(`dependencyDirections.roles.${role} requires ownerPaths and externalPackages arrays.`);
+      else {
+        for (const path of contribution.ownerPaths) workspacePath(path, `dependencyDirections.roles.${role}.ownerPaths`);
+        for (const name of contribution.externalPackages) if (typeof name !== "string" || !/^(?:@[a-z0-9][a-z0-9._-]*\/)?[a-z0-9][a-z0-9._-]*$/u.test(name)) problems.push(`dependencyDirections.roles.${role} has an invalid external package.`);
+      }
+    }
+    for (const [name, rule] of Object.entries(taxonomy.dependencyDirections.rules)) {
+      if (!name || !record(rule, `dependencyDirections.rules.${name}`)) continue;
+      for (const [field, roles] of [["fromRoles", rule.fromRoles], ["toRoles", rule.toRoles]] as const) {
+        if (!Array.isArray(roles) || !roles.length) problems.push(`dependencyDirections.rules.${name}.${field} requires nonempty roles.`);
+        else for (const role of roles) if (!taxonomy.dependencyDirections.roles[role]) problems.push(`dependencyDirections.rules.${name}.${field} references unknown role ${JSON.stringify(role)}.`);
+      }
+    }
+  }
+  if (record(taxonomy.cargoDependencyDirections, "cargoDependencyDirections") && record(taxonomy.cargoDependencyDirections.rules, "cargoDependencyDirections.rules")) {
+    const roles = taxonomy.cargoDependencyDirections.roles;
+    if (!Array.isArray(roles) || !roles.length || roles.some((role) => typeof role !== "string" || !role) || new Set(roles).size !== roles.length) problems.push("cargoDependencyDirections requires distinct declared semantic roles.");
+    else for (const [name, rule] of Object.entries(taxonomy.cargoDependencyDirections.rules)) {
+      if (!name || !record(rule, `cargoDependencyDirections.rules.${name}`)) continue;
+      for (const selected of [rule.fromRoles, rule.toRoles]) if (!Array.isArray(selected) || !selected.length || selected.some((role) => !roles.includes(role))) problems.push(`cargoDependencyDirections.rules.${name} references an unknown semantic role.`);
+    }
+  }
   if (record(taxonomy.areaLayers, "areaLayers")) for (const [area, layer] of Object.entries(taxonomy.areaLayers)) {
     if (area === "compose" || area.startsWith("compose/") || area === "temp/compose" || area.startsWith("temp/compose/")) problems.push("Opaque compose prefixes must not appear in areaLayers.");
     if (!["framework", "implementation", "repo-wide"].includes(layer)) problems.push(`areaLayers[${JSON.stringify(area)}] is invalid.`);
@@ -5106,8 +5137,6 @@ export function validateTaxonomy(taxonomy: Taxonomy = readTaxonomyUnchecked()): 
   ids(taxonomy.rootDataContractIds, taxonomy.fixedFilenameContracts, "rootDataContractIds");
   ids(taxonomy.rootDocumentContractIds, taxonomy.fixedFilenameContracts, "rootDocumentContractIds");
   ids(taxonomy.repoWideContractIds, taxonomy.fixedFilenameContracts, "repoWideContractIds");
-  ids(taxonomy.layeringGeneratedContractIds, taxonomy.fixedFilenameContracts, "layeringGeneratedContractIds");
-  if (taxonomy.layeringGeneratedContractIds.length !== 0) problems.push("layeringGeneratedContractIds must be empty until an exact deterministic writer exists.");
 
   for (const [formatId, format] of Object.entries(taxonomy.schemaFormats ?? {})) {
     if ("leafFilename" in (format as unknown as Record<string, unknown>) || "extension" in (format as unknown as Record<string, unknown>)) problems.push(`schemaFormats[${JSON.stringify(formatId)}] contains removed filename fields.`);

@@ -5,11 +5,33 @@
   "type": "object",
   "additionalProperties": false,
   "required": [
+    "mutation",
     "id"
   ],
   "properties": {
+    "mutation": {
+      "const": "deleteSetpointManager"
+    },
     "id": {
-      "type": "integer"
+      "type": "integer",
+      "minimum": 0,
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Setpoint manager",
+          "de": "Sollwertführung"
+        },
+        "description": {
+          "en": "The setpoint manager to delete, by id.",
+          "de": "Sollwertführung, die diese Mutation löscht, per ID."
+        },
+        "ref": {
+          "kind": "setpointManager"
+        },
+        "group": "target",
+        "order": 10
+      }
     }
   }
 }

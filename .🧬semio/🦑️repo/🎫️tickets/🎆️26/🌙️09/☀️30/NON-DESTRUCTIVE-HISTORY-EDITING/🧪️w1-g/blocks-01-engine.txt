@@ -1,0 +1,830 @@
+<<<<<<< ANCHOR
+/// 🧮️ Mechanical wrap only — see `replay_mutations`'s matching note.
+async fn fold_history<P, Mutation>(envelope: &ArtifactEnvelope<P, Mutation>, applied_edit_ids: &[String]) -> Result<P, VcsError>
+where
+    P: Clone,
+    Mutation: self::Mutation<P>,
+{
+    let mut snapshot = ReplayProjection::<P, Mutation>::new(envelope.vcs.initial_snapshot.clone());
+    let mut seen = HashSet::new();
+    for edit_id in applied_edit_ids {
+        if !seen.insert(edit_id) {
+            return Err(VcsError::ValidationFailed(format!("history repeats applied edit {edit_id}")));
+        }
+        let edit = envelope.vcs.edits.iter().find(|entry| entry.id == *edit_id).ok_or_else(|| VcsError::UnknownEdit(edit_id.clone()))?;
+        for operation in &edit.forwards {
+            let next = apply_mutation(&*snapshot, operation)?.0;
+            snapshot.advance(next);
+        }
+    }
+    Ok(snapshot.into_inner())
+}
+//#endregion 🔖️ArtifactStore
+=======
+/// 🧮️ Folds the genesis over the effective forwards of `applied_edit_ids` ([`fold_effective_edit`]).
+async fn fold_history<P, Mutation>(envelope: &ArtifactEnvelope<P, Mutation>, applied_edit_ids: &[String], supersessions: &EffectiveSupersessions) -> Result<P, VcsError>
+where
+    P: Clone,
+    Mutation: self::Mutation<P> + OpBinary,
+{
+    let mut snapshot = ReplayProjection::<P, Mutation>::new(envelope.vcs.initial_snapshot.clone());
+    let mut seen = HashSet::new();
+    for edit_id in applied_edit_ids {
+        if !seen.insert(edit_id) {
+            return Err(VcsError::ValidationFailed(format!("history repeats applied edit {edit_id}")));
+        }
+        let edit = envelope.vcs.edits.iter().find(|entry| entry.id == *edit_id).ok_or_else(|| VcsError::UnknownEdit(edit_id.clone()))?;
+        fold_effective_edit(&mut snapshot, edit, supersessions)?;
+    }
+    Ok(snapshot.into_inner())
+}
+//#endregion 🔖️ArtifactStore
+
+//#region 🔖️EffectiveForwards
+/// 🪞️ The effective supersession of every superseded operation ([`protocol::HistoryFold::supersessions`]): the
+/// replacement input every fold site reads in place of the recorded forward, which is never modified.
+pub type EffectiveSupersessions = BTreeMap<MutationId, protocol::EffectiveSupersession>;
+
+/// 🎭️ One forward operation as every fold site reads it: the recorded original, its decoded replacement, or nothing
+/// when withdrawn. A decoded replacement retires itself through [`Mutation::retire_cold`].
+pub struct EffectiveOperation<'a, P, Mutation>
+where
+    Mutation: self::Mutation<P>,
+{
+    pub op_index: u32,
+    pub mutation_id: MutationId,
+    original: &'a Mutation,
+    replacement: Option<Mutation>,
+    withdrawn: bool,
+    marker: PhantomData<fn() -> P>,
+}
+
+impl<P, Mutation> EffectiveOperation<'_, P, Mutation>
+where
+    Mutation: self::Mutation<P>,
+{
+    /// ▶️ The operation a fold applies, `None` when withdrawn.
+    pub fn operation(&self) -> Option<&Mutation> {
+        if self.withdrawn {
+            return None;
+        }
+        Some(self.replacement.as_ref().unwrap_or(self.original))
+    }
+
+    /// 🗿️ The recorded forward, whatever supersedes it.
+    pub fn original(&self) -> &Mutation {
+        self.original
+    }
+
+    /// ✏️ Whether a supersession replaced or withdrew the recorded forward.
+    pub fn superseded(&self) -> bool {
+        self.withdrawn || self.replacement.is_some()
+    }
+
+    /// 🚫️ Whether the operation folds as a no-op.
+    pub fn withdrawn(&self) -> bool {
+        self.withdrawn
+    }
+}
+
+impl<P, Mutation> Drop for EffectiveOperation<'_, P, Mutation>
+where
+    Mutation: self::Mutation<P>,
+{
+    fn drop(&mut self) {
+        if let Some(replacement) = self.replacement.take() {
+            self::Mutation::<P>::retire_cold(replacement);
+        }
+    }
+}
+
+/// 🪞️ The effective input of `operation` — operation `op_index` of its edit, identified as `mutation_id` — under `supersessions`.
+pub fn effective_operation<'a, P, Mutation>(operation: &'a Mutation, op_index: u32, mutation_id: MutationId, supersessions: &EffectiveSupersessions) -> Result<EffectiveOperation<'a, P, Mutation>, VcsError>
+where
+    Mutation: self::Mutation<P> + OpBinary,
+{
+    let (replacement, withdrawn) = match supersessions.get(&mutation_id).map(|supersession| &supersession.replacement) {
+        None => (None, false),
+        Some(protocol::InputReplacement::Withdrawn) => (None, true),
+        Some(protocol::InputReplacement::Input { payload, .. }) => (Some(Mutation::decode_op(payload).map_err(|error| VcsError::Deserialize(format!("supersession of {} does not decode: {error}", mutation_id.0)))?), false),
+    };
+    Ok(EffectiveOperation { op_index, mutation_id, original: operation, replacement, withdrawn, marker: PhantomData })
+}
+
+/// 🪞️ `edit`'s effective forwards in operation order: every operation replaced by its effective supersession, a
+/// withdrawn one reported as such. The single accessor every fold site reads an edit through.
+pub fn effective_forwards<'a, P, Mutation>(edit: &'a Edit<Mutation>, supersessions: &'a EffectiveSupersessions) -> impl Iterator<Item = Result<EffectiveOperation<'a, P, Mutation>, VcsError>> + 'a
+where
+    P: 'a,
+    Mutation: self::Mutation<P> + OpBinary + 'a,
+{
+    let ids = crate::os_spr::mutation_ids_for_edit::<P, Mutation>(edit);
+    edit.forwards.iter().zip(ids).enumerate().map(move |(index, (operation, mutation_id))| effective_operation::<P, Mutation>(operation, index as u32, mutation_id, supersessions))
+}
+
+/// 🔂️ Folds `edit`'s effective forwards into `projection` with keep-and-record semantics ([`fold_operation`]).
+fn fold_effective_edit<P, Mutation>(projection: &mut ReplayProjection<P, Mutation>, edit: &Edit<Mutation>, supersessions: &EffectiveSupersessions) -> Result<(), VcsError>
+where
+    Mutation: self::Mutation<P> + OpBinary,
+{
+    if supersessions.is_empty() {
+        for (index, operation) in edit.forwards.iter().enumerate() {
+            fold_operation_into(projection, operation, index as u32);
+        }
+        return Ok(());
+    }
+    for effective in effective_forwards::<P, Mutation>(edit, supersessions) {
+        let effective = effective?;
+        if let Some(operation) = effective.operation() {
+            fold_operation_into(projection, operation, effective.op_index);
+        }
+    }
+    Ok(())
+}
+
+/// ▶️ [`fold_operation`] into a replay projection, the recorded messages discarded.
+fn fold_operation_into<P, Mutation>(projection: &mut ReplayProjection<P, Mutation>, operation: &Mutation, op_index: u32)
+where
+    Mutation: self::Mutation<P>,
+{
+    if let (Some(next), _) = fold_operation::<P, Mutation>(projection, operation, op_index) {
+        projection.advance(next);
+    }
+}
+
+/// ▶️ One operation with [`protocol::MutationOutcome::apply_to`] semantics that never drops a projection: the next
+/// projection when its diff applied, and its op-stamped messages — an apply refusal becomes one `Fatal` message and
+/// folds as a no-op.
+fn fold_operation<P, Mutation>(state: &P, operation: &Mutation, op_index: u32) -> (Option<P>, Vec<crate::os_spr::MutationMessage>)
+where
+    Mutation: self::Mutation<P>,
+{
+    let (diff, mut messages) = operation.diff(state).stamp_op_index(op_index).into_parts();
+    let applied = diff.apply(state);
+    <Mutation::Diff as MutationDiff<P>>::retire_cold(diff);
+    match applied {
+        Ok(next) => (Some(next), messages),
+        Err(error) => {
+            let mut fatal = crate::os_spr::MutationMessage::fatal(error.code, error.message).at(error.target);
+            fatal.op_index = Some(op_index);
+            messages.push(fatal);
+            (None, messages)
+        }
+    }
+}
+
+/// 🔂️ Folds `applied[from..to]` onto `base` under `supersessions` with keep-and-record semantics, handing out the
+/// projection after every prefix length below `to` that is a multiple of `stride` (aliases of the running state, no
+/// copies). A failure retires the running state and everything recorded.
+fn fold_recorded<P, Mutation>(base: Arc<P>, applied: &[String], from: usize, to: usize, edits: &ArtifactHistoryLedger<Edit<Mutation>>, supersessions: &EffectiveSupersessions, stride: usize) -> Result<(Arc<P>, Vec<(usize, Arc<P>)>), VcsError>
+where
+    Mutation: self::Mutation<P> + OpBinary,
+{
+    let mut running = base;
+    let mut recorded: Vec<(usize, Arc<P>)> = Vec::new();
+    let mut failure = None;
+    for (offset, edit_id) in applied[from..to].iter().enumerate() {
+        let Some(edit) = edits.iter().find(|edit| edit.id == *edit_id) else {
+            failure = Some(VcsError::UnknownEdit(edit_id.clone()));
+            break;
+        };
+        for effective in effective_forwards::<P, Mutation>(edit, supersessions) {
+            let effective = match effective {
+                Ok(effective) => effective,
+                Err(error) => {
+                    failure = Some(error);
+                    break;
+                }
+            };
+            if let Some(operation) = effective.operation() {
+                if let (Some(next), _) = fold_operation::<P, Mutation>(&running, operation, effective.op_index) {
+                    retire_shared_projection::<P, Mutation>(std::mem::replace(&mut running, Arc::new(next)));
+                }
+            }
+        }
+        if failure.is_some() {
+            break;
+        }
+        let length = from + offset + 1;
+        if length < to && length % stride == 0 {
+            recorded.push((length, Arc::clone(&running)));
+        }
+    }
+    if let Some(error) = failure {
+        retire_shared_projection::<P, Mutation>(running);
+        for (_, snapshot) in recorded {
+            retire_shared_projection::<P, Mutation>(snapshot);
+        }
+        return Err(error);
+    }
+    Ok((running, recorded))
+}
+
+/// 🧊️ Releases one alias of a scratch projection: the last owner retires it ([`retire_replayed_projection`]), any
+/// other only drops its count — the owner that outlives it retires it.
+fn retire_shared_projection<P, Mutation>(projection: Arc<P>)
+where
+    Mutation: self::Mutation<P>,
+{
+    if let Ok(projection) = Arc::try_unwrap(projection) {
+        retire_replayed_projection::<P, Mutation>(projection);
+    }
+}
+
+/// 🔏️ Content digest of one effective supersession: which transition installed it and what it replaces the input with.
+fn supersession_digest(mutation_id: &MutationId, supersession: &protocol::EffectiveSupersession) -> [u8; 32] {
+    let (kind, schema, payload): (&[u8], &[u8], &[u8]) = match &supersession.replacement {
+        protocol::InputReplacement::Input { schema, payload } => (b"input", schema.as_bytes(), payload),
+        protocol::InputReplacement::Withdrawn => (b"withdrawn", b"", b""),
+    };
+    CursorRevisionAccumulator::hash_record(b"supersession", &[mutation_id.0.as_bytes(), supersession.transition_id.as_bytes(), kind, schema, payload])
+}
+
+/// 🔏️ Digest of the supersessions in effect for `edit`'s operations, `None` when none is.
+fn edit_supersession_digest<P, Mutation>(edit: &Edit<Mutation>, supersessions: &EffectiveSupersessions) -> Option<[u8; 32]>
+where
+    Mutation: self::Mutation<P>,
+{
+    if supersessions.is_empty() {
+        return None;
+    }
+    let mut digest = None;
+    for (index, mutation_id) in crate::os_spr::mutation_ids_for_edit::<P, Mutation>(edit).iter().enumerate() {
+        if let Some(supersession) = supersessions.get(mutation_id) {
+            digest = Some(CursorRevisionAccumulator::hash_record(b"edit-supersessions", &[&digest.unwrap_or([0; 32]), &(index as u64).to_be_bytes(), &supersession_digest(mutation_id, supersession)]));
+        }
+    }
+    digest
+}
+
+/// 🧭️ Forwards-only effective prefix digests of `applied`: entry `i` names the projection after the first `i` edits by
+/// their ids, forward counts and effective supersessions — never the inverses, metadata or messages a replay rewrites.
+fn forward_prefix_digests<P, Mutation>(identity: [u8; 32], applied: &[String], edits: &ArtifactHistoryLedger<Edit<Mutation>>, supersessions: &EffectiveSupersessions) -> Result<Vec<[u8; 32]>, VcsError>
+where
+    Mutation: self::Mutation<P>,
+{
+    let mut digest = CursorRevisionAccumulator::hash_record(b"forward-prefix", &[&identity]);
+    let mut digests = Vec::with_capacity(applied.len() + 1);
+    digests.push(digest);
+    for edit_id in applied {
+        let edit = edits.iter().find(|edit| edit.id == *edit_id).ok_or_else(|| VcsError::UnknownEdit(edit_id.clone()))?;
+        let superseded = edit_supersession_digest::<P, Mutation>(edit, supersessions).unwrap_or([0; 32]);
+        digest = CursorRevisionAccumulator::hash_record(b"forward-prefix", &[&digest, edit_id.as_bytes(), &(edit.forwards.len() as u64).to_be_bytes(), &superseded]);
+        digests.push(digest);
+    }
+    Ok(digests)
+}
+
+/// 🧮️ The applied positions of every edit owning an operation whose effective supersession differs between `previous`
+/// and `next`, ascending.
+fn superseded_positions<P, Mutation>(applied: &[String], edits: &ArtifactHistoryLedger<Edit<Mutation>>, previous: &EffectiveSupersessions, next: &EffectiveSupersessions) -> Result<Vec<usize>, VcsError>
+where
+    Mutation: self::Mutation<P>,
+{
+    let changed: HashSet<&MutationId> = previous.iter().filter(|(target, supersession)| next.get(*target) != Some(*supersession)).map(|(target, _)| target).chain(next.iter().filter(|(target, supersession)| previous.get(*target) != Some(*supersession)).map(|(target, _)| target)).collect();
+    if changed.is_empty() {
+        return Ok(Vec::new());
+    }
+    let mut positions = Vec::new();
+    for (position, edit_id) in applied.iter().enumerate() {
+        let edit = edits.iter().find(|edit| edit.id == *edit_id).ok_or_else(|| VcsError::UnknownEdit(edit_id.clone()))?;
+        if crate::os_spr::mutation_ids_for_edit::<P, Mutation>(edit).iter().any(|mutation_id| changed.contains(mutation_id)) {
+            positions.push(position);
+        }
+    }
+    Ok(positions)
+}
+
+/// ✍️ `supersessions` with every draft replacement laid over it — the effective inputs a time-travel session previews.
+pub fn draft_supersessions(supersessions: &EffectiveSupersessions, drafts: &BTreeMap<MutationId, protocol::InputReplacement>) -> EffectiveSupersessions {
+    let mut effective = supersessions.clone();
+    for (target, replacement) in drafts {
+        effective.insert(target.clone(), protocol::EffectiveSupersession { transition_id: DRAFT_SUPERSESSION_ID.to_string(), actor: String::new(), timestamp: HybridLogicalTimestamp::new(0, 0), scope: None, replacement: replacement.clone() });
+    }
+    effective
+}
+
+/// 🪪️ The transition id a not-yet-authored draft supersession carries inside a preview.
+pub const DRAFT_SUPERSESSION_ID: &str = "draft";
+//#endregion 🔖️EffectiveForwards
+
+//#region 🔖️EditReplay
+/// ⚖️ How an [`EditReplay`] settles each edit. `Merge(policy)` is the policy-local ingest verdict: an edit whose worst
+/// message the policy rejects is quarantined and an apply refusal aborts the replay. `Report` keeps every edit, records
+/// every outcome and never aborts, so its result is policy-independent and identical on every replica.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum ReplayMode {
+    Merge(crate::os_spr::MergePolicy),
+    Report,
+}
+
+/// 📚️ Where a replay reads the edits its order names.
+pub trait ReplayEdits<Mutation> {
+    fn replay_edit(&self, edit_id: &str) -> Option<&Edit<Mutation>>;
+}
+
+impl<Mutation> ReplayEdits<Mutation> for HashMap<String, Edit<Mutation>> {
+    fn replay_edit(&self, edit_id: &str) -> Option<&Edit<Mutation>> {
+        self.get(edit_id)
+    }
+}
+
+impl<Mutation> ReplayEdits<Mutation> for ArtifactHistoryLedger<Edit<Mutation>> {
+    fn replay_edit(&self, edit_id: &str) -> Option<&Edit<Mutation>> {
+        self.iter().find(|edit| edit.id == edit_id)
+    }
+}
+
+/// 📶️ `done` of `total` operations a replay folded.
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq)]
+pub struct ReplayProgress {
+    pub done: u32,
+    pub total: u32,
+}
+
+/// ⏯️ Where one [`EditReplay::step`] left its replay.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum ReplayStep {
+    Pending(ReplayProgress),
+    Finished(ReplayProgress),
+}
+
+/// 🏁️ The previous projection a Report replay may converge onto. From prefix length `horizon` on every changed input
+/// has been replayed, so a prefix whose state equals the previous state after the same prefix leaves the whole tail
+/// unchanged: the previous head is spliced in and the replay stops. `checkpoints` ascend by prefix length and end with
+/// the previous head.
+struct ReplayConvergence<P> {
+    horizon: usize,
+    checkpoints: Vec<(usize, Arc<P>)>,
+    equal: fn(&P, &P) -> bool,
+}
+
+/// ⏪️ Resumable replay of `order[from..]` over the projection after `order[..from]`, one operation per inner step:
+/// each operation's effective input is re-diffed and re-inverted against the running state and its messages are kept
+/// per mutation with their operation index. [`ArtifactStore::replay_suffix_partitioned`] drives a `Merge` replay to
+/// completion; history editing steps a `Report` replay under a deadline with progress. Cancelling is dropping it: the
+/// running projections, staged inverses and checkpoint aliases all retire.
+pub struct EditReplay<P, Mutation>
+where
+    Mutation: self::Mutation<P>,
+{
+    mode: ReplayMode,
+    order: Vec<String>,
+    from: usize,
+    cursor: usize,
+    operation: usize,
+    edit_ids: Option<Vec<MutationId>>,
+    supersessions: EffectiveSupersessions,
+    state: Option<Arc<P>>,
+    candidate: Option<Arc<P>>,
+    edit_messages: Vec<crate::os_spr::MutationMessage>,
+    edit_inverse: Vec<Mutation>,
+    committed: Vec<String>,
+    quarantined: Vec<String>,
+    rebased_inverse: Vec<(String, Vec<Mutation>)>,
+    replayed: Vec<crate::os_spr::EditMessages>,
+    outcomes: Vec<protocol::MutationReplayOutcome>,
+    convergence: Option<ReplayConvergence<P>>,
+    converged_at: Option<usize>,
+    record_stride: usize,
+    recorded: Vec<(usize, Arc<P>)>,
+    drafts: BTreeMap<MutationId, protocol::InputReplacement>,
+    generation: u64,
+    revision: [u8; 32],
+    progress: ReplayProgress,
+    finished: bool,
+}
+
+impl<P, Mutation> EditReplay<P, Mutation>
+where
+    Mutation: self::Mutation<P> + OpBinary,
+{
+    /// 🌱️ A replay of `order[from..]` starting from `base`, the projection after `order[..from]`, reading every
+    /// operation through `supersessions`. `edits` must hold every edit the suffix names.
+    pub fn new(mode: ReplayMode, base: Arc<P>, order: Vec<String>, from: usize, supersessions: EffectiveSupersessions, edits: &impl ReplayEdits<Mutation>) -> Result<Self, VcsError> {
+        let mut replay = Self {
+            mode,
+            order,
+            from,
+            cursor: from,
+            operation: 0,
+            edit_ids: None,
+            supersessions,
+            state: Some(base),
+            candidate: None,
+            edit_messages: Vec::new(),
+            edit_inverse: Vec::new(),
+            committed: Vec::new(),
+            quarantined: Vec::new(),
+            rebased_inverse: Vec::new(),
+            replayed: Vec::new(),
+            outcomes: Vec::new(),
+            convergence: None,
+            converged_at: None,
+            record_stride: usize::MAX,
+            recorded: Vec::new(),
+            drafts: BTreeMap::new(),
+            generation: 0,
+            revision: [0; 32],
+            progress: ReplayProgress::default(),
+            finished: false,
+        };
+        if replay.from > replay.order.len() {
+            return Err(VcsError::ValidationFailed(format!("edit replay starts at {} past its {}-edit order", replay.from, replay.order.len())));
+        }
+        let mut total = 0u32;
+        for edit_id in &replay.order[replay.from..] {
+            let edit = edits.replay_edit(edit_id).ok_or_else(|| VcsError::UnknownEdit(edit_id.clone()))?;
+            total = total.saturating_add(u32::try_from(edit.forwards.len()).unwrap_or(u32::MAX));
+        }
+        replay.progress.total = total;
+        Ok(replay)
+    }
+
+    fn with_convergence(mut self, convergence: Option<ReplayConvergence<P>>) -> Self {
+        if let Some(previous) = std::mem::replace(&mut self.convergence, convergence) {
+            for (_, checkpoint) in previous.checkpoints {
+                retire_shared_projection::<P, Mutation>(checkpoint);
+            }
+        }
+        self
+    }
+
+    /// 🧭️ Keeps the projection after every replayed prefix whose length is a multiple of `stride`, for the prefix ring.
+    pub fn recording(mut self, stride: usize) -> Self {
+        self.record_stride = stride.max(1);
+        self
+    }
+
+    /// 🔢️ Stamps the store generation and content revision this replay was started against — the freshness a finished
+    /// replay is committed under ([`ArtifactStore::commit_finished_replay`]).
+    pub fn with_base(mut self, generation: u64, revision: [u8; 32]) -> Self {
+        self.generation = generation;
+        self.revision = revision;
+        self
+    }
+
+    /// ✍️ Records the draft inputs this replay previews, which a finalization authors as the supersession.
+    pub fn with_drafts(mut self, drafts: BTreeMap<MutationId, protocol::InputReplacement>) -> Self {
+        self.drafts = drafts;
+        self
+    }
+
+    /// 🔢️ The store generation this replay was started against.
+    pub fn generation(&self) -> u64 {
+        self.generation
+    }
+
+    /// ✍️ The draft inputs this replay previews.
+    pub fn drafts(&self) -> &BTreeMap<MutationId, protocol::InputReplacement> {
+        &self.drafts
+    }
+
+    /// 📍️ The applied position the replay starts from.
+    pub fn from_position(&self) -> usize {
+        self.from
+    }
+
+    /// 📶️ Operations folded so far of the suffix total.
+    pub fn progress(&self) -> ReplayProgress {
+        self.progress
+    }
+
+    /// 🏁️ Whether every operation of the suffix was replayed (or the replay converged).
+    pub fn is_finished(&self) -> bool {
+        self.finished
+    }
+
+    /// ⏭️ Replays operations until the replay finishes or `deadline`, asked after every operation, answers `true`.
+    pub fn step(&mut self, edits: &impl ReplayEdits<Mutation>, deadline: &mut dyn FnMut() -> bool) -> Result<ReplayStep, VcsError> {
+        while !self.finished {
+            let Some(edit_id) = self.order.get(self.cursor) else {
+                self.finished = true;
+                break;
+            };
+            let edit = edits.replay_edit(edit_id).ok_or_else(|| VcsError::UnknownEdit(edit_id.clone()))?;
+            let edit_ids = match self.edit_ids.take() {
+                Some(edit_ids) => edit_ids,
+                None => crate::os_spr::mutation_ids_for_edit::<P, Mutation>(edit),
+            };
+            if self.operation < edit.forwards.len() {
+                let replayed = self.replay_operation(edit, &edit_ids);
+                self.edit_ids = Some(edit_ids);
+                replayed?;
+                self.operation += 1;
+                self.progress.done = self.progress.done.saturating_add(1);
+                if deadline() {
+                    return Ok(ReplayStep::Pending(self.progress));
+                }
+                continue;
+            }
+            self.close_edit(&edit.id);
+            self.cursor += 1;
+            self.operation = 0;
+            self.record();
+            self.converge();
+        }
+        Ok(ReplayStep::Finished(self.progress))
+    }
+
+    fn replay_operation(&mut self, edit: &Edit<Mutation>, edit_ids: &[MutationId]) -> Result<(), VcsError> {
+        let index = self.operation;
+        let mutation_id = edit_ids.get(index).cloned().unwrap_or_else(|| MutationId(format!("{}#{index}", edit.id)));
+        let effective = effective_operation::<P, Mutation>(&edit.forwards[index], index as u32, mutation_id, &self.supersessions)?;
+        let mut messages = Vec::new();
+        if let Some(operation) = effective.operation() {
+            let base = match self.mode {
+                ReplayMode::Merge(_) => self.candidate.as_ref().or(self.state.as_ref()),
+                ReplayMode::Report => self.state.as_ref(),
+            }
+            .ok_or_else(|| VcsError::ValidationFailed("edit replay lost its running projection".into()))?;
+            let mut back = operation.inverse(base);
+            back.reverse();
+            let next = match self.mode {
+                ReplayMode::Report => {
+                    let (next, operation_messages) = fold_operation::<P, Mutation>(base, operation, index as u32);
+                    messages = operation_messages;
+                    next
+                }
+                ReplayMode::Merge(_) => {
+                    let (diff, operation_messages) = operation.diff(base).stamp_op_index(index as u32).into_parts();
+                    let applied = diff.apply(base);
+                    <Mutation::Diff as MutationDiff<P>>::retire_cold(diff);
+                    messages = operation_messages;
+                    match applied {
+                        Ok(next) => Some(next),
+                        Err(error) => {
+                            retire_scratch_operations::<P, Mutation>(back);
+                            return Err(error.into());
+                        }
+                    }
+                }
+            };
+            self.edit_inverse.extend(back);
+            if let Some(next) = next {
+                let next = Arc::new(next);
+                let displaced = match self.mode {
+                    ReplayMode::Merge(_) => self.candidate.replace(next),
+                    ReplayMode::Report => self.state.replace(next),
+                };
+                if let Some(displaced) = displaced {
+                    retire_shared_projection::<P, Mutation>(displaced);
+                }
+            }
+        }
+        let worst = crate::os_spr::worst_level(&messages);
+        self.edit_messages.extend(messages.iter().cloned());
+        self.outcomes.push(protocol::MutationReplayOutcome { mutation_id: effective.mutation_id.clone(), edit_id: edit.id.clone(), op_index: index as u32, worst, messages, superseded: effective.superseded(), withdrawn: effective.withdrawn() });
+        Ok(())
+    }
+
+    fn close_edit(&mut self, edit_id: &str) {
+        let messages = std::mem::take(&mut self.edit_messages);
+        let inverse = std::mem::take(&mut self.edit_inverse);
+        let rejects = match self.mode {
+            ReplayMode::Merge(policy) => crate::os_spr::worst_level(&messages).is_some_and(|level| policy.rejects(level)),
+            ReplayMode::Report => false,
+        };
+        self.replayed.push(crate::os_spr::EditMessages { edit_id: edit_id.to_string(), messages });
+        if rejects {
+            if let Some(candidate) = self.candidate.take() {
+                retire_shared_projection::<P, Mutation>(candidate);
+            }
+            retire_scratch_operations::<P, Mutation>(inverse);
+            self.quarantined.push(edit_id.to_string());
+            return;
+        }
+        if let Some(candidate) = self.candidate.take() {
+            if let Some(previous) = self.state.replace(candidate) {
+                retire_shared_projection::<P, Mutation>(previous);
+            }
+        }
+        self.rebased_inverse.push((edit_id.to_string(), inverse));
+        self.committed.push(edit_id.to_string());
+    }
+
+    fn record(&mut self) {
+        if self.mode != ReplayMode::Report || self.cursor % self.record_stride != 0 || self.cursor >= self.order.len() {
+            return;
+        }
+        if let Some(state) = self.state.as_ref() {
+            self.recorded.push((self.cursor, Arc::clone(state)));
+        }
+    }
+
+    fn converge(&mut self) {
+        if self.mode != ReplayMode::Report {
+            return;
+        }
+        let Some(convergence) = self.convergence.as_ref() else { return };
+        if self.cursor < convergence.horizon || self.cursor >= self.order.len() {
+            return;
+        }
+        let (Some(state), Some((_, previous))) = (self.state.as_ref(), convergence.checkpoints.iter().find(|(length, _)| *length == self.cursor)) else { return };
+        if !(Arc::ptr_eq(state, previous) || (convergence.equal)(state, previous)) {
+            return;
+        }
+        let Some(head) = convergence.checkpoints.last().filter(|(length, _)| *length == self.order.len()).map(|(_, head)| Arc::clone(head)) else { return };
+        self.converged_at = Some(self.cursor);
+        self.finished = true;
+        self.progress.done = self.progress.total;
+        if let Some(previous) = self.state.replace(head) {
+            retire_shared_projection::<P, Mutation>(previous);
+        }
+    }
+
+    /// 🏁️ The finished replay's result; refused while operations remain.
+    pub fn finish(mut self) -> Result<EditReplayResult<P, Mutation>, VcsError> {
+        if !self.finished {
+            return Err(VcsError::ValidationFailed("edit replay has not finished".into()));
+        }
+        let outcomes = std::mem::take(&mut self.outcomes);
+        let worst = outcomes.iter().filter_map(|outcome| outcome.worst).max();
+        Ok(EditReplayResult {
+            order: std::mem::take(&mut self.order),
+            from: self.from,
+            supersessions: std::mem::take(&mut self.supersessions),
+            drafts: std::mem::take(&mut self.drafts),
+            generation: self.generation,
+            revision: self.revision,
+            state: self.state.take(),
+            converged_at: self.converged_at,
+            committed: std::mem::take(&mut self.committed),
+            quarantined: std::mem::take(&mut self.quarantined),
+            rebased_inverse: std::mem::take(&mut self.rebased_inverse),
+            replayed: std::mem::take(&mut self.replayed),
+            recorded: std::mem::take(&mut self.recorded),
+            report: protocol::ReplayReport { from_position: u32::try_from(self.from).unwrap_or(u32::MAX), outcomes, worst },
+        })
+    }
+
+    /// 🛑️ Cancels the replay; every scratch owner it holds retires and nothing it computed is published.
+    pub fn cancel(self) {
+        drop(self);
+    }
+}
+
+impl<P, Mutation> Drop for EditReplay<P, Mutation>
+where
+    Mutation: self::Mutation<P>,
+{
+    fn drop(&mut self) {
+        for projection in [self.state.take(), self.candidate.take()].into_iter().flatten() {
+            retire_shared_projection::<P, Mutation>(projection);
+        }
+        retire_scratch_operations::<P, Mutation>(std::mem::take(&mut self.edit_inverse));
+        for (_, inverse) in std::mem::take(&mut self.rebased_inverse) {
+            retire_scratch_operations::<P, Mutation>(inverse);
+        }
+        if let Some(convergence) = self.convergence.take() {
+            for (_, checkpoint) in convergence.checkpoints {
+                retire_shared_projection::<P, Mutation>(checkpoint);
+            }
+        }
+        for (_, recorded) in std::mem::take(&mut self.recorded) {
+            retire_shared_projection::<P, Mutation>(recorded);
+        }
+    }
+}
+
+/// 🏁️ What a finished [`EditReplay`] produced: the projection it reached, the edits it kept and quarantined, their
+/// rebased inverses and messages, and its per-mutation [`protocol::ReplayReport`]. Owners nobody took retire on drop.
+pub struct EditReplayResult<P, Mutation>
+where
+    Mutation: self::Mutation<P>,
+{
+    order: Vec<String>,
+    from: usize,
+    supersessions: EffectiveSupersessions,
+    drafts: BTreeMap<MutationId, protocol::InputReplacement>,
+    generation: u64,
+    revision: [u8; 32],
+    state: Option<Arc<P>>,
+    converged_at: Option<usize>,
+    committed: Vec<String>,
+    quarantined: Vec<String>,
+    rebased_inverse: Vec<(String, Vec<Mutation>)>,
+    replayed: Vec<crate::os_spr::EditMessages>,
+    recorded: Vec<(usize, Arc<P>)>,
+    report: protocol::ReplayReport,
+}
+
+impl<P, Mutation> EditReplayResult<P, Mutation>
+where
+    Mutation: self::Mutation<P>,
+{
+    /// 📍️ The applied position the replay started from.
+    pub fn from_position(&self) -> usize {
+        self.from
+    }
+
+    /// 🔢️ The store generation the replay was started against.
+    pub fn generation(&self) -> u64 {
+        self.generation
+    }
+
+    /// ✍️ The draft inputs the replay previewed.
+    pub fn drafts(&self) -> &BTreeMap<MutationId, protocol::InputReplacement> {
+        &self.drafts
+    }
+
+    /// 🖼️ The projection the replay reached (the previous head when it converged).
+    pub fn state(&self) -> Option<&Arc<P>> {
+        self.state.as_ref()
+    }
+
+    /// 🖼️ Takes the reached projection; its retirement moves to the caller.
+    pub fn take_state(&mut self) -> Option<Arc<P>> {
+        self.state.take()
+    }
+
+    /// 🏁️ The prefix length at which the replay met the previous projection, if it did.
+    pub fn converged_at(&self) -> Option<usize> {
+        self.converged_at
+    }
+
+    /// ✅️ The edits the replay kept, in order.
+    pub fn committed(&self) -> &[String] {
+        &self.committed
+    }
+
+    /// 🧊️ The edits a `Merge` policy quarantined, in order.
+    pub fn quarantined(&self) -> &[String] {
+        &self.quarantined
+    }
+
+    /// 📨️ Every replayed edit's messages, in order.
+    pub fn replayed(&self) -> &[crate::os_spr::EditMessages] {
+        &self.replayed
+    }
+
+    /// 📋️ The per-mutation outcomes.
+    pub fn report(&self) -> &protocol::ReplayReport {
+        &self.report
+    }
+
+    /// 📋️ Takes the per-mutation outcomes.
+    pub fn take_report(&mut self) -> protocol::ReplayReport {
+        std::mem::take(&mut self.report)
+    }
+
+    /// ✅️ Takes the kept edit ids.
+    pub fn take_committed(&mut self) -> Vec<String> {
+        std::mem::take(&mut self.committed)
+    }
+
+    /// 🧊️ Takes the quarantined edit ids.
+    pub fn take_quarantined(&mut self) -> Vec<String> {
+        std::mem::take(&mut self.quarantined)
+    }
+
+    /// 📨️ Takes the replayed edits' messages.
+    pub fn take_replayed(&mut self) -> Vec<crate::os_spr::EditMessages> {
+        std::mem::take(&mut self.replayed)
+    }
+
+    /// 🧭️ Takes the recorded prefix projections `(length, projection)`; their retirement moves to the caller.
+    pub fn take_recorded(&mut self) -> Vec<(usize, Arc<P>)> {
+        std::mem::take(&mut self.recorded)
+    }
+
+    /// 🔙️ Takes every kept edit's rebased inverse; their retirement moves to the caller.
+    pub fn take_rebased_inverse(&mut self) -> Vec<(String, Vec<Mutation>)> {
+        std::mem::take(&mut self.rebased_inverse)
+    }
+}
+
+impl<P, Mutation> Drop for EditReplayResult<P, Mutation>
+where
+    Mutation: self::Mutation<P>,
+{
+    fn drop(&mut self) {
+        if let Some(state) = self.state.take() {
+            retire_shared_projection::<P, Mutation>(state);
+        }
+        for (_, inverse) in std::mem::take(&mut self.rebased_inverse) {
+            retire_scratch_operations::<P, Mutation>(inverse);
+        }
+        for (_, recorded) in std::mem::take(&mut self.recorded) {
+            retire_shared_projection::<P, Mutation>(recorded);
+        }
+    }
+}
+
+/// 🟰️ Whether two supersession maps install the same effective inputs — which transition installed them aside.
+fn same_effective_inputs(left: &EffectiveSupersessions, right: &EffectiveSupersessions) -> bool {
+    left.len() == right.len() && left.iter().zip(right.iter()).all(|((left_target, left), (right_target, right))| left_target == right_target && left.replacement == right.replacement)
+}
+
+/// 🧭️ A retained projection after the first `length` applied edits, valid while `digest` names the live effective
+/// prefix ([`forward_prefix_digests`]).
+struct PrefixSnapshot<P> {
+    length: usize,
+    digest: [u8; 32],
+    snapshot: Arc<P>,
+}
+
+/// 🧭️ How many prefix projections a store retains; the stride adapts so they spread over the whole applied history.
+const PREFIX_SNAPSHOT_RING_CAPACITY: usize = 8;
+//#endregion 🔖️EditReplay
+>>>>>>> END

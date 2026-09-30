@@ -20,11 +20,11 @@ use crate::standards::v1::subsets::any::schema::inferences::find_board_node;
 use crate::{materialize_wires_content, WiresDiff, WiresSnapshot};
 use dsl::DslValue;
 
-const BEFORE: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🏷️change-node-kind/🧪️reports-a-no-op-when-the-kind-already-reads-topic/📸️snapshot/⬅️before/🔣️.json");
-const AFTER: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🏷️change-node-kind/🧪️reports-a-no-op-when-the-kind-already-reads-topic/📸️snapshot/➡️after/🔣️.json");
-const MUTATION: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🏷️change-node-kind/🧪️reports-a-no-op-when-the-kind-already-reads-topic/🦠️mutation/🔣️.json");
-const DIFF: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🏷️change-node-kind/🧪️reports-a-no-op-when-the-kind-already-reads-topic/🔺️diff/🔣️.json");
-const OUTCOME: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🏷️change-node-kind/🧪️reports-a-no-op-when-the-kind-already-reads-topic/🎯️outcome/🔣️.json");
+const BEFORE: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🏷️change-node-kind/🧪️reports-no-op-when-kind-already-reads-topic/📸️snapshot/⬅️before/🔣️.json");
+const AFTER: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🏷️change-node-kind/🧪️reports-no-op-when-kind-already-reads-topic/📸️snapshot/➡️after/🔣️.json");
+const MUTATION: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🏷️change-node-kind/🧪️reports-no-op-when-kind-already-reads-topic/🦠️mutation/🔣️.json");
+const DIFF: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🏷️change-node-kind/🧪️reports-no-op-when-kind-already-reads-topic/🔺️diff/🔣️.json");
+const OUTCOME: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🏷️change-node-kind/🧪️reports-no-op-when-kind-already-reads-topic/🎯️outcome/🔣️.json");
 
 fn board_entries(board: &DslValue, key: &str) -> Vec<DslValue> {
     board.get(key).and_then(|value| value.as_array()).map(|items| items.to_vec()).unwrap_or_default()

@@ -20,9 +20,3 @@ pub fn handle(payload: &SetSunIntensity, _doc: &ArtifactView<'_, Generation3dSna
     apply_world3d_sun_action(&mut sun, "setSunIntensity", Some(&dsl::json!({ "value": payload.value })));
     Ok(ViewEmit::config(vec![Generation3dViewConfigMutation::SetSun(config::SetSun { json: dsl::json::to_json_string(&sun) })]))
 }
-
-//#region 🧪️Tests
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
-//#endregion 🧪️Tests

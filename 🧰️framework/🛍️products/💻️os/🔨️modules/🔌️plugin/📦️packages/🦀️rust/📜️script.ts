@@ -1,7 +1,9 @@
 #!/usr/bin/env bun
+import { sourceFreshnessOracle } from "../../🧪️tests/🔬️source-freshness/🟦️.ts";
+import { extensionRetirementOracle } from "../../🧪️tests/🔬️extension-retirement/🟦️.ts";
 import { createPluginRunnerTests } from "../../🧪️tests/🏃️runner-self-tests/🟦️.ts";
 /** 🦀️ Awaited plugin SDK checks and exact-filter native regression tests. */
-import { BundleScript, ScriptRouter, resolveTestLevel, runBundleScriptMain, runCargo, runCargoTestBudgeted, runExactCargoLaws } from "../../../../../🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
+import { BundleScript, ScriptRouter, resolveTestLevel, runBundleScriptMain, runCargo, runCargoTestBudgeted, runExactCargoLaws, nextestArtifactLocation } from "../../../../../🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
 import assert from "node:assert/strict";
 import { createHash } from "node:crypto";
 import { readFileSync } from "node:fs";
@@ -21,8 +23,11 @@ export function pluginTestInvocation(segments: string[]): { mode: "inventory" | 
 
 import { artifactAdmissionOracle, completionRejectionOracle } from "../../🧪️tests/🧪️artifact-admission-and-completion-oracles/🟦️.ts";
 import { coldDocumentPairIngressOracle, documentBackboneBindingOracle, guestLifecycleOracle, issuedPatchOracle } from "../../🧪️tests/🧪️reactor-contract-oracles/🟦️.ts";
-import { declaredVerbVerdictOracle } from "../../🧪️tests/⚖️declared-verb-verdicts/🟦️.ts";
+import { declaredVerbVerdictOracle, declaredBridgeArgumentOracle } from "../../🧪️tests/⚖️declared-verb-verdicts/🟦️.ts";
+import { mediaOwnerContextOracle } from "../../🧪️tests/🎞️media-owner-context/🟦️.ts";
 import { agentLaneCarriageOracle, agentLanePreviewVerdictOracle } from "../../🧪️tests/🤖️agent-lane-preview/🟦️.ts";
+import { timeTravelScenarioOracle } from "../../🧪️tests/🧪️time-travel/🟦️.ts";
+import { supersedeLedgerOracle } from "../../🧪️tests/🧪️supersede-ledger/🟦️.ts";
 
 //#region 🎯️Tasks
 class CheckScript extends BundleScript {
@@ -37,8 +42,12 @@ class TestScript extends BundleScript {
     console.log(`artifact-admission-oracle cases=${artifactAdmissionOracle(this.repoRoot)} firstParty=39`);
     console.log(`completion-rejection-oracle assertions=${completionRejectionOracle(this.repoRoot)}`);
     console.log(`declared-verb-verdict-oracle cases=${declaredVerbVerdictOracle()}`);
+    console.log(`declared-bridge-argument-oracle assertions=${declaredBridgeArgumentOracle()}`);
+    console.log(`media-owner-context-oracle assertions=${mediaOwnerContextOracle()}`);
     console.log(`agent-lane-preview-verdict-oracle cases=${agentLanePreviewVerdictOracle()}`);
     console.log(`agent-lane-carriage-oracle cases=${agentLaneCarriageOracle()}`);
+    console.log(`time-travel-scenario-oracle cases=${timeTravelScenarioOracle(this.repoRoot)}`);
+    console.log(`supersede-ledger-oracle cases=${supersedeLedgerOracle(this.repoRoot)}`);
     if (segments.length === 1 && segments[0] === "--retained-child-close-exact") {
       const receipts = await runExactCargoLaws({
         cwd: this.root,
@@ -235,7 +244,50 @@ class DocumentBackboneBindingCheckScript extends BundleScript {
   }
 }
 
+/** 🏛️ Verifies worker-owned command publication and immutable presence authority. */
+class CanonicalArchitectureScript extends BundleScript {
+  async run(segments: string[]): Promise<void> {
+    if (segments.some((segment) => segment !== "--oracle-only")) throw new Error("canonical-architecture accepts only --oracle-only");
+    console.log(`declared-bridge-argument-oracle assertions=${declaredBridgeArgumentOracle()}`);
+    console.log(`media-owner-context-oracle assertions=${mediaOwnerContextOracle()}`);
+    console.log(`extension-retirement-oracle cases=${extensionRetirementOracle(this.repoRoot)}`);
+    console.log(`source-freshness-oracle cases=${await sourceFreshnessOracle(this.repoRoot,nextestArtifactLocation(this.repoRoot).directory)}`);
+    if (segments.includes("--oracle-only")) return;
+    const receipts = await runExactCargoLaws({
+      cwd: this.repoRoot,
+      env: { ...process.env, RUST_MIN_STACK: process.env.SEMIO_BUILD_RUST_MIN_STACK ?? "33554432" },
+      nativeEnv: { RUST_MIN_STACK: "268435456" },
+      groups: [{
+        package: "semio-framework-plugin",
+        target: { kind: "lib" },
+        laws: [
+          "media_export_request_context_preserves_exact_supplied_owner",
+          "declared_bridge_required_arguments_match_neutral_schemas",
+          "language_neutral_action_collections_agree_with_json_pointer_oracle",
+          "a_command_reaches_both_ephemeral_lanes_without_touching_history",
+          "a_command_that_emits_nothing_ephemeral_leaves_both_lanes_untouched",
+          "peer_presence_capture_is_one_arc_and_retirement_waits_for_then_drains_the_exact_root",
+          "peer_roster_saturation_cancel_stale_and_interrupted_close_preserve_exact_authority",
+          "extension_bundle_resource_retirement_preserves_zero_cancel_progress_and_terminal_owner",
+          "extension_bundle_resource_retirement_replacement_retains_old_and_backpressured_candidates",
+          "extension_bundle_resource_retirement_rejects_false_terminal_and_exceeded_grants",
+          "extension_bundle_resource_retirement_runs_through_suspend_and_exported_poll",
+          "extension_bundle_resource_retirement_refuses_implicit_live_drop_and_disposes_cold_explicitly",
+          "extension_bundle_resource_retirement_admits_exact_backing_and_boxed_shell_allocations",
+        ],
+      }],
+      artifactDir: process.env.SEMIO_TEST_ARTIFACT_DIR,
+      buildBudgetMs: Number(process.env.SEMIO_BUILD_BUDGET_MS ?? 3_600_000),
+      listBudgetMs: 60_000,
+      lawBudgetMs: 120_000,
+      progress(event) { console.log(`canonical-architecture-command ${event.stage}: ${event.law ?? ""}`); },
+    });
+    console.log(`canonical-architecture-command receipts=${receipts.length}`);
+  }
+}
+
 const router = new ScriptRouter(import.meta.dir)
+  .register("canonical-architecture", CanonicalArchitectureScript)
   .register("document-backbone-binding-check", DocumentBackboneBindingCheckScript)
   .register("cold-document-pair-ingress-check", ColdDocumentPairIngressCheckScript)
   .register("guest-lifecycle-check", GuestLifecycleCheckScript)

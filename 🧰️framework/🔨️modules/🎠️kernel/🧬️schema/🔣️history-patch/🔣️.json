@@ -1,0 +1,156 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/framework/kernel/history-patch/schema.json",
+  "title": "HistoryPatch",
+  "description": "Source of record for the history wire every host renders (ticket 26/09/30/NON-DESTRUCTIVE-HISTORY-EDITING, design §10): `HistoryPatch` with its rows (`HistoryEntry`, one per committed tool transaction, else per edit, keyed by `editId`, else by the `Supersede` history transition `transitionId`, falling back to `seq`), their per-mutation rows (`HistoryMutationEntry`) and the live history-edit session (`timeTravel`, absent while none is open). Rust owner `🎠️kernel/🦀️.rs` region `🔖️HistoryWire`, TypeScript twin `🎠️kernel/🟦️.ts`.",
+  "definitions": {
+    "Severity": { "type": "string", "enum": ["info", "warning", "error", "fatal"] },
+    "LocaleText": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["en", "de"],
+      "properties": { "en": { "type": "string" }, "de": { "type": "string" } }
+    },
+    "LocalizedLabel": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["native", "reuse"],
+      "properties": { "native": { "$ref": "#/definitions/LocaleText" }, "reuse": { "$ref": "#/definitions/LocaleText" } }
+    },
+    "U32": { "type": "integer", "minimum": 0, "maximum": 4294967295 },
+    "HistoryTransaction": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "tool"],
+      "properties": {
+        "id": { "type": "string", "pattern": "^tx-[0-9a-f]{16}$" },
+        "tool": { "type": "string", "minLength": 1 }
+      }
+    },
+    "HistoryMutationMessage": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["level", "code", "message"],
+      "properties": {
+        "level": { "$ref": "#/definitions/Severity" },
+        "code": { "type": "string", "minLength": 1 },
+        "message": { "type": "string" },
+        "target": { "type": "array", "items": { "type": "string" } },
+        "opIndex": { "$ref": "#/definitions/U32" }
+      }
+    },
+    "HistoryMutationEntry": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["mutationId", "position", "opIndex", "label"],
+      "properties": {
+        "mutationId": { "type": "string", "minLength": 1 },
+        "position": { "$ref": "#/definitions/U32" },
+        "opIndex": { "$ref": "#/definitions/U32" },
+        "label": { "$ref": "#/definitions/LocalizedLabel" },
+        "worst": { "$ref": "#/definitions/Severity" },
+        "messages": { "type": "array", "items": { "$ref": "#/definitions/HistoryMutationMessage" } },
+        "superseded": { "type": "boolean" },
+        "withdrawn": { "type": "boolean" },
+        "editable": { "type": "boolean" },
+        "pending": { "type": "boolean" },
+        "edited": { "type": "boolean" }
+      }
+    },
+    "HistoryEntry": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["seq", "actionId", "label", "kind", "timestamp"],
+      "properties": {
+        "seq": { "type": "integer", "minimum": 0 },
+        "editId": { "type": "string", "minLength": 1 },
+        "transaction": { "$ref": "#/definitions/HistoryTransaction" },
+        "transitionId": { "type": "string", "minLength": 1 },
+        "author": { "type": "string" },
+        "actionId": { "type": "string" },
+        "label": { "$ref": "#/definitions/LocalizedLabel" },
+        "kind": { "type": "string", "enum": ["mutation", "view", "history", "clipboard", "shell", "interaction"] },
+        "timestamp": { "type": "string" },
+        "opLines": { "type": "array", "items": { "type": "string" } },
+        "opCount": { "type": "integer", "minimum": 0 },
+        "applied": { "type": "boolean" },
+        "revertible": { "type": "boolean" },
+        "count": { "type": "integer", "minimum": 1 },
+        "worst": { "$ref": "#/definitions/Severity" },
+        "mutations": { "type": "array", "items": { "$ref": "#/definitions/HistoryMutationEntry" } }
+      }
+    },
+    "HistoryTimeTravel": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["sessionId", "generation", "stage"],
+      "properties": {
+        "sessionId": { "type": "string", "pattern": "^[0-9]+$" },
+        "generation": { "$ref": "#/definitions/U32" },
+        "stage": { "type": "string", "enum": ["editing", "replaying", "reviewing", "choosing", "finalizing"] },
+        "target": { "type": "string", "minLength": 1 },
+        "targetLabel": { "$ref": "#/definitions/LocalizedLabel" },
+        "done": { "$ref": "#/definitions/U32" },
+        "total": { "$ref": "#/definitions/U32" },
+        "worst": { "$ref": "#/definitions/Severity" },
+        "blocking": { "type": "boolean" },
+        "fault": { "type": "string", "minLength": 1 },
+        "acceptedCount": { "$ref": "#/definitions/U32" },
+        "review": { "type": "string", "enum": ["noChanges", "needsReplay", "blocked", "ready"] },
+        "rerunnable": { "type": "boolean" }
+      }
+    },
+    "HistoryPatch": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["cursor"],
+      "properties": {
+        "cursor": { "type": "integer", "minimum": 0 },
+        "upserts": { "type": "array", "items": { "$ref": "#/definitions/HistoryEntry" } },
+        "canUndo": { "type": "boolean" },
+        "canRedo": { "type": "boolean" },
+        "activeAlternativeId": { "type": "string" },
+        "currentCheckpointId": { "type": "string" },
+        "commandFilter": { "type": "string" },
+        "timeTravel": { "$ref": "#/definitions/HistoryTimeTravel" }
+      }
+    },
+    "HistoryPatchFixture": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["$schema", "note", "valid", "invalid"],
+      "properties": {
+        "$schema": { "type": "string" },
+        "note": { "type": "string" },
+        "valid": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["id", "patch", "keys"],
+            "properties": {
+              "id": { "type": "string", "minLength": 1 },
+              "patch": { "$ref": "#/definitions/HistoryPatch" },
+              "keys": { "type": "array", "items": { "type": "string" } }
+            }
+          }
+        },
+        "invalid": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["id", "patch", "reason"],
+            "properties": {
+              "id": { "type": "string", "minLength": 1 },
+              "patch": { "type": "object" },
+              "reason": { "type": "string", "minLength": 1 }
+            }
+          }
+        }
+      }
+    }
+  }
+}

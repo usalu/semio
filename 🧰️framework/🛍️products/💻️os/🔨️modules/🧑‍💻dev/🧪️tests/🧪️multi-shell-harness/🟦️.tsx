@@ -9,7 +9,6 @@ import "../../🎨️.css";
 import { resolvePlaygroundBoot } from "@semio-tech/framework";
 import { PLUGIN_CATALOG } from "../../../🔌️plugin/📇️registry/🟦️.ts";
 import { FrameworkOsShell } from "@semio-tech/framework-renderer-react";
-import { PUZZLE_BOARD_SESSION_FACTORIES } from "@semio-tech/puzzle-js";
 import * as React from "react";
 import { createRoot } from "react-dom/client";
 
@@ -44,7 +43,7 @@ function MultiShellHarnessPane({ pane }: { readonly pane: MultiHarnessPane }): R
       </div>
       <div style={{ flex: "1 1 0", minHeight: 0, position: "relative" }}>
         {mounted ? (
-          <FrameworkOsShell shellId={pane.shellId} storageNamespace={pane.shellId} pluginFilter={boot.variant} plugins={boot.plugins} surfaceSessionFactories={PUZZLE_BOARD_SESSION_FACTORIES} appId={boot.defaultAppId} appRole={MULTI_HARNESS_APP_ROLE} locks={{ locale: pane.locale, appearance: pane.appearance }} />
+          <FrameworkOsShell shellId={pane.shellId} storageNamespace={pane.shellId} pluginFilter={boot.variant} plugins={boot.plugins} appId={boot.defaultAppId} appRole={MULTI_HARNESS_APP_ROLE} locks={{ locale: pane.locale, appearance: pane.appearance }} />
         ) : null}
       </div>
     </div>

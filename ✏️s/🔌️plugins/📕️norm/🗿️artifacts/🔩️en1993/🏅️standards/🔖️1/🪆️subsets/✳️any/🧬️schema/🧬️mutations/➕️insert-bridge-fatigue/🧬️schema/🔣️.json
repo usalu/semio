@@ -6,14 +6,44 @@
   "additionalProperties": false,
   "required": [
     "index",
-    "bridge_fatigue_item"
+    "bridgeFatigueItem"
   ],
   "properties": {
     "index": {
-      "type": "integer"
+      "type": "integer",
+      "minimum": 0,
+      "x-semio-ui": {
+        "widget": "stepper",
+        "role": "value",
+        "label": {
+          "en": "Position",
+          "de": "Position"
+        },
+        "description": {
+          "en": "Zero-based list position at which the record is inserted.",
+          "de": "Nullbasierte Listenposition, an der der Datensatz eingefügt wird."
+        },
+        "step": 1,
+        "precision": 0,
+        "group": "target",
+        "order": 10
+      }
     },
-    "bridge_fatigue_item": {
-      "type": "object"
+    "bridgeFatigueItem": {
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1993/snapshot.json#/$defs/BridgeFatigue",
+      "x-semio-ui": {
+        "role": "value",
+        "label": {
+          "en": "Bridge fatigue check",
+          "de": "Ermüdungsnachweis der Brücke"
+        },
+        "description": {
+          "en": "The complete bridge fatigue check record to insert.",
+          "de": "Der vollständige einzufügende Datensatz des Ermüdungsnachweises der Brücke."
+        },
+        "group": "record",
+        "order": 20
+      }
     }
   }
 }

@@ -1,0 +1,62 @@
+{
+  "schema": "semio.replication.transaction-ref",
+  "mint": "tx-{hex16(blake3(actor str | hlc.actor varint | hlc.physical_ms varint | hlc.logical varint | tool str))}",
+  "cases": [
+    {
+      "id": "zero-clock",
+      "actor": "alice",
+      "hlc": {
+        "actor": 0,
+        "physical_ms": 0,
+        "logical": 0
+      },
+      "tool": "s.puzzle.2d#select",
+      "expect": {
+        "id": "tx-025e1288b9f42eae",
+        "tool": "s.puzzle.2d#select"
+      }
+    },
+    {
+      "id": "hub-actor-real-clock",
+      "actor": "hub.v1.370722f0cfb78d4e3eaf44a8b576001a0afd3711c6d35e600e17b516da8ac1a0",
+      "hlc": {
+        "actor": 2557761449,
+        "physical_ms": 1790622765027,
+        "logical": 1
+      },
+      "tool": "s.writer.writer#edit",
+      "expect": {
+        "id": "tx-ac7d1e2f6388816b",
+        "tool": "s.writer.writer#edit"
+      }
+    },
+    {
+      "id": "same-author-and-tick-other-tool",
+      "actor": "alice",
+      "hlc": {
+        "actor": 0,
+        "physical_ms": 0,
+        "logical": 0
+      },
+      "tool": "s.puzzle.2d#rotate",
+      "expect": {
+        "id": "tx-b1e4015d812f64a3",
+        "tool": "s.puzzle.2d#rotate"
+      }
+    },
+    {
+      "id": "unicode",
+      "actor": "Bé 🧪",
+      "hlc": {
+        "actor": 7,
+        "physical_ms": 9007199254740991,
+        "logical": 300
+      },
+      "tool": "app#🛠️tool",
+      "expect": {
+        "id": "tx-5e2350991e9fa97c",
+        "tool": "app#🛠️tool"
+      }
+    }
+  ]
+}

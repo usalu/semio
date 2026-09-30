@@ -9,7 +9,20 @@
   ],
   "properties": {
     "newClimateZone": {
-      "type": "object"
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/din4108/snapshot.json#/$defs/ClimateZoneDe",
+      "x-semio-ui": {
+        "role": "value",
+        "label": {
+          "en": "Summer climate region",
+          "de": "Sommerklimaregion"
+        },
+        "description": {
+          "en": "Summer climate region A, B or C per DIN 4108-2.",
+          "de": "Sommerklimaregion A, B oder C nach DIN 4108-2."
+        },
+        "group": "summer",
+        "order": 10
+      }
     }
   }
 }

@@ -4,12 +4,591 @@
   "title": "AddNode",
   "type": "object",
   "properties": {
+    "operation": {
+      "const": "addNode"
+    },
     "node": {
-      "type": "object"
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "pluginId",
+        "appId",
+        "label",
+        "yields",
+        "artifactRef",
+        "configRef",
+        "x",
+        "y",
+        "width",
+        "height",
+        "inputs",
+        "outputs"
+      ],
+      "properties": {
+        "id": {
+          "type": "string",
+          "x-semio-ui": {
+            "widget": "text",
+            "role": "value",
+            "label": {
+              "en": "Node ID",
+              "de": "Knoten-ID"
+            }
+          }
+        },
+        "pluginId": {
+          "type": "string",
+          "x-semio-ui": {
+            "widget": "text",
+            "role": "value",
+            "label": {
+              "en": "Plugin",
+              "de": "Plugin"
+            }
+          }
+        },
+        "appId": {
+          "type": "string",
+          "x-semio-ui": {
+            "widget": "text",
+            "role": "value",
+            "label": {
+              "en": "App",
+              "de": "App"
+            }
+          }
+        },
+        "label": {
+          "type": "string",
+          "x-semio-ui": {
+            "widget": "text",
+            "role": "value",
+            "label": {
+              "en": "Label",
+              "de": "Beschriftung"
+            }
+          }
+        },
+        "yields": {
+          "type": "string",
+          "x-semio-ui": {
+            "widget": "text",
+            "role": "value",
+            "label": {
+              "en": "Yields",
+              "de": "Liefert"
+            },
+            "description": {
+              "en": "Artifact kind the node produces.",
+              "de": "Artefaktart, die der Knoten erzeugt."
+            }
+          }
+        },
+        "artifactRef": {
+          "type": "string",
+          "x-semio-ui": {
+            "widget": "text",
+            "role": "value",
+            "label": {
+              "en": "Artifact",
+              "de": "Artefakt"
+            }
+          }
+        },
+        "configRef": {
+          "type": "string",
+          "x-semio-ui": {
+            "widget": "text",
+            "role": "value",
+            "label": {
+              "en": "Configuration",
+              "de": "Konfiguration"
+            }
+          }
+        },
+        "x": {
+          "type": "number",
+          "x-semio-ui": {
+            "widget": "stepper",
+            "role": "value",
+            "label": {
+              "en": "X",
+              "de": "X"
+            }
+          }
+        },
+        "y": {
+          "type": "number",
+          "x-semio-ui": {
+            "widget": "stepper",
+            "role": "value",
+            "label": {
+              "en": "Y",
+              "de": "Y"
+            }
+          }
+        },
+        "width": {
+          "type": "number",
+          "x-semio-ui": {
+            "widget": "stepper",
+            "role": "value",
+            "label": {
+              "en": "Width",
+              "de": "Breite"
+            }
+          }
+        },
+        "height": {
+          "type": "number",
+          "x-semio-ui": {
+            "widget": "stepper",
+            "role": "value",
+            "label": {
+              "en": "Height",
+              "de": "Höhe"
+            }
+          }
+        },
+        "inputs": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/WorkflowMediaPort"
+          },
+          "x-semio-ui": {
+            "role": "value",
+            "label": {
+              "en": "Inputs",
+              "de": "Eingänge"
+            }
+          }
+        },
+        "outputs": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/WorkflowMediaPort"
+          },
+          "x-semio-ui": {
+            "role": "value",
+            "label": {
+              "en": "Outputs",
+              "de": "Ausgänge"
+            }
+          }
+        }
+      },
+      "x-semio-ui": {
+        "role": "value",
+        "label": {
+          "en": "Node",
+          "de": "Knoten"
+        },
+        "group": "record",
+        "order": 10
+      }
     }
   },
   "required": [
+    "operation",
     "node"
   ],
-  "additionalProperties": false
+  "additionalProperties": false,
+  "$defs": {
+    "MediaType": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "class",
+        "form"
+      ],
+      "properties": {
+        "class": {
+          "type": "string",
+          "enum": [
+            "twoD",
+            "threeD",
+            "text",
+            "data",
+            "graph",
+            "kit",
+            "computation",
+            "presentation"
+          ],
+          "x-semio-ui": {
+            "widget": "select",
+            "role": "value",
+            "label": {
+              "en": "Media class",
+              "de": "Medienklasse"
+            },
+            "options": {
+              "twoD": {
+                "en": "2D",
+                "de": "2D"
+              },
+              "threeD": {
+                "en": "3D",
+                "de": "3D"
+              },
+              "text": {
+                "en": "Text",
+                "de": "Text"
+              },
+              "data": {
+                "en": "Data",
+                "de": "Daten"
+              },
+              "graph": {
+                "en": "Graph",
+                "de": "Graph"
+              },
+              "kit": {
+                "en": "Kit",
+                "de": "Bausatz"
+              },
+              "computation": {
+                "en": "Computation",
+                "de": "Berechnung"
+              },
+              "presentation": {
+                "en": "Presentation",
+                "de": "Präsentation"
+              }
+            }
+          }
+        },
+        "form": {
+          "type": "string",
+          "enum": [
+            "any",
+            "vector",
+            "raster",
+            "brep",
+            "mesh",
+            "document",
+            "value",
+            "dag",
+            "trinity",
+            "type",
+            "design",
+            "kit",
+            "flow",
+            "sequence",
+            "procedure",
+            "deck"
+          ],
+          "x-semio-ui": {
+            "widget": "select",
+            "role": "value",
+            "label": {
+              "en": "Media form",
+              "de": "Medienform"
+            },
+            "options": {
+              "any": {
+                "en": "Any",
+                "de": "Beliebig"
+              },
+              "vector": {
+                "en": "Vector",
+                "de": "Vektor"
+              },
+              "raster": {
+                "en": "Raster",
+                "de": "Raster"
+              },
+              "brep": {
+                "en": "B-rep",
+                "de": "B-Rep"
+              },
+              "mesh": {
+                "en": "Mesh",
+                "de": "Netz"
+              },
+              "document": {
+                "en": "Document",
+                "de": "Dokument"
+              },
+              "value": {
+                "en": "Value",
+                "de": "Wert"
+              },
+              "dag": {
+                "en": "DAG",
+                "de": "DAG"
+              },
+              "trinity": {
+                "en": "Trinity",
+                "de": "Trinity"
+              },
+              "type": {
+                "en": "Type",
+                "de": "Typ"
+              },
+              "design": {
+                "en": "Design",
+                "de": "Entwurf"
+              },
+              "kit": {
+                "en": "Kit",
+                "de": "Bausatz"
+              },
+              "flow": {
+                "en": "Flow",
+                "de": "Fluss"
+              },
+              "sequence": {
+                "en": "Sequence",
+                "de": "Sequenz"
+              },
+              "procedure": {
+                "en": "Procedure",
+                "de": "Prozedur"
+              },
+              "deck": {
+                "en": "Deck",
+                "de": "Foliensatz"
+              }
+            }
+          }
+        }
+      }
+    },
+    "MediaPortSpec": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "label",
+        "direction",
+        "mediaType",
+        "required",
+        "multiplicity"
+      ],
+      "properties": {
+        "id": {
+          "type": "string",
+          "x-semio-ui": {
+            "widget": "text",
+            "role": "value",
+            "label": {
+              "en": "Port ID",
+              "de": "Anschluss-ID"
+            }
+          }
+        },
+        "label": {
+          "type": "string",
+          "x-semio-ui": {
+            "widget": "text",
+            "role": "value",
+            "label": {
+              "en": "Label",
+              "de": "Beschriftung"
+            }
+          }
+        },
+        "direction": {
+          "type": "string",
+          "enum": [
+            "in",
+            "out"
+          ],
+          "x-semio-ui": {
+            "widget": "segmented",
+            "role": "value",
+            "label": {
+              "en": "Direction",
+              "de": "Richtung"
+            },
+            "options": {
+              "in": {
+                "en": "In",
+                "de": "Ein"
+              },
+              "out": {
+                "en": "Out",
+                "de": "Aus"
+              }
+            }
+          }
+        },
+        "mediaType": {
+          "$ref": "#/$defs/MediaType",
+          "x-semio-ui": {
+            "role": "value",
+            "label": {
+              "en": "Media type",
+              "de": "Medientyp"
+            }
+          }
+        },
+        "kindId": {
+          "type": "string",
+          "x-semio-ui": {
+            "widget": "text",
+            "role": "value",
+            "label": {
+              "en": "Artifact kind",
+              "de": "Artefaktart"
+            },
+            "description": {
+              "en": "Pins the port to one artifact kind; empty accepts the media type.",
+              "de": "Bindet den Anschluss an eine Artefaktart; leer akzeptiert den Medientyp."
+            }
+          }
+        },
+        "required": {
+          "type": "boolean",
+          "x-semio-ui": {
+            "widget": "toggle",
+            "role": "value",
+            "label": {
+              "en": "Required",
+              "de": "Erforderlich"
+            }
+          }
+        },
+        "multiplicity": {
+          "type": "string",
+          "enum": [
+            "one",
+            "many"
+          ],
+          "x-semio-ui": {
+            "widget": "segmented",
+            "role": "value",
+            "label": {
+              "en": "Multiplicity",
+              "de": "Vielfachheit"
+            },
+            "options": {
+              "one": {
+                "en": "One",
+                "de": "Eins"
+              },
+              "many": {
+                "en": "Many",
+                "de": "Viele"
+              }
+            }
+          }
+        }
+      }
+    },
+    "WorkflowMediaPort": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "spec"
+      ],
+      "properties": {
+        "id": {
+          "type": "string",
+          "x-semio-ui": {
+            "widget": "text",
+            "role": "value",
+            "label": {
+              "en": "Port ID",
+              "de": "Anschluss-ID"
+            }
+          }
+        },
+        "spec": {
+          "$ref": "#/$defs/MediaPortSpec",
+          "x-semio-ui": {
+            "role": "value",
+            "label": {
+              "en": "Port declaration",
+              "de": "Anschlussdeklaration"
+            }
+          }
+        }
+      }
+    },
+    "MediaWireFormat": {
+      "oneOf": [
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "format_kind"
+          ],
+          "properties": {
+            "kind": {
+              "const": "binary",
+              "x-semio-ui": {
+                "widget": "hidden",
+                "role": "discriminator",
+                "label": {
+                  "en": "Wire format",
+                  "de": "Übertragungsformat"
+                }
+              }
+            },
+            "format_kind": {
+              "type": "string",
+              "x-semio-ui": {
+                "widget": "text",
+                "role": "value",
+                "label": {
+                  "en": "Format kind",
+                  "de": "Formatart"
+                }
+              }
+            }
+          },
+          "x-semio-ui": {
+            "role": "value",
+            "label": {
+              "en": "Binary",
+              "de": "Binär"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "schema"
+          ],
+          "properties": {
+            "kind": {
+              "const": "document",
+              "x-semio-ui": {
+                "widget": "hidden",
+                "role": "discriminator",
+                "label": {
+                  "en": "Wire format",
+                  "de": "Übertragungsformat"
+                }
+              }
+            },
+            "schema": {
+              "type": "string",
+              "x-semio-ui": {
+                "widget": "text",
+                "role": "value",
+                "label": {
+                  "en": "Schema",
+                  "de": "Schema"
+                }
+              }
+            }
+          },
+          "x-semio-ui": {
+            "role": "value",
+            "label": {
+              "en": "Document",
+              "de": "Dokument"
+            }
+          }
+        }
+      ]
+    }
+  }
 }

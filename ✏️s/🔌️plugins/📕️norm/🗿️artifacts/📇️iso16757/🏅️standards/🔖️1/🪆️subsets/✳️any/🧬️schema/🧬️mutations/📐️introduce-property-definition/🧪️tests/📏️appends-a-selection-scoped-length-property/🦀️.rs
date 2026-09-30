@@ -11,11 +11,11 @@
 
 use crate::{Iso16757Diff, Iso16757Mutation, Iso16757Snapshot};
 
-const BEFORE: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/📐️introduce-property-definition/📏️appends-a-selection-scoped-length-property/📸️snapshot/⬅️before/🔣️.json");
-const AFTER: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/📐️introduce-property-definition/📏️appends-a-selection-scoped-length-property/📸️snapshot/➡️after/🔣️.json");
-const MUTATION: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/📐️introduce-property-definition/📏️appends-a-selection-scoped-length-property/🦠️mutation/🔣️.json");
-const DIFF: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/📐️introduce-property-definition/📏️appends-a-selection-scoped-length-property/🔺️diff/🔣️.json");
-const OUTCOME: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/📐️introduce-property-definition/📏️appends-a-selection-scoped-length-property/🎯️outcome/🔣️.json");
+const BEFORE: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/📐️introduce-property-definition/📏️appends-selection-scoped-length/📸️snapshot/⬅️before/🔣️.json");
+const AFTER: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/📐️introduce-property-definition/📏️appends-selection-scoped-length/📸️snapshot/➡️after/🔣️.json");
+const MUTATION: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/📐️introduce-property-definition/📏️appends-selection-scoped-length/🦠️mutation/🔣️.json");
+const DIFF: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/📐️introduce-property-definition/📏️appends-selection-scoped-length/🔺️diff/🔣️.json");
+const OUTCOME: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/📐️introduce-property-definition/📏️appends-selection-scoped-length/🎯️outcome/🔣️.json");
 
 fn before() -> Iso16757Snapshot {
     serde_json::from_str(BEFORE).expect("the committed before-snapshot decodes")
@@ -60,8 +60,8 @@ async fn deleting_the_length_property_restores_before() {
 
 /// 🔣️ Both committed snapshots and the committed `introduce-property-definition` payload are already canonical:
 /// decode → encode is a fixed point. The committed payload is spelled `{"IntroducePropertyDefinition":
-/// {"property_definition": {…}, "index": null}}` — the nested `unit`/`cardinality`/`kind` keep snake_case
-/// field names and bare Rust enum spellings.
+/// {"propertyDefinition": {…}, "index": null}}` — the nested `unit`/`cardinality` carry camelCase
+/// field names and `kind` the bare Rust enum spelling.
 #[semio_framework_async_macros::async_test]
 async fn committed_json_is_canonical() {
     for (side, text) in [("before", BEFORE), ("after", AFTER)] {

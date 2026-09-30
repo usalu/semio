@@ -15,12 +15,30 @@
       "type": "object",
       "additionalProperties": {
         "$ref": "#/$defs/Selection"
+      },
+      "x-semio-ui": {
+        "role": "value",
+        "label": {
+          "en": "Selection",
+          "de": "Auswahl"
+        },
+        "group": "record",
+        "order": 10
       }
     },
     "hover": {
       "type": "object",
       "additionalProperties": {
         "$ref": "#/$defs/Hover"
+      },
+      "x-semio-ui": {
+        "role": "value",
+        "label": {
+          "en": "Hover",
+          "de": "Hover"
+        },
+        "group": "record",
+        "order": 20
       }
     },
     "activeMode": {
@@ -30,12 +48,30 @@
           "single",
           "multiple"
         ]
+      },
+      "x-semio-ui": {
+        "role": "value",
+        "label": {
+          "en": "Active selection mode",
+          "de": "Aktiver Auswahlmodus"
+        },
+        "group": "record",
+        "order": 30
       }
     },
     "activeGranularity": {
       "type": "object",
       "additionalProperties": {
         "type": "string"
+      },
+      "x-semio-ui": {
+        "role": "value",
+        "label": {
+          "en": "Active granularity",
+          "de": "Aktive Granularität"
+        },
+        "group": "record",
+        "order": 40
       }
     }
   },

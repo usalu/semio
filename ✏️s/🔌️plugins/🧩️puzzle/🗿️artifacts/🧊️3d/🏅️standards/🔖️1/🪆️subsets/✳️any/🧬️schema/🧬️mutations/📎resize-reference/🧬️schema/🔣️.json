@@ -5,15 +5,56 @@
   "type": "object",
   "additionalProperties": false,
   "required": [
+    "mutation",
     "id",
     "newWidthWorld"
   ],
   "properties": {
+    "mutation": {
+      "const": "resizeReference"
+    },
     "id": {
-      "type": "string"
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Reference",
+          "de": "Referenz"
+        },
+        "description": {
+          "en": "The reference image this mutation addresses.",
+          "de": "Das Referenzbild, das diese Mutation adressiert."
+        },
+        "ref": {
+          "kind": "reference",
+          "domain": "vortex",
+          "granularity": "reference"
+        },
+        "group": "target",
+        "order": 10
+      }
     },
     "newWidthWorld": {
-      "type": "number"
+      "type": "number",
+      "exclusiveMinimum": 0,
+      "x-semio-ui": {
+        "widget": "stepper",
+        "role": "value",
+        "label": {
+          "en": "Width",
+          "de": "Breite"
+        },
+        "description": {
+          "en": "Width of the reference plane in the world.",
+          "de": "Breite der Referenzebene in der Welt."
+        },
+        "unit": "m",
+        "step": 0.1,
+        "precision": 3,
+        "group": "geometry",
+        "order": 20
+      }
     }
   }
 }

@@ -19,11 +19,11 @@ use protocol::{Mutation, MutationDiff};
 #[path = "../../🔺️diff/🦀️.rs"]
 mod leaf_diff;
 
-const BEFORE: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/📸️set-snapshot/⚫️retargets-the-document-onto-a-grayscale-sixteen-bit-variant/📸️snapshot/⬅️before/🔣️.json");
-const AFTER: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/📸️set-snapshot/⚫️retargets-the-document-onto-a-grayscale-sixteen-bit-variant/📸️snapshot/➡️after/🔣️.json");
-const MUTATION: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/📸️set-snapshot/⚫️retargets-the-document-onto-a-grayscale-sixteen-bit-variant/🦠️mutation/🔣️.json");
-const DIFF: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/📸️set-snapshot/⚫️retargets-the-document-onto-a-grayscale-sixteen-bit-variant/🔺️diff/🔣️.json");
-const OUTCOME: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/📸️set-snapshot/⚫️retargets-the-document-onto-a-grayscale-sixteen-bit-variant/🎯️outcome/🔣️.json");
+const BEFORE: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/📸️set-snapshot/⚫️retargets-document-grayscale-sixteen-bit-variant/📸️snapshot/⬅️before/🔣️.json");
+const AFTER: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/📸️set-snapshot/⚫️retargets-document-grayscale-sixteen-bit-variant/📸️snapshot/➡️after/🔣️.json");
+const MUTATION: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/📸️set-snapshot/⚫️retargets-document-grayscale-sixteen-bit-variant/🦠️mutation/🔣️.json");
+const DIFF: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/📸️set-snapshot/⚫️retargets-document-grayscale-sixteen-bit-variant/🔺️diff/🔣️.json");
+const OUTCOME: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/📸️set-snapshot/⚫️retargets-document-grayscale-sixteen-bit-variant/🎯️outcome/🔣️.json");
 
 fn before() -> SemioImageSnapshot {
     dsl::json::from_json_str(BEFORE).expect("set-snapshot before snapshot decodes")

@@ -5,18 +5,29 @@
   "type": "object",
   "additionalProperties": false,
   "required": [
-    "unknown_statements"
+    "mutation",
+    "unknownStatements"
   ],
   "properties": {
-    "unknown_statements": {
-      "type": "array",
-      "items": {
-        "$ref": "#/$defs/ObjUnknownStatement"
-      }
-    },
     "mutation": {
       "const": "setUnknownStatements",
       "description": "Aggregate discriminator spliced in by ObjMutation; absent when the payload stands alone."
+    },
+    "unknownStatements": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/ObjUnknownStatement"
+      },
+      "x-semio-ui": {
+        "label": {
+          "en": "Unknown statements",
+          "de": "Unbekannte Anweisungen"
+        },
+        "description": {
+          "en": "Lines without a dedicated field, kept verbatim.",
+          "de": "Zeilen ohne eigenes Feld, unverändert erhalten."
+        }
+      }
     }
   },
   "$defs": {
@@ -30,10 +41,28 @@
       "properties": {
         "lineIndex": {
           "type": "integer",
-          "minimum": 0
+          "minimum": 0,
+          "x-semio-ui": {
+            "widget": "stepper",
+            "label": {
+              "en": "Line index",
+              "de": "Zeilenindex"
+            },
+            "description": {
+              "en": "Source line of the statement.",
+              "de": "Quellzeile der Anweisung."
+            }
+          }
         },
         "raw": {
-          "type": "string"
+          "type": "string",
+          "x-semio-ui": {
+            "widget": "text",
+            "label": {
+              "en": "Raw line",
+              "de": "Rohzeile"
+            }
+          }
         }
       }
     }

@@ -88,4 +88,21 @@ export function declaredVerbVerdictOracle(): number {
   return fixture.cases.length;
 }
 
+/** 🧬️ AJV independently admits every declared representative and refuses every invalid neutral payload. */
+export function declaredBridgeArgumentOracle(): number {
+  const fixture = JSON.parse(readFileSync(new URL("../../🧫️fixtures/🎮️declared-bridge-arguments.json", import.meta.url), "utf8")) as { cases: { name: string; expected?: unknown; valueSchema?: object; invalid?: unknown[]; errorArgument?: string }[] };
+  const validator = new Ajv({ strict: true, allErrors: true });
+  let count = 0;
+  for (const row of fixture.cases) {
+    if (row.errorArgument !== undefined) continue;
+    assert(row.valueSchema !== undefined && row.invalid !== undefined, row.name);
+    const validate = validator.compile(row.valueSchema);
+    assert.equal(validate(row.expected), true, `${row.name}: ${validator.errorsText(validate.errors)}`);
+    for (const invalid of row.invalid) assert.equal(validate(invalid), false, `${row.name} rejects ${JSON.stringify(invalid)}`);
+    count += 1 + row.invalid.length;
+  }
+  assert.equal(count, 38, "every authored representative and negative payload reaches AJV");
+  return count;
+}
+
 if (import.meta.main) console.log(`declared-verb-verdict-oracle cases=${declaredVerbVerdictOracle()}`);

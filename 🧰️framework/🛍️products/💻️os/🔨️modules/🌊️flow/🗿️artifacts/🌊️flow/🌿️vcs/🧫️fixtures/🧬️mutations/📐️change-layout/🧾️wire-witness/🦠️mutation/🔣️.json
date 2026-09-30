@@ -1,0 +1,23 @@
+{
+  "operation": "changeLayout",
+  "entries": [
+    {
+      "id": "a",
+      "layout": {
+        "x": 3.0,
+        "y": 4.0
+      }
+    },
+    {
+      "id": "a",
+      "layout": null
+    },
+    {
+      "id": "a",
+      "layout": {
+        "x": 7.0,
+        "y": 8.0
+      }
+    }
+  ]
+}

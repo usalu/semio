@@ -1,15 +1,28 @@
 {
-  "id": "s.stdio.gltf.mutation.create-image.v1",
-  "version": 1,
-  "touchedPaths": [
-    "document/images/0"
-  ],
-  "payload": {
-    "position": 0
+  "textures": {
+    "modified": [
+      {
+        "index": 0,
+        "diff": {
+          "source": 1
+        }
+      }
+    ]
   },
-  "operation": {
-    "kind": "insert",
-    "position": 0,
-    "item": {}
+  "images": {
+    "modified": [
+      {
+        "index": 0,
+        "diff": {}
+      }
+    ],
+    "added": [
+      {
+        "index": 1,
+        "item": {
+          "uri": "albedo.png"
+        }
+      }
+    ]
   }
 }

@@ -34,7 +34,9 @@ Feature: Apply every typed DWG AC1024 mutation to the container that is actually
   preamble-only shape this artifact's own demo example already has) observably different from
   `set-version-info` (a field set that leaves every other byte where it was), rather than the two
   verbs collapsing into one indistinguishable edit. Every row below is chosen to move that
-  projection: the adapter fails any non-`no-mutation` row whose projection did not change.
+  projection: the adapter fails any row whose projection did not change. Every row's `params` is
+  the leaf wire payload (`set-snapshot` carries the `DwgSnapshot` wire), decoded by `DwgMutation`'s
+  own payload constructor.
 
   🔒️ The identity round trip asserts the EXACT-BYTES law, not the no-byte-pass-through law, and that
   is the correct law here rather than a missing one. The preamble is fixed-width with no writer
@@ -78,20 +80,8 @@ Feature: Apply every typed DWG AC1024 mutation to the container that is actually
     And a mutating row moved that projection, asserted in role
     Examples:
       | id               | params |
-      | set-snapshot     | {"version": "AC1024", "maintenanceVersion": 0, "codepage": 0} |
+      | set-snapshot     | {"snapshot": {"schema": "stdio.dwg", "version": "AC1024", "maintenanceVersion": 0, "codepage": 0}} |
       | set-version-info | {"version": "AC1032", "maintenanceVersion": 7, "codepage": 29} |
-
-  @id-no-mutation-baseline-mutate
-  @level-exhaustive
-  @mode-conformance
-  Scenario: Apply no-mutation to the R2010 container
-    Given the real input drawing asset://🏛️architectural/🏛️architectural.dwg
-    When the no-mutation mutation is applied with its parameters
-      """
-      {"kind": "no-mutation", "params": {}}
-      """
-    Then the preamble projection reports the values the specification's own offsets predict, asserted in role
-    And a mutating row moved that projection, asserted in role
 
   @id-inverse
   @level-exhaustive
@@ -106,20 +96,8 @@ Feature: Apply every typed DWG AC1024 mutation to the container that is actually
     Then the restored drawing's preamble projection equals the original's, asserted in role
     Examples:
       | id               | params |
-      | set-snapshot     | {"version": "AC1024", "maintenanceVersion": 0, "codepage": 0} |
+      | set-snapshot     | {"snapshot": {"schema": "stdio.dwg", "version": "AC1024", "maintenanceVersion": 0, "codepage": 0}} |
       | set-version-info | {"version": "AC1032", "maintenanceVersion": 7, "codepage": 29} |
-
-  @id-no-mutation-baseline-inverse
-  @level-exhaustive
-  @mode-property
-  Scenario: Undoing no-mutation restores the R2010 container
-    Given the real input drawing asset://🏛️architectural/🏛️architectural.dwg
-    When the no-mutation mutation is applied with its parameters
-      """
-      {"kind": "no-mutation", "params": {}}
-      """
-    And the inverse mutation computed against the untouched original is applied to that result
-    Then the restored drawing's preamble projection equals the original's, asserted in role
 
   @id-identity-round-trip
   @level-long

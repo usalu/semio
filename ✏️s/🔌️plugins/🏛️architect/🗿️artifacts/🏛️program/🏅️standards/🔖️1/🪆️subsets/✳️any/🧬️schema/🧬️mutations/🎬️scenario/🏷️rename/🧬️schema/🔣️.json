@@ -5,16 +5,52 @@
   "type": "object",
   "additionalProperties": false,
   "required": [
+    "mutation",
     "id",
     "newName"
   ],
   "properties": {
+    "mutation": {
+      "const": "renameScenario"
+    },
     "id": {
-      "type": "integer",
-      "minimum": 0
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Scenario",
+          "de": "Szenario"
+        },
+        "description": {
+          "en": "The scenario to rename.",
+          "de": "Umzubenennender Eintrag vom Typ „Szenario“."
+        },
+        "ref": {
+          "kind": "scenario",
+          "domain": "program",
+          "granularity": "entity"
+        },
+        "group": "target",
+        "order": 10
+      }
     },
     "newName": {
-      "type": "string"
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "text",
+        "role": "value",
+        "label": {
+          "en": "New Name",
+          "de": "Neuer Name"
+        },
+        "description": {
+          "en": "New name of the scenario.",
+          "de": "Neuer Name des Eintrags vom Typ „Szenario“."
+        },
+        "group": "identity",
+        "order": 20
+      }
     }
   }
 }

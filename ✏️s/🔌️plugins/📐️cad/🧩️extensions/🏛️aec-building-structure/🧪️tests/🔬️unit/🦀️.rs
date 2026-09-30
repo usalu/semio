@@ -2,7 +2,7 @@ use super::*;
 
 #[semio_framework_async_macros::async_test]
 async fn bundle_contributes_structure_manifest() {
-    let manifest = bundle().manifest;
+    let manifest = bundle().into_manifest_cold().unwrap();
     let topic_contribution = &manifest.topic_contributions[0];
     assert_eq!(topic_contribution.topic, "cad.computer");
     let computers_json = topic_contribution.payload["computersJson"].as_str().expect("computersJson");

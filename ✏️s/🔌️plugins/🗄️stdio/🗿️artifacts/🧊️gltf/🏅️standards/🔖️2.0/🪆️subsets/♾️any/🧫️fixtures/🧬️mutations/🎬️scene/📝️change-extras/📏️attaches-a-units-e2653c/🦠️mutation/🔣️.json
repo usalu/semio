@@ -1,0 +1,15 @@
+{
+  "mutation": "changeSceneExtraData",
+  "payload": {
+    "phase": "apply",
+    "value": {
+      "scene": 0,
+      "data": {
+        "state": "present",
+        "value": {
+          "units": "metre"
+        }
+      }
+    }
+  }
+}

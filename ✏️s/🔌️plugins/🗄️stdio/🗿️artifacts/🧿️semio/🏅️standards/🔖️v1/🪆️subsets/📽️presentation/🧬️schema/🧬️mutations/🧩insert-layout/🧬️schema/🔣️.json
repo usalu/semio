@@ -5,15 +5,16 @@
   "type": "object",
   "additionalProperties": false,
   "required": [
+    "mutation",
     "layout"
   ],
   "properties": {
-    "layout": {
-      "$ref": "#/$defs/SlideLayout"
-    },
     "mutation": {
       "const": "insertLayout",
       "description": "Aggregate discriminator spliced in by SemioPresentationMutation; absent when the payload stands alone."
+    },
+    "layout": {
+      "$ref": "#/$defs/SlideLayout"
     }
   },
   "$defs": {

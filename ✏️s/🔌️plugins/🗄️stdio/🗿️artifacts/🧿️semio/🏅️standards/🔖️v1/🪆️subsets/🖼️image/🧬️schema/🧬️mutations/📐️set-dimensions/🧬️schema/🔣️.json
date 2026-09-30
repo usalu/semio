@@ -5,10 +5,15 @@
   "type": "object",
   "additionalProperties": false,
   "required": [
+    "mutation",
     "width",
     "height"
   ],
   "properties": {
+    "mutation": {
+      "const": "setDimensions",
+      "description": "Aggregate discriminator spliced in by SemioImageMutation; absent when the payload stands alone."
+    },
     "width": {
       "type": "integer",
       "minimum": 0,
@@ -18,10 +23,6 @@
       "type": "integer",
       "minimum": 0,
       "maximum": 4294967295
-    },
-    "mutation": {
-      "const": "setDimensions",
-      "description": "Aggregate discriminator spliced in by SemioImageMutation; absent when the payload stands alone."
     }
   }
 }

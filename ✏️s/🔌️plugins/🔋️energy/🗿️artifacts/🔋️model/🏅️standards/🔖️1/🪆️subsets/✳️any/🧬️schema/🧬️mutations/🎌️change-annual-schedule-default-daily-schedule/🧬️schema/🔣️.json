@@ -5,15 +5,59 @@
   "type": "object",
   "additionalProperties": false,
   "required": [
+    "mutation",
     "id",
     "newDefaultDailyScheduleId"
   ],
   "properties": {
+    "mutation": {
+      "const": "changeAnnualScheduleDefaultDailySchedule"
+    },
     "id": {
-      "type": "integer"
+      "type": "integer",
+      "minimum": 0,
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Annual schedule",
+          "de": "Jahreszeitplan"
+        },
+        "description": {
+          "en": "The annual schedule this mutation changes, by id.",
+          "de": "Jahreszeitplan, den diese Mutation ändert, per ID."
+        },
+        "ref": {
+          "kind": "annualSchedule",
+          "domain": "energyModel",
+          "granularity": "schedule"
+        },
+        "group": "target",
+        "order": 10
+      }
     },
     "newDefaultDailyScheduleId": {
-      "type": "integer"
+      "type": "integer",
+      "minimum": 0,
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Default daily schedule",
+          "de": "Standard-Tageszeitplan"
+        },
+        "description": {
+          "en": "Daily profile of every day no rule covers, by id.",
+          "de": "Tagesprofil für jeden Tag ohne Regel, per ID."
+        },
+        "ref": {
+          "kind": "schedule",
+          "domain": "energyModel",
+          "granularity": "schedule"
+        },
+        "group": "schedule",
+        "order": 20
+      }
     }
   }
 }

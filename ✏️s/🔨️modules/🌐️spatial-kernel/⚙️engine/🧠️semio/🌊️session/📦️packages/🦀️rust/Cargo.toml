@@ -1,0 +1,43 @@
+[package]
+name = "semio-s-spatial-kernel-semio-session"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+description = "First-party Semio spatial kernel sessions and browser CAD invocation"
+
+[package.metadata.semio]
+role = "s-module"
+
+[lints]
+workspace = true
+
+[lib]
+crate-type = ["cdylib", "rlib"]
+path = "🦀️.rs"
+
+[dependencies]
+semio-framework-job.workspace = true
+semio-s-artifact-stdio-semio.workspace = true
+semio-framework-os-flow = { path = "../../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/📦️packages/🦀️rust" }
+semio-framework = { path = "../../../../../../../../🧰️framework/📦️packages/🦀️rust" }
+semio-framework-3d = { path = "../../../../../../../../🧰️framework/🔨️modules/🧊️3d/📦️packages/🦀️rust" }
+neural_engine = { path = "../../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🧠️neural/⚙️engine/📦️packages/🦀️rust", package = "semio-framework-os-kernel-neural-engine" }
+
+[target.'cfg(all(target_arch = "wasm32", not(target_env = "p2")))'.dependencies]
+wasm-bindgen = "0.2.106"
+
+[dev-dependencies]
+serde_json.workspace = true
+parry3d = "0.17"
+
+[[test]]
+name = "brep_invoke"
+path = "../../🧪️tests/📐️brep-invoke/🦀️.rs"
+
+[[test]]
+name = "mesh_session"
+path = "../../🧪️tests/🎒️mesh-session/🦀️.rs"
+
+[[test]]
+name = "session_lifetime"
+path = "../../🧪️tests/🏷️session-lifetime/🦀️.rs"

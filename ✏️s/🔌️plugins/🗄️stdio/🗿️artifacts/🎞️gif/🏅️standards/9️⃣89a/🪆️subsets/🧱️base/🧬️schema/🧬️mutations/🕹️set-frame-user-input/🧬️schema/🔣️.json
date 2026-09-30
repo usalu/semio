@@ -5,20 +5,44 @@
   "type": "object",
   "additionalProperties": false,
   "required": [
+    "mutation",
     "index",
-    "user_input"
+    "userInput"
   ],
   "properties": {
-    "index": {
-      "type": "integer",
-      "minimum": 0
-    },
-    "user_input": {
-      "type": "boolean"
-    },
     "mutation": {
       "const": "setFrameUserInput",
       "description": "Aggregate discriminator spliced in by GifMutation; absent when the payload stands alone."
+    },
+    "index": {
+      "type": "integer",
+      "minimum": 0,
+      "x-semio-ui": {
+        "widget": "stepper",
+        "label": {
+          "en": "Frame",
+          "de": "Einzelbild"
+        },
+        "description": {
+          "en": "Index of the frame, counted from 0.",
+          "de": "Index des Einzelbildes, ab 0 gezählt."
+        },
+        "precision": 0,
+        "group": "target",
+        "order": 10
+      }
+    },
+    "userInput": {
+      "type": "boolean",
+      "x-semio-ui": {
+        "widget": "toggle",
+        "label": {
+          "en": "Wait for user input",
+          "de": "Auf Benutzereingabe warten"
+        },
+        "group": "value",
+        "order": 20
+      }
     }
   }
 }

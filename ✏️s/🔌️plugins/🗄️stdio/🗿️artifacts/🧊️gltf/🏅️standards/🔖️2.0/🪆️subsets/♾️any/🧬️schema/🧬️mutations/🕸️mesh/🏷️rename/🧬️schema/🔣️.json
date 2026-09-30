@@ -5,12 +5,27 @@
   "type": "object",
   "additionalProperties": false,
   "required": [
-    "mesh"
+    "mesh",
+    "value"
   ],
   "properties": {
     "mesh": {
       "type": "integer",
-      "minimum": 0
+      "minimum": 0,
+      "x-semio-ui": {
+        "widget": "stepper",
+        "label": {
+          "en": "Mesh",
+          "de": "Netz"
+        },
+        "description": {
+          "en": "Index of the mesh, counted from 0.",
+          "de": "Index des Netzes, ab 0 gezählt."
+        },
+        "precision": 0,
+        "group": "target",
+        "order": 10
+      }
     },
     "value": {
       "anyOf": [
@@ -20,18 +35,59 @@
         {
           "type": "null"
         }
-      ]
+      ],
+      "x-semio-ui": {
+        "widget": "text",
+        "label": {
+          "en": "Name",
+          "de": "Name"
+        },
+        "description": {
+          "en": "Empty removes the name.",
+          "de": "Leer entfernt den Namen."
+        },
+        "group": "value",
+        "order": 20
+      }
     }
   },
-  "x-semio": {
-    "id": "s.stdio.gltf.mutation.change-mesh-name.v1",
-    "version": 1,
-    "phase": "mutation",
-    "kind": "change",
-    "touchedPaths": [
-      "document/meshes/*/name"
-    ],
-    "referencePolicy": "none"
-  },
-  "x-semio-mutation": "change-mesh-name"
+  "$defs": {
+    "ChangeMeshNameMutation": {
+      "description": "The whole wire of ChangeMeshNameMutation: the editable apply payload (this document's root) or the inert restore.",
+      "oneOf": [
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "phase",
+            "value"
+          ],
+          "properties": {
+            "phase": {
+              "const": "apply"
+            },
+            "value": {
+              "$ref": "#"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "phase",
+            "value"
+          ],
+          "properties": {
+            "phase": {
+              "const": "restore"
+            },
+            "value": {
+              "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/gltf/2.0/any/diff.json"
+            }
+          }
+        }
+      ]
+    }
+  }
 }

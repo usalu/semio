@@ -10,10 +10,41 @@
   ],
   "properties": {
     "ventId": {
-      "type": "string"
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Ventilation system",
+          "de": "Lüftungsanlage"
+        },
+        "description": {
+          "en": "The ventilation system this mutation addresses.",
+          "de": "Die Lüftungsanlage, die diese Mutation adressiert."
+        },
+        "ref": {
+          "kind": "ventSystem"
+        },
+        "group": "target",
+        "order": 10
+      }
     },
     "newDuctLeakageM3SM2": {
-      "type": "number"
+      "type": "number",
+      "minimum": 0,
+      "x-semio-ui": {
+        "widget": "stepper",
+        "role": "value",
+        "label": {
+          "en": "Duct air leakage rate f",
+          "de": "Leckluftrate der Luftleitungen f"
+        },
+        "unit": "m³/(s·m²)",
+        "step": 0.0001,
+        "precision": 5,
+        "group": "ventilation",
+        "order": 20
+      }
     }
   }
 }

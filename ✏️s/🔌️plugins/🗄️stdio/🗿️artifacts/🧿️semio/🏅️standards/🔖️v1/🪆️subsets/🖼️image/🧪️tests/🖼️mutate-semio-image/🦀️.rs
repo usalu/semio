@@ -63,8 +63,8 @@ mod subject {
         ctx.step_fixture_uris().into_iter().filter(|uri| uri.starts_with(prefix)).collect()
     }
 
-    fn only_uri(ctx: &Context, scheme: &str, what: &str) -> Result<String, String> {
-        step_uris(ctx, scheme).into_iter().find(|uri| uri.ends_with("/🦠️mutation/🔣️.json")).ok_or_else(|| format!("{}: the scenario names no {what}", ctx.scenario.id))
+    fn mutation_uri(ctx: &Context) -> Option<String> {
+        step_uris(ctx, "shared://🖼️mutate-semio-image/").into_iter().find(|uri| uri.ends_with("/🦠️mutation/🔣️.json"))
     }
     //#endregion 🔖️Input
 
@@ -152,11 +152,15 @@ mod subject {
         parse_semio_image_dsl(&text)
     }
 
-    /// 📜️ The scenario's own committed mutation payload — the feature owns the vector. `base` is
-    /// only consulted for the `no-mutation` scenario's identity mapping.
+    /// 📜️ The scenario's own mutation payload — the committed fixture its steps name, or, for the
+    /// `no-mutation` baselines, the sentinel in its doc string. The feature owns both; `base` is only
+    /// consulted for that sentinel's identity mapping.
     fn payload(ctx: &Context, base: &SemioImageSnapshot) -> Result<SemioImageMutation, String> {
-        let uri = only_uri(ctx, "shared://🖼️mutate-semio-image/", "mutation payload")?;
-        decode_mutation(&ctx.fixture_json(&uri)?, base).map_err(|error| format!("{}: {error}", ctx.scenario.id))
+        let json = match mutation_uri(ctx) {
+            Some(uri) => ctx.fixture_json(&uri)?,
+            None => ctx.doc_json()?,
+        };
+        decode_mutation(&json, base).map_err(|error| format!("{}: {error}", ctx.scenario.id))
     }
     //#endregion 🔖️Decode
 

@@ -4,8 +4,7 @@ use crate::schema::modules::mutation_support::top_level::rejection_outcome;
 use crate::schema::modules::mutation_support::top_level::{reject, GltfTopLevelMutationRejection};
 use crate::GltfSnapshot;
 pub const ID: &str = "s.stdio.gltf.mutation.reorder-primitive-attributes.v1";
-#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::MutationLeaf)]
-#[mutation_leaf(contract = ::protocol)]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
 #[value(rename_all = "camelCase")]
 pub struct GltfReorderPrimitiveAttributesPayload {
     pub mesh: usize,
@@ -38,7 +37,7 @@ pub fn apply(payload: &GltfReorderPrimitiveAttributesPayload, base: &GltfSnapsho
 
 //#region 🧬️DirectMutation
 #[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::MutationLeaf)]
-#[mutation_leaf(contract = ::protocol)]
+#[mutation_leaf(contract = ::protocol, payload = Apply)]
 #[value(tag = "phase", content = "value", rename_all = "camelCase")]
 pub enum ReorderPrimitiveAttributesMutation {
     Apply(GltfReorderPrimitiveAttributesPayload),
@@ -82,6 +81,6 @@ impl protocol::MutationKind<GltfSnapshot, super::GltfMutation> for ReorderPrimit
 
 //#region 🧪️Tests
 #[cfg(test)]
-#[path = "🧪️tests/🔬️direct-leaf/🦀️.rs"]
-mod direct_leaf_tests;
+#[path = "🧪️tests/🔬️t059/🦀️.rs"]
+mod case_t059;
 //#endregion 🧪️Tests

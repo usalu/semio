@@ -5,19 +5,20 @@
   "type": "object",
   "additionalProperties": false,
   "required": [
+    "mutation",
     "fileName",
     "relationship"
   ],
   "properties": {
+    "mutation": {
+      "const": "setAfRelationship",
+      "description": "Aggregate discriminator spliced in by PdfAMutation; absent when the payload stands alone."
+    },
     "fileName": {
       "type": "string"
     },
     "relationship": {
       "type": "string"
-    },
-    "mutation": {
-      "const": "setAfRelationship",
-      "description": "Aggregate discriminator spliced in by PdfAMutation; absent when the payload stands alone."
     }
   }
 }

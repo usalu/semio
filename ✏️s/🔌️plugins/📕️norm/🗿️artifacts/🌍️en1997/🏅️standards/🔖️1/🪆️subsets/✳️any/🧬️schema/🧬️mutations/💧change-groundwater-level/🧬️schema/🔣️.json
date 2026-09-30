@@ -5,11 +5,32 @@
   "type": "object",
   "additionalProperties": false,
   "required": [
+    "mutation",
     "newGroundwaterLevel"
   ],
   "properties": {
+    "mutation": {
+      "const": "changeGroundwaterLevel"
+    },
     "newGroundwaterLevel": {
-      "type": "number"
+      "type": "number",
+      "x-semio-ui": {
+        "widget": "stepper",
+        "role": "value",
+        "label": {
+          "en": "Groundwater level",
+          "de": "Grundwasserstand"
+        },
+        "description": {
+          "en": "Depth of the design groundwater table below ground level.",
+          "de": "Tiefe des Bemessungswasserstands unter Geländeoberkante."
+        },
+        "unit": "m",
+        "step": 0.1,
+        "precision": 2,
+        "group": "site",
+        "order": 10
+      }
     }
   }
 }

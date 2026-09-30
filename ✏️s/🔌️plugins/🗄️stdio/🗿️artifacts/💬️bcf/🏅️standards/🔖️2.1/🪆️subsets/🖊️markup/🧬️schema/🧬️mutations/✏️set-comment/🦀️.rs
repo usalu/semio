@@ -7,6 +7,7 @@ use super::*;
 //#region 🔖️Payload
 #[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::MutationLeaf)]
 #[mutation_leaf(contract = ::protocol)]
+#[value(rename_all = "camelCase")]
 pub struct SetComment {
     pub(crate) topic_guid: String,
     pub(crate) guid: String,
@@ -16,7 +17,7 @@ pub struct SetComment {
     pub(crate) author: Option<String>,
     #[value(default, skip_serializing_if = "Option::is_none")]
     pub(crate) text: Option<String>,
-    #[value(default, skip_serializing_if = "Option::is_none")]
+    #[value(default, skip_serializing_if = "Option::is_none", deserialize_with = "deserialize_double_option")]
     pub(crate) viewpoint_ref: Option<Option<String>>,
 }
 

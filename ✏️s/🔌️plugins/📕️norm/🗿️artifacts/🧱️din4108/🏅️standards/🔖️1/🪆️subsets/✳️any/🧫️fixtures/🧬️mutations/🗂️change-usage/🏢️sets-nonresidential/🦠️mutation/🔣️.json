@@ -1,1 +1,5 @@
-{"ChangeUsage":{"new_usage":"nonResidential"}}
+{
+  "ChangeUsage": {
+    "newUsage": "nonResidential"
+  }
+}

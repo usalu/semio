@@ -1997,7 +1997,7 @@ fn transform_brackets_are_migrated_host_only_routes_that_complete_empty() {
 /// `Puzzle3dArtifactStorePreparationFactory` — by dispatching `setActiveExample` through the
 /// real `InteractiveJob`/tool-job path (`Puzzle3dRetainedCommandJobFactory` ->
 /// `RetainedPuzzleCommandJob` -> `ArtifactToolCompletion` -> the shared publication loop's
-/// `self.store.begin_apply_batch(..., self.artifact_one_item_factory.as_ref())`), driving the
+/// `self.store.begin_apply_batch(..., self.artifact_one_item_factory.as_ref(), None)`), driving the
 /// resulting typed operation to completion via repeated `maintenance_step` turns exactly as a
 /// real host does every actor tick, then asserting the document was actually swapped. Uses
 /// the registry-backed, instance-bound `app()`: this plugin declares
@@ -2394,7 +2394,7 @@ async fn command_envelope_round_trip_holds_for_an_applied_operation() {
 
     let mut store = puzzle3d_store(create_document_envelope(PUZZLE_3D_SCHEMA, "puzzle3d", Puzzle3dSnapshot::default(), None)).await.expect("store");
     let object = TypedObject { id: "o1".into(), label: None, object_kind: None, anchor: Default::default(), origin: [0.0, 0.0, 0.0], orientation: None, scale: None, mesh_url: None, vortices: Vec::new(), hidden: false, locked: false };
-    store.dispatch(ArtifactCommand::Apply { mutations: vec![crate::standards::v1::subsets::any::schema::mutations::create_object(object, None)], description: None }).await.expect("apply");
+    store.dispatch(ArtifactCommand::Apply { mutations: vec![crate::standards::v1::subsets::any::schema::mutations::create_object(object, None)], description: None, transaction: None }).await.expect("apply");
     let envelope = store.envelope();
     let edit: &Edit<Puzzle3dMutation> = envelope.vcs.edits.last().expect("dispatch must have recorded an edit");
     semio_framework_os_kernel::os_store::test_support::assert_command_envelope_round_trip::<Puzzle3dSnapshot, Puzzle3dMutation>(edit, &ArtifactId(envelope.id.clone()), &SchemaId(envelope.schema.clone())).await;

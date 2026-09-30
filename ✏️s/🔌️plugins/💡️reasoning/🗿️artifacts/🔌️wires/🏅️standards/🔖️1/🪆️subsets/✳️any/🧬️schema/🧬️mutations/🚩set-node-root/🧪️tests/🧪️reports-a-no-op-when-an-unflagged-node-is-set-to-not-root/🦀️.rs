@@ -21,11 +21,11 @@ use crate::standards::v1::subsets::any::schema::inferences::find_board_node;
 use crate::{materialize_wires_content, WiresDiff, WiresSnapshot};
 use dsl::DslValue;
 
-const BEFORE: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🚩set-node-root/🧪️reports-a-no-op-when-an-unflagged-node-is-set-to-not-root/📸️snapshot/⬅️before/🔣️.json");
-const AFTER: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🚩set-node-root/🧪️reports-a-no-op-when-an-unflagged-node-is-set-to-not-root/📸️snapshot/➡️after/🔣️.json");
-const MUTATION: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🚩set-node-root/🧪️reports-a-no-op-when-an-unflagged-node-is-set-to-not-root/🦠️mutation/🔣️.json");
-const DIFF: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🚩set-node-root/🧪️reports-a-no-op-when-an-unflagged-node-is-set-to-not-root/🔺️diff/🔣️.json");
-const OUTCOME: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🚩set-node-root/🧪️reports-a-no-op-when-an-unflagged-node-is-set-to-not-root/🎯️outcome/🔣️.json");
+const BEFORE: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🚩set-node-root/🧪️reports-no-op-when-unflagged-node-is-set-not-root/📸️snapshot/⬅️before/🔣️.json");
+const AFTER: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🚩set-node-root/🧪️reports-no-op-when-unflagged-node-is-set-not-root/📸️snapshot/➡️after/🔣️.json");
+const MUTATION: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🚩set-node-root/🧪️reports-no-op-when-unflagged-node-is-set-not-root/🦠️mutation/🔣️.json");
+const DIFF: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🚩set-node-root/🧪️reports-no-op-when-unflagged-node-is-set-not-root/🔺️diff/🔣️.json");
+const OUTCOME: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🚩set-node-root/🧪️reports-no-op-when-unflagged-node-is-set-not-root/🎯️outcome/🔣️.json");
 
 fn board_entries(board: &DslValue, key: &str) -> Vec<DslValue> {
     board.get(key).and_then(|value| value.as_array()).map(|items| items.to_vec()).unwrap_or_default()

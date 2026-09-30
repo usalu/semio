@@ -11,11 +11,11 @@ use crate::standards::v1::subsets::table::schema::mutations::SemioTableMutation;
 use crate::standards::v1::subsets::table::schema::snapshot::SemioTableSnapshot;
 use protocol::{Mutation, MutationDiff};
 
-const BEFORE: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🔀reorder-columns/🔀️moves-the-area-column-to-the-front-and-realigns-every-row/📸️snapshot/⬅️before/🔣️.json");
-const AFTER: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🔀reorder-columns/🔀️moves-the-area-column-to-the-front-and-realigns-every-row/📸️snapshot/➡️after/🔣️.json");
-const MUTATION: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🔀reorder-columns/🔀️moves-the-area-column-to-the-front-and-realigns-every-row/🦠️mutation/🔣️.json");
-const DIFF: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🔀reorder-columns/🔀️moves-the-area-column-to-the-front-and-realigns-every-row/🔺️diff/🔣️.json");
-const OUTCOME: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🔀reorder-columns/🔀️moves-the-area-column-to-the-front-and-realigns-every-row/🎯️outcome/🔣️.json");
+const BEFORE: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🔀reorder-columns/🔀️moves-area-column-front-realigns-every-row/📸️snapshot/⬅️before/🔣️.json");
+const AFTER: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🔀reorder-columns/🔀️moves-area-column-front-realigns-every-row/📸️snapshot/➡️after/🔣️.json");
+const MUTATION: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🔀reorder-columns/🔀️moves-area-column-front-realigns-every-row/🦠️mutation/🔣️.json");
+const DIFF: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🔀reorder-columns/🔀️moves-area-column-front-realigns-every-row/🔺️diff/🔣️.json");
+const OUTCOME: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🔀reorder-columns/🔀️moves-area-column-front-realigns-every-row/🎯️outcome/🔣️.json");
 
 fn before() -> SemioTableSnapshot {
     dsl::json::from_json_str(BEFORE).expect("reorder-columns before snapshot decodes")

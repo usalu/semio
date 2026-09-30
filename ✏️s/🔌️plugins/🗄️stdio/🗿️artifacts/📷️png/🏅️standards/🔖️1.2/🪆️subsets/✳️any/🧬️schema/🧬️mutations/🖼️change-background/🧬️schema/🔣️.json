@@ -13,7 +13,13 @@
         {
           "type": "null"
         }
-      ]
+      ],
+      "x-semio-ui": {
+        "label": {
+          "en": "Background color (bKGD)",
+          "de": "Hintergrundfarbe (bKGD)"
+        }
+      }
     }
   },
   "$defs": {

@@ -312,6 +312,7 @@ async fn presentation_deck_materializes() {
         .dispatch(ArtifactCommand::Apply {
             mutations: vec![PresentationMutation::CreateTile(create_tile::CreateTile { index: 0, tile: crate::FigureTileDraft { id: "t1".into(), name: "A".into(), crop: crate::FigureTileFrame { x: 0.0, y: 0.0, width: 1.0, height: 1.0 } } })],
             description: None,
+            transaction: None,
         })
         .await
         .expect("apply");
@@ -329,6 +330,7 @@ async fn document_text_round_trip_with_operation_applied() {
         .dispatch(ArtifactCommand::Apply {
             mutations: vec![PresentationMutation::CreateTile(create_tile::CreateTile { index: 0, tile: crate::FigureTileDraft { id: "t1".into(), name: "A".into(), crop: crate::FigureTileFrame { x: 0.0, y: 0.0, width: 1.0, height: 1.0 } } })],
             description: None,
+            transaction: None,
         })
         .await
         .expect("apply");

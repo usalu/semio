@@ -1,0 +1,682 @@
+{
+  "description": "Language-neutral cases for the time-travel band and window indicator (ticket 26/09/30 NON-DESTRUCTIVE-HISTORY-EDITING, design §10): every stage of HistoryPatch.timeTravel, the lines a shell shows in English and German, the controls in order with the refusal that disables one, the reserved verb each dispatches (args carry the session generation), the default remappable chords (never Escape) and the indicator's accessible name. Read by the React band test; the wgpu band reads the same cases.",
+  "controllerId": "toy.controller",
+  "axes": {
+    "terminology": "native"
+  },
+  "chords": {
+    "accept": {
+      "controlId": "ui.timeTravel.accept",
+      "keys": "alt+enter",
+      "aria": "Alt+Enter"
+    },
+    "discard": {
+      "controlId": "ui.timeTravel.discard",
+      "keys": "alt+backspace",
+      "aria": "Alt+Backspace"
+    },
+    "exit": {
+      "controlId": "ui.timeTravel.exit",
+      "keys": "alt+shift+backspace",
+      "aria": "Alt+Shift+Backspace"
+    }
+  },
+  "cases": [
+    {
+      "name": "editing a mutation offers accept, discard and exit and names the edited mutation",
+      "session": {
+        "sessionId": "1",
+        "generation": 3,
+        "stage": "editing",
+        "target": "m-2",
+        "targetLabel": {
+          "native": {
+            "en": "Drag selection",
+            "de": "Auswahl ziehen"
+          },
+          "reuse": {
+            "en": "Drag selection",
+            "de": "Auswahl ziehen"
+          }
+        },
+        "blocking": false,
+        "acceptedCount": 0
+      },
+      "text": {
+        "en": {
+          "stage": "Editing a mutation",
+          "target": "Editing: Drag selection",
+          "progress": null,
+          "review": null,
+          "outcome": null,
+          "fault": null,
+          "accepted": null
+        },
+        "de": {
+          "stage": "Mutation wird bearbeitet",
+          "target": "Bearbeitet: Auswahl ziehen",
+          "progress": null,
+          "review": null,
+          "outcome": null,
+          "fault": null,
+          "accepted": null
+        }
+      },
+      "controls": [
+        {
+          "control": "accept",
+          "action": "historyEditAccept",
+          "disabledBy": null
+        },
+        {
+          "control": "discard",
+          "action": "historyEditDiscard",
+          "disabledBy": null
+        },
+        {
+          "control": "exit",
+          "action": "historyEditExit",
+          "disabledBy": null
+        }
+      ],
+      "indicator": {
+        "en": "Time travel: document before Drag selection",
+        "de": "Zeitreise: Dokument vor Auswahl ziehen"
+      }
+    },
+    {
+      "name": "a running replay shows its progress and can be cancelled",
+      "session": {
+        "sessionId": "1",
+        "generation": 4,
+        "stage": "replaying",
+        "target": "m-2",
+        "targetLabel": {
+          "native": {
+            "en": "Drag selection",
+            "de": "Auswahl ziehen"
+          },
+          "reuse": {
+            "en": "Drag selection",
+            "de": "Auswahl ziehen"
+          }
+        },
+        "done": 3,
+        "total": 8,
+        "blocking": false,
+        "acceptedCount": 1
+      },
+      "text": {
+        "en": {
+          "stage": "Replaying later mutations",
+          "target": "Editing: Drag selection",
+          "progress": "Replaying 3 of 8 mutations",
+          "review": null,
+          "outcome": null,
+          "fault": null,
+          "accepted": "Accepted changes: 1"
+        },
+        "de": {
+          "stage": "Spätere Mutationen werden neu angewendet",
+          "target": "Bearbeitet: Auswahl ziehen",
+          "progress": "3 von 8 Mutationen werden neu angewendet",
+          "review": null,
+          "outcome": null,
+          "fault": null,
+          "accepted": "Übernommene Änderungen: 1"
+        }
+      },
+      "controls": [
+        {
+          "control": "cancelReplay",
+          "action": "historyEditCancelReplay",
+          "disabledBy": null
+        },
+        {
+          "control": "exit",
+          "action": "historyEditExit",
+          "disabledBy": null
+        }
+      ],
+      "indicator": {
+        "en": "Replaying later mutations",
+        "de": "Spätere Mutationen werden neu angewendet"
+      }
+    },
+    {
+      "name": "a ready review with an accepted draft can be finalized; nothing to replay again",
+      "session": {
+        "sessionId": "1",
+        "generation": 5,
+        "stage": "reviewing",
+        "blocking": false,
+        "acceptedCount": 1,
+        "review": "ready",
+        "rerunnable": false
+      },
+      "text": {
+        "en": {
+          "stage": "Reviewing the edited history",
+          "target": null,
+          "progress": null,
+          "review": "Ready to finalize",
+          "outcome": null,
+          "fault": null,
+          "accepted": "Accepted changes: 1"
+        },
+        "de": {
+          "stage": "Bearbeiteter Verlauf wird geprüft",
+          "target": null,
+          "progress": null,
+          "review": "Bereit zum Abschließen",
+          "outcome": null,
+          "fault": null,
+          "accepted": "Übernommene Änderungen: 1"
+        }
+      },
+      "controls": [
+        {
+          "control": "rerun",
+          "action": "historyEditRerun",
+          "disabledBy": "ui.timeTravel.refusal.illegal"
+        },
+        {
+          "control": "finalize",
+          "action": "historyEditFinalize",
+          "disabledBy": null
+        },
+        {
+          "control": "exit",
+          "action": "historyEditExit",
+          "disabledBy": null
+        }
+      ],
+      "indicator": {
+        "en": "Reviewing the edited history",
+        "de": "Bearbeiteter Verlauf wird geprüft"
+      }
+    },
+    {
+      "name": "an error downstream blocks finalizing and says so in words",
+      "session": {
+        "sessionId": "1",
+        "generation": 6,
+        "stage": "reviewing",
+        "worst": "error",
+        "blocking": true,
+        "acceptedCount": 2,
+        "review": "blocked",
+        "rerunnable": false
+      },
+      "text": {
+        "en": {
+          "stage": "Reviewing the edited history",
+          "target": null,
+          "progress": null,
+          "review": "Errors in later mutations block finalizing",
+          "outcome": "Worst outcome: Error",
+          "fault": null,
+          "accepted": "Accepted changes: 2"
+        },
+        "de": {
+          "stage": "Bearbeiteter Verlauf wird geprüft",
+          "target": null,
+          "progress": null,
+          "review": "Fehler in späteren Mutationen verhindern den Abschluss",
+          "outcome": "Schwerstes Ergebnis: Fehler",
+          "fault": null,
+          "accepted": "Übernommene Änderungen: 2"
+        }
+      },
+      "controls": [
+        {
+          "control": "rerun",
+          "action": "historyEditRerun",
+          "disabledBy": "ui.timeTravel.refusal.illegal"
+        },
+        {
+          "control": "finalize",
+          "action": "historyEditFinalize",
+          "disabledBy": "ui.timeTravel.refusal.blocked"
+        },
+        {
+          "control": "exit",
+          "action": "historyEditExit",
+          "disabledBy": null
+        }
+      ],
+      "indicator": {
+        "en": "Reviewing the edited history",
+        "de": "Bearbeiteter Verlauf wird geprüft"
+      }
+    },
+    {
+      "name": "warnings never block a ready review",
+      "session": {
+        "sessionId": "1",
+        "generation": 7,
+        "stage": "reviewing",
+        "worst": "warning",
+        "blocking": false,
+        "acceptedCount": 1,
+        "review": "ready",
+        "rerunnable": false
+      },
+      "text": {
+        "en": {
+          "stage": "Reviewing the edited history",
+          "target": null,
+          "progress": null,
+          "review": "Ready to finalize",
+          "outcome": "Worst outcome: Warning",
+          "fault": null,
+          "accepted": "Accepted changes: 1"
+        },
+        "de": {
+          "stage": "Bearbeiteter Verlauf wird geprüft",
+          "target": null,
+          "progress": null,
+          "review": "Bereit zum Abschließen",
+          "outcome": "Schwerstes Ergebnis: Warnung",
+          "fault": null,
+          "accepted": "Übernommene Änderungen: 1"
+        }
+      },
+      "controls": [
+        {
+          "control": "rerun",
+          "action": "historyEditRerun",
+          "disabledBy": "ui.timeTravel.refusal.illegal"
+        },
+        {
+          "control": "finalize",
+          "action": "historyEditFinalize",
+          "disabledBy": null
+        },
+        {
+          "control": "exit",
+          "action": "historyEditExit",
+          "disabledBy": null
+        }
+      ],
+      "indicator": {
+        "en": "Reviewing the edited history",
+        "de": "Bearbeiteter Verlauf wird geprüft"
+      }
+    },
+    {
+      "name": "a review without accepted drafts has nothing to finalize",
+      "session": {
+        "sessionId": "1",
+        "generation": 8,
+        "stage": "reviewing",
+        "blocking": false,
+        "acceptedCount": 0,
+        "review": "noChanges",
+        "rerunnable": false
+      },
+      "text": {
+        "en": {
+          "stage": "Reviewing the edited history",
+          "target": null,
+          "progress": null,
+          "review": "No changes: showing the current history",
+          "outcome": null,
+          "fault": null,
+          "accepted": null
+        },
+        "de": {
+          "stage": "Bearbeiteter Verlauf wird geprüft",
+          "target": null,
+          "progress": null,
+          "review": "Keine Änderungen: aktueller Verlauf wird angezeigt",
+          "outcome": null,
+          "fault": null,
+          "accepted": null
+        }
+      },
+      "controls": [
+        {
+          "control": "rerun",
+          "action": "historyEditRerun",
+          "disabledBy": "ui.timeTravel.refusal.illegal"
+        },
+        {
+          "control": "finalize",
+          "action": "historyEditFinalize",
+          "disabledBy": "ui.timeTravel.refusal.empty"
+        },
+        {
+          "control": "exit",
+          "action": "historyEditExit",
+          "disabledBy": null
+        }
+      ],
+      "indicator": {
+        "en": "Reviewing the edited history",
+        "de": "Bearbeiteter Verlauf wird geprüft"
+      }
+    },
+    {
+      "name": "a cancelled replay needs a replay again before it can be finalized",
+      "session": {
+        "sessionId": "1",
+        "generation": 9,
+        "stage": "reviewing",
+        "blocking": false,
+        "fault": "timeTravel.cancelled",
+        "acceptedCount": 1,
+        "review": "needsReplay",
+        "rerunnable": true
+      },
+      "text": {
+        "en": {
+          "stage": "Reviewing the edited history",
+          "target": null,
+          "progress": null,
+          "review": "Replay needed: later mutations are not checked yet",
+          "outcome": null,
+          "fault": "Replay cancelled",
+          "accepted": "Accepted changes: 1"
+        },
+        "de": {
+          "stage": "Bearbeiteter Verlauf wird geprüft",
+          "target": null,
+          "progress": null,
+          "review": "Neu anwenden nötig: spätere Mutationen sind noch nicht geprüft",
+          "outcome": null,
+          "fault": "Neu anwenden abgebrochen",
+          "accepted": "Übernommene Änderungen: 1"
+        }
+      },
+      "controls": [
+        {
+          "control": "rerun",
+          "action": "historyEditRerun",
+          "disabledBy": null
+        },
+        {
+          "control": "finalize",
+          "action": "historyEditFinalize",
+          "disabledBy": "ui.timeTravel.refusal.blocked"
+        },
+        {
+          "control": "exit",
+          "action": "historyEditExit",
+          "disabledBy": null
+        }
+      ],
+      "indicator": {
+        "en": "Reviewing the edited history",
+        "de": "Bearbeiteter Verlauf wird geprüft"
+      }
+    },
+    {
+      "name": "a review the session does not state is never read as no changes or ready",
+      "session": {
+        "sessionId": "1",
+        "generation": 10,
+        "stage": "reviewing",
+        "blocking": false,
+        "fault": "timeTravel.stale",
+        "acceptedCount": 1
+      },
+      "text": {
+        "en": {
+          "stage": "Reviewing the edited history",
+          "target": null,
+          "progress": null,
+          "review": null,
+          "outcome": null,
+          "fault": "Outdated request ignored",
+          "accepted": "Accepted changes: 1"
+        },
+        "de": {
+          "stage": "Bearbeiteter Verlauf wird geprüft",
+          "target": null,
+          "progress": null,
+          "review": null,
+          "outcome": null,
+          "fault": "Veraltete Anfrage ignoriert",
+          "accepted": "Übernommene Änderungen: 1"
+        }
+      },
+      "controls": [
+        {
+          "control": "rerun",
+          "action": "historyEditRerun",
+          "disabledBy": "ui.timeTravel.refusal.illegal"
+        },
+        {
+          "control": "finalize",
+          "action": "historyEditFinalize",
+          "disabledBy": "ui.timeTravel.refusal.illegal"
+        },
+        {
+          "control": "exit",
+          "action": "historyEditExit",
+          "disabledBy": null
+        }
+      ],
+      "indicator": {
+        "en": "Reviewing the edited history",
+        "de": "Bearbeiteter Verlauf wird geprüft"
+      }
+    },
+    {
+      "name": "an unknown replay fault names its code",
+      "session": {
+        "sessionId": "1",
+        "generation": 11,
+        "stage": "editing",
+        "fault": "timeTravel.replay-faulted",
+        "blocking": false,
+        "acceptedCount": 0
+      },
+      "text": {
+        "en": {
+          "stage": "Editing a mutation",
+          "target": null,
+          "progress": null,
+          "review": null,
+          "outcome": null,
+          "fault": "Replay failed (timeTravel.replay-faulted)",
+          "accepted": null
+        },
+        "de": {
+          "stage": "Mutation wird bearbeitet",
+          "target": null,
+          "progress": null,
+          "review": null,
+          "outcome": null,
+          "fault": "Neuanwendung fehlgeschlagen (timeTravel.replay-faulted)",
+          "accepted": null
+        }
+      },
+      "controls": [
+        {
+          "control": "accept",
+          "action": "historyEditAccept",
+          "disabledBy": null
+        },
+        {
+          "control": "discard",
+          "action": "historyEditDiscard",
+          "disabledBy": null
+        },
+        {
+          "control": "exit",
+          "action": "historyEditExit",
+          "disabledBy": null
+        }
+      ],
+      "indicator": {
+        "en": "Editing a mutation",
+        "de": "Mutation wird bearbeitet"
+      }
+    },
+    {
+      "name": "the finalize prompt can go back to the review",
+      "session": {
+        "sessionId": "1",
+        "generation": 12,
+        "stage": "choosing",
+        "blocking": false,
+        "acceptedCount": 1
+      },
+      "text": {
+        "en": {
+          "stage": "Choose how to finalize",
+          "target": null,
+          "progress": null,
+          "review": null,
+          "outcome": null,
+          "fault": null,
+          "accepted": "Accepted changes: 1"
+        },
+        "de": {
+          "stage": "Art des Abschlusses wählen",
+          "target": null,
+          "progress": null,
+          "review": null,
+          "outcome": null,
+          "fault": null,
+          "accepted": "Übernommene Änderungen: 1"
+        }
+      },
+      "controls": [
+        {
+          "control": "back",
+          "action": "historyEditBack",
+          "disabledBy": null
+        },
+        {
+          "control": "exit",
+          "action": "historyEditExit",
+          "disabledBy": null
+        }
+      ],
+      "indicator": {
+        "en": "Choose how to finalize",
+        "de": "Art des Abschlusses wählen"
+      }
+    },
+    {
+      "name": "finalizing offers no control while the commit runs",
+      "session": {
+        "sessionId": "1",
+        "generation": 13,
+        "stage": "finalizing",
+        "blocking": false,
+        "acceptedCount": 1
+      },
+      "text": {
+        "en": {
+          "stage": "Finalizing the history edit",
+          "target": null,
+          "progress": null,
+          "review": null,
+          "outcome": null,
+          "fault": null,
+          "accepted": "Accepted changes: 1"
+        },
+        "de": {
+          "stage": "Verlaufsbearbeitung wird abgeschlossen",
+          "target": null,
+          "progress": null,
+          "review": null,
+          "outcome": null,
+          "fault": null,
+          "accepted": "Übernommene Änderungen: 1"
+        }
+      },
+      "controls": [],
+      "indicator": {
+        "en": "Finalizing the history edit",
+        "de": "Verlaufsbearbeitung wird abgeschlossen"
+      }
+    }
+  ],
+  "refusals": [
+    {
+      "code": "history.malformed-transition",
+      "text": {
+        "en": "History edit refused: the change could not be read.",
+        "de": "Verlaufsbearbeitung abgelehnt: Die Änderung konnte nicht gelesen werden."
+      },
+      "severity": "error"
+    },
+    {
+      "code": "history.unknown-target",
+      "text": {
+        "en": "History edit refused: the edited mutation no longer exists.",
+        "de": "Verlaufsbearbeitung abgelehnt: Die bearbeitete Mutation existiert nicht mehr."
+      },
+      "severity": "error"
+    },
+    {
+      "code": "history.transition-refused",
+      "text": {
+        "en": "The hub refused a history edit; the document is rebuilt from the hub.",
+        "de": "Der Hub hat eine Verlaufsbearbeitung abgelehnt; das Dokument wird vom Hub neu aufgebaut."
+      },
+      "severity": "error"
+    },
+    {
+      "code": "timeTravel.frozen",
+      "text": {
+        "en": "Editing is paused while history is being edited",
+        "de": "Bearbeiten ist pausiert, solange der Verlauf bearbeitet wird"
+      },
+      "severity": "warning"
+    },
+    {
+      "code": "timeTravel.illegal",
+      "text": {
+        "en": "Not possible right now",
+        "de": "Derzeit nicht möglich"
+      },
+      "severity": "warning"
+    },
+    {
+      "code": "timeTravel.stale",
+      "text": {
+        "en": "Outdated request ignored",
+        "de": "Veraltete Anfrage ignoriert"
+      },
+      "severity": "warning"
+    },
+    {
+      "code": "timeTravel.blocked",
+      "text": {
+        "en": "Blocked: resolve the pending change or the errors first",
+        "de": "Blockiert: zuerst die offene Änderung oder die Fehler auflösen"
+      },
+      "severity": "warning"
+    },
+    {
+      "code": "timeTravel.empty",
+      "text": {
+        "en": "Nothing to finalize: no accepted changes",
+        "de": "Nichts abzuschließen: keine übernommenen Änderungen"
+      },
+      "severity": "warning"
+    },
+    {
+      "code": "timeTravel.cancelled",
+      "text": {
+        "en": "Replay cancelled",
+        "de": "Neu anwenden abgebrochen"
+      },
+      "severity": "warning"
+    },
+    {
+      "code": "timeTravel.name-invalid",
+      "text": {
+        "en": "Invalid alternative name: use 1 to 256 characters",
+        "de": "Ungültiger Name der Alternative: 1 bis 256 Zeichen verwenden"
+      },
+      "severity": "warning"
+    }
+  ]
+}

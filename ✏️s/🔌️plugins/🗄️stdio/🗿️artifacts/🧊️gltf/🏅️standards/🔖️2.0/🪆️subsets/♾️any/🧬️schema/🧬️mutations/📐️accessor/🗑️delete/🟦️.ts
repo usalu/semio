@@ -1,7 +1,13 @@
-/** 🦠️ delete-accessor executable structural glTF command. */
-import type { GltfOrthographic, GltfPerspective, GltfSnapshot } from '../../📸️snapshot/🟦️.ts';
-import { clone, insert, order, position, reject, remove, relocate, reorder, repair, type GltfMutationRejection, type GltfStructuralResult } from './🟦️';
-export const GltfDeleteAccessorDescriptor = { id: 's.stdio.gltf.mutation.delete-accessor.v1', version: 1, touchedPathPattern: 'document/accessors', referencePolicy: 'all typed accessor references are remapped, repaired, or rejected' } as const;
-export interface GltfDeleteAccessorPayload { index: number }
-export const validateGltfDeleteAccessor = (payload: GltfDeleteAccessorPayload, base: GltfSnapshot): GltfMutationRejection | undefined => { const index = position(payload.index, base.document.accessors.length, 'document/accessors'); if (index) return index;  return undefined; };
-export const applyGltfDeleteAccessor = (base: GltfSnapshot, payload: GltfDeleteAccessorPayload): GltfStructuralResult => { const rejection = validateGltfDeleteAccessor(payload, base); if (rejection) return { accepted: false, rejection }; try { const next = clone(base); remove(next, 'accessors', payload.index); return { accepted: true, snapshot: clone(next) }; } catch (error) { return { accepted: false, rejection: typeof error === 'object' && error && 'code' in error ? error as GltfMutationRejection : reject('gltf.mutation.apply-failed', 'document/accessors', String(error)) }; } };
+/** 🗑️ `delete-accessor` wire twin: the flat `Apply` payload `GltfDeleteAccessorPayload` and the phase wire `DeleteAccessorMutation`, exactly as `./🦀️.rs` writes them.
+ * @see ./🧬️schema/🔣️.json */
+import { gltfWireIndex, gltfWireObject, gltfWireRequired } from "../../../📸️snapshot/🟦️.ts";
+import { type GltfDiff, type GltfPhase, gltfWirePhase, parseGltfDiff } from "../../../🔺️diff/🟦️.ts";
+
+export interface GltfDeleteAccessorPayload {
+  index: number;
+}
+
+export type DeleteAccessorMutation = GltfPhase<GltfDeleteAccessorPayload, GltfDiff>;
+
+export const parseGltfDeleteAccessorPayload = gltfWireObject<GltfDeleteAccessorPayload>({ index: gltfWireRequired(gltfWireIndex) });
+export const parseDeleteAccessorMutation = gltfWirePhase(parseGltfDeleteAccessorPayload, parseGltfDiff);

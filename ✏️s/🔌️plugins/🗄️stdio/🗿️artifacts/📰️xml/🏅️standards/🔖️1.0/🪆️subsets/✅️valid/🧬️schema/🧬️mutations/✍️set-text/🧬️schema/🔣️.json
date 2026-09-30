@@ -5,10 +5,15 @@
   "type": "object",
   "additionalProperties": false,
   "required": [
+    "mutation",
     "path",
     "text"
   ],
   "properties": {
+    "mutation": {
+      "const": "setText",
+      "description": "Aggregate discriminator spliced in by XmlValidMutation; absent when the payload stands alone."
+    },
     "path": {
       "type": "array",
       "items": {
@@ -18,10 +23,6 @@
     },
     "text": {
       "type": "string"
-    },
-    "mutation": {
-      "const": "setText",
-      "description": "Aggregate discriminator spliced in by XmlValidMutation; absent when the payload stands alone."
     }
   }
 }

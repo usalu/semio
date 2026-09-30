@@ -79,7 +79,7 @@ function recordingWorld(overrides: Partial<DevHubWorldV1> = {}): DevHubWorldV1 &
     ...devHubWorldV1(REPO, "en"),
     sleep: (ms) => new Promise<void>((resolveDelay) => setTimeout(resolveDelay, Math.min(ms, 50))),
     report: (status) => void statuses.push(status),
-    spawnOwner: () => {
+    spawnOwner: async () => {
       throw new Error("the join path must never start a hub");
     },
     ...overrides,
@@ -176,7 +176,7 @@ describe("owning the default hub", () => {
         ready: async () => row.readyAfterPolls !== null && polls++ >= row.readyAfterPolls,
         portInUse: () => row.portInUse,
         alive: (pid) => pid === OWNER,
-        spawnOwner: () => {
+        spawnOwner: async () => {
           spawned += 1;
           writeFileSync(paths[0], JSON.stringify(lease(OWNER)));
           return OWNER;

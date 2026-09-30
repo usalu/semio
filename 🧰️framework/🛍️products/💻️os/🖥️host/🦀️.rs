@@ -526,7 +526,7 @@ pub mod host {
     pub fn materialize_backbone_snapshot<P, Op>(document: &BackboneDocument<P, Op>, applied_edit_ids: &[String]) -> Result<P, VcsError>
     where
         P: Clone,
-        Op: Clone + Mutation<P>,
+        Op: Clone + Mutation<P> + protocol::OpBinary,
     {
         with_backbone_envelope(document, |envelope| resolve_kernel_future(materialize_document_snapshot(envelope, applied_edit_ids)))
     }
@@ -714,7 +714,7 @@ pub mod host {
     }
 
     /// 🎛️ Maps a `workflow::WorkflowParameter` to its `WorkflowParameterType` tag — needed here
-    /// to type-check a binding's parameter against its target `ConfigFieldShape`.
+    /// to type-check a binding's parameter against its target config field's `ArgSchema`.
     fn workflow_parameter_type_of(parameter: &workflow::WorkflowParameter) -> workflow::WorkflowParameterType {
         match parameter {
             workflow::WorkflowParameter::Numeric { .. } => workflow::WorkflowParameterType::Numeric,
@@ -859,7 +859,7 @@ pub mod host {
         }
 
         pub fn dispatch_apply(&mut self, mutations: Vec<workflow::WorkflowMutation>) -> Result<(), VcsError> {
-            resolve_kernel_future(self.inner.dispatch(ArtifactCommand::Apply { mutations, description: None })).map(|_| ())
+            resolve_kernel_future(self.inner.dispatch(ArtifactCommand::Apply { mutations, description: None, transaction: None })).map(|_| ())
         }
 
         pub fn set_workflow_name(&mut self, name: &str) {
@@ -882,7 +882,7 @@ pub mod host {
                 node.label = label.into();
             }
             self.dispatch_apply(vec![workflow::WorkflowMutation::AddNode(workflow::AddNode { node })])?;
-            resolve_kernel_future(space_store.dispatch(ArtifactCommand::Apply { mutations: vec![space::SpaceMutation::InstallProgram { plugin_id: plugin_id.into() }], description: None }))?;
+            resolve_kernel_future(space_store.dispatch(ArtifactCommand::Apply { mutations: vec![space::SpaceMutation::InstallProgram { plugin_id: plugin_id.into() }], description: None, transaction: None }))?;
             Ok(node_id)
         }
 
@@ -1564,10 +1564,10 @@ pub mod instance {
     pub struct OsParameterFieldBinding {
         pub parameter_id: String,
         pub node_id: String,
-        /// 🎯️ Names a `ConfigFieldSpec.key` in the target `node`'s app's declared `ConfigSpec`
+        /// 🎯️ Names a field `id` in the target `node`'s app's declared `ConfigSpec`
         /// (resolved via `registry::os_app_registration(node.plugin_id, node.app_id).config`) — see
         /// `build_configure_config` (overlays the bound parameter's value onto that config field for
-        /// an `AppCommand::Configure` payload; the analogous type-check against `ConfigFieldShape`
+        /// an `AppCommand::Configure` payload; the analogous type-check against the field's `ArgSchema`
         /// this field never had its own live caller for lives on the real workflow-graph binding type,
         /// `workflow::validate_workflow_parameter_config_binding`). Historically a JSON pointer into
         /// the node's live document (`apply_parameter_values_to_snapshot`'s still-live overlay,
@@ -1771,7 +1771,7 @@ pub mod instance {
     /// Pre-`ConfigSpec` document-snapshot overlay, kept for its one remaining live caller
     /// (`app_instance_document_patches_for_binding`, the media-export path's synthetic-document seed)
     /// — `field_path` here is still read as a JSON pointer into that bare document, distinct from the
-    /// `ConfigFieldSpec.key` sense `build_configure_config` gives it for driving a running app
+    /// config field `id` sense `build_configure_config` gives it for driving a running app
     /// instance's config (see `OsParameterFieldBinding::field_path`'s doc).
     pub fn apply_parameter_values_to_snapshot(snapshot: Value, bindings: &[OsParameterFieldBinding], parameters: &[OsParameter], node_id: &str) -> Value {
         let node_bindings: Vec<_> = bindings.iter().filter(|binding| binding.node_id == node_id).collect();
@@ -1877,7 +1877,7 @@ pub mod instance {
         for field in &config_spec.fields {
             if let Some(default) = &field.default {
                 let json_default = Value::from(default.clone());
-                defaults.insert(field.key.clone(), json_default);
+                defaults.insert(field.id.clone(), json_default);
             }
         }
         Value::Object(defaults)
@@ -1910,17 +1910,17 @@ pub mod instance {
             }
         };
         for binding in bindings.iter().filter(|binding| binding.node_id == node_id) {
-            let Some(field) = config_spec.fields.iter().find(|field| field.key == binding.field_path) else {
+            let Some(field) = config_spec.fields.iter().find(|field| field.id == binding.field_path) else {
                 continue;
             };
             let Some(parameter) = parameters.iter().find(|entry| entry.id() == binding.parameter_id) else {
                 continue;
             };
             let value = dsl::DslValue::from(&os_parameter_value(parameter));
-            if let Some((_, slot)) = entries.iter_mut().find(|(key, _)| key == &field.key) {
+            if let Some((_, slot)) = entries.iter_mut().find(|(key, _)| key == &field.id) {
                 *slot = value;
             } else {
-                entries.push((field.key.clone(), value));
+                entries.push((field.id.clone(), value));
             }
         }
         config

@@ -16,10 +16,10 @@
 use crate::{equation_graph, EquationDiff, EquationMutation, EquationSnapshot};
 use semio_framework_os_kernel::ToValue;
 
-const BEFORE: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/❌️delete-node/🧪️rejects-deleting-a-node-that-is-not-in-the-graph/📸️snapshot/⬅️before/🔣️.json");
-const AFTER: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/❌️delete-node/🧪️rejects-deleting-a-node-that-is-not-in-the-graph/📸️snapshot/➡️after/🔣️.json");
-const MUTATION: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/❌️delete-node/🧪️rejects-deleting-a-node-that-is-not-in-the-graph/🦠️mutation/🔣️.json");
-const OUTCOME: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/❌️delete-node/🧪️rejects-deleting-a-node-that-is-not-in-the-graph/🎯️outcome/🔣️.json");
+const BEFORE: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/❌️delete-node/🧪️rejects-deleting-node-is-not-graph/📸️snapshot/⬅️before/🔣️.json");
+const AFTER: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/❌️delete-node/🧪️rejects-deleting-node-is-not-graph/📸️snapshot/➡️after/🔣️.json");
+const MUTATION: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/❌️delete-node/🧪️rejects-deleting-node-is-not-graph/🦠️mutation/🔣️.json");
+const OUTCOME: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/❌️delete-node/🧪️rejects-deleting-node-is-not-graph/🎯️outcome/🔣️.json");
 
 fn before() -> EquationSnapshot {
     pack::from_json_str(BEFORE).expect("before snapshot decodes")

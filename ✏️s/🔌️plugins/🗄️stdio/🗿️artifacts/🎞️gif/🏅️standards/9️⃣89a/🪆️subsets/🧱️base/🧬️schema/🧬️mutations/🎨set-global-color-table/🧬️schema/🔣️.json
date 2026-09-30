@@ -4,7 +4,14 @@
   "title": "SetGlobalColorTable",
   "type": "object",
   "additionalProperties": false,
+  "required": [
+    "mutation"
+  ],
   "properties": {
+    "mutation": {
+      "const": "setGlobalColorTable",
+      "description": "Aggregate discriminator spliced in by GifMutation; absent when the payload stands alone."
+    },
     "gct": {
       "anyOf": [
         {
@@ -13,11 +20,19 @@
         {
           "type": "null"
         }
-      ]
-    },
-    "mutation": {
-      "const": "setGlobalColorTable",
-      "description": "Aggregate discriminator spliced in by GifMutation; absent when the payload stands alone."
+      ],
+      "x-semio-ui": {
+        "label": {
+          "en": "Global color table",
+          "de": "Globale Farbtabelle"
+        },
+        "description": {
+          "en": "Empty removes the global color table.",
+          "de": "Leer entfernt die globale Farbtabelle."
+        },
+        "group": "value",
+        "order": 10
+      }
     }
   },
   "$defs": {
@@ -26,12 +41,24 @@
       "additionalProperties": false,
       "properties": {
         "sorted": {
-          "type": "boolean"
+          "type": "boolean",
+          "x-semio-ui": {
+            "label": {
+              "en": "Sorted by importance",
+              "de": "Nach Wichtigkeit sortiert"
+            }
+          }
         },
         "colors": {
           "type": "array",
           "items": {
             "$ref": "#/$defs/GifRgb"
+          },
+          "x-semio-ui": {
+            "label": {
+              "en": "Colors",
+              "de": "Farben"
+            }
           }
         }
       }
@@ -48,17 +75,35 @@
         "r": {
           "type": "integer",
           "minimum": 0,
-          "maximum": 255
+          "maximum": 255,
+          "x-semio-ui": {
+            "label": {
+              "en": "Red",
+              "de": "Rot"
+            }
+          }
         },
         "g": {
           "type": "integer",
           "minimum": 0,
-          "maximum": 255
+          "maximum": 255,
+          "x-semio-ui": {
+            "label": {
+              "en": "Green",
+              "de": "Grün"
+            }
+          }
         },
         "b": {
           "type": "integer",
           "minimum": 0,
-          "maximum": 255
+          "maximum": 255,
+          "x-semio-ui": {
+            "label": {
+              "en": "Blue",
+              "de": "Blau"
+            }
+          }
         }
       }
     }

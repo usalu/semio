@@ -9,8 +9,8 @@
     "subjects": [],
     "relationships": [],
     "properties": [],
-    "controlled_lists": [],
-    "meta_subjects": []
+    "controlledLists": [],
+    "metaSubjects": []
   },
   "geometry": null,
   "selection": null,

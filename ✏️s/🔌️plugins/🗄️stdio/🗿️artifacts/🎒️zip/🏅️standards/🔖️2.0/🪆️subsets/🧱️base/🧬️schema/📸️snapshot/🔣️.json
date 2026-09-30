@@ -7,11 +7,17 @@
       "type": "object",
       "required": ["id", "data"],
       "properties": {
-        "id": { "type": "integer", "minimum": 0, "maximum": 65535 },
+        "id": { "type": "integer", "minimum": 0, "maximum": 65535, "x-semio-ui": {"widget": "stepper", "label": {"en": "Header ID", "de": "Header-ID"}, "description": {"en": "Extra-field header identifier, e.g. 0x5455.", "de": "Kennung des Zusatzfeld-Headers, z. B. 0x5455."}} },
         "data": {
           "type": "array",
           "items": { "type": "integer", "minimum": 0, "maximum": 255 },
-          "description": "Exact unknown payload. Derived ids 0x0001, 0x7075 and 0x6375 must use an empty marker payload and are regenerated coherently."
+          "description": "Exact unknown payload. Derived ids 0x0001, 0x7075 and 0x6375 must use an empty marker payload and are regenerated coherently.",
+          "x-semio-ui": {
+            "label": {
+              "en": "Field data",
+              "de": "Felddaten"
+            }
+          }
         }
       }
     },
@@ -19,39 +25,39 @@
       "type": "object",
       "required": ["versionNeeded", "flags", "modifiedTime", "modifiedDate", "extraFields"],
       "properties": {
-        "versionNeeded": { "type": "integer", "minimum": 0, "maximum": 65535 },
-        "flags": { "type": "integer", "minimum": 0, "maximum": 65535 },
-        "modifiedTime": { "type": "integer", "minimum": 0, "maximum": 65535 },
-        "modifiedDate": { "type": "integer", "minimum": 0, "maximum": 65535 },
-        "extraFields": { "type": "array", "items": { "$ref": "#/$defs/ZipExtraField" } },
-        "unicodePathLegacyName": { "type": "array", "items": { "type": "integer", "minimum": 0, "maximum": 255 } }
+        "versionNeeded": { "type": "integer", "minimum": 0, "maximum": 65535, "x-semio-ui": {"widget": "stepper", "label": {"en": "Version needed to extract", "de": "Zum Entpacken benötigte Version"}, "description": {"en": "ZIP specification version times ten, e.g. 20 for 2.0.", "de": "ZIP-Spezifikationsversion mal zehn, z. B. 20 für 2.0."}} },
+        "flags": { "type": "integer", "minimum": 0, "maximum": 65535, "x-semio-ui": {"widget": "stepper", "label": {"en": "General-purpose flags", "de": "Allzweck-Bitflags"}, "description": {"en": "General-purpose bit flag field of the header.", "de": "Allzweck-Bitfeld des Headers."}} },
+        "modifiedTime": { "type": "integer", "minimum": 0, "maximum": 65535, "x-semio-ui": {"widget": "stepper", "label": {"en": "Modification time", "de": "Änderungszeit"}, "description": {"en": "MS-DOS time field.", "de": "MS-DOS-Zeitfeld."}} },
+        "modifiedDate": { "type": "integer", "minimum": 0, "maximum": 65535, "x-semio-ui": {"widget": "stepper", "label": {"en": "Modification date", "de": "Änderungsdatum"}, "description": {"en": "MS-DOS date field.", "de": "MS-DOS-Datumsfeld."}} },
+        "extraFields": { "type": "array", "items": { "$ref": "#/$defs/ZipExtraField" }, "x-semio-ui": {"label": {"en": "Extra fields", "de": "Zusatzfelder"}} },
+        "unicodePathLegacyName": { "type": "array", "items": { "type": "integer", "minimum": 0, "maximum": 255 }, "x-semio-ui": {"label": {"en": "Legacy name bytes", "de": "Namensbytes (Altformat)"}, "description": {"en": "Name bytes stored beside a Unicode path extra field.", "de": "Neben einem Unicode-Pfad-Zusatzfeld gespeicherte Namensbytes."}} }
       }
     },
     "ZipCentralHeaderMetadata": {
       "type": "object",
       "required": ["versionMadeBy", "versionNeeded", "flags", "modifiedTime", "modifiedDate", "extraFields", "comment", "internalAttributes", "externalAttributes"],
       "properties": {
-        "versionMadeBy": { "type": "integer", "minimum": 0, "maximum": 65535 },
-        "versionNeeded": { "type": "integer", "minimum": 0, "maximum": 65535 },
-        "flags": { "type": "integer", "minimum": 0, "maximum": 65535 },
-        "modifiedTime": { "type": "integer", "minimum": 0, "maximum": 65535 },
-        "modifiedDate": { "type": "integer", "minimum": 0, "maximum": 65535 },
-        "extraFields": { "type": "array", "items": { "$ref": "#/$defs/ZipExtraField" } },
-        "unicodePathLegacyName": { "type": "array", "items": { "type": "integer", "minimum": 0, "maximum": 255 } },
-        "comment": { "type": "string" },
-        "unicodeCommentLegacy": { "type": "array", "items": { "type": "integer", "minimum": 0, "maximum": 255 } },
-        "internalAttributes": { "type": "integer", "minimum": 0, "maximum": 65535 },
-        "externalAttributes": { "type": "integer", "minimum": 0, "maximum": 4294967295 }
+        "versionMadeBy": { "type": "integer", "minimum": 0, "maximum": 65535, "x-semio-ui": {"widget": "stepper", "label": {"en": "Version made by", "de": "Erstellt mit Version"}, "description": {"en": "Host system and ZIP specification version of the archiver.", "de": "Hostsystem und ZIP-Spezifikationsversion des Archivierers."}} },
+        "versionNeeded": { "type": "integer", "minimum": 0, "maximum": 65535, "x-semio-ui": {"widget": "stepper", "label": {"en": "Version needed to extract", "de": "Zum Entpacken benötigte Version"}, "description": {"en": "ZIP specification version times ten, e.g. 20 for 2.0.", "de": "ZIP-Spezifikationsversion mal zehn, z. B. 20 für 2.0."}} },
+        "flags": { "type": "integer", "minimum": 0, "maximum": 65535, "x-semio-ui": {"widget": "stepper", "label": {"en": "General-purpose flags", "de": "Allzweck-Bitflags"}, "description": {"en": "General-purpose bit flag field of the header.", "de": "Allzweck-Bitfeld des Headers."}} },
+        "modifiedTime": { "type": "integer", "minimum": 0, "maximum": 65535, "x-semio-ui": {"widget": "stepper", "label": {"en": "Modification time", "de": "Änderungszeit"}, "description": {"en": "MS-DOS time field.", "de": "MS-DOS-Zeitfeld."}} },
+        "modifiedDate": { "type": "integer", "minimum": 0, "maximum": 65535, "x-semio-ui": {"widget": "stepper", "label": {"en": "Modification date", "de": "Änderungsdatum"}, "description": {"en": "MS-DOS date field.", "de": "MS-DOS-Datumsfeld."}} },
+        "extraFields": { "type": "array", "items": { "$ref": "#/$defs/ZipExtraField" }, "x-semio-ui": {"label": {"en": "Extra fields", "de": "Zusatzfelder"}} },
+        "unicodePathLegacyName": { "type": "array", "items": { "type": "integer", "minimum": 0, "maximum": 255 }, "x-semio-ui": {"label": {"en": "Legacy name bytes", "de": "Namensbytes (Altformat)"}, "description": {"en": "Name bytes stored beside a Unicode path extra field.", "de": "Neben einem Unicode-Pfad-Zusatzfeld gespeicherte Namensbytes."}} },
+        "comment": { "type": "string", "x-semio-ui": {"widget": "text", "label": {"en": "File comment", "de": "Dateikommentar"}} },
+        "unicodeCommentLegacy": { "type": "array", "items": { "type": "integer", "minimum": 0, "maximum": 255 }, "x-semio-ui": {"label": {"en": "Legacy comment bytes", "de": "Kommentarbytes (Altformat)"}, "description": {"en": "Comment bytes stored beside a Unicode comment extra field.", "de": "Neben einem Unicode-Kommentar-Zusatzfeld gespeicherte Kommentarbytes."}} },
+        "internalAttributes": { "type": "integer", "minimum": 0, "maximum": 65535, "x-semio-ui": {"widget": "stepper", "label": {"en": "Internal attributes", "de": "Interne Attribute"}} },
+        "externalAttributes": { "type": "integer", "minimum": 0, "maximum": 4294967295, "x-semio-ui": {"widget": "stepper", "label": {"en": "External attributes", "de": "Externe Attribute"}, "description": {"en": "Host-dependent file attributes, e.g. Unix mode bits.", "de": "Hostabhängige Dateiattribute, z. B. Unix-Modusbits."}} }
       }
     },
     "ZipEntryMetadata": {
       "type": "object",
       "required": ["compressionMethod", "local", "central", "dataDescriptorSignature"],
       "properties": {
-        "compressionMethod": { "type": "integer", "enum": [0, 8] },
-        "local": { "$ref": "#/$defs/ZipLocalHeaderMetadata" },
-        "central": { "$ref": "#/$defs/ZipCentralHeaderMetadata" },
-        "dataDescriptorSignature": { "type": "boolean" }
+        "compressionMethod": { "type": "integer", "enum": [0, 8], "x-semio-ui": {"label": {"en": "Compression method", "de": "Kompressionsverfahren"}, "description": {"en": "0 stores the member, 8 deflates it.", "de": "0 speichert den Eintrag, 8 komprimiert ihn mit Deflate."}} },
+        "local": { "$ref": "#/$defs/ZipLocalHeaderMetadata", "x-semio-ui": {"label": {"en": "Local file header", "de": "Lokaler Dateiheader"}} },
+        "central": { "$ref": "#/$defs/ZipCentralHeaderMetadata", "x-semio-ui": {"label": {"en": "Central directory header", "de": "Zentralverzeichnis-Header"}} },
+        "dataDescriptorSignature": { "type": "boolean", "x-semio-ui": {"widget": "toggle", "label": {"en": "Data descriptor signature", "de": "Datendeskriptor-Signatur"}, "description": {"en": "Whether the data descriptor carries its optional signature.", "de": "Ob der Datendeskriptor seine optionale Signatur trägt."}} }
       }
     },
     "ZipEntry": {
@@ -73,7 +79,7 @@
             "maximum": 255
           }
         },
-        "metadata": { "$ref": "#/$defs/ZipEntryMetadata" }
+        "metadata": { "$ref": "#/$defs/ZipEntryMetadata", "x-semio-ui": {"label": {"en": "Header metadata", "de": "Header-Metadaten"}, "description": {"en": "Serialization state of the member headers.", "de": "Serialisierungszustand der Header des Eintrags."}} }
       }
     }
   },
@@ -87,14 +93,31 @@
   "properties": {
     "schema": {
       "type": "string",
-      "x-semio-state": "artifact"
+      "x-semio-state": "artifact",
+      "x-semio-ui": {
+        "widget": "text",
+        "label": {
+          "en": "Snapshot schema",
+          "de": "Snapshot-Schema"
+        },
+        "description": {
+          "en": "Identifier of the snapshot schema version.",
+          "de": "Kennung der Version des Snapshot-Schemas."
+        }
+      }
     },
     "entries": {
       "type": "array",
       "items": {
         "$ref": "#/$defs/ZipEntry"
       },
-      "x-semio-state": "artifact"
+      "x-semio-state": "artifact",
+      "x-semio-ui": {
+        "label": {
+          "en": "Archive entries",
+          "de": "Archiveinträge"
+        }
+      }
     },
     "comment": {
       "type": "string",
@@ -103,7 +126,18 @@
     "commentUtf8": {
       "type": "boolean",
       "description": "True for UTF-8 EOCD comment bytes; false for the unambiguous CP437 fallback.",
-      "x-semio-state": "artifact"
+      "x-semio-state": "artifact",
+      "x-semio-ui": {
+        "widget": "toggle",
+        "label": {
+          "en": "UTF-8 comment",
+          "de": "UTF-8-Kommentar"
+        },
+        "description": {
+          "en": "Archive comment bytes are UTF-8; off means CP437.",
+          "de": "Die Bytes des Archivkommentars sind UTF-8; aus bedeutet CP437."
+        }
+      }
     }
   }
 }

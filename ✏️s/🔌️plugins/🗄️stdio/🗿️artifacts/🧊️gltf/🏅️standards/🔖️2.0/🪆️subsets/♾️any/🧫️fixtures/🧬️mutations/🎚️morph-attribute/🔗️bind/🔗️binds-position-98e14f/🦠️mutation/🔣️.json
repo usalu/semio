@@ -1,0 +1,13 @@
+{
+  "mutation": "bindMorphTargetAttribute",
+  "payload": {
+    "phase": "apply",
+    "value": {
+      "mesh": 0,
+      "primitive": 0,
+      "target": 0,
+      "semantic": "POSITION",
+      "accessor": 1
+    }
+  }
+}

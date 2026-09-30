@@ -1,0 +1,5 @@
+{
+  "operation": "renameNode",
+  "id": "a",
+  "newId": "renamed"
+}

@@ -5,11 +5,16 @@
   "type": "object",
   "additionalProperties": false,
   "required": [
+    "mutation",
     "slide_index",
     "shape_index",
     "blocks"
   ],
   "properties": {
+    "mutation": {
+      "const": "setTextBoxBlocks",
+      "description": "Aggregate discriminator spliced in by SemioPresentationMutation; absent when the payload stands alone."
+    },
     "slide_index": {
       "type": "integer",
       "minimum": 0
@@ -22,11 +27,13 @@
       "type": "array",
       "items": {
         "$ref": "#/$defs/DocBlock"
+      },
+      "x-semio-ui": {
+        "label": {
+          "en": "Text blocks",
+          "de": "Textblöcke"
+        }
       }
-    },
-    "mutation": {
-      "const": "setTextBoxBlocks",
-      "description": "Aggregate discriminator spliced in by SemioPresentationMutation; absent when the payload stands alone."
     }
   },
   "$defs": {

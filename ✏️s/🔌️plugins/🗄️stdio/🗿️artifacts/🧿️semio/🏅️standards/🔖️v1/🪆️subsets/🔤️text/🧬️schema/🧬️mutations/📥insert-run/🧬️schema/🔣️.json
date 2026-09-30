@@ -14,7 +14,13 @@
       "minimum": 0
     },
     "run": {
-      "$ref": "#/$defs/SemioTextRun"
+      "$ref": "#/$defs/SemioTextRun",
+      "x-semio-ui": {
+        "label": {
+          "en": "Text run",
+          "de": "Textlauf"
+        }
+      }
     }
   },
   "$defs": {
@@ -23,7 +29,18 @@
       "additionalProperties": false,
       "properties": {
         "language": {
-          "type": "string"
+          "type": "string",
+          "x-semio-ui": {
+            "widget": "text",
+            "label": {
+              "en": "Language",
+              "de": "Sprache"
+            },
+            "description": {
+              "en": "BCP 47 tag; empty means unspecified.",
+              "de": "BCP-47-Kennung; leer bedeutet unbestimmt."
+            }
+          }
         },
         "content": {
           "type": "string"
@@ -32,6 +49,12 @@
           "type": "array",
           "items": {
             "$ref": "#/$defs/SemioTextMark"
+          },
+          "x-semio-ui": {
+            "label": {
+              "en": "Marks",
+              "de": "Auszeichnungen"
+            }
           }
         }
       }
@@ -44,10 +67,41 @@
       ],
       "properties": {
         "kind": {
-          "$ref": "#/$defs/SemioTextMarkKind"
+          "$ref": "#/$defs/SemioTextMarkKind",
+          "x-semio-ui": {
+            "options": {
+              "bold": {
+                "en": "Bold",
+                "de": "Fett"
+              },
+              "italic": {
+                "en": "Italic",
+                "de": "Kursiv"
+              },
+              "code": {
+                "en": "Code",
+                "de": "Code"
+              },
+              "link": {
+                "en": "Link",
+                "de": "Link"
+              }
+            }
+          }
         },
         "href": {
-          "type": "string"
+          "type": "string",
+          "x-semio-ui": {
+            "widget": "text",
+            "label": {
+              "en": "Link target",
+              "de": "Linkziel"
+            },
+            "description": {
+              "en": "URL of a link mark.",
+              "de": "URL einer Link-Auszeichnung."
+            }
+          }
         }
       }
     },

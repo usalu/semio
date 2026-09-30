@@ -1,6 +1,7 @@
 {
   "kind": "insert-keyframe",
-  "params": {
+  "mutation": {
+    "mutation": "insertKeyframe",
     "timelineIndex": 0,
     "channelIndex": 0,
     "index": 1,

@@ -10,7 +10,21 @@
   "properties": {
     "project": {
       "type": "integer",
-      "minimum": 0
+      "minimum": 0,
+      "x-semio-ui": {
+        "widget": "stepper",
+        "label": {
+          "en": "Project",
+          "de": "Projekt"
+        },
+        "description": {
+          "en": "STEP instance id of the IfcProject.",
+          "de": "STEP-Instanz-ID des IfcProject."
+        },
+        "precision": 0,
+        "group": "target",
+        "order": 10
+      }
     },
     "units": {
       "anyOf": [
@@ -21,7 +35,21 @@
         {
           "type": "null"
         }
-      ]
+      ],
+      "x-semio-ui": {
+        "widget": "stepper",
+        "label": {
+          "en": "Unit assignment",
+          "de": "Einheitenzuweisung"
+        },
+        "description": {
+          "en": "STEP instance id of the IfcUnitAssignment; empty clears it.",
+          "de": "STEP-Instanz-ID der IfcUnitAssignment; leer löscht sie."
+        },
+        "precision": 0,
+        "group": "value",
+        "order": 20
+      }
     }
   }
 }

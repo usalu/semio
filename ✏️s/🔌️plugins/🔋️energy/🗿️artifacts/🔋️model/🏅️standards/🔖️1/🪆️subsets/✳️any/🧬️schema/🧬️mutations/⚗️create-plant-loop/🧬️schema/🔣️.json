@@ -5,6 +5,7 @@
   "type": "object",
   "additionalProperties": false,
   "required": [
+    "mutation",
     "id",
     "name",
     "loopType",
@@ -14,33 +15,160 @@
     "equipmentIds"
   ],
   "properties": {
+    "mutation": {
+      "const": "createPlantLoop"
+    },
     "id": {
-      "type": "integer"
+      "type": "integer",
+      "minimum": 0,
+      "x-semio-ui": {
+        "widget": "stepper",
+        "role": "value",
+        "label": {
+          "en": "ID",
+          "de": "ID"
+        },
+        "description": {
+          "en": "Id the new plant loop is created under; later mutations address it by this id.",
+          "de": "ID, unter der das neue Objekt angelegt wird; spätere Mutationen adressieren es darüber."
+        },
+        "step": 1,
+        "precision": 0,
+        "group": "identity",
+        "order": 10
+      }
     },
     "name": {
-      "type": "string"
+      "type": "string",
+      "pattern": "[^\\t\\n\\u000B\\f\\r \\u0085\\u00A0\\u1680\\u2000-\\u200A\\u2028\\u2029\\u202F\\u205F\\u3000]",
+      "x-semio-ui": {
+        "widget": "text",
+        "role": "value",
+        "label": {
+          "en": "Name",
+          "de": "Name"
+        },
+        "group": "identity",
+        "order": 20
+      }
     },
     "loopType": {
       "enum": [
         "Heating",
         "Cooling",
         "Condenser"
-      ]
+      ],
+      "x-semio-ui": {
+        "widget": "segmented",
+        "role": "value",
+        "label": {
+          "en": "Loop type",
+          "de": "Kreislauftyp"
+        },
+        "options": {
+          "Heating": {
+            "en": "Heating",
+            "de": "Heizung"
+          },
+          "Cooling": {
+            "en": "Cooling",
+            "de": "Kühlung"
+          },
+          "Condenser": {
+            "en": "Condenser",
+            "de": "Rückkühlung"
+          }
+        },
+        "group": "plant",
+        "order": 30
+      }
     },
     "supplyTemperatureC": {
-      "type": "number"
+      "type": "number",
+      "minimum": -100,
+      "maximum": 300,
+      "x-semio-ui": {
+        "widget": "stepper",
+        "role": "value",
+        "label": {
+          "en": "Supply temperature",
+          "de": "Vorlauftemperatur"
+        },
+        "unit": "°C",
+        "step": 0.5,
+        "precision": 1,
+        "group": "plant",
+        "order": 40
+      }
     },
     "returnTemperatureC": {
-      "type": "number"
+      "type": "number",
+      "minimum": -100,
+      "maximum": 300,
+      "x-semio-ui": {
+        "widget": "stepper",
+        "role": "value",
+        "label": {
+          "en": "Return temperature",
+          "de": "Rücklauftemperatur"
+        },
+        "unit": "°C",
+        "step": 0.5,
+        "precision": 1,
+        "group": "plant",
+        "order": 50
+      }
     },
     "designFlowKgS": {
-      "type": "number"
+      "type": "number",
+      "exclusiveMinimum": 0,
+      "x-semio-ui": {
+        "widget": "stepper",
+        "role": "value",
+        "label": {
+          "en": "Design mass flow",
+          "de": "Bemessungsmassenstrom"
+        },
+        "unit": "kg/s",
+        "step": 0.01,
+        "precision": 2,
+        "group": "plant",
+        "order": 60
+      }
     },
     "equipmentIds": {
       "type": "array",
       "items": {
-        "type": "integer"
+        "type": "integer",
+        "minimum": 1
+      },
+      "uniqueItems": true,
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Plant components",
+          "de": "Anlagenkomponenten"
+        },
+        "description": {
+          "en": "Component ids in strictly ascending order.",
+          "de": "Komponenten-IDs in streng aufsteigender Reihenfolge."
+        },
+        "ref": {
+          "kind": "plantComponent"
+        },
+        "group": "member",
+        "order": 70
       }
     }
-  }
+  },
+  "x-semio-invariant": [
+    {
+      "id": "equipment-ids-ascending",
+      "description": {
+        "en": "Plant component ids are listed in strictly ascending order.",
+        "de": "Die Komponenten-IDs sind streng aufsteigend sortiert."
+      }
+    }
+  ]
 }

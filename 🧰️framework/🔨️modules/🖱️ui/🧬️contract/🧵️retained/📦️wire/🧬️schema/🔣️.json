@@ -281,8 +281,8 @@
         },
         "components": {
           "type": "array",
-          "minItems": 23,
-          "maxItems": 23,
+          "minItems": 25,
+          "maxItems": 25,
           "items": {
             "type": "object",
             "additionalProperties": false,

@@ -10,10 +10,27 @@
   ],
   "properties": {
     "vertex_id": {
-      "type": "string"
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Vertex",
+          "de": "Eckpunkt"
+        },
+        "ref": {
+          "kind": "vertex"
+        }
+      }
     },
     "new_point": {
-      "$ref": "#/$defs/SemioPoint3"
+      "$ref": "#/$defs/SemioPoint3",
+      "x-semio-ui": {
+        "label": {
+          "en": "Position",
+          "de": "Position"
+        }
+      }
     }
   },
   "$defs": {

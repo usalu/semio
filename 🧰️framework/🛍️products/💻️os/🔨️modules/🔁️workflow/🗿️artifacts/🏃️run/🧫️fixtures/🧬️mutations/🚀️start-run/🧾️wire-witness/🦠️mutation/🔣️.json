@@ -1,0 +1,18 @@
+{
+  "operation": "startRun",
+  "workflowRef": "workflows/render",
+  "workflowCheckpointId": "cp-1",
+  "inputCollectionRef": "collections/input",
+  "inputSnapshotId": "snap-1",
+  "parameterValues": [
+    {
+      "parameterId": "p1",
+      "value": "10"
+    }
+  ],
+  "outputCollectionRef": "collections/output",
+  "trigger": {
+    "kind": "manual",
+    "actor": "ueli"
+  }
+}

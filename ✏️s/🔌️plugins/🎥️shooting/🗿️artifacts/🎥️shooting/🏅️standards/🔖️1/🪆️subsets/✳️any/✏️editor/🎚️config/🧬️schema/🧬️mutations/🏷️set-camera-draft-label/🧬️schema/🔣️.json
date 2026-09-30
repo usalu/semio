@@ -5,7 +5,21 @@
   "type": "object",
   "properties": {
     "value": {
-      "type": "string"
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "text",
+        "role": "value",
+        "label": {
+          "en": "Camera name draft",
+          "de": "Entwurf Kameraname"
+        },
+        "description": {
+          "en": "Name typed for the next saved camera.",
+          "de": "Eingegebener Name für die nächste gespeicherte Kamera."
+        },
+        "group": "camera",
+        "order": 10
+      }
     }
   },
   "required": [

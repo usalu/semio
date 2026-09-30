@@ -1,12 +1,32 @@
 {
-  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/norm/din18599/mutation/update-lighting/schema.json",
   "title": "UpdateLighting",
   "type": "object",
-  "properties": {
-    "newLighting": {
-      "type": "object"
-    }
-  },
   "additionalProperties": false,
-  "$id": "https://json.schemas.assets.semio-tech.com/s/norm/din18599/mutation/update-lighting/schema.json"
+  "required": [
+    "mutation",
+    "newLighting"
+  ],
+  "properties": {
+    "mutation": {
+      "const": "updateLighting"
+    },
+    "newLighting": {
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/din18599/snapshot/schema.json#/$defs/LightingSystem",
+      "x-semio-ui": {
+        "role": "value",
+        "label": {
+          "en": "Lighting",
+          "de": "Beleuchtung"
+        },
+        "description": {
+          "en": "Lighting system with its control factor.",
+          "de": "Beleuchtungsanlage mit ihrem Steuerungsfaktor."
+        },
+        "group": "systems",
+        "order": 10
+      }
+    }
+  }
 }

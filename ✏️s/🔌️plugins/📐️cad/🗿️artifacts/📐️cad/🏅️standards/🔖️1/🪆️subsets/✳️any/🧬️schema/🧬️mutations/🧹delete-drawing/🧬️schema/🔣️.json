@@ -5,11 +5,29 @@
   "type": "object",
   "additionalProperties": false,
   "required": [
+    "mutation",
     "childId"
   ],
   "properties": {
+    "mutation": {
+      "const": "deleteDrawing"
+    },
     "childId": {
-      "type": "string"
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "text",
+        "role": "value",
+        "label": {
+          "en": "Drawing",
+          "de": "Zeichnung"
+        },
+        "description": {
+          "en": "Child id of the drawing to remove.",
+          "de": "Kind-ID der zu entfernenden Zeichnung."
+        },
+        "group": "target",
+        "order": 10
+      }
     }
   }
 }

@@ -294,6 +294,14 @@ export type PdfSetPdfRect =
   | { kind: "clear" }
   | { kind: "set"; value: [number, number, number, number] };
 
+/** 🧭️ One step into one object's `PdfObject` tree — the `path` of `SetDictEntry`/`RemoveDictEntry`. */
+export type PdfPathSegment =
+  | { kind: "arrayIndex"; index: number }
+  | { kind: "dictKey"; key: string };
+
+/** 📐️ Which optional page box `SetPageBox` addresses. */
+export type PdfPageBox = "crop" | "bleed" | "trim" | "art";
+
 /** 🔣️ The JSON Schema document this facet is validated against. */
 export const schema = {
   "$schema": "http://json-schema.org/draft-07/schema#",
@@ -1173,6 +1181,15 @@ export const schema = {
         "page"
       ]
     },
+    "PdfPageBox": {
+      "type": "string",
+      "enum": [
+        "crop",
+        "bleed",
+        "trim",
+        "art"
+      ]
+    },
     "PdfPageDiff": {
       "type": "object",
       "properties": {
@@ -1395,6 +1412,41 @@ export const schema = {
           }
         }
       }
+    },
+    "PdfPathSegment": {
+      "oneOf": [
+        {
+          "type": "object",
+          "properties": {
+            "kind": {
+              "const": "arrayIndex"
+            },
+            "index": {
+              "type": "integer",
+              "minimum": 0
+            }
+          },
+          "required": [
+            "kind",
+            "index"
+          ]
+        },
+        {
+          "type": "object",
+          "properties": {
+            "kind": {
+              "const": "dictKey"
+            },
+            "key": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "kind",
+            "key"
+          ]
+        }
+      ]
     },
     "PdfSetArrVec_u8x2": {
       "oneOf": [
@@ -2163,3 +2215,5 @@ export const parsePdfSetPdfTransparencyGroup = (value: unknown): PdfSetPdfTransp
 export const parsePdfIndexedDiffPdfAnnotation = (value: unknown): PdfIndexedDiffPdfAnnotation => validateAgainst<PdfIndexedDiffPdfAnnotation>(schema, "/$defs/PdfIndexedDiffPdfAnnotation", value);
 export const parsePdfIndexedDiffPdfOp = (value: unknown): PdfIndexedDiffPdfOp => validateAgainst<PdfIndexedDiffPdfOp>(schema, "/$defs/PdfIndexedDiffPdfOp", value);
 export const parsePdfSetPdfRect = (value: unknown): PdfSetPdfRect => validateAgainst<PdfSetPdfRect>(schema, "/$defs/PdfSetPdfRect", value);
+export const parsePdfPathSegment = (value: unknown): PdfPathSegment => validateAgainst<PdfPathSegment>(schema, "/$defs/PdfPathSegment", value);
+export const parsePdfPageBox = (value: unknown): PdfPageBox => validateAgainst<PdfPageBox>(schema, "/$defs/PdfPageBox", value);

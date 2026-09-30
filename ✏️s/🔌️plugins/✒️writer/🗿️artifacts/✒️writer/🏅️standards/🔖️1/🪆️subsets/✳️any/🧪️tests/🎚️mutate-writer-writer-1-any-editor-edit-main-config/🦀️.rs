@@ -14,11 +14,11 @@ use semio_s_plugin_stdio_test_oracle::law::vector::Vector;
 fn vector(kind: &str) -> Result<Vector, String> {
     Ok(match kind {
         "set-editor-settings" => Vector {
-            before: include_str!("../../✏️editor/🎭️modes/✏️edit/🪟️windows/✒️main/🎚️config/🧫️fixtures/⚙️set-editor-settings/✅️set-editor-settings-applied/📸️snapshot/⬅️before/🔣️.json"),
-            mutation: include_str!("../../✏️editor/🎭️modes/✏️edit/🪟️windows/✒️main/🎚️config/🧫️fixtures/⚙️set-editor-settings/✅️set-editor-settings-applied/🦠️mutation/🔣️.json"),
-            after: include_str!("../../✏️editor/🎭️modes/✏️edit/🪟️windows/✒️main/🎚️config/🧫️fixtures/⚙️set-editor-settings/✅️set-editor-settings-applied/📸️snapshot/➡️after/🔣️.json"),
-            diff: include_str!("../../✏️editor/🎭️modes/✏️edit/🪟️windows/✒️main/🎚️config/🧫️fixtures/⚙️set-editor-settings/✅️set-editor-settings-applied/🔺️diff/🔣️.json"),
-            outcome: include_str!("../../✏️editor/🎭️modes/✏️edit/🪟️windows/✒️main/🎚️config/🧫️fixtures/⚙️set-editor-settings/✅️set-editor-settings-applied/🎯️outcome/🔣️.json"),
+            before: include_str!("../../✏️editor/🎭️modes/✏️edit/🪟️windows/✒️main/🎚️config/🧫️fixtures/⚙️set-editor-settings/✅️set-editor/📸️snapshot/⬅️before/🔣️.json"),
+            mutation: include_str!("../../✏️editor/🎭️modes/✏️edit/🪟️windows/✒️main/🎚️config/🧫️fixtures/⚙️set-editor-settings/✅️set-editor/🦠️mutation/🔣️.json"),
+            after: include_str!("../../✏️editor/🎭️modes/✏️edit/🪟️windows/✒️main/🎚️config/🧫️fixtures/⚙️set-editor-settings/✅️set-editor/📸️snapshot/➡️after/🔣️.json"),
+            diff: include_str!("../../✏️editor/🎭️modes/✏️edit/🪟️windows/✒️main/🎚️config/🧫️fixtures/⚙️set-editor-settings/✅️set-editor/🔺️diff/🔣️.json"),
+            outcome: include_str!("../../✏️editor/🎭️modes/✏️edit/🪟️windows/✒️main/🎚️config/🧫️fixtures/⚙️set-editor-settings/✅️set-editor/🎯️outcome/🔣️.json"),
             observable: true,
         },
         "set-camera" => Vector {

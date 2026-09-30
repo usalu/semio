@@ -13,7 +13,13 @@
       "type": "string"
     },
     "new_base_color": {
-      "$ref": "#/$defs/SemioRgba"
+      "$ref": "#/$defs/SemioRgba",
+      "x-semio-ui": {
+        "label": {
+          "en": "Base color",
+          "de": "Grundfarbe"
+        }
+      }
     }
   },
   "$defs": {

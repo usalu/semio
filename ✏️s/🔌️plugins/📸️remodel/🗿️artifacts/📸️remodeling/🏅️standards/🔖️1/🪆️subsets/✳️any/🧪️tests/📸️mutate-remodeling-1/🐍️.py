@@ -589,7 +589,8 @@ def refusal_of(kind, base, payload):
 
     Every line below is a statement about what the VERB means, not about how production is written:
     a record may not be created under an id the document already holds (`mutation.duplicate-id`); a
-    verb may only address a member that exists, index included (`mutation.target-missing`); a value a
+    verb may only address or reference a member that exists, index and media kind included
+    (`mutation.target-missing`); a value a
     verb constrains must satisfy that constraint (`mutation.invariant`); resubmitting the value a
     document already holds changes nothing (`mutation.no-op`); a content handle names only content the
     document stores complete, and only a reconstruction commit binds one (`mutation.incomplete-mesh`,
@@ -604,7 +605,7 @@ def refusal_of(kind, base, payload):
             return "mutation.duplicate-id"
         camera_id = payload["stream"].get("cameraId")
         if camera_id is not None and _index_of(cameras, camera_id) < 0:
-            return "mutation.invariant"
+            return "mutation.target-missing"
         return None
     if kind == "replace-stream-source":
         return None if _index_of(streams, payload["id"]) >= 0 else "mutation.target-missing"
@@ -625,9 +626,9 @@ def refusal_of(kind, base, payload):
         if index < 0:
             return "mutation.target-missing"
         # 🗂️ A stream's media kind is its provenance, fixed when it was created; a frame declaring a
-        # different one is describing a different stream.
+        # different one addresses a stream of that kind this document does not hold.
         if payload["kind"] != streams[index]["kind"]:
-            return "mutation.invariant"
+            return "mutation.target-missing"
         return "mutation.no-op" if payload["frame"] in streams[index]["frames"] else None
     if kind == "remove-stream-frame":
         index = _index_of(streams, payload["id"])
@@ -675,7 +676,7 @@ def refusal_of(kind, base, payload):
         camera_id = payload["extrinsic"]["cameraId"]
         if _index_of(rig, camera_id, key="cameraId") >= 0:
             return "mutation.duplicate-id"
-        return None if _index_of(cameras, camera_id) >= 0 else "mutation.invariant"
+        return None if _index_of(cameras, camera_id) >= 0 else "mutation.target-missing"
     if kind == "delete-rig-extrinsic":
         return None if _index_of(rig, payload["cameraId"], key="cameraId") >= 0 else "mutation.target-missing"
     if kind == "update-rig-extrinsic":
@@ -695,7 +696,7 @@ def refusal_of(kind, base, payload):
         if index < 0:
             return "mutation.target-missing"
         if _index_of(streams, payload["observation"]["streamId"]) < 0:
-            return "mutation.invariant"
+            return "mutation.target-missing"
         return "mutation.no-op" if payload["observation"] in gcps[index]["observations"] else None
     if kind == "remove-gcp-observation":
         index = _index_of(gcps, payload["id"])

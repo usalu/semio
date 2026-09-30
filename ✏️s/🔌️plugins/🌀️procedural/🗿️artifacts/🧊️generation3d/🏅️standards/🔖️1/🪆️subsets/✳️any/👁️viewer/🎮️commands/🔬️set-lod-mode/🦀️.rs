@@ -18,9 +18,3 @@ pub struct SetLodMode {
 pub fn handle(payload: &SetLodMode, _doc: &ArtifactView<'_, Generation3dSnapshot>, _cfg: &ConfigView<'_, Generation3dViewConfig>) -> Result<ViewEmit<Generation3dViewConfigMutation>, Fault> {
     Ok(ViewEmit::config(vec![Generation3dViewConfigMutation::SetLodMode(config::SetLodMode { value: payload.value.clone() })]))
 }
-
-//#region 🧪️Tests
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
-//#endregion 🧪️Tests

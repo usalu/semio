@@ -5,11 +5,16 @@
   "type": "object",
   "additionalProperties": false,
   "required": [
+    "mutation",
     "path",
     "key",
     "value"
   ],
   "properties": {
+    "mutation": {
+      "const": "upsertMember",
+      "description": "Aggregate discriminator spliced in by JsonIJsonMutation; absent when the payload stands alone."
+    },
     "path": {
       "type": "array",
       "items": {
@@ -21,10 +26,6 @@
     },
     "value": {
       "description": "any JSON value"
-    },
-    "mutation": {
-      "const": "upsertMember",
-      "description": "Aggregate discriminator spliced in by JsonIJsonMutation; absent when the payload stands alone."
     }
   },
   "$defs": {

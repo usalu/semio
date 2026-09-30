@@ -1,1 +1,76 @@
-{"$schema":"http://json-schema.org/draft-07/schema#","title":"UpdateParentPage","type":"object"}
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/layout/layout/mutation/update-parent-page/schema.json",
+  "title": "UpdateParentPage",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "id",
+    "name",
+    "width",
+    "height"
+  ],
+  "properties": {
+    "id": {
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Parent page",
+          "de": "Mustervorlage"
+        },
+        "ref": {
+          "kind": "parentPage"
+        },
+        "group": "target",
+        "order": 10
+      }
+    },
+    "name": {
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "text",
+        "role": "value",
+        "label": {
+          "en": "Name",
+          "de": "Name"
+        },
+        "group": "identity",
+        "order": 20
+      }
+    },
+    "width": {
+      "type": "number",
+      "x-semio-ui": {
+        "widget": "stepper",
+        "role": "value",
+        "label": {
+          "en": "Width",
+          "de": "Breite"
+        },
+        "unit": "mm",
+        "step": 1,
+        "precision": 1,
+        "group": "geometry",
+        "order": 30
+      }
+    },
+    "height": {
+      "type": "number",
+      "x-semio-ui": {
+        "widget": "stepper",
+        "role": "value",
+        "label": {
+          "en": "Height",
+          "de": "Höhe"
+        },
+        "unit": "mm",
+        "step": 1,
+        "precision": 1,
+        "group": "geometry",
+        "order": 40
+      }
+    }
+  }
+}

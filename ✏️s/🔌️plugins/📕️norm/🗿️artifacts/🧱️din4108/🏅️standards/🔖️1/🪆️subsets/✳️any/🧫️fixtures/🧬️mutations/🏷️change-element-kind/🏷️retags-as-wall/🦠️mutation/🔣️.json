@@ -1,1 +1,6 @@
-{"ChangeElementKind":{"element_id":"wall-north","new_kind":"wall"}}
+{
+  "ChangeElementKind": {
+    "elementId": "wall-north",
+    "newKind": "wall"
+  }
+}

@@ -5,15 +5,61 @@
   "type": "object",
   "additionalProperties": false,
   "required": [
+    "mutation",
     "id",
     "newRadiantFraction"
   ],
   "properties": {
+    "mutation": {
+      "const": "changeEquipmentGainRadiantFraction"
+    },
     "id": {
-      "type": "integer"
+      "type": "integer",
+      "minimum": 0,
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Equipment gain",
+          "de": "Gerätewärmegewinn"
+        },
+        "description": {
+          "en": "The equipment gain this mutation changes, by id.",
+          "de": "Gerätewärmegewinn, den diese Mutation ändert, per ID."
+        },
+        "ref": {
+          "kind": "equipmentGain",
+          "domain": "energyModel",
+          "granularity": "load"
+        },
+        "group": "target",
+        "order": 10
+      }
     },
     "newRadiantFraction": {
-      "type": "number"
+      "type": "number",
+      "minimum": 0,
+      "maximum": 1,
+      "x-semio-ui": {
+        "widget": "slider",
+        "role": "value",
+        "label": {
+          "en": "Radiant fraction",
+          "de": "Strahlungsanteil"
+        },
+        "description": {
+          "en": "Share of the heat output released as long-wave radiation.",
+          "de": "Anteil der Wärmeabgabe als langwellige Strahlung."
+        },
+        "displayUnit": "%",
+        "displayFactor": 100,
+        "step": 0.01,
+        "precision": 0,
+        "softMin": 0,
+        "softMax": 1,
+        "group": "gains",
+        "order": 20
+      }
     }
   }
 }

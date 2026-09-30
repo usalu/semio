@@ -1,10 +1,12 @@
 {
-  "operation": {
-    "node": 0,
-    "skin": 0
-  },
-  "after": 0,
-  "touchedPaths": [
-    "document/nodes/*/skin"
-  ]
+  "nodes": {
+    "modified": [
+      {
+        "index": 0,
+        "diff": {
+          "skin": 0
+        }
+      }
+    ]
+  }
 }

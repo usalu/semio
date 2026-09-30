@@ -159,7 +159,11 @@ export function buildKeysByActionId(keybindings: readonly ControlKeybindingDefin
  * `aria-keyshortcuts` republishes both chords so the keyboard path stays discoverable.
  * `playground.navbar.roles.*` can be per-button precisely because `AppRole` is a closed two-value
  * union — the ids double as the buttons' DOM ids, so each one also renders its chord badge and tooltip
- * (`ControlHotkeyBadge`). */
+ * (`ControlHotkeyBadge`).
+ *
+ * `ui.timeTravel.accept`/`.discard`/`.exit` drive a live history-edit session (the React band and the wgpu
+ * shell read the same chords); none is Escape, so Escape never discards a draft, and like every chord here
+ * they never fire from a form field. */
 export const SHELL_KEYBINDINGS: Readonly<Record<string, string>> = {
   "ui.introduction.skip": "escape",
   "ui.introduction.next": "enter,arrowright",
@@ -187,6 +191,9 @@ export const SHELL_KEYBINDINGS: Readonly<Record<string, string>> = {
   "ui.shell.mode.previous": "mod+alt+arrowleft",
   "playground.navbar.roles.editor": "mod+alt+e",
   "playground.navbar.roles.viewer": "mod+alt+v",
+  "ui.timeTravel.accept": "alt+enter",
+  "ui.timeTravel.discard": "alt+backspace",
+  "ui.timeTravel.exit": "alt+shift+backspace",
 };
 
 /** ⌨️ Merges shell defaults, app action bindings, and user overrides. */

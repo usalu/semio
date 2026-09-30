@@ -1,22 +1,43 @@
 {
-  "id": "s.stdio.gltf.mutation.delete-buffer.v1",
-  "version": 1,
-  "touchedPaths": [
-    "document/buffers/0",
-    "buffers/0"
-  ],
-  "payload": {
-    "index": 0
+  "bufferViews": {
+    "modified": [
+      {
+        "index": 0,
+        "diff": {
+          "buffer": 0,
+          "byteLength": 4
+        }
+      }
+    ]
   },
-  "operation": {
-    "kind": "delete",
-    "index": 0,
-    "removed": {
-      "byteLength": 2
-    },
-    "bytes": [
-      10,
-      20
+  "buffers": {
+    "removed": [
+      1
+    ],
+    "modified": [
+      {
+        "index": 0,
+        "diff": {
+          "byteLength": 4,
+          "uri": "data:application/octet-stream;base64,AAECAw=="
+        }
+      }
+    ]
+  },
+  "bufferBytes": {
+    "removed": [
+      1
+    ],
+    "modified": [
+      {
+        "index": 0,
+        "diff": [
+          0,
+          1,
+          2,
+          3
+        ]
+      }
     ]
   }
 }

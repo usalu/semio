@@ -2846,13 +2846,15 @@ pub enum AppFrame {
     /// output of `encode_presence_interaction` over the app's own declared broadcast domains — empty
     /// bytes when the app declares no interaction domains or nothing is selected/hovered right now.
     /// `tool_run` (trailing field) is `encode_presence_tool_run` of the instance's tool run summary — empty
-    /// bytes without a run (`📋️tool-run-contract.md` §3.4).
+    /// bytes without a run (`📋️tool-run-contract.md` §3.4). `history_edit` (trailing field) is
+    /// `encode_presence_history_edit` of the instance's open history edit — empty bytes while none is open.
     Ephemeral {
         presence: Vec<u8>,
         presence_generation: u64,
         transient_generation: u64,
         interaction: Vec<u8>,
         tool_run: Vec<u8>,
+        history_edit: Vec<u8>,
     },
     /// 🧾️ Full history patch for initial host projection and gap recovery.
     HistorySnapshot {
@@ -3168,7 +3170,15 @@ impl CommandPageWriter {
         self.bytes(&value.inverse.payload)?;
         self.varint(value.timestamp.actor)?;
         self.varint(value.timestamp.physical_ms)?;
-        self.varint(value.timestamp.logical)
+        self.varint(value.timestamp.logical)?;
+        match &value.transaction {
+            Some(transaction) => {
+                self.varint(1)?;
+                self.string(&transaction.id)?;
+                self.string(&transaction.tool)
+            }
+            None => self.varint(0),
+        }
     }
 
     fn finish(mut self) -> Result<PagedCommand, crate::Fault> {
@@ -3874,13 +3884,14 @@ pub async fn encode_app_frame(frame: &AppFrame) -> Vec<u8> {
             crate::os_spr::write_varint_u64(&mut out, *in_reply_to);
             write_vec_child_pack(&mut out, entries).await;
         }
-        AppFrame::Ephemeral { presence, presence_generation, transient_generation, interaction, tool_run } => {
+        AppFrame::Ephemeral { presence, presence_generation, transient_generation, interaction, tool_run, history_edit } => {
             out.push(13);
             crate::os_spr::write_bytes(&mut out, presence);
             crate::os_spr::write_varint_u64(&mut out, *presence_generation);
             crate::os_spr::write_varint_u64(&mut out, *transient_generation);
             crate::os_spr::write_bytes(&mut out, interaction);
             crate::os_spr::write_bytes(&mut out, tool_run);
+            crate::os_spr::write_bytes(&mut out, history_edit);
         }
         AppFrame::HistorySnapshot { in_reply_to, history_patch } => {
             out.push(14);
@@ -4035,6 +4046,7 @@ pub async fn decode_app_frame(bytes: &[u8]) -> Result<AppFrame, crate::os_spr::P
             transient_generation: crate::os_spr::read_varint_u64(bytes, &mut pos)?,
             interaction: crate::os_spr::read_bytes(bytes, &mut pos)?,
             tool_run: crate::os_spr::read_bytes(bytes, &mut pos)?,
+            history_edit: crate::os_spr::read_bytes(bytes, &mut pos)?,
         },
         14 => AppFrame::HistorySnapshot { in_reply_to: crate::os_spr::read_varint_u64(bytes, &mut pos)?, history_patch: crate::os_spr::read_bytes(bytes, &mut pos)? },
         15 => AppFrame::TransactionProposal {

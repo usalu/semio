@@ -1,53 +1,42 @@
 #!/usr/bin/env python3
-"""📋️ An INDEPENDENT second implementation of the `s.forms.form` document and its ten typed mutations,
-in Python, serving as this case's differential oracle.
+"""📋️ An INDEPENDENT second implementation of the `s.forms.form` document, its ten typed mutations and its
+`.dsl.semio` text carrier, in Python, serving as this case's differential oracle.
 
-**Why a second implementation and not a third-party library.** A `form` document is a HANDLE RECORD
-over a step/block survey: the snapshot itself carries only `schema`, `id`, `version`, `title` and two
-composed child handles (`structure`, `results`), while the steps and blocks the vocabulary addresses
-live in a WORKING SCENE inside the child. No form format — XForms, JSON Schema forms, ODK — models a
-survey whose content is a child artifact addressed by content, and none of them reads `.dsl.semio`.
-That a semio-native mutation algebra IS adjudicable was settled in this same wave by the fifteen
-`📕️norm` references and the nineteen `🧿️semio` ones.
+**Why a second implementation and not a third-party library.** A `form` document carries its survey INLINE
+(`definition.steps[].blocks[]`) beside its submitted `responses` and two composed child handles
+(`structure`, `results`). XForms, JSON Schema forms and ODK each model a survey, but none of them models this
+document's handle members, reads its `.dsl.semio` carrier, or answers its mutation vocabulary, so a
+second implementation written from this subset's own schemas is the reference.
 
 **What it was written from.**
 
-* ``🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🔣️.json`` — the snapshot's members.
+* ``🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🔣️.json`` and ``📝️definition/🔣️.json`` —
+  the document's members, the step/question records and which members are optional.
+* ``🚪️io/📸️snapshot/📝️text/📖️.grammar.semio`` — the text carrier's grammar.
+* the ten mutation leaf payload schemas under ``🧬️schema/🧬️mutations`` (camelCase members).
 * rules 1, 2 and 3 of
   `.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️12/SEMANTIC-MUTATIONS-OVERHAUL/📓️derivation-rules.md`.
-* the ten committed `(before, mutation, after, outcome)` vectors AND the `scene` array each scenario
-  carries in its own doc string — which is what makes this case adjudicable at all: the scene is the
-  child's content, and without it no reader could tell whether `step-outro` exists.
+* the ten committed `(before, mutation, after, outcome)` vectors.
 
-**No Rust was read to write this.** `🦀️.rs` beside this file registers the SUBJECT half
-only.
+**No Rust was read to write this.** `🦀️.rs` beside this file registers the SUBJECT half only.
 
-**WHAT THIS CASE'S EVIDENCE ACTUALLY COVERS, stated plainly rather than implied.** NINE of the ten
-committed vectors leave the snapshot BYTE-IDENTICAL, because nine of the ten kinds address records
-that live in the child scene and not in this document. What each of those vectors really pins is a
-DIAGNOSTIC — a `mutation.no-op` warning, a `mutation.target-missing`, a `mutation.duplicate-id` or a
-`mutation.invariant` refusal — and the reference derives that diagnostic from the scene rather than
-reading it off the committed outcome, which is the only way the comparison says anything. Only
-`change-form-title` moves the document, and what it does is ADD the `title` member the before-snapshot
-does not carry. So this case's evidence is one applied mutation and nine diagnostics; no committed
-vector in it exercises a create/delete/move/replace that SUCCEEDS.
+**WHAT THIS CASE'S EVIDENCE ACTUALLY COVERS, stated plainly rather than implied.** Nine of the ten committed
+vectors pin a DIAGNOSTIC and leave the document byte-identical — a `mutation.no-op` warning, a
+`mutation.target-missing` or a `mutation.duplicate-id` refusal — and the reference
+derives that diagnostic from the document's own `definition.steps` rather than reading it off the committed
+outcome. Only `change-form-title` moves the document: it ADDS the `title` member the before-document does
+not carry, and its inverse removes it again. The successful create/delete/move/replace branches below are
+therefore implemented but not yet witnessed by a committed vector.
 
-**A CROSS-CASE DIVERGENCE the reference surfaced.** `s.playbook.playbook` is the same shape with the
-same verbs, and the two subsets answer the same situation differently: a duplicate step id is a
-REJECTED `mutation.duplicate-id` here (`create-step`) and an APPLIED `mutation.no-op` there
-(`add-step`); a block added to a step that does not exist is `mutation.invariant` here
-(`create-block`) and `mutation.target-missing` there (`add-block`). Neither divergence is stated
-anywhere; both are visible only because one reference was written against both surfaces.
-
-**A SIBLING NOTE, because the count of second implementations must not be overstated.** This file and
-`✏️s/🔌️plugins/📖️playbook/🗿️artifacts/📖️playbook/🧪️tests/🌾️mutate-playbook-1/🐍️.py` are ONE
-implementation instantiated twice, differing in the verb names, the diagnostic each situation raises
-and the handle members. That the two instantiations disagree on two situations IS the finding above.
+**A CROSS-CASE DIVERGENCE the reference surfaced.** `s.playbook.playbook` is the same shape with the same
+verbs, and the two subsets answer the same situation differently: a duplicate step id is a REJECTED
+`mutation.duplicate-id` here (`create-step`) and an APPLIED `mutation.no-op` there (`add-step`).
 """
 
 # region 🔖️Imports
 import copy
 import json
+import re
 
 from semio_repo_test import Adapter, Outcome
 
@@ -55,9 +44,9 @@ from semio_repo_test import Adapter, Outcome
 
 
 # region 🔖️Vocabulary
-REQUIRED = ("schema", "id", "version", "structure", "results")
-"""🗂️ The members every committed form snapshot carries. `title` is ABSENT until `change-form-title`
-writes it, which is what its committed vector exercises."""
+REQUIRED = ("schema", "id", "version", "structure", "results", "definition", "responses")
+"""🗂️ The members every committed form document carries. `title` is optional: absent until
+`change-form-title` writes it, which is what its committed vector exercises."""
 
 MEMBERS = REQUIRED + ("title",)
 
@@ -76,36 +65,31 @@ TAGS = {kind: tag_of(kind) for kind in KINDS}
 NO_OP = "mutation.no-op"
 TARGET_MISSING = "mutation.target-missing"
 DUPLICATE_ID = "mutation.duplicate-id"
-INVARIANT = "mutation.invariant"
-"""🚨️ The four diagnostic codes this subset's committed vectors raise. Its `📖️playbook` sibling raises
-only the first two, and answers two of the same situations with them — see the module docstring."""
+"""🚨️ The three diagnostic codes this subset's committed vectors raise."""
 
-REJECTING = (TARGET_MISSING, DUPLICATE_ID, INVARIANT)
-"""🚦️ Which of the four refuse the mutation rather than warning about it."""
+REJECTING = (TARGET_MISSING, DUPLICATE_ID)
+"""🚦️ Which of the three refuse the mutation rather than warning about it."""
 # endregion 🔖️Vocabulary
 
 
 # region 🔖️Scene
-def step_at(scene, identity):
-    """🔎️ The index of a step in the working scene, or `None`."""
-    for at, step in enumerate(scene):
-        if step["id"] == identity:
-            return at
-    return None
+def steps_of(document):
+    """📋️ The survey's steps — the part of the document nine of the ten kinds address."""
+    return document["definition"]["steps"]
+
+
+def step_at(steps, identity):
+    """🔎️ The index of a step, or `None`."""
+    return next((at for at, step in enumerate(steps) if step["id"] == identity), None)
 
 
 def block_at(step, identity):
     """🔎️ The index of a block inside one step, or `None`."""
-    for at, block in enumerate(step.get("blocks", [])):
-        if block["id"] == identity:
-            return at
-    return None
+    return next((at for at, block in enumerate(step.get("blocks", [])) if block["id"] == identity), None)
 
 
 def numbers_equal(left, right):
-    """🔢 Two committed payload values compared as the wire compares them: a scene written `1` and a
-    payload written `1.0` are the same number, which is what makes `replace-block`'s committed no-op a
-    no-op at all."""
+    """🔢 Two payload values compared as the wire compares them: `1` and `1.0` are the same number."""
     if isinstance(left, dict) and isinstance(right, dict):
         return set(left) == set(right) and all(numbers_equal(left[key], right[key]) for key in left)
     if isinstance(left, list) and isinstance(right, list):
@@ -115,90 +99,346 @@ def numbers_equal(left, right):
     if isinstance(left, (int, float)) and isinstance(right, (int, float)):
         return float(left) == float(right)
     return left == right
+
+
+def placed(items, index):
+    """📍️ Where an insertion lands: the requested index clamped to the list, the end when absent."""
+    return len(items) if index is None else min(index, len(items))
 # endregion 🔖️Scene
 
 
 # region 🔖️Verbs
-def diagnose(kind, payload, scene):
-    """🚦️ The diagnostic this kind raises against this working scene, derived rather than read off the
-    committed outcome. `None` means the verb applies with nothing to say."""
+def diagnose(kind, payload, steps):
+    """🚦️ The diagnostic this kind raises against these steps, derived rather than read off the committed
+    outcome. `(None, None)` means the verb applies with nothing to say."""
     if kind == "create-step":
-        return (DUPLICATE_ID, [payload["step"]["id"]]) if step_at(scene, payload["step"]["id"]) is not None else (None, None)
+        return (DUPLICATE_ID, [payload["step"]["id"]]) if step_at(steps, payload["step"]["id"]) is not None else (None, None)
     if kind == "delete-step":
-        return (None, None) if step_at(scene, payload["id"]) is not None else (TARGET_MISSING, [payload["id"]])
+        return (None, None) if step_at(steps, payload["id"]) is not None else (TARGET_MISSING, [payload["id"]])
     if kind == "reorder-step":
-        at = step_at(scene, payload["id"])
+        at = step_at(steps, payload["id"])
         if at is None:
             return (TARGET_MISSING, [payload["id"]])
-        return (NO_OP, None) if at == payload["to_index"] else (None, None)
+        return (NO_OP, None) if at == payload["toIndex"] else (None, None)
     if kind == "rename-step":
-        at = step_at(scene, payload["id"])
+        at = step_at(steps, payload["id"])
         if at is None:
             return (TARGET_MISSING, [payload["id"]])
-        return (NO_OP, None) if scene[at].get("title") == payload["new_title"] else (None, None)
+        return (NO_OP, None) if steps[at].get("title") == payload["newTitle"] else (None, None)
     if kind == "change-step-description":
-        at = step_at(scene, payload["id"])
+        at = step_at(steps, payload["id"])
         if at is None:
             return (TARGET_MISSING, [payload["id"]])
-        return (NO_OP, None) if scene[at].get("description") == payload["new_description"] else (None, None)
+        return (NO_OP, None) if steps[at].get("description") == payload.get("newDescription") else (None, None)
     if kind == "create-block":
-        at = step_at(scene, payload["step_id"])
-        return (None, None) if at is not None else (INVARIANT, [payload["step_id"]])
+        at = step_at(steps, payload["stepId"])
+        return (None, None) if at is not None else (TARGET_MISSING, [payload["stepId"]])
     if kind == "delete-block":
-        at = step_at(scene, payload["step_id"])
+        at = step_at(steps, payload["stepId"])
         if at is None:
-            return (INVARIANT, [payload["step_id"]])
-        held = block_at(scene[at], payload["id"])
-        return (None, None) if held is not None else (TARGET_MISSING, [payload["step_id"], payload["id"]])
+            return (TARGET_MISSING, [payload["stepId"]])
+        held = block_at(steps[at], payload["id"])
+        return (None, None) if held is not None else (TARGET_MISSING, [payload["stepId"], payload["id"]])
     if kind == "move-block-to-step":
-        at = step_at(scene, payload["step_id"])
+        at = step_at(steps, payload["stepId"])
         if at is None:
-            return (INVARIANT, [payload["step_id"]])
-        if step_at(scene, payload["to_step_id"]) is None:
-            return (INVARIANT, [payload["to_step_id"]])
-        held = block_at(scene[at], payload["block_id"])
+            return (TARGET_MISSING, [payload["stepId"]])
+        if step_at(steps, payload["toStepId"]) is None:
+            return (TARGET_MISSING, [payload["toStepId"]])
+        held = block_at(steps[at], payload["blockId"])
         if held is None:
-            return (TARGET_MISSING, [payload["step_id"], payload["block_id"]])
-        unmoved = payload["step_id"] == payload["to_step_id"] and held == payload["index"]
+            return (TARGET_MISSING, [payload["stepId"], payload["blockId"]])
+        unmoved = payload["stepId"] == payload["toStepId"] and held == payload["index"]
         return (NO_OP, None) if unmoved else (None, None)
     if kind == "replace-block":
-        at = step_at(scene, payload["step_id"])
+        at = step_at(steps, payload["stepId"])
         if at is None:
-            return (INVARIANT, [payload["step_id"]])
-        held = block_at(scene[at], payload["block"]["id"])
+            return (TARGET_MISSING, [payload["stepId"]])
+        held = block_at(steps[at], payload["block"]["id"])
         if held is None:
-            return (TARGET_MISSING, [payload["step_id"], payload["block"]["id"]])
-        return (NO_OP, None) if numbers_equal(scene[at]["blocks"][held], payload["block"]) else (None, None)
+            return (TARGET_MISSING, [payload["stepId"], payload["block"]["id"]])
+        return (NO_OP, None) if numbers_equal(steps[at]["blocks"][held], payload["block"]) else (None, None)
     if kind == "change-form-title":
         return (None, None)
     raise AssertionError("mutate-%s: this implementation declares no verb for that kind" % kind)
 
 
-def apply_mutation(document, kind, payload, scene):
-    """🦠️ Applies one kind to the SNAPSHOT. Eight of the nine kinds address the child scene and cannot
-    move a document that holds only handles, so they answer it unchanged; `change-title` is the one
-    that writes a member this document really carries."""
+def set_or_clear(record, member, value):
+    """✏️ Writes an optional member, or removes it when the payload carries `null`."""
+    if value is None:
+        record.pop(member, None)
+    else:
+        record[member] = value
+
+
+def apply_mutation(document, kind, payload):
+    """🦠️ Applies one kind to the document: a diagnosed refusal or no-op leaves it untouched, every other
+    outcome edits `definition.steps` or the `title` member."""
     document = copy.deepcopy(document)
-    if kind == "change-form-title":
-        document["title"] = payload["new_title"]
+    if diagnose(kind, payload, steps_of(document))[0] is not None:
+        return document
+    steps = steps_of(document)
+    if kind == "create-step":
+        steps.insert(placed(steps, payload.get("index")), copy.deepcopy(payload["step"]))
+    elif kind == "delete-step":
+        steps.pop(step_at(steps, payload["id"]))
+    elif kind == "reorder-step":
+        step = steps.pop(step_at(steps, payload["id"]))
+        steps.insert(placed(steps, payload["toIndex"]), step)
+    elif kind == "rename-step":
+        steps[step_at(steps, payload["id"])]["title"] = payload["newTitle"]
+    elif kind == "change-step-description":
+        set_or_clear(steps[step_at(steps, payload["id"])], "description", payload.get("newDescription"))
+    elif kind == "create-block":
+        blocks = steps[step_at(steps, payload["stepId"])]["blocks"]
+        blocks.insert(placed(blocks, payload.get("index")), copy.deepcopy(payload["block"]))
+    elif kind == "delete-block":
+        step = steps[step_at(steps, payload["stepId"])]
+        step["blocks"].pop(block_at(step, payload["id"]))
+    elif kind == "move-block-to-step":
+        source = steps[step_at(steps, payload["stepId"])]
+        block = source["blocks"].pop(block_at(source, payload["blockId"]))
+        target = steps[step_at(steps, payload["toStepId"])]["blocks"]
+        target.insert(placed(target, payload["index"]), block)
+    elif kind == "replace-block":
+        step = steps[step_at(steps, payload["stepId"])]
+        step["blocks"][block_at(step, payload["block"]["id"])] = copy.deepcopy(payload["block"])
+    elif kind == "change-form-title":
+        set_or_clear(document, "title", payload.get("newTitle"))
     return document
 
 
-def inverse_mutation(document, kind, payload, scene):
-    """↩️ The kind's OWN inverse over the snapshot. A verb that could not move the snapshot has no
-    inverse to express here — which is exactly why this case's inverse scenarios establish so little,
-    and why that is said out loud rather than left to be inferred from a green row."""
+def inverse_mutation(document, kind, payload):
+    """↩️ The kind's OWN inverse, derived from the BASE document it was applied to. A refused or no-op
+    mutation has nothing to undo."""
+    steps = steps_of(document)
+    if diagnose(kind, payload, steps)[0] is not None:
+        return []
+    if kind == "create-step":
+        return [("delete-step", {"id": payload["step"]["id"]})]
+    if kind == "delete-step":
+        at = step_at(steps, payload["id"])
+        return [("create-step", {"step": steps[at], "index": at})]
+    if kind == "reorder-step":
+        return [("reorder-step", {"id": payload["id"], "toIndex": step_at(steps, payload["id"])})]
+    if kind == "rename-step":
+        return [("rename-step", {"id": payload["id"], "newTitle": steps[step_at(steps, payload["id"])]["title"]})]
+    if kind == "change-step-description":
+        return [("change-step-description", {"id": payload["id"], "newDescription": steps[step_at(steps, payload["id"])].get("description")})]
+    if kind == "create-block":
+        return [("delete-block", {"stepId": payload["stepId"], "id": payload["block"]["id"]})]
+    if kind == "delete-block":
+        step = steps[step_at(steps, payload["stepId"])]
+        at = block_at(step, payload["id"])
+        return [("create-block", {"stepId": payload["stepId"], "block": step["blocks"][at], "index": at})]
+    if kind == "move-block-to-step":
+        at = block_at(steps[step_at(steps, payload["stepId"])], payload["blockId"])
+        return [("move-block-to-step", {"stepId": payload["toStepId"], "blockId": payload["blockId"], "toStepId": payload["stepId"], "index": at})]
+    if kind == "replace-block":
+        step = steps[step_at(steps, payload["stepId"])]
+        return [("replace-block", {"stepId": payload["stepId"], "block": step["blocks"][block_at(step, payload["block"]["id"])]})]
     if kind == "change-form-title":
-        if "title" not in document:
-            raise AssertionError(
-                "inverse-change-form-title: this implementation refuses to guess this inverse. The committed vector ADDS the `title` member to a "
-                "snapshot that carried none, so undoing it requires REMOVING the member, and nothing committed says whether `change-form-title` "
-                "accepts a null argument or what removing a title means. Its `📖️playbook` sibling has no such gap: there `title` is always present "
-                "and nullable."
-            )
-        return [(kind, {"new_title": document["title"]})]
-    return []
+        return [("change-form-title", {"newTitle": document.get("title")})]
+    raise AssertionError("inverse-%s: this implementation declares no verb for that kind" % kind)
 # endregion 🔖️Verbs
+
+
+# region 🔖️TextCarrier
+ARTIFACT_MARK = "semio forms.form.dsl v1"
+"""🔖️ The carrier's first line (`artifact-mark` in the grammar)."""
+
+TEXT, NUMBER, BOOL, VALUE, BLOCK = "text", "number", "bool", "value", "block"
+CHILD = {"child_id": TEXT, "target": TEXT}
+OPTION = {"value": TEXT, "label": TEXT}
+FIELD = {"key": TEXT, "label": TEXT, "value": NUMBER}
+QUESTION = {
+    "id": TEXT, "label": TEXT, "kind": TEXT, "description": TEXT, "required": BOOL, "placeholder": TEXT, "default": VALUE, "min": NUMBER, "max": NUMBER, "step": NUMBER,
+    "unit": TEXT, "text": TEXT, "options": ("list", OPTION), "fields": ("list", FIELD), "schema": TEXT, "src": TEXT, "accept": TEXT, "fixture-slug": TEXT, "params": VALUE, "condition": BLOCK,
+}
+STEP = {"id": TEXT, "title": TEXT, "description": TEXT, "blocks": ("list", QUESTION)}
+ANSWER = {"question-id": TEXT, "label": TEXT, "kind": TEXT, "value": VALUE}
+RESPONSE = {"id": TEXT, "submitted-at": NUMBER, "definition-version": TEXT, "answers": ("list", ANSWER)}
+DEFINITION = {"steps": ("list", STEP)}
+DOCUMENT = {"schema": TEXT, "id": TEXT, "version": TEXT, "title": TEXT, "definition": ("record", DEFINITION), "responses": ("list", RESPONSE), "structure": ("record", CHILD), "results": ("record", CHILD)}
+"""📖️ The grammar's records, member by member, with the scalar each member reads as."""
+
+TOKEN = re.compile(r'\s*(?:(?P<string>"(?:[^"\\]|\\.)*")|(?P<punct>[\[\]{}=])|(?P<atom>[^\s\[\]{}="]+))')
+
+
+def tokenize(text):
+    """🔤️ The carrier body as `(kind, text)` tokens: quoted strings, `[ ] { } =`, and bare atoms."""
+    tokens, at = [], 0
+    while at < len(text):
+        match = TOKEN.match(text, at)
+        if match is None or match.end() == at:
+            if text[at:].strip() == "":
+                break
+            raise AssertionError("identity-round-trip: unreadable carrier text at offset %d: %r" % (at, text[at:at + 40]))
+        at = match.end()
+        kind = match.lastgroup
+        tokens.append((kind, json.loads(match.group(kind)) if kind == "string" else match.group(kind)))
+    return tokens
+
+
+def camel(key):
+    """🐫 A carrier member name (`fixture-slug`, `child_id`) as its document member (`fixtureSlug`, `childId`)."""
+    head, *rest = re.split(r"[-_]", key)
+    return head + "".join(part[:1].upper() + part[1:] for part in rest)
+
+
+class Reader:
+    """📖️ A spec-driven reader over the token stream: each record reads the members its grammar rule
+    names, a record in a list ends where a member it already holds starts again."""
+
+    def __init__(self, tokens):
+        self.tokens, self.at = tokens, 0
+
+    def peek(self, offset=0):
+        return self.tokens[self.at + offset] if self.at + offset < len(self.tokens) else (None, None)
+
+    def take(self, expected=None):
+        token = self.peek()
+        if token[0] is None or (expected is not None and token[1] != expected):
+            raise AssertionError("identity-round-trip: expected %r, found %r" % (expected, token[1]))
+        self.at += 1
+        return token
+
+    def scalar(self, kind):
+        token_kind, text = self.take()
+        if token_kind == "punct":
+            raise AssertionError("identity-round-trip: expected a scalar, found %r" % text)
+        if kind == TEXT:
+            return text
+        if kind == BOOL:
+            if text not in ("true", "false"):
+                raise AssertionError("identity-round-trip: %r is not a boolean" % text)
+            return text == "true"
+        return float(text)
+
+    def value(self):
+        token_kind, text = self.peek()
+        if (token_kind, text) == ("punct", "["):
+            self.take("[")
+            items = []
+            while self.peek()[1] != "]":
+                items.append(self.entries_until("]") if self.peek(1)[1] == "=" else self.value())
+            self.take("]")
+            return items
+        if (token_kind, text) == ("punct", "{"):
+            self.take("{")
+            entries = self.entries_until("}")
+            self.take("}")
+            return entries
+        self.take()
+        if token_kind == "string":
+            return text
+        if text in ("true", "false"):
+            return text == "true"
+        if re.fullmatch(r"-?\d+", text):
+            return int(text)
+        if re.fullmatch(r"-?(\d+\.\d*|\.\d+|\d+)([eE][-+]?\d+)?", text):
+            return float(text)
+        return text
+
+    def entries_until(self, closing):
+        entries = {}
+        while self.peek()[1] not in (closing, None) and self.peek(1)[1] == "=":
+            _, key = self.take()
+            self.take("=")
+            entries[key] = self.value()
+        return entries
+
+    def expression(self):
+        _, kind = self.take()
+        if kind == "const":
+            self.take("value")
+            self.take("=")
+            return {"kind": "const", "value": self.value()}
+        if kind == "var":
+            self.take("name")
+            self.take("=")
+            return {"kind": "var", "name": self.scalar(TEXT)}
+        if kind == "eq":
+            return {"kind": "eq", "left": self.nested("left"), "right": self.nested("right")}
+        if kind == "truthy":
+            return {"kind": "truthy", "expr": self.nested("expr")}
+        if kind in ("and", "or"):
+            self.take("items")
+            self.take("{")
+            items = []
+            while self.peek()[1] != "}":
+                items.append(self.expression())
+            self.take("}")
+            return {"kind": kind, "items": items}
+        raise AssertionError("identity-round-trip: unknown condition expression %r" % kind)
+
+    def nested(self, name):
+        self.take(name)
+        self.take("{")
+        inner = self.expression()
+        self.take("}")
+        return inner
+
+    def member(self, shape):
+        if shape == BLOCK:
+            self.take("{")
+            inner = None if self.peek()[1] == "}" else self.expression()
+            self.take("}")
+            return inner
+        self.take("=")
+        if isinstance(shape, tuple) and shape[0] == "list":
+            self.take("[")
+            records = []
+            while self.peek()[1] != "]":
+                records.append(self.record(shape[1]))
+            self.take("]")
+            return records
+        if isinstance(shape, tuple):
+            return self.record(shape[1])
+        return self.value() if shape == VALUE else self.scalar(shape)
+
+    def record(self, spec):
+        document = {}
+        while True:
+            _, key = self.peek()
+            follows = self.peek(1)[1]
+            if key not in spec or camel(key) in document or follows not in ("=", "{") or (follows == "{") != (spec[key] == BLOCK):
+                break
+            self.take()
+            read = self.member(spec[key])
+            if read is not None:
+                document[camel(key)] = read
+        if not document:
+            raise AssertionError("identity-round-trip: an empty record at token %d (%r)" % (self.at, self.peek()[1]))
+        return document
+
+
+def child_handle(record):
+    """🧩️ A composed child handle as the document carries it: the inline `target` URI
+    `<artifactId>!<artifactKind>@<standard>/<subset>` expanded into its parts."""
+    match = re.fullmatch(r"([^!]+)!([^@]+)@([^/]+)/(.+)", record["target"])
+    if match is None:
+        raise AssertionError("identity-round-trip: %r is not a child target URI" % record["target"])
+    artifact, kind, standard, subset = match.groups()
+    return {"childId": record["childId"], "target": {"artifactId": artifact, "dialect": {"artifactKind": kind, "standard": standard, "subset": subset}}}
+
+
+def read_carrier(text):
+    """📥️ Reads a `.dsl.semio` form document into the document the committed JSON vectors spell."""
+    head, _, body = text.partition("\n")
+    if head.strip() != ARTIFACT_MARK:
+        raise AssertionError("identity-round-trip: the carrier starts with %r, not %r" % (head, ARTIFACT_MARK))
+    reader = Reader(tokenize(body))
+    document = reader.record(DOCUMENT)
+    if reader.peek()[0] is not None:
+        raise AssertionError("identity-round-trip: unread carrier text from token %r on" % (reader.peek()[1],))
+    for member in ("structure", "results"):
+        document[member] = child_handle(document[member])
+    for response in document.get("responses", []):
+        if "submittedAt" in response:
+            response["submittedAt"] = int(response["submittedAt"])
+    return document
+# endregion 🔖️TextCarrier
 
 
 # region 🔖️Laws
@@ -210,48 +450,54 @@ def declared(outcome):
 
 
 def diagnoses_as_committed(kind, produced, outcome):
-    """⚖️ The derived diagnostic against the committed one — status, code and path. This is the whole
-    of what eight of the nine vectors pin, so it is asserted before anything else."""
+    """⚖️ The derived diagnostic against the committed one — status, code and path."""
     status, code, path = declared(outcome)
     derived_code, derived_path = produced
     derived_status = "rejected" if derived_code in REJECTING else "no-op" if derived_code == NO_OP else "applied"
     if (derived_status, derived_code) != (status, code):
-        raise AssertionError("mutate-%s: this implementation derives %r/%r from the scene, the committed 🎯️outcome vector declares %r/%r" % (kind, derived_status, derived_code, status, code))
+        raise AssertionError("mutate-%s: this implementation derives %r/%r, the committed 🎯️outcome vector declares %r/%r" % (kind, derived_status, derived_code, status, code))
     if derived_path is not None and path is not None and derived_path != path:
         raise AssertionError("mutate-%s: this implementation derives the path %r, the committed vector declares %r" % (kind, derived_path, path))
 
 
 def equals_committed(kind, produced, committed):
-    """🎯️ The committed after-snapshot claim, member by member, with no tolerance and no ignored key."""
+    """🎯️ The committed after-document claim, member by member, with no tolerance and no ignored key."""
     for member in sorted(set(produced) | set(committed)):
-        if produced.get(member, "⌀") != committed.get(member, "⌀"):
-            raise AssertionError("mutate-%s: %s is %s, the committed after-snapshot says %s" % (kind, member, json.dumps(produced.get(member), sort_keys=True)[:300], json.dumps(committed.get(member), sort_keys=True)[:300]))
+        if not numbers_equal(produced.get(member, "⌀"), committed.get(member, "⌀")):
+            raise AssertionError("mutate-%s: %s is %s, the committed after-document says %s" % (kind, member, json.dumps(produced.get(member), sort_keys=True)[:300], json.dumps(committed.get(member), sort_keys=True)[:300]))
 
 
 def restores(kind, restored, original):
     """↩️ The full inverse law, member for member."""
     for member in sorted(set(restored) | set(original)):
-        if restored.get(member, "⌀") != original.get(member, "⌀"):
+        if not numbers_equal(restored.get(member, "⌀"), original.get(member, "⌀")):
             raise AssertionError("inverse-%s: %s came back as %s, not %s" % (kind, member, json.dumps(restored.get(member), sort_keys=True)[:300], json.dumps(original.get(member), sort_keys=True)[:300]))
 
 
 def validate(document, where):
-    """✅️ Holds the document to the shape the committed vectors agree on: the five always-present
-    members, `title` only beyond them, and two well-formed composed child handles."""
+    """✅️ Holds a document to the shape the schemas state: the seven always-present members, `title`
+    only beyond them, two well-formed child handles, and every step and question carrying its identity."""
     if not set(REQUIRED) <= set(document):
         raise AssertionError("%s: a form document must carry %r, found %r" % (where, sorted(REQUIRED), sorted(document)))
     if not set(document) <= set(MEMBERS):
         raise AssertionError("%s: a form document may carry only %r, found %r" % (where, sorted(MEMBERS), sorted(document)))
     for member in ("structure", "results"):
-        if set(document[member]) != {"childId", "target"}:
-            raise AssertionError("%s: the composed %s child handle must carry exactly childId and target, found %r" % (where, member, sorted(document[member])))
+        if set(document[member]) != {"childId", "target"} or set(document[member]["target"]) != {"artifactId", "dialect"}:
+            raise AssertionError("%s: the composed %s child handle must carry childId and an expanded target, found %r" % (where, member, document[member]))
+    if set(document["definition"]) != {"steps"}:
+        raise AssertionError("%s: the definition carries only steps, found %r" % (where, sorted(document["definition"])))
+    for step in steps_of(document):
+        if not {"id", "title", "blocks"} <= set(step) or not set(step) <= {"id", "title", "description", "blocks"}:
+            raise AssertionError("%s: step %r must carry id, title and blocks, optionally a description" % (where, step.get("id")))
+        for block in step["blocks"]:
+            if not {"id", "label", "kind"} <= set(block) or not set(block) <= {camel(name) for name in QUESTION}:
+                raise AssertionError("%s: question %r carries %r" % (where, block.get("id"), sorted(block)))
 # endregion 🔖️Laws
 
 
 # region 🔖️Plan
 def doc_json(ctx):
-    """📜️ The scenario's doc string — the Python `Context` has no accessor of its own. It carries this
-    case's `scene`, the child content without which no diagnostic here is derivable."""
+    """📜️ The scenario's doc string — the Python `Context` has no accessor of its own."""
     for step in ctx.scenario["steps"]:
         if step.get("docString"):
             return json.loads(step["docString"])
@@ -280,6 +526,18 @@ def payload_of(ctx, kind):
     return {key: value for key, value in payload.items() if key != "mutation"}
 
 
+def before_of(ctx, kind, where):
+    """⬅️ The committed before-document, whose steps must be the scene the feature row states."""
+    spec = doc_json(ctx)
+    if spec.get("kind") != kind:
+        raise AssertionError("%s: the feature's doc string states %r" % (where, spec.get("kind")))
+    before = json_fixture(ctx, "⬅️before")
+    validate(before, where)
+    if spec.get("scene") != steps_of(before):
+        raise AssertionError("%s: the feature row's scene %s is not the committed before-document's steps %s" % (where, json.dumps(spec.get("scene"))[:200], json.dumps(steps_of(before))[:200]))
+    return before
+
+
 def outcome_of(payload):
     """📤️ Wraps a projection with its own compact serialization as the raw artifact."""
     return Outcome(payload, raw=json.dumps(payload, separators=(",", ":"), ensure_ascii=False).encode("utf-8"))
@@ -288,84 +546,61 @@ def outcome_of(payload):
 
 # region 🔖️Handlers
 def mutate_handler(kind):
-    """🎯️ Derives this kind's diagnostic from the working scene, asserts it against the committed
-    outcome, and answers the snapshot the verb leaves behind."""
+    """🎯️ Derives this kind's diagnostic from the document, asserts it against the committed outcome, and
+    answers the document the verb leaves behind."""
 
     def handler(ctx):
-        spec = doc_json(ctx)
-        if spec.get("kind") != kind:
-            raise AssertionError("mutate-%s: the feature's doc string states %r" % (kind, spec.get("kind")))
-        scene = spec.get("scene", [])
-        before = json_fixture(ctx, "⬅️before")
+        where = "mutate-%s" % kind
+        before = before_of(ctx, kind, where)
         after = json_fixture(ctx, "➡️after")
         outcome = json_fixture(ctx, "🎯️outcome")
-        validate(before, "mutate-%s" % kind)
         payload = payload_of(ctx, kind)
-        diagnoses_as_committed(kind, diagnose(kind, payload, scene), outcome)
-        applied = apply_mutation(before, kind, payload, scene)
-        validate(applied, "mutate-%s" % kind)
+        diagnoses_as_committed(kind, diagnose(kind, payload, steps_of(before)), outcome)
+        applied = apply_mutation(before, kind, payload)
+        validate(applied, where)
         equals_committed(kind, applied, after)
-        if kind != "change-form-title" and applied != before:
-            raise AssertionError("mutate-%s: this kind addresses the child scene, so it cannot move a snapshot that holds only handles, yet the snapshot moved" % kind)
         return outcome_of(applied)
 
     return handler
 
 
 def inverse_handler(kind):
-    """↩️ Applies one kind and then its OWN computed inverse and requires the committed before-snapshot
-    back, member for member."""
+    """↩️ Applies one kind and then its OWN computed inverse and requires the committed before-document back,
+    member for member."""
 
     def handler(ctx):
-        spec = doc_json(ctx)
-        if spec.get("kind") != kind:
-            raise AssertionError("inverse-%s: the feature's doc string states %r" % (kind, spec.get("kind")))
-        scene = spec.get("scene", [])
-        before = json_fixture(ctx, "⬅️before")
+        before = before_of(ctx, kind, "inverse-%s" % kind)
         payload = payload_of(ctx, kind)
-        validate(before, "inverse-%s" % kind)
-        current = apply_mutation(before, kind, payload, scene)
-        for step_kind, step_payload in inverse_mutation(before, kind, payload, scene):
-            current = apply_mutation(current, step_kind, step_payload, scene)
+        current = apply_mutation(before, kind, payload)
+        for step_kind, step_payload in inverse_mutation(before, kind, payload):
+            current = apply_mutation(current, step_kind, step_payload)
         restores(kind, current, before)
         return outcome_of(current)
 
     return handler
 
 
-def refuse_carrier(ctx):
-    """🚧️ `identity-round-trip` reads this subset's own `.forms.dsl.semio` text carrier, and this
-    implementation refuses it by clause rather than by absence. The committed grammar
-    `🧬️schema/📸️snapshot/📝️text/📖️.grammar.semio` describes a DIFFERENT DOCUMENT: it is the
-    generic `family-scene` canvas grammar — `doc-body = schema-line layers-block`,
-    `layer = shape-layer | path-layer | text-layer`, `canvas-field = "id" | "x" | "y" | "fill" |
-    "stroke" | "opacity"` — and the committed artifact contains no `layers` block, no layer and no
-    canvas field. What it does contain is a `steps=[ … ]` list whose members carry nested `blocks=[ … ]`
-    lists, `options=[ … ]`, `fields=[ … ]`, `params={ … }` and a bare `condition { }` block, none of
-    which the grammar mentions. Four more subsets — `📖️playbook`, `📏️layout`, `🖍️draw` and
-    `🖨️raster` — carry the same canvas grammar over four equally unrelated documents, differing from
-    this one only in the `grammar`, `extension` and `artifact-mark` lines."""
-    committed = ctx.fixture_bytes(uri_in(ctx, "🗣️.dsl.semio"))
-    raise AssertionError(
-        "identity-round-trip: this subset's `.dsl.semio` carrier cannot be read by a second implementation. Its committed grammar describes a "
-        "DIFFERENT document — the generic `family-scene` canvas grammar, `doc-body = schema-line layers-block` with shape/path/text layers and "
-        "`id`/`x`/`y`/`fill`/`stroke`/`opacity` fields — while the committed artifact carries no `layers` block at all, and instead a `steps=[ … ]` "
-        "list of nested `blocks=[ … ]`, `options=[ … ]`, `fields=[ … ]`, `params={ … }` and a bare `condition { }` block, none of which the grammar "
-        "mentions. Four more subsets — `📖️playbook`, `📏️layout`, `🖍️draw` and `🖨️raster` — carry the same canvas grammar over four equally "
-        "unrelated documents, differing only in their `grammar`, `extension` and `artifact-mark` lines. Read %d "
-        "bytes of the committed artifact and refused to guess their meaning." % len(committed)
-    )
+def identity_handler(ctx):
+    """🔁️ Reads the real committed `.dsl.semio` artifact through this implementation's own carrier reader and
+    answers the document it holds. In role it also requires the document to be one this subset accepts and
+    to exercise the survey records, the child handles and a nested value."""
+    committed = ctx.fixture_bytes(uri_in(ctx, "🗣️.dsl.semio")).decode("utf-8")
+    document = read_carrier(committed)
+    validate(document, "identity-round-trip")
+    blocks = [block for step in steps_of(document) for block in step["blocks"]]
+    if not blocks or not any("params" in block or "options" in block for block in blocks):
+        raise AssertionError("identity-round-trip: the committed artifact must carry questions with nested options or params, or it would not exercise the carrier's value grammar")
+    return outcome_of(document)
 # endregion 🔖️Handlers
 
 
 # region 🔖️Registration
 def adapter():
-    """🧭️ Registration by FULL expanded scenario id, in the ORACLE role only — registering these
-    handlers as subjects too would make the reference its own subject and manufacture a green
-    self-comparison."""
+    """🧭️ Registration by FULL expanded scenario id, in the ORACLE role only — registering these handlers as
+    subjects too would make the reference its own subject and manufacture a green self-comparison."""
     built = Adapter("python")
     for kind in KINDS:
         built = built.oracle("mutate-%s" % kind, mutate_handler(kind))
         built = built.oracle("inverse-%s" % kind, inverse_handler(kind))
-    return built.oracle("identity-round-trip", refuse_carrier)
+    return built.oracle("identity-round-trip", identity_handler)
 # endregion 🔖️Registration

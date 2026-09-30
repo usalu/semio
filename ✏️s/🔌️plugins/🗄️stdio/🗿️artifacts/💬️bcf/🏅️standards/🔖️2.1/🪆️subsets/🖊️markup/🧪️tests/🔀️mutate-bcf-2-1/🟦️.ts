@@ -13,9 +13,7 @@ export default defineTestAdapter({
   implementation: "typescript",
   scenarios: {
     mutate: after,
-    "no-mutation-baseline-mutate": after,
     inverse: before,
-    "no-mutation-baseline-inverse": before,
     "identity-round-trip": { oracle: (ctx) => committedArtifact(ctx, "🏥️wellness-center-coordination-review.bcf", "expected-bcf", "application/octet-stream") },
   },
 });

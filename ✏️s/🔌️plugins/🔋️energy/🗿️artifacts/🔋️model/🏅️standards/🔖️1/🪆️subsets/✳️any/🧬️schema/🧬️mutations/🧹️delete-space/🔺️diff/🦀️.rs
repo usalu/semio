@@ -11,7 +11,7 @@ pub fn diff(payload: &super::DeleteSpace, base: &EnergyModelSnapshot) -> protoco
     };
     let _ = existing;
     if base.model.space_lists.iter().any(|item| item.space_ids.contains(&payload.id)) {
-        return protocol::MutationOutcome::error("mutation.invariant", format!("Space {} is still a member of a space list.", payload.id.0), [payload.id.0.to_string()]);
+        return protocol::MutationOutcome::error("mutation.target-referenced", format!("Space {} is still a member of a space list.", payload.id.0), [payload.id.0.to_string()]);
     }
     let mut model = base.model.clone();
     model.spaces.retain(|item| item.id != payload.id);

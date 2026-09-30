@@ -10,7 +10,22 @@
   ],
   "properties": {
     "id": {
-      "type": "string"
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Route",
+          "de": "Route"
+        },
+        "description": {
+          "en": "The route this mutation addresses.",
+          "de": "Die Route, die diese Mutation adressiert."
+        },
+        "ref": {
+          "kind": "route"
+        }
+      }
     },
     "newData": {
       "description": "any JSON value"

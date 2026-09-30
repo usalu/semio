@@ -5,15 +5,16 @@
   "type": "object",
   "additionalProperties": false,
   "required": [
+    "mutation",
     "snapshot"
   ],
   "properties": {
-    "snapshot": {
-      "$ref": "#/$defs/SemioAudioSnapshot"
-    },
     "mutation": {
       "const": "setSnapshot",
       "description": "Aggregate discriminator spliced in by SemioAudioMutation; absent when the payload stands alone."
+    },
+    "snapshot": {
+      "$ref": "#/$defs/SemioAudioSnapshot"
     }
   },
   "$defs": {

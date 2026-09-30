@@ -1,19 +1,33 @@
 {
-  "id": "s.stdio.gltf.mutation.delete-accessor.v1",
-  "version": 1,
-  "touchedPaths": [
-    "document/accessors/0"
-  ],
-  "payload": {
-    "index": 0
+  "meshes": {
+    "modified": [
+      {
+        "index": 0,
+        "diff": {
+          "primitives": [
+            {
+              "attributes": {
+                "POSITION": 0
+              }
+            }
+          ]
+        }
+      }
+    ]
   },
-  "operation": {
-    "kind": "delete",
-    "index": 0,
-    "removed": {
-      "componentType": 5125,
-      "count": 6,
-      "type": "SCALAR"
-    }
+  "accessors": {
+    "removed": [
+      1
+    ],
+    "modified": [
+      {
+        "index": 0,
+        "diff": {
+          "componentType": 5126,
+          "count": 3,
+          "kind": "VEC3"
+        }
+      }
+    ]
   }
 }

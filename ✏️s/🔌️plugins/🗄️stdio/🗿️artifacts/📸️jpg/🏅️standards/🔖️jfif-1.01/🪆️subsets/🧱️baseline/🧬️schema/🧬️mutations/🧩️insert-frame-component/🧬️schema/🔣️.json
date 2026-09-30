@@ -14,7 +14,13 @@
       "minimum": 0
     },
     "component": {
-      "$ref": "#/$defs/JpgFrameComponent"
+      "$ref": "#/$defs/JpgFrameComponent",
+      "x-semio-ui": {
+        "label": {
+          "en": "Frame component",
+          "de": "Frame-Komponente"
+        }
+      }
     }
   },
   "$defs": {
@@ -36,17 +42,42 @@
         "hSampling": {
           "type": "integer",
           "minimum": 0,
-          "maximum": 255
+          "maximum": 255,
+          "x-semio-ui": {
+            "widget": "stepper",
+            "label": {
+              "en": "Horizontal sampling factor",
+              "de": "Horizontaler Abtastfaktor"
+            }
+          }
         },
         "vSampling": {
           "type": "integer",
           "minimum": 0,
-          "maximum": 255
+          "maximum": 255,
+          "x-semio-ui": {
+            "widget": "stepper",
+            "label": {
+              "en": "Vertical sampling factor",
+              "de": "Vertikaler Abtastfaktor"
+            }
+          }
         },
         "quantTableId": {
           "type": "integer",
           "minimum": 0,
-          "maximum": 255
+          "maximum": 255,
+          "x-semio-ui": {
+            "widget": "stepper",
+            "label": {
+              "en": "Quantization table",
+              "de": "Quantisierungstabelle"
+            },
+            "description": {
+              "en": "Tq: destination of the quantization table this component uses.",
+              "de": "Tq: Ziel der Quantisierungstabelle, die diese Komponente verwendet."
+            }
+          }
         }
       }
     }

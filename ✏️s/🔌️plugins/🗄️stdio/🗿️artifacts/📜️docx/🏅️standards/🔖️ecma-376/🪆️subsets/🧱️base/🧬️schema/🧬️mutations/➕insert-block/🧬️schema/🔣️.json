@@ -5,19 +5,44 @@
   "type": "object",
   "additionalProperties": false,
   "required": [
+    "mutation",
     "path",
     "block"
   ],
   "properties": {
-    "path": {
-      "$ref": "#/$defs/DocxBlockPath"
-    },
-    "block": {
-      "$ref": "#/$defs/DocxBlock"
-    },
     "mutation": {
       "const": "insertBlock",
       "description": "Aggregate discriminator spliced in by DocxMutation; absent when the payload stands alone."
+    },
+    "path": {
+      "$ref": "#/$defs/DocxBlockPath",
+      "x-semio-ui": {
+        "label": {
+          "en": "Block path",
+          "de": "Blockpfad"
+        },
+        "description": {
+          "en": "Where the block is inserted.",
+          "de": "Wo der Block eingefügt wird."
+        },
+        "group": "target",
+        "order": 10
+      }
+    },
+    "block": {
+      "$ref": "#/$defs/DocxBlock",
+      "x-semio-ui": {
+        "label": {
+          "en": "Block",
+          "de": "Block"
+        },
+        "description": {
+          "en": "Paragraph or table to insert.",
+          "de": "Einzufügender Absatz oder Tabelle."
+        },
+        "group": "value",
+        "order": 20
+      }
     }
   },
   "$defs": {
@@ -32,11 +57,27 @@
           "type": "array",
           "items": {
             "$ref": "#/$defs/DocxPathSegment"
+          },
+          "x-semio-ui": {
+            "label": {
+              "en": "Segments",
+              "de": "Segmente"
+            },
+            "description": {
+              "en": "Descent through tables: block, row and cell per level.",
+              "de": "Abstieg durch Tabellen: Block, Zeile und Zelle je Ebene."
+            }
           }
         },
         "index": {
           "type": "integer",
-          "minimum": 0
+          "minimum": 0,
+          "x-semio-ui": {
+            "label": {
+              "en": "Block position",
+              "de": "Blockposition"
+            }
+          }
         }
       }
     },
@@ -51,15 +92,37 @@
       "properties": {
         "blockIndex": {
           "type": "integer",
-          "minimum": 0
+          "minimum": 0,
+          "x-semio-ui": {
+            "label": {
+              "en": "Block",
+              "de": "Block"
+            },
+            "description": {
+              "en": "Index of the block, counted from 0.",
+              "de": "Index des Blocks, ab 0 gezählt."
+            }
+          }
         },
         "row": {
           "type": "integer",
-          "minimum": 0
+          "minimum": 0,
+          "x-semio-ui": {
+            "label": {
+              "en": "Table row",
+              "de": "Tabellenzeile"
+            }
+          }
         },
         "cell": {
           "type": "integer",
-          "minimum": 0
+          "minimum": 0,
+          "x-semio-ui": {
+            "label": {
+              "en": "Table cell",
+              "de": "Tabellenzelle"
+            }
+          }
         }
       }
     },

@@ -1,6 +1,6 @@
 {
   "UpdateHssInputs": {
-    "load_case": {
+    "loadCase": {
       "id": "lc-acc",
       "name": "Accidental",
       "kind": "accidental",

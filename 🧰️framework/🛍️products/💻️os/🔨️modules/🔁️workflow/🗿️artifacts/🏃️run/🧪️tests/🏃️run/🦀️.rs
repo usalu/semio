@@ -2,6 +2,20 @@
 use crate::*;
 use protocol::MutationDiff;
 
+/// 🧾️ Every committed wire witness decodes through `RunMutation`'s `FromValue` and re-encodes to exactly the committed JSON.
+#[test]
+fn committed_wire_witnesses_are_the_canonical_wire() {
+    for witness in [
+        include_str!("../../🧫️fixtures/🧬️mutations/🚀️start-run/🧾️wire-witness/🦠️mutation/🔣️.json"),
+        include_str!("../../🧫️fixtures/🧬️mutations/▶️start-run-node/🧾️wire-witness/🦠️mutation/🔣️.json"),
+        include_str!("../../🧫️fixtures/🧬️mutations/✅️finish-run-node/🧾️wire-witness/🦠️mutation/🔣️.json"),
+        include_str!("../../🧫️fixtures/🧬️mutations/🪵️append-run-log/🧾️wire-witness/🦠️mutation/🔣️.json"),
+        include_str!("../../🧫️fixtures/🧬️mutations/🔏️seal-run/🧾️wire-witness/🦠️mutation/🔣️.json"),
+    ] {
+        store::os_store::test_support::assert_wire_witness::<RunMutation>(witness);
+    }
+}
+
 async fn sample_run_node_record(node_id: &str, status: RunNodeStatus) -> RunNodeRecord {
     RunNodeRecord {
         node_id: node_id.into(),

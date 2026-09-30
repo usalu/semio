@@ -8,71 +8,11 @@
       "type": "object",
       "additionalProperties": false,
       "required": [
-        "CreateBrep"
+        "SetSnapshot"
       ],
       "properties": {
-        "CreateBrep": {
-          "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/semio/v1/object/mutation/create-brep/schema.json"
-        }
-      }
-    },
-    {
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "CreateMesh"
-      ],
-      "properties": {
-        "CreateMesh": {
-          "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/semio/v1/object/mutation/create-mesh/schema.json"
-        }
-      }
-    },
-    {
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "CreateProperties"
-      ],
-      "properties": {
-        "CreateProperties": {
-          "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/semio/v1/object/mutation/create-properties/schema.json"
-        }
-      }
-    },
-    {
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "DeleteBrep"
-      ],
-      "properties": {
-        "DeleteBrep": {
-          "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/semio/v1/object/mutation/delete-brep/schema.json"
-        }
-      }
-    },
-    {
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "DeleteMesh"
-      ],
-      "properties": {
-        "DeleteMesh": {
-          "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/semio/v1/object/mutation/delete-mesh/schema.json"
-        }
-      }
-    },
-    {
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "DeleteProperties"
-      ],
-      "properties": {
-        "DeleteProperties": {
-          "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/semio/v1/object/mutation/delete-properties/schema.json"
+        "SetSnapshot": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/semio/v1/object/mutation/set-snapshot/schema.json"
         }
       }
     },
@@ -116,11 +56,71 @@
       "type": "object",
       "additionalProperties": false,
       "required": [
-        "SetSnapshot"
+        "CreateBrep"
       ],
       "properties": {
-        "SetSnapshot": {
-          "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/semio/v1/object/mutation/set-snapshot/schema.json"
+        "CreateBrep": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/semio/v1/object/mutation/create-brep/schema.json"
+        }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "DeleteBrep"
+      ],
+      "properties": {
+        "DeleteBrep": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/semio/v1/object/mutation/delete-brep/schema.json"
+        }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "CreateMesh"
+      ],
+      "properties": {
+        "CreateMesh": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/semio/v1/object/mutation/create-mesh/schema.json"
+        }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "DeleteMesh"
+      ],
+      "properties": {
+        "DeleteMesh": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/semio/v1/object/mutation/delete-mesh/schema.json"
+        }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "CreateProperties"
+      ],
+      "properties": {
+        "CreateProperties": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/semio/v1/object/mutation/create-properties/schema.json"
+        }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "DeleteProperties"
+      ],
+      "properties": {
+        "DeleteProperties": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/semio/v1/object/mutation/delete-properties/schema.json"
         }
       }
     }

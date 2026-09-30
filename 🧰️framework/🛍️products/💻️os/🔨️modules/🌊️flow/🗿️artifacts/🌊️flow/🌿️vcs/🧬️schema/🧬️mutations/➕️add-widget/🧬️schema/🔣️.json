@@ -2,32 +2,40 @@
   "$schema": "http://json-schema.org/draft-07/schema#",
   "$id": "https://json.schemas.assets.semio-tech.com/os/flow/artifacts/flow/vcs/mutation/add-widget/schema.json",
   "title": "AddWidget",
-  "$defs": {
-    "Payload": {
-      "type": "object",
-      "properties": {
-        "index": {
-          "$ref": "https://json.schemas.assets.semio-tech.com/os/flow/artifacts/flow/vcs/snapshot.json#/$defs/Index"
-        },
-        "widget": {
-          "$ref": "https://json.schemas.assets.semio-tech.com/os/flow/artifacts/flow/vcs/snapshot.json#/$defs/Widget"
-        }
-      },
-      "required": [
-        "index",
-        "widget"
-      ]
-    }
-  },
-  "allOf": [
-    {
-      "$ref": "#/$defs/Payload"
-    }
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "operation",
+    "index",
+    "widget"
   ],
-  "propertyNames": {
-    "enum": [
-      "index",
-      "widget"
-    ]
+  "properties": {
+    "operation": {
+      "const": "addWidget"
+    },
+    "index": {
+      "$ref": "https://json.schemas.assets.semio-tech.com/os/flow/artifacts/flow/vcs/snapshot.json#/$defs/Index",
+      "x-semio-ui": {
+        "role": "value",
+        "label": {
+          "en": "Index",
+          "de": "Index"
+        },
+        "group": "record",
+        "order": 10
+      }
+    },
+    "widget": {
+      "$ref": "https://json.schemas.assets.semio-tech.com/os/flow/artifacts/flow/vcs/snapshot.json#/$defs/Widget",
+      "x-semio-ui": {
+        "role": "value",
+        "label": {
+          "en": "Widget",
+          "de": "Widget"
+        },
+        "group": "record",
+        "order": 20
+      }
+    }
   }
 }

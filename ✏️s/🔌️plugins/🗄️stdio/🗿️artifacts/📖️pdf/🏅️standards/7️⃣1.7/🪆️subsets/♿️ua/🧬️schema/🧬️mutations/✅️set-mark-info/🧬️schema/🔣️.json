@@ -5,15 +5,27 @@
   "type": "object",
   "additionalProperties": false,
   "required": [
+    "mutation",
     "marked"
   ],
   "properties": {
-    "marked": {
-      "type": "boolean"
-    },
     "mutation": {
       "const": "setMarkInfo",
       "description": "Aggregate discriminator spliced in by PdfUaMutation; absent when the payload stands alone."
+    },
+    "marked": {
+      "type": "boolean",
+      "x-semio-ui": {
+        "widget": "toggle",
+        "label": {
+          "en": "Tagged PDF",
+          "de": "Getaggtes PDF"
+        },
+        "description": {
+          "en": "The document conforms to the Tagged PDF conventions.",
+          "de": "Das Dokument folgt den Konventionen für getaggtes PDF."
+        }
+      }
     }
   }
 }

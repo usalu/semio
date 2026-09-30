@@ -31,12 +31,12 @@ carrier.
 ONE implementation instantiated twice: the two subsets' documents are the same shape and their
 vocabularies differ only in NAMES — three kind names (`replace-widget`/`replace-synapse`/
 `clear-widget-layout` here against `update-widget`/`update-synapse`/`delete-widget-position` there)
-and four argument names. Counting them as two distinct references would overstate the evidence; they
+and three argument names. Counting them as two distinct references would overstate the evidence; they
 are two instantiations of one, and what they genuinely do is hold both subsets to the SAME semantics
-under different spellings. Two real divergences surfaced by writing them side by side: `delete-widget`
+under different spellings. One real divergence surfaced by writing them side by side: `delete-widget`
 raises `mutation.cascade` at level `info` HERE and raises nothing in the 3d sibling, for an effect
-that is byte-for-byte identical in both committed vectors; and this subset spells one argument
-`question_id` in snake_case, the only snake_case identifier in either document model.**
+that is byte-for-byte identical in both committed vectors. A second one, this subset's snake_case
+`question_id`, was fixed at the source: both subsets now spell the argument `questionId`.**
 
 **No Rust was read to write this.** `🦀️.rs` beside this file registers the SUBJECT half
 only. All fourteen kinds are adjudicated and none is refused: this document holds no composed child,
@@ -92,8 +92,8 @@ REPLACE_WIDGET = "replace-widget"
 REPLACE_SYNAPSE = "replace-synapse"
 CLEAR_LAYOUT = "clear-widget-layout"
 
-ARGUMENTS = {"schema": "schema", "name": "name", "questionId": "question_id", "value": "value"}
-"""🔤️ What this subset calls four arguments its sibling spells differently. Its `question_id` is the only snake_case identifier in either document model; the 3d sibling spells the same argument `questionId`."""
+ARGUMENTS = {"schema": "schema", "name": "name", "questionId": "questionId", "value": "value"}
+"""🔤️ What this subset calls the four arguments; the 3d sibling spells three of them differently (`newSchema`, `newName`, `newValue`) and `questionId` alike."""
 # endregion 🔖️Vocabulary
 
 

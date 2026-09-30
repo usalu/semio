@@ -4,7 +4,7 @@ use super::*;
 fn typed_wire_neutral_component_defaults_match_serde() {
     let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧵️retained/📦️wire/🧫️fixtures/🧾️typed/🔣️.json")).expect("typed fixture");
     let rows = fixture["components"].as_array().expect("component vectors");
-    assert_eq!(rows.len(), 23);
+    assert_eq!(rows.len(), 25);
     for row in rows {
         let sparse: Component = serde_json::from_value(row["wire"].clone()).expect("native sparse component");
         let normalized: Component = serde_json::from_value(row["expected"].clone()).expect("native normalized component");
@@ -48,13 +48,13 @@ fn every_component_variant_round_trips() {
     component_round_trips(Component::Text(TextProps { value: label("hi"), emphasize: Some(true), data_attributes: None }));
     component_round_trips(Component::Button(ButtonProps { icon: ui_text("plus"), label: label("Add") }));
     component_round_trips(Component::Separator(SeparatorProps {}));
-    component_round_trips(Component::Input(InputProps { kind: InputKind::Number, value: ui_text("3"), placeholder: None, commit: Some(ui_text("blur")), min: Some(0.0), max: Some(10.0), step: Some(1.0), accept: None }));
+    component_round_trips(Component::Input(InputProps { kind: InputKind::Number, value: ui_text("3"), placeholder: None, commit: Some(ui_text("blur")), min: Some(0.0), max: Some(10.0), step: Some(1.0), accept: None, precision: Some(2), snaps: Default::default() }));
     component_round_trips(Component::Select(SelectProps { value: ui_text("a"), items: crate::UiFixedList::default(), placeholder: None }));
     component_round_trips(Component::Toggle(ToggleProps { appearance: ToggleAppearance::Button, on: true, icon: ui_text("toggle-left"), text: Some(label("Enabled")) }));
     component_round_trips(Component::Toggle(ToggleProps { appearance: ToggleAppearance::Checkbox, on: true, icon: ui_text("check"), text: Some(label("Enabled")) }));
     component_round_trips(Component::KeyValueList(KeyValueListProps { entries: crate::UiFixedList::default() }));
-    component_round_trips(Component::Slider(SliderProps { value: 0.5, min: 0.0, max: 1.0, step: 0.1, unit: Some(ui_text("m")) }));
-    component_round_trips(Component::NumberStepper(NumberStepperProps { value: 2.0, step: 1.0, uniform: false, min: Some(0.0), max: Some(10.0) }));
+    component_round_trips(Component::Slider(SliderProps { value: 0.5, min: 0.0, max: 1.0, step: 0.1, unit: Some(ui_text("m")), snaps: snaps(&[0.25, 0.5, 0.75]) }));
+    component_round_trips(Component::NumberStepper(NumberStepperProps { value: 2.0, step: 1.0, uniform: false, min: Some(0.0), max: Some(10.0), precision: Some(1) }));
     component_round_trips(Component::Ring(RingProps { orb_id: ui_text("orb-1"), t: 0.25 }));
     component_round_trips(Component::IconSelect(IconSelectProps { value: ui_text("circle"), uniform: true, classifier_kind: ui_text("shape") }));
     component_round_trips(Component::Progress(ProgressProps { completed: 12.0, total: Some(100.0), value_text: label("12 of 100") }));
@@ -272,3 +272,95 @@ fn progress_with_a_non_finite_number_is_rejected_by_validation() {
 }
 
 //#endregion 📶️ProgressWireLaw
+
+fn snaps(values: &[f64]) -> crate::UiFixedList<f64> {
+    let mut list = crate::UiFixedList::default();
+    for value in values {
+        list.try_push(*value).expect("bounded fixture snaps");
+    }
+    list
+}
+
+fn fixture_snaps(value: &serde_json::Value) -> Vec<f64> {
+    value.as_array().expect("fixture snaps").iter().map(|snap| snap.as_f64().expect("numeric snap")).collect()
+}
+
+#[test]
+fn number_controls_fixture_pins_the_detent_pointer_key_and_precision_laws() {
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🧫️number-controls/🔣️.json")).expect("number-controls fixture");
+    for row in fixture["validity"].as_array().expect("validity rows") {
+        let verdict = crate::snaps_are_valid(fixture_snaps(&row["snaps"]), row["min"].as_f64().expect("min"), row["max"].as_f64().expect("max"));
+        assert_eq!(verdict, row["valid"].as_bool().expect("valid"), "{}", row["case"]);
+    }
+    for row in fixture["pointer"].as_array().expect("pointer rows") {
+        let value = crate::slider_pointer_value(row["value"].as_f64().expect("value"), row["min"].as_f64().expect("min"), row["max"].as_f64().expect("max"), row["step"].as_f64().expect("step"), fixture_snaps(&row["snaps"]));
+        assert_eq!(value, row["expected"].as_f64().expect("expected"), "{}", row["case"]);
+    }
+    for row in fixture["adjacent"].as_array().expect("adjacent rows") {
+        let snap = crate::slider_adjacent_snap(row["current"].as_f64().expect("current"), fixture_snaps(&row["snaps"]), row["forward"].as_bool().expect("forward"));
+        assert_eq!(snap, row["expected"].as_f64(), "{}", row["case"]);
+    }
+    for row in fixture["keys"].as_array().expect("key rows") {
+        let key = match row["key"].as_str().expect("key") {
+            "decrement" => crate::SliderKey::Decrement,
+            "increment" => crate::SliderKey::Increment,
+            "pageDown" => crate::SliderKey::PageDown,
+            "pageUp" => crate::SliderKey::PageUp,
+            "home" => crate::SliderKey::Home,
+            "end" => crate::SliderKey::End,
+            other => panic!("unknown slider key {other}"),
+        };
+        let (current, min, max, step, large) = (row["current"].as_f64().expect("current"), row["min"].as_f64(), row["max"].as_f64(), row["step"].as_f64().expect("step"), row["large"].as_bool().expect("large"));
+        let value = crate::ui_number_key_value(current, min, max, step, fixture_snaps(&row["snaps"]), key, large);
+        assert_eq!(value, row["expected"].as_f64().expect("expected"), "{}", row["case"]);
+        if let (Some(min), Some(max)) = (min, max) {
+            assert_eq!(crate::slider_key_value(current, min, max, step, fixture_snaps(&row["snaps"]), key, large), value, "{}: the slider law is the bounded number law", row["case"]);
+        }
+    }
+    for row in fixture["fixed"].as_array().expect("fixed rows") {
+        let (value, precision) = (row["value"].as_f64().expect("value"), row["precision"].as_u64().expect("precision") as u16);
+        assert_eq!(crate::format_ui_number_fixed(value, precision), row["expected"].as_str().expect("expected"), "{}", row["case"]);
+        assert_eq!(crate::round_ui_number(value, precision), row["rounded"].as_f64().expect("rounded"), "{}", row["case"]);
+    }
+    for row in fixture["valueTexts"].as_array().expect("value text rows") {
+        let component: Component = serde_json::from_value(row["component"].clone()).expect("value text component");
+        assert_eq!(crate::accessibility_value(&component).text.as_deref(), row["valueText"].as_str(), "{}", row["case"]);
+    }
+    for row in fixture["documents"].as_array().expect("document rows") {
+        let node = serde_json::json!({ "id": 1, "key": row["case"], "component": row["component"], "layout": { "kind": "leaf", "width": "hug", "height": "hug" }, "style": {}, "activity": "idle", "accessibility": {} });
+        let snapshot: crate::UiSnapshot = serde_json::from_value(serde_json::json!({ "surface": "number-controls", "revision": 1, "root": 1, "nodes": [node], "layoutEpoch": 0 })).expect("number-control snapshot");
+        let verdict = crate::validate_snapshot(&snapshot, &crate::UiDocumentLimits::default());
+        match row["violation"].as_str() {
+            None => assert_eq!(verdict, Ok(()), "{}: admitted", row["case"]),
+            Some(violation) => {
+                let violations = verdict.expect_err("refused");
+                assert!(violations.iter().any(|found| serde_json::to_value(found).expect("violation wire")["type"] == violation), "{}: refused as {violation}", row["case"]);
+            }
+        }
+        component_round_trips(snapshot.nodes[0].component.credited_clone().expect("credited copy"));
+    }
+}
+
+#[test]
+fn color_input_fixture_pins_the_hex_format_and_parse_laws() {
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🧫️color-input/🔣️.json")).expect("color-input fixture");
+    for row in fixture["hex"].as_array().expect("hex rows") {
+        assert_eq!(crate::ui_color_hex(&fixture_snaps(&row["rgba"]), row["alpha"].as_bool().expect("alpha")), row["expected"].as_str().expect("expected"), "{}", row["case"]);
+    }
+    for row in fixture["parse"].as_array().expect("parse rows") {
+        let expected = row["expected"].as_array().map(|rgba| rgba.iter().map(|component| component.as_f64().expect("component")).collect::<Vec<_>>());
+        assert_eq!(crate::parse_ui_color_hex(row["text"].as_str().expect("text")).map(Vec::from), expected, "{}", row["case"]);
+    }
+    assert_eq!(crate::ui_color_hex(&[f64::NAN, f64::INFINITY, 0.5, f64::NAN], true), "#00008000", "a non-finite component reads 0");
+}
+
+#[test]
+fn a_non_finite_snap_is_a_non_finite_number_not_a_detent_violation() {
+    let node = serde_json::json!({ "id": 1, "key": "nan", "component": { "type": "slider", "value": 1, "min": 0, "max": 2, "step": 0.5, "snaps": [1] }, "layout": { "kind": "leaf", "width": "hug", "height": "hug" }, "style": {}, "activity": "idle", "accessibility": {} });
+    let mut snapshot: crate::UiSnapshot = serde_json::from_value(serde_json::json!({ "surface": "nan", "revision": 1, "root": 1, "nodes": [node], "layoutEpoch": 0 })).expect("slider snapshot");
+    let Some(Component::Slider(props)) = snapshot.nodes.get_mut(0).map(|record| &mut record.component) else { panic!("a slider record") };
+    props.snaps = snaps(&[f64::NAN]);
+    let violations = crate::validate_snapshot(&snapshot, &crate::UiDocumentLimits::default()).expect_err("a NaN snap is refused");
+    assert!(violations.iter().any(|violation| matches!(violation, crate::UiContractViolation::NonFiniteNumber { .. })));
+    assert!(!violations.iter().any(|violation| matches!(violation, crate::UiContractViolation::InvalidSnaps { .. })));
+}

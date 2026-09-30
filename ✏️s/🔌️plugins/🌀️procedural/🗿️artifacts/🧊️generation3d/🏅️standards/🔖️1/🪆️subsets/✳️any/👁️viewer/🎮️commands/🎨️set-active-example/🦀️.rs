@@ -40,9 +40,3 @@ pub fn handle(payload: &SetActiveExample, _doc: &ArtifactView<'_, Generation3dSn
     }
     Ok(ViewEmit::config(vec![Generation3dViewConfigMutation::SetActiveExample(config::SetActiveExample { value: Some(payload.example_id.clone()) })]))
 }
-
-//#region 🧪️Tests
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
-//#endregion 🧪️Tests

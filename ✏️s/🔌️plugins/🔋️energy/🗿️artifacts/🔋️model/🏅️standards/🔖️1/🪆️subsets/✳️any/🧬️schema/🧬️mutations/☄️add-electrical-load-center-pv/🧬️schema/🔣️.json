@@ -5,19 +5,76 @@
   "type": "object",
   "additionalProperties": false,
   "required": [
+    "mutation",
     "id",
     "index",
     "pvId"
   ],
   "properties": {
+    "mutation": {
+      "const": "addElectricalLoadCenterPv"
+    },
     "id": {
-      "type": "integer"
+      "type": "integer",
+      "minimum": 0,
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Electrical load center",
+          "de": "Stromverteiler"
+        },
+        "description": {
+          "en": "The electrical load center this mutation changes, by id.",
+          "de": "Stromverteiler, den diese Mutation ändert, per ID."
+        },
+        "ref": {
+          "kind": "electricalLoadCenter"
+        },
+        "group": "target",
+        "order": 10
+      }
     },
     "index": {
-      "type": "integer"
+      "type": "integer",
+      "minimum": 0,
+      "x-semio-ui": {
+        "widget": "stepper",
+        "role": "value",
+        "label": {
+          "en": "Position",
+          "de": "Position"
+        },
+        "description": {
+          "en": "Insertion position in the member list; 0 is first.",
+          "de": "Einfügeposition in der Mitgliederliste; 0 ist die erste."
+        },
+        "step": 1,
+        "precision": 0,
+        "group": "order",
+        "order": 20
+      }
     },
     "pvId": {
-      "type": "integer"
+      "type": "integer",
+      "minimum": 0,
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "PV system",
+          "de": "PV-Anlage"
+        },
+        "description": {
+          "en": "PV system to attach, by id.",
+          "de": "Anzubindende PV-Anlage, per ID."
+        },
+        "ref": {
+          "kind": "pvSystem"
+        },
+        "group": "member",
+        "order": 30
+      }
     }
   }
 }

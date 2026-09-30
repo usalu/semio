@@ -1,9 +1,22 @@
-/** 🦠️ change-node-extension-data is an atomic, typed glTF 2.0 command. */
-import type { GltfJson, GltfSnapshot, GltfPrimitive, GltfMorphTarget, GltfAccessor, GltfSparseAccessor, GltfSparseIndices, GltfSparseValues } from '../../📸️snapshot/🟦️.ts';
-import { run, reject, positionIn, itemIndex, moveItem, type GltfLeafResult, type GltfMutationRejection } from './🟦️';
-export const GltfChangeNodeExtensionDataDescriptor = { id: 's.stdio.gltf.mutation.change-node-extension-data.v1', version: 1, kind: 'change', touchedPaths: ["document/nodes/*/extensions"], referencePolicy: 'none' } as const;
-export type GltfDataPresence = { state: 'absent' } | { state: 'present'; value: GltfJson };
-export interface GltfChangeNodeExtensionDataPayload { node: number; data: GltfDataPresence }
-export type GltfChangeNodeExtensionDataResult = GltfLeafResult;
-export const validateGltfChangeNodeExtensionData = (payload: GltfChangeNodeExtensionDataPayload, base: GltfSnapshot): GltfMutationRejection | undefined => { const node = itemIndex(payload.node, base.document.nodes.length, 'document/nodes'); if (node) return node; return undefined; };
-export const applyGltfChangeNodeExtensionData = (base: GltfSnapshot, payload: GltfChangeNodeExtensionDataPayload): GltfChangeNodeExtensionDataResult => run(base, payload, validateGltfChangeNodeExtensionData, (next, payload) => { next.document.nodes[payload.node]!.extensions = payload.data.state === 'present' ? payload.data.value : undefined; }, GltfChangeNodeExtensionDataDescriptor.touchedPaths);
+/** 🧩️ `change-node-extension-data` wire twin: the flat `Apply` payload `GltfChangeNodeExtensionDataPayload` and the phase wire `ChangeNodeExtensionDataMutation`, exactly as `./🦀️.rs` writes them.
+ * @see ./🧬️schema/🔣️.json */
+import { type GltfJson, gltfWireIndex, gltfWireLiteral, gltfWireObject, gltfWireRequired, gltfWireTagged, parseGltfJson } from "../../../📸️snapshot/🟦️.ts";
+import { type GltfDiff, type GltfPhase, gltfWirePhase, parseGltfDiff } from "../../../🔺️diff/🟦️.ts";
+
+export type GltfDataPresence =
+  | { state: "absent" }
+  | { state: "present"; value: GltfJson };
+
+export interface GltfChangeNodeExtensionDataPayload {
+  node: number;
+  data: GltfDataPresence;
+}
+
+export type ChangeNodeExtensionDataMutation = GltfPhase<GltfChangeNodeExtensionDataPayload, GltfDiff>;
+
+export const parseGltfDataPresence = gltfWireTagged<GltfDataPresence, "state">("state", {
+  absent: gltfWireObject<Extract<GltfDataPresence, { state: "absent" }>>({ state: gltfWireRequired(gltfWireLiteral("absent")) }),
+  present: gltfWireObject<Extract<GltfDataPresence, { state: "present" }>>({ state: gltfWireRequired(gltfWireLiteral("present")), value: gltfWireRequired(parseGltfJson) }),
+});
+export const parseGltfChangeNodeExtensionDataPayload = gltfWireObject<GltfChangeNodeExtensionDataPayload>({ node: gltfWireRequired(gltfWireIndex), data: gltfWireRequired(parseGltfDataPresence) });
+export const parseChangeNodeExtensionDataMutation = gltfWirePhase(parseGltfChangeNodeExtensionDataPayload, parseGltfDiff);

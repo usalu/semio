@@ -1,4 +1,4 @@
-import { formatUiNumber } from "../🔢️number-format/🟦️.ts";
+import { formatUiNumber, formatUiNumberFixed } from "../🔢️number-format/🟦️.ts";
 /**
  * ♿️ The TypeScript twin of the contract's own `♿️accessibility/🦀️.rs` projection region.
  *
@@ -156,11 +156,12 @@ export function uiAccessibilityIsFocusableV1(component: Component, activatable: 
 export function uiAccessibilityValueV1(component: Component): UiAccessibilityValueV1 {
   if (component.type === "input") {
     const numeric = /^[-+]?(?:\d+\.?\d*|\.\d+)(?:[eE][-+]?\d+)?$/u.test(component.value) ? Number(component.value) : Number.NaN;
-    return { valueMin: component.min ?? null, valueMax: component.max ?? null, valueNow: Number.isFinite(numeric) ? numeric : null, valueText: component.value, busy: false };
+    const valueText = component.kind === "number" && component.precision != null && Number.isFinite(numeric) ? formatUiNumberFixed(numeric, component.precision) : component.value;
+    return { valueMin: component.min ?? null, valueMax: component.max ?? null, valueNow: Number.isFinite(numeric) ? numeric : null, valueText, busy: false };
   }
   if (component.type === "select" || component.type === "iconSelect") return { valueMin: null, valueMax: null, valueNow: null, valueText: component.value, busy: false };
   if (component.type === "slider") return { valueMin: component.min, valueMax: component.max, valueNow: component.value, valueText: component.unit == null ? null : `${component.value} ${component.unit}`, busy: false };
-  if (component.type === "numberStepper") return { valueMin: component.min ?? null, valueMax: component.max ?? null, valueNow: component.uniform ? component.value : null, valueText: component.uniform ? formatUiNumber(component.value) : null, busy: false };
+  if (component.type === "numberStepper") return { valueMin: component.min ?? null, valueMax: component.max ?? null, valueNow: component.uniform ? component.value : null, valueText: component.uniform ? (component.precision == null ? formatUiNumber(component.value) : formatUiNumberFixed(component.value, component.precision)) : null, busy: false };
   if (component.type === "ring") return { valueMin: 0, valueMax: 1, valueNow: component.t, valueText: String(component.t), busy: false };
   if (component.type !== "progress") return { valueMin: null, valueMax: null, valueNow: null, valueText: null, busy: false };
   if (component.total == null) return { valueMin: null, valueMax: null, valueNow: null, valueText: null, busy: true };

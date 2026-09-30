@@ -51,7 +51,13 @@ export async function runArtifactRustPackageMain(packageRoot: string, cargoName:
       await runArtifactRustTests(cargoName, this.repoRoot, segments, options.testFeatures);
     }
   }
+  class CanonicalArchitectureScript extends BundleScript {
+    run(): void {
+      for (const twin of options.twins ?? []) console.log(`artifact-contribution: ${twin.name} checks=${twin.run()}`);
+    }
+  }
   const packageRouter = new ScriptRouter(packageRoot).register("build", BuildScript).register("check", CheckScript).register("test", TestScript);
+  if (options.twins?.length) packageRouter.register("canonical-architecture", CanonicalArchitectureScript);
   const segments = process.argv.slice(2);
   await packageRouter.run(segments.length ? segments : ["test"]);
 }

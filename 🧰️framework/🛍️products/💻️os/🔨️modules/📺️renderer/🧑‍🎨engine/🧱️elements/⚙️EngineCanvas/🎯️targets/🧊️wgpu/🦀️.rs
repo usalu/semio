@@ -5005,26 +5005,10 @@ pub fn tiled_map_wheel_into(surface_id: &str, controller_id: &str, inner: Rect, 
 //#endregion TiledMap
 
 //#region Board2d
-/// 🧩️ Raw event row drained from {@link infinite_canvas::BoardHost::drain_events_json}; mirrors the TS `BoardEventRow` shape.
-#[cfg(test)]
-#[derive(Clone, Debug, serde::Deserialize, serde::Serialize)]
-pub struct BoardEventRow {
-    pub name: String,
-    #[serde(default)]
-    pub payload: Value,
-}
-
 pub struct CoalescedBoardEvents {
     pub flush_now: bool,
     pub events_json: String,
 }
-
-#[cfg(test)]
-const PUZZLE2D_TRANSIENT_EVENT_NAMES: &[&str] = &["preselect", "brushPreview", "linkCompatibleNodes", "linkTargetRing"];
-#[cfg(test)]
-const PUZZLE2D_FLUSH_NOW_EVENT_NAMES: &[&str] = &["select", "preselectCancel", "brushCandidates", "brushPlace", "edgeCreate", "edgeDelete", "nodeDelete"];
-
-/// 📬️ Drops transient rows, coalesces `camera` to its latest value and `nodeMove` to one row per id (unless a `nodeDragEnd` follows), and flags whether the buffer should flush immediately. Port of `coalesceBoard2dEvents` in the React host.
 
 pub fn with_board_host_mut<R>(surface_id: &str, f: impl FnOnce(&mut infinite_canvas::BoardHost) -> R) -> Option<R> {
     ENGINE_SURFACES.with(|cell| {
@@ -5094,34 +5078,36 @@ pub fn board_pick_best_target_id(surface_id: &str, sx: f64, sy: f64) -> Option<S
     .flatten()
 }
 
-/// 📬️ Verbatim port of React's `PUZZLE2D_TRANSIENT_EVENT_NAMES` (`🖥️Board2dHost/🟦️.tsx:293`).
-/// `Hover` and `TransformPreview` were MISSING here: every board pointermove therefore carried a
-/// hover row into `applyBoardEvents`, i.e. a whole-surface republish per move, where React keeps
-/// hover on its own coalesced `interactionHover` lane (see [`puzzle_board_hover_into`]).
+/// 📬️ The rows that never reach `applyBoardEvents` — the twin of React's `PUZZLE2D_TRANSIENT_EVENT_NAMES`
+/// (`🖥️Board2dHost/🟦️.tsx`): live-preview frames (`nodeMove`, `transformPreview`) a gesture's ONE record
+/// supersedes, link/brush/marquee chrome, and `hover`, which rides its own `interactionHover` lane
+/// (see [`puzzle_board_hover_into`]).
 fn board_event_transient(kind: infinite_canvas::BoardEventKind) -> bool {
     use infinite_canvas::BoardEventKind;
-    matches!(kind, BoardEventKind::Preselect | BoardEventKind::BrushPreview | BoardEventKind::LinkCompatibleNodes | BoardEventKind::LinkTargetRing | BoardEventKind::TransformPreview | BoardEventKind::Hover)
+    matches!(kind, BoardEventKind::NodeMove | BoardEventKind::TransformPreview | BoardEventKind::Preselect | BoardEventKind::BrushPreview | BoardEventKind::LinkCompatibleNodes | BoardEventKind::LinkTargetRing | BoardEventKind::Hover)
 }
 
-/// 📬️ Verbatim port of React's `PUZZLE2D_FLUSH_NOW_EVENT_NAMES` (`🖥️Board2dHost/🟦️.tsx:294`) — the
-/// four region/rotate kinds were missing, so a rotate or a region edit sat in the buffer until some
-/// later event happened to flush it.
+/// 📬️ The terminal rows that flush the buffer at once — the twin of React's `PUZZLE2D_FLUSH_NOW_EVENT_NAMES`.
 fn board_event_flush_now(kind: infinite_canvas::BoardEventKind) -> bool {
     use infinite_canvas::BoardEventKind;
     matches!(
         kind,
-        BoardEventKind::Select
+        BoardEventKind::Gesture
+            | BoardEventKind::Select
             | BoardEventKind::PreselectCancel
             | BoardEventKind::BrushCandidates
             | BoardEventKind::BrushPlace
             | BoardEventKind::EdgeCreate
             | BoardEventKind::EdgeDelete
             | BoardEventKind::NodeDelete
-            | BoardEventKind::NodeRotate
             | BoardEventKind::RegionCreate
-            | BoardEventKind::RegionMove
             | BoardEventKind::RegionResize
     )
+}
+
+/// 🪪️ The `gestureId` a `select` or `gesture` row carries, `None` for an untagged row.
+fn board_event_gesture_id(event: &infinite_canvas::BoardOwnedEvent) -> Option<String> {
+    serde_json::from_str::<Value>(event.payload_json()).ok()?.get("gestureId")?.as_str().map(str::to_string)
 }
 
 /// 🎯️ Classifies every entity id a board fixture carries into the granularity a pick or hover
@@ -5161,35 +5147,27 @@ fn append_board_owned_event(output: &mut String, first: &mut bool, event: &infin
     Ok(())
 }
 
+/// 📬️ The Rust twin of React's `coalesceBoard2dEvents` (`🖥️Board2dHost/🟦️.tsx`); the shared corpus
+/// `🖥️Board2dHost/🧫️fixtures/🧫️board-event-coalescing/🔣️.json` pins both. Drops every transient row, keeps
+/// only the latest `camera` (first), keeps every other row in order, and flushes now for a terminal row —
+/// except a `select` tagged with a `gestureId` whose record the batch does not yet carry: an open gesture's
+/// selection leaves together with its record, never mid-gesture.
 fn coalesce_owned_board_events(queue: &infinite_canvas::BoardEventQueue) -> Result<CoalescedBoardEvents, ui_wgpu::wgpu::BoundedActionFault> {
     use infinite_canvas::BoardEventKind;
-    let has_drag_end = queue.iter().any(|event| event.kind() == BoardEventKind::NodeDragEnd);
+    let recorded: Vec<String> = queue.iter().filter(|event| event.kind() == BoardEventKind::Gesture).filter_map(board_event_gesture_id).collect();
     let mut output = String::from("[");
     let mut first = true;
     let mut flush_now = false;
     if let Some(camera) = queue.iter().filter(|event| event.kind() == BoardEventKind::Camera).last() {
         append_board_owned_event(&mut output, &mut first, camera)?;
     }
-    if !has_drag_end {
-        for (index, event) in queue.iter().enumerate() {
-            if event.kind() != BoardEventKind::NodeMove {
-                continue;
-            }
-            let key = event.key();
-            if queue.iter().take(index).any(|candidate| candidate.kind() == BoardEventKind::NodeMove && candidate.key() == key) {
-                continue;
-            }
-            let latest = queue.iter().skip(index).filter(|candidate| candidate.kind() == BoardEventKind::NodeMove && candidate.key() == key).last().expect("first node move is a latest candidate");
-            append_board_owned_event(&mut output, &mut first, latest)?;
-        }
-    }
     for event in queue.iter() {
         let kind = event.kind();
-        if board_event_flush_now(kind) {
-            flush_now = true;
-        }
-        if kind == BoardEventKind::Camera || kind == BoardEventKind::NodeMove || board_event_transient(kind) {
+        if kind == BoardEventKind::Camera || board_event_transient(kind) {
             continue;
+        }
+        if board_event_flush_now(kind) && (kind != BoardEventKind::Select || board_event_gesture_id(event).is_none_or(|id| recorded.contains(&id))) {
+            flush_now = true;
         }
         append_board_owned_event(&mut output, &mut first, event)?;
     }

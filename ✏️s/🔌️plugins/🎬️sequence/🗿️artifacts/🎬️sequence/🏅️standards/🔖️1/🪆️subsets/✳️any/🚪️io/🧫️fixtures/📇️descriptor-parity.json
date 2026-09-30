@@ -1,0 +1,321 @@
+{
+  "entries": [
+    {
+      "from": {
+        "artifactKind": "s.sequence.sequence",
+        "standard": "1",
+        "subset": "*"
+      },
+      "into": {
+        "artifactKind": "s.stdio.csv",
+        "standard": "rfc4180",
+        "subset": "*"
+      },
+      "fidelity": "Lossy",
+      "sniffs": false
+    },
+    {
+      "from": {
+        "artifactKind": "s.stdio.csv",
+        "standard": "rfc4180",
+        "subset": "*"
+      },
+      "into": {
+        "artifactKind": "s.sequence.sequence",
+        "standard": "1",
+        "subset": "*"
+      },
+      "fidelity": "Lossy",
+      "sniffs": true
+    },
+    {
+      "from": {
+        "artifactKind": "s.sequence.sequence",
+        "standard": "1",
+        "subset": "*"
+      },
+      "into": {
+        "artifactKind": "s.stdio.md",
+        "standard": "commonmark",
+        "subset": "*"
+      },
+      "fidelity": "Canonical",
+      "sniffs": false
+    },
+    {
+      "from": {
+        "artifactKind": "s.stdio.md",
+        "standard": "commonmark",
+        "subset": "*"
+      },
+      "into": {
+        "artifactKind": "s.sequence.sequence",
+        "standard": "1",
+        "subset": "*"
+      },
+      "fidelity": "Canonical",
+      "sniffs": true
+    },
+    {
+      "from": {
+        "artifactKind": "s.sequence.sequence",
+        "standard": "1",
+        "subset": "*"
+      },
+      "into": {
+        "artifactKind": "s.stdio.json",
+        "standard": "rfc8259",
+        "subset": "*"
+      },
+      "fidelity": "Exact",
+      "sniffs": false
+    },
+    {
+      "from": {
+        "artifactKind": "s.stdio.json",
+        "standard": "rfc8259",
+        "subset": "*"
+      },
+      "into": {
+        "artifactKind": "s.sequence.sequence",
+        "standard": "1",
+        "subset": "*"
+      },
+      "fidelity": "Exact",
+      "sniffs": true
+    },
+    {
+      "from": {
+        "artifactKind": "s.sequence.sequence",
+        "standard": "1",
+        "subset": "*"
+      },
+      "into": {
+        "artifactKind": "s.stdio.txt",
+        "standard": "utf-8",
+        "subset": "*"
+      },
+      "fidelity": "Exact",
+      "sniffs": false
+    },
+    {
+      "from": {
+        "artifactKind": "s.stdio.txt",
+        "standard": "utf-8",
+        "subset": "*"
+      },
+      "into": {
+        "artifactKind": "s.sequence.sequence",
+        "standard": "1",
+        "subset": "*"
+      },
+      "fidelity": "Exact",
+      "sniffs": true
+    }
+  ],
+  "invalidEntries": [
+    {
+      "from": "s.sequence.sequence@1/*",
+      "into": {
+        "artifactKind": "s.stdio.csv",
+        "standard": "rfc4180",
+        "subset": "*"
+      },
+      "fidelity": "Lossy",
+      "sniffs": false
+    },
+    {
+      "from": {
+        "artifactKind": "s.sequence.sequence",
+        "standard": "1",
+        "subset": "*"
+      },
+      "into": {
+        "artifactKind": "s.stdio.csv",
+        "standard": "rfc4180",
+        "subset": "*"
+      },
+      "fidelity": "exact",
+      "sniffs": false
+    },
+    {
+      "from": {
+        "artifactKind": "s.sequence.sequence",
+        "standard": "1",
+        "subset": "*"
+      },
+      "into": {
+        "artifactKind": "s.stdio.csv",
+        "standard": "rfc4180",
+        "subset": "*"
+      },
+      "fidelity": "Lossy",
+      "sniffs": 0
+    },
+    {
+      "from": {
+        "artifactKind": "s.sequence.sequence",
+        "standard": "1",
+        "subset": "*"
+      },
+      "into": {
+        "artifactKind": "s.stdio.csv",
+        "standard": "rfc4180",
+        "subset": "*"
+      },
+      "fidelity": "Lossy",
+      "sniffs": false,
+      "extra": true
+    },
+    {
+      "from": {
+        "artifactKind": "s.sequence.sequence",
+        "standard": "1",
+        "subset": "*"
+      },
+      "fidelity": "Lossy",
+      "sniffs": false
+    },
+    {
+      "from": {
+        "artifactKind": "s.sequence.sequence",
+        "standard": "1",
+        "subset": "*"
+      },
+      "into": {
+        "artifactKind": "s.stdio.csv",
+        "standard": "rfc4180",
+        "subset": "*",
+        "extra": "x"
+      },
+      "fidelity": "Lossy",
+      "sniffs": false
+    }
+  ],
+  "routes": [
+    {
+      "hops": [
+        {
+          "from": {
+            "artifactKind": "s.sequence.sequence",
+            "standard": "1",
+            "subset": "*"
+          },
+          "into": {
+            "artifactKind": "s.stdio.txt",
+            "standard": "utf-8",
+            "subset": "*"
+          },
+          "fidelity": "Exact",
+          "sniffs": false
+        }
+      ],
+      "fidelity": "Exact"
+    },
+    {
+      "hops": [
+        {
+          "from": {
+            "artifactKind": "s.stdio.csv",
+            "standard": "rfc4180",
+            "subset": "*"
+          },
+          "into": {
+            "artifactKind": "s.sequence.sequence",
+            "standard": "1",
+            "subset": "*"
+          },
+          "fidelity": "Lossy",
+          "sniffs": true
+        },
+        {
+          "from": {
+            "artifactKind": "s.sequence.sequence",
+            "standard": "1",
+            "subset": "*"
+          },
+          "into": {
+            "artifactKind": "s.stdio.json",
+            "standard": "rfc8259",
+            "subset": "*"
+          },
+          "fidelity": "Exact",
+          "sniffs": false
+        }
+      ],
+      "fidelity": "Lossy"
+    }
+  ],
+  "invalidRoutes": [
+    {
+      "hops": {},
+      "fidelity": "Exact"
+    },
+    {
+      "hops": [
+        {
+          "from": "s.sequence.sequence@1/*",
+          "into": {
+            "artifactKind": "s.stdio.csv",
+            "standard": "rfc4180",
+            "subset": "*"
+          },
+          "fidelity": "Lossy",
+          "sniffs": false
+        }
+      ],
+      "fidelity": "Exact"
+    },
+    {
+      "hops": [
+        {
+          "from": {
+            "artifactKind": "s.sequence.sequence",
+            "standard": "1",
+            "subset": "*"
+          },
+          "into": {
+            "artifactKind": "s.stdio.csv",
+            "standard": "rfc4180",
+            "subset": "*"
+          },
+          "fidelity": "Lossy",
+          "sniffs": false
+        }
+      ],
+      "fidelity": "exact"
+    },
+    {
+      "hops": [
+        {
+          "from": {
+            "artifactKind": "s.sequence.sequence",
+            "standard": "1",
+            "subset": "*"
+          },
+          "into": {
+            "artifactKind": "s.stdio.txt",
+            "standard": "utf-8",
+            "subset": "*"
+          },
+          "fidelity": "Exact",
+          "sniffs": false
+        }
+      ],
+      "fidelity": "Exact",
+      "extra": false
+    }
+  ],
+  "mismatches": [
+    {
+      "index": 6,
+      "field": "fidelity",
+      "value": "Lossy"
+    },
+    {
+      "index": 1,
+      "field": "sniffs",
+      "value": false
+    }
+  ]
+}

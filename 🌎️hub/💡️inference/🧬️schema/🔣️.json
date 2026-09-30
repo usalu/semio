@@ -34,17 +34,6 @@
       }
     },
 
-    "InferenceJobReconcileRequestV1": {
-      "type": "object",
-      "additionalProperties": false,
-      "required": ["schema", "version", "requestId"],
-      "properties": {
-        "schema": { "const": "semio.hub.inference-job-reconcile/v1" },
-        "version": { "const": 1 },
-        "requestId": { "$ref": "#/$defs/id" }
-      }
-    },
-
     "InferenceJobReconcileApprovalStateV1": { "enum": ["available", "undo-prepared", "undone"] },
 
     "InferenceJobReconcileApprovalV1": {
@@ -94,7 +83,7 @@
       "additionalProperties": false,
       "required": ["schema", "version", "requestId", "found", "job"],
       "properties": {
-        "schema": { "const": "semio.hub.inference-job-reconcile-result/v1" },
+        "schema": { "const": "semio.framework.job-reconcile-result/v1" },
         "version": { "const": 1 },
         "requestId": { "$ref": "#/$defs/id" },
         "found": { "type": "boolean" },

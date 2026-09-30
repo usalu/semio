@@ -8,11 +8,13 @@ pub fn diff(payload: &super::CreateEdge, base: &JackSnapshot) -> protocol::Mutat
     if scene.edges.iter().any(|edge| edge.id == payload.edge.id) {
         return protocol::MutationOutcome::fatal("mutation.duplicate-id", format!("An edge with id \"{}\" already exists.", payload.edge.id), [payload.edge.id.clone()]);
     }
-    let source_id = crate::port_node_id(&payload.edge.source);
-    let target_id = crate::port_node_id(&payload.edge.target);
-    let endpoints_exist = source_id.is_some_and(|id| scene.nodes.iter().any(|node| node.id == id)) && target_id.is_some_and(|id| scene.nodes.iter().any(|node| node.id == id));
-    if !endpoints_exist {
-        return protocol::MutationOutcome::fatal("mutation.invariant", format!("Edge \"{}\" references an endpoint that does not exist ({} -> {}).", payload.edge.id, payload.edge.source, payload.edge.target), [payload.edge.id.clone()]);
+    let (Some(source_id), Some(target_id)) = (crate::port_node_id(&payload.edge.source), crate::port_node_id(&payload.edge.target)) else {
+        return protocol::MutationOutcome::fatal("mutation.invariant", format!("Edge \"{}\" endpoints must be `nodeId@portId` port keys ({} -> {}).", payload.edge.id, payload.edge.source, payload.edge.target), [payload.edge.id.clone()]);
+    };
+    let mut missing: Vec<String> = [source_id, target_id].into_iter().filter(|id| !scene.nodes.iter().any(|node| node.id == *id)).map(str::to_string).collect();
+    missing.dedup();
+    if !missing.is_empty() {
+        return protocol::MutationOutcome::error("mutation.target-missing", format!("Edge \"{}\" references a node that does not exist ({} -> {}).", payload.edge.id, payload.edge.source, payload.edge.target), missing);
     }
     let mut edges = scene.edges;
     edges.push(payload.edge.clone());

@@ -41,13 +41,11 @@
       "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/♻️activation/🏃️execution/🟦️.ts",
       "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/♻️activation/🌐️serve/🟦️.ts",
       "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🧪️tests/🧹️capability-policy/🟦️.ts",
-      "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🧪️tests/🧹️layering-policy/🟦️.ts",
       "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🧪️tests/🧹️export-path-policy/🟦️.ts",
       "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🧪️tests/🧹️host-handle-policy/🟦️.ts",
       "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🧪️tests/🏃️execution/🟦️.ts",
       "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🧪️tests/🎬️studio/🟦️.ts",
       "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🧪️tests/🔬️catalog-smoke/🟦️.ts",
-      "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🧪️tests/🤝️collaboration/🟦️.ts",
       "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🧪️tests/✅️verification/🟦️.ts",
       "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/⚖️parity/🏗️structure/🟦️.ts",
       "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/⚖️parity/🖼️pixels/🟦️.ts",
@@ -236,15 +234,6 @@
         "forwardAllArgs": true
       }
     },
-    "layer-lint": {
-      "executor": "nx:run-commands",
-      "outputs": [],
-      "options": {
-        "cwd": "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript",
-        "command": "bun ./📜️script.ts layer-lint",
-        "forwardAllArgs": true
-      }
-    },
     "index-lint": {
       "executor": "nx:run-commands",
       "outputs": [],
@@ -260,26 +249,6 @@
       "options": {
         "cwd": "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript",
         "command": "bun ./📜️script.ts host-handle-lint",
-        "forwardAllArgs": true
-      }
-    },
-    "local-hub": {
-      "executor": "nx:run-commands",
-      "cache": false,
-      "continuous": true,
-      "outputs": [],
-      "options": {
-        "cwd": "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript",
-        "command": "bun ./📜️script.ts local-hub",
-        "forwardAllArgs": true
-      }
-    },
-    "collab-e2e": {
-      "executor": "nx:run-commands",
-      "cache": false,
-      "options": {
-        "cwd": "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript",
-        "command": "bun ./📜️script.ts verify collab",
         "forwardAllArgs": true
       }
     },
@@ -368,7 +337,9 @@
     "cold-boot-check-s": {
       "executor": "nx:run-commands",
       "cache": false,
-      "dependsOn": ["activate-s-react-dev"],
+      "dependsOn": [
+        "activate-s-react-dev"
+      ],
       "options": {
         "cwd": "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript",
         "command": "bun ./📜️script.ts cold-boot-check s react dev"
@@ -599,6 +570,14 @@
       "options": {
         "cwd": "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript",
         "command": "bun ./📜️script.ts verify boot",
+        "forwardAllArgs": true
+      }
+    },
+    "canonical-architecture": {
+      "executor": "nx:run-commands",
+      "options": {
+        "cwd": "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript",
+        "command": "bun ./📜️script.ts canonical-architecture",
         "forwardAllArgs": true
       }
     }

@@ -84,8 +84,8 @@ fn media_slot_fixture_composes_body_clip_and_exact_owner() {
         assert!(collect_tree_slots(&tree, "media.video.viewer", body, &owner(), &mut slots));
         assert_eq!(slots.len(), vector["expectedCount"].as_u64().unwrap() as usize, "{}", vector["name"]);
         if let Some(slot) = slots.first() {
-            assert_eq!(serde_json::to_value(&slot.rect).unwrap(), vector["expectedRect"]);
-            assert_eq!(serde_json::to_value(&slot.clip).unwrap(), vector["expectedClip"]);
+            assert_eq!(serde_json::from_slice::<serde_json::Value>(&serde_json::to_vec(&slot.rect).unwrap()).unwrap(), vector["expectedRect"]);
+            assert_eq!(serde_json::from_slice::<serde_json::Value>(&serde_json::to_vec(&slot.clip).unwrap()).unwrap(), vector["expectedClip"]);
             assert_eq!(slot.occluded, vector["expectedOccluded"].as_bool().unwrap());
             assert_eq!(slot.node_id, "1");
             assert_eq!(slot.node_key, "media-slot");
@@ -112,13 +112,19 @@ fn media_slot_caps_refuse_the_entire_overflow_publication() {
 fn media_slot_descriptor_byte_budget_refuses_oversized_publication() {
     let fixture = fixture();
     let mut props = props();
-    props["labels"]["play"] = serde_json::Value::String("x".repeat(30_000));
+    let budget = &fixture["descriptorBudget"];
+    for label in props["labels"].as_object_mut().unwrap().values_mut() {
+        *label = serde_json::Value::String("x".repeat(budget["labelBytes"].as_u64().unwrap() as usize));
+    }
     let tree = tree(props, &fixture["cases"][0]);
     let mut slots = Vec::new();
     let body = Rect::new(0.0, 0.0, 500.0, 500.0);
-    assert!(collect_tree_slots(&tree, "media.video.viewer", body, &owner(), &mut slots));
-    assert!(collect_tree_slots(&tree, "media.video.viewer", body, &owner(), &mut slots));
+    for _ in 0..budget["expectedAcceptedSlots"].as_u64().unwrap() {
+        assert!(collect_tree_slots(&tree, "media.video.viewer", body, &owner(), &mut slots));
+    }
+    assert!(serde_json::to_vec(&slots).unwrap().len() <= PRESENTED_MEDIA_DESCRIPTOR_BYTES);
     assert!(!collect_tree_slots(&tree, "media.video.viewer", body, &owner(), &mut slots));
+    assert!(serde_json::to_vec(&slots).unwrap().len() > PRESENTED_MEDIA_DESCRIPTOR_BYTES);
     assert!(slots.len() < PRESENTED_MEDIA_SLOT_CAPACITY);
     retire(tree);
 }

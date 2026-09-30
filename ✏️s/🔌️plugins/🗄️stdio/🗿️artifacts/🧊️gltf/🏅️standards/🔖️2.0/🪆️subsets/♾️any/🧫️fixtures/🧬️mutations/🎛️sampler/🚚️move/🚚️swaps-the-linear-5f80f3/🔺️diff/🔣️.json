@@ -1,17 +1,34 @@
 {
-  "id": "s.stdio.gltf.mutation.move-sampler.v1",
-  "version": 1,
-  "touchedPaths": [
-    "document/samplers/0",
-    "document/samplers/1"
-  ],
-  "payload": {
-    "index": 0,
-    "position": 1
+  "textures": {
+    "modified": [
+      {
+        "index": 0,
+        "diff": {
+          "sampler": 1
+        }
+      },
+      {
+        "index": 1,
+        "diff": {
+          "sampler": 0
+        }
+      }
+    ]
   },
-  "operation": {
-    "kind": "move",
-    "index": 0,
-    "position": 1
+  "samplers": {
+    "modified": [
+      {
+        "index": 0,
+        "diff": {
+          "wrapS": 33071
+        }
+      },
+      {
+        "index": 1,
+        "diff": {
+          "magFilter": 9729
+        }
+      }
+    ]
   }
 }

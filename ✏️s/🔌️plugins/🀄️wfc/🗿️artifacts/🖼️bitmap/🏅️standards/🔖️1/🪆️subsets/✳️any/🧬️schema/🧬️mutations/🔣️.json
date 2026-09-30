@@ -3,15 +3,125 @@
   "$id": "https://json.schemas.assets.semio-tech.com/s/wfc/bitmap/1/any/mutations.json",
   "title": "BitmapMutation",
   "oneOf": [
-    { "$ref": "./change-seed/schema.json" },
-    { "$ref": "./resize-input/schema.json" },
-    { "$ref": "./set-input-pixels/schema.json" },
-    { "$ref": "./add-palette-color/schema.json" },
-    { "$ref": "./change-palette-color/schema.json" },
-    { "$ref": "./remove-palette-color/schema.json" },
-    { "$ref": "./resize-output/schema.json" },
-    { "$ref": "./change-model/schema.json" },
-    { "$ref": "./pin-pixel/schema.json" },
-    { "$ref": "./unpin-pixel/schema.json" }
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "ChangeSeed"
+      ],
+      "properties": {
+        "ChangeSeed": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/wfc/bitmap/1/any/mutation/change-seed/schema.json"
+        }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "ResizeInput"
+      ],
+      "properties": {
+        "ResizeInput": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/wfc/bitmap/1/any/mutation/resize-input/schema.json"
+        }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "SetInputPixels"
+      ],
+      "properties": {
+        "SetInputPixels": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/wfc/bitmap/1/any/mutation/set-input-pixels/schema.json"
+        }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "AddPaletteColor"
+      ],
+      "properties": {
+        "AddPaletteColor": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/wfc/bitmap/1/any/mutation/add-palette-color/schema.json"
+        }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "ChangePaletteColor"
+      ],
+      "properties": {
+        "ChangePaletteColor": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/wfc/bitmap/1/any/mutation/change-palette-color/schema.json"
+        }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "RemovePaletteColor"
+      ],
+      "properties": {
+        "RemovePaletteColor": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/wfc/bitmap/1/any/mutation/remove-palette-color/schema.json"
+        }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "ResizeOutput"
+      ],
+      "properties": {
+        "ResizeOutput": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/wfc/bitmap/1/any/mutation/resize-output/schema.json"
+        }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "ChangeModel"
+      ],
+      "properties": {
+        "ChangeModel": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/wfc/bitmap/1/any/mutation/change-model/schema.json"
+        }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "PinPixel"
+      ],
+      "properties": {
+        "PinPixel": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/wfc/bitmap/1/any/mutation/pin-pixel/schema.json"
+        }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "UnpinPixel"
+      ],
+      "properties": {
+        "UnpinPixel": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/wfc/bitmap/1/any/mutation/unpin-pixel/schema.json"
+        }
+      }
+    }
   ]
 }

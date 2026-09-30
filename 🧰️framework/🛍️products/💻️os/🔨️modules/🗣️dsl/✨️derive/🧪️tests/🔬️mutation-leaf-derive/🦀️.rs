@@ -42,3 +42,17 @@ fn hashes_workspace_provenance_with_sha2_oracle() {
     let other = mutation_leaf_workspace_token(&mutation_source_authority(&other_source, &other_cwd).unwrap()).unwrap();
     assert_ne!(first, other);
 }
+
+#[test]
+fn resolves_the_payload_schema_beside_the_descriptor_and_refuses_escapes() {
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🛂️mutation-source-authority/🔣️.json")).unwrap();
+    let (_, compiler_cwd, source) = mutation_source_authority_tests::materialize("valid", &fixture);
+    let authority = mutation_source_authority(&source, &compiler_cwd).unwrap();
+    let leaf = authority.descriptor_path.parent().unwrap().to_path_buf();
+    fs::create_dir_all(leaf.join("🧬️schema")).unwrap();
+    fs::write(leaf.join("🧬️schema/🔣️.json"), r#"{"type":"object","properties":{}}"#).unwrap();
+    assert_eq!(mutation_leaf_payload_schema_path(&authority, "🧬️schema/🔣️.json").unwrap(), leaf.join("🧬️schema/🔣️.json"));
+    for rejected in ["", "/🧬️schema/🔣️.json", "../🔣️.json", "🧬️schema/../🔣️.json", "🧬️schema//🔣️.json", "🧬️schema\\🔣️.json", "🧬️schema/absent.json", "🦀️.rs#InsertPage"] {
+        assert!(mutation_leaf_payload_schema_path(&authority, rejected).is_err(), "{rejected:?}");
+    }
+}

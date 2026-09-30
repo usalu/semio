@@ -9,7 +9,20 @@
   ],
   "properties": {
     "namespace": {
-      "type": "string"
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "text",
+        "label": {
+          "en": "Main namespace",
+          "de": "Hauptnamensraum"
+        },
+        "description": {
+          "en": "Namespace URI of the WordprocessingML main part.",
+          "de": "Namensraum-URI des WordprocessingML-Hauptteils."
+        },
+        "group": "value",
+        "order": 10
+      }
     }
   }
 }

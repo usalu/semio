@@ -73,6 +73,7 @@ async fn sample_log() -> HistoryLog {
                     // not just the unit `Owner` case — survives a real `.spr` byte round trip.
                     origin: crate::os_spr::command::MutationOrigin::Contributed { plugin_id: "flow".to_string(), mutation_id: crate::os_spr::ids::SchemaId("widget.doc#recolor".to_string()), payload_hash: crate::os_spr::ids::PayloadHash([3u8; 32]) },
                     messages: Vec::new(),
+                    transaction: Some(crate::os_spr::command::TransactionRef { id: "tx-0123456789abcdef".to_string(), tool: "s.puzzle.2d#select".to_string() }),
                 }]), lane: None,
             },
         ],
@@ -162,7 +163,7 @@ async fn retained_history_decode_yields_across_bytes_and_semantic_records() {
 #[semio_framework_async_macros::async_test]
 async fn retained_history_decode_rejects_a_crc_valid_malformed_transition_after_valid_records() {
     let mut log = sample_log().await;
-    log.transitions.push(HistoryTransitionRecord { id: "transition-after-valid-prefix".to_string(), actor: "alice".to_string(), hlt: (1, 2, 0), dependencies: Vec::new(), payload: vec![0xff] });
+    log.transitions.push(HistoryTransitionRecord { id: "transition-after-valid-prefix".to_string(), actor: "alice".to_string(), hlt: (1, 2, 0), dependencies: Vec::new(), observed: None, payload: vec![0xff] });
     let bytes = encode_history(&log, &EncodeOptions::default()).await.expect("encode semantically malformed retained history");
     let limits = crate::os_spr::format::retained::RetainedSprLimits { file_bytes: bytes.len() as u64, frame_body_bytes: 1_048_576, records: 8_192 };
     let mut decode = RetainedHistoryDecode::new(bytes.len(), limits).expect("admit retained semantic refusal");
@@ -300,6 +301,7 @@ async fn op_meta_messages_round_trip_every_severity_and_target_shape() {
         payload_hash: None,
         group_id: None,
         origin: crate::os_spr::command::MutationOrigin::Owner,
+        transaction: None,
         messages: vec![
             HistoryMessage { level: 0, code: "mutation.cascade".to_string(), message: "cascaded".to_string(), target: Vec::new(), op_index: None },
             HistoryMessage { level: 1, code: "mutation.clamped".to_string(), message: "clamped".to_string(), target: vec!["a".to_string()], op_index: Some(0) },
@@ -328,7 +330,7 @@ async fn op_meta_messages_round_trip_every_severity_and_target_shape() {
 
 #[semio_framework_async_macros::async_test]
 async fn op_meta_without_messages_writes_no_messages_section() {
-    let meta = HistoryOpMeta { op_id: None, dependencies: Vec::new(), base_version: 0, author_id: None, hlt: None, undo_policy: 0, payload_hash: None, group_id: None, origin: crate::os_spr::command::MutationOrigin::Owner, messages: Vec::new() };
+    let meta = HistoryOpMeta { op_id: None, dependencies: Vec::new(), base_version: 0, author_id: None, hlt: None, undo_policy: 0, payload_hash: None, group_id: None, origin: crate::os_spr::command::MutationOrigin::Owner, messages: Vec::new(), transaction: None };
     let mut dict = DictBuilder::new();
     let mut out = ByteWriter::new();
     write_op_meta(&mut out, &meta, &mut dict, &|_: &str| None).await.unwrap();
@@ -440,7 +442,7 @@ async fn ops_text_skips_comments_and_blank_lines() {
     let text = "doc doc-1 schema=s1\n\n# a comment\ntransition t-1 actor=alice hlc=1,2,3 dependencies=[] payload=\"AAEEb3AtYg==\"\n";
     let log = parse_ops_text(text).unwrap();
     assert_eq!(log.doc_id, "doc-1");
-    assert_eq!(log.transitions, vec![HistoryTransitionRecord { id: "t-1".to_string(), actor: "alice".to_string(), hlt: (1, 2, 3), dependencies: Vec::new(), payload: hex("0001046f702d62") }]);
+    assert_eq!(log.transitions, vec![HistoryTransitionRecord { id: "t-1".to_string(), actor: "alice".to_string(), hlt: (1, 2, 3), dependencies: Vec::new(), observed: None, payload: hex("0001046f702d62") }]);
 }
 
 #[semio_framework_async_macros::async_test]
@@ -457,7 +459,7 @@ async fn ops_text_round_trips_every_transition_field() {
     for edit in &mut log.edits {
         edit.meta = None;
     }
-    log.transitions.push(HistoryTransitionRecord { id: "transition-x".to_string(), actor: "bob".to_string(), hlt: (u64::MAX, 0, 7), dependencies: vec!["op-1".to_string(), "edit-1#0".to_string()], payload: Vec::new() });
+    log.transitions.push(HistoryTransitionRecord { id: "transition-x".to_string(), actor: "bob".to_string(), hlt: (u64::MAX, 0, 7), dependencies: vec!["op-1".to_string(), "edit-1#0".to_string()], observed: None, payload: Vec::new() });
     let text = print_ops_text(&log).unwrap();
     assert_eq!(text.lines().filter(|line| line.starts_with("transition ")).count(), 3);
     assert_eq!(parse_ops_text(&text).unwrap(), log);
@@ -531,6 +533,7 @@ async fn transition_payload_matches_the_language_agnostic_fixture() {
         actor: record["actor"].as_str().unwrap().to_string(),
         hlt: (hlt[0], hlt[1], hlt[2]),
         dependencies: record["dependencies"].as_array().unwrap().iter().map(|id| id.as_str().unwrap().to_string()).collect(),
+        observed: None,
         payload: hex(record["payloadHex"].as_str().unwrap()),
     };
     let mut dict = DictBuilder::new();
@@ -818,6 +821,7 @@ async fn fold_excludes_edits_quarantined_by_an_unaccepted_conflict() {
         diff: crate::os_spr::ArtifactDiff { schema: crate::os_spr::SchemaId("schema-f".to_string()), payload: vec![1] },
         inverse: crate::os_spr::InverseMutation { schema: crate::os_spr::SchemaId("schema-f".to_string()), payload: Vec::new() },
         timestamp: crate::os_spr::HybridLogicalTimestamp { actor: 2, physical_ms: 100, logical: 0 },
+        transaction: None,
     };
     let mut envelope = Vec::new();
     crate::os_spr::encode_envelope(&quarantined, &mut envelope);

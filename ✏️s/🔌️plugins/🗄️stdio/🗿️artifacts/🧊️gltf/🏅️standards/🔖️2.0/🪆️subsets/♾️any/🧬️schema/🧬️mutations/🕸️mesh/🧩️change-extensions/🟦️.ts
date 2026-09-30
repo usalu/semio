@@ -1,9 +1,22 @@
-/** 🦠️ change-mesh-extension-data: cohesive atomic mesh mutation. */
-import type { GltfJson, GltfSnapshot, GltfPrimitive, GltfMorphTarget } from '../../📸️snapshot/🟦️.ts';
-import { run, reject, positionIn, itemIndex, permutation, moveItem, type GltfLeafResult, type GltfMutationRejection } from './🟦️';
-export const GltfChangeMeshExtensionDataDescriptor = { id: 's.stdio.gltf.mutation.change-mesh-extension-data.v1', version: 1, kind: 'change', touchedPaths: ["document/meshes/*/extensions"], referencePolicy: 'none' } as const;
-export type GltfDataPresence = { state: 'absent' } | { state: 'present'; value: GltfJson };
-export interface GltfChangeMeshExtensionDataPayload { mesh: number; data: GltfDataPresence }
-export type GltfChangeMeshExtensionDataResult = GltfLeafResult;
-export const validateGltfChangeMeshExtensionData = (payload: GltfChangeMeshExtensionDataPayload, base: GltfSnapshot): GltfMutationRejection | undefined => { const mesh = itemIndex(payload.mesh, base.document.meshes.length, 'document/meshes'); if (mesh) return mesh; return undefined; };
-export const applyGltfChangeMeshExtensionData = (base: GltfSnapshot, payload: GltfChangeMeshExtensionDataPayload): GltfChangeMeshExtensionDataResult => run(base, payload, validateGltfChangeMeshExtensionData, (next, payload) => { next.document.meshes[payload.mesh]!.extensions = payload.data.state === 'present' ? payload.data.value : undefined; }, GltfChangeMeshExtensionDataDescriptor.touchedPaths);
+/** 🧩️ `change-mesh-extension-data` wire twin: the flat `Apply` payload `GltfChangeMeshExtensionDataPayload` and the phase wire `ChangeMeshExtensionDataMutation`, exactly as `./🦀️.rs` writes them.
+ * @see ./🧬️schema/🔣️.json */
+import { type GltfJson, gltfWireIndex, gltfWireLiteral, gltfWireObject, gltfWireRequired, gltfWireTagged, parseGltfJson } from "../../../📸️snapshot/🟦️.ts";
+import { type GltfDiff, type GltfPhase, gltfWirePhase, parseGltfDiff } from "../../../🔺️diff/🟦️.ts";
+
+export type GltfDataPresence =
+  | { state: "absent" }
+  | { state: "present"; value: GltfJson };
+
+export interface GltfChangeMeshExtensionDataPayload {
+  mesh: number;
+  data: GltfDataPresence;
+}
+
+export type ChangeMeshExtensionDataMutation = GltfPhase<GltfChangeMeshExtensionDataPayload, GltfDiff>;
+
+export const parseGltfDataPresence = gltfWireTagged<GltfDataPresence, "state">("state", {
+  absent: gltfWireObject<Extract<GltfDataPresence, { state: "absent" }>>({ state: gltfWireRequired(gltfWireLiteral("absent")) }),
+  present: gltfWireObject<Extract<GltfDataPresence, { state: "present" }>>({ state: gltfWireRequired(gltfWireLiteral("present")), value: gltfWireRequired(parseGltfJson) }),
+});
+export const parseGltfChangeMeshExtensionDataPayload = gltfWireObject<GltfChangeMeshExtensionDataPayload>({ mesh: gltfWireRequired(gltfWireIndex), data: gltfWireRequired(parseGltfDataPresence) });
+export const parseChangeMeshExtensionDataMutation = gltfWirePhase(parseGltfChangeMeshExtensionDataPayload, parseGltfDiff);

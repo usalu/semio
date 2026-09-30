@@ -5,15 +5,44 @@
   "type": "object",
   "additionalProperties": false,
   "required": [
+    "mutation",
     "id",
     "newDefaultWireKind"
   ],
   "properties": {
+    "mutation": {
+      "const": "changeHandleKindDefaultWireKind"
+    },
     "id": {
-      "type": "string"
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Handle kind",
+          "de": "Griffart"
+        },
+        "ref": {
+          "kind": "handleKind",
+          "domain": "handle",
+          "granularity": "handleKind"
+        },
+        "group": "target",
+        "order": 10
+      }
     },
     "newDefaultWireKind": {
-      "type": "string"
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "text",
+        "role": "value",
+        "label": {
+          "en": "Default wire kind",
+          "de": "Standard-Leitungsart"
+        },
+        "group": "kind",
+        "order": 20
+      }
     }
   }
 }

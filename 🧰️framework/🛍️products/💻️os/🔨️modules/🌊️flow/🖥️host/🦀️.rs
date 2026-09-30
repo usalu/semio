@@ -221,6 +221,8 @@ impl FlowWheelPlan {
 
 /// 🏠️ Retained flow host: host_snapshot, dag scene, evaluation cache.
 pub struct FlowHost {
+    geometry_port: Option<Box<dyn crate::geometry::GeometryPort>>,
+    operator_registry: Option<neural::SharedRegistry>,
     pub host_snapshot: FlowHostSnapshot,
     pub dag: DagHost,
     pub outputs: BTreeMap<String, Dictionary>,
@@ -294,6 +296,25 @@ impl Default for FlowHost {
 }
 
 impl FlowHost {
+    /// 📔️ Supplies immutable operator implementations owned by this host's composition.
+    pub fn with_operator_registry(mut self, registry: neural::SharedRegistry) -> Self {
+        assert!(self.operator_registry.is_none(), "operator registry is supplied once");
+        self.set_neuron_kind_info_map(Arc::new(registry.operator_infos().map(|info| (info.id.clone(),info.clone())).collect()));
+        self.operator_registry = Some(registry);
+        self.baseline_registry_generation = 0;
+        self
+    }
+    fn operator_registry(&self) -> neural::SharedRegistry { self.operator_registry.clone().unwrap_or_else(flow_operator_registry) }
+    fn operator_registry_generation(&self) -> u64 { if self.operator_registry.is_some() { 0 } else { flow_extension_registry_generation() } }
+    /// 🔌️ Supplies one geometry authority that this owner retains and explicitly closes.
+    pub fn with_geometry_port(mut self, port: Box<dyn crate::geometry::GeometryPort>) -> Self {
+        assert!(self.geometry_port.is_none(), "geometry authority is supplied once");
+        self.geometry_port = Some(port);
+        self
+    }
+    pub fn geometry_port(&self) -> Result<&dyn crate::geometry::GeometryPort, String> {
+        self.geometry_port.as_deref().ok_or_else(|| "flow.geometry-port-missing".into())
+    }
     pub fn from_host_snapshot(host_snapshot: FlowHostSnapshot) -> Self {
         Self::from_host_snapshot_with_cache(host_snapshot, Arc::new(NeuralCache::new()))
     }
@@ -312,6 +333,8 @@ impl FlowHost {
     pub fn from_host_snapshot_with_cache_and_infos(mut host_snapshot: FlowHostSnapshot, neural_cache: Arc<NeuralCache>, kind_infos: Arc<HashMap<String, OperatorInfo>>) -> Self {
         dedupe_host_snapshot_widgets(&mut host_snapshot);
         let mut host = Self {
+            geometry_port: None,
+            operator_registry: None,
             host_snapshot: host_snapshot,
             dag: DagHost::from_host_snapshot(DagHostSnapshot { schema: "dag.host_snapshot".into(), camera: semio_framework_artifact_infinite_dag::DagCamera { x: 0.0, y: 0.0, zoom: 1.0 }, nodes: vec![], edges: vec![] }),
             outputs: BTreeMap::new(),
@@ -512,7 +535,7 @@ impl FlowHost {
         let seeds = self.build_seeds();
         let snapshot = TreeSnapshot::capture(&tree, &seeds);
         let dirty = compute_dirty_set(self.previous_snapshot.as_ref(), &snapshot);
-        let evaluated_generation = flow_extension_registry_generation();
+        let evaluated_generation = self.operator_registry_generation();
         let converged = self.probe_eval_outputs_converged(&tree, &seeds, &dirty, &channels);
         tree.retire_cold();
         seeds.retire_cold();
@@ -535,7 +558,7 @@ impl FlowHost {
     }
 
     fn probe_eval_outputs_converged(&self, tree: &Tree, seeds: &HashMap<String, Dictionary>, dirty: &HashSet<String>, channels: &EvalChannels) -> bool {
-        let registry = flow_registry();
+        let registry = self.operator_registry();
         let evaluator = Evaluator::new(registry.as_ref());
         let mut probe_never_dispatches = |kind: &str, _: &Dictionary| -> Result<Dictionary, EvalError> { Err(EvalError::InvalidInput(format!("apply_eval_outputs_json probed a dispatch for {kind}"))) };
         match evaluator.evaluate_channels_budgeted(tree, seeds, &self.kind_infos, &mut probe_never_dispatches, &self.neural_cache, dirty, Some(channels), EvalStepBudget::PROBE) {
@@ -611,7 +634,7 @@ impl FlowHost {
     /// old snapshot computes an empty dirty set and dispatches nothing, which is the same stale
     /// answer by a longer road (ticket 26/09/09/PROCEDURAL-3D-END-TO-END).
     fn baseline_is_current(&self) -> bool {
-        self.baseline_registry_generation == flow_extension_registry_generation()
+        self.baseline_registry_generation == self.operator_registry_generation()
     }
 
     /// ⏮️ The snapshot to diff this evaluation against — `None` once the registry it was computed
@@ -1426,8 +1449,8 @@ impl FlowHost {
         // then stamps the baseline with the OLDER generation, which over-dirties the next step
         // (extra work, never a stale answer). Reading it after could stamp a generation the
         // evaluation never used.
-        let evaluated_generation = flow_extension_registry_generation();
-        let registry = flow_registry();
+        let evaluated_generation = self.operator_registry_generation();
+        let registry = self.operator_registry();
         let evaluator = Evaluator::new(registry.as_ref());
         self.neural_cache.begin_epoch();
         let previous = self.current_baseline_channels();
@@ -1461,7 +1484,7 @@ impl FlowHost {
                 // dictionaries faulted `missing handle: <digest>` on a node whose inputs had not
                 // moved at all. That is what made a moved slider settle on an empty payload while
                 // the census reported the chain done. The one authority is
-                // [`sync_flow_geometry_retention`], over the MERGED claim of every live session, and
+                // the supplied geometry authority, over the MERGED claim of every live session, and
                 // [`FlowEvalSession::capture_baseline_from`] publishes this host's claim into it on
                 // exactly this convergence. A session-free host owns no claim and therefore retires
                 // nothing (ticket 26/09/09/PROCEDURAL-3D-END-TO-END,
@@ -1582,7 +1605,7 @@ impl FlowHost {
             seeds.retire_cold();
             return Vec::new();
         }
-        let registry = flow_registry();
+        let registry = self.operator_registry();
         let evaluator = Evaluator::new(registry.as_ref());
         let previous = self.current_baseline_channels();
         let mut probe_never_dispatches = |kind: &str, _: &Dictionary| -> Result<Dictionary, EvalError> { Err(EvalError::InvalidInput(format!("pending_eval_widget_ids probed a dispatch for {kind}"))) };
@@ -2069,7 +2092,7 @@ impl FlowHost {
     }
 
     pub fn schemas_json(&self) -> Result<String, FlowCoreError> {
-        let refs = flow_registry().schema_refs();
+        let refs = self.operator_registry().schema_refs();
         Ok(crate::os_pack::json::to_json_string(&refs))
     }
 
@@ -2455,7 +2478,7 @@ impl FlowHost {
             let baseline = self.pending_history_baseline.take().unwrap_or_else(|| self.host_snapshot.clone());
             let fixture = self.host_snapshot.clone();
             if let Some(store) = self.history_store_from_baseline(baseline) {
-                let _ = resolve_ready(store.dispatch(ArtifactCommand::Apply { mutations: vec![FlowMutation::ReplaceFlowHostSnapshot(ReplaceFlowHostSnapshot { host_snapshot: fixture })], description: None }));
+                let _ = resolve_ready(store.dispatch(ArtifactCommand::Apply { mutations: vec![FlowMutation::ReplaceFlowHostSnapshot(ReplaceFlowHostSnapshot { host_snapshot: fixture })], description: None, transaction: None }));
             }
         }
     }
@@ -2517,7 +2540,7 @@ impl FlowHost {
             self.gesture_changed_content = true;
             let fixture = self.host_snapshot.clone();
             if let Some(store) = self.history_store_from_baseline(baseline) {
-                let _ = resolve_ready(store.dispatch(ArtifactCommand::Apply { mutations: vec![FlowMutation::ReplaceFlowHostSnapshot(ReplaceFlowHostSnapshot { host_snapshot: fixture })], description: None }));
+                let _ = resolve_ready(store.dispatch(ArtifactCommand::Apply { mutations: vec![FlowMutation::ReplaceFlowHostSnapshot(ReplaceFlowHostSnapshot { host_snapshot: fixture })], description: None, transaction: None }));
             }
         }
     }
@@ -2574,6 +2597,7 @@ impl FlowHost {
 /// 🧹 Incremental exact-owner retirement for one retained flow host.
 #[doc(hidden)]
 pub struct FlowHostRetirementState {
+    geometry_port: Option<crate::geometry::GeometryPortRetirement>,
     host_snapshot: FlowHostSnapshot,
     dag: Option<dag::DagHostRetirement>,
     outputs: BTreeMap<String, Dictionary>,
@@ -2604,6 +2628,7 @@ pub struct FlowHostRetirement {
 /// takes them. `Domain` and `Neural` drain payload frontiers; every other rung retires one owner.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum FlowHostClosePhase {
+    Geometry,
     Dag,
     Domain,
     Neural,
@@ -2651,8 +2676,11 @@ impl std::ops::DerefMut for FlowHostRetirement {
 }
 
 impl FlowHostRetirement {
-    pub fn new(host: FlowHost) -> Self {
+    pub fn new(mut host: FlowHost) -> Self {
+        let geometry_port = host.geometry_port.take().map(crate::geometry::GeometryPortRetirement::new);
         let FlowHost {
+            geometry_port: _,
+            operator_registry: _,
             host_snapshot: host_snapshot,
             dag,
             outputs,
@@ -2688,6 +2716,7 @@ impl FlowHostRetirement {
         }
         Self {
             state: std::mem::ManuallyDrop::new(FlowHostRetirementState {
+                geometry_port,
                 host_snapshot: host_snapshot,
                 dag: Some(dag),
                 outputs,
@@ -2736,6 +2765,14 @@ impl FlowHostRetirement {
         }
         if state.faulted {
             return Err(FlowHostRetirementFault::Failed);
+        }
+        if let Some(port) = state.geometry_port.as_mut() {
+            match port.close_step(maximum_items,maximum_bytes) {
+                Ok(neural::ValueRetirementStep::Complete) if port.terminal_is_empty() => state.geometry_port = None,
+                Ok(_) => return Ok(false),
+                Err(_) => { state.faulted = true; return Err(FlowHostRetirementFault::Failed); }
+            }
+            return Ok(false);
         }
         if let Some(dag) = state.dag.as_mut() {
             match dag.close_step(maximum_items, maximum_bytes) {
@@ -2830,7 +2867,9 @@ impl FlowHostRetirement {
         if state.faulted {
             return FlowHostClosePhase::Faulted;
         }
-        if state.dag.is_some() {
+        if state.geometry_port.is_some() {
+            FlowHostClosePhase::Geometry
+        } else if state.dag.is_some() {
             FlowHostClosePhase::Dag
         } else if !state.domain.is_empty() {
             FlowHostClosePhase::Domain
@@ -2875,6 +2914,7 @@ impl FlowHostRetirement {
 
     pub fn terminal_nonopaque_is_empty(&self) -> bool {
         self.terminal
+            && self.geometry_port.is_none()
             && !self.faulted
             && self.dag.is_none()
             && self.host_snapshot.widgets.is_empty()
@@ -2919,7 +2959,7 @@ impl FlowHost {
     /// instead; this drains the same ladder in one uninterrupted cold pass.
     pub fn retire_cold(self) {
         let mut retirement = FlowHostRetirement::new(self);
-        while !retirement.close_page(1, 4096).expect("cold flow host retirement") {}
+        while !retirement.close_page(1, 4096.max(retirement.geometry_port.as_ref().map_or(0,crate::geometry::GeometryPortRetirement::next_close_byte_demand))).expect("cold flow host retirement") {}
     }
 
     /// 🏠️ Runs `body` against a host built from `fixture`, then retires that host — the ONE shape a
@@ -3001,15 +3041,6 @@ pub fn flow_eval_inline_continuation_fits(turn_started_us: Option<u64>, now_us: 
     }
 }
 
-static FLOW_SESSION_GEOMETRY: LazyLock<Mutex<HashMap<u64, BTreeSet<String>>>> = LazyLock::new(|| Mutex::new(HashMap::new()));
-static NEXT_FLOW_SESSION_ID: AtomicU64 = AtomicU64::new(1);
-
-fn sync_flow_geometry_retention() {
-    let merged: HashSet<String> = FLOW_SESSION_GEOMETRY.lock().map(|entries| entries.values().flat_map(|set| set.iter().cloned()).collect()).unwrap_or_default();
-    let live: Vec<String> = merged.into_iter().collect();
-    crate::retain_geometry_handles(&live);
-}
-
 /// 🚦 Per-widget evaluation state for flow graph chrome (not persisted in config).
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, semio_framework_value_derive::ToValue, semio_framework_value_derive::FromValue)]
 #[serde(tag = "status", rename_all = "camelCase")]
@@ -3056,7 +3087,9 @@ fn flow_eval_window_key(window_id: &str) -> u64 {
 /// 🧵️ In-process evaluation session: neural cache, incremental baseline, eval output, and status — one per app instance, never serialized.
 #[doc(hidden)]
 pub struct FlowEvalSessionState {
-    session_id: u64,
+    retiring_geometry_port: Option<crate::geometry::GeometryPortRetirement>,
+    geometry_port: Option<Box<dyn crate::geometry::GeometryPort>>,
+    operator_registry: Option<neural::SharedRegistry>,
     neural_cache: Option<Arc<NeuralCache>>,
     previous_snapshot: Option<TreeSnapshot>,
     previous_channels: Option<EvalChannels>,
@@ -3088,7 +3121,7 @@ pub struct FlowEvalSessionState {
     window_tick_latches: BTreeMap<u64, FlowEvalWindowTickLatch>,
     live_geometry_handles: BTreeSet<String>,
     /// 🧊 Tessellated preview meshes keyed by geometry handle, each one a base64 `pack` record body
-    /// (see `brep_geometry::encode_mesh_pack`) — filled via extension `tessellate` because
+    /// (see `mesh::encode_mesh_pack`) — filled via extension `tessellate` because
     /// runtime-installable brep owns the kernel that minted the handles. Binary, not a JSON number
     /// array: the render path decodes typed arrays instead of parsing millions of JSON tokens.
     preview_mesh_pack_by_handle: BTreeMap<String, String>,
@@ -3299,10 +3332,30 @@ impl Drop for FlowEvalSession {
 const FLOW_EVAL_SESSION_COLD_CLOSE_STEPS: usize = 1_000_000;
 
 impl FlowEvalSession {
+    /// 📔️ Shares the explicitly supplied registry with this session's evaluation hosts.
+    pub fn with_operator_registry(mut self, registry: neural::SharedRegistry) -> Self {
+        assert!(!self.closing, "closed session refuses an operator registry");
+        assert!(self.state.operator_registry.is_none(), "operator registry is supplied once");
+        self.state.operator_registry = Some(registry);
+        self.state.flow_extension_generation = 0;
+        self
+    }
+    /// 🔌️ Supplies one geometry authority that this owner retains and explicitly closes.
+    pub fn with_geometry_port(mut self, port: Box<dyn crate::geometry::GeometryPort>) -> Self {
+        assert!(!self.closing, "closed session refuses a geometry authority");
+        assert!(self.state.geometry_port.is_none(), "geometry authority is supplied once");
+        self.state.geometry_port = Some(port);
+        self
+    }
+    /// 🌐️ Reads the explicitly supplied geometry authority for this evaluation session.
+    pub fn geometry_port(&self) -> Option<&dyn crate::geometry::GeometryPort> { self.state.geometry_port.as_deref() }
+
     pub fn new() -> Self {
         Self {
             state: std::mem::ManuallyDrop::new(FlowEvalSessionState {
-                session_id: NEXT_FLOW_SESSION_ID.fetch_add(1, AtomicOrdering::Relaxed),
+                retiring_geometry_port: None,
+                geometry_port: None,
+                operator_registry: None,
                 neural_cache: Some(Arc::new(NeuralCache::new())),
                 previous_snapshot: None,
                 previous_channels: None,
@@ -3365,12 +3418,7 @@ impl FlowEvalSession {
         if let Some(channels) = state.previous_channels.as_ref() {
             let next = collect_live_geometry_handles_from_channels(channels).into_iter().collect();
             state.retiring_collections.push_back(SessionCollectionOwner::Handles(std::mem::replace(&mut state.live_geometry_handles, next)));
-            if let Ok(mut map) = FLOW_SESSION_GEOMETRY.lock() {
-                if let Some(previous) = map.insert(state.session_id, state.live_geometry_handles.clone()) {
-                    state.retiring_collections.push_back(SessionCollectionOwner::Handles(previous));
-                }
-            }
-            sync_flow_geometry_retention();
+            if let Some(port) = state.geometry_port.as_ref() { port.retain(&state.live_geometry_handles.iter().cloned().collect::<Vec<_>>()); }
             retain_drawing_handles(&collect_live_drawing_handles_from_channels(channels));
         }
     }
@@ -3477,12 +3525,7 @@ impl FlowEvalSession {
         state.tessellate_progress_by_hash.clear();
         state.eval_progress_by_hash.clear();
         state.published_preview_mesh_digest = 0;
-        if let Ok(mut map) = FLOW_SESSION_GEOMETRY.lock() {
-            if let Some(previous) = map.remove(&state.session_id) {
-                state.retiring_collections.push_back(SessionCollectionOwner::Handles(previous));
-            }
-        }
-        sync_flow_geometry_retention();
+        if let Some(port) = state.geometry_port.as_ref() { port.retain(&[]); }
     }
 
     pub fn pending(&self) -> bool {
@@ -3661,6 +3704,7 @@ impl FlowEvalSession {
     /// Answers whether anything was actually invalidated, so the caller only re-arms a chain it
     /// owes.
     pub fn invalidate_for_flow_extension_registry(&mut self, generation: u64) -> bool {
+        if self.operator_registry.is_some() { return false; }
         if self.state.flow_extension_generation == generation {
             return false;
         }
@@ -3823,7 +3867,7 @@ impl FlowEvalSession {
     /// cancelling command emits alongside this call.
     pub fn cancel_preview_evaluation(&mut self, window_id: &str) -> usize {
         let retired = self.pending_tessellate_by_hash.len();
-        crate::brep_geometry::cancel_all_tessellations();
+        if let Some(port) = self.state.geometry_port.as_ref() { port.cancel(); }
         let state = &mut *self.state;
         state.retiring_collections.push_back(SessionCollectionOwner::Pending(std::mem::take(&mut state.pending_tessellate_by_hash)));
         state.retiring_collections.push_back(SessionCollectionOwner::Pending(std::mem::take(&mut state.tessellate_handle_by_hash)));
@@ -4038,15 +4082,11 @@ impl FlowEvalSession {
 
     /// 🧹 Begins exact incremental retirement of this instance-owned evaluation session.
     pub fn begin_close(&mut self) {
+        self.state.operator_registry.take();
         self.closing = true;
         self.tick_scheduled = false;
         self.window_tick_latches.clear();
-        if let Ok(mut map) = FLOW_SESSION_GEOMETRY.lock() {
-            if let Some(previous) = map.remove(&self.session_id) {
-                self.retiring_collections.push_back(SessionCollectionOwner::Handles(previous));
-            }
-        }
-        sync_flow_geometry_retention();
+        if let Some(port) = self.state.geometry_port.take() { self.state.retiring_geometry_port = Some(crate::geometry::GeometryPortRetirement::new(port)); }
     }
 
     /// 🧊️ Explicit cold-only disposal of a detached evaluation session — the twin of
@@ -4079,6 +4119,14 @@ impl FlowEvalSession {
         let state = &mut *self.state;
         if !state.closing || maximum_items == 0 || maximum_bytes == 0 {
             return Step::Blocked;
+        }
+        if let Some(port) = state.retiring_geometry_port.as_mut() {
+            return match port.close_step(maximum_items,maximum_bytes) {
+                Ok(neural::ValueRetirementStep::Complete) if port.terminal_is_empty() => { state.retiring_geometry_port = None; Step::Pending { released_items:0,released_bytes:0 } },
+                Ok(neural::ValueRetirementStep::Pending { released_items,released_bytes }) => Step::Pending { released_items,released_bytes },
+                Ok(_) => Step::Blocked,
+                Err(error) => panic!("geometry port retirement failed: {error}"),
+            };
         }
         if !state.retirement.terminal_is_empty() {
             return match state.retirement.close_step(maximum_items, maximum_bytes) {
@@ -4163,6 +4211,9 @@ impl FlowEvalSession {
     /// ✅️ Proves that every retained evaluation owner has crossed the close boundary.
     pub fn terminal_is_empty(&self) -> bool {
         self.closing
+            && self.geometry_port.is_none()
+            && self.retiring_geometry_port.is_none()
+            && self.operator_registry.is_none()
             && self.neural_cache.is_none()
             && self.previous_snapshot.is_none()
             && self.previous_channels.is_none()
@@ -4186,10 +4237,10 @@ impl FlowEvalSession {
 /// 🧊 True when a base64 `pack` mesh body carries something paintable — decoded once, structurally,
 /// never by re-parsing prose.
 fn preview_mesh_pack_has_geometry(base64_body: &str) -> bool {
-    let Ok(bytes) = crate::brep_geometry::decode_base64(base64_body) else {
+    let Ok(bytes) = crate::mesh::decode_base64(base64_body) else {
         return false;
     };
-    let Ok(mesh) = crate::brep_geometry::decode_mesh_pack(&bytes) else {
+    let Ok(mesh) = crate::mesh::decode_mesh_pack(&bytes) else {
         return false;
     };
     (!mesh.indices.is_empty() && mesh.positions.len() >= 9) || mesh.edge_positions.len() >= 6 || (mesh.positions.len() >= 3 && mesh.indices.is_empty())
@@ -4573,7 +4624,9 @@ pub fn preview_tessellate_node_hash(handle: &str, tolerance_bits: u64) -> u64 {
 
 /// 🏠 Builds a host wired to `session`'s shared cache and converged baseline.
 pub fn flow_host_with_session(host_snapshot: &FlowHostSnapshot, session: &FlowEvalSession) -> FlowHost {
-    let mut host = FlowHost::from_host_snapshot_with_cache_and_infos(host_snapshot.clone(), session.neural_cache(), flow_neuron_kind_info_map());
+    let infos = session.operator_registry.as_ref().map(|registry| Arc::new(registry.operator_infos().map(|info| (info.id.clone(),info.clone())).collect())).unwrap_or_else(flow_neuron_kind_info_map);
+    let mut host = FlowHost::from_host_snapshot_with_cache_and_infos(host_snapshot.clone(), session.neural_cache(), infos);
+    if let Some(registry) = &session.operator_registry { host = host.with_operator_registry(registry.clone()); }
     session.install_baseline_into(&mut host);
     if !session.eval_json().is_empty() {
         host.last_eval_json = session.eval_json().to_string();
@@ -4598,12 +4651,11 @@ pub fn flow_host_with_session(host_snapshot: &FlowHostSnapshot, session: &FlowEv
 /// extension pack registers and the ones a host push makes resolvable. A cluster's inner tree is not
 /// walked — its boundary kinds are structural (`core.input`/`core.output`), never contributed — so
 /// this answer never invents a block that a contribution could not lift.
-pub fn unserved_flow_operator_kinds(host_snapshot: &FlowHostSnapshot) -> Vec<String> {
-    let registry = flow_registry();
+pub fn unserved_flow_operator_kinds(host_snapshot: &FlowHostSnapshot, registry: &neural::Registry) -> Vec<String> {
     let mut unserved = BTreeSet::new();
     for widget in &host_snapshot.widgets {
         if let Widget::Neuron { neuron_kind, .. } = widget {
-            if registry.as_ref().operator(neuron_kind).is_none() {
+            if registry.operator(neuron_kind).is_none() {
                 unserved.insert(neuron_kind.clone());
             }
         }

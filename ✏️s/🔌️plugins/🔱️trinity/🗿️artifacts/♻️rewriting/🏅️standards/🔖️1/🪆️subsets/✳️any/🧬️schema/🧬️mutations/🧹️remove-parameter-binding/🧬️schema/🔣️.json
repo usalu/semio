@@ -5,9 +5,13 @@
   "type": "object",
   "additionalProperties": false,
   "required": [
+    "mutation",
     "key"
   ],
   "properties": {
+    "mutation": {
+      "const": "removeParameterBinding"
+    },
     "key": {
       "type": "string"
     }

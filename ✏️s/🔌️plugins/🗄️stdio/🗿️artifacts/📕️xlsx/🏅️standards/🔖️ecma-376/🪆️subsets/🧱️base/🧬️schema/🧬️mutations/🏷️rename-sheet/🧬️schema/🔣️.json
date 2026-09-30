@@ -5,19 +5,20 @@
   "type": "object",
   "additionalProperties": false,
   "required": [
+    "mutation",
     "name",
     "new_name"
   ],
   "properties": {
+    "mutation": {
+      "const": "renameSheet",
+      "description": "Aggregate discriminator spliced in by XlsxMutation; absent when the payload stands alone."
+    },
     "name": {
       "type": "string"
     },
     "new_name": {
       "type": "string"
-    },
-    "mutation": {
-      "const": "renameSheet",
-      "description": "Aggregate discriminator spliced in by XlsxMutation; absent when the payload stands alone."
     }
   }
 }

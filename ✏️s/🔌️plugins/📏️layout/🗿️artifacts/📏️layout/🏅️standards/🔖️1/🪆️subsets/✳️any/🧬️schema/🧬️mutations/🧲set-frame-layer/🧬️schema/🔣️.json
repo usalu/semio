@@ -1,1 +1,68 @@
-{"$schema":"http://json-schema.org/draft-07/schema#","title":"SetFrameLayer","type":"object"}
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/layout/layout/mutation/set-frame-layer/schema.json",
+  "title": "SetFrameLayer",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "pageId",
+    "frameId",
+    "layerId"
+  ],
+  "properties": {
+    "pageId": {
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Page",
+          "de": "Seite"
+        },
+        "ref": {
+          "kind": "page"
+        },
+        "group": "target",
+        "order": 10
+      }
+    },
+    "frameId": {
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Frame",
+          "de": "Rahmen"
+        },
+        "ref": {
+          "kind": "frame",
+          "domain": "elements",
+          "granularity": "element"
+        },
+        "group": "target",
+        "order": 20
+      }
+    },
+    "layerId": {
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "value",
+        "label": {
+          "en": "Layer",
+          "de": "Ebene"
+        },
+        "description": {
+          "en": "The layer of the same page the frame moves to.",
+          "de": "Die Ebene derselben Seite, auf die der Rahmen wechselt."
+        },
+        "ref": {
+          "kind": "layer"
+        },
+        "group": "target",
+        "order": 30
+      }
+    }
+  }
+}

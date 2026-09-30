@@ -453,6 +453,7 @@ async fn remodel_window_ownership_one_item_preparation_transfers_its_candidate_o
             Some("candidate transfer".into()),
             store::HistoryLane::Document,
             Some(&factory),
+            None,
         )
         .expect("Remodel one-item publication admits its exact factory");
     let grant = store::ArtifactStoreOneItemGrant { maximum_items: 1, maximum_bytes: store::ARTIFACT_STORE_ONE_ITEM_MAXIMUM_BYTES };

@@ -12,11 +12,11 @@ use crate::standards::v1::subsets::drawing::schema::mutations::SemioDrawingMutat
 use crate::standards::v1::subsets::drawing::schema::snapshot::{DrawNode, SemioDrawingSnapshot};
 use protocol::{Mutation, MutationDiff};
 
-const BEFORE: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🖐️drag-nodes/🖐️drags-the-text-node-and-the-nested-group-by-the-same-offset/📸️snapshot/⬅️before/🔣️.json");
-const AFTER: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🖐️drag-nodes/🖐️drags-the-text-node-and-the-nested-group-by-the-same-offset/📸️snapshot/➡️after/🔣️.json");
-const MUTATION: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🖐️drag-nodes/🖐️drags-the-text-node-and-the-nested-group-by-the-same-offset/🦠️mutation/🔣️.json");
-const DIFF: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🖐️drag-nodes/🖐️drags-the-text-node-and-the-nested-group-by-the-same-offset/🔺️diff/🔣️.json");
-const OUTCOME: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🖐️drag-nodes/🖐️drags-the-text-node-and-the-nested-group-by-the-same-offset/🎯️outcome/🔣️.json");
+const BEFORE: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🖐️drag-nodes/🖐️drags-text-node-nested-group-same-offset/📸️snapshot/⬅️before/🔣️.json");
+const AFTER: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🖐️drag-nodes/🖐️drags-text-node-nested-group-same-offset/📸️snapshot/➡️after/🔣️.json");
+const MUTATION: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🖐️drag-nodes/🖐️drags-text-node-nested-group-same-offset/🦠️mutation/🔣️.json");
+const DIFF: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🖐️drag-nodes/🖐️drags-text-node-nested-group-same-offset/🔺️diff/🔣️.json");
+const OUTCOME: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🖐️drag-nodes/🖐️drags-text-node-nested-group-same-offset/🎯️outcome/🔣️.json");
 
 fn before() -> SemioDrawingSnapshot {
     dsl::json::from_json_str(BEFORE).expect("drag-nodes before snapshot decodes")

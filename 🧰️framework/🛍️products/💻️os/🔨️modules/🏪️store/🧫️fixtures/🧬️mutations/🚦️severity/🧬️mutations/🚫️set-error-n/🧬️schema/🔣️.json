@@ -2,28 +2,24 @@
   "$schema": "http://json-schema.org/draft-07/schema#",
   "$id": "https://json.schemas.assets.semio-tech.com/framework/os/store/fixtures/severity/mutation/set-error-n/schema.json",
   "title": "SetErrorN",
-  "type": "object",
-  "$defs": {
-    "Payload": {
-      "type": "object",
-      "properties": {
-        "n": {
-          "$ref": "https://json.schemas.assets.semio-tech.com/os/store/fixtures/schema.json#/$defs/I32"
-        }
-      },
-      "required": [
-        "n"
-      ]
-    }
-  },
-  "allOf": [
-    {
-      "$ref": "#/$defs/Payload"
-    }
-  ],
   "propertyNames": {
     "enum": [
+      "operation",
       "n"
     ]
+  },
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "operation",
+    "n"
+  ],
+  "properties": {
+    "operation": {
+      "const": "setErrorN"
+    },
+    "n": {
+      "$ref": "https://json.schemas.assets.semio-tech.com/os/store/fixtures/schema.json#/$defs/I32"
+    }
   }
 }

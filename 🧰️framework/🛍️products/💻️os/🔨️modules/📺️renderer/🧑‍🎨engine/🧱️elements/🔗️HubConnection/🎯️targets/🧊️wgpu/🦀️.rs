@@ -566,6 +566,8 @@ fn input(id: &str, value: &str, placeholder: &str, action: &str, submit: Option<
         max: None,
         step: None,
         accept: None,
+        precision: None,
+        snaps: Vec::new(),
         on_change: descriptor(action, None),
         on_submit: submit.map(|action| descriptor(action, None)),
         on_abort: None,

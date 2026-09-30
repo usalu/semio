@@ -90,6 +90,15 @@ pub fn apply_semio_video_mutation(snapshot: &mut SemioVideoSnapshot, mutation: &
 pub fn inverse_semio_video_mutation(mutation: &SemioVideoMutation, base: &SemioVideoSnapshot) -> Vec<SemioVideoMutation> {
     <SemioVideoMutation as Mutation<SemioVideoSnapshot>>::inverse(mutation, base)
 }
+
+/// 📥️ Decodes this subset's internally tagged (`{"mutation": "<camelCaseVariant>", ...}`) wire value — the shape
+/// `🎥️mutate-semio-video`'s committed specification vectors and doc strings carry — into a real [`SemioVideoMutation`]. A thin
+/// `pack::from_json_str` wrapper over `ToValue`/`FromValue`, so the test adapter reads the committed wire value instead of
+/// re-declaring it field by field beside it.
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn decode_semio_video_mutation_json(text: &str) -> Result<SemioVideoMutation, String> {
+    pack::from_json_str(text).map_err(|error| error.to_string())
+}
 //#endregion 🔖️Apply
 
 //#region 🔖️Helpers
@@ -306,7 +315,7 @@ impl OpBinary for SemioVideoMutation {
 /// the conformance-law tests — delegates to the existing test module's own `sample_mutations()`
 /// (byte-identical) rather than keep an independent copy, same dedupe flow's/mesh's own waves
 /// perform.
-#[cfg(all(test, feature = "conversion-video"))]
+#[cfg(test)]
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub(crate) fn demo_mutation_cases() -> Vec<SemioVideoMutation> {
     tests::sample_mutations()

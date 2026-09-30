@@ -7,11 +7,25 @@ import { BundleScript, ScriptRouter } from "../../../🏃️process/🧭️routi
 import { getWorkspaceRoot } from "../../../🗂️workspaces/🟦️.ts";
 import { runOwnedCommand } from "../../../🏃️process/🎛️owned-execution/🟦️.ts";
 
+/** 🧪️ The artifact's own TypeScript suites, relative to the artifact root: `check` type-checks them and `test` also runs
+ * them with `bun test`, so a suite is registered here once instead of being discovered by a filename convention. */
+export interface ArtifactTypeScriptPackageOptions {
+  readonly suites?: readonly string[];
+}
+
 /** 🟦️ Builds and resolves a declaration-only TypeScript artifact package from its taxonomy source. */
-export async function runArtifactTypeScriptPackageMain(packageRoot: string, packageName: string): Promise<void> {
+export async function runArtifactTypeScriptPackageMain(packageRoot: string, packageName: string, options: ArtifactTypeScriptPackageOptions = {}): Promise<void> {
   const source = resolve(packageRoot, "../../🟦️.ts"), output = resolve(packageRoot, "dist");
   const typeScript = async (entry: string, args: string[], skipLibraries = true): Promise<void> => {
     await runOwnedCommand(process.execPath, ["x", "tsc", entry, ...args, "--module", "ESNext", "--moduleResolution", "Bundler", "--resolveJsonModule", "--allowSyntheticDefaultImports", "--strict", ...(skipLibraries ? ["--skipLibCheck"] : []), "--target", "ES2022"], getWorkspaceRoot(), `artifact-typescript:${packageName}:tsc`, 120_000);
+  };
+  const suites = (options.suites ?? []).map((suite) => {
+    const path = resolve(packageRoot, "../..", suite);
+    if (!existsSync(path)) throw new Error(`${packageName} registers the missing suite ${suite}`);
+    return path;
+  });
+  const checkSuites = async (): Promise<void> => {
+    for (const suite of suites) await typeScript(suite, ["--noEmit", "--allowImportingTsExtensions"]);
   };
   const copyDeclarationAssets = (): number => {
     const declaration = join(output, "🟦️.d.ts"), compiler = createRequire(import.meta.url)("typescript");
@@ -48,7 +62,8 @@ export async function runArtifactTypeScriptPackageMain(packageRoot: string, pack
       const result = await Bun.build({ entrypoints: [source], target: "bun", format: "esm" });
       if (!result.success) throw new AggregateError(result.logs, `Failed to check ${packageName}`);
       await typeScript(source, ["--noEmit"]);
-      console.log(`[artifact-typescript] checked ${packageName}`);
+      await checkSuites();
+      console.log(`[artifact-typescript] checked ${packageName} suites=${suites.length}`);
     }
   }
   class TestScript extends BundleScript {
@@ -61,7 +76,9 @@ export async function runArtifactTypeScriptPackageMain(packageRoot: string, pack
       writeFileSync(probe, `import * as artifact from ${JSON.stringify(packageName)};\n${assertion}\n`);
       try { await typeScript(probe, ["--noEmit", "--typeRoots", typeRoots], false); } finally { rmSync(probe, { force: true }); rmSync(typeRoots, { recursive: true, force: true }); }
       assert.equal(typeof artifact, "object", `${packageName} did not resolve as an ES module`);
-      console.log(`[artifact-typescript] tested ${packageName} exports=${Object.keys(artifact).length}`);
+      await checkSuites();
+      for (const suite of suites) await runOwnedCommand(process.execPath, ["test", `./${relative(getWorkspaceRoot(), suite)}`], getWorkspaceRoot(), `artifact-typescript:${packageName}:suite`, 300_000);
+      console.log(`[artifact-typescript] tested ${packageName} exports=${Object.keys(artifact).length} suites=${suites.length}`);
     }
   }
   const router = new ScriptRouter(packageRoot).register("build", BuildScript).register("check", CheckScript).register("test", TestScript);

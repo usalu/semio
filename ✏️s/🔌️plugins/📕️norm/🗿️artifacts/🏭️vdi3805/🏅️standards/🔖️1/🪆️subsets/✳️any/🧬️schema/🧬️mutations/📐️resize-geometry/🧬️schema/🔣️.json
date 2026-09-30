@@ -10,39 +10,39 @@
   ],
   "properties": {
     "id": {
-      "type": "string"
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Geometry",
+          "de": "Geometrie"
+        },
+        "description": {
+          "en": "The parametric geometry this mutation addresses.",
+          "de": "Die parametrische Geometrie, die diese Mutation adressiert."
+        },
+        "ref": {
+          "kind": "geometry"
+        },
+        "group": "target",
+        "order": 10
+      }
     },
     "newBbox": {
-      "title": "BoundingBox",
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "maxX",
-        "maxY",
-        "maxZ",
-        "minX",
-        "minY",
-        "minZ"
-      ],
-      "properties": {
-        "minX": {
-          "type": "number"
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/vdi3805/snapshot.json#/$defs/BoundingBox",
+      "x-semio-ui": {
+        "role": "value",
+        "label": {
+          "en": "Bounding box",
+          "de": "Hüllquader"
         },
-        "minY": {
-          "type": "number"
+        "description": {
+          "en": "Minimum and maximum corner in metres.",
+          "de": "Minimal- und Maximalecke in Metern."
         },
-        "minZ": {
-          "type": "number"
-        },
-        "maxX": {
-          "type": "number"
-        },
-        "maxY": {
-          "type": "number"
-        },
-        "maxZ": {
-          "type": "number"
-        }
+        "group": "geometry",
+        "order": 20
       }
     }
   }

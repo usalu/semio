@@ -1,0 +1,71 @@
+[package]
+name = "semio-s-composition-laws"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+publish = false
+autotests = false
+description = "Concrete implementation extension compositions and application law tests"
+
+[package.metadata.semio]
+role = "test"
+id = "s-composition-laws"
+
+[lints]
+workspace = true
+
+[[test]]
+name = "generation2d-example-export"
+path = "../../🧪️tests/🖼️generation2d-example-export/🦀️.rs"
+
+[[test]]
+name = "sequence-runtime"
+path = "../../🧪️tests/🎬️sequence-runtime/🦀️.rs"
+
+[dev-dependencies]
+semio-framework-artifact-playbook-playbook.workspace = true
+semio-framework-os-kernel = { workspace = true, features = ["protocol-laws"] }
+semio-s-spatial-kernel-semio-session = { workspace = true }
+semio-framework-trace = { workspace = true }
+semio-framework-artifact-infinite-dag = { workspace = true }
+semio-s-artifact-procedural-generation2d = { workspace = true, features = ["component-app-assembly"] }
+semio-s-artifact-stdio-png = { workspace = true }
+semio-framework-os-flow = { workspace = true }
+semio-s-plugin-flow-extension-draw = { workspace = true }
+semio-s-artifact-sequence-sequence = { workspace = true }
+semio-framework-async-macros = { workspace = true }
+semio-framework-os-kernel-neural-engine = { workspace = true }
+semio-s-imperative = { workspace = true }
+semio-s-plugin-imperative-math = { path = "../../../../../✏️s/🔌️plugins/📜️imperative/🧩️extensions/🧮️math/📦️packages/🦀️rust" }
+semio-s-plugin-imperative-text = { path = "../../../../../✏️s/🔌️plugins/📜️imperative/🧩️extensions/📝️text/📦️packages/🦀️rust" }
+semio-s-plugin-imperative-effect = { path = "../../../../../✏️s/🔌️plugins/📜️imperative/🧩️extensions/📣️effect/📦️packages/🦀️rust" }
+semio-s-plugin-imperative-control = { path = "../../../../../✏️s/🔌️plugins/📜️imperative/🧩️extensions/🎮️control/📦️packages/🦀️rust" }
+semio-framework-plugin = { workspace = true, features = ["artifact-app-testing"] }
+semio-s-artifact-stdio-semio = { workspace = true }
+
+semio-s-artifact-procedural-generation3d = { workspace = true, features = ["component-app-assembly"] }
+semio-s-plugin-flow-extension-brep = { workspace = true, default-features = false }
+semio-s-plugin-flow-extension-math = { workspace = true, default-features = false }
+semio-framework = { workspace = true }
+semio-framework-job = { workspace = true }
+semio-framework-tool-run = { workspace = true }
+semio-framework-artifact-flow-flow = { workspace = true }
+semio-framework-ui = { workspace = true, features = ["wgpu"] }
+semio-framework-ui-contract = { workspace = true }
+serde = { workspace = true }
+serde_json = { workspace = true }
+parry3d = "0.17"
+fnv = "1.0.7"
+
+[[test]]
+name = "generation3d-example-geometry"
+path = "../../🧪️tests/🧩️generation3d-example-geometry/🦀️.rs"
+
+[[test]]
+name = "generation3d-incremental-eval"
+path = "../../🧪️tests/🔁️generation3d-incremental-eval/🦀️.rs"
+
+
+[[test]]
+name = "generation3d-app-laws"
+path = "../../🧪️tests/🧊️generation3d-app-laws/🦀️.rs"

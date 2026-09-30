@@ -12,13 +12,41 @@
   ],
   "properties": {
     "mutation": {
-      "const": "disconnectKindCompatibility"
+      "const": "disconnectKindCompatibility",
+      "x-semio-ui": {
+        "widget": "hidden",
+        "role": "discriminator",
+        "label": {
+          "en": "Mutation",
+          "de": "Mutation"
+        }
+      }
     },
     "source": {
-      "type": "string"
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "text",
+        "role": "value",
+        "label": {
+          "en": "Source kind",
+          "de": "Quellart"
+        },
+        "group": "kind",
+        "order": 10
+      }
     },
     "target": {
-      "type": "string"
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "text",
+        "role": "value",
+        "label": {
+          "en": "Target kind",
+          "de": "Zielart"
+        },
+        "group": "kind",
+        "order": 20
+      }
     }
   }
 }

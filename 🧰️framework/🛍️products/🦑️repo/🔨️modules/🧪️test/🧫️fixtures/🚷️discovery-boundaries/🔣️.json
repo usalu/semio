@@ -1,0 +1,31 @@
+{
+  "schemaVersion": 1,
+  "features": [
+    "🧰️framework/🔨️modules/🧵️job/🧪️tests/🔎️visible",
+    "🧰️framework/🔨️modules/🧵️job/🗑️generated/🧪️tests/🔎️hidden",
+    "🧰️framework/🔨️modules/🧵️job/target/🧪️tests/🔎️hidden",
+    "🧰️framework/🔨️modules/🧵️job/.nx/🧪️tests/🔎️hidden",
+    ".🧬semio/🧪️tests/🔎️hidden",
+    "compose/🧪️tests/🔎️hidden",
+    "temp/compose/🧪️tests/🔎️hidden",
+    "♻️mit-bestand/🔎️recherche/🧪️tests/🔎️hidden"
+  ],
+  "links": [
+    {
+      "path": "🧰️framework/🔨️modules/🧵️job/🔁️loop",
+      "target": "🧰️framework/🔨️modules/🧵️job"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🧵️job/🧪️tests/🔗️alias",
+      "target": "🧰️framework/🔨️modules/🧵️job/🧪️tests/🔎️visible"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🧵️job/🧪️tests/🔗️source/🥒️.feature",
+      "target": "🧰️framework/🔨️modules/🧵️job/🧪️tests/🔎️visible/🥒️.feature",
+      "file": true
+    }
+  ],
+  "expected": [
+    "🧰️framework/🔨️modules/🧵️job/🧪️tests/🔎️visible"
+  ]
+}

@@ -5,10 +5,15 @@
   "type": "object",
   "additionalProperties": false,
   "required": [
+    "mutation",
     "index",
     "rgba8"
   ],
   "properties": {
+    "mutation": {
+      "const": "setFramePixels",
+      "description": "Aggregate discriminator spliced in by SemioImageMutation; absent when the payload stands alone."
+    },
     "index": {
       "type": "integer",
       "minimum": 0
@@ -19,11 +24,17 @@
         "type": "integer",
         "minimum": 0,
         "maximum": 255
+      },
+      "x-semio-ui": {
+        "label": {
+          "en": "RGBA pixels",
+          "de": "RGBA-Pixel"
+        },
+        "description": {
+          "en": "8-bit red, green, blue, alpha per pixel, row by row.",
+          "de": "8 Bit Rot, Grün, Blau, Alpha je Pixel, zeilenweise."
+        }
       }
-    },
-    "mutation": {
-      "const": "setFramePixels",
-      "description": "Aggregate discriminator spliced in by SemioImageMutation; absent when the payload stands alone."
     }
   }
 }

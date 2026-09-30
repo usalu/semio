@@ -1,65 +1,33 @@
 
 use super::*;
+use semio_repo_test_host::parse_json;
 
 /// 🧫️ The real committed document `📑️mutate-pdf-1-7` runs on, read where the artifact already
 /// keeps it — a 6.3 MB, 65-page LaTeX bachelor thesis carrying 3,173 indirect objects, a
 /// six-entry outline tree and an `/OpenAction` `/GoTo` destination.
 const FIXTURE: &[u8] = include_bytes!("../../../🖼️assets/🎓️bachelor-thesis/🎓️bachelor-thesis.pdf");
 
+/// 🥒️ The case this module is the reference of — its Examples rows are the only parameter source here.
+const FEATURE: &str = include_str!("../../../🧪️tests/📑️mutate-pdf-1-7/🥒️.feature");
+
 fn json_object(pairs: Vec<(&str, Json)>) -> Json {
     Json::Object(pairs.into_iter().map(|(key, value)| (key.to_string(), value)).collect())
-}
-
-fn number(value: f64) -> Json {
-    Json::Number(value)
 }
 
 fn text(value: &str) -> Json {
     Json::String(value.to_string())
 }
 
-fn object_id(num: f64) -> Json {
-    json_object(vec![("num", number(num)), ("gen", number(0.0))])
-}
-
-fn pdf_dict(entries: Vec<(&str, Json)>) -> Json {
-    json_object(vec![("kind", text("dict")), ("entries", Json::Array(entries.into_iter().map(|(key, value)| json_object(vec![("key", text(key)), ("value", value)])).collect()))])
-}
-
-fn pdf_name(value: &str) -> Json {
-    json_object(vec![("kind", text("name")), ("value", text(value))])
-}
-
-fn pdf_str(value: &str) -> Json {
-    json_object(vec![("kind", text("str")), ("value", text(value))])
-}
-
-/// 🧾️ The Examples rows `../../../../🧪️tests/📑️mutate-pdf-1-7/🥒️.feature` carries, one per
-/// declared kind — the same targets against the same real document, so a failure here and a
-/// failure there have the same cause and the same fix.
+/// 🧾️ The leaf wire payload the feature's first Examples row for `kind` carries — the same target against the same real
+/// document, read from the feature itself, so a failure here and a failure there have the same cause and the same fix.
 fn params_for(kind: &str) -> Json {
-    match kind {
-        "insert-page" => json_object(vec![
-            ("index", number(30.0)),
-            ("page", json_object(vec![("mediaBox", Json::Array(vec![number(0.0), number(0.0), number(612.0), number(792.0)])), ("rotate", number(0.0)), ("text", text("Inserted page for wave 7 mutation testing"))])),
-        ]),
-        "remove-page" => json_object(vec![("index", number(7.0))]),
-        "set-page-media-box" => json_object(vec![("index", number(15.0)), ("mediaBox", Json::Array(vec![number(0.0), number(0.0), number(595.0), number(842.0)]))]),
-        "set-page-crop-box" => json_object(vec![("index", number(16.0)), ("cropBox", Json::Array(vec![number(10.0), number(10.0), number(580.0), number(820.0)]))]),
-        "append-page-content" => json_object(vec![("index", number(17.0)), ("text", text("Appended content line for wave 7 testing"))]),
-        "set-info" => json_object(vec![("title", text("Wave 7 Replaced Title")), ("author", text("Wave 7 Test Author"))]),
-        "insert-object" => json_object(vec![("id", object_id(900001.0)), ("value", pdf_dict(vec![("Type", pdf_name("SemioWave7Marker")), ("Note", pdf_str("inserted by wave 7"))]))]),
-        "remove-object" => json_object(vec![("id", object_id(3015.0))]),
-        "set-object-value" => json_object(vec![("id", object_id(145.0)), ("value", pdf_dict(vec![("S", pdf_name("GoToR")), ("Note", pdf_str("replaced by wave 7"))]))]),
-        "set-dict-entry" => json_object(vec![("id", object_id(3188.0)), ("path", Json::Array(vec![])), ("key", text("PageMode")), ("value", pdf_name("UseNone"))]),
-        "remove-dict-entry" => json_object(vec![("id", object_id(3188.0)), ("path", Json::Array(vec![])), ("key", text("Outlines"))]),
-        "set-trailer-entry" => json_object(vec![("key", text("SemioWave7Marker")), ("value", json_object(vec![("kind", text("int")), ("value", number(42.0))]))]),
-        "remove-trailer-entry" => json_object(vec![("key", text("ID"))]),
-        "move-page" => json_object(vec![("from", number(10.0)), ("to", number(40.0))]),
-        "set-page-content" => json_object(vec![("index", number(20.0)), ("text", text("Replaced page content for wave 7 mutation testing"))]),
-        "set-page-rotation" => json_object(vec![("index", number(5.0)), ("rotation", number(90.0))]),
-        other => panic!("no test parameters for kind {other:?}"),
-    }
+    FEATURE
+        .lines()
+        .find_map(|line| {
+            let cells: Vec<&str> = line.split('|').map(str::trim).collect();
+            (cells.len() == 4 && cells[1] == kind).then(|| parse_json(cells[2]).unwrap_or_else(|error| panic!("{kind}: the feature row is not JSON: {error}")))
+        })
+        .unwrap_or_else(|| panic!("the feature declares no Examples row for {kind:?}"))
 }
 
 fn spec(kind: &str) -> Json {
@@ -144,10 +112,9 @@ fn unknown_kind_is_an_error_never_a_silent_no_op() {
 #[test]
 fn kinds_matches_the_catalog_and_every_feature_row() {
     let manifest = include_str!("../../🔣️.json");
-    let feature = include_str!("../../../🧪️tests/📑️mutate-pdf-1-7/🥒️.feature");
     for kind in KINDS {
         assert!(manifest.contains(&format!("\"{kind}\"")), "the pdf-1-7-base catalog is missing {kind:?}");
-        assert!(feature.contains(&format!("| {kind} ")) || feature.contains(&format!("| {kind}\n")), "the feature declares no Examples row for {kind:?}");
+        assert!(FEATURE.contains(&format!("| {kind} ")) || FEATURE.contains(&format!("| {kind}\n")), "the feature declares no Examples row for {kind:?}");
     }
     assert_eq!(KINDS.len(), 16, "the pdf-1-7-base vocabulary declares sixteen direct kinds");
 }

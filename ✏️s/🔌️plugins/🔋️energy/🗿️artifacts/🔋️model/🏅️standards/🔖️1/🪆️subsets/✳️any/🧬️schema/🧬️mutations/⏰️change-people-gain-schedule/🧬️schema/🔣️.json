@@ -5,15 +5,59 @@
   "type": "object",
   "additionalProperties": false,
   "required": [
+    "mutation",
     "id",
     "newScheduleId"
   ],
   "properties": {
+    "mutation": {
+      "const": "changePeopleGainSchedule"
+    },
     "id": {
-      "type": "integer"
+      "type": "integer",
+      "minimum": 0,
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "People gain",
+          "de": "Personenwärmegewinn"
+        },
+        "description": {
+          "en": "The people gain this mutation changes, by id.",
+          "de": "Personenwärmegewinn, den diese Mutation ändert, per ID."
+        },
+        "ref": {
+          "kind": "peopleGain",
+          "domain": "energyModel",
+          "granularity": "load"
+        },
+        "group": "target",
+        "order": 10
+      }
     },
     "newScheduleId": {
-      "type": "integer"
+      "type": "integer",
+      "minimum": 0,
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Schedule",
+          "de": "Zeitplan"
+        },
+        "description": {
+          "en": "Fraction schedule scaling the design value over time, by id.",
+          "de": "Anteilszeitplan, der den Bemessungswert zeitlich skaliert, per ID."
+        },
+        "ref": {
+          "kind": "schedule",
+          "domain": "energyModel",
+          "granularity": "schedule"
+        },
+        "group": "schedule",
+        "order": 20
+      }
     }
   }
 }

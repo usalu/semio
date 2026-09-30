@@ -5,8 +5,11 @@
         "index": 0,
         "diff": {
           "extras": {
-            "author": "semio",
-            "revision": 2
+            "state": "present",
+            "value": {
+              "author": "semio",
+              "revision": 2
+            }
           }
         }
       }

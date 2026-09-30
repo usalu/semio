@@ -1,3 +1,4 @@
+import { shellFooterNavbarItem } from "../🏛️ShellFooter/🟦️.tsx";
 import { prepareDocumentSurfaceV1 } from "./🔀️surface-switch/📄️document/🟦️.ts";
 import { useInitialExampleReadiness } from "../🐚️Shell/🎬️initial-example/🟦️.ts";
 // #region 🧲️Header
@@ -86,8 +87,6 @@ import {
   FRAMEWORK_PANEL_TAB_INSPECTION_ID,
   FRAMEWORK_PANEL_TAB_TOOL_RUN_ID,
   type Effect,
-  type HistoryEntry,
-  historyEntryLabelText,
   type HistoryPatch,
   type IntroductionInteraction,
   CLEAR_SELECTION_ACTION_ID,
@@ -216,8 +215,8 @@ import {
  * package itself, not re-exported by `@semio-tech/framework-os` — same source
  * `🧰️framework/🛍️products/💻️os/🟦️.ts` (that package's own root) imports them from for its
  * own `encode`/`decodeMutationEnvelopesPack` helpers above. */
-import { DOCUMENT_BACKBONE_RETENTION_LIMITS, type LocalInteractionState, type MutationEnvelope, decodePresenceInteraction } from "@semio-tech/framework-replication";
-import { scopedPresencePeersV1 } from "./👥️presence-scope/🟦️.ts";
+import { DOCUMENT_BACKBONE_RETENTION_LIMITS, type LocalInteractionState, type MutationEnvelope } from "@semio-tech/framework-replication";
+import { scopedPresencePeersV1, type ScopedPresencePeerV1 } from "./👥️presence-scope/🟦️.ts";
 import { SpaceDirectoryHistoryV1 } from "./📇️space-directory/🟦️.ts";
 import { collectLocalPresenceWindowViewsV1, collectLocalActiveToolV1, publishArtifactPresenceRosterV1, clearArtifactPresenceRosterV1, publishLocalPresenceActorV1, subscribeLocalPresenceWindowViewsV1 } from "../👕️canvas-presence/🟦️.ts";
 import { MODE_STEP_CONTROL_IDS, SURFACE_ROLE_CONTROL_IDS, SURFACE_ROLE_ORDER, createSealedInstanceLedgerV1, createSessionAppSwitchGateV1, createSessionWorkLedgerV1, createShellSessionLaneV1, quiesceSessionWorkV1, SHELL_HUB_ROUTE, shellHumanChangeRecoveryV1, shellIdentityResolutionV1, shellRouteAdmissionTextV1, shellRouteAdmissionV1, shellRouteIsOverlayV1, shellSessionRouteV1, resolveBootPrimaryAppV1, roleSwitchTargetV1, sealedInstanceDropTextV1, sealedInstanceDropV1, stepModeIdV1, surfaceRoleAppsV1, surfaceSwitchBusyTextV1, type ShellHumanV1 } from "./🔀️surface-switch/🟦️.ts";
@@ -388,7 +387,6 @@ import {
   ShellScopeProvider,
   singleTreeLeaf,
   staticTreePanelDefinition,
-  liveTreePanelDefinition,
   TextSelectionContextMenuHost,
   type ThemeAppearanceName,
   type ThemePaletteGroup,
@@ -436,6 +434,7 @@ import {
   PluginSurfaceActionsContext,
   ShellContextMenuFallbackContext,
   TreeWindowContext,
+  UiPresenceOverlayContext,
   wireLabel,
   type TreeWindowContextValue,
 } from "../🗣️Interpreter/🟦️.tsx";
@@ -597,7 +596,20 @@ import {
   browserActorPanelKeysV1,
   browserActorSectionValuesV1,
   withoutUiRefreshSectionsV1,
-  hubCommandRejectionReasonKeyV1,
+  hubCommandRejectionNoticeV1,
+  EMPTY_SHELL_HISTORY_PROJECTION_V1,
+  manifestLabelTextV1,
+  operationProgressPartsV1,
+  shellHistoryProjectionAfterPatchV1,
+  shellLabelTextV1,
+  type OperationProgressV1,
+  type ShellHistoryProjectionV1,
+  type ShellLabelTextV1,
+  HISTORY_REFUSAL_LABEL_KEYS,
+  historyRefusalCodeV1,
+  historyRefusalNoticeV1,
+  historyRefusalOfFaultV1,
+  historyRefusalOfOutputV1,
   type BrowserActorPanelHostV1,
   type TreeWindowHostV1,
   type TreeWindowSchedulerV1,
@@ -609,19 +621,18 @@ import {
   AutoCheckinScheduler,
   canCheckIn,
   checkinAbortText,
-  checkinActionText,
-  checkinCancelText,
-  checkinMessagePlaceholderText,
   checkinStatusText,
-  checkinSubmitText,
+  checkinSubmitMessageV1,
+  FRAMEWORK_CHECKIN_CONTROLLER_ID,
   computeSyncPillState,
   createLatestAsyncDispatcher,
-  historyPanelText,
   presenceClientIdentity,
+  presenceEphemeralPeerFieldsV1,
   preserveJsonIdentity,
   programArmedToolRevealV1,
   reconcileToolTabSelection,
   renderStagedArgControl,
+  interactionSelectionIdsV1,
   requestFileOpen,
   requestBackboneFilePath,
   requestBackboneFolderPath,
@@ -656,11 +667,10 @@ import {
   SEGMENTED_DOWNLOAD_MARKER_PREFIX,
   sessionWindowInstances,
   setAsDefaultText,
-  shellChromeCommandLabel,
   shellLabelLocale,
   shellLabel,
   integrateAppSettingsPanelTabsIntoFrameworkBranch,
-  shellRendersPanelTabItself,
+  partitionFrameworkHistoryPanelTab,
   shellTabIcon,
   spawnedWindowChromeForKind,
   studioPanelFocusingSpawned,
@@ -696,10 +706,9 @@ import {
   type UiRefreshCache,
 } from "../🛠️ShellHelpers/🟦️.tsx";
 import { toolRunPanelReveal, toolRunPanelTasksV1, type ToolRunPanelControlV1 } from "../🛠️ShellHelpers/⏯️tool-run-panel/🟦️.ts";
+import { TimeTravelBand, timeTravelIndicatorTextV1, timeTravelPeerPresenceV1, TimeTravelWindowIndicator } from "../🛠️ShellHelpers/⏪️time-travel/🟦️.tsx";
 import { createContributionsPublisher, type ContributionsPublishOutcome, type ContributionsSessionKey } from "../🛠️ShellHelpers/🧩️contributions/🟦️.ts";
 
-import { aProjectOfLuhUdkFooterItem, fundedByZukunftBauFooterItem } from "../../../../../../../../♻️mit-bestand/🧺️demonstrator/⚛️footer.tsx";
-import { ENTWERFEN_MIT_BESTAND_BRAND_IDS, isEntwerfenMitBestandBrandId } from "../../../../../../../../♻️mit-bestand/🧺️demonstrator/🪧️brand.ts";
 import {
   createFrameworkChatPanelTab,
   createFrameworkDisplayPanelTabs,
@@ -741,7 +750,7 @@ import { PLUGIN_CATALOG } from "../../../../🔌️plugin/📇️registry/🟦�
 import { MODULE_EXTENSION_ROUTE } from "../../../../🔌️plugin/📇️registry/📦️deployment/🟦️.ts";
 import { createHubPluginSource, HUB_SAME_ORIGIN_MOUNT, type HubPluginSourceV1 } from "../../../../🔌️plugin/📇️registry/🌎️hub-source/🟦️.ts";
 import { hubCatalogClosureV1, hubCatalogOnlyPluginsV1, hubCatalogOwnerOfDialectV1, hubProgramIdV1, parseHubProgramIdV1 } from "../../../../🔌️plugin/📇️registry/🌎️hub-source/🔍️resolution/🟦️.ts";
-import type { TrustedPluginModuleIndexEntryV1, TrustedPluginModuleIndexV1 } from "../../../../🔌️plugin/📇️registry/🌎️hub-source/🧬️schema/🟦️.ts";
+import type { TrustedPluginModuleIndexEntryV1, TrustedPluginModuleIndexV1 } from "../../../../🔌️plugin/📇️registry/📦️deployment/🧬️schema/🟦️.ts";
 import pluginModuleStoreWorkerUrl from "../../../../🔌️plugin/📇️registry/🌎️hub-source/👷️service-worker/🟦️.ts?worker&url";
 import { BootstrapStatusNotice, ExecutionTargetStatusNotice, InferencePortPanel, inferencePortStatusRuntimeKeyV1, reduceBootstrapUiState, reduceExecutionTargetUiState, resolveRequiredHostApps, retainInferencePortOwnerAfterCloseV1, shellHistoryUndoRouteV1, type BootstrapUiState, type ExecutionTargetUiState, type InferencePortOwnerV1, type InferencePortUiAction } from "./🪪️host-bootstrap/🟦️.tsx";
 import { ArtifactCreationCatalogNotice, ArtifactCreationProgressNotice, reduceArtifactCreationProgressUiV1, type ArtifactCreationProgressOwnerV1, type ArtifactCreationProgressUiStateV1 } from "./🌱️artifact-creation/🟦️.tsx";
@@ -951,7 +960,8 @@ const LOCAL_SESSION_RECLAIM_INTERVAL_MS = 30_000;
 
 /** ⚖️ Maps one of the frozen seven `mutation.*` codes (contract freeze §C2 — no per-plugin codes,
  * ever) onto its `ui.mutation.code.*` label key, and the event log's own `history.foreign-transition` refusal (kernel-db
- * `FOREIGN_HISTORY_TRANSITION_CODE`) onto `ui.mutation.history.foreignTransition`; an unrecognized code falls back to the
+ * `FOREIGN_HISTORY_TRANSITION_CODE`) onto `ui.mutation.history.foreignTransition`, every history-edit refusal onto its
+ * {@link HISTORY_REFUSAL_LABEL_KEYS} key; an unrecognized code falls back to the
  * generic rejected-title key rather than fabricating a key the schema doesn't have. */
 function mutationCodeLabelKey(code: string): UiTranslationKey {
   switch (code) {
@@ -971,8 +981,10 @@ function mutationCodeLabelKey(code: string): UiTranslationKey {
       return "ui.mutation.code.cascade";
     case "history.foreign-transition":
       return "ui.mutation.history.foreignTransition";
-    default:
-      return "ui.mutation.rejected.title";
+    default: {
+      const refusal = historyRefusalCodeV1(code);
+      return refusal === null ? "ui.mutation.rejected.title" : HISTORY_REFUSAL_LABEL_KEYS[refusal];
+    }
   }
 }
 
@@ -989,18 +1001,6 @@ const OPERATION_SETTLE_RING_SLOTS = 64;
  * able to recover from a lost frame, never wedge on one. */
 const OPERATION_SETTLE_WATCHDOG_MS = 30_000;
 
-/** 🧾️ One program's history as the shell projects it: the cursor undo/redo act on, the entries the
- * History panel lists, and the checkpoint the check-in lane watches. */
-type ShellHistoryProjectionV1 = {
-  readonly cursor: number;
-  readonly entries: Readonly<Record<number, HistoryEntry>>;
-  readonly canUndo: boolean;
-  readonly canRedo: boolean;
-  readonly currentCheckpointId: string | undefined;
-};
-/** 🧾️ What a program whose history has not been read yet projects — and what the History panel shows
- * for it, which is nothing rather than another program's ledger. */
-const EMPTY_SHELL_HISTORY_PROJECTION_V1: ShellHistoryProjectionV1 = { cursor: 0, entries: {}, canUndo: false, canRedo: false, currentCheckpointId: undefined };
 
 /** 📌️ Uncommitted-since-last-checkpoint count, derived purely from a projection's entries (no new wire field): every applied
  * `mutation`-kind entry counts, reset to 0 the moment a `commitCheckpoint` (`kind: "history"`) entry is seen — mirrors
@@ -2323,12 +2323,9 @@ function FrameworkOsShellInner({
         (current) => {
           historyOrderByProgramRef.current.set(key, ++historyOrderRef.current);
           localHistoryOrderRef.current = historyOrderRef.current;
-          const entries = replace ? {} as Record<number, HistoryEntry> : { ...current.entries };
-          for (const entry of patch.upserts ?? []) entries[entry.seq] = entry;
-          // 📌️ §C5 — `currentCheckpointId` used to be dropped here even though `HistoryPatch` always
-          // carried it; `🔖️CheckIn` below watches it change to know a checkpoint it asked for actually
-          // landed (see `touchSpaceIndexArtifact`'s call site).
-          return { cursor: patch.cursor, entries, canUndo: patch.canUndo ?? false, canRedo: patch.canRedo ?? false, currentCheckpointId: replace ? patch.currentCheckpointId : (patch.currentCheckpointId ?? current.currentCheckpointId) };
+          // 📌️ §C5 — `currentCheckpointId` rides every patch; `🔖️CheckIn` below watches it change to know a
+          // checkpoint it asked for actually landed (see `touchSpaceIndexArtifact`'s call site).
+          return shellHistoryProjectionAfterPatchV1(current, patch, replace);
         },
       );
       if (next.applied) applied = true;
@@ -2947,6 +2944,9 @@ function FrameworkOsShellInner({
    * effect reached `wireEffectToFriendly` and was dropped, so a refusal looked exactly like nothing
    * happening. Assigned right after `showTransientNotice` itself is defined. */
   const showTransientNoticeRef = useRef<(message: string, kind?: Severity, code?: string) => void>(() => {});
+  /** 📌️ Same idiom for the explicit check-in: `onAction` answers the history body's `framework.checkin` `submit` with
+   * `dispatchCheckpoint`, which is declared below it in the 🔖️CheckIn region. */
+  const dispatchCheckpointRef = useRef<(message: string) => void>(() => {});
   /** 🐚️ Same ref-forwarding idiom — `applyHostEffects`'s `replayShellCommand` branch replays a
    * SHELL-owned command id against shell-owned state (`dispatchOsCommand`, declared far below), never
    * into the guest, which has no window kind for chrome and refuses it `undeclared-action`. Answers
@@ -3361,7 +3361,7 @@ function FrameworkOsShellInner({
   const socketActorReadyRef = useRef<Map<string, { readonly clientInstanceId: string; resolve(actorId: string): void; reject(error: Error): void }>>(new Map());
   const [bootstrapUiByDocument, setBootstrapUiByDocument] = useState<BootstrapUiState>({});
   const [executionTargetUiByDocument, setExecutionTargetUiByDocument] = useState<ExecutionTargetUiState>({});
-  const [presencePeersByRuntimeKey, setPresencePeersByRuntimeKey] = useState<Readonly<Record<string, readonly PresencePeer[]>>>({});
+  const [presencePeersByRuntimeKey, setPresencePeersByRuntimeKey] = useState<Readonly<Record<string, readonly ScopedPresencePeerV1[]>>>({});
   const rebootstrapDiscardedSessionsRef = useRef<Map<string, ActiveSession>>(new Map());
   /** 🐚️ Mirrors `loadedPlugins` for the unmount-cleanup effect below, which needs the latest value at
    * teardown time without depending on it (a dependency would tear down and re-run on every reload). */
@@ -3908,9 +3908,9 @@ function FrameworkOsShellInner({
         // 🌐️ A hub `Ack` that refused or transformed this human's batch: the worker already discarded the refused edit
         // (rollback, or a rebootstrap of the document's actor), so the human is TOLD, in their language, and why.
         if (event.outcome.kind === "rejected") {
-          const reasonKey = hubCommandRejectionReasonKeyV1(event.outcome.messages);
+          const notice = hubCommandRejectionNoticeV1(event.outcome.messages);
           console.warn("[os-shell] hub refused a command batch", message.documentId, event.outcome.reason);
-          showTransientNoticeRef.current(reasonKey === null ? shellLabel("ui.conflict.hubRejected") : `${shellLabel("ui.conflict.hubRejected")}: ${shellLabel(reasonKey)}`, "warning", "sync.command.rejected");
+          showTransientNoticeRef.current(notice.text, notice.kind, notice.code);
         }
         else if (event.outcome.kind === "transformed") showTransientNoticeRef.current(shellLabel("ui.conflict.hubTransformed"), "info", "sync.command.transformed");
       } else if (event.kind === "conflict") {
@@ -3921,8 +3921,14 @@ function FrameworkOsShellInner({
         // `id`/`status`/`actors` exists for either source event, and `protocol_wire::ServerFrame` has
         // no `MergeReport`/`Conflicts` variant to carry one). The REAL roster/merge-outcome delivery
         // this contract added is `AppCommand::ApplyEnvelopes`'s own reply — see the `remoteMutations`
-        // branch above (`applyRemoteMergeRef`) — so this branch stays a passive log, same as before.
+        // branch above (`applyRemoteMergeRef`) — so this branch stays a passive log, except for a refused history
+        // transition (`history.transition-refused` & co.), which the human is told about in their language.
         console.warn("[os-shell] sync conflict", message.documentId, event.message);
+        const refusal = historyRefusalCodeV1(event.code);
+        if (refusal !== null) {
+          const notice = historyRefusalNoticeV1(refusal);
+          showTransientNoticeRef.current(notice.text, notice.kind, notice.code);
+        }
       }
     };
     const failBrowserActorActions = () => {
@@ -5180,6 +5186,14 @@ function FrameworkOsShellInner({
   const focusedHistoryV1 = useCallback(() => programHistoryProjectionV1(historyStore.get(), focusedHistoryKey, EMPTY_SHELL_HISTORY_PROJECTION_V1), [historyStore, focusedHistoryKey]);
   const historyCanUndo = useSyncExternalStore(historyStore.subscribe, () => focusedHistoryV1().canUndo, () => false);
   const historyCheckpointId = useSyncExternalStore(historyStore.subscribe, () => focusedHistoryV1().currentCheckpointId, () => undefined);
+  /** ⏪️ The focused program's live history-edit session, `null` while none is open: the band shows it whichever panel
+   * is open, and every window of that program wears the indicator. The indicator reads only the stage and its own
+   * text, so a replay progress step re-renders the band and never the window descriptors. */
+  const focusedTimeTravel = useSyncExternalStore(historyStore.subscribe, () => focusedHistoryV1().timeTravel, () => null);
+  const focusedHistoryEntries = useSyncExternalStore(historyStore.subscribe, () => focusedHistoryV1().entries, () => EMPTY_SHELL_HISTORY_PROJECTION_V1.entries);
+  const timeTravelIndicatorStage = focusedTimeTravel?.stage ?? null;
+  const timeTravelIndicatorText = focusedTimeTravel === null ? null : timeTravelIndicatorTextV1(focusedTimeTravel, { terminology: uiTerminology, locale: uiLocale });
+  const timeTravelIndicator = useMemo(() => (timeTravelIndicatorStage === null || timeTravelIndicatorText === null ? undefined : <TimeTravelWindowIndicator stage={timeTravelIndicatorStage} description={timeTravelIndicatorText} />), [timeTravelIndicatorStage, timeTravelIndicatorText]);
   /** 🧾️ A spawned program's full history, read once when it takes the canvas. Its completions patch
    * the projection incrementally from then on; without this first snapshot its ledger would start
    * empty even for a document that already carries entries (a re-opened artifact). */
@@ -6264,7 +6278,7 @@ function FrameworkOsShellInner({
         },
         spawnedWindowInstanceIdV1(spawned.id, guestActiveWindowId),
       );
-      const panelTabLeaves = flattenPanelTabLeaves(app.panelTabs).filter((tab) => !shellRendersPanelTabItself(panelTabKindId(tab.kind)));
+      const panelTabLeaves = flattenPanelTabLeaves(app.panelTabs);
       const contributions = await publishContributions({ pluginId: spawned.pluginId, instanceId: spawned.instanceId, app, viewState: spawnedProgramViewStateV1(viewState, app) }, sessionProgramsV1(loadedPlugins, spawned.pluginId), true);
       if (contributions.status === "failed") console.error(`[os-shell] contributions push into spawned "${spawned.pluginId}" #${spawned.instanceId} failed: ${contributions.reason}`);
       if (spawnedLayoutSeedRef.current !== spawnedSeed) return;
@@ -7313,8 +7327,9 @@ function FrameworkOsShellInner({
     if (!plugin) return;
     const target = session;
     try {
-      const unsubscribeOperations = plugin.subscribeOperationProgress(target.instanceId, (uiScope) => {
-        const scope = resolveUiDirtyScope(uiScope);
+      const unsubscribeOperations = plugin.subscribeOperationProgress(target.instanceId, (progress: OperationProgressV1) => {
+        const { scope, historyPatch } = operationProgressPartsV1(progress);
+        applyHistoryPatch(historyPatch, false, { pluginId: target.pluginId, instanceId: target.instanceId });
         if (scope.kind === "none") return;
         void applyHostEffects([], target, scope, captureProgramEffectOwner(target)).catch(logUnlessRetiredV1("typed-operation progress refresh failed"));
       });
@@ -7331,7 +7346,7 @@ function FrameworkOsShellInner({
     } catch (error) {
       return;
     }
-  }, [applyHostEffects, captureProgramEffectOwner, dropForRetiredInstance, session]);
+  }, [applyHistoryPatch, applyHostEffects, captureProgramEffectOwner, dropForRetiredInstance, session]);
 
   /**
    * 🎞️🪟️ The SAME mid-operation progress lane, for every spawned program. The effect above
@@ -7351,8 +7366,9 @@ function FrameworkOsShellInner({
       if (!entry || !app) continue;
       const target: ActiveSession = { pluginId: spawned.pluginId, instanceId: spawned.instanceId, app, viewState: spawnedProgramViewStateV1(session.viewState, app) };
       try {
-        const unsubscribeOperations = entry.handle.subscribeOperationProgress(spawned.instanceId, (uiScope) => {
-          const scope = resolveUiDirtyScope(uiScope);
+        const unsubscribeOperations = entry.handle.subscribeOperationProgress(spawned.instanceId, (progress: OperationProgressV1) => {
+          const { scope, historyPatch } = operationProgressPartsV1(progress);
+          applyHistoryPatch(historyPatch, false, { pluginId: spawned.pluginId, instanceId: spawned.instanceId });
           if (scope.kind === "none") return;
           void applyHostEffects([], target, scope, captureProgramEffectOwner(target)).catch(logUnlessRetiredV1("spawned typed-operation progress refresh failed"));
         });
@@ -7372,7 +7388,7 @@ function FrameworkOsShellInner({
     };
     // 🐢️ Keyed on the spawned ROSTER, not on `panel` identity: a panel object churns on every action.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [hostMode, session, spawnedRosterKey, applyHostEffects, captureProgramEffectOwner]);
+  }, [hostMode, session, spawnedRosterKey, applyHistoryPatch, applyHostEffects, captureProgramEffectOwner]);
 
   const applyShellUri = useCallback(
     async (uri: string, preservedViewState?: ViewModel): Promise<boolean> => {
@@ -8075,6 +8091,12 @@ function FrameworkOsShellInner({
 
         completeIntroductionInteraction((interaction) => interaction.on.kind === "action" && interaction.on.id === action.action);
 
+        if (action.controllerId === FRAMEWORK_CHECKIN_CONTROLLER_ID) {
+          if (action.action !== "submit") return refuse("undeclared-action", `check-in: ${action.action}`);
+          dispatchCheckpointRef.current(checkinSubmitMessageV1(action.args));
+          return applied();
+        }
+
         if (action.controllerId === FRAMEWORK_SYNC_CONTROLLER_ID) {
           if (action.action === "selectFile") {
             dispatch({ type: "SET_SYNC_CARD_KIND", value: "file" });
@@ -8347,6 +8369,11 @@ function FrameworkOsShellInner({
           const response = await plugin.handleAction(targetSession.instanceId, encodeWindowActionInvocation({ ...targetSession, viewState: dispatchViewState }, action, dispatchExtraInstances, dispatchWindowId), dispatchViewState, { order: causalOrderKeyV1(entry.provenance) });
           applyHistoryPatch(response.historyPatch, false, { pluginId: targetSession.pluginId, instanceId: targetSession.instanceId });
           applyLeftoverInteractionView(response.output, hostWindowId);
+          const rejectedHistoryEdit = historyRefusalOfOutputV1(response.output);
+          if (rejectedHistoryEdit !== null) {
+            const notice = historyRefusalNoticeV1(rejectedHistoryEdit);
+            showTransientNotice(notice.text, notice.kind, notice.code);
+          }
           const navbarExample = navbarExampleIdFromHistoryUpserts(response.historyPatch?.upserts, lastDispatchedExampleIdRef.current, resolveBootExampleId("", exampleOptionsRef.current, defaults.exampleId));
           if (navbarExample !== undefined) dispatch({ type: "SET_ACTIVE_EXAMPLE_ID", value: navbarExample });
           const needsHistoryRefresh = historyRefreshNeededV1(action.action, response.historyPatch);
@@ -8366,12 +8393,17 @@ function FrameworkOsShellInner({
           return applied();
         } catch (actionError) {
           let outcome: InputOutcomeV1;
+          const historyRefusal = actionError instanceof SemioFaultError ? historyRefusalOfFaultV1(actionError.fault) : null;
           if (isViewerReadOnlyFault(actionError)) {
             showTransientNotice(viewerReadOnlyNoticeText(uiLocale), "info", SURFACE_FAULT_CODES.ViewerReadOnly);
             outcome = refuse("viewer-read-only", undefined, true);
           } else if (isMutationRejectedFault(actionError)) {
             showMutationRejectedNotice((actionError as SemioFaultError).fault);
             outcome = refuse("mutation-rejected", undefined, true);
+          } else if (historyRefusal !== null) {
+            const notice = historyRefusalNoticeV1(historyRefusal, (actionError as SemioFaultError).fault.severity);
+            showTransientNotice(notice.text, notice.kind, notice.code);
+            outcome = refuse("dispatch-failed", notice.code, true);
           } else if (dropForSealedInstance(targetSession, "action failure", action.action)) {
             outcome = refuse("instance-sealed", `${targetSession.pluginId}#${targetSession.instanceId}`);
           } else if (dropForRetiredInstance(targetSession, `action ${action.action}`, actionError)) {
@@ -8446,7 +8478,7 @@ function FrameworkOsShellInner({
    * Answers the ledger outcome, so a caller that retires the target instance right after (closing a spawned
    * program's last window) can wait for the note to land first. No-ops when there's no active app session. */
   const noteShellCommand = useCallback(
-    (commandId: string, label: string, detail?: Record<string, unknown>): Promise<InputOutcomeV1 | null> => {
+    (commandId: string, label: ShellLabelTextV1, detail?: Record<string, unknown>): Promise<InputOutcomeV1 | null> => {
       if (!session) return Promise.resolve(null);
       return onAction(buildNoteShellCommandAction(session.app.controllerId, commandId, label, detail));
     },
@@ -9010,9 +9042,7 @@ function FrameworkOsShellInner({
                 label: presenceIdentity.name,
                 presencePack: snapshot?.presence,
                 connectedAtMs: presenceConnectedAtMsRef.current,
-                ...(snapshot?.interaction && snapshot.interaction.length > 0
-                  ? { interaction: decodePresenceInteraction(Uint8Array.from(snapshot.interaction), [0]) }
-                  : {}),
+                ...presenceEphemeralPeerFieldsV1(snapshot),
                 ...((snapshot?.activeTool ?? collectLocalActiveToolV1(runtimeKey))
                   ? { activeTool: snapshot?.activeTool ?? collectLocalActiveToolV1(runtimeKey) }
                   : {}),
@@ -9066,7 +9096,7 @@ function FrameworkOsShellInner({
     onToggle: (anchor) => {
       if (mobile) dispatch({ type: "SET_MOBILE_PANEL_VISIBLE", value: (visible) => !visible });
       else dispatch({ type: "SET_PANEL_VISIBLE", anchor, value: (visible) => !visible });
-      noteShellCommand("shell.panelToggle", shellLabel("ui.shellCommand.panelToggle"), { anchor: mobile ? undefined : anchor, hotkey: true });
+      noteShellCommand("shell.panelToggle", shellLabelTextV1("ui.shellCommand.panelToggle"), { anchor: mobile ? undefined : anchor, hotkey: true });
     },
   });
 
@@ -9289,7 +9319,7 @@ function FrameworkOsShellInner({
         },
       });
       dispatch({ type: "SET_ACTIVE_WINDOW_ID", value: instanceId });
-      noteShellCommand("shell.windowSplit", shellLabel("ui.shellCommand.windowSplit"), { windowKindId: payload.windowKindId, instanceId });
+      noteShellCommand("shell.windowSplit", shellLabelTextV1("ui.shellCommand.windowSplit"), { windowKindId: payload.windowKindId, instanceId });
     },
     [appLabelsOverlay, refreshUi, session, focusedSpawnedId, noteShellCommand, uiTerminology, uiLocale],
   );
@@ -9812,34 +9842,9 @@ function FrameworkOsShellInner({
       // 🩹️ `CommandDefinition.label` has no owned schema mirror yet (`unknown` — see that generated type's own
       // doc comment); resolved the same way every other manifest label in this file is.
       const rawLabel = osCommands.find((entry) => entry.id === commandId)?.label as LocalizedLabel | string | undefined;
-      const label = rawLabel !== undefined ? resolveManifestLabel(rawLabel, uiTerminology, uiLocale) : commandId;
-      noteShellCommand(commandId, label, detail);
+      noteShellCommand(commandId, manifestLabelTextV1(rawLabel ?? commandId, uiTerminology), detail);
     },
-    [osCommands, noteShellCommand, uiTerminology, uiLocale],
-  );
-
-  /** 🌐️ One history row's text, resolved against the locale this shell is showing RIGHT NOW.
-   *
-   * A plugin row carries a real `LocalizedLabel` (every terminology × locale the guest filled), so
-   * `historyEntryLabelText` alone already re-renders it on a locale switch. A CHROME row does not:
-   * `noteShellCommand` takes a resolved `string`, and the guest stores it as `LocalizedLabel::data`,
-   * which projects that one string onto every axis — so the row is frozen in the locale it was
-   * journalled in, and re-resolving it can only hand the same text back. Measured 2026-09-21 (S10
-   * §2.10 item 2): after switching to German the older rows still read `"Switch Panel Tab"` while
-   * the row for the switch itself read `"Panel-Tab wechseln"`, breaking `HistoryEntry.label`'s own
-   * promise that "a locale switch re-renders the whole ledger". Chrome text is the shell's to own,
-   * so both chrome families are resolved here from the row's `actionId` instead of from the frozen
-   * string: the nine `shell.*` notes through their `ui.shellCommand.*` keys, and an `os.*` note
-   * through the live `osCommands` catalog that the palette itself renders. */
-  const historyRowLabelText = useCallback(
-    (entry: HistoryEntry): string => {
-      const chrome = shellChromeCommandLabel(entry.actionId);
-      if (chrome !== null) return chrome;
-      const osCommandLabel = osCommands.find((command) => command.id === entry.actionId)?.label as LocalizedLabel | string | undefined;
-      if (osCommandLabel !== undefined) return resolveManifestLabel(osCommandLabel, uiTerminology, uiLocale);
-      return historyEntryLabelText(entry.label, uiTerminology, uiLocale);
-    },
-    [osCommands, uiTerminology, uiLocale],
+    [osCommands, noteShellCommand, uiTerminology],
   );
 
   const commitUiPreference = useCallback(
@@ -10731,16 +10736,13 @@ function FrameworkOsShellInner({
    * proximity radius, overlap budget — was unreachable while the framework's own `framework.settings`
    * branch beside it opened fine.
    *
-   * 🕰️ {@link shellRendersPanelTabItself} keeps the framework-injected `framework.panel.history` out: the
-   * shell builds that tab itself ({@link frameworkUtilitiesHistoryTab}), and mounting the app's copy beside
-   * it put two identically-named tab buttons carrying one DOM id in this anchor — the guest-rendered twin
-   * winning the id lookup and renaming every row to `panel:<key>/framework.history.entry.<seq>`.
+   * 🕰️ {@link partitionFrameworkHistoryPanelTab} keeps the framework-injected `framework.panel.history` out: the
+   * dock mounts it as its own bottom-right leaf ({@link frameworkHistoryTab}) rather than inside the Settings branch.
    */
   const appTabsForBottomAnchor = useCallback(
     (anchor: ReturnType<typeof panelAnchorForGroup>): PanelTabNode[] =>
       session && focusedApp
-        ? focusedApp.panelTabs
-            .filter((tab) => panelAnchorForGroup(tab.group) === anchor && !shellRendersPanelTabItself(panelTabKindId(tab.kind)))
+        ? partitionFrameworkHistoryPanelTab(focusedApp.panelTabs.filter((tab) => panelAnchorForGroup(tab.group) === anchor)).rest
             .map((tab, order) => panelTabDefinitionToNode(tab, tab.group, focusedPanelBodyStores, onAction, order, appLabelsOverlay, uiTerminology, uiLocale, treeWindowHost, panelTreeConfigCacheRef.current, focusedBrowserActorPanels))
         : [],
     [appLabelsOverlay, focusedBrowserActorPanels, onAction, focusedPanelBodyStores, session, focusedApp, uiTerminology, uiLocale, treeWindowHost, treeWindowGeneration],
@@ -10769,7 +10771,10 @@ function FrameworkOsShellInner({
 
   // 👥️ Host-only normalized roster, keyed by the exact verified document runtime. It never enters a
   // plugin view-state payload, so an app cannot forge or persist Shell presence chrome.
-  const presencePeers = useMemo((): readonly PresencePeer[] => currentDocumentRuntimeKey === null ? [] : (presencePeersByRuntimeKey[currentDocumentRuntimeKey] ?? []), [currentDocumentRuntimeKey, presencePeersByRuntimeKey]);
+  const presencePeers = useMemo((): readonly ScopedPresencePeerV1[] => currentDocumentRuntimeKey === null ? [] : (presencePeersByRuntimeKey[currentDocumentRuntimeKey] ?? []), [currentDocumentRuntimeKey, presencePeersByRuntimeKey]);
+  /** ⏪️👥️ Peers' open history edits, labelled from this program's own history rows: the roster chip says who edits
+   * which mutation, and the history body's affected rows carry a note through the interpreter's presence overlay. */
+  const timeTravelPeers = useMemo(() => timeTravelPeerPresenceV1(presencePeers, Object.values(focusedHistoryEntries), { terminology: uiTerminology, locale: uiLocale }), [presencePeers, focusedHistoryEntries, uiTerminology, uiLocale]);
 
   const currentSyncStatus = currentDocumentRuntimeKey ? (syncStatusByDocumentId[currentDocumentRuntimeKey] ?? null) : null;
   const syncPillState: SyncPillState = useMemo(() => computeSyncPillState(currentSyncStatus), [currentSyncStatus]);
@@ -10892,6 +10897,16 @@ function FrameworkOsShellInner({
     if (current === undefined || isTerminalDocumentCheckInPhaseV1(current.status.phase)) return;
     backboneWorkerRef.current?.postMessage({ wire: encodeBackboneWorkerRequest({ kind: "document-check-in-cancel", requestId: current.requestId, scope: current.scope }) });
   }, [documentCheckInUi]);
+  /** 📌️ Closes a finished Check In's band; a running one is cancelled, never dismissed. */
+  const dismissHubCheckIn = useCallback((runtimeKey: string) => {
+    setDocumentCheckInUi((current) => {
+      const entry = current[runtimeKey];
+      if (entry === undefined || !isTerminalDocumentCheckInPhaseV1(entry.status.phase)) return current;
+      const { [runtimeKey]: _dismissed, ...rest } = current;
+      return rest;
+    });
+  }, []);
+  const currentCheckIn = currentDocumentRuntimeKey === null ? undefined : documentCheckInUi[currentDocumentRuntimeKey];
   const dispatchCheckpoint = useCallback(
     (message: string) => {
       if (!session) return;
@@ -10968,14 +10983,9 @@ function FrameworkOsShellInner({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [session, currentDocumentId]);
 
-  // 📌️ §C5 item 3 — explicit check-in: `#s-checkin` opens a small message dialog (local, ephemeral
-  // state — never persisted, never survives a session switch), then dispatches with that message.
-  const [checkinDialog, setCheckinDialog] = useState<{ readonly message: string } | null>(null);
-  const submitCheckin = useCallback(() => {
-    if (!checkinDialog) return;
-    dispatchCheckpoint(checkinDialog.message.trim().length > 0 ? checkinDialog.message.trim() : "check-in");
-    setCheckinDialog(null);
-  }, [checkinDialog, dispatchCheckpoint]);
+  // 📌️ §C5 item 3 — explicit check-in: the history body's `#s-checkin` dispatches `framework.checkin` `submit`, which
+  // `onAction` answers through this ref (the same fallback message the wgpu shell uses).
+  dispatchCheckpointRef.current = dispatchCheckpoint;
   //#endregion 🔖️CheckIn
 
   /** 🧾️ `data-history-json` on the shell root follows the focused program's history straight from the store — written on
@@ -10992,123 +11002,13 @@ function FrameworkOsShellInner({
     return historyStore.subscribe(() => publishHistoryDomRef.current());
   }, [historyStore, focusedHistoryV1, uiTerminology, uiLocale]);
 
-  //#region 🧰️FooterUtilityLeaves — bottom-right's History tab, sourced from the framework-injected
-  // `framework.panel.history` panel tab (every app gets one — see `AppBuilder::build_definition`).
-  const mountedInferenceHistory = useMemo(() => {
-    if (!session) return null;
-    const matches = Object.entries(inferenceHistoryByRuntimeKey).filter(([runtimeKey, history]) => {
-      const document = openDocumentSessionsRef.current.get(runtimeKey);
-      return document?.session.pluginId === session.pluginId && document.session.instanceId === session.instanceId && document.clientInstanceId === history.clientInstanceId && history.sessionInstanceId === session.instanceId;
-    });
-    return matches.length === 1 ? matches[0]![1] : null;
-  }, [inferenceHistoryByRuntimeKey, session]);
-  const shellUndoRoute = shellHistoryUndoRouteV1(mountedInferenceHistory === null ? null : { ...mountedInferenceHistory.status, order: mountedInferenceHistory.order }, { canUndo: historyCanUndo, order: localHistoryOrderRef.current });
-  const shellCanUndo = shellUndoRoute === "remote" || shellUndoRoute === "local";
-  const frameworkUtilitiesHistoryTab = useMemo((): PanelTabNode | null => {
-    if (!session) return null;
-    const tab = session.app.panelTabs.find((candidate) => panelTabKindId(candidate.kind) === FRAMEWORK_PANEL_TAB_HISTORY_ID);
-    if (!tab) return null;
-    // 👁️✏️ "renders the history panel read-only" (contract freeze §2.3) — undo/redo stay visible but
-    // disabled (contract freeze §5's "disables undo/redo"), checkpoint/revert-to-command (both
-    // mutating) are hidden outright rather than disabled, since neither has a meaningful disabled
-    // affordance for a session that can never enable them.
-    const isViewer = session.app.role === "viewer";
-    return singleTreeLeaf({
-      id: FRAMEWORK_PANEL_TAB_HISTORY_ID,
-      icon: shellTabIcon("undo"),
-      name: resolvePanelTabLabel(appLabelsOverlay, FRAMEWORK_PANEL_TAB_HISTORY_ID, resolveManifestLabel(tab.label as LocalizedLabel | string, uiTerminology, uiLocale)),
-      order: 1,
-      tree: liveTreePanelDefinition(historyStore.subscribe, focusedHistoryV1, (projection) => {
-        const entries = Object.values(projection.entries).sort((left, right) => right.seq - left.seq);
-        const uncommittedEditCount = shellUncommittedEditCountV1(projection.entries);
-        return {
-          sections: [
-            {
-              id: "framework.history.actions",
-              label: shellLabel("ui.panel.history"),
-              items: [
-                { id: "framework.history.undo", label: "", control: <button type="button" disabled={isViewer || !shellCanUndo} onClick={() => onAction({ controllerId: session.app.controllerId, action: "undo" })}>{historyPanelText("undo", uiLocale)}</button> },
-                { id: "framework.history.redo", label: "", control: <button type="button" disabled={isViewer || !projection.canRedo} onClick={() => onAction({ controllerId: session.app.controllerId, action: "redo" })}>{historyPanelText("redo", uiLocale)}</button> },
-                // 📌️ §C5 items 3/5 — `#s-checkin` (explicit check-in, opens a message dialog) is a
-                // SEPARATE affordance from the no-message quick "Checkpoint" button above; both are
-                // absent outright for a viewer (never disabled — a viewer role has no meaningful
-                // disabled affordance for either, mirroring undo/redo's own comment above `isViewer`).
-                // `!canCheckIn(...)` here specifically (not the local `isViewer`) so this gate is the
-                // SAME tested predicate `📓️w3-a-report.md`'s viewer-guard test exercises.
-                ...(!canCheckIn(session.app.role)
-                  ? []
-                  : [
-                      { id: "framework.history.checkpoint", label: "", control: <button type="button" onClick={() => onAction({ controllerId: session.app.controllerId, action: "commitCheckpoint" })}>{historyPanelText("checkpoint", uiLocale)}</button> },
-                      {
-                        id: "framework.history.checkin",
-                        label: "",
-                        control: checkinDialog ? (
-                          <span style={{ display: "inline-flex", gap: 4 }}>
-                            <input
-                              id="s-checkin-message"
-                              type="text"
-                              value={checkinDialog.message}
-                              placeholder={checkinMessagePlaceholderText(uiLocale)}
-                              onChange={(event) => setCheckinDialog({ message: event.target.value })}
-                              onKeyDown={(event) => {
-                                if (event.key === "Enter") submitCheckin();
-                                if (event.key === "Escape") setCheckinDialog(null);
-                              }}
-                            />
-                            <button type="button" onClick={submitCheckin}>{checkinSubmitText(uiLocale)}</button>
-                            <button type="button" onClick={() => setCheckinDialog(null)}>{checkinCancelText(uiLocale)}</button>
-                          </span>
-                        ) : (
-                          <button type="button" id="s-checkin" onClick={() => setCheckinDialog({ message: "" })}>
-                            {checkinActionText(uiLocale)}
-                            {uncommittedEditCount > 0 ? ` (${uncommittedEditCount})` : ""}
-                          </button>
-                        ),
-                      },
-                      ...(currentDocumentRuntimeKey === null || documentCheckInUi[currentDocumentRuntimeKey] === undefined
-                        ? []
-                        : [
-                            {
-                              id: "framework.history.checkin-status",
-                              label: "",
-                              control: (
-                                <span style={{ display: "inline-flex", gap: 4 }}>
-                                  <span id="s-checkin-status" role="status" aria-live="polite">{checkinStatusText(documentCheckInUi[currentDocumentRuntimeKey]!.status, uiLocale)}</span>
-                                  {isTerminalDocumentCheckInPhaseV1(documentCheckInUi[currentDocumentRuntimeKey]!.status.phase) ? null : (
-                                    <button type="button" id="s-checkin-abort" onClick={() => cancelHubCheckIn(currentDocumentRuntimeKey)}>{checkinAbortText(uiLocale)}</button>
-                                  )}
-                                </span>
-                              ),
-                            },
-                          ]),
-                    ]),
-              ],
-            },
-            {
-              id: "framework.history.commands",
-              label: historyPanelText("commands", uiLocale),
-              items: entries.map((entry) => ({
-                id: `framework.history.entry.${entry.seq}`,
-                label: entry.count && entry.count > 1 ? `${historyRowLabelText(entry)} ×${entry.count}` : historyRowLabelText(entry),
-                description: entry.opLines && (entry.opCount ?? 0) > entry.opLines.length ? ["…", ...entry.opLines].join(" · ") : entry.opLines?.join(" · "),
-                dimmed: entry.applied === false,
-                // 🕰️ The shell's ONLY revert-to-command affordance. It was an id-less glyph button, so
-                // nothing outside a mouse could reach it: the ◻️2d/🧊️3d batteries both looked for a
-                // `framework.history.revert` that has never existed and scored the panel as lacking revert
-                // altogether. The id is per entry, because the verb takes that entry's `entrySeq`.
-                control:
-                  entry.revertible && !isViewer ? (
-                    <button type="button" id={`framework.history.entry.${entry.seq}.revert`} title={historyPanelText("revert", uiLocale)} aria-label={historyPanelText("revert", uiLocale)} onClick={() => onAction({ controllerId: session.app.controllerId, action: "revertToCommand", args: { entrySeq: entry.seq } })}>
-                      ↶
-                    </button>
-                  ) : undefined,
-              })),
-            },
-          ],
-        };
-      }),
-    });
-  }, [appLabelsOverlay, cancelHubCheckIn, checkinDialog, currentDocumentRuntimeKey, documentCheckInUi, focusedHistoryV1, historyStore, onAction, session, shellCanUndo, submitCheckin, uiLocale, uiTerminology]);
+  //#region 🧰️FooterUtilityLeaves — bottom-right's History leaf: the framework-injected `framework.panel.history` tab
+  // (every app gets one — see `AppBuilder::build_definition`) rendered from the focused program's own
+  // `framework.body.history` through the interpreter, like every other panel body.
+  const frameworkHistoryTab = useMemo((): PanelTabNode | null => {
+    const tab = session && focusedApp ? partitionFrameworkHistoryPanelTab(focusedApp.panelTabs).history : undefined;
+    return tab === undefined ? null : panelTabDefinitionToNode(tab, tab.group, focusedPanelBodyStores, onAction, 1, appLabelsOverlay, uiTerminology, uiLocale, treeWindowHost, panelTreeConfigCacheRef.current, focusedBrowserActorPanels);
+  }, [appLabelsOverlay, focusedBrowserActorPanels, onAction, focusedPanelBodyStores, session, focusedApp, uiTerminology, uiLocale, treeWindowHost, treeWindowGeneration]);
   //#endregion 🧰️FooterUtilityLeaves
 
   //#region 🔄️SyncLeaf — bottom-left's sync tab, replacing the old floating footer SyncAttachCard.
@@ -11382,8 +11282,7 @@ function FrameworkOsShellInner({
       if (isOsCommandAddress(address)) {
         dispatchOsCommand(commandId, args, commitUiPreference, dispatch, dockLayoutStore, dockUiStateStore, locks);
         const rawCommandLabel = resolvedCommands.find((entry) => commandAddressKey(entry.address) === commandAddressKey(address))?.definition.label as LocalizedLabel | string | undefined;
-        const label = rawCommandLabel !== undefined ? resolveManifestLabel(rawCommandLabel, uiTerminology, uiLocale) : commandId;
-        noteShellCommand(commandId, label, args);
+        noteShellCommand(commandId, manifestLabelTextV1(rawCommandLabel ?? commandId, uiTerminology), args);
         return;
       }
       if (!session) return;
@@ -11434,6 +11333,12 @@ function FrameworkOsShellInner({
           }
           if (isMutationRejectedFault(error)) {
             showMutationRejectedNotice((error as SemioFaultError).fault);
+            return;
+          }
+          const historyRefusal = error instanceof SemioFaultError ? historyRefusalOfFaultV1(error.fault) : null;
+          if (historyRefusal !== null) {
+            const notice = historyRefusalNoticeV1(historyRefusal, (error as SemioFaultError).fault.severity);
+            showTransientNotice(notice.text, notice.kind, notice.code);
             return;
           }
           console.error("Command execution failed", error);
@@ -11508,7 +11413,7 @@ function FrameworkOsShellInner({
     // 🧵️ Task manager sits beside Marketplace on the same anchor: both are shell-owned windows about
     // what the runtime is doing, not about the open document.
     const bottomRight: PanelTabNode[] = [settingsBottomRightDockTab, frameworkMarketplaceTab, frameworkTaskManagerTab];
-    if (frameworkUtilitiesHistoryTab) bottomRight.push(frameworkUtilitiesHistoryTab);
+    if (frameworkHistoryTab) bottomRight.push(frameworkHistoryTab);
     // 🛠️ Tool categories stay nested under one expandable Tool branch, exactly like Command categories,
     // placed left of Command (order 0 vs 1) — like commands not being window-level, tools are not
     // window-level either; both live only on this shared mode-scoped anchor.
@@ -11530,7 +11435,7 @@ function FrameworkOsShellInner({
         "left-middle": [],
       },
     };
-  }, [commandCategoryTabs, detailsRightTabs, displayBottomLeftTabs, frameworkChatTab, frameworkDisplayTabs, frameworkMarketplaceTab, frameworkSyncTab, frameworkTaskManagerTab, frameworkUtilitiesHistoryTab, settingsBottomRightDockTab, toolTabs, uiLocale, workbenchLeftTabs]);
+  }, [commandCategoryTabs, detailsRightTabs, displayBottomLeftTabs, frameworkChatTab, frameworkDisplayTabs, frameworkMarketplaceTab, frameworkSyncTab, frameworkTaskManagerTab, frameworkHistoryTab, settingsBottomRightDockTab, toolTabs, uiLocale, workbenchLeftTabs]);
 
   useEffect(() => {
     dispatch({ type: "SET_DOCK_OVERRIDE", value: dockLayoutStore.getSnapshot() });
@@ -11626,7 +11531,7 @@ function FrameworkOsShellInner({
         dispatch({ type: "SET_PANEL_PATH", anchor: move.fromAnchor, value: (prev) => reconcileActivePath(sourceTabs, prev, panelTabChildren) });
       }
       dispatch({ type: "SET_PANEL_VISIBLE", anchor: move.target.anchor, value: true });
-      noteShellCommand("shell.dockMove", shellLabel("ui.shellCommand.dockMove"), { tabId: move.tabId, fromAnchor: move.fromAnchor, toAnchor: move.target.anchor });
+      noteShellCommand("shell.dockMove", shellLabelTextV1("ui.shellCommand.dockMove"), { tabId: move.tabId, fromAnchor: move.fromAnchor, toAnchor: move.target.anchor });
     },
     [dock, defaultDock, noteShellCommand],
   );
@@ -11639,7 +11544,7 @@ function FrameworkOsShellInner({
       const defaultSkeleton = dockSkeletonOf(defaultDock);
       dispatch({ type: "SET_DOCK_OVERRIDE", value: dockSkeletonsEqual(nextSkeleton, defaultSkeleton) ? null : nextSkeleton });
       dispatch({ type: "SET_PANEL_VISIBLE", anchor: move.target.anchor, value: true });
-      noteShellCommand("shell.dockMove", shellLabel("ui.shellCommand.dockMove"), { toAnchor: move.target.anchor });
+      noteShellCommand("shell.dockMove", shellLabelTextV1("ui.shellCommand.dockMove"), { toAnchor: move.target.anchor });
     },
     [dock, defaultDock, noteShellCommand],
   );
@@ -12230,7 +12135,7 @@ function FrameworkOsShellInner({
       onVisibleChange: (value: boolean) => {
         if (value && (anchor === "top-right" || anchor === "bottom-right" || anchor === "right-middle")) closePeerRightDockAnchors(anchor);
         dispatch({ type: "SET_PANEL_VISIBLE", anchor, value });
-        noteShellCommand("shell.panelToggle", shellLabel("ui.shellCommand.panelToggle"), { anchor, visible: value });
+        noteShellCommand("shell.panelToggle", shellLabelTextV1("ui.shellCommand.panelToggle"), { anchor, visible: value });
       },
       activeTabPath: panelActivePaths[anchor],
       onActiveTabPathChange: (path: readonly string[]) => {
@@ -12258,7 +12163,7 @@ function FrameworkOsShellInner({
         if (tabId && hostMode && session && session.app.id === hostAppId && findPanelTabNode(dock.anchors[anchor], path)?.kind === "leaf") {
           onAction({ controllerId: session.app.controllerId, action: "setActivePanelTab", args: { tabId } });
         }
-        if (pathChanged && tabId) noteShellCommand("shell.panelTab", shellLabel("ui.shellCommand.panelTab"), { anchor, tabId });
+        if (pathChanged && tabId) noteShellCommand("shell.panelTab", shellLabelTextV1("ui.shellCommand.panelTab"), { anchor, tabId });
       },
       pathMemory: panelPathMemory,
       onPathMemoryChange: (value: Readonly<Record<string, string>>) => dispatch({ type: "SET_PANEL_PATH_MEMORY", value }),
@@ -12274,7 +12179,7 @@ function FrameworkOsShellInner({
       <div key="logoAndTitle" className="flex min-w-0 shrink-0 items-center gap-single">
         {brand?.logoSvg ? <ShellBrandLogo svg={brand.logoSvg} className="size-workbench shrink-0" /> : <SemioLogo className="size-workbench shrink-0" />}
         <span data-slot="app-name" className={cn("px-single", shellChromeTitleClassName)}>
-          {isEntwerfenMitBestandBrandId(brand?.id) ? brand!.windowTitle : appBreadcrumb(resolveAppBreadcrumb(session.app, uiTerminology))}
+          {brand?.windowTitle ?? appBreadcrumb(resolveAppBreadcrumb(session.app, uiTerminology))}
         </span>
         {/* 👁️✏️ Window title chip / read-only badge (contract freeze §5) — role read off the resolved
          * `session.app.role`, never parsed out of `session.app.id`. */}
@@ -12486,6 +12391,7 @@ function FrameworkOsShellInner({
           iconId: windowIconsById[windowId] ?? windowKind.iconId ?? "app-window",
           title: wireLabel(declaredTitle !== undefined ? appWindowLabel(spawnedApp, uiTerminology, declaredTitle, uiLocale) : spawnedApp.windowKinds.length > 1 ? appWindowLabel(spawnedApp, uiTerminology, resolveAppLabel(appLabelsOverlay, "windowKind", windowKind.id, resolveManifestLabel(windowKind.label as LocalizedLabel | string, uiTerminology, uiLocale)), uiLocale) : appBreadcrumb(resolveAppBreadcrumb(spawnedApp, uiTerminology))),
           fill: true,
+          controls: timeTravelIndicator,
           measures: chrome.measures,
           measuresFolded: measuresFoldedFor(windowId, windowKind.id),
           engagement: chrome.engagement,
@@ -12522,6 +12428,7 @@ function FrameworkOsShellInner({
         iconId: windowIconsById[kind.id] ?? kind.iconId,
         title: wireLabel(windowTitlesById[kind.id] ?? appWindowLabel(session.app, uiTerminology, resolveAppLabel(appLabelsOverlay, "windowKind", kind.id, resolveManifestLabel(kind.label as LocalizedLabel | string, uiTerminology, uiLocale)), uiLocale)),
         fill: true,
+        controls: timeTravelIndicator,
         measures: chrome.measures,
         measuresFolded: measuresFoldedFor(kind.id, kind.id),
         engagement: windowEngagementToSpec(resolvedEngagement, onActionStable),
@@ -12566,6 +12473,7 @@ function FrameworkOsShellInner({
           iconId: windowIconsById[instance.id] ?? kind.iconId,
           title: wireLabel(windowTitlesById[instance.id] ?? instance.title),
           fill: true,
+          controls: timeTravelIndicator,
           measures: chrome.measures,
           measuresFolded: measuresFoldedFor(instance.id, instance.windowKindId),
           engagement: windowEngagementToSpec(resolvedEngagement, onActionStable),
@@ -12601,6 +12509,7 @@ function FrameworkOsShellInner({
     });
     return [...baseWindows, ...extraWindows];
   }, [
+    timeTravelIndicator,
     actionPaneExpandedByWindowId,
     actionPaneFoldedByWindowId,
     actionPaneStagedArgsByKey,
@@ -12672,7 +12581,7 @@ function FrameworkOsShellInner({
   const handleActiveWindowChange = useCallback(
     (value: string | null) => {
       dispatch({ type: "SET_ACTIVE_WINDOW_ID", value });
-      if (value) noteShellCommand("shell.windowActivate", shellLabel("ui.shellCommand.windowActivate"), { windowId: value });
+      if (value) noteShellCommand("shell.windowActivate", shellLabelTextV1("ui.shellCommand.windowActivate"), { windowId: value });
     },
     [noteShellCommand],
   );
@@ -12704,8 +12613,8 @@ function FrameworkOsShellInner({
         layoutChangeSettleTimeoutRef.current = null;
         const finalClassification = layoutChangeClassificationRef.current;
         layoutChangeClassificationRef.current = null;
-        if (finalClassification === "resize") noteShellCommand("shell.windowResize", shellLabel("ui.shellCommand.windowResize"));
-        else if (finalClassification === "rearrange") noteShellCommand("shell.windowMove", shellLabel("ui.shellCommand.windowMove"));
+        if (finalClassification === "resize") noteShellCommand("shell.windowResize", shellLabelTextV1("ui.shellCommand.windowResize"));
+        else if (finalClassification === "rearrange") noteShellCommand("shell.windowMove", shellLabelTextV1("ui.shellCommand.windowMove"));
       }, LAYOUT_CHANGE_SETTLE_MS);
     },
     [noteShellCommand],
@@ -12783,7 +12692,7 @@ function FrameworkOsShellInner({
               onLayoutChange={handleModeLayoutChange}
               onTemplateDrop={mobile ? undefined : handleTemplateDrop}
               onWindowClose={(windowId) => {
-                const closeNoted = noteShellCommand("shell.windowClose", shellLabel("ui.shellCommand.windowClose"), { windowId });
+                const closeNoted = noteShellCommand("shell.windowClose", shellLabelTextV1("ui.shellCommand.windowClose"), { windowId });
                 // 🪟️ A spawned program now owns one window per declared kind, so closing ONE of them
                 // closes that window; the instance is retired when its LAST window goes. Before this,
                 // a spawned app was a single window whose id was the instance id itself.
@@ -12861,7 +12770,7 @@ function FrameworkOsShellInner({
                   },
                 });
                 dispatch({ type: "SET_ACTIVE_WINDOW_ID", value: instanceId });
-                noteShellCommand("shell.windowOpenInNewWindow", shellLabel("ui.shellCommand.windowOpenInNewWindow"), {
+                noteShellCommand("shell.windowOpenInNewWindow", shellLabelTextV1("ui.shellCommand.windowOpenInNewWindow"), {
                   windowId,
                   windowKindId,
                   instanceId,
@@ -12876,13 +12785,6 @@ function FrameworkOsShellInner({
   }, [initialExampleReady, activeWindowId, appLabelsOverlay, effectiveModeLayout, error, sessionFault, handleActiveWindowChange, handleModeLayoutChange, handleTemplateDrop, loadedPlugins, mobile, modeWindows, navigateShellUri, noteShellCommand, onAction, panel, pluginSupervisorById, primaryPluginId, refreshUi, reloadPlugin, session, notFoundPath, hostMode, uiLocale, uiTerminology, updateSpacePanel, dispatch, uninstallPlugin]);
 
   const footerItems = useMemo((): NavbarItem[] => {
-    // 🏛️ Mit Bestand Aggregator partner credits: left "Ein Projekt von LUH und UdK", right "Gefördert durch Zukunft Bau".
-    // A single middle flex-1 fill pushes the funding credit to the trailing edge; fixed `w-huge` gaps keep each credit
-    // off the exact corner pixel that floating corner panels also anchor to (a second flex-1 would center the funding
-    // credit under the Command overlay; `w-double` reads as flush against the toggle group).
-    // 📱️ The three tab bars have no anchor on mobile (all anchors merge into the mobile panel) — only the credits stay.
-    // 🗜️ A tablet carries the dock anchors but not the desktop footer's labelled width: every chip goes icon-only
-    // (its name stays its accessible name) so the trailing tabs are not clipped out of reach.
     const compactFooter = uiDevice === "tablet";
     const items: NavbarItem[] = mobile
       ? []
@@ -12890,21 +12792,16 @@ function FrameworkOsShellInner({
           { key: "bottomLeftPanelTabs", content: <PanelChromeTabBar anchor="bottom-left" compactLabels={compactFooter} {...buildPanelSelectionProps("bottom-left")} /> },
           { key: "bottomMiddlePanelTabs", centered: true, content: <PanelChromeTabBar anchor="bottom-middle" compactLabels={compactFooter} {...buildPanelSelectionProps("bottom-middle")} /> },
         ];
-    if (brand?.id && (ENTWERFEN_MIT_BESTAND_BRAND_IDS as readonly string[]).includes(brand.id)) {
-      items.push(
-        { key: "footerProjectOfGap", className: "w-huge", content: null },
-        aProjectOfLuhUdkFooterItem("aProjectOfLuhUdk", uiLocale, mobile),
-        navbarFillItem("footerLeadingFill"),
-        fundedByZukunftBauFooterItem("fundedByZukunftBau", uiLocale, mobile),
-        { key: "footerFundedByGap", className: "w-huge", content: null },
-      );
-    } else {
-      items.push(navbarFillItem("footerLeadingFill"));
-    }
+    const credits = brand?.footerItems ?? [];
+    if (credits.some((item) => item.placement === "leading")) items.push({ key: "footerLeadingGap", className: "w-huge", content: null });
+    for (const item of credits.filter((item) => item.placement === "leading")) items.push(shellFooterNavbarItem(item, uiLocale, mobile));
+    items.push(navbarFillItem("footerLeadingFill"));
+    for (const item of credits.filter((item) => item.placement === "trailing")) items.push(shellFooterNavbarItem(item, uiLocale, mobile));
+    if (credits.some((item) => item.placement === "trailing")) items.push({ key: "footerTrailingGap", className: "w-huge", content: null });
     // 👥️ ticket §C0/§5 lane 4-F — `#s-presence-peers`, right-aligned in the footer, mirroring the wgpu
     // shell's own `render_presence_bar` placement (`🐚️Shell/🎯️targets/🧊️wgpu/🦀️.rs`) rather than hiding behind a
     // panel tab click: presence is ambient chrome, always visible while a document is open.
-    if (!mobile && !(compactFooter && presencePeers.length === 0)) items.push({ key: "presenceBar", content: <PresenceBar id="s-presence-peers" peers={presencePeers} /> });
+    if (!mobile && !(compactFooter && presencePeers.length === 0)) items.push({ key: "presenceBar", content: <PresenceBar id="s-presence-peers" peers={timeTravelPeers.peers} /> });
     // 📶️ The hub link itself, beside presence and on every device — a human with several documents
     // open used to have to open each one's own sync popover to learn the hub was unreachable
     // (`📓️g5-ux-completeness-audit.md` §5). Mobile keeps it too: it is one short badge, and a phone is
@@ -12916,7 +12813,7 @@ function FrameworkOsShellInner({
     items.push({ key: "hubConnection", content: <HubConnectionIndicator statuses={hubConnectionStatuses} session={hubSessionPresence} link={hubLink} onSignIn={openHubWorkspace} /> });
     if (!mobile) items.push({ key: "bottomRightPanelTabs", content: <PanelChromeTabBar anchor="bottom-right" compactLabels={compactFooter} {...buildPanelSelectionProps("bottom-right")} /> });
     return items;
-  }, [agentBridge.pendingApprovals, agentBridge.presence, agentBridge.status, agentBridge.versionMismatch, brand?.id, buildPanelSelectionProps, hubConnectionStatuses, hubLink, hubSessionPresence, mobile, openHubWorkspace, presencePeers, revealAgentApproval, uiDevice, uiLocale]);
+  }, [agentBridge.pendingApprovals, agentBridge.presence, agentBridge.status, agentBridge.versionMismatch, brand?.footerItems, buildPanelSelectionProps, hubConnectionStatuses, hubLink, hubSessionPresence, mobile, openHubWorkspace, presencePeers, revealAgentApproval, timeTravelPeers.peers, uiDevice, uiLocale]);
 
   const buildPanelProps = useCallback(
     (anchor: Anchor) => ({
@@ -13157,6 +13054,7 @@ function FrameworkOsShellInner({
     <AppKeybindingsContext.Provider value={keysByActionId}>
     <AppCatalogueContext.Provider value={appCatalogue}>
     <UiKeybindingsProvider bindings={controlKeybindings}>
+    <UiPresenceOverlayContext.Provider value={timeTravelPeers.overlay}>
     <PluginSurfaceActionsContext.Provider value={requestContextMenu}>
     <ShellContextMenuFallbackContext.Provider value={buildShellContextMenuItems}>
     <ShellFaultBoundary boundaryId="shell-root" fallbackLabel={shellLabel("ui.common.renderError")}>
@@ -13245,6 +13143,30 @@ function FrameworkOsShellInner({
                 inviteCapabilityStatus={spaceAdministration.inviteCapabilityStatus}
                 onIntent={dispatchSpaceAdministrationIntent}
               />
+            </div>
+          ) : null}
+          {/* ⏪️📌️ The persistent bottom bands: a live history-edit session of the focused program (whichever panel is
+           * open) and the running or finished hub Check In of the current document, each with its own real controls. */}
+          {focusedTimeTravel !== null || currentCheckIn !== undefined ? (
+            <div className="pointer-events-none absolute bottom-double left-1/2 z-40 flex max-w-[90vw] -translate-x-1/2 flex-col items-center gap-single">
+              {focusedTimeTravel === null || focusedApp === null ? null : <TimeTravelBand session={focusedTimeTravel} terminology={uiTerminology} locale={uiLocale} controllerId={focusedApp.controllerId} onAction={onActionStable} />}
+              {currentCheckIn === undefined || currentDocumentRuntimeKey === null ? null : (
+                <div role="status" aria-live="polite" data-semio-checkin-band={currentCheckIn.status.phase} className="pointer-events-auto flex flex-wrap items-center gap-single rounded-sm border border-normal bg-menu px-double py-single text-sm shadow-sm">
+                  <span id="s-checkin-status">{checkinStatusText(currentCheckIn.status, uiLocale)}</span>
+                  {isTerminalDocumentCheckInPhaseV1(currentCheckIn.status.phase) ? (
+                    <button type="button" id="s-checkin-dismiss" className="underline" onClick={() => dismissHubCheckIn(currentDocumentRuntimeKey)}>
+                      {shellLabel("ui.common.close")}
+                    </button>
+                  ) : (
+                    <>
+                      {currentCheckIn.status.progress.totalUnits > 0 ? <progress value={currentCheckIn.status.progress.completedUnits} max={currentCheckIn.status.progress.totalUnits} aria-label={checkinStatusText(currentCheckIn.status, uiLocale)} /> : null}
+                      <button type="button" id="s-checkin-abort" className="underline" onClick={() => cancelHubCheckIn(currentDocumentRuntimeKey)}>
+                        {checkinAbortText(uiLocale)}
+                      </button>
+                    </>
+                  )}
+                </div>
+              )}
             </div>
           ) : null}
           {routeAdmissionNotice === null ? null : (
@@ -13405,7 +13327,7 @@ function FrameworkOsShellInner({
               <OwnedShellDialog
                 owner={overlayDialog}
                 dialog={resolved}
-                renderField={(def, value, onChange, field) => renderStagedArgControl(def, value, onChange, false, field)}
+                renderField={(def, value, onChange, field) => renderStagedArgControl(def, value, onChange, false, field, { selection: (domain) => interactionSelectionIdsV1(localInteraction.get(), domain) })}
                 notice={creationCatalog === null ? undefined : <ArtifactCreationCatalogNotice status={creationCatalog} locale={uiLocale} hasChoices={creationCatalog.kinds.length > 0} />}
                 choiceRevisions={choiceRevisions}
                 isCurrent={isCurrentDialogOrigin}
@@ -13419,6 +13341,7 @@ function FrameworkOsShellInner({
     </ShellFaultBoundary>
     </ShellContextMenuFallbackContext.Provider>
     </PluginSurfaceActionsContext.Provider>
+    </UiPresenceOverlayContext.Provider>
     </UiKeybindingsProvider>
     </AppCatalogueContext.Provider>
     </AppKeybindingsContext.Provider>

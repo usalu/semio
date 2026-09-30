@@ -1,15 +1,16 @@
 // #region 🧲️Header
 /** 🧠️ `@semio-tech/cad-js/spatial-kernel/semio` — first-party `SpatialKernel` backed by the
  * Rust `BrepKernel` (`Brep`, `semio-s-plugin-stdio`'s `🧊️brep` subset) over the existing
- * `flow_core` wasm JS→Rust bridge (`invokeBrep`/`brep_invoke`, see
- * `🧰️framework/🔨️modules/🧊️3d/🟦️.ts` and `🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/📐️brep-geometry/🦀️.rs`).
+ * explicit Semio session wasm JS→Rust bridge (`invokeBrep`/`brep_invoke`, see
+ * `🌊️session/🟦️.ts` and `🌊️session/🦀️.rs`).
  * THE production CAD runtime kernel (`id = "semio-brep"`); `🧱️brepjs` (OpenCascade) stays only as
  * the vitest differential oracle. Pure preview math lives in the kernel-agnostic `🧮️preview/🟦️.ts`,
  * which this kernel extends. See `🎫️tickets/…/BREP-KERNEL-DEPENDENCY-FREE-RUNTIME/📓️w4a-spatial-kernel-first-party.md`. */
 // #endregion 🧲️Header
 
 // #region 🔌️Adapters
-import { invokeBrep, kernelGeometry, type EdgeCurve, type EdgeGroup, type FaceGroup, type MeshTransfer, type Vec3, solidRef } from "@semio-tech/s-3d-js";
+import { SemioGeometrySession } from "./🌊️session/🟦️.ts";
+import { kernelGeometry, type EdgeCurve, type EdgeGroup, type FaceGroup, type MeshTransfer, type Vec3, solidRef } from "@semio-tech/s-3d-js";
 import { Model } from "../📐️geometry/🟦️.ts";
 import { applyModelDiff, isEmptyModelDiff, type ModelDiff, type SpatialKernel } from "../🗺️spatial/🟦️.ts";
 import {
@@ -150,7 +151,7 @@ function wirePolylinePoints(model: Model, wireId: WireRef, segments = 24): Vec3[
 }
 
 /** 🧊️ Rust `GeometryHandle` for a wire's polyline approximation. */
-async function polylineWireHandle(model: Model, wireId: WireRef, segments = 24): Promise<string | null> {
+async function polylineWireHandle(invokeBrep: SemioGeometrySession["invoke"], model: Model, wireId: WireRef, segments = 24): Promise<string | null> {
   const points = wirePolylinePoints(model, wireId, segments);
   if (points.length < 2) return null;
   const { handle } = await invokeBrep<{ readonly handle: string }>("polylineWire", { points });
@@ -158,7 +159,7 @@ async function polylineWireHandle(model: Model, wireId: WireRef, segments = 24):
 }
 
 /** 🏗️ Rust `GeometryHandle` for one Rust primitive matching a `SolidPrimitive` record, placed to match the record's world transform. */
-async function primitiveHandle(solid: SolidPrimitive): Promise<string> {
+async function primitiveHandle(invokeBrep: SemioGeometrySession["invoke"], solid: SolidPrimitive): Promise<string> {
   if (solid.kind === "sphere") {
     const { handle } = await invokeBrep<{ readonly handle: string }>("sphere", { radius: solid.radius });
     const t = await invokeBrep<{ readonly handle: string }>("translate", { shape: handle, offset: solid.center });
@@ -195,7 +196,7 @@ async function primitiveHandle(solid: SolidPrimitive): Promise<string> {
 }
 
 /** 🧵️ Assembles a Rust solid handle from a `Model` shell's planar faces (`sewFaces` + `healSolid`) — best-effort topology reconstruction for shells not covered by `primitiveHandle` (e.g. edited/extruded solids). Non-planar faces are dropped from the sew set (their wire is still polyline-approximated). */
-async function shellSolidHandle(model: Model, cell: SolidRecord): Promise<string | null> {
+async function shellSolidHandle(invokeBrep: SemioGeometrySession["invoke"], model: Model, cell: SolidRecord): Promise<string | null> {
   const faceHandles: string[] = [];
   for (const shellId of cell.shellIds) {
     const shell = geom(model).shells[String(shellId)];
@@ -204,7 +205,7 @@ async function shellSolidHandle(model: Model, cell: SolidRecord): Promise<string
       const face = geom(model).faces[String(faceId)];
       const wireId = face?.wireIds[0];
       if (!face || !wireId) continue;
-      const wireHandle = await polylineWireHandle(model, wireId);
+      const wireHandle = await polylineWireHandle(invokeBrep, model, wireId);
       if (!wireHandle) continue;
       const { handle } = await invokeBrep<{ readonly handle: string }>("planarFaceFromWire", { wire: wireHandle });
       faceHandles.push(handle);
@@ -219,6 +220,9 @@ async function shellSolidHandle(model: Model, cell: SolidRecord): Promise<string
 
 // #region 🧠️SemioBrepEngine
 class SemioBrepEngine {
+  async close(): Promise<void> { await this.session.close(); this.resetDerivedPipeline(); }
+  private readonly session = new SemioGeometrySession();
+  private readonly invokeBrep = this.session.invoke.bind(this.session);
   private seq = 0;
   private readonly solids = new Map<SolidRef, string>();
   private readonly faceNormalMaps = new Map<SolidRef, Map<string, FaceRef>>();
@@ -253,13 +257,13 @@ class SemioBrepEngine {
     const prefix = `${String(solid)}:`;
     for (const key of [...this.meshCache.keys()]) if (key.startsWith(prefix)) this.meshCache.delete(key);
     const handle = this.solids.get(solid);
-    if (handle) void invokeBrep("dispose", { handle });
+    if (handle) void this.invokeBrep("dispose", { handle });
     this.solids.delete(solid);
     this.faceNormalMaps.delete(solid);
   }
 
   async createBoxFromCorners(input: { cornerA: Vec3; cornerB: Vec3; height: number }): Promise<SolidRef> {
-    const handle = await primitiveHandle({ kind: "box", cornerA: input.cornerA, cornerB: input.cornerB, height: input.height });
+    const handle = await primitiveHandle(this.invokeBrep, { kind: "box", cornerA: input.cornerA, cornerB: input.cornerB, height: input.height });
     const ref = this.nextRef("box");
     this.solids.set(ref, handle);
     return ref;
@@ -268,7 +272,7 @@ class SemioBrepEngine {
   async createBoxFromCornersDiff(input: { cornerA: Vec3; cornerB: Vec3; height: number }): Promise<{ readonly diff: ModelDiff; readonly solid: SolidRef }> {
     const solid = this.nextRef("box");
     const diff = boxModelDiff(input, solid);
-    const handle = await primitiveHandle({ kind: "box", cornerA: input.cornerA, cornerB: input.cornerB, height: input.height });
+    const handle = await primitiveHandle(this.invokeBrep, { kind: "box", cornerA: input.cornerA, cornerB: input.cornerB, height: input.height });
     this.solids.set(solid, handle);
     this.faceNormalMaps.set(solid, boxFaceNormalMap(diff));
     return { diff, solid };
@@ -277,7 +281,7 @@ class SemioBrepEngine {
   async volume(solid: SolidRef): Promise<number> {
     const handle = this.solids.get(solid);
     if (!handle) return 0;
-    const { value } = await invokeBrep<{ readonly value: number }>("volume", { shape: handle });
+    const { value } = await this.invokeBrep<{ readonly value: number }>("volume", { shape: handle });
     return value;
   }
 
@@ -288,7 +292,7 @@ class SemioBrepEngine {
     const key = this.meshCacheKey(solid, tolerance, model);
     const cached = this.meshCache.get(key);
     if (cached) return cached;
-    const raw = await invokeBrep<RawMeshTransfer>("tessellate", { shape: handle, tolerance });
+    const raw = await this.invokeBrep<RawMeshTransfer>("tessellate", { shape: handle, tolerance });
     const transfer = meshTransferFromInvoke(raw, this.faceNormalMaps.get(solid));
     this.meshCache.set(key, transfer);
     return transfer;
@@ -299,11 +303,11 @@ class SemioBrepEngine {
     if (cached) return cached;
     if (cell.shellIds.length === 0) {
       const primitive = (cell as SolidRecord & { solid?: SolidPrimitive }).solid;
-      const handle = await primitiveHandle(primitive ?? { kind: "box", cornerA: [0, 0, 0], cornerB: [1, 1, 0], height: 1 });
+      const handle = await primitiveHandle(this.invokeBrep, primitive ?? { kind: "box", cornerA: [0, 0, 0], cornerB: [1, 1, 0], height: 1 });
       this.solids.set(cell.id, handle);
       return handle;
     }
-    const handle = await shellSolidHandle(model, cell);
+    const handle = await shellSolidHandle(this.invokeBrep, model, cell);
     if (handle) this.solids.set(cell.id, handle);
     return handle;
   }
@@ -332,10 +336,10 @@ class SemioBrepEngine {
   }
 
   async extrudeWire(input: { wireId: string; distance: number; direction: Vec3; model: Model }): Promise<SolidRef> {
-    const wireHandle = await polylineWireHandle(input.model, input.wireId as WireRef);
+    const wireHandle = await polylineWireHandle(this.invokeBrep, input.model, input.wireId as WireRef);
     if (!wireHandle) throw new Error(`Cannot extrude wire ${input.wireId}`);
     const vector = [input.direction[0] * input.distance, input.direction[1] * input.distance, input.direction[2] * input.distance] as Vec3;
-    const { handle } = await invokeBrep<{ readonly handle: string }>("extrudeWire", { wire: wireHandle, vector });
+    const { handle } = await this.invokeBrep<{ readonly handle: string }>("extrudeWire", { wire: wireHandle, vector });
     const ref = this.nextRef("extrude");
     this.solids.set(ref, handle);
     return ref;
@@ -352,10 +356,10 @@ class SemioBrepEngine {
     const face = geom(input.model).faces[faceId];
     const wireId = face?.wireIds[0];
     if (!wireId) return { diff: {} };
-    const wireHandle = await polylineWireHandle(input.model, wireId as WireRef);
+    const wireHandle = await polylineWireHandle(this.invokeBrep, input.model, wireId as WireRef);
     if (!wireHandle) return { diff: {} };
-    const { handle: planar } = await invokeBrep<{ readonly handle: string }>("planarFaceFromWire", { wire: wireHandle });
-    const { handle: offset } = await invokeBrep<{ readonly handle: string }>("offsetFace", { face: planar, distance: input.distance });
+    const { handle: planar } = await this.invokeBrep<{ readonly handle: string }>("planarFaceFromWire", { wire: wireHandle });
+    const { handle: offset } = await this.invokeBrep<{ readonly handle: string }>("offsetFace", { face: planar, distance: input.distance });
     const ref = this.nextRef("offset");
     this.solids.set(ref, offset);
     return { diff: { solids: { added: [{ id: ref, shellIds: [] }] } } };
@@ -388,10 +392,10 @@ class SemioBrepEngine {
     const face = geom(model).faces[String(f)];
     const wireId = face?.wireIds[0];
     if (!wireId) return 0;
-    const wireHandle = await polylineWireHandle(model, wireId as WireRef);
+    const wireHandle = await polylineWireHandle(this.invokeBrep, model, wireId as WireRef);
     if (!wireHandle) return 0;
-    const { handle: planar } = await invokeBrep<{ readonly handle: string }>("planarFaceFromWire", { wire: wireHandle });
-    const { value } = await invokeBrep<{ readonly value: number }>("area", { shape: planar });
+    const { handle: planar } = await this.invokeBrep<{ readonly handle: string }>("planarFaceFromWire", { wire: wireHandle });
+    const { value } = await this.invokeBrep<{ readonly value: number }>("area", { shape: planar });
     return value;
   }
 
@@ -443,7 +447,7 @@ class SemioBrepEngine {
     if (handles.length === 0) return null;
     let result = handles[0]!;
     for (const h of handles.slice(1)) {
-      const { handle } = await invokeBrep<{ readonly handle: string }>("fuse", { a: result, b: h });
+      const { handle } = await this.invokeBrep<{ readonly handle: string }>("fuse", { a: result, b: h });
       result = handle;
     }
     return result;
@@ -523,7 +527,7 @@ class SemioBrepEngine {
       const radius = typeof params.radius === "number" ? params.radius : radiusPoint ? vec3Distance(center, radiusPoint) : 1;
       const solid: SolidPrimitive = { kind: "sphere", center, radius };
       const c = { id: nextId("c") as SolidRef, shellIds: [], solid };
-      this.solids.set(c.id, await primitiveHandle(solid));
+      this.solids.set(c.id, await primitiveHandle(this.invokeBrep, solid));
       return { diff: { solids: { added: [c] } } };
     }
     if (commandId === "solid.cylinder") {
@@ -536,7 +540,7 @@ class SemioBrepEngine {
       const axis = height > 1e-9 ? vec3Normalize(axisVec) : ([0, 0, 1] as Vec3);
       const solid: SolidPrimitive = { kind: "cylinder", base, axis, radius, height: height > 1e-9 ? height : 1e-6 };
       const c = { id: nextId("c") as SolidRef, shellIds: [], solid };
-      this.solids.set(c.id, await primitiveHandle(solid));
+      this.solids.set(c.id, await primitiveHandle(this.invokeBrep, solid));
       return { diff: { solids: { added: [c] } } };
     }
     if (commandId === "solid.cone") {
@@ -549,7 +553,7 @@ class SemioBrepEngine {
       const axis = height > 1e-9 ? vec3Normalize(axisVec) : ([0, 0, 1] as Vec3);
       const solid: SolidPrimitive = { kind: "cone", base, axis, radius, height: height > 1e-9 ? height : 1e-6, radiusTop: 0 };
       const c = { id: nextId("c") as SolidRef, shellIds: [], solid };
-      this.solids.set(c.id, await primitiveHandle(solid));
+      this.solids.set(c.id, await primitiveHandle(this.invokeBrep, solid));
       return { diff: { solids: { added: [c] } } };
     }
     const solidRefsFromSelection = (model: Model, raw: unknown): SolidRef[] => {
@@ -584,7 +588,7 @@ class SemioBrepEngine {
       if (!baseHandle || !toolHandles.length) return { diff: {} };
       let result = baseHandle;
       for (const tool of toolHandles) {
-        const { handle } = await invokeBrep<{ readonly handle: string }>("cut", { a: result, b: tool });
+        const { handle } = await this.invokeBrep<{ readonly handle: string }>("cut", { a: result, b: tool });
         result = handle;
       }
       const ref = this.nextRef("diff");
@@ -600,7 +604,7 @@ class SemioBrepEngine {
       const firstHandle = await this.fuseShapes(await this.validSolidsFromRefs(model, firstRefs));
       const secondHandle = await this.fuseShapes(await this.validSolidsFromRefs(model, secondRefs));
       if (!firstHandle || !secondHandle) return { diff: {} };
-      const { handle } = await invokeBrep<{ readonly handle: string }>("intersect", { a: firstHandle, b: secondHandle });
+      const { handle } = await this.invokeBrep<{ readonly handle: string }>("intersect", { a: firstHandle, b: secondHandle });
       const ref = this.nextRef("isect");
       this.solids.set(ref, handle);
       return { diff: { solids: { added: [{ id: ref, shellIds: [] }], removed: [...firstRefs, ...secondRefs] } } };
@@ -649,12 +653,12 @@ class SemioBrepEngine {
       }
       const profiles: string[] = [];
       for (const wireId of wireIds) {
-        const handle = await polylineWireHandle(model, wireId as WireRef);
+        const handle = await polylineWireHandle(this.invokeBrep, model, wireId as WireRef);
         if (!handle) return { diff: {} };
-        const { handle: face } = await invokeBrep<{ readonly handle: string }>("planarFaceFromWire", { wire: handle });
+        const { handle: face } = await this.invokeBrep<{ readonly handle: string }>("planarFaceFromWire", { wire: handle });
         profiles.push(face);
       }
-      await invokeBrep<{ readonly handle: string }>("loft", { profiles, smooth: true });
+      await this.invokeBrep<{ readonly handle: string }>("loft", { profiles, smooth: true });
       const f: FaceRecord = { id: nextId("f") as FaceRef, wireIds: wireIds as WireRef[] };
       return { diff: { faces: { added: [f] } } };
     }
@@ -666,10 +670,10 @@ class SemioBrepEngine {
       if (!railId) return { diff: {} };
       const picks = Array.isArray(params.sections) ? (params.sections as readonly { readonly kind?: string; readonly id?: string }[]) : [];
       const sectionId = picks.find((p) => p.kind === "wire" && p.id)?.id;
-      const railHandle = await polylineWireHandle(model, railId as WireRef);
-      const profileHandle = sectionId ? await polylineWireHandle(model, sectionId as WireRef) : null;
+      const railHandle = await polylineWireHandle(this.invokeBrep, model, railId as WireRef);
+      const profileHandle = sectionId ? await polylineWireHandle(this.invokeBrep, model, sectionId as WireRef) : null;
       if (!railHandle || !profileHandle) return { diff: {} };
-      await invokeBrep<{ readonly handle: string }>("sweep", { profile: profileHandle, path: railHandle });
+      await this.invokeBrep<{ readonly handle: string }>("sweep", { profile: profileHandle, path: railHandle });
       const boundaryWireIds = sectionId ? [railId, sectionId] : [railId];
       const f: FaceRecord = { id: nextId("f") as FaceRef, wireIds: boundaryWireIds as WireRef[] };
       return { diff: { faces: { added: [f] } } };
@@ -681,28 +685,29 @@ class SemioBrepEngine {
     await this.syncSolidsFromModel(model);
     const handles = [...this.solids.values()];
     if (handles.length === 0) return "";
-    const { value } = await invokeBrep<{ readonly value: string }>("exportStep", { shapes: handles });
+    const { value } = await this.invokeBrep<{ readonly value: string }>("exportStep", { shapes: handles });
     return value;
   }
 
   async importStepHandles(stepText: string): Promise<readonly string[]> {
-    const { handles } = await invokeBrep<{ readonly handles: readonly string[] }>("importStep", { data: stepText });
+    const { handles } = await this.invokeBrep<{ readonly handles: readonly string[] }>("importStep", { data: stepText });
     return handles;
   }
 
   async deconstruct(solid: SolidRef): Promise<RawTopology | null> {
     const handle = this.solids.get(solid);
     if (!handle) return null;
-    return invokeBrep<RawTopology>("deconstruct", { shape: handle });
+    return this.invokeBrep<RawTopology>("deconstruct", { shape: handle });
   }
 }
 // #endregion 🧠️SemioBrepEngine
 
 // #region 🔌️SemioBrepKernel
 /** 🧠️ THE production CAD `SpatialKernel`: OCCT-backed methods route through the Rust
- * `BrepKernel` via `invokeBrep`; every preview-math method is inherited unchanged from
+ * `BrepKernel` via `this.invokeBrep`; every preview-math method is inherited unchanged from
  * `PreciseSpatialKernelMath`. */
 export class SemioBrepKernel extends PreciseSpatialKernelMath implements SpatialKernel {
+  async close(): Promise<void> { await this.engine.close(); }
   readonly id = "semio-brep";
   readonly operations: readonly string[] = ["solid.createBox", "wire.extrudeToSolid", "face.offset", "entity.tessellate", "measure.distance", "measure.area", "measure.volume"];
   private readonly engine = new SemioBrepEngine();
@@ -770,7 +775,6 @@ export class SemioBrepKernel extends PreciseSpatialKernelMath implements Spatial
   }
 }
 
-export const semioBrepKernel = new SemioBrepKernel();
 // #endregion 🔌️SemioBrepKernel
 
 // #region 🧪️Tests

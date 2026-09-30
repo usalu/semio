@@ -1,8 +1,14 @@
-/** 🦠️ reorder-primitives: cohesive atomic mesh mutation. */
-import type { GltfJson, GltfSnapshot, GltfPrimitive, GltfMorphTarget } from '../../📸️snapshot/🟦️.ts';
-import { run, reject, positionIn, itemIndex, permutation, moveItem, type GltfLeafResult, type GltfMutationRejection } from './🟦️';
-export const GltfReorderPrimitivesDescriptor = { id: 's.stdio.gltf.mutation.reorder-primitives.v1', version: 1, kind: 'reorder', touchedPaths: ["document/meshes/*/primitives"], referencePolicy: 'accepts only a complete mesh-local primitive permutation' } as const;
-export interface GltfReorderPrimitivesPayload { mesh: number; order: number[] }
-export type GltfReorderPrimitivesResult = GltfLeafResult;
-export const validateGltfReorderPrimitives = (payload: GltfReorderPrimitivesPayload, base: GltfSnapshot): GltfMutationRejection | undefined => { const mesh = itemIndex(payload.mesh, base.document.meshes.length, 'document/meshes'); if (mesh) return mesh; const order = permutation(payload.order, base.document.meshes[payload.mesh]!.primitives.length, `document/meshes/${payload.mesh}/primitives`); if (order) return order; if (payload.order.every((value, index) => value === index)) return reject('gltf.mutation.no-observable-change', 'document/meshes/primitives', 'reorder must change order'); return undefined; };
-export const applyGltfReorderPrimitives = (base: GltfSnapshot, payload: GltfReorderPrimitivesPayload): GltfReorderPrimitivesResult => run(base, payload, validateGltfReorderPrimitives, (next, payload) => { const primitives = next.document.meshes[payload.mesh]!.primitives; next.document.meshes[payload.mesh]!.primitives = payload.order.map(index => primitives[index]!); }, GltfReorderPrimitivesDescriptor.touchedPaths);
+/** 🔀️ `reorder-primitives` wire twin: the flat `Apply` payload `GltfReorderPrimitivesPayload` and the phase wire `ReorderPrimitivesMutation`, exactly as `./🦀️.rs` writes them.
+ * @see ./🧬️schema/🔣️.json */
+import { gltfWireArray, gltfWireIndex, gltfWireObject, gltfWireRequired } from "../../../📸️snapshot/🟦️.ts";
+import { type GltfDiff, type GltfPhase, gltfWirePhase, parseGltfDiff } from "../../../🔺️diff/🟦️.ts";
+
+export interface GltfReorderPrimitivesPayload {
+  mesh: number;
+  order: number[];
+}
+
+export type ReorderPrimitivesMutation = GltfPhase<GltfReorderPrimitivesPayload, GltfDiff>;
+
+export const parseGltfReorderPrimitivesPayload = gltfWireObject<GltfReorderPrimitivesPayload>({ mesh: gltfWireRequired(gltfWireIndex), order: gltfWireRequired(gltfWireArray(gltfWireIndex)) });
+export const parseReorderPrimitivesMutation = gltfWirePhase(parseGltfReorderPrimitivesPayload, parseGltfDiff);

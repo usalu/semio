@@ -1,0 +1,9 @@
+{
+  "mutation": "setCatalogEntry",
+  "key": "key",
+  "value": {
+    "num": 0,
+    "gen": 0,
+    "kind": "ref"
+  }
+}

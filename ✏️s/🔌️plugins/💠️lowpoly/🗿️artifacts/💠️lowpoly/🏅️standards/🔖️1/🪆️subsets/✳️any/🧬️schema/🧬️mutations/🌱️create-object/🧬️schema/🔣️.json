@@ -47,7 +47,19 @@
               ],
               "properties": {
                 "childId": {
-                  "type": "string"
+                  "type": "string",
+                  "x-semio-ui": {
+                    "widget": "text",
+                    "role": "value",
+                    "label": {
+                      "en": "Child ID",
+                      "de": "Kind-ID"
+                    },
+                    "description": {
+                      "en": "Id of the child slot in this document.",
+                      "de": "ID des Kind-Slots in diesem Dokument."
+                    }
+                  }
                 },
                 "target": {
                   "title": "ArtifactRef",
@@ -59,7 +71,19 @@
                   ],
                   "properties": {
                     "artifactId": {
-                      "type": "string"
+                      "type": "string",
+                      "x-semio-ui": {
+                        "widget": "text",
+                        "role": "value",
+                        "label": {
+                          "en": "Artifact ID",
+                          "de": "Artefakt-ID"
+                        },
+                        "description": {
+                          "en": "Document id of the child artifact.",
+                          "de": "Dokument-ID des Kind-Artefakts."
+                        }
+                      }
                     },
                     "dialect": {
                       "title": "ArtifactDialect",
@@ -72,21 +96,90 @@
                       ],
                       "properties": {
                         "artifactKind": {
-                          "type": "string"
+                          "type": "string",
+                          "x-semio-ui": {
+                            "widget": "text",
+                            "role": "value",
+                            "label": {
+                              "en": "Artifact Kind",
+                              "de": "Artefaktart"
+                            },
+                            "description": {
+                              "en": "Kind id of the artifact, e.g. s.stdio.semio.",
+                              "de": "Art-ID des Artefakts, z. B. s.stdio.semio."
+                            }
+                          }
                         },
                         "standard": {
-                          "type": "string"
+                          "type": "string",
+                          "x-semio-ui": {
+                            "widget": "text",
+                            "role": "value",
+                            "label": {
+                              "en": "Standard",
+                              "de": "Standard"
+                            },
+                            "description": {
+                              "en": "Standard version of the artifact kind.",
+                              "de": "Standardversion der Artefaktart."
+                            }
+                          }
                         },
                         "subset": {
-                          "type": "string"
+                          "type": "string",
+                          "x-semio-ui": {
+                            "widget": "text",
+                            "role": "value",
+                            "label": {
+                              "en": "Subset",
+                              "de": "Teilmenge"
+                            },
+                            "description": {
+                              "en": "Subset of the standard the artifact uses.",
+                              "de": "Vom Artefakt verwendete Teilmenge des Standards."
+                            }
+                          }
+                        }
+                      },
+                      "x-semio-ui": {
+                        "role": "value",
+                        "label": {
+                          "en": "Dialect",
+                          "de": "Dialekt"
+                        },
+                        "description": {
+                          "en": "Artifact kind, standard and subset of the child.",
+                          "de": "Artefaktart, Standard und Teilmenge des Kindes."
                         }
                       }
+                    }
+                  },
+                  "x-semio-ui": {
+                    "role": "value",
+                    "label": {
+                      "en": "Target",
+                      "de": "Ziel"
+                    },
+                    "description": {
+                      "en": "Artifact the mesh child points at.",
+                      "de": "Artefakt, auf das das Netz-Kind verweist."
                     }
                   }
                 }
               }
             }
-          ]
+          ],
+          "x-semio-ui": {
+            "role": "value",
+            "label": {
+              "en": "Mesh",
+              "de": "Netz"
+            },
+            "description": {
+              "en": "Owned mesh child of the object; empty for none.",
+              "de": "Eigenes Netz-Kind des Objekts; leer für keines."
+            }
+          }
         },
         "transform": {
           "title": "LowpolyTransform",
@@ -125,10 +218,34 @@
           }
         },
         "smoothShading": {
-          "type": "boolean"
+          "type": "boolean",
+          "x-semio-ui": {
+            "widget": "toggle",
+            "role": "value",
+            "label": {
+              "en": "Smooth Shading",
+              "de": "Glatte Schattierung"
+            },
+            "description": {
+              "en": "Interpolates normals across faces.",
+              "de": "Interpoliert Normalen über Flächen hinweg."
+            }
+          }
         },
         "meshContent": {
-          "type": "string"
+          "type": "string",
+          "x-semio-ui": {
+            "widget": "multiline",
+            "role": "value",
+            "label": {
+              "en": "Mesh Content",
+              "de": "Netzinhalt"
+            },
+            "description": {
+              "en": "Mesh content set together with the mesh child.",
+              "de": "Zusammen mit dem Netz-Kind gesetzter Netzinhalt."
+            }
+          }
         },
         "paintLayers": {
           "type": "array",
@@ -154,14 +271,48 @@
                 "type": "number"
               },
               "blendMode": {
-                "type": "string"
+                "type": "string",
+                "x-semio-ui": {
+                  "widget": "text",
+                  "role": "value",
+                  "label": {
+                    "en": "Blend Mode",
+                    "de": "Füllmethode"
+                  },
+                  "description": {
+                    "en": "How the layer combines with the layers below, e.g. normal or multiply.",
+                    "de": "Wie die Ebene mit den darunterliegenden Ebenen verrechnet wird, z. B. normal oder multiply."
+                  }
+                }
               },
               "pixels": {
                 "type": "string",
                 "contentEncoding": "base64"
               }
             }
+          },
+          "x-semio-ui": {
+            "role": "value",
+            "label": {
+              "en": "Paint Layers",
+              "de": "Malebenen"
+            },
+            "description": {
+              "en": "Paint layers from bottom to top.",
+              "de": "Malebenen von unten nach oben."
+            }
           }
+        }
+      },
+      "x-semio-ui": {
+        "role": "value",
+        "label": {
+          "en": "Object",
+          "de": "Objekt"
+        },
+        "description": {
+          "en": "The complete object record to add.",
+          "de": "Das vollständige hinzuzufügende Objekt."
         }
       }
     }

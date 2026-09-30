@@ -1,6 +1,8 @@
 syntax = "proto3";
 package semio.s.procedural.generation2d.snapshot;
 
+import "google/protobuf/struct.proto";
+
 // 🧬️ Generation2d snapshot schema — artifact-lane fields only.
 
 message Generation2dSnapshot {
@@ -27,7 +29,125 @@ message SynapseSpec {
   string to_port = 5;
 }
 message Widget {
-  string json = 1;
+  oneof kind {
+    NeuronWidget neuron = 1;
+    InputSliderWidget input_slider = 2;
+    InputNoteWidget input_note = 3;
+    InputImageWidget input_image = 4;
+    VariableWidget variable = 5;
+    OutputPreviewWidget output_preview = 6;
+    OutputActionWidget output_action = 7;
+    OutputExportWidget output_export = 8;
+    ClusterWidget cluster = 9;
+  }
+}
+message NeuronWidget {
+  string id = 1;
+  string neuron_kind = 2;
+  google.protobuf.Struct params = 3;
+  repeated string input_ports = 4;
+  repeated string output_ports = 5;
+  bool preview = 6;
+}
+message InputSliderWidget {
+  string id = 1;
+  string label = 2;
+  double value = 3;
+  double min = 4;
+  double max = 5;
+  double step = 6;
+}
+message InputNoteWidget {
+  string id = 1;
+  string text = 2;
+}
+message InputImageWidget {
+  string id = 1;
+  string src = 2;
+}
+message VariableWidget {
+  string id = 1;
+  string name = 2;
+  string schema = 3;
+}
+message OutputPreviewWidget {
+  string id = 1;
+  google.protobuf.Struct preview = 2;
+  repeated string expanded = 3;
+}
+message OutputActionWidget {
+  string id = 1;
+  string action = 2;
+}
+message OutputExportWidget {
+  string id = 1;
+  string format = 2;
+}
+message ClusterWidget {
+  string id = 1;
+  string name = 2;
+  FlowTree tree = 3;
+  FlowUi flow = 4;
+}
+message FlowTree {
+  repeated FlowNeuron neurons = 1;
+  repeated SynapseSpec synapses = 2;
+}
+message FlowNeuron {
+  string id = 1;
+  string kind = 2;
+  google.protobuf.Struct params = 3;
+  optional FlowTree tree = 4;
+}
+message FlowUi {
+  CameraJson camera = 1;
+  map<string, FlowNodeGui> nodes = 2;
+  repeated FlowPreviewGui previews = 3;
+}
+message FlowNodeGui {
+  WidgetLayout layout = 1;
+  NodeChrome chrome = 2;
+}
+message NodeChrome {
+  oneof kind {
+    PlainChrome plain = 1;
+    SliderChrome slider = 2;
+    NoteChrome note = 3;
+    ImageChrome image = 4;
+    VariableChrome variable = 5;
+  }
+}
+message PlainChrome {
+  bool preview = 1;
+}
+message SliderChrome {
+  string label = 1;
+  double min = 2;
+  double max = 3;
+  double step = 4;
+  double value = 5;
+}
+message NoteChrome {
+  string text = 1;
+}
+message ImageChrome {
+  string src = 1;
+}
+message VariableChrome {
+  string name = 1;
+  string schema = 2;
+}
+message FlowPreviewGui {
+  string id = 1;
+  optional FlowChannelRef source = 2;
+  string mode = 3;
+  google.protobuf.Struct preview = 4;
+  repeated string expanded = 5;
+  optional WidgetLayout layout = 6;
+}
+message FlowChannelRef {
+  string neuron = 1;
+  string channel = 2;
 }
 message FlowHostSnapshot {
   string schema = 1;
@@ -39,7 +159,7 @@ message FlowHostSnapshot {
 message FormGeneration {
   string id = 1;
   string name = 2;
-  string values_json = 3;
+  google.protobuf.Struct values = 3;
 }
 message GenerationPlayState {
   repeated FormGeneration generations = 1;

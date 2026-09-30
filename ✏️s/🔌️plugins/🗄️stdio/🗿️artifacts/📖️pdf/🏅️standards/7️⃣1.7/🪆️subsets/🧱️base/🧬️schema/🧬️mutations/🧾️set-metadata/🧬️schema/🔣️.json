@@ -4,8 +4,14 @@
   "title": "SetMetadata",
   "type": "object",
   "additionalProperties": false,
-  "required": [],
+  "required": [
+    "mutation"
+  ],
   "properties": {
+    "mutation": {
+      "const": "setMetadata",
+      "description": "Aggregate discriminator spliced in by PdfMutation; absent when the payload stands alone."
+    },
     "xmp": {
       "anyOf": [
         {
@@ -14,11 +20,14 @@
         {
           "type": "null"
         }
-      ]
-    },
-    "mutation": {
-      "const": "setMetadata",
-      "description": "Aggregate discriminator spliced in by PdfMutation; absent when the payload stands alone."
+      ],
+      "x-semio-ui": {
+        "widget": "multiline",
+        "label": {
+          "en": "XMP metadata",
+          "de": "XMP-Metadaten"
+        }
+      }
     }
   }
 }

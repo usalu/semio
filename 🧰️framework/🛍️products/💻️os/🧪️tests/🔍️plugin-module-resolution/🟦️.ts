@@ -7,7 +7,8 @@ import { describe, expect, it } from "vitest";
 import { createHash } from "node:crypto";
 import { readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
-import { decodeTrustedPluginModuleBundleV1, PLUGIN_MODULE_SOURCES_V1, trustedPluginModuleSourceOfEntryV1, validateTrustedPluginModuleIndexV1, type TrustedPluginModuleFileV1 } from "../../🔨️modules/🔌️plugin/📇️registry/🌎️hub-source/🧬️schema/🟦️.ts";
+import { PLUGIN_MODULE_SOURCES_V1 } from "../../🔨️modules/🔌️plugin/📇️registry/🌎️hub-source/🧬️schema/🟦️.ts";
+import { decodeTrustedPluginModuleBundleV1, trustedPluginModuleSourceOfEntryV1, validateTrustedPluginModuleIndexV1, type TrustedPluginModuleFileV1 } from "../../🔨️modules/🔌️plugin/📇️registry/📦️deployment/🧬️schema/🟦️.ts";
 import {
   hubCatalogClosureV1,
   hubCatalogOnlyPluginsV1,
@@ -22,7 +23,7 @@ import { semioSchemaAjvV1 } from "../🧬️schema-oracle/🟦️.ts";
 const here = (path: string) => JSON.parse(readFileSync(fileURLToPath(new URL(path, import.meta.url)), "utf8"));
 const fixture = here("../../🔨️modules/🔌️plugin/📇️registry/🌎️hub-source/🧫️fixtures/🔍️resolution/🔣️.json");
 const storeSchema = here("../../🔨️modules/🔌️plugin/📇️registry/🌎️hub-source/🧬️schema/🔣️.json");
-const hubSchema = here("../../../../../🌎️hub/🗿️artifact-authority/🔏️trusted-catalog/🧬️schema/🔣️.json");
+const hubSchema = here("../../🔨️modules/🔌️plugin/📇️registry/📦️deployment/🧬️schema/🔣️.json");
 const hexBytes = (value: string) => Uint8Array.from(value.match(/../gu) ?? [], (pair) => Number.parseInt(pair, 16));
 const ajv = semioSchemaAjvV1({ strict: false, allErrors: true }).addSchema({ ...hubSchema, $ref: undefined }).addSchema(storeSchema);
 const programIdOracle = ajv.getSchema(`${storeSchema.$id}#/$defs/HubProgramIdV1`)!;

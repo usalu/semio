@@ -5,15 +5,28 @@
   "type": "object",
   "additionalProperties": false,
   "required": [
-    "main_header"
+    "mutation",
+    "mainHeader"
   ],
   "properties": {
-    "main_header": {
-      "$ref": "#/$defs/AviMainHeader"
-    },
     "mutation": {
       "const": "setMainHeader",
       "description": "Aggregate discriminator spliced in by AviMutation; absent when the payload stands alone."
+    },
+    "mainHeader": {
+      "$ref": "#/$defs/AviMainHeader",
+      "x-semio-ui": {
+        "label": {
+          "en": "Main header",
+          "de": "Hauptheader"
+        },
+        "description": {
+          "en": "avih chunk",
+          "de": "avih-Chunk"
+        },
+        "group": "value",
+        "order": 10
+      }
     }
   },
   "$defs": {
@@ -36,52 +49,118 @@
         "microSecPerFrame": {
           "type": "integer",
           "minimum": 0,
-          "maximum": 4294967295
+          "maximum": 4294967295,
+          "x-semio-ui": {
+            "label": {
+              "en": "Frame duration",
+              "de": "Framedauer"
+            },
+            "unit": "µs"
+          }
         },
         "maxBytesPerSec": {
           "type": "integer",
           "minimum": 0,
-          "maximum": 4294967295
+          "maximum": 4294967295,
+          "x-semio-ui": {
+            "label": {
+              "en": "Maximum data rate",
+              "de": "Maximale Datenrate"
+            },
+            "unit": "B/s"
+          }
         },
         "paddingGranularity": {
           "type": "integer",
           "minimum": 0,
-          "maximum": 4294967295
+          "maximum": 4294967295,
+          "x-semio-ui": {
+            "label": {
+              "en": "Padding granularity",
+              "de": "Auffüllgranularität"
+            },
+            "unit": "B"
+          }
         },
         "flags": {
           "type": "integer",
           "minimum": 0,
-          "maximum": 4294967295
+          "maximum": 4294967295,
+          "x-semio-ui": {
+            "label": {
+              "en": "Flags",
+              "de": "Flags"
+            }
+          }
         },
         "totalFrames": {
           "type": "integer",
           "minimum": 0,
-          "maximum": 4294967295
+          "maximum": 4294967295,
+          "x-semio-ui": {
+            "label": {
+              "en": "Total frames",
+              "de": "Gesamtzahl Frames"
+            }
+          }
         },
         "initialFrames": {
           "type": "integer",
           "minimum": 0,
-          "maximum": 4294967295
+          "maximum": 4294967295,
+          "x-semio-ui": {
+            "label": {
+              "en": "Initial frames",
+              "de": "Anfangsframes"
+            }
+          }
         },
         "streams": {
           "type": "integer",
           "minimum": 0,
-          "maximum": 4294967295
+          "maximum": 4294967295,
+          "x-semio-ui": {
+            "label": {
+              "en": "Stream count",
+              "de": "Anzahl Datenströme"
+            }
+          }
         },
         "suggestedBufferSize": {
           "type": "integer",
           "minimum": 0,
-          "maximum": 4294967295
+          "maximum": 4294967295,
+          "x-semio-ui": {
+            "label": {
+              "en": "Suggested buffer size",
+              "de": "Empfohlene Puffergröße"
+            },
+            "unit": "B"
+          }
         },
         "width": {
           "type": "integer",
           "minimum": 0,
-          "maximum": 4294967295
+          "maximum": 4294967295,
+          "x-semio-ui": {
+            "label": {
+              "en": "Width",
+              "de": "Breite"
+            },
+            "unit": "px"
+          }
         },
         "height": {
           "type": "integer",
           "minimum": 0,
-          "maximum": 4294967295
+          "maximum": 4294967295,
+          "x-semio-ui": {
+            "label": {
+              "en": "Height",
+              "de": "Höhe"
+            },
+            "unit": "px"
+          }
         },
         "reserved": {
           "type": "array",
@@ -89,6 +168,12 @@
             "type": "integer",
             "minimum": 0,
             "maximum": 4294967295
+          },
+          "x-semio-ui": {
+            "label": {
+              "en": "Reserved",
+              "de": "Reserviert"
+            }
           }
         }
       }

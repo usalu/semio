@@ -5,15 +5,53 @@
   "type": "object",
   "additionalProperties": false,
   "required": [
+    "mutation",
     "id",
     "newMinOaFlowM3S"
   ],
   "properties": {
+    "mutation": {
+      "const": "changeOutdoorAirSystemMinOaFlow"
+    },
     "id": {
-      "type": "integer"
+      "type": "integer",
+      "minimum": 0,
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Outdoor air system",
+          "de": "Außenluftsystem"
+        },
+        "description": {
+          "en": "The outdoor air system this mutation changes, by id.",
+          "de": "Außenluftsystem, das diese Mutation ändert, per ID."
+        },
+        "ref": {
+          "kind": "outdoorAirSystem"
+        },
+        "group": "target",
+        "order": 10
+      }
     },
     "newMinOaFlowM3S": {
-      "type": "number"
+      "type": "number",
+      "minimum": 0,
+      "x-semio-ui": {
+        "widget": "stepper",
+        "role": "value",
+        "label": {
+          "en": "Minimum outdoor air flow",
+          "de": "Minimaler Außenluftvolumenstrom"
+        },
+        "unit": "m³/s",
+        "displayUnit": "m³/h",
+        "displayFactor": 3600,
+        "step": 0.002777777777777778,
+        "precision": 0,
+        "group": "ventilation",
+        "order": 20
+      }
     }
   }
 }

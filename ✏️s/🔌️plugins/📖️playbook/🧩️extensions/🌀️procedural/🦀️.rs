@@ -3,8 +3,9 @@
 use semio_framework_plugin::UiAssemblyResult;
 use semio_framework_ui_contract::{ActionId as UiActionId, Buildable, HasBase, HasChildren};
 
-use flow::{export_solid_json, import_solid_json, tessellate_geometry};
-use flow::{flow_neuron_kind_info_map, forms_bridge::flow_host_snapshot_to_form_spec, FlowHost};
+use flow::{forms_bridge::flow_host_snapshot_to_form_spec, FlowHost};
+use neural_engine::{Registry, RegistryRetirement, SharedRegistry, ValueRetirement, ValueRetirementStep};
+use semio_s_spatial_kernel_semio_session::{Session, SessionCapture};
 use protocol::MutationDiff;
 use semio_framework_artifact_flow_flow::{FlowHostSnapshot, Widget};
 use semio_framework_artifact_playbook_playbook::{visible_blocks, PlaybookBlock};
@@ -15,8 +16,8 @@ use semio_framework::action_bus::RetainedToolWireInput;
 use semio_framework::{ToolExecutionContract, ToolFactoryKey, ToolJobFactory, ToolJobFactoryError, ToolOperationSpec};
 use semio_framework_job::Operation;
 use semio_framework_plugin::app::{ArtifactOwnedToolJobContext, InteractionHoverState};
-use semio_framework_plugin::retained_command::{ArtifactRetainedCommandInputs, ArtifactRetainedCommandJob, ArtifactRetainedCommandPayload, BoundedArtifactCommandWork};
-use semio_framework_plugin::{bounded_config_store_one_item_preparation_factory, HistoryView};
+use semio_framework_plugin::retained_command::{ArtifactRetainedCommandInputs, ArtifactRetainedCommandJob, ArtifactRetainedCommandPayload, ArtifactCommandInputs, ArtifactCommandWork, ArtifactCommandWorkStep};
+use semio_framework_plugin::{bounded_config_store_one_item_preparation_factory, ArtifactInstanceOperationOwner, ArtifactInstanceOperationOwnerHandle, HistoryView, PluginCloseStep};
 use semio_framework_plugin::{
     app_labels, create_default_layout, mesh_from_kind, world3d_default_camera, world3d_scene, world3d_selection_json, ActionArgDef, ActionArgOption, App, AppOperationContext, ArtifactApp, ArtifactOwnedToolJobFactory, ArtifactOwnedToolJobRequest,
     ArtifactToolFactoryRegistry, ArtifactToolPublicationContract, ArtifactToolPublicationLane, ArtifactView, ConfigView, DraftView, Emit, ExecutionMode, ExtensionBundle, Fault, FaultCode, FaultOrigin, InteractiveJobClassification, LocalizedLabel,
@@ -309,15 +310,7 @@ fn widget_id(widget: &Widget) -> &str {
 }
 
 fn is_brep_geometry_handle(handle: &str) -> bool {
-    handle.starts_with("solid-")
-        || handle.starts_with("shell-")
-        || handle.starts_with("face-")
-        || handle.starts_with("wire-")
-        || handle.starts_with("edge-")
-        || handle.starts_with("vertex-")
-        || handle.starts_with("compound-")
-        || handle.starts_with("curve-")
-        || handle.starts_with("surface-")
+    handle.len() == 64 && handle.bytes().all(|byte| byte.is_ascii_digit() || (b'a'..=b'f').contains(&byte))
 }
 
 fn collect_geometry_handles_from_eval(value: &Value, handles: &mut Vec<String>) {
@@ -358,30 +351,113 @@ fn apply_flow_params(host: &mut FlowHost, host_snapshot: &FlowHostSnapshot, para
             host.set_slider_value(key, number);
         }
     }
-    let params_json = json_to_string(&Value::Object(object.clone()));
     for widget in &host_snapshot.widgets {
         if let Widget::Neuron { id, .. } = widget {
-            let _ = host.set_neuron_params(id, &params_json);
+            if let Some(params) = object.get(id).filter(|value| value.as_object().is_some()) {
+                let _ = host.set_neuron_params(id, &json_to_string(params));
+            }
         }
     }
 }
 
-fn evaluated_preview_payload(host_snapshot: &FlowHostSnapshot, params: &Value) -> (String, String) {
-    // 🧊️ A `FlowHost` and the `FlowHostSnapshot` it owns refuse a bare drop — the snapshot's
-    // `layout` is an `OrderedMap` and its neurons own `Dictionary` params — so the host is CLOSED
-    // here, never dropped. A missed close panics the native tests with
-    // `final Dictionary ownership must be explicitly retired or owned by a cold boundary` and
-    // ABORTS the wasm guest, which is why the eval result is read out and the host retired before
-    // any of the branches below can return (twin of the flow editor's `with_host_from_snapshot`).
-    let eval_json = {
-        let mut host = FlowHost::from_host_snapshot(host_snapshot.clone());
-        host.set_neuron_kind_info_map(flow_neuron_kind_info_map());
-        apply_flow_params(&mut host, host_snapshot, params);
-        let eval_json = host.evaluate().unwrap_or_default();
-        host.retire_cold();
-        eval_json
+/// 🌐️ Concrete geometry and operator authority retained by one procedural module instance.
+struct ModuleGeometryOwner {
+    session: SessionCapture,
+    registry: Option<SharedRegistry>,
+    registry_retirement: RegistryRetirement,
+    closing: bool,
+    imported: Option<ModuleImportedGeometry>,
+    retirement: ValueRetirement,
+}
+
+struct ModuleImportedGeometry { source: String, handles: Vec<String> }
+
+impl ModuleGeometryOwner {
+    fn new() -> Self {
+        let session = Session::new();
+        let mut registry = Registry::new();
+        semio_s_plugin_flow_extension_math::register(&mut registry);
+        semio_s_plugin_flow_extension_brep::register(&mut registry, &session);
+        registry.finalize();
+        let (registry, registry_retirement) = SharedRegistry::new(registry);
+        Self { session: session.capture(), registry: Some(registry), registry_retirement, closing: false, imported: None, retirement: ValueRetirement::default() }
+    }
+
+    fn retire_import_cache(&mut self) {
+        if let Some(cache) = self.imported.take() {
+            self.retirement.text(cache.source);
+            self.retirement.push_strings(cache.handles);
+        }
+    }
+
+    fn retain_current(&self, handles: &[String]) {
+        let mut retained = handles.to_vec();
+        if let Some(cache) = &self.imported {
+            retained.extend(cache.handles.iter().cloned());
+        }
+        self.session.retain_geometry_handles(&retained);
+    }
+
+    fn host(&self, snapshot: FlowHostSnapshot) -> Result<FlowHost, Fault> {
+        let registry = self.registry.as_ref().ok_or_else(|| Fault::from("playbook.module.procedural.geometry-closed"))?;
+        Ok(FlowHost::from_host_snapshot(snapshot).with_operator_registry(registry.clone()).with_geometry_port(self.session.port()))
+    }
+}
+
+impl ArtifactInstanceOperationOwner for ModuleGeometryOwner {
+    fn as_any_mut(&mut self) -> &mut dyn std::any::Any { self }
+
+    fn maintenance_step(&mut self, maximum_items: usize, maximum_bytes: usize) -> Result<PluginCloseStep, Fault> {
+        Ok(match self.retirement.close_step(maximum_items, maximum_bytes) {
+            ValueRetirementStep::Blocked => PluginCloseStep::Pending { released_items: 0, released_bytes: 0 },
+            ValueRetirementStep::Pending { released_items, released_bytes } => PluginCloseStep::Pending { released_items, released_bytes },
+            ValueRetirementStep::Complete => PluginCloseStep::Complete,
+        })
+    }
+
+    fn close_step(&mut self, maximum_items: usize, maximum_bytes: usize) -> Result<PluginCloseStep, Fault> {
+        if self.terminal_is_empty() { return Ok(PluginCloseStep::Complete); }
+        if maximum_items == 0 || maximum_bytes == 0 { return Ok(PluginCloseStep::Pending { released_items: 0, released_bytes: 0 }); }
+        if !self.closing {
+            self.closing = true;
+            drop(self.registry.take());
+            self.retire_import_cache();
+            return Ok(PluginCloseStep::Pending { released_items: 1, released_bytes: 0 });
+        }
+        if !self.retirement.terminal_is_empty() {
+            return Ok(match self.maintenance_step(maximum_items, maximum_bytes)? {
+                PluginCloseStep::Complete => PluginCloseStep::Pending { released_items: 0, released_bytes: 0 },
+                step => step,
+            });
+        }
+        let step = if !self.registry_retirement.terminal_is_empty() {
+            self.registry_retirement.close_step(maximum_items, maximum_bytes).map_err(Fault::from)?
+        } else {
+            self.session.close_step(maximum_items, maximum_bytes).map_err(Fault::from)?
+        };
+        Ok(match step {
+            ValueRetirementStep::Blocked => PluginCloseStep::Pending { released_items: 0, released_bytes: 0 },
+            ValueRetirementStep::Pending { released_items, released_bytes } => PluginCloseStep::Pending { released_items, released_bytes },
+            ValueRetirementStep::Complete if self.terminal_is_empty() => PluginCloseStep::Complete,
+            ValueRetirementStep::Complete => PluginCloseStep::Pending { released_items: 0, released_bytes: 0 },
+        })
+    }
+
+    fn terminal_is_empty(&self) -> bool {
+        self.registry.is_none() && self.imported.is_none() && self.retirement.terminal_is_empty() && self.registry_retirement.terminal_is_empty() && self.session.terminal_is_empty()
+    }
+}
+
+fn evaluated_preview_payload(owner: &mut ModuleGeometryOwner, host_snapshot: &FlowHostSnapshot, params: &Value) -> (String, String) {
+    let mut host = match owner.host(host_snapshot.clone()) {
+        Ok(host) => host,
+        Err(_) => return ("[]".into(), "[]".into()),
     };
+    apply_flow_params(&mut host, host_snapshot, params);
+    let evaluated = host.evaluate();
+    let eval_json = evaluated.unwrap_or_default();
     let eval: Value = parse_json(&eval_json).unwrap_or(pack::json!({}));
+    let mut preview_handles = Vec::new();
     let mut meshes: Vec<Value> = Vec::new();
     let mut instances: Vec<Value> = Vec::new();
     for widget in &host_snapshot.widgets {
@@ -393,9 +469,11 @@ fn evaluated_preview_payload(host_snapshot: &FlowHostSnapshot, params: &Value) -
         let Some(handle) = geometry_handle_for_widget(&eval, &id) else {
             continue;
         };
+        preview_handles.push(handle.clone());
         let mesh_id = format!("eval-{id}");
         if !meshes.iter().any(|entry| entry.get("id").and_then(|value| value.as_str()) == Some(mesh_id.as_str())) {
-            if let Ok(data) = tessellate_geometry(&handle, 0.05) {
+            let tessellated = owner.session.tessellate_geometry(&handle, 0.05);
+            if let Ok(data) = tessellated {
                 meshes.push(pack::json!({ "id": mesh_id, "data": data }));
             }
         }
@@ -412,6 +490,17 @@ fn evaluated_preview_payload(host_snapshot: &FlowHostSnapshot, params: &Value) -
             }));
         }
     }
+    if let Ok(handles) = imported_geometry_handles(owner, params) {
+        for (index, handle) in handles.iter().enumerate() {
+            if let Ok(data) = owner.session.tessellate_geometry(handle, 0.05) {
+                let id = format!("import-{index}");
+                meshes.push(pack::json!({ "id": id, "data": data }));
+                instances.push(pack::json!({ "id": id, "meshId": id, "position": [0.0, 0.0, 0.0], "rotation": [0.0, 0.0, 0.0, 1.0], "scale": [1.0, 1.0, 1.0], "label": id, "selected": false, "hovered": false }));
+            }
+        }
+    }
+    owner.retain_current(&preview_handles);
+    host.retire_cold();
     if meshes.is_empty() {
         let fallback = pack::json!([{ "id": PREVIEW_FALLBACK_MESH_KIND, "data": mesh_from_kind(PREVIEW_FALLBACK_MESH_KIND) }]);
         let fallback_instances = pack::json!([{
@@ -429,14 +518,14 @@ fn evaluated_preview_payload(host_snapshot: &FlowHostSnapshot, params: &Value) -
     (json_to_string(&Value::Array(meshes)), json_to_string(&Value::Array(instances)))
 }
 
-fn render_preview_body(payload: &ModuleRenderPayload) -> UiAssemblyResult<BuiltNode> {
+fn render_preview_body(owner: &mut ModuleGeometryOwner, payload: &ModuleRenderPayload) -> UiAssemblyResult<BuiltNode> {
     let slug = if payload.fixture_slug.is_empty() { "hexagonal-mushroom-column" } else { payload.fixture_slug.as_str() };
     let Some(fixture_json) = fixture_json_for_slug(slug) else {
         return text_node(format!("Unknown fixture slug: {slug}"));
     };
     let host_snapshot: FlowHostSnapshot = pack::json::from_json_str(fixture_json).unwrap_or_else(|_| FlowHostSnapshot::default());
     let params = params_as_json(&payload.params);
-    let (meshes_json, instances_json) = evaluated_preview_payload(&host_snapshot, &params);
+    let (meshes_json, instances_json) = evaluated_preview_payload(owner, &host_snapshot, &params);
     // 🧊️ The decoded fixture is this function's own owner of the widgets' dictionaries.
     host_snapshot.retire_cold();
     scene_surface(PREVIEW_SURFACE, SurfaceKind::World3d, &world3d_scene(world3d_default_camera(), meshes_json, instances_json, world3d_selection_json("single", &[], None), &WorldSunConfig::default()))
@@ -445,16 +534,13 @@ fn render_preview_body(payload: &ModuleRenderPayload) -> UiAssemblyResult<BuiltN
 
 //#region 🔖️MediaExport
 /// 🧵️ Collects every distinct brep geometry handle exposed by the fixture's preview-flagged widgets, evaluated against the current param overrides — same eval pass as `evaluated_preview_payload`, minus the tessellation step.
-fn evaluated_preview_geometry_handles(host_snapshot: &FlowHostSnapshot, params: &Value) -> Vec<String> {
-    // 🧊️ Closed, never dropped — see `evaluated_preview_payload`.
-    let eval_json = {
-        let mut host = FlowHost::from_host_snapshot(host_snapshot.clone());
-        host.set_neuron_kind_info_map(flow_neuron_kind_info_map());
-        apply_flow_params(&mut host, host_snapshot, params);
-        let eval_json = host.evaluate().unwrap_or_default();
-        host.retire_cold();
-        eval_json
+fn evaluated_preview_geometry_handles(owner: &mut ModuleGeometryOwner, host_snapshot: &FlowHostSnapshot, params: &Value) -> Vec<String> {
+    let mut host = match owner.host(host_snapshot.clone()) {
+        Ok(host) => host,
+        Err(_) => return Vec::new(),
     };
+    apply_flow_params(&mut host, host_snapshot, params);
+    let eval_json = host.evaluate().unwrap_or_default();
     let eval: Value = parse_json(&eval_json).unwrap_or(pack::json!({}));
     let mut handles: Vec<String> = Vec::new();
     for widget in &host_snapshot.widgets {
@@ -469,21 +555,28 @@ fn evaluated_preview_geometry_handles(host_snapshot: &FlowHostSnapshot, params: 
             }
         }
     }
+    owner.retain_current(&handles);
+    host.retire_cold();
     handles
 }
 
 /// 📤️ Handles `Command::ExportSolid`: re-evaluates the active host_snapshot, exports every preview geometry handle through `flow` brep geometry session's STEP/OBJ/STL kernel codecs (GLB bridges through mesh tessellation), and stashes the JSON result on `params.__solidExport` for the host shell to read back.
-fn handle_export_solid(payload: &mut ModuleRenderPayload, format: &str) {
+fn handle_export_solid(owner: &mut ModuleGeometryOwner, payload: &mut ModuleRenderPayload, format: &str) {
     let slug = if payload.fixture_slug.is_empty() { "hexagonal-mushroom-column" } else { payload.fixture_slug.as_str() };
     let Some(fixture_json) = fixture_json_for_slug(slug) else {
         return;
     };
     let host_snapshot: FlowHostSnapshot = pack::json::from_json_str(fixture_json).unwrap_or_else(|_| FlowHostSnapshot::default());
-    let handles = evaluated_preview_geometry_handles(&host_snapshot, &params_as_json(&payload.params));
+    let params = params_as_json(&payload.params);
+    let mut handles = evaluated_preview_geometry_handles(owner, &host_snapshot, &params);
+    if let Ok(imported) = imported_geometry_handles(owner, &params) {
+        for handle in imported { if !handles.contains(&handle) { handles.push(handle); } }
+    }
     // 🧊️ Closed, never dropped — see `evaluated_preview_payload`.
     host_snapshot.retire_cold();
+    owner.retain_current(&handles);
     let result_json =
-        if handles.is_empty() { pack::json!({ "error": "no procedural solid geometry to export" }) } else { parse_json(&export_solid_json(&handles, format, SOLID_EXPORT_DEFLECTION)).unwrap_or(pack::json!({ "error": "export failed" })) };
+        if handles.is_empty() { pack::json!({ "error": "no procedural solid geometry to export" }) } else { parse_json(&owner.session.export_solid_json(&handles, format, SOLID_EXPORT_DEFLECTION)).unwrap_or(pack::json!({ "error": "export failed" })) };
     let mut object = params_as_json(&payload.params);
     let Some(map) = object.as_object_mut() else {
         return;
@@ -492,15 +585,44 @@ fn handle_export_solid(payload: &mut ModuleRenderPayload, format: &str) {
     payload.params = json_to_dsl_value(&object);
 }
 
-/// 📥️ Handles `Command::ImportSolid`: imports `data` (UTF-8 text for STEP/OBJ, base64 for STL/GLB) as `format` through `flow` brep geometry session's in-process kernel (GLB bridges through mesh tessellation into an OBJ ingestion) and stashes the resulting geometry handles on `params.__solidImport`.
-fn handle_import_solid(payload: &mut ModuleRenderPayload, format: &str, data: &str) {
-    let result_json = if data.is_empty() { pack::json!({ "error": "no import data provided" }) } else { parse_json(&import_solid_json(format, data, SOLID_IMPORT_TOLERANCE)).unwrap_or(pack::json!({ "error": "import failed" })) };
+/// 📥️ Handles `Command::ImportSolid`: imports `data` (UTF-8 text for STEP/OBJ, base64 for STL/GLB) as `format` through `flow` brep geometry session's in-process kernel (GLB bridges through mesh tessellation into an OBJ ingestion) and persists the replayable interchange source on `params.__solidImport`.
+fn handle_import_solid(owner: &mut ModuleGeometryOwner, payload: &mut ModuleRenderPayload, format: &str, data: &str) {
+    let source = pack::json!({ "format": format, "data": data, "tolerance": SOLID_IMPORT_TOLERANCE });
+    let params = pack::json!({ "__solidImport": source });
+    let result_json = if data.is_empty() { pack::json!({ "error": "no import data provided" }) } else {
+        match imported_geometry_handles(owner, &params) {
+            Ok(_) => source,
+            Err(_) => pack::json!({ "error": "import failed" }),
+        }
+    };
     let mut object = params_as_json(&payload.params);
     let Some(map) = object.as_object_mut() else {
         return;
     };
     map.insert("__solidImport", result_json);
     payload.params = json_to_dsl_value(&object);
+}
+
+fn imported_geometry_handles(owner: &mut ModuleGeometryOwner, params: &Value) -> Result<Vec<String>, Fault> {
+    let Some(source) = params.get("__solidImport").filter(|source| source.get("error").is_none()) else {
+        owner.retire_import_cache();
+        return Ok(Vec::new());
+    };
+    let source_json = json_to_string(source);
+    if let Some(cache) = &owner.imported {
+        if cache.source == source_json { return Ok(cache.handles.clone()); }
+    }
+    owner.retire_import_cache();
+    let format = source.get("format").and_then(Value::as_str).ok_or_else(|| Fault::from("playbook.module.procedural.import-source-format"))?;
+    let data = source.get("data").and_then(Value::as_str).ok_or_else(|| Fault::from("playbook.module.procedural.import-source-data"))?;
+    let tolerance = source.get("tolerance").and_then(Value::as_f64).ok_or_else(|| Fault::from("playbook.module.procedural.import-source-tolerance"))?;
+    let result = parse_json(&owner.session.import_solid_json(format, data, tolerance)).map_err(|_| Fault::from("playbook.module.procedural.import-source-invalid"))?;
+    if result.get("error").is_some() { return Err(Fault::from("playbook.module.procedural.import-source-failed")); }
+    let values = result.get("handles").and_then(Value::as_array).ok_or_else(|| Fault::from("playbook.module.procedural.import-handles-missing"))?;
+    let handles: Vec<String> = values.iter().map(|value| value.as_str().filter(|handle| is_brep_geometry_handle(handle)).map(str::to_owned).ok_or_else(|| Fault::from("playbook.module.procedural.import-handle-invalid"))).collect::<Result<_, _>>()?;
+    owner.retire_import_cache();
+    owner.imported = Some(ModuleImportedGeometry { source: source_json, handles: handles.clone() });
+    Ok(handles)
 }
 
 fn media_button(payload: &ModuleRenderPayload, format: &str, import: bool) -> UiAssemblyResult<BuiltNode> {
@@ -666,23 +788,31 @@ fn module_retained_extent(command: &Command, _snapshot: &ModuleRenderPayload, _i
     MODULE_RETAINED_TOOL_IDS.contains(&module_retained_command_id(command)).then_some(MODULE_RETAINED_WORK_ITEMS)
 }
 
-#[expect(clippy::too_many_arguments, reason = "BoundedArtifactCommandWork requires the full retained reducer context callback")]
-fn module_retained_reduce(
-    command: &Command,
-    snapshot: &ModuleRenderPayload,
-    _config: &NoConfig,
-    _history: &HistoryView,
-    _interaction: &InteractionState,
-    _hover: &InteractionHoverState,
-    _context: Option<&ArtifactOwnedToolJobContext<ModuleApp>>,
-    _operation: &AppOperationContext,
-) -> Result<Emit<ModulePayloadMutation, NoConfigMutation, NoDraftMutation>, Fault> {
-    let mut payload = snapshot.clone();
-    match command {
-        Command::ExportSolid { format } => handle_export_solid(&mut payload, format),
-        Command::ImportSolid { format, data } => handle_import_solid(&mut payload, format, data),
+struct ModuleGeometryCommandWork {
+    tool_id: &'static str,
+    instance_owner: ArtifactInstanceOperationOwnerHandle,
+    consumed: bool,
+}
+
+impl ArtifactCommandWork<ModuleApp> for ModuleGeometryCommandWork {
+    fn tool_id(&self) -> &'static str { self.tool_id }
+
+    fn extent(&self, command: &Command, snapshot: &ModuleRenderPayload, interaction: &InteractionState, _context: Option<&ArtifactOwnedToolJobContext<ModuleApp>>) -> Option<usize> {
+        module_retained_extent(command, snapshot, interaction)
     }
-    Ok(Emit::mutations(vec![ModulePayloadMutation::SetPayload(SetPayload { payload })]))
+
+    fn step(&mut self, input: &ArtifactCommandInputs<'_, ModuleApp>) -> Result<ArtifactCommandWorkStep<ModuleApp>, Fault> {
+        if self.consumed { return Err(Fault::from("playbook.module.procedural.geometry-work-repeated")); }
+        self.consumed = true;
+        self.instance_owner.with_mut::<ModuleGeometryOwner, _>(|owner| {
+            let mut payload = input.snapshot.clone();
+            match input.command {
+                Command::ExportSolid { format } => handle_export_solid(owner, &mut payload, format),
+                Command::ImportSolid { format, data } => handle_import_solid(owner, &mut payload, format, data),
+            }
+            Ok(ArtifactCommandWorkStep::Complete(Emit::mutations(vec![ModulePayloadMutation::SetPayload(SetPayload { payload })])))
+        })
+    }
 }
 
 pub struct ModuleRetainedCommandJobFactory {
@@ -826,7 +956,7 @@ impl ArtifactApp for ModuleApp {
             return Err(Fault::new(FaultOrigin::App, FaultCode::new("playbook.module.procedural.tool-mismatch"), "the procedural module command does not match its exact registered tool"));
         }
         let tool_id = module_retained_command_id(&request.command);
-        let work = Box::new(BoundedArtifactCommandWork::new(tool_id, module_retained_reduce, module_retained_extent));
+        let work = Box::new(ModuleGeometryCommandWork { tool_id, instance_owner: request.instance_operation_owner.clone(), consumed: false });
         let operation_context = AppOperationContext {
             app_instance_id: request.app_instance_id,
             parent_document_id: request.parent_document_id,
@@ -884,26 +1014,34 @@ impl ArtifactApp for ModuleApp {
     }
 
     async fn handle(
-        command: &Command,
-        doc: &ArtifactView<'_, ModuleRenderPayload>,
+        _command: &Command,
+        _doc: &ArtifactView<'_, ModuleRenderPayload>,
         _cfg: &ConfigView<'_, NoConfig>,
         _interaction: &InteractionView<'_>,
         _view_state: Option<&ViewModel>,
         _draft: &DraftView<'_, Self::Draft>,
         _engines: &EngineHandles,
     ) -> Result<Emit<ModulePayloadMutation, NoConfigMutation, Self::DraftMutation>, Fault> {
-        match command {
-            Command::ExportSolid { format } => {
-                let mut payload = doc.snapshot.clone();
-                handle_export_solid(&mut payload, format);
-                Ok(Emit::mutations(vec![ModulePayloadMutation::SetPayload(SetPayload { payload })]))
-            }
-            Command::ImportSolid { format, data } => {
-                let mut payload = doc.snapshot.clone();
-                handle_import_solid(&mut payload, format, data);
-                Ok(Emit::mutations(vec![ModulePayloadMutation::SetPayload(SetPayload { payload })]))
-            }
-        }
+        Err(Fault::from("playbook.module.procedural.geometry-instance-owner-required"))
+    }
+
+    fn build_instance_operation_owner() -> Box<dyn ArtifactInstanceOperationOwner> {
+        Box::new(ModuleGeometryOwner::new())
+    }
+
+    async fn render_with_instance_operation_owner(
+        owner: &ArtifactInstanceOperationOwnerHandle,
+        body_key: &str,
+        doc: &ArtifactView<'_, ModuleRenderPayload>,
+        cfg: &ConfigView<'_, NoConfig>,
+        view_state: &ViewModel,
+    ) -> UiAssemblyResult<ComponentTree> {
+        if body_key != BODY_PREVIEW { return Self::render(body_key, doc, cfg, view_state).await; }
+        let embedded = view_state.extension_input_json.as_deref().map(|input| embedded_payload(input, body_key)).transpose()?;
+        let payload = embedded.as_ref().map(|(payload, _)| payload).unwrap_or(doc.snapshot);
+        owner.with_mut::<ModuleGeometryOwner, _>(|owner| render_preview_body(owner, payload).map_err(|_| Fault::from("playbook.module.procedural.preview-assembly")))
+            .map(built_to_component_tree)
+            .map_err(|_| PluginAssemblyError::new("playbook.module.procedural.preview-instance-owner", "procedural preview requires its live geometry instance owner"))
     }
 
     async fn render(body_key: &str, doc: &ArtifactView<'_, ModuleRenderPayload>, _cfg: &ConfigView<'_, NoConfig>, view_state: &ViewModel) -> UiAssemblyResult<ComponentTree> {
@@ -913,7 +1051,7 @@ impl ArtifactApp for ModuleApp {
         let parent_window = embedded.as_ref().and_then(|(_, window)| window.as_ref()).map(|(id, kind)| (id.as_str(), kind.as_str()));
         match body_key {
             BODY_PARAMS => render_params_body(payload, labels, parent_window, embedded.is_some()),
-            BODY_PREVIEW => render_preview_body(payload),
+            BODY_PREVIEW => Err(PluginAssemblyError::new("playbook.module.procedural.preview-instance-owner", "procedural preview requires its live geometry instance owner")),
             _ => text_node(format!("Unknown body: {body_key}")),
         }
         .map(built_to_component_tree)
@@ -952,7 +1090,7 @@ async fn create_module_app() -> Result<App, PluginAssemblyError> {
             // bounded first-step tool factory `validate_ui_dispatch_classification` demands, so `Migrated` is the
             // truthful disposition and the shell can dispatch them (ticket 26/09/18 S10).
             .action_describe("exportSolidGeometry", LocalizedLabel::native("Exports the block's preview geometry as STEP, OBJ, STL or GLB and stores the result in the block's parameters for the shell to read back; nothing is written to disk.", "Exportiert die Vorschaugeometrie des Bausteins als STEP, OBJ, STL oder GLB und legt das Ergebnis in den Parametern des Bausteins ab, damit die Shell es ausliest; auf die Festplatte wird nichts geschrieben.")).await
-            .action_describe("importSolidGeometry", LocalizedLabel::native("Imports solid geometry in the given format (STEP or OBJ text, STL or GLB as base64) into the block and stores the resulting geometry handles in its parameters.", "Importiert Volumengeometrie im angegebenen Format (STEP- oder OBJ-Text, STL oder GLB als Base64) in den Baustein und legt die entstandenen Geometrie-Handles in seinen Parametern ab.")).await
+            .action_describe("importSolidGeometry", LocalizedLabel::native("Imports solid geometry in the given format (STEP or OBJ text, STL or GLB as base64) into the block and stores the replayable geometry source in its parameters.", "Importiert Volumengeometrie im angegebenen Format (STEP- oder OBJ-Text, STL oder GLB als Base64) in den Baustein und legt die wiederherstellbare Geometriequelle in seinen Parametern ab.")).await
             .action_interactive_job(ACTION_EXPORT_SOLID, InteractiveJobClassification::Migrated).await
             .action_interactive_job(ACTION_IMPORT_SOLID, InteractiveJobClassification::Migrated).await,
     )

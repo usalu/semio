@@ -1,7 +1,16 @@
-/** 🦠️ create-accessor executable structural glTF command. */
-import type { GltfOrthographic, GltfPerspective, GltfSnapshot } from '../../📸️snapshot/🟦️.ts';
-import { clone, insert, order, position, reject, remove, relocate, reorder, repair, type GltfMutationRejection, type GltfStructuralResult } from './🟦️';
-export const GltfCreateAccessorDescriptor = { id: 's.stdio.gltf.mutation.create-accessor.v1', version: 1, touchedPathPattern: 'document/accessors', referencePolicy: 'all typed accessor references are remapped, repaired, or rejected' } as const;
-export interface GltfCreateAccessorPayload { position: number; componentType: number; count: number; kind: 'SCALAR'|'VEC2'|'VEC3'|'VEC4'|'MAT2'|'MAT3'|'MAT4' }
-export const validateGltfCreateAccessor = (payload: GltfCreateAccessorPayload, base: GltfSnapshot): GltfMutationRejection | undefined => { const index = position(payload.position, base.document.accessors.length, 'document/accessors', true); if (index) return index; if (!Number.isInteger(payload.componentType) || !Number.isInteger(payload.count) || payload.count < 0) return reject('gltf.mutation.invalid-accessor-layout', 'document/accessors', 'component type and count must be valid');   return undefined; };
-export const applyGltfCreateAccessor = (base: GltfSnapshot, payload: GltfCreateAccessorPayload): GltfStructuralResult => { const rejection = validateGltfCreateAccessor(payload, base); if (rejection) return { accepted: false, rejection }; try { const next = clone(base); insert(next, 'accessors', payload.position, { bufferView: undefined, byteOffset: 0, componentType: payload.componentType, normalized: false, count: payload.count, type: payload.kind }); return { accepted: true, snapshot: clone(next) }; } catch (error) { return { accepted: false, rejection: typeof error === 'object' && error && 'code' in error ? error as GltfMutationRejection : reject('gltf.mutation.apply-failed', 'document/accessors', String(error)) }; } };
+/** 🌱️ `create-accessor` wire twin: the flat `Apply` payload `GltfCreateAccessorPayload` and the phase wire `CreateAccessorMutation`, exactly as `./🦀️.rs` writes them.
+ * @see ./🧬️schema/🔣️.json */
+import { type GltfAccessorType, type GltfComponentType, gltfWireIndex, gltfWireObject, gltfWireRequired, parseGltfAccessorType, parseGltfComponentType } from "../../../📸️snapshot/🟦️.ts";
+import { type GltfDiff, type GltfPhase, gltfWirePhase, parseGltfDiff } from "../../../🔺️diff/🟦️.ts";
+
+export interface GltfCreateAccessorPayload {
+  position: number;
+  componentType: GltfComponentType;
+  count: number;
+  kind: GltfAccessorType;
+}
+
+export type CreateAccessorMutation = GltfPhase<GltfCreateAccessorPayload, GltfDiff>;
+
+export const parseGltfCreateAccessorPayload = gltfWireObject<GltfCreateAccessorPayload>({ position: gltfWireRequired(gltfWireIndex), componentType: gltfWireRequired(parseGltfComponentType), count: gltfWireRequired(gltfWireIndex), kind: gltfWireRequired(parseGltfAccessorType) });
+export const parseCreateAccessorMutation = gltfWirePhase(parseGltfCreateAccessorPayload, parseGltfDiff);

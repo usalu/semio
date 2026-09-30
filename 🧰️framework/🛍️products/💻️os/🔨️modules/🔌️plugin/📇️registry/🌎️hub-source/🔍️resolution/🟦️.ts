@@ -10,16 +10,8 @@
  * @see ../🧬️schema/🔣️.json
  * @see ../🧫️fixtures/🔍️resolution/🔣️.json
  */
-import {
-  HUB_PROGRAM_ID_MAX_CHARS,
-  HUB_PROGRAM_ID_PATTERN,
-  PLUGIN_MODULE_STORE_V1,
-  verifyTrustedPluginModuleFileV1,
-  type TrustedPluginModuleBundleV1,
-  type TrustedPluginModuleFileV1,
-  type TrustedPluginModuleIndexEntryV1,
-  type TrustedPluginModuleIndexV1,
-} from "../🧬️schema/🟦️.ts";
+import { HUB_PROGRAM_ID_MAX_CHARS, HUB_PROGRAM_ID_PATTERN, PLUGIN_MODULE_STORE_V1 } from "../🧬️schema/🟦️.ts";
+import { verifyTrustedPluginModuleFileV1, type TrustedPluginModuleBundleV1, type TrustedPluginModuleFileV1, type TrustedPluginModuleIndexEntryV1, type TrustedPluginModuleIndexV1 } from "../../📦️deployment/🧬️schema/🟦️.ts";
 
 /** 🪪️ `PluginModuleSourceV1`: where a hub program's verified bytes came from. */
 export type PluginModuleSourceV1 = "store" | "local" | "hub";

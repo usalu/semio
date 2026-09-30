@@ -9,7 +9,17 @@
   ],
   "properties": {
     "newTitle": {
-      "type": "string"
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "text",
+        "role": "value",
+        "label": {
+          "en": "Report title",
+          "de": "Berichtstitel"
+        },
+        "group": "report",
+        "order": 10
+      }
     }
   }
 }

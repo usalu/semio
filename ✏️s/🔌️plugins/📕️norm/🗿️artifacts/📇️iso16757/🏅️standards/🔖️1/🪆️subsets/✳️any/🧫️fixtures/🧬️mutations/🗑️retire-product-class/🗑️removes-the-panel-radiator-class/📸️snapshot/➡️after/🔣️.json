@@ -2,7 +2,7 @@
   "catalogue": {
     "accessories": {},
     "compositions": {},
-    "descriptive_objects": [],
+    "descriptiveObjects": [],
     "dictionary": {
       "id": "bsdd.fixture",
       "version": "2026-01"
@@ -19,16 +19,16 @@
           "locale": "en",
           "text": "Fixture Heating Works"
         },
-        "short_name": null
+        "shortName": null
       }
     },
     "metadata": {
-      "edition_profile": "FullPublished",
+      "editionProfile": "FullPublished",
       "lifecycle": {
         "revision": "1",
         "status": "published",
-        "valid_from": null,
-        "valid_to": null
+        "validFrom": null,
+        "validTo": null
       },
       "names": {
         "alternatives": [
@@ -41,13 +41,13 @@
           "locale": "en",
           "text": "Fixture Radiator Catalogue"
         },
-        "short_name": "Fixture"
+        "shortName": "Fixture"
       }
     },
-    "product_classes": [],
-    "product_groups": [
+    "productClasses": [],
+    "productGroups": [
       {
-        "dictionary_subject_id": "subject.radiator",
+        "dictionarySubjectId": "subject.radiator",
         "id": "group.radiators",
         "names": {
           "alternatives": [],
@@ -55,15 +55,15 @@
             "locale": "en",
             "text": "Radiators"
           },
-          "short_name": null
+          "shortName": null
         }
       }
     ],
-    "product_indexes": [],
-    "product_series": [
+    "productIndexes": [],
+    "productSeries": [
       {
-        "class_id": "class.panel-radiator",
-        "geometry_id": null,
+        "classId": "class.panel-radiator",
+        "geometryId": null,
         "id": "series-pr",
         "names": {
           "alternatives": [],
@@ -71,9 +71,9 @@
             "locale": "en",
             "text": "PR series"
           },
-          "short_name": null
+          "shortName": null
         },
-        "shared_property_values": {}
+        "sharedPropertyValues": {}
       }
     ],
     "products": [
@@ -85,22 +85,22 @@
             "locale": "en",
             "text": "PR-600"
           },
-          "short_name": null
+          "shortName": null
         },
-        "parameter_domains": [],
-        "series_id": "series-pr",
-        "static_properties": [],
+        "parameterDomains": [],
+        "seriesId": "series-pr",
+        "staticProperties": [],
         "variants": []
       }
     ],
-    "property_definitions": [
+    "propertyDefinitions": [
       {
         "cardinality": {
           "max": 1,
           "min": 1
         },
-        "data_type": "decimal",
-        "dictionary_property_id": "prop.height",
+        "dataType": "decimal",
+        "dictionaryPropertyId": "prop.height",
         "id": "prop.height",
         "kind": "Static",
         "names": {
@@ -109,7 +109,7 @@
             "locale": "en",
             "text": "Height"
           },
-          "short_name": null
+          "shortName": null
         },
         "unit": {
           "dimension": {
@@ -118,15 +118,15 @@
             "temperature": 0,
             "time": 0
           },
-          "si_factor": 0.001,
+          "siFactor": 0.001,
           "symbol": "mm"
         }
       }
     ]
   },
   "dictionary": {
-    "controlled_lists": [],
-    "meta_subjects": [],
+    "controlledLists": [],
+    "metaSubjects": [],
     "properties": [],
     "reference": {
       "id": "bsdd.fixture",
@@ -147,16 +147,16 @@
             "locale": "en",
             "text": "Radiator"
           },
-          "short_name": null
+          "shortName": null
         },
-        "parent_id": null
+        "parentId": null
       }
     ]
   },
   "exchangeProcess": "ProvideCatalogue",
   "geometry": {
     "objects": {},
-    "primitive_registry": [
+    "primitiveRegistry": [
       {
         "id": "box",
         "parameters": [
@@ -182,16 +182,16 @@
     "value": "PR-600"
   },
   "scriptLimits": {
-    "max_recursion": 64,
-    "max_steps": 10000,
-    "timeout_ms": 50
+    "maxRecursion": 64,
+    "maxSteps": 10000,
+    "timeoutMs": 50
   },
   "selection": {
-    "class_id": "class.panel-radiator",
+    "classId": "class.panel-radiator",
     "constraints": [
       {
         "operator": "Equal",
-        "property_id": "prop.height",
+        "propertyId": "prop.height",
         "value": {
           "kind": "decimal",
           "value": 600.0
@@ -200,7 +200,7 @@
       },
       {
         "operator": "GreaterThan",
-        "property_id": "prop.length",
+        "propertyId": "prop.length",
         "value": {
           "kind": "decimal",
           "value": 1000.0
@@ -208,6 +208,6 @@
         "id": "constraint-prop.length-1"
       }
     ],
-    "series_id": "series-pr"
+    "seriesId": "series-pr"
   }
 }

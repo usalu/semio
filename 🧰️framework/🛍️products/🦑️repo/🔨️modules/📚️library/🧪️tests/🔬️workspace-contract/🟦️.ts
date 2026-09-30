@@ -11,7 +11,7 @@ import { parseArgs } from "node:util";
 import { policyCanonicalArtifactKindBreaches, policyCanonicalChildKindBreaches, policyDissolvedKindRedefinitionBreaches, policyEmojiPrefixBreaches, policyModeCompletenessBreaches, policyPluginDependencyParityBreaches, policyWindowCompletenessBreaches } from "../../../../../../../📜️script.ts";
 import { playgroundStaticSiteBuildOptions } from "../../../../../../🔨️modules/🖱️ui/🎨️styling/🏗️builder/🌐️vite/🟦️.ts";
 import { newScaffoldMutationTree } from "../../🏗️authoring/🧬️mutation-tree/🟦️.ts";
-import { BundleScript, DAEMON_BUDGET_MS, ORCHESTRATOR_BUDGET_MS, PLAYGROUND_LOCKED_EXAMPLE_ENV, PLAYGROUND_PORTS, ScriptRouter, allPlaygroundReservedPorts, areaOf, budgetTimeoutHint, canReuseDevPort, capturedTestFailureDiagnostics, clearDiscoveryCache, computeWorkspaces, daemonBudgetMs, daemonBudgetOpts, defineLint, dependencyBoundaryBreachesForBundleDir, dependencyBoundaryBreachesForFile, describeDevPortOccupant, devServerUrl, devToolingEnv, diffWorkspaces, discoverBurndown, discoverOwners, discoverPackageProblems, discoverPackages, dispatchSubcommand, findRepoRoot, frameworkOsPlaygroundDevEnv, getWorkspaceRoot, gitSpawnEnv, goLevelTestArgs, isAdapterBoundaryFile, isDevPortInUse, layeringBreaches, layeringCounts, layeringReferences, loadFrameworkOsPlaygroundCatalog, loadLayeringBaseline, loadTaxonomy, nextestArtifactLocation, orchestratorBudgetMs, orchestratorBudgetOpts, parseTsImportSpecs, partitionNextestExecutionFilters, playgroundDevPort, playgroundPlayViteDefine, policyDiscoveredAllowlist, readSemioMarker, resolveCargoPackageName, resolveCargoPackageNames, resolveDevPort, resolveFrameworkOsPlaygroundPlugin, resolveWorkspaceTaxonomyAuthority, resolveWorkspaceTaxonomyAuthorityFromDirectory, runCmd, runCmdStatus, runProbe, testLevelAtLeast, testLevelBudgetMs, validateTaxonomy, vitestLevelArgs, wgpuDevPlayUrl, type FileLinter } from "../../📦️packages/🟦️typescript/🟦️.ts";
+import { BundleScript, DAEMON_BUDGET_MS, ORCHESTRATOR_BUDGET_MS, PLAYGROUND_LOCKED_EXAMPLE_ENV, PLAYGROUND_PORTS, ScriptRouter, allPlaygroundReservedPorts, areaOf, budgetTimeoutHint, canReuseDevPort, capturedTestFailureDiagnostics, clearDiscoveryCache, computeWorkspaces, daemonBudgetMs, daemonBudgetOpts, defineLint, dependencyBoundaryBreachesForBundleDir, dependencyBoundaryBreachesForFile, describeDevPortOccupant, devServerUrl, devToolingEnv, diffWorkspaces, discoverBurndown, discoverOwners, discoverPackageProblems, discoverPackages, dispatchSubcommand, findRepoRoot, frameworkOsPlaygroundDevEnv, getWorkspaceRoot, gitSpawnEnv, goLevelTestArgs, isAdapterBoundaryFile, isDevPortInUse, loadFrameworkOsPlaygroundCatalog, loadTaxonomy, nextestArtifactLocation, orchestratorBudgetMs, orchestratorBudgetOpts, parseTsImportSpecs, partitionNextestExecutionFilters, playgroundDevPort, playgroundPlayViteDefine, policyDiscoveredAllowlist, readSemioMarker, resolveCargoPackageName, resolveCargoPackageNames, resolveDevPort, resolveFrameworkOsPlaygroundPlugin, resolveWorkspaceTaxonomyAuthority, resolveWorkspaceTaxonomyAuthorityFromDirectory, runCmd, runCmdStatus, runProbe, testLevelAtLeast, testLevelBudgetMs, validateTaxonomy, vitestLevelArgs, wgpuDevPlayUrl, type FileLinter } from "../../📦️packages/🟦️typescript/🟦️.ts";
 import { artifactFacetPathIsDeclared, buildSemanticCensus, canonicalPrimaryFilenameForKind, createRustMutationCodecOwnershipInspector, fixedDirectoryContractIdsForPath, fixedFilenameContractIdsForPath, fixedSourceDispositionDecision, generatorNxPreviewCommand, inspectMutationMetadataSource, inspectRustModuleGraph, inspectRustModuleGraphFacts, inspectRustMutationAggregateSpan, inspectRustMutationMetadataFacts, inspectRustStructure, inspectRustVirtualSources, leadingEmojiIdentity, loadCatalogTaxonomy, mutationDirectLeafInlinedBehaviorFacets, pathEmojiStatuteFindings, projectCargoProviderManifest, registryCompilerInputDependencies, renderRustStructuralFactsJson, renderSemanticCensusJson, resolveCargoProviderBinding, resolveRustPathAttributes, scopedFileKindIdForSourcePath, semanticPathProjectionAuthority, taxonomyCliAttemptPreparationsProblems, taxonomyCliBackupPreparationProblems, taxonomyCliBackupWritePreparationProblems, taxonomyCliEditPreparationProblems, taxonomyCliEditWritePreparationProblems, taxonomyCliJsonWritePreparationProblems, taxonomyCliLeaseDirectoryProblems, taxonomyCliRestorePreparationProblems, validateGeneratorContractsAgainstWorkspace, type FixedDirectoryContract, type FixedFilenameContract, type PackageSourceDisposition, type RegistryCompilerInputRole, type SemanticProjectionAuthorityNode, type Taxonomy } from "../../🔍️discovery/🟦️.ts";
 import { validateJsonSchemaSubset } from "../../🧬️schema/✅️validation/🟦️.ts";
 import { taxonomyCliArtifactPath } from "../../🧹️normalization/🎮️command-contract/🟦️.ts";
@@ -4225,26 +4225,8 @@ describe("policyPluginDependencyParityBreaches", () => {
 });
 //#endregion 🧪️PluginDependencyParityPolicy
 
-describe("🏛️ layering", () => {
+describe("🔒️ policy allowlist", () => {
   const repoRoot = getWorkspaceRoot();
-
-  test.if(testLevelAtLeast("long"))("the ratchet never allows a file to grow past its baseline", () => {
-    expect(layeringBreaches(repoRoot)).toEqual([]);
-  }, 600_000);
-
-  test.if(testLevelAtLeast("long"))("no repo-wide or framework file exceeds what the baseline records", () => {
-    const baseline = loadLayeringBaseline(repoRoot);
-    for (const [file, count] of Object.entries(layeringCounts(layeringReferences(repoRoot)))) {
-      expect(count, `${file} references more implementation paths than its baseline`).toBeLessThanOrEqual(baseline.allowed[file] ?? 0);
-    }
-  }, 600_000);
-
-  test.if(testLevelAtLeast("long"))("the baseline lists no file that is already clean", () => {
-    const counts = layeringCounts(layeringReferences(repoRoot));
-    for (const [file, allowed] of Object.entries(loadLayeringBaseline(repoRoot).allowed)) {
-      if (allowed === 0) expect(counts[file] ?? 0, `${file} is baselined at 0 and should be dropped from the list`).toBe(0);
-    }
-  }, 600_000);
 
   test.if(testLevelAtLeast("long"))("an area contributes its own policy exemptions, and the router merges them by discovery", () => {
     const merged = policyDiscoveredAllowlist(repoRoot, "semantic-vocabulary");

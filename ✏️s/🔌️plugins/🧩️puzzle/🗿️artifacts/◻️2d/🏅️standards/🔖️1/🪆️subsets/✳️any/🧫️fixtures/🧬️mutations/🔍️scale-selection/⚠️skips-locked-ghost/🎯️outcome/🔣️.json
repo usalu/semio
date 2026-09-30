@@ -1,0 +1,20 @@
+{
+  "messages": [
+    {
+      "code": "mutation.partial",
+      "level": "warn",
+      "target": [
+        "node-ghost"
+      ]
+    },
+    {
+      "code": "mutation.partial",
+      "level": "warn",
+      "target": [
+        "node-c",
+        "region-2"
+      ]
+    }
+  ],
+  "status": "applied"
+}

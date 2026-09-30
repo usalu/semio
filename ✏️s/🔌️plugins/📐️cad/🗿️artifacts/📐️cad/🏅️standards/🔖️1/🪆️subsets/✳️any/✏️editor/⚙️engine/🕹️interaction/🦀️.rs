@@ -147,31 +147,31 @@ const RAW_INTERACTION_ASSETS: &[(&str, &str)] = &[
     ("aec.building.energy", include_str!("../../../../../../../../../🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🖼️assets/🏗️modelDefinitions/🔥️aec.building.energy/🕹️interactions/🪟️constructWindows.json")),
     (
         "aec.building.structure.classic",
-        include_str!("../../../../../../../../../🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🖼️assets/🏗️modelDefinitions/🌉️aec.building.structure.classic/🕹️interactions/🧱️constructOneWayRe-72a083.json"),
+        include_str!("../../../../../../../../../🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🖼️assets/🏗️modelDefinitions/🌉️aec.building/🕹️interactions/🧱️constructOneWayRe-72a083.json"),
     ),
     (
         "aec.building.structure.classic",
-        include_str!("../../../../../../../../../🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🖼️assets/🏗️modelDefinitions/🌉️aec.building.structure.classic/🕹️interactions/🏛️constructReinforc-411bd6.json"),
+        include_str!("../../../../../../../../../🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🖼️assets/🏗️modelDefinitions/🌉️aec.building/🕹️interactions/🏛️constructReinforc-411bd6.json"),
     ),
     (
         "aec.building.structure.classic",
-        include_str!("../../../../../../../../../🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🖼️assets/🏗️modelDefinitions/🌉️aec.building.structure.classic/🕹️interactions/🛡️constructReinforc-c38891.json"),
+        include_str!("../../../../../../../../../🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🖼️assets/🏗️modelDefinitions/🌉️aec.building/🕹️interactions/🛡️constructReinforc-c38891.json"),
     ),
     (
         "aec.building.structure.classic",
-        include_str!("../../../../../../../../../🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🖼️assets/🏗️modelDefinitions/🌉️aec.building.structure.classic/🕹️interactions/🚧️constructReinforc-e8fc67.json"),
+        include_str!("../../../../../../../../../🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🖼️assets/🏗️modelDefinitions/🌉️aec.building/🕹️interactions/🚧️constructReinforc-e8fc67.json"),
     ),
     (
         "aec.building.structure.fem.line",
-        include_str!("../../../../../../../../../🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🖼️assets/🏗️modelDefinitions/📏️aec.building.structure.fem.line/🕹️interactions/🔣️constructLineElem-0d404b.json"),
+        include_str!("../../../../../../../../../🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🖼️assets/🏗️modelDefinitions/📏️aec.building/🕹️interactions/🔣️constructLineElem-0d404b.json"),
     ),
     (
         "aec.building.structure.fem.solid",
-        include_str!("../../../../../../../../../🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🖼️assets/🏗️modelDefinitions/🧊️aec.building.structure.fem.solid/🕹️interactions/🔣️constructSolidEle-105046.json"),
+        include_str!("../../../../../../../../../🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🖼️assets/🏗️modelDefinitions/🧊️aec.building/🕹️interactions/🔣️constructSolidEle-105046.json"),
     ),
     (
         "aec.building.structure.fem.surface",
-        include_str!("../../../../../../../../../🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🖼️assets/🏗️modelDefinitions/🗺️aec.building.structure.fem.surface/🕹️interactions/🔣️constructSurfaceE-7da86f.json"),
+        include_str!("../../../../../../../../../🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🖼️assets/🏗️modelDefinitions/🗺️aec.building/🕹️interactions/🔣️constructSurfaceE-7da86f.json"),
     ),
 ];
 

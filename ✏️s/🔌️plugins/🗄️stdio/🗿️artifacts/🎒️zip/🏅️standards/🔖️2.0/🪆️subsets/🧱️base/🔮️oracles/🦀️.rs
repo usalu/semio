@@ -95,17 +95,29 @@ mod live {
     }
     //#endregion 🔖️Codec
 
+    //#region 🔖️Wire
+    /// 🔎️ A byte payload as the wire carries it: a plain JSON array of 0-255 numbers.
+    fn bytes_of(value: &Json, key: &str) -> Vec<u8> {
+        value.array(key).iter().filter_map(|item| if let Json::Number(number) = item { Some(*number as u8) } else { None }).collect()
+    }
+
+    /// 🎒️ One wire `ZipEntry` (`{name, data, metadata}`) as the member the reference writer stores.
+    fn entry_of(entry: &Json) -> MutationEntry {
+        MutationEntry { name: entry.str("name"), data: bytes_of(entry, "data") }
+    }
+    //#endregion 🔖️Wire
+
     //#region 🔖️Forward
-    /// 🦠️ Applies one declared mutation kind, described by `spec` (`{"kind": ..., "params": {...}}`),
+    /// 🦠️ Applies one declared mutation kind, described by `spec` (`{"kind": ..., "params": <leaf wire payload>}`),
     /// to an already-decoded archive. An unrecognised kind, or a named entry that does not exist, is
     /// an error — never a silent no-op.
     pub fn apply(mut archive: MutationArchive, spec: &Json) -> Result<MutationArchive, String> {
         let params = spec.get("params").cloned().unwrap_or(Json::Object(Vec::new()));
         match spec.str("kind").as_str() {
-            "no-mutation" => Ok(archive),
             "set-snapshot" => {
-                archive.entries = params.array("entries").iter().map(|entry| MutationEntry { name: entry.str("name"), data: entry.str("content").into_bytes() }).collect();
-                archive.comment = params.str("comment");
+                let snapshot = params.get("snapshot").ok_or("set-snapshot requires a `snapshot` field")?;
+                archive.entries = snapshot.array("entries").iter().map(entry_of).collect();
+                archive.comment = snapshot.str("comment");
                 Ok(archive)
             }
             "set-archive-comment" => {
@@ -113,14 +125,15 @@ mod live {
                 Ok(archive)
             }
             "add-entry" => {
-                let name = params.str("name");
-                if archive.entries.iter().any(|entry| entry.name == name) {
-                    return Err(format!("add-entry: an entry named {name:?} already exists"));
+                let entry = entry_of(params.get("entry").ok_or("add-entry requires an `entry` field")?);
+                if archive.entries.iter().any(|existing| existing.name == entry.name) {
+                    return Err(format!("add-entry: an entry named {:?} already exists", entry.name));
                 }
-                let index = if params.get("before").is_some() {
-                    archive.entries.iter().position(|entry| entry.name == params.str("before")).ok_or_else(|| "add-entry: insertion anchor does not exist".to_string())?
-                } else { archive.entries.len() };
-                archive.entries.insert(index, MutationEntry { name, data: params.str("content").into_bytes() });
+                let index = match params.get("before") {
+                    Some(Json::String(before)) => archive.entries.iter().position(|existing| &existing.name == before).ok_or_else(|| "add-entry: insertion anchor does not exist".to_string())?,
+                    _ => archive.entries.len(),
+                };
+                archive.entries.insert(index, entry);
                 Ok(archive)
             }
             "remove-entry" => {
@@ -134,7 +147,7 @@ mod live {
             }
             "rename-entry" => {
                 let name = params.str("name");
-                let new_name = params.str("newName");
+                let new_name = params.str("new_name");
                 match archive.entries.iter_mut().find(|entry| entry.name == name) {
                     Some(entry) => {
                         entry.name = new_name;
@@ -145,10 +158,10 @@ mod live {
             }
             "set-entry-data" => {
                 let name = params.str("name");
-                let content = params.str("content").into_bytes();
+                let data = bytes_of(&params, "data");
                 match archive.entries.iter_mut().find(|entry| entry.name == name) {
                     Some(entry) => {
-                        entry.data = content;
+                        entry.data = data;
                         Ok(archive)
                     }
                     None => Err(format!("set-entry-data: no entry named {name:?}")),
@@ -169,11 +182,10 @@ mod live {
     pub fn invert(original: &MutationArchive, mutated: MutationArchive, spec: &Json) -> Result<MutationArchive, String> {
         let params = spec.get("params").cloned().unwrap_or(Json::Object(Vec::new()));
         match spec.str("kind").as_str() {
-            "no-mutation" => Ok(mutated),
             "set-snapshot" => Ok(original.clone()),
             "set-archive-comment" => Ok(MutationArchive { comment: original.comment.clone(), ..mutated }),
             "add-entry" => {
-                let name = params.str("name");
+                let name = params.get("entry").map(|entry| entry.str("name")).unwrap_or_default();
                 let mut restored = mutated;
                 let before = restored.entries.len();
                 restored.entries.retain(|entry| entry.name != name);
@@ -184,15 +196,14 @@ mod live {
             }
             "remove-entry" => {
                 let name = params.str("name");
-                let removed = original.entries.iter().find(|entry| entry.name == name).cloned().ok_or_else(|| format!("inverse remove-entry: original archive has no entry named {name:?}"))?;
+                let index = original.entries.iter().position(|entry| entry.name == name).ok_or_else(|| format!("inverse remove-entry: original archive has no entry named {name:?}"))?;
                 let mut restored = mutated;
-                let index = original.entries.iter().position(|entry| entry.name == name).unwrap();
-                restored.entries.insert(index, removed);
+                restored.entries.insert(index, original.entries[index].clone());
                 Ok(restored)
             }
             "rename-entry" => {
                 let name = params.str("name");
-                let new_name = params.str("newName");
+                let new_name = params.str("new_name");
                 let mut restored = mutated;
                 match restored.entries.iter_mut().find(|entry| entry.name == new_name) {
                     Some(entry) => {

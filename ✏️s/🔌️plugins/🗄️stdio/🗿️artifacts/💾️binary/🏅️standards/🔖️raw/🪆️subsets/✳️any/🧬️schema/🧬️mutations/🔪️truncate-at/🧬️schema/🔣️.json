@@ -5,16 +5,28 @@
   "type": "object",
   "additionalProperties": false,
   "required": [
+    "mutation",
     "offset"
   ],
   "properties": {
-    "offset": {
-      "type": "integer",
-      "minimum": 0
-    },
     "mutation": {
       "const": "truncateAt",
       "description": "Aggregate discriminator spliced in by BinaryMutation; absent when the payload stands alone."
+    },
+    "offset": {
+      "type": "integer",
+      "minimum": 0,
+      "x-semio-ui": {
+        "widget": "stepper",
+        "label": {
+          "en": "Byte offset",
+          "de": "Byte-Versatz"
+        },
+        "unit": "B",
+        "precision": 0,
+        "group": "target",
+        "order": 10
+      }
     }
   }
 }

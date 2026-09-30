@@ -872,6 +872,9 @@ export const uiChromeTranslationBundles = {
             invariant: { label: { normal: "Ungültiger Zustand", beginner: "Diese Änderung würde einen ungültigen Zustand erzeugen." } },
             cascade: { label: { normal: "Folgeänderung", beginner: "Diese Änderung hat weitere Änderungen ausgelöst." } },
           },
+          history: {
+            foreignTransition: { label: { normal: "Änderung einer anderen Person", beginner: "Du kannst nur eigene Änderungen rückgängig machen oder wiederherstellen." } },
+          },
           policy: {
             laissezFaire: {
               label: { label: { normal: "Laissez-faire", beginner: "Laissez-faire" } },
@@ -916,6 +919,69 @@ export const uiChromeTranslationBundles = {
           kind: {
             agent: { label: { normal: "KI-Agent", beginner: "Ein KI-Agent, dem jemand Zugriff erteilt hat" } },
           },
+        },
+        timeTravel: {
+          band: { label: { normal: "Zeitreise", beginner: "Zeitreise: Du bearbeitest den Verlauf" } },
+          indicator: { label: { normal: "Zeitreise", beginner: "Zeitreise" } },
+          indicatorTarget: { label: { normal: "Zeitreise: Dokument vor {{target}}", beginner: "Zeitreise: Dieses Fenster zeigt das Dokument vor {{target}}" } },
+          stage: {
+            editing: { label: { normal: "Mutation wird bearbeitet", beginner: "Mutation wird bearbeitet" } },
+            replaying: { label: { normal: "Spätere Mutationen werden neu angewendet", beginner: "Spätere Mutationen werden neu angewendet" } },
+            reviewing: { label: { normal: "Bearbeiteter Verlauf wird geprüft", beginner: "Bearbeiteter Verlauf wird geprüft" } },
+            choosing: { label: { normal: "Art des Abschlusses wählen", beginner: "Art des Abschlusses wählen" } },
+            finalizing: { label: { normal: "Verlaufsbearbeitung wird abgeschlossen", beginner: "Verlaufsbearbeitung wird abgeschlossen" } },
+          },
+          target: { label: { normal: "Bearbeitet: {{target}}", beginner: "Bearbeitete Mutation: {{target}}" } },
+          progress: { label: { normal: "{{done}} von {{total}} Mutationen werden neu angewendet", beginner: "{{done}} von {{total}} Mutationen werden neu angewendet" } },
+          worst: { label: { normal: "Schwerstes Ergebnis: {{level}}", beginner: "Schwerstes Ergebnis der neu angewendeten Mutationen: {{level}}" } },
+          review: {
+            noChanges: { label: { normal: "Keine Änderungen: aktueller Verlauf wird angezeigt", beginner: "Keine Änderungen: aktueller Verlauf wird angezeigt" } },
+            needsReplay: { label: { normal: "Neu anwenden nötig: spätere Mutationen sind noch nicht geprüft", beginner: "Neu anwenden nötig: spätere Mutationen sind noch nicht geprüft" } },
+            blocked: { label: { normal: "Fehler in späteren Mutationen verhindern den Abschluss", beginner: "Fehler in späteren Mutationen verhindern den Abschluss" } },
+            ready: { label: { normal: "Bereit zum Abschließen", beginner: "Bereit zum Abschließen" } },
+          },
+          fault: { label: { normal: "Neuanwendung fehlgeschlagen ({{code}})", beginner: "Die Neuanwendung ist fehlgeschlagen ({{code}})" } },
+          accepted: { label: { normal: "Übernommene Änderungen: {{count}}", beginner: "Übernommene Änderungen: {{count}}" } },
+          accept: { label: { normal: "Entwurf übernehmen", beginner: "Entwurf übernehmen und spätere Mutationen neu anwenden" } },
+          discard: { label: { normal: "Entwurf verwerfen", beginner: "Entwurf verwerfen" } },
+          exit: { label: { normal: "Zeitreise beenden", beginner: "Zeitreise beenden und alle Entwürfe verwerfen" } },
+          finalize: { label: { normal: "Abschließen…", beginner: "Bearbeiteten Verlauf abschließen…" } },
+          back: { label: { normal: "Zurück", beginner: "Zurück zur Prüfung" } },
+          cancelReplay: { label: { normal: "Neuanwendung abbrechen", beginner: "Neuanwendung abbrechen" } },
+          rerun: { label: { normal: "Erneut anwenden", beginner: "Erneut anwenden" } },
+          peer: {
+            editingRow: { label: { normal: "{{name}} bearbeitet dies in der Zeitreise", beginner: "{{name}} bearbeitet dies gerade in der Zeitreise" } },
+            editingTarget: { label: { normal: "{{name}} bearbeitet {{target}} in der Zeitreise", beginner: "{{name}} bearbeitet gerade {{target}} in der Zeitreise" } },
+            editingHistory: { label: { normal: "{{name}} bearbeitet den Verlauf in der Zeitreise", beginner: "{{name}} bearbeitet gerade den Verlauf in der Zeitreise" } },
+          },
+          refusal: {
+            frozen: { label: { normal: "Bearbeiten ist pausiert, solange der Verlauf bearbeitet wird", beginner: "Bearbeiten ist pausiert, solange der Verlauf bearbeitet wird" } },
+            illegal: { label: { normal: "Derzeit nicht möglich", beginner: "Derzeit nicht möglich" } },
+            stale: { label: { normal: "Veraltete Anfrage ignoriert", beginner: "Veraltete Anfrage ignoriert" } },
+            blocked: { label: { normal: "Blockiert: zuerst die offene Änderung oder die Fehler auflösen", beginner: "Blockiert: zuerst die offene Änderung oder die Fehler auflösen" } },
+            empty: { label: { normal: "Nichts abzuschließen: keine übernommenen Änderungen", beginner: "Nichts abzuschließen: keine übernommenen Änderungen" } },
+            cancelled: { label: { normal: "Neu anwenden abgebrochen", beginner: "Neu anwenden abgebrochen" } },
+            nameInvalid: { label: { normal: "Ungültiger Name der Alternative: 1 bis 256 Zeichen verwenden", beginner: "Ungültiger Name der Alternative: 1 bis 256 Zeichen verwenden" } },
+          },
+        },
+        history: {
+          refusal: {
+            malformedTransition: { label: { normal: "Verlaufsbearbeitung abgelehnt: Die Änderung konnte nicht gelesen werden.", beginner: "Verlaufsbearbeitung abgelehnt: Die Änderung konnte nicht gelesen werden." } },
+            unknownTarget: { label: { normal: "Verlaufsbearbeitung abgelehnt: Die bearbeitete Mutation existiert nicht mehr.", beginner: "Verlaufsbearbeitung abgelehnt: Die bearbeitete Mutation existiert nicht mehr." } },
+            transitionRefused: { label: { normal: "Der Hub hat eine Verlaufsbearbeitung abgelehnt; das Dokument wird vom Hub neu aufgebaut.", beginner: "Der Hub hat eine Verlaufsbearbeitung abgelehnt; das Dokument wird vom Hub neu aufgebaut." } },
+          },
+        },
+        referenceList: {
+          useSelection: { label: { normal: "Aktuelle Auswahl verwenden", beginner: "Aktuelle Auswahl übernehmen" } },
+          remove: { label: { normal: "{{item}} entfernen", beginner: "{{item}} entfernen" } },
+          empty: { label: { normal: "Nichts ausgewählt", beginner: "Noch nichts ausgewählt" } },
+        },
+        colorInput: {
+          hex: { label: { normal: "Hex", beginner: "Hex-Farbcode" } },
+          alpha: { label: { normal: "Deckkraft", beginner: "Deckkraft (0 bis 1)" } },
+        },
+        nullableInput: {
+          clear: { label: { normal: "Leeren", beginner: "Wert leeren" } },
         },
       },
       settings: {
@@ -1798,6 +1864,9 @@ export const uiChromeTranslationBundles = {
             invariant: { label: { normal: "Invalid state", beginner: "This change would leave the document in an invalid state." } },
             cascade: { label: { normal: "Cascaded", beginner: "This change triggered further changes." } },
           },
+          history: {
+            foreignTransition: { label: { normal: "Change belongs to another author", beginner: "You can only undo or redo your own changes." } },
+          },
           policy: {
             laissezFaire: {
               label: { label: { normal: "Laissez-faire", beginner: "Laissez-faire" } },
@@ -1842,6 +1911,69 @@ export const uiChromeTranslationBundles = {
           kind: {
             agent: { label: { normal: "AI agent", beginner: "An AI agent someone gave access to" } },
           },
+        },
+        timeTravel: {
+          band: { label: { normal: "Time travel", beginner: "Time travel: you are editing the history" } },
+          indicator: { label: { normal: "Time travel", beginner: "Time travel" } },
+          indicatorTarget: { label: { normal: "Time travel: document before {{target}}", beginner: "Time travel: this window shows the document before {{target}}" } },
+          stage: {
+            editing: { label: { normal: "Editing a mutation", beginner: "Editing a mutation" } },
+            replaying: { label: { normal: "Replaying later mutations", beginner: "Replaying later mutations" } },
+            reviewing: { label: { normal: "Reviewing the edited history", beginner: "Reviewing the edited history" } },
+            choosing: { label: { normal: "Choose how to finalize", beginner: "Choose how to finalize" } },
+            finalizing: { label: { normal: "Finalizing the history edit", beginner: "Finalizing the history edit" } },
+          },
+          target: { label: { normal: "Editing: {{target}}", beginner: "Edited mutation: {{target}}" } },
+          progress: { label: { normal: "Replaying {{done}} of {{total}} mutations", beginner: "Replaying {{done}} of {{total}} mutations" } },
+          worst: { label: { normal: "Worst outcome: {{level}}", beginner: "Worst outcome of the replayed mutations: {{level}}" } },
+          review: {
+            noChanges: { label: { normal: "No changes: showing the current history", beginner: "No changes: showing the current history" } },
+            needsReplay: { label: { normal: "Replay needed: later mutations are not checked yet", beginner: "Replay needed: later mutations are not checked yet" } },
+            blocked: { label: { normal: "Errors in later mutations block finalizing", beginner: "Errors in later mutations block finalizing" } },
+            ready: { label: { normal: "Ready to finalize", beginner: "Ready to finalize" } },
+          },
+          fault: { label: { normal: "Replay failed ({{code}})", beginner: "The replay failed ({{code}})" } },
+          accepted: { label: { normal: "Accepted changes: {{count}}", beginner: "Accepted changes: {{count}}" } },
+          accept: { label: { normal: "Accept draft", beginner: "Accept the draft and replay later mutations" } },
+          discard: { label: { normal: "Discard draft", beginner: "Discard draft" } },
+          exit: { label: { normal: "Exit time travel", beginner: "Exit time travel and discard every draft" } },
+          finalize: { label: { normal: "Finalize…", beginner: "Finalize the edited history…" } },
+          back: { label: { normal: "Back", beginner: "Back to reviewing" } },
+          cancelReplay: { label: { normal: "Cancel replay", beginner: "Cancel replay" } },
+          rerun: { label: { normal: "Replay again", beginner: "Replay again" } },
+          peer: {
+            editingRow: { label: { normal: "{{name}} is editing this in time travel", beginner: "{{name}} is editing this right now in time travel" } },
+            editingTarget: { label: { normal: "{{name}} is editing {{target}} in time travel", beginner: "{{name}} is editing {{target}} right now in time travel" } },
+            editingHistory: { label: { normal: "{{name}} is editing the history in time travel", beginner: "{{name}} is editing the history right now in time travel" } },
+          },
+          refusal: {
+            frozen: { label: { normal: "Editing is paused while history is being edited", beginner: "Editing is paused while history is being edited" } },
+            illegal: { label: { normal: "Not possible right now", beginner: "Not possible right now" } },
+            stale: { label: { normal: "Outdated request ignored", beginner: "Outdated request ignored" } },
+            blocked: { label: { normal: "Blocked: resolve the pending change or the errors first", beginner: "Blocked: resolve the pending change or the errors first" } },
+            empty: { label: { normal: "Nothing to finalize: no accepted changes", beginner: "Nothing to finalize: no accepted changes" } },
+            cancelled: { label: { normal: "Replay cancelled", beginner: "Replay cancelled" } },
+            nameInvalid: { label: { normal: "Invalid alternative name: use 1 to 256 characters", beginner: "Invalid alternative name: use 1 to 256 characters" } },
+          },
+        },
+        history: {
+          refusal: {
+            malformedTransition: { label: { normal: "History edit refused: the change could not be read.", beginner: "History edit refused: the change could not be read." } },
+            unknownTarget: { label: { normal: "History edit refused: the edited mutation no longer exists.", beginner: "History edit refused: the edited mutation no longer exists." } },
+            transitionRefused: { label: { normal: "The hub refused a history edit; the document is rebuilt from the hub.", beginner: "The hub refused a history edit; the document is rebuilt from the hub." } },
+          },
+        },
+        referenceList: {
+          useSelection: { label: { normal: "Use current selection", beginner: "Use the current selection" } },
+          remove: { label: { normal: "Remove {{item}}", beginner: "Remove {{item}}" } },
+          empty: { label: { normal: "Nothing selected", beginner: "Nothing selected yet" } },
+        },
+        colorInput: {
+          hex: { label: { normal: "Hex", beginner: "Hex colour code" } },
+          alpha: { label: { normal: "Opacity", beginner: "Opacity (0 to 1)" } },
+        },
+        nullableInput: {
+          clear: { label: { normal: "Clear", beginner: "Clear the value" } },
         },
       },
       settings: {
@@ -2065,6 +2197,7 @@ function registerUiChromeTranslationBundles() {
 function createUiI18nPort(instance: typeof i18next): UiI18nPort {
   return {
     t: ((key, options) => instance.t(key as never, options as never)) as UiTranslateFn,
+    tIn: (locale, key, options) => instance.getFixedT(locale)(key as never, options as never),
     exists: (key) => instance.exists(key),
     changeLanguage: (locale) => instance.changeLanguage(locale),
     get language() {

@@ -5,12 +5,31 @@
   "type": "object",
   "additionalProperties": false,
   "required": [
+    "mutation",
     "id",
     "newLabel"
   ],
   "properties": {
+    "mutation": {
+      "const": "renameMachine"
+    },
     "id": {
-      "type": "string"
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Machine",
+          "de": "Maschine"
+        },
+        "description": {
+          "en": "The machine this mutation addresses.",
+          "de": "Die Maschine, die diese Mutation adressiert."
+        },
+        "ref": {
+          "kind": "machine"
+        }
+      }
     },
     "newLabel": {
       "type": "string"

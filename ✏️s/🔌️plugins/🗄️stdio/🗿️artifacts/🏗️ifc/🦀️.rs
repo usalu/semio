@@ -15,6 +15,8 @@ pub use schema::diff::IfcDiff;
 pub use schema::mutations::IfcMutation;
 pub use schema::snapshot::IfcSnapshot;
 pub use schema::IfcArtifact;
+/// 🧾️ The shared Part-21 codec and the leaf wire bridges, re-exported for the case adapters that link only this crate.
+pub use semio_s_artifact_stdio_contract::{apply_mutation_checked, mutation_from_payload_json, mutation_inverse, part21};
 
 /// 🏷️ Document schema / DSL envelope id.
 pub const STDIO_IFC_DOCUMENT_SCHEMA: &str = "stdio.ifc";

@@ -602,7 +602,7 @@ async fn toy_app(target: u64) -> ToyApp {
 }
 
 async fn set_target(app: &mut ToyApp, target: u64) {
-    app.config_store.dispatch(ArtifactCommand::Apply { mutations: vec![ChangeTestConfigSelection { selected: Some(target.to_string()) }.into()], description: None }).await.expect("toy target config applies");
+    app.config_store.dispatch(ArtifactCommand::Apply { mutations: vec![ChangeTestConfigSelection { selected: Some(target.to_string()) }.into()], description: None, transaction: None }).await.expect("toy target config applies");
 }
 
 fn toy_meta() -> ActionMeta {
@@ -838,7 +838,7 @@ async fn tool_run_remote_ingest_rebases_and_a_revalidation_conflict_returns_to_c
     let mut remote = artifact_app_laws::new_registered_app::<ToyRunApp, _>(toy_manifest()).await;
     let mut remote_probe = attach_probe(&mut remote, "tool-run-conflict-remote").await;
     remote.store.set_local_actor_id(Some("remote".into())).expect("remote actor");
-    remote.store.dispatch(ArtifactCommand::Apply { mutations: vec![SetCount { value: number(&expected["remoteCount"]) as i32 }.into()], description: None }).await.expect("remote edit");
+    remote.store.dispatch(ArtifactCommand::Apply { mutations: vec![SetCount { value: number(&expected["remoteCount"]) as i32 }.into()], description: None, transaction: None }).await.expect("remote edit");
     for message in remote_probe.receive().await.expect("remote outbox").into_iter().filter(|message| matches!(message, BackboneMessage::Mutations { .. })) {
         probe.send(message).await.expect("forward remote edit");
     }
@@ -1317,7 +1317,7 @@ async fn ingest_remote_count(app: &mut ToyApp, probe: &mut MemoryBackbone, chann
     let mut remote = artifact_app_laws::new_registered_app::<ToyRunApp, _>(toy_manifest()).await;
     let mut remote_probe = attach_probe(&mut remote, channel).await;
     remote.store.set_local_actor_id(Some("remote".into())).expect("remote actor");
-    remote.store.dispatch(ArtifactCommand::Apply { mutations: vec![SetCount { value: count as i32 }.into()], description: None }).await.expect("remote edit");
+    remote.store.dispatch(ArtifactCommand::Apply { mutations: vec![SetCount { value: count as i32 }.into()], description: None, transaction: None }).await.expect("remote edit");
     for message in remote_probe.receive().await.expect("remote outbox").into_iter().filter(|message| matches!(message, BackboneMessage::Mutations { .. })) {
         probe.send(message).await.expect("forward remote edit");
     }
@@ -1836,7 +1836,7 @@ fn expected_flag(value: &Value) -> bool {
 async fn a_retained_config_over_one_envelope_page_closes_after_a_render() {
     for (bytes, rendered) in [(2_909usize, true), (3_706, true), (4_360, true), (16_384, true), (65_536, true), (3_820, false)] {
         let mut app = toy_app(1).await;
-        app.config_store.dispatch(ArtifactCommand::Apply { mutations: vec![ChangeTestConfigSelection { selected: Some("c".repeat(bytes)) }.into()], description: None }).await.expect("a retained config past one envelope page applies");
+        app.config_store.dispatch(ArtifactCommand::Apply { mutations: vec![ChangeTestConfigSelection { selected: Some("c".repeat(bytes)) }.into()], description: None, transaction: None }).await.expect("a retained config past one envelope page applies");
         if rendered {
             let _ = render_text(&mut app, "main").await;
         }

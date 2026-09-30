@@ -158,6 +158,14 @@ impl<T, Id: ArenaId> Store<T, Id> {
     pub fn is_live(&self, id: Id) -> bool {
         self.contains(id)
     }
+    /// 🧹️ Transfers one tail slot, including an empty hole, without scanning the arena.
+    pub(crate) fn retirement_pop(&mut self) -> Option<Option<T>> { self.slots.pop().map(|slot| slot.value) }
+    /// 🎟️ Transfers empty slot backing and its free-list payload into explicit retirement.
+    pub(crate) fn retirement_backing(&mut self, retirement: &mut crate::standards::v1::subsets::brep::schema::engine::retirement::PayloadRetirement) where T: Send + 'static {
+        assert!(self.slots.is_empty());
+        retirement.empty_allocation(std::mem::take(&mut self.slots));
+        retirement.pod(std::mem::take(&mut self.free));
+    }
     /// 🗄️ Deterministic index-order iteration over live entries.
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn iter(&self) -> impl Iterator<Item = (Id, &T)> {

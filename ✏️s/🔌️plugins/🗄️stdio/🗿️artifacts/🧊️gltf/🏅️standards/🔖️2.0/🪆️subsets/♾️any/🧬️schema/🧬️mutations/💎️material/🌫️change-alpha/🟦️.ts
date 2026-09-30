@@ -1,18 +1,14 @@
-/** 🦠️ change-material-alpha-mode executes one typed alpha-mode mutation. */
-import type { GltfAlphaMode, GltfSnapshot } from '../../📸️snapshot/🟦️.ts';
-import { index, type GltfMaterialAnimationFailure } from './🟦️';
-export const GltfChangeMaterialAlphaModeDescriptor = { id: 's.stdio.gltf.mutation.change-material-alpha-mode.v1', version: 1, touchedPaths: ['document/materials/{material}/alphaMode'] } as const;
-export const touchedPathsGltfChangeMaterialAlphaMode = (payload: GltfChangeMaterialAlphaModePayload): string[] => [`document/materials/${payload.material}/alphaMode`];
-export interface GltfChangeMaterialAlphaModePayload { material: number; alphaMode: GltfAlphaMode }
-export interface GltfChangeMaterialAlphaModeRejection { code: string; path: string; detail: string }
-export type GltfChangeMaterialAlphaModeResult = { accepted: true; touchedPaths: readonly string[] } | { accepted: false; rejection: GltfChangeMaterialAlphaModeRejection };
-const failure = (value: GltfMaterialAnimationFailure): GltfChangeMaterialAlphaModeRejection => ({ ...value });
-export const validateGltfChangeMaterialAlphaMode = (payload: GltfChangeMaterialAlphaModePayload, base: GltfSnapshot): GltfChangeMaterialAlphaModeRejection | undefined => {
-  const target = index(base.document.materials.length, payload.material, 'document/materials'); if (target) return failure(target);
-  if (base.document.materials[payload.material].alphaMode === payload.alphaMode) return { code: 'gltf.mutation.no-observable-change', path: `document/materials/${payload.material}/alphaMode`, detail: 'alphaMode already has that value' };
-};
-export const applyGltfChangeMaterialAlphaMode = (snapshot: GltfSnapshot, payload: GltfChangeMaterialAlphaModePayload): GltfChangeMaterialAlphaModeResult => {
-  const rejection = validateGltfChangeMaterialAlphaMode(payload, snapshot); if (rejection) return { accepted: false, rejection };
-  snapshot.document.materials[payload.material].alphaMode = payload.alphaMode;
-  return { accepted: true, touchedPaths: touchedPathsGltfChangeMaterialAlphaMode(payload) };
-};
+/** 🌫️ `change-material-alpha-mode` wire twin: the flat `Apply` payload `GltfChangeMaterialAlphaModePayload` and the phase wire `ChangeMaterialAlphaModeMutation`, exactly as `./🦀️.rs` writes them.
+ * @see ./🧬️schema/🔣️.json */
+import { type GltfAlphaMode, gltfWireIndex, gltfWireObject, gltfWireRequired, parseGltfAlphaMode } from "../../../📸️snapshot/🟦️.ts";
+import { type GltfDiff, type GltfPhase, gltfWirePhase, parseGltfDiff } from "../../../🔺️diff/🟦️.ts";
+
+export interface GltfChangeMaterialAlphaModePayload {
+  material: number;
+  alphaMode: GltfAlphaMode;
+}
+
+export type ChangeMaterialAlphaModeMutation = GltfPhase<GltfChangeMaterialAlphaModePayload, GltfDiff>;
+
+export const parseGltfChangeMaterialAlphaModePayload = gltfWireObject<GltfChangeMaterialAlphaModePayload>({ material: gltfWireRequired(gltfWireIndex), alphaMode: gltfWireRequired(parseGltfAlphaMode) });
+export const parseChangeMaterialAlphaModeMutation = gltfWirePhase(parseGltfChangeMaterialAlphaModePayload, parseGltfDiff);

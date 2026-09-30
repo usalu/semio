@@ -4,12 +4,29 @@
   "title": "RemoveNode",
   "type": "object",
   "properties": {
-    "node_id": {
-      "type": "string"
+    "operation": {
+      "const": "removeNode"
+    },
+    "nodeId": {
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Node",
+          "de": "Knoten"
+        },
+        "ref": {
+          "kind": "node"
+        },
+        "group": "target",
+        "order": 10
+      }
     }
   },
   "required": [
-    "node_id"
+    "operation",
+    "nodeId"
   ],
   "additionalProperties": false
 }

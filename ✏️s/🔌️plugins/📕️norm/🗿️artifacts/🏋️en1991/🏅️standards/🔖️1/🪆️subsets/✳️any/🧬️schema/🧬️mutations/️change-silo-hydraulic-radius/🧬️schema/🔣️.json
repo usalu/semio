@@ -9,7 +9,21 @@
   ],
   "properties": {
     "newSiloHydraulicRadius": {
-      "type": "number"
+      "type": "number",
+      "minimum": 0,
+      "x-semio-ui": {
+        "widget": "stepper",
+        "role": "value",
+        "label": {
+          "en": "Hydraulic radius a/U",
+          "de": "Hydraulischer Radius A/U"
+        },
+        "unit": "m",
+        "step": 0.01,
+        "precision": 2,
+        "group": "silo",
+        "order": 10
+      }
     }
   }
 }

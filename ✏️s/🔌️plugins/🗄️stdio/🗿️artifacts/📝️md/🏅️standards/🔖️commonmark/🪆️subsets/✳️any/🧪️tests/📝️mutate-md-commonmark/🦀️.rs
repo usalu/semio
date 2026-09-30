@@ -11,7 +11,7 @@
 //! compiles the local implementation.
 
 use semio_repo_test_host::{Adapter, Context, Json, Outcome};
-use semio_s_plugin_stdio_test_oracle::artifacts::md::standards::v_commonmark::subsets::any::{inverse_mutation_spec, oracle_apply_mutation, project_md};
+use semio_s_plugin_stdio_test_oracle::artifacts::md::standards::v_commonmark::subsets::any::{inverse_mutation_spec, oracle_apply_mutation, oracle_round_trip, project_md};
 
 
 //#region 🔖️Input
@@ -28,9 +28,9 @@ fn mutable_input(ctx: &Context, uri: &str, name: &str) -> Result<Vec<u8>, String
 //#endregion 🔖️Input
 
 //#region 🔖️Oracle
-/// 👁️ The forward mutation, with the OBSERVABILITY law asserted in role: a kind other than
-/// `no-mutation` whose parameters leave the semantic projection exactly where it was has not been
-/// tested by this scenario at all -- it proves only that the reference library declined to error.
+/// 👁️ The forward mutation, with the OBSERVABILITY law asserted in role: a kind whose parameters
+/// leave the semantic projection exactly where it was has not been tested by this scenario at all
+/// -- it proves only that the reference library declined to error.
 /// Every `Examples` row is chosen against the real artifact's actual content for that reason, and
 /// this check is what keeps them so.
 fn mutate_oracle(ctx: &Context) -> Result<Outcome, String> {
@@ -39,7 +39,7 @@ fn mutate_oracle(ctx: &Context) -> Result<Outcome, String> {
     let input = mutable_input(ctx, INPUT, "input.md")?;
     let bytes = oracle_apply_mutation(&input, &spec)?;
     let projection = project_md(&bytes)?;
-    if kind != "no-mutation" && projection_divergence(&projection, &project_md(&input)?).is_none() {
+    if projection_divergence(&projection, &project_md(&input)?).is_none() {
         return Err(format!("{kind:?} left the semantic projection exactly as it found it -- a mutation whose parameters make it a no-op against the real artifact is not a test of that kind"));
     }
     Ok(Outcome::with_raw(bytes, projection))
@@ -87,8 +87,7 @@ fn inverse_oracle(ctx: &Context) -> Result<Outcome, String> {
 /// therefore blind to the writer freedom the feature file documents.
 fn round_trip_oracle(ctx: &Context) -> Result<Outcome, String> {
     let input = mutable_input(ctx, INPUT, "input.md")?;
-    let spec = Json::Object(vec![("kind".to_string(), Json::String("no-mutation".to_string())), ("params".to_string(), Json::Object(Vec::new()))]);
-    let bytes = oracle_apply_mutation(&input, &spec)?;
+    let bytes = oracle_round_trip(&input)?;
     if bytes == input {
         return Err("byte pass-through: the oracle's re-rendered bytes are bit-identical to the input, so nothing here proves the document was parsed rather than copied".to_string());
     }
@@ -106,182 +105,26 @@ fn round_trip_oracle(ctx: &Context) -> Result<Outcome, String> {
 mod subject {
     use super::{mutable_input, INPUT};
     use semio_repo_test_host::{Context, Json, Outcome};
-    use semio_s_artifact_stdio_md::schema::diff::navigate_container;
-    use semio_s_artifact_stdio_md::schema::mutations::{apply_md_mutation, MdPathStep};
-    use semio_s_artifact_stdio_md::schema::mutations::{insert_block::InsertBlock, remove_block::RemoveBlock, replace_block::ReplaceBlock, set_inlines::SetInlines, set_snapshot::SetSnapshot};
-    use semio_s_artifact_stdio_md::schema::snapshot::{MdBlock, MdInline};
+    use semio_s_artifact_stdio_md::schema::mutations::{apply_md_mutation, decode_md_mutation_payload_json, inverse_md_mutation};
     use semio_s_artifact_stdio_md::{MdMutation, MdSnapshot};
     use semio_s_plugin_stdio_test_oracle::artifacts::md::standards::v_commonmark::subsets::any::project_md;
 
-    //#region 🔖️Json
-    fn json_array(value: Option<&Json>) -> Vec<Json> {
-        match value {
-            Some(Json::Array(items)) => items.clone(),
-            _ => Vec::new(),
-        }
+    //#region 🔖️SpecCodec
+    /// 📄️ The scenario's `<id>`/`<params>` spec decoded as the leaf wire payload it is, through the aggregate's own
+    /// derive-generated payload constructor — never re-declared field by field here.
+    fn mutation_from_spec(spec: &Json) -> Result<MdMutation, String> {
+        decode_md_mutation_payload_json(&spec.str("kind"), &spec.get("params").cloned().unwrap_or(Json::Null).to_string())
     }
-    fn json_usize(json: &Json, key: &str) -> Result<usize, String> {
-        match json.get(key) {
-            Some(Json::Number(value)) => Ok(*value as usize),
-            _ => Err(format!("mutation params carry no numeric '{key}'")),
-        }
-    }
-    fn json_u8(json: &Json, key: &str) -> Result<u8, String> {
-        match json.get(key) {
-            Some(Json::Number(value)) => Ok(*value as u8),
-            _ => Err(format!("mutation params carry no numeric '{key}'")),
-        }
-    }
-    fn optional_string(json: &Json, key: &str) -> Option<String> {
-        match json.get(key) {
-            Some(Json::String(value)) => Some(value.clone()),
-            _ => None,
-        }
-    }
-    //#endregion 🔖️Json
-
-    //#region 🔖️Build
-    /// 🏗️ Builds the real `MdBlock`/`MdInline` tree the spec's JSON describes — the same
-    /// `kind`-tagged shape `MdBlock`/`MdInline` themselves serialize as, read here by hand (the
-    /// generated host's own minimal `Json` type, not `serde_json`, is what a scenario's params
-    /// arrive as).
-    fn build_inline(json: &Json) -> Result<MdInline, String> {
-        match json.str("kind").as_str() {
-            "text" => Ok(MdInline::Text { text: json.str("text") }),
-            "emphasis" => Ok(MdInline::Emphasis { inlines: build_inlines(&json.array("inlines"))? }),
-            "strong" => Ok(MdInline::Strong { inlines: build_inlines(&json.array("inlines"))? }),
-            "code" => Ok(MdInline::Code { literal: json.str("literal") }),
-            "link" => Ok(MdInline::Link { text: build_inlines(&json.array("text"))?, url: json.str("url"), title: optional_string(json, "title") }),
-            "image" => Ok(MdInline::Image { alt: json.str("alt"), url: json.str("url"), title: optional_string(json, "title") }),
-            "softBreak" => Ok(MdInline::SoftBreak),
-            "hardBreak" => Ok(MdInline::HardBreak),
-            "htmlInline" => Ok(MdInline::HtmlInline { raw: json.str("raw") }),
-            other => Err(format!("mutation inline carries unknown kind {other:?}")),
-        }
-    }
-    fn build_inlines(items: &[Json]) -> Result<Vec<MdInline>, String> {
-        items.iter().map(build_inline).collect()
-    }
-
-    fn build_block(json: &Json) -> Result<MdBlock, String> {
-        match json.str("kind").as_str() {
-            "heading" => Ok(MdBlock::Heading { level: json_u8(json, "level")?, inlines: build_inlines(&json.array("inlines"))? }),
-            "paragraph" => Ok(MdBlock::Paragraph { inlines: build_inlines(&json.array("inlines"))? }),
-            "list" => {
-                let ordered = matches!(json.get("ordered"), Some(Json::Bool(true)));
-                let tight = matches!(json.get("tight"), Some(Json::Bool(true)));
-                let start = match json.get("start") {
-                    Some(Json::Number(value)) => Some(*value as u32),
-                    _ => None,
-                };
-                let items = json.array("items").iter().map(|entry| json_array(Some(entry)).iter().map(build_block).collect::<Result<Vec<_>, _>>()).collect::<Result<Vec<_>, _>>()?;
-                Ok(MdBlock::List { ordered, start, tight, items })
-            }
-            "codeBlock" => Ok(MdBlock::CodeBlock { info: optional_string(json, "info"), literal: json.str("literal") }),
-            "blockQuote" => Ok(MdBlock::BlockQuote { blocks: json.array("blocks").iter().map(build_block).collect::<Result<Vec<_>, _>>()? }),
-            "thematicBreak" => Ok(MdBlock::ThematicBreak),
-            "htmlBlock" => Ok(MdBlock::HtmlBlock { raw: json.str("raw") }),
-            other => Err(format!("mutation block carries unknown kind {other:?}")),
-        }
-    }
-
-    fn build_path(params: &Json) -> Result<Vec<MdPathStep>, String> {
-        json_array(params.get("path"))
-            .iter()
-            .map(|step| match step.str("step").as_str() {
-                "blockQuote" => Ok(MdPathStep::BlockQuote { index: json_usize(step, "index")? }),
-                "listItem" => Ok(MdPathStep::ListItem { index: json_usize(step, "index")?, item: json_usize(step, "item")? }),
-                other => Err(format!("path step carries unknown 'step' {other:?}")),
-            })
-            .collect()
-    }
-
-    fn build_snapshot(json: &Json) -> Result<MdSnapshot, String> {
-        let blocks = json.array("blocks").iter().map(build_block).collect::<Result<Vec<_>, _>>()?;
-        Ok(MdSnapshot { schema: semio_s_artifact_stdio_md::STDIO_MD_DOCUMENT_SCHEMA.to_string(), blocks })
-    }
-
-    /// 🦠️ Builds the real `MdMutation` the spec describes — the same shape `oracle_apply_mutation`
-    /// reads, so both producers see one spec. `no-mutation` has no arm here -- it carries no
-    /// `MdMutation` variant (dropped by the `26/08/29/S-END-TO-END` mutation-leaf migration) and is
-    /// handled directly by `mutate`/`inverse` below before this function is ever called.
-    fn spec_to_mutation(spec: &Json) -> Result<MdMutation, String> {
-        let params = spec.get("params").cloned().unwrap_or(Json::Object(Vec::new()));
-        match spec.str("kind").as_str() {
-            "set-snapshot" => Ok(MdMutation::SetSnapshot(SetSnapshot { snapshot: build_snapshot(params.get("snapshot").ok_or("set-snapshot: params carry no 'snapshot'")?)? })),
-            "insert-block" => Ok(MdMutation::InsertBlock(InsertBlock { path: build_path(&params)?, index: json_usize(&params, "index")?, block: build_block(params.get("block").ok_or("insert-block: params carry no 'block'")?)? })),
-            "remove-block" => Ok(MdMutation::RemoveBlock(RemoveBlock { path: build_path(&params)?, index: json_usize(&params, "index")? })),
-            "replace-block" => Ok(MdMutation::ReplaceBlock(ReplaceBlock { path: build_path(&params)?, index: json_usize(&params, "index")?, block: build_block(params.get("block").ok_or("replace-block: params carry no 'block'")?)? })),
-            "set-inlines" => Ok(MdMutation::SetInlines(SetInlines { path: build_path(&params)?, index: json_usize(&params, "index")?, inlines: build_inlines(&json_array(params.get("inlines")))? })),
-            other => Err(format!("mutation kind {other:?} has no subject implementation")),
-        }
-    }
-    //#endregion 🔖️Build
-
-    //#region 🔖️Inverse
-    /// ↩️ The real inverse `MdMutation` of `kind`/`params`, restoring `original`'s own prior value —
-    /// the exact algebra `MdMutation::inverse` implements, reusing `navigate_container` (already
-    /// part of this same crate, no extra dependency) rather than the `protocol::Mutation` trait,
-    /// since the generated case crate has no direct `protocol` dependency of its own to reach it
-    /// through (same shape the `deflate` case's own `inverse_spec` helper documents). Returns `None`
-    /// when there is nothing to invert against (the address the mutation named is stale) or when
-    /// `kind` is `no-mutation` -- both mean zero inverse steps to apply, the same "EMPTY vec" shape
-    /// production's own `agg_inverse` returns now that `NoMutation` (dropped by the
-    /// `26/08/29/S-END-TO-END` mutation-leaf migration) is no longer available as a no-op sentinel.
-    fn inverse_mutation_of(kind: &str, params: &Json, original: &MdSnapshot) -> Result<Option<MdMutation>, String> {
-        if kind == "no-mutation" {
-            return Ok(None);
-        }
-        let path = build_path(params)?;
-        match kind {
-            "set-snapshot" => Ok(Some(MdMutation::SetSnapshot(SetSnapshot { snapshot: original.clone() }))),
-            "insert-block" => Ok(Some(MdMutation::RemoveBlock(RemoveBlock { path, index: json_usize(params, "index")? }))),
-            "remove-block" => {
-                let index = json_usize(params, "index")?;
-                match navigate_container(&original.blocks, &path).and_then(|container| container.get(index)).cloned() {
-                    Some(block) => Ok(Some(MdMutation::InsertBlock(InsertBlock { path, index, block }))),
-                    None => Ok(None),
-                }
-            }
-            "replace-block" => {
-                let index = json_usize(params, "index")?;
-                match navigate_container(&original.blocks, &path).and_then(|container| container.get(index)).cloned() {
-                    Some(block) => Ok(Some(MdMutation::ReplaceBlock(ReplaceBlock { path, index, block }))),
-                    None => Ok(None),
-                }
-            }
-            "set-inlines" => {
-                let index = json_usize(params, "index")?;
-                let original_block = navigate_container(&original.blocks, &path).and_then(|container| container.get(index));
-                let inlines = match original_block {
-                    Some(MdBlock::Heading { inlines, .. }) => Some(inlines.clone()),
-                    Some(MdBlock::Paragraph { inlines }) => Some(inlines.clone()),
-                    _ => None,
-                };
-                match inlines {
-                    Some(inlines) => Ok(Some(MdMutation::SetInlines(SetInlines { path, index, inlines }))),
-                    None => Ok(None),
-                }
-            }
-            other => Err(format!("mutation kind {other:?} has no inverse implementation")),
-        }
-    }
-    //#endregion 🔖️Inverse
+    //#endregion 🔖️SpecCodec
 
     //#region 🔖️Handlers
-    /// `no-mutation` is handled BEFORE `spec_to_mutation` is even called: it carries no
-    /// `MdMutation` variant of its own (dropped by the `26/08/29/S-END-TO-END` mutation-leaf
-    /// migration), so no mutation is applied at all -- `snapshot` stays exactly the parsed input,
-    /// then goes through the same `to_text`/byte-pass-through/projection path every other kind does.
+    /// 👁️ The forward mutation through this subset's own vocabulary, re-rendered and projected.
     pub fn mutate(ctx: &Context) -> Result<Outcome, String> {
         let spec = ctx.doc_json()?;
         let input = mutable_input(ctx, INPUT, "input.md")?;
         let text = String::from_utf8(input.clone()).map_err(|error| format!("input is not valid UTF-8: {error}"))?;
         let mut snapshot = MdSnapshot::from_text(&text);
-        if spec.str("kind") != "no-mutation" {
-            let mutation = spec_to_mutation(&spec)?;
-            apply_md_mutation(&mut snapshot, &mutation);
-        }
+        apply_md_mutation(&mut snapshot, &mutation_from_spec(&spec)?);
         let bytes = snapshot.to_text().into_bytes();
         if bytes == input {
             return Err("byte pass-through: output is bit-identical to the input".to_string());
@@ -290,28 +133,24 @@ mod subject {
         Ok(Outcome::with_raw(bytes, projection))
     }
 
-    /// `no-mutation` is handled the same way `mutate` handles it above: no `MdMutation` to
-    /// construct or invert, so `mutated`/`restored` both stay the identity of `original`.
+    /// ↩️ The subset's OWN `Mutation::inverse` (`inverse_md_mutation`), applied after the forward step and asserted
+    /// against the original document's projection — the implementation's algebra, not a transcription of it.
     pub fn inverse(ctx: &Context) -> Result<Outcome, String> {
         let spec = ctx.doc_json()?;
         let input = mutable_input(ctx, INPUT, "input.md")?;
         let text = String::from_utf8(input.clone()).map_err(|error| format!("input is not valid UTF-8: {error}"))?;
         let original = MdSnapshot::from_text(&text);
         let original_projection = project_md(&input)?;
-        let params = spec.get("params").cloned().unwrap_or(Json::Object(Vec::new()));
         let kind = spec.str("kind");
-        let mut mutated = original.clone();
-        if kind != "no-mutation" {
-            let mutation = spec_to_mutation(&spec)?;
-            apply_md_mutation(&mut mutated, &mutation);
-        }
-        let mutated_bytes = mutated.to_text().into_bytes();
-        if mutated_bytes == input {
+        let mutation = mutation_from_spec(&spec)?;
+        let undo = inverse_md_mutation(&mutation, &original);
+        let mut restored = original;
+        apply_md_mutation(&mut restored, &mutation);
+        if restored.to_text().into_bytes() == input {
             return Err("byte pass-through: mutated output is bit-identical to the input".to_string());
         }
-        let mut restored = mutated.clone();
-        if let Some(inverse_mutation) = inverse_mutation_of(&kind, &params, &original)? {
-            apply_md_mutation(&mut restored, &inverse_mutation);
+        for step in &undo {
+            apply_md_mutation(&mut restored, step);
         }
         let restored_bytes = restored.to_text().into_bytes();
         let projection = project_md(&restored_bytes)?;
@@ -349,10 +188,10 @@ mod subject {
 /// 🧭️ Registration entry point the generated host calls.
 pub fn adapter() -> Adapter {
     let mut built = Adapter::new("rust");
-    built = built.oracle("mutate", mutate_oracle).oracle("no-mutation-baseline-mutate", mutate_oracle).oracle("inverse", inverse_oracle).oracle("no-mutation-baseline-inverse", inverse_oracle);
+    built = built.oracle("mutate", mutate_oracle).oracle("inverse", inverse_oracle);
     #[cfg(feature = "sut")]
     {
-        built = built.subject("mutate", subject::mutate).subject("no-mutation-baseline-mutate", subject::mutate).subject("inverse", subject::inverse).subject("no-mutation-baseline-inverse", subject::inverse);
+        built = built.subject("mutate", subject::mutate).subject("inverse", subject::inverse);
     }
     built = built.oracle("identity-round-trip", round_trip_oracle);
     #[cfg(feature = "sut")]

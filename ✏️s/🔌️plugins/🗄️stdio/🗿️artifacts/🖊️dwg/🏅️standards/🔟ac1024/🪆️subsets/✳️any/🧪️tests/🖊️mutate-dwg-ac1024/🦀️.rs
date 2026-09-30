@@ -26,7 +26,7 @@
 //! expectation tables rather than one text under two names.
 
 use semio_repo_test_host::{Adapter, Context, Json, Outcome};
-use semio_s_plugin_stdio_test_oracle::artifacts::dwg::standards::v_ac1024::subsets::any::{dwgread_agrees, oracle_apply_mutation, oracle_inverse_spec, oracle_round_trip, project_dwg};
+use semio_s_plugin_stdio_test_oracle::artifacts::dwg::standards::v_ac1024::subsets::any::{dwgread_agrees, oracle_apply_mutation, oracle_restore, oracle_round_trip, project_dwg};
 use semio_s_plugin_stdio_test_oracle::law::{carrier_is_exact, inverse_restores, round_trip_preserves};
 
 
@@ -54,7 +54,8 @@ const NATIVE_VERSION: &str = "AC1024";
 /// answers to the specification, so this table is the thing the handler is measured against.
 fn predicted(kind: &str, params: &Json, input: &[u8]) -> Result<Json, String> {
     let before = project_dwg(input)?;
-    let field = |key: &str| params.get(key).cloned().unwrap_or_else(|| before.get(key).cloned().unwrap_or(Json::Null));
+    let stated = if kind == "set-snapshot" { params.get("snapshot").cloned().unwrap_or(Json::Null) } else { params.clone() };
+    let field = |key: &str| stated.get(key).cloned().unwrap_or_else(|| before.get(key).cloned().unwrap_or(Json::Null));
     let triple = vec![("version".to_string(), field("version")), ("maintenanceVersion".to_string(), field("maintenanceVersion")), ("codepage".to_string(), field("codepage"))];
     let length = match kind {
         "set-snapshot" => Json::Number(22.0),
@@ -75,21 +76,13 @@ fn conforms(kind: &str, projection: &Json, expected: &Json) -> Result<(), String
 //#endregion 🔖️Expectation
 
 //#region 🔖️Oracle
-/// 🧾️ The `no-mutation` spec, spelled once. Only the subject half needs it: the oracle side reaches
-/// its identity through `oracle_round_trip`, which zeroes the preamble first.
-#[cfg(feature = "sut")]
-fn no_mutation() -> Json {
-    Json::Object(vec![("kind".to_string(), Json::String("no-mutation".to_string())), ("params".to_string(), Json::Object(vec![]))])
-}
-
 fn params_of(spec: &Json) -> Json {
     spec.get("params").cloned().unwrap_or(Json::Object(vec![]))
 }
 
 /// 🔮️ Every `mutate-<kind>` scenario id, asserted IN ROLE against the specification: the
 /// independent preamble writer applies the kind and the result must read back exactly the triple
-/// the published offsets predict, and — for anything but `no-mutation` — must have MOVED the
-/// projection at all. A row whose params leave the projection where it was is not a test.
+/// the published offsets predict, and must have MOVED the projection at all. A row whose params leave the projection where it was is not a test.
 fn mutate_oracle(ctx: &Context) -> Result<Outcome, String> {
     let input = mutable_input(ctx)?;
     let spec = ctx.doc_json()?;
@@ -98,7 +91,7 @@ fn mutate_oracle(ctx: &Context) -> Result<Outcome, String> {
     let bytes = oracle_apply_mutation(&input, &spec)?;
     let projection = project_dwg(&bytes)?;
     conforms(&kind, &projection, &predicted(&kind, &params_of(&spec), &input)?)?;
-    if kind != "no-mutation" && projection == before {
+    if projection == before {
         return Err(format!("{kind:?} left the preamble projection unchanged — a mutation that is not observable proves nothing"));
     }
     dwgread_agrees(&ctx.work_dir, "mutated.dwg", &bytes, &projection)?;
@@ -107,16 +100,15 @@ fn mutate_oracle(ctx: &Context) -> Result<Outcome, String> {
 
 /// ↩️ Every `inverse-<kind>` scenario id, and the ORACLE side of the inverse law: the forward
 /// mutation is applied, the inverse is computed independently against the UNTOUCHED original
-/// (`oracle_inverse_spec`, mirroring `DwgMutation::inverse()`'s own base-relative semantics), and
-/// the restored drawing must project exactly as the original does. `no-mutation` runs the same two
-/// steps as every other kind rather than being short-circuited, so the trivial case is evidence.
+/// (`oracle_restore`, mirroring `DwgMutation::inverse()`'s own base-relative semantics), and
+/// the restored drawing must project exactly as the original does.
 fn inverse_oracle(ctx: &Context) -> Result<Outcome, String> {
     let input = mutable_input(ctx)?;
     let spec = ctx.doc_json()?;
     let kind = spec.str("kind");
     let original = project_dwg(&input)?;
     let mutated = oracle_apply_mutation(&input, &spec)?;
-    let restored = oracle_apply_mutation(&mutated, &oracle_inverse_spec(&input, &spec)?)?;
+    let restored = oracle_restore(&input, &mutated, &spec)?;
     let projection = project_dwg(&restored)?;
     inverse_restores(&kind, &projection, &original)?;
     dwgread_agrees(&ctx.work_dir, "restored.dwg", &restored, &projection)?;
@@ -148,42 +140,25 @@ fn identity_round_trip_oracle(ctx: &Context) -> Result<Outcome, String> {
 //#region 🔖️Subject
 #[cfg(feature = "sut")]
 mod subject {
-    use super::{conforms, mutable_input, no_mutation, params_of, predicted, NATIVE_VERSION};
+    use super::{conforms, mutable_input, params_of, predicted, NATIVE_VERSION};
     use semio_repo_test_host::{Context, Json, Outcome};
-    use semio_s_artifact_stdio_dwg::standards::v_ac1024::subsets::any::schema::mutations::{apply_dwg_mutation_checked, inverse_dwg_mutation, set_snapshot, set_version_info, DwgMutation};
-    use semio_s_artifact_stdio_dwg::standards::v_ac1024::subsets::any::schema::snapshot::{decode_dwg, encode_dwg, DwgSnapshot};
+    use semio_s_artifact_stdio_dwg::standards::v_ac1024::subsets::any::schema::mutations::{apply_dwg_mutation_checked, decode_dwg_mutation_payload, inverse_dwg_mutation, DwgMutation};
+    use semio_s_artifact_stdio_dwg::standards::v_ac1024::subsets::any::schema::snapshot::{decode_dwg, encode_dwg};
     use semio_s_plugin_stdio_test_oracle::artifacts::dwg::standards::v_ac1024::subsets::any::project_dwg;
     use semio_s_plugin_stdio_test_oracle::law::{carrier_is_exact, inverse_restores, round_trip_preserves};
 
-    /// 🦠️ The `(kind, params)` wire shape read into a real `DwgMutation`. `set-snapshot` builds a
-    /// preamble-only document — a genuine whole-document replacement, the same thing the reference
-    /// side builds — rather than a field set wearing a different verb's name.
-    fn mutation_from_spec(spec: &Json, base: &DwgSnapshot) -> Result<DwgMutation, String> {
-        let params = params_of(spec);
-        let version = match params.get("version") {
-            Some(Json::String(text)) => text.clone(),
-            _ => base.version.clone(),
-        };
-        let number = |key: &str, fallback: f64| match params.get(key) {
-            Some(Json::Number(found)) => *found,
-            _ => fallback,
-        };
-        let maintenance_version = number("maintenanceVersion", f64::from(base.maintenance_version)) as u8;
-        let codepage = number("codepage", f64::from(base.codepage)) as u16;
-        Ok(match spec.str("kind").as_str() {
-            "no-mutation" => DwgMutation::SetSnapshot(set_snapshot::SetSnapshot { snapshot: Box::new(base.clone()) }),
-            "set-version-info" => DwgMutation::SetVersionInfo(set_version_info::SetVersionInfo { version, maintenance_version, codepage }),
-            "set-snapshot" => DwgMutation::SetSnapshot(set_snapshot::SetSnapshot { snapshot: Box::new(DwgSnapshot { version, maintenance_version, codepage, ..DwgSnapshot::default() }) }),
-            other => return Err(format!("unrecognised mutation kind {other:?}")),
-        })
+    /// 🦠️ The spec's wire payload, decoded by `DwgMutation`'s own payload constructor reached through this standard's
+    /// module path — for AC1018 that path re-exports the AC1024 vocabulary, so if the re-export stops resolving this
+    /// case is the thing that fails.
+    fn mutation_of(spec: &Json) -> Result<DwgMutation, String> {
+        decode_dwg_mutation_payload(&spec.str("kind"), &params_of(spec).to_string())
     }
 
     /// 📐️ Full parse into the typed `DwgSnapshot` and re-serialization from the model alone — never
     /// a splice of the input's own bytes.
     fn apply_and_encode(input: &[u8], spec: &Json) -> Result<Vec<u8>, String> {
         let mut snapshot = decode_dwg(input)?;
-        let mutation = mutation_from_spec(spec, &snapshot.clone())?;
-        apply_dwg_mutation_checked(&mut snapshot, &mutation)?;
+        apply_dwg_mutation_checked(&mut snapshot, &mutation_of(spec)?)?;
         encode_dwg(&snapshot).map_err(|error| format!("encode_dwg failed: {error}"))
     }
 
@@ -205,7 +180,7 @@ mod subject {
         let base = decode_dwg(&input)?;
         let mutated = apply_and_encode(&input, &spec)?;
         let mut snapshot = decode_dwg(&mutated)?;
-        for step in inverse_dwg_mutation(&base, &mutation_from_spec(&spec, &base)?) {
+        for step in inverse_dwg_mutation(&base, &mutation_of(&spec)?) {
             apply_dwg_mutation_checked(&mut snapshot, &step)?;
         }
         let restored = encode_dwg(&snapshot).map_err(|error| format!("encode_dwg failed: {error}"))?;
@@ -217,7 +192,7 @@ mod subject {
     pub fn identity_round_trip(ctx: &Context) -> Result<Outcome, String> {
         let input = mutable_input(ctx)?;
         let before = project_dwg(&input)?;
-        let bytes = apply_and_encode(&input, &no_mutation())?;
+        let bytes = encode_dwg(&decode_dwg(&input)?).map_err(|error| format!("encode_dwg failed: {error}"))?;
         let projection = project_dwg(&bytes)?;
         round_trip_preserves(&projection, &before)?;
         carrier_is_exact(&bytes, &input)?;
@@ -234,10 +209,10 @@ mod subject {
 /// base ids, which the host resolves for every Examples row, and plain scenarios under their own ids.
 pub fn adapter() -> Adapter {
     let mut built = Adapter::new("rust");
-    built = built.oracle("mutate", mutate_oracle).oracle("no-mutation-baseline-mutate", mutate_oracle).oracle("inverse", inverse_oracle).oracle("no-mutation-baseline-inverse", inverse_oracle);
+    built = built.oracle("mutate", mutate_oracle).oracle("inverse", inverse_oracle);
     #[cfg(feature = "sut")]
     {
-        built = built.subject("mutate", subject::mutate).subject("no-mutation-baseline-mutate", subject::mutate).subject("inverse", subject::inverse).subject("no-mutation-baseline-inverse", subject::inverse);
+        built = built.subject("mutate", subject::mutate).subject("inverse", subject::inverse);
     }
     built = built.oracle("identity-round-trip", identity_round_trip_oracle);
     #[cfg(feature = "sut")]

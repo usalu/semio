@@ -13,6 +13,7 @@ fn puzzle3d_document_vcs_replays_granular_operations() {
             None,
         )],
         description: None,
+        transaction: None,
     }))
     .expect("apply");
     let projection = store.snapshot().expect("projection");

@@ -5,30 +5,79 @@
   "type": "object",
   "additionalProperties": false,
   "required": [
+    "mutation",
     "parent",
     "index",
     "expectedName",
     "revision"
   ],
   "properties": {
+    "mutation": {
+      "const": "removeXmlNode"
+    },
     "parent": {
-      "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/docx/ecma-376/base/xml-address.json"
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/docx/ecma-376/base/xml-address.json",
+      "x-semio-ui": {
+        "label": {
+          "en": "Parent element",
+          "de": "Übergeordnetes Element"
+        },
+        "description": {
+          "en": "Address of the element the node is removed from.",
+          "de": "Adresse des Elements, aus dem der Knoten entfernt wird."
+        },
+        "group": "target",
+        "order": 10
+      }
     },
     "index": {
       "type": "integer",
       "minimum": 0,
-      "maximum": 9007199254740991
+      "maximum": 9007199254740991,
+      "x-semio-ui": {
+        "widget": "stepper",
+        "label": {
+          "en": "Child position",
+          "de": "Kindposition"
+        },
+        "precision": 0,
+        "group": "target",
+        "order": 20
+      }
     },
     "expectedName": {
       "type": "string",
-      "minLength": 1
+      "minLength": 1,
+      "x-semio-ui": {
+        "widget": "text",
+        "label": {
+          "en": "Expected element name",
+          "de": "Erwarteter Elementname"
+        },
+        "description": {
+          "en": "Expanded name the addressed node must have, e.g. {…/main}p.",
+          "de": "Erweiterter Name, den der adressierte Knoten haben muss, z. B. {…/main}p."
+        },
+        "group": "value",
+        "order": 30
+      }
     },
     "revision": {
       "type": "string",
-      "pattern": "^[0-9a-f]{16}$"
-    },
-    "mutation": {
-      "const": "removeXmlNode"
+      "pattern": "^[0-9a-f]{16}$",
+      "x-semio-ui": {
+        "widget": "text",
+        "label": {
+          "en": "Revision stamp",
+          "de": "Revisionsstempel"
+        },
+        "description": {
+          "en": "Lineage revision the address was taken at; a stale stamp refuses the edit.",
+          "de": "Abstammungsrevision, zu der die Adresse erfasst wurde; ein veralteter Stempel lehnt die Bearbeitung ab."
+        },
+        "group": "value",
+        "order": 40
+      }
     }
   }
 }

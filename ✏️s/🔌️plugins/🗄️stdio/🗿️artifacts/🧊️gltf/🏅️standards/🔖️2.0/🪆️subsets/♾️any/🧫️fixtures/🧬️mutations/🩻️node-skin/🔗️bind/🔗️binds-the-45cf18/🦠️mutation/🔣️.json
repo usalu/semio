@@ -1,0 +1,10 @@
+{
+  "mutation": "bindNodeSkin",
+  "payload": {
+    "phase": "apply",
+    "value": {
+      "node": 0,
+      "skin": 0
+    }
+  }
+}

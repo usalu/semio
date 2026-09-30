@@ -11,14 +11,62 @@
   ],
   "properties": {
     "memberId": {
-      "type": "string"
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Member",
+          "de": "Bauteil"
+        },
+        "description": {
+          "en": "The timber member this mutation addresses.",
+          "de": "Das Holzbauteil, das diese Mutation adressiert."
+        },
+        "ref": {
+          "kind": "member"
+        },
+        "group": "target",
+        "order": 10
+      }
     },
     "actionId": {
-      "type": "string"
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Action",
+          "de": "Einwirkung"
+        },
+        "description": {
+          "en": "The characteristic action of the member or connection.",
+          "de": "Die charakteristische Einwirkung des Bauteils oder der Verbindung."
+        },
+        "ref": {
+          "kind": "action"
+        },
+        "group": "target",
+        "order": 20
+      }
     },
     "newValue": {
       "type": "number",
-      "format": "double"
+      "x-semio-ui": {
+        "widget": "stepper",
+        "role": "value",
+        "label": {
+          "en": "Characteristic shear force V_k",
+          "de": "Charakteristische Querkraft V_k"
+        },
+        "unit": "N",
+        "displayUnit": "kN",
+        "displayFactor": 0.001,
+        "step": 100,
+        "precision": 1,
+        "group": "actions",
+        "order": 30
+      }
     }
   }
 }

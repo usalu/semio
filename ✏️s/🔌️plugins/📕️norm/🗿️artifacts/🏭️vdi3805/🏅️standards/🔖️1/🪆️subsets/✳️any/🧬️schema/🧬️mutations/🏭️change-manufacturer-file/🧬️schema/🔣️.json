@@ -9,73 +9,19 @@
   ],
   "properties": {
     "newManufacturerFile": {
-      "title": "ManufacturerFile",
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "buildingSystemNumber",
-        "charset",
-        "created",
-        "extensions",
-        "headerVersion",
-        "manufacturer",
-        "recordCount"
-      ],
-      "properties": {
-        "headerVersion": {
-          "type": "string"
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/vdi3805/snapshot.json#/$defs/ManufacturerFile",
+      "x-semio-ui": {
+        "role": "value",
+        "label": {
+          "en": "Manufacturer file header",
+          "de": "Kopfsatz der Herstellerdatei"
         },
-        "manufacturer": {
-          "type": "string"
+        "description": {
+          "en": "Header version, manufacturer, building services number, creation date and character set.",
+          "de": "Kopfversion, Hersteller, Gewerknummer, Erstellungsdatum und Zeichensatz."
         },
-        "buildingSystemNumber": {
-          "title": "BuildingSystemNumber",
-          "type": "object",
-          "additionalProperties": false,
-          "required": [
-            "sequence",
-            "subsystem",
-            "systemCode"
-          ],
-          "properties": {
-            "systemCode": {
-              "type": "string"
-            },
-            "subsystem": {
-              "type": "string"
-            },
-            "sequence": {
-              "type": "integer",
-              "minimum": 0
-            }
-          }
-        },
-        "created": {
-          "type": "string"
-        },
-        "charset": {
-          "type": "string"
-        },
-        "recordCount": {
-          "type": "integer",
-          "minimum": 0
-        },
-        "extensions": {
-          "title": "ExtensionBag",
-          "type": "object",
-          "additionalProperties": false,
-          "required": [
-            "fields"
-          ],
-          "properties": {
-            "fields": {
-              "type": "object",
-              "additionalProperties": {
-                "description": "any JSON value"
-              }
-            }
-          }
-        }
+        "group": "catalogue",
+        "order": 10
       }
     }
   }

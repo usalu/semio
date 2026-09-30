@@ -13,7 +13,18 @@
       "type": "string"
     },
     "new_roughness": {
-      "type": "number"
+      "type": "number",
+      "x-semio-ui": {
+        "widget": "stepper",
+        "label": {
+          "en": "Roughness",
+          "de": "Rauheit"
+        },
+        "description": {
+          "en": "PBR roughness, 0 smooth to 1 rough.",
+          "de": "PBR-Rauheit, 0 glatt bis 1 rau."
+        }
+      }
     }
   }
 }

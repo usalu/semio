@@ -10,8 +10,8 @@
     "periodic"
   ],
   "properties": {
-    "width": { "type": "integer", "minimum": 1, "maximum": 512 },
-    "height": { "type": "integer", "minimum": 1, "maximum": 512 },
-    "periodic": { "type": "boolean" }
+    "width": { "type": "integer", "minimum": 1, "maximum": 512, "x-semio-ui": { "widget": "stepper", "role": "value", "label": { "en": "Width", "de": "Breite" }, "unit": "px", "step": 1, "precision": 0, "group": "size", "order": 10 } },
+    "height": { "type": "integer", "minimum": 1, "maximum": 512, "x-semio-ui": { "widget": "stepper", "role": "value", "label": { "en": "Height", "de": "Höhe" }, "unit": "px", "step": 1, "precision": 0, "group": "size", "order": 20 } },
+    "periodic": { "type": "boolean", "x-semio-ui": { "widget": "toggle", "role": "value", "label": { "en": "Periodic output", "de": "Periodische Ausgabe" }, "description": { "en": "The output wraps around its edges.", "de": "Die Ausgabe läuft über ihre Ränder um." }, "group": "model", "order": 30 } }
   }
 }

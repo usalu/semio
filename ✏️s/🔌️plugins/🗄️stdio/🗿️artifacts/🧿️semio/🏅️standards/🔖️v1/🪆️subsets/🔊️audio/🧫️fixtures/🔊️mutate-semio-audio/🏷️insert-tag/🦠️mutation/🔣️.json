@@ -1,6 +1,7 @@
 {
   "kind": "insert-tag",
-  "params": {
+  "mutation": {
+    "mutation": "insertTag",
     "index": 1,
     "tag": {
       "key": "artist",

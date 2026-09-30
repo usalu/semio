@@ -1,0 +1,14 @@
+{
+  "mutation": "scaleObjects",
+  "pane": "shape",
+  "placements": [
+    {
+      "objectId": "object-a",
+      "newScale": [
+        2.0,
+        1.5,
+        0.5
+      ]
+    }
+  ]
+}

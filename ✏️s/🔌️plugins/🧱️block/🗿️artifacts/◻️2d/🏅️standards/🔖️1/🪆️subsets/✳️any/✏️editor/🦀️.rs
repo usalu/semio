@@ -339,6 +339,7 @@ impl store::ArtifactStoreOneItemPreparation<Block2dSnapshot, Block2dMutation> fo
                 label: None,
                 group_id: None,
                 origin: Default::default(),
+                transaction: None,
             }],
             description: self.description.take(),
             coalesce_key: None,

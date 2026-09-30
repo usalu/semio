@@ -60,6 +60,12 @@ KINDS = (
     "set-tag-value",
 )
 
+
+#: 🦠️ Every verb's wire tag — the camelCase variant name its internally tagged aggregate carries in `mutation`;
+#: `noMutation` is the `no-mutation` baselines' scenario sentinel (the dropped `NoMutation` verb's spelling).
+TAG_OF_KIND = {kind: kind.split("-")[0] + "".join(part.capitalize() for part in kind.split("-")[1:]) for kind in KINDS}
+KIND_OF_TAG = {tag: kind for kind, tag in TAG_OF_KIND.items()}
+
 #: 🎚️ `format = "pcm8" | "pcm16" | "pcm24" | "pcm32" | "f32" | "f64"`, verbatim from the grammar.
 FORMATS = ("pcm8", "pcm16", "pcm24", "pcm32", "f32", "f64")
 
@@ -198,11 +204,16 @@ def clone(value):
 
 
 def parts(mutation: dict) -> tuple:
-    """🔎️ Splits `{"kind": …, "params": {…}}` into its verb and its arguments."""
-    kind = mutation.get("kind")
-    if kind not in KINDS:
-        raise AssertionError("unknown verb %r — the vocabulary is %s" % (kind, ", ".join(KINDS)))
-    return kind, mutation.get("params") or {}
+    """🔎️ Splits the wire value `{"mutation": "<camelCaseVariant>", …}` into its verb and its arguments."""
+    tag = mutation.get("mutation")
+    if tag not in KIND_OF_TAG:
+        raise AssertionError("unknown verb %r — the vocabulary is %s" % (tag, ", ".join(KIND_OF_TAG)))
+    return KIND_OF_TAG[tag], {key: value for key, value in mutation.items() if key != "mutation"}
+
+
+def wire(kind: str, args: dict) -> dict:
+    """🦠️ The wire value of one verb and its arguments."""
+    return {"mutation": TAG_OF_KIND[kind], **args}
 
 
 def index_at(count: int, index, verb: str, inclusive: bool) -> int:
@@ -263,28 +274,28 @@ def inverse_mutation(snapshot: dict, mutation: dict) -> dict:
     overwrite with the value it displaced."""
     kind, args = parts(mutation)
     if kind == "no-mutation":
-        return {"kind": "no-mutation", "params": {}}
+        return wire("no-mutation", {})
     if kind == "set-snapshot":
-        return {"kind": "set-snapshot", "params": {"snapshot": clone(snapshot)}}
+        return wire("set-snapshot", {"snapshot": clone(snapshot)})
     if kind == "set-sample-rate":
-        return {"kind": "set-sample-rate", "params": {"sampleRate": snapshot["sampleRate"]}}
+        return wire("set-sample-rate", {"sampleRate": snapshot["sampleRate"]})
     if kind == "set-format":
-        return {"kind": "set-format", "params": {"format": snapshot["format"]}}
+        return wire("set-format", {"format": snapshot["format"]})
     if kind == "insert-channel":
-        return {"kind": "remove-channel", "params": {"index": args["index"]}}
+        return wire("remove-channel", {"index": args["index"]})
     if kind == "remove-channel":
         index = index_at(len(snapshot["channels"]), args["index"], kind, False)
-        return {"kind": "insert-channel", "params": {"index": index, "channel": clone(snapshot["channels"][index])}}
+        return wire("insert-channel", {"index": index, "channel": clone(snapshot["channels"][index])})
     if kind == "set-channel-samples":
         index = index_at(len(snapshot["channels"]), args["index"], kind, False)
-        return {"kind": "set-channel-samples", "params": {"index": index, "samples": clone(snapshot["channels"][index]["samples"])}}
+        return wire("set-channel-samples", {"index": index, "samples": clone(snapshot["channels"][index]["samples"])})
     if kind == "insert-tag":
-        return {"kind": "remove-tag", "params": {"index": args["index"]}}
+        return wire("remove-tag", {"index": args["index"]})
     if kind == "remove-tag":
         index = index_at(len(snapshot["tags"]), args["index"], kind, False)
-        return {"kind": "insert-tag", "params": {"index": index, "tag": clone(snapshot["tags"][index])}}
+        return wire("insert-tag", {"index": index, "tag": clone(snapshot["tags"][index])})
     index = index_at(len(snapshot["tags"]), args["index"], kind, False)
-    return {"kind": "set-tag-value", "params": {"index": index, "value": snapshot["tags"][index]["value"]}}
+    return wire("set-tag-value", {"index": index, "value": snapshot["tags"][index]["value"]})
 
 
 # endregion 🔖️Mutations
@@ -338,7 +349,7 @@ def spec_vector(ctx: Context) -> Outcome:
     what the verb means, independent of both implementations, kept from before this oracle existed."""
     kind = ctx.row()
     committed = vector(ctx, kind)
-    applied = apply_mutation(committed["before"], {"kind": committed["kind"], "params": committed["params"]})
+    applied = apply_mutation(committed["before"], committed["mutation"])
     if applied != committed["after"]:
         raise AssertionError("%s: the applied snapshot does not match the committed after-snapshot\n     got: %s\nexpected: %s" % (ctx.scenario["id"], json.dumps(applied), json.dumps(committed["after"])))
     return Outcome(applied)

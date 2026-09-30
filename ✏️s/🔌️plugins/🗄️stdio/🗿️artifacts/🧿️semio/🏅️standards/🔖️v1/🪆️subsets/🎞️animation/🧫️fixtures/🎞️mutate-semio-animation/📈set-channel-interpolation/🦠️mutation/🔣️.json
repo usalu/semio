@@ -1,6 +1,7 @@
 {
   "kind": "set-channel-interpolation",
-  "params": {
+  "mutation": {
+    "mutation": "setChannelInterpolation",
     "timelineIndex": 0,
     "index": 0,
     "interpolation": "step"

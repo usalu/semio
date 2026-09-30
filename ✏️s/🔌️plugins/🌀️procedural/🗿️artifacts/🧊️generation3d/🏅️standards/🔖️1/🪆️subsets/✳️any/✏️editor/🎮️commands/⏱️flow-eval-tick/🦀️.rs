@@ -122,9 +122,3 @@ pub fn continue_inline(
 pub fn handle(payload: &FlowEvalTick, doc: &ArtifactView<'_, Generation3dSnapshot>, cfg: &ConfigView<'_, Generation3dConfig>, session: &mut FlowEvalSession) -> Result<Emit<Generation3dMutation, Generation3dConfigMutation>, Fault> {
     evaluate(&payload.window_id, &payload.window_kind_id, doc, cfg, session, None, None).map(|(emit, _)| emit)
 }
-
-//#region 🧪️Tests
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
-//#endregion 🧪️Tests

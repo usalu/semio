@@ -5,11 +5,27 @@
   "type": "object",
   "additionalProperties": false,
   "required": [
+    "mutation",
     "newLanguageId"
   ],
   "properties": {
+    "mutation": {
+      "const": "changeLanguage"
+    },
     "newLanguageId": {
-      "type": "string"
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "text",
+        "role": "value",
+        "label": {
+          "en": "New Language",
+          "de": "Neue Sprache"
+        },
+        "description": {
+          "en": "Language id of the document, e.g. markdown.",
+          "de": "Sprach-ID des Dokuments, z. B. markdown."
+        }
+      }
     }
   }
 }

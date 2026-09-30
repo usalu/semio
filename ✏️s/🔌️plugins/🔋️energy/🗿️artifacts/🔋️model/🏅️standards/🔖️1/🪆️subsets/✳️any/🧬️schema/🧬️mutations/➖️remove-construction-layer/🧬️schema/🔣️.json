@@ -5,15 +5,56 @@
   "type": "object",
   "additionalProperties": false,
   "required": [
+    "mutation",
     "id",
     "index"
   ],
   "properties": {
+    "mutation": {
+      "const": "removeConstructionLayer"
+    },
     "id": {
-      "type": "integer"
+      "type": "integer",
+      "minimum": 0,
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Construction",
+          "de": "Konstruktion"
+        },
+        "description": {
+          "en": "The construction this mutation changes, by id.",
+          "de": "Konstruktion, die diese Mutation ändert, per ID."
+        },
+        "ref": {
+          "kind": "construction",
+          "domain": "energyModel",
+          "granularity": "construction"
+        },
+        "group": "target",
+        "order": 10
+      }
     },
     "index": {
-      "type": "integer"
+      "type": "integer",
+      "minimum": 0,
+      "x-semio-ui": {
+        "widget": "stepper",
+        "role": "value",
+        "label": {
+          "en": "Layer position",
+          "de": "Schichtposition"
+        },
+        "description": {
+          "en": "Position of the layer to remove; 0 is the outside layer.",
+          "de": "Position der zu entfernenden Schicht; 0 ist die äußere Schicht."
+        },
+        "step": 1,
+        "precision": 0,
+        "group": "order",
+        "order": 20
+      }
     }
   }
 }

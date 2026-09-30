@@ -4,24 +4,87 @@
   "title": "SetPayload",
   "type": "object",
   "properties": {
+    "mutation": {
+      "const": "setPayload"
+    },
     "payload": {
       "type": "object",
       "properties": {
         "fixtureSlug": {
-          "type": "string"
+          "type": "string",
+          "x-semio-ui": {
+            "widget": "text",
+            "role": "value",
+            "label": {
+              "en": "Fixture",
+              "de": "Vorlage"
+            },
+            "description": {
+              "en": "Procedural fixture to render.",
+              "de": "Darzustellende prozedurale Vorlage."
+            }
+          }
         },
         "params": {},
         "questionId": {
-          "type": "string"
+          "type": "string",
+          "x-semio-ui": {
+            "widget": "text",
+            "role": "value",
+            "label": {
+              "en": "Question ID",
+              "de": "Fragen-ID"
+            },
+            "description": {
+              "en": "Playbook question the module answers.",
+              "de": "Playbook-Frage, die das Modul beantwortet."
+            }
+          }
         },
         "controllerId": {
-          "type": "string"
+          "type": "string",
+          "x-semio-ui": {
+            "widget": "text",
+            "role": "value",
+            "label": {
+              "en": "Controller App",
+              "de": "Steuernde App"
+            },
+            "description": {
+              "en": "App scope that controls the module, e.g. s.forms.forms@1/*#editor.",
+              "de": "App-Bereich, der das Modul steuert, z. B. s.forms.forms@1/*#editor."
+            }
+          }
         },
         "surface": {
-          "type": "string"
+          "type": "string",
+          "x-semio-ui": {
+            "widget": "text",
+            "role": "value",
+            "label": {
+              "en": "Surface",
+              "de": "Oberfläche"
+            },
+            "description": {
+              "en": "Surface the module renders on.",
+              "de": "Oberfläche, auf der das Modul dargestellt wird."
+            }
+          }
         },
         "interactive": {
-          "type": "boolean"
+          "type": "boolean",
+          "x-semio-ui": {
+            "widget": "toggle",
+            "role": "value",
+            "label": {
+              "en": "Interactive",
+              "de": "Interaktiv"
+            },
+            "description": {
+              "en": "The viewer may change the parameters.",
+              "de": "Die betrachtende Person darf die Parameter ändern."
+            }
+          }
         }
       },
       "required": [
@@ -32,10 +95,22 @@
         "surface",
         "interactive"
       ],
-      "additionalProperties": false
+      "additionalProperties": false,
+      "x-semio-ui": {
+        "role": "value",
+        "label": {
+          "en": "Payload",
+          "de": "Nutzlast"
+        },
+        "description": {
+          "en": "Render payload of the procedural module.",
+          "de": "Darstellungsnutzlast des prozeduralen Moduls."
+        }
+      }
     }
   },
   "required": [
+    "mutation",
     "payload"
   ],
   "additionalProperties": false

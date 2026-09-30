@@ -48,8 +48,8 @@ Feature: Apply every typed XML 1.0 mutation to a real 92 KB OOXML document part
   projection (`project_xml_1_0`) before comparison.
 
   Three laws are asserted IN ROLE, by the handler that plays the role, and are not deferred to the
-  oracle-vs-subject comparison. Every `mutate-<kind>` row other than `no-mutation` requires the
-  semantic projection to MOVE — a row whose parameters make the mutation a no-op against the real
+  oracle-vs-subject comparison. Every `mutate-<kind>` row requires the semantic projection to
+  MOVE — a row whose parameters make the mutation a no-op against the real
   document tests nothing, and every `Examples` value below is chosen against this part's actual
   content for that reason: `set-attribute` retags the real `w:pStyle` of the document's first
   paragraph from `Heading1` to `Heading2`, `insert-element` lands at index 3 of the real nine-run
@@ -100,12 +100,12 @@ Feature: Apply every typed XML 1.0 mutation to a real 92 KB OOXML document part
       {"kind": "<id>", "params": <params>}
       """
     Then the oracle and the subject agree on the semantic projection
-    And the semantic projection moved, unless the kind is no-mutation
+    And the semantic projection moved
     Examples:
       | id              | params                                                                                                                                                                                                                                       |
-      | set-declaration  | {"version": "1.0", "encoding": "UTF-8", "standalone": false}                                                                                                                                                                                |
-      | set-doctype      | {"name": "w:document", "externalId": {"kind": "public", "publicId": "-//SEMIO//XML 1.0 Wave 7 Sample//EN", "systemId": "https://schemas.openxmlformats.org/wordprocessingml/2006/main.dtd"}, "entities": [{"parameter": false, "name": "semio", "value": "Semio End-to-End Testing Wave 7"}]} |
-      | insert-element   | {"path": [0,275], "index": 3, "node": {"kind":"element","name":"w:r","attrs":[{"name":"w:id","value":"7"},{"name":"w:rev","value":"26-08-23"},{"name":"w:note","value":"wave7"}],"children":[{"kind":"comment","text":"wave 7 mutation test"},{"kind":"cdata","text":"<raw> unescaped content"},{"kind":"text","text":"Ticket <ENDTOEND> & \"testing\" review"}]}} |
+      | set-declaration  | {"declaration": {"version": "1.0", "encoding": "UTF-8", "standalone": false}}                                                                                                                                                                                |
+      | set-doctype      | {"doctype": {"name": "w:document", "externalId": {"kind": "public", "publicId": "-//SEMIO//XML 1.0 Wave 7 Sample//EN", "systemId": "https://schemas.openxmlformats.org/wordprocessingml/2006/main.dtd"}, "declarations": [{"kind": "entity", "parameter": false, "name": "semio", "value": "Semio End-to-End Testing Wave 7"}]}} |
+      | insert-element   | {"path": [0,275], "index": 3, "node": {"kind":"element","name":"w:r","attrs":[{"name":"w:id","value":"7"},{"name":"w:rev","value":"26-08-23"},{"name":"w:note","value":"wave7"}],"children":[{"kind":"comment","text":"wave 7 mutation test"},{"kind":"cData","text":"<raw> unescaped content"},{"kind":"text","text":"Ticket <ENDTOEND> & \"testing\" review"}]}} |
       | remove-element   | {"path": [0,359,0], "index": 1}                                                                                                                                                                                                              |
       | set-attribute    | {"path": [0,0,0,0], "name": "w:val", "value": "Heading2"}                                                                                                                                                                                  |
       | set-text         | {"path": [0,275,3,0,0], "text": "Wave 7 <mutation> & review text"}                                                                                                                                                                           |
@@ -122,9 +122,9 @@ Feature: Apply every typed XML 1.0 mutation to a real 92 KB OOXML document part
     Then the oracle and the subject agree on the semantic projection
     Examples:
       | id              | params                                                                                                                                                                                                                                       |
-      | set-declaration  | {"version": "1.0", "encoding": "UTF-8", "standalone": false}                                                                                                                                                                                |
-      | set-doctype      | {"name": "w:document", "externalId": {"kind": "public", "publicId": "-//SEMIO//XML 1.0 Wave 7 Sample//EN", "systemId": "https://schemas.openxmlformats.org/wordprocessingml/2006/main.dtd"}, "entities": [{"parameter": false, "name": "semio", "value": "Semio End-to-End Testing Wave 7"}]} |
-      | insert-element   | {"path": [0,275], "index": 3, "node": {"kind":"element","name":"w:r","attrs":[{"name":"w:id","value":"7"},{"name":"w:rev","value":"26-08-23"},{"name":"w:note","value":"wave7"}],"children":[{"kind":"comment","text":"wave 7 mutation test"},{"kind":"cdata","text":"<raw> unescaped content"},{"kind":"text","text":"Ticket <ENDTOEND> & \"testing\" review"}]}} |
+      | set-declaration  | {"declaration": {"version": "1.0", "encoding": "UTF-8", "standalone": false}}                                                                                                                                                                                |
+      | set-doctype      | {"doctype": {"name": "w:document", "externalId": {"kind": "public", "publicId": "-//SEMIO//XML 1.0 Wave 7 Sample//EN", "systemId": "https://schemas.openxmlformats.org/wordprocessingml/2006/main.dtd"}, "declarations": [{"kind": "entity", "parameter": false, "name": "semio", "value": "Semio End-to-End Testing Wave 7"}]}} |
+      | insert-element   | {"path": [0,275], "index": 3, "node": {"kind":"element","name":"w:r","attrs":[{"name":"w:id","value":"7"},{"name":"w:rev","value":"26-08-23"},{"name":"w:note","value":"wave7"}],"children":[{"kind":"comment","text":"wave 7 mutation test"},{"kind":"cData","text":"<raw> unescaped content"},{"kind":"text","text":"Ticket <ENDTOEND> & \"testing\" review"}]}} |
       | remove-element   | {"path": [0,359,0], "index": 1}                                                                                                                                                                                                              |
       | set-attribute    | {"path": [0,0,0,0], "name": "w:val", "value": "Heading2"}                                                                                                                                                                                  |
       | set-text         | {"path": [0,275,3,0,0], "text": "Wave 7 <mutation> & review text"}                                                                                                                                                                           |

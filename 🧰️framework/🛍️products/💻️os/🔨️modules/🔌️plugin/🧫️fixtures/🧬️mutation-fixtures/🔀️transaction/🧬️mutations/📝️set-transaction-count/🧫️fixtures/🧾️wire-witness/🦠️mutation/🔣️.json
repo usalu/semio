@@ -1,0 +1,6 @@
+{
+  "operation": "setTransactionCount",
+  "payload": {
+    "value": 5
+  }
+}

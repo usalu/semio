@@ -16,10 +16,10 @@ Feature: Apply every typed GIF 89a mutation to a real-world animation
       """
     Then the oracle and the subject agree on the semantic projection
     Examples:
-      | id                          | params                                                                   |
-      | set-loop-count              | {"loopCount":5}                                                          |
-      | add-app-extension           | {"index":0,"identifier":"XMPDATA1","authCode":"XMP","data":[1,2,3]}      |
-      | remove-app-extension        | {"index":0}                                                              |
+      | id | params |
+      | set-loop-count | {"loopCount":5} |
+      | add-app-extension | {"index":0,"extension":{"identifier":[88,77,80,68,65,84,65,49],"authCode":[88,77,80],"data":[1,2,3]}} |
+      | remove-app-extension | {"index":0} |
 
   @id-inverse
   @level-exhaustive
@@ -32,7 +32,7 @@ Feature: Apply every typed GIF 89a mutation to a real-world animation
       """
     Then the original semantic projection is recovered
     Examples:
-      | id                          | params                                                                   |
-      | set-loop-count              | {"loopCount":5}                                                          |
-      | add-app-extension           | {"index":0,"identifier":"XMPDATA1","authCode":"XMP","data":[1,2,3]}      |
-      | remove-app-extension        | {"index":0}                                                              |
+      | id | params |
+      | set-loop-count | {"loopCount":5} |
+      | add-app-extension | {"index":0,"extension":{"identifier":[88,77,80,68,65,84,65,49],"authCode":[88,77,80],"data":[1,2,3]}} |
+      | remove-app-extension | {"index":0} |

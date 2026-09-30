@@ -5,9 +5,13 @@
   "type": "object",
   "additionalProperties": false,
   "required": [
+    "mutation",
     "edge"
   ],
   "properties": {
+    "mutation": {
+      "const": "createEdge"
+    },
     "edge": {
       "title": "CreateEdgeEdge",
       "type": "object",
@@ -27,10 +31,46 @@
           "type": "string"
         },
         "source": {
-          "type": "string"
+          "type": "string",
+          "pattern": "^[^@]+@.+$",
+          "x-semio-ui": {
+            "widget": "reference",
+            "role": "value",
+            "label": {
+              "en": "Source Node",
+              "de": "Quellknoten"
+            },
+            "description": {
+              "en": "The node the connection starts at.",
+              "de": "Der Knoten, an dem die Verbindung beginnt."
+            },
+            "ref": {
+              "kind": "node",
+              "domain": "ast",
+              "granularity": "node"
+            }
+          }
         },
         "target": {
-          "type": "string"
+          "type": "string",
+          "pattern": "^[^@]+@.+$",
+          "x-semio-ui": {
+            "widget": "reference",
+            "role": "value",
+            "label": {
+              "en": "Target Node",
+              "de": "Zielknoten"
+            },
+            "description": {
+              "en": "The node the connection ends at.",
+              "de": "Der Knoten, an dem die Verbindung endet."
+            },
+            "ref": {
+              "kind": "node",
+              "domain": "ast",
+              "granularity": "node"
+            }
+          }
         },
         "properties": {
           "type": "object",

@@ -3,6 +3,8 @@ import { existsSync, mkdtempSync, mkdirSync, readFileSync, cpSync, rmSync } from
 import { join } from "node:path";
 import { createHash } from "node:crypto";
 
+type ImportEdge = Readonly<{ source: string; target: string; sourceFile?: string; type: string }>;
+
 /** 🔗️ Fixture + repo import edges from the full scan equal the incremental filesToProcess path. */
 export async function testImportEdgeEquality(workspace: string, output: string): Promise<void> {
   const { cacheInternals } = await import("../../../🟨️.mjs");
@@ -12,7 +14,7 @@ export async function testImportEdgeEquality(workspace: string, output: string):
   const dataDir = join(root, ".nx/workspace-data");
   mkdirSync(dataDir, { recursive: true });
   process.env.NX_WORKSPACE_DATA_DIRECTORY = dataDir;
-  const key = (edge: { source: string; target: string; sourceFile?: string; type: string }) =>
+  const key = (edge: ImportEdge) =>
     `${edge.source}\0${edge.target}\0${edge.sourceFile ?? ""}\0${edge.type}`;
   try {
     for (const name of ["a", "b"]) cpSync(join(fixtureRoot, name), join(root, name), { recursive: true });
@@ -57,7 +59,7 @@ export async function testImportEdgeEquality(workspace: string, output: string):
         nonProjectFiles: [],
       },
     };
-    const partial = await cacheInternals.createDependenciesImplementation({ analyzeLockfile: false }, utilOnly);
+    const partial: readonly ImportEdge[] = await cacheInternals.createDependenciesImplementation({ analyzeLockfile: false }, utilOnly);
     assert.ok(partial.some((edge) => edge.source === "fixture-a" && edge.target === "fixture-b" && edge.sourceFile === "a/deep/util.js"));
 
     const pgPath = join(workspace, ".tmp-ticket/wp-o2c/generated/nx-iso3/ws-data/project-graph.json");
@@ -80,7 +82,7 @@ export async function testImportEdgeEquality(workspace: string, output: string):
       externalNodes: {},
       nxJsonConfiguration: {},
     };
-    const cold = await cacheInternals.createDependenciesImplementation({ analyzeLockfile: false }, repoContext);
+    const cold: readonly ImportEdge[] = await cacheInternals.createDependenciesImplementation({ analyzeLockfile: false }, repoContext);
     const warm = await cacheInternals.createDependenciesImplementation({ analyzeLockfile: false }, repoContext);
     assert.deepEqual([...warm.map(key)].sort(), [...cold.map(key)].sort(), "warm hash cache must preserve the full edge set");
 

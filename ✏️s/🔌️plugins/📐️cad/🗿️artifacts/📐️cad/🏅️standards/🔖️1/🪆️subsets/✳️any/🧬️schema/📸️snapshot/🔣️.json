@@ -67,7 +67,7 @@
     "CadModelChild": {
       "allOf": [
         {
-          "$ref": "https://json.schemas.assets.semio-tech.com/os/store/child.json"
+          "$ref": "https://json.schemas.assets.semio-tech.com/os/store/child/schema.json"
         },
         {
           "type": "object",
@@ -98,7 +98,7 @@
     "CadDrawingChild": {
       "allOf": [
         {
-          "$ref": "https://json.schemas.assets.semio-tech.com/os/store/child.json"
+          "$ref": "https://json.schemas.assets.semio-tech.com/os/store/child/schema.json"
         },
         {
           "type": "object",

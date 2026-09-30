@@ -38,11 +38,10 @@ const VALIDATED_ONLY: FacetLeaves = FacetLeaves { rust: "", typescript: include_
 const MODULE_JSON: &str = include_str!("🔣️.json");
 
 /// 🏷️ `$defs` of `🔣️.json`, in declaration order.
-const EXPORTS: [SchemaExport; 51] = [
+const EXPORTS: [SchemaExport; 50] = [
     SchemaExport { id: "InferenceServerIdV1", leaves: VALIDATED_ONLY },
     SchemaExport { id: "InferenceDocumentScopeV1", leaves: VALIDATED_ONLY },
     SchemaExport { id: "InferenceRequestV1", leaves: ALL_LEAVES },
-    SchemaExport { id: "InferenceJobReconcileRequestV1", leaves: ALL_LEAVES },
     SchemaExport { id: "InferenceJobReconcileApprovalStateV1", leaves: ALL_LEAVES },
     SchemaExport { id: "InferenceJobReconcileApprovalV1", leaves: ALL_LEAVES },
     SchemaExport { id: "InferenceJobReconcilePageV1", leaves: ALL_LEAVES },
@@ -107,7 +106,6 @@ mod scope_schema_export_law;
 //#endregion 🔖️ScopeSchemaExports
 
 pub const REQUEST_MAX_BYTES: usize = 1024;
-pub const RECONCILE_REQUEST_MAX_BYTES: usize = 256;
 pub const SERVER_ID_MAX_BYTES: usize = 96;
 /// 📏️ The largest map base one inference may run on: the verified pack of the document's active
 /// checkpoint. It must admit every document the hub itself creates — the GIS kind's default map packs
@@ -163,26 +161,14 @@ impl InferenceRequestV1 {
     }
 }
 
-/// 🧭️ The exact original submit identity used only for owner-private lookup; it can never create a job.
-#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase", deny_unknown_fields)]
-pub struct InferenceJobReconcileRequestV1 {
-    pub schema: String,
-    pub version: u32,
-    pub request_id: String,
-}
-
-impl InferenceJobReconcileRequestV1 {
-    pub fn decode(bytes: &[u8]) -> Result<Self, super::InferenceErrorV1> {
-        if bytes.is_empty() || bytes.len() > RECONCILE_REQUEST_MAX_BYTES {
-            return Err(super::InferenceErrorV1::Bounds);
-        }
-        let request: Self = serde_json::from_slice(bytes).map_err(|_| super::InferenceErrorV1::Invalid)?;
-        if request.schema != "semio.hub.inference-job-reconcile/v1" || request.version != 1 || !hex(&request.request_id, 32) {
-            return Err(super::InferenceErrorV1::Invalid);
-        }
-        Ok(request)
-    }
+/// 🧭️ The owner-private transport decodes a closed request into the neutral framework identity.
+pub fn decode_inference_job_reconcile_request_v1(bytes: &[u8]) -> Result<semio_framework_job::reconcile::JobReconcileRequestV1, super::InferenceErrorV1> {
+    if bytes.is_empty() || bytes.len() > semio_framework_job::reconcile::JOB_RECONCILE_REQUEST_MAX_BYTES { return Err(super::InferenceErrorV1::Bounds); }
+    #[derive(Deserialize)]
+    #[serde(rename_all = "camelCase", deny_unknown_fields)]
+    struct Request { schema: String, version: u32, request_id: String }
+    let request: Request = serde_json::from_slice(bytes).map_err(|_| super::InferenceErrorV1::Invalid)?;
+    semio_framework_job::reconcile::parse_job_reconcile_request_v1(&request.schema, request.version, &request.request_id).map_err(|_| super::InferenceErrorV1::Invalid)
 }
 
 /// 🧬️ The exact retained parent dialect the frozen Map binding admitted; never a client label.

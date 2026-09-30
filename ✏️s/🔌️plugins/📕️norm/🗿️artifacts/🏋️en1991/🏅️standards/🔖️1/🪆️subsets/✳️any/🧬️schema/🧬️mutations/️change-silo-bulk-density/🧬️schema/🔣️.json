@@ -9,7 +9,23 @@
   ],
   "properties": {
     "newSiloBulkDensity": {
-      "type": "number"
+      "type": "number",
+      "minimum": 0,
+      "x-semio-ui": {
+        "widget": "stepper",
+        "role": "value",
+        "label": {
+          "en": "Bulk solid unit weight γ",
+          "de": "Wichte des Schüttguts γ"
+        },
+        "unit": "N/m³",
+        "displayUnit": "kN/m³",
+        "displayFactor": 0.001,
+        "step": 100,
+        "precision": 1,
+        "group": "silo",
+        "order": 10
+      }
     }
   }
 }

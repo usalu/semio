@@ -27,8 +27,13 @@ const CASES = [
 ];
 
 class TestScript extends BundleScript {
-  run(): void {
-    runCmd(process.execPath, ["test", ...CASES.map(path => resolve(this.repoRoot, path))], { cwd: this.repoRoot });
+  run(segments: string[]): void {
+    const rendererCases = ["✏️s/🔌️plugins/🖨️raster/🧪️tests/🎯️pixel-selection/🟦️.ts", "✏️s/🔌️plugins/🖨️raster/🧪️tests/🎭️mask-selection-oracle/🟦️.ts"];
+    if (segments[0] === "renderer-contract") {
+      runCmd(process.execPath, ["test", ...rendererCases.map(path => resolve(this.repoRoot, path))], { cwd: this.repoRoot });
+      return;
+    }
+    runCmd(process.execPath, ["test", ...[...CASES, ...rendererCases].map(path => resolve(this.repoRoot, path))], { cwd: this.repoRoot });
   }
 }
 const router = new ScriptRouter(import.meta.dir).register("test", TestScript);

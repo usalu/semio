@@ -13,6 +13,7 @@ use semio_framework_value_derive::{FromValue, ToValue};
 /// 🌱 `create-widget` payload — full initial widget payload plus a FINAL-state insertion index.
 #[derive(Clone, Debug, PartialEq, ToValue, FromValue, dsl::MutationLeaf)]
 #[mutation_leaf(contract = ::protocol)]
+#[value(rename_all = "camelCase")]
 pub struct CreateWidget {
     pub index: usize,
     pub widget: Widget,

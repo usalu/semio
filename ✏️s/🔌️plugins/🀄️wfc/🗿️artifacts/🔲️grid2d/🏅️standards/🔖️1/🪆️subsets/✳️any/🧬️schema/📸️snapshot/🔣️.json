@@ -60,7 +60,7 @@
         "palette": { "type": "array", "items": { "$ref": "#/definitions/WfcColor" } },
         "pixels": { "type": "string", "format": "base64" },
         "paths": { "type": "array", "items": { "$ref": "#/definitions/WfcVectorPath" } },
-        "child": { "type": "object" }
+        "child": { "$ref": "https://json.schemas.assets.semio-tech.com/os/store/child/schema.json" }
       }
     },
     "WfcTile2d": {

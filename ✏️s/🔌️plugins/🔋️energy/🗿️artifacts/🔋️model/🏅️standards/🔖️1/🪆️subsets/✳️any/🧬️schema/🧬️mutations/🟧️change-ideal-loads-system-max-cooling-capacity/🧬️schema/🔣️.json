@@ -5,19 +5,105 @@
   "type": "object",
   "additionalProperties": false,
   "required": [
+    "mutation",
     "id",
     "newCapacityPresent",
     "newMaxCoolingCapacityW"
   ],
   "properties": {
+    "mutation": {
+      "const": "changeIdealLoadsSystemMaxCoolingCapacity"
+    },
     "id": {
-      "type": "integer"
+      "type": "integer",
+      "minimum": 0,
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Ideal loads system",
+          "de": "Ideallastsystem"
+        },
+        "description": {
+          "en": "The ideal loads system this mutation changes, by id.",
+          "de": "Ideallastsystem, das diese Mutation ändert, per ID."
+        },
+        "ref": {
+          "kind": "idealLoadsSystem",
+          "domain": "energyModel",
+          "granularity": "hvac"
+        },
+        "group": "target",
+        "order": 10
+      }
     },
     "newCapacityPresent": {
-      "type": "boolean"
+      "type": "boolean",
+      "x-semio-ui": {
+        "widget": "toggle",
+        "role": "value",
+        "label": {
+          "en": "Limit cooling capacity",
+          "de": "Kühlleistung begrenzen"
+        },
+        "description": {
+          "en": "Off means unlimited; the cooling capacity is then 0.",
+          "de": "Aus bedeutet unbegrenzt; die Kühlleistung ist dann 0."
+        },
+        "group": "capacity",
+        "order": 20
+      }
     },
     "newMaxCoolingCapacityW": {
-      "type": "number"
+      "type": "number",
+      "x-semio-ui": {
+        "widget": "stepper",
+        "role": "value",
+        "label": {
+          "en": "Maximum cooling capacity",
+          "de": "Maximale Kühlleistung"
+        },
+        "description": {
+          "en": "Only while the cooling capacity is limited.",
+          "de": "Nur solange die Kühlleistung begrenzt ist."
+        },
+        "unit": "W",
+        "displayUnit": "kW",
+        "displayFactor": 0.001,
+        "step": 100,
+        "precision": 2,
+        "group": "capacity",
+        "order": 30
+      }
     }
-  }
+  },
+  "allOf": [
+    {
+      "if": {
+        "type": "object",
+        "properties": {
+          "newCapacityPresent": {
+            "const": false
+          }
+        }
+      },
+      "then": {
+        "type": "object",
+        "properties": {
+          "newMaxCoolingCapacityW": {
+            "const": 0
+          }
+        }
+      },
+      "else": {
+        "type": "object",
+        "properties": {
+          "newMaxCoolingCapacityW": {
+            "type": "number",
+            "exclusiveMinimum": 0
+          }
+        }
+      }
+    }
+  ]
 }

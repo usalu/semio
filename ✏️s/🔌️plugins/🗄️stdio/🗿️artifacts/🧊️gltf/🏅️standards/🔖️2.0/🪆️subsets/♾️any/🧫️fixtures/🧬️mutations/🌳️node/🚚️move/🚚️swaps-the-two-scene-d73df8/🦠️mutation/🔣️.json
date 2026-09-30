@@ -1,0 +1,10 @@
+{
+  "mutation": "moveNode",
+  "payload": {
+    "phase": "apply",
+    "value": {
+      "index": 0,
+      "position": 1
+    }
+  }
+}

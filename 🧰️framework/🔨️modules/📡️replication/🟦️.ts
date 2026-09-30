@@ -4,6 +4,8 @@
 //! are the shared gate both sides must reproduce. Frame layout is `lane u8`, `frame tag u8`, then
 //! fields in declaration order — no length prefix, no per-field tags.
 
+import { blake3Hex } from "../🔏️hash/🟦️.ts";
+
 //#region 🔖️SyncProtocol
 export * from "./📡️wire/🏠️local-interaction/🟦️.ts";
 export * from "./📡️wire/🏠️local-interaction/📡️transport/🟦️.ts";
@@ -30,6 +32,7 @@ export type MutationEnvelope = {
     readonly dependencies?: readonly string[];
     readonly undoPolicy: string;
   };
+  readonly transaction?: TransactionRef;
 };
 
 /** 📦️ Owned interface to the host-selected schema-less pack implementation. */
@@ -51,6 +54,7 @@ export function mutationEnvelopeToWire(envelope: MutationEnvelope, timestamp: Wi
     diff: { schema: envelope.diff.schemaId, payload: packPayload(envelope.diff.payload) },
     inverse: { schema: envelope.inverse.inverseDiff.schemaId, payload: packPayload(envelope.inverse.inverseDiff.payload) },
     timestamp,
+    transaction: envelope.transaction ?? null,
   };
 }
 
@@ -74,6 +78,7 @@ export function mutationEnvelopeFromWire(envelope: WireMutationEnvelope, codec: 
       dependencies: [],
       undoPolicy: "exactBaseOnly",
     },
+    ...(envelope.transaction === null ? {} : { transaction: envelope.transaction }),
   };
 }
 
@@ -112,6 +117,23 @@ export type ArtifactPresencePeer = {
   /** 🛠️ Active editor tool/utility id (bit 12, ARTIFACT scope) — e.g. select/brush/fill. Optional when
    * the peer has not published an active tool. Distinct from `toolRun` (interactive long-running tool). */
   readonly activeTool?: string;
+  /** ⏪️ Summary of this peer's open history edit (bit 13, ARTIFACT scope): who edits history, on which mutation, at
+   * which stage. */
+  readonly historyEdit?: ArtifactPresenceHistoryEdit;
+};
+
+/** ⏪️ Twin of Rust `PresenceHistoryEditStage`: the `HistoryTimeTravelStage` wire spelling in binary tag order. */
+export const PRESENCE_HISTORY_EDIT_STAGES = Object.freeze(["editing", "replaying", "reviewing", "choosing", "finalizing"] as const);
+
+/** 🔤️ One history-edit stage wire name. */
+export type ArtifactPresenceHistoryEditStage = (typeof PRESENCE_HISTORY_EDIT_STAGES)[number];
+
+/** 👥️ Twin of Rust `PresenceHistoryEdit`: the replica-independent id of the mutation a peer's open history edit drafts
+ * (every replica labels it from its own history rows), the stage and the accepted draft count. */
+export type ArtifactPresenceHistoryEdit = {
+  readonly mutationId: string;
+  readonly stage: ArtifactPresenceHistoryEditStage;
+  readonly drafts: number;
 };
 
 /** 🤖️ Twin of Rust `PresencePrincipalKind`, in binary tag order. An `agent` peer is an AI agent
@@ -196,6 +218,8 @@ export type WireMutationEnvelope = {
   readonly diff: { readonly schema: string; readonly payload: readonly number[] };
   readonly inverse: { readonly schema: string; readonly payload: readonly number[] };
   readonly timestamp: { readonly actor: number; readonly physical_ms: number; readonly logical: number };
+  /** 🧾️ The committed tool transaction that authored the operation (`null`: none, and always for a transition). */
+  readonly transaction: TransactionRef | null;
 };
 
 /** 🏔️ Runtime/wire frontier summary — mirrors Rust `protocol_causal::FrontierSummary`
@@ -474,6 +498,7 @@ export function encodePresencePeer(peer: ArtifactPresencePeer): number[] {
   if (presencePresent(peer.toolRun)) flags |= 1 << 10;
   if (presencePresent(peer.principalKind)) flags |= 1 << 11;
   if (presencePresent(peer.activeTool)) flags |= 1 << 12;
+  if (presencePresent(peer.historyEdit)) flags |= 1 << 13;
   writeVarintU64(out, flags);
   writeVarintU64(out, peer.connectedAtMs ?? 0);
   if (presencePresent(peer.label)) writeStr(out, peer.label);
@@ -493,7 +518,17 @@ export function encodePresencePeer(peer: ArtifactPresencePeer): number[] {
     out.push(tag);
   }
   if (presencePresent(peer.activeTool)) writeStr(out, peer.activeTool);
+  if (presencePresent(peer.historyEdit)) writePresenceHistoryEdit(out, peer.historyEdit);
   return out;
+}
+
+function writePresenceHistoryEdit(out: number[], historyEdit: ArtifactPresenceHistoryEdit): void {
+  const tag = PRESENCE_HISTORY_EDIT_STAGES.indexOf(historyEdit.stage);
+  if (tag < 0) throw new Error(`presence history edit stage: unknown ${historyEdit.stage}`);
+  if (!Number.isSafeInteger(historyEdit.drafts) || historyEdit.drafts < 0 || historyEdit.drafts > 0xffffffff) throw new Error("presence history edit drafts: limit exceeded");
+  writeStr(out, historyEdit.mutationId);
+  out.push(tag);
+  writeVarintU64(out, historyEdit.drafts);
 }
 
 function writePresenceToolRun(out: number[], toolRun: ArtifactPresenceToolRun): void {
@@ -670,6 +705,16 @@ class PresencePeerReader {
     return { hoveredPath: this.optionalText("presence ui hovered path"), focusedPath: this.optionalText("presence ui focused path"), pressedPath: this.optionalText("presence ui pressed path") };
   }
 
+  historyEdit(): ArtifactPresenceHistoryEdit {
+    const mutationId = this.text("presence history edit mutation");
+    const tag = this.byte("presence history edit stage");
+    const stage = PRESENCE_HISTORY_EDIT_STAGES[tag];
+    if (stage === undefined) this.fail("presence history edit stage", `unknown tag ${tag}`);
+    const drafts = this.varint("presence history edit drafts");
+    if (drafts > 0xffffffff) this.fail("presence history edit drafts", "limit exceeded");
+    return { mutationId, stage, drafts };
+  }
+
   principalKind(): ArtifactPresencePrincipalKind {
     const tag = this.byte("presence peer principal kind");
     const kind = PRESENCE_PRINCIPAL_KINDS[tag];
@@ -685,7 +730,7 @@ export function decodePresencePeer(bytes: Uint8Array, pos: [number]): ArtifactPr
   const reader = new PresencePeerReader(bytes, pos[0]);
   const actor = reader.text("presence peer actor");
   const flags = reader.varint("presence peer flags");
-  if (flags > 0x1fff) reader.fail("presence peer flags", `unknown flag bits set: ${flags.toString(16)}`);
+  if (flags > 0x3fff) reader.fail("presence peer flags", `unknown flag bits set: ${flags.toString(16)}`);
   const connectedAtMs = reader.varint("presence peer connected at");
   if (connectedAtMs > PRESENCE_PEER_WIRE_LIMITS_V1.maximumConnectedAtMs) reader.fail("presence peer connected at", "limit exceeded");
   const label = flags & (1 << 0) ? reader.text("presence peer label") : undefined;
@@ -701,9 +746,10 @@ export function decodePresencePeer(bytes: Uint8Array, pos: [number]): ArtifactPr
   const toolRun = flags & (1 << 10) ? reader.toolRun() : undefined;
   const principalKind = flags & (1 << 11) ? reader.principalKind() : undefined;
   const activeTool = flags & (1 << 12) ? reader.text("presence peer active tool") : undefined;
+  const historyEdit = flags & (1 << 13) ? reader.historyEdit() : undefined;
   if (reader.position !== bytes.length) reader.fail("presence peer", "trailing bytes");
   pos[0] = reader.position;
-  return { actor, connectedAtMs, label, presencePack, userId, role, dragGhostJson, interaction, color, surface, views, ui, toolRun, principalKind, activeTool };
+  return { actor, connectedAtMs, label, presencePack, userId, role, dragGhostJson, interaction, color, surface, views, ui, toolRun, principalKind, activeTool, historyEdit };
 }
 
 /** ⏯️ Twin of Rust `encode_presence_tool_run`: the standalone tool run summary body a guest's
@@ -721,6 +767,23 @@ export function decodePresenceToolRun(bytes: Uint8Array): ArtifactPresenceToolRu
   const toolRun = reader.toolRun();
   if (reader.position !== bytes.length) reader.fail("presence tool run", "trailing bytes");
   return toolRun;
+}
+
+/** ⏪️ Twin of Rust `encode_presence_history_edit`: the standalone history-edit summary body a guest's
+ * `AppFrame::Ephemeral.history_edit` carries, byte-identical to a peer's flag-bit-13 section. */
+export function encodePresenceHistoryEdit(historyEdit: ArtifactPresenceHistoryEdit): number[] {
+  const out: number[] = [];
+  writePresenceHistoryEdit(out, historyEdit);
+  return out;
+}
+
+/** 🎞️ Twin of Rust `decode_presence_history_edit`: the peer decoder's limits over a standalone body, no trailing bytes. */
+export function decodePresenceHistoryEdit(bytes: Uint8Array): ArtifactPresenceHistoryEdit {
+  if (bytes.length > PRESENCE_PEER_WIRE_LIMITS_V1.maximumEntryBytes) throw new Error("presence history edit bytes: limit exceeded");
+  const reader = new PresencePeerReader(bytes, 0);
+  const historyEdit = reader.historyEdit();
+  if (reader.position !== bytes.length) reader.fail("presence history edit", "trailing bytes");
+  return historyEdit;
 }
 
 /** 🎞️ One raw byte — the TS twin of `protocol_core::read_u8`-shaped inline reads. */
@@ -875,8 +938,8 @@ function decodeHlc(bytes: Uint8Array, pos: [number]): { readonly actor: number; 
 }
 
 /** 🎯️ `mutation_id str | document_id str | actor str | dependencies vec<str> | observed (0 | 1 str) |
- * target vec<str> | diff.schema str | diff.payload bytes | inverse.schema str | inverse.payload bytes | hlc` —
- * the TS twin of Rust `protocol_causal::encode_envelope`. */
+ * target vec<str> | diff.schema str | diff.payload bytes | inverse.schema str | inverse.payload bytes | hlc |
+ * transaction (0 | 1 id str tool str)` — the TS twin of Rust `protocol_causal::encode_envelope`. */
 function encodeEnvelope(out: number[], envelope: WireMutationEnvelope): void {
   writeStr(out, envelope.mutation_id);
   writeStr(out, envelope.document_id);
@@ -893,6 +956,12 @@ function encodeEnvelope(out: number[], envelope: WireMutationEnvelope): void {
   writeStr(out, envelope.inverse.schema);
   writeBytes(out, envelope.inverse.payload);
   encodeHlc(out, envelope.timestamp);
+  if (envelope.transaction === null) writeVarintU64(out, 0);
+  else {
+    writeVarintU64(out, 1);
+    writeStr(out, envelope.transaction.id);
+    writeStr(out, envelope.transaction.tool);
+  }
 }
 
 /** 🎯️ Inverse of {@link encodeEnvelope} — the TS twin of Rust `protocol_causal::decode_envelope`. */
@@ -910,7 +979,10 @@ function decodeEnvelope(bytes: Uint8Array, pos: [number]): WireMutationEnvelope 
   const inverseSchema = readStr(bytes, pos);
   const inversePayload = readBytes(bytes, pos);
   const timestamp = decodeHlc(bytes, pos);
-  return { mutation_id, document_id, actor, dependencies, observed, target, diff: { schema: diffSchema, payload: diffPayload }, inverse: { schema: inverseSchema, payload: inversePayload }, timestamp };
+  const transactionFlag = readVarintU64(bytes, pos);
+  if (transactionFlag !== 0 && transactionFlag !== 1) throw new Error(`mutation envelope: transaction flag ${transactionFlag}`);
+  const transaction = transactionFlag === 1 ? { id: readStr(bytes, pos), tool: readStr(bytes, pos) } : null;
+  return { mutation_id, document_id, actor, dependencies, observed, target, diff: { schema: diffSchema, payload: diffPayload }, inverse: { schema: inverseSchema, payload: inversePayload }, timestamp, transaction };
 }
 
 /** 🎯️ `document_id str | head_edit_ordinal varint | head_edit_id str | last_commit_seq varint |
@@ -946,9 +1018,126 @@ export function encodeCausalEnvelopeBatch(envelopes: readonly MutationEnvelope[]
 /** 🔀️ `diff.schema` of every history-transition envelope — undo, redo, checkpoint commit, branch, checkout, pin — the TS
  * twin of Rust's `HISTORY_TRANSITION_SCHEMA`, pinned by the neutral schema's `diffSchema` const. Operation envelopes carry
  * their artifact's own schema, so this tag alone tells a framework history record from an app mutation.
- * @see ./🔗️causal/🧬️schema/🔀️history-transition-v1/🔣️.json
+ * @see ./🔗️causal/🧬️schema/🔣️history-transition/🔣️.json
  * @see ./🔗️causal/🔀️transition/🦀️.rs */
 export const HISTORY_TRANSITION_DIFF_SCHEMA = "semio.history.transition";
+
+//#region 🔖️HistoryEditing
+/** 🧾️ Twin of Rust `protocol::TransactionRef`: the committed tool transaction (`tx-<hex16>`) and the authoring
+ * action/tool id (`<appId>#<toolId>`) stamped on every operation that transaction produced.
+ * @see ./🎮️mutation/🦀️.rs */
+export type TransactionRef = { readonly id: string; readonly tool: string };
+
+/** 🪪️ Twin of Rust `TransactionRef::mint`: `tx-{hex16(blake3(actor str | hlc.actor varint | hlc.physical_ms varint |
+ * hlc.logical varint | tool str))}`, byte-identical to the Rust material. */
+export function mintTransactionRef(actor: string, hlc: WireMutationEnvelope["timestamp"], tool: string): TransactionRef {
+  const material: number[] = [];
+  writeStr(material, actor);
+  writeVarintU64(material, hlc.actor);
+  writeVarintU64(material, hlc.physical_ms);
+  writeVarintU64(material, hlc.logical);
+  writeStr(material, tool);
+  return { id: `tx-${blake3Hex(new Uint8Array(material)).slice(0, 16)}`, tool };
+}
+
+/** 🪪️ Twin of Rust `history_transition_id`: `transition-{hex16(blake3(hlc.actor varint | hlc.physical_ms varint |
+ * hlc.logical varint | payload bytes))}`. The free-form actor string is authentication metadata and never enters the
+ * content address. */
+export function historyTransitionId(hlc: WireMutationEnvelope["timestamp"], payload: readonly number[] | Uint8Array): string {
+  const material: number[] = [];
+  writeVarintU64(material, hlc.actor);
+  writeVarintU64(material, hlc.physical_ms);
+  writeVarintU64(material, hlc.logical);
+  writeBytes(material, Array.from(payload));
+  return `transition-${blake3Hex(new Uint8Array(material)).slice(0, 16)}`;
+}
+
+/** ♻️ Twin of Rust `InputReplacement` (`ToValue` shape): an operation's replacement input (the artifact aggregate op's
+ * canonical `OpBinary` bytes under `schema`) or a withdrawal that folds the operation as a no-op. */
+export type InputReplacement = { readonly kind: "input"; readonly schema: string; readonly payload: readonly number[] } | { readonly kind: "withdrawn" };
+
+/** 🎯️ Twin of Rust `SupersededInput`. */
+export type SupersededInput = { readonly target: string; readonly replacement: InputReplacement };
+
+/** ✏️ Twin of Rust `TransitionSupersede` (history transition tag 6). */
+export type TransitionSupersede = { readonly scope: string | null; readonly inputs: readonly SupersededInput[] };
+
+/** 🧭️ Twin of Rust `EffectiveSupersession` (`ToValue` shape). */
+export type EffectiveSupersession = {
+  readonly transitionId: string;
+  readonly actor: string;
+  readonly timestamp: WireMutationEnvelope["timestamp"];
+  readonly scope: string | null;
+  readonly replacement: InputReplacement;
+};
+
+/** 🔀️ The part of a history transition the supersession fold reads: `branch`/`checkout` move the alternative,
+ * `supersede` installs replacements; every other kind leaves both untouched. */
+export type SupersessionFoldTransition =
+  | { readonly kind: "branch"; readonly alternativeId: string }
+  | { readonly kind: "checkout"; readonly alternativeId: string | null }
+  | ({ readonly kind: "supersede" } & TransitionSupersede)
+  | { readonly kind: "revert" | "reinstate" | "commit" | "repin" };
+
+/** ✉️ One transition event of a document log as the supersession fold sees it. */
+export type SupersessionFoldEvent = { readonly id: string; readonly actor: string; readonly timestamp: WireMutationEnvelope["timestamp"]; readonly transition: SupersessionFoldTransition };
+
+/** 🧮️ Twin of the supersession half of Rust `fold_history`: events in `(physical_ms, logical, actor, id)` order; an
+ * operation's effective supersession is the last `supersede` naming it whose scope is `null` or the final
+ * alternative. No ownership rule. A target outside `operations` is refused like Rust's unknown-operation fold error.
+ * @see ./🔗️causal/🔀️transition/🦀️.rs */
+export function foldSupersessions(operations: ReadonlySet<string>, events: readonly SupersessionFoldEvent[]): Readonly<{ alternative: string | null; supersessions: ReadonlyMap<string, EffectiveSupersession> }> {
+  const key = (event: SupersessionFoldEvent): readonly [number, number, number] => [event.timestamp.physical_ms, event.timestamp.logical, event.timestamp.actor];
+  const ordered = [...events].sort((left, right) => {
+    const [a, b] = [key(left), key(right)];
+    return a[0] - b[0] || a[1] - b[1] || a[2] - b[2] || (left.id < right.id ? -1 : left.id > right.id ? 1 : 0);
+  });
+  let alternative: string | null = null;
+  const candidates: [string, EffectiveSupersession][] = [];
+  for (const event of ordered) {
+    const transition = event.transition;
+    if (transition.kind === "branch") alternative = transition.alternativeId;
+    else if (transition.kind === "checkout") alternative = transition.alternativeId;
+    else if (transition.kind === "supersede") {
+      for (const input of transition.inputs) {
+        if (!operations.has(input.target)) throw new Error(`history fold: transition references unknown operation ${input.target}`);
+        candidates.push([input.target, { transitionId: event.id, actor: event.actor, timestamp: event.timestamp, scope: transition.scope, replacement: input.replacement }]);
+      }
+    }
+  }
+  const supersessions = new Map<string, EffectiveSupersession>();
+  for (const [target, supersession] of candidates) if (supersession.scope === null || supersession.scope === alternative) supersessions.set(target, supersession);
+  return { alternative, supersessions };
+}
+
+/** 🚦️ Twin of Rust `diagnostic::Severity` (`ToValue` spelling), in level order. */
+export const REPLAY_SEVERITIES = Object.freeze(["info", "warning", "error", "fatal"] as const);
+
+/** 🚦️ One `Severity` wire name. */
+export type ReplaySeverity = (typeof REPLAY_SEVERITIES)[number];
+
+/** 📨️ Twin of Rust `MutationMessage` (`ToValue` shape: `target`/`opIndex` omitted when empty). */
+export type ReplayMutationMessage = { readonly level: ReplaySeverity; readonly code: string; readonly message: string; readonly target?: readonly string[]; readonly opIndex?: number };
+
+/** 🔬️ Twin of Rust `conflict::MutationReplayOutcome`. */
+export type MutationReplayOutcome = {
+  readonly mutationId: string;
+  readonly editId: string;
+  readonly opIndex: number;
+  readonly worst: ReplaySeverity | null;
+  readonly messages: readonly ReplayMutationMessage[];
+  readonly superseded: boolean;
+  readonly withdrawn: boolean;
+};
+
+/** 📋️ Twin of Rust `conflict::ReplayReport`. */
+export type ReplayReport = { readonly fromPosition: number; readonly outcomes: readonly MutationReplayOutcome[]; readonly worst: ReplaySeverity | null };
+
+/** 🚧️ Twin of Rust `ReplayReport::blocks_finalize`: any outcome at `error` or `fatal` (the `MergePolicy::Normal` floor). */
+export function replayReportBlocksFinalize(report: ReplayReport): boolean {
+  return report.outcomes.some((outcome) => outcome.worst === "error" || outcome.worst === "fatal");
+}
+//#endregion 🔖️HistoryEditing
 
 const MUTATION_DAG_CAPACITY = 8_192;
 const MUTATION_DAG_IDENTIFIER_BYTES = 256;
@@ -992,6 +1181,7 @@ export type ExactWireMutationEnvelope = Readonly<{
   diff: Readonly<{ schema: string; payload: Uint8Array }>;
   inverse: Readonly<{ schema: string; payload: Uint8Array }>;
   timestamp: Readonly<{ actor: bigint; physical_ms: bigint; logical: bigint }>;
+  transaction: TransactionRef | null;
 }>;
 
 export class DocumentBackboneBatchError extends Error {
@@ -1070,6 +1260,12 @@ export function encodeDocumentBackboneEnvelopeBatchExact(envelopes: readonly Exa
     documentBackboneWriteU64(out, envelope.timestamp.actor);
     documentBackboneWriteU64(out, envelope.timestamp.physical_ms);
     documentBackboneWriteU64(out, envelope.timestamp.logical);
+    if (envelope.transaction === null) documentBackboneWriteU64(out, 0n);
+    else {
+      documentBackboneWriteU64(out, 1n);
+      documentBackboneWriteText(out, envelope.transaction.id);
+      documentBackboneWriteText(out, envelope.transaction.tool);
+    }
   }
   return new Uint8Array(out);
 }
@@ -1156,6 +1352,10 @@ function readDocumentBackboneEnvelopeBatchAtExact(
     const inverseSchema = readText(limits.maximumSchemaBytes, "schema-bytes");
     const inversePayload = readBytes(limits.maximumPayloadBytes - totalPayloadBytes, "payload-bytes");
     totalPayloadBytes += inversePayload.length;
+    const timestamp = { actor: readU64(), physical_ms: readU64(), logical: readU64() };
+    const transactionFlag = readU64();
+    if (transactionFlag > 1n) throw new DocumentBackboneBatchError("malformed", "transaction-flag");
+    const transaction = transactionFlag === 1n ? { id: readText(limits.maximumIdentifierBytes, "identifier-bytes"), tool: readText(limits.maximumIdentifierBytes, "identifier-bytes") } : null;
     envelopes.push({
       mutation_id,
       document_id,
@@ -1165,7 +1365,8 @@ function readDocumentBackboneEnvelopeBatchAtExact(
       target,
       diff: { schema: diffSchema, payload: diffPayload },
       inverse: { schema: inverseSchema, payload: inversePayload },
-      timestamp: { actor: readU64(), physical_ms: readU64(), logical: readU64() },
+      timestamp,
+      transaction,
     });
   }
   if (terminal && position[0] !== bytes.length) throw new DocumentBackboneBatchError("malformed", "trailing-bytes");
@@ -1824,9 +2025,15 @@ if (import.meta.vitest) {
   const { registerTests2 } = await import("./🧪️tests/🧪️document-backbone-envelope-batch/🟦️.ts");
   await registerTests2(import.meta.vitest, { DOCUMENT_BACKBONE_RETENTION_LIMITS, DocumentBackboneBatchError, decodeDocumentBackboneEnvelopeBatchExact, encodeDocumentBackboneEnvelopeBatchExact }, { directory: import.meta.dir, url: import.meta.url });
   const { registerTests3 } = await import("./🧪️tests/🧪️history-transition/🟦️.ts");
-  await registerTests3(import.meta.vitest, { directory: import.meta.dir, url: import.meta.url }, HISTORY_TRANSITION_DIFF_SCHEMA);
+  await registerTests3(import.meta.vitest, { directory: import.meta.dir, url: import.meta.url }, HISTORY_TRANSITION_DIFF_SCHEMA, { historyTransitionId });
   const { registerTests: registerDurableCollaborativeRedoTests } = await import("./🧪️tests/🗄️durable-collaborative-redo/🟦️.ts");
   await registerDurableCollaborativeRedoTests(import.meta.vitest, { directory: import.meta.dir, url: import.meta.url });
+  const { registerSupersedeFoldTests } = await import("./🧪️tests/🧪️supersede-fold/🟦️.ts");
+  await registerSupersedeFoldTests(import.meta.vitest, { foldSupersessions }, { directory: import.meta.dir, url: import.meta.url });
+  const { registerTransactionRefTests } = await import("./🧪️tests/🧪️transaction-ref/🟦️.ts");
+  await registerTransactionRefTests(import.meta.vitest, { mintTransactionRef, writeVecEnvelope, readVecEnvelope }, { directory: import.meta.dir, url: import.meta.url });
+  const { registerReplayReportTests } = await import("./🧪️tests/🧪️replay-report/🟦️.ts");
+  await registerReplayReportTests(import.meta.vitest, { replayReportBlocksFinalize, REPLAY_SEVERITIES }, { directory: import.meta.dir, url: import.meta.url });
 
 }
 

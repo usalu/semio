@@ -96,6 +96,10 @@ pub struct Puzzle2dPlayRuntime {
     pub brush_candidate_source_handle_id: String,
     #[value(default)]
     pub suggestion_menu: Option<Puzzle2dSuggestionMenu>,
+    /// 🛠️ The window's in-flight select-tool gesture (its open transaction), ridden from and back to the window
+    /// transient — never config, never history.
+    #[value(default)]
+    pub select_tool: Option<crate::editor::puzzle2d::modes::edit::windows::overview::utilities::select::Puzzle2dSelectToolState>,
     #[value(default = "default_fill_count")]
     pub fill_count: u32,
     #[value(default)]
@@ -189,6 +193,7 @@ impl Default for Puzzle2dPlayRuntime {
             brush_candidates: Vec::new(),
             brush_candidate_source_handle_id: String::new(),
             suggestion_menu: None,
+            select_tool: None,
             fill_count: default_fill_count(),
             grid_snap_enabled: false,
             grid_factor: default_grid_factor(),

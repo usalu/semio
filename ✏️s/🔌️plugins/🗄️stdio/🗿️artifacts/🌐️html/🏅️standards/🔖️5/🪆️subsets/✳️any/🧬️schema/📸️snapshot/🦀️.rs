@@ -90,7 +90,7 @@ impl RawTextKind {
 // `{ text: String }` struct variants, not the bare-tuple `Text(String)`/`Comment(String)` shorthand
 // used in the ticket brief's conceptual shape.
 #[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
-#[value(tag = "kind", rename_all = "camelCase")]
+#[value(tag = "kind", rename_all = "camelCase", rename_all_fields = "camelCase")]
 pub enum HtmlNode {
     Element {
         name: String,

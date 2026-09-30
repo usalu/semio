@@ -171,6 +171,7 @@ fn playground_store_edit(forward: PlaygroundMutation, inverse: Vec<PlaygroundMut
             label: None,
             group_id: None,
             origin: Default::default(),
+            transaction: None,
         }],
         description,
         coalesce_key: None,

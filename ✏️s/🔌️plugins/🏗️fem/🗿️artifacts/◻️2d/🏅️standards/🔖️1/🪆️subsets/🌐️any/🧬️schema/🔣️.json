@@ -119,12 +119,28 @@
         "x": {
           "type": "number",
           "format": "double",
-          "x-semio-invariant": "mutations::guards::node_geometry — a node coordinate is finite"
+          "x-semio-invariant": [
+            {
+              "id": "node-coordinate-finite",
+              "description": {
+                "en": "A node coordinate is finite.",
+                "de": "Eine Knotenkoordinate ist endlich."
+              }
+            }
+          ]
         },
         "y": {
           "type": "number",
           "format": "double",
-          "x-semio-invariant": "mutations::guards::node_geometry — a node coordinate is finite"
+          "x-semio-invariant": [
+            {
+              "id": "node-coordinate-finite",
+              "description": {
+                "en": "A node coordinate is finite.",
+                "de": "Eine Knotenkoordinate ist endlich."
+              }
+            }
+          ]
         }
       },
       "title": "FemNode"
@@ -229,7 +245,15 @@
             "maxItems": 2
           },
           "minItems": 3,
-          "x-semio-invariant": "mutations::guards::region_geometry — an outline of at least three points enclosing non-zero area"
+          "x-semio-invariant": [
+            {
+              "id": "region-outline-encloses-area",
+              "description": {
+                "en": "The outline has at least three points and encloses a non-zero area.",
+                "de": "Der Umriss hat mindestens drei Punkte und umschließt eine Fläche ungleich null."
+              }
+            }
+          ]
         },
         "holes": {
           "type": "array",
@@ -246,13 +270,29 @@
             },
             "minItems": 3
           },
-          "x-semio-invariant": "mutations::guards::region_geometry — every hole a real polygon lying inside the outline"
+          "x-semio-invariant": [
+            {
+              "id": "region-holes-inside-outline",
+              "description": {
+                "en": "Every hole is a real polygon lying inside the outline.",
+                "de": "Jedes Loch ist ein echtes Polygon, das innerhalb des Umrisses liegt."
+              }
+            }
+          ]
         },
         "thickness": {
           "type": "number",
           "format": "double",
           "exclusiveMinimum": 0,
-          "x-semio-invariant": "mutations::guards::region_geometry — a positive thickness"
+          "x-semio-invariant": [
+            {
+              "id": "region-thickness-positive",
+              "description": {
+                "en": "The thickness is positive.",
+                "de": "Die Dicke ist positiv."
+              }
+            }
+          ]
         },
         "materialId": {
           "type": "string"
@@ -261,7 +301,15 @@
           "type": "number",
           "format": "double",
           "exclusiveMinimum": 0,
-          "x-semio-invariant": "mutations::guards::region_geometry — a positive mesh size"
+          "x-semio-invariant": [
+            {
+              "id": "region-mesh-size-positive",
+              "description": {
+                "en": "The mesh size is positive.",
+                "de": "Die Netzgröße ist positiv."
+              }
+            }
+          ]
         }
       },
       "title": "FemRegion"
@@ -287,20 +335,44 @@
           "type": "number",
           "format": "double",
           "exclusiveMinimum": 0,
-          "x-semio-invariant": "mutations::guards::material_plausibility — a positive Young's modulus"
+          "x-semio-invariant": [
+            {
+              "id": "material-youngs-modulus-positive",
+              "description": {
+                "en": "Young's modulus is positive.",
+                "de": "Der Elastizitätsmodul ist positiv."
+              }
+            }
+          ]
         },
         "nu": {
           "type": "number",
           "format": "double",
           "exclusiveMinimum": -1,
           "exclusiveMaximum": 0.5,
-          "x-semio-invariant": "mutations::guards::material_plausibility — a Poisson ratio in the admissible open interval"
+          "x-semio-invariant": [
+            {
+              "id": "material-poisson-ratio-admissible",
+              "description": {
+                "en": "The Poisson ratio lies in the admissible open interval.",
+                "de": "Die Querdehnzahl liegt im zulässigen offenen Intervall."
+              }
+            }
+          ]
         },
         "rho": {
           "type": "number",
           "format": "double",
           "exclusiveMinimum": 0,
-          "x-semio-invariant": "mutations::guards::material_plausibility — a positive density"
+          "x-semio-invariant": [
+            {
+              "id": "material-density-positive",
+              "description": {
+                "en": "The density is positive.",
+                "de": "Die Dichte ist positiv."
+              }
+            }
+          ]
         }
       },
       "title": "FemMaterial"
@@ -325,13 +397,29 @@
           "type": "number",
           "format": "double",
           "exclusiveMinimum": 0,
-          "x-semio-invariant": "mutations::guards::section_plausibility — a positive area"
+          "x-semio-invariant": [
+            {
+              "id": "section-area-positive",
+              "description": {
+                "en": "The section area is positive.",
+                "de": "Die Querschnittsfläche ist positiv."
+              }
+            }
+          ]
         },
         "iy": {
           "type": "number",
           "format": "double",
           "exclusiveMinimum": 0,
-          "x-semio-invariant": "mutations::guards::section_plausibility — a positive second moment of area"
+          "x-semio-invariant": [
+            {
+              "id": "section-second-moment-positive",
+              "description": {
+                "en": "The second moment of area is positive.",
+                "de": "Das Flächenträgheitsmoment ist positiv."
+              }
+            }
+          ]
         }
       },
       "title": "FemSection"

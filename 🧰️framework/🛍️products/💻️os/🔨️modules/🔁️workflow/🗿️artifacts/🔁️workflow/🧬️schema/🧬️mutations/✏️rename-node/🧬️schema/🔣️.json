@@ -4,15 +4,42 @@
   "title": "RenameNode",
   "type": "object",
   "properties": {
-    "node_id": {
-      "type": "string"
+    "operation": {
+      "const": "renameNode"
+    },
+    "nodeId": {
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Node",
+          "de": "Knoten"
+        },
+        "ref": {
+          "kind": "node"
+        },
+        "group": "target",
+        "order": 10
+      }
     },
     "label": {
-      "type": "string"
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "text",
+        "role": "value",
+        "label": {
+          "en": "Label",
+          "de": "Bezeichnung"
+        },
+        "group": "value",
+        "order": 20
+      }
     }
   },
   "required": [
-    "node_id",
+    "operation",
+    "nodeId",
     "label"
   ],
   "additionalProperties": false

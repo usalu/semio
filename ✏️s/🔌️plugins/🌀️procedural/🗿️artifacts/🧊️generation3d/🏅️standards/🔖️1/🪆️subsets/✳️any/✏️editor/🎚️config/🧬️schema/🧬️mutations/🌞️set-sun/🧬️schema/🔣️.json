@@ -5,5 +5,5 @@
   "type": "object",
   "additionalProperties": false,
   "required": ["json"],
-  "properties": { "json": { "type": "string" } }
+  "properties": { "json": { "type": "string", "x-semio-ui": {"widget": "multiline", "role": "value", "label": {"en": "Sun", "de": "Sonne"}, "description": {"en": "Sun settings as JSON text.", "de": "Sonneneinstellungen als JSON-Text."}, "group": "lighting", "order": 10} } }
 }

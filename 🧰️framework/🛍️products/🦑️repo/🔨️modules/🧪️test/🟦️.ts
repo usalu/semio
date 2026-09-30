@@ -4633,6 +4633,8 @@ export const SCHEMA_DIAGNOSTIC_CODE_TABLE = {
   "schema-mutation-leaf-schema-absent": { emitters: ["check"], description: "a described mutation leaf carries no `🧬️schema/🔣️.json`, so the declared authority for its payload does not exist" },
   "schema-mutation-aggregate-id": { emitters: ["check"], description: "a mutations aggregate's `$id` is not its own module's `mutations.json` facet, so the aggregate deepens the scope" },
   "schema-mutation-aggregate-kinds-redundant": { emitters: ["check"], description: "an aggregate carries `x-semio-mutationKinds`, which restates its `oneOf` `$ref` union and has no reader" },
+  "schema-mutation-input-ui": { emitters: ["harness"], description: "a mutation leaf input has no resolvable UI descriptor: no label in every locale (x-semio-ui or the input-label glossary), an invalid x-semio-ui, or a widget its value cannot take" },
+  "schema-mutation-payload-parity": { emitters: ["harness"], description: "a committed mutation fixture's leaf payload (cut out of the aggregate wire value as `payload_value()` does) fails or is not fully described by its leaf payload schema, sits in another wire layout, maps to no leaf, or the leaf schema holds an object node without members" },
   "schema-fixture-defines-schema": { emitters: ["harness", "check"], description: "a schema DEFINITION lives inside a `🧪️*`/`🧫️*` tree without the enclosing case declaring `inertSchemaData`" },
   "schema-fixture-local-schema-fallback": { emitters: ["harness"], description: "a fixture resolves its contract from a fixture-local copy instead of the owning scope" },
   "schema-fixture-metadata-invalid": { emitters: ["harness"], description: "a schema-bound fixture's declaration is not the shape the test protocol states" },

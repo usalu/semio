@@ -5,16 +5,49 @@
   "type": "object",
   "additionalProperties": false,
   "required": [
+    "mutation",
     "index",
     "tower"
   ],
   "properties": {
+    "mutation": {
+      "const": "insertTower"
+    },
     "index": {
       "type": "integer",
-      "minimum": 0
+      "minimum": 0,
+      "x-semio-ui": {
+        "widget": "stepper",
+        "role": "value",
+        "label": {
+          "en": "Position",
+          "de": "Position"
+        },
+        "description": {
+          "en": "Zero-based list position at which the record is inserted.",
+          "de": "Nullbasierte Listenposition, an der der Datensatz eingefügt wird."
+        },
+        "step": 1,
+        "precision": 0,
+        "group": "target",
+        "order": 10
+      }
     },
     "tower": {
-      "type": "object"
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1998/snapshot.json#/$defs/En1998Tower",
+      "x-semio-ui": {
+        "role": "value",
+        "label": {
+          "en": "Tower",
+          "de": "Turm"
+        },
+        "description": {
+          "en": "The complete tower, mast or chimney record (EN 1998-6) to insert.",
+          "de": "Der vollständige einzufügende Datensatz für Turm, Mast oder Schornstein (EN 1998-6)."
+        },
+        "group": "record",
+        "order": 20
+      }
     }
   }
 }

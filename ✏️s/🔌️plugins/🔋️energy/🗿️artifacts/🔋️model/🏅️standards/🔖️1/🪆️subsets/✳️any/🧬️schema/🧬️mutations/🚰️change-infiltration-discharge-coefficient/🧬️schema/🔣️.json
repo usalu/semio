@@ -5,15 +5,56 @@
   "type": "object",
   "additionalProperties": false,
   "required": [
+    "mutation",
     "id",
     "newDischargeCoefficient"
   ],
   "properties": {
+    "mutation": {
+      "const": "changeInfiltrationDischargeCoefficient"
+    },
     "id": {
-      "type": "integer"
+      "type": "integer",
+      "minimum": 0,
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Infiltration",
+          "de": "Infiltration"
+        },
+        "description": {
+          "en": "The infiltration this mutation changes, by id.",
+          "de": "Infiltration, die diese Mutation ändert, per ID."
+        },
+        "ref": {
+          "kind": "infiltration",
+          "domain": "energyModel",
+          "granularity": "load"
+        },
+        "group": "target",
+        "order": 10
+      }
     },
     "newDischargeCoefficient": {
-      "type": "number"
+      "type": "number",
+      "exclusiveMinimum": 0,
+      "x-semio-ui": {
+        "widget": "stepper",
+        "role": "value",
+        "label": {
+          "en": "Discharge coefficient",
+          "de": "Durchflussbeiwert"
+        },
+        "description": {
+          "en": "Orifice discharge coefficient of the leakage path.",
+          "de": "Durchflussbeiwert der Leckageöffnung."
+        },
+        "step": 0.01,
+        "precision": 2,
+        "group": "infiltration",
+        "order": 20
+      }
     }
   }
 }

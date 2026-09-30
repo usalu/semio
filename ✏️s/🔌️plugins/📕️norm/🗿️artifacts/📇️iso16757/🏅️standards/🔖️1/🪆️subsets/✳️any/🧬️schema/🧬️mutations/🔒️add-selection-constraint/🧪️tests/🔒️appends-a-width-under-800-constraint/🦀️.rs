@@ -59,7 +59,7 @@ async fn removing_the_appended_constraint_restores_before() {
 
 /// 🔣️ Both committed snapshots and the committed `add-selection-constraint` payload are already canonical:
 /// decode → encode is a fixed point. The committed payload is spelled `{"AddSelectionConstraint":
-/// {"constraint": {"property_id": …, "operator": "LessThan", "value": {"kind": "decimal", …}}}}` —
+/// {"constraint": {"propertyId": …, "operator": "LessThan", "value": {"kind": "decimal", …}}}}` —
 /// `ConstraintOperator` carries no serde rename, so it is the bare Rust variant name.
 #[semio_framework_async_macros::async_test]
 async fn committed_json_is_canonical() {

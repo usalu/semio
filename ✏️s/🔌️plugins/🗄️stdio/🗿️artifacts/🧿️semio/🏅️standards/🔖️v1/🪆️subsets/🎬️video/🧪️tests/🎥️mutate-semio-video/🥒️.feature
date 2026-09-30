@@ -77,15 +77,15 @@ Feature: Apply every typed semio VIDEO mutation to a real recording, against an 
       """
     Then the independent implementation and the subject agree on the resulting snapshot
     Examples:
-      | id               | mutation |
-      | set-snapshot     | {"kind":"set-snapshot","params":{"snapshot":{"schema":"stdio.semio.video","streams":[{"kind":"S","codec":"srt","width":0,"height":0,"rate":{"num":1,"den":1},"samples":[{"pts":0,"key":true,"data":"4261756572"}]}]}}} |
-      | insert-stream    | {"kind":"insert-stream","params":{"index":0,"stream":{"kind":"S","codec":"srt","width":0,"height":0,"rate":{"num":1,"den":1},"samples":[]}}} |
-      | remove-stream    | {"kind":"remove-stream","params":{"index":0}} |
-      | set-stream-meta  | {"kind":"set-stream-meta","params":{"index":0,"kind":"V","codec":"vp9","width":1280,"height":720,"rate":{"num":60,"den":1}}} |
-      | insert-sample    | {"kind":"insert-sample","params":{"streamIndex":1,"index":12,"sample":{"pts":13248,"key":true,"data":"fffbe044"}}} |
-      | remove-sample    | {"kind":"remove-sample","params":{"streamIndex":0,"index":0}} |
-      | set-sample-data  | {"kind":"set-sample-data","params":{"streamIndex":0,"index":4,"data":"ffd8ffe000104a464946"}} |
-      | set-sample-flags | {"kind":"set-sample-flags","params":{"streamIndex":0,"index":0,"pts":500,"key":false}} |
+      | id               | mutation                                                                                                                                                                                                                     |
+      | set-snapshot     | {"mutation":"setSnapshot","snapshot":{"schema":"stdio.semio.video","streams":[{"kind":"subtitle","codec":"srt","width":0,"height":0,"rate":{"num":1,"den":1},"samples":[{"pts":0,"key":true,"data":[66,97,117,101,114]}]}]}} |
+      | insert-stream    | {"mutation":"insertStream","index":0,"stream":{"kind":"subtitle","codec":"srt","width":0,"height":0,"rate":{"num":1,"den":1},"samples":[]}}                                                                                  |
+      | remove-stream    | {"mutation":"removeStream","index":0}                                                                                                                                                                                        |
+      | set-stream-meta  | {"mutation":"setStreamMeta","index":0,"kind":"video","codec":"vp9","width":1280,"height":720,"rate":{"num":60,"den":1}}                                                                                                      |
+      | insert-sample    | {"mutation":"insertSample","streamIndex":1,"index":12,"sample":{"pts":13248,"key":true,"data":[255,251,224,68]}}                                                                                                             |
+      | remove-sample    | {"mutation":"removeSample","streamIndex":0,"index":0}                                                                                                                                                                        |
+      | set-sample-data  | {"mutation":"setSampleData","streamIndex":0,"index":4,"data":[255,216,255,224,0,16,74,70,73,70]}                                                                                                                             |
+      | set-sample-flags | {"mutation":"setSampleFlags","streamIndex":0,"index":0,"pts":500,"key":false}                                                                                                                                                |
 
   @id-no-mutation-baseline-mutate
   @level-exhaustive
@@ -94,7 +94,7 @@ Feature: Apply every typed semio VIDEO mutation to a real recording, against an 
     Given the real recording shared://🎥️mutate-semio-video/🏚️bauen-mit-bestand-ausschnitt/🗣️.dsl.semio
     When the no-mutation mutation is applied to the recording parsed from it
       """
-      {"kind":"no-mutation","params":{}}
+      {"mutation":"noMutation"}
       """
     Then the independent implementation and the subject agree on the resulting snapshot
 
@@ -109,15 +109,15 @@ Feature: Apply every typed semio VIDEO mutation to a real recording, against an 
       """
     Then both sides restore the recording and agree on the mutated and the restored snapshot
     Examples:
-      | id               | mutation |
-      | set-snapshot     | {"kind":"set-snapshot","params":{"snapshot":{"schema":"stdio.semio.video","streams":[{"kind":"S","codec":"srt","width":0,"height":0,"rate":{"num":1,"den":1},"samples":[{"pts":0,"key":true,"data":"4261756572"}]}]}}} |
-      | insert-stream    | {"kind":"insert-stream","params":{"index":0,"stream":{"kind":"S","codec":"srt","width":0,"height":0,"rate":{"num":1,"den":1},"samples":[]}}} |
-      | remove-stream    | {"kind":"remove-stream","params":{"index":0}} |
-      | set-stream-meta  | {"kind":"set-stream-meta","params":{"index":0,"kind":"V","codec":"vp9","width":1280,"height":720,"rate":{"num":60,"den":1}}} |
-      | insert-sample    | {"kind":"insert-sample","params":{"streamIndex":1,"index":12,"sample":{"pts":13248,"key":true,"data":"fffbe044"}}} |
-      | remove-sample    | {"kind":"remove-sample","params":{"streamIndex":0,"index":0}} |
-      | set-sample-data  | {"kind":"set-sample-data","params":{"streamIndex":0,"index":4,"data":"ffd8ffe000104a464946"}} |
-      | set-sample-flags | {"kind":"set-sample-flags","params":{"streamIndex":0,"index":0,"pts":500,"key":false}} |
+      | id               | mutation                                                                                                                                                                                                                     |
+      | set-snapshot     | {"mutation":"setSnapshot","snapshot":{"schema":"stdio.semio.video","streams":[{"kind":"subtitle","codec":"srt","width":0,"height":0,"rate":{"num":1,"den":1},"samples":[{"pts":0,"key":true,"data":[66,97,117,101,114]}]}]}} |
+      | insert-stream    | {"mutation":"insertStream","index":0,"stream":{"kind":"subtitle","codec":"srt","width":0,"height":0,"rate":{"num":1,"den":1},"samples":[]}}                                                                                  |
+      | remove-stream    | {"mutation":"removeStream","index":0}                                                                                                                                                                                        |
+      | set-stream-meta  | {"mutation":"setStreamMeta","index":0,"kind":"video","codec":"vp9","width":1280,"height":720,"rate":{"num":60,"den":1}}                                                                                                      |
+      | insert-sample    | {"mutation":"insertSample","streamIndex":1,"index":12,"sample":{"pts":13248,"key":true,"data":[255,251,224,68]}}                                                                                                             |
+      | remove-sample    | {"mutation":"removeSample","streamIndex":0,"index":0}                                                                                                                                                                        |
+      | set-sample-data  | {"mutation":"setSampleData","streamIndex":0,"index":4,"data":[255,216,255,224,0,16,74,70,73,70]}                                                                                                                             |
+      | set-sample-flags | {"mutation":"setSampleFlags","streamIndex":0,"index":0,"pts":500,"key":false}                                                                                                                                                |
 
   @id-no-mutation-baseline-inverse
   @level-exhaustive
@@ -126,7 +126,7 @@ Feature: Apply every typed semio VIDEO mutation to a real recording, against an 
     Given the real recording shared://🎥️mutate-semio-video/🏚️bauen-mit-bestand-ausschnitt/🗣️.dsl.semio
     When the no-mutation mutation is applied to the recording parsed from it and each side undoes it with its own computed inverse
       """
-      {"kind":"no-mutation","params":{}}
+      {"mutation":"noMutation"}
       """
     Then both sides restore the recording and agree on the mutated and the restored snapshot
 

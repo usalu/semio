@@ -44,7 +44,8 @@ async fn fold_plan_inverse_restores_base_exactly() {
 async fn precondition_rejects_a_missing_source_widget() {
     let base = FlowSnapshot::default();
     let error = precondition(&sample_payload(), &base).expect_err("note-1 does not exist yet");
-    assert!(error.contains("note-1"));
+    assert_eq!((error.code.0.as_str(), error.target.as_slice()), ("mutation.target-missing", ["note-1".to_string()].as_slice()));
+    assert!(error.message.contains("note-1"));
 }
 
 #[semio_framework_async_macros::async_test]
@@ -52,5 +53,6 @@ async fn precondition_rejects_a_new_id_already_taken() {
     let base = base_with_source_widget();
     let payload = DuplicateWidget { new_id: "note-1".into(), ..sample_payload() };
     let error = precondition(&payload, &base).expect_err("new_id collides with source_id");
-    assert!(error.contains("differ"));
+    assert_eq!(error.code.0, "mutation.invariant", "an id equal to its own source is a payload invariant, not a state refusal");
+    assert!(error.message.contains("differ"));
 }

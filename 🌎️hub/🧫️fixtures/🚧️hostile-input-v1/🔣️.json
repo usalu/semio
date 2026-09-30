@@ -81,8 +81,8 @@
       "body": {
         "kind": "json",
         "schema": {
-          "module": "🌎️hub/💡️inference/🧬️schema/🔣️.json",
-          "def": "InferenceJobReconcileRequestV1"
+          "module": "🧰️framework/🔨️modules/🧵️job/🔎️reconcile/🧬️schema/🔣️.json",
+          "def": "JobReconcileRequestV1"
         }
       }
     },
@@ -98,8 +98,8 @@
       "body": {
         "kind": "json",
         "schema": {
-          "module": "🌎️hub/💡️inference/🧬️schema/🔣️.json",
-          "def": "InferenceJobReconcileRequestV1"
+          "module": "🧰️framework/🔨️modules/🧵️job/🔎️reconcile/🧬️schema/🔣️.json",
+          "def": "JobReconcileRequestV1"
         }
       }
     },

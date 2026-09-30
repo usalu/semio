@@ -4,9 +4,28 @@
   "title": "ChangeGridVisible",
   "type": "object",
   "additionalProperties": false,
+  "required": [
+    "mutation"
+  ],
   "properties": {
+    "mutation": {
+      "const": "changeGridVisible"
+    },
     "newVisible": {
-      "type": "boolean"
+      "type": [
+        "boolean",
+        "null"
+      ],
+      "x-semio-ui": {
+        "widget": "toggle",
+        "role": "value",
+        "label": {
+          "en": "Grid visible",
+          "de": "Raster sichtbar"
+        },
+        "group": "grid",
+        "order": 10
+      }
     }
   }
 }

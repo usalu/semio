@@ -3,6 +3,8 @@ use crate::{ColdFormedMember, En1993Mutation, En1993Snapshot};
 #[derive(Clone, Debug, PartialEq, dsl::MutationLeaf, value_derive::ToValue, value_derive::FromValue)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 #[mutation_leaf(contract = ::protocol)]
+#[cfg_attr(test, serde(rename_all = "camelCase"))]
+#[value(rename_all = "camelCase")]
 pub struct InsertColdFormedMember { pub index: usize, pub cold_formed_member: ColdFormedMember }
 impl protocol::MutationKind<En1993Snapshot, En1993Mutation> for InsertColdFormedMember {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "insert", entity: "cold-formed-member", kind: "insert-cold-formed-member", record: "InsertedColdFormedMember" };

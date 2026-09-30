@@ -75,8 +75,8 @@ async fn inverse_restores_before() {
 }
 
 /// 🔣️ Both committed snapshots and the committed mutation are already canonical. `RenameStep`
-/// carries NO `rename_all` of its own, so its fields stay snake_case on the wire (`new_title`) even
-/// though the enum tag itself is camelCased to `renameStep`.
+/// declares `rename_all = "camelCase"` like its enum tag, so the wire spells `newTitle` beside
+/// `renameStep`.
 #[semio_framework_async_macros::async_test]
 async fn committed_json_is_canonical() {
     for (label, text) in [("before", BEFORE), ("after", AFTER)] {

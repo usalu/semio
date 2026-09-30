@@ -17,7 +17,14 @@
       "type": "string"
     },
     "category": {
-      "type": "string"
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "text",
+        "label": {
+          "en": "Category",
+          "de": "Kategorie"
+        }
+      }
     }
   }
 }

@@ -98,10 +98,8 @@ fn a_textual_export_refuses_bytes_that_are_not_utf8() {
 /// does claim — the difference between a dead menu row and an answerable one.
 #[test]
 fn an_unclaimed_export_format_is_refused_by_name() {
-    let document = semio_s_artifact_procedural_generation3d::Generation3dSnapshot::default();
-    let error = document_io::export_document(&document, "step").expect_err("`step` is not one of this artifact's formats");
+    let error = document_io::export_geometry(&unit_cube_semio_mesh(), "step").expect_err("`step` is not one of this artifact's formats");
     let message = error.to_string();
-    retire_document(document);
     assert!(message.contains("step"), "the refusal names the format, got {message}");
     assert!(message.contains("stl"), "the refusal lists what IS offered, got {message}");
 }
@@ -144,7 +142,7 @@ fn every_geometry_export_format_moves_the_committed_cube_past_the_oracle() {
 #[test]
 fn the_text_export_is_the_documents_own_text_and_needs_no_evaluator() {
     let document = semio_s_artifact_procedural_generation3d::Generation3dSnapshot::default();
-    let bytes = document_io::export_document_bytes(&document, "txt").expect("txt exports without an evaluator");
+    let bytes = document_io::export_document_bytes(&document).expect("txt exports without an evaluator");
     retire_document(document);
     let written = String::from_utf8(bytes).expect("txt is utf-8");
     assert!(!written.is_empty(), "the document's text is not empty");
@@ -222,3 +220,104 @@ fn a_picked_file_becomes_a_previewable_document_carrying_its_own_bytes() {
     assert_eq!(mesh_bridge::base64_decode(&planted).expect("the planted note is base64"), bytes, "the planted payload is the picked file, byte for byte");
 }
 //#endregion 📥️ImportRoster
+
+/// 🚪️ Document and prepared geometry inputs have distinct truthful format contracts.
+#[test]
+fn geometry_exports_require_prepared_geometry_and_document_exports_preserve_text() {
+    let fixture = fixture();
+    let mesh = unit_cube_semio_mesh();
+    for format in fixture["exportInputs"]["preparedGeometry"].as_array().expect("geometry inputs") {
+        let export = document_io::export_geometry(&mesh, format.as_str().expect("format")).expect("prepared geometry exports");
+        assert!(!export.data.is_empty());
+    }
+    assert!(document_io::export_geometry(&mesh, fixture["exportInputs"]["rejectDocumentAsGeometry"].as_str().unwrap()).is_err());
+    let document = semio_s_artifact_procedural_generation3d::Generation3dSnapshot::default();
+    let export = document_io::export_document(&document).expect("document exports without geometry");
+    assert_eq!(export.filename, "generation3d.txt");
+    assert!(!export.data.is_empty());
+    retire_document(document);
+}
+
+/// 🧊️ Prepared geometry preserves independent meshes and the oracle's combined volume.
+#[test]
+fn prepared_geometry_merge_preserves_indices_bounds_and_oracle_volume() {
+    let expected = fixture()["mergeGeometry"].clone();
+    let first = crate::unit_cube_mesh_data();
+    let mut second = first.clone();
+    for position in second.positions.chunks_exact_mut(3) {
+        for axis in 0..3 { position[axis] += expected["translation"][axis].as_f64().unwrap() as f32; }
+    }
+    let merged = mesh_bridge::merge_meshes(&[first, second]);
+    assert_eq!(merged.positions.len() / 3, expected["vertexCount"].as_u64().unwrap() as usize);
+    assert_eq!(merged.indices.len() / 3, expected["triangleCount"].as_u64().unwrap() as usize);
+    let mesh = mesh_bridge::semio_mesh_from_mesh_data(&merged).expect("merged geometry validates");
+    let projection = project(&mesh);
+    for axis in 0..3 {
+        crate::assert_close("merged min", projection.min[axis], expected["min"][axis].as_f64().unwrap());
+        crate::assert_close("merged max", projection.max[axis], expected["max"][axis].as_f64().unwrap());
+    }
+    let (volume, min, max) = crate::oracle_volume_and_bounds(&crate::triangles_of(&mesh));
+    crate::assert_close("merged oracle volume", volume, expected["volume"].as_f64().unwrap());
+    for axis in 0..3 {
+        crate::assert_close("merged oracle min", min[axis], expected["min"][axis].as_f64().unwrap());
+        crate::assert_close("merged oracle max", max[axis], expected["max"][axis].as_f64().unwrap());
+    }
+}
+
+/// 📤️ Graph codecs require valid declared documents and finite caller-prepared geometry.
+#[test]
+fn document_geometry_bridge_validates_both_explicit_inputs() {
+    let document = semio_s_artifact_procedural_generation3d::Generation3dSnapshot::default();
+    let value = semio_framework_os_kernel::ToValue::to_value(&document);
+    retire_document(document);
+    let mesh = crate::unit_cube_mesh_data();
+    assert_eq!(mesh_bridge::generation3d_mesh_from_document(&value, &mesh).expect("explicit geometry"), mesh);
+    assert!(mesh_bridge::generation3d_mesh_from_document(&value, &Default::default()).is_err());
+    let mut invalid = mesh.clone();
+    invalid.positions[0] = f32::NAN;
+    assert!(mesh_bridge::generation3d_mesh_from_document(&value, &invalid).is_err());
+    assert!(mesh_bridge::generation3d_mesh_from_document(&semio_framework_os_kernel::DslValue::null(), &mesh).is_err());
+}
+
+/// 🗄️ The graph registry advertises only genuine document conversion routes.
+#[test]
+fn graph_registry_does_not_claim_geometry_materialization() {
+    let exports: Vec<_> = semio_s_artifact_procedural_generation3d::standards::v1::subsets::any::io::io_registry::entries().iter()
+        .filter(|entry| entry.writes.artifact_kind != "s.procedural.generation3d")
+        .map(|entry| entry.writes.artifact_kind).collect();
+    assert_eq!(exports, vec!["s.stdio.txt"]);
+}
+
+/// 📄️ The real registry preserves imported graph documents and retires its rebuilt roots.
+#[test]
+fn imported_graph_text_registry_round_trip_preserves_graph_and_retires_rebuilt_snapshot() {
+    use semio_framework_plugin::{Dialect, ErasedComposeSource, IoPayload, StandardId, SubsetId};
+    use semio_s_artifact_procedural_generation3d::standards::v1::subsets::any::io::{import, io_registry};
+    let contract = fixture()["registryText"].clone();
+    assert_eq!(contract["source"], "imported-unit-cube");
+    assert_eq!(contract["preserveGraph"], true);
+    let document = mesh_bridge::import_mesh_data(&crate::unit_cube_mesh_data()).expect("real imported graph");
+    assert_eq!(document.host_snapshot.widgets.len(), 3);
+    let expected = semio_framework_os_kernel::ToValue::to_value(&document);
+    let bytes = document_io::export_document_bytes(&document).expect("real document text");
+    let json = String::from_utf8(semio_s_artifact_procedural_generation3d::standards::v1::subsets::any::io::export::serializers::artifacts::json::v_rfc8259::any::serialize_bytes(&document).expect("real document json")).expect("json is utf8");
+    let independent: serde_json::Value = serde_json::from_str(&json).expect("third-party json reader");
+    assert_eq!(independent["hostSnapshot"]["widgets"].as_array().expect("imported graph widgets").len(), 3);
+    retire_document(document);
+    let entry = io_registry::entries().iter().find(|entry| entry.writes.artifact_kind == contract["target"].as_str().unwrap()).expect("true graph text registry entry");
+    for kind in contract["sourceKinds"].as_array().unwrap() {
+        let source = match kind.as_str().unwrap() {
+            "native" => ErasedComposeSource { dialect: semio_s_artifact_procedural_generation3d::GENERATION3D_DIALECT, payload: IoPayload::Text(String::from_utf8(bytes.clone()).unwrap()) },
+            "json-bridge" => ErasedComposeSource { dialect: Dialect { artifact_kind: "s.stdio.json", standard: StandardId("rfc8259"), subset: SubsetId::ANY }, payload: IoPayload::Text(json.clone()) },
+            unknown => panic!("unsupported registry fixture source {unknown}"),
+        };
+        let sources = [source];
+        let composed = semio_framework_plugin::resolve_ready((entry.compose)(&sources)).expect("actual registry exports imported graph");
+        assert_eq!(composed.dialect, entry.writes);
+        let IoPayload::Text(text) = composed.payload else { panic!("text registry must return text") };
+        let restored = import::deserializers::artifacts::txt::v_utf_8::any::deserialize_bytes(text.as_bytes()).expect("registry text imports");
+        let actual = semio_framework_os_kernel::ToValue::to_value(&restored);
+        retire_document(restored);
+        assert_eq!(actual, expected, "registry preserves the full imported graph for {kind}");
+    }
+}

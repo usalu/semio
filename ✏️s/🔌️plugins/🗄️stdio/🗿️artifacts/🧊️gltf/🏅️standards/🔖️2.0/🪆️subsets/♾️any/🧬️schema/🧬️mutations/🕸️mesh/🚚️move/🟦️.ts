@@ -1,7 +1,14 @@
-/** 🦠️ move-mesh executable structural glTF command. */
-import type { GltfOrthographic, GltfPerspective, GltfSnapshot } from '../../📸️snapshot/🟦️.ts';
-import { clone, insert, order, position, reject, remove, relocate, reorder, repair, type GltfMutationRejection, type GltfStructuralResult } from './🟦️';
-export const GltfMoveMeshDescriptor = { id: 's.stdio.gltf.mutation.move-mesh.v1', version: 1, touchedPathPattern: 'document/meshes', referencePolicy: 'all typed mesh references are remapped, repaired, or rejected' } as const;
-export interface GltfMoveMeshPayload { index: number; position: number }
-export const validateGltfMoveMesh = (payload: GltfMoveMeshPayload, base: GltfSnapshot): GltfMutationRejection | undefined => { const index = position(payload.index, base.document.meshes.length, 'document/meshes'); if (index) return index; const destination = position(payload.position, base.document.meshes.length, 'document/meshes'); if (destination) return destination; if (payload.index === payload.position) return reject('gltf.mutation.no-observable-change', 'document/meshes', 'destination equals source');  return undefined; };
-export const applyGltfMoveMesh = (base: GltfSnapshot, payload: GltfMoveMeshPayload): GltfStructuralResult => { const rejection = validateGltfMoveMesh(payload, base); if (rejection) return { accepted: false, rejection }; try { const next = clone(base); relocate(next, 'meshes', payload.index, payload.position); return { accepted: true, snapshot: clone(next) }; } catch (error) { return { accepted: false, rejection: typeof error === 'object' && error && 'code' in error ? error as GltfMutationRejection : reject('gltf.mutation.apply-failed', 'document/meshes', String(error)) }; } };
+/** 🚚️ `move-mesh` wire twin: the flat `Apply` payload `GltfMoveMeshPayload` and the phase wire `MoveMeshMutation`, exactly as `./🦀️.rs` writes them.
+ * @see ./🧬️schema/🔣️.json */
+import { gltfWireIndex, gltfWireObject, gltfWireRequired } from "../../../📸️snapshot/🟦️.ts";
+import { type GltfDiff, type GltfPhase, gltfWirePhase, parseGltfDiff } from "../../../🔺️diff/🟦️.ts";
+
+export interface GltfMoveMeshPayload {
+  index: number;
+  position: number;
+}
+
+export type MoveMeshMutation = GltfPhase<GltfMoveMeshPayload, GltfDiff>;
+
+export const parseGltfMoveMeshPayload = gltfWireObject<GltfMoveMeshPayload>({ index: gltfWireRequired(gltfWireIndex), position: gltfWireRequired(gltfWireIndex) });
+export const parseMoveMeshMutation = gltfWirePhase(parseGltfMoveMeshPayload, parseGltfDiff);

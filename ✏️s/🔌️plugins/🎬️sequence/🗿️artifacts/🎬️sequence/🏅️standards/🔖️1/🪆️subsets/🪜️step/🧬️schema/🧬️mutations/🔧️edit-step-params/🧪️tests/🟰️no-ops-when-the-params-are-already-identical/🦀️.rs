@@ -16,11 +16,11 @@ use crate::diff::SequenceDiff;
 use crate::mutations::{apply_sequence_mutation, inverse_sequence_mutation, SequenceMutation};
 use crate::{SequenceSnapshot, SequenceStep, SequenceWorkingScene};
 
-const BEFORE: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🔧️edit-step-params/🟰️no-ops-when-the-params-are-already-identical/📸️snapshot/⬅️before/🔣️.json");
-const AFTER: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🔧️edit-step-params/🟰️no-ops-when-the-params-are-already-identical/📸️snapshot/➡️after/🔣️.json");
-const MUTATION: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🔧️edit-step-params/🟰️no-ops-when-the-params-are-already-identical/🦠️mutation/🔣️.json");
-const DIFF: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🔧️edit-step-params/🟰️no-ops-when-the-params-are-already-identical/🔺️diff/🔣️.json");
-const OUTCOME: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🔧️edit-step-params/🟰️no-ops-when-the-params-are-already-identical/🎯️outcome/🔣️.json");
+const BEFORE: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🔧️edit-step-params/🟰️no-ops-when-params-are-already-identical/📸️snapshot/⬅️before/🔣️.json");
+const AFTER: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🔧️edit-step-params/🟰️no-ops-when-params-are-already-identical/📸️snapshot/➡️after/🔣️.json");
+const MUTATION: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🔧️edit-step-params/🟰️no-ops-when-params-are-already-identical/🦠️mutation/🔣️.json");
+const DIFF: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🔧️edit-step-params/🟰️no-ops-when-params-are-already-identical/🔺️diff/🔣️.json");
+const OUTCOME: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🔧️edit-step-params/🟰️no-ops-when-params-are-already-identical/🎯️outcome/🔣️.json");
 
 /// 🧊️ Every decoded fixture here owns its own non-empty `StepParams` pair root, so it is the FINAL
 /// owner of a dictionary and must leave through a cold boundary — a bare drop trips `final Dictionary

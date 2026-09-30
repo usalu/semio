@@ -35,7 +35,7 @@ async fn command_envelope_round_trip_holds_for_an_applied_operation() {
 
     let mut store = crate::store_fixture::document_store(Generation3dSnapshot::default()).await;
     use crate::standards::v1::subsets::any::schema::mutations::create_widget::CreateWidget;
-    store.dispatch(ArtifactCommand::Apply { mutations: vec![Generation3dMutation::CreateWidget(CreateWidget { index: 3, widget: Widget::InputNote { id: "note-9".into(), text: String::new() } })], description: None }).await.expect("apply");
+    store.dispatch(ArtifactCommand::Apply { mutations: vec![Generation3dMutation::CreateWidget(CreateWidget { index: 3, widget: Widget::InputNote { id: "note-9".into(), text: String::new() } })], description: None, transaction: None }).await.expect("apply");
     let edit: &Edit<Generation3dMutation> = store.envelope().vcs.edits.last().expect("dispatch must have recorded an edit");
     test_support::assert_command_envelope_round_trip::<Generation3dSnapshot, Generation3dMutation>(edit, &ArtifactId(store.envelope().id.clone()), &SchemaId(store.envelope().schema.clone())).await;
     crate::store_fixture::close(store);

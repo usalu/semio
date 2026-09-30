@@ -465,15 +465,13 @@ pub fn number_stepper_segments(bounds: Rect, inline: ui_contract::FlowInline, bo
 
 /// 🎚️ The value a `Slider` press/drag at `x` reports on its resolved track cell, snapped onto `step` and clamped into
 /// `min..=max` — Radix's own `Slider` semantics, which React's `SliderView` delegates to.
-pub fn slider_value_at(bounds: Rect, x: f32, min: f64, max: f64, step: f64) -> f64 {
+pub fn slider_value_at(bounds: Rect, x: f32, min: f64, max: f64, step: f64, snaps: &[f64]) -> f64 {
     let span = max - min;
     if !span.is_finite() || span <= 0.0 {
         return min;
     }
     let ratio = if bounds.w > 0.0 { f64::from((x - bounds.x) / bounds.w).clamp(0.0, 1.0) } else { 0.0 };
-    let raw = min + ratio * span;
-    let snapped = if step.is_finite() && step > 0.0 { min + ((raw - min) / step).round() * step } else { raw };
-    snapped.clamp(min, max)
+    crate::wgpu::slider::slider_pointer_value(min + ratio * span, min, max, step, snaps)
 }
 
 /// 💍️ The normalised `t` a `Ring` press/drag at `(x, y)` reports, on the same circle `paint`'s ring

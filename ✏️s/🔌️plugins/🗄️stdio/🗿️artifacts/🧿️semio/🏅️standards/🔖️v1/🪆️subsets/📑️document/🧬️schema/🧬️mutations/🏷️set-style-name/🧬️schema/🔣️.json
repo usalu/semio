@@ -5,19 +5,20 @@
   "type": "object",
   "additionalProperties": false,
   "required": [
+    "mutation",
     "id",
     "name"
   ],
   "properties": {
+    "mutation": {
+      "const": "setStyleName",
+      "description": "Aggregate discriminator spliced in by SemioDocumentMutation; absent when the payload stands alone."
+    },
     "id": {
       "type": "string"
     },
     "name": {
       "type": "string"
-    },
-    "mutation": {
-      "const": "setStyleName",
-      "description": "Aggregate discriminator spliced in by SemioDocumentMutation; absent when the payload stands alone."
     }
   }
 }

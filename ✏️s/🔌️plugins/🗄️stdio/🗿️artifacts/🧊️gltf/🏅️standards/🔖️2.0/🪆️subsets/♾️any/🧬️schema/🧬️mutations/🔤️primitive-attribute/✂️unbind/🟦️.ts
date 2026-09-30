@@ -1,8 +1,15 @@
-/** 🦠️ unbind-primitive-attribute: cohesive atomic mesh mutation. */
-import type { GltfJson, GltfSnapshot, GltfPrimitive, GltfMorphTarget } from '../../📸️snapshot/🟦️.ts';
-import { run, reject, positionIn, itemIndex, permutation, moveItem, type GltfLeafResult, type GltfMutationRejection } from './🟦️';
-export const GltfUnbindPrimitiveAttributeDescriptor = { id: 's.stdio.gltf.mutation.unbind-primitive-attribute.v1', version: 1, kind: 'unbind', touchedPaths: ["document/meshes/*/primitives/*/attributes"], referencePolicy: 'removes one semantic-keyed accessor relationship' } as const;
-export interface GltfUnbindPrimitiveAttributePayload { mesh: number; primitive: number; semantic: string }
-export type GltfUnbindPrimitiveAttributeResult = GltfLeafResult;
-export const validateGltfUnbindPrimitiveAttribute = (payload: GltfUnbindPrimitiveAttributePayload, base: GltfSnapshot): GltfMutationRejection | undefined => { const mesh = itemIndex(payload.mesh, base.document.meshes.length, 'document/meshes'); if (mesh) return mesh; const primitive = itemIndex(payload.primitive, base.document.meshes[payload.mesh]!.primitives.length, `document/meshes/${payload.mesh}/primitives`); if (primitive) return primitive; if (!Object.prototype.hasOwnProperty.call(base.document.meshes[payload.mesh]!.primitives[payload.primitive]!.attributes, payload.semantic)) return reject('gltf.mutation.relation-absent', 'document/meshes/primitives/attributes', 'semantic is not bound'); return undefined; };
-export const applyGltfUnbindPrimitiveAttribute = (base: GltfSnapshot, payload: GltfUnbindPrimitiveAttributePayload): GltfUnbindPrimitiveAttributeResult => run(base, payload, validateGltfUnbindPrimitiveAttribute, (next, payload) => { delete next.document.meshes[payload.mesh]!.primitives[payload.primitive]!.attributes[payload.semantic]; }, GltfUnbindPrimitiveAttributeDescriptor.touchedPaths);
+/** ✂️ `unbind-primitive-attribute` wire twin: the flat `Apply` payload `GltfUnbindPrimitiveAttributePayload` and the phase wire `UnbindPrimitiveAttributeMutation`, exactly as `./🦀️.rs` writes them.
+ * @see ./🧬️schema/🔣️.json */
+import { gltfWireIndex, gltfWireObject, gltfWireRequired, gltfWireString } from "../../../📸️snapshot/🟦️.ts";
+import { type GltfDiff, type GltfPhase, gltfWirePhase, parseGltfDiff } from "../../../🔺️diff/🟦️.ts";
+
+export interface GltfUnbindPrimitiveAttributePayload {
+  mesh: number;
+  primitive: number;
+  semantic: string;
+}
+
+export type UnbindPrimitiveAttributeMutation = GltfPhase<GltfUnbindPrimitiveAttributePayload, GltfDiff>;
+
+export const parseGltfUnbindPrimitiveAttributePayload = gltfWireObject<GltfUnbindPrimitiveAttributePayload>({ mesh: gltfWireRequired(gltfWireIndex), primitive: gltfWireRequired(gltfWireIndex), semantic: gltfWireRequired(gltfWireString) });
+export const parseUnbindPrimitiveAttributeMutation = gltfWirePhase(parseGltfUnbindPrimitiveAttributePayload, parseGltfDiff);
